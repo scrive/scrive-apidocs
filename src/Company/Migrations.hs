@@ -10,6 +10,17 @@ default (SQL)
 removeDuplicateIndexFromCompanyUIs :: MonadDB m => Migration m
 removeDuplicateIndexFromCompanyUIs = Migration {
   mgrTable = tableCompanyUIs
+, mgrFrom = 2
+, mgrDo = do
+    kRunRaw "ALTER TABLE company_uis ADD COLUMN signview_primarycolour TEXT NULL"
+    kRunRaw "ALTER TABLE company_uis ADD COLUMN signview_primarytextcolour TEXT NULL"
+    kRunRaw "ALTER TABLE company_uis ADD COLUMN signview_secondarycolour TEXT NULL"
+    kRunRaw "ALTER TABLE company_uis ADD COLUMN signview_secondarytextcolour TEXT NULL"
+}
+
+addPrimaryAndSecondaryColoursToCompanyUIs :: MonadDB m => Migration m
+addPrimaryAndSecondaryColoursToCompanyUIs = Migration {
+  mgrTable = tableCompanyUIs
 , mgrFrom = 1
 , mgrDo = do
   let Table{..} = tableCompanyUIs

@@ -180,4 +180,5 @@ staticRoutes = choice
      , dir "serialize_image" $ hPost $ toK0 $ ServerUtils.handleSerializeImage
      , dir "scale_image" $ hPost $ toK0 $ ServerUtils.handleScaleImage
      , dir "text_to_image" $ hGet $ toK0 $ ServerUtils.handleTextToImage
+     , dir "branded_signview_image" $ hGet $ toK0 $ ServerUtils.brandedSignviewImage
    ]

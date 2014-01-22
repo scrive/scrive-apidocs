@@ -8,7 +8,9 @@ var DocumentAuthorAttachmentsModel = Backbone.Model.extend({
      title  : localization.authorAttachmentBoxHeader,
      textcolour : undefined,
      textfont : undefined,
-     forSigning : false
+     forSigning : false,
+     secondarycolour: undefined,
+     secondarytextcolour: undefined
   },
   initialize: function (args) {
   },
@@ -26,6 +28,12 @@ var DocumentAuthorAttachmentsModel = Backbone.Model.extend({
   },
   textfont : function() {
      return this.get("textfont");
+  },
+  secondarycolour : function() {
+     return this.get("secondarycolour");
+  },
+  secondarytextcolour : function() {
+     return this.get("secondarytextcolour");
   }
 });
 
@@ -48,13 +56,21 @@ var DocumentAuthorAttachmentsView = Backbone.View.extend({
     container.append($("<div class='clearfix' />"));
     return container;
   },
-  authorAttachmentFile: function(attachment, labelCss) {
+  authorAttachmentFile: function(attachment, secondarycolour, secondarytextcolour) {
     var model = this.model;
     var container = $("<div class='item' />");
     var buttonSize = 'small';
-    var button = new Button({color: model.forSigning() ? "signview-blue" : "black", text: localization.reviewPDF, cssClass: 'float-right', size: buttonSize, onClick: function() {
-                        window.open(attachment.downloadLink(), '_blank');
-                        }});
+    var button = new Button({
+      color: model.forSigning() ? "signview-blue" : "black", 
+      customcolor: model.forSigning() ? secondarycolour,
+      textcolor: model.forSigning() ? secondarytextcolour,
+      text: localization.reviewPDF, 
+      cssClass: 'float-right', 
+      size: buttonSize, 
+      onClick: function() {
+        window.open(attachment.downloadLink(), '_blank');
+      }
+    });
     container.append(button.el());
     return container;
   },
@@ -75,6 +91,8 @@ var DocumentAuthorAttachmentsView = Backbone.View.extend({
 
     var document = this.model.document();
     var labelCss = {};
+    var secondarycolour = this.model.secondarycolour();
+    var secondarytextcolour = this.model.secondarytextcolour();
 
     var header = $("<h2/>");
     if (this.model.textcolour()) {
@@ -93,7 +111,7 @@ var DocumentAuthorAttachmentsView = Backbone.View.extend({
       var tr = $("<tr/>");
 
       tr.append($("<td class='desc'>").append(self.authorAttachmentDesc(attachment, labelCss)));
-      tr.append($("<td class='file'>").append(self.authorAttachmentFile(attachment, labelCss)));
+      tr.append($("<td class='file'>").append(self.authorAttachmentFile(attachment, secondarycolour, secondarytextcolour)));
       tbody.append(tr);
     });
 

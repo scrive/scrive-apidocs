@@ -134,12 +134,13 @@ window.DocumentSignConfirmation = Backbone.View.extend({
   createSignButtonElems: function() {
     var document = this.document();
     var signviewbranding = this.model.signviewbranding();
-    var guardModel = this.guardModel;
     var self = this;
     return new Button({
       size: BrowserInfo.isSmallScreen() ? "big" : "small",
       color: "green",
       shape: BrowserInfo.isSmallScreen() ? "" : "rounded",
+      customcolor: this.model.usebranding() ? signviewbranding.signviewprimarycolour() : undefined,
+      textcolor: this.model.usebranding() ? signviewbranding.signviewprimarytextcolour() : undefined,
       cssClass: 'greybg',
       text: localization.process.signbuttontext,
       oneClick : true,
@@ -312,7 +313,6 @@ window.DocumentSignConfirmation = Backbone.View.extend({
 
 window.DocumentSignSignSection = Backbone.View.extend({
    initialize : function(args){
-      this.textstyle = args.textstyle;
       this.render();
    },
    render: function() {
@@ -391,10 +391,15 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                             });
                                         }
                                 });
+
+
+
        this.signButton = new Button({
                             size: "big",
                             shape : BrowserInfo.isSmallScreen() ? "" : "rounded",
                             color: "green",
+                            customcolor: model.usebranding() ? signviewbranding.signviewprimarycolour() : undefined,
+                            textcolor: model.usebranding() ? signviewbranding.signviewprimarytextcolour() : undefined,
                             width: BrowserInfo.isSmallScreen() ?  504 : 206,
                             text: localization.process.signbuttontext,
                             icon: BrowserInfo.isSmallScreen() ? undefined : $("<span class='icon cross' style='position: absolute; top: auto;margin-top: -1px;'></span>"),
@@ -413,6 +418,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
                             });
 
       var signButton = this.signButton.el();
+
       if (BrowserInfo.isSmallScreen()) {
         signButton.css({
           'padding-left': '0px',

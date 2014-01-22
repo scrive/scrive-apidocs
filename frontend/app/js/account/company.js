@@ -20,6 +20,10 @@ window.CompanyUI = Backbone.Model.extend({
         signviewlogo: args.companysignviewlogo,
         signviewtextcolour: args.companysignviewtextcolour,
         signviewtextfont: args.companysignviewtextfont,
+        signviewprimarycolour: args.companysignviewprimarycolour,
+        signviewprimarytextcolour: args.companysignviewprimarytextcolour,
+        signviewsecondarycolour: args.companysignviewsecondarycolour,
+        signviewsecondarytextcolour: args.companysignviewsecondarytextcolour,
         signviewbarscolour: args.companysignviewbarscolour,
         signviewbarstextcolour: args.companysignviewbarstextcolour,
         signviewbackgroundcolour: args.companysignviewbackgroundcolour,
@@ -68,6 +72,18 @@ window.CompanyUI = Backbone.Model.extend({
   },
   signviewtextfont: function() {
     return this.get('signviewtextfont');
+  },
+  signviewprimarycolour: function() {
+    return this.get('signviewprimarycolour');
+  },
+  signviewprimarytextcolour: function() {
+    return this.get('signviewprimarytextcolour');
+  },
+  signviewsecondarycolour: function() {
+    return this.get('signviewsecondarycolour');
+  },
+  signviewsecondarytextcolour: function() {
+    return this.get('signviewsecondarytextcolour');
   },
   signviewbarstextcolour: function() {
     return this.get('signviewbarstextcolour');

@@ -25,6 +25,10 @@ data CompanyUI = CompanyUI
   , companysignviewlogo               :: Maybe Binary
   , companysignviewtextcolour         :: Maybe String
   , companysignviewtextfont           :: Maybe String
+  , companysignviewprimarycolour      :: Maybe String
+  , companysignviewprimarytextcolour  :: Maybe String
+  , companysignviewsecondarycolour    :: Maybe String
+  , companysignviewsecondarytextcolour:: Maybe String
   , companysignviewbarscolour         :: Maybe String
   , companysignviewbarstextcolour     :: Maybe String
   , companysignviewbackgroundcolour   :: Maybe String
@@ -57,6 +61,10 @@ instance MonadDB m => DBUpdate m SetCompanyUI Bool where
       sqlSet "signview_logo" $ companysignviewlogo cui
       sqlSet "signview_textcolour" $ companysignviewtextcolour cui
       sqlSet "signview_textfont" $ companysignviewtextfont cui
+      sqlSet "signview_primarycolour" $ companysignviewprimarycolour cui
+      sqlSet "signview_primarytextcolour" $ companysignviewprimarytextcolour cui
+      sqlSet "signview_secondarycolour" $ companysignviewsecondarycolour cui
+      sqlSet "signview_secondarytextcolour" $ companysignviewsecondarytextcolour cui
       sqlSet "signview_barscolour" $ companysignviewbarscolour cui
       sqlSet "signview_barstextcolour" $ companysignviewbarstextcolour cui
       sqlSet "signview_backgroundcolour" $ companysignviewbackgroundcolour cui
@@ -81,6 +89,10 @@ selectCompanyUIsSelectors = do
   sqlResult "company_uis.signview_logo"
   sqlResult "company_uis.signview_textcolour"
   sqlResult "company_uis.signview_textfont"
+  sqlResult "company_uis.signview_primarycolour"
+  sqlResult "company_uis.signview_primarytextcolour"
+  sqlResult "company_uis.signview_secondarycolour"
+  sqlResult "company_uis.signview_secondarytextcolour"
   sqlResult "company_uis.signview_barscolour"
   sqlResult "company_uis.signview_barstextcolour"
   sqlResult "company_uis.signview_backgroundcolour"
@@ -102,7 +114,8 @@ fetchCompanyUIs = kFold decoder []
       email_font
       email_bordercolour email_buttoncolour email_emailbackgroundcolour
       email_backgroundcolour email_textcolour email_logo signview_logo signview_textcolour
-      signview_textfont signview_barscolour signview_barstextcolour
+      signview_textfont signview_primarycolour signview_primarytextcolour signview_secondarycolour signview_secondarytextcolour
+      signview_barscolour signview_barstextcolour
       signview_backgroundcolour custom_logo custom_barscolour custom_barstextcolour
       custom_barssecondarycolour custom_backgroundcolour = CompanyUI
         { companyuicompanyid = company_id
@@ -116,6 +129,10 @@ fetchCompanyUIs = kFold decoder []
         , companysignviewlogo = logoFromBinary signview_logo
         , companysignviewtextcolour = signview_textcolour
         , companysignviewtextfont = signview_textfont
+        , companysignviewprimarycolour = signview_primarycolour
+        , companysignviewprimarytextcolour = signview_primarytextcolour
+        , companysignviewsecondarycolour = signview_secondarycolour
+        , companysignviewsecondarytextcolour = signview_secondarytextcolour
         , companysignviewbarscolour = signview_barscolour
         , companysignviewbarstextcolour = signview_barstextcolour
         , companysignviewbackgroundcolour = signview_backgroundcolour

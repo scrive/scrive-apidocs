@@ -206,7 +206,7 @@ var CsvSignatoryDesignView = Backbone.View.extend({
                     size: "big",
                     text: localization.csv.selectFile,
                     type: "application/csv",
-                    labelstyle: 'font-size: 15px; font-weight: 300;',
+                    style: 'font-size: 15px; font-weight: 300;',
                     onAppend : function(input) {
                         setTimeout(function() {model.upload($(input));},100);
 

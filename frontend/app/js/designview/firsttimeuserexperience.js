@@ -205,7 +205,7 @@ var FirstTimeUserExperienceView = Backbone.View.extend({
             color: 'green',
             size: 'big',
             text: localization.ftue.useSampleDocument,
-            labelstyle: 'width: 202px',
+            style: 'width: 202px',
             onClick: function() {
                 mixpanel.track('Sample document accept');
                 that.previewSampleDocument.hide();

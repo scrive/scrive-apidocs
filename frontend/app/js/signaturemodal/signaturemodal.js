@@ -53,6 +53,9 @@ var SignatureDrawOrTypeModel= Backbone.Model.extend({
   width: function() {
      return this.get("width");
   },
+  branding: function() {
+     return this.get("branding");
+  },
   typerOrDrawer : function() {
      var tod = this.get('typerOrDrawer');
      if (tod == undefined || (tod.isTyper() != this.typingMode()))
@@ -146,9 +149,12 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
     },
     acceptButton : function() {
         var self = this;
+        var branding = this.model.branding();
         var signatory = this.model.field().signatory();
-        return new Button({
+        var button = new Button({
                     color : 'green',
+                    customcolor: branding ? branding.signviewprimarycolour(),
+                    textcolor: branding ? branding.signviewprimarytextcolour(),
                     size: 'small',
                     style: "float:right;margin-top:-2px;",
                     text: localization.signature.confirmSignature,
@@ -158,6 +164,8 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
                         return false;
                     }
             }).el();
+
+        return button;
     },
     cleanButton : function() {
         var self = this;
@@ -221,6 +229,7 @@ window.SignatureDrawOrTypeModal = function(args){
         var model = new SignatureDrawOrTypeModel({field : args.field,
                                                   width: args.width,
                                                   height: args.height,
+                                                  branding: args.branding,
                                                   modal : modal,
                                                   typingMode : (BrowserInfo.isIE8orLower() ? true : undefined),
                                                   onClose : function() {

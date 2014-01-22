@@ -9,10 +9,6 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
     this.model.bind('change', this.render);
     this.model.view = this;
     this.signview = args.signview;
-    this.labelstyle = '';
-    for (var key in args.labelCss) {
-      this.labelstyle += key + ': ' + args.labelCss[key] + ' !important; ';
-    }
     this.render();
   },
   setattachmentURL: function() {
@@ -48,6 +44,8 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
       size : 'small',
       name: "file",
       text: localization.signatoryAttachmentUploadButton,
+      customcolor: this.signview.usebranding() ? this.signview.signviewbranding().signviewprimarycolour() : undefined,
+      textcolor: this.signview.usebranding() ? this.signview.signviewbranding().signviewprimarytextcolour() : undefined,
       submitOnUpload: true,
       showLoadingDialog: false,
       onClick: function() {
@@ -103,7 +101,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
       var model = this.model;
       var button = new Button({color: "black", text: localization.reviewPDF, size:'small', cssClass : 's-review-sigattachment', onClick: function() {
           window.open(model.file().downloadLink(), '_blank');
-          }});
+      }});
       return button;
   },
   render: function() {
@@ -117,7 +115,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
             container.append(this.removeButton().el());
 
       } else if (attachment.signatory().document().pending() || attachment.signatory().document().currentSignatoryCanSign()){
-          container.append(this.uploadButton().el().addClass('float-right').css("overflow","hidden"));
+        container.append(this.uploadButton().el().addClass('float-right').css("overflow","hidden"));
       }
       container.append($("<div class='clearfix' />"));
 
@@ -135,6 +133,10 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
     this.subtitle = args.subtitle;
     this.textcolour = args.textcolour;
     this.textfont = args.textfont;
+    this.primarycolour = args.primarycolour;
+    this.primarytextcolour = args.primarytextcolour;
+    this.secondarycolour = args.secondarycolour;
+    this.secondarytextcolour = args.secondarytextcolour;
     this.uploadElems = [];
     this.render();
   },
@@ -150,11 +152,10 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
     container.append(desc.text(attachment.description()));
     return container;
   },
-  signatoryAttachmentFile: function(attachment, labelCss) {
+  signatoryAttachmentFile: function(attachment) {
     var upl = new SignatoryAttachmentUploadView({
       model: attachment,
       el: $("<div/>"),
-      labelCss: labelCss,
       signview: this.model
     });
     this.uploadElems.push($(upl.el));
@@ -175,12 +176,8 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
     var labelCss = {};
 
     var header = $("<h2/>");
-    if (this.textcolour) {
-      labelCss['color'] = this.textcolour;
-    }
-    if (this.textfont) {
-      labelCss['font-family'] = this.textfont;
-    }
+    if (this.textcolour) { labelCss['color'] = this.textcolour; }
+    if (this.textfont) { labelCss['font-family'] = this.textfont; }
 
     var container = $("<div class='signatoryattachments' />");
     var header = $("<div class='header'/>");
@@ -193,7 +190,7 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
     table.append(tbody);
     _.each(this.model.document().currentSignatory().attachments(), function(attachment) {
       var desc = $("<td class='desc'>").append(self.signatoryAttachmentDescription(attachment, labelCss));
-      var file = $("<td class='file'>").append(self.signatoryAttachmentFile(attachment, labelCss));
+      var file = $("<td class='file'>").append(self.signatoryAttachmentFile(attachment));
       self.listenTo(attachment, 'change', function() {desc.empty().append(self.signatoryAttachmentDescription(attachment, labelCss));});
       tbody.append($("<tr/>").append(desc).append(file));
     });

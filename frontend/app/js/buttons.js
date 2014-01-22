@@ -17,12 +17,13 @@ define(['Backbone', 'legacy_code'], function() {
 var ButtonModel = Backbone.Model.extend({
   defaults : {
       color : "green",
+      customcolor : undefined,
+      textcolor : undefined,
       size  : "small",
       text  : "",
       shape : "squere",
       onClick : function() {return false;},
       icon : jQuery(""),
-      labelstyle : undefined,
       width: undefined,
       cssClass : "",
       style : "",
@@ -33,6 +34,12 @@ var ButtonModel = Backbone.Model.extend({
   },
   size : function(){
        return this.get("size");
+  },
+  textcolor: function() {
+       return this.get("textcolor");
+  },
+  customcolor : function(){
+       return this.get("customcolor");
   },
   text: function() {
        return this.get("text");
@@ -49,9 +56,6 @@ var ButtonModel = Backbone.Model.extend({
   },
   icon : function() {
        return this.get("icon");
-  },
-  labelstyle :  function() {
-       return this.get("labelstyle");
   },
   width: function() {
        return this.get("width");
@@ -107,17 +111,32 @@ var ButtonView = Backbone.View.extend({
             $(this.el).addClass("button-small");
         else if (this.model.size() == "big")
             $(this.el).addClass("button-large");
-        if (this.model.color() == "red" )
-            $(this.el).addClass("button-red");
-        else if (this.model.color() == "green" )
-            $(this.el).addClass("button-green");
-        else if (this.model.color() == "black")
-            $(this.el).addClass("button-gray");
-        else if (this.model.color() == "light-blue")
-            $(this.el).addClass("button-light-blue");
-        else if (this.model.color() == "signview-blue")
-            $(this.el).addClass("button-signview-blue");
+        if (this.model.customcolor()) {
+          $(this.el).css("background-color", this.model.customcolor());
+        } else {
+          if (this.model.color() == "red" )
+              $(this.el).addClass("button-red");
+          else if (this.model.color() == "green" )
+              $(this.el).addClass("button-green");
+          else if (this.model.color() == "black")
+              $(this.el).addClass("button-gray");
+          else if (this.model.color() == "light-blue")
+              $(this.el).addClass("button-light-blue");
+          else if (this.model.color() == "signview-blue")
+              $(this.el).addClass("button-signview-blue");
+        }
 
+        if (this.model.textcolor()) {
+          var styleAttr = $(this.el).attr("style");
+          // This is what !important does to your code :-(
+          if (styleAttr) {
+            $(this.el).attr("style", styleAttr + "; color: " + this.model.textcolor() + " !important;");
+          } else {
+            $(this.el).attr("style", "color: " + this.model.textcolor() + " !important;");
+          }
+
+          console.log("style attribute is", $(this.el).attr("style"));
+        }
 
         if (this.model.isRounded()) {
             $(this.el).addClass("button-round");
@@ -126,8 +145,6 @@ var ButtonView = Backbone.View.extend({
         }
 
         var label = $("<div class='label'/>").text(this.model.text());
-        if (this.model.labelstyle() != undefined)
-            $(this.el).attr("style",this.model.labelstyle());
         if (this.model.width() != undefined)
             $(this.el).css("width",this.model.width() - (2*this.borderWidth(this.model.size())) - (2* this.labelPadding(this.model.size()))+ "px");
         label.append(this.model.icon());

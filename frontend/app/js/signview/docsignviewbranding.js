@@ -24,6 +24,18 @@ window.BrandingForSignView = Backbone.Model.extend({
   signviewtextfont: function() {
       return this.get("signviewtextfont");
   },
+  signviewprimarycolour: function() {
+      return this.get("signviewprimarycolour");
+  },
+  signviewprimarytextcolour: function() {
+      return this.get("signviewprimarytextcolour");
+  },
+  signviewsecondarycolour: function() {
+      return this.get("signviewsecondarycolour");
+  },
+  signviewsecondarytextcolour: function() {
+      return this.get("signviewsecondarytextcolour");
+  },
   signviewbarscolour: function() {
       return this.get("signviewbarscolour");
   },
@@ -53,6 +65,10 @@ window.BrandingForSignView = Backbone.Model.extend({
         signviewlogo: args.signviewlogo,
         signviewtextcolour: args.signviewtextcolour,
         signviewtextfont: args.signviewtextfont,
+        signviewprimarycolour: args.signviewprimarycolour,
+        signviewprimarytextcolour: args.signviewprimarytextcolour,
+        signviewsecondarycolour: args.signviewsecondarycolour,
+        signviewsecondarytextcolour: args.signviewsecondarytextcolour,
         signviewbarscolour: args.signviewbarscolour,
         signviewbarstextcolour : args.signviewbarstextcolour,
         signviewbackgroundcolour: args.signviewbackgroundcolour,

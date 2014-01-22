@@ -89,6 +89,10 @@ companyUIJson ctx companyui = runJSONGenT $ do
     value "companyemailtextcolour" $ fromMaybe "" $ companyemailtextcolour $ companyui
     value "companysignviewtextcolour" $ fromMaybe "" $ companysignviewtextcolour $ companyui
     value "companysignviewtextfont" $ fromMaybe "" $ companysignviewtextfont $ companyui
+    value "companysignviewprimarycolour" $ fromMaybe "" $ companysignviewprimarycolour $ companyui
+    value "companysignviewprimarytextcolour" $ fromMaybe "" $ companysignviewprimarytextcolour $ companyui
+    value "companysignviewsecondarycolour" $ fromMaybe "" $ companysignviewsecondarycolour $ companyui
+    value "companysignviewsecondarytextcolour" $ fromMaybe "" $ companysignviewsecondarytextcolour $ companyui
     value "companysignviewbarscolour" $ fromMaybe "" $ companysignviewbarscolour $ companyui
     value "companysignviewbarstextcolour" $ fromMaybe "" $ companysignviewbarstextcolour $ companyui
     value "companysignviewbackgroundcolour" $ fromMaybe "" $ companysignviewbackgroundcolour $ companyui
@@ -134,6 +138,10 @@ signviewBrandingJSON ctx user company companyui = runJSONGenT $ do
                                     else (bdlogolink <$> mdb)
     value "signviewtextcolour" $ companysignviewtextcolour $ companyui
     value "signviewtextfont" $ companysignviewtextfont   $ companyui
+    value "signviewprimarycolour" $ companysignviewprimarycolour   $ companyui
+    value "signviewprimarytextcolour" $ companysignviewprimarytextcolour   $ companyui
+    value "signviewsecondarycolour" $ companysignviewsecondarycolour   $ companyui
+    value "signviewsecondarytextcolour" $ companysignviewsecondarytextcolour   $ companyui
     value "signviewbarscolour" $ (companysignviewbarscolour  $ companyui) `mplus` (bdbarscolour <$> mdb)
     value "signviewbarstextcolour" $ (companysignviewbarstextcolour $ companyui) `mplus` (bdbarstextcolour <$> mdb)
     value "signviewbackgroundcolour" $ (companysignviewbackgroundcolour $ companyui) `mplus` (bdbackgroundcolour <$> mdb)

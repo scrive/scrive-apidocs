@@ -3,6 +3,7 @@ module ServerUtils.ServerUtils (
    , handleSerializeImage
    , handleTextToImage
    , handleScaleImage
+   , brandedSignviewImage
   ) where
 
 --import Happstack.Server hiding (dir, simpleHTTP)
@@ -123,6 +124,34 @@ handleTextToImage = do
                              then ok $ toResponseBS (BSUTF8.fromString "text/plain") $ BSL.fromChunks [BSUTF8.fromString "data:image/png;base64,", B64.encode $ concatChunks fcontent]
                              else ok $ setHeaderBS "Cache-Control" "max-age=60" $ toResponseBS (BSUTF8.fromString "image/png") $ fcontent
          Nothing -> internalError
+
+-- Take a signview image and brand it by replacing the non-white and non-transparent colors
+-- with the specified colour.
+-- Expecting colour and filename to be passed as parameters. 
+-- Colour format should be #deadbe.
+-- Filename is the basename of the file, brandedSignviewImage will find it in public/img/
+brandedSignviewImage :: Kontrakcja m =>  m Response
+brandedSignviewImage = do
+    colour <- fmap (take 12) $ guardJustM $ getField "colour"
+    file <- fmap (take 50) $ guardJustM $ getField "file"
+
+    cwd <- liftIO getCurrentDirectory
+    let imgDir = cwd </> "public/img"
+    fpath <- guardJust $ secureAbsNormPath imgDir file
+
+    Log.debug $ "Branding signview images with colour" ++ colour
+
+    (procResult, out, _) <- readProcessWithExitCode' "convert" [fpath
+                                                  , "-fuzz", "35%"
+                                                  , "-fill", colour -- some filtering hre?
+                                                  , "+opaque", "white"
+                                                  , "-"] ""
+    case procResult of
+      ExitFailure msg -> do
+        Log.debug $ "Problem branding signview image: " ++ show msg
+        internalError
+      ExitSuccess -> do
+         ok $ setHeaderBS "Cache-Control" "max-age=60" $ toResponseBS (BSUTF8.fromString "image/png") $ out
 
 -- Point scale - some heuristic for pointsize, based on size of image, type of font and lenght of text.
 -- Result should be point size that will result in best fit. It is also expected that this value does not change much on text lenght change.

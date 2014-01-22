@@ -72,6 +72,10 @@ companyUiFromJSON jsv = withJSValue jsv $ do
   jsoncompanysignviewlogo <- fromJSValueField "companysignviewlogo"
   jsoncompanysignviewtextcolour <- fromJSValueField "companysignviewtextcolour"
   jsoncompanysignviewtextfont <- fromJSValueField "companysignviewtextfont"
+  jsoncompanysignviewprimarycolour <- fromJSValueField "companysignviewprimarycolour"
+  jsoncompanysignviewprimarytextcolour <- fromJSValueField "companysignviewprimarytextcolour"
+  jsoncompanysignviewsecondarycolour <- fromJSValueField "companysignviewsecondarycolour"
+  jsoncompanysignviewsecondarytextcolour <- fromJSValueField "companysignviewsecondarytextcolour"
   jsoncompanysignviewbarscolour <- fromJSValueField "companysignviewbarscolour"
   jsoncompanysignviewbarstextcolour <- fromJSValueField "companysignviewbarstextcolour"
   jsoncompanysignviewbackgroundcolour <- fromJSValueField "companysignviewbackgroundcolour"
@@ -94,6 +98,10 @@ companyUiFromJSON jsv = withJSValue jsv $ do
   , companysignviewlogo = (Binary . B64.decodeLenient) <$> BS.fromString <$>  drop 1 <$> dropWhile ((/=) ',')  <$> maybeS jsoncompanysignviewlogo
   , companysignviewtextcolour = maybeS jsoncompanysignviewtextcolour
   , companysignviewtextfont = maybeS jsoncompanysignviewtextfont
+  , companysignviewprimarycolour = maybeS jsoncompanysignviewprimarycolour
+  , companysignviewprimarytextcolour = maybeS jsoncompanysignviewprimarytextcolour
+  , companysignviewsecondarycolour = maybeS jsoncompanysignviewsecondarycolour
+  , companysignviewsecondarytextcolour = maybeS jsoncompanysignviewsecondarytextcolour
   , companysignviewbarscolour = maybeS jsoncompanysignviewbarscolour
   , companysignviewbarstextcolour = maybeS jsoncompanysignviewbarstextcolour
   , companysignviewbackgroundcolour = maybeS jsoncompanysignviewbackgroundcolour
@@ -135,6 +143,10 @@ handleGetCompanyJSON mcid = do
       value "companysignviewlogo" $ fromMaybe ""  $ ((++) "data:image/png;base64,")  <$> BS.toString .  B64.encode . unBinary <$> (companysignviewlogo $ companyui)
       value "companysignviewtextcolour" $ fromMaybe "" $ companysignviewtextcolour $ companyui
       value "companysignviewtextfont" $ fromMaybe "" $ companysignviewtextfont $ companyui
+      value "companysignviewprimarycolour" $ fromMaybe "" $ companysignviewprimarycolour $ companyui
+      value "companysignviewprimarytextcolour" $ fromMaybe "" $ companysignviewprimarytextcolour $ companyui
+      value "companysignviewsecondarycolour" $ fromMaybe "" $ companysignviewsecondarycolour $ companyui
+      value "companysignviewsecondarytextcolour" $ fromMaybe "" $ companysignviewsecondarytextcolour $ companyui
       value "companysignviewbarscolour" $ fromMaybe "" $ companysignviewbarscolour $ companyui
       value "companysignviewbarstextcolour" $ fromMaybe "" $ companysignviewbarstextcolour $ companyui
       value "companysignviewbackgroundcolour" $ fromMaybe "" $ companysignviewbackgroundcolour $ companyui

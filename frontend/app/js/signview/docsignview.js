@@ -121,20 +121,8 @@ var DocumentSignViewModel = Backbone.Model.extend({
         return this.get('createaccountsection');
   },
   signsection : function() {
-       var signviewbranding = this.signviewbranding();
-       var textcolour = signviewbranding.signviewtextcolour();
-       var textfont = signviewbranding.signviewtextfont();
-       var textstyle = {};
-
-       if (textcolour && this.usebranding()) {
-         textstyle['color'] = textcolour;
-       }
-       if (textfont  && this.usebranding()) {
-         textstyle['font-family'] = textfont;
-       }
-
         if (this.get("signsection") == undefined)
-            this.set({'signsection' : new DocumentSignSignSection({model : this, textstyle: textstyle})}, {silent : true});
+            this.set({'signsection' : new DocumentSignSignSection({model : this})}, {silent : true});
         return this.get('signsection');
   },
   signatoriessection : function() {
@@ -169,8 +157,11 @@ var DocumentSignViewModel = Backbone.Model.extend({
                                             localization.docsignview.signatoryAttachmentsTitleForOne),
                                 subtitle :   this.document().currentSignatory().hasSigned() ? undefined : localization.docsignview.signatoryAttachmentsSupportedFormats,
                                 textcolour : this.usebranding() ? this.signviewbranding().signviewtextcolour() : undefined,
-                                textfont : this.usebranding() ? this.signviewbranding().signviewtextfont() : undefined
-
+                                textfont : this.usebranding() ? this.signviewbranding().signviewtextfont() : undefined,
+                                primarycolour: this.usebranding() ? this.signviewbranding().signviewprimarycolour() : undefined,
+                                primarytextcolour: this.usebranding() ? this.signviewbranding().signviewprimarytextcolour() : undefined,
+                                secondarycolour: this.usebranding() ? this.signviewbranding().signviewsecondarycolour() : undefined,
+                                secondarytextcolour: this.usebranding() ? this.signviewbranding().signviewsecondarytextcolour() : undefined
                             })
             }, {silent : true});
         return this.get('signatoryattachmentsection');
@@ -186,7 +177,9 @@ var DocumentSignViewModel = Backbone.Model.extend({
                                     localization.docsignview.authorAttachmentsTitleForLots :
                                     localization.docsignview.authorAttachmentsTitleForOne,
                             textcolour : this.usebranding() ? this.signviewbranding().signviewtextcolour() : undefined,
-                            textfont : this.usebranding() ? this.signviewbranding().signviewtextfont() : undefined
+                            textfont : this.usebranding() ? this.signviewbranding().signviewtextfont() : undefined,
+                            secondarycolour: this.usebranding() ? this.signviewbranding().signviewsecondarycolour() : undefined,
+                            secondarytextcolour: this.usebranding() ? this.signviewbranding().signviewsecondarytextcolour() : undefined,
                         })
         }, {silent : true});
       return this.get('authorattachmentssection');
@@ -215,12 +208,11 @@ var DocumentSignViewModel = Backbone.Model.extend({
         this.set({'mainfile' :
                     new KontraFile({
                             file: this.document().mainfile(),
-                            document: this.document()
+                            document: this.document(),
                         })
         }, {silent : true} );
         this.get('mainfile').view.bind("ready", function() {
             model.trigger("change");
-
         });
       }
       return this.get('mainfile');
@@ -239,11 +231,11 @@ var DocumentSignViewModel = Backbone.Model.extend({
                             el: els[i],
                             onActivate   : function() {
                                 mixpanel.track('Begin attachment task');
-                                $(model.signatoryattachmentsection().el).addClass("highlight");
+                                model.toggleHighlight($(model.signatoryattachmentsection().el));
                             },
                             onDeactivate : function() {
                                 mixpanel.track('Finish attachment task');
-                                $(model.signatoryattachmentsection().el).removeClass("highlight");
+                                model.toggleHighlight($(model.signatoryattachmentsection().el));
                             }
                         });
             attachment.bind("change", function() {
@@ -267,25 +259,44 @@ var DocumentSignViewModel = Backbone.Model.extend({
                                 el:  $(model.signsection().el),
                                 onActivate   : function() {
                                     mixpanel.track('Begin signature task');
-                                    $(model.signsection().el).addClass("highlight");
+                                    model.toggleHighlight($(model.signsection().el));
                                 },
                                 onDeactivate : function() {
                                     mixpanel.track('Finish signature task');
-                                    $(model.signsection().el).removeClass("highlight");
+                                    model.toggleHighlight($(model.signsection().el));
                                 }
                                 })
             }, {silent : true});
         return this.get('signtask');
   },
+  stylePlacedFields: function() {
+    var self = this;
+    var document = this.document();
+    var signviewbranding = this.signviewbranding();
+
+    _.each(this.mainfile().model.placements(), function(placement) {
+      if (!placement.field().signatory().current()) return;
+
+      var view = placement.view;
+
+      if (view.brandField) {
+        view.brandField({branding: signviewbranding});
+      }
+    });
+  },
   filltasks : function() {
+     var self = this;
      var document = this.document();
      var signviewbranding = this.signviewbranding();
-     var textcolour = signviewbranding.signviewtextcolour();
      var textfont = signviewbranding.signviewtextfont();
+     var textcolour = signviewbranding.signviewprimarytextcolour();
      var arrowLabelCss = {};
 
      if (textfont  && this.usebranding()) {
        arrowLabelCss['font-family'] = textfont;
+     }
+     if (textcolour && this.usebranding()) {
+       arrowLabelCss['color'] = textcolour;
      }
      if (this.get("filltasks") == undefined) {
         var tasks = [];
@@ -297,6 +308,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
                     label = localization.docsignview.textfield;
                 else if (placement.field().isCheckbox() && placement.field().isObligatory())
                     label = localization.docsignview.checkbox;
+
                 var task = new PageTask({
                     isComplete: function() {
                     return placement.field().readyForSign();
@@ -333,6 +345,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
   fillExtraDetailsTask : function() {
         var self = this;
         var document = self.document();
+
         if (self.get("fillExtraDetailsTask") == undefined) {
          var task = new PageTask({
                     isComplete: function() {
@@ -356,10 +369,10 @@ var DocumentSignViewModel = Backbone.Model.extend({
                     },
                     el: $(self.extradetailssection().el),
                     onActivate   : function() {
-                        $(self.extradetailssection().el).addClass("highlight");
+                       self.toggleHighlight($(self.extradetailssection().el));
                     },
                     onDeactivate : function() {
-                        $(self.extradetailssection().el).removeClass("highlight");
+                       self.toggleHighlight($(self.extradetailssection().el));
                     }
                 });
          document.currentSignatory().bind("change", function() { task.update()});
@@ -385,13 +398,28 @@ var DocumentSignViewModel = Backbone.Model.extend({
   arrow : function() {
       if (this.get("arrow") == undefined)
         this.set({'arrow' :
-                    new PageTasksArrow({ tasks: this.tasks()})
+                    new PageTasksArrow({
+                      arrowcolour: this.usebranding() ? this.signviewbranding().signviewprimarycolour() : undefined,
+                      tasks: this.tasks(),
+                    })
         }, {silent : true} );
       return this.get('arrow');
   },
   updateArrowPosition : function() {
       if (this.get("arrow") != undefined)
         this.get("arrow").updatePosition();
+  },
+  toggleHighlight: function($el) {
+    var signviewbranding = this.signviewbranding();
+    var isHighlighted = $el.hasClass('highlight');
+    if (isHighlighted) {
+      $el.removeClass('highlight').css('border-color', '');
+    } else {
+      $el.addClass('highlight');
+      if (signviewbranding.signviewprimarycolour() != undefined) {
+        $el.css('border-color', signviewbranding.signviewprimarycolour());
+      }
+    }
   },
   recall : function(f) {
       this.document().recall(f);
@@ -483,6 +511,8 @@ var DocumentSignViewView = Backbone.View.extend({
 
      if (this.model.hasArrows())
          view.container.prepend(view.model.arrow().view().el);
+
+     this.model.stylePlacedFields();
 
      if (BrowserInfo.isSmallScreen()) {
        $('.mainContainer').css('padding-top', '20px');

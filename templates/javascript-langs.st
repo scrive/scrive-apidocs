@@ -502,6 +502,8 @@ javascriptLocalisation =
            }
          , docsignview : {
                followArrowToSign: "$_followArrowToSign()$"
+             , greenArrow: "$_arrowGreen()$"
+             , arrow: "$_arrow()$"
              , reviewDocument: "$_reviewDocument()$"
              , signedNotClosed: "$_signedNotClosed()$"
              , signedNotClosedSubText: "$_signedNotClosedSubText()$"
@@ -977,6 +979,10 @@ javascriptLocalisation =
              , customiseEmailBackgroundColour : "$_customiseEmailBackgroundColourLabel()$"
              , sampleEmailButtonLabel : "$_sampleEmailButtonLabel()$"
              , sampleEmailFooter : "$_sampleEmailFooter()$"
+             , primaryColour: "$_companyBrandingPrimaryColour()$"
+             , primaryTextColour: "$_companyBrandingPrimaryTextColour()$"
+             , secondaryColour: "$_companyBrandingSecondaryColour()$"
+             , secondaryTextColour: "$_companyBrandingSecondaryTextColour()$"
              , barsColour : "$_companyBrandingBarsColour()$"
              , barsTextColour : "$_companyBrandingBarsTextColour()$"
              , barsSecondaryColour : "$_companyBrandingbarsSecondaryColour()$"

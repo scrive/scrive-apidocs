@@ -24,7 +24,7 @@ tableCompanies = tblTable {
 tableCompanyUIs :: Table
 tableCompanyUIs = tblTable {
     tblName = "company_uis"
-  , tblVersion = 2
+  , tblVersion = 3
   , tblColumns = [
       tblColumn { colName = "company_id",                  colType = BigIntT, colNullable = False }
     , tblColumn { colName = "email_bordercolour",          colType = TextT }
@@ -37,6 +37,10 @@ tableCompanyUIs = tblTable {
     , tblColumn { colName = "signview_logo",               colType = BinaryT }
     , tblColumn { colName = "signview_textcolour",         colType = TextT }
     , tblColumn { colName = "signview_textfont",           colType = TextT }
+    , tblColumn { colName = "signview_primarycolour",      colType = TextT }
+    , tblColumn { colName = "signview_primarytextcolour",  colType = TextT }
+    , tblColumn { colName = "signview_secondarycolour",    colType = TextT }
+    , tblColumn { colName = "signview_secondarytextcolour",colType = TextT }
     , tblColumn { colName = "signview_barscolour",         colType = TextT }
     , tblColumn { colName = "signview_barstextcolour",     colType = TextT }
     , tblColumn { colName = "signview_backgroundcolour",   colType = TextT }

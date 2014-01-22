@@ -16,6 +16,16 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
            this.model.document().currentSignatory().name() +
            "</span>";
   },
+  // The copy changes if we have the default primary color (green) or not.
+  arrowText: function() {
+    var signviewbranding = this.model.signviewbranding();
+    var primarycolour = signviewbranding.signviewprimarycolour();
+    if (this.model.usebranding() && primarycolour) {
+      return localization.docsignview.arrow;
+    } else {
+      return localization.docsignview.greenArrow;
+    }
+  },
   // Big instruction or information about document state
   text: function() {
     var document = this.model.document();
@@ -64,6 +74,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     var signviewbranding = this.model.signviewbranding();
     var textcolour = signviewbranding.signviewtextcolour();
     var textfont = signviewbranding.signviewtextfont();
+    var primarycolour = signviewbranding.signviewprimarycolour();
 
     if (this.model.usebranding() && textcolour) {
       elem.css('color', textcolour);
@@ -71,6 +82,30 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     if (this.model.usebranding() && textfont) {
       elem.css('font-family', textfont);
     }
+    if (this.model.usebranding() && primarycolour) {
+      elem.find('.arrowtext').css('color', primarycolour);
+    }
+  },
+  renderArrowLegend: function() {
+    var signviewbranding = this.model.signviewbranding();
+    var primarycolour = signviewbranding.signviewprimarycolour();
+    var secondarycolour = signviewbranding.signviewsecondarycolour();
+
+    var arrowLegend = $("<div class='arrow-legend'/>");
+    var mandatoryIcon = $("<span class='icon-legend mandatory' />");
+    var optionalIcon = $("<span class='icon-legend optional' />");
+    
+    if (primarycolour) {
+      BrandedImage.setBrandedImageBackground(mandatoryIcon, 'icon-legend-mandatory.png', primarycolour);
+    }
+    if (secondarycolour) {
+      BrandedImage.setBrandedImageBackground(optionalIcon, 'icon-legend-optional.png', secondarycolour);
+    }
+
+    arrowLegend.append($("<p class='row'/>").append(mandatoryIcon).append("<span class='copy'>" + localization.docsignview.mandatoryAction + "</span>"));
+    arrowLegend.append($("<p class='row'/>").append(optionalIcon).append("<span class='copy'>" + localization.docsignview.optionalAction + "</span>"));
+
+    return arrowLegend;
   },
   render: function() {
     var document = this.model.document();
@@ -99,11 +134,14 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
       headline.css('margin-bottom', '0px');
     }
 
+    var headlineText = this.text();
+    headlineText.find('.arrowtext').text(this.arrowText());
+    container.append(headline.append(headlineText));
     this.styleText(headline);
-    container.append(headline.append(this.text()));
+
     var subheadline = $("<div class='subheadline' />");
-    this.styleText(subheadline);
     container.append(subheadline.text(this.subtext()));
+    this.styleText(subheadline);
 
 
     if (document.currentSignatory().padDelivery() && document.isSignedNotClosed() && document.signatoriesThatCanSignNowOnPad().length > 0)
@@ -133,11 +171,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
         var hasOptionalFields = _.any( document.currentSignatory().fields(), function(f) { return f.hasPlacements() && !f.obligatory() && !f.isClosed() } );
         var hasAttachments =   document.authorattachments().length > 0;
         if(hasOptionalFields || hasAttachments) {
-          // Since we always have at least one mandatory field, wa can always show legend for mandatory fields
-          var arrowLegend = $("<div class='arrow-legend'/>");
-          arrowLegend.append($("<p class='row'/>").append($("<span class='icon-legend mandatory' />")).append("<span class='copy'>" + localization.docsignview.mandatoryAction + "</span>"));
-          arrowLegend.append($("<p class='row'/>").append($("<span class='icon-legend optional' />")).append("<span class='copy'>" + localization.docsignview.optionalAction + "</span>"));
-          container.append(arrowLegend);
+          container.append(this.renderArrowLegend());
         }
     }
 

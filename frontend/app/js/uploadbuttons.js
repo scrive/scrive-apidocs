@@ -26,7 +26,7 @@ var UploadButtonModel = Backbone.Model.extend({
   defaults : {
       name : "",
       text : "",
-      labelstyle: '',
+      style: '',
       button : null,
       width: 200,
       height: 66,
@@ -46,8 +46,8 @@ var UploadButtonModel = Backbone.Model.extend({
   text: function() {
        return this.get("text");
   },
-  labelstyle: function() {
-       return this.get("labelstyle");
+  style: function() {
+       return this.get("style");
   },
   button: function() {
        return this.get("button");
@@ -111,7 +111,7 @@ var UploadButtonView = Backbone.View.extend({
         var model = this.model;
         var button = model.button();
         if (!button) {
-            button = new Button({size: model.size(), color: model.color(), shape : model.shape(), width: model.width(), text: model.text(), labelstyle: model.labelstyle(), onClick : function() {return false;}}).el();
+            button = new Button({size: model.size(), color: model.color(), shape : model.shape(), width: model.width(), text: model.text(), style: model.style(), onClick : function() {return false;}}).el();
         }
         var fileinput = $("<input class='multiFileInput' type='file'/>");
         if (model.type() != "")
