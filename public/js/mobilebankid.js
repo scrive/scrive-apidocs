@@ -85,8 +85,8 @@
                                            polling.status(d.status);
                                            polling.message(d.message);
                                            if(polling.status() === "complete" && !polling.done()) {
-                                               polling.setDone();
                                                polling.callback();
+                                               polling.setDone();
                                            }
                                        }
                                    }});
