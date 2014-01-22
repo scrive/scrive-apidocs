@@ -153,8 +153,8 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
         var signatory = this.model.field().signatory();
         var button = new Button({
                     color : 'green',
-                    customcolor: branding ? branding.signviewprimarycolour(),
-                    textcolor: branding ? branding.signviewprimarytextcolour(),
+                    customcolor: branding ? branding.signviewprimarycolour() : undefined,
+                    textcolor: branding ? branding.signviewprimarytextcolour() : undefined,
                     size: 'small',
                     style: "float:right;margin-top:-2px;",
                     text: localization.signature.confirmSignature,

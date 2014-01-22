@@ -61,7 +61,7 @@ handleSerializeImage = do
   runJSONGenT $ value "logo_base64" $ showJSON $ B64.encode logo
 
 
--- Read an image file from POST or /public/img directory, and return it scaled down to 60%, and base 64 encoded
+-- Read an image file from POST or /frontend/app directory, and return it scaled down to 60%, and base 64 encoded
 handleScaleImage :: Kontrakcja m => m JSValue
 handleScaleImage = do
   logo <- guardJustM $ getFileField "logo"
@@ -129,29 +129,27 @@ handleTextToImage = do
 -- with the specified colour.
 -- Expecting colour and filename to be passed as parameters. 
 -- Colour format should be #deadbe.
--- Filename is the basename of the file, brandedSignviewImage will find it in public/img/
+-- Filename is the basename of the file, brandedSignviewImage will find it in frontend/app/img/
 brandedSignviewImage :: Kontrakcja m =>  m Response
 brandedSignviewImage = do
     colour <- fmap (take 12) $ guardJustM $ getField "colour"
     file <- fmap (take 50) $ guardJustM $ getField "file"
 
     cwd <- liftIO getCurrentDirectory
-    let imgDir = cwd </> "public/img"
+    let imgDir = cwd </> "frontend/app/img"
     fpath <- guardJust $ secureAbsNormPath imgDir file
 
-    Log.debug $ "Branding signview images with colour" ++ colour
-
     (procResult, out, _) <- readProcessWithExitCode' "convert" [fpath
-                                                  , "-fuzz", "35%"
-                                                  , "-fill", colour -- some filtering hre?
-                                                  , "+opaque", "white"
+                                                  , "-colorspace", "Gray"
+                                                  , "+level-colors", colour ++ ",white"
+                                                  , "-gamma", ".4235" -- make dark colors look nice
                                                   , "-"] ""
     case procResult of
       ExitFailure msg -> do
-        Log.debug $ "Problem branding signview image: " ++ show msg
+        Log.mixlog_ $ "Problem branding signview image: " ++ show msg
         internalError
       ExitSuccess -> do
-         ok $ setHeaderBS "Cache-Control" "max-age=60" $ toResponseBS (BSUTF8.fromString "image/png") $ out
+         ok $ setHeaderBS "Cache-Control" "max-age=600" $ toResponseBS (BSUTF8.fromString "image/png") $ out
 
 -- Point scale - some heuristic for pointsize, based on size of image, type of font and lenght of text.
 -- Result should be point size that will result in best fit. It is also expected that this value does not change much on text lenght change.

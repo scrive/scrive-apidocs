@@ -96,10 +96,10 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     var optionalIcon = $("<span class='icon-legend optional' />");
     
     if (primarycolour) {
-      BrandedImage.setBrandedImageBackground(mandatoryIcon, 'icon-legend-mandatory.png', primarycolour);
+      BrandedImageUtil.setBrandedImageBackground(mandatoryIcon, 'icon-legend-mandatory.png', primarycolour);
     }
     if (secondarycolour) {
-      BrandedImage.setBrandedImageBackground(optionalIcon, 'icon-legend-optional.png', secondarycolour);
+      BrandedImageUtil.setBrandedImageBackground(optionalIcon, 'icon-legend-optional.png', secondarycolour);
     }
 
     arrowLegend.append($("<p class='row'/>").append(mandatoryIcon).append("<span class='copy'>" + localization.docsignview.mandatoryAction + "</span>"));

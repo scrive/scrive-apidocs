@@ -109,9 +109,9 @@ var PointLeftArrowView = Backbone.View.extend({
        var back = $('<div class="back" />');
 
        if (this.model.arrowColour()) {
-         BrandedImage.setBrandedImageBackground(front, 'sign-arrow-action-left-front.png', this.model.arrowColour());
-         BrandedImage.setBrandedImageBackground(label, 'sign-arrow-action-label.png', this.model.arrowColour());
-         BrandedImage.setBrandedImageBackground(back, 'sign-arrow-action-left-back.png', this.model.arrowColour());
+         BrandedImageUtil.setBrandedImageBackground(front, 'sign-arrow-action-left-front.png', this.model.arrowColour());
+         BrandedImageUtil.setBrandedImageBackground(label, 'sign-arrow-action-label.png', this.model.arrowColour());
+         BrandedImageUtil.setBrandedImageBackground(back, 'sign-arrow-action-left-back.png', this.model.arrowColour());
        }
 
        container.append(front);
@@ -169,9 +169,9 @@ var PointRightArrowView = Backbone.View.extend({
        var back = $('<div class="back" />');
 
        if (this.model.arrowColour()) {
-         BrandedImage.setBrandedImageBackground(front, 'sign-arrow-action-right-front.png', this.model.arrowColour());
-         BrandedImage.setBrandedImageBackground(label, 'sign-arrow-action-label.png', this.model.arrowColour());
-         BrandedImage.setBrandedImageBackground(back, 'sign-arrow-action-right-back.png', this.model.arrowColour());
+         BrandedImageUtil.setBrandedImageBackground(front, 'sign-arrow-action-right-front.png', this.model.arrowColour());
+         BrandedImageUtil.setBrandedImageBackground(label, 'sign-arrow-action-label.png', this.model.arrowColour());
+         BrandedImageUtil.setBrandedImageBackground(back, 'sign-arrow-action-right-back.png', this.model.arrowColour());
        }
 
        container.append(front);
@@ -203,7 +203,7 @@ var ScrollUpArrowView = Backbone.View.extend({
         var view = this;
         $(this.el).addClass("up").addClass("arrow").css("cursor", "pointer");
         if (this.model.arrowColour()) {
-          BrandedImage.setBrandedImageBackground(this.el, 'sign-arrow-up.png', this.model.arrowColour());
+          BrandedImageUtil.setBrandedImageBackground(this.el, 'sign-arrow-up.png', this.model.arrowColour());
         }
         this.updateRightMargin();
         return this;
@@ -257,7 +257,7 @@ var ScrollDownArrowView = Backbone.View.extend({
         var view = this;
         $(this.el).addClass("down").addClass("arrow").css("cursor", "pointer");
         if (this.model.arrowColour()) {
-          BrandedImage.setBrandedImageBackground(this.el, 'sign-arrow-down.png', this.model.arrowColour());
+          BrandedImageUtil.setBrandedImageBackground(this.el, 'sign-arrow-down.png', this.model.arrowColour());
         }
         this.updateRightMargin();
         return this;

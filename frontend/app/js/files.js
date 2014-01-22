@@ -183,6 +183,7 @@ var FilePageView = Backbone.View.extend({
     model : FilePage,
     initialize: function (args) {
         _.bindAll(this, 'render', 'renderDragables', 'updateDragablesPosition');
+        this.signviewbranding = args.signviewbranding;
         this.listenTo(this.model,'change:dragables', this.renderDragables);
         this.render();
     },
@@ -227,7 +228,7 @@ var FilePageView = Backbone.View.extend({
             var placement = placement;
             if (!placement.placed() && placement.page()==page.number()) {
                 var elem = $("<div />").appendTo(container);
-                createFieldPlacementPlacedView({model: placement, el: elem});
+                createFieldPlacementPlacedView({model: placement, signviewbranding: view.signviewbranding, el: elem});
             }
         });
     },
@@ -275,6 +276,7 @@ var FileView = Backbone.View.extend({
         this.model.on('change', this.render);
         this.model.view = this;
         this.pageviews = [];
+        this.signviewbranding = args.signviewbranding;
         this.model.fetch({data: { signatoryid: this.model.signatoryid()},
                           processData:  true,
                           cache : false});
@@ -312,7 +314,11 @@ var FileView = Backbone.View.extend({
             _.each(this.pageviews, function(p) {p.destroy(); });
             this.pageviews = [];
             _.each(file.pages(),function(page){
-                 var pageview = new FilePageView({model : page, el: $("<div/>")});
+                 var pageview = new FilePageView({
+                   model : page, 
+                   signviewbranding: view.signviewbranding, 
+                   el: $("<div/>")
+                 });
                  view.pageviews.push(pageview);
                  docbox.append($(pageview.el));
             });
@@ -399,7 +405,7 @@ window.KontraFile = function(args){
         }
         this.view = new FileView({
             model: this.model,
-            addFields: args.addFields || false,
+            signviewbranding: args.signviewbranding,
             el : $("<div class='document-pages'/>")
         });
         this.destroy = function() {

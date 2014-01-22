@@ -19,6 +19,10 @@ data BrandedDomain = BrandedDomain {
                         , bdmailsbackgroundcolor :: String
                         , bdmailsbuttoncolor :: String
                         , bdmailstextcolor :: String
+                        , bdsignviewprimarycolour :: String
+                        , bdsignviewprimarytextcolour :: String
+                        , bdsignviewsecondarycolour :: String
+                        , bdsignviewsecondarytextcolour :: String
                         , bdbuttonclass    :: String
                         , bdservicelinkcolour :: String
                         , bdheadercolour :: String

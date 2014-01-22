@@ -36,6 +36,10 @@ window.CompanyUI = Backbone.Model.extend({
         domainbarscolour: args.domainbarscolour,
         domainbarstextcolour: args.domainbarstextcolour,
         domainbarssecondarycolour : args.domainbarssecondarycolour,
+        domainsignviewprimarycolour : args.domainsignviewprimarycolour,
+        domainsignviewprimarytextcolour : args.domainsignviewprimarytextcolour,
+        domainsignviewsecondarycolour : args.domainsignviewsecondarycolour,
+        domainsignviewsecondarytextcolour : args.domainsignviewsecondarytextcolour,
         domainbackgroundcolour: args.domainbackgroundcolour,
         domainmailsbackgroundcolor: args.domainmailsbackgroundcolor,
         domainmailsbuttoncolor: args.domainmailsbuttoncolor,
@@ -124,6 +128,18 @@ window.CompanyUI = Backbone.Model.extend({
   domainbackgroundcolour : function() {
     return this.get('domainbackgroundcolour');
   },
+  domainsignviewprimarycolour : function() {
+    return this.get('domainsignviewprimarycolour');
+  },
+  domainsignviewprimarytextcolour : function() {
+    return this.get('domainsignviewprimarytextcolour');
+  },
+  domainsignviewsecondarycolour : function() {
+    return this.get('domainsignviewsecondarycolour');
+  },
+  domainsignviewsecondarytextcolour : function() {
+    return this.get('domainsignviewsecondarytextcolour');
+  },
   domainmailsbackgroundcolor: function() {
     return this.get('domainmailsbackgroundcolor');
   },
@@ -161,6 +177,10 @@ window.CompanyUI = Backbone.Model.extend({
       domainbarstextcolour: args.domainbarstextcolour,
       domainbarssecondarycolour : args.domainbarssecondarycolour,
       domainbackgroundcolour: args.domainbackgroundcolour,
+      domainsignviewprimarycolour: args.domainsignviewprimarycolour,
+      domainsignviewprimarytextcolour: args.domainsignviewprimarytextcolour,
+      domainsignviewsecondarycolour: args.domainsignviewsecondarycolour,
+      domainsignviewsecondarytextcolour: args.domainsignviewsecondarytextcolour,
       ready: true
     };
   }

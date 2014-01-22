@@ -27,25 +27,25 @@ window.CompanyBrandingSignViewModel = Backbone.Model.extend({
         }),
         signviewprimarycolour: new CompanyBrandingColour({
           customised: companyui.signviewprimarycolour().trim() != '',
-          defaultcolour: "#53b588",
+          defaultcolour: companyui.domainsignviewprimarycolour()!= "" ? companyui.domainsignviewprimarycolour() : "#53b588",
           colour: companyui.signviewprimarycolour(),
           label: localization.companyBranding.primaryColour
         }),
         signviewprimarytextcolour: new CompanyBrandingColour({
           customised: companyui.signviewprimarytextcolour().trim() != '',
-          defaultcolour: "#ffffff", 
+          defaultcolour: companyui.domainsignviewprimarytextcolour()!= "" ? companyui.domainsignviewprimarytextcolour() : "#ffffff",
           colour: companyui.signviewprimarytextcolour(),
           label: localization.companyBranding.primaryTextColour
         }),
         signviewsecondarycolour: new CompanyBrandingColour({
           customised: companyui.signviewsecondarycolour().trim() != '',
-          defaultcolour: "#33b1dd",
+          defaultcolour: companyui.domainsignviewsecondarycolour()!= "" ? companyui.domainsignviewsecondarycolour() : "#33b1dd",
           colour: companyui.signviewsecondarycolour(),
           label: localization.companyBranding.secondaryColour
         }),
         signviewsecondarytextcolour: new CompanyBrandingColour({
           customised: companyui.signviewsecondarytextcolour().trim() != '',
-          defaultcolour: "#ffffff",
+          defaultcolour: companyui.domainsignviewsecondarytextcolour()!= "" ? companyui.domainsignviewsecondarytextcolour() : "#ffffff",
           colour: companyui.signviewsecondarytextcolour(),
           label: localization.companyBranding.secondaryTextColour
         }),
@@ -125,9 +125,28 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
     this.rightheader.text('HEADER TEXT');
     this.header.append(leftheader).append(this.rightheader).append($('<div style="clear:both;"/>'));
 
+    var arrowlegend = $('<div class="arrow-legend"></div>');
+    var arrowlegendmandatorycontainer = $('<p></p>');
+    this.arrowlegendmandatoryimage = $('<span class="mandatory" style="width: 22px; height: 22px; display: inline-block; margin-right:5px;margin-bottom:-5px; background-image: url(../img/icon-legend-mandatory.png);"></span>');
+    var arrowlegendmandatorylegend = $('<span style="font-size:11px" class="copy">Mandatory action</span>');
+    var arrowlegendoptionalcontainer = $('<p style="padding-bottom: 5px; margin-top: -3px;"></p>');
+    this.arrowlegendoptionalimage = $('<span class="optional" style="width: 22px; height: 22px; display: inline-block; margin-right:5px;margin-bottom:-5px;margin-left:-8px; background-image: url(../img/icon-legend-optional.png);"></span>');
+    var arrowlegendoptionallegend = $('<span style="font-size:11px" class="copy">Optional action</span>');
+    arrowlegendmandatorycontainer.append(this.arrowlegendmandatoryimage).append(arrowlegendmandatorylegend);
+    arrowlegendoptionalcontainer.append(this.arrowlegendoptionalimage).append(arrowlegendoptionallegend);
+    arrowlegend.append(arrowlegendmandatorycontainer).append(arrowlegendoptionalcontainer);
+
+    var documentdownload = $('<div style="margin-right: 20px;font-weight: normal;margin-bottom: 1px; display: inline">Due date 2020-09-16</div><p style="background: url(../img/senddoc.png) no-repeat;padding-left: 20px;font-weight: normal;display: inline-block;background-position: 0px 2px;position: relative;font-size:11px;left: -10px;color: #7a94b8;cursor: pointer;">MyNewsdesk demo document</p>');
 
     this.contentheader = $('<div style="text-align: center;padding-top:5px;font-size: 12px;background-color: white;border: 1px solid #cccccc; border-bottom-width: 0;"/>');
-    this.contentheader.html('<div style="font-size: 18px;margin-bottom: 0px; margin-top: 10px;">Follow the <span style="color:#53b688; font-weight: 600;" class="highlight-green">ARROW</span> to e-sign</div><div style="margin-right: 20px;font-weight: normal;margin-bottom: 1px;">Due date 2020-09-16</div><p style="background: url(../img/senddoc.png) no-repeat;padding-left: 20px;font-weight: normal;display: inline-block;background-position: 0px 2px;position: relative;font-size:11px;left: -10px;color: #7a94b8;cursor: pointer;margin-bottom:8px;">MyNewsdesk demo document</p><div class="arrow-legend"><p><span class="mandatory" style="width: 22px; height: 22px; display: inline-block; margin-right:5px;margin-bottom:-5px; background-image: url(../img/icon-legend-mandatory.png);"></span><span class="copy">Mandatory action</span></p><p style="padding-bottom: 10px; margin-top: -3px;"><span class="optional" style="width: 22px; height: 22px; display: inline-block; margin-right:5px;margin-bottom:-5px;margin-left:-8px; background-image: url(../img/icon-legend-optional.png);"></span><span class="copy">Optional action</span></p></div>');
+    this.greenarrowtext = $('<span style="color:#53b688; font-weight: 600;" class="highlight-green">ARROW</span>');
+    var instructionswrapper = $('<div style="font-size: 18px;margin-bottom: 0px; margin-top: 10px;"></div>');
+    instructionswrapper.append('<span>Follow the </span>').append(this.greenarrowtext).append('<span> to e-sign</span>');
+
+    this.contentheader.append(instructionswrapper);
+    this.contentheader.append(documentdownload);
+    this.contentheader.append(arrowlegend);
+
     var documentpic = $('<img src="/img/document_example.png" style="box-shadow: 0px 0px 8px rgba(80, 80, 80, 0.31);width: 480px;"/>')
                         .css("width","480px");
 
@@ -140,7 +159,7 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
       'position': 'absolute',
       'left': '43%',
       'bottom': '162px',
-      'background': 'url(../img/sign-arrow-down.png)',
+      'background': 'url(../img/sign-arrow-down.png)'
     });
 
     this.optionalField = $('<div />');
@@ -153,8 +172,8 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
       'bottom': '320px',
       'margin-top': '3px'
     });
-    var placedField = $('<div class="placedfield" style="display: inline-block; float: left; border: 2px solid; cursor: pointer; left: 342px; top: 508px; font-size: 12px; border-color: #33B1DD; z-index: 1;"><div class="placedfieldvalue value" style="font-size: 12px; line-height: 12px;">End date   &nbsp;   </div></div>');
-    this.optionalField.append(placedField);
+    this.optionalPlacedField = $('<div class="placedfield" style="display: inline-block; float: left; border: 2px solid; cursor: pointer; left: 342px; top: 508px; font-size: 12px; border-color: #33B1DD; z-index: 1;"><div class="placedfieldvalue value" style="font-size: 12px; line-height: 12px;">End date   &nbsp;   </div></div>');
+    this.optionalField.append(this.optionalPlacedField);
 
     this.mandatoryField = $('<div />');
     this.mandatoryField.css({
@@ -166,19 +185,19 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
       'bottom': '351px',
       'margin-top': '3px'
     });
-    var placedField = $('<div class="placedfield to-fill-now" style="display: inline-block; float: left; border: 2px solid; cursor: pointer; left: 342px; top: 508px; font-size: 12px; border-color: #53B688; z-index: 1;"><div class="placedfieldvalue value" style="font-size: 12px; line-height: 12px;">Start date</div></div>');
-    this.mandatoryField.append(placedField);
+    this.mandatoryPlacedField = $('<div class="placedfield to-fill-now" style="display: inline-block; float: left; border: 2px solid; cursor: pointer; left: 342px; top: 508px; font-size: 12px; border-color: #53B688; z-index: 1;"><div class="placedfieldvalue value" style="font-size: 12px; line-height: 12px;">Start date</div></div>');
+    this.mandatoryField.append(this.mandatoryPlacedField);
 
-    var front = $('<div class="front">');
-    front.css({
+    this.mandatoryFieldFront = $('<div class="front">');
+    this.mandatoryFieldFront.css({
       'background-image': 'url(../img/sign-arrow-action-right-front.png)',
       'float': 'left',
       'background-repeat': 'no-repeat',
-      'height': '38px',
+      'height': '37px',
       'width': '20px'
     });
-    var label = $('<div class="label">').text('Write there');
-    label.css({
+    this.mandatoryFieldLabel = $('<div class="label">').text('Write there');
+    this.mandatoryFieldLabel.css({
       'background-image': 'url(../img/sign-arrow-action-label.png)',
       'float': 'left',
       'line-height': '1.8',
@@ -187,20 +206,20 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
       'background-repeat': 'repeat-x',
       'color': '#FFF',
       'font-size': '14px',
-      'height': '38px',
+      'height': '37px',
       'min-width': '43px',
       'padding-top': '6px',
       'white-space': 'nowrap'
     });
-    var back = $('<div class="back">');
-    back.css({
+    this.mandatoryFieldBack = $('<div class="back">');
+    this.mandatoryFieldBack.css({
       'background-image': 'url(../img/sign-arrow-action-right-back.png)',
       'float': 'left',
       'background-repeat': 'no-repeat',
-      'height': '38px',
-      'width': '9px'
+      'height': '37px',
+      'width': '8px'
     });
-    this.mandatoryField.append(front).append(label).append(back);
+    this.mandatoryField.append(this.mandatoryFieldFront).append(this.mandatoryFieldLabel).append(this.mandatoryFieldBack);
 
     var document = $("<div/>").css("border", "1px solid #cccccc")
       .css("padding", "10px").css("padding-bottom", "0").css("text-align","center").css("background", "#e9e9e9").css("border-bottom-right-radius", "4px").css("border-bottom-left-radius", "4px");
@@ -224,7 +243,8 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
                                   width: 150,
                                   text: 'Sign document',
                                   onClick: function() {}});
-    signbuttoncontainer.append(signbutton.el());
+    this.signButton = signbutton.el();
+    signbuttoncontainer.append(this.signButton);
     var buttonsdiv = $('<div style="height: 56px; text-align: center; border-top-width: 1px; border-top-color: #eee; border-top-style: solid;margin: 10px 0px;box-shadow: 0px 0px 8px rgba(80, 80, 80, 0.31);background-color:white;"/>');
     buttonsdiv.append(rejectbuttoncontainer).append(signbuttoncontainer);
     var contentcontent = $('<div/>').css("width","500px").css("margin","auto")
@@ -257,9 +277,10 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
       this.model.signviewtextfont().onChange(function(font) {self.changeTextFont(font);});
       this.model.signviewtextcolour().onChange(function(colour) {self.changeTextColor(colour);});
       this.model.signviewlogo().onChange(function(logo) {self.changeLogo(logo);});
-      this.model.signviewprimarycolour().onChange(function(colour) {self.changePrimaryColour(colour)});
+      // Debounce here as when dragging your mouse in the color picker we get a lot of change events.
+      this.model.signviewprimarycolour().onChange(_.debounce(function(colour) {self.changePrimaryColour(colour)}, 100));
       this.model.signviewprimarytextcolour().onChange(function(colour) {self.changePrimaryTextColour(colour)});
-      this.model.signviewsecondarycolour().onChange(function(colour) {self.changeSecondaryColour(colour)});
+      this.model.signviewsecondarycolour().onChange(_.debounce(function(colour) {self.changeSecondaryColour(colour)}, 100));
       this.model.signviewsecondarytextcolour().onChange(function(colour) {self.changeSecondaryTextColour(colour)});
   },
   changeLogo : function(logo) {
@@ -286,24 +307,23 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
     this.rightheader.css('font-family', font);
   },
   changePrimaryColour : function(colour) {
-    BrandedImage.setBrandedImageBackground(this.contentheader.find('.mandatory'), 'icon-legend-mandatory.png', colour);
-    BrandedImage.setBrandedImageBackground(this.downarrow, 'sign-arrow-down.png', colour);
-    BrandedImage.setBrandedImageBackground(this.mandatoryField.find('.front'), 'sign-arrow-action-right-front.png', colour);
-    BrandedImage.setBrandedImageBackground(this.mandatoryField.find('.label'), 'sign-arrow-action-label.png', colour);
-    BrandedImage.setBrandedImageBackground(this.mandatoryField.find('.back'), 'sign-arrow-action-right-back.png', colour);
-    this.mandatoryField.find('.placedfield').css('border-color', colour);
-    this.content.find('.button-green').css('background-color', colour);
-    this.contentheader.find('.highlight-green').css('color', colour);
+    BrandedImageUtil.setBrandedImageBackground(this.arrowlegendmandatoryimage, 'icon-legend-mandatory.png', colour);
+    BrandedImageUtil.setBrandedImageBackground(this.downarrow, 'sign-arrow-down.png', colour);
+    BrandedImageUtil.setBrandedImageBackground(this.mandatoryFieldFront, 'sign-arrow-action-right-front.png', colour);
+    BrandedImageUtil.setBrandedImageBackground(this.mandatoryFieldLabel, 'sign-arrow-action-label.png', colour);
+    BrandedImageUtil.setBrandedImageBackground(this.mandatoryFieldBack, 'sign-arrow-action-right-back.png', colour);
+    this.mandatoryPlacedField.css('border-color', colour);
+    this.signButton.css('background-color', colour);
+    this.greenarrowtext.css('color', colour);
   },
   changePrimaryTextColour : function(colour) {
-    var signButton = this.content.find('.button-green');
-    signButton.css('color', ''); // reset colour
-    signButton.attr('style', 'color: ' + colour + ' !important;' + signButton.attr('style'));
-    this.mandatoryField.find('.label').css('color', colour);
+    this.signButton.css('color', ''); // reset colour
+    this.signButton.attr('style', 'color: ' + colour + ' !important;' + this.signButton.attr('style'));
+    this.mandatoryFieldLabel.css('color', colour);
   },
   changeSecondaryColour : function(colour) {
-    BrandedImage.setBrandedImageBackground(this.contentheader.find('.optional'), 'icon-legend-optional.png', colour);
-    this.optionalField.find('.placedfield').css('border-color', colour);
+    BrandedImageUtil.setBrandedImageBackground(this.arrowlegendoptionalimage, 'icon-legend-optional.png', colour);
+    this.optionalPlacedField.css('border-color', colour);
   },
   changeSecondaryTextColour : function(colour) {
   },

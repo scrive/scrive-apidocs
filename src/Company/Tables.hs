@@ -37,10 +37,6 @@ tableCompanyUIs = tblTable {
     , tblColumn { colName = "signview_logo",               colType = BinaryT }
     , tblColumn { colName = "signview_textcolour",         colType = TextT }
     , tblColumn { colName = "signview_textfont",           colType = TextT }
-    , tblColumn { colName = "signview_primarycolour",      colType = TextT }
-    , tblColumn { colName = "signview_primarytextcolour",  colType = TextT }
-    , tblColumn { colName = "signview_secondarycolour",    colType = TextT }
-    , tblColumn { colName = "signview_secondarytextcolour",colType = TextT }
     , tblColumn { colName = "signview_barscolour",         colType = TextT }
     , tblColumn { colName = "signview_barstextcolour",     colType = TextT }
     , tblColumn { colName = "signview_backgroundcolour",   colType = TextT }
@@ -49,6 +45,10 @@ tableCompanyUIs = tblTable {
     , tblColumn { colName = "custom_barstextcolour",       colType = TextT }
     , tblColumn { colName = "custom_barssecondarycolour",  colType = TextT }
     , tblColumn { colName = "custom_backgroundcolour",     colType = TextT }
+    , tblColumn { colName = "signview_primarycolour",      colType = TextT }
+    , tblColumn { colName = "signview_primarytextcolour",  colType = TextT }
+    , tblColumn { colName = "signview_secondarycolour",    colType = TextT }
+    , tblColumn { colName = "signview_secondarytextcolour",colType = TextT }
     ]
   , tblPrimaryKey = pkOnColumn "company_id"
   , tblForeignKeys = [

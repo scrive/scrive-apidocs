@@ -62,8 +62,8 @@ var DocumentAuthorAttachmentsView = Backbone.View.extend({
     var buttonSize = 'small';
     var button = new Button({
       color: model.forSigning() ? "signview-blue" : "black", 
-      customcolor: model.forSigning() ? secondarycolour,
-      textcolor: model.forSigning() ? secondarytextcolour,
+      customcolor: model.forSigning() ? secondarycolour : undefined,
+      textcolor: model.forSigning() ? secondarytextcolour : undefined,
       text: localization.reviewPDF, 
       cssClass: 'float-right', 
       size: buttonSize, 

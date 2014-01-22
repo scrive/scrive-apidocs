@@ -143,6 +143,10 @@ brandingFields mbd mcompanyui = do
   F.value "custombarscolour" $ mcolour bdbarscolour companycustombarscolour
   F.value "custombarstextcolour" $ mcolour bdbarstextcolour companycustombarstextcolour
   F.value "custombarshighlightcolour" $ mcolour bdbarssecondarycolour companycustombarssecondarycolour
+  F.value "customsignviewprimarycolour" $ mcolour bdsignviewprimarycolour companysignviewprimarycolour
+  F.value "customsignviewprimarytextcolour" $ mcolour bdsignviewprimarytextcolour companysignviewprimarytextcolour
+  F.value "customsignviewsecondarycolour" $ mcolour bdsignviewsecondarycolour companysignviewsecondarycolour
+  F.value "customsignviewsecondarytextcolour" $ mcolour bdsignviewsecondarytextcolour companysignviewsecondarytextcolour
   F.value "custombackground" $ mcolour bdbackgroundcolour companycustombackgroundcolour
   F.value "customdomainbdbuttonclass" $ bdbuttonclass <$> mbd
   F.value "customservicelinkcolour" $ bdservicelinkcolour <$> mbd

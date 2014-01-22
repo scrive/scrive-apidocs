@@ -530,6 +530,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
         var placement = this.model;
         var field =  placement.field();
         var signatory = field?field.signatory():placement.signatory();
+        this.branding = args.signviewbranding;
         this.model.bind('removed', this.clear, this);
         this.model.bind('change:field change:signatory change:step change:withTypeSetter change:fsrel', this.render);
         this.model.bind('change:xrel change:yrel change:wrel change:hrel', this.updatePosition, this);
@@ -601,19 +602,6 @@ var TextPlacementPlacedView = Backbone.View.extend({
          if (this.hasTypeSetter()) {
              placement.typeSetter.clear();
          }
-    },
-    brandField: function(args) {
-      this.branding = args.branding;
-      this.render();
-
-      // TODO clean up this mess. damn the inline editing accept button mess.
-      if (this.inlineediting) {
-        this.inlineediting = false;
-        $(this.el).removeClass('active');
-        this.render();
-        this.model.field().trigger('change:inlineedited');
-        $(this.el).click();
-      }
     },
     startInlineEditing : function() {
         var placement = this.model;
@@ -971,6 +959,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
          if (field.obligatory())
             place.addClass("obligatory");
 
+         console.log("this branding is", this.branding);
          if (this.branding) {
            place.css('border-color', field.obligatory() ? this.branding.signviewprimarycolour() : this.branding.signviewsecondarycolour());
          }
@@ -1222,6 +1211,7 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
         this.model.bind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
         this.model.field().bind('change', this.render);
         this.model.view = this;
+        this.branding = args.signviewbranding;
         var view = this;
         this.model.bind('change:withTypeSetter', this.closeTypeSetterIfNeeded);
         this.render();
@@ -1245,10 +1235,6 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
                 fontSize: placement.fsrel() * parentWidth
             });
         }
-    },
-    brandField: function(args) {
-      this.branding = args.branding;
-      this.render();
     },
     clear: function() {
         this.off();
@@ -1352,7 +1338,7 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
         this.model.bind('change', this.render);
         this.height = args.height;
         this.width = args.width;
-        this.branding = args.branding;
+        this.branding = args.signviewbranding;
         this.render();
     },
     clear: function() {
@@ -1721,6 +1707,7 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
         this.model.bind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
         this.model.bind('change:withTypeSetter', this.closeTypeSetter);
         this.model.view = this;
+        this.signviewbranding = args.signviewbranding;
         this.render();
     },
     updatePosition: function() {
@@ -1764,10 +1751,6 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
              placement.typeSetter.clear();
          }
     },
-    brandField: function(args) {
-      this.branding = args.branding;
-      this.render();
-    },
     render: function() {
         var view = this;
         var placement = this.model;
@@ -1788,7 +1771,7 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
                                                                 model: placement.field(),
                                                                 width : placement.wrel() * place.parent().width(),
                                                                 height : placement.hrel() * place.parent().height(),
-                                                                branding: this.branding
+                                                                signviewbranding: this.signviewbranding
                                                               }).el);
         }
         else if (document.preparation()) {

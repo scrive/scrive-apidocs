@@ -160,6 +160,10 @@ handleGetCompanyJSON mcid = do
       value "domainbarstextcolour" $ fromMaybe "" $ bdbarstextcolour <$> currentBrandedDomain ctx
       value "domainbarssecondarycolour" $ fromMaybe "" $ bdbarssecondarycolour <$> currentBrandedDomain ctx
       value "domainbackgroundcolour" $ fromMaybe "" $ bdbackgroundcolour <$> currentBrandedDomain ctx
+      value "domainsignviewprimarycolour" $ fromMaybe "" $ bdsignviewprimarycolour <$> currentBrandedDomain ctx
+      value "domainsignviewprimarytextcolour" $ fromMaybe "" $ bdsignviewprimarytextcolour <$> currentBrandedDomain ctx
+      value "domainsignviewsecondarycolour" $ fromMaybe "" $ bdsignviewsecondarycolour <$> currentBrandedDomain ctx
+      value "domainsignviewsecondarytextcolour" $ fromMaybe "" $ bdsignviewsecondarytextcolour <$> currentBrandedDomain ctx
       value "domainmailsbackgroundcolor" $ fromMaybe "" $ bdmailsbackgroundcolor <$> currentBrandedDomain ctx
       value "domainmailsbuttoncolor" $ fromMaybe "" $ bdmailsbuttoncolor <$> currentBrandedDomain ctx
       value "domainmailstextcolor" $ fromMaybe "" $ bdmailstextcolor <$> currentBrandedDomain ctx

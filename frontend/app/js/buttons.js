@@ -12,7 +12,7 @@
  *
  * button.el()
 */
-define(['Backbone', 'legacy_code'], function() {
+define(['Backbone', 'legacy_code', '../libs/tinycolor-min'], function(notUsed, notUsed2, tinycolor) {
 
 var ButtonModel = Backbone.Model.extend({
   defaults : {
@@ -112,7 +112,14 @@ var ButtonView = Backbone.View.extend({
         else if (this.model.size() == "big")
             $(this.el).addClass("button-large");
         if (this.model.customcolor()) {
-          $(this.el).css("background-color", this.model.customcolor());
+          var backgroundColor = this.model.customcolor();
+          $(this.el).css("background-color", backgroundColor);
+
+          // This does not work nicely on touch devices, but neither does :hover.
+          $(this.el).hover(
+            function() { $(this).css("background-color", tinycolor.lighten(backgroundColor, 10).toRgbString()); },
+            function() { $(this).css("background-color", backgroundColor); }
+          );
         } else {
           if (this.model.color() == "red" )
               $(this.el).addClass("button-red");
@@ -127,15 +134,7 @@ var ButtonView = Backbone.View.extend({
         }
 
         if (this.model.textcolor()) {
-          var styleAttr = $(this.el).attr("style");
-          // This is what !important does to your code :-(
-          if (styleAttr) {
-            $(this.el).attr("style", styleAttr + "; color: " + this.model.textcolor() + " !important;");
-          } else {
-            $(this.el).attr("style", "color: " + this.model.textcolor() + " !important;");
-          }
-
-          console.log("style attribute is", $(this.el).attr("style"));
+          $(this.el).attr("style", ($(this.el).attr("style") || '') + "; color: " + this.model.textcolor() + " !important;");
         }
 
         if (this.model.isRounded()) {

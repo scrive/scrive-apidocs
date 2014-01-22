@@ -109,6 +109,10 @@ companyUIJson ctx companyui = runJSONGenT $ do
     value "domainmailsbackgroundcolor" $ fromMaybe "" $ bdmailsbackgroundcolor <$> currentBrandedDomain ctx
     value "domainmailsbuttoncolor" $ fromMaybe "" $ bdmailsbuttoncolor <$> currentBrandedDomain ctx
     value "domainmailstextcolor" $ fromMaybe "" $ bdmailstextcolor <$> currentBrandedDomain ctx
+    value "domainsignviewprimarycolour" $ fromMaybe "" $ bdsignviewprimarycolour <$> currentBrandedDomain ctx
+    value "domainsignviewprimarytextcolour" $ fromMaybe "" $ bdsignviewprimarytextcolour <$> currentBrandedDomain ctx
+    value "domainsignviewsecondarycolour" $ fromMaybe "" $ bdsignviewsecondarycolour <$> currentBrandedDomain ctx
+    value "domainsignviewsecondarytextcolour" $ fromMaybe "" $ bdsignviewsecondarytextcolour <$> currentBrandedDomain ctx
     value "servicelinkcolour" $ fromMaybe "" $ bdservicelinkcolour <$> currentBrandedDomain ctx
 
 
@@ -138,10 +142,10 @@ signviewBrandingJSON ctx user company companyui = runJSONGenT $ do
                                     else (bdlogolink <$> mdb)
     value "signviewtextcolour" $ companysignviewtextcolour $ companyui
     value "signviewtextfont" $ companysignviewtextfont   $ companyui
-    value "signviewprimarycolour" $ companysignviewprimarycolour   $ companyui
-    value "signviewprimarytextcolour" $ companysignviewprimarytextcolour   $ companyui
-    value "signviewsecondarycolour" $ companysignviewsecondarycolour   $ companyui
-    value "signviewsecondarytextcolour" $ companysignviewsecondarytextcolour   $ companyui
+    value "signviewprimarycolour" $ (companysignviewprimarycolour $ companyui) `mplus` (bdsignviewprimarycolour <$> mdb)
+    value "signviewprimarytextcolour" $ (companysignviewprimarytextcolour   $ companyui) `mplus` (bdsignviewprimarytextcolour <$> mdb)
+    value "signviewsecondarycolour" $ (companysignviewsecondarycolour   $ companyui) `mplus` (bdsignviewsecondarycolour <$> mdb)
+    value "signviewsecondarytextcolour" $ (companysignviewsecondarytextcolour   $ companyui) `mplus` (bdsignviewsecondarytextcolour <$> mdb)
     value "signviewbarscolour" $ (companysignviewbarscolour  $ companyui) `mplus` (bdbarscolour <$> mdb)
     value "signviewbarstextcolour" $ (companysignviewbarstextcolour $ companyui) `mplus` (bdbarstextcolour <$> mdb)
     value "signviewbackgroundcolour" $ (companysignviewbackgroundcolour $ companyui) `mplus` (bdbackgroundcolour <$> mdb)

@@ -35,7 +35,9 @@ var UploadButtonModel = Backbone.Model.extend({
       size : "small",
       showLoadingDialog : true,
       color: 'green',
-      onAppend: undefined // If set no files will be stored in this upload box
+      onAppend: undefined, // If set no files will be stored in this upload box
+      customcolor: undefined,
+      textcolor: undefined
   },
   width : function(){
        return this.get("width");
@@ -82,6 +84,12 @@ var UploadButtonModel = Backbone.Model.extend({
   color : function() {
         return this.get("color");
   },
+  customcolor : function() {
+        return this.get("customcolor");
+  },
+  textcolor : function() {
+        return this.get("textcolor");
+  },
   shape : function() {
         return this.get("shape");
   },
@@ -111,7 +119,7 @@ var UploadButtonView = Backbone.View.extend({
         var model = this.model;
         var button = model.button();
         if (!button) {
-            button = new Button({size: model.size(), color: model.color(), shape : model.shape(), width: model.width(), text: model.text(), style: model.style(), onClick : function() {return false;}}).el();
+            button = new Button({size: model.size(), color: model.color(), shape : model.shape(), width: model.width(), text: model.text(), style: model.style(), customcolor: model.customcolor(), textcolor: model.textcolor(), onClick : function() {return false;}}).el();
         }
         var fileinput = $("<input class='multiFileInput' type='file'/>");
         if (model.type() != "")
