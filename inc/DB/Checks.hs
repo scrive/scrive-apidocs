@@ -134,7 +134,7 @@ createTable table@Table{..} = do
     createTableSQLs = concat
       [ [sqlCreateTable tblName]
       , [sqlAlterTable tblName $ map sqlAddColumn tblColumns | not (null tblColumns)]
-      , [sqlAlterTable tblName [sqlAddPK tblName pk] | let Just pk = tblPrimaryKey ]
+      , [sqlAlterTable tblName [sqlAddPK tblName pk] | Just pk <- return tblPrimaryKey ]
       , [sqlAlterTable tblName $ map sqlAddCheck tblChecks | not (null tblChecks)]
       , map (sqlCreateIndex tblName) tblIndexes
       , [sqlAlterTable tblName $ map (sqlAddFK tblName) tblForeignKeys | not (null tblForeignKeys)]
@@ -279,13 +279,6 @@ checkDBConsistency logger tables migrations = do
   versions <- mapM checkTableVersion tables
   let tablesWithVersions = zip tables (map (fromMaybe 0) versions)
 
-  forM_ tablesWithVersions $ \(table,ver) -> when (tblVersion table /= ver) $ do
-    case L.find (\m -> tblNameString (mgrTable m) == tblNameString table) migrations of
-      Nothing -> do
-        error $ "No migrations found for table '" ++ tblNameString table ++ "', cannot migrate " ++ show ver ++ "->" ++ show (tblVersion table)
-      Just m | mgrFrom m > ver -> do
-        error $ "Earliest migration for table '" ++ tblNameString table ++ "' is from version " ++ show (mgrFrom m) ++ ", cannot migrate " ++ show ver ++ "->" ++ show (tblVersion table)
-      Just _ -> return ()
 
   if all ((==) 0 . snd) tablesWithVersions
     then do -- no tables are present, create everything from scratch
@@ -294,6 +287,15 @@ checkDBConsistency logger tables migrations = do
       logger "Creating tables...done"
 
     else do -- migration mode
+
+      forM_ tablesWithVersions $ \(table,ver) -> when (tblVersion table /= ver) $ do
+        case L.find (\m -> tblNameString (mgrTable m) == tblNameString table) migrations of
+          Nothing -> do
+            error $ "No migrations found for table '" ++ tblNameString table ++ "', cannot migrate " ++ show ver ++ "->" ++ show (tblVersion table)
+          Just m | mgrFrom m > ver -> do
+            error $ "Earliest migration for table '" ++ tblNameString table ++ "' is from version " ++ show (mgrFrom m) ++ ", cannot migrate " ++ show ver ++ "->" ++ show (tblVersion table)
+          Just _ -> return ()
+
       mapM_ (normalizePropertyNames logger) tables
 
       let migrationsToRun = filter (\m -> any (\(t, from) -> tblName (mgrTable m) == tblName t && mgrFrom m >= from) tablesWithVersions) migrations
