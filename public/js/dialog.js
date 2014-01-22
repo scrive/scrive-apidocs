@@ -20,6 +20,12 @@ var fillWith = function(e, s) {
 
 var buildDialog = function(cfg) {
   var dialog = $('<div class="modal screenblockingdialog" />');
+  if (BrowserInfo.isPadDevice()) {
+            //Pad devices have a different aproach to body.width
+            //Check http://stackoverflow.com/questions/6695676/100-width-css-issue-only-on-mobile-safari
+            // Note also that width of sign page is dynamic due to arrows
+            dialog.css("min-width",$(document).width());
+  }
   dialog.height($(document).height());
   var modalcontainer = $('<div class="modal-container" />');
   dialog.append(modalcontainer);
