@@ -103,6 +103,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                     s.deleteField(field);
                     placement.setField(undefined);
                     f.removePlacement(placement);
+
                 }
 
             }
@@ -293,24 +294,22 @@ var TextTypeSetterView = Backbone.View.extend({
     initialize: function (args) {
         var self = this;
         _.bindAll(this);
-        this.model.bind('removed', this.clear);
-        this.model.bind('change:field change:signatory change:step change:fsrel', this.render);
+        self.listenTo(self.model,'removed',self.clear);
+        self.listenTo(self.model,'change:field change:signatory change:step change:fsrel',self.render);
 
-
-
-        this.model.field().signatory().bind("change:fields",this.render);
-        this.model.field().signatory().document().bind("change:signatories",this.render);
-        this.model.bind('change:field',function() {
-          self.model.field().bind('change:value',self.updatePosition);
+        self.listenTo(self.model.field().signatory(),'change:fields',self.render);
+        self.listenTo(self.model.field().signatory().document(),"change:signatories",self.render);
+        self.listenTo(self.model,'change:field',function() {
+          self.listenTo(self.model.field(),'change:value',self.updatePosition);
         });
-        this.model.field().bind('change:value',this.updatePosition);
-        var view = this;
-        this.fixPlaceFunction = function(){
-            view.place();
+        self.listenTo(self.model.field(),'change:value',self.updatePosition);
+
+        self.fixPlaceFunction = function(){
+            self.place();
         };
-        $(window).scroll(view.fixPlaceFunction); // To deal with resize;
-        $(window).resize(view.fixPlaceFunction);
-        this.render();
+        $(window).scroll(self.fixPlaceFunction); // To deal with resize;
+        $(window).resize(self.fixPlaceFunction);
+        self.render();
     },
     updatePosition : function() {
         var self = this;
@@ -318,19 +317,12 @@ var TextTypeSetterView = Backbone.View.extend({
     },
     clear: function() {
         this.off();
+        this.stopListening();
+
         $(this.el).remove();
-        this.model.unbind('removed', this.clear);
-        this.model.unbind('change:field change:signatory change:step', this.render);
 
         $(window).unbind('scroll',this.fixPlaceFunction);
         $(window).unbind('resize',this.fixPlaceFunction);
-        this.model.field().unbind('change:value',this.updatePosition);
-
-
-        this.model.field().signatory().unbind("change:fields",this.render);
-        this.model.field().signatory().document().unbind("change:signatories",this.render);
-        //this.model.field().signatory().bind("change:fields",this.render);
-        //this.model.field().signatory().document().bind("change:signatories",this.render);
 
         this.model.typeSetter = undefined;
     },
@@ -453,7 +445,6 @@ var TextTypeSetterView = Backbone.View.extend({
 
         var placement = view.model;
         var field = placement.field();
-
         if(placement.step() === 'edit' && field.name()) {
 
             container.addClass("fieldTypeSetter-container");
