@@ -6,6 +6,7 @@ module Doc.DocMails (
   , sendReminderEmail
   , sendAllReminderEmails
   , sendAllReminderEmailsExceptAuthor
+  , sendForwardEmail
   , sendClosedEmails
   , sendRejectEmails
   , sendDocumentErrorEmail
@@ -87,7 +88,7 @@ sendDocumentErrorEmail author document = do
       sendNotifications signatorylink
         (do
           mail <- mailDocumentErrorForSignatory document
-          scheduleEmailSendout (mctxmailsconfig mctx) $ mail {
+          scheduleEmailSendoutWithDocumentAuthorSender (documentid document) (mctxmailsconfig mctx) $ mail {
                                    to = [getMailAddress signatorylink]
                                  , mailInfo = Invitation (documentid document) (signatorylinkid signatorylink)
                                  })
@@ -135,7 +136,7 @@ sendInvitationEmail1 signatorylink | not (isAuthor signatorylink) = do
       mail <- theDocument >>= mailInvitation True (Sign <| isSignatory signatorylink |> View) (Just signatorylink) False
       -- ?? Do we need to read in the contents? -EN
       -- _attachmentcontent <- liftIO $ documentFileID document >>= getFileContents ctx
-      scheduleEmailSendout (mctxmailsconfig mctx) $
+      scheduleEmailSendoutWithDocumentAuthorSender did (mctxmailsconfig mctx) $
                            mail { to = [getMailAddress signatorylink]
                                 , mailInfo = Invitation did (signatorylinkid signatorylink)
                                 })
@@ -174,7 +175,7 @@ sendReminderEmail custommessage  actor automatic siglink = do
       mail <- theDocument >>= mailDocumentRemind custommessage siglink False
       mailattachments <- makeMailAttachments =<< theDocument
       docid <- theDocumentID
-      scheduleEmailSendout (mctxmailsconfig mctx) $ mail {
+      scheduleEmailSendoutWithDocumentAuthorSender docid (mctxmailsconfig mctx) $ mail {
                                to = [getMailAddress siglink]
                              , mailInfo = Invitation docid (signatorylinkid siglink)
                              , attachments = if isJust $ maybesigninfo siglink
@@ -277,6 +278,27 @@ sendAllReminderEmailsWithFilter f actor automatic = do
       sequence . map (sendReminderEmail Nothing actor automatic) $ filter f unsignedsiglinks)
     {-else-} $ do
       return []
+
+
+
+{- |
+    Send a forward email
+-}
+sendForwardEmail :: (Log.MonadLog m, TemplatesMonad m,MonadIO m, CryptoRNG m, DocumentMonad m, MailContextMonad m) =>
+                          String -> m ()
+sendForwardEmail email = do
+  mctx <- getMailContext
+  mail <- mailForwardSigned =<< theDocument
+  mailattachments <- makeMailAttachments =<< theDocument
+  did <- documentid <$> theDocument
+  scheduleEmailSendoutWithDocumentAuthorSender did (mctxmailsconfig mctx) $ mail {
+                               to = [MailAddress "" email]
+                             , attachments = mailattachments
+                             }
+  return ()
+
+
+
 
 {- |
    Try to sign up a new user. Returns the confirmation link for the new user.

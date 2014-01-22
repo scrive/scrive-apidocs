@@ -7,6 +7,7 @@ module Doc.DocView (
   , mailDocumentRejected
   , mailDocumentRemind
   , mailInvitation
+  , mailForwardSigned
   , pageDocumentDesign
   , pageDocumentView
   , pageDocumentSignView

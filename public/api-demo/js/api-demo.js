@@ -47,6 +47,7 @@ var ApiDemoView = Backbone.View.extend({
             var setattachments = $("<option value='setatt'>Set attachments</option>");
             var ready = $("<option value='g'>Ready</option>");
             var sendReminder = $("<option value='s'>Send reminder</option>");
+            var sendForward = $("<option value='fw'>Forward with mail</option>");
             var cancel = $("<option value='cc'>Cancel</option>");
             var restart = $("<option value='restart'>Restart</option>");
             var prolong= $("<option value='prolong'>Prolong</option>");
@@ -70,7 +71,7 @@ var ApiDemoView = Backbone.View.extend({
             var checkclient  = $("<option value='check'>Check client</option>");
 
             select.append(none).append(createFromFile).append(changeFile).append(createFromTemplate).append(update).append(setattachments)
-                  .append(ready).append(sendReminder).append(cancel).append(restart).append(prolong).append(del).append(check).append(history)
+                  .append(ready).append(sendReminder).append(sendForward).append(cancel).append(restart).append(prolong).append(del).append(check).append(history)
                   .append(list).append(download).append(downloadmf).append(addtopad).append(reject).append(setsigatt).append(sign)
                   .append($("<option>---------</option>"))
                   .append(profile).append(payments).append(language).append(password).append(signup).append(passwordreset).append(updateprofile)
@@ -91,6 +92,8 @@ var ApiDemoView = Backbone.View.extend({
                     ready.attr("selected", "true");
                 else if (model.selectedApiCall().isSendReminder())
                     sendReminder.attr("selected", "true");
+                else if (model.selectedApiCall().isForward())
+                    sendForward.attr("selected", "true");
                 else if (model.selectedApiCall().isCancel())
                     cancel.attr("selected", "true");
                 else if (model.selectedApiCall().isRestart())
@@ -152,6 +155,8 @@ var ApiDemoView = Backbone.View.extend({
                     model.setSelectedApiCall(new ReadyApiCall({oauth : oauth}));
                 else if (select.val() == "s")
                     model.setSelectedApiCall(new SendReminderApiCall({oauth : oauth}));
+                else if (select.val() == "fw")
+                    model.setSelectedApiCall(new ForwardApiCall({oauth : oauth}));
                 else if (select.val() == "cc")
                     model.setSelectedApiCall(new CancelApiCall({oauth : oauth}));
                 else if (select.val() == "restart")

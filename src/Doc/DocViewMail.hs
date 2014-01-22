@@ -7,6 +7,7 @@ module Doc.DocViewMail
     , mailDocumentRejectedContent
     , mailDocumentRemind
     , mailDocumentRemindContent
+    , mailForwardSigned
     , InvitationTo(..)
     , mailInvitation
     , mailInvitationContent
@@ -141,6 +142,13 @@ remindMailSignedStandardHeader document signlink =
         F.value "documenttitle" $ documenttitle document
         F.value "author" $ getAuthorName document
         F.value "personname" $ getSmartName signlink
+
+
+mailForwardSigned :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
+                 => Document
+                 -> m Mail
+mailForwardSigned document = documentMailWithDocLang document "mailForwardSigned" $ return()
+
 
 mailDocumentRejected :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
                      => Maybe String

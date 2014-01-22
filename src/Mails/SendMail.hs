@@ -5,6 +5,7 @@ module Mails.SendMail
     , MailAddress(..)
     , MessageData(..)
     , scheduleEmailSendout
+    , scheduleEmailSendoutWithDocumentAuthorSender
     , kontramail
     , kontramaillocal
     ) where
@@ -29,18 +30,30 @@ import User.Lang
 import Util.SignatoryLinkUtils
 import Doc.Model
 import Doc.DocStateData
+import Doc.DocumentID
 import Data.Maybe
 import BrandedDomains
 
+
 scheduleEmailSendout :: (CryptoRNG m, MonadDB m) => MailsConfig -> Mail -> m ()
-scheduleEmailSendout MailsConfig{..} mail@Mail{..} = do
+scheduleEmailSendout c m =  scheduleEmailSendout' (originator m) c m
+
+scheduleEmailSendoutWithDocumentAuthorSender :: (CryptoRNG m, MonadDB m) => DocumentID  -> MailsConfig -> Mail -> m ()
+scheduleEmailSendoutWithDocumentAuthorSender did c m = do
+  doc <- dbQuery $ GetDocumentByDocumentID did
+  name <- case (documentlang doc, getAuthorName doc) of
+      (_,         []) -> return $ (originator m)
+      (LANG_SV, an) -> return $ an ++ " genom " ++ (originator m)
+      (LANG_EN, an) -> return $ an ++ " through " ++ (originator m)
+  scheduleEmailSendout' name c m
+
+scheduleEmailSendout' :: (CryptoRNG m, MonadDB m) => String -> MailsConfig -> Mail ->  m ()
+scheduleEmailSendout' authorname  MailsConfig{..} mail@Mail{..} = do
   Log.error $ "Sending mail with originator" ++ show originator
   if unsendable to
     then Log.error $ "Email " ++ show mail ++ " is unsendable, discarding."
     else do
-      fromAddr <- do
-        niceAddress <- fromNiceAddress mailInfo $ originator
-        return Address {addrName = niceAddress, addrEmail = ourInfoEmail }
+      fromAddr <- return Address {addrName = authorname, addrEmail = ourInfoEmail }
       token <- random
       now <- getMinutesTime
       mid <- dbUpdate $ CreateEmail token fromAddr (map toAddress to) now
@@ -76,18 +89,6 @@ wrapHTML body = concat [
   , "</body>"
   , "</html>"
   ]
-
--- Prototyped. This is why texts are here. But the proper way to do
--- that is not to add some extra info in Mail data structure
--- Proper way is to hold as abstract data there.
-fromNiceAddress :: MonadDB m => MessageData -> String -> m String
-fromNiceAddress (None) servicename = return servicename
-fromNiceAddress (Invitation did _) servicename = do
-  doc <- dbQuery $ GetDocumentByDocumentID did
-  case (documentlang doc, getAuthorName doc) of
-      (_,         []) -> return $ servicename
-      (LANG_SV, an) -> return $ an ++ " genom " ++ servicename
-      (LANG_EN, an) -> return $ an ++ " through " ++ servicename
 
 kontramaillocal :: (HasLang a, T.TemplatesMonad m) => MailsConfig -> Maybe BrandedDomain -> a -> String -> F.Fields m () -> m Mail
 kontramaillocal mc mbd = kontramailHelper mc mbd . renderLocalTemplate

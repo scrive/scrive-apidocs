@@ -142,11 +142,9 @@ window.UpdateApiCall = ApiCall.extend({
             $("body").append(form);
             form.append($("<input type='hidden' name='json'/>").val(model.json()));
 
-            //var formData = new FormData(form[0]);
             this.call("update/" + model.documentid(), {
                 type: 'POST',
                 data:{json:model.json(), objectversion : this.objectversion()},
-                //data: formData,
                 cache: false,
                 success : function(res) {
                     model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
@@ -275,6 +273,42 @@ window.SendReminderApiCall = ApiCall.extend({
             });
         }
 });
+
+window.ForwardApiCall = ApiCall.extend({
+        defaults: {
+            name : "Forward email with signed document",
+            documentid : LocalStorage.get("api","documentid"),
+            email : "vip@gmail.com"
+        },
+        documentid : function() {return this.get("documentid");},
+        setDocumentid : function(documentid) {
+            LocalStorage.set("api","documentid",documentid);
+            return this.set({"documentid" : documentid});
+        },
+        email : function() {return this.get("email");},
+        setEmail: function(email) {
+            return this.set({"email" : email});
+        },
+
+        initialize: function (args) {
+        },
+        isForward : function() {return true;},
+        send : function() {
+            var model = this;
+            this.call("forward/" + model.documentid(), {
+                type: 'POST',
+                cache: false,
+                data : { email : model.email()},
+                success : function(res) {
+                    model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
+                },
+                error : function(res) {
+                    model.setResult(JSON.stringify(res.responseText,undefined," "));
+                }
+            });
+        }
+});
+
 
 window.CancelApiCall = ApiCall.extend({
         defaults: {
@@ -1021,6 +1055,39 @@ window.SendReminderApiCallView = Backbone.View.extend({
         }
 });
 
+
+window.ForwardApiCallView = Backbone.View.extend({
+        initialize: function(args) {
+            _.bindAll(this, 'render');
+            this.model.bind('change', this.render);
+            this.prerender();
+        },
+        prerender : function() {
+            var model = this.model;
+            var box = $(this.el);
+            box.children().detach();
+            var boxLeft  = $("<div class='left-box'>");
+            this.boxRight = $("<div class='right-box'>");
+            box.append(this.boxRight).append(boxLeft);
+            var documentidInput = $("<input type='text'/>").val(model.documentid());
+            documentidInput.change(function() {model.setDocumentid(documentidInput.val()); return false;})
+            var emailInput = $("<input type='text'/>").val(model.email());
+            emailInput.change(function() {model.setEmail(emailInput.val()); return false;})
+
+            var button = $("<input type='button' value='Send request'/>");
+            button.click(function() {model.send(); return false;});
+            boxLeft.append($("<div>Document #: <BR/></div>").append(documentidInput))
+                   .append($("<div>Email : <BR/></div>").append(emailInput))
+                   .append($("<div/>").append(button));
+            this.render();
+        },
+        render : function() {
+            this.boxRight.empty();
+            var model = this.model;
+            if (model.result() != undefined)
+                this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
+        }
+});
 
 
 window.CancelApiCallView = Backbone.View.extend({

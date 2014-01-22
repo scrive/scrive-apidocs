@@ -77,6 +77,16 @@ $else$
   <div class="editable" name="custommessage"></div>
 $endif$
 ####
+#### FOREWARDING DOCUMENT
+####
+mailForwardSigned =
+      $_mailForwardMailTitle()$
+      $nicemail(
+        mailheader = _mailForwardMailTitle();
+        mailp1 = _mailForwardMailContent1();
+        mailp2 = _mailForwardMailContent2();
+        footer = null
+      )$
 #### INVITATION MAILS
 ####
 mailInvitationTitleContract=

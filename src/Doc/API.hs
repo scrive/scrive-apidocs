@@ -123,6 +123,7 @@ versionedAPI _version = choice [
 
 
   dir "remind"             $ hPost $ toK1 $ apiCallRemind,
+  dir "forward"           $ hPost $ toK1 $ apiCallForward,
   dir "delete"             $ hDeleteAllowHttp  $ toK1 $ apiCallDelete,
   dir "get"                $ hGetAllowHttp $ toK1 $ apiCallGet,
 
@@ -543,8 +544,6 @@ apiCallSetAutoReminder did =  api $ do
       Accepted <$> (documentJSON (Just $ user) False True True Nothing Nothing =<< theDocument)
 
 
-
-
 apiCallRemind :: Kontrakcja m => DocumentID -> m Response
 apiCallRemind did =  api $ do
   (user, actor , _) <- getAPIUser APIDocSend
@@ -556,6 +555,20 @@ apiCallRemind did =  api $ do
           throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
     _ <- sendAllReminderEmailsExceptAuthor actor False
     Accepted <$> (documentJSON (Just user) False True True Nothing Nothing =<< theDocument)
+
+apiCallForward :: Kontrakcja m => DocumentID -> m Response
+apiCallForward did =  api $ do
+  (user, _actor , _) <- getAPIUser APIDocCheck
+  withDocumentID did $ do
+    unlessM (isClosed <$> theDocument) $ do
+          throwIO . SomeKontraException $ badInput "Only document that are signed can be forwarded"
+    auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
+    when (not $ (auid == userid user)) $ do
+          throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
+    email <- apiGuardJustM (badInput "Email adress is no valid.") $ getOptionalField  asValidEmail "email"
+    _ <- sendForwardEmail email
+    Accepted <$> (documentJSON (Just user) False True True Nothing Nothing =<< theDocument)
+
 
 apiCallDelete :: Kontrakcja m => DocumentID -> m Response
 apiCallDelete did =  api $ do
