@@ -17,6 +17,7 @@ import Crypto.RNG
 import DB
 import qualified Log
 import Amazon
+import Text.JSON.Gen
 
 type ActionQueue = ActionQueueT (AmazonMonadT (CryptoRNGT (DBT IO)))
 
@@ -53,5 +54,10 @@ actionQueue qa = getMinutesTime
         kCommit
     )
   where
-    printSuccess a = Log.mixlog_ $ "Action " ++ show a ++ " evaluated successfully"
-    printError a e = Log.mixlog_ $ "Oops, qaEvaluateExpired with " ++ show a ++ " failed with error: " ++ show e
+    printSuccess a = Log.mixlog "Action evaluated successfully" $ do
+        value "action" (show a)
+        value "table" (unRawSQL (tblName (qaTable qa)))
+    printError a e = Log.attention "Actional evaluation failed" $ do
+        value "action" (show a)
+        value "table" (unRawSQL (tblName (qaTable qa)))
+        value "exception" (show e)
