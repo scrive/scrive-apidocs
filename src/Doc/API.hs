@@ -285,7 +285,7 @@ apiCallSetAuthorAttachemnts did = api $ do
                        cres <- liftIO $ preCheckPDF (concatChunks content)
                        case cres of
                          Left _ -> do
-                           Log.debug $ "Document #" ++ show did ++ ". File for attachment " ++ show filepath ++ " is broken PDF. Skipping."
+                           Log.mixlog_ $ "Document #" ++ show did ++ ". File for attachment " ++ show filepath ++ " is broken PDF. Skipping."
                            throwIO . SomeKontraException $ (badInput $ "AttachFile " ++ show i ++ " file is not a valid PDF")
                          Right content' -> do
                            fileid' <- dbUpdate $ NewFile filename content'
@@ -381,9 +381,9 @@ apiCallCheckSign :: Kontrakcja m
              -> m Response
 apiCallCheckSign did slid = api $ do
   checkObjectVersionIfProvided did
-  Log.debug $ "Checking if we can sign a document"
+  Log.mixlog_ $ "Checking if we can sign a document"
   (mh,_) <- getMagicHashAndUserForSignatoryAction did slid
-  Log.debug "We have magic hash for this operation"
+  Log.mixlog_ "We have magic hash for this operation"
   fields <- getFieldForSigning
   mprovider <- readField "eleg"
   doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
@@ -415,15 +415,15 @@ apiCallSign :: Kontrakcja m
              -> m Response
 apiCallSign  did slid = api $ do
   checkObjectVersionIfProvided did
-  Log.debug $ "Ready to sign a document " ++ show did ++ " for signatory " ++ show slid
+  Log.mixlog_ $ "Ready to sign a document " ++ show did ++ " for signatory " ++ show slid
   (mh,mu) <- getMagicHashAndUserForSignatoryAction did slid
-  Log.debug "We have magic hash for this operation"
+  Log.mixlog_ "We have magic hash for this operation"
   screenshots' <- fmap (fromMaybe emptySignatoryScreenshots) $
                (fromJSValue =<<) <$> getFieldJSON "screenshots"
   screenshots <- resolveReferenceScreenshotNames screenshots'
   fields <- getFieldForSigning
   mprovider <- readField "eleg"
-  Log.debug $ "All parameters read and parsed"
+  Log.mixlog_ $ "All parameters read and parsed"
 
   olddoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
   withDocument olddoc $ do
@@ -442,11 +442,11 @@ apiCallSign  did slid = api $ do
                             BankID.verifySignatureAndGetSignInfo slid mh fields provider signature transactionid
                   case esigninfo of
                       BankID.Problem msg -> do
-                        Log.error $ "Eleg verification for document #" ++ show did ++ " failed with message: " ++ msg
+                        Log.mixlog_ $ "Eleg verification for document #" ++ show did ++ " failed with message: " ++ msg
                         (Left . Failed) <$> (runJSONGenT $ return ())
                       BankID.Mismatch (onname,onnumber) (sfn,sln,spn) -> do
                         handleMismatch slid ((\(t,v) -> SignatoryField t v False False []) <$> fields) sfn sln spn
-                        Log.error $ "Eleg verification for document #" ++ show did ++ " failed with mismatch " ++ show ((onname,onnumber),(sfn,sln,spn))
+                        Log.mixlog_ $ "Eleg verification for document #" ++ show did ++ " failed with mismatch " ++ show ((onname,onnumber),(sfn,sln,spn))
                         (Left . Failed) <$> (runJSONGenT $ value "mismatch" True >> value "onName" onname >> value "onNumber" onnumber)
                       BankID.Sign sinfo -> do
                         signDocument slid mh fields (Just sinfo) screenshots
@@ -479,7 +479,7 @@ handleMismatch :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [Signato
 handleMismatch sid sf sfn sln spn = do
         ctx <- getContext
         Just sl <- getSigLinkFor sid <$> theDocument
-        Log.eleg $ "Information from eleg did not match information stored for signatory in document."
+        Log.mixlog_ $ "Information from eleg did not match information stored for signatory in document."
         dbUpdate $ LogSignWithELegFailureForDocument sid (nothingIfEmpty $ getFullName sf) (nothingIfEmpty $ getPersonalNumber sf)  sfn sln spn (signatoryActor ctx sl)
         triggerAPICallbackIfThereIsOne =<< theDocument
 
@@ -702,7 +702,7 @@ apiCallDownloadMainFile did _nameForBrowser = api $ do
                     now <- getMinutesTime
                     -- Give Guardtime signing a few seconds to complete before we respond
                     when (toSeconds now - toSeconds (documentmtime doc) < 8) $ do
-                      Log.debug $ "Waiting for Guardtime signing, document was modified " ++ show (toSeconds now - toSeconds (getLastSignedTime doc)) ++ " seconds ago"
+                      Log.mixlog_ $ "Waiting for Guardtime signing, document was modified " ++ show (toSeconds now - toSeconds (getLastSignedTime doc)) ++ " seconds ago"
                       throwIO $ SomeKontraException $ noAvailableYet "Digitally sealed document not ready"
                   file <- apiGuardJustM (noAvailableYet "Not ready, please try later") $ documentsealedfileM doc
                   getFileIDContents $ fileid file
@@ -821,9 +821,9 @@ apiCallGetBrandingForSignView did slid = api $ do
 apiCallSetSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryLinkID -> String -> m Response
 apiCallSetSignatoryAttachment did sid aname = api $ do
   checkObjectVersionIfProvided did
-  Log.debug $ "Setting signatory attachments" ++ show did ++ " for signatory " ++ show sid ++ " name " ++ aname
+  Log.mixlog_ $ "Setting signatory attachments" ++ show did ++ " for signatory " ++ show sid ++ " name " ++ aname
   (mh,mu) <- getMagicHashAndUserForSignatoryAction did sid
-  Log.debug "We are authorized to set signatory attachment"
+  Log.mixlog_ "We are authorized to set signatory attachment"
   -- We check permission here - because we are able to get a valid magichash here
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh) `withDocumentM` do
     unlessM (isPending <$> theDocument) $ do
@@ -878,7 +878,7 @@ getMagicHashAndUserForSignatoryAction did sid = do
       Just mh'' ->  return (mh'',Nothing)
       Nothing -> do
          (user, _ , _) <- getAPIUser APIPersonal
-         Log.debug $ "User is " ++ show user
+         Log.mixlog_ $ "User is " ++ show user
          mh'' <- getMagicHashForDocumentSignatoryWithUser  did sid user
          case mh'' of
            Nothing -> throwIO . SomeKontraException $ serverError "Can't perform this action. Not authorized."
