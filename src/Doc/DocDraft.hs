@@ -206,7 +206,7 @@ instance FromJSValueWithUpdate Document where
 applyDraftDataToDocument :: (Kontrakcja m, DocumentMonad m) =>  Document -> Actor -> m ()
 applyDraftDataToDocument draft actor = do
     unlessM (isPreparation <$> theDocument) $ do
-      theDocument >>= \doc -> Log.mixlog_ $ "Document is not in preparation, is in " ++ show (documentstatus doc)
+      theDocument >>= \doc -> Log.attention_ $ "Document is not in preparation, is in " ++ show (documentstatus doc)
       throwIO $ SomeKontraException $ serverError "applyDraftDataToDocument failed"
     _ <- theDocument >>= \doc -> dbUpdate $ UpdateDraft doc{
                                   documenttitle = documenttitle draft
