@@ -94,7 +94,7 @@ postDocumentPreparationChange skipauthorinvitation tzn = do
   msaved <- saveDocumentForSignatories
   case msaved of
     Just msg -> do
-      Log.mixlog_ $ "Failed to save document #" ++ (show docid) ++ " for signatories " ++ msg
+      Log.attention_ $ "Failed to save document #" ++ (show docid) ++ " for signatories " ++ msg
     Nothing -> return ()
   theDocument >>= \d -> Log.mixlog_ $ "Sending invitation emails for document #" ++ show docid ++ ": " ++ documenttitle d
 
