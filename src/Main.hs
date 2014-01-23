@@ -37,17 +37,17 @@ main = Log.withLogger $ do
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
 
-  Log.server $ "Starting kontrakcja-server build " ++ Version.versionID
+  Log.mixlog_ $ "Starting kontrakcja-server build " ++ Version.versionID
 
   appConf <- do
     appname <- getProgName
     args <- getArgs
-    readConfig Log.server appname args "kontrakcja.conf"
+    readConfig Log.mixlog_ appname args "kontrakcja.conf"
 
   checkExecutables
 
   withPostgreSQL (dbConfig appConf) $
-    checkDatabase Log.server kontraTables
+    checkDatabase Log.mixlog_ kontraTables
 
   appGlobals <- do
     templates <- newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates
@@ -70,7 +70,7 @@ startSystem appGlobals appConf = E.bracket startServer stopServer waitForTerm
       let (iface,port) = httpBindAddress appConf
       listensocket <- listenOn (htonl iface) (fromIntegral port)
       let (routes,overlaps) = compile staticRoutes
-      maybe (return ()) Log.server overlaps
+      maybe (return ()) Log.mixlog_ overlaps
       let conf = nullConf {
             port = fromIntegral port
           , timeout = 120
@@ -81,7 +81,7 @@ startSystem appGlobals appConf = E.bracket startServer stopServer waitForTerm
       withPostgreSQL (dbConfig appConf) . runCryptoRNGT (cryptorng appGlobals) $
         initDatabaseEntries $ initialUsers appConf
       waitForTermination
-      Log.server $ "Termination request received"
+      Log.mixlog_ $ "Termination request received"
 
 initDatabaseEntries :: (CryptoRNG m, MonadDB m) => [(Email, String)] -> m ()
 initDatabaseEntries = mapM_ $ \(email, passwordstring) -> do
