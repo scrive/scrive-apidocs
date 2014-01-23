@@ -31,7 +31,7 @@ scheduleSMS msg@SMS{..} = do
         Log.mixlog_ $ "SMS " ++ show msg ++ " with id #" ++ show sid ++ " scheduled for sendout"
         return ()
        else do
-        Log.mixlog_ $ "SMS:  trying to send SMS, but not mobile number was defined. This should not happend after mid II.2014. Till then we need to support it"
+        Log.attention_ $ "SMS:  trying to send SMS, but not mobile number was defined. This should not happend after mid II.2014. Till then we need to support it"
         return ()
 
 
