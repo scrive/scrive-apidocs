@@ -14,50 +14,50 @@ import Sender
 import Mails.Model
 import MinutesTime
 import qualified Amazon as AWS
-import qualified Log (mailingServer)
+import qualified Log
 
 dispatcher :: CryptoRNGState -> Sender -> MVar Sender -> String -> AWS.AmazonConfig -> IO ()
 dispatcher rng master msender dbconf amazonconf = withPostgreSQL dbconf . runCryptoRNGT rng . AWS.runAmazonMonadT amazonconf $ do
-  Log.mailingServer $ "Dispatcher is starting"
+  Log.mixlog_ $ "Dispatcher is starting"
   do
     mails <- dbQuery GetIncomingEmails
-    Log.mailingServer $ "Batch of mails to send is " ++ show (length mails) ++ " email(s) long."
+    Log.mixlog_ $ "Batch of mails to send is " ++ show (length mails) ++ " email(s) long."
     forM_ mails $ \mail@Mail{mailID, mailServiceTest} -> do
       if isNotSendable mail
        then do
-         Log.mailingServer $ "Email " ++ show mail ++ " is not sendable, discarding."
+         Log.mixlog_ $ "Email " ++ show mail ++ " is not sendable, discarding."
          success <- dbUpdate $ DeleteEmail mailID
          when (not success) $
-           Log.mailingServer $ "Couldn't remove unsendable email #" ++ show mailID ++ " from database."
+           Log.mixlog_ $ "Couldn't remove unsendable email #" ++ show mailID ++ " from database."
        else do
          -- we want to send service testing emails always with master service
          mailer <- if mailServiceTest
                    then return master
                    else liftIO $ readMVar msender
 
-         Log.mailingServer $ "Sending email #" ++ show mailID ++ " using " ++ show mailer ++ "..."
+         Log.mixlog_ $ "Sending email #" ++ show mailID ++ " using " ++ show mailer ++ "..."
          success <- sendMail mailer mail
          now <- getMinutesTime
          if success
            then do
              res <- dbUpdate $ MarkEmailAsSent mailID now
              when (not res) $
-               Log.mailingServer $ "Failed to mark email #" ++ show mailID ++ " as sent."
+               Log.mixlog_ $ "Failed to mark email #" ++ show mailID ++ " as sent."
            else do
-             Log.mailingServer $ "Failed to send email #" ++ show mailID
+             Log.mixlog_ $ "Failed to send email #" ++ show mailID
              if (mailAttempt mail < 100)
                 then do
-                  Log.mailingServer $ "Deferring email #" ++ show mailID ++" for 5 minutes"
+                  Log.mixlog_ $ "Deferring email #" ++ show mailID ++" for 5 minutes"
                   res <- dbUpdate $ DeferEmail mailID $ 5 `minutesAfter` now
                   when (not res) $
-                    Log.mailingServer $ "Failed to defer email #" ++ show mailID ++ " sendout."
+                    Log.mixlog_ $ "Failed to defer email #" ++ show mailID ++ " sendout."
                 else do
-                  Log.mailingServer $ "Deleting email #" ++ show mailID ++" since there was over 100 tries to send it"
+                  Log.mixlog_ $ "Deleting email #" ++ show mailID ++" since there was over 100 tries to send it"
                   res <- dbUpdate $ DeleteEmail mailID
                   when (not res) $
-                    Log.mailingServer $ "Deleting email #" ++ show mailID ++ " failed."
+                    Log.mixlog_ $ "Deleting email #" ++ show mailID ++ " failed."
       kCommit -- commit after email was handled properly
-      Log.mailingServer $ "Dispatcher is done"
+      Log.mixlog_ $ "Dispatcher is done"
   where
     isNotSendable Mail{..} =
       null (addrEmail mailFrom) || null mailTo || any (null . addrEmail) mailTo
