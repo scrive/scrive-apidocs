@@ -131,7 +131,7 @@ testMany (allargs, ts) = Log.withLogger $ do
   rng <- unsafeCryptoRNGState (BS.pack (replicate 128 0))
   templates <- readGlobalTemplates
   withPostgreSQL pgconf $ do
-    migrateDatabase Log.debug kontraTables kontraMigrations
+    migrateDatabase Log.mixlog_ kontraTables kontraMigrations
     defineMany kontraFunctions
 
     nex <- getNexus
