@@ -19,16 +19,16 @@ import Sender
 import Utils.Cron
 import Utils.IO
 import Utils.Network
-import qualified Log (withLogger, messengerServer)
+import qualified Log
 
 main :: IO ()
 main = Log.withLogger $ do
   appname <- getProgName
-  conf <- readConfig Log.messengerServer appname [] "messenger_server.conf"
+  conf <- readConfig Log.mixlog_ appname [] "messenger_server.conf"
   checkExecutables
 
   withPostgreSQL (mscDBConfig conf) $
-    checkDatabase Log.messengerServer messengerTables
+    checkDatabase Log.mixlog_ messengerTables
 
   rng <- newCryptoRNGState
 
@@ -36,7 +36,7 @@ main = Log.withLogger $ do
     let (iface, port) = mscHttpBindAddress conf
         handlerConf = nullConf { port = fromIntegral port }
         (routes, overlaps) = R.compile handlers
-    maybe (return ()) Log.messengerServer overlaps
+    maybe (return ()) Log.mixlog_ overlaps
     socket <- listenOn (htonl iface) $ fromIntegral port
     forkIO $ simpleHTTPWithSocket socket handlerConf (router rng conf routes)
    ) killThread $ \_ -> do
@@ -48,4 +48,4 @@ main = Log.withLogger $ do
         , forkCron_ True "SMS Cleaner" (60*60) $ cleaner rng dbconf
         ]) $ \_ -> do
             waitForTermination
-            Log.messengerServer $ "Termination request received"
+            Log.mixlog_ $ "Termination request received"
