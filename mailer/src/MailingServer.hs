@@ -22,16 +22,16 @@ import DB.Checks
 import Mails.Tables
 import qualified Data.ByteString.Char8 as BS
 import qualified MemCache
-import qualified Log (withLogger, mailingServer)
+import qualified Log
 import qualified Amazon as AWS
 
 main :: IO ()
 main = Log.withLogger $ do
   appname <- getProgName
-  conf <- readConfig Log.mailingServer appname [] "mailing_server.conf"
+  conf <- readConfig Log.mixlog_ appname [] "mailing_server.conf"
   checkExecutables
   withPostgreSQL (mscDBConfig conf) $
-    checkDatabase Log.mailingServer mailerTables
+    checkDatabase Log.mixlog_ mailerTables
 
   fcache <- MemCache.new BS.length 52428800
   let amazonconf = AWS.AmazonConfig (mscAmazonConfig conf) fcache
@@ -41,7 +41,7 @@ main = Log.withLogger $ do
     let (iface, port) = mscHttpBindAddress conf
         handlerConf = nullConf { port = fromIntegral port }
         (routes, overlaps) = R.compile handlers
-    maybe (return ()) Log.mailingServer overlaps
+    maybe (return ()) Log.mixlog_ overlaps
     socket <- listenOn (htonl iface) $ fromIntegral port
     forkIO $ simpleHTTPWithSocket socket handlerConf (router rng conf routes)
    ) killThread $ \_ -> do
@@ -57,4 +57,4 @@ main = Log.withLogger $ do
                             (serviceAvailabilityChecker conf rng dbconf (sender, createSender slave) msender) ]
           Nothing    -> []) $ \_ -> do
       waitForTermination
-      Log.mailingServer $ "Termination request received"
+      Log.mixlog_ $ "Termination request received"
