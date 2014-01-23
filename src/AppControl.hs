@@ -27,7 +27,7 @@ import Session.Data hiding (session)
 import Session.Model
 import Templates
 import User.Model
-import qualified Log (error, debug)
+import qualified Log
 import qualified FlashMessage as F
 import qualified MemCache
 import Util.FinishWith
@@ -89,7 +89,7 @@ maybeReadTemplates production mvar = modifyMVar mvar $ \(modtime, templates) -> 
               modtime' <- getTemplatesModTime
               if modtime /= modtime'
                then do
-                   Log.debug $ "Reloading templates"
+                   Log.mixlog_ $ "Reloading templates"
                    templates' <- readGlobalTemplates
                    return ((modtime', templates'), templates')
                else return ((modtime, templates), templates)
@@ -170,7 +170,7 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
     -- access/update session from a row that was previously locked.
     kCommit
     rq <- askRq
-    Log.debug $ "Handling routes for : " ++ rqUri rq ++ rqQuery rq
+    Log.mixlog_ $ "Handling routes for : " ++ rqUri rq ++ rqQuery rq
 
     (res, ctx') <- routeHandlers ctx
 
@@ -199,7 +199,7 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
         TOD fs fp = finishTime
         diff = (fs - ss) * 1000000000000 + fp - sp
 
-    Log.debug $ "SQL stats: " ++ rqUri rq ++ rqQuery rq ++
+    Log.mixlog_ $ "SQL stats: " ++ rqUri rq ++ rqQuery rq ++
                 "\n    " ++ show stats ++ ", time: " ++ show (diff `div` 1000000000) ++ "ms"
 
     case res of
@@ -210,7 +210,7 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
   where
     amazoncfg = AWS.AmazonConfig (amazonConfig appConf) (filecache appGlobals)
     catchEverything m = m `E.catch` \(e::E.SomeException) -> do
-      lift $ Log.error $ "appHandler: exception caught at top level: " ++ show e ++ " (this shouldn't happen)"
+      lift $ Log.mixlog_ $ "appHandler: exception caught at top level: " ++ show e ++ " (this shouldn't happen)"
       internalServerError $ toResponse ""
 
     routeHandlers ctx = runKontraPlus ctx $ do
@@ -220,7 +220,7 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
             modifyContext $ const ctx'
             return $ Right res
         , E.Handler $ \(e::E.SomeException) -> do
-          Log.error $ "Exception caught in routeHandlers: " ++ show e
+          Log.mixlog_ $ "Exception caught in routeHandlers: " ++ show e
           handleKontraError (InternalError ["routeHandlers"])
         ]
       ctx' <- getContext
@@ -229,11 +229,11 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
     handleKontraError e = Left <$> do
       rq <- askRq
       liftIO (tryReadMVar $ rqInputsBody rq)
-        >>= Log.error . shows e . (++) ": " . showRequest rq
+        >>= Log.mixlog_ . shows e . (++) ": " . showRequest rq
       case e of
         InternalError stack -> do
-          Log.error $ "InternalError with call stack: "
-          mapM_ (\s -> Log.error ("    " ++ s)) (reverse stack)
+          Log.mixlog_ $ "InternalError with call stack: "
+          mapM_ (\s -> Log.mixlog_ ("    " ++ s)) (reverse stack)
           internalServerErrorPage >>= internalServerError
         Respond404 -> notFoundPage >>= notFound
 
@@ -270,7 +270,7 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
         case flashes of
           Right (Just fs) -> return fs
           _ -> do
-            Log.error $ "Couldn't read flash messages from value: " ++ fval
+            Log.mixlog_ $ "Couldn't read flash messages from value: " ++ fval
             F.removeFlashCookie
             return []
 
