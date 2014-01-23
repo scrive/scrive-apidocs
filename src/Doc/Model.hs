@@ -1796,7 +1796,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m RestartDocumen
               (documentid d)
             return $ Just d
       Left err -> do
-        Log.mixlog_ err
+        Log.attention_ err
         return Nothing
    where
 
@@ -2091,7 +2091,7 @@ instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m) => DBUpdate m ResetSig
             return True
 
           s -> do
-            Log.mixlog_ $ "cannot reset signatory details on document " ++ show documentid ++ " because " ++ intercalate ";" s
+            Log.attention_ $ "cannot reset signatory details on document " ++ show documentid ++ " because " ++ intercalate ";" s
             return False
 
 data CloneDocumentWithUpdatedAuthor = CloneDocumentWithUpdatedAuthor User Document Actor
