@@ -58,13 +58,11 @@ addDigitalSignature = theDocumentID >>= \did -> do
                 return (res, Guardtime (GT.extended gsig) (GT.privateGateway gsig))
            _ -> do
                 res <- liftIO $ BS.readFile mainpath
-                Log.mixlog_ $ "GuardTime verification after signing failed for document #" ++ show did ++ ": " ++ show vr
-                Log.mixlog_ $ "GuardTime verification after signing failed for document #" ++ show did ++ ": " ++ show vr
+                Log.attention_ $ "GuardTime verification after signing failed for document #" ++ show did ++ ": " ++ show vr
                 return (res, Missing)
     ExitFailure c -> do
       res <- liftIO $ BS.readFile mainpath
-      Log.mixlog_ $ "GuardTime failed " ++ show c ++ " of document #" ++ show did
-      Log.mixlog_ $ "GuardTime failed for document #" ++ show did
+      Log.attention_ $ "GuardTime failed " ++ show c ++ " of document #" ++ show did
       return (res, Missing)
   when (status /= Missing) $ do
     Log.mixlog_ $ "Adding new sealed file to DB"
@@ -125,7 +123,7 @@ digitallyExtendFile ctxtime ctxgtconf pdfpath pdfname = do
                 Log.mixlog_ $ "GuardTime verification after extension failed for document #" ++ show documentid ++ ": " ++ show vr
                 return Nothing
     ExitFailure c -> do
-      Log.mixlog_ $ "GuardTime failed " ++ show c ++ " for document #" ++ show documentid
+      Log.attention_ $ "GuardTime failed " ++ show c ++ " for document #" ++ show documentid
       return Nothing
   case mr of
     Nothing -> return False
