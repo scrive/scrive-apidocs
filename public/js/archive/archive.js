@@ -103,7 +103,10 @@ var ArchiveView = Backbone.View.extend({
         if ($('.blocking-info').size() > 0) limit += $('.blocking-info').outerHeight();
         if ($(window).scrollTop() >= limit && $(".wrapper-position-footer").height() >= 1200) {
             $(this.el).addClass("scrolled");
-            $(this.el).find('.option-top-box').css('background-color', $('body').css('background-color'));
+            var topbox = $(this.el).find('.option-top-box');
+            var bgcolor = $('body').css('background-color');
+            topbox.css('background-color', bgcolor);
+            topbox.find('.subbox').css('background-color', bgcolor);
         } else if ( $(this.el).hasClass("scrolled") && $(window).scrollTop() <= limit) {
             $(this.el).removeClass("scrolled");
         }
