@@ -337,23 +337,23 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
                                }
 
   in do
-      -- Log.debug "Creating seal spec from file."
+      -- Log.mixlog_ "Creating seal spec from file."
       -- Remove events induced by resealing and non-signing party activities
       let eventsForHistory = filter eventForVerificationPage . filter (not . viewingParty)
           viewingParty e = viewer (evAffectedSigLink e) || viewer (evSigLink e)
                where viewer s = (signatoryispartner <$> s) == Just False
       history <- (mapM mkHistEntry . eventsForHistory) =<< getSignatoryLinks (eventsForLog elog)
-      -- Log.debug ("about to render staticTexts")
+      -- Log.mixlog_ ("about to render staticTexts")
       staticTexts <- renderLocalTemplate document "contractsealingtexts" $ do
                         documentInfoFields document
                         F.value "hostpart" hostpart
-      -- Log.debug ("finished staticTexts: " ++ show staticTexts)
+      -- Log.mixlog_ ("finished staticTexts: " ++ show staticTexts)
       readtexts <- case maybeRead staticTexts of
                      Just x -> return x
                      Nothing -> do
-                       --Log.error $ "Cannot read SealingTexts: " ++ staticTexts
+                       --Log.mixlog_ $ "Cannot read SealingTexts: " ++ staticTexts
                        error $ "Cannot read SealingTexts: " ++ staticTexts
-      -- Log.debug ("read texts: " ++ show readtexts)
+      -- Log.mixlog_ ("read texts: " ++ show readtexts)
 
       -- Creating HTML Evidence Log
       htmllogs <- htmlDocFromEvidenceLog (documenttitle document) (suppressRepeatedEvents elog) ces
@@ -416,11 +416,11 @@ sealDocument = theDocumentID >>= \did -> do
   mfile <- theDocument >>= documentfileM
   case mfile of
     Just file -> do
-      Log.debug $ "Sealing document #" ++ show did
+      Log.mixlog_ $ "Sealing document #" ++ show did
       sealDocumentFile file
-      Log.debug $ "Sealing of document #" ++ show did ++ " should be done now"
+      Log.mixlog_ $ "Sealing of document #" ++ show did ++ " should be done now"
     Nothing -> do
-      Log.debug $ "Sealing of document #" ++ show did ++ " failed because it has no main file attached"
+      Log.mixlog_ $ "Sealing of document #" ++ show did ++ " failed because it has no main file attached"
       internalError
 
 collectClockErrorStatistics :: MonadDB m => [DocumentEvidenceEvent] -> m HC.ClockErrorStatistics
@@ -458,7 +458,7 @@ sealDocumentFile file@File{fileid, filename} = theDocumentID >>= \documentid ->
       liftIO $ BS.writeFile sealspecpath (BS.fromString $ show $ pp_value (toJSValue config))
       readProcessWithExitCode' "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "add-verification-pages", sealspecpath] (BSL.empty)
 
-    Log.debug $ "Sealing completed with " ++ show code
+    Log.mixlog_ $ "Sealing completed with " ++ show code
     case code of
       ExitSuccess -> do
         sealedfileid <- dbUpdate . NewFile filename . Binary =<< liftIO (BS.readFile tmpout)
@@ -469,9 +469,9 @@ sealDocumentFile file@File{fileid, filename} = theDocumentID >>= \documentid ->
           systmp <- getTemporaryDirectory
           (path, handle) <- openTempFile systmp ("seal-failed-" ++ show documentid ++ "-" ++ show fileid ++ "-.pdf")
           let msg = "Cannot seal document #" ++ show documentid ++ " because of file #" ++ show fileid
-          Log.error $ msg ++ ": " ++ path
-          Log.error $ BSL.toString stderr
-          Log.error $ "Sealing configuration: " ++ show config
+          Log.mixlog_ $ msg ++ ": " ++ path
+          Log.mixlog_ $ BSL.toString stderr
+          Log.mixlog_ $ "Sealing configuration: " ++ show config
           BS.hPutStr handle content
           hClose handle
         void $ dbUpdate $ ErrorDocument ("Could not seal document because of file #" ++ show fileid)
@@ -486,7 +486,7 @@ presealDocumentFile :: (MonadBaseControl IO m, MonadDB m, KontraMonad m, Templat
                  -> m (Either String BS.ByteString)
 presealDocumentFile document@Document{documentid} file@File{fileid} =
   withSystemTempDirectory' ("preseal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
-    Log.debug ("presealing: " ++ show fileid)
+    Log.mixlog_ ("presealing: " ++ show fileid)
     let tmpin = tmppath ++ "/input.pdf"
     let tmpout = tmppath ++ "/output.pdf"
     content <- getFileContents file
@@ -500,15 +500,15 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
       let sealspecpath = tmppath ++ "/sealspec.json"
       liftIO $ BS.writeFile sealspecpath (BS.fromString $ show $ pp_value (toJSValue config))
       readProcessWithExitCode' "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "add-verification-pages", sealspecpath] (BSL.empty)
-    Log.debug $ "PreSealing completed with " ++ show code
+    Log.mixlog_ $ "PreSealing completed with " ++ show code
     case code of
       ExitSuccess -> do
           res <- liftIO $ BS.readFile tmpout
-          Log.debug $ "Returning presealed content"
+          Log.mixlog_ $ "Returning presealed content"
           return $ Right res
       ExitFailure _ -> do
-          Log.error $ BSL.toString stderr
-          Log.error $ "Presealing failed for configuration: " ++ show config
+          Log.mixlog_ $ BSL.toString stderr
+          Log.mixlog_ $ "Presealing failed for configuration: " ++ show config
           return $ Left "Error when preprinting fields on PDF"
 
 emptyFieldsTextT :: (TemplatesMonad m) => m [(FieldType,String)]
