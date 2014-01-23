@@ -469,9 +469,9 @@ sealDocumentFile file@File{fileid, filename} = theDocumentID >>= \documentid ->
           systmp <- getTemporaryDirectory
           (path, handle) <- openTempFile systmp ("seal-failed-" ++ show documentid ++ "-" ++ show fileid ++ "-.pdf")
           let msg = "Cannot seal document #" ++ show documentid ++ " because of file #" ++ show fileid
-          Log.mixlog_ $ msg ++ ": " ++ path
-          Log.mixlog_ $ BSL.toString stderr
-          Log.mixlog_ $ "Sealing configuration: " ++ show config
+          Log.attention_ $ msg ++ ": " ++ path
+          Log.attention_ $ BSL.toString stderr
+          Log.attention_ $ "Sealing configuration: " ++ show config
           BS.hPutStr handle content
           hClose handle
         void $ dbUpdate $ ErrorDocument ("Could not seal document because of file #" ++ show fileid)
@@ -507,8 +507,8 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
           Log.mixlog_ $ "Returning presealed content"
           return $ Right res
       ExitFailure _ -> do
-          Log.mixlog_ $ BSL.toString stderr
-          Log.mixlog_ $ "Presealing failed for configuration: " ++ show config
+          Log.attention_ $ BSL.toString stderr
+          Log.attention_ $ "Presealing failed for configuration: " ++ show config
           return $ Left "Error when preprinting fields on PDF"
 
 emptyFieldsTextT :: (TemplatesMonad m) => m [(FieldType,String)]
