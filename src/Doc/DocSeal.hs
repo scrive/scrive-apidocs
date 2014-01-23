@@ -456,7 +456,7 @@ sealDocumentFile file@File{fileid, filename} = theDocumentID >>= \documentid ->
     (code,_stdout,stderr) <- liftIO $ do
       let sealspecpath = tmppath ++ "/sealspec.json"
       liftIO $ BS.writeFile sealspecpath (BS.fromString $ show $ pp_value (toJSValue config))
-      readProcessWithExitCode' "java" ["-jar", "pdfsealjava/pdfseal.jar", sealspecpath] (BSL.empty)
+      readProcessWithExitCode' "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "add-verification-pages", sealspecpath] (BSL.empty)
 
     Log.debug $ "Sealing completed with " ++ show code
     case code of
@@ -499,7 +499,7 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
     (code,_stdout,stderr) <- liftIO $ do
       let sealspecpath = tmppath ++ "/sealspec.json"
       liftIO $ BS.writeFile sealspecpath (BS.fromString $ show $ pp_value (toJSValue config))
-      readProcessWithExitCode' "java" ["-jar", "pdfsealjava/pdfseal.jar", sealspecpath] (BSL.empty)
+      readProcessWithExitCode' "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "add-verification-pages", sealspecpath] (BSL.empty)
     Log.debug $ "PreSealing completed with " ++ show code
     case code of
       ExitSuccess -> do
