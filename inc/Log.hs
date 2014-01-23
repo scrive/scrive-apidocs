@@ -34,6 +34,7 @@ import System.IO.Unsafe
 import Data.Char
 import Data.List
 import Numeric
+import Data.Time.Clock
 import Data.Ratio
 import Control.Monad.Cont
 import Control.Monad.Error
@@ -132,16 +133,24 @@ outputChannel = unsafePerformIO $ do
 
 
 instance MonadLog IO where
-  mixlogjs title js = C.writeChan outputChannel text
+  mixlogjs title js = do
+      -- FIXME: asking got time on every log line is actually a heavy task
+      -- Find in the internet how to get around this limitation
+      currentTime <-getCurrentTime
+      -- show instance for UTCTime looks like this:
+      -- "2014-01-23 22:08:14.682469 UTC"
+      -- this is exactly what we want here
+      let datedTitle = takeWhile (/='.') (show currentTime) ++ " " ++ title
+      C.writeChan outputChannel (text datedTitle)
     where
       jsx = toJSValue js
-      text = case jsx of
-               JSObject vals | null (fromJSObject vals) -> title
+      text datedTitle = case jsx of
+               JSObject vals | null (fromJSObject vals) -> datedTitle
                JSObject _vals ->
-                     intercalate "\n" (title : map ("    " ++) (jsonShowYamlLn jsx))
+                     intercalate "\n" (datedTitle : map ("    " ++) (jsonShowYamlLn jsx))
                JSArray vals | not (null vals) ->
-                     intercalate "\n" (title : map ("    " ++) (jsonShowYamlLn jsx))
-               _ -> intercalate " " (title : jsonShowYamlLn jsx)
+                     intercalate "\n" (datedTitle : map ("    " ++) (jsonShowYamlLn jsx))
+               _ -> intercalate " " (datedTitle : jsonShowYamlLn jsx)
 
 setupLogger :: IO ()
 setupLogger = do
