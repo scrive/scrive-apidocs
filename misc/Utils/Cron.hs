@@ -88,11 +88,11 @@ forkCron waitfirst name seconds action tg = do
           case st of
             (Running, Continue) -> do
               action release `E.catch` \(e::E.SomeException) ->
-                Log.mixlog_ ("forkCron: exception caught in thread " ++ name ++ ": " ++ show e)
+                Log.attention_ ("forkCron: exception caught in thread " ++ name ++ ": " ++ show e)
               atomically . modifyTVar' ctrl $ first (const Waiting)
               worker
             (_, Finish) -> Log.mixlog_ $ "forkCron: finishing " ++ name ++ "..."
-            (Waiting, Continue) -> Log.mixlog_ "forkCron: (Waiting, Continue) after (/= (Waiting, Continue)) condition. Something bad happened, exiting."
+            (Waiting, Continue) -> Log.attention_ "forkCron: (Waiting, Continue) after (/= (Waiting, Continue)) condition. Something bad happened, exiting."
 
 -- | Same as forkCron, but there is no way to make parts
 -- of passed action interruptible
