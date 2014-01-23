@@ -242,7 +242,6 @@ apiCallUpdate did = api $ do
     json <- apiGuard (badInput "The MIME part 'json' must be a valid JSON.") $ case decode jsons of
                                                                                  J.Ok js -> Just js
                                                                                  _ -> Nothing
-    Log.mixlog "Just checking documentid" (return ())
     Log.mixlogjs "Document updated with:" json
     draftData   <- apiGuardJustM (badInput "Given JSON does not represent valid draft data.") $ flip fromJSValueWithUpdate json . Just <$> theDocument
     whenM (draftIsChangingDocument draftData <$> theDocument) $ do
@@ -285,7 +284,6 @@ apiCallSetAuthorAttachemnts did = api $ do
                        cres <- liftIO $ preCheckPDF (concatChunks content)
                        case cres of
                          Left _ -> do
-                           Log.mixlog_ $ "Document #" ++ show did ++ ". File for attachment " ++ show filepath ++ " is broken PDF. Skipping."
                            throwIO . SomeKontraException $ (badInput $ "AttachFile " ++ show i ++ " file is not a valid PDF")
                          Right content' -> do
                            fileid' <- dbUpdate $ NewFile filename content'
@@ -381,9 +379,9 @@ apiCallCheckSign :: Kontrakcja m
              -> m Response
 apiCallCheckSign did slid = api $ do
   checkObjectVersionIfProvided did
-  Log.mixlog_ $ "Checking if we can sign a document"
+
   (mh,_) <- getMagicHashAndUserForSignatoryAction did slid
-  Log.mixlog_ "We have magic hash for this operation"
+
   fields <- getFieldForSigning
   mprovider <- readField "eleg"
   doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
@@ -417,13 +415,12 @@ apiCallSign  did slid = api $ do
   checkObjectVersionIfProvided did
   Log.mixlog_ $ "Ready to sign a document " ++ show did ++ " for signatory " ++ show slid
   (mh,mu) <- getMagicHashAndUserForSignatoryAction did slid
-  Log.mixlog_ "We have magic hash for this operation"
+
   screenshots' <- fmap (fromMaybe emptySignatoryScreenshots) $
                (fromJSValue =<<) <$> getFieldJSON "screenshots"
   screenshots <- resolveReferenceScreenshotNames screenshots'
   fields <- getFieldForSigning
   mprovider <- readField "eleg"
-  Log.mixlog_ $ "All parameters read and parsed"
 
   olddoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
   withDocument olddoc $ do
@@ -442,11 +439,11 @@ apiCallSign  did slid = api $ do
                             BankID.verifySignatureAndGetSignInfo slid mh fields provider signature transactionid
                   case esigninfo of
                       BankID.Problem msg -> do
-                        Log.mixlog_ $ "Eleg verification for document #" ++ show did ++ " failed with message: " ++ msg
+                        Log.attention_ $ "Eleg verification for document #" ++ show did ++ " failed with message: " ++ msg
                         (Left . Failed) <$> (runJSONGenT $ return ())
                       BankID.Mismatch (onname,onnumber) (sfn,sln,spn) -> do
                         handleMismatch slid ((\(t,v) -> SignatoryField t v False False []) <$> fields) sfn sln spn
-                        Log.mixlog_ $ "Eleg verification for document #" ++ show did ++ " failed with mismatch " ++ show ((onname,onnumber),(sfn,sln,spn))
+                        Log.attention_ $ "Eleg verification for document #" ++ show did ++ " failed with mismatch " ++ show ((onname,onnumber),(sfn,sln,spn))
                         (Left . Failed) <$> (runJSONGenT $ value "mismatch" True >> value "onName" onname >> value "onNumber" onnumber)
                       BankID.Sign sinfo -> do
                         signDocument slid mh fields (Just sinfo) screenshots
@@ -479,7 +476,7 @@ handleMismatch :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [Signato
 handleMismatch sid sf sfn sln spn = do
         ctx <- getContext
         Just sl <- getSigLinkFor sid <$> theDocument
-        Log.mixlog_ $ "Information from eleg did not match information stored for signatory in document."
+        Log.attention_ $ "Information from eleg did not match information stored for signatory in document."
         dbUpdate $ LogSignWithELegFailureForDocument sid (nothingIfEmpty $ getFullName sf) (nothingIfEmpty $ getPersonalNumber sf)  sfn sln spn (signatoryActor ctx sl)
         triggerAPICallbackIfThereIsOne =<< theDocument
 
