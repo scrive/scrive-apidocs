@@ -99,7 +99,7 @@ convertPdfToJpgPages fid widthInPixels = do
       ExitFailure _ -> do
         systmp <- getTemporaryDirectory
         (path,handle) <- openTempFile systmp ("mudraw-failed-" ++ show fid ++ "-.pdf")
-        Log.mixlog_ $ "Cannot mudraw of file #" ++ show fid ++ ": " ++ path
+        Log.attention_ $ "Cannot mudraw of file #" ++ show fid ++ ": " ++ path
         BS.hPutStr handle content
         hClose handle
 
@@ -221,7 +221,7 @@ preCheckPDF content =
     value <- preCheckPDFHelper content tmppath
       `E.catch` \(e::IOError) -> return (Left (FileOtherError (show e)))
     case value of
-      Left x -> Log.mixlog_ $ "preCheckPDF: " ++ show x
+      Left x -> Log.attention_ $ "preCheckPDF: " ++ show x
       Right _ -> return ()
     return $ Binary <$> value
 
