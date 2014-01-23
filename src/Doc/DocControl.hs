@@ -271,7 +271,6 @@ handleIssueShowGet docid = checkUserTOSGet $ do
     (False, Just siglink)            -> do
        Left  <$> (simpleHtmlResonseClrFlash =<< pageDocumentSignView ctx document siglink ad)
     _                                -> do
-       Log.mixlog_ $ "internalError in handleIssueShowGet for document #" ++ show (documentid document)
        internalError
 
 
