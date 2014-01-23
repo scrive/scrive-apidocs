@@ -14,37 +14,37 @@ import Sender
 import SMS.Model
 import SMS.Data
 import MinutesTime
-import qualified Log (messengerServer)
+import qualified Log
 
 dispatcher :: CryptoRNGState -> Sender -> MVar Sender -> String -> IO ()
 dispatcher rng _master msender dbconf = withPostgreSQL dbconf . runCryptoRNGT rng $ do
-    Log.messengerServer $ "SMS Dispatcher is starting"
+    Log.mixlog_ $ "SMS Dispatcher is starting"
     smses <- dbQuery GetIncomingSMSes
-    Log.messengerServer $ "Batch of smses to send is " ++ show (length smses) ++ " sms(es) long."
+    Log.mixlog_ $ "Batch of smses to send is " ++ show (length smses) ++ " sms(es) long."
     forM_ smses $ \sms@ShortMessage{smID} -> do
          -- we want to send service testing emails always with master service
          messenger <- liftIO $ readMVar msender
 
-         Log.messengerServer $ "Sending sms #" ++ show smID ++ " using " ++ show messenger ++ "..."
+         Log.mixlog_ $ "Sending sms #" ++ show smID ++ " using " ++ show messenger ++ "..."
          success <- sendSMS messenger sms
          now <- getMinutesTime
          if success
            then do
              res <- dbUpdate $ MarkSMSAsSent smID now
              when (not res) $
-               Log.messengerServer $ "Failed to mark sms #" ++ show smID ++ " as sent."
+               Log.mixlog_ $ "Failed to mark sms #" ++ show smID ++ " as sent."
            else do
-             Log.messengerServer $ "Failed to send sms #" ++ show smID
+             Log.mixlog_ $ "Failed to send sms #" ++ show smID
              if (smAttemtp sms < 100)
                 then do
-                  Log.messengerServer $ "Deferring sms #" ++ show smID ++" for 5 minutes"
+                  Log.mixlog_ $ "Deferring sms #" ++ show smID ++" for 5 minutes"
                   res <- dbUpdate $ DeferSMS smID $ 5 `minutesAfter` now
                   when (not res) $
-                    Log.messengerServer $ "Failed to defer sms #" ++ show smID ++ " sendout."
+                    Log.mixlog_ $ "Failed to defer sms #" ++ show smID ++ " sendout."
                 else do
-                  Log.messengerServer $ "Deleting sms #" ++ show smID ++" since there was over 100 tries to send it"
+                  Log.mixlog_ $ "Deleting sms #" ++ show smID ++" since there was over 100 tries to send it"
                   res <- dbUpdate $ DeleteSMS smID
                   when (not res) $
-                    Log.messengerServer $ "Deleting sms #" ++ show smID ++ " failed."
+                    Log.mixlog_ $ "Deleting sms #" ++ show smID ++ " failed."
          kCommit -- commit after sms was handled properly
-    Log.messengerServer $ "SMS Dispatcher is done"
+    Log.mixlog_ $ "SMS Dispatcher is done"
