@@ -97,7 +97,7 @@ processEvents = dbQuery GetUnreadEvents >>= mapM_ processEvent
       now <- getMinutesTime
       success <- dbUpdate $ MarkEventAsRead eid now
       when (not success) $
-        Log.mixlog_ $ "Couldn't mark event #" ++ show eid ++ " as read"
+        Log.attention_ $ "Couldn't mark event #" ++ show eid ++ " as read"
 
 handleDeliveredInvitation :: (CryptoRNG m, DocumentMonad m, TemplatesMonad m)
                           => Maybe BrandedDomain -> String -> MailsConfig -> SignatoryLinkID -> m ()
