@@ -870,7 +870,7 @@
 "_signedAndClosed":"Dokument signerat!",
 "_signedAndClosedSubText":"Dokumentet med registrerad signeringshistorik har skickats till din inkorg.",
 "_signedNotClosed":"Du har signerat",
-"_signedNotClosedSubText":"När alla har signerat kommer dokumentet skickas till din angivna e-postadress.",
+"_signedNotClosedSubText":"När alla parter har signerat kommer det färdigställda dokumentet att skickas till din e-postadress.",
 "_signingErrorMessage1":"Vi har problem att hantera ditt dokument.",
 "_signingErrorMessage2":"Vänligen ladda om sidan.",
 "_signingErrorReload":"Ladda om sidan",
