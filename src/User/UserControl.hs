@@ -370,7 +370,7 @@ handleAccessNewAccountGet uid token = do
           case ctxmaybeuser ctx of
             Just currentUser | currentUser == user -> return LinkArchive
             Just currentUser -> do
-              Log.debug $ "New account email button link for user " ++ show uid ++ " clicked by logged user " ++ show (userid currentUser)
+              Log.mixlog_ $ "New account email button link for user " ++ show uid ++ " clicked by logged user " ++ show (userid currentUser)
               return LinkArchive
             Nothing -> return $ LinkLogin (ctxlang ctx) NotLogged
         _ -> do
