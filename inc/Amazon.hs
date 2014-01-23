@@ -30,6 +30,7 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
+import Text.JSON.Gen
 
 import Crypto
 import Crypto.RNG
@@ -125,7 +126,7 @@ uploadFilesToAmazon = do
         then kCommit
         else do
           kRollback
-          Log.mixlog_ "Uploading to Amazon failed, sleeping for 5 minutes."
+          Log.attention_ "Uploading to Amazon failed, sleeping for 5 minutes."
           liftIO $ threadDelay $ 5 * 60 * 1000000
       uploadFilesToAmazon
 
@@ -166,11 +167,16 @@ exportFile ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)}
   result <- liftIO $ AWS.runAction action
   case result of
     Right _ -> do
-      Log.mixlog_ $ "AWS uploaded " ++ bucket </> url
+      Log.mixlog "AWS uploaded" $ do
+          value "fileid" (show fileid)
+          value "url" (bucket </> url)
       _ <- dbUpdate $ FileMovedToAWS fileid bucket url aes
       return True
-    Left err -> do -- FIXME: do much better error handling
-      Log.mixlog_ $ "AWS failed to upload of " ++ bucket </> url ++ " failed with error: " ++ show err
+    Left err -> do
+      Log.attention "AWS failed to upload" $ do
+          value "fileid" (show fileid)
+          value "url" (bucket </> url)
+          value "error" (show err)
       return False
 
 exportFile _ _ = do
@@ -188,35 +194,48 @@ deleteFile ctxs3action bucket url = do
   result <- liftIO $ AWS.runAction action
   case result of
     Right res -> do
-      Log.mixlog_ $ "AWS deleted " ++ bucket </> url ++ " (result: " ++ show res ++ ")"
+      Log.mixlog "AWS file deleted" $ do
+         value "url" $ bucket </> url
+         value "result" (show res)
       return True
-    Left err -> do -- FIXME: do much better error handling
-      Log.mixlog_ $ "AWS failed to delete " ++ bucket </> url ++ " failed with error: " ++ show err
+    Left err -> do
+      Log.attention "AWS failed to delete file" $ do
+         value "url" $ bucket </> url
+         value "result" (show err)
       return False
 
 
 getFileContents :: (MonadIO m, Log.MonadLog m) => S3Action -> File -> m (Maybe BS.ByteString)
 getFileContents s3action File{..} = do
-  mcontent <- liftIO $ getContent filestorage
+  mcontent <- getContent filestorage
   case mcontent of
     Nothing -> do
-      Log.mixlog_ $ "No content for file " ++ show fileid
+      Log.attention "No content for file" $ do
+         value "fileid" (show fileid)
+         value "filename" filename
       return Nothing
     Just content -> do
       if isJust filechecksum && Just (SHA1.hash content) /= filechecksum
         then do
-          Log.mixlog_ $ "CRITICAL: SHA1 checksum of file with id = " ++ show fileid ++ " doesn't match the one in the database"
+          Log.attention "SHA1 checksum of file doesn't match the one in the database" $ do
+             value "fileid" (show fileid)
+             value "filename" filename
+             -- value "database_sha1" filechecksum
+             -- value "calculated_sha1" (SHA1.hash content)
           return Nothing
         else return $ Just content
   where
     getContent (FileStorageMemory content) = return . Just $ content
     getContent (FileStorageAWS bucket url aes) = do
-      result <- AWS.runAction $ s3action {
+      result <- liftIO $ AWS.runAction $ s3action {
           AWS.s3object = url
         , AWS.s3bucket = bucket
       }
       case result of
         Right rsp -> return . Just . aesDecrypt aes . concatChunks $ HTTP.rspBody rsp
         Left err -> do
-          Log.mixlog_ $ "AWS.runAction failed with: " ++ show err
+          Log.mixlog "AWS.runAction failed" $ do
+             value "fileid" (show fileid)
+             value "error" (show err)
+             value "filename" filename
           return Nothing
