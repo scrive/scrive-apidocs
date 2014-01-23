@@ -10,6 +10,10 @@ module Log
   , mixlogt
   , mixlog_
 
+  , attention
+  , attentiont
+  , attention_
+
   ) where
 
 import Control.Exception.Extensible (bracket)
@@ -195,6 +199,16 @@ mixlogt title jsgent = runJSONGenT jsgent >>= mixlogjs title
 -- | Log a line without any additional properties.
 mixlog_ :: (MonadLog m) => String -> m ()
 mixlog_ title = mixlog title (return ())
+
+
+attention :: (MonadLog m) => String -> JSONGen () -> m ()
+attention title = mixlog (title ++ " (ATTENTION!)")
+
+attentiont :: (MonadLog m) => String -> JSONGenT m () -> m ()
+attentiont title = mixlogt (title ++ " (ATTENTION!)")
+
+attention_ :: (MonadLog m) => String -> m ()
+attention_ title = mixlog_ (title ++ " (ATTENTION!)")
 
 -- | Cannonicalize a string for yaml output. Yaml has a lot of different
 -- ways to encode strings, we choose double quoted style as canonical.
