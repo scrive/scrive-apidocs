@@ -85,8 +85,8 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent
     deleteSMS mid = do
       success <- dbUpdate $ DeleteSMS mid
       if (not success)
-        then Log.mixlog_ $ "Couldn't delete email #" ++ show mid
-        else Log.mixlog_ $ "Deleted email #" ++ show mid
+        then Log.attention_ $ "Couldn't delete sms #" ++ show mid
+        else Log.mixlog_ $ "Deleted sms #" ++ show mid
 
 handleDeliveredInvitation :: (CryptoRNG m, DocumentMonad m, TemplatesMonad m) => SignatoryLinkID -> m ()
 handleDeliveredInvitation signlinkid = do
