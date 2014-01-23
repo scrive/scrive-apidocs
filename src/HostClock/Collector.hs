@@ -13,7 +13,7 @@ collectClockError :: (MonadDB m, MonadIO m) => [String] -> (forall a . IO a -> I
 collectClockError ntpServers interruptible = do
   moffset <- liftIO $ (interruptible $ Just <$> getOffset ntpServers) `E.catch`
                 \(E.SomeException e) -> do
-    Log.mixlog_ $ "HostClock.collectClockError: getOffset failed: " ++ show e
+    Log.attention_ $ "HostClock.collectClockError: getOffset failed: " ++ show e
     return Nothing
   freq <- liftIO $ interruptible $ getFrequency
   _ <- dbUpdate $ InsertClockOffsetFrequency moffset freq
