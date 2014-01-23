@@ -49,9 +49,9 @@ scheduleEmailSendoutWithDocumentAuthorSender did c m = do
 
 scheduleEmailSendout' :: (CryptoRNG m, MonadDB m) => String -> MailsConfig -> Mail ->  m ()
 scheduleEmailSendout' authorname  MailsConfig{..} mail@Mail{..} = do
-  Log.error $ "Sending mail with originator" ++ show originator
+  Log.mixlog_ $ "Sending mail with originator " ++ show originator
   if unsendable to
-    then Log.error $ "Email " ++ show mail ++ " is unsendable, discarding."
+    then Log.mixlog_ $ "Email " ++ show mail ++ " is unsendable, discarding."
     else do
       fromAddr <- return Address {addrName = authorname, addrEmail = ourInfoEmail }
       token <- random
