@@ -18,6 +18,7 @@ import Crypto.RNG
 import DB
 import DB.PostgreSQL
 import IPAddress
+import Text.JSON.Gen
 import Kontra
 import MinutesTime (parseMinutesTimeRealISO)
 import Utils.HTTP
@@ -101,7 +102,7 @@ showNamedHeader :: (a, HeaderPair) -> [String]
 showNamedHeader (_nm,hd) | hName hd == BS.fromString "cookie" = []
 showNamedHeader (_nm,hd) = map showHeaderLine (hValue hd)
   where
-    showHeaderLine value = BS.toString (hName hd) ++ ": " ++ BS.toString value
+    showHeaderLine value' = BS.toString (hName hd) ++ ": " ++ BS.toString value'
 
 showNamedCookie :: (String, Cookie) -> String
 showNamedCookie (_name,cookie) = mkCookieHeader Nothing cookie
@@ -112,7 +113,7 @@ showNamedInput (name,input) = name ++ ": " ++
       Just filename -> filename
       _ -> case inputValue input of
              Left _tmpfilename -> "<<content in /tmp>>"
-             Right value -> show (BSL.toString value)
+             Right value' -> show (BSL.toString value')
 
 showRequest :: Request -> Maybe [(String, Input)] -> String
 showRequest rq maybeInputsBody = unlines $
@@ -210,7 +211,10 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
   where
     amazoncfg = AWS.AmazonConfig (amazonConfig appConf) (filecache appGlobals)
     catchEverything m = m `E.catch` \(e::E.SomeException) -> do
-      lift $ Log.mixlog_ $ "appHandler: exception caught at top level: " ++ show e ++ " (this shouldn't happen)"
+      uri <- rqUri <$> askRq
+      Log.attention "appHandler: exception caught at top level" $ do
+         value "exception" (show e)
+         value "url" uri
       internalServerError $ toResponse ""
 
     routeHandlers ctx = runKontraPlus ctx $ do
@@ -220,20 +224,31 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
             modifyContext $ const ctx'
             return $ Right res
         , E.Handler $ \(e::E.SomeException) -> do
-          Log.mixlog_ $ "Exception caught in routeHandlers: " ++ show e
-          handleKontraError (InternalError ["routeHandlers"])
+             uri <- rqUri <$> askRq
+             Log.attention "Exception caught in routeHandlers" $ do
+                 value "exception" (show e)
+                 value "url" uri
+             handleKontraError (InternalError [])
         ]
       ctx' <- getContext
       return (res, ctx')
 
     handleKontraError e = Left <$> do
-      rq <- askRq
-      liftIO (tryReadMVar $ rqInputsBody rq)
-        >>= Log.mixlog_ . shows e . (++) ": " . showRequest rq
       case e of
         InternalError stack -> do
-          Log.mixlog_ $ "InternalError with call stack: "
-          mapM_ (\s -> Log.mixlog_ ("    " ++ s)) (reverse stack)
+          uri <- rqUri <$> askRq
+          case stack of
+            [] -> do
+              Log.attention "InternalError (stack trace not available)" $ do
+                 value "url" uri
+            _ -> do
+              Log.attention "InternalError" $ do
+                 value "url" uri
+                 value "stacktrace" (reverse stack)
+          -- FIXME: embed request inside mixlog json
+          rq <- askRq
+          mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
+          Log.mixlog_ (showRequest rq mbody)
           internalServerErrorPage >>= internalServerError
         Respond404 -> notFoundPage >>= notFound
 
