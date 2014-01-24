@@ -38,7 +38,6 @@ tar zcf "$TMP/$ZIP"                              \
     --exclude=_local*                            \
     --exclude=_darcs*                            \
     --exclude=log                                \
-    --exclude=pdfsealjava/itextpdf-5.4.2-sources \
     --exclude=dist/build/*/*-tmp                 \
     *
 ls -lh "$TMP/$ZIP"
