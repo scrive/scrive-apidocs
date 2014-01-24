@@ -8,8 +8,8 @@ fi
 rm -f kontrakcja-test.tix
 cabal-dev --sandbox="$1" update
 cabal-dev --sandbox="$1" clean
-cabal-dev --sandbox="$1" install --only-dependencies --force-reinstalls
-cabal-dev --sandbox="$1" configure -ftest-coverage
+cabal-dev --sandbox="$1" install --only-dependencies --force-reinstalls --enable-library-profiling
+cabal-dev --sandbox="$1" configure -ftest-coverage --enable-executable-profiling
 
 if [ "$TEAMCITY_VERSION" = "" ]; then
   cabal-dev --sandbox="$1" build
