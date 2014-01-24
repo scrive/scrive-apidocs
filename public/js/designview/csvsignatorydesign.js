@@ -266,7 +266,7 @@ window.CsvSignatoryDesignPopup =  function(args) {
               icon: '/img/modal-icons/multisend.png',
               subtitle: localization.csv.subtitle,
               title  : localization.csv.title,
-              width: 530,
+              width: model.ready() && model.hasData() ? 1018 : 530,
               acceptVisible : model.ready(),
               onAccept : function() {
                   if (csvSignatory == undefined) {
