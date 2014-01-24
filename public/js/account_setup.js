@@ -135,7 +135,9 @@
                         '$first_name' : model.fstname(),
                         '$last_name' : model.sndname(),
                         'TOS Date' : new Date(),
-                        'Signup Method' : model.signupMethod()};
+                        'Signup Method' : model.signupMethod(),
+                        'Scrive Domain': window.location.hostname
+              };
               mixpanel.register(ps);
               mixpanel.people.set(ps);
               trackTimeout('Sign TOS', {}, function() {
