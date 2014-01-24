@@ -24,7 +24,7 @@ import Crypto.RNG
 import DB
 import Doc.Model
 import Doc.DocStateData
-import Doc.DocumentMonad (DocumentMonad, theDocument, withDocument)
+import Doc.DocumentMonad (DocumentMonad, theDocument, withDocumentID)
 import KontraLink
 import Mails.MailsConfig
 import Mails.MailsData
@@ -48,20 +48,19 @@ processEvents :: Scheduler ()
 processEvents = dbQuery GetUnreadEvents >>= mapM_ processEvent
   where
     processEvent (eid, _mid, XSMTPAttrs [("mailinfo", mi)], eventType) = do
-      markEventAsRead eid
       case maybeRead mi of
         Just (Invitation docid signlinkid) -> do
-          Log.debug $ "Processiong invitation event: " ++ show (Invitation docid signlinkid)
-          doc <- dbQuery $ GetDocumentByDocumentID docid
-          do
+          Log.debug $ "Processing invitation event: " ++ show (Invitation docid signlinkid)
+          withDocumentID docid $ do
+              markEventAsRead eid
               appConf <- sdAppConf <$> ask
-              mbd <- case (maybesignatory =<< getAuthorSigLink doc) of
+              mbd <- (maybesignatory =<<) . getAuthorSigLink <$> theDocument >>= \case
                           Nothing -> return Nothing
                           Just uid -> do
                             user  <- dbQuery $ GetUserByID uid
                             return $ findBrandedDomain (fromMaybe "" $ join $ userassociateddomain <$> user) (brandedDomains $ appConf)
-              let msl = getSigLinkFor signlinkid doc
-                  muid = maybe Nothing maybesignatory msl
+              msl <- getSigLinkFor signlinkid <$> theDocument
+              let muid = maybe Nothing maybesignatory msl
               let signemail = maybe "" getEmail msl
               templates <- getGlobalTemplates
               let host = fromMaybe (hostpart $ appConf) (bdurl <$> mbd)
@@ -90,8 +89,8 @@ processEvents = dbQuery GetUnreadEvents >>= mapM_ processEvent
                       MG_Bounced _ _ _ -> when (signemail == email) $ handleUndeliveredInvitation mbd host mc signlinkid
                       MG_Dropped _ -> when (signemail == email) $ handleUndeliveredInvitation mbd host mc signlinkid
                       _ -> return ()
-              runTemplatesT (getLang doc, templates) $ withDocument doc $ handleEv eventType
-        _ -> return ()
+              theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ handleEv eventType
+        _ -> markEventAsRead eid
     processEvent (eid, _ , _, _) = markEventAsRead eid
 
     markEventAsRead eid = do

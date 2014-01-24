@@ -46,21 +46,21 @@ processEvents :: Scheduler ()
 processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent (a,b,c, fromMaybe None $ maybeRead d))
   where
     processEvent (eid, smsid, eventType, Invitation _did slid ) = do
-      _ <- dbUpdate $ MarkSMSEventAsRead eid
 
-      Log.cron $ "Messages.procesEvent: " ++ show (eid, smsid, eventType, slid)
+      Log.cron $ "Messages.processEvent: " ++ show (eid, smsid, eventType, slid)
 
-      mdoc <- dbQuery $ GetDocumentBySignatoryLinkID slid
-      case mdoc of
+      dbQuery (GetDocumentBySignatoryLinkID slid) >>= \case
         Nothing -> do
+          _ <- dbUpdate $ MarkSMSEventAsRead eid
           Log.cron $ "No document with signatory link id = " ++ show slid
           deleteSMS smsid
-        Just doc -> do
-          let msl = getSigLinkFor slid doc
+        Just doc' -> withDocument doc' $ do
+          _ <- dbUpdate $ MarkSMSEventAsRead eid
+          msl <- getSigLinkFor slid <$> theDocument
           let signphone = maybe "" getMobile msl
           templates <- getGlobalTemplates
           appConf <- sdAppConf <$> ask
-          mbd <- case (maybesignatory =<< getAuthorSigLink doc) of
+          mbd <- (maybesignatory =<<) . getAuthorSigLink <$> theDocument >>= \case
                           Nothing -> return Nothing
                           Just uid -> do
                             user  <- dbQuery $ GetUserByID uid
@@ -73,7 +73,7 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent
               -- addresses here (for dropped/bounce events)
               handleEv (SMSEvent phone ev) = do
                 Log.cron $ signphone ++ " == " ++ phone
-                runTemplatesT (getLang doc, templates) $ withDocument doc $ case ev of
+                theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ case ev of
                   SMSDelivered -> handleDeliveredInvitation slid
                   SMSUndelivered _ -> when (signphone == phone) $ handleUndeliveredSMSInvitation mbd host mc slid
           handleEv eventType
