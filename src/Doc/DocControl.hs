@@ -167,6 +167,7 @@ handleAfterSigning signatorylinkid = do
 -- handle this as special case, but this is not secure and should just
 -- be removed. To iPhone users with disabled cookies: tell them to
 -- call Apple service and enable cookies (again) on their phone.
+{-# NOINLINE handleSignShowSaveMagicHash #-}
 handleSignShowSaveMagicHash :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m KontraLink
 handleSignShowSaveMagicHash did sid mh = do
   -- Getting some evidence
@@ -180,9 +181,9 @@ handleSignShowSaveMagicHash did sid mh = do
     -- Redirect to propper page
     return $ LinkSignDocNoMagicHash did sid
 
+{-# NOINLINE handleSignShow #-}
 handleSignShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
-handleSignShow documentid
-                signatorylinkid = do
+handleSignShow documentid signatorylinkid = do
   ctx <- getContext
 
   mmagichash <- dbQuery $ GetDocumentSessionToken signatorylinkid
