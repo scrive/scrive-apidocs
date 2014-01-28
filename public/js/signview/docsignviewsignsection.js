@@ -131,7 +131,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       onClick: function() { return makeCallback('Mobile BankID', Eleg.mobileBankIDSign, signatory.personalnumberField().value()); }
     });
 
-    return $("<span class='elegButtonFooter' />").append(bankid.el()).append(telia.el()).append(mbi.el());
+    return $("<span class='elegButtonFooter' />").append(bankid.el()).append(mbi.el()).append(telia.el());
   },
   createSignButtonElems: function() {
     var document = this.document();
