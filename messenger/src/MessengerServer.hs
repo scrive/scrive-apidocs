@@ -34,7 +34,7 @@ main = Log.withLogger $ do
 
   E.bracket (do
     let (iface, port) = mscHttpBindAddress conf
-        handlerConf = nullConf { port = fromIntegral port }
+        handlerConf = nullConf { port = fromIntegral port, logAccess = Nothing }
         (routes, overlaps) = R.compile handlers
     maybe (return ()) Log.mixlog_ overlaps
     socket <- listenOn (htonl iface) $ fromIntegral port

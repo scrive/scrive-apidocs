@@ -74,6 +74,7 @@ startSystem appGlobals appConf = E.bracket startServer stopServer waitForTerm
       let conf = nullConf {
             port = fromIntegral port
           , timeout = 120
+          , logAccess = Nothing
           }
       forkIO . simpleHTTPWithSocket listensocket conf $ appHandler routes appConf appGlobals
     stopServer = killThread
