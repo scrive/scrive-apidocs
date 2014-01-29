@@ -12,6 +12,8 @@ gtVerificationPage=
 </div>
 
 <script>
+ require(['jquery', 'legacy_code'], function(jQuery) {
     jQuery('.verificationContainer').append(FileVerifier.init().view.el);
+ });
 </script>
 ###

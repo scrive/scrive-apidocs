@@ -13,8 +13,6 @@ import Text.JSON
 import AppView
 import Happstack.Server.SimpleHTTP
 import Kontra
-import qualified Static.Resources as SR
-
 
 pagePrivilegesConfirm :: Kontrakcja m
                       => Context
@@ -29,7 +27,6 @@ pagePrivilegesConfirm ctx privileges companyname token = do
          F.value "isDocumentCheck" $ APIDocCheck `elem` privileges
          F.value "companyname" companyname
          F.value "token" $ show token
-         F.value "staticResources" $ SR.htmlImportList "systemPage" (ctxstaticresources ctx)
          contextInfoFields ctx
      simpleHtmlResonseClrFlash rsp
 

@@ -1,0 +1,46 @@
+node_modules
+dist
+.tmp
+.sass-cache
+.bower-cache/
+.bower-registry/
+app/compiled_jsx
+.idea
+app/less/less-compiled.css
+app/less/less-compiled.css.map
+app/less/regular-css-compiled.css
+
+# Build remains ignore
+LAST_BUILT
+
+
+# Emacs.gitignore
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+.elc
+auto-save-list
+tramp
+.\#*
+
+# Org-mode
+.org-id-locations
+*_archive
+
+
+#OSX.gitignore
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon must ends with two \r.
+Icon
+
+
+# Thumbnails
+._*
+
+# Files that might appear on external disk
+.Spotlight-V100
+.Trashes

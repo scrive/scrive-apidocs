@@ -5,8 +5,10 @@ termsOfService=
 
     <div class="js-terms-of-service terms-of-service">$termsOfServiceContent()$</div>
     <script>
+     require(['jquery', 'legacy_code'], function(jQuery) {
       jQuery('body').css('background','none repeat scroll 0 0 #FFFFFF');
       mixpanel.track('View Terms Of Service Page');
+     });
     </script>
  </div>
 </div>

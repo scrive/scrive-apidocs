@@ -72,7 +72,7 @@ handleScaleImage = do
               Right x -> return x
           else do
             cwd <- liftIO getCurrentDirectory
-            let publicDir = cwd </> "public"
+            let publicDir = cwd </> "frontend/app"
             logoPath <- guardJust $ secureAbsNormPath publicDir $ tail (BSUTF8.toString logo) -- strip leading slash from logo path
             liftIO $ BS.readFile logoPath
   (procResult, out, _) <- readProcessWithExitCode' "convert" ["-", "-resize", "60%", "-"] $ strictBStoLazyBS logo'
@@ -97,9 +97,9 @@ handleTextToImage = do
     (font, fontSize) <- do
               mfont <- getField "font"
               return $ case mfont of
-                        Just "JenniferLynne"    -> ("public/fonts/JenniferLynne.ttf",22)
-                        Just "TalkingToTheMoon" -> ("public/fonts/TalkingToTheMoon.ttf",20)
-                        _                       -> ("public/fonts/TheOnlyException.ttf",16)
+                        Just "JenniferLynne"    -> ("frontend/app/fonts/JenniferLynne.ttf",22)
+                        Just "TalkingToTheMoon" -> ("frontend/app/fonts/TalkingToTheMoon.ttf",20)
+                        _                       -> ("frontend/app/fonts/TheOnlyException.ttf",16)
     base64 <- isFieldSet "base64"
     transparent <- isFieldSet "transparent"
     left <- isFieldSet "left"

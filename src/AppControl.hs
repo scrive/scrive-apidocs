@@ -20,7 +20,6 @@ import DB.PostgreSQL
 import IPAddress
 import Kontra
 import MinutesTime (parseMinutesTimeRealISO)
-import Utils.Either
 import Utils.HTTP
 import Utils.Monoid
 import OurServerPart
@@ -54,7 +53,6 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
-import qualified Static.Resources as SR
 import Salesforce.Conf
 
 {- |
@@ -65,7 +63,6 @@ data AppGlobals
                  , filecache       :: MemCache.MemCache FileID BS.ByteString
                  , docscache       :: MemCache.MemCache FileID JpegPages
                  , cryptorng       :: CryptoRNGState
-                 , staticResources :: MVar SR.ResourceSetsForImport
                  }
 
 
@@ -96,19 +93,6 @@ maybeReadTemplates production mvar = modifyMVar mvar $ \(modtime, templates) -> 
                    templates' <- readGlobalTemplates
                    return ((modtime', templates'), templates')
                else return ((modtime, templates), templates)
-
-maybeReadStaticResources :: Bool -> MVar SR.ResourceSetsForImport -> String -> IO SR.ResourceSetsForImport
-maybeReadStaticResources production mvar srConfigForAppConf = modifyMVar mvar $ \sr ->
-        if (production)
-         then return $  (sr,sr)
-         else do
-              mtime <- SR.resourcesMTime srConfigForAppConf
-              if (SR.generationTime sr < mtime)
-               then do
-                   sr' <- fromRight <$> SR.getResourceSetsForImport SR.Development srConfigForAppConf ""
-                   return (sr',sr')
-               else return $  (sr,sr)
-
 
 -- | Show nicely formated headers. Same header lines can appear
 -- multiple times in HTTP so we need to beautifully show them.  We
@@ -293,9 +277,6 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
       -- do reload templates in non-production code
       templates2 <- liftIO $ maybeReadTemplates (production appConf) (templates appGlobals)
 
-      -- regenerate static files that need to be regenerated in development mode
-      staticRes <-  liftIO $ maybeReadStaticResources (production appConf) (staticResources appGlobals) (srConfig appConf)
-
       -- work out the language
       userlang <- getStandardLang muser
 
@@ -322,7 +303,6 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
         , ctxadminaccounts = admins appConf
         , ctxsalesaccounts = sales appConf
         , ctxmaybepaduser = mpaduser
-        , ctxstaticresources = staticRes
         , ctxusehttps = useHttps appConf
         , ctxrecurlyconfig = recurlyConfig appConf
         , ctxsessionid = sesID session

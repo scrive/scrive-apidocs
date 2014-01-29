@@ -35,7 +35,6 @@ import User.Lang
 import qualified Text.StringTemplates.Fields as F
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import qualified Data.ByteString.UTF8 as BS (fromString,toString)
-import qualified Static.Resources as SR
 import qualified Data.ByteString.Base16 as B16
 import Data.Char
 import Data.String.Utils hiding (join)
@@ -208,7 +207,6 @@ renderTemplateAsPage ctx templateName showCreateAccount f = do
     contextInfoFields ctx
     mainLinksFields $ ctxlang ctx
     langSwitcherFields ctx
-    F.value "staticResources" $ SR.htmlImportList "systemPage" (ctxstaticresources ctx)
     F.value "showCreateAccount" $ showCreateAccount && (isNothing $ ctxmaybeuser ctx)
     F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
     F.object "analytics" $ analyticsTemplates ad
@@ -221,7 +219,6 @@ standardPageFields ctx title ad = do
   langSwitcherFields ctx
   contextInfoFields ctx
   F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
-  F.value "staticResources" $ SR.htmlImportList "systemPage" (ctxstaticresources ctx)
   F.object "analytics" $ analyticsTemplates ad
   F.value "homebase" $ ctxhomebase ctx
 

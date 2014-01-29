@@ -16,10 +16,10 @@ notFound=
 </div>
 </div>
 <script>
-mixpanel.track('Error', {
-  Message : '404',
-  URL : window.location.href
-});
+ mixpanel.track('Error', {
+   Message : '404',
+   URL : window.location.href
+ });
 </script>
 ###
 internalServerError=
@@ -39,10 +39,10 @@ internalServerError=
 </div>
 </div>
 <script>
-mixpanel.track('Error', {
-  Message : '500',
-  URL : window.location.href
-});
+ mixpanel.track('Error', {
+   Message : '500',
+   URL : window.location.href
+ });
 </script>
 ###
 wholePage=
@@ -89,8 +89,17 @@ standardHeaderContents=
         <link rel=" icon" href="/favicon.png" />
         <script src="/$ctxlang$/localization/$versioncode$.js"  type="text/javascript"></script>
         <script type="text/javascript"> window.versioncode = "$versioncode$" </script>
-        $staticResources:noescape()$
 
+        $if(production)$
+        <link href='/$versioncode$.all-styling-minified.css' rel='stylesheet' type='text/css'/>
+        <script src="/$versioncode$.optimized-system.js"></script>
+        $else$ 
+        <link href='/less/less-compiled.css' rel='stylesheet' type='text/css'/>
+        <link rel="stylesheet" href="/less/regular-css-compiled.css" />
+        <script src="/compiled_jsx/requirejs_config.js"></script>
+        <script src="/bower_components/requirejs/require.js"></script>
+        $endif$
+ 
 <!-- start Mixpanel -->
         <script>
 (function(e,b){if(!b.__SV){var a,f,i,g;window.mixpanel=b;a=e.createElement("script");a.type="text/javascript";a.async=!0;a.src=("https:"===e.location.protocol?"https:":"http:")+'//cdn.mxpnl.com/libs/mixpanel-2.2.min.js';f=e.getElementsByTagName("script")[0];f.parentNode.insertBefore(a,f);b._i=[];b.init=function(a,e,d){function f(b,h){var a=h.split(".");2==a.length&&(b=b[a[0]],h=a[1]);b[h]=function(){b.push([h].concat(Array.prototype.slice.call(arguments,0)))}}var c=b;"undefined"!==
@@ -114,12 +123,10 @@ typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var
         mixpanel.track_links('.logout', 'Click Logout');
         mixpanel.track_links('#logo', 'Click Logo');
         mixpanel.track_links('.fromtemplate', 'Click from template');
-
         </script>
 <!-- end Mixpanel -->
 <!-- Google analytics tracking -->
 <script type="text/javascript">
-
   var _gaq = _gaq || [];
   _gaq.push(['_setAccount', '$analytics.gatoken$']);
   _gaq.push(['_trackPageview']);
@@ -129,7 +136,6 @@ typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var
     ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
   })();
-
 </script>
 <!-- end Google analytics -->
 ####
@@ -276,6 +282,7 @@ postPageCode=
   <!-- Google Code for Tagg f&ouml;r ommarknadsf&ouml;ring -->
   <!-- Remarketing tags may not be associated with personally identifiable information or placed on pages related to sensitive categories. For instructions on adding this tag and more information on the above requirements, read the setup guide: google.com/ads/remarketingsetup -->
   <script type="text/javascript">
+
   /* <![CDATA[ */
   var google_conversion_id = 1009530676;
   var google_conversion_label = "bYPcCKyX6QMQtO6w4QM";
@@ -285,10 +292,13 @@ postPageCode=
   </script>
   <script type="text/javascript" src="//www.googleadservices.com/pagead/conversion.js"></script>
   <script>
-  var container = jQuery('.mainContainer');
-  // Fill the whole page
-  if ($if(logged)$true$else$false$endif$ && container.find('.short-input-section').length > 0)
-    container.height(jQuery(window).height() - jQuery('header').height() - jQuery('footer').height());
+   require(['jquery'], function(jQuery) {
+     var container = jQuery('.mainContainer');
+     // Fill the whole page
+     if ($if(logged)$true$else$false$endif$ && container.find('.short-input-section').length > 0) {
+       container.height(jQuery(window).height() - jQuery('header').height() - jQuery('footer').height());
+     }
+   });
   </script>
   <noscript>
   <div style="display:inline;">
@@ -300,7 +310,10 @@ postPageCode=
 header=
 $if(logged)$
 <script>
-  window.BlockingInfo = Blocking();
+
+ require(['Backbone', 'legacy_code'], function() {
+   window.BlockingInfo = Blocking();
+ });
 </script>
 $endif$
 
@@ -407,6 +420,7 @@ $endif$
 langSwitcher=
 <div class='langSwitcher'></div>
 <script>
+ require(['jquery', 'Backbone', 'legacy_code'], function(jQuery) {
               jQuery(function() {
                    var changeLang = function(l) {
                       mixpanel.track('Click switch languages', { 'Language' : l });
@@ -428,6 +442,7 @@ langSwitcher=
                                                 ]})
                    jQuery('.langSwitcher').append(select.el());
               })
+});
 </script>
 ####
 contactUsVivocha=
@@ -468,11 +483,13 @@ $loadScript(src="https://www.vivocha.com/a/scrive/api/vivocha.js")$
 ####
 loadScript=
 <script>
+ require(['jquery'], function(jQuery) {
   jQuery(function(){
     var script = document.createElement( 'script' );
     script.type = 'text/javascript';
     script.src = "$src$";
     jQuery("head").append( script );
   })
+});
 </script>
 ####

@@ -111,7 +111,6 @@ importantExecutables =
   , ("mutool", [])
   , ("mudraw", [])
   , ("convert", [])
-  , ("lessc", ["--version"])
   ]
 
 checkExecutables :: IO ()

@@ -13,12 +13,12 @@ import DB.Binary
 
 referenceScreenshotBinary :: Screenshot
 referenceScreenshotBinary = unsafePerformIO $ do
-  jpg <- BS.readFile "public/reference_screenshot.jpg"
+  jpg <- BS.readFile "frontend/app/reference_screenshot.jpg"
   return (Screenshot (Binary jpg))
 
 referenceScreenshotTime :: MinutesTime
 referenceScreenshotTime = unsafePerformIO $ do
-  mt <- readFile "public/reference_screenshot_seconds.txt"
+  mt <- readFile "frontend/app/reference_screenshot_seconds.txt"
   seconds <- readIO mt
   return (fromSeconds seconds)
 

@@ -447,8 +447,8 @@ sealDocumentFile file@File{fileid, filename} = theDocumentID >>= \documentid ->
     let tmpout = tmppath ++ "/output.pdf"
     content <- getFileContents file
     liftIO $ BS.writeFile tmpin content
-    checkedBoxImage <- liftIO $ BS.readFile "public/img/checkbox_checked.jpg"
-    uncheckedBoxImage <- liftIO $  BS.readFile "public/img/checkbox_unchecked.jpg"
+    checkedBoxImage <- liftIO $ BS.readFile "frontend/app/img/checkbox_checked.jpg"
+    uncheckedBoxImage <- liftIO $  BS.readFile "frontend/app/img/checkbox_unchecked.jpg"
     elog <- dbQuery $ GetEvidenceLog documentid
     ces <- collectClockErrorStatistics elog
     config <- theDocument >>= \d -> sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) mctxhostpart d elog ces content tmpin tmpout
@@ -491,8 +491,8 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
     let tmpout = tmppath ++ "/output.pdf"
     content <- getFileContents file
     liftIO $ BS.writeFile tmpin content
-    checkedBoxImage <- liftIO $ BS.readFile "public/img/checkbox_checked.jpg"
-    uncheckedBoxImage <- liftIO $  BS.readFile "public/img/checkbox_unchecked.jpg"
+    checkedBoxImage <- liftIO $ BS.readFile "frontend/app/img/checkbox_checked.jpg"
+    uncheckedBoxImage <- liftIO $  BS.readFile "frontend/app/img/checkbox_unchecked.jpg"
     emptyFieldsText <- emptyFieldsTextT
     let config = presealSpecFromDocument emptyFieldsText (checkedBoxImage,uncheckedBoxImage) document tmpin tmpout
 

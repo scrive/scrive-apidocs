@@ -14,16 +14,13 @@ import Control.Monad
 import Templates
 import Text.StringTemplates.TemplatesLoader (renderTemplateMain)
 import User.Lang
-import Static.Resources as SR
-import TestingUtil (assertRight)
 
 htmlTests :: Test
 htmlTests = testGroup "HTML"
     [ testGroup "static checks"
         [ testCase "templates make valid xml" testValidXml,
           testCase "no unecssary double divs" testNoUnecessaryDoubleDivs ,
-          testCase "no nested p tags when templates are rendered" testNoNestedP,
-          testCase "testing static resource generation" testStaticResources
+          testCase "no nested p tags when templates are rendered" testNoNestedP
           ]
     ]
 
@@ -185,9 +182,3 @@ clearTemplating' ts tcs (x:xs) = x : clearTemplating' ts tcs xs
 
 assertSuccess :: Assertion
 assertSuccess = assertBool "not success?!" True
-
--- Library testing if all js and css are listed and if config file is valid
-testStaticResources :: Assertion
-testStaticResources = do
-    v <- SR.getResourceSetsForImport SR.Development "public/resources.spec" ""
-    assertRight $ v

@@ -1,0 +1,21 @@
+{
+  "name": "spin",
+  "version": "1.2.8",
+  "main": "./dist/spin.js",
+  "dependencies": {},
+  "readme": "README.md",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/fgnass/spin.js.git"
+  },
+  "homepage": "https://github.com/fgnass/spin.js",
+  "_release": "1.2.8",
+  "_resolution": {
+    "type": "version",
+    "tag": "1.2.8",
+    "commit": "841e6157c7c64f5415bf9b74b420e104470cb359"
+  },
+  "_source": "git://github.com/fgnass/spin.js.git",
+  "_target": "~1.2.8",
+  "_originalSource": "spin.js"
+}

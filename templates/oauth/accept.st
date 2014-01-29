@@ -10,6 +10,7 @@ pagePrivilegesConfirm =
         $flashmessages()$
         <div class='oauth-confirm' ></div>
         <script>
+         require(['jquery', 'legacy_code'], function(jQuery) {
           jQuery(function() {
             var target = jQuery(".oauth-confirm");
             var confirmation =  new OAuthConfiration({
@@ -22,6 +23,7 @@ pagePrivilegesConfirm =
                         }).view().el
             target.append(confirmation);
           });
+         });
         </script>
       </body>
     $htmlclosingtag()$

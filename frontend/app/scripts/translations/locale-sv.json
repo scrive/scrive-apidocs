@@ -1,0 +1,70 @@
+{
+  "TESTVIEW": {
+    "TITLE": "Jag är en test översättning"
+  },
+  "welcomeNewUser": {
+    "documentTitle": "DEMO av elektronisk signering"
+  },
+  "docSignView": {
+    "signedAndClosed": "Dokument signerat!",
+    "signedAndClosedSubText": "Dokumentet med registrerad signeringshistorik har skickats till din inkorg.",
+    "titleText": "Spara en säkerhetskopia",
+    "subtitleText": "Vill du spara en säkerhetskopia i Scrives e-arkiv? Det är gratis.",
+    "signupButtonText": "Spara säkerhetskopia",
+    "accountFromSignInputsBodyAcceptTOS": "Jag har läst och accepterat <a target='_blank' class='clickable' href='/sv/terms'>Scrive Allmänna Villkor</a>",
+    "padTitle": "Din säkerhetskopia har blivit sparad",
+    "padSubtitle": "Login uppgifter för att komma åt dokumentet har skickats till din mail.",
+    "promoBannerButton": "Ja tack, jag vill testa gratis"
+  },
+  "archive": {
+    "documents": {
+      "columns": {
+        "status": "Status",
+        "time": "Senaste händelse",
+        "sender": "Avsändare",
+        "party": "Signerande parter",
+        "title": "Dokument"
+      }
+    },
+    "ftue": {
+      "title": "Ditt signerade dokument har sparats i ditt personliga e-arkiv",
+      "subtitleInJustAFewMinutes": "På bara några minuter har du:",
+      "subtitleIsntThisHowSimple": "Är det inte så här enkelt det borde vara för dina kunder också?",
+      "subtitleReturned": "Skickat tillbaka det signerade dokumentet",
+      "subtitleReviewed": "Granskat och signerat ett dokument",
+      "subtitleSaved": "Sparat en säkerhetskopia i ditt e-arkiv",
+      "button": "Skicka ett exempel dokument"
+    }
+  },
+  "QN": {
+    "HEYIMVIKTOR": "Hej, jag heter Viktor och jag jobbar på ",
+    "OURESIGNINGSERVICE": "Du signerade precis på vår e-signeringsplattform.",
+    "QUICKQUESTION": "En snabb fråga...",
+    "ENJOYESIGNING": "Gillade du att e-signera?",
+    "YES": "Ja",
+    "NO": "Nej",
+    "SORRY": "Det var tråkigt att höra",
+    "IMPROVEMENTS": "Har du några idéer om hur vi skulle kunna göra e-signeringen bättre? Hör gärna av dig nedan!",
+    "SENDFEEDBACK": "Skicka feedback",
+    "GREAT": "Härligt! En fråga till...",
+    "SENDOWN": "Skickar du några egna dokument för signering?<br />T.ex. offerter, kontrakt eller anställningsavtal.",
+    "SENDOWN_2": "Brukar det dra ut på tiden att få dina dokument signerade?",
+    "CURIOSITY": "Av ren nyfikenhet...",
+    "SENDINGTODAY": "Hur skickar du dina dokument som du vill ha påskrivna idag?",
+    "PENPAPER": "Personligt möte",
+    "VOICEAGREEMENTS": "Muntligt avtal",
+    "MAIL": "Brev",
+    "ESIGNING": "E-signering",
+    "EMAILSCAN": "Email och scanner",
+    "OTHER": "Annat",
+    "CLOSEFASTER": "Med e-signering signeras dina dokument snabbare!",
+    "SHOWMEDEMO": "Ja tack",
+    "SEEHOWSIMPLE": "Vill du ha ett personligt mail från mig om hur du skulle kunna använda e-signering för att göra ditt arbete enklare?",
+    "EASYTOSIGN": "Du har precis upplevt hur enkelt det var att signera.",
+    "OTHERBENEFITS": "Det är lika enkelt att <span class='green-text'>skicka och följa</span> dina dokument.",
+    "THANKSFORYOURTIME": "Tack för dina svar!",
+    "HAVEAGREATDAY": "Ha en trevlig dag!",
+    "LASTQUESTION": "En sista fråga...",
+    "ANYONEELSE": "Vill du ändå ha ett mail från mig med information om hur e-signering kan göra ditt företag effektivare?"
+  }
+}

@@ -5,7 +5,12 @@ $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
     $standardHeaderContents()$
-    <script src="$homebase$/js/docsignviewcreateaccount.js"></script>
+    <script>
+     require(['Backbone', 'legacy_code'], function(Backbone) {
+       // need Backbone to be definied before we load this file
+       require(['$homebase$/js/docsignviewcreateaccount.js'], function() {});
+     });
+    </script>
   </head>
   <body $if(custombackground)$style="background:$custombackground$;"$endif$ class='designview'>
     $header()$
@@ -14,6 +19,7 @@ $htmlopentag()$
     <div class="mainContainer" >
     <div class="body-container">
     <script>
+     require(['jquery', 'legacy_code'], function(jQuery) {
     jQuery(function(){
       var dv = new DesignView({
                             id:"$documentid$"
@@ -36,6 +42,7 @@ $htmlopentag()$
         })
       }
     });
+     });
 
     </script>
     </div>

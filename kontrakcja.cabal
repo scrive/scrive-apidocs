@@ -260,7 +260,6 @@ Executable kontrakcja-server
   Build-depends: semigroups == 0.11
   Build-depends: sendfile == 0.7.9
   Build-depends: spreadsheet == 0.1.3.2
-  Build-depends: static-resources == 0.1.6
   Build-depends: stm == 2.4.2
   Build-depends: syb == 0.4.1
   Build-depends: system-filepath == 0.4.8

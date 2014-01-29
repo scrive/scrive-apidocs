@@ -20,7 +20,6 @@ import LiveDocx (LiveDocxConf(..))
 import MagicHash (MagicHash)
 import IPAddress
 import Session.SessionID
-import qualified Static.Resources as SR
 import ELegitimation.Config (LogicaConfig(..))
 import GuardTime (GuardTimeConf(..))
 import Payments.Config (RecurlyConfig)
@@ -51,7 +50,6 @@ data Context = Context
     , ctxadminaccounts       :: [Email] -- ^
     , ctxsalesaccounts       :: [Email] -- ^
     , ctxmaybepaduser        :: Maybe User -- ^ If we are loged in to the pad view
-    , ctxstaticresources     :: SR.ResourceSetsForImport
     , ctxusehttps            :: Bool
     , ctxrecurlyconfig       :: RecurlyConfig
     , ctxsessionid           :: SessionID

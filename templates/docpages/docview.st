@@ -5,6 +5,7 @@ pageDocumentView=
 <div class='place-for-authorview'>
 </div>
 <script>
+ require(['jquery', 'legacy_code'], function(jQuery) {
 jQuery(function(){
   if (AuthorViewFirstTime.isFromFTUE()) {
     AuthorViewFirstTime.noLongerFromFTUE();
@@ -35,7 +36,7 @@ mixpanel.register({DocumentID : "$documentid$"
                   });
   mixpanel.track('View Author View');
 
-
+});
 
 </script>
 </div>

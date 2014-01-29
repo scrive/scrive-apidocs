@@ -5,8 +5,13 @@ $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
     $standardHeaderContents()$
-    <script src="$homebase$/js/docsignviewcreateaccount.js"></script>
-      </head>
+    <script>
+     require(['Backbone', 'legacy_code'], function(Backbone) {
+       // need Backbone to be definied before we load this file
+       require(['$homebase$/js/docsignviewcreateaccount.js'], function() {});
+     });
+    </script>
+  </head>
   <body  $if(usestandardheaders)$ $if(custombackground)$style="background:$custombackground$;"$endif$    $endif$ >
     $if(usestandardheaders)$
     $wrapperopentag()$
@@ -17,6 +22,7 @@ $htmlopentag()$
         $flashmessages()$
         <div class="body-container">
           <script>
+           require(['jquery', 'legacy_code'], function(jQuery) {
               var svb =  new BrandingForSignView({ documentid : "$documentid$" , signatoryid : "$siglinkid$" });
               svb.fetch({ processData:  true, cache : false});
 
@@ -38,7 +44,7 @@ $htmlopentag()$
                   jQuery('.signview').prepend(new DocumentSignViewHeader({model : svb}).el);
                   jQuery('.signview').append(new DocumentSignViewFooter({model : svb }).el);
                 $endif$
-                jQuery(".body-container").replaceWith(docview.view.el);
+               jQuery(".body-container").replaceWith(docview.view.el);
               });
 
               mixpanel.register({
@@ -49,7 +55,7 @@ $htmlopentag()$
               mixpanel.people.set({
                'Last document sign view' : new Date()
               });
-
+           });
          </script>
         </div>
       </div>

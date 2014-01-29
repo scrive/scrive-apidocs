@@ -5,7 +5,9 @@ adminsmain=
 <div class='blocking-box'></div>
 <div class='admin'></div>
 <script>
+ require(['jquery', 'legacy_code'], function(jQuery) {
     jQuery(".admin").append(new Admin({isAdmin: $if(admin)$true$else$false$endif$}).el());
+ });
 </script>
 </div>
 </div>
@@ -16,7 +18,9 @@ adminuser=
 <div class='blocking-box'></div>
 <div class='admin'></div>
 <script>
+ require(['jquery', 'legacy_code'], function(jQuery) {
     jQuery(".admin").append(new UserAdmin({userid: "$userid$"}).el());
+ });
 </script>
 </div>
 </div>
@@ -27,7 +31,9 @@ admincompany=
 <div class='blocking-box'></div>
 <div class='admin'></div>
 <script>
+ require(['jquery', 'legacy_code'], function(jQuery) {
     jQuery(".admin").append(new CompanyAdmin({companyid: "$companyid$"}).el());
+ });
 </script>
 </div>
 </div>

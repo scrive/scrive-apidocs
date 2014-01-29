@@ -30,6 +30,7 @@ th=<th style="width:60px;text-align:center">$it:noescape()$</th>
 ####
 flashmessages =
 <script>
+ require(['jquery', 'legacy_code'], function(jQuery) {
    jQuery(function(){
      $flashmessages:{ flash |
         $if(flash)$
@@ -40,6 +41,7 @@ flashmessages =
         $endif$
      }$
    })
+ });
 </script>
 
 ####

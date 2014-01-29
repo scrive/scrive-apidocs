@@ -5,10 +5,12 @@ showAccount =
     <div class='blocking-box'></div>
     <div class='archive'></div>
     <script>
+     require(['jquery', 'legacy_code'], function(jQuery) {
       var account = new Account({companyAdmin : $if(companyAdmin)$true$else$false$endif$, noCompany : $if(noCompany)$true$else$false$endif$});
       jQuery(".body-container").append(account.el());
       mixpanel.register({Context : 'Account Page'});
       mixpanel.track('View Account Page');
+     });
     </script>
   </div>
 </div>
@@ -22,6 +24,7 @@ pageDoYouWantToBeCompanyAccount=
   </div>
 </div>
 <script>
+ require(['jquery', 'legacy_code'], function(jQuery) {
   jQuery(document).ready(function() {
     var content = jQuery('<div/>').addClass('recovery-container');
     content.append(jQuery('<p/>').append('$_modalDoYouWantToBeCompanyAccountBody()$'));
@@ -33,6 +36,7 @@ pageDoYouWantToBeCompanyAccount=
                         acceptButtonText: '$_modalDoYouWantToBeCompanyAccountFooterAccept()$',
                         content: content});
   });
+ });
 </script>
 ####
 pageDoYouWantToChangeEmail=
@@ -41,6 +45,7 @@ pageDoYouWantToChangeEmail=
   </div>
 </div>
 <script>
+ require(['jquery', 'legacy_code'], function(jQuery) {
   jQuery(document).ready(function() {
     var content = jQuery('<div/>').addClass('recovery-container');
     content.append(jQuery('<p/>').append('$_modalDoYouWantToChangeEmailBody()$'));
@@ -56,5 +61,6 @@ pageDoYouWantToChangeEmail=
                         acceptButtonText: 'OK',
                         content: content});
   });
+ });
 </script>
 ####

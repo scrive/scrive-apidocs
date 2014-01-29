@@ -5,10 +5,12 @@ priceplanPage=
 
     <div class="js-price-plan price-plan price-plan-outside"></div>
     <script>
+     require(['jquery', 'legacy_code'], function(jQuery) {
       jQuery('body').css('background','none repeat scroll 0 0 #FFFFFF');
       jQuery('.price-plan-page-link').addClass('active');
       PricePage({}).show('.js-price-plan');
       mixpanel.track('View Price Plan Page');
+     });
     </script>
 
  </div>
@@ -34,6 +36,7 @@ $htmlopentag()$
     </div>
     <div class="js-price-plan price-plan price-plan-branded"></div>
     <script>
+     require(['jquery', 'legacy_code'], function(jQuery) {
       PricePage({noheaders: true,
                  includeenterprise: false,
                  buttoncolorclass : "$buttoncolorclass$",
@@ -42,6 +45,7 @@ $htmlopentag()$
                  pricecolour: "$pricecolour$"
                  }).show('.js-price-plan');
       mixpanel.track('View Price Plan Page | Branded');
+     });
     </script>
 
   </body>

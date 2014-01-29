@@ -1,0 +1,31 @@
+{
+  "name": "Frontend",
+  "version": "0.2.0",
+  "dependencies": {
+    "json3": "~3.2.4",
+    "jquery": "~1.9.1",
+    "es5-shim": "~2.1.0",
+    "html5shiv": "~3.7.0",
+    "underscore": "~1.4.4",
+    "spin.js": "~1.2.8",
+    "backbone": "~1.1.0",
+    "requirejs": "~2.1.10",
+    "q": "~1.0.0",
+    "requirejs-text": "~2.0.10",
+    "imagesloaded": "~3.1.0",
+    "react": "~0.8.0"
+  },
+  "homepage": "https://github.com/Jenso/Scrive-Frontend",
+  "authors": [
+    "jens@scrive.com"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

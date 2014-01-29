@@ -172,7 +172,8 @@ staticRoutes = choice
      , userAPI
      , padApplicationAPI
      , oauth
-     , remainingPath GET $ allowHttp $ serveDirectory DisableBrowsing [] "public"
+     , remainingPath GET $ allowHttp $ serveDirectory DisableBrowsing [] "frontend/app"
+     , remainingPath GET $ allowHttp $ serveDirectory DisableBrowsing [] "frontend/dist"
 
      -- public services
      , dir "parsecsv"        $ hPost $ toK0 $ ServerUtils.handleParseCSV

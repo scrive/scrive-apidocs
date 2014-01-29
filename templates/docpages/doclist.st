@@ -5,6 +5,7 @@ pageDocumentsList=
 <div class='blocking-box'></div>
 <div class='archive'></div>
 <script>
+ require(['jquery', 'legacy_code'], function(jQuery) {
   jQuery(".archive").append(new Archive({
     month : $month$, 
     year : $year$, 
@@ -18,6 +19,7 @@ pageDocumentsList=
 
   mixpanel.register({Context : 'Archive'});
   mixpanel.track('View Archive');
+ });
 </script>
 </div>
 </div>

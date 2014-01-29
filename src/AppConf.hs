@@ -30,7 +30,6 @@ data AppConf = AppConf {
   , static             :: FilePath                     -- ^ static files directory
   , amazonConfig       :: Maybe (String,String,String) -- ^ bucket, access key, secret key
   , dbConfig           :: String                       -- ^ postgresql configuration
-  , srConfig           :: String                       -- ^ static resource spec file
   , production         :: Bool                         -- ^ production flag, enables some production stuff, disables some development
   , guardTimeConf      :: GuardTimeConf
   , mailsConfig        :: MailsConfig                  -- ^ mail sendout configuration
@@ -56,10 +55,9 @@ instance Configuration AppConf where
     , hostpart           = "http://localhost:8000"
     , useHttps           = True
     , store              = "_local/kontrakcja/_state"
-    , static             = "public"
+    , static             = "frontend/app"
     , amazonConfig       = Nothing
     , dbConfig           = "user='kontra' password='kontra' dbname='kontrakcja'"
-    , srConfig           = "public/resources.spec"
     , production         = True
     , guardTimeConf      = GuardTimeConf { guardTimeURL = "http://stamper.guardtime.net/gt-signingservice"
                                          , guardTimeExtendingServiceURL = "http://verifier.guardtime.net/gt-extendingservice"

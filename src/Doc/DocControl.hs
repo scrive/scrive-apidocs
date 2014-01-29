@@ -328,7 +328,7 @@ showPreview docid fileid = do
    _ <- getDocByDocID docid
    if (fileid == (unsafeFileID 0))
     then do
-        emptyPreview <- liftIO $ BS.readFile "public/img/empty-preview.jpg"
+        emptyPreview <- liftIO $ BS.readFile "frontend/app/img/empty-preview.jpg"
         let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [emptyPreview]) Nothing
         return $ Right $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/jpeg") res
     else do

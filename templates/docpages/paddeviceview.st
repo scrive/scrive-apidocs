@@ -17,11 +17,12 @@ $htmlopentag()$
           <div class="body-container">
             <div class="padview"></div>
             <script>
+             require(['jquery', 'legacy_code'], function(jQuery) {
             jQuery(function(){
                 var pad = new KontraPad();
                 jQuery(".padview").append(pad.view().el)
             });
-
+             });
             </script>
           </div>
         </div>

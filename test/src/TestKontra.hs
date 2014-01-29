@@ -56,10 +56,7 @@ import User.Lang
 import Util.FinishWith
 import ELegitimation.Config (LogicaConfig(..))
 import qualified Control.Exception.Lifted as E
-import qualified Static.Resources as SR
 import qualified Doc.JpegPages as JpegPages
-import Data.Time.Clock
-import Data.Time
 import qualified Log
 import Salesforce.Conf
 data TestEnvSt = TestEnvSt {
@@ -261,7 +258,6 @@ mkContext lang = do
         , ctxadminaccounts = []
         , ctxsalesaccounts = []
         , ctxmaybepaduser = Nothing
-        , ctxstaticresources = SR.ResourceSetsForImport [] (UTCTime (ModifiedJulianDay 0) 0)
         , ctxusehttps = False
         , ctxgtconf = GuardTimeConf { guardTimeURL = "http://stamper.guardtime.net/gt-signingservice"
                                     , guardTimeExtendingServiceURL = "http://verifier.guardtime.net/gt-extendingservice"

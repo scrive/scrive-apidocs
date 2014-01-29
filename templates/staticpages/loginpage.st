@@ -4,6 +4,7 @@ loginPage=
 <div class="inner">
 <img width="1920" height="544" src="/img/bg-home.jpg" class="bg"/>
 <script type="text/javascript">
+ require(['jquery', 'legacy_code'], function(jQuery) {
   jQuery(document).ready(function() {
     var referer =  "$referer$";
     if (window.location.hash != "" && referer.indexOf("#") == -1) referer = referer + window.location.hash;
@@ -14,6 +15,7 @@ loginPage=
     });
     mixpanel.track('View login page');
   });
+ });
 </script>
 </div>
 </div>
@@ -32,6 +34,7 @@ $htmlopentag()$
       </div>
   </div>
   <script type="text/javascript">
+   require(['jquery', 'legacy_code'], function(jQuery) {
     jQuery(document).ready(function() {
       var referer =  "$referer$";
       if (window.location.hash != "" && referer.indexOf("#") == -1) referer = referer + window.location.hash;
@@ -47,6 +50,7 @@ $htmlopentag()$
       });
       mixpanel.track('View login page -branded');
     });
+   });
   </script>
 
   </body>
@@ -57,9 +61,11 @@ changePasswordPage=
 <div class="inner">
 <img width="1920" height="544" src="/img/bg-home.jpg" class="bg"/>
 <script type="text/javascript">
+ require(['jquery', 'legacy_code'], function(jQuery) {
   jQuery(document).ready(function() {
     jQuery('.inner').append(new NewPassword({linkchangepassword: "$linkchangepassword$"}).el());
   });
+ });
 </script>
 </div>
 </div>
@@ -69,6 +75,7 @@ accessNewAccountPage=
 <div class="inner">
 <img width="1920" height="544" src="/img/bg-home.jpg" class="bg"/>
 <script type="text/javascript">
+ require(['jquery', 'legacy_code'], function(jQuery) {
   jQuery(document).ready(function() {
     mixpanel.track('View access new account page');
     jQuery('.inner').append(new NewPassword({
@@ -76,6 +83,7 @@ accessNewAccountPage=
       accessnewaccount: true
     }).el());
   });
+ });
 </script>
 </div>
 </div>
@@ -94,6 +102,7 @@ $htmlopentag()$
       </div>
   </div>
 <script type="text/javascript">
+ require(['jquery', 'legacy_code'], function(jQuery) {
   jQuery(document).ready(function() {
     jQuery('.inner').append(new NewPassword({
                         linkchangepassword: "$linkchangepassword$",
@@ -102,6 +111,7 @@ $htmlopentag()$
                         buttoncolorclass : "$buttoncolorclass$"
                        }).el());
   });
+ });
 </script>
   </body>
 $htmlclosingtag()$
@@ -119,6 +129,7 @@ $htmlopentag()$
       </div>
   </div>
 <script type="text/javascript">
+ require(['jquery', 'legacy_code'], function(jQuery) {
   jQuery(document).ready(function() {
     mixpanel.track('View access new account page', {
         branded: true
@@ -131,6 +142,7 @@ $htmlopentag()$
                         buttoncolorclass : "$buttoncolorclass$"
                        }).el());
   });
+ });
 </script>
   </body>
 $htmlclosingtag()$
@@ -140,11 +152,13 @@ signupPage=
 <div class="inner">
 <img width="1920" height="544" src="/img/bg-home.jpg" class="bg"/>
 <script type="text/javascript">
+ require(['jquery', 'legacy_code'], function(jQuery) {
   jQuery(document).ready(function() {
     mixpanel.track('Visit signup page');
     jQuery('.inner').append(new Signup({email:     "$email:noescape()$",
                                         autofocus: true}).el());
   });
+ });
 </script>
 </div>
 </div>
@@ -162,6 +176,7 @@ $htmlopentag()$
       </div>
   </div>
   <script type="text/javascript">
+   require(['jquery', 'legacy_code'], function(jQuery) {
     jQuery(document).ready(function() {
       mixpanel.track('Visit signup page');
       jQuery('.inner').append(new Signup({
@@ -172,6 +187,7 @@ $htmlopentag()$
                                          autofocus: true
                             }).el());
     });
+   });
   </script>
 
   </body>
@@ -203,6 +219,7 @@ accountSetupPage=
       <div class='mainContainer'>
 
       <script type="text/javascript">
+       require(['jquery', 'legacy_code'], function(jQuery) {
           jQuery(document).ready(function() {
             jQuery('.mainContainer').append( new AccountSetup({
                                                   fstname: "$fstname$",
@@ -218,6 +235,7 @@ accountSetupPage=
                                               .el());
             jQuery('.short-input-section input:first').focus();
           });
+       });
         </script>
         </div>
 
@@ -229,9 +247,11 @@ pageAcceptTOS =
 <div class='inner'>
 <img width="1920" height="544" src="/img/bg-home.jpg" class="bg"/>
 <script type="text/javascript">
+ require(['jquery', 'legacy_code'], function(jQuery) {
   jQuery(document).ready(function() {
     jQuery('.inner').append(new AcceptTOS({}).el());
   });
+ });
 </script>
 </div>
 </div>

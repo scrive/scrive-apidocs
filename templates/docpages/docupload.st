@@ -5,11 +5,13 @@ createFromTemplatePage=
 <div class="body-container">
 <div class="blocking-box"></div>
 <script>
+ require(['jquery', 'legacy_code'], function(jQuery) {
 jQuery(function() {
   mixpanel.register({Context : 'Create from template'});
   mixpanel.track('View Create From Template');
 });
 jQuery(".body-container").append(new CreateFromTemplate().el());
+});
 </script>
 </div>
 </div>
