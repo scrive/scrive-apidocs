@@ -8,11 +8,9 @@ module Doc.SignatoryScreenshots
 import API.Monad (badInput)
 import Control.Applicative ((<$>))
 import qualified Control.Exception.Lifted as E
-import Control.Logic ((||^))
 import Control.Monad.Base (MonadBase)
 import Control.Monad.Trans (MonadIO, liftIO)
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Data.Char (isAlphaNum)
 import DB.SQL2 (SomeKontraException(..))
 import Doc.Screenshot
 import Text.JSON(Result(..), decode, JSValue(..), fromJSString)
@@ -56,11 +54,10 @@ resolveReferenceScreenshotNames s =
   case reference s of
     Nothing -> return s
     Just (Right _) -> return s
-    Just (Left name) ->
-      if all (isAlphaNum ||^ (`elem` "-_/")) name then do
+    Just (Left name) | name `elem` ["standard"] -> do
         Ok json <- decode <$> (liftIO $ readFile $ "files/reference_screenshots/" ++ name ++ ".json") `E.catch`
                     \E.SomeException{} -> bad
         Just r <- return $ fromJSValue json
         return $ s{ reference = Just (Right r) }
-      else bad
+    _ -> bad
   where bad = E.throwIO . SomeKontraException $ badInput "Illegal reference screenshot name"
