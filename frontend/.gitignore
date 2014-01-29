@@ -9,6 +9,7 @@ app/compiled_jsx
 app/less/less-compiled.css
 app/less/less-compiled.css.map
 app/less/regular-css-compiled.css
+_grunt_pid
 
 # Build remains ignore
 LAST_BUILT
