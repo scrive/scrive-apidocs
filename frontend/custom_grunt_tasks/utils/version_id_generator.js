@@ -13,9 +13,9 @@
  */
 var generateVersionId = function() {
   var variables = {
-    build_date: process.env.build_date,
-    build_number: process.env.build_number,
-    build_vcs_number: process.env.build_vcs_number,
+    build_date: process.env.BUILD_DATE,
+    build_number: process.env.BUILD_NUMBER,
+    build_vcs_number: process.env.BUILD_VCS_NUMBER,
   };
 
   var lst = [];
