@@ -1,10 +1,10 @@
 #!/bin/bash -e
 
-tar -czf kontrakcja-master-dist-$1.tar.gz kontrakcja.cabal dist texts templates public files GuardTime scrivepdftools
+tar -czf kontrakcja-master-dist-$1.tar.gz kontrakcja.cabal dist texts templates frontend/dist files GuardTime scrivepdftools
 
 scp kontrakcja-master-dist-$1.tar.gz dev@dev.scrive.com:kontrakcja-master-dist-$1.tar.gz
 
-ssh dev@dev.scrive.com rm -rf kontrakcja.cabal dist texts templates public files
+ssh dev@dev.scrive.com rm -rf kontrakcja.cabal dist texts templates frontend/dist files
 ssh dev@dev.scrive.com tar -zxf kontrakcja-master-dist-$1.tar.gz
 
 ssh dev@dev.scrive.com supervisorctl stop dev-messenger
