@@ -26,6 +26,12 @@ echo "Target server: "$TRGMH
 echo "Building Clean"
 ./build-scripts/runCleanCompile.sh "$1" > build-report.txt
 
+echo "Building Frontend"
+cd frontend/
+npm install
+grunt build
+cd ../
+
 echo "Running unit tests"
 ./build-scripts/runAllUnitTests.sh > test-report.txt
 
