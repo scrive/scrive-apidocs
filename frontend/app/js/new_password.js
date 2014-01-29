@@ -133,7 +133,8 @@ define(['Backbone', 'legacy_code'], function() {
   });
 
   var NewPasswordBrandedView = Backbone.View.extend({
-    initialize: function() {
+    initialize: function(options) {
+      this.options = options;
       this.render();
     },
 
