@@ -1,4 +1,4 @@
-{-# LANGUAGE RecursiveDo, PatternGuards, CPP, NoOverloadedStrings #-}
+{-# LANGUAGE RecursiveDo, PatternGuards, NoOverloadedStrings #-}
 {-# OPTIONS_GHC -funbox-strict-fields #-}
 
 module PdfModel where
@@ -6,7 +6,6 @@ import Prelude hiding (String)
 import qualified Prelude as P
 import Control.Applicative ((<|>), (<$>), many)
 import Control.Monad.State.Strict
--- import "mtl" Control.Monad.ST
 import System.IO
 import Control.Exception
 import Numeric
@@ -31,12 +30,8 @@ import qualified Control.Monad.Writer.Strict as Strict
 import qualified Control.Monad.State.Strict as Strict
 import Data.List (findIndex)
 
-#ifdef _DEBUG
-import Debug.Trace
-#else
 trace :: P.String -> a -> a
 trace _ x = x
-#endif
 
 traceM :: (Monad m) => P.String -> m ()
 traceM msg = trace msg (return ())
