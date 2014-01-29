@@ -17,6 +17,7 @@ import AppView as V
 import Crypto.RNG
 import DB
 import DB.PostgreSQL
+import Database.HDBC.Statement (SqlError(..))
 import IPAddress
 import Text.JSON.Gen
 import Kontra
@@ -115,17 +116,12 @@ showNamedInput (name,input) = name ++ ": " ++
              Left _tmpfilename -> "<<content in /tmp>>"
              Right value' -> show (BSL.toString value')
 
-showRequest :: Request -> Maybe [(String, Input)] -> String
-showRequest rq maybeInputsBody = unlines $
-    [show (rqMethod rq) ++ " " ++ rqUri rq ++ rqQuery rq] ++
-    (indented "post variables" . map showNamedInput) (fromMaybe [] maybeInputsBody) ++
-    (indented "http headers" . concatMap showNamedHeader) (Map.toList $ rqHeaders rq) ++
-    (indented "http cookies" . map showNamedCookie) (rqCookies rq)
-  where
-    indented _title [] = []
-    indented title list =
-        ["  " ++ title ++ ":"] ++
-        map (\line -> "    " ++ line) list
+logRequest :: (Monad m) => Request -> Maybe [(String, Input)] -> JSONGenT m ()
+logRequest rq maybeInputsBody = do
+    value "request" (show (rqMethod rq) ++ " " ++ rqUri rq ++ rqQuery rq)
+    value "post variables" $ map showNamedInput (fromMaybe [] maybeInputsBody)
+    value "http headers" $ concatMap showNamedHeader (Map.toList $ rqHeaders rq)
+    value "http cookies" $ map showNamedCookie (rqCookies rq)
 
 
 -- | Long polling implementation.
@@ -219,38 +215,42 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
 
     routeHandlers ctx = runKontraPlus ctx $ do
       res <- (Right <$> handleRoutes `mplus` E.throwIO Respond404) `E.catches` [
-          E.Handler handleKontraError
+          E.Handler $ \e -> Left <$> case e of
+            InternalError stack -> do
+              rq <- askRq
+              mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
+              Log.attention "InternalError" $ do
+                value "stacktrace" (reverse stack)
+                logRequest rq mbody
+              internalServerErrorPage >>= internalServerError
+            Respond404 -> do
+              rq <- askRq
+              mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
+              Log.attention "Respond404" $
+                logRequest rq mbody
+              notFoundPage >>= notFound
         , E.Handler $ \(FinishWith res ctx') -> do
             modifyContext $ const ctx'
             return $ Right res
-        , E.Handler $ \(e::E.SomeException) -> do
-             uri <- rqUri <$> askRq
-             Log.attention "Exception caught in routeHandlers" $ do
-                 value "exception" (show e)
-                 value "url" uri
-             handleKontraError (InternalError [])
+        , E.Handler $ \(e :: SqlError) -> Left <$> do
+            rq <- askRq
+            mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
+            Log.attention "SqlError" $ do
+              value "seState" (seState e)
+              value "seNativeError" (seNativeError e)
+              value "seErrorMsg" (lines (seErrorMsg e))
+              logRequest rq mbody
+            internalServerErrorPage >>= internalServerError
+        , E.Handler $ \(e :: E.SomeException) -> Left <$> do
+            rq <- askRq
+            mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
+            Log.attention "Exception caught in routeHandlers" $ do
+              value "exception" (show e)
+              logRequest rq mbody
+            internalServerErrorPage >>= internalServerError
         ]
       ctx' <- getContext
       return (res, ctx')
-
-    handleKontraError e = Left <$> do
-      case e of
-        InternalError stack -> do
-          uri <- rqUri <$> askRq
-          case stack of
-            [] -> do
-              Log.attention "InternalError (stack trace not available)" $ do
-                 value "url" uri
-            _ -> do
-              Log.attention "InternalError" $ do
-                 value "url" uri
-                 value "stacktrace" (reverse stack)
-          -- FIXME: embed request inside mixlog json
-          rq <- askRq
-          mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
-          Log.mixlog_ (showRequest rq mbody)
-          internalServerErrorPage >>= internalServerError
-        Respond404 -> notFoundPage >>= notFound
 
     createContext session = do
       -- rqPeer hostname comes always from showHostAddress
