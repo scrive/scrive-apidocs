@@ -225,6 +225,9 @@ showStringYaml :: String -> String
 showStringYaml str = "\"" ++ concatMap escape str ++ "\""
   where escape '"' = "\\\""
         escape '\\' = "\\\\"
+        escape '\n' = "\\n"
+        escape '\r' = "\\r"
+        escape '\t' = "\\t"
         escape c | ord c < 32 = "\\x" ++ showHex (ord c `div` 16) (showHex (ord c `mod` 16) "")
         escape c = [c]
 
