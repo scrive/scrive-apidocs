@@ -46,7 +46,7 @@ test_settingUIWithHandlePostCompany = do
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext defaultValue
-  logo <- liftIO $ BS.readFile "public/img/logo_email.png"
+  logo <- liftIO $ BS.readFile "frontend/app/img/logo_email.png"
   let logo64 = BS.unpack $ B64.encode logo
 
   req1 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"companyemailfont\":\"font2\",\"companyemailbordercolour\":\"color1\",\"companyemailbuttoncolour\":\"color2\",\"companyemailemailbackgroundcolour\":\"color3\",\"companyemailbackgroundcolour\":\"color11\",\"companyemailtextcolour\":\"color4\",\"companysignviewtextcolour\":\"color5\",\"companysignviewtextfont\":\"font3\",\"companysignviewbarscolour\":\"color6\",\"companysignviewbarstextcolour\":\"color7\",\"companysignviewbackgroundcolour\":\"color10\",\"companyemaillogo\":\"" ++ logo64 ++ "\",\"companysignviewlogo\":\"" ++ logo64 ++ "\",\"companyemaillogochanged\":\"true\",\"companysignviewlogochanged\":\"true\"}")]
