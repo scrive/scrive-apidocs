@@ -28,13 +28,17 @@ echo "STARTING CRON SERVER"
     echo "started mailer with pid $(cat _cron_pid)"
     sleep 1
 
-echo ""
-echo "STARTING GRUNT SERVER"
+# if there's an argument, dont start grunt
+if [ -z "$1" ]; then
+    echo ""
+    echo "STARTING GRUNT SERVER"
     cd frontend/
     grunt server &
     echo $! > _grunt_pid
     echo "started server with pid $(cat _grunt_pid)"
     cd ../
+fi
+
 
 echo ""
 echo "STARTING MAIN SERVER"
