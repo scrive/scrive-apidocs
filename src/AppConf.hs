@@ -27,7 +27,6 @@ data AppConf = AppConf {
   , hostpart           :: String                       -- ^ hostname as it should looklike in emails for example
   , useHttps           :: Bool                         -- ^ should we redirect to https?
   , store              :: FilePath                     -- ^ where to put database files
-  , static             :: FilePath                     -- ^ static files directory
   , amazonConfig       :: Maybe (String,String,String) -- ^ bucket, access key, secret key
   , dbConfig           :: String                       -- ^ postgresql configuration
   , production         :: Bool                         -- ^ production flag, enables some production stuff, disables some development
@@ -55,7 +54,6 @@ instance Configuration AppConf where
     , hostpart           = "http://localhost:8000"
     , useHttps           = True
     , store              = "_local/kontrakcja/_state"
-    , static             = "frontend/app"
     , amazonConfig       = Nothing
     , dbConfig           = "user='kontra' password='kontra' dbname='kontrakcja'"
     , production         = True
@@ -105,9 +103,6 @@ instance Configuration AppConf where
       Option [] ["store"]
       (ReqArg (\h c -> c {store = h}) "PATH")
       "The directory used for database storage."
-    , Option [] ["static"]
-      (ReqArg (\h c -> c {static = h}) "PATH")
-      "The directory searched for static files"
     , Option [] ["production"]
       (NoArg (\ c -> c { production = True }))
       "Turn on production environment"
