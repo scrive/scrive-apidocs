@@ -1019,10 +1019,11 @@ insertSignatoryLinkFieldsAsAre fields = do
 insertSignatoryScreenshots :: (MonadDB m, Applicative m, CryptoRNG m)
                            => [(SignatoryLinkID, SignatoryScreenshots)] -> m Integer
 insertSignatoryScreenshots l = do
-  let (slids, types, times, ss) = unzip4 $ [ (slid, "first",     t, s) | (slid, Just (t, s)) <- map (second first) l ]
-                                        <> [ (slid, "signing",   t, s) | (slid, Just (t, s)) <- map (second signing) l ]
-                                        <> [ (slid, "reference", t, s) | (slid,      (t, s)) <- map (second reference) l ]
-  (fileids :: [FileID]) <- mapM (\(t,s) -> dbUpdate $ NewFile (t ++ "_screenshot.jpeg") (Screenshot.image s)) (zip types ss)
+  let (slids, types, times, ss) = unzip4 $ f "first" first
+                                        <> f "signing" signing
+                                        <> f "reference" getReferenceScreenshot
+      f col part = [ (slid, col, Screenshot.time s, Screenshot.image s) | (slid, Just s) <- map (second part) l ]
+  (fileids :: [FileID]) <- mapM (\(t,s) -> dbUpdate $ NewFile (t ++ "_screenshot.jpeg") s) (zip types ss)
   if null slids then return 0 else
     kRun $ sqlInsert "signatory_screenshots" $ do
            sqlSetList "signatory_link_id" $ slids
@@ -1052,9 +1053,9 @@ instance (MonadDB m, MonadIO m, Amazon.AmazonMonad m) => DBQuery m GetSignatoryS
         folder a (slid, ty, time, i) = (slid, mkss ty time i emptySignatoryScreenshots) : a
 
         mkss :: String -> MinutesTime -> Binary -> SignatoryScreenshots -> SignatoryScreenshots
-        mkss "first"     time i s = s{ first = Just (time, Screenshot i) }
-        mkss "signing"   time i s = s{ signing = Just (time, Screenshot i) }
-        mkss "reference" time i s = s{ reference = (time, Screenshot i) }
+        mkss "first"     time i s = s{ first = Just $ Screenshot time i }
+        mkss "signing"   time i s = s{ signing = Just $ Screenshot time i }
+        mkss "reference" time i s = s{ reference = Just $ Right $ Screenshot time i }
         mkss t           _    _ _ = error $ "GetSignatoryScreenshots: invalid type: " <> show t
     return $ foldl' folder [] screenshotsWithBinaryData
 

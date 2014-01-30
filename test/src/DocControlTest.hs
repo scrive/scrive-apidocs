@@ -4,8 +4,6 @@ module DocControlTest(
 
 import Control.Applicative
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString.RFC2397 as RFC2397
 import Data.Maybe
 import Control.Monad
 import Control.Monad.Trans (liftIO)
@@ -16,14 +14,17 @@ import Test.Framework
 import TestingUtil
 import TestKontra as T
 import qualified Text.JSON
-import Text.JSON.Gen (runJSONGen, value)
+import Text.JSON.Gen (toJSValue)
 import Mails.Model
+import MinutesTime(fromSeconds)
 import Utils.Default
 import Context
 import DB
 import Doc.Model
 import Doc.DocStateData
 import Doc.DocControl
+import Doc.Screenshot (Screenshot(..))
+import Doc.SignatoryScreenshots(emptySignatoryScreenshots, SignatoryScreenshots(signing))
 import Archive.Control
 import Doc.DocumentMonad (withDocumentM, withDocumentID, theDocument, updateDocumentWithID)
 import Doc.DocUtils
@@ -82,8 +83,9 @@ uploadDocAsNewUser = do
 
 
 signScreenshots :: (String, Input)
-signScreenshots = ("screenshots", inText $ Text.JSON.encode $ runJSONGen $ ss "first" >> ss "signing")
-  where ss f = value f (0::Int, BS.toString $ RFC2397.encode "image/jpeg" "\255\216\255\224\NUL\DLEJFIF\NUL\SOH\SOH\SOH\NULH\NULH\NUL\NUL\255\219\NULC\NUL\ETX\STX\STX\STX\STX\STX\ETX\STX\STX\STX\ETX\ETX\ETX\ETX\EOT\ACK\EOT\EOT\EOT\EOT\EOT\b\ACK\ACK\ENQ\ACK\t\b\n\n\t\b\t\t\n\f\SI\f\n\v\SO\v\t\t\r\DC1\r\SO\SI\DLE\DLE\DC1\DLE\n\f\DC2\DC3\DC2\DLE\DC3\SI\DLE\DLE\DLE\255\201\NUL\v\b\NUL\SOH\NUL\SOH\SOH\SOH\DC1\NUL\255\204\NUL\ACK\NUL\DLE\DLE\ENQ\255\218\NUL\b\SOH\SOH\NUL\NUL?\NUL\210\207 \255\217")
+signScreenshots = ("screenshots", inText $ Text.JSON.encode $ toJSValue $
+                   emptySignatoryScreenshots { signing = s })
+  where s = Just $ Screenshot (fromSeconds 0) $ Binary "\255\216\255\224\NUL\DLEJFIF\NUL\SOH\SOH\SOH\NULH\NULH\NUL\NUL\255\219\NULC\NUL\ETX\STX\STX\STX\STX\STX\ETX\STX\STX\STX\ETX\ETX\ETX\ETX\EOT\ACK\EOT\EOT\EOT\EOT\EOT\b\ACK\ACK\ENQ\ACK\t\b\n\n\t\b\t\t\n\f\SI\f\n\v\SO\v\t\t\r\DC1\r\SO\SI\DLE\DLE\DC1\DLE\n\f\DC2\DC3\DC2\DLE\DC3\SI\DLE\DLE\DLE\255\201\NUL\v\b\NUL\SOH\NUL\SOH\SOH\SOH\DC1\NUL\255\204\NUL\ACK\NUL\DLE\DLE\ENQ\255\218\NUL\b\SOH\SOH\NUL\NUL?\NUL\210\207 \255\217"
 
 testLastPersonSigningADocumentClosesIt :: TestEnv ()
 testLastPersonSigningADocumentClosesIt = do

@@ -2,7 +2,7 @@
 
 ROOTDIR=$(dirname $0)/..
 
-if [ -z "$1" -o -z $2 ];
+if [ -z "$1" -o -z "$2" ];
 then
     echo "Usage:"
     echo "    $0 psqlargs documentid"
@@ -27,19 +27,24 @@ EOF
 )
 
 SQL_SELECT_FILE="SELECT encode(files.content,'base64') $SQL_BASE"
-SQL_SELECT_TIME="SELECT EXTRACT(EPOCH FROM signatory_screenshots.time) $SQL_BASE"
+SQL_SELECT_TIME="SELECT to_char(timezone('UTC',signatory_screenshots.time),'YYYY-MM-DD T HH24:MI:SSZ') $SQL_BASE"
 
-psql $1 -q -t -A -c "$SQL_SELECT_FILE" | base64 -d > $ROOTDIR/public/reference_screenshot.jpg.tmp
+mkdir -p $ROOTDIR/files/reference_screenshots
+outfile=$ROOTDIR/files/reference_screenshots/standard.json
+tmpfile=$outfile.tmp
+echo -n "{ \"time\": \"" > $tmpfile
 
-psql $1 -q -t -A -c "$SQL_SELECT_TIME"  > $ROOTDIR/public/reference_screenshot_seconds.txt.tmp
+psql $1 -q -t -A -c "$SQL_SELECT_TIME" | tr -d ' \n' >> $tmpfile
 
-if [ -s $ROOTDIR/public/reference_screenshot.jpg.tmp -a -s $ROOTDIR/public/reference_screenshot_seconds.txt.tmp ];
+echo -n "\", \"image\": \"data:image/jpg;base64," >> $tmpfile
+
+psql $1 -q -t -A -c "$SQL_SELECT_FILE" | tr -d '\n' >> $tmpfile
+
+echo "\" }" >> $tmpfile
+
+if [ $(stat -c '%s' $tmpfile) -gt 50 ];
 then
-    echo "Seems like it has worked"
-    echo "Epoch seconds is:"
-    cat $ROOTDIR/public/reference_screenshot_seconds.txt.tmp
-    mv -f $ROOTDIR/public/reference_screenshot_seconds.txt.tmp $ROOTDIR/public/reference_screenshot_seconds.txt
-    mv -f $ROOTDIR/public/reference_screenshot.jpg.tmp $ROOTDIR/public/reference_screenshot.jpg
+    mv -f $tmpfile $outfile
 else
     echo "Our magic select statements returned no results"
     echo "Reference screenshot left intact"
