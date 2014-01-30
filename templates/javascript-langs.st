@@ -297,6 +297,7 @@ javascriptLocalisation =
              , useSampleDocument: "$_FTUEuseSampleDocument()$"
              , addYourself: "$_FTUEaddYourself()$"
              , addAScriver: "$_FTUEaddAScriver()$"
+             , documentTitle: "$_documentTitle()$"
            }
          , designview : {
               editMessagePlaceholder: "$_editMessagePlaceholder()$",
@@ -547,6 +548,12 @@ javascriptLocalisation =
              , welcome : "$_welcome()$"
              , mandatoryAction: "$_mandatoryAction()$"
              , optionalAction: "$_optionalAction()$"
+             , promoBannerButton: "$_promoBannerButton()$"
+             , signupButtonText: "$_signupButtonText()$"
+             , padTitle: "$_padTitle()$"
+             , padSubtitle: "$_padSubtitle()$"
+             , titleText: "$_titleText()$"
+             , subtitleText: "$_subtitleText()$"
         }
         , verification : {
                 success: "$_verificationSuccess()$"
@@ -697,6 +704,15 @@ javascriptLocalisation =
 
                        }
                 }
+            , ftue: {
+                       title: "$_title()$"
+                     , subtitleInJustAFewMinutes: "$_subtitleInJustAFewMinutes()$"
+                     , subtitleIsntThisHowSimple: "$_subtitleIsntThisHowSimple()$"
+                     , subtitleReturned: "$_subtitleReturned()$"
+                     , subtitleReviewed: "$_subtitleReviewed()$"
+                     , subtitleSaved: "$_subtitleSaved()$"
+                     , button: "$_button()$"
+                       }
             ,  templates : {
                        name :  "$_docListTabsTemplates()$"
                     ,  remove : {

@@ -33,12 +33,12 @@ define(['React', 'Backbone', 'common/utilities_service'], function(React, Backbo
         'font-size': '19px',
         'font-weight': 'bold'
       };
-      
+
       return (
           <div className="save" style={containerDivStyle}>
             <div></div>
             <a onClick={this.props.registerUser} style={buttonStyle} className="green button button-large button-green">
-              <div className="label" style={labelStyle}>{ localization.docSignView.promoBannerButton }</div>
+              <div className="label" style={labelStyle}>{ localization.docsignview.promoBannerButton }</div>
             </a>
           </div>
       );
@@ -57,7 +57,7 @@ define(['React', 'Backbone', 'common/utilities_service'], function(React, Backbo
         'display': 'block',
         'padding-bottom': '5px'
       };
-      
+
       var acceptButtonStyle = {
         'margin-left': '12px'
       };
@@ -74,13 +74,13 @@ define(['React', 'Backbone', 'common/utilities_service'], function(React, Backbo
       if(!this.props.isSmallScreen) {
         titles = (
             <div>
-              <div className="title">{ localization.docSignView.titleText }</div>
-              <div className="subtitle">{ localization.docSignView.subtitleText }</div>
+              <div className="title">{ localization.docsignview.titleText }</div>
+              <div className="subtitle">{ localization.docsignview.subtitleText }</div>
             </div>
         )
       } else {
         titles = (
-            <div className="title">{ docSignView.subtitleText }</div>
+            <div className="title">{ localization.docsignview.subtitleText }</div>
         )
       }
       
@@ -94,7 +94,7 @@ define(['React', 'Backbone', 'common/utilities_service'], function(React, Backbo
                   Jag har läst och accepterat <a target='_blank' class='clickable' href='/sv/terms'>Scrive Allmänna Villkor</a>
                 </label>
                 <a onClick={this.props.registerUser} className="green button button-large button-green button-round">
-                  <div className="label">{ localization.docSignView.signupButtonText }</div>
+                  <div className="label">{ localization.docsignview.signupButtonText }</div>
                 </a>
               </div>
             </div>
@@ -108,8 +108,8 @@ define(['React', 'Backbone', 'common/utilities_service'], function(React, Backbo
       return (
           <div>
             <div className="save">
-              <div className="title">{ localization.docSignView.padTitle }</div>
-              <div className="subtitle">{ localization.docSignView.padSubtitle }</div>
+              <div className="title">{ localization.docsignview.padTitle }</div>
+              <div className="subtitle">{ localization.docsignview.padSubtitle }</div>
             </div>
           </div>
       )

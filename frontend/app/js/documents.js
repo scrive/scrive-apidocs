@@ -292,21 +292,18 @@ window.Document = Backbone.Model.extend({
             fields: JSON.stringify(fields),
             ajax: true,
             expectedType : "text",
-            ajaxsuccess : function(docdata) {
-              var docjson = JSON.parse(docdata);
+            ajaxsuccess : function(newDocumentRaw) {
+	      var newDocumentJSON = JSON.parse(newDocumentRaw),
+              newDocument = new Document(new Document({}).parse(newDocumentJSON)),
+              oldDocument = document;
+
 
               var postSign = function() {
                 if (whileSigningAction != undefined && !whileSigningAction.done()) {
                   whileSigningAction.setCanBeFinished();
                   setTimeout(postSign,100);
                 } else {
-                  if (postSignAction != undefined) postSignAction();
-                  if (document.currentSignatory().signsuccessredirect() != undefined && document.currentSignatory().signsuccessredirect() != "") {
-                    window.location = document.currentSignatory().signsuccessredirect();
-                  }
-                  else {
-                    new Submit().send(); // Same as window.location.reload(), but will reset scrolling
-                  }
+                  if (postSignAction != undefined) postSignAction(newDocument, oldDocument);
                 }
               };
               postSign();

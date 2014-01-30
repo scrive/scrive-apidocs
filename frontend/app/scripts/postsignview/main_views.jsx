@@ -62,7 +62,7 @@ define(['React', 'Backbone', 'common/common_views', 'postsignview/user_service',
     },
 
     registerAndRedirect: function() {
-      UserService.registerUser(currentDocument).then(function() {
+      UserService.registerUser(this.currentDocument).then(function() {
 	App.router.navigate('/postsignview/save-safety-copy-step2', true);
       });
     },
@@ -224,7 +224,7 @@ define(['React', 'Backbone', 'common/common_views', 'postsignview/user_service',
 	return url;
       };
       
-      var title = localization.welcomeNewUser.documentTitle;
+      var title = localization.ftue.documentTitle;
 
       DocumentUploader.uploadByURL(function(documentData) {
 	window.location.pathname = '/d/' + documentData.id;
@@ -285,7 +285,7 @@ define(['React', 'Backbone', 'common/common_views', 'postsignview/user_service',
                 <ul className="ct ">
                   <li id="branding">
                     <a id="logo" className="page" href="/">
-                      <img src="/img/logo.png" height="23" width="120" />
+                      <img src="/img/logo.png"/>
                     </a>
                     <div id="tagline" className="h3"></div>
                   </li>
@@ -295,23 +295,21 @@ define(['React', 'Backbone', 'common/common_views', 'postsignview/user_service',
             <div className="mainContainer">
               <div className="body-container">
                 <div className="blocking-box"></div>
-                <div className="archive">
+                <div className="archive psv-archive">
                   <div>
                     <div className="tab-viewer">
-                      <div style={{opacity: '1', display: 'block'}} className="list-container"><div className="table">
+                      <div className="list-container"><div className="table">
                           <table>
                             <thead>
                               <tr>
-                                <th style={{width: '30px'}}>
-                                  <div className="checkbox"></div>
-                                </th>
-                                <th style={{width: '62px'}}><span className="sortable">{ localization.archive.documents.columns.status }</span></th>
-                                <th style={{width: '105px'}}><span className="sortable">{ localization.archive.documents.columns.time }</span></th>
-                                <th style={{width: '5px'}}><span></span></th>
-                                <th style={{width: '140px'}}><span className="sortable">{ localization.archive.documents.columns.sender }</span></th>
-                                <th style={{width: '5px'}}><span></span></th>
-                                <th style={{width: '210px'}}><span className="sortable">{ localization.archive.documents.columns.party }</span></th>
-                                <th style={{width: '230px'}}><span>{ localization.archive.documents.columns.title }</span></th>
+                                <th><div className="checkbox"></div></th>
+                                <th><span className="sortable">{ localization.archive.documents.columns.status }</span></th>
+                                <th><span className="sortable">{ localization.archive.documents.columns.time }</span></th>
+                                <th><span></span></th>
+                                <th><span className="sortable">{ localization.archive.documents.columns.sender }</span></th>
+                                <th><span></span></th>
+                                <th><span className="sortable">{ localization.archive.documents.columns.party }</span></th>
+                                <th><span>{ localization.archive.documents.columns.title }</span></th>
                               </tr>
                             </thead>
                             <tbody className="selectable">

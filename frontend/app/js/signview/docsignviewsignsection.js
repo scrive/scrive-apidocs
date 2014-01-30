@@ -8,12 +8,13 @@ define(['Backbone', 'legacy_code'], function() {
 
 window.DocumentSignConfirmation = Backbone.View.extend({
   initialize: function(args) {
-    _.bindAll(this, 'popup');
-    _.bindAll(this, 'createContentElems');
+    _.bindAll(this, 'popup', 'onSignedDocument', 'createContentElems');
   },
+
   document : function() {
     return this.model.document();
   },
+
   elegMishmatchErrorMessage : function(onName,onNumber) {
     var document = this.document();
     var signatory = document.currentSignatory();
@@ -32,12 +33,25 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     if (onNumber && numberCanBeChanged)
       return localization.sign.eleg.mismatch.mismatchOnNumberAndCanChange;
   },
+
+  /**
+   *  @description
+   *  Block browser from reloading page
+   *
+   *  TODO(mariusz): Only works for some browsers, should be done more generic, so it works for all browsers
+   */
   startBlockingReload : function() {
     window.onbeforeunload = function() {return localization.signingInProgressDontCloseWindow;};
   },
+
+  /**
+   *  @description
+   *  Stop blocking browser from reloading page 
+   */
   stopBlockingReload : function() {
     window.onbeforeunload = function() {};
   },
+
   openSigningFailedAndReloadModal : function() {
       var text = $("<div>").append($("<span/>").text(localization.signingErrorMessage1))
                            .append("<BR/>")
@@ -51,6 +65,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
                              }).el();
       ScreenBlockingDialog.open({header:text,  content : button});
   },
+
   createElegButtonElems: function() {
     var document = this.document();
     var signatory = document.currentSignatory();
@@ -131,6 +146,102 @@ window.DocumentSignConfirmation = Backbone.View.extend({
 
     return $("<span class='elegButtonFooter' />").append(bankid.el()).append(mbi.el()).append(telia.el());
   },
+
+  /**                       
+   *  @description     
+   *  Is this the first time currentSignatory sign a document with Scrive?
+   */
+  userFirstSign: function(document) {
+    return document.currentSignatory() != undefined
+      && document.currentSignatory().email()
+      && !document.currentSignatory().saved();
+  },
+
+  /**
+   *  @description
+   *  Determine if the user should be redirected to PSV landing page.
+   */
+  showLandingPage: function(newDocument, oldDocument) {
+    var authorCompany = oldDocument.author().company();
+    // TODO(jens): Are these checks for 'undefinied' needed?
+    return newDocument.currentSignatory() != undefined
+      && oldDocument.currentSignatory() != undefined
+      && authorCompany !== 'Phone House'
+      && null === /^nj.*scrive.com/.exec(location.host)
+      && newDocument.currentSignatory().hasSigned()
+      && !oldDocument.currentSignatory().padDelivery()
+      && this.userFirstSign(oldDocument);
+  },
+  
+  /**
+   *  @description
+   *  Redirect to different pages when a document is signed,
+   *  based on a few conditions,
+   */
+  onSignedDocument: function(newDocument, oldDocument) {
+    this.stopBlockingReload()
+
+    // Signing through api
+    if (oldDocument.currentSignatory().signsuccessredirect() != undefined && oldDocument.currentSignatory().signsuccessredirect() != "") {
+      window.location = document.currentSignatory().signsuccessredirect();
+    }
+    else if(this.showLandingPage(newDocument, oldDocument)) {
+      window.location = '/r/#/postsignview/' + oldDocument.documentid() + '/' + oldDocument.currentSignatory().signatoryid();
+    }
+    // Display regular document page
+    else {      
+      window.scroll(0,0);
+      window.location.reload();
+    }
+  },
+  /**                       
+   *  @description     
+   *  Is this the first time currentSignatory sign a document with Scrive?
+   */
+  userFirstSign: function(document) {
+    return document.currentSignatory() != undefined
+      && document.currentSignatory().email()
+      && !document.currentSignatory().saved();
+  },
+
+  /**
+   *  @description
+   *  Determine if the user should be redirected to PSV landing page.
+   */
+  showLandingPage: function(newDocument, oldDocument) {
+    var authorCompany = oldDocument.author().company();
+    // TODO(jens): Are these checks for 'undefinied' needed?
+    return newDocument.currentSignatory() != undefined
+      && oldDocument.currentSignatory() != undefined
+      && authorCompany !== 'Phone House'
+      && null === /^nj.*scrive.com/.exec(location.host)
+      && newDocument.currentSignatory().hasSigned()
+      && !oldDocument.currentSignatory().padDelivery()
+      && this.userFirstSign(oldDocument);
+  },
+  
+  /**
+   *  @description
+   *  Redirect to different pages when a document is signed,
+   *  based on a few conditions,
+   */
+  onSignedDocument: function(newDocument, oldDocument) {
+    this.stopBlockingReload()
+
+    // Signing through api
+    if (oldDocument.currentSignatory().signsuccessredirect() != undefined && oldDocument.currentSignatory().signsuccessredirect() != "") {
+      window.location = document.currentSignatory().signsuccessredirect();
+    }
+    else if(this.showLandingPage(newDocument, oldDocument)) {
+      window.location = '/r/#/postsignview/' + oldDocument.documentid() + '/' + oldDocument.currentSignatory().signatoryid();
+    }
+    // Display regular document page
+    else {      
+      window.scroll(0,0);
+      window.location.reload();
+    }
+  },
+
   createSignButtonElems: function() {
     var document = this.document();
     var signviewbranding = this.model.signviewbranding();
@@ -177,8 +288,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
             }
             trackTimeout('Accept', {'Accept' : 'sign document'});
 
-
-            document.sign(errorCallback,self.signinprogressmodal,function(){self.stopBlockingReload();}).send();
+            document.sign(errorCallback, self.signinprogressmodal, self.onSignedDocument).send();
           };
           f();
       }, errorCallback).send();
@@ -187,6 +297,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     }).el().css('margin-top', '-10px')
               .css('margin-bottom', BrowserInfo.isSmallScreen() ? '10px' : '0px');
   },
+
   createPreambleElems: function() {
     var document = this.document();
     var signatory = document.currentSignatory();
@@ -223,6 +334,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       return content;
     }
   },
+
   createContentElems: function() {
     var content = $("<div />");
     content.append(this.createPreambleElems());
@@ -233,6 +345,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     }
     return content;
   },
+
   popup: function() {
     var document = this.document();
     var signviewbranding = this.model.signviewbranding();

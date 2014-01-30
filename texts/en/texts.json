@@ -1,4 +1,4 @@
-{ 
+{
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Are you sure you want to send reminders to the parties involved in the",
@@ -985,5 +985,19 @@
 "_youCantCancelThisDocuments":"You can't withdraw selected documents.",
 "_youCantSendRemindersToThisDocuments":"Reminders can’t be sent for some of the selected documents.",
 "_yourSigningPluginFailed":"Your signing plug-in failed to sign the document. Please contact your e-ID provider.",
-"_zip":"Zip"
+"_zip":"Zip",
+"_promoBannerButton":"Yes please, I want to try for free",
+"_signupButtonText":"Save safety copy",
+"_padTitle":"Your safety copy have been saved",
+"_padSubtitle":"Login credentiales to acess the document have been sent to your email.",
+"_titleText":"Save a safety copy",
+"_subtitleText":"Do you want to save a safety copy in Scrives e-archive? It's free.",
+"_title":"Your signed document has now been safely stored in your own e-archive",
+"_subtitleInJustAFewMinutes":"In just a few minutes, you:",
+"_subtitleIsntThisHowSimple":"Isn't this how simple signing should be for your customers?",
+"_subtitleReturned":"Returned the signed document to the sender",
+"_subtitleReviewed":"Reviewed and signed a document",
+"_subtitleSaved":"Saved a digital copy in your personal e-archive",
+"_button":"Try sending a sample document",
+"_documentTitle":"DEMO of electronic signing"
 }

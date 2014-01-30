@@ -1,11 +1,7 @@
 /** @jsx React.DOM */
 var App = {};
 
-require(['Underscore', 'Backbone', 'React', 'dashboard/DashboardView', 'postsignview/main_views', 'postsignview/simple_documents_model', 'common/global_events', 'common/utilities_service', 'config/load_language',
-
-	 ////'text!/scripts/translations/locale-sv.json', 
-
-'legacy_code'], function(_, Backbone, React, DashboardView, MainViews, SimpleDocumentsService, GlobalEvents, trans) {
+require(['Underscore', 'Backbone', 'React', 'dashboard/DashboardView', 'postsignview/main_views', 'postsignview/simple_documents_model', 'common/global_events', 'config/load_language', 'legacy_code'], function(_, Backbone, React, DashboardView, MainViews, SimpleDocumentsService, GlobalEvents) {
   /**
    *  If we're not under Backbone router url /r/. Bail out.
    *  This is needed since r.js (r.js == make one big js file for production) 
@@ -15,11 +11,6 @@ require(['Underscore', 'Backbone', 'React', 'dashboard/DashboardView', 'postsign
   if(currentPath.indexOf('/r') === -1) {
     return;
   }
-
-  // TODO(jens): Move translation to real system
-  //window.localization = _.extend(JSON.parse(trans), localization);
-  //window.localization.archive = _.extend(JSON.parse(trans).archive, localization.archive);
-  //console.log(window.localization);
  
   App.GlobalEvents = GlobalEvents;
 
