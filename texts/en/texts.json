@@ -537,7 +537,7 @@
 "_mailDocumentErrorContentBodyFourth":"We are sorry for the inconvenience",
 "_mailDocumentErrorContentBodySecond":"If you have any comments or questions regarding this issue, please contact Scrive support at <a href=\"mailto:support@scrive.com\">support@scrive.com</a>.",
 "_mailDocumentErrorTitle":"Problem with file format",
-"_mailInvitationCustomInvitationHeader":"Message from <strong>$creatorname$</strong>",
+"_mailInvitationCustomInvitationHeader":"Message from <strong>$rejectorName$</strong>",
 "_mailInvitationToSignContractDefaultHeader":"<strong>$creatorname$</strong>  has invited you to sign the document <strong>$documenttitle$</strong> electronically through the Scrive e-signing system.",
 "_mailInvitationToSignTitleContract":"Contract to e-sign: $documenttitle$",
 "_mailInvitationToViewDefaultHeader":"<strong>$creatorname$</strong> has invited you to review the document <strong>$documenttitle$</strong>.",
