@@ -23,7 +23,6 @@ define([
   '../js/utils/brandedimageutils',
   '../js/utils/language',
   '../js/utils/time',
-  '../js/utils/cookie',
   '../js/utils/highlight',
   '../js/utils/experiment',
   '../js/utils/sampledocumentuploader',

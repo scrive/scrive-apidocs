@@ -9,8 +9,12 @@
  */
 
 var require = {
+  waitSeconds: 0,
   baseUrl:'/compiled_jsx/',
   paths: {
+    /**
+     *  Libraries
+     */
     jquery: '../bower_components/jquery/jquery.min',
     React: '../bower_components/react/react-with-addons.min',
     Backbone: '../bower_components/backbone/backbone',
@@ -25,6 +29,10 @@ var require = {
     tinyMCE_theme: '../libs/tiny_mce/themes/modern/theme.min',
     tinyMCE_noneeditable: '../libs/tiny_mce/plugins/noneditable/plugin.min',
     tinyMCE_paste: '../libs/tiny_mce/plugins/paste/plugin.min',
+    /**
+     *  Legacy code imports
+     */
+    'utils/cookie': '../js/utils/cookie',
     legacy_code: 'config/include_legacy_code'
   },
   shim: {
@@ -55,7 +63,6 @@ var require = {
     'tinyMCE_paste': {
       deps: ['tinyMCE']
     },
-    waitSeconds: 15
   },
   deps: ['jquery', 'Underscore', 'Backbone']
 };

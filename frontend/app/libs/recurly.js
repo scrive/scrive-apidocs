@@ -30,6 +30,7 @@
 
 //   Modified by Eric Normand for translations
 
+require(function() {
 
 (function($) {
 "use strict";
@@ -2308,3 +2309,5 @@ R.dom['one_time_transaction_form'] = '<form class="recurly update_billing_info">
 R.dom['terms_of_service'] = '<input id="tos_check" type="checkbox"/><label id="accept_tos" for="tos_check">I accept the <a target="_blank" class="tos_link">Terms of Service</a><span class="and"> and </span><a target="_blank" class="pp_link">Privacy Policy</a></label>';
 window.Recurly = R;
 })(jQuery);
+
+});

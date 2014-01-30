@@ -1,16 +1,18 @@
-/* Reading cookies */
+define(function() {
 
-define(['Backbone', 'legacy_code'], function() {
-
-window.Cookies = {
+  /**
+   *  @description
+   *  Reading and settings browser cookies 
+   */
+  window.Cookies = {
     buildCookieMap : function () {
-        var cookies = document.cookie.split(';');
-        var cookieMap = {};
-        for(var i in cookies) {
-            cookies[i] = cookies[i].split('=');
+      var cookies = document.cookie.split(';');
+      var cookieMap = {};
+      for(var i in cookies) {
+        cookies[i] = cookies[i].split('=');
             cookieMap[cookies[i][0].trim()] = cookies[i][1];
-        }
-        return cookieMap;
+      }
+      return cookieMap;
     },
     get : function(name) {
       var cookies = this.buildCookieMap();
@@ -19,6 +21,7 @@ window.Cookies = {
     set : function(name,value) {
       document.cookie = name + '=' + value;
     }
-};
+  };
 
+  return window.Cookies;
 });

@@ -3,7 +3,7 @@
  * Instrumented for Mixpanel
  */
 
-define(['Backbone', 'legacy_code'], function() {
+define(['React', 'postsignview/create_account_views', 'postsignview/user_service', 'common/global_events', 'Backbone', 'Underscore', 'legacy_code'], function(React, CreateAccountViews, UserService, GlobalEvents, Backbone, _) {
 
 var DocumentSignViewModel = Backbone.Model.extend({
   defaults : {
