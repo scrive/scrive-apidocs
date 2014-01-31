@@ -1,5 +1,4 @@
 /** @jsx React.DOM */
-// TODO(jens): Move to better place
 
 define(['React', 'Backbone', 'imagesLoaded'], function(React, Backbone, imagesLoaded) {
   var expose = {};

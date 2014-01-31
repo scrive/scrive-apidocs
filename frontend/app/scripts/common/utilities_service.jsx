@@ -11,10 +11,6 @@ define(['utils/cookie'], function(Cookies) {
    *     With GET parameters as dictionary in the end
    *          buildAbsoluteUrl('archive', {id:1}); => /archive/downloadmainfile.pdf/?id=1&
    *
-   *   TODO: Add tests.
-   *         Better comments.
-   *         Make it possible to use url fragments like this:
-   *              buildAbsoluteUrl('/api/', '/archive'). Right now it becomes '/api//archive'.
    */
   expose.buildAbsoluteUrl = function() {
     var parameters = null,

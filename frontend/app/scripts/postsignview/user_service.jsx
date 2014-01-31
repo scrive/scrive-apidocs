@@ -24,7 +24,7 @@ define(['Q', 'postsignview/analytics_service', 'common/utilities_service'], func
         userObjectParsed = JSON.parse(userObject);
         
         // simple way to handle errors..
-        // TODO(jens): Make it better
+        // TODO(jens): Make error handling better
         if(userObjectParsed.userid) {
           deferred.resolve(userObjectParsed.userid);
         }

@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React', 'Backbone', 'common/common_views', 'postsignview/user_service', 'common/react_mixins', 'common/filters', 'legacy_code'], function(React, Backbone, CommonViews, UserService, ReactMixins, filters) {
+define(['React', 'Backbone', 'common/common_views', 'postsignview/user_service', 'common/react_mixins', 'common/filters', 'common/utilities_service', 'legacy_code'], function(React, Backbone, CommonViews, UserService, ReactMixins, filters, UtilitiesService) {
 
   // Legacy dependencies: '/js/signview/docsignviewbranding.js', 
   //     '/js/storage.js', '/js/loading.js', '/js/utils/time.js', '/js/documents',
@@ -217,7 +217,7 @@ define(['React', 'Backbone', 'common/common_views', 'postsignview/user_service',
      */
     uploadSampleAndRedirect: function() {
       var samplePdfUrl = function() {
-	var language = 'SV'; // TODO(jens): should be set dynamically
+	var language = UtilitiesService.getCurrentLanguage();
 	var url = '/pdf/sample_document_loremipsumcontract_';
 	url += language;
 	url += '.base64.pdf';
