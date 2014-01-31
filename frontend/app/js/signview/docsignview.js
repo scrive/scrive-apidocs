@@ -111,10 +111,13 @@ var DocumentSignViewModel = Backbone.Model.extend({
    *  @description
    *  Is this the first time current user sign a document with Scrive?
    */
-  userFirstSign: function(document) {
+  userFirstSign: function() {
+      var document = this.document();
+
       return document.currentSignatory() != undefined
              && !document.currentSignatory().saved()
-	     && !document.currentSignatory().email();
+	     && document.currentSignatory().email()
+             && document.currentSignatory().hasSigned();
   },
 
   /**
@@ -156,7 +159,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
     promotionImg = '/img/partnerbanners/',
     language = UtilitiesService.getCurrentLanguage();
 
-    if(this.userFirstSign(this.document()) && this.document().author().company() === 'Phone House') {
+    if(this.document().author().company() === 'Phone House') {
       // Phone house, create account banner
       promotionImg += (language === 'sv' ? 'phonehouse_bg_se.png': 'phonehouse_bg.png');
       var component = CreateAccountViews.BrandedBanner({
@@ -174,7 +177,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
         registerUser: _.partial(this.bannerRegisterUser, 'NJ', createAccountElement)
       });
       React.renderComponent(component, createAccountElement);
-    } else if(this.userFirstSign(this.document()) && this.document().currentSignatory().padDelivery()) {
+    } else if(this.document().currentSignatory().padDelivery()) {
       // Signing in padqueue, create account banner
 
       var component = CreateAccountViews.SaveBackupCopy({
@@ -183,7 +186,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
       })
       React.renderComponent(component, createAccountElement);
     } else {
-      // No create account section
+      // TODO(jens): Show questionnare
     }
 
     return createAccountElement;
@@ -548,7 +551,9 @@ var DocumentSignViewView = Backbone.View.extend({
 
      subcontainerWrapper.prepend(this.model.instructionssection().el);
 
-     this.subcontainer.append(this.model.createAccountSection());
+     if(this.model.userFirstSign()) {
+       this.subcontainer.append(this.model.createAccountSection());
+     }
 
      if (   this.model.hasMainFileSection()
          || this.model.hasAuthorAttachmentsSection()
