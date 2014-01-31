@@ -1,7 +1,8 @@
 /** @jsx React.DOM */
+
 var App = {};
 
-require(['Underscore', 'Backbone', 'React', 'dashboard/DashboardView', 'postsignview/main_views', 'postsignview/simple_documents_model', 'common/global_events', 'config/load_language', 'legacy_code'], function(_, Backbone, React, DashboardView, MainViews, SimpleDocumentsService, GlobalEvents) {
+require(['Underscore', 'Backbone', 'React', 'postsignview/hi3g_views', 'common/global_events', 'config/load_language', 'legacy_code'], function(_, Backbone, React, Hi3gViews, GlobalEvents) {
   /**
    *  If we're not under Backbone router url /r/. Bail out.
    *  This is needed since r.js (r.js == make one big js file for production) 
@@ -20,27 +21,12 @@ require(['Underscore', 'Backbone', 'React', 'dashboard/DashboardView', 'postsign
      *  Always add routes with (/), so it doesnt matter if you have trailing slash or not.
      */
     routes: {
-      'postsignview/:documentId/:signatoryId(/)': 'postsignview',
-      'postsignview/save-safety-copy-step2(/)': 'archivePSV',
-      '*default': 'dashboard'
+      'hi3g-landing(/)': 'hi3gLandingPage',
     },
 
-    dashboard: function(id) {
-      React.renderComponent(<DashboardView />,document.body);
-    },
-
-    archivePSV: function(documentId, signatoryId) {
-      var simpleDocumentList = new SimpleDocumentsService.SimpleDocumentCollection();
-      simpleDocumentList.fetch({
-        success: function(collection, response) {
-	  React.renderComponent(MainViews.ArchivePSV({document: collection.at(0)}), document.body);
-        }
-      });  
-    },
-
-    postsignview: function(documentId, signatoryId) {      
-      var LandingPage = MainViews.LandingPage;
-      React.renderComponent(<LandingPage documentId={documentId} signatoryId={signatoryId}/>, document.body);
+    hi3gLandingPage: function(documentId, signatoryId) {      
+      var LandingPage = Hi3gViews.LandingPage;
+      React.renderComponent(<LandingPage />, document.body);
     }
   });
 

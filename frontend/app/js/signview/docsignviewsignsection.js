@@ -147,32 +147,6 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     return $("<span class='elegButtonFooter' />").append(bankid.el()).append(mbi.el()).append(telia.el());
   },
 
-  /**                       
-   *  @description     
-   *  Is this the first time currentSignatory sign a document with Scrive?
-   */
-  userFirstSign: function(document) {
-    return document.currentSignatory() != undefined
-      && document.currentSignatory().email()
-      && !document.currentSignatory().saved();
-  },
-
-  /**
-   *  @description
-   *  Determine if the user should be redirected to PSV landing page.
-   */
-  showLandingPage: function(newDocument, oldDocument) {
-    var authorCompany = oldDocument.author().company();
-    // TODO(jens): Are these checks for 'undefinied' needed?
-    return newDocument.currentSignatory() != undefined
-      && oldDocument.currentSignatory() != undefined
-      && authorCompany !== 'Phone House'
-      && null === /^nj.*scrive.com/.exec(location.host)
-      && newDocument.currentSignatory().hasSigned()
-      && !oldDocument.currentSignatory().padDelivery()
-      && this.userFirstSign(oldDocument);
-  },
-  
   /**
    *  @description
    *  Redirect to different pages when a document is signed,
@@ -184,56 +158,6 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     // Signing through api
     if (oldDocument.currentSignatory().signsuccessredirect() != undefined && oldDocument.currentSignatory().signsuccessredirect() != "") {
       window.location = document.currentSignatory().signsuccessredirect();
-    }
-    else if(this.showLandingPage(newDocument, oldDocument)) {
-      window.location = '/r/#/postsignview/' + oldDocument.documentid() + '/' + oldDocument.currentSignatory().signatoryid();
-    }
-    // Display regular document page
-    else {      
-      window.scroll(0,0);
-      window.location.reload();
-    }
-  },
-  /**                       
-   *  @description     
-   *  Is this the first time currentSignatory sign a document with Scrive?
-   */
-  userFirstSign: function(document) {
-    return document.currentSignatory() != undefined
-      && document.currentSignatory().email()
-      && !document.currentSignatory().saved();
-  },
-
-  /**
-   *  @description
-   *  Determine if the user should be redirected to PSV landing page.
-   */
-  showLandingPage: function(newDocument, oldDocument) {
-    var authorCompany = oldDocument.author().company();
-    // TODO(jens): Are these checks for 'undefinied' needed?
-    return newDocument.currentSignatory() != undefined
-      && oldDocument.currentSignatory() != undefined
-      && authorCompany !== 'Phone House'
-      && null === /^nj.*scrive.com/.exec(location.host)
-      && newDocument.currentSignatory().hasSigned()
-      && !oldDocument.currentSignatory().padDelivery()
-      && this.userFirstSign(oldDocument);
-  },
-  
-  /**
-   *  @description
-   *  Redirect to different pages when a document is signed,
-   *  based on a few conditions,
-   */
-  onSignedDocument: function(newDocument, oldDocument) {
-    this.stopBlockingReload()
-
-    // Signing through api
-    if (oldDocument.currentSignatory().signsuccessredirect() != undefined && oldDocument.currentSignatory().signsuccessredirect() != "") {
-      window.location = document.currentSignatory().signsuccessredirect();
-    }
-    else if(this.showLandingPage(newDocument, oldDocument)) {
-      window.location = '/r/#/postsignview/' + oldDocument.documentid() + '/' + oldDocument.currentSignatory().signatoryid();
     }
     // Display regular document page
     else {      

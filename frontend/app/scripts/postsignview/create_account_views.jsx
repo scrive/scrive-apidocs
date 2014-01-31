@@ -1,7 +1,6 @@
 /** @jsx React.DOM */
 
-
-define(['React', 'Backbone', 'common/utilities_service'], function(React, Backbone, UtilitiesService) {
+define(['React', 'Backbone'], function(React, Backbone) {
   var expose = {};
   
   expose.BrandedBanner = React.createClass({
