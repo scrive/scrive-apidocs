@@ -1,4 +1,4 @@
-{ 
+{
 "_CompanyAccounts":"Användare",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Är du säker på att du vill skicka en påminnelse till berörda parter för",
@@ -541,7 +541,7 @@
 "_mailForwardMailContent1":"<strong>$creatorname$</strong> har begärt att vi ska skicka dokumentet <strong>$documenttitle$</strong> till dig. Det signerades med e-signeringstjänsten Scrive.",
 "_mailForwardMailContent2":"Dokumentet är bifogat med detta mail.",
 "_mailForwardMailTitle":"E-signerat dokument: $documenttitle$",
-"_mailInvitationCustomInvitationHeader":"Meddelande från <strong>$creatorname$</strong>",
+"_mailInvitationCustomInvitationHeader":"Meddelande från <strong>$rejectorName$</strong>",
 "_mailInvitationToSignContractDefaultHeader":"<strong>$creatorname$</strong> har bjudit in dig att signera dokumentet <strong>$documenttitle$</strong> elektroniskt genom tjänsten Scrive e-signering.",
 "_mailInvitationToSignTitleContract":"Avtal att e-signera: $documenttitle$",
 "_mailInvitationToViewDefaultHeader":"<strong>$creatorname$</strong> har bjudit in dig att granska dokumentet <strong>$documenttitle$</strong>.",
