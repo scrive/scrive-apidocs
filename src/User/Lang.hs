@@ -22,6 +22,7 @@ import Happstack.Server
 
 data Lang = LANG_SV
           | LANG_EN
+          | LANG_DE
   deriving (Bounded, Enum, Show, Read, Ord, Eq)
 
 instance HasDefaultValue Lang where
@@ -53,6 +54,7 @@ instance ToSQL Lang where
 codeFromLang :: Lang -> String
 codeFromLang LANG_SV = "sv"
 codeFromLang LANG_EN = "en"
+codeFromLang LANG_DE = "de"
 
 langFromCode :: String -> Maybe Lang
 langFromCode s = find ((== s) . codeFromLang) allValues
