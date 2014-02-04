@@ -811,7 +811,7 @@ apiCallGetBrandingForSignView did slid = api $ do
   user <- apiGuardL (serverError "Document problem | No author in DB") $ dbQuery $ GetUserByIDIncludeDeleted authorid
   company <- getCompanyForUser user
   companyui <- dbQuery $ GetCompanyUI (companyid company)
-  Ok <$> signviewBrandingJSON ctx user company companyui
+  Ok <$> (runJSONGenT $ documentSignviewBrandingJSON ctx user company companyui doc)
 
 -- Signatory Attachments handling
 apiCallSetSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryLinkID -> String -> m Response

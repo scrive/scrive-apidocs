@@ -10,7 +10,6 @@ define(['Q', 'postsignview/analytics_service'], function(Q, AnalyticsService) {
    */
   expose.createAccountPSV = function(stopUserLogin, currentSignatory) {
     var deferred = Q.defer();
-
     // Should be posted as a form
     var submitValues = {
       url: currentSignatory.saveurl(),
@@ -36,7 +35,6 @@ define(['Q', 'postsignview/analytics_service'], function(Q, AnalyticsService) {
 
     return deferred.promise;
   };
-
 
   /**
    *  @description

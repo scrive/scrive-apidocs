@@ -311,7 +311,15 @@ javascriptLocalisation =
                     , notReadyField : "$_setAllFields()$"
                     , pleaseSelectField : "$_validationPleaseSelectField()$"
                 }
-             , sign : "$_sign()$"
+             , signviewsettings : {
+                  showheader: "$_signviewSettingsShowHeader()$"
+                , showpdfdownload: "$_signviewSettingsShowPDFDownload()$"
+                , showrejectoption: "$_signviewSettingsShowRejectOption()$"
+                , showfooter: "$_signviewSettingsShowFooter()$"
+                , title: "$_signviewSettingsTitle()$"
+                , button: "$_signviewSettingsButton()$"
+               }
+                 , sign : "$_sign()$"
              , textFields : {
                       textField: "$_textField()$"
                     , obligatory: "$_textFieldObligatory()$"

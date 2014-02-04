@@ -1,0 +1,288 @@
+@import 'branding/variables';
+
+.sample-sign-view {
+  border: 1px solid @gray-border;
+  margin: auto;
+  width: 560px;
+
+  .sample-sign-view-header {
+    border-bottom: 1px solid @blue-border;
+    display: table;
+    min-height: 50px;
+    width: 100%;
+
+    &.hidden { display: none; }
+
+    .logo {
+      display: table-cell;
+      padding: 10px 10px 10px 41px;
+      vertical-align: middle;
+      text-align: left;
+    }
+
+    .header-text {
+      display: table-cell;
+      font-size: 10px;
+      padding-right: 38px;
+      text-align: right;
+      vertical-align: middle;
+    }
+  }
+
+  .arrow-legend {
+    .arrow-icon {
+      display: inline-block;
+      height: 22px;
+      width: 22px;
+    }
+    .copy {
+      font-size: 11px;
+      margin-left: 2px;
+      vertical-align: super;
+    }
+    .optionalcontainer {
+      padding-bottom: 5px;
+      margin-top: -3px;
+    }
+  }
+
+  .contentheader {
+    text-align: center;
+    padding-top: 5px;
+    font-size: 12px;
+    background-color: white;
+    border: 1px solid @gray-border; 
+    border-bottom-width: 0;
+
+    p {
+      display: inline-block;
+      margin: 0;
+    }
+
+    .download {
+      &.hidden {
+        display: none;
+      }
+      background: url(../img/senddoc.png) no-repeat;
+      padding-left: 20px;
+      font-size: 11px;
+      font-weight: normal;
+      display: inline-block;
+      background-position: 0px 2px;
+      position: relative;
+      left: -10px;
+      color: @blue-medium;
+    }
+    
+    .highlight-green {
+      font-weight: 600;
+      color: @brand-secondary;
+    }
+
+    .instructions {
+      font-size: 18px;
+      margin-bottom: 0px;
+      margin-top: 10px;
+    }
+
+  }
+
+  .document {
+    border: 1px solid @gray-border;
+    padding: 10px;
+    padding-bottom: 0;
+    text-align: center;
+    background: @gray-10-percent;
+    border-bottom-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+    position: relative;
+
+    .exampledocument {
+      box-shadow: 0px 0px 8px rgba(80, 80, 80, 0.31);
+      width: 480px;
+    }
+
+    .downarrow {
+      display: inline-block;
+      height: 102px;
+      width: 102px;
+      position: absolute;
+      left: 43%;
+      bottom: 162px;
+      background: url('../img/sign-arrow-down.png');
+    }
+
+    .field {
+      display: inline-block;
+      height: 30px;
+      position: absolute;
+      margin-top: 3px;
+    }
+    
+    .mandatoryfield {
+      bottom: 553px;
+      left: 75px;
+      width: 167px;
+
+      .front {
+        background-image: url('../img/sign-arrow-action-right-front.png');
+        float: left;
+        background-repeat: no-repeat;
+        height: 37px;
+        width: 20px;
+      }
+
+      .label {
+        background-image: url('../img/sign-arrow-action-label.png');
+        float: left;
+        line-height: 1.8;
+        padding-left: 3px;
+        padding-right: 3px;
+        background-repeat: repeat-x;
+        color: #FFF;
+        font-size: 14px;
+        height: 37px;
+        min-width: 43px;
+        padding-top: 6px;
+        white-space: nowrap;
+      }
+
+      .back {
+        background-image: url('../img/sign-arrow-action-right-back.png');
+        float: left;
+        background-repeat: no-repeat;
+        height: 37px;
+        width: 8px;
+      }
+    }
+
+    .optionalfield {
+      bottom: 572px;
+      left: 369px;
+      width: 62px;
+    }
+
+    .placedfield {
+      display: inline-block;
+      float: left;
+      border: 2px solid;
+      font-size: 12px;
+      z-index: 1; 
+    }
+
+    .optionalplacedfield {
+      border-color: #33b1dd;
+    }
+
+    .mandatoryplacedfield {
+      border-color: #53b688;
+    }
+
+    .placedfieldvalue {
+      font-size: 12px;
+      line-height: 12px;
+    }
+  }
+
+  .section {
+    height: 56px;
+    text-align: center;
+    border-top-width: 1px;
+    border-top-color: @gray-border;
+    border-top-style: solid;
+    margin: 10px 0px;
+    box-shadow: 0px 0px 8px rgba(80, 80, 80, 0.31);
+    background-color: white;
+  }
+
+  .attachments {
+    .attachments-container {
+      padding: 10px;
+
+      .file-container {
+        float: right;
+        margin-top: 6px;
+        
+        .name {
+          font-size: 11px;
+          margin-right: 150px;
+        }
+        .icon {
+          height: 9px;
+          margin-right: 2px;
+        }
+        .button {
+          line-height: 10px;
+          font-size: 11px;
+        }
+      }
+
+      h2 {
+        float: left;
+        color: #4A4A49;
+        font-size: 14px;
+        font-weight: 300;
+      }
+    }
+  }
+
+  .buttons {
+    &.noreject {
+      .buttoncontainer {
+        &.sign {
+          float: none;
+        }
+        &.reject {
+          display: none;
+        }
+      }
+    }
+
+    .buttoncontainer {
+      padding: 10px;
+      &.reject { 
+        float: left; 
+      }
+      &.sign { 
+        float: right; 
+      }
+    }
+  }
+
+  .innercontent {
+    width: 500px;
+    margin: auto;
+    padding-bottom: 10px;
+    padding-top: 15px;
+
+    &.noheader {
+      padding-top: 0px;
+      .contentheader {
+        border-top-width: 0px;
+      }
+    }
+  }
+
+  .content {
+    padding-bottom: 20px;
+  }
+
+  .footer {
+    height: 30px;
+    padding: 10px;
+    border-top: 1px solid @blue-border;
+    font-size: 10px;
+    display: table;
+    width: 541px;
+
+    &.hidden {
+      display: none;
+    }
+
+    .text {
+      text-align: center;
+      display: table-cell;
+      vertical-align: middle;
+    }
+  }
+}

@@ -107,7 +107,7 @@ apiCallUserSignviewBranding =  api $ do
   (user, _ , _) <- getAPIUserWithPad APIPersonal
   company <- getCompanyForUser user
   companyui <- dbQuery $ GetCompanyUI (companyid company)
-  Ok <$> signviewBrandingJSON ctx user company companyui
+  Ok <$> (runJSONGenT $ signviewBrandingJSON ctx user company companyui)
 
 apiCallChangeUserPassword :: Kontrakcja m => m Response
 apiCallChangeUserPassword = api $ do

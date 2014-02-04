@@ -200,12 +200,13 @@ var ConfirmationView = Backbone.View.extend({
 
        if (model.icon() == null) {
          header.addClass('no-icon');
-         inner.append(title);
        } else {
          inner.append(icon);
-         inner.append(title);
-         inner.append(subtitle);
        }
+
+       inner.append(title);
+       inner.append(subtitle);
+
        this.closeButton = $("<a class='modal-close'></a>").click(function() {view.reject(); return false;});
        this.renderCloseButton();
        header.append(this.closeButton);

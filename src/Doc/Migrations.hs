@@ -1128,6 +1128,28 @@ migrateDocumentsAddDaysToRemind =
        return ()
     }
 
+migrateDocumentsAddSignviewSettings :: MonadDB m => Migration m
+migrateDocumentsAddSignviewSettings =
+  Migration {
+      mgrTable = tableDocuments
+    , mgrFrom = 30
+    , mgrDo = do
+        runSQL_ "ALTER TABLE documents ADD COLUMN show_header BOOL NOT NULL DEFAULT TRUE"
+        runSQL_ "ALTER TABLE documents ADD COLUMN show_pdf_download BOOL NOT NULL DEFAULT TRUE"
+        runSQL_ "ALTER TABLE documents ADD COLUMN show_reject_option BOOL NOT NULL DEFAULT TRUE"
+        runSQL_ "ALTER TABLE documents ADD COLUMN show_footer BOOL NOT NULL DEFAULT TRUE"
+
+        -- PadDelivery used to mean "don't show reject option, don't show pdf download",
+        -- but this is now decoupled.
+        runQuery_ $ sqlUpdate "documents" $ do
+          sqlSet "show_reject_option" False
+          sqlSet "show_pdf_download" False
+          sqlWhereExists $ sqlSelect "signatory_links" $ do
+            sqlWhere "signatory_links.document_id = documents.id"
+            sqlWhereEq "signatory_links.delivery_method" PadDelivery
+
+        return ()
+      }
 
 fixSignatureFieldsWithAnySize :: MonadDB m => Migration m
 fixSignatureFieldsWithAnySize =

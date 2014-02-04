@@ -68,6 +68,8 @@ define(['Backbone', 'tinyMCE', 'tinyMCE_theme', 'tinyMCE_noneeditable', 'tinyMCE
             var div = $('<div />');
             div.addClass('design-view-action-process-right-column');
 
+            div.append(view.signviewsettings());
+
             div.append(view.attachments());
 
             return div;
@@ -252,6 +254,27 @@ define(['Backbone', 'tinyMCE', 'tinyMCE_theme', 'tinyMCE_noneeditable', 'tinyMCE
                .append($("<div class='design-view-action-process-left-column-remindline-tag'/>").text(localization.autoreminders.days))
                .append(calendarbutton);
 
+
+            return div;
+        },
+        signviewsettings: function() {
+            var view = this;
+            var viewmodel = view.model;
+            var document = viewmodel.document();
+
+            var div = $("<div class='design-view-action-process-signview-settings'/>");
+
+            var editSignviewSettingsButton = new Button({
+                color: 'black',
+                text: localization.designview.signviewsettings.button,
+                cssClass: 'design-view-action-process-signview-settings-button',
+                onClick: function() {
+                  mixpanel.track('Open signview settings');
+                  new SignviewSettingsPopup({document: document});
+                }
+            });
+
+            div.append(editSignviewSettingsButton.el());
 
             return div;
         },

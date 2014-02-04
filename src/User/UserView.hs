@@ -3,6 +3,7 @@ module User.UserView (
     -- pages
     userJSON,
     companyJSON,
+    documentSignviewBrandingJSON,
     signviewBrandingJSON,
     showAccount,
     pageAcceptTOS,
@@ -57,6 +58,7 @@ import qualified Data.ByteString.Base64 as B64
 import DB
 import BrandedDomains
 import Doc.DocViewMail
+import Doc.DocStateData
 import Control.Monad
 
 showAccount :: TemplatesMonad m => User -> m String
@@ -128,8 +130,16 @@ companyJSON ctx company companyui = runJSONGenT $ do
     value "ipaddressmasklist" $ intercalate "," $ fmap show $ companyipaddressmasklist $ companyinfo company
     valueM "companyui" $ companyUIJson ctx companyui
 
-signviewBrandingJSON :: Monad m => Context -> User -> Company -> CompanyUI -> m JSValue
-signviewBrandingJSON ctx user company companyui = runJSONGenT $ do
+documentSignviewBrandingJSON :: Monad m => Context -> User -> Company -> CompanyUI -> Document -> JSONGenT m ()
+documentSignviewBrandingJSON ctx user company companyui document = do
+    signviewBrandingJSON ctx user company companyui
+    value "showheader" $ documentshowheader $ document
+    value "showpdfdownload" $ documentshowpdfdownload $ document
+    value "showrejectoption" $ documentshowrejectoption $ document
+    value "showfooter" $ documentshowfooter $ document
+
+signviewBrandingJSON :: Monad m => Context -> User -> Company -> CompanyUI -> JSONGenT m ()
+signviewBrandingJSON ctx user company companyui = do
     let mdb = currentBrandedDomain ctx
     value "fullname" $ getFullName user
     value "email" $ getEmail user

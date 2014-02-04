@@ -16,7 +16,7 @@ var require = {
      *  Libraries
      */
     jquery: '../bower_components/jquery/jquery.min',
-    React: '../bower_components/react/react-with-addons.min',
+    React: '../bower_components/react/react-with-addons',
     Backbone: '../bower_components/backbone/backbone',
     Underscore: '../bower_components/underscore/underscore-min',
     text: '../bower_components/requirejs-text/text',
@@ -29,8 +29,6 @@ var require = {
     tinyMCE_theme: '../libs/tiny_mce/themes/modern/theme.min',
     tinyMCE_noneeditable: '../libs/tiny_mce/plugins/noneditable/plugin.min',
     tinyMCE_paste: '../libs/tiny_mce/plugins/paste/plugin.min',
-
-
     /**
      *  Legacy code imports
      */

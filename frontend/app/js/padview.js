@@ -84,8 +84,22 @@ window.PadQueueView = Backbone.View.extend({
         return doc.view.el;
     },
     signViewBranding : function() {
-      var svb = new BrandingForSignView({});
-      svb.fetch({ processData:  true, cache : false});
+      var padqueue = this.model;
+      var svb;
+
+      // We have a document, include its settings in the branding.
+      if (padqueue.hasDocument()) {
+        var svb = new BrandingForSignView({
+          documentid: padqueue.documentid(),
+          signatoryid: padqueue.signatorylinkid()
+        });
+      } else {
+        // No document
+        svb = new BrandingForSignView({}); 
+      }
+
+      svb.fetch({processData: true, cache : false});
+
       return svb;
     },
     signviewheader : function(svb) {
@@ -136,26 +150,31 @@ window.PadQueueView = Backbone.View.extend({
                window.location.reload(); // We reload if content has changes so much that it is not good to keep it opened.
             else if (padqueue.logged()) {
                 var svb = this.signViewBranding();
+                var hasDocument = padqueue.hasDocument();
+
                 svb.bind("change", function() {
                   if (svb.ready() && svb.signviewbackgroundcolour())
                     $('.signview').css('background-image','none').css('background-color', svb.signviewbackgroundcolour());
                 });
+
                 $('.mainContainer').prepend(this.signviewheader(svb).el);
+                container.append(hasDocument ? this.documentView(svb) : this.noDocumentView());
                 $('.mainContainer').append(this.signviewfooter(svb).el);
-                if (padqueue.hasDocument()) {
-                  container.append(this.documentView(svb));
-                }
-                else {
-                  container.append(this.noDocumentView());
-                }
+
+                $('.mainContainer').addClass('padqueue');
             }
             else
                 container.append(this.logToPadDevice());
 
+            // If the author has chosen to hide the header, we still need a good place for the icons.
+            var iconContainer = $('.pageheader');
+            if (iconContainer.is(':hidden'))
+              iconContainer = $('.mainContainer');
+
             if (padqueue.loggedToPad())
-               $('.pageheader').append(this.padLogoutIcon());
+               iconContainer.append(this.padLogoutIcon());
             if (padqueue.loggedToSystem())
-               $('.pageheader').append(this.backToSystemIcon());
+               iconContainer.append(this.backToSystemIcon());
 
         }
         return this;
