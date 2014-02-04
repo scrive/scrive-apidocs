@@ -151,9 +151,6 @@ module.exports = function (grunt) {
 	out: '<%= yeoman.dist %>/optimized-system.js',
 	include: ['../bower_components/requirejs/require.js'],
 	name: 'app',
-	paths: {
-          LoadDefaultLanguage: "empty:"
-	},
 	preserveLicenseComments: false
       },
       withSourceMap: {
@@ -336,11 +333,13 @@ module.exports = function (grunt) {
    *  User facing Grunt Tasks
    */
 
-  // compiled_jsx directory need to exist for it to start watch, i.e. run compileJsx first
-  grunt.registerTask('compileJsxWatch', [
-    'shell:compileJsx',
-    'shell:compileJsxWatch'
-  ]);
+  grunt.registerTask('compileJsxWatch', function (target) {
+    return grunt.task.run([
+      // compiled_jsx directory need to exist for it to start watch, i.e. run compileJsx first
+      'shell:compileJsx', 
+      'shell:compileJsxWatch',
+    ]);
+  });
 
   /**
    *  Get a production looking enviroment, i.e. 

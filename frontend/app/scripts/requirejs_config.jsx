@@ -9,7 +9,7 @@
  */
 
 var require = {
-  waitSeconds: 0,
+  waitSeconds: 8,
   baseUrl:'/compiled_jsx/',
   paths: {
     /**
@@ -31,19 +31,10 @@ var require = {
     tinyMCE_paste: '../libs/tiny_mce/plugins/paste/plugin.min',
 
     /**
-     *  Loads language file, which set window.localization.
-     *
-     *  @note 
-     *  Kontrackja will serve the language file that corresponds to
-     *  current user's language on this url.
-     */
-    LoadDefaultLanguage: '/localization/localization',
-
-    /**
      *  Legacy code imports
      */
     'utils/cookie': '../js/utils/cookie',
-    legacy_code: 'config/include_legacy_code'
+    'legacy_code': 'config/include_legacy_code'
   },
   shim: {
     'Underscore': {

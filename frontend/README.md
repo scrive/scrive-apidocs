@@ -2,9 +2,9 @@ Frontend-Scrive
 ===============
 
 ## Installation
-> Install latest version of NodeJS
-> npm install -g yo grunt grunt-cli karma react-tools // as root
-> npm install   // In project root
+> Install latest version of NodeJS (expected version is definied 
+> npm install -g --production // In project root
+> npm install --dev // In project root
 
 ### Running static files server and compilation of less and jsx
 > grunt server

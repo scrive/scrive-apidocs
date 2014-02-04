@@ -1,8 +1,7 @@
 {
   "name": "frontend",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "devDependencies": {
-    "grunt": "~0.4.1",
     "grunt-contrib-copy": "~0.4.1",
     "grunt-contrib-concat": "~0.3.0",
     "grunt-contrib-uglify": "~0.2.0",
@@ -37,8 +36,14 @@
     "closure-linter-wrapper": "~0.2.9",
     "grunt-gjslint": "~0.1.4"
   },
+  "dependencies": {
+    "grunt": "~0.4.1",
+    "grunt-cli": "~0.1.9",
+    "karma": "~0.10.2",
+    "react-tools": "0.8.0"
+  },
   "engines": {
-    "node": ">=0.8.0"
+    "node": ">=0.10.15"
   },
   "scripts": {
     "test": "grunt test"

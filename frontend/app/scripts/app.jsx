@@ -2,7 +2,7 @@
 
 var App = {};
 
-require(['Underscore', 'Backbone', 'React', 'postsignview/hi3g_views', 'common/language_service', 'LoadDefaultLanguage'], function(_, Backbone, React, Hi3gViews, LanguageService) {
+require(['Underscore', 'Backbone', 'React', 'postsignview/hi3g_views', 'common/language_service', 'legacy_code'], function(_, Backbone, React, Hi3gViews, LanguageService) {
   /**
    *  If we're not under Backbone router url /r/. Bail out.
    *  This is needed since r.js (r.js == make one big js file for production) 

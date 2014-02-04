@@ -13,10 +13,6 @@ define(['Underscore', 'jquery', 'utils/cookie'], function(_, $, Cookie) {
    *  Load language file synchronously
    *
    *  @note
-   *  This is kind of hacky and slows down stuff, since we need a round-trip to start loading stuff.
-   *  Maybe make a backend url that always serves the correct localization file, so we don't need this.
-   *
-   *  Also:
    *  When the script on the url is loaded, window.localization will be set
    *  which we use to access all translation strings. Make it not global..
    */

@@ -28,6 +28,9 @@ module.exports = function(grunt) {
       });
     });
 
+    // Special case, this file is served by kontrakcja but dont want it to be cached.
+    jsFiles.push('localization/localization?' + generateVersionId());
+
     // Create html code to include all production - css and js files
     var includes = [];
     jsFiles.forEach(function(str) {
