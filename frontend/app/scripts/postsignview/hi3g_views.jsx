@@ -37,6 +37,7 @@ define(['React', 'Backbone'], function(React, Backbone) {
       };
       mixpanel.register(props);
       mixpanel.people.set(props);
+      mixpanel.track('Hi3G landing: Fill phonenumber');
     },
 
     phoneNumberSubmit: function() {
@@ -54,6 +55,7 @@ define(['React', 'Backbone'], function(React, Backbone) {
       
       var content_section;
       if(!this.state.phoneNumberSubmitted) {
+	mixpanel.track('Hi3G landing: View');
 	content_section = (
 	    <div className="content-section">
 	      <h1>{ localization.hi3gLandingPage.hi3gContentHeader }</h1>
