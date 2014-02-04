@@ -17,6 +17,7 @@ module AppView( kontrakcja
               , contextInfoFields
               , renderTemplateAsPage
               , localizationScript
+              , analyticsLoaderScript
               , brandingFields
               , companyForPage
               , companyUIForPage
@@ -295,3 +296,11 @@ localizationScript :: Kontrakcja m => String -> m Response
 localizationScript _ = do
    script <- renderTemplate_ "javascriptLocalisation"
    ok $ toResponseBS (BS.fromString "text/javascript;charset=utf-8") $ BSL.fromString script
+
+analyticsLoaderScript :: Kontrakcja m => m Response
+analyticsLoaderScript = do
+   ad <- getAnalyticsData
+   script <- renderTemplate "analyticsLoaderBase" $ do
+             F.object "analytics" $ analyticsTemplates ad
+   ok $ toResponseBS (BS.fromString "text/javascript;charset=utf-8") $ BSL.fromString script
+   

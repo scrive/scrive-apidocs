@@ -51,7 +51,8 @@ staticRoutes = choice
      ,  allLangDirs $  dir "localization"    $ hGet $ toK1 localizationScript
      ,  allLangDirs $  dir "pricing"         $ hGet $ toK0 priceplanPage
 
-
+     ,  dir "analyticsloader" $ hGet $ toK0 analyticsLoaderScript
+        
      -- Top level handlers - buttons on top bar, when user is logged in
      , dir "fromtemplate"                 $ hGet  $ toK0 $ DocControl.showCreateFromTemplate
      , dir "newdocument" $ hGet $ toK0 $ DocControl.handleNewDocument
