@@ -124,10 +124,11 @@ define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_the
 
             var languageText = {
                 en : {name: localization.languages.en, value: 'en'},
-                sv : {name: localization.languages.sv, value: 'sv'}
+                sv : {name: localization.languages.sv, value: 'sv'},
+                de : {name: localization.languages.de, value: 'de'}
             };
 
-            var languages = ['sv', 'en'];
+            var languages = ['sv', 'en', 'de'];
 
             var div = $("<div class='design-view-action-process-left-column-language'/>");
 

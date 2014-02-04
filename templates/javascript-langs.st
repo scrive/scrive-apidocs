@@ -259,6 +259,7 @@ javascriptLocalisation =
           , languages : {
                 en : "$_English()$"
               , sv : "$_Swedish()$"
+              , de : "$_German()$"
             }
          , csv : {
                 title : "$_dialogCsvupload1Head()$"
@@ -1028,6 +1029,7 @@ javascriptLocalisation =
               , lang            : "$_UserLanguage()$"
               , langSV          : "$_SwedishInSwedish()$"
               , langEN          : "$_EnglishInEnglish()$"
+              , langDE          : "$_GermanInGerman()$"
             }
           , companySettings : "$_CompanySettings()$"
           , companyAccounts : {

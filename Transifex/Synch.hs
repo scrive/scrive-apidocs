@@ -152,4 +152,4 @@ main' ("push":(user:(password:(lang:("texts":_)))))  = push user password lang T
 main' ("push":(user:(password:(lang:("events":_)))))  = push user password lang Events
 main' ("push":(user:(password:(lang:("questionnaire":_)))))  = push user password lang Questionnaire
 main' ("push":_)   = error "Invalid parameters. Usage: transifex.sh push user password lang"
-main' _ = error "Invalid command. Valid commands are fix, diff, marge and push."
+main' _ = error "Invalid command. Valid commands are fix, diff, merge and push."

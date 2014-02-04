@@ -208,10 +208,10 @@ $else$
       <header><h4>$_pageFooterExplore()$</h4></header>
       <div class="content">
         <ul class="tree">
-          <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$api" id="nav-api"> $_pageFooterAPI()$</a></li>
-          <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$jobs" id="nav-jobs"> $_pageFooterWork()$</a></li>
-          <li class="branch"><a href="$if(langenglish)$/en/$else$/sv/$endif$verify" id="nav-privacy">$_footerVerifyDocument()$</a></li>
-          <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$get-started">$_headerGetStarted()$</a></li>
+          <li class="branch"><a href="$httplink$$langprefix()$api" id="nav-api"> $_pageFooterAPI()$</a></li>
+          <li class="branch"><a href="$httplink$$langprefix()$jobs" id="nav-jobs"> $_pageFooterWork()$</a></li>
+          <li class="branch"><a href="$langprefix()$verify" id="nav-privacy">$_footerVerifyDocument()$</a></li>
+          <li class="branch"><a href="$httplink$$langprefix()$get-started">$_headerGetStarted()$</a></li>
         </ul>
       </div>
     </nav>
@@ -220,9 +220,9 @@ $else$
       <header><h4>$_pageFooterTerms()$</h4></header>
       <div class="content">
         <ul class="tree">
-          <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$terms" id="nav-terms">$_pageFooterTOS()$</a></li>
-          <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$environment" id="nav-environment">$_pageFooterEnvironmentalPolicy()$</a></li>
-          <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$privacy" id="nav-privacy">$_pageFooterPrivacyPolicy()$</a></li>
+          <li class="branch"><a href="$httplink$$langprefix()$terms" id="nav-terms">$_pageFooterTOS()$</a></li>
+          <li class="branch"><a href="$httplink$$langprefix()$environment" id="nav-environment">$_pageFooterEnvironmentalPolicy()$</a></li>
+          <li class="branch"><a href="$httplink$$langprefix()$privacy" id="nav-privacy">$_pageFooterPrivacyPolicy()$</a></li>
         </ul>
       </div>
     </nav>
@@ -316,6 +316,8 @@ postPageCode=
   </div>
   </noscript>
 
+###
+langprefix=$if(langenglish)$/en/$elseif(langgerman)$/de/$else$/sv/$endif$
 ####
 header=
 $if(logged)$
@@ -378,7 +380,7 @@ $endif$
   <nav>
     <ul class="ct $if(!logged)$thin$endif$">
       <li id="branding">
-        <a id="logo" class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$"><img $if(customlogo)$ src="$customlogolink$"  style="margin:0px" $else$ src="/img/logo.png" width="120" height="23" $endif$ /></a>
+        <a id="logo" class="page" href="$httplink$$langprefix()$"><img $if(customlogo)$ src="$customlogolink$"  style="margin:0px" $else$ src="/img/logo.png" width="120" height="23" $endif$ /></a>
         <div id="tagline" class="h3"></div>
       </li>
       $if(logged)$
@@ -401,26 +403,26 @@ $endif$
       </ul>
       $else$
       <li class="session-login float-right">
-        <a class="button" id="page-login" href="$if(langenglish)$/en/$else$/sv/$endif$login">$_login()$ </a>
-        <a class="button" id="page-signup" href="$if(langenglish)$/en/$else$/sv/$endif$signup">$_startFreeTrial()$</a>
+        <a class="button" id="page-login" href="$langprefix()$login">$_login()$ </a>
+        <a class="button" id="page-signup" href="$langprefix()$signup">$_startFreeTrial()$</a>
       </li>
       <li class="float-right"  >
-          <a class="page"   href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$contact">$_headerContakt()$</a>
+          <a class="page"   href="$httplink$$langprefix()$contact">$_headerContakt()$</a>
       </li>
       <li class="float-right" >
-          <a class="page"  href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$about">$_headerAbout()$</a>
+          <a class="page"  href="$httplink$$langprefix()$about">$_headerAbout()$</a>
       </li>
       <li class="float-right" >
-          <a class="page"  href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$cases">$_headerCases()$</a>
+          <a class="page"  href="$httplink$$langprefix()$cases">$_headerCases()$</a>
       </li>
       <li class="float-right" >
-          <a class="page price-plan-page-link"  href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$pricing">$_headerPricing()$</a>
+          <a class="page price-plan-page-link"  href="$httplink$$langprefix()$pricing">$_headerPricing()$</a>
       </li>
       <li class="float-right" >
-          <a class="page"  href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$legal">$_headerLegal()$</a>
+          <a class="page"  href="$httplink$$langprefix()$legal">$_headerLegal()$</a>
       </li>
       <li class="float-right" >
-          <a class="page"  href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$features">$_headerFeatures()$</a>
+          <a class="page"  href="$httplink$$langprefix()$features">$_headerFeatures()$</a>
       </li>
       $endif$
     </ul>

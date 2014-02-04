@@ -12,6 +12,8 @@ window.DocLang = Backbone.Model.extend({
         return "en";
       else if (this.sv())
         return "sv";
+      else if (this.de())
+        return "de";
     },
     en : function(){
         return this.lang() == "en" || this.lang() == "gb";
@@ -19,11 +21,17 @@ window.DocLang = Backbone.Model.extend({
     sv : function(){
         return this.lang() == "sv" || this.lang() == "se";
     },
+    de : function(){
+        return this.lang() == "de";
+    },
     setEN : function() {
         this.set({lang : "en"});
     },
     setSV : function() {
         this.set({lang : "sv"});
+    },
+    setDE : function() {
+        this.set({lang : "de"});
     },
     draftData : function() {
         return this.lang();

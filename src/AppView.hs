@@ -300,6 +300,7 @@ langSwitcherFields :: Monad m => Context -> Fields m ()
 langSwitcherFields Context{ctxlang} = do
   F.value "langswedish" $ getLang ctxlang == LANG_SV
   F.value "langenglish" $ getLang ctxlang == LANG_EN
+  F.value "langgerman"  $ getLang ctxlang == LANG_DE
 
 {- |
    Defines some standard context information as fields handy for substitution

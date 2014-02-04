@@ -98,6 +98,7 @@ documentJSON muser includeEvidenceAttachments forapi forauthor pq msl doc = do
       J.value "lang" $  case (getLang doc) of
                              LANG_EN -> "gb"
                              LANG_SV -> "sv"
+                             LANG_DE -> "de"
       J.objects "tags" $ for (Set.toList $ documenttags doc) $ \(DocumentTag n v) -> do
                                     J.value "name"  n
                                     J.value "value" v

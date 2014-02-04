@@ -160,7 +160,9 @@ instance FromJSValue Lang where
         Just "sv"    -> Just LANG_SV
         Just "en"    -> Just LANG_EN
         Just "gb"    -> Just LANG_EN
+        Just "de"    -> Just LANG_DE
         _            -> Nothing
+
 
 instance FromJSValueWithUpdate Document where
     fromJSValueWithUpdate mdoc = do
