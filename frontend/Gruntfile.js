@@ -35,7 +35,7 @@ module.exports = function (grunt) {
           livereload: LIVERELOAD_PORT
         },
         files: [
-          '<%= yeoman.app %>/styles/less/*.css',
+          '<%= yeoman.app %>/less/*.css',
           '.tmp/styles/{,*/}*.css',
           '{.tmp,<%= yeoman.app %>}/compiled_jsx/**/*.js',
           '<%= yeoman.app %>/js/**/*.js',
@@ -48,6 +48,7 @@ module.exports = function (grunt) {
         // Proxy connections to either kontraktcja or angularjs
         options: {
           debug: true,
+          hostname: '*',
           port: 9000,
           middleware: function (connect, options) {
             // Configure grunt-connect-proxy
@@ -93,7 +94,7 @@ module.exports = function (grunt) {
         // this is the main server for serving static files
         options: {
           // Change this to '0.0.0.0' to access the server from outside.
-          hostname: 'localhost',
+          hostname: '*',
 	  port: 9001,
           middleware: function (connect) {
             return [
@@ -316,7 +317,7 @@ module.exports = function (grunt) {
       compile: {
 	options: {
           paths: ['<%= yeoman.app %>/less'],
-	  sourceMap: true,
+	  sourceMap: false,
 	  sourceMapFilename: '<%= yeoman.app %>/less/less-compiled.css.map',
 	  sourceMapURL: '/less/less-compiled.css.map'
 	},
