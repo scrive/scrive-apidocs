@@ -1,4 +1,4 @@
-{ 
+{
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Are you sure you want to send reminders to the parties involved in the",
@@ -541,7 +541,7 @@
 "_mailForwardMailContent1":"<strong>$creatorname$</strong> has requested we send the document <strong>$documenttitle$</strong> to you. It was signed through the Scrive e-signing service.",
 "_mailForwardMailContent2":"Please find the document attached.",
 "_mailForwardMailTitle":"E-signed document: $documenttitle$",
-"_mailInvitationCustomInvitationHeader":"Message from <strong>$creatorname$</strong>",
+"_mailInvitationCustomInvitationHeader":"Message from <strong>$rejectorName$</strong>",
 "_mailInvitationToSignContractDefaultHeader":"<strong>$creatorname$</strong>  has invited you to sign the document <strong>$documenttitle$</strong> electronically through the Scrive e-signing system.",
 "_mailInvitationToSignTitleContract":"Document to e-sign: $documenttitle$",
 "_mailInvitationToViewDefaultHeader":"<strong>$creatorname$</strong> has invited you to review the document <strong>$documenttitle$</strong>.",

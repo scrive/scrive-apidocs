@@ -222,10 +222,16 @@ applyDraftDataToDocument draft actor = do
     documentauthorattachments <$> theDocument >>= \atts -> forM_ atts $ \att -> do
             when_ (not $ att `elem` (documentauthorattachments draft)) $ do
               dbUpdate $ RemoveDocumentAttachment (authorattachmentfile att) actor
-
     documentsignatorylinks <$> theDocument >>= \siglinks -> case (mergeAuthorDetails siglinks (sortBy compareSL $ documentsignatorylinks draft)) of
          Nothing   -> throwIO $ SomeKontraException $ serverError "Problem with author details while sending draft"
          Just sigs -> do
+           -- Checking if some integrations depend on fact that we don't change fstname and lastname for author. To be removed till 20. II.
+           let  (Just oldAuthor) = find isAuthor $ documentsignatorylinks $ draft
+           let  (Just newAuthor) = find isAuthor sigs
+           when (getFirstName oldAuthor /= getFirstName newAuthor || getLastName oldAuthor /= getLastName newAuthor) $ do
+            Log.debug $ "Checkup: Update could changed author details from " ++ getFullName oldAuthor ++ " to " ++ getFullName newAuthor
+           -- End testing
+
            res <- dbUpdate $ ResetSignatoryDetails (sortBy compareSL $ sigs) actor
            unless res $ throwIO $ SomeKontraException $ serverError "applyDraftDataToDocument failed"
 
