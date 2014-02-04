@@ -3,12 +3,14 @@ module Doc.Screenshot
   ) where
 
 import Control.Applicative ((<$>), (<*>))
-import Control.Monad (liftM)
+import Control.Monad.Reader (asks)
+import Data.Maybe (isJust)
 import DB.Binary (Binary(..))
 import qualified Data.ByteString.RFC2397 as RFC2397
 import qualified Data.ByteString.UTF8 as BS
 import MinutesTime (MinutesTime,parseMinutesTimeRealISO, formatMinutesTimeRealISO)
 import Text.JSON.FromJSValue (FromJSValue(..), fromJSValueField)
+import Text.JSON.JSValueContainer (getJSValue)
 import Text.JSON.Gen (value, runJSONGen)
 import Text.JSON.ToJSValue (ToJSValue(..))
 
@@ -20,9 +22,15 @@ data Screenshot = Screenshot
 
 instance FromJSValue Screenshot where
   fromJSValueM = do
-    time' <- (parseMinutesTimeRealISO =<<)  `liftM` fromJSValueField "time"
-    image' <- (fmap (Binary . snd) . RFC2397.decode . BS.fromString =<<) `liftM` fromJSValueField "image"
-    return $ Screenshot <$> time' <*> image'
+    time' <- fromJSValueField "time"
+    image' <- fromJSValueField "image"
+    s <- asks (fromJSValue . getJSValue)
+    return $ if isJust time' && isJust image'
+      then f time' image'
+      else f (fst <$> s) (snd <$> s) -- old array format
+   where f :: Maybe String -> Maybe String -> Maybe Screenshot
+         f t i = Screenshot <$> (parseMinutesTimeRealISO =<< t)
+                             <*> (fmap (Binary . snd) . RFC2397.decode . BS.fromString =<< i)
 
 instance ToJSValue Screenshot where
   toJSValue (Screenshot time' (Binary image')) = runJSONGen $ do
