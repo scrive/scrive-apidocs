@@ -11,7 +11,7 @@
  * );
  */
 
-define(['Backbone', 'legacy_code'], function() {
+define(['Backbone', 'utils/cookie', 'legacy_code'], function(Cookie) {
     /*
      * Fake a form submission that has a <input type="file"> in it. 
      * 

@@ -9,37 +9,17 @@ define(['React', 'Backbone'], function(React, Backbone) {
     },
 
     render: function() {
-      var containerDivStyle = {
-        'height': '368px',
-        'background-image': 'url(' + this.props.promotionImg + ')'
-      };
-      
-      var buttonStyle = {
-        'background-color': 'rgb(162, 198, 23)',
-        'margin-top': '300px',
-        'margin-left': '404px',
-        'box-shadow': 'none',
-        'border': 'none',
-        'border-top-right-radius': '3px',
-        'border-top-left-radius': '3px',
-        'border-bottom-right-radius': '3px',
-        'border-bottom-left-radius': '3px',
-        'background-position': 'initial initial',
-        'background-repeat': 'initial initial'
-      };
-      
-      var labelStyle = {
-        'font-size': '19px',
-        'font-weight': 'bold'
-      };
-
+      var containerClasses = ['save',
+			      'branded-banner',
+			      this.props.bannerType,
+			      this.props.language].join(' ');
       return (
-          <div className="save" style={containerDivStyle}>
-            <div></div>
-            <a onClick={this.props.registerUser} style={buttonStyle} className="green button button-large button-green">
-              <div className="label" style={labelStyle}>{ localization.docsignview.promoBannerButton }</div>
-            </a>
-          </div>
+	<div className={ containerClasses }>
+	  <div></div>
+	  <a onClick={this.props.registerUser} className="green button button-large button-green">
+	    <div className="label">{ localization.docsignview.promoBannerButton }</div>
+	  </a>
+	</div>
       );
     }
   });
@@ -51,19 +31,10 @@ define(['React', 'Backbone'], function(React, Backbone) {
     },
     
     render: function() {
-      // TODO(jens): Remove inline styling
-      var labelStyle = {
-        'display': 'block',
-        'padding-bottom': '5px'
-      };
-
-      var acceptButtonStyle = {
-        'margin-left': '12px'
-      };
-      
       var cx = React.addons.classSet;
       var mainContainerClasses = cx({
         'small-screen': this.props.isSmallScreen,
+	'save-backup-copy': true,
         'save': true,
         'section': true,
         'spacing': true
@@ -88,8 +59,8 @@ define(['React', 'Backbone'], function(React, Backbone) {
             <div className={mainContainerClasses}>
               { titles }
               <div class="clearfix"></div>
-              <div class="acceptbutton" style={acceptButtonStyle}>
-                <label style={labelStyle}>
+              <div class="acceptbutton">
+                <label>
                   Jag har läst och accepterat <a target='_blank' class='clickable' href='/sv/terms'>Scrive Allmänna Villkor</a>
                 </label>
                 <a onClick={this.props.registerUser} className="green button button-large button-green button-round">

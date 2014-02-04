@@ -282,7 +282,7 @@ window.Document = Backbone.Model.extend({
             ajaxerror : errorCallback
             });
     },
-    sign: function(errorCallback,whileSigningAction,postSignAction) {
+    sign: function(errorCallback, successCallback) {
         var document = this;
         var fields = this.fieldsForSigning();
         return new Submit({
@@ -296,17 +296,7 @@ window.Document = Backbone.Model.extend({
 	      var newDocumentJSON = JSON.parse(newDocumentRaw),
               newDocument = new Document(new Document({}).parse(newDocumentJSON)),
               oldDocument = document;
-
-
-              var postSign = function() {
-                if (whileSigningAction != undefined && !whileSigningAction.done()) {
-                  whileSigningAction.setCanBeFinished();
-                  setTimeout(postSign,100);
-                } else {
-                  if (postSignAction != undefined) postSignAction(newDocument, oldDocument);
-                }
-              };
-              postSign();
+	      successCallback(newDocument, oldDocument);
             },
             ajaxerror : function(xhr) {
               if (errorCallback != undefined) {

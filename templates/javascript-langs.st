@@ -264,6 +264,16 @@ javascriptLocalisation =
              , placeYour : "$_signaturePlaceYour()$"
              , confirmSignature : "$_signatureConfirm()$"
            }
+         , hi3gLandingPage: {
+               signedTitle: "$_signedTitle()$"
+             , signedSubtitle: "$_signedSubtitle()$"
+             , hi3gContentHeader: "$_hi3gContentHeader()$"
+             , hi3gContentSubheader: "$_hi3gContentSubheader()$"
+             , hi3gSubmit: "$_hi3gSubmit()$"
+             , hi3gPlaceholder: "$_hi3gPlaceholder()$"
+             , hi3gPhoneSubmittedTitle: "$_hi3gPhoneSubmittedTitle()$"
+             , hi3gPhoneSubmittedSubtitle: "$_hi3gPhoneSubmittedSubtitle()$"
+         }
          , welcomenewuser : {
                title: "$_welcomeTitle()$"
              , button: "$_welcomeButton()$"

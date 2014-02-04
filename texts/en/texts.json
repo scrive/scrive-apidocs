@@ -999,5 +999,13 @@
 "_subtitleReviewed":"Reviewed and signed a document",
 "_subtitleSaved":"Saved a digital copy in your personal e-archive",
 "_button":"Try sending a sample document",
-"_documentTitle":"DEMO of electronic signing"
+"_documentTitle":"DEMO of electronic signing",
+"_signedTitle":"You have signed!",
+"_signedSubtitle":"The signed contract has been sent to your inbox",
+"_hi3gContentHeader":"Want to sign this way with your clients",
+"_hi3gContentSubheader":"Try Scrive e-sign via tablet, sms or email for free. 3's partner Scrive will help you get started",
+"_hi3gSubmit":"Contact me!",
+"_hi3gPlaceholder":"Leave your phone number here",
+"_hi3gPhoneSubmittedTitle":"Thank you for your interest!",
+"_hi3gPhoneSubmittedSubtitle":"A representative from Scrive will contact you as soon as possible."
 }

@@ -999,5 +999,13 @@
 "_subtitleReviewed":"Granskat och signerat ett dokument",
 "_subtitleSaved":"Sparat en säkerhetskopia i ditt e-arkiv",
 "_button":"Skicka ett exempel dokument",
-"_documentTitle":"DEMO av elektronisk signering"
+"_documentTitle":"DEMO av elektronisk signering",
+"_signedTitle":"Du har signerat!",
+"_signedSubtitle":"Det signerade avtalet har skickats till din inkorg",
+"_hi3gContentHeader":"Skulle du vilja signera så här med dina kunder?",
+"_hi3gContentSubheader":"Testa Scrive E-sign via läsplatta, sms eller epost. 3's partner Scrive hjälper er att komma igång",
+"_hi3gSubmit":"Kontakta mig!",
+"_hi3gPlaceholder":"Lämna ditt telefonnummer här",
+"_hi3gPhoneSubmittedTitle":"Tack för ditt intresse!",
+"_hi3gPhoneSubmittedSubtitle":"En representant från Scrive kommer att kontakta dig så snart som möjligt."
 }

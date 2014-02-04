@@ -1,4 +1,4 @@
-define(['utils/cookie'], function(Cookies) {
+define(function() {
   var expose = {};
 
   /**
@@ -46,22 +46,6 @@ define(['utils/cookie'], function(Cookies) {
     }
     return url;
   };
-
-   expose.getCurrentLanguage = function() {
-    var language = Cookies.get('lang'),
-    languageFormatted = '';
-
-    if(language) {
-      languageFormatted = language.replace('LANG_', '').replace(/\"/g, '');
-      languageFormatted = languageFormatted.toLowerCase();
-    } else {
-      console.error('No language cookie found, falling back to english');
-      languageFormatted = 'en';
-    }
-
-    return languageFormatted;
-  };
-
   
   return expose;
 });

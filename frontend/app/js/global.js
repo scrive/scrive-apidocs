@@ -181,7 +181,7 @@ function parseQueryString() {
     return urlParams;
 }
 
-require(['Backbone', 'legacy_code'], function() {
+require(['Backbone', 'utils/cookie', 'legacy_code'], function(Backbone, Cookie) {
 
 /**
  * For Cross-Site Request Forgery (CSRF) Attacks

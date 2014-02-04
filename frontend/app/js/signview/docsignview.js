@@ -3,7 +3,7 @@
  * Instrumented for Mixpanel
  */
 
-define(['React', 'common/utilities_service', 'postsignview/create_account_views', 'postsignview/user_service', 'Backbone', 'Underscore', 'legacy_code'], function(React, UtilitiesService, CreateAccountViews, UserService, Backbone, _) {
+define(['React', 'Backbone', 'Underscore', 'signview/create_account_section_view', 'legacy_code'], function(React, Backbone, _, CreateAccountSection) {
 
 var DocumentSignViewModel = Backbone.Model.extend({
   defaults : {
@@ -14,7 +14,6 @@ var DocumentSignViewModel = Backbone.Model.extend({
       var model = this;
       var document = args.document;
       var signviewbranding = args.signviewbranding;
-      _.bindAll(this, 'bannerRegisterUser', 'padRegisterUser');
 
       document.bind("reset", function() {
           model.trigger("change");
@@ -111,85 +110,20 @@ var DocumentSignViewModel = Backbone.Model.extend({
    *  @description
    *  Is this the first time current user sign a document with Scrive?
    */
-  userFirstSign: function() {
+  hasCreateAccountSection: function() {
       var document = this.document();
-
       return document.currentSignatory() != undefined
              && !document.currentSignatory().saved()
 	     && document.currentSignatory().email()
              && document.currentSignatory().hasSigned();
   },
 
-  /**
-   *  @description
-   *  Register a new user and redirect him to right place
-   */
-  bannerRegisterUser: function(companyName, sectionElement) {
-    UserService.registerUser(this.document()).then(function() {
-      mixpanel.people.set({
-        'Accepted Promotion': true,
-        'Promotion': companyName
-      });
-
-      if(this.document().currentSignatory().padDelivery()) {
-        React.renderComponent(CreateAccountViews.PadSafetyCopySaved(null), sectionElement);
-      } else {
-        window.location.pathname = '/newdocument';
-      }
-    }.bind(this));
-  },
-
-  /**                  
-   *  @description
-   *  Register a new user that signed on a pad and change content of supplied element
-   */
-  padRegisterUser: function(sectionElement) {
-    UserService.registerUser(this.document()).then(function() {
-      React.renderComponent(CreateAccountViews.PadSafetyCopySaved(null), sectionElement);
-    });
-  },
-
- /**
-   *  @description
-   *  Render different types of create account sections on postsignview,
-   *  depending on a few different conditions.
-   */
   createAccountSection: function() {
-    var createAccountElement = $('<div />')[0],
-    promotionImg = '/img/partnerbanners/',
-    language = UtilitiesService.getCurrentLanguage();
-
-    if(this.document().author().company() === 'Phone House') {
-      // Phone house, create account banner
-      promotionImg += (language === 'sv' ? 'phonehouse_bg_se.png': 'phonehouse_bg.png');
-      var component = CreateAccountViews.BrandedBanner({
-        promotionImg: promotionImg,
-        registerUser: _.partial(this.bannerRegisterUser, 'Phone House', createAccountElement)
-      });
-      React.renderComponent(component, createAccountElement);
-    } else if(this.userFirstSign(this.document()) && null !== /^nj.*scrive.com/.exec(location.host)) {
-      // Nordsteds juridik, create account section
-
-      promotionImg += (language === 'sv' ? 'nj_bg_se.png': 'nj_bg.png');
-
-      var component = CreateAccountViews.BrandedBanner({
-        promotionImg: promotionImg,
-        registerUser: _.partial(this.bannerRegisterUser, 'NJ', createAccountElement)
-      });
-      React.renderComponent(component, createAccountElement);
-    } else if(this.document().currentSignatory().padDelivery()) {
-      // Signing in padqueue, create account banner
-
-      var component = CreateAccountViews.SaveBackupCopy({
-        isSmallScreen: BrowserInfo.isSmallScreen(),
-        registerUser: _.partial(this.padRegisterUser, createAccountElement)
-      })
-      React.renderComponent(component, createAccountElement);
-    } else {
-      // TODO(jens): Show questionnare
+    if (this.createAccountSectionEle == undefined) {
+      this.createAccountSectionEle = $('<div />');
+      CreateAccountSection.render(this.document(), this.createAccountSectionEle);
     }
-
-    return createAccountElement;
+    return this.createAccountSectionEle;
   },
 
   signsection : function() {
@@ -551,9 +485,10 @@ var DocumentSignViewView = Backbone.View.extend({
 
      subcontainerWrapper.prepend(this.model.instructionssection().el);
 
-     if(this.model.userFirstSign()) {
-       this.subcontainer.append(this.model.createAccountSection());
-     }
+      if(this.model.hasCreateAccountSection()) {
+	//console.log(this.model.createAccountSection());
+	this.subcontainer.append(this.model.createAccountSection());
+      }
 
      if (   this.model.hasMainFileSection()
          || this.model.hasAuthorAttachmentsSection()
@@ -618,4 +553,7 @@ window.DocumentSignView = function(args){
          };
 };
 
+  return {
+    DocumentSignView: window.DocumentSignView
+  }
 });

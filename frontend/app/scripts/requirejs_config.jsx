@@ -29,6 +29,16 @@ var require = {
     tinyMCE_theme: '../libs/tiny_mce/themes/modern/theme.min',
     tinyMCE_noneeditable: '../libs/tiny_mce/plugins/noneditable/plugin.min',
     tinyMCE_paste: '../libs/tiny_mce/plugins/paste/plugin.min',
+
+    /**
+     *  Loads language file. 
+     *
+     *  @note 
+     *  Kontrackja will serve the language file that corresponds to
+     *  current user's language on this url.
+     */
+    LoadDefaultLanguage: '/localization/localization',
+
     /**
      *  Legacy code imports
      */

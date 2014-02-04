@@ -37,8 +37,6 @@ window.DocumentSignConfirmation = Backbone.View.extend({
   /**
    *  @description
    *  Block browser from reloading page
-   *
-   *  TODO(mariusz): Only works for some browsers, should be done more generic, so it works for all browsers
    */
   startBlockingReload : function() {
     window.onbeforeunload = function() {return localization.signingInProgressDontCloseWindow;};
@@ -147,14 +145,13 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     return $("<span class='elegButtonFooter' />").append(bankid.el()).append(mbi.el()).append(telia.el());
   },
 
+
   /**
    *  @description
-   *  Redirect to different pages when a document is signed,
+   *  Show different pages when a document is signed,
    *  based on a few conditions,
    */
-  onSignedDocument: function(newDocument, oldDocument) {
-    this.stopBlockingReload()
-
+  showPSV: function(newDocument, oldDocument) {
     // Signing through api
     if (oldDocument.currentSignatory().signsuccessredirect() != undefined && oldDocument.currentSignatory().signsuccessredirect() != "") {
       window.location = document.currentSignatory().signsuccessredirect();
@@ -164,6 +161,24 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       window.scroll(0,0);
       window.location.reload();
     }
+  },
+
+  /**
+   *  @description
+   *  Start checking with an interval, if we can show postsignview
+   */
+  onSignedDocument: function(newDocument, oldDocument) {
+    this.stopBlockingReload()
+
+    var postSign = function() {
+      if (this.signinprogressmodal != undefined && !this.signinprogressmodal.done()) {
+        this.signinprogressmodal.setCanBeFinished();
+        setTimeout(postSign, 100);
+      } else {
+	this.showPSV(newDocument, oldDocument);
+      }
+    }.bind(this);
+    postSign();
   },
 
   createSignButtonElems: function() {
@@ -212,7 +227,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
             }
             trackTimeout('Accept', {'Accept' : 'sign document'});
 
-            document.sign(errorCallback, self.signinprogressmodal, self.onSignedDocument).send();
+            document.sign(errorCallback, self.onSignedDocument).send();
           };
           f();
       }, errorCallback).send();

@@ -6,7 +6,7 @@
  *              });
 */
 
-define(['Backbone', 'legacy_code'], function() {
+define(['Backbone', 'utils/cookie', 'legacy_code'], function(Cookie) {
 
 window.Submit = Backbone.Model.extend({
     defaults : {

@@ -1,0 +1,64 @@
+.hi3g-landing-page {
+  background-color: @body-bg;
+  width: 100%;
+
+  .inner {
+    box-sizing: border-box; // TODO(jens): make mixin to prefix this
+    margin: auto;
+    padding: 8px;
+    width: 100%;
+  }
+
+  .signed-section {
+    background-color: @white;
+    border: 2px solid #E6E6E6;
+    padding: 40px 0;
+    text-align: center;
+
+    h1 {
+      color: @primary-font-color;
+      font-weight: 400;
+      font-size: 24px;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      color: @secondary-font-color;
+      font-weight: 300;
+      font-size: 26px;
+    }
+  }
+
+  .content-section {
+    border: 2px solid #E6E6E6;
+    margin-top: 6px;
+    text-align: center;
+    padding: 120px 15px;//
+    
+    h1 {
+      font-size: 42px;
+    }
+
+    h2 {
+      font-size: 22px;
+      padding-top: 12px;
+    }
+
+    .telephone-number {
+      margin-top: 35px;
+    }
+    
+    .telephone-number-input {
+      height: 25px;
+      width: 250px;
+    }
+    
+    .submit {
+      background-color: #d5832c;
+      color: @white;
+      height: 37px;
+      margin-left: 15px;
+      padding: 0 30px;
+    }
+  }
+}
