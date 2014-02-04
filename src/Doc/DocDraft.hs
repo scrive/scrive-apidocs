@@ -229,7 +229,7 @@ applyDraftDataToDocument draft actor = do
            let  (Just oldAuthor) = find isAuthor $ documentsignatorylinks $ draft
            let  (Just newAuthor) = find isAuthor sigs
            when (getFirstName oldAuthor /= getFirstName newAuthor || getLastName oldAuthor /= getLastName newAuthor) $ do
-            Log.debug $ "Checkup: Update could changed author details from " ++ getFullName oldAuthor ++ " to " ++ getFullName newAuthor
+            Log.mixlog_ $ "Checkup: Update could changed author details from " ++ getFullName oldAuthor ++ " to " ++ getFullName newAuthor
            -- End testing
 
            res <- dbUpdate $ ResetSignatoryDetails (sortBy compareSL $ sigs) actor
