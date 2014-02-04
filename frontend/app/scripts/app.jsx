@@ -19,7 +19,7 @@ require(['Underscore', 'Backbone', 'React', 'postsignview/hi3g_views', 'common/l
      *  Always add routes with (/), so it doesnt matter if you have trailing slash or not.
      */
     routes: {
-      'hi3g-try-scrive/:language/:email(/)': 'hi3gLandingPage',
+      'hi3g-try-scrive/:language/?email=(:email)': 'hi3gLandingPage',
     },
 
     hi3gLandingPage: function(language, email) {
@@ -27,6 +27,10 @@ require(['Underscore', 'Backbone', 'React', 'postsignview/hi3g_views', 'common/l
       //   and it's a supported language.
       if(LanguageService.currentLanguage() !== language && LanguageService.isSupportedLanguage(language)) {
 	LanguageService.loadLanguage(language);
+      }
+
+      if(email === null) {
+	email = '';
       }
 
       var LandingPage = Hi3gViews.LandingPage;
