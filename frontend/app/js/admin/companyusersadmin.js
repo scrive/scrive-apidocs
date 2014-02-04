@@ -95,7 +95,7 @@ var newUserInCompanyButton = function(companyid) {
                                       lang : lang.val(),
                                       iscompanyadmin : isadmin.is(":checked") ? "Yes" : undefined,
                                       custommessage : jQuery('textarea',body).val()
-                                      }).send();
+                                      }).sendAjax(function() {window.location.reload();},function() {window.location.reload();});
                               }
                           },
                 title : "Create user in company",
