@@ -151,6 +151,9 @@ module.exports = function (grunt) {
 	out: '<%= yeoman.dist %>/optimized-system.js',
 	include: ['../bower_components/requirejs/require.js'],
 	name: 'app',
+	paths: {
+          LoadDefaultLanguage: "empty:"
+	},
 	preserveLicenseComments: false
       },
       withSourceMap: {

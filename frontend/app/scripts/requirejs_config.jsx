@@ -31,7 +31,7 @@ var require = {
     tinyMCE_paste: '../libs/tiny_mce/plugins/paste/plugin.min',
 
     /**
-     *  Loads language file. 
+     *  Loads language file, which set window.localization.
      *
      *  @note 
      *  Kontrackja will serve the language file that corresponds to
