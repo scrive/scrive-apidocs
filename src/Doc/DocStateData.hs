@@ -79,9 +79,11 @@ data StatusClass = SCDraft
                   | SCProlonged
                   | SCSealed -- has a digital seal
                   | SCExtended -- has an extended digital seal
+                  | SCInitiated
                   deriving (Eq, Ord, Enum, Bounded)
 
 instance Show StatusClass where
+  show SCInitiated = "initiated"
   show SCDraft = "draft"
   show SCCancelled = "cancelled"
   show SCRejected  = "rejected"
