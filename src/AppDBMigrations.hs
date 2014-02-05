@@ -151,5 +151,6 @@ kontraMigrations = [
   , migrateDocumentsAddDaysToRemind
   , normalizeCompanyInvites
   , addProbablyMissingIndexesOnAttachments
+  , addPrimaryAndSecondaryColoursToCompanyUIs
   ] ++ mailerMigrations
     ++ messengerMigrations
