@@ -317,7 +317,7 @@ module.exports = function (grunt) {
       compile: {
 	options: {
           paths: ['<%= yeoman.app %>/less'],
-	  sourceMap: false,
+	  sourceMap: true,
 	  sourceMapFilename: '<%= yeoman.app %>/less/less-compiled.css.map',
 	  sourceMapURL: '/less/less-compiled.css.map'
 	},

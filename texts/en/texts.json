@@ -1007,5 +1007,7 @@
 "_hi3gSubmit":"Contact me!",
 "_hi3gPlaceholder":"Leave your phone number here",
 "_hi3gPhoneSubmittedTitle":"Thank you for your interest!",
-"_hi3gPhoneSubmittedSubtitle":"A representative from Scrive will contact you as soon as possible."
+"_hi3gPhoneSubmittedSubtitle":"A representative from Scrive will contact you as soon as possible.",
+"_acceptTOSpart1":"I have read and accept the",
+"_acceptTOSpart2":"Scrive Terms of Service"
 }

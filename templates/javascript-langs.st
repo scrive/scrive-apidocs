@@ -539,6 +539,8 @@ javascriptLocalisation =
              , passwordLabel: "$_modalAccountSetupChoosePassword()$"
              , password2Label: "$_modalAccountSetupRepeatPassword()$"
              , acceptTOSLabel: "$_accountFromSignInputsBodyAcceptTOS()$"
+             , acceptTOSpart1: "$_acceptTOSpart1()$"
+             , acceptTOSpart2: "$_acceptTOSpart2()$"
              , newAccountButton: "$_signViewCreateAccountLabel()$"
              , createdAccountTitle: "$_signViewCreatedAccountTitle()$"
              , createdAccountSubtitle: "$_signViewCreatedAccountSubtitle()$"

@@ -7,19 +7,19 @@ define(['React', 'Backbone'], function(React, Backbone) {
     propTypes: {
       registerUser: React.PropTypes.func.isRequired,
     },
-
+    
     render: function() {
       var containerClasses = ['save',
-			      'branded-banner',
-			      this.props.bannerType,
-			      this.props.language].join(' ');
+                              'branded-banner',
+                              this.props.bannerType,
+                              this.props.language].join(' ');
       return (
-	<div className={ containerClasses }>
-	  <div></div>
-	  <a onClick={this.props.registerUser} className="green button button-large button-green">
-	    <div className="label">{ localization.docsignview.promoBannerButton }</div>
-	  </a>
-	</div>
+          <div className={ containerClasses }>
+            <div></div>
+            <a onClick={this.props.registerUser} className="green button button-large button-green">
+              <div className="label">{ localization.docsignview.promoBannerButton }</div>
+            </a>
+          </div>
       );
     }
   });
@@ -34,7 +34,7 @@ define(['React', 'Backbone'], function(React, Backbone) {
       var cx = React.addons.classSet;
       var mainContainerClasses = cx({
         'small-screen': this.props.isSmallScreen,
-	'save-backup-copy': true,
+        'save-backup-copy': true,
         'save': true,
         'section': true,
         'spacing': true
@@ -47,11 +47,11 @@ define(['React', 'Backbone'], function(React, Backbone) {
               <div className="title">{ localization.docsignview.titleText }</div>
               <div className="subtitle">{ localization.docsignview.subtitleText }</div>
             </div>
-        )
+        );
       } else {
         titles = (
             <div className="title">{ localization.docsignview.subtitleText }</div>
-        )
+        );
       }
       
       return (
@@ -60,16 +60,14 @@ define(['React', 'Backbone'], function(React, Backbone) {
               { titles }
               <div class="clearfix"></div>
               <div class="acceptbutton">
-                <label>
-                  Jag har läst och accepterat <a target='_blank' class='clickable' href='/sv/terms'>Scrive Allmänna Villkor</a>
-                </label>
+                <label className="label">{ localization.docsignview.acceptTOSpart1 }<a className="terms" target='_blank' class='clickable' href='/sv/terms'>{ localization.docsignview.acceptTOSpart2 }</a></label>
                 <a onClick={this.props.registerUser} className="green button button-large button-green button-round">
                   <div className="label">{ localization.docsignview.signupButtonText }</div>
                 </a>
               </div>
             </div>
           </div>
-      )
+      );
     }
   });
   
@@ -82,9 +80,9 @@ define(['React', 'Backbone'], function(React, Backbone) {
               <div className="subtitle">{ localization.docsignview.padSubtitle }</div>
             </div>
           </div>
-      )
+      );
     }
   });
-    
+  
   return expose;
 });

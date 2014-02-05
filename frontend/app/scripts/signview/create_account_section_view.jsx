@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React', 'common/utilities_service', 'postsignview/create_account_views', 'postsignview/user_service', 'Backbone', 'Underscore'], function(React, UtilitiesService, CreateAccountViews, UserService, Backbone, _) {
+define(['React', 'common/language_service', 'postsignview/questionnaire_view', 'postsignview/create_account_views', 'postsignview/user_service', 'Backbone', 'Underscore'], function(React, LanguageService, QuestionareView, CreateAccountViews, UserService, Backbone, _) {
   var expose = {};
   
   /**
@@ -42,15 +42,15 @@ define(['React', 'common/utilities_service', 'postsignview/create_account_views'
    */
   expose.render = function(document, sectionElement) {
     var promotionImg = '/img/partnerbanners/',
-    language = UtilitiesService.getCurrentLanguage(),
-    sectionElement = sectionElement[0]; // Make it a raw html object instead of jQuery object
+    language = LanguageService.currentLanguage(),
+    sectionElementRaw = sectionElement[0];
     
     if(document.author().company() === 'Phone House') {
       // Phone house, create account banner
       var component = CreateAccountViews.BrandedBanner({
         bannerType: 'phone-house',
         language: language,
-        registerUser: _.partial(bannerRegisterUser, document, 'Phone House', sectionElement)
+        registerUser: _.partial(bannerRegisterUser, document, 'Phone House', sectionElementRaw)
       });
     } else if(null !== /^nj.*scrive.com/.exec(location.host)) {
       // Nordsteds juridik, create account section
@@ -58,24 +58,20 @@ define(['React', 'common/utilities_service', 'postsignview/create_account_views'
       var component = CreateAccountViews.BrandedBanner({
         bannerType: 'nj',
         language: language,
-        registerUser: _.partial(bannerRegisterUser, document, 'NJ', sectionElement)
+        registerUser: _.partial(bannerRegisterUser, document, 'NJ', sectionElementRaw)
       });
-    } else if(document.currentSignatory().padDelivery()) {
-      // Signing in padqueue, create account banner
-      
-      var component = CreateAccountViews.SaveBackupCopy({
-        isSmallScreen: BrowserInfo.isSmallScreen(),
-        registerUser: _.partial(padRegisterUser, document, sectionElement)
-      });
+      React.renderComponent(component, sectionElementRaw);
+    } else if(false && document.currentSignatory().company() !== '') {
+      // B2B contracts
+      var view = new QuestionareView({model: document});
+      sectionElement.append(view.render());
     } else {
       var component = CreateAccountViews.SaveBackupCopy({
         isSmallScreen: BrowserInfo.isSmallScreen(),
-        registerUser: _.partial(padRegisterUser, document, sectionElement)
+        registerUser: _.partial(padRegisterUser, document, sectionElementRaw)
       });
-      console.log("Show questionnare");
-      // TODO(jens): Show questionnare
+      React.renderComponent(component, sectionElementRaw);
     }
-    React.renderComponent(component, sectionElement);
   };
   
   return expose;

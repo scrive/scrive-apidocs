@@ -29,7 +29,7 @@ define(['Underscore', 'jquery', 'utils/cookie'], function(_, $, Cookie) {
    *  @description
    *  Get language that is set in cookie, which is set by backend/kontrakcja
    */
-  expose.getLanguageCookie = function() {
+  expose.cookieLanguage = function() {
     var language = Cookies.get('lang'),
     languageFormatted = '';
     
