@@ -7,8 +7,8 @@ import Company.Tables
 
 default (SQL)
 
-removeDuplicateIndexFromCompanyUIs :: MonadDB m => Migration m
-removeDuplicateIndexFromCompanyUIs = Migration {
+addPrimaryAndSecondaryColoursToCompanyUIs :: MonadDB m => Migration m
+addPrimaryAndSecondaryColoursToCompanyUIs = Migration {
   mgrTable = tableCompanyUIs
 , mgrFrom = 2
 , mgrDo = do
@@ -18,8 +18,8 @@ removeDuplicateIndexFromCompanyUIs = Migration {
     kRunRaw "ALTER TABLE company_uis ADD COLUMN signview_secondarytextcolour TEXT NULL"
 }
 
-addPrimaryAndSecondaryColoursToCompanyUIs :: MonadDB m => Migration m
-addPrimaryAndSecondaryColoursToCompanyUIs = Migration {
+removeDuplicateIndexFromCompanyUIs :: MonadDB m => Migration m
+removeDuplicateIndexFromCompanyUIs = Migration {
   mgrTable = tableCompanyUIs
 , mgrFrom = 1
 , mgrDo = do
