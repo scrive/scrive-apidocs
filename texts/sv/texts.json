@@ -1,4 +1,4 @@
-{
+{ 
 "_CompanyAccounts":"Användare",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Är du säker på att du vill skicka en påminnelse till berörda parter för",
@@ -98,8 +98,8 @@
 "_april":"april",
 "_archiveCSV":"Ladda ner metadata (alla dok), CSV",
 "_archiveZIP":"Ladda ner valda dokument, PDF",
-"_arrowGreen":"den gröna pilen",
 "_arrow":"pilen",
+"_arrowGreen":"den gröna pilen",
 "_attachedDocument":"Bilaga $number$",
 "_august":"augusti",
 "_authorParty":"Upphovsman",
@@ -214,11 +214,11 @@
 "_companyBrandingBarsColour":"Sidhuvud-/sidfotsfärg",
 "_companyBrandingBarsTextColour":" Sidhuvud/sidfot typsnittsfärg",
 "_companyBrandingCustomize":"Anpassa",
-"_companyBrandingbarsSecondaryColour":" Ram- och markeringsfärg",
 "_companyBrandingPrimaryColour":"Primärfärg",
 "_companyBrandingPrimaryTextColour":"Primär textfärg",
 "_companyBrandingSecondaryColour":"Sekundärfärg",
 "_companyBrandingSecondaryTextColour":"Sekundär textfärg",
+"_companyBrandingbarsSecondaryColour":" Ram- och markeringsfärg",
 "_companyNumberInvalidChars":"Organisationsnumret får endast innehålla bokstäver, siffror samt bindestreck.",
 "_companyNumberLabel":"Org. nr.",
 "_companyNumberTooLong":"Organisationsnumret får inte vara längre än 50 tecken.",

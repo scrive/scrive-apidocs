@@ -1,4 +1,4 @@
-{
+{ 
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Are you sure you want to send reminders to the parties involved in the",
@@ -98,8 +98,8 @@
 "_april":"April",
 "_archiveCSV":"Download metadata (all docs), CSV",
 "_archiveZIP":"Download selected documents, PDF",
-"_arrowGreen":"green arrow",
 "_arrow":"arrow",
+"_arrowGreen":"green arrow",
 "_attachedDocument":"Attachment $number$",
 "_august":"August",
 "_authorParty":"Author",
@@ -214,11 +214,11 @@
 "_companyBrandingBarsColour":"Header/footer colour",
 "_companyBrandingBarsTextColour":"Header/footer text colour",
 "_companyBrandingCustomize":"Customize",
-"_companyBrandingbarsSecondaryColour":"Border and highlight colour",
 "_companyBrandingPrimaryColour":"Primary colour",
 "_companyBrandingPrimaryTextColour":"Primary text colour",
 "_companyBrandingSecondaryColour":"Secondary colour",
 "_companyBrandingSecondaryTextColour":"Secondary text colour",
+"_companyBrandingbarsSecondaryColour":"Border and highlight colour",
 "_companyNumberInvalidChars":"Company number may only contain letters, digits and dash symbol.",
 "_companyNumberLabel":"Org. no.",
 "_companyNumberTooLong":"Company number must be at most 50 characters long.",
