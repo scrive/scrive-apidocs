@@ -41,7 +41,8 @@ type KontrakcjaGlobalTemplates = TL.GlobalTemplates
 type KontrakcjaTemplates = TL.Templates
 
 readGlobalTemplates :: MonadIO m => m KontrakcjaGlobalTemplates
-readGlobalTemplates = TL.readGlobalTemplates textsDirectory templateFilesDir (codeFromLang LANG_SV)
+readGlobalTemplates = TL.readGlobalTemplates textsDirectory templateFilesDir (codeFromLang LANG_EN)
+
 
 localizedVersion :: Lang -> KontrakcjaGlobalTemplates -> KontrakcjaTemplates
 localizedVersion lang = TL.localizedVersion $ codeFromLang lang

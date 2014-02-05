@@ -30,7 +30,6 @@ import MinutesTime
 import User.Lang
 import Util.SignatoryLinkUtils
 import Doc.Model
-import Doc.DocStateData
 import Doc.DocumentID
 import Data.Maybe
 import BrandedDomain.BrandedDomain
@@ -42,11 +41,11 @@ scheduleEmailSendout c m =  scheduleEmailSendout' (originator m) c m
 scheduleEmailSendoutWithDocumentAuthorSender :: (CryptoRNG m, MonadDB m, Log.MonadLog m, T.TemplatesMonad m) => DocumentID  -> MailsConfig -> Mail -> m ()
 scheduleEmailSendoutWithDocumentAuthorSender did c m = do
   doc <- dbQuery $ GetDocumentByDocumentID did
-  name <- case (documentlang doc, getAuthorName doc) of
-      (_,         []) -> return $ (originator m)
-      (LANG_SV, an) -> return $ an ++ " genom " ++ (originator m)
-      (LANG_EN, an) -> return $ an ++ " through " ++ (originator m)
-      (LANG_DE, an) -> return $ an ++ " through " ++ (originator m)
+  name <- case (getAuthorName doc) of
+      ("") -> return $ (originator m)
+      (an) -> renderLocalTemplate doc "mailInvitationFromPart" $ do
+                F.value "authorname" an
+                F.value "originator" (originator m)
   scheduleEmailSendout' name c m
 
 scheduleEmailSendout' :: (CryptoRNG m, MonadDB m, Log.MonadLog m) => String -> MailsConfig -> Mail ->  m ()

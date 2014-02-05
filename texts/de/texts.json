@@ -972,5 +972,7 @@
 "_youCantCancelThisDocuments":"Sie können die ausgewählte Dokumente nicht zurückziehen.",
 "_youCantSendRemindersToThisDocuments":"Erinnerungen können nicht für einige der ausgewählten Dokumente gesendet werden.",
 "_yourSigningPluginFailed":"Ihr Unterzeichnung Plug-In konnte nicht das Dokument unterzeichnen. Bitte kontaktieren Sie Ihren E-ID-Anbieter.",
-"_zip":"Postleitzahl"
+"_zip":"Postleitzahl",
+"_through":""
+
 }
