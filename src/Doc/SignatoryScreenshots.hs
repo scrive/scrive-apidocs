@@ -3,6 +3,8 @@ module Doc.SignatoryScreenshots
   , emptySignatoryScreenshots
   , resolveReferenceScreenshotNames
   , getReferenceScreenshot
+  , referencePath
+  , validReferenceName
   ) where
 
 import API.Monad (badInput)
@@ -49,13 +51,19 @@ instance ToJSValue SignatoryScreenshots where
                    Nothing -> return ()
                    Just s  -> value n s
 
+referencePath :: String -> FilePath
+referencePath name = "files/reference_screenshots/" ++ name ++ ".json"
+
+validReferenceName :: String -> Bool
+validReferenceName n = n `elem` ["author", "mobile", "standard"]
+
 resolveReferenceScreenshotNames :: (MonadBase IO m, MonadBaseControl IO m, MonadIO m) => SignatoryScreenshots -> m SignatoryScreenshots
 resolveReferenceScreenshotNames s =
   case reference s of
     Nothing -> return s
     Just (Right _) -> return s
-    Just (Left name) | name `elem` ["standard"] -> do
-        Ok json <- decode <$> (liftIO $ readFile $ "files/reference_screenshots/" ++ name ++ ".json") `E.catch`
+    Just (Left name) | validReferenceName name -> do
+        Ok json <- decode <$> (liftIO $ readFile $ referencePath name) `E.catch`
                     \E.SomeException{} -> bad
         Just r <- return $ fromJSValue json
         return $ s{ reference = Just (Right r) }

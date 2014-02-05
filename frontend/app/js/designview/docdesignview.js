@@ -514,6 +514,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             view.documentView = new DesignViewDocumentView({model : view.model.document(),
                                                             viewmodel : view.model});
             $(window).on('resize scroll', view.affix);
+            view.model.document().setReferenceScreenshot("author");
             view.render();
         },
         fix: function() {
