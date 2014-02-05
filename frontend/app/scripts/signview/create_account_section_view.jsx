@@ -43,7 +43,8 @@ define(['React', 'common/language_service', 'postsignview/questionnaire_view', '
   expose.render = function(document, sectionElement) {
     var promotionImg = '/img/partnerbanners/',
     language = LanguageService.currentLanguage(),
-    sectionElementRaw = sectionElement[0];
+    // React.renderComponent need a html object to attach to, not a jquery html object
+    sectionElementRaw = sectionElement[0]; 
     
     if(document.author().company() === 'Phone House') {
       // Phone house, create account banner
