@@ -3,12 +3,17 @@
   width: 100%;
 
   h1, h2 {
-      //font-family: 'ModenaCondensedRegular';
-      //src: url('../css/fonts/Modena.ttf');
-
+    font-family: 'Open Sans';
     letter-spacing: 0px;
   }
+  
+  h1 {
+    font-weight: 400;
+  }
 
+  h2 {
+    font-weight: 300;
+  }
 
   .inner {
     box-sizing: border-box; // TODO(jens): make mixin to prefix this
@@ -25,15 +30,14 @@
 
     h1 {
       color: @primary-font-color;
-      font-weight: 400;
       font-size: 25px;
       text-transform: uppercase;
     }
 
     h2 {
       color: @secondary-font-color;
-      font-weight: 300;
       font-size: 21px;
+      margin-top: 2px;
     }
   }
 
@@ -41,29 +45,37 @@
     border: 2px solid #E6E6E6;
     margin-top: 6px;
     text-align: center;
-    padding: 120px 15px;//
+    padding: 120px 15px;
     
     h1 {
       font-size: 42px;
     }
 
     h2 {
-      font-size: 22px;
+      font-size: 20px;
       padding-top: 12px;
     }
 
     .telephone-number {
       margin-top: 60px;
     }
+
+    .info-text-input {
+      padding: 2px;
+    }
     
     .telephone-number-input {
       height: 37px;
+      font-size: 23px;
+      padding-top: 5px;
       width: 403px;
+      padding-left: 7px;
     }
     
     .submit {
       background-color: #d5832c;
       color: @white;
+      font-size: 22px;
       height: 47px;
       margin-left: 15px;
       width: 194px;

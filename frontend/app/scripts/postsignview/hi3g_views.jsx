@@ -61,8 +61,13 @@ define(['React', 'Backbone'], function(React, Backbone) {
 	      <h1>{ localization.hi3gLandingPage.hi3gContentHeader }</h1>
 	      <h2>{ localization.hi3gLandingPage.hi3gContentSubheader }</h2>
 	      <div className="telephone-number">
-		<input className="telephone-number-input" onChange={ this.handlePhoneNumber } type="tel"placeholder={ localization.hi3gLandingPage.hi3gPlaceholder } />
+
+		  <div className="info-text-input">
+		    <input className="telephone-number-input" name="" type="text" placeholder={ localization.hi3gLandingPage.hi3gPlaceholder }></input>
+		  </div>
+
 		<input className="submit" type="submit" onClick={ this.phoneNumberSubmit } value={ localization.hi3gLandingPage.hi3gSubmit }></input>
+
 	      </div>
 	    </div>
 	    );	    
