@@ -27,25 +27,6 @@ define(['Underscore', 'jquery', 'utils/cookie'], function(_, $, Cookie) {
   
   /**
    *  @description
-   *  Get language that is set in cookie, which is set by backend/kontrakcja
-   */
-  expose.cookieLanguage = function() {
-    var language = Cookies.get('lang'),
-    languageFormatted = '';
-    
-    if(language) {
-      languageFormatted = language.replace('LANG_', '').replace(/\"/g, '');
-      languageFormatted = languageFormatted.toLowerCase();
-    } else {
-      console.error('No language cookie found, falling back to swedish');
-      languageFormatted = 'sv';
-    }
-
-    return languageFormatted;
-  };
-
-  /**
-   *  @description
    *  Get which language is loaded right now, with localization file
    *
    *  @note

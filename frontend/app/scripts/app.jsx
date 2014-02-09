@@ -2,7 +2,7 @@
 
 var App = {};
 
-require(['Underscore', 'Backbone', 'React', 'postsignview/hi3g_views', 'common/language_service', 'legacy_code'], function(_, Backbone, React, Hi3gViews, LanguageService) {
+require(['Underscore', 'Backbone', 'React', 'postsignview/hi3g_views', 'postsignview/archive_views', 'common/language_service', 'postsignview/simple_document_model', 'legacy_code'], function(_, Backbone, React, Hi3gViews, ArchiveViews, LanguageService, SimpleDocumentModel) {
   /**
    *  If we're not under Backbone router url /r/. Bail out.
    *  This is needed since r.js (r.js == make one big js file for production) 
@@ -20,7 +20,17 @@ require(['Underscore', 'Backbone', 'React', 'postsignview/hi3g_views', 'common/l
      */
     routes: {
       'hi3g-try-scrive/:language/?email=(:email)': 'hi3gLandingPage',
+      'postsignview/archive(/)': 'archivePSV'
     },
+
+    archivePSV: function(documentId, signatoryId) {
+      var simpleDocumentList = new SimpleDocumentModel.Collection();
+      simpleDocumentList.fetch({
+        success: function(collection, response) {
+	  React.renderComponent(ArchiveViews.ShowDocument({document: collection.at(0)}), document.body);
+        }
+      });
+    },  
 
     hi3gLandingPage: function(language, email) {
       // Load language specified in url, if it's not the same as the one already loaded 
@@ -29,9 +39,7 @@ require(['Underscore', 'Backbone', 'React', 'postsignview/hi3g_views', 'common/l
 	LanguageService.loadLanguage(language);
       }
 
-      if(email === null) {
-	email = '';
-      }
+      email = email || '';
 
       var LandingPage = Hi3gViews.LandingPage;
       React.renderComponent(<LandingPage email={ email }/>, document.body);

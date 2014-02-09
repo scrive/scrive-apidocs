@@ -31,6 +31,12 @@ define(['React', 'common/language_service', 'postsignview/questionnaire_view', '
       React.renderComponent(CreateAccountViews.PadSafetyCopySaved(null), sectionElement);
     });
   };
+
+  var normalRegisterUser = function(document, sectionElement) {
+    UserService.registerUser(document).then(function() {
+      window.location = '/r/#/postsignview/archive';
+    });
+  };
   
   /**
    *  @description
@@ -53,6 +59,7 @@ define(['React', 'common/language_service', 'postsignview/questionnaire_view', '
         language: language,
         registerUser: _.partial(bannerRegisterUser, document, 'Phone House', sectionElementRaw)
       });
+      React.renderComponent(component, sectionElementRaw);
     } else if(null !== /^nj.*scrive.com/.exec(location.host)) {
       // Nordsteds juridik, create account section
       
@@ -62,14 +69,22 @@ define(['React', 'common/language_service', 'postsignview/questionnaire_view', '
         registerUser: _.partial(bannerRegisterUser, document, 'NJ', sectionElementRaw)
       });
       React.renderComponent(component, sectionElementRaw);
-    } else if(false && document.currentSignatory().company() !== '') {
+    } else if(document.currentSignatory().company() !== '') {
       // B2B contracts
       var view = new QuestionareView({model: document});
       sectionElement.append(view.render());
     } else {
+
+      var registerUser;
+      if(BrowserInfo.isSmallScreen()) {
+	registerUser = _.partial(padRegisterUser, document, sectionElementRaw)
+      } else {
+	registerUser = _.partial(normalRegisterUser, document, sectionElementRaw)
+      }
+
       var component = CreateAccountViews.SaveBackupCopy({
         isSmallScreen: BrowserInfo.isSmallScreen(),
-        registerUser: _.partial(padRegisterUser, document, sectionElementRaw)
+        registerUser: registerUser
       });
       React.renderComponent(component, sectionElementRaw);
     }

@@ -30,6 +30,7 @@ var require = {
     tinyMCE_noneeditable: '../libs/tiny_mce/plugins/noneditable/plugin.min',
     tinyMCE_paste: '../libs/tiny_mce/plugins/paste/plugin.min',
 
+
     /**
      *  Legacy code imports
      */

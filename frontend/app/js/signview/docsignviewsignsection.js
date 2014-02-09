@@ -151,7 +151,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
    *  Show different pages when a document is signed,
    *  based on a few conditions,
    */
-  showPSV: function(newDocument, oldDocument) {
+  showPostSigning: function(newDocument, oldDocument) {
     // Signing through api
     if (oldDocument.currentSignatory().signsuccessredirect() != undefined && oldDocument.currentSignatory().signsuccessredirect() != "") {
       window.location = document.currentSignatory().signsuccessredirect();
@@ -175,7 +175,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
         this.signinprogressmodal.setCanBeFinished();
         setTimeout(postSign, 100);
       } else {
-	this.showPSV(newDocument, oldDocument);
+	this.showPostSigning(newDocument, oldDocument);
       }
     }.bind(this);
     postSign();

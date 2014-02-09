@@ -119,6 +119,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
   },
 
   createAccountSection: function() {
+
     if (this.createAccountSectionEle == undefined) {
       this.createAccountSectionEle = $('<div />');
       CreateAccountSection.render(this.document(), this.createAccountSectionEle);
@@ -552,8 +553,4 @@ window.DocumentSignView = function(args){
             , recall     : function()    { this.model.recall();}
          };
 };
-
-  return {
-    DocumentSignView: window.DocumentSignView
-  }
 });
