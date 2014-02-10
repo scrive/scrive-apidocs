@@ -2,7 +2,7 @@
 
 var App = {};
 
-require(['Underscore', 'Backbone', 'React', 'postsignview/hi3g_views', 'postsignview/archive_views', 'common/language_service', 'postsignview/simple_document_model', 'legacy_code'], function(_, Backbone, React, Hi3gViews, ArchiveViews, LanguageService, SimpleDocumentModel) {
+require(['Underscore', 'Backbone', 'React', 'postsignview/archive_views', 'common/language_service', 'postsignview/simple_document_model', 'legacy_code'], function(_, Backbone, React, ArchiveViews, LanguageService, SimpleDocumentModel) {
   /**
    *  If we're not under Backbone router url /r/. Bail out.
    *  This is needed since r.js (r.js == make one big js file for production) 
@@ -19,7 +19,6 @@ require(['Underscore', 'Backbone', 'React', 'postsignview/hi3g_views', 'postsign
      *  Always add routes with (/), so it doesnt matter if you have trailing slash or not.
      */
     routes: {
-      'hi3g-try-scrive/:language/?email=(:email)': 'hi3gLandingPage',
       'postsignview/archive(/)': 'archivePSV'
     },
 
@@ -30,20 +29,8 @@ require(['Underscore', 'Backbone', 'React', 'postsignview/hi3g_views', 'postsign
 	  React.renderComponent(ArchiveViews.ShowDocument({document: collection.at(0)}), document.body);
         }
       });
-    },  
-
-    hi3gLandingPage: function(language, email) {
-      // Load language specified in url, if it's not the same as the one already loaded 
-      //   and it's a supported language.
-      if(LanguageService.currentLanguage() !== language && LanguageService.isSupportedLanguage(language)) {
-	LanguageService.loadLanguage(language);
-      }
-
-      email = email || '';
-
-      var LandingPage = Hi3gViews.LandingPage;
-      React.renderComponent(<LandingPage email={ email }/>, document.body);
     }
+
   });
 
   App.router = new Router;
