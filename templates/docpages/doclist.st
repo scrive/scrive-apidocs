@@ -10,12 +10,7 @@ pageDocumentsList=
     month : $month$, 
     year : $year$, 
     forCompanyAdmin : $if(isadmin)$true$else$false$endif$,
-    forNewUser: WelcomeUser.isFromPostSignView()
   }).view().el);
-
-  if (WelcomeUser.isFromPostSignView()) {
-    jQuery(".archive").append(WelcomeUser.fromPostSignViewWelcome());
-  }
 
   mixpanel.register({Context : 'Archive'});
   mixpanel.track('View Archive');

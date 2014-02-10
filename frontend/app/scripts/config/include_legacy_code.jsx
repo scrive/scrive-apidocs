@@ -43,7 +43,6 @@ define([
   '../js/account_setup',
   '../js/accept_tos',
   '../js/new_signup',
-  '../js/welcomeuser',
   '../js/lists/action',
   '../js/lists/sorting',
   '../js/lists/filtering',
