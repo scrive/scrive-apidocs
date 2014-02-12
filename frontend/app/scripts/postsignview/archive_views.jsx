@@ -1,11 +1,10 @@
 /** @jsx React.DOM */
 
-define(['React', 'Backbone', 'postsignview/user_service', 'common/filters', 'common/language_service', 'legacy_code'], function(React, Backbone, UserService, filters, LanguageService) {  
-  var expose = {};
+define(['React', 'Backbone', 'postsignview/user_service', 'common/language_service', 'legacy_code'], function(React, Backbone, UserService, LanguageService) {
 
-  expose.ShowDocument = React.createClass({
+  return React.createClass({
     propTypes: {
-      document: React.PropTypes.object.isRequired,
+      document: React.PropTypes.object.isRequired
     },
 
     /**
@@ -51,9 +50,6 @@ define(['React', 'Backbone', 'postsignview/user_service', 'common/filters', 'com
     },
     
     render: function() {
-      var documentTimeRaw = this.props.document.get('time'),
-      documentTime = new Date(Date.parse(documentTimeRaw)).fullTime();
-      
       var promotion;
       if(!BrowserInfo.isPadDevice() && !BrowserInfo.isSmallScreen()) {
         promotion = (
@@ -118,12 +114,12 @@ define(['React', 'Backbone', 'postsignview/user_service', 'common/filters', 'com
                                 <td className="row">
                                   <div className="icon status signed"></div>
                                 </td>
-                                <td className="row"><span>{ documentTime }</span></td>
+                                <td className="row"><span>{ this.props.document.documentTime() }</span></td>
                                 <td className="row"></td>
-                                <td className="row"><a>{ this.props.document.get('author') }</a></td>
+                                <td className="row"><a>{ this.props.document.author() }</a></td>
                                 <td className="row"></td>
-                                <td className="row"><a className="expand">{ filters.truncate(this.props.document.get('party'), 40) }</a></td>
-                                <td className="row"><a className="s-archive-document-title">{ filters.truncate(this.props.document.get('title'), 40) }</a></td>
+                                <td className="row"><a className="expand">{ this.props.document.party() }</a></td>
+                                <td className="row"><a className="s-archive-document-title">{ this.props.document.title() }</a></td>
                               </tr>
                             </tbody>
                           </table>
@@ -146,6 +142,4 @@ define(['React', 'Backbone', 'postsignview/user_service', 'common/filters', 'com
       );
     }
   });
- 
-  return expose;
 });

@@ -30,7 +30,7 @@
 
 //   Modified by Eric Normand for translations
 
-require(function() {
+require(['jquery'], function($) {
 
 (function($) {
 "use strict";

@@ -61,7 +61,7 @@ define(['Q', 'postsignview/analytics_service', 'common/utilities_service'], func
       
       AnalyticsService.setMixpanelUserData(currentSignatory, documentLanguage, document.author().company());
       
-    }.bind(this));
+    });
     
   };
   

@@ -2,7 +2,7 @@
 
 var App = {};
 
-require(['Underscore', 'Backbone', 'React', 'postsignview/archive_views', 'common/language_service', 'postsignview/simple_document_model', 'legacy_code'], function(_, Backbone, React, ArchiveViews, LanguageService, SimpleDocumentModel) {
+require(['Underscore', 'Backbone', 'React', 'postsignview/archive_views', 'common/language_service', 'postsignview/psv_document_model', 'legacy_code'], function(_, Backbone, React, ArchiveView, LanguageService, PsvDocumentModel) {
   /**
    *  If we're not under Backbone router url /r/. Bail out.
    *  This is needed since r.js (r.js == make one big js file for production) 
@@ -23,10 +23,10 @@ require(['Underscore', 'Backbone', 'React', 'postsignview/archive_views', 'commo
     },
 
     archivePSV: function(documentId, signatoryId) {
-      var simpleDocumentList = new SimpleDocumentModel.Collection();
-      simpleDocumentList.fetch({
-        success: function(collection, response) {
-	  React.renderComponent(ArchiveViews.ShowDocument({document: collection.at(0)}), document.body);
+      var psvDocument = new PsvDocumentModel();
+      psvDocument.fetch({
+        success: function(document_, response) {
+	  React.renderComponent(<ArchiveView document={document_} />, document.body);
         }
       });
     }

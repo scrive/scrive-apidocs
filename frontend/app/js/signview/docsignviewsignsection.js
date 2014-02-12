@@ -168,16 +168,17 @@ window.DocumentSignConfirmation = Backbone.View.extend({
    *  Start checking with an interval, if we can show postsignview
    */
   onSignedDocument: function(newDocument, oldDocument) {
-    this.stopBlockingReload()
+    var self = this;
+    this.stopBlockingReload();
 
     var postSign = function() {
-      if (this.signinprogressmodal != undefined && !this.signinprogressmodal.done()) {
-        this.signinprogressmodal.setCanBeFinished();
+      if (self.signinprogressmodal != undefined && !self.signinprogressmodal.done()) {
+        self.signinprogressmodal.setCanBeFinished();
         setTimeout(postSign, 100);
       } else {
-	this.showPostSigning(newDocument, oldDocument);
+	self.showPostSigning(newDocument, oldDocument);
       }
-    }.bind(this);
+    };
     postSign();
   },
 

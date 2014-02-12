@@ -48,13 +48,14 @@ define(['React', 'common/language_service', 'postsignview/questionnaire_view', '
    */
   expose.render = function(document, sectionElement) {
     var promotionImg = '/img/partnerbanners/',
-    language = LanguageService.currentLanguage(),
-    // React.renderComponent need a html object to attach to, not a jquery html object
-    sectionElementRaw = sectionElement[0]; 
+	language = LanguageService.currentLanguage(),
+	component,
+	// React.renderComponent need a html object to attach to, not a jquery html object
+	sectionElementRaw = sectionElement[0];
     
     if(document.author().company() === 'Phone House') {
       // Phone house, create account banner
-      var component = CreateAccountViews.BrandedBanner({
+      component = CreateAccountViews.BrandedBanner({
         bannerType: 'phone-house',
         language: language,
         registerUser: _.partial(bannerRegisterUser, document, 'Phone House', sectionElementRaw)
@@ -63,7 +64,7 @@ define(['React', 'common/language_service', 'postsignview/questionnaire_view', '
     } else if(null !== /^nj.*scrive.com/.exec(location.host)) {
       // Nordsteds juridik, create account section
       
-      var component = CreateAccountViews.BrandedBanner({
+      component = CreateAccountViews.BrandedBanner({
         bannerType: 'nj',
         language: language,
         registerUser: _.partial(bannerRegisterUser, document, 'NJ', sectionElementRaw)
@@ -77,12 +78,12 @@ define(['React', 'common/language_service', 'postsignview/questionnaire_view', '
 
       var registerUser;
       if(BrowserInfo.isSmallScreen()) {
-	registerUser = _.partial(padRegisterUser, document, sectionElementRaw)
+	registerUser = _.partial(padRegisterUser, document, sectionElementRaw);
       } else {
-	registerUser = _.partial(normalRegisterUser, document, sectionElementRaw)
+	registerUser = _.partial(normalRegisterUser, document, sectionElementRaw);
       }
 
-      var component = CreateAccountViews.SaveBackupCopy({
+      component = CreateAccountViews.SaveBackupCopy({
         isSmallScreen: BrowserInfo.isSmallScreen(),
         registerUser: registerUser
       });
