@@ -48,10 +48,6 @@
 
 .authorview {
 
-  .signatories-box {
-    margin-right: 36px;
-  }
-
   .history-box {
     background-color: @white;
     border: 1px solid @dark-border;
@@ -177,14 +173,26 @@
       }
     }
 
-    .sig.first {
-      margin-top: 0px;
-      padding-top: 0px;
-    }
+
 
     .sig {
-      margin-top: 4px;
+      padding-left: 25px;
+      padding-right: 25px;
+      padding-top : 10px;
+      padding-bottom: 10px
     }
+
+    .sig.active {
+      background-color: @grey;
+    }
+
+    .sig:hover{
+      background-color: @grey;
+      &:active {
+            background-color: @text-lighter;
+      }
+    }
+
 
     .inner .details,
     .titleinfo,
@@ -194,8 +202,8 @@
     }
 
     .grey-box {
-      background: @grey-background;
-      border: solid @dark-border 1px;
+      background: @slightly-darker-grey-background;
+      border: 1px solid @text-lighter;
       padding: 15px;
       vertical-align: top;
     }
@@ -204,21 +212,27 @@
       display: inline-block;
       margin-right: 0px;
       min-height: 125px;
-      width:269px;
+      width:249px;
 
       .sig {
-        border-bottom: 1px dashed #ccc;
-        padding: 10px;
-
-        &:first-child {
-          padding-top: 0px;
-        }
+        border-bottom: 1px solid @text-lighter;
 
         &:last-child {
-          border-bottom: none;
-          padding-bottom: 0px;
+            border-bottom: none;
+        }
+
+        &.active .arrow {
+          width: 10px;
+          height: 12px;
+          position: relative;
+          margin-left: -16px;
+          margin-top: 3px;
+          float: left;
+          background: url(~"@{img-base-url}/arrow-list-pointing-left.png") 0 0 no-repeat;
         }
       }
+
+
     }
 
     .name {
@@ -235,7 +249,7 @@
       display: inline-block;
       margin-right: 0px;
       min-height: 125px;
-      width: 269px;
+      width: 249px;
 
       &.auto-reminder {
         // Fix for the auto reminder case, if used in more places,
@@ -253,23 +267,10 @@
         }
       }
 
-      .sig {
-        border-bottom: 1px dashed #ccc;
-        padding: 10px;
-
-        &:first-child {
-          padding-top: 0px;
-        }
-
-        &:last-child {
-          border-bottom: none;
-          padding-bottom: 0px;
-        }
-      }
     }
 
     .inner {
-      border-top: 1px dashed #ccc;
+      border-top: 1px solid @text-lighter;
       color: #505050;
       min-height: 75px;
     }
@@ -295,7 +296,7 @@
     }
 
     .statusbox {
-      border-top: 1px dashed #ccc;
+      border-top: 1px solid @text-lighter;
       font-size: 13px;
       vertical-align: middle;
 
@@ -338,7 +339,7 @@
     }
 
     .optionbox {
-      border-top: 1px dashed #ccc;
+      border-top: 1px solid @text-lighter;
       display: block;
       height: 40px;
       margin-top: 30px;
@@ -416,7 +417,7 @@
 
   .document-pages-wrapper {
     background: #e9e9e9;
-    border: 1px solid #cccccc;
+    border: 1px solid @text-lighter;
     margin: 0 auto;
     padding: 36px 36px 36px 37px;
     width: 943px; // Propageted form document-pages
