@@ -525,7 +525,7 @@ var TextPlacementView = Backbone.View.extend({
 
 var TextPlacementPlacedView = Backbone.View.extend({
     initialize: function (args) {
-        _.bindAll(this, 'render' , 'clear', 'closeTypeSetter', 'updateErrorBackground');
+        _.bindAll(this, 'render' , 'clear', 'closeTypeSetter', 'updateErrorBackground', 'fixWHRel');
         var view = this;
         var placement = this.model;
         var field =  placement.field();
@@ -535,7 +535,6 @@ var TextPlacementPlacedView = Backbone.View.extend({
         this.model.bind('change:field change:signatory change:step change:withTypeSetter change:fsrel', this.render);
         this.model.bind('change:xrel change:yrel change:wrel change:hrel', this.updatePosition, this);
         this.model.bind('clean', this.closeTypeSetter);
-        //signatory.document().bind('change:signatories',this.updateColor);
         placement.bind('change', this.updateErrorBackground);
 
         this.model.view = this;
@@ -582,7 +581,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
         this.model.unbind('change:field change:signatory', this.render);
         this.model.unbind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
         this.model.unbind('clean', this.closeTypeSetter);
-        //this.model.field().signatory().document().unbind('change:signatories',this.updateColor);
+        this.stopListening();
     },
     hasTypeSetter : function(){
         return this.model.typeSetter != undefined;
@@ -904,6 +903,11 @@ var TextPlacementPlacedView = Backbone.View.extend({
 
         return input;
     },
+    fixWHRel : function() {
+        // This will silently update wrel and hrel. Should be called after all changes to w/h are applied. Not 100% reliable
+        if ($(this.el).width() != undefined && $(this.el).width() > 0 && $(this.el).height() != undefined && $(this.el).height() > 0)
+          this.model.fixWHRel($(this.el).width(),$(this.el).height());
+    },
     render: function() {
         var view = this;
         var placement = this.model;
@@ -972,7 +976,9 @@ var TextPlacementPlacedView = Backbone.View.extend({
         if (placement.withTypeSetter()) {
           this.addTypeSetter();
         }
-
+        this.stopListening(undefined,undefined,view.fixWHRel);
+        this.listenTo(placement.field(), 'change', view.fixWHRel );
+        this.fixWHRel();
         return this;
     }
 });
