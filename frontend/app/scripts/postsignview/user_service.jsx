@@ -1,6 +1,6 @@
 define(['Q', 'postsignview/analytics_service', 'common/utilities_service'], function(Q, AnalyticsService, UtilitiesService) {
   var expose = {};
-  
+
   /**
    *  Create an account for a user that just have signed a document (PostSignView)
    *
@@ -10,7 +10,7 @@ define(['Q', 'postsignview/analytics_service', 'common/utilities_service'], func
    */
   expose.createAccountPSV = function(stopUserLogin, currentSignatory) {
     var deferred = Q.defer();
-    
+
     // Should be posted as a form
     var submitValues = {
       url: currentSignatory.saveurl(),
@@ -22,7 +22,7 @@ define(['Q', 'postsignview/analytics_service', 'common/utilities_service'], func
       stopLogin: stopUserLogin,
       ajaxsuccess: function(userObject) {
         userObjectParsed = JSON.parse(userObject);
-        
+
         // simple way to handle errors..
         // TODO(jens): Make error handling better
         if(userObjectParsed.userid) {
@@ -30,14 +30,14 @@ define(['Q', 'postsignview/analytics_service', 'common/utilities_service'], func
         }
       }
     };
-    
+
     // Submit form to backend
     new window.Submit(submitValues).send();
-    
+
     return deferred.promise;
   };
-  
-  
+
+
   /**
    *  @description
    *  Create new account for a user that dont have a Scrive account and then redirect the
@@ -47,23 +47,22 @@ define(['Q', 'postsignview/analytics_service', 'common/utilities_service'], func
     var currentSignatory = document.currentSignatory(),
     padDelivery = currentSignatory.padDelivery(),
     email = currentSignatory.email();
-    
+
     return expose.createAccountPSV(padDelivery, currentSignatory).then(function (userId) {
-      
+
       // When we register a user on postsignview, this user get's a new userid,
       // which is different from the id the user have when he sign the document =>
       // Use userid that we get from the ajax request when we register the user in analytics.
-      AnalyticsService.newAnalyticsUser(userId);
-      
-      
-      // TODO(jens): Move to Document model? Or it already exists in signatories.js?
-      var documentLanguage = (document.lang() === "gb" ? "en" : "sv");
-      
+      AnalyticsService.setNewAnalyticsUser(userId);
+
+
+      var documentLanguage = document.lang().simpleCode();
+
       AnalyticsService.setMixpanelUserData(currentSignatory, documentLanguage, document.author().company());
-      
+
     });
-    
+
   };
-  
+
   return expose;
 });

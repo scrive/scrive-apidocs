@@ -114,7 +114,8 @@ var DocumentSignViewModel = Backbone.Model.extend({
       var document = this.document();
       return document.currentSignatory() != undefined
              && !document.currentSignatory().saved()
-	     && document.currentSignatory().email()
+             && document.currentSignatory().email() //We assume that if this email is set - then it is valid
+             && !document.currentSignatory().padDelivery()
              && document.currentSignatory().hasSigned();
   },
 

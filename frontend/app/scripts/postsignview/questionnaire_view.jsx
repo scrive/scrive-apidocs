@@ -2,7 +2,7 @@
 
 define(['React', 'Backbone'], function(React, Backbone) {
   var expose = {};
-  
+
 
   /**
    *  @description
@@ -25,17 +25,17 @@ define(['React', 'Backbone'], function(React, Backbone) {
         firstName: this.model.currentSignatory().fstname(),
         lastName: this.model.currentSignatory().sndname(),
         email: this.model.currentSignatory().email(),
-        language: this.model.lang() === "gb" ? "en" : "sv",
+        language: this.model.lang().simpleCode(),
         companyName: this.model.currentSignatory().company(),
         referringCompany: this.model.author().company(),
         signupMethod: 'BySigning'
       };
     },
-    
+
     render: function() {
       var model = this.model;
-      
-      var iframe = $('<iframe frameborder="0" marginheight="0" marginwidth="0" src="/growth/index.html#/questionnaire"></iframe>');
+
+      var iframe = $('<iframe frameborder="0" marginheight="0" marginwidth="0" src="/images/growth/index.html#/questionnaire"></iframe>');
       iframe.css({
         'width': '958px',
         'height': '635px',

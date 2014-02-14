@@ -9,20 +9,20 @@ define(function() {
    *
    *  @param {number} userId
    */
-  expose.newAnalyticsUser = function(userId) {
+  expose.setNewAnalyticsUser = function(userId) {
     mixpanel.alias(userId);
     mixpanel.identify(userId);
     mixpanel.track('Create new account',
                    {'Signup Method' : 'BySigning'});
     mixpanel.track('Sign TOS');
   };
-				 
+
   /**
    *
    *  @description
-   *  Prepare user data and register it in Mixpanel, 
+   *  Prepare user data and register it in Mixpanel,
    *  for the currently identified Mixpanel user
-   * 
+   *
    *  @param {User} user Object with user-data to register in mixpanel
    *  @param {string} language The language the user have in Scrive
    *  @param {string} referringCompany Which company that referred the user
@@ -52,6 +52,6 @@ define(function() {
     mixpanel.register(userData); // as super property
     mixpanel.people.set(userData); // as regular person property
   };
-  
+
   return expose;
 });

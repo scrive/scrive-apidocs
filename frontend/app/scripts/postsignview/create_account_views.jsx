@@ -2,12 +2,12 @@
 
 define(['React', 'Backbone'], function(React, Backbone) {
   var expose = {};
-  
+
   expose.BrandedBanner = React.createClass({
     propTypes: {
       registerUser: React.PropTypes.func.isRequired,
     },
-    
+
     render: function() {
       var containerClasses = ['save',
                               'branded-banner',
@@ -23,13 +23,13 @@ define(['React', 'Backbone'], function(React, Backbone) {
       );
     }
   });
-  
+
   expose.SaveBackupCopy = React.createClass({
     propTypes: {
       registerUser: React.PropTypes.func.isRequired,
       isSmallScreen: React.PropTypes.bool.isRequired
     },
-    
+
     render: function() {
       var cx = React.addons.classSet;
       var mainContainerClasses = cx({
@@ -39,7 +39,7 @@ define(['React', 'Backbone'], function(React, Backbone) {
         'section': true,
         'spacing': true
       });
-      
+
       var titles;
       if(!this.props.isSmallScreen) {
         titles = (
@@ -53,7 +53,7 @@ define(['React', 'Backbone'], function(React, Backbone) {
             <div className="title">{ localization.docsignview.subtitleText }</div>
         );
       }
-      
+
       return (
           <div>
             <div className={mainContainerClasses}>
@@ -70,19 +70,5 @@ define(['React', 'Backbone'], function(React, Backbone) {
       );
     }
   });
-  
-  expose.PadSafetyCopySaved = React.createClass({
-    render: function() {
-      return (
-          <div>
-            <div className="save">
-              <div className="title">{ localization.docsignview.padTitle }</div>
-              <div className="subtitle">{ localization.docsignview.padSubtitle }</div>
-            </div>
-          </div>
-      );
-    }
-  });
-  
   return expose;
 });

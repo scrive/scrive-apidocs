@@ -2,7 +2,7 @@
 
 define(['React', 'common/language_service', 'postsignview/questionnaire_view', 'postsignview/create_account_views', 'postsignview/user_service', 'Backbone', 'Underscore'], function(React, LanguageService, QuestionareView, CreateAccountViews, UserService, Backbone, _) {
   var expose = {};
-  
+
   /**
    *  @description
    *  Register a new user and redirect him or change content of supplied element
@@ -13,23 +13,9 @@ define(['React', 'common/language_service', 'postsignview/questionnaire_view', '
         'Accepted Promotion': true,
         'Promotion': companyName
       });
-      
-      if(document.currentSignatory().padDelivery()) {
-        React.renderComponent(CreateAccountViews.PadSafetyCopySaved(null), sectionElement);
-      } else {
-        window.location.pathname = '/newdocument';
-      }
+
+      window.location.pathname = '/newdocument';
     }.bind(this));
-  };
-  
-  /**
-   *  @description
-   *  Register a new user that signed on a pad and change content of supplied element
-   */
-  var padRegisterUser = function(document, sectionElement) {
-    UserService.registerUser(document).then(function() {
-      React.renderComponent(CreateAccountViews.PadSafetyCopySaved(null), sectionElement);
-    });
   };
 
   var normalRegisterUser = function(document, sectionElement) {
@@ -37,7 +23,7 @@ define(['React', 'common/language_service', 'postsignview/questionnaire_view', '
       window.location = '/r/#/postsignview/archive';
     });
   };
-  
+
   /**
    *  @description
    *  Render different types of create account section on postsignview,
@@ -52,7 +38,7 @@ define(['React', 'common/language_service', 'postsignview/questionnaire_view', '
 	component,
 	// React.renderComponent need a html object to attach to, not a jquery html object
 	sectionElementRaw = sectionElement[0];
-    
+
     if(document.author().company() === 'Phone House') {
       // Phone house, create account banner
       component = CreateAccountViews.BrandedBanner({
@@ -63,7 +49,7 @@ define(['React', 'common/language_service', 'postsignview/questionnaire_view', '
       React.renderComponent(component, sectionElementRaw);
     } else if(null !== /^nj.*scrive.com/.exec(location.host)) {
       // Nordsteds juridik, create account section
-      
+
       component = CreateAccountViews.BrandedBanner({
         bannerType: 'nj',
         language: language,
@@ -76,12 +62,7 @@ define(['React', 'common/language_service', 'postsignview/questionnaire_view', '
       sectionElement.append(view.render());
     } else {
 
-      var registerUser;
-      if(BrowserInfo.isSmallScreen()) {
-	registerUser = _.partial(padRegisterUser, document, sectionElementRaw);
-      } else {
-	registerUser = _.partial(normalRegisterUser, document, sectionElementRaw);
-      }
+      var registerUser = _.partial(normalRegisterUser, document, sectionElementRaw);
 
       component = CreateAccountViews.SaveBackupCopy({
         isSmallScreen: BrowserInfo.isSmallScreen(),
@@ -90,6 +71,6 @@ define(['React', 'common/language_service', 'postsignview/questionnaire_view', '
       React.renderComponent(component, sectionElementRaw);
     }
   };
-  
+
   return expose;
 });

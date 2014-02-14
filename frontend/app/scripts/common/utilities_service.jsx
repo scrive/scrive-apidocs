@@ -9,7 +9,7 @@ define(function() {
    *        buildAbsoluteUrl('archive', 'downloadmainfile'); => /archive/downloadmainfile/
    *
    *     With GET parameters as dictionary in the end
-   *          buildAbsoluteUrl('archive', {id:1}); => /archive/downloadmainfile.pdf/?id=1&
+   *        buildAbsoluteUrl('archive', {id:1}); => /archive/downloadmainfile.pdf/?id=1&
    *
    */
   expose.buildAbsoluteUrl = function() {
@@ -46,6 +46,6 @@ define(function() {
     }
     return url;
   };
-  
+
   return expose;
 });
