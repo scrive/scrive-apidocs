@@ -32,7 +32,7 @@ define(['Backbone', 'legacy_code'], function() {
             window.setTimeout(timedout, timeoutval);
 
         try {
-           if (!BrowserInfo.isIE8orLower() && !BrowserInfo.isIphone() && !BrowserInfo.isIpad()) {
+           if (!BrowserInfo.isIE8orLower()) {
               html2canvas( $('body'),
                           { onrendered: function(canvas)
                             {
@@ -46,6 +46,7 @@ define(['Backbone', 'legacy_code'], function() {
                             width : $(window).width(),
                             height : $(window).height(),
                             logging: true,
+                            type: 'view',
                             proxy: null
                           }
                         );
