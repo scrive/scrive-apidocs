@@ -888,8 +888,8 @@ getFieldForSigning = do
       case eFieldsJSON of
            Nothing -> throwIO . SomeKontraException $ serverError "No fields description provided or fields description is not a valid JSON array"
            Just fieldsJSON -> do
-             mvalues <- withJSValue fieldsJSON $ fromJSValueCustomMany $ do
-                  ft <- fromJSValueM
+             let mvalues = flip ($) fieldsJSON $ fromJSValueCustomMany $ do
+                  ft <- fromJSValue
                   val <- fromJSValueField "value"
                   return $ case (ft,val) of
                             (Just ft', Just val') -> Just (ft',val')

@@ -3,14 +3,12 @@ module Doc.Screenshot
   ) where
 
 import Control.Applicative ((<$>), (<*>))
-import Control.Monad.Reader (asks)
 import Data.Maybe (isJust)
 import DB.Binary (Binary(..))
 import qualified Data.ByteString.RFC2397 as RFC2397
 import qualified Data.ByteString.UTF8 as BS
 import MinutesTime (MinutesTime,parseMinutesTimeRealISO, formatMinutesTimeRealISO)
 import Text.JSON.FromJSValue (FromJSValue(..), fromJSValueField)
-import Text.JSON.JSValueContainer (getJSValue)
 import Text.JSON.Gen (value, runJSONGen)
 import Text.JSON.ToJSValue (ToJSValue(..))
 
@@ -21,10 +19,10 @@ data Screenshot = Screenshot
  deriving (Show, Eq, Ord)
 
 instance FromJSValue Screenshot where
-  fromJSValueM = do
+  fromJSValue = do
     time' <- fromJSValueField "time"
     image' <- fromJSValueField "image"
-    s <- asks (fromJSValue . getJSValue)
+    s <- fromJSValue
     return $ if isJust time' && isJust image'
       then f time' image'
       else f (fst <$> s) (snd <$> s) -- old array format

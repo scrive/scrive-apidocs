@@ -152,7 +152,7 @@ privateGateway :: GuardtimeSignature -> Bool
 privateGateway gsig  = "Scrive" `elem` words (gateway_name gsig)
 
 instance FromJSValue VerifyResult where
-    fromJSValueM = do
+    fromJSValue = do
         mvalid   <- fromJSValueFieldCustom "valid" $ do
                       time <- fromJSValueField "time"
                       gid <- fromJSValueField "gateway_id"

@@ -33,7 +33,7 @@ emptySignatoryScreenshots :: SignatoryScreenshots
 emptySignatoryScreenshots = SignatoryScreenshots Nothing Nothing Nothing
 
 instance FromJSValue SignatoryScreenshots where
-  fromJSValueM = do
+  fromJSValue = do
     first <- fromJSValueField "first"
     signing <- fromJSValueField "signing"
     reference <- fromJSValueField "reference" >>= \case

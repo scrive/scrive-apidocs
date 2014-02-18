@@ -5,32 +5,20 @@ import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit (Assertion)
 import TestingUtil
-import Test.QuickCheck
 
 import TestKontra
 import Text.JSON
-import Text.JSON.JSValueContainer
 import Text.JSON.FromJSValue
 import Text.JSON.String
 import qualified Data.ByteString.UTF8 as BS
 
 jsonUtilTests :: TestEnvSt -> Test
-jsonUtilTests env = testGroup "JSONUtil" [
-    testGroup "JSON Container Test" [
-      testThat "Check basic corelation between getJSValue and putJSON" env testJSONContainer
-    ]
-  , testGroup "Checking diggers" [
+jsonUtilTests _env = testGroup "JSONUtil" [
+    testGroup "Checking diggers" [
       testCase "Check basic JSON diggers"  testBasicDiggers
     , testCase "Check advanced JSON diggers" testAdvancedDiggers
     ]
   ]
-
-testJSONContainer :: TestEnv ()
-testJSONContainer = doTimes 100 $ do
-   (initJSON :: JSValue) <- rand 10 arbitrary 
-   (newJSON :: JSValue) <- rand 10 arbitrary
-   let changedJSON = getJSValue (setJSValue newJSON initJSON)
-   assertBool "New value gets set" (changedJSON == newJSON)  
 
 
 testBasicDiggers :: Assertion

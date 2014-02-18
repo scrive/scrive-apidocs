@@ -171,7 +171,7 @@ instance FromJSValueWithUpdate Document where
         signatories <-  fromJSValueFieldCustom "signatories" (fromJSValueManyWithUpdate (fromMaybe [] $ documentsignatorylinks <$> mdoc))
         lang <- fromJSValueField "lang"
         doctype <- fmap (\t -> if t then Template else Signable) <$> fromJSValueField "template"
-        tags <- fromJSValueFieldCustom "tags" $ fromJSValueCustomMany  fromJSValueM
+        tags <- fromJSValueFieldCustom "tags" $ fromJSValueCustomMany  fromJSValue
         (apicallbackurl :: Maybe (Maybe String)) <- fromJSValueField "apicallbackurl"
         authorattachments <- fromJSValueFieldCustom "authorattachments" $ fromJSValueCustomMany $ fmap (join . (fmap maybeRead)) $ (fromJSValueField "id")
         let daystosign'  = min 90 $ max 1 $ updateWithDefaultAndField 14 documentdaystosign daystosign

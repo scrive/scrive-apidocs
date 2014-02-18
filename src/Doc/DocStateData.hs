@@ -511,7 +511,7 @@ instance FromJSValue Double where
     fromJSValue _ = Nothing
 
 instance FromJSValue FieldPlacement where
-  fromJSValueM = do
+  fromJSValue = do
                   xrel       <- fromJSValueField "xrel"
                   yrel       <- fromJSValueField "yrel"
                   wrel       <- fromJSValueField "wrel"

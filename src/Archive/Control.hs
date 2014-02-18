@@ -49,7 +49,6 @@ import Data.Char
 import File.Storage as F
 import qualified Log
 import Control.Logic
-import Control.Monad.Identity
 import Text.JSON.String (runGetJSON)
 import Doc.DocDraft()
 import Data.String.Utils (splitWs)
@@ -174,7 +173,7 @@ jsonDocumentsList = do
       fltSpec _ = []
   tagsstr <- getField' "tags"
   let tagsFilters = case runGetJSON readJSArray tagsstr of
-                      Right js ->[DocumentFilterByTags $ join $ maybeToList $ runIdentity $ withJSValue js $ fromJSValueCustomMany $ fromJSValueM]
+                      Right js ->[DocumentFilterByTags $ join $ maybeToList $ (fromJSValueCustomMany fromJSValue js)]
                       _ -> []
   let sorting    = docSortingFromParams params
       searching  = docSearchingFromParams params
