@@ -505,11 +505,6 @@ $(jsonableDeriveConvertible [t| [DocumentTag] |])
 $(jsonableDeriveConvertible [t| CancelationReason |])
 $(jsonableDeriveConvertible [t| [[String]] |])
 
--- this should go to fields-json
-instance FromJSValue Double where
-    fromJSValue (JSRational _ r) = Just $ fromRational r
-    fromJSValue _ = Nothing
-
 instance FromJSValue FieldPlacement where
   fromJSValue = do
                   xrel       <- fromJSValueField "xrel"
