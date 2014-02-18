@@ -237,6 +237,7 @@ data CurrentEvidenceEventType =
   MarkInvitationReadEvidence                      |
   CloseDocumentEvidence                           |
   ChangeSignatoryEmailWhenUndeliveredEvidence     |
+  SignWithELegFailureEvidence                     |
   CancelDocumentEvidence                          |
   AttachSealedFileEvidence                        |
   PreparationToPendingEvidence                    |
@@ -258,7 +259,6 @@ data CurrentEvidenceEventType =
   AttachExtendedSealedFileEvidence                |
   ErrorSealingDocumentEvidence                    |
   AutomaticReminderSent                           |
-  SignWithELegFailureEvidence                     |
   UpdateFieldCheckboxEvidence                     |
   UpdateFieldSignatureEvidence                    |
   UpdateFieldTextEvidence                         |
@@ -321,6 +321,7 @@ data ObsoleteEvidenceEventType =
   SetDocumentInviteTimeEvidence                   |
   CancelDocumenElegEvidence
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
+
 
 instance PQFormat EvidenceEventType where
   pqFormat _ = pqFormat (undefined::Int16)
