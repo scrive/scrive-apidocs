@@ -491,12 +491,12 @@
 "_invitationMailUndeliveredContentBody":"Leider konnte die Einladung zu einem E-unterzeichnen des Dokumentes <strong>$documenttitle$</strong> nicht an <strong>$name$</strong> &lt;$email$&gt geschickt werden. Es kann sein, weil der Mail-Server des Empfängers Schwierigkeiten hat, oder weil die E-Mail-Adresse, die Sie zur Verfügung gestellt haben, falsch ist.",
 "_invitationMailUndeliveredContentBodyButton":"Offenes Dokument",
 "_invitationMailUndeliveredContentBodyFirst":"Um die E-Mail-Adresse zu bestätigen und die Einladung erneut zu senden:",
-"_invitationMailUndeliveredContentInstruction":"<ol> <li> Um das Dokument aus dem Archiv zu holen,  klicken Sie auf die Schaltfläche unten. \n<br/><div style=\"margin-bottom: 10px;\"></div>$nicebutton(link=concat(a1=ctxhostpart;a2=unsigneddoclink); \ntext=_invitationMailUndeliveredContentBodyButton())$<div style=\"margin-bottom: 10px;\"></div></li><li> Klicken Sie auf\" E-Mail-Ändern\"li><li> E-Mail-Adresse bestätigen und wieder senden</li></ol>",
+"_invitationMailUndeliveredContentInstruction":"<ol><li>Um das Dokument aus dem Archiv zu holen,  klicken Sie auf die Schaltfläche unten.\n<br/><div style=\"margin-bottom: 10px;\"></div>$nicebutton(link=concat(a1=ctxhostpart;a2=unsigneddoclink); \ntext=_invitationMailUndeliveredContentBodyButton())$<div style=\"margin-bottom: 10px;\"></div></li><li>Klicken Sie auf\" E-Mail-Ändern\"</li><li>E-Mail-Adresse bestätigen und wieder senden</li></ol>",
 "_invitationMailUndeliveredTitle":"Lieferausfall",
 "_invitationSMSSentEntry":"Die Einladung zu unterzeichnen wurde per SMS an die $partyList$ gesendet.",
 "_invitationSMSUndeliveredContentBody":"Wir waren nicht in der Lage, die Einladung zu E-unterzeichnen des Dokumentes <strong>$documenttitle$</strong> zu <strong>$documenttitle$</strong> zu liefern. Es könnte daran liegen, dass die Telefonnummer, die Sie angegeben haben, falsch ist.",
 "_invitationSMSUndeliveredContentBodyFirst":"Um die Telefonnummer zu korrigieren und die Einladung erneut zu senden:",
-"_invitationSMSUndeliveredContentInstruction":"<ol> <li> Holen Sie das Dokument aus dem Archiv oder durch auf die Schaltfläche unten zu klicken<br/><div style=\"margin-bottom: 10px;\"></div>$nicebutton(link=concat(a1=ctxhostpart;a2=unsigneddoclink); text=_invitationMailUndeliveredContentBodyButton())$<br/></li><li>Klicken Sie auf \"Telefonnummer ändern\"</li><li>Die Telefonnummer bestätigen und wieder senden</li></ol>",
+"_invitationSMSUndeliveredContentInstruction":"<ol><li>Holen Sie das Dokument aus dem Archiv oder durch auf die Schaltfläche unten zu klicken<br/><div style=\"margin-bottom: 10px;\"></div>$nicebutton(link=concat(a1=ctxhostpart;a2=unsigneddoclink); text=_invitationMailUndeliveredContentBodyButton())$<br/></li><li>Klicken Sie auf \"Telefonnummer ändern\"</li><li>Die Telefonnummer bestätigen und wieder senden</li></ol>",
 "_invitationSMSUndeliveredTitle":"Lieferausfall",
 "_inviteTextFieldName":"Text laden",
 "_january":"Januar",
@@ -913,6 +913,7 @@
 "_textFieldDone":"Speichern",
 "_textFieldFor":"Beteiligter",
 "_textFieldObligatory":"Pflicht hier zu unterschreiben",
+"_through":"",
 "_to":"für/zu/an/bis",
 "_toFilter":"An:",
 "_toNoSpaces":"an",
@@ -972,7 +973,5 @@
 "_youCantCancelThisDocuments":"Sie können die ausgewählte Dokumente nicht zurückziehen.",
 "_youCantSendRemindersToThisDocuments":"Erinnerungen können nicht für einige der ausgewählten Dokumente gesendet werden.",
 "_yourSigningPluginFailed":"Ihr Unterzeichnung Plug-In konnte nicht das Dokument unterzeichnen. Bitte kontaktieren Sie Ihren E-ID-Anbieter.",
-"_zip":"Postleitzahl",
-"_through":""
-
+"_zip":"Postleitzahl"
 }

@@ -24,6 +24,8 @@
 "_FTUEstep4":"Step 4",
 "_FTUEstep4description":"Click &quot;Start signing&quot; to sign and send the document!",
 "_FTUEuseSampleDocument":"Use the sample document",
+"_German":"German",
+"_GermanInGerman":"German",
 "_HeadUsageStats":"Usage stats",
 "_HeadUserInfo":"My info",
 "_NewPassword":"New password",
@@ -983,6 +985,7 @@
 "_textFieldObligatory":"Mandatory to sign here",
 "_title":"Your signed document has now been safely stored in your own e-archive",
 "_titleText":"Save a safety copy",
+"_through":"through",
 "_to":" to ",
 "_toFilter":"To:",
 "_toNoSpaces":"to",
@@ -1046,9 +1049,10 @@
 "_youCancelledSigning":"Action cancelled. Please select your eID again.",
 "_youCantCancelThisDocuments":"Some of the selected documents can't be withdrawn.",
 "_youCantSendRemindersToThisDocuments":"Reminders can’t be sent for some of the selected documents.",
-"_yourSigningPluginFailed":"Your signing plug-in failed to sign the document. Please contact your eID provider.",
+"_yourSigningPluginFailed":"Your signing plug-in failed to sign the document. Please contact your e-ID provider.",
 "_zip":"Zip",
 "_GermanInGerman":"German",
 "_German":"German",
 "_through":"through"
+
 }
