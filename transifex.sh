@@ -9,7 +9,8 @@ if [ $# -lt 1 ]; then
   echo "transifex.sh diff user password lang resource   -- to see a diff between extranal version to your local one"
   echo "transifex.sh merge user password lang resource  -- to merge extrnall version to your local one"
   echo
-  echo "Available languages : en | sv"
+
+  echo "Available languages : en | sv | de"
   echo "Available resources : texts | events | questionnaire"
   exit 0
 fi

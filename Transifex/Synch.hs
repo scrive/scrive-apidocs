@@ -119,7 +119,12 @@ diff user password lang resource = do
 
 
 fix :: IO ()
-fix = fix' "en" Texts >>  fix' "en" Events >> fix' "en" Questionnaire >> fix' "sv" Texts >> fix' "sv" Events >> fix' "sv" Questionnaire >> putStrLn "Done."
+fix = do
+  forM_ ["en","sv","de"] $ \l -> do
+    fix' l Texts
+    fix' l Events
+    fix' l Questionnaire
+  putStrLn "Done."
   where fix' lang resource = do
           mjson <- readFile $ translationFile lang resource
           local <- case decode mjson of
