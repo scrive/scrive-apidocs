@@ -32,8 +32,13 @@ echo "STARTING CRON SERVER"
 if [ -z "$1" ]; then
     echo ""
     echo "STARTING GRUNT SERVER"
+    if grep --quiet ".*production.*=.*True.*" kontrakcja.conf; then
+        GRUNT_TASK="server:dist"
+    else
+        GRUNT_TASK="server"
+    fi
     cd frontend/
-    grunt server:dist &
+    grunt "${GRUNT_TASK}" &
     echo $! > _grunt_pid
     echo "started server with pid $(cat _grunt_pid)"
     cd ../
