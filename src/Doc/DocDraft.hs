@@ -153,12 +153,14 @@ instance FromJSValue DocumentTag where
              _ -> return Nothing
 
 instance FromJSValue Lang where
-    fromJSValue j =case fromJSValue j of -- Due to documentation inconsistency we need to support gb and en for a while.
-      Just "se"    -> Just LANG_SV
-      Just "sv"    -> Just LANG_SV
-      Just "en"    -> Just LANG_EN
-      Just "gb"    -> Just LANG_EN
-      _            -> Nothing
+    fromJSValue = do
+      j <- fromJSValue
+      return $ case j of -- Due to documentation inconsistency we need to support gb and en for a while.
+        Just "se"    -> Just LANG_SV
+        Just "sv"    -> Just LANG_SV
+        Just "en"    -> Just LANG_EN
+        Just "gb"    -> Just LANG_EN
+        _            -> Nothing
 
 instance FromJSValueWithUpdate Document where
     fromJSValueWithUpdate mdoc = do

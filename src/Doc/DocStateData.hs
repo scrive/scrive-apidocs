@@ -106,19 +106,23 @@ data AuthenticationMethod = StandardAuthentication
   deriving (Eq, Ord, Show)
 
 instance FromJSValue AuthenticationMethod where
-  fromJSValue j = case fromJSValue j of
-    Just "standard" -> Just StandardAuthentication
-    Just "eleg"     -> Just ELegAuthentication
-    _               -> Nothing
+  fromJSValue = do
+    j <- fromJSValue
+    return $ case j of
+      Just "standard" -> Just StandardAuthentication
+      Just "eleg"     -> Just ELegAuthentication
+      _               -> Nothing
 
 instance FromJSValue DeliveryMethod where
-  fromJSValue j = case fromJSValue j of
-    Just "email" -> Just EmailDelivery
-    Just "pad"   -> Just PadDelivery
-    Just "api"   -> Just APIDelivery
-    Just "mobile"-> Just MobileDelivery
-    Just "email_mobile"-> Just EmailAndMobileDelivery
-    _            -> Nothing
+  fromJSValue = do
+    j <- fromJSValue
+    return $ case j of
+      Just "email" -> Just EmailDelivery
+      Just "pad"   -> Just PadDelivery
+      Just "api"   -> Just APIDelivery
+      Just "mobile"-> Just MobileDelivery
+      Just "email_mobile"-> Just EmailAndMobileDelivery
+      _            -> Nothing
 
 instance ToJSValue DeliveryMethod where
   toJSValue EmailDelivery  = toJSValue "email"
@@ -519,10 +523,12 @@ instance FromJSValue FieldPlacement where
                                          <*> page <*> Just side)
 
 instance FromJSValue TipSide where
-    fromJSValue js = case fromJSValue js of
-          Just "left"  -> Just LeftTip
-          Just "right" -> Just RightTip
-          _ ->            Nothing
+    fromJSValue = do
+      s <- fromJSValue
+      case s of
+          Just "left"  -> return $ Just LeftTip
+          Just "right" -> return $ Just RightTip
+          _ ->            return $ Nothing
 
 
 instance Convertible  [FieldPlacement] SqlValue where
