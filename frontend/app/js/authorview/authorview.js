@@ -29,7 +29,7 @@ var AuthorViewModel = Backbone.Model.extend({
   signatories : function() {
     var self = this;
     if (this.get("signatories") == undefined)
-      this.set({"signatories" : new DocumentViewSignatories({document : this.document(), onAction: function() {self.reload(true);} })}, {silent : true});
+      this.set({"signatories" : new DocumentViewSignatories({forSigning: false, document : this.document(), onAction: function() {self.reload(true);} })}, {silent : true});
     return this.get("signatories");
   },
   file  : function() {
