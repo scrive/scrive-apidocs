@@ -118,21 +118,16 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
       var box = $(this.el);
       if (this.listDiv!= undefined) this.listDiv.remove();
       box.children().detach();
-      box.addClass('section').addClass('signatories').addClass('spacing').css("position","relative");
+      box.addClass('section').addClass('signatories').addClass('spacing');
 
       var box1 = $("<div style='width:275px;margin-left:36px;display:inline-block;'/>");
-      var box2 = $("<div style='width:275px;margin-right:18px;margin-left:18px;display:inline-block;'/>");
+      var box2 = $("<div style='width:275px;margin-right:18px;margin-left:18px;display:inline-block;;position:relative;'/>");
       var box3 = $("<div style='width:275px;margin-right:36px;display:inline-block;'/>");
       box.append(box1).append(box2).append(box3);
 
 
-      var header = $("<h2 style='width: 100px;float:none;' />").text(localization.authorview.signatoriesTitle);
+      var header = $("<h2 style='width: 100px;float:none;padding-left:0px;' />").text(localization.authorview.signatoriesTitle);
       box1.append(header)
-      if (this.model.hasAutomaticReminder()) {
-         var rm = $("<div class='column auto-reminder' style='position:absolute;bottom:30px;left:36px;'/>").append(this.model.automaticreminder().el()).addClass("grey-box");
-         box.append(rm);
-      }
-
 
       var s1box = $("<div class='column' />");
       var s2box = $("<div class='column' />");
@@ -150,6 +145,12 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
          s1box.append(this.model.signatoryView(0).el()).addClass("grey-box");
          s2box.append(this.model.signatoryView(1).el()).addClass("grey-box");
       }
+
+      if (this.model.hasAutomaticReminder()) {
+         var rm = $("<div class='column auto-reminder' style='position:absolute;left:-293px;bottom:0px;'/>").append(this.model.automaticreminder().el()).addClass("grey-box");
+         box2.append(rm);
+      }
+
 
       return this;
   }
