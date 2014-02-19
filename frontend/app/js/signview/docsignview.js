@@ -147,7 +147,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
 
        if (this.get("signatoriessection") != undefined)
             return this.get('signatoriessection');
-       this.set({'signatoriessection' : new DocumentViewSignatories({document:this.document(), textstyle: textstyle}) }, {silent : true} );
+       this.set({'signatoriessection' : new DocumentViewSignatories({forSigning: true, document:this.document(), textstyle: textstyle}) }, {silent : true} );
        return this.signatoriessection();
   },
   signatoryattachmentsection : function() {
