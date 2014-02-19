@@ -435,100 +435,6 @@
     }
   }
 
-  .signatories .list .sig .statustext {
-    float: left;
-    font-size: 14px;
-    line-height: 13px;
-    vertical-align: middle;
-    width: 124px;
-  }
-
-  .signatories {
-
-    .columns-container {
-  	  display: inline-block;
-      *display: inline; // IE7 hack - http://stackoverflow.com/a/6545033/337587
-      float: right;
-  	  zoom: 1; // IE7 hack - http://stackoverflow.com/a/6545033/337587
-    }
-
-    .column {
-      background-color: @grey-background;
-  	  border: solid #bababc 1px;
-      display:inline-block;
-  	  *display: inline; // IE7 hack - http://stackoverflow.com/a/6545033/337587
-  	  min-height: 196px;
-  	  padding: 15px;
-      vertical-align: top;
-      width: 260px;
-      zoom: 1; // IE7 hack - http://stackoverflow.com/a/6545033/337587
-
-      &.first-column {
-        margin-right: 20px;
-      }
-    }
-
-    .name {
-      font-size: 16px;
-      word-wrap: break-word;
-    }
-
-    h2 {
-      float: left;
-    }
-
-    .inner {
-  	  color: #505050;
-  	  border-top: 1px dashed #ccc;
-      min-height: 72px;
-
-  	  .email:hover{
-  	    overflow: visible;
-  	  }
-    }
-
-    .details {
-      font-size: 14px;
-      padding: 10px;
-    }
-
-    .statusbox {
-  	  border-top: 1px dashed #ccc;
-  	  font-size: 13px;
-  	  line-height: 17px;
-  	  padding: 10px;
-
-      .spacing {
-        margin-left: auto;
-        margin-right: auto;
-      }
-
-      .statustext {
-        float: left;
-        margin-top: 5px;
-      }
-    }
-  }
-
-  .field {
-    height: 18px;
-    line-height: 16px;
-    margin-bottom: 3px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    width: 200px;
-  }
-
-  .icon.status {
-    padding-top: 1px;
-  }
-
-  .signatories .statusbox .icon.status {
-    display: inline-block;
-    float: left;
-  }
-
   .rejectwrapper {
     float: left;
   }
@@ -580,27 +486,6 @@
     text-transform: uppercase;
   }
 
-  .sig {
-    padding: 10px;
-    border-bottom: 1px dashed #ccc;
-
-    &.first {
-  	  margin-top: 0px;
-  	  padding-top: 0px;
-    }
-
-    &:last-child {
-      border-bottom: none;
-    }
-  }
-
-  .sig .name {
-    margin-bottom: 2px;
-  }
-
-  .sig .name.first {
-    margin-top: 0px;
-  }
 
   .section {
 

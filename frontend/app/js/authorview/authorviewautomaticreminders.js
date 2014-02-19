@@ -2,12 +2,17 @@ define(['Backbone', 'legacy_code'], function() {
 
 var AuthorViewAutomaticRemindersModel = Backbone.Model.extend({
   defaults : {
+    onAction : function() {}
   },
   initialize: function (args) {
     if (this.document().autoremindtime() != undefined)
       this.set({newdaystoremind: this.document().autoremindtime().diffDays()+1});
     else
       this.set({newdaystoremind: Math.max(1,Math.floor(this.maxdays() / 2))});
+  },
+  triggerOnAction : function() {
+    if (this.get("onAction"))
+      this.get("onAction")();
   },
   authorview : function() {
      return this.get("authorview");
@@ -28,13 +33,13 @@ var AuthorViewAutomaticRemindersModel = Backbone.Model.extend({
         this.trigger("change:newdaystoremind");
   },
   document :function() {
-     return this.authorview().document();
+     return this.get("document");
   },
   setautoreminder : function(days, callback) {
      var self = this;
      this.document().setautoreminder(days).sendAjax(function() {
           if (callback!= undefined) callback();
-          self.authorview().reload(true);
+          self.triggerOnAction();
 
     });
   }
