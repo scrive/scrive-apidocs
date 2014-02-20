@@ -1,4 +1,8 @@
-define(['Backbone', 'legacy_code'], function() {
+/** @jsx React.DOM */
+
+define(['React','button', 'Backbone', 'legacy_code'], function(React, NewButton) {
+
+var expose = {};
 
 var AuthorViewAutomaticRemindersModel = Backbone.Model.extend({
   defaults : {
@@ -174,42 +178,68 @@ var AuthorViewAutomaticRemindersView = Backbone.View.extend({
         });
   },
   render: function() {
-    var self = this;
-    $(this.el).empty();
-
-    var titlebox = $("<div class='titleinfo'>").append($("<div class='name'>").text(localization.autoreminders.automaticRemindersTitle));
-    var contentbox = $("<div class='details'/>");
-    if (self.model.document().autoremindtime() != undefined)
-      contentbox.text(localization.autoreminders.willBeSentOn + ": " + self.model.document().autoremindtime().toYMDString());
-
-    contentbox.append(new Button({
-      color: "black",
-      style: "margin-top: 10px",
-      text : self.model.document().autoremindtime() == undefined ? localization.autoreminders.setDate : localization.autoreminders.changeDate ,
-      size: "small",
-      onClick : function() {
-        if (self.model.document().autoremindtime() == undefined)
-          self.startSetReminderDateModal();
-        else
-          self.startChangeReminderDateModal();
-        return false;
-      }
-    }).el());
-
-    $(this.el).append(titlebox).append($("<div class='inner'>").append(contentbox));
-
     return this;
   }
 
 });
 
-window.AuthorViewAutomaticReminders = function(args) {
+var AuthorViewAutomaticRemindersSetPopup = function(args) {
           var model = new AuthorViewAutomaticRemindersModel(args);
           var view =  new AuthorViewAutomaticRemindersView({model : model, el :$("<div/>")});
-          this.el = function() {return $(view.el);};
-          this.destroy = function() { view.destroy()};
+          view.startSetReminderDateModal();
 
 };
 
+var AuthorViewAutomaticRemindersChangePopup = function(args) {
+          var model = new AuthorViewAutomaticRemindersModel(args);
+          var view =  new AuthorViewAutomaticRemindersView({model : model, el :$("<div/>")});
+          view.startChangeReminderDateModal();
+
+
+};
+
+
+
+
+var AuthorViewAutomaticReminders = React.createClass({
+    propTypes: {
+      document    : React.PropTypes.object,
+      onAction    : React.PropTypes.func
+    },
+    handleOpenModal: function() {
+        if (this.props.document.autoremindtime() == undefined)
+          new AuthorViewAutomaticRemindersSetPopup({document : this.props.document,onAction :this.props.onAction});
+        else
+          new AuthorViewAutomaticRemindersChangePopup({document : this.props.document,onAction :this.props.onAction});
+    },
+    render: function() {
+      var Button = NewButton.Button;
+      return (
+           <div className='grey-box'>
+             <div className='titleinfo'>
+                  <div className='name'>
+                      {localization.autoreminders.automaticRemindersTitle}
+                  </div>
+             </div>
+              <div className='inner'>
+                <div className='details'>
+                  {this.props.document.autoremindtime() ? localization.autoreminders.willBeSentOn + ": " + this.props.document.autoremindtime().toYMDString() : ""}
+                  <Button
+                    color="black"
+                    style= {{"margin-top": "10px"}}
+                    text = {this.props.document.autoremindtime() ? localization.autoreminders.setDate : localization.autoreminders.changeDate}
+                    size = "small"
+                    onClick = {this.handleOpenModal}
+                  />
+               </div>
+             </div>
+           </div>
+      );
+    }
 });
 
+expose.AuthorViewAutomaticReminders = AuthorViewAutomaticReminders
+
+return expose;
+
+});
