@@ -229,6 +229,9 @@ data EvidenceEventType =
  | Obsolete ObsoleteEvidenceEventType
   deriving (Eq, Ord, Show)
 
+-- Evidence types that can currently be generated in the system, and
+-- that will be included in the author's view and on the verification
+-- page.
 data CurrentEvidenceEventType =
   TimeoutDocumentEvidence                         |
   SignDocumentEvidence                            |
@@ -266,6 +269,9 @@ data CurrentEvidenceEventType =
   SignWithELegFailureEvidence
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
+-- Evidence types that are not generated anymore by the system.  Not
+-- included in the author's view or on the verification page, and they
+-- have no text definitions anymore.
 data ObsoleteEvidenceEventType =
   AddSigAttachmentEvidence                        |
   RemoveSigAttachmentsEvidence                    |
