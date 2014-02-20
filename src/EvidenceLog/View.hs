@@ -104,7 +104,7 @@ eventJSValue doc dee = do
 simpleEvents :: EvidenceEventType -> Bool
 simpleEvents (Current AttachExtendedSealedFileEvidence)  = True
 simpleEvents (Current AttachGuardtimeSealedFileEvidence) = True
-simpleEvents (Current SignWithELegFailureEvidence)       = True
+simpleEvents (Obsolete CancelDocumenElegEvidence)        = True
 simpleEvents (Current CancelDocumentEvidence)            = True
 simpleEvents (Current InvitationDeliveredByEmail)        = True
 simpleEvents (Current InvitationDeliveredBySMS)          = True
@@ -144,7 +144,7 @@ getEvidenceEventStatusClass (Current InvitationUndeliveredBySMS)        = SCDeli
 getEvidenceEventStatusClass (Current ReminderSend)                      = SCSent
 getEvidenceEventStatusClass (Current AutomaticReminderSent)             = SCSent
 getEvidenceEventStatusClass (Current ResealedPDF)                       = SCSigned
-getEvidenceEventStatusClass (Current SignWithELegFailureEvidence)       = SCError
+getEvidenceEventStatusClass (Obsolete CancelDocumenElegEvidence)        = SCCancelled
 getEvidenceEventStatusClass (Current ProlongDocumentEvidence)           = SCProlonged
 getEvidenceEventStatusClass (Current AttachSealedFileEvidence)          = SCSigned
 getEvidenceEventStatusClass (Current AttachGuardtimeSealedFileEvidence) = SCSealed

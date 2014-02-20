@@ -237,7 +237,6 @@ data CurrentEvidenceEventType =
   MarkInvitationReadEvidence                      |
   CloseDocumentEvidence                           |
   ChangeSignatoryEmailWhenUndeliveredEvidence     |
-  SignWithELegFailureEvidence                     |
   CancelDocumentEvidence                          |
   AttachSealedFileEvidence                        |
   PreparationToPendingEvidence                    |
@@ -264,6 +263,7 @@ data CurrentEvidenceEventType =
   UpdateFieldTextEvidence                         |
   SMSPinSendEvidence                              |
   SMSPinDeliveredEvidence
+  SignWithELegFailureEvidence
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 data ObsoleteEvidenceEventType =
