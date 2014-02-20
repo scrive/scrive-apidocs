@@ -4,6 +4,8 @@ define(['React','button', 'Backbone', 'legacy_code'], function(React, NewButton)
 
 var expose = {};
 
+
+/* Modal for setting reminder - still done using Backbone */
 var AuthorViewAutomaticRemindersModel = Backbone.Model.extend({
   defaults : {
     onAction : function() {}
@@ -183,6 +185,7 @@ var AuthorViewAutomaticRemindersView = Backbone.View.extend({
 
 });
 
+/* Two interfaces for modal classes */
 var AuthorViewAutomaticRemindersSetPopup = function(args) {
           var model = new AuthorViewAutomaticRemindersModel(args);
           var view =  new AuthorViewAutomaticRemindersView({model : model, el :$("<div/>")});
@@ -200,7 +203,7 @@ var AuthorViewAutomaticRemindersChangePopup = function(args) {
 
 
 
-
+/* Propper UI component that is embedded in author view */
 var AuthorViewAutomaticReminders = React.createClass({
     propTypes: {
       document    : React.PropTypes.object,

@@ -1,4 +1,4 @@
-define(['React','authorview/authorviewautomaticreminders', 'Backbone', 'legacy_code'], function(React,Reminders) {
+define(['React','authorview/authorviewautomaticreminders','doctools/docviewsignatory', 'Backbone', 'legacy_code'], function(React,Reminders,DocumentViewSignatory) {
 
 var DocumentViewSignatoriesModel = Backbone.Model.extend({
   defaults : function() { return {
@@ -11,11 +11,6 @@ var DocumentViewSignatoriesModel = Backbone.Model.extend({
   },
   initialize: function (args) {
     var self = this;
-    var signatoriesViews = this.get("signatoriesViews");
-    _.each(this.signatories(), function(sig) {
-      signatoriesViews.push(new DocumentViewSignatory({signatory: sig, authorviewsignatories : self, onAction: args.onAction, forSigning : self.forSigning(), textstyle: self.textstyle() }));
-    });
-    this.set({currentSignview : this.get('signatoriesViews')[0]}, {silent : true});
   },
   forSigning : function() {
     return this.get("forSigning");
@@ -38,12 +33,13 @@ var DocumentViewSignatoriesModel = Backbone.Model.extend({
     return this.get("onAction");
   },
   currentIndex : function() {
-    for(var i = 0;i < this.get("signatoriesViews").length ; i++ )
-      if (this.get("signatoriesViews")[i] == this.get("currentSignview")) return i;
+    return 0;
+    //for(var i = 0;i < this.get("signatoriesViews").length ; i++ )
+    //  if (this.get("signatoriesViews")[i] == this.get("currentSignview")) return i;
   },
   setCurrentIndex : function(i) {
-      if (this.get("signatoriesViews")[i] != undefined)
-        this.setCurrentSignview(this.get("signatoriesViews")[i]);
+      //if (this.get("signatoriesViews")[i] != undefined)
+      //  this.setCurrentSignview(this.get("signatoriesViews")[i]);
   },
   hasAutomaticReminder : function() {
       return !this.forSigning()
@@ -56,24 +52,15 @@ var DocumentViewSignatoriesModel = Backbone.Model.extend({
      return this.get("document");
   },
   hasList : function() {
-     return this.signatoriesViews().length > 2;
+     return this.signatories().length > 2;
   },
   isSingleSignatory : function() {
-     return this.signatoriesViews().length ==1;
-  },
-  signatoriesViews : function() {
-     return this.get("signatoriesViews");
-  },
-  signatoryView : function(i)
-  {
-    if (i == undefined)  return this.get("currentSignview");
-    return this.signatoriesViews()[i];
+     return this.signatories().length ==1;
   },
   setCurrentSignview : function(sv) {
     this.set({currentSignview : sv});
   },
   destroy : function() {
-    _.each(this.signatoriesViews(), function(s) {s.destroy();});
     this.clear();
   }
 });
@@ -94,7 +81,7 @@ var DocumentViewSignatoriesView = Backbone.View.extend({
       var self = this;
       var model = this.model;
       this.listDiv = $("<div class='list spacing'>");
-      _.each(this.model.signatoriesViews(), function(sigview, index) {
+      /*_.each(this.model.signatoriesViews(), function(sigview, index) {
           var sigdiv     = $("<div class='sig' />");
           if(index === 0)
               sigdiv.addClass('first');
@@ -122,10 +109,12 @@ var DocumentViewSignatoriesView = Backbone.View.extend({
           sigdiv.append(name).append(line);
           self.listDiv.append(sigdiv);
       });
+    */
     return this.listDiv;
   },
   render: function() {
       var view = this;
+      var model = this.model;
       var box = $(this.el);
       if (this.listDiv!= undefined) this.listDiv.remove();
       box.children().detach();
@@ -151,15 +140,39 @@ var DocumentViewSignatoriesView = Backbone.View.extend({
       box3.append(s2box);
 
       if (this.model.isSingleSignatory()) {
-         s1box.append(this.model.signatoryView().el()).addClass("grey-box");
+
+         React.renderComponent(DocumentViewSignatory.DocumentViewSignatory({
+           signatory : model.signatories()[0],
+           onAction : model.onAction(),
+           forSigning : model.forSigning(),
+           textstyle : model.textstyle()
+        }),s1box[0]);
+
       }
       else if (this.model.hasList()) {
-         s1box.append(this.model.signatoryView().el()).addClass("grey-box");
+
+         React.renderComponent(DocumentViewSignatory.DocumentViewSignatory({
+           signatory : model.signatories()[0],
+           onAction : model.onAction(),
+           forSigning : model.forSigning(),
+           textstyle : model.textstyle()
+        }),s1box[0]);
+
          s2box.append(this.list()).addClass("grey-box").css("padding","0px");
 
       } else {
-         s1box.append(this.model.signatoryView(0).el()).addClass("grey-box");
-         s2box.append(this.model.signatoryView(1).el()).addClass("grey-box");
+        React.renderComponent(DocumentViewSignatory.DocumentViewSignatory({
+           signatory : model.signatories()[0],
+           onAction : model.onAction(),
+           forSigning : model.forSigning(),
+           textstyle : model.textstyle(),
+        }),s1box[0]);
+        React.renderComponent(DocumentViewSignatory.DocumentViewSignatory({
+           signatory : model.signatories()[1],
+           onAction : model.onAction(),
+           forSigning : model.forSigning(),
+           textstyle : model.textstyle(),
+        }),s2box[0]);
       }
 
       if (this.model.hasAutomaticReminder()) {
