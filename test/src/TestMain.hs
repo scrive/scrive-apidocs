@@ -104,9 +104,8 @@ modifyTestEnv ("--output-dir":d:r) = second (. (\te -> te{ teOutputDirectory = J
 modifyTestEnv (d:r) = first (d:) $ modifyTestEnv r
 
 
-testMany :: ([String], [(TestEnvSt -> Test)]) -> IO ()
-testMany (allargs, ts) = Log.withLogger $ do
-  let (args, envf) =  modifyTestEnv allargs
+testMany :: (TestEnvSt -> TestEnvSt) -> ([String], [(TestEnvSt -> Test)]) -> IO ()
+testMany envf (args, ts) = Log.withLogger $ do
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
   pgconf <- BS.readFile "kontrakcja_test.conf"
@@ -156,9 +155,10 @@ testMany (allargs, ts) = Log.withLogger $ do
 testone :: (TestEnvSt -> Test) -> IO ()
 testone t = do
   args <- getArgs
-  testMany (args, [t])
+  testMany id (args, [t])
 
 main :: IO ()
 main = do
-  args <- getArgs
-  testMany (args, allTests)
+  allargs <- getArgs
+  let (args, envf) = modifyTestEnv allargs
+  testMany envf (partitionEithers $ testsToRun args)
