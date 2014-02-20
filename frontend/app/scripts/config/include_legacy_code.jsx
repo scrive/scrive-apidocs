@@ -63,7 +63,6 @@ define([
   '../js/authorview/authorviewtitlebox',
   '../js/authorview/authorsviewhistory',
   '../js/authorview/authorviewsignatoriesattachments',
-  '../js/authorview/authorviewautomaticreminders',
   '../js/authorview/authorview',
   '../js/authorview/authorviewfirsttime',
   '../js/attachmentview',

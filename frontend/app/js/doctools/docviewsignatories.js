@@ -1,4 +1,4 @@
-define(['Backbone', 'legacy_code'], function() {
+define(['React','authorview/authorviewautomaticreminders', 'Backbone', 'legacy_code'], function(React,Reminders) {
 
 var DocumentViewSignatoriesModel = Backbone.Model.extend({
   defaults : function() { return {
@@ -45,11 +45,6 @@ var DocumentViewSignatoriesModel = Backbone.Model.extend({
       if (this.get("signatoriesViews")[i] != undefined)
         this.setCurrentSignview(this.get("signatoriesViews")[i]);
   },
-  automaticreminder :  function() {
-      if (this.get("automaticreminder") == undefined)
-        this.set({"automaticreminder" : new AuthorViewAutomaticReminders({document : this.document(), onAction: this.onAction() })}, {silent : true});
-      return this.get("automaticreminder");
-  },
   hasAutomaticReminder : function() {
       return !this.forSigning()
              && this.document().pending()
@@ -79,8 +74,6 @@ var DocumentViewSignatoriesModel = Backbone.Model.extend({
   },
   destroy : function() {
     _.each(this.signatoriesViews(), function(s) {s.destroy();});
-    if (this.hasAutomaticReminder())
-      this.automaticreminder().destroy();
     this.clear();
   }
 });
@@ -170,8 +163,10 @@ var DocumentViewSignatoriesView = Backbone.View.extend({
       }
 
       if (this.model.hasAutomaticReminder()) {
-         var rm = $("<div class='column auto-reminder' style='position:absolute;left:-293px;bottom:0px;'/>").append(this.model.automaticreminder().el()).addClass("grey-box");
-         box2.append(rm);
+          var model = this.model;
+          var rm = $("<div class='column auto-reminder' style='position:absolute;left:-293px;bottom:0px;width:275px;'/>")
+          React.renderComponent(Reminders.AuthorViewAutomaticReminders({document : model.document(), onAction : model.onAction()}),rm[0]);
+          box2.append(rm);
       }
 
 
