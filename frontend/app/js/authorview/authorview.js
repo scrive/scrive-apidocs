@@ -2,7 +2,7 @@
  * Now unified with author and viewer views
  */
 
-define(['Backbone', 'legacy_code'], function() {
+define(['React','doctools/docviewsignatories', 'Backbone', 'legacy_code'], function(React,DocumentViewSignatories) {
 
 var AuthorViewModel = Backbone.Model.extend({
   defaults : {
@@ -28,8 +28,22 @@ var AuthorViewModel = Backbone.Model.extend({
   },
   signatories : function() {
     var self = this;
-    if (this.get("signatories") == undefined)
-      this.set({"signatories" : new DocumentViewSignatories({forSigning: false, document : this.document(), onAction: function() {self.reload(true);} })}, {silent : true});
+    if (this.get("signatories") == undefined) {
+       var div = $('<div/>');
+       var component = React.renderComponent(
+                         DocumentViewSignatories.DocumentViewSignatories({
+                           forSigning: false,
+                           document : this.document(),
+                           onAction: function() {self.reload(true);}
+                         })
+                         , div[0]);
+     this.set({"signatories" :    {
+         el : function() {return div;},
+         component : function() {return component;}
+       }
+     });
+
+    }
     return this.get("signatories");
   },
   file  : function() {
@@ -81,7 +95,6 @@ var AuthorViewModel = Backbone.Model.extend({
     this.title().destroy();
     if (this.get("history") != undefined)
       this.history().destroy();
-    this.signatories().destroy();
     if (this.get("file") != undefined)
       this.file().destroy();
     if (this.hasAuthorAttachmentsSection())
@@ -207,7 +220,7 @@ window.AuthorView = function(args) {
                      if (reloadversion == version) {
 
                         // Initial settings based on old model
-                        newmodel.signatories().setCurrentIndex(oldmodel.signatories().currentIndex());
+                        newmodel.signatories().component().setCurrentIndex(oldmodel.signatories().component().currentIndex());
                         console.log("Expanded " + oldmodel.history().expanded());
                         newmodel.history().setExpanded(oldmodel.history().expanded());
 

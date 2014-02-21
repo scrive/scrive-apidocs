@@ -71,7 +71,6 @@ define([
   '../js/doctools/dochistory',
   '../js/doctools/docauthorattachments',
   '../js/doctools/docevidenceattachments',
-  '../js/doctools/docviewsignatories',
   '../js/signview/docsignviewbranding',
   '../js/signview/docsignviewinstructions',
   '../js/signview/docsignviewextradetailssection',
