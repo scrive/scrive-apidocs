@@ -212,7 +212,7 @@ mailNewCompanyUserInviteMainP=
  $_mailNewAccountCreatedByAdminContentHeaderBodySecond()$
  <br/>
  <br/>
- $_mailNewCompanyUserInviteContentBodyUserName()$ $invitedemail$
+ $_mailNewCompanyUserInviteContentBodyUserName()$ <strong>$invitedemail$</strong>
  <br/>
  <br/>
  $_mailNewCompanyUserInviteContentClickLink()$
@@ -242,7 +242,7 @@ mailNewAccountCreatedByAdmin=
     )$
 ####
 mailNewAccountCreatedByAdminMainP=
-    $_mailNewAccountCreatedByAdminContentUserName()$ $email$
+    $_mailNewAccountCreatedByAdminContentUserName()$ <strong>$email$</strong>
     <br/>
     <br/>
     $_mailNewAccountCreatedByAdminContentBody()$

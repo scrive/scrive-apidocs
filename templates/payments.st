@@ -34,9 +34,9 @@ paymentsSignupEmail3=
 $_paymentsEmailBilledTo()$:
 </p>
 <p>
-$fullname$<br />
+<strong>$fullname$</strong><br />
 $if(companyname)$$companyname$<br />$endif$
-$email$
+<strong>$email$</strong>
 </p>
 ###
 paymentsSignupEmail4=
@@ -66,9 +66,9 @@ paymentsDeclinedEmail2=
 $_paymentsEmailBilledTo()$:
 </p>
 <p>
-$fullname$<br />
+<strong>$fullname$</strong><br />
 $if(companyname)$$companyname$<br />$endif$
-$email$
+<strong>$email$</strong>
 </p>
 ###
 paymentsDeclinedEmail3=
