@@ -3,7 +3,7 @@
  * Instrumented for Mixpanel
  */
 
-define(['React', 'Backbone', 'Underscore', 'signview/create_account_section_view', 'legacy_code'], function(React, Backbone, _, CreateAccountSection) {
+define(['React', 'signview/create_account_section_view', 'doctools/docviewsignatories', 'Backbone', 'Underscore', 'legacy_code'], function(React, CreateAccountSection,DocumentViewSignatories) {
 
 var DocumentSignViewModel = Backbone.Model.extend({
   defaults : {
@@ -147,7 +147,18 @@ var DocumentSignViewModel = Backbone.Model.extend({
 
        if (this.get("signatoriessection") != undefined)
             return this.get('signatoriessection');
-       this.set({'signatoriessection' : new DocumentViewSignatories({forSigning: true, document:this.document(), textstyle: textstyle}) }, {silent : true} );
+
+       var div = $('<div/>');
+       var component = React.renderComponent(
+                         DocumentViewSignatories.DocumentViewSignatories({
+                           forSigning: true,
+                           document : this.document(),
+                           textstyle: textstyle
+                         }), div[0]);
+       this.set({"signatoriessection" :    {
+            el : function() {return div;}
+          }
+        },{silent : true});
        return this.signatoriessection();
   },
   signatoryattachmentsection : function() {

@@ -133,6 +133,45 @@ var DocumentViewSignatoryModel = Backbone.Model.extend({
  }
 });
 
+
+
+var DocumentViewSignatoryForListView = React.createClass({
+    propTypes: {
+      model: React.PropTypes.object
+    },
+    onSelect : function() {
+      this.props.onSelect();
+    },
+    render: function() {
+      var model = this.props.model;
+      var signatory = model.signatory();
+      var textstyle= model.textstyle();
+      return (
+        <div onClick={this.onSelect} className={"sig " +  (this.props.first ? "first " :"") + (this.props.last ? "last " : "") + (this.props.active  ? "active " : "")}>
+                {/*if*/ (this.props.active ) &&
+                  <div className='arrow'/>
+                }
+                <div className='name' style={model.textstyle()}>
+                  {signatory.nameOrEmailOrMobile()}
+                </div>
+                <div className='line'>
+                  <div className='middle'>
+                    <div className={"icon status " + model.status() }> </div>
+                  </div>
+                  <div className='middle' style={{minWidth: "150px"}}>
+                    <div className={"statustext " + model.status()} style={model.textstyle()}>
+                        {model.signatoryViewerySummary()}
+                    </div>
+                  </div>
+                  <div className='middle details' style={{whiteSpace: "nowrap"}}>
+                  </div>
+                </div>
+              </div>
+      );
+    }
+  });
+
+
 var DocumentViewSignatoryView = React.createClass({
     propTypes: {
       model: React.PropTypes.object
@@ -347,7 +386,7 @@ var DocumentViewSignatoryView = React.createClass({
           <div className="statusbox" >
             <div className="spacing butt" >
               <span className={'icon status '+ model.status()}></span>
-              <span className={'status statustext ' + model.status()}>
+              <span className={'status statustext ' + model.status()} style={textstyle}>
                 {model.signatorySummary()}
               </span>
             </div>
@@ -445,6 +484,43 @@ var DocumentViewSignatoryView = React.createClass({
   });
 
 
+var DocumentViewSignatoryForList = React.createClass({
+    propTypes: {
+      signatory: React.PropTypes.object,
+      textstyle: React.PropTypes.object,
+      first    : React.PropTypes.bool.isRequired,
+      last     : React.PropTypes.bool.isRequired,
+      active   : React.PropTypes.bool.isRequired,
+      onSelect : React.PropTypes.func
+    },
+    getInitialState: function() {
+      return this.stateFromProps(this.props);
+    },
+    componentWillReceiveProps: function(props) {
+      this.setState(this.stateFromProps(props));
+    },
+    stateFromProps : function(props) {
+      var model = new DocumentViewSignatoryModel({
+        signatory: props.signatory,
+        textstyle : props.textstyle,
+      })
+      return {model: model};
+    },
+    render: function() {
+      return (
+        <DocumentViewSignatoryForListView
+          model={this.state.model}
+          first={this.props.first}
+          last={this.props.last}
+          active={this.props.active}
+          onSelect={this.props.onSelect}
+        />
+      );
+    }
+  });
+
+
+
 var DocumentViewSignatory = React.createClass({
     propTypes: {
       signatory: React.PropTypes.object,
@@ -452,14 +528,19 @@ var DocumentViewSignatory = React.createClass({
       textstyle:  React.PropTypes.object,
       onAction: React.PropTypes.func
     },
-
     getInitialState: function() {
+      return this.stateFromProps(this.props);
+    },
+    componentWillReceiveProps: function(props) {
+      this.setState(this.stateFromProps(props));
+    },
+    stateFromProps : function(props) {
       var model = new DocumentViewSignatoryModel({
-        signatory: this.props.signatory,
-        forSigning : this.props.forSigning,
-        textstyle : this.props.textstyle,
-        onAction : this.props.onAction
-      })
+        signatory: props.signatory,
+        forSigning : props.forSigning,
+        textstyle : props.textstyle,
+        onAction : props.onAction
+      });
       return {model: model};
     },
     render: function() {
@@ -469,7 +550,7 @@ var DocumentViewSignatory = React.createClass({
     }
   });
 
-
+expose.DocumentViewSignatoryForList = DocumentViewSignatoryForList
 expose.DocumentViewSignatory = DocumentViewSignatory
 
 return expose;

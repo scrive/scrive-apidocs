@@ -218,7 +218,7 @@ var AuthorViewAutomaticReminders = React.createClass({
     render: function() {
       var Button = NewButton.Button;
       return (
-           <div className='grey-box'>
+           <div className='grey-box auto-reminder'>
              <div className='titleinfo'>
                   <div className='name'>
                       {localization.autoreminders.automaticRemindersTitle}
@@ -226,7 +226,9 @@ var AuthorViewAutomaticReminders = React.createClass({
              </div>
               <div className='inner'>
                 <div className='details'>
-                  {this.props.document.autoremindtime() ? localization.autoreminders.willBeSentOn + ": " + this.props.document.autoremindtime().toYMDString() : ""}
+                  <div>
+                    {this.props.document.autoremindtime() ? localization.autoreminders.willBeSentOn + ": " + this.props.document.autoremindtime().toYMDString() : ""}
+                  </div>
                   <Button
                     color="black"
                     style= {{"margin-top": "10px"}}
