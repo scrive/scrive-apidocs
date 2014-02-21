@@ -9,42 +9,7 @@ window.CompanyUI = Backbone.Model.extend({
       this.url = args.url;
       this.fetch();
     } else {
-      this.set({
-        emailfont: args.companyemailfont,
-        emailbordercolour: args.companyemailbordercolour,
-        emailbuttoncolour: args.companyemailbuttoncolour,
-        emailemailbackgroundcolour: args.companyemailemailbackgroundcolour,
-        emailbackgroundcolour: args.companyemailbackgroundcolour,
-        emailtextcolour: args.companyemailtextcolour,
-        emaillogo: args.companyemaillogo,
-        signviewlogo: args.companysignviewlogo,
-        signviewtextcolour: args.companysignviewtextcolour,
-        signviewtextfont: args.companysignviewtextfont,
-        signviewprimarycolour: args.companysignviewprimarycolour,
-        signviewprimarytextcolour: args.companysignviewprimarytextcolour,
-        signviewsecondarycolour: args.companysignviewsecondarycolour,
-        signviewsecondarytextcolour: args.companysignviewsecondarytextcolour,
-        signviewbarscolour: args.companysignviewbarscolour,
-        signviewbarstextcolour: args.companysignviewbarstextcolour,
-        signviewbackgroundcolour: args.companysignviewbackgroundcolour,
-        customlogo: args.companycustomlogo,
-        custombarscolour: args.companycustombarscolour,
-        custombarstextcolour: args.companycustombarstextcolour,
-        custombarssecondarycolour : args.companycustombarssecondarycolour,
-        custombackgroundcolour: args.companycustombackgroundcolour,
-        domaincustomlogo: args.domaincustomlogo,
-        domainbarscolour: args.domainbarscolour,
-        domainbarstextcolour: args.domainbarstextcolour,
-        domainbarssecondarycolour : args.domainbarssecondarycolour,
-        domainsignviewprimarycolour : args.domainsignviewprimarycolour,
-        domainsignviewprimarytextcolour : args.domainsignviewprimarytextcolour,
-        domainsignviewsecondarycolour : args.domainsignviewsecondarycolour,
-        domainsignviewsecondarytextcolour : args.domainsignviewsecondarytextcolour,
-        domainbackgroundcolour: args.domainbackgroundcolour,
-        domainmailsbackgroundcolor: args.domainmailsbackgroundcolor,
-        domainmailsbuttoncolor: args.domainmailsbuttoncolor,
-        domainmailstextcolor: args.domainmailstextcolor
-      }, {silent: true});
+      this.set(this.parseArgs(args), {silent: true});
     }
   },
   emailfont: function() {
@@ -152,37 +117,46 @@ window.CompanyUI = Backbone.Model.extend({
   ready : function() {
     return this.get("ready");
   },
+  parseArgs: function(args) {
+    return {emailfont: args.companyemailfont,
+            emailbordercolour: args.companyemailbordercolour,
+            emailbuttoncolour: args.companyemailbuttoncolour,
+            emailemailbackgroundcolour: args.companyemailemailbackgroundcolour,
+            emailbackgroundcolour: args.companyemailbackgroundcolour,
+            emailtextcolour: args.companyemailtextcolour,
+            emaillogo: args.companyemaillogo,
+            signviewlogo: args.companysignviewlogo,
+            signviewtextcolour: args.companysignviewtextcolour,
+            signviewtextfont: args.companysignviewtextfont,
+            signviewprimarycolour: args.companysignviewprimarycolour,
+            signviewprimarytextcolour: args.companysignviewprimarytextcolour,
+            signviewsecondarycolour: args.companysignviewsecondarycolour,
+            signviewsecondarytextcolour: args.companysignviewsecondarytextcolour,
+            signviewbarscolour: args.companysignviewbarscolour,
+            signviewbarstextcolour: args.companysignviewbarstextcolour,
+            signviewbackgroundcolour: args.companysignviewbackgroundcolour,
+            customlogo: args.companycustomlogo,
+            custombarscolour: args.companycustombarscolour,
+            custombarstextcolour: args.companycustombarstextcolour,
+            custombarssecondarycolour : args.companycustombarssecondarycolour,
+            custombackgroundcolour: args.companycustombackgroundcolour,
+            domaincustomlogo: args.domaincustomlogo,
+            domainbarscolour: args.domainbarscolour,
+            domainbarstextcolour: args.domainbarstextcolour,
+            domainbarssecondarycolour : args.domainbarssecondarycolour,
+            domainsignviewprimarycolour: args.domainsignviewprimarycolour,
+            domainsignviewprimarytextcolour: args.domainsignviewprimarytextcolour,
+            domainsignviewsecondarycolour: args.domainsignviewsecondarycolour,
+            domainsignviewsecondarytextcolour: args.domainsignviewsecondarytextcolour,
+            domainbackgroundcolour: args.domainbackgroundcolour,
+            domainmailsbackgroundcolor: args.domainmailsbackgroundcolor,
+            domainmailsbuttoncolor: args.domainmailsbuttoncolor,
+            domainmailstextcolor: args.domainmailstextcolor};
+  },
   parse: function(args) {
-    return {
-      emailfont: args.companyemailfont,
-      emailbordercolour: args.companyemailbordercolour,
-      emailbuttoncolour: args.companyemailbuttoncolour,
-      emailemailbackgroundcolour: args.companyemailemailbackgroundcolour,
-      emailbackgroundcolour: args.companyemailbackgroundcolour,
-      emailtextcolour: args.companyemailtextcolour,
-      emaillogo: args.companyemaillogo,
-      signviewlogo: args.companysignviewlogo,
-      signviewtextcolour: args.companysignviewtextcolour,
-      signviewtextfont: args.companysignviewtextfont,
-      signviewbarscolour: args.companysignviewbarscolour,
-      signviewbarstextcolour: args.companysignviewbarstextcolour,
-      signviewbackgroundcolour: args.companysignviewbackgroundcolour,
-      customlogo: args.companycustomlogo,
-      custombarscolour: args.companycustombarscolour,
-      custombarstextcolour: args.companycustombarstextcolour,
-      custombarssecondarycolour : args.companycustombarssecondarycolour,
-      custombackgroundcolour: args.companycustombackgroundcolour,
-      domaincustomlogo: args.domaincustomlogo,
-      domainbarscolour: args.domainbarscolour,
-      domainbarstextcolour: args.domainbarstextcolour,
-      domainbarssecondarycolour : args.domainbarssecondarycolour,
-      domainbackgroundcolour: args.domainbackgroundcolour,
-      domainsignviewprimarycolour: args.domainsignviewprimarycolour,
-      domainsignviewprimarytextcolour: args.domainsignviewprimarytextcolour,
-      domainsignviewsecondarycolour: args.domainsignviewsecondarycolour,
-      domainsignviewsecondarytextcolour: args.domainsignviewsecondarytextcolour,
-      ready: true
-    };
+    var parsed_args = this.parseArgs(args);
+    parsed_args['ready'] = true;
+    return parsed_args;
   }
 });
 
