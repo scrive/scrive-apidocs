@@ -212,7 +212,8 @@ var PageTasksArrowView = Backbone.View.extend({
     var oldArrowIsUpOrDown = oldarrow != undefined && (oldarrow.model().type() == 'scroll-up' || oldarrow.model().type() == 'scroll-down');
     var newArrowIsPoint = newarrow.model().type() == 'point-left' || newarrow.model().type() == 'point-right';
     var newUpArrow = newarrow.model().type() == 'scroll-up' && (oldarrow == undefined || oldarrow.model().type() != 'scroll-up');
-    return (oldArrowIsUpOrDown && newArrowIsPoint) || newUpArrow;
+    var newDownArrow = newarrow.model().type() == 'scroll-down' && (oldarrow == undefined || oldarrow.model().type() != 'scroll-down');
+    return (oldArrowIsUpOrDown && newArrowIsPoint) || newUpArrow || newDownArrow;
   },
   updateArrow : function() {
      var view = this;
