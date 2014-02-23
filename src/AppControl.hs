@@ -56,6 +56,8 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
 import Salesforce.Conf
+import Data.Pool
+import Database.HDBC.PostgreSQL (Connection)
 
 {- |
   Global application data
@@ -65,6 +67,7 @@ data AppGlobals
                  , filecache       :: MemCache.MemCache FileID BS.ByteString
                  , docscache       :: MemCache.MemCache FileID JpegPages
                  , cryptorng       :: CryptoRNGState
+                 , connectionpool  :: Pool Connection
                  }
 
 
@@ -150,7 +153,7 @@ enhanceYourCalm action = enhanceYourCalmWorker 100
 -}
 appHandler :: KontraPlus Response -> AppConf -> AppGlobals -> ServerPartT IO Response
 appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT . enhanceYourCalm $
-  withPostgreSQL (dbConfig appConf) . runCryptoRNGT (cryptorng appGlobals) $
+  withPostgreSQLConnectionPool (connectionpool appGlobals) . runCryptoRNGT (cryptorng appGlobals) $
     AWS.runAmazonMonadT amazoncfg $ do
     startTime <- liftIO getClockTime
     let quota = 10000000
