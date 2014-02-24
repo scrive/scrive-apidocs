@@ -123,7 +123,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
 
     var mbi = new Button({
       text: localization.sign.eleg.mobilebankid,
-      cssClass: 'bankid',
+      cssClass: 'bankid mbi',
       color: 'blue',
       oneClick: true,
       onClick: function() { return makeCallback('Mobile BankID', Eleg.mobileBankIDSign, signatory.personalnumberField().value()); }
@@ -273,11 +273,10 @@ window.DocumentSignConfirmation = Backbone.View.extend({
 
       // Remove the modal footer but keep the button
       var modalFooter = $('.modal-container .modal-footer');
-      var signButton = modalFooter.find('.button').detach();
-      if (signButton.length == 0) {
-        // No sign button means bankid
-        signButton = modalFooter.find('.mbi').addClass("button button-green").detach().prepend(localization.process.mobileBankID);
-        signButton.find('img').remove();
+      var signButton = modalFooter.find('.button.button-green').detach();
+      if (signatory.elegAuthentication()) {
+        signButton = modalFooter.find('.mbi').detach();
+        signButton.addClass("button-green");
       }
       modalFooter.remove();
 

@@ -477,7 +477,9 @@ window.Document = Backbone.Model.extend({
     makeTemplate: function() {
        return this.set({"template": true});
     },
-    recall: function(successCallback) {
+    // errorCallback(response) should return bool value
+    // indicating if further attempts should be continued
+    recall: function(successCallback, errorCallback) {
         console.log('recall');
         var self = this;
         var fetchOptions = { data: self.viewer().forFetch(),
@@ -486,9 +488,13 @@ window.Document = Backbone.Model.extend({
         var fetchFunction = function () {
             self.fetch(fetchOptions);
         };
-        fetchOptions.error = function() {
-            console.error("Failed to fetch document #" + self.documentid() + ", trying again in one sec...");
-            window.setTimeout(fetchFunction, 1000);
+        fetchOptions.error = function(model, response) {
+            if (errorCallback === undefined || errorCallback(response) === true) {
+              console.error("Failed to fetch document #" + self.documentid() + ", trying again in one sec...");
+              window.setTimeout(fetchFunction, 1000);
+            } else {
+              console.error("Failed to fetch document #" + self.documentid() + ", giving up.");
+            }
         };
 
         if( successCallback!=undefined ) {

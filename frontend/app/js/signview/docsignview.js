@@ -407,14 +407,22 @@ var DocumentSignViewModel = Backbone.Model.extend({
     }
   },
   recall : function(f) {
-      this.document().recall(f);
+      var self = this;
+      this.document().recall(f, function(response) {
+        if (response.status == 403) {
+          self.trigger('recallfailednotauthorized');
+          return false;
+        }
+        return true;
+      });
   }
 });
 var DocumentSignViewView = Backbone.View.extend({
     initialize: function(args) {
-        _.bindAll(this, 'render');
+        _.bindAll(this, 'render', 'notAuthorized');
         var view = this;
         this.model.bind('change', this.render);
+        this.model.bind('recallfailednotauthorized', this.notAuthorized);
         this.model.view = this;
         view.model.document().setReferenceScreenshot(BrowserInfo.isSmallScreen() ? "mobile" : "standard");
         this.prerender();
@@ -436,6 +444,14 @@ var DocumentSignViewView = Backbone.View.extend({
       if (color && this.model.usebranding()) {
         $('.signview').css('background-image','none').css('background-color', color);
       }
+    },
+    notAuthorized: function() {
+      var content = $('<p/>').text(localization.sessionTimedoutInSignviewAfterHistoryBackMessage);
+      var popup = new Confirmation({title: localization.sessionTimedoutInSignviewAfterHistoryBackTitle,
+                                    content: content});
+      popup.hideCancel();
+      popup.hideClose();
+      popup.hideAccept();
     },
     render: function() {
      var view = this;
