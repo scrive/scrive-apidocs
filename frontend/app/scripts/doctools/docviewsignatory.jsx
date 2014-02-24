@@ -520,7 +520,6 @@ var DocumentViewSignatoryForList = React.createClass({
   });
 
 
-
 var DocumentViewSignatory = React.createClass({
     propTypes: {
       signatory: React.PropTypes.object,
