@@ -163,7 +163,7 @@ var DocumentViewSignatoryForListView = React.createClass({
                         {model.signatoryViewerySummary()}
                     </div>
                   </div>
-                  <div className='middle details' style={{whiteSpace: "nowrap"}}>
+                  <div className='middle details'>
                   </div>
                 </div>
               </div>
