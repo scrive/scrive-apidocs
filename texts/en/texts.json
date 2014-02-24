@@ -834,6 +834,8 @@
 "_september":"September",
 "_serviceBranding":"Service branding",
 "_sessionTimedoutInSignview":"Your session has timed out. You can access your document again by following the link in your email.",
+"_sessionTimedoutInSignviewAfterHistoryBackMessage":"In order to proceed, you need to click the invitation link again.",
+"_sessionTimedoutInSignviewAfterHistoryBackTitle":"Session timed out",
 "_setAllFields":"Please name all created fields",
 "_share":"Share",
 "_shared":"Shared",

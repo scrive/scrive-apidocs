@@ -11,6 +11,8 @@ javascriptLocalisation =
              , problemContactingServer : "$_problemContactingServer()$"
              , esigningpoweredbyscrive : "E-signing powered by Scrive"
              , sessionTimedoutInSignview : "$_sessionTimedoutInSignview()$"
+             , sessionTimedoutInSignviewAfterHistoryBackMessage : "$_sessionTimedoutInSignviewAfterHistoryBackMessage()$"
+             , sessionTimedoutInSignviewAfterHistoryBackTitle : "$_sessionTimedoutInSignviewAfterHistoryBackTitle()$"
              , signviewSigningFailed : "$_signviewSigningFailed()$"
              , resetYourPassword : "$_resetYourPassword()$"
              , resetYourPasswordCheckEmail : "$_resetYourPasswordCheckEmail()$"

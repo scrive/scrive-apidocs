@@ -834,6 +834,8 @@
 "_september":"september",
 "_serviceBranding":"Branding av tjänsten",
 "_sessionTimedoutInSignview":"Det tog för lång tid att slutföra signeringen. För att fortsätta klicka på länken i mailet igen.",
+"_sessionTimedoutInSignviewAfterHistoryBackMessage":"För att fortsätta måste du klicka på länken med inbjudan igen.",
+"_sessionTimedoutInSignviewAfterHistoryBackTitle":"Session avbruten",
 "_setAllFields":"Var vänlig namnge alla skapade fält",
 "_share":"Dela",
 "_shared":"Delad",
