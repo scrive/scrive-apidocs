@@ -346,13 +346,24 @@ module.exports = function (grunt) {
    *  Expects 'grunt build' to have been run.
    *  
    */
-  grunt.registerTask('server:dist', function (target) {
+  grunt.registerTask('server:dist_run', function (target) {
     grunt.task.run([
       'configureProxies:proxyserver',
       'connect:proxyserver',
       'connect:dist:keepalive',
     ]);
   });
+
+  /**
+   *  Get a production looking enviroment, i.e.
+   *  serve files compiled files from dist/
+   *  build task is run as a dependency of this task
+   */
+  grunt.registerTask('server:dist', [
+    'build',
+    'server:dist_run'
+  ]);
+
 
   /**
    *  Serve and compile static files, while developing.

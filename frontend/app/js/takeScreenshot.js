@@ -45,7 +45,6 @@ define(['Backbone', 'legacy_code'], function() {
                             },
                             width : $(window).width(),
                             height : $(window).height(),
-                            logging: true,
                             type: 'view',
                             proxy: null
                           }
