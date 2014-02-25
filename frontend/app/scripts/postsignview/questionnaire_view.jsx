@@ -35,7 +35,7 @@ define(['React', 'Backbone'], function(React, Backbone) {
     render: function() {
       var model = this.model;
 
-      var iframe = $('<iframe frameborder="0" marginheight="0" marginwidth="0" src="/images/growth/index.html#/questionnaire"></iframe>');
+      var iframe = $('<iframe frameborder="0" marginheight="0" marginwidth="0" src="/growth/index.html#/questionnaire"></iframe>');
       iframe.css({
         'width': '958px',
         'height': '635px',

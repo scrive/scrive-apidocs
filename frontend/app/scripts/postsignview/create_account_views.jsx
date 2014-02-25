@@ -5,7 +5,7 @@ define(['React', 'Backbone'], function(React, Backbone) {
 
   expose.BrandedBanner = React.createClass({
     propTypes: {
-      registerUser: React.PropTypes.func.isRequired,
+      registerUser: React.PropTypes.func.isRequired
     },
 
     render: function() {
@@ -40,24 +40,20 @@ define(['React', 'Backbone'], function(React, Backbone) {
         'spacing': true
       });
 
-      var titles;
-      if(!this.props.isSmallScreen) {
-        titles = (
-            <div>
-              <div className="title">{ localization.docsignview.titleText }</div>
-              <div className="subtitle">{ localization.docsignview.subtitleText }</div>
-            </div>
-        );
-      } else {
-        titles = (
-            <div className="title">{ localization.docsignview.subtitleText }</div>
-        );
-      }
-
       return (
           <div>
             <div className={mainContainerClasses}>
-              { titles }
+
+	      { /*if*/ !this.props.isSmallScreen &&
+	      <div>
+		<div className="title">{ localization.docsignview.titleText }</div>
+		<div className="subtitle">{ localization.docsignview.subtitleText }</div>
+	      </div>
+	      }
+	      { /*else*/ this.props.isSmallScreen &&
+	      <div className="title">{ localization.docsignview.subtitleText }</div>
+	      }
+
               <div class="clearfix"></div>
               <div class="acceptbutton">
                 <label className="label">{ localization.docsignview.acceptTOSpart1 }<a className="terms" target='_blank' class='clickable' href='/sv/terms'>{ localization.docsignview.acceptTOSpart2 }</a></label>

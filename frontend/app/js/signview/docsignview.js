@@ -120,7 +120,6 @@ var DocumentSignViewModel = Backbone.Model.extend({
   },
 
   createAccountSection: function() {
-
     if (this.createAccountSectionEle == undefined) {
       this.createAccountSectionEle = $('<div />');
       CreateAccountSection.render(this.document(), this.createAccountSectionEle);

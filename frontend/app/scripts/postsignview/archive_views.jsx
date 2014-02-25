@@ -50,28 +50,6 @@ define(['React', 'Backbone', 'postsignview/user_service', 'common/language_servi
     },
     
     render: function() {
-      var promotion;
-      if(!BrowserInfo.isPadDevice() && !BrowserInfo.isSmallScreen()) {
-        promotion = (
-            <div className="new-post-sign-view-user">
-              <div className="inner-container">
-                <img src="/img/arrow-grey.png" className="grey-arrow" />
-                <h2>{ localization.archive.ftue.title }</h2>
-                <div className="subtitle">
-                  <h5>{ localization.archive.ftue.subtitleInJustAFewMinutes }</h5>
-                  <h5 className="great-thing">{ localization.archive.ftue.subtitleReviewed }</h5>
-                  <h5 className="great-thing">{ localization.archive.ftue.subtitleReturned }</h5>
-                  <h5 className="great-thing">{ localization.archive.ftue.subtitleSaved }</h5>
-                  <h5>{ localization.archive.ftue.subtitleIsntThisHowSimple }</h5>
-                </div>
-                <a onClick={ this.sendExampleDocument } className="design-view-document-buttons-upload-button green button button-large button-green button-round">
-                  <div className="label">{ localization.archive.ftue.button }</div>
-                </a>
-              </div>
-            </div>
-        );
-      }
-            
       return (
           <div className="wrapper-position-footer">
             <header className="site ">
@@ -134,7 +112,26 @@ define(['React', 'Backbone', 'postsignview/user_service', 'common/language_servi
                       </div>
                     </div>
                   </div>
-                  { promotion }
+
+		  {/*if*/ !BrowserInfo.isPadDevice() && !BrowserInfo.isSmallScreen() &&
+		  <div className="new-post-sign-view-user">
+		    <div className="inner-container">
+		      <img src="/img/arrow-grey.png" className="grey-arrow" />
+		      <h2>{ localization.archive.ftue.title }</h2>
+		      <div className="subtitle">
+			<h5>{ localization.archive.ftue.subtitleInJustAFewMinutes }</h5>
+			<h5 className="great-thing">{ localization.archive.ftue.subtitleReviewed }</h5>
+			<h5 className="great-thing">{ localization.archive.ftue.subtitleReturned }</h5>
+			<h5 className="great-thing">{ localization.archive.ftue.subtitleSaved }</h5>
+			<h5>{ localization.archive.ftue.subtitleIsntThisHowSimple }</h5>
+		      </div>
+		      <a onClick={ this.sendExampleDocument } className="design-view-document-buttons-upload-button green button button-large button-green button-round">
+			<div className="label">{ localization.archive.ftue.button }</div>
+		      </a>
+		    </div>
+		  </div>
+		  }
+
                 </div>
               </div>
             </div>
