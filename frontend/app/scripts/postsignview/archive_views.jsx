@@ -74,12 +74,10 @@ define(['React', 'Backbone', 'postsignview/user_service', 'common/language_servi
                           <table>
                             <thead>
                               <tr>
-                                <th><div className="checkbox"></div></th>
-                                <th><span className="sortable">{ localization.archive.documents.columns.status }</span></th>
+                                <th className="checkbox-width"><div className="checkbox"></div></th>
+                                <th className="status-width"><span className="sortable status">{ localization.archive.documents.columns.status }</span></th>
                                 <th><span className="sortable">{ localization.archive.documents.columns.time }</span></th>
-                                <th><span></span></th>
                                 <th><span className="sortable">{ localization.archive.documents.columns.sender }</span></th>
-                                <th><span></span></th>
                                 <th><span className="sortable">{ localization.archive.documents.columns.party }</span></th>
                                 <th><span>{ localization.archive.documents.columns.title }</span></th>
                               </tr>
@@ -93,9 +91,8 @@ define(['React', 'Backbone', 'postsignview/user_service', 'common/language_servi
                                   <div className="icon status signed"></div>
                                 </td>
                                 <td className="row"><span>{ this.props.document.documentTime() }</span></td>
-                                <td className="row"></td>
                                 <td className="row"><a>{ this.props.document.author() }</a></td>
-                                <td className="row"></td>
+
                                 <td className="row"><a className="expand">{ this.props.document.party() }</a></td>
                                 <td className="row"><a className="s-archive-document-title">{ this.props.document.title() }</a></td>
                               </tr>
