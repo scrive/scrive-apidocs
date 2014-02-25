@@ -173,6 +173,7 @@ staticRoutes = choice
      , userAPI
      , padApplicationAPI
      , oauth
+     , dir "r" $ remainingPath GET $ serveFile (asContentType "text/html") "frontend/app/index.html"
      , remainingPath GET $ allowHttp $ serveDirectory DisableBrowsing [] "frontend/app"
      , remainingPath GET $ allowHttp $ serveDirectory DisableBrowsing [] "frontend/dist"
 

@@ -64,16 +64,6 @@ module.exports = function (grunt) {
           }
         },
         proxies: [
-          // This gives access to this backbone router under /r
-          {
-            context: '/r',
-            host: '127.0.0.1',
-            port: 9001,
-            https: false,
-            rewrite: {
-              '^/r': ''
-            }
-          },
 	  // Serve most of the static files with grunt (since it's faster atleast on mac)
           {
             context: ['/js', '/libs', '/compiled_jsx', '/img', '/css', '/bower_components'],
