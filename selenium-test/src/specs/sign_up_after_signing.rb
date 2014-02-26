@@ -36,7 +36,7 @@ describe "sign up after signing a document" do
     @h.wait_until { @h.driver.find_element :css => "a.button.button-large" }.click
 
     puts "should be logged in and able to upload a document"
-    @h.wait_until { @h.driver.find_element :css => "a.js-logout" }
+    @h.wait_until { @h.driver.find_element :css => ".psv-archive" }
     @h.driver.get(@h.ctx.createKontrakcjaURL "/d")
     @h.wait_until { @h.driver.find_element :css => ".archive" }
 
@@ -71,7 +71,7 @@ describe "sign up after signing a document" do
     @h.wait_until { @h.driver.find_element :css => "a.js-logout" }
     @h.driver.get(@h.ctx.createKontrakcjaURL "/d")
     @h.wait_until { @h.driver.find_element :css => ".archive" }
-    
+
     @h.loginhelper.logout
 
     puts "make sure we can login and out as our new user"
