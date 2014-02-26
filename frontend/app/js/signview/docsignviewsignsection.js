@@ -300,7 +300,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     }
 
     self.confirmation = new Confirmation({
-      cssClass: 'grey',
+      cssClass: 'grey sign-confirmation-modal',
       title: title,
       acceptButton: signatory.elegAuthentication() ? this.createElegButtonElems() : this.createSignButtonElems(),
       rejectText: localization.cancel,
@@ -312,19 +312,19 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       content: this.createContentElems
     });
 
+    // TODO rewrite me, but not on staging
     // Re-adjust the signing modal for small screen devices.
     if (BrowserInfo.isSmallScreen()) {
-      $('.modal-container').addClass('small-device');
+      var signModal = $('.sign-confirmation-modal .modal-container');
+      var modalHeader = signModal.find('.modal-header');
+      var modalBody = signModal.find('.modal-body');
+      var modalFooter = signModal.find('.modal-footer');
       // Remove the modal header but keep the close button
-      var modalHeader = $('.modal-container .modal-header');
       modalHeader.remove();
-
-      // Set up close button
       var close = $('<a class="small-device-go-back-button">' + localization.process.cancel + '</a>');
       close.click(function() { self.confirmation.close(); });
 
-      // Remove the modal footer but keep the button
-      var modalFooter = $('.modal-container .modal-footer');
+      // Remove the modal footer but keep the button (regular or mobile bankid)
       var signButton = modalFooter.find('.button.button-green').detach();
       if (signatory.elegAuthentication()) {
         signButton = modalFooter.find('.mbi').detach();
@@ -332,7 +332,11 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       }
       modalFooter.remove();
 
-      $('.modal-container .modal-body .modal-content').css('border-bottom', '0px');
+
+      // Styling
+      signModal.addClass('small-device');
+      
+      signModal.find('.modal-content').css('border-bottom', '0px');
 
       signButton.css({
         'font-size': '80px',
@@ -352,12 +356,11 @@ window.DocumentSignConfirmation = Backbone.View.extend({
         'margin-top': '10px'
       });
 
-      $('.modal-container .modal-body').css({'padding-bottom': '50px'});
+      modalBody.css({'padding-bottom': '50px'});
+      signModal.css({'border-bottom': '0px'});
 
-      $('.modal-container').css({'border-bottom': '0px'});
-
-      $('.modal-container .modal-body').append(signButton);
-      $('.modal-container .modal-body').append(close);
+      modalBody.append(signButton);
+      modalBody.append(close);
     }
   }
 });

@@ -7,6 +7,8 @@
 
 (function(window, document, undefined){
 
+var html2canvasNodeAttribute = "data-html2canvas-node";
+
 window.html2canvas = function(nodeList, options) {
     options = options || {};
     if (options.logging) {
@@ -17,7 +19,9 @@ window.html2canvas = function(nodeList, options) {
     options.async = typeof(options.async) === "undefined" ? true : options.async;
     options.removeContainer = typeof(options.removeContainer) === "undefined" ? true : options.removeContainer;
 
-    return renderDocument(document, options, window.innerWidth, window.innerHeight).then(function(canvas) {
+    var node = ((nodeList === undefined) ? [document.documentElement] : ((nodeList.length) ? nodeList : [nodeList]))[0];
+    node.setAttribute(html2canvasNodeAttribute, "true");
+    return renderDocument(node.ownerDocument, options, window.innerWidth, window.innerHeight).then(function(canvas) {
         if (typeof(options.onrendered) === "function") {
             log("options.onrendered is deprecated, html2canvas returns a Promise containing the canvas");
             options.onrendered(canvas);
@@ -29,9 +33,10 @@ window.html2canvas = function(nodeList, options) {
 function renderDocument(document, options, windowWidth, windowHeight) {
     return createWindowClone(document, windowWidth, windowHeight, options).then(function(container) {
         log("Document cloned");
+        var selector = "[" + html2canvasNodeAttribute + "='true']";
+        document.querySelector(selector).removeAttribute(html2canvasNodeAttribute);
         var clonedWindow = container.contentWindow;
-        //var element = (nodeList === undefined) ? document.body : nodeList[0];
-        var node = clonedWindow.document.documentElement;
+        var node = clonedWindow.document.querySelector(selector);
         var support = new Support();
         var imageLoader = new ImageLoader(options, support);
         var bounds = NodeParser.prototype.getBounds(node);
@@ -75,6 +80,7 @@ function createWindowClone(ownerDocument, width, height, options) {
 
     container.style.visibility = "hidden";
     container.style.position = "absolute";
+    container.style.left = container.style.top = "-10000px";
     container.width = width;
     container.height = height;
     container.scrolling = "no"; // ios won't scroll without it
@@ -360,6 +366,18 @@ NodeContainer.prototype.css = function(attribute) {
     return this.styles[attribute] || (this.styles[attribute] = this.computedStyles[attribute]);
 };
 
+NodeContainer.prototype.prefixedCss = function(attribute) {
+    var prefixes = ["webkit", "moz", "ms", "o"];
+    var value = this.css(attribute);
+    if (value === undefined) {
+        prefixes.some(function(prefix) {
+            value = this.css(prefix + attribute.substr(0, 1).toUpperCase() + attribute.substr(1));
+            return value !== undefined;
+        }, this);
+    }
+    return value === undefined ? null : value;
+};
+
 NodeContainer.prototype.computedStyle = function(type) {
     return this.node.ownerDocument.defaultView.getComputedStyle(this.node, type);
 };
@@ -479,8 +497,34 @@ NodeContainer.prototype.parseTextShadows = function() {
     return results;
 };
 
+NodeContainer.prototype.parseTransform = function() {
+    var transformRegExp = /(matrix)\((.+)\)/;
+    var transform = this.prefixedCss("transform");
+    if (transform !== null && transform !== "none") {
+        var matrix = parseMatrix(transform.match(transformRegExp));
+        if (matrix) {
+            return {
+                origin: this.prefixedCss("transformOrigin"),
+                matrix: matrix
+            };
+        }
+    }
+    return {
+        origin: [0, 0],
+        matrix: [1, 0, 0, 1, 0, 0]
+    };
+};
+
 NodeContainer.prototype.TEXT_SHADOW_PROPERTY = /((rgba|rgb)\([^\)]+\)(\s-?\d+px){0,})/g;
 NodeContainer.prototype.TEXT_SHADOW_VALUES = /(-?\d+px)|(#.+)|(rgb\(.+\))|(rgba\(.+\))/g;
+
+function parseMatrix(match) {
+    if (match && match[1] === "matrix") {
+        return match[2].split(",").map(function(s) {
+            return parseFloat(s.trim());
+        });
+    }
+}
 
 function isPercentage(value) {
     return value.toString().indexOf("%") !== -1;
@@ -719,7 +763,7 @@ NodeParser.prototype.newStackingContext = function(container, hasOwnStacking) {
 
 NodeParser.prototype.createStackingContexts = function() {
     this.nodes.forEach(function(container) {
-        if (isElement(container) && (this.isRootElement(container) || hasOpacity(container) || isPositionedForStacking(container) || this.isBodyWithTransparentRoot(container))) {
+        if (isElement(container) && (this.isRootElement(container) || hasOpacity(container) || isPositionedForStacking(container) || this.isBodyWithTransparentRoot(container) || hasTransform(container))) {
             this.newStackingContext(container, true);
         } else if (isElement(container) && ((isPositioned(container) && zIndex0(container)) || isInlineBlock(container) || isFloating(container))) {
             this.newStackingContext(container, false);
@@ -734,7 +778,7 @@ NodeParser.prototype.isBodyWithTransparentRoot = function(container) {
 };
 
 NodeParser.prototype.isRootElement = function(container) {
-    return container.node.nodeName === "HTML";
+    return container.parent === null;
 };
 
 NodeParser.prototype.sortStackingContexts = function(stack) {
@@ -837,6 +881,10 @@ NodeParser.prototype.paint = function(container) {
 NodeParser.prototype.paintNode = function(container) {
     if (isStackingContext(container)) {
         this.renderer.setOpacity(container.opacity);
+        var transform = container.parseTransform();
+        if (transform) {
+            this.renderer.setTransform(transform);
+        }
     }
 
     var bounds = this.parseBounds(container);
@@ -1206,6 +1254,11 @@ function hasOpacity(container) {
     return container.css("opacity") < 1;
 }
 
+function hasTransform(container) {
+    var transform = container.prefixedCss("transform");
+    return transform !== null && transform !== "none";
+}
+
 function bind(callback, context) {
     return function() {
         return callback.apply(context, arguments);
@@ -1459,6 +1512,12 @@ CanvasRenderer.prototype.clearShadow = function() {
 
 CanvasRenderer.prototype.setOpacity = function(opacity) {
     this.ctx.globalAlpha = opacity;
+};
+
+CanvasRenderer.prototype.setTransform = function(transform) {
+    this.ctx.translate(transform.origin[0], transform.origin[1]);
+    this.ctx.setTransform.apply(this.ctx, transform.matrix);
+    this.ctx.translate(transform.origin[0], transform.origin[1]);
 };
 
 CanvasRenderer.prototype.setVariable = function(property, value) {

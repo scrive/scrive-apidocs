@@ -304,8 +304,13 @@ var TabsView = Backbone.View.extend({
         }
         var toHide = visible.not(newvisible);
         var toShow = newvisible.not(visible);
-        var hideMethod = model.slideEffect() ? function(c) { toHide.slideUp(200,c);} : function(c) { toHide.hide(0,c);};
-        var showMethod = model.slideEffect() ? function(c) { toShow.slideDown(200,c);} : function(c) { toShow.show(0,c);};
+        var forceRedraw = function(el, c) { el.hide().show(0, c); };
+        var hideMethod = model.slideEffect() ? function(c) { toHide.slideUp(200,c); } : function(c) { toHide.hide(0,c);};
+        var showMethod = model.slideEffect() ? function(c) { toShow.slideDown(200, function() { 
+          /* Chrome 33 on certain platforms (JN's mac, JS's linux) partially renders the participants
+           * after sliding down the tab content and requires a redraw of the tab to fully render the participants. */
+          forceRedraw(toShow, c);
+        }); } : function(c) { toShow.show(0,c);};
 
         if (toHide.size() != 0 || toShow.size() != 0) {
 
