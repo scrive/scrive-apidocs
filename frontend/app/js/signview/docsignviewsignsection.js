@@ -35,7 +35,6 @@ window.DocumentSignConfirmation = Backbone.View.extend({
   },
 
   /**
-   *  @description
    *  Block browser from reloading page
    */
   startBlockingReload : function() {
@@ -43,7 +42,6 @@ window.DocumentSignConfirmation = Backbone.View.extend({
   },
 
   /**
-   *  @description
    *  Stop blocking browser from reloading page
    */
   stopBlockingReload : function() {
@@ -147,7 +145,6 @@ window.DocumentSignConfirmation = Backbone.View.extend({
 
 
   /**
-   *  @description
    *  Show different pages when a document is signed,
    *  based on a few conditions,
    */
@@ -163,7 +160,6 @@ window.DocumentSignConfirmation = Backbone.View.extend({
   },
 
   /**
-   *  @description
    *  Start checking with an interval, if we can show postsignview
    */
   onSignedDocument: function(newDocument, oldDocument) {
@@ -335,7 +331,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
 
       // Styling
       signModal.addClass('small-device');
-      
+
       signModal.find('.modal-content').css('border-bottom', '0px');
 
       signButton.css({

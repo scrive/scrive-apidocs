@@ -1,8 +1,7 @@
 define(function() {
 
   /**
-   *  @description
-   *  Reading and settings browser cookies 
+   *  Reading and settings browser cookies
    */
   window.Cookies = {
     buildCookieMap : function () {

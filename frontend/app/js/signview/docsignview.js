@@ -107,7 +107,6 @@ var DocumentSignViewModel = Backbone.Model.extend({
   },
 
   /**
-   *  @description
    *  Is this the first time current user sign a document with Scrive?
    */
   hasCreateAccountSection: function() {
