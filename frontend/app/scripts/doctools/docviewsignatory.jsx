@@ -367,9 +367,11 @@ var DocumentViewSignatoryView = React.createClass({
           <div className="inner spacing" >
             <div className="details" >
 
-               <div className="company" style={textstyle}>
-                 {signatory.company()}
-               </div>
+               {/*if*/ signatory.company() &&
+                 <div className="company field" style={textstyle}>
+                   {localization.company}: {signatory.company()}
+                 </div>
+               }
 
                {/*if*/ signatory.email() &&
                  <div className="email field" style={textstyle}  display={false} title={signatory.email()}>
@@ -379,7 +381,7 @@ var DocumentViewSignatoryView = React.createClass({
 
                {/*if*/ signatory.mobile() &&
                 <div className="mobile field" style={textstyle} title={signatory.mobile()}>
-                  {signatory.mobile()}
+                   {localization.phone}: {signatory.mobile()}
                 </div>
                }
 
@@ -393,7 +395,7 @@ var DocumentViewSignatoryView = React.createClass({
             </div>
           </div>
 
-          <div className="statusbox" >
+          <div className={"statusbox " + (model.hasAnyOptions() ? "" : "last")} >
             <div className="spacing butt" >
               <span className={'icon status '+ model.status()}></span>
               <span className={'status statustext ' + model.status()} style={textstyle}>
