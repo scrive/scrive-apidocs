@@ -326,18 +326,18 @@ module.exports = function (grunt) {
   grunt.registerTask('compileJsxWatch', function (target) {
     return grunt.task.run([
       // compiled_jsx directory need to exist for it to start watch, i.e. run compileJsx first
-      'shell:compileJsx', 
+      'shell:compileJsx',
       'shell:compileJsxWatch',
     ]);
   });
 
   /**
-   *  Get a production looking enviroment, i.e. 
+   *  Get a production looking enviroment, i.e.
    *  serve files compiled files from dist/
-   *  
+   *
    *  @note
    *  Expects 'grunt build' to have been run.
-   *  
+   *
    */
   grunt.registerTask('server:dist_run', function (target) {
     grunt.task.run([
@@ -450,5 +450,5 @@ module.exports = function (grunt) {
     'gjslint',
     'build',
     'test'
-  ]);  
+  ]);
 };

@@ -98,7 +98,6 @@ standardHeaderContents=
         <link rel="stylesheet" href="/less/regular-css-compiled.css" />
         <script src="/compiled_jsx/requirejs_config.js"></script>
         <script src="/bower_components/requirejs/require.js"></script>
-        <script src="http://localhost:35729/livereload.js?snipver=1"></script>
         $endif$
 
         $analyticsLoaderKontrakcja()$

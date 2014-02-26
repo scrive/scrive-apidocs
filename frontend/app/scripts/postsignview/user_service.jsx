@@ -1,4 +1,4 @@
-define(['Q', 'postsignview/analytics_service', 'common/utilities_service'], function(Q, AnalyticsService, UtilitiesService) {
+define(['Q', 'postsignview/analytics_service'], function(Q, AnalyticsService) {
   var expose = {};
 
   /**
