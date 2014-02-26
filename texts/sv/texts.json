@@ -94,7 +94,7 @@
 "_apiDashboardPersonalToken":"Personligt åtkomstbevis",
 "_apiDashboardPersonalTokenCreate":"Skapa",
 "_apiDashboardPrivilige":"Rättigheter",
-"_apiDashboardpersonalTokenDescription":"Använd detta åtkomstbevis för att få tillgång till ditt eget Scrive konto genom API:et utan OAuthhandskakning.",
+"_apiDashboardpersonalTokenDescription":"Använd detta åtkomstbevis för att få tillgång till ditt eget Scrive-konto genom API:et utan OAuth-handskakning.",
 "_apiOauthReveal":"Visa",
 "_apiSettings":"API-inställningar",
 "_april":"april",

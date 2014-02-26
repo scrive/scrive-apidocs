@@ -255,6 +255,7 @@ Executable kontrakcja-server
   Build-depends: regex-compat == 0.95.1
   Build-depends: regex-posix == 0.95.2
   Build-depends: regex-tdfa == 1.1.8
+  Build-depends: resource-pool == 0.2.1.1
   Build-depends: securemem == 0.1.3
   Build-depends: semigroups == 0.11
   Build-depends: sendfile == 0.7.9
