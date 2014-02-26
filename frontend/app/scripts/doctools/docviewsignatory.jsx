@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
 
 
-define(['React','button','Backbone', 'legacy_code'], function(React,NewButton) {
+define(['React','common/button','common/backbone_mixim','Backbone', 'legacy_code'], function(React,NewButton,BackboneMixin) {
 
 var expose = {};
 
@@ -12,6 +12,8 @@ var DocumentViewSignatoryModel = Backbone.Model.extend({
     textstyle : {}
   },
   initialize: function (args) {
+    var self = this;
+    this.listenTo(args.signatory, "change", function() {self.trigger("change");});
   },
   triggerOnAction : function() {
     if (this.get("onAction"))
@@ -136,6 +138,10 @@ var DocumentViewSignatoryModel = Backbone.Model.extend({
 
 
 var DocumentViewSignatoryForListView = React.createClass({
+    mixins: [BackboneMixin.BackboneMixin],
+    getBackboneModels : function() {
+      return [this.props.model];
+    },
     propTypes: {
       model: React.PropTypes.object
     },
@@ -173,6 +179,10 @@ var DocumentViewSignatoryForListView = React.createClass({
 
 
 var DocumentViewSignatoryView = React.createClass({
+    mixins: [BackboneMixin.BackboneMixin],
+    getBackboneModels : function() {
+      return [this.props.model];
+    },
     propTypes: {
       model: React.PropTypes.object
     },

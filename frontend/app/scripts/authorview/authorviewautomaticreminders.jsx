@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React','button', 'Backbone', 'legacy_code'], function(React, NewButton) {
+define(['React','common/button', 'Backbone', 'legacy_code'], function(React, NewButton) {
 
 var expose = {};
 
