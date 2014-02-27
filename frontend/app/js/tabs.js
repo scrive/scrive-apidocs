@@ -306,9 +306,9 @@ var TabsView = Backbone.View.extend({
         var toShow = newvisible.not(visible);
         var forceRedraw = function(el, c) {
           var el = el[0];
-          el.style.cssText += ';-webkit-transform:rotateZ(0deg)'
+          el.style.cssText += ';-webkit-transform:rotateZ(0deg)';
           el.offsetHeight;
-          el.style.cssText += ';-webkit-transform:none'
+          el.style.cssText += ';-webkit-transform:none';
           c();
         };
         var hideMethod = model.slideEffect() ? function(c) { toHide.slideUp(200,c); } : function(c) { toHide.hide(0,c);};
