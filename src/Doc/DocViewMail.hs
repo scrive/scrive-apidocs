@@ -109,7 +109,8 @@ remindMailSigned :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
 remindMailSigned _forMail customMessage document signlink ispreview = do
     sheader <- remindMailSignedStandardHeader document signlink
     documentMailWithDocLang document "remindMailSigned" $ do
-            F.valueM "header" $ makeEditable "customtext" $ fromMaybe sheader customMessage
+            F.value "header" sheader
+            F.value "custommessage" customMessage
             F.value "ispreview" ispreview
 
 
