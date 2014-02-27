@@ -70,7 +70,7 @@ mailRejectMailContentHeader=
 $if(customMessage)$
   <br/>
   <br/>
-  $_mailInvitationCustomInvitationHeader()$:
+  $_mailRejectionCustomInvitationHeader()$:
   <br/>
   <i>$customMessage:noescape()$</i>
 $else$
@@ -141,11 +141,21 @@ remindMailSigned=
     $_remindMailSignedTitle()$
     $nicemail(
         mailheader= _remindMailSignedTitle();
-        mailp1 = remindMailSignedP()
+        mailp1 = remindMailSignedP1();
+        mailp2 = remindMailSignedP2()
     )$
 ###
-remindMailSignedP=
+remindMailSignedP1=
 $header:noescape()$
+###
+remindMailSignedP2=
+$if(custommessage)$
+  $_mailInvitationCustomInvitationHeader()$:
+  <br/>
+  <i>$custommessage:noescape()$</i>
+$else$
+      <div class="editable" name="custommessage"></div>
+$endif$
 ####
 remindMailSignedStandardHeader=
 <br/>
@@ -162,17 +172,18 @@ remindMailNotSignedContract=
 
     $nicemail(
         mailheader=_remindMailNotSignedTitleContract();
-        mailp1=remindMailNotSignedContractP1();
+        mailp1=_remindMailNotSignedContractBody();
+        mailp2=remindMailNotSignedContractP2();
         footer= legalparagraph()
     )$
 #####
-remindMailNotSignedContractP1=
+remindMailNotSignedContractP2=
 $if(custommessage)$
   $_mailInvitationCustomInvitationHeader()$:
   <br/>
   <i>$custommessage:noescape()$</i>
 $else$
-      <div class="editable" name="custommessage">$_remindMailNotSignedContractBody()$</div>
+      <div class="editable" name="custommessage"></div>
 $endif$
 <br/>
 <br/>
