@@ -25,6 +25,7 @@ var require = {
     eventie: '../bower_components/eventie',
     eventEmitter: '../bower_components/eventEmitter',
     imagesLoaded: '../bower_components/imagesloaded/imagesloaded',
+    StateMachine: '../bower_components/javascript-state-machine/state-machine',
     tinyMCE: '../libs/tiny_mce/tinymce.min',
     tinyMCE_theme: '../libs/tiny_mce/themes/modern/theme.min',
     tinyMCE_noneeditable: '../libs/tiny_mce/plugins/noneditable/plugin.min',
