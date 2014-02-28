@@ -94,7 +94,6 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
       size: "big",
       shape: "rounded",
       text: localization.process.prolongbuttontext,
-      oneClick : true,
       onClick: function() {
         mixpanel.track('Click prolong button');
         new ProlongModal({authorview : model.authorview()});
