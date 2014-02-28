@@ -145,7 +145,7 @@ class DocHelper
 
   def checkOpened
     puts "make sure it's got the opened icon displayed"
-    @h.wait_until { @driver.find_element :css => "div.opened" }
+    @h.wait_until { @driver.find_element :css => ".opened" }
   end
 
   def uploadAttachment(pdf_path)
