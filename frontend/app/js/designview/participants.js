@@ -1130,8 +1130,7 @@ define(['Backbone', 'legacy_code'], function() {
                         duration: 250,
                         easing: "linear",
                         complete: function() {
-                            view.innerDiv.css({overflow:'visible',
-                                               'z-index': 500});
+                            view.innerDiv.css({overflow:'visible'});
 
                             view.viewmodel.trigger('visibility:participantopen');
                             $(window).resize();
@@ -1146,8 +1145,7 @@ define(['Backbone', 'legacy_code'], function() {
                 } else {
                     // don't animate, just set them
                     view.innerDiv.css({height: totalHeight,
-                                       overflow:'visible',
-                                       'z-index': 500});
+                                       overflow:'visible'});
                     view.active = false;
                 }
             } else {
@@ -1162,8 +1160,7 @@ define(['Backbone', 'legacy_code'], function() {
             if(!view.active) {
                 view.active = true;
                 if(view.opened) {
-                    view.innerDiv.css({'overflow': 'hidden',
-                                       'z-index': 1});
+                    view.innerDiv.css({'overflow': 'hidden'});
                     view.innerDiv.animate({height:46}, {
                         duration: 250,
                         easing: "linear",
@@ -1179,8 +1176,7 @@ define(['Backbone', 'legacy_code'], function() {
                     view.opened = false;
                 } else {
                     view.innerDiv.css({height:46,
-                                       overflow:'hidden',
-                                       'z-index': 1});
+                                       overflow:'hidden'});
                     view.active = false;
                 }
             } else {
