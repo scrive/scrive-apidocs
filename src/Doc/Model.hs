@@ -1827,7 +1827,8 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m RestartDocumen
                           }
       return doc {documentstatus = Preparation,
                   documenttimeouttime = Nothing,
-                  documentsignatorylinks = newSignLinks
+                  documentsignatorylinks = newSignLinks,
+                  documentapicallbackurl = Nothing
                  }
 
 data RestoreArchivedDocument = RestoreArchivedDocument User Actor

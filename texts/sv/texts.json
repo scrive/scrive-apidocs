@@ -617,7 +617,7 @@
 "_modalAddCompanyAccountTitle":"Nytt konto",
 "_modalDoYouWantToBeCompanyAccountBody":"Vill du konvertera ditt privata Scrive konto till ett $companyname$ Scrive-konto? När du konverterar kommer ägarskapet av kontot och dess samtliga dokument att överföras till $companyname$.",
 "_modalDoYouWantToBeCompanyAccountFooterAccept":"Acceptera",
-"_modalDoYouWantToBeCompanyAccountHeader":"Vänligen bekräfta",
+"_modalDoYouWantToBeCompanyAccountHeader":"Bekräfta överföring",
 "_modalDoYouWantToChangeEmailBody":"Vänligen fyll i ditt lösenord för att fullfölja ändringen av både användarnamn och e-post till $newemail$.",
 "_modalDoYouWantToChangeEmailHeader":"Bekräfta ändring av användarnamn",
 "_modalNewPasswordViewFooterSave":"Spara",
