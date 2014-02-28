@@ -24,7 +24,7 @@ describe "Sign a document and then cancel it" do
     @h.dochelper.signAndSend
     puts "After sign and send"
     (@h.wait_until { @h.driver.find_element :css => "a.s-withdraw-button" }).click
-    @h.click ".s-withdraw-confirmation .modal-footer a.float-right"
+    (@h.wait_until { @h.driver.find_element :css => ".s-withdraw-confirmation .modal-footer a.float-right" }).click
     @h.wait_until { @h.driver.find_element :css => ".icon.status.cancelled" }
 
     @h.loginhelper.logout
