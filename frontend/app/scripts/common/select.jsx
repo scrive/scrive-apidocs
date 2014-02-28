@@ -51,7 +51,7 @@ var expose = {};
 var SelectOptionModel = Backbone.Model.extend({
   defaults : {
       onSelect : function(){return false;},
-      style : "",
+      style : {},
       disabled : false
   },
   name : function(){
@@ -84,7 +84,7 @@ var SelectModel = Backbone.Model.extend({
       border: "1px solid #ddd",
       textWidth : "160px",
       optionsWidth : "200px",
-      style : "",
+      style : {},
       cssClass : ""
 
   },
@@ -101,6 +101,9 @@ var SelectModel = Backbone.Model.extend({
   },
   options: function(){
       return this.get("options");
+  },
+  activeOptions : function() {
+      return _.filter(this.options(),function(o) {return !o.disabled();});
   },
   name : function(){
        return this.get("name");
@@ -161,151 +164,22 @@ var SelectModel = Backbone.Model.extend({
   }
 });
 
-//View for individual options
-var SelectOptionView = Backbone.View.extend({
-    initialize: function (args) {
-        _.bindAll(this, 'render');
-        this.render();
-    },
-    render: function () {
-        var model = this.model;
-        var a = $("<span/>").text(model.name()).attr("style", model.style());
-        $(this.el).append(a).click(function() {model.selected(); return false;});
-    }
-
-});
-
-/*
-var SelectView = Backbone.View.extend({
-    initialize: function (args) {
-        var self = this;
-        _.bindAll(this, 'render');
-        this.model.bind('change', this.render);
-        $(this.el).mouseout(function() {
-                 setTimeout(function() {self.closeIfNeeded();}, 100);
-              });
-        $(this.el).mouseenter(function() {self.enterdate = new Date().getTime();});
-        this.render();
-    },
-    //Close if we are expanded, we are not hovered and some time has passed since mouse left.
-    closeIfNeeded : function() {
-        if ( this.dead != true
-            && this.model.expanded()
-            && new Date().getTime() - this.enterdate > 50
-            && (this.expButton == undefined || $(":hover", this.expButton).size() == 0)
-            && (!BrowserInfo.doesNotSupportHoverPseudoclassSelector() && !BrowserInfo.isPadDevice())
-           )
-          this.model.toggleExpand();
-    },
-
-    // Main button - no options
-    button : function() {
-        var model = this.model;
-        var button = $("<div className='select-button' />");
-        button.append("<div className='select-button-left' />");
-        button.append($("<div className='select-button-label' />")
-                          .attr("style", model.style())
-                          .text(model.name())
-                          .css("width",model.textWidth())
-                     );
-        button.append("<div className='select-button-right' />");
-
-        button.click(function(){
-          model.toggleExpand();
-          return false;
-        });
-
-        if (this.model.hasRemoveOption())
-            button.append($("<div className='closer'/>").click(function() { model.onRemove(); model.set({"expanded" : false}); }));
-
-        return button;
-    },
-    render: function () {
-        var self = this;
-        var model = this.model;
-
-        //If we are rerendering we remove expanded part.
-        if (this.expButton != undefined) $(this.expButton).remove();
-
-        if (!model.expanded()) {
-          // We are rerendering button if it is not expanded. We start with cleaning old buttons
-          $(this.el).empty()
-                    .addClass(this.model.cssClass())
-                    .attr("style",this.model.style())
-                    .css('color',this.model.color())
-                    .css("border", this.model.border())
-                    .append(this.button());
-        }
-        else
-            {
-           // We are rerendering button with options above current element
-
-              // Prepare box with options
-              var options = $("<ul className='select-opts'/>")
-                                .addClass(this.model.expandSide())
-                                .css("border", this.model.border())
-                                .css("min-width", this.model.optionsWidth());
-
-              _.each(model.options(),function(e){
-                    if (!e.disabled())
-                      options.append($(new SelectOptionView({model : e, el : $("<li/>")}).el));
-              });
-
-              // Prepare area simillar to $(this.el) with extra styles, copy of button and options appended, positioned over current el
-              this.expButton = $("<div className='select select-exp'/>")
-                                  .append(this.button())
-                                  .append(options)
-                                  .addClass(this.model.cssClass())
-                                  .attr("style",this.model.style())
-                                  .css('color',this.model.color())
-                                  .css("border", this.model.border())
-                                  .css('left',$(this.el).offset().left + "px")
-                                  .css('top',$(this.el).offset().top + "px")
-                                  .mouseout(function() {
-                                      setTimeout(function() {self.closeIfNeeded();}, 100);
-                                  })
-                                  .mouseenter(function() {
-                                      self.enterdate = new Date().getTime();
-                                  });
-
-
-              // Adding expanded button directly to page
-              $('body').append(this.expButton);
-            }
-        return this;
-    }
-});
-
-/*
-// Interface
-var Select = function(args) {
-          // Build model
-          var model = new SelectModel(args);
-
-          // Build view
-          var div = $("<div className={'select select select-exp' + model.cssClass()}/>");
-          var view = new SelectView({model : model, el : $("<div className='select'/>")});
-
-          // Export interface
-          this.setName = function(name) { model.setName(name);};
-          this.open = function(name) { model.expand();};
-          this.el = function() {return $(view.el);};
-
-};
-*/
-
-
+/* View for expanded box*/
 var SelectExpandedView = React.createClass({
     handleRemove : function() {
       var model = this.props.model;
       model.onRemove();
       model.set({"expanded" : false});
     },
+    handleExpand : function() {
+      var model = this.props.model;
+      model.toggleExpand();
+    },
     render: function() {
       var model = this.props.model;
       return (
-        <div className={'select select-exp' + model.cssClass()}  style={_.extend({color: model.color(),border : model.border()},model.style())}>
-          <div className='select-button'>
+        <div className={'select select-exp ' + model.cssClass()}  style={_.extend({color: model.color(),border : model.border()},model.style())}>
+          <div className='select-button' onClick={this.handleExpand}>
             <div className='select-button-left'/>
             <div className='select-button-label' style={_.extend({width: model.textWidth()},model.style())}>
               {model.name()}
@@ -315,10 +189,26 @@ var SelectExpandedView = React.createClass({
                 <div className='closer' onClick={this.handleRemove}/>
               }
           </div>
+
+          <ul className={'select-opts '+ model.expandSide()} style={{border:model.border(), minWidth:model.optionsWidth()}}>
+            {_.map(model.activeOptions(),function(o,i) {
+              return (
+                <li onClick={function() {o.selected()}}>
+                  <span style={model.style()}>
+                    {o.name()}
+                  </span>
+                </li>
+              )
+            })
+            }
+          </ul>
         </div>
       )
     }
 });
+
+
+/* View for not expanded box. On expand original box will be placed above it (z-index)*/
 
 var SelectView = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
@@ -326,7 +216,8 @@ var SelectView = React.createClass({
       return [this.props.model];
     },
     getInitialState: function() {
-      var div = $("<div/>");
+      var self = this;
+      var div = $("<div/>").mouseenter(function() {self.handleMouseEnter();}).mouseout(function() {self.handleMouseOut();});
                 React.renderComponent(
                          SelectExpandedView({model : this.props.model})
                        , div[0]);
@@ -335,13 +226,21 @@ var SelectView = React.createClass({
       }
     },
     closeIfNeeded : function() {
-        if ( this.dead != true
-            && this.model.expanded()
-            && new Date().getTime() - this.enterdate > 50
-            && (this.expButton == undefined || $(":hover", this.expButton).size() == 0)
-            && (!BrowserInfo.doesNotSupportHoverPseudoclassSelector() && !BrowserInfo.isPadDevice())
-           )
-          this.model.toggleExpand();
+        var model = this.props.model;
+        if (
+          model.expanded() &&
+          new Date().getTime() - this.state.enterdate > 50 &&
+          ($(":hover", this.state.expandedDiv).size() == 0) &&
+          (!BrowserInfo.doesNotSupportHoverPseudoclassSelector() && !BrowserInfo.isPadDevice())
+          )
+          model.toggleExpand();
+    },
+    handleMouseEnter : function() {
+      this.state.enterdate = new Date().getTime();
+    },
+    handleMouseOut : function() {
+      var self = this;
+      setTimeout(function() {self.closeIfNeeded();}, 100);
     },
     handleRemove : function() {
       var model = this.props.model;
@@ -356,13 +255,20 @@ var SelectView = React.createClass({
       var model = this.props.model;
 
       if (model.expanded()) {
+        this.state.expandedDiv.css('position',"absolute");
+        this.state.expandedDiv.css('z-index',"5000");
+        this.state.expandedDiv.css('left',$(this.getDOMNode()).offset().left + "px")
+        this.state.expandedDiv.css('top',$(this.getDOMNode()).offset().top + "px")
         $('body').append(this.state.expandedDiv);
       }
       else
         this.state.expandedDiv.detach();
 
       return (
-        <div className={'select ' + model.cssClass()}  style={_.extend({color: model.color(),border : model.border()},model.style())}>
+        <div className={'select ' + model.cssClass()}  style={_.extend({color: model.color(),border : model.border()},model.style())}
+             onMouseEnter={this.handleMouseEnter}
+             onMouseOut={this.handleMouseOut}
+             >
           <div className='select-button' onClick={this.handleExpand}>
             <div className='select-button-left'/>
             <div className='select-button-label' style={_.extend({width: model.textWidth()},model.style())}>
@@ -379,7 +285,7 @@ var SelectView = React.createClass({
 });
 
 
-
+/*Interface for selectbox*/
 var Select = React.createClass({
     propTypes: {
       name : React.PropTypes.string,
