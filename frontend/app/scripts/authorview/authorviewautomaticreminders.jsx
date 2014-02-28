@@ -232,7 +232,7 @@ var AuthorViewAutomaticReminders = React.createClass({
                   <Button
                     color="black"
                     style= {{"margin-top": "10px"}}
-                    text = {this.props.document.autoremindtime() ? localization.autoreminders.setDate : localization.autoreminders.changeDate}
+                    text = {this.props.document.autoremindtime() ? localization.autoreminders.changeDate : localization.autoreminders.setDate}
                     size = "small"
                     onClick = {this.handleOpenModal}
                   />

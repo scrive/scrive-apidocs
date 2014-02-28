@@ -1,4 +1,4 @@
-{ 
+{
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Are you sure you want to send reminders to the parties involved in the",
@@ -879,8 +879,8 @@
 "_signatoryMessageIfSignatorySeendate":"Reviewed online",
 "_signatoryMessageIfSigned":"Signed",
 "_signatoryMessageIfTimedout":"Expired",
-"_signatoryMessageOpenedViewer":"Reviewed online<br/>(as viewer)",
-"_signatoryMessageSentViewer":"Sent<br/>(for viewing)",
+"_signatoryMessageOpenedViewer":"Reviewed online (as viewer)",
+"_signatoryMessageSentViewer":"Sent (for viewing)",
 "_signatoryMessageWaiting":"Waiting for prior signatures",
 "_signatureConfirm":"Apply signature",
 "_signaturePlaceFor":"will sign here",
