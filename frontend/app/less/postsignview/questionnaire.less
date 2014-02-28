@@ -1,0 +1,144 @@
+.questionnaire-wrapper {
+  background-color: @white;
+  .box-shadow(0px 0px 8px rgba(80, 80, 80, 0.31));
+  height: 620-10px;
+  margin: 5px;
+  padding: 5px;
+  width: 933px;
+
+  .questionnaire {
+    margin: 0 auto;
+    width: 933px;
+
+    .green-text {
+      color: @brand-secondary;
+    }
+
+    .hithere {
+      background: @grey;
+      height: 115px;
+
+      .wrapper {
+        margin: 0 auto;
+        padding-top: 40px;
+        width: 550px;
+
+        .viktor {
+          display: inline-block;
+          height: 44px;
+          margin-right: 10px;
+          vertical-align: top;
+          width: 44px;
+        }
+
+        .notch {
+          border-bottom: 0;
+          border-left: 15px solid;
+          border-right: 15px solid;
+          border-top: 15px solid;
+          // This is a solution for a problem in FF, http://stackoverflow.com/questions/13630886/firefox-17-and-css-borders-based-triangles-not-rendering-properly
+          border-color: @grey transparent transparent transparent;
+          border-color: @grey rgba(230,230,230,0) rgba(230,230,230,0) rgba(230,230,230,0);
+          bottom: -61px;
+          height: 0;
+          left: -356px;
+          margin: 0;
+          padding: 0;
+          position: relative;
+          width: 0;
+        }
+
+        .heyimviktor {
+          display: inline-block
+        }
+      }
+    }
+
+    .questions {
+      background: @gray-5-percent;
+      font-weight: 300;
+      font-size: 18px;
+      
+      height: 620-10-115px;
+
+      .inner {
+        margin: 0 auto;
+        text-align: center;
+        width: 600px;
+
+        h1 {
+          font-weight: 400;
+          font-size: 26px;
+          letter-spacing: 0px;
+          padding: 40px 0 15px;
+        }
+
+        .question {
+          background: @gray-2-percent;
+          text-align: center;
+          padding: 30px 20px 40px 20px;
+          .rounded(5px);
+
+          h6 {
+            font-weight: 300;
+            font-size: 16px;
+            margin: 0 auto;
+            width: 520px;
+
+            &.yourcompany {
+              font-weight: 400;
+              margin-bottom: 30px;
+            }
+
+            &.wanttotry {
+              margin-bottom: -22px;
+            }
+          }
+
+          .fixed-width {
+            font-weight: 300 !important;
+            margin-right: 10px;
+            margin-left: 10px !important;
+            width: 160px;
+            text-align: left;
+          }
+
+          textarea {
+            border: 1px solid @gray-15-percent;
+            height: 120px;
+            margin: 20px;
+            resize: none;
+            width: 470px;
+          }
+
+          .yesnobuttons {
+            margin-top: 33px;
+            .button {
+              padding-left: 25px;
+              padding-right: 25px;
+              .rounded(2px);
+            }
+            .button-green {
+              font-weight: 400;
+              margin-left: 20px;
+            }
+            .button-signup {
+              margin-left: 0px;
+            }
+            .phoneinput {
+              margin-top: 9px;
+              margin-bottom: 10px;
+              margin-right: -10px;
+              padding: 11px;
+              .rounded(2px);
+            }
+          }
+
+          .button-sendfeedback {
+            margin-left: 348px;
+          }
+        }
+      }
+    }
+  }
+}

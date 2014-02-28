@@ -58,8 +58,7 @@ define(['React', 'common/language_service', 'postsignview/questionnaire_view', '
       React.renderComponent(component, sectionElementRaw);
     } else if(document.currentSignatory().company() !== '') {
       // B2B contracts
-      var view = new QuestionareView({model: document});
-      sectionElement.append(view.render());
+      React.renderComponent(QuestionareView({document: document}), sectionElementRaw);
     } else {
 
       var registerUser = _.partial(normalRegisterUser, document, sectionElementRaw);
