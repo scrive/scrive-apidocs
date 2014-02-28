@@ -612,7 +612,7 @@
 "_modalAddCompanyAccountTitle":"New account",
 "_modalDoYouWantToBeCompanyAccountBody":"Do you want to convert your private Scrive account into a $companyname$ Scrive account? When you convert, the ownership of the account and all its documents, will be transferred to $companyname$.",
 "_modalDoYouWantToBeCompanyAccountFooterAccept":"Accept",
-"_modalDoYouWantToBeCompanyAccountHeader":"Account confirmation",
+"_modalDoYouWantToBeCompanyAccountHeader":"Confirm transfer",
 "_modalDoYouWantToChangeEmailBody":"Please enter your password to complete the change of both your username and email to $newemail$.",
 "_modalDoYouWantToChangeEmailHeader":"Confirm username change",
 "_modalNewPasswordViewFooterSave":"Save",
