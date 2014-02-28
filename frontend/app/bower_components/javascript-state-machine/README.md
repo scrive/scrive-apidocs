@@ -252,7 +252,11 @@ instances:
 
 This should be easy to adjust to fit your appropriate mechanism for object construction.
 
+<<<<<<< HEAD
 >> _NOTE: the `startup` event can be given any name, but it must be present in some form to 
+=======
+>> _NOTE: the `startup` event can be given any name, but it must be present in some form to
+>>>>>>> Add javascript-state-machine
    ensure that each instance constructed is initialized with its own unique `current` state._
 
 Initialization Options
@@ -353,8 +357,3 @@ Contact
 If you have any ideas, feedback, requests or bug reports, you can reach me at
 [jake@codeincomplete.com](mailto:jake@codeincomplete.com), or via
 my website: [Code inComplete](http://codeincomplete.com/)
-
-
-
-
-

@@ -5,4 +5,3 @@ task :minify do
   Minifier.enabled = true
   Minifier.minify('state-machine.js')
 end
-

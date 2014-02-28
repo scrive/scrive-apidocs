@@ -404,5 +404,3 @@ test("cannot fire event during existing transition", function() {
 });
 
 //-----------------------------------------------------------------------------
-
-

@@ -70,7 +70,6 @@ test("github issue 19", function() {
     events : [{name: 'execute', from: 'ready',   to: 'running'},
               {name: 'abort',   from: 'running', to: 'ready'}]
     });
- 
   var foo = new Foo();
   var bar = new Foo();
 
@@ -89,4 +88,3 @@ test("github issue 19", function() {
   equal(bar.counter, 8, 'counter remains the same');
 
 });
-

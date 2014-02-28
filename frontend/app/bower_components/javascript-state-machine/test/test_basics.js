@@ -207,7 +207,6 @@ test("inappropriate event handling can be customized", function() {
   equals(fsm.current, 'yellow', "current state should be yellow");
   equals(fsm.warn(), 'event warn inappropriate in current state yellow');
   equals(fsm.calm(), 'event calm inappropriate in current state yellow');
-  
   fsm.panic();
   equals(fsm.current, 'red', "current state should be red");
   equals(fsm.warn(),  'event warn inappropriate in current state red');
@@ -229,7 +228,7 @@ test("event is cancelable", function() {
 
   equal(fsm.current, 'green', 'initial state should be green');
 
-  fsm.onbeforewarn = function() { return false; } 
+  fsm.onbeforewarn = function() { return false; }
   fsm.warn();
 
   equal(fsm.current, 'green', 'state should STAY green when event is cancelled');
@@ -536,7 +535,6 @@ test("no-op transitions (github issue #5)", function() {
 
   ok(fsm.cannot('noop'), "should NOT be able to noop from yellow state")
   ok(fsm.cannot('warn'), "should NOT be able to warn from yellow state")
-  
 });
 
 //-----------------------------------------------------------------------------
@@ -631,4 +629,3 @@ test("event return values (github issue #12) ", function() {
   equals(fsm.current,      'running',                     "async transition should now be complete");
 
 });
-
