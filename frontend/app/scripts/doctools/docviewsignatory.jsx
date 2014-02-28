@@ -164,7 +164,7 @@ var DocumentViewSignatoryForListView = React.createClass({
                   <div className='middle'>
                     <div className={"icon status " + model.status() }> </div>
                   </div>
-                  <div className='middle' style={{minWidth: "150px"}}>
+                  <div className='middle'>
                     <div className={"statustext " + model.status()} style={model.textstyle()}>
                         {model.signatoryViewerySummary()}
                     </div>

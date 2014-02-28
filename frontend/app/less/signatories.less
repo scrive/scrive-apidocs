@@ -54,13 +54,13 @@
 
   .grey-box {
     background: @slightly-darker-grey-background;
-    border: 1px solid @text-lighter;
+    border: 1px solid @border-grey;
     padding: 15px;
     vertical-align: top;
   }
 
   .sig {
-    border-bottom: 1px solid @text-lighter;
+    border-bottom: 1px solid @border-grey;
     cursor: pointer;
     padding-left: 25px;
     padding-right: 25px;
@@ -85,7 +85,7 @@
     &:hover{
       background-color: @grey;
       &:active {
-        background-color: @text-lighter;
+        background-color: @border-grey;
       }
     }
 
@@ -112,7 +112,7 @@
 
 
   .inner {
-    border-top: 1px solid @text-lighter;
+    border-top: 1px solid @border-grey;
     color: #505050;
   }
 
@@ -133,10 +133,11 @@
 
   .statustext {
     font-size: 14px;
+    word-break: normal;
   }
 
   .statusbox {
-    border-top: 1px solid @text-lighter;
+    border-top: 1px solid @border-grey;
     font-size: 13px;
     padding-bottom: 15px;
     padding-top: 15px;
@@ -185,7 +186,7 @@
   }
 
   .optionbox {
-    border-top: 1px solid @text-lighter;
+    border-top: 1px solid @border-grey;
     display: block;
     height: 40px;
 
