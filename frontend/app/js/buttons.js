@@ -21,7 +21,7 @@ var ButtonModel = Backbone.Model.extend({
       textcolor : undefined,
       size  : "small",
       text  : "",
-      shape : "squere",
+      shape : "square",
       onClick : function() {return false;},
       icon : jQuery(""),
       width: undefined,

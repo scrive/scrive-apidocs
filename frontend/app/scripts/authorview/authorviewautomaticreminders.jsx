@@ -14,7 +14,7 @@ var AuthorViewAutomaticRemindersModel = Backbone.Model.extend({
     if (this.document().autoremindtime() != undefined)
       this.set({newdaystoremind: this.document().autoremindtime().diffDays()+1});
     else
-      this.set({newdaystoremind: Math.max(1,Math.floor(this.maxdays() / 2))});
+      this.set({newdaystoremind: Math.max(1,Math.floor(this.maxDaysLeftToSign() / 2))});
   },
   triggerOnAction : function() {
     if (this.get("onAction"))
@@ -23,7 +23,7 @@ var AuthorViewAutomaticRemindersModel = Backbone.Model.extend({
   authorview : function() {
      return this.get("authorview");
   },
-  maxdays : function() {
+  maxDaysLeftToSign : function() {
     return Math.max(1,this.document().timeouttime().diffDays());
 
   },
@@ -32,9 +32,10 @@ var AuthorViewAutomaticRemindersModel = Backbone.Model.extend({
   },
   setNewdaystoremind: function(newdaystoremind) {
      var old = this.get("newdaystoremind");
-     if (newdaystoremind == undefined || (1 <= newdaystoremind || newdaystoremind <= this.maxdays())) {
+     if (newdaystoremind == undefined || (1 <= newdaystoremind || newdaystoremind <= this.maxDaysLeftToSign())) {
       this.set({"newdaystoremind": newdaystoremind}, {silent: true});
      }
+     // Triggering of events is tricky here since we can end in loop in UI (calendar updates input -> input updates calendar -> ..).
      if (old != this.get("newdaystoremind"))
         this.trigger("change:newdaystoremind");
   },
@@ -82,7 +83,7 @@ var AuthorViewAutomaticRemindersView = Backbone.View.extend({
     var calendarbutton = $("<div class='calendarbutton'/>");
     self.calendar = new Calendar({on : calendarbutton,
                                          days : model.newdaystoremind(),
-                                         maxValue : model.maxdays(),
+                                         maxValue : model.maxDaysLeftToSign(),
                                          change: function(days) {
                                             if (days != model.newdaystoremind()) {
                                               model.setNewdaystoremind(days);

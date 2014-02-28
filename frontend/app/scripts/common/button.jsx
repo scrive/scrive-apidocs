@@ -1,12 +1,22 @@
 /** @jsx React.DOM */
 
 /**
- * A button component. Used in branding settings.
+ * A button component in React. It does not have all properties of original backbone button,
+ * so please double chack if you use options not described here.
  *
- * Properties taken:
- * label, a string labeling the button.
- * initiallyChecked, a boolean representing the initial checked(=true)/unchecked(=false) state.
- * onChange, a callback function being called every time the checkbox is checked or unchecked.
+ * Properties:
+      text        : string , text on button,  default ""
+      color       : string, red | green | black | light-blue | signview-blue, one of predefined colors
+      customcolor : string, custom color for button, overwrites color
+      size        : string, tiny | small | big
+      shape       : string, rounded | square, where square is default
+      textcolor   : string, color for text on button, else default value for predefined color will be used.
+      width       : integer, final width of button, if not set, button will adjust to text
+      cssClass    : additional css classes
+      style       : style object (react format)
+      onClick     : func, functiona to be called on click
+      oneClick    : bool, if the button can be clicked only once
+
  *
  * Example usage:
  * var button = React.renderComponent(Button.Button({
@@ -37,7 +47,7 @@ define(['React'], function(React) {
           "text"     : "",
           "color"    : "green",
           "size"     : "small",
-          "shape"    : "squere",
+          "shape"    : "square",
           "style"    : {}
         };
       },
