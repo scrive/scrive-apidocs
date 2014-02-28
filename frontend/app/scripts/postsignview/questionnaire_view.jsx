@@ -39,7 +39,6 @@ define(['React', 'StateMachine', 'postsignview/questionnaire_question_views'], f
           onchangestate: function(event, from, to) {
 	    // change questionview
             self.setState({question: to});
-
             var extraMixpanelProperties = {};
 
             if (to === 'Done' && event === 'yes' && from === 'OthersInYourOrg') {
@@ -133,4 +132,5 @@ define(['React', 'StateMachine', 'postsignview/questionnaire_question_views'], f
       );
     }
   });
+
 });
