@@ -1,4 +1,4 @@
-{ 
+{
 "_CompanyAccounts":"Användare",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Är du säker på att du vill skicka en påminnelse till berörda parter för",
@@ -879,8 +879,8 @@
 "_signatoryMessageIfSignatorySeendate":"Granskat online",
 "_signatoryMessageIfSigned":"Signerat",
 "_signatoryMessageIfTimedout":"Förfallodatum har passerat",
-"_signatoryMessageOpenedViewer":"Granskat online<br/>(som icke-signerande part)",
-"_signatoryMessageSentViewer":"Skickat<br/>(för granskning)",
+"_signatoryMessageOpenedViewer":"Granskat online (som icke-signerande part)",
+"_signatoryMessageSentViewer":"Skickat (för granskning)",
 "_signatoryMessageWaiting":"Väntar på föregående signaturer",
 "_signatureConfirm":"Placera signatur",
 "_signaturePlaceFor":"signerar här",

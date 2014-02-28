@@ -3,191 +3,191 @@
 @import 'designview/util';
 
 .section.signatories {
-    padding-bottom : 30px;
-    padding-top : 30px;
-    margin-bottom: 15px;
-    margin-top: 0px;
+  margin-bottom: 15px;
+  margin-top: 0px;
+  padding-bottom: 30px;
+  padding-top: 30px;
 
-    // Signview sectons have width hardcoded - and this should not apply to this one
-    .signview & {
-      width:943px;
+  .box-shadow(0px 0px 8px rgba(80, 80, 80, 0.31));
+
+  // Signview sectons have width hardcoded - and this should not apply to this one
+  .signview & {
+    width:943px;
+  }
+
+  .column {
+    display:inline-block;
+    vertical-align: top;
+
+    &.first {
+      margin-left: 30px;
+      width: 247px;
     }
 
-
-    .box-shadow(0px 0px 8px rgba(80, 80, 80, 0.31));
-
-
-    .column {
-      display:inline-block;
-      vertical-align: top;
-
-      &.first {
-        margin-left: 30px;
-        width: 247px;
-      }
-
-      &.last {
-        margin-right: 20px;
-        width: 301px;
-      }
-
-      &.middle {
-        margin: 0 20px;
-        width: 301px;
-      }
+    &.last {
+      margin-right: 20px;
+      width: 301px;
     }
 
-    div.spacing {
-
-      .butt {
-        margin-bottom: 0px;
-        padding-bottom: 0px;
-      }
+    &.middle {
+      margin: 0 20px;
+      width: 301px;
     }
+  }
 
-    .inner .details,
-    .titleinfo,
-    .statusbox,
-    .optionbox {
-      padding: 10px;
+  div.spacing {
+
+    .butt {
+      margin-bottom: 0px;
+      padding-bottom: 0px;
     }
+  }
 
-    .grey-box {
-      background: @slightly-darker-grey-background;
-      border: 1px solid @text-lighter;
-      padding: 15px;
-      vertical-align: top;
-    }
+  .inner .details,
+  .titleinfo,
+  .statusbox,
+  .optionbox {
+    padding: 10px;
+    word-break: break-all;
 
-    .sig {
-      border-bottom: 1px solid @text-lighter;
-      cursor: pointer;
-      padding-left: 25px;
-      padding-right: 25px;
-      padding-top : 10px;
-      padding-bottom: 10px;
+  }
 
-      &.active {
-        background-color: @grey;
+  .grey-box {
+    background: @slightly-darker-grey-background;
+    border: 1px solid @text-lighter;
+    padding: 15px;
+    vertical-align: top;
+  }
 
-        .arrow {
-                width: 10px;
-                height: 12px;
-                position: relative;
-                margin-right: -16px;
-                margin-top: 3px;
-                float: right;
-                background: url(~"@{img-base-url}/arrow-list-dark.png") 0 0 no-repeat;
-              }
-      }
+  .sig {
+    border-bottom: 1px solid @text-lighter;
+    cursor: pointer;
+    padding-left: 25px;
+    padding-right: 25px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    word-break: break-all;
 
-      &:hover{
-        background-color: @grey;
-        &:active {
-              background-color: @text-lighter;
-        }
-      }
+    &.active {
+      background-color: @grey;
 
-      &.last {
-          border-bottom: none;
-      }
-
-
-    }
-
-
-    .name {
-      color: @text-dark;
-      font-size: 16px;
-    }
-
-    .auto-reminder {
-      margin-top: 15px;
-
-      &:first-child{
-        margin-top: 0px;
+      .arrow {
+        width: 10px;
+        height: 12px;
+        position: relative;
+        margin-right: -16px;
+        margin-top: 3px;
+        float: right;
+        background: url(~"@{img-base-url}/arrow-list-dark.png") 0 0 no-repeat;
       }
     }
 
-
-    .inner {
-      border-top: 1px solid @text-lighter;
-      color: #505050;
-      min-height: 75px;
+    &:hover{
+      background-color: @grey;
+      &:active {
+        background-color: @text-lighter;
+      }
     }
 
-    .inner .email:hover {
-      overflow: visible;
+    &.last {
+      border-bottom: none;
     }
 
-    .field {
-      height: 16px;
-      font-size: 14px;
-      line-height: 15px;
-      margin-bottom: 5px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      width: 200px;
-      white-space: nowrap;
+
+  }
+
+
+  .name {
+    color: @text-dark;
+    font-size: 16px;
+  }
+
+  .auto-reminder {
+    margin-top: 15px;
+
+    &:first-child{
+      margin-top: 0px;
+    }
+  }
+
+
+  .inner {
+    border-top: 1px solid @text-lighter;
+    color: #505050;
+  }
+
+  .inner .email:hover {
+    overflow: visible;
+  }
+
+  .field {
+    height: 16px;
+    font-size: 14px;
+    line-height: 15px;
+    margin-bottom: 5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 200px;
+    white-space: nowrap;
+  }
+
+  .statustext {
+    font-size: 14px;
+  }
+
+  .statusbox {
+    border-top: 1px solid @text-lighter;
+    font-size: 13px;
+    padding-bottom: 15px;
+    padding-top: 15px;
+
+    &.last {
+      padding-bottom: 0px;
     }
 
     .statustext {
+      margin-top: 5px;
+      max-width: 212px;
+      line-height: 28px;
+      vertical-align: top;
+    }
+  }
+
+  .statusbox .icon.status {
+    display: inline-block;
+    margin-right: 10px;
+    margin-top: 1px;
+  }
+
+  .line {
+    display: table;
+    margin-top: 2px;
+    overflow: hidden;
+
+    .middle {
+      display: table-cell;
+      vertical-align: middle;
+
+      a {
+        cursor: pointer;
+      }
+
+      .icon.status {
+        margin-right: 7px;
+      }
+    }
+
+    .details {
+      float:right;
       font-size: 14px;
+      white-space: nowrap;
     }
+  }
 
-    .statusbox {
-      border-top: 1px solid @text-lighter;
-      font-size: 13px;
-      padding-bottom: 15px;
-      padding-top: 15px;
+  .optionbox {
+    border-top: 1px solid @text-lighter;
+    display: block;
+    height: 40px;
 
-      &.last {
-        padding-bottom: 0px;
-      }
-
-      .statustext {
-        margin-top: 5px;
-        max-width: 212px;
-        line-height: 28px;
-        vertical-align: top;
-      }
-    }
-
-    .statusbox .icon.status {
-      display: inline-block;
-      margin-right: 10px;
-      margin-top: 1px;
-    }
-
-    .line {
-      display: table;
-      margin-top: 2px;
-      overflow: hidden;
-
-      .middle {
-        display: table-cell;
-        vertical-align: middle;
-
-        a {
-          cursor: pointer;
-        }
-
-        .icon.status {
-          margin-right: 7px;
-        }
-      }
-
-      .details {
-        float:right;
-        font-size: 14px;
-        white-space: nowrap;
-      }
-    }
-
-    .optionbox {
-      border-top: 1px solid @text-lighter;
-      display: block;
-      height: 40px;
-
-    }
+  }
 }

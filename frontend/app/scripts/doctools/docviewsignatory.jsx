@@ -158,7 +158,7 @@ var DocumentViewSignatoryForListView = React.createClass({
                   <div className='arrow'/>
                 }
                 <div className='name' style={model.textstyle()}>
-                  {signatory.nameOrEmailOrMobile()}
+                  {signatory.nameOrEmailOrMobile()}{'\u00A0'}
                 </div>
                 <div className='line'>
                   <div className='middle'>
@@ -360,7 +360,7 @@ var DocumentViewSignatoryView = React.createClass({
 
           <div className="titleinfo spacing">
             <div className="name" style={textstyle}>
-              {signatory.nameOrEmailOrMobile()}
+              {signatory.nameOrEmailOrMobile()}{'\u00A0'}
             </div>
           </div>
 
