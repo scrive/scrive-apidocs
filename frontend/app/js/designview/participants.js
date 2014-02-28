@@ -3,7 +3,7 @@
  *
  */
 
-define(['Backbone', 'common/language_service', 'legacy_code'], function(Backbone, LanguageService) {
+define(['React','common/select','Backbone', 'common/language_service', 'legacy_code'], function(React,NewSelect,Backbone, LanguageService) {
     // model is Signatory
     var DesignViewNewFieldSelector = Backbone.View.extend({
         className: 'design-view-action-participant-new-field-selector',
@@ -225,28 +225,30 @@ define(['Backbone', 'common/language_service', 'legacy_code'], function(Backbone
             };
 
             var roleTypes = ['signatory', 'viewer'];
+            var div = $("<div/>")
+            var component = React.renderComponent(
+                              NewSelect.Select({
+                                options: _.map(roleTypes, function(t) {
+                                    return {name: roleTexts[t], value:t};
+                                }),
+                                name: roleTexts[role],
+                                textWidth : "195px",
 
-            var select = new Select({
-                options: _.map(roleTypes, function(t) {
-                    return {name: roleTexts[t], value:t};
-                }),
-                name: roleTexts[role],
-                 textWidth : "145px",
-
-                optionsWidth : "177px",
-                cssClass : 'design-view-action-participant-details-participation-role',
-                onSelect: function(v) {
-                    mixpanel.track('Choose participant role', {
-                        Where: 'Icon'
-                    });
-                    if(v === 'signatory')
-                        sig.makeSignatory();
-                    else if(v === 'viewer')
-                        sig.makeViewer();
-                    return true;
-                }
-            });
-            return select.el();
+                                optionsWidth : "225px",
+                                cssClass : 'design-view-action-participant-details-participation-role',
+                                onSelect: function(v) {
+                                    mixpanel.track('Choose participant role', {
+                                        Where: 'Icon'
+                                    });
+                                    if(v === 'signatory')
+                                        sig.makeSignatory();
+                                    else if(v === 'viewer')
+                                        sig.makeViewer();
+                                    return true;
+                                }
+                            })
+                         , div[0]);
+            return div;
         },
         detailsParticipationFieldsAuth: function() {
             var view = this;
