@@ -150,6 +150,7 @@ function prepareForEdit(form, width) {
 }
 
 function prepareEditor(textarea) {
+  tinyMCE.baseURL = '/libs/tiny_mce';
   tinymce.init({
     selector: '#' + textarea.attr('id'),
     plugins: "noneditable,paste",
