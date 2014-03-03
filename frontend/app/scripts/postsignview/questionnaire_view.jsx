@@ -1,7 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React', 'Backbone', 'StateMachine'], function(React, Backbone, StateMachine) {
-
+define(['React', 'StateMachine', 'postsignview/questionnaire_question_views'], function(React, StateMachine, QuestionViews) {
   /**
    *  @description
    *  A questionnaire, asking user to answer a couple of questions and
@@ -38,8 +37,9 @@ define(['React', 'Backbone', 'StateMachine'], function(React, Backbone, StateMac
         ],
         callbacks: {
           onchangestate: function(event, from, to) {
-	    console.log(event, from, to);
+	    // change questionview
             self.setState({question: to});
+
             var extraMixpanelProperties = {};
 
             if (to === 'Done' && event === 'yes' && from === 'OthersInYourOrg') {
@@ -54,17 +54,17 @@ define(['React', 'Backbone', 'StateMachine'], function(React, Backbone, StateMac
       });
     },
 
-    yesanswer: function() {
+    yesAnswer: function() {
       this.questionSTM.yes();
     },
 
-    noanswer: function() {
+    noAnswer: function() {
       this.questionSTM.no();
     },
 
     /**
      *  @description
-     *  Set phoneNumber on internal object, which is then used
+     *  Set phoneNumber on internal object, which is used
      *  when registering current user to Mixpanel
      */
     phoneNumber: null,
@@ -107,7 +107,7 @@ define(['React', 'Backbone', 'StateMachine'], function(React, Backbone, StateMac
     render: function() {
       // Which Question to display is determined by the StateMachine,
       // by setting this.state.question
-      var Question = Questions[this.state.question];
+      var Question = QuestionViews[this.state.question];
 
       return (
           <div className="questionnaire-wrapper">
@@ -125,220 +125,9 @@ define(['React', 'Backbone', 'StateMachine'], function(React, Backbone, StateMac
 
               <div>
                 <div className="questions">
-		  <Question yesButton={this.yesanswer} noButton={this.noanswer} setPhoneNumber={this.setPhoneNumber} />
+		  <Question yesButton={this.yesAnswer} noButton={this.noAnswer} setPhoneNumber={this.setPhoneNumber} />
 		</div>
 	      </div>
-	    </div>
-	  </div>
-      );
-    }
-  });
-
-  var Questions = {};
-  Questions.DelayedSignatures = React.createClass({
-    yesButton: function() {
-      mixpanel.track('Questionnaire #2 Accept');
-      this.props.yesButton();
-    },
-
-    noButton: function() {
-      mixpanel.track('Questionnaire #2 Deny');
-      this.props.noButton();
-    },
-
-    render: function() {
-      return (
-	<div className="inner">
-	  <h1>{ localization.questionnaire.great }</h1>
-	  <div className="question">
-	    <h6>{ localization.questionnaire.sendDown2 }</h6>
-
-	    <div className="yesnobuttons">
-	      <div className="button button-gray" onClick={this.noButton}>
-		<div className="label">{ localization.questionnaire.no }</div>
-	      </div>
-	      <div className="button button-green" onClick={this.yesButton}>
-		<div className="label">{ localization.questionnaire.yes }</div>
-	      </div>
-	    </div>
-	  </div>
-	</div>
-      );
-    }
-  });
-
-  Questions.DemoCta = React.createClass({
-    yesButton: function() {
-      mixpanel.track('Questionnaire #4 Show Demo');
-      this.props.yesButton();
-    },
-
-    handleChange: function(event) {
-      this.props.setPhoneNumber(event.target.value);
-    },
-
-    render: function() {
-      return (
-          <div className="inner">
-            <h1>{ localization.questionnaire.closeFaster }</h1>
-            <div className="question">
-              <h6 className="yourcompany">
-                { localization.questionnaire.easyToSign }<br/>
-                <span>
-		  { localization.questionnaire.otherBenefitsP1 }
-		  <span className="green-text">{ localization.questionnaire.otherBenefitsP2 }</span>
-		  { localization.questionnaire.otherBenefitsP3 }
-		</span>
-              </h6>
-              <h6 className="wanttotry">{ localization.questionnaire.seeHowSimple }</h6>
-
-              <div className="yesnobuttons">
-                <input type="text" onChange={this.handleChange} className="phoneinput" placeholder={ localization.questionnaire.phoneNumber } />
-
-		<div className="button button-green" onClick={this.yesButton}>
-		  <div className="label">{ localization.questionnaire.showDemo }</div>
-		</div>
-              </div>
-	    </div>
-	  </div>
-      );
-    }
-  });
-
-  Questions.Dislike = React.createClass({
-    sendFeedback: function() {
-      mixpanel.track('Unenjoyable e-signing experience', {feedback: this.feedback });
-      this.props.noButton();
-    },
-
-    handleChange: function(event) {
-      this.feedback = event.target.value;
-    },
-
-    render: function() {
-      return (
-          <div className="inner">
-            <h1>{ localization.questionnaire.sorry }</h1>
-            <div className="question">
-              <h6>{ localization.questionnaire.improvements }</h6>
-              <textarea onChange={this.handleChange}></textarea>
-              <br />
-
-              <div className="button button-sendfeedback button-green" onClick={this.sendFeedback}>
-		<div className="label">{ localization.questionnaire.sendFeedback }</div>
-	      </div>
-	    </div>
-	  </div>
-
-      );
-    }
-  });
-
-  Questions.LikeEsigning = React.createClass({
-    yesButton: function() {
-      mixpanel.track('Questionnaire #1 Accept');
-      this.props.yesButton();
-    },
-
-    noButton: function() {
-      mixpanel.track('Questionnaire #1 Deny');
-      this.props.noButton();
-    },
-
-    render: function() {
-      return (
-	  <div className="inner">
-	    <h1>{ localization.questionnaire.quickQuestion }</h1>
-	    <div className="question">
-	      <h6>{ localization.questionnaire.enjoySigning }</h6>
-
-	      <div className="yesnobuttons">
-		<div className="button button-gray" onClick={this.noButton}>
-		  <div className="label">{ localization.questionnaire.no }</div>
-		</div>
-		<div className="button button-green" onClick={this.yesButton}>
-		  <div className="label">{ localization.questionnaire.yes }</div>
-		</div>
-	      </div>
-	    </div>
-          </div>
-
-      );
-    }
-  });
-
-  Questions.OthersInYourOrg = React.createClass({
-    yesButton: function() {
-      mixpanel.track('Questionnaire Others in your organization Accept');
-      this.props.yesButton();
-    },
-
-    noButton: function() {
-      mixpanel.track('Questionnaire Others in your organization Deny');
-      this.props.noButton();
-    },
-
-    render: function() {
-      return (
-          <div className="inner">
-            <h1>{ localization.questionnaire.lastQuestion }</h1>
-            <div className="question">
-              <h6>{ localization.questionnaire.anyoneElse }</h6>
-
-	      <div className="yesnobuttons">
-		<div className="button button-gray" onClick={this.noButton}>
-		  <div className="label">{ localization.questionnaire.no }</div>
-		</div>
-		<div className="button button-green" onClick={this.yesButton}>
-		  <div className="label">{ localization.questionnaire.yes }</div>
-		</div>
-	      </div>
-	    </div>
-	  </div>
-      );
-    }
-  });
-
-  Questions.SendDocuments = React.createClass({
-    yesButton: function() {
-      mixpanel.track('Questionnaire #2 Accept');
-      this.props.yesButton();
-    },
-
-    noButton: function() {
-      mixpanel.track('Questionnaire #2 Deny');
-      this.props.noButton();
-    },
-
-    render: function() {
-      return (
-          <div className="inner">
-            <h1>{ localization.questionnaire.great }</h1>
-            <div className="question">
-              <h6>{ localization.questionnaire.sendDownP1 }</h6>
-	      <h6>{ localization.questionnaire.sendDownP2 }</h6>
-
-	      <div className="yesnobuttons">
-		<div className="button button-gray" onClick={this.noButton}>
-		  <div className="label">{ localization.questionnaire.no }</div>
-		</div>
-		<div className="button button-green" onClick={this.yesButton}>
-		  <div className="label">{ localization.questionnaire.yes }</div>
-		</div>
-	      </div>
-            </div>
-          </div>
-      );
-    }
-  });
-
-  Questions.Done = React.createClass({
-    render: function() {
-      return (
-	  <div className="inner">
-	    <h1>{ localization.questionnaire.thanksForYourTime }</h1>
-	    <div className="question">
-	      { localization.questionnaire.haveAGreatDay }
 	    </div>
 	  </div>
       );
