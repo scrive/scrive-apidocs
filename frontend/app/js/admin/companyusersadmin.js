@@ -142,7 +142,7 @@ window.CompanyUsersListDefinition = function(args) {
                                                     title : "Delete invitation",
                                                     acceptText: "Delete",
                                                     content : $("<div style='text-align:center;'>Are you sure that you want to delete this invitation?<BR/>"
-                                                                 + " User will still exist in hid original company.</div>"),
+                                                                 + " User will still exist in his original company.</div>"),
                                                     onAccept : function() {
                                                       new Submit({
                                                         url: "/adminonly/useradmin/deleteinvite/" + args.companyid + "/" +user.field("id"),
