@@ -127,11 +127,8 @@ var SelectModel = Backbone.Model.extend({
   optionsWidth : function() {
        return this.get("optionsWidth");
   },
-  toggleExpand: function() {
-     if (this.expanded())
+  unexpand: function() {
        this.set({"expanded" : false});
-     else
-       this.expand();
   },
   expand : function() {
      if (!this.expanded() && this.onOpen() && this.options().length > 0)
@@ -168,12 +165,14 @@ var SelectModel = Backbone.Model.extend({
 var SelectExpandedView = React.createClass({
     handleRemove : function() {
       var model = this.props.model;
+      model.unexpand();
       model.onRemove();
-      model.set({"expanded" : false});
+      return false;
     },
     handleExpand : function() {
       var model = this.props.model;
-      model.toggleExpand();
+      model.unexpand();
+      return false;
     },
     render: function() {
       var model = this.props.model;
@@ -193,7 +192,7 @@ var SelectExpandedView = React.createClass({
           <ul className={'select-opts '+ model.expandSide()} style={{border:model.border(), minWidth:model.optionsWidth()}}>
             {_.map(model.activeOptions(),function(o,i) {
               return (
-                <li onClick={function() {o.selected()}}>
+                <li key={i} onClick={function() {o.selected()}}>
                   <span style={model.style()}>
                     {o.name()}
                   </span>
@@ -217,10 +216,14 @@ var SelectView = React.createClass({
     },
     getInitialState: function() {
       var self = this;
-      var div = $("<div/>").mouseenter(function() {self.handleMouseEnter();}).mouseout(function() {self.handleMouseOut();});
-                React.renderComponent(
-                         SelectExpandedView({model : this.props.model})
-                       , div[0]);
+      // Temporary div. It will be stored in local state and appended to <body> on expantion
+      // It contains SelectExpandedView inside.
+      var div = $("<div class='select-expanded-wrapper'/>")
+                  .mouseenter(function() {self.handleMouseEnter();})
+                  .mouseout(function() {self.handleMouseOut();});
+      React.renderComponent(
+            SelectExpandedView({model : this.props.model})
+            , div[0]);
       return {
         expandedDiv : div
       }
@@ -233,7 +236,7 @@ var SelectView = React.createClass({
           ($(":hover", this.state.expandedDiv).size() == 0) &&
           (!BrowserInfo.doesNotSupportHoverPseudoclassSelector() && !BrowserInfo.isPadDevice())
           )
-          model.toggleExpand();
+          model.unexpand();
     },
     handleMouseEnter : function() {
       this.state.enterdate = new Date().getTime();
@@ -244,19 +247,19 @@ var SelectView = React.createClass({
     },
     handleRemove : function() {
       var model = this.props.model;
+      model.unexpand();
       model.onRemove();
-      model.set({"expanded" : false});
+      return false;
     },
     handleExpand : function() {
       var model = this.props.model;
-      model.toggleExpand();
+      model.expand();
+      return false;
     },
     render: function() {
       var model = this.props.model;
 
       if (model.expanded()) {
-        this.state.expandedDiv.css('position',"absolute");
-        this.state.expandedDiv.css('z-index',"5000");
         this.state.expandedDiv.css('left',$(this.getDOMNode()).offset().left + "px")
         this.state.expandedDiv.css('top',$(this.getDOMNode()).offset().top + "px")
         $('body').append(this.state.expandedDiv);
