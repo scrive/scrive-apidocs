@@ -20,7 +20,7 @@
                       { name : "Option 1" // Name on option label
                         value* : "1" // Value that will be propagated to onSelect
                         onSelect* : function(v) {} // Function to be called on selection. It overwrites top level function
-                        style* : "font-size: 8px" // Extra styling of label
+                        style* : {fontSize: 8px"} // Extra styling of label
                         disabled : false // If set to tru, option will not be visible
                       },
                       { name : "Option 2"
@@ -30,16 +30,15 @@
                   ]
    });
 
-  Interface:
-      .el()          // jQuery object to be appended somewere on a page
+  Component itself exposes two aditional methods:
       .open()        // Expand select box. Note that it will be automaticly closed if mouse is not over it.
-      .setName(name) // Change name on button
+      .setName(name) // Allows a dynamic change of component name
 
   Details:
     - It does not use <select> tag internally.
-    - On expand, clone of current el with expanded options is displayed over current position.
+    - On expand, speciall diff is appended to  of current el with expanded options is displayed over current position.
       This way we can have selects withing scrollable areas, that don't make this areas expand.
-    - onSelect function must be provided either for whole select of for all options
+    - onSelect function must be provided either for whole select or for all options
     - Select box will be closed on selection only if onSelect for selected option will return true.
 */
 
@@ -291,7 +290,7 @@ var SelectView = React.createClass({
 /*Interface for selectbox*/
 var Select = React.createClass({
     propTypes: {
-      name : React.PropTypes.string,
+      name : React.PropTypes.string.isRequired,
       cssClass : React.PropTypes.string,
       expandSide : React.PropTypes.string,
       textWidth : React.PropTypes.string,
@@ -302,7 +301,7 @@ var Select = React.createClass({
       onOpen :React.PropTypes.func,
       onSelect : React.PropTypes.func,
       onRemove : React.PropTypes.func,
-      options: React.PropTypes.array
+      options: React.PropTypes.array.isRequired
     },
     getInitialState: function() {
       return this.stateFromProps(this.props);
