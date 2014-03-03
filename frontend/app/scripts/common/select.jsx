@@ -209,6 +209,9 @@ var SelectExpandedView = React.createClass({
 /* View for not expanded box. On expand original box will be placed above it (z-index)*/
 
 var SelectView = React.createClass({
+    componentWillUnmount : function() {
+        this.state.expandedComponent.unmountComponent(); //We need to clear this component on unmount for garbage collection
+    },
     mixins: [BackboneMixin.BackboneMixin],
     getBackboneModels : function() {
       return [this.props.model];
@@ -220,11 +223,12 @@ var SelectView = React.createClass({
       var div = $("<div class='select-expanded-wrapper'/>")
                   .mouseenter(function() {self.handleMouseEnter();})
                   .mouseout(function() {self.handleMouseOut();});
-      React.renderComponent(
+      var component = React.renderComponent(
             SelectExpandedView({model : this.props.model})
             , div[0]);
       return {
-        expandedDiv : div
+        expandedDiv : div,
+        expandedComponent : component
       }
     },
     closeIfNeeded : function() {
