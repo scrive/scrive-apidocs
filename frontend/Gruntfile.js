@@ -265,6 +265,10 @@ module.exports = function (grunt) {
 	      'newsletter/**/*',
 	      'pdf/**/*',
 	      'libs/tiny_mce/**/*',
+
+	      // Shims that need to be loaded separately
+	      'bower_components/json3/**',
+	      'bower_components/es5-shim/**'
             ]
           },
         ]
