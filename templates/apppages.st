@@ -82,7 +82,10 @@ standardHeaderContents=
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <meta http-equiv="content-language" content="$ctxlang$" />
         <!--[if lt IE 9]>
-        <script src="/libs/html5shiv.js"></script>
+	<script src="/bower_components/es5-shim/es5-shim.js"></script>
+	<script src="/bower_components/es5-shim/es5-sham.js"></script>
+	<script src="/bower_components/html5shiv/dist/html5shiv.js></script>
+	<script src="/bower_components/json3/lib/json3.min.js"></script>
         <![endif]-->
         <link href='/css/fonts/SourceSansPro.css' rel='stylesheet' type='text/css'/>
         <link href='/css/fonts/HelveticaNeue.css' rel='stylesheet' type='text/css'/>
