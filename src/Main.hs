@@ -71,7 +71,7 @@ startSystem appGlobals appConf = E.bracket startServer stopServer waitForTerm
     startServer = do
       let (iface,port) = httpBindAddress appConf
       listensocket <- listenOn (htonl iface) (fromIntegral port)
-      let (routes,overlaps) = compile staticRoutes
+      let (routes,overlaps) = compile $ staticRoutes (production appConf)
       maybe (return ()) Log.mixlog_ overlaps
       let conf = nullConf {
             port = fromIntegral port
