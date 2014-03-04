@@ -116,7 +116,7 @@ define(['React'], function(React) {
     render: function() {
       return (
         <a className={this.cssClasses()} onClick={this.handleClick} style={this.style()}>
-          <div class='label'>{this.props.text}</div>
+          <div className="label">{this.props.text}</div>
         </a>
       );
     }
