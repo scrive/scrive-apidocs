@@ -259,7 +259,7 @@ module.exports = function (grunt) {
 	      './*.{html,xml,jpg,ico,txt}',
 	      'api-demo/**/*',
 	      'enable-cookies/**/*',
-	      'css/fonts/*.css',
+	      'css/fonts/*',
 	      'fonts/**/*',
 	      'img/**/*',
 	      'newsletter/**/*',
