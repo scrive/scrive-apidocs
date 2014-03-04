@@ -45,14 +45,14 @@ import qualified ServerUtils.ServerUtils as ServerUtils
    the function for any given path and method.
 -}
 
-staticRoutes :: Route (KontraPlus Response)
-staticRoutes = choice
+staticRoutes :: Bool -> Route (KontraPlus Response)
+staticRoutes production = choice
      [  allLangDirs $                          hGet $ toK0 $ sendRedirect $ LinkDesignView
      ,  allLangDirs $  dir "localization"    $ hGet $ toK1 localizationScript
      ,  allLangDirs $  dir "pricing"         $ hGet $ toK0 priceplanPage
 
      ,  dir "analyticsloader" $ hGet $ toK0 analyticsLoaderScript
-        
+
      -- Top level handlers - buttons on top bar, when user is logged in
      , dir "fromtemplate"                 $ hGet  $ toK0 $ DocControl.showCreateFromTemplate
      , dir "newdocument" $ hGet $ toK0 $ DocControl.handleNewDocument
@@ -173,9 +173,8 @@ staticRoutes = choice
      , userAPI
      , padApplicationAPI
      , oauth
-     , dir "r" $ remainingPath GET $ serveFile (asContentType "text/html") "frontend/app/index.html"
-     , remainingPath GET $ allowHttp $ serveDirectory DisableBrowsing [] "frontend/app"
-     , remainingPath GET $ allowHttp $ serveDirectory DisableBrowsing [] "frontend/dist"
+     , dir "r" $ remainingPath GET $ serveFile (asContentType "text/html") (staticDir++"/index.html")
+     , remainingPath GET $ allowHttp $ serveDirectory DisableBrowsing [] staticDir
 
      -- public services
      , dir "parsecsv"        $ hPost $ toK0 $ ServerUtils.handleParseCSV
@@ -184,3 +183,7 @@ staticRoutes = choice
      , dir "text_to_image" $ hGet $ toK0 $ ServerUtils.handleTextToImage
      , dir "branded_signview_image" $ hGet $ toK0 $ ServerUtils.brandedSignviewImage
    ]
+  where
+    staticDir = if (production)
+                  then "frontend/dist"
+                  else "frontend/app"
