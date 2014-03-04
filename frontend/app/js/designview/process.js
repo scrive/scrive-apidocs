@@ -379,6 +379,7 @@ define(['Backbone', 'tinyMCE', 'tinyMCE_theme', 'tinyMCE_noneeditable', 'tinyMCE
 		view.invitationEditor.attr('disabled', '').val('<i>' + localization.designview.editMessagePlaceholder + '</i>');
 	    }
 
+            tinyMCE.baseURL = '/libs/tiny_mce';
             tinyMCE.init({
 	        selector: '#design-view-action-process-right-column-invitation-editor',
                 width: 275, // TODO this is overwritten by cwidth (?)
