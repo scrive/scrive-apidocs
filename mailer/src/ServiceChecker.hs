@@ -15,9 +15,8 @@ import MinutesTime
 import Sender
 import qualified Log
 
-
-serviceAvailabilityChecker :: MailingServerConf -> CryptoRNGState -> String -> (Sender, Sender) -> MVar Sender -> (forall a. IO a -> IO a)  -> IO ()
-serviceAvailabilityChecker conf rng dbconf (master, slave) msender interruptible = do
+serviceAvailabilityChecker :: MailingServerConf -> CryptoRNGState -> ConnectionSource -> (Sender, Sender) -> MVar Sender -> (forall a. IO a -> IO a)  -> IO ()
+serviceAvailabilityChecker conf rng cs (master, slave) msender interruptible = do
     Log.mixlog_ $ "Running service checker"
     mid <- inDB $ do
       token <- random
@@ -52,7 +51,7 @@ serviceAvailabilityChecker conf rng dbconf (master, slave) msender interruptible
         Log.mixlog_ $ "Couldn't delete service testing email #" ++ show mid
   where
     inDB :: CryptoRNGT (DBT IO) a -> IO a
-    inDB = withPostgreSQL dbconf . runCryptoRNGT rng
+    inDB = withPostgreSQL cs . runCryptoRNGT rng
 
     isDelivered mid (_, emid, _, SendGridEvent _ SG_Delivered{} _) = mid == emid
     isDelivered mid (_, emid, _, MailGunEvent _ MG_Delivered) = mid == emid

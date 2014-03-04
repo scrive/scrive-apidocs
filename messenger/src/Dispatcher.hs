@@ -16,8 +16,8 @@ import SMS.Data
 import MinutesTime
 import qualified Log
 
-dispatcher :: CryptoRNGState -> Sender -> MVar Sender -> String -> IO ()
-dispatcher rng _master msender dbconf = withPostgreSQL dbconf . runCryptoRNGT rng $ do
+dispatcher :: CryptoRNGState -> Sender -> MVar Sender -> ConnectionSource -> IO ()
+dispatcher rng _master msender cs = withPostgreSQL cs . runCryptoRNGT rng $ do
     Log.mixlog_ $ "SMS Dispatcher is starting"
     smses <- dbQuery GetIncomingSMSes
     Log.mixlog_ $ "Batch of smses to send is " ++ show (length smses) ++ " sms(es) long."
@@ -35,7 +35,7 @@ dispatcher rng _master msender dbconf = withPostgreSQL dbconf . runCryptoRNGT rn
                Log.mixlog_ $ "Failed to mark sms #" ++ show smID ++ " as sent."
            else do
              Log.mixlog_ $ "Failed to send sms #" ++ show smID
-             if (smAttemtp sms < 100)
+             if (smAttempt sms < 100)
                 then do
                   Log.mixlog_ $ "Deferring sms #" ++ show smID ++" for 5 minutes"
                   res <- dbUpdate $ DeferSMS smID $ 5 `minutesAfter` now
@@ -46,5 +46,5 @@ dispatcher rng _master msender dbconf = withPostgreSQL dbconf . runCryptoRNGT rn
                   res <- dbUpdate $ DeleteSMS smID
                   when (not res) $
                     Log.mixlog_ $ "Deleting sms #" ++ show smID ++ " failed."
-         kCommit -- commit after sms was handled properly
+         commit -- commit after sms was handled properly
     Log.mixlog_ $ "SMS Dispatcher is done"

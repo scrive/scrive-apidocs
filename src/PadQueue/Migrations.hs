@@ -1,5 +1,7 @@
 module PadQueue.Migrations where
 
+import Data.Monoid
+
 import DB
 import PadQueue.Tables
 
@@ -9,7 +11,7 @@ setCascadeOnPadQueue = Migration {
   , mgrFrom = 1
   , mgrDo = do
     -- this is supposed to aid in the signatory_links renumeration step that follows
-    kRunRaw $ "ALTER TABLE padqueue"
+    runSQL_ $ "ALTER TABLE padqueue"
               <> " DROP CONSTRAINT fk_padqueue_signatorylinks,"
               <> " ADD CONSTRAINT fk_padqueue_signatorylinks FOREIGN KEY(document_id,signatorylink_id)"
               <> " REFERENCES signatory_links(document_id,id) ON DELETE RESTRICT ON UPDATE CASCADE"
@@ -21,7 +23,7 @@ dropSLForeignKeyOnPadQueue = Migration {
     mgrTable = tablePadQueue
   , mgrFrom = 2
   , mgrDo = do
-    kRunRaw $ "ALTER TABLE padqueue"
+    runSQL_ $ "ALTER TABLE padqueue"
            <> " DROP CONSTRAINT fk_padqueue_signatorylinks"
   }
 
@@ -30,7 +32,7 @@ setPadQueueForeignKeyToSLIDOnly = Migration {
     mgrTable = tablePadQueue
   , mgrFrom = 3
   , mgrDo = do
-    kRunRaw $ "ALTER TABLE padqueue"
+    runSQL_ $ "ALTER TABLE padqueue"
       <> " ADD CONSTRAINT fk_padqueue_signatorylinks FOREIGN KEY(signatorylink_id)"
       <> " REFERENCES signatory_links(id) ON DELETE CASCADE ON UPDATE RESTRICT"
       <> " DEFERRABLE INITIALLY IMMEDIATE"

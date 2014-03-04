@@ -45,7 +45,6 @@ import Util.MonadUtils (guardJustM)
 import Happstack.Server.RqData
 import Doc.Rendering
 import DB
-import DB.SQL2
 import DB.TimeZoneName (mkTimeZoneName)
 import MagicHash (MagicHash)
 import Kontra

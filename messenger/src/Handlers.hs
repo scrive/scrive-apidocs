@@ -9,14 +9,14 @@ import Happstack.Server hiding (dir, path)
 import Happstack.StaticRouting
 import System.Directory
 
+import DB
 import DB.PostgreSQL
 import Crypto.RNG
 import GlobalMouth
-import MessengerServerConf
 import Messenger
 
-router :: CryptoRNGState -> MessengerServerConf -> Messenger Response -> ServerPartT IO Response
-router rng conf routes = withPostgreSQL (mscDBConfig conf) $ do
+router :: CryptoRNGState -> ConnectionSource -> Messenger Response -> ServerPartT IO Response
+router rng cs routes = withPostgreSQL cs $ do
   let quota = 65536
   temp <- liftIO getTemporaryDirectory
   decodeBody $ defaultBodyPolicy temp quota quota quota

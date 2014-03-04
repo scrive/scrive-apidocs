@@ -2,18 +2,20 @@ module Mails.Migrations (
     mailerMigrations
   ) where
 
+import Data.Int
+import Data.Monoid.Space
+
 import DB
-import DB.SQL2
 import Mails.Tables
 import qualified Log
 
 -- Note: ALWAYS append new migrations TO THE END of this list.
-mailerMigrations :: MonadDB m => [Migration m]
+mailerMigrations :: (MonadDB m, Log.MonadLog m) => [Migration m]
 mailerMigrations = [
     addTestServiceToMails
-   , moveAtachmentsToSeparateTable
-   , addFileIdToAttachmentsTable
-   , addAttemptCountToMails
+  , moveAtachmentsToSeparateTable
+  , addFileIdToAttachmentsTable
+  , addAttemptCountToMails
   ]
 
 addTestServiceToMails :: MonadDB m => Migration m
@@ -22,29 +24,27 @@ addTestServiceToMails =
     mgrTable = tableMails
   , mgrFrom = 1
   , mgrDo = do
-      kRunRaw "ALTER TABLE mails ADD COLUMN service_test BOOL"
-      _ <- kRun $ SQL "UPDATE mails SET service_test = ?" [toSql False]
-      kRunRaw "ALTER TABLE mails ALTER COLUMN service_test SET NOT NULL"
+      runSQL_ "ALTER TABLE mails ADD COLUMN service_test BOOL"
+      runSQL_ $ "UPDATE mails SET service_test =" <?> False
+      runSQL_ "ALTER TABLE mails ALTER COLUMN service_test SET NOT NULL"
   }
 
-moveAtachmentsToSeparateTable :: MonadDB m => Migration m
+moveAtachmentsToSeparateTable :: (MonadDB m, Log.MonadLog m) => Migration m
 moveAtachmentsToSeparateTable =
   Migration {
     mgrTable = tableMails
   , mgrFrom = 2
   , mgrDo = do
 
-      kRun_ $ sqlSelect "mails" $ do
+      runQuery_ . sqlSelect "mails" $ do
         sqlResult "count(*)"
         sqlWhere "attachments IS NOT NULL"
         sqlWhere "attachments <> '[]'"
-      let decoder1 :: Int -> Int -> Int
-          decoder1 _ value = value
-      count <- kFold decoder1 0
+      count :: Int64 <- fetchOne unSingle
 
       Log.mixlog_ $ "There are " ++ show count ++ " mails with attachments to move to mail_attachments, it will take around " ++ show ((count+999) `div` 1000) ++ " minutes"
 
-      kRunRaw $ "WITH"
+      runSQL_ $ "WITH"
           <+> "toinsert AS (SELECT mails.id AS id"
           <+> "                  , regexp_matches(attachments, '{\"attName\":\"([^\"]*)\",\"attContent\":\"([^\"]*)\"}', 'g') AS arr"
           <+> "               FROM mails"
@@ -55,7 +55,7 @@ moveAtachmentsToSeparateTable =
 
       Log.mixlog_ "Attachments moved to separate table, now dropping attachments column from mails"
 
-      kRunRaw "ALTER TABLE mails DROP COLUMN attachments"
+      runSQL_ "ALTER TABLE mails DROP COLUMN attachments"
   }
 
 addAttemptCountToMails :: MonadDB m => Migration m
@@ -64,10 +64,8 @@ addAttemptCountToMails =
     mgrTable = tableMails
   , mgrFrom = 3
   , mgrDo = do
-      kRunRaw "ALTER TABLE mails ADD COLUMN attempt INTEGER NOT NULL DEFAULT 0"
+      runSQL_ "ALTER TABLE mails ADD COLUMN attempt INTEGER NOT NULL DEFAULT 0"
   }
-
-
 
 addFileIdToAttachmentsTable :: MonadDB m => Migration m
 addFileIdToAttachmentsTable =
@@ -75,6 +73,6 @@ addFileIdToAttachmentsTable =
     mgrTable = tableMailAttachments
   , mgrFrom = 1
   , mgrDo = do
-      kRunRaw $ "ALTER TABLE mail_attachments ADD COLUMN file_id BIGINT,"
-             <> "ALTER COLUMN content DROP NOT NULL"
+      runSQL_ $ "ALTER TABLE mail_attachments ADD COLUMN file_id BIGINT,"
+            <+> "ALTER COLUMN content DROP NOT NULL"
   }

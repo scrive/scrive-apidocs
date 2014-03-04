@@ -1,11 +1,14 @@
-module Payments.Stats (record
-                      ,PaymentsAction(..)
-                      ,handlePaymentsStatsCSV)
-
-       where
+module Payments.Stats (
+    record
+  , PaymentsAction(..)
+  , handlePaymentsStatsCSV
+  ) where
 
 import Control.Monad.Base
+import Data.Int
 import Data.Maybe
+import Data.Monoid
+import qualified Control.Exception as E
 
 import MinutesTime
 import DB
@@ -38,42 +41,42 @@ data AddPaymentsStat = AddPaymentsStat { psTime        :: MinutesTime
                                        }
 instance MonadDB m => DBUpdate m AddPaymentsStat Bool where
   update AddPaymentsStat{..} = do
-    kRun01 $ SQL ("INSERT INTO payment_stats (time, provider, action, quantity, plan, company_id, account_code) "
-      <> "      SELECT ?, ?, ?, ?, ?, ?, ?"
-      <> "      WHERE EXISTS (SELECT 1 FROM companies     WHERE id = ?)"
-      <> "        AND EXISTS  (SELECT 1 FROM payment_plans WHERE account_code = ?)")
-               [toSql psTime
-               ,toSql psProvider
-               ,toSql psAction
-               ,toSql psQuantity
-               ,toSql psPlan
-               ,toSql psCompanyID
-               ,toSql psAccountCode
+    runQuery01 $ rawSQL ("INSERT INTO payment_stats (time, provider, action, quantity, plan, company_id, account_code) "
+      <> "      SELECT $1, $2, $3, $4, $5, $6, $7"
+      <> "      WHERE EXISTS (SELECT 1 FROM companies     WHERE id = $8)"
+      <> "        AND EXISTS  (SELECT 1 FROM payment_plans WHERE account_code = $9)")
+               (psTime
+               ,psProvider
+               ,psAction
+               ,fromIntegral psQuantity :: Int32
+               ,psPlan
+               ,psCompanyID
+               ,psAccountCode
                -- WHERE clause
-               ,toSql psCompanyID
-               ,toSql psAccountCode
-               ]
+               ,psCompanyID
+               ,psAccountCode
+               )
 
 data GetPaymentsStats = GetPaymentsStats
 instance (MonadBase IO m, MonadDB m) => DBQuery m GetPaymentsStats [[String]] where
   query GetPaymentsStats = do
-    _ <- kRun $ SQL ("SELECT payment_plans.sync_date, payment_plans.account_code, payment_plans.user_id, payment_plans.company_id, " <>
+    runSQL_ $ "SELECT payment_plans.sync_date, payment_plans.account_code, payment_plans.user_id, payment_plans.company_id, " <>
                      "       payment_plans.quantity, payment_plans.plan, payment_plans.provider, payment_plans.billing_ends, payment_plans.status, " <>
                      "       trim(trim(users.first_name) || ' ' || trim(users.last_name)), trim(users.email), " <>
                      "       trim(companies.name) " <>
                      "FROM payment_plans " <>
                      "LEFT OUTER JOIN users     ON payment_plans.user_id    = users.id " <>
                      "LEFT OUTER JOIN companies ON payment_plans.company_id = companies.id " <>
-                     "ORDER BY payment_plans.account_code DESC") []
-    kFold f []
-      where f :: [[String]] -> MinutesTime -> AccountCode -> CompanyID -> Int -> PricePlan -> PaymentPlanProvider -> MinutesTime -> PaymentPlanStatus -> Maybe String -> Maybe String -> Maybe String -> [[String]]
-            f acc t ac cid q pp pr be st un em cn =
+                     "ORDER BY payment_plans.account_code DESC"
+    foldlM f []
+      where f :: [[String]] -> (MinutesTime, AccountCode, CompanyID, Int32, PricePlan, PaymentPlanProvider, MinutesTime, PaymentPlanStatus, Maybe String, Maybe String, Maybe String) -> m [[String]]
+            f acc (t, ac, cid, q, pp, pr, be, st, un, em, cn) =
               let smartname = case cn of
                     Just name -> name
                     _         -> case un of
                         Just name | not $ null name -> name
                         _ -> fromMaybe "" em
-              in [formatMinutesTimeISO t, show ac, show cid, show q, show pp, show pr, formatMinutesTimeISO be, show st, smartname] : acc
+              in return $ [formatMinutesTimeISO t, show ac, show cid, show q, show pp, show pr, formatMinutesTimeISO be, show st, smartname] : acc
 
 
 
@@ -88,36 +91,36 @@ data PaymentsAction = SignupAction
                     | OwnerSwitchAction
                     deriving (Show, Eq)
 
-instance Convertible PaymentsAction Int where
-  safeConvert SignupAction        = return 1
-  safeConvert ChangeAction        = return 2
-  safeConvert CancelAction        = return 3
-  safeConvert ReactivateAction    = return 4
-  safeConvert CompanySwitchAction = return 5
-  safeConvert UserSwitchAction    = return 6
-  safeConvert SyncAction          = return 7
-  safeConvert PushAction          = return 8
-  safeConvert OwnerSwitchAction   = return 9
+instance PQFormat PaymentsAction where
+  pqFormat _ = pqFormat (undefined::Int16)
 
-instance Convertible Int PaymentsAction where
-  safeConvert 1 = return SignupAction
-  safeConvert 2 = return ChangeAction
-  safeConvert 3 = return CancelAction
-  safeConvert 4 = return ReactivateAction
-  safeConvert 5 = return CompanySwitchAction
-  safeConvert 6 = return UserSwitchAction
-  safeConvert 7 = return SyncAction
-  safeConvert 8 = return PushAction
-  safeConvert 9 = return OwnerSwitchAction
-  safeConvert s = Left ConvertError { convSourceValue  = show s
-                                    , convSourceType   = "Int"
-                                    , convDestType     = "PaymentsAction"
-                                    , convErrorMessage = "Convertion error: value " ++ show s ++ " not mapped"
-                                    }
+instance FromSQL PaymentsAction where
+  type PQBase PaymentsAction = PQBase Int16
+  fromSQL mbase = do
+    n <- fromSQL mbase
+    case n :: Int16 of
+      1 -> return SignupAction
+      2 -> return ChangeAction
+      3 -> return CancelAction
+      4 -> return ReactivateAction
+      5 -> return CompanySwitchAction
+      6 -> return UserSwitchAction
+      7 -> return SyncAction
+      8 -> return PushAction
+      9 -> return OwnerSwitchAction
+      _ -> E.throwIO $ RangeError {
+        reRange = [(1, 9)]
+      , reValue = n
+      }
 
-
-instance Convertible PaymentsAction SqlValue where
-  safeConvert e = fmap toSql (safeConvert e :: Either ConvertError Int)
-
-instance Convertible SqlValue PaymentsAction where
-  safeConvert s = safeConvert (fromSql s :: Int)
+instance ToSQL PaymentsAction where
+  type PQDest PaymentsAction = PQDest Int16
+  toSQL SignupAction        = toSQL (1::Int16)
+  toSQL ChangeAction        = toSQL (2::Int16)
+  toSQL CancelAction        = toSQL (3::Int16)
+  toSQL ReactivateAction    = toSQL (4::Int16)
+  toSQL CompanySwitchAction = toSQL (5::Int16)
+  toSQL UserSwitchAction    = toSQL (6::Int16)
+  toSQL SyncAction          = toSQL (7::Int16)
+  toSQL PushAction          = toSQL (8::Int16)
+  toSQL OwnerSwitchAction   = toSQL (9::Int16)

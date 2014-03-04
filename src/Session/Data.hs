@@ -11,7 +11,6 @@ import ActionQueue.Core
 import ActionQueue.Scheduler
 import Crypto.RNG
 import DB
-import DB.SQL2
 import MinutesTime
 import MagicHash
 import Session.SessionID
@@ -44,16 +43,22 @@ emptySession = do
 session :: Action SessionID Session (Maybe UserID, Maybe UserID, MagicHash, MagicHash) Scheduler
 session = Action {
     qaTable = tableSessions
-  , qaFields = \(uid, puid, token, csrf_token) -> [
-      ("user_id", toSql uid)
-    , ("pad_user_id", toSql puid)
-    , ("token", toSql token)
-    , ("csrf_token", toSql csrf_token)
-    ]
+  , qaSetFields = \(uid, puid, token, csrf_token) -> do
+    sqlSet "user_id" uid
+    sqlSet "pad_user_id" puid
+    sqlSet "token" token
+    sqlSet "csrf_token" csrf_token
   , qaSelectFields = ["id", "user_id", "pad_user_id", "expires", "token", "csrf_token"]
   , qaIndexField = "id"
   , qaExpirationDelay = "2 hours"
-  , qaDecode = kFold decoder []
+  , qaDecode = \(sid, user_id, pad_user_id, expires, token, csrf_token) -> Session {
+      sesID = sid
+    , sesUserID = user_id
+    , sesPadUserID = pad_user_id
+    , sesExpires = expires
+    , sesToken = token
+    , sesCSRFToken = csrf_token
+    }
   , qaUpdateSQL = \Session{..} -> toSQLCommand $ sqlUpdate "sessions" $ do
       sqlSet "user_id" sesUserID
       sqlSet "pad_user_id" sesPadUserID
@@ -64,12 +69,3 @@ session = Action {
     _ <- dbUpdate $ DeleteAction session sesID
     return ()
   }
-  where
-    decoder acc sid user_id pad_user_id expires token csrf_token = Session {
-        sesID = sid
-      , sesUserID = user_id
-      , sesPadUserID = pad_user_id
-      , sesExpires = expires
-      , sesToken = token
-      , sesCSRFToken = csrf_token
-      } : acc

@@ -9,14 +9,15 @@ module DB.Model.ForeignKey (
   ) where
 
 import Data.Monoid
+import Data.Monoid.Space
+import Data.Monoid.Utils
+import Database.PostgreSQL.PQTypes
 import qualified Data.Set as S
 
-import DB.SQL
-
 data ForeignKey = ForeignKey {
-  fkColumns    :: S.Set RawSQL
-, fkRefTable   :: RawSQL
-, fkRefColumns :: S.Set RawSQL
+  fkColumns    :: S.Set (RawSQL ())
+, fkRefTable   :: RawSQL ()
+, fkRefColumns :: S.Set (RawSQL ())
 , fkOnUpdate   :: ForeignKeyAction
 , fkOnDelete   :: ForeignKeyAction
 , fkDeferrable :: Bool
@@ -31,11 +32,11 @@ data ForeignKeyAction
   | ForeignKeySetDefault
   deriving (Eq, Ord, Show)
 
-fkOnColumn :: RawSQL -> RawSQL -> RawSQL -> ForeignKey
+fkOnColumn :: RawSQL () -> RawSQL () -> RawSQL () -> ForeignKey
 fkOnColumn column reftable refcolumn =
   fkOnColumns [column] reftable [refcolumn]
 
-fkOnColumns :: [RawSQL] -> RawSQL -> [RawSQL] -> ForeignKey
+fkOnColumns :: [RawSQL ()] -> RawSQL () -> [RawSQL ()] -> ForeignKey
 fkOnColumns columns reftable refcolumns = ForeignKey {
   fkColumns    = S.fromList columns
 , fkRefTable   = reftable
@@ -46,22 +47,22 @@ fkOnColumns columns reftable refcolumns = ForeignKey {
 , fkDeferred   = False
 }
 
-fkName :: RawSQL -> ForeignKey -> SQL
+fkName :: RawSQL () -> ForeignKey -> RawSQL ()
 fkName tname ForeignKey{..} = mconcat [
     "fk__"
-  , raw tname
+  , tname
   , "__"
-  , intersperseNoWhitespace "__" (map raw . S.toAscList $ fkColumns)
+  , mintercalate "__" $ S.toAscList fkColumns
   , "__"
-  , raw fkRefTable
+  , fkRefTable
   ]
 
-sqlAddFK :: RawSQL -> ForeignKey -> SQL
+sqlAddFK :: RawSQL () -> ForeignKey -> RawSQL ()
 sqlAddFK tname fk@ForeignKey{..} = mconcat [
     "ADD CONSTRAINT" <+> fkName tname fk <+> "FOREIGN KEY ("
-  , intersperseNoWhitespace ", " (map raw . S.toAscList $ fkColumns)
-  , ") REFERENCES" <+> raw fkRefTable <+> "("
-  , intersperseNoWhitespace ", " (map raw . S.toAscList $ fkRefColumns)
+  , mintercalate ", " $ S.toAscList fkColumns
+  , ") REFERENCES" <+> fkRefTable <+> "("
+  , mintercalate ", " $ S.toAscList fkRefColumns
   , ") ON UPDATE" <+> foreignKeyActionToSQL fkOnUpdate
   , "  ON DELETE" <+> foreignKeyActionToSQL fkOnDelete
   , " " <> if fkDeferrable then "DEFERRABLE" else "NOT DEFERRABLE"
@@ -74,5 +75,5 @@ sqlAddFK tname fk@ForeignKey{..} = mconcat [
     foreignKeyActionToSQL ForeignKeySetNull = "SET NULL"
     foreignKeyActionToSQL ForeignKeySetDefault = "SET DEFAULT"
 
-sqlDropFK :: RawSQL -> ForeignKey -> SQL
+sqlDropFK :: RawSQL () -> ForeignKey -> RawSQL ()
 sqlDropFK tname fk = "DROP CONSTRAINT" <+> fkName tname fk

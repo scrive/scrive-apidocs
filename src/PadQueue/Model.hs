@@ -7,7 +7,6 @@ module PadQueue.Model (
     ) where
 
 import Control.Monad
-import Database.HDBC
 import DB
 import OurPrelude
 import Utils.Monad
@@ -15,43 +14,44 @@ import User.Model
 import Doc.SignatoryLinkID
 import Doc.DocumentID
 import Doc.Model
-import Data.Maybe (listToMaybe)
 import Util.Actor
 import EvidenceLog.Model
 import Text.StringTemplates.Templates
 import Util.SignatoryLinkUtils
 
-type PadQueue = Maybe (DocumentID,SignatoryLinkID)
+type PadQueue = Maybe (DocumentID, SignatoryLinkID)
 
 data AddToPadQueue = AddToPadQueue UserID DocumentID SignatoryLinkID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddToPadQueue () where
   update (AddToPadQueue uid did slid a) = do
     doc <- query $ GetDocumentByDocumentID did
     update $ ClearPadQueue uid a
-    r <- kRun $ SQL "INSERT INTO padqueue( user_id, document_id, signatorylink_id) VALUES(?,?,?)"
-                [toSql uid, toSql did, toSql slid]
-    when_ (r == 1) $
-                update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
-                SendToPadDevice
-                (return ())
-                (getSigLinkFor slid doc)
-                Nothing
-                a
-                did
+    r <- runQuery . sqlInsert "padqueue" $ do
+      sqlSet "user_id" uid
+      sqlSet "document_id" did
+      sqlSet "signatorylink_id" slid
+    when_ (r == 1) $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+      SendToPadDevice
+      (return ())
+      (getSigLinkFor slid doc)
+      Nothing
+      a
+      did
     return ()
 
 data ClearPadQueue = ClearPadQueue UserID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ClearPadQueue () where
   update (ClearPadQueue uid a) = do
-    kRun_ $ SQL "SELECT document_id, signatorylink_id FROM padqueue WHERE user_id = ? "
-           [toSql uid]
-    pq <- fetchPadQueue
+    runQuery_ . sqlSelect "padqueue" $ do
+      sqlResult "document_id"
+      sqlResult "signatorylink_id"
+      sqlWhereEq "user_id" uid
+    pq :: PadQueue <- fetchMaybe id
     case pq of
        Nothing -> return ()
        Just (did, slid) -> do
          doc <- query $ GetDocumentByDocumentID did
-         r <- kRun $ SQL "DELETE FROM padqueue WHERE user_id = ?"
-                   [toSql uid]
+         r <- runQuery $ "DELETE FROM padqueue WHERE user_id =" <?> uid
          when_ (r == 1) $ do
            _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                 RemovedFromPadDevice
@@ -65,13 +65,13 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ClearPadQueue () where
 data GetPadQueue = GetPadQueue UserID
 instance MonadDB m => DBQuery m GetPadQueue PadQueue where
   query (GetPadQueue uid) = do
-    kRun_ $ SQL ("SELECT document_id, signatorylink_id FROM padqueue WHERE user_id = ? " 
-                <+> "AND EXISTS (SELECT * FROM signatory_links WHERE signatory_links.document_id = padqueue.document_id " 
-                <+>                                               " AND signatory_links.user_id = ? AND signatory_links.deleted IS NULL)")
-            [toSql uid,toSql uid]
-    fetchPadQueue
-
-fetchPadQueue :: MonadDB m => m PadQueue
-fetchPadQueue = listToMaybe `liftM` kFold decoder []
-  where
-    decoder acc did slid  = (did, slid) : acc
+    runQuery_ . sqlSelect "padqueue" $ do
+      sqlResult "document_id"
+      sqlResult "signatorylink_id"
+      sqlWhereEq "user_id" uid
+      sqlWhereExists $ sqlSelect "signatory_links" $ do
+        sqlResult "1"
+        sqlWhereEqSql "signatory_links.document_id" "padqueue.document_id"
+        sqlWhereEq "signatory_links.user_id" uid
+        sqlWhereIsNULL "signatory_links.deleted"
+    fetchMaybe id

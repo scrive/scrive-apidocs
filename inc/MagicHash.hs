@@ -12,11 +12,11 @@ import Control.Applicative
 import Control.Arrow
 import Data.Int
 import Data.Word
+import Database.PostgreSQL.PQTypes
 import Happstack.Server
 import Numeric
 
 import Crypto.RNG
-import DB.Derive
 import Utils.Read
 
 -- | Hash value that is produced by cryptographically secure random
@@ -29,8 +29,7 @@ import Utils.Read
 -- unsigned one in Show instance and readHex works fine with negative
 -- numbers.
 newtype MagicHash = MagicHash Int64
-  deriving (Eq, Ord, Random)
-$(newtypeDeriveConvertible ''MagicHash)
+  deriving (Eq, Ord, PQFormat, Random)
 
 instance Show MagicHash where
   show (MagicHash x) = pad0 16 $ showHex (fromIntegral x :: Word64) ""
@@ -41,6 +40,14 @@ instance Read MagicHash where
 instance FromReqURI MagicHash where
   fromReqURI = maybeRead
 
+instance FromSQL MagicHash where
+  type PQBase MagicHash = PQBase Int64
+  fromSQL mbase = MagicHash <$> fromSQL mbase
+
+instance ToSQL MagicHash where
+  type PQDest MagicHash = PQDest Int64
+  toSQL (MagicHash n) = toSQL n
+
 -- | Construct a magic hash manually.  It is up to the caller to
 -- reason about the consequences if the argument is not generated from
 -- a secure random source.
@@ -50,4 +57,4 @@ unsafeMagicHash = MagicHash
 -- | Deconstruct a magic hash manually.  It is up to the caller to
 -- reason about the consequences of using the internal number.
 unMagicHash :: MagicHash -> Int64
-unMagicHash (MagicHash value) = value
+unMagicHash (MagicHash mh) = mh

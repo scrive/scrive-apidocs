@@ -13,7 +13,6 @@ import KontraLink
 import Happstack.StaticRouting(Route, choice, dir)
 import Util.MonadUtils
 import Control.Exception.Lifted
-import DB.SQL2
 import OAuth.View
 import OAuth.Util
 import User.Model

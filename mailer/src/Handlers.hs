@@ -8,10 +8,10 @@ import Control.Monad.Reader
 import Happstack.Server hiding (dir, path)
 import Happstack.StaticRouting
 
+import DB
 import DB.PostgreSQL
 import Crypto.RNG
 import MailGun
-import MailingServerConf
 import Mailer
 import SendGrid
 import System.Directory
@@ -20,8 +20,8 @@ import Data.Functor
 import Data.ByteString.UTF8  as BS
 import Data.Maybe
 
-router :: CryptoRNGState -> MailingServerConf -> Mailer Response -> ServerPartT IO Response
-router rng conf routes = withPostgreSQL (mscDBConfig conf) $
+router :: CryptoRNGState -> ConnectionSource -> Mailer Response -> ServerPartT IO Response
+router rng cs routes = withPostgreSQL cs $
   runMailer rng $ routes `mplus` notFound (toResponse "Nothing is here.")
 
 handlers :: Route (Mailer Response)
@@ -32,16 +32,12 @@ handlers = choice [
   where
     hPost = path POST id
 
-
-
-
 handleSendGridEvents :: Mailer Response
 handleSendGridEvents = do
   ct <- getHeader "Content-Type" <$> askRq
   if ("x-www-form-urlencoded" `isInfixOf` (fromMaybe "" $ BS.toString <$> ct))
      then withDecodedBody handleSendGridEventsV1
      else handleSendGridEventsV3
-
 
 withDecodedBody :: Mailer Response -> Mailer Response
 withDecodedBody mr = do

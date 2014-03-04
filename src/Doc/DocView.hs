@@ -45,11 +45,12 @@ import qualified Data.Set as Set
 import Analytics.Include
 import qualified Amazon as AWS
 import Happstack.Server.SimpleHTTP
+import qualified Log
 
 pageCreateFromTemplate :: TemplatesMonad m => m String
 pageCreateFromTemplate = renderTemplate_ "createFromTemplatePage"
 
-documentJSON :: (MonadDB m, MonadIO m, AWS.AmazonMonad m) => (Maybe User) -> Bool -> Bool -> Bool -> PadQueue -> Maybe SignatoryLink -> Document -> m JSValue
+documentJSON :: (MonadDB m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m) => (Maybe User) -> Bool -> Bool -> Bool -> PadQueue -> Maybe SignatoryLink -> Document -> m JSValue
 documentJSON muser includeEvidenceAttachments forapi forauthor pq msl doc = do
     file <- documentfileM doc
     sealedfile <- documentsealedfileM doc

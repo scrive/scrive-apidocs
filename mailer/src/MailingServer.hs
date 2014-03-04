@@ -17,6 +17,7 @@ import ServiceChecker
 import Utils.Cron
 import Utils.IO
 import Utils.Network
+import DB
 import DB.PostgreSQL
 import DB.Checks
 import Mails.Tables
@@ -30,7 +31,9 @@ main = Log.withLogger $ do
   appname <- getProgName
   conf <- readConfig Log.mixlog_ appname [] "mailing_server.conf"
   checkExecutables
-  withPostgreSQL (mscDBConfig conf) $
+
+  let connSource = defaultSource $ defaultSettings { csConnInfo = mscDBConfig conf }
+  withPostgreSQL connSource $
     checkDatabase Log.mixlog_ mailerTables
 
   fcache <- MemCache.new BS.length 52428800
@@ -43,18 +46,17 @@ main = Log.withLogger $ do
         (routes, overlaps) = R.compile handlers
     maybe (return ()) Log.mixlog_ overlaps
     socket <- listenOn (htonl iface) $ fromIntegral port
-    forkIO $ simpleHTTPWithSocket socket handlerConf (router rng conf routes)
+    forkIO $ simpleHTTPWithSocket socket handlerConf (router rng connSource routes)
    ) killThread $ \_ -> do
      let sender = createSender $ mscMasterSender conf
-         dbconf = mscDBConfig conf
      msender <- newMVar sender
      withCronJobs
-       ([ forkCron_ True "Dispatcher" 5 $ dispatcher rng sender msender dbconf amazonconf
-        , forkCron_ True "Cleaner" (60*60) $ cleaner rng dbconf
+       ([ forkCron_ True "Dispatcher" 5 $ dispatcher rng sender msender connSource amazonconf
+        , forkCron_ True "Cleaner" (60*60) $ cleaner rng connSource
         ] ++
         case mscSlaveSender conf of
           Just slave -> [ forkCron True "ServiceAvailabilityChecker" 0
-                            (serviceAvailabilityChecker conf rng dbconf (sender, createSender slave) msender) ]
+                            (serviceAvailabilityChecker conf rng connSource (sender, createSender slave) msender) ]
           Nothing    -> []) $ \_ -> do
       waitForTermination
       Log.mixlog_ $ "Termination request received"

@@ -43,6 +43,9 @@ import Control.Monad.Reader
 import Crypto.RNG
 import Control.Monad.Trans.Maybe
 import Control.Monad.Trans.Identity
+import Database.PostgreSQL.PQTypes
+import Text.StringTemplates.Templates
+import Happstack.Server (ServerPartT)
 
 import Text.JSON.Gen
 import Text.JSON
@@ -89,7 +92,13 @@ instance (MonadLog m, Error e) => MonadLog (ErrorT e m) where
 instance (MonadLog m) => MonadLog (ReaderT r m) where
   mixlogjs title js = lift (mixlogjs title js)
 
+instance MonadLog m => MonadLog (DBT m) where
+  mixlogjs title js = lift (mixlogjs title js)
+
 instance (MonadLog m) => MonadLog (CryptoRNGT m) where
+  mixlogjs title js = lift (mixlogjs title js)
+
+instance (MonadLog m) => MonadLog (TemplatesT m) where
   mixlogjs title js = lift (mixlogjs title js)
 
 instance (MonadLog m, SRWS.Monoid w) => MonadLog (SRWS.RWST r w s m) where
@@ -98,7 +107,8 @@ instance (MonadLog m, SRWS.Monoid w) => MonadLog (SRWS.RWST r w s m) where
 instance (MonadLog m, LRWS.Monoid w) => MonadLog (LRWS.RWST r w s m) where
   mixlogjs title js = lift (mixlogjs title js)
 
-
+instance (MonadLog m) => MonadLog (ServerPartT m) where
+  mixlogjs title js = lift (mixlogjs title js)
 
 -- Here we use 'ByteString.putStrLn' because 'Prelude.putStrLn' prints
 -- character by character and in case there are many thread it will

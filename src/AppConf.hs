@@ -7,6 +7,7 @@ import Configuration
 import HostClock.System (defaultNtpServers)
 import User.Model
 import Mails.MailsConfig
+import Data.ByteString (ByteString)
 import Data.Word
 import System.Console.GetOpt
 import LiveDocx (LiveDocxConf(..))
@@ -28,7 +29,7 @@ data AppConf = AppConf {
   , useHttps           :: Bool                         -- ^ should we redirect to https?
   , store              :: FilePath                     -- ^ where to put database files
   , amazonConfig       :: Maybe (String,String,String) -- ^ bucket, access key, secret key
-  , dbConfig           :: String                       -- ^ postgresql configuration
+  , dbConfig           :: ByteString                   -- ^ postgresql configuration
   , production         :: Bool                         -- ^ production flag, enables some production stuff, disables some development
   , guardTimeConf      :: GuardTimeConf
   , mailsConfig        :: MailsConfig                  -- ^ mail sendout configuration

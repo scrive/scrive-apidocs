@@ -14,15 +14,14 @@ Also, it is insert only. No updates, no deletes.
 tableEvidenceLog :: Table
 tableEvidenceLog = tblTable {
   tblName = "evidence_log"
-  , tblVersion = 3
+  , tblVersion = 4
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "document_id", colType = BigIntT }
     , tblColumn { colName = "user_id", colType = BigIntT }
     , tblColumn { colName = "email", colType = TextT }
     , tblColumn { colName = "time", colType = TimestampWithZoneT, colNullable = False }
-    , tblColumn { colName = "request_ip_v4", colType = BigIntT }
-    , tblColumn { colName = "request_ip_v6", colType = BigIntT }
+    , tblColumn { colName = "request_ip_v4", colType = IntegerT }
     , tblColumn { colName = "signatory_link_id", colType = BigIntT }
     , tblColumn { colName = "text", colType = TextT, colNullable = False }
     , tblColumn { colName = "event_type", colType = SmallIntT, colNullable = False }

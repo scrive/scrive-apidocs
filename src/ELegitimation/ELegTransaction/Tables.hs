@@ -1,11 +1,13 @@
 module ELegitimation.ELegTransaction.Tables where
 
+import Data.Monoid
+
 import DB
 import DB.SQLFunction
 
 mergeELegTransaction :: SQLFunction
 mergeELegTransaction = SQLFunction {
-  sqlFunDef  = SQL ("CREATE OR REPLACE FUNCTION"
+  sqlFunDef  = "CREATE OR REPLACE FUNCTION"
   <> " merge_eleg_transaction(id_ TEXT, session_id_ BIGINT, nonce_ TEXT,"
   <> "   tbs_ TEXT, encoded_tbs_ TEXT, signatory_link_id_ BIGINT,"
   <> "   document_id_ BIGINT, token_ BIGINT, status_ TEXT, cr_transaction_id_ TEXT,"
@@ -40,7 +42,7 @@ mergeELegTransaction = SQLFunction {
   <> "     END;"
   <> "   END LOOP;"
   <> " END;"
-  <> " $$ LANGUAGE plpgsql") []
+  <> " $$ LANGUAGE plpgsql"
 }
 
 tableELegTransactions :: Table

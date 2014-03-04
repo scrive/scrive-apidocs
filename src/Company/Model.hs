@@ -14,9 +14,10 @@ module Company.Model (
   , CompanyOrderBy(..)
   ) where
 
+import Data.Monoid
+import Data.Monoid.Space
 import Data.Typeable
 import DB
-import DB.SQL2
 import Company.CompanyID
 import Control.Monad.State
 import User.UserID
@@ -76,77 +77,75 @@ data CompanyOrderBy
 companyOrderByToOrderBySQL :: CompanyOrderBy -> SQL
 companyOrderByToOrderBySQL order =
   case order of
-    CompanyOrderByName    -> SQL "companies.name" []
-    CompanyOrderByNumber  -> SQL "companies.number" []
-    CompanyOrderByAddress -> SQL "companies.address" []
-    CompanyOrderByZip     -> SQL "companies.zip" []
-    CompanyOrderByCity    -> SQL "companies.city" []
-    CompanyOrderByCountry -> SQL "companies.country" []
-    CompanyOrderByID      -> SQL "companies.id" []
+    CompanyOrderByName    -> "companies.name"
+    CompanyOrderByNumber  -> "companies.number"
+    CompanyOrderByAddress -> "companies.address"
+    CompanyOrderByZip     -> "companies.zip"
+    CompanyOrderByCity    -> "companies.city"
+    CompanyOrderByCountry -> "companies.country"
+    CompanyOrderByID      -> "companies.id"
 
 data GetCompanies = GetCompanies [CompanyFilter] [AscDesc CompanyOrderBy] Integer Integer
 instance MonadDB m => DBQuery m GetCompanies [Company] where
   query (GetCompanies filters sorting offset limit) = do
-    kRun_ $ sqlSelect "companies" $ do
+    runQuery_ $ sqlSelect "companies" $ do
        sqlJoinOn "company_uis" "company_uis.company_id = companies.id"
        selectCompaniesSelectors
        mapM_ companyFilterToWhereClause filters
        let ascdesc (Asc x) = companyOrderByToOrderBySQL x
-           ascdesc (Desc x) = companyOrderByToOrderBySQL x <> SQL " DESC" []
+           ascdesc (Desc x) = companyOrderByToOrderBySQL x <> " DESC"
        mapM_ (sqlOrderBy . ascdesc) sorting
        sqlOffset offset
        sqlLimit limit
-       sqlOrderBy "companies.id DESC"
-    fetchCompanies
+       sqlOrderBy "companies.id"
+    fetchMany fetchCompany
 
 data GetCompany = GetCompany CompanyID
 instance MonadDB m => DBQuery m GetCompany (Maybe Company) where
   query (GetCompany cid) = do
-    kRun_ $ sqlSelect "companies" $ do
+    runQuery_ $ sqlSelect "companies" $ do
       sqlJoinOn "company_uis" "company_uis.company_id = companies.id"
       selectCompaniesSelectors
       sqlWhereEq "id" cid
-    fetchCompanies >>= oneObjectReturnedGuard
+    fetchMaybe fetchCompany
 
 data GetCompanyByUserID = GetCompanyByUserID UserID
 instance MonadDB m => DBQuery m GetCompanyByUserID Company where
   query (GetCompanyByUserID uid) = do
-    kRun_ $ sqlSelect "companies" $ do
+    runQuery_ $ sqlSelect "companies" $ do
       sqlJoinOn "users" "users.company_id = companies.id"
       sqlJoinOn "company_uis" "company_uis.company_id = companies.id"
       selectCompaniesSelectors
       sqlWhereEq "users.id" uid
-    fetchCompanies >>= exactlyOneObjectReturnedGuard
+    fetchOne fetchCompany
 
 data CreateCompany = CreateCompany
 instance MonadDB m => DBUpdate m CreateCompany Company where
   update (CreateCompany) = do
-    kRun_ $ sqlInsert "companies" $ do
+    runQuery_ $ sqlInsert "companies" $ do
       sqlSetCmd "id" "DEFAULT"
       sqlResult "id"
-    (companyidx :: CompanyID) <- kFold (flip (:)) [] >>= exactlyOneObjectReturnedGuard
-    kRun_ $ sqlInsert "company_uis" $ do
+    companyidx :: CompanyID <- fetchOne unSingle
+    runQuery_ $ sqlInsert "company_uis" $ do
       sqlSet "company_id" companyidx
 
-    kRun_ $ sqlSelect "companies" $ do
+    runQuery_ $ sqlSelect "companies" $ do
       sqlJoinOn "company_uis" "company_uis.company_id = companies.id"
       selectCompaniesSelectors
       sqlWhereEq "companies.id" companyidx
-    fetchCompanies >>= exactlyOneObjectReturnedGuard
+    fetchOne fetchCompany
 
 data SetCompanyIPAddressMaskList = SetCompanyIPAddressMaskList CompanyID [IPAddress]
 instance MonadDB m => DBUpdate m SetCompanyIPAddressMaskList Bool where
-  update (SetCompanyIPAddressMaskList cid ads) = do
-    kRun01 $ SQL ("UPDATE companies SET"
-                  <> "  ip_address_mask = ?"
-                  <> "  WHERE id = ?")
-             [toSql $ (show ads), toSql cid]
-
+  update (SetCompanyIPAddressMaskList cid ads) =
+    runQuery01 . sqlUpdate "companies" $ do
+      sqlSet "ip_address_mask" $ show ads
+      sqlWhereEq "id" cid
 
 data SetCompanyInfo = SetCompanyInfo CompanyID CompanyInfo
 instance MonadDB m => DBUpdate m SetCompanyInfo Bool where
   update (SetCompanyInfo cid CompanyInfo{..}) =
-    kRun01 $ sqlUpdate "companies" $ do
+    runQuery01 $ sqlUpdate "companies" $ do
       sqlSet "name" companyname
       sqlSet "number" companynumber
       sqlSet "address" companyaddress
@@ -173,21 +172,17 @@ selectCompaniesSelectors = do
   sqlResult "companies.ip_address_mask_list"
   sqlResult "companies.sms_originator"
 
-
-fetchCompanies :: MonadDB m => m [Company]
-fetchCompanies = kFold decoder []
-  where
-    decoder acc cid name number address zip' city country
-      ip_address_mask_list sms_originator = Company {
-        companyid = cid
-      , companyinfo = CompanyInfo {
-          companyname = name
-        , companynumber = number
-        , companyaddress = address
-        , companyzip = zip'
-        , companycity = city
-        , companycountry = country
-        , companyipaddressmasklist = maybe [] $(read) ip_address_mask_list
-        , companysmsoriginator = sms_originator
-        }
-      } : acc
+fetchCompany :: (CompanyID, String, String, String, String, String, String, Maybe String, String) -> Company
+fetchCompany (cid, name, number, address, zip', city, country, ip_address_mask_list, sms_originator) = Company {
+  companyid = cid
+, companyinfo = CompanyInfo {
+    companyname = name
+  , companynumber = number
+  , companyaddress = address
+  , companyzip = zip'
+  , companycity = city
+  , companycountry = country
+  , companyipaddressmasklist = maybe [] $(read) ip_address_mask_list
+  , companysmsoriginator = sms_originator
+  }
+}

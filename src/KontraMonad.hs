@@ -13,11 +13,12 @@ import Happstack.Server
 
 import Context
 import Crypto.RNG
-import DB.Core
+import DB
 import GuardTime (GuardTimeConfMonad)
 import MailContext (MailContextMonad)
 import Text.StringTemplates.Templates
 import qualified Amazon as AWS
+import qualified Log
 
 -- | This is for grouping things together so we won't need to
 -- write all that each time we write function type signature
@@ -28,6 +29,7 @@ class ( Applicative m
       , HasRqData m
       , KontraMonad m
       , MailContextMonad m
+      , Log.MonadLog m
       , MonadDB m
       , MonadBase IO m
       , MonadBaseControl IO m

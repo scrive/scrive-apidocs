@@ -3,7 +3,6 @@ module DumpEvidenceTexts (dumpAllEvidenceTexts) where
 import Data.Function (on)
 import Data.List (sortBy)
 import Data.Maybe (fromJust, isNothing)
-import DB (getMinutesTime)
 import Doc.DocStateData (SignatoryField(..), SignatoryLink(..), FieldType(..), DeliveryMethod(..))
 import Doc.DocumentID (unsafeDocumentID)
 import EvidenceLog.View (simpleEvents, simplyfiedEventText, eventForVerificationPage)
@@ -15,7 +14,7 @@ import Control.Applicative ((<$>))
 import Control.Monad (forM, forM_, when)
 import Control.Monad.Reader (asks)
 import Control.Monad.Trans (liftIO)
-import MinutesTime (formatMinutesTimeUTC, MinutesTime, parseMinutesTimeDMY)
+import MinutesTime
 import TestKontra (TestEnvSt, teOutputDirectory, teGlobalTemplates)
 import qualified Text.StringTemplates.Fields as F
 import EvidenceLog.Model (DocumentEvidenceEvent'(..), EvidenceEventType(..), CurrentEvidenceEventType(..), evidenceLogText)
@@ -87,7 +86,6 @@ dumpEvidenceTexts now lang = do
                                 , evEmail = actorEmail actor
                                 , evUserID = actorUserID actor
                                 , evIP4 = actorIP actor
-                                , evIP6 = Nothing
                                 , evSigLink = sl
                                 , evAPI = actorAPIString actor
                                 , evAffectedSigLink = asl

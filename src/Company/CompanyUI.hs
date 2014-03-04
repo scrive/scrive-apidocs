@@ -7,7 +7,6 @@ module Company.CompanyUI (
 
 import Data.Typeable
 import DB
-import DB.SQL2
 import Company.CompanyID
 import Control.Monad.State
 import OurPrelude
@@ -21,8 +20,8 @@ data CompanyUI = CompanyUI
   , companyemailemailbackgroundcolour :: Maybe String
   , companyemailbackgroundcolour      :: Maybe String
   , companyemailtextcolour            :: Maybe String
-  , companyemaillogo                  :: Maybe Binary
-  , companysignviewlogo               :: Maybe Binary
+  , companyemaillogo                  :: Maybe (Binary BS.ByteString)
+  , companysignviewlogo               :: Maybe (Binary BS.ByteString)
   , companysignviewtextcolour         :: Maybe String
   , companysignviewtextfont           :: Maybe String
   , companysignviewprimarycolour      :: Maybe String
@@ -32,7 +31,7 @@ data CompanyUI = CompanyUI
   , companysignviewbarscolour         :: Maybe String
   , companysignviewbarstextcolour     :: Maybe String
   , companysignviewbackgroundcolour   :: Maybe String
-  , companycustomlogo                 :: Maybe Binary
+  , companycustomlogo                 :: Maybe (Binary BS.ByteString)
   , companycustombarscolour           :: Maybe String
   , companycustombarstextcolour       :: Maybe String
   , companycustombarssecondarycolour  :: Maybe String
@@ -42,15 +41,15 @@ data CompanyUI = CompanyUI
 data GetCompanyUI = GetCompanyUI CompanyID
 instance MonadDB m => DBQuery m GetCompanyUI CompanyUI where
   query (GetCompanyUI cid) = do
-    kRun_ $ sqlSelect "company_uis" $ do
+    runQuery_ . sqlSelect "company_uis" $ do
       sqlWhereEq "company_id" cid
       selectCompanyUIsSelectors
-    fetchCompanyUIs >>= exactlyOneObjectReturnedGuard
+    fetchOne fetchCompanyUI
 
 data SetCompanyUI = SetCompanyUI CompanyID CompanyUI
 instance MonadDB m => DBUpdate m SetCompanyUI Bool where
   update (SetCompanyUI cid cui) = do
-    kRun01 $ sqlUpdate "company_uis" $ do
+    runQuery01 . sqlUpdate "company_uis" $ do
       sqlSet "email_bordercolour" $ companyemailbordercolour cui
       sqlSet "email_font" $ companyemailfont cui
       sqlSet "email_buttoncolour" $ companyemailbuttoncolour cui
@@ -102,43 +101,33 @@ selectCompanyUIsSelectors = do
   sqlResult "company_uis.custom_barssecondarycolour"
   sqlResult "company_uis.custom_backgroundcolour"
 
-
-fetchCompanyUIs :: MonadDB m => m [CompanyUI]
-fetchCompanyUIs = kFold decoder []
+fetchCompanyUI :: (CompanyID, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe (Binary BS.ByteString), Maybe (Binary BS.ByteString), Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe (Binary BS.ByteString), Maybe String, Maybe String, Maybe String, Maybe String) -> CompanyUI
+fetchCompanyUI (company_id, email_font, email_bordercolour, email_buttoncolour, email_emailbackgroundcolour, email_backgroundcolour, email_textcolour, email_logo, signview_logo, signview_textcolour, signview_textfont, signview_primarycolour, signview_primarytextcolour, signview_secondarycolour, signview_secondarytextcolour, signview_barscolour, signview_barstextcolour, signview_backgroundcolour, custom_logo, custom_barscolour, custom_barstextcolour, custom_barssecondarycolour, custom_backgroundcolour) = CompanyUI {
+  companyuicompanyid = company_id
+, companyemailfont = email_font
+, companyemailbordercolour = email_bordercolour
+, companyemailbuttoncolour = email_buttoncolour
+, companyemailemailbackgroundcolour = email_emailbackgroundcolour
+, companyemailbackgroundcolour = email_backgroundcolour
+, companyemailtextcolour =  email_textcolour
+, companyemaillogo = logoFromBinary email_logo
+, companysignviewlogo = logoFromBinary signview_logo
+, companysignviewtextcolour = signview_textcolour
+, companysignviewtextfont = signview_textfont
+, companysignviewprimarycolour = signview_primarycolour
+, companysignviewprimarytextcolour = signview_primarytextcolour
+, companysignviewsecondarycolour = signview_secondarycolour
+, companysignviewsecondarytextcolour = signview_secondarytextcolour
+, companysignviewbarscolour = signview_barscolour
+, companysignviewbarstextcolour = signview_barstextcolour
+, companysignviewbackgroundcolour = signview_backgroundcolour
+, companycustomlogo  = logoFromBinary custom_logo
+, companycustombarscolour = custom_barscolour
+, companycustombarstextcolour = custom_barstextcolour
+, companycustombarssecondarycolour = custom_barssecondarycolour
+, companycustombackgroundcolour = custom_backgroundcolour
+}
   where
     -- We should interpret empty logos as no logos.
     logoFromBinary (Just l) = if (BS.null $ unBinary l) then Nothing else Just l
     logoFromBinary Nothing = Nothing
-    decoder acc
-      company_id
-      email_font
-      email_bordercolour email_buttoncolour email_emailbackgroundcolour
-      email_backgroundcolour email_textcolour email_logo signview_logo signview_textcolour
-      signview_textfont signview_primarycolour signview_primarytextcolour signview_secondarycolour signview_secondarytextcolour
-      signview_barscolour signview_barstextcolour
-      signview_backgroundcolour custom_logo custom_barscolour custom_barstextcolour
-      custom_barssecondarycolour custom_backgroundcolour = CompanyUI
-        { companyuicompanyid = company_id
-        , companyemailfont = email_font
-        , companyemailbordercolour = email_bordercolour
-        , companyemailbuttoncolour = email_buttoncolour
-        , companyemailemailbackgroundcolour = email_emailbackgroundcolour
-        , companyemailbackgroundcolour = email_backgroundcolour
-        , companyemailtextcolour =  email_textcolour
-        , companyemaillogo = logoFromBinary email_logo
-        , companysignviewlogo = logoFromBinary signview_logo
-        , companysignviewtextcolour = signview_textcolour
-        , companysignviewtextfont = signview_textfont
-        , companysignviewprimarycolour = signview_primarycolour
-        , companysignviewprimarytextcolour = signview_primarytextcolour
-        , companysignviewsecondarycolour = signview_secondarycolour
-        , companysignviewsecondarytextcolour = signview_secondarytextcolour
-        , companysignviewbarscolour = signview_barscolour
-        , companysignviewbarstextcolour = signview_barstextcolour
-        , companysignviewbackgroundcolour = signview_backgroundcolour
-        , companycustomlogo  = logoFromBinary custom_logo
-        , companycustombarscolour = custom_barscolour
-        , companycustombarstextcolour = custom_barstextcolour
-        , companycustombarssecondarycolour = custom_barssecondarycolour
-        , companycustombackgroundcolour = custom_backgroundcolour
-        } : acc

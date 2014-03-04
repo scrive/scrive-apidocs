@@ -6,10 +6,11 @@ module MailingServerConf (
 import Data.Word
 import Configuration
 import Mails.Data
+import qualified Data.ByteString as BS
 
 data MailingServerConf = MailingServerConf {
     mscHttpBindAddress :: (Word32, Word16)
-  , mscDBConfig        :: String
+  , mscDBConfig        :: BS.ByteString
   , mscMasterSender    :: SenderConfig
   , mscSlaveSender     :: Maybe SenderConfig
   , mscAmazonConfig    :: Maybe (String, String, String)

@@ -200,7 +200,7 @@ makeAttachmentFromFile (Input contentspec (Just filename) _contentType) = do
         let title = takeBaseName filename
         actor <- guardJustM $ mkAuthorActor <$> getContext
         ctx <- getContext
-        att <- guardRightM $ dbUpdate $ NewAttachment (userid $ fromJust $ ctxmaybeuser ctx) title filename content' actor
+        att <- dbUpdate $ NewAttachment (userid $ fromJust $ ctxmaybeuser ctx) title filename content' actor
         return $ Just att
 makeAttachmentFromFile _ = internalError -- to complete the patterns
 
@@ -213,7 +213,7 @@ handleShow :: Kontrakcja m => AttachmentID -> m (Either KontraLink (Either Respo
 handleShow attid = checkUserTOSGet $ do
   ctx <- getContext
   let Just user = ctxmaybeuser ctx
-  mattachment <- oneObjectReturnedGuard =<< dbQuery (GetAttachments
+  mattachment <- listToMaybe <$> dbQuery (GetAttachments
     [AttachmentsSharedInUsersCompany (userid user), AttachmentsOfAuthorDeleteValue  (userid user) False]
     [AttachmentFilterByID [attid]]
     []
