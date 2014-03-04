@@ -119,7 +119,7 @@ define(['React', 'StateMachine', 'postsignview/questionnaire_question_views'], f
                     { localization.questionnaire.heyImViktor } <span className="normal-weight">Scrive!</span><br />
                     { localization.questionnaire.ourEsignService }
                   </div>
-                  <b className="notch"></b>
+                  <div className="notch"></div>
                 </div>
               </div>
 

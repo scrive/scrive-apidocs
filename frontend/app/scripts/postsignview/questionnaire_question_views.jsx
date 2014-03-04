@@ -188,7 +188,7 @@ define(['React'], function(React) {
 
 	      <div className="yesnobuttons">
 		<div className="button button-gray" onClick={this.noButton}>
-o		  <div className="label">{ localization.questionnaire.no }</div>
+		  <div className="label">{ localization.questionnaire.no }</div>
 		</div>
 		<div className="button button-green" onClick={this.yesButton}>
 		  <div className="label">{ localization.questionnaire.yes }</div>

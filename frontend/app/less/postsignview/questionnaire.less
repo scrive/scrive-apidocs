@@ -1,8 +1,7 @@
 .questionnaire-wrapper {
   background-color: @white;
   .box-shadow(0px 0px 8px rgba(80, 80, 80, 0.31));
-  height: 620-10px;
-  margin: 5px 5px 5px 0px;
+  margin: 5px 5px 15px 0px;
   padding: 5px;
   width: 933px;
 
@@ -32,6 +31,8 @@
         }
 
         .notch {
+	  // This is a triangle made with css, which we use to point down to the content,
+	  // from the header of the questionnaire.
           border-bottom: 0;
           border-left: 15px solid;
           border-right: 15px solid;
@@ -39,7 +40,8 @@
           // This is a solution for a problem in FF, http://stackoverflow.com/questions/13630886/firefox-17-and-css-borders-based-triangles-not-rendering-properly
           border-color: @grey transparent transparent transparent;
           border-color: @grey rgba(230,230,230,0) rgba(230,230,230,0) rgba(230,230,230,0);
-          bottom: -61px;
+          bottom: -52px;
+	  display: inline-block;
           height: 0;
           left: -356px;
           margin: 0;
@@ -58,8 +60,7 @@
       background: @gray-5-percent;
       font-weight: 300;
       font-size: 18px;
-      
-      height: 620-10-115px;
+      padding-bottom: 55px;
 
       .inner {
         margin: 0 auto;
@@ -95,14 +96,6 @@
             }
           }
 
-          .fixed-width {
-            font-weight: 300 !important;
-            margin-right: 10px;
-            margin-left: 10px !important;
-            width: 160px;
-            text-align: left;
-          }
-
           textarea {
             border: 1px solid @gray-15-percent;
             height: 120px;
@@ -113,13 +106,7 @@
 
           .yesnobuttons {
             margin-top: 33px;
-            .button {
-              padding-left: 25px;
-              padding-right: 25px;
-              .rounded(2px);
-            }
             .button-green {
-              font-weight: 400;
               margin-left: 20px;
             }
             .button-signup {
