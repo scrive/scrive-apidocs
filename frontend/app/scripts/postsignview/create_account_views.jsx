@@ -54,9 +54,9 @@ define(['React', 'Backbone'], function(React, Backbone) {
 	      <div className="title">{ localization.docsignview.subtitleText }</div>
 	      }
 
-              <div class="clearfix"></div>
-              <div class="acceptbutton">
-                <label className="label">{ localization.docsignview.acceptTOSpart1 }<a className="terms" target='_blank' class='clickable' href='/sv/terms'>{ localization.docsignview.acceptTOSpart2 }</a></label>
+              <div className="clearfix"></div>
+              <div className="acceptbutton">
+                <label className="label">{ localization.docsignview.acceptTOSpart1 }<a className="terms clickable" target="_blank" href='/sv/terms'>{ localization.docsignview.acceptTOSpart2 }</a></label>
                 <a onClick={this.props.registerUser} className="green button button-large button-green button-round">
                   <div className="label">{ localization.docsignview.signupButtonText }</div>
                 </a>
