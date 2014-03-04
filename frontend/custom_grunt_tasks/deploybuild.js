@@ -10,6 +10,10 @@ module.exports = function(grunt) {
     
     var cssFiles = [],
     jsFiles = [];
+
+    // Special case, this file is served by kontrakcja but dont want it to be cached.
+    jsFiles.push('localization/localization?' + generateVersionId());
+
     // Rename files with to have versionId in their name
     this.files.forEach(function(filePair) {
       filePair.src.forEach(function(f) {
@@ -27,9 +31,6 @@ module.exports = function(grunt) {
         grunt.log.write(f + ' ').ok(renamed);
       });
     });
-
-    // Special case, this file is served by kontrakcja but dont want it to be cached.
-    jsFiles.push('localization/localization?' + generateVersionId());
 
     // Create html code to include all production - css and js files
     var includes = [];
