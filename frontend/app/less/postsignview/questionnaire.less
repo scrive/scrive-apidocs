@@ -24,6 +24,10 @@
 
         .viktor {
           display: inline-block;
+	  .ie7 & {
+	    zoom: 1;
+	    *display: inline;
+	  }
           height: 44px;
           margin-right: 10px;
           vertical-align: top;
@@ -51,7 +55,11 @@
         }
 
         .heyimviktor {
-          display: inline-block
+          display: inline-block;
+	  .ie7 & {
+	    zoom: 1;
+	    *display: inline;
+	  }
         }
       }
     }
