@@ -561,10 +561,8 @@ var DocumentViewSignatory = React.createClass({
     }
   });
 
-expose.DocumentViewSignatoryForList = DocumentViewSignatoryForList
-expose.DocumentViewSignatory = DocumentViewSignatory
+  expose.DocumentViewSignatoryForList = DocumentViewSignatoryForList;
+  expose.DocumentViewSignatory = DocumentViewSignatory;
 
-return expose;
-
-
+  return expose;
 });

@@ -266,7 +266,7 @@ module.exports = function (grunt) {
 	      'pdf/**/*',
 	      'libs/tiny_mce/**/*',
 
-	      // Shims that need to be loaded separately
+	      // Shims that need to be loaded separately (without requirejs)
 	      'bower_components/json3/**',
 	      'bower_components/es5-shim/**'
             ]
@@ -277,14 +277,15 @@ module.exports = function (grunt) {
     gjslint: {
       options: {
 	flags: [
-          '--disable 1,2,5,110,120,131,220' // TODO(jens): Fix so these pass
+          '--disable 1,2,5,110,120,131,220', // TODO(jens): Fix so these pass
+	  '--custom_jsdoc_tags jsx,note,description'
 	],
 	reporter: {
           name: 'console'
 	}
       },
       all: {
-	src: ['<%= yeoman.app %>/js/**/*.js', '<%= yeoman.app %>/js/**/*.js']
+	src: ['<%= yeoman.app %>/js/**/*.js', '<%= yeoman.app %>/compiled_jsx/**/*.js']
       }
     },
     cssmin: {

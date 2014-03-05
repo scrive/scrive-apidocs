@@ -26,7 +26,7 @@ var BackboneMixin = {
       this.__syncedModels.push(model);
     }
   }
-}
+};
 
 
 
