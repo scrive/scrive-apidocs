@@ -178,8 +178,8 @@ listAttachmentsFromDocument document =
   concatMap extract (documentsignatorylinks document)
   where extract sl = map (\at -> (at,sl)) (signatoryattachments sl)
 
-findOutAttachmentDesc :: (MonadIO m, MonadDB m, Log.MonadLog m, TemplatesMonad m, AWS.AmazonMonad m) => Document -> m [Seal.FileDesc]
-findOutAttachmentDesc document = do
+findOutAttachmentDesc :: (MonadIO m, MonadDB m, Log.MonadLog m, TemplatesMonad m, AWS.AmazonMonad m) => String -> Document -> m [Seal.FileDesc]
+findOutAttachmentDesc tmppath document = do
   a <- mapM findAttachmentsForAuthorAttachment authorAttsNumbered
   b <- mapM findAttachmentsForSignatoryAttachment attAndSigsNumbered
   return (a ++ b)
@@ -191,13 +191,19 @@ findOutAttachmentDesc document = do
 
       authorName = fromMaybe "" $ fmap getSmartName $ getAuthorSigLink document
 
-      findAttachmentsForAuthorAttachment (num, authorattach) = do
-        let fileid' = authorattachmentfile authorattach
-        (numberOfPages,name) <- do
-          contents <- getFileIDContents fileid'
-          file <- dbQuery $ GetFileByFileID fileid'
-          let name' = filename file
-          return (getNumberOfPDFPages contents, name')
+      findAttachmentsForAuthorAttachment (num, authorattach) =
+        findAttachments (Just (authorattachmentfile authorattach)) num authorName removeExtIfAny
+
+      findAttachmentsForSignatoryAttachment (num, sigattach, sl) =
+        findAttachments (signatoryattachmentfile sigattach) num (getSmartName sl) (const (signatoryattachmentname sigattach))
+
+      findAttachments mfileid num author titlef = do
+        (contents,numberOfPages,name) <- case mfileid of
+          Nothing -> return (BS.empty, 1, "")
+          Just fileid' -> do
+            contents <- getFileIDContents fileid'
+            file <- dbQuery $ GetFileByFileID fileid'
+            return (contents, getNumberOfPDFPages contents, filename file)
         numberOfPagesText <-
           if (".png" `isSuffixOf` (map toLower name) || ".jpg" `isSuffixOf` (map toLower name) )
            then return ""
@@ -207,50 +213,25 @@ findOutAttachmentDesc document = do
                     F.value "pages" numberOfPages
 
         attachedByText <- renderLocalTemplate document "_documentAttachedBy" $ do
-                                     F.value "author" authorName
+                                     F.value "author" author
 
         attachmentNumText <- renderLocalTemplate document "_attachedDocument" $ do
                                      F.value "number" num
+        let attachmentPath = tmppath ++ "/appendix-" ++ show num
+        liftIO $ BS.writeFile attachmentPath contents
 
         return $ Seal.FileDesc
-                 { fileTitle      = removeExtIfAny name
+                 { fileTitle      = titlef name
                  , fileRole       = attachmentNumText
                  , filePagesText  = numberOfPagesText
                  , fileAttachedBy = attachedByText
+                 , fileInput      = Just attachmentPath
                  }
 
       removeExtIfAny fname = case dropWhile (/= '.') (reverse fname) of
                                "" -> fname
                                x -> reverse (drop 1 x)
 
-      findAttachmentsForSignatoryAttachment (num, sigattach, sl) = do
-        let personName = getSmartName sl
-        (numberOfPages,name) <- case signatoryattachmentfile sigattach of
-                       Nothing -> return (1,"")
-                       Just fileid' -> do
-                                   file <- dbQuery $ GetFileByFileID fileid'
-                                   contents <- getFileIDContents fileid'
-                                   return $ (getNumberOfPDFPages contents,filename file)
-        numberOfPagesText <-
-          if (".png" `isSuffixOf` (map toLower name) || ".jpg" `isSuffixOf` (map toLower name) )
-           then return ""
-           else if numberOfPages==1
-              then renderLocalTemplate document "_numberOfPagesIs1" $ return ()
-              else renderLocalTemplate document "_numberOfPages" $ do
-                F.value "pages" numberOfPages
-
-        attachedByText <- renderLocalTemplate document "_documentAttachedBy" $ do
-                                     F.value "author" personName
-
-        attachmentNumText <- renderLocalTemplate document "_attachedDocument" $ do
-                                     F.value "number" num
-
-        return $ Seal.FileDesc
-                 { fileTitle      = signatoryattachmentname sigattach
-                 , fileRole       = attachmentNumText
-                 , filePagesText  = numberOfPagesText
-                 , fileAttachedBy = attachedByText
-                 }
 
 evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m) => String -> [SignatoryLink] -> m Seal.SealAttachment
 evidenceOfIntentAttachment title sls = do
@@ -281,9 +262,10 @@ sealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, Log.MonadLog m,
                      -> BS.ByteString
                      -> String
                      -> String
+                     -> String
                      -> m Seal.SealSpec
-sealSpecFromDocument boxImages hostpart document elog ces content inputpath outputpath = do
-  additionalAttachments <- findOutAttachmentDesc document
+sealSpecFromDocument boxImages hostpart document elog ces content tmppath inputpath outputpath = do
+  additionalAttachments <- findOutAttachmentDesc tmppath document
   docs <- mapM (\f -> ((takeFileName f,) . BS.toString . B64.encode) <$> liftIO (BS.readFile f))
             [ "files/Evidence_Documentation.html"
             , "files/Digital_Signature_Documentation_Part_I.html"
@@ -396,6 +378,7 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
                               , fileRole = mainDocumentText
                               , filePagesText = numberOfPagesText
                               , fileAttachedBy = attachedByText
+                              , fileInput = Nothing
                               } ] ++ additionalAttachments
             }
 
@@ -448,7 +431,7 @@ sealDocumentFile file@File{fileid, filename} = theDocumentID >>= \documentid ->
     uncheckedBoxImage <- liftIO $  BS.readFile "frontend/app/img/checkbox_unchecked.jpg"
     elog <- dbQuery $ GetEvidenceLog documentid
     ces <- collectClockErrorStatistics elog
-    config <- theDocument >>= \d -> sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) mctxhostpart d elog ces content tmpin tmpout
+    config <- theDocument >>= \d -> sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) mctxhostpart d elog ces content tmppath tmpin tmpout
 
     (code,_stdout,stderr) <- liftIO $ do
       let sealspecpath = tmppath ++ "/sealspec.json"

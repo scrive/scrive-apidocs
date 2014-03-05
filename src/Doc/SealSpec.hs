@@ -140,6 +140,7 @@ data FileDesc = FileDesc
     , fileRole       :: String
     , filePagesText  :: String
     , fileAttachedBy :: String
+    , fileInput      :: Maybe String
     }
     deriving (Eq,Ord,Show,Read)
 
@@ -149,6 +150,7 @@ instance J.ToJSValue FileDesc where
     J.value "role" fileRole
     J.value "pagesText" filePagesText
     J.value "attachedBy" fileAttachedBy
+    J.value "input" fileInput
 
 data PreSealSpec = PreSealSpec
     { pssInput  :: String
@@ -195,6 +197,9 @@ data SealingTexts = SealingTexts
   , dateText           :: String -- history table date header
   , historyText        :: String -- history table event header
   , verificationFooter :: String -- Long text all the end saying that doc was verified
+  , attachmentText     :: String -- "Attachment"
+  , hiddenAttachmentText :: String -- "Concealed Attachment"
+  , onePageText        :: String -- "1 page"
   }
   deriving (Eq,Ord,Show,Read)
 
@@ -212,3 +217,6 @@ instance J.ToJSValue SealingTexts where
    J.value "dateText" dateText
    J.value "historyText" historyText
    J.value "verificationFooter" verificationFooter
+   J.value "attachmentText" attachmentText
+   J.value "hiddenAttachmentText" hiddenAttachmentText
+   J.value "onePageText" onePageText
