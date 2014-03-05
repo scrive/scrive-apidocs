@@ -7,10 +7,12 @@ define(function() {
     buildCookieMap : function () {
       var cookies = document.cookie.split(';');
       var cookieMap = {};
-      for(var i in cookies) {
-        cookies[i] = cookies[i].split('=');
-            cookieMap[cookies[i][0].trim()] = cookies[i][1];
-      }
+
+      cookies.forEach(function(cookie, i) {
+          cookies[i] = cookie.split('=');
+          cookieMap[cookies[i][0].trim()] = cookies[i][1];
+      });
+
       return cookieMap;
     },
     get : function(name) {
