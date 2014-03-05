@@ -40,7 +40,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
     var self = this;
     var attachment = this.model;
     return new UploadButton({
-      width: 200,
+      style : 'min-width: 166px',
       size : 'small',
       name: "file",
       text: localization.signatoryAttachmentUploadButton,
