@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
 
 
-define(['React','authorview/authorviewautomaticreminders','doctools/docviewsignatory', 'Backbone', 'legacy_code'], function(React,Reminders,SignatoryView) {
+define(['React', 'Backbone', 'authorview/authorviewautomaticreminders','doctools/docviewsignatory', 'legacy_code'], function(React, Backbone, Reminders, SignatoryView) {
 
 var expose = {};
 

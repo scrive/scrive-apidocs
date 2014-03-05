@@ -65,7 +65,7 @@ var require = {
     },
     'tinyMCE_paste': {
       deps: ['tinyMCE']
-    },
+    }
   },
   deps: ['jquery', 'Underscore', 'Backbone']
 };
