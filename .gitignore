@@ -8,6 +8,7 @@ messenger_server.conf
 _cron_pid
 _mailer_pid
 _server_pid
+_grunt_pid
 kontrakcja_test.conf
 kontrakcja-server
 *.cookies
