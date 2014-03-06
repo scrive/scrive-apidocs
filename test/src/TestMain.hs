@@ -58,11 +58,9 @@ import SessionsTest
 import FileTest
 import EvidenceLogTest
 import PadTest
---import LiveDocxTest
 import OAuth
 import FlashMessages
 import PaymentsTest
-import ThirdPartyStats
 
 allTests :: [(String, TestEnvSt -> Test)]
 allTests = tail tests
@@ -94,12 +92,10 @@ allTests = tail tests
       , ("evidencelog", evidenceLogTests)
       , ("evidencetexts", dumpAllEvidenceTexts)
       , ("pad", padTests)
---      , ("livedocx", const $ const liveDocxTests)
       , ("oauth", oauthTest)
       , ("flashmessages", const $ flashMessagesTests)
       , ("payments", paymentsTests)
       , ("sessions", sessionsTests)
-      , ("thirdpartystats", thirdPartyStatsTests)
       ]
 
 testsToRun :: [String] -> [Either String (TestEnvSt -> Test)]

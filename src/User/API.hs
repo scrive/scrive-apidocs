@@ -39,8 +39,6 @@ import Mails.SendMail
 import ActionQueue.EmailChangeRequest
 import Util.HasSomeUserInfo
 import Util.FlashUtil
-import ActionQueue.UserAccountRequest
-import ThirdPartyStats.Core
 import User.Action
 import Payments.Model
 import MinutesTime
@@ -217,21 +215,6 @@ apiCallSignup = api $ do
     Nothing -> runJSONGenT $ value "sent" $ False
     Just user -> do
           sendNewUserMail user
-          l <- newUserAccountRequestLink lang (userid user) AccountRequest
-          asyncLogEvent "Send account confirmation email" [
-                UserIDProp $ userid user,
-                IPProp $ ctxipnumber ctx,
-                TimeProp $ ctxtime ctx,
-                someProp "Context" ("Acount request" :: String)
-                ]
-          asyncLogEvent SetUserProps [
-                UserIDProp $ userid user,
-                someProp "Account confirmation email" $ ctxtime ctx,
-                NameProp (firstname ++ " " ++ lastname),
-                FirstNameProp firstname,
-                LastNameProp lastname,
-                someProp "Confirmation link" $ show l
-                ]
           runJSONGenT $ value "sent" $ True
 
 

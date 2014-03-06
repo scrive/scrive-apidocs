@@ -12,18 +12,13 @@ import Data.Bits
 import Data.Int
 import Data.List
 import Data.Word
-import Data.Binary
-import Database.PostgreSQL.PQTypes hiding (Binary, put)
+import Database.PostgreSQL.PQTypes
 import Numeric
 import Data.Char
 import Control.Monad
 
 newtype IPAddress = IPAddress Word32
   deriving (Eq, Ord)
-
-instance Binary IPAddress where
-  put (IPAddress w32) = put w32
-  get = IPAddress `fmap` get
 
 -- IP addresses are currently cast to signed Int32 in DB
 instance PQFormat IPAddress where
