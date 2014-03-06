@@ -31,7 +31,7 @@ import Text.Regex.TDFA
 
 data Sender = Sender {
     senderName :: String
-  , sendSMS   :: CryptoRNG m => ShortMessage -> m Bool
+  , sendSMS    :: (CryptoRNG m, MonadIO m) => ShortMessage -> m Bool
   }
 
 instance Show Sender where
@@ -48,11 +48,10 @@ createSender mc = case mc of
 createGlobalMouthSender :: String -> String -> String -> Sender
 createGlobalMouthSender user password url = Sender { senderName = "GlobalMouth", sendSMS = send }
   where
-    send :: CryptoRNG m => ShortMessage -> m Bool
-    send sms@ShortMessage{..} = do
-      liftIO $ do
-        Log.mixlog_ $ show sms
-        sendSMS2 (user,password,url) smOriginator smMSISDN smBody (show smID)
+    send :: (CryptoRNG m, MonadIO m) => ShortMessage -> m Bool
+    send sms@ShortMessage{..} = liftIO $ do
+      Log.mixlog_ $ show sms
+      sendSMS2 (user,password,url) smOriginator smMSISDN smBody (show smID)
 
 sendSMS2 :: (String, String, String) -> String -> String -> String -> String -> IO Bool
 sendSMS2 (user, password, baseurl) originator msisdn body ref = do
@@ -105,10 +104,8 @@ sendSMS2 (user, password, baseurl) originator msisdn body ref = do
 createLocalSender :: SenderConfig -> Sender
 createLocalSender config = Sender { senderName = "localSender", sendSMS = send }
   where
-    send :: CryptoRNG m => ShortMessage -> m Bool
+    send :: (CryptoRNG m, MonadIO m) => ShortMessage -> m Bool
     send ShortMessage{..} = do
-
-
       let matchResult = (match (makeRegex ("https?://[a-zA-Z:0-9.-]+/[a-zA-Z_:/0-9#?-]+" :: String) :: Regex) (smBody :: String) :: MatchResult String)
       let withClickableLinks = mrBefore matchResult ++ "<a href=\"" ++ mrMatch matchResult ++ "\">" ++ mrMatch matchResult ++ "</a>" ++ mrAfter matchResult
       let content = "<html><head><title>SMS - " ++ show smID ++ " to " ++ smMSISDN ++ "</title></head><body>" ++

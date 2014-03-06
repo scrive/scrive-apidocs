@@ -247,7 +247,7 @@ sendClosedEmails sealFixed document = do
                                               when useMail $ sendMail
                                               when useSMS  $ sendSMS useMail
 
-makeMailAttachments :: (MonadDB m, MonadIO m) => Document -> m [(String, Either BS.ByteString FileID)]
+makeMailAttachments :: MonadDB m => Document -> m [(String, Either BS.ByteString FileID)]
 makeMailAttachments document = do
   let mainfile = documentsealedfile document `mplus` documentfile document
   let

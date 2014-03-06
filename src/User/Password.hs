@@ -1,7 +1,6 @@
 module User.Password where
 
 import Control.Monad (liftM)
-import Control.Monad.Trans (MonadIO)
 import Crypto.RNG(CryptoRNG, randomBytes)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BSU
@@ -18,7 +17,7 @@ data Password = Password {
 instance Show Password where
   show _ = "Password (hash and salt are not visible for logging)"
 
-createPassword :: (MonadIO m, CryptoRNG m) => String -> m Password
+createPassword :: CryptoRNG m => String -> m Password
 createPassword password = do
   salt <- Binary `liftM` randomBytes 10
   return Password {
@@ -38,5 +37,5 @@ maybePassword :: (Maybe (Binary BS.ByteString), Maybe (Binary BS.ByteString)) ->
 maybePassword (Just hash, Just salt) = Just Password { pwdHash = hash, pwdSalt = salt }
 maybePassword _ = Nothing
 
-randomPassword :: (MonadIO m, CryptoRNG m) => m String
+randomPassword :: CryptoRNG m => m String
 randomPassword = randomString 8 (['0'..'9'] ++ ['A'..'Z'] ++ ['a'..'z'])

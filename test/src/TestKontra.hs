@@ -92,7 +92,7 @@ ununTestEnv :: TestEnvSt -> TestEnv a -> DBT IO a
 ununTestEnv st m = runReaderT (unTestEnv m) st
 
 instance CryptoRNG TestEnv where
-  getCryptoRNGState = teRNGState <$> ask
+  randomBytes n = asks teRNGState >>= liftIO . randomBytesIO n
 
 instance MonadDB TestEnv where
   runQuery = TestEnv . runQuery
@@ -130,12 +130,12 @@ instance MonadBaseControl IO TestEnv where
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
-runTestKontraHelper :: (CryptoRNG m, MonadDB m, MonadBaseControl IO m) => ConnectionSource -> Request -> Context -> Kontra a -> m (a, Context, FilterFun Response)
+runTestKontraHelper :: ConnectionSource -> Request -> Context -> Kontra a -> TestEnv (a, Context, FilterFun Response)
 runTestKontraHelper cs rq ctx tk = do
   filecache <- MemCache.new BS.length 52428800
   let noflashctx = ctx { ctxflashmessages = [] }
       amazoncfg = AWS.AmazonConfig Nothing filecache
-  rng <- getCryptoRNGState
+  rng <- asks teRNGState
   ts <- getTransactionSettings
   -- commit previous changes and do not begin new transaction as runDBT
   -- does it and we don't want these pesky warnings about transaction

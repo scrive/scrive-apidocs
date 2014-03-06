@@ -18,7 +18,7 @@ module Crypto.RNG (
   , newCryptoRNGState
   , unsafeCryptoRNGState
   , CryptoRNG(..)
-  , randomBytes
+  , randomBytesIO
   , randomR
   -- * Generation of values in other types
   , Random(..)
@@ -58,14 +58,13 @@ unsafeCryptoRNGState s = liftIO $
   either (fail . show) (fmap CryptoRNGState . newMVar) (newGen s)
 
 -- | Generate given number of cryptographically secure random bytes.
-randomBytes :: CryptoRNG m
-            => ByteLength -- ^ number of bytes to generate
-            -> m ByteString
-randomBytes l = do
-  CryptoRNGState gv <- getCryptoRNGState
+randomBytesIO :: ByteLength -- ^ number of bytes to generate
+              -> CryptoRNGState
+              -> IO ByteString
+randomBytesIO n (CryptoRNGState gv) = do
   liftIO $ modifyMVar gv $ \g -> do
     (bs, g') <- either (fail "Crypto.GlobalRandom.genBytes") return $
-                genBytes l g
+                genBytes n g
     return (g', bs)
 
 -- | Generate a cryptographically secure random number in given,
@@ -127,15 +126,18 @@ instance MonadBaseControl b m => MonadBaseControl b (CryptoRNGT m) where
   {-# INLINE restoreM #-}
 
 -- | Monads carrying around the RNG state.
-class MonadIO m => CryptoRNG m where
-  getCryptoRNGState :: m CryptoRNGState
+class Monad m => CryptoRNG m where
+  -- | Generate given number of cryptographically secure random bytes.
+  randomBytes :: CryptoRNG m
+              => ByteLength -- ^ number of bytes to generate
+              -> m ByteString
 
 instance MonadIO m => CryptoRNG (CryptoRNGT m) where
-  getCryptoRNGState = CryptoRNGT ask
+  randomBytes n = CryptoRNGT ask >>= liftIO . randomBytesIO n
 
 instance (
-    MonadIO (t m)
+    Monad (t m)
   , MonadTrans t
   , CryptoRNG m
   ) => CryptoRNG (t m) where
-    getCryptoRNGState = lift getCryptoRNGState
+    randomBytes = lift . randomBytes

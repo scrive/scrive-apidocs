@@ -30,7 +30,7 @@ import DB
 import qualified Amazon as AWS
 import qualified Log
 
-assembleContent :: (CryptoRNG m, MonadDB m, Log.MonadLog m, AWS.AmazonMonad m) => Mail -> m BSL.ByteString
+assembleContent :: (CryptoRNG m, MonadDB m, MonadIO m, Log.MonadLog m, AWS.AmazonMonad m) => Mail -> m BSL.ByteString
 assembleContent Mail{..} = do
   (boundaryMixed, boundaryAlternative) <- createBoundaries
   let datafields = do
@@ -136,7 +136,7 @@ createMailTos = intercalate ", " . map (\a -> createAddrString a)
 createAddrString :: Address -> String
 createAddrString Address{..} = mailEncode Nothing addrName ++ " <" ++ addrEmail ++ ">"
 
-createBoundaries :: (MonadIO m, CryptoRNG m) => m (String, String)
+createBoundaries :: CryptoRNG m => m (String, String)
 createBoundaries = return (,) `ap` f `ap` f
   where
     f = randomString 32 $ ['0'..'9'] ++ ['a'..'z']

@@ -230,7 +230,7 @@ postDocumentClosedActions
       theDocument >>= triggerAPICallbackIfThereIsOne
 
 -- | Post-process documents that lack final PDF or digital signature
-findAndDoPostDocumentClosedActions :: (MonadReader SchedulerData m, MonadBaseControl IO m, CryptoRNG m, MonadDB m, Log.MonadLog m, AmazonMonad m) => Maybe Int -> m ()
+findAndDoPostDocumentClosedActions :: (MonadReader SchedulerData m, MonadBaseControl IO m, CryptoRNG m, MonadDB m, MonadIO m, Log.MonadLog m, AmazonMonad m) => Maybe Int -> m ()
 findAndDoPostDocumentClosedActions
   mhours -- ^ Only consider documents signed within the latest number of hours given.
   = do
@@ -253,7 +253,7 @@ findAndDoPostDocumentClosedActions
     commit
 
 -- | Extend (replace with keyless) signatures of documents older than latest publication code (if they are not already extended)
-findAndExtendDigitalSignatures :: (MonadBaseControl IO m, MonadReader SchedulerData m, CryptoRNG m, AmazonMonad m, MonadDB m, Log.MonadLog m) => m ()
+findAndExtendDigitalSignatures :: (MonadBaseControl IO m, MonadReader SchedulerData m, CryptoRNG m, AmazonMonad m, MonadDB m, MonadIO m, Log.MonadLog m) => m ()
 findAndExtendDigitalSignatures = do
   lpt <- latest_publication_time
   Log.mixlog_ $ "extendSignatures: latest publication time is " ++ show lpt

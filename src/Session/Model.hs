@@ -32,7 +32,9 @@ import Utils.HTTP
 -- its id (needed when document ticket/eleg transaction needs to be
 -- inserted into the database, but current session is temporary), also
 -- modifying Context to carry modified id.
-getNonTempSessionID :: (CryptoRNG m, KontraMonad m, MonadDB m, MonadIO m, ServerMonad m) => m SessionID
+
+getNonTempSessionID :: (CryptoRNG m, KontraMonad m, MonadDB m, ServerMonad m)
+                    => m SessionID
 getNonTempSessionID = do
   sid <- ctxsessionid `liftM` getContext
   if sid == tempSessionID

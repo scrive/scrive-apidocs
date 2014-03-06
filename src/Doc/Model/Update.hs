@@ -862,7 +862,7 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m RejectDocument () whe
                   actor
 
 data RestartDocument = RestartDocument Document Actor
-instance (CryptoRNG m, MonadDB m, Log.MonadLog m, TemplatesMonad m) => DBUpdate m RestartDocument (Maybe Document) where
+instance (CryptoRNG m, MonadDB m, MonadIO m, Log.MonadLog m, TemplatesMonad m) => DBUpdate m RestartDocument (Maybe Document) where
   update (RestartDocument doc actor) = do
     mndoc <- tryToGetRestarted
     case mndoc of

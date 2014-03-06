@@ -51,7 +51,7 @@ documentAutomaticReminder = Action {
   , qaEvaluateExpired = sentReminder
   }
   where
-    sentReminder :: (Log.MonadLog m, CryptoRNG m, MonadDB m, MonadBase IO m, MonadReader SchedulerData m) => DocumentAutomaticReminder -> m ()
+    sentReminder :: (Log.MonadLog m, CryptoRNG m, MonadDB m, MonadIO m, MonadBase IO m, MonadReader SchedulerData m) => DocumentAutomaticReminder -> m ()
     sentReminder dar = do
       now <- currentTime
       _ <- dbQuery (GetDocumentByDocumentID (reminderDocumentID dar)) >>= \doc -> runMailTInScheduler doc $
