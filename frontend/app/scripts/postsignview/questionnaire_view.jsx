@@ -43,6 +43,6 @@ define(['React', 'Backbone'], function(React, Backbone) {
       });
 
       return iframe;
-    },
+    }
   });
 });
