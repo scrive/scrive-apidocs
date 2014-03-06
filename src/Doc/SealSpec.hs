@@ -111,6 +111,7 @@ data SealSpec = SealSpec
     , documentNumber :: String
     , persons        :: [Person]
     , secretaries    :: [Person]
+    , initiator      :: Maybe Person
     , history        :: [HistEntry]
     , initials       :: String
     , hostpart       :: String
@@ -127,6 +128,7 @@ instance J.ToJSValue SealSpec where
     J.value "documentNumber" documentNumber
     J.value "persons" persons
     J.value "secretaries" secretaries
+    J.value "initiator" initiator
     J.value "history" history
     J.value "initials" initials
     J.value "hostpart" hostpart
@@ -189,7 +191,7 @@ data SealingTexts = SealingTexts
   , docPrefix          :: String -- ex. Doc. nr (last page and all footers)
   , signedText         :: String -- ex. Underteknat (all footers)
   , partnerText        :: String -- Header for partner list
-  , secretaryText      :: String -- Header for secretary list
+  , initiatorText      :: String -- Header for initiator
   , documentText       :: String -- Header for documents list
   , orgNumberText      :: String -- Info about partner subtext
   , personalNumberText :: String -- Info about partner subtext
@@ -209,7 +211,7 @@ instance J.ToJSValue SealingTexts where
    J.value "docPrefix" docPrefix
    J.value "signedText" signedText
    J.value "partnerText" partnerText
-   J.value "secretaryText" secretaryText
+   J.value "initiatorText" initiatorText
    J.value "documentText" documentText
    J.value "orgNumberText" orgNumberText
    J.value "personalNumberText" personalNumberText

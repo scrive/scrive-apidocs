@@ -5,7 +5,7 @@ SealingTexts
       , docPrefix="$_sealingtextsdocPrefix()$"
       , signedText="$_contractsealingtextssignedText()$"
       , partnerText="$_contractsealingtextspartnerText()$"
-      , secretaryText="$_contractsealingtextssecretaryText()$"
+      , initiatorText="$_contractsealingtextsinitiatorText()$"
       , documentText="$_documentText()$"
       , orgNumberText="$_contractsealingtextsorgNumberText()$"
       , personalNumberText="$_personalNumberText()$"

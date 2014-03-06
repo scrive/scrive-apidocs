@@ -92,11 +92,11 @@ personExFromSignatoryLink boxImages (sl@SignatoryLink { signatorysignatureinfo
                                                       , signatorylinkdeliverymethod
                                                       }) =
   ((personFromSignatory boxImages sl)
-     { Seal.emailverified    = signatorylinkdeliverymethod `elem` [EmailDelivery, EmailAndMobileDelivery]
+     { Seal.emailverified    = signatorylinkdeliverymethod == EmailDelivery
      , Seal.fullnameverified = fullnameverified
      , Seal.companyverified  = False
      , Seal.numberverified   = numberverified
-     , Seal.phoneverified    = signatorylinkdeliverymethod `elem` [MobileDelivery, EmailAndMobileDelivery]
+     , Seal.phoneverified    = signatorylinkdeliverymethod == MobileDelivery
      }
     , map head $ words $ getFullName sl
     )
@@ -300,6 +300,9 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
                         , not . signatoryispartner $ s
                     ]
 
+      initiator | signatoryispartner authorsiglink = Nothing
+                | otherwise = Just (personFromSignatory boxImages authorsiglink)
+
       (persons, initialsx) = unzip signatories
       paddeddocid = pad0 20 (show docid)
 
@@ -368,6 +371,7 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
             , Seal.documentNumber = paddeddocid
             , Seal.persons        = persons
             , Seal.secretaries    = secretaries
+            , Seal.initiator      = initiator
             , Seal.history        = history
             , Seal.initials       = initials
             , Seal.hostpart       = hostpart
