@@ -1,4 +1,5 @@
 {- All function related to Amazon Web Services -}
+{-# LANGUAGE OverlappingInstances #-}
 module Amazon (
     isAWSConfigOk
   , mkAWSAction
@@ -17,13 +18,10 @@ import Control.Monad.Trans
 import Control.Monad.Trans.Control
 import Control.Concurrent
 import Control.Monad.Reader
-import qualified Control.Monad.State.Strict as Strict
-import qualified Control.Monad.State.Lazy as Lazy
 import Data.Maybe
 import Network.AWS.Authentication
 import qualified MemCache
 import System.FilePath ((</>))
-import Happstack.Server hiding (result)
 import qualified Network.AWS.AWSConnection as AWS
 import qualified Crypto.Hash.SHA1 as SHA1
 import qualified Data.ByteString.Char8 as BSC
@@ -72,7 +70,6 @@ instance MonadTransControl AmazonMonadT where
   {-# INLINE liftWith #-}
   {-# INLINE restoreT #-}
 
-
 instance MonadBaseControl IO m => MonadBaseControl IO (AmazonMonadT m) where
   newtype StM (AmazonMonadT m) a = StMAmazonMonadT { unStMAmazonMonadT :: ComposeSt AmazonMonadT m a }
   liftBaseWith = defaultLiftBaseWith StMAmazonMonadT
@@ -80,40 +77,21 @@ instance MonadBaseControl IO m => MonadBaseControl IO (AmazonMonadT m) where
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
-instance WebMonad Response m => WebMonad Response (AmazonMonadT m) where
-    finishWith = AmazonMonadT . finishWith
-
-instance ServerMonad m => ServerMonad (AmazonMonadT m) where
-    askRq = lift askRq
-    localRq f m = AmazonMonadT $ localRq f $ unAmazonMonadT m
-
-instance (Monad m, HasRqData m) => HasRqData (AmazonMonadT m) where
-    askRqEnv = lift askRqEnv
-    localRqEnv f m = AmazonMonadT $ localRqEnv f $ unAmazonMonadT m
-    rqDataError = AmazonMonadT . rqDataError
-
-instance FilterMonad Response m => FilterMonad Response (AmazonMonadT m) where
-    setFilter = AmazonMonadT . setFilter
-    getFilter = AmazonMonadT . getFilter . unAmazonMonadT
-    composeFilter = AmazonMonadT . composeFilter
-
-instance (Monad m, AmazonMonad m) => AmazonMonad (ReaderT r m) where
-    getAmazonConfig = lift getAmazonConfig
-
-instance (Monad m, AmazonMonad m) => AmazonMonad (Strict.StateT s m) where
-    getAmazonConfig = lift getAmazonConfig
-
-instance (Monad m, AmazonMonad m) => AmazonMonad (Lazy.StateT s m) where
-    getAmazonConfig = lift getAmazonConfig
-
 runAmazonMonadT :: Monad m => AmazonConfig -> AmazonMonadT m a -> m a
 runAmazonMonadT ac = flip runReaderT ac . unAmazonMonadT
 
 class AmazonMonad m where
-    getAmazonConfig :: m AmazonConfig
+  getAmazonConfig :: m AmazonConfig
+
+instance (
+    Monad m
+  , MonadTrans t
+  , AmazonMonad m
+  ) => AmazonMonad (t m) where
+    getAmazonConfig = lift getAmazonConfig
 
 instance Monad m => AmazonMonad (AmazonMonadT m) where
-    getAmazonConfig = AmazonMonadT $ ReaderT return
+  getAmazonConfig = AmazonMonadT ask
 
 uploadFilesToAmazon :: (AmazonMonad m, MonadIO m, Log.MonadLog m, MonadDB m, CryptoRNG m) => m ()
 uploadFilesToAmazon = do

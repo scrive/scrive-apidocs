@@ -1,3 +1,4 @@
+{-# LANGUAGE OverlappingInstances #-}
 module Log
   ( teardownLogger
   , withLogger
@@ -27,28 +28,12 @@ import qualified Control.Exception.Lifted as C
 
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BSU
-import qualified Control.Monad.State.Lazy as LS
-import qualified Control.Monad.State.Strict as SS
-import qualified Control.Monad.Writer.Lazy as LW
-import qualified Control.Monad.Writer.Strict as SW
-import qualified Control.Monad.RWS.Lazy as LRWS
-import qualified Control.Monad.RWS.Strict as SRWS
 import System.IO.Unsafe
 import Data.Char
 import Data.List
 import Numeric
-import Data.Time.Clock
+import Data.Time
 import Data.Ratio
-import Control.Monad.Cont
-import Control.Monad.Error
-import Control.Monad.List
-import Control.Monad.Reader
-import Crypto.RNG
-import Control.Monad.Trans.Maybe
-import Control.Monad.Trans.Identity
-import Database.PostgreSQL.PQTypes
-import Text.StringTemplates.Templates
-import Happstack.Server (ServerPartT)
 
 import qualified Control.Exception.Lifted as E
 
@@ -61,59 +46,18 @@ import Text.JSON
 --
 -- Should be used together with other IO based monads that do not
 -- expose MonadIO or MonadBase IO.
-class (Monad m) => MonadLog m where
+class Monad m => MonadLog m where
   -- | This is a variation on 'mixlog' that takes a premade version of
   -- properties object. Useful for logging data directly from API calls
   -- for example.
   mixlogjs :: (ToJSValue js) => String -> js -> m ()
 
-instance (MonadLog m) => MonadLog (LS.StateT s m) where
-  mixlogjs title js = lift (mixlogjs title js)
-
-instance (MonadLog m) => MonadLog (SS.StateT s m) where
-  mixlogjs title js = lift (mixlogjs title js)
-
-instance (MonadLog m, LW.Monoid w) => MonadLog (LW.WriterT w m) where
-  mixlogjs title js = lift (mixlogjs title js)
-
-instance (MonadLog m, SW.Monoid w) => MonadLog (SW.WriterT w m) where
-  mixlogjs title js = lift (mixlogjs title js)
-
-instance (MonadLog m) => MonadLog (MaybeT m) where
-  mixlogjs title js = lift (mixlogjs title js)
-
-instance (MonadLog m) => MonadLog (ListT m) where
-  mixlogjs title js = lift (mixlogjs title js)
-
-instance (MonadLog m) => MonadLog (ContT r m) where
-  mixlogjs title js = lift (mixlogjs title js)
-
-instance (MonadLog m) => MonadLog (IdentityT m) where
-  mixlogjs title js = lift (mixlogjs title js)
-
-instance (MonadLog m, Error e) => MonadLog (ErrorT e m) where
-  mixlogjs title js = lift (mixlogjs title js)
-
-instance (MonadLog m) => MonadLog (ReaderT r m) where
-  mixlogjs title js = lift (mixlogjs title js)
-
-instance MonadLog m => MonadLog (DBT m) where
-  mixlogjs title js = lift (mixlogjs title js)
-
-instance (MonadLog m) => MonadLog (CryptoRNGT m) where
-  mixlogjs title js = lift (mixlogjs title js)
-
-instance (MonadLog m) => MonadLog (TemplatesT m) where
-  mixlogjs title js = lift (mixlogjs title js)
-
-instance (MonadLog m, SRWS.Monoid w) => MonadLog (SRWS.RWST r w s m) where
-  mixlogjs title js = lift (mixlogjs title js)
-
-instance (MonadLog m, LRWS.Monoid w) => MonadLog (LRWS.RWST r w s m) where
-  mixlogjs title js = lift (mixlogjs title js)
-
-instance (MonadLog m) => MonadLog (ServerPartT m) where
-  mixlogjs title js = lift (mixlogjs title js)
+instance (
+    MonadLog m
+  , Monad (t m)
+  , MonadTrans t
+  ) => MonadLog (t m) where
+    mixlogjs title js = lift (mixlogjs title js)
 
 -- Here we use 'ByteString.putStrLn' because 'Prelude.putStrLn' prints
 -- character by character and in case there are many thread it will
@@ -147,7 +91,6 @@ outputChannel = unsafePerformIO $ do
         loop
   _ <- C.forkIO loop
   return chan
-
 
 instance MonadLog IO where
   mixlogjs = mixlogjsIO

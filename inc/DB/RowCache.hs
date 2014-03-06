@@ -14,9 +14,10 @@ module DB.RowCache
 
 import Control.Applicative (Applicative)
 import Control.Monad.Base (MonadBase)
-import Control.Monad.Reader (MonadReader, mapReaderT, local, runReaderT, ask, ReaderT)
-import Control.Monad.State (MonadTrans, MonadState, liftM, get, put, lift, mapStateT, evalStateT, StateT, MonadIO)
+import Control.Monad.Reader (runReaderT, ask, ReaderT)
+import Control.Monad.State (MonadTrans, liftM, get, put, lift, evalStateT, StateT, MonadIO)
 import Control.Monad.Trans.Control (MonadBaseControl(..), MonadTransControl(..), ComposeSt, defaultLiftBaseWith, defaultRestoreM)
+import Database.PostgreSQL.PQTypes (MonadDB)
 
 -- | Return an identifier type for a row 'r' that can be used to retrieve rows from storage
 type family ID r
@@ -33,7 +34,7 @@ class Monad m => GetRow r m  where
 -- | Monad transformer for maintaining a cached row value or an invalid
 -- mark, and remembering the row's identifier
 newtype RowCacheT r m a = RowCacheT { unRowCacheT :: InnerRowCacheT r m a }
-  deriving (Applicative, Functor, Monad, MonadIO, MonadBase b)
+  deriving (Applicative, Functor, Monad, MonadDB, MonadIO, MonadBase b)
 
 -- | Fetch the row and perform an operation that updates the stored row (and therefore marks the cached row as invalid)
 updateRow :: GetRow r m => (r -> RowCacheT r m a) -> RowCacheT r m a
@@ -88,16 +89,8 @@ updateRow' cache m = do
 
 -- Instances
 
-instance MonadReader a m => MonadReader a (RowCacheT r m) where
-  ask = lift ask
-  local f = RowCacheT . mapStateT (mapReaderT (local f)) . unRowCacheT
-
-instance MonadState a m => MonadState a (RowCacheT r m) where
-  get = lift get
-  put = lift . put
-
 instance MonadTrans (RowCacheT r) where
-  lift m = RowCacheT (lift (lift m))
+  lift = RowCacheT . lift . lift
 
 instance MonadBaseControl b m => MonadBaseControl b (RowCacheT r m) where
   newtype StM (RowCacheT r m) a = StM { unStM :: ComposeSt (RowCacheT r) m a }

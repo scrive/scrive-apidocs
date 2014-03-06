@@ -56,8 +56,6 @@ instance Log.MonadLog KontraPlus where
 runKontraPlus :: Context -> KontraPlus a -> AWS.AmazonMonadT (CryptoRNGT (DBT (ServerPartT IO))) a
 runKontraPlus ctx f = evalStateT (unKontraPlus f) ctx
 
-instance Kontrakcja KontraPlus
-
 instance MonadBaseControl IO KontraPlus where
   newtype StM KontraPlus a = StKontraPlus { unStKontraPlus :: StM InnerKontraPlus a }
   liftBaseWith = newtypeLiftBaseWith KontraPlus unKontraPlus StKontraPlus
@@ -89,8 +87,6 @@ instance MailContextMonad KontraPlus where
 -- through 'KontraError'.
 newtype Kontra a = Kontra { unKontra :: KontraPlus a }
   deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadIO, MonadDB, ServerMonad, KontraMonad, TemplatesMonad, Log.MonadLog, AWS.AmazonMonad, MailContextMonad, GuardTimeConfMonad)
-
-instance Kontrakcja Kontra
 
 instance MonadBaseControl IO Kontra where
   newtype StM Kontra a = StKontra { unStKontra :: StM KontraPlus a }

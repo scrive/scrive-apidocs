@@ -25,7 +25,6 @@ import File.Model (NewFile(..))
 import File.Storage (getFileContents)
 import GuardTime (GuardTimeConf, GuardTimeConfMonad, getGuardTimeConf)
 import qualified GuardTime as GT
-import Instances ()
 import qualified Log
 import MinutesTime
 import System.Exit (ExitCode(..))

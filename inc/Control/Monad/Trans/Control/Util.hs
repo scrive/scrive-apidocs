@@ -4,6 +4,10 @@ module Control.Monad.Trans.Control.Util where
 import Control.Monad
 import Control.Monad.Trans.Control
 
+controlT :: (MonadTransControl t, Monad (t m), Monad m)
+         => (Run t -> m (StT t a)) -> t m a
+controlT f = liftWith f >>= restoreT . return
+
 {-# INLINE newtypeLiftBaseWith #-}
 newtypeLiftBaseWith ∷ (Monad m, MonadBaseControl b mInner)
                     ⇒ (mInner α → m α)              -- ^ Constructor

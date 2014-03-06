@@ -68,6 +68,7 @@ module Doc.Model.Update
 import Control.Monad.Identity (Identity)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.IO.Class
+import Control.Monad.Trans.Instances ()
 import Data.Decimal (realFracToDecimal)
 import Data.Int
 import Data.Monoid

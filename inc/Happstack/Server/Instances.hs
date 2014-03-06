@@ -1,45 +1,48 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE OverlappingInstances #-}
 module Happstack.Server.Instances where
 
+import Control.Monad
 import Control.Monad.Trans
-import Database.PostgreSQL.PQTypes
+import Control.Monad.Trans.Control
+import Control.Monad.Trans.Control.Util
 import Happstack.Server
-import Control.Monad.State.Strict
 
-instance FilterMonad r m => FilterMonad r (DBT m) where
-  setFilter f   = lift $ setFilter f
-  composeFilter = lift . composeFilter
-  getFilter     = mapDBT $ \m -> do
-    ((b, s), f) <- getFilter m
-    return ((b, f), s)
-
-instance (Monad m, HasRqData m) => HasRqData (DBT m) where
-  askRqEnv    = lift askRqEnv
-  localRqEnv  = mapDBT . localRqEnv
-  rqDataError = lift . rqDataError
-
-instance ServerMonad m => ServerMonad (DBT m) where
-  askRq   = lift askRq
-  localRq = mapDBT . localRq
-
-instance WebMonad r m => WebMonad r (DBT m) where
-  finishWith = lift . finishWith
-
-instance (FilterMonad res m) => FilterMonad res (StateT s m) where
-    setFilter f   = lift $ setFilter f
+instance (
+    Monad (t m)
+  , MonadTrans t
+  , MonadTransControl t
+  , FilterMonad f m
+  ) => FilterMonad f (t m) where
+    setFilter     = lift . setFilter
     composeFilter = lift . composeFilter
-    getFilter   m = mapStateT (\m' ->
-                                   do ((b,s), f) <- getFilter m'
-                                      return ((b, f), s)) m
+    getFilter m   = do
+      (stT, f) <- liftWith $ \run -> getFilter (run m)
+      (, f) `liftM` restoreT (return stT)
 
-instance (WebMonad a m) => WebMonad a (StateT s m) where
-    finishWith    = lift . finishWith
+instance (
+    Monad m
+  , Monad (t m)
+  , MonadTrans t
+  , MonadTransControl t
+  , HasRqData m
+  ) => HasRqData (t m) where
+    askRqEnv       = lift askRqEnv
+    localRqEnv f m = controlT $ \run -> localRqEnv f (run m)
+    rqDataError    = lift . rqDataError
 
-instance (ServerMonad m) => ServerMonad (StateT s m) where
-    askRq         = lift askRq
-    localRq f     = mapStateT (localRq f)
+instance (
+    Monad (t m)
+  , MonadTrans t
+  , MonadTransControl t
+  , ServerMonad m
+  ) => ServerMonad (t m) where
+    askRq       = lift askRq
+    localRq f m = controlT $ \run -> localRq f (run m)
 
-instance (Monad m, HasRqData m) => HasRqData (StateT s m) where
-    askRqEnv      = lift askRqEnv
-    localRqEnv f  = mapStateT (localRqEnv f)
-    rqDataError e = lift (rqDataError e)
+instance (
+    Monad (t m)
+  , MonadTrans t
+  , WebMonad r m
+  ) => WebMonad r (t m) where
+    finishWith = lift . finishWith

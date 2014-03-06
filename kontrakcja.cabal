@@ -138,6 +138,7 @@ Executable kontrakcja-server
 
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns,
+              ConstraintKinds,
               DeriveDataTypeable,
               DeriveFunctor,
               FlexibleContexts,
@@ -241,6 +242,7 @@ Executable cron
 
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns,
+              ConstraintKinds
               DeriveFunctor,
               DeriveDataTypeable,
               FlexibleContexts,
@@ -653,6 +655,7 @@ Executable kontrakcja-test
 
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns,
+              ConstraintKinds,
               DeriveFunctor,
               DeriveDataTypeable,
               FlexibleContexts,

@@ -20,6 +20,7 @@ import Control.Monad.Reader
 
 import AppConf
 import ActionQueue.Scheduler
+import Control.Monad.Trans.Instances ()
 import Crypto.RNG
 import DB
 import Doc.Model

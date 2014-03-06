@@ -12,6 +12,7 @@ import ActionQueue.Scheduler
 import Crypto.RNG
 import Database.PostgreSQL.PQTypes.Class.Instances.Overlapping ()
 import DB
+import Database.PostgreSQL.PQTypes.Class.Instances.Overlapping ()
 import MinutesTime
 import MagicHash
 import Session.SessionID

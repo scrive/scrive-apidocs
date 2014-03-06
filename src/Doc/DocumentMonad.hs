@@ -1,3 +1,4 @@
+{-# LANGUAGE OverlappingInstances #-}
 -- | Monad for manipulating documents
 module Doc.DocumentMonad
   ( DocumentMonad (..)
@@ -7,25 +8,17 @@ module Doc.DocumentMonad
   , withDocumentM
   ) where
 
-import Amazon (AmazonMonad)
 import Control.Applicative (Applicative)
 import Control.Monad.Base (MonadBase)
-import Control.Monad.Reader (MonadReader, ReaderT(..), lift, runReaderT, ask, MonadIO, MonadTrans)
+import Control.Monad.Reader (lift, MonadIO, MonadTrans)
 import Control.Monad.Trans.Control (MonadBaseControl(..), MonadTransControl(..), ComposeSt, defaultLiftBaseWith, defaultRestoreM, defaultLiftWith, defaultRestoreT)
-import Crypto.RNG (CryptoRNG)
+import Control.Monad.Trans.Control.Util
 import Data.Monoid.Space
 import DB
 import DB.RowCache (RowCacheT, GetRow, runRowCacheT, runRowCacheTID, runRowCacheTM, rowCache, rowCacheID, updateRow, updateRowWithID)
 import Doc.DocStateData (Document)
 import Doc.DocumentID (DocumentID)
-import GuardTime (GuardTimeConfMonad)
-import Happstack.Server (FilterMonad, HasRqData, ServerMonad, WebMonad)
-import Kontra (Kontrakcja)
-import KontraMonad (KontraMonad)
 import Log (MonadLog(..))
-import MailContext (MailContextMonad)
-import Text.StringTemplates.Templates (TemplatesMonad, TemplatesT(..))
-import Instances ()
 import Text.JSON
 import Text.JSON.Gen
 
@@ -51,9 +44,9 @@ class MonadDB m => DocumentMonad m where
 
 -- | A monad transformer that has a 'DocumentMonad' instance
 newtype DocumentT m a = DocumentT { unDocumentT :: RowCacheT Document m a }
-  deriving (Applicative, Monad, Functor, MonadIO, MonadDB, MonadTrans, MonadBase b)
+  deriving (Applicative, Monad, MonadDB, Functor, MonadIO, MonadTrans, MonadBase b)
 
-instance (MonadLog m) => MonadLog (DocumentT m) where
+instance MonadLog m => MonadLog (DocumentT m) where
   mixlogjs title js = do
     case toJSValue js of
       JSObject jso -> DocumentT $ do
@@ -90,29 +83,18 @@ instance (GetRow Document m, MonadDB m) => DocumentMonad (DocumentT m) where
   updateDocument m = DocumentT $ updateRow $ unDocumentT . m
   updateDocumentWithID m = DocumentT $ updateRowWithID $ unDocumentT . m
 
--- Boring instances
+-- Generic instance
 
-instance DocumentMonad m => DocumentMonad (ReaderT r m) where
-  theDocument = lift $ theDocument
-  theDocumentID = lift $ theDocumentID
-  updateDocument m = ask >>= \r -> lift $ updateDocument $ \d -> runReaderT (m d) r
-  updateDocumentWithID m = ask >>= \r -> lift $ updateDocumentWithID $ \d ->  runReaderT (m d) r
-
-deriving instance (MonadBase IO m, DocumentMonad m) => DocumentMonad (TemplatesT m)
-
-deriving instance (Monad m, AmazonMonad m) => AmazonMonad (DocumentT m)
-deriving instance (Monad m, CryptoRNG m) => CryptoRNG (DocumentT m)
-deriving instance FilterMonad f m => FilterMonad f (DocumentT m)
-deriving instance (Monad m, GuardTimeConfMonad m) => GuardTimeConfMonad (DocumentT m)
-deriving instance (Monad m, HasRqData m) => HasRqData (DocumentT m)
-deriving instance KontraMonad m => KontraMonad (DocumentT m)
-deriving instance Kontrakcja m => Kontrakcja (DocumentT m)
-deriving instance (Monad m, MailContextMonad m) => MailContextMonad (DocumentT m)
-deriving instance MonadReader r m => MonadReader r (DocumentT m)
-deriving instance ServerMonad m => ServerMonad (DocumentT m)
-deriving instance (Monad m, TemplatesMonad m) => TemplatesMonad (DocumentT m)
-deriving instance WebMonad r m => WebMonad r (DocumentT m)
-
+instance (
+    DocumentMonad m
+  , MonadDB (t m)
+  , MonadTrans t
+  , MonadTransControl t
+  ) => DocumentMonad (t m) where
+    theDocument = lift theDocument
+    theDocumentID = lift theDocumentID
+    updateDocument m = controlT $ \run -> updateDocument (run . m)
+    updateDocumentWithID m = controlT $ \run -> updateDocumentWithID (run . m)
 
 instance MonadBaseControl b m => MonadBaseControl b (DocumentT m) where
   newtype StM (DocumentT m) a = StM { unStM :: ComposeSt DocumentT m a }

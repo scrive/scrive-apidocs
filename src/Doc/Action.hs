@@ -38,7 +38,6 @@ import Doc.SignatoryLinkID
 import ForkAction (forkAction)
 import GuardTime (GuardTimeConfMonad, runGuardTimeConfT)
 import InputValidation
-import Instances ()
 import Kontra
 import qualified Log
 import MailContext (MailContextMonad(..), MailContext(..))

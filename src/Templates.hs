@@ -17,7 +17,6 @@ import Control.Monad.Reader
 import Data.Time.Clock
 
 import User.Lang
-import Crypto.RNG
 
 import qualified Text.StringTemplates.Files as TF
 import qualified Text.StringTemplates.TemplatesLoader as TL
@@ -54,9 +53,6 @@ renderLocalTemplate :: (HasLang a, T.TemplatesMonad m) => a -> String -> F.Field
 renderLocalTemplate haslang name fields = do
   ts <- T.getTextTemplatesByLanguage $ codeFromLang $ getLang haslang
   T.renderHelper ts name fields
-
-instance CryptoRNG m => CryptoRNG (T.TemplatesT m) where
-    getCryptoRNGState = T.TemplatesT $ ReaderT $ \_r -> getCryptoRNGState
 
 runTemplatesT :: (Functor m, Monad m) => (Lang, TL.GlobalTemplates) -> T.TemplatesT m a -> m a
 runTemplatesT (lang, ts) action = runReaderT (T.unTT action) (codeFromLang lang, ts)

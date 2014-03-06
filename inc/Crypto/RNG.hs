@@ -11,7 +11,7 @@
 -- The access to the RNG state is captured by a class.  By making
 -- instances of this class, client code can enjoy RNG generation from
 -- their own monads.
-
+{-# LANGUAGE OverlappingInstances #-}
 module Crypto.RNG (
   -- * Generation of strings and numbers
     CryptoRNGState
@@ -34,25 +34,14 @@ import Control.Applicative
 import Control.Concurrent
 import Control.Monad.Base
 import Control.Monad.Cont
-import Control.Monad.Error
-import Control.Monad.List
 import Control.Monad.Reader
-import Control.Monad.State
 import Control.Monad.Trans.Control
-import Control.Monad.Trans.Identity
-import Control.Monad.Trans.Maybe
-import Control.Monad.Writer
 import Crypto.Random
 import Crypto.Random.DRBG
 import Data.Bits
 import Data.ByteString (ByteString, unpack)
 import Data.Int
 import Data.List
-import Happstack.Server
-import qualified Control.Monad.State.Lazy as LS
-import qualified Control.Monad.State.Strict as SS
-import qualified Control.Monad.Writer.Lazy as LW
-import qualified Control.Monad.Writer.Strict as SW
 
 -- | The random number generator state.  It sits inside an MVar to
 -- support concurrent thread access.
@@ -137,42 +126,6 @@ instance MonadBaseControl b m => MonadBaseControl b (CryptoRNGT m) where
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
-instance MonadError e m => MonadError e (CryptoRNGT m) where
-  throwError     = lift . throwError
-  catchError m h = withCryptoRNGState $ \s -> catchError (runCryptoRNGT s m) (runCryptoRNGT s . h)
-
-instance MonadReader r m => MonadReader r (CryptoRNGT m) where
-  ask     = lift ask
-  local f = mapCryptoRNGT $ local f
-
-instance MonadState s m => MonadState s (CryptoRNGT m) where
-  get = lift get
-  put = lift . put
-
-instance MonadWriter w m => MonadWriter w (CryptoRNGT m) where
-  tell   = lift . tell
-  listen = mapCryptoRNGT listen
-  pass   = mapCryptoRNGT pass
-
--- Happstack specific instances, to be moved somewhere else
-
-instance FilterMonad f m => FilterMonad f (CryptoRNGT m) where
-  setFilter     = lift . setFilter
-  composeFilter = lift . composeFilter
-  getFilter     = mapCryptoRNGT getFilter
-
-instance (HasRqData m, Monad m) => HasRqData (CryptoRNGT m) where
-  askRqEnv     = lift askRqEnv
-  localRqEnv f = mapCryptoRNGT $ localRqEnv f
-  rqDataError  = lift . rqDataError
-
-instance ServerMonad m => ServerMonad (CryptoRNGT m) where
-  askRq     = lift askRq
-  localRq f = mapCryptoRNGT $ localRq f
-
-instance WebMonad r m => WebMonad r (CryptoRNGT m) where
-  finishWith = lift . finishWith
-
 -- | Monads carrying around the RNG state.
 class MonadIO m => CryptoRNG m where
   getCryptoRNGState :: m CryptoRNGState
@@ -180,32 +133,9 @@ class MonadIO m => CryptoRNG m where
 instance MonadIO m => CryptoRNG (CryptoRNGT m) where
   getCryptoRNGState = CryptoRNGT ask
 
-instance CryptoRNG m => CryptoRNG (ReaderT r m) where
-  getCryptoRNGState = lift getCryptoRNGState
-
-instance CryptoRNG m => CryptoRNG (ContT r m) where
-  getCryptoRNGState = lift getCryptoRNGState
-
-instance (Error e, CryptoRNG m) => CryptoRNG (ErrorT e m) where
-  getCryptoRNGState = lift getCryptoRNGState
-
-instance CryptoRNG m => CryptoRNG (IdentityT m) where
-  getCryptoRNGState = lift getCryptoRNGState
-
-instance CryptoRNG m => CryptoRNG (ListT m) where
-  getCryptoRNGState = lift getCryptoRNGState
-
-instance CryptoRNG m => CryptoRNG (MaybeT m) where
-  getCryptoRNGState = lift getCryptoRNGState
-
-instance CryptoRNG m => CryptoRNG (SS.StateT s m) where
-  getCryptoRNGState = lift getCryptoRNGState
-
-instance CryptoRNG m => CryptoRNG (LS.StateT s m) where
-  getCryptoRNGState = lift getCryptoRNGState
-
-instance (CryptoRNG m, Monoid w) => CryptoRNG (LW.WriterT w m) where
-  getCryptoRNGState = lift getCryptoRNGState
-
-instance (CryptoRNG m, Monoid w) => CryptoRNG (SW.WriterT w m) where
-  getCryptoRNGState = lift getCryptoRNGState
+instance (
+    MonadIO (t m)
+  , MonadTrans t
+  , CryptoRNG m
+  ) => CryptoRNG (t m) where
+    getCryptoRNGState = lift getCryptoRNGState
