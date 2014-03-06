@@ -808,7 +808,7 @@ apiCallGetBrandingForSignView did slid = api $ do
   sl <- apiGuardJustM  (serverError "No document found") $ return $ getMaybeSignatoryLink (doc,slid)
   when (signatorymagichash sl /= magichash) $ throwIO . SomeKontraException $ serverError "No document found"
   authorid <- apiGuardL (serverError "Document problem | No author") $ return $ getAuthorSigLink doc >>= maybesignatory
-  user <- apiGuardL (serverError "Document problem | No author in DB") $ dbQuery $ GetUserByID authorid
+  user <- apiGuardL (serverError "Document problem | No author in DB") $ dbQuery $ GetUserByIDIncludeDeleted authorid
   company <- getCompanyForUser user
   companyui <- dbQuery $ GetCompanyUI (companyid company)
   Ok <$> signviewBrandingJSON ctx user company companyui

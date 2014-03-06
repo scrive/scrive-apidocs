@@ -187,7 +187,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       shape: BrowserInfo.isSmallScreen() ? "" : "rounded",
       customcolor: this.model.usebranding() ? signviewbranding.signviewprimarycolour() : undefined,
       textcolor: this.model.usebranding() ? signviewbranding.signviewprimarytextcolour() : undefined,
-      cssClass: 'greybg',
+      cssClass: 'greybg signbutton',
       text: localization.process.signbuttontext,
       oneClick : true,
       onClick: function() {
@@ -321,7 +321,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       close.click(function() { self.confirmation.close(); });
 
       // Remove the modal footer but keep the button (regular or mobile bankid)
-      var signButton = modalFooter.find('.button.button-green').detach();
+      var signButton = modalFooter.find('.button.signbutton').detach();
       if (signatory.elegAuthentication()) {
         signButton = modalFooter.find('.mbi').detach();
         signButton.addClass("button-green");

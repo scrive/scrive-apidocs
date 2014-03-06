@@ -26,9 +26,7 @@ var BackboneMixin = {
       this.__syncedModels.push(model);
     }
   }
-}
-
-
+};
 
 expose.BackboneMixin = BackboneMixin;
 

@@ -307,6 +307,7 @@ window.CsvSignatoryDesignPopup =  function(args) {
              } else {
                popup.setWidth(530);
              }
+             popup.fixOverlay();
         });
 };
 

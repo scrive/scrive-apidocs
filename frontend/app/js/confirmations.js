@@ -324,6 +324,7 @@ window.Confirmation = function (args) {
           }
          // Export the interface
          return {
+           fixOverlay : function() { overlay.height($(document).height()); },
            clear      : function() { view.clear();},
            close      : function(fast) { model.close();},
            showAccept : function() { model.setAcceptVisible(true);},

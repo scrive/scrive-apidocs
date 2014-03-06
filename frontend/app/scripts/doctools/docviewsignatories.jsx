@@ -100,7 +100,7 @@ var DocumentViewSignatoriesView = React.createClass({
                         last   = {i == model.signatories().length - 1}
                         active = {i == self.currentIndex()}
                       />
-                      )
+                      );
                     })
                   }
                 </div>
@@ -157,7 +157,7 @@ var DocumentViewSignatories = React.createClass({
         forSigning : props.forSigning,
         textstyle : props.textstyle,
         onAction : props.onAction
-      })
+      });
       return {model: model};
     },
     currentIndex : function() {

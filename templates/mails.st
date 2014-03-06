@@ -46,7 +46,6 @@ mailContractClosed=
 
 ####
 mailContractClosedMainP =
-<br/>
     $if(sealFixed)$ $_mailDocumentCorrectionBody()$ $else$ $_mailContractClosedContentSignedBy()$ $endif$
     <br/>
     <br/>

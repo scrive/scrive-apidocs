@@ -304,7 +304,7 @@ var TabsView = Backbone.View.extend({
         }
         var toHide = visible.not(newvisible);
         var toShow = newvisible.not(visible);
-        var forceRedraw = function(el, c) {
+        var forceRedraw = function(el, c) { 
           var el = el[0];
           el.style.cssText += ';-webkit-transform:rotateZ(0deg)';
           el.offsetHeight;

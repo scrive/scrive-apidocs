@@ -242,10 +242,9 @@ var AuthorViewAutomaticReminders = React.createClass({
            </div>
       );
     }
+
 });
 
-expose.AuthorViewAutomaticReminders = AuthorViewAutomaticReminders
-
-return expose;
-
+  expose.AuthorViewAutomaticReminders = AuthorViewAutomaticReminders;
+  return expose;
 });
