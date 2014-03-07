@@ -16,27 +16,27 @@ define(['React', 'common/button'], function(React, Button) {
 
     render: function() {
       return (
-	<div className="inner">
-	  <h1>{ localization.questionnaire.great }</h1>
-	  <div className="question">
-	    <h6>{ localization.questionnaire.sendDown2 }</h6>
+          <div className="inner">
+            <h1>{ localization.questionnaire.great }</h1>
+            <div className="question">
+              <h6>{ localization.questionnaire.sendDown2 }</h6>
 
-	    <div className="yesnobuttons">
-	      <Button
-		 color="black"
-		 text = { localization.questionnaire.no }
-		 size = "small"
-		 onClick = {this.noButton}
-		 />
-	      <Button
-		 color="green"
-		 text = { localization.questionnaire.yes }
-		 size = "small"
-		 onClick = {this.yesButton}
-		 />
-	    </div>
-	  </div>
-	</div>
+              <div className="yesnobuttons">
+                <Button
+                   color="black"
+                   text = { localization.questionnaire.no }
+                   size = "small"
+                   onClick = {this.noButton}
+                   />
+                <Button
+                   color="green"
+                   text = { localization.questionnaire.yes }
+                   size = "small"
+                   onClick = {this.yesButton}
+                   />
+              </div>
+            </div>
+          </div>
       );
     }
   });
@@ -59,24 +59,24 @@ define(['React', 'common/button'], function(React, Button) {
               <h6 className="yourcompany">
                 { localization.questionnaire.easyToSign }<br/>
                 <span>
-		  { localization.questionnaire.otherBenefitsP1 }
-		  <span className="green-text">{ localization.questionnaire.otherBenefitsP2 }</span>
-		  { localization.questionnaire.otherBenefitsP3 }
-		</span>
+                  { localization.questionnaire.otherBenefitsP1 }
+                  <span className="green-text">{ localization.questionnaire.otherBenefitsP2 }</span>
+                  { localization.questionnaire.otherBenefitsP3 }
+                </span>
               </h6>
               <h6 className="wanttotry">{ localization.questionnaire.seeHowSimple }</h6>
 
               <div className="yesnobuttons">
                 <input type="text" onChange={this.handleChange} className="phoneinput" placeholder={ localization.questionnaire.phoneNumber } />
-		<Button
-		   color="green"
-		   text = { localization.questionnaire.showDemo }
-		   size = "small"
-		   onClick = {this.yesButton}
-		   />
+                <Button
+                   color="green"
+                   text = { localization.questionnaire.showDemo }
+                   size = "small"
+                   onClick = {this.yesButton}
+                   />
               </div>
-	    </div>
-	  </div>
+            </div>
+          </div>
       );
     }
   });
@@ -99,15 +99,15 @@ define(['React', 'common/button'], function(React, Button) {
               <h6>{ localization.questionnaire.improvements }</h6>
               <textarea onChange={this.handleChange}></textarea>
               <br />
-	      <Button
-		 color="green"
-		 cssClass="button-sendfeedback"
-		 text = { localization.questionnaire.sendFeedback }
-		 size = "small"
-		 onClick = {this.sendFeedback}
-		 />
-	    </div>
-	  </div>
+              <Button
+                 color="green"
+                 cssClass="button-sendfeedback"
+                 text = { localization.questionnaire.sendFeedback }
+                 size = "small"
+                 onClick = {this.sendFeedback}
+                 />
+            </div>
+          </div>
 
       );
     }
@@ -126,26 +126,26 @@ define(['React', 'common/button'], function(React, Button) {
 
     render: function() {
       return (
-	  <div className="inner">
-	    <h1>{ localization.questionnaire.quickQuestion }</h1>
-	    <div className="question">
-	      <h6>{ localization.questionnaire.enjoySigning }</h6>
+          <div className="inner">
+            <h1>{ localization.questionnaire.quickQuestion }</h1>
+            <div className="question">
+              <h6>{ localization.questionnaire.enjoySigning }</h6>
 
-	      <div className="yesnobuttons">
-		<Button
-		   color="black"
-		   text = { localization.questionnaire.no }
-		   size = "small"
-		   onClick = {this.noButton}
-		   />
-		<Button
-		   color="green"
-		   text = { localization.questionnaire.yes }
-		   size = "small"
-		   onClick = {this.yesButton}
-		   />
-	      </div>
-	    </div>
+              <div className="yesnobuttons">
+                <Button
+                   color="black"
+                   text = { localization.questionnaire.no }
+                   size = "small"
+                   onClick = {this.noButton}
+                   />
+                <Button
+                   color="green"
+                   text = { localization.questionnaire.yes }
+                   size = "small"
+                   onClick = {this.yesButton}
+                   />
+              </div>
+            </div>
           </div>
 
       );
@@ -170,22 +170,22 @@ define(['React', 'common/button'], function(React, Button) {
             <div className="question">
               <h6>{ localization.questionnaire.anyoneElse }</h6>
 
-	      <div className="yesnobuttons">
-		<Button
-		   color="black"
-		   text = { localization.questionnaire.no }
-		   size = "small"
-		   onClick = {this.noButton}
-		   />
-		<Button
-		   color="green"
-		   text = { localization.questionnaire.yes }
-		   size = "small"
-		   onClick = {this.yesButton}
-		   />
-	      </div>
-	    </div>
-	  </div>
+              <div className="yesnobuttons">
+                <Button
+                   color="black"
+                   text = { localization.questionnaire.no }
+                   size = "small"
+                   onClick = {this.noButton}
+                   />
+                <Button
+                   color="green"
+                   text = { localization.questionnaire.yes }
+                   size = "small"
+                   onClick = {this.yesButton}
+                   />
+              </div>
+            </div>
+          </div>
       );
     }
   });
@@ -207,22 +207,22 @@ define(['React', 'common/button'], function(React, Button) {
             <h1>{ localization.questionnaire.great }</h1>
             <div className="question">
               <h6>{ localization.questionnaire.sendDownP1 }</h6>
-	      <h6>{ localization.questionnaire.sendDownP2 }</h6>
+              <h6>{ localization.questionnaire.sendDownP2 }</h6>
 
-	      <div className="yesnobuttons">
-		<Button
-		   color="black"
-		   text = { localization.questionnaire.no }
-		   size = "small"
-		   onClick = {this.noButton}
-		   />
-		<Button
-		   color="green"
-		   text = { localization.questionnaire.yes }
-		   size = "small"
-		   onClick = {this.yesButton}
-		   />
-	      </div>
+              <div className="yesnobuttons">
+                <Button
+                   color="black"
+                   text = { localization.questionnaire.no }
+                   size = "small"
+                   onClick = {this.noButton}
+                   />
+                <Button
+                   color="green"
+                   text = { localization.questionnaire.yes }
+                   size = "small"
+                   onClick = {this.yesButton}
+                   />
+              </div>
             </div>
           </div>
       );
@@ -232,12 +232,12 @@ define(['React', 'common/button'], function(React, Button) {
   expose.Done = React.createClass({
     render: function() {
       return (
-	  <div className="inner">
-	    <h1>{ localization.questionnaire.thanksForYourTime }</h1>
-	    <div className="question">
-	      { localization.questionnaire.haveAGreatDay }
-	    </div>
-	  </div>
+          <div className="inner">
+            <h1>{ localization.questionnaire.thanksForYourTime }</h1>
+            <div className="question">
+              { localization.questionnaire.haveAGreatDay }
+            </div>
+          </div>
       );
     }
     

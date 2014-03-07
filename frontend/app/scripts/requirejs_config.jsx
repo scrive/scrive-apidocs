@@ -1,4 +1,4 @@
-/** 
+/**
  *  @description
  *  Setup RequireJS library paths and shims
  *
@@ -52,7 +52,7 @@ var require = {
       init: function () {
         this.tinyMCE.DOM.events.domLoaded = true;
 
-	// needed to make tinymce load css from correct place
+        // needed to make tinymce load css from correct place
         this.tinyMCE.baseURL = window.location.origin + '/libs/tiny_mce';
 
         return this.tinyMCE;

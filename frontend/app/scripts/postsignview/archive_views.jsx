@@ -14,21 +14,21 @@ define(['React', 'Backbone', 'postsignview/user_service', 'common/language_servi
      */
     uploadSampleAndRedirect: function() {
       var samplePdfUrl = function() {
-	var language = LanguageService.currentLanguage();
-	var url = '/pdf/sample_document_loremipsumcontract_';
-	url += language;
-	url += '.base64.pdf';
-	return url;
+        var language = LanguageService.currentLanguage();
+        var url = '/pdf/sample_document_loremipsumcontract_';
+        url += language;
+        url += '.base64.pdf';
+        return url;
       };
       
       var title = localization.ftue.documentTitle;
 
       DocumentUploader.uploadByURL(function(documentData) {
-	window.location.pathname = '/d/' + documentData.id;
-      }, function() {		   
-	// In case of fail, just throw them into design view.                                      
-	SessionStorage.set('welcome', 'accepted', false);
-	window.location.pathname = '/newdocument';
+        window.location.pathname = '/d/' + documentData.id;
+      }, function() {
+        // In case of fail, just throw them into design view.
+        SessionStorage.set('welcome', 'accepted', false);
+        window.location.pathname = '/newdocument';
       }, samplePdfUrl(), title);
     },
 
@@ -39,7 +39,7 @@ define(['React', 'Backbone', 'postsignview/user_service', 'common/language_servi
      */
     sendExampleDocument: function() {
       mixpanel.register({
-	'Welcome modal accepted': true
+        'Welcome modal accepted': true
       });
       
       mixpanel.track('Welcome modal accept');
@@ -110,24 +110,24 @@ define(['React', 'Backbone', 'postsignview/user_service', 'common/language_servi
                     </div>
                   </div>
 
-		  {/*if*/ !BrowserInfo.isPadDevice() && !BrowserInfo.isSmallScreen() &&
-		  <div className="new-post-sign-view-user">
-		    <div className="inner-container">
-		      <img src="/img/arrow-grey.png" className="grey-arrow" />
-		      <h2>{ localization.archive.ftue.title }</h2>
-		      <div className="subtitle">
-			<h5>{ localization.archive.ftue.subtitleInJustAFewMinutes }</h5>
-			<h5 className="great-thing">{ localization.archive.ftue.subtitleReviewed }</h5>
-			<h5 className="great-thing">{ localization.archive.ftue.subtitleReturned }</h5>
-			<h5 className="great-thing">{ localization.archive.ftue.subtitleSaved }</h5>
-			<h5>{ localization.archive.ftue.subtitleIsntThisHowSimple }</h5>
-		      </div>
-		      <a onClick={ this.sendExampleDocument } className="design-view-document-buttons-upload-button green button button-large button-green button-round">
-			<div className="label">{ localization.archive.ftue.button }</div>
-		      </a>
-		    </div>
-		  </div>
-		  }
+                  {/*if*/ !BrowserInfo.isPadDevice() && !BrowserInfo.isSmallScreen() &&
+                  <div className="new-post-sign-view-user">
+                    <div className="inner-container">
+                      <img src="/img/arrow-grey.png" className="grey-arrow" />
+                      <h2>{ localization.archive.ftue.title }</h2>
+                      <div className="subtitle">
+                        <h5>{ localization.archive.ftue.subtitleInJustAFewMinutes }</h5>
+                        <h5 className="great-thing">{ localization.archive.ftue.subtitleReviewed }</h5>
+                        <h5 className="great-thing">{ localization.archive.ftue.subtitleReturned }</h5>
+                        <h5 className="great-thing">{ localization.archive.ftue.subtitleSaved }</h5>
+                        <h5>{ localization.archive.ftue.subtitleIsntThisHowSimple }</h5>
+                      </div>
+                      <a onClick={ this.sendExampleDocument } className="design-view-document-buttons-upload-button green button button-large button-green button-round">
+                        <div className="label">{ localization.archive.ftue.button }</div>
+                      </a>
+                    </div>
+                  </div>
+                  }
 
                 </div>
               </div>

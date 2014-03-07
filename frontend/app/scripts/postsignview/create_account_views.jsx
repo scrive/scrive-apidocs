@@ -44,15 +44,15 @@ define(['React', 'Backbone'], function(React, Backbone) {
           <div>
             <div className={mainContainerClasses}>
 
-	      { /*if*/ !this.props.isSmallScreen &&
-	      <div>
-		<div className="title">{ localization.docsignview.titleText }</div>
-		<div className="subtitle">{ localization.docsignview.subtitleText }</div>
-	      </div>
-	      }
-	      { /*else*/ this.props.isSmallScreen &&
-	      <div className="title">{ localization.docsignview.subtitleText }</div>
-	      }
+              { /*if*/ !this.props.isSmallScreen &&
+              <div>
+                <div className="title">{ localization.docsignview.titleText }</div>
+                <div className="subtitle">{ localization.docsignview.subtitleText }</div>
+              </div>
+              }
+              { /*else*/ this.props.isSmallScreen &&
+              <div className="title">{ localization.docsignview.subtitleText }</div>
+              }
 
               <div className="clearfix"></div>
               <div className="acceptbutton">

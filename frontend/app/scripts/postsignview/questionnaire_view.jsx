@@ -37,7 +37,7 @@ define(['React', 'StateMachine', 'postsignview/questionnaire_question_views'], f
         ],
         callbacks: {
           onchangestate: function(event, from, to) {
-	    // change questionview
+            // change questionview
             self.setState({question: to});
             var extraMixpanelProperties = {};
 
@@ -86,7 +86,7 @@ define(['React', 'StateMachine', 'postsignview/questionnaire_question_views'], f
       };
 
       if(this.phoneNumber) {
-	properties['Phone'] = this.phoneNumber;
+        properties['Phone'] = this.phoneNumber;
       }
 
       return properties;
@@ -124,11 +124,11 @@ define(['React', 'StateMachine', 'postsignview/questionnaire_question_views'], f
 
               <div>
                 <div className="questions">
-		  <Question yesButton={this.yesAnswer} noButton={this.noAnswer} setPhoneNumber={this.setPhoneNumber} />
-		</div>
-	      </div>
-	    </div>
-	  </div>
+                  <Question yesButton={this.yesAnswer} noButton={this.noAnswer} setPhoneNumber={this.setPhoneNumber} />
+                </div>
+              </div>
+            </div>
+          </div>
       );
     }
   });

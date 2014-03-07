@@ -34,10 +34,10 @@ define(['React', 'utils/browserinfo', 'common/language_service', 'postsignview/q
    */
   expose.render = function(document, sectionElement) {
     var promotionImg = '/img/partnerbanners/',
-	language = LanguageService.currentLanguage(),
-	component,
-	// React.renderComponent need a html object to attach to, not a jquery html object
-	sectionElementRaw = sectionElement[0];
+        language = LanguageService.currentLanguage(),
+        component,
+        // React.renderComponent need a html object to attach to, not a jquery html object
+        sectionElementRaw = sectionElement[0];
 
     // TODO(jens): Remove this when we drop support for IE7
     if(BrowserInfo.isIE7orLower()) {
