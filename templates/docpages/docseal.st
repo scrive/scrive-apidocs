@@ -13,7 +13,6 @@ SealingTexts
       , dateText="$_contractsealingtextsdateText()$"
       , historyText="$_contractsealingtextshistoryText()$"
       , verificationFooter="$_verificationFooter()$"
-      , attachmentText="$_contractsealingtextsattachment()$"
       , hiddenAttachmentText="$_contractsealingtextshiddenAttachment()$"
       , onePageText="$_numberOfPagesIs1()$"
     }
