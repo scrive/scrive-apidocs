@@ -512,7 +512,7 @@ var DocumentViewSignatoryForList = React.createClass({
     stateFromProps : function(props) {
       var model = new DocumentViewSignatoryModel({
         signatory: props.signatory,
-        textstyle : props.textstyle,
+        textstyle : props.textstyle
       })
       return {model: model};
     },

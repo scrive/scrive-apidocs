@@ -24,7 +24,7 @@ define(['React', 'Backbone', 'postsignview/user_service', 'postsignview/analytic
     get: function(attr) {
       // TODO(jens): How to make this more generic? Put it on Backbone.sync?
       return this.attributes.list[0].fields[attr];
-    },
+    }
   });
 
 });
