@@ -188,9 +188,7 @@ var DocumentViewSignatoryView = React.createClass({
     },
     getInitialState: function() {
       return {
-        newEmail : this.props.model.signatory().email() || "",
         changingEmail : false,       // Switch for changing email
-        newMobile : this.props.model.signatory().mobile() || "",
         changingMobile : false  // Switch for chaning phone number
       };
     },
@@ -201,7 +199,7 @@ var DocumentViewSignatoryView = React.createClass({
       var model= this.props.model;
       var signatory = model.signatory();
       mixpanel.track('Click change email', {'Signatory index':signatory.signIndex()});
-      this.setState({changingEmail: true});
+      this.setState({changingEmail: true,newEmail : this.props.model.signatory().email() || ""});
     },
     handleChangeEmail : function() {
       var model= this.props.model;
@@ -221,7 +219,7 @@ var DocumentViewSignatoryView = React.createClass({
       var model= this.props.model;
       var signatory = model.signatory();
       mixpanel.track('Click change phone', {'Signatory index':signatory.signIndex()});
-      this.setState({changingMobile: true});
+      this.setState({changingMobile: true, newMobile : this.props.model.signatory().mobile() || ""});
     },
     handleChangeMobile : function() {
       var model= this.props.model;
