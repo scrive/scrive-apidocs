@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React','common/button', 'Backbone', 'legacy_code'], function(React, NewButton) {
+define(['React','common/button', 'Backbone', 'legacy_code'], function(React, Button) {
 
 var expose = {};
 
@@ -217,7 +217,6 @@ var AuthorViewAutomaticReminders = React.createClass({
           new AuthorViewAutomaticRemindersChangePopup({document : this.props.document,onAction :this.props.onAction});
     },
     render: function() {
-      var Button = NewButton.Button;
       return (
            <div className='grey-box auto-reminder'>
              <div className='titleinfo'>

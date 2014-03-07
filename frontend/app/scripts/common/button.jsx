@@ -19,16 +19,14 @@
 
  *
  * Example usage:
- * var button = React.renderComponent(Button.Button({
+ * var button = React.renderComponent(Button({
  *    text: "ABC"
  * }), div);
  *
  */
 
 define(['React'], function(React) {
-  var expose = {};
-
-  var Button = React.createClass({
+  return React.createClass({
     propTypes: {
       text        : React.PropTypes.string,
       color       : React.PropTypes.string,
@@ -121,8 +119,4 @@ define(['React'], function(React) {
       );
     }
   });
-
-  expose.Button = Button;
-
-  return expose;
 });

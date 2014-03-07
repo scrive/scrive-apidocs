@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
 
 
-define(['React','common/button','common/backbone_mixim','Backbone', 'legacy_code'], function(React,NewButton,BackboneMixin) {
+define(['React','common/button','common/backbone_mixim','Backbone', 'legacy_code'], function(React, Button, BackboneMixin, Backbone) {
 
 var expose = {};
 
@@ -354,7 +354,6 @@ var DocumentViewSignatoryView = React.createClass({
       var model = this.props.model;
       var signatory = model.signatory();
       var textstyle= model.textstyle();
-      var Button = NewButton.Button;
       return (
         <div className='grey-box'>
 
