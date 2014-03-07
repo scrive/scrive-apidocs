@@ -38,4 +38,6 @@ window.BrowserInfo = {
     }
 };
 
+  return window.BrowserInfo;
+
 });

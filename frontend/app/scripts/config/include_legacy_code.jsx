@@ -16,7 +16,7 @@ define([
   '../libs/moment.min',
   '../libs/iso8601.min',
   '../libs/html2canvas',
-  '../js/utils/browserinfo',
+  'utils/browserinfo',
   '../js/global',
   '../js/storage',
   '../js/dialog',

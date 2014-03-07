@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React', 'common/language_service', 'postsignview/questionnaire_view', 'postsignview/create_account_views', 'postsignview/user_service', 'Backbone', 'Underscore'], function(React, LanguageService, QuestionareView, CreateAccountViews, UserService, Backbone, _) {
+define(['React', 'utils/browserinfo', 'common/language_service', 'postsignview/questionnaire_view', 'postsignview/create_account_views', 'postsignview/user_service', 'Backbone', 'Underscore'], function(React, BrowserInfo, LanguageService, QuestionareView, CreateAccountViews, UserService, Backbone, _) {
   var expose = {};
 
   /**
@@ -38,6 +38,11 @@ define(['React', 'common/language_service', 'postsignview/questionnaire_view', '
 	component,
 	// React.renderComponent need a html object to attach to, not a jquery html object
 	sectionElementRaw = sectionElement[0];
+
+    // TODO(jens): Remove this when we drop support for IE7
+    if(BrowserInfo.isIE7orLower()) {
+      return;
+    }
 
     if(document.author().company() === 'Phone House') {
       // Phone house, create account banner

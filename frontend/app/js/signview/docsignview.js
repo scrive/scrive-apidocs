@@ -149,12 +149,17 @@ var DocumentSignViewModel = Backbone.Model.extend({
             return this.get('signatoriessection');
 
        var div = $('<div/>');
-       var component = React.renderComponent(
-                         DocumentViewSignatories.DocumentViewSignatories({
-                           forSigning: true,
-                           document : this.document(),
-                           textstyle: textstyle
-                         }), div[0]);
+
+    // TODO(jens): Remove this when we drop support for IE7
+    if(!BrowserInfo.isIE7orLower()) {
+      var component = React.renderComponent(
+        DocumentViewSignatories.DocumentViewSignatories({
+          forSigning: true,
+          document : this.document(),
+          textstyle: textstyle
+        }), div[0]);
+    }
+
        this.set({"signatoriessection" :    {
             el : function() {return div;}
           }

@@ -4,7 +4,7 @@ define(['React', 'StateMachine', 'postsignview/questionnaire_question_views'], f
   /**
    *  @description
    *  A questionnaire, asking user to answer a couple of questions and
-   *  record the answers and user informationto Mixpanel.
+   *  record the answers and user information to Mixpanel.
    */
   return React.createClass({
     componentDidMount: function() {
