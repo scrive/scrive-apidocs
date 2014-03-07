@@ -49,7 +49,14 @@ mailContractClosedMainP =
     $if(sealFixed)$ $_mailDocumentCorrectionBody()$ $else$ $_mailContractClosedContentSignedBy()$ $endif$
     <br/>
     <br/>
-    $_mailContractClosedContentAttached()$
+    $if(documentAttached)$
+      $_mailContractClosedContentAttached()$
+    $else$
+      $_mailContractClosedContentLinked()$
+      <br/><br/>
+      $nicebutton(link=mainfilelink; text=_mailContractClosedContentLinkedButton())$
+      <br/>
+    $endif$
     $mailClosedSignup()$
 ####
 #### REJECTED MAIL
@@ -83,9 +90,19 @@ mailForwardSigned =
       $nicemail(
         mailheader = _mailForwardMailTitle();
         mailp1 = _mailForwardMailContent1();
-        mailp2 = _mailForwardMailContent2();
+        mailp2 = mailDocumentAttachedOrLinked(attached=_mailForwardMailContent2());
         footer = null
       )$
+####
+mailDocumentAttachedOrLinked =
+ $if(documentAttached)$
+   $attached$
+ $else$
+   $_mailDocumentLinked()$
+   <br/><br/>
+   $nicebutton(link=mainfilelink; text=_mailContractClosedContentLinkedButton())$
+   <br/>
+ $endif$
 #### INVITATION MAILS
 ####
 mailInvitationTitleContract=
@@ -161,7 +178,7 @@ remindMailSignedStandardHeader=
   $_remindMailSignedContractStandardHeaderSendRequest()$
   <br/>
   <br/>
-  $_remindMailSignedContractStandardHeaderSendRequest2()$
+    mailDocumentAttachedOrLinked(attached=_remindMailSignedContractStandardHeaderSendRequest2());
 ###
 ###
 ### Reminding mails - NOT SIGNED

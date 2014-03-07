@@ -43,6 +43,7 @@ data KontraLink
     | LinkChangeUserEmail UserID MagicHash
     | LinkUserMailAPI
     | LinkSignDoc Document SignatoryLink
+    | LinkMainFile Document SignatoryLink
     | LinkSignDocNoMagicHash DocumentID SignatoryLinkID
     | LinkIssueDoc DocumentID
     | LinkEvidenceAttachment DocumentID BSC.ByteString
@@ -97,6 +98,9 @@ instance Show KontraLink where
     showsPrec _ (LinkSignDoc document signatorylink) =
         (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++
                  "/"++ show (signatorymagichash signatorylink)
+    showsPrec _ (LinkMainFile document signatorylink) =
+        (++) $ "/download/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++
+                 "/"++ show (signatorymagichash signatorylink) ++ "/"++ documenttitle document ++ ".pdf"
     showsPrec _ (LinkSignDocNoMagicHash documentid signatorylinkid) =
         (++) $ "/s/" ++ show documentid ++ "/" ++ show signatorylinkid
     showsPrec _ (LinkUserAdmin userId) = (++) $ "/adminonly/useradmin/"++show userId

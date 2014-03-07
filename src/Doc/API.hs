@@ -561,11 +561,12 @@ apiCallForward did =  api $ do
   withDocumentID did $ do
     unlessM (isClosed <$> theDocument) $ do
           throwIO . SomeKontraException $ badInput "Only document that are signed can be forwarded"
-    auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
+    asiglink <- apiGuardJustM (serverError "No author found") $ getAuthorSigLink <$> theDocument
+    auid <- apiGuardJustM (serverError "No author found") $ return $ maybesignatory asiglink
     when (not $ (auid == userid user)) $ do
           throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
     email <- apiGuardJustM (badInput "Email adress is no valid.") $ getOptionalField  asValidEmail "email"
-    _ <- sendForwardEmail email
+    _ <- sendForwardEmail email asiglink -- Make sure we only send out the document with the author's signatory link when it is closed, otherwise the link may be abused
     Accepted <$> (documentJSON (Just user) False True True Nothing Nothing =<< theDocument)
 
 

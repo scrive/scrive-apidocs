@@ -77,10 +77,11 @@ filesSelectors = [
   , "checksum"
   , "aes_key"
   , "aes_iv"
+  , "size"
   ]
 
-fetchFile :: (FileID, String, Maybe (Binary BS.ByteString), Maybe String, Maybe String, Maybe (Binary BS.ByteString), Maybe (Binary BS.ByteString), Maybe (Binary BS.ByteString)) -> File
-fetchFile (fid, fname, content, amazon_bucket, amazon_url, checksum, maes_key, maes_iv) = File {
+fetchFile :: (FileID, String, Maybe (Binary BS.ByteString), Maybe String, Maybe String, Maybe (Binary BS.ByteString), Maybe (Binary BS.ByteString), Maybe (Binary BS.ByteString), Int32) -> File
+fetchFile (fid, fname, content, amazon_bucket, amazon_url, checksum, maes_key, maes_iv, size) = File {
         fileid = fid
       , filename = fname
       , filestorage =
@@ -107,6 +108,7 @@ fetchFile (fid, fname, content, amazon_bucket, amazon_url, checksum, maes_key, m
             (Just _,      Just _,   Just (Left msg))  -> err msg
             d                                  -> error $ "Invalid AWS data for file with id = " ++ show fid ++ ": " ++ show d
       , filechecksum = unBinary `fmap` checksum
+      , filesize = size
     }
       where
         err :: String -> FileStorage

@@ -38,6 +38,7 @@ module Doc.Model
   , NewDocument(..)
   , PreparationToPending(..)
   , PurgeDocuments(..)
+  , unsavedDocumentLingerDays
   , RejectDocument(..)
   , RemoveDocumentAttachment(..)
   , ResetSignatoryDetails(..)
@@ -2403,9 +2404,12 @@ instance MonadDB m => DBQuery m CheckDocumentObjectVersionIs () where
        sqlWhereDocumentObjectVersionIs did ov
     return ()
 
+unsavedDocumentLingerDays :: Int
+unsavedDocumentLingerDays = 30
+
 data PurgeDocuments = PurgeDocuments Int Int
 instance MonadDB m => DBUpdate m PurgeDocuments Int where
-  update (PurgeDocuments savedDocumentLingerDays unsavedDocumentLingerDays) = do
+  update (PurgeDocuments savedDocumentLingerDays unsavedDocumentLingerDays') = do
 
     runQuery_ $ "CREATE TEMP TABLE documents_to_purge(id, title) AS"
         <+> "SELECT documents.id, documents.title"
@@ -2427,7 +2431,7 @@ instance MonadDB m => DBUpdate m PurgeDocuments Int where
         <+> "                   WHERE signatory_links.document_id = documents.id"
         <+> "                     AND signatory_links.user_id IS NULL"
                                   -- linger time hasn't elapsed yet
-        <+> "                     AND documents.mtime + (" <?> (show unsavedDocumentLingerDays ++ "days") <+> " :: INTERVAL) > now())"
+        <+> "                     AND documents.mtime + (" <?> (show unsavedDocumentLingerDays' ++ "days") <+> " :: INTERVAL) > now())"
 
     -- set purged time on documents
     rows <- runSQL $ "UPDATE documents"

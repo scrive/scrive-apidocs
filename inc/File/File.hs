@@ -5,6 +5,7 @@ module File.File
 
 import Data.Typeable
 import qualified Data.ByteString as BS
+import Data.Int (Int32)
 
 import Crypto
 import File.FileID
@@ -20,6 +21,7 @@ data File = File {
   -- if there is conversion error from sql, detect it immediately
   , filestorage  :: !FileStorage
   , filechecksum :: Maybe BS.ByteString
+  , filesize     :: Int32
   } deriving (Typeable)
 
 instance Eq File where

@@ -8,6 +8,7 @@ module Doc.DocControl(
     -- Top level handlers
     , handleNewDocument
     , showCreateFromTemplate
+    , handleDownloadClosedFile
     , handleSignShow
     , handleSignShowSaveMagicHash
     , handleAcceptAccountFromSign
@@ -37,6 +38,7 @@ import Doc.DocStateData
 import Doc.DocStateQuery
 import Doc.DocumentMonad (DocumentMonad, withDocumentM, withDocument, theDocument, theDocumentID)
 import Doc.Rendering
+import Doc.DocUtils (documentsealedfileM)
 import Doc.DocView
 import Doc.DocViewMail
 import Doc.SignatoryLinkID
@@ -47,7 +49,9 @@ import Doc.Tokens.Model
 import Attachment.Model
 import InputValidation
 import Instances ()
+import File.File (fileid)
 import File.Model
+import File.Storage (getFileIDContents)
 import Kontra
 import KontraLink
 import MagicHash
@@ -381,6 +385,19 @@ showPage' fileid pageno = do
     _ -> do
       Log.mixlog_ $ "JPEG page not found in cache, responding 404 for file " ++ show fileid ++ " and page " ++ show pageno
       notFound (toResponse "temporarily unavailable (document has files pending for process)")
+
+handleDownloadClosedFile :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> String -> m Response
+handleDownloadClosedFile did sid mh _nameForBrowser = do
+  doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
+  if isClosed doc then do
+    file <- guardJustM $ documentsealedfileM doc
+    content <- getFileIDContents $ fileid file
+    return $ respondWithPDF content
+   else respond404
+
+respondWithPDF :: BS.ByteString -> Response
+respondWithPDF contents = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") $
+                          Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
 
 handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 handleResend docid signlinkid  = withUserPost $

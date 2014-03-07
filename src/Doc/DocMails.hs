@@ -172,8 +172,8 @@ sendReminderEmail custommessage  actor automatic siglink = do
   mctx <- getMailContext
   sent <- sendNotifications siglink
     (do
-      mail <- theDocument >>= mailDocumentRemind custommessage siglink False
       mailattachments <- makeMailAttachments =<< theDocument
+      mail <- theDocument >>= mailDocumentRemind custommessage siglink False (not (null mailattachments))
       docid <- theDocumentID
       scheduleEmailSendoutWithDocumentAuthorSender docid (mctxmailsconfig mctx) $ mail {
                                to = [getMailAddress siglink]
@@ -194,7 +194,8 @@ sendReminderEmail custommessage  actor automatic siglink = do
 -- | Send emails to all parties when a document is closed.  If
 -- 'sealFixed', then there were earlier emails sent that contained a
 -- document that wasn't digitally sealed, so now we resend the
--- document with digital seal.
+-- document with digital seal.  If the main file is deemed too large
+-- to attach, a link to it is used instead of attaching it.
 sendClosedEmails :: (CryptoRNG m, MailContextMonad m, MonadDB m, Log.MonadLog m, TemplatesMonad m) => Bool -> Document -> m ()
 sendClosedEmails sealFixed document = do
     mctx <- getMailContext
@@ -205,7 +206,7 @@ sendClosedEmails sealFixed document = do
                then handlePostSignSignup (Email $ getEmail sl) (getFirstName sl) (getLastName sl) (getCompanyName sl) (getCompanyNumber sl)
                else return $ Nothing
       let sendMail = do
-            mail <- mailDocumentClosed ml sl sealFixed document
+            mail <- mailDocumentClosed ml sl sealFixed (not (null mailattachments)) document
             scheduleEmailSendout (mctxmailsconfig mctx) $
                                  mail { to = [getMailAddress sl]
                                       , attachments = mailattachments
@@ -222,13 +223,15 @@ makeMailAttachments document = do
   let
       aattachments = map authorattachmentfile $ documentauthorattachments document
       sattachments = concatMap (maybeToList . signatoryattachmentfile) $ concatMap signatoryattachments $ documentsignatorylinks document
-      allfiles' = maybeToList mainfile ++ aattachments ++ sattachments
+      allfiles' = maybeToList mainfile ++
+                  if isClosed document then [] else aattachments ++ sattachments
   allfiles <- mapM (dbQuery . GetFileByFileID) allfiles'
-  --use the doc title rather than file name for the main file (see jira #1152)
-  let filenames =  (documenttitle document ++ ".pdf") : map filename ($(tail) allfiles)
-
-  let filecontents = map (Right . fileid) allfiles
-  return $ zip filenames filecontents
+  let maxFileSize = 10 * 1024 * 1024
+  if sum (map filesize allfiles) > maxFileSize
+    then return []
+    else do
+      let filenames =  (documenttitle document ++ ".pdf") : map filename ($(tail) allfiles)
+      return $ zip filenames (map (Right . fileid) allfiles)
 
 {- |
    Send an email to the author and to all signatories who were sent an invitation  when the document is rejected
@@ -285,11 +288,11 @@ sendAllReminderEmailsWithFilter f actor automatic = do
     Send a forward email
 -}
 sendForwardEmail :: (Log.MonadLog m, TemplatesMonad m,MonadIO m, CryptoRNG m, DocumentMonad m, MailContextMonad m) =>
-                          String -> m ()
-sendForwardEmail email = do
+                          String -> SignatoryLink -> m ()
+sendForwardEmail email asiglink = do
   mctx <- getMailContext
-  mail <- mailForwardSigned =<< theDocument
   mailattachments <- makeMailAttachments =<< theDocument
+  mail <- mailForwardSigned asiglink (not (null mailattachments)) =<< theDocument
   did <- documentid <$> theDocument
   scheduleEmailSendoutWithDocumentAuthorSender did (mctxmailsconfig mctx) $ mail {
                                to = [MailAddress "" email]

@@ -95,6 +95,7 @@ staticRoutes production = choice
      , dir "d" $ dir "signview"     $ hPost $ toK1 $ DocControl.handleIssueAuthorGoToSignview
      , dir "d" $ dir "evidenceattachment" $ hGet $ toK2 $ DocControl.handleEvidenceAttachment
      , dir "mailpreview"           $ hGet  $ toK2 $ DocControl.prepareEmailPreview
+     , dir "download" $ hGet $ toK4 $ DocControl.handleDownloadClosedFile
 
      --This are actions on documents. We may integrate it with all the stuff above, but I don't like it. MR
      , dir "resend"  $ hPost $ toK2 $ DocControl.handleResend

@@ -74,7 +74,7 @@ main = Log.withLogger $ do
      , forkCron_ False "PurgeDocuments" (60 * 10) $ do
          Log.mixlog_ "Running PurgeDocuments..."
          runScheduler $ do
-           purgedCount <- dbUpdate $ PurgeDocuments 30 30
+           purgedCount <- dbUpdate $ PurgeDocuments 30 unsavedDocumentLingerDays
            Log.mixlog_ $ "Purged " ++ show purgedCount ++ " documents."
      , forkCron_ True "EmailChangeRequests" (60 * 60) $ do
          Log.mixlog_ "Evaluating EmailChangeRequest actions..."

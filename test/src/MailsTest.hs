@@ -116,7 +116,7 @@ sendDocumentMails author = do
         checkMail "Undelivered invitation" $  mailUndeliveredInvitation (ctxmailsconfig ctx)  Nothing (ctxhostpart ctx) sl =<< theDocument
         checkMail "Delivered invitation"   $  mailDeliveredInvitation (ctxmailsconfig ctx)  Nothing (ctxhostpart ctx) sl =<< theDocument
         --remind mails
-        checkMail "Reminder notsigned" $ mailDocumentRemind Nothing sl False =<< theDocument
+        checkMail "Reminder notsigned" $ mailDocumentRemind Nothing sl False True =<< theDocument
         --reject mail
         checkMail "Reject"  $ mailDocumentRejected  Nothing sl False =<< theDocument
         -- awaiting author email
@@ -126,9 +126,9 @@ sendDocumentMails author = do
                                    (signatoryActor ctx{ ctxtime = 10 `minutesAfter` now } sl)
 
         -- Sending closed email
-        checkMail "Closed" $ mailDocumentClosed Nothing sl False =<< theDocument
+        checkMail "Closed" $ mailDocumentClosed Nothing sl False False =<< theDocument
         -- Reminder after send
-        checkMail "Reminder signed" $ theDocument >>= \d -> mailDocumentRemind Nothing (head $ documentsignatorylinks d) False d
+        checkMail "Reminder signed" $ theDocument >>= \d -> mailDocumentRemind Nothing (head $ documentsignatorylinks d) False True d
   commit
 
 
