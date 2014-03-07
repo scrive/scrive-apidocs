@@ -1,7 +1,7 @@
 module Session.Cookies (
     SessionCookieInfo(..)
   , startSessionCookie
-  , currentSessionInfoCookie
+  , currentSessionInfoCookies
   ) where
 
 import Control.Applicative
@@ -14,6 +14,8 @@ import MagicHash
 import Utils.HTTP
 import Utils.Read
 import Session.Data
+import Data.Maybe
+import Data.Char
 
 -- | Info that we store in cookies.
 data SessionCookieInfo = SessionCookieInfo {
@@ -50,5 +52,17 @@ startSessionCookie Session{..} = do
     mkCookie "xtoken" $ show sesCSRFToken
 
 -- | Read current session cookie from request.
-currentSessionInfoCookie :: RqData (Maybe SessionCookieInfo)
-currentSessionInfoCookie = optional (readCookieValue "sessionId")
+currentSessionInfoCookies :: RqData [SessionCookieInfo]
+currentSessionInfoCookies = readCookiesValues "sessionId"
+
+{- IE 10 is sending cookies for both domain and subdomain (scrive.com & nj.scrive.com)
+   We need to read them both, since we have no idea which is the right one.
+
+   To protect against overload attack, we limit number of session cookies supported to 10.
+-}
+readCookiesValues :: (Monad m, HasRqData m,Read a) => String -> m [a]
+readCookiesValues name = do
+  (_,_, cookiesWithNames) <- askRqEnv
+  let cookies = take 10 $ map snd $ filter (\c -> (fst c) == (map toLower name)) cookiesWithNames
+  return  $ map fromJust $ filter isJust $ maybeRead <$> cookieValue <$> cookies
+

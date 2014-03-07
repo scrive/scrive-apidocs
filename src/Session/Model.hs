@@ -51,13 +51,14 @@ getNonTempSessionID = do
 -- If no session is available, return new, empty session.
 getCurrentSession :: (CryptoRNG m, HasRqData m, MonadDB m, MonadPlus m, ServerMonad m)
                   => m Session
-getCurrentSession = withDataFn currentSessionInfoCookie $ \msc -> case msc of
-  Just cs -> do
-    mses <- getSession (cookieSessionID cs) (cookieSessionToken cs)
-    case mses of
-      Just ses -> return ses
-      Nothing  -> emptySession
-  Nothing -> emptySession
+getCurrentSession = withDataFn currentSessionInfoCookies $ getSessionFromCookies
+  where
+    getSessionFromCookies (cs:css) = do
+      mses <- getSession (cookieSessionID cs) (cookieSessionToken cs)
+      case mses of
+        Just ses -> return ses
+        Nothing  -> getSessionFromCookies css
+    getSessionFromCookies [] = emptySession
 
 updateSession :: (FilterMonad Response m, MonadDB m, ServerMonad m, MonadIO m)
               => Session -> Session -> m ()
