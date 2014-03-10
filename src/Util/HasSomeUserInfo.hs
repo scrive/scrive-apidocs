@@ -81,10 +81,14 @@ getFullName a = strip $ (strip $ getFirstName a) ++ " " ++ (strip $ getLastName 
 getSmartName :: (HasSomeUserInfo a) => a -> String
 getSmartName a = firstNonEmpty $ [getFullName a, getEmail a, getMobile a]
 
--- | Return the first non-empty of person number, email or mobile
--- number.  Should be unique, suitable for use in event log.
+-- | Return the full name plus first non-empty of person number,
+-- email or mobile number.
 getIdentifier :: HasSomeUserInfo a => a -> String
-getIdentifier a = firstNonEmpty $ [getPersonalNumber a, getEmail a, getMobile a]
+getIdentifier a | null fullName   = identifier
+                | null identifier = fullName
+                | otherwise       = fullName ++ " (" ++ identifier ++ ")"
+  where fullName = getFullName a
+        identifier = firstNonEmpty [getPersonalNumber a, getEmail a, getMobile a]
 
 -- | Get a MailAddress
 getMailAddress :: (HasSomeUserInfo a) => a -> MailAddress

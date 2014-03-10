@@ -38,15 +38,15 @@ RejectDocumentEvidenceText=$RejectDocumentEvidenceText()$
 ###
 ReminderSendText=$ReminderSendText()$
 ###
-RemovedFromPadDeviceText=The invitation to signatory ($signatory$) to sign the document by in-person signing was withdrawn by $actor$.
+RemovedFromPadDeviceText=The invitation to signatory $signatory$ to sign the document by in-person signing was withdrawn by $actor$.
 ###
 ResealedPDFText=$ResealedPDFText()$
 ###
 RestartDocumentEvidenceText=$RestartDocumentEvidenceText()$
 ###
-SaveSigAttachmentEvidenceText=The signatory ($actor$) uploaded the attachment “$name$” requested by $author$.  The request had the following description: $description$
+SaveSigAttachmentEvidenceText=The signatory $actor$ uploaded the attachment “$name$” requested by $author$.  The request had the following description: $description$
 ###
-SendToPadDeviceText=The signing invitation for signatory ($signatory$) was set by $actor$ to “in-person signing.” In-person signing enables $actor$ to present $_theScriveSystem()$s online interface to sign documents for $signatory$, on a device controlled by $actor$.
+SendToPadDeviceText=The signing invitation for signatory $signatory$ was set by $actor$ to “in-person signing.” In-person signing enables $actor$ to present $_theScriveSystem()$s online interface to sign documents for $signatory$, on a device controlled by $actor$.
 ###
 SetDocumentInviteTimeEvidenceText=The signing process was started by $actor$.
 ###

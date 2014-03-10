@@ -189,15 +189,15 @@ findOutAttachmentDesc tmppath document = do
       authorAttsNumbered = zip [1::Int ..] authorAtts
       attAndSigsNumbered = zipWith (\num (at,sl) -> (num,at,sl)) [(length authorAtts + 1) ..] attAndSigs
 
-      authorName = fromMaybe "" $ fmap getSmartName $ getAuthorSigLink document
+      Just asl = getAuthorSigLink document
 
       findAttachmentsForAuthorAttachment (num, authorattach) =
-        findAttachments (Just (authorattachmentfile authorattach)) num authorName removeExtIfAny
+        findAttachments (Just (authorattachmentfile authorattach)) num asl removeExtIfAny
 
       findAttachmentsForSignatoryAttachment (num, sigattach, sl) =
-        findAttachments (signatoryattachmentfile sigattach) num (getSmartName sl) (const (signatoryattachmentname sigattach))
+        findAttachments (signatoryattachmentfile sigattach) num sl (const (signatoryattachmentname sigattach))
 
-      findAttachments mfileid num author titlef = do
+      findAttachments mfileid num sl titlef = do
         (contents,numberOfPages,name) <- case mfileid of
           Nothing -> return (BS.empty, 1, "")
           Just fileid' -> do
@@ -213,7 +213,7 @@ findOutAttachmentDesc tmppath document = do
                     F.value "pages" numberOfPages
 
         attachedByText <- renderLocalTemplate document "_documentAttachedBy" $ do
-                                     F.value "author" author
+                                     F.value "identifier" $ getIdentifier sl
 
         attachmentNumText <- renderLocalTemplate document "_attachedDocument" $ do
                                      F.value "number" num
@@ -311,7 +311,7 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
       removeTags s = concat [t | TagText t <- parseTags s]
 
       mkHistEntry ev = do
-        actor <- approximateActor document ev
+        actor <- approximateActor True document ev
         comment <- removeTags <$> simplyfiedEventText (Just actor) document ev
         return $ Seal.HistEntry{ Seal.histdate = formatMinutesTimeForVerificationPage $ evTime ev
                                , Seal.histcomment = comment
@@ -360,7 +360,7 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
              F.value "pages" numberOfPages
 
       attachedByText <- renderLocalTemplate document "_documentSentBy" $ do
-        F.value "author" (getSmartName authorsiglink)
+        F.value "identifier" $ getIdentifier authorsiglink
 
       mainDocumentText <- renderLocalTemplate document "_mainDocument"
                           $ (return ())

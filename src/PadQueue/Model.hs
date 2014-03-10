@@ -52,7 +52,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ClearPadQueue () where
        Just (did, slid) -> do
          doc <- query $ GetDocumentByDocumentID did
          r <- runQuery $ "DELETE FROM padqueue WHERE user_id =" <?> uid
-         when_ (r == 1) $ do
+         when_ (r == 1 && not (hasSigned (doc, slid))) $ do
            _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                 RemovedFromPadDevice
                 (return ())

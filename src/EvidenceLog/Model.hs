@@ -18,6 +18,8 @@ module EvidenceLog.Model (
 
 import Control.Applicative ((<$>), (<*>))
 import Data.Int
+import Data.List (find)
+import Data.Maybe (fromMaybe)
 import Data.Monoid
 import Data.Monoid.Space
 import DB
@@ -30,7 +32,8 @@ import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo (getIdentifier, getEmail)
 import Doc.SignatoryLinkID
-import Doc.DocStateData (SignatoryLink(..), AuthenticationMethod(..), DeliveryMethod(..))
+import Doc.DocStateData (SignatoryLink(..), AuthenticationMethod(..), DeliveryMethod(..), documentsignatorylinks)
+import Doc.Model.Query (GetDocumentByDocumentID(..))
 import Version
 import Doc.DocumentID
 import Text.StringTemplates.Templates
@@ -70,8 +73,21 @@ signatoryLinkTemplateFields sl = do
   F.value "signing"     $ signatoryispartner sl
 
 -- | Create evidence text that goes into evidence log
-evidenceLogText :: TemplatesMonad m => CurrentEvidenceEventType -> F.Fields Identity () -> Maybe SignatoryLink -> Maybe String -> Actor -> m String
-evidenceLogText event textFields masl mmsg actor = do
+evidenceLogText :: (TemplatesMonad m, MonadDB m) => DocumentID -> CurrentEvidenceEventType -> F.Fields Identity () -> Maybe SignatoryLink -> Maybe String -> Actor -> m String
+evidenceLogText did event textFields masl mmsg actor = do
+   msignatory <-
+     case masl of
+       Nothing -> return Nothing
+       Just sl -> do
+         let s = getIdentifier sl
+         if null s
+          then do
+           d <- dbQuery $ GetDocumentByDocumentID did
+           return $ fmap (("(signatory " ++) . (++ ")") . show . fst) $ 
+                       find ((==(signatorylinkid sl)) . signatorylinkid . snd) $
+                       zip [1..] (documentsignatorylinks d)
+          else
+           return $ Just s
    let fields = do
          F.value "full" True
          F.value "actor" $ actorWho actor
@@ -79,7 +95,7 @@ evidenceLogText event textFields masl mmsg actor = do
          case masl of
            Nothing -> return ()
            Just sl -> do
-             F.value "signatory" $ getIdentifier sl
+             F.value "signatory" $ fromMaybe "(anonymous)" msignatory
              F.value "signatory_email" $ getEmail sl
              signatoryLinkTemplateFields sl
          textFields
@@ -88,7 +104,7 @@ evidenceLogText event textFields masl mmsg actor = do
 
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsg Bool where
   update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields masl mmsg actor did) = do
-   text <- evidenceLogText event textFields masl mmsg actor
+   text <- evidenceLogText did event textFields masl mmsg actor
    runQuery01 . sqlInsert "evidence_log" $ do
       sqlSet "document_id" did
       sqlSet "time" $ actorTime actor

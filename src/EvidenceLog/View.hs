@@ -64,13 +64,13 @@ eventsForLog :: [DocumentEvidenceEvent] -> [DocumentEvidenceEvent]
 eventsForLog = cleanUnimportantAfterSigning . filter ((simpleEvents . evType) &&^ (not . emptyEvent))
 
 -- TODO: Consider saving actor name in event instead, this is likely to become broken
-approximateActor :: (MonadDB m, TemplatesMonad m) => Document -> DocumentEvidenceEventWithSignatoryLink -> m String
-approximateActor doc dee | systemEvents $ evType dee = return "Scrive"
-                         | otherwise =
+approximateActor :: (MonadDB m, TemplatesMonad m) => Bool -> Document -> DocumentEvidenceEventWithSignatoryLink -> m String
+approximateActor useIdentifier doc dee | systemEvents $ evType dee = return "Scrive"
+                                       | otherwise =
   case evSigLink dee of
     Just sl -> if (isAuthor sl)
              then authorName
-             else case (getSmartName sl) of
+             else case getId sl of
                     "" -> renderTemplate_ "_notNamedParty" >>= \t -> return $ "(" ++ t ++ ")"
                     name -> return name
     Nothing -> case (evUserID dee) of
@@ -79,21 +79,24 @@ approximateActor doc dee | systemEvents $ evType dee = return "Scrive"
                             else do
                               muser <- dbQuery $ GetUserByID uid
                               case muser of
-                                Just user -> return $ getSmartName user
+                                Just user -> return $ getId user
                                 _ -> return "Scrive" -- This should not happend
                _ ->  if (authorEvents $ evType dee)
                         then authorName
                         else return "Scrive"
 
   where authorName = case (getAuthorSigLink doc) of
-                        Just sl -> return $ getSmartName sl
+                        Just sl -> return $ getId sl
                         Nothing -> renderTemplate_ "_authorParty"
+        getId :: HasSomeUserInfo a => a -> String
+        getId | useIdentifier = getIdentifier
+              | otherwise     = getSmartName
 
 eventJSValue :: (MonadDB m, TemplatesMonad m) => Document -> DocumentEvidenceEventWithSignatoryLink -> JSONGenT m ()
 eventJSValue doc dee = do
     J.value "status" $ show $ getEvidenceEventStatusClass (evType dee)
     J.value "time"  $ formatMinutesTimeRealISO (evTime dee)
-    J.valueM "party" $ approximateActor doc dee
+    J.valueM "party" $ approximateActor False doc dee
     J.valueM "text"  $ simplyfiedEventText Nothing doc dee
 
 -- | Simple events to be included in the archive history and the verification page.  These have translations.
@@ -191,7 +194,7 @@ simplyfiedEventText mactor doc dee = case evType dee of
   Current et -> (if isJust mactor then renderLocalTemplate doc else renderTemplate) (eventTextTemplateName et) $ do
     let siglink = evAffectedSigLink dee
     F.value "text" $ filterTagsNL <$> evMessageText dee
-    F.value "signatory" $ getSmartName <$> siglink
+    F.value "signatory" $ getIdentifier <$> siglink
     -- signatory email: there are events that are missing affected
     -- signatory, but happen to have evEmail set to what we want
     F.value "signatory_email" $ (getEmail <$> siglink) <|> evEmail dee

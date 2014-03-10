@@ -83,7 +83,7 @@ systemActor time = Actor {
 -- author to be logged in
 authorActor :: Context -> User -> Actor
 authorActor ctx u = (userActor ctx u) {
-    actorWho = "the author (" ++ getIdentifier u ++ ")"
+    actorWho = "the author " ++ getIdentifier u
 }
 
 -- | For an action requiring a signatory with siglinkid and token (such as signing)
@@ -92,8 +92,9 @@ signatoryActor ctx s = (contextActor ctx) {
     actorUserID = maybesignatory s
   , actorEmail = Just (getEmail s)
   , actorSigLinkID = Just (signatorylinkid s)
-  , actorWho = "the signatory (" ++ getIdentifier s ++ ")"
+  , actorWho = "the signatory " ++ if null identifier then "(anonymous)" else identifier
 }
+  where identifier = getIdentifier s
 
 -- | For delivery/reading notifications from the mail system
 mailSystemActor :: MinutesTime -> Maybe UserID -> String -> SignatoryLinkID -> Actor
@@ -114,7 +115,7 @@ userActor :: Context -> User -> Actor
 userActor ctx u = (contextActor ctx) {
     actorUserID = Just (userid u)
   , actorEmail = Just (getEmail u)
-  , actorWho = "the user (" ++ getIdentifier u ++ ")"
+  , actorWho = "the user " ++ getIdentifier u
 }
 
 -- | For actions performed by an admin

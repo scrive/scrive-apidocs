@@ -43,7 +43,6 @@ import Network.HTTP (urlEncodeVars)
 import DB
 import Kontra
 import User.Model
-import EvidenceLog.Model
 
 import OAuth.Util
 import OAuth.Model

@@ -3,6 +3,7 @@ module DumpEvidenceTexts (dumpAllEvidenceTexts) where
 import Data.Function (on)
 import Data.List (sortBy)
 import Data.Maybe (fromJust, isNothing)
+import DB (MonadDB)
 import Doc.DocStateData (SignatoryField(..), SignatoryLink(..), FieldType(..), DeliveryMethod(..))
 import Doc.DocumentID (unsafeDocumentID)
 import EvidenceLog.View (simpleEvents, simplyfiedEventText, eventForVerificationPage)
@@ -36,7 +37,7 @@ dumpAllEvidenceTexts env = testThat "Generating all evidence texts" env $ do
       Just d  -> liftIO $ writeFile (d </> "evidence-texts-" ++ codeFromLang lang ++ ".html") t
       Nothing -> t == t `seq` return ()
 
-dumpEvidenceTexts :: (TemplatesMonad m) => MinutesTime -> Lang -> m String
+dumpEvidenceTexts :: (MonadDB m, TemplatesMonad m) => MinutesTime -> Lang -> m String
 dumpEvidenceTexts now lang = do
   let Just time = parseMinutesTimeDMY "01-01-2013"
   let actor = Actor { actorTime = time
@@ -93,7 +94,7 @@ dumpEvidenceTexts now lang = do
                                 }
   evs <- (sortBy (compare `on` (\(evt, _, _, _) -> show evt)) <$>) $
          forM (evidencetypes) $ \evt -> do
-       elog <- evidenceLogText evt (fields evt) asl messageText actor
+       elog <- evidenceLogText undefined evt (fields evt) asl messageText actor
        let simpletext mactor = if simpleEvents (Current evt) && (isNothing mactor || eventForVerificationPage ev)
                                then Just <$> simplyfiedEventText mactor lang ev
                                else return Nothing
