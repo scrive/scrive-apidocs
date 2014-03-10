@@ -36,6 +36,11 @@ test:
 	rm -f kontrakcja-test.tix
 	time dist/build/kontrakcja-test/kontrakcja-test $(TESTS)
 
+# Create evidence text pages
+.PHONY : evidence-texts
+evidence-texts:
+	$(MAKE) test TESTS="--output-dir dist/evidence-texts evidencetexts --plain"
+
 # Create coverage pages from test run
 .PHONY : hpc
 hpc:
