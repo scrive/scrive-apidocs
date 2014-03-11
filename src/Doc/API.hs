@@ -6,10 +6,12 @@ module Doc.API (
   , apiCallUpdate              -- Exported for tests
   , apiCallReady               -- Exported for tests
   , apiCallSign                -- Exported for tests
+  , apiCallSetAutoReminder     -- Exported for tests
   ) where
 
 import Control.Conditional (whenM, unlessM, ifM)
 import Control.Monad.Trans.Control (MonadBaseControl)
+import Data.Int
 import Happstack.StaticRouting
 import Text.JSON hiding (Ok)
 import qualified Text.JSON as J
@@ -534,7 +536,7 @@ apiCallSetAutoReminder did =  api $ do
            Just n -> do tot <- documenttimeouttime <$> theDocument
                         if n < 1 || (isJust tot && n `daysAfter` (ctxtime ctx) > fromJust tot)
                           then throwIO . SomeKontraException $ (badInput "Number of days to send autoreminder must be a valid number, between 1 and number of days left till document deadline")
-                          else return $ Just n
+                          else return $ Just (fromIntegral n :: Int32)
       timezone <- mkTimeZoneName =<< (fromMaybe "Europe/Stockholm" <$> getField "timezone")
       setAutoreminder did days timezone
       triggerAPICallbackIfThereIsOne =<< theDocument

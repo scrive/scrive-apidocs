@@ -4,10 +4,10 @@ module Doc.AutomaticReminder.Model (
   , setAutoreminder
   ) where
 
-import Control.Applicative
 import Control.Monad
 import ActionQueue.Core
 import ActionQueue.Scheduler
+import Data.Int
 import Data.Monoid.Space
 import DB
 import Doc.DocumentID
@@ -63,12 +63,12 @@ documentAutomaticReminder = Action {
 
 
 scheduleAutoreminderIfThereIsOne :: (MonadDB m, MonadBaseControl IO m) => TimeZoneName -> Document -> m ()
-scheduleAutoreminderIfThereIsOne tzn doc = setAutoreminder (documentid doc) (fromIntegral <$> documentdaystoremind doc) tzn
+scheduleAutoreminderIfThereIsOne tzn doc = setAutoreminder (documentid doc) (documentdaystoremind doc) tzn
 
-setAutoreminder :: (MonadDB m, MonadBaseControl IO m) => DocumentID -> Maybe Int -> TimeZoneName -> m ()
+setAutoreminder :: (MonadDB m, MonadBaseControl IO m) => DocumentID -> Maybe Int32 -> TimeZoneName -> m ()
 setAutoreminder did mdays tzn = do
       void $  dbUpdate $ DeleteAction documentAutomaticReminder did
-      case (mdays) of
+      case mdays of
         Nothing   -> return ()
         Just days -> do
             time <- getMinutesTime
@@ -77,5 +77,5 @@ setAutoreminder did mdays tzn = do
             withTimeZone dstTz $
               void . runQuery_ . sqlInsert "document_automatic_reminders" $ do
                 sqlSetCmd "expires" $ "cast (" <?> timestamp <+> "as timestamp with time zone)"
-                                <+> "+ ((interval '1 day') * " <?> (show days) <+> " ) + (interval '7 hours 30 minutes')"
+                                <+> "+ ((interval '1 day') * " <?> days <+> " ) + (interval '7 hours 30 minutes')"
                 sqlSet "document_id" did

@@ -1,5 +1,6 @@
 module DocAPITest (docAPITests) where
 
+import Control.Monad
 import Control.Monad.Trans
 import Control.Applicative
 import Happstack.Server
@@ -17,12 +18,19 @@ import TestKontra as T
 import Doc.API
 
 docAPITests :: TestEnvSt -> Test
-docAPITests env = testGroup "DocAPI"
-                  [ testThat "document1.json updates correctly" env $ testUpdateDoc "test/json/document1.json"
-                  , testThat "document2.json updates correctly" env $ testUpdateDoc "test/json/document2.json"
-                  ]
+docAPITests env = testGroup "DocAPI" $
+  map (\d -> testThat (d ++ " updates correctly") env (void $ testUpdateDoc d)) jsonDocs
+  ++ [
+    testThat "settings auto reminder works" env testSetAutoReminder
+  ]
 
-testUpdateDoc :: String -> TestEnv ()
+jsonDocs :: [String]
+jsonDocs = [
+    "test/json/document1.json"
+  , "test/json/document2.json"
+  ]
+
+testUpdateDoc :: String -> TestEnv Context
 testUpdateDoc updateJsonPath = do
   cont <- liftIO $ readFile updateJsonPath
 
@@ -47,3 +55,15 @@ testUpdateDoc updateJsonPath = do
       Just (JSString sts) = lookup "status" $ fromJSObject response
 
   assertBool "status is pending" (fromJSString sts == "Pending")
+
+  return ctx
+
+testSetAutoReminder :: TestEnv ()
+testSetAutoReminder = do
+  ctx@Context{ctxmaybeuser = Just user} <- testUpdateDoc $ head jsonDocs
+  [doc] <- randomQuery $ GetDocumentsByAuthor (userid user)
+
+  req <- mkRequest POST [("days", inText "3")]
+  (res, _) <- runTestKontra req ctx $ apiCallSetAutoReminder (documentid doc)
+
+  assertEqual ("response code is 202 (response is " ++ show res ++ ")") (rsCode res) 202
