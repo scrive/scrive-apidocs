@@ -1,4 +1,4 @@
-{
+{ 
 "_CompanyAccounts":"Användare",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Är du säker på att du vill skicka en påminnelse till berörda parter för",
@@ -454,7 +454,7 @@
 "_flashMessageYourEmailHasChanged":"Ditt användarnamn och din e-post har nu ändrats.",
 "_flashRemindMailSentNotSigned":"En påminnelse har skickats till",
 "_flashRemindMailSentSigned":"Dokumentet har skickats till",
-"_followArrowToSign":"Följ den <span class='arrowtext'></span> för instruktioner",
+"_followArrowToSign":"Följ <span class='arrowtext'></span> för att e-signera",
 "_fontSizeBig":"stor",
 "_fontSizeCustom":"anpassa",
 "_fontSizeLarge":"mycket stor",
@@ -901,6 +901,12 @@
 "_signupButtonText":"Spara säkerhetskopia",
 "_signviewAttachmentUploadedInOtherWindow":"Tyvärr kan vi inte ladda upp din fil eftersom du har det här dokumentet öppet i ett annat fönster eller tab.",
 "_signviewBranding":"Branding av signeringsvyn",
+"_signviewSettingsButton":"Inställningar för signeringsvyn",
+"_signviewSettingsShowFooter":"Visa sidfot",
+"_signviewSettingsShowHeader":"Visa sidhuvud",
+"_signviewSettingsShowPDFDownload":"Visa PDF-länk",
+"_signviewSettingsShowRejectOption":"Visa avvisa-knapp",
+"_signviewSettingsTitle":"Ställ in hur signeringsvyn ska se ut",
 "_signviewSigningFailed":"Något gick fel vid signeringen. Vänligen försök igen.",
 "_smsClosedNotification":"Dokumentet har nu signerats. Hitta dokumentet genom att följa denna länk: $link$$if(withEmail)$. Vi har också skickat det signerade dokumentet till din e-post.$endif$",
 "_smsCorrectedNotification":"Vi har noterat att ett dokument vi tidigare skickade till dig var felaktigt och saknade digital signatur, men vi har nu åtgärdat felet. Hitta dokumentet med korrekt digital signatur genom att följa denna länk: $link$$if(withEmail)$. Vi har också skickat det korrigerade dokumentet till din e-post.$endif$",

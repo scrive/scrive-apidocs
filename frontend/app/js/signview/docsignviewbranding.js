@@ -45,6 +45,18 @@ window.BrandingForSignView = Backbone.Model.extend({
   signviewbackgroundcolour: function() {
       return this.get("signviewbackgroundcolour");
   },
+  showheader: function() {
+      return this.get("showheader");
+  },
+  showpdfdownload: function() {
+      return this.get("showpdfdownload");
+  },
+  showrejectoption: function() {
+      return this.get("showrejectoption");
+  },
+  showfooter: function() {
+      return this.get("showfooter");
+  },
   fullname: function() {
       return this.get("fullname");
   },
@@ -72,6 +84,9 @@ window.BrandingForSignView = Backbone.Model.extend({
         signviewbarscolour: args.signviewbarscolour,
         signviewbarstextcolour : args.signviewbarstextcolour,
         signviewbackgroundcolour: args.signviewbackgroundcolour,
+        showheader: args.showheader,
+        showrejectoption: args.showrejectoption,
+        showfooter: args.showfooter,
         fullname: args.fullname,
         email: args.email,
         company: args.company,

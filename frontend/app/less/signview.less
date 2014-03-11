@@ -29,6 +29,20 @@
       }
   }
 
+  &.noheader {
+    .pageheader { display: none; }
+    .subcontainerWrapper {
+      margin-top: 0px;
+      padding-top: 0px;
+    }
+    .instructions { border-top-width: 0px; }
+  }
+
+  &.nofooter {
+    .pagefooter { display: none; }
+    .mainContainer { padding-bottom: 7px; }
+  }
+
   .mainContainer {
       padding-bottom: 121px;
   }
@@ -148,27 +162,14 @@
         margin: 0 auto;
         text-align: center;
 
-        .duedate {
-          margin: 0px auto 20px auto;
-          font-weight: normal;
-        }
-
         .download  {
+          &:first-child { margin-left: 0; }
           background: url(~"@{img-base-url}/senddoc.png") no-repeat;
           background-position: 0px 2px;
           display: inline-block;
           font-weight: normal;
-          left: 10px;
           padding-left: 20px;
-      	  position: relative;
-
-          .docname {
-            color: grey;
-            font-weight: normal;
-            text-align: left;
-            text-decoration: underline;
-            width: auto;
-          }
+          margin-left: 10px;
         }
       }
     }
@@ -542,7 +543,6 @@
     height: 15px;
     margin-top: 7px;
     overflow: hidden;
-    width: 100%;
   }
 
   .line .middle {

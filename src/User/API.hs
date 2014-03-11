@@ -39,8 +39,6 @@ import Mails.SendMail
 import ActionQueue.EmailChangeRequest
 import Util.HasSomeUserInfo
 import Util.FlashUtil
-import ActionQueue.UserAccountRequest
-import ThirdPartyStats.Core
 import User.Action
 import Payments.Model
 import MinutesTime
@@ -107,7 +105,7 @@ apiCallUserSignviewBranding =  api $ do
   (user, _ , _) <- getAPIUserWithPad APIPersonal
   company <- getCompanyForUser user
   companyui <- dbQuery $ GetCompanyUI (companyid company)
-  Ok <$> signviewBrandingJSON ctx user company companyui
+  Ok <$> (runJSONGenT $ signviewBrandingJSON ctx user company companyui)
 
 apiCallChangeUserPassword :: Kontrakcja m => m Response
 apiCallChangeUserPassword = api $ do
@@ -217,21 +215,6 @@ apiCallSignup = api $ do
     Nothing -> runJSONGenT $ value "sent" $ False
     Just user -> do
           sendNewUserMail user
-          l <- newUserAccountRequestLink lang (userid user) AccountRequest
-          asyncLogEvent "Send account confirmation email" [
-                UserIDProp $ userid user,
-                IPProp $ ctxipnumber ctx,
-                TimeProp $ ctxtime ctx,
-                someProp "Context" ("Acount request" :: String)
-                ]
-          asyncLogEvent SetUserProps [
-                UserIDProp $ userid user,
-                someProp "Account confirmation email" $ ctxtime ctx,
-                NameProp (firstname ++ " " ++ lastname),
-                FirstNameProp firstname,
-                LastNameProp lastname,
-                someProp "Confirmation link" $ show l
-                ]
           runJSONGenT $ value "sent" $ True
 
 

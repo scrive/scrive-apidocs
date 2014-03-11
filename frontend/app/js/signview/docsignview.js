@@ -52,7 +52,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
       return this.document().ready() && this.document().mainfile() == undefined;
   },
   hasRejectOption : function() {
-      return !this.document().currentSignatory().padDelivery();
+      return this.signviewbranding().showrejectoption();
   },
   hasMainFileSection : function() {
       return this.document().ready() && this.document().mainfile() != undefined;
@@ -119,6 +119,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
   },
 
   createAccountSection: function() {
+
     if (this.createAccountSectionEle == undefined) {
       this.createAccountSectionEle = $('<div />');
       CreateAccountSection.render(this.document(), this.createAccountSectionEle);
@@ -538,7 +539,7 @@ var DocumentSignViewView = Backbone.View.extend({
      if (this.model.hasArrows())
          view.container.prepend(view.model.arrow().view().el);
 
-     if (BrowserInfo.isSmallScreen()) {
+     if (BrowserInfo.isSmallScreen() && this.model.signviewbranding().showheader()) {
        $('.mainContainer').css('padding-top', '20px');
      }
 

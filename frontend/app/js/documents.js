@@ -160,6 +160,30 @@ window.Document = Backbone.Model.extend({
            this.trigger('change:daystoremind');
 
     },
+    showheader: function() {
+      return this.get("showheader");
+    },
+    setShowheader: function(showheader) {
+      this.set({"showheader": showheader});
+    },
+    showrejectoption: function() {
+      return this.get("showrejectoption");
+    },
+    setShowrejectoption: function(showrejectoption) {
+      this.set({"showrejectoption": showrejectoption});
+    },
+    showpdfdownload: function() {
+      return this.get("showpdfdownload");
+    },
+    setShowpdfdownload: function(showpdfdownload) {
+      this.set({"showpdfdownload": showpdfdownload});
+    },
+    showfooter: function() {
+      return this.get("showfooter");
+    },
+    setShowfooter: function(showfooter) {
+      this.set({"showfooter": showfooter});
+    },
     setReferenceScreenshot: function(d) {
       this.get("screenshots").reference = d;
     },
@@ -218,7 +242,6 @@ window.Document = Backbone.Model.extend({
     setInvitationMessage: function(customtext)
     {
         this.set({invitationmessage: $(customtext).text() != "" ? customtext : ""},{silent: true});
-
     },
     invitationmessage : function() {
         return this.get("invitationmessage");
@@ -368,7 +391,11 @@ window.Document = Backbone.Model.extend({
           signatories: _.map(this.signatories(), function(sig) {return sig.draftData()}),
           lang: this.lang().draftData(),
           template: this.isTemplate(),
-          authorattachments : _.map(this.authorattachments(), function(a) {return a.draftData()})
+          authorattachments : _.map(this.authorattachments(), function(a) {return a.draftData()}),
+          showheader: this.get("showheader") != undefined ? this.get("showheader") : null,
+          showpdfdownload: this.get("showpdfdownload") != undefined ? this.get("showpdfdownload") : null,
+          showrejectoption: this.get("showrejectoption") != undefined ? this.get("showrejectoption") : null,
+          showfooter: this.get("showfooter") != undefined ? this.get("showfooter") : null
       };
     },
     status: function() {
@@ -633,6 +660,10 @@ window.Document = Backbone.Model.extend({
        template: args.template,
        daystosign: args.daystosign,
        daystoremind: args.daystoremind,
+       showheader: args.showheader,
+       showpdfdownload: args.showpdfdownload,
+       showrejectoption: args.showrejectoption,
+       showfooter: args.showfooter,
        invitationmessage: args.invitationmessage,
        ready: true
      };

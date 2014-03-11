@@ -166,6 +166,10 @@ instance FromJSValueWithUpdate Document where
         (invitationmessage :: Maybe (Maybe String)) <-  fromJSValueField "invitationmessage"
         daystosign <- fromJSValueField "daystosign"
         daystoremind <- fromJSValueField "daystoremind"
+        showheader <- fromJSValueField "showheader"
+        showpdfdownload <- fromJSValueField "showpdfdownload"
+        showrejectoption <- fromJSValueField "showrejectoption"
+        showfooter <- fromJSValueField "showfooter"
         authentication <-  fromJSValueField "authentication"
         delivery <-  fromJSValueField "delivery"
         signatories <-  fromJSValueFieldCustom "signatories" (fromJSValueManyWithUpdate (fromMaybe [] $ documentsignatorylinks <$> mdoc))
@@ -186,6 +190,10 @@ instance FromJSValueWithUpdate Document where
                                      Just (Just s) -> fromMaybe "" (resultToMaybe $ asValidInviteText s),
             documentdaystosign   = daystosign',
             documentdaystoremind = daystoremind',
+            documentshowheader = updateWithDefaultAndField True documentshowheader showheader,
+            documentshowpdfdownload = updateWithDefaultAndField True documentshowpdfdownload showpdfdownload,
+            documentshowrejectoption = updateWithDefaultAndField True documentshowrejectoption showrejectoption,
+            documentshowfooter = updateWithDefaultAndField True documentshowfooter showfooter,
             documentsignatorylinks = mapAuth authentication $ mapDL delivery $ updateWithDefaultAndField [] documentsignatorylinks signatories,
             documentauthorattachments = updateWithDefaultAndField [] documentauthorattachments (fmap AuthorAttachment <$> authorattachments),
             documenttags = updateWithDefaultAndField Set.empty documenttags (Set.fromList <$> tags),
@@ -212,7 +220,11 @@ applyDraftDataToDocument draft actor = do
                                   documenttitle = documenttitle draft
                                 , documentinvitetext = documentinvitetext draft
                                 , documentdaystosign = documentdaystosign draft
-                                  , documentdaystoremind = documentdaystoremind draft
+                                , documentdaystoremind = documentdaystoremind draft
+                                , documentshowheader = documentshowheader draft
+                                , documentshowpdfdownload = documentshowpdfdownload draft
+                                , documentshowrejectoption = documentshowrejectoption draft
+                                , documentshowfooter = documentshowfooter draft
                                 , documentlang = documentlang draft
                                 , documenttags = documenttags draft
                                 , documentapicallbackurl = documentapicallbackurl draft
@@ -261,6 +273,7 @@ mergeAuthorDetails sigs nsigs =
                _ -> Nothing
 
 
+-- TODO can't we refactor this to take a list of documenttitle, documentinvitetext etc?
 draftIsChangingDocument :: Document -> Document -> Bool
 draftIsChangingDocument draft doc =
         (documenttitle draft /= documenttitle doc)
@@ -271,6 +284,10 @@ draftIsChangingDocument draft doc =
      || (isTemplate draft /= isTemplate doc)
      || (documentdaystosign draft /= documentdaystosign doc)
      || (documentdaystoremind draft /= documentdaystoremind doc)
+     || (documentshowheader draft /= documentshowheader doc)
+     || (documentshowpdfdownload draft /= documentshowpdfdownload doc)
+     || (documentshowrejectoption draft /= documentshowrejectoption doc)
+     || (documentshowfooter draft /= documentshowfooter doc)
      || (draftIsChangingDocumentSignatories (documentsignatorylinks draft) (documentsignatorylinks doc))
 
 draftIsChangingDocumentSignatories :: [SignatoryLink] -> [SignatoryLink] -> Bool

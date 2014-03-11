@@ -13,6 +13,7 @@ import Text.JSON
 import AppView
 import Happstack.Server.SimpleHTTP
 import Kontra
+import Analytics.Include
 
 pagePrivilegesConfirm :: Kontrakcja m
                       => Context
@@ -21,13 +22,14 @@ pagePrivilegesConfirm :: Kontrakcja m
                       -> APIToken
                       -> m Response
 pagePrivilegesConfirm ctx privileges companyname token = do
+     ad <- getAnalyticsData
      rsp <- renderTemplate "pagePrivilegesConfirm" $ do
          F.value "isDocumentCreate" $ APIDocCreate `elem` privileges
          F.value "isDocumentSend" $ APIDocSend `elem` privileges
          F.value "isDocumentCheck" $ APIDocCheck `elem` privileges
          F.value "companyname" companyname
          F.value "token" $ show token
-         contextInfoFields ctx
+         standardPageFields ctx "Scrive" ad
      simpleHtmlResonseClrFlash rsp
 
 privilegeDescription :: TemplatesMonad m => APIPrivilege -> m String

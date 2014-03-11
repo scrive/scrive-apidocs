@@ -266,7 +266,9 @@ module.exports = function (grunt) {
 	      'pdf/**/*',
 	      'libs/tiny_mce/**/*',
 
-	      // Shims that need to be loaded separately (without requirejs)
+	      // Shims that need to be loaded separately
+          'libs/html5shiv.js',
+
 	      'bower_components/json3/**',
 	      'bower_components/es5-shim/**'
             ]

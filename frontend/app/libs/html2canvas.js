@@ -113,9 +113,9 @@ function renderDocument(document, options, windowWidth, windowHeight) {
         document.querySelector(selector).removeAttribute(html2canvasNodeAttribute);
         var clonedWindow = container.contentWindow;
         var node = clonedWindow.document.querySelector(selector);
-        var support = new Support();
+        var support = new Support(clonedWindow.document);
         var imageLoader = new ImageLoader(options, support);
-        var bounds = NodeParser.prototype.getBounds(node);
+        var bounds = getBounds(node);
         var width = options.type === "view" ? Math.min(bounds.width, windowWidth) : documentWidth();
         var height = options.type === "view" ? Math.min(bounds.height, windowHeight) : documentHeight();
         var renderer = new CanvasRenderer(width, height, imageLoader);
@@ -125,9 +125,23 @@ function renderDocument(document, options, windowWidth, windowHeight) {
             if (options.removeContainer) {
                 container.parentNode.removeChild(container);
             }
-            return renderer.canvas;
+            return (options.type !== "view" && (node === clonedWindow.document.body || node === clonedWindow.document.documentElement)) ? renderer.canvas : crop(renderer.canvas, bounds);
         });
     });
+}
+
+function crop(canvas, bounds) {
+    var croppedCanvas = document.createElement("canvas");
+    var x1 = Math.min(canvas.width - 1, Math.max(0, bounds.left));
+    var x2 = Math.min(canvas.width, Math.max(1, bounds.left + bounds.width));
+    var y1 = Math.min(canvas.height - 1, Math.max(0, bounds.top));
+    var y2 = Math.min(canvas.height, Math.max(1, bounds.top + bounds.height));
+    var width = croppedCanvas.width = x2 - x1;
+    var height = croppedCanvas.height =  y2 - y1;
+    log("Cropping canvas at:", "left:", bounds.left, "top:", bounds.top, "width:", bounds.width, "height:", bounds.height);
+    log("Resulting crop with width", width, "and height", height, " with x", x1, "and y", y1);
+    croppedCanvas.getContext("2d").drawImage(canvas, x1, y1, width, height, 0, 0, width, height);
+    return croppedCanvas;
 }
 
 function documentWidth () {
@@ -171,12 +185,35 @@ function createWindowClone(ownerDocument, width, height, options) {
         documentClone.write("<!DOCTYPE html>");
         documentClone.close();
 
-        documentClone.replaceChild(documentClone.adoptNode(documentElement), documentClone.documentElement);
+        documentClone.replaceChild(removeScriptNodes(documentClone.adoptNode(documentElement)), documentClone.documentElement);
         if (options.type === "view") {
-            container.contentWindow.scrollTo(window.scrollX, window.scrollY);
+            container.contentWindow.scrollTo(window.pageXOffset, window.pageYOffset);
         }
-        resolve(container);
+
+        var timeout = setTimeout(function() {
+            resolve(container);
+        }, 100);
+
+        container.contentWindow.onload = function() {
+            clearTimeout(timeout);
+            resolve(container);
+        };
     });
+}
+
+function removeScriptNodes(parent) {
+    [].slice.call(parent.childNodes, 0).filter(isElementNode).forEach(function(node) {
+        if (node.tagName === "SCRIPT") {
+            parent.removeChild(node);
+        } else {
+            removeScriptNodes(node);
+        }
+    });
+    return parent;
+}
+
+function isElementNode(node) {
+    return node.nodeType === Node.ELEMENT_NODE;
 }
 
 function Font(family, size) {
@@ -410,7 +447,7 @@ LinearGradientContainer.prototype.stepRegExp = /((?:rgb|rgba)\(\d{1,3},\s\d{1,3}
 
 function log() {
     if (window.html2canvas.logging && window.console && window.console.log) {
-        window.console.log.apply(window.console, [(Date.now() - window.html2canvas.start) + "ms", "html2canvas:"].concat([].slice.call(arguments, 0)));
+        Function.prototype.bind.call(window.console.log, (window.console)).apply(window.console, [(Date.now() - window.html2canvas.start) + "ms", "html2canvas:"].concat([].slice.call(arguments, 0)));
     }
 }
 
@@ -419,10 +456,13 @@ function NodeContainer(node, parent) {
     this.parent = parent;
     this.stack = null;
     this.bounds = null;
+    this.offsetBounds = null;
     this.visible = null;
     this.computedStyles = null;
     this.styles = {};
     this.backgroundImages = null;
+    this.transformData = null;
+    this.transformMatrix = null;
 }
 
 NodeContainer.prototype.assignStack = function(stack) {
@@ -574,25 +614,57 @@ NodeContainer.prototype.parseTextShadows = function() {
 };
 
 NodeContainer.prototype.parseTransform = function() {
-    var transformRegExp = /(matrix)\((.+)\)/;
-    var transform = this.prefixedCss("transform");
-    if (transform !== null && transform !== "none") {
-        var matrix = parseMatrix(transform.match(transformRegExp));
-        if (matrix) {
-            return {
-                origin: this.prefixedCss("transformOrigin"),
-                matrix: matrix
+    if (!this.transformData) {
+        if (this.hasTransform()) {
+            var offset = this.parseBounds();
+            var origin = this.prefixedCss("transformOrigin").split(" ").map(removePx).map(asFloat);
+            origin[0] += offset.left;
+            origin[1] += offset.top;
+            this.transformData = {
+                origin: origin,
+                matrix: this.parseTransformMatrix()
+            };
+        } else {
+            this.transformData = {
+                origin: [0, 0],
+                matrix: [1, 0, 0, 1, 0, 0]
             };
         }
     }
-    return {
-        origin: [0, 0],
-        matrix: [1, 0, 0, 1, 0, 0]
-    };
+    return this.transformData;
 };
 
+NodeContainer.prototype.parseTransformMatrix = function() {
+    if (!this.transformMatrix) {
+        var transform = this.prefixedCss("transform");
+        var matrix = transform ? parseMatrix(transform.match(this.MATRIX_PROPERTY)) : null;
+        this.transformMatrix = matrix ? matrix : [1, 0, 0, 1, 0, 0];
+    }
+    return this.transformMatrix;
+};
+
+NodeContainer.prototype.parseBounds = function() {
+    return this.bounds || (this.bounds = this.hasTransform() ? offsetBounds(this.node) : getBounds(this.node));
+};
+
+NodeContainer.prototype.hasTransform = function() {
+    return this.parseTransformMatrix().join(",") !== "1,0,0,1,0,0";
+};
+
+NodeContainer.prototype.getValue = function() {
+    var value = this.node.value || "";
+    value = (this.node.tagName === "SELECT") ? selectionValue(this.node) : value;
+    return value.length === 0 ? (this.node.placeholder || "") : value;
+};
+
+NodeContainer.prototype.MATRIX_PROPERTY = /(matrix)\((.+)\)/;
 NodeContainer.prototype.TEXT_SHADOW_PROPERTY = /((rgba|rgb)\([^\)]+\)(\s-?\d+px){0,})/g;
 NodeContainer.prototype.TEXT_SHADOW_VALUES = /(-?\d+px)|(#.+)|(rgb\(.+\))|(rgba\(.+\))/g;
+
+function selectionValue(node) {
+    var option = node.options[node.selectedIndex || 0];
+    return option ? (option.text || "") : "";
+}
 
 function parseMatrix(match) {
     if (match && match[1] === "matrix") {
@@ -701,6 +773,44 @@ function parseBackgrounds(backgroundImage) {
 
     appendResult();
     return results;
+}
+
+function removePx(str) {
+    return str.replace("px", "");
+}
+
+function asFloat(str) {
+    return parseFloat(str);
+}
+
+function getBounds(node) {
+    if (node.getBoundingClientRect) {
+        var clientRect = node.getBoundingClientRect();
+        var isBody = node.nodeName === "BODY";
+        var width = isBody ? node.scrollWidth : node.offsetWidth;
+        return {
+            top: clientRect.top,
+            bottom: clientRect.bottom || (clientRect.top + clientRect.height),
+            right: clientRect.left + width,
+            left: clientRect.left,
+            width:  width,
+            height: isBody ? node.scrollHeight : node.offsetHeight
+        };
+    }
+    return {};
+}
+
+function offsetBounds(node) {
+    var parent = node.offsetParent ? offsetBounds(node.offsetParent) : {top: 0, left: 0};
+
+    return {
+        top: node.offsetTop + parent.top,
+        bottom: node.offsetTop + node.offsetHeight + parent.top,
+        right: node.offsetLeft + parent.left + node.offsetWidth,
+        left: node.offsetLeft + parent.left,
+        width: node.offsetWidth,
+        height: node.offsetHeight
+    };
 }
 
 function NodeParser(element, renderer, support, imageLoader, options) {
@@ -825,7 +935,7 @@ NodeParser.prototype.getPseudoElement = function(container, type) {
 NodeParser.prototype.getChildren = function(parentContainer) {
     return flatten([].filter.call(parentContainer.node.childNodes, renderableNode).map(function(node) {
         var container = [node.nodeType === Node.TEXT_NODE ? new TextContainer(node, parentContainer) : new NodeContainer(node, parentContainer)].filter(nonIgnoredElement);
-        return node.nodeType === Node.ELEMENT_NODE && container.length ? (container[0].isElementVisible() ? container.concat(this.getChildren(container[0])) : []) : container;
+        return node.nodeType === Node.ELEMENT_NODE && container.length && node.tagName !== "TEXTAREA" ? (container[0].isElementVisible() ? container.concat(this.getChildren(container[0])) : []) : container;
     }, this));
 };
 
@@ -839,7 +949,7 @@ NodeParser.prototype.newStackingContext = function(container, hasOwnStacking) {
 
 NodeParser.prototype.createStackingContexts = function() {
     this.nodes.forEach(function(container) {
-        if (isElement(container) && (this.isRootElement(container) || hasOpacity(container) || isPositionedForStacking(container) || this.isBodyWithTransparentRoot(container) || hasTransform(container))) {
+        if (isElement(container) && (this.isRootElement(container) || hasOpacity(container) || isPositionedForStacking(container) || this.isBodyWithTransparentRoot(container) || container.hasTransform())) {
             this.newStackingContext(container, true);
         } else if (isElement(container) && ((isPositioned(container) && zIndex0(container)) || isInlineBlock(container) || isFloating(container))) {
             this.newStackingContext(container, false);
@@ -862,55 +972,33 @@ NodeParser.prototype.sortStackingContexts = function(stack) {
     stack.contexts.forEach(this.sortStackingContexts, this);
 };
 
-NodeParser.prototype.parseBounds = function(nodeContainer) {
-    return nodeContainer.bounds = this.getBounds(nodeContainer.node);
-};
-
-NodeParser.prototype.getBounds = function(node) {
-    if (node.getBoundingClientRect) {
-        var clientRect = node.getBoundingClientRect();
-        var isBody = node.nodeName === "BODY";
-        var width = isBody ? node.scrollWidth : node.offsetWidth;
-        return {
-            top: clientRect.top,
-            bottom: clientRect.bottom || (clientRect.top + clientRect.height),
-            right: clientRect.left + width,
-            left: clientRect.left,
-            width:  width,
-            height: isBody ? node.scrollHeight : node.offsetHeight
-        };
-    }
-    return {};
-};
-
 NodeParser.prototype.parseTextBounds = function(container) {
     return function(text, index, textList) {
-        if (container.parent.css("textDecoration") !== "none" || text.trim().length !== 0) {
-            if (this.support.rangeBounds) {
+        if (container.parent.css("textDecoration").substr(0, 4) !== "none" || text.trim().length !== 0) {
+            if (this.support.rangeBounds && !container.parent.hasTransform()) {
                 var offset = textList.slice(0, index).join("").length;
                 return this.getRangeBounds(container.node, offset, text.length);
             } else if (container.node && typeof(container.node.data) === "string") {
                 var replacementNode = container.node.splitText(text.length);
-                var bounds = this.getWrapperBounds(container.node);
+                var bounds = this.getWrapperBounds(container.node, container.parent.hasTransform());
                 container.node = replacementNode;
                 return bounds;
             }
-        } else if (!this.support.rangeBounds) {
+        } else if(!this.support.rangeBounds || container.parent.hasTransform()){
             container.node = container.node.splitText(text.length);
         }
         return {};
     };
 };
 
-NodeParser.prototype.getWrapperBounds = function(node) {
-    var wrapper = node.ownerDocument.createElement('wrapper');
+NodeParser.prototype.getWrapperBounds = function(node, transform) {
+    var wrapper = node.ownerDocument.createElement('html2canvaswrapper');
     var parent = node.parentNode,
         backupText = node.cloneNode(true);
 
     wrapper.appendChild(node.cloneNode(true));
     parent.replaceChild(wrapper, node);
-
-    var bounds = this.getBounds(wrapper);
+    var bounds = transform ? offsetBounds(wrapper) : getBounds(wrapper);
     parent.replaceChild(backupText, wrapper);
     return bounds;
 };
@@ -921,6 +1009,8 @@ NodeParser.prototype.getRangeBounds = function(node, offset, length) {
     range.setEnd(node, offset + length);
     return range.getBoundingClientRect();
 };
+
+function ClearTransform() {}
 
 NodeParser.prototype.parse = function(stack) {
     // http://www.w3.org/TR/CSS21/visuren.html#z-index
@@ -938,13 +1028,16 @@ NodeParser.prototype.parse = function(stack) {
             this.renderQueue.push(container);
             if (isStackingContext(container)) {
                 this.parse(container);
+                this.renderQueue.push(new ClearTransform());
             }
         }, this);
 };
 
 NodeParser.prototype.paint = function(container) {
     try {
-        if (isTextNode(container)) {
+        if (container instanceof ClearTransform) {
+            this.renderer.ctx.restore();
+        } else if (isTextNode(container)) {
             this.paintText(container);
         } else {
             this.paintNode(container);
@@ -957,13 +1050,12 @@ NodeParser.prototype.paint = function(container) {
 NodeParser.prototype.paintNode = function(container) {
     if (isStackingContext(container)) {
         this.renderer.setOpacity(container.opacity);
-        var transform = container.parseTransform();
-        if (transform) {
-            this.renderer.setTransform(transform);
+        this.renderer.ctx.save();
+        if (container.hasTransform()) {
+            this.renderer.setTransform(container.parseTransform());
         }
     }
-
-    var bounds = this.parseBounds(container);
+    var bounds = container.parseBounds();
     var borderData = this.parseBorders(container);
     this.renderer.clip(borderData.clip, function() {
         this.renderer.renderBackground(container, bounds, borderData.borders.map(getWidth));
@@ -979,6 +1071,39 @@ NodeParser.prototype.paintNode = function(container) {
                 log("Error loading <img>", container.node.src);
             }
             break;
+        case "SELECT":
+        case "INPUT":
+        case "TEXTAREA":
+            this.paintFormValue(container);
+            break;
+    }
+};
+
+NodeParser.prototype.paintFormValue = function(container) {
+    if (container.getValue().length > 0) {
+        var document = container.node.ownerDocument;
+        var wrapper = document.createElement('html2canvaswrapper');
+        var properties = ['lineHeight', 'textAlign', 'fontFamily', 'fontWeight', 'fontSize', 'color',
+            'paddingLeft', 'paddingTop', 'paddingRight', 'paddingBottom',
+            'width', 'height', 'borderLeftStyle', 'borderTopStyle', 'borderLeftWidth', 'borderTopWidth',
+            'boxSizing', 'whiteSpace', 'wordWrap'];
+
+        properties.forEach(function(property) {
+            try {
+                wrapper.style[property] = container.css(property);
+            } catch(e) {
+                // Older IE has issues with "border"
+                log("html2canvas: Parse: Exception caught in renderFormValue: " + e.message);
+            }
+        });
+        var bounds = container.parseBounds();
+        wrapper.style.position = "absolute";
+        wrapper.style.left = bounds.left + "px";
+        wrapper.style.top = bounds.top + "px";
+        wrapper.textContent = container.getValue();
+        document.body.appendChild(wrapper);
+        this.paintText(new TextContainer(wrapper.firstChild, container));
+        document.body.removeChild(wrapper);
     }
 };
 
@@ -1330,11 +1455,6 @@ function hasOpacity(container) {
     return container.css("opacity") < 1;
 }
 
-function hasTransform(container) {
-    var transform = container.prefixedCss("transform");
-    return transform !== null && transform !== "none";
-}
-
 function bind(callback, context) {
     return function() {
         return callback.apply(context, arguments);
@@ -1350,7 +1470,7 @@ function getWidth(border) {
 }
 
 function nonIgnoredElement(nodeContainer) {
-    return (nodeContainer.node.nodeType !== Node.ELEMENT_NODE || ["SCRIPT", "HEAD", "TITLE", "OBJECT", "BR"].indexOf(nodeContainer.node.nodeName) === -1);
+    return (nodeContainer.node.nodeType !== Node.ELEMENT_NODE || ["SCRIPT", "HEAD", "TITLE", "OBJECT", "BR", "OPTION"].indexOf(nodeContainer.node.nodeName) === -1);
 }
 
 function flatten(arrays) {
@@ -1592,8 +1712,8 @@ CanvasRenderer.prototype.setOpacity = function(opacity) {
 
 CanvasRenderer.prototype.setTransform = function(transform) {
     this.ctx.translate(transform.origin[0], transform.origin[1]);
-    this.ctx.setTransform.apply(this.ctx, transform.matrix);
-    this.ctx.translate(transform.origin[0], transform.origin[1]);
+    this.ctx.transform.apply(this.ctx, transform.matrix);
+    this.ctx.translate(-transform.origin[0], -transform.origin[1]);
 };
 
 CanvasRenderer.prototype.setVariable = function(property, value) {
@@ -1664,12 +1784,12 @@ StackingContext.prototype.getParentStack = function(context) {
     return parentStack ? (parentStack.ownStacking ? parentStack : parentStack.getParentStack(context)) : context.stack;
 };
 
-function Support() {
-    this.rangeBounds = this.testRangeBounds();
+function Support(document) {
+    this.rangeBounds = this.testRangeBounds(document);
     this.cors = this.testCORS();
 }
 
-Support.prototype.testRangeBounds = function() {
+Support.prototype.testRangeBounds = function(document) {
     var range, testElement, rangeBounds, rangeHeight, support = false;
 
     if (document.createRange) {
