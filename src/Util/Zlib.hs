@@ -1,6 +1,9 @@
-module Util.Zlib where
+module Util.Zlib ( safeDecompress
+                 , decompressIfPossible
+                 ) where
 
-import Data.Either ()
+import Utils.Either (toMaybe)
+import Data.Maybe (fromMaybe)
 import Codec.Compression.Zlib.Internal
 import qualified Data.ByteString.Lazy.Char8 as LB
 
@@ -17,7 +20,4 @@ safeDecompress bstr = decompressStreamToEither $ decompressWithErrors gzipOrZlib
 
 -- | Decompress gzip, if it fails, return uncompressed String
 decompressIfPossible :: LB.ByteString -> LB.ByteString
-decompressIfPossible bstr =
-    let conv (Left _) = bstr
-        conv (Right a) = a
-    in (conv . safeDecompress) bstr
+decompressIfPossible bstr = fromMaybe bstr $ toMaybe $ safeDecompress bstr
