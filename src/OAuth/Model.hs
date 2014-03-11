@@ -138,7 +138,7 @@ instance MonadDB m => DBQuery m GetAPITokensForUser [(APIToken, MagicHash)] wher
              <> "      id NOT IN (SELECT api_token_id FROM oauth_access_token "
              <> "                 JOIN oauth_privilege on oauth_privilege.access_token_id = oauth_access_token.id "
              <> "                 WHERE oauth_privilege.privilege = $2) "
-             <> "ORDER BY id DESC")
+             <> "ORDER BY id")
             (uid, APIPersonal)
     fetchMany $ \(i, t, s) -> (APIToken i t, s)
 

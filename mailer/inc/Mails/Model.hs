@@ -212,8 +212,8 @@ getUnreadEvents service_test = do
     sqlJoinOn "mail_events" "mails.id = mail_events.mail_id"
     sqlWhereEq "mails.service_test" service_test
     sqlWhere "mail_events.event_read IS NULL"
-    sqlOrderBy "mails.id DESC"
-    sqlOrderBy "mail_events.id DESC"
+    sqlOrderBy "mails.id"
+    sqlOrderBy "mail_events.id"
   fetchMany id
 
 fetchMail :: (MailID, MagicHash, Address, [Address], String, String, XSMTPAttrs, Bool, Int32) -> Mail

@@ -1503,7 +1503,7 @@ selectDocumentsWithSoftLimit allowzeroresults softlimit sqlquery = do
       throwDB exception
 
     runSQL_ "SELECT * FROM docs"
-    docs <- reverse `liftM` fetchMany fetchDocument
+    docs <- fetchMany fetchDocument
 
 
     runQuery_ $ "CREATE TEMP TABLE links AS" <+>

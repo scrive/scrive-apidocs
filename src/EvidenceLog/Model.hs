@@ -155,7 +155,7 @@ instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
       <> ", host_clock.clock_frequency"
       <> "  FROM evidence_log LEFT JOIN host_clock ON host_clock.time = (SELECT max(host_clock.time) FROM host_clock WHERE host_clock.time <= evidence_log.time)"
       <> "  WHERE document_id =" <?> docid
-      <> "  ORDER BY evidence_log.time DESC, id DESC"
+      <> "  ORDER BY evidence_log.time, id"
     fetchMany fetchEvidenceLog
     where
       fetchEvidenceLog (did', tm, txt, tp, vid, uid, eml, ip4, slid, api, aslid, emsg, ctime, cname, hctime, offset, frequency) =

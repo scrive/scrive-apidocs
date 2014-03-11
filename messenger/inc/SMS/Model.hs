@@ -100,7 +100,7 @@ instance MonadDB m => DBQuery m GetUnreadSMSEvents [(SMSEventID, ShortMessageID,
       sqlResult "smses.data"
 
       sqlWhere "sms_events.event_read IS NULL"
-      sqlOrderBy "sms_events.id DESC"
+      sqlOrderBy "sms_events.id"
     fetchMany id
 
 data DeleteSMS = DeleteSMS ShortMessageID
