@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React','common/button', 'Backbone', 'legacy_code'], function(React, Button) {
+define(['React','common/button', 'Backbone', 'legacy_code'], function(React, NewButton) {
 
 var expose = {};
 
@@ -229,7 +229,7 @@ var AuthorViewAutomaticReminders = React.createClass({
                   <div>
                     {this.props.document.autoremindtime() ? localization.autoreminders.willBeSentOn + ": " + this.props.document.autoremindtime().toYMDString() : ""}
                   </div>
-                  <Button
+                  <NewButton
                     color="black"
                     style= {{"margin-top": "10px"}}
                     text = {this.props.document.autoremindtime() ? localization.autoreminders.changeDate : localization.autoreminders.setDate}
