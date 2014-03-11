@@ -27,8 +27,7 @@ project = "kontrakcja"
 resourceslug :: TranslationResource -> String
 resourceslug Texts = "textsjson"
 resourceslug Events = "eventsjson"
-
-
+resourceslug Questionnaire = "questionnairejson"
 
 fetch :: String -> String -> String -> TranslationResource -> IO [(String,String)]
 fetch user password lang resource = do
@@ -120,7 +119,7 @@ diff user password lang resource = do
 
 
 fix :: IO ()
-fix = fix' "en" Texts >>  fix' "en" Events >> fix' "sv" Texts >> fix' "sv" Events >> putStrLn "Done."
+fix = fix' "en" Texts >>  fix' "en" Events >> fix' "en" Questionnaire >> fix' "sv" Texts >> fix' "sv" Events >> fix' "sv" Questionnaire >> putStrLn "Done."
   where fix' lang resource = do
           mjson <- readFile $ translationFile lang resource
           local <- case decode mjson of
@@ -143,11 +142,14 @@ main' :: [String] -> IO ()
 main' ("fix":_) = fix
 main' ("diff":(user:(password:(lang:("texts":_)))))  = diff user password lang Texts
 main' ("diff":(user:(password:(lang:("events":_)))))  = diff user password lang Events
+main' ("diff":(user:(password:(lang:("questionnaire":_)))))  = diff user password lang Questionnaire
 main' ("diff":_)   = error "Invalid parameters. Usage: transifex.sh diff user password lang resource"
 main' ("merge":(user:(password:(lang:("texts":_))))) = merge user password lang Texts
 main' ("merge":(user:(password:(lang:("events":_))))) = merge user password lang Events
+main' ("merge":(user:(password:(lang:("questionnaire":_))))) = merge user password lang Events
 main' ("merge":_)  = error "Invalid parameters. Usage: transifex.sh merge user password lang"
 main' ("push":(user:(password:(lang:("texts":_)))))  = push user password lang Texts
 main' ("push":(user:(password:(lang:("events":_)))))  = push user password lang Events
+main' ("push":(user:(password:(lang:("questionnaire":_)))))  = push user password lang Questionnaire
 main' ("push":_)   = error "Invalid parameters. Usage: transifex.sh push user password lang"
 main' _ = error "Invalid command. Valid commands are fix, diff, marge and push."

@@ -10,7 +10,7 @@ if [ $# -lt 1 ]; then
   echo "transifex.sh merge user password lang resource  -- to merge extrnall version to your local one"
   echo
   echo "Available languages : en | sv"
-  echo "Available resources : texts | events"
+  echo "Available resources : texts | events | questionnaire"
   exit 0
 fi
 

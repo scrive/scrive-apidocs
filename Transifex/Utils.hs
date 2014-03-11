@@ -18,11 +18,12 @@ import Control.Monad.Identity
 import Data.Maybe
 
 
-data TranslationResource = Texts | Events deriving Show
+data TranslationResource = Texts | Events | Questionnaire deriving Show
 
 translationFile:: String -> TranslationResource -> String
 translationFile lang Texts = "texts/" ++ lang ++ "/texts.json"
 translationFile lang Events = "texts/" ++ lang ++ "/events.json"
+translationFile lang Questionnaire = "texts/" ++ lang ++ "/questionnaire.json"
 
 sourceLang :: String
 sourceLang = "en"
