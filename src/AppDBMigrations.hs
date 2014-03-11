@@ -151,5 +151,6 @@ kontraMigrations = [
   , evidenceLogFixColumns
   , signatoryLinksChangeVarcharColumnsToText
   , tempCredentialChangeVarcharColumnsToText
+  , migrateDocumentsAddSignviewSettings
   ] ++ mailerMigrations
     ++ messengerMigrations

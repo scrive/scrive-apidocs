@@ -610,6 +610,10 @@ data Document = Document {
   , documentautoremindtime         :: Maybe MinutesTime
   , documentinvitetime             :: Maybe SignInfo
   , documentinvitetext             :: String
+  , documentshowheader             :: Bool
+  , documentshowpdfdownload       :: Bool
+  , documentshowrejectoption       :: Bool
+  , documentshowfooter             :: Bool
   , documentsharing                :: DocumentSharing
   , documenttags                   :: S.Set DocumentTag
   , documentauthorattachments      :: [AuthorAttachment]
@@ -634,6 +638,10 @@ instance HasDefaultValue Document where
           , documentdaystoremind         = Nothing
           , documenttimeouttime          = Nothing
           , documentautoremindtime       = Nothing
+          , documentshowheader           = True
+          , documentshowpdfdownload      = True
+          , documentshowrejectoption     = True
+          , documentshowfooter           = True
           , documentinvitetext           = ""
           , documentinvitetime           = Nothing
           , documentsharing              = Private

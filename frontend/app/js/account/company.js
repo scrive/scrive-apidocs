@@ -5,7 +5,7 @@ window.CompanyUI = Backbone.Model.extend({
     ready : false
   },
   initialize: function(args) {
-    if (args.companyid) {
+    if (args.url) {
       this.url = args.url;
       this.fetch();
     } else {

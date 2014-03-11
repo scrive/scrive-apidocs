@@ -56,6 +56,10 @@ module Doc.Model
   , SetEmailInvitationDeliveryStatus(..)
   , SetSMSInvitationDeliveryStatus(..)
   , SetInviteText(..)
+  , SetShowHeader(..)
+  , SetShowPDFDownload(..)
+  , SetShowRejectOption(..)
+  , SetShowFooter(..)
   , SignDocument(..)
   , CloneDocumentWithUpdatedAuthor(..)
   , StoreDocumentForTesting(..)
@@ -501,6 +505,10 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documenttimeouttime" documenttimeouttime
                    , checkEqualBy "documentinvitetime" documentinvitetime
                    , checkEqualBy "documentinvitetext" documentinvitetext
+                   , checkEqualBy "documentshowheader" documentshowheader
+                   , checkEqualBy "documentshowpdfdownload" documentshowpdfdownload
+                   , checkEqualBy "documentshowrejectoption" documentshowrejectoption
+                   , checkEqualBy "documentshowfooter" documentshowfooter
                    , checkEqualBy "documentsharing" documentsharing
                    , checkEqualBy "documenttags" documenttags
                    , checkEqualBy "documentauthorattachments" (sort . documentauthorattachments)
@@ -530,6 +538,10 @@ documentsSelectors =
   , "documents.invite_time"
   , "documents.invite_ip"
   , "documents.invite_text"
+  , "documents.show_header"
+  , "documents.show_pdf_download"
+  , "documents.show_reject_option"
+  , "documents.show_footer"
   , "documents.lang"
   , "documents.sharing"
   , "documents.api_callback_url"
@@ -537,8 +549,8 @@ documentsSelectors =
   , documentStatusClassExpression
   ]
 
-fetchDocument :: (DocumentID, String, DocumentStatus, Maybe String, DocumentType, MinutesTime, MinutesTime, Int32, Maybe Int32, Maybe MinutesTime, Maybe MinutesTime, Maybe MinutesTime, Maybe IPAddress, String, Lang, DocumentSharing, Maybe String, Int64, StatusClass) -> Document
-fetchDocument (did, title, status, error_text, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, lang, sharing, apicallback, objectversion, status_class)
+fetchDocument :: (DocumentID, String, DocumentStatus, Maybe String, DocumentType, MinutesTime, MinutesTime, Int32, Maybe Int32, Maybe MinutesTime, Maybe MinutesTime, Maybe MinutesTime, Maybe IPAddress, String, Bool, Bool, Bool, Bool, Lang, DocumentSharing, Maybe String, Int64, StatusClass) -> Document
+fetchDocument (did, title, status, error_text, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, show_header, show_pdf_download, show_reject_option, show_footer, lang, sharing, apicallback, objectversion, status_class)
        = Document {
          documentid = did
        , documenttitle = title
@@ -561,6 +573,10 @@ fetchDocument (did, title, status, error_text, doc_type, ctime, mtime, days_to_s
            Nothing -> Nothing
            Just t -> Just (SignInfo t $ fromMaybe noIP invite_ip)
        , documentinvitetext = invite_text
+       , documentshowheader = show_header
+       , documentshowpdfdownload = show_pdf_download
+       , documentshowrejectoption = show_reject_option
+       , documentshowfooter = show_footer
        , documentsharing = sharing
        , documenttags = S.empty
        , documentauthorattachments = []
@@ -1068,6 +1084,10 @@ insertDocumentAsIs document@(Document
                    _documentautoremindtime
                    documentinvitetime
                    documentinvitetext
+                   documentshowheader
+                   documentshowpdfdownload
+                   documentshowrejectoption
+                   documentshowfooter
                    documentsharing
                    documenttags
                    documentauthorattachments
@@ -1091,6 +1111,10 @@ insertDocumentAsIs document@(Document
         sqlSet "invite_time" $ signtime `fmap` documentinvitetime
         sqlSet "invite_ip" (fmap signipnumber documentinvitetime)
         sqlSet "invite_text" documentinvitetext
+        sqlSet "show_header" documentshowheader
+        sqlSet "show_pdf_download" documentshowpdfdownload
+        sqlSet "show_reject_option" documentshowrejectoption
+        sqlSet "show_footer" documentshowfooter
         sqlSet "lang" documentlang
         sqlSet "sharing" documentsharing
         sqlSet "object_version" documentobjectversion
@@ -1909,6 +1933,22 @@ data SetInviteText = SetInviteText String Actor
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetInviteText Bool where
   update (SetInviteText text _actor) = updateWithoutEvidence "invite_text" text
 
+data SetShowHeader = SetShowHeader Bool Actor
+instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetShowHeader Bool where
+  update (SetShowHeader bool _actor) = updateWithoutEvidence "show_header" bool
+
+data SetShowPDFDownload = SetShowPDFDownload Bool Actor
+instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetShowPDFDownload Bool where
+  update (SetShowPDFDownload bool _actor) = updateWithoutEvidence "show_pdf_download" bool
+
+data SetShowRejectOption = SetShowRejectOption Bool Actor
+instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetShowRejectOption Bool where
+  update (SetShowRejectOption bool _actor) = updateWithoutEvidence "show_reject_option" bool
+
+data SetShowFooter = SetShowFooter Bool Actor
+instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetShowFooter Bool where
+  update (SetShowFooter bool _actor) = updateWithoutEvidence "show_footer" bool
+
 data SetDaysToSign = SetDaysToSign Int32 Actor
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetDaysToSign Bool where
   update (SetDaysToSign days _actor) = updateWithoutEvidence "days_to_sign" days
@@ -2304,6 +2344,10 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m UpdateDraft Bool wher
     , update $ SetDaysToRemind (documentdaystoremind document) actor
     , update $ SetDocumentLang (getLang document) actor
     , update $ SetInviteText (documentinvitetext document) actor
+    , update $ SetShowHeader (documentshowheader document) actor
+    , update $ SetShowPDFDownload (documentshowpdfdownload document) actor
+    , update $ SetShowRejectOption (documentshowrejectoption document) actor
+    , update $ SetShowFooter (documentshowfooter document) actor
     , update $ SetDocumentTags (documenttags document) actor
     , update $ SetDocumentAPICallbackURL (documentapicallbackurl document)
     , updateMTimeAndObjectVersion (actorTime actor) >> return True

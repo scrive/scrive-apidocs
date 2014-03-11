@@ -5,7 +5,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = tblTable {
     tblName = "documents"
-  , tblVersion = 30
+  , tblVersion = 31
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "title", colType = TextT, colNullable = False }
@@ -26,6 +26,10 @@ tableDocuments = tblTable {
     , tblColumn { colName = "object_version", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "purged_time", colType = TimestampWithZoneT }
     , tblColumn { colName = "days_to_remind", colType = IntegerT  }
+    , tblColumn { colName = "show_header", colType = BoolT, colNullable = False, colDefault = Just "true" }
+    , tblColumn { colName = "show_pdf_download", colType = BoolT, colNullable = False, colDefault = Just "true" }
+    , tblColumn { colName = "show_reject_option", colType = BoolT, colNullable = False, colDefault = Just "true" }
+    , tblColumn { colName = "show_footer", colType = BoolT, colNullable = False, colDefault = Just "true" }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   }

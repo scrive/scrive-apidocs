@@ -36,7 +36,14 @@ window.DocumentSignViewHeader = Backbone.View.extend({
       return this;
     }
 
-    if (BrowserInfo.isSmallScreen()) {
+    var hideHeader = BrowserInfo.isSmallScreen() || !model.showheader(); 
+
+    if (!model.showheader()) {
+      $('.signview').addClass("noheader"); // We need to affect things outside the top bar too
+    }
+
+    // Don't keep rendering if we're not rendering the top bar.
+    if (hideHeader) {
       maindiv.css("display", "none");
       return this;
     }
@@ -116,6 +123,13 @@ window.DocumentSignViewFooter = Backbone.View.extend({
       maindiv.css("display", "none");
       return this;
     }
+
+    if (!model.showfooter()) {
+      $('.signview').addClass("nofooter"); // We need to affect things outside the bottom bar too
+      maindiv.css("display", "none");
+      return this;
+    }
+
     maindiv.css("display","block");
 
     if (BrowserInfo.isSmallScreen())

@@ -90,6 +90,7 @@ define([
   '../js/designview/designviewtabs',
   '../js/designview/csvsignatorydesign',
   '../js/designview/firsttimeuserexperience',
+  '../js/designview/signviewsettings',
   '../js/mobilebankid',
   '../js/bankid',
   '../js/createfromtemplate/createfromtemplate',
@@ -129,6 +130,7 @@ define([
   '../js/account/companybranding/companybrandingsignview',
   '../js/account/companybranding/companybrandingservice',
   '../js/account/companybranding/companybranding',
+  '../js/account/companybranding/samplesignview',
   '../js/account/account',
   '../js/blocking',
   '../js/oauth'], function() {
