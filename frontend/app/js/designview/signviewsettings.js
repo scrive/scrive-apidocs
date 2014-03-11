@@ -21,7 +21,7 @@ var SignviewSettingsModel = Backbone.Model.extend({
       showFooter: new SignviewSettingsBoolean({
         checked: args.document.showfooter() == undefined ? true : args.document.showfooter(),
         label: localization.designview.signviewsettings.showfooter
-      }),
+      })
     }, {silent: true});
   },
   showHeader: function() { return this.get("showHeader"); },

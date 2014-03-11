@@ -277,7 +277,7 @@ window.SampleSignView = function(args) {
     var model = new SampleSignViewModel(args);
     var view = new SampleSignViewView({model: model, el: $("<div />") });
     return {
-      el : function() { return $(view.el); },
+      el : function() { return $(view.el); }
     };
 };
 

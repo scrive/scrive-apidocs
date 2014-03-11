@@ -139,7 +139,7 @@ window.CompanyBrandingSignViewView = Backbone.View.extend({
     var sample = $("<div class='branding-container'/>");
 
     container.append(sample.append(new SampleSignView({
-      signviewbranding: this.model,
+      signviewbranding: this.model
     }).el()));
 
     $(this.el).append("<div class='clearfix'></div>");
