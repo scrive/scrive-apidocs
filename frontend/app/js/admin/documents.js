@@ -69,7 +69,9 @@ window.DocumentAdminListDefinition = function(isAdmin, userid, companyid) {
         schema: new Schema({
             url: "/adminonly/documentslist" + (userid != undefined && userid != ""  ? "?userid=" + userid :  (companyid != undefined && companyid != ""  ? "?companyid=" + companyid : "")),
             sorting: new Sorting({
-                fields: [
+                fields: (userid == undefined && companyid == undefined) ?
+                    [] :
+                    [
                       "ctime"
                     , "mtime"
                     , "id"
@@ -80,7 +82,7 @@ window.DocumentAdminListDefinition = function(isAdmin, userid, companyid) {
                     , "signs"
                     ]}),
             paging: new Paging({}),
-            textfiltering: new TextFiltering({infotext: "Filter documents"}),
+            textfiltering: new TextFiltering({infotext: "Filter documents", disabled : userid == undefined && companyid == undefined}),
             cells : cells
         })
     };
