@@ -42,7 +42,7 @@ import Text.StringTemplates.Templates
 import Text.Printf
 import Text.JSON.Gen
 import Text.JSON.Pretty (pp_value)
-import System.FilePath (takeFileName)
+import System.FilePath (takeFileName, takeExtension, (</>))
 import System.Time
 import System.Locale
 import Templates
@@ -217,7 +217,7 @@ findOutAttachmentDesc tmppath document = do
 
         attachmentNumText <- renderLocalTemplate document "_attachedDocument" $ do
                                      F.value "number" num
-        let attachmentPath = tmppath ++ "/appendix-" ++ show num
+        let attachmentPath = tmppath </> attachmentNumText ++ takeExtension name
         liftIO $ BS.writeFile attachmentPath contents
 
         return $ Seal.FileDesc
