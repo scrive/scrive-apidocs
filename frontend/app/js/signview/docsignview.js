@@ -466,6 +466,7 @@ var DocumentSignViewView = Backbone.View.extend({
       var content = $('<p/>').text(localization.sessionTimedoutInSignviewAfterHistoryBackMessage);
       var popup = new Confirmation({title: localization.sessionTimedoutInSignviewAfterHistoryBackTitle,
                                     content: content,
+                                    width: 425,
                                     footerVisible: false});
       popup.hideCancel();
       popup.hideClose();
