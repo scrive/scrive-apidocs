@@ -178,7 +178,7 @@ remindMailSignedStandardHeader=
   $_remindMailSignedContractStandardHeaderSendRequest()$
   <br/>
   <br/>
-    mailDocumentAttachedOrLinked(attached=_remindMailSignedContractStandardHeaderSendRequest2());
+    $mailDocumentAttachedOrLinked(attached=_remindMailSignedContractStandardHeaderSendRequest2())$
 ###
 ###
 ### Reminding mails - NOT SIGNED

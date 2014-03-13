@@ -12,6 +12,7 @@ import Control.Monad (MonadPlus)
 import Control.Monad.Base (MonadBase)
 import Control.Monad.Reader (ReaderT(..), runReaderT, ask)
 import Control.Monad.State (StateT(..))
+import qualified Control.Monad.State.Strict as Strict
 import Control.Monad.Trans (MonadIO, MonadTrans, lift)
 import Control.Monad.Trans.Control (MonadBaseControl(..), MonadTransControl(..), ComposeSt, defaultLiftBaseWith, defaultRestoreM, defaultLiftWith, defaultRestoreT)
 import IPAddress (IPAddress)
@@ -46,6 +47,9 @@ instance MailContextMonad m => MailContextMonad (ReaderT r m) where
   getMailContext = lift getMailContext
 
 instance MailContextMonad m => MailContextMonad (StateT r m) where
+  getMailContext = lift getMailContext
+
+instance MailContextMonad m => MailContextMonad (Strict.StateT r m) where
   getMailContext = lift getMailContext
 
 instance MonadBaseControl IO m => MonadBaseControl IO (MailContextT m) where

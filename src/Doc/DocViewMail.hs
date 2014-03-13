@@ -18,6 +18,7 @@ module Doc.DocViewMail
 import Company.Model
 import Company.CompanyUI
 import Control.Logic
+import Control.Monad.Trans (lift)
 import Doc.DocInfo (getLastSignedTime)
 import Doc.DocStateData
 import Doc.DocUtils
@@ -27,7 +28,7 @@ import File.File
 import KontraLink
 import MailContext (MailContextMonad(..), getMailContext, MailContext(..))
 import Mails.SendMail
-import MinutesTime (formatMinutesTime)
+import MinutesTime (formatMinutesTime, getMinutesTime, showDateYMD, daysAfter)
 import Utils.Monoid
 import Utils.Prelude
 import Utils.Color
@@ -57,14 +58,10 @@ mailDocumentRemind cm s ispreview documentAttached d = case s of
   _                                       -> remindMailSigned    True cm d s ispreview documentAttached
 
 mailDocumentRemindContent :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
-                          => Maybe String
-                          -> Document
-                          -> SignatoryLink
-                          -> Bool
-                          -> m String
-mailDocumentRemindContent cm d s ispreview = case s of
-  SignatoryLink {maybesigninfo = Nothing} -> remindMailNotSignedContent False cm d s ispreview
-  _                                       -> remindMailSignedContent False cm d s ispreview
+                          => Maybe String -> Document -> SignatoryLink -> m String
+mailDocumentRemindContent cm d s = content <$> case s of
+  SignatoryLink {maybesigninfo = Nothing} -> remindMailNotSigned False cm d s True
+  _                                       -> remindMailSigned    False cm d s True False
 
 remindMailNotSigned :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
                     => Bool
@@ -101,6 +98,14 @@ remindMailNotSigned forMail customMessage document signlink ispreview = do
         F.value "ispreview" ispreview
 
 
+documentAttachedFields :: (MailContextMonad m, MonadDB m) => SignatoryLink -> Bool -> Document -> Fields m ()
+documentAttachedFields signlink documentAttached document = do
+  mctx <- getMailContext
+  F.value "documentAttached" documentAttached
+  F.value "mainfilelink" $ (++) (mctxhostpart mctx) $ show $ LinkMainFile document signlink
+  now <- lift $ getMinutesTime
+  F.value "availabledate" $ showDateYMD $ (unsavedDocumentLingerDays-1) `daysAfter` now
+
 remindMailSigned :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
                  => Bool
                  -> Maybe String
@@ -111,35 +116,11 @@ remindMailSigned :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
                  -> m Mail
 remindMailSigned _forMail customMessage document signlink ispreview documentAttached = do
     sheader <- remindMailSignedStandardHeader document signlink
-    mctx <- getMailContext
     documentMailWithDocLang document "remindMailSigned" $ do
             F.value "header" sheader
             F.value "custommessage" customMessage
             F.value "ispreview" ispreview
-            F.value "documentAttached" documentAttached
-            F.value "mainfilelink" $ (++) (mctxhostpart mctx) $ show $ LinkMainFile document signlink
-            F.value "availabledays" $ unsavedDocumentLingerDays
-
-
-remindMailNotSignedContent :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
-                           => Bool
-                           -> Maybe String
-                           -> Document
-                           -> SignatoryLink
-                           -> Bool
-                           -> m String
-remindMailNotSignedContent forMail customMessage document signlink ispreview =
-    content <$> remindMailNotSigned forMail customMessage document signlink ispreview
-
-remindMailSignedContent :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
-                        => Bool
-                        -> (Maybe String)
-                        -> Document
-                        -> SignatoryLink
-                        -> Bool
-                        -> m String
-remindMailSignedContent forMail customMessage document signlink ispreview = do
-    content <$> remindMailSigned forMail customMessage document signlink ispreview True
+            documentAttachedFields signlink documentAttached document
 
 remindMailSignedStandardHeader :: TemplatesMonad m
                                => Document
@@ -156,11 +137,8 @@ mailForwardSigned :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
                  => SignatoryLink -> Bool -> Document
                  -> m Mail
 mailForwardSigned sl documentAttached document = do
-  mctx <- getMailContext
   documentMailWithDocLang document "mailForwardSigned" $ do
-    F.value "documentAttached" documentAttached
-    F.value "mainfilelink" $ (++) (mctxhostpart mctx) $ show $ LinkMainFile document sl
-    F.value "availabledays" $ unsavedDocumentLingerDays
+    documentAttachedFields sl documentAttached document
 
 
 mailDocumentRejected :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
@@ -291,9 +269,7 @@ mailDocumentClosed l sl sealFixed documentAttached document = do
                             else (++) (mctxhostpart mctx) $ show $ LinkSignDoc document sl
         F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (Just sl) mainfile
         F.value "sealFixed" $ sealFixed
-        F.value "documentAttached" $ documentAttached
-        F.value "mainfilelink" $ (++) (mctxhostpart mctx) $ show $ LinkMainFile document sl
-        F.value "availabledays" $ unsavedDocumentLingerDays
+        documentAttachedFields sl documentAttached document
         F.value "closingtime" $ formatMinutesTime "%Y-%m-%d %H:%M %Z" $ getLastSignedTime document
 
 mailDocumentAwaitingForAuthor :: (HasLang a, MonadDB m, TemplatesMonad m, MailContextMonad m) => a -> Document -> m Mail

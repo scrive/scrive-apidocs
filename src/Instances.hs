@@ -13,6 +13,7 @@ import KontraMonad (KontraMonad)
 import Log (MonadLog)
 import MailContext (MailContextT(..), MailContextMonad)
 import Text.StringTemplates.Templates (TemplatesMonad, TemplatesT(..))
+import Text.StringTemplates.Fields (Fields(..))
 
 deriving instance (Monad m, AmazonMonad m) => AmazonMonad (MailContextT m)
 deriving instance (MonadLog m) => MonadLog (MailContextT m)
@@ -26,6 +27,7 @@ deriving instance (MonadDB m) => MonadDB (GuardTimeConfT m)
 deriving instance (CryptoRNG m) => CryptoRNG (GuardTimeConfT m)
 deriving instance (TemplatesMonad m) => TemplatesMonad (GuardTimeConfT m)
 deriving instance MailContextMonad m => MailContextMonad (GuardTimeConfT m)
+deriving instance MailContextMonad m => MailContextMonad (Fields m)
 
 deriving instance (Monad m, AmazonMonad m) => AmazonMonad (TemplatesT m)
 
