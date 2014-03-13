@@ -124,6 +124,8 @@ window.MailView = Backbone.View.extend({
 var ConfirmationWithEmailModel = Backbone.Model.extend({
   defaults : {
       onAccept : function() {},
+      onReject: function() {},
+      bottom: false,
       title  : "",
       acceptText: "Ok",
       rejectText: "Cancel",
@@ -162,13 +164,18 @@ var ConfirmationWithEmailModel = Backbone.Model.extend({
   mail: function() {
        return this.get("mail");
   },
+  bottom: function() {
+       return this.get("bottom");
+  },
   onEdit: function() {
       return this.get("onEdit");
   },
-    close: function() {
-        this.view.reject();
-    }
-
+  onReject: function() {
+      return this.get("onReject");
+  },
+  close: function() {
+      this.view.reject();
+  }
 });
 
 
@@ -185,6 +192,7 @@ var ConfirmationWithEmailView = Backbone.View.extend({
        var model = this.model;
        var view = this;
        var container = $("<div class='modal-container'/>").css('width',BrowserInfo.isSmallScreen() ? "980px" : "800px");
+       this.container = container;
        if(BrowserInfo.isSmallScreen()) container.addClass("small-screen");
        container.css("top",$(window).scrollTop());
        container.css("margin-top",50);
@@ -267,6 +275,7 @@ var ConfirmationWithEmailView = Backbone.View.extend({
     reject: function(){
         var self = this;
         $(this.el).removeClass("active");
+        this.model.onReject()();
         setTimeout(function() {if (self.clear != undefined) self.clear()}, 600);
     },
     edit: function(){
@@ -317,6 +326,9 @@ window.ConfirmationWithEmail = {
             overlay_height = overlay.height();
           }
           setTimeout(function() {
+            if (model.bottom()) {
+              view.container.css("margin-top", window.innerHeight - view.container.height() - 100);
+            }
             overlay.addClass("active");
             // wait for a second so the browser has the time to
             // render everything and display the animation

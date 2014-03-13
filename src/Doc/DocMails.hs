@@ -208,7 +208,7 @@ sendClosedEmails sealFixed document = do
                then handlePostSignSignup (Email $ getEmail sl) (getFirstName sl) (getLastName sl) (getCompanyName sl) (getCompanyNumber sl)
                else return $ Nothing
       let sendMail = do
-            mail <- mailDocumentClosed ml sl sealFixed (not (null mailattachments)) document
+            mail <- mailDocumentClosed False ml sl sealFixed (not (null mailattachments)) document
             scheduleEmailSendout (mctxmailsconfig mctx) $
                                  mail { to = [getMailAddress sl]
                                       , attachments = mailattachments
@@ -216,8 +216,13 @@ sendClosedEmails sealFixed document = do
       let sendSMS withMail = (scheduleSMS =<< smsClosedNotification document sl withMail sealFixed)
       let useMail = isGood $ asValidEmail $ getEmail sl
           useSMS = isGood $  asValidPhoneForSMS $ getMobile sl
-      when useMail $ sendMail
-      when useSMS  $ sendSMS useMail
+      case (signatorylinkconfirmationdeliverymethod sl) of
+        NoConfirmationDelivery -> return ()
+        EmailConfirmationDelivery -> when useMail $ sendMail
+        MobileConfirmationDelivery -> when useSMS $ sendSMS False
+        EmailAndMobileConfirmationDelivery -> do
+                                              when useMail $ sendMail
+                                              when useSMS  $ sendSMS useMail
 
 makeMailAttachments :: (MonadDB m, MonadIO m) => Document -> m [(String, Either BS.ByteString FileID)]
 makeMailAttachments document = do

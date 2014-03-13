@@ -34,13 +34,17 @@
     .subcontainerWrapper {
       margin-top: 0px;
       padding-top: 0px;
+      padding-bottom: 0px;
     }
     .instructions { border-top-width: 0px; }
   }
 
   &.nofooter {
     .pagefooter { display: none; }
-    .mainContainer { padding-bottom: 7px; }
+    .mainContainer { 
+      padding-bottom: 0px; 
+      .subcontainer { .border-radius } // reset rounded bottom borders
+    }
   }
 
   .mainContainer {
@@ -119,17 +123,20 @@
       }
     }
 
-    &.small-screen {
-      padding-bottom: 45px;
+    &.section.small-screen {
+      padding-bottom: 40px;
+      padding-top: 40px;
 
       .headline {
         font-size: 42px;
-        line-height: 20px;
+        line-height: 42px;
+        margin-bottom: 0px;
       }
 
       .subheadline {
-        font-size: 44px;
-        line-height: 45px;
+        font-size: 32px;
+        line-height: 32px;
+        margin-top: 15px;
       }
     }
 
@@ -558,6 +565,7 @@
     padding: 10px;
   }
 
+
   .extradetails {
 
     .title {
@@ -751,5 +759,42 @@
 
   .clearfix {
     width: 100%; // Without the width the clerfix will not work on IE7 in this case
+  }
+}
+
+.sign-confirmation-modal {
+  .modal-container.small-screen {
+    .signbutton {
+      font-size: 80px !important;
+      height: 100px;
+      width: 80%;
+      max-height: 120px;
+      margin-right: 48px;
+      line-height: 105px;
+      padding-bottom: 55px;
+      padding-top: 50px;
+      float: none;
+      display: block !important;
+      margin: 0px auto;
+    }
+  }
+}
+
+
+
+.extradetails-modal {
+  .small-screen .standard-input-table { 
+    table td:first-child {
+      width: 200px;
+    }
+  }
+
+  .standard-input-table {
+    margin-top: 0;
+
+    table td:first-child {
+      padding-left: 0px;
+      width: 120px;
+    }
   }
 }

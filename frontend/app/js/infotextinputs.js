@@ -16,6 +16,7 @@
       onEnter*  : function() {}, // Function to be called when enter is pressed
       onTab*    : function() {}, // Function to be called when tab is entered
       onBlur*   : function() {}, // Function to be called when input will loose focus
+      onFocus*  : function() {}, // Function to be called when input gains focus
       onRemove* : function() {}, // Function to be called when remove icon is clicked. If no function is provided, no icon will not show up
       onOk*     : function() {}  // Function called when ok button is clicked. If no function is provided, no ok button will show up
    });
@@ -101,6 +102,10 @@ var InfoTextInputModel = Backbone.Model.extend({
   onBlur : function() {
       if (this.get("onBlur") != undefined)
           this.get("onBlur")();
+  },
+  onFocus : function() {
+      if (this.get("onFocus") != undefined)
+          this.get("onFocus")();
   },
   onRemove : function(){
        if (this.get("onRemove") != undefined)
@@ -204,6 +209,7 @@ var InfoTextInputView = Backbone.View.extend({
     addFocus: function(){
         if (!this.model.hasFocus()) {
           this.model.setFocus();
+          this.model.onFocus();
           this.render();
         }
     },

@@ -151,7 +151,7 @@ var CsvSignatoryDesignView = Backbone.View.extend({
        if (name == "sigco" )
                 return localization.company;
        if (name == "sigpersnr")
-                return localization.personamNumber;
+                return localization.personalNumber;
        if (name == "sigcompnr"  )
                 return localization.companyNumber;
        if (name == "mobile")

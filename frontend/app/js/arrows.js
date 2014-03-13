@@ -302,53 +302,73 @@ var ScrollDownArrowView = Backbone.View.extend({
 
 
 
-window.Arrow = {
-    init: function (args) {
-          var model = new ArrowModel({
-                          type  : args.type,
-                          text  : args.text,
-                          labelCss : args.labelCss,
-                          arrowColour : args.arrowColour,
-                          point : args.point,
-                          scrollDone : args.scrollDone
-                    });
-          var view = new ArrowView({model : model, el : $("<div/>")});
-          return new Object({
-              model : function() {return model;},
-              view  : function() {return view;},
-              clear  : function() {
-                  view.clear();
-                  model.destroy();
-              },
-              updatePosition : function() {
-                  view.updatePosition();
-              },
-              blink : function(count) {
-                    var arrow = this;
-                    var el = $(view.el);
-                    model.setBlinks(count);
-                    var startBlinking = function() {
-                      var i = model.blinks();
-                      if (i <= 0 ) return;
-                      else if (i % 2 == 0 )
-                          el.addClass('hidden');
-                      else
-                          el.removeClass('hidden');
-                      model.setBlinks(i-1);
-                      setTimeout(startBlinking,200);
-                      };
-                    startBlinking();
+window.Arrow = function (args) {
+  var model = new ArrowModel({
+    type  : args.type,
+      text  : args.text,
+      labelCss : args.labelCss,
+      arrowColour : args.arrowColour,
+      point : args.point,
+      scrollDone : args.scrollDone
+  });
+  var view = new ArrowView({model : model, el : $("<div/>")});
+  var blinkTimeout = undefined;
+  var disabled = false;
 
-              },
-              scroll: function() {
-                view.scroll();
-              },
-              /* We need to recalculate width after appending arrow to page */
-              fixWidth: function() {
-                   if (view.fixWidth != undefined) view.fixWidth();
-              }
-            });
-        }
+  this.type = function() {
+    return model.type();
+  };
+  this.el = function() {
+    return $(view.el);
+  };
+  this.clear = function() {
+    view.clear();
+    model.destroy();
+  };
+  this.updatePosition = function() {
+    view.updatePosition();
+  };
+  this.blink = function(count) {
+    var arrow = this;
+    var el = $(view.el);
+    model.setBlinks(count);
+    var startBlinking = function() {
+      var i = model.blinks();
+      if (i <= 0 ) return;
+      else if (i % 2 == 0 )
+        el.addClass('hidden');
+      else
+        el.removeClass('hidden');
+      model.setBlinks(i-1);
+      blinkTimeout = setTimeout(startBlinking,200);
+    };
+
+    startBlinking();
+  };
+  this.isDisabled = function() {
+    return disabled;
+  };
+  this.disable = function() {
+    disabled = true;
+    model.setBlinks(0);
+    clearTimeout(blinkTimeout);
+    $(view.el).addClass('disabled');
+  };
+  this.enable = function() {
+    disabled = false;
+    $(view.el).removeClass('disabled');
+
+    // There is something funky going on, if I don't scroll() the arrow points
+    // to the previous task, one that is already completed. There should be a better way.
+    $(window).scroll();
+    this.fixWidth();
+
+    this.blink(10);
+  };
+  /* We need to recalculate width after appending arrow to page */
+  this.fixWidth = function() {
+    if (view.fixWidth != undefined) view.fixWidth();
+  };
 };
 
 });

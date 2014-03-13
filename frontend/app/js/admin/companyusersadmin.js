@@ -10,7 +10,7 @@ var newUserInCompanyButton = function(companyid) {
         size : "tiny",
         style: "float:left",
         onClick : function() {
-              var body = jQuery("<div class='account-body'>");
+              var body = jQuery("<div class='standard-input-table'>");
               body.append("<p>Create new user account in company</p>");
               var table = jQuery("<table/>");
 

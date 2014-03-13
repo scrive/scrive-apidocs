@@ -286,6 +286,15 @@
   border-color: red;
 }
 
+// Use this class to mark that an input is obligatory
+.obligatory-input {
+  border: 1px solid fade(@brand-secondary, 50%);
+
+  &:focus:not(.readonly), &:hover:not(.readonly) {
+   border-color: fade(@brand-secondary, 50%);
+  }
+}
+
 .button.bankid {
   margin-right: 15px;
 }

@@ -157,5 +157,8 @@ kontraMigrations = [
   , migrateDocumentsAddSignviewSettings
   , migrateDocumentsAddDocumentToken
   , addDomainToSession
+  , addConfirmTextToDocuments
+  , addConfirmationDeliveryMethodToSignatoryLinks
+  , changeSomeStandardFieldsToOptional
   ] ++ mailerMigrations
     ++ messengerMigrations

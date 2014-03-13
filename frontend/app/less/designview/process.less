@@ -21,11 +21,28 @@
 
 .design-view-action-process {
 
-  .design-view-action-process-right-column-invitation-wrapper.disabled {
-    
-    .mce-panel {
-      border-color: @white;
+  .custommessageeditor {
+
+    .label {
+      display: inline-block;
     }
+
+    .preview {
+
+    }
+
+    .custommessageeditboxwrapper
+
+      .editor {
+        height: 70px;
+        width: 470px;
+      }
+
+      &.disabled {
+        .mce-panel {
+          border-color: @white;
+        }
+      }
   }
 }
 
@@ -130,10 +147,10 @@
 
 .designview-attachemnts-list {
   margin-top: 10px;
-  
+
   .icon-td {
     width: 24px;
-    
+
     .author-attachment-icon {
       background: url(~"@{img-base-url}/editor-view-attachment-added.png");
       display: inline-block;
@@ -160,7 +177,7 @@
 
   .remove-td {
     width: 11px;
-    
+
     .remove-icon {
       background: url(~"@{img-base-url}/editor-view-remove-field.png") repeat scroll -5px -5px transparent;
       cursor: pointer;
@@ -187,9 +204,8 @@
 
 .design-view-action-process-middle-column {
   display:inline-block;
-  height: 200px;
-  margin-top: 15px;
-  padding: 4px 16px 8px 18px;
+  margin-top: 14px;
+  padding: 0 16px 8px 18px;
   vertical-align: top;
   width: 307px;
 
@@ -218,17 +234,4 @@
 .design-view-action-process-right-column-invitation-link {
   float: right;
   margin-top: 10px;
-}
-
-.design-view-action-process-right-column-invitation-wrapper {
-  display: inline-block;
-  height: 140px;
-  overflow: hidden;
-  vertical-align: top;
-  width: 310px;
-}
-
-.design-view-action-process-right-column-invitation-editor {
-  height: 110px;
-  width: 470px;
 }

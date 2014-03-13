@@ -112,6 +112,7 @@ instance InspectXML UserInfo where
 instance InspectXML UserSettings where
 instance InspectXML AuthenticationMethod where
 instance InspectXML DeliveryMethod where
+instance InspectXML ConfirmationDeliveryMethod where
 instance InspectXML CancelationReason where
 instance InspectXML SignatureProvider where
 instance InspectXML SignatureInfo where

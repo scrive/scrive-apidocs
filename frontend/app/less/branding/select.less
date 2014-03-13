@@ -7,11 +7,25 @@
   position: relative;
   text-align: left;
 
+  &.inactive {
+    cursor: default;
+    background: @gray-2-percent;
+
+    .select-button {
+       background: @gray-2-percent;
+
+      .select-button-right {
+        background: @gray-2-percent;
+      }
+    }
+  }
+
+
   .select-button {
     background: @white;
     height: 38px;
     position: relative;
-    
+
     .select-button-left {
       float: left;
       height: 34px;

@@ -58,6 +58,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
       return this.document().ready() && this.document().mainfile() != undefined;
   },
   hasSignSection : function() {
+      var signatory = this.document().currentSignatory();
       return this.document().currentSignatoryCanSign() && this.hasArrows();
   },
   hasSignatoriesSection : function() {
@@ -72,24 +73,8 @@ var DocumentSignViewModel = Backbone.Model.extend({
     if (!this.document().currentSignatoryCanSign()) return false;
 
     var signatory = this.document().currentSignatory();
-    var res = false;
-    // Name check is outside the look, since we have two fields for that
-    if (signatory.name() == ""
-        && (signatory.fstnameField() != undefined && !signatory.fstnameField().hasPlacements())
-        && (signatory.sndnameField() != undefined && !signatory.sndnameField().hasPlacements())
-       )
-    res = true;
 
-    _.each(signatory.fields(), function(field) {
-      if (field.isEmail() && field.value() == "" && !field.hasPlacements())
-        res = true;
-      if (field.isSSN() && field.value() == "" && !field.hasPlacements() && signatory.elegAuthentication())
-        res = true;
-    });
-    if( !res && this.document().currentSignatory().padDelivery() && this.document().currentSignatory().hasSignatureField()) {
-        res =  !this.document().currentSignatory().anySignatureHasImageOrPlacement();
-    }
-    return res;
+    return DocumentExtraDetails.detailsMissing(signatory);
   },
   hasSignatoriesAttachmentsSection : function() {
       return this.document().currentSignatory().attachments().length > 0;
@@ -115,6 +100,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
              && !document.currentSignatory().saved()
              && document.currentSignatory().email() //We assume that if this email is set - then it is valid
              && !document.currentSignatory().padDelivery()
+             && !document.currentSignatory().apiDelivery()
              && document.currentSignatory().hasSigned();
   },
 
@@ -208,6 +194,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
       return this.get('authorattachmentssection');
   },
   extradetailssection : function() {
+      var model = this;
       var document = this.document();
       var signviewbranding = this.signviewbranding();
       var textcolour = signviewbranding.signviewtextcolour();
@@ -224,7 +211,9 @@ var DocumentSignViewModel = Backbone.Model.extend({
       if (this.get('extradetailssection') === undefined) {
         var extradetailssection = new DocumentSignExtraDetailsSection({model: this.document().currentSignatory(),
                                                                        textstyle: textstyle,
-                                                                       signviewbranding: signviewbranding});
+                                                                       arrow: function() { return model.get("arrow"); },
+                                                                       signview: this,
+                                                                       signviewbranding: this.usebranding() ? signviewbranding : undefined});
         this.set({'extradetailssection': extradetailssection}, {silent: true});
       }
       return this.get('extradetailssection');
@@ -236,7 +225,9 @@ var DocumentSignViewModel = Backbone.Model.extend({
                     new KontraFile({
                             file: this.document().mainfile(),
                             document: this.document(),
-                            signviewbranding: this.usebranding() ? this.signviewbranding() : undefined
+                            signviewbranding: this.usebranding() ? this.signviewbranding() : undefined,
+                            signview: this,
+                            arrow: function() { return model.get("arrow"); }
                         })
         }, {silent : true} );
         this.get('mainfile').view.bind("ready", function() {
@@ -253,6 +244,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
         var tasks = [];
         _.each(attachments, function(attachment,i) {
                 var task = new PageTask({
+                            type: 'signatory-attachment',
                             isComplete: function() {
                                 return attachment.hasFile();
                             },
@@ -281,6 +273,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
         if (this.get("signtask") == undefined)
             this.set({'signtask' :
                             new PageTask({
+                                type: 'sign',
                                 isComplete: function() {
                                     return !model.document().currentSignatoryCanSign();
                                 },
@@ -323,6 +316,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
                     label = localization.docsignview.checkbox;
 
                 var task = new PageTask({
+                    type: 'field',
                     isComplete: function() {
                     return placement.field().readyForSign();
                     },
@@ -361,24 +355,11 @@ var DocumentSignViewModel = Backbone.Model.extend({
 
         if (self.get("fillExtraDetailsTask") == undefined) {
          var task = new PageTask({
+                    type: 'extra-details',
                     isComplete: function() {
-                        var res = true;
                         var signatory = document.currentSignatory();
 
-                        // Name check is outside the look, since we have two fields for that
-                        if (signatory.name() == "")  res = false;
-
-                        _.each(signatory.fields(), function(field) {
-                            if (field.isEmail() && (!new EmailValidation().validateData(field.value())))
-                                res = false;
-                            if (field.isSSN()    && (field.value() == "") && signatory.elegAuthentication())
-                                res = false;
-                             if (field.isSignature() && (field.value() == "")
-                                 && field.placements().length == 0 && !document.currentSignatory().anySignatureHasImageOrPlacement()
-                                 && document.currentSignatory().padDelivery())
-                                res = false;
-                        });
-                        return res;
+                        return !DocumentExtraDetails.detailsMissing(signatory);
                     },
                     el: $(self.extradetailssection().el),
                     onActivate   : function() {

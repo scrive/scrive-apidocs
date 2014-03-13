@@ -49,6 +49,21 @@ signatoryLinksChangeVarcharColumnsToText = Migration {
     runSQL_ "ALTER TABLE signatory_links ALTER COLUMN reject_redirect_url TYPE TEXT"
 }
 
+addConfirmationDeliveryMethodToSignatoryLinks :: MonadDB m => Migration m
+addConfirmationDeliveryMethodToSignatoryLinks = Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 24
+  , mgrDo = do
+      runSQL_ $   "ALTER TABLE signatory_links"
+              <+> "ADD COLUMN confirmation_delivery_method SMALLINT NOT NULL DEFAULT 1"
+
+      runQuery_ $ "UPDATE signatory_links SET confirmation_delivery_method =" <?> (MobileConfirmationDelivery)
+        <+> "WHERE delivery_method = " <?> MobileDelivery
+
+      runQuery_ $ "UPDATE signatory_links SET confirmation_delivery_method =" <?> (EmailAndMobileConfirmationDelivery)
+        <+> "WHERE delivery_method = " <?> EmailAndMobileDelivery
+}
+
 addSealStatusToDocument :: MonadDB m => Migration m
 addSealStatusToDocument = Migration {
     mgrTable = tableDocuments
@@ -1177,6 +1192,18 @@ migrateDocumentsAddDocumentToken =
         return ()
       }
 
+
+addConfirmTextToDocuments :: MonadDB m => Migration m
+addConfirmTextToDocuments =
+  Migration {
+      mgrTable = tableDocuments
+    , mgrFrom = 32
+    , mgrDo = do
+        runSQL_ "ALTER TABLE documents ADD COLUMN confirm_text TEXT NOT NULL DEFAULT ''"
+        return ()
+      }
+
+
 fixSignatureFieldsWithAnySize :: MonadDB m => Migration m
 fixSignatureFieldsWithAnySize =
   Migration {
@@ -1197,6 +1224,34 @@ fixSignatureFieldsWithAnySize =
                   sqlSet "placements" placements'
                   sqlWhereEq "id" fid
   }
+
+
+-- Personal number used to be obligatory, but we didn't asked about it in extra details section
+changeSomeStandardFieldsToOptional :: MonadDB m => Migration m
+changeSomeStandardFieldsToOptional=
+  Migration {
+    mgrTable = tableSignatoryLinkFields
+  , mgrFrom = 5
+  , mgrDo =  do
+    runQuery_ $ sqlUpdate "signatory_link_fields as ff" $ do
+                 sqlSet "obligatory" False
+                 sqlWhereExists $ do
+                  sqlSelect "documents as d, signatory_links as s, signatory_link_fields as f" $ do
+                    sqlWhere  "ff.id = f.id"
+                    sqlWhereEq "f.placements" ("[]"::String)
+                    sqlWhereEq "f.value" (""::String)
+                    sqlWhereIn "d.status" [Preparation,Pending]
+                    sqlWhereAny $ do
+                      sqlWhereAll $ do
+                        sqlWhereEq "f.type" PersonalNumberFT
+                        sqlWhereNotEq "s.authentication_method" ELegAuthentication
+                      sqlWhereAll $ do
+                        sqlWhereEq "f.type" (MobileFT)
+                        sqlWhereNotIn "s.delivery_method" [MobileDelivery,EmailAndMobileDelivery]
+                        sqlWhereNotIn "s.confirmation_delivery_method" [MobileConfirmationDelivery,EmailAndMobileConfirmationDelivery]
+  }
+
+
 
 makeSealStatusNonNullInMainFiles  :: MonadDB m => Migration m
 makeSealStatusNonNullInMainFiles =

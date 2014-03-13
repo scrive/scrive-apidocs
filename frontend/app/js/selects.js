@@ -81,7 +81,8 @@ var SelectModel = Backbone.Model.extend({
       textWidth : "160px",
       optionsWidth : "200px",
       style : "",
-      cssClass : ""
+      cssClass : "",
+      inactive : false
 
   },
   initialize: function(args){
@@ -152,6 +153,9 @@ var SelectModel = Backbone.Model.extend({
   cssClass : function() {
      return this.get("cssClass");
   },
+  inactive : function() {
+     return this.get("inactive");
+  },
   style : function() {
      return this.get("style");
   }
@@ -206,10 +210,11 @@ var SelectView = Backbone.View.extend({
                      );
         button.append("<div class='select-button-right' />");
 
-        button.click(function(){
-          model.toggleExpand();
-          return false;
-        });
+        if (!model.inactive())
+          button.click(function(){
+            model.toggleExpand();
+            return false;
+          });
 
         if (this.model.hasRemoveOption())
             button.append($("<div class='closer'/>").click(function() { model.onRemove(); model.set({"expanded" : false}); }));
@@ -220,6 +225,7 @@ var SelectView = Backbone.View.extend({
         var self = this;
         var model = this.model;
 
+        if (model.inactive()) $(this.el).addClass("inactive");
         //If we are rerendering we remove expanded part.
         if (this.expButton != undefined) $(this.expButton).remove();
 
@@ -279,7 +285,6 @@ window.Select = function(args) {
           var model = new SelectModel (args);
 
           // Build view
-          var div = $("<div class='select'/>");
           var view = new SelectView({model : model, el : $("<div class='select'/>")});
 
           // Export interface

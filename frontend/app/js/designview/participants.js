@@ -106,6 +106,7 @@ define(['Backbone', 'legacy_code'], function() {
             div.append(view.detailsParticipationFieldsDelivery());
             div.append(view.detailsParticipationFieldsRole());
             div.append(view.detailsParticipationFieldsAuth());
+            div.append(view.detailsParticipationFieldsConfirmationDelivery());
             return div;
         },
         detailsParticipationFieldsSignOrder: function() {
@@ -129,9 +130,9 @@ define(['Backbone', 'legacy_code'], function() {
                 options: options,
                 name: ordinal + ' ' +
                     localization.designview.toReceiveDocument,
-                 textWidth : "195px",
+                 textWidth : "145px",
 
-                optionsWidth : "225px",
+                optionsWidth : "177px",
                 cssClass : 'design-view-action-participant-details-participation-order',
                 onSelect: function(v) {
                     mixpanel.track('Choose sign order', {
@@ -163,15 +164,48 @@ define(['Backbone', 'legacy_code'], function() {
                     return {name: deliveryTexts[t], value:t};
                 }),
                 name: deliveryTexts[delivery],
-                 textWidth : "195px",
+                 textWidth : "145px",
 
-                optionsWidth : "225px",
+                optionsWidth : "177px",
                 cssClass : 'design-view-action-participant-details-participation-delivery',
                 onSelect: function(v) {
                     mixpanel.track('Choose delivery method', {
                         Where: 'select'
                     });
                     sig.setDelivery(v);
+                    return true;
+                }
+            });
+            return select.el();
+        },
+        detailsParticipationFieldsConfirmationDelivery: function() {
+            var view = this;
+            var sig = view.model;
+            var delivery = sig.confirmationdelivery();
+
+            var deliveryTexts = {
+                email : localization.designview.withEmailConfirmation,
+                mobile : localization.designview.withMobileConfirmation,
+                email_mobile : localization.designview.withEmailMobileConfirmation,
+                none : localization.designview.withoutConfirmation
+            };
+
+            var deliveryTypes = ['email', 'mobile', 'email_mobile', 'none'];
+
+            var select = new Select({
+                options: _.map(deliveryTypes, function(t) {
+                    return {name: deliveryTexts[t], value:t};
+                }),
+                name: deliveryTexts[delivery],
+                 textWidth : "145px",
+
+                optionsWidth : "225px",
+                cssClass : 'design-view-action-participant-details-participation-confirmation-delivery',
+                onSelect: function(v) {
+                    mixpanel.track('Choose confirmation delivery method', {
+                        Where: 'select'
+                    });
+                    sig.setConfirmationDelivery(v);
                     return true;
                 }
             });
@@ -194,9 +228,9 @@ define(['Backbone', 'legacy_code'], function() {
                     return {name: roleTexts[t], value:t};
                 }),
                 name: roleTexts[role],
-                 textWidth : "195px",
+                 textWidth : "145px",
 
-                optionsWidth : "225px",
+                optionsWidth : "177px",
                 cssClass : 'design-view-action-participant-details-participation-role',
                 onSelect: function(v) {
                     mixpanel.track('Choose participant role', {
@@ -228,9 +262,9 @@ define(['Backbone', 'legacy_code'], function() {
                     return {name: authTexts[t], value:t};
                 }),
                 name: authTexts[auth],
-                 textWidth : "195px",
+                 textWidth : "145px",
 
-                optionsWidth : "225px",
+                optionsWidth : "200px",
                 cssClass : 'design-view-action-participant-details-participation-auth',
                 onSelect: function(v) {
                     mixpanel.track('Choose auth', {
@@ -586,6 +620,56 @@ define(['Backbone', 'legacy_code'], function() {
         }
     });
 
+    // delivery icon + delivery selection
+    var DesignViewConfirmationDeliveryIconView = Backbone.View.extend({
+        className: 'design-view-action-participant-confirmation',
+        initialize: function(args) {
+            var view = this;
+            _.bindAll(view);
+            view.model.bind('change:confirmationdelivery', view.render);
+            view.render();
+            view.$el.click(function() {
+                mixpanel.track('Choose confirmation delivery method', {
+                    Where: 'icon'
+                });
+                if(view.model.confirmationdelivery() === 'email')
+                    view.model.setConfirmationDelivery('mobile');
+                else if(view.model.confirmationdelivery() === 'mobile')
+                    view.model.setConfirmationDelivery('email_mobile');
+                else if(view.model.confirmationdelivery() === 'email_mobile')
+                    view.model.setConfirmationDelivery('none');
+                else
+                    view.model.setConfirmationDelivery('email');
+
+                return false;
+            });
+        },
+        icons: {
+            email: 'design-view-action-participant-confirmation-icon-email',
+            mobile: 'design-view-action-participant-confirmation-icon-phone',
+            email_mobile : 'design-view-action-participant-confirmation-icon-email-mobile',
+            none : 'design-view-action-participant-confirmation-icon-empty'
+        },
+        render: function() {
+            var view = this;
+            var sig = view.model;
+
+            var delivery = sig.confirmationdelivery();
+
+            var div = $('<div />')
+                .addClass('design-view-action-participant-icon-device-inner')
+                .append($('<div />')
+                        .addClass('design-view-action-participant-confirmation-icon')
+                        .addClass(view.icons[delivery]));
+            view.$el.html(div);
+
+            return view;
+        }
+    });
+
+
+
+
     // auth icon + auth selection
     var DesignViewAuthIconView = Backbone.View.extend({
         className: 'design-view-action-participant-icon-auth',
@@ -643,6 +727,7 @@ define(['Backbone', 'legacy_code'], function() {
             view.model.bind('change:fields', view.render);
             view.model.bind('change:authentication', view.render);
             view.model.bind('change:delivery', view.render);
+            view.model.bind('change:confirmationdelivery', view.render);
             view.model.bind('change:csv', view.render);
             view.render();
         },
@@ -650,8 +735,8 @@ define(['Backbone', 'legacy_code'], function() {
           this.model.unbind('change:fields', this.render);
           this.model.unbind('change:authentication', this.render);
           this.model.unbind('change:delivery', this.render);
+          this.model.unbind('change:confirmationdelivery', this.render);
           this.model.unbind('change:csv', this.render);
-
           this.off();
           if (this.participation != undefined) this.participation.destroy();
           this.remove();
@@ -987,12 +1072,20 @@ define(['Backbone', 'legacy_code'], function() {
                 onRemove: (!field.canBeRemoved() ?
                             undefined :
                             function() {
-                              mixpanel.track('Click remove field', {
-                                  Type: field.type(),
-                                  Name: field.name()
-                              });
-                              field.removeAllPlacements();
-                              sig.deleteField(field);
+                              if (field.isLastIdentificationField()) {
+                                new FlashMessage({
+                                  color: "red",
+                                  content : localization.designview.cantRemoveAllIdentificationFieldsText
+                                });
+                              }
+                              else {
+                                mixpanel.track('Click remove field', {
+                                    Type: field.type(),
+                                    Name: field.name()
+                                });
+                                field.removeAllPlacements();
+                                sig.deleteField(field);
+                              }
                             })
             });
 
@@ -1051,14 +1144,13 @@ define(['Backbone', 'legacy_code'], function() {
             sndname: localization.sndname,
             email: localization.email,
             sigcompnr: localization.companyNumber,
-            sigpersnr: localization.personamNumber,
+            sigpersnr: localization.personalNumber,
             sigco: localization.company,
             mobile: localization.phone
         },
         placeholder: function(name) {
             return this.fieldNames[name] || name;
         }
-
     });
 
     // single line view which can open
@@ -1078,6 +1170,10 @@ define(['Backbone', 'legacy_code'], function() {
             view.deviceIcon = new DesignViewDeviceIconView({model:view.model,
                                                             viewmodel: view.viewmodel});
             view.authIcon   = new DesignViewAuthIconView  ({model:view.model,
+                                                            viewmodel: view.viewmodel});
+
+            view.confirmationDeliveryIcon = new DesignViewConfirmationDeliveryIconView ({
+                                                            model:view.model,
                                                             viewmodel: view.viewmodel});
 
             view.detailsView = new DesignViewParticipantDetailsView({model:view.model,
@@ -1241,6 +1337,7 @@ define(['Backbone', 'legacy_code'], function() {
             div.append(view.deviceIcon.el);
             div.append(view.roleIcon.el);
             div.append(view.authIcon.el);
+            div.append(view.confirmationDeliveryIcon.el);
             div.click(function() {
                 if(viewmodel.participantDetail() === sig) {
                     mixpanel.track('Close participant detail');

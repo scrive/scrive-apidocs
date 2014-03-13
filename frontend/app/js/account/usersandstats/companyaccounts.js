@@ -20,7 +20,7 @@ var CompanyAccountsModel = Backbone.Model.extend({
         text: localization.account.companyAccounts.createNewButtonText,
         onClick: function() {
             mixpanel.track('Click new account');
-            var body = jQuery("<div class='account-body'>");
+            var body = jQuery("<div class='standard-input-table'>");
             var table = jQuery("<table/>");
 
             var tr1 = jQuery("<tr/>").append(jQuery("<td/>").text(localization.fstname + ":"));

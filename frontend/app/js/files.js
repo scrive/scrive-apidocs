@@ -184,6 +184,9 @@ var FilePageView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'renderDragables', 'updateDragablesPosition');
         this.signviewbranding = args.signviewbranding;
+        this.signview = args.signview;
+        this.arrow = args.arrow;
+
         this.listenTo(this.model,'change:dragables', this.renderDragables);
         this.render();
     },
@@ -228,7 +231,13 @@ var FilePageView = Backbone.View.extend({
             var placement = placement;
             if (!placement.placed() && placement.page()==page.number()) {
                 var elem = $("<div />").appendTo(container);
-                createFieldPlacementPlacedView({model: placement, signviewbranding: view.signviewbranding, el: elem});
+                createFieldPlacementPlacedView({
+                  model: placement, 
+                  signviewbranding: view.signviewbranding, 
+                  signview: view.signview,
+                  arrow: view.arrow,
+                  el: elem
+                });
             }
         });
     },
@@ -277,6 +286,8 @@ var FileView = Backbone.View.extend({
         this.model.view = this;
         this.pageviews = [];
         this.signviewbranding = args.signviewbranding;
+        this.arrow = args.arrow;
+        this.signview = args.signview;
         this.model.fetch({data: { signatoryid: this.model.signatoryid()},
                           processData:  true,
                           cache : false});
@@ -317,6 +328,8 @@ var FileView = Backbone.View.extend({
                  var pageview = new FilePageView({
                    model : page, 
                    signviewbranding: view.signviewbranding, 
+                   arrow: view.arrow,
+                   signview: view.signview,
                    el: $("<div/>")
                  });
                  view.pageviews.push(pageview);
@@ -406,6 +419,8 @@ window.KontraFile = function(args){
         this.view = new FileView({
             model: this.model,
             signviewbranding: args.signviewbranding,
+            signview: args.signview,
+            arrow: args.arrow,
             el : $("<div class='document-pages'/>")
         });
         this.destroy = function() {

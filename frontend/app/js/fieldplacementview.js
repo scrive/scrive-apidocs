@@ -97,7 +97,8 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                 if(f &&
                    f.addedByMe &&
                    f.value() === '' &&
-                   f.placements().length <= 1) {
+                   f.placements().length <= 1 &&
+                   !f.isLastIdentificationField()) {
                     s.deleteField(field);
                     placement.setField(undefined);
                     f.removePlacement(placement);
@@ -222,40 +223,47 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
             _.bindAll(view);
             view.render();
             if(field) {
-                field.bind('change:obligatory', view.render);
-                field.bind('change:shouldbefilledbysender', view.render);
+                this.listenTo(field,'change:obligatory change:shouldbefilledbysender', view.render);
+                this.listenTo(field.signatory(),'change:delivery change:confirmationdelivery change:authentication', view.render);
             }
         },
         render: function() {
             var view = this;
             var field = view.model;
-            var selected;
+            var selected,selectedName;
             if(!field) {
                 selected = 'optional';
+                selectedName = localization.designview.optionalField;
             } else if(field.isOptional()) {
                 selected = 'optional';
+                selectedName = localization.designview.optionalField;
             } else if(field.shouldbefilledbysender()) {
                 selected = 'sender';
+                selectedName = localization.designview.mandatoryForSender;
             } else {
                 selected = 'signatory';
+                selectedName = localization.designview.mandatoryForRecipient;
             }
-            var values = view.options;
-            var options = {
-                optional  : {name : localization.designview.optionalField,
-                             value : 'optional'
-                            },
-                signatory : {name : localization.designview.mandatoryForRecipient,
-                             value : 'signatory'
-                            },
-                sender    : {name : localization.designview.mandatoryForSender,
+
+            var options = [];
+            if (selected != 'sender')
+              options.push({ name : localization.designview.mandatoryForSender,
                              value : 'sender'
-                            }
-            };
+                            });
+            if (selected != 'signatory' && field.canBeSetByRecipent())
+              options.push({ name : localization.designview.mandatoryForRecipient,
+                             value : 'signatory'
+                            });
+            if (selected != 'optional' && field.canBeOptional())
+              options.push({ name : localization.designview.optionalField,
+                             value : 'optional'
+                            });
+
+
             var select = new Select({
-                options: _.map(_.without(values, selected), function(v) {
-                    return options[v];
-                }),
-                name: options[selected].name,
+                options: options,
+                inactive: (options.length == 0),
+                name: selectedName,
                 cssClass : 'design-view-action-participant-details-information-field-options ' + (view.extraClass || ""),
                 style: 'font-size: 16px; width: 220px;',
                 textWidth: "191px",
@@ -266,6 +274,14 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                             Subcontext: 'inline'
                         });
                         if(v === 'optional') {
+                            if (field.isLastNonOptionalIdentificationField())
+                            {
+                               new FlashMessage({
+                                  color: "red",
+                                  content : localization.designview.cantMakeAllIdentificationFieldsOptionalText
+                                });
+                               return true;
+                            }
                             field.makeOptional();
                             field.setShouldBeFilledBySender(false);
                             field.authorObligatory = 'optional';
@@ -693,7 +709,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
         sndname: localization.sndname,
         email: localization.email,
         sigcompnr: localization.companyNumber,
-        sigpersnr: localization.personamNumber,
+        sigpersnr: localization.personalNumber,
         sigco: localization.company,
         mobile: localization.phone
     },
@@ -963,7 +979,6 @@ var TextPlacementPlacedView = Backbone.View.extend({
          if (field.obligatory())
             place.addClass("obligatory");
 
-         console.log("this branding is", this.branding);
          if (this.branding) {
            place.css('border-color', field.obligatory() ? this.branding.signviewprimarycolour() : this.branding.signviewsecondarycolour());
          }
@@ -1352,6 +1367,8 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
         this.height = args.height;
         this.width = args.width;
         this.branding = args.signviewbranding;
+        this.arrow = args.arrow;
+        this.signview = args.signview;
         this.render();
     },
     clear: function() {
@@ -1367,6 +1384,8 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
             var width =  this.width;
             var height = this.height;
             var branding = this.branding;
+            var arrow = this.arrow;
+            var signview = this.signview;
             var image = field.value();
             box.empty();
             box.unbind("click");
@@ -1429,7 +1448,16 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
                 }
                 box.append(img);
             }
-            box.click(function() {new SignatureDrawOrTypeModal({field: field, width: width, height: height, branding: branding})});
+            box.click(function() {
+              new SignatureDrawOrTypeModal({
+                field: field, 
+                width: width, 
+                height: height, 
+                branding: branding,
+                arrow: arrow,
+                signview: signview
+              });
+            });
             return this;
     }
 });
@@ -1721,6 +1749,8 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
         this.model.bind('change:withTypeSetter', this.closeTypeSetter);
         this.model.view = this;
         this.signviewbranding = args.signviewbranding;
+        this.signview = args.signview;
+        this.arrow = args.arrow;
         this.render();
     },
     updatePosition: function() {
@@ -1784,7 +1814,9 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
                                                                 model: placement.field(),
                                                                 width : placement.wrel() * place.parent().width(),
                                                                 height : placement.hrel() * place.parent().height(),
-                                                                signviewbranding: this.signviewbranding
+                                                                signviewbranding: this.signviewbranding,
+                                                                signview: this.signview,
+                                                                arrow: this.arrow
                                                               }).el);
         }
         else if (document.preparation()) {

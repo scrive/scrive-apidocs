@@ -6,7 +6,7 @@
 
 **/
 
-define(['Backbone', 'tinyMCE', 'tinyMCE_theme', 'tinyMCE_noneeditable', 'tinyMCE_paste', 'legacy_code'], function(Backbone, tinyMCE) {
+define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_theme', 'tinyMCE_noneeditable', 'tinyMCE_paste', 'legacy_code'], function(Backbone, React, CustomTextEditor, tinyMCE) {
     /**
         model is DocViewModel
     **/
@@ -17,8 +17,6 @@ define(['Backbone', 'tinyMCE', 'tinyMCE_theme', 'tinyMCE_noneeditable', 'tinyMCE
             _.bindAll(view);
             view.render();
             view.model.document().bind('change', view.render);
-	    view.emailDeliveryUsedTogglerWorker();
-        view.model.document().bind('change:signatories', view.emailDeliveryUsedToggler);
         view.model.document().bind('change:daystosign', view.updateDaysToSign);
         view.model.document().bind('change:daystoremind', view.updateDaysToRemind);
         },
@@ -31,7 +29,7 @@ define(['Backbone', 'tinyMCE', 'tinyMCE_theme', 'tinyMCE_noneeditable', 'tinyMCE
             div.append(view.rightColumn());
 
             view.$el.html(div.children());
-            view.setupTinyMCE();
+            //view.setupTinyMCE();
             return view;
         },
         leftColumn: function() {
@@ -53,14 +51,14 @@ define(['Backbone', 'tinyMCE', 'tinyMCE_theme', 'tinyMCE_noneeditable', 'tinyMCE
             var div = $('<div />');
             div.addClass('design-view-action-process-middle-column');
             view.middleColumnDiv = div;
-            div.append(view.invitationBox());
+            div.append(view.invitationAndConfirmationBox());
 
             return div;
         },
 	rerenderMiddleColumn: function() {
 	    var view = this;
-	    view.middleColumnDiv.html('').append(view.invitationBox());
-	    view.setupTinyMCE();
+	    view.middleColumnDiv.html('').append(view.invitationAndConfirmationBox());
+	    //view.setupTinyMCE();
 	},
         rightColumn: function() {
             var view = this;
@@ -322,160 +320,83 @@ define(['Backbone', 'tinyMCE', 'tinyMCE_theme', 'tinyMCE_noneeditable', 'tinyMCE
 
             return div;
         },
-	emailDeliveryUsedToggler: function() {
-	    var view = this;
-	    _.each(this.model.document().signatories(), function(signatory) {
-		signatory.unbind('change:delivery', view.emailDeliveryUsedTogglerWorker);
-		signatory.bind('change:delivery', view.emailDeliveryUsedTogglerWorker);
-            });
-	    view.emailDeliveryUsedTogglerWorker();
-	},
-	emailDeliveryUsedTogglerWorker: function() {
-	    this.emaildeliveryused = _.some(this.model.document().signatories(), function(signatory) {
-		return signatory.delivery() == 'email' || signatory.delivery() == 'email_mobile';
-            });
-	},
-        invitationBox: function() {
+        invitationAndConfirmationBox: function() {
            var view = this;
             var viewmodel = view.model;
             var doc = viewmodel.document();
 
             var div = $('<div />');
 
-            var topLine = $('<div />');
-            topLine.addClass('design-view-action-process-right-column-invitation-topline');
+            if (view.invitationmessagewrapper != undefined) React.unmountComponentAtNode(view.invitationmessagewrapper[0]);
+            view.invitationmessagewrapper = $('<div />');
+
+            var emailInvitationMessageEditable = _.any(doc.signatories(), function(s) { return s.emailDelivery() || s.emailMobileDelivery();});
+
+            React.renderComponent(CustomTextEditor({
+              id : 'design-view-action-process-right-column-invitation-editor',
+              customtext : doc.invitationmessage(),
+              editable : emailInvitationMessageEditable,
+              width: view.middleColumnDiv.width(),
+              label: localization.designview.customMessage.invitation,
+              previewLabel : localization.designview.customMessage.preview,
+              onChange: function(c) {doc.setInvitationMessage(c);},
+              placeholder :  localization.designview.editInvitation,
+              disabledPlaceholder : localization.designview.editMessagePlaceholder,
+              onPreview : function() {
+                mixpanel.track('Open invitation preview');
+                doc.save();
+                doc.afterSave(function() {
+                var popup = ConfirmationWithEmail.popup({
+                              editText: '',
+                              title: localization.designview.customMessage.invitation,
+                              mail: doc.inviteMail(),
+                              onAccept: function() {
+                                popup.close();
+                              }
+                            });
+                });
+              }
+            }), view.invitationmessagewrapper[0]);
 
 
-            var wrapper = $('<div />');
-            wrapper.addClass('design-view-action-process-right-column-invitation-wrapper');
-	    if (!view.emaildeliveryused) {
-	      wrapper.addClass('disabled');
-	    }
 
-            var textarea = $('<textarea id="design-view-action-process-right-column-invitation-editor" placeholder="' + localization.designview.editInvitation + '"></textarea>');
-            textarea.addClass('design-view-action-process-right-column-invitation-editor');
-            textarea.hide();
+            if (view.confirmationmessagewrapper != undefined) React.unmountComponentAtNode(view.confirmationmessagewrapper[0]);
+            view.confirmationmessagewrapper = $("<div style='margin-top:15px'/>");
 
-            wrapper.append(textarea);
+            var emailConfirmationMessageEditable = _.any(doc.signatories(), function(s) { return s.emailConfirmationDelivery() || s.emailMobileConfirmationDelivery();});
 
-            view.invitationEditor = textarea;
+            React.renderComponent(CustomTextEditor({
+              id : 'design-view-action-process-right-column-confirmation-editor',
+              customtext : doc.confirmationmessage(),
+              editable : emailConfirmationMessageEditable,
+              width: view.middleColumnDiv.width(),
+              label: localization.designview.customMessage.confirmation,
+              previewLabel : localization.designview.customMessage.preview,
+              placeholder :  localization.designview.editConfirmation,
+              disabledPlaceholder : localization.designview.editMessagePlaceholder,
+              onChange: function(c) {doc.setConfirmationMessage(c);},
+              onPreview : function() {
+                mixpanel.track('Open confirmation preview');
+                doc.save();
+                doc.afterSave(function() {
+                var popup = ConfirmationWithEmail.popup({
+                              editText: '',
+                              title: localization.designview.customMessage.confirmation,
+                              mail: doc.confirmMail(),
+                              onAccept: function() {
+                                popup.close();
+                              }
+                            });
+                });
+              }
+            }), view.confirmationmessagewrapper[0]);
 
-            var previewLink = new Button({
-                color: 'black',
-                text: localization.designview.previewInvitation,
-                cssClass: 'design-view-action-process-right-column-invitation-link',
-                onClick: function() {
-                    mixpanel.track('Open invitation preview');
-                    doc.save();
-                    doc.afterSave(function() {
-			var popup = ConfirmationWithEmail.popup({
-                            editText: '',
-                            title: localization.editInviteDialogHead,
-                            mail: doc.inviteMail(),
-                            onAccept: function() {
-                            popup.close();
-                            }
-			});
-                    });
-                }
-            });
 
-            div.append(topLine);
-            div.append(wrapper);
 
-	    if (view.emaildeliveryused) {
-		div.append(previewLink.el());
-	    }
-
+            div.append(view.invitationmessagewrapper);
+            div.append(view.confirmationmessagewrapper);
 
             return div.children();
-        },
-        setupTinyMCE: function() {
-            var view = this;
-            var viewmodel = view.model;
-            var doc = viewmodel.document();
-            var cwidth = view.middleColumnDiv.width();
-            if (!doc.ready()) return;
-            view.invitationEditor.val(doc.invitationmessage());
-            view.invitationEditor.show();
-	    if (!view.emaildeliveryused) {
-		view.invitationEditor.attr('disabled', '').val('<i>' + localization.designview.editMessagePlaceholder + '</i>');
-	    }
-
-            tinyMCE.baseURL = '/libs/tiny_mce';
-            tinyMCE.init({
-	        selector: '#design-view-action-process-right-column-invitation-editor',
-                width: 275, // TODO this is overwritten by cwidth (?)
-                height: 138,
-                menubar: false,
-                plugins: "noneditable,paste",
-                readonly: !view.emaildeliveryused,
-                valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul,i[style<_color: #AAAAAA;]",
-                width: cwidth, // automatically adjust for different swed/eng text
-                font_formats : "Verdana=Source Sans Pro, Helvetica Neue;", // fake using source sans pro / helvetica neue
-                setup: function(editor) {
-
-                    editor.on('init', function() {
-			$(editor.getDoc()).blur(function() {
-			    if (view.emaildeliveryused) {
-				doc.setInvitationMessage(editor.getContent());
-			    }
-			});
-			if (!view.emaildeliveryused) {
-         		    editor.getWin().document.body.style.color = '#AAAAAA';
-			}
-                    });
-
-		    editor.on('PreInit', function() {
-		        $(editor.getContainer()).find('div[role=toolbar]').hide();
-		        $(editor.getContainer()).find('.mce-path').parents('.mce-panel').first().hide();
-		    });
-
-                    editor.on('change', function () {
-			doc.setInvitationMessage(editor.getContent());
-                    });
-
-
-		    /* Imitate a HTML5 placeholder on the TinyMCE textarea */
-		    var placeholder = $('#' + editor.id).attr('placeholder');
-		    if (typeof placeholder !== 'undefined' && placeholder !== false) {
-			var is_default = false;
-			editor.on('init', function() {
-			    // get the current content
-			    var cont = editor.getContent();
-
-			    // If its empty and we have a placeholder set the value
-			    if (cont.length === 0) {
-				editor.setContent(placeholder);
-			    }
-
-  			    var $message = $(editor.getWin().document).find("p");
-			    // change placeholder text color, if it's the 'placeholder text'
-			    if($message.text() == localization.designview.editInvitation) {
-				$message.css("color", "#999999");
-			    }
-			}).on('focus', function() {
-			      // replace the default content on focus if the
-			      // same as original placeholder
-			      var $message = $(editor.getWin().document).find("p");
-				if ($message.text() == localization.designview.editInvitation) {
-				    editor.setContent('');
-				}
-			}).on('blur', function(ed, e) {
-			    // if the input field is empty when leaving it, set default
-		  	    // placeholder message
-			    var message = editor.getContent();
-			    if(message == '') {
-			      editor.setContent(placeholder);
-			      var message = $(editor.getWin().document).find("p");
-			      $(message[0]).css("color", "#999999");
-			    }
-			});
-		    }
-		  /* END Imitate placeholder */
-                }
-            });
-            return view;
         }
     });
 

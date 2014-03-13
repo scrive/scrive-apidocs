@@ -110,6 +110,7 @@ selectSignatoryLinksX extension = sqlSelect "signatory_links" $ do
   sqlResult "signatory_links.eleg_data_mismatch_last_name"
   sqlResult "signatory_links.eleg_data_mismatch_personal_number"
   sqlResult "signatory_links.delivery_method"
+  sqlResult "signatory_links.confirmation_delivery_method"
 
   sqlResult (statusClassCaseExpression <> " AS status_class")
   sqlResult "signatory_attachments.file_id AS sigfileid"
@@ -139,6 +140,7 @@ fetchSignatoryLinks = do
      eleg_data_mismatch_last_name,
      eleg_data_mismatch_personal_number,
      delivery_method,
+     confirmation_delivery_method,
      status_class,
      safileid, saname, sadesc)
       | docid == nulldocid                      = return (document_id, [link], linksmap)
@@ -199,6 +201,7 @@ fetchSignatoryLinks = do
           , signatorylinkelegdatamismatchlastname = eleg_data_mismatch_last_name
           , signatorylinkelegdatamismatchpersonalnumber = eleg_data_mismatch_personal_number
           , signatorylinkdeliverymethod = delivery_method
+          , signatorylinkconfirmationdeliverymethod = confirmation_delivery_method
           }
 
 fetchDocumentTags :: MonadDB m => m (M.Map DocumentID (S.Set DocumentTag))

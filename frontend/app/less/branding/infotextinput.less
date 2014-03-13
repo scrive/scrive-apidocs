@@ -2,11 +2,17 @@
   &:not(transparent) {
     background: none repeat scroll 0 0 @white;
   }
-  border: 1px solid #dddddd;
+  border: 1px solid @gray-border;
   display : inline-block;
   font-size: 16px;
   line-height: 21px;
   padding: 5px;
+
+  .small-screen & {
+    line-height: 25px;
+    font-size: 22px;
+    padding: 10px;
+  }
 
   &.readonly {
     color: @disabled-grey-background;

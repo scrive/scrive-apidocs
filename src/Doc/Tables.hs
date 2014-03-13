@@ -5,7 +5,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = tblTable {
     tblName = "documents"
-  , tblVersion = 32
+  , tblVersion = 33
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "title", colType = TextT, colNullable = False }
@@ -31,6 +31,7 @@ tableDocuments = tblTable {
     , tblColumn { colName = "show_reject_option", colType = BoolT, colNullable = False, colDefault = Just "true" }
     , tblColumn { colName = "show_footer", colType = BoolT, colNullable = False, colDefault = Just "true" }
     , tblColumn { colName = "token", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "confirm_text", colType = TextT, colNullable = False, colDefault = Just "''::text" }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   }
@@ -100,7 +101,7 @@ tableSignatoryAttachments = tblTable {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = tblTable {
     tblName = "signatory_links"
-  , tblVersion = 24
+  , tblVersion = 25
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
@@ -146,7 +147,7 @@ tableSignatoryLinks = tblTable {
     , tblColumn { colName = "mail_invitation_delivery_status", colType = SmallIntT, colNullable = False, colDefault = Just "3" }
     , tblColumn { colName = "sms_invitation_delivery_status", colType = SmallIntT, colNullable = False, colDefault = Just "3" }
     , tblColumn { colName = "reject_redirect_url", colType = TextT }
-
+    , tblColumn { colName = "confirmation_delivery_method", colType = SmallIntT, colNullable = False, colDefault = Just "1" }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
@@ -177,7 +178,7 @@ tableDocumentTags = tblTable {
 tableSignatoryLinkFields :: Table
 tableSignatoryLinkFields = tblTable {
     tblName = "signatory_link_fields"
-  , tblVersion = 5
+  , tblVersion = 6
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }

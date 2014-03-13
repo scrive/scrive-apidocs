@@ -253,6 +253,20 @@ window.Document = Backbone.Model.extend({
                                                 editWidth: 300
                         });
     },
+    setConfirmationMessage: function(customtext)
+    {
+        this.set({confirmationmessage: $(customtext).text() != "" ? customtext : ""},{silent: true});
+    },
+    confirmationmessage : function() {
+        return this.get("confirmationmessage");
+    },
+    confirmMail: function() {
+                return new Mail({
+                                                document: this,
+                                                type: "confirm",
+                                                editWidth: 300
+                        });
+    },
     takeFirstScreenshot: function() {
         var document = this;
         if (document.file() && document.file().view.readyFirstPage())
@@ -385,6 +399,7 @@ window.Document = Backbone.Model.extend({
       return {
           title: this.title(),
           invitationmessage: this.get("invitationmessage"),
+          confirmationmessage: this.get("confirmationmessage"),
           daystosign: this.get("daystosign"),
           daystoremind: this.get("daystoremind") != undefined ? this.get("daystoremind") : null,
           apicallbackurl : this.get("apicallbackurl"),
@@ -665,6 +680,7 @@ window.Document = Backbone.Model.extend({
        showrejectoption: args.showrejectoption,
        showfooter: args.showfooter,
        invitationmessage: args.invitationmessage,
+       confirmationmessage: args.confirmationmessage,
        ready: true
      };
     },

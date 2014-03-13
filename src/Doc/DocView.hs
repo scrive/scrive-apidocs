@@ -93,6 +93,7 @@ documentJSON muser includeEvidenceAttachments forapi forauthor pq msl doc = do
       J.value "showrejectoption" $ documentshowrejectoption doc
       J.value "showfooter" $ documentshowfooter doc
       J.value "invitationmessage" $ documentinvitetext doc
+      J.value "confirmationmessage" $ documentconfirmtext doc
       J.value "lang" $  case (getLang doc) of
                              LANG_EN -> "gb"
                              LANG_SV -> "sv"
@@ -128,6 +129,7 @@ signatoryJSON forapi forauthor pq doc viewer siglink = do
     J.value "undeliveredSMSInvitation" $  Undelivered == smsinvitationdeliverystatus siglink
     J.value "deliveredInvitation" $ Delivered == mailinvitationdeliverystatus siglink || Delivered == smsinvitationdeliverystatus siglink
     J.value "delivery" $ signatorylinkdeliverymethod siglink
+    J.value "confirmationdelivery" $ signatorylinkconfirmationdeliverymethod siglink
     J.value "signs" $ isSignatory siglink
     J.value "author" $ isAuthor siglink
     J.value "saved" $ isJust . maybesignatory $ siglink

@@ -914,7 +914,7 @@ define(['Backbone', 'legacy_code'], function() {
           var div = $('<div class="col subscription-plan" />');
             var header = $('<div class="account-header" />')
                 .append($('<h4></h4>').text(localization.payments.table.currentplan));
-          var table = $('<div class="account-body" />');
+          var table = $('<div class="account-body standard-input-table" />');
 
 	  var planInformation = $('<div class="plan-information" />');
           var planName = $('<p class="plan-name"></p>').text(localization.payments.plans[model.paidPlan()].name);
@@ -946,7 +946,7 @@ define(['Backbone', 'legacy_code'], function() {
             var paymentsheader = $('<div class="account-header" />').append($('<h4 />')
 									    .text(localization.payments.table.payments));
 
-            var paymentstable = $('<div class="account-body" />')
+            var paymentstable = $('<div class="account-body standard-input-table" />')
                 .append(view.nextPayment())
                 .append(view.previousPayments());
 
@@ -1039,7 +1039,7 @@ define(['Backbone', 'legacy_code'], function() {
             var billingheader = $('<div class="account-header" />')
                 .append($('<h4 />')
                         .text(localization.payments.table.changebilling));
-            var billingform = $('<div class="account-body changebilling-form" />');
+            var billingform = $('<div class="account-body standard-input-table changebilling-form" />');
             Recurly.config({
                 subdomain: model.subdomain()
                 , currency: 'SEK'
@@ -1108,7 +1108,7 @@ define(['Backbone', 'legacy_code'], function() {
             var cancelheader = $('<div class="account-header" />')
                 .append($('<h4 />')
                         .text(localization.payments.cancelsubscription));
-            var cancelbody = $('<div class="account-body" />');
+            var cancelbody = $('<div class="account-body standard-input-table" />');
 	    cancelbody.append(view.cancelButton());
 	    cancel.append(cancelheader);
 	    cancel.append(cancelbody);
@@ -1175,7 +1175,7 @@ define(['Backbone', 'legacy_code'], function() {
             var billingheader = $('<div class="account-header" />')
                 .append($('<h4 />')
                         .text(localization.payments.renewSubscription));
-            var billingform = $('<div class="account-body renew-form" />');
+            var billingform = $('<div class="account-body standard-input-table renew-form" />');
 
             var canceledDate = model.subscription() && model.subscription().cancelled() && new Date(model.subscription().cancelled());
 

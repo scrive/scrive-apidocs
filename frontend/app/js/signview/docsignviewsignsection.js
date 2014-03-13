@@ -9,6 +9,10 @@ define(['Backbone', 'legacy_code'], function() {
 window.DocumentSignConfirmation = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'popup', 'onSignedDocument', 'createContentElems');
+    this.signaturesPlaced = args.signaturesPlaced;
+    this.signview = args.signview;
+    this.fast = args.fast;
+    this.margin = args.margin;
   },
 
   document : function() {
@@ -99,6 +103,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
             self.confirmation.clear();
             self.signinprogressmodal = new SigningInProgressModal({
                                             document : document,
+                                            margin: self.confirmation.margin(),
                                             textcolor : self.model.usebranding() ? self.model.signviewbranding().signviewtextcolour() : undefined,
                                             textfont : self.model.usebranding() ? self.model.signviewbranding().signviewtextfont() : undefined
                                        });
@@ -184,11 +189,10 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     return new Button({
       size: BrowserInfo.isSmallScreen() ? "big" : "small",
       color: "green",
-      shape: BrowserInfo.isSmallScreen() ? "" : "rounded",
       customcolor: this.model.usebranding() ? signviewbranding.signviewprimarycolour() : undefined,
       textcolor: this.model.usebranding() ? signviewbranding.signviewprimarytextcolour() : undefined,
       cssClass: 'greybg signbutton',
-      text: localization.process.signbuttontext,
+      text: this.signaturesPlaced ? localization.process.signbuttontextfromsignaturedrawing : localization.process.signbuttontext,
       oneClick : true,
       onClick: function() {
         self.startBlockingReload();
@@ -206,9 +210,11 @@ window.DocumentSignConfirmation = Backbone.View.extend({
 
 
         document.checksign(function() {
+          var modalTop = self.confirmation.absoluteTop();
           self.confirmation.clear();
           self.signinprogressmodal = new SigningInProgressModal({
                                           document : document,
+                                          margin: modalTop + "px auto 0",
                                           textcolor : self.model.usebranding() ? self.model.signviewbranding().signviewtextcolour() : undefined,
                                           textfont : self.model.usebranding() ? self.model.signviewbranding().signviewtextfont() : undefined
                                      });
@@ -257,8 +263,9 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       var content = $("<div />");
       if (signatory.elegAuthentication())
           content.append(localization.process.signatorysignmodalcontentsignvieweleg);
-      else
-          content.append(localization.process.signatorysignmodalcontent);
+      else {
+        content.append(this.signaturesPlaced ? localization.process.signatorysignmodalcontentfromsignaturedrawing : localization.process.signatorysignmodalcontent);
+      }
 
       if (signatory.elegAuthentication()) {
         var subhead = $("<h3/>").text(localization.sign.eleg.subhead);
@@ -284,39 +291,56 @@ window.DocumentSignConfirmation = Backbone.View.extend({
   popup: function() {
     var document = this.document();
     var signviewbranding = this.model.signviewbranding();
+    var arrow = this.model.arrow();
     var signatory = document.currentSignatory();
     var self = this;
     var title;
-    self.screenshotDone = false;
+    self.signview = this.signview;
 
     if (signatory.elegAuthentication()) {
       title = localization.process.signatorysignmodaltitleeleg;
     } else {
       title = localization.signByAuthor.modalTitle;
+      if (this.signaturesPlaced)
+        title = localization.process.signatorysignmodaltitlefromsignatorydrawing;
     }
 
+    if (arrow) {
+      arrow.disable();
+    }
+
+    var isSmallScreen = BrowserInfo.isSmallScreen();
+
     self.confirmation = new Confirmation({
-      cssClass: 'grey sign-confirmation-modal',
+      cssClass: 'grey sign-confirmation-modal' + (isSmallScreen ? ' small-device' : ''),
       title: title,
+      signview: this.margin ? false : self.signview, // margin overrides signview
       acceptButton: signatory.elegAuthentication() ? this.createElegButtonElems() : this.createSignButtonElems(),
       rejectText: localization.cancel,
       // use default width for eleg, as there is less text
-      width: signatory.elegAuthentication() ? undefined : (BrowserInfo.isSmallScreen() ? 825 : 520),
-      margin : BrowserInfo.isSmallScreen() ? '150px auto 0px' : undefined,
+      width: signatory.elegAuthentication() ? undefined : (isSmallScreen ? 825 : 520),
+      margin : this.margin || (isSmallScreen ? '150px auto 0px' : undefined),
       textcolor : this.model.usebranding() ? signviewbranding.signviewtextcolour() : undefined,
       textfont : this.model.usebranding() ? signviewbranding.signviewtextfont() : undefined,
+      onReject: function() {
+        if (arrow) {
+          arrow.enable();
+        }
+      },
+      fast: this.fast,
       content: this.createContentElems
     });
 
     // TODO rewrite me, but not on staging
     // Re-adjust the signing modal for small screen devices.
-    if (BrowserInfo.isSmallScreen()) {
+    if (isSmallScreen) {
       var signModal = $('.sign-confirmation-modal .modal-container');
       var modalHeader = signModal.find('.modal-header');
       var modalBody = signModal.find('.modal-body');
       var modalFooter = signModal.find('.modal-footer');
-      // Remove the modal header but keep the close button
       modalHeader.remove();
+
+      // Add a custom close button
       var close = $('<a class="small-device-go-back-button">' + localization.process.cancel + '</a>');
       close.click(function() { self.confirmation.close(); });
 
@@ -324,39 +348,22 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       var signButton = modalFooter.find('.button.signbutton').detach();
       if (signatory.elegAuthentication()) {
         signButton = modalFooter.find('.mbi').detach();
-        signButton.addClass("button-green");
+        signButton.addClass("button-green signbutton");
       }
       modalFooter.remove();
 
-
       // Styling
-      signModal.addClass('small-device');
-
-      signModal.find('.modal-content').css('border-bottom', '0px');
-
-      signButton.css({
-        'font-size': '80px',
-        'height': '100px',
-        'width': '80%',
-        'max-height': '120px',
-        'margin-right': '48px',
-        'margin-bottom': '65px',
-        'margin-top': '40px',
-        'line-height': '105px',
-        'padding-bottom': '55px',
-        'padding-top': '50px',
-        'float': 'none',
-        'display': 'block',
-        'margin': '0px auto',
-        'margin-bottom': '20px',
-        'margin-top': '10px'
-      });
-
-      modalBody.css({'padding-bottom': '50px'});
-      signModal.css({'border-bottom': '0px'});
-
       modalBody.append(signButton);
       modalBody.append(close);
+
+      // Check so we didn't put the modal outside of the window, if we can help it.
+      // This is a special case that will go away when we refactor the modals / small screen modals.
+      if (window.innerHeight > signModal.height()) {
+        var modalBottom = signModal.height() + parseInt(signModal.css("margin-top"));
+        if (modalBottom > window.innerHeight) {
+          signModal.css("margin-top", window.innerHeight - signModal.height() - 100);
+        }
+      }
     }
   }
 });
@@ -372,6 +379,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
        var box = $(this.el).addClass('section').addClass('spacing').addClass('signbuttons');
 
        var signatory = document.currentSignatory();
+       var signatoryHasPlacedSignatures = signatory.hasPlacedSignatures() || DocumentExtraDetails.askForSignature(signatory);
        var sps = {};
        sps['Has user?'] = signatory.hasUser();
        sps['First visit'] = !signatory.seendate();
@@ -409,10 +417,13 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                         text: localization.process.rejectbuttontext,
                                         onClick: function() {
                                             mixpanel.track('Click Reject');
+                                            var arrow = model.arrow();
+                                            if (arrow) { arrow.disable(); }
                                             ConfirmationWithEmail.popup({
                                             title: localization.process.signatorycancelmodaltitle,
                                             mail: document.currentSignatory().rejectMail(),
                                             icon: null,
+                                            signview: true,
                                             cssClass: "grey",
                                             acceptText: localization.reject.send,
                                             editText: localization.reject.editMessage,
@@ -437,12 +448,25 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                                                    rejectErrorCallback
                                                                 );
                                                              });
+                                              },
+                                              onReject: function() {
+                                                var arrow = model.arrow();
+                                                if (arrow) { arrow.enable(); }
                                               }
                                             });
                                         }
                                 });
 
 
+       var icon = $("<span class='icon cross' style='position: absolute; top: auto;margin-top: -1px;'></span>");
+       if (BrowserInfo.isSmallScreen() || signatoryHasPlacedSignatures) {
+         icon = undefined
+       };
+
+       var signButtonText = localization.process.signbuttontext;
+       if (signatoryHasPlacedSignatures) {
+         signButtonText = localization.next;
+       }
 
        this.signButton = new Button({
                             size: "big",
@@ -451,19 +475,21 @@ window.DocumentSignSignSection = Backbone.View.extend({
                             customcolor: model.usebranding() ? signviewbranding.signviewprimarycolour() : undefined,
                             textcolor: model.usebranding() ? signviewbranding.signviewprimarytextcolour() : undefined,
                             width: BrowserInfo.isSmallScreen() ?  504 : 206,
-                            text: localization.process.signbuttontext,
-                            icon: BrowserInfo.isSmallScreen() ? undefined : $("<span class='icon cross' style='position: absolute; top: auto;margin-top: -1px;'></span>"),
+                            text: signButtonText,
+                            icon: icon,
                             onClick: function() {
 
-                                var valid =  model.tasks().notCompleatedTasks().length == 1 && model.tasks().notCompleatedTasks()[0] == model.signtask();
+                                var valid =  model.tasks().notCompletedTasks().length == 1 && model.tasks().notCompletedTasks()[0] == model.signtask();
                                 if (!valid) {
                                         model.arrow().blink();
                                         return false;
                                     }
                                 mixpanel.track('Click sign');
                                 new DocumentSignConfirmation({
-                                    model: model
-                                    }).popup();
+                                    model: model,
+                                    signview: true,
+                                    signaturesPlaced: signatoryHasPlacedSignatures
+                                }).popup();
                                 }
                             });
 

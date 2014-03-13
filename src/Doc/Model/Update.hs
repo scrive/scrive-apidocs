@@ -38,6 +38,7 @@ module Doc.Model.Update
   , SetEmailInvitationDeliveryStatus(..)
   , SetSMSInvitationDeliveryStatus(..)
   , SetInviteText(..)
+  , SetConfirmText(..)
   , SetShowHeader(..)
   , SetShowPDFDownload(..)
   , SetShowRejectOption(..)
@@ -157,6 +158,8 @@ insertSignatoryLinksAsAre documentid links = do
            sqlSetList "eleg_data_mismatch_last_name" $ signatorylinkelegdatamismatchlastname <$> links
            sqlSetList "eleg_data_mismatch_personal_number" $ signatorylinkelegdatamismatchpersonalnumber <$> links
            sqlSetList "delivery_method" $ signatorylinkdeliverymethod <$> links
+           sqlSetList "confirmation_delivery_method" $ signatorylinkconfirmationdeliverymethod <$> links
+
            sqlResult "id"
 
   slids :: [SignatoryLinkID] <- fetchMany unSingle
@@ -300,6 +303,7 @@ insertDocumentAsIs document@(Document
                    _documentautoremindtime
                    documentinvitetime
                    documentinvitetext
+                   documentconfirmtext
                    documentshowheader
                    documentshowpdfdownload
                    documentshowrejectoption
@@ -328,6 +332,7 @@ insertDocumentAsIs document@(Document
         sqlSet "invite_time" $ signtime `fmap` documentinvitetime
         sqlSet "invite_ip" (fmap signipnumber documentinvitetime)
         sqlSet "invite_text" documentinvitetext
+        sqlSet "confirm_text" documentconfirmtext
         sqlSet "show_header" documentshowheader
         sqlSet "show_pdf_download" documentshowpdfdownload
         sqlSet "show_reject_option" documentshowrejectoption
@@ -908,6 +913,12 @@ data SetInviteText = SetInviteText String Actor
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetInviteText Bool where
   update (SetInviteText text _actor) = updateWithoutEvidence "invite_text" text
 
+data SetConfirmText = SetConfirmText String Actor
+instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetConfirmText Bool where
+  update (SetConfirmText text _actor) = updateWithoutEvidence "confirm_text" text
+
+
+
 data SetShowHeader = SetShowHeader Bool Actor
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetShowHeader Bool where
   update (SetShowHeader bool _actor) = updateWithoutEvidence "show_header" bool
@@ -1334,6 +1345,7 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m UpdateDraft Bool wher
     , update $ SetDaysToRemind (documentdaystoremind document) actor
     , update $ SetDocumentLang (getLang document) actor
     , update $ SetInviteText (documentinvitetext document) actor
+    , update $ SetConfirmText (documentconfirmtext document) actor
     , update $ SetShowHeader (documentshowheader document) actor
     , update $ SetShowPDFDownload (documentshowpdfdownload document) actor
     , update $ SetShowRejectOption (documentshowrejectoption document) actor
@@ -1475,6 +1487,7 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documenttimeouttime" documenttimeouttime
                    , checkEqualBy "documentinvitetime" documentinvitetime
                    , checkEqualBy "documentinvitetext" documentinvitetext
+                   , checkEqualBy "documentconfirmtext" documentconfirmtext
                    , checkEqualBy "documentsharing" documentsharing
                    , checkEqualBy "documenttags" documenttags
                    , checkEqualBy "documentauthorattachments" (sort . documentauthorattachments)

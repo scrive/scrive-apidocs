@@ -39,8 +39,9 @@ javascriptLocalisation =
              , email : "$_email()$"
              , phone : "$_phone()$"
              , company : "$_company()$"
-             , personamNumber : "$_personnumber()$"
+             , personalNumber : "$_personnumber()$"
              , companyNumber : "$_orgnumber()$"
+             , next : "$_next()$"
              , statusToolTip: {
                    draft: "$_tooltipdraft()$"
                  , cancelled : "$_tooltipcancelled()$"
@@ -196,12 +197,15 @@ javascriptLocalisation =
                cancelmodaltextwithsignatures: "$_contractcancelmodaltextwithsignatures()$",
                rejectbuttontext: "$_contractrejectbuttontext()$",
                signatorysignmodaltitle: "$_contractsignatorysignmodaltitle()$",
+               signatorysignmodaltitlefromsignatorydrawing: "$_contractsignatorysignmodaltitlefromsignaturedrawing()$",
                signatorysignmodaltitleeleg: "$_contractsignatorysignmodaltitleeleg()$",
                signatorysignmodalcontent: "<p>$_contractsignatorysignmodalcontent()$ </p>",
+               signatorysignmodalcontentfromsignaturedrawing: "<p>$_contractsignatorysignmodalcontentfromsignaturedrawing()$ </p>",
                signatorysignmodalcontentdesignvieweleg: "<p>$_contractsignatorysignmodalcontentdesignvieweleg()$ </p>",
                signatorysignmodalcontentsignvieweleg: "<p>$_contractsignatorysignmodalcontentdesignvieweleg()$ </p>",
                signatorysignmodalcontentauthoronly: "<p>$_contractsignatorysignmodalcontentauthoronly()$ </p>",
                signbuttontext: "$_contractsignbuttontext()$",
+               signbuttontextfromsignaturedrawing: "$_contractsignbuttontextfromsignaturedrawing()$",
                signatorycancelmodaltitle: "$_contractsignatorycancelmodaltitle()$",
                mobileBankID: "$_mobileBankID()$",
                remindagainbuttontext: "$_contractremindagainbuttontext()$",
@@ -356,7 +360,7 @@ javascriptLocalisation =
                 , title: "$_signviewSettingsTitle()$"
                 , button: "$_signviewSettingsButton()$"
                }
-                 , sign : "$_sign()$"
+             , sign : "$_sign()$"
              , textFields : {
                       textField: "$_textField()$"
                     , obligatory: "$_textFieldObligatory()$"
@@ -399,6 +403,10 @@ javascriptLocalisation =
              , forViewing: "$_designViewForViewing()$"
              , noIDControl: "$_designViewNoIDControl()$"
              , withEleg: "$_designViewWithEleg()$"
+             , withEmailConfirmation: "$_withEmailConfirmationg()$"
+             , withMobileConfirmation: "$_withMobileConfirmation()$"
+             , withEmailMobileConfirmation: "$_withEmailMobileConfirmation()$"
+             , withoutConfirmation: "$_withoutConfirmation()$"
              , addParty: "$_designViewAddParty()$"
              , addMultisend: "$_designViewAddMultisend()$"
              , viewCSV: "$_designViewViewCSV()$"
@@ -412,6 +420,7 @@ javascriptLocalisation =
              , addRemove: "$_designViewAddRemove()$"
              , request: "$_designViewRequest()$"
              , editInvitation: "$_designViewEditInvitation()$"
+             , editConfirmation: "$_designViewEditConfirmation()$"
              , previewInvitation: "$_designViewPreviewInvitation()$"
              , signatureBox: "$_designViewSignatureBox()$"
              , signatureBoxSettings: "$_designViewSignatureBoxSettings()$"
@@ -432,6 +441,13 @@ javascriptLocalisation =
              , fieldWithSameNameExists : "$_fieldWithSameNameExists()$"
              , emailCanBeChangedInAccountSection : "$_emailCanBeChangedInAccountSection()$"
              , nameCanBeChangedInAccountSection : "$_nameCanBeChangedInAccountSection()$"
+             , customMessage : {
+                 invitation   : "$_designViewCustomMessageInvitation()$"
+               , confirmation : "$_designViewCustomMessageConfirmation()$"
+               , preview      : "$_designViewCustomMessagePreview()$"
+             }
+             , cantRemoveAllIdentificationFieldsText : "$_cantRemoveAllIdentificationFieldsText()$"
+             , cantMakeAllIdentificationFieldsOptionalText : "$_cantMakeAllIdentificationFieldsOptionalText()$"
 
            }
 
@@ -466,6 +482,7 @@ javascriptLocalisation =
              ,  or            : "$_padOR()$"
              ,  drawSignature : "$_padDrawSignature()$"
              ,  typeSignature : "$_padTypeSignature()$"
+             ,  fillInExtraDetails : "$_padFillInExtraDetails()$"
              ,  cleanImage : "$_padCleanImage()$"
              ,  notNamedParty : "$_notNamedParty()$"
              ,  changePartyTo : "$_changePartyTo()$"
@@ -592,6 +609,7 @@ javascriptLocalisation =
              , textfield: "$_signViewTextField()$"
              , filladitionfields : "$_filladitionfields()$"
              , filladitionfieldsdescription : "$_filladitionfieldsdescription()$"
+             , additionalFieldsMissingInModal : "$_filladitionfieldsdescription()$"
              , mandatoryAction: "$_mandatoryAction()$"
              , optionalAction: "$_optionalAction()$"
              , promoBannerButton: "$_promoBannerButton()$"
@@ -1112,5 +1130,6 @@ javascriptLocalisation =
       , signingErrorMessage1 : "$_signingErrorMessage1()$"
       , signingErrorMessage2 : "$_signingErrorMessage2()$"
       , signingErrorReload   : "$_signingErrorReload()$"
+      , signNowFromSignatureModal : "$_signNowFromSignatureModal()$"
     };
 ###

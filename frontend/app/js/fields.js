@@ -147,7 +147,7 @@ window.Field = Backbone.Model.extend({
             if (name == "sigco")
                 return localization.company;
             if (name == "sigpersnr" )
-                return localization.personamNumber;
+                return localization.personalNumber;
             if (name == "sigcompnr")
                 return localization.companyNumber;
             if (name == "mobile")
@@ -200,7 +200,7 @@ window.Field = Backbone.Model.extend({
         }
 
         if (   this.isMobile()
-            && this.signatory().needsMobile()
+            && (this.signatory().mobileDelivery() || this.signatory().emailMobileDelivery())
            ){
             var msg = localization.designview.validation.missingOrWrongMobile;
             return new PhoneValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
@@ -294,6 +294,27 @@ window.Field = Backbone.Model.extend({
     makeObligatory : function() {
         this.set({"obligatory":true});
     },
+    canBeOptional : function() {
+      if (this.signatory().author() && (this.isEmail() ||this.isFstName() || this.isSndName()))
+        return false;
+      if (this.isFstName() || this.isSndName())
+        return false;
+      if (this.isEmail())
+        return !this.signatory().needsEmail();
+      if (this.isMobile())
+        return !this.signatory().needsMobile();
+      if (this.isSSN())
+        return !this.signatory().needsPersonalNumber();
+
+      return true;
+    },
+    canBeSetByRecipent : function() {
+      if (this.isEmail())
+        return !(this.signatory().emailDelivery() || this.signatory().emailMobileDelivery());
+      if (this.isMobile())
+        return !(this.signatory().mobileDelivery() || this.signatory().emailMobileDelivery());
+      return true;
+    },
     isReady: function(){
       return this.get("fresh") == false && this.name() !== '' && this.type() !== '';
     },
@@ -353,15 +374,11 @@ window.Field = Backbone.Model.extend({
             .setCallback(callback)
             .validateData(this.value());
     },
-    basicFields: ['fstname', 'sndname', 'email'],
-    isBasic: function() {
-        var field = this;
-        return field.isStandard() && _.contains(field.basicFields, field.name());
-    },
     requiredForParticipation: function() {
         var field = this;
         var sig = field.signatory();
-
+        if(field.isEmail() && (sig.needsEmail() || sig.author()))
+            return true;
         if(field.isSSN() && sig.needsPersonalNumber())
             return true;
         if(field.isMobile() && sig.needsMobile())
@@ -369,13 +386,23 @@ window.Field = Backbone.Model.extend({
         return false;
     },
     canBeRemoved: function() {
-        if(this.isBasic())
+        if(this.isFstName() || this.isSndName())
             return false;
         else if(this.requiredForParticipation())
             return false;
         else if (this.isCsvField())
             return false;
         return true;
+    },
+    isIdentificationField : function() {
+      return this.isEmail() || this.isMobile() || this.isSSN();
+    },
+    isLastIdentificationField : function() {
+       return this.isIdentificationField() && (this.signatory().identificationFields().length == 1);
+    },
+    isLastNonOptionalIdentificationField : function() {
+       var nonOptionalIdentificationFieldCount = _.filter(this.signatory().identificationFields(),function(f) {return !f.isOptional()}).length;
+       return this.isIdentificationField() && !this.isOptional() && (nonOptionalIdentificationFieldCount == 1);
     },
     bindBubble: function() {
         var field = this;

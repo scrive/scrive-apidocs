@@ -83,6 +83,7 @@ documentsSelectors =
   , "documents.invite_time"
   , "documents.invite_ip"
   , "documents.invite_text"
+  , "documents.confirm_text"
   , "documents.show_header"
   , "documents.show_pdf_download"
   , "documents.show_reject_option"
@@ -95,8 +96,8 @@ documentsSelectors =
   , documentStatusClassExpression
   ]
 
-fetchDocument :: (DocumentID, String, DocumentStatus, Maybe String, DocumentType, MinutesTime, MinutesTime, Int32, Maybe Int32, Maybe MinutesTime, Maybe MinutesTime, Maybe MinutesTime, Maybe IPAddress, String, Bool, Bool, Bool, Bool, Lang, DocumentSharing, Maybe String, Int64, MagicHash, StatusClass) -> Document
-fetchDocument (did, title, status, error_text, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, show_header, show_pdf_download, show_reject_option, show_footer, lang, sharing, apicallback, objectversion, token, status_class)
+fetchDocument :: (DocumentID, String, DocumentStatus, Maybe String, DocumentType, MinutesTime, MinutesTime, Int32, Maybe Int32, Maybe MinutesTime, Maybe MinutesTime, Maybe MinutesTime, Maybe IPAddress, String, String, Bool, Bool, Bool, Bool, Lang, DocumentSharing, Maybe String, Int64, MagicHash, StatusClass) -> Document
+fetchDocument (did, title, status, error_text, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text,  show_header, show_pdf_download, show_reject_option, show_footer, lang, sharing, apicallback, objectversion, token, status_class)
        = Document {
          documentid = did
        , documenttitle = title
@@ -119,6 +120,7 @@ fetchDocument (did, title, status, error_text, doc_type, ctime, mtime, days_to_s
            Nothing -> Nothing
            Just t -> Just (SignInfo t $ fromMaybe noIP invite_ip)
        , documentinvitetext = invite_text
+       , documentconfirmtext = confirm_text
        , documentshowheader = show_header
        , documentshowpdfdownload = show_pdf_download
        , documentshowrejectoption = show_reject_option

@@ -126,7 +126,7 @@ sendDocumentMails author = do
                                    =<< signatoryActor ctx{ ctxtime = 10 `minutesAfter` now } sl
 
         -- Sending closed email
-        checkMail "Closed" $ mailDocumentClosed Nothing sl False False =<< theDocument
+        checkMail "Closed" $ mailDocumentClosed False Nothing sl False False =<< theDocument
         -- Reminder after send
         checkMail "Reminder signed" $ theDocument >>= \d -> mailDocumentRemind Nothing (head $ documentsignatorylinks d) False True d
   commit

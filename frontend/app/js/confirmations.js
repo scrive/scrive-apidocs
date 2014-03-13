@@ -17,7 +17,8 @@ var ConfirmationModel = Backbone.Model.extend({
       extraOption : undefined,
       textfont : undefined,
       textcolor : undefined,
-      margin: undefined
+      margin: undefined,
+      signview: false
   },
   initialize : function(args) {
     var width = args.width;
@@ -37,6 +38,9 @@ var ConfirmationModel = Backbone.Model.extend({
   },
   content : function(){
        return this.get("content");
+  },
+  signview: function() {
+       return this.get("signview");
   },
   onAccept : function() {
       if (this.get("onAccept") != undefined )
@@ -169,8 +173,6 @@ var ConfirmationView = Backbone.View.extend({
        var model = this.model;
        this.container = $("<div class='modal-container'/>");
 
-
-
        if(BrowserInfo.isSmallScreen()) this.container.addClass("small-screen");
        this.container.css("top",$(window).scrollTop());
        this.container.css("left","0px");
@@ -178,8 +180,7 @@ var ConfirmationView = Backbone.View.extend({
        if (model.margin() != undefined) {
          this.container.css("margin", model.margin());
          this.container.css('position','relative');
-       }
-       else {
+       } else {
         this.container.css("margin-top","50px");
         var left = Math.floor(($(window).width() - model.width()) / 2);
         this.container.css("margin-left",left > 20 ? left : 20);
@@ -297,6 +298,8 @@ var ConfirmationView = Backbone.View.extend({
 window.Confirmation = function (args) {
           var model = new ConfirmationModel(args);
           var overlay = $("<div class='modal'/>");
+          var bottomMargin = 100;
+          var topMargin = 100;
           if (args.cssClass != undefined)
             overlay.addClass(args.cssClass);
           overlay.height($(document).height());
@@ -309,15 +312,37 @@ window.Confirmation = function (args) {
           }
 
           var view = new ConfirmationView({model : model, el : overlay});
+
+          // Hide the modal so that we can get its size and move it without any flickering.
+          if (model.signview()) {
+            view.container.css("opacity", 0);
+            view.container.addClass("no-transition");
+          }
+
           // Initiate the view
           if (args.fast != undefined && args.fast == true) {
-            $("body").append(overlay.addClass('active'));
+            overlay.addClass("no-transition");
+            $("body").append(overlay.addClass('active')).each(function() { 
+              if (model.signview() && (window.innerHeight - bottomMargin) > view.container.height()) {
+                // We have to do this here as I'm not able to get the height() of the container until we've appended it.
+                view.container.css("margin-top", window.innerHeight - view.container.height() - bottomMargin);
+              }
+            });
+            overlay.removeClass("no-transition");
+            view.container.css("opacity", 1);
             overlay.height($(document).height());
             view.onRender();
           } else {
-            $("body").append(overlay);
+            $("body").append(overlay).each(function() { 
+              if (model.signview() && (window.innerHeight - bottomMargin) > view.container.height()) {
+                overlay.addClass("no-transition");
+                view.container.css("margin-top", window.innerHeight - view.container.height() - bottomMargin);
+                overlay.removeClass("no-transition");
+              }
+            });
             setTimeout(function() {
               overlay.addClass("active");
+              view.container.css("opacity", 1);
               // wait for a second so the browser has the time to
               // render everything and display the animation
               // animation takes 600ms, but waiting for a shorter period
@@ -330,11 +355,37 @@ window.Confirmation = function (args) {
               }, 1000);
             }, 100);
           }
+
+          // Make sure the modal is not placed in a dumb way.
+          overlay.addClass("no-transition");
+          if (window.innerHeight < view.container.height()) {
+            // If we can't fit the whole modal on the screen, make sure the top is visible.
+            view.container.css("margin-top", topMargin);
+          } else {
+            // Is the top of the modal not visible? Then move the modal up or down until the whole modal fits.
+            var modalTop = view.container.offset().top;
+            var modalBottom = modalTop + view.container.height();
+            var scrollTop = $(window).scrollTop();
+            var scrollBottom = scrollTop + window.innerHeight;
+
+            if (modalTop < scrollTop) {
+              view.container.css("margin-top", topMargin);
+            } 
+
+            if (modalBottom > scrollBottom) {
+              view.container.css("margin-top", window.innerHeight - view.container.height() - bottomMargin);
+            }
+          }
+          overlay.removeClass("no-transition");
+
          // Export the interface
          return {
            fixOverlay : function() { overlay.height($(document).height()); },
            clear      : function() { view.clear();},
            close      : function(fast) { model.close();},
+           margin     : function() { return model.margin(); },
+           absoluteTop: function() { console.log(view.container.offset()); debugger; return view.container.offset().top - $(window).scrollTop(); },
+           signview     : function() { return model.signview(); },
            showAccept : function() { model.setAcceptVisible(true);},
            hideAccept : function() { model.setAcceptVisible(false);},
            showClose  : function() { model.setCloseVisible(true);},

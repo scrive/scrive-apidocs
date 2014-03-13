@@ -513,6 +513,9 @@ prepareEmailPreview docid slid = do
          "invite" -> do
              doc <- getDocByDocID docid
              mailInvitationContent False Sign Nothing True doc
+         "confirm" -> do
+             doc <- getDocByDocID docid
+             mailClosedContent True doc
          _ -> fail "prepareEmailPreview"
     runJSONGenT $ J.value "content" content
 

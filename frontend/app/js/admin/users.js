@@ -16,7 +16,7 @@ define(['Backbone', 'legacy_code'], function() {
           size: "tiny",
           text: "Create user",
           onClick: function() {
-              var body = jQuery("<div class='account-body'>");
+              var body = jQuery("<div class='standard-input-table'>");
               body.append("<p>Create new user account</p>");
               var table = jQuery("<table/>");
 

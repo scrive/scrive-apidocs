@@ -64,8 +64,8 @@ window.Signatory = Backbone.Model.extend({
         author: false,
         fields: [{name: "fstname",   type : "standard"},
                  {name: "sndname",   type : "standard"},
-                 {name: "email",     type : "standard"},
-                 {name: "mobile",    type : "standard"},
+                 {name: "email",     type : "standard", shouldbefilledbysender : true, obligatory : true}, // We need to set it since default delivery is email
+                 {name: "mobile",    type : "standard", shouldbefilledbysender : false, obligatory : false},
                  {name: "sigco",     type : "standard"},
                  {name: "sigcompnr", type : "standard"}
         ],
@@ -76,11 +76,16 @@ window.Signatory = Backbone.Model.extend({
         saved: false,
         ispadqueue : false,
         authentication: "standard",
-        delivery: "email"
+        delivery: "email",
+        confirmationdelivery : "email",
+        // Internal properties used by design view
+        changedDelivery : false,
+        changedConfirmationDelivery : false
     },
 
     initialize: function(args) {
         var signatory = this;
+        signatory.desynchronizeDeliveryAndConfirmationDeliveryIfNeeded();
         _.bindAll(signatory);
         var extendedWithSignatory = function(hash) {
                     hash.signatory = signatory;
@@ -158,7 +163,11 @@ window.Signatory = Backbone.Model.extend({
         return this.field("sigpersnr", "standard");
     },
     email: function() {
-        return this.emailField().value();
+        if (this.emailField() != undefined) {
+          return this.emailField().value();
+        } else {
+          return '';
+        }
     },
     mobile: function() {
         if (this.mobileField() != undefined) {
@@ -426,6 +435,18 @@ window.Signatory = Backbone.Model.extend({
     apiDelivery : function() {
           return this.get("delivery") == "api";
     },
+    emailConfirmationDelivery: function() {
+          return this.get("confirmationdelivery") == "email";
+    },
+    mobileConfirmationDelivery: function() {
+          return this.get("confirmationdelivery") == "mobile";
+    },
+    emailMobileConfirmationDelivery: function() {
+          return this.get("confirmationdelivery") == "email_mobile";
+    },
+    noneConfirmationDelivery: function() {
+          return this.get("confirmationdelivery") == "none";
+    },
     remind: function(customtext) {
         return new Submit({
               url: "/resend/" + this.document().documentid() + "/" + this.signatoryid(),
@@ -559,18 +580,67 @@ window.Signatory = Backbone.Model.extend({
               signsuccessredirect : this.signsuccessredirect(),
               rejectredirect : this.rejectredirect(),
               authentication: this.authentication(),
-              delivery: this.delivery()
-
+              delivery: this.delivery(),
+              confirmationdelivery : this.confirmationdelivery()
         };
     },
     delivery: function() {
         return this.get('delivery');
     },
+    confirmationdelivery : function() {
+        return this.get('confirmationdelivery');
+    },
     setDelivery: function(d) {
-        // TODO: check values of d
-        // email, pad, api
-        this.set({delivery:d});
+        this.set({delivery:d, changedDelivery : true});
+        if (!this.get("changedConfirmationDelivery"))
+          this.synchConfirmationDelivery();
         return this;
+    },
+    setConfirmationDelivery: function(d) {
+        this.set({confirmationdelivery:d, changedConfirmationDelivery : true});
+        if (!this.get("changedDelivery"))
+          this.synchDelivery();
+        return this;
+    },
+    desynchronizeDeliveryAndConfirmationDeliveryIfNeeded : function() {
+      if (this.emailDelivery() && this.emailConfirmationDelivery())
+        return;
+      if (this.mobileDelivery() && this.mobileConfirmationDelivery())
+        return;
+      if (this.emailMobileDelivery() && this.emailMobileConfirmationDelivery())
+        return;
+      if (this.padDelivery() && this.emailDelivery())
+        return;
+
+      this.set({changedDelivery : true, changedConfirmationDelivery : true});
+    },
+    synchConfirmationDelivery : function() {
+      if (this.emailDelivery()) {
+        this.set({confirmationdelivery:"email"});
+      }
+      else if (this.mobileDelivery()) {
+        this.set({confirmationdelivery:"mobile"});
+      }
+      else if (this.emailMobileDelivery()) {
+        this.set({confirmationdelivery:"email_mobile"});
+      }
+      else if (this.padDelivery()) {
+        this.set({confirmationdelivery:"email"});
+      }
+    },
+    synchDelivery : function() {
+      if (this.emailConfirmationDelivery()) {
+        this.set({delivery:"email"});
+      }
+      else if (this.mobileConfirmationDelivery()) {
+        this.set({delivery:"mobile"});
+      }
+      else if (this.emailMobileConfirmationDelivery()) {
+        this.set({delivery:"email_mobile"});
+      }
+      else if (this.noneConfirmationDelivery()) {
+        this.set({delivery:"email"});
+      }
     },
     authentication: function() {
         return this.get('authentication');
@@ -595,7 +665,36 @@ window.Signatory = Backbone.Model.extend({
         else
             return 'viewer';
     },
+    identificationFields : function() {
+      return _.filter(this.fields(), function(f) {return f.isIdentificationField()});
+    },
+    allIdentificationFieldsAreOptional : function() {
+      return _.all(this.identificationFields(), function(f){return f.isOptional();});
+    },
     ensureAllFields : function() {
+      var signatory = this;
+      if (!signatory.document().preparation()) return; // We only do this checks in design view. We will need to factor this out one day. MR
+
+      // This is a reset of obligatorynes of all fields that could be included in extra details section
+      // Explaination: If email, phone or personal number has no placements, it will be interpreted as optional,
+      // unless it will be required to be obligatory by one of ensureXXX functions.
+
+      if (signatory.personalnumberField() != undefined && !signatory.personalnumberField().hasPlacements())
+      {
+        signatory.personalnumberField().authorObligatory = 'optional';
+        signatory.personalnumberField().set({"obligatory":false},{silent:true});
+      }
+      if (signatory.emailField() != undefined && !signatory.emailField().hasPlacements())
+      {
+        signatory.emailField().authorObligatory = 'optional';
+        signatory.emailField().set({"obligatory":false},{silent:true});
+      }
+      if (signatory.mobileField() != undefined && !signatory.mobileField().hasPlacements())
+      {
+        signatory.mobileField().authorObligatory = 'optional';
+        signatory.mobileField().set({"obligatory":false},{silent:true});
+      }
+
       this.ensureEmail();
       this.ensureMobile();
       this.ensurePersNr();
@@ -618,7 +717,7 @@ window.Signatory = Backbone.Model.extend({
                 pn.makeObligatory();
             }
         } else {
-            if(pn && pn.addedByMe && pn.value() === '' && !pn.hasPlacements()) {
+            if(pn && pn.addedByMe && pn.value() === '' && !pn.hasPlacements() && !pn.isLastIdentificationField()) {
                 signatory.deleteField(pn);
             } else if(pn && pn.authorObligatory == 'sender') {
                 pn.makeObligatory();
@@ -626,7 +725,9 @@ window.Signatory = Backbone.Model.extend({
             } else if(pn && pn.authorObligatory == 'signatory') {
                 pn.makeObligatory();
                 pn.setShouldBeFilledBySender(false);
-            } else if(pn && pn.authorObligatory == 'optional') {
+            } else if(pn && this.allIdentificationFieldsAreOptional()) {
+                pn.makeObligatory();
+            } else if(pn && pn.authorObligatory == 'optional' && !pn.isLastNonOptionalIdentificationField()) {
                 pn.makeOptional();
                 pn.setShouldBeFilledBySender(false);
             }
@@ -649,10 +750,10 @@ window.Signatory = Backbone.Model.extend({
                 signatory.addField(f);
             } else {
                 pn.makeObligatory();
-                pn.setShouldBeFilledBySender(true);
+                pn.setShouldBeFilledBySender((!pn.canBeSetByRecipent()) || (pn.authorObligatory == 'sender'));
             }
         } else {
-            if(pn && pn.addedByMe && pn.value() === '' && !pn.hasPlacements()) {
+            if(pn && pn.addedByMe && pn.value() === '' && !pn.hasPlacements() && !pn.isLastIdentificationField()) {
                 signatory.deleteField(pn);
             } else if(pn && pn.authorObligatory == 'sender') {
                 pn.makeObligatory();
@@ -660,14 +761,16 @@ window.Signatory = Backbone.Model.extend({
             } else if(pn && pn.authorObligatory == 'signatory') {
                 pn.makeObligatory();
                 pn.setShouldBeFilledBySender(false);
-            } else if(pn && pn.authorObligatory == 'optional') {
+            } else if(pn && this.allIdentificationFieldsAreOptional() && !signatory.needsPersonalNumber()) {
+                pn.makeObligatory();
+            } else if(pn && pn.authorObligatory == 'optional' && !pn.isLastNonOptionalIdentificationField()) {
                 pn.makeOptional();
                 pn.setShouldBeFilledBySender(false);
             }
         }
     },
     needsMobile: function() {
-        return this.mobileDelivery() || this.emailMobileDelivery();
+        return this.mobileDelivery() || this.emailMobileDelivery() || this.mobileConfirmationDelivery() || this.emailMobileConfirmationDelivery() ;
     },
     color: function() {
         return this.get('color');
@@ -677,24 +780,41 @@ window.Signatory = Backbone.Model.extend({
         return this;
     },
     needsEmail: function() {
-        return this.emailDelivery() || this.emailMobileDelivery();
+        return this.emailDelivery() || this.emailMobileDelivery() || this.emailConfirmationDelivery() || this.emailMobileConfirmationDelivery();
     },
     ensureEmail: function() {
         var signatory = this;
         var email = signatory.emailField();
         if(signatory.needsEmail()) {
+          if (!email) {
+            var f = new Field({name:'email',
+                                 type: 'standard',
+                                 obligatory: true,
+                                 shouldbefilledbysender: true,
+                                 signatory: signatory});
+            f.addedByMe = true;
+            signatory.addField(f);
+          } else {
+            email.makeObligatory();
+            email.setShouldBeFilledBySender((!email.canBeSetByRecipent()) || (email.authorObligatory == 'sender'));
+          }
+        }
+       else {
+         if(email && email.addedByMe && email.value() === '' && !email.hasPlacements() && !email.isLastIdentificationField()) {
+            signatory.deleteField(email);
+         } else if(email && email.authorObligatory == 'sender') {
             email.makeObligatory();
             email.setShouldBeFilledBySender(true);
-        } else if(email.authorObligatory == 'sender') {
-            email.makeObligatory();
-            email.setShouldBeFilledBySender(true);
-        } else if(email.authorObligatory == 'signatory') {
+         } else if(email && email.authorObligatory == 'signatory') {
             email.makeObligatory();
             email.setShouldBeFilledBySender(false);
-        } else if(email.authorObligatory == 'optional') {
+         } else if(email && this.allIdentificationFieldsAreOptional()  && !signatory.needsMobile() && !signatory.needsPersonalNumber()) {
+            email.makeObligatory();
+         } else if(email && email.authorObligatory == 'optional' && !email.isLastNonOptionalIdentificationField()) {
             email.makeOptional();
             email.setShouldBeFilledBySender(false);
-        }
+         }
+      }
     },
     needsSignature: function() {
         return this.padDelivery() && this.signs();

@@ -11,6 +11,7 @@ module Doc.DocViewMail
     , InvitationTo(..)
     , mailInvitation
     , mailInvitationContent
+    , mailClosedContent
     , documentMailWithDocLang
     , brandingMailFields
     ) where
@@ -239,23 +240,43 @@ mailInvitationContent :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
 mailInvitationContent  forMail invitationto msiglink ispreview document = do
      content <$> mailInvitation forMail invitationto msiglink ispreview document
 
-mailDocumentClosed :: (MonadDB m, TemplatesMonad m, MailContextMonad m) => Maybe KontraLink -> SignatoryLink -> Bool -> Bool -> Document -> m Mail
-mailDocumentClosed l sl sealFixed documentAttached document = do
+
+mailClosedContent :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
+                      => Bool
+                      ->Document
+                      -> m String
+mailClosedContent  ispreview document = do
+     content <$> mailDocumentClosed ispreview Nothing (fromJust $ getAuthorSigLink document) False True document
+
+mailDocumentClosed :: (MonadDB m, TemplatesMonad m, MailContextMonad m) => Bool -> Maybe KontraLink -> SignatoryLink -> Bool -> Bool -> Document -> m Mail
+mailDocumentClosed ispreview l sl sealFixed documentAttached document = do
    mctx <- getMailContext
    partylist <- renderLocalListTemplate document $ map getSmartName $ filter isSignatory (documentsignatorylinks document)
-   let mainfile = fromMaybe (unsafeFileID 0) (documentsealedfile document)
+   let mainfile = fromMaybe (unsafeFileID 0) (documentsealedfile document `mplus` documentfile document) -- For preview we don't have a sealedd file yet
    documentMailWithDocLang document "mailContractClosed" $ do
         F.value "partylist" $ partylist
         F.value "signatoryname" $ getSmartName sl
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
-        F.value "confirmationlink" $ (++) (mctxhostpart mctx) <$> show <$> l
-        F.value "doclink" $ if isAuthor sl
-                            then (++) (mctxhostpart mctx) $ show $ LinkIssueDoc (documentid document)
-                            else (++) (mctxhostpart mctx) $ show $ LinkSignDoc document sl
-        F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (Just sl) mainfile
+        F.value "confirmationlink" $ if ispreview
+                                       then Just $ makeFullLink mctx "/s/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
+                                       else (++) (mctxhostpart mctx) <$> show <$> l
+        F.value "doclink" $ if ispreview
+                             then makeFullLink mctx "/s/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
+                             else if isAuthor sl
+                               then (++) (mctxhostpart mctx) $ show $ LinkIssueDoc (documentid document)
+                               else (++) (mctxhostpart mctx) $ show $ LinkSignDoc document sl
+        F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (Nothing <| ispreview |> Just sl) (mainfile)
         F.value "sealFixed" $ sealFixed
         documentAttachedFields True sl documentAttached document
         F.value "closingtime" $ formatMinutesTime "%Y-%m-%d %H:%M %Z" $ getLastSignedTime document
+        F.value "ispreview" ispreview
+        F.value "custommessage" $ if (isAuthor sl && not ispreview)
+                                    then Nothing
+                                    else case (documentconfirmtext document) of
+                                      "" -> Nothing
+                                      s -> Just s
+
+
 
 mailDocumentAwaitingForAuthor :: (HasLang a, MonadDB m, TemplatesMonad m, MailContextMonad m) => a -> Document -> m Mail
 mailDocumentAwaitingForAuthor authorlang document = do

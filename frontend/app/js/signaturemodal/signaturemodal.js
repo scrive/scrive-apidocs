@@ -44,6 +44,12 @@ var SignatureDrawOrTypeModel= Backbone.Model.extend({
   modal : function() {
      return this.get("modal");
   },
+  container : function() {
+     return this.get("container");
+  },
+  containerTop: function() {
+    return this.container().offset().top - $(window).scrollTop();
+  },
   field : function() {
      return this.get("field");
   },
@@ -55,6 +61,65 @@ var SignatureDrawOrTypeModel= Backbone.Model.extend({
   },
   branding: function() {
      return this.get("branding");
+  },
+  signview: function() {
+     return this.get("signview");
+  },
+  arrow: function() {
+     return this.get("arrow");
+  },
+  actionButtonType: function() {
+    if (this.get("actionButtonType"))
+      return this.get("actionButtonType");
+
+    var signatureDrawn = this.hasImage();
+    var signatory = this.field().signatory();
+
+    var incompleteTasks = this.arrow().notCompletedTasks();
+
+    var incompleteFieldTasks = _.filter(incompleteTasks, function(task) { return task.isFieldTask(); });
+    var incompleteSignatoryAttachmentsTasks = _.filter(incompleteTasks, function(task) { return task.isSignatoryAttachmentTask(); });
+    var incompleteExtraDetailsTasks = _.filter(incompleteTasks, function(task) { return task.isExtraDetailsTask(); });
+
+    var fieldsLeftToFillIn = incompleteFieldTasks.length > 1 || (incompleteFieldTasks.length == 1 && signatureDrawn);
+    var attachmentsLeft = incompleteSignatoryAttachmentsTasks.length > 0;
+
+    var extraDetailsLeft = DocumentExtraDetails.detailsMissing(signatory);
+
+    // Are we currently in the extra details signature drawing modal and all other fields are filled in?
+    if (extraDetailsLeft && 
+        DocumentExtraDetails.askForSignature(signatory) &&
+        !DocumentExtraDetails.askForSSN(signatory)      &&
+        !DocumentExtraDetails.askForName(signatory)     &&
+        !DocumentExtraDetails.askForEmail(signatory)
+      ) {
+      extraDetailsLeft = false;
+    }
+
+    if (attachmentsLeft || fieldsLeftToFillIn) {
+      this.set({actionButtonType: "apply"}, {silent: true});
+    } else if (extraDetailsLeft) {
+      this.set({actionButtonType: "extra-details"}, {silent: true});
+    } else {
+      // Only sign task left.
+      this.set({actionButtonType: "sign-now"}, {silent: true});
+    }
+
+    return this.get("actionButtonType");
+  },
+  actionButtonIsSignNow: function() {
+    return this.actionButtonType() == "sign-now";
+  },
+  actionButtonIsFillInExtraDetails: function() {
+    return this.actionButtonType() == "extra-details";
+  },
+  actionButtonIsApply: function() {
+    return this.actionButtonType() == "apply";
+  },
+  hasImage: function() {
+    if (this.field().value()) return true;
+
+    return false;
   },
   typerOrDrawer : function() {
      var tod = this.get('typerOrDrawer');
@@ -85,7 +150,7 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
         header.append($("<div style='font-size:28px;line-height:32px'>").text(this.model.drawingMode() ? localization.pad.drawSignatureBoxHeader : localization.pad.typeSignatureBoxHeader));
         var row1 = $("<div>");
         header.append(row1);
-        if (!BrowserInfo.isIE8orLower()) {
+        if (!BrowserInfo.isIE8orLower() && !BrowserInfo.isIphone()) {
         row1.append($("<div style='display:inline-block'/>").text(localization.pad.or).append($("<label class='clickable' style='margin-left:5px'/>")
                                                             .text(this.model.drawingMode() ? localization.pad.typeSignature : localization.pad.drawSignature)
                                                             .click(function() { self.model.toogleMode(); return false;}))
@@ -95,7 +160,7 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
         header.append($("<a class='modal-close'/>").click(function() { self.model.onClose();}));
         if (!this.model.drawingMode()) {
           this.textInput = new InfoTextInput({
-                               infotext : "Please type your name",
+                               infotext : "Please type your name", // TODO fix me
                                cssClass : "float-left",
                                style: "margin-right:10px;border: 1px solid #7A94B8;width:170px;",
                                value : self.model.typerOrDrawer().text(),
@@ -147,7 +212,7 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
         if (this.model.drawingMode()) div.css("border-color","#7A94B8");
         return div.append(this.model.typerOrDrawer().el()).width(820).height(820 * this.height / this.width);
     },
-    acceptButton : function() {
+    applyButton : function() {
         var self = this;
         var branding = this.model.branding();
         var signatory = this.model.field().signatory();
@@ -156,11 +221,99 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
                     customcolor: branding ? branding.signviewprimarycolour() : undefined,
                     textcolor: branding ? branding.signviewprimarytextcolour() : undefined,
                     size: 'small',
-                    style: "float:right;margin-top:-2px;",
+                    cssClass: 'bottom-button',
                     text: localization.signature.confirmSignature,
                     onClick : function(){
                         self.model.typerOrDrawer().saveImage();
                         self.model.onClose();
+                        return false;
+                    }
+            }).el();
+
+        return button;
+    },
+    extraDetailsButton: function() {
+        var self = this;
+        var branding = this.model.branding();
+        var signatory = this.model.field().signatory();
+        var document = signatory.document();
+        var signview = this.model.signview();
+        var button = new Button({
+                    color : 'green',
+                    customcolor: branding ? branding.signviewprimarycolour() : undefined,
+                    textcolor: branding ? branding.signviewprimarytextcolour() : undefined,
+                    size: 'small',
+                    cssClass: 'bottom-button',
+                    text: localization.pad.fillInExtraDetails,
+                    onClick : function(){
+                        var arrow = self.model.arrow();
+
+                        self.model.typerOrDrawer().saveImage(function() {
+                          if (!self.model.hasImage()) {
+                            self.model.onClose();
+                            return;
+                          }
+
+                          var modal = new DocumentExtraDetailsModal({
+                            model: signview,
+                            arrow: arrow,
+                            branding: branding ? branding : undefined,
+                            margin: self.model.containerTop() + "px auto 0",
+                            bottom: true
+                          });
+
+                          modal.popup();
+
+                          self.model.modal().remove();
+
+                          self.model.onClose();
+
+                          if (arrow) { arrow.disable(); }
+                        });
+
+                        return false;
+                    }
+            }).el();
+
+        return button;
+    },
+    signButton: function() {
+        var self = this;
+        var branding = this.model.branding();
+        var signatory = this.model.field().signatory();
+        var document = signatory.document();
+        var signview = this.model.signview();
+        var button = new Button({
+                    color : 'green',
+                    customcolor: branding ? branding.signviewprimarycolour() : undefined,
+                    textcolor: branding ? branding.signviewprimarytextcolour() : undefined,
+                    size: 'small',
+                    cssClass: 'bottom-button',
+                    text: localization.next,
+                    onClick : function(){
+                        var arrow = self.model.arrow();
+
+                        self.model.typerOrDrawer().saveImage(function() {
+                          if (!self.model.hasImage()) {
+                            self.model.onClose();
+                            return;
+                          }
+
+                          new DocumentSignConfirmation({
+                            model: signview,
+                            fast: true,
+                            signaturesPlaced: true,
+                            margin: self.model.containerTop() + "px auto 0",
+                            arrow: arrow
+                          }).popup();
+
+                          self.model.modal().remove();
+
+                          self.model.onClose();
+
+                          if (arrow) { arrow.disable(); }
+                        });
+
                         return false;
                     }
             }).el();
@@ -189,8 +342,9 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
     },
     footer : function() {
            var self = this;
+           var container = $('<div />');
+           var inner = $('<div class="modal-footer"/>');
            var signatory = this.model.field().signatory();
-           var abutton = this.acceptButton();
 
            var canceloption = $("<label class='delete' style='float:left;margin-right:20px;line-height: 40px;'></label>").text(localization.cancel).click(function() {
                                      self.model.onClose();
@@ -199,51 +353,86 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
 
            var cleanoption = this.cleanButton();
 
-           return $('<div></div>').append($("<div class='modal-footer'/>").append(abutton).append(canceloption).append(cleanoption));
+           if (this.model.actionButtonIsSignNow()) {
+             inner.append(this.signButton());
+           } else if (this.model.actionButtonIsFillInExtraDetails()) { 
+             inner.append(this.extraDetailsButton());
+           } else {
+             inner.append(this.applyButton());
+           }
+
+           inner.append(canceloption);
+           inner.append(cleanoption);
+
+           container.append(inner);
+           return container;
     },
     render: function () {
         var box = $(this.el).empty();
         box.append(this.header());
         box.append(this.drawingOrTypingBox());
         box.append(this.footer());
+
         return this;
     }
 });
 
 
 window.SignatureDrawOrTypeModal = function(args){
-
         var self = this;
+        var arrow = args.arrow();
         var width = BrowserInfo.isSmallScreen() ? 980 : 900;
         var left = Math.floor(((window.innerWidth ? window.innerWidth : $(window).width()) - width) / 2);
         var modal = $("<div class='modal'></div>").css("height", $(document).height()).css("min-width", "1018px");
         var container = $("<div class='modal-container drawing-modal'/>").css("width",width);
-
-        if(BrowserInfo.isSmallScreen()) container.addClass("small-screen");
+        var innerHeight = 820 * args.height / args.width;
+        var containerTop = window.innerHeight - innerHeight - 240;
 
         container.css("top",$(window).scrollTop())
-                 .css("margin-top",$(window).height() > 700 ? 200 : 100)
+                 .css("margin-top", containerTop)
                  .css("left","0px")
                  .css("margin-left",left > 20 ? left : 20);
+
+        container.toggleClass('small-screen', BrowserInfo.isSmallScreen());
 
         var model = new SignatureDrawOrTypeModel({field : args.field,
                                                   width: args.width,
                                                   height: args.height,
                                                   branding: args.branding,
+                                                  arrow: arrow,
+                                                  signview: args.signview,
                                                   modal : modal,
+                                                  container: container,
                                                   typingMode : (BrowserInfo.isIE8orLower() ? true : undefined),
                                                   onClose : function() {
                                                     modal.removeClass('active');
                                                     document.ontouchmove = function(e){
                                                       return true;
                                                     };
+                                                    if (arrow) { arrow.enable(); }
                                                     setTimeout(function() {modal.detach();},500);
                                                   }
                     });
-        var view  = new SignatureDrawOrTypeView({model : model});
+        var view  = new SignatureDrawOrTypeView({
+          model : model
+        });
+
+
+        if (arrow) {
+          arrow.disable();
+        }
+
         modal.append(container.append(view.el));
 
         $('body').append(modal);
+
+
+        // If the modal (+ margin) doesn't fit when positioned at the bottom
+        // position it at the top.
+        if (container.height() > (window.innerHeight - 150)) {
+          container.css("margin-top", 15);
+        }
+
         modal.addClass('active');
 };
 

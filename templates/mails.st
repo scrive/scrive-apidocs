@@ -23,15 +23,27 @@ $else$
  $_mailDocumentAwaitingForAuthorContentReadyForSigning()$
 $endif$
 #####
+mailClosedCustomeMessage=
+$if(custommessage)$
+ $_mailClosedCustomTextHeader()$:
+  <br/>
+  <i>$custommessage:noescape()$</i>
+<br/>
+$endif$
+#####
 mailClosedSignup=
-
 $if(confirmationlink)$
 $_mailClosedSignup()$
 <br/>
 <br/>
+$mailClosedCustomeMessage()$
 $nicebutton(link=confirmationlink; text=_mailClosedButton())$
 $else$
-$_mailClosedLogin()$
+$_mailClosedLoginText()$
+<br/>
+<br/>
+$mailClosedCustomeMessage()$
+$nicebutton(link=doclink; text=_mailClosedLoginButtonText())$
 $endif$
 #####
 ##### CLOSED MAIL

@@ -51,6 +51,7 @@ instance FromJSValueWithUpdate SignatoryLink where
         (rredirecturl :: Maybe (Maybe String)) <- fromJSValueField "rejectredirect"
         authentication' <-  fromJSValueField "authentication"
         delivery' <-  fromJSValueField "delivery"
+        confirmationdelivery' <-  fromJSValueField "confirmationdelivery"
         case (mfields) of
              (Just fields) -> return $ Just $ defaultValue {
                     signatorylinkid            = fromMaybe (unsafeSignatoryLinkID 0) (signatorylinkid <$> ms)
@@ -64,6 +65,7 @@ instance FromJSValueWithUpdate SignatoryLink where
                   , signatorylinkrejectredirecturl = updateWithDefaultAndField Nothing signatorylinkrejectredirecturl rredirecturl
                   , signatorylinkauthenticationmethod = updateWithDefaultAndField StandardAuthentication signatorylinkauthenticationmethod authentication'
                   , signatorylinkdeliverymethod       = updateWithDefaultAndField EmailDelivery signatorylinkdeliverymethod delivery'
+                  , signatorylinkconfirmationdeliverymethod = updateWithDefaultAndField EmailConfirmationDelivery signatorylinkconfirmationdeliverymethod confirmationdelivery'
                 }
              _ -> return Nothing
       where
@@ -164,6 +166,7 @@ instance FromJSValueWithUpdate Document where
     fromJSValueWithUpdate mdoc = do
         title <- fromJSValueField "title"
         (invitationmessage :: Maybe (Maybe String)) <-  fromJSValueField "invitationmessage"
+        (confirmationmessage :: Maybe (Maybe String)) <-  fromJSValueField "confirmationmessage"
         daystosign <- fromJSValueField "daystosign"
         daystoremind <- fromJSValueField "daystoremind"
         showheader <- fromJSValueField "showheader"
@@ -186,6 +189,10 @@ instance FromJSValueWithUpdate Document where
             documentlang  = updateWithDefaultAndField LANG_SV documentlang lang,
             documentinvitetext = case (invitationmessage) of
                                      Nothing -> fromMaybe "" $ documentinvitetext <$> mdoc
+                                     Just Nothing -> ""
+                                     Just (Just s) -> fromMaybe "" (resultToMaybe $ asValidInviteText s),
+            documentconfirmtext = case (confirmationmessage) of
+                                     Nothing -> fromMaybe "" $ documentconfirmtext <$> mdoc
                                      Just Nothing -> ""
                                      Just (Just s) -> fromMaybe "" (resultToMaybe $ asValidInviteText s),
             documentdaystosign   = daystosign',
@@ -219,6 +226,7 @@ applyDraftDataToDocument draft actor = do
     _ <- theDocument >>= \doc -> dbUpdate $ UpdateDraft doc{
                                   documenttitle = documenttitle draft
                                 , documentinvitetext = documentinvitetext draft
+                                , documentconfirmtext = documentconfirmtext draft
                                 , documentdaystosign = documentdaystosign draft
                                 , documentdaystoremind = documentdaystoremind draft
                                 , documentshowheader = documentshowheader draft

@@ -12,6 +12,7 @@ module Doc.DocStateData (
   , FieldPlacement(..)
   , AuthenticationMethod(..)
   , DeliveryMethod(..)
+  , ConfirmationDeliveryMethod(..)
   , DeliveryStatus(..)
   , SignatureProvider(..)
   , SignInfo(..)
@@ -240,6 +241,70 @@ instance ToSQL DeliveryMethod where
   toSQL MobileDelivery         = toSQL (4::Int16)
   toSQL EmailAndMobileDelivery = toSQL (5::Int16)
 
+
+instance FromJSValue ConfirmationDeliveryMethod where
+  fromJSValue = do
+    j <- fromJSValue
+    return $ case j of
+      Just "email" -> Just EmailConfirmationDelivery
+      Just "mobile"-> Just MobileConfirmationDelivery
+      Just "email_mobile"-> Just EmailAndMobileConfirmationDelivery
+      Just "none"-> Just NoConfirmationDelivery
+      _            -> Nothing
+
+instance ToJSValue ConfirmationDeliveryMethod where
+  toJSValue EmailConfirmationDelivery  = toJSValue "email"
+  toJSValue MobileConfirmationDelivery = toJSValue "mobile"
+  toJSValue EmailAndMobileConfirmationDelivery = toJSValue "email_mobile"
+  toJSValue NoConfirmationDelivery = toJSValue "none"
+
+
+data ConfirmationDeliveryMethod = EmailConfirmationDelivery
+                    | MobileConfirmationDelivery
+                    | EmailAndMobileConfirmationDelivery
+                    | NoConfirmationDelivery
+  deriving (Eq, Ord, Show)
+
+instance PQFormat ConfirmationDeliveryMethod where
+  pqFormat _ = pqFormat (undefined::Int16)
+
+instance FromSQL ConfirmationDeliveryMethod where
+  type PQBase ConfirmationDeliveryMethod = PQBase Int16
+  fromSQL mbase = do
+    n <- fromSQL mbase
+    case n :: Int16 of
+      1 -> return EmailConfirmationDelivery
+      2 -> return MobileConfirmationDelivery
+      3 -> return EmailAndMobileConfirmationDelivery
+      4 -> return NoConfirmationDelivery
+      _ -> E.throwIO $ RangeError {
+        reRange = [(1, 4)]
+      , reValue = n
+      }
+
+instance ToSQL ConfirmationDeliveryMethod where
+  type PQDest ConfirmationDeliveryMethod = PQDest Int16
+  toSQL EmailConfirmationDelivery           = toSQL (1::Int16)
+  toSQL MobileConfirmationDelivery          = toSQL (2::Int16)
+  toSQL EmailAndMobileConfirmationDelivery  = toSQL (3::Int16)
+  toSQL NoConfirmationDelivery              = toSQL (4::Int16)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 data SignatureInfo = SignatureInfo {
     signatureinfotext        :: String
   , signatureinfosignature   :: String
@@ -362,6 +427,7 @@ data SignatoryLink = SignatoryLink {
   , signatorylinkelegdatamismatchlastname       :: Maybe String
   , signatorylinkelegdatamismatchpersonalnumber :: Maybe String
   , signatorylinkdeliverymethod         :: DeliveryMethod
+  , signatorylinkconfirmationdeliverymethod :: ConfirmationDeliveryMethod
   } deriving (Ord, Show)
 
 -- | Drop this instance when we introduce Set SignatoryFields intead of list
@@ -393,7 +459,8 @@ instance Eq SignatoryLink where
     signatorylinkelegdatamismatchfirstname s1 == signatorylinkelegdatamismatchfirstname s2 &&
     signatorylinkelegdatamismatchlastname s1 == signatorylinkelegdatamismatchlastname s2 &&
     signatorylinkelegdatamismatchpersonalnumber s1 == signatorylinkelegdatamismatchpersonalnumber s2 &&
-    signatorylinkdeliverymethod s1 == signatorylinkdeliverymethod s2
+    signatorylinkdeliverymethod s1 == signatorylinkdeliverymethod s2 &&
+    signatorylinkconfirmationdeliverymethod s1 == signatorylinkconfirmationdeliverymethod s2
 
 instance HasDefaultValue SignatoryLink where
   defaultValue =  SignatoryLink
@@ -425,6 +492,7 @@ instance HasDefaultValue SignatoryLink where
                   , signatorylinkelegdatamismatchlastname = Nothing
                   , signatorylinkelegdatamismatchpersonalnumber = Nothing
                   , signatorylinkdeliverymethod       = EmailDelivery
+                  , signatorylinkconfirmationdeliverymethod = EmailConfirmationDelivery
                   }
 
 data CSVUpload = CSVUpload {
@@ -614,6 +682,7 @@ data Document = Document {
   , documentautoremindtime         :: Maybe MinutesTime
   , documentinvitetime             :: Maybe SignInfo
   , documentinvitetext             :: String
+  , documentconfirmtext            :: String
   , documentshowheader             :: Bool
   , documentshowpdfdownload       :: Bool
   , documentshowrejectoption       :: Bool
@@ -648,6 +717,7 @@ instance HasDefaultValue Document where
           , documentshowrejectoption     = True
           , documentshowfooter           = True
           , documentinvitetext           = ""
+          , documentconfirmtext          = ""
           , documentinvitetime           = Nothing
           , documentsharing              = Private
           , documenttags                 = S.empty

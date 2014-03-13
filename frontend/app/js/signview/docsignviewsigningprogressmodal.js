@@ -158,7 +158,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
       textfont : args.textfont,
       content: $(view.el),
       width: BrowserInfo.isSmallScreen() ? 825 : 520,
-      margin : BrowserInfo.isSmallScreen() ? '150px auto 0px' : undefined
+      margin : args.margin || (BrowserInfo.isSmallScreen() ? '150px auto 0px' : undefined),
     });
 
     model.startActions();
