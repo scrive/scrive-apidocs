@@ -170,10 +170,10 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
             var div = $("<div style='height:32px;'/>");
             var label = $("<label style='float:left;padding-right:10px;line-height: 32px;'>").text(localization.pad.giveForSigningThisDevice + " " );
             div.append(label);
-            if (document.signatoriesThatCanSignNow().length > 1)
+            if (document.signatoriesThatCanSignNowOnPad().length > 1)
             {
               var options = [];
-              _.each(document.signatoriesThatCanSignNow(),function(sig) {
+              _.each(document.signatoriesThatCanSignNowOnPad(),function(sig) {
                 if (sig != model.padNextSignatory())
                 options.push({
                   name: (sig.smartname() != "" ? sig.smartname() : localization.pad.notNamedParty),
