@@ -9,7 +9,7 @@ var ConfirmationModel = Backbone.Model.extend({
       rejectText: localization.cancel,
       acceptColor : "green",
       content  : jQuery("<p/>"),
-      width: BrowserInfo.isSmallScreen() ? 980 : 640,
+      width: undefined,
       footerVisible : true,
       acceptVisible : true,
       closeVisible  : true,
@@ -18,6 +18,13 @@ var ConfirmationModel = Backbone.Model.extend({
       textfont : undefined,
       textcolor : undefined,
       margin: undefined
+  },
+  initialize : function(args) {
+    var width = args.width;
+    if (width === undefined) {
+      width = BrowserInfo.isSmallScreen() ? 980 : 640;
+    }
+    this.set("width", width, {silent: true});
   },
   title : function(){
        return this.get("title");
