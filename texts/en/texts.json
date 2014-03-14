@@ -818,7 +818,7 @@
 "_remindMailSignedContractStandardHeaderSendRequest2":"Please find the document attached.",
 "_remindMailSignedTitle":"Resent document: $documenttitle$",
 "_reminderByEmailMobileQuestion":"Do you want to send a reminder via email and SMS",
-"_reminderByMobileQuestion":"Do you want to send a reminder by through a mobile text message?",
+"_reminderByMobileQuestion":"Do you want to send a reminder by SMS?",
 "_reminderFormFooterOwnMessage":"Write your own message",
 "_reminderFormHead":"Send reminder",
 "_reminderFormSendReminder":"Send reminder",
