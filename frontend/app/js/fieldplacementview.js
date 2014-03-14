@@ -972,6 +972,13 @@ var TextPlacementPlacedView = Backbone.View.extend({
                 return view.startInlineEditing();
           });
         }
+        else if (!document.preparation() && (field.value() == undefined || field.value()=="") ) {
+
+          // We hide placements of text fields if user can't interact with them, and they are not filled.
+          place.css("display","none");
+        }
+
+
 
         if (placement.withTypeSetter()) {
           this.addTypeSetter();
@@ -1786,7 +1793,12 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
         }
         else {
             place.append(new SignaturePlacementView({model: placement}).el);
+
+            // We hide placements of signatures if user can't interact with them, and they are not filled.
+            if (field.value() == undefined || field.value()=="")
+              place.css("display","none");
         }
+
         if (document.allowsDD()) {
             var parentWidth = place.parent().width();
             var parentHeight = place.parent().height();
@@ -1802,8 +1814,6 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
         }
         if (placement.withTypeSetter()) {
           this.addTypeSetter();
-
-
         }
 
 

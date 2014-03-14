@@ -91,7 +91,7 @@ import System.Directory
 import MinutesTime
 import Analytics.Include
 import Data.String.Utils (replace)
-import Codec.Compression.Zlib
+import Util.Zlib (decompressIfPossible)
 
 handleNewDocument :: Kontrakcja m => m KontraLink
 handleNewDocument = do
@@ -235,7 +235,10 @@ handleEvidenceAttachment docid file = do
   let mimetype = fromMaybe "text/html" (EvidenceAttachments.mimetype e)
   -- Evidence attachments embedded in PDFs are compressed using RFC #1950. This is NOT the same
   -- as what browsers are supporting (under names gzip and deflate), and we need to decompress server side.
-  return $ (toResponseBS mimetype (decompress $ EvidenceAttachments.content e))
+  -- decompressIfPossible returns original content if it was not possible to decompress
+  -- this is needed to handle attachments from our old version of service
+  -- where they were apparently not compressed at all
+  return $ toResponseBS mimetype $ decompressIfPossible $ EvidenceAttachments.content e
 
 {- |
    Handles the request to show a document to a logged in user.

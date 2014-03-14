@@ -31,36 +31,23 @@ define(['Backbone', 'legacy_code'], function() {
         if(timeout)
             window.setTimeout(timedout, timeoutval);
 
-        try {
-           if (!BrowserInfo.isIE8orLower()) {
-              html2canvas( $('body'),
-                          { onrendered: function(canvas)
-                            {
-                                var newCanvas = scaleCanvas(canvas, 0.6); // smallest scale that still makes text readable
-                                canvas = null;
-                                if (!callbackCalled) {
-                                    callbackCalled = true;
-                                    success(newCanvas);
-                                }
-                            },
-                            width : $(window).width(),
-                            height : $(window).height(),
-                            type: 'view',
-                            proxy: null
-                          }
-                        );
-           }
-           else {
-             mixpanel.track('Take screenshot failed', {'Reason' : 'Not supported browser'});
-           }
-        }
-        catch(e) {
-            if (!callbackCalled) {
-                callbackCalled = true;
-                mixpanel.track('Take screenshot failed', {'Reason' : 'Error'});
-                error(e);
+        html2canvas($('body'), {logging: true, type: 'view', allowTaint: true}).then(function(canvas) {
+          var newCanvas = scaleCanvas(canvas, 0.6); // smallest scale that still makes text readable
+          canvas = null;
+          if (!callbackCalled) {
+            callbackCalled = true;
+            success(newCanvas);
+          }
+        })['catch'](function(err) { // use catch as key, because IE8 cannot handle catch attribute
+          if (!callbackCalled) {
+            callbackCalled = true;
+            if (err === "No canvas support") {
+              mixpanel.track('Take screenshot failed', {'Reason': 'Not supported browser'});
+            } else {
+              mixpanel.track('Take screenshot failed', {'Reason': 'Error'});
+              error(err);
             }
-        }
+          }
+        });
     };
-
 });

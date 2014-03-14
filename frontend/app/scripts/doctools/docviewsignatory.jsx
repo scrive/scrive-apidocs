@@ -365,7 +365,7 @@ var DocumentViewSignatoryView = React.createClass({
             <div className="details" >
 
                {/*if*/ signatory.company() &&
-                 <div className="company field" style={textstyle}>
+                 <div className="company field" style={textstyle} title={signatory.company()}>
                    {localization.company}: {signatory.company()}
                  </div>
                }

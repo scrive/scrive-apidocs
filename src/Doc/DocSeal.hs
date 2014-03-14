@@ -84,7 +84,7 @@ personFromSignatory boxImages signatory =
                 , Seal.numberverified = False
                 , Seal.emailverified = True
                 , Seal.phoneverified = False
-                , Seal.fields = fieldsFromSignatory False [] boxImages signatory
+                , Seal.fields = fieldsFromSignatory boxImages signatory
                 }
 
 personExFromSignatoryLink :: (BS.ByteString,BS.ByteString) -> SignatoryLink -> (Seal.Person, String)
@@ -105,8 +105,8 @@ personExFromSignatoryLink boxImages (sl@SignatoryLink { signatorysignatureinfo
                            signatorysignatureinfo
         numberverified = maybe False signaturepersnumverified signatorysignatureinfo
 
-fieldsFromSignatory :: Bool -> [(FieldType,String)] -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> [Seal.Field]
-fieldsFromSignatory addEmpty emptyFieldsText (checkedBoxImage,uncheckedBoxImage) SignatoryLink{signatoryfields} =
+fieldsFromSignatory :: (BS.ByteString,BS.ByteString) -> SignatoryLink -> [Seal.Field]
+fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryLink{signatoryfields} =
   silenceJPEGFieldsFromFirstSignature $ concatMap makeSealField  signatoryfields
   where
     silenceJPEGFieldsToTheEnd [] = []
@@ -124,10 +124,7 @@ fieldsFromSignatory addEmpty emptyFieldsText (checkedBoxImage,uncheckedBoxImage)
                            ([],v) -> maybeToList $ fieldJPEGFromSignatureField v
                            (plsms,v) -> concatMap (maybeToList . (fieldJPEGFromPlacement v)) plsms
        CheckboxFT _ -> map (uncheckedImageFromPlacement <| null (sfValue sf) |>  checkedImageFromPlacement) (sfPlacements sf)
-       _ -> for (sfPlacements sf) $ \p -> case (addEmpty, sfValue sf, sfType sf) of
-                                                (True,"",CustomFT n _) -> fieldFromPlacement True n p
-                                                (True,"",ft) -> fieldFromPlacement True (fromMaybe "" (lookup ft emptyFieldsText)) p
-                                                _ -> fieldFromPlacement False (sfValue sf) p
+       _ -> for (sfPlacements sf) $ fieldFromPlacement False (sfValue sf)
     fieldFromPlacement greyed sf placement =
       Seal.Field { Seal.value            = sf
                  , Seal.x                = placementxrel placement
@@ -402,12 +399,12 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
                               } ] ++ additionalAttachments
             }
 
-presealSpecFromDocument :: [(FieldType,String)] -> (BS.ByteString,BS.ByteString) -> Document -> String -> String -> Seal.PreSealSpec
-presealSpecFromDocument emptyFieldsText boxImages document inputpath outputpath =
+presealSpecFromDocument :: (BS.ByteString,BS.ByteString) -> Document -> String -> String -> Seal.PreSealSpec
+presealSpecFromDocument boxImages document inputpath outputpath =
        Seal.PreSealSpec
             { Seal.pssInput          = inputpath
             , Seal.pssOutput         = outputpath
-            , Seal.pssFields         = concatMap (fieldsFromSignatory True emptyFieldsText boxImages) (documentsignatorylinks document)
+            , Seal.pssFields         = concatMap (fieldsFromSignatory boxImages) (documentsignatorylinks document)
             }
 
 
@@ -493,8 +490,7 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
     liftIO $ BS.writeFile tmpin content
     checkedBoxImage <- liftIO $ BS.readFile "frontend/app/img/checkbox_checked.jpg"
     uncheckedBoxImage <- liftIO $  BS.readFile "frontend/app/img/checkbox_unchecked.jpg"
-    emptyFieldsText <- emptyFieldsTextT
-    let config = presealSpecFromDocument emptyFieldsText (checkedBoxImage,uncheckedBoxImage) document tmpin tmpout
+    let config = presealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) document tmpin tmpout
 
     (code,_stdout,stderr) <- liftIO $ do
       let sealspecpath = tmppath ++ "/sealspec.json"
@@ -510,18 +506,3 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
           Log.attention_ $ BSL.toString stderr
           Log.attention_ $ "Presealing failed for configuration: " ++ show config
           return $ Left "Error when preprinting fields on PDF"
-
-emptyFieldsTextT :: (TemplatesMonad m) => m [(FieldType,String)]
-emptyFieldsTextT = do
-  fstname <- renderTemplate_ "_firstname"
-  sndname <- renderTemplate_ "_lastname"
-  email <- renderTemplate_ "_email"
-  company <- renderTemplate_ "_company"
-  companynumber <- renderTemplate_ "_orgnumber"
-  personalnumber <- renderTemplate_  "_personnumber"
-  return [(FirstNameFT, fstname),
-          (LastNameFT, sndname),
-          (CompanyFT, company),
-          (PersonalNumberFT, personalnumber),
-          (CompanyNumberFT,companynumber),
-          (EmailFT, email)]
