@@ -107,7 +107,7 @@ window.AuthorViewHistory = function(args) {
                   if (model.dontRefresh())
                     return; // No checkAndRefresh will be called anymore if this happends
                   model.checkIfHistoryHasChangedAndRefresh();
-                  setTimeout(function() {checkAndRefresh(i> 30 ? 30 : i+1);},i * 1000);
+                  setTimeout(function() {checkAndRefresh(i> 30 ? 30 : i+2);},i * 1000);
           };
           checkAndRefresh(1);
 
