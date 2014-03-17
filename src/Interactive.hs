@@ -35,11 +35,13 @@ run m = Log.withLogger $ do
     filecache <- MemCache.new BS.length 50000000
     docs <- MemCache.new JpegPages.pagesCount 1000
     rng <- newCryptoRNGState
+    connpool <- createPostgreSQLConnectionPool (dbConfig appConf)
     return AppGlobals {
         templates = templates
       , filecache = filecache
       , docscache = docs
       , cryptorng = rng
+      , connectionpool = connpool
       }
 
   withPostgreSQL (dbConfig appConf) . runCryptoRNGT (cryptorng appGlobals) .

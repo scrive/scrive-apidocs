@@ -25,7 +25,7 @@ var DocumentViewSignatoriesModel = Backbone.Model.extend({
         var signatories = this.document().signatories();
         var current = _.find  (signatories, function(s) { return  s.current(); });
         var others  = _.filter(signatories, function(s) { return !s.current(); });
-        var sigs = [current].concat(others);
+        var sigs = _.compact([current].concat(others));
         if (this.forSigning())
           return _.filter(sigs, function(s) { return s.signs(); });
         else

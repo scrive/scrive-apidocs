@@ -221,8 +221,12 @@ var DocumentSignViewModel = Backbone.Model.extend({
         textstyle['font-family'] = textfont;
       }
 
-      if (this.get("extradetailssection") == undefined)
-        this.set({'extradetailssection' :  new DocumentSignExtraDetailsSection({model: this.document().currentSignatory(), textstyle: textstyle}) }, {silent : true});
+      if (this.get('extradetailssection') === undefined) {
+        var extradetailssection = new DocumentSignExtraDetailsSection({model: this.document().currentSignatory(),
+                                                                       textstyle: textstyle,
+                                                                       signviewbranding: signviewbranding});
+        this.set({'extradetailssection': extradetailssection}, {silent: true});
+      }
       return this.get('extradetailssection');
   },
   mainfile : function() {

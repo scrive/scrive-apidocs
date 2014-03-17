@@ -9,6 +9,7 @@ define(['Backbone', 'legacy_code'], function() {
 window.DocumentSignExtraDetailsSection = Backbone.View.extend({
    initialize : function(args){
       this.textstyle = args.textstyle;
+      this.signviewbranding = args.signviewbranding;
       this.render();
    },
    emailInputAvaible : function() {
@@ -84,7 +85,8 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
      var signatory = this.model;
      var field = this.model.signatures()[0];
      field.bind("change", function() {signatory.trigger("change");});
-     return new SignaturePlacementViewForDrawing({model: field, height : 102, width: 260}).el;
+     return new SignaturePlacementViewForDrawing({model: field, height: 102,
+                                                  width: 260, signviewbranding: this.signviewbranding}).el;
    },
    render: function() {
        var document = this.model;
