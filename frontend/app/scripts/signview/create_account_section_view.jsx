@@ -33,6 +33,7 @@ define(['React', 'common/language_service', 'postsignview/questionnaire_view', '
    *
    */
   expose.render = function(document, sectionElement) {
+    var promotionName = "";
     var promotionImg = '/img/partnerbanners/',
 	language = LanguageService.currentLanguage(),
 	component,
@@ -41,6 +42,7 @@ define(['React', 'common/language_service', 'postsignview/questionnaire_view', '
 
     if(document.author().company() === 'Phone House') {
       // Phone house, create account banner
+      promotionName = "Phone House";
       component = CreateAccountViews.BrandedBanner({
         bannerType: 'phone-house',
         language: language,
@@ -48,6 +50,7 @@ define(['React', 'common/language_service', 'postsignview/questionnaire_view', '
       });
       React.renderComponent(component, sectionElementRaw);
     } else if(null !== /^nj.*scrive.com/.exec(location.host)) {
+      promotionName = "NJ";
       // Nordsteds juridik, create account section
 
       component = CreateAccountViews.BrandedBanner({
@@ -57,6 +60,7 @@ define(['React', 'common/language_service', 'postsignview/questionnaire_view', '
       });
       React.renderComponent(component, sectionElementRaw);
     } else if(document.currentSignatory().company() !== '') {
+      promotionName = "Questionnaire";
       // B2B contracts
       var view = new QuestionareView({model: document});
       sectionElement.append(view.render());
@@ -70,6 +74,8 @@ define(['React', 'common/language_service', 'postsignview/questionnaire_view', '
       });
       React.renderComponent(component, sectionElementRaw);
     }
+
+    mixpanel.track("Store copy button shown", promotionName ? { promo: promotionName } : {});
   };
 
   return expose;
