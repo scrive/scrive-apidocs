@@ -1,4 +1,4 @@
-/** 
+/**
  *  @description
  *  Setup RequireJS library paths and shims
  *
