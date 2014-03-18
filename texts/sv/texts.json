@@ -557,7 +557,7 @@
 "_mailForwardMailContent2":"Dokumentet är bifogat med detta mail.",
 "_mailForwardMailTitle":"E-signerat dokument: $documenttitle$",
 "_mailInvitationCustomInvitationHeader":"Meddelande från <strong>$creatorname$</strong>",
-"_mailInvitationToSignContractDefaultHeader":"<strong>$creatorname$</strong> har bjudit in dig att signera dokumentet <strong>$documenttitle$</strong> elektroniskt genom tjänsten Scrive e-signering.",
+"_mailInvitationToSignContractDefaultHeader":"<strong>$creatorname$</strong> har bjudit in dig att signera dokumentet <strong>$documenttitle$</strong> elektroniskt genom tjänsten Scrive E-sign.",
 "_mailInvitationToSignTitleContract":"Dokument att e-signera: $documenttitle$",
 "_mailInvitationToViewDefaultHeader":"<strong>$creatorname$</strong> har bjudit in dig att granska dokumentet <strong>$documenttitle$</strong>.",
 "_mailInvitationToViewTitleContract":"Dokument att granska: $documenttitle$",

@@ -179,7 +179,7 @@ $htmlopentag()$
 <body class="en legal article ct full">
 <h1>Evidence Log</h1>
 <p>
-  This evidence log is a complete collection of all actions and events that occurred during the document transaction, which have been logged by the Scrive e-signing service. The information included in each log event is the following:
+  This evidence log is a complete collection of all actions and events that occurred during the document transaction, which have been logged by Scrive E-sign. The information included in each log event is the following:
 </p>
 <div style="margin-left: 50px;">
   <ul>
@@ -192,10 +192,10 @@ $htmlopentag()$
 </div>
 <h4 style="margin-top: 20px;">About the clock error estimate</h4>
 <p>
-  As accurate time can be of crucial importance for some types of transactions, this evidence log includes abundant information about time and estimated time error. The purpose of the time error estimate is to give the holder of this document a tool to be able to evaluate the accuracy of the Scrive e-signing service’s clock at the point of each logged event. We estimate the clock error each hour and measure the estimated error in milliseconds (the Clock Error Sample or CES). The first column in the table tells us the time of the event and the estimated error at the time of the last Clock Error Sample. The second column in the table tells us the time of the latest successful Clock Error Sample (CES).  
+  As accurate time can be of crucial importance for some types of transactions, this evidence log includes abundant information about time and estimated time error. The purpose of the time error estimate is to give the holder of this document a tool to be able to evaluate the accuracy of Scrive E-sign’s clock at the point of each logged event. We estimate the clock error each hour and measure the estimated error in milliseconds (the Clock Error Sample or CES). The first column in the table tells us the time of the event and the estimated error at the time of the last Clock Error Sample. The second column in the table tells us the time of the latest successful Clock Error Sample (CES).  
 </p>
 <p>
-  Additionally, below this evidence log, are statistics about clock error history over an extended period of time. This information is to serve as a reference of the Scrive e-signing system’s time accuracy over time.  
+  Additionally, below this evidence log, are statistics about clock error history over an extended period of time. This information is to serve as a reference of Scrive E-sign’s time accuracy over time.  
 </p>
 <br/>
 <table style="border-collapse: separate; border-spacing: 20px 0px; margin: 0 -10px;">
