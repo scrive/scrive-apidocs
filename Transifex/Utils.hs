@@ -29,7 +29,7 @@ sourceLang :: String
 sourceLang = "en"
 
 encodeTranslationJSON :: JSValue -> String
-encodeTranslationJSON  (JSObject jso) = "{ \n" ++ (intercalate ",\n" $ map (\(s,js) -> encode s ++ ":" ++ encode js) (fromJSObject jso)) ++ "\n}"
+encodeTranslationJSON  (JSObject jso) = "{ \n" ++ (intercalate ",\n" $ map (\(s,js) -> encode s ++ ":" ++ encode js) (fromJSObject jso)) ++ "\n}\n"
 encodeTranslationJSON  e = encode e
 
 textsFromJSON :: JSValue -> [(String,String)]
