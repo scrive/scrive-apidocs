@@ -4,6 +4,9 @@ dumpAllEvidenceTexts=
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Evidence texts ($lang$)</title>
+    <style>
+      tr:nth-child(even) { background-color: #f0f0f0; }
+    </style>
   </head>
   <body>
     <div class="mainContainer" >
