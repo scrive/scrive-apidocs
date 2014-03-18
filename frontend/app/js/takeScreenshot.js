@@ -45,8 +45,8 @@ define(['Backbone', 'legacy_code'], function() {
               mixpanel.track('Take screenshot failed', {'Reason': 'Not supported browser'});
             } else {
               mixpanel.track('Take screenshot failed', {'Reason': 'Error'});
-              error(err);
             }
+            error(err);
           }
         });
     };
