@@ -151,7 +151,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
   postSigningAction: function(newDocument, oldDocument) {
     // Signing through api
     if (oldDocument.currentSignatory().signsuccessredirect() != undefined && oldDocument.currentSignatory().signsuccessredirect() != "") {
-      window.location = document.currentSignatory().signsuccessredirect();
+      window.location = oldDocument.currentSignatory().signsuccessredirect();
     }
     // Display regular document page
     else {
