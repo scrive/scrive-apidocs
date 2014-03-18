@@ -157,11 +157,16 @@ describe "sign up on front page and modify account settings" do
     (@h.wait_until { @h.driver.find_element :name => "phone" }).send_keys "031-650 000"
     (@h.wait_until { @h.driver.find_element :name => "companyname" }).send_keys "Scrive AB"
     (@h.wait_until { @h.driver.find_element :name => "companynumber" }).send_keys "556816-6804"
-    (@h.wait_until { @h.driver.find_element :name => "companyposition" }).send_keys companyposition
+    companypositioninput = (@h.wait_until { @h.driver.find_element :name => "companyposition" })
+    companypositioninput_ref = companypositioninput.ref
+    companypositioninput.send_keys companyposition
     (@h.wait_until { @h.driver.find_element :css => "a.save" }).click
 
     puts "make sure we get a confirmation"
     @h.wait_until { @h.driver.find_element :css => "div.flash.success" }
+
+    # we have to wait until new companyposition input is rendered so we don't grab reference to the old one
+    @h.wait_until { (@h.driver.find_element :name => "companyposition").ref != companypositioninput_ref }
     expect((@h.wait_until { @h.driver.find_element :xpath => "//input[@name='companyposition']" }).attribute("value")).to eq(companyposition)
     @h.loginhelper.logout
   end
