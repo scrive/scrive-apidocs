@@ -69,7 +69,7 @@ dumpEvidenceTexts now lang = do
           F.value "author" $ actorEmail actor
         F.value "description" ("This is a description." :: String)
         F.value "lang" $ show lang
-        F.value "msg" ("Really long message from external e-ID system." :: String)
+        F.value "msg" ("Really long message from external eID system." :: String)
         F.value "name" ("some name" :: String)
         F.value "newemail" ("good@example.com" :: String)
         F.value "newphone" ("good-12 34 56" :: String)

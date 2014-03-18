@@ -3,7 +3,7 @@
 "AttachGuardtimeSealedFileEvidenceText":"The document was sealed with a digital signature$if(full)$ by $_theScriveSystem()$$endif$.",
 "AttachSealedFileEvidenceText":"$_TheScriveSystem()$ prepared the final PDF$if(!archive)$, including evidence collected by $_theScriveSystem()$, before sealing with a digital signature$endif$.",
 "AutomaticReminderSentText":"An automatic reminder to sign was sent to $signatory$ using $_delivery_method()$$if(full)$ at the request of $author$$endif$.",
-"CancelDocumenElegEvidenceText":"$_TheScriveSystem()$ rejected the attempt by $signatory$ to sign the document. The reason was that the identity information of $signatory$ did not match the identity information received from the external e-ID system.$if(full)$ Information given by the external e-ID system: $msg$$endif$",
+"CancelDocumenElegEvidenceText":"$_TheScriveSystem()$ rejected the attempt by $signatory$ to sign the document. The reason was that the identity information of $signatory$ did not match the identity information received from the external eID system.$if(full)$ Information given by the external eID system: $msg$$endif$",
 "CancelDocumentEvidenceText":"The invitation to sign was withdrawn$if(!archive)$ by $actor$$endif$.$_ThePossibilityToSignIsDisabled()$",
 "CloseDocumentEvidenceText":"$_TheScriveSystem()$ locked the document from further modifications by the signing parties.",
 "InvitationDeliveredByEmailText":"$_TheEmailSystemReportsThatTheInvitation()$$_to_review_or_sign()$ was delivered to $signatory$ by email.",
@@ -18,8 +18,8 @@
 "ReminderSendText":"A reminder$_to_review_or_sign()$ was sent to $signatory$ using $_delivery_method()$$if(!archive)$ at the request of $actor$$endif$.$if(text)$ The reminder message$if(!archive)$ from $actor$$endif$ was: <BR/> <i>$text:noescape()$</i>$endif$",
 "ResealedPDFText":"$if(full)$Preparation of the Evidence Package was requested by $if(!archive)$$actor$, $endif$a person authorised to administer $_theScriveSystem()$.$endif$",
 "RestartDocumentEvidenceText":"The document was opened for editing$if(!archive)$ by $actor$ in $_theScriveSystem()$’s interface to design signing processes$endif$.",
-"SignDocumentEvidenceText":"The document was signed$if(!archive)$ by $actor$$endif$$_using_identification_method()$.$if(eleg)$$if(full)$<p>The text signed in the e-ID client was: </p> <pre>$infotext$</pre> <p>E-legitimation provider: $provider$.</p> $if(fieldsverified)$ <p>Information about signatory verified by $provider$: $if(fstnameverified)$ First name; $endif$ $if(lstnameverified)$ Last name; $endif$ $if(persnumverified)$ Personal number; $endif$</p> $endif$ <p>Signature: <div style='white-space:pre'>$signature$</div></p> $if(certificate)$ <p>Certificate: <div style='white-space:pre'>$certificate$</div></p>$endif$ $if(ocsp)$ <p>Online Certificate Status Protocol (OCSP) Response: <div style='white-space:pre'>$ocsp$</div></p>$endif$$endif$$endif$",
-"SignWithELegFailureEvidenceText":"$_TheScriveSystem()$ rejected the attempt by $signatory$ to sign the document. The reason was that the identity information of $signatory$ did not match the identity information received from the external e-ID system.$if(full)$ Information given by the external e-ID system: $msg$.$endif$",
+"SignDocumentEvidenceText":"The document was signed$if(!archive)$ by $actor$$endif$$_using_identification_method()$.$if(eleg)$$if(full)$<p>The text signed in the eID client was: </p> <pre>$infotext$</pre> <p>E-legitimation provider: $provider$.</p> $if(fieldsverified)$ <p>Information about signatory verified by $provider$: $if(fstnameverified)$ First name; $endif$ $if(lstnameverified)$ Last name; $endif$ $if(persnumverified)$ Personal number; $endif$</p> $endif$ <p>Signature: <div style='white-space:pre'>$signature$</div></p> $if(certificate)$ <p>Certificate: <div style='white-space:pre'>$certificate$</div></p>$endif$ $if(ocsp)$ <p>Online Certificate Status Protocol (OCSP) Response: <div style='white-space:pre'>$ocsp$</div></p>$endif$$endif$$endif$",
+"SignWithELegFailureEvidenceText":"$_TheScriveSystem()$ rejected the attempt by $signatory$ to sign the document. The reason was that the identity information of $signatory$ did not match the identity information received from the external eID system.$if(full)$ Information given by the external eID system: $msg$.$endif$",
 "SignatoryLinkVisitedText":"$if(full)$The link in the invitation$_to_review_or_sign()$ was clicked$if(!archive)$ by $actor$$endif$. $endif$The document was opened $if(!archive)$by $actor$ $endif$$if(full)$in $_theScriveSystem()$’s online interface to sign documents$else$online$endif$.",
 "TimeoutDocumentEvidenceText":"The due date for signing the document passed.$_ThePossibilityToSignIsDisabled()$",
 "_TheEmailSystemReportsThatTheInvitation":"$if(full)$$_TheScriveSystem()$’s external email delivery system reported that the invitation$else$The invitation$endif$",
@@ -29,5 +29,5 @@
 "_delivery_method":"$if(email)$email$elseif(mobile)$SMS$elseif(emailmobile)$email and SMS$endif$",
 "_theScriveSystem":"$if(full)$the Scrive e-signing system$else$Scrive$endif$",
 "_to_review_or_sign":"$if(viewing)$ to review$elseif(signing)$ to sign$endif$",
-"_using_identification_method":"$if(eleg)$ using e-ID as identification method$endif$"
+"_using_identification_method":"$if(eleg)$ using eID as identification method$endif$"
 }

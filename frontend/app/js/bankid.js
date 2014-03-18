@@ -88,7 +88,7 @@ window.Eleg = {
    },
    isUserCancelError: function(res) {
      var res = new String(res);
-     // The error message for user abortion differs between e-ID providers and versions
+     // The error message for user abortion differs between eID providers and versions
      if (res && res.match(/8002|USER_ABORT|USER_CANCEL/))
        return true;
 
