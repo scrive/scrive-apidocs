@@ -245,7 +245,6 @@ data CurrentEvidenceEventType =
   MarkInvitationReadEvidence                      |
   CloseDocumentEvidence                           |
   ChangeSignatoryEmailWhenUndeliveredEvidence     |
-  CancelDocumenElegEvidence                       |
   CancelDocumentEvidence                          |
   AttachSealedFileEvidence                        |
   PreparationToPendingEvidence                    |
@@ -267,7 +266,10 @@ data CurrentEvidenceEventType =
   AttachExtendedSealedFileEvidence                |
   ErrorSealingDocumentEvidence                    |
   AutomaticReminderSent                           |
-  SignWithELegFailureEvidence
+  SignWithELegFailureEvidence                     |
+  UpdateFieldCheckboxEvidence                     |
+  UpdateFieldSignatureEvidence                    |
+  UpdateFieldTextEvidence
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 data ObsoleteEvidenceEventType =
@@ -322,7 +324,8 @@ data ObsoleteEvidenceEventType =
   SetELegAuthenticationMethodEvidence             |
   AuthorUsesCSVEvidence                           |
   ErrorDocumentEvidence                           |
-  SetDocumentInviteTimeEvidence
+  SetDocumentInviteTimeEvidence                   |
+  CancelDocumenElegEvidence
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 instance PQFormat EvidenceEventType where
@@ -362,7 +365,7 @@ instance ToSQL EvidenceEventType where
   toSQL (Current CloseDocumentEvidence)                            = toSQL (30::Int16)
   toSQL (Current ChangeSignatoryEmailWhenUndeliveredEvidence)      = toSQL (31::Int16)
   toSQL (Obsolete ChangeMainfileEvidence)                          = toSQL (32::Int16)
-  toSQL (Current CancelDocumenElegEvidence)                        = toSQL (33::Int16)
+  toSQL (Obsolete CancelDocumenElegEvidence)                       = toSQL (33::Int16)
   toSQL (Current CancelDocumentEvidence)                           = toSQL (34::Int16)
   toSQL (Obsolete AttachFileEvidence)                              = toSQL (35::Int16)
   toSQL (Current AttachSealedFileEvidence)                         = toSQL (36::Int16)
@@ -412,6 +415,9 @@ instance ToSQL EvidenceEventType where
   toSQL (Current ErrorSealingDocumentEvidence)                     = toSQL (80::Int16)
   toSQL (Current AutomaticReminderSent)                            = toSQL (81::Int16)
   toSQL (Current SignWithELegFailureEvidence)                      = toSQL (82::Int16)
+  toSQL (Current UpdateFieldCheckboxEvidence)                      = toSQL (83::Int16)
+  toSQL (Current UpdateFieldSignatureEvidence)                     = toSQL (84::Int16)
+  toSQL (Current UpdateFieldTextEvidence)                          = toSQL (85::Int16)
 
 instance FromSQL EvidenceEventType where
   type PQBase EvidenceEventType = PQBase Int16
@@ -450,7 +456,7 @@ instance FromSQL EvidenceEventType where
       30 -> return (Current CloseDocumentEvidence)
       31 -> return (Current ChangeSignatoryEmailWhenUndeliveredEvidence)
       32 -> return (Obsolete ChangeMainfileEvidence)
-      33 -> return (Current CancelDocumenElegEvidence)
+      33 -> return (Obsolete CancelDocumenElegEvidence)
       34 -> return (Current CancelDocumentEvidence)
       35 -> return (Obsolete AttachFileEvidence)
       36 -> return (Current AttachSealedFileEvidence)
@@ -500,6 +506,9 @@ instance FromSQL EvidenceEventType where
       80 -> return (Current ErrorSealingDocumentEvidence)
       81 -> return (Current AutomaticReminderSent)
       82 -> return (Current SignWithELegFailureEvidence)
+      83 -> return (Current UpdateFieldCheckboxEvidence)
+      84 -> return (Current UpdateFieldSignatureEvidence)
+      85 -> return (Current UpdateFieldTextEvidence)
       _ -> E.throwIO $ RangeError {
         reRange = [(1, 82)]
       , reValue = n

@@ -1,5 +1,6 @@
 module DumpEvidenceTexts (dumpAllEvidenceTexts) where
 
+import Data.Decimal (realFracToDecimal)
 import Data.Function (on)
 import Data.List (sortBy)
 import Data.Maybe (fromJust, isNothing)
@@ -76,6 +77,12 @@ dumpEvidenceTexts now lang = do
         F.value "oldphone" ("bad-12 34 56" :: String)
         F.value "timeouttime" $ formatMinutesTimeUTC time
         F.value "timezone" ("Europe/Stockholm" :: String)
+        F.value "value" ("field value" :: String)
+        F.value "fieldname" ("field name" :: String)
+        F.objects "placements" $ for [(1::Int,0.123::Double,0.42::Double)] $ \(page,x,y) -> do
+                       F.value "page" $ page
+                       F.value "x" $ show $ realFracToDecimal 3 $ x
+                       F.value "y" $ show $ realFracToDecimal 3 $ y
   let mkev text evt =
           DocumentEvidenceEvent { evDocumentID = unsafeDocumentID 0
                                 , evTime = time

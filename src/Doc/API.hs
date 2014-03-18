@@ -474,11 +474,9 @@ signDocument :: (Kontrakcja m, DocumentMonad m)
              -> m ()
 signDocument slid mh fields msinfo screenshots = do
   switchLang =<< getLang <$> theDocument
-  dbUpdate $ UpdateFieldsForSigning slid fields
   ctx <- getContext
-  Just sl' <- getSigLinkFor slid <$> theDocument
-  let actor = signatoryActor ctx sl'
-  dbUpdate $ SignDocument slid mh msinfo screenshots actor
+  getSigLinkFor slid <$> theDocument >>= \sl -> dbUpdate $ UpdateFieldsForSigning sl fields $ signatoryActor ctx sl
+  getSigLinkFor slid <$> theDocument >>= \sl -> dbUpdate $ SignDocument slid mh msinfo screenshots $ signatoryActor ctx sl
 
 handleMismatch :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [SignatoryField] -> String -> String -> String -> m ()
 handleMismatch sid sf sfn sln spn = do

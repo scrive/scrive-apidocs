@@ -132,7 +132,6 @@ $htmlopentag()$
 
       table {
       width: 100%;
-      margin-bottom: 60px;
       padding: 0;
 
       }
@@ -145,6 +144,10 @@ $htmlopentag()$
         color: #333333;
         padding-top: 18px;
 
+      }
+
+      table.placements td {
+        padding: 0;
       }
 
       td.top{

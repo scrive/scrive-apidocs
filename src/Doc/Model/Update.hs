@@ -64,6 +64,7 @@ module Doc.Model.Update
 import Control.Monad.Identity (Identity)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.IO.Class
+import Data.Decimal (realFracToDecimal)
 import Data.Int
 import Data.Monoid
 import Data.Monoid.Space
@@ -91,6 +92,7 @@ import System.Locale (defaultTimeLocale)
 import Utils.Default
 import Utils.Monad
 import Utils.Monoid
+import Utils.Prelude (for)
 import Instances ()
 import IPAddress
 import Data.List hiding (tail, head)
@@ -1216,18 +1218,19 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m PostReminderSend () w
           mmsg
           actor
 
-data UpdateFieldsForSigning = UpdateFieldsForSigning SignatoryLinkID [(FieldType, String)]
+data UpdateFieldsForSigning = UpdateFieldsForSigning SignatoryLink [(FieldType, String)] Actor
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m UpdateFieldsForSigning () where
-  update (UpdateFieldsForSigning slid fields) = updateDocumentWithID $ const $ do
+  update (UpdateFieldsForSigning sl fields actor) = updateDocumentWithID $ \did -> do
     -- Document has to be in Pending state
     -- signatory could not have signed already
+    let slid = signatorylinkid sl
     let updateValue (fieldtype, fvalue) = do
           let custom_name = case fieldtype of
                               CustomFT xname _ -> xname
                               CheckboxFT xname -> xname
                               SignatureFT xname -> xname
                               _ -> ""
-          runQuery . sqlUpdate "signatory_link_fields" $ do
+          void $ runQuery . sqlUpdate "signatory_link_fields" $ do
                    sqlSet "value" fvalue
                    sqlWhereEq "signatory_link_id" slid
                    sqlWhereEq "custom_name" custom_name
@@ -1242,6 +1245,40 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m UpdateFieldsForSignin
                      sqlLeftJoinOn "signatory_links" "documents.id = signatory_links.document_id"
                      sqlWhereEq "documents.status" Pending
                      sqlWhere "signatory_links.sign_time IS NULL"
+
+    let mfield = getFieldOfType fieldtype (signatoryfields sl)
+              changed = case mfield of
+                          Just f | sfValue f == fvalue -> False
+                          _                            -> True
+          when changed $ do
+            let (event, efields) =
+                  case fieldtype of
+                    SignatureFT _ -> (UpdateFieldSignatureEvidence, return ())
+                    CheckboxFT _  -> (UpdateFieldCheckboxEvidence, when (not (null fvalue)) $ F.value "checked" True)
+                    _             -> (UpdateFieldTextEvidence, return ())
+            void $ update $ InsertEvidenceEvent event
+               (do F.value "value" fvalue
+                   F.value "fieldname" $ case fieldtype of
+                     FirstNameFT      -> "First name"
+                     LastNameFT       -> "Last name"
+                     CompanyFT        -> "Company"
+                     PersonalNumberFT -> "ID number"
+                     CompanyNumberFT  -> "Company number"
+                     EmailFT          -> "Email"
+                     CustomFT s _     -> s
+                     MobileFT         -> "Mobile number"
+                     _                -> ""
+                   efields
+                   case mfield of
+                     Just f | not (null ps) -> do
+                       F.objects "placements" $ for ps $ \p -> do
+                         F.value "page" $ placementpage p
+                         F.value "x" $ show $ realFracToDecimal 3 $ placementxrel p
+                         F.value "y" $ show $ realFracToDecimal 3 $ placementyrel p
+                       where ps = sfPlacements f
+                     _ -> return ())
+               actor
+               did
 
     forM_ fields updateValue
 
