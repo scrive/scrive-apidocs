@@ -4,8 +4,6 @@ AttachGuardtimeSealedFileEvidenceText=$AttachGuardtimeSealedFileEvidenceText()$
 ###
 AttachSealedFileEvidenceText=$AttachSealedFileEvidenceText()$
 ###
-CancelDocumenElegEvidenceText=$CancelDocumenElegEvidenceText()$
-###
 CancelDocumentEvidenceText=$CancelDocumentEvidenceText()$
 ###
 ChangeSignatoryEmailWhenUndeliveredEvidenceText=The email address for the signatory was changed from $oldemail$ to $newemail$ by $actor$.

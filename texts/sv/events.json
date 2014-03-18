@@ -3,7 +3,6 @@
 "AttachGuardtimeSealedFileEvidenceText":"Dokumentet förseglades med en digital signatur.",
 "AttachSealedFileEvidenceText":"$_TheScriveSystem()$ preparerade den slutgiltiga PDF:en$if(!archive)$, inklusive bevismaterial insamlat av $_TheScriveSystem()$, före försegling med en digital signatur$endif$.",
 "AutomaticReminderSentText":"En automatisk påminnelse att signera skickades till $signatory$ via $_delivery_method()$$if(full)$ på begäran av $author$$endif$.",
-"CancelDocumenElegEvidenceText":"$_TheScriveSystem()$ avvisade försöket av $signatory$ att signera dokumentet. Anledningen var att personuppgifterna för $signatory$ inte stämde överens med uppgifterna i den e-legitimation som användes vid signering.$if(full)$ Orsaken som den externa e-legitimationstjänsten angav: $msg$.$endif$",
 "CancelDocumentEvidenceText":"Inbjudan att signera återkallades$if(!archive)$ av $actor$$endif$.$_ThePossibilityToSignIsDisabled()$",
 "CloseDocumentEvidenceText":"$_TheScriveSystem()$ låste dokumentet för ytterligare ändringar av de signerande parterna.",
 "InvitationDeliveredByEmailText":"$_TheEmailSystemReportsThatTheInvitation()$ $_to_review_or_sign()$ levererades till $signatory$ via e-post.",
