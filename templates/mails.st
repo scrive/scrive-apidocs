@@ -172,13 +172,20 @@ $if(custommessage)$
 $else$
       <div class="editable" name="custommessage"></div>
 $endif$
+$if(!documentAttached)$
+  $nicebutton(link=mainfilelink; text=_mailContractClosedContentLinkedButton())$
+$endif$
 ####
 remindMailSignedStandardHeader=
 <br/>
   $_remindMailSignedContractStandardHeaderSendRequest()$
   <br/>
   <br/>
-    $mailDocumentAttachedOrLinked(attached=_remindMailSignedContractStandardHeaderSendRequest2())$
+  $if(documentAttached)$
+    $_remindMailSignedContractStandardHeaderSendRequest2()$
+  $else$
+    $_mailDocumentLinked()$
+  $endif$
 ###
 ###
 ### Reminding mails - NOT SIGNED

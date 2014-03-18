@@ -10,6 +10,7 @@ module Doc.DocMails (
   , sendClosedEmails
   , sendRejectEmails
   , sendDocumentErrorEmail
+  , makeMailAttachments
   , runMailTInScheduler
   , MailT
   ) where
