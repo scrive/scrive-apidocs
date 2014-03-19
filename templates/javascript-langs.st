@@ -548,7 +548,6 @@ javascriptLocalisation =
            }
          , docsignview : {
                followArrowToSign: "$_followArrowToSign()$"
-             , greenArrow: "$_arrowGreen()$"
              , arrow: "$_arrow()$"
              , reviewDocument: "$_reviewDocument()$"
              , signedNotClosed: "$_signedNotClosed()$"
@@ -590,7 +589,6 @@ javascriptLocalisation =
              , textfield: "$_signViewTextField()$"
              , filladitionfields : "$_filladitionfields()$"
              , filladitionfieldsdescription : "$_filladitionfieldsdescription()$"
-             , welcome : "$_welcome()$"
              , mandatoryAction: "$_mandatoryAction()$"
              , optionalAction: "$_optionalAction()$"
              , promoBannerButton: "$_promoBannerButton()$"

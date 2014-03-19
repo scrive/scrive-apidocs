@@ -242,6 +242,12 @@ var PageTasksArrowView = Backbone.View.extend({
     if (this.arrow != undefined)
       this.arrow.updatePosition();
   },
+  goToCurrentTask: function() {
+    if (this.arrow === undefined) {
+      return;
+    }
+    this.arrow.scroll();
+  },
   render: function() {
     var view = this;
     var document = this.document;
@@ -265,6 +271,7 @@ window.PageTasksArrow = function(args){
             , view     : function()    { return view;}
             , blink    : function()    { view.blink();}
             , updatePosition: function() { view.updatePosition();}
+            , goToCurrentTask: function() { view.goToCurrentTask();}
          };
 };
 

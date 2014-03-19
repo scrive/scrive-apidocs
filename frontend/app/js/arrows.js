@@ -340,6 +340,9 @@ window.Arrow = {
                     startBlinking();
 
               },
+              scroll: function() {
+                view.scroll();
+              },
               /* We need to recalculate width after appending arrow to page */
               fixWidth: function() {
                    if (view.fixWidth != undefined) view.fixWidth();

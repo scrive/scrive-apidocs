@@ -11,23 +11,10 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     this.render();
   },
   welcomeText : function() {
-    return localization.docsignview.welcome +
-           " <span class='name'>" +
-           this.model.document().currentSignatory().name() +
-           "</span>";
-  },
-  // The copy changes if we have the default primary color (green) or not.
-  arrowText: function() {
-    var signviewbranding = this.model.signviewbranding();
-    var primarycolour = signviewbranding.signviewprimarycolour();
-    if (this.model.usebranding() && primarycolour) {
-      return localization.docsignview.arrow;
-    } else {
-      return localization.docsignview.greenArrow;
-    }
+    return $('<span />').text(this.model.document().currentSignatory().name() + ', ');
   },
   // Big instruction or information about document state
-  text: function() {
+  text: function(capitalize) {
     var document = this.model.document();
     var string = "";
     if (document.isSigning()) {
@@ -44,8 +31,11 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
       console.error("Unsure what state we're in");
       string = localization.docsignview.unavailableForSign;
     }
+    if (capitalize) {
+      string = string.charAt(0).toUpperCase() + string.slice(1);
+    }
     // Keep this as a string to preserve the ability to have HTML in the translation strings.
-    return $("<div>" + string + "</div>");
+    return $("<span>" + string + "</span>");
   },
   // Smaller text with more details on some states
   subtext: function() {
@@ -123,26 +113,14 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
                       document.currentSignatory().canSign() &&
                       !document.currentSignatory().author();
 
-    if (welcomeUser) {
-      var headline = $("<div class='headline' style='margin-bottom : 10px'/>");
-      if (BrowserInfo.isSmallScreen()) {
-        headline.css({'font-size': '42px',
-                      'line-height': '20px',
-                      'margin-bottom': '30px'});
-      }
-      this.styleText(headline);
-      container.append(headline.html(this.welcomeText()));
-    }
-
     var headline = $("<div class='headline' />");
-    if (BrowserInfo.isSmallScreen() && welcomeUser) {
-      headline.css('font-size', '42px');
-      headline.css('margin-bottom', '0px');
-      headline.css('line-height', '20px');
+    if (welcomeUser) {
+      headline.append(this.welcomeText());
     }
 
-    var headlineText = this.text();
-    headlineText.find('.arrowtext').text(this.arrowText());
+    var headlineText = this.text(headline.text() == "");
+    var view = this;
+    headlineText.find('.arrowtext').text(localization.docsignview.arrow).click(function() {view.model.arrow().goToCurrentTask();});
     container.append(headline.append(headlineText));
     this.styleText(headline);
 
