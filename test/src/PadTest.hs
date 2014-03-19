@@ -6,6 +6,7 @@ import Data.List
 import User.Model
 import Doc.DocUtils
 import Doc.DocStateData
+import Doc.DocumentMonad (withDocument)
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import TestingUtil
@@ -41,7 +42,7 @@ testAddToPadQueue = do
                                                            (any isSignatory . documentsignatorylinks) &&^
                                                            (any (((==) PadDelivery) . signatorylinkdeliverymethod) . documentsignatorylinks) )
   let Just siglink = find ((==) PadDelivery . signatorylinkdeliverymethod) (documentsignatorylinks doc)
-  _ <- dbUpdate $ AddToPadQueue (userid user) (documentid doc) (signatorylinkid $ siglink) aa
+  _ <- withDocument doc $ dbUpdate $ AddToPadQueue (userid user) (signatorylinkid $ siglink) aa
   Just (did,slid) <- dbQuery $ GetPadQueue (userid user)
   assertEqual "We get from pad queue same document we put in" (documentid doc) did
   assertEqual "We get from pad queue same document we put in" (signatorylinkid $ siglink) slid
@@ -56,7 +57,7 @@ testRemoveFromPadQueue = do
                                                            (any isSignatory . documentsignatorylinks) &&^
                                                            (any (((==) PadDelivery) . signatorylinkdeliverymethod) . documentsignatorylinks))
   let Just siglink = find ((==) PadDelivery . signatorylinkdeliverymethod) (documentsignatorylinks doc)
-  _ <- dbUpdate $ AddToPadQueue (userid user) (documentid doc) (signatorylinkid $ siglink) aa
+  _ <- withDocument doc $ dbUpdate $ AddToPadQueue (userid user) (signatorylinkid $ siglink) aa
   _ <- dbQuery $ GetPadQueue (userid user)
   _ <- dbUpdate $ ClearPadQueue (userid user) aa
   pq <- dbQuery $ GetPadQueue (userid user)
@@ -73,13 +74,13 @@ testLastDocumentInPadqueue = do
                                                            (any isSignatory . documentsignatorylinks) &&^
                                                            (any (((==) PadDelivery) . signatorylinkdeliverymethod) . documentsignatorylinks))
   let Just siglink1 = find ((==) PadDelivery . signatorylinkdeliverymethod) (documentsignatorylinks doc1)
-  _ <- dbUpdate $ AddToPadQueue (userid user) (documentid doc1) (signatorylinkid siglink1) aa
+  _ <- withDocument doc1 $ dbUpdate $ AddToPadQueue (userid user) (signatorylinkid siglink1) aa
   doc2 <- addRandomDocumentWithAuthorAndCondition user (isSignable &&^
                                                            isPending &&^
                                                            (any isSignatory . documentsignatorylinks) &&^
                                                            (any (((==) PadDelivery) . signatorylinkdeliverymethod) . documentsignatorylinks))
   let Just siglink2 = find ((==) PadDelivery . signatorylinkdeliverymethod) (documentsignatorylinks doc2)
-  _ <- dbUpdate $ AddToPadQueue (userid user) (documentid doc2) (signatorylinkid siglink2) aa
+  _ <- withDocument doc2 $ dbUpdate $ AddToPadQueue (userid user) (signatorylinkid siglink2) aa
   Just (did,slid) <- dbQuery $ GetPadQueue (userid user)
   assertEqual "We get last document from padqueue" (documentid doc2) did
   assertEqual "We get last document from padqueue with proper signatory link" (signatorylinkid siglink2) slid

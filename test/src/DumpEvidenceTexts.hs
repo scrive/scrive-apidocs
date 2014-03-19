@@ -6,6 +6,7 @@ import Data.Maybe (fromJust, isNothing)
 import DB (MonadDB)
 import Doc.DocStateData (SignatoryField(..), SignatoryLink(..), FieldType(..), DeliveryMethod(..))
 import Doc.DocumentID (unsafeDocumentID)
+import Doc.DocumentMonad (withDocumentID)
 import EvidenceLog.View (simpleEvents, simplyfiedEventText, eventForVerificationPage)
 import Text.StringTemplates.Templates (TemplatesMonad, renderTemplate)
 import Util.Actor (Actor(..), actorEmail, actorUserID, actorAPIString, actorIP)
@@ -94,7 +95,7 @@ dumpEvidenceTexts now lang = do
                                 }
   evs <- (sortBy (compare `on` (\(evt, _, _, _) -> show evt)) <$>) $
          forM (evidencetypes) $ \evt -> do
-       elog <- evidenceLogText undefined evt (fields evt) asl messageText actor
+       elog <- withDocumentID (unsafeDocumentID 0) $ evidenceLogText evt (fields evt) asl messageText actor
        let simpletext mactor = if simpleEvents (Current evt) && (isNothing mactor || eventForVerificationPage ev)
                                then Just <$> simplyfiedEventText mactor lang ev
                                else return Nothing

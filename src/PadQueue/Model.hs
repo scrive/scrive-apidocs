@@ -13,7 +13,8 @@ import Utils.Monad
 import User.Model
 import Doc.SignatoryLinkID
 import Doc.DocumentID
-import Doc.Model
+import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID, withDocumentID)
+import Doc.Model ()
 import Util.Actor
 import EvidenceLog.Model
 import Text.StringTemplates.Templates
@@ -21,23 +22,21 @@ import Util.SignatoryLinkUtils
 
 type PadQueue = Maybe (DocumentID, SignatoryLinkID)
 
-data AddToPadQueue = AddToPadQueue UserID DocumentID SignatoryLinkID Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddToPadQueue () where
-  update (AddToPadQueue uid did slid a) = do
-    doc <- query $ GetDocumentByDocumentID did
+data AddToPadQueue = AddToPadQueue UserID SignatoryLinkID Actor
+instance (DocumentMonad m, MonadDB m, TemplatesMonad m) => DBUpdate m AddToPadQueue () where
+  update (AddToPadQueue uid slid a) = do
+    did <- theDocumentID
     update $ ClearPadQueue uid a
     r <- runQuery . sqlInsert "padqueue" $ do
       sqlSet "user_id" uid
       sqlSet "document_id" did
       sqlSet "signatorylink_id" slid
-    when_ (r == 1) $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+    when_ (r == 1) $ theDocument >>= \doc -> update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
       SendToPadDevice
       (return ())
       (getSigLinkFor slid doc)
       Nothing
       a
-      did
-    return ()
 
 data ClearPadQueue = ClearPadQueue UserID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ClearPadQueue () where
@@ -49,18 +48,15 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ClearPadQueue () where
     pq :: PadQueue <- fetchMaybe id
     case pq of
        Nothing -> return ()
-       Just (did, slid) -> do
-         doc <- query $ GetDocumentByDocumentID did
+       Just (did, slid) -> withDocumentID did $ do
          r <- runQuery $ "DELETE FROM padqueue WHERE user_id =" <?> uid
-         when_ (r == 1 && not (hasSigned (doc, slid))) $ do
-           _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+         theDocument >>= \doc -> when_ (r == 1 && not (hasSigned (doc, slid))) $ do
+           update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                 RemovedFromPadDevice
                 (return ())
                 (getSigLinkFor slid doc)
                 Nothing
                 a
-                did
-           return ()
 
 data GetPadQueue = GetPadQueue UserID
 instance MonadDB m => DBQuery m GetPadQueue PadQueue where

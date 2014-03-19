@@ -78,7 +78,6 @@ docStateTests env = testGroup "DocState" [
   testThat "SignWithELegFailure adds to the log" env testSignWithELegFailureEvidenceDocumentEvidenceLog,
 
   testThat "AppendFirstSealedFile adds to the log" env testAppendFirstSealedFileEvidenceLog,
-  testThat "AddInvitationEvidence adds to the log" env testAddInvitationEvidenceLog,
   testThat "GetDocumentsByCompanyWithFiltering filters" env testGetDocumentsByCompanyWithFilteringFilters,
   testThat "GetDocumentsByCompanyWithFiltering finds" env testGetDocumentsByCompanyWithFilteringFinds,
   testThat "GetDocumentsByCompanyWithFiltering finds with multiple" env testGetDocumentsByCompanyWithFilteringFindsMultiple,
@@ -423,16 +422,6 @@ testDeleteSigAttachmentEvidenceLog = do
 
     lg <- dbQuery . GetEvidenceLog =<< theDocumentID
     assertJust $ find (\e -> evType e == Current DeleteSigAttachmentEvidence) lg
-
-testAddInvitationEvidenceLog :: TestEnv ()
-testAddInvitationEvidenceLog = do
-  author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author (isPending &&^ ((<=) 2 . length . documentsignatorylinks)) `withDocumentM` do
-    Just sl <- getSigLinkFor (not . (isAuthor::SignatoryLink->Bool)) <$> theDocument
-    success <- randomUpdate $ \t->AddInvitationEvidence (signatorylinkid sl) Nothing (systemActor t)
-    assert success
-    lg <- dbQuery . GetEvidenceLog =<< theDocumentID
-    assertJust $ find (\e -> evType e == Current InvitationEvidence) lg
 
 testAppendFirstSealedFileEvidenceLog :: TestEnv ()
 testAppendFirstSealedFileEvidenceLog = do

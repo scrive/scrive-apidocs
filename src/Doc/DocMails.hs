@@ -33,6 +33,7 @@ import Doc.DocUtils
 import Doc.DocView
 import Doc.DocViewMail
 import Doc.DocViewSMS
+import EvidenceLog.Model (InsertEvidenceEventWithAffectedSignatoryAndMsg(..), CurrentEvidenceEventType(..))
 import SMS.SMS (scheduleSMS)
 import InputValidation
 import IPAddress (noIP)
@@ -126,7 +127,7 @@ sendInvitationEmailsToViewers = do
    Helper function to send emails to invited parties
    ??: Should this be in DocControl or in an email-specific file?
  -}
-sendInvitationEmail1 :: (CryptoRNG m, Log.MonadLog m, TemplatesMonad m, DocumentMonad m, MailContextMonad m) => SignatoryLink -> m (Maybe String)
+sendInvitationEmail1 :: (CryptoRNG m, Log.MonadLog m, TemplatesMonad m, DocumentMonad m, MailContextMonad m) => SignatoryLink -> m ()
 sendInvitationEmail1 signatorylink | not (isAuthor signatorylink) = do
   did <- theDocumentID
   mctx <- getMailContext
@@ -143,17 +144,18 @@ sendInvitationEmail1 signatorylink | not (isAuthor signatorylink) = do
                                 })
      (scheduleSMS =<< smsInvitation signatorylink =<< theDocument)
 
-  if sent then do
-      res <- documentinvitetext <$> theDocument >>= \text ->
-              dbUpdate $ AddInvitationEvidence (signatorylinkid signatorylink) (Just text <| text /= "" |> Nothing) $ systemActor $ mctxtime mctx
-      if res then return Nothing
-             else return $ Just "sendInvitationEmail1 failed"
-   else return Nothing
+  when sent $ do
+    documentinvitetext <$> theDocument >>= \text ->
+            void $ dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+              InvitationEvidence
+              (return ())
+              (Just signatorylink)
+              (Just text <| text /= "" |> Nothing)
+              (systemActor $ mctxtime mctx)
 
 sendInvitationEmail1 authorsiglink = do
   mctx <- getMailContext
-  if (isSignatory authorsiglink)
-     then do
+  when (isSignatory authorsiglink) $ do
        void $ sendNotifications authorsiglink
           (do
             -- send invitation to sign to author when it is his turn to sign
@@ -161,8 +163,6 @@ sendInvitationEmail1 authorsiglink = do
             scheduleEmailSendout (mctxmailsconfig mctx) $
                                  mail { to = [getMailAddress authorsiglink] })
           (scheduleSMS =<<  flip smsInvitationToAuthor authorsiglink =<< theDocument)
-       return Nothing
-     else return Nothing
 
 {- |
     Send a reminder email (and update the modification time on the document)

@@ -36,7 +36,7 @@ import Doc.DocMails
 import Doc.Model
 import Doc.DocStateData
 import Doc.DocStateQuery
-import Doc.DocumentMonad (DocumentMonad, withDocumentM, withDocument, theDocument, theDocumentID)
+import Doc.DocumentMonad (DocumentMonad, withDocumentM, withDocument, theDocument)
 import Doc.Rendering
 import Doc.DocUtils (documentsealedfileM)
 import Doc.DocView
@@ -46,6 +46,7 @@ import Doc.DocumentID
 import Doc.JpegPages
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
 import Doc.Tokens.Model
+import EvidenceLog.Model (InsertEvidenceEvent(..), CurrentEvidenceEventType(..))
 import Attachment.Model
 import InputValidation
 import Instances ()
@@ -180,7 +181,7 @@ handleSignShowSaveMagicHash did sid mh = do
     dbUpdate $ AddDocumentSessionToken sid mh
 
     invitedlink <- guardJust . getSigLinkFor sid =<< theDocument
-    dbUpdate . AddSignatoryLinkVisitedEvidence (signatoryActor ctx invitedlink) =<< theDocumentID
+    void $ dbUpdate $ InsertEvidenceEvent SignatoryLinkVisited (return ()) (signatoryActor ctx invitedlink)
 
     -- Redirect to propper page
     return $ LinkSignDocNoMagicHash did sid

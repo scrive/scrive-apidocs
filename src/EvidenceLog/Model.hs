@@ -23,6 +23,7 @@ import Data.Maybe (fromMaybe)
 import Data.Monoid
 import Data.Monoid.Space
 import DB
+import Doc.DocumentMonad (DocumentMonad, theDocumentID, theDocument)
 import qualified Control.Exception as E
 import qualified HostClock.Model as HC
 import IPAddress
@@ -33,7 +34,6 @@ import Util.Actor
 import Util.HasSomeUserInfo (getIdentifier, getEmail)
 import Doc.SignatoryLinkID
 import Doc.DocStateData (SignatoryLink(..), AuthenticationMethod(..), DeliveryMethod(..), documentsignatorylinks)
-import Doc.Model.Query (GetDocumentByDocumentID(..))
 import Version
 import Doc.DocumentID
 import Text.StringTemplates.Templates
@@ -46,14 +46,12 @@ data InsertEvidenceEventWithAffectedSignatoryAndMsg = InsertEvidenceEventWithAff
                            (Maybe SignatoryLink)  -- Affected signatory
                            (Maybe String)         -- Message text
                            Actor                  -- Actor
-                           DocumentID             -- Affected document
     deriving (Typeable)
 
 data InsertEvidenceEvent = InsertEvidenceEvent
                            CurrentEvidenceEventType -- A code for the event
                            (F.Fields Identity ()) -- Text for evidence
                            Actor                  -- Actor
-                           DocumentID             -- Affected document
     deriving (Typeable)
 
 eventTextTemplateName :: CurrentEvidenceEventType -> String
@@ -73,19 +71,19 @@ signatoryLinkTemplateFields sl = do
   F.value "signing"     $ signatoryispartner sl
 
 -- | Create evidence text that goes into evidence log
-evidenceLogText :: (TemplatesMonad m, MonadDB m) => DocumentID -> CurrentEvidenceEventType -> F.Fields Identity () -> Maybe SignatoryLink -> Maybe String -> Actor -> m String
-evidenceLogText did event textFields masl mmsg actor = do
+evidenceLogText :: (DocumentMonad m, TemplatesMonad m, MonadDB m)
+                => CurrentEvidenceEventType -> F.Fields Identity () -> Maybe SignatoryLink -> Maybe String -> Actor -> m String
+evidenceLogText event textFields masl mmsg actor = do
    msignatory <-
      case masl of
        Nothing -> return Nothing
        Just sl -> do
          let s = getIdentifier sl
          if null s
-          then do
-           d <- dbQuery $ GetDocumentByDocumentID did
-           return $ fmap (("(signatory " ++) . (++ ")") . show . fst) $ 
-                       find ((==(signatorylinkid sl)) . signatorylinkid . snd) $
-                       zip [1..] (documentsignatorylinks d)
+          then
+           fmap (("(signatory " ++) . (++ ")") . show . fst) .
+                       find ((==(signatorylinkid sl)) . signatorylinkid . snd) .
+                       zip [1..] . documentsignatorylinks <$> theDocument
           else
            return $ Just s
    let fields = do
@@ -102,9 +100,10 @@ evidenceLogText did event textFields masl mmsg actor = do
    ts <- getTextTemplatesByLanguage $ codeFromLang LANG_EN
    return $ runIdentity $ renderHelper ts (eventTextTemplateName event) fields
 
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsg Bool where
-  update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields masl mmsg actor did) = do
-   text <- evidenceLogText did event textFields masl mmsg actor
+instance (DocumentMonad m, MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsg Bool where
+  update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields masl mmsg actor) = do
+   text <- evidenceLogText event textFields masl mmsg actor
+   did <- theDocumentID
    runQuery01 . sqlInsert "evidence_log" $ do
       sqlSet "document_id" did
       sqlSet "time" $ actorTime actor
@@ -121,8 +120,8 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffe
       sqlSet "client_time" $ actorClientTime actor
       sqlSet "client_name" $ actorClientName actor
 
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEvent Bool where
-  update (InsertEvidenceEvent event textFields actor did) = update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields Nothing Nothing actor did)
+instance (DocumentMonad m, MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEvent Bool where
+  update (InsertEvidenceEvent event textFields actor) = update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields Nothing Nothing actor)
 
 type DocumentEvidenceEvent = DocumentEvidenceEvent' SignatoryLinkID
 

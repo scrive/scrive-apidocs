@@ -579,7 +579,6 @@ resealFile docid = onlyAdmin $ withDocumentID docid $ do
           ResealedPDF
           (return ())
           actor
-          docid
   postDocumentClosedActions False True
   return LoopBack
 

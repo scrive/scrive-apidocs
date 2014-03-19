@@ -426,7 +426,6 @@ sealDocumentFile file@File{fileid, filename} = theDocumentID >>= \documentid ->
         AttachSealedFileEvidence
         (return ())
         (systemActor mctxtime)
-        documentid
     let tmpin = tmppath ++ "/input.pdf"
     let tmpout = tmppath ++ "/output.pdf"
     content <- getFileContents file

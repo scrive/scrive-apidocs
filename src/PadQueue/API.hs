@@ -19,6 +19,7 @@ import Kontra
 import User.Model
 import Doc.SignatoryLinkID
 import Doc.DocumentID
+import Doc.DocumentMonad (withDocumentM, theDocument)
 import API.Monad
 import Control.Monad.Error
 import qualified Log
@@ -40,17 +41,17 @@ padqueueAPI = choice
 addToQueue :: Kontrakcja m => DocumentID ->  SignatoryLinkID -> m Response
 addToQueue did slid = api $ do
     (user, actor, _) <- getAPIUserWithPad APIDocSend
-    doc <- dbQuery $ GetDocumentByDocumentID $ did
-    auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
-    when (not $ (auid == userid user)) $ do
-        throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
-    sl <-  apiGuardJustM (serverError "Not a signatory") $ return $ getSigLinkFor slid doc
-    if (signatorylinkdeliverymethod sl == PadDelivery)
-        then do
-            Log.mixlog_ $ "Adding signatory #" ++ (show slid) ++ "to padqueue of user #" ++ (show $ userid user)
-            dbUpdate $ AddToPadQueue (userid user) did slid actor
-            runJSONGenT $ return ()
-        else throwIO . SomeKontraException $ serverError "Not a pad document."
+    dbQuery (GetDocumentByDocumentID did) `withDocumentM` do
+      auid <- theDocument >>= \doc -> apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
+      when (not $ (auid == userid user)) $ do
+          throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
+      sl <-  theDocument >>= \doc -> apiGuardJustM (serverError "Not a signatory") $ return $ getSigLinkFor slid doc
+      if (signatorylinkdeliverymethod sl == PadDelivery)
+          then do
+              Log.mixlog_ $ "Adding signatory #" ++ (show slid) ++ "to padqueue of user #" ++ (show $ userid user)
+              dbUpdate $ AddToPadQueue (userid user) slid actor
+              runJSONGenT $ return ()
+          else throwIO . SomeKontraException $ serverError "Not a pad document."
 
 clearQueue :: Kontrakcja m => m Response
 clearQueue = api $ do
