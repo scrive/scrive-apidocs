@@ -132,6 +132,7 @@ testMany (allargs, ts) = Log.withLogger $ do
   runDBT connSource dts $ do
     migrateDatabase Log.mixlog_ kontraTables kontraMigrations
     defineMany kontraFunctions
+    commit
 
     active_tests <- liftIO . atomically $ newTVar (True, 0)
     rejected_documents <- liftIO . atomically $ newTVar 0
