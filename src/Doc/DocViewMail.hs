@@ -113,26 +113,10 @@ remindMailSigned :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
                  -> Bool
                  -> m Mail
 remindMailSigned forMail customMessage document signlink ispreview documentAttached = do
-    let fields = documentAttachedFields forMail signlink documentAttached document
-    sheader <- remindMailSignedStandardHeader document signlink fields
     documentMailWithDocLang document "remindMailSigned" $ do
-            F.value "header" sheader
             F.value "custommessage" customMessage
             F.value "ispreview" ispreview
-            fields
-
-remindMailSignedStandardHeader :: TemplatesMonad m
-                               => Document
-                               -> SignatoryLink
-                               -> Fields m ()
-                               -> m String
-remindMailSignedStandardHeader document signlink fields =
-    renderLocalTemplate document "remindMailSignedStandardHeader" $ do
-        F.value "documenttitle" $ documenttitle document
-        F.value "author" $ getAuthorName document
-        F.value "personname" $ getSmartName signlink
-        fields
-
+            documentAttachedFields forMail signlink documentAttached document
 
 mailForwardSigned :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
                  => SignatoryLink -> Bool -> Document

@@ -157,12 +157,9 @@ remindMailSigned=
     $_remindMailSignedTitle()$
     $nicemail(
         mailheader= _remindMailSignedTitle();
-        mailp1 = remindMailSignedP1();
+        mailp1 = remindMailSignedStandardHeader();
         mailp2 = remindMailSignedP2()
     )$
-###
-remindMailSignedP1=
-$header:noescape()$
 ###
 remindMailSignedP2=
 $if(custommessage)$

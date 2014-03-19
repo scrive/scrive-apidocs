@@ -818,7 +818,7 @@
 "_reloadPage":"Ladda om sidan",
 "_remindMailNotSignedContractBody":"<strong>$authorname$</strong> vill påminna dig om att du inte har signerat dokumentet <strong>$documenttitle$</strong> än.",
 "_remindMailNotSignedTitleContract":"Påminnelse att e-signera dokument: $documenttitle$",
-"_remindMailSignedContractStandardHeaderSendRequest":"Du har tidigare signerat dokumentet <strong>$documenttitle$</strong> genom e-signeringstjänsten Scrive. <strong>$author$</strong> har begärt att vi ska skicka dokumentet <strong>$documenttitle$</strong> till dig på nytt.",
+"_remindMailSignedContractStandardHeaderSendRequest":"Du har tidigare signerat dokumentet <strong>$documenttitle$</strong> genom e-signeringstjänsten Scrive. <strong>$creatorname$</strong> har begärt att vi ska skicka dokumentet <strong>$documenttitle$</strong> till dig på nytt.",
 "_remindMailSignedContractStandardHeaderSendRequest2":"Dokumentet är bifogat med detta mail.",
 "_remindMailSignedTitle":"Dokument skickat på nytt: $documenttitle$",
 "_reminderByEmailMobileQuestion":"Vill du skicka en påminnelse via e-post och SMS?",
