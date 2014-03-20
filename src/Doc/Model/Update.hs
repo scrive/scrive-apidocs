@@ -19,6 +19,7 @@ module Doc.Model.Update
   , NewDocument(..)
   , PreparationToPending(..)
   , PurgeDocuments(..)
+  , unsavedDocumentLingerDays
   , RejectDocument(..)
   , RemoveDocumentAttachment(..)
   , ResetSignatoryDetails(..)
@@ -37,6 +38,10 @@ module Doc.Model.Update
   , SetEmailInvitationDeliveryStatus(..)
   , SetSMSInvitationDeliveryStatus(..)
   , SetInviteText(..)
+  , SetShowHeader(..)
+  , SetShowPDFDownload(..)
+  , SetShowRejectOption(..)
+  , SetShowFooter(..)
   , SignDocument(..)
   , CloneDocumentWithUpdatedAuthor(..)
   , StoreDocumentForTesting(..)
@@ -293,6 +298,10 @@ insertDocumentAsIs document@(Document
                    _documentautoremindtime
                    documentinvitetime
                    documentinvitetext
+                   documentshowheader
+                   documentshowpdfdownload
+                   documentshowrejectoption
+                   documentshowfooter
                    documentsharing
                    documenttags
                    documentauthorattachments
@@ -316,6 +325,10 @@ insertDocumentAsIs document@(Document
         sqlSet "invite_time" $ signtime `fmap` documentinvitetime
         sqlSet "invite_ip" (fmap signipnumber documentinvitetime)
         sqlSet "invite_text" documentinvitetext
+        sqlSet "show_header" documentshowheader
+        sqlSet "show_pdf_download" documentshowpdfdownload
+        sqlSet "show_reject_option" documentshowrejectoption
+        sqlSet "show_footer" documentshowfooter
         sqlSet "lang" documentlang
         sqlSet "sharing" documentsharing
         sqlSet "object_version" documentobjectversion
@@ -889,6 +902,22 @@ data SetInviteText = SetInviteText String Actor
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetInviteText Bool where
   update (SetInviteText text _actor) = updateWithoutEvidence "invite_text" text
 
+data SetShowHeader = SetShowHeader Bool Actor
+instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetShowHeader Bool where
+  update (SetShowHeader bool _actor) = updateWithoutEvidence "show_header" bool
+
+data SetShowPDFDownload = SetShowPDFDownload Bool Actor
+instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetShowPDFDownload Bool where
+  update (SetShowPDFDownload bool _actor) = updateWithoutEvidence "show_pdf_download" bool
+
+data SetShowRejectOption = SetShowRejectOption Bool Actor
+instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetShowRejectOption Bool where
+  update (SetShowRejectOption bool _actor) = updateWithoutEvidence "show_reject_option" bool
+
+data SetShowFooter = SetShowFooter Bool Actor
+instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetShowFooter Bool where
+  update (SetShowFooter bool _actor) = updateWithoutEvidence "show_footer" bool
+
 data SetDaysToSign = SetDaysToSign Int32 Actor
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetDaysToSign Bool where
   update (SetDaysToSign days _actor) = updateWithoutEvidence "days_to_sign" days
@@ -1265,14 +1294,21 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m UpdateDraft Bool wher
     , update $ SetDaysToRemind (documentdaystoremind document) actor
     , update $ SetDocumentLang (getLang document) actor
     , update $ SetInviteText (documentinvitetext document) actor
+    , update $ SetShowHeader (documentshowheader document) actor
+    , update $ SetShowPDFDownload (documentshowpdfdownload document) actor
+    , update $ SetShowRejectOption (documentshowrejectoption document) actor
+    , update $ SetShowFooter (documentshowfooter document) actor
     , update $ SetDocumentTags (documenttags document) actor
     , update $ SetDocumentAPICallbackURL (documentapicallbackurl document)
     , updateMTimeAndObjectVersion (actorTime actor) >> return True
     ]
 
+unsavedDocumentLingerDays :: Int
+unsavedDocumentLingerDays = 30
+
 data PurgeDocuments = PurgeDocuments Int Int
 instance MonadDB m => DBUpdate m PurgeDocuments Int where
-  update (PurgeDocuments savedDocumentLingerDays unsavedDocumentLingerDays) = do
+  update (PurgeDocuments savedDocumentLingerDays unsavedDocumentLingerDays') = do
 
     runQuery_ $ "CREATE TEMP TABLE documents_to_purge(id, title) AS"
         <+> "SELECT documents.id, documents.title"
@@ -1294,7 +1330,7 @@ instance MonadDB m => DBUpdate m PurgeDocuments Int where
         <+> "                   WHERE signatory_links.document_id = documents.id"
         <+> "                     AND signatory_links.user_id IS NULL"
                                   -- linger time hasn't elapsed yet
-        <+> "                     AND documents.mtime + (" <?> (show unsavedDocumentLingerDays ++ "days") <+> " :: INTERVAL) > now())"
+        <+> "                     AND documents.mtime + (" <?> (show unsavedDocumentLingerDays' ++ "days") <+> " :: INTERVAL) > now())"
 
     -- set purged time on documents
     rows <- runSQL $ "UPDATE documents"
