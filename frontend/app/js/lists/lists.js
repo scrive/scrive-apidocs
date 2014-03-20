@@ -396,8 +396,8 @@ define(['Backbone', 'legacy_code'], function() {
                                        cssClass: "float-left extra-width",
                                        name : localization.more,
                                        theme : "black",
-                                       expandSide : "right",
-                                       optionsWidth: "270px"
+                                       optionsWidth: "100%",
+                                       textWidth: "243px"
             });
             this.pretableboxsubbox.removeClass('empty');
             this.pretableboxsubbox.append($("<div class='options-box'/>").append(select.el()));
