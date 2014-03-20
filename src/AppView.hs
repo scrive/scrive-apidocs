@@ -22,6 +22,7 @@ module AppView( kontrakcja
               , companyForPage
               , companyUIForPage
               , handleTermsOfService
+              , enableCookiesPage
               ) where
 
 import FlashMessage
@@ -184,6 +185,9 @@ unsupportedBrowserPage :: Kontrakcja m => m Response
 unsupportedBrowserPage = do
   res <- renderTemplate "unsupportedBrowser" $ return ()
   simpleHtmlResponse res
+
+enableCookiesPage :: Kontrakcja m => m Response
+enableCookiesPage = simpleHtmlResponse =<< renderTemplate "enableCookies" (return ())
 
 handleTermsOfService :: Kontrakcja m => m Response
 handleTermsOfService = withAnonymousContext $ do
