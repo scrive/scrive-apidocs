@@ -107,7 +107,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
                   self.screenshotDone = true;
             });
 
-            document.sign(errorCallback, self.signinprogressmodal, function(){self.stopBlockingReload();}).addMany(p).sendAjax();
+            document.sign(errorCallback, self.onSignedDocument).addMany(p).sendAjax();
 
         }, errorCallback).addMany(p).send();
 
