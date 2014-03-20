@@ -19,7 +19,7 @@ data PricePlan = FreePricePlan
                | TeamPricePlan
                | FormPricePlan
                | EnterprisePricePlan  -- nothing gets blocked
-               | TrialTeamPricePlan -- team plan for 3 months
+               | TrialPricePlan        -- a trial plan 
                deriving (Eq, Ord)
 
 instance Show PricePlan where
@@ -27,14 +27,14 @@ instance Show PricePlan where
   showsPrec _ TeamPricePlan         = (++) "team"
   showsPrec _ FormPricePlan         = (++) "form"
   showsPrec _ EnterprisePricePlan   = (++) "enterprise"
-  showsPrec _ TrialTeamPricePlan    = (++) "trial"
+  showsPrec _ TrialPricePlan        = (++) "trial"
 
 instance Read PricePlan where
   readsPrec _ "free"         = [(FreePricePlan,         "")]
   readsPrec _ "team"         = [(TeamPricePlan,         "")]
   readsPrec _ "form"         = [(FormPricePlan,         "")]
   readsPrec _ "enterprise"   = [(EnterprisePricePlan,   "")]
-  readsPrec _ "trial"        = [(TrialTeamPricePlan,    "")]
+  readsPrec _ "trial"        = [(TrialPricePlan,        "")]
   readsPrec _ _              = []
 
 instance PQFormat PricePlan where
@@ -49,7 +49,7 @@ instance FromSQL PricePlan where
       1 -> return TeamPricePlan
       2 -> return FormPricePlan
       3 -> return EnterprisePricePlan
-      4 -> return TrialTeamPricePlan
+      4 -> return TrialPricePlan
       _ -> E.throwIO $ RangeError {
         reRange = [(0, 4)]
       , reValue = n
@@ -61,7 +61,7 @@ instance ToSQL PricePlan where
   toSQL TeamPricePlan       = toSQL (1::Int16)
   toSQL FormPricePlan       = toSQL (2::Int16)
   toSQL EnterprisePricePlan = toSQL (3::Int16)
-  toSQL TrialTeamPricePlan  = toSQL (4::Int16)
+  toSQL TrialPricePlan      = toSQL (4::Int16)
 
 newtype AccountCode = AccountCode Int64
   deriving (Eq, Ord, Typeable, PQFormat)

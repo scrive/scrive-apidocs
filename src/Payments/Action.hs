@@ -25,6 +25,6 @@ changePaymentPlanOwner sourceCID destinationCID = do
     _ -> return False
 
 getNonTrialPlanName :: PricePlan -> String
-getNonTrialPlanName TrialTeamPricePlan = show TeamPricePlan
+getNonTrialPlanName TrialPricePlan = show TeamPricePlan
 getNonTrialPlanName x = show x
 

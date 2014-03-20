@@ -189,7 +189,7 @@ paymentPlanJSON mpaymentplan mci recurlysubdomain =  runJSONGenT $ do
           TeamPricePlan       -> ("team"       :: String)
           FormPricePlan       -> ("form"       :: String)
           EnterprisePricePlan -> ("enterprise" :: String)
-          TrialTeamPricePlan  -> ("trial"      :: String)
+          TrialPricePlan      -> ("trial"      :: String)
         value "status" $ case ppStatus paymentplan of
           ActiveStatus        -> ("active"     :: String)
           OverdueStatus       -> ("overdue"    :: String)

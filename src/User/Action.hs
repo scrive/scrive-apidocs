@@ -125,7 +125,7 @@ handleActivate mfstname msndname (actvuser,company) signupmethod = do
               when (not stoplogin) $ do
                 logUserToContext $ Just tosuser
               when (callme) $ phoneMeRequest (Just tosuser) phone
-              when (promo) $ addCompanyPlanManual (companyid company) TrialTeamPricePlan ActiveStatus
+              when (promo) $ addCompanyPlanManual (companyid company) TrialPricePlan ActiveStatus
               return $ Just tosuser
             else do
               Log.mixlog_ $ "No TOS accepted. We cant activate user."
