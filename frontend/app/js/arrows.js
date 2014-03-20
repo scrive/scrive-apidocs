@@ -276,7 +276,7 @@ var ScrollDownArrowView = Backbone.View.extend({
 
     },
     checkIfDownArrowInFooter : function() {
-      if ($(".pagefooter").size() == 0) return;
+      if ($(".pagefooter").size() == 0 || $(".nofooter .pagefooter").size() > 0) return; //We need to do such ugly check, since footer sometimes is just hidden
       var footertop = $(".pagefooter").offset().top;
       var downarrowbottom = $(this.el).offset().top + $(this.el).height();
       if (downarrowbottom + 100 > footertop) {
