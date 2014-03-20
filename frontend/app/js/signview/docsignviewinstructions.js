@@ -14,7 +14,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     return $('<span />').text(this.model.document().currentSignatory().name() + ', ');
   },
   // Big instruction or information about document state
-  text: function(capitalize) {
+  generateHeadlineText: function(capitalize) {
     var document = this.model.document();
     var string = "";
     if (document.isSigning()) {
@@ -118,9 +118,12 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
       headline.append(this.welcomeText());
     }
 
-    var headlineText = this.text(headline.text() == "");
+    var headlineText = this.generateHeadlineText(headline.text() == "");
     var view = this;
-    headlineText.find('.arrowtext').text(localization.docsignview.arrow).click(function() {view.model.arrow().goToCurrentTask();});
+    headlineText.find('.arrowtext').text(localization.docsignview.arrow).click(function() {
+      mixpanel.track('Click arrow text');
+      view.model.arrow().goToCurrentTask();
+    });
     container.append(headline.append(headlineText));
     this.styleText(headline);
 
