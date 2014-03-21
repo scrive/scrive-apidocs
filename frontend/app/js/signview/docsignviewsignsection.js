@@ -107,7 +107,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
                   self.screenshotDone = true;
             });
 
-            document.sign(errorCallback, self.signinprogressmodal, function(){self.stopBlockingReload();}).addMany(p).sendAjax();
+            document.sign(errorCallback, self.onSignedDocument).addMany(p).sendAjax();
 
         }, errorCallback).addMany(p).send();
 
@@ -151,7 +151,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
   postSigningAction: function(newDocument, oldDocument) {
     // Signing through api
     if (oldDocument.currentSignatory().signsuccessredirect() != undefined && oldDocument.currentSignatory().signsuccessredirect() != "") {
-      window.location = document.currentSignatory().signsuccessredirect();
+      window.location = oldDocument.currentSignatory().signsuccessredirect();
     }
     // Display regular document page
     else {
