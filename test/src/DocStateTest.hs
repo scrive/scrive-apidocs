@@ -1527,7 +1527,7 @@ testCancelDocumentNotNothing = doTimes 10 $ do
 
 testSetDocumentTitleNotLeft :: TestEnv ()
 testSetDocumentTitleNotLeft = doTimes 10 $ do
-  (did, title) <- rand 10 arbitrary
+  (did, StringNoNUL title) <- rand 10 arbitrary
   actor <- arbitraryAuthorActor
   success <- withDocumentID did $ randomUpdate $ SetDocumentTitle title actor
   assert $ not success
