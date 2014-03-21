@@ -106,13 +106,14 @@ handleTextToImage = do
     left <- isFieldSet "left"
     mfcontent <- liftIO $ withSystemTempDirectory "text_to_image" $ \tmppath -> do
       let fpath = tmppath ++ "/text_to_image.png"
-      (_,_,_, drawer) <-createProcess $  proc "convert" [  "-size",(show width ++ "x" ++ show height)
-                                                    , "-background",if (transparent) then "transparent" else "white"
-                                                    , "-pointsize", show (pointSize width height (length text) fontSize)
-                                                    , "-gravity",if (left) then "West" else "Center"
-                                                    , "-font", font
-                                                    , "label:" ++ (if null text then " " else text)
-                                                    ,  fpath]
+      (_,_,_, drawer) <- createProcess $ proc "convert"
+            [ "-size", (show width ++ "x" ++ show height)
+            , "-background", if (transparent) then "transparent" else "white"
+            , "-pointsize", show (pointSize width height (length text) fontSize)
+            , "-gravity", if (left) then "West" else "Center"
+            , "-font", font
+            , "label:" ++ (if null text then " " else text)
+            , "PNG8:" ++ fpath ]
       drawerexitcode <- waitForProcess drawer
       case drawerexitcode of
           ExitFailure msg -> do
