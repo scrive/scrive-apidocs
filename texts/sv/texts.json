@@ -1,4 +1,4 @@
-{ 
+{
 "_CompanyAccounts":"Användare",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Är du säker på att du vill skicka en påminnelse till berörda parter för",
@@ -314,7 +314,7 @@
 "_designViewChooseDocument":"Ladda upp dokument",
 "_designViewChooseParticipant":"Vem är fältet för?",
 "_designViewCustomField":"Nytt fält",
-"_designViewDefineParticipation":"Definiera deltagare",
+"_designViewDefineParticipation":"Definiera deltagande",
 "_designViewDocumentName":"Dokumentnamn",
 "_designViewEditDocument":"Placera fält",
 "_designViewEditInvitation":"Ändra inbjudningsmeddelande",
