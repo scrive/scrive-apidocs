@@ -14,7 +14,7 @@ import User.Model
 import Doc.SignatoryLinkID
 import Doc.DocumentID
 import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID, withDocumentID)
-import Doc.Model ()
+import Doc.Model (GetDocumentBySignatoryLinkID(..))
 import Util.Actor
 import EvidenceLog.Model
 import Text.StringTemplates.Templates
@@ -48,15 +48,20 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ClearPadQueue () where
     pq :: PadQueue <- fetchMaybe id
     case pq of
        Nothing -> return ()
-       Just (did, slid) -> withDocumentID did $ do
+       Just (did, slid) -> do
+         mdoc <- query $ GetDocumentBySignatoryLinkID slid -- We can't get a document here since it can be deleted
          r <- runQuery $ "DELETE FROM padqueue WHERE user_id =" <?> uid
-         theDocument >>= \doc -> when_ (r == 1 && not (hasSigned (doc, slid))) $ do
-           update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
-                RemovedFromPadDevice
-                (return ())
-                (getSigLinkFor slid doc)
-                Nothing
-                a
+         case (mdoc,r) of
+           (Just _,1) ->  withDocumentID did $ do
+              theDocument >>= \doc -> do
+                when_ (not (hasSigned (doc, slid))) $
+                  update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+                    RemovedFromPadDevice
+                    (return ())
+                    (getSigLinkFor slid doc)
+                    Nothing
+                    a
+           _ -> return ()
 
 data GetPadQueue = GetPadQueue UserID
 instance MonadDB m => DBQuery m GetPadQueue PadQueue where
