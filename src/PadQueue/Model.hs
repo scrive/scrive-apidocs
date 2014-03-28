@@ -50,18 +50,19 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ClearPadQueue () where
     case pq of
        Nothing -> return ()
        Just (did, slid) -> do
-         doc <- query $ GetDocumentByDocumentID did
+         docs <- query $ GetDocumentsBySignatoryLinkIDs [slid]
          r <- runQuery $ "DELETE FROM padqueue WHERE user_id =" <?> uid
-         when_ (r == 1) $ do
-           _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
-                RemovedFromPadDevice
-                (return ())
-                (getSigLinkFor slid doc)
-                Nothing
-                a
-                did
-           return ()
-
+         case (docs,r) of
+           ([doc],1) -> do
+             _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+                  RemovedFromPadDevice
+                  (return ())
+                  (getSigLinkFor slid doc)
+                  Nothing
+                  a
+                  did
+             return ()
+           _ -> return ()
 data GetPadQueue = GetPadQueue UserID
 instance MonadDB m => DBQuery m GetPadQueue PadQueue where
   query (GetPadQueue uid) = do
