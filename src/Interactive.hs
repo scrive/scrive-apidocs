@@ -30,19 +30,20 @@ run m = Log.withLogger $ do
     args <- getArgs
     readConfig Log.mixlog_ appname args "kontrakcja.conf"
 
+  let connSettings = pgConnSettings $ dbConfig appConf
   appGlobals <- do
     templates <- newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates
     filecache <- MemCache.new BS.length 50000000
     docs <- MemCache.new JpegPages.pagesCount 1000
     rng <- newCryptoRNGState
-    connpool <- createPostgreSQLConnectionPool (dbConfig appConf)
+    connpool <- createPoolSource connSettings
     return AppGlobals {
         templates = templates
       , filecache = filecache
       , docscache = docs
       , cryptorng = rng
-      , connectionpool = connpool
+      , connsource = connpool
       }
 
-  withPostgreSQL (dbConfig appConf) . runCryptoRNGT (cryptorng appGlobals) .
+  withPostgreSQL (defaultSource connSettings) . runCryptoRNGT (cryptorng appGlobals) .
    AWS.runAmazonMonadT (AWS.AmazonConfig (amazonConfig appConf) (filecache appGlobals)) $ m
