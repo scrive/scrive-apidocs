@@ -58,7 +58,6 @@ import SessionsTest
 import FileTest
 import EvidenceLogTest
 import PadTest
---import LiveDocxTest
 import OAuth
 import FlashMessages
 import PaymentsTest
@@ -94,7 +93,6 @@ allTests = tail tests
       , ("evidencelog", evidenceLogTests)
       , ("evidencetexts", dumpAllEvidenceTexts)
       , ("pad", padTests)
---      , ("livedocx", const $ const liveDocxTests)
       , ("oauth", oauthTest)
       , ("flashmessages", const $ flashMessagesTests)
       , ("payments", paymentsTests)

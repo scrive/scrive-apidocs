@@ -50,7 +50,7 @@ instance Binary PropValue where
   put (PVString s)      = putWord8 1 >> put s
   put (PVBool b)        = putWord8 2 >> put b
   put (PVMinutesTime t) = putWord8 3 >> put t
-  
+
   get = do
     tag <- getWord8
     case tag of
@@ -60,7 +60,7 @@ instance Binary PropValue where
       3 -> PVMinutesTime <$> get
       n -> fail $ "Couldn't parse PropValue constructor tag: " ++ show n
 
-instance Binary J.JSString where  
+instance Binary J.JSString where
   get = J.toJSString <$> get
   put = put . J.fromJSString
 
@@ -75,7 +75,7 @@ instance Binary J.JSValue where
   put (J.JSString s)     = putWord8 3 >> put s
   put (J.JSArray arr)    = putWord8 4 >> put arr
   put (J.JSObject obj)   = putWord8 5 >> put obj
-  
+
   get = do
     tag <- getWord8
     case tag of
@@ -122,7 +122,7 @@ stringProp = someProp
 -- | Makes type signatures on functions involving event names look nicer.
 data EventName
   = SetUserProps
-  | NamedEvent String 
+  | NamedEvent String
   | UploadDocInfo J.JSValue
     deriving (Show, Eq)
 type PropName = String
@@ -134,7 +134,7 @@ instance Binary EventName where
   put (SetUserProps)          = putWord8 0
   put (UploadDocInfo docjson) = putWord8 1 >> put docjson
   put (NamedEvent name)       = putWord8 255 >> put name
-  
+
   get = do
       tag <- getWord8
       case tag of
@@ -172,7 +172,7 @@ instance Binary EventProperty where
   put (FirstNameProp n)   = putWord8 7   >> put n
   put (LastNameProp n)    = putWord8 8   >> put n
   put (SomeProp name val) = putWord8 255 >> put name >> put val
-  
+
   get = do
     tag <- getWord8
     case tag of
@@ -277,7 +277,7 @@ asyncProcessEvents process numEvts = do
     fetchEvents = do
             runQuery_ . sqlSelect "async_event_queue" $ do
                 sqlResult "sequence_number"
-                sqlResult "event"
+                sqlResult "event::bytea"
                 sqlOrderBy "sequence_number ASC"
                 case numEvts of
                   NoMoreThan n -> sqlLimit n
@@ -290,7 +290,7 @@ asyncProcessEvents process numEvts = do
 --   which, such as email address or signup time, may be "special", in the
 --   sence that third party services may be able to do interesting things to
 --   them since they have more contextual knowledge about them.
---   
+--
 --   "Special" properties should be identified using the proper `EventProperty`
 --   constructor, whereas others may be arbitrarily named using `someProp`.
 asyncLogEvent :: (MonadDB m) => EventName -> [EventProperty] -> m ()
@@ -307,7 +307,7 @@ jsobj sz = do
   vals <- jslist sz
   names <- map unStr <$> arbitrary
   return $ J.toJSObject $ zip (zipWith (:) ['a'..] names) vals
-    
+
 jslist :: Int -> Gen [J.JSValue]
 jslist sz = do
   n <- oneof $ map return [0..10]
