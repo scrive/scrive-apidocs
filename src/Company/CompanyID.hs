@@ -7,7 +7,8 @@ module Company.CompanyID (
 import Control.Applicative
 import Data.Int
 import Data.Typeable
-import Database.PostgreSQL.PQTypes
+import Data.Binary
+import Database.PostgreSQL.PQTypes hiding (Binary, put)
 import Happstack.Server
 
 import DB.Derive
@@ -19,6 +20,10 @@ $(newtypeDeriveUnderlyingReadShow ''CompanyID)
 
 instance FromReqURI CompanyID where
   fromReqURI = maybeRead
+
+instance Binary CompanyID where
+  put (CompanyID cid) = put cid
+  get = fmap CompanyID get
 
 instance FromSQL CompanyID where
   type PQBase CompanyID = PQBase Int64

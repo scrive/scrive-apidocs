@@ -5,8 +5,9 @@ module Doc.DocumentID (
   ) where
 
 import Control.Applicative
+import Data.Binary
 import Data.Int
-import Database.PostgreSQL.PQTypes
+import Database.PostgreSQL.PQTypes hiding (Binary, put)
 import Happstack.Server
 
 import DB.Derive
@@ -18,6 +19,10 @@ $(newtypeDeriveUnderlyingReadShow ''DocumentID)
 
 instance FromReqURI DocumentID where
   fromReqURI = maybeRead
+
+instance Binary DocumentID where
+  put (DocumentID did) = put did
+  get = fmap DocumentID get
 
 instance FromSQL DocumentID where
   type PQBase DocumentID = PQBase Int64

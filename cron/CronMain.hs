@@ -6,6 +6,7 @@ import Control.Monad.Trans
 import qualified CronEnv
 import System.Environment
 import qualified System.Time
+import Data.Maybe (catMaybes)
 
 import ActionQueue.EmailChangeRequest
 import ActionQueue.Monad
@@ -38,6 +39,9 @@ import Doc.Model
 import qualified Amazon as AWS
 import qualified Log
 
+import ThirdPartyStats.Core
+import ThirdPartyStats.Mixpanel
+
 main :: IO ()
 main = Log.withLogger $ do
   appConf <- do
@@ -57,6 +61,13 @@ main = Log.withLogger $ do
 
   let runScheduler = inDB . CronEnv.runScheduler appConf filecache templates
       inDB = liftIO . withPostgreSQL connSource . runCryptoRNGT rng
+  -- Asynchronous event dispatcher; if you want to add a consumer to the event
+  -- dispatcher, please combine the two into one dispatcher function rather
+  -- than creating a new thread or something like that, since
+  -- asyncProcessEvents removes events after processing.
+  mmixpanel <- case mixpanelToken appConf of
+    ""    -> Log.mixlog_ "WARNING: no Mixpanel token present!" >> return Nothing
+    token -> return $ Just $ processMixpanelEvent token
 
   withCronJobs
     ([ forkCron_ True "findAndExtendDigitalSignatures" (60 * 60 * 3) $ do
@@ -118,6 +129,8 @@ main = Log.withLogger $ do
          runScheduler $ do
            delCount <- dbUpdate $ RemoveOldDrafts 100
            Log.mixlog_ $ "Removed " ++ show delCount ++ " old, unsaved draft documents."
+     , forkCron_ True "Async Event Dispatcher" (10) . inDB $ do
+         asyncProcessEvents (catEventProcs $ catMaybes [mmixpanel]) All
      ]) $ \_ -> do
        waitForTermination
        Log.mixlog_ $ "Termination request received, waiting for jobs to finish..."
