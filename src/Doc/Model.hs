@@ -2193,7 +2193,7 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m TimeoutDocument () wh
     updateMTimeAndObjectVersion (actorTime actor)
     return ()
 
-data ProlongDocument = ProlongDocument Int (Maybe TimeZoneName) Actor
+data ProlongDocument = ProlongDocument Int32 (Maybe TimeZoneName) Actor
 instance (DocumentMonad m, MonadBaseControl IO m, TemplatesMonad m) => DBUpdate m ProlongDocument () where
   update (ProlongDocument days mtzn actor) = updateDocumentWithID $ \did -> do
     -- Whole TimeZome behaviour is a clone of what is happending with making document ready for signing.
@@ -2206,7 +2206,7 @@ instance (DocumentMonad m, MonadBaseControl IO m, TemplatesMonad m) => DBUpdate 
        sqlSet "status" Pending
        sqlSet "mtime" time
        sqlSetCmd "timeout_time" $ "cast (" <?> timestamp <+> "as timestamp with time zone)"
-                            <+> "+ (interval '1 day') * " <?> (show days) <+> " + (interval '23 hours 59 minutes 59 seconds')"
+                            <+> "+ (interval '1 day') * " <?> days <+> " + (interval '23 hours 59 minutes 59 seconds')"
        sqlWhereDocumentIDIs did
        sqlWhereDocumentTypeIs Signable
        sqlWhereDocumentStatusIs Timedout
