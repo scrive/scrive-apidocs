@@ -30,6 +30,7 @@ import Util.HasSomeCompanyInfo
 import qualified Log
 import Util.MonadUtils
 import User.History.Model
+import ThirdPartyStats.Core
 import Payments.Model
 import Administration.AddPaymentPlan
 import Crypto.RNG
@@ -173,6 +174,20 @@ phoneMeRequest muser phone = do
           , title = "Phone Call Request"
           , content = content
       }
+  when (isJust muser) $ do
+    let user = fromJust muser
+        name = getFirstName user ++ " " ++ getLastName user
+    now <- ctxtime <$> getContext
+
+    asyncLogEvent "Phone Request" [UserIDProp (userid user),
+                                   IPProp (ctxipnumber ctx),
+                                   NameProp name,
+                                   TimeProp now,
+                                   MailProp (useremail $ userinfo user)]
+    asyncLogEvent SetUserProps [UserIDProp (userid user),
+                                IPProp (ctxipnumber ctx),
+                                someProp "Phone Request" now]
+    return ()
 
 checkPasswordsMatch :: TemplatesMonad m => String -> String -> Either (m FlashMessage) ()
 checkPasswordsMatch p1 p2 =

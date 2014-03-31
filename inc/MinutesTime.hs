@@ -48,8 +48,9 @@ import System.Time hiding (toClockTime, toUTCTime, toCalendarTime)
 import qualified System.Time as System.Time (toUTCTime, toCalendarTime,toClockTime)
 import Text.Printf
 import System.IO.Unsafe
+import Data.Binary
 import Control.Monad
-import Database.PostgreSQL.PQTypes
+import Database.PostgreSQL.PQTypes hiding (Binary, put)
 import Database.PostgreSQL.PQTypes.Internal.C.Types
 import Database.PostgreSQL.PQTypes.Internal.Utils
 
@@ -57,6 +58,10 @@ import Database.PostgreSQL.PQTypes.Internal.Utils
 -- Same as POSIX seconds and what every other database uses as TIMESTAMP time type.
 newtype MinutesTime = MinutesTime Int
     deriving (Eq, Ord, Typeable)
+
+instance Binary MinutesTime where
+  put (MinutesTime t) = put t
+  get = fmap MinutesTime get
 
 instance Show MinutesTime where
     show = formatMinutesTime "%Y-%m-%d, %H:%M:%S %Z"

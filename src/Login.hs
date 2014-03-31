@@ -27,6 +27,7 @@ import qualified Text.StringTemplates.Fields as F
 import Text.StringTemplates.Templates
 import Routing
 import Utils.HTTP
+import ThirdPartyStats.Core
 import AppView
 import Analytics.Include
 import BrandedDomains
@@ -103,6 +104,18 @@ handleLoginPost = do
                         }
                         muuser <- dbQuery $ GetUserByID (userid user)
 
+                        case muuser of
+                          Just User{userid = uid} -> do
+                            asyncLogEvent "Login" [
+                              UserIDProp uid,
+                              IPProp $ ctxipnumber ctx,
+                              TimeProp $ ctxtime ctx
+                              ]
+                            asyncLogEvent SetUserProps [
+                              UserIDProp uid,
+                              someProp "Last login" $ ctxtime ctx
+                              ]
+                          _ -> return ()
                         if padlogin
                           then do
                             _ <- dbUpdate $ LogHistoryPadLoginSuccess (userid user) (ctxipnumber ctx) (ctxtime ctx)

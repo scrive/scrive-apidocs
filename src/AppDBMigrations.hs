@@ -18,6 +18,7 @@ import SMS.Migrations
 import EvidenceLog.Migrations
 import Payments.Migrations
 import Attachment.Migrations
+import ThirdPartyStats.Migrations
 import User.CallbackScheme.Migrations
 import qualified Log
 
@@ -114,6 +115,7 @@ kontraMigrations = [
   , addSealStatusToDocument
   , removeStatsTables
   , removeEmailDomainFromCompany
+  , asyncEventQueueChangePrimaryKeyToBigSerial
   , removeProcessFromDocuments
   , moveCompanyUIsToSeparateTable
   , removeIsFree

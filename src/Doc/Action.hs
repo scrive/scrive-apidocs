@@ -31,6 +31,7 @@ import Doc.DocSeal (sealDocument)
 import Doc.DocStateData
 import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID, withDocument)
 import Doc.DocUtils
+import Doc.DocView
 import Doc.Model
 import Doc.SealStatus (SealStatus(..), hasGuardtimeSignature)
 import Doc.SignatoryLinkID
@@ -40,20 +41,48 @@ import InputValidation
 import Instances ()
 import Kontra
 import qualified Log
-import MailContext (MailContextMonad(..))
+import MailContext (MailContextMonad(..), MailContext(..))
 import MinutesTime (MinutesTime, getMinutesTime, toCalendarTimeInUTC, fromClockTime, minutesBefore)
 import OurPrelude
 import System.Time (toClockTime, CalendarTime(..), Month(..))
 import Templates (runTemplatesT)
 import Text.StringTemplates.Templates (TemplatesMonad)
+import ThirdPartyStats.Core
 import User.Model
+import User.Utils
 import Util.Actor
+import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import Utils.Default (defaultValue)
 import Doc.AutomaticReminder.Model
 import DB.TimeZoneName
+
+-- | Log a document event, adding some standard properties.
+logDocEvent :: (MailContextMonad m, MonadDB m) => EventName -> User -> [EventProperty] -> Document -> m ()
+logDocEvent name user extraProps doc = do
+  comp <- getCompanyForUser user
+  now <- getMinutesTime
+  ip <- mctxipnumber <$> getMailContext
+  let uid = userid user
+      email = Email $ getEmail user
+      fullname = getFullName user
+      deliverymethod = fromMaybe "undefined" $ show . signatorylinkdeliverymethod <$> getSigLinkFor uid doc
+  asyncLogEvent name $ extraProps ++ [
+    UserIDProp uid,
+    DocIDProp  (documentid doc),
+    TimeProp   now,
+    MailProp   email,
+    IPProp     ip,
+    NameProp   fullname,
+    stringProp "Company Name" $ getCompanyName $ comp,
+    stringProp "Delivery Method" deliverymethod,
+    stringProp "Type" (show $ documenttype doc),
+    stringProp "Language" (show $ documentlang doc),
+    numProp "Days to sign" (fromIntegral $ documentdaystosign doc),
+    numProp "Signatories" (fromIntegral $ length $ documentsignatorylinks doc),
+    stringProp "Signup Method" (show $ usersignupmethod user)]
 
 postDocumentPreparationChange :: (Kontrakcja m, DocumentMonad m) => Bool -> TimeZoneName -> m ()
 postDocumentPreparationChange skipauthorinvitation tzn = do
@@ -69,6 +98,20 @@ postDocumentPreparationChange skipauthorinvitation tzn = do
     Nothing -> return ()
   theDocument >>= \d -> Log.mixlog_ $ "Sending invitation emails for document #" ++ show docid ++ ": " ++ documenttitle d
 
+  -- Stat logging
+  now <- getMinutesTime
+  author <- getDocAuthor =<< theDocument
+  docssent <- dbQuery $ GetDocsSent (userid author)
+  -- Log the current time as the last doc sent time
+  asyncLogEvent SetUserProps [UserIDProp (userid author),
+                              someProp "Last Doc Sent" now,
+                              numProp "Docs sent" (fromIntegral $ docssent)
+                              ]
+  json <- documentJSON Nothing False True False Nothing Nothing =<< theDocument
+  asyncLogEvent (UploadDocInfo json) [UserIDProp (userid author),
+                                      DocIDProp docid]
+  theDocument >>= logDocEvent "Doc Sent" author []
+
   sendInvitationEmails skipauthorinvitation
   sendInvitationEmailsToViewers
   scheduleAutoreminderIfThereIsOne tzn =<< theDocument
@@ -81,6 +124,11 @@ postDocumentRejectedChange siglinkid doc@Document{..} = do
     stateMismatchError "postDocumentRejectedChange" Rejected doc
   Log.mixlog_ $ "Pending -> Rejected; send reject emails: " ++ show documentid
   Log.mixlog_ $ "Sending rejection emails for document #" ++ show documentid ++ ": " ++ documenttitle
+  ctx <- getContext
+  -- Log the fact that the current user rejected a document.
+  maybe (return ())
+        (\user -> logDocEvent "Doc Rejected" user [] doc)
+        (ctxmaybeuser ctx)
   customMessage <- getOptionalField  asValidInviteText "customtext"
   sendRejectEmails customMessage ($(fromJust) $ getSigLinkFor siglinkid doc) doc
   return ()
@@ -91,6 +139,9 @@ postDocumentCanceledChange doc@Document{..} = do
   unless (isCanceled doc) $
     stateMismatchError "postDocumentCanceledChange" Canceled doc
   Log.mixlog_ $ "Pending -> Canceled" ++ show documentid
+  author <- getDocAuthor doc
+  logDocEvent "Doc Canceled" author [] doc
+
 
 -- | After a party has signed - check if we need to close document and
 -- take further actions.
@@ -105,6 +156,10 @@ postDocumentPendingChange olddoc = do
       theDocument >>= \d -> Log.mixlog_ $ "All have signed; " ++ show (documentstatus d) ++ " -> Closed: " ++ show (documentid d)
       time <- ctxtime <$> getContext
       dbUpdate $ CloseDocument (systemActor time)
+      author <- theDocument >>= getDocAuthor
+      theDocument >>= logDocEvent "Doc Closed" author []
+      asyncLogEvent SetUserProps [UserIDProp (userid author),
+                                  someProp "Last Doc Closed" time]
       commit -- ... so that the forked thread can see our changes
       theDocument >>= \d -> forkAction ("Sealing document #" ++ show (documentid d) ++ ": " ++ (documenttitle d)) $ do
         -- We fork so that the client can get the response to the

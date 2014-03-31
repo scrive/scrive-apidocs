@@ -25,6 +25,7 @@ import ELegitimation.ELegTransaction.Tables
 import EvidenceLog.Tables
 import Payments.Tables
 import Attachment.Tables
+import ThirdPartyStats.Tables
 import User.CallbackScheme.Tables
 import Doc.AutomaticReminder.Tables
 
@@ -67,6 +68,7 @@ kontraTables =
   , tableSessions
   , tableDocumentSessionTokens
   , tableELegTransactions
+  , tableAsyncEventQueue
   , tableHostClock
   , tableUsersCallbackScheme
   , tableCompanyUIs
