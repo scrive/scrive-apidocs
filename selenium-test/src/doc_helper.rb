@@ -75,6 +75,7 @@ class DocHelper
     (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'design-view-action-participant-details-information-field-wrapper')]//input[contains(@placeholder,'" + fieldname + "')]"}).send_keys fieldvalue
 
     fieldtab
+    @driver.execute_script("window.scroll(0, 0)")
     @driver.action.drag_and_drop((@driver.find_element :css => ".design-view-action-document-draggable.design-view-action-document-draggable-textbox .design-view-action-document-draggable-icon"), (@driver.find_element :css => "img.pagejpg")).perform
     # set target party
     (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'text-field-placement-setter-field-selector')]//div[contains(@class,'select-button')]"}).click
