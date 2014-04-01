@@ -118,6 +118,8 @@ documentJSON muser includeEvidenceAttachments forapi forauthor pq msl doc = do
 authenticationJSON :: AuthenticationMethod -> JSValue
 authenticationJSON StandardAuthentication = toJSValue "standard"
 authenticationJSON ELegAuthentication     = toJSValue "eleg"
+authenticationJSON SMSPinAuthentication   = toJSValue "sms_pin"
+
 
 signatoryJSON :: (MonadDB m) => Bool -> Bool -> PadQueue -> Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
 signatoryJSON forapi forauthor pq doc viewer siglink = do

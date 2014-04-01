@@ -160,6 +160,7 @@ instance Read StatusClass where
 
 data AuthenticationMethod = StandardAuthentication
                           | ELegAuthentication
+                          | SMSPinAuthentication
   deriving (Eq, Ord, Show)
 
 instance PQFormat AuthenticationMethod where
@@ -172,8 +173,9 @@ instance FromSQL AuthenticationMethod where
     case n :: Int16 of
       1 -> return StandardAuthentication
       2 -> return ELegAuthentication
+      3 -> return SMSPinAuthentication
       _ -> E.throwIO $ RangeError {
-        reRange = [(1, 2)]
+        reRange = [(1, 3)]
       , reValue = n
       }
 
@@ -181,6 +183,7 @@ instance ToSQL AuthenticationMethod where
   type PQDest AuthenticationMethod = PQDest Int16
   toSQL StandardAuthentication = toSQL (1::Int16)
   toSQL ELegAuthentication     = toSQL (2::Int16)
+  toSQL SMSPinAuthentication   = toSQL (3::Int16)
 
 instance FromJSValue AuthenticationMethod where
   fromJSValue = do
@@ -188,6 +191,7 @@ instance FromJSValue AuthenticationMethod where
     return $ case j of
       Just "standard" -> Just StandardAuthentication
       Just "eleg"     -> Just ELegAuthentication
+      Just "sms_pin"  -> Just SMSPinAuthentication
       _               -> Nothing
 
 instance FromJSValue DeliveryMethod where

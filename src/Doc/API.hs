@@ -101,6 +101,7 @@ import Utils.Read
 import Doc.DocMails
 import Doc.AutomaticReminder.Model
 import Utils.Monoid
+import Doc.SMSPin.Model
 
 documentAPI :: Route (KontraPlus Response)
 documentAPI = dir "api" $ choice
@@ -122,6 +123,8 @@ versionedAPI _version = choice [
   dir "reject"             $ hPost $ toK2 $ apiCallReject,
   dir "checksign"          $ hPost $ toK2 $ apiCallCheckSign,
   dir "sign"               $ hPost $ toK2 $ apiCallSign,
+
+  dir "sendsmspin"            $ hPost $ toK2 $ apiCallSendSMSPinCode,
 
   dir "restart"            $ hPost $ toK1 $ apiCallRestart,
   dir "prolong"            $ hPost $ toK1 $ apiCallProlong,
@@ -887,6 +890,26 @@ apiCallChangeMainFile docid = api $ do
         apiGuardL' $ dbUpdate $ SetDocumentTitle filename actor
       Nothing -> dbUpdate $ DetachFile actor
     Accepted <$> (documentJSON (Just user) False True True Nothing Nothing =<< theDocument)
+
+
+apiCallSendSMSPinCode :: Kontrakcja m => DocumentID -> SignatoryLinkID ->  m Response
+apiCallSendSMSPinCode did slid = api $ do
+  --ctx <- getContext
+  mh <- apiGuardL (serverError "No document found")  $ dbQuery $ GetDocumentSessionToken slid
+  (dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
+    sl <- apiGuardJustM  (serverError "No document found") $ getSigLinkFor slid <$> theDocument
+    --authorid <- apiGuardL (serverError "Document problem | No author") $ join <$> (fmap maybesignatory) <$> getAuthorSigLink <$> theDocument
+    --user <- apiGuardL (serverError "Document problem | No author in DB") $ dbQuery $ GetUserByIDIncludeDeleted authorid
+    --company <- getCompanyForUser user
+    --companyui <- dbQuery $ GetCompanyUI (companyid company)
+    whenM (not . isPending <$> theDocument) $ do
+       throwIO . SomeKontraException $ serverError "SMS pin code can't be sent to document that is not pending"
+    when (SMSPinAuthentication /= signatorylinkauthenticationmethod sl) $ do
+       throwIO . SomeKontraException $ serverError "SMS pin code can't be sent to this signatory"
+    phone <- apiGuardJustM (badInput "Phone number is no valid.") $ getOptionalField  asValidPhone "phone"
+    pin <- dbQuery $ GetSignatoryPin slid phone
+    sendPinCode sl phone pin
+    Ok <$> (runJSONGenT $ value "sent" True)
 
 apiCallGetBrandingForSignView :: Kontrakcja m => DocumentID -> SignatoryLinkID ->  m Response
 apiCallGetBrandingForSignView did slid = api $ do

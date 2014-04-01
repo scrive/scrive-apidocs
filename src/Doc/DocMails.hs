@@ -10,6 +10,7 @@ module Doc.DocMails (
   , sendClosedEmails
   , sendRejectEmails
   , sendDocumentErrorEmail
+  , sendPinCode
   , makeMailAttachments
   , runMailTInScheduler
   , MailT
@@ -309,6 +310,12 @@ sendForwardEmail email asiglink = do
 
 
 
+sendPinCode:: (Log.MonadLog m, TemplatesMonad m,MonadIO m, DocumentMonad m, CryptoRNG m, MailContextMonad m) =>
+                          SignatoryLink -> String -> String -> m ()
+sendPinCode sl phone pin = do
+  doc <- theDocument
+  scheduleSMS =<< smsPinCodeSendout doc sl phone pin
+
 
 {- |
    Try to sign up a new user. Returns the confirmation link for the new user.
@@ -341,8 +348,6 @@ handlePostSignSignup email fn ln cnm cnr = do
           l <- newUserAccountRequestLink lang (userid newuser) BySigning
           return $ Just l
     (_, _) -> return Nothing
-
-
 
 
 -- Notification sendout

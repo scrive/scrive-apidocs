@@ -6,6 +6,7 @@ module Doc.DocViewSMS (
     , smsReminder
     , smsClosedNotification
     , smsRejectNotification
+    , smsPinCodeSendout
     ) where
 
 import Control.Logic
@@ -70,6 +71,11 @@ smsClosedNotification doc sl withEmail sealFixed = do
 smsRejectNotification :: (MailContextMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> SignatoryLink -> m SMS
 smsRejectNotification doc sl rejector = do
   mkSMS doc sl None =<< renderLocalTemplate doc "_smsRejectNotification" (smsFields doc sl >> F.value "rejectorName" (getSmartName rejector))
+
+smsPinCodeSendout :: (MailContextMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> String -> String -> m SMS
+smsPinCodeSendout doc sl phone pin = do
+  sms <- mkSMS doc sl None =<< renderLocalTemplate doc "_smsPinSendout" (smsFields doc sl >> F.value "pin" pin)
+  return sms {smsMSISDN = phone}
 
 smsFields :: (MailContextMonad m, TemplatesMonad m) => Document -> SignatoryLink -> Fields m ()
 smsFields document siglink = do

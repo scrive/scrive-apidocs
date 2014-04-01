@@ -86,6 +86,7 @@ docFieldsListForJSON userid padqueue doc = do
     J.value "authentication" $ case nub (map signatorylinkauthenticationmethod (documentsignatorylinks doc)) of
       [StandardAuthentication] -> "standard"
       [ELegAuthentication]     -> "eleg"
+      [SMSPinAuthentication]   -> "sms_pin"
       _                        -> "mixed"
     J.value "delivery" $ case nub (map signatorylinkdeliverymethod (documentsignatorylinks doc)) of
       [EmailDelivery] -> "email"
@@ -120,7 +121,9 @@ signatoryFieldsListForJSON padqueue doc sl = do
     J.value "isauthor" $ isAuthor sl
     J.value "authentication" $ case signatorylinkauthenticationmethod sl of
       StandardAuthentication -> "standard"
-      ELegAuthentication  -> "eleg"
+      ELegAuthentication     -> "eleg"
+      SMSPinAuthentication   -> "sms_pin"
+
     J.value "delivery" $ signatorylinkdeliverymethod sl
     where
         sign = signtime <$> maybesigninfo sl

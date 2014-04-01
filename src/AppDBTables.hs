@@ -12,6 +12,7 @@ import CompanyAccounts.Tables
 import Doc.Tables
 import Doc.API.Callback.Tables
 import Doc.Tokens.Tables
+import Doc.SMSPin.Tables
 import HostClock.Tables
 import User.Tables
 import User.History.Tables
@@ -73,5 +74,6 @@ kontraTables =
   , tableUsersCallbackScheme
   , tableCompanyUIs
   , tableDocumentAutomaticReminders
+  , tableSignatorySMSPins
   ] ++ mailerTables
     ++ messengerTables
