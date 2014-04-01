@@ -62,6 +62,8 @@ docStateTests env = testGroup "DocState" [
   testThat "RestartDocument adds to the log" env testRestartDocumentEvidenceLog,
   testThat "SignDocument adds to the log" env testSignDocumentEvidenceLog,
   testThat "TimeoutDocument adds to the log" env testTimeoutDocumentEvidenceLog,
+  testThat "ProlongDocument can be executed and adds to a log" env testProlongDocument,
+
   testThat "Documents are shared in company properly" env testGetDocumentsSharedInCompany,
   testThat "SetDocumentUnsavedDraft and filtering based on unsaved_draft works" env testSetDocumentUnsavedDraft,
   testThat "Documents sorting SQL syntax is correct" env testGetDocumentsSQLSorted,
@@ -329,6 +331,20 @@ testTimeoutDocumentEvidenceLog = do
     assert success
     lg <- dbQuery . GetEvidenceLog =<< theDocumentID
     assertJust $ find (\e -> evType e == Current TimeoutDocumentEvidence) lg
+
+
+
+testProlongDocument :: TestEnv ()
+testProlongDocument = do
+  author <- addNewRandomUser
+  addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending) `withDocumentM` do
+    success <- randomUpdate $ \t->TimeoutDocument (systemActor t)
+    assert success
+    randomUpdate $ \t -> ProlongDocument 2 Nothing (systemActor t)
+    pending <- (\d ->  (Pending == documentstatus d))  <$> theDocument
+    assert pending
+    lg <- dbQuery . GetEvidenceLog =<< theDocumentID
+    assertJust $ find (\e -> evType e == Current ProlongDocumentEvidence) lg
 
 testPreparationToPendingEvidenceLog :: TestEnv ()
 testPreparationToPendingEvidenceLog = do
