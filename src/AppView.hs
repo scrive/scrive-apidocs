@@ -187,7 +187,9 @@ unsupportedBrowserPage = do
   simpleHtmlResponse res
 
 enableCookiesPage :: Kontrakcja m => m Response
-enableCookiesPage = simpleHtmlResponse =<< renderTemplate "enableCookies" (return ())
+enableCookiesPage = do
+  ctx <- getContext
+  simpleHtmlResponse =<< renderTemplateAsPage ctx "enableCookies" False (return ())
 
 handleTermsOfService :: Kontrakcja m => m Response
 handleTermsOfService = withAnonymousContext $ do
