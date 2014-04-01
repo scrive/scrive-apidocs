@@ -41,8 +41,9 @@ instance FromSQL Lang where
     case n :: Int16 of
       1 -> return LANG_SV
       2 -> return LANG_EN
+      3 -> return LANG_DE
       _ -> E.throwIO $ RangeError {
-        reRange = [(1, 2)]
+        reRange = [(1, 3)]
       , reValue = n
       }
 
@@ -50,6 +51,7 @@ instance ToSQL Lang where
   type PQDest Lang = PQDest Int16
   toSQL LANG_SV = toSQL (1::Int16)
   toSQL LANG_EN = toSQL (2::Int16)
+  toSQL LANG_DE = toSQL (3::Int16)
 
 codeFromLang :: Lang -> String
 codeFromLang LANG_SV = "sv"
