@@ -109,7 +109,6 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
 
     var welcomeUser = document.currentSignatory() != undefined &&
                       document.currentSignatory().name()!="" &&
-                      !document.currentSignatory().padDelivery() &&
                       document.currentSignatory().canSign() &&
                       !document.currentSignatory().author();
 
