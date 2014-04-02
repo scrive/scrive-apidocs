@@ -15,6 +15,7 @@ import Data.Int
 import Happstack.StaticRouting
 import Text.JSON hiding (Ok)
 import qualified Text.JSON as J
+import qualified Text.JSON.Pretty as J (pp_value)
 import KontraMonad
 import Happstack.Server.Types
 import Routing
@@ -33,7 +34,10 @@ import Control.Monad.Trans
 import Happstack.Fields
 import Utils.String
 import Utils.Monad
+import System.Exit
 import System.FilePath
+import Utils.Directory
+import Utils.IO
 import Data.Maybe
 import Doc.SignatoryScreenshots(SignatoryScreenshots, emptySignatoryScreenshots, resolveReferenceScreenshotNames)
 import qualified ELegitimation.Control as BankID
@@ -132,6 +136,7 @@ versionedAPI _version = choice [
   dir "history"           $ hGetAllowHttp $ apiCallHistory,
   dir "downloadmainfile"   $ hGetAllowHttp  $ toK2 $ apiCallDownloadMainFile,
   dir "downloadfile"       $ hGetAllowHttp  $ toK3 $ apiCallDownloadFile,
+  dir "extracttexts"       $ hGetAllowHttp  $ toK2 $ apiCallExtractTexts,
 
   dir "padqueue"           $ PadQueue.padqueueAPI,
   dir "changemainfile"     $ hPost $ toK1 $ apiCallChangeMainFile,
@@ -751,6 +756,66 @@ apiCallDownloadFile did fileid nameForBrowser = api $ do
             res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString ct) res
         return res2
 
+apiCallExtractTexts :: Kontrakcja m => DocumentID -> FileID -> m Response
+apiCallExtractTexts did fileid = api $ do
+  (msid :: Maybe SignatoryLinkID) <- readField "signatorylinkid"
+  jsons <- apiGuardL (badInput "The MIME part 'json' must exist and must be a JSON.") $ getDataFn' (look "json")
+  json <- apiGuard (badInput "The MIME part 'json' must be a valid JSON.") $ case decode jsons of
+                                                                                 J.Ok js -> Just js
+                                                                                 _ -> Nothing
+  mmh <- maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msid
+  doc <- do
+           case (msid, mmh) of
+            (Just sid, Just mh) -> dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
+            _ ->  do
+                  (user, _actor, external) <- getAPIUser APIDocCheck
+                  if (external)
+                    then do
+                      ctx <- getContext
+                      modifyContext (\ctx' -> ctx' {ctxmaybeuser = Just user});
+                      res <- getDocByDocID did
+                      modifyContext (\ctx' -> ctx' {ctxmaybeuser = ctxmaybeuser ctx});
+                      return res;
+                    else getDocByDocID did
+  let allfiles = maybeToList (documentfile doc) ++ maybeToList (documentsealedfile doc) ++
+                      (authorattachmentfile <$> documentauthorattachments doc) ++
+                      (catMaybes $ Prelude.map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
+  if (all (/= fileid) allfiles)
+     then throwIO . SomeKontraException $ forbidden "Access to file is forbiden."
+     else do
+        content <- getFileIDContents fileid
+        result1 <- runJavaTextExtract json content
+        return result1
+
+runJavaTextExtract :: (Monad m,Kontrakcja m) => JSValue -> BS.ByteString -> m (Ok JSValue)
+runJavaTextExtract json content = do
+  withSystemTempDirectory' ("extract-texts-") $ \tmppath -> do
+    let tmpin = tmppath ++ "/input.pdf"
+    let specpath = tmppath ++ "/sealspec.json"
+
+
+    let (rects :: Maybe JSValue) = flip ($) json $ fromJSValueField "rects"
+    let config = runJSONGen $ do
+                   value "rects" rects
+
+    liftIO $ BS.writeFile tmpin content
+    liftIO $ BS.writeFile specpath (BS.fromString $ show $ J.pp_value (toJSValue config))
+    (code,_stdout,_stderr) <- liftIO $ do
+      readProcessWithExitCode' "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "extract-texts", specpath, tmpin] (BSL.empty)
+    case code of
+      ExitSuccess -> do
+          (jsonresult :: JSValue) <- apiGuard (serverError "Backend did not return json.") $
+                                        case decode (BSL.toString _stdout) of
+                                          J.Ok js -> Just js
+                                          _ -> Nothing
+          let (rectsresult :: Maybe JSValue) = flip ($) jsonresult $ fromJSValueField "rects"
+          let censoredresult = runJSONGen $ do
+                   value "rects" rectsresult
+          return $ Ok censoredresult
+      ExitFailure _ -> do
+          Log.attention_ $ BSL.toString _stderr
+          Log.attention_ $ "Extract texts failed for configuration: " ++ show config
+          apiGuardL (serverError "Extract texts failed on PDF") (return Nothing)
 
 -- this one must be standard post with post params because it needs to
 -- be posted from a browser form

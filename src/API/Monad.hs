@@ -53,6 +53,7 @@ import Util.ZipUtil
 import Control.Exception.Lifted
 import Control.Monad.Base
 import Data.Typeable
+import qualified Data.ByteString.Lazy as BSL
 
 -- | Respond with a 200 Created status
 data Ok a = Ok a
@@ -161,6 +162,11 @@ instance ToAPIResponse JSValue where
   toAPIResponse jv =
     -- must be text/plain because some browsers complain about JSON type
     setHeader "Content-Type" "text/plain; charset=UTF-8" $ Web.toResponse $ encode jv
+
+instance ToAPIResponse BSL.ByteString where
+  toAPIResponse jv =
+    -- must be text/plain because some browsers complain about JSON type
+    setHeader "Content-Type" "text/plain; charset=UTF-8" $ Web.toResponse $ jv
 
 instance ToAPIResponse CSV where
   toAPIResponse v = let r1 = Web.toResponse $ v in
