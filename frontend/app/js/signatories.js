@@ -420,6 +420,9 @@ window.Signatory = Backbone.Model.extend({
     elegAuthentication: function() {
           return this.get("authentication") == "eleg";
     },
+    smsPinAuthentication: function() {
+          return this.get("authentication") == "sms_pin";
+    },
     emailDelivery: function() {
           return this.get("delivery") == "email";
     },

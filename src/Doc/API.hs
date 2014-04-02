@@ -393,29 +393,40 @@ apiCallCheckSign did slid = api $ do
 
   (mh,_) <- getMagicHashAndUserForSignatoryAction did slid
 
-  fields <- getFieldForSigning
-  mprovider <- readField "eleg"
-  doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
-  when (not $ isPending doc)
-    (throwIO . SomeKontraException $ conflictError $ "Document not pending")
-  when (isJust $ join $ maybesigninfo <$> getSigLinkFor slid doc)
-    (throwIO . SomeKontraException $ conflictError $ "Document already signed")
-  withDocument doc $ do
-     case mprovider of
-       Just provider -> do
-                  transactionid <- getDataFnM $ look "transactionid"
-                  esigninfo <- case provider of
-                      MobileBankIDProvider -> BankID.verifySignatureAndGetSignInfoMobile did slid mh fields transactionid
-                      _ -> do
-                            signature <- getDataFnM $ look "signature"
-                            BankID.verifySignatureAndGetSignInfo slid mh fields provider signature transactionid
-                  case esigninfo of
-                        BankID.Sign _ -> return $ Right $ Ok ()
-                        BankID.Mismatch (onname,onnumber) _ -> do
-                          (Left . Failed) <$> (runJSONGenT $ value "elegProblem" True >> value "mismatch" True >> value "onName" onname >> value "onNumber" onnumber)
-                        _ -> do
-                          (Left . Failed) <$> (runJSONGenT $ value "elegProblem" True)
-       _ -> return $ Right $ Ok ()
+  (dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
+    whenM (not <$> isPending <$> theDocument ) $ do
+      (throwIO . SomeKontraException $ conflictError $ "Document not pending")
+    whenM (hasSigned <$> fromJust . getSigLinkFor slid <$> theDocument) $ do -- We can use fromJust since else we would not get access to document
+      (throwIO . SomeKontraException $ conflictError $ "Document already signed")
+    authorization <- signatorylinkauthenticationmethod <$> fromJust . getSigLinkFor slid <$> theDocument
+
+    case authorization of
+       StandardAuthentication -> return $ Right $ Ok () -- If we have a document with standard auth, it can be always signed if its not closed and signed
+       SMSPinAuthentication -> do
+             pin <- apiGuardJustM (badInput "Pin not provided or invalid.") $ getField "pin"
+             fields <- getFieldForSigning
+             phone <- getMobile <$> fromJust . getSigLinkFor slid <$> theDocument
+             let phoneFromFields = fmap snd $ find (\x -> MobileFT == fst x) fields
+             pin' <- dbQuery $ GetSignatoryPin slid (fromMaybe phone phoneFromFields)
+             if (pin == pin')
+               then return $ Right $ Ok ()
+               else (Left . Failed) <$> (runJSONGenT $ value "pinProblem" True)
+       ELegAuthentication -> do
+             provider <-apiGuardJustM (badInput "Eleg details not provided or invalid.") $ readField "eleg"
+             fields <- getFieldForSigning
+             transactionid <- getDataFnM $ look "transactionid"
+             esigninfo <- case provider of
+                 MobileBankIDProvider -> BankID.verifySignatureAndGetSignInfoMobile did slid mh fields transactionid
+                 _ -> do
+                      signature <- getDataFnM $ look "signature"
+                      BankID.verifySignatureAndGetSignInfo slid mh fields provider signature transactionid
+             case esigninfo of
+                 BankID.Sign _ -> return $ Right $ Ok ()
+                 BankID.Mismatch (onname,onnumber) _ -> do
+                     (Left . Failed) <$> (runJSONGenT $ value "elegProblem" True >> value "mismatch" True >> value "onName" onname >> value "onNumber" onnumber)
+                 _ -> do
+                     (Left . Failed) <$> (runJSONGenT $ value "elegProblem" True)
+
 
 
 apiCallSign :: Kontrakcja m

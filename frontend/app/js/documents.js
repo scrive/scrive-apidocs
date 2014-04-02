@@ -306,9 +306,10 @@ window.Document = Backbone.Model.extend({
         });
         return fields;
     },
-    checksign: function(successCallback, errorCallback) {
+    checksign: function(successCallback, errorCallback,extraSignFields) {
         var document = this;
         var fields = this.fieldsForSigning();
+        extraSignFields = extraSignFields || {};
         return new Submit({
             url : "/api/frontend/checksign/" + document.documentid() +  "/" + document.currentSignatory().signatoryid(),
             method: "POST",
@@ -317,11 +318,12 @@ window.Document = Backbone.Model.extend({
             expectedType : "text",
             ajaxsuccess : successCallback,
             ajaxerror : errorCallback
-            });
+            }).addMany(extraSignFields);
     },
-    sign: function(errorCallback, successCallback) {
+    sign: function(errorCallback, successCallback,extraSignFields) {
         var document = this;
         var fields = this.fieldsForSigning();
+        extraSignFields = extraSignFields || {};
         return new Submit({
             url : "/api/frontend/sign/" + document.documentid() +  "/" + document.currentSignatory().signatoryid(),
             method: "POST",
@@ -342,7 +344,7 @@ window.Document = Backbone.Model.extend({
                 window.location.reload();
               }
             }
-        });
+        }).addMany(extraSignFields);
     },
     verifyEleg : function() {
          var document = this;

@@ -77,6 +77,7 @@ documentJSON muser includeEvidenceAttachments forapi forauthor pq msl doc = do
       J.value "authentication" $ case nub (map signatorylinkauthenticationmethod (documentsignatorylinks doc)) of
                                    [StandardAuthentication] -> "standard"
                                    [ELegAuthentication]     -> "eleg"
+                                   [SMSPinAuthentication]   -> "sms_pin"
                                    _                        -> "mixed"
       J.value "delivery" $ case nub (map signatorylinkdeliverymethod (documentsignatorylinks doc)) of
                                    [EmailDelivery]   -> "email"

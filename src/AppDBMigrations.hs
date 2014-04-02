@@ -22,6 +22,7 @@ import ThirdPartyStats.Migrations
 import User.CallbackScheme.Migrations
 import Session.Migrations
 import qualified Log
+import Doc.SMSPin.Tables
 
 -- Note: ALWAYS append new migrations TO THE END of this list.
 -- (mailerMigrations always stay at the end though. They are
@@ -160,5 +161,6 @@ kontraMigrations = [
   , addConfirmTextToDocuments
   , addConfirmationDeliveryMethodToSignatoryLinks
   , changeSomeStandardFieldsToOptional
+  , createSignatorySMSPinsTable
   ] ++ mailerMigrations
     ++ messengerMigrations

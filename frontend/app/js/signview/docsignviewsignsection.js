@@ -97,7 +97,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
 
     var makeCallback = function(bankName, bankSign, bankSignExtraOpt) {
       mixpanel.track('Click ' + bankName);
-      bankSign(document, signatory, function(p) {
+      bankSign(document, signatory, function(elegParams) {
         document.checksign(function() {
             self.startBlockingReload();
             self.confirmation.clear();
@@ -112,9 +112,9 @@ window.DocumentSignConfirmation = Backbone.View.extend({
                   self.screenshotDone = true;
             });
 
-            document.sign(errorCallback, self.onSignedDocument).addMany(p).sendAjax();
+            document.sign(errorCallback, self.onSignedDocument,elegParams).sendAjax();
 
-        }, errorCallback).addMany(p).send();
+        }, errorCallback,elegParams).send();
 
         }, bankSignExtraOpt);
       return false;
@@ -185,6 +185,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
   createSignButtonElems: function() {
     var document = this.document();
     var signviewbranding = this.model.signviewbranding();
+    var signatory = document.currentSignatory();
     var self = this;
     return new Button({
       size: BrowserInfo.isSmallScreen() ? "big" : "small",
@@ -208,7 +209,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
             }
         };
 
-
+        var pinParam = signatory.smsPinAuthentication() ? {pin : self.pin} : {};
         document.checksign(function() {
           var modalTop = self.confirmation.absoluteTop();
           self.confirmation.clear();
@@ -229,10 +230,11 @@ window.DocumentSignConfirmation = Backbone.View.extend({
             }
             trackTimeout('Accept', {'Accept' : 'sign document'});
 
-            document.sign(errorCallback, self.onSignedDocument).send();
+            var pinParam = signatory.smsPinAuthentication() ? {pin : self.pin} : {};
+            document.sign(errorCallback, self.onSignedDocument, pinParam).send();
           };
           f();
-      }, errorCallback).send();
+      }, errorCallback,pinParam).send();
       return false;
       }
     }).el().css('margin-top', '-10px')
@@ -277,8 +279,32 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     }
   },
 
+  pineCodeInput : function() {
+    var self = this;
+    var p = $("<p style='margin-left:10px;margin-right:10px'/>");
+    p.append("<span>Enter your SMS PIN</span>");
+    var iti = new InfoTextInput({
+          infotext: "Check your pin",
+          value: "",
+          style: "margin-left:10px;width:200px;",
+          onChange: function(v) {
+            self.pin = v;
+          },
+          inputtype: 'text',
+          name: 'pin'
+        });
+    p.append(iti.el());
+    return p;
+  },
   createContentElems: function() {
     var content = $("<div />");
+    var document = this.document();
+    var signatory = document.currentSignatory();
+
+    if (signatory.smsPinAuthentication()) {
+      content.append(this.pineCodeInput());
+    }
+
     content.append(this.createPreambleElems());
     if (BrowserInfo.isSmallScreen()) {
         var p = content.find('p'); p.css('font-size', '52px');

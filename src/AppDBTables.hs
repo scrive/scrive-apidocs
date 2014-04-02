@@ -12,7 +12,6 @@ import CompanyAccounts.Tables
 import Doc.Tables
 import Doc.API.Callback.Tables
 import Doc.Tokens.Tables
-import Doc.SMSPin.Tables
 import HostClock.Tables
 import User.Tables
 import User.History.Tables
@@ -29,6 +28,7 @@ import Attachment.Tables
 import ThirdPartyStats.Tables
 import User.CallbackScheme.Tables
 import Doc.AutomaticReminder.Tables
+import Doc.SMSPin.Tables
 
 kontraFunctions :: [SQLFunction]
 kontraFunctions = [
