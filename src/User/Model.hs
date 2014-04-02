@@ -430,7 +430,7 @@ instance MonadDB m => DBQuery m GetUsageStats [UserUsageStats] where
      case euc of
        Left  uid -> sqlWhereEq "users.id" uid
        Right cid -> sqlWhereEq "companies.id" cid
-     sqlOrderBy "1, 3, 4"
+     sqlOrderBy "1 DESC, 8 DESC, 9 DESC"
    fetchMany fetchUserUsageStats
 
 -- helpers
