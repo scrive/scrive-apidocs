@@ -57,6 +57,7 @@ var ApiDemoView = Backbone.View.extend({
             var list  = $("<option value='l'>List</option>");
             var download  = $("<option value='dl'>Download file</option>");
             var downloadmf  = $("<option value='dlmf'>Download document file</option>");
+            var extracttexts  = $("<option value='extracttexts'>Extract texts</option>");
             var addtopad  = $("<option value='pq'>Add to padqueue</option>");
             var reject  = $("<option value='reject'>Reject</option>");
             var setsigatt  = $("<option value='setsigatt'>Set signatory attachment</option>");
@@ -72,7 +73,7 @@ var ApiDemoView = Backbone.View.extend({
 
             select.append(none).append(createFromFile).append(changeFile).append(createFromTemplate).append(update).append(setattachments)
                   .append(ready).append(sendReminder).append(sendForward).append(cancel).append(restart).append(prolong).append(del).append(check).append(history)
-                  .append(list).append(download).append(downloadmf).append(addtopad).append(reject).append(setsigatt).append(sign)
+                  .append(list).append(download).append(downloadmf).append(extracttexts).append(addtopad).append(reject).append(setsigatt).append(sign)
                   .append($("<option>---------</option>"))
                   .append(profile).append(payments).append(language).append(password).append(signup).append(passwordreset).append(updateprofile)
                   .append($("<option>---------</option>"))
@@ -111,6 +112,8 @@ var ApiDemoView = Backbone.View.extend({
                 else if (model.selectedApiCall().isDownloadFile())
                     download.attr("selected", "true");
                 else if (model.selectedApiCall().isDownloadMainFile())
+                    downloadmf.attr("selected", "true");
+                else if (model.selectedApiCall().isExtractTexts())
                     downloadmf.attr("selected", "true");
                 else if (model.selectedApiCall().isAddToPadQueue())
                     addtopad.attr("selected", "true");
@@ -175,6 +178,8 @@ var ApiDemoView = Backbone.View.extend({
                     model.setSelectedApiCall(new DownloadFileApiCall({oauth : oauth}));
                 else if (select.val() == "dlmf")
                     model.setSelectedApiCall(new DownloadMainFileApiCall({oauth : oauth}));
+                else if (select.val() == "extracttexts")
+                    model.setSelectedApiCall(new ExtractTextsApiCall({oauth : oauth}));
                 else if (select.val() == "pq")
                     model.setSelectedApiCall(new AddToPadQueueApiCall({oauth : oauth}));
                 else if (select.val() == "reject")

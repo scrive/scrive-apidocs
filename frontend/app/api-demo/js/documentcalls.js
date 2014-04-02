@@ -621,6 +621,47 @@ window.DownloadFileApiCall = ApiCall.extend({
         }
 });
 
+window.ExtractTextsApiCall = ApiCall.extend({
+        defaults: {
+             name : "Extract texts API call",
+             documentid : LocalStorage.get("api","documentid"),
+             fileid : LocalStorage.get("api","fileid"),
+             json : LocalStorage.get("api","extract-texts-json") || "{\"rects\": [{\"rect\":[0,0,1,1],\"page\": 1}]}"
+        },
+        initialize: function (args) {
+        },
+        isExtractTexts : function() {return true;},
+        documentid : function() {return this.get("documentid");},
+        setDocumentid : function(documentid) {
+             LocalStorage.set("api","documentid",documentid);
+            return this.set({"documentid" : documentid});
+        },
+        fileid : function() {return this.get("fileid");},
+        setFileid : function(fileid) {
+             LocalStorage.set("api","fileid",fileid);
+            return this.set({"fileid" : fileid});
+        },
+        json : function() {return this.get("json");},
+        setJson : function(json) {
+             LocalStorage.set("api","extract-texts-json",json);
+            return this.set({"json" : json});
+        },
+        send : function() {
+            var model = this;
+            this.call("extracttexts/" + model.documentid() + "/" + model.fileid(), {
+                type: 'GET',
+                data: {json: model.json()},
+                cache: false,
+                success : function(res) {
+                    model.setResult(res);
+                },
+                error : function(res) {
+                    model.setResult(JSON.stringify(res.responseText,undefined," "));
+                }
+            });
+        }
+});
+
 window.AddToPadQueueApiCall = ApiCall.extend({
         defaults: {
              name : "Add to padqueue API call",
@@ -1371,6 +1412,44 @@ window.DownloadFileApiCallView = Backbone.View.extend({
             button.click(function() {model.send(); return false;});
             boxLeft.append($("<div>Document #: <BR/></div>").append(documentidInput))
                    .append($("<div>File #: <BR/></div>").append(fileidInput))
+                   .append($("<div/>").append(button));
+            this.render();
+        },
+        render : function() {
+            this.boxRight.empty();
+            var model = this.model;
+            if (model.result() != undefined)
+                this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
+        }
+});
+
+
+window.ExtractTextsApiCallView = Backbone.View.extend({
+        initialize: function(args) {
+            _.bindAll(this, 'render');
+            this.model.bind('change', this.render);
+            this.prerender();
+
+        },
+        prerender : function() {
+            var model = this.model;
+            var box = $(this.el);
+            box.children().detach();
+            var boxLeft  = $("<div class='left-box'>");
+            this.boxRight = $("<div class='right-box'>");
+            box.append(this.boxRight).append(boxLeft);
+            var documentidInput = $("<input type='text'/>").val(model.documentid());
+            documentidInput.change(function() {model.setDocumentid(documentidInput.val()); return false;})
+            var fileidInput = $("<input type='text'/>").val(model.fileid());
+            fileidInput.change(function() {model.setFileid(fileidInput.val()); return false;})
+            var jsontextarea = $("<textarea class='json-text-area'>"+model.json()+"</textarea>");
+            jsontextarea.change(function() {model.setJson(jsontextarea.val()); return false;})
+
+            var button = $("<input type='button' value='Send request'/>");
+            button.click(function() {model.send(); return false;});
+            boxLeft.append($("<div>Document #: <BR/></div>").append(documentidInput))
+                   .append($("<div>File #: <BR/></div>").append(fileidInput))
+                   .append($("<div>JSON : <BR/></div>").append(jsontextarea))
                    .append($("<div/>").append(button));
             this.render();
         },
