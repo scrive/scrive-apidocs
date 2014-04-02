@@ -54,7 +54,7 @@ var SampleSignViewView = Backbone.View.extend({
     this.contentheader = $('<div class="contentheader" />');
     this.greenarrowtext = $('<span class="highlight-green">GREEN ARROW</span>');
     var instructionswrapper = $('<div class="instructions" />');
-    instructionswrapper.append('<span>Follow the </span>').append(this.greenarrowtext).append('<span> to e-sign</span>');
+    instructionswrapper.append('<span>Follow the </span>').append(this.greenarrowtext);
 
     this.contentheader.append(instructionswrapper);
     this.contentheader.append(extradocumentdetailscontainer);
