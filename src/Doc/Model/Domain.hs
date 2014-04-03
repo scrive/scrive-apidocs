@@ -8,6 +8,7 @@ import DB
 import User.UserID
 import Doc.DocStateData
 import Control.Monad.State.Class
+import MagicHash
 
 -- | Document security domain.
 --
@@ -25,6 +26,7 @@ import Control.Monad.State.Class
 data DocumentDomain
   = DocumentsOfWholeUniverse                     -- ^ All documents in the system. Only for admin view.
   | DocumentsVisibleToUser UserID                -- ^ Documents that a user has possible access to
+  | DocumentsVisibleViaAccessToken MagicHash     -- ^ Documents accessed using 'accesstoken' field from json
 
 --
 -- Document visibility rules:
@@ -64,6 +66,8 @@ documentDomainToSQL :: (MonadState v m, SqlWhere v)
                     -> m ()
 documentDomainToSQL (DocumentsOfWholeUniverse) = do
   sqlWhere "TRUE"
+documentDomainToSQL (DocumentsVisibleViaAccessToken token) = do
+  sqlWhereEq "documents.token" token
 documentDomainToSQL (DocumentsVisibleToUser uid) =
   sqlWhereAny $ do
     sqlWhereAll $ do           -- 1: see own documents
