@@ -10,6 +10,8 @@ module Attachment.Control
   , jsonAttachmentsList
   )
 where
+
+import AppView (respondWithPDF)
 import Attachment.AttachmentID
 import InputValidation
 import KontraLink
@@ -40,8 +42,6 @@ import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 import File.Storage
 import File.Model
-import qualified Data.Map as Map
-import qualified Data.ByteString.UTF8 as BS
 import Happstack.Fields
 
 handleRename :: Kontrakcja m => AttachmentID -> m JSValue
@@ -84,14 +84,8 @@ handleDownloadAttachment attid fid _nameForBrowser = do
                                             []
                                             (0,1)
   case atts of
-       [att] -> getFileIDContents (attachmentfile att) >>= respondWithPDF
+       [att] -> getFileIDContents (attachmentfile att) >>= return . respondWithPDF False
        _ -> internalError
-  where
-    respondWithPDF contents = do
-      let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
-          res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
-      return res2
-
 
 handleCreateNew :: Kontrakcja m => m JSValue
 handleCreateNew = do

@@ -394,12 +394,8 @@ handleDownloadClosedFile did sid mh _nameForBrowser = do
   if isClosed doc then do
     file <- guardJustM $ documentsealedfileM doc
     content <- getFileIDContents $ fileid file
-    return $ respondWithPDF content
+    return $ respondWithPDF True content
    else respond404
-
-respondWithPDF :: BS.ByteString -> Response
-respondWithPDF contents = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") $
-                          Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
 
 handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 handleResend docid signlinkid  = withUserPost $

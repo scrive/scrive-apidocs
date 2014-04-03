@@ -11,6 +11,7 @@ module AppView( kontrakcja
               , simpleJsonResponse
               , simpleHtmlResponse
               , simpleHtmlResonseClrFlash
+              , respondWithPDF
               , priceplanPage
               , unsupportedBrowserPage
               , standardPageFields
@@ -30,13 +31,15 @@ import Kontra
 import KontraLink
 
 import Control.Applicative
+import qualified Data.Map as Map
 import Data.Maybe
 import Happstack.Server.SimpleHTTP
 import Text.StringTemplates.Templates
 import User.Lang
 import qualified Text.StringTemplates.Fields as F
-import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
-import qualified Data.ByteString.UTF8 as BS (fromString,toString)
+import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.Lazy.UTF8 as BSL
+import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Base16 as B16
 import Data.Char
 import Data.String.Utils hiding (join)
@@ -263,6 +266,12 @@ simpleHtmlResonseClrFlash rsp = do
   res <- simpleHtmlResponse rsp
   clearFlashMsgs
   return res
+
+respondWithPDF :: Bool -> BS.ByteString -> Response
+respondWithPDF forceDownload contents =
+  setHeaderBS "Content-Type" "application/pdf" $
+  (if forceDownload then setHeaderBS "Content-Disposition" "attachment" else id) $
+  Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
 
 {- |
    Defines the main links as fields handy for substituting into templates.

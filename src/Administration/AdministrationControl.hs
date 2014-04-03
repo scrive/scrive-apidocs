@@ -12,6 +12,8 @@ module Administration.AdministrationControl(
             adminonlyRoutes
           , daveRoutes
           ) where
+
+import AppView (respondWithPDF)
 import Control.Monad.State
 import Data.Functor
 import Happstack.Server hiding (simpleHTTP,dir,path,https)
@@ -71,10 +73,7 @@ import qualified Company.CompanyControl as Company
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
 import Happstack.StaticRouting(Route, choice, dir)
 import Text.JSON.Gen
-import qualified Data.Map as Map
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.UTF8 as BS hiding (length)
 import File.Model
 import File.Storage
 
@@ -663,10 +662,7 @@ daveFile fileid' _title = onlyAdmin $ do
    contents <- getFileIDContents fileid'
    if BS.null contents
       then internalError
-      else do
-          let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
-          let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
-          return res2
+      else return $ respondWithPDF False contents
 
 handleAdminUserUsageStatsDays :: Kontrakcja m => UserID -> m JSValue
 handleAdminUserUsageStatsDays uid = onlySalesOrAdmin $ do

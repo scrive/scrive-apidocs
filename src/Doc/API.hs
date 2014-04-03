@@ -11,6 +11,7 @@ module Doc.API (
   , apiCallDownloadFile        -- Exported for tests
   ) where
 
+import AppView (respondWithPDF)
 import Control.Conditional (whenM, unlessM, ifM)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Int
@@ -718,13 +719,7 @@ apiCallDownloadMainFile did _nameForBrowser = api $ do
                 _ -> do
                   sourceFile <- apiGuardJustM  (serverError "No file") $ documentfileM doc
                   apiGuardL  (serverError "Can't get file content")  $ DocSeal.presealDocumentFile doc sourceFile
-  respondWithPDF content
-    where
-      respondWithPDF contents = do
-        let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
-            res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
-        return res2
-
+  return $ respondWithPDF False content
 
 apiCallDownloadFile :: Kontrakcja m => DocumentID -> FileID -> String -> m Response
 apiCallDownloadFile did fileid nameForBrowser = api $ do
