@@ -32,6 +32,7 @@ import Company.Model
 import User.Model
 import Util.SignatoryLinkUtils
 import Util.Actor
+import File.FileID
 import Doc.API
 import ELegitimation.BankIDUtils
 import DB.TimeZoneName (mkTimeZoneName)
@@ -51,6 +52,7 @@ docControlTests env = testGroup "Templates" [
   , testThat "We can't get json for document is we are logged in but we provided authorization header" env testGetBadHeader
   , testThat "Document bulk delete works fast" env testDocumentDeleteInBulk
   , testThat "Bankid mismatch happends when it should" env testBankIDMismatch
+  , testThat "Download file and download main file obey access rights" env testDownloadFile
   ]
 
 testUploadingFile :: TestEnv ()
@@ -227,6 +229,64 @@ testSendReminderEmailByCompanyAdmin = do
   emails <- dbQuery GetEmails
   assertEqual "Email was sent" 1 (length emails)
 
+testDownloadFile :: TestEnv ()
+testDownloadFile = do
+  company <- addNewCompany
+  user <- addNewRandomCompanyUser (companyid company) False
+  otheruser <- addNewRandomCompanyUser (companyid company) False
+  adminuser <- addNewRandomCompanyUser (companyid company) True
+
+  ctxnotloggedin <- mkContext defaultValue
+  ctxuser <- (\c -> c { ctxmaybeuser = Just user })
+    <$> mkContext defaultValue
+
+  ctxuseronpad <- (\c -> c { ctxmaybepaduser = Just user })
+    <$> mkContext defaultValue
+
+  ctxadmin <- (\c -> c { ctxmaybeuser = Just adminuser })
+    <$> mkContext defaultValue
+
+  ctxother <- (\c -> c { ctxmaybeuser = Just otheruser })
+    <$> mkContext defaultValue
+
+  reqfile <- mkRequest POST [ ("file", inFile "test/pdfs/simple.pdf") ]
+  (_rsp, _ctx') <- runTestKontra reqfile ctxuser $ apiCallCreateFromFile
+  [doc] <- randomQuery $ GetDocumentsByAuthor (userid user)
+
+  -- who cares which one, just pick the last one
+  --let sl = head . reverse $ documentsignatorylinks doc
+  let Just (fid :: FileID) = (documentfile doc)
+
+  let cases =
+       [ (False, ctxnotloggedin, [], "nobody is not logged in")
+       , (True,  ctxuser,        [], "user logged in is author")
+       , (False, ctxuseronpad,   [], "user on pad is author when document in Preparation")
+       , (False, ctxadmin,       [], "user logged in is admin of author when document in Preparation")
+       , (False, ctxother,       [], "user logged in is unrelated to document")
+       , (True,  ctxnotloggedin, [("accesstoken",inText (show (documentmagichash doc)))],
+                                     "using accesstoken, nobody logged in")
+       ]
+
+  let sortOutResult apicall shouldallow res comment =
+          case (shouldallow,res) of
+            (True, Left (e :: E.SomeException)) -> do
+              assertFailure $ "Should be able to download " ++ apicall ++ " when " ++ comment ++ ": " ++ show e
+            (True, Right (resp1,_ctx1)) | rsCode resp1 < 200 || rsCode resp1 >= 399 -> do
+              assertFailure $ "Should be able to download " ++ apicall ++ " when " ++ comment ++ ":\n" ++ show resp1
+            (False, Right (resp1,_ctx1)) | rsCode resp1 >= 200 && rsCode resp1 <= 399 -> do
+              assertFailure $ "Should not be able to download " ++ apicall ++ " when " ++ comment
+            _ -> return ()
+
+  forM_ cases $ \(shouldallow, ctx, params, comment) -> do
+    req1 <- mkRequest GET params
+    result1 <- E.try $ runTestKontra req1 ctx $
+                  apiCallDownloadFile (documentid doc) fid "anything.pdf"
+    sortOutResult "apiCallDownloadFile" shouldallow result1 comment
+
+    result2 <- E.try $ runTestKontra req1 ctx $
+                  apiCallDownloadMainFile (documentid doc) "anything.pdf"
+
+    sortOutResult "apiCallDownloadMainFile" shouldallow result2 comment
 
 testSendingReminderClearsDeliveryInformation :: TestEnv ()
 testSendingReminderClearsDeliveryInformation = do
