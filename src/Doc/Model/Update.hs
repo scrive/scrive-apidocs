@@ -711,7 +711,7 @@ instance (CryptoRNG m, MonadDB m, Log.MonadLog m, TemplatesMonad m) => DBUpdate 
     othersignatories <- sequence $ replicate nrOfOtherSignatories $ do
                           mh <- random
                           return $ signLinkFromDetails' emptySignatoryFields False True (SignOrder 2) [] mh
-
+    token <- random
     let doc = defaultValue
                   { documenttitle                = title
                   , documentsignatorylinks       = authorlink : othersignatories
@@ -720,6 +720,7 @@ instance (CryptoRNG m, MonadDB m, Log.MonadLog m, TemplatesMonad m) => DBUpdate 
                   , documentctime                = ctime
                   , documentmtime                = ctime
                   , documentauthorattachments    = []
+                  , documentmagichash            = token
                   }
 
     midoc <- insertDocumentAsIs doc
