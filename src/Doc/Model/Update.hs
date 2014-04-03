@@ -309,6 +309,7 @@ insertDocumentAsIs document@(Document
                    _documentstatusclass
                    documentapicallbackurl
                    documentobjectversion
+                   documentmagichash
                  ) = do
     runQuery_ . sqlInsert "documents" $ do
         sqlSet "title" documenttitle
@@ -333,6 +334,7 @@ insertDocumentAsIs document@(Document
         sqlSet "sharing" documentsharing
         sqlSet "object_version" documentobjectversion
         sqlSet "api_callback_url" documentapicallbackurl
+        sqlSet "token" documentmagichash
         sqlResult "documents.id"
 
     mdid <- fetchMaybe unSingle
@@ -347,22 +349,23 @@ insertDocumentAsIs document@(Document
         assertEqualDocuments document newdocument
         return (Just newdocument)
 
-insertNewDocument :: (MonadDB m, Log.MonadLog m, MonadIO m) => Document -> m Document
+insertNewDocument :: (MonadDB m, Log.MonadLog m, MonadIO m,CryptoRNG m) => Document -> m Document
 insertNewDocument doc = do
   now <- getMinutesTime
-  let docWithTime = doc {documentmtime  = now, documentctime = now}
+  magichash <- random
+  let docWithTime = doc {documentmtime  = now, documentctime = now, documentmagichash = magichash}
   newdoc <- insertDocumentAsIs docWithTime
   case newdoc of
     Just d -> return d
     Nothing -> error "insertNewDocument failed for some reason"
 
 -- Create new document based on existing one
-newFromDocumentID :: (MonadDB m, Log.MonadLog m, MonadIO m) => (Document -> Document) -> DocumentID -> m (Maybe Document)
+newFromDocumentID :: (MonadDB m, Log.MonadLog m, MonadIO m,CryptoRNG m) => (Document -> Document) -> DocumentID -> m (Maybe Document)
 newFromDocumentID f docid = do
   doc <- query $ GetDocumentByDocumentID docid
   newFromDocument f doc
 
-newFromDocument :: (MonadDB m, Log.MonadLog m, MonadIO m) => (Document -> Document) -> Document -> m (Maybe Document)
+newFromDocument :: (MonadDB m, Log.MonadLog m, MonadIO m,CryptoRNG m) => (Document -> Document) -> Document -> m (Maybe Document)
 newFromDocument f doc = do
   Just `liftM` insertNewDocument (f doc)
 
@@ -1444,4 +1447,3 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documentsignatorylinks count" (length . documentsignatorylinks)
                    ] ++
                    concat (zipWith checkSigLink sl1 sl2)
-

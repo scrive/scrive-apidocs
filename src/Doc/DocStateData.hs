@@ -621,6 +621,7 @@ data Document = Document {
   , documentstatusclass            :: StatusClass
   , documentapicallbackurl         :: Maybe String
   , documentobjectversion          :: Int64
+  , documentmagichash              :: MagicHash
   } deriving (Eq, Ord, Show)
 
 
@@ -651,6 +652,7 @@ instance HasDefaultValue Document where
           , documentstatusclass          = SCDraft
           , documentapicallbackurl       = Nothing
           , documentobjectversion        = 0
+          , documentmagichash            = unsafeMagicHash 0
           }
 
 instance HasLang Document where

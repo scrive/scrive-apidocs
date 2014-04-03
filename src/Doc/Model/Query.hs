@@ -90,11 +90,12 @@ documentsSelectors =
   , "documents.sharing"
   , "documents.api_callback_url"
   , "documents.object_version"
+  , "documents.token"
   , documentStatusClassExpression
   ]
 
-fetchDocument :: (DocumentID, String, DocumentStatus, Maybe String, DocumentType, MinutesTime, MinutesTime, Int32, Maybe Int32, Maybe MinutesTime, Maybe MinutesTime, Maybe MinutesTime, Maybe IPAddress, String, Bool, Bool, Bool, Bool, Lang, DocumentSharing, Maybe String, Int64, StatusClass) -> Document
-fetchDocument (did, title, status, error_text, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, show_header, show_pdf_download, show_reject_option, show_footer, lang, sharing, apicallback, objectversion, status_class)
+fetchDocument :: (DocumentID, String, DocumentStatus, Maybe String, DocumentType, MinutesTime, MinutesTime, Int32, Maybe Int32, Maybe MinutesTime, Maybe MinutesTime, Maybe MinutesTime, Maybe IPAddress, String, Bool, Bool, Bool, Bool, Lang, DocumentSharing, Maybe String, Int64, MagicHash, StatusClass) -> Document
+fetchDocument (did, title, status, error_text, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, show_header, show_pdf_download, show_reject_option, show_footer, lang, sharing, apicallback, objectversion, token, status_class)
        = Document {
          documentid = did
        , documenttitle = title
@@ -128,6 +129,7 @@ fetchDocument (did, title, status, error_text, doc_type, ctime, mtime, days_to_s
        , documentstatusclass = status_class
        , documentapicallbackurl = apicallback
        , documentobjectversion = objectversion
+       , documentmagichash = token
        }
 
 selectSignatoryLinksSQL :: SQL
