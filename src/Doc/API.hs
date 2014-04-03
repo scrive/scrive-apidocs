@@ -758,43 +758,61 @@ apiCallDownloadFile did fileid nameForBrowser = api $ do
 
 apiCallExtractTexts :: Kontrakcja m => DocumentID -> FileID -> m Response
 apiCallExtractTexts did fileid = api $ do
-  (msid :: Maybe SignatoryLinkID) <- readField "signatorylinkid"
-  jsons <- apiGuardL (badInput "The MIME part 'json' must exist and must be a JSON.") $ getDataFn' (look "json")
-  json <- apiGuard (badInput "The MIME part 'json' must be a valid JSON.") $ case decode jsons of
+  (user, _actor , _) <- getAPIUser APIDocCreate
+  withDocumentID did $ do
+    unlessM (isPreparation <$> theDocument) $ do
+      throwIO . SomeKontraException $ serverError "Can't extract texts from documents that are not in preparation"
+    auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
+    when (not $ (auid == userid user)) $ do
+      throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
+
+
+    jsons <- apiGuardL (badInput "The MIME part 'json' must exist and must be a JSON.") $ getDataFn' (look "json")
+    json <- apiGuard (badInput "The MIME part 'json' must be a valid JSON.") $ case decode jsons of
                                                                                  J.Ok js -> Just js
                                                                                  _ -> Nothing
-  mmh <- maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msid
-  doc <- do
-           case (msid, mmh) of
-            (Just sid, Just mh) -> dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
-            _ ->  do
-                  (user, _actor, external) <- getAPIUser APIDocCheck
-                  if (external)
-                    then do
-                      ctx <- getContext
-                      modifyContext (\ctx' -> ctx' {ctxmaybeuser = Just user});
-                      res <- getDocByDocID did
-                      modifyContext (\ctx' -> ctx' {ctxmaybeuser = ctxmaybeuser ctx});
-                      return res;
-                    else getDocByDocID did
-  let allfiles = maybeToList (documentfile doc) ++ maybeToList (documentsealedfile doc) ++
-                      (authorattachmentfile <$> documentauthorattachments doc) ++
-                      (catMaybes $ Prelude.map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
-  if (all (/= fileid) allfiles)
-     then throwIO . SomeKontraException $ forbidden "Access to file is forbiden."
-     else do
-        content <- getFileIDContents fileid
-        result1 <- runJavaTextExtract json content
-        return result1
+    doc <- theDocument
+    when (Just fileid /= documentfile doc) $ do
+      throwIO . SomeKontraException $ serverError "Requested file does not belong to the document"
 
+    content <- getFileIDContents fileid
+    runJavaTextExtract json content
+
+
+{-
+
+Java scrivepdftools extract-text expect as input json in the following format:
+
+{ "rects": [ { "rect": [0,0,1,1],   // rectangle to extract text from, normalized to 0,0-1,1
+               "page": 1},          // page number to extract from, starting from 1
+             { "rect": [0,0,0.2,0.2],
+               "page": 7 }]}
+
+as output it will add keys to the json on the input:
+{ "rects": [ { "rect": [0,0,1,1],   // rectangle to extract text from, normalized to 0,0-1,1
+               "page": 1,           // page number to extract from, starting from 1
+               "lines": [ "first line of extracted text",
+                          "second line of extracted text" ]
+             { "rect": [0,0,0.2,0.2],
+               // no lines here as document has less than 7 pages
+               "page": 7 }]}
+
+java tool tries to preserve lines of text that were give in
+pdf. Whitespace is normalized: no whitespec at the beginning or the
+end, single space between words, newlines, tabs changed to
+spaces. Note that whitespace in PDF is not reliable as sometimes
+letters are just spread out visually but do not contain whitespace
+character between them. When matching you should probably just run the
+words together to stay on the safe side.
+
+-}
 runJavaTextExtract :: (Monad m,Kontrakcja m) => JSValue -> BS.ByteString -> m (Ok JSValue)
 runJavaTextExtract json content = do
   withSystemTempDirectory' ("extract-texts-") $ \tmppath -> do
     let tmpin = tmppath ++ "/input.pdf"
     let specpath = tmppath ++ "/sealspec.json"
 
-
-    let (rects :: Maybe JSValue) = flip ($) json $ fromJSValueField "rects"
+    let (rects :: Maybe JSValue) = fromJSValueField "rects" json
     let config = runJSONGen $ do
                    value "rects" rects
 
@@ -808,13 +826,13 @@ runJavaTextExtract json content = do
                                         case decode (BSL.toString _stdout) of
                                           J.Ok js -> Just js
                                           _ -> Nothing
-          let (rectsresult :: Maybe JSValue) = flip ($) jsonresult $ fromJSValueField "rects"
+          let (rectsresult :: Maybe JSValue) = fromJSValueField "rects" jsonresult
           let censoredresult = runJSONGen $ do
                    value "rects" rectsresult
           return $ Ok censoredresult
       ExitFailure _ -> do
           Log.attention_ $ BSL.toString _stderr
-          Log.attention_ $ "Extract texts failed for configuration: " ++ show config
+          Log.attention_ $ "Extract texts failed for configuration: " ++ show json
           apiGuardL (serverError "Extract texts failed on PDF") (return Nothing)
 
 -- this one must be standard post with post params because it needs to
