@@ -86,7 +86,7 @@ define(['Backbone', 'tinyMCE', 'tinyMCE_theme', 'tinyMCE_noneeditable', 'tinyMCE
 
             var label = $('<div />');
             label.addClass('design-view-action-process-left-column-document-name-label');
-            label.text(labelText + ':');
+            label.text(labelText);
 
             var field = new InfoTextInput({
                 infotext: labelText,
@@ -130,7 +130,7 @@ define(['Backbone', 'tinyMCE', 'tinyMCE_theme', 'tinyMCE_noneeditable', 'tinyMCE
             var div = $("<div class='design-view-action-process-left-column-language'/>");
 
 
-            var label = $("<div class='design-view-action-process-left-column-language-label''/>").text(labelText + ':');
+            var label = $("<div class='design-view-action-process-left-column-language-label''/>").text(labelText);
 
             var select = new Select({
                 options: _.map(languages, function(e) {
@@ -167,7 +167,7 @@ define(['Backbone', 'tinyMCE', 'tinyMCE_theme', 'tinyMCE_noneeditable', 'tinyMCE
 
 
             var div = $("<div class='design-view-action-process-left-column-deadline'/>");
-            var label = $("<div class='design-view-action-process-left-column-deadline-label'/>").text(localization.designview.signingDeadline + ':');
+            var label = $("<div class='design-view-action-process-left-column-deadline-label'/>").text(localization.designview.signingDeadline);
             var calendarbutton = $("<div class='calendarbutton'/>");
             view.daystosigncalendar = new Calendar({on : calendarbutton,
                                          days : doc.daystosign(),
@@ -217,7 +217,7 @@ define(['Backbone', 'tinyMCE', 'tinyMCE_theme', 'tinyMCE_noneeditable', 'tinyMCE
             var doc = viewmodel.document();
 
             var div = $("<div class='design-view-action-process-left-column-remindline'/>");
-            var label = $("<div class='design-view-action-process-left-column-remindline-label'/>").text(localization.autoreminders.sendReminderIn + ':');
+            var label = $("<div class='design-view-action-process-left-column-remindline-label'/>").text(localization.autoreminders.sendReminderIn);
             var calendarbutton = $("<div class='calendarbutton'/>");
             view.daystoremindcalendar = new Calendar({on : calendarbutton,
                                          days : doc.daystoremind(),
