@@ -74,19 +74,19 @@ define(['React', 'StateMachine', 'postsignview/questionnaire_question_views'], f
     mixpanelProperties: function() {
       var document = this.props.document;
       var properties = {
-        saveUrl: document.currentSignatory().saveurl(),
-        fullName: document.currentSignatory().name(),
-        firstName: document.currentSignatory().fstname(),
-        lastName: document.currentSignatory().sndname(),
-        email: document.currentSignatory().email(),
-        language: document.lang().simpleCode(),
-        companyName: document.currentSignatory().company(),
-        referringCompany: document.author().company(),
-        signupMethod: 'BySigning'
+        'Full Name': document.currentSignatory().name(),
+        '$first_name': document.currentSignatory().fstname(),
+        '$last_name': document.currentSignatory().sndname(),
+        '$email': document.currentSignatory().email(),
+        'Language': document.lang().simpleCode(),
+        'Company Name': document.currentSignatory().company(),
+        'Referring Company': document.author().company(),
+        'Signup Method': 'BySigning'
       };
 
       if(this.phoneNumber) {
         properties['Phone'] = this.phoneNumber;
+        properties['Questionnaire Lead'] = true;
       }
 
       return properties;
@@ -94,8 +94,7 @@ define(['React', 'StateMachine', 'postsignview/questionnaire_question_views'], f
 
     registerInMixpanel: function(extraProperties) {
       var props = _.extend(this.mixpanelProperties(), extraProperties);
-      var mail = props.email;
-      delete props.saveUrl;
+      var mail = props['$email'];
       mixpanel.alias(mail);
       mixpanel.identify(mail);
       mixpanel.register(props);
