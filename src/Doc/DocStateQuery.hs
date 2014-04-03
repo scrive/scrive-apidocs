@@ -26,6 +26,7 @@
 
 module Doc.DocStateQuery
     ( getDocByDocID
+    , getDocByDocIDEx
     , getDocsByDocIDs
     , getDocByDocIDForAuthor
     , getDocByDocIDForAuthorOrAuthorsCompanyAdmin
@@ -45,22 +46,26 @@ import Data.List
 import Util.SignatoryLinkUtils
 
 getDocByDocID :: Kontrakcja m => DocumentID -> m Document
-getDocByDocID docid = do
+getDocByDocID docid = getDocByDocIDEx docid Nothing
+
+getDocByDocIDEx :: Kontrakcja m => DocumentID -> (Maybe MagicHash) -> m Document
+getDocByDocIDEx docid maccesstoken = do
   Context { ctxmaybeuser, ctxmaybepaduser} <- getContext
-  case (ctxmaybeuser `mplus` ctxmaybepaduser) of
-    Nothing -> do
-      -- we should never come to this place as user being loggen in is
-      -- guarded up in the call stack
-      internalError
-    Just user -> do
-      (_,mdoc) <- dbQuery (GetDocuments2 False
-                                    [ DocumentsVisibleToUser (userid user) ]
-                                    [ DocumentFilterByDocumentID docid ]
-                                    [] (0,1, Nothing))
-      case mdoc of
-        [doc] -> do
-          return doc
-        _ -> error "This will never happen due to allowzeroresults=False in statement above"
+  -- document will be returned if ANY of the below is true (logical OR)
+  let visibility = concat
+        [ [DocumentsVisibleToUser (userid user) | Just user <- return ctxmaybeuser]
+        , [DocumentsVisibleToUser (userid user) | Just user <- return ctxmaybepaduser]
+        , [DocumentsVisibleViaAccessToken token | Just token <- return maccesstoken]
+        ]
+
+  (_,mdoc) <- dbQuery (GetDocuments2 False
+                                visibility
+                                [ DocumentFilterByDocumentID docid ]
+                                [] (0,1, Nothing))
+  case mdoc of
+    [doc] -> do
+      return doc
+    _ -> error "This will never happen due to allowzeroresults=False in statement above"
 
 getDocsByDocIDs :: Kontrakcja m => [DocumentID] -> m [Document]
 getDocsByDocIDs docids = do

@@ -7,6 +7,8 @@ module Doc.API (
   , apiCallReady               -- Exported for tests
   , apiCallSign                -- Exported for tests
   , apiCallSetAutoReminder     -- Exported for tests
+  , apiCallDownloadMainFile    -- Exported for tests
+  , apiCallDownloadFile        -- Exported for tests
   ) where
 
 import Control.Conditional (whenM, unlessM, ifM)
@@ -679,11 +681,13 @@ apiCallDownloadMainFile :: Kontrakcja m => DocumentID -> String -> m Response
 apiCallDownloadMainFile did _nameForBrowser = api $ do
 
   (msid :: Maybe SignatoryLinkID) <- readField "signatorylinkid"
+  (maccesstoken :: Maybe MagicHash) <- readField "accesstoken"
   mmh <- maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msid
 
   doc <- do
-           case (msid, mmh) of
-            (Just sid, Just mh) -> dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
+           case (msid, mmh, maccesstoken) of
+            (Just sid, Just mh, _) -> dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
+            (_, _, Just _) -> getDocByDocIDEx did maccesstoken
             _ ->  do
                   (user, _actor, external) <- getAPIUser APIDocCheck
                   if (external)
@@ -719,10 +723,12 @@ apiCallDownloadMainFile did _nameForBrowser = api $ do
 apiCallDownloadFile :: Kontrakcja m => DocumentID -> FileID -> String -> m Response
 apiCallDownloadFile did fileid nameForBrowser = api $ do
   (msid :: Maybe SignatoryLinkID) <- readField "signatorylinkid"
+  (maccesstoken :: Maybe MagicHash) <- readField "accesstoken"
   mmh <- maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msid
   doc <- do
-           case (msid, mmh) of
-            (Just sid, Just mh) -> dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
+           case (msid, mmh, maccesstoken) of
+            (Just sid, Just mh, _) -> dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
+            (_, _, Just _accesstoken) -> getDocByDocIDEx did maccesstoken
             _ ->  do
                   (user, _actor, external) <- getAPIUser APIDocCheck
                   if (external)
