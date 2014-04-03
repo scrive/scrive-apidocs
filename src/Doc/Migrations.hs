@@ -1151,6 +1151,32 @@ migrateDocumentsAddSignviewSettings =
         return ()
       }
 
+migrateDocumentsAddDocumentToken :: MonadDB m => Migration m
+migrateDocumentsAddDocumentToken =
+  Migration {
+      mgrTable = tableDocuments
+    , mgrFrom = 31
+    , mgrDo = do
+        runQuery_ $ sqlAlterTable "documents"
+                  [ sqlAddColumn $ tblColumn { colName = "token"
+                                             , colType = BigIntT
+                                             , colNullable = True }
+                  ]
+        -- We need to generate random tokens here. Postgresql random function
+        -- returns double precision number in the range [0;1], but there are
+        -- about 31 bits of significant random data in there. Putting those two
+        -- together it gives 62 bits and that should be enough.
+        --
+        -- We do two runs over documents table so that both random samples are
+        -- independent from each other.
+        runSQL_ "update documents set token = (random() * 2147483647) :: BIGINT"
+        runSQL_ "update documents set token = ((random() * 2147483647) :: BIGINT << 32) # token"
+        runQuery_ $ sqlAlterTable "documents"
+                  [ sqlAlterColumn "token" "set not null"
+                  ]
+        return ()
+      }
+
 fixSignatureFieldsWithAnySize :: MonadDB m => Migration m
 fixSignatureFieldsWithAnySize =
   Migration {

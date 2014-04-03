@@ -154,5 +154,6 @@ kontraMigrations = [
   , signatoryLinksChangeVarcharColumnsToText
   , tempCredentialChangeVarcharColumnsToText
   , migrateDocumentsAddSignviewSettings
+  , migrateDocumentsAddDocumentToken
   ] ++ mailerMigrations
     ++ messengerMigrations
