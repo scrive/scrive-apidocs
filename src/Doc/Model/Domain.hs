@@ -9,6 +9,7 @@ import User.UserID
 import Doc.DocStateData
 import Control.Monad.State.Class
 import MagicHash
+import Data.Typeable
 
 -- | Document security domain.
 --
@@ -27,7 +28,7 @@ data DocumentDomain
   = DocumentsOfWholeUniverse                     -- ^ All documents in the system. Only for admin view.
   | DocumentsVisibleToUser UserID                -- ^ Documents that a user has possible access to
   | DocumentsVisibleViaAccessToken MagicHash     -- ^ Documents accessed using 'accesstoken' field from json
-
+ deriving (Eq, Ord, Typeable, Show)
 --
 -- Document visibility rules:
 --
