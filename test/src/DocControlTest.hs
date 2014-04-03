@@ -36,6 +36,7 @@ import File.FileID
 import Doc.API
 import ELegitimation.BankIDUtils
 import DB.TimeZoneName (mkTimeZoneName)
+import MagicHash
 
 docControlTests :: TestEnvSt -> Test
 docControlTests env = testGroup "Templates" [
@@ -252,6 +253,8 @@ testDownloadFile = do
   reqfile <- mkRequest POST [ ("file", inFile "test/pdfs/simple.pdf") ]
   (_rsp, _ctx') <- runTestKontra reqfile ctxuser $ apiCallCreateFromFile
   [doc] <- randomQuery $ GetDocumentsByAuthor (userid user)
+
+  assertBool "Document access token should not be zero" (documentmagichash doc /= unsafeMagicHash 0)
 
   -- who cares which one, just pick the last one
   --let sl = head . reverse $ documentsignatorylinks doc
