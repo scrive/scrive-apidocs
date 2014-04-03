@@ -72,6 +72,7 @@ javascriptLocalisation =
 					   , formSend :	"$_reminderFormSendReminder()$"
                        , formOwnMessage : "$_reminderFormFooterOwnMessage()$"
                        , mobileQuestion : "$_reminderByMobileQuestion()$"
+                       , mobileQuestionAlreadySigned : "$_reminderByMobileQuestionAlreadySigned()$"
                        , emailMobileQuestion : "$_reminderByEmailMobileQuestion()$"
 					}
              , sign :  {
