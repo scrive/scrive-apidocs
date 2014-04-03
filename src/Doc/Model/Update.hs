@@ -1220,7 +1220,7 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m PostReminderSend () w
 
 data UpdateFieldsForSigning = UpdateFieldsForSigning SignatoryLink [(FieldType, String)] Actor
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m UpdateFieldsForSigning () where
-  update (UpdateFieldsForSigning sl fields actor) = updateDocumentWithID $ \did -> do
+  update (UpdateFieldsForSigning sl fields actor) = updateDocumentWithID $ const $ do
     -- Document has to be in Pending state
     -- signatory could not have signed already
     let slid = signatorylinkid sl
@@ -1246,7 +1246,7 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m UpdateFieldsForSignin
                      sqlWhereEq "documents.status" Pending
                      sqlWhere "signatory_links.sign_time IS NULL"
 
-    let mfield = getFieldOfType fieldtype (signatoryfields sl)
+          let mfield = getFieldOfType fieldtype (signatoryfields sl)
               changed = case mfield of
                           Just f | sfValue f == fvalue -> False
                           _                            -> True
@@ -1278,7 +1278,6 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m UpdateFieldsForSignin
                        where ps = sfPlacements f
                      _ -> return ())
                actor
-               did
 
     forM_ fields updateValue
 

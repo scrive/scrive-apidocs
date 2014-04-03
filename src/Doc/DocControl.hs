@@ -182,7 +182,7 @@ handleSignShowSaveMagicHash did sid mh = do
     dbUpdate $ AddDocumentSessionToken sid mh
 
     invitedlink <- guardJust . getSigLinkFor sid =<< theDocument
-    void $ dbUpdate $ InsertEvidenceEvent SignatoryLinkVisited (return ()) (signatoryActor ctx invitedlink)
+    void $ dbUpdate . InsertEvidenceEvent SignatoryLinkVisited (return ()) =<< signatoryActor ctx invitedlink
 
     -- Redirect to propper page
     return $ LinkSignDocNoMagicHash did sid
@@ -200,8 +200,8 @@ handleSignShow documentid signatorylinkid = do
         invitedlink <- guardJust . getSigLinkFor signatorylinkid =<< theDocument
         switchLangWhenNeeded  (Just invitedlink) =<< theDocument
         unlessM ((isTemplate ||^ isPreparation ||^ isClosed) <$> theDocument) $
-          dbUpdate $ MarkDocumentSeen signatorylinkid magichash
-             (signatoryActor ctx invitedlink)
+          dbUpdate . MarkDocumentSeen signatorylinkid magichash
+             =<< signatoryActor ctx invitedlink
 
         ad <- getAnalyticsData
         content <- theDocument >>= \d -> pageDocumentSignView ctx d invitedlink ad

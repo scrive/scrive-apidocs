@@ -133,8 +133,8 @@ testLastPersonSigningADocumentClosesIt = do
     siglink <- head . filter isUnsigned .documentsignatorylinks <$> theDocument
 
     do t <- documentctime <$> theDocument
-       randomUpdate $ MarkDocumentSeen (signatorylinkid siglink) (signatorymagichash siglink)
-                 (signatoryActor ctx{ ctxtime = t } siglink)
+       randomUpdate . MarkDocumentSeen (signatorylinkid siglink) (signatorymagichash siglink)
+                 =<< signatoryActor ctx{ ctxtime = t } siglink
 
     assertEqual "One left to sign" 1 . length . filter isUnsigned . documentsignatorylinks =<< theDocument
 

@@ -14,11 +14,15 @@ module Util.HasSomeUserInfo (
   getFullName,
   getSmartName,
   getIdentifier,
+  getSignatoryIdentifier,
   HasSomeUserInfo(..)
   ) where
 
 
+import Control.Applicative ((<$>))
+import Data.List (find)
 import Doc.DocStateData
+import Doc.DocumentMonad (DocumentMonad, theDocument)
 import User.Model
 import Mails.MailsData
 import Data.String.Utils
@@ -89,6 +93,19 @@ getIdentifier a | null fullName   = identifier
                 | otherwise       = fullName ++ " (" ++ identifier ++ ")"
   where fullName = getFullName a
         identifier = firstNonEmpty [getPersonalNumber a, getEmail a, getMobile a]
+
+-- | Return identifier for a signatory or "(Signatory <N>)" if the
+-- identifier is empty, where the signatory is the Nth signatory of
+-- the document.
+getSignatoryIdentifier :: DocumentMonad m => SignatoryLink -> m String
+getSignatoryIdentifier sl = do
+  let i = getIdentifier sl
+  if null i then
+     maybe "(Anonymous)" (("(Signatory " ++) . (++ ")") . show . fst) .
+                 find ((==(signatorylinkid sl)) . signatorylinkid . snd) .
+                 zip [1..] . documentsignatorylinks <$> theDocument
+   else
+     return i
 
 -- | Get a MailAddress
 getMailAddress :: (HasSomeUserInfo a) => a -> MailAddress

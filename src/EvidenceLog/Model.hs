@@ -18,12 +18,11 @@ module EvidenceLog.Model (
 
 import Control.Applicative ((<$>), (<*>))
 import Data.Int
-import Data.List (find)
 import Data.Maybe (fromMaybe)
 import Data.Monoid
 import Data.Monoid.Space
 import DB
-import Doc.DocumentMonad (DocumentMonad, theDocumentID, theDocument)
+import Doc.DocumentMonad (DocumentMonad, theDocumentID)
 import qualified Control.Exception as E
 import qualified HostClock.Model as HC
 import IPAddress
@@ -31,9 +30,9 @@ import MinutesTime
 import Data.Typeable
 import User.Model
 import Util.Actor
-import Util.HasSomeUserInfo (getIdentifier, getEmail)
+import Util.HasSomeUserInfo (getEmail, getSignatoryIdentifier)
 import Doc.SignatoryLinkID
-import Doc.DocStateData (SignatoryLink(..), AuthenticationMethod(..), DeliveryMethod(..), documentsignatorylinks)
+import Doc.DocStateData (SignatoryLink(..), AuthenticationMethod(..), DeliveryMethod(..))
 import Version
 import Doc.DocumentID
 import Text.StringTemplates.Templates
@@ -77,15 +76,7 @@ evidenceLogText event textFields masl mmsg actor = do
    msignatory <-
      case masl of
        Nothing -> return Nothing
-       Just sl -> do
-         let s = getIdentifier sl
-         if null s
-          then
-           fmap (("(signatory " ++) . (++ ")") . show . fst) .
-                       find ((==(signatorylinkid sl)) . signatorylinkid . snd) .
-                       zip [1..] . documentsignatorylinks <$> theDocument
-          else
-           return $ Just s
+       Just sl -> Just <$> getSignatoryIdentifier sl
    let fields = do
          F.value "full" True
          F.value "actor" $ actorWho actor

@@ -18,6 +18,7 @@ import MinutesTime
 import User.Model
 import Doc.SignatoryLinkID
 import Doc.DocStateData (SignatoryLink(..))
+import Doc.DocumentMonad (DocumentMonad)
 import Data.Typeable
 import Control.Monad
 
@@ -87,14 +88,15 @@ authorActor ctx u = (userActor ctx u) {
 }
 
 -- | For an action requiring a signatory with siglinkid and token (such as signing)
-signatoryActor :: Context -> SignatoryLink -> Actor
-signatoryActor ctx s = (contextActor ctx) {
-    actorUserID = maybesignatory s
-  , actorEmail = Just (getEmail s)
-  , actorSigLinkID = Just (signatorylinkid s)
-  , actorWho = "the signatory " ++ if null identifier then "(anonymous)" else identifier
-}
-  where identifier = getIdentifier s
+signatoryActor :: DocumentMonad m => Context -> SignatoryLink -> m Actor
+signatoryActor ctx s = do
+  sid <- getSignatoryIdentifier s
+  return $ (contextActor ctx){
+        actorUserID = maybesignatory s
+      , actorEmail = Just (getEmail s)
+      , actorSigLinkID = Just (signatorylinkid s)
+      , actorWho = "the signatory " ++ sid
+      }
 
 -- | For delivery/reading notifications from the mail system
 mailSystemActor :: MinutesTime -> Maybe UserID -> String -> SignatoryLinkID -> Actor

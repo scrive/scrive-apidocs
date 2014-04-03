@@ -13,6 +13,7 @@ import Data.Word
 import Test.QuickCheck
 import Happstack.Server
 import Doc.DocUtils
+import Doc.DocumentMonad (withDocumentID)
 import Doc.SealStatus (SealStatus(..))
 import Test.QuickCheck.Gen
 import Control.Monad (unless)
@@ -142,8 +143,10 @@ arbitrarySystemActor :: (Functor m, CryptoRNG m) => m Actor
 arbitrarySystemActor = systemActor <$> rand 10 arbitrary
 
 arbitrarySignatoryActor :: TestEnv Actor
-arbitrarySignatoryActor = signatoryActor <$> mkContext defaultValue
-                                         <*> rand 10 arbitrary
+arbitrarySignatoryActor = do
+  ctx <- mkContext defaultValue
+  sl <- rand 10 arbitrary
+  withDocumentID (unsafeDocumentID 0) $ signatoryActor ctx sl
 
 instance Arbitrary SignatoryLinkID where
   arbitrary = unsafeSignatoryLinkID . abs <$> arbitrary

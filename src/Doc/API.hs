@@ -371,10 +371,9 @@ apiCallReject did slid = api $ do
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
     ctx <- getContext
     Just sll <- getSigLinkFor slid <$> theDocument
-    let  actor = signatoryActor ctx sll
     customtext <- getOptionalField  asValidInviteText "customtext"
     switchLang . getLang =<< theDocument
-    (dbUpdate $ RejectDocument slid customtext actor)
+    (dbUpdate . RejectDocument slid customtext =<< signatoryActor ctx sll)
         `catchKontra` (\(DocumentStatusShouldBe _ _ i) -> throwIO . SomeKontraException $ conflictError $ "Document not pending but " ++ show i)
         `catchKontra` (\(SignatoryHasAlreadySigned) -> throwIO . SomeKontraException $ conflictError $ "Signatory has already signed")
     postDocumentRejectedChange slid =<< theDocument
@@ -475,15 +474,15 @@ signDocument :: (Kontrakcja m, DocumentMonad m)
 signDocument slid mh fields msinfo screenshots = do
   switchLang =<< getLang <$> theDocument
   ctx <- getContext
-  getSigLinkFor slid <$> theDocument >>= \sl -> dbUpdate $ UpdateFieldsForSigning sl fields $ signatoryActor ctx sl
-  getSigLinkFor slid <$> theDocument >>= \sl -> dbUpdate $ SignDocument slid mh msinfo screenshots $ signatoryActor ctx sl
+  getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . UpdateFieldsForSigning sl fields =<< signatoryActor ctx sl
+  getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . SignDocument slid mh msinfo screenshots =<< signatoryActor ctx sl
 
 handleMismatch :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [SignatoryField] -> String -> String -> String -> m ()
 handleMismatch sid sf sfn sln spn = do
         ctx <- getContext
         Just sl <- getSigLinkFor sid <$> theDocument
         Log.attention_ $ "Information from eleg did not match information stored for signatory in document."
-        dbUpdate $ LogSignWithELegFailureForDocument sid (nothingIfEmpty $ getFullName sf) (nothingIfEmpty $ getPersonalNumber sf)  sfn sln spn (signatoryActor ctx sl)
+        dbUpdate . LogSignWithELegFailureForDocument sid (nothingIfEmpty $ getFullName sf) (nothingIfEmpty $ getPersonalNumber sf)  sfn sln spn =<< signatoryActor ctx sl
         triggerAPICallbackIfThereIsOne =<< theDocument
 
 {- End of utils-}
@@ -606,8 +605,8 @@ apiCallGet did = api $ do
        sl <- apiGuardJustM  (serverError "No document found") $ getSigLinkFor slid <$> theDocument
        when (signatorymagichash sl /= mh) $ throwIO . SomeKontraException $ serverError "No document found"
        unlessM ((isTemplate ||^ isPreparation ||^ isClosed) <$> theDocument) $
-         dbUpdate $ MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl)
-                       (signatoryActor ctx sl)
+         dbUpdate . MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl)
+                       =<< signatoryActor ctx sl
        switchLang . getLang =<< theDocument
 
        mauser <- theDocument >>= \d -> case join $ maybesignatory <$> getAuthorSigLink d of
@@ -623,8 +622,8 @@ apiCallGet did = api $ do
       msiglink <- getSigLinkFor user <$> theDocument
       unlessM (((const (isNothing msiglink)) ||^ isPreparation ||^ isClosed  ||^ isTemplate) <$> theDocument) $ do
           let sl = fromJust msiglink
-          dbUpdate $ MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl)
-               (signatoryActor ctx sl)
+          dbUpdate . MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl)
+               =<< signatoryActor ctx sl
 
       mauser <- theDocument >>= \d -> case (join $ maybesignatory <$> getAuthorSigLink d) of
                      Just auid -> dbQuery $ GetUserByIDIncludeDeleted auid
@@ -931,9 +930,9 @@ apiCallSetSignatoryAttachment did sid aname = api $ do
       _ -> return Nothing
     ctx <- getContext
     case mfileid of
-      Just fileid -> (dbUpdate $ SaveSigAttachment sid sigattach fileid (signatoryActor ctx sl))
+      Just fileid -> (dbUpdate . SaveSigAttachment sid sigattach fileid =<< signatoryActor ctx sl)
                        `catchKontra` (\(DBBaseLineConditionIsFalse _) -> throwIO . SomeKontraException $ conflictError $ "Inconsistent state - attachment is already set")
-      Nothing -> dbUpdate $ DeleteSigAttachment sid sigattach (signatoryActor ctx sl)
+      Nothing -> dbUpdate . DeleteSigAttachment sid sigattach =<< signatoryActor ctx sl
 
     Accepted <$> (documentJSON mu False True False Nothing (Just sl) =<< theDocument)
 
