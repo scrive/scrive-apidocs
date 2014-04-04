@@ -44,6 +44,7 @@ $htmlopentag()$
                                          logolink:   "$logolink$",
                                          buttoncolorclass : "$buttoncolorclass$",
                                          servicelinkcolour: $if(servicelinkcolour)$"$servicelinkcolour$"$else$null$endif$,
+                                         textscolour: $if(textscolour)$"$textscolour$"$else$null$endif$,
                                          autofocus: true}).el());
       mixpanel.register({
         Context : 'Login page - branded'
@@ -184,6 +185,7 @@ $htmlopentag()$
                                          logolink:   "$logolink$",
                                          buttoncolorclass : "$buttoncolorclass$",
                                          servicelinkcolour: $if(servicelinkcolour)$"$servicelinkcolour$"$else$null$endif$,
+                                         textscolour: $if(textscolour)$"$textscolour$"$else$null$endif$,
                                          autofocus: true
                             }).el());
     });
@@ -210,7 +212,7 @@ accountSetupPage=
           $if(customlogo)$
             <img alt="logo" src="$customlogolink$"/>
             <div class="divider-line"></div>
-            <label style="text-align:center;width:275px;">E-signing powered by Scrive</label>
+            <label style="text-align:center;width:275px;$if(customexternaltextcolour)$;color:$customexternaltextcolour$$endif$">E-signing powered by Scrive</label>
           $else$
             <img src="/img/Scrive-logo.png" style='margin: 50px 30px 0px;'/>
           $endif$

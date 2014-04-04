@@ -25,6 +25,7 @@ data BrandedDomain = BrandedDomain {
                         , bdsignviewsecondarytextcolour :: String
                         , bdbuttonclass    :: String
                         , bdservicelinkcolour :: String
+                        , bdexternaltextcolour :: String
                         , bdheadercolour :: String
                         , bdtextcolour :: String
                         , bdpricecolour :: String

@@ -81,7 +81,7 @@ instance Configuration AppConf where
     , googleanalyticsToken = "f25e59c70a8570a12fe57e7835d1d881"
     , homebase           = "https://staging.scrive.com"
     , ntpServers         = defaultNtpServers
-    , brandedDomains     = [BrandedDomain "https://domain.scrive.com" "/img/logo.png" "#000000" "#000000" "#FFFFFF" "#FFFFFF" "#FFFFFF" "#DDDDDD" "#CCCCCCC" "#AAAAAA" "#53B688" "#FFFFFF" "#33B1DD" "#FFFFFF" "blue" "hsl(215,30%,60%)" "#364963" "#7A94B8" "#C2000A" "Scrive SMS" "Scrive Email" "info@scrive.com"]
+    , brandedDomains     = [BrandedDomain "https://domain.scrive.com" "/img/logo.png" "#000000" "#000000" "#FFFFFF" "#FFFFFF" "#FFFFFF" "#DDDDDD" "#666666" "#CCCCCCC" "#AAAAAA" "#53B688" "#FFFFFF" "#33B1DD" "#FFFFFF" "blue" "hsl(215,30%,60%)" "#364963" "#7A94B8" "#C2000A" "Scrive SMS" "Scrive Email" "info@scrive.com"]
     , salesforceConf     = SalesforceConf
                               { salesforceAuthenticationUrl = "https://login.salesforce.com/services/oauth2/authorize"
                               , salesforceTokenUrl = "https://login.salesforce.com/services/oauth2/token"
