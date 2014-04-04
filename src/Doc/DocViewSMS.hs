@@ -68,14 +68,10 @@ smsInvitationToAuthor doc sl = do
   mkSMS doc sl (Invitation (documentid doc) (signatorylinkid sl)) =<< renderLocalTemplate doc "_smsInvitationToAuthor" (smsFields doc sl)
 
 smsReminder :: (MailContextMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> m SMS
-smsReminder doc sl = mkSMS doc sl smsdata =<< renderLocalTemplate doc template fields
-  where (smsdata, template, fields) = case maybesigninfo sl of
-          Nothing -> (Invitation (documentid doc) (signatorylinkid sl), "_smsReminder", smsFields doc sl)
-          Just _  -> (None, "_smsReminderSigned", extrafields)
-        extrafields = do
-          smsFields doc sl
-          mctx <- lift $ getMailContext
-          F.value "mainfilelink" $ mctxhostpart mctx ++ show (LinkMainFile doc sl)
+smsReminder doc sl = mkSMS doc sl smsdata =<< renderLocalTemplate doc template (smsFields doc sl)
+  where (smsdata, template) = case maybesigninfo sl of
+          Nothing -> (Invitation (documentid doc) (signatorylinkid sl), "_smsReminder")
+          Just _  -> (None, "_smsReminderSigned")
 
 smsClosedNotification :: (MailContextMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> Bool -> Bool -> m SMS
 smsClosedNotification doc sl withEmail sealFixed = do
