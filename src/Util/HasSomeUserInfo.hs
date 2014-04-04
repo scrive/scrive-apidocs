@@ -20,7 +20,7 @@ module Util.HasSomeUserInfo (
 
 
 import Control.Applicative ((<$>))
-import Data.List (find)
+import Data.List (findIndex)
 import Doc.DocStateData
 import Doc.DocumentMonad (DocumentMonad, theDocument)
 import User.Model
@@ -101,9 +101,11 @@ getSignatoryIdentifier :: DocumentMonad m => SignatoryLink -> m String
 getSignatoryIdentifier sl = do
   let i = getIdentifier sl
   if null i then
-     maybe "(Anonymous)" (("(Signatory " ++) . (++ ")") . show . fst) .
-                 find ((==(signatorylinkid sl)) . signatorylinkid . snd) .
-                 zip [1..] . documentsignatorylinks <$> theDocument
+     maybe "(Anonymous)"
+           (("(Signatory " ++) . (++ ")") . show . succ) .
+            findIndex ((==(signatorylinkid sl)) . signatorylinkid) .
+            documentsignatorylinks
+     <$> theDocument
    else
      return i
 
