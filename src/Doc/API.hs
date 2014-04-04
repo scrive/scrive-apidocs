@@ -474,6 +474,10 @@ signDocument :: (Kontrakcja m, DocumentMonad m)
 signDocument slid mh fields msinfo screenshots = do
   switchLang =<< getLang <$> theDocument
   ctx <- getContext
+  -- Note that the second 'getSigLinkFor' call below may return a
+  -- different result than the first one due to the field update, so
+  -- don't attempt to replace the calls with a single call, or the
+  -- actor identities may get wrong in the evidence log.
   getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . UpdateFieldsForSigning sl fields =<< signatoryActor ctx sl
   getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . SignDocument slid mh msinfo screenshots =<< signatoryActor ctx sl
 
