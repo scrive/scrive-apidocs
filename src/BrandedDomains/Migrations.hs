@@ -1,0 +1,1 @@
+module BrandedDomains.Migrations where

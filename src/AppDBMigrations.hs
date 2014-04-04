@@ -21,6 +21,7 @@ import Attachment.Migrations
 import ThirdPartyStats.Migrations
 import User.CallbackScheme.Migrations
 import Session.Migrations
+import BrandedDomains.Migrations
 import qualified Log
 import Doc.SMSPin.Tables
 

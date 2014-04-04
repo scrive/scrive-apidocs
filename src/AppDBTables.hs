@@ -29,6 +29,7 @@ import ThirdPartyStats.Tables
 import User.CallbackScheme.Tables
 import Doc.AutomaticReminder.Tables
 import Doc.SMSPin.Tables
+import BrandedDomains.Tables
 
 kontraFunctions :: [SQLFunction]
 kontraFunctions = [
@@ -75,5 +76,6 @@ kontraTables =
   , tableCompanyUIs
   , tableDocumentAutomaticReminders
   , tableSignatorySMSPins
+  , tableBrandedDomains
   ] ++ mailerTables
     ++ messengerTables
