@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, RecordWildCards #-}
+{-# LANGUAGE RecordWildCards #-}
 module Mails.SendMail
     ( Mail(..)
     , emptyMail

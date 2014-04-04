@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 module TestMain where
 
 import Control.Applicative

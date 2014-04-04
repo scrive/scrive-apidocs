@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 module EvidenceLog.Control
        (
        jsonDocumentEvidenceLog
