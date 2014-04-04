@@ -21,6 +21,11 @@ var AdminModel = Backbone.Model.extend({
         this.set({ "documents" : new KontraList(DocumentAdminListDefinition(this.isAdmin(), undefined)) });
         return this.documents();
   },
+  domainbrandings: function() {
+        if (this.get("domainbrandings") != undefined) return this.get("domainbrandings");
+        this.set({ "domainbrandings" : new KontraList(DomainBrandingAdminListDefinition()) });
+        return this.domainbrandings();
+  },
   salesUserAdminTab : function() {
                     var admin = this;
                     return new Tab({
@@ -53,6 +58,17 @@ var AdminModel = Backbone.Model.extend({
                             admin.documents().recall();
                         }
                     });
+  },
+  domainBrandingsTab : function() {
+                    var admin = this;
+                    return new Tab({
+                        name: "Domain Brandings",
+                        elems: [function() { return $(admin.domainbrandings().el()); }],
+                        pagehash : "domainbrandings",
+                        onActivate : function() {
+                            admin.domainbrandings().recall();
+                        }
+                    });
   }
 });
 
@@ -71,7 +87,8 @@ var AdminView = Backbone.View.extend({
         tabs: [
            admin.salesUserAdminTab(),
            admin.companyAdminTab(),
-            admin.documentsTab()]
+           admin.documentsTab(),
+           admin.domainBrandingsTab()]
        });
        container.append(tabs.el());
        return this;
