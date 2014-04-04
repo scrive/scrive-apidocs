@@ -33,6 +33,6 @@ tableBrandedDomains = tblTable {
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblIndexes = [
-      indexOnColumn "name"
+      indexOnColumn "url"
     ]
   }

@@ -21,7 +21,7 @@ import Attachment.Migrations
 import ThirdPartyStats.Migrations
 import User.CallbackScheme.Migrations
 import Session.Migrations
-import BrandedDomain.Migrations ()
+import BrandedDomain.Migrations
 import qualified Log
 import Doc.SMSPin.Tables
 
@@ -163,5 +163,6 @@ kontraMigrations = [
   , addConfirmationDeliveryMethodToSignatoryLinks
   , changeSomeStandardFieldsToOptional
   , createSignatorySMSPinsTable
+  , createBrandedDomainsTable
   ] ++ mailerMigrations
     ++ messengerMigrations
