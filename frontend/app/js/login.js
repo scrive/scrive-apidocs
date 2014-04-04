@@ -12,7 +12,8 @@ var LoginModel = Backbone.Model.extend({
         rememberPassword : false,
         autofocus: false,
         logolink : "",
-        servicelinkcolour : ''
+        servicelinkcolour : '',
+        textscolour : ''
   },
   reminderView : function() {
      return this.get("reminderView") == true;
@@ -46,6 +47,9 @@ var LoginModel = Backbone.Model.extend({
   },
   servicelinkcolour : function() {
      return this.get("servicelinkcolour");
+  },
+  textscolour : function() {
+     return this.get("textscolour");
   },
   buttoncolorclass: function() {
      return this.get("buttoncolorclass");
@@ -282,7 +286,7 @@ var LoginBrandedView = Backbone.View.extend({
       var content = $("<div style='width:'/>");
       var wrapper = $("<div/>");
       var body = $("<div/>");
-      var header = $("<div style='margin-bottom: 50px; margin-top: 50px;'/>");
+      var header = $("<div style='margin-bottom: 50px; margin-top: 50px;text-align:center;'/>");
       content.append(wrapper.append(body));
       $(this.el).append(header);
 
@@ -293,9 +297,14 @@ var LoginBrandedView = Backbone.View.extend({
       model.setEmail(LocalStorage.get('login','last_login_email'));
       header.append($("<img alt='logo'/>").attr('src',model.logolink()));
       header.append($("<div class='divider-line'/>"));
-      header.append($("<label style='text-align:center;width:275px;'/>").text(localization.esigningpoweredbyscrive));
+      var poweredLabel = $("<label style='text-align:center;width:275px;'/>").text(localization.esigningpoweredbyscrive);
+      if (model.textscolour() != undefined) poweredLabel.css("color",model.textscolour());
+      header.append(poweredLabel);
 
-      body.append($("<div class='position first' style='text-align: left;height:30px'/>").append($("<label style='padding-left:10px;'/>").text(localization.login + ":")));
+      var loginLabel =$("<label style='padding-left:10px;'/>").text(localization.login + ":");
+      if (model.textscolour() != undefined) loginLabel.css("color",model.textscolour());
+
+      body.append($("<div class='position first' style='text-align: left;height:30px'/>").append(loginLabel));
 
 
 
@@ -342,6 +351,7 @@ var LoginBrandedView = Backbone.View.extend({
 
       if (!model.pad()) {
         var toogleOption = $("<label class='s-forgot-password' style='border-bottom: 1px solid #999999;color:#999999;font-style:italic;font-size:10px;line-height: 12px;'/>").text(localization.loginModal.forgotpassword).click(function(){ model.toogleView();return false;});
+        if (model.textscolour() != undefined) toogleOption.css("color",model.textscolour());
         fp_position.append($("<div style='display:inline-block;width:224px;text-align:left;vertical-align: bottom;margin-left:4px;'/>").append(toogleOption));
       }
       var button_position = $("<div class='position' style='text-align:center'/>");
@@ -361,6 +371,12 @@ var LoginBrandedView = Backbone.View.extend({
 
       var dontHaveAccount = $("<label class='label-with-link'/>").html(localization.loginModal.dontHaveAccount);
       var paymentsPage = $("<label class='label-with-link'/>").html(localization.visitOurPricingPage);
+
+      if (model.textscolour() != undefined) {
+        dontHaveAccount.css("color",model.textscolour());
+        paymentsPage.css("color",model.textscolour());
+      }
+
       if (model.servicelinkcolour()) {
         dontHaveAccount.find('a').css('color', model.servicelinkcolour());
         paymentsPage.find('a').css('color', model.servicelinkcolour());
@@ -375,17 +391,23 @@ var LoginBrandedView = Backbone.View.extend({
       var content = $("<div style='width:'/>");
       var wrapper = $("<div/>");
       var body = $("<div/>");
-      var header = $("<div style='margin-bottom: 103px'/>");
+      var header = $("<div style='margin-bottom: 103px;text-align:center;'/>");
 
       header.append($("<img alt='logo'/>").attr('src',model.logolink()));
       header.append($("<div class='divider-line'/>"));
-      header.append($("<label style='text-align:center;width:275px;'/>").text(localization.esigningpoweredbyscrive));
+
+      var poweredLabel = $("<label style='text-align:center;width:275px;'/>").text(localization.esigningpoweredbyscrive);
+      if (model.textscolour() != undefined) poweredLabel.css("color",model.textscolour());
+      header.append(poweredLabel);
 
       $(this.el).append(header);
 
       content.append(wrapper.append(body));
 
-      body.append($("<div class='position first' style='text-align: left;height:30px''/>").append($("<label style='padding-left:10px;'/>").text(localization.resetYourPassword + ":")));
+      var resetLabel = $("<label style='padding-left:10px;'/>").text(localization.resetYourPassword + ":");
+      if (model.textscolour() != undefined) resetLabel.css("color",model.textscolour());
+
+      body.append($("<div class='position first' style='text-align: left;height:30px''/>").append(resetLabel));
 
       var emailinput = new InfoTextInput({
               infotext: localization.loginModal.email,

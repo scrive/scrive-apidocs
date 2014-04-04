@@ -8,6 +8,7 @@ javascriptLocalisation =
         {      code : "$_code()$"
              , welcomeback : "$_welcomeback()$"
              , reloadPage : "$_reloadPage()$"
+             , from : "$_from()$"
              , problemContactingServer : "$_problemContactingServer()$"
              , esigningpoweredbyscrive : "E-signing powered by Scrive"
              , sessionTimedoutInSignview : "$_sessionTimedoutInSignview()$"
@@ -72,6 +73,7 @@ javascriptLocalisation =
 					   , formSend :	"$_reminderFormSendReminder()$"
                        , formOwnMessage : "$_reminderFormFooterOwnMessage()$"
                        , mobileQuestion : "$_reminderByMobileQuestion()$"
+                       , mobileQuestionAlreadySigned : "$_reminderByMobileQuestionAlreadySigned()$"
                        , emailMobileQuestion : "$_reminderByEmailMobileQuestion()$"
 					}
              , sign :  {
@@ -418,6 +420,7 @@ javascriptLocalisation =
              , removeThisDocument: "$_designViewRemoveThisDocument()$"
              , chooseDocument: "$_designViewChooseDocument()$"
              , attached : "$_designViewAttached()$"
+             , attachmentRequested : "$_designViewAttachmentRequested()$"
              , requestedFrom : "$_designViewRequestedFrom()$"
              , draggablehelp1 : "$_designviewdraggablehelp1()$"
              , draggablehelp2 : "$_designviewdraggablehelp2()$"

@@ -152,6 +152,7 @@ brandingFields mbd mcompanyui = do
   F.value "custombackground" $ mcolour bdbackgroundcolour companycustombackgroundcolour
   F.value "customdomainbdbuttonclass" $ bdbuttonclass <$> mbd
   F.value "customservicelinkcolour" $ bdservicelinkcolour <$> mbd
+  F.value "customexternaltextcolour" $ bdexternaltextcolour <$> mbd
   F.value "hasbrandeddomain" $ isJust mbd
  where
    mcolour df cuf =  (join $ cuf <$> mcompanyui) `mplus` (df <$> mbd)
@@ -309,4 +310,4 @@ analyticsLoaderScript = do
    script <- renderTemplate "analyticsLoaderBase" $ do
              F.object "analytics" $ analyticsTemplates ad
    ok $ toResponseBS (BS.fromString "text/javascript;charset=utf-8") $ BSL.fromString script
-   
+

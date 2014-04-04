@@ -258,7 +258,7 @@ var DocumentViewSignatoryView = React.createClass({
       } else if( signatory.mobileDelivery()) {
        new Confirmation({
          title: signatory.hasSigned() ? localization.process.remindagainbuttontext : localization.reminder.formHead,
-         content: $("<div>").text(localization.reminder.mobileQuestion),
+         content: $("<div>").text(signatory.hasSigned() ? localization.reminder.mobileQuestionAlreadySigned : localization.reminder.mobileQuestion),
          acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
          rejectText: localization.cancel,
          onAccept: function(customtext) {

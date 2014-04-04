@@ -265,8 +265,13 @@ instance MonadDB m => DBUpdate m RemoveInactiveUser Bool where
     -- yet not active account the true fix is to not have inactive
     -- accounts, but we are not close to that point yet. Here is a
     -- kludge to get around our own bug.
-    runQuery_ $ "UPDATE signatory_links SET user_id = NULL WHERE user_id = " <?> uid <+> "AND EXISTS (SELECT TRUE FROM users WHERE users.id = signatory_links.user_id AND users.has_accepted_terms_of_service IS NULL)"
-    runQuery01 $ "DELETE FROM users WHERE id = " <?> uid <+> "AND has_accepted_terms_of_service IS NULL"
+    runQuery_ $ "SELECT TRUE FROM companyinvites where user_id = " <?> uid
+    x :: Maybe Bool <- fetchMaybe unSingle
+    if isJust x then
+        return False
+     else do
+       runQuery_ $ "UPDATE signatory_links SET user_id = NULL WHERE user_id = " <?> uid <+> "AND EXISTS (SELECT TRUE FROM users WHERE users.id = " <?> uid <+> " AND users.has_accepted_terms_of_service IS NULL)"
+       runQuery01 $ "DELETE FROM users WHERE id = " <?> uid <+> "AND has_accepted_terms_of_service IS NULL"
 
 data AddUser = AddUser (String, String) String (Maybe Password) (CompanyID,Bool) Lang (Maybe String)
 instance MonadDB m => DBUpdate m AddUser (Maybe User) where
@@ -430,7 +435,7 @@ instance MonadDB m => DBQuery m GetUsageStats [UserUsageStats] where
      case euc of
        Left  uid -> sqlWhereEq "users.id" uid
        Right cid -> sqlWhereEq "companies.id" cid
-     sqlOrderBy "1, 3, 4"
+     sqlOrderBy "1 DESC, 8 DESC, 9 DESC"
    fetchMany fetchUserUsageStats
 
 -- helpers

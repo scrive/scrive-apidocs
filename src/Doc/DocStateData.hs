@@ -87,6 +87,7 @@ data StatusClass = SCDraft
                   | SCProlonged
                   | SCSealed -- has a digital seal
                   | SCExtended -- has an extended digital seal
+                  | SCInitiated
                   deriving (Eq, Ord, Enum, Bounded)
 
 instance PQFormat StatusClass where
@@ -111,8 +112,9 @@ instance FromSQL StatusClass where
       12 -> return SCProlonged
       13 -> return SCSealed
       14 -> return SCExtended
+      15 -> return SCInitiated
       _ -> E.throwIO $ RangeError {
-        reRange = [(1, 14)]
+        reRange = [(1, 15)]
       , reValue = n
       }
 
@@ -132,8 +134,10 @@ instance ToSQL StatusClass where
   toSQL SCProlonged       = toSQL (12::Int16)
   toSQL SCSealed          = toSQL (13::Int16)
   toSQL SCExtended        = toSQL (14::Int16)
+  toSQL SCInitiated       = toSQL (15::Int16)
 
 instance Show StatusClass where
+  show SCInitiated = "initiated"
   show SCDraft = "draft"
   show SCCancelled = "cancelled"
   show SCRejected  = "rejected"

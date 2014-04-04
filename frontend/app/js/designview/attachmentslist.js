@@ -23,7 +23,7 @@ var DesignAttachmentsListView = Backbone.View.extend({
       var self = this;
       var tr = $("<tr/>");
       var icon = $("<td class='icon-td'/>").append("<div class='author-attachment-icon'>");
-      var name = $("<td class='name-td'/>").text(a.name() + " " + localization.designview.attached);
+      var name = $("<td class='name-td'/>").text(localization.designview.attached + " " + a.name());
       var remove = $("<td class='remove-td'/>")
             .append($("<div class='remove-icon'/>")
                     .click(function() {
@@ -42,7 +42,7 @@ var DesignAttachmentsListView = Backbone.View.extend({
         text = sig.nameInDocument();
       var icon = $("<td class='icon-td'/>").append("<div class='signatory-attachment-icon'>");
       var tr = $("<tr/>");
-      var name = $("<td class='name-td'/>").text(a.name() + " "+localization.designview.requestedFrom+" " + text.trim() + ".");
+      var name = $("<td class='name-td'/>").text(localization.designview.attachmentRequested + " " + a.name() + " " + localization.from + " " + text.trim());
       var remove = $("<td class='remove-td'/>")
             .append($("<div class='remove-icon'/>")
                     .click(function() {

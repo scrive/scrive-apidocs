@@ -3,7 +3,8 @@ define(['Backbone', 'legacy_code'], function() {
   var SignupModel = Backbone.Model.extend({
     defaults: {
         logolink : "",
-        servicelinkcolour : ''
+        servicelinkcolour : "",
+        textscolour : ""
     },
     autofocus: function() {
       return this.get('autofocus');
@@ -19,6 +20,9 @@ define(['Backbone', 'legacy_code'], function() {
     },
     servicelinkcolour : function() {
       return this.get("servicelinkcolour");
+    },
+    textscolour : function() {
+     return this.get("textscolour");
     },
     buttoncolorclass: function() {
      return this.get("buttoncolorclass");
@@ -145,16 +149,22 @@ define(['Backbone', 'legacy_code'], function() {
         var content = $("<div style='width:'/>");
         var wrapper = $("<div/>");
         var body = $("<div/>");
-        var header = $("<div style='margin-bottom: 103px'/>");
+        var header = $("<div style='margin-bottom: 103px;text-align: center;'/>");
 
         header.append($("<img alt='logo'/>").attr('src',model.logolink()));
         header.append($("<div class='divider-line'/>"));
-        header.append($("<label style='text-align:center;width:275px;'/>").text(localization.esigningpoweredbyscrive));
+
+        var poweredLabel = $("<label style='text-align:center;width:275px;'/>").text(localization.esigningpoweredbyscrive);
+        if (model.textscolour() != undefined) poweredLabel.css("color",model.textscolour());
+        header.append(poweredLabel);
+
         $(this.el).append(header);
 
         content.append(wrapper.append(body));
 
-        body.append($("<div class='position first' style='text-align: left;height:30px;'/>").append($("<label style='padding-left:10px;'/>").text(localization.signup + ":")));
+        var signUpLabel = $("<label style='padding-left:10px;'/>").text(localization.signup + ":");
+        if (model.textscolour() != undefined) signUpLabel.css("color",model.textscolour());
+        body.append($("<div class='position first' style='text-align: left;height:30px;'/>").append(signUpLabel));
 
 
         var emailInput = new InfoTextInput({
@@ -192,6 +202,12 @@ define(['Backbone', 'legacy_code'], function() {
 
         var dontHaveAccount = $("<label class='label-with-link'/>").html(localization.signupModal.alreadyHaveAnAccount);
         var paymentsPage = $("<label class='label-with-link'/>").html(localization.visitOurPricingPage);
+
+        if (model.textscolour() != undefined)  {
+          dontHaveAccount.css('color', model.textscolour());
+          paymentsPage.css('color', model.textscolour());
+        }
+
         if (model.servicelinkcolour()) {
           dontHaveAccount.find('a').css('color', model.servicelinkcolour());
           paymentsPage.find('a').css('color', model.servicelinkcolour());

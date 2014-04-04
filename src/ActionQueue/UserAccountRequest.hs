@@ -6,6 +6,7 @@ module ActionQueue.UserAccountRequest (
   , newUserAccountRequestLink
   ) where
 
+import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans.Maybe
 import Data.Typeable
@@ -47,10 +48,13 @@ userAccountRequest = Action {
       sqlWhereEq (qaIndexField userAccountRequest) uarUserID
   , qaEvaluateExpired = \UserAccountRequest{uarUserID} -> do
       _ <- dbUpdate $ DeleteAction userAccountRequest uarUserID
-      success <- dbUpdate $ RemoveInactiveUser uarUserID
-      when success $
-            Log.mixlog_ $ "Inactive user (no plan) with id = " ++ show uarUserID ++ " successfully removed from database"
-
+      musertos <- (fmap userhasacceptedtermsofservice) <$> dbQuery (GetUserByIDIncludeDeleted uarUserID)
+      case musertos of
+        Just Nothing -> do
+          success <- dbUpdate $ RemoveInactiveUser uarUserID
+          when success $
+               Log.mixlog_ $ "Inactive user (no plan) with id = " ++ show uarUserID ++ " successfully removed from database"
+        _ -> return ()
   }
 
 getUserAccountRequestUser :: MonadDB m => UserID -> MagicHash -> m (Maybe User)
