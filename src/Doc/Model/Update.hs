@@ -1230,14 +1230,14 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m UpdateFieldsForSignin
                               CheckboxFT xname -> xname
                               SignatureFT xname -> xname
                               _ -> ""
-          void $ runQuery . sqlUpdate "signatory_link_fields" $ do
+          updated <- runQuery01 . sqlUpdate "signatory_link_fields" $ do
                    sqlSet "value" fvalue
                    sqlWhereEq "signatory_link_id" slid
                    sqlWhereEq "custom_name" custom_name
                    sqlWhereEq "type" fieldtype
                    sqlWhereAny $ do
                        sqlWhereAll $ do
-                         sqlWhereEq "value" (""::String)
+                         sqlWhereEq "value" (""::String) -- Note: if we allow values to be overwritten, the evidence events need to be adjusted to reflect the old value.
                          sqlWhereIn "type" [CustomFT undefined undefined, FirstNameFT,LastNameFT,EmailFT,CompanyFT,PersonalNumberFT,PersonalNumberFT,CompanyNumberFT, MobileFT]
                        sqlWhereIn "type" [CheckboxFT undefined,SignatureFT undefined]
                    sqlWhereExists $ sqlSelect "documents" $ do
@@ -1250,7 +1250,7 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m UpdateFieldsForSignin
               changed = case mfield of
                           Just f | sfValue f == fvalue -> False
                           _                            -> True
-          when changed $ do
+          when (updated && changed) $ do
             let (event, efields) =
                   case fieldtype of
                     SignatureFT _ -> (UpdateFieldSignatureEvidence, return ())
