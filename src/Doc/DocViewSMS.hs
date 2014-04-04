@@ -27,7 +27,7 @@ import DB
 import Data.Maybe
 import Control.Monad
 import Company.Model
-import BrandedDomains
+import BrandedDomains.BrandedDomains
 import Utils.Monoid
 
 mkSMS :: (MonadDB m, MailContextMonad m) => Document -> SignatoryLink -> MessageData -> String -> (m SMS)
@@ -86,4 +86,3 @@ smsFields document siglink = do
     F.value "documenttitle" $ documenttitle document
     F.value "partylist" partylist
     F.value "link" $ mctxhostpart mctx ++ show (LinkSignDoc document siglink)
-

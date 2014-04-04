@@ -52,7 +52,7 @@ import Company.Model
 import Company.CompanyUI
 import User.Model
 import Control.Monad
-import BrandedDomains
+import BrandedDomains.BrandedDomains
 
 {- |
    The name of our application (the codebase is known as kontrakcja,

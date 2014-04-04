@@ -24,7 +24,7 @@ import Session.SessionID
 import ELegitimation.Config (LogicaConfig(..))
 import GuardTime (GuardTimeConf(..))
 import Payments.Config (RecurlyConfig)
-import BrandedDomains
+import BrandedDomains.BrandedDomains
 import Salesforce.Conf
 import Data.Maybe
 

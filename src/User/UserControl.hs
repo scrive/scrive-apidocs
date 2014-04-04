@@ -62,7 +62,7 @@ import User.History.Model
 import ListUtil
 import qualified Text.StringTemplates.Fields as F
 import Routing
-import BrandedDomains
+import BrandedDomains.BrandedDomains
 import Analytics.Include
 
 

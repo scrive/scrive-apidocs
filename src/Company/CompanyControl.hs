@@ -32,7 +32,7 @@ import User.Utils
 import Util.MonadUtils
 import Utils.String
 import Text.JSON.Gen
-import BrandedDomains
+import BrandedDomains.BrandedDomains
 
 routes :: Route (KontraPlus Response)
 routes = choice

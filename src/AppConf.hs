@@ -14,7 +14,7 @@ import LiveDocx (LiveDocxConf(..))
 import ELegitimation.Config (LogicaConfig(..))
 import GuardTime (GuardTimeConf(..))
 import Payments.Config (RecurlyConfig(..))
-import BrandedDomains
+import BrandedDomains.BrandedDomains
 import Salesforce.Conf
 
 -- | Defines the application's configuration.  This includes amongst

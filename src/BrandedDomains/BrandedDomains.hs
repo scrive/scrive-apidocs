@@ -1,4 +1,4 @@
-module BrandedDomains
+module BrandedDomains.BrandedDomains
   (   BrandedDomains
     , BrandedDomain(..)
     , findBrandedDomain

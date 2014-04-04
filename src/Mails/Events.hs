@@ -41,7 +41,7 @@ import Doc.SignatoryLinkID
 import qualified Log
 import Util.Actor
 import qualified Text.StringTemplates.Fields as F
-import BrandedDomains
+import BrandedDomains.BrandedDomains
 import Data.Functor
 import Doc.DocViewMail
 

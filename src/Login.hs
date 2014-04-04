@@ -31,7 +31,7 @@ import Utils.HTTP
 import ThirdPartyStats.Core
 import AppView
 import Analytics.Include
-import BrandedDomains
+import BrandedDomains.BrandedDomains
 
 handleLoginGet :: Kontrakcja m => m (Either KontraLink (Either Response ThinPage))
 handleLoginGet = do
