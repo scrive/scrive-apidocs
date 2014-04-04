@@ -42,13 +42,17 @@ define(['React', 'common/button'], function(React, Button) {
   });
 
   expose.DemoCta = React.createClass({
+    phonenumber: undefined,
     yesButton: function() {
       mixpanel.track('Questionnaire #4 Show Demo');
-      this.props.yesButton();
+      if (this.phonenumber) {
+        this.props.yesButton();
+      }
     },
 
     handleChange: function(event) {
-      this.props.setPhoneNumber(event.target.value);
+      this.phonenumber = event.target.value;
+      this.props.setPhoneNumber(this.phonenumber);
     },
 
     render: function() {
