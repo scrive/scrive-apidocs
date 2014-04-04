@@ -399,21 +399,16 @@ apiCallCheckSign did slid = api $ do
     whenM (hasSigned <$> fromJust . getSigLinkFor slid <$> theDocument) $ do -- We can use fromJust since else we would not get access to document
       (throwIO . SomeKontraException $ conflictError $ "Document already signed")
     authorization <- signatorylinkauthenticationmethod <$> fromJust . getSigLinkFor slid <$> theDocument
-
+    fields <- getFieldForSigning
     case authorization of
        StandardAuthentication -> return $ Right $ Ok () -- If we have a document with standard auth, it can be always signed if its not closed and signed
        SMSPinAuthentication -> do
-             pin <- apiGuardJustM (badInput "Pin not provided or invalid.") $ getField "pin"
-             fields <- getFieldForSigning
-             phone <- getMobile <$> fromJust . getSigLinkFor slid <$> theDocument
-             let phoneFromFields = fmap snd $ find (\x -> MobileFT == fst x) fields
-             pin' <- dbQuery $ GetSignatoryPin slid (fromMaybe phone phoneFromFields)
-             if (pin == pin')
+             validPin <- getValidPin slid fields
+             if (isJust validPin)
                then return $ Right $ Ok ()
                else (Left . Failed) <$> (runJSONGenT $ value "pinProblem" True)
        ELegAuthentication -> do
              provider <-apiGuardJustM (badInput "Eleg details not provided or invalid.") $ readField "eleg"
-             fields <- getFieldForSigning
              transactionid <- getDataFnM $ look "transactionid"
              esigninfo <- case provider of
                  MobileBankIDProvider -> BankID.verifySignatureAndGetSignInfoMobile did slid mh fields transactionid
@@ -437,56 +432,86 @@ apiCallSign  did slid = api $ do
   checkObjectVersionIfProvided did
   Log.mixlog_ $ "Ready to sign a document " ++ show did ++ " for signatory " ++ show slid
   (mh,mu) <- getMagicHashAndUserForSignatoryAction did slid
-
   screenshots' <- fmap (fromMaybe emptySignatoryScreenshots) $
                (fromJSValue =<<) <$> getFieldJSON "screenshots"
   screenshots <- resolveReferenceScreenshotNames screenshots'
   fields <- getFieldForSigning
-  mprovider <- readField "eleg"
+  olddoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh -- We store old document, as it is needed by postDocumentXXX calls
+  olddoc `withDocument` ( do
+    whenM (not <$> isPending <$> theDocument ) $ do
+      (throwIO . SomeKontraException $ conflictError $ "Document not pending")
+    whenM (hasSigned <$> fromJust . getSigLinkFor slid <$> theDocument) $ do -- We can use fromJust since else we would not get access to document
+      (throwIO . SomeKontraException $ conflictError $ "Document already signed")
+    authorization <- signatorylinkauthenticationmethod <$> fromJust . getSigLinkFor slid <$> theDocument
 
-  olddoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
-  withDocument olddoc $ do
-    (case mprovider of
-              Nothing -> do
-                  signDocument slid mh fields Nothing screenshots
+    case authorization of
+      StandardAuthentication -> do
+                  signDocument slid mh fields Nothing Nothing screenshots
                   postDocumentPendingChange olddoc
                   handleAfterSigning slid
                   (Right . Accepted) <$> (documentJSON mu False True True Nothing Nothing =<< theDocument)
-              Just provider -> do
-                  transactionid <- getDataFnM $ look "transactionid"
-                  esigninfo <- case provider of
-                      MobileBankIDProvider -> BankID.verifySignatureAndGetSignInfoMobile did slid mh fields transactionid
-                      _ -> do
-                            signature <- getDataFnM $ look "signature"
-                            BankID.verifySignatureAndGetSignInfo slid mh fields provider signature transactionid
-                  case esigninfo of
-                      BankID.Problem msg -> do
-                        Log.attention_ $ "Eleg verification for document #" ++ show did ++ " failed with message: " ++ msg
-                        (Left . Failed) <$> (runJSONGenT $ return ())
-                      BankID.Mismatch (onname,onnumber) (sfn,sln,spn) -> do
-                        handleMismatch slid ((\(t,v) -> SignatoryField t v False False []) <$> fields) sfn sln spn
-                        Log.attention_ $ "Eleg verification for document #" ++ show did ++ " failed with mismatch " ++ show ((onname,onnumber),(sfn,sln,spn))
-                        (Left . Failed) <$> (runJSONGenT $ value "mismatch" True >> value "onName" onname >> value "onNumber" onnumber)
-                      BankID.Sign sinfo -> do
-                        signDocument slid mh fields (Just sinfo) screenshots
+
+      SMSPinAuthentication -> do
+                  validPin <- getValidPin slid fields
+                  if (isJust validPin)
+                    then do
+                      signDocument slid mh fields Nothing validPin screenshots
+                      postDocumentPendingChange olddoc
+                      handleAfterSigning slid
+                      (Right . Accepted) <$> (documentJSON mu False True True Nothing Nothing =<< theDocument)
+                    else (Left . Failed) <$> (runJSONGenT $ return ())
+      ELegAuthentication -> do
+        mprovider <- readField "eleg"
+        case mprovider of
+                    Nothing -> do
+                        signDocument slid mh fields Nothing Nothing screenshots
                         postDocumentPendingChange olddoc
                         handleAfterSigning slid
                         (Right . Accepted) <$> (documentJSON mu False True True Nothing Nothing =<< theDocument)
-     )
-           `catchKontra` (\(DocumentStatusShouldBe _ _ i) -> throwIO . SomeKontraException $ conflictError $ "Document not pending but " ++ show i)
-           `catchKontra` (\(SignatoryHasAlreadySigned) -> throwIO . SomeKontraException $ conflictError $ "Signatory has already signed")
+                    Just provider -> do
+                        transactionid <- getDataFnM $ look "transactionid"
+                        esigninfo <- case provider of
+                            MobileBankIDProvider -> BankID.verifySignatureAndGetSignInfoMobile did slid mh fields transactionid
+                            _ -> do
+                                  signature <- getDataFnM $ look "signature"
+                                  BankID.verifySignatureAndGetSignInfo slid mh fields provider signature transactionid
+                        case esigninfo of
+                            BankID.Problem msg -> do
+                              Log.attention_ $ "Eleg verification for document #" ++ show did ++ " failed with message: " ++ msg
+                              (Left . Failed) <$> (runJSONGenT $ return ())
+                            BankID.Mismatch (onname,onnumber) (sfn,sln,spn) -> do
+                              handleMismatch slid ((\(t,v) -> SignatoryField t v False False []) <$> fields) sfn sln spn
+                              Log.attention_ $ "Eleg verification for document #" ++ show did ++ " failed with mismatch " ++ show ((onname,onnumber),(sfn,sln,spn))
+                              (Left . Failed) <$> (runJSONGenT $ value "mismatch" True >> value "onName" onname >> value "onNumber" onnumber)
+                            BankID.Sign sinfo -> do
+                              signDocument slid mh fields (Just sinfo) Nothing screenshots
+                              postDocumentPendingChange olddoc
+                              handleAfterSigning slid
+                              (Right . Accepted) <$> (documentJSON mu False True True Nothing Nothing =<< theDocument)
+   )
+    `catchKontra` (\(DocumentStatusShouldBe _ _ i) -> throwIO . SomeKontraException $ conflictError $ "Document not pending but " ++ show i)
+    `catchKontra` (\(SignatoryHasAlreadySigned) -> throwIO . SomeKontraException $ conflictError $ "Signatory has already signed")
 
 {- | Utils for signing with eleg -}
-
+getValidPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [(FieldType,String)] -> m (Maybe String)
+getValidPin slid fields = do
+  pin <- apiGuardJustM (badInput "Pin not provided or invalid.") $ getField "pin"
+  phone <- getMobile <$> fromJust . getSigLinkFor slid <$> theDocument
+  let phoneFromFields = fmap snd $ find (\x -> MobileFT == fst x) fields
+  pin' <- dbQuery $ GetSignatoryPin slid (fromMaybe phone phoneFromFields)
+  if (pin == pin')
+    then return $ Just pin
+    else return $ Nothing
 
 signDocument :: (Kontrakcja m, DocumentMonad m)
              => SignatoryLinkID
              -> MagicHash
              -> [(FieldType, String)]
              -> Maybe SignatureInfo
+             -> Maybe String
              -> SignatoryScreenshots
              -> m ()
-signDocument slid mh fields msinfo screenshots = do
+signDocument slid mh fields msinfo mpin screenshots = do
   switchLang =<< getLang <$> theDocument
   ctx <- getContext
   -- Note that the second 'getSigLinkFor' call below may return a
@@ -494,7 +519,8 @@ signDocument slid mh fields msinfo screenshots = do
   -- don't attempt to replace the calls with a single call, or the
   -- actor identities may get wrong in the evidence log.
   getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . UpdateFieldsForSigning sl fields =<< signatoryActor ctx sl
-  getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . SignDocument slid mh msinfo screenshots =<< signatoryActor ctx sl
+  getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . SignDocument slid mh msinfo mpin screenshots =<< signatoryActor ctx sl
+
 
 handleMismatch :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [SignatoryField] -> String -> String -> String -> m ()
 handleMismatch sid sf sfn sln spn = do

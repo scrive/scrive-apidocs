@@ -4,7 +4,7 @@
  *   $('body').append(new DocumentSignSignSection(model : document).el);
  */
 
-define(['Backbone', 'legacy_code'], function() {
+define(['signview/send_sms_pin_modal','Backbone', 'legacy_code'], function(SendSMSPinModal) {
 
 window.DocumentSignConfirmation = Backbone.View.extend({
   initialize: function(args) {
@@ -181,13 +181,18 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     };
     postSign();
   },
-
+  openVerifyingPinModal : function() {
+    ScreenBlockingDialog.open({header: "Verifying SMS PIN"});
+  },
+  closeVerifyingPinModal : function() {
+    ScreenBlockingDialog.close();
+  },
   createSignButtonElems: function() {
     var document = this.document();
     var signviewbranding = this.model.signviewbranding();
     var signatory = document.currentSignatory();
     var self = this;
-    return new Button({
+    var button =  new Button({
       size: BrowserInfo.isSmallScreen() ? "big" : "small",
       color: "green",
       customcolor: this.model.usebranding() ? signviewbranding.signviewprimarycolour() : undefined,
@@ -196,22 +201,47 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       text: this.signaturesPlaced ? localization.process.signbuttontextfromsignaturedrawing : localization.process.signbuttontext,
       oneClick : true,
       onClick: function() {
+        if (signatory.smsPinAuthentication() && (self.pin == undefined || self.pin == "")) {
+          new FlashMessage({content: "No pin provided",  color: 'red'});
+          button.restoreOnClick();
+          return;
+        }
+
         self.startBlockingReload();
         var errorCallback = function(xhr) {
             self.stopBlockingReload();
-            if (self.confirmation != undefined)         self.confirmation.clear();
-            if (self.signinprogressmodal != undefined) self.signinprogressmodal.close();
+            var data = {};
+            try {
+              data = JSON.parse(xhr.responseText);
+            } catch (e) {}
+
             if (xhr.status == 403) {
+              if (self.confirmation != undefined)         self.confirmation.clear();
+              if (self.signinprogressmodal != undefined) self.signinprogressmodal.close();
               // session timed out
               ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
+            } else if (xhr.status == 400 && data.pinProblem) {
+                button.restoreOnClick();
+                self.closeVerifyingPinModal();
+                new FlashMessage({content: "Pin is invalid",  color: 'red'});
             } else {
+              if (self.confirmation != undefined)         self.confirmation.clear();
+              if (self.signinprogressmodal != undefined) self.signinprogressmodal.close();
               self.openSigningFailedAndReloadModal();
             }
         };
 
         var pinParam = signatory.smsPinAuthentication() ? {pin : self.pin} : {};
+        if (signatory.smsPinAuthentication())
+          self.openVerifyingPinModal();
+
         document.checksign(function() {
+<<<<<<< HEAD
           var modalTop = self.confirmation.absoluteTop();
+=======
+          if (signatory.smsPinAuthentication())
+            self.closeVerifyingPinModal();
+>>>>>>> Working SMS modal
           self.confirmation.clear();
           self.signinprogressmodal = new SigningInProgressModal({
                                           document : document,
@@ -237,8 +267,11 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       }, errorCallback,pinParam).send();
       return false;
       }
-    }).el().css('margin-top', '-10px')
-              .css('margin-bottom', BrowserInfo.isSmallScreen() ? '10px' : '0px');
+    });
+
+    button.el().css('margin-top', '-10px')
+               .css('margin-bottom', BrowserInfo.isSmallScreen() ? '10px' : '0px');
+    return button.el();
   },
 
   createPreambleElems: function() {
@@ -511,12 +544,19 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                         return false;
                                     }
                                 mixpanel.track('Click sign');
-                                new DocumentSignConfirmation({
+                                var openSignConfirmation = function() {
+                                  new DocumentSignConfirmation({
                                     model: model,
                                     signview: true,
                                     signaturesPlaced: signatoryHasPlacedSignatures
-                                }).popup();
-                                }
+                                  }).popup();
+                                };
+
+                                if (signatory.smsPinAuthentication())
+                                  new SendSMSPinModal({model: model, onSend : function() {openSignConfirmation();}   });
+                                else
+                                  openSignConfirmation()
+                               }
                             });
 
       var signButton = this.signButton.el();

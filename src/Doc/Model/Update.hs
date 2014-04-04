@@ -1030,9 +1030,9 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetDocumentUnsavedDra
       sqlSet "unsaved_draft" flag
       sqlWhereDocumentIDIs did
 
-data SignDocument = SignDocument SignatoryLinkID MagicHash (Maybe SignatureInfo) SignatoryScreenshots Actor
+data SignDocument = SignDocument SignatoryLinkID MagicHash (Maybe SignatureInfo) (Maybe String) SignatoryScreenshots Actor
 instance (DocumentMonad m, TemplatesMonad m, Applicative m, CryptoRNG m) => DBUpdate m SignDocument () where
-  update (SignDocument slid mh msiginfo screenshots actor) = do
+  update (SignDocument slid mh msiginfo mpin screenshots actor) = do
     updateDocumentWithID $ \docid -> do
       let ipnumber = fromMaybe noIP $ actorIP actor
           time     = actorTime actor
@@ -1055,9 +1055,10 @@ instance (DocumentMonad m, TemplatesMonad m, Applicative m, CryptoRNG m) => DBUp
            sqlWhereDocumentStatusIs Pending
            sqlWhereSignatoryIsPartner
            sqlWhereSignatoryHasNotSigned
-           sqlWhereSignatoryAuthenticationMethodIs (if isJust msiginfo
-                                                       then ELegAuthentication
-                                                       else StandardAuthentication)
+           case (msiginfo,mpin) of
+                (Just _,_)        -> sqlWhereSignatoryAuthenticationMethodIs ELegAuthentication
+                (_, Just _)       -> sqlWhereSignatoryAuthenticationMethodIs SMSPinAuthentication -- We should check pin here
+                (Nothing,Nothing) -> sqlWhereSignatoryAuthenticationMethodIs StandardAuthentication
            sqlWhereSignatoryLinkMagicHashIs mh
       updateMTimeAndObjectVersion (actorTime actor)
     let signatureFields = case msiginfo of

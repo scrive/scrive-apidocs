@@ -101,9 +101,15 @@ sendDocumentMails author = do
         tz <- mkTimeZoneName "Europe/Stockholm"
         randomUpdate $ PreparationToPending (systemActor now) tz
         asl2 <- head . documentsignatorylinks <$> theDocument
+<<<<<<< HEAD
         randomUpdate . MarkDocumentSeen (signatorylinkid asl2) (signatorymagichash asl2)
              =<< signatoryActor ctx asl2
         randomUpdate $ SignDocument (signatorylinkid asl2) (signatorymagichash asl2) Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor now)
+=======
+        randomUpdate $ MarkDocumentSeen (signatorylinkid asl2) (signatorymagichash asl2)
+             (signatoryActor ctx asl2)
+        randomUpdate $ SignDocument (signatorylinkid asl2) (signatorymagichash asl2) Nothing Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor now)
+>>>>>>> Working SMS modal
         [sl] <- filter (not . isAuthor) . documentsignatorylinks <$> theDocument
         --Invitation Mails
         let checkMail s mg = do
@@ -122,7 +128,7 @@ sendDocumentMails author = do
         -- awaiting author email
         checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor (defaultValue :: Lang) =<< theDocument
         -- Virtual signing
-        randomUpdate . SignDocument (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.emptySignatoryScreenshots
+        randomUpdate $ SignDocument (signatorylinkid sl) (signatorymagichash sl) Nothing  Nothing SignatoryScreenshots.emptySignatoryScreenshots
                                    =<< signatoryActor ctx{ ctxtime = 10 `minutesAfter` now } sl
 
         -- Sending closed email

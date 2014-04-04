@@ -306,6 +306,18 @@ window.Document = Backbone.Model.extend({
         });
         return fields;
     },
+    requestPin : function(successCallback,errorCallback) {
+        var document = this;
+        return new Submit({
+            url : "/api/frontend/sendsmspin/" + document.documentid() +  "/" + document.currentSignatory().signatoryid(),
+            method: "POST",
+            phone: document.currentSignatory().mobile(),
+            ajax: true,
+            expectedType : "text",
+            ajaxsuccess : successCallback,
+            ajaxerror : errorCallback
+            });
+    },
     checksign: function(successCallback, errorCallback,extraSignFields) {
         var document = this;
         var fields = this.fieldsForSigning();

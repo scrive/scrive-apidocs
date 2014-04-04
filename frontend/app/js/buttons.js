@@ -29,6 +29,9 @@ var ButtonModel = Backbone.Model.extend({
       style : "",
       oneClick : false
   },
+  initialize : function() {
+    this.set({_onClick : this.get("onClick")});
+  },
   color : function(){
        return this.get("color");
   },
@@ -51,8 +54,12 @@ var ButtonModel = Backbone.Model.extend({
        return this.get("oneClick");
   },
   clicked : function(){
-       this.get("onClick")();
-       if (this.oneClick()) this.set({onClick : function() {return;}}); //After calling onClick, it can't be called again.
+    var f = this.get("onClick");
+    if (this.oneClick()) this.set({onClick : function() {return;}}); //After calling onClick, it can't be called again.
+    f();
+  },
+  restoreOnClick : function() {
+       this.set({onClick : this.get("_onClick")});
   },
   icon : function() {
        return this.get("icon");
@@ -162,6 +169,7 @@ window.Button = function (args) {
    var view = new ButtonView({model : model, el : $("<a/>")});
    this.el = function() {return $(view.el);};
    this.setText = function(text) { model.setText(text);};
+   this.restoreOnClick = function() { model.restoreOnClick();}
 };
 
 });
