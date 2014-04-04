@@ -49,6 +49,7 @@ import Util.HasSomeUserInfo
 import InputValidation
 import User.Utils
 import Util.Actor
+import BrandedDomain.BrandedDomain
 import Payments.Action
 import Payments.Model
 import Payments.Config
@@ -118,6 +119,8 @@ adminonlyRoutes =
         , dir "paymentsstats.csv" $ hGet $ toK0 $ Payments.Stats.handlePaymentsStatsCSV
 
         , dir "companies" $ hGet $ toK0 $ jsonCompanies
+
+        , dir "domainbrandingslist" $ hGet $ toK0 $ jsonBrandedDomainsList
   ]
 
 daveRoutes :: Route (KontraPlus Response)
@@ -688,3 +691,26 @@ handleAdminCompanyUsageStatsDays cid = onlySalesOrAdmin $ do
 handleAdminCompanyUsageStatsMonths :: Kontrakcja m => CompanyID -> m JSValue
 handleAdminCompanyUsageStatsMonths cid = onlySalesOrAdmin $ do
   getMonthsStats (Right $ cid)
+
+jsonBrandedDomainsList ::Kontrakcja m => m JSValue
+jsonBrandedDomainsList = onlySalesOrAdmin $ do
+    params <- getListParams
+    let _filters = userSearchingFromParams params
+        _sorting = userSortingFromParams params
+        _pagination = ((listParamsOffset params),(pageSize * 4))
+        pageSize = 100
+
+    allBrandedDomains <- dbQuery $ GetBrandedDomains
+    let allBrandedDomainsPagedList =
+                PagedList { list       = allBrandedDomains
+                          , params     = params
+                          , pageSize   = pageSize
+                          , listLength = length allBrandedDomains
+                          }
+
+    runJSONGenT $ do
+      valueM "list" $ forM (take pageSize $ allBrandedDomains) $ \bd -> runJSONGenT $ do
+        object "fields" $ do
+          --value "id" $ show $ bdid bd -- add identifier
+          value "url"      $ bdurl bd
+      value "paging" $ pagingParamsJSON allBrandedDomainsPagedList
