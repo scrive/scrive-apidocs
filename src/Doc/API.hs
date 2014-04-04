@@ -17,6 +17,7 @@ import Data.Int
 import Happstack.StaticRouting
 import Text.JSON hiding (Ok)
 import qualified Text.JSON as J
+import qualified Text.JSON.Pretty as J (pp_value)
 import KontraMonad
 import Happstack.Server.Types
 import Routing
@@ -35,7 +36,10 @@ import Control.Monad.Trans
 import Happstack.Fields
 import Utils.String
 import Utils.Monad
+import System.Exit
 import System.FilePath
+import Utils.Directory
+import Utils.IO
 import Data.Maybe
 import Doc.SignatoryScreenshots(SignatoryScreenshots, emptySignatoryScreenshots, resolveReferenceScreenshotNames)
 import qualified ELegitimation.Control as BankID
@@ -134,6 +138,7 @@ versionedAPI _version = choice [
   dir "history"           $ hGetAllowHttp $ apiCallHistory,
   dir "downloadmainfile"   $ hGetAllowHttp  $ toK2 $ apiCallDownloadMainFile,
   dir "downloadfile"       $ hGetAllowHttp  $ toK3 $ apiCallDownloadFile,
+  dir "extracttexts"       $ hGetAllowHttp  $ toK2 $ apiCallExtractTexts,
 
   dir "padqueue"           $ PadQueue.padqueueAPI,
   dir "changemainfile"     $ hPost $ toK1 $ apiCallChangeMainFile,
@@ -757,6 +762,84 @@ apiCallDownloadFile did fileid nameForBrowser = api $ do
             res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString ct) res
         return res2
 
+apiCallExtractTexts :: Kontrakcja m => DocumentID -> FileID -> m Response
+apiCallExtractTexts did fileid = api $ do
+  (user, _actor , _) <- getAPIUser APIDocCreate
+  withDocumentID did $ do
+    unlessM (isPreparation <$> theDocument) $ do
+      throwIO . SomeKontraException $ serverError "Can't extract texts from documents that are not in preparation"
+    auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
+    when (not $ (auid == userid user)) $ do
+      throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
+
+
+    jsons <- apiGuardL (badInput "The MIME part 'json' must exist and must be a JSON.") $ getDataFn' (look "json")
+    json <- apiGuard (badInput "The MIME part 'json' must be a valid JSON.") $ case decode jsons of
+                                                                                 J.Ok js -> Just js
+                                                                                 _ -> Nothing
+    doc <- theDocument
+    when (Just fileid /= documentfile doc) $ do
+      throwIO . SomeKontraException $ serverError "Requested file does not belong to the document"
+
+    content <- getFileIDContents fileid
+    runJavaTextExtract json content
+
+
+{-
+
+Java scrivepdftools extract-text expect as input json in the following format:
+
+{ "rects": [ { "rect": [0,0,1,1],   // rectangle to extract text from, normalized to 0,0-1,1
+               "page": 1},          // page number to extract from, starting from 1
+             { "rect": [0,0,0.2,0.2],
+               "page": 7 }]}
+
+as output it will add keys to the json on the input:
+{ "rects": [ { "rect": [0,0,1,1],   // rectangle to extract text from, normalized to 0,0-1,1
+               "page": 1,           // page number to extract from, starting from 1
+               "lines": [ "first line of extracted text",
+                          "second line of extracted text" ]
+             { "rect": [0,0,0.2,0.2],
+               // no lines here as document has less than 7 pages
+               "page": 7 }]}
+
+java tool tries to preserve lines of text that were give in
+pdf. Whitespace is normalized: no whitespec at the beginning or the
+end, single space between words, newlines, tabs changed to
+spaces. Note that whitespace in PDF is not reliable as sometimes
+letters are just spread out visually but do not contain whitespace
+character between them. When matching you should probably just run the
+words together to stay on the safe side.
+
+-}
+runJavaTextExtract :: (Monad m,Kontrakcja m) => JSValue -> BS.ByteString -> m (Ok JSValue)
+runJavaTextExtract json content = do
+  withSystemTempDirectory' ("extract-texts-") $ \tmppath -> do
+    let tmpin = tmppath ++ "/input.pdf"
+    let specpath = tmppath ++ "/sealspec.json"
+
+    let (rects :: Maybe JSValue) = fromJSValueField "rects" json
+    let config = runJSONGen $ do
+                   value "rects" rects
+
+    liftIO $ BS.writeFile tmpin content
+    liftIO $ BS.writeFile specpath (BS.fromString $ show $ J.pp_value (toJSValue config))
+    (code,_stdout,_stderr) <- liftIO $ do
+      readProcessWithExitCode' "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "extract-texts", specpath, tmpin] (BSL.empty)
+    case code of
+      ExitSuccess -> do
+          (jsonresult :: JSValue) <- apiGuard (serverError "Backend did not return json.") $
+                                        case decode (BSL.toString _stdout) of
+                                          J.Ok js -> Just js
+                                          _ -> Nothing
+          let (rectsresult :: Maybe JSValue) = fromJSValueField "rects" jsonresult
+          let censoredresult = runJSONGen $ do
+                   value "rects" rectsresult
+          return $ Ok censoredresult
+      ExitFailure _ -> do
+          Log.attention_ $ BSL.toString _stderr
+          Log.attention_ $ "Extract texts failed for configuration: " ++ show json
+          apiGuardL (serverError "Extract texts failed on PDF") (return Nothing)
 
 -- this one must be standard post with post params because it needs to
 -- be posted from a browser form

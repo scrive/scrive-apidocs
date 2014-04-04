@@ -27,6 +27,7 @@ window.ApiCall = Backbone.Model.extend({
         isList : function() {return false;},
         isDownloadFile : function() {return false;},
         isDownloadMainFile : function() {return false;},
+        isExtractTexts : function() {return false;},
         isAddToPadQueue : function() {return false;},
         isGetProfile : function() {return false;},
         isGetPaymentInfo : function() {return false;},
@@ -98,6 +99,8 @@ window.ApiCallView = function(args) {
            return new DownloadFileApiCallView(args);
         else if (args.model.isDownloadMainFile())
            return new DownloadMainFileApiCallView(args);
+        else if (args.model.isExtractTexts())
+           return new ExtractTextsApiCallView(args);
         else if (args.model.isAddToPadQueue())
            return new AddToPadQueueApiCallView(args);
         else if (args.model.isReject())
