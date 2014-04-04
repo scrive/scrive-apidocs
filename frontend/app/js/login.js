@@ -282,7 +282,7 @@ var LoginBrandedView = Backbone.View.extend({
       var content = $("<div style='width:'/>");
       var wrapper = $("<div/>");
       var body = $("<div/>");
-      var header = $("<div style='margin-bottom: 50px; margin-top: 50px;'/>");
+      var header = $("<div style='margin-bottom: 50px; margin-top: 50px;text-align:center;'/>");
       content.append(wrapper.append(body));
       $(this.el).append(header);
 
