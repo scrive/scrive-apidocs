@@ -1,6 +1,8 @@
 module BrandedDomain.BrandedDomain
   (   BrandedDomains
     , BrandedDomain(..)
+    , GetBrandedDomains(..)
+    , GetBrandedDomainByURL(..)
     , findBrandedDomain
   ) where
 
@@ -9,6 +11,7 @@ import BrandedDomain.BrandedDomainID
 import BrandedDomain.Tables
 import DB
 import qualified Log
+import Data.Monoid
 
 type BrandedDomains = [BrandedDomain]
 
@@ -76,3 +79,11 @@ instance (MonadDB m, Log.MonadLog m) => DBQuery m GetBrandedDomains [BrandedDoma
     runQuery_ . sqlSelect "branded_domains" $ do
       mapM_ (sqlResult . raw . colName) (tblColumns tableBrandedDomains)
     fetchMany fetchBrandedDomain
+
+data GetBrandedDomainByURL = GetBrandedDomainByURL String
+instance (MonadDB m, Log.MonadLog m) => DBQuery m GetBrandedDomainByURL (Maybe BrandedDomain) where
+  query (GetBrandedDomainByURL url) = do
+    runQuery_ . sqlSelect "branded_domains" $ do
+      mapM_ (sqlResult . raw . colName) (tblColumns tableBrandedDomains)
+      sqlWhere ("" <?> url <> "ILIKE (branded_domains.url || '%')")
+    fetchMaybe fetchBrandedDomain
