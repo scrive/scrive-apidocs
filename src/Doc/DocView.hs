@@ -255,7 +255,7 @@ pageDocumentDesign :: Kontrakcja m
                    -> AnalyticsData
                    -> m String
 pageDocumentDesign ctx document ad = do
-     let  mbd = currentBrandedDomain ctx
+     let  mbd = ctxbrandeddomain ctx
      mcompany <- companyUIForPage
      renderTemplate "pageDocumentDesign" $ do
          F.value "documentid" $ show $ documentid document
@@ -281,7 +281,7 @@ pageDocumentSignView :: Kontrakcja m
                     -> AnalyticsData
                     -> m String
 pageDocumentSignView ctx document siglink ad = do
-  let  mbd = currentBrandedDomain ctx
+  let  mbd = ctxbrandeddomain ctx
   mcompany <- companyUIForPage
   renderTemplate "pageDocumentSignView" $ do
       F.value "documentid" $ show $ documentid document

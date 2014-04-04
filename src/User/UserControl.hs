@@ -291,7 +291,7 @@ handleAccountSetupGet uid token sm = do
     (Just user, Nothing,_) -> do
       company <-  getCompanyForUser user
       companyui <- dbQuery $ GetCompanyUI (usercompany user)
-      mbd <- return $ currentBrandedDomain ctx
+      mbd <- return $ ctxbrandeddomain ctx
       let background =
               companycustombackgroundcolour companyui `mplus` (bdbackgroundcolorexternal <$>  mbd) `mplus` (bdbackgroundcolour <$> mbd)
       Right <$> (simpleHtmlResponse =<< (renderTemplateAsPage ctx "accountSetupPage" False $ do
@@ -347,7 +347,7 @@ handleAccessNewAccountGet uid token = do
       switchLang (getLang user)
       let changePassLink = show $ LinkAccessNewAccount uid token
       ctx <- getContext
-      case (currentBrandedDomain ctx) of
+      case (ctxbrandeddomain ctx) of
         Just bd -> do
           ad <- getAnalyticsData
           content <- renderTemplate "accessNewAccountPageWithBranding" $ do
@@ -411,7 +411,7 @@ handlePasswordReminderGet uid token = do
       switchLang (getLang user)
       let changePassLink = show $ LinkPasswordReminder uid token
       ctx <- getContext
-      case (currentBrandedDomain ctx) of
+      case (ctxbrandeddomain ctx) of
         Just bd -> do
           ad <- getAnalyticsData
           content <- renderTemplate "changePasswordPageWithBranding" $ do
@@ -456,7 +456,6 @@ handlePasswordReminderPost uid token = do
 handleContactUs :: Kontrakcja m => m KontraLink
 handleContactUs = do
   Context{..} <- getContext
-  ctx <- getContext
   fname   <- getField' "firstname"
   lname   <- getField' "lastname"
   email   <- getField' "email"
@@ -464,7 +463,7 @@ handleContactUs = do
   plan    <- getField' "plan"
 
   let uid = maybe "user not logged in" ((++) "user with id " . show . userid) ctxmaybeuser
-      mbd = currentBrandedDomain ctx
+      mbd = ctxbrandeddomain
       domainInfo = case mbd of
                      Nothing -> ""
                      Just bd -> " (from domain " ++ bdurl bd ++ " )"

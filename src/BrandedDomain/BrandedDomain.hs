@@ -3,15 +3,15 @@ module BrandedDomain.BrandedDomain
     , BrandedDomain(..)
     , GetBrandedDomains(..)
     , GetBrandedDomainByURL(..)
-    , findBrandedDomain
+    , GetBrandedDomainByUserID(..)
   ) where
 
-import Data.List
 import BrandedDomain.BrandedDomainID
 import BrandedDomain.Tables
 import DB
 import qualified Log
 import Data.Monoid
+import User.UserID
 
 type BrandedDomains = [BrandedDomain]
 
@@ -40,9 +40,6 @@ data BrandedDomain = BrandedDomain {
                         , bdemailoriginator :: String
                         , bdcontactemail :: String
                       } deriving (Read, Eq, Ord, Show)
-
-findBrandedDomain :: String -> BrandedDomains -> Maybe BrandedDomain
-findBrandedDomain s = find (\d -> bdurl d `isPrefixOf` s)
 
 
 fetchBrandedDomain :: (BrandedDomainID, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String) -> BrandedDomain
@@ -86,4 +83,14 @@ instance (MonadDB m, Log.MonadLog m) => DBQuery m GetBrandedDomainByURL (Maybe B
     runQuery_ . sqlSelect "branded_domains" $ do
       mapM_ (sqlResult . raw . colName) (tblColumns tableBrandedDomains)
       sqlWhere ("" <?> url <> "ILIKE (branded_domains.url || '%')")
+    fetchMaybe fetchBrandedDomain
+
+data GetBrandedDomainByUserID = GetBrandedDomainByUserID UserID
+instance (MonadDB m, Log.MonadLog m) => DBQuery m GetBrandedDomainByUserID (Maybe BrandedDomain) where
+  query (GetBrandedDomainByUserID uid) = do
+    runQuery_ . sqlSelect "branded_domains" $ do
+      mapM_ (sqlResult . raw . colName) (tblColumns tableBrandedDomains)
+      sqlWhereExists $ sqlSelect "users" $ do
+        sqlWhereEq "users.id" uid
+        sqlWhere "users.associated_domain = branded_domains.url"
     fetchMaybe fetchBrandedDomain

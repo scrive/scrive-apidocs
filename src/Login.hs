@@ -39,7 +39,7 @@ handleLoginGet = do
   case (ctxmaybeuser ctx) of
        Nothing -> do
           referer <- getField "referer"
-          case (currentBrandedDomain ctx) of
+          case (ctxbrandeddomain ctx) of
                Nothing -> do
                 content <- renderTemplate "loginPage" $ do
                           F.value "referer" $ fromMaybe "/" referer
@@ -61,7 +61,7 @@ signupPageGet :: Kontrakcja m => m (Either Response ThinPage)
 signupPageGet = do
   ctx <- getContext
   memail <- getField "email"
-  case (currentBrandedDomain ctx) of
+  case (ctxbrandeddomain ctx) of
       Nothing -> do
           content <- renderTemplate "signupPage" $ do
             F.value "email" memail

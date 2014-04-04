@@ -297,7 +297,7 @@ mkContext lang = do
         , ctxmixpaneltoken = "5b04329b972851feac0e9b853738e742"
         , ctxgoogleanalyticstoken = "5b04329b972851feac0e9b853738e741"
         , ctxhomebase = "https://staging.scrive.com"
-        , ctxbrandeddomains = []
+        , ctxbrandeddomain = Nothing
         , ctxsalesforceconf = SalesforceConf "" "" "" "" "" "" ""
     }
 

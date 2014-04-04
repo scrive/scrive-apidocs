@@ -58,8 +58,7 @@ processEvents = dbQuery GetUnreadEvents >>= mapM_ processEvent
               mbd <- (maybesignatory =<<) . getAuthorSigLink <$> theDocument >>= \case
                           Nothing -> return Nothing
                           Just uid -> do
-                            user  <- dbQuery $ GetUserByID uid
-                            return $ findBrandedDomain (fromMaybe "" $ join $ userassociateddomain <$> user) (brandedDomains $ appConf)
+                            dbQuery $ GetBrandedDomainByUserID uid
               msl <- getSigLinkFor signlinkid <$> theDocument
               let muid = maybe Nothing maybesignatory msl
               let signemail = maybe "" getEmail msl

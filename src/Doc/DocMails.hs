@@ -17,8 +17,8 @@ module Doc.DocMails (
   ) where
 
 import ActionQueue.Scheduler (SchedulerData, sdAppConf, getGlobalTemplates)
-import AppConf (brandedDomains, hostpart, mailsConfig)
-import BrandedDomain.BrandedDomain (findBrandedDomain, bdurl)
+import AppConf (hostpart, mailsConfig)
+import BrandedDomain.BrandedDomain
 import Control.Applicative ((<$>), (<*>), Applicative)
 import Control.Conditional (whenM, ifM)
 import Control.Monad.Trans
@@ -372,12 +372,12 @@ type MailT m = MailContextT (TemplatesT m)
 
 -- | Set up mail and template context, with language and branding
 -- based on document data, and the rest from SchedulerData
-runMailTInScheduler :: (MonadReader SchedulerData m, MonadIO m, MonadDB m) => Document -> MailT m a -> m a
+runMailTInScheduler :: (MonadReader SchedulerData m, MonadIO m, MonadDB m,Log.MonadLog m) => Document -> MailT m a -> m a
 runMailTInScheduler doc m = do
   appConf <- asks sdAppConf
   now <- getMinutesTime
   mauthor <- maybe (return Nothing) (dbQuery . GetUserByID) $ join $ maybesignatory <$> getAuthorSigLink doc
-  let mbd = flip findBrandedDomain (brandedDomains appConf) =<< userassociateddomain =<< mauthor
+  mbd <- maybe (return Nothing) (dbQuery . GetBrandedDomainByUserID) (userid <$> mauthor)
   let mctx = MailContext { mctxhostpart = fromMaybe (hostpart appConf) (bdurl <$> mbd)
                          , mctxmailsconfig = mailsConfig appConf
                          , mctxlang = documentlang doc

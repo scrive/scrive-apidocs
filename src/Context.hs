@@ -1,8 +1,6 @@
 module Context (
       Context(..),
       anonymousContext,
-      currentBrandedDomain,
-      userBrandedDomain,
       contextToMailContext
     ) where
 
@@ -26,7 +24,6 @@ import GuardTime (GuardTimeConf(..))
 import Payments.Config (RecurlyConfig)
 import BrandedDomain.BrandedDomain
 import Salesforce.Conf
-import Data.Maybe
 
 data Context = Context
     { ctxmaybeuser           :: Maybe User -- ^ The logged in user. Is Nothing when there is no one logged in.
@@ -57,7 +54,7 @@ data Context = Context
     , ctxmixpaneltoken       :: String
     , ctxgoogleanalyticstoken       :: String
     , ctxhomebase            :: String
-    , ctxbrandeddomains      :: BrandedDomains
+    , ctxbrandeddomain       :: Maybe BrandedDomain
     , ctxsalesforceconf      :: SalesforceConf
     }
 
@@ -66,20 +63,12 @@ data Context = Context
 anonymousContext :: Context -> Context
 anonymousContext ctx = ctx { ctxmaybeuser = Nothing, ctxmaybepaduser = Nothing, ctxsessionid = tempSessionID }
 
--- | Current branded domain
-currentBrandedDomain :: Context -> Maybe BrandedDomain
-currentBrandedDomain ctx = findBrandedDomain (ctxhostpart ctx) (ctxbrandeddomains ctx)
-
--- | Branded domain for given user
-userBrandedDomain ::  Context -> User -> Maybe BrandedDomain
-userBrandedDomain ctx user = findBrandedDomain (fromMaybe "" $ userassociateddomain user) (ctxbrandeddomains ctx)
-
 contextToMailContext :: Context -> MailContext
 contextToMailContext ctx = MailContext { mctxhostpart = ctxhostpart ctx
 
                                        , mctxmailsconfig = ctxmailsconfig ctx
                                        , mctxlang = ctxlang ctx
-                                       , mctxcurrentBrandedDomain = currentBrandedDomain ctx
+                                       , mctxcurrentBrandedDomain = ctxbrandeddomain ctx
                                        , mctxipnumber = ctxipnumber ctx
                                        , mctxtime = ctxtime ctx
                                        , mctxmaybeuser = ctxmaybeuser ctx
