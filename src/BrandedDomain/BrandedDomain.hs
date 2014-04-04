@@ -1,12 +1,12 @@
-module BrandedDomains.BrandedDomains
+module BrandedDomain.BrandedDomain
   (   BrandedDomains
     , BrandedDomain(..)
     , findBrandedDomain
   ) where
 
 import Data.List
-import BrandedDomains.BrandedDomainID
-import BrandedDomains.Tables
+import BrandedDomain.BrandedDomainID
+import BrandedDomain.Tables
 import DB
 import qualified Log
 

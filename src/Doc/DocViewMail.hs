@@ -45,7 +45,7 @@ import File.Model
 import User.Model
 import Util.HasSomeCompanyInfo
 import qualified Text.StringTemplates.Fields as F
-import BrandedDomains.BrandedDomains
+import BrandedDomain.BrandedDomain
 
 mailDocumentRemind :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
                    => Maybe String

@@ -57,7 +57,7 @@ import qualified Text.StringTemplates.Fields as F
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Base64 as B64
 import DB
-import BrandedDomains.BrandedDomains
+import BrandedDomain.BrandedDomain
 import Doc.DocViewMail
 import Doc.DocStateData
 import Control.Monad

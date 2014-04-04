@@ -1,4 +1,4 @@
-module BrandedDomains.Tables (tableBrandedDomains) where
+module BrandedDomain.Tables (tableBrandedDomains) where
 
 import DB
 

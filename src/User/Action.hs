@@ -36,7 +36,7 @@ import Payments.Model
 import Administration.AddPaymentPlan
 import Crypto.RNG
 import MinutesTime
-import BrandedDomains.BrandedDomains
+import BrandedDomain.BrandedDomain
 import Company.Model
 
 handleAccountSetupFromSign :: (Kontrakcja m, DocumentMonad m) => SignatoryLink -> m (Maybe User)

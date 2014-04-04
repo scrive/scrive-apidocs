@@ -6,7 +6,7 @@ module MailContext
   , runMailContextT
   ) where
 
-import BrandedDomains.BrandedDomains (BrandedDomain)
+import BrandedDomain.BrandedDomain (BrandedDomain)
 import Control.Applicative
 import Control.Monad (MonadPlus)
 import Control.Monad.Base (MonadBase)

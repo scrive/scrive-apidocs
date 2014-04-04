@@ -27,7 +27,7 @@ import DB
 import Data.Maybe
 import Control.Monad
 import Company.Model
-import BrandedDomains.BrandedDomains
+import BrandedDomain.BrandedDomain
 import Utils.Monoid
 
 mkSMS :: (MonadDB m, MailContextMonad m) => Document -> SignatoryLink -> MessageData -> String -> (m SMS)

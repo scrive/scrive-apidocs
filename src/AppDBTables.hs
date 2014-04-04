@@ -29,7 +29,7 @@ import ThirdPartyStats.Tables
 import User.CallbackScheme.Tables
 import Doc.AutomaticReminder.Tables
 import Doc.SMSPin.Tables
-import BrandedDomains.Tables
+import BrandedDomain.Tables
 
 kontraFunctions :: [SQLFunction]
 kontraFunctions = [

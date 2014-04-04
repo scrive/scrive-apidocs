@@ -40,7 +40,7 @@ import Util.Actor
 import qualified Text.StringTemplates.Fields as F
 import Utils.Read
 import Data.Functor
-import BrandedDomains.BrandedDomains
+import BrandedDomain.BrandedDomain
 import Doc.DocViewMail
 import EvidenceLog.Model
 import Utils.Default (defaultValue)

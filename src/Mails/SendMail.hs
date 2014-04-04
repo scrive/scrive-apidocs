@@ -33,7 +33,7 @@ import Doc.Model
 import Doc.DocStateData
 import Doc.DocumentID
 import Data.Maybe
-import BrandedDomains.BrandedDomains
+import BrandedDomain.BrandedDomain
 
 
 scheduleEmailSendout :: (CryptoRNG m, MonadDB m, Log.MonadLog m) => MailsConfig -> Mail -> m ()

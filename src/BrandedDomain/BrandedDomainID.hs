@@ -1,4 +1,4 @@
-module BrandedDomains.BrandedDomainID (
+module BrandedDomain.BrandedDomainID (
     BrandedDomainID
   , unsafeBrandedDomainID
   , unBrandedDomainID
