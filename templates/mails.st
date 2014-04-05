@@ -63,13 +63,15 @@ mailContractClosedMainP =
     <br/>
     $if(documentAttached)$
       $_mailContractClosedContentAttached()$
+      $mailClosedSignup()$
     $else$
       $_mailContractClosedContentLinked()$
-      <br/><br/>
-      $nicebutton(link=mainfilelink; text=_mailContractClosedContentLinkedButton())$
-      <br/>
+      $if(confirmationlink)$
+        $_mailContractClosedContentLinkedNoAccount()$
+      $else$
+        $_mailContractClosedContentLinkedAccount()$
+      $endif$
     $endif$
-    $mailClosedSignup()$
 ####
 #### REJECTED MAIL
 ####
@@ -111,9 +113,7 @@ mailDocumentAttachedOrLinked =
    $attached$
  $else$
    $_mailDocumentLinked()$
-   <br/><br/>
-   $nicebutton(link=mainfilelink; text=_mailContractClosedContentLinkedButton())$
-   <br/>
+  <br/><br/>$nicebutton(link=mainfilelink; text=_mailDocumentLinkedButton())$
  $endif$
 #### INVITATION MAILS
 ####
@@ -182,7 +182,7 @@ $else$
       <div class="editable" name="custommessage"></div>
 $endif$
 $if(!documentAttached)$
-  $nicebutton(link=mainfilelink; text=_mailContractClosedContentLinkedButton())$
+  $nicebutton(link=mainfilelink; text=_mailDocumentLinkedButton())$
 $endif$
 ####
 remindMailSignedStandardHeader=
