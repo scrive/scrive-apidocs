@@ -37,7 +37,7 @@ import Utils.Default (defaultValue)
 import Utils.Directory (withSystemTempDirectory')
 
 addDigitalSignature :: (CryptoRNG m, MonadIO m, Log.MonadLog m, MonadBaseControl IO m, DocumentMonad m, AmazonMonad m, GuardTimeConfMonad m, TemplatesMonad m) => m ()
-addDigitalSignature = theDocumentID >>= \did -> do
+addDigitalSignature = theDocumentID >>= \did ->
   withSystemTempDirectory' ("DigitalSignature-" ++ show did ++ "-") $ \tmppath -> do
   Just file <- theDocument >>= documentsealedfileM
   content <- getFileContents file
