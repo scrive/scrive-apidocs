@@ -7,7 +7,7 @@ Category: Web
 Synopsis: Ultimate signing solution
 Description:
         Sign documents online
-Cabal-version: >= 1.16
+Cabal-version: >= 1.18
 Build-type: Simple
 
 Flag cron
