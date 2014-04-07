@@ -864,9 +864,9 @@ fixSignatoryLinksSwedishChars =
        let fixedfields = fixSwedishChars fields
        when (fields /= fixedfields) $ do
          runQuery_ . sqlUpdate "signatory_links" $ do
-         sqlSet "fields" fixedfields
-         sqlWhereEq "id" sid
-         sqlWhereEq "document_id" did
+           sqlSet "fields" fixedfields
+           sqlWhereEq "id" sid
+           sqlWhereEq "document_id" did
   }
     where
         fixSwedishChars :: [SignatoryField] ->  [SignatoryField]
