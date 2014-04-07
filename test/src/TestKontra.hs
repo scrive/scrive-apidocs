@@ -112,8 +112,8 @@ instance MonadDB TestEnv where
     -- new connection.
     cs <- asks teConnSource
     TestEnv . ReaderT $ \r -> DBT . StateT $ \st -> do
-    res <- runDBT cs (dbTransactionSettings st) (runReaderT m r)
-    return (res, st)
+      res <- runDBT cs (dbTransactionSettings st) (runReaderT m r)
+      return (res, st)
 
 instance TemplatesMonad TestEnv where
   getTemplates = getTextTemplatesByLanguage $ codeFromLang defaultValue
