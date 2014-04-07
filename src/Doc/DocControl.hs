@@ -287,7 +287,7 @@ handleIssueShowGet docid = checkUserTOSGet $ do
 handleFilePages :: Kontrakcja m => FileID -> m Response
 handleFilePages fid = do
   checkFileAccess fid
-  jpages <- maybeScheduleRendering fid
+  jpages <- maybeScheduleRendering fid legacyWidthInPixels True
 
   case jpages of
     JpegPagesPending _ -> do
@@ -361,15 +361,14 @@ preview fid value
   | value > 10 = return Nothing
   | otherwise  =   do
         Context{ctxnormalizeddocuments} <- getContext
-        jpages <- MemCache.get (fid,legacyWidthInPixels,True) ctxnormalizeddocuments
+        jpages <- MemCache.get (fid,150,False) ctxnormalizeddocuments
         case jpages of
             Just (JpegPages pages) -> do
                 let contents =  pages !! 0
-                scaledContent <- liftIO $ scaleForPreview contents
-                let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [scaledContent]) Nothing
+                let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
                 return $ Just $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/jpeg") res
             other -> do
-                when_ (other == Nothing) $ maybeScheduleRendering fid
+                when_ (other == Nothing) $ maybeScheduleRendering fid 150 False
                 liftIO $ threadDelay 500000
                 preview fid (value+1)
 

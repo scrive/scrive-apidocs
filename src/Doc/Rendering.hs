@@ -10,7 +10,6 @@
 -----------------------------------------------------------------------------
 module Doc.Rendering
     ( maybeScheduleRendering
-    , scaleForPreview
     , FileError(..)
     , preCheckPDF
     , getNumberOfPDFPages
@@ -33,7 +32,6 @@ import System.Directory
 import System.Exit
 import System.IO
 import qualified System.IO.Temp
-import System.Process
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
@@ -50,26 +48,15 @@ import Control.Monad.Trans.Control
 withSystemTempDirectory :: (MonadBaseControl IO m) => String -> (String -> m a) -> m a
 withSystemTempDirectory = liftBaseOp . System.IO.Temp.withSystemTempDirectory
 
-scaleForPreview :: BS.ByteString -> IO BS.ByteString
-scaleForPreview image = withSystemTempDirectory "preview" $ \tmppath -> do
-    let fpath = tmppath ++ "/source.png"
-    BS.writeFile fpath image
-    (_,_,_, resizer) <- createProcess $  proc "convert" ["-scale","150x213", fpath, fpath]
-    resizerexitcode <- waitForProcess resizer
-    case resizerexitcode of
-        ExitFailure _ -> return ()
-        ExitSuccess -> return ()
-    fcontent <- BS.readFile fpath
-    return fcontent
-
 {- |
    Convert PDF to jpeg images of pages
  -}
 convertPdfToJpgPages :: forall m . (KontraMonad m, Log.MonadLog m, MonadDB m, MonadIO m, MonadBaseControl IO m, AWS.AmazonMonad m)
                      => FileID
                      -> Int
+                     -> Bool
                      -> m JpegPages
-convertPdfToJpgPages fid widthInPixels = do
+convertPdfToJpgPages fid widthInPixels _wholeDocument = do
   content <- getFileIDContents fid
   withSystemTempDirectory "mudraw" $ \tmppath -> do
     let sourcepath = tmppath ++ "/source.pdf"
@@ -119,8 +106,10 @@ convertPdfToJpgPages fid widthInPixels = do
  -}
 maybeScheduleRendering :: Kontrakcja m
                        => FileID
+                       -> Int
+                       -> Bool
                        -> m JpegPages
-maybeScheduleRendering fileid = do
+maybeScheduleRendering fileid pageWidthInPixels wholeDocument = do
   Context{ctxnormalizeddocuments} <- getContext
 
   -- Some debugs
@@ -129,14 +118,15 @@ maybeScheduleRendering fileid = do
   Log.mixlog_ $ "Total rendered pages count: " ++ show (pgs)
 
   -- Propper action
-  v <- MemCache.get (fileid,legacyWidthInPixels,True) ctxnormalizeddocuments
+  let key = (fileid,pageWidthInPixels,wholeDocument)
+  v <- MemCache.get key ctxnormalizeddocuments
   case v of
       Just pages -> return pages
       Nothing -> do
-          MemCache.put (fileid,legacyWidthInPixels,True) (JpegPagesPending []) ctxnormalizeddocuments
+          MemCache.put key (JpegPagesPending []) ctxnormalizeddocuments
           forkAction ("Rendering file #" ++ show fileid) $ do
-                   jpegpages <- convertPdfToJpgPages fileid legacyWidthInPixels            -- FIXME: We should report error somewere
-                   MemCache.put (fileid,legacyWidthInPixels,True) jpegpages ctxnormalizeddocuments
+                   jpegpages <- convertPdfToJpgPages fileid pageWidthInPixels wholeDocument            -- FIXME: We should report error somewere
+                   MemCache.put key jpegpages ctxnormalizeddocuments
           return (JpegPagesPending [])
 
 
