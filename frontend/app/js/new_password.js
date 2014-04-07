@@ -155,7 +155,7 @@ define(['Backbone', 'legacy_code'], function() {
       header.append($("<img alt='logo'/>").attr('src',model.logolink()));
       header.append($("<div class='divider-line'/>"));
 
-      var poweredLabel = $("<label style='text-align:center;width:275px;'/>").text(localization.esigningpoweredbyscrive)
+      var poweredLabel = $("<label style='text-align:center;width:275px;'/>").text(localization.esigningpoweredbyscrive);
       if (model.textscolour() != undefined) poweredLabel.css("color",model.textscolour());
       header.append(poweredLabel);
 
