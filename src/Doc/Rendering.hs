@@ -32,9 +32,9 @@ import Utils.String
 import System.Directory
 import System.Exit
 import System.IO
-import System.IO.Temp
+import qualified System.IO.Temp
 import System.Process
-import qualified Control.Exception as E
+import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.ByteString.Char8 as BSC
@@ -44,6 +44,12 @@ import qualified MemCache as MemCache
 import File.Storage
 import Data.Char
 import Data.Maybe
+import Control.Monad.Trans.Control
+--import Control.Monad.Base
+
+
+withSystemTempDirectory :: (MonadBaseControl IO m) => String -> (String -> m a) -> m a
+withSystemTempDirectory = liftBaseOp . System.IO.Temp.withSystemTempDirectory
 
 scaleForPreview :: BS.ByteString -> IO BS.ByteString
 scaleForPreview image = withSystemTempDirectory "preview" $ \tmppath -> do
@@ -60,16 +66,16 @@ scaleForPreview image = withSystemTempDirectory "preview" $ \tmppath -> do
 {- |
    Convert PDF to jpeg images of pages
  -}
-convertPdfToJpgPages :: forall m . (KontraMonad m, Log.MonadLog m, MonadDB m, MonadIO m, AWS.AmazonMonad m)
+convertPdfToJpgPages :: forall m . (KontraMonad m, Log.MonadLog m, MonadDB m, MonadIO m, MonadBaseControl IO m, AWS.AmazonMonad m)
                      => FileID
                      -> Int
                      -> m JpegPages
 convertPdfToJpgPages fid widthInPixels = do
   content <- getFileIDContents fid
-  liftIO $ withSystemTempDirectory "mudraw" $ \tmppath -> do
+  withSystemTempDirectory "mudraw" $ \tmppath -> do
     let sourcepath = tmppath ++ "/source.pdf"
 
-    BS.writeFile sourcepath content
+    liftIO $ BS.writeFile sourcepath content
 
     (exitcode,outcontent,errcontent) <-
       liftIO $ readProcessWithExitCode' "mudraw"
@@ -84,9 +90,9 @@ convertPdfToJpgPages fid widthInPixels = do
     -- readPagesFrom opens a file. If the file does not exists then it
     -- stops, if open is successful the file is prepended to a list of
     -- files and a file with number larger by 1 is tried
-    let readPagesFrom :: Int -> IO [BS.ByteString]
+    let readPagesFrom :: Int -> m [BS.ByteString]
         readPagesFrom n = do
-          econtentx <- E.try (BS.readFile (pathOfPage n))
+          econtentx <- E.try (liftIO $ BS.readFile (pathOfPage n))
           case econtentx of
             Right contentx -> do
                followingPages <- readPagesFrom (n+1 :: Int)
@@ -96,7 +102,7 @@ convertPdfToJpgPages fid widthInPixels = do
                return []
 
     result <- case exitcode of
-      ExitFailure _ -> do
+      ExitFailure _ -> liftIO $ do
         systmp <- getTemporaryDirectory
         (path,handle) <- openTempFile systmp ("mudraw-failed-" ++ show fid ++ "-.pdf")
         Log.attention_ $ "Cannot mudraw of file #" ++ show fid ++ ": " ++ path
@@ -105,7 +111,7 @@ convertPdfToJpgPages fid widthInPixels = do
 
         return $ JpegPagesError (concatChunks errcontent `BS.append` concatChunks outcontent)
       ExitSuccess -> do
-        pages <- liftIO $ readPagesFrom 1
+        pages <- readPagesFrom 1
         return (JpegPages pages)
     return result
 
