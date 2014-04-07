@@ -174,64 +174,29 @@ Executable kontrakcja-server
   Build-depends: DRBG
   Build-depends: Decimal
   Build-depends: hpqtypes
-  -- Build-depends: HPDF
   Build-depends: HStringTemplate
   Build-depends: HTTP
   Build-depends: HUnit
   Build-depends: HaXml
   Build-depends: MissingH
   Build-depends: QuickCheck
-  -- Build-depends: ansi-terminal
-  -- Build-depends: ansi-wl-pprint
-  -- Build-depends: asn1-data
-  -- Build-depends: asn1-types
   Build-depends: attoparsec
-  -- Build-depends: base-unicode-symbols
   Build-depends: base16-bytestring
   Build-depends: base64-bytestring
-  -- Build-depends: blaze-builder
-  -- Build-depends: blaze-html
-  -- Build-depends: blaze-markup
-  -- Build-depends: byteable
-  -- Build-depends: cereal
-  -- Build-depends: certificate
-  -- Build-depends: cipher-aes
-  -- Build-depends: cipher-aes128
-  -- Build-depends: cipher-blowfish
-  -- Build-depends: cipher-camellia
-  -- Build-depends: cipher-des
-  -- Build-depends: cipher-rc4
   Build-depends: cond
   Build-depends: crypto-api
-  -- Build-depends: crypto-cipher-types
-  -- Build-depends: crypto-pubkey-types
-  -- Build-depends: cryptocipher
   Build-depends: cryptohash
-  -- Build-depends: cryptohash-cryptoapi
   Build-depends: dataenc
-  -- Build-depends: digest
-  -- Build-depends: dlist
-  -- Build-depends: entropy
   Build-depends: explicit-exception
   Build-depends: extensible-exceptions
   Build-depends: fields-json
   Build-depends: hS3
   Build-depends: happstack-server
   Build-depends: happstack-static-routing
-  -- Build-depends: hashable
-  -- Build-depends: haskell-lexer
-  -- Build-depends: hostname
-  -- Build-depends: html
-  -- Build-depends: hxt
-  -- Build-depends: hxt-charproperties
-  -- Build-depends: hxt-regex-xmlschema
-  -- Build-depends: hxt-unicode
   Build-depends: iconv
   Build-depends: json
   Build-depends: kontrakcja-templates
   Build-depends: lifted-base
-  -- Build-depends: list-tries
-  -- Build-depends: mime
   Build-depends: mixpanel
   Build-depends: mmap
   Build-depends: monad-control
