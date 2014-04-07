@@ -21,7 +21,7 @@ import Control.Monad
 import Control.Monad.Error
 import Data.Typeable
 import DB
-import Doc.JpegPages
+import Doc.RenderedPages
 import File.Model
 import ForkAction
 import Kontra
@@ -55,7 +55,7 @@ convertPdfToJpgPages :: forall m . (KontraMonad m, Log.MonadLog m, MonadDB m, Mo
                      => FileID
                      -> Int
                      -> Bool
-                     -> m JpegPages
+                     -> m RenderedPages
 convertPdfToJpgPages fid widthInPixels wholeDocument = do
   content <- getFileIDContents fid
   withSystemTempDirectory "mudraw" $ \tmppath -> do
@@ -96,10 +96,10 @@ convertPdfToJpgPages fid widthInPixels wholeDocument = do
         BS.hPutStr handle content
         hClose handle
 
-        return $ JpegPagesError (concatChunks errcontent `BS.append` concatChunks outcontent)
+        return $ RenderedPagesError (concatChunks errcontent `BS.append` concatChunks outcontent)
       ExitSuccess -> do
         pages <- readPagesFrom 1
-        return (JpegPages pages)
+        return (RenderedPages pages)
     return result
 
 {- | Shedules rendering od a file. After forked process is done, images will be put in shared memory.
@@ -109,7 +109,7 @@ maybeScheduleRendering :: Kontrakcja m
                        => FileID
                        -> Int
                        -> Bool
-                       -> m JpegPages
+                       -> m RenderedPages
 maybeScheduleRendering fileid pageWidthInPixels wholeDocument = do
   Context{ctxnormalizeddocuments} <- getContext
 
@@ -124,11 +124,11 @@ maybeScheduleRendering fileid pageWidthInPixels wholeDocument = do
   case v of
       Just pages -> return pages
       Nothing -> do
-          MemCache.put key (JpegPagesPending []) ctxnormalizeddocuments
+          MemCache.put key (RenderedPagesPending []) ctxnormalizeddocuments
           forkAction ("Rendering file #" ++ show fileid) $ do
                    jpegpages <- convertPdfToJpgPages fileid pageWidthInPixels wholeDocument            -- FIXME: We should report error somewere
                    MemCache.put key jpegpages ctxnormalizeddocuments
-          return (JpegPagesPending [])
+          return (RenderedPagesPending [])
 
 
 data FileError = FileSizeError Int Int

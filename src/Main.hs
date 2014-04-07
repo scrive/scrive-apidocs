@@ -28,7 +28,7 @@ import AppDBTables (kontraTables)
 import qualified Log
 import qualified MemCache
 import qualified Version
-import qualified Doc.JpegPages as JpegPages
+import qualified Doc.RenderedPages as RenderedPages
 
 main :: IO ()
 main = Log.withLogger $ do
@@ -52,7 +52,7 @@ main = Log.withLogger $ do
   appGlobals <- do
     templates <- newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates
     filecache <- MemCache.new BS.length 50000000
-    docs <- MemCache.new JpegPages.pagesCount 1000
+    docs <- MemCache.new RenderedPages.pagesCount 1000
     rng <- newCryptoRNGState
     connpool <- createPoolSource connSettings
     return AppGlobals {

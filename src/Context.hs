@@ -7,7 +7,7 @@ module Context (
     ) where
 
 import File.FileID
-import Doc.JpegPages
+import Doc.RenderedPages
 import MailContext (MailContext(..))
 import MinutesTime
 import User.Model
@@ -36,7 +36,7 @@ data Context = Context
     , ctxtime                :: MinutesTime -- ^ The time of the request.
     , ctxclientname          :: Maybe String -- ^ Client identification from header Client-Name or if that's missing: User-Agent
     , ctxclienttime          :: Maybe MinutesTime -- ^ Client-local time when an action was performed (e.g. signing a document)
-    , ctxnormalizeddocuments :: JpegPagesCache -- ^ Rendered jpeg pages
+    , ctxnormalizeddocuments :: RenderedPagesCache -- ^ Rendered jpeg pages
     , ctxipnumber            :: IPAddress -- ^ The ip number of the client.
     , ctxproduction          :: Bool -- ^ Is this server the production server?
     , ctxtemplates           :: KontrakcjaTemplates -- ^ The set of templates to render text for the ctxlang

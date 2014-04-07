@@ -49,7 +49,7 @@ import System.Time
 import Data.Time.Clock
 
 import qualified Control.Exception.Lifted as E
-import Doc.JpegPages
+import Doc.RenderedPages
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
@@ -62,7 +62,7 @@ import Salesforce.Conf
 data AppGlobals
     = AppGlobals { templates       :: MVar (UTCTime, KontrakcjaGlobalTemplates)
                  , filecache       :: MemCache.MemCache FileID BS.ByteString
-                 , docscache       :: JpegPagesCache
+                 , docscache       :: RenderedPagesCache
                  , cryptorng       :: CryptoRNGState
                  , connsource      :: ConnectionSource
                  }

@@ -59,7 +59,7 @@ import User.Lang
 import Util.FinishWith
 import ELegitimation.Config (LogicaConfig(..))
 import qualified Control.Exception.Lifted as E
-import qualified Doc.JpegPages as JpegPages
+import qualified Doc.RenderedPages as RenderedPages
 import qualified Log
 import Salesforce.Conf
 
@@ -255,7 +255,7 @@ mkContext lang = do
   globaltemplates <- teGlobalTemplates <$> ask
   time <- getMinutesTime
   liftIO $ do
-    docs <- MemCache.new JpegPages.pagesCount 500
+    docs <- MemCache.new RenderedPages.pagesCount 500
     memcache <- MemCache.new BS.length 52428800
     return Context {
           ctxmaybeuser = Nothing

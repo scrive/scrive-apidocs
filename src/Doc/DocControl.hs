@@ -43,7 +43,7 @@ import Doc.DocView
 import Doc.DocViewMail
 import Doc.SignatoryLinkID
 import Doc.DocumentID
-import Doc.JpegPages
+import Doc.RenderedPages
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
 import Doc.Tokens.Model
 import EvidenceLog.Model (InsertEvidenceEvent(..), CurrentEvidenceEventType(..))
@@ -290,16 +290,16 @@ handleFilePages fid = do
   jpages <- maybeScheduleRendering fid legacyWidthInPixels True
 
   case jpages of
-    JpegPagesPending _ -> do
+    RenderedPagesPending _ -> do
       -- Here we steal Twitter's Enhance Your Calm status code.  Out
       -- mechanism upwards the stack will know to retry to ask us
       -- again before giving up.
       rsp <- simpleJsonResponse $ runJSONGen $ J.value "wait" "Rendering in progress"
       return (rsp { rsCode = 420 })
-    JpegPagesError _ -> do
+    RenderedPagesError _ -> do
       rsp <- simpleJsonResponse $ runJSONGen $ J.value "error" "Rendering failed"
       return (rsp { rsCode = 500 })
-    JpegPages pages  -> do
+    RenderedPages pages  -> do
       -- This communicates to JavaScript how many pages there
       -- are. This should be totally changed to the following
       -- mechanism:
@@ -363,7 +363,7 @@ preview fid value
         Context{ctxnormalizeddocuments} <- getContext
         jpages <- MemCache.get (fid,150,False) ctxnormalizeddocuments
         case jpages of
-            Just (JpegPages pages) -> do
+            Just (RenderedPages pages) -> do
                 let contents =  pages !! 0
                 let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
                 return $ Just $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/jpeg") res
@@ -378,7 +378,7 @@ showPage' fileid pageno = do
   Context{ctxnormalizeddocuments} <- getContext
   jpages <- MemCache.get (fileid,legacyWidthInPixels,True) ctxnormalizeddocuments
   case jpages of
-    Just (JpegPages pages) -> do
+    Just (RenderedPages pages) -> do
       let contents = pages !! (pageno - 1)
       let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
       Log.mixlog_ $ "JPEG page found and returned for file " ++ show fileid ++ " and page " ++ show pageno

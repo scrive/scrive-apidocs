@@ -18,7 +18,7 @@ import DB.PostgreSQL
 import Templates
 import qualified Log
 import qualified MemCache
-import qualified Doc.JpegPages as JpegPages
+import qualified Doc.RenderedPages as RenderedPages
 
 run :: AWS.AmazonMonadT (CryptoRNGT (DBT IO)) a -> IO a
 run m = Log.withLogger $ do
@@ -34,7 +34,7 @@ run m = Log.withLogger $ do
   appGlobals <- do
     templates <- newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates
     filecache <- MemCache.new BS.length 50000000
-    docs <- MemCache.new JpegPages.pagesCount 1000
+    docs <- MemCache.new RenderedPages.pagesCount 1000
     rng <- newCryptoRNGState
     connpool <- createPoolSource connSettings
     return AppGlobals {
