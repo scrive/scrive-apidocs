@@ -178,6 +178,8 @@ priceplanPage = do
             F.value "headercolour" $ bdheadercolour bd
             F.value "textcolour" $ bdtextcolour bd
             F.value "pricecolour" $ bdpricecolour bd
+            F.value "externaltextcolour" $ bdexternaltextcolour bd
+            F.value "linkcolour" $  bdservicelinkcolour bd
             standardPageFields ctx kontrakcja ad
           simpleHtmlResonseClrFlash content
 

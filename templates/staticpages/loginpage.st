@@ -109,7 +109,9 @@ $htmlopentag()$
                         linkchangepassword: "$linkchangepassword$",
                         branded : true,
                         logolink:   "$logolink$",
+                        textscolour: $if(textscolour)$"$textscolour$"$else$null$endif$,
                         buttoncolorclass : "$buttoncolorclass$"
+
                        }).el());
   });
  });
@@ -140,6 +142,7 @@ $htmlopentag()$
                         accessnewaccount: true,
                         branded : true,
                         logolink:   "$logolink$",
+                        textscolour: $if(textscolour)$"$textscolour$"$else$null$endif$,
                         buttoncolorclass : "$buttoncolorclass$"
                        }).el());
   });

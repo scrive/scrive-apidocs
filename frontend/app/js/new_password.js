@@ -6,7 +6,8 @@ define(['Backbone', 'legacy_code'], function() {
     defaults: {
       password: '',
       password2: '',
-      linkchangepassword: ''
+      linkchangepassword: '',
+      textscolour : ''
     },
     linkchangepassword: function() {
       return this.get('linkchangepassword');
@@ -28,6 +29,9 @@ define(['Backbone', 'legacy_code'], function() {
     },
     buttoncolorclass: function() {
      return this.get("buttoncolorclass");
+    },
+    textscolour : function() {
+     return this.get("textscolour");
     },
     validatePassword: function() {
       var password = this.password();
@@ -150,13 +154,20 @@ define(['Backbone', 'legacy_code'], function() {
       var header = $("<div style='margin-bottom: 103px'/>");
       header.append($("<img alt='logo'/>").attr('src',model.logolink()));
       header.append($("<div class='divider-line'/>"));
-      header.append($("<label style='text-align:center;width:275px;'/>").text(localization.esigningpoweredbyscrive));
+
+      var poweredLabel = $("<label style='text-align:center;width:275px;'/>").text(localization.esigningpoweredbyscrive)
+      if (model.textscolour() != undefined) poweredLabel.css("color",model.textscolour());
+      header.append(poweredLabel);
+
       $(this.el).append(header);
 
       content.append(wrapper.append(body));
 
-      body.append($("<div class='position first' style='text-align: left;height: 30px;'/>").append($("<label style='padding-left:10px;'/>").text(this.options.header)));
-       if (this.options.body)
+      var headerLabel = $("<label style='padding-left:10px;'/>").text(this.options.header);
+      if (model.textscolour() != undefined) headerLabel.css("color",model.textscolour());
+
+      body.append($("<div class='position first' style='text-align: left;height: 30px;'/>").append(headerLabel));
+      if (this.options.body)
          body.append($("<label style='padding-bottom: 1em;'/>").text(this.options.body));
 
       var passwordInput = new InfoTextInput({
