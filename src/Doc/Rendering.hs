@@ -56,7 +56,7 @@ convertPdfToJpgPages :: forall m . (KontraMonad m, Log.MonadLog m, MonadDB m, Mo
                      -> Int
                      -> Bool
                      -> m JpegPages
-convertPdfToJpgPages fid widthInPixels _wholeDocument = do
+convertPdfToJpgPages fid widthInPixels wholeDocument = do
   content <- getFileIDContents fid
   withSystemTempDirectory "mudraw" $ \tmppath -> do
     let sourcepath = tmppath ++ "/source.pdf"
@@ -65,11 +65,12 @@ convertPdfToJpgPages fid widthInPixels _wholeDocument = do
 
     (exitcode,outcontent,errcontent) <-
       liftIO $ readProcessWithExitCode' "mudraw"
-               [ "-o", tmppath ++ "/output-%d.png"
-               , "-w", show widthInPixels
-               , "-b", "8"
-               , sourcepath
-               ] BSL.empty
+               (concat [ ["-o", tmppath ++ "/output-%d.png"]
+                       , ["-w", show widthInPixels]
+                       , ["-b", "8"]
+                       , [sourcepath]
+                       , ["1" | False <- return wholeDocument] -- render only first page if so desired
+                       ]) BSL.empty
 
     let pathOfPage n = tmppath ++ "/output-" ++ show n ++ ".png"
 
