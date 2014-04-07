@@ -49,22 +49,20 @@ withSystemTempDirectory :: (MonadBaseControl IO m) => String -> (String -> m a) 
 withSystemTempDirectory = liftBaseOp . System.IO.Temp.withSystemTempDirectory
 
 
--- this will kill the stack if a lot of pages are there
-readNumberedFiles :: (MonadBaseControl IO m) => (Int -> FilePath) -> Int -> m [BS.ByteString]
-readNumberedFiles pathFromNumber currentNumber = do
+readNumberedFiles :: (MonadBaseControl IO m) => (Int -> FilePath) -> Int -> [BS.ByteString] -> m [BS.ByteString]
+readNumberedFiles pathFromNumber currentNumber accum = do
   econtentx <- E.try (liftBase $ BS.readFile (pathFromNumber currentNumber))
   case econtentx of
     Right contentx -> do
-       followingPages <- readNumberedFiles pathFromNumber (succ currentNumber)
-       return $ (contentx : followingPages)
+       readNumberedFiles pathFromNumber (succ currentNumber) (contentx : accum)
     Left (_ :: IOError) -> do
        -- we could not open this file, it means it does not exists
-       return []
+       return (reverse accum)
 
 sniffRenderedPages :: RenderedPagesCache -> (Int -> FilePath) -> FileID -> Int -> Bool -> Int -> IO ()
 sniffRenderedPages renderedPages pathFromNumber fileid page wholeDocument currentNumber = do
   C.threadDelay 100000 -- wait 0.1s
-  newPages <- readNumberedFiles pathFromNumber currentNumber
+  newPages <- readNumberedFiles pathFromNumber currentNumber []
   let f (Just (RenderedPages False pagesUpToCurrentNumber)) =
          Just (RenderedPages False (pagesUpToCurrentNumber ++ newPages))
       f x = x
@@ -113,7 +111,7 @@ runRendering renderedPages fid widthInPixels wholeDocument = do
 
         return $ RenderedPages True []
       ExitSuccess -> do
-        pages <- readNumberedFiles pathOfPage 1
+        pages <- readNumberedFiles pathOfPage 1 []
         return (RenderedPages True pages)
     return result
 
