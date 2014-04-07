@@ -9,7 +9,7 @@
 -- Also stuff for generating JPEGS from PDF's
 -----------------------------------------------------------------------------
 module Doc.Rendering
-    ( maybeScheduleRendering
+    ( getRenderedPages
     , FileError(..)
     , preCheckPDF
     , getNumberOfPDFPages
@@ -19,6 +19,7 @@ module Doc.Rendering
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Error
+import qualified Control.Concurrent.Lifted as C
 import Data.Typeable
 import DB
 import Doc.RenderedPages
@@ -27,7 +28,6 @@ import ForkAction
 import Kontra
 import Utils.IO
 import Utils.Read
-import Utils.String
 import System.Directory
 import System.Exit
 import System.IO
@@ -43,27 +43,56 @@ import File.Storage
 import Data.Char
 import Data.Maybe
 import Control.Monad.Trans.Control
---import Control.Monad.Base
+import Control.Monad.Base
 
 withSystemTempDirectory :: (MonadBaseControl IO m) => String -> (String -> m a) -> m a
 withSystemTempDirectory = liftBaseOp . System.IO.Temp.withSystemTempDirectory
 
+
+-- this will kill the stack if a lot of pages are there
+readNumberedFiles :: (MonadBaseControl IO m) => (Int -> FilePath) -> Int -> m [BS.ByteString]
+readNumberedFiles pathFromNumber currentNumber = do
+  econtentx <- E.try (liftBase $ BS.readFile (pathFromNumber currentNumber))
+  case econtentx of
+    Right contentx -> do
+       followingPages <- readNumberedFiles pathFromNumber (succ currentNumber)
+       return $ (contentx : followingPages)
+    Left (_ :: IOError) -> do
+       -- we could not open this file, it means it does not exists
+       return []
+
+sniffRenderedPages :: RenderedPagesCache -> (Int -> FilePath) -> FileID -> Int -> Bool -> Int -> IO ()
+sniffRenderedPages renderedPages pathFromNumber fileid page wholeDocument currentNumber = do
+  C.threadDelay 100000 -- wait 0.1s
+  newPages <- readNumberedFiles pathFromNumber currentNumber
+  let f (Just (RenderedPages False pagesUpToCurrentNumber)) =
+         Just (RenderedPages False (pagesUpToCurrentNumber ++ newPages))
+      f x = x
+  MemCache.alter f (fileid,page,wholeDocument) renderedPages
+  sniffRenderedPages renderedPages pathFromNumber fileid page wholeDocument (currentNumber + length newPages)
+
+
 {- |
    Convert PDF to jpeg images of pages
  -}
-convertPdfToJpgPages :: forall m . (KontraMonad m, Log.MonadLog m, MonadDB m, MonadIO m, MonadBaseControl IO m, AWS.AmazonMonad m)
-                     => FileID
+runRendering :: forall m . (KontraMonad m, Log.MonadLog m, MonadDB m, MonadIO m, MonadBaseControl IO m, AWS.AmazonMonad m)
+                     => RenderedPagesCache
+                     -> FileID
                      -> Int
                      -> Bool
                      -> m RenderedPages
-convertPdfToJpgPages fid widthInPixels wholeDocument = do
+runRendering renderedPages fid widthInPixels wholeDocument = do
   content <- getFileIDContents fid
   withSystemTempDirectory "mudraw" $ \tmppath -> do
     let sourcepath = tmppath ++ "/source.pdf"
 
     liftIO $ BS.writeFile sourcepath content
 
-    (exitcode,outcontent,errcontent) <-
+    let pathOfPage n = tmppath ++ "/output-" ++ show n ++ ".png"
+
+    sniffThreadId <- C.fork $ liftIO $ sniffRenderedPages renderedPages pathOfPage fid widthInPixels wholeDocument 1
+
+    (exitcode,_outcontent,_errcontent) <-
       liftIO $ readProcessWithExitCode' "mudraw"
                (concat [ ["-o", tmppath ++ "/output-%d.png"]
                        , ["-w", show widthInPixels]
@@ -72,21 +101,7 @@ convertPdfToJpgPages fid widthInPixels wholeDocument = do
                        , ["1" | False <- return wholeDocument] -- render only first page if so desired
                        ]) BSL.empty
 
-    let pathOfPage n = tmppath ++ "/output-" ++ show n ++ ".png"
-
-    -- readPagesFrom opens a file. If the file does not exists then it
-    -- stops, if open is successful the file is prepended to a list of
-    -- files and a file with number larger by 1 is tried
-    let readPagesFrom :: Int -> m [BS.ByteString]
-        readPagesFrom n = do
-          econtentx <- E.try (liftIO $ BS.readFile (pathOfPage n))
-          case econtentx of
-            Right contentx -> do
-               followingPages <- readPagesFrom (n+1 :: Int)
-               return $ (contentx : followingPages)
-            Left (_ :: IOError) -> do
-               -- we could not open this file, it means it does not exists
-               return []
+    C.killThread sniffThreadId
 
     result <- case exitcode of
       ExitFailure _ -> liftIO $ do
@@ -96,39 +111,41 @@ convertPdfToJpgPages fid widthInPixels wholeDocument = do
         BS.hPutStr handle content
         hClose handle
 
-        return $ RenderedPagesError (concatChunks errcontent `BS.append` concatChunks outcontent)
+        return $ RenderedPages True []
       ExitSuccess -> do
-        pages <- readPagesFrom 1
-        return (RenderedPages pages)
+        pages <- readNumberedFiles pathOfPage 1
+        return (RenderedPages True pages)
     return result
 
-{- | Shedules rendering od a file. After forked process is done, images will be put in shared memory.
- FIXME: this is so convoluted that I'm getting lost in this function. Make it clear.
- -}
-maybeScheduleRendering :: Kontrakcja m
-                       => FileID
-                       -> Int
-                       -> Bool
-                       -> m RenderedPages
-maybeScheduleRendering fileid pageWidthInPixels wholeDocument = do
+-- | 'getRenderedPages' returns 'RenderedPages' for document 'fileid'
+-- requested to be rendered with width 'pageWidthInPixels' and also a
+-- flag if full document should be rendered or only first page is
+-- enough.
+--
+-- This function return immediatelly, so look for 'RenderedPages'
+-- first argument to see if the page that is requested has already
+-- been rendered. 'RenderedPages' is the final state of rendering.
+--
+-- This function has internal caching system based on 'Context'
+getRenderedPages :: Kontrakcja m
+                 => FileID
+                 -> Int
+                 -> Bool
+                 -> m RenderedPages
+getRenderedPages fileid pageWidthInPixels wholeDocument = do
   Context{ctxnormalizeddocuments} <- getContext
-
-  -- Some debugs
-  Log.mixlog_ $ "Rendering is being scheduled for file #" ++ show fileid
-  pgs <- MemCache.size ctxnormalizeddocuments
-  Log.mixlog_ $ "Total rendered pages count: " ++ show (pgs)
-
   -- Propper action
   let key = (fileid,pageWidthInPixels,wholeDocument)
   v <- MemCache.get key ctxnormalizeddocuments
   case v of
-      Just pages -> return pages
-      Nothing -> do
-          MemCache.put key (RenderedPagesPending []) ctxnormalizeddocuments
-          forkAction ("Rendering file #" ++ show fileid) $ do
-                   jpegpages <- convertPdfToJpgPages fileid pageWidthInPixels wholeDocument            -- FIXME: We should report error somewere
-                   MemCache.put key jpegpages ctxnormalizeddocuments
-          return (RenderedPagesPending [])
+    Just pages -> return pages
+    Nothing -> do
+      MemCache.put key (RenderedPages False []) ctxnormalizeddocuments
+      forkAction ("Rendering file #" ++ show fileid) $ do
+        -- FIXME: We should report error somewere
+        jpegpages <- runRendering ctxnormalizeddocuments fileid pageWidthInPixels wholeDocument
+        MemCache.put key jpegpages ctxnormalizeddocuments
+      return (RenderedPages False [])
 
 
 data FileError = FileSizeError Int Int

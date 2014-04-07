@@ -57,7 +57,6 @@ import Kontra
 import KontraLink
 import MagicHash
 import Happstack.Fields
-import Utils.Monad
 import Redirect
 import User.Model
 import User.Email
@@ -90,7 +89,6 @@ import qualified Text.JSON.Gen as J
 import Doc.DocDraft() -- Import instances only
 import qualified User.Action
 import Util.Actor
-import qualified MemCache as MemCache
 import qualified GuardTime as GuardTime
 import System.IO.Temp
 import System.Directory
@@ -287,19 +285,16 @@ handleIssueShowGet docid = checkUserTOSGet $ do
 handleFilePages :: Kontrakcja m => FileID -> m Response
 handleFilePages fid = do
   checkFileAccess fid
-  jpages <- maybeScheduleRendering fid legacyWidthInPixels True
+  pages <- getRenderedPages fid legacyWidthInPixels True
 
-  case jpages of
-    RenderedPagesPending _ -> do
+  case pages of
+    RenderedPages False _ -> do
       -- Here we steal Twitter's Enhance Your Calm status code.  Out
       -- mechanism upwards the stack will know to retry to ask us
       -- again before giving up.
       rsp <- simpleJsonResponse $ runJSONGen $ J.value "wait" "Rendering in progress"
       return (rsp { rsCode = 420 })
-    RenderedPagesError _ -> do
-      rsp <- simpleJsonResponse $ runJSONGen $ J.value "error" "Rendering failed"
-      return (rsp { rsCode = 500 })
-    RenderedPages pages  -> do
+    RenderedPages True pngpages  -> do
       -- This communicates to JavaScript how many pages there
       -- are. This should be totally changed to the following
       -- mechanism:
@@ -316,7 +311,7 @@ handleFilePages fid = do
       -- Such architecture would allow incremental rendering of pages
       -- on the server side also, thus improving user experience a
       -- lot.
-      simpleJsonResponse $ runJSONGen $ J.value "pages" $ length pages
+      simpleJsonResponse $ runJSONGen $ J.value "pages" $ length pngpages
 
 {- |
    Get some html to display the images of the files
@@ -360,29 +355,28 @@ preview :: Kontrakcja m => FileID -> Int -> m (Maybe Response)
 preview fid value
   | value > 10 = return Nothing
   | otherwise  =   do
-        Context{ctxnormalizeddocuments} <- getContext
-        jpages <- MemCache.get (fid,150,False) ctxnormalizeddocuments
-        case jpages of
-            Just (RenderedPages pages) -> do
-                let contents =  pages !! 0
+        pages <- getRenderedPages fid 150 False
+        case pages of
+            RenderedPages _ (contents:_) -> do
                 let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
-                return $ Just $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/jpeg") res
-            other -> do
-                when_ (other == Nothing) $ maybeScheduleRendering fid 150 False
+                return $ Just $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") res
+            _ -> do
                 liftIO $ threadDelay 500000
                 preview fid (value+1)
 
 
 showPage' :: Kontrakcja m => FileID -> Int -> m Response
 showPage' fileid pageno = do
-  Context{ctxnormalizeddocuments} <- getContext
-  jpages <- MemCache.get (fileid,legacyWidthInPixels,True) ctxnormalizeddocuments
-  case jpages of
-    Just (RenderedPages pages) -> do
-      let contents = pages !! (pageno - 1)
-      let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
-      Log.mixlog_ $ "JPEG page found and returned for file " ++ show fileid ++ " and page " ++ show pageno
-      return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/jpeg") res
+  pages <- getRenderedPages fileid legacyWidthInPixels True
+  case pages of
+    RenderedPages _ contents | pageno - 1 < length contents -> do
+      let content = contents !! (pageno - 1)
+      let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [content]) Nothing
+      Log.mixlog_ $ "PNG page found and returned for file " ++ show fileid ++ " and page " ++ show pageno
+      return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") res
+
+    RenderedPages False _ -> do
+      return ((toResponse "") { rsCode = 420 })
     _ -> do
       Log.mixlog_ $ "JPEG page not found in cache, responding 404 for file " ++ show fileid ++ " and page " ++ show pageno
       notFound (toResponse "temporarily unavailable (document has files pending for process)")

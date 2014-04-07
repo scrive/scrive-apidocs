@@ -10,16 +10,12 @@ import qualified Data.ByteString as BS
 import File.FileID
 
 data RenderedPages
-  = RenderedPagesPending [BS.ByteString] -- ^ Pages are bing rendered in
-                                     -- the background, pages rendered
-                                     -- so far available in the array
-  | RenderedPages [BS.ByteString]        -- ^ Image binary data (currently png)
-  | RenderedPagesError BS.ByteString     -- ^ There was an error rendering pages
+  = RenderedPages Bool  -- ^ Rendering is finished
+                  [BS.ByteString] -- ^ Pages rendered so far. Format is PNG.
     deriving (Eq, Ord, Show)
 
 pagesCount :: RenderedPages -> Int
-pagesCount (RenderedPages ps) = length ps
-pagesCount _              = 0
+pagesCount (RenderedPages _ ps) = length ps
 
 -- | This is a memcache indexed by tripples: FileID of file that was rendered,
 -- page width in pixels that was requested and indication if whole document
