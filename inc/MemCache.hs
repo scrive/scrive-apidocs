@@ -12,7 +12,7 @@
 -- would be larger than limit some object (oldest) in purged from cache before
 -- putting the new one in.
 
-module MemCache (MemCache, new, put, get, size)
+module MemCache (MemCache, new, put, get, size, alter)
 where
 
 import Control.Concurrent.MVar
@@ -73,3 +73,19 @@ size :: MonadIO m => MemCache k v -> m Int
 size (MemCache mc) = liftIO $ do
   withMVar mc $ \(MemCache' _ _ csize _) -> return csize
 
+
+alter :: (MonadIO m, Ord k, Show k) => (Maybe v -> Maybe v) -> k -> MemCache k v -> m ()
+alter f k (MemCache mc) = do
+  liftIO $ modifyMVar_ mc $ \(MemCache' sizefun sizelimit _csize mmap) ->
+      do
+        now <- getClockTime
+        let f2 Nothing = case f Nothing of
+                           Nothing -> Nothing
+                           Just v -> Just (now,v)
+            f2 (Just (_,v)) = case f (Just v) of
+                           Nothing -> Nothing
+                           Just v' -> Just (now,v')
+        let mmap' = Map.alter f2 k mmap
+
+        let mc' = MemCache' sizefun sizelimit (sum (map (sizefun . snd . snd) (Map.toList mmap'))) mmap'
+        return mc'
