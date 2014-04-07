@@ -290,7 +290,7 @@ handleFilePages fid = do
   jpages <- maybeScheduleRendering fid
 
   case jpages of
-    JpegPagesPending -> do
+    JpegPagesPending _ -> do
       -- Here we steal Twitter's Enhance Your Calm status code.  Out
       -- mechanism upwards the stack will know to retry to ask us
       -- again before giving up.
@@ -361,7 +361,7 @@ preview fid value
   | value > 10 = return Nothing
   | otherwise  =   do
         Context{ctxnormalizeddocuments} <- getContext
-        jpages <- MemCache.get fid ctxnormalizeddocuments
+        jpages <- MemCache.get (fid,legacyWidthInPixels,True) ctxnormalizeddocuments
         case jpages of
             Just (JpegPages pages) -> do
                 let contents =  pages !! 0
@@ -377,7 +377,7 @@ preview fid value
 showPage' :: Kontrakcja m => FileID -> Int -> m Response
 showPage' fileid pageno = do
   Context{ctxnormalizeddocuments} <- getContext
-  jpages <- MemCache.get fileid ctxnormalizeddocuments
+  jpages <- MemCache.get (fileid,legacyWidthInPixels,True) ctxnormalizeddocuments
   case jpages of
     Just (JpegPages pages) -> do
       let contents = pages !! (pageno - 1)

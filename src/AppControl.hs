@@ -62,7 +62,7 @@ import Salesforce.Conf
 data AppGlobals
     = AppGlobals { templates       :: MVar (UTCTime, KontrakcjaGlobalTemplates)
                  , filecache       :: MemCache.MemCache FileID BS.ByteString
-                 , docscache       :: MemCache.MemCache FileID JpegPages
+                 , docscache       :: JpegPagesCache
                  , cryptorng       :: CryptoRNGState
                  , connsource      :: ConnectionSource
                  }

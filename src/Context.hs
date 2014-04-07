@@ -36,7 +36,7 @@ data Context = Context
     , ctxtime                :: MinutesTime -- ^ The time of the request.
     , ctxclientname          :: Maybe String -- ^ Client identification from header Client-Name or if that's missing: User-Agent
     , ctxclienttime          :: Maybe MinutesTime -- ^ Client-local time when an action was performed (e.g. signing a document)
-    , ctxnormalizeddocuments :: MemCache.MemCache FileID JpegPages -- ^ Rendered jpeg pages
+    , ctxnormalizeddocuments :: JpegPagesCache -- ^ Rendered jpeg pages
     , ctxipnumber            :: IPAddress -- ^ The ip number of the client.
     , ctxproduction          :: Bool -- ^ Is this server the production server?
     , ctxtemplates           :: KontrakcjaTemplates -- ^ The set of templates to render text for the ctxlang

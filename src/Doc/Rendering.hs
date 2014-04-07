@@ -47,7 +47,6 @@ import Data.Maybe
 import Control.Monad.Trans.Control
 --import Control.Monad.Base
 
-
 withSystemTempDirectory :: (MonadBaseControl IO m) => String -> (String -> m a) -> m a
 withSystemTempDirectory = liftBaseOp . System.IO.Temp.withSystemTempDirectory
 
@@ -130,15 +129,15 @@ maybeScheduleRendering fileid = do
   Log.mixlog_ $ "Total rendered pages count: " ++ show (pgs)
 
   -- Propper action
-  v <- MemCache.get fileid ctxnormalizeddocuments
+  v <- MemCache.get (fileid,legacyWidthInPixels,True) ctxnormalizeddocuments
   case v of
       Just pages -> return pages
       Nothing -> do
-          MemCache.put fileid JpegPagesPending ctxnormalizeddocuments
+          MemCache.put (fileid,legacyWidthInPixels,True) (JpegPagesPending []) ctxnormalizeddocuments
           forkAction ("Rendering file #" ++ show fileid) $ do
-                   jpegpages <- convertPdfToJpgPages fileid 943            -- FIXME: We should report error somewere
-                   MemCache.put fileid jpegpages ctxnormalizeddocuments
-          return JpegPagesPending
+                   jpegpages <- convertPdfToJpgPages fileid legacyWidthInPixels            -- FIXME: We should report error somewere
+                   MemCache.put (fileid,legacyWidthInPixels,True) jpegpages ctxnormalizeddocuments
+          return (JpegPagesPending [])
 
 
 data FileError = FileSizeError Int Int
