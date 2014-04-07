@@ -1,4 +1,4 @@
-{ 
+{
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Are you sure you want to send reminders to the parties involved in the",
@@ -550,9 +550,9 @@
 "_mailClosedLoginText":"The document has also been saved to your Scrive account in your e-archive.",
 "_mailClosedSignup":"You can also save a safety copy of the document.",
 "_mailContractClosedContentAttached":"The finalised document is attached.",
-"_mailContractClosedContentLinked":"The signed document was too big to send to you via email.",
+"_mailContractClosedContentLinked":"The signed document was too large to send to you by email.",
 "_mailContractClosedContentLinkedAccount":"The document has been saved to your Scrive account.<br/><br/>$nicebutton(link=doclink; text=\"Go to your account\")$",
-"_mailContractClosedContentLinkedNoAccount":"It will be available for download until $availabledate$.<br/><br/>$nicebutton(link=mainfilelink; text=\"Download the document\")$",
+"_mailContractClosedContentLinkedNoAccount":"It will be available to download until $availabledate$.<br/><br/>$nicebutton(link=mainfilelink; text=\"Download the document\")$",
 "_mailContractClosedContentSignedBy":"The document <strong>$documenttitle$</strong> has been signed by $partylist:noescape()$.",
 "_mailDocumentAwaitingForAuthorContentReadyForSigning":"The document <strong>$documenttitle$</strong> is ready to sign.",
 "_mailDocumentAwaitingForAuthorContentSignedBy":"You have invited $partylist:noescape()$ to sign the document <strong>$documenttitle$</strong>. This document has been signed by $partylistSigned:noescape()$.<br/><br/>It is now your turn to sign.",
@@ -564,7 +564,7 @@
 "_mailDocumentErrorContentBodyFourth":"We are sorry for the inconvenience",
 "_mailDocumentErrorContentBodySecond":"If you have any comments or questions regarding this issue, please contact Scrive support at <a href=\"mailto:support@scrive.com\">support@scrive.com</a>.",
 "_mailDocumentErrorTitle":"Problem with file format",
-"_mailDocumentLinked":"The document was too big to attach with this email. It will be available for downloading until $availabledate$.",
+"_mailDocumentLinked":"The document was too large to attach to this email. It will be available to download until $availabledate$.",
 "_mailDocumentLinkedButton":"Download the document",
 "_mailForwardMailContent1":"<strong>$creatorname$</strong> has requested we send the document <strong>$documenttitle$</strong> to you. It was signed through the Scrive e-signing service.",
 "_mailForwardMailContent2":"Please find the document attached.",
