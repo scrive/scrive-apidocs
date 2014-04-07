@@ -131,9 +131,11 @@ getRenderedPages :: Kontrakcja m
                  -> Bool
                  -> m RenderedPages
 getRenderedPages fileid pageWidthInPixels wholeDocument = do
+  let clampedPageWidthInPixels =
+        min 4000 (max 100 pageWidthInPixels)
   Context{ctxnormalizeddocuments} <- getContext
   -- Propper action
-  let key = (fileid,pageWidthInPixels,wholeDocument)
+  let key = (fileid,clampedPageWidthInPixels,wholeDocument)
   v <- MemCache.get key ctxnormalizeddocuments
   case v of
     Just pages -> return pages
@@ -141,7 +143,7 @@ getRenderedPages fileid pageWidthInPixels wholeDocument = do
       MemCache.put key (RenderedPages False []) ctxnormalizeddocuments
       forkAction ("Rendering file #" ++ show fileid) $ do
         -- FIXME: We should report error somewere
-        jpegpages <- runRendering ctxnormalizeddocuments fileid pageWidthInPixels wholeDocument
+        jpegpages <- runRendering ctxnormalizeddocuments fileid clampedPageWidthInPixels wholeDocument
         MemCache.put key jpegpages ctxnormalizeddocuments
       return (RenderedPages False [])
 
