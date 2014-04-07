@@ -285,7 +285,8 @@ handleIssueShowGet docid = checkUserTOSGet $ do
 handleFilePages :: Kontrakcja m => FileID -> m Response
 handleFilePages fid = do
   checkFileAccess fid
-  pages <- getRenderedPages fid legacyWidthInPixels True
+  mpixelwidth <- readField "pixelwidth"
+  pages <- getRenderedPages fid (fromMaybe legacyWidthInPixels mpixelwidth) True
 
   case pages of
     RenderedPages False _ -> do
@@ -367,7 +368,8 @@ preview fid value
 
 showPage' :: Kontrakcja m => FileID -> Int -> m Response
 showPage' fileid pageno = do
-  pages <- getRenderedPages fileid legacyWidthInPixels True
+  mpixelwidth <- readField "pixelwidth"
+  pages <- getRenderedPages fileid (fromMaybe legacyWidthInPixels mpixelwidth) True
   case pages of
     RenderedPages _ contents | pageno - 1 < length contents -> do
       let content = contents !! (pageno - 1)
