@@ -40,24 +40,28 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
   // Smaller text with more details on some states
   subtext: function() {
     var document = this.model.document();
-    if (document.isSignedAndClosed()) {
-      var text = localization.docsignview.signedAndClosedSubText + ' ';
-      var dm = this.model.document().currentSignatory().delivery();
-      if (dm == 'email') {
-        text += localization.delivery.email;
-      } else if (dm == 'mobile') {
-        text += localization.delivery.mobile;
-      } else if (dm == 'email_mobile') {
-        text += localization.delivery.email_mobile;
-      } else {
-        text = '';
-      }
-      return text;
-    } else if (document.isSignedNotClosed()) {
-      return localization.docsignview.signedNotClosedSubText;
-    } else {
-      return "";
+    var signatory = document.currentSignatory();
+    if (!(signatory.hasSigned() && (document.pending() || document.closed()))) {
+      return '';
     }
+    var text;
+    if (document.closed()) {
+      text = localization.docsignview.signedAndClosedSubText;
+    } else {
+      text = localization.docsignview.signedNotClosedSubText;
+    }
+    text += ' ';
+    var dm = signatory.delivery();
+    if (dm == 'email') {
+      text += localization.delivery.email + '.';
+    } else if (dm == 'mobile') {
+      text += localization.delivery.mobile + '.';
+    } else if (dm == 'email_mobile') {
+      text += localization.delivery.email_mobile + '.';
+    } else {
+      text = '';
+    }
+    return text;
   },
   // Description of due date
   dueDateDescription : function() {

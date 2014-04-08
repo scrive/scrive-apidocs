@@ -894,7 +894,7 @@
 "_signedAndClosed":"Dokument signerat!",
 "_signedAndClosedSubText":"Det signerade dokumentet har skickats till dig med",
 "_signedNotClosed":"Du har signerat",
-"_signedNotClosedSubText":"När alla parter har signerat kommer det färdigställda dokumentet att skickas till din e-postadress.",
+"_signedNotClosedSubText":"När alla parter har signerat kommer det färdigställda dokumentet att skickas till dig med",
 "_signingErrorMessage1":"Vi har problem att hantera ditt dokument.",
 "_signingErrorMessage2":"Vänligen ladda om sidan.",
 "_signingErrorReload":"Ladda om sidan",

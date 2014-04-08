@@ -894,7 +894,7 @@
 "_signedAndClosed":"Document signed!",
 "_signedAndClosedSubText":"The signed document has been sent to you by",
 "_signedNotClosed":"You have signed",
-"_signedNotClosedSubText":"When every party has signed the finalised document will be sent to your email.",
+"_signedNotClosedSubText":"When every party has signed the finalised document will be sent to you by",
 "_signingErrorMessage1":"We're experiencing difficulties handling your document.",
 "_signingErrorMessage2":"Please reload the page.",
 "_signingErrorReload":"Reload page",
