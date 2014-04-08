@@ -1302,7 +1302,7 @@ define(['Backbone', 'legacy_code'], function() {
                 txt.text(sig.email());
             };
 
-            sig.bind('change:email', f);
+            sig.bind('change:email change:fields', f);
 
             div.append(txt);
             return div;
@@ -1322,7 +1322,7 @@ define(['Backbone', 'legacy_code'], function() {
                 };
 
 
-                sig.bind('change:company', f);
+                sig.bind('change:company change:fields', f);
             }
             div.append(txt);
             return div;
