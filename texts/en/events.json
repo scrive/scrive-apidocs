@@ -7,7 +7,7 @@
 "CloseDocumentEvidenceText":"$_TheScriveSystem()$ locked the document from further modifications by the signing parties.",
 "InvitationDeliveredByEmailText":"$_TheEmailSystemReportsThatTheInvitation()$$_to_review_or_sign()$ was delivered to $signatory$ by email.",
 "InvitationDeliveredBySMSText":"$_TheSMSSystemReportsThatTheInvitation()$$_to_review_or_sign()$ was delivered to $signatory$ by SMS.",
-"InvitationEvidenceText":"An invitation$_to_review_or_sign()$ was sent to $signatory$ using $_delivery_method()$$if(!archive)$ by $_TheScriveSystem()$$endif$.$if(full)$ The invitation included a link that when clicked lead to $_TheScriveSystem()$’s online interface to sign documents.$endif$$if(text)$ The invitation$_to_review_or_sign()$ contained the following message: <BR/> <i>$text:noescape()$</i>$endif$",
+"InvitationEvidenceText":"An invitation$_to_review_or_sign()$ was sent to $signatory$ using $_delivery_method()$$if(!archive)$ by $_theScriveSystem()$$endif$.$if(full)$ The invitation included a link that when clicked lead to $_theScriveSystem()$’s online interface to sign documents.$endif$$if(text)$$if(!mobile)$ The invitation$_to_review_or_sign()$ contained the following message: <BR/> <i>$text:noescape()$</i>$endif$$endif$",
 "InvitationUndeliveredByEmailText":"$_TheEmailSystemReportsThatTheInvitation()$ $if(!archive)$ to $signatory$$endif$ could not be delivered by email and continued attempts were cancelled.",
 "InvitationUndeliveredBySMSText":"$_TheSMSSystemReportsThatTheInvitation()$ $if(!archive)$ to $signatory$$endif$ could not be delivered by SMS and continued attempts were cancelled.",
 "MarkInvitationReadEvidenceText":"$_TheEmailSystemReportsThatTheInvitation()$$_to_review_or_sign()$ (sent to $signatory_email$) was opened.",
