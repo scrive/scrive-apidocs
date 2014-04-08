@@ -41,7 +41,18 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
   subtext: function() {
     var document = this.model.document();
     if (document.isSignedAndClosed()) {
-      return localization.docsignview.signedAndClosedSubText;
+      var text = localization.docsignview.signedAndClosedSubText + ' ';
+      var dm = this.model.document().currentSignatory().delivery();
+      if (dm == 'email') {
+        text += localization.delivery.email;
+      } else if (dm == 'mobile') {
+        text += localization.delivery.mobile;
+      } else if (dm == 'email_mobile') {
+        text += localization.delivery.email_mobile;
+      } else {
+        text = '';
+      }
+      return text;
     } else if (document.isSignedNotClosed()) {
       return localization.docsignview.signedNotClosedSubText;
     } else {

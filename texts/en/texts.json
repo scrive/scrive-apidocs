@@ -892,7 +892,7 @@
 "_signaturePlaceFor":"will sign here",
 "_signaturePlaceYour":"Click here to draw signature",
 "_signedAndClosed":"Document signed!",
-"_signedAndClosedSubText":"The document with registered signing history has been sent to your inbox.",
+"_signedAndClosedSubText":"The signed document has been sent to you by",
 "_signedNotClosed":"You have signed",
 "_signedNotClosedSubText":"When every party has signed the finalised document will be sent to your email.",
 "_signingErrorMessage1":"We're experiencing difficulties handling your document.",
