@@ -572,7 +572,7 @@ window.Document = Backbone.Model.extend({
     },
     isSignedNotClosed: function() {
         var signatory = this.currentSignatory();
-        return signatory != undefined && this.signingInProcess() && signatory.hasSigned() && !this.closed();
+        return signatory != undefined && this.signingInProcess() && signatory.hasSigned();
     },
     isSignedAndClosed: function() {
         var signatory = this.currentSignatory();
