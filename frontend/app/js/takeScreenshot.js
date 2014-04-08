@@ -18,12 +18,20 @@ define(['Backbone', 'legacy_code'], function() {
       return newCanvas;
     };
 
+    var mixpanelScreenshotError = function(reason, extraParams) {
+      var errorInfo = {'Reason': reason,
+                       'Browser': $.browser.name,
+                       'Browser version': $.browser.version,
+                       'Platform': $.browser.platform};
+      mixpanel.track('Take screenshot failed', _.extend(errorInfo, extraParams));
+    };
+
     window.takeScreenshot = function(success, error, timeout, timeoutval) {
         var callbackCalled = false;
         function timedout() {
             if (!callbackCalled) {
                 callbackCalled = true;
-                mixpanel.track('Take screenshot failed', {'Reason' : 'Timeout'});
+                mixpanelScreenshotError('Timeout');
                 timeout();
             }
         };
@@ -42,9 +50,9 @@ define(['Backbone', 'legacy_code'], function() {
           if (!callbackCalled) {
             callbackCalled = true;
             if (err === "No canvas support") {
-              mixpanel.track('Take screenshot failed', {'Reason': 'Not supported browser'});
+              mixpanelScreenshotError('Not supported browser');
             } else {
-              mixpanel.track('Take screenshot failed', {'Reason': 'Error'});
+              mixpanelScreenshotError('Error', {'Error message': err});
             }
             error(err);
           }

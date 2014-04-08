@@ -14,13 +14,9 @@ window.DesignViewTabsView = function(args) {
   var tab1Name = $("<div class='design-view-tab-text'/>")
                       .text(localization.designview.editParticipants);
   var tab2Name = $("<div class='design-view-tab-text'/>")
-                      .text(localization.designview.editDocument + ' ')
-                      .append($("<span class='design-view-tab-text-optional'/>")
-                         .text('(' + localization.designview.optional + ')'));
+                      .text(localization.designview.editDocument);
   var tab3Name = $("<div class='design-view-tab-text'/>")
-                      .text(localization.designview.editSigningProcess + ' ')
-                      .append($("<span class='design-view-tab-text-optional'/>")
-                         .text('(' + localization.designview.optional + ')'));
+                      .text(localization.designview.editSigningProcess);
 
   var tab1 = new Tab({
           name: tab1Name,

@@ -354,7 +354,7 @@ handleAccessNewAccountGet uid token = do
                         F.value "logolink" $ bdlogolink bd
                         F.value "background" $ bdbackgroundcolorexternal $ bd
                         F.value "buttoncolorclass" $ bdbuttonclass $ bd
-
+                        F.value "textscolour" $ bdexternaltextcolour bd
                         standardPageFields ctx kontrakcja ad
           Right . Left <$> simpleHtmlResonseClrFlash content
         Nothing -> do
@@ -417,6 +417,7 @@ handlePasswordReminderGet uid token = do
                         F.value "linkchangepassword" $ changePassLink
                         F.value "logolink" $ bdlogolink bd
                         F.value "background" $ bdbackgroundcolorexternal $ bd
+                        F.value "textscolour" $ bdexternaltextcolour bd
                         F.value "buttoncolorclass" $ bdbuttonclass $ bd
 
                         standardPageFields ctx kontrakcja ad

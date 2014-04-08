@@ -96,6 +96,8 @@ define(['Backbone', 'legacy_code'], function() {
             headercolour: null,
             textcolour: null,
             pricecolour: null,
+            linkcolour : null,
+            externaltextcolor : null,
             includeenterprise: true
         },
         reset: function() {
@@ -169,6 +171,12 @@ define(['Backbone', 'legacy_code'], function() {
         },
         textcolour: function() {
             return this.get('textcolour');
+        },
+        externaltextcolor : function() {
+            return this.get('externaltextcolor');
+        },
+        linkcolour : function() {
+            return this.get('linkcolour');
         },
         pricecolour: function() {
             return this.get('pricecolour');
@@ -853,7 +861,7 @@ define(['Backbone', 'legacy_code'], function() {
         },
         fixlinkstyle: function() {
           if (this.model.pricecolour()) {
-            $('.stylablelink').css('color', this.model.pricecolour());
+            $('.stylablelink').css('color', this.model.linkcolour());
           }
         },
         render: function() {
@@ -866,6 +874,8 @@ define(['Backbone', 'legacy_code'], function() {
             var header = $('<header />')
                 .append($('<h1 />').text(model.header()))
                 .append($('<h4 />').text('')); //localization.payments.subheader
+
+
             if (!this.noheaders)
               div.append(header);
             //div.append($('<h3 />').text(localization.payments.chooseplan));
