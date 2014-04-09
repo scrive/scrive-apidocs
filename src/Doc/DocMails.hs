@@ -323,7 +323,6 @@ sendPinCode sl phone pin = do
               (signatoryActor ctx sl)
   scheduleSMS =<< smsPinCodeSendout doc sl phone pin
 
-
 {- |
    Try to sign up a new user. Returns the confirmation link for the new user.
    Nothing means there is already an account or there was an error creating the user.

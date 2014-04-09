@@ -95,7 +95,7 @@ approximateActor useIdentifier doc dee | systemEvents $ evType dee = return "Scr
 eventJSValue :: (MonadDB m, TemplatesMonad m) => Document -> DocumentEvidenceEventWithSignatoryLink -> JSONGenT m ()
 eventJSValue doc dee = do
     J.value "status" $ show $ getEvidenceEventStatusClass (evType dee)
-    J.value "time"  $ formatMinutesTimeRealISO (evTime dee)
+    J.value "time"   $ formatMinutesTimeRealISO (evTime dee)
     J.valueM "party" $ approximateActor False doc dee
     J.valueM "text"  $ simplyfiedEventText Nothing doc dee
 
@@ -121,6 +121,8 @@ simpleEvents (Current SignDocumentEvidence)              = True
 simpleEvents (Current SignatoryLinkVisited)              = True
 simpleEvents (Current TimeoutDocumentEvidence)           = True
 simpleEvents (Current SignWithELegFailureEvidence)       = True
+simpleEvents (Current SMSPinSend)           = True
+simpleEvents (Current SMSPinDelivered)       = True
 simpleEvents _                                           = False
 
 getEvidenceEventStatusClass :: EvidenceEventType -> StatusClass
@@ -147,6 +149,8 @@ getEvidenceEventStatusClass (Current AttachSealedFileEvidence)          = SCSign
 getEvidenceEventStatusClass (Current AttachGuardtimeSealedFileEvidence) = SCSealed
 getEvidenceEventStatusClass (Current AttachExtendedSealedFileEvidence)  = SCExtended
 getEvidenceEventStatusClass (Current SignWithELegFailureEvidence)       = SCError
+getEvidenceEventStatusClass (Current SMSPinSend)                        = SCSent
+getEvidenceEventStatusClass (Current SMSPinDelivered)                   = SCDelivered
 getEvidenceEventStatusClass _                                           = SCError
 
 -- Remove signatory events that happen after signing (link visited, invitation read)

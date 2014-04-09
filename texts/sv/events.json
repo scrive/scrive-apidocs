@@ -1,4 +1,4 @@
-{ 
+{
 "AttachExtendedSealedFileEvidenceText":"Dokumentet förseglades med en nyckellös digital signatur.",
 "AttachGuardtimeSealedFileEvidenceText":"Dokumentet förseglades med en digital signatur.",
 "AttachSealedFileEvidenceText":"$_TheScriveSystem()$ preparerade den slutgiltiga PDF:en$if(!archive)$, inklusive bevismaterial insamlat av $_TheScriveSystem()$, före försegling med en digital signatur$endif$.",
@@ -27,5 +27,7 @@
 "_TheScriveSystem":"$if(full)$Scrive E-sign$else$Scrive$endif$",
 "_delivery_method":"$if(email)$e-post$elseif(mobile)$SMS$elseif(emailmobile)$e-post och SMS$endif$",
 "_to_review_or_sign":"$if(viewing)$ att granska$elseif(signing)$ att signera$endif$",
-"_using_identification_method":"$if(eleg)$ med e-legitimation som identifieringsmetod$endif$"
+"_using_identification_method":"$if(eleg)$ med e-legitimation som identifieringsmetod$endif$",
+"SMSPinSendText":"A PIN was sent to  $signatory$ ($text$) by SMS.",
+"SMSPinDeliveredText":"The PIN was delivered to $signatory$  ($text$) by SMS."
 }

@@ -42,6 +42,8 @@ import Utils.Read
 import Data.Functor
 import BrandedDomains
 import Doc.DocViewMail
+import EvidenceLog.Model
+import Utils.Default (defaultValue)
 
 processEvents :: Scheduler ()
 processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent (a,b,c, fromMaybe None $ maybeRead d))
@@ -78,6 +80,32 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent
                   SMSDelivered -> handleDeliveredInvitation slid
                   SMSUndelivered _ -> when (signphone == phone) $ handleUndeliveredSMSInvitation mbd host mc slid
           handleEv eventType
+
+    processEvent (eid, smsid, eventType, SMSPinSendout slid) = do
+      Log.mixlog_ $ "Messages.procesEvent: " ++ show (eid, smsid, eventType, slid)
+      dbQuery (GetDocumentBySignatoryLinkID slid) >>= \case
+        Nothing -> do
+          _ <- dbUpdate $ MarkSMSEventAsRead eid
+          Log.mixlog_ $ "No document with signatory link id = " ++ show slid
+          deleteSMS smsid
+        Just doc' -> withDocument doc' $ do
+          _ <- dbUpdate $ MarkSMSEventAsRead eid
+          templates <- getGlobalTemplates
+          msl <- getSigLinkFor slid <$> theDocument
+          case (eventType,msl) of
+               (SMSEvent phone SMSDelivered, Just sl) -> runTemplatesT (defaultValue, templates) $ do
+                 Log.mixlog_ $ "SMS with PIN delivered to " ++ phone
+                 time <- getMinutesTime
+                 let actor = mailSystemActor time (maybesignatory sl) (getEmail sl) slid
+                 void $ dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+                                SMSPinDelivered
+                                (return ())
+                                (Just sl)
+                                (Just phone)
+                                (actor)
+               _ -> return ()
+
+
     processEvent (eid, _ , _, _) = do
       _ <- dbUpdate $ MarkSMSEventAsRead eid
       return ()

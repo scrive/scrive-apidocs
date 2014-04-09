@@ -10,5 +10,6 @@ import Doc.DocumentID
 
 data MessageData =
     Invitation DocumentID SignatoryLinkID
+  | SMSPinSendout SignatoryLinkID
   | None
     deriving (Eq, Ord, Show, Read)

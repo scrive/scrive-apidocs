@@ -75,7 +75,7 @@ smsRejectNotification doc sl rejector = do
 smsPinCodeSendout :: (MailContextMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> String -> String -> m SMS
 smsPinCodeSendout doc sl phone pin = do
   sms <- mkSMS doc sl None =<< renderLocalTemplate doc "_smsPinSendout" (smsFields doc sl >> F.value "pin" pin)
-  return sms {smsMSISDN = phone}
+  return sms {smsMSISDN = phone, smsData = SMSPinSendout (signatorylinkid sl) }
 
 smsFields :: (MailContextMonad m, TemplatesMonad m) => Document -> SignatoryLink -> Fields m ()
 smsFields document siglink = do
