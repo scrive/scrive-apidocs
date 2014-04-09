@@ -188,7 +188,6 @@ Executable kontrakcja-server
   Build-depends: cryptohash
   Build-depends: dataenc
   Build-depends: explicit-exception
-  Build-depends: extensible-exceptions
   Build-depends: fields-json
   Build-depends: hS3
   Build-depends: happstack-server
@@ -297,7 +296,6 @@ Executable cron
   Build-depends: cryptohash
   Build-depends: dataenc
   Build-depends: explicit-exception
-  Build-depends: extensible-exceptions
   Build-depends: fields-json
   Build-depends: hS3
   Build-depends: happstack-server
@@ -361,7 +359,6 @@ Executable cron
   Build-depends: cryptohash
   Build-depends: dataenc
   Build-depends: explicit-exception
-  Build-depends: extensible-exceptions
   Build-depends: fields-json
   Build-depends: hS3
   Build-depends: happstack-server
@@ -455,7 +452,6 @@ Executable kontrakcja-migrate
   Build-depends: cryptohash
   Build-depends: dataenc
   Build-depends: explicit-exception
-  Build-depends: extensible-exceptions
   Build-depends: fields-json
   Build-depends: hS3
   Build-depends: happstack-server
@@ -520,7 +516,6 @@ Executable kontrakcja-migrate
   Build-depends: cryptohash
   Build-depends: dataenc
   Build-depends: explicit-exception
-  Build-depends: extensible-exceptions
   Build-depends: fields-json
   Build-depends: hS3
   Build-depends: happstack-server
@@ -629,7 +624,6 @@ Executable mailing-server
   Build-depends: cryptohash
   Build-depends: dataenc
   Build-depends: explicit-exception
-  Build-depends: extensible-exceptions
   Build-depends: fields-json
   Build-depends: hS3
   Build-depends: happstack-server
@@ -738,7 +732,6 @@ Executable messenger-server
   Build-depends: cryptohash
   Build-depends: dataenc
   Build-depends: explicit-exception
-  Build-depends: extensible-exceptions
   Build-depends: fields-json
   Build-depends: hS3
   Build-depends: happstack-server
@@ -848,7 +841,6 @@ Executable kontrakcja-test
   Build-depends: cryptohash
   Build-depends: dataenc
   Build-depends: explicit-exception
-  Build-depends: extensible-exceptions
   Build-depends: fields-json
   Build-depends: hS3
   Build-depends: happstack-server

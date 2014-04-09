@@ -16,7 +16,7 @@ module Log
 
   ) where
 
-import Control.Exception.Extensible (bracket)
+import Control.Exception (bracket)
 import Control.Monad.Trans
 import Prelude hiding (error)
 import qualified Control.Concurrent as C
