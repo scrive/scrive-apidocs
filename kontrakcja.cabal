@@ -794,8 +794,7 @@ Executable messenger-server
               UndecidableInstances
 
 
-Test-Suite kontrakcja-test
-  type:       exitcode-stdio-1.0
+Executable kontrakcja-test
   if flag(test)
     Buildable: True
   else
