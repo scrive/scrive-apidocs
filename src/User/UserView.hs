@@ -48,6 +48,7 @@ import FlashMessage
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import User.Model
+import User.Email
 import MinutesTime
 import Data.List
 import Text.JSON
@@ -325,4 +326,3 @@ flashMessageProblemWithPassword =
 flashMessageYourEmailHasChanged :: TemplatesMonad m => m FlashMessage
 flashMessageYourEmailHasChanged =
   toFlashMsg OperationDone <$> renderTemplate_ "flashMessageYourEmailHasChanged"
-

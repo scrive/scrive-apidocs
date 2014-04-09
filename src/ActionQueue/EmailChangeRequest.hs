@@ -22,6 +22,7 @@ import KontraLink
 import MagicHash
 import MinutesTime
 import User.Model
+import User.Email
 
 data EmailChangeRequest = EmailChangeRequest {
     ecrUserID :: UserID

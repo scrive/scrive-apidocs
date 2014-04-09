@@ -8,7 +8,7 @@ import ThirdPartyStats.Utils
 import Mixpanel.Event as Mixpanel
 import Mixpanel.Engage as Mixpanel (set)
 import MinutesTime (toUTCTime)
-import User.Model (unEmail)
+import User.Email
 
 -- | Token identifying us to Mixpanel.
 type MixpanelToken = String

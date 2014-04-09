@@ -45,6 +45,7 @@ import Kontra
 import KontraLink
 import MagicHash (MagicHash)
 import Mails.SendMail
+import User.Email
 import MinutesTime hiding (toClockTime)
 import Happstack.Fields
 import Redirect

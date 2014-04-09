@@ -35,6 +35,7 @@ import DB
 import User.UserControl
 import User.UserView
 import User.Model
+import User.Email
 import Data.Maybe
 import Data.Char
 import Text.StringTemplates.Templates

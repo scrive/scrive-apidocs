@@ -31,6 +31,7 @@ import User.Lang
 import Text.JSON
 import Text.JSON.Gen hiding (value)
 import User.Model
+import User.Email
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Happstack.Fields

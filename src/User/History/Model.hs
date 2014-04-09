@@ -26,6 +26,7 @@ import qualified Control.Exception as E
 import DB
 import IPAddress
 import MinutesTime
+import User.Email
 
 import User.UserID
 import User.Model

@@ -19,6 +19,7 @@ import Mails.MailsConfig
 import LiveDocx (LiveDocxConf(..))
 import MagicHash (MagicHash)
 import IPAddress
+import User.Email
 import Session.SessionID
 import ELegitimation.Config (LogicaConfig(..))
 import GuardTime (GuardTimeConf(..))

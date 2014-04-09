@@ -49,6 +49,7 @@ import Doc.DocumentID
 import Attachment.AttachmentID
 import Numeric
 import IPAddress
+import User.Email
 import qualified Log
 import Happstack.Fields hiding (getFields)
 import User.Model

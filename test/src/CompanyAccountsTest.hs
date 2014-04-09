@@ -16,6 +16,7 @@ import DB hiding (query, update)
 import Doc.DocStateData
 import Doc.Model
 import FlashMessage
+import User.Email
 import KontraError
 import Mails.Model
 import MinutesTime

@@ -28,6 +28,7 @@ import File.FileID
 import IPAddress
 import Text.JSON
 import Utils.String
+import User.Email
 import File.File
 
 instance (InspectXML a, Show a) => InspectXML [a] where

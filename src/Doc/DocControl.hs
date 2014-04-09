@@ -60,6 +60,7 @@ import Happstack.Fields
 import Utils.Monad
 import Redirect
 import User.Model
+import User.Email
 import Util.HasSomeUserInfo
 import qualified Log
 import Text.StringTemplates.Templates

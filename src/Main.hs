@@ -22,6 +22,7 @@ import Utils.Network
 import RoutingTable
 import Templates
 import User.Model
+import User.Email
 import Company.Model
 import AppDBTables (kontraTables)
 import qualified Log

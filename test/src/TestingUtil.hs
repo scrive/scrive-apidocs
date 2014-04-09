@@ -40,6 +40,7 @@ import KontraMonad
 import MinutesTime
 import Control.Exception.Lifted
 import User.Model
+import User.Email
 import Doc.SignatoryLinkID
 import Doc.DocumentID
 import Utils.Default

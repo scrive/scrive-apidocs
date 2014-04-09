@@ -17,6 +17,7 @@ import API.APIVersion (APIVersion(..))
 import Control.Applicative
 import Control.Exception.Lifted
 import User.Model
+import User.Email
 import Kontra
 import API.Monad
 import Control.Monad.Error
@@ -308,4 +309,3 @@ apiCallPaymentInfo = api $ do
         value "quantity"  quantity
         value "billingEnds" billingEnds
         value "docsTotal" (docTotal::Int)
-

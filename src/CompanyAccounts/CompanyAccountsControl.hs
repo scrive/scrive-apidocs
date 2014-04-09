@@ -32,6 +32,7 @@ import Kontra
 import KontraLink
 import ListUtil
 import Mails.SendMail
+import User.Email
 import Happstack.Fields
 import Util.FlashUtil
 import Util.HasSomeUserInfo
@@ -306,4 +307,3 @@ handlePostBecomeCompanyAccount cid = withUserPost $ do
   -- should delete their personal plan
   addFlashM $ flashMessageUserHasBecomeCompanyAccount newcompany
   return $ LinkAccount
-

@@ -17,6 +17,7 @@ import Doc.DocumentMonad (DocumentMonad, theDocument, withDocumentID)
 import Doc.Model
 import Doc.DocStateData
 import InputValidation
+import User.Email
 import Kontra
 import MailContext (MailContextMonad(..), MailContext(..))
 import Mails.SendMail

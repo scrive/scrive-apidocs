@@ -35,6 +35,7 @@ import Doc.Model.Expressions
 import Doc.Model.Filter
 import Doc.Model.OrderBy
 import MagicHash
+import User.Email
 import Doc.Conditions
 import File.FileID
 import File.Storage

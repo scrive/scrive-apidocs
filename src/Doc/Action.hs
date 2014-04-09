@@ -50,6 +50,7 @@ import Text.StringTemplates.Templates (TemplatesMonad)
 import ThirdPartyStats.Core
 import User.Model
 import User.Utils
+import User.Email
 import Util.Actor
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo

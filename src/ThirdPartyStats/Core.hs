@@ -31,7 +31,7 @@ import User.UserID (UserID, unsafeUserID)
 import Doc.DocumentID (DocumentID, unsafeDocumentID)
 import Company.CompanyID (CompanyID, unsafeCompanyID)
 import IPAddress
-import User.Model (Email (..))
+import User.Email
 import qualified Text.JSON as J
 
 import Test.QuickCheck (Arbitrary (..), frequency, oneof, suchThat, Gen)

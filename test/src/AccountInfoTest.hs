@@ -18,6 +18,7 @@ import TestingUtil
 import TestKontra as T
 import User.Lang()
 import User.Model
+import User.Email
 import User.UserControl
 import Util.HasSomeUserInfo
 import User.API

@@ -41,6 +41,7 @@ import Utils.Prelude
 import Data.List
 import Data.Maybe
 import Data.Functor
+import User.Email
 
 {- |
    Anything that could identify a SignatoryLink

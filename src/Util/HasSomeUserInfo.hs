@@ -22,7 +22,7 @@ import Doc.DocStateData
 import User.Model
 import Mails.MailsData
 import Data.String.Utils
-
+import User.Email
 
 -- | Anything that might have a first name and last name, or personalnumber
 class HasSomeUserInfo a where

@@ -9,6 +9,7 @@ import DB
 import MinutesTime
 import Utils.Default
 import User.Model
+import User.Email
 import TestingUtil
 import TestKontra
 import Data.List

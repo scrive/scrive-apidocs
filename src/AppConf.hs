@@ -5,7 +5,7 @@ module AppConf (
 
 import Configuration
 import HostClock.System (defaultNtpServers)
-import User.Model
+import User.Email
 import Mails.MailsConfig
 import Data.ByteString (ByteString)
 import Data.Word

@@ -4,7 +4,6 @@ module User.Model (
     module User.Lang
   , module User.Password
   , module User.UserID
-  , Email(..)
   , InviteType(..)
   , SignupMethod(..)
   , User(..)

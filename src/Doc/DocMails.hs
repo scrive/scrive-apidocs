@@ -45,6 +45,7 @@ import MailContext (getMailContext, MailContext(..), MailContextMonad, MailConte
 import Mails.SendMail
 import OurPrelude
 import User.Model
+import User.Email
 import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
 import qualified Log
