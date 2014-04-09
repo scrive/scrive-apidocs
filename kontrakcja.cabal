@@ -157,6 +157,8 @@ Executable kontrakcja-server
 
   ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
+  Main-Is: Main.hs
+
   Build-depends: base < 6
   Build-depends: bytestring
   Build-depends: template-haskell
@@ -218,8 +220,6 @@ Executable kontrakcja-server
   Build-depends: utf8-string
   Build-depends: zip-archive
   Build-depends: zlib
-
-  Main-Is: Main.hs
 
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns,
@@ -329,62 +329,6 @@ Executable cron
 
   Main-is: CronMain.hs
 
-  Build-depends: base < 6
-  Build-depends: bytestring
-  Build-depends: template-haskell
-  Build-depends: old-time
-  Build-depends: containers
-  Build-depends: unix
-  Build-depends: directory
-  Build-depends: binary
-  Build-depends: old-locale
-  Build-depends: time
-  Build-depends: filepath
-  Build-depends: process
-  Build-depends: AES
-  Build-depends: Crypto
-  Build-depends: DRBG
-  Build-depends: Decimal
-  Build-depends: hpqtypes
-  Build-depends: HStringTemplate
-  Build-depends: HTTP
-  Build-depends: HaXml
-  Build-depends: MissingH
-  Build-depends: QuickCheck
-  Build-depends: attoparsec
-  Build-depends: base16-bytestring
-  Build-depends: base64-bytestring
-  Build-depends: cond
-  Build-depends: crypto-api
-  Build-depends: cryptohash
-  Build-depends: dataenc
-  Build-depends: explicit-exception
-  Build-depends: fields-json
-  Build-depends: hS3
-  Build-depends: happstack-server
-  Build-depends: iconv
-  Build-depends: json
-  Build-depends: kontrakcja-templates
-  Build-depends: lifted-base
-  Build-depends: mixpanel
-  Build-depends: mmap
-  Build-depends: monad-control
-  Build-depends: mtl
-  Build-depends: network
-  Build-depends: pretty-show
-  Build-depends: recurly
-  Build-depends: regex-tdfa
-  Build-depends: spreadsheet
-  Build-depends: stm
-  Build-depends: tagsoup
-  Build-depends: temporary
-  Build-depends: threads
-  Build-depends: transformers
-  Build-depends: transformers-base
-  Build-depends: utf8-string
-  Build-depends: zip-archive
-  Build-depends: zlib
-
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns,
               DeriveDataTypeable,
@@ -421,70 +365,7 @@ Executable kontrakcja-migrate
 
   ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries -main-is AppDBMain
 
-  Build-depends: base < 6
-  Build-depends: bytestring
-  Build-depends: template-haskell
-  Build-depends: old-time
-  Build-depends: containers
-  Build-depends: unix
-  Build-depends: directory
-  Build-depends: binary
-  Build-depends: old-locale
-  Build-depends: time
-  Build-depends: filepath
-  Build-depends: process
-  Build-depends: AES
-  Build-depends: Crypto
-  Build-depends: DRBG
-  Build-depends: Decimal
-  Build-depends: hpqtypes
-  Build-depends: HStringTemplate
-  Build-depends: HTTP
-  Build-depends: HUnit
-  Build-depends: HaXml
-  Build-depends: MissingH
-  Build-depends: QuickCheck
-  Build-depends: attoparsec
-  Build-depends: base16-bytestring
-  Build-depends: base64-bytestring
-  Build-depends: cond
-  Build-depends: crypto-api
-  Build-depends: cryptohash
-  Build-depends: dataenc
-  Build-depends: explicit-exception
-  Build-depends: fields-json
-  Build-depends: hS3
-  Build-depends: happstack-server
-  Build-depends: happstack-static-routing
-  Build-depends: iconv
-  Build-depends: json
-  Build-depends: kontrakcja-templates
-  Build-depends: lifted-base
-  Build-depends: mixpanel
-  Build-depends: mmap
-  Build-depends: monad-control
-  Build-depends: mtl
-  Build-depends: network
-  Build-depends: pretty-show
-  Build-depends: random
-  Build-depends: recurly
-  Build-depends: regex-tdfa
-  Build-depends: spreadsheet
-  Build-depends: stm
-  Build-depends: tagsoup
-  Build-depends: temporary
-  Build-depends: test-framework
-  Build-depends: test-framework-hunit
-  Build-depends: test-framework-quickcheck2
-  Build-depends: threads
-  Build-depends: transformers
-  Build-depends: transformers-base
-  Build-depends: utf8-string
-  Build-depends: zip-archive
-  Build-depends: zlib
-
   Main-is: AppDBMain.hs
-
   Build-depends: base < 6
   Build-depends: bytestring
   Build-depends: template-haskell
