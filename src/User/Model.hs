@@ -58,18 +58,8 @@ import User.UserID
 import Data.Maybe
 import Doc.DocStateData (DocumentStatus(..),FieldType(..))
 import Utils.Read
+import User.Email
 
--- newtypes
-newtype Email = Email { unEmail :: String }
-  deriving (Eq, Ord, PQFormat)
-$(newtypeDeriveUnderlyingReadShow ''Email)
-
-instance FromSQL Email where
-  type PQBase Email = PQBase String
-  fromSQL mbase = Email <$> fromSQL mbase
-instance ToSQL Email where
-  type PQDest Email = PQDest String
-  toSQL (Email n) = toSQL n
 
 data InviteType = Viral | Admin
   deriving (Eq, Ord, Show)
