@@ -17,6 +17,7 @@ import Doc.SignatoryLinkID
 import Doc.DocumentID
 import MagicHash
 import Session.Model
+import Happstack.Server (ServerMonad)
 
 -- | Wrapper for conversion between SQL and list of strings, as we don't want
 -- to add instance for jsonizing [(String, String)] that is used only for that
@@ -47,7 +48,7 @@ data ELegTransaction = ELegTransaction {
   } deriving (Eq, Ord, Show, Typeable)
 
 data MergeELegTransaction = MergeELegTransaction ELegTransaction
-instance (CryptoRNG m, KontraMonad m, MonadDB m) => DBUpdate m MergeELegTransaction () where
+instance (ServerMonad m, CryptoRNG m, KontraMonad m, MonadDB m) => DBUpdate m MergeELegTransaction () where
   update (MergeELegTransaction ELegTransaction{..}) = do
     sid <- getNonTempSessionID
     runQuery_ $ rawSQL "SELECT merge_eleg_transaction($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)" (

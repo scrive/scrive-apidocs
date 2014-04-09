@@ -25,13 +25,14 @@ import Session.Cookies
 import Session.Data
 import User.Model
 import qualified Log
+import Utils.HTTP
 
 -- | Gets non temporary session id from Context. If current session id
 -- is temporary, it inserts new, empty session into database and returns
 -- its id (needed when document ticket/eleg transaction needs to be
 -- inserted into the database, but current session is temporary), also
 -- modifying Context to carry modified id.
-getNonTempSessionID :: (CryptoRNG m, KontraMonad m, MonadDB m, MonadIO m) => m SessionID
+getNonTempSessionID :: (CryptoRNG m, KontraMonad m, MonadDB m, MonadIO m, ServerMonad m) => m SessionID
 getNonTempSessionID = do
   sid <- ctxsessionid `liftM` getContext
   if sid == tempSessionID
@@ -45,17 +46,19 @@ getNonTempSessionID = do
       token <- random
       csrf_token <- random
       expires <- sessionNowModifier `liftM` getMinutesTime
-      update (NewAction session expires (Nothing, Nothing, token, csrf_token))
+      domain <- currentDomain
+      update (NewAction session expires (Nothing, Nothing, token, csrf_token, domain))
         >>= return . sesID
 
 -- | Get current session based on cookies set.
 -- If no session is available, return new, empty session.
-getCurrentSession :: (CryptoRNG m, HasRqData m, MonadDB m, MonadPlus m, ServerMonad m)
+getCurrentSession :: (CryptoRNG m, HasRqData m, MonadDB m, MonadPlus m, ServerMonad m, Log.MonadLog m)
                   => m Session
 getCurrentSession = withDataFn currentSessionInfoCookies $ getSessionFromCookies
   where
     getSessionFromCookies (cs:css) = do
-      mses <- getSession (cookieSessionID cs) (cookieSessionToken cs)
+      domain <- currentDomain
+      mses <- getSession (cookieSessionID cs) (cookieSessionToken cs) domain
       case mses of
         Just ses -> return ses
         Nothing  -> getSessionFromCookies css
@@ -73,7 +76,7 @@ updateSession old_ses ses = do
         Log.mixlog_ $ show n ++ " superfluous sessions of user with id = " ++ show uid ++ " removed from the database"
       expires <- sessionNowModifier `liftM` getMinutesTime
       let Session{..} = ses
-      dbUpdate (NewAction session expires (sesUserID, sesPadUserID, sesToken, sesCSRFToken))
+      dbUpdate (NewAction session expires (sesUserID, sesPadUserID, sesToken, sesCSRFToken, sesDomain))
         >>= startSessionCookie
     _ | old_ses /= ses -> do
       success <- dbUpdate $ UpdateAction session ses
@@ -103,10 +106,11 @@ sessionNowModifier = (120 `minutesAfter`)
 isSessionEmpty :: Session -> Bool
 isSessionEmpty Session{..} = isNothing sesUserID && isNothing sesPadUserID
 
-getSession :: MonadDB m => SessionID -> MagicHash -> m (Maybe Session)
-getSession sid token = runMaybeT $ do
-  Just ses@Session{sesToken} <- dbQuery $ GetAction session sid
+getSession :: MonadDB m => SessionID -> MagicHash -> String -> m (Maybe Session)
+getSession sid token domain = runMaybeT $ do
+  Just ses@Session{sesToken,sesDomain} <- dbQuery $ GetAction session sid
   guard $ sesToken == token
+  guard $ sesDomain == domain
   return ses
 
 -- | We allow for at most 5 sessions with the same user_id, so if there

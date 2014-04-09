@@ -20,6 +20,7 @@ import Payments.Migrations
 import Attachment.Migrations
 import ThirdPartyStats.Migrations
 import User.CallbackScheme.Migrations
+import Session.Migrations
 import qualified Log
 
 -- Note: ALWAYS append new migrations TO THE END of this list.
@@ -155,5 +156,6 @@ kontraMigrations = [
   , tempCredentialChangeVarcharColumnsToText
   , migrateDocumentsAddSignviewSettings
   , migrateDocumentsAddDocumentToken
+  , addDomainToSession
   ] ++ mailerMigrations
     ++ messengerMigrations

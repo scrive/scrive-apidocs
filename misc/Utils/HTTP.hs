@@ -5,9 +5,20 @@ import Data.Char
 import Data.List
 import Happstack.Server
 import qualified Data.ByteString.UTF8 as BS
+import Network.URI hiding (scheme)
+import Data.Maybe
 
 class URLAble a where
    encodeForURL :: a -> String
+
+
+domainFromString  :: String -> String
+domainFromString s = fromMaybe "" $ fmap uriRegName $ join $ fmap uriAuthority $ parseURI s
+
+currentDomain :: ServerMonad m => m String
+currentDomain = do
+  rq <- askRq
+  return $ maybe "scrive.com" BS.toString $ getHeader "host" rq
 
 isIphone :: ServerMonad m => m Bool
 isIphone =  do

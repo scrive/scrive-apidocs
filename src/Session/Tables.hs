@@ -5,7 +5,7 @@ import DB
 tableSessions :: Table
 tableSessions = tblTable {
     tblName = "sessions"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "user_id", colType = BigIntT }
@@ -13,6 +13,7 @@ tableSessions = tblTable {
     , tblColumn { colName = "expires", colType = TimestampWithZoneT, colNullable = False }
     , tblColumn { colName = "token", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "csrf_token", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "domain", colType = TextT, colNullable = False}
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [

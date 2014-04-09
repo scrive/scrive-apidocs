@@ -11,6 +11,7 @@ module TestKontra (
     , mkCookies
     , getHeader
     , getCookie
+    , defaultUri
     , mkRequest
     , mkRequestWithHeaders
     , mkContext
@@ -216,9 +217,13 @@ getHeader name hdrs = BSU.toString <$> join
 getCookie :: String -> [(String, Cookie)] -> Maybe String
 getCookie name cookies = cookieValue <$> lookup name cookies
 
+-- | Default uri used for tests
+defaultUri :: String
+defaultUri = "http://testkontra.fake"
+
 -- | Constructs initial request with given data (POST or GET)
 mkRequest :: MonadIO m => Method -> [(String, Input)] -> m Request
-mkRequest method vars = mkRequestWithHeaders method vars []
+mkRequest method vars = mkRequestWithHeaders method vars [("host",["testkontra.fake"])]
 
 mkRequestWithHeaders :: MonadIO m => Method -> [(String, Input)] -> [(String, [String])]-> m Request
 mkRequestWithHeaders method vars headers = liftIO $ do
@@ -231,7 +236,7 @@ mkRequestWithHeaders method vars headers = liftIO $ do
           rqSecure = False
         , rqMethod = POST
         , rqPaths = []
-        , rqUri = ""
+        , rqUri = defaultUri
         , rqQuery = ""
         , rqInputsQuery = iq
         , rqInputsBody = ib
@@ -254,8 +259,8 @@ mkContext lang = do
     memcache <- MemCache.new BS.length 52428800
     return Context {
           ctxmaybeuser = Nothing
-        , ctxhostpart = "http://testkontra.fake"
-        , ctxresourcehostpart = "http://testkontra.fake"
+        , ctxhostpart = defaultUri
+        , ctxresourcehostpart = defaultUri
         , ctxflashmessages = []
         , ctxtime = time
         , ctxclientname = Nothing

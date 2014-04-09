@@ -24,6 +24,7 @@ import Doc.Tokens.Model
 import Session.Data
 import Session.Model
 import Company.Model
+import Utils.HTTP
 
 sessionsTests :: TestEnvSt -> Test
 sessionsTests env = testGroup "Sessions" [
@@ -52,10 +53,15 @@ testSessionUpdate = do
   _ <- do
     rq <- mkRequest GET []
     runTestKontra rq ctx $ updateSession sess (sess { sesPadUserID = Just uid })
-  msess' <- getSession (sesID sess) (sesToken sess)
+  msess' <- getSession (sesID sess) (sesToken sess) (domainFromString $ defaultUri)
   assertBool "modified session successfully taken from the database" (isJust msess')
+
   let sess' = fromJust msess'
   assertEqual "session successfully modified" (sesPadUserID sess') (Just uid)
+
+  msess'' <- getSession (sesID sess) (sesToken sess) "other.domain.com"
+  assertBool "we should only be able to fetch session where domain does match" (isNothing msess'')
+
 
 testDocumentTicketInsertion :: TestEnv ()
 testDocumentTicketInsertion = doTimes 10 $ do
@@ -94,17 +100,19 @@ testElegTransactionUpdate = doTimes 10 $ do
 
 insertNewSession :: UserID -> TestEnv (Maybe Session, Context)
 insertNewSession uid = do
-  sess <- emptySession
-  (_, ctx) <- do
+  (sess, ctx) <- do
     rq <- mkRequest GET []
     ctx <- mkContext defaultValue
-    runTestKontra rq ctx $ updateSession sess (sess { sesUserID = Just uid })
+    runTestKontra rq ctx $ do
+      initialSession <- emptySession
+      updateSession initialSession (initialSession { sesUserID = Just uid })
+      return initialSession
   -- FIXME: this sucks, but there is no way to get id of newly inserted
   -- session and modifying normal code to get access to it seems like
   -- a bad idea
   runSQL_ "SELECT id FROM sessions ORDER BY id DESC LIMIT 1"
   sid <- fetchOne unSingle
-  msess <- getSession sid (sesToken sess)
+  msess <- getSession sid (sesToken sess) (domainFromString $ defaultUri)
   return (msess, ctx)
 
 addDocumentAndInsertToken :: TestEnv (User, Document, Context)
