@@ -30,6 +30,8 @@ import Text.JSON
 import Utils.String
 import User.Email
 import File.File
+import Data.List
+
 
 instance (InspectXML a, Show a) => InspectXML [a] where
     inspectXML l = "<ul>" ++ (concatMap (\s -> "<li>" ++ (inspectXML s) ++ "</li>") l) ++ "</ul>"
@@ -54,10 +56,14 @@ $(deriveInspectXML ''SignatoryLink)
 
 instance InspectXML SignatoryField where
   inspectXML field =
-    (show $ sfType field) ++ " " ++ inspectXML (sfValue field) ++ ", " ++
+    (show $ sfType field) ++ " " ++ useImgDataURL (sfValue field) ++ ", " ++
     (if sfObligatory field then "obligatory, " else "optional, ") ++
     (if sfShouldBeFilledBySender field then "filled by sender, " else "") ++
     "<br/>placements: " ++ inspectXML (sfPlacements field)
+    where
+      useImgDataURL txt | "data:image/" `isPrefixOf` txt
+                        = "<img style=\"height:100px; width=auto\" src=\"" ++ escapeString txt ++ "\">"
+      useImgDataURL txt = inspectXML txt
 
 --Link creating types
 instance InspectXML DocumentID where
