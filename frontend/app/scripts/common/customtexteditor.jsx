@@ -85,7 +85,7 @@ return React.createClass({
                 if ($message.text() == self.props.placeholder) {
                     editor.setContent('');
                 }
-            })
+            });
             editor.on('blur', function(ed, e) {
                 // if the input field is empty when leaving it, set default
                 // placeholder message
@@ -108,7 +108,7 @@ return React.createClass({
       var self = this;
       var value = this.props.customtext;
       if (!this.props.editable)
-        value = "<i>" + this.props.disabledPlaceholder + "</i>"
+        value = "<i>" + this.props.disabledPlaceholder + "</i>";
       return (
         <div className="custommessageeditor">
           <div className='label'>{this.props.label}</div>
