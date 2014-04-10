@@ -1242,7 +1242,7 @@ changeSomeStandardFieldsToOptional=
                      sqlWhereEq "f.value" (""::String)
                      sqlWhereEqSql "f.signatory_link_id" "s.id"
                      sqlWhereEqSql "d.id" "s.document_id"
-                     sqlWhereIn "d.status" [Preparation,Pending]
+                     sqlWhereNotEq "d.status" Closed
                      sqlWhereAny $ do
                        sqlWhereAll $ do
                          sqlWhereEq "f.type" PersonalNumberFT
