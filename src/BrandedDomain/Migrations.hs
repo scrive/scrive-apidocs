@@ -31,6 +31,7 @@ createBrandedDomainsTable =
     , tblColumn { colName = "signview_secondary_text_color", colType = TextT, colNullable = False }
     , tblColumn { colName = "button_class",                  colType = TextT, colNullable = False }
     , tblColumn { colName = "service_link_color",            colType = TextT, colNullable = False }
+    , tblColumn { colName = "external_text_color",           colType = TextT, colNullable = False }
     , tblColumn { colName = "header_color",                  colType = TextT, colNullable = False }
     , tblColumn { colName = "text_color",                    colType = TextT, colNullable = False }
     , tblColumn { colName = "price_color",                   colType = TextT, colNullable = False }

@@ -42,8 +42,8 @@ data BrandedDomain = BrandedDomain {
                       } deriving (Read, Eq, Ord, Show)
 
 
-fetchBrandedDomain :: (BrandedDomainID, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String) -> BrandedDomain
-fetchBrandedDomain (_id, url, logolink, barscolour, barstextcolour, barssecondarycolour, backgroundcolour, backgroundcolorexternal, mailsbackgroundcolor, mailsbuttoncolor, mailstextcolor, signviewprimarycolour, signviewprimarytextcolour, signviewsecondarycolour, signviewsecondarytextcolour, buttonclass, servicelinkcolour, headercolour, textcolour, pricecolour, smsoriginator, emailoriginator, contactemail)
+fetchBrandedDomain :: (BrandedDomainID, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String) -> BrandedDomain
+fetchBrandedDomain (_id, url, logolink, barscolour, barstextcolour, barssecondarycolour, backgroundcolour, backgroundcolorexternal, mailsbackgroundcolor, mailsbuttoncolor, mailstextcolor, signviewprimarycolour, signviewprimarytextcolour, signviewsecondarycolour, signviewsecondarytextcolour, buttonclass, servicelinkcolour, externaltextcolour, headercolour, textcolour, pricecolour, smsoriginator, emailoriginator, contactemail)
        = BrandedDomain
          { bdurl                         = url
          , bdlogolink                    = logolink
@@ -61,6 +61,7 @@ fetchBrandedDomain (_id, url, logolink, barscolour, barstextcolour, barssecondar
          , bdsignviewsecondarytextcolour = signviewsecondarytextcolour
          , bdbuttonclass                 = buttonclass
          , bdservicelinkcolour           = servicelinkcolour
+         , bdexternaltextcolour          = externaltextcolour
          , bdheadercolour                = headercolour
          , bdtextcolour                  = textcolour
          , bdpricecolour                 = pricecolour
