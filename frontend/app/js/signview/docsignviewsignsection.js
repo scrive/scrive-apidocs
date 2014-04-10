@@ -319,11 +319,11 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var iti = new InfoTextInput({
           infotext: "Check your pin",
           value: "",
-          style: "margin-left:10px;width:200px;",
           onChange: function(v) {
             self.pin = v;
           },
           inputtype: 'text',
+          cssClass : "pin-input " + (BrowserInfo.isSmallScreen() ? "small-screen" : ""),
           name: 'pin'
         });
     p.append(iti.el());

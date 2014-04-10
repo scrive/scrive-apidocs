@@ -41,8 +41,8 @@
 
   &.nofooter {
     .pagefooter { display: none; }
-    .mainContainer { 
-      padding-bottom: 0px; 
+    .mainContainer {
+      padding-bottom: 0px;
       .subcontainer { .border-radius } // reset rounded bottom borders
     }
   }
@@ -787,7 +787,7 @@
 
 
 .extradetails-modal {
-  .small-screen .standard-input-table { 
+  .small-screen .standard-input-table {
     table td:first-child {
       width: 200px;
     }
@@ -799,6 +799,26 @@
     table td:first-child {
       padding-left: 0px;
       width: 120px;
+    }
+  }
+}
+
+.sign-confirmation-modal {
+
+  .pin-input {
+    margin-left:10px;
+    vertical-align:middle;
+    width:200px;
+
+    &.small-screen {
+      width:340px;
+      margin-left:4px;
+      input {
+        line-height: 54px;
+        font-size: 54px;
+        height: 54px;
+        width:340px;
+      }
     }
   }
 }

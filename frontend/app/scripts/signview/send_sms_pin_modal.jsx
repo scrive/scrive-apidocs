@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React','common/button','common/backbone_mixim','Backbone', 'legacy_code'], function(React, Button, BackboneMixin, Backbone) {
+define(['React','common/button','common/backbone_mixim','Backbone', 'legacy_code'], function(React, NewButton, BackboneMixin, Backbone) {
 
 
 
@@ -45,6 +45,12 @@ define(['React','common/button','common/backbone_mixim','Backbone', 'legacy_code
     },
     setPhone: function(v) {
       this.set({phone: v});
+    },
+    usebranding : function() {
+      return this.model().usebranding();
+    },
+    signviewbranding : function() {
+      return this.model().signviewbranding();
     }
   });
 
@@ -65,8 +71,8 @@ define(['React','common/button','common/backbone_mixim','Backbone', 'legacy_code
           <div>
              {/*if*/ this.props.model.phoneCanChange() &&
                <div>
-                Phone number for SMS PIN delivery
-                <input style={{width: "100px"}}  type='text' value={this.props.model.phone()} onChange={this.setPhone}/>
+                <div>Phone number for SMS PIN delivery</div>
+                <input style={{width: "200px"}}  placeholder={localization.phone} type='text' value={this.props.model.phone()} onChange={this.setPhone}/>
                </div>
              }
              {/*else*/ !this.props.model.phoneCanChange() &&
@@ -113,25 +119,41 @@ define(['React','common/button','common/backbone_mixim','Backbone', 'legacy_code
       });
     },
     startModal : function() {
-        var self = this;
-        var content =$("<div>");
-         React.renderComponent(SendSMSPinModalViewContent({
+      var self = this;
+      var content =$("<div>");
+        React.renderComponent(SendSMSPinModalViewContent({
           model: self.model
-        }), content[0]);
+      }), content[0]);
+
+      var acceptButton =  new Button({
+        size:  "small",
+        color: "green",
+        shape: BrowserInfo.isSmallScreen() ? "" : "rounded",
+        customcolor: this.model.usebranding() ? this.model.signviewbranding().signviewprimarycolour() : undefined,
+        textcolor: this.model.usebranding() ? this.model.signviewbranding().signviewprimarytextcolour() : undefined,
+        cssClass: 'greybg',
+        text: "Next",
+        onClick: function() {
+          if (self.model.hasValidPhone())
+            self.onNext()
+          else
+            new FlashMessage({color: "red",content : "Invalid phone"});
+          }
+        });
+
+
+
         self.modal = new Confirmation({
                   title: "Sign with SMS PIN",
                   //subtitle : $("<div/>").html(localization.autoreminders.changeAutoreminderDescription),
                   content: content,
-                  width: 424,
+                  width: BrowserInfo.isSmallScreen() ? 825 : 424,
                   //icon : '/img/modal-icons/extend-duedate.png',
+                  cssClass: 'grey',
+                  textcolor : this.model.usebranding() ? this.model.signviewbranding().signviewtextcolour() : undefined,
+                  textfont : this.model.usebranding() ? this.model.signviewbranding().signviewtextfont() : undefined,
                   onReject : function() { },
-                  onAccept : function() {
-                    if (self.model.hasValidPhone())
-                      self.onNext()
-                    else
-                      new FlashMessage({color: "red",content : "Invalid phone"});
-                  },
-                  acceptText : "Next"
+                  acceptButton : acceptButton.el()
           });
     },
     render: function() {
