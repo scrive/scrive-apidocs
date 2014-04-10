@@ -1240,6 +1240,8 @@ changeSomeStandardFieldsToOptional=
                      sqlResult "f.id"
                      sqlWhereEq "f.placements" ("[]"::String)
                      sqlWhereEq "f.value" (""::String)
+                     sqlWhereEqSql "f.signatory_link_id" "s.id"
+                     sqlWhereEqSql "d.id" "s.document_id"
                      sqlWhereIn "d.status" [Preparation,Pending]
                      sqlWhereAny $ do
                        sqlWhereAll $ do
