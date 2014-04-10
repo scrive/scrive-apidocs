@@ -27,7 +27,7 @@
 "_TheScriveSystem":"$if(full)$Scrive E-sign$else$Scrive$endif$",
 "_delivery_method":"$if(email)$email$elseif(mobile)$SMS$elseif(emailmobile)$email and SMS$endif$",
 "_to_review_or_sign":"$if(viewing)$ to review$elseif(signing)$ to sign$endif$",
-"_using_identification_method":"$if(eleg)$ using eID as identification method$endif$",
+"_using_identification_method":"$if(eleg)$ using eID as identification method$elseif(sms_pin)$ using PIN by SMS as identification method$endif$",
 "SMSPinSendText":"A PIN was sent to $signatory$ ($text$) by SMS.",
 "SMSPinDeliveredText":"The PIN was delivered to $signatory$  ($text$) by SMS."
 }

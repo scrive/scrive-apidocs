@@ -1061,9 +1061,8 @@ instance (DocumentMonad m, TemplatesMonad m, Applicative m, CryptoRNG m) => DBUp
                 (Nothing,Nothing) -> sqlWhereSignatoryAuthenticationMethodIs StandardAuthentication
            sqlWhereSignatoryLinkMagicHashIs mh
       updateMTimeAndObjectVersion (actorTime actor)
-    let signatureFields = case msiginfo of
-            Nothing -> return ()
-            Just si -> do
+    let signatureFields = case (msiginfo,mpin) of
+            (Just si,_) -> do
                       F.value "eleg" True
                       F.value "provider" $ case signatureinfoprovider si of
                                             BankIDProvider -> "BankID" :: String
@@ -1078,6 +1077,9 @@ instance (DocumentMonad m, TemplatesMonad m, Applicative m, CryptoRNG m) => DBUp
                       F.value "certificate" $ nothingIfEmpty $ signatureinfocertificate si
                       F.value "ocsp" $ signatureinfoocspresponse si
                       F.value "infotext" $ signatureinfotext si
+            (_,Just _) -> F.value "sms_pin" True
+            _ -> return ()
+
     sl <- theDocumentID >>= \docid -> query $ GetSignatoryLinkByID docid slid Nothing
     void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
         SignDocumentEvidence

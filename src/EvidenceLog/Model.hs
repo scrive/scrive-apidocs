@@ -61,6 +61,7 @@ signatoryLinkTemplateFields sl = do
   F.value "identified"  $ signatorylinkauthenticationmethod sl == ELegAuthentication
                        || not (signatoryisauthor sl || signatorylinkdeliverymethod sl == APIDelivery)
   F.value "eleg"        $ signatorylinkauthenticationmethod sl == ELegAuthentication
+  F.value "sms_pin"     $ signatorylinkauthenticationmethod sl == SMSPinAuthentication
   F.value "api"         $ signatorylinkdeliverymethod sl == APIDelivery
   F.value "pad"         $ signatorylinkdeliverymethod sl == PadDelivery
   F.value "email"       $ signatorylinkdeliverymethod sl == EmailDelivery
