@@ -80,7 +80,6 @@ define(['Backbone', 'legacy_code'], function() {
     },
     render: function () {
         $(this.el).html('');
-        $("#page-signup").removeClass("button-red").addClass("button-green");
         var self = this;
         var model = this.model;
         var header = $("<div class='shadowed'/>");
@@ -142,7 +141,7 @@ define(['Backbone', 'legacy_code'], function() {
     },
     render: function () {
         $(this.el).html('');
-        $("#page-signup").removeClass("button-red").addClass("button-gray");
+        $("#page-signup").addClass("button-gray");
         var self = this;
         var model = this.model;
 
