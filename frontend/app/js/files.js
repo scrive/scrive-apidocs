@@ -14,11 +14,12 @@ window.File = Backbone.Model.extend({
         broken : false
       };
     },
-    queryPart: function () {
-      var params = { documentid: this.documentid(),
-                     attachmentid: this.attachmentid(),
-                     signatorylinkid: this.signatoryid()
-                   };
+    queryPart: function (more) {
+      more = more || {};
+      var params = _.extend(more, { documentid: this.documentid(),
+                                    attachmentid: this.attachmentid(),
+                                    signatorylinkid: this.signatoryid()
+                                  });
       /*
        * Remove undefined values that may happen in the object.
        */
@@ -267,7 +268,7 @@ var FilePageView = Backbone.View.extend({
 
         // Page part with image
         this.pagejpg = $("<img class='pagejpg'/>");
-        var pagelink = "/pages/" + fileid  + "/" + page.number() + file.queryPart();
+        var pagelink = "/pages/" + fileid  + "/" + page.number() + file.queryPart({"pixelwidth": Math.round(page.width()/8)});
 
         this.pagejpg.attr("src", pagelink);
         container.append(this.pagejpg);
