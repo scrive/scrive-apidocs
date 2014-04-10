@@ -268,7 +268,7 @@ var FilePageView = Backbone.View.extend({
 
         // Page part with image
         this.pagejpg = $("<img class='pagejpg'/>");
-        var pagelink = "/pages/" + fileid  + "/" + page.number() + file.queryPart({"pixelwidth": Math.round(page.width()/8)});
+        var pagelink = "/pages/" + fileid  + "/" + page.number() + file.queryPart({"pixelwidth": page.width()});
 
         this.pagejpg.attr("src", pagelink);
         container.append(this.pagejpg);
