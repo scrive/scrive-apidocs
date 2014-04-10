@@ -110,7 +110,7 @@ var AdminPaymentsView = Backbone.View.extend({
     },
     priceplanNameToText : function(ppname) {
           if (ppname == "free")
-             return "Free (no plan";
+             return "Free (no plan)";
           else if (ppname == "team")
              return "Team";
           else if (ppname == "form")
