@@ -33,7 +33,7 @@ window.DocumentCellsDefinition = function(archive) { return  [
                             return $("<a class='s-archive-document-title'/>").text(listobject.field("title")).attr("href",listobject.link());
                        }
                     //For pad we show extra icon
-                    if (idx != undefined && listobject.subfield(idx,"delivery") == "pad")
+                    if (idx != undefined && listobject.subfield(idx,"delivery") == "pad" && listobject.field("status") != "signed")
                       {
                         var actionIcon = $("<a class='actionIcon'/>");
                         if (listobject.field("inpadqueue") && listobject.subfield(idx,"inpadqueue"))
