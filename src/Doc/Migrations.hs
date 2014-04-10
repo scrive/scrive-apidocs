@@ -1233,22 +1233,22 @@ changeSomeStandardFieldsToOptional=
     mgrTable = tableSignatoryLinkFields
   , mgrFrom = 5
   , mgrDo =  do
-    runQuery_ $ sqlUpdate "signatory_link_fields as ff" $ do
+    runQuery_ $ sqlUpdate "signatory_link_fields" $ do
                  sqlSet "obligatory" False
-                 sqlWhereExists $ do
-                  sqlSelect "documents as d, signatory_links as s, signatory_link_fields as f" $ do
-                    sqlWhere  "ff.id = f.id"
-                    sqlWhereEq "f.placements" ("[]"::String)
-                    sqlWhereEq "f.value" (""::String)
-                    sqlWhereIn "d.status" [Preparation,Pending]
-                    sqlWhereAny $ do
-                      sqlWhereAll $ do
-                        sqlWhereEq "f.type" PersonalNumberFT
-                        sqlWhereNotEq "s.authentication_method" ELegAuthentication
-                      sqlWhereAll $ do
-                        sqlWhereEq "f.type" (MobileFT)
-                        sqlWhereNotIn "s.delivery_method" [MobileDelivery,EmailAndMobileDelivery]
-                        sqlWhereNotIn "s.confirmation_delivery_method" [MobileConfirmationDelivery,EmailAndMobileConfirmationDelivery]
+                 sqlWhereInSql "id" $ do
+                   sqlSelect "documents as d, signatory_links as s, signatory_link_fields as f" $ do
+                     sqlResult "f.id"
+                     sqlWhereEq "f.placements" ("[]"::String)
+                     sqlWhereEq "f.value" (""::String)
+                     sqlWhereIn "d.status" [Preparation,Pending]
+                     sqlWhereAny $ do
+                       sqlWhereAll $ do
+                         sqlWhereEq "f.type" PersonalNumberFT
+                         sqlWhereNotEq "s.authentication_method" ELegAuthentication
+                       sqlWhereAll $ do
+                         sqlWhereEq "f.type" (MobileFT)
+                         sqlWhereNotIn "s.delivery_method" [MobileDelivery,EmailAndMobileDelivery]
+                         sqlWhereNotIn "s.confirmation_delivery_method" [MobileConfirmationDelivery,EmailAndMobileConfirmationDelivery]
   }
 
 
