@@ -325,12 +325,8 @@
 "_designViewCustomMessagePreview":"Preview",
 "_designViewDefineParticipation":"Define participation",
 "_designViewDocumentName":"Document name",
-<<<<<<< HEAD
-"_designViewEditDocument":"Fields",
-=======
 "_designViewEditConfirmation":"Edit confirmation message",
-"_designViewEditDocument":"Add/edit fields",
->>>>>>> Initial commit.
+"_designViewEditDocument":"Fields",
 "_designViewEditInvitation":"Edit invitation message",
 "_designViewEditParticipants":"Participants",
 "_designViewEditSigningProcess":"Options",
