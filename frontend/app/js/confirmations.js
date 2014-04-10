@@ -299,7 +299,7 @@ window.Confirmation = function (args) {
           var model = new ConfirmationModel(args);
           var overlay = $("<div class='modal'/>");
           var bottomMargin = 100;
-          var topMargin = 100;
+          var topMargin = 20;
           if (args.cssClass != undefined)
             overlay.addClass(args.cssClass);
           overlay.height($(document).height());
