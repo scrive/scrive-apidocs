@@ -460,8 +460,8 @@ window.DocumentSignSignSection = Backbone.View.extend({
 
        var icon = $("<span class='icon cross' style='position: absolute; top: auto;margin-top: -1px;'></span>");
        if (BrowserInfo.isSmallScreen() || signatoryHasPlacedSignatures) {
-         icon = undefined
-       };
+         icon = undefined;
+       }
 
        var signButtonText = localization.process.signbuttontext;
        if (signatoryHasPlacedSignatures) {
