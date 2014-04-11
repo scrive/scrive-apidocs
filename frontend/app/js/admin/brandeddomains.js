@@ -123,36 +123,61 @@ var AdminBrandedDomainView = Backbone.View.extend({
       var table = $("<table style='border-collapse: separate; border-spacing: 10px;'/>");
       box.append(table);
 
-      var addTableRow = function(field) {
-          var input = $("<input type='text'/>").val(model.get(field));
-          table.append($("<tr/>").append($("<td/>").append($("<label/>").text(field))).
-                                  append($("<td/>").append(input)));
+      var addTableRow = function(field,type) {
+          var value = model.get(field);
+          var input = $("<input type='text'/>").val(value);
+          var tr = $("<tr/>");
+          tr.append($("<td/>").append($("<label/>").text(field)));
+          tr.append($("<td/>").append(input));
+          var colimm;
+          var imgimm;
+          if( type=="color" ) {
+              colimm = $("<div>").css({height: "25px", width: "50px", "background-color":value});
+              tr.append($("<td/>").append(colimm));
+          }
+          else if( type=="imglink" ) {
+              imgimm = $("<img>").css({height: "25px", width: "50px"}).attr("src",value);
+              tr.append($("<td/>").append(imgimm));
+          }
+          table.append(tr);
+
           input.change(function() {
               var changes = {};
-              changes[field] = input.val();
+              value = input.val();
+              changes[field] = value;
+              /*
+               * Due to silent updates we need to manually update
+               * immediate feedback controls. Backbone sucks.
+               */
+              if( colimm ) {
+                  colimm.css({"background-color":value});
+              }
+              if( imgimm ) {
+                  imgimm.attr("src",value);
+              }
               model.set(changes, {silent: true});
           });
       }
       addTableRow("url");
-      addTableRow("logolink");
-      addTableRow("bars_color");
-      addTableRow("bars_text_color");
-      addTableRow("bars_secondary_color");
-      addTableRow("background_color");
-      addTableRow("background_color_external");
-      addTableRow("mails_background_color");
-      addTableRow("mails_button_color");
-      addTableRow("mails_text_color");
-      addTableRow("signview_primary_color");
-      addTableRow("signview_primary_text_color");
-      addTableRow("signview_secondary_color");
-      addTableRow("signview_secondary_text_color");
+      addTableRow("logolink", "imglink");
+      addTableRow("bars_color", "color");
+      addTableRow("bars_text_color", "color");
+      addTableRow("bars_secondary_color", "color");
+      addTableRow("background_color", "color");
+      addTableRow("background_color_external", "color");
+      addTableRow("mails_background_color", "color");
+      addTableRow("mails_button_color", "color");
+      addTableRow("mails_text_color", "color");
+      addTableRow("signview_primary_color", "color");
+      addTableRow("signview_primary_text_color", "color");
+      addTableRow("signview_secondary_color", "color");
+      addTableRow("signview_secondary_text_color", "color");
       addTableRow("button_class");
-      addTableRow("service_link_color");
-      addTableRow("external_text_color");
-      addTableRow("header_color");
-      addTableRow("text_color");
-      addTableRow("price_color");
+      addTableRow("service_link_color", "color");
+      addTableRow("external_text_color", "color");
+      addTableRow("header_color", "color");
+      addTableRow("text_color", "color");
+      addTableRow("price_color", "color");
       addTableRow("sms_originator");
       addTableRow("email_originator");
       addTableRow("contact_email");
