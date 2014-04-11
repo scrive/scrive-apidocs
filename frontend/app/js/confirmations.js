@@ -322,7 +322,7 @@ window.Confirmation = function (args) {
           // Initiate the view
           if (args.fast != undefined && args.fast == true) {
             overlay.addClass("no-transition");
-            $("body").append(overlay.addClass('active')).each(function() { 
+            $("body").append(overlay.addClass('active')).each(function() {
               if (model.signview() && (window.innerHeight - bottomMargin) > view.container.height()) {
                 // We have to do this here as I'm not able to get the height() of the container until we've appended it.
                 view.container.css("margin-top", window.innerHeight - view.container.height() - bottomMargin);
@@ -333,7 +333,7 @@ window.Confirmation = function (args) {
             overlay.height($(document).height());
             view.onRender();
           } else {
-            $("body").append(overlay).each(function() { 
+            $("body").append(overlay).each(function() {
               if (model.signview() && (window.innerHeight - bottomMargin) > view.container.height()) {
                 overlay.addClass("no-transition");
                 view.container.css("margin-top", window.innerHeight - view.container.height() - bottomMargin);
@@ -370,7 +370,7 @@ window.Confirmation = function (args) {
 
             if (modalTop < scrollTop) {
               view.container.css("margin-top", topMargin);
-            } 
+            }
 
             if (modalBottom > scrollBottom) {
               view.container.css("margin-top", window.innerHeight - view.container.height() - bottomMargin);

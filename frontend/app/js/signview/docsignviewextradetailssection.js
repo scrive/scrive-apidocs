@@ -35,7 +35,7 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
             fast: true,
             signaturesPlaced: true,
             margin: self.confirmation.absoluteTop() + "px auto 0"
-          }).popup();
+          });
 
           self.confirmation.clear();
         }  else {

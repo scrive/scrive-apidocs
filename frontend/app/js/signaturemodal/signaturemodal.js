@@ -87,7 +87,7 @@ var SignatureDrawOrTypeModel= Backbone.Model.extend({
     var extraDetailsLeft = DocumentExtraDetails.detailsMissing(signatory);
 
     // Are we currently in the extra details signature drawing modal and all other fields are filled in?
-    if (extraDetailsLeft && 
+    if (extraDetailsLeft &&
         DocumentExtraDetails.askForSignature(signatory) &&
         !DocumentExtraDetails.askForSSN(signatory)      &&
         !DocumentExtraDetails.askForName(signatory)     &&
@@ -305,7 +305,7 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
                             signaturesPlaced: true,
                             margin: self.model.containerTop() + "px auto 0",
                             arrow: arrow
-                          }).popup();
+                          });
 
                           self.model.modal().remove();
 
@@ -355,7 +355,7 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
 
            if (this.model.actionButtonIsSignNow()) {
              inner.append(this.signButton());
-           } else if (this.model.actionButtonIsFillInExtraDetails()) { 
+           } else if (this.model.actionButtonIsFillInExtraDetails()) {
              inner.append(this.extraDetailsButton());
            } else {
              inner.append(this.applyButton());

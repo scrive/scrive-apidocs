@@ -1032,5 +1032,6 @@
 "_youCantSendRemindersToThisDocuments":"Reminders can’t be sent for some of the selected documents.",
 "_yourSigningPluginFailed":"Your signing plug-in failed to sign the document. Please contact your eID provider.",
 "_zip":"Zip",
-"_smsPinSendout":"Your pin code is $pin$"
+"_smsPinSendout":"Your pin code is $pin$",
+"_designViewWithSMSPin":"With SMS Pin"
 }

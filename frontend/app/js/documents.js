@@ -562,6 +562,11 @@ window.Document = Backbone.Model.extend({
             return false;
         }
 
+        if (this.author().smsPinAuthentication()) {
+            // We don't support same sms pin for author from design view
+            return false;
+        }
+
         var aidx = this.author().signorder();
         return ! _.any(this.signatories(), function(sig) {
             return sig.signs() && sig.signorder() < aidx;

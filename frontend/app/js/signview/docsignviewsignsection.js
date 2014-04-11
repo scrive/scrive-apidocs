@@ -6,7 +6,26 @@
 
 define(['signview/send_sms_pin_modal','Backbone', 'legacy_code'], function(SendSMSPinModal) {
 
-window.DocumentSignConfirmation = Backbone.View.extend({
+
+window.DocumentSignConfirmation = function(args) {
+          if (args.model.document().currentSignatory().smsPinAuthentication()) {
+             console.log(args.margin);
+             var modal = new SendSMSPinModal({
+                model: args.model,
+                margin : args.margin,
+                fast : args.fast,
+                onSend : function() {
+                 args.fast = true;
+                 args.margin = modal.modalAbsoluteTop() + "px auto 0";
+                 new DocumentSignConfirmationForSigning(args).popup();
+                }
+            });
+          } else
+             new DocumentSignConfirmationForSigning(args).popup();
+};
+
+
+window.DocumentSignConfirmationForSigning = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'popup', 'onSignedDocument', 'createContentElems');
     this.signaturesPlaced = args.signaturesPlaced;
@@ -236,12 +255,11 @@ window.DocumentSignConfirmation = Backbone.View.extend({
           self.openVerifyingPinModal();
 
         document.checksign(function() {
-<<<<<<< HEAD
+
           var modalTop = self.confirmation.absoluteTop();
-=======
           if (signatory.smsPinAuthentication())
             self.closeVerifyingPinModal();
->>>>>>> Working SMS modal
+
           self.confirmation.clear();
           self.signinprogressmodal = new SigningInProgressModal({
                                           document : document,
@@ -544,18 +562,13 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                         return false;
                                     }
                                 mixpanel.track('Click sign');
-                                var openSignConfirmation = function() {
-                                  new DocumentSignConfirmation({
+
+
+                                new DocumentSignConfirmation({
                                     model: model,
                                     signview: true,
                                     signaturesPlaced: signatoryHasPlacedSignatures
-                                  }).popup();
-                                };
-
-                                if (signatory.smsPinAuthentication())
-                                  new SendSMSPinModal({model: model, onSend : function() {openSignConfirmation();}   });
-                                else
-                                  openSignConfirmation()
+                                });
                                }
                             });
 

@@ -252,10 +252,11 @@ define(['Backbone', 'legacy_code'], function() {
 
             var authTexts = {
                 standard : localization.designview.noIDControl,
-                eleg : localization.designview.withEleg
+                eleg : localization.designview.withEleg,
+                sms_pin : localization.designview.withSMSPin
             };
 
-            var authTypes = ['standard', 'eleg'];
+            var authTypes = ['standard', 'eleg', 'sms_pin'];
 
             var select = new Select({
                 options: _.map(authTypes, function(t) {
@@ -686,6 +687,8 @@ define(['Backbone', 'legacy_code'], function() {
                 var auth = sig.authentication();
                 if(auth === 'standard')
                     sig.setAuthentication('eleg');
+                else if (auth === 'eleg')
+                    sig.setAuthentication('sms_pin');
                 else
                     sig.setAuthentication('standard');
                 return false;
@@ -693,7 +696,8 @@ define(['Backbone', 'legacy_code'], function() {
         },
         icons: {
             standard: 'design-view-action-participant-icon-auth-icon-noauth',
-            eleg: 'design-view-action-participant-icon-auth-icon-eleg'
+            eleg: 'design-view-action-participant-icon-auth-icon-eleg',
+            sms_pin : 'design-view-action-participant-icon-auth-icon-sms-pin'
         },
         render: function() {
             var view = this;

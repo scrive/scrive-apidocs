@@ -15,8 +15,11 @@ define(['React','common/button','common/backbone_mixim','Backbone', 'legacy_code
     onSend : function() {
        this.get("onSend")();
     },
-    newdaystoremind: function() {
-      return this.get("newdaystoremind");
+    margin : function() {
+        return this.get("margin");
+    },
+    fast : function() {
+        return this.get("fast");
     },
     model : function() {
       return this.get("model");
@@ -93,27 +96,10 @@ define(['React','common/button','common/backbone_mixim','Backbone', 'legacy_code
       _.bindAll(this, 'render');
       this.render();
     },
-    /*sentButton : function() {
-      var self = this;
-      return new Button({
-        color: "green",
-        style : (BrowserInfo.isSmallScreen() ? "margin-top:-10px" : ""),
-        size: "small",
-        text : (self.model.document().autoremindtime() != undefined ? localization.autoreminders.changeAutoreminderButton : localization.autoreminders.setAutoreminderButton),
-        onClick : function() {
-          if (self.model.newdaystoremind() == undefined) return; // This should never happend;
-          self.model.setautoreminder(self.model.newdaystoremind(),function() {
-            self.modal.close();
-          });
-        }
-      }).el();
-    },*/
     onNext : function() {
       var self = this;
       self.model.savePhoneNumber();
-      LoadingDialog.open("Sending SMS with PIN");
       self.model.sendSMSPin(function() {
-        LoadingDialog.close();
         self.modal.close();
         self.model.onSend();
       });
@@ -142,14 +128,14 @@ define(['React','common/button','common/backbone_mixim','Backbone', 'legacy_code
         });
 
 
-
         self.modal = new Confirmation({
                   title: "Sign with SMS PIN",
-                  //subtitle : $("<div/>").html(localization.autoreminders.changeAutoreminderDescription),
                   content: content,
                   width: BrowserInfo.isSmallScreen() ? 825 : 424,
-                  //icon : '/img/modal-icons/extend-duedate.png',
                   cssClass: 'grey',
+                  signview : self.model.margin() != undefined ? false : true,
+                  fast : self.model.fast(),
+                  margin : self.model.margin(),
                   textcolor : this.model.usebranding() ? this.model.signviewbranding().signviewtextcolour() : undefined,
                   textfont : this.model.usebranding() ? this.model.signviewbranding().signviewtextfont() : undefined,
                   onReject : function() { },
@@ -169,5 +155,8 @@ define(['React','common/button','common/backbone_mixim','Backbone', 'legacy_code
     var model = new SendSMSPinModalModel(args);
     var view = new SendSMSPinModalView({model: model});
     view.startModal();
+    return {
+      modalAbsoluteTop : function() {return view.modal.absoluteTop();}
+    }
   }
 });

@@ -29,11 +29,7 @@ test("multiple 'from' states for the same event", function() {
 
   fsm.panic(); equals(fsm.current, 'red',   "panic event should transition from green to red");
   fsm.clear(); equals(fsm.current, 'green', "clear event should transition from red to green");
-<<<<<<< HEAD
-   
-=======
 
->>>>>>> Add javascript-state-machine
 });
 
 //-----------------------------------------------------------------------------

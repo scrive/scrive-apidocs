@@ -403,6 +403,7 @@ javascriptLocalisation =
              , forViewing: "$_designViewForViewing()$"
              , noIDControl: "$_designViewNoIDControl()$"
              , withEleg: "$_designViewWithEleg()$"
+             , withSMSPin: "$_designViewWithSMSPin()$"
              , withEmailConfirmation: "$_withEmailConfirmationg()$"
              , withMobileConfirmation: "$_withMobileConfirmation()$"
              , withEmailMobileConfirmation: "$_withEmailMobileConfirmation()$"

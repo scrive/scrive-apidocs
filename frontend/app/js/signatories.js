@@ -747,13 +747,13 @@ window.Signatory = Backbone.Model.extend({
                 var f = new Field({name:'mobile',
                                    type: 'standard',
                                    obligatory: true,
-                                   shouldbefilledbysender: true,
+                                   shouldbefilledbysender: signatory.author(),
                                    signatory: signatory});
                 f.addedByMe = true;
                 signatory.addField(f);
             } else {
                 pn.makeObligatory();
-                pn.setShouldBeFilledBySender((!pn.canBeSetByRecipent()) || (pn.authorObligatory == 'sender'));
+                pn.setShouldBeFilledBySender((!pn.canBeSetByRecipent()) || signatory.author() || (pn.authorObligatory == 'sender'));
             }
         } else {
             if(pn && pn.addedByMe && pn.value() === '' && !pn.hasPlacements() && !pn.isLastIdentificationField()) {
@@ -773,7 +773,7 @@ window.Signatory = Backbone.Model.extend({
         }
     },
     needsMobile: function() {
-        return this.mobileDelivery() || this.emailMobileDelivery() || this.mobileConfirmationDelivery() || this.emailMobileConfirmationDelivery() ;
+        return this.mobileDelivery() || this.emailMobileDelivery() || this.mobileConfirmationDelivery() || this.emailMobileConfirmationDelivery() || this.smsPinAuthentication();
     },
     color: function() {
         return this.get('color');
