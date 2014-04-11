@@ -124,6 +124,7 @@ adminonlyRoutes =
 
         , dir "brandeddomainslist" $ hGet $ toK0 $ jsonBrandedDomainsList
         , dir "brandeddomain" $ hGet $ toK1 $ showAdminBrandedDomain
+        , dir "brandeddomain" $ dir "create" $ hPost $ toK0 $ createBrandedDomain
         , dir "brandeddomain" $ dir "details" $ hGet $ toK1 $ jsonBrandedDomain
         , dir "brandeddomain" $ dir "details" $ dir "change" $ hPost $ toK1 $ updateBrandedDomain
   ]
@@ -834,3 +835,9 @@ updateBrandedDomain bdid = onlySalesOrAdmin $ do
 
     _ <- dbUpdate $ UpdateBrandedDomain bdid bd
     return ()
+
+createBrandedDomain :: Kontrakcja m => m JSValue
+createBrandedDomain = do
+    bdid <- dbUpdate $ NewBrandedDomain
+    runJSONGenT $ do
+      value "id" (show bdid)
