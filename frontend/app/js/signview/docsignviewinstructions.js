@@ -31,11 +31,13 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
       console.error("Unsure what state we're in");
       string = localization.docsignview.unavailableForSign;
     }
-    if (capitalize) {
-      string = string.charAt(0).toUpperCase() + string.slice(1);
-    }
     // Keep this as a string to preserve the ability to have HTML in the translation strings.
-    return $("<span>" + string + "</span>");
+    result = $("<span>" + string + "</span>");
+    if (capitalize) {
+      result.css('display', 'inline-block');
+      result.addClass('capitalize-first-letter');
+    }
+    return result;
   },
   // Smaller text with more details on some states
   subtext: function() {
