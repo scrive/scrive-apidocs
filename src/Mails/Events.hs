@@ -42,6 +42,7 @@ import qualified Log
 import Util.Actor
 import qualified Text.StringTemplates.Fields as F
 import BrandedDomain.BrandedDomain
+import BrandedDomain.Model
 import Data.Functor
 import Doc.DocViewMail
 

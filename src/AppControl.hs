@@ -34,7 +34,7 @@ import qualified MemCache
 import Util.FinishWith
 import Util.FlashUtil
 import File.FileID
-import BrandedDomain.BrandedDomain
+import BrandedDomain.Model
 
 import Control.Concurrent (MVar, modifyMVar, threadDelay)
 import Control.Concurrent.MVar.Util (tryReadMVar)

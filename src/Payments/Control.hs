@@ -54,6 +54,7 @@ import qualified Payments.Stats as Stats
 import Util.MonadUtils
 import AppConf
 import BrandedDomain.BrandedDomain
+import BrandedDomain.Model
 
 -- to call this, user must not have an account code yet (no payment plan in table)
 handleSyncNewSubscriptionWithRecurly :: Kontrakcja m => m ()

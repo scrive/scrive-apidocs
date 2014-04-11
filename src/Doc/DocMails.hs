@@ -19,6 +19,7 @@ module Doc.DocMails (
 import ActionQueue.Scheduler (SchedulerData, sdAppConf, getGlobalTemplates)
 import AppConf (hostpart, mailsConfig)
 import BrandedDomain.BrandedDomain
+import BrandedDomain.Model
 import Control.Applicative ((<$>), (<*>), Applicative)
 import Control.Conditional (whenM, ifM)
 import Control.Monad.Trans

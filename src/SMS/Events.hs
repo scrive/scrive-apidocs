@@ -41,6 +41,7 @@ import qualified Text.StringTemplates.Fields as F
 import Utils.Read
 import Data.Functor
 import BrandedDomain.BrandedDomain
+import BrandedDomain.Model
 import Doc.DocViewMail
 import EvidenceLog.Model
 import Utils.Default (defaultValue)

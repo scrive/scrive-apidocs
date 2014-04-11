@@ -50,6 +50,7 @@ import InputValidation
 import User.Utils
 import Util.Actor
 import BrandedDomain.BrandedDomain
+import BrandedDomain.Model
 import Payments.Action
 import Payments.Model
 import Payments.Config
