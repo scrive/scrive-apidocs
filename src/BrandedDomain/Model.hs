@@ -4,6 +4,7 @@ module BrandedDomain.Model
     , GetBrandedDomainByUserID(..)
     , GetBrandedDomainByID(..)
     , UpdateBrandedDomain(..)
+    , NewBrandedDomain(..)
   ) where
 
 import BrandedDomain.BrandedDomainID
@@ -106,3 +107,13 @@ instance (MonadDB m, Log.MonadLog m) => DBUpdate m UpdateBrandedDomain () where
       sqlSet "email_originator" $ bdemailoriginator bd
       sqlSet "contact_email" $ bdcontactemail bd
       sqlWhereEq "id" uid
+
+data NewBrandedDomain = NewBrandedDomain
+instance (MonadDB m, Log.MonadLog m) => DBUpdate m NewBrandedDomain BrandedDomainID where
+  update (NewBrandedDomain) = do
+    runQuery_ . sqlInsert "branded_domains" $ do
+      -- skip first column, that is branded_domains.id, it will default from sequence
+      mapM_ (\col -> sqlSet (raw (colName col)) (""::String)) (tail $ tblColumns tableBrandedDomains)
+      sqlResult "id"
+    Single x <- fetchOne id
+    return x
