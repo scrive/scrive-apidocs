@@ -199,7 +199,7 @@ var AdminBrandedDomainView = Backbone.View.extend({
                     return e; }],
                 pagehash : "details",
                 onActivate : function() {
-                    //self.companydetails().refresh();
+                    self.model.fetch();
                 }
             })]
        });
@@ -214,7 +214,7 @@ window.AdminBrandedDomain = function(args) {
           var view =  new AdminBrandedDomainView({model : model, el : $("<div/>")});
           this.el = function() {return $(view.el);};
           this.refresh = function() {
-              model.refresh();
+              model.fetch();
           };
 };
 
