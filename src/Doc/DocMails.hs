@@ -315,12 +315,12 @@ sendPinCode:: (Log.MonadLog m, TemplatesMonad m,MonadIO m, DocumentMonad m, Cryp
 sendPinCode sl phone pin = do
   ctx <- getContext
   doc <- theDocument
-  void $ dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+  void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg
               SMSPinSend
               (return ())
               (Just sl)
               (Just phone)
-              (signatoryActor ctx sl)
+              =<< (signatoryActor ctx sl)
   scheduleSMS =<< smsPinCodeSendout doc sl phone pin
 
 {- |
