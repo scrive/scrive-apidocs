@@ -121,7 +121,7 @@ adminonlyRoutes =
 
         , dir "companies" $ hGet $ toK0 $ jsonCompanies
 
-        , dir "domainbrandingslist" $ hGet $ toK0 $ jsonBrandedDomainsList
+        , dir "brandeddomainslist" $ hGet $ toK0 $ jsonBrandedDomainsList
   ]
 
 daveRoutes :: Route (KontraPlus Response)

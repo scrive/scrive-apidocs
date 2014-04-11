@@ -2,7 +2,7 @@
 
 define(['Backbone', 'legacy_code'], function() {
 
-window.DomainBrandingAdminListDefinition = function() {
+window.BrandedDomainAdminListDefinition = function() {
     var cells = [
         new Cell({name: "Prefix", width:"80px", field: "url", special: "rendered",
                     rendering: function(_, _, doc) {
@@ -13,9 +13,9 @@ window.DomainBrandingAdminListDefinition = function() {
 
     var list = {
 	loadOnInit: false,
-        name : "Documents Table",
+        name : "Branded Domains",
         schema: new Schema({
-            url: "/adminonly/domainbrandingslist",
+            url: "/adminonly/brandeddomainslist",
             sorting: new Sorting({fields: []}),
             paging: new Paging({}),
             textfiltering: new TextFiltering({infotext: "Filter", disabled : true }),

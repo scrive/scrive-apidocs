@@ -117,7 +117,7 @@ define([
   '../js/admin/payments',
   '../js/admin/users',
   '../js/admin/userdetails',
-  '../js/admin/domainbrandings',
+  '../js/admin/brandeddomains',
   '../js/account/company',
   '../js/account/user',
   '../js/account/accountsettings/accountsettings',
