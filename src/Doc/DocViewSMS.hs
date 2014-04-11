@@ -1,7 +1,5 @@
 module Doc.DocViewSMS (
-      smsMismatchSignatory
-    , smsMismatchAuthor
-    , smsDocumentErrorAuthor
+      smsDocumentErrorAuthor
     , smsDocumentErrorSignatory
     , smsInvitation
     , smsInvitationToAuthor
@@ -39,16 +37,6 @@ mkSMS doc sl msgData msgBody = do
        Nothing -> return Nothing
   let originator = fromMaybe (fromMaybe "Scrive" (bdsmsoriginator <$> mctxcurrentBrandedDomain mctx)) (joinEmpty  moriginator)
   return $ SMS (getMobile sl) msgData msgBody originator
-
-
-
-smsMismatchSignatory :: (MailContextMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> m SMS
-smsMismatchSignatory doc sl = do
-  mkSMS doc sl None =<< renderLocalTemplate doc "_smsMismatchSignatory" (smsFields doc sl)
-
-smsMismatchAuthor :: (MailContextMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> m SMS
-smsMismatchAuthor doc sl = do
-  mkSMS doc sl None =<< renderLocalTemplate doc "_smsMismatchAuthor" (smsFields doc sl)
 
 smsDocumentErrorAuthor :: (MailContextMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> m SMS
 smsDocumentErrorAuthor doc sl = do
