@@ -107,7 +107,7 @@ var AdminBrandedDomainView = Backbone.View.extend({
           input.change(function() {
               var changes = {};
               changes[field] = input.val();
-              model.set(changes);
+              model.set(changes, {silent: true});
           });
       }
       addTableRow("url");
