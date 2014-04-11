@@ -2,6 +2,8 @@ module BrandedDomain.Model
   (   GetBrandedDomains(..)
     , GetBrandedDomainByURL(..)
     , GetBrandedDomainByUserID(..)
+    , GetBrandedDomainByID(..)
+    , UpdateBrandedDomain(..)
   ) where
 
 import BrandedDomain.BrandedDomainID
@@ -67,3 +69,40 @@ instance (MonadDB m, Log.MonadLog m) => DBQuery m GetBrandedDomainByUserID (Mayb
         sqlWhereEq "users.id" uid
         sqlWhere "users.associated_domain = branded_domains.url"
     fetchMaybe fetchBrandedDomain
+
+data GetBrandedDomainByID = GetBrandedDomainByID BrandedDomainID
+instance (MonadDB m, Log.MonadLog m) => DBQuery m GetBrandedDomainByID (Maybe BrandedDomain) where
+  query (GetBrandedDomainByID uid) = do
+    runQuery_ . sqlSelect "branded_domains" $ do
+      mapM_ (sqlResult . raw . colName) (tblColumns tableBrandedDomains)
+      sqlWhereEq "id" uid
+    fetchMaybe fetchBrandedDomain
+
+data UpdateBrandedDomain = UpdateBrandedDomain BrandedDomainID BrandedDomain
+instance (MonadDB m, Log.MonadLog m) => DBUpdate m UpdateBrandedDomain () where
+  update (UpdateBrandedDomain uid bd) = do
+    runQuery_ . sqlUpdate "branded_domains" $ do
+      sqlSet "url" $ bdurl bd
+      sqlSet "logolink" $ bdlogolink bd
+      sqlSet "bars_color" $ bdbarscolour bd
+      sqlSet "bars_text_color" $ bdbarstextcolour bd
+      sqlSet "bars_secondary_color" $ bdbarssecondarycolour bd
+      sqlSet "background_color" $ bdbackgroundcolour bd
+      sqlSet "background_color_external" $ bdbackgroundcolorexternal bd
+      sqlSet "mails_background_color" $ bdmailsbackgroundcolor bd
+      sqlSet "mails_button_color" $ bdmailsbuttoncolor bd
+      sqlSet "mails_text_color" $ bdmailstextcolor bd
+      sqlSet "signview_primary_color" $ bdsignviewprimarycolour bd
+      sqlSet "signview_primary_text_color" $ bdsignviewprimarytextcolour bd
+      sqlSet "signview_secondary_color" $ bdsignviewsecondarycolour bd
+      sqlSet "signview_secondary_text_color" $ bdsignviewsecondarytextcolour bd
+      sqlSet "button_class" $ bdbuttonclass bd
+      sqlSet "service_link_color" $ bdservicelinkcolour bd
+      sqlSet "external_text_color" $ bdexternaltextcolour bd
+      sqlSet "header_color" $ bdheadercolour bd
+      sqlSet "text_color" $ bdtextcolour bd
+      sqlSet "price_color" $ bdpricecolour bd
+      sqlSet "sms_originator" $ bdsmsoriginator bd
+      sqlSet "email_originator" $ bdemailoriginator bd
+      sqlSet "contact_email" $ bdcontactemail bd
+      sqlWhereEq "id" uid
