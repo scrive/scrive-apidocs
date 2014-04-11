@@ -369,6 +369,13 @@ window.Arrow = function (args) {
   this.fixWidth = function() {
     if (view.fixWidth != undefined) view.fixWidth();
   };
+  this.activate = function() {
+    if (view.scroll !== undefined) {
+      view.scroll();
+    } else {
+      this.blink(10);
+    }
+  };
 };
 
 });

@@ -269,7 +269,7 @@ var PageTasksArrowView = Backbone.View.extend({
     if (this.arrow === undefined) {
       return;
     }
-    this.arrow.scroll();
+    this.arrow.activate();
   },
   render: function() {
     var view = this;

@@ -2,7 +2,7 @@
  * Has some extra options in some cases.
  */
 
-define(['Backbone', 'legacy_code'], function() {
+define(['Backbone', 'legacy_code', '../../libs/tinycolor-min'], function(notUsed, notUsed2, tinycolor) {
 
 window.DocumentSignInstructionsView = Backbone.View.extend({
   initialize: function(args) {
@@ -88,7 +88,11 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
       elem.css('font-family', textfont);
     }
     if (this.model.usebranding() && primarycolour) {
-      elem.find('.arrowtext').css('color', primarycolour);
+      elem.find('.arrowtext').css('color', primarycolour).hover(function() {
+        $(this).css('color', tinycolor.lighten(primarycolour, 10).toRgbString());
+      }, function() {
+        $(this).css('color', primarycolour);
+      });
     }
   },
   renderArrowLegend: function() {
