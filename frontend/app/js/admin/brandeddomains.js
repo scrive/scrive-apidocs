@@ -5,7 +5,7 @@ define(['Backbone', 'legacy_code'], function() {
     var createDomainBrandingButton =  new Button({
         color: "green",
         size: "tiny",
-        text: "Create domain branding",
+        text: "Create branded domain",
         onClick: function() {
             new Submit({
                 method: "POST",
@@ -191,7 +191,7 @@ var AdminBrandedDomainView = Backbone.View.extend({
                 url :  "/adminonly#brandeddomains"
             }),
             new Tab({
-                name: "Domain branding details",
+                name: "Branded domain details",
                 elems: [function() {
                     var e = $("<div class='tab-container brandeddomains'/>");
                     e.append(self.domainBrandingDetails());
