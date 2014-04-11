@@ -3,10 +3,13 @@ module BrandedDomain.BrandedDomain
     , BrandedDomain(..)
   ) where
 
+import BrandedDomain.BrandedDomainID
+
 type BrandedDomains = [BrandedDomain]
 
 data BrandedDomain = BrandedDomain {
-                          bdurl :: String
+                          bdid :: BrandedDomainID
+                        , bdurl :: String
                         , bdlogolink :: String
                         , bdbarscolour :: String
                         , bdbarstextcolour :: String

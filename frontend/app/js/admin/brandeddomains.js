@@ -24,22 +24,22 @@ window.BrandedDomainAdminListDefinition = function() {
     var cells = [
         new Cell({name: "URL", width:"80px", field: "url", special: "rendered",
                     rendering: function(_, _, doc) {
-                        return jQuery("<span/>").text(doc.field("url"));
+                        return jQuery("<a/>").text(doc.field("url")).attr("href", "/adminonly/brandeddomain/"+doc.field("id"));
                     }
         }),
         new Cell({name: "Contact Email", width:"80px", field: "contact_email", special: "rendered",
                     rendering: function(_, _, doc) {
-                        return jQuery("<span/>").text(doc.field("contact_email"));
+                        return jQuery("<a/>").text(doc.field("contact_email")).attr("href", "/adminonly/brandeddomain/"+doc.field("id"));
                     }
         }),
         new Cell({name: "Email Originator", width:"80px", field: "email_originator", special: "rendered",
                     rendering: function(_, _, doc) {
-                        return jQuery("<span/>").text(doc.field("email_originator"));
+                        return jQuery("<a/>").text(doc.field("email_originator")).attr("href", "/adminonly/brandeddomain/"+doc.field("id"));
                     }
         }),
         new Cell({name: "SMS Originator", width:"80px", field: "sms_originator", special: "rendered",
                     rendering: function(_, _, doc) {
-                        return jQuery("<span/>").text(doc.field("sms_originator"));
+                        return jQuery("<a/>").text(doc.field("sms_originator")).attr("href", "/adminonly/brandeddomain/"+doc.field("id"));
                     }
         }),
         new Cell({name: "Logo", width:"80px", field: "url", special: "rendered",

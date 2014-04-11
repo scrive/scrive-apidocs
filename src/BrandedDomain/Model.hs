@@ -21,9 +21,10 @@ import Control.Applicative
 
 
 fetchBrandedDomain :: (BrandedDomainID, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String) -> BrandedDomain
-fetchBrandedDomain (_id, url, logolink, barscolour, barstextcolour, barssecondarycolour, backgroundcolour, backgroundcolorexternal, mailsbackgroundcolor, mailsbuttoncolor, mailstextcolor, signviewprimarycolour, signviewprimarytextcolour, signviewsecondarycolour, signviewsecondarytextcolour, buttonclass, servicelinkcolour, externaltextcolour, headercolour, textcolour, pricecolour, smsoriginator, emailoriginator, contactemail)
+fetchBrandedDomain (xid, url, logolink, barscolour, barstextcolour, barssecondarycolour, backgroundcolour, backgroundcolorexternal, mailsbackgroundcolor, mailsbuttoncolor, mailstextcolor, signviewprimarycolour, signviewprimarytextcolour, signviewsecondarycolour, signviewsecondarytextcolour, buttonclass, servicelinkcolour, externaltextcolour, headercolour, textcolour, pricecolour, smsoriginator, emailoriginator, contactemail)
        = BrandedDomain
-         { bdurl                         = url
+         { bdid                          = xid
+         , bdurl                         = url
          , bdlogolink                    = logolink
          , bdbarscolour                  = barscolour
          , bdbarstextcolour              = barstextcolour
@@ -82,9 +83,9 @@ instance (MonadDB m, Log.MonadLog m) => DBQuery m GetBrandedDomainByID (Maybe Br
       sqlWhereEq "id" uid
     fetchMaybe fetchBrandedDomain
 
-data UpdateBrandedDomain = UpdateBrandedDomain BrandedDomainID BrandedDomain
+data UpdateBrandedDomain = UpdateBrandedDomain BrandedDomain
 instance (MonadDB m, Log.MonadLog m) => DBUpdate m UpdateBrandedDomain () where
-  update (UpdateBrandedDomain uid bd) = do
+  update (UpdateBrandedDomain bd) = do
     runQuery_ . sqlUpdate "branded_domains" $ do
       sqlSet "url" $ bdurl bd
       sqlSet "logolink" $ bdlogolink bd
@@ -109,7 +110,7 @@ instance (MonadDB m, Log.MonadLog m) => DBUpdate m UpdateBrandedDomain () where
       sqlSet "sms_originator" $ bdsmsoriginator bd
       sqlSet "email_originator" $ bdemailoriginator bd
       sqlSet "contact_email" $ bdcontactemail bd
-      sqlWhereEq "id" uid
+      sqlWhereEq "id" (bdid bd)
 
 data NewBrandedDomain = NewBrandedDomain
 instance (MonadDB m, Log.MonadLog m) => DBUpdate m NewBrandedDomain BrandedDomainID where

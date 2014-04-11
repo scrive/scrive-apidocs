@@ -720,7 +720,6 @@ jsonBrandedDomainsList = onlySalesOrAdmin $ do
     runJSONGenT $ do
       valueM "list" $ forM (take pageSize $ allBrandedDomains) $ \bd -> runJSONGenT $ do
         object "fields" $ do
-          --value "id" $ show $ bdid bd -- add identifier
           jsonBrandedDomainHelper bd
       value "paging" $ pagingParamsJSON allBrandedDomainsPagedList
 
@@ -730,7 +729,6 @@ jsonBrandedDomain bdid = onlySalesOrAdmin $ do
   bd <- guardJustM $ dbQuery $ GetBrandedDomainByID bdid
 
   runJSONGenT $ do
-    value "id" $ show $ bdid
     jsonBrandedDomainHelper bd
 
 jsonBrandedDomainHelper :: forall (m :: * -> *).
@@ -738,6 +736,7 @@ jsonBrandedDomainHelper :: forall (m :: * -> *).
                                  BrandedDomain -> JSONGenT m ()
 jsonBrandedDomainHelper bd = do
   -- keep this 1to1 consistent with fields in the database
+  value "id"                            $ show (bdid bd)
   value "url"                           $ bdurl bd
   value "logolink"                      $ bdlogolink bd
   value "bars_color"                    $ bdbarscolour bd
@@ -763,7 +762,7 @@ jsonBrandedDomainHelper bd = do
   value "contact_email"                 $ bdcontactemail bd
 
 updateBrandedDomain :: Kontrakcja m => BrandedDomainID -> m ()
-updateBrandedDomain bdid = onlySalesOrAdmin $ do
+updateBrandedDomain xbdid = onlySalesOrAdmin $ do
 
     -- keep this 1to1 consistent with fields in the database
     post_url <- look "bdurl"
@@ -791,6 +790,7 @@ updateBrandedDomain bdid = onlySalesOrAdmin $ do
     post_contact_email <- look "contact_email"
 
     let bd = BrandedDomain {
+        bdid = xbdid,
         bdurl = post_url,
         bdlogolink = post_logolink,
         bdbarscolour = post_bars_color,
@@ -816,7 +816,7 @@ updateBrandedDomain bdid = onlySalesOrAdmin $ do
         bdcontactemail = post_contact_email
              }
 
-    _ <- dbUpdate $ UpdateBrandedDomain bdid bd
+    _ <- dbUpdate $ UpdateBrandedDomain bd
     return ()
 
 createBrandedDomain :: Kontrakcja m => m JSValue
