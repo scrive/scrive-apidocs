@@ -49,6 +49,7 @@ import Util.HasSomeUserInfo
 import InputValidation
 import User.Utils
 import Util.Actor
+import BrandedDomain.BrandedDomainID
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Payments.Action
@@ -122,6 +123,7 @@ adminonlyRoutes =
         , dir "companies" $ hGet $ toK0 $ jsonCompanies
 
         , dir "brandeddomainslist" $ hGet $ toK0 $ jsonBrandedDomainsList
+        , dir "brandeddomain" $ hGet $ toK1 $ showAdminBrandedDomain
   ]
 
 daveRoutes :: Route (KontraPlus Response)
@@ -164,6 +166,9 @@ handleCompanyGetProfile cid = onlySalesOrAdmin $ do
 
 showAdminCompany :: Kontrakcja m => CompanyID -> m String
 showAdminCompany companyid = onlySalesOrAdmin $ adminCompanyPage companyid
+
+showAdminBrandedDomain :: Kontrakcja m => BrandedDomainID -> m String
+showAdminBrandedDomain bdid = onlySalesOrAdmin $ adminDomainBrandingPage bdid
 
 companyPaymentsJSON :: Kontrakcja m => CompanyID -> m JSValue
 companyPaymentsJSON cid = onlySalesOrAdmin $ do
