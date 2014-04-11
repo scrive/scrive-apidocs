@@ -115,5 +115,5 @@ instance (MonadDB m, Log.MonadLog m) => DBUpdate m NewBrandedDomain BrandedDomai
       -- skip first column, that is branded_domains.id, it will default from sequence
       mapM_ (\col -> sqlSet (raw (colName col)) (""::String)) (tail $ tblColumns tableBrandedDomains)
       sqlResult "id"
-    Single x <- fetchOne id
-    return x
+    fetchOne unSingle
+
