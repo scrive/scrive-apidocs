@@ -2,6 +2,24 @@
 
 define(['Backbone', 'legacy_code'], function() {
 
+    var createDomainBrandingButton =  new Button({
+        color: "green",
+        size: "tiny",
+        text: "Create domain branding",
+        onClick: function() {
+            new Submit({
+                method: "POST",
+                url: "/adminonly/brandeddomain/create",
+                ajax: true,
+                ajaxsuccess: function(js) {
+                    window.location = "/adminonly/brandeddomain/" + js.id;
+                },
+                expectedType: "json"
+            }).send();
+        },
+    });
+
+
 window.BrandedDomainAdminListDefinition = function() {
     var cells = [
         new Cell({name: "URL", width:"80px", field: "url", special: "rendered",
@@ -40,7 +58,12 @@ window.BrandedDomainAdminListDefinition = function() {
             paging: new Paging({}),
             textfiltering: new TextFiltering({infotext: "Filter", disabled : true }),
             cells : cells
-        })
+        }),
+        headerExtras: function() {
+            var buttons = $('<div></div>');
+            buttons.append(createDomainBrandingButton.el());
+            return buttons;
+        }
     };
 
     return list;
