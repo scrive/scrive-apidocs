@@ -183,14 +183,35 @@ var AdminBrandedDomainView = Backbone.View.extend({
        var container = $(this.el);
        if (!model.ready()) return;
        container.empty();
-       container.append(this.domainBrandingDetails()).append(this.buttonsRow());
+
+        var tabs = new KontraTabs({
+            tabs: [
+            new Tab({
+                name: "<",
+                url :  "/adminonly#brandeddomains"
+            }),
+            new Tab({
+                name: "Domain branding details",
+                elems: [function() {
+                    var e = $("<div class='tab-container brandeddomains'/>");
+                    e.append(self.domainBrandingDetails());
+                    e.append(self.buttonsRow());
+                    return e; }],
+                pagehash : "details",
+                onActivate : function() {
+                    //self.companydetails().refresh();
+                }
+            })]
+       });
+
+       container.append(tabs.el());
     }
 });
 
 
 window.AdminBrandedDomain = function(args) {
           var model = new AdminBrandedDomainModel(args);
-          var view =  new AdminBrandedDomainView({model : model, el : $("<div class='tab-container account'/>")});
+          var view =  new AdminBrandedDomainView({model : model, el : $("<div/>")});
           this.el = function() {return $(view.el);};
           this.refresh = function() {
               model.refresh();
