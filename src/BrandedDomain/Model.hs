@@ -5,15 +5,18 @@ module BrandedDomain.Model
     , GetBrandedDomainByID(..)
     , UpdateBrandedDomain(..)
     , NewBrandedDomain(..)
+    , InitBrandedDomainsFromConf(..)
   ) where
 
 import BrandedDomain.BrandedDomainID
 import BrandedDomain.BrandedDomain
+import qualified BrandedDomain.BrandedDomain.Legacy as Legacy
 import BrandedDomain.Tables
 import DB
 import qualified Log
 import Data.Monoid
 import User.UserID
+import Control.Applicative
 
 
 
@@ -117,3 +120,44 @@ instance (MonadDB m, Log.MonadLog m) => DBUpdate m NewBrandedDomain BrandedDomai
       sqlResult "id"
     fetchOne unSingle
 
+
+
+data InitBrandedDomainsFromConf = InitBrandedDomainsFromConf [Legacy.BrandedDomain]
+instance (MonadDB m, Log.MonadLog m) => DBUpdate m InitBrandedDomainsFromConf Bool where
+  update (InitBrandedDomainsFromConf []) = return False
+  update (InitBrandedDomainsFromConf bds) = do
+    -- Note that here we insert old configuration branded domains into
+    -- new structures in the database. Some information might need to
+    -- be invented from thin air or taken from somewhere else (like
+    -- contents of files)
+    runQuery_ $ ("SELECT EXISTS (SELECT * FROM branded_domains)" :: SQL)
+    thereAreBrandedDomainsAlready <- fetchOne unSingle
+    if not thereAreBrandedDomainsAlready
+      then do
+        runQuery_ . sqlInsert "branded_domains" $ do
+          sqlSetList "url" $ Legacy.bdurl <$> bds
+          sqlSetList "logolink" $ Legacy.bdlogolink <$> bds
+          sqlSetList "bars_color" $ Legacy.bdbarscolour <$> bds
+          sqlSetList "bars_text_color" $ Legacy.bdbarstextcolour <$> bds
+          sqlSetList "bars_secondary_color" $ Legacy.bdbarssecondarycolour <$> bds
+          sqlSetList "background_color" $ Legacy.bdbackgroundcolour <$> bds
+          sqlSetList "background_color_external" $ Legacy.bdbackgroundcolorexternal <$> bds
+          sqlSetList "mails_background_color" $ Legacy.bdmailsbackgroundcolor <$> bds
+          sqlSetList "mails_button_color" $ Legacy.bdmailsbuttoncolor <$> bds
+          sqlSetList "mails_text_color" $ Legacy.bdmailstextcolor <$> bds
+          sqlSetList "signview_primary_color" $ Legacy.bdsignviewprimarycolour <$> bds
+          sqlSetList "signview_primary_text_color" $ Legacy.bdsignviewprimarytextcolour <$> bds
+          sqlSetList "signview_secondary_color" $ Legacy.bdsignviewsecondarycolour <$> bds
+          sqlSetList "signview_secondary_text_color" $ Legacy.bdsignviewsecondarytextcolour <$> bds
+          sqlSetList "button_class" $ Legacy.bdbuttonclass <$> bds
+          sqlSetList "service_link_color" $ Legacy.bdservicelinkcolour <$> bds
+          sqlSetList "external_text_color" $ Legacy.bdexternaltextcolour <$> bds
+          sqlSetList "header_color" $ Legacy.bdheadercolour <$> bds
+          sqlSetList "text_color" $ Legacy.bdtextcolour <$> bds
+          sqlSetList "price_color" $ Legacy.bdpricecolour <$> bds
+          sqlSetList "sms_originator" $ Legacy.bdsmsoriginator <$> bds
+          sqlSetList "email_originator" $ Legacy.bdemailoriginator <$> bds
+          sqlSetList "contact_email" $ Legacy.bdcontactemail <$> bds
+        return True
+      else do
+        return False
