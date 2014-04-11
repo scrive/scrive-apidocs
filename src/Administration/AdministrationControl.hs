@@ -713,5 +713,28 @@ jsonBrandedDomainsList = onlySalesOrAdmin $ do
       valueM "list" $ forM (take pageSize $ allBrandedDomains) $ \bd -> runJSONGenT $ do
         object "fields" $ do
           --value "id" $ show $ bdid bd -- add identifier
-          value "url"      $ bdurl bd
+          -- keep this 1to1 consistent with fields in the database
+          value "url"                           $ bdurl bd
+          value "logolink"                      $ bdlogolink bd
+          value "bars_color"                    $ bdbarscolour bd
+          value "bars_text_color"               $ bdbarstextcolour bd
+          value "bars_secondary_color"          $ bdbarssecondarycolour bd
+          value "background_color"              $ bdbackgroundcolour bd
+          value "background_color_external"     $ bdbackgroundcolorexternal bd
+          value "mails_background_color"        $ bdmailsbackgroundcolor bd
+          value "mails_button_color"            $ bdmailsbuttoncolor bd
+          value "mails_text_color"              $ bdmailstextcolor bd
+          value "signview_primary_color"        $ bdsignviewprimarycolour bd
+          value "signview_primary_text_color"   $ bdsignviewprimarytextcolour bd
+          value "signview_secondary_color"      $ bdsignviewsecondarycolour bd
+          value "signview_secondary_text_color" $ bdsignviewsecondarytextcolour bd
+          value "button_class"                  $ bdbuttonclass bd
+          value "service_link_color"            $ bdservicelinkcolour bd
+          value "external_text_color"           $ bdexternaltextcolour bd
+          value "header_color"                  $ bdheadercolour bd
+          value "text_color"                    $ bdtextcolour bd
+          value "price_color"                   $ bdpricecolour bd
+          value "sms_originator"                $ bdsmsoriginator bd
+          value "email_originator"              $ bdemailoriginator bd
+          value "contact_email"                 $ bdcontactemail bd
       value "paging" $ pagingParamsJSON allBrandedDomainsPagedList
