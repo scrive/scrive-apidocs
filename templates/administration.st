@@ -45,7 +45,7 @@ domainbranding=
 <div class='admin'></div>
 <script>
  require(['jquery', 'legacy_code'], function(jQuery) {
-    jQuery(".admin").append(new AdminBrandedDomain({bdid: "$bdid$"}).el());
+    jQuery(".admin").append(new AdminBrandedDomain({id: "$id$"}).el());
  });
 </script>
 </div>

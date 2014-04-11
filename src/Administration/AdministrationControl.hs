@@ -124,6 +124,8 @@ adminonlyRoutes =
 
         , dir "brandeddomainslist" $ hGet $ toK0 $ jsonBrandedDomainsList
         , dir "brandeddomain" $ hGet $ toK1 $ showAdminBrandedDomain
+        , dir "brandeddomain" $ dir "details" $ hGet $ toK1 $ jsonBrandedDomain
+        , dir "brandeddomain" $ dir "details" $ dir "change" $ hPost $ toK1 $ updateBrandedDomain
   ]
 
 daveRoutes :: Route (KontraPlus Response)
@@ -743,3 +745,92 @@ jsonBrandedDomainsList = onlySalesOrAdmin $ do
           value "email_originator"              $ bdemailoriginator bd
           value "contact_email"                 $ bdcontactemail bd
       value "paging" $ pagingParamsJSON allBrandedDomainsPagedList
+
+jsonBrandedDomain :: Kontrakcja m => BrandedDomainID -> m JSValue
+jsonBrandedDomain bdid = onlySalesOrAdmin $ do
+
+  bd <- guardJustM $ dbQuery $ GetBrandedDomainByID bdid
+
+  runJSONGenT $ do
+    value "id" $ show $ bdid
+    -- keep this 1to1 consistent with fields in the database
+    value "url"                           $ bdurl bd
+    value "logolink"                      $ bdlogolink bd
+    value "bars_color"                    $ bdbarscolour bd
+    value "bars_text_color"               $ bdbarstextcolour bd
+    value "bars_secondary_color"          $ bdbarssecondarycolour bd
+    value "background_color"              $ bdbackgroundcolour bd
+    value "background_color_external"     $ bdbackgroundcolorexternal bd
+    value "mails_background_color"        $ bdmailsbackgroundcolor bd
+    value "mails_button_color"            $ bdmailsbuttoncolor bd
+    value "mails_text_color"              $ bdmailstextcolor bd
+    value "signview_primary_color"        $ bdsignviewprimarycolour bd
+    value "signview_primary_text_color"   $ bdsignviewprimarytextcolour bd
+    value "signview_secondary_color"      $ bdsignviewsecondarycolour bd
+    value "signview_secondary_text_color" $ bdsignviewsecondarytextcolour bd
+    value "button_class"                  $ bdbuttonclass bd
+    value "service_link_color"            $ bdservicelinkcolour bd
+    value "external_text_color"           $ bdexternaltextcolour bd
+    value "header_color"                  $ bdheadercolour bd
+    value "text_color"                    $ bdtextcolour bd
+    value "price_color"                   $ bdpricecolour bd
+    value "sms_originator"                $ bdsmsoriginator bd
+    value "email_originator"              $ bdemailoriginator bd
+    value "contact_email"                 $ bdcontactemail bd
+
+updateBrandedDomain :: Kontrakcja m => BrandedDomainID -> m ()
+updateBrandedDomain bdid = onlySalesOrAdmin $ do
+
+    -- keep this 1to1 consistent with fields in the database
+    post_url <- look "bdurl"
+    post_logolink <- look "logolink"
+    post_bars_color <- look "bars_color"
+    post_bars_text_color <- look "bars_text_color"
+    post_bars_secondary_color <- look "bars_secondary_color"
+    post_background_color <- look "background_color"
+    post_background_color_external <- look "background_color_external"
+    post_mails_background_color <- look "mails_background_color"
+    post_mails_button_color <- look "mails_button_color"
+    post_mails_text_color <- look "mails_text_color"
+    post_signview_primary_color <- look "signview_primary_color"
+    post_signview_primary_text_color <- look "signview_primary_text_color"
+    post_signview_secondary_color <- look "signview_secondary_color"
+    post_signview_secondary_text_color <- look "signview_secondary_text_color"
+    post_button_class <- look "button_class"
+    post_service_link_color <- look "service_link_color"
+    post_external_text_color <- look "external_text_color"
+    post_header_color <- look "header_color"
+    post_text_color <- look "text_color"
+    post_price_color <- look "price_color"
+    post_sms_originator <- look "sms_originator"
+    post_email_originator <- look "email_originator"
+    post_contact_email <- look "contact_email"
+
+    let bd = BrandedDomain {
+        bdurl = post_url,
+        bdlogolink = post_logolink,
+        bdbarscolour = post_bars_color,
+        bdbarstextcolour = post_bars_text_color,
+        bdbarssecondarycolour = post_bars_secondary_color,
+        bdbackgroundcolour = post_background_color,
+        bdbackgroundcolorexternal = post_background_color_external,
+        bdmailsbackgroundcolor = post_mails_background_color,
+        bdmailsbuttoncolor = post_mails_button_color,
+        bdmailstextcolor = post_mails_text_color,
+        bdsignviewprimarycolour = post_signview_primary_color,
+        bdsignviewprimarytextcolour = post_signview_primary_text_color,
+        bdsignviewsecondarycolour = post_signview_secondary_color,
+        bdsignviewsecondarytextcolour = post_signview_secondary_text_color,
+        bdbuttonclass = post_button_class,
+        bdservicelinkcolour = post_service_link_color,
+        bdexternaltextcolour = post_external_text_color,
+        bdheadercolour = post_header_color,
+        bdtextcolour = post_text_color,
+        bdpricecolour = post_price_color,
+        bdsmsoriginator = post_sms_originator,
+        bdemailoriginator = post_email_originator,
+        bdcontactemail = post_contact_email
+             }
+
+    _ <- dbUpdate $ UpdateBrandedDomain bdid bd
+    return ()
