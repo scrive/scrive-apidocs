@@ -199,12 +199,6 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
     };
     postSign();
   },
-  openVerifyingPinModal : function() {
-    ScreenBlockingDialog.open({header: localization.docsignview.pinSigning.verifyingSMSPin});
-  },
-  closeVerifyingPinModal : function() {
-    ScreenBlockingDialog.close();
-  },
   createSignButtonElems: function() {
     var document = this.document();
     var signviewbranding = this.model.signviewbranding();
@@ -221,7 +215,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
       onClick: function() {
         if (signatory.smsPinAuthentication() && (self.pin == undefined || self.pin == "")) {
           new FlashMessage({content: localization.docsignview.pinSigning.noPinProvided,  color: 'red'});
-          button.restoreOnClick();
+          button.setNotClicked();
           return;
         }
 
@@ -233,31 +227,24 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
               data = JSON.parse(xhr.responseText);
             } catch (e) {}
 
-            if (xhr.status == 403) {
-              if (self.confirmation != undefined)         self.confirmation.clear();
-              if (self.signinprogressmodal != undefined) self.signinprogressmodal.close();
-              // session timed out
-              ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
-            } else if (xhr.status == 400 && data.pinProblem) {
-                button.restoreOnClick();
-                self.closeVerifyingPinModal();
+            if (xhr.status == 400 && data.pinProblem) {
+                button.setNotClicked();
                 new FlashMessage({content: localization.docsignview.pinSigning.invalidPin,  color: 'red'});
             } else {
               if (self.confirmation != undefined)         self.confirmation.clear();
               if (self.signinprogressmodal != undefined) self.signinprogressmodal.close();
-              self.openSigningFailedAndReloadModal();
+              if (xhr.status == 403)
+                ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
+              else
+                self.openSigningFailedAndReloadModal();
             }
         };
 
         var pinParam = signatory.smsPinAuthentication() ? {pin : self.pin} : {};
-        if (signatory.smsPinAuthentication())
-          self.openVerifyingPinModal();
 
         document.checksign(function() {
 
           var modalTop = self.confirmation.absoluteTop();
-          if (signatory.smsPinAuthentication())
-            self.closeVerifyingPinModal();
 
           self.confirmation.clear();
           self.signinprogressmodal = new SigningInProgressModal({
@@ -329,7 +316,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
     }
   },
 
-  pineCodeInput : function() {
+  pinCodeInput : function() {
     var self = this;
     var signviewbranding = this.model.signviewbranding();
     var color = this.model.usebranding() && signviewbranding.signviewprimarycolour() ? signviewbranding.signviewprimarycolour() : '#53b688';
@@ -337,8 +324,8 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
     var highlightedBorderColor = tinycolor(color);
     highlightedBorderColor.setAlpha(1);
     standardBorderColor.setAlpha(0.6);
-
-    var p = $("<p style='margin-left:10px;margin-right:10px'/>");
+    var focused = false;
+    var p = $("<p>");
     p.append("<span/>").text(localization.docsignview.pinSigning.enterSMSPin);
     var iti = new InfoTextInput({
           infotext: localization.docsignview.pinSigning.checkYourPhone,
@@ -379,7 +366,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
     var signatory = document.currentSignatory();
 
     if (signatory.smsPinAuthentication()) {
-      content.append(this.pineCodeInput());
+      content.append(this.pinCodeInput());
     }
 
     content.append(this.createPreambleElems());

@@ -98,7 +98,7 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent
                  time <- getMinutesTime
                  let actor = mailSystemActor time (maybesignatory sl) (getEmail sl) slid
                  void $ dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
-                                SMSPinDelivered
+                                SMSPinDeliveredEvidence
                                 (return ())
                                 (Just sl)
                                 (Just phone)

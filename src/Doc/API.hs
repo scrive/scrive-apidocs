@@ -931,14 +931,9 @@ apiCallChangeMainFile docid = api $ do
 
 apiCallSendSMSPinCode :: Kontrakcja m => DocumentID -> SignatoryLinkID ->  m Response
 apiCallSendSMSPinCode did slid = api $ do
-  --ctx <- getContext
   mh <- apiGuardL (serverError "No document found")  $ dbQuery $ GetDocumentSessionToken slid
   (dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
     sl <- apiGuardJustM  (serverError "No document found") $ getSigLinkFor slid <$> theDocument
-    --authorid <- apiGuardL (serverError "Document problem | No author") $ join <$> (fmap maybesignatory) <$> getAuthorSigLink <$> theDocument
-    --user <- apiGuardL (serverError "Document problem | No author in DB") $ dbQuery $ GetUserByIDIncludeDeleted authorid
-    --company <- getCompanyForUser user
-    --companyui <- dbQuery $ GetCompanyUI (companyid company)
     whenM (not . isPending <$> theDocument) $ do
        throwIO . SomeKontraException $ serverError "SMS pin code can't be sent to document that is not pending"
     when (SMSPinAuthentication /= signatorylinkauthenticationmethod sl) $ do

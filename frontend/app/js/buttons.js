@@ -27,10 +27,10 @@ var ButtonModel = Backbone.Model.extend({
       width: undefined,
       cssClass : "",
       style : "",
-      oneClick : false
+      oneClick : false,
+      isClicked : false
   },
   initialize : function() {
-    this.set({_onClick : this.get("onClick")});
   },
   color : function(){
        return this.get("color");
@@ -53,13 +53,17 @@ var ButtonModel = Backbone.Model.extend({
   oneClick : function() {
        return this.get("oneClick");
   },
-  clicked : function(){
-    var f = this.get("onClick");
-    if (this.oneClick()) this.set({onClick : function() {return;}}); //After calling onClick, it can't be called again.
-    f();
+  isClicked : function() {
+       return this.get("isClicked");
   },
-  restoreOnClick : function() {
-       this.set({onClick : this.get("_onClick")});
+  clicked : function(){
+    if (!this.oneClick() || !this.isClicked()) // We call onClick, only if we don't count clicks or button was not clicked
+     { this.set({isClicked : true});
+       this.get("onClick")();
+     }
+  },
+  setNotClicked : function() {
+       this.set({isClicked : false});
   },
   icon : function() {
        return this.get("icon");
@@ -169,7 +173,7 @@ window.Button = function (args) {
    var view = new ButtonView({model : model, el : $("<a/>")});
    this.el = function() {return $(view.el);};
    this.setText = function(text) { model.setText(text);};
-   this.restoreOnClick = function() { model.restoreOnClick();}
+   this.setNotClicked = function() { model.setNotClicked();}
 };
 
 });

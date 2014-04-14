@@ -262,8 +262,8 @@ data CurrentEvidenceEventType =
   UpdateFieldCheckboxEvidence                     |
   UpdateFieldSignatureEvidence                    |
   UpdateFieldTextEvidence                         |
-  SMSPinSend                                      |
-  SMSPinDelivered
+  SMSPinSendEvidence                              |
+  SMSPinDeliveredEvidence
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 data ObsoleteEvidenceEventType =
@@ -412,8 +412,8 @@ instance ToSQL EvidenceEventType where
   toSQL (Current UpdateFieldCheckboxEvidence)                      = toSQL (83::Int16)
   toSQL (Current UpdateFieldSignatureEvidence)                     = toSQL (84::Int16)
   toSQL (Current UpdateFieldTextEvidence)                          = toSQL (85::Int16)
-  toSQL (Current SMSPinSend)                                       = toSQL (86::Int16)
-  toSQL (Current SMSPinDelivered)                                  = toSQL (87::Int16)
+  toSQL (Current SMSPinSendEvidence)                               = toSQL (86::Int16)
+  toSQL (Current SMSPinDeliveredEvidence)                          = toSQL (87::Int16)
 
 instance FromSQL EvidenceEventType where
   type PQBase EvidenceEventType = PQBase Int16
@@ -505,8 +505,8 @@ instance FromSQL EvidenceEventType where
       83 -> return (Current UpdateFieldCheckboxEvidence)
       84 -> return (Current UpdateFieldSignatureEvidence)
       85 -> return (Current UpdateFieldTextEvidence)
-      86 -> return (Current SMSPinSend)
-      87 -> return (Current SMSPinDelivered)
+      86 -> return (Current SMSPinSendEvidence)
+      87 -> return (Current SMSPinDeliveredEvidence)
       _ -> E.throwIO $ RangeError {
         reRange = [(1, 82)]
       , reValue = n

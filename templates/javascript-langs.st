@@ -622,7 +622,6 @@ javascriptLocalisation =
              , pinSigning : {
                   invalidPhone   :  "$_invalidPhone()$"
                 , signWithSMSPin :  "$_signWithSMSPin()$"
-                , verifyingSMSPin : "$_verifyingSMSPin()$"
                 , noPinProvided   : "$_noPinProvided()$"
                 , invalidPin      : "$_invalidPin()$"
                 , enterSMSPin     : "$_enterSMSPin()$"

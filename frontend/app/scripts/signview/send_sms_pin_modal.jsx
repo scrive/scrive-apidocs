@@ -122,7 +122,7 @@ define(['React','common/button','common/backbone_mixim','Backbone', '../../libs/
              }
              {/*else*/ !this.props.model.phoneCanChange() &&
               <div>
-               {localization.docsignview.pinSigning.pinWillBeSentTo} <strong>{this.props.model.phone()}</strong>
+               {localization.docsignview.pinSigning.pinWillBeSentTo}{" "}<strong>{this.props.model.phone()}</strong>
               </div>
              }
          </div>

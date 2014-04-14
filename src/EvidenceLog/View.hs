@@ -121,8 +121,8 @@ simpleEvents (Current SignDocumentEvidence)              = True
 simpleEvents (Current SignatoryLinkVisited)              = True
 simpleEvents (Current TimeoutDocumentEvidence)           = True
 simpleEvents (Current SignWithELegFailureEvidence)       = True
-simpleEvents (Current SMSPinSend)           = True
-simpleEvents (Current SMSPinDelivered)       = True
+simpleEvents (Current SMSPinSendEvidence)                = True
+simpleEvents (Current SMSPinDeliveredEvidence)           = True
 simpleEvents _                                           = False
 
 getEvidenceEventStatusClass :: EvidenceEventType -> StatusClass
@@ -149,8 +149,8 @@ getEvidenceEventStatusClass (Current AttachSealedFileEvidence)          = SCSign
 getEvidenceEventStatusClass (Current AttachGuardtimeSealedFileEvidence) = SCSealed
 getEvidenceEventStatusClass (Current AttachExtendedSealedFileEvidence)  = SCExtended
 getEvidenceEventStatusClass (Current SignWithELegFailureEvidence)       = SCError
-getEvidenceEventStatusClass (Current SMSPinSend)                        = SCSent
-getEvidenceEventStatusClass (Current SMSPinDelivered)                   = SCDelivered
+getEvidenceEventStatusClass (Current SMSPinSendEvidence)                = SCSent
+getEvidenceEventStatusClass (Current SMSPinDeliveredEvidence)           = SCDelivered
 getEvidenceEventStatusClass _                                           = SCError
 
 -- Remove signatory events that happen after signing (link visited, invitation read)

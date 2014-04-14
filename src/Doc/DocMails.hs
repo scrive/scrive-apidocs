@@ -316,7 +316,7 @@ sendPinCode sl phone pin = do
   ctx <- getContext
   doc <- theDocument
   void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg
-              SMSPinSend
+              SMSPinSendEvidence
               (return ())
               (Just sl)
               (Just phone)
