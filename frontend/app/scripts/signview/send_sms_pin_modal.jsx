@@ -28,6 +28,11 @@ define(['React','common/button','common/backbone_mixim','Backbone', '../../libs/
       return this.model().document();
     },
     sendSMSPin : function(success) {
+      mixpanel.track('Requesting SMS PIN', {
+                        documentid: this.document().documentid(),
+                        signatoryid : this.document().currentSignatory().signatoryid(),
+                        phone: this.phone()
+      });
       this.document().requestPin(success).send();
     },
     mobileField : function() {
@@ -110,7 +115,7 @@ define(['React','common/button','common/backbone_mixim','Backbone', '../../libs/
                        onMouseLeave={this.inputOnMouseLeave}
                        onFocus={this.inputOnFocus}
                        onBlur={this.inputOnBlur}
-                       placeholder={localization.docsignview.pinSigning.checkYourPhone}
+                       placeholder={localization.phone}
                        type='text' value={this.props.model.phone()}
                        onChange={this.setPhone}/>
                </div>

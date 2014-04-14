@@ -1032,5 +1032,15 @@
 "_youCantSendRemindersToThisDocuments":"Det går inte att skicka påminnelser för några av de valda dokumenten.",
 "_yourSigningPluginFailed":"Din signerings-plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör.",
 "_zip":"Postnummer",
-"_designViewWithSMSPin":"With SMS Pin"
+"_smsPinSendout":"Din PIN-kod är $pin$",
+"_designViewWithSMSPin":"med PIN via SMS",
+"_invalidPhone":"Fel format. Korrekt format är +46701234567",
+"_signWithSMSPin":"Signera med PIN via SMS",
+"_verifyingSMSPin": "Verifierar PIN",
+"_noPinProvided": "Vänligen skriv in din SMS PIN",
+"_invalidPin":"Fel PIN, vänligen forsook igen",
+"_enterSMSPin":"Skriv in din SMS PIN",
+"_checkYourPhone":"Kontrollera din telefon",
+"_pinWillBeSentTo":"PIN-koden kommer att skickas via SMS till",
+"_enterPhoneForPinDelivery":"Skriv in ditt telefonnummer"
 }

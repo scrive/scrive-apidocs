@@ -9,7 +9,6 @@ define(['signview/send_sms_pin_modal', '../../libs/tinycolor-min','Backbone', 'l
 
 window.DocumentSignConfirmation = function(args) {
           if (args.model.document().currentSignatory().smsPinAuthentication()) {
-             console.log(args.margin);
              var modal = new SendSMSPinModal({
                 model: args.model,
                 margin : args.margin,
@@ -342,7 +341,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
     var p = $("<p style='margin-left:10px;margin-right:10px'/>");
     p.append("<span/>").text(localization.docsignview.pinSigning.enterSMSPin);
     var iti = new InfoTextInput({
-          infotext: "Check your pin",
+          infotext: localization.docsignview.pinSigning.checkYourPhone,
           value: "",
           onChange: function(v) {
             self.pin = v;
