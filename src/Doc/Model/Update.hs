@@ -1057,7 +1057,7 @@ instance (DocumentMonad m, TemplatesMonad m, Applicative m, CryptoRNG m) => DBUp
            sqlWhereSignatoryHasNotSigned
            case (msiginfo,mpin) of
                 (Just _,_)        -> sqlWhereSignatoryAuthenticationMethodIs ELegAuthentication
-                (_, Just _)       -> sqlWhereSignatoryAuthenticationMethodIs SMSPinAuthentication -- We should check pin here
+                (_, Just _)       -> sqlWhereSignatoryAuthenticationMethodIs SMSPinAuthentication -- We should check pin here, but for now we do it in controler
                 (Nothing,Nothing) -> sqlWhereSignatoryAuthenticationMethodIs StandardAuthentication
            sqlWhereSignatoryLinkMagicHashIs mh
       updateMTimeAndObjectVersion (actorTime actor)
