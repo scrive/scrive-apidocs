@@ -1033,5 +1033,14 @@
 "_yourSigningPluginFailed":"Your signing plug-in failed to sign the document. Please contact your eID provider.",
 "_zip":"Zip",
 "_smsPinSendout":"Your pin code is $pin$",
-"_designViewWithSMSPin":"With SMS Pin"
+"_designViewWithSMSPin":"with PIN by SMS",
+"_invalidPhone":"Wrong format. Correct format is +46701234567",
+"_signWithSMSPin":"Sign with SMS by PIN",
+"_verifyingSMSPin": "Verifying PIN",
+"_noPinProvided": "Please enter your SMS PIN",
+"_invalidPin":"Wrong PIN, please try again",
+"_enterSMSPin":"Enter your SMS PIN",
+"_checkYourPhone":"Check your phone",
+"_pinWillBeSentTo":"The PIN will be sent by SMS to",
+"_enterPhoneForPinDelivery":"Enter your phone number"
 }

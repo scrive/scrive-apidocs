@@ -201,7 +201,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
     postSign();
   },
   openVerifyingPinModal : function() {
-    ScreenBlockingDialog.open({header: "Verifying SMS PIN"});
+    ScreenBlockingDialog.open({header: localization.docsignview.pinSigning.verifyingSMSPin});
   },
   closeVerifyingPinModal : function() {
     ScreenBlockingDialog.close();
@@ -221,7 +221,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
       oneClick : true,
       onClick: function() {
         if (signatory.smsPinAuthentication() && (self.pin == undefined || self.pin == "")) {
-          new FlashMessage({content: "No pin provided",  color: 'red'});
+          new FlashMessage({content: localization.docsignview.pinSigning.noPinProvided,  color: 'red'});
           button.restoreOnClick();
           return;
         }
@@ -242,7 +242,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
             } else if (xhr.status == 400 && data.pinProblem) {
                 button.restoreOnClick();
                 self.closeVerifyingPinModal();
-                new FlashMessage({content: "Pin is invalid",  color: 'red'});
+                new FlashMessage({content: localization.docsignview.pinSigning.invalidPin,  color: 'red'});
             } else {
               if (self.confirmation != undefined)         self.confirmation.clear();
               if (self.signinprogressmodal != undefined) self.signinprogressmodal.close();
@@ -340,7 +340,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
     standardBorderColor.setAlpha(0.6);
 
     var p = $("<p style='margin-left:10px;margin-right:10px'/>");
-    p.append("<span>Enter your SMS PIN</span>");
+    p.append("<span/>").text(localization.docsignview.pinSigning.enterSMSPin);
     var iti = new InfoTextInput({
           infotext: "Check your pin",
           value: "",

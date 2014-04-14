@@ -104,20 +104,20 @@ define(['React','common/button','common/backbone_mixim','Backbone', '../../libs/
           <div>
              {/*if*/ this.props.model.phoneCanChange() &&
                <div>
-                <div>Phone number for SMS PIN delivery</div>
+                <div>{localization.docsignview.pinSigning.enterPhoneForPinDelivery}</div>
                 <input style={{width: "200px", borderColor:this.borderColor()}}
                        onMouseEnter={this.inputOnMouseEnter}
                        onMouseLeave={this.inputOnMouseLeave}
                        onFocus={this.inputOnFocus}
                        onBlur={this.inputOnBlur}
-                       placeholder={localization.phone}
+                       placeholder={localization.docsignview.pinSigning.checkYourPhone}
                        type='text' value={this.props.model.phone()}
                        onChange={this.setPhone}/>
                </div>
              }
              {/*else*/ !this.props.model.phoneCanChange() &&
               <div>
-                SMS pin code has been send to <strong>{this.props.model.phone()}</strong>
+               {localization.docsignview.pinSigning.pinWillBeSentTo} <strong>{this.props.model.phone()}</strong>
               </div>
              }
          </div>
@@ -155,18 +155,18 @@ define(['React','common/button','common/backbone_mixim','Backbone', '../../libs/
         customcolor: this.model.usebranding() ? this.model.signviewbranding().signviewprimarycolour() : undefined,
         textcolor: this.model.usebranding() ? this.model.signviewbranding().signviewprimarytextcolour() : undefined,
         cssClass: 'greybg',
-        text: "Next",
+        text: localization.docsignview.pinSigning.next,
         onClick: function() {
           if (self.model.hasValidPhone())
             self.onNext()
           else
-            new FlashMessage({color: "red",content : "Invalid phone"});
+            new FlashMessage({color: "red",content : localization.docsignview.pinSigning.invalidPhone});
           }
         });
 
 
         self.modal = new Confirmation({
-                  title: "Sign with SMS PIN",
+                  title: localization.docsignview.pinSigning.signWithSMSPin,
                   content: content,
                   width: BrowserInfo.isSmallScreen() ? 825 : 424,
                   cssClass: 'grey',

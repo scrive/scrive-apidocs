@@ -619,6 +619,19 @@ javascriptLocalisation =
              , padSubtitle: "$_padSubtitle()$"
              , titleText: "$_titleText()$"
              , subtitleText: "$_subtitleText()$"
+             , pinSigning : {
+                  invalidPhone   :  "$_invalidPhone()$"
+                , signWithSMSPin :  "$_signWithSMSPin()$"
+                , verifyingSMSPin : "$_verifyingSMSPin()$"
+                , noPinProvided   : "$_noPinProvided()$"
+                , invalidPin      : "$_invalidPin()$"
+                , enterSMSPin     : "$_enterSMSPin()$"
+                , pinWillBeSentTo : "$_pinWillBeSentTo()$"
+                , enterPhoneForPinDelivery : "$_enterPhoneForPinDelivery()$"
+                , next : "$_next()$"
+                , checkYourPhone : "$_checkYourPhone()$"
+
+             }
         }
         , verification : {
                 success: "$_verificationSuccess()$"
