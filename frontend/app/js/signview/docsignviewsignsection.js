@@ -4,7 +4,7 @@
  *   $('body').append(new DocumentSignSignSection(model : document).el);
  */
 
-define(['signview/send_sms_pin_modal','Backbone', 'legacy_code'], function(SendSMSPinModal) {
+define(['signview/send_sms_pin_modal', '../../libs/tinycolor-min','Backbone', 'legacy_code'], function(SendSMSPinModal,tinycolor) {
 
 
 window.DocumentSignConfirmation = function(args) {
@@ -332,6 +332,13 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
 
   pineCodeInput : function() {
     var self = this;
+    var signviewbranding = this.model.signviewbranding();
+    var color = this.model.usebranding() && signviewbranding.signviewprimarycolour() ? signviewbranding.signviewprimarycolour() : '#53b688';
+    var standardBorderColor = tinycolor(color);
+    var highlightedBorderColor = tinycolor(color);
+    highlightedBorderColor.setAlpha(1);
+    standardBorderColor.setAlpha(0.6);
+
     var p = $("<p style='margin-left:10px;margin-right:10px'/>");
     p.append("<span>Enter your SMS PIN</span>");
     var iti = new InfoTextInput({
@@ -342,8 +349,28 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
           },
           inputtype: 'text',
           cssClass : "pin-input " + (BrowserInfo.isSmallScreen() ? "small-screen" : ""),
-          name: 'pin'
+          name: 'pin',
+          onFocus: function() {
+            focused = true;
+            iti.el().css("border-color", highlightedBorderColor);
+          },
+          onBlur: function() {
+            focused = false;
+            iti.el().css("border-color", standardBorderColor);
+          },
         });
+
+    var el = iti.el();
+    el.css("border-color", standardBorderColor);
+
+    el.hover(function() {
+      if (focused) return;
+      iti.el().css("border-color", highlightedBorderColor);
+    }, function() {
+      if (focused) return;
+      iti.el().css("border-color", standardBorderColor);
+    });
+
     p.append(iti.el());
     return p;
   },

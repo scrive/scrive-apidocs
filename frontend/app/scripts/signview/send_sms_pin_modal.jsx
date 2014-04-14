@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React','common/button','common/backbone_mixim','Backbone', 'legacy_code'], function(React, NewButton, BackboneMixin, Backbone) {
+define(['React','common/button','common/backbone_mixim','Backbone', '../../libs/tinycolor-min', 'legacy_code'], function(React, NewButton, BackboneMixin, Backbone,tinycolor) {
 
 
 
@@ -66,8 +66,38 @@ define(['React','common/button','common/backbone_mixim','Backbone', 'legacy_code
       getBackboneModels : function() {
         return [this.props.model];
       },
+      getInitialState: function() {
+        return {focus: false, hover : false};
+      },
       setPhone : function(event) {
         this.props.model.setPhone(event.target.value);
+      },
+      borderColor: function() {
+        var model = this.props.model;
+        var color = model.usebranding() && model.signviewbranding().signviewprimarycolour() ? model.signviewbranding().signviewprimarycolour() : '#53b688';
+        var standardBorderColor = tinycolor(color);
+        standardBorderColor.setAlpha(0.6);
+        var highlightedBorderColor = tinycolor(color);
+        highlightedBorderColor.setAlpha(1);
+        var validBorderColor = '#ddd';
+        if (this.props.model.hasValidPhone())
+           return validBorderColor;
+        if (this.state.focus || this.state.hover)
+          return highlightedBorderColor;
+        return standardBorderColor;
+
+      },
+      inputOnFocus: function() {
+        this.setState({focus : true});
+      },
+      inputOnBlur : function() {
+        this.setState({focus : false});
+      },
+      inputOnMouseEnter : function() {
+        this.setState({hover : true});
+      },
+      inputOnMouseLeave : function() {
+        this.setState({hover : false});
       },
       render: function() {
         return (
@@ -75,7 +105,14 @@ define(['React','common/button','common/backbone_mixim','Backbone', 'legacy_code
              {/*if*/ this.props.model.phoneCanChange() &&
                <div>
                 <div>Phone number for SMS PIN delivery</div>
-                <input style={{width: "200px"}}  placeholder={localization.phone} type='text' value={this.props.model.phone()} onChange={this.setPhone}/>
+                <input style={{width: "200px", borderColor:this.borderColor()}}
+                       onMouseEnter={this.inputOnMouseEnter}
+                       onMouseLeave={this.inputOnMouseLeave}
+                       onFocus={this.inputOnFocus}
+                       onBlur={this.inputOnBlur}
+                       placeholder={localization.phone}
+                       type='text' value={this.props.model.phone()}
+                       onChange={this.setPhone}/>
                </div>
              }
              {/*else*/ !this.props.model.phoneCanChange() &&

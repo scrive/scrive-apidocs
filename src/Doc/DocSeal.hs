@@ -89,13 +89,14 @@ personFromSignatory boxImages signatory =
 personExFromSignatoryLink :: (BS.ByteString,BS.ByteString) -> SignatoryLink -> (Seal.Person, String)
 personExFromSignatoryLink boxImages (sl@SignatoryLink { signatorysignatureinfo
                                                       , signatorylinkdeliverymethod
+                                                      , signatorylinkauthenticationmethod
                                                       }) =
   ((personFromSignatory boxImages sl)
      { Seal.emailverified    = signatorylinkdeliverymethod == EmailDelivery
      , Seal.fullnameverified = fullnameverified
      , Seal.companyverified  = False
      , Seal.numberverified   = numberverified
-     , Seal.phoneverified    = signatorylinkdeliverymethod == MobileDelivery
+     , Seal.phoneverified    = (signatorylinkdeliverymethod == MobileDelivery) || (signatorylinkauthenticationmethod == SMSPinAuthentication)
      }
     , map head $ words $ getFullName sl
     )
