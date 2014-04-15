@@ -59,15 +59,15 @@ readNumberedFiles pathFromNumber currentNumber accum = do
        -- we could not open this file, it means it does not exists
        return (reverse accum)
 
-sniffRenderedPages :: RenderedPagesCache -> (Int -> FilePath) -> FileID -> Int -> Bool -> Int -> IO ()
-sniffRenderedPages renderedPages pathFromNumber fileid page wholeDocument currentNumber = do
+sniffRenderedPages :: RenderedPagesCache -> (Int -> FilePath) -> FileID -> Int -> RenderingMode -> Int -> IO ()
+sniffRenderedPages renderedPages pathFromNumber fileid page renderingMode currentNumber = do
   C.threadDelay 100000 -- wait 0.1s
   newPages <- readNumberedFiles pathFromNumber currentNumber []
   let f (Just (RenderedPages False pagesUpToCurrentNumber)) =
          Just (RenderedPages False (pagesUpToCurrentNumber ++ newPages))
       f x = x
-  MemCache.alter f (fileid,page,wholeDocument) renderedPages
-  sniffRenderedPages renderedPages pathFromNumber fileid page wholeDocument (currentNumber + length newPages)
+  MemCache.alter f (fileid,page,renderingMode) renderedPages
+  sniffRenderedPages renderedPages pathFromNumber fileid page renderingMode (currentNumber + length newPages)
 
 
 {- |
@@ -77,9 +77,9 @@ runRendering :: forall m . (KontraMonad m, Log.MonadLog m, MonadDB m, MonadIO m,
                      => RenderedPagesCache
                      -> FileID
                      -> Int
-                     -> Bool
+                     -> RenderingMode
                      -> m RenderedPages
-runRendering renderedPages fid widthInPixels wholeDocument = do
+runRendering renderedPages fid widthInPixels renderingMode = do
   content <- getFileIDContents fid
   withSystemTempDirectory "mudraw" $ \tmppath -> do
     let sourcepath = tmppath ++ "/source.pdf"
@@ -88,7 +88,7 @@ runRendering renderedPages fid widthInPixels wholeDocument = do
 
     let pathOfPage n = tmppath ++ "/output-" ++ show n ++ ".png"
 
-    sniffThreadId <- C.fork $ liftIO $ sniffRenderedPages renderedPages pathOfPage fid widthInPixels wholeDocument 1
+    sniffThreadId <- C.fork $ liftIO $ sniffRenderedPages renderedPages pathOfPage fid widthInPixels renderingMode 1
 
     (exitcode,_outcontent,_errcontent) <-
       liftIO $ readProcessWithExitCode' "mudraw"
@@ -96,7 +96,7 @@ runRendering renderedPages fid widthInPixels wholeDocument = do
                        , ["-w", show widthInPixels]
                        , ["-b", "8"]
                        , [sourcepath]
-                       , ["1" | False <- return wholeDocument] -- render only first page if so desired
+                       , ["1" | RenderingModeFirstPageOnly <- return renderingMode] -- render only first page if so desired
                        ]) BSL.empty
 
     C.killThread sniffThreadId
@@ -128,14 +128,14 @@ runRendering renderedPages fid widthInPixels wholeDocument = do
 getRenderedPages :: Kontrakcja m
                  => FileID
                  -> Int
-                 -> Bool
+                 -> RenderingMode
                  -> m RenderedPages
-getRenderedPages fileid pageWidthInPixels wholeDocument = do
+getRenderedPages fileid pageWidthInPixels renderingMode = do
   let clampedPageWidthInPixels =
         min 4000 (max 100 pageWidthInPixels)
   Context{ctxnormalizeddocuments} <- getContext
   -- Propper action
-  let key = (fileid,clampedPageWidthInPixels,wholeDocument)
+  let key = (fileid,clampedPageWidthInPixels,renderingMode)
   v <- MemCache.get key ctxnormalizeddocuments
   case v of
     Just pages -> return pages
@@ -143,7 +143,7 @@ getRenderedPages fileid pageWidthInPixels wholeDocument = do
       MemCache.put key (RenderedPages False []) ctxnormalizeddocuments
       forkAction ("Rendering file #" ++ show fileid) $ do
         -- FIXME: We should report error somewere
-        jpegpages <- runRendering ctxnormalizeddocuments fileid clampedPageWidthInPixels wholeDocument
+        jpegpages <- runRendering ctxnormalizeddocuments fileid clampedPageWidthInPixels renderingMode
         MemCache.put key jpegpages ctxnormalizeddocuments
       return (RenderedPages False [])
 

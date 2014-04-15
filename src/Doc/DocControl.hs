@@ -286,7 +286,7 @@ handleFilePages :: Kontrakcja m => FileID -> m Response
 handleFilePages fid = do
   checkFileAccess fid
   mpixelwidth <- readField "pixelwidth"
-  pages <- getRenderedPages fid (fromMaybe legacyWidthInPixels mpixelwidth) True
+  pages <- getRenderedPages fid (fromMaybe legacyWidthInPixels mpixelwidth) RenderingModeWholeDocument
 
   case pages of
     RenderedPages False _ -> do
@@ -356,7 +356,7 @@ preview :: Kontrakcja m => FileID -> Int -> m (Maybe Response)
 preview fid value
   | value > 10 = return Nothing
   | otherwise  =   do
-        pages <- getRenderedPages fid 150 False
+        pages <- getRenderedPages fid 150 RenderingModeFirstPageOnly
         case pages of
             RenderedPages _ (contents:_) -> do
                 let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
@@ -369,7 +369,7 @@ preview fid value
 showPage' :: Kontrakcja m => FileID -> Int -> m Response
 showPage' fileid pageno = do
   mpixelwidth <- readField "pixelwidth"
-  pages <- getRenderedPages fileid (fromMaybe legacyWidthInPixels mpixelwidth) True
+  pages <- getRenderedPages fileid (fromMaybe legacyWidthInPixels mpixelwidth) RenderingModeWholeDocument
   case pages of
     RenderedPages _ contents | pageno - 1 < length contents -> do
       let content = contents !! (pageno - 1)
