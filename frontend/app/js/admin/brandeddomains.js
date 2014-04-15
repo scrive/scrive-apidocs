@@ -44,7 +44,7 @@ window.BrandedDomainAdminListDefinition = function() {
         }),
         new Cell({name: "Logo", width:"80px", field: "url", special: "rendered",
                     rendering: function(_, _, doc) {
-                        return jQuery("<img/>").attr("src",doc.field("logolink"));
+                        return jQuery("<img style=\"max-height: 25px; max-width: 50px\"/>").attr("src",doc.field("logolink"));
                     }
         })
     ];
