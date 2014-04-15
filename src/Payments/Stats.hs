@@ -60,22 +60,16 @@ instance MonadDB m => DBUpdate m AddPaymentsStat Bool where
 data GetPaymentsStats = GetPaymentsStats
 instance (MonadBase IO m, MonadDB m) => DBQuery m GetPaymentsStats [[String]] where
   query GetPaymentsStats = do
-    runSQL_ $ "SELECT payment_plans.sync_date, payment_plans.account_code, payment_plans.user_id, payment_plans.company_id, " <>
+    runSQL_ $ "SELECT payment_plans.sync_date, payment_plans.account_code, payment_plans.company_id, " <>
                      "       payment_plans.quantity, payment_plans.plan, payment_plans.provider, payment_plans.billing_ends, payment_plans.status, " <>
-                     "       trim(trim(users.first_name) || ' ' || trim(users.last_name)), trim(users.email), " <>
                      "       trim(companies.name) " <>
                      "FROM payment_plans " <>
-                     "LEFT OUTER JOIN users     ON payment_plans.user_id    = users.id " <>
                      "LEFT OUTER JOIN companies ON payment_plans.company_id = companies.id " <>
                      "ORDER BY payment_plans.account_code DESC"
     foldlM f []
-      where f :: [[String]] -> (MinutesTime, AccountCode, CompanyID, Int32, PricePlan, PaymentPlanProvider, MinutesTime, PaymentPlanStatus, Maybe String, Maybe String, Maybe String) -> m [[String]]
-            f acc (t, ac, cid, q, pp, pr, be, st, un, em, cn) =
-              let smartname = case cn of
-                    Just name -> name
-                    _         -> case un of
-                        Just name | not $ null name -> name
-                        _ -> fromMaybe "" em
+      where f :: [[String]] -> (MinutesTime, AccountCode, CompanyID, Int32, PricePlan, PaymentPlanProvider, MinutesTime, PaymentPlanStatus, Maybe String) -> m [[String]]
+            f acc (t, ac, cid, q, pp, pr, be, st, cn) =
+              let smartname = fromMaybe "" cn
               in return $ [formatMinutesTimeISO t, show ac, show cid, show q, show pp, show pr, formatMinutesTimeISO be, show st, smartname] : acc
 
 
