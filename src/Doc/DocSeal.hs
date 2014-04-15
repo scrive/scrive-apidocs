@@ -83,6 +83,7 @@ personFromSignatory boxImages signatory =
                 , Seal.emailverified = True
                 , Seal.phoneverified = False
                 , Seal.fields = fieldsFromSignatory boxImages signatory
+                , Seal.signtime = maybe "" (formatMinutesTimeForVerificationPage . signtime) $ maybesigninfo signatory
                 }
 
 personExFromSignatoryLink :: (BS.ByteString,BS.ByteString) -> SignatoryLink -> (Seal.Person, String)

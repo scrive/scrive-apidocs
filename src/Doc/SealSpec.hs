@@ -16,6 +16,7 @@ data Person =
            , emailverified    :: Bool
            , phoneverified    :: Bool
            , fields           :: [Field]
+           , signtime         :: String
            }
     deriving (Eq,Ord,Show,Read)
 
@@ -33,6 +34,7 @@ instance J.ToJSValue Person where
     J.value "emailverified" $ emailverified person
     J.value "phoneverified" $ phoneverified person
     J.value "fields" $ map J.toJSValue $ fields person
+    J.value "signtime" $ signtime person
 
 -- | Field coordinates are in screen coordinate space. That means:
 --
@@ -201,6 +203,7 @@ data SealingTexts = SealingTexts
   , verificationFooter :: String -- Long text all the end saying that doc was verified
   , hiddenAttachmentText :: String -- "Concealed Attachment"
   , onePageText        :: String -- "1 page"
+  , signedAtText       :: String -- "Signed at"
   }
   deriving (Eq,Ord,Show,Read)
 
@@ -220,3 +223,4 @@ instance J.ToJSValue SealingTexts where
    J.value "verificationFooter" verificationFooter
    J.value "hiddenAttachmentText" hiddenAttachmentText
    J.value "onePageText" onePageText
+   J.value "signedAtText" signedAtText

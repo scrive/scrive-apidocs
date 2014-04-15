@@ -15,5 +15,6 @@ SealingTexts
       , verificationFooter="$_verificationFooter()$"
       , hiddenAttachmentText="$_contractsealingtextshiddenAttachment()$"
       , onePageText="$_numberOfPagesIs1()$"
+      , signedAtText="$_signedAt()$"
     }
 #####

@@ -907,6 +907,7 @@
 "_signaturePlaceYour":"Klicka här för att rita signatur",
 "_signedAndClosed":"Dokument signerat!",
 "_signedAndClosedSubText":"Det signerade dokumentet har skickats till dig med",
+"_signedAt":"Signerade",
 "_signedNotClosed":"Du har signerat",
 "_signedNotClosedSubText":"När alla parter har signerat kommer det färdigställda dokumentet att skickas till dig med",
 "_signingErrorMessage1":"Vi har problem att hantera ditt dokument.",
