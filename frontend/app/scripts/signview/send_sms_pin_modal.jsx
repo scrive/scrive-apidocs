@@ -110,14 +110,18 @@ define(['React','common/button','common/backbone_mixim','Backbone', '../../libs/
              {/*if*/ this.props.model.phoneCanChange() &&
                <div>
                 <div>{localization.docsignview.pinSigning.enterPhoneForPinDelivery}</div>
-                <input style={{width: "200px", borderColor:this.borderColor()}}
-                       onMouseEnter={this.inputOnMouseEnter}
-                       onMouseLeave={this.inputOnMouseLeave}
-                       onFocus={this.inputOnFocus}
-                       onBlur={this.inputOnBlur}
-                       placeholder={localization.phone}
-                       type='text' value={this.props.model.phone()}
-                       onChange={this.setPhone}/>
+                  <div className="info-text-input"  style={{borderColor:this.borderColor()}}>
+                     <input
+                        style={{width: "200px"}}
+                        onMouseEnter={this.inputOnMouseEnter}
+                        onMouseLeave={this.inputOnMouseLeave}
+                        onFocus={this.inputOnFocus}
+                        onBlur={this.inputOnBlur}
+                        placeholder={localization.phone}
+                        type='text' value={this.props.model.phone()}
+                        onChange={this.setPhone}
+                     />
+                 </div>
                </div>
              }
              {/*else*/ !this.props.model.phoneCanChange() &&
@@ -142,8 +146,8 @@ define(['React','common/button','common/backbone_mixim','Backbone', '../../libs/
       var self = this;
       self.model.savePhoneNumber();
       self.model.sendSMSPin(function() {
-        self.modal.close();
         self.model.onSend();
+        self.modal.clear();
       });
     },
     startModal : function() {

@@ -28,6 +28,6 @@
 "_delivery_method":"$if(email)$e-post$elseif(mobile)$SMS$elseif(emailmobile)$e-post och SMS$endif$",
 "_to_review_or_sign":"$if(viewing)$ att granska$elseif(signing)$ att signera$endif$",
 "_using_identification_method":"$if(eleg)$ med e-legitimation som identifieringsmetod$elseif(sms_pin)$ med PIN via SMS som identifieringsmetod$endif$",
-"SMSPinSendEvidenceText":"En PIN-kod skickades till $signatory$  via SMS till nummer $text$.",
-"SMSPinDeliveredEvidenceText":"PIN-koden levererades till $signatory$  via SMS till nummer $text$."
+"SMSPinSendEvidenceText":"En PIN-kod skickades till $signatory$ via SMS till nummer $text$.",
+"SMSPinDeliveredEvidenceText":"PIN-koden levererades till $signatory$ via SMS till nummer $text$."
 }

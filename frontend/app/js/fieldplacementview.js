@@ -1450,9 +1450,9 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
             }
             box.click(function() {
               new SignatureDrawOrTypeModal({
-                field: field, 
-                width: width, 
-                height: height, 
+                field: field,
+                width: width,
+                height: height,
                 branding: branding,
                 arrow: arrow,
                 signview: signview

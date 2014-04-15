@@ -18,7 +18,7 @@ instance (KontraMonad m, MonadDB m,CryptoRNG m) => DBQuery m GetSignatoryPin Str
     case mpin of
          Just pin -> return pin
          Nothing -> do
-            pin' <- fmap show $ randomR (1000,9999)
+            pin' <- fmap show $ randomR (100000,999999)
             runQuery_ $ sqlInsert "signatory_sms_pins" $ do
               sqlSet "signatory_link_id" slid
               sqlSet "phone_number" phone
