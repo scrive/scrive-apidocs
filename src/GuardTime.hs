@@ -1,16 +1,16 @@
-{-# LANGUAGE OverlappingInstances #-}
-module GuardTime
-       ( digitallySign
-       , digitallyExtend
-       , verify
-       , VerifyResult(..)
-       , GuardtimeSignature(..)
-       , GuardTimeConf(..)
-       , GuardTimeConfMonad(..)
-       , GuardTimeConfT(..)
-       , runGuardTimeConfT
-       , privateGateway
-       ) where
+module GuardTime (
+    module GuardTime.Class
+  , digitallySign
+  , digitallyExtend
+  , verify
+  , VerifyResult(..)
+  , GuardtimeSignature(..)
+  , GuardTimeConf(..)
+  , GuardTimeConfMonad(..)
+  , GuardTimeConfT(..)
+  , runGuardTimeConfT
+  , privateGateway
+  ) where
 
 import qualified Data.ByteString.Lazy as BSL hiding (length)
 import qualified Data.ByteString.Lazy.UTF8 as BSL
@@ -27,49 +27,12 @@ import Text.JSON.Gen
 import Control.Monad
 import Control.Monad.Base (MonadBase)
 import Control.Monad.Reader (ReaderT(..), runReaderT, ask)
-import Control.Monad.Trans (MonadTrans, lift)
+import Control.Monad.Trans (MonadTrans)
 import Control.Monad.Trans.Control (MonadBaseControl(..), MonadTransControl(..), ComposeSt, defaultLiftWith, defaultRestoreT, defaultLiftBaseWith, defaultRestoreM)
-import Data.Unjson
-
-data GuardTimeConf = GuardTimeConf
-    { guardTimeURL ::  String
-    , guardTimeExtendingServiceURL :: String
-    , guardTimeControlPublicationsURL :: String
-    } deriving (Eq, Ord, Show, Read)
-
-unjsonGuardTimeConf :: UnjsonDef GuardTimeConf
-unjsonGuardTimeConf = objectOf $ pure GuardTimeConf
-  <*> field "url"
-      guardTimeURL
-      "GuardTime URL"
-  <*> field "extending_service_url"
-      guardTimeExtendingServiceURL
-      "GuardTime Extendind Service URL"
-  <*> field "control_publications_url"
-      guardTimeControlPublicationsURL
-      "GuardTime Control Publications URL"
-
-instance Unjson GuardTimeConf where
-  unjsonDef = unjsonGuardTimeConf
-
-class Monad m => GuardTimeConfMonad m where
-  getGuardTimeConf :: m GuardTimeConf
-
-instance Monad m => GuardTimeConfMonad (GuardTimeConfT m) where
-  getGuardTimeConf = GuardTimeConfT ask
-
-instance (
-    GuardTimeConfMonad m
-  , Monad (t m)
-  , MonadTrans t
-  ) => GuardTimeConfMonad (t m) where
-    getGuardTimeConf = lift getGuardTimeConf
+import GuardTime.Class
 
 newtype GuardTimeConfT m a = GuardTimeConfT { unGuardTimeConfT :: ReaderT GuardTimeConf m a }
   deriving (Alternative, Applicative, Functor, Monad, MonadPlus, MonadIO, MonadTrans, MonadBase b)
-
-runGuardTimeConfT :: GuardTimeConf -> GuardTimeConfT m a -> m a
-runGuardTimeConfT ts m = runReaderT (unGuardTimeConfT m) ts
 
 instance MonadBaseControl b m => MonadBaseControl b (GuardTimeConfT m) where
   newtype StM (GuardTimeConfT m) a = StM { unStM :: ComposeSt GuardTimeConfT m a }
@@ -84,6 +47,12 @@ instance MonadTransControl GuardTimeConfT where
   restoreT = defaultRestoreT GuardTimeConfT unStT
   {-# INLINE liftWith #-}
   {-# INLINE restoreT #-}
+
+instance Monad m => GuardTimeConfMonad (GuardTimeConfT m) where
+  getGuardTimeConf = GuardTimeConfT ask
+
+runGuardTimeConfT :: GuardTimeConf -> GuardTimeConfT m a -> m a
+runGuardTimeConfT ts m = runReaderT (unGuardTimeConfT m) ts
 
 invokeGuardtimeTool :: MonadIO m => String -> [String] -> m (ExitCode, BSL.ByteString, BSL.ByteString)
 invokeGuardtimeTool tool args = do

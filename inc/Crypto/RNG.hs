@@ -11,13 +11,13 @@
 -- The access to the RNG state is captured by a class.  By making
 -- instances of this class, client code can enjoy RNG generation from
 -- their own monads.
-{-# LANGUAGE OverlappingInstances #-}
 module Crypto.RNG (
+  -- * CryproRNG class
+    module Crypto.RNG.Class
   -- * Generation of strings and numbers
-    CryptoRNGState
+  , CryptoRNGState
   , newCryptoRNGState
   , unsafeCryptoRNGState
-  , CryptoRNG(..)
   , randomBytesIO
   , randomR
   -- * Generation of values in other types
@@ -42,6 +42,8 @@ import Data.Bits
 import Data.ByteString (ByteString, unpack)
 import Data.Int
 import Data.List
+
+import Crypto.RNG.Class
 
 -- | The random number generator state.  It sits inside an MVar to
 -- support concurrent thread access.
@@ -125,19 +127,5 @@ instance MonadBaseControl b m => MonadBaseControl b (CryptoRNGT m) where
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
--- | Monads carrying around the RNG state.
-class Monad m => CryptoRNG m where
-  -- | Generate given number of cryptographically secure random bytes.
-  randomBytes :: CryptoRNG m
-              => ByteLength -- ^ number of bytes to generate
-              -> m ByteString
-
 instance MonadIO m => CryptoRNG (CryptoRNGT m) where
   randomBytes n = CryptoRNGT ask >>= liftIO . randomBytesIO n
-
-instance (
-    Monad (t m)
-  , MonadTrans t
-  , CryptoRNG m
-  ) => CryptoRNG (t m) where
-    randomBytes = lift . randomBytes

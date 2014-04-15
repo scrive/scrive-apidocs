@@ -97,7 +97,6 @@ import Utils.Default
 import Utils.Monad
 import Utils.Monoid
 import Utils.Prelude (for)
-import Instances ()
 import IPAddress
 import Data.List hiding (tail, head)
 import qualified Data.Map as M

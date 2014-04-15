@@ -56,7 +56,6 @@ import Doc.DocumentID
 import OurPrelude
 import Doc.DocStateData
 import Data.Maybe hiding (fromJust)
-import Instances ()
 import IPAddress
 import qualified Log
 import Data.List hiding (tail, head)

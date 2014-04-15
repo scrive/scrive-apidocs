@@ -53,7 +53,6 @@ import Doc.Tokens.Model
 import EvidenceLog.Model (InsertEvidenceEventWithAffectedSignatoryAndMsg(..), CurrentEvidenceEventType(..))
 import Attachment.Model
 import InputValidation
-import Instances ()
 import File.File (fileid)
 import File.Model
 import File.Storage (getFileIDContents)

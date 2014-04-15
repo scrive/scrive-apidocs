@@ -18,7 +18,6 @@ import Control.Monad.Base
 
 import AppConf
 import ActionQueue.Scheduler
-import Control.Monad.Trans.Instances ()
 import Crypto.RNG
 import DB
 import Doc.Model

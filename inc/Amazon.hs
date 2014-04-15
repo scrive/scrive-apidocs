@@ -1,14 +1,13 @@
 {- All function related to Amazon Web Services -}
-{-# LANGUAGE OverlappingInstances #-}
 module Amazon (
-    isAWSConfigOk
+    module Amazon.Class
+  , isAWSConfigOk
   , mkAWSAction
   , uploadFilesToAmazon
   , getFileContents
   , AmazonMonadT
   , runAmazonMonadT
   , AmazonConfig(..)
-  , AmazonMonad(..)
   , deleteFile
   ) where
 
@@ -20,7 +19,6 @@ import Control.Concurrent
 import Control.Monad.Reader
 import Data.Maybe
 import Network.AWS.Authentication
-import qualified MemCache
 import System.FilePath ((</>))
 import qualified Network.AWS.AWSConnection as AWS
 import qualified Crypto.Hash.SHA1 as SHA1
@@ -31,6 +29,7 @@ import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 import Text.JSON.Gen
 
+import Amazon.Class
 import Crypto
 import Crypto.RNG
 import DB
@@ -56,12 +55,11 @@ mkAWSAction amazonConfig = AWS.S3Action {
   where
     (bucket, accessKey, secretKey) = fromMaybe ("","","") $ amazonConfig
 
-data AmazonConfig = AmazonConfig { amazonConfig :: Maybe (String, String, String)
-                                 , fileCache    :: MemCache.MemCache FileID BS.ByteString
-                                 }
-
 newtype AmazonMonadT m a = AmazonMonadT { unAmazonMonadT :: ReaderT AmazonConfig m a }
-    deriving (Alternative, Applicative, Functor, Monad, MonadDB, MonadIO, Log.MonadLog, CryptoRNG, MonadTrans, MonadPlus, MonadBase b)
+  deriving (Alternative, Applicative, Functor, Monad, MonadDB, MonadIO, Log.MonadLog, CryptoRNG, MonadTrans, MonadPlus, MonadBase b)
+
+runAmazonMonadT :: Monad m => AmazonConfig -> AmazonMonadT m a -> m a
+runAmazonMonadT ac = flip runReaderT ac . unAmazonMonadT
 
 instance MonadTransControl AmazonMonadT where
   newtype StT AmazonMonadT m = StAmazonMonadT { unStAmazonMonadT :: StT (ReaderT AmazonConfig) m }
@@ -76,19 +74,6 @@ instance MonadBaseControl IO m => MonadBaseControl IO (AmazonMonadT m) where
   restoreM     = defaultRestoreM unStMAmazonMonadT
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
-
-runAmazonMonadT :: Monad m => AmazonConfig -> AmazonMonadT m a -> m a
-runAmazonMonadT ac = flip runReaderT ac . unAmazonMonadT
-
-class AmazonMonad m where
-  getAmazonConfig :: m AmazonConfig
-
-instance (
-    Monad m
-  , MonadTrans t
-  , AmazonMonad m
-  ) => AmazonMonad (t m) where
-    getAmazonConfig = lift getAmazonConfig
 
 instance Monad m => AmazonMonad (AmazonMonadT m) where
   getAmazonConfig = AmazonMonadT ask

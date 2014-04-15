@@ -12,7 +12,6 @@ import Data.Maybe
 
 import ActionQueue.AccessNewAccount (newAccessNewAccountLink)
 import Company.CompanyID
-import Control.Monad.Trans.Instances ()
 import DB
 import Doc.DocumentMonad (DocumentMonad, theDocument, withDocumentID)
 import Doc.Model

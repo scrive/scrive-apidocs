@@ -1,10 +1,10 @@
-{-# LANGUAGE OverlappingInstances #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Log
   ( teardownLogger
   , withLogger
   , setupLogger
 
-  , MonadLog(..)
+  , module Log.Class
 
   , mixlogjsIO
   , mixlogIO
@@ -20,12 +20,9 @@ module Log
 
   ) where
 
-import Control.Exception.Lifted (bracket)
-import Control.Monad.Trans
 import Prelude hiding (error)
 import qualified Control.Concurrent as C
-import qualified Control.Exception.Lifted as C
-
+import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BSU
 import System.IO.Unsafe
@@ -35,29 +32,9 @@ import Numeric
 import Data.Time
 import Data.Ratio
 
-import qualified Control.Exception.Lifted as E
-
+import Log.Class
 import Text.JSON.Gen
 import Text.JSON
-
--- | MonadLog is for situations when you want to have access to
--- logging, but to not expose whole IO functionality. It is a safe
--- entry to a restricted IO monad.
---
--- Should be used together with other IO based monads that do not
--- expose MonadIO or MonadBase IO.
-class Monad m => MonadLog m where
-  -- | This is a variation on 'mixlog' that takes a premade version of
-  -- properties object. Useful for logging data directly from API calls
-  -- for example.
-  mixlogjs :: (ToJSValue js) => String -> js -> m ()
-
-instance (
-    MonadLog m
-  , Monad (t m)
-  , MonadTrans t
-  ) => MonadLog (t m) where
-    mixlogjs title js = lift (mixlogjs title js)
 
 -- Here we use 'ByteString.putStrLn' because 'Prelude.putStrLn' prints
 -- character by character and in case there are many thread it will
@@ -85,7 +62,7 @@ outputChannel = unsafePerformIO $ do
   chan <- C.newChan
   let loop = do
         msg <- C.readChan chan
-        BSC.putStrLn (BSU.fromString msg) `C.catch` \(e :: C.SomeException) -> do
+        BSC.putStrLn (BSU.fromString msg) `E.catch` \(e :: E.SomeException) -> do
           mixlogjsIO "Exception caught while logging exception (ATTENTION!):" $
             runJSONGen (value "exception" (show e))
         loop
@@ -128,7 +105,7 @@ teardownLogger () = do
 -- the application are needed to installed. Sets them up before running the action
 -- and tears them down afterwards. Even in case of an exception.
 withLogger :: IO a -> IO a
-withLogger = bracket setupLogger teardownLogger . const
+withLogger = E.bracket setupLogger teardownLogger . const
 
 -- | Log a line of text with possibly non-empty set of properties attached to the text.
 --

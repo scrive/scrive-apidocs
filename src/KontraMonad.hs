@@ -42,6 +42,7 @@ class Monad m => KontraMonad m where
   getContext    :: m Context
   modifyContext :: (Context -> Context) -> m ()
 
+-- | Generic, overlapping instance.
 instance (
     KontraMonad m
   , Monad (t m)

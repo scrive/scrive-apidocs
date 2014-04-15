@@ -14,7 +14,6 @@ import MinutesTime
 import Doc.DocumentID
 import Control.Logic
 import Doc.DocStateData
-import Instances ()
 import Control.Monad
 import Company.Model
 
