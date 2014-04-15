@@ -17,7 +17,7 @@
 "ReminderSendText":"En påminnelse att signera skickades till $signatory$ via $_delivery_method()$$if(!archive)$ på begäran av $actor$$endif$.$if(text)$ Meddelandet$if(!archive)$ från $actor$$endif$ var: <BR/><i>$text:noescape()$</i>$endif$",
 "ResealedPDFText":"$if(full)$Preparering av bevispaketet begärdes av $if(!archive)$$actor$, $endif$en person som var behörig att administrera $_TheScriveSystem()$.$endif$",
 "RestartDocumentEvidenceText":"Dokumentet öppnades$if(!archive)$ av $actor$ i $_TheScriveSystem()$s gränssnitt för att utforma signeringsprocesser$endif$.",
-"SignDocumentEvidenceText":"Dokumentet signerades$if(!archive)$ av $actor$$endif$$_using_identification_method()$.$if(sms_pin)$The PIN was sent to $phone$.$endif$",
+"SignDocumentEvidenceText":"Dokumentet signerades$if(!archive)$ av $actor$$endif$$_using_identification_method()$.",
 "SignWithELegFailureEvidenceText":"$_TheScriveSystem()$ avvisade försöket av $signatory$ att signera dokumentet. Anledningen var att personuppgifterna för $signatory$ inte stämde överens med uppgifterna i den e-legitimation som användes vid signering.$if(full)$ Orsaken som den externa e-legitimationstjänsten angav: $msg$.$endif$",
 "SignatoryLinkVisitedText":"Dokumentet öppnades online$if(!archive)$ av $actor$ i $_TheScriveSystem()$s gränssnitt för att signera dokument$endif$.",
 "TimeoutDocumentEvidenceText":"Förfallodatumet för signering passerade.$_ThePossibilityToSignIsDisabled()$",
