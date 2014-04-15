@@ -28,6 +28,6 @@
 "_delivery_method":"$if(email)$email$elseif(mobile)$SMS$elseif(emailmobile)$email and SMS$endif$",
 "_to_review_or_sign":"$if(viewing)$ to review$elseif(signing)$ to sign$endif$",
 "_using_identification_method":"$if(eleg)$ using eID as identification method$elseif(sms_pin)$ using PIN by SMS as identification method$endif$",
-"SMSPinSendEvidenceText":"An SMS with a PIN was sent to $text$ for $text$ to use for authentication",
-"SMSPinDeliveredEvidenceText":"The SMS with the PIN was delivered to $text$ for $text$ to use for authentication."
+"SMSPinSendEvidenceText":"An SMS with a PIN was sent to $text$ for $text$ to use for identification.",
+"SMSPinDeliveredEvidenceText":"The SMS with the PIN was delivered to $text$ for $text$ to use for identification."
 }
