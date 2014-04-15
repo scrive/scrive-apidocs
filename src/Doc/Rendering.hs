@@ -19,7 +19,6 @@ module Doc.Rendering
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Error
-import qualified Control.Concurrent.Lifted as C
 import Data.Typeable
 import DB
 import Doc.RenderedPages
@@ -59,16 +58,6 @@ readNumberedFiles pathFromNumber currentNumber accum = do
        -- we could not open this file, it means it does not exists
        return (reverse accum)
 
-sniffRenderedPages :: RenderedPagesCache -> (Int -> FilePath) -> FileID -> Int -> RenderingMode -> Int -> IO ()
-sniffRenderedPages renderedPages pathFromNumber fileid page renderingMode currentNumber = do
-  C.threadDelay 100000 -- wait 0.1s
-  newPages <- readNumberedFiles pathFromNumber currentNumber []
-  let f (Just (RenderedPages False pagesUpToCurrentNumber)) =
-         Just (RenderedPages False (pagesUpToCurrentNumber ++ newPages))
-      f x = x
-  MemCache.alter f (fileid,page,renderingMode) renderedPages
-  sniffRenderedPages renderedPages pathFromNumber fileid page renderingMode (currentNumber + length newPages)
-
 
 {- |
    Convert PDF to jpeg images of pages
@@ -79,7 +68,7 @@ runRendering :: forall m . (KontraMonad m, Log.MonadLog m, MonadDB m, MonadIO m,
                      -> Int
                      -> RenderingMode
                      -> m RenderedPages
-runRendering renderedPages fid widthInPixels renderingMode = do
+runRendering _renderedPages fid widthInPixels renderingMode = do
   content <- getFileIDContents fid
   withSystemTempDirectory "mudraw" $ \tmppath -> do
     let sourcepath = tmppath ++ "/source.pdf"
@@ -88,7 +77,13 @@ runRendering renderedPages fid widthInPixels renderingMode = do
 
     let pathOfPage n = tmppath ++ "/output-" ++ show n ++ ".png"
 
-    sniffThreadId <- C.fork $ liftIO $ sniffRenderedPages renderedPages pathOfPage fid widthInPixels renderingMode 1
+    -- Note: Infrstructure here is prepared for existence of
+    -- background thread that will sniff already rendered
+    -- pages. Although it is not that easy to do that, as that thread
+    -- will need to wait for a file (n+1) to appear before reading
+    -- file (n). Potentials for race conditions also abound. Remember
+    -- about final condition as this is not clear when this thread is
+    -- supposed to finish.
 
     (exitcode,_outcontent,_errcontent) <-
       liftIO $ readProcessWithExitCode' "mudraw"
@@ -98,8 +93,6 @@ runRendering renderedPages fid widthInPixels renderingMode = do
                        , [sourcepath]
                        , ["1" | RenderingModeFirstPageOnly <- return renderingMode] -- render only first page if so desired
                        ]) BSL.empty
-
-    C.killThread sniffThreadId
 
     result <- case exitcode of
       ExitFailure _ -> liftIO $ do
