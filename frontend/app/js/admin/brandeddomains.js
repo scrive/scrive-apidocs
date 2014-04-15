@@ -51,7 +51,7 @@ window.BrandedDomainAdminListDefinition = function() {
 
     var list = {
 	loadOnInit: false,
-        name : "Branded Domains",
+        name : "Branded domains",
         schema: new Schema({
             url: "/adminonly/brandeddomainslist",
             sorting: new Sorting({fields: []}),

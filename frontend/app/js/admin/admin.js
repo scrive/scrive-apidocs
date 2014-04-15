@@ -62,7 +62,7 @@ var AdminModel = Backbone.Model.extend({
   brandedDomainsTab : function() {
                     var admin = this;
                     return new Tab({
-                        name: "Branded Domains",
+                        name: "Branded domains",
                         elems: [function() { return $(admin.brandeddomains().el()); }],
                         pagehash : "brandeddomains",
                         onActivate : function() {
