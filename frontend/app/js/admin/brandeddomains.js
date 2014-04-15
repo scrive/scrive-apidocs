@@ -22,29 +22,40 @@ define(['Backbone', 'legacy_code'], function() {
 
 window.BrandedDomainAdminListDefinition = function() {
     var cells = [
+        new Cell({name: "ID", width:"20px", field: "url", special: "rendered",
+                    rendering: function(_, _, doc) {
+                        return jQuery("<a/>").text(doc.field("id")).attr("href", "/adminonly/brandeddomain/"+doc.field("id"));
+                    }
+        }),
         new Cell({name: "URL", width:"80px", field: "url", special: "rendered",
                     rendering: function(_, _, doc) {
                         return jQuery("<a/>").text(doc.field("url")).attr("href", "/adminonly/brandeddomain/"+doc.field("id"));
                     }
         }),
-        new Cell({name: "Contact Email", width:"80px", field: "contact_email", special: "rendered",
+        new Cell({name: "Contact email", width:"80px", field: "contact_email", special: "rendered",
                     rendering: function(_, _, doc) {
                         return jQuery("<a/>").text(doc.field("contact_email")).attr("href", "/adminonly/brandeddomain/"+doc.field("id"));
                     }
         }),
-        new Cell({name: "Email Originator", width:"80px", field: "email_originator", special: "rendered",
+        new Cell({name: "Email originator", width:"80px", field: "email_originator", special: "rendered",
                     rendering: function(_, _, doc) {
                         return jQuery("<a/>").text(doc.field("email_originator")).attr("href", "/adminonly/brandeddomain/"+doc.field("id"));
                     }
         }),
-        new Cell({name: "SMS Originator", width:"80px", field: "sms_originator", special: "rendered",
+        new Cell({name: "SMS originator", width:"80px", field: "sms_originator", special: "rendered",
                     rendering: function(_, _, doc) {
                         return jQuery("<a/>").text(doc.field("sms_originator")).attr("href", "/adminonly/brandeddomain/"+doc.field("id"));
                     }
         }),
         new Cell({name: "Logo", width:"80px", field: "url", special: "rendered",
                     rendering: function(_, _, doc) {
-                        return jQuery("<img style=\"max-height: 25px; max-width: 50px\"/>").attr("src",doc.field("logolink"));
+                        var imgurl = doc.field("logolink");
+                        if( imgurl!=undefined && imgurl!=null && imgurl!="" ) {
+                            return jQuery("<img style=\"max-height: 25px; max-width: 50px\"/>").attr("src",imgurl);
+                        }
+                        else {
+                            return jQuery("<div/>");
+                        }
                     }
         })
     ];
@@ -136,7 +147,7 @@ var AdminBrandedDomainView = Backbone.View.extend({
               tr.append($("<td/>").append(colimm));
           }
           else if( type=="imglink" ) {
-              imgimm = $("<img>").css({height: "25px", width: "50px"}).attr("src",value);
+              imgimm = $("<img style=\"max-height: 25px; max-width: 50px\">").attr("src",value);
               tr.append($("<td/>").append(imgimm));
           }
           table.append(tr);
@@ -154,6 +165,12 @@ var AdminBrandedDomainView = Backbone.View.extend({
               }
               if( imgimm ) {
                   imgimm.attr("src",value);
+                  if(value=="" ) {
+                      imgimm.hide();
+                  }
+                  else {
+                      imgimm.show();
+                  }
               }
               model.set(changes, {silent: true});
           });
