@@ -119,6 +119,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
         document.checksign(function() {
             self.startBlockingReload();
             self.confirmation.clear();
+            new FlashMessagesCleaner(); // We clean all flash message, so they don't land on screenshot
             self.signinprogressmodal = new SigningInProgressModal({
                                             document : document,
                                             margin: self.confirmation.margin(),
@@ -247,6 +248,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
           var modalTop = self.confirmation.absoluteTop();
 
           self.confirmation.clear();
+          new FlashMessagesCleaner(); // We clean all flash message, so they don't land on screenshot
           self.signinprogressmodal = new SigningInProgressModal({
                                           document : document,
                                           margin: modalTop + "px auto 0",

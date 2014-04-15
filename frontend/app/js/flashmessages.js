@@ -5,6 +5,9 @@
  *                       withReload: true/false})
  *
  * If you need to redirect user to different page, and then he should see a flash message, user parameters withRedirect = true and  redirect = new_url
+ *
+ * If you need to clean all flash message do
+ *   new FlashMessagesCleaner();
  */
 
 define(['Backbone', 'legacy_code'], function() {
@@ -94,5 +97,9 @@ window.FlashMessage = function(args) {
         setTimeout(function() {$(view.el).addClass("active");},100);
         setTimeout(function() {view.clear();},10000);
 };
+
+window.FlashMessagesCleaner = function() {
+        $('.flash').css("display","none");
+}
 
 });
