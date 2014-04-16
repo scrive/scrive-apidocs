@@ -158,7 +158,11 @@ window.Signatory = Backbone.Model.extend({
         return this.field("sigpersnr", "standard");
     },
     email: function() {
-        return this.emailField().value();
+        if (this.emailField() != undefined) {
+          return this.emailField().value();
+        } else {
+          return '';
+        }
     },
     mobile: function() {
         if (this.mobileField() != undefined) {
