@@ -55,6 +55,7 @@ instance (MonadDB m, Log.MonadLog m) => DBQuery m GetBrandedDomains [BrandedDoma
   query (GetBrandedDomains) = do
     runQuery_ . sqlSelect "branded_domains" $ do
       mapM_ (sqlResult . raw . colName) (tblColumns tableBrandedDomains)
+      sqlOrderBy "id"
     fetchMany fetchBrandedDomain
 
 data GetBrandedDomainByURL = GetBrandedDomainByURL String
