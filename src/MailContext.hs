@@ -7,7 +7,7 @@ module MailContext
   ) where
 
 import BrandedDomains (BrandedDomain)
-import Control.Applicative (Applicative)
+import Control.Applicative
 import Control.Monad (MonadPlus)
 import Control.Monad.Base (MonadBase)
 import Control.Monad.Reader (ReaderT(..), runReaderT, ask)
@@ -35,7 +35,7 @@ class Monad m => MailContextMonad m where
   getMailContext :: m MailContext
 
 newtype MailContextT m a = MailContextT { unMailContextT :: ReaderT MailContext m a }
-    deriving (Applicative, Functor, Monad, MonadPlus, MonadIO, MonadTrans, MonadBase b)
+    deriving (Applicative, Alternative, Functor, Monad, MonadPlus, MonadIO, MonadTrans, MonadBase b)
 
 runMailContextT :: MailContext -> MailContextT m a -> m a
 runMailContextT ts m = runReaderT (unMailContextT m) ts

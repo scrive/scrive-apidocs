@@ -50,7 +50,7 @@ type InnerKontraPlus = StateT Context (AWS.AmazonMonadT (CryptoRNGT (DBT (OurSer
 -- | KontraPlus is 'MonadPlus', but it should only be used on toplevel
 -- for interfacing with static routing.
 newtype KontraPlus a = KontraPlus { unKontraPlus :: InnerKontraPlus a }
-  deriving (MonadPlus, Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadDB, MonadIO, ServerMonad, WebMonad Response, MonadLog, AWS.AmazonMonad)
+  deriving (Alternative, Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadDB, MonadIO, ServerMonad, WebMonad Response, MonadLog, MonadPlus, AWS.AmazonMonad)
 
 runKontraPlus :: Context -> KontraPlus a -> AWS.AmazonMonadT (CryptoRNGT (DBT (OurServerPartT IO))) a
 runKontraPlus ctx f = evalStateT (unKontraPlus f) ctx

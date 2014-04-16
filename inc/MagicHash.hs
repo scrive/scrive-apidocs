@@ -10,6 +10,7 @@ module MagicHash
 
 import Control.Applicative
 import Control.Arrow
+import Control.Monad
 import Data.Int
 import Data.Word
 import Database.PostgreSQL.PQTypes
@@ -29,7 +30,10 @@ import Utils.Read
 -- unsigned one in Show instance and readHex works fine with negative
 -- numbers.
 newtype MagicHash = MagicHash Int64
-  deriving (Eq, Ord, PQFormat, Random)
+  deriving (Eq, Ord, PQFormat)
+
+instance Random MagicHash where
+  random = MagicHash `liftM` random
 
 instance Show MagicHash where
   show (MagicHash x) = pad0 16 $ showHex (fromIntegral x :: Word64) ""

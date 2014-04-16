@@ -97,8 +97,8 @@ main = Log.withLogger $ do
          Log.mixlog_ "Evaluating UserAccountRequest actions..."
          runScheduler $ actionQueue userAccountRequest
      , forkCron False "Clock error collector" (60 * 60) $
-                       withPostgreSQL connSource .
-                       collectClockError (ntpServers appConf)
+         \interruptible -> withPostgreSQL connSource $
+           collectClockError (ntpServers appConf) interruptible
      , forkCron_ True "Sessions" (60 * 60) $ do
          Log.mixlog_ "Evaluating sessions..."
          runScheduler $ actionQueue session
