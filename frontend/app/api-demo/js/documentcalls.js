@@ -182,8 +182,9 @@ window.SetAttachmentsApiCall = ApiCall.extend({
             $("body").append(form);
 
             var slaves = _.filter(this.multiFile()["slaves"],function(s) {return s != undefined;});
+            var slavesParents = _.map(slaves,function(s) {return $(s).parent();});
             for(var i=0;i<slaves.length - 1;i++)
-              form.append($(slaves[i]).clone().attr('name',"attachment_"+ i));
+              form.append($(slaves[i]).attr('name',"attachment_"+ i));
             var formData = new FormData(form[0]);
             this.call("setattachments/" + this.documentid(), {
                 type: 'POST',
@@ -193,10 +194,14 @@ window.SetAttachmentsApiCall = ApiCall.extend({
                 processData: false,
                 success : function(res) {
                     model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
+                    for(var i=0;i<slaves.length && i< slavesParents.length;i++)
+                      slavesParents[i].append(slaves[i]);
                     form.remove();
                 },
                 error : function(res) {
                     model.setResult(JSON.stringify(res.responseText,undefined," "));
+                    for(var i=0;i<slaves.length && i< slavesParents.length;i++)
+                      slavesParents[i].append(slaves[i]);
                     form.remove();
                 }
             });
