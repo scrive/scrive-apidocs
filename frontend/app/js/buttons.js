@@ -173,7 +173,7 @@ window.Button = function (args) {
    var view = new ButtonView({model : model, el : $("<a/>")});
    this.el = function() {return $(view.el);};
    this.setText = function(text) { model.setText(text);};
-   this.setNotClicked = function() { model.setNotClicked();}
+   this.setNotClicked = function() { model.setNotClicked();};
 };
 
 });

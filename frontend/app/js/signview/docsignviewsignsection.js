@@ -345,7 +345,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
           onBlur: function() {
             focused = false;
             iti.el().css("border-color", standardBorderColor);
-          },
+          }
         });
 
     var el = iti.el();

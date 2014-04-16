@@ -65,7 +65,7 @@ define(['React','common/button','common/backbone_mixim','Backbone', '../../libs/
 
   var SendSMSPinModalViewContent = React.createClass({
       propTypes: {
-        model    : React.PropTypes.object,
+        model    : React.PropTypes.object
       },
       mixins: [BackboneMixin.BackboneMixin],
       getBackboneModels : function() {
@@ -167,7 +167,7 @@ define(['React','common/button','common/backbone_mixim','Backbone', '../../libs/
         text: localization.docsignview.pinSigning.next,
         onClick: function() {
           if (self.model.hasValidPhone())
-            self.onNext()
+            self.onNext();
           else
             new FlashMessage({color: "red",content : localization.docsignview.pinSigning.invalidPhone});
           }
@@ -203,6 +203,6 @@ define(['React','common/button','common/backbone_mixim','Backbone', '../../libs/
     view.startModal();
     return {
       modalAbsoluteTop : function() {return view.modal.absoluteTop();}
-    }
+    };
   }
 });

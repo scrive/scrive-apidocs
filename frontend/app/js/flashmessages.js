@@ -100,6 +100,6 @@ window.FlashMessage = function(args) {
 
 window.FlashMessagesCleaner = function() {
         $('.flash').css("display","none");
-}
+};
 
 });
