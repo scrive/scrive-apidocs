@@ -296,7 +296,7 @@ window.Document = Backbone.Model.extend({
             },
             function(e) { callDone() },
             function() { callDone() },
-            5000);
+            20000);
     },
     fieldsForSigning : function() {
         var fields = [];

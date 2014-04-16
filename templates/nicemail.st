@@ -169,7 +169,7 @@ nicebutton=
        cellpadding="0">
   <tr>
     <td>
-      <a href="$link$"
+      <a $if(link)$href="$link$"$endif$
          class="button-blue notclickableinpreview"
          style="$if(!buttoncolour)$
                   background-color: rgb(83,182,136);

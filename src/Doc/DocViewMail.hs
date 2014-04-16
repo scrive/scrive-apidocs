@@ -213,8 +213,8 @@ mailInvitation forMail
               F.value "creatorname" creatorname
               F.valueM "custommessage" $ makeEditable "customtext" documentinvitetext
         F.value "link" $ case msiglink of
-          Just siglink -> makeFullLink mctx $ show (LinkSignDoc document siglink)
-          Nothing -> makeFullLink mctx "/s/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
+          Just siglink -> Just $ makeFullLink mctx $ show (LinkSignDoc document siglink)
+          Nothing -> Nothing
         F.value "partners" $ map getSmartName $ filter isSignatory (documentsignatorylinks document)
         F.value "partnerswhosigned" $ map getSmartName $ filter (isSignatory &&^ hasSigned) (documentsignatorylinks document)
         F.value "someonesigned" $ not $ null $ filter (isSignatory &&^ hasSigned) (documentsignatorylinks document)
@@ -303,10 +303,10 @@ makeEditable name this = renderTemplate "makeEditable" $ do
 makeFullLink :: MailContext -> String -> String
 makeFullLink mctx link = mctxhostpart mctx ++ link
 
-protectLink :: Bool -> MailContext -> KontraLink -> String
+protectLink :: Bool -> MailContext -> KontraLink -> Maybe String
 protectLink forMail mctx link
- | forMail   = makeFullLink mctx $ show link
- | otherwise = makeFullLink mctx "/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
+ | forMail   = Just $ makeFullLink mctx $ show link
+ | otherwise = Nothing
 
 documentMailWithDocLang :: (MonadDB m, TemplatesMonad m, MailContextMonad m) =>  Document -> String -> Fields m () -> m Mail
 documentMailWithDocLang doc mailname otherfields = documentMail doc doc mailname otherfields

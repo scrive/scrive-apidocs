@@ -89,7 +89,7 @@ html {
   // always show scrollbar, even if it's not needed for the current page
   // effect: the content isn't moved a few pixels to the left/right, when
   // switching between pages that have and don't have scrollbars
-  
+
   height: 100%;
   overflow-y: scroll;
 }
@@ -242,7 +242,7 @@ a {
 a.clickable {
   color: @blue-medium;
   text-decoration: none;
-  
+
   &:hover {
     color : @blue-dark;
   }
@@ -277,4 +277,8 @@ iframe[name='google_conversion_frame'] {
   &:first-letter {
     text-transform: capitalize;
   }
+
+.notclickableinpreview {
+  cursor: default !important;
+
 }
