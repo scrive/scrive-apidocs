@@ -2,7 +2,7 @@ module Doc.API.Callback.Execute ( execute ) where
 
 import System.Exit
 import qualified Data.ByteString.Lazy.Char8 as BSL
-import qualified Data.ByteString.Lazy.UTF8 as BSL (toString)
+import qualified Data.ByteString.Lazy.UTF8 as BSL (toString, fromString)
 
 import DB
 import Control.Monad.IO.Class
@@ -24,6 +24,7 @@ import Text.JSON
 import Doc.DocView (documentJSON)
 import Amazon
 import Network.HTTP as HTTP
+import Text.JSON.Gen
 
 execute :: (AmazonMonad m, MonadDB m, Log.MonadLog m, MonadIO m, MonadReader c m, HasSalesforceConf c) => DocumentAPICallback -> m Bool
 execute DocumentAPICallback{..} = do
@@ -40,20 +41,31 @@ execute DocumentAPICallback{..} = do
 executeStandardCallback :: (AmazonMonad m, MonadDB m, Log.MonadLog m, MonadIO m, MonadReader c m, HasSalesforceConf c) => Document -> String -> m Bool
 executeStandardCallback doc url = do
   dJSON <- documentJSON Nothing False False True Nothing Nothing doc
-  (exitcode, _ , stderr) <- readCurl [
-                "-X", "POST"
-              , "-f" -- make curl return exit code (22) if it got anything else but 2XX
-              , "-L" -- make curl follow redirects
-              , "-d", urlEncodeVars [
-                          ("documentid", show (documentid doc))
-                        , ("signedAndSealed", (if (isClosed doc && (isJust $ documentsealedfile doc)) then "true" else "false") )
-                        , ("json", encode dJSON)
-                      ]
-              , url
-              ] BSL.empty
+  (exitcode, _ , stderr) <- readCurl
+     [ "-X", "POST"
+     , "-f" -- make curl return exit code (22) if it got anything else but 2XX
+     , "-L" -- make curl follow redirects
+     , "--data-binary", "@-"          -- take binary data from stdin
+     , "-H", "Content-type: application/x-www-form-urlencoded"
+     , url
+     ] (BSL.fromString (urlEncodeVars [ ("documentid", show (documentid doc))
+                                      , ("signedAndSealed", (if (isClosed doc && (isJust $ documentsealedfile doc))
+                                                             then "true" else "false"))
+                                      , ("json", encode dJSON)
+                                      ]))
   case exitcode of
-              ExitSuccess -> return True
-              ExitFailure _ -> (Log.mixlog_ $ "API callback for #" ++ show (documentid doc)  ++ " failed: " ++ BSL.toString stderr) >> return False
+    ExitSuccess -> do
+      Log.mixlog "API callback executeStandardCallback succeeded" $ do
+        value "document_id" (show (documentid doc))
+        value "url" url
+      return True
+    ExitFailure ec -> do
+      Log.attention "API callback executeStandardCallback failed" $ do
+        value "document_id" (show (documentid doc))
+        value "url" url
+        value "curl_exitcode" ec
+        value "stderr" (BSL.toString stderr)
+      return False
 
 executeSalesforceCallback :: (MonadDB m, Log.MonadLog m, MonadIO m, MonadReader c m, HasSalesforceConf c) => Document -> String ->  String -> m Bool
 executeSalesforceCallback doc rtoken url = do
