@@ -340,6 +340,7 @@ javascriptLocalisation =
              , addAScriver: "$_FTUEaddAScriver()$"
              , documentTitle: "$_documentTitle()$"
            }
+         , phonePlaceholder: "$_phonePlaceholder()$"
          , designview : {
               editMessagePlaceholder: "$_editMessagePlaceholder()$",
               chooseParticipant: "$_designViewChooseParticipant()$",
@@ -348,6 +349,7 @@ javascriptLocalisation =
                       missingOrWrongEmail : "$_emptyOrNotValidEmail()$"
                     , missingOrWrongPersonalNumber : "$_backToStepTwoAndFillPersonNumber()$"
                     , missingOrWrongMobile : "$_emptyOrNotValidMobile()$"
+                    , wrongMobile : "$_notValidMobile()$"
                     , missingOrWrongPlacedAuthorField : "$_missingPlacedAuthorFieldValue()$"
                     , notReadyField : "$_setAllFields()$"
                     , pleaseSelectField : "$_validationPleaseSelectField()$"
@@ -382,7 +384,6 @@ javascriptLocalisation =
                , mobileFormatInfo : "$_designviewCantSignModalMobileFormatInfo()$"
                , mobileSample : "$_designviewCantSignModalMobileSample()$"
              }
-             , phonePlaceholder: "$_phonePlaceholder()$"
              , editParticipants: "$_designViewEditParticipants()$"
              , editDocument: "$_designViewEditDocument()$"
              , optional: "$_designViewOptional()$"

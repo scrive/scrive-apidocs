@@ -555,7 +555,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
     var valid = !DocumentExtraDetails.askForPhone(signatory);
     var focused = false;
     var iti = new InfoTextInput({
-      infotext: localization.phone,
+      infotext: localization.phonePlaceholder,
       value: field.value(),
       cssClass: 'obligatory-input',
       onFocus: function() {
