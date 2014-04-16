@@ -1,4 +1,4 @@
-{
+{ 
 "AttachExtendedSealedFileEvidenceText":"Dokumentet förseglades med en nyckellös digital signatur.",
 "AttachGuardtimeSealedFileEvidenceText":"Dokumentet förseglades med en digital signatur.",
 "AttachSealedFileEvidenceText":"$_TheScriveSystem()$ preparerade den slutgiltiga PDF:en$if(!archive)$, inklusive bevismaterial insamlat av $_TheScriveSystem()$, före försegling med en digital signatur$endif$.",
@@ -17,6 +17,8 @@
 "ReminderSendText":"En påminnelse att signera skickades till $signatory$ via $_delivery_method()$$if(!archive)$ på begäran av $actor$$endif$.$if(text)$ Meddelandet$if(!archive)$ från $actor$$endif$ var: <BR/><i>$text:noescape()$</i>$endif$",
 "ResealedPDFText":"$if(full)$Preparering av bevispaketet begärdes av $if(!archive)$$actor$, $endif$en person som var behörig att administrera $_TheScriveSystem()$.$endif$",
 "RestartDocumentEvidenceText":"Dokumentet öppnades$if(!archive)$ av $actor$ i $_TheScriveSystem()$s gränssnitt för att utforma signeringsprocesser$endif$.",
+"SMSPinDeliveredEvidenceText":"SMS:et med PIN-koden levererades till $text$ för $signatory$ att användas som identifiering.",
+"SMSPinSendEvidenceText":"Ett SMS med en PIN-kod skickades till $text$ för $signatory$ att användas som identifiering.",
 "SignDocumentEvidenceText":"Dokumentet signerades$if(!archive)$ av $actor$$endif$$_using_identification_method()$.",
 "SignWithELegFailureEvidenceText":"$_TheScriveSystem()$ avvisade försöket av $signatory$ att signera dokumentet. Anledningen var att personuppgifterna för $signatory$ inte stämde överens med uppgifterna i den e-legitimation som användes vid signering.$if(full)$ Orsaken som den externa e-legitimationstjänsten angav: $msg$.$endif$",
 "SignatoryLinkVisitedText":"Dokumentet öppnades online$if(!archive)$ av $actor$ i $_TheScriveSystem()$s gränssnitt för att signera dokument$endif$.",
@@ -27,7 +29,5 @@
 "_TheScriveSystem":"$if(full)$Scrive E-sign$else$Scrive$endif$",
 "_delivery_method":"$if(email)$e-post$elseif(mobile)$SMS$elseif(emailmobile)$e-post och SMS$endif$",
 "_to_review_or_sign":"$if(viewing)$ att granska$elseif(signing)$ att signera$endif$",
-"_using_identification_method":"$if(eleg)$ med e-legitimation som identifieringsmetod$elseif(sms_pin)$ med PIN via SMS som identifieringsmetod$endif$",
-"SMSPinSendEvidenceText":"Ett SMS med en PIN-kod skickades till $text$ för $signatory$ att användas som identifiering.",
-"SMSPinDeliveredEvidenceText":"SMS:et med PIN-koden levererades till $text$ för $signatory$ att användas som identifiering."
+"_using_identification_method":"$if(eleg)$ med e-legitimation som identifieringsmetod$elseif(sms_pin)$ med PIN via SMS som identifieringsmetod$endif$"
 }

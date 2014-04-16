@@ -1,4 +1,4 @@
-{
+{ 
 "AttachExtendedSealedFileEvidenceText":"The document was sealed with a keyless digital signature$if(full)$ by $_TheScriveSystem()$$endif$.",
 "AttachGuardtimeSealedFileEvidenceText":"The document was sealed with a digital signature$if(full)$ by $_TheScriveSystem()$$endif$.",
 "AttachSealedFileEvidenceText":"$_TheScriveSystem()$ prepared the final PDF$if(!archive)$, including evidence collected by $_TheScriveSystem()$, before sealing with a digital signature$endif$.",
@@ -17,6 +17,8 @@
 "ReminderSendText":"A reminder$_to_review_or_sign()$ was sent to $signatory$ using $_delivery_method()$$if(!archive)$ at the request of $actor$$endif$.$if(text)$ The reminder message$if(!archive)$ from $actor$$endif$ was: <BR/> <i>$text:noescape()$</i>$endif$",
 "ResealedPDFText":"$if(full)$Preparation of the Evidence Package was requested by $if(!archive)$$actor$, $endif$a person authorised to administer $_TheScriveSystem()$.$endif$",
 "RestartDocumentEvidenceText":"The document was opened for editing$if(!archive)$ by $actor$ in $_TheScriveSystem()$’s interface to design signing processes$endif$.",
+"SMSPinDeliveredEvidenceText":"The SMS with the PIN was delivered to $text$ for $signatory$ to use for identification.",
+"SMSPinSendEvidenceText":"An SMS with a PIN was sent to $text$ for $signatory$ to use for identification.",
 "SignDocumentEvidenceText":"The document was signed$if(!archive)$ by $actor$$endif$$_using_identification_method()$.$if(sms_pin)$$if(full)$ The PIN was sent to $phone$.$endif$$elseif(eleg)$$if(full)$<p>The text signed in the eID client was: </p> <pre>$infotext$</pre> <p>E-legitimation provider: $provider$.</p> $if(fieldsverified)$ <p>Information about signatory verified by $provider$: $if(fstnameverified)$ First name; $endif$ $if(lstnameverified)$ Last name; $endif$ $if(persnumverified)$ Personal number; $endif$</p> $endif$ <p>Signature: <div style='white-space:pre'>$signature$</div></p> $if(certificate)$ <p>Certificate: <div style='white-space:pre'>$certificate$</div></p>$endif$ $if(ocsp)$ <p>Online Certificate Status Protocol (OCSP) Response: <div style='white-space:pre'>$ocsp$</div></p>$endif$$endif$$endif$",
 "SignWithELegFailureEvidenceText":"$_TheScriveSystem()$ rejected the attempt by $signatory$ to sign the document. The reason was that the identity information of $signatory$ did not match the identity information received from the external eID system.$if(full)$ Information given by the external eID system: $msg$.$endif$",
 "SignatoryLinkVisitedText":"$if(full)$The link in the invitation$_to_review_or_sign()$ was clicked$if(!archive)$ by $actor$$endif$. $endif$The document was opened $if(!archive)$by $actor$ $endif$$if(full)$in $_TheScriveSystem()$’s online interface to sign documents$else$online$endif$.",
@@ -27,7 +29,5 @@
 "_TheScriveSystem":"$if(full)$Scrive E-sign$else$Scrive$endif$",
 "_delivery_method":"$if(email)$email$elseif(mobile)$SMS$elseif(emailmobile)$email and SMS$endif$",
 "_to_review_or_sign":"$if(viewing)$ to review$elseif(signing)$ to sign$endif$",
-"_using_identification_method":"$if(eleg)$ using eID as identification method$elseif(sms_pin)$ using PIN by SMS as identification method$endif$",
-"SMSPinSendEvidenceText":"An SMS with a PIN was sent to $text$ for $signatory$ to use for identification.",
-"SMSPinDeliveredEvidenceText":"The SMS with the PIN was delivered to $text$ for $signatory$ to use for identification."
+"_using_identification_method":"$if(eleg)$ using eID as identification method$elseif(sms_pin)$ using PIN by SMS as identification method$endif$"
 }
