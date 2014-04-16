@@ -34,7 +34,7 @@ module InputValidation
     , asValidIPAddressWithMaskList
 ) where
 
-import Control.Monad()
+import Control.Applicative
 import Control.Monad.Error
 import Data.Char
 import Text.Regex.TDFA ((=~))
@@ -70,7 +70,7 @@ type Input = Maybe String
 data Result a = Good a
               | Bad
               | Empty
-              deriving (Eq, Show)
+              deriving (Eq, Show, Functor)
 
 instance Monoid a => Monoid (Result a) where
     mappend (Good a1) (Good a2) = Good $ mappend a1 a2
@@ -79,6 +79,14 @@ instance Monoid a => Monoid (Result a) where
     mappend Bad _ = Bad
     mappend _ Bad  = Bad
     mempty = Empty
+
+instance Applicative Result where
+  pure = Good
+  Good f <*> Good v = Good (f v)
+  Good _ <*> Bad    = Bad
+  Good _ <*> Empty  = Empty
+  Bad    <*> _      = Bad
+  Empty  <*> _      = Empty
 
 instance Monad Result where
   return = Good

@@ -15,7 +15,7 @@ module GuardTime
 import qualified Data.ByteString.Lazy as BSL hiding (length)
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import Utils.IO
-import Control.Applicative ((<$>), (<*>))
+import Control.Applicative
 import Control.Monad.IO.Class
 import System.Exit
 import qualified Log
@@ -24,7 +24,6 @@ import Text.JSON.String
 import Text.JSON.FromJSValue
 import Text.JSON.ToJSValue
 import Text.JSON.Gen
-import Control.Applicative (Applicative)
 import Control.Monad
 import Control.Monad.Base (MonadBase)
 import Control.Monad.Reader (ReaderT(..), runReaderT, ask)
@@ -48,7 +47,7 @@ instance (Monad m, GuardTimeConfMonad m) => GuardTimeConfMonad (StateT s m) wher
   getGuardTimeConf = lift $ getGuardTimeConf
 
 newtype GuardTimeConfT m a = GuardTimeConfT { unGuardTimeConfT :: ReaderT GuardTimeConf m a }
-    deriving (Applicative, Functor, Monad, MonadPlus, MonadIO, MonadTrans, MonadBase b)
+    deriving (Alternative, Applicative, Functor, Monad, MonadPlus, MonadIO, MonadTrans, MonadBase b)
 
 runGuardTimeConfT :: GuardTimeConf -> GuardTimeConfT m a -> m a
 runGuardTimeConfT ts m = runReaderT (unGuardTimeConfT m) ts

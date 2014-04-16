@@ -138,14 +138,6 @@ fetchDocument (did, title, status, error_text, doc_type, ctime, mtime, days_to_s
 selectSignatoryLinksSQL :: SQL
 selectSignatoryLinksSQL = toSQLCommand (selectSignatoryLinksX (return ())) <+> ""
 
-signatoryAttachmentsSelectors :: String
-signatoryAttachmentsSelectors = intercalate ", "
-  [ "signatory_link_id"
-  , "file_id"
-  , "name"
-  , "description"
-  ]
-
 documentTagsSelectors :: SQL
 documentTagsSelectors = sqlConcatComma [
     "document_id"

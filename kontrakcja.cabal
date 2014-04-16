@@ -224,6 +224,7 @@ Executable kontrakcja-server
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns,
               DeriveDataTypeable,
+              DeriveFunctor,
               FlexibleContexts,
               FlexibleInstances,
               FunctionalDependencies,
@@ -331,6 +332,7 @@ Executable cron
 
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns,
+              DeriveFunctor,
               DeriveDataTypeable,
               FlexibleContexts,
               FlexibleInstances,
@@ -430,6 +432,7 @@ Executable kontrakcja-migrate
 
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns,
+              DeriveFunctor,
               DeriveDataTypeable,
               FlexibleContexts,
               FlexibleInstances,
@@ -538,6 +541,7 @@ Executable mailing-server
 
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns,
+              DeriveFunctor,
               DeriveDataTypeable,
               FlexibleContexts,
               FlexibleInstances,
@@ -646,6 +650,7 @@ Executable messenger-server
 
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns,
+              DeriveFunctor,
               DeriveDataTypeable,
               FlexibleContexts,
               FlexibleInstances,
@@ -755,6 +760,7 @@ Executable kontrakcja-test
 
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns,
+              DeriveFunctor,
               DeriveDataTypeable,
               FlexibleContexts,
               FlexibleInstances,

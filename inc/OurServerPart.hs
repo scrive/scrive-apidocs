@@ -20,7 +20,7 @@ import Log
 -- this is bad for us (information leakage) and confusing for customers.
 
 newtype OurServerPartT m a = OurServerPartT { runOurServerPartT :: ServerPartT m a }
-  deriving (Applicative, FilterMonad Response, Functor, HasRqData, MonadBase b, MonadIO, MonadPlus, MonadTrans, ServerMonad, WebMonad Response, MonadLog)
+  deriving (Alternative, Applicative, FilterMonad Response, Functor, HasRqData, MonadBase b, MonadIO, MonadPlus, MonadTrans, ServerMonad, WebMonad Response, MonadLog)
 
 instance Monad m => Monad (OurServerPartT m) where
   return  = OurServerPartT . return

@@ -19,7 +19,7 @@ import qualified Log
 type InnerMailer = CryptoRNGT (DBT (ServerPartT IO))
 
 newtype Mailer a = Mailer { unMailer :: InnerMailer a }
-  deriving (Applicative, CryptoRNG, FilterMonad Response, WebMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadDB, MonadIO, MonadPlus, ServerMonad, Log.MonadLog)
+  deriving (Alternative, Applicative, CryptoRNG, FilterMonad Response, WebMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadDB, MonadIO, MonadPlus, ServerMonad, Log.MonadLog)
 
 instance MonadBaseControl IO Mailer where
   newtype StM Mailer a = StMailer { unStMailer :: StM InnerMailer a }

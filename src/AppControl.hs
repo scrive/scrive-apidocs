@@ -35,7 +35,7 @@ import Util.FinishWith
 import Util.FlashUtil
 import File.FileID
 
-import Control.Concurrent
+import Control.Concurrent (MVar, modifyMVar, threadDelay)
 import Control.Concurrent.MVar.Util (tryReadMVar)
 import Control.Monad.Error
 import Data.Functor

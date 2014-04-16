@@ -97,7 +97,7 @@ forkCron waitfirst name seconds action tg = do
 -- | Same as forkCron, but there is no way to make parts
 -- of passed action interruptible
 forkCron_ :: Bool -> String -> Integer -> IO () -> TG.ThreadGroup -> IO CronInfo
-forkCron_ waitfirst name seconds action = forkCron waitfirst name seconds (const action)
+forkCron_ waitfirst name seconds action = forkCron waitfirst name seconds (\_ -> action)
 
 -- | Stops given cron thread. Use that before calling wait with appropriate
 -- ThreadGroup object.
