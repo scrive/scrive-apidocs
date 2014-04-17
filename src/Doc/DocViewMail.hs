@@ -258,11 +258,11 @@ mailDocumentClosed ispreview l sl sealFixed documentAttached document = do
         F.value "signatoryname" $ getSmartName sl
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
         F.value "confirmationlink" $ if ispreview
-                                       then Just $ makeFullLink mctx "/s/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
-                                       else (++) (mctxhostpart mctx) <$> show <$> l
+                                       then Nothing
+                                       else Just $ (++) (mctxhostpart mctx) <$> show <$> l
         F.value "doclink" $ if ispreview
-                             then makeFullLink mctx "/s/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
-                             else if isAuthor sl
+                             then Nothing
+                             else Just $ if isAuthor sl
                                then (++) (mctxhostpart mctx) $ show $ LinkIssueDoc (documentid document)
                                else (++) (mctxhostpart mctx) $ show $ LinkSignDoc document sl
         F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (Nothing <| ispreview |> Just sl) (mainfile)
