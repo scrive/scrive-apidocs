@@ -37,6 +37,8 @@ import Doc.API
 import ELegitimation.BankIDUtils
 import DB.TimeZoneName (mkTimeZoneName)
 import MagicHash
+import Doc.SMSPin.Model
+import Util.HasSomeUserInfo
 
 docControlTests :: TestEnvSt -> Test
 docControlTests env = testGroup "Templates" [
@@ -46,6 +48,7 @@ docControlTests env = testGroup "Templates" [
   , testThat "Create document from template | Shared" env testDocumentFromTemplateShared
   , testThat "Uploading file creates unsaved draft" env testNewDocumentUnsavedDraft
   , testThat "Last person signing a doc closes it" env testLastPersonSigningADocumentClosesIt
+  , testThat "Signing with pin" env testSigningWithPin
   , testThat "Sending an reminder clears delivery information" env testSendingReminderClearsDeliveryInformation
   , testThat "Sending reminder email works for company admin" env testSendReminderEmailByCompanyAdmin
   , testThat "We can get json for document" env testGetLoggedIn
@@ -151,6 +154,78 @@ testLastPersonSigningADocumentClosesIt = do
     --assertEqual "None left to sign" 0 (length $ filter isUnsigned (documentsignatorylinks doc))
     --emails <- dbQuery GetEmails
     --assertEqual "Confirmation email sent" 1 (length emails)
+
+
+testSigningWithPin :: TestEnv ()
+testSigningWithPin = do
+  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
+    <$> mkContext defaultValue
+
+  let filename = "test/pdfs/simple.pdf"
+  filecontent <- liftIO $ BS.readFile filename
+  file <- addNewFile filename filecontent
+
+  addRandomDocumentWithAuthorAndConditionAndFile
+            user
+            (\d -> documentstatus d == Preparation
+                     && (case documenttype d of
+                          Signable -> True
+                          _ -> False)
+                     && all ((==) EmailDelivery . signatorylinkdeliverymethod) (documentsignatorylinks d))
+            file `withDocumentM` do
+    True <- do d <- theDocument
+               randomUpdate $ ResetSignatoryDetails ([
+                      (defaultValue {   signatoryfields = (signatoryfields $ fromJust $ getAuthorSigLink d)
+                                      , signatoryisauthor = True
+                                      , signatoryispartner = False
+                                      , maybesignatory = Just $ userid user })
+                    , (defaultValue {   signatorysignorder = SignOrder 1
+                                      , signatoryisauthor = False
+                                      , signatoryispartner = True
+                                      , signatorylinkauthenticationmethod = SMSPinAuthentication
+                                      , signatoryfields = [
+                                          SignatoryField FirstNameFT "Fred" True False []
+                                        , SignatoryField LastNameFT "Frog"  True False []
+                                        , SignatoryField EmailFT "fred@frog.com" True False []
+                                        , SignatoryField MobileFT "+47 666 111 777" True False []
+                                        ]})
+                 ]) (systemActor $ documentctime d)
+
+    do t <- documentctime <$> theDocument
+       tz <- mkTimeZoneName "Europe/Stockholm"
+       randomUpdate $ PreparationToPending (systemActor t) tz
+    let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
+    siglink <- head . filter isUnsigned .documentsignatorylinks <$> theDocument
+
+    --do t <- documentctime <$> theDocument
+    --   randomUpdate . MarkDocumentSeen (signatorylinkid siglink) (signatorymagichash siglink)
+    --             =<< signatoryActor ctx{ ctxtime = t } siglink
+
+    pin <- dbQuery $ GetSignatoryPin (signatorylinkid siglink) (getMobile siglink)
+    preq <- mkRequest GET [ ]
+    (_,ctx') <- updateDocumentWithID $ \did ->
+                lift . runTestKontra preq ctx $ handleSignShowSaveMagicHash did (signatorylinkid siglink) (signatorymagichash siglink)
+
+
+    req1 <- mkRequest POST [ ("fields", inText "[]"), signScreenshots]
+    (_link, _ctx') <- updateDocumentWithID $ \did ->
+                      lift . runTestKontra req1 ctx' $ apiCallSign did (signatorylinkid siglink)
+
+    assertEqual "Document is not closed if no pin is provided" Pending .documentstatus =<< theDocument
+
+    req2 <- mkRequest POST [ ("fields", inText "[]"),("pin",inText $ pin ++ "4"), signScreenshots]
+    (_link, _ctx') <- updateDocumentWithID $ \did ->
+                      lift . runTestKontra req2 ctx' $ apiCallSign did (signatorylinkid siglink)
+
+    assertEqual "Document is not closed if pin is not valid" Pending .documentstatus =<< theDocument
+
+    req3 <- mkRequest POST [ ("fields", inText "[]"),("pin",inText pin), signScreenshots]
+    (_link, _ctx') <- updateDocumentWithID $ \did ->
+                      lift . runTestKontra req3 ctx' $ apiCallSign did (signatorylinkid siglink)
+
+    assertEqual "Document is closed if pin is valid" Closed .documentstatus =<< theDocument
+
 
 testSendReminderEmailUpdatesLastModifiedDate :: TestEnv ()
 testSendReminderEmailUpdatesLastModifiedDate = do

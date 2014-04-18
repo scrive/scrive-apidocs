@@ -5,10 +5,9 @@ module Doc.SMSPin.Model (
 import Crypto.RNG
 import DB
 import Doc.SignatoryLinkID
-import KontraMonad
 
 data GetSignatoryPin = GetSignatoryPin SignatoryLinkID String
-instance (KontraMonad m, MonadDB m,CryptoRNG m) => DBQuery m GetSignatoryPin String where
+instance (MonadDB m,CryptoRNG m) => DBQuery m GetSignatoryPin String where
   query (GetSignatoryPin slid phone) = do
     runQuery_ . sqlSelect "signatory_sms_pins" $ do
       sqlResult "pin"
