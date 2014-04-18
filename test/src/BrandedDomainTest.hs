@@ -16,7 +16,8 @@ import Utils.Default
 brandedDomainTests :: TestEnvSt -> Test
 brandedDomainTests env = testGroup "CompanyState" [
     testThat "test_brandedDomainCreateUpdate" env test_brandedDomainCreateUpdate,
-    testThat "test_brandedDomainAssociatedDomain" env test_brandedDomainAssociatedDomain
+    testThat "test_brandedDomainAssociatedDomain" env test_brandedDomainAssociatedDomain,
+    testThat "test_brandedDomainAmbiguous" env test_brandedDomainAmbiguous
   ]
 
 test_brandedDomainCreateUpdate :: TestEnv ()
@@ -52,3 +53,31 @@ test_brandedDomainAssociatedDomain = do
   mwbd <- dbQuery $ GetBrandedDomainByUserID (userid user)
 
   assertEqual "GetBrandedDomainByUserID works" (Just nbd) mwbd
+
+test_brandedDomainAmbiguous :: TestEnv ()
+test_brandedDomainAmbiguous = do
+  _bdid0 <- dbUpdate $ NewBrandedDomain
+  mwbd0 <- dbQuery $ GetBrandedDomainByURL ("http://url")
+
+  assertEqual "GetBrandedDomainByURL with no url does not match" Nothing mwbd0
+
+  bdid1 <- dbUpdate $ NewBrandedDomain
+  Just bd1 <- dbQuery $ GetBrandedDomainByID bdid1
+  let nbd1 = bd1 { bdurl = "http://localhost:8000"
+               }
+  dbUpdate $ UpdateBrandedDomain nbd1
+
+  bdid2 <- dbUpdate $ NewBrandedDomain
+  Just bd2 <- dbQuery $ GetBrandedDomainByID bdid2
+  let nbd2 = bd2 { bdurl = "http://localhost"
+               }
+  dbUpdate $ UpdateBrandedDomain nbd2
+
+
+  mwbd1 <- dbQuery $ GetBrandedDomainByURL (bdurl nbd1)
+  mwbd2 <- dbQuery $ GetBrandedDomainByURL (bdurl nbd2)
+  mwbd3 <- dbQuery $ GetBrandedDomainByURL ("")
+
+  assertEqual "GetBrandedDomainByURL works" (Just nbd1) mwbd1
+  assertEqual "GetBrandedDomainByURL works" (Just nbd2) mwbd2
+  assertEqual "GetBrandedDomainByURL works" Nothing mwbd3
