@@ -261,12 +261,12 @@ data CurrentEvidenceEventType =
   AttachExtendedSealedFileEvidence                |
   ErrorSealingDocumentEvidence                    |
   AutomaticReminderSent                           |
+  SignWithELegFailureEvidence                     |
   UpdateFieldCheckboxEvidence                     |
   UpdateFieldSignatureEvidence                    |
   UpdateFieldTextEvidence                         |
   SMSPinSendEvidence                              |
   SMSPinDeliveredEvidence
-  SignWithELegFailureEvidence
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 -- Evidence types that are not generated anymore by the system.  Not
@@ -366,11 +366,7 @@ instance ToSQL EvidenceEventType where
   toSQL (Current CloseDocumentEvidence)                            = toSQL (30::Int16)
   toSQL (Current ChangeSignatoryEmailWhenUndeliveredEvidence)      = toSQL (31::Int16)
   toSQL (Obsolete ChangeMainfileEvidence)                          = toSQL (32::Int16)
-<<<<<<< HEAD
   toSQL (Obsolete CancelDocumenElegEvidence)                       = toSQL (33::Int16)
-=======
-  toSQL (Obsolete CancelDocumenElegEvidence)                        = toSQL (33::Int16)
->>>>>>> Fixes after rabase on master
   toSQL (Current CancelDocumentEvidence)                           = toSQL (34::Int16)
   toSQL (Obsolete AttachFileEvidence)                              = toSQL (35::Int16)
   toSQL (Current AttachSealedFileEvidence)                         = toSQL (36::Int16)
