@@ -1049,7 +1049,7 @@
 "_youCancelledSigning":"Action cancelled. Please select your eID again.",
 "_youCantCancelThisDocuments":"Some of the selected documents can't be withdrawn.",
 "_youCantSendRemindersToThisDocuments":"Reminders can’t be sent for some of the selected documents.",
-"_yourSigningPluginFailed":"Your signing plug-in failed to sign the document. Please contact your e-ID provider.",
+"_yourSigningPluginFailed":"Your signing plug-in failed to sign the document. Please contact your eID provider.",
 "_zip":"Zip",
 "_GermanInGerman":"German",
 "_German":"German",
