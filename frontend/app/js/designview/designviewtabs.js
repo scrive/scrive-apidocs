@@ -42,8 +42,8 @@ window.DesignViewTabsView = function(args) {
                         Action: 'Open',
                         Tab: '2'
                     });
-            }
-          });
+         }
+  });
   var tab3 = new Tab({
           name: tab3Name,
           pagehash : "process",
@@ -56,16 +56,19 @@ window.DesignViewTabsView = function(args) {
                         Action: 'Open',
                         Tab: '3'
                     });
-            }
-          });
+          }
+  });
 
   var tabs = new KontraTabs({
       numbers : false,
       tabs: [tab1,tab2,tab3],
       tabsTail : $(),
       canHaveNoActiveTab : true,
-      slideEffect : true
-      });
+      slideEffect : true,
+      beforeEachChange : function() {
+        processView.hideAllCalendars();
+      }
+  });
   document.bind('change:ready change:file', function() {
           tab2.setAvailable(document.mainfile() != undefined);
           if (document.ready()) {
@@ -74,7 +77,7 @@ window.DesignViewTabsView = function(args) {
               else {
                 var updateOnReady = function() {
                   if (document.mainfile().ready()) {
-                     setTimeout(function() { 
+                     setTimeout(function() {
                         tabs.activate(tabs.activeTab() || tab1);
                         model.trigger('visibility:designviewtab');
                     }, 800);
