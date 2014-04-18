@@ -88,11 +88,11 @@ mailRejectContractMail=
       )$
 ####
 mailRejectLoginButton=
-$if(!ispreview)$
+<div class="email-preview-hidden">
   <br/>
   <br/>
   $nicebutton(link=concat(a1=ctxhostpart;a2=loginlink); text=_mailRejectMailContentRejectedButton())$
-$endif$
+</div>
 ####
 mailRejectMailContentHeader=
 $if(customMessage)$
@@ -168,7 +168,7 @@ $defaultheader:noescape()$
 <br/>
 $_mailInvitationCustomInvitationHeader()$:
 <br/>
-<i>$custommessage:noescape()$</i>
+<i style="color: $nicemailfgcolour()$">$custommessage:noescape()$</i>
 ###
 ### Reminding mails - SIGNED
 ###
