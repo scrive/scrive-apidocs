@@ -13,15 +13,35 @@ window.Validation = Backbone.Model.extend({
             this.get("next").concat(nextValidation);
         return this;
     },
-    validateData: function(text, elem) {
-            if (!this.get("validates").call(this, text)) {
-               this.fail(text, elem);
-               return false;
-            }
-            else if (this.get("next") != undefined)
-               return this.get("next").validateData(text,elem);
-            else
-               return true;
+    validateData: function(text, elem, skipCallback) {
+      var validates = this.get("validates");
+      var alternative = this.get("alternative");
+      var next = this.get("next");
+      if (!validates.call(this, text)) {
+        if (alternative !== undefined) {
+          return alternative.validateData(text, elem);
+        }
+        if (skipCallback !== true) {
+          this.fail(text, elem);
+        }
+        return false;
+      } else if (next !== undefined) {
+        if (alternative === undefined) {
+          return next.validateData(text, elem);
+        } else {
+          return next.validateData(text, elem, true) || alternative.validateData(text, elem);
+        }
+      }
+      return true;
+    },
+    or: function(alternativeValidation) {
+      var currentAlternative = this.get("alternative");
+      if (currentAlternative === undefined) {
+        this.set({"alternative": alternativeValidation});
+      } else {
+        currentAlternative.or(alternativeValidation);
+      }
+      return this;
     },
     fail : function(text, elem) {
         if (this.get("callback") != undefined)
@@ -45,6 +65,15 @@ window.NoValidation = Validation.extend({
            validates: function(t) { return true; },
            message: "The value should be always ok"
         }
+});
+
+window.EmptyValidation = Validation.extend({
+    defaults: {
+      validates: function(t) {
+        return /^\s*$/.test(t);
+      },
+      message: "The value must be empty!"
+    }
 });
 
 window.NotEmptyValidation = Validation.extend({

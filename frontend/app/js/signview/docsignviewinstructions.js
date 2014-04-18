@@ -53,12 +53,11 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
       text = localization.docsignview.signedNotClosedSubText;
     }
     text += ' ';
-    var dm = signatory.delivery();
-    if (dm == 'email') {
+    if (signatory.emailConfirmationDelivery()) {
       text += localization.delivery.email + '.';
-    } else if (dm == 'mobile') {
+    } else if (signatory.mobileConfirmationDelivery()) {
       text += localization.delivery.mobile + '.';
-    } else if (dm == 'email_mobile') {
+    } else if (signatory.emailMobileConfirmationDelivery()) {
       text += localization.delivery.email_mobile + '.';
     } else {
       text = '';

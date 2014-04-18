@@ -1,4 +1,4 @@
-{ 
+{
 "_CompanyAccounts":"Användare",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Är du säker på att du vill skicka en påminnelse till berörda parter för",
@@ -327,10 +327,10 @@
 "_designViewDefineParticipation":"Definiera deltagande",
 "_designViewDocumentName":"Dokumentnamn",
 "_designViewEditConfirmation":"Ändra bekräftelsemeddelande",
-"_designViewEditDocument":"Fält",
+"_designViewEditDocument":"Placera fält",
 "_designViewEditInvitation":"Ändra inbjudningsmeddelande",
-"_designViewEditParticipants":"Parter",
-"_designViewEditSigningProcess":"Alternativ",
+"_designViewEditParticipants":"Lägg till parter",
+"_designViewEditSigningProcess":"Övriga inställningar",
 "_designViewFieldName":"Namn på fältet",
 "_designViewForSigning":"för signering",
 "_designViewForViewing":"för granskning",

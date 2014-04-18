@@ -166,6 +166,7 @@ window.Field = Backbone.Model.extend({
     validation: function(forSigning) {
         var field = this;
         var name  = this.name();
+        var signatory = this.signatory();
 
         if (field.isFake())
            return new NoValidation();
@@ -186,12 +187,12 @@ window.Field = Backbone.Model.extend({
         }
 
         if (   this.isEmail()
-            && (this.signatory().emailDelivery() || this.signatory().emailMobileDelivery())
+            && (signatory.emailDelivery() || signatory.emailMobileDelivery())
            ){
             var msg = localization.designview.validation.missingOrWrongEmail;
             return new EmailValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
         }
-        if ((this.isFstName() || this.isSndName()) && this.signatory().author())
+        if ((this.isFstName() || this.isSndName()) && signatory.author())
             return new NoValidation();
 
         if ( this.isEmail() && this.value() != undefined && this.value() != "") {
@@ -200,13 +201,20 @@ window.Field = Backbone.Model.extend({
         }
 
         if (   this.isMobile()
-            && (this.signatory().mobileDelivery() || this.signatory().emailMobileDelivery())
+            && (signatory.mobileDelivery() || signatory.emailMobileDelivery())
            ){
             var msg = localization.designview.validation.missingOrWrongMobile;
             return new PhoneValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
         }
 
-        if (forSigning && this.signatory().author() && this.signatory().elegAuthentication() && this.isSSN()) {
+        if (   this.isMobile()
+            && (   signatory.smsPinAuthentication()
+                || signatory.emailMobileConfirmationDelivery()
+                || signatory.mobileConfirmationDelivery())) {
+            return new PhoneValidation().or(new EmptyValidation());
+        }
+
+        if (forSigning && signatory.author() && signatory.elegAuthentication() && this.isSSN()) {
             var msg = localization.designview.validation.missingOrWrongPersonalNumber;
             return new NotEmptyValidation({message: msg});
         }
@@ -216,7 +224,7 @@ window.Field = Backbone.Model.extend({
             return new NotEmptyValidation({message: msg});
         }
 
-        if (this.signatory().author() && (this.isCheckbox() || this.isText()) && this.hasPlacements() && this.isObligatory() && forSigning) {
+        if (signatory.author() && (this.isCheckbox() || this.isText()) && this.hasPlacements() && this.isObligatory() && forSigning) {
           var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
           return new NotEmptyValidation({message: msg});
         }
