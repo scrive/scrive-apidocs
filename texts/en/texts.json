@@ -983,9 +983,9 @@
 "_textFieldDone":"Save",
 "_textFieldFor":"Party ",
 "_textFieldObligatory":"Mandatory to sign here",
+"_through":"through",
 "_title":"Your signed document has now been safely stored in your own e-archive",
 "_titleText":"Save a safety copy",
-"_through":"through",
 "_to":" to ",
 "_toFilter":"To:",
 "_toNoSpaces":"to",
@@ -1050,9 +1050,5 @@
 "_youCantCancelThisDocuments":"Some of the selected documents can't be withdrawn.",
 "_youCantSendRemindersToThisDocuments":"Reminders can’t be sent for some of the selected documents.",
 "_yourSigningPluginFailed":"Your signing plug-in failed to sign the document. Please contact your eID provider.",
-"_zip":"Zip",
-"_GermanInGerman":"German",
-"_German":"German",
-"_through":"through"
-
+"_zip":"Zip"
 }

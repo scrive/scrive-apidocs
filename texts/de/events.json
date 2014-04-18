@@ -17,6 +17,8 @@
 "ReminderSendText":"Eine Erinnerung$_to_review_or_sign()$ an $signatory$ per $_delivery_method()$ wurde gesendet$if(!archive)$auf Antrag von $actor$$endif$.$if(text)$ Die Erinnerungsmeldung$if(!archive)$ von $actor$$endif$ lautet: <BR/> <i>$text:noescape()$</i>$endif$",
 "ResealedPDFText":"$if(full)$Vorbereitung des Nachweis-Paketes wurde von $if(!archive)$$actor$ angefordert, eine$else$enier$endif$ Person, die berechtigt ist, $_theScriveSystem()$ zu verwalten.$endif$",
 "RestartDocumentEvidenceText":"Das Dokument wurde zur Bearbeitung geöffnet$if(!archive)$, von $actor$ in der Schnittstelle von $_theScriveSystem()$ um Unterzeichnungsprozesse zu entwerfen$endif$.",
+"SMSPinDeliveredEvidenceText":"",
+"SMSPinSendEvidenceText":"",
 "SignDocumentEvidenceText":"Das Dokument wurde$if(!archive)$ von $actor$$endif$$_using_identification_method()$ unterzeichnet.$if(eleg)$$if(full)$<p>Der in dem e-ID-Klient unterschriebene Text ist:</p> <pre>$infotext$</pre> <p>E-legitimation Anbieter: $provider$. .</p> $if(fieldsverified)$ <p>Informationen über Unterzeichner von $provider$ verifiziert:  $if(fstnameverified)$ Vorname; $endif$ $if(lstnameverified)$ Nachname; $endif$ $if(persnumverified)$ Personen nummer; $endif$</p> $endif$ <p>Signatur: <div style='white-space:pre'>$signature$</div></p> $if(certificate)$ <p>Zertifikat: <div style='white-space:pre'>$certificate$</div></p>$endif$ $if(ocsp)$ <p>Online Certificate Status Protocol (OCSP) Antwort: <div style='white-space:pre'>$ocsp$</div></p>$endif$$endif$$endif$",
 "SignWithELegFailureEvidenceText":"$_TheScriveSystem()$ hat den Versuch von $signatory$, um das Dokument zu unterzeichen, abgelehnt. Der Grund war, dass die Identitätsinformation von $signatory$ nicht mit der Identitätsinformation aus dem externen e-ID-System übereinstimmen.$if(full)$ Informationen aus dem externen e-ID-System:$msg$.$endif$",
 "SignatoryLinkVisitedText":"$if(full)$Der Link in der Einladung$_to_review_or_sign()$ wurde$if(!archive)$ von $actor$$endif$ angeklickt. $endif$Das Dokument wurde $if(!archive)$von $actor$$endif$$if(full)$ in der Online-Schnittstelle des $_theScriveSystem()$s  für das Unterzeichnen von Dokumenten$else$ online$endif$ geöffnet.",
@@ -26,7 +28,6 @@
 "_TheSMSSystemReportsThatTheInvitation":"$if(full)$Das externe E-Mail-Abgabensystem von $_TheScriveSystem()$s berichtet, dass die Einladung $else$Die Einladung$endif$",
 "_TheScriveSystem":"$if(full)$Das Scrive E-Anmeldungssystem$else$Scrive$endif$",
 "_delivery_method":"$if(email)$E-Mail$elseif(mobile)$SMS$elseif(emailmobile)$E-Mail und SMS$endif$",
-"_theScriveSystem":"$if(full)$Scrive E-Anmeldungssystem$else$Scrive$endif$",
 "_to_review_or_sign":"$if(viewing)$ zu überprüfen$elseif(signing)$ zu unterzeichnen$endif$",
 "_using_identification_method":"$if(eleg)$ mit e-ID als Identifikationsmethode$endif$"
 }
