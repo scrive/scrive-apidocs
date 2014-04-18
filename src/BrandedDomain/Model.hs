@@ -64,6 +64,9 @@ instance (MonadDB m, Log.MonadLog m) => DBQuery m GetBrandedDomainByURL (Maybe B
     runQuery_ . sqlSelect "branded_domains" $ do
       mapM_ (sqlResult . raw . colName) (tblColumns tableBrandedDomains)
       sqlWhere ("" <?> url <> "ILIKE (branded_domains.url || '%')")
+      sqlWhere "branded_domains.url <> ''"
+      sqlOrderBy "branded_domains.id"
+      sqlLimit 1
     fetchMaybe fetchBrandedDomain
 
 data GetBrandedDomainByUserID = GetBrandedDomainByUserID UserID
