@@ -61,6 +61,7 @@ import OAuth
 import FlashMessages
 import PaymentsTest
 import ThirdPartyStats
+import BrandedDomainTest
 
 allTests :: [(String, TestEnvSt -> Test)]
 allTests = tail tests
@@ -97,6 +98,7 @@ allTests = tail tests
       , ("payments", paymentsTests)
       , ("sessions", sessionsTests)
       , ("thirdpartystats", thirdPartyStatsTests)
+      , ("brandeddomain", brandedDomainTests)
       ]
 
 testsToRun :: [String] -> [Either String (TestEnvSt -> Test)]
