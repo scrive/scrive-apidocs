@@ -137,7 +137,7 @@ sendInvitationEmail1 signatorylink | not (isAuthor signatorylink) = do
   sent <- sendNotifications signatorylink
 
     (do
-      mail <- theDocument >>= mailInvitation True (Sign <| isSignatory signatorylink |> View) (Just signatorylink) False
+      mail <- theDocument >>= mailInvitation True (Sign <| isSignatory signatorylink |> View) (Just signatorylink)
       -- ?? Do we need to read in the contents? -EN
       -- _attachmentcontent <- liftIO $ documentFileID document >>= getFileContents ctx
       scheduleEmailSendoutWithDocumentAuthorSender did (mctxmailsconfig mctx) $
@@ -176,7 +176,7 @@ sendReminderEmail custommessage  actor automatic siglink = do
   sent <- sendNotifications siglink
     (do
       mailattachments <- makeMailAttachments =<< theDocument
-      mail <- theDocument >>= mailDocumentRemind custommessage siglink False (not (null mailattachments))
+      mail <- theDocument >>= mailDocumentRemind custommessage siglink (not (null mailattachments))
       docid <- theDocumentID
       scheduleEmailSendoutWithDocumentAuthorSender docid (mctxmailsconfig mctx) $ mail {
                                to = [getMailAddress siglink]
@@ -254,7 +254,7 @@ sendRejectEmails customMessage signalink document = do
     void $ sendNotifications sl
       (do
          mctx <- getMailContext
-         mail <- mailDocumentRejected customMessage signalink False document
+         mail <- mailDocumentRejected customMessage signalink document
          scheduleEmailSendout (mctxmailsconfig mctx) $ mail {
                                   to = [getMailAddress sl]
                                 })

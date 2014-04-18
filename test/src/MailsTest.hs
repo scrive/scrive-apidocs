@@ -110,15 +110,15 @@ sendDocumentMails author = do
                               Log.mixlog_ $ "Checking mail " ++ s
                               m <- mg
                               validMail s m
-        checkMail "Invitation" $ mailInvitation True Sign (Just sl) False =<< theDocument
+        checkMail "Invitation" $ mailInvitation True Sign (Just sl) =<< theDocument
         -- DELIVERY MAILS
         checkMail "Deferred invitation"    $  mailDeferredInvitation (ctxmailsconfig ctx) Nothing (ctxhostpart ctx) sl =<< theDocument
         checkMail "Undelivered invitation" $  mailUndeliveredInvitation (ctxmailsconfig ctx)  Nothing (ctxhostpart ctx) sl =<< theDocument
         checkMail "Delivered invitation"   $  mailDeliveredInvitation (ctxmailsconfig ctx)  Nothing (ctxhostpart ctx) sl =<< theDocument
         --remind mails
-        checkMail "Reminder notsigned" $ mailDocumentRemind Nothing sl False True =<< theDocument
+        checkMail "Reminder notsigned" $ mailDocumentRemind Nothing sl True =<< theDocument
         --reject mail
-        checkMail "Reject"  $ mailDocumentRejected  Nothing sl False =<< theDocument
+        checkMail "Reject"  $ mailDocumentRejected Nothing sl =<< theDocument
         -- awaiting author email
         checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor (defaultValue :: Lang) =<< theDocument
         -- Virtual signing
@@ -128,7 +128,7 @@ sendDocumentMails author = do
         -- Sending closed email
         checkMail "Closed" $ mailDocumentClosed False Nothing sl False False =<< theDocument
         -- Reminder after send
-        checkMail "Reminder signed" $ theDocument >>= \d -> mailDocumentRemind Nothing (head $ documentsignatorylinks d) False True d
+        checkMail "Reminder signed" $ theDocument >>= \d -> mailDocumentRemind Nothing (head $ documentsignatorylinks d) True d
   commit
 
 

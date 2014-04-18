@@ -1,5 +1,5 @@
 nicemail=
-<center>
+<center class="rendered-email">
   <table border="0" cellpadding="0" cellspacing="0" width="100%" id="backgroundTable" style="margin: 0; padding: 0; width: 100%; vertical-align: top; background-color: $nicemailemailbackgroundcolour()$; line-height: 0px;">
     <tr>
       <td align="center" valign="top">
@@ -33,7 +33,7 @@ nicemail=
             <td align="center" valign="top">
               <!-- // Begin Template Body \\ -->
 
-              <table border="0" cellpadding="0" cellspacing="40" width="600" id="templateBody" style="border-bottom-color: $nicemailbordercolour()$; border-bottom-width: 1px; border-bottom-style: solid; $if(ispreview)$border-collapse: separate; border-spacing: $borderspacing()$$endif$">
+              <table border="0" cellpadding="0" cellspacing="40" width="600" id="templateBody" style="border-bottom-color: $nicemailbordercolour()$; border-bottom-width: 1px; border-bottom-style: solid;">
                 <tr>
                   <td valign="top" class="bodyContent" style="background-color: $nicemailbgcolour()$">
                     <!-- // Begin Module: Standard Content \\ -->
@@ -133,8 +133,6 @@ nicemail=
     </tr>
   </table>
 </center>
-######
-borderspacing=40px 30px
 ######
 nicemailbgcolour=$if(!background)$#FFFFFF$else$$background$$endif$
 #####
