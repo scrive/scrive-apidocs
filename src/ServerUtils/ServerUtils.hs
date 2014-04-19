@@ -22,7 +22,9 @@ import System.Exit
 import System.IO.Temp
 import System.Process
 import Happstack.Server hiding (dir, simpleHTTP)
+import Control.Monad.Base
 import Control.Monad.Trans
+import Control.Monad.Trans.Control
 import Log as Log
 import Numeric
 import Data.Maybe
@@ -104,21 +106,21 @@ handleTextToImage = do
     base64 <- isFieldSet "base64"
     transparent <- isFieldSet "transparent"
     left <- isFieldSet "left"
-    mfcontent <- liftIO $ withSystemTempDirectory "text_to_image" $ \tmppath -> do
+    mfcontent <- liftBaseOp (withSystemTempDirectory "text_to_image") $ \tmppath -> do
       let fpath = tmppath ++ "/text_to_image.png"
-      (_,_,_, drawer) <-createProcess $  proc "convert" [  "-size",(show width ++ "x" ++ show height)
+      (_,_,_, drawer) <- liftBase $ createProcess $  proc "convert" [  "-size",(show width ++ "x" ++ show height)
                                                     , "-background",if (transparent) then "transparent" else "white"
                                                     , "-pointsize", show (pointSize width height (length text) fontSize)
                                                     , "-gravity",if (left) then "West" else "Center"
                                                     , "-font", font
                                                     , "label:" ++ (if null text then " " else text)
                                                     ,  fpath]
-      drawerexitcode <- waitForProcess drawer
+      drawerexitcode <- liftBase $ waitForProcess drawer
       case drawerexitcode of
           ExitFailure msg -> do
             Log.mixlog_ $ "Problem text_to_image " ++ show msg
             return Nothing
-          ExitSuccess -> (BSL.readFile fpath) >>= (return . Just)
+          ExitSuccess -> (liftBase $ BSL.readFile fpath) >>= (return . Just)
     case mfcontent of
          Just fcontent -> if base64
                              then ok $ toResponseBS (BSUTF8.fromString "text/plain") $ BSL.fromChunks [BSUTF8.fromString "data:image/png;base64,", B64.encode $ concatChunks fcontent]
