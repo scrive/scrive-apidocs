@@ -199,7 +199,8 @@ instance XmlContent (VerifySignatureResponse) where
             }
         } `adjustErr` ("in <VerifySignatureResponse>, "++)
 
-generateChallenge :: LogicaConfig -> SignatureProvider -> IO (Either ImplStatus (String, String)) -- challenge + transactionid
+generateChallenge :: (Log.MonadLog m, MonadBaseControl IO m)
+                  => LogicaConfig -> SignatureProvider -> m (Either ImplStatus (String, String)) -- challenge + transactionid
 generateChallenge (LogicaConfig{..}) provider = do
     eresponse <- makeSoapCallWithCA logicaEndpoint logicaCertFile "GenerateChallenge" $ GenerateChallengeRequest provider logicaServiceID
     case eresponse of
@@ -207,7 +208,8 @@ generateChallenge (LogicaConfig{..}) provider = do
         Right (GenerateChallengeResponse (ImplStatus _ _ 0 _) challenge transactionid) -> return $ Right (challenge, transactionid)
         Right (GenerateChallengeResponse status _ _) -> return $ Left status
 
-encodeTBS :: LogicaConfig -> SignatureProvider -> String -> String -> IO (Either ImplStatus String) -- encoded TBS + transactionid
+encodeTBS :: (Log.MonadLog m, MonadBaseControl IO m)
+          => LogicaConfig -> SignatureProvider -> String -> String -> m (Either ImplStatus String) -- encoded TBS + transactionid
 encodeTBS (LogicaConfig{..}) provider tbs transactionID = do
     eresponse <- makeSoapCallWithCA logicaEndpoint logicaCertFile "EncodeTBS" $ EncodeTBSRequest provider logicaServiceID tbs transactionID
     case eresponse of
@@ -215,13 +217,14 @@ encodeTBS (LogicaConfig{..}) provider tbs transactionID = do
         Right (EncodeTBSResponse (ImplStatus _ _ 0 _) txt _) -> return $ Right txt
         Right (EncodeTBSResponse status _ _) -> return $ Left status
 
-verifySignature :: LogicaConfig
+verifySignature :: (Log.MonadLog m, MonadBaseControl IO m)
+                => LogicaConfig
                 -> SignatureProvider
                 -> String
                 -> String
                 -> Maybe String
                 -> String
-                -> IO (Either ImplStatus (String, [(String, String)])) -- certificate and user attributes
+                -> m (Either ImplStatus (String, [(String, String)])) -- certificate and user attributes
 verifySignature LogicaConfig{..} provider tbs signature mnonce transactionID = do
     eresponse <-
         makeSoapCallWithCA logicaEndpoint logicaCertFile
@@ -317,7 +320,8 @@ instance XmlContent (CollectResponse) where
             }
         } `adjustErr` ("in <CollectResponse>, "++)
 
-mbiRequestSignature :: LogicaConfig -> String -> String -> IO (Either String (String, String))
+mbiRequestSignature :: (Log.MonadLog m, MonadBaseControl IO m)
+                    => LogicaConfig -> String -> String -> m (Either String (String, String))
 mbiRequestSignature LogicaConfig{..} personalnumber uvd = do
   let personalnumbernormalized = filter isDigit personalnumber
   let personalnumbernormalizedwithyear =  if ("19" `isPrefixOf` personalnumbernormalized) -- This is ugly, but we will sooner change provider, then it will be a problem
