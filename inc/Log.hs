@@ -1,6 +1,5 @@
 module Log
-  ( forkIOLogWhenError
-  , teardownLogger
+  ( teardownLogger
   , withLogger
   , setupLogger
 
@@ -183,14 +182,6 @@ teardownLogger () = do
 -- and tears them down afterwards. Even in case of an exception.
 withLogger :: IO a -> IO a
 withLogger = bracket setupLogger teardownLogger . const
-
-
--- | FIXME: use forkAction
-forkIOLogWhenError :: (MonadIO m) => String -> IO () -> m ()
-forkIOLogWhenError errmsg action =
-  liftIO $ do
-    _ <- C.forkIO (action `C.catch` \(e :: C.SomeException) -> mixlog_ $ errmsg ++ " " ++ show e)
-    return ()
 
 -- | Log a line of text with possibly non-empty set of properties attached to the text.
 --
