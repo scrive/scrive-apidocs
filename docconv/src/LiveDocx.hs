@@ -6,16 +6,19 @@ module LiveDocx (
   , convertToPDF
 ) where
 
-import qualified Control.Exception as E (catch)
+import qualified Control.Exception.Lifted as E (catch)
 
 import Control.Monad()
 import Control.Monad.Reader
+import Control.Monad.Trans.Control
+import Control.Monad.Base
 import Data.Char
 import Text.XML.HaXml.XmlContent.Parser
 import Text.XML.HaXml.Types (QName(N))
 import System.CPUTime
 import System.FilePath
 import System.IO.Temp
+import System.IO
 import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
@@ -32,7 +35,7 @@ data LiveDocxContext = LiveDocxContext {
   , ctxcookiefile :: FilePath
 }
 
-type LiveDocx a = ReaderT LiveDocxContext IO (Either LiveDocxError a)
+type LiveDocx m a = ReaderT LiveDocxContext m (Either LiveDocxError a)
 
 mkLiveDocxContext :: LiveDocxConf -> FilePath -> LiveDocxContext
 mkLiveDocxContext conf cookiefile = LiveDocxContext {
@@ -40,12 +43,12 @@ mkLiveDocxContext conf cookiefile = LiveDocxContext {
   , ctxcookiefile = cookiefile
 }
 
-makeLiveDocxCall :: (XmlContent request, HasXmlNamespace request, XmlContent result)
+makeLiveDocxCall :: (XmlContent request, HasXmlNamespace request, XmlContent result, Log.MonadLog m, MonadBaseControl IO m)
                       => request
-                      -> LiveDocx result
+                      -> LiveDocx m result
 makeLiveDocxCall request = do
   ctx <- ask
-  eresult <- liftIO $ makeSoapCallWithCookies
+  eresult <- makeSoapCallWithCookies
     (ctxurl ctx)
     (ctxcookiefile ctx)
     (liveDocxNamespace ++ xmlNamespace request)
@@ -54,31 +57,31 @@ makeLiveDocxCall request = do
     Left msg -> Left $ LiveDocxSoapError msg
     Right result -> Right result
 
-ignoreIfRight :: Either LiveDocxError a -> LiveDocx ()
+ignoreIfRight :: (Monad m) => Either LiveDocxError a -> LiveDocx m ()
 ignoreIfRight (Left x) = return $ Left x
 ignoreIfRight (Right _) = return $ Right ()
 
-logIn :: String -> String -> LiveDocx ()
+logIn :: forall m. (Log.MonadLog m, MonadBaseControl IO m) => String -> String -> LiveDocx m ()
 logIn username password = ignoreIfRight =<<
   (makeLiveDocxCall
-    (LogIn username password) :: LiveDocx LogInResponse)
+    (LogIn username password) :: LiveDocx m LogInResponse)
 
-logOut :: LiveDocx ()
+logOut :: forall m. (Log.MonadLog m, MonadBaseControl IO m) => LiveDocx m ()
 logOut = ignoreIfRight =<<
   (makeLiveDocxCall
-    LogOut :: LiveDocx LogOutResponse)
+    LogOut :: LiveDocx m LogOutResponse)
 
-setLocalTemplate :: BS.ByteString -> FileFormat ->  LiveDocx ()
+setLocalTemplate :: forall m. (Log.MonadLog m, MonadBaseControl IO m) => BS.ByteString -> FileFormat ->  LiveDocx m ()
 setLocalTemplate filecontents format = ignoreIfRight =<<
   (makeLiveDocxCall
-    (SetLocalTemplate filecontents format) :: LiveDocx SetLocalTemplateResponse)
+    (SetLocalTemplate filecontents format) :: LiveDocx m SetLocalTemplateResponse)
 
-createDocument ::  LiveDocx ()
+createDocument :: forall m. (Log.MonadLog m, MonadBaseControl IO m) => LiveDocx m ()
 createDocument = ignoreIfRight =<<
   (makeLiveDocxCall
-    CreateDocument :: LiveDocx CreateDocumentResponse)
+    CreateDocument :: LiveDocx m CreateDocumentResponse)
 
-retrieveDocument :: String ->  LiveDocx BS.ByteString
+retrieveDocument :: forall m. (Log.MonadLog m, MonadBaseControl IO m) => String ->  LiveDocx m BS.ByteString
 retrieveDocument format = do
   result <- makeLiveDocxCall
               (RetrieveDocument format)
@@ -89,18 +92,23 @@ retrieveDocument format = do
 getFileFormatForConversion :: FilePath -> Maybe FileFormat
 getFileFormatForConversion = maybeRead . map toUpper . dropWhile (== '.') . takeExtension
 
+
+withSystemTempFile :: (MonadBaseControl IO m) => String -> (String -> Handle -> m a) -> m a
+withSystemTempFile initname = liftBaseOp (System.IO.Temp.withSystemTempFile initname . curry) . uncurry
+
 {- | Calls the LiveDocx Soap API to convert the given document contents to a pdf.
      Errors are put in the docconverter.log.
  -}
-convertToPDF :: LiveDocxConf -> BS.ByteString -> FileFormat -> IO (Either LiveDocxError BS.ByteString)
+convertToPDF :: forall m. (Log.MonadLog m, MonadBaseControl IO m)
+             => LiveDocxConf -> BS.ByteString -> FileFormat -> m (Either LiveDocxError BS.ByteString)
 convertToPDF conf filecontents format = do
-  start <- getCPUTime
+  start <- liftBase $ getCPUTime
   res <- E.catch
            --withSystemTempFile gives us uniquely named temp file for storing LiveDocx session cookies in for curl
-           (withSystemTempFile "livedocx-cookies.txt" $ \cookiefile _cookiefilehandle ->
-              liftIO $ runReaderT convertDocument (mkLiveDocxContext conf cookiefile))
+           (LiveDocx.withSystemTempFile "livedocx-cookies.txt" $ \cookiefile _cookiefilehandle ->
+              runReaderT convertDocument (mkLiveDocxContext conf cookiefile))
            (return . Left . LiveDocxIOError)
-  end <- getCPUTime
+  end <- liftBase $ getCPUTime
   case res of
     Left err ->
       Log.mixlog_ $ "failed conversion from " ++ show format ++ " to PDF: " ++ show err
@@ -116,7 +124,7 @@ convertToPDF conf filecontents format = do
          * retrieveDocument: retrieves the document we created in the previous call from the LiveDocx server, we retrieve it in PDF format
          * logOut: finally logOut of the server
     -}
-    convertDocument :: LiveDocx BS.ByteString
+    convertDocument :: LiveDocx m BS.ByteString
     convertDocument = do
       _ <- logIn (username conf) (password conf)
       _ <- setLocalTemplate filecontents format
