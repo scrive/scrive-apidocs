@@ -27,7 +27,9 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS hiding (length, drop, break)
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length, drop)
 import qualified Data.ByteString.Lazy as BSL
-import qualified Control.Exception as E
+import qualified Control.Exception.Lifted as E
+import Control.Monad.Trans.Control
+import Control.Monad.IO.Class
 import qualified Log
 
 import Prelude hiding (print, putStrLn, putStr)
@@ -75,7 +77,9 @@ inElementNS name action = do
   e <- elementNS name
   interior e action
 
-tryAndJoinEither :: IO (Either String a) -> IO (Either String a)
+tryAndJoinEither :: (MonadBaseControl IO m)
+                 => m (Either String a)
+                 -> m (Either String a)
 tryAndJoinEither action = do
   result <- E.try action
   case result of
@@ -83,12 +87,12 @@ tryAndJoinEither action = do
     Left (excpt :: E.SomeException) -> return (Left (show excpt))
 
 -- other makeSoapCallXXX functions use this as their base
-makeSoapCall :: (XmlContent request, XmlContent result)
+makeSoapCall :: (XmlContent request, XmlContent result, Log.MonadLog m, MonadIO m, MonadBaseControl IO m)
                 => String
                 -> String
                 -> [String]
                 -> request
-                -> IO (Either String result)
+                -> m (Either String result)
 makeSoapCall url action extraargs request = tryAndJoinEither $ do
   let input = showXml False (SOAP request)
   -- BSL.appendFile "soap.xml" input
@@ -102,7 +106,7 @@ makeSoapCall url action extraargs request = tryAndJoinEither $ do
                url
              ]
 
-  (code,stdout,stderr) <- readCurl args $ BSL.fromString input
+  (code,stdout,stderr) <- liftIO $ readCurl args $ BSL.fromString input
   -- BSL.appendFile "soap.xml" stdout
 
   {-
@@ -134,7 +138,7 @@ makeSoapCall url action extraargs request = tryAndJoinEither $ do
     ExitFailure _ ->
       return (Left $ "Cannot execute 'curl' for soap: " ++ show args ++ BSL.toString stderr)
     ExitSuccess -> do
-      BSL.appendFile "soap.xml" xml
+      liftIO $ BSL.appendFile "soap.xml" xml
       let s = BSL.toString xml
       Log.mixlog_ $ "length of xml string from soap call: " ++ show (length s)
       let rx = readXml s
@@ -144,13 +148,13 @@ makeSoapCall url action extraargs request = tryAndJoinEither $ do
         Right (SOAPFault soapcode string actor) -> return (Left (soapcode ++":" ++ string ++":" ++ actor))
         Left errmsg -> return (Left (errmsg ++ ": " ++ BSL.toString stdout))
 
-makeSoapCallWithCert :: (XmlContent request, XmlContent result)
+makeSoapCallWithCert :: (XmlContent request, XmlContent result, Log.MonadLog m, MonadIO m, MonadBaseControl IO m)
                         => String
                         -> String
                         -> String
                         -> String
                         -> request
-                        -> IO (Either String result)
+                        -> m (Either String result)
 makeSoapCallWithCert url action cert certpwd request =
   let args = [ "--silent",
                "--cert", cert ++ ":" ++ certpwd,
@@ -158,24 +162,24 @@ makeSoapCallWithCert url action cert certpwd request =
              ] in
   makeSoapCall url action args request
 
-makeSoapCallWithCA :: (XmlContent request, XmlContent response)
+makeSoapCallWithCA :: (XmlContent request, XmlContent response, Log.MonadLog m, MonadIO m, MonadBaseControl IO m)
                       => String
                       -> String
                       -> String
                       -> request
-                      -> IO (Either String response)
+                      -> m (Either String response)
 makeSoapCallWithCA url cert action request =
   let args = [ "--verbose",
                "--cacert", cert
              ] in
   makeSoapCall url action args request
 
-makeSoapCallWithCookies :: (XmlContent request, XmlContent result)
+makeSoapCallWithCookies :: (XmlContent request, XmlContent result, Log.MonadLog m, MonadIO m, MonadBaseControl IO m)
                            => String
                            -> FilePath
                            -> String
                            -> request
-                           -> IO (Either String result)
+                           -> m (Either String result)
 makeSoapCallWithCookies url cookiefile action request =
   let args = [ "--silent",
                "--cookie", cookiefile,
