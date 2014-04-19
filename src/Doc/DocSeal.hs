@@ -447,16 +447,14 @@ sealDocumentFile file@File{fileid, filename} = theDocumentID >>= \documentid ->
         sealedfileid <- dbUpdate . NewFile filename . Binary =<< liftIO (BS.readFile tmpout)
         dbUpdate $ AppendSealedFile sealedfileid Missing (systemActor mctxtime)
       ExitFailure _ -> do
-        -- error handling
-        liftIO $ do
-          systmp <- getTemporaryDirectory
-          (path, handle) <- openTempFile systmp ("seal-failed-" ++ show documentid ++ "-" ++ show fileid ++ "-.pdf")
-          let msg = "Cannot seal document #" ++ show documentid ++ " because of file #" ++ show fileid
-          Log.attention_ $ msg ++ ": " ++ path
-          Log.attention_ $ BSL.toString stderr
-          Log.attention_ $ "Sealing configuration: " ++ show config
-          BS.hPutStr handle content
-          hClose handle
+        systmp <- liftIO $ getTemporaryDirectory
+        (path, handle) <- liftIO $ openTempFile systmp ("seal-failed-" ++ show documentid ++ "-" ++ show fileid ++ "-.pdf")
+        let msg = "Cannot seal document #" ++ show documentid ++ " because of file #" ++ show fileid
+        Log.attention_ $ msg ++ ": " ++ path
+        Log.attention_ $ BSL.toString stderr
+        Log.attention_ $ "Sealing configuration: " ++ show config
+        liftIO $ BS.hPutStr handle content
+        liftIO $ hClose handle
         void $ dbUpdate $ ErrorDocument ("Could not seal document because of file #" ++ show fileid)
                             ErrorSealingDocumentEvidence
                             (return ())
