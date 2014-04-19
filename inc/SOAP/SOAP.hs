@@ -29,7 +29,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length, drop)
 import qualified Data.ByteString.Lazy as BSL
 import qualified Control.Exception.Lifted as E
 import Control.Monad.Trans.Control
-import Control.Monad.IO.Class
+import Control.Monad.Base
 import qualified Log
 
 import Prelude hiding (print, putStrLn, putStr)
@@ -87,7 +87,7 @@ tryAndJoinEither action = do
     Left (excpt :: E.SomeException) -> return (Left (show excpt))
 
 -- other makeSoapCallXXX functions use this as their base
-makeSoapCall :: (XmlContent request, XmlContent result, Log.MonadLog m, MonadIO m, MonadBaseControl IO m)
+makeSoapCall :: (XmlContent request, XmlContent result, Log.MonadLog m, MonadBaseControl IO m)
                 => String
                 -> String
                 -> [String]
@@ -106,7 +106,7 @@ makeSoapCall url action extraargs request = tryAndJoinEither $ do
                url
              ]
 
-  (code,stdout,stderr) <- liftIO $ readCurl args $ BSL.fromString input
+  (code,stdout,stderr) <- liftBase $ readCurl args $ BSL.fromString input
   -- BSL.appendFile "soap.xml" stdout
 
   {-
@@ -138,7 +138,7 @@ makeSoapCall url action extraargs request = tryAndJoinEither $ do
     ExitFailure _ ->
       return (Left $ "Cannot execute 'curl' for soap: " ++ show args ++ BSL.toString stderr)
     ExitSuccess -> do
-      liftIO $ BSL.appendFile "soap.xml" xml
+      liftBase $ BSL.appendFile "soap.xml" xml
       let s = BSL.toString xml
       Log.mixlog_ $ "length of xml string from soap call: " ++ show (length s)
       let rx = readXml s
@@ -148,7 +148,7 @@ makeSoapCall url action extraargs request = tryAndJoinEither $ do
         Right (SOAPFault soapcode string actor) -> return (Left (soapcode ++":" ++ string ++":" ++ actor))
         Left errmsg -> return (Left (errmsg ++ ": " ++ BSL.toString stdout))
 
-makeSoapCallWithCert :: (XmlContent request, XmlContent result, Log.MonadLog m, MonadIO m, MonadBaseControl IO m)
+makeSoapCallWithCert :: (XmlContent request, XmlContent result, Log.MonadLog m, MonadBaseControl IO m)
                         => String
                         -> String
                         -> String
@@ -162,7 +162,7 @@ makeSoapCallWithCert url action cert certpwd request =
              ] in
   makeSoapCall url action args request
 
-makeSoapCallWithCA :: (XmlContent request, XmlContent response, Log.MonadLog m, MonadIO m, MonadBaseControl IO m)
+makeSoapCallWithCA :: (XmlContent request, XmlContent response, Log.MonadLog m, MonadBaseControl IO m)
                       => String
                       -> String
                       -> String
@@ -174,7 +174,7 @@ makeSoapCallWithCA url cert action request =
              ] in
   makeSoapCall url action args request
 
-makeSoapCallWithCookies :: (XmlContent request, XmlContent result, Log.MonadLog m, MonadIO m, MonadBaseControl IO m)
+makeSoapCallWithCookies :: (XmlContent request, XmlContent result, Log.MonadLog m, MonadBaseControl IO m)
                            => String
                            -> FilePath
                            -> String
