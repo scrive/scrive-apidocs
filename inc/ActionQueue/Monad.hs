@@ -26,7 +26,10 @@ type ActionQueue = ActionQueueT (AmazonMonadT (CryptoRNGT (DBT IO)))
 type InnerAQ m qd = ReaderT qd m
 
 newtype ActionQueueT m qd a = AQ { unAQ :: InnerAQ m qd a }
-  deriving (Applicative, CryptoRNG, Functor, Monad, MonadDB, MonadIO, MonadReader qd, Log.MonadLog, AmazonMonad, MonadBase b)
+  deriving (Applicative, CryptoRNG, Functor, Monad, MonadDB, MonadIO, MonadReader qd, AmazonMonad, MonadBase b)
+
+instance (MonadBase IO m) => Log.MonadLog (ActionQueueT m qd) where
+  mixlogjs title js = liftBase (Log.mixlogjsIO title js)
 
 instance (MonadBaseControl IO m, MonadBase IO (ActionQueueT m qd)) => MonadBaseControl IO (ActionQueueT m qd) where
   newtype StM (ActionQueueT m qd) a = StAQ { unStAQ :: StM (InnerAQ m qd) a }
