@@ -75,7 +75,7 @@ invokeGuardtimeTool tool args = do
              ] ++ args)
   liftIO $ readProcessWithExitCode' "java" a BSL.empty
 
-digitallySign :: GuardTimeConf -> String -> IO ExitCode
+digitallySign :: (Log.MonadLog m, MonadIO m) => GuardTimeConf -> String -> m ExitCode
 digitallySign conf inputFileName = do
   (code,stdout,stderr) <- invokeGuardtimeTool "PdfSigner"
              [ "-i"
@@ -96,7 +96,7 @@ digitallySign conf inputFileName = do
 -- Verification
 
 
-digitallyExtend :: GuardTimeConf -> String -> IO ExitCode
+digitallyExtend :: (Log.MonadLog m, MonadIO m) => GuardTimeConf -> String -> m ExitCode
 digitallyExtend conf inputFileName = do
   (code,stdout,stderr) <- invokeGuardtimeTool "PdfExtender"
              [ "-x", guardTimeExtendingServiceURL conf
@@ -114,7 +114,7 @@ digitallyExtend conf inputFileName = do
 
 -- Invoke special extender to deal with certain signatures (see GuardTime/fix-incorrect-core/mail.eml)
 
-digitallyExtendCore1 :: String -> IO ExitCode
+digitallyExtendCore1 :: (Log.MonadLog m, MonadIO m) => String -> m ExitCode
 digitallyExtendCore1 inputFileName = do
   (code,stdout,stderr) <- invokeGuardtimeTool "fix-incorrect-core/Core1-CheckPDF"
              [ "ext"
@@ -181,7 +181,7 @@ instance ToJSValue VerifyResult where
                                         value "error"   True
                                         value "message" msg
 
-verify :: GuardTimeConf -> String -> IO VerifyResult
+verify :: (Log.MonadLog m, MonadIO m) => GuardTimeConf -> String -> m VerifyResult
 verify conf inputFileName = do
   (code,stdout,stderr) <- invokeGuardtimeTool "PdfVerifier"
              [ "-j"
