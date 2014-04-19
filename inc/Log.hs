@@ -6,6 +6,8 @@ module Log
   , MonadLog(..)
 
   , mixlogjsIO
+  , mixlogIO
+  , attentionIO
 
   , mixlog
   , mixlogt
@@ -219,6 +221,11 @@ mixlogt title jsgent = runJSONGenT jsgent >>= mixlogjs title
 mixlog_ :: (MonadLog m) => String -> m ()
 mixlog_ title = mixlog title (return ())
 
+mixlogIO :: String -> JSONGen () -> IO ()
+mixlogIO title jsgen = mixlogjsIO title (runJSONGen jsgen)
+
+attentionIO :: String -> JSONGen () -> IO ()
+attentionIO title jsgen = mixlogjsIO (title ++ " (ATTENTION!)") (runJSONGen jsgen)
 
 attention :: (MonadLog m) => String -> JSONGen () -> m ()
 attention title = mixlog (title ++ " (ATTENTION!)")
