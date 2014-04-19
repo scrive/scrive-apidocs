@@ -20,6 +20,8 @@ import ELegitimation.Config
 import ELegitimation.SignatureProvider
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Base64 as Base64
+import qualified Log
+import Control.Monad.Trans.Control
 
 data ImplStatus = ImplStatus { errorGroup            :: Int,
                                errorGroupDescription :: String,
@@ -326,6 +328,7 @@ mbiRequestSignature LogicaConfig{..} personalnumber uvd = do
     Left m -> return $ Left m
     Right (SignatureResponse tid oref) -> return $ Right (tid, oref)
 
-mbiRequestCollect :: LogicaConfig -> String -> String -> IO (Either String CollectResponse)
+mbiRequestCollect :: (Log.MonadLog m, MonadBaseControl IO m)
+                  => LogicaConfig -> String -> String -> m (Either String CollectResponse)
 mbiRequestCollect LogicaConfig{..} tid oref = do
   makeSoapCallWithCA logicaMBIEndpoint logicaCertFile "Collect" $ CollectRequest logicaServiceID tid oref logicaMBIDisplayName
