@@ -139,7 +139,9 @@ outputChannel = unsafePerformIO $ do
   chan <- C.newChan
   let loop = do
         msg <- C.readChan chan
-        BSC.putStrLn (BSU.fromString msg) `C.catch` \(e :: C.SomeException) -> mixlog_ $ "Exception caught while logging: " ++ show e
+        BSC.putStrLn (BSU.fromString msg) `C.catch` \(e :: C.SomeException) -> do
+          mixlogjsIO "Exception caught while logging exception (ATTENTION!):" $
+            runJSONGen (value "exception" (show e))
         loop
   _ <- C.forkIO loop
   return chan
