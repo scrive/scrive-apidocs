@@ -35,7 +35,6 @@ module InputValidation
 ) where
 
 import Control.Applicative
-import Control.Monad.Error
 import Data.Char
 import Text.Regex.TDFA ((=~))
 import Text.XML.HaXml.Parse (xmlParse')
@@ -182,7 +181,7 @@ logIfBad x@(input, Bad) = do
                " user " ++ username ++
                " invalid input: " ++
                " raw value info [" ++ show input ++ "]"
-  _ <- liftIO $ Log.mixlog_ logtext
+  _ <- Log.mixlog_ logtext
   return x
 logIfBad x = return x
 
