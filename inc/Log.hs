@@ -6,6 +6,8 @@ module Log
 
   , MonadLog(..)
 
+  , mixlogjsIO
+
   , mixlog
   , mixlogt
   , mixlog_
@@ -145,7 +147,10 @@ outputChannel = unsafePerformIO $ do
 
 
 instance MonadLog IO where
-  mixlogjs title js = do
+  mixlogjs = mixlogjsIO
+
+mixlogjsIO :: (ToJSValue js) => String -> js -> IO ()
+mixlogjsIO title js = do
       -- FIXME: asking got time on every log line is actually a heavy task
       -- Find in the internet how to get around this limitation
       currentTime <-getCurrentTime
