@@ -36,7 +36,6 @@ import CompanyControlTest
 import DocStateTest
 import DocControlTest
 import DocAPITest
-import DocStateQueryTest
 import DumpEvidenceTexts
 import EvidenceAttachmentsTest
 import HtmlTest
@@ -73,7 +72,6 @@ allTests = tail tests
       , ("docstate",  docStateTests)
       , ("doccontrol",  docControlTests)
       , ("docapi",  docAPITests)
-      , ("docstatequery", const $ docStateQueryTests)
       , ("evidenceattachments", const $ evidenceAttachmentsTest)
       , ("html", const $ htmlTests)
       , ("localization", const $ localizationTest)
