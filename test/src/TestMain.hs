@@ -31,72 +31,72 @@ import TestKontra
 -- if e.g. for some reason they stop compiling. Also, please keep them in
 -- alphabetic order.
 
-import CompanyStateTest
+import AccountInfoTest
+import BrandedDomainTest
+import CSVUtilTest
+import CompanyAccountsTest
 import CompanyControlTest
-import DocStateTest
-import DocControlTest
+import CompanyStateTest
 import DocAPITest
+import DocControlTest
+import DocStateTest
 import DumpEvidenceTexts
 import EvidenceAttachmentsTest
-import HtmlTest
-import LocalizationTest
-import InputValidationTest
-import LoginTest
-import SignupTest
-import AccountInfoTest
-import MailModelTest
-import UserStateTest
-import UserHistoryTest
-import CSVUtilTest
-import LangTest
-import CompanyAccountsTest
-import MailsTest
-import JSONUtilTest
-import SessionsTest
-import FileTest
 import EvidenceLogTest
-import PadTest
-import OAuth
+import FileTest
 import FlashMessages
+import HtmlTest
+import InputValidationTest
+import JSONUtilTest
+import LangTest
+import LocalizationTest
+import LoginTest
+import MailModelTest
+import MailsTest
+import OAuth
+import PadTest
 import PaymentsTest
+import SessionsTest
+import SignupTest
 import ThirdPartyStats
-import BrandedDomainTest
+import UserHistoryTest
+import UserStateTest
 
 allTests :: [(String, TestEnvSt -> Test)]
 allTests = tail tests
   where
     tests = [
         undefined
-      , ("companystate",  companyStateTests)
-      , ("companycontrol",  companyControlTests)
-      , ("docstate",  docStateTests)
-      , ("doccontrol",  docControlTests)
-      , ("docapi",  docAPITests)
-      , ("evidenceattachments", const $ evidenceAttachmentsTest)
-      , ("html", const $ htmlTests)
-      , ("localization", const $ localizationTest)
-      , ("inputvalidation", const $ inputValidationTests)
-      , ("login", loginTests)
-      , ("signup", signupTests)
       , ("accountinfo", accountInfoTests)
-      , ("userstate", userStateTests)
-      , ("userhistory", userHistoryTests)
-      , ("csvutil", const $ csvUtilTests)
-      , ("mailmodel", mailModelTests)
-      , ("lang", langTests)
+      , ("brandeddomain", brandedDomainTests)
       , ("companyaccounts", companyAccountsTests)
-      , ("mails", mailsTests )
-      , ("jsonutil", jsonUtilTests )
-      , ("file", fileTests )
+      , ("companycontrol",  companyControlTests)
+      , ("companystate",  companyStateTests)
+      , ("csvutil", const $ csvUtilTests)
+      , ("docapi",  docAPITests)
+      , ("doccontrol",  docControlTests)
+      , ("docstate",  docStateTests)
+      , ("evidenceattachments", const $ evidenceAttachmentsTest)
       , ("evidencelog", evidenceLogTests)
       , ("evidencetexts", dumpAllEvidenceTexts)
-      , ("pad", padTests)
-      , ("oauth", oauthTest)
+      , ("file", fileTests )
       , ("flashmessages", const $ flashMessagesTests)
+      , ("html", const $ htmlTests)
+      , ("inputvalidation", const $ inputValidationTests)
+      , ("jsonutil", jsonUtilTests )
+      , ("lang", langTests)
+      , ("localization", const $ localizationTest)
+      , ("login", loginTests)
+      , ("mailmodel", mailModelTests)
+      , ("mails", mailsTests )
+      , ("oauth", oauthTest)
+      , ("pad", padTests)
       , ("payments", paymentsTests)
       , ("sessions", sessionsTests)
+      , ("signup", signupTests)
       , ("thirdpartystats", thirdPartyStatsTests)
-      , ("brandeddomain", brandedDomainTests)
+      , ("userhistory", userHistoryTests)
+      , ("userstate", userStateTests)
       ]
 
 testsToRun :: [String] -> [Either String (TestEnvSt -> Test)]
