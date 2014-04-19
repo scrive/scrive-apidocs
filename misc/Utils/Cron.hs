@@ -8,13 +8,12 @@ module Utils.Cron (
 
 import Control.Applicative
 import Control.Arrow hiding (loop)
-import Control.Exception (bracket)
 import Control.Monad
 import Control.Concurrent
 import Control.Concurrent.STM
 import qualified Control.Concurrent.Thread.Group as TG
-import qualified Control.Exception as E
-
+import qualified Control.Exception.Lifted as E
+import Control.Monad.Base
 import qualified Log
 
 newtype CronInfo = CronInfo (TVar (WorkerState, Command))
@@ -88,11 +87,11 @@ forkCron waitfirst name seconds action tg = do
           case st of
             (Running, Continue) -> do
               action release `E.catch` \(e::E.SomeException) ->
-                Log.attention_ ("forkCron: exception caught in thread " ++ name ++ ": " ++ show e)
+                liftBase $ Log.attentionIO ("forkCron: exception caught in thread " ++ name ++ ": " ++ show e) (return ())
               atomically . modifyTVar' ctrl $ first (const Waiting)
               worker
-            (_, Finish) -> Log.mixlog_ $ "forkCron: finishing " ++ name ++ "..."
-            (Waiting, Continue) -> Log.attention_ "forkCron: (Waiting, Continue) after (/= (Waiting, Continue)) condition. Something bad happened, exiting."
+            (_, Finish) -> liftBase $ Log.mixlogIO ("forkCron: finishing " ++ name ++ "...") (return ())
+            (Waiting, Continue) -> liftBase $ Log.attentionIO ("forkCron: (Waiting, Continue) after (/= (Waiting, Continue)) condition. Something bad happened, exiting.") (return ())
 
 -- | Same as forkCron, but there is no way to make parts
 -- of passed action interruptible
@@ -106,7 +105,7 @@ stopCron (CronInfo ctrl) = atomically . modifyTVar' ctrl $ second (const Finish)
 
 -- | Start a list of jobs in a local thread group, then perform an action, and finally stop the jobs and wait for the thread group.
 withCronJobs :: [TG.ThreadGroup -> IO CronInfo] -> ((TG.ThreadGroup, [CronInfo]) -> IO a) -> IO a
-withCronJobs jobs = bracket start stop where
+withCronJobs jobs = E.bracket start stop where
   start = do
     tg <- TG.new
     cil <- sequence (map ($ tg) jobs)
