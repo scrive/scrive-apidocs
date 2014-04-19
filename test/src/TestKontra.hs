@@ -77,7 +77,10 @@ data TestEnvSt = TestEnvSt {
 type InnerTestEnv = ReaderT TestEnvSt (DBT IO)
 
 newtype TestEnv a = TestEnv { unTestEnv :: InnerTestEnv a }
-  deriving (Applicative, Functor, Monad, MonadIO, MonadReader TestEnvSt, Log.MonadLog, MonadBase IO)
+  deriving (Applicative, Functor, Monad, MonadIO, MonadReader TestEnvSt, MonadBase IO)
+
+instance Log.MonadLog TestEnv where
+  mixlogjs title js = liftBase (Log.mixlogjsIO title js)
 
 runTestEnv :: TestEnvSt -> TestEnv () -> IO ()
 runTestEnv st m = do
