@@ -117,7 +117,7 @@ define(['React','common/button','common/backbone_mixim','Backbone', '../../libs/
                         onMouseLeave={this.inputOnMouseLeave}
                         onFocus={this.inputOnFocus}
                         onBlur={this.inputOnBlur}
-                        placeholder={localization.phone}
+                        placeholder={localization.phonePlaceholder}
                         type='text' value={this.props.model.phone()}
                         onChange={this.setPhone}
                      />
