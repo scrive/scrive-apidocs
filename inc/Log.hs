@@ -47,6 +47,8 @@ import Database.PostgreSQL.PQTypes
 import Text.StringTemplates.Templates
 import Happstack.Server (ServerPartT)
 
+import qualified Control.Exception as E
+
 import Text.JSON.Gen
 import Text.JSON
 
@@ -241,10 +243,35 @@ showStringYaml str = "\"" ++ concatMap escape str ++ "\""
         escape c | ord c < 32 = "\\x" ++ showHex (ord c `div` 16) (showHex (ord c `mod` 16) "")
         escape c = [c]
 
+-- | @'isBottomTimeOut' timeOutLimit@ works like 'isBottom', but if
+-- @timeOutLimit@ is @'Just' lim@, then computations taking more than
+-- @lim@ seconds are also considered to be equal to bottom. Note that
+-- this is a very crude approximation of what a bottom is. Also note
+-- that this \"function\" may return different answers upon different
+-- invocations. Take it for what it is worth.
+--
+-- 'isBottomTimeOut' is subject to all the same vagaries as
+-- 'T.timeOut'.
+
+{-# NOINLINE isBottom #-}
+isBottom :: a -> Bool
+isBottom f = unsafePerformIO $
+  (E.evaluate f >> return False) `E.catches`
+    [ E.Handler (\(_ :: E.ArrayException)   -> return True)
+    , E.Handler (\(_ :: E.ErrorCall)        -> return True)
+    , E.Handler (\(_ :: E.NoMethodError)    -> return True)
+    , E.Handler (\(_ :: E.NonTermination)   -> return True)
+    , E.Handler (\(_ :: E.PatternMatchFail) -> return True)
+    , E.Handler (\(_ :: E.RecConError)      -> return True)
+    , E.Handler (\(_ :: E.RecSelError)      -> return True)
+    , E.Handler (\(_ :: E.RecUpdError)      -> return True)
+    ]
+
 -- | Show JSON as Yaml in defined by us canonical form. Important is
 -- that it does not introduce spurious newlines so it can be reliably
 -- grepped.
 jsonShowYamlLn :: JSValue -> [String]
+jsonShowYamlLn ev | isBottom ev = ["undefined"]
 jsonShowYamlLn JSNull = ["null"]
 jsonShowYamlLn (JSBool True) = ["true"]
 jsonShowYamlLn (JSBool False) = ["false"]
