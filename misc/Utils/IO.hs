@@ -112,6 +112,7 @@ importantExecutables =
   , ("mutool", [])
   , ("mudraw", [])
   , ("convert", [])
+  , ("pngquant", [])
   ]
 
 checkExecutables :: IO ()
