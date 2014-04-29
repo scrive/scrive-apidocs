@@ -68,6 +68,7 @@ mailContractClosedMainP =
       $_mailContractClosedContentLinked()$
       $if(custommessage)$
       <br/>
+      <br/>
       $mailClosedCustomeMessage()$
       $endif$
       $if(confirmationlink)$
