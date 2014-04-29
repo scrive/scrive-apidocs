@@ -1,4 +1,4 @@
-module Utils.String(concatChunks, pureString, maxLev, maybeS, escapeString) where
+module Utils.String(concatChunks, pureString, maxLev, maybeS, escapeString, trim) where
 
 import Data.Char
 import qualified Data.ByteString as BS
@@ -35,3 +35,6 @@ escapeString =  concatMap escape
               escape '"' = "\\\""
               escape '\\' = "\\\\"
               escape c   = [c]
+
+trim :: String -> String
+trim = reverse . dropWhile isSpace . reverse . dropWhile isSpace
