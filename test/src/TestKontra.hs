@@ -49,7 +49,6 @@ import Mails.MailsConfig
 import Utils.Default
 import Payments.Config (RecurlyConfig(..))
 import IPAddress
-import OurServerPart
 import Session.SessionID
 import qualified Text.StringTemplates.TemplatesLoader as TL
 import Text.StringTemplates.Templates
@@ -144,7 +143,7 @@ runTestKontraHelper cs rq ctx tk = do
   -- being already in progress
   commit' ts { tsAutoTransaction = False }
   mres <- E.finally (liftIO . ununWebT $ runServerPartT
-    (runOurServerPartT . runDBT cs ts . runCryptoRNGT rng $
+    (runDBT cs ts . runCryptoRNGT rng $
       AWS.runAmazonMonadT amazoncfg $ runStateT (unKontraPlus $ unKontra tk) noflashctx) rq)
       -- runDBT commits and doesn't run another transaction, so begin new one
       begin

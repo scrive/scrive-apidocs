@@ -36,7 +36,6 @@ import KontraError
 import KontraMonad
 import MailContext (MailContextMonad(..))
 import Mails.MailsConfig
-import OurServerPart
 import qualified Text.StringTemplates.TemplatesLoader as TL
 import Text.StringTemplates.Templates
 import Templates
@@ -45,7 +44,7 @@ import Utils.List
 import qualified Log
 import qualified Amazon as AWS
 
-type InnerKontraPlus = StateT Context (AWS.AmazonMonadT (CryptoRNGT (DBT (OurServerPartT IO))))
+type InnerKontraPlus = StateT Context (AWS.AmazonMonadT (CryptoRNGT (DBT (ServerPartT IO))))
 
 -- | KontraPlus is 'MonadPlus', but it should only be used on toplevel
 -- for interfacing with static routing.
@@ -55,7 +54,7 @@ newtype KontraPlus a = KontraPlus { unKontraPlus :: InnerKontraPlus a }
 instance Log.MonadLog KontraPlus where
   mixlogjs title js = liftBase (Log.mixlogjsIO title js)
 
-runKontraPlus :: Context -> KontraPlus a -> AWS.AmazonMonadT (CryptoRNGT (DBT (OurServerPartT IO))) a
+runKontraPlus :: Context -> KontraPlus a -> AWS.AmazonMonadT (CryptoRNGT (DBT (ServerPartT IO))) a
 runKontraPlus ctx f = evalStateT (unKontraPlus f) ctx
 
 instance Kontrakcja KontraPlus

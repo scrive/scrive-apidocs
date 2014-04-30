@@ -23,7 +23,6 @@ import Kontra
 import MinutesTime
 import Utils.HTTP
 import Utils.Monoid
-import OurServerPart
 import Session.Data hiding (session)
 import Session.Model
 import Templates
@@ -149,7 +148,7 @@ enhanceYourCalm action = enhanceYourCalmWorker 100
    Creates a context, routes the request, and handles the session.
 -}
 appHandler :: KontraPlus Response -> AppConf -> AppGlobals -> ServerPartT IO Response
-appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT . enhanceYourCalm $
+appHandler handleRoutes appConf appGlobals = catchEverything . enhanceYourCalm $
   withPostgreSQL (connsource appGlobals) . runCryptoRNGT (cryptorng appGlobals) $
     AWS.runAmazonMonadT amazoncfg $ do
     startTime <- liftIO getClockTime
