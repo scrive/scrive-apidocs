@@ -200,3 +200,16 @@ migrateUsersUniqueIndexOnEmail =
        runQuery_ $ sqlDropIndex "users" (indexOnColumn "email")
        runQuery_ $ sqlCreateIndex "users" ((indexOnColumn "email") { idxUnique = True, idxWhere = Just ("deleted IS NULL") })
     }
+
+usersTableChangeAssociatedDomainToForeignKey :: MonadDB m => Migration m
+usersTableChangeAssociatedDomainToForeignKey =
+  Migration {
+    mgrTable = tableUsers
+  , mgrFrom = 18
+  , mgrDo = do
+      runQuery_ $ sqlAlterTable "users" [ sqlAddColumn (tblColumn { colName = "associated_domain_id", colType = BigIntT }) ]
+      runSQL_ "UPDATE users SET associated_domain_id = (SELECT branded_domains.id FROM branded_domains WHERE branded_domains.url = users.associated_domain)"
+      runQuery_ $ sqlAlterTable "users" [ sqlDropColumn "associated_domain"
+                            , sqlAddFK "users" (fkOnColumn "associated_domain_id" "branded_domains" "id")
+                            ]
+  }

@@ -76,7 +76,7 @@ instance (MonadDB m, Log.MonadLog m) => DBQuery m GetBrandedDomainByUserID (Mayb
       mapM_ (sqlResult . raw . colName) (tblColumns tableBrandedDomains)
       sqlWhereExists $ sqlSelect "users" $ do
         sqlWhereEq "users.id" uid
-        sqlWhere "users.associated_domain = branded_domains.url"
+        sqlWhere "users.associated_domain_id = branded_domains.id"
     fetchMaybe fetchBrandedDomain
 
 data GetBrandedDomainByID = GetBrandedDomainByID BrandedDomainID

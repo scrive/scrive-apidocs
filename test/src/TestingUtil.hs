@@ -361,7 +361,7 @@ instance Arbitrary User where
                    <*> arbitrary
                    <*> arbitrary
                    <*> arbitrary
-                   <*> arbitrary
+                   <*> (pure Nothing)
 
 instance Arbitrary CollectResponse where
   arbitrary = oneof [outstanding, usersign, complete]
