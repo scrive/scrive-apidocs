@@ -44,7 +44,10 @@ define(['Backbone', 'legacy_code'], function() {
           canvas = null;
           if (!callbackCalled) {
             callbackCalled = true;
-            mixpanel.track('Take screenshot success');
+            var errorInfo = {'Browser': $.browser.name,
+                             'Browser version': $.browser.version,
+                             'Platform': $.browser.platform};
+            mixpanel.track('Take screenshot success', _.extend(errorInfo, extraErrorLogParams));
             success(newCanvas);
           }
         })['catch'](function(err) { // use catch as key, because IE8 cannot handle catch attribute
