@@ -16,7 +16,7 @@ define(['Backbone', 'legacy_code'], function() {
                 },
                 expectedType: "json"
             }).send();
-        },
+        }
     });
 
 
@@ -174,7 +174,7 @@ var AdminBrandedDomainView = Backbone.View.extend({
               }
               model.set(changes, {silent: true});
           });
-      }
+      };
       addTableRow("url");
       addTableRow("logolink", "imglink");
       addTableRow("bars_color", "color");
