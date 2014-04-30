@@ -62,7 +62,7 @@ data AmazonConfig = AmazonConfig { amazonConfig :: Maybe (String, String, String
                                  }
 
 newtype AmazonMonadT m a = AmazonMonadT { unAmazonMonadT :: ReaderT AmazonConfig m a }
-    deriving (Applicative, Functor, Monad, MonadDB, MonadIO, Log.MonadLog, CryptoRNG, MonadTrans, MonadPlus, MonadBase b)
+    deriving (Alternative, Applicative, Functor, Monad, MonadDB, MonadIO, Log.MonadLog, CryptoRNG, MonadTrans, MonadPlus, MonadBase b)
 
 instance MonadTransControl AmazonMonadT where
   newtype StT AmazonMonadT m = StAmazonMonadT { unStAmazonMonadT :: StT (ReaderT AmazonConfig) m }

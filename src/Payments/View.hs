@@ -19,7 +19,7 @@ import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
 import Control.Monad
 import Control.Applicative
-import BrandedDomains
+import BrandedDomain.BrandedDomain
 import Mails.MailsConfig
 
 mailSignup :: (TemplatesMonad m) => MailsConfig -> Maybe BrandedDomain -> String -> User -> Company -> Recurly.Subscription -> m Mail

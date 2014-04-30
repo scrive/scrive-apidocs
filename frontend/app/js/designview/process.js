@@ -32,6 +32,11 @@ define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_the
             //view.setupTinyMCE();
             return view;
         },
+        hideAllCalendars: function() {
+           var self = this;
+           if (self.daystosigncalendar != undefined) self.daystosigncalendar.close();
+           if (self.daystoremindcalendar != undefined) self.daystoremindcalendar.close();
+        },
         leftColumn: function() {
             var view = this;
 
@@ -55,11 +60,10 @@ define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_the
 
             return div;
         },
-	rerenderMiddleColumn: function() {
-	    var view = this;
-	    view.middleColumnDiv.html('').append(view.invitationAndConfirmationBox());
-	    //view.setupTinyMCE();
-	},
+        rerenderMiddleColumn: function() {
+          var view = this;
+          view.middleColumnDiv.html('').append(view.invitationAndConfirmationBox());
+        },
         rightColumn: function() {
             var view = this;
 

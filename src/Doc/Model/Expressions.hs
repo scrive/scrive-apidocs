@@ -26,8 +26,8 @@ import DB
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.SignatoryLinkID
-import OurPrelude
 import Prelude hiding (head, tail)
+import OurPrelude
 
 documentLatestSignTimeExpression :: SQL
 documentLatestSignTimeExpression = "(SELECT max(signatory_links.sign_time) FROM signatory_links WHERE signatory_links.document_id = documents.id)"

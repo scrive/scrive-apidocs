@@ -57,7 +57,7 @@ import qualified Text.StringTemplates.Fields as F
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Base64 as B64
 import DB
-import BrandedDomains
+import BrandedDomain.BrandedDomain
 import Doc.DocViewMail
 import Doc.DocStateData
 import Control.Monad
@@ -103,19 +103,19 @@ companyUIJson ctx companyui = runJSONGenT $ do
     value "companycustombarstextcolour" $ fromMaybe "" $ companycustombarstextcolour $ companyui
     value "companycustombarssecondarycolour" $ fromMaybe "" $ companycustombarssecondarycolour $ companyui
     value "companycustombackgroundcolour" $ fromMaybe "" $ companycustombackgroundcolour $ companyui
-    value "domaincustomlogo" $ fromMaybe "" $ bdlogolink <$> currentBrandedDomain ctx
-    value "domainbarscolour" $ fromMaybe "" $ bdbarscolour <$> currentBrandedDomain ctx
-    value "domainbarstextcolour" $ fromMaybe "" $ bdbarstextcolour <$> currentBrandedDomain ctx
-    value "domainbarssecondarycolour" $ fromMaybe "" $ bdbarssecondarycolour <$> currentBrandedDomain ctx
-    value "domainbackgroundcolour" $ fromMaybe "" $ bdbackgroundcolour <$> currentBrandedDomain ctx
-    value "domainmailsbackgroundcolor" $ fromMaybe "" $ bdmailsbackgroundcolor <$> currentBrandedDomain ctx
-    value "domainmailsbuttoncolor" $ fromMaybe "" $ bdmailsbuttoncolor <$> currentBrandedDomain ctx
-    value "domainmailstextcolor" $ fromMaybe "" $ bdmailstextcolor <$> currentBrandedDomain ctx
-    value "domainsignviewprimarycolour" $ fromMaybe "" $ bdsignviewprimarycolour <$> currentBrandedDomain ctx
-    value "domainsignviewprimarytextcolour" $ fromMaybe "" $ bdsignviewprimarytextcolour <$> currentBrandedDomain ctx
-    value "domainsignviewsecondarycolour" $ fromMaybe "" $ bdsignviewsecondarycolour <$> currentBrandedDomain ctx
-    value "domainsignviewsecondarytextcolour" $ fromMaybe "" $ bdsignviewsecondarytextcolour <$> currentBrandedDomain ctx
-    value "servicelinkcolour" $ fromMaybe "" $ bdservicelinkcolour <$> currentBrandedDomain ctx
+    value "domaincustomlogo" $ fromMaybe "" $ bdlogolink <$> ctxbrandeddomain ctx
+    value "domainbarscolour" $ fromMaybe "" $ bdbarscolour <$> ctxbrandeddomain ctx
+    value "domainbarstextcolour" $ fromMaybe "" $ bdbarstextcolour <$> ctxbrandeddomain ctx
+    value "domainbarssecondarycolour" $ fromMaybe "" $ bdbarssecondarycolour <$> ctxbrandeddomain ctx
+    value "domainbackgroundcolour" $ fromMaybe "" $ bdbackgroundcolour <$> ctxbrandeddomain ctx
+    value "domainmailsbackgroundcolor" $ fromMaybe "" $ bdmailsbackgroundcolor <$> ctxbrandeddomain ctx
+    value "domainmailsbuttoncolor" $ fromMaybe "" $ bdmailsbuttoncolor <$> ctxbrandeddomain ctx
+    value "domainmailstextcolor" $ fromMaybe "" $ bdmailstextcolor <$> ctxbrandeddomain ctx
+    value "domainsignviewprimarycolour" $ fromMaybe "" $ bdsignviewprimarycolour <$> ctxbrandeddomain ctx
+    value "domainsignviewprimarytextcolour" $ fromMaybe "" $ bdsignviewprimarytextcolour <$> ctxbrandeddomain ctx
+    value "domainsignviewsecondarycolour" $ fromMaybe "" $ bdsignviewsecondarycolour <$> ctxbrandeddomain ctx
+    value "domainsignviewsecondarytextcolour" $ fromMaybe "" $ bdsignviewsecondarytextcolour <$> ctxbrandeddomain ctx
+    value "servicelinkcolour" $ fromMaybe "" $ bdservicelinkcolour <$> ctxbrandeddomain ctx
 
 
 companyJSON :: Monad m => Context -> Company -> CompanyUI -> m JSValue
@@ -141,7 +141,7 @@ documentSignviewBrandingJSON ctx user company companyui document = do
 
 signviewBrandingJSON :: Monad m => Context -> User -> Company -> CompanyUI -> JSONGenT m ()
 signviewBrandingJSON ctx user company companyui = do
-    let mdb = currentBrandedDomain ctx
+    let mdb = ctxbrandeddomain ctx
     value "fullname" $ getFullName user
     value "email" $ getEmail user
     value "company" $ getCompanyName company
@@ -209,52 +209,52 @@ pageAcceptTOS = renderTemplate_ "pageAcceptTOS"
 
 accessNewAccountMail :: TemplatesMonad m => Context -> User -> KontraLink -> m Mail
 accessNewAccountMail ctx user setpasslink = do
-  kontramail (ctxmailsconfig ctx) (currentBrandedDomain ctx)  "accessNewAccountMail" $ do
+  kontramail (ctxmailsconfig ctx) (ctxbrandeddomain ctx)  "accessNewAccountMail" $ do
     F.value "personname"   $ getFullName user
     F.value "personemail"  $ getEmail user
     F.value "passwordlink" $ show setpasslink
     F.value "ctxhostpart"  $ ctxhostpart ctx
-    brandingMailFields (currentBrandedDomain ctx) Nothing
+    brandingMailFields (ctxbrandeddomain ctx) Nothing
 
 resetPasswordMail :: TemplatesMonad m => Context -> User -> KontraLink -> m Mail
 resetPasswordMail ctx user setpasslink = do
-  kontramail (ctxmailsconfig ctx) (currentBrandedDomain ctx)   "passwordChangeLinkMail" $ do
+  kontramail (ctxmailsconfig ctx) (ctxbrandeddomain ctx)   "passwordChangeLinkMail" $ do
     F.value "personname"   $ getFullName user
     F.value "personemail"  $ getEmail user
     F.value "passwordlink" $ show setpasslink
     F.value "ctxhostpart"  $ ctxhostpart ctx
-    brandingMailFields (currentBrandedDomain ctx) Nothing
+    brandingMailFields (ctxbrandeddomain ctx) Nothing
 
 newUserMail :: TemplatesMonad m => Context -> String -> String -> KontraLink -> m Mail
 newUserMail ctx emailaddress personname activatelink = do
-  kontramail (ctxmailsconfig ctx) (currentBrandedDomain ctx)  "newUserMail" $ do
+  kontramail (ctxmailsconfig ctx) (ctxbrandeddomain ctx)  "newUserMail" $ do
     F.value "personname"   $ personname
     F.value "email"        $ emailaddress
     F.value "activatelink" $ show activatelink
     F.value "ctxhostpart"  $ ctxhostpart ctx
-    brandingMailFields (currentBrandedDomain ctx) Nothing
+    brandingMailFields (ctxbrandeddomain ctx) Nothing
 
 
 mailNewAccountCreatedByAdmin :: (HasLang a, TemplatesMonad m) => Context -> a -> String -> String -> KontraLink -> Maybe String -> m Mail
 mailNewAccountCreatedByAdmin ctx lang personname email setpasslink custommessage = do
-  kontramaillocal (ctxmailsconfig ctx) (currentBrandedDomain ctx)  lang "mailNewAccountCreatedByAdmin" $ do
+  kontramaillocal (ctxmailsconfig ctx) (ctxbrandeddomain ctx)  lang "mailNewAccountCreatedByAdmin" $ do
     F.value "personname"    $ personname
     F.value "email"         $ email
     F.value "passwordlink"  $ show setpasslink
     F.value "creatorname"   $ maybe "" getSmartName (ctxmaybeuser ctx)
     F.value "ctxhostpart"   $ ctxhostpart ctx
     F.value "custommessage"   custommessage
-    brandingMailFields (currentBrandedDomain ctx) Nothing
+    brandingMailFields (ctxbrandeddomain ctx) Nothing
 
 
 mailEmailChangeRequest :: (TemplatesMonad m, HasSomeUserInfo a) => Context -> a -> Email -> KontraLink -> m Mail
 mailEmailChangeRequest ctx user newemail link = do
-  kontramail (ctxmailsconfig ctx) (currentBrandedDomain ctx)  "mailRequestChangeEmail" $ do
+  kontramail (ctxmailsconfig ctx) (ctxbrandeddomain ctx)  "mailRequestChangeEmail" $ do
     F.value "fullname" $ getFullName user
     F.value "newemail" $ unEmail newemail
     F.value "ctxhostpart" $ ctxhostpart ctx
     F.value "link" $ show link
-    brandingMailFields (currentBrandedDomain ctx) Nothing
+    brandingMailFields (ctxbrandeddomain ctx) Nothing
 
 -------------------------------------------------------------------------------
 

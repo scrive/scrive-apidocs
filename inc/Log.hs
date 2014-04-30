@@ -1,10 +1,13 @@
 module Log
-  ( forkIOLogWhenError
-  , teardownLogger
+  ( teardownLogger
   , withLogger
   , setupLogger
 
   , MonadLog(..)
+
+  , mixlogjsIO
+  , mixlogIO
+  , attentionIO
 
   , mixlog
   , mixlogt
@@ -138,14 +141,19 @@ outputChannel = unsafePerformIO $ do
   chan <- C.newChan
   let loop = do
         msg <- C.readChan chan
-        BSC.putStrLn (BSU.fromString msg) `C.catch` \(e :: C.SomeException) -> mixlog_ $ "Exception caught while logging: " ++ show e
+        BSC.putStrLn (BSU.fromString msg) `C.catch` \(e :: C.SomeException) -> do
+          mixlogjsIO "Exception caught while logging exception (ATTENTION!):" $
+            runJSONGen (value "exception" (show e))
         loop
   _ <- C.forkIO loop
   return chan
 
 
 instance MonadLog IO where
-  mixlogjs title js = do
+  mixlogjs = mixlogjsIO
+
+mixlogjsIO :: (ToJSValue js) => String -> js -> IO ()
+mixlogjsIO title js = do
       -- FIXME: asking got time on every log line is actually a heavy task
       -- Find in the internet how to get around this limitation
       currentTime <-getCurrentTime
@@ -178,14 +186,6 @@ teardownLogger () = do
 -- and tears them down afterwards. Even in case of an exception.
 withLogger :: IO a -> IO a
 withLogger = bracket setupLogger teardownLogger . const
-
-
--- | FIXME: use forkAction
-forkIOLogWhenError :: (MonadIO m) => String -> IO () -> m ()
-forkIOLogWhenError errmsg action =
-  liftIO $ do
-    _ <- C.forkIO (action `C.catch` \(e :: C.SomeException) -> mixlog_ $ errmsg ++ " " ++ show e)
-    return ()
 
 -- | Log a line of text with possibly non-empty set of properties attached to the text.
 --
@@ -221,6 +221,11 @@ mixlogt title jsgent = runJSONGenT jsgent >>= mixlogjs title
 mixlog_ :: (MonadLog m) => String -> m ()
 mixlog_ title = mixlog title (return ())
 
+mixlogIO :: String -> JSONGen () -> IO ()
+mixlogIO title jsgen = mixlogjsIO title (runJSONGen jsgen)
+
+attentionIO :: String -> JSONGen () -> IO ()
+attentionIO title jsgen = mixlogjsIO (title ++ " (ATTENTION!)") (runJSONGen jsgen)
 
 attention :: (MonadLog m) => String -> JSONGen () -> m ()
 attention title = mixlog (title ++ " (ATTENTION!)")

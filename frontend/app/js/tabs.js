@@ -114,21 +114,27 @@ var Tabs = Backbone.Model.extend({
        canHaveNoActiveTab : false,
        slideEffect : false,
        inner: false,
-       innerText: ""
+       innerText: "",
+       beforeEachChange: function() {}
     },
    initialize : function(args){
        if (!this.canHaveNoActiveTab() && _.all(args.tabs,function(t) {return !t.active(); }))
           this.activate(_.filter(args.tabs,function(tab) {return !tab.isRedirect();})[0]);
    },
+   beforeEachChange : function() {
+      this.get("beforeEachChange")();
+   },
    activate: function(newtab)
    {
         if (newtab.active()) return;
+        this.beforeEachChange();
         var tabs = this.tabs();
         for(var i=0;i<tabs.length;i++)
             tabs[i].setActive(newtab == tabs[i]);
         this.trigger("change");
    },
    deactive : function() {
+        this.beforeEachChange();
         var tabs = this.tabs();
         for(var i=0;i<tabs.length;i++)
             tabs[i].setActive(false);
@@ -304,7 +310,7 @@ var TabsView = Backbone.View.extend({
         }
         var toHide = visible.not(newvisible);
         var toShow = newvisible.not(visible);
-        var forceRedraw = function(el, c) { 
+        var forceRedraw = function(el, c) {
           var el = el[0];
           el.style.cssText += ';-webkit-transform:rotateZ(0deg)';
           el.offsetHeight;
@@ -312,7 +318,7 @@ var TabsView = Backbone.View.extend({
           c();
         };
         var hideMethod = model.slideEffect() ? function(c) { toHide.slideUp(200,c); } : function(c) { toHide.hide(0,c);};
-        var showMethod = model.slideEffect() ? function(c) { toShow.slideDown(200, function() { 
+        var showMethod = model.slideEffect() ? function(c) { toShow.slideDown(200, function() {
           /* Chrome 33 on certain platforms (JN's mac, JS's linux) partially renders the participants
            * after sliding down the tab content and requires a redraw of the tab to fully render the participants. */
           forceRedraw(toShow, c);

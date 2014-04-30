@@ -34,8 +34,9 @@ import qualified MemCache
 import Util.FinishWith
 import Util.FlashUtil
 import File.FileID
+import BrandedDomain.Model
 
-import Control.Concurrent
+import Control.Concurrent (MVar, modifyMVar, threadDelay)
 import Control.Concurrent.MVar.Util (tryReadMVar)
 import Control.Monad.Error
 import Data.Functor
@@ -277,6 +278,7 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
           userAgent  = BS.toString <$> getHeader "user-agent" rq
       muser <- getUserFromSession session
       mpaduser <- getPadUserFromSession session
+      mbrandeddomain <- dbQuery $ GetBrandedDomainByURL currhostpart
 
       flashmessages <- withDataFn F.flashDataFromCookie $ maybe (return []) $ \fval -> do
         flashes <- liftIO $ (E.try (E.evaluate $ F.fromCookieValue fval) :: IO (Either  E.SomeException (Maybe [FlashMessage])))
@@ -322,6 +324,6 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
         , ctxmixpaneltoken = mixpanelToken appConf
         , ctxgoogleanalyticstoken = googleanalyticsToken appConf
         , ctxhomebase = homebase appConf
-        , ctxbrandeddomains = brandedDomains appConf
+        , ctxbrandeddomain = mbrandeddomain
         , ctxsalesforceconf = getSalesforceConf appConf
         }

@@ -52,7 +52,7 @@ import Company.Model
 import Company.CompanyUI
 import User.Model
 import Control.Monad
-import BrandedDomains
+import BrandedDomain.BrandedDomain
 
 {- |
    The name of our application (the codebase is known as kontrakcja,
@@ -116,7 +116,7 @@ pageFromBody :: Kontrakcja m
              -> m String
 pageFromBody thin ctx ad title bodytext fields = do
   mcompanyui <- companyUIForPage
-  mbd <- return $ currentBrandedDomain ctx
+  mbd <- return $ ctxbrandeddomain ctx
   renderTemplate "wholePage" $ do
     F.value "content" bodytext
     F.value "thin" thin
@@ -170,7 +170,7 @@ internalServerErrorPage = renderTemplate_ "internalServerError" >>= renderFromBo
 priceplanPage :: Kontrakcja m => m Response
 priceplanPage = do
   ctx <- getContext
-  case currentBrandedDomain ctx of
+  case ctxbrandeddomain ctx of
        Nothing -> renderTemplate_ "priceplanPage" >>= renderFromBody kontrakcja
        Just bd -> do
           ad <- getAnalyticsData
@@ -200,7 +200,7 @@ enableCookiesPage = do
 handleTermsOfService :: Kontrakcja m => m Response
 handleTermsOfService = withAnonymousContext $ do
   ctx <- getContext
-  case currentBrandedDomain ctx of
+  case ctxbrandeddomain ctx of
        Nothing -> renderTemplate_ "termsOfService" >>= renderFromBody kontrakcja
        Just bd -> do
           ad <- getAnalyticsData

@@ -32,7 +32,7 @@ import User.Utils
 import Util.MonadUtils
 import Utils.String
 import Text.JSON.Gen
-import BrandedDomains
+import BrandedDomain.BrandedDomain
 
 routes :: Route (KontraPlus Response)
 routes = choice
@@ -155,17 +155,17 @@ handleGetCompanyJSON mcid = do
       value "companycustombarstextcolour" $ fromMaybe "" $ companycustombarstextcolour $ companyui
       value "companycustombarssecondarycolour" $ fromMaybe "" $ companycustombarssecondarycolour $ companyui
       value "companycustombackgroundcolour" $ fromMaybe "" $ companycustombackgroundcolour $ companyui
-      value "domaincustomlogo" $ fromMaybe "" $ bdlogolink <$> currentBrandedDomain ctx
-      value "domainbarscolour" $ fromMaybe "" $ bdbarscolour <$> currentBrandedDomain ctx
-      value "domainbarstextcolour" $ fromMaybe "" $ bdbarstextcolour <$> currentBrandedDomain ctx
-      value "domainbarssecondarycolour" $ fromMaybe "" $ bdbarssecondarycolour <$> currentBrandedDomain ctx
-      value "domainbackgroundcolour" $ fromMaybe "" $ bdbackgroundcolour <$> currentBrandedDomain ctx
-      value "domainsignviewprimarycolour" $ fromMaybe "" $ bdsignviewprimarycolour <$> currentBrandedDomain ctx
-      value "domainsignviewprimarytextcolour" $ fromMaybe "" $ bdsignviewprimarytextcolour <$> currentBrandedDomain ctx
-      value "domainsignviewsecondarycolour" $ fromMaybe "" $ bdsignviewsecondarycolour <$> currentBrandedDomain ctx
-      value "domainsignviewsecondarytextcolour" $ fromMaybe "" $ bdsignviewsecondarytextcolour <$> currentBrandedDomain ctx
-      value "domainmailsbackgroundcolor" $ fromMaybe "" $ bdmailsbackgroundcolor <$> currentBrandedDomain ctx
-      value "domainmailsbuttoncolor" $ fromMaybe "" $ bdmailsbuttoncolor <$> currentBrandedDomain ctx
-      value "domainmailstextcolor" $ fromMaybe "" $ bdmailstextcolor <$> currentBrandedDomain ctx
+      value "domaincustomlogo" $ fromMaybe "" $ bdlogolink <$> ctxbrandeddomain ctx
+      value "domainbarscolour" $ fromMaybe "" $ bdbarscolour <$> ctxbrandeddomain ctx
+      value "domainbarstextcolour" $ fromMaybe "" $ bdbarstextcolour <$> ctxbrandeddomain ctx
+      value "domainbarssecondarycolour" $ fromMaybe "" $ bdbarssecondarycolour <$> ctxbrandeddomain ctx
+      value "domainbackgroundcolour" $ fromMaybe "" $ bdbackgroundcolour <$> ctxbrandeddomain ctx
+      value "domainsignviewprimarycolour" $ fromMaybe "" $ bdsignviewprimarycolour <$> ctxbrandeddomain ctx
+      value "domainsignviewprimarytextcolour" $ fromMaybe "" $ bdsignviewprimarytextcolour <$> ctxbrandeddomain ctx
+      value "domainsignviewsecondarycolour" $ fromMaybe "" $ bdsignviewsecondarycolour <$> ctxbrandeddomain ctx
+      value "domainsignviewsecondarytextcolour" $ fromMaybe "" $ bdsignviewsecondarytextcolour <$> ctxbrandeddomain ctx
+      value "domainmailsbackgroundcolor" $ fromMaybe "" $ bdmailsbackgroundcolor <$> ctxbrandeddomain ctx
+      value "domainmailsbuttoncolor" $ fromMaybe "" $ bdmailsbuttoncolor <$> ctxbrandeddomain ctx
+      value "domainmailstextcolor" $ fromMaybe "" $ bdmailstextcolor <$> ctxbrandeddomain ctx
       value "editable" editable
       value "ipmasklist" $ show <$> (companyipaddressmasklist $ companyinfo company)

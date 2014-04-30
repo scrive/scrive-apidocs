@@ -17,8 +17,9 @@ module Doc.DocMails (
   ) where
 
 import ActionQueue.Scheduler (SchedulerData, sdAppConf, getGlobalTemplates)
-import AppConf (brandedDomains, hostpart, mailsConfig)
-import BrandedDomains (findBrandedDomain, bdurl)
+import AppConf (hostpart, mailsConfig)
+import BrandedDomain.BrandedDomain
+import BrandedDomain.Model
 import Control.Applicative ((<$>), (<*>), Applicative)
 import Control.Conditional (whenM, ifM)
 import Control.Monad.Trans
@@ -137,7 +138,7 @@ sendInvitationEmail1 signatorylink | not (isAuthor signatorylink) = do
   sent <- sendNotifications signatorylink
 
     (do
-      mail <- theDocument >>= mailInvitation True (Sign <| isSignatory signatorylink |> View) (Just signatorylink) False
+      mail <- theDocument >>= mailInvitation True (Sign <| isSignatory signatorylink |> View) (Just signatorylink)
       -- ?? Do we need to read in the contents? -EN
       -- _attachmentcontent <- liftIO $ documentFileID document >>= getFileContents ctx
       scheduleEmailSendoutWithDocumentAuthorSender did (mctxmailsconfig mctx) $
@@ -176,7 +177,7 @@ sendReminderEmail custommessage  actor automatic siglink = do
   sent <- sendNotifications siglink
     (do
       mailattachments <- makeMailAttachments =<< theDocument
-      mail <- theDocument >>= mailDocumentRemind custommessage siglink False (not (null mailattachments))
+      mail <- theDocument >>= mailDocumentRemind custommessage siglink (not (null mailattachments))
       docid <- theDocumentID
       scheduleEmailSendoutWithDocumentAuthorSender docid (mctxmailsconfig mctx) $ mail {
                                to = [getMailAddress siglink]
@@ -254,7 +255,7 @@ sendRejectEmails customMessage signalink document = do
     void $ sendNotifications sl
       (do
          mctx <- getMailContext
-         mail <- mailDocumentRejected customMessage signalink False document
+         mail <- mailDocumentRejected customMessage signalink document
          scheduleEmailSendout (mctxmailsconfig mctx) $ mail {
                                   to = [getMailAddress sl]
                                 })
@@ -372,12 +373,12 @@ type MailT m = MailContextT (TemplatesT m)
 
 -- | Set up mail and template context, with language and branding
 -- based on document data, and the rest from SchedulerData
-runMailTInScheduler :: (MonadReader SchedulerData m, MonadIO m, MonadDB m) => Document -> MailT m a -> m a
+runMailTInScheduler :: (MonadReader SchedulerData m, MonadIO m, MonadDB m,Log.MonadLog m) => Document -> MailT m a -> m a
 runMailTInScheduler doc m = do
   appConf <- asks sdAppConf
   now <- getMinutesTime
   mauthor <- maybe (return Nothing) (dbQuery . GetUserByID) $ join $ maybesignatory <$> getAuthorSigLink doc
-  let mbd = flip findBrandedDomain (brandedDomains appConf) =<< userassociateddomain =<< mauthor
+  mbd <- maybe (return Nothing) (dbQuery . GetBrandedDomainByUserID) (userid <$> mauthor)
   let mctx = MailContext { mctxhostpart = fromMaybe (hostpart appConf) (bdurl <$> mbd)
                          , mctxmailsconfig = mailsConfig appConf
                          , mctxlang = documentlang doc

@@ -3,6 +3,7 @@ module CronMain where
 import Control.Concurrent
 import Control.Monad
 import Control.Monad.Trans
+import Control.Monad.Trans.Control
 import qualified CronEnv
 import System.Environment
 import qualified System.Time
@@ -97,8 +98,8 @@ main = Log.withLogger $ do
          Log.mixlog_ "Evaluating UserAccountRequest actions..."
          runScheduler $ actionQueue userAccountRequest
      , forkCron False "Clock error collector" (60 * 60) $
-                       withPostgreSQL connSource .
-                       collectClockError (ntpServers appConf)
+         \interruptible -> withPostgreSQL connSource $
+           collectClockError (ntpServers appConf) (liftBaseOp_ interruptible)
      , forkCron_ True "Sessions" (60 * 60) $ do
          Log.mixlog_ "Evaluating sessions..."
          runScheduler $ actionQueue session

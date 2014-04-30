@@ -95,12 +95,12 @@ runRendering _renderedPages fid widthInPixels renderingMode = do
                        ]) BSL.empty
 
     result <- case exitcode of
-      ExitFailure _ -> liftIO $ do
-        systmp <- getTemporaryDirectory
-        (path,handle) <- openTempFile systmp ("mudraw-failed-" ++ show fid ++ "-.pdf")
+      ExitFailure _ -> do
+        systmp <- liftIO $ getTemporaryDirectory
+        (path,handle) <- liftIO $ openTempFile systmp ("mudraw-failed-" ++ show fid ++ "-.pdf")
         Log.attention_ $ "Cannot mudraw of file #" ++ show fid ++ ": " ++ path
-        BS.hPutStr handle content
-        hClose handle
+        liftIO $ BS.hPutStr handle content
+        liftIO $ hClose handle
 
         return $ RenderedPages True []
       ExitSuccess -> do
@@ -220,11 +220,11 @@ preCheckPDFHelper content tmppath =
 -- Return value is either a 'BS.ByteString' with normalized document
 -- content or 'FileError' enumeration stating what is going on.
 --
-preCheckPDF :: BS.ByteString
-            -> IO (Either FileError (Binary BS.ByteString))
+preCheckPDF :: (Log.MonadLog m, MonadBaseControl IO m) => BS.ByteString
+            -> m (Either FileError (Binary BS.ByteString))
 preCheckPDF content =
-  withSystemTempDirectory "precheck" $ \tmppath -> do
-    res <- preCheckPDFHelper content tmppath
+  liftBaseOp (withSystemTempDirectory "precheck") $ \tmppath -> do
+    res <- liftBase (preCheckPDFHelper content tmppath)
       `E.catch` \(e::IOError) -> return (Left (FileOtherError (show e)))
     case res of
       Left x -> Log.attention_ $ "preCheckPDF: " ++ show x

@@ -77,7 +77,10 @@ data TestEnvSt = TestEnvSt {
 type InnerTestEnv = ReaderT TestEnvSt (DBT IO)
 
 newtype TestEnv a = TestEnv { unTestEnv :: InnerTestEnv a }
-  deriving (Applicative, Functor, Monad, MonadIO, MonadReader TestEnvSt, Log.MonadLog, MonadBase IO)
+  deriving (Applicative, Functor, Monad, MonadIO, MonadReader TestEnvSt, MonadBase IO)
+
+instance Log.MonadLog TestEnv where
+  mixlogjs title js = liftBase (Log.mixlogjsIO title js)
 
 runTestEnv :: TestEnvSt -> TestEnv () -> IO ()
 runTestEnv st m = do
@@ -297,7 +300,7 @@ mkContext lang = do
         , ctxmixpaneltoken = "5b04329b972851feac0e9b853738e742"
         , ctxgoogleanalyticstoken = "5b04329b972851feac0e9b853738e741"
         , ctxhomebase = "https://staging.scrive.com"
-        , ctxbrandeddomains = []
+        , ctxbrandeddomain = Nothing
         , ctxsalesforceconf = SalesforceConf "" "" "" "" "" "" ""
     }
 

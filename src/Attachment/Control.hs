@@ -184,7 +184,7 @@ makeAttachmentFromFile (Input contentspec (Just filename) _contentType) = do
     content <- case contentspec of
         Left filepath -> liftIO $ BSL.readFile filepath
         Right content -> return content
-    cres <- liftIO $ preCheckPDF (concatChunks content)
+    cres <- preCheckPDF (concatChunks content)
     case cres of
       Left _ -> do
          Log.mixlog_ "Attachment file is not a valid PDF"

@@ -45,33 +45,31 @@ import File.Model
 import User.Model
 import Util.HasSomeCompanyInfo
 import qualified Text.StringTemplates.Fields as F
-import BrandedDomains
+import BrandedDomain.BrandedDomain
 
 mailDocumentRemind :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
                    => Maybe String
                    -> SignatoryLink
                    -> Bool
-                   -> Bool
                    -> Document
                    -> m Mail
-mailDocumentRemind cm s ispreview documentAttached d = case s of
-  SignatoryLink {maybesigninfo = Nothing} -> remindMailNotSigned True cm d s ispreview
-  _                                       -> remindMailSigned    True cm d s ispreview documentAttached
+mailDocumentRemind cm s documentAttached d = case s of
+  SignatoryLink {maybesigninfo = Nothing} -> remindMailNotSigned True cm d s
+  _                                       -> remindMailSigned    True cm d s documentAttached
 
 mailDocumentRemindContent :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
                           => Maybe String -> Document -> SignatoryLink -> Bool -> m String
 mailDocumentRemindContent cm d s documentAttached = content <$> case s of
-  SignatoryLink {maybesigninfo = Nothing} -> remindMailNotSigned False cm d s True
-  _                                       -> remindMailSigned    False cm d s True documentAttached
+  SignatoryLink {maybesigninfo = Nothing} -> remindMailNotSigned False cm d s
+  _                                       -> remindMailSigned    False cm d s documentAttached
 
 remindMailNotSigned :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
                     => Bool
                     -> Maybe String
                     -> Document
                     -> SignatoryLink
-                    -> Bool
                     -> m Mail
-remindMailNotSigned forMail customMessage document signlink ispreview = do
+remindMailNotSigned forMail customMessage document signlink = do
     mctx <- getMailContext
     let mainfile =  fromMaybe (unsafeFileID 0) (documentfile document)
         authorname = getAuthorName document
@@ -94,7 +92,6 @@ remindMailNotSigned forMail customMessage document signlink ispreview = do
         F.value "nojavascriptmagic" $ True
         F.value "javascriptmagic" $ False
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
-        F.value "ispreview" ispreview
 
 
 documentAttachedFields :: (MailContextMonad m, MonadDB m) => Bool -> SignatoryLink -> Bool -> Document -> Fields m ()
@@ -111,12 +108,10 @@ remindMailSigned :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
                  -> Document
                  -> SignatoryLink
                  -> Bool
-                 -> Bool
                  -> m Mail
-remindMailSigned forMail customMessage document signlink ispreview documentAttached = do
+remindMailSigned forMail customMessage document signlink documentAttached = do
     documentMailWithDocLang document "remindMailSigned" $ do
             F.value "custommessage" customMessage
-            F.value "ispreview" ispreview
             documentAttachedFields forMail signlink documentAttached document
 
 mailForwardSigned :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
@@ -130,27 +125,24 @@ mailForwardSigned sl documentAttached document = do
 mailDocumentRejected :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
                      => Maybe String
                      -> SignatoryLink
-                     -> Bool
                      -> Document
                      -> m Mail
-mailDocumentRejected customMessage rejector ispreview document = do
+mailDocumentRejected customMessage rejector document = do
    documentMailWithDocLang document "mailRejectContractMail" $ do
         F.value "rejectorName" $ getSmartName rejector
         F.value "customMessage" $ customMessage
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
         F.value "loginlink" $ show $ LinkIssueDoc $ documentid document
-        F.value "ispreview" ispreview
 
 
 
 mailDocumentRejectedContent :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
                             => Maybe String
                             -> SignatoryLink
-                            -> Bool
                             -> Document
                             -> m String
-mailDocumentRejectedContent customMessage rejector ispreview document =
-     content <$> mailDocumentRejected customMessage rejector ispreview document
+mailDocumentRejectedContent customMessage rejector document =
+     content <$> mailDocumentRejected customMessage rejector document
 
 mailDocumentErrorForAuthor :: (HasLang a, MonadDB m, TemplatesMonad m, MailContextMonad m) => a -> Document -> m Mail
 mailDocumentErrorForAuthor authorlang document = do
@@ -173,19 +165,18 @@ mailInvitation :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
                => Bool
                -> InvitationTo
                -> Maybe SignatoryLink
-               -> Bool
                -> Document
                -> m Mail
 mailInvitation forMail
                invitationto
                msiglink
-               ispreview
                document@Document{documentinvitetext, documenttitle } = do
     mctx <- getMailContext
     authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
     let creatorname = getSmartName $ fromJust $ getAuthorSigLink document
     let personname = maybe "" getSmartName msiglink
     let mainfile =  fromMaybe (unsafeFileID 0) (documentfile document) -- There always should be main file but tests fail without it
+    allMailFields <- documentMailFields document mctx
     documentMailWithDocLang document "mailInvitationToSignContract" $ do
         fieldsInvitationTo invitationto
         F.value "nojavascriptmagic" $ forMail
@@ -212,6 +203,7 @@ mailInvitation forMail
               F.value "defaultheader" defaultHeader
               F.value "creatorname" creatorname
               F.valueM "custommessage" $ makeEditable "customtext" documentinvitetext
+              allMailFields
         F.value "link" $ case msiglink of
           Just siglink -> Just $ makeFullLink mctx $ show (LinkSignDoc document siglink)
           Nothing -> Nothing
@@ -227,25 +219,23 @@ mailInvitation forMail
         F.value "sigattachments" $ for (concat $ (\l -> (\a -> (l,a)) <$> signatoryattachments l) <$> documentsignatorylinks document) $ \(link, sa) ->
                         (signatoryattachmentname sa, getSmartName link)
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
-        F.value "ispreview" ispreview
 
 
 mailInvitationContent :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
                       => Bool
                       -> InvitationTo
                       -> Maybe SignatoryLink
-                      -> Bool
                       -> Document
                       -> m String
-mailInvitationContent  forMail invitationto msiglink ispreview document = do
-     content <$> mailInvitation forMail invitationto msiglink ispreview document
+mailInvitationContent  forMail invitationto msiglink document = do
+     content <$> mailInvitation forMail invitationto msiglink document
 
 
 mailClosedContent :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
                       => Bool
-                      ->Document
+                      -> Document
                       -> m String
-mailClosedContent  ispreview document = do
+mailClosedContent ispreview document = do
      content <$> mailDocumentClosed ispreview Nothing (fromJust $ getAuthorSigLink document) False True document
 
 mailDocumentClosed :: (MonadDB m, TemplatesMonad m, MailContextMonad m) => Bool -> Maybe KontraLink -> SignatoryLink -> Bool -> Bool -> Document -> m Mail
@@ -269,7 +259,6 @@ mailDocumentClosed ispreview l sl sealFixed documentAttached document = do
         F.value "sealFixed" $ sealFixed
         documentAttachedFields True sl documentAttached document
         F.value "closingtime" $ formatMinutesTime "%Y-%m-%d %H:%M %Z" $ getLastSignedTime document
-        F.value "ispreview" ispreview
         F.value "custommessage" $ if (isAuthor sl && not ispreview)
                                     then Nothing
                                     else case (documentconfirmtext document) of
@@ -311,23 +300,27 @@ protectLink forMail mctx link
 documentMailWithDocLang :: (MonadDB m, TemplatesMonad m, MailContextMonad m) =>  Document -> String -> Fields m () -> m Mail
 documentMailWithDocLang doc mailname otherfields = documentMail doc doc mailname otherfields
 
-documentMail :: (HasLang a, MailContextMonad m, MonadDB m, TemplatesMonad m) =>  a -> Document -> String -> Fields m () -> m Mail
-documentMail haslang doc mailname otherfields = do
-    mctx <- getMailContext
+documentMailFields :: (MonadDB m, Monad m') => Document -> MailContext -> m (Fields m' ())
+documentMailFields doc mctx = do
     mcompany <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
                    Just suid ->  fmap Just $ dbQuery $ GetCompanyByUserID $ suid
                    Nothing -> return Nothing
     mcompanyui <- case mcompany of
                     Just comp -> (dbQuery $ GetCompanyUI (companyid comp)) >>= return . Just
                     Nothing -> return Nothing
-    let allfields = do
-          F.value "ctxhostpart" (mctxhostpart mctx)
-          F.value "ctxlang" (codeFromLang $ mctxlang mctx)
-          F.value "documenttitle" $ documenttitle doc
-          F.value "creatorname" $ getSmartName $ fromJust $ getAuthorSigLink doc
-          brandingMailFields (mctxcurrentBrandedDomain mctx) mcompanyui
-          otherfields
-    kontramaillocal (mctxmailsconfig mctx) (mctxcurrentBrandedDomain mctx) haslang mailname allfields
+
+    return $ do
+      F.value "ctxhostpart" (mctxhostpart mctx)
+      F.value "ctxlang" (codeFromLang $ mctxlang mctx)
+      F.value "documenttitle" $ documenttitle doc
+      F.value "creatorname" $ getSmartName $ fromJust $ getAuthorSigLink doc
+      brandingMailFields (mctxcurrentBrandedDomain mctx) mcompanyui
+
+documentMail :: (HasLang a, MailContextMonad m, MonadDB m, TemplatesMonad m) =>  a -> Document -> String -> Fields m () -> m Mail
+documentMail haslang doc mailname otherfields = do
+  mctx <- getMailContext
+  allfields <- documentMailFields doc mctx
+  kontramaillocal (mctxmailsconfig mctx) (mctxcurrentBrandedDomain mctx) haslang mailname $ allfields >> otherfields
 
 brandingMailFields :: Monad m => Maybe BrandedDomain -> Maybe CompanyUI -> Fields m ()
 brandingMailFields mbd companyui = do

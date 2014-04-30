@@ -31,7 +31,7 @@ import Utils.HTTP
 import ThirdPartyStats.Core
 import AppView
 import Analytics.Include
-import BrandedDomains
+import BrandedDomain.BrandedDomain
 
 handleLoginGet :: Kontrakcja m => m (Either KontraLink (Either Response ThinPage))
 handleLoginGet = do
@@ -39,7 +39,7 @@ handleLoginGet = do
   case (ctxmaybeuser ctx) of
        Nothing -> do
           referer <- getField "referer"
-          case (currentBrandedDomain ctx) of
+          case (ctxbrandeddomain ctx) of
                Nothing -> do
                 content <- renderTemplate "loginPage" $ do
                           F.value "referer" $ fromMaybe "/" referer
@@ -61,7 +61,7 @@ signupPageGet :: Kontrakcja m => m (Either Response ThinPage)
 signupPageGet = do
   ctx <- getContext
   memail <- getField "email"
-  case (currentBrandedDomain ctx) of
+  case (ctxbrandeddomain ctx) of
       Nothing -> do
           content <- renderTemplate "signupPage" $ do
             F.value "email" memail

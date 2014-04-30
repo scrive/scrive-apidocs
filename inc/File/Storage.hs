@@ -23,7 +23,7 @@ getFileContents file = do
   case mcontent of
       Just content -> return content
       Nothing -> do
-        mcontentAWS <- liftIO $ AWS.getFileContents (AWS.mkAWSAction $ AWS.amazonConfig ac) file
+        mcontentAWS <- AWS.getFileContents (AWS.mkAWSAction $ AWS.amazonConfig ac) file
         case mcontentAWS of
           Nothing -> do
             Log.mixlog_ $ "Couldn't get content for file " ++ show (fileid file) ++ ", returning empty ByteString."

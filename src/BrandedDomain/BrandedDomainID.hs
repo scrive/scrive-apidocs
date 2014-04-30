@@ -1,0 +1,39 @@
+module BrandedDomain.BrandedDomainID (
+    BrandedDomainID
+  , unsafeBrandedDomainID
+  , unBrandedDomainID
+  ) where
+
+import Control.Applicative
+import Data.Int
+import Data.Typeable
+import Database.PostgreSQL.PQTypes hiding (Binary, put)
+import DB.Derive
+import Happstack.Server
+import Data.Binary
+import Utils.Read
+
+newtype BrandedDomainID = BrandedDomainID Int64
+  deriving (Eq, Ord, PQFormat, Typeable)
+$(newtypeDeriveUnderlyingReadShow ''BrandedDomainID)
+
+instance FromReqURI BrandedDomainID where
+  fromReqURI = maybeRead
+
+instance Binary BrandedDomainID where
+  put (BrandedDomainID uid) = put uid
+  get = fmap BrandedDomainID get
+
+instance FromSQL BrandedDomainID where
+  type PQBase BrandedDomainID = PQBase Int64
+  fromSQL mbase = BrandedDomainID <$> fromSQL mbase
+
+instance ToSQL BrandedDomainID where
+  type PQDest BrandedDomainID = PQDest Int64
+  toSQL (BrandedDomainID n) = toSQL n
+
+unsafeBrandedDomainID :: Int64 -> BrandedDomainID
+unsafeBrandedDomainID = BrandedDomainID
+
+unBrandedDomainID :: BrandedDomainID -> Int64
+unBrandedDomainID (BrandedDomainID i) = i

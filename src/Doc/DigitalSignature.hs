@@ -46,10 +46,10 @@ addDigitalSignature = theDocumentID >>= \did ->
   now <- getMinutesTime
   gtconf <- getGuardTimeConf
   -- GuardTime signs in place
-  code <- liftIO $ GT.digitallySign gtconf mainpath
+  code <- GT.digitallySign gtconf mainpath
   (newfilepdf, status) <- first Binary <$> case code of
     ExitSuccess -> do
-      vr <- liftIO $ GT.verify gtconf mainpath
+      vr <- GT.verify gtconf mainpath
       case vr of
            GT.Valid gsig -> do
                 res <- liftIO $ BS.readFile mainpath
@@ -103,15 +103,15 @@ digitallyExtendFile :: (TemplatesMonad m, CryptoRNG m, Log.MonadLog m, MonadIO m
                     => MinutesTime -> GuardTimeConf -> FilePath -> String -> m Bool
 digitallyExtendFile ctxtime ctxgtconf pdfpath pdfname = do
   documentid <- theDocumentID
-  code <- liftIO $ GT.digitallyExtend ctxgtconf pdfpath
+  code <- GT.digitallyExtend ctxgtconf pdfpath
   mr <- case code of
     ExitSuccess -> do
-      vr1 <- liftIO $ GT.verify ctxgtconf pdfpath
+      vr1 <- GT.verify ctxgtconf pdfpath
       vr <- case vr1 of
         GT.Invalid "SYNTACTIC_CHECK_FAILURE" -> do
           Log.mixlog_ "Verification failed with SYNTACTIC_CHECK_FAILURE - trying temporary Guardtime extension tool"
-          _ <- liftIO $ GT.digitallyExtendCore1 pdfpath
-          liftIO $ GT.verify ctxgtconf pdfpath
+          _ <- GT.digitallyExtendCore1 pdfpath
+          GT.verify ctxgtconf pdfpath
         _ -> return vr1
       case vr of
            GT.Valid gsig | GT.extended gsig -> do

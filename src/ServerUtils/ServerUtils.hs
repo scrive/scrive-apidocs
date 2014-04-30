@@ -104,6 +104,7 @@ handleTextToImage = do
     base64 <- isFieldSet "base64"
     transparent <- isFieldSet "transparent"
     left <- isFieldSet "left"
+
     mfcontent <- liftIO $ withSystemTempDirectory "text_to_image" $ \tmppath -> do
       let fpath32 = tmppath ++ "/text_to_image.png"
           fpath8 = tmppath ++ "/text_to_image-fs8.png"

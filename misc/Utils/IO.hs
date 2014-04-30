@@ -115,7 +115,7 @@ importantExecutables =
   , ("pngquant", [])
   ]
 
-checkExecutables :: IO ()
+checkExecutables :: (Log.MonadLog m, MonadIO m, Functor m) => m ()
 checkExecutables = do
   Log.mixlogt "Checking paths to executables:" $ do
     mapM_ check (sort importantExecutables)

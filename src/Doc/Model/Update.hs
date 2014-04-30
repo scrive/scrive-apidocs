@@ -1246,7 +1246,7 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m UpdateFieldsForSignin
                               CheckboxFT xname -> xname
                               SignatureFT xname -> xname
                               _ -> ""
-          updated <- runQuery01 . sqlUpdate "signatory_link_fields" $ do
+          updated <- runQuery . sqlUpdate "signatory_link_fields" $ do
                    sqlSet "value" fvalue
                    sqlWhereEq "signatory_link_id" slid
                    sqlWhereEq "custom_name" custom_name
@@ -1266,7 +1266,7 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m UpdateFieldsForSignin
               changed = case mfield of
                           Just f | sfValue f == fvalue -> False
                           _                            -> True
-          when (updated && changed) $ do
+          when (updated/=0 && changed) $ do
             let (event, efields) =
                   case fieldtype of
                     SignatureFT _ -> (UpdateFieldSignatureEvidence, return ())

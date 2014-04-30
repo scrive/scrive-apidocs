@@ -23,6 +23,7 @@ import RoutingTable
 import Templates
 import User.Model
 import User.Email
+import BrandedDomain.Model
 import Company.Model
 import AppDBTables (kontraTables)
 import qualified Log
@@ -81,8 +82,15 @@ startSystem appGlobals appConf = E.bracket startServer stopServer waitForTerm
       forkIO . simpleHTTPWithSocket listensocket conf $ appHandler routes appConf appGlobals
     stopServer = killThread
     waitForTerm _ = do
-      withPostgreSQL (connsource appGlobals) . runCryptoRNGT (cryptorng appGlobals) $
+      withPostgreSQL (connsource appGlobals) . runCryptoRNGT (cryptorng appGlobals) $ do
         initDatabaseEntries $ initialUsers appConf
+        -- InitBrandedDomainsFromConf will only add domains if
+        -- branded_domains table is empty.  Note that we couldn't put
+        -- this in Migration as migrations do not have access to
+        -- AppConf.
+        added <- dbUpdate $ InitBrandedDomainsFromConf (brandedDomains appConf)
+        when added $ do
+          Log.mixlog_ $ "Legacy BrandedDomains imported from kontrakcja.conf"
       waitForTermination
       Log.mixlog_ $ "Termination request received"
 

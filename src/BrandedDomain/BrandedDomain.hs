@@ -1,15 +1,15 @@
-module BrandedDomains
+module BrandedDomain.BrandedDomain
   (   BrandedDomains
     , BrandedDomain(..)
-    , findBrandedDomain
   ) where
 
-import Data.List
+import BrandedDomain.BrandedDomainID
 
 type BrandedDomains = [BrandedDomain]
 
 data BrandedDomain = BrandedDomain {
-                          bdurl :: String
+                          bdid :: BrandedDomainID
+                        , bdurl :: String
                         , bdlogolink :: String
                         , bdbarscolour :: String
                         , bdbarstextcolour :: String
@@ -33,6 +33,3 @@ data BrandedDomain = BrandedDomain {
                         , bdemailoriginator :: String
                         , bdcontactemail :: String
                       } deriving (Read, Eq, Ord, Show)
-
-findBrandedDomain :: String -> BrandedDomains -> Maybe BrandedDomain
-findBrandedDomain s = find (\d -> bdurl d `isPrefixOf` s)

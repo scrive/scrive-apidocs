@@ -40,7 +40,8 @@ import Util.Actor
 import qualified Text.StringTemplates.Fields as F
 import Utils.Read
 import Data.Functor
-import BrandedDomains
+import BrandedDomain.BrandedDomain
+import BrandedDomain.Model
 import Doc.DocViewMail
 import EvidenceLog.Model
 import Utils.Default (defaultValue)
@@ -66,8 +67,7 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent
           mbd <- (maybesignatory =<<) . getAuthorSigLink <$> theDocument >>= \case
                           Nothing -> return Nothing
                           Just uid -> do
-                            user  <- dbQuery $ GetUserByID uid
-                            return $ findBrandedDomain (fromMaybe "" $ join $ userassociateddomain <$> user) (brandedDomains $ appConf)
+                            dbQuery $ GetBrandedDomainByUserID uid
           let host = fromMaybe (hostpart $ appConf) (bdurl <$> mbd)
               mc = mailsConfig $ appConf
               -- since when email is reported deferred author has a possibility to
