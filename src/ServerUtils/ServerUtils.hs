@@ -114,7 +114,7 @@ handleTextToImage = do
             , "-gravity", if (left) then "West" else "Center"
             , "-font", font
             , "label:" ++ (if null text then " " else text)
-            , "PNG8:" ++ fpath ]
+            , (if transparent then "PNG32:" else "PNG8:") ++ fpath ]
       drawerexitcode <- waitForProcess drawer
       case drawerexitcode of
           ExitFailure msg -> do
