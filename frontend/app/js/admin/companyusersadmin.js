@@ -6,7 +6,7 @@ define(['Backbone', 'legacy_code'], function() {
 var newUserInCompanyButton = function(companyid) {
       return new Button({
         color: "green",
-        text : "Add new user",
+        text : "Add new user in company",
         size : "tiny",
         style: "float:left",
         onClick : function() {
