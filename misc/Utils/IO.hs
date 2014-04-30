@@ -112,7 +112,6 @@ importantExecutables =
   , ("mutool", [])
   , ("mudraw", [])
   , ("convert", [])
-  , ("pngquant", [])
   ]
 
 checkExecutables :: (Log.MonadLog m, MonadIO m, Functor m) => m ()
