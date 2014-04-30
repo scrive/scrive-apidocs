@@ -12,6 +12,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSLU
 
 import Crypto.RNG (CryptoRNG)
 import MessengerServerConf
+import Text.JSON.Gen (value)
 --import SMS.Model
 import SMS.Data
 import OurPrelude
@@ -60,7 +61,11 @@ sendSMS2 (user, password, baseurl) originator msisdn body ref = do
     (ExitSuccess, Just (httpcode :: Int)) | httpcode >= 200 && httpcode<300 ->
       return True
     _ -> do
-      Log.mixlog_ $ "sendSMS2 failed with code: " ++ show code ++ " and message:" ++ BSLU.toString stdout ++ " and stderr:"++ BSLU.toString stderr
+      Log.mixlog "sendSMS2 failed" $ do
+        value "code" $ show code
+        value "message" $ BSLU.toString stdout
+        value "stderr" $ BSLU.toString stderr
+        value "number" msisdn
       return False
   where
     latin_user = toLatin user

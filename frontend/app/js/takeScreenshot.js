@@ -18,15 +18,15 @@ define(['Backbone', 'legacy_code'], function() {
       return newCanvas;
     };
 
-    var mixpanelScreenshotError = function(reason, extraParams) {
-      var errorInfo = {'Reason': reason,
-                       'Browser': $.browser.name,
-                       'Browser version': $.browser.version,
-                       'Platform': $.browser.platform};
-      mixpanel.track('Take screenshot failed', _.extend(errorInfo, extraParams));
-    };
+    window.takeScreenshot = function(success, error, timeout, timeoutval, extraErrorLogParams) {
+        var mixpanelScreenshotError = function(reason, extraParams) {
+          var errorInfo = {'Reason': reason,
+                           'Browser': $.browser.name,
+                           'Browser version': $.browser.version,
+                           'Platform': $.browser.platform};
+          mixpanel.track('Take screenshot failed', _.extend(errorInfo, extraParams, extraErrorLogParams));
+        };
 
-    window.takeScreenshot = function(success, error, timeout, timeoutval) {
         var callbackCalled = false;
         function timedout() {
             if (!callbackCalled) {
@@ -44,6 +44,7 @@ define(['Backbone', 'legacy_code'], function() {
           canvas = null;
           if (!callbackCalled) {
             callbackCalled = true;
+            mixpanel.track('Take screenshot success');
             success(newCanvas);
           }
         })['catch'](function(err) { // use catch as key, because IE8 cannot handle catch attribute

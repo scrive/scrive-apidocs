@@ -1239,7 +1239,8 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m UpdateFieldsForSignin
     -- Document has to be in Pending state
     -- signatory could not have signed already
     let slid = signatorylinkid sl
-    let updateValue (fieldtype, fvalue) = do
+    let updateValue (SignatureFT _, "") = return ()
+        updateValue (fieldtype, fvalue) = do
           let custom_name = case fieldtype of
                               CustomFT xname _ -> xname
                               CheckboxFT xname -> xname
@@ -1253,8 +1254,8 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m UpdateFieldsForSignin
                    sqlWhereAny $ do
                        sqlWhereAll $ do
                          sqlWhereEq "value" (""::String) -- Note: if we allow values to be overwritten, the evidence events need to be adjusted to reflect the old value.
-                         sqlWhereIn "type" [CustomFT undefined undefined, FirstNameFT,LastNameFT,EmailFT,CompanyFT,PersonalNumberFT,PersonalNumberFT,CompanyNumberFT, MobileFT]
-                       sqlWhereIn "type" [CheckboxFT undefined,SignatureFT undefined]
+                         sqlWhereIn "type" [CustomFT "" False, FirstNameFT,LastNameFT,EmailFT,CompanyFT,PersonalNumberFT,PersonalNumberFT,CompanyNumberFT, MobileFT]
+                       sqlWhereIn "type" [CheckboxFT "", SignatureFT ""]
                    sqlWhereExists $ sqlSelect "documents" $ do
                      sqlWhere "signatory_links.id = signatory_link_id"
                      sqlLeftJoinOn "signatory_links" "documents.id = signatory_links.document_id"

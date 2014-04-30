@@ -281,6 +281,7 @@ window.Document = Backbone.Model.extend({
     },
     takeScreenshot: function(first, done) {
         var document = this;
+        var extraErrorLogParams = {'Number of pages': document.file().pages().length};
         function callDone() {
             if (done) done();
         }
@@ -296,7 +297,8 @@ window.Document = Backbone.Model.extend({
             },
             function(e) { callDone() },
             function() { callDone() },
-            20000);
+            20000,
+            extraErrorLogParams);
     },
     fieldsForSigning : function() {
         var fields = [];

@@ -66,6 +66,10 @@ mailContractClosedMainP =
       $mailClosedSignup()$
     $else$
       $_mailContractClosedContentLinked()$
+      $if(custommessage)$
+      <br/>
+      $mailClosedCustomeMessage()$
+      $endif$
       $if(confirmationlink)$
         $_mailContractClosedContentLinkedNoAccount()$
       $else$
