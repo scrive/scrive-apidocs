@@ -106,8 +106,7 @@ handleTextToImage = do
     left <- isFieldSet "left"
 
     mfcontent <- liftIO $ withSystemTempDirectory "text_to_image" $ \tmppath -> do
-      let fpath32 = tmppath ++ "/text_to_image.png"
-          fpath8 = tmppath ++ "/text_to_image-fs8.png"
+      let fpath = tmppath ++ "/text_to_image.png"
       (_,_,_, drawer) <- createProcess $ proc "convert"
             [ "-size", (show width ++ "x" ++ show height)
             , "-background", if (transparent) then "transparent" else "white"
@@ -115,23 +114,18 @@ handleTextToImage = do
             , "-gravity", if (left) then "West" else "Center"
             , "-font", font
             , "label:" ++ (if null text then " " else text)
-            , "PNG32:" ++ fpath32 ]
+            , "PNG8:" ++ fpath ]
       drawerexitcode <- waitForProcess drawer
       case drawerexitcode of
-          ExitFailure msg -> return $ Left msg
-          ExitSuccess -> do
-            (_,_,_, drawer') <- createProcess $ proc "pngquant" [fpath32]
-            drawerexitcode' <- waitForProcess drawer'
-            case drawerexitcode' of
-              ExitFailure msg -> return $ Left msg
-              ExitSuccess -> Right <$> BSL.readFile fpath8
+          ExitFailure msg -> do
+            Log.mixlog_ $ "Problem text_to_image " ++ show msg
+            return Nothing
+          ExitSuccess -> (BSL.readFile fpath) >>= (return . Just)
     case mfcontent of
-         Right fcontent -> if base64
+         Just fcontent -> if base64
                              then ok $ toResponseBS (BSUTF8.fromString "text/plain") $ BSL.fromChunks [BSUTF8.fromString "data:image/png;base64,", B64.encode $ concatChunks fcontent]
                              else ok $ setHeaderBS "Cache-Control" "max-age=60" $ toResponseBS (BSUTF8.fromString "image/png") $ fcontent
-         Left msg -> do
-           Log.mixlog_ $ "Problem text_to_image " ++ show msg
-           internalError
+         Nothing -> internalError
 
 -- Take a signview image and brand it by replacing the non-white and non-transparent colors
 -- with the specified colour.
