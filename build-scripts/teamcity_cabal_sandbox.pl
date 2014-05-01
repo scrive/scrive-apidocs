@@ -48,7 +48,7 @@ system_or_die("cabal", "sandbox", "init", "--sandbox=$sandbox");
 # TODO: Consider colorizing output.
 system_or_die("cabal", "install",
               "--only-dependencies",
-              "--enable-split-objs",
+              # "--enable-split-objs",
               "--force-reinstalls");
 
 # We might want these flags somewhere, although I'm not sure about it.
