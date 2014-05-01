@@ -209,7 +209,6 @@ usersTableChangeAssociatedDomainToForeignKey =
   , mgrDo = do
       runQuery_ $ sqlAlterTable "users" [ sqlAddColumn (tblColumn { colName = "associated_domain_id", colType = BigIntT }) ]
       runSQL_ "UPDATE users SET associated_domain_id = (SELECT branded_domains.id FROM branded_domains WHERE branded_domains.url = users.associated_domain)"
-      runQuery_ $ sqlAlterTable "users" [ sqlDropColumn "associated_domain"
-                            , sqlAddFK "users" (fkOnColumn "associated_domain_id" "branded_domains" "id")
-                            ]
+      runQuery_ $ sqlAlterTable "users" [sqlDropColumn "associated_domain"]
+      runQuery_ $ sqlAlterTable "users" [sqlAddFK "users" (fkOnColumn "associated_domain_id" "branded_domains" "id")]
   }
