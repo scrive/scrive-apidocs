@@ -31,7 +31,7 @@ import Utils.String
 import User.Email
 import File.File
 import Data.List
-
+import BrandedDomain.BrandedDomainID
 
 instance (InspectXML a, Show a) => InspectXML [a] where
     inspectXML l = "<ul>" ++ (concatMap (\s -> "<li>" ++ (inspectXML s) ++ "</li>") l) ++ "</ul>"
@@ -78,6 +78,9 @@ instance InspectXML FileID where
     inspectXML fileid = "<a href='" ++ (inspectXML $ LinkDaveFile fileid (show fileid)) ++"'>" ++ show fileid ++ "</a>"
 instance InspectXML (S.Set DocumentTag) where
   inspectXML = inspectXML . S.toList
+
+instance InspectXML BrandedDomainID where
+    inspectXML x = "<a href='/adminonly/brandeddomain/" ++ show x ++ "'>"  ++ show x ++"</a>"
 
 instance InspectXML String where
   inspectXML str = "\"" ++ escapeString str ++ "\""
