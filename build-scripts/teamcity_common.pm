@@ -46,6 +46,13 @@ sub system_or_die {
     # with what TeamCity expects
     die;
   }
+  if($result!=0) {
+    my $msg = "Failed to execute: " . join(" ", @args) . ": ";
+    teamcity_error($msg);
+    # Cannot die with a message here as that message is incompatible
+    # with what TeamCity expects
+    die;
+  }
   return $result;
 };
 
