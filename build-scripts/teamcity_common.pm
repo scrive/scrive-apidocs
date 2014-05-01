@@ -37,7 +37,7 @@ sub open_or_die {
 
 sub system_or_die {
   my @args = @_;
-  print @args.join(" ") . "\n";
+  print join(" ", @args) . "\n";
   my $result = system(@args);
   if( ($result>>8) > 0) {
     my $msg = "Cannot execute: " . join(" ", @args) . ": " . $!;
