@@ -10,7 +10,7 @@ CREATE FUNCTION escape_for_csv(text) RETURNS text
     RETURNS NULL ON NULL INPUT;
 
 CREATE TEMP TABLE thetime(time) AS
-    VALUES ('2013-10-01' :: TIMESTAMP WITH TIME ZONE);
+    VALUES (now() - interval '1 month');
 
 CREATE TEMP TABLE results AS
 SELECT escape_for_csv(companies.name) AS "Company name"
