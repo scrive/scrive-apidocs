@@ -96,6 +96,8 @@ import MinutesTime
 import Analytics.Include
 import Data.String.Utils (replace)
 import Util.Zlib (decompressIfPossible)
+import Doc.API.Callback.Model
+
 
 handleNewDocument :: Kontrakcja m => m KontraLink
 handleNewDocument = do
@@ -197,10 +199,9 @@ handleSignShow documentid signatorylinkid = do
       dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash documentid signatorylinkid magichash) `withDocumentM` do
         invitedlink <- guardJust . getSigLinkFor signatorylinkid =<< theDocument
         switchLangWhenNeeded  (Just invitedlink) =<< theDocument
-        unlessM ((isTemplate ||^ isPreparation ||^ isClosed) <$> theDocument) $
-          dbUpdate . MarkDocumentSeen signatorylinkid magichash
-             =<< signatoryActor ctx invitedlink
-
+        unlessM ((isTemplate ||^ isPreparation ||^ isClosed) <$> theDocument) $ do
+          dbUpdate . MarkDocumentSeen signatorylinkid magichash =<< signatoryActor ctx invitedlink
+          triggerAPICallbackIfThereIsOne =<< theDocument
         ad <- getAnalyticsData
         content <- theDocument >>= \d -> pageDocumentSignView ctx d invitedlink ad
         simpleHtmlResonseClrFlash content
