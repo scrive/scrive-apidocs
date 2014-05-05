@@ -14,7 +14,7 @@ define(['Backbone', 'legacy_code'], function() {
     var createUserButton =  new Button({
           color: "green",
           size: "tiny",
-          text: "Create user",
+          text: "Create user with empty company",
           onClick: function() {
               var body = jQuery("<div class='standard-input-table'>");
               body.append("<p>Create new user account</p>");
@@ -96,7 +96,7 @@ define(['Backbone', 'legacy_code'], function() {
                                       }).send();
                               }
                           },
-                title : "Create user",
+                title : "Create user with empty company",
                 acceptButtonText : "OK",
                 content  : body
               });

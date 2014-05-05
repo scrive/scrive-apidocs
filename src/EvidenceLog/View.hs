@@ -31,6 +31,7 @@ import Text.JSON.Gen as J
 import qualified Text.StringTemplates.Fields as F
 import EvidenceLog.Model
 import Utils.Prelude
+import Utils.String
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import qualified Data.ByteString.RFC2397 as RFC2397
@@ -197,7 +198,7 @@ simplyfiedEventText mactor doc dee = case evType dee of
   Obsolete _ -> return ""
   Current et -> (if isJust mactor then renderLocalTemplate doc else renderTemplate) (eventTextTemplateName et) $ do
     let siglink = evAffectedSigLink dee
-    F.value "text" $ filterTagsNL <$> evMessageText dee
+    F.value "text" $ trim . filterTagsNL <$> evMessageText dee
     F.value "signatory" $ getIdentifier <$> siglink
     -- signatory email: there are events that are missing affected
     -- signatory, but happen to have evEmail set to what we want
