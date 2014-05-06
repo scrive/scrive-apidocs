@@ -36,13 +36,19 @@ $if(confirmationlink)$
 $_mailClosedSignup()$
 <br/>
 <br/>
-$mailClosedCustomeMessage()$
+$if(custommessage)$
+  $mailClosedCustomeMessage()$
+  <br/>
+$endif$
 $nicebutton(link=confirmationlink; text=_mailClosedButton())$
 $else$
 $_mailClosedLoginText()$
 <br/>
 <br/>
-$mailClosedCustomeMessage()$
+$if(custommessage)$
+  $mailClosedCustomeMessage()$
+  <br/>
+$endif$
 $nicebutton(link=doclink; text=_mailClosedLoginButtonText())$
 $endif$
 #####
@@ -66,15 +72,26 @@ mailContractClosedMainP =
       $mailClosedSignup()$
     $else$
       $_mailContractClosedContentLinked()$
-      $if(custommessage)$
       <br/>
       <br/>
-      $mailClosedCustomeMessage()$
-      $endif$
       $if(confirmationlink)$
         $_mailContractClosedContentLinkedNoAccount()$
+        $if(custommessage)$
+          <br/>
+          <br/>
+          $mailClosedCustomeMessage()$
+          <br/>
+        $endif$
+        $nicebutton(link=mainfilelink; text=_mailContractClosedContentLinkedNoAccountButton())$
       $else$
         $_mailContractClosedContentLinkedAccount()$
+        $if(custommessage)$
+          <br/>
+          <br/>
+          $mailClosedCustomeMessage()$
+          <br/>
+        $endif$
+        $nicebutton(link=doclink; text=_mailContractClosedContentLinkedAccountButton())$
       $endif$
     $endif$
 ####
@@ -194,6 +211,8 @@ $if(custommessage)$
 $else$
       <div class="editable" name="custommessage"></div>
 $endif$
+<br/>
+<br/>
 $if(!documentAttached)$
   $nicebutton(link=mainfilelink; text=_mailDocumentLinkedButton())$
 $endif$
