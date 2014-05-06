@@ -165,5 +165,7 @@ kontraMigrations = [
   , addNoReplyEmailToBrandedDomainSetDefault
   , addMailsBorderColorToBrandedDomain
   , addAPIVersionToDocument
+  , addUniqueContrainsTypeOnFields
+
   ] ++ mailerMigrations
     ++ messengerMigrations

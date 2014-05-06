@@ -172,7 +172,7 @@ tableDocumentTags = tblTable {
 tableSignatoryLinkFields :: Table
 tableSignatoryLinkFields = tblTable {
     tblName = "signatory_link_fields"
-  , tblVersion = 6
+  , tblVersion = 7
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
@@ -188,7 +188,9 @@ tableSignatoryLinkFields = tblTable {
   , tblForeignKeys = [
       (fkOnColumn "signatory_link_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }
     ]
-  , tblIndexes = [ indexOnColumn "signatory_link_id" ]
+  , tblIndexes = [   indexOnColumn "signatory_link_id"
+                   , uniqueIndexOnColumns ["signatory_link_id","type","custom_name"]
+                 ]
   }
 
 tableSignatoryScreenshots :: Table

@@ -1156,6 +1156,35 @@ changeSomeStandardFieldsToOptional=
                          sqlWhereNotIn "s.confirmation_delivery_method" [MobileConfirmationDelivery,EmailAndMobileConfirmationDelivery]
   }
 
+-- Personal number used to be obligatory, but we didn't asked about it in extra details section
+addUniqueContrainsTypeOnFields :: MonadDB m => Migration m
+addUniqueContrainsTypeOnFields=
+  Migration {
+    mgrTable = tableSignatoryLinkFields
+  , mgrFrom = 6
+  , mgrDo =  runQuery_ $ sqlCreateIndex "signatory_link_fields" (uniqueIndexOnColumns ["signatory_link_id","type","custom_name"])
+    {-
+    runQuery_ $ sqlUpdate "signatory_link_fields" $ do
+                 sqlSet "obligatory" False
+                 sqlWhereInSql "id" $ do
+                   sqlSelect "documents as d, signatory_links as s, signatory_link_fields as f" $ do
+                     sqlResult "f.id"
+                     sqlWhereEq "f.placements" ("[]"::String)
+                     sqlWhereEq "f.value" (""::String)
+                     sqlWhereEqSql "f.signatory_link_id" "s.id"
+                     sqlWhereEqSql "d.id" "s.document_id"
+                     sqlWhereNotEq "d.status" Closed
+                     sqlWhereAny $ do
+                       sqlWhereAll $ do
+                         sqlWhereEq "f.type" PersonalNumberFT
+                         sqlWhereNotEq "s.authentication_method" ELegAuthentication
+                       sqlWhereAll $ do
+                         sqlWhereEq "f.type" (MobileFT)
+                         sqlWhereNotIn "s.delivery_method" [MobileDelivery,EmailAndMobileDelivery]
+                         sqlWhereNotIn "s.confirmation_delivery_method" [MobileConfirmationDelivery,EmailAndMobileConfirmationDelivery]
+                         -}
+  }
+
 
 
 makeSealStatusNonNullInMainFiles  :: MonadDB m => Migration m
