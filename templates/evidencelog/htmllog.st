@@ -164,7 +164,10 @@ $htmlopentag()$
          text-transform: uppercase;
       }
 
-
+      .event-content {
+        max-width: 230px;
+        word-wrap: break-word;
+      }
     </style>
 
 </head>
@@ -205,7 +208,7 @@ $htmlopentag()$
        <td>$entry.time$</td>
        <td>$entry.ces_time$</td>
        <td>$entry.ip$</td>
-       <td><div class="capitalize-first-letter">$entry.text:noescape()$</div></td>
+       <td><div class="capitalize-first-letter event-content">$entry.text:noescape()$</div></td>
      </tr>
     }$
 
