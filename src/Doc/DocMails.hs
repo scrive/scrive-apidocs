@@ -21,7 +21,7 @@ import AppConf (hostpart, mailsConfig)
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Control.Applicative ((<$>), (<*>), Applicative)
-import Control.Conditional (whenM, ifM)
+import Control.Conditional (ifM)
 import Control.Monad.Trans
 import Control.Monad.Reader
 import Control.Logic
@@ -174,21 +174,38 @@ sendReminderEmail :: (Log.MonadLog m, TemplatesMonad m,MonadIO m, CryptoRNG m, D
                           Maybe String -> Actor -> Bool -> SignatoryLink  -> m SignatoryLink
 sendReminderEmail custommessage  actor automatic siglink = do
   mctx <- getMailContext
-  sent <- sendNotifications siglink
-    (do
-      mailattachments <- makeMailAttachments =<< theDocument
-      mail <- theDocument >>= mailDocumentRemind custommessage siglink (not (null mailattachments))
-      docid <- theDocumentID
-      scheduleEmailSendoutWithDocumentAuthorSender docid (mctxmailsconfig mctx) $ mail {
-                               to = [getMailAddress siglink]
-                             , mailInfo = Invitation docid (signatorylinkid siglink)
-                             , attachments = if isJust $ maybesigninfo siglink
-                                             then mailattachments
-                                             else []
-                             })
-    (scheduleSMS =<< flip smsReminder siglink =<< theDocument)
+  doc <- theDocument
+  let domail = do
+       mailattachments <- makeMailAttachments doc
+       mail <- mailDocumentRemind custommessage siglink (not (null mailattachments)) doc
+       docid <- theDocumentID
+       scheduleEmailSendoutWithDocumentAuthorSender docid (mctxmailsconfig mctx) $ mail {
+                                                             to = [getMailAddress siglink]
+                                                           , mailInfo = Invitation docid (signatorylinkid siglink)
+                                                           , attachments = if isJust $ maybesigninfo siglink
+                                                                           then mailattachments
+                                                                           else []
+                                                           }
+      dosms = scheduleSMS =<< smsReminder doc siglink
+
+  sent <- case maybesigninfo siglink of
+           Just _ -> do
+             -- reminders for signed documents should use confirmation delivery method
+             -- and fallback to invitation delivery method if confirmation delivery method is NoConfirmation
+             let noConfirmationMethod = signatorylinkconfirmationdeliverymethod siglink == NoConfirmationDelivery
+                 sendemail =   signatorylinkconfirmationdeliverymethod siglink `elem` [EmailConfirmationDelivery, EmailAndMobileConfirmationDelivery]
+                             || (noConfirmationMethod && signatorylinkdeliverymethod siglink `elem` [EmailDelivery, EmailAndMobileDelivery])
+                 sendsms =   signatorylinkconfirmationdeliverymethod siglink `elem` [MobileConfirmationDelivery, EmailAndMobileConfirmationDelivery]
+                           || (noConfirmationMethod && signatorylinkdeliverymethod siglink `elem` [MobileDelivery, EmailAndMobileDelivery])
+             case (sendemail, sendsms) of
+               (True, True) -> domail >> dosms >> return True
+               (True, False) -> domail >> return True
+               (False, True) -> dosms >> return True
+               (False, False) -> return False
+           Nothing -> sendNotifications siglink domail dosms
+
   when sent $ do
-    whenM ((\d -> isPending d &&  not (hasSigned siglink)) <$> theDocument) $ do
+    when (isPending doc &&  not (hasSigned siglink)) $ do
       -- Reset delivery status if the signatory has not signed yet
       Log.mixlog_ $ "Reminder mail send for signatory that has not signed " ++ show (signatorylinkid siglink)
       dbUpdate $ PostReminderSend siglink custommessage automatic actor

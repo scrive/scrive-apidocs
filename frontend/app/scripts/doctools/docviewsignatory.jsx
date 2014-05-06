@@ -76,7 +76,14 @@ var DocumentViewSignatoryModel = Backbone.Model.extend({
           && !signatory.author()
           && signatory.signs()
           && signatory.reachedBySignorder()
-          && (signatory.document().signingInProcess() || signatory.document().closed())
+          && (   signatory.document().signingInProcess()
+              || (   signatory.document().closed()
+                  && (   signatory.emailDelivery()
+                      || signatory.mobileDelivery()
+                      || signatory.emailMobileDelivery()
+                      || signatory.emailConfirmationDelivery()
+                      || signatory.mobileConfirmationDelivery()
+                      || signatory.emailMobileConfirmationDelivery())))
           && !signatory.undeliveredInvitation()
           && !signatory.padDelivery();
  },
@@ -232,11 +239,22 @@ var DocumentViewSignatoryView = React.createClass({
         model.triggerOnAction();
       });
     },
-    handeSendReminder : function() {
+    handleSendReminder : function() {
       var model= this.props.model;
       var signatory = model.signatory();
       mixpanel.track('Click send reminder', {'Signatory index':signatory.signIndex()});
-      if(signatory.emailDelivery()) {
+      if (!signatory.hasSigned()) {
+        // if signatory hasnt signed yet, use invitation delivery method
+        var useEmail = signatory.emailDelivery();
+        var useMobile = signatory.mobileDelivery();
+        var useEmailAndMobile = signatory.emailMobileDelivery();
+      } else {
+        // signatory has already signed, prefer confirmation delivery method
+        var useEmail = signatory.noneConfirmationDelivery() ? signatory.emailDelivery() : signatory.emailConfirmationDelivery();
+        var useMobile = signatory.noneConfirmationDelivery() ? signatory.mobileDelivery() : signatory.mobileConfirmationDelivery();
+        var useEmailAndMobile = signatory.noneConfirmationDelivery() ? signatory.emailMobileDelivery() : signatory.emailMobileConfirmationDelivery();
+      }
+      if(useEmail) {
         ConfirmationWithEmail.popup({
           title: signatory.hasSigned() ? localization.process.remindagainbuttontext : localization.reminder.formHead,
           mail: signatory.remindMail(),
@@ -255,7 +273,7 @@ var DocumentViewSignatoryView = React.createClass({
             return true;
           }
          });
-      } else if( signatory.mobileDelivery()) {
+      } else if(useMobile) {
        new Confirmation({
          title: signatory.hasSigned() ? localization.process.remindagainbuttontext : localization.reminder.formHead,
          content: $("<div>").text(signatory.hasSigned() ? localization.reminder.mobileQuestionAlreadySigned : localization.reminder.mobileQuestion),
@@ -273,7 +291,7 @@ var DocumentViewSignatoryView = React.createClass({
            return true;
          }
       });
-     } else if( signatory.emailMobileDelivery()) {
+      } else if(useEmailAndMobile) {
       new Confirmation({
         title: signatory.hasSigned() ? localization.process.remindagainbuttontext : localization.reminder.formHead,
         content: $("<div>").text(localization.reminder.emailMobileQuestion),
@@ -408,7 +426,7 @@ var DocumentViewSignatoryView = React.createClass({
               <Button
                    color="black"
                    text={signatory.hasSigned() ? localization.process.remindagainbuttontext : localization.reminder.send}
-                   onClick={this.handeSendReminder}
+                   onClick={this.handleSendReminder}
               />
              }
 
