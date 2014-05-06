@@ -132,6 +132,14 @@ var DocumentViewSignatoryModel = Backbone.Model.extend({
          || this.hasAddToPadQueueOption()
          || this.hasRemoveFromPadQueueOption();
 
+ },
+ hasAnyDetails : function() {
+   var signatory = this.signatory();
+   return signatory.company()
+       || signatory.email()
+       || signatory.mobile()
+       || signatory.companynumber()
+       || signatory.personalnumber();
  }
 });
 
@@ -361,8 +369,8 @@ var DocumentViewSignatoryView = React.createClass({
             </div>
           </div>
 
-          <div className="inner spacing" >
-            <div className="details" >
+          <div className={model.hasAnyDetails() ? "inner spacing" : ""} >
+            <div className={model.hasAnyDetails() ? "details" : ""} >
 
                {/*if*/ signatory.company() &&
                  <div className="company field" style={textstyle} title={signatory.company()}>
@@ -382,13 +390,17 @@ var DocumentViewSignatoryView = React.createClass({
                 </div>
                }
 
-               <div className="orgnum field" style={textstyle} title={signatory.companynumber()}>
-                 {localization.docsignview.companyNumberLabel}: {signatory.companynumber().trim() || localization.docsignview.notEntered}
-               </div>
+               {/*if*/ signatory.companynumber() &&
+                <div className="orgnum field" style={textstyle} title={signatory.companynumber()}>
+                  {localization.docsignview.companyNumberLabel}: {signatory.companynumber().trim() || localization.docsignview.notEntered}
+                </div>
+               }
 
-               <div className="persnum field" style={textstyle} title={signatory.personalnumber()}>
-                 {localization.docsignview.personalNumberLabel}: {signatory.personalnumber().trim() || localization.docsignview.notEntered}
-               </div>
+               {/*if*/ signatory.personalnumber() &&
+                <div className="persnum field" style={textstyle} title={signatory.personalnumber()}>
+                  {localization.docsignview.personalNumberLabel}: {signatory.personalnumber().trim() || localization.docsignview.notEntered}
+                </div>
+               }
             </div>
           </div>
 
