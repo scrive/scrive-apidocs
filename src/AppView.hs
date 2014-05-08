@@ -53,6 +53,7 @@ import Company.CompanyUI
 import User.Model
 import Control.Monad
 import BrandedDomain.BrandedDomain
+import ThirdPartyStats.Core
 
 {- |
    The name of our application (the codebase is known as kontrakcja,
@@ -194,8 +195,20 @@ unsupportedBrowserPage = do
 
 enableCookiesPage :: Kontrakcja m => m Response
 enableCookiesPage = do
-  ctx <- getContext
-  simpleHtmlResponse =<< renderTemplateAsPage ctx "enableCookies" False (return ())
+  cookies <- rqCookies <$> askRq
+  case cookies of
+    [] -> do
+      -- there are still no cookies, client probably disabled them
+      mixpanel "Enable cookies page load"
+      ctx <- getContext
+      simpleHtmlResponse =<< renderTemplateAsPage ctx "enableCookies" False (return ())
+    _ -> do
+      -- there are some cookies after all, so no point in telling them to enable them
+      mixpanel "Enable cookies page load attempt with cookies"
+      -- internalServerError is a happstack function, it's not our internalError
+      -- this will not rollback the transaction
+      internalServerErrorPage >>= internalServerError
+  where mixpanel event = asyncLogEvent (NamedEvent event) []
 
 handleTermsOfService :: Kontrakcja m => m Response
 handleTermsOfService = withAnonymousContext $ do
