@@ -72,16 +72,14 @@ mailContractClosedMainP =
       $mailClosedSignup()$
     $else$
       $_mailContractClosedContentLinked()$
-      <br/>
-      <br/>
       $if(confirmationlink)$
         $_mailContractClosedContentLinkedNoAccount()$
         $if(custommessage)$
           <br/>
           <br/>
           $mailClosedCustomeMessage()$
-          <br/>
         $endif$
+        <br/>
         $nicebutton(link=mainfilelink; text=_mailContractClosedContentLinkedNoAccountButton())$
       $else$
         $_mailContractClosedContentLinkedAccount()$
@@ -89,8 +87,10 @@ mailContractClosedMainP =
           <br/>
           <br/>
           $mailClosedCustomeMessage()$
+        $else$
           <br/>
         $endif$
+        <br/>
         $nicebutton(link=doclink; text=_mailContractClosedContentLinkedAccountButton())$
       $endif$
     $endif$
