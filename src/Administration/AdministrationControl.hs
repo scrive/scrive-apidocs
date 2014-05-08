@@ -366,6 +366,7 @@ handleMoveUserToDifferentCompany :: Kontrakcja m => UserID -> m ()
 handleMoveUserToDifferentCompany uid = onlySalesOrAdmin $ do
   cid <- guardJustM $ readField "companyid"
   _ <- dbUpdate $ SetUserCompany uid cid
+  _ <- dbUpdate $ SetUserCompanyAdmin uid False
   return ()
 
 
