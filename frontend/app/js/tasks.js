@@ -231,7 +231,10 @@ var PageTasksArrowView = Backbone.View.extend({
 
         return (arrow.type() != 'scroll-up');
   },
-  shouldBinkOnUpdate : function(oldarrow,newarrow) {
+  shouldBlinkOnUpdate : function(oldarrow,newarrow) {
+    if (oldarrow !== undefined && oldarrow.isBlinking()) {
+      return true;
+    }
     var oldArrowIsUpOrDown = oldarrow != undefined && (oldarrow.type() == 'scroll-up' || oldarrow.type() == 'scroll-down');
     var newArrowIsPoint = newarrow.type() == 'point-left' || newarrow.type() == 'point-right';
     var newUpArrow = newarrow.type() == 'scroll-up' && (oldarrow == undefined || oldarrow.type() != 'scroll-up');
@@ -254,7 +257,7 @@ var PageTasksArrowView = Backbone.View.extend({
               if (this.arrow != undefined) {
                   view.arrow.fixWidth();
                   setTimeout(function() {view.arrow.fixWidth();},100);
-                  if (this.shouldBinkOnUpdate(oldArrow,view.arrow)) {
+                  if (this.shouldBlinkOnUpdate(oldArrow,view.arrow)) {
                     this.blink();
                   }
               }
