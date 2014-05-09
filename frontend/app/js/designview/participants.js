@@ -447,6 +447,16 @@ define(['Backbone', 'legacy_code'], function() {
             });
             return view;
         },
+        customScrollbarOpts: function() {
+          return {mouseWheel: true,
+                  theme: 'dark-2',
+                  advanced: {updateOnContentResize: true, // this is polling, might want to have update called in proper times
+                             autoScrollOnFocus: false // Else it jumps when filling the fieds
+                            },
+                  scrollInertia: 0,
+                  scrollButtons: {enable: false // we do not want buttons, also we do not want pngs that come with the buttons
+                                 }};
+        },
         resizeOnWindowResize: function() {
             var view = this;
             var newHeight = $(window).height() - 350;
@@ -455,7 +465,12 @@ define(['Backbone', 'legacy_code'], function() {
             }
             view.scrollBox.css("max-height", newHeight + "px");
             setTimeout(function() {
-                view.scrollBox.mCustomScrollbar('update');
+              // this should work but apparently there is a bug in mCustomScrollbar
+              // view.scrollBox.mCustomScrollbar('update');
+              // for now, just destroy the scrollbar and create a new one
+              // pretty costly, but you don't often resize your browser window
+              view.scrollBox.mCustomScrollbar('destroy');
+              view.scrollBox.mCustomScrollbar(view.customScrollbarOpts());
             }, 500);
             return false;
         },
@@ -476,16 +491,7 @@ define(['Backbone', 'legacy_code'], function() {
             view.$el.append(box).append(view.addNew.el);
 
 
-            box.mCustomScrollbar({ mouseWheel: true
-                                   , theme: "dark-2"
-                                   , advanced:{
-                                       updateOnContentResize: true, // this is polling, might want to have update called in proper times
-                                       autoScrollOnFocus : false // Else it jumps when filling the fieds
-                                   }
-                                   , scrollInertia: 0
-                                   , scrollButtons:{
-                                       enable: false // we do not want buttons, also we do not want pngs that come with the buttons
-                                   }});
+            box.mCustomScrollbar(view.customScrollbarOpts());
             view.scrollBox = box;
             return view;
         }
