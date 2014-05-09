@@ -147,7 +147,7 @@ createUser :: (CryptoRNG m, MailContextMonad m, MonadDB m, TemplatesMonad m) => 
 createUser email names companyandrole lang = do
   mctx <- getMailContext
   passwd <- createPassword =<< randomPassword
-  muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) companyandrole lang (bdurl <$> mctxcurrentBrandedDomain mctx)
+  muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) companyandrole lang (bdid <$> mctxcurrentBrandedDomain mctx)
   case muser of
     Just user -> do
       _ <- dbUpdate $ LogHistoryAccountCreated (userid user) (mctxipnumber mctx) (mctxtime mctx) email (userid <$> mctxmaybeuser mctx)

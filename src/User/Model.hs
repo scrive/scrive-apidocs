@@ -58,7 +58,7 @@ import Data.Maybe
 import Doc.DocStateData (DocumentStatus(..),FieldType(..))
 import Utils.Read
 import User.Email
-
+import BrandedDomain.BrandedDomainID
 
 data InviteType = Viral | Admin
   deriving (Eq, Ord, Show)
@@ -117,7 +117,7 @@ data User = User {
   , userinfo                      :: UserInfo
   , usersettings                  :: UserSettings
   , usercompany                   :: CompanyID
-  , userassociateddomain          :: Maybe String
+  , userassociateddomainid        :: Maybe BrandedDomainID
   } deriving (Eq, Ord, Show)
 
 data UserInfo = UserInfo {
@@ -262,7 +262,7 @@ instance MonadDB m => DBUpdate m RemoveInactiveUser Bool where
        runQuery_ $ "UPDATE signatory_links SET user_id = NULL WHERE user_id = " <?> uid <+> "AND EXISTS (SELECT TRUE FROM users WHERE users.id = " <?> uid <+> " AND users.has_accepted_terms_of_service IS NULL)"
        runQuery01 $ "DELETE FROM users WHERE id = " <?> uid <+> "AND has_accepted_terms_of_service IS NULL"
 
-data AddUser = AddUser (String, String) String (Maybe Password) (CompanyID,Bool) Lang (Maybe String)
+data AddUser = AddUser (String, String) String (Maybe Password) (CompanyID,Bool) Lang (Maybe BrandedDomainID)
 instance MonadDB m => DBUpdate m AddUser (Maybe User) where
   update (AddUser (fname, lname) email mpwd (cid, admin) l mad) = do
     mu <- query $ GetUserByEmail $ Email email
@@ -285,7 +285,7 @@ instance MonadDB m => DBUpdate m AddUser (Maybe User) where
             sqlSet "email" $ map toLower email
             sqlSet "lang" l
             sqlSet "deleted" (Nothing :: Maybe MinutesTime)
-            sqlSet "associated_domain" mad
+            sqlSet "associated_domain_id" mad
             mapM_ sqlResult selectUsersSelectorsList
         fetchMaybe fetchUser
 
@@ -454,14 +454,14 @@ selectUsersSelectorsList =
   , "phone"
   , "email"
   , "lang"
-  , "associated_domain"
+  , "associated_domain_id"
   ]
 
 selectUsersSelectors :: SQL
 selectUsersSelectors = sqlConcatComma selectUsersSelectorsList
 
-fetchUser :: (UserID, Maybe (Binary ByteString), Maybe (Binary ByteString), Bool, Bool, Maybe MinutesTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, Maybe String) -> User
-fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain) = User {
+fetchUser :: (UserID, Maybe (Binary ByteString), Maybe (Binary ByteString), Bool, Bool, Maybe MinutesTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, Maybe BrandedDomainID) -> User
+fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id) = User {
   userid = uid
 , userpassword = maybePassword (password, salt)
 , useriscompanyadmin = is_company_admin
@@ -478,7 +478,7 @@ fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepte
   }
 , usersettings = UserSettings { lang = lang }
 , usercompany = company_id
-, userassociateddomain = associated_domain
+, userassociateddomainid = associated_domain_id
 }
 
 selectUsersWithCompaniesSQL :: SQL
@@ -499,7 +499,7 @@ selectUsersWithCompaniesSQL = "SELECT"
   <> ", users.phone"
   <> ", users.email"
   <> ", users.lang"
-  <> ", users.associated_domain"
+  <> ", users.associated_domain_id"
   -- Company:
   <> ", c.id AS company_id"
   <> ", c.name"
@@ -514,8 +514,8 @@ selectUsersWithCompaniesSQL = "SELECT"
   <> "  LEFT JOIN companies c ON users.company_id = c.id"
   <> "  WHERE users.deleted IS NULL"
 
-fetchUserWithCompany :: (UserID, Maybe (Binary ByteString), Maybe (Binary ByteString), Bool, Bool, Maybe MinutesTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, Maybe String, Maybe CompanyID, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String) -> (User, Company)
-fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain, cid, name, number, address, zip', city, country, ip_address_mask, sms_originator) = (user, company)
+fetchUserWithCompany :: (UserID, Maybe (Binary ByteString), Maybe (Binary ByteString), Bool, Bool, Maybe MinutesTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, Maybe BrandedDomainID, Maybe CompanyID, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String) -> (User, Company)
+fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, cid, name, number, address, zip', city, country, ip_address_mask, sms_originator) = (user, company)
   where
     user = User {
       userid = uid
@@ -534,7 +534,7 @@ fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, 
       }
     , usersettings = UserSettings { lang = lang }
     , usercompany = company_id
-    , userassociateddomain = associated_domain
+    , userassociateddomainid = associated_domain_id
     }
     company = Company {
       companyid = fromJust cid

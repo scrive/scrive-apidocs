@@ -164,5 +164,6 @@ kontraMigrations = [
   , changeSomeStandardFieldsToOptional
   , createSignatorySMSPinsTable
   , createBrandedDomainsTable
+  , usersTableChangeAssociatedDomainToForeignKey
   ] ++ mailerMigrations
     ++ messengerMigrations
