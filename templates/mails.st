@@ -78,6 +78,8 @@ mailContractClosedMainP =
           <br/>
           <br/>
           $mailClosedCustomeMessage()$
+        $else$
+          <br/>
         $endif$
         <br/>
         $nicebutton(link=mainfilelink; text=_mailContractClosedContentLinkedNoAccountButton())$
