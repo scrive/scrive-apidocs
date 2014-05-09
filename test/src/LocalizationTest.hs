@@ -9,9 +9,10 @@ import Control.Monad
 import Text.JSON
 import User.Lang
 import Utils.Enum
+import TestKontra
 
-localizationTest :: Test
-localizationTest = testGroup "Localization Test"
+localizationTest :: TestEnvSt -> Test
+localizationTest _ = testGroup "Localization Test"
     [ testGroup "static checks"
     [ testCase "tests if translations are valid JSONS and are ordered" testTranslationFilesAreJSONSAndSorted]
     ]

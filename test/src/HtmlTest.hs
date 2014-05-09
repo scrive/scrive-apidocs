@@ -14,9 +14,10 @@ import Control.Monad
 import Templates
 import Text.StringTemplates.TemplatesLoader (renderTemplateMain)
 import User.Lang
+import TestKontra
 
-htmlTests :: Test
-htmlTests = testGroup "HTML"
+htmlTests :: TestEnvSt -> Test
+htmlTests _ = testGroup "HTML"
     [ testGroup "static checks"
         [ testCase "templates make valid xml" testValidXml,
           testCase "no unecssary double divs" testNoUnecessaryDoubleDivs ,

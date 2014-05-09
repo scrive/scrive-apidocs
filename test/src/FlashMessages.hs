@@ -10,9 +10,10 @@ import Test.QuickCheck (elements, oneof, Arbitrary(..), Property,
   mapSize)
 
 import FlashMessage(FlashMessage(..), FlashType(..), fromCookieValue, toCookieValue)
+import TestKontra
 
-flashMessagesTests :: Test
-flashMessagesTests = testGroup "FlashMessages"
+flashMessagesTests :: TestEnvSt -> Test
+flashMessagesTests _ = testGroup "FlashMessages"
   [ {-testProperty "Flash decoding can handle arbitrary input." $ flashDecodeAnything
   , -}testProperty "Flash encoding/decoding is identity." $ flashEncodeDecode
   ]
@@ -36,4 +37,3 @@ flashEncodeDecode =
 _flashDecodeAnything :: String -> Bool
 _flashDecodeAnything s = fromCookieValue (BS.unpack (B64.encode (BS.pack s'))) `seq` True
   where s' = take (16 * (length s `div` 16)) s
-

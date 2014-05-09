@@ -7,9 +7,10 @@ import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assertEqual, Assertion)
 import qualified Doc.EvidenceAttachments as E
+import TestKontra
 
-evidenceAttachmentsTest :: Test
-evidenceAttachmentsTest = testGroup "EvidenceAttachments"
+evidenceAttachmentsTest :: TestEnvSt -> Test
+evidenceAttachmentsTest _ = testGroup "EvidenceAttachments"
   [ testCase "Sealed file has evidence attachments (version 1)" $ sealedFileHasEvidenceAttachmentsVersion1
   , testCase "Sealed file has evidence attachments (version 2)" $ sealedFileHasEvidenceAttachmentsVersion2
   ]

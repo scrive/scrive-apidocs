@@ -8,9 +8,10 @@ import Test.HUnit (assert, Assertion)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.QuickCheck (Arbitrary(..), Property, oneof, (==>), property, mapSize)
 import InputValidation
+import TestKontra
 
-inputValidationTests :: Test
-inputValidationTests = testGroup "InputValidation"
+inputValidationTests :: TestEnvSt -> Test
+inputValidationTests _ = testGroup "InputValidation"
     [
       testGroup "asValidEmail"
         [ testCase "bad examples fail" testValidEmailExampleFails

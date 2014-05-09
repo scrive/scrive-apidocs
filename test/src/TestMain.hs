@@ -5,8 +5,6 @@ import Control.Arrow
 import Control.Concurrent.STM
 import Control.Monad
 import Control.Monad.IO.Class
-import Data.Char
-import Data.Either
 import Database.PostgreSQL.PQTypes.Internal.Connection
 import System.Directory (createDirectoryIfMissing)
 import System.Environment.UTF8
@@ -62,53 +60,42 @@ import ThirdPartyStats
 import UserHistoryTest
 import UserStateTest
 
-allTests :: [(String, TestEnvSt -> Test)]
+allTests :: [TestEnvSt -> Test]
 allTests = tail tests
   where
     tests = [
         undefined
-      , ("accountinfo", accountInfoTests)
-      , ("brandeddomain", brandedDomainTests)
-      , ("companyaccounts", companyAccountsTests)
-      , ("companycontrol",  companyControlTests)
-      , ("companystate",  companyStateTests)
-      , ("csvutil", const $ csvUtilTests)
-      , ("docapi",  docAPITests)
-      , ("doccontrol",  docControlTests)
-      , ("docstate",  docStateTests)
-      , ("evidenceattachments", const $ evidenceAttachmentsTest)
-      , ("evidencelog", evidenceLogTests)
-      , ("evidencetexts", dumpAllEvidenceTexts)
-      , ("file", fileTests )
-      , ("flashmessages", const $ flashMessagesTests)
-      , ("html", const $ htmlTests)
-      , ("inputvalidation", const $ inputValidationTests)
-      , ("jsonutil", jsonUtilTests )
-      , ("lang", langTests)
-      , ("localization", const $ localizationTest)
-      , ("login", loginTests)
-      , ("mailmodel", mailModelTests)
-      , ("mails", mailsTests )
-      , ("oauth", oauthTest)
-      , ("pad", padTests)
-      , ("payments", paymentsTests)
-      , ("sessions", sessionsTests)
-      , ("signup", signupTests)
-      , ("thirdpartystats", thirdPartyStatsTests)
-      , ("userhistory", userHistoryTests)
-      , ("userstate", userStateTests)
+      , accountInfoTests
+      , brandedDomainTests
+      , companyAccountsTests
+      , companyControlTests
+      , companyStateTests
+      , csvUtilTests
+      , docAPITests
+      , docControlTests
+      , docStateTests
+      , evidenceAttachmentsTest
+      , evidenceLogTests
+      , dumpAllEvidenceTexts
+      , fileTests
+      , flashMessagesTests
+      , htmlTests
+      , inputValidationTests
+      , jsonUtilTests
+      , langTests
+      , localizationTest
+      , loginTests
+      , mailModelTests
+      , mailsTests
+      , oauthTest
+      , padTests
+      , paymentsTests
+      , sessionsTests
+      , signupTests
+      , thirdPartyStatsTests
+      , userHistoryTests
+      , userStateTests
       ]
-
-testsToRun :: [String] -> [Either String (TestEnvSt -> Test)]
-testsToRun [] = []
-testsToRun (t:ts)
-  | lt == "all" = map (\(_,f) -> Right $ f) allTests ++ rest
-  | otherwise = case lookup lt allTests of
-                  Just testcase -> Right (testcase) : rest
-                  Nothing       -> Left t : rest
-  where
-    lt = map toLower t
-    rest = testsToRun ts
 
 modifyTestEnv :: [String] -> ([String], TestEnvSt -> TestEnvSt)
 modifyTestEnv [] = ([], id)
@@ -172,4 +159,6 @@ testone t = do
   testMany (args, [t])
 
 main :: IO ()
-main = (partitionEithers . testsToRun <$> getArgs) >>= testMany
+main = do
+  args <- getArgs
+  testMany (args, allTests)

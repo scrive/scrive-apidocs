@@ -8,9 +8,10 @@ import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assert, assertEqual, Assertion)
 
 import Util.CSVUtil
+import TestKontra
 
-csvUtilTests :: Test
-csvUtilTests = testGroup "CSVUtil"
+csvUtilTests :: TestEnvSt -> Test
+csvUtilTests _ = testGroup "CSVUtil"
     [ testGroup "parseCSV"
       [ testCase "exported from excel on a mac in comma separated format" $ testCSVFile "mac_csv.csv"
       , testCase "exported from excel on a mac in windows csv format" $ testCSVFile "mac_windows_csv.csv"
