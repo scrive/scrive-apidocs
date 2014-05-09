@@ -1,22 +1,17 @@
 #!/bin/bash -e
 
-tar -czf kontrakcja-master-dist-$1.tar.gz kontrakcja.cabal dist texts templates frontend/dist frontend/app files GuardTime scrivepdftools
+tar -cz dist texts templates frontend/dist frontend/app files GuardTime scrivepdftools | ssh dev@dev.scrive.com tar -C kontrakcja -xz
 
-scp kontrakcja-master-dist-$1.tar.gz dev@dev.scrive.com:kontrakcja-master-dist-$1.tar.gz
+ssh dev@dev.scrive.com bash -s <<EOF
 
-ssh dev@dev.scrive.com rm -rf kontrakcja.cabal dist texts templates frontend/dist frontend/app files
-ssh dev@dev.scrive.com tar -zxf kontrakcja-master-dist-$1.tar.gz
+cd kontrakcja
 
-ssh dev@dev.scrive.com supervisorctl stop dev-messenger
-ssh dev@dev.scrive.com supervisorctl stop dev-mailer
-ssh dev@dev.scrive.com supervisorctl stop dev-cron
-ssh dev@dev.scrive.com supervisorctl stop dev
+rm -rf dist texts templates frontend/dist frontend/app files
 
-ssh dev@dev.scrive.com dist/build/kontrakcja-migrate/kontrakcja-migrate
+supervisorctl stop dev-messenger dev-mailer dev
 
-ssh dev@dev.scrive.com supervisorctl start dev-messenger
-ssh dev@dev.scrive.com supervisorctl start dev-mailer
-ssh dev@dev.scrive.com supervisorctl start dev-cron
-ssh dev@dev.scrive.com supervisorctl start dev
+./dist/build/kontrakcja-migrate/kontrakcja-migrate
 
-ssh dev@dev.scrive.com rm kontrakcja-master-dist-$1.tar.gz
+supervisorctl start dev-messenger dev-mailer dev
+
+EOF
