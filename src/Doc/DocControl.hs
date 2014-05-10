@@ -214,7 +214,11 @@ handleSignShow documentid signatorylinkid = do
       cookies <- rqCookies <$> askRq
       if null cookies
          then sendRedirect LinkEnableCookies
-         else internalError
+         else do
+           res <- internalError
+           preventTailCallOptimization -- we would like to see the above internalError in stack trace
+           return res
+
 
 {- |
    Redirect author of document to go to signview

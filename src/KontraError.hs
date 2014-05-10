@@ -19,3 +19,7 @@ internalError = do
 
 respond404 :: MonadBase IO m => m a
 respond404 = E.throwIO Respond404
+
+{-# NOINLINE preventTailCallOptimization #-}
+preventTailCallOptimization :: (Monad m) => m ()
+preventTailCallOptimization = return ()
