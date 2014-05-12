@@ -1,6 +1,6 @@
-#!/bin/bash -e
+#!/bin/bash -xe
 
-ssh dev@dev.scrive.com bash -s <<EOF
+ssh dev@dev.scrive.com bash -x -s <<EOF
 
 cd kontrakcja
 
@@ -10,11 +10,9 @@ EOF
 
 tar -cz --exclude '*-tmp' dist texts templates frontend/dist frontend/app files GuardTime scrivepdftools | ssh dev@dev.scrive.com tar -C kontrakcja -xvz
 
-ssh dev@dev.scrive.com bash -s <<EOF
+ssh dev@dev.scrive.com bash -x -s <<EOF
 
 cd kontrakcja
-
-rm -rf dist texts templates frontend/dist frontend/app files
 
 supervisorctl stop dev-messenger dev-mailer dev
 
