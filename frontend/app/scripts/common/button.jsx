@@ -15,6 +15,7 @@
       cssClass    : additional css classes
       style       : style object (react format)
       onClick     : func, functiona to be called on click
+      multiline   : bool, if button should support multiline labels (if true, text must be an array of strings)
       oneClick    : bool, if the button can be clicked only once
 
  *
@@ -28,7 +29,12 @@
 define(['React'], function(React) {
   return React.createClass({
     propTypes: {
-      text        : React.PropTypes.string,
+      text        : function(props, propName, componentName) {
+        var val = props[propName];
+        if (typeof val !== 'string' && !$.isArray(val)) {
+          console.error('Button.text should be a string or an array of strings');
+        }
+      },
       color       : React.PropTypes.string,
       customcolor : React.PropTypes.string,
       size        : React.PropTypes.string,
@@ -38,15 +44,17 @@ define(['React'], function(React) {
       cssClass    : React.PropTypes.string,
       style       : React.PropTypes.object,
       onClick     : React.PropTypes.func,
+      multiline   : React.PropTypes.bool,
       oneClick    : React.PropTypes.bool
     },
     getDefaultProps : function() {
         return {
-          "text"     : "",
-          "color"    : "green",
-          "size"     : "small",
-          "shape"    : "square",
-          "style"    : {}
+          "text"      : "",
+          "color"     : "green",
+          "size"      : "small",
+          "shape"     : "square",
+          "multiline" : false,
+          "style"     : {}
         };
       },
     getInitialState: function() {
@@ -100,11 +108,15 @@ define(['React'], function(React) {
        if (this.props.shape == "rounded" )
          return {"button-round":true};
     },
+    multilineClass : function() {
+      return {"button-signleline": !this.props.multiline};
+    },
     cssClasses : function() {
       return React.addons.classSet(_.extend(
                             {button: true},
                             this.sizeClass(),
                             this.colorClass(),
+                            this.multilineClass(),
                             this.shapeClass()
              ));
     },
@@ -114,7 +126,16 @@ define(['React'], function(React) {
     render: function() {
       return (
         <a className={this.cssClasses()} onClick={this.handleClick} style={this.style()}>
-          <div className="label">{this.props.text}</div>
+          <div className="label">
+            {/*if*/ this.props.multiline &&
+              this.props.text.map(function(text) {
+                return <div>{text}</div>
+              })
+            }
+            {/*else*/ !this.props.multiline &&
+              this.props.text
+            }
+          </div>
         </a>
       );
     }
