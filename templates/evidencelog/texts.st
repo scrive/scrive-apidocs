@@ -6,13 +6,13 @@ AttachSealedFileEvidenceText=$if(full)$$if(archive)$$_AttachSealedFileEvidenceTe
 ###
 AutomaticReminderSentText=$if(full)$$_AutomaticReminderSentTextFull()$$else$$_AutomaticReminderSentTextSimple()$$endif$
 ###
-CancelDocumentEvidenceText=$CancelDocumentEvidenceText()$
+CancelDocumentEvidenceText=$if(full)$$if(archive)$$_CancelDocumentEvidenceTextFullArchive()$$else$$_CancelDocumentEvidenceTextFullNotArchive()$$endif$$else$$if(archive)$$_CancelDocumentEvidenceTextSimpleArchive()$$else$$_CancelDocumentEvidenceTextSimpleNotArchive()$$endif$
 ###
 ChangeSignatoryEmailWhenUndeliveredEvidenceText=The email address for the signatory was changed from $oldemail$ to $newemail$ by $actor$.
 ###
 ChangeSignatoryPhoneWhenUndeliveredEvidenceText=The phone number for the signatory was changed from $oldphone$ to $newphone$ by $actor$.
 ###
-CloseDocumentEvidenceText=$CloseDocumentEvidenceText()$
+CloseDocumentEvidenceText=$if(full)$$_CloseDocumentEvidenceTextFull()$$else$$_CloseDocumentEvidenceTextSimple()$$endif$
 ###
 DeleteSigAttachmentEvidenceText=The attachment “$name$” previously uploaded by $actor$ on the request of $author$ was deleted by $actor$.
 ###
