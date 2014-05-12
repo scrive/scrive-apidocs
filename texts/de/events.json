@@ -1,5 +1,6 @@
-{ 
-"AttachExtendedSealedFileEvidenceText":"Das Dokument wurde mit einem digitalen Signatur abgeschlossen$if(full)$ durch $_theScriveSystem()$$endif$.",
+{
+"AttachExtendedSealedFileEvidenceTextSimple":"Das Dokument wurde mit einem digitalen Signatur abgeschlossen.",
+"AttachExtendedSealedFileEvidenceTextFull":"Das Dokument wurde mit einem digitalen Signatur abgeschlossen durch Das Scrive E-Anmeldungssystem.",
 "AttachGuardtimeSealedFileEvidenceText":"Das Dokument wurde mit einem schüssellosen digitalen Signatur$if(full)$ durch $_theScriveSystem()$$endif$ abgeschlossen.",
 "AttachSealedFileEvidenceText":"$_TheScriveSystem()$ hat die endgültige PDF-Datei vorbereitet$if(!archive)$, inklusive Beweise gesammelt von $_TheScriveSystem()$, bevor das Dokument mit einer digitalen Unterzeichnung abgeschlossen wurde$endif$.",
 "AutomaticReminderSentText":"Eine automatische Erinnerung zu unterzeichnen wurde an $signatory$ per $_delivery_method()$ gesendet$if(full)$ auf Antrag von $author$$endif$.",

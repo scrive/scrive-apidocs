@@ -1,4 +1,4 @@
-AttachExtendedSealedFileEvidenceText=$AttachExtendedSealedFileEvidenceText()$
+AttachExtendedSealedFileEvidenceText=$if(full)$$AttachExtendedSealedFileEvidenceTextFull()$$else$$AttachExtendedSealedFileEvidenceTextSimple()$$endif$
 ###
 AttachGuardtimeSealedFileEvidenceText=$AttachGuardtimeSealedFileEvidenceText()$
 ###

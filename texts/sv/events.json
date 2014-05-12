@@ -1,5 +1,6 @@
-{ 
-"AttachExtendedSealedFileEvidenceText":"Dokumentet förseglades med en nyckellös digital signatur.",
+{
+"AttachExtendedSealedFileEvidenceTextSample":"Dokumentet förseglades med en nyckellös digital signatur.",
+"AttachExtendedSealedFileEvidenceTextFull":"Dokumentet förseglades med en nyckellös digital signatur.",
 "AttachGuardtimeSealedFileEvidenceText":"Dokumentet förseglades med en digital signatur.",
 "AttachSealedFileEvidenceText":"$_TheScriveSystem()$ preparerade den slutgiltiga PDF:en$if(!archive)$, inklusive bevismaterial insamlat av $_TheScriveSystem()$, före försegling med en digital signatur$endif$.",
 "AutomaticReminderSentText":"En automatisk påminnelse att signera skickades till $signatory$ via $_delivery_method()$$if(full)$ på begäran av $author$$endif$.",
