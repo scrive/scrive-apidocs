@@ -129,7 +129,9 @@ define(['React'], function(React) {
           <div className="label">
             {/*if*/ this.props.multiline &&
               this.props.text.map(function(text) {
-                return <div>{text}</div>
+                return (
+                  <div>{text}</div>
+                );
               })
             }
             {/*else*/ !this.props.multiline &&
