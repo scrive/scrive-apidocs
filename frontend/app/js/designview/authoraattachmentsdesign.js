@@ -242,12 +242,15 @@ window.DesignAuthorAttachmentsPopup = function(args) {
                                 popup.close();
                             });
                         },
-                        function() {
-                            new FlashMessage({
-                                color: "red",
-                                content: localization.authorattachments.invalidAttachments
-                            });
-                                LoadingDialog.close();
+                        function(xhr) {
+                          var errorMsg;
+                          if (xhr.status == 413) {
+                            errorMsg = localization.fileTooLarge;
+                          } else {
+                            errorMsg = localization.authorattachments.invalidAttachments;
+                          }
+                          new FlashMessage({color: 'red', content: errorMsg});
+                          LoadingDialog.close();
                         }
                       );
                       LoadingDialog.open();
