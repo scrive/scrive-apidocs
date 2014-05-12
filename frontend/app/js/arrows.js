@@ -345,6 +345,9 @@ window.Arrow = function (args) {
 
     startBlinking();
   };
+  this.isBlinking = function() {
+    return model.blinks() > 1;
+  };
   this.isDisabled = function() {
     return disabled;
   };

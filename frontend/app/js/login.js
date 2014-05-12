@@ -360,7 +360,7 @@ var LoginBrandedView = Backbone.View.extend({
       var loginButton = new Button({
                   size  : "tiny",
                   color : model.buttoncolorclass(),
-                  text  : localization.loginModal.login + " ›",
+                  text  : localization.loginModal.login,
                   style : "width:245px;",
                   onClick : loginFunction
                 });
