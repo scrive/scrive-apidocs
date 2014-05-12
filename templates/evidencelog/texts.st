@@ -1,8 +1,10 @@
-AttachExtendedSealedFileEvidenceText=$if(full)$$AttachExtendedSealedFileEvidenceTextFull()$$else$$AttachExtendedSealedFileEvidenceTextSimple()$$endif$
+AttachExtendedSealedFileEvidenceText=$if(full)$$_AttachExtendedSealedFileEvidenceTextFull()$$else$$_AttachExtendedSealedFileEvidenceTextSimple()$$endif$
 ###
-AttachGuardtimeSealedFileEvidenceText=$AttachGuardtimeSealedFileEvidenceText()$
+AttachGuardtimeSealedFileEvidenceText=$if(full)$$_AttachGuardtimeSealedFileEvidenceTextFull()$$else$$_AttachGuardtimeSealedFileEvidenceTextSimple()$$endif$
 ###
-AttachSealedFileEvidenceText=$AttachSealedFileEvidenceText()$
+AttachSealedFileEvidenceText=$if(full)$$if(archive)$$_AttachSealedFileEvidenceTextFullArchive()$$else$$_AttachSealedFileEvidenceTextFullNotArchive()$$endif$$else$$if(archive)$$_AttachSealedFileEvidenceTextSimpleArchive()$$else$$_AttachSealedFileEvidenceTextSimpleNotArchive()$$endif$
+###
+AutomaticReminderSentText=$if(full)$$_AutomaticReminderSentTextFull()$$else$$_AutomaticReminderSentTextSimple()$$endif$
 ###
 CancelDocumentEvidenceText=$CancelDocumentEvidenceText()$
 ###
