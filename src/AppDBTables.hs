@@ -40,6 +40,7 @@ kontraFunctions = [
 kontraTables :: [Table]
 kontraTables =
   [ tableCompanies
+  , tableBrandedDomains
   , tableUsers
   , tableUsersHistory
   , tableCompanyInvites
@@ -76,6 +77,5 @@ kontraTables =
   , tableCompanyUIs
   , tableDocumentAutomaticReminders
   , tableSignatorySMSPins
-  , tableBrandedDomains
   ] ++ mailerTables
     ++ messengerTables

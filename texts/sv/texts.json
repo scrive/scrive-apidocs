@@ -1,4 +1,4 @@
-{
+{ 
 "_CompanyAccounts":"Användare",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Är du säker på att du vill skicka en påminnelse till berörda parter för",
@@ -985,6 +985,8 @@
 "_to":" till ",
 "_toFilter":"Till:",
 "_toNoSpaces":"till",
+"_tooLargeAttachment":"Filen överskrider maxstorleken på 10 MB. Pröva att göra den mindre.",
+"_tooLargeAttachments":"Filerna överskrider maxstorleken på 10 MB. Pröva med en fil i taget.",
 "_tooltipcancelled":"Återkallat",
 "_tooltipdelivered":"Levererat",
 "_tooltipdeliveryproblem":"Leveransproblem",

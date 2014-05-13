@@ -242,6 +242,8 @@ javascriptLocalisation =
                 , selectFile: "$_updateAttachmentsDialogUpLoadChooseFile()$"
                 , selectFromScrive : "$_updateAttachmentsDialogChooseFromScrive()$"
                 , invalidAttachments : "$_invalidAttachments()$"
+                , tooLargeAttachment : "$_tooLargeAttachment()$"
+                , tooLargeAttachments : "$_tooLargeAttachments()$"
             }
           , signatoryAttachments : {
                 addAttachment:      "$_pageDocumentForAuthorHelpersLocalDialogsAddAttachment()$"

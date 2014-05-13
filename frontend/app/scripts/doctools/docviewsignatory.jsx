@@ -76,7 +76,8 @@ var DocumentViewSignatoryModel = Backbone.Model.extend({
           && !signatory.author()
           && signatory.signs()
           && signatory.reachedBySignorder()
-          && (   signatory.document().signingInProcess()
+          && (   (   signatory.document().signingInProcess()
+                  && !signatory.padDelivery())
               || (   signatory.document().closed()
                   && (   signatory.emailDelivery()
                       || signatory.mobileDelivery()
@@ -84,8 +85,7 @@ var DocumentViewSignatoryModel = Backbone.Model.extend({
                       || signatory.emailConfirmationDelivery()
                       || signatory.mobileConfirmationDelivery()
                       || signatory.emailMobileConfirmationDelivery())))
-          && !signatory.undeliveredInvitation()
-          && !signatory.padDelivery();
+          && !signatory.undeliveredInvitation();
  },
  hasChangeEmailOption: function() {
    var signatory = this.signatory();
