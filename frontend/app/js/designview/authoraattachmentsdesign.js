@@ -245,7 +245,11 @@ window.DesignAuthorAttachmentsPopup = function(args) {
                         function(xhr) {
                           var errorMsg;
                           if (xhr.status == 413) {
-                            errorMsg = localization.fileTooLarge;
+                            if (model.attachments().length > 1) {
+                              errorMsg = localization.authorattachments.tooLargeAttachments;
+                            } else {
+                              errorMsg = localization.authorattachments.tooLargeAttachment;
+                            }
                           } else {
                             errorMsg = localization.authorattachments.invalidAttachments;
                           }
