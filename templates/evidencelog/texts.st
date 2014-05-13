@@ -180,29 +180,169 @@ $else$
   $endif$
 $endif$
 ###
-ProlongDocumentEvidenceText=$ProlongDocumentEvidenceText()$
+ProlongDocumentEvidenceText=
+$if(archive)$
+  $_ProlongDocumentEvidenceTextArchive()$
+$else$
+  $_ProlongDocumentEvidenceTextNotArchive()$
+$endif$
 ###
-RejectDocumentEvidenceText=$RejectDocumentEvidenceText()$
+RejectDocumentEvidenceText=
+$if(full)$
+  $if(archive)$
+    $_RejectDocumentEvidenceTextFullArchive()$
+  $else$
+    $_RejectDocumentEvidenceTextFullNotArchive()$
+  $endif$
+$else$
+  $if(archive)$
+    $_RejectDocumentEvidenceTextSimpleArchive()$
+  $else$
+    $_RejectDocumentEvidenceTextSimpleNotArchive()$
+  $endif$
+$endif$
 ###
-ReminderSendText=$ReminderSendText()$
+ReminderSendText=
+$if(archive)$
+  $if(signing)$
+    $_ReminderSendTextToSignArchive()$
+  $elseif(viewing)$
+    $_ReminderSendTextToReviewArchive()$
+  $endif$
+$else$
+  $if(signing)$
+    $_ReminderSendTextToSignNotArchive()$
+  $elseif(viewing)$
+    $_ReminderSendTextToReviewNotArchive()$
+  $endif$
+$endif$
 ###
 RemovedFromPadDeviceText=The invitation to signatory $signatory$ to sign the document by in-person meeting was withdrawn by $actor$.
 ###
-ResealedPDFText=$ResealedPDFText()$
+ResealedPDFText=
+$if(full)$
+  $if(archive)$
+    $_ResealedPDFTextFullArchive()$
+  $else$
+    $_ResealedPDFTextFullNotArchive()$
+  $endif$
+$endif$
 ###
-RestartDocumentEvidenceText=$RestartDocumentEvidenceText()$
+RestartDocumentEvidenceText=
+$if(full)$
+  $if(archive)$
+    $_RestartDocumentEvidenceTextFullArchive()$
+  $else$
+    $_RestartDocumentEvidenceTextFullNotArchive()$
+  $endif$
+$else$
+  $if(archive)$
+    $_RestartDocumentEvidenceTextSimpleArchive()$
+  $else$
+    $_RestartDocumentEvidenceTextSimpleNotArchive()$
+  $endif$
+$endif$
+###
+SMSPinDeliveredEvidenceText=$_SMSPinDeliveredEvidenceText()$
+###
+SMSPinSendEvidenceText=$_SMSPinSendEvidenceText()$
 ###
 SaveSigAttachmentEvidenceText=The signatory $actor$ uploaded the attachment “$name$” requested by $author$.  The request had the following description: $description$
 ###
-SendToPadDeviceText=The signing invitation for signatory $signatory$ was set by $actor$ to “in-person meeting”. In-person meeting enables $actor$ to present $_TheScriveSystem()$s online interface to sign documents for $signatory$, on a device controlled by $actor$.
+SendToPadDeviceText=The signing invitation for signatory $signatory$ was set by $actor$ to “in-person meeting”. In-person meeting enables $actor$ to present $if(full)$Scrive E-signs$else$Scrives$endif$ online interface to sign documents for $signatory$, on a device controlled by $actor$.
 ###
 SetDocumentInviteTimeEvidenceText=The signing process was started by $actor$.
 ###
-SignDocumentEvidenceText=$SignDocumentEvidenceText()$
+SignDocumentEvidenceText=
+$if(sms_pin)$
+  $if(full)$
+    $if(archive)$
+      $_SignDocumentEvidenceTextFullArchiveSMSPin()$
+    $else$
+      $_SignDocumentEvidenceTextFullNotArchiveSMSPin()$
+    $endif$
+  $else$
+    $if(archive)$
+      $_SignDocumentEvidenceTextSimpleArchiveSMSPin()$
+    $else$
+      $_SignDocumentEvidenceTextSimpleNotArchiveSMSPin()$
+    $endif$
+  $endif$
+$elseif(eleg)$
+  $if(full)$
+    $if(archive)$
+      $_SignDocumentEvidenceTextFullArchiveEleg()$
+    $else$
+      $_SignDocumentEvidenceTextFullNotArchiveEleg()$
+    $endif$
+  $else$
+    $if(archive)$
+      $_SignDocumentEvidenceTextSimpleArchiveEleg()$
+    $else$
+      $_SignDocumentEvidenceTextSimpleNotArchiveEleg()$
+    $endif$
+  $endif$
+$else$
+  $if(full)$
+    $if(archive)$
+      $_SignDocumentEvidenceTextFullArchiveStandard()$
+    $else$
+      $_SignDocumentEvidenceTextFullNotArchiveStandard()$
+    $endif$
+  $else$
+    $if(archive)$
+      $_SignDocumentEvidenceTextSimpleArchiveStandard()$
+    $else$
+      $_SignDocumentEvidenceTextSimpleNotArchiveStandard()$
+    $endif$
+  $endif$
+$endif$
 ###
-SignatoryLinkVisitedText=$SignatoryLinkVisitedText()$
+SignWithELegFailureEvidenceText=
+$if(full)$
+  $_SignWithELegFailureEvidenceTextFull()$
+$else$
+  $_SignWithELegFailureEvidenceTextSimple()$
+$endif$
 ###
-TimeoutDocumentEvidenceText=$TimeoutDocumentEvidenceText()$
+SignatoryLinkVisitedText=
+$if(signing)$
+  $if(archive)$
+    $if(full)$
+      $_SignatoryLinkVisitedTextToSignArchiveFull()$
+    $else$
+      $_SignatoryLinkVisitedTextToSignArchiveSimple()$
+    $endif$
+  $else$
+    $if(full)$
+      $_SignatoryLinkVisitedTextToSignNotArchiveFull()$
+    $else$
+      $_SignatoryLinkVisitedTextToSignNotArchiveSimple()$
+    $endif$
+  $endif$
+$elseif(viewing)$
+  $if(archive)$
+    $if(full)$
+      $_SignatoryLinkVisitedTextToReviewArchiveFull()$
+    $else$
+      $_SignatoryLinkVisitedTextToReviewArchiveSimple()$
+    $endif$
+  $else$
+    $if(full)$
+      $_SignatoryLinkVisitedTextToReviewNotArchiveFull()$
+    $else$
+      $_SignatoryLinkVisitedTextToReviewNotArchiveSimple()$
+    $endif$
+  $endif$
+$endif$
+
+###
+TimeoutDocumentEvidenceText=
+$if(full)$
+  $_TimeoutDocumentEvidenceTextFull()$
+$else$
+  $_TimeoutDocumentEvidenceTextSimple()$
+$endif$
 ###
 UpdateFieldCheckboxEvidenceText=A checkbox was $if(checked)$checked$else$unchecked$endif$ by $actor$.$updatePlacements()$
 ###
