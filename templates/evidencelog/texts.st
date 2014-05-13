@@ -1,12 +1,53 @@
-AttachExtendedSealedFileEvidenceText=$if(full)$$_AttachExtendedSealedFileEvidenceTextFull()$$else$$_AttachExtendedSealedFileEvidenceTextSimple()$$endif$
+AttachExtendedSealedFileEvidenceText=
+$if(full)$
+  $_AttachExtendedSealedFileEvidenceTextFull()$
+$else$
+  $_AttachExtendedSealedFileEvidenceTextSimple()$
+$endif$
 ###
-AttachGuardtimeSealedFileEvidenceText=$if(full)$$_AttachGuardtimeSealedFileEvidenceTextFull()$$else$$_AttachGuardtimeSealedFileEvidenceTextSimple()$$endif$
+AttachGuardtimeSealedFileEvidenceText=
+$if(full)$
+  $_AttachGuardtimeSealedFileEvidenceTextFull()$
+$else$
+  $_AttachGuardtimeSealedFileEvidenceTextSimple()$
+$endif$
 ###
-AttachSealedFileEvidenceText=$if(full)$$if(archive)$$_AttachSealedFileEvidenceTextFullArchive()$$else$$_AttachSealedFileEvidenceTextFullNotArchive()$$endif$$else$$if(archive)$$_AttachSealedFileEvidenceTextSimpleArchive()$$else$$_AttachSealedFileEvidenceTextSimpleNotArchive()$$endif$
+AttachSealedFileEvidenceText=
+$if(full)$
+  $if(archive)$
+    $_AttachSealedFileEvidenceTextFullArchive()$
+  $else$
+    $_AttachSealedFileEvidenceTextFullNotArchive()$
+  $endif$
+$else$
+  $if(archive)$
+    $_AttachSealedFileEvidenceTextSimpleArchive()$
+  $else$
+    $_AttachSealedFileEvidenceTextSimpleNotArchive()$
+  $endif$
+$endif$
 ###
-AutomaticReminderSentText=$if(full)$$_AutomaticReminderSentTextFull()$$else$$_AutomaticReminderSentTextSimple()$$endif$
+AutomaticReminderSentText=
+$if(full)$
+  $_AutomaticReminderSentTextFull()$
+$else$
+  $_AutomaticReminderSentTextSimple()$
+$endif$
 ###
-CancelDocumentEvidenceText=$if(full)$$if(archive)$$_CancelDocumentEvidenceTextFullArchive()$$else$$_CancelDocumentEvidenceTextFullNotArchive()$$endif$$else$$if(archive)$$_CancelDocumentEvidenceTextSimpleArchive()$$else$$_CancelDocumentEvidenceTextSimpleNotArchive()$$endif$
+CancelDocumentEvidenceText=
+$if(full)$
+  $if(archive)$
+    $_CancelDocumentEvidenceTextFullArchive()$
+  $else$
+    $_CancelDocumentEvidenceTextFullNotArchive()$
+  $endif$
+$else$
+  $if(archive)$
+    $_CancelDocumentEvidenceTextSimpleArchive()$
+  $else$
+    $_CancelDocumentEvidenceTextSimpleNotArchive()$
+  $endif$
+$endif$
 ###
 ChangeSignatoryEmailWhenUndeliveredEvidenceText=The email address for the signatory was changed from $oldemail$ to $newemail$ by $actor$.
 ###
@@ -18,19 +59,126 @@ DeleteSigAttachmentEvidenceText=The attachment “$name$” previously uploaded 
 ###
 ErrorSealingDocumentEvidenceText=Due to a system error Scrive E-sign failed to finalise the document, i.e. failed to include the Verification Page, Evidence Log, Evidence of Intent, Evidence Documentation and Digital Signature Documentation into the document before sealing the Evidence Package (as defined in the Evidence Documentation) with a digital signature.
 ###
-InvitationDeliveredByEmailText=$InvitationDeliveredByEmailText()$
+InvitationDeliveredByEmailText=
+$if(full)$
+  $if(signing)$
+    $_InvitationDeliveredByEmailTextToSignFull()$
+  $elseif(viewing)$
+    $_InvitationDeliveredByEmailTextToReviewFull()$
+  $endif$
+$else$
+  $if(signing)$
+    $_InvitationDeliveredByEmailTextToSignSimple()$
+  $elseif(viewing)$
+    $_InvitationDeliveredByEmailTextToReviewSimple()$
+  $endif$
+$endif$
 ###
-InvitationDeliveredBySMSText=$InvitationDeliveredBySMSText()$
+InvitationDeliveredBySMSText=
+$if(full)$
+  $if(signing)$
+    $_InvitationDeliveredBySMSTextToSignFull()$
+  $elseif(viewing)$
+    $_InvitationDeliveredBySMSTextToReviewFull()$
+  $endif$
+$else$
+  $if(signing)$
+    $_InvitationDeliveredBySMSTextToSignSimple()$
+  $elseif(viewing)$
+    $_InvitationDeliveredBySMSTextToReviewSimple()$
+  $endif$
+$endif$
 ###
-InvitationEvidenceText=$InvitationEvidenceText()$
+InvitationEvidenceText=
+$if(signing)$
+  $if(archive)$
+    $if(full)$
+      $_InvitationEvidenceTextToSignArchiveFull()$
+    $else$
+      $_InvitationEvidenceTextToSignArchiveSimple()$
+    $endif$
+  $else$
+    $if(full)$
+      $_InvitationEvidenceTextToSignNotArchiveFull()$
+    $else$
+      $_InvitationEvidenceTextToSignNotArchiveSimple()$
+    $endif$
+  $endif$
+$elseif(viewing)$
+  $if(archive)$
+    $if(full)$
+      $_InvitationEvidenceTextToReviewArchiveFull()$
+    $else$
+      $_InvitationEvidenceTextToReviewArchiveSimple()$
+    $endif$
+  $else$
+    $if(full)$
+      $_InvitationEvidenceTextToReviewNotArchiveFull()$
+    $else$
+      $_InvitationEvidenceTextToReviewNotArchiveSimple()$
+    $endif$
+  $endif$
+$endif$
 ###
-InvitationUndeliveredByEmailText=$InvitationUndeliveredByEmailText()$
+InvitationUndeliveredByEmailText=
+$if(full)$
+  $if(archive)$
+    $_InvitationUndeliveredByEmailTextFullArchive()$
+  $else$
+    $_InvitationUndeliveredByEmailTextFullNotArchive()$
+  $endif$
+$else$
+  $if(archive)$
+    $_InvitationUndeliveredByEmailTextSimpleArchive()$
+  $else$
+    $_InvitationUndeliveredByEmailTextSimpleNotArchive()$
+  $endif$
+$endif$
 ###
-InvitationUndeliveredBySMSText=$InvitationUndeliveredBySMSText()$
+InvitationUndeliveredBySMSText=
+$if(full)$
+  $if(archive)$
+    $_InvitationUndeliveredBySMSTextFullArchive()$
+  $else$
+    $_InvitationUndeliveredBySMSTextFullNotArchive()$
+  $endif$
+$else$
+  $if(archive)$
+    $_InvitationUndeliveredBySMSTextSimpleArchive()$
+  $else$
+    $_InvitationUndeliveredBySMSTextSimpleNotArchive()$
+  $endif$
+$endif$
 ###
-MarkInvitationReadEvidenceText=$MarkInvitationReadEvidenceText()$
+MarkInvitationReadEvidenceText=
+$if(full)$
+  $if(signing)$
+    $_MarkInvitationReadEvidenceTextToSignFull()$
+  $elseif(viewing)$
+    $_MarkInvitationReadEvidenceTextToReviewFull()$
+  $endif$
+$else$
+  $if(signing)$
+    $_MarkInvitationReadEvidenceTextToSignSimple()$
+  $elseif(viewing)$
+    $_MarkInvitationReadEvidenceTextToReviewSimple()$
+  $endif$
+$endif$
 ###
-PreparationToPendingEvidenceText=$PreparationToPendingEvidenceText()$
+PreparationToPendingEvidenceText=
+$if(full)$
+  $if(archive)$
+    $_PreparationToPendingEvidenceTextFullArchive()$
+  $else$
+    $_PreparationToPendingEvidenceTextFullNotArchive()$
+  $endif$
+$else$
+  $if(archive)$
+    $_PreparationToPendingEvidenceTextSimpleArchive()$
+  $else$
+    $_PreparationToPendingEvidenceTextSimpleNotArchive()$
+  $endif$
+$endif$
 ###
 ProlongDocumentEvidenceText=$ProlongDocumentEvidenceText()$
 ###
