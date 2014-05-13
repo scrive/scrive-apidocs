@@ -985,7 +985,7 @@
 "_toFilter":"To:",
 "_toNoSpaces":"to",
 "_tooLargeAttachment":"The file exceeds the maximum size of 10 MB. Try to make it smaller.",
-"_tooLargeAttachments":"The files exceed the maximum size of 10 MB. Try one file at a time.",
+"_tooLargeAttachments":"The files exceed the maximum size of 10 MB. Try with one file at a time.",
 "_tooltipcancelled":"Withdrawn",
 "_tooltipdelivered":"Delivered",
 "_tooltipdeliveryproblem":"Delivery problem",
