@@ -197,21 +197,21 @@ var AdminUserDetailsView = Backbone.View.extend({
       var languages = [
           {name: localization.account.accountSecurity.langEN, value: "en"}
         , {name: localization.account.accountSecurity.langSV, value: "sv"}
-        , {name: localization.account.accountSecurity.langDE, value: "de"}
-        , {name: localization.account.accountSecurity.langFR, value: "fr"}
-        , {name: localization.account.accountSecurity.langIT, value: "it"}
-        , {name: localization.account.accountSecurity.langES, value: "es"}
-        , {name: localization.account.accountSecurity.langPT, value: "pt"}
-        , {name: localization.account.accountSecurity.langNL, value: "nl"}
-        , {name: localization.account.accountSecurity.langDA, value: "da"}
-        , {name: localization.account.accountSecurity.langNO, value: "no"}
+        , {name: localization.account.accountSecurity.langDE, value: "de", hidden: true}
+        , {name: localization.account.accountSecurity.langFR, value: "fr", hidden: true}
+        , {name: localization.account.accountSecurity.langIT, value: "it", hidden: true}
+        , {name: localization.account.accountSecurity.langES, value: "es", hidden: true}
+        , {name: localization.account.accountSecurity.langPT, value: "pt", hidden: true}
+        , {name: localization.account.accountSecurity.langNL, value: "nl", hidden: true}
+        , {name: localization.account.accountSecurity.langDA, value: "da", hidden: true}
+        , {name: localization.account.accountSecurity.langNO, value: "no", hidden: true}
       ]
       var lname = _.findWhere(languages, {value :model.lang()}).name;
 
       this.langselect = new Select({
                              name : lname,
                              onSelect : function(v) {model.setLang(v); self.langselect.el().replaceWith(self.langSelect().el()); return true;},
-                             options: _.filter(languages, function(l) { return l.value !=  model.lang();}),
+                             options: _.filter(languages, function(l) { return l.value !=  model.lang() && !l.hidden;}),
                              textWidth : "203px",
                              optionsWidth : "230px"
                            });

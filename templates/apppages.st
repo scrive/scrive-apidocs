@@ -445,14 +445,14 @@ langSwitcher=
                    var languages = [
                       {value : "en", name : "$_EnglishInEnglish()$"}
                     , {value : "sv", name : "$_SwedishInSwedish()$"}
-                    , {value : "de", name : "$_GermanInGerman()$"}
-                    , {value : "fr", name : "$_FrenchInFrench()$"}
-                    , {value : "it", name : "$_ItalianInItalian()$"}
-                    , {value : "es", name : "$_SpanishInSpanish()$"}
-                    , {value : "pt", name : "$_PortugueseInPortuguese()$"}
-                    , {value : "nl", name : "$_DutchInDutch()$"}
-                    , {value : "da", name : "$_DanishInDanish()$"}
-                    , {value : "no", name : "$_NorwegianInNorwegian()$"}
+                    , {value : "de", name : "$_GermanInGerman()$", hidden : true}
+                    , {value : "fr", name : "$_FrenchInFrench()$", hidden : true}
+                    , {value : "it", name : "$_ItalianInItalian()$", hidden : true}
+                    , {value : "es", name : "$_SpanishInSpanish()$", hidden : true}
+                    , {value : "pt", name : "$_PortugueseInPortuguese()$", hidden : true}
+                    , {value : "nl", name : "$_DutchInDutch()$", hidden : true}
+                    , {value : "da", name : "$_DanishInDanish()$", hidden : true}
+                    , {value : "no", name : "$_NorwegianInNorwegian()$", hidden : true}
                    ]
                    var lname = _.findWhere(languages, {value : "$langcode$"}).name;
 
@@ -461,7 +461,7 @@ langSwitcher=
                                               textWidth: 80,
                                               border: "none",
                                               onSelect : function(v) {changeLang(v);},
-                                              options: _.filter(languages, function(l) { return l.value != "$langcode$"; })
+                                              options: _.filter(languages, function(l) { return l.value != "$langcode$" && !l.hidden; })
                                  })
                    jQuery('.langSwitcher').append(select.el());
               })

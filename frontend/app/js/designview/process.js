@@ -126,14 +126,14 @@ define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_the
             var languages = [
                 {name: localization.languages.en, value: "en"}
               , {name: localization.languages.sv, value: "sv"}
-              , {name: localization.languages.de, value: "de"}
-              , {name: localization.languages.fr, value: "fr"}
-              , {name: localization.languages.it, value: "it"}
-              , {name: localization.languages.es, value: "es"}
-              , {name: localization.languages.pt, value: "pt"}
-              , {name: localization.languages.nl, value: "nl"}
-              , {name: localization.languages.da, value: "da"}
-              , {name: localization.languages.no, value: "no"}
+              , {name: localization.languages.de, value: "de", hidden : true}
+              , {name: localization.languages.fr, value: "fr", hidden : true}
+              , {name: localization.languages.it, value: "it", hidden : true}
+              , {name: localization.languages.es, value: "es", hidden : true}
+              , {name: localization.languages.pt, value: "pt", hidden : true}
+              , {name: localization.languages.nl, value: "nl", hidden : true}
+              , {name: localization.languages.da, value: "da", hidden : true}
+              , {name: localization.languages.no, value: "no", hidden : true}
             ]
             var lname = _.findWhere(languages, {value :lang}).name;
 
@@ -144,7 +144,7 @@ define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_the
             var label = $("<div class='design-view-action-process-left-column-language-label''/>").text(labelText);
 
             var select = new Select({
-                options: _.filter(languages, function(l) { return l.value !=  lang;}),
+                options: _.filter(languages, function(l) { return l.value !=  lang && !l.hidden;}),
                 textWidth: "130px",
                 name: lname,
                 cssClass : 'design-view-action-process-left-column-language-field',
