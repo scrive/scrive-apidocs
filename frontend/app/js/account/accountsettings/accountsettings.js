@@ -133,7 +133,7 @@ var AccountSettingsModel = Backbone.Model.extend({
       , newemail : ""
       , newemailagain : ""
       , phone : this.user().phone()
-      , lang :  this.user().lang() == "de" ? "de" : (this.user().lang() != "sv" ?  "en" : "sv")
+      , lang :  this.user().lang() ||  "en"
       , companyname :     this.company().companyname()
       , companynumber :   this.company().companynumber()
       , companyposition : this.user().companyposition()
@@ -301,28 +301,24 @@ var AccountSettingsView = Backbone.View.extend({
     langSelect : function() {
       var self = this;
       var model = this.model;
-      var name = localization.account.accountSecurity.langSV;
-      if (model.lang() == "en")
-        name = localization.account.accountSecurity.langEN;
-      else if (model.lang() == "de")
-        name = localization.account.accountSecurity.langDE;
 
-      var enOption = {name: localization.account.accountSecurity.langEN, value: "en"}
-      var svOption = {name: localization.account.accountSecurity.langSV, value: "sv"}
-      var deOption = {name: localization.account.accountSecurity.langDE, value: "de"}
-
-      var options = [];
-      if (model.lang() == "en")
-        options = [svOption,deOption];
-      else if (model.lang() == "de")
-        options = [enOption,svOption];
-      else
-        options = [enOption,deOption];
-
+      var languages = [
+          {name: localization.account.accountSecurity.langEN, value: "en"}
+        , {name: localization.account.accountSecurity.langSV, value: "sv"}
+        , {name: localization.account.accountSecurity.langDE, value: "de"}
+        , {name: localization.account.accountSecurity.langFR, value: "fr"}
+        , {name: localization.account.accountSecurity.langIT, value: "it"}
+        , {name: localization.account.accountSecurity.langES, value: "es"}
+        , {name: localization.account.accountSecurity.langPT, value: "pt"}
+        , {name: localization.account.accountSecurity.langNL, value: "nl"}
+        , {name: localization.account.accountSecurity.langDA, value: "da"}
+        , {name: localization.account.accountSecurity.langNO, value: "no"}
+      ]
+      var lname = _.findWhere(languages, {value : model.lang()}).name;
       this.langselect = new Select({
-                             name : name,
+                             name : lname,
                              onSelect : function(v) {model.setLang(v); self.langselect.el().replaceWith(self.langSelect().el()); return true;},
-                             options:  options,
+                             options: _.filter(languages, function(l) { return l.value !=  model.lang();}),
                              textWidth : "213px",
                              optionsWidth : "240px"
                            });

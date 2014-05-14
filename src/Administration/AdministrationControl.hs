@@ -424,7 +424,7 @@ handleCreateUser = onlySalesOrAdmin $ do
     fstname <- guardJustM $ getField "fstname"
     sndname <- guardJustM $ getField "sndname"
     custommessage <- getField "custommessage"
-    lang <- guardJustM $ readField "lang"
+    lang <- guardJustM $ join <$> fmap langFromCode <$> getField "lang"
     company <- dbUpdate $ CreateCompany
     muser <- createNewUserByAdmin email (fstname, sndname) custommessage (companyid company, True) lang
     when (isNothing muser) $
@@ -445,7 +445,7 @@ handleCreateCompanyUser companyid = onlySalesOrAdmin $ do
   sndname <- getCriticalField asValidName "sndname"
   custommessage <- joinEmpty <$> getField "custommessage"
   Log.mixlog_ $ "Custom message when creating an account " ++ show custommessage
-  lang <- guardJustM $ readField "lang"
+  lang <- guardJustM $ join <$> fmap langFromCode <$> getField "lang"
   admin <- isFieldSet "iscompanyadmin"
   muser <- createNewUserByAdmin email (fstname, sndname) custommessage (companyid, admin) lang
   when (isNothing muser) $
@@ -477,7 +477,7 @@ getCompanyInfoChange = do
 {- | Reads params and returns function for conversion of user settings.  No param leaves fields unchanged -}
 getUserSettingsChange :: Kontrakcja m => m (UserSettings -> UserSettings)
 getUserSettingsChange = do
-  mlang <- readField "userlang"
+  mlang <- join <$> fmap langFromCode <$> getField "userlang"
   return $ \settings -> settings {
      lang = fromMaybe (lang settings) mlang
   }

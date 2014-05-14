@@ -95,10 +95,10 @@ documentJSON muser includeEvidenceAttachments forapi forauthor pq msl doc = do
       J.value "showfooter" $ documentshowfooter doc
       J.value "invitationmessage" $ documentinvitetext doc
       J.value "confirmationmessage" $ documentconfirmtext doc
-      J.value "lang" $  case (getLang doc) of
+      J.value "lang" $  case (getLang doc) of -- We keep some old lang codes for old integrations. We should drop it on new API release
                              LANG_EN -> "gb"
                              LANG_SV -> "sv"
-                             LANG_DE -> "de"
+                             l -> codeFromLang l
       J.objects "tags" $ for (Set.toList $ documenttags doc) $ \(DocumentTag n v) -> do
                                     J.value "name"  n
                                     J.value "value" v

@@ -229,7 +229,7 @@ sendNewCompanyUserMail :: Kontrakcja m => User -> Company -> User -> m ()
 sendNewCompanyUserMail inviter company user = do
   ctx <- getContext
   companyui <- dbQuery $ GetCompanyUI (companyid company)
-  al <- newUserAccountRequestLink (ctxlang ctx) (userid user) CompanyInvitation
+  al <- newUserAccountRequestLink (lang $ usersettings user) (userid user) CompanyInvitation
   mail <- mailNewCompanyUserInvite ctx user inviter company companyui al
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = getFullName user, email = getEmail user }]}
   return ()

@@ -354,7 +354,7 @@ handlePostSignSignup email fn ln cnm cnr = do
     (Just user, Nothing) -> do
       -- there is an existing user that hasn't been activated
       -- return the existing link
-      l <- newUserAccountRequestLink lang (userid user) BySigning
+      l <- newUserAccountRequestLink (lang $ usersettings user) (userid user) BySigning
       return $ Just l
     (Nothing, Nothing) -> do
       -- this email address is new to the system, so create the user

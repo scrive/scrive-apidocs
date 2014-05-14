@@ -236,7 +236,7 @@ renderTemplateAsPage ctx templateName showCreateAccount f = do
   renderTemplate templateName $ do
     contextInfoFields ctx
     mainLinksFields $ ctxlang ctx
-    langSwitcherFields ctx
+    F.value "langcode" $ codeFromLang $ ctxlang ctx
     F.value "showCreateAccount" $ showCreateAccount && (isNothing $ ctxmaybeuser ctx)
     F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
     F.object "analytics" $ analyticsTemplates ad
@@ -246,7 +246,7 @@ standardPageFields :: TemplatesMonad m => Context -> String -> AnalyticsData -> 
 standardPageFields ctx title ad = do
   F.value "title" title
   mainLinksFields $ ctxlang ctx
-  langSwitcherFields ctx
+  F.value "langcode" $ codeFromLang $ ctxlang ctx
   contextInfoFields ctx
   F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
   F.object "analytics" $ analyticsTemplates ad
@@ -295,12 +295,6 @@ mainLinksFields lang = do
   F.value "linkissue"            $ show LinkArchive
   F.value "linklogin"            $ show (LinkLogin lang LoginTry)
   F.value "linklogout"           $ show LinkLogout
-
-langSwitcherFields :: Monad m => Context -> Fields m ()
-langSwitcherFields Context{ctxlang} = do
-  F.value "langswedish" $ getLang ctxlang == LANG_SV
-  F.value "langenglish" $ getLang ctxlang == LANG_EN
-  F.value "langgerman"  $ getLang ctxlang == LANG_DE
 
 {- |
    Defines some standard context information as fields handy for substitution

@@ -122,13 +122,21 @@ define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_the
 
             var labelText = localization.designview.recipientsLanguage;
 
-            var languageText = {
-                en : {name: localization.languages.en, value: 'en'},
-                sv : {name: localization.languages.sv, value: 'sv'},
-                de : {name: localization.languages.de, value: 'de'}
-            };
 
-            var languages = ['sv', 'en', 'de'];
+            var languages = [
+                {name: localization.languages.en, value: "en"}
+              , {name: localization.languages.sv, value: "sv"}
+              , {name: localization.languages.de, value: "de"}
+              , {name: localization.languages.fr, value: "fr"}
+              , {name: localization.languages.it, value: "it"}
+              , {name: localization.languages.es, value: "es"}
+              , {name: localization.languages.pt, value: "pt"}
+              , {name: localization.languages.nl, value: "nl"}
+              , {name: localization.languages.da, value: "da"}
+              , {name: localization.languages.no, value: "no"}
+            ]
+            var lname = _.findWhere(languages, {value :lang}).name;
+
 
             var div = $("<div class='design-view-action-process-left-column-language'/>");
 
@@ -136,11 +144,9 @@ define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_the
             var label = $("<div class='design-view-action-process-left-column-language-label''/>").text(labelText);
 
             var select = new Select({
-                options: _.map(languages, function(e) {
-                    return languageText[e];
-                }),
+                options: _.filter(languages, function(l) { return l.value !=  lang;}),
                 textWidth: "130px",
-                name: languageText[lang].name,
+                name: lname,
                 cssClass : 'design-view-action-process-left-column-language-field',
                 onSelect: function(v) {
                     mixpanel.track('Select language',
@@ -151,7 +157,7 @@ define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_the
             });
 
             doc.bind('change:lang', function() {
-                select.setName(languageText[doc.lang().simpleCode()].name);
+              select.setName(_.findWhere(languages, {value : doc.lang().simpleCode()}).name);
             });
 
             return div.append(label).append(select.el());

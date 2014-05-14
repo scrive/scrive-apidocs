@@ -31,12 +31,19 @@ var newUserInCompanyButton = function(companyid) {
 
               var tr6 = jQuery("<tr/>").append(jQuery("<td/>").text("Language:"));
               var lang = jQuery("<select name='lang'>"
-                                  + '<option $if(user.langen)$selected=""$endif$ value="LANG_SV">Sweden (Swedish)</option>'
-                                  + '<option $if(user.langsv)$selected=""$endif$ value="LANG_EN">Britain (English)</option>'
+                                  + '<option value="sv">Swedish</option>'
+                                  + '<option value="en">Britain</option>'
+                                  + '<option value="de">German</option>'
+                                  + '<option value="fr">French</option>'
+                                  + '<option value="nl">Dutch</option>'
+                                  + '<option value="it">Italian</option>'
+                                  + '<option value="no">Norwegian</option>'
+                                  + '<option value="pt">Portuguese</option>'
+                                  + '<option value="es">Spanish</option>'
+                                  + '<option value="da">Danish</option>'
                                   + "</select>");
               tr6.append(jQuery("<td/>").append(lang));
               table.append(tr6);
-
               var tr7 = jQuery("<tr/>").append(jQuery("<td/>").text("Is company admin:"));
               var isadmin = jQuery("<input type='checkbox' name='isadmin' autocomplete='off' />");
               tr7.append(jQuery("<td/>").append(isadmin));

@@ -250,7 +250,7 @@ isUserDeletable user = do
 sendNewUserMail :: Kontrakcja m => User -> m ()
 sendNewUserMail user = do
   ctx <- getContext
-  al <- newUserAccountRequestLink (ctxlang ctx) (userid user) AccountRequest
+  al <- newUserAccountRequestLink (lang $ usersettings user) (userid user) AccountRequest
   mail <- newUserMail ctx (getEmail user) (getSmartName user) al
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = getSmartName user, email = getEmail user }]}
   return ()
@@ -262,7 +262,7 @@ createNewUserByAdmin email names custommessage companyandrole lang = do
     case muser of
          Just user -> do
              let fullname = composeFullName names
-             chpwdlink <- newUserAccountRequestLink (ctxlang ctx) (userid user) ByAdmin
+             chpwdlink <- newUserAccountRequestLink (lang $ usersettings user) (userid user) ByAdmin
              mail <- mailNewAccountCreatedByAdmin ctx (getLang user) fullname email chpwdlink custommessage
              scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = fullname, email = email }]}
              return muser

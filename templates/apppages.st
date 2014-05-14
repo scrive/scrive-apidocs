@@ -317,7 +317,7 @@ postPageCode=
   </noscript>
 
 ###
-langprefix=$if(langenglish)$/en/$elseif(langgerman)$/de/$else$/sv/$endif$
+langprefix=/$langcode$/
 ####
 header=
 $if(logged)$
@@ -442,16 +442,27 @@ langSwitcher=
                         Language.changeForPageAndReload(l);
                       $endif$
                    }
-                   var select = new Select({  name : $if(langswedish)$ "$_SwedishInSwedish()$" $else$ "$_EnglishInEnglish()$" $endif$,
-		                              cssClass: "change-language",
+                   var languages = [
+                      {value : "en", name : "$_EnglishInEnglish()$"}
+                    , {value : "sv", name : "$_SwedishInSwedish()$"}
+                    , {value : "de", name : "$_GermanInGerman()$"}
+                    , {value : "fr", name : "$_FrenchInFrench()$"}
+                    , {value : "it", name : "$_ItalianInItalian()$"}
+                    , {value : "es", name : "$_SpanishInSpanish()$"}
+                    , {value : "pt", name : "$_PortugueseInPortuguese()$"}
+                    , {value : "nl", name : "$_DutchInDutch()$"}
+                    , {value : "da", name : "$_DanishInDanish()$"}
+                    , {value : "no", name : "$_NorwegianInNorwegian()$"}
+                   ]
+                   var lname = _.findWhere(languages, {value : "$langcode$"}).name;
+
+                   var select = new Select({  name : lname,
+                                              cssClass: "change-language",
                                               textWidth: 80,
                                               border: "none",
-                                              options: [ $if(langswedish)$
-                                                               {name: "$_EnglishInEnglish()$", value: "en", onSelect : function() {changeLang("en");}}
-                                                         $else$
-                                                               {name: "$_SwedishInSwedish()$", value: "sv", onSelect : function() {changeLang("sv");} }
-                                                         $endif$
-                                                ]})
+                                              onSelect : function(v) {changeLang(v);},
+                                              options: _.filter(languages, function(l) { return l.value != "$langcode$"; })
+                                 })
                    jQuery('.langSwitcher').append(select.el());
               })
 });

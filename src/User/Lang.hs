@@ -23,6 +23,13 @@ import Happstack.Server
 data Lang = LANG_SV
           | LANG_EN
           | LANG_DE
+          | LANG_FR
+          | LANG_IT
+          | LANG_ES
+          | LANG_PT
+          | LANG_NL
+          | LANG_DA
+          | LANG_NO
   deriving (Bounded, Enum, Show, Read, Ord, Eq)
 
 instance HasDefaultValue Lang where
@@ -39,11 +46,18 @@ instance FromSQL Lang where
   fromSQL mbase = do
     n <- fromSQL mbase
     case n :: Int16 of
-      1 -> return LANG_SV
-      2 -> return LANG_EN
-      3 -> return LANG_DE
-      _ -> E.throwIO $ RangeError {
-        reRange = [(1, 3)]
+      1  -> return LANG_SV
+      2  -> return LANG_EN
+      3  -> return LANG_DE
+      4  -> return LANG_FR
+      5  -> return LANG_IT
+      6  -> return LANG_ES
+      7  -> return LANG_PT
+      8  -> return LANG_NL
+      9  -> return LANG_DA
+      10 -> return LANG_NO
+      _  -> E.throwIO $ RangeError {
+        reRange = [(1, 10)]
       , reValue = n
       }
 
@@ -52,11 +66,26 @@ instance ToSQL Lang where
   toSQL LANG_SV = toSQL (1::Int16)
   toSQL LANG_EN = toSQL (2::Int16)
   toSQL LANG_DE = toSQL (3::Int16)
+  toSQL LANG_FR = toSQL (4::Int16)
+  toSQL LANG_IT = toSQL (5::Int16)
+  toSQL LANG_ES = toSQL (6::Int16)
+  toSQL LANG_PT = toSQL (7::Int16)
+  toSQL LANG_NL = toSQL (8::Int16)
+  toSQL LANG_DA = toSQL (9::Int16)
+  toSQL LANG_NO = toSQL (10::Int16)
+
 
 codeFromLang :: Lang -> String
 codeFromLang LANG_SV = "sv"
 codeFromLang LANG_EN = "en"
 codeFromLang LANG_DE = "de"
+codeFromLang LANG_FR = "fr"
+codeFromLang LANG_IT = "it"
+codeFromLang LANG_ES = "es"
+codeFromLang LANG_PT = "pt"
+codeFromLang LANG_NL = "nl"
+codeFromLang LANG_DA = "da"
+codeFromLang LANG_NO = "no"
 
 langFromCode :: String -> Maybe Lang
 langFromCode s = find ((== s) . codeFromLang) allValues

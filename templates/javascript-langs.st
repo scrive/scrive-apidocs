@@ -260,6 +260,13 @@ javascriptLocalisation =
                 en : "$_English()$"
               , sv : "$_Swedish()$"
               , de : "$_German()$"
+              , fr : "$_French()$"
+              , it : "$_Italian()$"
+              , es : "$_Spanish()$"
+              , pt : "$_Portuguese()$"
+              , nl : "$_Dutch()$"
+              , da : "$_Danish()$"
+              , no : "$_Norwegian()$"
             }
          , csv : {
                 title : "$_dialogCsvupload1Head()$"
@@ -1030,6 +1037,13 @@ javascriptLocalisation =
               , langSV          : "$_SwedishInSwedish()$"
               , langEN          : "$_EnglishInEnglish()$"
               , langDE          : "$_GermanInGerman()$"
+              , langFR          : "$_FrenchInFrench()$"
+              , langIT          : "$_ItalianInItalian()$"
+              , langES          : "$_SpanishInSpanish()$"
+              , langPT          : "$_PortugueseInPortuguese()$"
+              , langNL          : "$_DutchInDutch()$"
+              , langDA          : "$_DanishInDanish()$"
+              , langNO          : "$_NorwegianInNorwegian()$"
             }
           , companySettings : "$_CompanySettings()$"
           , companyAccounts : {

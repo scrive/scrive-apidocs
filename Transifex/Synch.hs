@@ -120,7 +120,7 @@ diff user password lang resource = do
 
 fix :: IO ()
 fix = do
-  forM_ ["en","sv","de"] $ \l -> do
+  forM_ ["en","sv","de","fr","it","es","pt","nl","da","no"] $ \l -> do
     fix' l Texts
     fix' l Events
     fix' l Questionnaire

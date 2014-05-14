@@ -11,6 +11,9 @@ window.Language = {
     current : function() {
        return localization.code;
     },
+    availableCodes : function() {
+      return ["en","sv","de","fr","it","es","pt","nl","da","no"]
+    },
     changeOnCurrentPage : function(code,callback) {
        if (code == Language.current) {
         if (callback != undefined) callback();
@@ -28,7 +31,8 @@ window.Language = {
     },
     changeForPageAndReload : function(code) {
         var p = window.location.pathname;
-        if (p.substring(0, 3) == "/en" || p.substring(0, 3) == "/sv") {
+        var hasLangPrefix = _.any(Language.availableCodes(), function(c) {return p.substring(0, 3) == ('/'+ c);});
+        if (hasLangPrefix) {
             p = "/" + code + p.substr(3);
             window.location.pathname = p;
         } else
