@@ -163,7 +163,7 @@ var CompanyAccountsModel = Backbone.Model.extend({
                                   rejectText: localization.cancel,
                                   title: localization.account.companyAccounts.resendModalTitle,
                                   icon: '/img/modal-icons/remind.png',
-                                  content: $("<p/>").text(localization.account.companyAccounts.resendModalBody + self.userFullName(user) + "?")
+                                  content: $("<p/>").text(localization.account.companyAccounts.resendModalBody + self.userFullName(user) + ".")
                                 });
                               };
                               icon.click(popupResendConfirmation);
