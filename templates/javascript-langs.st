@@ -184,6 +184,7 @@ javascriptLocalisation =
 
             , process : {
                sendbuttontext: "$_contractsendbuttontext()$",
+               changesignatorybuttontext: "$_changeSignatoryButtonText()$",
                startsigningbuttontext: "$_contractstartsigningbuttontext()$",
                confirmsendtext: "$_contractconfirmsendtext()$",
                confirmstartsigningtext: "$_contractconfirmstartsigningtext()$",

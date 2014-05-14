@@ -64,7 +64,7 @@ window.PadGiveToNextSignatoryView = Backbone.View.extend({
                                 size: "tiny",
                                 color : "green",
                                 style: "display:inline-block;margin-left: 10px" ,
-                                text : localization.process.sendbuttontext,
+                                text : localization.process.changesignatorybuttontext,
                                 onClick : function() {
                                     model.giveForSigning();
                                     return false;
