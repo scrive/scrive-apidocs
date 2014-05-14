@@ -1042,7 +1042,7 @@
 "_withoutConfirmation":"utan bekräftelse",
 "_you":"du",
 "_youCancelledSigning":"Åtgärden avbruten. Vänligen välj e-legitimation igen.",
-"_youCantCancelThisDocuments":"Du kan inte återkalla valda dokument.",
+"_youCantCancelThisDocuments":"Några av de valda dokumenten kan inte återkallas.",
 "_youCantSendRemindersToThisDocuments":"Det går inte att skicka påminnelser för några av de valda dokumenten.",
 "_yourSigningPluginFailed":"Din signerings-plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör.",
 "_zip":"Postnummer"
