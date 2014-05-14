@@ -176,7 +176,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
               _.each(document.signatoriesThatCanSignNowOnPad(),function(sig) {
                 if (sig != model.padNextSignatory())
                 options.push({
-                  name: (sig.smartname() != "" ? sig.smartname() : localization.pad.notNamedParty),
+                  name: (sig.smartname().trim() !== '' ? sig.smartname() : sig.nameInDocument()),
                   onSelect : function() {model.setPadNextSignatory(sig); return true;}
                 });
               });

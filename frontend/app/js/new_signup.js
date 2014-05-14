@@ -114,7 +114,7 @@ define(['Backbone', 'legacy_code'], function() {
         var signupButton = new Button({
             size: 'big',
             color : 'green',
-            text: localization.signup + " ›",
+            text: localization.signup,
             onClick: function() {
               self.clearValidationMessages();
               if (emailInput.value().validate(new EmailValidation({callback: self.validationCallback, message: localization.validation.wrongEmail})))
@@ -187,7 +187,7 @@ define(['Backbone', 'legacy_code'], function() {
         var signupButton = new Button({
             size  : 'tiny',
             color : model.buttoncolorclass(),
-            text: localization.signup + " ›",
+            text: localization.signup,
             style : "width:245px;",
             onClick: function() {
               self.clearValidationMessages();

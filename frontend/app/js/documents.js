@@ -863,8 +863,12 @@ window.DocumentDataFiller = {
             }
             else
             {
-                unsignedparty.push(signatories[i].smartname());
-                unsignedpartynotcurrent.push(signatories[i].smartname());
+                var name = signatories[i].smartname();
+                if (name.trim() === '') {
+                  name = signatories[i].nameInDocument();
+                }
+                unsignedparty.push(name);
+                unsignedpartynotcurrent.push(name);
             }
 
         var escapeHTML = function(s) {
