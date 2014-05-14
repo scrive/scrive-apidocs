@@ -17,7 +17,8 @@ import Control.Monad.Trans
 import Control.Monad.Trans.Control
 import Control.Concurrent
 import Control.Monad.Reader
-import Control.Monad.State
+import qualified Control.Monad.State.Strict as Strict
+import qualified Control.Monad.State.Lazy as Lazy
 import Data.Maybe
 import Network.AWS.Authentication
 import qualified MemCache
@@ -99,7 +100,10 @@ instance FilterMonad Response m => FilterMonad Response (AmazonMonadT m) where
 instance (Monad m, AmazonMonad m) => AmazonMonad (ReaderT r m) where
     getAmazonConfig = lift getAmazonConfig
 
-instance (Monad m, AmazonMonad m) => AmazonMonad (StateT s m) where
+instance (Monad m, AmazonMonad m) => AmazonMonad (Strict.StateT s m) where
+    getAmazonConfig = lift getAmazonConfig
+
+instance (Monad m, AmazonMonad m) => AmazonMonad (Lazy.StateT s m) where
     getAmazonConfig = lift getAmazonConfig
 
 runAmazonMonadT :: Monad m => AmazonConfig -> AmazonMonadT m a -> m a
