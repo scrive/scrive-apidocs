@@ -120,7 +120,7 @@ diff user password lang resource = do
 
 fix :: IO ()
 fix = do
-  forM_ ["en","sv","de","fr","it","es","pt","nl","da","no"] $ \l -> do
+  forM_ allLangs $ \l -> do
     fix' l Texts
     fix' l Events
     fix' l Questionnaire
@@ -139,6 +139,7 @@ fix = do
                           putStrLn $ "Language "++ lang ++ " resource "++ show resource ++" fixed."
 
 
+
 main :: IO ()
 main = main' =<< getArgs
 
@@ -152,9 +153,13 @@ main' ("diff":_)   = error "Invalid parameters. Usage: transifex.sh diff user pa
 main' ("merge":(user:(password:(lang:("texts":_))))) = merge user password lang Texts
 main' ("merge":(user:(password:(lang:("events":_))))) = merge user password lang Events
 main' ("merge":(user:(password:(lang:("questionnaire":_))))) = merge user password lang Questionnaire
-main' ("merge":_)  = error "Invalid parameters. Usage: transifex.sh merge user password lang"
+main' ("merge":_)  = error "Invalid parameters. Usage: transifex.sh merge user password lang resource"
 main' ("push":(user:(password:(lang:("texts":_)))))  = push user password lang Texts
 main' ("push":(user:(password:(lang:("events":_)))))  = push user password lang Events
 main' ("push":(user:(password:(lang:("questionnaire":_)))))  = push user password lang Questionnaire
-main' ("push":_)   = error "Invalid parameters. Usage: transifex.sh push user password lang"
+main' ("push":_)   = error "Invalid parameters. Usage: transifex.sh push user password lang resource"
+main' ("push-lang":(user:(password:(lang:_)))) = mapM_ (push user password lang) [Texts,Events,Questionnaire]
+main' ("push-lang":_)   = error "Invalid parameters. Usage: transifex.sh push-lang user password lang"
+main' ("merge-lang":(user:(password:(lang:_)))) = mapM_ (merge user password lang) [Texts,Events,Questionnaire]
+main' ("merge-lang":_)   = error "Invalid parameters. Usage: transifex.sh pull-lang user password lang"
 main' _ = error "Invalid command. Valid commands are fix, diff, merge and push."

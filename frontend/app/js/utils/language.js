@@ -11,7 +11,7 @@ window.Language = {
     current : function() {
        return localization.code;
     },
-    availableCodes : function() {
+    allLanguagesCodes : function() {
       return ["en","sv","de","fr","it","es","pt","nl","da","no"]
     },
     changeOnCurrentPage : function(code,callback) {
@@ -31,7 +31,7 @@ window.Language = {
     },
     changeForPageAndReload : function(code) {
         var p = window.location.pathname;
-        var hasLangPrefix = _.any(Language.availableCodes(), function(c) {return p.substring(0, 3) == ('/'+ c);});
+        var hasLangPrefix = _.any(Language.allLanguagesCodes(), function(c) {return p.substring(0, 3) == ('/'+ c);});
         if (hasLangPrefix) {
             p = "/" + code + p.substr(3);
             window.location.pathname = p;
