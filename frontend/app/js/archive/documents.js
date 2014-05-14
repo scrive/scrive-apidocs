@@ -190,10 +190,8 @@ window.DocumentsListDefinition = function(archive) { return {
             notAvailableMessage :  localization.archive.documents.cancel.notAvailableMessage,
             size: 'normal',
             avaible : function(doc){
-              return doc.field("status") == "sent"      ||
-                     doc.field("status") == "delivered" ||
-                     doc.field("status") == "read"      ||
-                     doc.field("status") == "opened";
+              return (   _.contains(['sent', 'delivered', 'read', 'opened'], doc.field('status'))
+                      && (doc.get('isauthor') || archive.forCompanyAdmin()));
             },
             onSelect : function(docs) {
                              var confirmationPopup = new Confirmation({
