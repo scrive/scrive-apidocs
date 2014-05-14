@@ -348,7 +348,6 @@ sendPinCode sl phone pin = do
 handlePostSignSignup :: (CryptoRNG m, MonadDB m, TemplatesMonad m, MailContextMonad m) => Email -> String -> String -> String -> String -> m (Maybe KontraLink)
 handlePostSignSignup email fn ln cnm cnr = do
   mctx <- getMailContext
-  let lang = mctxlang mctx
   muser <- dbQuery $ GetUserByEmail email
   case (muser, muser >>= userhasacceptedtermsofservice) of
     (Just user, Nothing) -> do
@@ -365,11 +364,11 @@ handlePostSignSignup email fn ln cnm cnr = do
                     companyname = cnm
                   , companynumber = cnr
               }
-      mnewuser <- createUser email (fn, ln) (companyid company,True) lang
+      mnewuser <- createUser email (fn, ln) (companyid company,True) (mctxlang mctx)
       case mnewuser of
         Nothing -> return Nothing
         Just newuser -> do
-          l <- newUserAccountRequestLink lang (userid newuser) BySigning
+          l <- newUserAccountRequestLink (mctxlang mctx) (userid newuser) BySigning
           return $ Just l
     (_, _) -> return Nothing
 
