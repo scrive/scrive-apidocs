@@ -1,18 +1,18 @@
-AttachExtendedSealedFileEvidenceText=
+AttachExtendedSealedFileEvidenceText=*
 $if(full)$
   $_AttachExtendedSealedFileEvidenceTextFull()$
 $else$
   $_AttachExtendedSealedFileEvidenceTextSimple()$
 $endif$
 ###
-AttachGuardtimeSealedFileEvidenceText=
+AttachGuardtimeSealedFileEvidenceText=*
 $if(full)$
   $_AttachGuardtimeSealedFileEvidenceTextFull()$
 $else$
   $_AttachGuardtimeSealedFileEvidenceTextSimple()$
 $endif$
 ###
-AttachSealedFileEvidenceText=
+AttachSealedFileEvidenceText=*
 $if(full)$
   $if(archive)$
     $_AttachSealedFileEvidenceTextFullArchive()$
@@ -27,14 +27,14 @@ $else$
   $endif$
 $endif$
 ###
-AutomaticReminderSentText=
+AutomaticReminderSentText=*
 $if(full)$
   $_AutomaticReminderSentTextFull()$
 $else$
   $_AutomaticReminderSentTextSimple()$
 $endif$
 ###
-CancelDocumentEvidenceText=
+CancelDocumentEvidenceText=*
 $if(full)$
   $if(archive)$
     $_CancelDocumentEvidenceTextFullArchive()$
@@ -59,7 +59,7 @@ DeleteSigAttachmentEvidenceText=The attachment “$name$” previously uploaded 
 ###
 ErrorSealingDocumentEvidenceText=Due to a system error Scrive E-sign failed to finalise the document, i.e. failed to include the Verification Page, Evidence Log, Evidence of Intent, Evidence Documentation and Digital Signature Documentation into the document before sealing the Evidence Package (as defined in the Evidence Documentation) with a digital signature.
 ###
-InvitationDeliveredByEmailText=
+InvitationDeliveredByEmailText=*
 $if(full)$
   $if(signing)$
     $_InvitationDeliveredByEmailTextToSignFull()$
@@ -74,7 +74,7 @@ $else$
   $endif$
 $endif$
 ###
-InvitationDeliveredBySMSText=
+InvitationDeliveredBySMSText=*
 $if(full)$
   $if(signing)$
     $_InvitationDeliveredBySMSTextToSignFull()$
@@ -89,7 +89,7 @@ $else$
   $endif$
 $endif$
 ###
-InvitationEvidenceText=
+InvitationEvidenceText=*
 $if(signing)$
   $if(archive)$
     $if(full)$
@@ -120,7 +120,7 @@ $elseif(viewing)$
   $endif$
 $endif$
 ###
-InvitationUndeliveredByEmailText=
+InvitationUndeliveredByEmailText=*
 $if(full)$
   $if(archive)$
     $_InvitationUndeliveredByEmailTextFullArchive()$
@@ -135,7 +135,7 @@ $else$
   $endif$
 $endif$
 ###
-InvitationUndeliveredBySMSText=
+InvitationUndeliveredBySMSText=*
 $if(full)$
   $if(archive)$
     $_InvitationUndeliveredBySMSTextFullArchive()$
@@ -150,7 +150,7 @@ $else$
   $endif$
 $endif$
 ###
-MarkInvitationReadEvidenceText=
+MarkInvitationReadEvidenceText=*
 $if(full)$
   $if(signing)$
     $_MarkInvitationReadEvidenceTextToSignFull()$
@@ -165,7 +165,7 @@ $else$
   $endif$
 $endif$
 ###
-PreparationToPendingEvidenceText=
+PreparationToPendingEvidenceText=*
 $if(full)$
   $if(archive)$
     $_PreparationToPendingEvidenceTextFullArchive()$
@@ -180,14 +180,14 @@ $else$
   $endif$
 $endif$
 ###
-ProlongDocumentEvidenceText=
+ProlongDocumentEvidenceText=*
 $if(archive)$
   $_ProlongDocumentEvidenceTextArchive()$
 $else$
   $_ProlongDocumentEvidenceTextNotArchive()$
 $endif$
 ###
-RejectDocumentEvidenceText=
+RejectDocumentEvidenceText=*
 $if(full)$
   $if(archive)$
     $_RejectDocumentEvidenceTextFullArchive()$
@@ -202,7 +202,7 @@ $else$
   $endif$
 $endif$
 ###
-ReminderSendText=
+ReminderSendText=*
 $if(archive)$
   $if(signing)$
     $_ReminderSendTextToSignArchive()$
@@ -219,7 +219,7 @@ $endif$
 ###
 RemovedFromPadDeviceText=The invitation to signatory $signatory$ to sign the document by in-person meeting was withdrawn by $actor$.
 ###
-ResealedPDFText=
+ResealedPDFText=*
 $if(full)$
   $if(archive)$
     $_ResealedPDFTextFullArchive()$
@@ -228,7 +228,7 @@ $if(full)$
   $endif$
 $endif$
 ###
-RestartDocumentEvidenceText=
+RestartDocumentEvidenceText=*
 $if(full)$
   $if(archive)$
     $_RestartDocumentEvidenceTextFullArchive()$
@@ -253,7 +253,7 @@ SendToPadDeviceText=The signing invitation for signatory $signatory$ was set by 
 ###
 SetDocumentInviteTimeEvidenceText=The signing process was started by $actor$.
 ###
-SignDocumentEvidenceText=
+SignDocumentEvidenceText=*
 $if(sms_pin)$
   $if(full)$
     $if(archive)$
@@ -298,46 +298,39 @@ $else$
   $endif$
 $endif$
 ###
-SignWithELegFailureEvidenceText=
+SignWithELegFailureEvidenceText=*
 $if(full)$
   $_SignWithELegFailureEvidenceTextFull()$
 $else$
   $_SignWithELegFailureEvidenceTextSimple()$
 $endif$
 ###
-SignatoryLinkVisitedText=
-$if(signing)$
+SignatoryLinkVisitedText=*
+
+
+$if(full)$
   $if(archive)$
-    $if(full)$
+    $if(signing)$
       $_SignatoryLinkVisitedTextToSignArchiveFull()$
-    $else$
-      $_SignatoryLinkVisitedTextToSignArchiveSimple()$
+    $elseif(viewing)$
+      $_SignatoryLinkVisitedTextToReviewArchiveFull()$
     $endif$
   $else$
-    $if(full)$
+    $if(signing)$
       $_SignatoryLinkVisitedTextToSignNotArchiveFull()$
-    $else$
-      $_SignatoryLinkVisitedTextToSignNotArchiveSimple()$
+    $elseif(viewing)$
+      $_SignatoryLinkVisitedTextToReviewNotArchiveFull()$
     $endif$
   $endif$
-$elseif(viewing)$
+$else$
   $if(archive)$
-    $if(full)$
-      $_SignatoryLinkVisitedTextToReviewArchiveFull()$
-    $else$
-      $_SignatoryLinkVisitedTextToReviewArchiveSimple()$
-    $endif$
+   $_SignatoryLinkVisitedTextArchiveSimple()$
   $else$
-    $if(full)$
-      $_SignatoryLinkVisitedTextToReviewNotArchiveFull()$
-    $else$
-      $_SignatoryLinkVisitedTextToReviewNotArchiveSimple()$
-    $endif$
+   $_SignatoryLinkVisitedTextNotArchiveSimple()$
   $endif$
 $endif$
-
 ###
-TimeoutDocumentEvidenceText=
+TimeoutDocumentEvidenceText=*
 $if(full)$
   $_TimeoutDocumentEvidenceTextFull()$
 $else$
