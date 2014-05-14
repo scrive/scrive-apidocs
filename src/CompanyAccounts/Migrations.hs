@@ -3,9 +3,11 @@ module CompanyAccounts.Migrations where
 import Data.Monoid
 import DB
 import CompanyAccounts.Tables
+import Company.CompanyID
 import Control.Monad
 import Data.Maybe
 import User.Model
+import Data.Char
 
 normalizeCompanyInvites :: MonadDB m => Migration m
 normalizeCompanyInvites = Migration {
@@ -33,7 +35,19 @@ normalizeCompanyInvites = Migration {
               runQuery_ . sqlInsert "companyinvites" $ do
                 sqlSet "company_id" icid
                 sqlSet "user_id" uid
-        (_ , _ , icid, email, fstname, lstname) -> do -- There should be Nothing,Nothing at the begining
+        (_ , _ , icid::CompanyID, email :: String, fstname :: String, lstname :: String) -> do -- There should be Nothing,Nothing at the begining
           -- We need user for this invite
-          void $ dbUpdate $ AddUser (fstname,lstname) email Nothing (icid,False) LANG_SV Nothing
+          runQuery_ $ sqlInsertSelect "users" "" $ do
+            sqlSet "is_company_admin" False
+            sqlSet "account_suspended" False
+            sqlSet "signup_method" AccountRequest
+            sqlSet "company_id" icid
+            sqlSet "first_name" fstname
+            sqlSet "last_name" lstname
+            sqlSet "personal_number" ("" :: String)
+            sqlSet "company_position" ("" :: String)
+            sqlSet "phone" ("" :: String)
+            sqlSet "email" $ map toLower email
+            sqlSet "lang" LANG_SV
+            sqlWhereNotExists (sqlSelect "users AS users2" $ sqlWhereEq "users2.email" (map toLower email))
   }
