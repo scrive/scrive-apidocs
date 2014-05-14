@@ -207,7 +207,7 @@ var LoginView = Backbone.View.extend({
       var loginButton = new Button({
                   size  : "small",
                   color : "green",
-                  text  : localization.loginModal.login + " ›",
+                  text  : localization.loginModal.login,
                   cssClass : "login-button ",
                   onClick : loginFunction
                 });
@@ -252,7 +252,7 @@ var LoginView = Backbone.View.extend({
      var remindButton = new Button({
                   size  : "big",
                   color : "green",
-                  text  : localization.loginModal.sendNewPassword + " ›",
+                  text  : localization.loginModal.sendNewPassword,
                   cssClass : "recovery-password-submit",
                   onClick : function() {
                         model.sendPasswordReminder();
