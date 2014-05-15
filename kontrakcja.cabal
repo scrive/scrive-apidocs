@@ -11,15 +11,18 @@ Cabal-version: >= 1.18
 Build-type: Simple
 
 
+-- Note:
+--
+-- To allow warnings use command:
+--
+--    cabal configure --ghc-option=-Wwarn
+--
+
 Flag server-coverage
   Description: Build server with coverage instrumentation
   Manual: True
   Default: False
 
-Flag allow-warnings
-  Description: Disable -Werror flag
-  Manual: True
-  Default: False
 
 Flag test-coverage
   Description: Collects tests coverage status
@@ -30,10 +33,8 @@ Executable kontrakcja-server
 
   Hs-source-dirs: inc misc src mailer/inc docconv/src messenger/src messenger/inc pdftools
 
-  GHC-Options: -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
+  GHC-Options: -Werror -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
 
-  if !flag(allow-warnings)
-    GHC-Options: -Werror
   if flag(server-coverage)
     GHC-Options: -fhpc
   if !os(windows)
@@ -136,10 +137,8 @@ Executable cron
 
   Hs-source-dirs: inc misc src cron mailer/inc docconv/src messenger/inc pdftools
 
-  GHC-Options: -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
+  GHC-Options: -Werror -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
 
-  if !flag(allow-warnings)
-    GHC-Options: -Werror
   if flag(server-coverage)
     GHC-Options: -fhpc
   if !os(windows)
@@ -241,10 +240,8 @@ Executable cron
 Executable kontrakcja-migrate
   Hs-source-dirs: inc misc src messenger/inc mailer/inc docconv/src
 
-  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fno-warn-type-defaults
+  GHC-Options: -Werror -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
 
-  if !flag(allow-warnings)
-    GHC-Options: -Werror
   if flag(server-coverage)
     GHC-Options: -fhpc
   if os(windows)
@@ -343,10 +340,8 @@ Executable mailing-server
 
   Hs-source-dirs: inc misc mailer/src mailer/inc docconv/src
 
-  GHC-Options: -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
+  GHC-Options: -Werror -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
 
-  if !flag(allow-warnings)
-    GHC-Options: -Werror
   if flag(server-coverage)
     GHC-Options: -fhpc
   if !os(windows)
@@ -449,10 +444,8 @@ Executable messenger-server
 
   Hs-source-dirs: src inc misc messenger/src messenger/inc
 
-  GHC-Options: -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
+  GHC-Options: -Werror -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
 
-  if !flag(allow-warnings)
-    GHC-Options: -Werror
   if flag(server-coverage)
     GHC-Options: -fhpc
   if !os(windows)
@@ -556,12 +549,11 @@ Executable kontrakcja-test
 
   Hs-source-dirs: inc misc test/src src mailer/inc docconv/src docconv/test/src messenger/src messenger/inc pdftools
 
-  GHC-Options: -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
+  GHC-Options: -Werror -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
 
   if flag(test-coverage)
     GHC-Options: -fhpc
-  if !flag(allow-warnings)
-    GHC-Options: -Werror
+
   if !os(windows)
     -- don't do threaded on Windows because it uses blocking listen and accept
     GHC-Options: -threaded
