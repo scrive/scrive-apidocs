@@ -53,7 +53,6 @@ import LoginTest
 import MailModelTest
 import MailsTest
 import OAuth
-import PadTest
 import PaymentsTest
 import SessionsTest
 import SignupTest
@@ -90,7 +89,6 @@ allTests = tail tests
       , mailModelTests
       , mailsTests
       , oauthTest
-      , padTests
       , paymentsTests
       , sessionsTests
       , signupTests

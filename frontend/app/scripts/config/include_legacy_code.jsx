@@ -99,7 +99,6 @@ define([
   '../js/signaturemodal/signaturedrawer',
   '../js/signaturemodal/signaturemodal',
   '../js/fieldplacementview',
-  '../js/padview',
   '../js/fileverifier',
   '../js/payments',
   '../js/archive/documents',

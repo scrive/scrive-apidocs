@@ -11,7 +11,6 @@ import Doc.AutomaticReminder.Tables
 import Doc.API.Callback.Migrations
 import User.Migrations
 import File.Migrations
-import PadQueue.Migrations
 import Mails.Migrations
 import OAuth.Migrations
 import SMS.Migrations
@@ -51,13 +50,10 @@ kontraMigrations = [
   , updateDocumentStatusAfterRemovingAwaitingAuthor
   , moveDocumentTagsFromDocumentsTableToDocumentTagsTable
   , fixSignatoryLinksSwedishChars
-  , setCascadeOnPadQueue
   , setCascadeOnSignatoryAttachments
   , renumerateSignatoryLinkIDS
-  , dropSLForeignKeyOnPadQueue
   , dropSLForeignKeyOnSignatoryAttachments
   , setSignatoryLinksPrimaryKeyToIDOnly
-  , setPadQueueForeignKeyToSLIDOnly
   , setSignatoryAttachmentsForeignKeyToSLIDOnly
   , dropDocumentIDColumntFromSignatoryAttachments
   , addCheckLowercaseEmailsUsers

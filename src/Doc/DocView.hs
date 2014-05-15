@@ -37,8 +37,6 @@ import Data.List (sortBy, nub)
 import File.Model
 import File.File
 import DB
-import DB.TimeZoneName
-import PadQueue.Model
 import Text.JSON.Gen hiding (value)
 import qualified Text.JSON.Gen as J
 import qualified Text.StringTemplates.Fields as F
@@ -51,8 +49,8 @@ import qualified Log
 pageCreateFromTemplate :: TemplatesMonad m => m String
 pageCreateFromTemplate = renderTemplate_ "createFromTemplatePage"
 
-documentJSON :: (MonadDB m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m) => (Maybe User) -> Bool -> Bool -> Bool -> PadQueue -> Maybe SignatoryLink -> Document -> m JSValue
-documentJSON muser includeEvidenceAttachments forapi forauthor pq msl doc = do
+documentJSON :: (MonadDB m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m) => (Maybe User) -> Bool -> Bool -> Bool ->  Maybe SignatoryLink -> Document -> m JSValue
+documentJSON muser includeEvidenceAttachments forapi forauthor msl doc = do
     file <- documentfileM doc
     sealedfile <- documentsealedfileM doc
     authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments doc)
@@ -73,7 +71,7 @@ documentJSON muser includeEvidenceAttachments forapi forauthor pq msl doc = do
       J.value "autoremindtime" $ jsonDate $ documentautoremindtime doc
       J.value "status" $ show $ documentstatus doc
       J.value "state" $ show $ documentstatus doc
-      J.objects "signatories" $ map (signatoryJSON forapi forauthor pq doc msl) (documentsignatorylinks doc)
+      J.objects "signatories" $ map (signatoryJSON forapi forauthor doc msl) (documentsignatorylinks doc)
       J.value "signorder" $ unSignOrder $ documentcurrentsignorder doc
       J.value "authentication" $ case nub (map signatorylinkauthenticationmethod (documentsignatorylinks doc)) of
                                    [StandardAuthentication] -> "standard"
@@ -125,8 +123,8 @@ authenticationJSON ELegAuthentication     = toJSValue "eleg"
 authenticationJSON SMSPinAuthentication   = toJSValue "sms_pin"
 
 
-signatoryJSON :: (MonadDB m) => Bool -> Bool -> PadQueue -> Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
-signatoryJSON forapi forauthor pq doc viewer siglink = do
+signatoryJSON :: (MonadDB m) => Bool -> Bool -> Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
+signatoryJSON forapi forauthor doc viewer siglink = do
     J.value "id" $ show $ signatorylinkid siglink
     J.value "current" $ isCurrent
     J.value "signorder" $ unSignOrder $ signatorysignorder siglink
@@ -149,7 +147,7 @@ signatoryJSON forapi forauthor pq doc viewer siglink = do
     J.value "status" $ show $ signatorylinkstatusclass siglink
     J.objects "attachments" $ map signatoryAttachmentJSON (signatoryattachments siglink)
     J.value "csv" $ csvcontents <$> signatorylinkcsvupload siglink
-    J.value "inpadqueue"  $ (fmap fst pq == Just (documentid doc)) && (fmap snd pq == Just (signatorylinkid siglink))
+    J.value "inpadqueue"  $ False
     J.value "userid" $ show <$> maybesignatory siglink
     J.value "signsuccessredirect" $ signatorylinksignredirecturl siglink
     J.value "rejectredirect" $ signatorylinkrejectredirecturl siglink

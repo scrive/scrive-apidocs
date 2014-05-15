@@ -33,7 +33,6 @@ import Text.JSON
 import Util.CSVUtil
 import ListUtil
 import Happstack.Fields
-import PadQueue.Model
 import Data.Maybe
 import Text.JSON.Gen as J
 import Text.JSON.FromJSValue
@@ -177,7 +176,6 @@ jsonDocumentsList = do
       pagination2 = ((listParamsOffset params),(listParamsLimit params), Just docsPageSize)
       filters = filters1 ++ filters2 ++ tagsFilters ++ [DocumentFilterPurged False]
 
-  padqueue <- dbQuery $ GetPadQueue $ userid user
   format <- getField "format"
   case format of
        Just "csv" -> do
@@ -194,7 +192,7 @@ jsonDocumentsList = do
                                 , pageSize   = docsPageSize
                                 , listLength = allDocsCount
                                 }
-          docsJSONs <- forM allDocs $ docForListJSON user padqueue
+          docsJSONs <- mapM (docForListJSON user) $ list docs
           return $ Right $ runJSONGen $ do
               value "list" docsJSONs
               value "paging" $ pagingParamsJSON docs

@@ -17,7 +17,6 @@ import User.Tables
 import User.History.Tables
 import File.Tables
 import Mails.Tables
-import PadQueue.Tables
 import Session.Tables
 import OAuth.Tables
 import SMS.Tables
@@ -51,7 +50,6 @@ kontraTables =
   , tableAuthorAttachments
   , tableSignatoryAttachments
   , tableEvidenceLog
-  , tablePadQueue
   , tableDocumentTags
   , tableSignatoryLinkFields
   , tableSignatoryScreenshots

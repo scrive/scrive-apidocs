@@ -30,7 +30,6 @@ import Text.JSON
 
 
 import Doc.DocUtils
-import PadQueue.Model
 import Text.JSON.Gen as J
 import qualified Text.StringTemplates.Fields as F
 import Data.String.Utils (strip)
@@ -53,21 +52,21 @@ pageArchive user mt = renderTemplate "pageDocumentsList" $ do
                     F.value "month" $ mtMonth mt
                     F.value "year" $ mtYear mt
 
-docForListJSON :: TemplatesMonad m => User -> PadQueue -> Document -> m JSValue
-docForListJSON user padqueue doc = do
+docForListJSON :: TemplatesMonad m => User ->  Document -> m JSValue
+docForListJSON user doc = do
   let link = case getSigLinkFor user doc of
         Just sl | not $ isAuthor sl -> LinkSignDoc doc sl
         _                           -> LinkIssueDoc $ documentid doc
       sigFilter sl =   isSignatory sl && (documentstatus doc /= Preparation)
   runJSONGenT $ do
-    J.object "fields" $ docFieldsListForJSON (userid user) padqueue doc
-    J.objects "subfields" $ map (signatoryFieldsListForJSON padqueue doc) (filter sigFilter (documentsignatorylinks doc))
+    J.object "fields" $ docFieldsListForJSON (userid user) doc
+    J.objects "subfields" $ map (signatoryFieldsListForJSON doc) (filter sigFilter (documentsignatorylinks doc))
     J.value "link" $ show link
     J.value "isauthor" $ fromMaybe False (isAuthor <$> getSigLinkFor user doc)
     J.value "docauthorcompanysameasuser" $ Just (usercompany user) == documentauthorcompanyid doc
 
-docFieldsListForJSON :: TemplatesMonad m => UserID -> PadQueue -> Document -> JSONGenT m ()
-docFieldsListForJSON userid padqueue doc = do
+docFieldsListForJSON :: TemplatesMonad m => UserID -> Document -> JSONGenT m ()
+docFieldsListForJSON userid doc = do
     J.value "id" $ show $ documentid doc
     J.value "title" $ documenttitle doc
     J.value "status" $ show $ documentstatusclass doc
@@ -104,15 +103,15 @@ docFieldsListForJSON userid padqueue doc = do
                                             )
     J.value "shared" $ documentsharing doc == Shared
     J.value "file" $ show <$> (documentsealedfile doc `mplus` documentfile doc)
-    J.value "inpadqueue" $  (fmap fst padqueue == Just (documentid doc))
+    J.value "inpadqueue" $ False
     J.value "deleted" $ documentDeletedForUser doc userid
     J.value "reallydeleted" $ documentReallyDeletedForUser doc userid
     J.value "canperformsigning" $ userCanPerformSigningAction userid doc
     J.value "isviewedbyauthor" $ isSigLinkFor userid (getAuthorSigLink doc)
     J.value "objectversion" $ documentobjectversion doc
 
-signatoryFieldsListForJSON :: TemplatesMonad m => PadQueue -> Document -> SignatoryLink -> JSONGenT m ()
-signatoryFieldsListForJSON padqueue doc sl = do
+signatoryFieldsListForJSON :: TemplatesMonad m => Document -> SignatoryLink -> JSONGenT m ()
+signatoryFieldsListForJSON doc sl = do
     J.value "id" $ show $ signatorylinkid sl
     J.value "status" $ show $ signatorylinkstatusclass sl
     J.value "name" $ case strip (getCompanyName sl) of
@@ -120,7 +119,7 @@ signatoryFieldsListForJSON padqueue doc sl = do
                        _  -> getSmartName sl ++ " (" ++ getCompanyName sl ++ ")"
     J.value "time" $ fromMaybe "" $ formatMinutesTimeRealISO <$> (sign `mplus` reject `mplus` seen `mplus` open)
     J.value "invitationundelivered" $ Pending == documentstatus doc && (Undelivered == mailinvitationdeliverystatus sl || Undelivered == smsinvitationdeliverystatus sl)
-    J.value "inpadqueue" $  (fmap fst padqueue == Just (documentid doc)) && (fmap snd padqueue == Just (signatorylinkid sl))
+    J.value "inpadqueue" $  False
     J.value "isauthor" $ isAuthor sl
     J.value "authentication" $ case signatorylinkauthenticationmethod sl of
       StandardAuthentication -> "standard"

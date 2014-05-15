@@ -32,47 +32,6 @@ window.DocumentCellsDefinition = function(archive) { return  [
                        {
                             return $("<a class='s-archive-document-title'/>").text(listobject.field("title")).attr("href",listobject.link());
                        }
-
-                    // Only show icons when the party can actually still sign the document
-                    var status = listobject.subfield(idx,"status");
-                    if (status != "opened" && status != "sent") {
-                      return $('<span />');
-                    }
-
-                    //For pad we show extra icon
-                    if (idx != undefined && listobject.subfield(idx,"delivery") == "pad")
-                      {
-                        var actionIcon = $("<a class='actionIcon'/>");
-                        if (listobject.field("inpadqueue") && listobject.subfield(idx,"inpadqueue"))
-                            {
-                                actionIcon.addClass("removefromqueue");
-                                actionIcon.click(function() {
-                                    mixpanel.track('Click clear pad queue');
-                                    new Submit({
-                                        url: "/api/frontend/padqueue/clear" ,
-                                        method: "POST"
-                                    }).sendAjax(function() { LoadingDialog.close(); archive.documents().recall(); });
-                                return false;
-                                });
-                            }
-                        else
-                            {
-                                actionIcon.addClass("addtoqueue");
-                                ToolTip.set({on: actionIcon, tip : localization.pad.addToPadQueue});
-                                actionIcon.click(function() {
-                                LoadingDialog.open();
-                                    mixpanel.track('Add to pad queue',
-                                                   {DocumentID : listobject.field("id")});
-                                new Submit({
-                                        url: "/api/frontend/padqueue/add/"+ listobject.field("id") + "/" +  listobject.subfield(idx,"id") ,
-                                        method: "POST"
-                                    }).sendAjax(function() { LoadingDialog.close(); archive.documents().recall(); });
-                                return false;
-                                });
-                            }
-                        return actionIcon;
-                     }
-
                  }})
         ];
 };

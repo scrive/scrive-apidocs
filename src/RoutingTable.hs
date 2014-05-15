@@ -27,7 +27,6 @@ import OAuth.Control
 import LangRouting
 import Happstack.Server hiding (simpleHTTP, host, https, dir, path)
 import AppView
-import qualified PadQueue.Control as PadQueue
 import PadApplication.API
 import Salesforce.Control as Salesforce
 import qualified ServerUtils.ServerUtils as ServerUtils
@@ -110,10 +109,6 @@ staticRoutes production = choice
 
      , allLangDirs $ dir "verify" $ hGet  $ toK0 $ DocControl.handleShowVerificationPage
      , allLangDirs $ dir "verify" $ hPostNoXToken $ toK0 $ DocControl.handleVerify
-
-     , dir "padqueue" $ dir "state" $ hGet $ toK0 $ PadQueue.padQueueState
-     , dir "padqueue" $ hGet $ toK0 $ PadQueue.showPadQueuePage
-     , dir "padqueue" $ dir "logout" $ hPostNoXToken $ toK0 $ PadQueue.handlePadLogout
 
      -- UserControl
      , dir "account"                    $ hGet  $ toK0 $ UserControl.handleAccountGet
