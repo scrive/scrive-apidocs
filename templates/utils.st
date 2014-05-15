@@ -45,3 +45,23 @@ flashmessages =
 </script>
 
 ####
+EnglishInEnglish=English
+####
+SwedishInSwedish=Svenska
+####
+GermanInGerman=Deutsch
+####
+FrenchInFrench=Français
+####
+ItalianInItalian=Italiano
+####
+SpanishInSpanish=Español
+####
+PortugueseInPortuguese=Português
+####
+DutchInDutch=Nederlands
+####
+DanishInDanish=Dansk
+####
+NorwegianInNorwegian=Norsk
+####

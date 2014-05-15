@@ -65,7 +65,7 @@
 "_RestartDocumentEvidenceTextSimpleNotArchive":"Dokumentet öppnades av $actor$ i Scrives gränssnitt för att utforma signeringsprocesser..",
 "_SMSPinDeliveredEvidenceText":"SMS:et med PIN-koden levererades till $text$ för $signatory$ att användas som identifiering.",
 "_SMSPinSendEvidenceText":"Ett SMS med en PIN-kod skickades till $text$ för $signatory$ att användas som identifiering.",
-"_SignDocumentEvidenceTextFullArchiveEleg":"Dokumentet signerades$_using_identification_method()$.",
+"_SignDocumentEvidenceTextFullArchiveEleg":"Dokumentet signerades$_using_identification_method()$. $_elegVerified()$",
 "_SignDocumentEvidenceTextFullArchiveSMSPin":"Dokumentet signerades$_using_identification_method()$.",
 "_SignDocumentEvidenceTextFullArchiveStandard":"Dokumentet signerades$_using_identification_method()$.",
 "_SignDocumentEvidenceTextFullNotArchiveEleg":"Dokumentet signerades av $actor$$_using_identification_method()$.",

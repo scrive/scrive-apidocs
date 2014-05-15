@@ -443,16 +443,16 @@ langSwitcher=
                       $endif$
                    }
                    var languages = [
-                      {value : "en", name : "$_EnglishInEnglish()$"}
-                    , {value : "sv", name : "$_SwedishInSwedish()$"}
-                    , {value : "de", name : "$_GermanInGerman()$", hidden : true}
-                    , {value : "fr", name : "$_FrenchInFrench()$", hidden : true}
-                    , {value : "it", name : "$_ItalianInItalian()$", hidden : true}
-                    , {value : "es", name : "$_SpanishInSpanish()$", hidden : true}
-                    , {value : "pt", name : "$_PortugueseInPortuguese()$", hidden : true}
-                    , {value : "nl", name : "$_DutchInDutch()$", hidden : true}
-                    , {value : "da", name : "$_DanishInDanish()$", hidden : true}
-                    , {value : "no", name : "$_NorwegianInNorwegian()$", hidden : true}
+                      {value : "en", name : "$EnglishInEnglish()$"}
+                    , {value : "sv", name : "$SwedishInSwedish()$"}
+                    , {value : "de", name : "$GermanInGerman()$", hidden : true}
+                    , {value : "fr", name : "$FrenchInFrench()$", hidden : true}
+                    , {value : "it", name : "$ItalianInItalian()$", hidden : true}
+                    , {value : "es", name : "$SpanishInSpanish()$", hidden : true}
+                    , {value : "pt", name : "$PortugueseInPortuguese()$", hidden : true}
+                    , {value : "nl", name : "$DutchInDutch()$", hidden : true}
+                    , {value : "da", name : "$DanishInDanish()$", hidden : true}
+                    , {value : "no", name : "$NorwegianInNorwegian()$", hidden : true}
                    ]
                    var lname = _.findWhere(languages, {value : "$langcode$"}).name;
 
