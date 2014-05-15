@@ -88,9 +88,9 @@
 "_TimeoutDocumentEvidenceTextFull":"Förfallodatumet för signering passerade.Scrive E-sign inaktiverade möjligheten att signera.",
 "_TimeoutDocumentEvidenceTextSimple":"Förfallodatumet för signering passerade.",
 "_delivery_method":"$if(email)$e-post$elseif(mobile)$SMS$elseif(emailmobile)$e-post och SMS$endif$",
-"_elegVerified":"",
+"_elegVerified":"<p>Texten som signerades med e-legitimationsklienten var: </p> <pre>$infotext$</pre> <p>E-legitimations leverantör: $provider$.</p> $if(fieldsverified)$ <p>Information om signerande part verifierad av $provider$: $if(fstnameverified)$ Förnamn; $endif$ $if(lstnameverified)$ Efternamn; $endif$ $if(persnumverified)$ Personnummer; $endif$</p> $endif$ <p>Signatur: <div style='white-space:pre'>$signature$</div></p> $if(certificate)$ <p>Certifikat: <div style='white-space:pre'>$certificate$</div></p>$endif$ $if(ocsp)$ <p>Svar från Online Certificate Status Protocol (OCSP): <div style='white-space:pre'>$ocsp$</div></p>$endif$",
 "_invitationCustomMessageTextToReview":"$if(text)$$if(!mobile)$ Inbjudan innehöll följande meddelande: <BR/> <i>$text:noescape()$</i>$endif$$endif$",
 "_invitationCustomMessageTextToSign":"$if(text)$$if(!mobile)$ Inbjudan innehöll följande meddelande: <BR/> <i>$text:noescape()$</i>$endif$$endif$",
-"_pinWasSend":"",
+"_pinWasSend":"PIN-koden skickades till $phone$.",
 "_using_identification_method":"$if(eleg)$ med e-legitimation som identifieringsmetod$elseif(sms_pin)$ med PIN via SMS som identifieringsmetod$endif$"
 }
