@@ -33,6 +33,7 @@ import qualified MemCache
 import Util.FinishWith
 import Util.FlashUtil
 import File.FileID
+import GHC.Stack
 import BrandedDomain.Model
 
 import Control.Concurrent (MVar, modifyMVar, threadDelay)
@@ -40,6 +41,7 @@ import Control.Concurrent.MVar.Util (tryReadMVar)
 import Control.Monad.Error
 import Data.Functor
 import Data.Maybe
+import Data.Typeable
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
 import Happstack.Server.Internal.Cookie
 import Network.Socket
@@ -223,6 +225,7 @@ appHandler handleRoutes appConf appGlobals = catchEverything . enhanceYourCalm $
                 logRequest rq mbody
               internalServerErrorPage >>= internalServerError
             Respond404 -> do
+              -- there is no way to get stacktrace here as Respond404 is a CAF, fix this later
               rq <- askRq
               mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
               Log.attention "Respond404" $
@@ -231,19 +234,36 @@ appHandler handleRoutes appConf appGlobals = catchEverything . enhanceYourCalm $
         , E.Handler $ \(FinishWith res ctx') -> do
             modifyContext $ const ctx'
             return $ Right res
-        , E.Handler $ \DBException{..} -> Left <$> do
+        , E.Handler $ \e@DBException{..} -> Left <$> do
             rq <- askRq
             mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
+            stack <- liftIO $ whoCreated e
             Log.attention "DBException" $ do
               value "dbeQueryContext" $ show dbeQueryContext
-              value "dbeError" $ show dbeError
+              case cast dbeError of
+                Nothing -> do
+                  value "dbeError" $ show dbeError
+                Just (SomeKontraException ee) -> do
+                  value "exception" $ toJSValue ee
+              value "stacktrace" (reverse stack)
+              logRequest rq mbody
+            internalServerErrorPage >>= internalServerError
+        , E.Handler $ \e@(SomeKontraException ee) -> Left <$> do
+            rq <- askRq
+            mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
+            stack <- liftIO $ whoCreated e
+            Log.attention "SomeKontraException" $ do
+              value "exception" $ toJSValue ee
+              value "stacktrace" (reverse stack)
               logRequest rq mbody
             internalServerErrorPage >>= internalServerError
         , E.Handler $ \(e :: E.SomeException) -> Left <$> do
             rq <- askRq
             mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
+            stack <- liftIO $ whoCreated e
             Log.attention "Exception caught in routeHandlers" $ do
               value "exception" (show e)
+              value "stacktrace" (reverse stack)
               logRequest rq mbody
             internalServerErrorPage >>= internalServerError
         ]

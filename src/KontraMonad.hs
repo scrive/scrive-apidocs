@@ -5,8 +5,12 @@ module KontraMonad (
     ) where
 
 import Control.Applicative
+import Control.Monad.Trans.Class
 import Control.Monad.Base
-import Control.Monad.State
+import Control.Monad.State.Class
+import Control.Monad.IO.Class
+import qualified Control.Monad.State.Strict as Strict
+import qualified Control.Monad.State.Lazy as Lazy
 import Control.Monad.Reader (ReaderT)
 import Control.Monad.Trans.Control
 import Happstack.Server
@@ -43,7 +47,11 @@ class (Functor m, Monad m) => KontraMonad m where
   getContext    :: m Context
   modifyContext :: (Context -> Context) -> m ()
 
-instance (Monad m, Functor m) => KontraMonad (StateT Context m) where
+instance (Monad m, Functor m) => KontraMonad (Lazy.StateT Context m) where
+  getContext    = get
+  modifyContext = modify
+
+instance (Monad m, Functor m) => KontraMonad (Strict.StateT Context m) where
   getContext    = get
   modifyContext = modify
 
@@ -51,7 +59,11 @@ instance KontraMonad m => KontraMonad (ReaderT a m) where
   getContext = lift $ getContext
   modifyContext = lift . modifyContext
 
-instance KontraMonad m => KontraMonad (StateT a m) where
+instance KontraMonad m => KontraMonad (Lazy.StateT a m) where
+  getContext = lift $ getContext
+  modifyContext = lift . modifyContext
+
+instance KontraMonad m => KontraMonad (Strict.StateT a m) where
   getContext = lift $ getContext
   modifyContext = lift . modifyContext
 
