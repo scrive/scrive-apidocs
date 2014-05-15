@@ -34,16 +34,11 @@ Executable kontrakcja-server
   Hs-source-dirs: inc misc src mailer/inc docconv/src messenger/src messenger/inc pdftools
 
   GHC-Options: -Werror -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
+  GHC-Options: -threaded -rtsopts
+  ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
   if flag(server-coverage)
     GHC-Options: -fhpc
-  if !os(windows)
-    -- don't do threaded on Windows because it uses blocking listen and accept
-    GHC-Options: -threaded
-  if os(windows)
-    cpp-options: -DWINDOWS
-
-  ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
   Main-Is: Main.hs
 
@@ -138,16 +133,11 @@ Executable cron
   Hs-source-dirs: inc misc src cron mailer/inc docconv/src messenger/inc pdftools
 
   GHC-Options: -Werror -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
+  GHC-Options: -threaded -rtsopts
+  ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
   if flag(server-coverage)
     GHC-Options: -fhpc
-  if !os(windows)
-    -- don't do threaded on Windows because it uses blocking listen and accept
-    GHC-Options: -threaded
-  if os(windows)
-    cpp-options: -DWINDOWS
-
-  ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries -fprof-auto-calls -main-is CronMain
 
   Build-depends: base < 6
   Build-depends: bytestring
@@ -241,13 +231,11 @@ Executable kontrakcja-migrate
   Hs-source-dirs: inc misc src messenger/inc mailer/inc docconv/src
 
   GHC-Options: -Werror -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
+  GHC-Options: -threaded -rtsopts
+  ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
   if flag(server-coverage)
     GHC-Options: -fhpc
-  if os(windows)
-    cpp-options: -DWINDOWS
-
-  ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries -main-is AppDBMain
 
   Main-is: AppDBMain.hs
   Build-depends: base < 6
@@ -341,16 +329,11 @@ Executable mailing-server
   Hs-source-dirs: inc misc mailer/src mailer/inc docconv/src
 
   GHC-Options: -Werror -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
+  GHC-Options: -threaded -rtsopts
+  ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
   if flag(server-coverage)
     GHC-Options: -fhpc
-  if !os(windows)
-    -- don't do threaded on Windows because it uses blocking listen and accept
-    GHC-Options: -threaded
-  if os(windows)
-    cpp-options: -DWINDOWS
-
-  ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries -fprof-auto-calls -main-is MailingServer
 
   Main-is: MailingServer.hs
 
@@ -445,16 +428,11 @@ Executable messenger-server
   Hs-source-dirs: src inc misc messenger/src messenger/inc
 
   GHC-Options: -Werror -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
+  GHC-Options: -threaded -rtsopts
+  ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
   if flag(server-coverage)
     GHC-Options: -fhpc
-  if !os(windows)
-    -- don't do threaded on Windows because it uses blocking listen and accept
-    GHC-Options: -threaded
-  if os(windows)
-    cpp-options: -DWINDOWS
-
-  ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries -fprof-auto-calls -main-is MessengerServer
 
   Main-is: MessengerServer.hs
 
@@ -550,17 +528,12 @@ Executable kontrakcja-test
   Hs-source-dirs: inc misc test/src src mailer/inc docconv/src docconv/test/src messenger/src messenger/inc pdftools
 
   GHC-Options: -Werror -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
+  GHC-Options: -threaded -rtsopts
+  ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
   if flag(test-coverage)
     GHC-Options: -fhpc
 
-  if !os(windows)
-    -- don't do threaded on Windows because it uses blocking listen and accept
-    GHC-Options: -threaded
-  if os(windows)
-    cpp-options: -DWINDOWS
-
-  GHC-Options: -rtsopts -fprof-auto -fno-prof-count-entries -fprof-auto-calls -main-is TestMain
   Main-is: TestMain.hs
 
   Build-depends: base < 6
