@@ -17,6 +17,10 @@ Build-type: Simple
 --
 --    cabal configure --ghc-option=-Wwarn
 --
+-- Another useful command:
+--
+--    cabal configure --ghc-option=-fdefer-type-errors
+--
 
 Flag server-coverage
   Description: Build server with coverage instrumentation
