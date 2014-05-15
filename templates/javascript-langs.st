@@ -558,8 +558,8 @@ javascriptLocalisation =
              , downloadPdf : "$_DownloadPDF()$"
              , firsttime : {
                    counterpart: "$_you()$"
-                 , emailDelivered : "$InvitationDeliveredByEmailText(signatory='ACTOR')$"
-                 , emailRead : "$MarkInvitationReadEvidenceText(signatory_email='EMAIL')$"
+                 , emailDelivered : "$InvitationDeliveredByEmailText(signatory='ACTOR';signing='TRUE')$"
+                 , emailRead : "$MarkInvitationReadEvidenceText(signatory_email='EMAIL';signing='TRUE')$"
                  , tryYourself : "$_authorviewFTUETryYourself()$"
                  , linkOpened : "$SignatoryLinkVisitedText(actor='ACTOR')$"
                  , documentSigned : "$SignDocumentEvidenceText(actor='ACTOR')$"
