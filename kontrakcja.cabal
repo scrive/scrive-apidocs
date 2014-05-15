@@ -69,6 +69,7 @@ Executable kontrakcja-server
     GHC-Options: -fhpc
 
   Main-Is: Main.hs
+  GHC-options: -main-is Main
 
   Build-depends: base < 6
   Build-depends: bytestring
@@ -230,6 +231,7 @@ Executable cron
   Build-depends: zlib
 
   Main-is: CronMain.hs
+  GHC-options: -main-is CronMain
 
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns,
@@ -266,6 +268,8 @@ Executable kontrakcja-migrate
     GHC-Options: -fhpc
 
   Main-is: AppDBMain.hs
+  GHC-options: -main-is AppDBMain
+
   Build-depends: base < 6
   Build-depends: bytestring
   Build-depends: template-haskell
@@ -364,6 +368,7 @@ Executable mailing-server
     GHC-Options: -fhpc
 
   Main-is: MailingServer.hs
+  GHC-options: -main-is MailingServer
 
   Build-depends: base < 6
   Build-depends: bytestring
@@ -463,6 +468,7 @@ Executable messenger-server
     GHC-Options: -fhpc
 
   Main-is: MessengerServer.hs
+  GHC-options: -main-is MessengerServer
 
   Build-depends: base < 6
   Build-depends: bytestring
@@ -563,6 +569,7 @@ Executable kontrakcja-test
     GHC-Options: -fhpc
 
   Main-is: TestMain.hs
+  GHC-options: -main-is TestMain
 
   Build-depends: base < 6
   Build-depends: bytestring
