@@ -144,7 +144,8 @@ Executable kontrakcja-server
 
   Hs-source-dirs: inc misc src mailer/inc docconv/src messenger/src messenger/inc pdftools
 
-  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fno-warn-type-defaults -fcontext-stack=34
+  GHC-Options: -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
+
   if !flag(allow-warnings)
     GHC-Options: -Werror
   if flag(server-coverage)
@@ -253,7 +254,8 @@ Executable cron
 
   Hs-source-dirs: inc misc src cron mailer/inc docconv/src messenger/inc pdftools
 
-  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fno-warn-type-defaults
+  GHC-Options: -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
+
   if !flag(allow-warnings)
     GHC-Options: -Werror
   if flag(server-coverage)
@@ -358,6 +360,7 @@ Executable kontrakcja-migrate
   Hs-source-dirs: inc misc src messenger/inc mailer/inc docconv/src
 
   GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fno-warn-type-defaults
+
   if !flag(allow-warnings)
     GHC-Options: -Werror
   if flag(server-coverage)
@@ -462,7 +465,8 @@ Executable mailing-server
 
   Hs-source-dirs: inc misc mailer/src mailer/inc docconv/src
 
-  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fno-warn-type-defaults
+  GHC-Options: -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
+
   if !flag(allow-warnings)
     GHC-Options: -Werror
   if flag(server-coverage)
@@ -571,7 +575,8 @@ Executable messenger-server
 
   Hs-source-dirs: src inc misc messenger/src messenger/inc
 
-  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fno-warn-type-defaults
+  GHC-Options: -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
+
   if !flag(allow-warnings)
     GHC-Options: -Werror
   if flag(server-coverage)
@@ -682,7 +687,8 @@ Executable kontrakcja-test
 
   Hs-source-dirs: inc misc test/src src mailer/inc docconv/src docconv/test/src messenger/src messenger/inc pdftools
 
-  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fno-warn-type-defaults -fcontext-stack=34
+  GHC-Options: -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
+
   if flag(test-coverage)
     GHC-Options: -fhpc
   if !flag(allow-warnings)
