@@ -21,6 +21,30 @@ Build-type: Simple
 --
 --    cabal configure --ghc-option=-fdefer-type-errors
 --
+--
+-- Note about TemplateHaskell
+--
+-- Template Haskell is code that executes inside the compiler. It is
+-- loaded from object *.o file that has to be compiled before.  This
+-- object file must be a normal-vanilla one, not profiled. Here is
+-- where trouble starts: since we want stack traces we want profiling
+-- executables, but to build those template haskell normal ones need
+-- to be loaded.
+--
+-- Cabal hacks around it by forcing vanilla compilation if it sees
+-- TemplateHaskell in Extensions field. That is upside down, as
+-- vanilla is needed for sources that *define* template Haskell
+-- functions, although those source themselves do not use template
+-- Haskell.
+--
+-- Whole mess results in double compilation and over twice the time
+-- spent waiting. Possible way out is to:
+-- - move modules that define template haskell function into separate
+--   library, make everything else depend on it, enable TH there
+-- - remove TH from extensions from everything else, add
+--   LANGUAGE TemplateHaskell at the top of each file where it is used
+-- - use TH only where it is trully needed
+--
 
 Flag server-coverage
   Description: Build server with coverage instrumentation
