@@ -10,121 +10,11 @@ Description:
 Cabal-version: >= 1.18
 Build-type: Simple
 
-Flag cron
-  Description: Build executable that run various jobs periodically
-  Manual: True
-  Default: True
-
-Flag mailing-server
-  Description: Build mailing server
-  Manual: True
-  Default: True
-
-Flag messenger-server
-  Description: Build messenger server
-  Manual: True
-  Default: True
-
-Flag server
-  Description: Build server
-  Manual: True
-  Default: True
 
 Flag server-coverage
   Description: Build server with coverage instrumentation
   Manual: True
   Default: False
-
-Flag test
-  Description: Build tests
-  Manual: True
-  Default: True
-
-Flag test-companystate
-  Description: Build companystate testsuite
-  Manual: True
-  Default: True
-
-Flag test-companycontrol
-  Description: Build companycontrol testsuite
-  Manual: True
-  Default: True
-
-Flag test-docstate
-  Description: Build docstate testsuite
-  Manual: True
-  Default: True
-
-Flag test-docstatequery
-  Description: Build DocStateQuery testsuite
-  Manual: True
-  Default: True
-
-Flag test-html
-  Description: Build html testsuite
-  Manual: True
-  Default: True
-
-Flag test-input-validation
-  Description: Build input-validation testsuite
-  Manual: True
-  Default: True
-
-Flag test-login
-  Description: Build login testsuite
-  Manual: True
-  Default: True
-
-Flag test-signup
-  Description: Build signup testsuite
-
-Flag test-accountinfo
-  Description: Build account info testsuite
-
-Flag test-mailapi
-  Description: Build mailapi testsuite
-  Manual: True
-  Default: True
-
-Flag test-redirect
-  Description: Build redirect testsuite
-  Manual: True
-  Default: True
-
-Flag test-userstate
-  Description: Build userstate testsuite
-  Manual: True
-  Default: True
-
-Flag test-userhistory
-  Description: Build userhistory testsuite
-  Manual: True
-  Default: True
-
-Flag test-livedocx
-  Description: Build livedocx testsuite
-  Manual: True
-  Default: False
-
-Flag test-csvutil
-  Description: Build csvutil testsuite
-  Manual: True
-  Default: True
-
-Flag test-locale
-  Description: Build locale testsuite
-  Manual: True
-  Default: True
-
-Flag test-companyaccounts
-  Description: Build company accounts testsuite
-  Manual: True
-  Default: True
-
-Flag test-sessions
-  Description: Collects tests coverage status
-  Manual: True
-  Default: True
 
 Flag allow-warnings
   Description: Disable -Werror flag
@@ -137,10 +27,6 @@ Flag test-coverage
   Default: False
 
 Executable kontrakcja-server
-  if flag(server)
-    Buildable: True
-  else
-    Buildable: False
 
   Hs-source-dirs: inc misc src mailer/inc docconv/src messenger/src messenger/inc pdftools
 
@@ -247,10 +133,6 @@ Executable kontrakcja-server
               UndecidableInstances
 
 Executable cron
-  if flag(cron)
-    Buildable: True
-  else
-    Buildable: False
 
   Hs-source-dirs: inc misc src cron mailer/inc docconv/src messenger/inc pdftools
 
@@ -458,10 +340,6 @@ Executable kontrakcja-migrate
               UndecidableInstances
 
 Executable mailing-server
-  if flag(mailing-server)
-    Buildable: True
-  else
-    Buildable: False
 
   Hs-source-dirs: inc misc mailer/src mailer/inc docconv/src
 
@@ -568,10 +446,6 @@ Executable mailing-server
               UndecidableInstances
 
 Executable messenger-server
-  if flag(messenger-server)
-    Buildable: True
-  else
-    Buildable: False
 
   Hs-source-dirs: src inc misc messenger/src messenger/inc
 
@@ -679,11 +553,6 @@ Executable messenger-server
 
 
 Executable kontrakcja-test
-  if flag(test)
-    Buildable: True
-  else
-    Buildable: False
-
 
   Hs-source-dirs: inc misc test/src src mailer/inc docconv/src docconv/test/src messenger/src messenger/inc pdftools
 
