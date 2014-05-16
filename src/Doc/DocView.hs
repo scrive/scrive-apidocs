@@ -142,6 +142,7 @@ signatoryJSON forapi forauthor pq doc viewer siglink = do
     J.value "seendate" $ jsonDate $ signtime <$> maybeseeninfo siglink
     J.value "readdate" $ jsonDate $ maybereadinvite siglink
     J.value "rejecteddate" $ jsonDate rejectedDate
+    J.value "rejectionreason" $ signatorylinkrejectionreason siglink
     J.value "fields" $ signatoryFieldsJSON doc siglink
     J.value "status" $ show $ signatorylinkstatusclass siglink
     J.objects "attachments" $ map signatoryAttachmentJSON (signatoryattachments siglink)
