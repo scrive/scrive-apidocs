@@ -824,5 +824,7 @@
 "_youCantCancelThisDocuments":"Some of the selected documents can't be withdrawn.",
 "_youCantSendRemindersToThisDocuments":"Reminders can’t be sent for some of the selected documents.",
 "_yourSigningPluginFailed":"Your signing plug-in failed to sign the document. Please contact your eID provider.",
-"_zip":"ZIP"
+"_zip":"ZIP",
+"_padBackToList":"Back to list",
+"_padBackToDocument":"Back to document"
 }

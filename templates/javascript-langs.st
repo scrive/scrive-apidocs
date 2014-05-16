@@ -453,6 +453,8 @@ javascriptLocalisation =
              ,  font1 : "$_padFont1()$"
              ,  font2 : "$_padFont2()$"
              ,  font3 : "$_padFont3()$"
+             ,  backToList : "$_padBackToList()$"
+             ,  backToDocument : "$_padBackToDocument()$"
         }
          , changeEmail : "$_changeEmail()$"
          , changePhone : "$_changePhone()$"

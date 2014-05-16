@@ -15,7 +15,7 @@ define(['React', 'Backbone', 'common/backbone_mixim'], function(React, Backbone,
     render: function() {
       var signviewbranding = this.props.signviewbranding;
       var forPad =  this.props.forPad;
-      var backToList = true;
+      var backToList = LocalStorage.get("pad","from-list") == "true";
       var showHeader = signviewbranding.ready() && !BrowserInfo.isSmallScreen() && signviewbranding.showheader();
 
       var bgImage = signviewbranding.signviewbarscolour() != undefined ?  'none' : ''
@@ -42,12 +42,12 @@ define(['React', 'Backbone', 'common/backbone_mixim'], function(React, Backbone,
                   <div className="inner">
                     {/*if*/ backToList &&
                       <a className='link' href={"/to-sign"} style={{color: color}}>
-                        Back to list
+                        {localization.pad.backToList}
                       </a>
                     }
                     {/*else*/ !backToList &&
                       <a className='link' href={"/d/" + signviewbranding.documentid()} style={{color: color}}>
-                        Back to system
+                        {localization.pad.backToDocument}
                       </a>
                     }
                   </div>

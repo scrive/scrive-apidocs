@@ -318,6 +318,7 @@ var DocumentViewSignatoryView = React.createClass({
             mixpanel.track('Accept',
               {'Signatory index':signatory.signIndex(),
                'Accept' : 'give for signing'});
+                LocalStorage.set("pad","from-list","false");
                 signatory.giveForPadSigning().send();
            return true;
         }
