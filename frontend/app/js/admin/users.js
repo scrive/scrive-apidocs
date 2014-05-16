@@ -68,13 +68,13 @@ define(['Backbone', 'legacy_code'], function() {
                 onAccept : function() {
                               var callback = function(t,e,v) {
                                   jQuery(document.createElement('div'))
-                                      .attr("class", "validation-message")
+                                      .attr("class", "validation-failed-msg")
                                       .append(v.message())
                                       .appendTo(e.parent());
                               };
 
                               //delete messages
-                              jQuery('.validation-message').remove();
+                              jQuery('.validation-failed-msg').remove();
 
                               var vresult = [
                                   fstname.validate(new NameValidation({callback: callback, message: "Wrong first name format!"})),

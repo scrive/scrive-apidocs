@@ -199,7 +199,7 @@ define(['Backbone', 'legacy_code'], function() {
       model.addValidator(function() {
         return nameInput.value().validate(new UserNameValidation({
           callback: function(t, e, v) {
-            $("<div class='validate-message failed-validation' />").append(v.message()).appendTo(nameInput.el().parent());
+            $("<div class='validate-message failed-validation validation-failed-msg' />").append(v.message()).appendTo(nameInput.el().parent());
           },
           firstName: localization.validation.firstNameField,
           lastName: localization.validation.lastNameField}));
@@ -256,7 +256,7 @@ define(['Backbone', 'legacy_code'], function() {
       model.addValidator(function() {
         return passwordInput.value().validate(new PasswordValidation({
                     callback: function(t, e, v) {
-                      $("<div class='validate-message failed-validation' />").append(v.message()).appendTo(passwordInput.el().parent());
+                      $("<div class='validate-message failed-validation validation-failed-msg' />").append(v.message()).appendTo(passwordInput.el().parent());
                     },
                     message: localization.validation.passwordLessThanMinLength,
                     message_max: localization.validation.passwordExceedsMaxLength,
@@ -275,7 +275,7 @@ define(['Backbone', 'legacy_code'], function() {
       model.addValidator(function() {
         return password2Input.value().validate(new PasswordEqValidation({
                   callback: function(t, e, v) {
-                      $("<div class='validate-message failed-validation' />").append(v.message()).appendTo(password2Input.el().parent());
+                      $("<div class='validate-message failed-validation validation-failed-msg' />").append(v.message()).appendTo(password2Input.el().parent());
                   },
                   message: localization.validation.passwordsDontMatch,
                   'with': function() {return passwordInput.value();}
@@ -299,7 +299,7 @@ define(['Backbone', 'legacy_code'], function() {
       model.setTosValidator(function() {
         tosCBox.validate(new CheckboxReqValidation({
           callback: function(t, e, v) {
-                      $("<div class='validate-message failed-validation' />").css({'margin-left': '2px', 'margin-top': '-10px'}).append(v.message()).appendTo(tosCBox.parent());
+                      $("<div class='validate-message failed-validation validation-failed-msg' />").css({'margin-left': '2px', 'margin-top': '-10px', 'display': 'block'}).append(v.message()).appendTo(tosCBox.parent());
           },
           message: localization.validation.mustAcceptTOS
         }));
