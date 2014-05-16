@@ -11,10 +11,12 @@ module Doc.DocControl(
     , handleDownloadClosedFile
     , handleSignShow
     , handleSignShowSaveMagicHash
+    , handleSignPadShow
     , handleAcceptAccountFromSign
     , handleEvidenceAttachment
     , handleIssueShowGet
     , handleIssueAuthorGoToSignview
+    , handleIssueGoToSignviewPad
     , prepareEmailPreview
     , handleResend
     , handleChangeSignatoryEmail
@@ -191,6 +193,8 @@ handleSignShowSaveMagicHash did sid mh = do
     -- Redirect to propper page
     return $ LinkSignDocNoMagicHash did sid
 
+-- |
+--   /s/[documentid]/[signatorylinkid]
 {-# NOINLINE handleSignShow #-}
 handleSignShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 handleSignShow documentid signatorylinkid = do
@@ -209,13 +213,37 @@ handleSignShow documentid signatorylinkid = do
         ad <- getAnalyticsData
         content <- theDocument >>= \d -> pageDocumentSignView ctx d invitedlink ad
         simpleHtmlResonseClrFlash content
-    Nothing -> do
-      -- There is not magic hash in session. It may mean that the
-      -- session expired and we deleted the credentials already or it
-      -- may mean that cookies are disabled. Lets try to find out if
-      -- there are any cookies, if there are none we show a page how
-      -- to enable cookies on iPhone that seems to be the only
-      -- offender.
+    Nothing -> handleCookieFail
+
+-- |
+--   /sp/[documentid]/[signatorylinkid]
+{-# NOINLINE handleSignPadShow #-}
+handleSignPadShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
+handleSignPadShow documentid signatorylinkid = do
+  ctx <- getContext
+  mmagichash <- dbQuery $ GetDocumentSessionToken signatorylinkid
+  case mmagichash of
+    Just magichash ->
+      dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash documentid signatorylinkid magichash) `withDocumentM` do
+        invitedlink <- guardJust . getSigLinkFor signatorylinkid =<< theDocument
+        switchLangWhenNeeded  (Just invitedlink) =<< theDocument
+        unlessM ((isTemplate ||^ isPreparation ||^ isClosed) <$> theDocument) $ do
+          dbUpdate . MarkDocumentSeen signatorylinkid magichash =<< signatoryActor ctx invitedlink
+          triggerAPICallbackIfThereIsOne =<< theDocument
+        ad <- getAnalyticsData
+        content <- theDocument >>= \d -> pageDocumentSignForPadView ctx d invitedlink ad
+        simpleHtmlResonseClrFlash content
+    Nothing -> handleCookieFail
+
+
+-- If is not magic hash in session. It may mean that the
+-- session expired and we deleted the credentials already or it
+-- may mean that cookies are disabled. Lets try to find out if
+-- there are any cookies, if there are none we show a page how
+-- to enable cookies on iPhone that seems to be the only
+-- offender.
+handleCookieFail :: Kontrakcja m => m Response
+handleCookieFail = do
       cookies <- rqCookies <$> askRq
       if null cookies
          then sendRedirect LinkEnableCookies
@@ -223,7 +251,6 @@ handleSignShow documentid signatorylinkid = do
            res <- internalError
            preventTailCallOptimization -- we would like to see the above internalError in stack trace
            return res
-
 
 {- |
    Redirect author of document to go to signview
@@ -233,10 +260,31 @@ handleSignShow documentid signatorylinkid = do
 handleIssueAuthorGoToSignview :: Kontrakcja m => DocumentID -> m KontraLink
 handleIssueAuthorGoToSignview docid = do
   guardLoggedIn
+  ctx <- getContext
   doc <- getDocByDocIDForAuthor docid
-  user <- guardJustM $ ctxmaybeuser <$> getContext
+  user <-  guardJust (ctxmaybeuser ctx)
   case (isAuthor <$> getMaybeSignatoryLink (doc,user)) of
-    Just True -> return $ LinkSignDoc doc $ fromJust $ getMaybeSignatoryLink (doc,user)
+    Just True -> do
+      let asl = fromJust $ getMaybeSignatoryLink (doc,user) -- Checked isJust in case
+      dbUpdate $ AddDocumentSessionToken (signatorylinkid asl) (signatorymagichash asl)
+      return $ LinkSignDocNoMagicHash docid (signatorylinkid asl)
+    _ -> return LoopBack
+
+{- |
+   Redirect author of document to go to signview for any of the pad signatories
+   URL: /d/signview/{documentid}/{signatorylinkid}
+   Method: POST
+ -}
+handleIssueGoToSignviewPad :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
+handleIssueGoToSignviewPad docid slid= do
+  guardLoggedIn
+  ctx <- getContext
+  doc <- getDocByDocIDForAuthor docid
+  user <-  guardJust $ mplus (ctxmaybeuser ctx) (ctxmaybepaduser ctx)
+  case (isAuthor <$> getMaybeSignatoryLink (doc,user), getMaybeSignatoryLink (doc,slid)) of
+    (Just True,Just sl) -> do
+      dbUpdate $ AddDocumentSessionToken (signatorylinkid sl) (signatorymagichash sl)
+      return $ LinkSignDocPad docid slid
     _ -> return LoopBack
 
 handleEvidenceAttachment :: Kontrakcja m => DocumentID -> String -> m Response

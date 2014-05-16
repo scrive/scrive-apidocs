@@ -15,6 +15,12 @@ window.BrandingForSignView = Backbone.Model.extend({
   ready : function() {
      return this.get("ready");
   },
+  documentid : function() {
+    return this.get("documentid");
+  },
+  signatoryid : function() {
+    return this.get("signatoryid");
+  },
   signviewlogo: function() {
       return this.get("signviewlogo");
   },

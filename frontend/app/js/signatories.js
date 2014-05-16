@@ -457,21 +457,11 @@ window.Signatory = Backbone.Model.extend({
               customtext: customtext
           });
     },
-    addtoPadQueue : function(callback) {
+    giveForPadSigning : function(callback) {
         return new Submit({
-              url: "/api/frontend/padqueue/add/"+ this.document().documentid() + "/" + this.signatoryid(),
-              method: "POST",
-              ajax : true,
-              ajaxsuccess : callback
+              url: "/padsign/"+ this.document().documentid() + "/" + this.signatoryid(),
+              method: "POST"
           });
-    },
-    removeFromPadQueue : function(callback) {
-       return new Submit({
-              url: "/api/frontend/padqueue/clear",
-              method: "POST",
-              ajax : true,
-              ajaxsuccess : callback
-       });
     },
     reject: function(customtext) {
         return new Submit({

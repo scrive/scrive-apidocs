@@ -43,6 +43,7 @@ data KontraLink
     | LinkChangeUserEmail UserID MagicHash
     | LinkUserMailAPI
     | LinkSignDoc Document SignatoryLink
+    | LinkSignDocPad DocumentID SignatoryLinkID
     | LinkMainFile Document SignatoryLink
     | LinkSignDocNoMagicHash DocumentID SignatoryLinkID
     | LinkIssueDoc DocumentID
@@ -100,6 +101,8 @@ instance Show KontraLink where
     showsPrec _ (LinkSignDoc document signatorylink) =
         (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++
                  "/"++ show (signatorymagichash signatorylink)
+    showsPrec _ (LinkSignDocPad did slid) =
+        (++) $ "/sp/" ++ show did ++ "/" ++ show slid
     showsPrec _ (LinkMainFile document signatorylink) =
         (++) $ "/download/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++
                  "/"++ show (signatorymagichash signatorylink) ++ "/"++ documenttitle document ++ ".pdf"

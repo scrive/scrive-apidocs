@@ -67,6 +67,10 @@ staticRoutes production = choice
 
      , dir "s" $ dir "acceptaccount"  $ hPostNoXToken $ toK2 $ DocControl.handleAcceptAccountFromSign
 
+     , dir "sp" $ hGet $ toK2 $ DocControl.handleSignPadShow
+     , dir "padsign" $ hPost $ toK2 $ DocControl.handleIssueGoToSignviewPad
+
+
      -- Attachments
      , dir "a" $ dir "rename"      $ hPost $ toK1 $ AttachmentControl.handleRename
      , dir "a" $ dir "share"       $ hPost $ toK0 $ AttachmentControl.handleShare

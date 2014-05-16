@@ -51,9 +51,7 @@ var AuthorViewTitleBoxModel = Backbone.Model.extend({
   },
   giveToPadSignatory : function() {
       if (this.padNextSignatory() != undefined)
-        this.padNextSignatory().addtoPadQueue().sendAjax(function() {
-                      window.location =  '/padqueue';
-                });
+        this.padNextSignatory().giveForPadSigning().send();
   }
 });
 

@@ -113,31 +113,17 @@ var DocumentViewSignatoryModel = Backbone.Model.extend({
           && signatory.canSign()
           && signatory.padDelivery();
  },
- hasGiveForSigningOnThisDeviceOption : function() {
+ hasGiveForSigningOption : function() {
    return    !this.forSigning()
           && this.hasPadOptions()
-          && this.signatory().author()
-          && BrowserInfo.isPadDevice();
- },
- hasRemoveFromPadQueueOption : function() {
-   return    !this.forSigning()
-          && this.hasPadOptions()
-          && this.signatory().inpadqueue()
-          && !BrowserInfo.isPadDevice();
- },
- hasAddToPadQueueOption : function() {
-   return    !this.forSigning()
-          && this.hasPadOptions()
-          && !this.signatory().inpadqueue()
-          && !BrowserInfo.isPadDevice();
+          //&& this.signatory().author()
+          //&& BrowserInfo.isPadDevice();
  },
  hasAnyOptions : function() {
     return  this.hasRemindOption()
          || this.hasChangeEmailOption()
          || this.hasChangePhoneOption()
-         || this.hasGiveForSigningOnThisDeviceOption()
-         || this.hasAddToPadQueueOption()
-         || this.hasRemoveFromPadQueueOption();
+         || this.hasGiveForSigningOption()
 
  },
  hasAnyDetails : function() {
@@ -319,7 +305,7 @@ var DocumentViewSignatoryView = React.createClass({
        });
      }
     },
-    handleGiveForSigningOnThisDevice : function() {
+    hasGiveForSigning : function() {
       var model= this.props.model;
       var signatory = model.signatory();
       mixpanel.track('Click give for signing',  {'Signatory index':signatory.signIndex()});
@@ -332,46 +318,10 @@ var DocumentViewSignatoryView = React.createClass({
             mixpanel.track('Accept',
               {'Signatory index':signatory.signIndex(),
                'Accept' : 'give for signing'});
-            signatory.addtoPadQueue(function(resp) {
-              if (resp.error == undefined)
-                window.location = signatory.padSigningURL();
-              else
-                new FlashMessage({
-                  content: localization.pad.addToPadQueueNotAdded,
-                  color: "red"
-                });
-            }).send();
+                signatory.giveForPadSigning().send();
            return true;
         }
       });
-    },
-    handleRemoveFromPadQueue : function() {
-      var model= this.props.model;
-      var signatory = model.signatory();
-      mixpanel.track('Click remove from pad queue', {'Signatory index':signatory.signIndex()});
-      LoadingDialog.open();
-      signatory.removeFromPadQueue().sendAjax(function() {
-                            model.triggerOnAction();
-      });
-    },
-    handleAddToPadQueueOption : function() {
-      var model= this.props.model;
-      var signatory = model.signatory();
-      mixpanel.track('Click add to pad queue',{'Signatory index':signatory.signIndex()});
-      new Confirmation({
-        title : localization.pad.addToPadQueueConfirmHeader,
-        content : localization.pad.addToPadQueueConfirmText,
-        acceptText : localization.pad.addToPadQueue ,
-        rejectText : localization.cancel,
-        onAccept : function() {
-          mixpanel.track('Accept',{'Accept' : 'add to pad queue', 'Signatory index':signatory.signIndex()});
-          LoadingDialog.open();
-          signatory.addtoPadQueue().sendAjax(function() {
-             model.triggerOnAction();
-          });
-          return true;
-       }
-     });
     },
 
     render: function() {
@@ -442,27 +392,12 @@ var DocumentViewSignatoryView = React.createClass({
               />
              }
 
-             {/*if*/ model.hasAddToPadQueueOption() &&
-               <Button
-                 color="black"
-                 text={localization.pad.addToPadQueue}
-                 onClick={this.handleAddToPadQueueOption}
-               />
-             }
 
-             {/*if*/ model.hasGiveForSigningOnThisDeviceOption() &&
+             {/*if*/ model.hasGiveForSigningOption() &&
                <Button
                  color="black"
                  text={localization.pad.signingOnSameDevice}
-                 onClick={this.handleGiveForSigningOnThisDevice}
-               />
-             }
-
-             {/*if*/ model.hasRemoveFromPadQueueOption() &&
-               <Button
-                 color="black"
-                 text={localization.pad.removeFromPadQueue}
-                 onClick={this.handleRemoveFromPadQueue}
+                 onClick={this.hasGiveForSigning}
                />
              }
 

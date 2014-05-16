@@ -67,7 +67,6 @@ define([
   '../js/authorview/authorviewfirsttime',
   '../js/attachmentview',
   '../js/tasks',
-  '../js/docsignviewframes',
   '../js/doctools/dochistory',
   '../js/doctools/docauthorattachments',
   '../js/doctools/docevidenceattachments',

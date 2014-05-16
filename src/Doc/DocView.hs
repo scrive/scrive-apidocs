@@ -11,6 +11,7 @@ module Doc.DocView (
   , pageDocumentDesign
   , pageDocumentView
   , pageDocumentSignView
+  , pageDocumentSignForPadView
   , documentJSON
   , gtVerificationPage
   ) where
@@ -294,6 +295,25 @@ pageDocumentSignView ctx document siglink ad = do
       F.value "usestandardheaders" $ (isJust $ maybesignatory siglink) && (maybesignatory siglink) == (userid <$> ctxmaybeuser ctx)
       standardPageFields ctx kontrakcja ad
       brandingFields mbd mcompany
+
+
+pageDocumentSignForPadView :: Kontrakcja m
+                    => Context
+                    -> Document
+                    -> SignatoryLink
+                    -> AnalyticsData
+                    -> m String
+pageDocumentSignForPadView ctx document siglink ad = do
+  let  mbd = ctxbrandeddomain ctx
+  mcompany <- companyUIForPage
+  renderTemplate "pageDocumentSignPadView" $ do
+      F.value "documentid" $ show $ documentid document
+      F.value "siglinkid" $ show $ signatorylinkid siglink
+      F.value "documenttitle" $ documenttitle document
+      standardPageFields ctx kontrakcja ad
+      brandingFields mbd mcompany
+
+
 
 
 
