@@ -73,10 +73,10 @@ define(['Backbone', 'legacy_code'], function() {
       this.render();
     },
     validationCallback: function(t, _e , v) {
-      $("<div class='validate-message validation-failed-msg' />").css({'display': 'inline-block'}).append(v.message()).appendTo($('.position.withEmail',this.el));
+      $("<div class='validation-failed-msg inline-block' />").append(v.message()).appendTo($('.position.withEmail',this.el));
     },
     clearValidationMessages : function() {
-      $(".validate-message",this.el).remove();
+      $(".validation-failed-msg",this.el).remove();
     },
     render: function () {
         $(this.el).html('');
@@ -134,10 +134,10 @@ define(['Backbone', 'legacy_code'], function() {
       this.render();
     },
     validationCallback: function(t, e, v) {
-      $("<div class='validate-message validation-failed-msg' />").css({'display': 'inline-block'}).append(v.message()).appendTo($('.position.withEmail',this.el));
+      $("<div class='validation-failed-msg inline-block' />").append(v.message()).appendTo($('.position.withEmail',this.el));
     },
     clearValidationMessages : function() {
-      $(".validate-message",this.el).remove();
+      $(".validation-failed-msg",this.el).remove();
     },
     render: function () {
         $(this.el).html('');

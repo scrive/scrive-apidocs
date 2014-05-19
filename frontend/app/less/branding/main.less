@@ -274,9 +274,13 @@ iframe[name='google_conversion_frame'] {
 }
 
 .validation-failed-msg {
-  text-align: left;
   color: @red;
   font-size: 14px;
+  text-align: left;
+
+  &.inline-block {
+    display: inline-block;
+  }
 }
 
 .capitalize-first-letter {
