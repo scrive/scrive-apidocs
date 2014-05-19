@@ -160,7 +160,7 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
         header.append($("<a class='modal-close'/>").click(function() { self.model.onClose();}));
         if (!this.model.drawingMode()) {
           this.textInput = new InfoTextInput({
-                               infotext : "Please type your name", // TODO fix me
+                               infotext : localization.pad.typeSignatureNameField,
                                cssClass : "float-left",
                                style: "margin-right:10px;border: 1px solid #7A94B8;width:170px;",
                                value : self.model.typerOrDrawer().text(),

@@ -493,6 +493,7 @@ javascriptLocalisation =
              ,  removeFromPadQueue2 : "$_padRemoveFromPadQueue2()$"
              ,  drawSignatureBoxHeader : "$_padDrawSignatureBoxHeader()$"
              ,  typeSignatureBoxHeader : "$_padTypeSignatureBoxHeader()$"
+             ,  typeSignatureNameField : "$_padTypeSignatureNameField()$"
              ,  or            : "$_padOR()$"
              ,  drawSignature : "$_padDrawSignature()$"
              ,  typeSignature : "$_padTypeSignature()$"
