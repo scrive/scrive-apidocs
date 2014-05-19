@@ -1,13 +1,13 @@
 AttachExtendedSealedFileEvidenceText=*
 $if(full)$
-  $_AttachExtendedSealedFileEvidenceTextFull()$
+  The document was sealed with a keyless digital signature by Scrive E-sign.
 $else$
   $_AttachExtendedSealedFileEvidenceTextSimple()$
 $endif$
 ###
 AttachGuardtimeSealedFileEvidenceText=*
 $if(full)$
-  $_AttachGuardtimeSealedFileEvidenceTextFull()$
+  The document was sealed with a digital signature by Scrive E-sign.
 $else$
   $_AttachGuardtimeSealedFileEvidenceTextSimple()$
 $endif$
@@ -29,7 +29,7 @@ $endif$
 ###
 AutomaticReminderSentText=*
 $if(full)$
-  $_AutomaticReminderSentTextFull()$
+  An automatic reminder to sign was sent to $signatory$ using $_delivery_method()$ at the request of $author$.
 $else$
   $_AutomaticReminderSentTextSimple()$
 $endif$
@@ -53,7 +53,12 @@ ChangeSignatoryEmailWhenUndeliveredEvidenceText=The email address for the signat
 ###
 ChangeSignatoryPhoneWhenUndeliveredEvidenceText=The phone number for the signatory was changed from $oldphone$ to $newphone$ by $actor$.
 ###
-CloseDocumentEvidenceText=$if(full)$$_CloseDocumentEvidenceTextFull()$$else$$_CloseDocumentEvidenceTextSimple()$$endif$
+CloseDocumentEvidenceText=
+$if(full)$
+  Scrive E-sign locked the document from further modifications by the signing parties.
+$else$
+  $_CloseDocumentEvidenceTextSimple()$
+$endif$
 ###
 DeleteSigAttachmentEvidenceText=The attachment “$name$” previously uploaded by $actor$ on the request of $author$ was deleted by $actor$.
 ###
@@ -300,7 +305,7 @@ $endif$
 ###
 SignWithELegFailureEvidenceText=*
 $if(full)$
-  $_SignWithELegFailureEvidenceTextFull()$
+  Scrive E-sign rejected the attempt by $signatory$ to sign the document. The reason was that the identity information of $signatory$ did not match the identity information received from the external eID system. Information given by the external eID system: $msg$.
 $else$
   $_SignWithELegFailureEvidenceTextSimple()$
 $endif$
@@ -332,7 +337,7 @@ $endif$
 ###
 TimeoutDocumentEvidenceText=*
 $if(full)$
-  $_TimeoutDocumentEvidenceTextFull()$
+  The due date for signing the document passed. The possibility to sign was disabled by Scrive E-sign.
 $else$
   $_TimeoutDocumentEvidenceTextSimple()$
 $endif$
