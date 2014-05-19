@@ -201,7 +201,6 @@ mailInvitation forMail
            else
             renderLocalTemplate document "mailInvitationCustomInvitationHeader" $ do
               F.value "defaultheader" defaultHeader
-              F.value "creatorname" creatorname
               F.valueM "custommessage" $ makeEditable "customtext" documentinvitetext
               allMailFields
         F.value "link" $ case msiglink of
