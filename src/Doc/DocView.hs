@@ -12,6 +12,7 @@ module Doc.DocView (
   , pageDocumentView
   , pageDocumentSignView
   , pageDocumentSignForPadView
+  , pageDocumentPadList
   , documentJSON
   , gtVerificationPage
   ) where
@@ -314,7 +315,16 @@ pageDocumentSignForPadView ctx document siglink ad = do
       brandingFields mbd mcompany
 
 
-
+pageDocumentPadList:: Kontrakcja m
+                    => Context
+                    -> AnalyticsData
+                    -> m String
+pageDocumentPadList ctx ad = do
+  let  mbd = ctxbrandeddomain ctx
+  mcompany <- companyUIForPage
+  renderTemplate "pagePadListView" $ do
+      standardPageFields ctx kontrakcja ad
+      brandingFields mbd mcompany
 
 
 -- | Basic info about document , name, id ,author

@@ -121,6 +121,7 @@ signatoryFieldsListForJSON doc sl = do
     J.value "invitationundelivered" $ Pending == documentstatus doc && (Undelivered == mailinvitationdeliverystatus sl || Undelivered == smsinvitationdeliverystatus sl)
     J.value "inpadqueue" $  False
     J.value "isauthor" $ isAuthor sl
+    J.value "cansignnow" $ canSignatorySignNow doc sl
     J.value "authentication" $ case signatorylinkauthenticationmethod sl of
       StandardAuthentication -> "standard"
       ELegAuthentication     -> "eleg"

@@ -147,6 +147,7 @@ jsonDocumentsList = do
                           "Rubbish"           -> ([DocumentsVisibleToUser uid]
                                                  ,[DocumentFilterDeleted True, DocumentFilterUnsavedDraft False])
                           "All"               -> ([DocumentsVisibleToUser uid],[DocumentFilterUnsavedDraft False])
+                          "DocumentsForPad"   -> ([DocumentsVisibleToUser uid],[DocumentFilterByAuthor uid, DocumentFilterSignNowOnPad])
                           _ -> ([DocumentsVisibleToUser uid],[DocumentFilterDeleted False, DocumentFilterUnsavedDraft False])
       filters2 = concatMap fltSpec (listParamsFilters params)
       fltSpec ("time", tostr) = case reads tostr of

@@ -4,7 +4,7 @@ define(['Backbone', 'legacy_code'], function() {
 
 window.BrandingForSignView = Backbone.Model.extend({
   defaults : {
-      ready : false
+      ready : false,
   },
   initialize: function(args) {
       if (args.documentid && args.signatoryid)
@@ -52,16 +52,16 @@ window.BrandingForSignView = Backbone.Model.extend({
       return this.get("signviewbackgroundcolour");
   },
   showheader: function() {
-      return this.get("showheader");
+      return this.get("showheader") || true;
   },
   showpdfdownload: function() {
-      return this.get("showpdfdownload");
+      return this.get("showpdfdownload") || true;
   },
   showrejectoption: function() {
-      return this.get("showrejectoption");
+      return this.get("showrejectoption") || true;
   },
   showfooter: function() {
-      return this.get("showfooter");
+      return this.get("showfooter") || true;
   },
   fullname: function() {
       return this.get("fullname");

@@ -6,7 +6,7 @@
     -moz-border-radius: 0 0 5px 5px;
     -webkit-border-radius: 0 0 5px 5px;
     border-radius: 0 0 5px 5px;
-    
+
     table {
       background: @white;
       border: 1px solid @dark-border;
@@ -31,7 +31,7 @@
 
           &.sortable {
             cursor: pointer;
-            
+
             &:hover {
               color: @blue-dark !important;
             }
@@ -48,7 +48,7 @@
         margin-bottom: 1px;
         padding: 3px 5px 3px 15px;
         overflow-x: hidden;
-        
+
         &.right {
           padding-right: 12px;
           text-align: right;
@@ -105,14 +105,14 @@
     max-width: 800px;
     padding-bottom: 14px;
     padding-top: 5px;
-    
+
     &.float-right {
       margin: 0 20px 0 0;
     }
 
     &.float-left {
       margin: 0 0 0 20px;
-      
+
       a {
         margin-right: 7px;
       }
@@ -135,7 +135,7 @@
     padding-left: 20px;
     padding-right: 10px;
     padding-top: 10x; // TODO: should this be px, or should it be removed?
-    
+
     .empty {
       height: 0px;
     }
@@ -148,6 +148,10 @@
   .actionButton,
   .select  {
     margin-right: 8px;
+
+    &.float-right {
+      margin-right:0px;
+    }
 
     .select-button .select-button-label{
       color : @black;

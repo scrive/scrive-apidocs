@@ -69,6 +69,7 @@ staticRoutes production = choice
 
      , dir "sp" $ hGet $ toK2 $ DocControl.handleSignPadShow
      , dir "padsign" $ hPost $ toK2 $ DocControl.handleIssueGoToSignviewPad
+     , dir "to-sign" $ hGet $ toK0 $ DocControl.handlePadList
 
 
      -- Attachments

@@ -12,7 +12,8 @@ define(['Backbone', 'legacy_code'], function() {
             size: "normal",
             button : undefined, //Custom button, jQuery object. We don't control it's visability.
             emptyMessage : "", // Message to show when nothing is selected and we dont accept empty
-            notAvailableMessage : ""
+            notAvailableMessage : "",
+            cssClass : ""
         },
         initialize: function (args) {
         },
@@ -49,6 +50,9 @@ define(['Backbone', 'legacy_code'], function() {
         },
         width : function() {
           return this.get("width");
+        },
+        cssClass : function() {
+          return this.get("cssClass");
         }
     });
 
@@ -80,9 +84,9 @@ define(['Backbone', 'legacy_code'], function() {
                                       size : model.size(),
                                       text  : model.name(),
                                       width : model.width(),
-                                      onClick : function() { return self.onSelect();}
+                                      onClick : function() { return self.onSelect();},
                 });
-            $(this.el).append(button.el());
+            $(this.el).addClass(model.cssClass()).append(button.el());
         }
     });
 

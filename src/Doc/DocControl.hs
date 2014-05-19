@@ -29,6 +29,7 @@ module Doc.DocControl(
     , handleVerify
     , handleMarkAsSaved
     , handleAfterSigning
+    , handlePadList
 ) where
 
 import AppView
@@ -486,6 +487,13 @@ handleChangeSignatoryPhone docid slid = withUserPost $ do
       _ <- sendInvitationEmail1 sl
       return $ LoopBack
     _ -> return LoopBack
+
+
+handlePadList :: Kontrakcja m => m Response
+handlePadList = do
+  ctx <- getContext
+  ad <- getAnalyticsData
+  simpleHtmlResonseClrFlash =<< pageDocumentPadList ctx  ad
 
 checkFileAccess :: Kontrakcja m => FileID -> m ()
 checkFileAccess fid = do

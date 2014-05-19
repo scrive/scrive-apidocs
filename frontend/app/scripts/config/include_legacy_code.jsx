@@ -105,6 +105,7 @@ define([
   '../js/archive/attachments',
   '../js/archive/bin',
   '../js/archive/archive',
+  '../js/archive/padlist',
   '../js/admin/admin',
   '../js/admin/useradmin',
   '../js/admin/companyadmin',

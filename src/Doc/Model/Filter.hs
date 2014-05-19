@@ -39,6 +39,7 @@ data DocumentFilter
   | DocumentFilterByAuthor UserID             -- ^ Only documents created by this user
   | DocumentFilterByAuthorCompany CompanyID   -- ^ Onl documents where author is in given company
   | DocumentFilterByCanSign UserID            -- ^ Only if given person can sign right now given document
+  | DocumentFilterSignNowOnPad                -- ^ Only documents where someone can sign now on pad
   | DocumentFilterByDocumentID DocumentID     -- ^ Document by specific ID
   | DocumentFilterByDocumentIDs [DocumentID]  -- ^ Documents by specific IDs
   | DocumentFilterSignable                    -- ^ Document is signable
@@ -148,6 +149,14 @@ documentFilterToSQL (DocumentFilterByCanSign userid) = do
   sqlWhereIsNULL "signatory_links.sign_time"
   sqlWhereEqSql "signatory_links.sign_order" documentSignorderExpression
 
+documentFilterToSQL (DocumentFilterSignNowOnPad) = do
+  sqlWhereEq "documents.status" Pending
+  sqlWhereExists $ sqlSelect "signatory_links AS sl5" $ do
+                      sqlWhere "sl5.document_id = signatory_links.document_id"
+                      sqlWhere "sl5.is_partner"
+                      sqlWhereIsNULL "sl5.sign_time"
+                      sqlWhereEqSql "sl5.sign_order" documentSignorderExpression
+                      sqlWhereEq "sl5.delivery_method" PadDelivery
 
 documentFilterToSQL (DocumentFilterByDocumentID did) = do
   sqlWhereEq "documents.id" did

@@ -3,16 +3,17 @@
 @import 'branding/variables.less';
 
 .archive,
+.pad-list,
 .admin {
 
   .list-container {
     border: none;
     margin: auto;
     width: 1018px;
-    
+
     .table {
       border: none;
-      
+
       thead {
         background: @grey;
       }
@@ -25,7 +26,7 @@
 
   .option-top-box {
     border-bottom: none;
-    
+
     // align to menu and the list.
     .col.float-left,
     .col.float-right {
@@ -82,8 +83,8 @@
 .table-statuses .icon {
   margin-left: 30px;
   margin-top: -7px;
-  
-  &.first { 
+
+  &.first {
     margin-left: 4px;
   }
 }
@@ -121,7 +122,7 @@
     h5.great-thing {
       font-weight: 300;
       margin-left: 15px;
-      
+
       &:before {
         content: url(~"@{img-base-url}/arrow-list.png");
         margin-right: 5px;
@@ -130,6 +131,12 @@
   }
 }
 
+// Special view that is similar to archive, but doesn't have tabs
+.pad-list {
+  .list-container {
+    margin-top: 15px;
+  }
+}
 
 // Welcome new user in document archive view - EXPERIMENT
 // -------------------------
@@ -168,7 +175,7 @@
     margin-bottom: 400px;
     margin-top: 40px;
     padding: 46px 20px 53px 100px;
-    
+
     .subtitle {
       width: 489px;
     }
@@ -211,7 +218,7 @@
       left: 6px;
       top: 32px;
       position: relative;
-      
+
       span {
         color: #4a4949;
         font-size: 17px;
