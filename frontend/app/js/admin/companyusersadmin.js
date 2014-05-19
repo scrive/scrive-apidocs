@@ -68,22 +68,14 @@ var newUserInCompanyButton = function(companyid) {
               new Confirmation({
                 onAccept : function() {
                               var callback = function(t,e,v) {
-                                  e.css("background", "red");
                                   jQuery(document.createElement('div'))
-                                      .attr("name", "validate-message")
-                                      .css({"font-size": 8, "font-weight": "bold", "color": "red"})
+                                      .attr("class", "validation-failed-msg")
                                       .append(v.message())
                                       .appendTo(e.parent());
                               };
 
-                              //reset red background
-                              fstname.css("background", "white");
-                              sndname.css("background", "white");
-                              email.css("background", "white");
-                              lang.css("background", "white");
-
                               //delete messages
-                              jQuery('[name=validate-message]').remove();
+                              jQuery('.validation-failed-msg').remove();
 
                               var vresult = [
                                   fstname.validate(new NameValidation({callback: callback, message: "Wrong first name format!"})),
