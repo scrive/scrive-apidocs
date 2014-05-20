@@ -493,7 +493,10 @@ handlePadList :: Kontrakcja m => m Response
 handlePadList = do
   ctx <- getContext
   ad <- getAnalyticsData
-  simpleHtmlResonseClrFlash =<< pageDocumentPadList ctx  ad
+  case (ctxmaybeuser ctx `mplus` ctxmaybepaduser ctx) of
+    Just _ -> simpleHtmlResonseClrFlash =<< pageDocumentPadList ctx  ad
+    _ -> simpleHtmlResonseClrFlash =<< pageDocumentPadListLogin ctx  ad
+
 
 checkFileAccess :: Kontrakcja m => FileID -> m ()
 checkFileAccess fid = do

@@ -5,6 +5,41 @@ wrapperopentag=
 wrapperclosingtag=
 </div>
 ########
+padLogin=
+$doctype()$
+$htmlopentag()$
+  <head>
+    <title>$pagetitle()$</title>
+    $standardHeaderContents()$
+  </head>
+  <body style="background: $background$" >
+  $flashmessages()$
+  <div class='mainContainer big' style='height:auto;position: static;overflow-y:hidden;'>
+      <div class="inner" style='height:auto;position:static;margin:auto;width:auto;'>
+      </div>
+  </div>
+  <script type="text/javascript">
+   require(['jquery', 'legacy_code'], function(jQuery) {
+    jQuery(document).ready(function() {
+      jQuery('.inner').append(new Login({
+                                         branded : true,
+                                         referer:   "/to-sign",
+                                         logolink:   "$if(logolink)$$logolink$$else$/img/logo_email.png$endif$",
+                                         buttoncolorclass : "$buttoncolorclass$",
+                                         servicelinkcolour: $if(servicelinkcolour)$"$servicelinkcolour$"$else$null$endif$,
+                                         textscolour: $if(textscolour)$"$textscolour$"$else$null$endif$,
+                                         autofocus: true}).el());
+      mixpanel.register({
+        Context : 'Login page - branded'
+      });
+      mixpanel.track('View login page -branded');
+    });
+   });
+  </script>
+
+  </body>
+$htmlclosingtag()$
+########
 pageDocumentSignView=
 $doctype()$
 $htmlopentag()$
@@ -115,10 +150,20 @@ $htmlopentag()$
                   });
 
               var headerDiv = jQuery('<div/>');
+              var link = {};
+              if (LocalStorage.get("pad","from-list") == "true") {
+                link.text= localization.pad.backToList;
+                link.onClick = function() {window.location = "/to-sign"};
+              }
+              else {
+                link.text = localization.pad.backToDocument;
+                link.onClick = function() {window.location = "/d/$documentid$"};
+              }
+
               var component = React.renderComponent(
                 Header({
                    signviewbranding: svb,
-                    forPad : true
+                   link : link
                 }), headerDiv[0]);
 
               var footerDiv = jQuery('<div/>');

@@ -13,6 +13,7 @@ module Doc.DocView (
   , pageDocumentSignView
   , pageDocumentSignForPadView
   , pageDocumentPadList
+  , pageDocumentPadListLogin
   , documentJSON
   , gtVerificationPage
   ) where
@@ -47,6 +48,7 @@ import Analytics.Include
 import qualified Amazon as AWS
 import Happstack.Server.SimpleHTTP
 import qualified Log
+import BrandedDomain.BrandedDomain
 
 pageCreateFromTemplate :: TemplatesMonad m => m String
 pageCreateFromTemplate = renderTemplate_ "createFromTemplatePage"
@@ -325,6 +327,21 @@ pageDocumentPadList ctx ad = do
   renderTemplate "pagePadListView" $ do
       standardPageFields ctx kontrakcja ad
       brandingFields mbd mcompany
+
+pageDocumentPadListLogin:: Kontrakcja m
+                    => Context
+                    -> AnalyticsData
+                    -> m String
+pageDocumentPadListLogin ctx ad = do
+  let  mbd = ctxbrandeddomain ctx
+  renderTemplate "padLogin" $ do
+      standardPageFields ctx kontrakcja ad
+      F.value "logolink" $ bdlogolink <$> mbd
+      F.value "servicelinkcolour" $ bdservicelinkcolour <$> mbd
+      F.value "textscolour" $ bdexternaltextcolour <$> mbd
+      F.value "background" $ bdbackgroundcolorexternal <$> mbd
+      brandingFields mbd Nothing
+
 
 
 -- | Basic info about document , name, id ,author

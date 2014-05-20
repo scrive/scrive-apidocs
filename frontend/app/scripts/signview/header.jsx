@@ -6,7 +6,7 @@ define(['React', 'Backbone', 'common/backbone_mixim'], function(React, Backbone,
   return React.createClass({
     propTypes: {
       signviewbranding: React.PropTypes.signviewbranding,
-      forPad : React.PropTypes.pad
+      link : React.PropTypes.object
     },
     mixins: [BackboneMixin.BackboneMixin],
     getBackboneModels : function() {
@@ -14,8 +14,7 @@ define(['React', 'Backbone', 'common/backbone_mixim'], function(React, Backbone,
     },
     render: function() {
       var signviewbranding = this.props.signviewbranding;
-      var forPad =  this.props.forPad;
-      var backToList = LocalStorage.get("pad","from-list") == "true";
+      var hasLink = this.props.link != undefined;
       var showHeader = signviewbranding.ready() && !BrowserInfo.isSmallScreen() && signviewbranding.showheader();
 
       var bgImage = signviewbranding.signviewbarscolour() != undefined ?  'none' : ''
@@ -37,23 +36,16 @@ define(['React', 'Backbone', 'common/backbone_mixim'], function(React, Backbone,
               </div>
               <div className="sender" style={{color: color,fontFamily : font}}>
 
-                {/*if*/ forPad &&
+                {/*if*/ hasLink &&
 
                   <div className="inner">
-                    {/*if*/ backToList &&
-                      <a className='link' href={"/to-sign"} style={{color: color}}>
-                        {localization.pad.backToList}
+                      <a className='link' onClick={this.props.link.onClick} style={{color: color}}>
+                        {this.props.link.text}
                       </a>
-                    }
-                    {/*else*/ !backToList &&
-                      <a className='link' href={"/d/" + signviewbranding.documentid()} style={{color: color}}>
-                        {localization.pad.backToDocument}
-                      </a>
-                    }
                   </div>
 
                 }
-                {/*else*/ !forPad &&
+                {/*else*/ !hasLink &&
                   <div className="inner">
                     <div className='name'>
                       {signviewbranding.fullname()}
