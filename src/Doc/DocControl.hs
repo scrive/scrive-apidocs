@@ -46,7 +46,7 @@ import Doc.DocumentID
 import Doc.RenderedPages
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
 import Doc.Tokens.Model
-import EvidenceLog.Model (InsertEvidenceEvent(..), CurrentEvidenceEventType(..))
+import EvidenceLog.Model (InsertEvidenceEventWithAffectedSignatoryAndMsg(..), CurrentEvidenceEventType(..))
 import Attachment.Model
 import InputValidation
 import Instances ()
@@ -182,7 +182,7 @@ handleSignShowSaveMagicHash did sid mh = do
     dbUpdate $ AddDocumentSessionToken sid mh
 
     invitedlink <- guardJust . getSigLinkFor sid =<< theDocument
-    void $ dbUpdate . InsertEvidenceEvent SignatoryLinkVisited (return ()) =<< signatoryActor ctx invitedlink
+    void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg SignatoryLinkVisited  (return ()) (Just invitedlink) Nothing =<< signatoryActor ctx invitedlink
 
     -- Redirect to propper page
     return $ LinkSignDocNoMagicHash did sid

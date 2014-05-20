@@ -234,7 +234,7 @@ ResealedPDFText=Preparation of the Evidence Package was requested by $actor$, a 
 ###
 RestartDocumentEvidenceText=*
 $if(full)$
-  The document was opened for editing by $actor$ in Scrive E-sign’s interface to design signing processes
+  $RestartDocumentEvidenceTextFull()$
 $else$
   $if(archive)$
     $_RestartDocumentEvidenceTextSimpleArchive()$
@@ -242,6 +242,8 @@ $else$
     $_RestartDocumentEvidenceTextSimpleNotArchive()$
   $endif$
 $endif$
+###
+RestartDocumentEvidenceTextFull=The document was opened for editing by $actor$ in Scrive E-sign’s interface to design signing processes.
 ###
 SMSPinDeliveredEvidenceText=$_SMSPinDeliveredEvidenceText()$
 ###
