@@ -1,20 +1,26 @@
+AttachAttachExtendedSealedFileEvidenceTextFull=The document was sealed with a keyless digital signature by Scrive E-sign.
+###
 AttachExtendedSealedFileEvidenceText=*
 $if(full)$
-  The document was sealed with a keyless digital signature by Scrive E-sign.
+  $AttachAttachExtendedSealedFileEvidenceTextFull()$
 $else$
   $_AttachExtendedSealedFileEvidenceTextSimple()$
 $endif$
 ###
+AttachGuardtimeSealedFileEvidenceTextFull=The document was sealed with a digital signature by Scrive E-sign.
+###
 AttachGuardtimeSealedFileEvidenceText=*
 $if(full)$
-  The document was sealed with a digital signature by Scrive E-sign.
+  $AttachGuardtimeSealedFileEvidenceTextFull()$
 $else$
   $_AttachGuardtimeSealedFileEvidenceTextSimple()$
 $endif$
 ###
+AttachSealedFileEvidenceTextFull=Scrive E-sign prepared the final PDF, including evidence collected by Scrive E-sign, before sealing with a digital signature.
+###
 AttachSealedFileEvidenceText=*
 $if(full)$
-  Scrive E-sign prepared the final PDF, including evidence collected by Scrive E-sign, before sealing with a digital signature.
+  $AttachSealedFileEvidenceTextFull()$
 $else$
   $if(archive)$
     $_AttachSealedFileEvidenceTextSimpleArchive()$
@@ -23,16 +29,20 @@ $else$
   $endif$
 $endif$
 ###
+AutomaticReminderSentTextFull=An automatic reminder to sign was sent to $signatory$ using $_delivery_method()$ at the request of $author$.
+###
 AutomaticReminderSentText=*
 $if(full)$
-  An automatic reminder to sign was sent to $signatory$ using $_delivery_method()$ at the request of $author$.
+  $AutomaticReminderSentTextFull()$
 $else$
   $_AutomaticReminderSentTextSimple()$
 $endif$
 ###
+CancelDocumentEvidenceTextFull=The invitation to sign was withdrawn by $actor$. The possibility to sign was disabled by Scrive E-sign.
+###
 CancelDocumentEvidenceText=*
 $if(full)$
-  The invitation to sign was withdrawn by $actor$. The possibility to sign was disabled by Scrive E-sign.
+  $CancelDocumentEvidenceTextFull()$
 $else$
   $if(archive)$
     $_CancelDocumentEvidenceTextSimpleArchive()$
@@ -45,9 +55,11 @@ ChangeSignatoryEmailWhenUndeliveredEvidenceText=The email address for the signat
 ###
 ChangeSignatoryPhoneWhenUndeliveredEvidenceText=The phone number for the signatory was changed from $oldphone$ to $newphone$ by $actor$.
 ###
-CloseDocumentEvidenceText=
+CloseDocumentEvidenceTextFull=Scrive E-sign locked the document from further modifications by the signing parties.
+###
+CloseDocumentEvidenceText=*
 $if(full)$
-  Scrive E-sign locked the document from further modifications by the signing parties.
+  $CloseDocumentEvidenceTextFull()$
 $else$
   $_CloseDocumentEvidenceTextSimple()$
 $endif$
@@ -56,12 +68,16 @@ DeleteSigAttachmentEvidenceText=The attachment “$name$” previously uploaded 
 ###
 ErrorSealingDocumentEvidenceText=Due to a system error Scrive E-sign failed to finalise the document, i.e. failed to include the Verification Page, Evidence Log, Evidence of Intent, Evidence Documentation and Digital Signature Documentation into the document before sealing the Evidence Package (as defined in the Evidence Documentation) with a digital signature.
 ###
+ReviewInvitationDeliveredByEmailText=Scrive E-sign’s external email delivery system reported that the invitation to review was delivered to $signatory$ by email.
+###
+SigningInvitationDeliveredByEmailText=Scrive E-sign’s external email delivery system reported that the invitation to sign was delivered to $signatory$ by email.
+###
 InvitationDeliveredByEmailText=*
 $if(full)$
   $if(signing)$
-    Scrive E-sign’s external email delivery system reported that the invitation to sign was delivered to $signatory$ by email.
+    $SigningInvitationDeliveredByEmailText()$
   $elseif(viewing)$
-    Scrive E-sign’s external email delivery system reported that the invitation to review was delivered to $signatory$ by email.
+    $ReviewInvitationDeliveredByEmailText()$
   $endif$
 $else$
   $if(signing)$
@@ -71,12 +87,16 @@ $else$
   $endif$
 $endif$
 ###
+ReviewInvitationDeliveredBySMSText=Scrive E-sign’s external SMS delivery system reported that the invitation to review was delivered to $signatory$ by SMS.
+###
+SigningInvitationDeliveredBySMSText=Scrive E-sign’s external SMS delivery system reported that the invitation to sign was delivered to $signatory$ by SMS.
+###
 InvitationDeliveredBySMSText=*
 $if(full)$
   $if(signing)$
-    Scrive E-sign’s external SMS delivery system reported that the invitation to sign was delivered to $signatory$ by SMS.
+    $SigningInvitationDeliveredBySMSText()$
   $elseif(viewing)$
-  Scrive E-sign’s external SMS delivery system reported that the invitation to review was delivered to $signatory$ by SMS.
+    $ReviewInvitationDeliveredBySMSText()$
   $endif$
 $else$
   $if(signing)$
@@ -86,10 +106,14 @@ $else$
   $endif$
 $endif$
 ###
+SigningInvitationEvidenceTextFull=An invitation to sign was sent to $signatory$ using $_delivery_method()$. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $_invitationCustomMessageTextToSign()$
+###
+ReviewInvitationEvidenceTextFull=An invitation to review was sent to $signatory$ using $_delivery_method()$. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $_invitationCustomMessageTextToReview()$
+###
 InvitationEvidenceText=*
 $if(signing)$
   $if(full)$
-    An invitation to sign was sent to $signatory$ using $_delivery_method()$. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $_invitationCustomMessageTextToSign()$
+    $SigningInvitationEvidenceTextFull()$
   $else$
     $if(archive)$
       $_InvitationEvidenceTextToSignArchiveSimple()$
@@ -99,7 +123,7 @@ $if(signing)$
   $endif$
 $elseif(viewing)$
   $if(full)$
-    An invitation to review was sent to $signatory$ using $_delivery_method()$. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $_invitationCustomMessageTextToReview()$
+    $ReviewInvitationEvidenceTextFull()$
   $else$
     $if(archive)$
       $_InvitationEvidenceTextToReviewArchiveSimple()$
@@ -109,9 +133,13 @@ $elseif(viewing)$
   $endif$
 $endif$
 ###
+InvitationUndeliveredByEmailTextFull=Scrive E-sign’s external email delivery system reported that the invitation to $signatory$ could not be delivered by email and continued attempts were cancelled.
+###
+InvitationUndeliveredBySMSTextFull=Scrive E-sign’s external SMS delivery system reported that the invitation could not be delivered by SMS and continued attempts were cancelled.
+###
 InvitationUndeliveredByEmailText=*
 $if(full)$
-  Scrive E-sign’s external email delivery system reported that the invitation to $signatory$ could not be delivered by email and continued attempts were cancelled.
+  $InvitationUndeliveredByEmailTextFull()$
 $else$
   $if(archive)$
     $_InvitationUndeliveredByEmailTextSimpleArchive()$
@@ -122,7 +150,7 @@ $endif$
 ###
 InvitationUndeliveredBySMSText=*
 $if(full)$
-  Scrive E-sign’s external SMS delivery system reported that the invitation could not be delivered by SMS and continued attempts were cancelled.
+  $InvitationUndeliveredBySMSTextFull()$
 $else$
   $if(archive)$
     $_InvitationUndeliveredBySMSTextSimpleArchive()$
@@ -131,12 +159,16 @@ $else$
   $endif$
 $endif$
 ###
+MarkSigningInvitationReadEvidenceText=Scrive E-sign’s external email delivery system reported that the invitation to sign (sent to $signatory_email$) was opened.
+###
+MarkReviewInvitationReadEvidenceText=Scrive E-sign’s external email delivery system reported that the invitation to review (sent to $signatory_email$) was opened.
+###
 MarkInvitationReadEvidenceText=*
 $if(full)$
   $if(signing)$
-  Scrive E-sign’s external email delivery system reported that the invitation to sign (sent to $signatory_email$) was opened.
+    $MarkSigningInvitationReadEvidenceText()$
   $elseif(viewing)$
-    Scrive E-sign’s external email delivery system reported that the invitation to review (sent to $signatory_email$) was opened.
+    $MarkReviewInvitationReadEvidenceText()$
   $endif$
 $else$
   $if(signing)$
@@ -146,9 +178,11 @@ $else$
   $endif$
 $endif$
 ###
+PreparationToPendingEvidenceTextFull=The preparation of the signing process settings was finished by $actor$, and Scrive E-sign locked the document from editing. The signing process language was set to $lang$, and the signing due date was set to $timeouttime$ UTC.$if(timezone)$ The time zone $timezone$ was provided by $actor$$endif$. The signing process was initiated.
+###
 PreparationToPendingEvidenceText=*
 $if(full)$
-  The preparation of the signing process settings was finished by $actor$, and Scrive E-sign locked the document from editing. The signing process language was set to $lang$, and the signing due date was set to $timeouttime$ UTC.$if(timezone)$ The time zone $timezone$ was provided by $actor$$endif$. The signing process was initiated.
+  $PreparationToPendingEvidenceTextFull()$
 $else$
   $if(archive)$
     $_PreparationToPendingEvidenceTextSimpleArchive()$
@@ -157,16 +191,20 @@ $else$
   $endif$
 $endif$
 ###
+ProlongDocumentEvidenceTextFull=The due date for signing was prolonged by $actor$.
+###
 ProlongDocumentEvidenceText=*
 $if(archive)$
   $_ProlongDocumentEvidenceTextArchive()$
 $else$
-  The due date for signing was prolonged by $actor$.
+  $ProlongDocumentEvidenceTextFull()$
 $endif$
+###
+RejectDocumentEvidenceTextFull=The invitation to sign was rejected by $actor$. The possibility to sign was disabled by Scrive E-sign.$if(text)$ The rejection message from $actor$ was: <BR/> <i>$text:noescape()$</i>$endif$
 ###
 RejectDocumentEvidenceText=*
 $if(full)$
-  The invitation to sign was rejected by $actor$. The possibility to sign was disabled by Scrive E-sign.$if(text)$ The rejection message from $actor$ was: <BR/> <i>$text:noescape()$</i>$endif$
+  $RejectDocumentEvidenceTextFull()$
 $else$
   $if(archive)$
     $_RejectDocumentEvidenceTextSimpleArchive()$
@@ -215,10 +253,16 @@ SendToPadDeviceText=The signing invitation for signatory $signatory$ was set by 
 ###
 SetDocumentInviteTimeEvidenceText=The signing process was started by $actor$.
 ###
+SignDocumentEvidenceTextSMSPinFull=The document was signed by $actor$$_using_identification_method()$. $_pinWasSend()$
+###
+SignDocumentEvidenceTextElegFull=The document was signed by $actor$$_using_identification_method()$. $_elegVerified()$
+###
+SignDocumentEvidenceTextFull=The document was signed$_using_identification_method()$.
+###
 SignDocumentEvidenceText=*
 $if(sms_pin)$
   $if(full)$
-    The document was signed by $actor$$_using_identification_method()$. $_pinWasSend()$
+    $SignDocumentEvidenceTextSMSPinFull()$
   $else$
     $if(archive)$
       $_SignDocumentEvidenceTextSimpleArchiveSMSPin()$
@@ -228,7 +272,7 @@ $if(sms_pin)$
   $endif$
 $elseif(eleg)$
   $if(full)$
-    The document was signed by $actor$$_using_identification_method()$. $_elegVerified()$
+    $SignDocumentEvidenceTextElegFull()$
   $else$
     $if(archive)$
       $_SignDocumentEvidenceTextSimpleArchiveEleg()$
@@ -238,7 +282,7 @@ $elseif(eleg)$
   $endif$
 $else$
   $if(full)$
-    The document was signed$_using_identification_method()$.
+    $SignDocumentEvidenceTextFull()$
   $else$
     $if(archive)$
       $_SignDocumentEvidenceTextSimpleArchiveStandard()$
@@ -248,19 +292,25 @@ $else$
   $endif$
 $endif$
 ###
+SignWithELegFailureEvidenceTextFull=Scrive E-sign rejected the attempt by $signatory$ to sign the document. The reason was that the identity information of $signatory$ did not match the identity information received from the external eID system. Information given by the external eID system: $msg$.
+###
 SignWithELegFailureEvidenceText=*
 $if(full)$
-  Scrive E-sign rejected the attempt by $signatory$ to sign the document. The reason was that the identity information of $signatory$ did not match the identity information received from the external eID system. Information given by the external eID system: $msg$.
+  $SignWithELegFailureEvidenceTextFull()$
 $else$
   $_SignWithELegFailureEvidenceTextSimple()$
 $endif$
 ###
+SignatorySignLinkVisitedText=The link in the invitation to sign was clicked by $actor$. The document was opened by $actor$ in Scrive E-sign’s online interface to sign documents.
+###
+SignatoryReviewLinkVisitedText=The link in the invitation to review was clicked by $actor$. The document was opened by $actor$  in Scrive E-sign’s online interface to sign documents.
+###
 SignatoryLinkVisitedText=*
 $if(full)$
   $if(signing)$
-    The link in the invitation to sign was clicked by $actor$. The document was opened by $actor$ in Scrive E-sign’s online interface to sign documents.
+    $SignatorySignLinkVisitedText()$
   $elseif(viewing)$
-    The link in the invitation to review was clicked by $actor$. The document was opened by $actor$  in Scrive E-sign’s online interface to sign documents.
+    $SignatoryReviewLinkVisitedText()$
   $endif$
 $else$
   $if(archive)$
@@ -270,9 +320,11 @@ $else$
   $endif$
 $endif$
 ###
+TimeoutDocumentEvidenceTextFull=The due date for signing the document passed. The possibility to sign was disabled by Scrive E-sign.
+###
 TimeoutDocumentEvidenceText=*
 $if(full)$
-  The due date for signing the document passed. The possibility to sign was disabled by Scrive E-sign.
+  $TimeoutDocumentEvidenceTextFull()$
 $else$
   $_TimeoutDocumentEvidenceTextSimple()$
 $endif$
