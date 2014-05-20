@@ -122,7 +122,7 @@ var AuthorViewAutomaticRemindersView = Backbone.View.extend({
                 title: localization.autoreminders.setAutoReminderTitle,
                 subtitle : $("<div/>").html(localization.autoreminders.changeAutoreminderDescription),
                 content: $(self.changeReminderDateBody()),
-                width: 424,
+                width: 640,
                 icon : '/img/modal-icons/extend-duedate.png',
                 onReject : function() {
                   if (this.calendar != undefined)
@@ -168,7 +168,7 @@ var AuthorViewAutomaticRemindersView = Backbone.View.extend({
                 title: localization.autoreminders.changeAutoReminderTitle,
                 subtitle : $("<div/>").html(localization.autoreminders.changeAutoreminderDescription),
                 content: $(self.changeReminderDateBody()),
-                width: 424,
+                width: 640,
                 icon : '/img/modal-icons/extend-duedate.png',
                 onReject : function() {
                   if (this.calendar != undefined)
