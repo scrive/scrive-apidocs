@@ -253,9 +253,9 @@ SendToPadDeviceText=The signing invitation for signatory $signatory$ was set by 
 ###
 SetDocumentInviteTimeEvidenceText=The signing process was started by $actor$.
 ###
-SignDocumentEvidenceTextSMSPinFull=The document was signed by $actor$$_using_identification_method()$. $_pinWasSend()$
+SignDocumentEvidenceTextSMSPinFull=The document was signed by $actor$$_using_identification_method()$. $pinWasSent()$
 ###
-SignDocumentEvidenceTextElegFull=The document was signed by $actor$$_using_identification_method()$. $_elegVerified()$
+SignDocumentEvidenceTextElegFull=The document was signed by $actor$$_using_identification_method()$. $elegVerified()$
 ###
 SignDocumentEvidenceTextFull=The document was signed$_using_identification_method()$.
 ###
@@ -336,4 +336,9 @@ UpdateFieldSignatureEvidenceText=A signature field was signed by $actor$.<br/><i
 UpdateFieldTextEvidenceText=The value of the field “$fieldname$” was changed by $actor$ to “$value$”.$updatePlacements()$
 ###
 updatePlacements=$if(placements)$ The field had the following placements in the document:<table class="placements"><tr><td>Page</td><td>X</td><td>Y</td></tr>$placements:{placement|<tr><td>$placement.page$</td><td>$placement.x$</td><td>$placement.y$</td></tr>}$</table>$endif$
+###
+pinWasSent=The PIN was sent to $phone$.
+###
+elegVerification=
+<p>The text signed in the eID client was: </p><pre>$infotext$</pre> <p>E-legitimation provider: $provider$.</p> $if(fieldsverified)$ <p>Information about signatory verified by $provider$: $if(fstnameverified)$ First name; $endif$ $if(lstnameverified)$ Last name; $endif$ $if(persnumverified)$ Personal number; $endif$</p> $endif$ <p>Signature: <div style='white-space:pre'>$signature$</div></p> $if(certificate)$ <p>Certificate: <div style='white-space:pre'>$certificate$</div></p>$endif$ $if(ocsp)$ <p>Online Certificate Status Protocol (OCSP) Response: <div style='white-space:pre'>$ocsp$</div></p>$endif$
 ###
