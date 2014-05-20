@@ -46,7 +46,7 @@
 "_SignatoryLinkVisitedTextNotArchiveSimple":"Das Dokument wurde von $actor$ online geöffnet.",
 "_TimeoutDocumentEvidenceTextSimple":"Das Fälligkeitsdatum für die Unterzeichnung des Dokuments ist abgelaufen.",
 "_delivery_method":"$if(email)$E-Mail$elseif(mobile)$SMS$elseif(emailmobile)$E-Mail und SMS$endif$",
-"_invitationCustomMessageTextToReview":"Die Einladung  zu überprüfen enthält die folgende Nachricht:  <BR/> <i>$text:noescape()$</i>",
-"_invitationCustomMessageTextToSign":"Die Einladung zu unterzeichnen enthält die folgende Nachricht:  <BR/> <i>$text:noescape()$</i>",
+"_invitationCustomMessageTextToReview":"$if(text)$$if(!mobile)$ Die Einladung  zu überprüfen enthält die folgende Nachricht: <BR/> <i>$text:noescape()$</i>$endif$$endif$",
+"_invitationCustomMessageTextToSign":"$if(text)$$if(!mobile)$ Die Einladung zu unterzeichnen enthält die folgende Nachricht: <BR/> <i>$text:noescape()$</i>$endif$$endif$",
 "_using_identification_method":"$if(eleg)$ mit e-ID als Identifikationsmethode$endif$"
 }
