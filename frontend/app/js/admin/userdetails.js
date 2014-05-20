@@ -198,7 +198,7 @@ var AdminUserDetailsView = Backbone.View.extend({
           {name: localization.account.accountSecurity.langEN, value: "en"}
         , {name: localization.account.accountSecurity.langSV, value: "sv"}
         , {name: localization.account.accountSecurity.langDE, value: "de"}
-        , {name: localization.account.accountSecurity.langFR, value: "fr", hidden: true}
+        , {name: localization.account.accountSecurity.langFR, value: "fr"}
         , {name: localization.account.accountSecurity.langIT, value: "it", hidden: true}
         , {name: localization.account.accountSecurity.langES, value: "es", hidden: true}
         , {name: localization.account.accountSecurity.langPT, value: "pt", hidden: true}
