@@ -502,10 +502,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
          }
        };
        this.rejectButton = new Button({
-                                        size: "big",
-                                        color: "blue",
-                                        shape : "rounded",
-                                        width: 206,
+                                        cssClass: "button-gray",
                                         text: localization.process.rejectbuttontext,
                                         onClick: function() {
                                             mixpanel.track('Click Reject');
@@ -549,26 +546,16 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                         }
                                 });
 
-
-       var icon = $("<span class='icon cross' style='position: absolute; top: auto;margin-top: -1px;'></span>");
-       if (BrowserInfo.isSmallScreen() || signatoryHasPlacedSignatures) {
-         icon = undefined;
-       }
-
        var signButtonText = localization.process.signbuttontext;
        if (signatoryHasPlacedSignatures) {
          signButtonText = localization.next;
        }
 
        this.signButton = new Button({
-                            size: "big",
-                            shape : BrowserInfo.isSmallScreen() ? "" : "rounded",
                             color: "green",
                             customcolor: model.usebranding() ? signviewbranding.signviewprimarycolour() : undefined,
                             textcolor: model.usebranding() ? signviewbranding.signviewprimarytextcolour() : undefined,
-                            width: BrowserInfo.isSmallScreen() ?  504 : 206,
                             text: signButtonText,
-                            icon: icon,
                             onClick: function() {
 
                                 var valid =  model.tasks().notCompletedTasks().length == 1 && model.tasks().notCompletedTasks()[0] == model.signtask();

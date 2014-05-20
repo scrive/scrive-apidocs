@@ -95,19 +95,14 @@ var SampleSignViewView = Backbone.View.extend({
 
     this.rejectbuttoncontainer = $('<div class="buttoncontainer reject" />');
     this.rejectbutton = new Button({size: 'tiny',
-                                    color: 'blue',
-                                    shape: 'rounded',
-                                    cssClass: 'not-clickable',
-                                    width: 150,
+                                    cssClass: 'button-gray not-clickable',
                                     text: 'Reject and reply',
                                     onClick: function() {}}).el();
     this.rejectbuttoncontainer.append(this.rejectbutton);
     this.signbuttoncontainer = $('<div class="buttoncontainer sign" />');
     this.signbutton = new Button({size: 'tiny',
                                   color: 'green',
-                                  shape: 'rounded',
                                   cssClass: 'not-clickable',
-                                  width: 100,
                                   text: 'Sign',
                                   onClick: function() {}}).el();
     this.signbuttoncontainer.append(this.signbutton);

@@ -227,6 +227,25 @@
   }
 
   .buttons {
+    height: auto;
+    overflow: hidden;
+    padding: 10px;
+
+    .button {
+      .label {
+        margin: 0 7px 0 7px;
+      }
+    }
+
+    .buttoncontainer {
+      &.reject {
+        float: left;
+      }
+      &.sign {
+        float: right;
+      }
+    }
+
     &.noreject {
       .buttoncontainer {
         &.sign {
@@ -235,16 +254,6 @@
         &.reject {
           display: none;
         }
-      }
-    }
-
-    .buttoncontainer {
-      padding: 10px;
-      &.reject { 
-        float: left; 
-      }
-      &.sign { 
-        float: right; 
       }
     }
   }
