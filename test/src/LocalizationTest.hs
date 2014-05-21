@@ -53,7 +53,7 @@ testTranslationsHaveSameStructure = do
        errs -> return $ Just $ "For lang " ++ show (codeFromLang l) ++ "\n" ++ concat errs
   case catMaybes lErrors of
        [] -> return ()
-       _lErrs -> return () --assertFailure $ "Some translation texts had different structure then base texts\n" ++ concat lErrs
+       lErrs -> assertFailure $ "Some translation texts had different structure then base texts\n" ++ concat lErrs
 
 checkTexts :: [(String,String)] -> [(String,String)] ->  [Maybe String]
 checkTexts _ [] = []
