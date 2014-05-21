@@ -409,6 +409,7 @@ javascriptLocalisation =
              , defineParticipation: "$_designViewDefineParticipation()$"
              , toReceiveDocument: "$_designViewToReceiveDocument()$"
              , byEmail: "$_designViewByEmail()$"
+             , byAPI: "$_designViewByAPI()$"
              , onThisTablet: "$_designViewOnThisTablet()$"
              , bySMS: "$_designViewBySMS()$"
              , byEmailAndSMS : "$_designViewbyEmailAndSMS()$"

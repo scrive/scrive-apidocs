@@ -323,6 +323,7 @@
 "_designViewAddRemove":"Add attachments",
 "_designViewAttached":"Added attachment",
 "_designViewAttachmentRequested":"Requested attachment",
+"_designViewByAPI":"by API",
 "_designViewByEmail":"by email",
 "_designViewBySMS":"by SMS",
 "_designViewChooseDocument":"Upload document",

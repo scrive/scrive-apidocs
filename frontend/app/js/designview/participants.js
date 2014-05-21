@@ -154,7 +154,8 @@ define(['Backbone', 'legacy_code'], function() {
                 email : localization.designview.byEmail,
                 pad : localization.designview.onThisTablet,
                 mobile : localization.designview.bySMS,
-                email_mobile : localization.designview.byEmailAndSMS
+                email_mobile : localization.designview.byEmailAndSMS,
+                api : localization.designview.byAPI
             };
 
             var deliveryTypes = ['email', 'pad', 'mobile', 'email_mobile'];
