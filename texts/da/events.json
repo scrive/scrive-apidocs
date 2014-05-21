@@ -1,4 +1,4 @@
-{ 
+{
 "_AttachExtendedSealedFileEvidenceTextSimple":"Dokumentet blev forseglet med en nøglefri digital signatur.",
 "_AttachGuardtimeSealedFileEvidenceTextSimple":"Dokumentet blev forseglet med en digital signatur.",
 "_AttachSealedFileEvidenceTextSimpleArchive":"Scrive har udarbejdet den endelige PDF.",
@@ -17,7 +17,7 @@
 "_InvitationEvidenceTextToSignNotArchiveSimple":"En invitation blev sendt til $signatory$ ved hjælp af $_delivery_method()$ fra Scrive. $_invitationCustomMessageTextToSign()$",
 "_InvitationUndeliveredByEmailTextSimpleArchive":"Invitationen kunne ikke leveres via e-mail og fortsatte forsøg blev afbrudt.",
 "_InvitationUndeliveredByEmailTextSimpleNotArchive":"Invitationen til $signatory$ kunne ikke leveres via e-mail og fortsatte forsøg blev afbrudt.",
-"_InvitationUndeliveredBySMSTextSimpleArchive":"Invitationen til $signatory$ kunne ikke leveres via SMS og fortsatte forsøg blev aflyst.",
+"_InvitationUndeliveredBySMSTextSimpleArchive":" ",
 "_InvitationUndeliveredBySMSTextSimpleNotArchive":"Invitationen til $signatory$ kunne ikke leveres via SMS og fortsatte forsøg blev aflyst.",
 "_MarkInvitationReadEvidenceTextToReviewSimple":"Invitationen til gennemgang (sendt til $signatory_email$) blev åbnet.",
 "_MarkInvitationReadEvidenceTextToSignSimple":"Invitationen til at signere (sendt til $signatory_email$) blev åbnet.",

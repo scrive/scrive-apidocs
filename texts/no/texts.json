@@ -1,4 +1,4 @@
-{
+{ 
 "_CompanyAccounts":"",
 "_CompanySettings":"",
 "_ContractReminderBodyMulti":"",
@@ -957,7 +957,7 @@
 "_smsOriginator":"SMS-etikett",
 "_smsOriginatorDescription":"Navnet som vises for mottakeren når denne mottar et dokument via SMS. Maksimum 11 alfanumeriske tegn.",
 "_smsPinSendout":"",
-"_smsRejectNotification":"\"Hei $personname$",
+"_smsRejectNotification":"",
 "_smsReminder":"Hei $personname$, dette er en påminnelse fra $creatorname$ at du ennå ikke har signert dokumentet $documenttitle$. Åpne lenken for å lese gjenom dokumentet: $link$",
 "_smsReminderSigned":"",
 "_standard":"",
