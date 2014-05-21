@@ -47,6 +47,7 @@ define(['Backbone', 'legacy_code'], function() {
                                   + '<option value="pt">Portuguese</option>'
                                   + '<option value="es">Spanish</option>'
                                   + '<option value="da">Danish</option>'
+                                  + '<option value="el">Greek</option>'
                                   + "</select>");
               tr6.append(jQuery("<td/>").append(lang));
               table.append(tr6);

@@ -267,6 +267,7 @@ javascriptLocalisation =
               , nl : "$_Dutch()$"
               , da : "$_Danish()$"
               , no : "$_Norwegian()$"
+              , el : "$_Greek()$"
             }
          , csv : {
                 title : "$_dialogCsvupload1Head()$"
@@ -1045,6 +1046,7 @@ javascriptLocalisation =
               , langNL          : "$DutchInDutch()$"
               , langDA          : "$DanishInDanish()$"
               , langNO          : "$NorwegianInNorwegian()$"
+              , langEL          : "$GreekInGreek()$"
             }
           , companySettings : "$_CompanySettings()$"
           , companyAccounts : {

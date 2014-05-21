@@ -12,7 +12,7 @@ window.Language = {
        return localization.code;
     },
     allLanguagesCodes : function() {
-      return ["en","sv","de","fr","it","es","pt","nl","da","no"];
+      return ["en","sv","de","fr","it","es","pt","nl","da","no","el"];
     },
     changeOnCurrentPage : function(code,callback) {
        if (code == Language.current) {

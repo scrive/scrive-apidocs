@@ -65,3 +65,5 @@ DanishInDanish=Dansk
 ####
 NorwegianInNorwegian=Norsk
 ####
+GreekInGreek=ελληνικά
+###

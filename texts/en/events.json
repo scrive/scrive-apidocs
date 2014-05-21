@@ -1,4 +1,4 @@
-{ 
+{
 "_AttachExtendedSealedFileEvidenceTextSimple":"The document was sealed with a keyless digital signature.",
 "_AttachGuardtimeSealedFileEvidenceTextSimple":"The document was sealed with a digital signature.",
 "_AttachSealedFileEvidenceTextSimpleArchive":"Scrive prepared the final PDF.",
@@ -48,5 +48,6 @@
 "_delivery_method":"$if(email)$email$elseif(mobile)$SMS$elseif(emailmobile)$email and SMS$endif$",
 "_invitationCustomMessageTextToReview":"$if(text)$$if(!mobile)$ The invitation to review contained the following message: <BR/> <i>$text:noescape()$</i>$endif$$endif$",
 "_invitationCustomMessageTextToSign":"$if(text)$$if(!mobile)$ The invitation to sign contained the following message: <BR/> <i>$text:noescape()$</i>$endif$$endif$",
-"_using_identification_method":"$if(eleg)$ using eID as identification method$elseif(sms_pin)$ using PIN by SMS as identification method$endif$"
+"_using_identification_method":"$if(eleg)$ using eID as identification method$elseif(sms_pin)$ using PIN by SMS as identification method$endif$",
+"_Greek":"Greek"
 }

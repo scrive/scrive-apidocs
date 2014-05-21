@@ -205,6 +205,7 @@ var AdminUserDetailsView = Backbone.View.extend({
         , {name: localization.account.accountSecurity.langNL, value: "nl", hidden: true}
         , {name: localization.account.accountSecurity.langDA, value: "da"}
         , {name: localization.account.accountSecurity.langNO, value: "no"}
+        , {name: localization.account.accountSecurity.langEL, value: "el", hidden: true}
       ];
       var lname = _.findWhere(languages, {value :model.lang()}).name;
 

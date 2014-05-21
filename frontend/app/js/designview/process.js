@@ -134,6 +134,7 @@ define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_the
               , {name: localization.languages.nl, value: "nl", hidden : true}
               , {name: localization.languages.da, value: "da", hidden : true}
               , {name: localization.languages.no, value: "no", hidden : true}
+              , {name: localization.languages.el, value: "el", hidden : true}
             ];
             var lname = _.findWhere(languages, {value :lang}).name;
 
