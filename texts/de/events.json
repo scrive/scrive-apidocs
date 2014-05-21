@@ -1,4 +1,4 @@
-{ 
+{
 "_AttachExtendedSealedFileEvidenceTextSimple":"Das Dokument wurde mit einem digitalen Signatur abgeschlossen.",
 "_AttachGuardtimeSealedFileEvidenceTextSimple":"Das Dokument wurde mit einem schüssellosen digitalen Signatur abgeschlossen.",
 "_AttachSealedFileEvidenceTextSimpleArchive":"Scrive hat die vollendete PDF-Datei vorbereitet.",
@@ -6,7 +6,7 @@
 "_AutomaticReminderSentTextSimple":"Eine automatische Erinnerung zu unterzeichnen wurde an $signatory$ per $_delivery_method()$ gesendet.",
 "_CancelDocumentEvidenceTextSimpleArchive":"Die Einladung zu unterzeichnen wurde zurückgezogen.",
 "_CancelDocumentEvidenceTextSimpleNotArchive":"Die Einladung zu unterzeichnen wurde zurückgezogen von $actor$.",
-"_CloseDocumentEvidenceTextSimple":"$_TheScriveSystem()$ hat das Dokument vor weiteren Änderungen der unterzeichnender Parteien gesperrt. ",
+"_CloseDocumentEvidenceTextSimple":" ",
 "_InvitationDeliveredByEmailTextToReviewSimple":"Die Einladung zu überprüfen wurde per E-Mail an $signatory$ geschickt. ",
 "_InvitationDeliveredByEmailTextToSignSimple":"Die Einladung zu unterzeichnen wurde per E-Mail an $signatory$ geschickt. ",
 "_InvitationDeliveredBySMSTextToReviewSimple":"Die Einladung zu überprüfen wurde per SMS an $signatory$ geschickt.",
@@ -48,5 +48,5 @@
 "_delivery_method":"$if(email)$E-Mail$elseif(mobile)$SMS$elseif(emailmobile)$E-Mail und SMS$endif$",
 "_invitationCustomMessageTextToReview":"$if(text)$$if(!mobile)$ Die Einladung  zu überprüfen enthält die folgende Nachricht: <BR/> <i>$text:noescape()$</i>$endif$$endif$",
 "_invitationCustomMessageTextToSign":"$if(text)$$if(!mobile)$ Die Einladung zu unterzeichnen enthält die folgende Nachricht: <BR/> <i>$text:noescape()$</i>$endif$$endif$",
-"_using_identification_method":"$if(eleg)$ mit e-ID als Identifikationsmethode$endif$"
+"_using_identification_method":" "
 }
