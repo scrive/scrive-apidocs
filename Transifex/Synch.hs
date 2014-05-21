@@ -17,6 +17,9 @@ import System.Process
 import Transifex.Utils
 import Control.Monad
 import System.Environment
+import System.Time
+import System.Locale
+import Data.Time.Calendar
 
 apiURL :: String
 apiURL = "http://www.transifex.com/api/2/"
@@ -44,12 +47,21 @@ fetchLocal lang resource = do
      Ok js -> return $ sort $ textsFromJSON $ js
      _ -> error $ "Can't parse response from Transifex: " ++ mjson
 
+makeBackup  :: String -> String ->  String -> TranslationResource -> IO ()
+makeBackup user password lang resource = do
+  s <- fetch user password lang resource
+  timePart <- getClockTime >>= toCalendarTime >>= return . formatCalendarTime defaultTimeLocale "%Y-%m-%dT%H:%M:%S"
+  withFile ("backup_" ++ lang ++ "_" ++ show resource ++ "_" ++ timePart ++ ".json") WriteMode $ \h -> do
+    hSetEncoding h utf8
+    hPutStr h (encodeTranslationJSON $ textsToJSON $ sort s)
+    hClose h
 
 push :: String -> String ->  String -> TranslationResource -> IO ()
 push user password lang resource = do
   let url = if (sourceLang == lang)
               then  apiURL ++ "project/" ++ project ++ "/resource/" ++ resourceslug resource ++ "/content/"
               else  apiURL ++ "project/" ++ project ++ "/resource/" ++ resourceslug resource ++ "/translation/"++lang ++ "/"
+  makeBackup user password lang resource
   resp  <- readProcess "curl" ["--user", user++":" ++ password,"-s", "-X", "PUT" ,"-F", "file=@" ++ translationFile lang resource, url] ""
   case (parsePushResponse resp) of
     Nothing -> putStrLn $ "Push of lang " ++ lang++ " resource "++ show resource ++ " failed. Error message " ++ resp
