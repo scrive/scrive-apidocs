@@ -148,6 +148,20 @@ define(['Backbone', 'legacy_code'], function() {
         }
     });
 
+    var ListObjectViewDummy = Backbone.View.extend({
+      initialize: function(args) {
+        this.schema = args.schema;
+        this.render();
+      },
+      render: function() {
+        $(this.el).children().detach();
+        var res = ""
+        for (var i = 0; i < this.schema.size(); i++)
+          res += "<td class='row '/>";
+        $(this.el).append(res);
+      }
+    })
+
     var ListObjectView = Backbone.View.extend({
         model: ListObject,
         initialize: function(args) {
@@ -486,7 +500,7 @@ define(['Backbone', 'legacy_code'], function() {
              * and next one to connect them to ListObjectViews. Gives much better performance.
              */
             var trs = "";
-            for(var i=0;i<elems.length;i++) {
+            for(var i=0;i<Math.max(elems.length,schema.minRows());i++) {
               trs += "<tr/>";
             }
             trs = $(trs);
@@ -502,6 +516,13 @@ define(['Backbone', 'legacy_code'], function() {
                     });
                 else
                   $(trs[i]).replaceWith(e.view.el);
+            }
+
+           for(var i=elems.length;i<Math.max(elems.length,schema.minRows());i++) {
+              new ListObjectViewDummy({
+                        schema: schema,
+                        el: $(trs[i])
+              });
             }
 
             return this;

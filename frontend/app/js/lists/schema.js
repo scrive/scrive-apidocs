@@ -59,7 +59,8 @@ define(['Backbone', 'legacy_code'], function() {
             options: [],
             actions: [],
             extraParams: {},
-            expandedByDefault : false
+            expandedByDefault : false,
+            minRows : 0
         },
         initialize: function() {
             var schema = this;
@@ -135,6 +136,9 @@ define(['Backbone', 'legacy_code'], function() {
         },
         allFiltering : function() {
             return this.selectfiltering();
+        },
+        minRows : function() {
+          return this.get('minRows');
         },
         initSessionStorageNamespace: function(name) {
             this.set({ namespace: name });
