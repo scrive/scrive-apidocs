@@ -591,7 +591,7 @@
 "_mailInvitationToViewDefaultHeader":"<strong>$creatorname$</strong> has invited you to review the document <strong>$documenttitle$</strong>.",
 "_mailInvitationToViewTitleContract":"Document to review: $documenttitle$",
 "_mailMismatchAuthorButton":"Log in",
-"_mailMismatchAuthorContentBodySecond":"The signing process for <strong>$documenttitle$</strong> has therefore been cancelled and all involved parties have been informed by email. You may log in to your account online to restart the signing process.",
+"_mailMismatchAuthorContentBodySecond":"The signing process for <strong>$documenttitle$</strong> has therefore been cancelled and all involved parties have been informed by email. You may log in to your account to restart the signing process.",
 "_mailMismatchAuthorContentBodyThird":"If you have any questions don't hesitate to contact Scrive support at <a href=\"mailto:support@scrive.com\">support@scrive.com</a>.",
 "_mailMismatchAuthorTitle":"Mismatched information",
 "_mailMismatchSignatoryContentBodyButton":"Log in",
