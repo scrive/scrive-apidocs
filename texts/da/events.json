@@ -1,4 +1,4 @@
-{
+{ 
 "_AttachExtendedSealedFileEvidenceTextSimple":"Dokumentet blev forseglet med en nøglefri digital signatur.",
 "_AttachGuardtimeSealedFileEvidenceTextSimple":"Dokumentet blev forseglet med en digital signatur.",
 "_AttachSealedFileEvidenceTextSimpleArchive":"Scrive har udarbejdet den endelige PDF.",
@@ -7,6 +7,7 @@
 "_CancelDocumentEvidenceTextSimpleArchive":"Invitationen til signere blev trukket tilbage.",
 "_CancelDocumentEvidenceTextSimpleNotArchive":"Invitationen til signere blev trukket tilbage af $actor$.",
 "_CloseDocumentEvidenceTextSimple":"Scrive låste dokumentet for yderligere ændringer af de signerende parter.",
+"_Greek":"",
 "_InvitationDeliveredByEmailTextToReviewSimple":"Invitationen til gennemgang blev leveret til $signatory$ via e-mail.",
 "_InvitationDeliveredByEmailTextToSignSimple":"Invitationen til at underskrive blev leveret til $signatory$ via e-mail.",
 "_InvitationDeliveredBySMSTextToReviewSimple":"Invitationen til gennemgang blev leveret til $signatory$ via SMS.",

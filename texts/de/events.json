@@ -1,4 +1,4 @@
-{
+{ 
 "_AttachExtendedSealedFileEvidenceTextSimple":"Das Dokument wurde mit einem digitalen Signatur abgeschlossen.",
 "_AttachGuardtimeSealedFileEvidenceTextSimple":"Das Dokument wurde mit einem schüssellosen digitalen Signatur abgeschlossen.",
 "_AttachSealedFileEvidenceTextSimpleArchive":"Scrive hat die vollendete PDF-Datei vorbereitet.",
@@ -7,6 +7,7 @@
 "_CancelDocumentEvidenceTextSimpleArchive":"Die Einladung zu unterzeichnen wurde zurückgezogen.",
 "_CancelDocumentEvidenceTextSimpleNotArchive":"Die Einladung zu unterzeichnen wurde zurückgezogen von $actor$.",
 "_CloseDocumentEvidenceTextSimple":" ",
+"_Greek":"",
 "_InvitationDeliveredByEmailTextToReviewSimple":"Die Einladung zu überprüfen wurde per E-Mail an $signatory$ geschickt. ",
 "_InvitationDeliveredByEmailTextToSignSimple":"Die Einladung zu unterzeichnen wurde per E-Mail an $signatory$ geschickt. ",
 "_InvitationDeliveredBySMSTextToReviewSimple":"Die Einladung zu überprüfen wurde per SMS an $signatory$ geschickt.",
