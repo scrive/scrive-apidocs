@@ -576,7 +576,7 @@
 "_mailDocumentClosedTitleContract":"$_mailDocumentCorrectionOrConfirmation()$: documento firmato $documenttitle$",
 "_mailDocumentCorrectionBody":"Alle $closingtime$ il documento <strong>$documenttitle$</strong> è stato firmato e ti abbiamo inviato una copia dello stesso.<br/><br/>Al momento della finalizzazione del documento da parte del nostro sistema di e-signing, abbiamo riscontrato un problema tecnico. Il problema ha impedito al sistema di proteggere il documento con una firma digitale. Il sistema è stato ora corretto e il documento ha ora una firma digitale.<br/><br/>Apri il documento con la nuova firma digitale allegata. Per evitare confusioni in futuro, ti preghiamo di conservare questo documento ed eliminare la versione precedente.<br/><br/>Se vuoi saperne di più sullo scopo delle firme digitali, ti consigliamo di leggere questo articolo:<a href='http://en.wikipedia.org/wiki/Digital_signature'>http://en.wikipedia.org/wiki/Digital_signature</a>",
 "_mailDocumentCorrectionOrConfirmation":"$if(sealFixed)$Correzione$else$Conferma$endif$",
-"_mailDocumentErrorContentBodyFirst":"Purtroppo Scrive E-sign non ha potuto gestire il file del documento https://scrive.com/verify. Inoltre il processo di firma è stato annullato. Il problema è stato notificato ai nostri tecnici.",
+"_mailDocumentErrorContentBodyFirst":"",
 "_mailDocumentErrorContentBodyFourth":"Ci scusiamo per l'inconveniente",
 "_mailDocumentErrorContentBodySecond":"Se hai qualche commento o domanda relativi a questo punto, ti preghiamo di contattare l'assistenza di Scrive a <a href=\"mailto:support@scrive.com\">support@scrive.com</a>.",
 "_mailDocumentErrorTitle":"Problema con il formato del file",
