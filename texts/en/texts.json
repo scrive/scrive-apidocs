@@ -476,7 +476,7 @@
 "_flashMessageYourEmailHasChanged":"Your username and email have been successfully changed.",
 "_flashRemindMailSentNotSigned":"A reminder has been sent to",
 "_flashRemindMailSentSigned":"The document has been sent to",
-"_followArrowToSign":"follow the <span class='arrowtext'></span>",
+"_followTheArrow":"follow the <span class='arrowtext'>arrow</span>",
 "_fontSizeBig":"large",
 "_fontSizeCustom":"custom",
 "_fontSizeLarge":"huge",

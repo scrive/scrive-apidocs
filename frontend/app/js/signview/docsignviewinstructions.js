@@ -18,7 +18,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     var document = this.model.document();
     var string = "";
     if (document.isSigning()) {
-      string = localization.docsignview.followArrowToSign;
+      string = localization.docsignview.followTheArrow;
     } else if (document.isReviewing()) {
       string = localization.docsignview.reviewDocument;
     } else if (document.isSignedAndClosed()) {
@@ -139,7 +139,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
 
     var headlineText = this.generateHeadlineText(headline.text() == "");
     var view = this;
-    headlineText.find('.arrowtext').text(localization.docsignview.arrow).click(function() {
+    headlineText.find('.arrowtext').click(function() {
       mixpanel.track('Click arrow text');
       view.model.arrow().goToCurrentTask();
     });
