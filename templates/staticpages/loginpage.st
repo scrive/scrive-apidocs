@@ -34,17 +34,20 @@ $htmlopentag()$
       </div>
   </div>
   <script type="text/javascript">
-   require(['jquery', 'legacy_code'], function(jQuery) {
+   require(['jquery', 'React', 'login/brandedlogin', 'legacy_code'], function(jQuery,React,BrandedLogin) {
     jQuery(document).ready(function() {
       var referer =  "$referer$";
       if (window.location.hash != "" && referer.indexOf("#") == -1) referer = referer + window.location.hash;
-      jQuery('.inner').append(new Login({
-                                         branded : true,
-                                         referer:   referer,
-                                         buttoncolorclass : "$buttoncolorclass$",
-                                         servicelinkcolour: $if(servicelinkcolour)$"$servicelinkcolour$"$else$null$endif$,
-                                         textscolour: $if(textscolour)$"$textscolour$"$else$null$endif$,
-                                         autofocus: true}).el());
+      var div = jQuery('.inner');
+      React.renderComponent(BrandedLogin({
+        referer:   referer,
+        logolink:   "$logolink$",
+        buttoncolorclass : "$buttoncolorclass$",
+        servicelinkcolour: $if(servicelinkcolour)$"$servicelinkcolour$"$else$null$endif$,
+        textscolour: $if(textscolour)$"$textscolour$"$else$null$endif$,
+        autofocus: true
+      }),div[0]);
+
       mixpanel.register({
         Context : 'Login page - branded'
       });

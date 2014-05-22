@@ -1,6 +1,6 @@
 // Login + Password reminder modal
 
-define(['Backbone', 'legacy_code'], function() {
+define(['Backbone','React','common/infotextinput','legacy_code'], function(Backbone,React,NewInfoTextInput) {
 
 var LoginModel = Backbone.Model.extend({
   defaults: {
@@ -8,7 +8,6 @@ var LoginModel = Backbone.Model.extend({
         email : "",
         password : "",
         referer : "",
-        visible : true,
         rememberPassword : false,
         autofocus: false,
         servicelinkcolour : '',
@@ -23,17 +22,8 @@ var LoginModel = Backbone.Model.extend({
   toogleView : function() {
     this.set({reminderView : ! this.reminderView()});
   },
-  visible : function() {
-    return this.get("visible");
-  },
   pad : function() {
     return this.get("pad") == true;
-  },
-  show: function() {
-    this.set({visible : true});
-  },
-  hide: function() {
-    this.set({visible : false});
   },
   email : function() {
     return this.get("email");
@@ -304,8 +294,8 @@ var LoginBrandedView = Backbone.View.extend({
 
 
 
-
-      var emailinput = new InfoTextInput({
+      var emailDiv = $("<div class='position' style='margin-bottom:6px;'/>");
+      var emailinput = React.renderComponent(NewInfoTextInput({
               infotext: localization.loginModal.email,
               value : model.email(),
               onChange : function(v) {model.setEmail(v);} ,
@@ -313,12 +303,12 @@ var LoginBrandedView = Backbone.View.extend({
               name : "email",
               onEnter : loginFunction,
               autocomplete : true,
-              inputStyle : "width :  245px; padding : 7px 14px ",
-              style : "width : 273px; padding: 0px; font-size : 16px "
+              inputStyle : {width : "245px", padding: "7px 14px"},
+              style : {width : "273px", padding: "0px", fontSize : "16px"}
 
-      });
-      body.append($("<div class='position' style='margin-bottom:6px;'/>").append(emailinput.el()));
-      emailinput.el().click();
+      }),emailDiv[0]);
+
+      body.append(emailDiv);
       var passwordinput = new InfoTextInput({
               infotext: localization.loginModal.password,
               value : model.password(),
