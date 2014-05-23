@@ -34,7 +34,7 @@ resourceslug Questionnaire = "questionnairejson"
 
 fetch :: String -> String -> String -> TranslationResource -> IO [(String,String)]
 fetch user password lang resource = do
-  mjson <- readProcess "curl" ["--user", user++":" ++ password, "-s" ,"-X", "GET" , apiURL ++ "project/" ++ project ++ "/resource/" ++ resourceslug resource ++ "/translation/"++lang++"/strings/"] ""
+  mjson <- readProcess "curl" ["--compressed", "--user", user++":" ++ password, "-s" ,"-X", "GET" , apiURL ++ "project/" ++ project ++ "/resource/" ++ resourceslug resource ++ "/translation/"++lang++"/strings/"] ""
   case decode mjson of
      Ok js -> return $ sort $ textsFromStringJSON $ js
      _ -> error $ "Can't parse response from Transifex: " ++ mjson
