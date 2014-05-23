@@ -52,7 +52,7 @@ var SampleSignViewView = Backbone.View.extend({
     extradocumentdetailscontainer.append(this.downloaddoc);
 
     this.contentheader = $('<div class="contentheader" />');
-    this.greenarrowtext = $('<span class="highlight-green">GREEN ARROW</span>');
+    this.greenarrowtext = $('<span class="highlight-green">ARROW</span>');
     var instructionswrapper = $('<div class="instructions" />');
     instructionswrapper.append('<span>Follow the </span>').append(this.greenarrowtext);
 
@@ -218,7 +218,6 @@ var SampleSignViewView = Backbone.View.extend({
     this.signbutton.css('background-color', colour);
 
     this.greenarrowtext.css('color', colour);
-    this.greenarrowtext.text(customized ? "ARROW" : "GREEN ARROW");
   },
   changePrimaryTextColour : function(colour) {
     this.signbutton.css('color', ''); // reset colour
