@@ -4,12 +4,16 @@ loginPage=
 <div class="inner">
 <img width="1920" height="544" src="/img/bg-home.jpg" class="bg"/>
 <script type="text/javascript">
- require(['jquery', 'legacy_code'], function(jQuery) {
+   require(['jquery', 'React', 'login/login', 'legacy_code'], function(jQuery,React,Login) {
   jQuery(document).ready(function() {
     var referer =  "$referer$";
     if (window.location.hash != "" && referer.indexOf("#") == -1) referer = referer + window.location.hash;
-    jQuery('.inner').append(new Login({referer:   referer,
-                                       autofocus: true}).el());
+    var div = jQuery("<div / >");
+    React.renderComponent(Login({
+        referer:   referer,
+        autofocus: true
+    }),div[0]);
+    jQuery('.inner').append(div);
     mixpanel.register({
       Context : 'Login page'
     });

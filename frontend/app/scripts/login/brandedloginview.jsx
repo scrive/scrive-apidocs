@@ -1,249 +1,103 @@
 /** @jsx React.DOM */
 
-define(['React','common/button', 'Backbone', 'legacy_code'], function(React, NewButton) {
-
-var expose = {};
+define(['React','common/backbone_mixim','common/button','common/infotextinput', 'login/loginmodel' ,'legacy_code'], function(React, BackboneMixin, Button, InfoTextInput, LoginModel) {
 
 
-/* Modal for setting reminder - still done using Backbone */
-var AuthorViewAutomaticRemindersModel = Backbone.Model.extend({
-  defaults : {
-    onAction : function() {}
-  },
-  initialize: function (args) {
-    if (this.document().autoremindtime() != undefined)
-      this.set({newdaystoremind: this.document().autoremindtime().diffDays()+1});
-    else
-      this.set({newdaystoremind: Math.max(1,Math.floor(this.maxDaysLeftToSign() / 2))});
-  },
-  triggerOnAction : function() {
-    if (this.get("onAction"))
-      this.get("onAction")();
-  },
-  authorview : function() {
-     return this.get("authorview");
-  },
-  maxDaysLeftToSign : function() {
-    return Math.max(1,this.document().timeouttime().diffDays());
-
-  },
-  newdaystoremind: function() {
-     return this.get("newdaystoremind");
-  },
-  setNewdaystoremind: function(newdaystoremind) {
-     var old = this.get("newdaystoremind");
-     if (newdaystoremind == undefined || (1 <= newdaystoremind || newdaystoremind <= this.maxDaysLeftToSign())) {
-      this.set({"newdaystoremind": newdaystoremind}, {silent: true});
-     }
-     // Triggering of events is tricky here since we can end in loop in UI (calendar updates input -> input updates calendar -> ..).
-     if (old != this.get("newdaystoremind"))
-        this.trigger("change:newdaystoremind");
-  },
-  document :function() {
-     return this.get("document");
-  },
-  setautoreminder : function(days, callback) {
-     var self = this;
-     this.document().setautoreminder(days).sendAjax(function() {
-          if (callback!= undefined) callback();
-          self.triggerOnAction();
-
-    });
-  }
-});
-
-var AuthorViewAutomaticRemindersView = Backbone.View.extend({
-  initialize: function(args) {
-    var self = this;
-    _.bindAll(this, 'render', 'updateNewDaysToRemind');
-    this.listenTo(this.model,'change:newdaystoremind', self.updateNewDaysToRemind);
-    this.render();
-  },
-  destroy : function() {
-    this.stopListening();
-    $(this.el).remove();
-  },
-  updateNewDaysToRemind : function() {
-     this.daysinput.setValue(this.model.newdaystoremind());
-     this.calendar.setDays(this.model.newdaystoremind());
-  },
-  changeReminderDateBody : function() {
-    var self = this;
-    var model = self.model;
-    var document = model.document();
-    var div = $("<div class='autoreminder-modal-content'/>");
-
-    var deadlinedecription = $("<div class='line-before-calendar'/>").text(localization.autoreminders.dueDateIn +" " + document.timeouttime().diffDays() + " " + localization.autoreminders.days+" (" +document.timeouttime().toYMDString()+ ")");
-    div.append(deadlinedecription);
-
-
-
-    var label = $("<div class='text'/>");
-    label.text(localization.autoreminders.daysToRemind + ':');
-    var calendarbutton = $("<div class='calendarbutton'/>");
-    self.calendar = new Calendar({on : calendarbutton,
-                                         days : model.newdaystoremind(),
-                                         maxValue : model.maxDaysLeftToSign(),
-                                         change: function(days) {
-                                            if (days != model.newdaystoremind()) {
-                                              model.setNewdaystoremind(days);
-                                            }
-                                          }
-                        });
-
-    self.daysinput = new InfoTextInput({
-                infotext: "-",
-                value: model.newdaystoremind(),
-                onChange: function(v) {
-                    days = parseInt(v);
-                    if (isNaN(days))
-                      days = undefined;
-                    if (days != model.newdaystoremind()) {
-                      model.setNewdaystoremind(days);
-                    }
-                    if (days == undefined && v != "") {
-                      self.daysinput.setValue("");
-                    } else if (days + "" != v && v != "") {
-                      self.daysinput.setValue(days + "");
-                    }
-                }
-            });
-
-  div.append(label)
-      .append(self.daysinput.el())
-      .append($("<div class='text'/>").text(localization.designview.days))
-      .append(calendarbutton);
-
-  return div;
-  },
-  startSetReminderDateModal : function() {
-      var self = this;
-      self.modal = new Confirmation({
-                title: localization.autoreminders.setAutoReminderTitle,
-                subtitle : $("<div/>").html(localization.autoreminders.changeAutoreminderDescription),
-                content: $(self.changeReminderDateBody()),
-                width: 640,
-                icon : '/img/modal-icons/extend-duedate.png',
-                onReject : function() {
-                  if (this.calendar != undefined)
-                    this.calendar.close();
-                },
-                acceptButton : function() {
-                  return self.buttonChangeForModal();
-                }()
-        });
-  },
-  buttonChangeForModal : function() {
-    var self = this;
-    return new Button({
-      color: "green",
-      style : (BrowserInfo.isSmallScreen() ? "margin-top:-10px" : ""),
-      size: "small",
-      text : (self.model.document().autoremindtime() != undefined ? localization.autoreminders.changeAutoreminderButton : localization.autoreminders.setAutoreminderButton),
-      onClick : function() {
-        if (self.model.newdaystoremind() == undefined) return; // This should never happend;
-        self.model.setautoreminder(self.model.newdaystoremind(),function() {
-          self.modal.close();
-        });
-      }
-    }).el();
-  },
-  buttonClearForModal : function() {
-    var self = this;
-    return new Button({
-      color: "black",
-      style : "margin-right:10px;" + (BrowserInfo.isSmallScreen() ? "margin-top:-10px" : ""),
-      size: "small",
-      text : localization.autoreminders.removeAutoreminderButton,
-      onClick : function() {
-        self.model.setautoreminder(undefined,function() {
-          self.modal.close();
-        });
-      }
-    }).el();
-  },
-  startChangeReminderDateModal : function() {
-      var self = this;
-      self.modal = new Confirmation({
-                title: localization.autoreminders.changeAutoReminderTitle,
-                subtitle : $("<div/>").html(localization.autoreminders.changeAutoreminderDescription),
-                content: $(self.changeReminderDateBody()),
-                width: 640,
-                icon : '/img/modal-icons/extend-duedate.png',
-                onReject : function() {
-                  if (this.calendar != undefined)
-                    this.calendar.close();
-                },
-                acceptButton : function() {
-                  var box = $("<div>");
-                  return box.append(self.buttonClearForModal()).append(self.buttonChangeForModal());
-                }()
-        });
-  },
-  render: function() {
-    return this;
-  }
-
-});
-
-/* Two interfaces for modal classes */
-var AuthorViewAutomaticRemindersSetPopup = function(args) {
-          var model = new AuthorViewAutomaticRemindersModel(args);
-          var view =  new AuthorViewAutomaticRemindersView({model : model, el :$("<div/>")});
-          view.startSetReminderDateModal();
-
-};
-
-var AuthorViewAutomaticRemindersChangePopup = function(args) {
-          var model = new AuthorViewAutomaticRemindersModel(args);
-          var view =  new AuthorViewAutomaticRemindersView({model : model, el :$("<div/>")});
-          view.startChangeReminderDateModal();
-
-
-};
-
-
-
-/* Propper UI component that is embedded in author view */
-var AuthorViewAutomaticReminders = React.createClass({
-    propTypes: {
-      document    : React.PropTypes.object,
-      onAction    : React.PropTypes.func
+return React.createClass({
+    mixins: [BackboneMixin.BackboneMixin],
+    getBackboneModels : function() {
+      return [this.props.model];
     },
-    handleOpenModal: function() {
-        if (this.props.document.autoremindtime() == undefined)
-          new AuthorViewAutomaticRemindersSetPopup({document : this.props.document,onAction :this.props.onAction});
-        else
-          new AuthorViewAutomaticRemindersChangePopup({document : this.props.document,onAction :this.props.onAction});
+    propTypes: {
+      model: React.PropTypes.object
+    },
+    toLinkWithColor : function(text) {
+      var res = $("<div>" + text + "</div>");
+      $("a",res).css("color",this.props.model.servicelinkcolour())
+      return res.html();
+    },
+    tryLogin : function() {
+      this.props.model.login();
     },
     render: function() {
+      var self = this;
+      var model = this.props.model;
+
       return (
-           <div className='grey-box auto-reminder'>
-             <div className='titleinfo'>
-                  <div className='name'>
-                      {localization.autoreminders.automaticRemindersTitle}
-                  </div>
-             </div>
-              <div className='inner'>
-                <div className='details'>
-                  <div>
-                    {this.props.document.autoremindtime() ? localization.autoreminders.willBeSentOn + ": " + this.props.document.autoremindtime().toYMDString() : ""}
-                  </div>
-                  <NewButton
-                    color="black"
-                    style= {{"margin-top": "10px"}}
-                    text = {this.props.document.autoremindtime() ? localization.autoreminders.changeDate : localization.autoreminders.setDate}
-                    size = "small"
-                    onClick = {this.handleOpenModal}
-                  />
-               </div>
-             </div>
-           </div>
+        <div style={{"width":"275px","margin" : "20px auto"}}>
+          <div style={{marginBottom: "50px", marginTop: "50px", textAlign: "center"}} >
+            <img alt='logo' src={model.logolink()} />
+            <div className='divider-line'/>
+            <label style={{"textAlign":"center", "width":"275px", color : model.textscolour()}}>
+              {localization.esigningpoweredbyscrive}
+            </label>
+          </div>
+          <div>
+            <div>
+              <div className='position first' style={{textAlign: "left", height: "30px"}} >
+                <label style={{paddingLeft: "10px", color : model.textscolour()}}>
+                  {localization.login + ":"}
+                </label>
+              </div>
+              <div className='position' style={{marginBottom:"6px"}}>
+                <InfoTextInput
+                  infotext={localization.loginModal.email}
+                  value={model.email()}
+                  onChange={function(v) {model.setEmail(v);}}
+                  inputtype="text"
+                  name="email"
+                  onEnter={this.tryLogin}
+                  autocomplete={true}
+                  inputStyle={{width : "245px", padding: "7px 14px"}}
+                  style={{width : "273px", padding: "0px", fontSize : "16px"}}
+                  focus={model.email() == "" && model.autofocus()}
+                />
+              </div>
+              <div className='position'>
+                <InfoTextInput
+                  infotext={localization.loginModal.password}
+                  value={model.password()}
+                  onChange={function(v) {model.setPassword(v);} }
+                  inputtype="password"
+                  name="password"
+                  onEnter={this.tryLogin}
+                  style={{width : "245px", padding : "7px 14px", fontSize : "16px" }}
+                  focus={model.email() != "" && model.autofocus()}
+                />
+              </div>
+              <div className='position' style={{textAlign:"left",height:"30px"}}>
+                <div style={{display:"inline-block",width:"224px",textAlign:"left",verticalAlign: "bottom", marginLeft: "4px"}}>
+                  <label className="s-forgot-password"
+                         style={{borderBottom: "1px solid #999999",color:"#999999",fontStyle:"italic",fontSize:"10px",lineHeight: "12px", color: model.textscolour()}}
+                         onClick={function(){ model.toogleView();}}
+                  >
+                   {localization.loginModal.forgotpassword}
+                  </label>
+                </div>
+              </div>
+              <div className="position" style={{textAlign:"center"}}>
+                <Button
+                  size="tiny"
+                  color={model.buttoncolorclass()}
+                  text={localization.loginModal.login}
+                  style={{"width":"245px;"}}
+                  onClick={this.tryLogin}
+                />
+              </div>
+              <div className='position' style={{textAlign:"center",marginTop:"20px"}}>
+               <label className='label-with-link'
+                      style={{color:model.textscolour()}}
+                      dangerouslySetInnerHTML={{__html: this.toLinkWithColor(localization.loginModal.dontHaveAccount)}}
+               />
+               <label className='label-with-link'
+                      style={{color:model.textscolour()}}
+                      dangerouslySetInnerHTML={{__html: this.toLinkWithColor(localization.visitOurPricingPage)}}
+               />
+              </div>
+            </div>
+          </div>
+        </div>
       );
     }
-
-});
-
-  expose.AuthorViewAutomaticReminders = AuthorViewAutomaticReminders;
-  return expose;
+  });
 });

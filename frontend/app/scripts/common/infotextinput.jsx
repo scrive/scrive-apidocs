@@ -69,6 +69,11 @@ define(['React'], function(React) {
     getInitialState: function() {
       return {value: this.props.value, focus : this.props.focus};
     },
+    componentDidMount : function() {
+      console.log("Maybe will focus " + this.props.focus)
+      if (this.props.focus)
+        this.focus();
+    },
     // External functions. If we will create interface to this element on they, we should move it there
     setValue : function(v) {
       this.setState({value :v});
@@ -77,7 +82,6 @@ define(['React'], function(React) {
       return this.state.value;
     },
     focus : function() {
-      console.log("Focusing");
       $("input",this.getDOMNode()).focus();
     },
     onFocus : function() {

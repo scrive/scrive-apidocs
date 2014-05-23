@@ -13,6 +13,10 @@ return Backbone.Model.extend({
         servicelinkcolour : '',
         textscolour : ''
   },
+  initialize : function() {
+    if (this.email() == "" && LocalStorage.get('login','last_login_email') != "")
+      this.set({email : LocalStorage.get('login','last_login_email')});
+  },
   reminderView : function() {
      return this.get("reminderView") == true;
   },
@@ -57,6 +61,7 @@ return Backbone.Model.extend({
   },
   login : function() {
     var model = this;
+    LocalStorage.set('login','last_login_email',model.email());
     var submit = new Submit({
           method: "POST",
           url: "/login",
