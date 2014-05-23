@@ -282,25 +282,6 @@ javascriptLocalisation =
              , placeYour : "$_signaturePlaceYour()$"
              , confirmSignature : "$_signatureConfirm()$"
            }
-         , welcomenewuser : {
-               title: "$_welcomeTitle()$"
-             , button: "$_welcomeButton()$"
-             , subtitle1: "$_welcomeSubtitle1()$"
-             , subtitle2: "$_welcomeSubtitle2()$"
-             , subtitle3: {
-                   injustafewminutes: "$_welcomeSubtitle3InJustAFewMinutes()$"
-                 , reviewed: "$_welcomeSubtitle3Reviewed()$"
-                 , returned: "$_welcomeSubtitle3Returned()$"
-                 , saved: "$_welcomeSubtitle3Saved()$"
-                 , isntthishowsimple: "$_welcomeSubtitle3IsntThisHowSimple()$"
-               }
-             , subtitle4: {
-                   buttonText: "$_buttonText4()$"
-                 , explainDocument: "$_explainDocument4()$"
-                 , isntthishowsimple: "$_welcomeSubtitle4IsntThisHowSimple()$"
-             }
-             , documentTitle: "$_welcomeDocumentTitle()$"
-           }
           , questionnaire : {
                heyImViktor: "$_questionnaireHeyImViktor()$"
              , ourEsignService: "$_questionnaireOurEsignService()$"
