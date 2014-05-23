@@ -18,41 +18,38 @@ return React.createClass({
       var model = this.props.model;
       return (
         <div className="short-input-section">
-          <div style={{marginBottom: "103px", textAlign: "center"}} >
-            <img alt='logo' src={model.logolink()} />
-            <div className='divider-line'/>
-            <label style={{"textAlign":"center", "width":"275px", color : model.textscolour()}}>
-              {localization.esigningpoweredbyscrive}
-            </label>
+          <div className='shadowed recovery'>
+            <h1>
+              {localization.resetYourPassword + "."}
+            </h1>
+            <h2>
+              {localization.resetYourPasswordCheckEmail}
+            </h2>
           </div>
-          <div>
-            <div>
-              <div className='position first' style={{textAlign: "left", height: "30px"}} >
-                <label style={{paddingLeft: "10px", color : model.textscolour()}}>
-                  {localization.resetYourPassword  + ":"}
-                </label>
-              </div>
-              <div className='position' style={{marginBottom:"6px"}}>
-                <InfoTextInput
-                  infotext={localization.loginModal.email}
-                  value={model.email()}
-                  onChange={function(v) {model.setEmail(v);}}
-                  inputtype="text"
-                  name="email"
-                  onEnter={this.trySendPasswordReminder}
-                  autocomplete={true}
-                  style={{"width" : "245px", "padding" : "7px 14px","fontSize" : "16px"}}
-                />
-              </div>
-              <div className="position" style={{textAlign:"center", marginTop:"10px"}}>
-                <Button
-                  size="tiny"
-                  cssClass="recovery-password-submit"
-                  color={model.buttoncolorclass()}
-                  text={localization.loginModal.sendNewPassword}
-                  style={{"width":"245px;"}}
-                  onClick={this.trySendPasswordReminder}
-                />
+
+          <div className='short-input-container recovery'>
+            <div className='short-input-container-body-wrapper'>
+              <div className='short-input-container-body'>
+                <div className='position first'>
+                  <InfoTextInput
+                    infotext = {localization.loginModal.email}
+                    value = {model.email()}
+                    onChange = {function(v) {model.setEmail(v);}}
+                    className = "big-input"
+                    inputtype = "text"
+                    name = "email"
+                    autocomplete = {true}
+                    onEnter = {function() {model.sendPasswordReminder();}}
+                    focus={true}
+                  />
+                  <Button
+                    size="big"
+                    color = "green"
+                    text  = {localization.loginModal.sendNewPassword}
+                    cssClass ="recovery-password-submit"
+                    onClick  = {function() {model.sendPasswordReminder();}}
+                  />
+                </div>
               </div>
             </div>
           </div>

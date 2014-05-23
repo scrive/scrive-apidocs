@@ -9,11 +9,11 @@ loginPage=
     var referer =  "$referer$";
     if (window.location.hash != "" && referer.indexOf("#") == -1) referer = referer + window.location.hash;
     var div = jQuery("<div / >");
+    jQuery('.inner').append(div);  //Order is important here. To have focus on input, we need to have it rendered on element that is appended.
     React.renderComponent(Login({
         referer:   referer,
         autofocus: true
     }),div[0]);
-    jQuery('.inner').append(div);
     mixpanel.register({
       Context : 'Login page'
     });
