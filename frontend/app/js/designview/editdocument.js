@@ -33,14 +33,14 @@ define(['Backbone', 'legacy_code'], function() {
             var div = $("<div class='design-view-action-document-draggables-help help1'/>");
             div.append($("<div class='wrapper'>")
               .append($("<div class='icon'/>"))
-              .append($("<span class='text'/>").text(localization.designview.draggablehelp1)));
+              .append($("<div class='text-wrapper'/>").append($("<span class='text'/>").text(localization.designview.draggablehelp1))));
             return div;
         },
         help2: function() {
             var div = $("<div class='design-view-action-document-draggables-help help2'/>");
             div.append($("<div class='wrapper'>")
               .append($("<div class='icon' />"))
-              .append($("<span class='text'/>").text(localization.designview.draggablehelp2)));
+              .append($("<div class='text-wrapper'/>").append($("<span class='text'/>").text(localization.designview.draggablehelp2))));
 
 
             return div;

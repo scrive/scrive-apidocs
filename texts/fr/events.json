@@ -7,6 +7,7 @@
 "_CancelDocumentEvidenceTextSimpleArchive":"L'invitation à signer le document a été supprimée.",
 "_CancelDocumentEvidenceTextSimpleNotArchive":"L'invitation à signer le document a été supprimée par $actor$.",
 "_CloseDocumentEvidenceTextSimple":"Scrive a verrouillé le document contre toutes nouvelles modifications par les personnes possédant une signature numérique.",
+"_Greek":"",
 "_InvitationDeliveredByEmailTextToReviewSimple":"L'invitation à la consultation du document a été envoyé à $signatory$ par mail.",
 "_InvitationDeliveredByEmailTextToSignSimple":"L'invitation à signer le document a été envoyée à $signatory$ par mail.",
 "_InvitationDeliveredBySMSTextToReviewSimple":"L'invitation à la consultation du document a été envoyée à $signatory$ par SMS.",

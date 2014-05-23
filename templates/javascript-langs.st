@@ -584,8 +584,7 @@ javascriptLocalisation =
              , hide : "$_historyHide()$"
            }
          , docsignview : {
-               followArrowToSign: "$_followArrowToSign()$"
-             , arrow: "$_arrow()$"
+               followTheArrow: "$_followTheArrow()$"
              , reviewDocument: "$_reviewDocument()$"
              , signedNotClosed: "$_signedNotClosed()$"
              , signedNotClosedSubText: "$_signedNotClosedSubText()$"
