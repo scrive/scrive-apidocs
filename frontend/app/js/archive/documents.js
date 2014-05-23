@@ -191,7 +191,8 @@ window.DocumentsListDefinition = function(archive) { return {
             size: 'normal',
             avaible : function(doc){
               return (   _.contains(['sent', 'delivered', 'read', 'opened'], doc.field('status'))
-                      && (doc.get('isauthor') || archive.forCompanyAdmin()));
+                      && (doc.get('isauthor') || (   doc.get('docauthorcompanysameasuser')
+                                                  && archive.forCompanyAdmin())));
             },
             onSelect : function(docs) {
                              var confirmationPopup = new Confirmation({

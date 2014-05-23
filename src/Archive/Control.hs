@@ -191,13 +191,15 @@ jsonDocumentsList = do
                               , csvContent = docsCSVs
                               }
        _ -> do
+          let filterWithAuthorCompany = DocumentFilterByAuthorCompany (usercompany user) : searching ++ filters
           (allDocsCount,allDocs) <- dbQuery $ GetDocuments2 True domain (searching ++ filters) sorting pagination2
+          companyDocs <- dbQuery $ GetDocuments domain filterWithAuthorCompany sorting (listParamsOffset params, listParamsLimit params)
           let docs = PagedList {  list       = allDocs
                                 , params     = params
                                 , pageSize   = docsPageSize
                                 , listLength = allDocsCount
                                 }
-          docsJSONs <- mapM (docForListJSON user padqueue) $ list docs
+          docsJSONs <- forM allDocs $ \doc -> docForListJSON user padqueue doc (doc `elem` companyDocs)
           return $ Right $ runJSONGen $ do
               value "list" docsJSONs
               value "paging" $ pagingParamsJSON docs
