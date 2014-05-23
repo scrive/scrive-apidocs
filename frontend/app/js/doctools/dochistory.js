@@ -96,19 +96,17 @@ var DocumentHistoryView = Backbone.View.extend({
     },
     updateOption : function() {
          if (this.model.expanded()) {
-            this.checkbox.addClass("expanded");
-            this.label.text(localization.history.hide);
+            this.label.text('- ' + localization.history.hide);
          }
         else {
-            this.checkbox.removeClass("expanded");
-            this.label.text(localization.history.expand + " (" + (this.model.historyList().model().length - 15) + " " +localization.history.available+ ")");
+            var expandString = localization.history.expand.replace(/[0-9]+/,this.model.historyList().model().length - 15);
+            this.label.text('+ ' + expandString);
         }
     },
     expandAllOption : function() {
         var model = this.model;
         var view = this;
         var option = $("<div class='option'/>");
-        this.checkbox = $("<div class='expandable'>");
         this.label = $("<div class='label'/>");
         this.updateOption();
         option.click(function() {
@@ -116,7 +114,7 @@ var DocumentHistoryView = Backbone.View.extend({
             view.updateOption();
             return false;
         });
-        return option.append(this.checkbox).append(this.label);
+        return option.append(this.label);
     },
     render: function() {
       var self = this;
