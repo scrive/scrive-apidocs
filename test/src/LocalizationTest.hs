@@ -58,9 +58,9 @@ testTranslationsHaveSameStructure = do
 checkTexts :: [(String,String)] -> [(String,String)] ->  [Maybe String]
 checkTexts _ [] = []
 checkTexts [] _ = []
-checkTexts ((sn,sv):ss) ((tn,tv):tt)
-  | (sn < tn) = checkTexts ss ((tn,tv):tt)
-  | (tn > sn) = checkTexts ss ((sn,sv):tt)
+checkTexts src@((sn,sv):ss) tar@((tn,tv):tt)
+  | (sn < tn) = checkTexts ss tar
+  | (sn > tn) = checkTexts src tt
   | (strip tv == "") = checkTexts ss tt
   | otherwise = ((\s -> "In " ++ tn ++ " " ++ s ++ "\n") <$> compareTranslations sv tv) : (checkTexts ss tt)
 
