@@ -114,29 +114,32 @@
     }
 
     .design-view-action-document-draggable-text {
-      width: 110px;
+      // FIXME
+      //width: 110px;
     }
   }
 
   &.design-view-action-document-draggable-signature {
-    
+
     .design-view-action-document-draggable-icon {
       background-position: 44px 0px;
     }
 
     .design-view-action-document-draggable-text {
-      width: 116px;
+      // FIXME
+      //width: 116px;
     }
   }
 
   &.design-view-action-document-draggable-checkbox {
-    
+
     .design-view-action-document-draggable-icon {
       background-position: 21px 0px;
     }
-    
+
     .design-view-action-document-draggable-text {
-      width:94px;
+      // FIXME
+      //width:94px;
     }
   }
 
@@ -157,6 +160,7 @@
     background-color: @brand-secondary;
     border-radius: 2px 0px 0px 2px;
     display: inline-block;
+    float: left;
     height: 100%;
     text-align: center;
     width: 44px;
@@ -164,14 +168,19 @@
 
   .design-view-action-document-draggable-text {
     display:inline-block;
+    float: left;
+    height: 44px;
+    line-height: 44px;
+    max-width: 120px;
+    min-width: 100px;
     text-align:center;
-    position: relative;
-    top: -7px;
 
     span {
       color: @white;
-      position: relative;
-      top: 2px;
+      display: inline-block;
+      line-height: 16px;
+      margin: 0 6px 0 6px;
+      vertical-align: middle;
     }
   }
 
