@@ -16,9 +16,15 @@ import Network.HTTP (urlDecode)
 
 
 splitAuthorization :: String -> [(String, String)]
-splitAuthorization s = 
-  catMaybes $ map makeKV $ splitOver "," over
-  where over = if "OAuth" `isPrefixOf` s
+splitAuthorization s =
+  catMaybes $ map makeKV $ splitParts $ over
+  where
+        -- We by default we split on commas, but if no comma is there, we split on spaces
+        -- This is a fix for some headers that cant send commas in header.
+        splitParts o = if (',' `elem` o)
+                          then splitOver "," o
+                          else splitOver " " o
+        over = if "OAuth" `isPrefixOf` s
                then drop 5 s
                else s
         makeKV kv = case break (== '=') kv of

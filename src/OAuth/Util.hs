@@ -38,6 +38,7 @@ getTempCredRequest = do
   eparams <- getAuthorizationHeader
   case eparams of
     Nothing -> return $ Left "Authorization header is required."
+    Just [] -> return $ Left "Authorization header does not have a valid format and could not be parsed."
     Just params -> do
       mprivilegesstring <- getDataFn' (look "privileges")
       let msigtype          = lookupAndRead "oauth_signature_method" params
