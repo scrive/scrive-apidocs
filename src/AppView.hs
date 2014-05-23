@@ -320,7 +320,8 @@ flashMessageFields flash = do
 
 localizationScript :: Kontrakcja m => String -> m Response
 localizationScript _ = do
-   script <- renderTemplate_ "javascriptLocalisation"
+   Context{ctxlang} <- getContext
+   script <- renderTemplate "javascriptLocalisation" $ F.value "code" $ codeFromLang ctxlang
    ok $ toResponseBS (BS.fromString "text/javascript;charset=utf-8") $ BSL.fromString script
 
 analyticsLoaderScript :: Kontrakcja m => m Response

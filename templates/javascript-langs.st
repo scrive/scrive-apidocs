@@ -5,7 +5,7 @@
 ####
 javascriptLocalisation =
   window.localization =
-        {      code : "$_code()$"
+        {      code : "$code$"
              , welcomeback : "$_welcomeback()$"
              , reloadPage : "$_reloadPage()$"
              , from : "$_from()$"

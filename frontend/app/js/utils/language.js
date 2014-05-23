@@ -15,7 +15,7 @@ window.Language = {
       return ["en","sv","de","fr","it","es","pt","nl","da","no","el"];
     },
     changeOnCurrentPage : function(code,callback) {
-       if (code == Language.current) {
+       if (code == Language.current()) {
         if (callback != undefined) callback();
        }
        else
