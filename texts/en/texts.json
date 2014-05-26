@@ -1,4 +1,4 @@
-{ 
+{
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Are you sure you want to send reminders to the parties involved in the",
@@ -365,7 +365,6 @@
 "_dontHaveAccount":"Don't have an account?<a href='/en/signup'> Sign up for free.</a>",
 "_editInviteTextDialogHead":"Invitation message",
 "_editMessagePlaceholder":"Message available for email delivery only.",
-"_eleg":"E-ID",
 "_emailCanBeChangedInAccountSection":"Your email can be changed in your account settings",
 "_emptyOrNotValidEmail":"You have not entered an email address or the email address is incorrect. Please try again.",
 "_emptyOrNotValidMobile":"You have not entered a mobile number, or the number is incorrect. Please note that the number must be on international format starting with a + sign and country code.",
@@ -406,7 +405,7 @@
 "_flashMessageInvalidUnprintableCharsInInput":"$fieldnametitlecase$ contains invalid characters.",
 "_flashMessageLoginPageRedirectReasonNotAdmin":"You are not authorised to see this page.",
 "_flashMessageLoginPageRedirectReasonNotLoggedIn":"You are not logged in.",
-"_flashMessageLoginPageRedirectReasonWrongIPAddress":"You cannot use Scrive system from IP ipaddr. Please contact 'adminname' who is your system administrator.",
+"_flashMessageLoginPageRedirectReasonWrongIPAddress":"You cannot use Scrive system from IP <span class='put-ip-here'/>. Please contact '<span class='put-adminname-here'/>' who is your system administrator.",
 "_flashMessageLoginPageRedirectReasonWrongMailOrPassword":"Incorrect email or password.",
 "_flashMessageMismatchedEmails":"The emails you entered do not match.",
 "_flashMessageMissingRequiredField":"You missed to fill at least one mandatory field.",
@@ -468,7 +467,6 @@
 "_historyParty":"Party",
 "_historyTime":"Time",
 "_historyTitle":"Track progress",
-"_idFieldName":"id",
 "_ie6NotSupported":"We are sorry. Your browser Internet Explorer 6 is more than 12 years old and we have therefore chosen to not support it. Please upgrade to a newer version and both Scrive E-sign and the rest of internet will work much better for you.",
 "_internalServerError":"<h1>Something went wrong</h1><h4>If the problem remains please contact our support at support@scrive.com or +46 8 519 779 00.</h4>",
 "_invalidAttachments":"Sorry, this file format is not supported. Please select a PDF file instead.",

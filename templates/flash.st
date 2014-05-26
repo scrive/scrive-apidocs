@@ -69,8 +69,6 @@ checkBoxFieldName=	$_checkBoxFieldName()$
 ###
 daysToSignFieldName=	$_daysToSignFieldName()$
 ###
-idFieldName=	$_idFieldName()$
-###
 fieldNameFieldName=	$_fieldNameFieldName()$
 ###
 fieldValueFieldName=	$_fieldValueFieldName()$

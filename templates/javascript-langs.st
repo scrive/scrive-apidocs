@@ -230,7 +230,6 @@ javascriptLocalisation =
            , filterByAuthor : {
                 showAnyAuthor : "$_anyAuthor()$"
             }
-           , eleg : "$_eleg()$"
            , editInviteDialogHead : "$_editInviteTextDialogHead()$"
            , to : "$_to()$"
            , toNoSpaces : "$_toNoSpaces()$"
