@@ -161,7 +161,7 @@ move s sres tres = do
        Just mtch -> do
          withFile (translationFile lang sres) WriteMode $ \h -> do
                           hSetEncoding h utf8
-                          hPutStr h (encodeTranslationJSON $ textsToJSON $ filter (\(s',_) -> s == s') stexts)
+                          hPutStr h (encodeTranslationJSON $ textsToJSON $ filter (\(s',_) -> s /= s') stexts)
                           hClose h
                           putStrLn $ "Text " ++ s ++ " removed from " ++ show sres
 
