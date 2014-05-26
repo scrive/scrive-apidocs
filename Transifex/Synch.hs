@@ -31,6 +31,7 @@ resourceslug :: TranslationResource -> String
 resourceslug Texts = "textsjson"
 resourceslug Events = "eventsjson"
 resourceslug Questionnaire = "questionnairejson"
+resourceslug Signview = "signviewjson"
 
 fetch :: String -> String -> String -> TranslationResource -> IO [(String,String)]
 fetch user password lang resource = do
@@ -183,7 +184,10 @@ main' ("diff":(user:(password:(lang:(res:_)))))  = case (readResource res) of
                                                      _ -> error "Invalid parameters. Resource name is invalid"
 main' ("diff":_)   = error "Invalid parameters. Usage: transifex.sh diff user password lang resource"
 main' ("diff-lang":(user:(password:(lang:_))))  = mapM_ (diff user password lang) allResources
-main' ("diff-lang":_)   = error "Invalid parameters. Usage: transifex.sh diff user password lang"
+main' ("diff-lang":_)   = error "Invalid parameters. Usage: transifex.sh diff-lang user password lang"
+main' ("diff-all":(user:(password:_)))  =  forM_ allLangs $ \lang -> putStrLn ("Diff for language " ++ lang) >> mapM_ (diff user password lang) allResources
+main' ("diff-all":_)   = error "Invalid parameters. Usage: transifex.sh diff-all user password"
+
 main' ("merge":(user:(password:(lang:(res:_))))) = case (readResource res) of
                                                      Just res' -> merge user password lang res'
                                                      _ -> error "Invalid parameters. Resource name is invalid"
