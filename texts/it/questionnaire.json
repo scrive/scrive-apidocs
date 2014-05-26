@@ -1,7 +1,7 @@
 { 
 "_questionnaireAnyoneElse":"Vuoi che ti invii un'email su come rendere la tua organizzazione più efficiente con l'e-signing?",
 "_questionnaireCloseFaster":"Con l'e-signing, i documenti vengono firmati più velocemente.",
-"_questionnaireCuriosity":"E mi stavo chiedendo...\n",
+"_questionnaireCuriosity":"E mi stavo chiedendo...",
 "_questionnaireEasyToSign":"Hai visto quanto è stato facile firmare...",
 "_questionnaireEmailScan":"Email & Scansione",
 "_questionnaireEnjoySigning":"Hai gradito la tua esperienza di e-signing?",
@@ -16,7 +16,7 @@
 "_questionnaireOther":"Altro",
 "_questionnaireOtherBenefitsP1":"Con l'e-signing è facile anche ",
 "_questionnaireOtherBenefitsP2":"crea, invia & segui",
-"_questionnaireOtherBenefitsP3":"i tuoi documenti.\n",
+"_questionnaireOtherBenefitsP3":"i tuoi documenti.",
 "_questionnaireOurEsignService":"Il nostro servizio di e-signing ti ha fornito quest'esperienza di firma. ",
 "_questionnairePenPaper":"Carta & penna di persona",
 "_questionnairePhoneNumber":"Numero telefonico per il lavoro",
@@ -27,9 +27,9 @@
 "_questionnaireSendDownP2":"es. contratti di vendita, contratti di impiego, ecc...",
 "_questionnaireSendFeedback":"Invia feedback",
 "_questionnaireSendingToday":"Come vieni coinvolto solitamente in accordi legalmente vincolanti?",
-"_questionnaireShowDemo":"Sì per favore",
+"_questionnaireShowDemo":"Sì, grazie",
 "_questionnaireSorry":"Ci dispiace tu non abbia gradito l'esperienza",
-"_questionnaireThanksForYourTime":"Grazie per aver trovato il tempo di rispondere alle nostre domande!\n",
+"_questionnaireThanksForYourTime":"Grazie per aver trovato il tempo di rispondere alle nostre domande!",
 "_questionnaireVoiceAgreements":"Accordo verbale",
 "_questionnaireYes":"Sì"
 }
