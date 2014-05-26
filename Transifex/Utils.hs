@@ -18,15 +18,16 @@ import Control.Monad.Identity
 import Data.Maybe
 
 
-data TranslationResource = Texts | Events | Questionnaire deriving Show
+data TranslationResource = Texts | Events | Questionnaire | Signview deriving Show
 
 allResources :: [TranslationResource]
-allResources = [Texts, Events, Questionnaire]
+allResources = [Texts, Events, Questionnaire, Signview]
 
 readResource :: String -> Maybe TranslationResource
 readResource "texts" = Just Texts
 readResource "events" = Just Events
 readResource "questionnaire" = Just Questionnaire
+readResource "signview" = Just Signview
 readResource _ = Nothing
 
 
@@ -34,6 +35,7 @@ translationFile:: String -> TranslationResource -> String
 translationFile lang Texts = "texts/" ++ lang ++ "/texts.json"
 translationFile lang Events = "texts/" ++ lang ++ "/events.json"
 translationFile lang Questionnaire = "texts/" ++ lang ++ "/questionnaire.json"
+translationFile lang Signview = "texts/" ++ lang ++ "/signview.json"
 
 
 allLangs :: [String]
