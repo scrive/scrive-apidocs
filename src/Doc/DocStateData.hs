@@ -41,6 +41,7 @@ import IPAddress
 import MagicHash
 import MinutesTime
 import User.UserID
+import Company.CompanyID
 import User.Lang
 import File.FileID
 import Doc.SealStatus (SealStatus, HasGuardtimeSignature(..))
@@ -699,6 +700,7 @@ data Document = Document {
   , documentapicallbackurl         :: Maybe String
   , documentobjectversion          :: Int64
   , documentmagichash              :: MagicHash
+  , documentauthorcompanyid        :: Maybe CompanyID
   } deriving (Eq, Ord, Show)
 
 
@@ -731,6 +733,7 @@ instance HasDefaultValue Document where
           , documentapicallbackurl       = Nothing
           , documentobjectversion        = 0
           , documentmagichash            = unsafeMagicHash 0
+          , documentauthorcompanyid      = Nothing
           }
 
 instance HasLang Document where
