@@ -49,5 +49,5 @@
 "_delivery_method":"$if(email)$email$elseif(mobile)$SMS$elseif(emailmobile)$email και SMS$endif$",
 "_invitationCustomMessageTextToReview":"$if(text)$$if(!mobile)$ Η πρόσκληση ελέγχου περιελάμβανε το ακόλουθο μήνυμα: <BR/> <i>$text:noescape()$</i>$endif$$endif$  ",
 "_invitationCustomMessageTextToSign":"$if(text)$$if(!mobile)$ Η πρόσκληση υπογραφής περιελάμβανε το ακόλουθο μήνυμα: <BR/> <i>$text:noescape()$</i>$endif$$endif$ ",
-"_using_identification_method":"$if(eleg)$ χρησιμοποιώντας ηλεκτρονική ταυτότητα ως μέθοδο ταυτοποίησης $elseif(sms_pin)$ χρησιμοποιώντας κωδικό PIN με SMS ως μέθοδο ταυτοποίησης"
+"_using_identification_method":"$if(eleg)$ χρησιμοποιώντας ηλεκτρονική ταυτότητα ως μέθοδο ταυτοποίησης $elseif(sms_pin)$ χρησιμοποιώντας κωδικό PIN με SMS ως μέθοδο ταυτοποίησης$endif$"
 }

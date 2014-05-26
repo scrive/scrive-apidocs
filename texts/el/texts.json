@@ -798,7 +798,7 @@
 "_paymentsEmailBilledTo":"Χρεώθηκαν στο ",
 "_paymentsEmailCreditCardCharged":"Η πιστωτική σας κάρτα έχει χρεωθεί ",
 "_paymentsEmailDescription":"Σχέδιο τιμών ",
-"_paymentsEmailExpiredQuestions":"Ευχαριστούμε για την αγορά σας! Παρακαλώ κρατήστε αυτό το μήνυμα στο αρχείο σας. Αν έχετε κάποιες ερωτήσεις, παρακαλώ επικοινωνήστε με <ahref='accounting@scrive.com'>accounting@scrive.com</a>. ",
+"_paymentsEmailExpiredQuestions":"Ευχαριστούμε για την αγορά σας! Παρακαλώ κρατήστε αυτό το μήνυμα στο αρχείο σας. Αν έχετε κάποιες ερωτήσεις, παρακαλώ επικοινωνήστε με <a href='accounting@scrive.com'>accounting@scrive.com</a>. ",
 "_paymentsEmailExpiredSubject":"Λήξη Λογαριασμού ",
 "_paymentsEmailNextTransactionDate":"Επόμενη ημερομηνία συναλλαγής ",
 "_paymentsEmailQuestion":"Παρακαλώ κρατήστε αυτό το email για τα αρχεία σας. Αν έχετε ερωτήσεις, παρακαλώ επικοινωνήστε με <a href='accounting@scrive.com'>accounting@scrive.com</a>. ",
