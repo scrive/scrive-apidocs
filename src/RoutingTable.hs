@@ -10,7 +10,8 @@ import KontraLink
 import Login
 import Redirect
 import Routing
-import Happstack.StaticRouting(Route, choice, dir, param, remainingPath)
+import Happstack.MonadPlus (runMPlusT)
+import Happstack.StaticRouting(Route, choice, dir, remainingPath)
 import qualified Administration.AdministrationControl as Administration
 import qualified Company.CompanyControl as Company
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
@@ -65,7 +66,7 @@ staticRoutes production = choice
      , dir "s" $ hGet $ toK2    $ DocControl.handleSignShow
      , dir "s" $ hGet $ toK3    $ DocControl.handleSignShowSaveMagicHash
 
-     , dir "s" $ param "acceptaccount"  $ hPostNoXToken $ toK2 $ DocControl.handleAcceptAccountFromSign
+     , dir "s" $ dir "acceptaccount"  $ hPostNoXToken $ toK2 $ DocControl.handleAcceptAccountFromSign
 
      -- Attachments
      , dir "a" $ dir "rename"      $ hPost $ toK1 $ AttachmentControl.handleRename
@@ -76,8 +77,6 @@ staticRoutes production = choice
      , dir "a"                     $ hGet  $ toK1 $ AttachmentControl.handleShow
      , dir "att"                   $ hGet  $ toK1 $ AttachmentControl.jsonAttachment
      , dir "a" $ dir "download"    $ hGet  $ toK3 $ AttachmentControl.handleDownloadAttachment
-
-
 
      , dir "d"                     $ hGet  $ toK0 $ ArchiveControl.showArchive
      , dir "d"                     $ hGet  $ toK1 $ DocControl.handleIssueShowGet
@@ -175,8 +174,8 @@ staticRoutes production = choice
      , userAPI
      , padApplicationAPI
      , oauth
-     , dir "r" $ remainingPath GET $ serveFile (asContentType "text/html") (staticDir++"/index.html")
-     , remainingPath GET $ allowHttp $ serveDirectory DisableBrowsing [] staticDir
+     , dir "r" $ remainingPath GET $ (runMPlusT $ serveFile (asContentType "text/html") (staticDir++"/index.html")) >>= maybe respond404 return
+     , remainingPath GET $ (runMPlusT $ serveDirectory DisableBrowsing [] staticDir) >>= maybe respond404 return
 
      -- public services
      , dir "parsecsv"        $ hPost $ toK0 $ ServerUtils.handleParseCSV

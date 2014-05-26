@@ -22,7 +22,6 @@ import Text.JSON.Gen
 import Kontra
 import MinutesTime
 import Utils.HTTP
-import Utils.Monoid
 import Session.Data hiding (session)
 import Session.Model
 import Templates
@@ -42,6 +41,7 @@ import Control.Monad.Error
 import Data.Functor
 import Data.Maybe
 import Data.Typeable
+import Happstack.MonadPlus (runMPlusT)
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
 import Happstack.Server.Internal.Cookie
 import Network.Socket
@@ -74,11 +74,11 @@ data AppGlobals
     Determines the lang of the current user (whether they are logged in or not), by checking
     their settings, the request, and cookies.
 -}
-getStandardLang :: (HasLang a, HasRqData m, ServerMonad m, FilterMonad Response m, MonadIO m, MonadPlus m, Functor m) => Maybe a -> m Lang
+getStandardLang :: (HasLang a, HasRqData m, ServerMonad m, FilterMonad Response m, MonadIO m, Functor m) => Maybe a -> m Lang
 
 getStandardLang muser = do
   rq <- askRq
-  currentcookielang <- optional $ readCookieValue "lang"
+  currentcookielang <- runMPlusT $ readCookieValue "lang" -- MPLusT captures evil use of rqDataError
   let browserlang = langFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
       newlang = fromMaybe browserlang $ msum [(getLang <$> muser), currentcookielang]
       newlangcookie = mkCookie "lang" (show newlang)
@@ -149,7 +149,7 @@ enhanceYourCalm action = enhanceYourCalmWorker 100
 {- |
    Creates a context, routes the request, and handles the session.
 -}
-appHandler :: KontraPlus Response -> AppConf -> AppGlobals -> ServerPartT IO Response
+appHandler :: KontraPlus (Maybe Response) -> AppConf -> AppGlobals -> ServerPartT IO Response
 appHandler handleRoutes appConf appGlobals = catchEverything . enhanceYourCalm $
   withPostgreSQL (connsource appGlobals) . runCryptoRNGT (cryptorng appGlobals) $
     AWS.runAmazonMonadT amazoncfg $ do
@@ -215,7 +215,7 @@ appHandler handleRoutes appConf appGlobals = catchEverything . enhanceYourCalm $
       internalServerError $ toResponse ""
 
     routeHandlers ctx = runKontraPlus ctx $ do
-      res <- (Right <$> handleRoutes `mplus` E.throwIO Respond404) `E.catches` [
+      res <- (Right <$> (handleRoutes >>= maybe (E.throwIO Respond404) return)) `E.catches` [
           E.Handler $ \e -> Left <$> case e of
             InternalError stack -> do
               rq <- askRq

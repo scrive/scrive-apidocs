@@ -46,10 +46,9 @@ import qualified Amazon as AWS
 
 type InnerKontraPlus = StateT Context (AWS.AmazonMonadT (CryptoRNGT (DBT (ServerPartT IO))))
 
--- | KontraPlus is 'MonadPlus', but it should only be used on toplevel
--- for interfacing with static routing.
+-- | KontraPlus is Kontra plus 'WebMonad', used for interfacing with certain Happstack functions.
 newtype KontraPlus a = KontraPlus { unKontraPlus :: InnerKontraPlus a }
-  deriving (Alternative, Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadDB, MonadIO, ServerMonad, WebMonad Response, MonadPlus, AWS.AmazonMonad)
+  deriving (Alternative, Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadDB, MonadIO, ServerMonad, WebMonad Response, AWS.AmazonMonad)
 
 instance Log.MonadLog KontraPlus where
   mixlogjs title js = liftBase (Log.mixlogjsIO title js)
@@ -83,10 +82,11 @@ instance MailContextMonad KontraPlus where
   getMailContext = contextToMailContext <$> getContext
 
 -- | Kontra is a traditional Happstack handler monad except that it's
--- not MonadZero and WebMonad.
+-- not WebMonad.
 --
--- Since we use static routing, there is no need for mzero inside a
--- handler. Instead we signal errors explicitly through 'KontraError'.
+-- Note also that in Kontra we don't do backtracking, which is why it
+-- is not an instance of MonadPlus.  Errors are signaled explicitly
+-- through 'KontraError'.
 newtype Kontra a = Kontra { unKontra :: KontraPlus a }
   deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadIO, MonadDB, ServerMonad, KontraMonad, TemplatesMonad, Log.MonadLog, AWS.AmazonMonad, MailContextMonad, GuardTimeConfMonad)
 

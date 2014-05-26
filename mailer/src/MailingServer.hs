@@ -43,8 +43,11 @@ main = Log.withLogger $ do
   E.bracket (do
     let (iface, port) = mscHttpBindAddress conf
         handlerConf = nullConf { port = fromIntegral port, logAccess = Nothing }
-        (routes, overlaps) = R.compile handlers
-    maybe (return ()) Log.mixlog_ overlaps
+    routes <- case R.compile handlers of
+                Left e -> do
+                  Log.mixlog_ e
+                  error "static routing"
+                Right r -> return (r >>= maybe (notFound (toResponse ("Not found."::String))) return)
     socket <- listenOn (htonl iface) $ fromIntegral port
     forkIO $ simpleHTTPWithSocket socket handlerConf (router rng connSource routes)
    ) killThread $ \_ -> do

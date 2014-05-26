@@ -114,7 +114,7 @@ window.Signatory = Backbone.Model.extend({
         return this.get("document");
     },
     saveurl: function() {
-      return "/s/" + this.document().id + "/" + this.signatoryid();
+      return "/s/acceptaccount/" + this.document().id + "/" + this.signatoryid();
     },
     signIndex: function() {
         var allSignatories = this.document().signatories();

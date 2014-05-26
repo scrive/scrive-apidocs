@@ -14,7 +14,6 @@ define(['Q', 'postsignview/analytics_service'], function(Q, AnalyticsService) {
     var submitValues = {
       url: currentSignatory.saveurl(),
       method: 'POST',
-      acceptaccount: true,
       tos: 'on',
       email: currentSignatory.email(),
       ajax: true,

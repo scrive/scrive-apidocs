@@ -20,7 +20,7 @@ router rng cs routes = withPostgreSQL cs $ do
   let quota = 65536
   temp <- liftIO getTemporaryDirectory
   decodeBody $ defaultBodyPolicy temp quota quota quota
-  res <- runMessenger rng $ routes `mplus` notFound (toResponse "Nothing is here.")
+  res <- runMessenger rng routes
   return res
 
 handlers :: Route (Messenger Response)

@@ -22,7 +22,7 @@ import Data.Maybe
 
 router :: CryptoRNGState -> ConnectionSource -> Mailer Response -> ServerPartT IO Response
 router rng cs routes = withPostgreSQL cs $
-  runMailer rng $ routes `mplus` notFound (toResponse "Nothing is here.")
+  runMailer rng routes
 
 handlers :: Route (Mailer Response)
 handlers = choice [

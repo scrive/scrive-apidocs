@@ -72,8 +72,11 @@ startSystem appGlobals appConf = E.bracket startServer stopServer waitForTerm
     startServer = do
       let (iface,port) = httpBindAddress appConf
       listensocket <- listenOn (htonl iface) (fromIntegral port)
-      let (routes,overlaps) = compile $ staticRoutes (production appConf)
-      maybe (return ()) Log.mixlog_ overlaps
+      routes <- case compile $ staticRoutes (production appConf) of
+                  Left e -> do
+                    Log.mixlog_ e
+                    error "static routing"
+                  Right r -> return r
       let conf = nullConf {
             port = fromIntegral port
           , timeout = 120
