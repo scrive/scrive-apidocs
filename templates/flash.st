@@ -67,8 +67,6 @@ positionFieldName=	$_companyposition()$
 ###
 checkBoxFieldName=	$_checkBoxFieldName()$
 ###
-daysToSignFieldName=	$_daysToSignFieldName()$
-###
 fieldNameFieldName=	$_fieldNameFieldName()$
 ###
 fieldValueFieldName=	$_fieldValueFieldName()$
