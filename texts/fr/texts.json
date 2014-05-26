@@ -454,7 +454,7 @@
 "_flashMessageNotAValidInteger":"",
 "_flashMessageNumberAboveMaximum":"",
 "_flashMessageNumberBelowMinimum":"",
-"_flashMessagePasswordChangeLinkNotValid":"Nous sommes désolés. Ce lien n'est plus valable.<br/>Appuyez sur\"$_forgotpassword()$\" pour générer un nouveau lien.",
+"_flashMessagePasswordChangeLinkNotValid":"",
 "_flashMessagePasswordExceedsMaxLength":"",
 "_flashMessagePasswordInvalid":"",
 "_flashMessagePasswordsDontMatch":"Les deux mots de passe saisis ne sont pas identiques",

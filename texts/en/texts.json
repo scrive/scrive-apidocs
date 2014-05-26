@@ -454,7 +454,7 @@
 "_flashMessageNotAValidInteger":"$fieldnametitlecase$ should be a number.",
 "_flashMessageNumberAboveMaximum":"$fieldnametitlecase$ can be a maximum of $max$.",
 "_flashMessageNumberBelowMinimum":"$fieldnametitlecase$ must be a minimum of $min$.",
-"_flashMessagePasswordChangeLinkNotValid":"We are sorry. This link is no longer valid.<br/>Click on \"$_forgotpassword()$\" to generate a new link.",
+"_flashMessagePasswordChangeLinkNotValid":"We are sorry. This link is no longer valid.<br/>Click on \\\\\"$_forgotpassword()$\\\\\" to generate a new link.",
 "_flashMessagePasswordExceedsMaxLength":"The password must contain at most 250 characters.",
 "_flashMessagePasswordInvalid":"Password must contain at least 8 characters and contain at least one letter and one digit.",
 "_flashMessagePasswordsDontMatch":"The two passwords do not match.",

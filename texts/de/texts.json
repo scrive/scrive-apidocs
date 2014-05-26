@@ -454,7 +454,7 @@
 "_flashMessageNotAValidInteger":"$fieldnametitlecase$ sollte eine Zahl sein",
 "_flashMessageNumberAboveMaximum":"$fieldnametitlecase$ kann ein Maximum von $max$ enthalten.",
 "_flashMessageNumberBelowMinimum":"$fieldnametitlecase$ muss ein Minimum von $min$ enthalten.",
-"_flashMessagePasswordChangeLinkNotValid":"Es tut uns leid. Dieser Link ist nicht mehr gültig. <br/> Klicken Sie auf \"$_forgotpassword()$\"um einen neuen Link zu erzeugen.",
+"_flashMessagePasswordChangeLinkNotValid":"",
 "_flashMessagePasswordExceedsMaxLength":"Das Passwort darf höchstens 250 Zeichen enthalten.",
 "_flashMessagePasswordInvalid":"Das Passwort muss mindestens aus 8 Zeichen bestehen und davon mindestens einen Buchstaben und eine Zahl.",
 "_flashMessagePasswordsDontMatch":"Die zwei Passwörter stimmen nicht mit einander.",

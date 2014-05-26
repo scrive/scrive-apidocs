@@ -506,7 +506,7 @@ javascriptLocalisation =
            , flashMessagePasswordExceedsMaxLength: "$_flashMessagePasswordExceedsMaxLength()$"
            , flashMessageInvalidCharsInPassword: "$_flashMessageInvalidCharsInPassword()$"
            , flashMessagePasswordInvalid: "$_flashMessagePasswordInvalid()$"
-           , flashMessagePasswordChangeLinkNotValid: '$_flashMessagePasswordChangeLinkNotValid()$'
+           , flashMessagePasswordChangeLinkNotValid: "$_flashMessagePasswordChangeLinkNotValid()$"
          }
          , signupModal: {
              modalAccountSetupFooter: "$_modalAccountSetupFooter()$"

@@ -454,7 +454,7 @@
 "_flashMessageNotAValidInteger":"$fieldnametitlecase$ borde vara ett nummer.",
 "_flashMessageNumberAboveMaximum":"$fieldnametitlecase$ kan vara ett max av $max$.",
 "_flashMessageNumberBelowMinimum":"$fieldnametitlecase$ måste vara ett minimum av $min$.",
-"_flashMessagePasswordChangeLinkNotValid":"Vi beklagar. Länken är inte längre giltig.<br/>Klicka på \"$_forgotpassword()$\" för att generera en ny länk.",
+"_flashMessagePasswordChangeLinkNotValid":"Vi beklagar. Länken är inte längre giltig.<br/>Klicka på \\\\\"$_forgotpassword()$\\\\\" för att generera en ny länk.",
 "_flashMessagePasswordExceedsMaxLength":"Lösenordet får max innehålla 250 tecken.",
 "_flashMessagePasswordInvalid":"Lösenordet måste vara minst 8 tecken samt innehålla åtminstone en bokstav och en siffra",
 "_flashMessagePasswordsDontMatch":"De två lösenorden matchar inte.",

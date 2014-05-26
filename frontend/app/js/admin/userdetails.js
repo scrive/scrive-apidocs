@@ -200,12 +200,12 @@ var AdminUserDetailsView = Backbone.View.extend({
         , {name: localization.account.accountSecurity.langDE, value: "de"}
         , {name: localization.account.accountSecurity.langFR, value: "fr"}
         , {name: localization.account.accountSecurity.langIT, value: "it"}
-        , {name: localization.account.accountSecurity.langES, value: "es", hidden: true}
-        , {name: localization.account.accountSecurity.langPT, value: "pt", hidden: true}
-        , {name: localization.account.accountSecurity.langNL, value: "nl", hidden: true}
+        , {name: localization.account.accountSecurity.langES, value: "es"}
+        , {name: localization.account.accountSecurity.langPT, value: "pt"}
+        , {name: localization.account.accountSecurity.langNL, value: "nl"}
         , {name: localization.account.accountSecurity.langDA, value: "da"}
         , {name: localization.account.accountSecurity.langNO, value: "no"}
-        , {name: localization.account.accountSecurity.langEL, value: "el", hidden: true}
+        , {name: localization.account.accountSecurity.langEL, value: "el"}
       ];
       var lname = _.findWhere(languages, {value :model.lang()}).name;
 

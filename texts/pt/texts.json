@@ -454,7 +454,7 @@
 "_flashMessageNotAValidInteger":"$fieldnametitlecase$ deve ser um número.",
 "_flashMessageNumberAboveMaximum":"$fieldnametitlecase$ pode ter um máximo de $max$.",
 "_flashMessageNumberBelowMinimum":"",
-"_flashMessagePasswordChangeLinkNotValid":"Lamentamos, mas esta hiperligação já não é válida.<br/>Clique em \"$_forgotpassword()$\" para gerar uma nova hiperligação.",
+"_flashMessagePasswordChangeLinkNotValid":"",
 "_flashMessagePasswordExceedsMaxLength":"A palavra-passe deve conter, no máximo, 250 caracteres.",
 "_flashMessagePasswordInvalid":"A palavra-passe tem de conter pelo menos 8 caracteres e pelo menos uma letra e um dígito.",
 "_flashMessagePasswordsDontMatch":"As duas palavras-passe não coincidem.",

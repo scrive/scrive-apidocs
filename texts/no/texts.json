@@ -454,7 +454,7 @@
 "_flashMessageNotAValidInteger":"$fieldnametitlecase$ må være et nummer.",
 "_flashMessageNumberAboveMaximum":"$fieldnametitlecase$ kan maksimalt bestå av $max$.",
 "_flashMessageNumberBelowMinimum":"$fieldnametitlecase$ må bestå av minimum $min$.",
-"_flashMessagePasswordChangeLinkNotValid":"Vi beklager. Denne lenken er ikke lengre gyldig.<br/>Klikk på \"$_forgotpassword()$\" for å skape en ny lenke.",
+"_flashMessagePasswordChangeLinkNotValid":"",
 "_flashMessagePasswordExceedsMaxLength":"Passordet kan maksimalt inneholde 250 tegn.",
 "_flashMessagePasswordInvalid":"Passordet må inneholde minst 8 tegn med minst en bokstav og et tall.",
 "_flashMessagePasswordsDontMatch":"De to passordene er ikke identiske.",

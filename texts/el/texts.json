@@ -454,7 +454,7 @@
 "_flashMessageNotAValidInteger":"Το $fieldnametitlecase$ έπρεπε να ήταν αριθμός. ",
 "_flashMessageNumberAboveMaximum":"$fieldnametitlecase$ μπορεί να είναι το μέγιστο $max$. ",
 "_flashMessageNumberBelowMinimum":"$fieldnametitlecase$ πρέπει να είναι το ελάχιστο $min$.",
-"_flashMessagePasswordChangeLinkNotValid":"Λυπούμαστε. Αυτός ο σύνδεσμος δεν είναι πλέον έγκυρος.<br/>Κάντε κλικ στο \"$_forgotpassword()$\" για να δημιουργήσετε ένα νέο σύνδεσμο. ",
+"_flashMessagePasswordChangeLinkNotValid":"",
 "_flashMessagePasswordExceedsMaxLength":"Ο κωδικός πρόσβασης πρέπει να περιέχει το μέγιστο 250 χαρακτήρες. ",
 "_flashMessagePasswordInvalid":"Ο κωδικός πρόσβασης πρέπει να περιέχει τουλάχιστον 8 χαρακτήρες και να περιέχει τουλάχιστον ένα γράμμα και έναν αριθμό. ",
 "_flashMessagePasswordsDontMatch":"Οι δύο κωδικοί πρόσβασης δεν ταιριάζουν.  ",
