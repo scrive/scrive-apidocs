@@ -1,7 +1,9 @@
 DBNAME=kontratest
 DBUSER=kontra
 DBBACKUP=$(DBNAME).dump
-TESTS=all --plain
+TESTS= --plain
+
+CONFIGURE_FLAGS=--disable-optimization
 
 CABAL_CONFIGURE=cabal configure $(CONFIGURE_FLAGS)
 
@@ -9,7 +11,7 @@ CABAL_CONFIGURE=cabal configure $(CONFIGURE_FLAGS)
 all:
 	cabal sandbox init
 	cabal install --only-dependencies
-	$(CABAL_CONFIGURE) -f-test
+	$(CABAL_CONFIGURE)
 	cabal build
 
 # Make "pretty" diagram of database model (requires postgresql-autodoc and graphwiz)
@@ -29,10 +31,7 @@ schemaspy:
 
 # Build and run all tests
 .PHONY : test
-test:
-	cabal sandbox init
-	$(CABAL_CONFIGURE) -f-server -f-cron -f-mailing-server -f-messenger-server -f-update-reference-screenshot -ftest-coverage
-	cabal build
+test: all
 	rm -f kontrakcja-test.tix
 	time dist/build/kontrakcja-test/kontrakcja-test $(TESTS)
 
