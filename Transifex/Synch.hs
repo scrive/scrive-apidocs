@@ -133,9 +133,7 @@ diff user password lang resource = do
 fix :: IO ()
 fix = do
   forM_ allLangs $ \l -> do
-    fix' l Texts
-    fix' l Events
-    fix' l Questionnaire
+    mapM (fix' l) allResources
   putStrLn "Done."
   where fix' lang resource = do
           mjson <- readFile $ translationFile lang resource
@@ -150,6 +148,28 @@ fix = do
                           hClose h
                           putStrLn $ "Language "++ lang ++ " resource "++ show resource ++" fixed."
 
+move :: String -> TranslationResource -> TranslationResource -> IO ()
+move s sres tres = do
+  forM_ allLangs $ \lang -> do
+     msjson <- readFile $ translationFile lang sres
+     mtjson <- readFile $ translationFile lang tres
+     (stexts,ttexts) <- case (decode msjson, decode mtjson) of
+                       (Ok sjs,Ok tjs) -> return (textsFromJSON sjs, textsFromJSON tjs)
+                       _ -> error "Can read one of the source files"
+     case find (\(s',_) -> s == s') stexts of
+       Nothing -> putStrLn $ "Template " ++ s ++ " not found in basic file."
+       Just mtch -> do
+         withFile (translationFile lang sres) WriteMode $ \h -> do
+                          hSetEncoding h utf8
+                          hPutStr h (encodeTranslationJSON $ textsToJSON $ filter (\(s',_) -> s == s') stexts)
+                          hClose h
+                          putStrLn $ "Text " ++ s ++ " removed from " ++ show sres
+
+         withFile (translationFile lang tres) WriteMode $ \h -> do
+                          hSetEncoding h utf8
+                          hPutStr h (encodeTranslationJSON $ textsToJSON $ sort $ mtch:ttexts)
+                          hClose h
+                          putStrLn $ "Text " ++ s ++ " added to " ++ show tres
 
 
 main :: IO ()
@@ -158,22 +178,27 @@ main = main' =<< getArgs
 
 main' :: [String] -> IO ()
 main' ("fix":_) = fix
-main' ("diff":(user:(password:(lang:("texts":_)))))  = diff user password lang Texts
-main' ("diff":(user:(password:(lang:("events":_)))))  = diff user password lang Events
-main' ("diff":(user:(password:(lang:("questionnaire":_)))))  = diff user password lang Questionnaire
+main' ("diff":(user:(password:(lang:(res:_)))))  = case (readResource res) of
+                                                     Just res' -> diff user password lang res'
+                                                     _ -> error "Invalid parameters. Resource name is invalid"
 main' ("diff":_)   = error "Invalid parameters. Usage: transifex.sh diff user password lang resource"
-main' ("diff-lang":(user:(password:(lang:_))))  = mapM_ (diff user password lang) [Texts,Events,Questionnaire]
+main' ("diff-lang":(user:(password:(lang:_))))  = mapM_ (diff user password lang) allResources
 main' ("diff-lang":_)   = error "Invalid parameters. Usage: transifex.sh diff user password lang"
-main' ("merge":(user:(password:(lang:("texts":_))))) = merge user password lang Texts
-main' ("merge":(user:(password:(lang:("events":_))))) = merge user password lang Events
-main' ("merge":(user:(password:(lang:("questionnaire":_))))) = merge user password lang Questionnaire
+main' ("merge":(user:(password:(lang:(res:_))))) = case (readResource res) of
+                                                     Just res' -> merge user password lang res'
+                                                     _ -> error "Invalid parameters. Resource name is invalid"
 main' ("merge":_)  = error "Invalid parameters. Usage: transifex.sh merge user password lang resource"
-main' ("push":(user:(password:(lang:("texts":_)))))  = push user password lang Texts
-main' ("push":(user:(password:(lang:("events":_)))))  = push user password lang Events
-main' ("push":(user:(password:(lang:("questionnaire":_)))))  = push user password lang Questionnaire
+main' ("push":(user:(password:(lang:(res:_)))))  = case (readResource res) of
+                                                     Just res' -> push user password lang res'
+                                                     _ -> error "Invalid parameters. Resource name is invalid"
 main' ("push":_)   = error "Invalid parameters. Usage: transifex.sh push user password lang resource"
-main' ("push-lang":(user:(password:(lang:_)))) = mapM_ (push user password lang) [Texts,Events,Questionnaire]
+main' ("push-lang":(user:(password:(lang:_)))) = mapM_ (push user password lang) allResources
 main' ("push-lang":_)   = error "Invalid parameters. Usage: transifex.sh push-lang user password lang"
-main' ("merge-lang":(user:(password:(lang:_)))) = mapM_ (merge user password lang) [Texts,Events,Questionnaire]
+main' ("merge-lang":(user:(password:(lang:_)))) = mapM_ (merge user password lang) allResources
 main' ("merge-lang":_)   = error "Invalid parameters. Usage: transifex.sh pull-lang user password lang"
+main' ("move":(source:(sres:(tres:_)))) = case (readResource sres, readResource tres) of
+                                                     (Just sres',Just tres') -> move source sres' tres'
+                                                     _ -> error "Invalid parameters. One of resources is invalid"
+main' ("move":_)   = error "Invalid parameters. Usage: transifex.sh move templates_name source_resource target_resource"
+
 main' _ = error "Invalid command. Valid commands are fix, diff, merge and push."

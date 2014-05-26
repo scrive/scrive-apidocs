@@ -1,4 +1,4 @@
-module Transifex.Utils (TranslationResource(..), translationFile, allLangs, sourceLang , encodeTranslationJSON, textsToJSON,textsFromStringJSON, textsFromJSON, Change(..), compareTranslations,parsePushResponse, applyChange) where
+module Transifex.Utils (TranslationResource(..), allResources, readResource, translationFile, allLangs, sourceLang , encodeTranslationJSON, textsToJSON,textsFromStringJSON, textsFromJSON, Change(..), compareTranslations,parsePushResponse, applyChange) where
 
 
 import Data.CSV (csvFile)
@@ -19,6 +19,16 @@ import Data.Maybe
 
 
 data TranslationResource = Texts | Events | Questionnaire deriving Show
+
+allResources :: [TranslationResource]
+allResources = [Texts, Events, Questionnaire]
+
+readResource :: String -> Maybe TranslationResource
+readResource "texts" = Just Texts
+readResource "events" = Just Events
+readResource "questionnaire" = Just Questionnaire
+readResource _ = Nothing
+
 
 translationFile:: String -> TranslationResource -> String
 translationFile lang Texts = "texts/" ++ lang ++ "/texts.json"
