@@ -406,7 +406,7 @@ javascriptLocalisation =
              , addMultisend: "$_designViewAddMultisend()$"
              , viewCSV: "$_designViewViewCSV()$"
              , participantsInFile: "$_participantsIncludedInFile()$"
-             , fullName: "$_designViewFullName()$"
+             , fullName: "$_fullName()$"
              , mandatoryForRecipient: "$_designViewMandatoryForRecipient()$"
              , mandatoryForSender: "$_designViewMandatoryForSender()$"
              , documentName: "$_designViewDocumentName()$"
