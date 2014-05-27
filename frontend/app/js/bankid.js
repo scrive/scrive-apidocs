@@ -252,8 +252,8 @@ window.Eleg = {
             'scriptCharset': "utf-8",
             'success': function(data) {
                 fetching = false;
-                if (data && !data.error)  {
-                    LoadingDialog.open(data.msg);
+                if (data && !data.error && data.message)  {
+                    LoadingDialog.open(data.message);
                 } else if (data && data.error) {
                     new FlashMessage({ content: data.error, color: "red"});
                     LoadingDialog.close();
