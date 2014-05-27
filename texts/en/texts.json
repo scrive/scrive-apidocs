@@ -576,7 +576,7 @@
 "_modalResendCompanyAccountInviteBody":"Please confirm that you would like to resend an invitation to",
 "_modalResendCompanyAccountInviteConfirm":"Send",
 "_modalResendCompanyAccountInviteHeader":"Resend Invite",
-"_modalUserSignupDoneHeader":"Your account has been created! Please check your email inbox to active your account.",
+"_modalUserSignupDoneHeader":"Your account has been created! Please check your email inbox to activate your account.",
 "_more":"More",
 "_name":"Name",
 "_nameCanBeChangedInAccountSection":"Your name can be changed in your account settings",
