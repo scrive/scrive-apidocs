@@ -566,13 +566,19 @@ define(['Backbone', 'legacy_code'], function() {
                   error : function() { if (errorcallback != undefined) errorcallback(); }
                 });
             };
-            this.recall = function() {
-              view.startLoading();
+            this.recall = function(p) {
+              var silent = false || p && p.silent;
+              if (!silent)
+                view.startLoading();
               model.fetch({ data: schema.getSchemaUrlParams(),
                                 processData: true,
                                 cache: false,
                                 reset: true,
-                                success: function() {view.stopLoading();isReady = true; },
+                                success: function() {
+                                  if (!silent)
+                                    view.stopLoading();
+                                  isReady = true;
+                                },
                                 error : function(list,resp) {
                                   if (resp != undefined && resp.status != undefined && resp.status == 403)
                                     window.location.reload(); // Reload page since we are not authorized to see it, one should
