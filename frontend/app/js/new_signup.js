@@ -200,6 +200,8 @@ define(['Backbone', 'legacy_code'], function() {
         body.append($("<div class='position' style='text-align:center;margin-top:10px;'/>").append(signupButton.el()));
 
         var dontHaveAccount = $("<label class='label-with-link'/>").html(localization.signupModal.alreadyHaveAnAccount);
+        dontHaveAccount.find('a').attr('href', '/login');
+
         var paymentsPage = $("<label class='label-with-link'/>").html(localization.visitOurPricingPage);
 
         if (model.textscolour() != undefined)  {

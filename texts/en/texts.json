@@ -67,7 +67,7 @@
 "_accessNewAccountMailTitle":"A document was saved in your e-archive",
 "_address":"Address",
 "_admin":"Admin",
-"_alreadyHaveAccount":"Already have an account? <a href='/en/login'> Log in.</a>",
+"_alreadyHaveAccount":"Already have an account? <a>Log in.</a>",
 "_and":"and",
 "_anyAuthor":"Any sender",
 "_apiConfiramtionAccept":"Grant privileges",
