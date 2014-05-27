@@ -323,7 +323,9 @@ define(['Backbone', 'legacy_code'], function() {
             });
         },
         canceledCSVMessage: function() {
-            return localization.blocking.canceled.csv.body;
+            var span = $('<span />').html(localization.blocking.canceled.csv.body);
+            span.find('a').attr('href', '/account#subscription');
+            return span;
         },
         deactivatedCreatePopup: function() {
             var p = $('<p />');

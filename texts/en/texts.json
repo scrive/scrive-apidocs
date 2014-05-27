@@ -150,7 +150,7 @@
 "_blockingButtonContact":"Contact us",
 "_blockingButtonDoubleCheck":"Check billing info",
 "_blockingButtonReinstate":"Renew your account",
-"_blockingCanceledCSVBody":"You have chosen to cancel your subscription. Visit the <a href='/Scrive/account#subscription'>payments page</a> to renew your subscription.",
+"_blockingCanceledCSVBody":"You have chosen to cancel your subscription. Visit the <a>payments page</a> to renew your subscription.",
 "_blockingCanceledCreateBody":"You have chosen to cancel your subscription. Visit the <a href='/Scrive/account#subscription'>payments page</a> to renew your subscription.",
 "_blockingCanceledCreateTitle":"Renew your account",
 "_blockingCanceledHeadline":"Every month you can send 3 documents for free. Sent so far: <span class='put-docs-used-here'/>",
