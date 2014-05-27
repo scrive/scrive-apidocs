@@ -307,7 +307,9 @@ define(['Backbone', 'legacy_code'], function() {
             });
         },
         overdueCSVMessage: function() {
-            return localization.blocking.overdue.csv.body;
+            var span = $('<span />').html(localization.blocking.overdue.csv.body);
+            span.find('a').attr('href', '/account#subscription');
+            return span;
         },
         canceledCreatePopup: function() {
             var p = $('<p />');

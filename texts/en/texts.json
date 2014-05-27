@@ -171,7 +171,7 @@
 "_blockingFreeHasNotHeadline":"You have sent all your free documents this month.",
 "_blockingFreeHasNotSubtext1":"<a>Purchase a subscription to send more this month</a>",
 "_blockingFreeHeading":"You have sent all your free documents this month. Purchase a subscription to send more this month.",
-"_blockingOverdueCSVBody":"There was something wrong with your last payment. Please visit the <a href='/Scrive/account#subscription'>payments page</a> and double-check your billing information. You cannot send more documents until this is resolved.",
+"_blockingOverdueCSVBody":"There was something wrong with your last payment. Please visit the <a>payments page</a> and double-check your billing information. You cannot send more documents until this is resolved.",
 "_blockingOverdueCreateBody":"There was something wrong with your last payment. Please visit the <a href='/Scrive/account#subscription'>payments page</a> and double-check your billing information. You cannot send more documents until this is resolved.",
 "_blockingOverdueCreateTitle":"Payment failure",
 "_blockingOverdueHeadline":"Payment failure",
