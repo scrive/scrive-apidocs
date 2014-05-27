@@ -156,7 +156,7 @@
 "_blockingCanceledHeadline":"Every month you can send 3 documents for free. Sent so far: <span class='put-docs-used-here'/>",
 "_blockingCanceledSubtext1":"You have chosen to cancel your subscription.",
 "_blockingCanceledSubtext2":"Visit the <a href='/Scrive/account#subscription'>payments page</a> to renew your subscription.",
-"_blockingDeactivatedCSVBody":"Your account has been deactivated by Scrive administration. Please contact <a href='mailto:support@scrive.com'>Scrive support</a> to reactivate the account.",
+"_blockingDeactivatedCSVBody":"Your account has been deactivated by Scrive administration. Please contact <a>Scrive support</a> to reactivate the account.",
 "_blockingDeactivatedCreateBody":"Your account has been deactivated by Scrive administration. Please contact <a href='mailto:support@scrive.com'>Scrive support</a> to reactivate the account.",
 "_blockingDeactivatedCreateTitle":"Your account has been deactivated",
 "_blockingDeactivatedHeadline":"Your account has been deactivated by Scrive administration",

@@ -343,7 +343,9 @@ define(['Backbone', 'legacy_code'], function() {
             });
         },
         deactivatedCSVMessage: function() {
-            return localization.blocking.deactivated.csv.body;
+            var span = $('<span />').html(localization.blocking.deactivated.csv.body);
+            span.find('a').attr('href', 'mailto:support@scrive.com');
+            return span;
         },
         payingCreatePopup: function() {
             var p = $('<p />');
