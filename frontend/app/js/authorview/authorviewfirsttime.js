@@ -86,7 +86,9 @@ window.AuthorViewFirstTime = {
         }}).el());
         ctacontainer.append(new Button({color: 'black', size: 'big', text: localization.authorview.firsttime.contact, shape: 'rounded', cssClass: 'contact', onClick: function() {
           mixpanel.track('FTUE Authorview contact clicked');
-          ctacontainer.find('.button.contact').replaceWith($('<h5 class="contact"></h5>').html(localization.authorview.firsttime.contactdetails));
+          var newContact = $('<h5 class="contact"></h5>').html(localization.authorview.firsttime.contactdetails);
+          newContact.find('a').attr('href', 'viktor@scrive.com');
+          ctacontainer.find('.button.contact').replaceWith(newContact);
         }}).el());
         ctacontainer.append(new Button({color: 'black', size: 'big', text: localization.authorview.firsttime.branding, shape: 'rounded', onClick: function() {
           window.location.href = '/account#branding-email';
