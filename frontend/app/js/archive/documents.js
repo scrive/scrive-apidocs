@@ -149,11 +149,13 @@ window.DocumentsListDefinition = function(archive) { return {
             onSelect : function(docs) {
                  var content = jQuery("<p/>");
                              if (docs.length == 1) {
-                               content.append(localization.archive.documents.sendreminder.bodysingle + " ");
-                               content.append(jQuery("<strong/>").text(docs[0].field("title")));
-                               content.append("?");
+                               var span = $('<span />').html(localization.archive.documents.sendreminder.bodysingle);
+                               span.find('.put-document-name-here').html(jQuery("<strong/>").text(docs[0].field("title")));
+                               content.append(span);
                              } else {
-                               content.text(localization.archive.documents.sendreminder.bodymulti + " "+ docs.length + (" " + localization.documents +"?").toLowerCase());
+                               var span = $('<span />').html(localization.archive.documents.sendreminder.bodymulti);
+                               span.find('.put-number-of-documents-here').text(docs.length);
+                               content.append(span);
                              }
                              var confirmationPopup = new Confirmation({
                                 acceptText: localization.ok,
