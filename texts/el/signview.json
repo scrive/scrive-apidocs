@@ -1,4 +1,4 @@
-{
+{ 
 "_DeletePDF":"Διαγραφή ",
 "_RequestedAttachments":"Απαιτούμενα συνημμένα ",
 "_ReviewPDF":"Έλεγχος ",
@@ -49,7 +49,7 @@
 "_mailClosedSignup":"Μπορείτε επίσης να αποθηκεύσετε ένα αντίγραφο ασφαλείας του εγγράφου. ",
 "_mailContractClosedContentAttached":"Το ολοκληρωμένο αρχείο επισυνάφθηκε. ",
 "_mailContractClosedContentLinked":"Το υπογεγραμμένο έγγραφο ήταν πολύ μεγάλο για να σας αποσταλεί μέσω email.",
-"_mailContractClosedContentLinkedAccount":"Το έγγραφο έχει αποθηκευτεί στο λογαριασμό της υπηρεσίας Scrive.  ",
+"_mailContractClosedContentLinkedAccount":"Το έγγραφο έχει αποθηκευτεί στο λογαριασμό σας στην υπηρεσία Scrive.  ",
 "_mailContractClosedContentLinkedAccountButton":"Πηγαίνετε στο λογαριασμό σας ",
 "_mailContractClosedContentLinkedNoAccount":"Θα είναι διαθέσιμο για λήψη μέχρι $availabledate$.",
 "_mailContractClosedContentLinkedNoAccountButton":"Λήψη του εγγράφου ",

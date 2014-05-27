@@ -405,7 +405,7 @@
 "_flashMessageInvalidUnprintableCharsInInput":"$fieldnametitlecase$ περιέχει μη έγκυρους χαρακτήρες. ",
 "_flashMessageLoginPageRedirectReasonNotAdmin":"Δεν είστε εξουσιοδοτημένος/η να δείτε αυτή τη σελίδα. ",
 "_flashMessageLoginPageRedirectReasonNotLoggedIn":"Δεν είστε συνδεδεμένος. ",
-"_flashMessageLoginPageRedirectReasonWrongIPAddress":"",
+"_flashMessageLoginPageRedirectReasonWrongIPAddress":"Δεν μπορείτε να χρησιμοποιήσετε το σύστημα της υπηρεσίας Scrive από το IP <span class='put-ip-here'/>. Παρακαλώ επικοινωνήστε'<span class='put-adminname-here'/>' ο οποίος είναι ο διαχειριστής του συστήματός σας. ",
 "_flashMessageLoginPageRedirectReasonWrongMailOrPassword":"Λανθασμένο email ή κωδικός πρόσβασης.   ",
 "_flashMessageMismatchedEmails":"Τα emails που εισαγάγατε δεν ταιριάζουν .",
 "_flashMessageMissingRequiredField":"Παραλείψατε να συμπληρώσετε τουλάχιστον ένα υποχρεωτικό πεδίο. ",
