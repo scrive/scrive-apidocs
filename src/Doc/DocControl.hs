@@ -278,7 +278,6 @@ handleIssueAuthorGoToSignview docid = do
  -}
 handleIssueGoToSignviewPad :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 handleIssueGoToSignviewPad docid slid= do
-  guardLoggedIn
   ctx <- getContext
   doc <- getDocByDocIDForAuthor docid
   user <-  guardJust $ mplus (ctxmaybeuser ctx) (ctxmaybepaduser ctx)

@@ -68,6 +68,7 @@ data KontraLink
     | LinkBrandedDomainLogo
     | LinkBrandedDomainLogoWithMD5 String
     | LinkDesignView
+    | LinkPadList
     deriving (Eq)
 
 langFolder :: Lang -> String
@@ -132,6 +133,7 @@ instance Show KontraLink where
     showsPrec _ (LinkDesignView) = (++) "/newdocument"
     showsPrec _ (LinkBrandedDomainLogo) =(++) "/branding/logo"
     showsPrec _ (LinkBrandedDomainLogoWithMD5 md5) = (++) ("/branding/logo/" ++ md5)
+    showsPrec _ (LinkPadList) = (++) "/to-sign"
     showsPrec _ (LinkExternal s) = (++) s
 
 
