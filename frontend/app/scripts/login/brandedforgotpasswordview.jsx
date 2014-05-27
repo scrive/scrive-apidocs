@@ -18,7 +18,7 @@ return React.createClass({
       var model = this.props.model;
       return (
         <div style={{"width":"275px","margin" : "20px auto"}}>
-          <div style={{marginBottom: "103px", textAlign: "center"}} >
+          <div style={{marginBottom: "50px", marginTop: "50px", textAlign: "center"}} >
             <img alt='logo' src={model.logolink()} />
             <div className='divider-line'/>
             <label style={{"textAlign":"center", "width":"275px", color : model.textscolour()}}>
@@ -46,11 +46,10 @@ return React.createClass({
               </div>
               <div className="position" style={{textAlign:"center", marginTop:"10px"}}>
                 <Button
-                  size="tiny"
                   cssClass="recovery-password-submit"
                   color={model.buttoncolorclass()}
                   text={localization.loginModal.sendNewPassword}
-                  style={{"width":"245px;"}}
+                  style={{"width":"235px;"}}
                   onClick={this.trySendPasswordReminder}
                 />
               </div>

@@ -11,11 +11,15 @@ return Backbone.Model.extend({
         autofocus: false,
         logolink : "",
         servicelinkcolour : '',
-        textscolour : ''
+        textscolour : '',
+        nolinks : false
   },
   initialize : function() {
     if (this.email() == "" && LocalStorage.get('login','last_login_email') != "")
       this.set({email : LocalStorage.get('login','last_login_email')});
+  },
+  nolinks : function() {
+     return this.get("nolinks");
   },
   reminderView : function() {
      return this.get("reminderView") == true;

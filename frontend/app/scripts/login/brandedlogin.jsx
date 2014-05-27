@@ -12,7 +12,8 @@ return React.createClass({
         pad : React.PropTypes.bool,
         logolink : React.PropTypes.string,
         servicelinkcolour : React.PropTypes.string,
-        textscolour : React.PropTypes.string
+        textscolour : React.PropTypes.string,
+        nolink : React.PropTypes.string
     },
     getInitialState: function() {
       return this.stateFromProps(this.props);
@@ -30,7 +31,8 @@ return React.createClass({
         autofocus: props.autofocus,
         logolink : props.logolink,
         servicelinkcolour : props.servicelinkcolour,
-        textscolour : props.textscolour
+        textscolour : props.textscolour,
+        nolinks : props.nolinks
       });
       return {model: model};
     },

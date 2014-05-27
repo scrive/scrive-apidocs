@@ -34,18 +34,17 @@ define(['React', 'Backbone', 'common/backbone_mixim'], function(React, Backbone,
                      src={(signviewbranding.signviewlogo() != undefined && signviewbranding.signviewlogo() != "") ? signviewbranding.signviewlogo() : '/img/logo.png'}>
                 </img>
               </div>
-              <div className="sender" style={{color: color,fontFamily : font}}>
-
-                {/*if*/ hasLink &&
-
+              {/*if*/ hasLink &&
+                <div className="sender" style={{color: color,fontFamily : font}} onClick={this.props.link.onClick}>
                   <div className="inner">
-                      <a className='link' onClick={this.props.link.onClick} style={{color: color}}>
+                      <a className='link' style={{color: color}}>
                         {this.props.link.text}
                       </a>
                   </div>
-
-                }
-                {/*else*/ !hasLink &&
+                </div>
+              }
+              {/*else*/ !hasLink &&
+                <div className="sender" style={{color: color,fontFamily : font}}>
                   <div className="inner">
                     <div className='name'>
                       {signviewbranding.fullname()}
@@ -54,9 +53,8 @@ define(['React', 'Backbone', 'common/backbone_mixim'], function(React, Backbone,
                       {signviewbranding.phone()}
                     </div>
                   </div>
-                }
-
-              </div>
+                </div>
+              }
               <div className="clearfix"/>
             </div>
           </div>

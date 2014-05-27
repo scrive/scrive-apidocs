@@ -105,7 +105,7 @@ var DocumentViewSignatoryModel = Backbone.Model.extend({
           && signatory.document().pending()
           && (signatory.mobileDelivery() || signatory.emailMobileDelivery());
  },
- hasPadOptions : function() {
+ hasGoToSignviewOption : function() {
    var signatory = this.signatory();
    return    !this.forSigning()
           && signatory.document().currentViewerIsAuthor()
@@ -113,17 +113,11 @@ var DocumentViewSignatoryModel = Backbone.Model.extend({
           && signatory.canSign()
           && signatory.padDelivery();
  },
- hasGiveForSigningOption : function() {
-   return    !this.forSigning()
-          && this.hasPadOptions()
-          //&& this.signatory().author()
-          //&& BrowserInfo.isPadDevice();
- },
  hasAnyOptions : function() {
     return  this.hasRemindOption()
          || this.hasChangeEmailOption()
          || this.hasChangePhoneOption()
-         || this.hasGiveForSigningOption()
+         || this.hasGoToSignviewOption()
 
  },
  hasAnyDetails : function() {
@@ -305,26 +299,15 @@ var DocumentViewSignatoryView = React.createClass({
        });
      }
     },
-    hasGiveForSigning : function() {
+    goToSignView : function() {
       var model= this.props.model;
       var signatory = model.signatory();
-      mixpanel.track('Click give for signing',  {'Signatory index':signatory.signIndex()});
-      new Confirmation({
-        title : localization.pad.signingOnSameDeviceConfirmHeader,
-        content : localization.pad.signingOnSameDeviceConfirmText,
-        acceptText : localization.pad.signingOnSameDevice ,
-        rejectText : localization.cancel,
-        onAccept : function() {
-            mixpanel.track('Accept',
+      LocalStorage.set("pad","from-list","false");
+      mixpanel.track('Accept',
               {'Signatory index':signatory.signIndex(),
                'Accept' : 'give for signing'});
-                LocalStorage.set("pad","from-list","false");
-                signatory.giveForPadSigning().send();
-           return true;
-        }
-      });
+      signatory.giveForPadSigning().send();
     },
-
     render: function() {
       var model = this.props.model;
       var signatory = model.signatory();
@@ -394,11 +377,11 @@ var DocumentViewSignatoryView = React.createClass({
              }
 
 
-             {/*if*/ model.hasGiveForSigningOption() &&
+             {/*if*/ model.hasGoToSignviewOption() &&
                <Button
                  color="black"
-                 text={localization.pad.signingOnSameDevice}
-                 onClick={this.hasGiveForSigning}
+                 text={localization.authorview.goToSignView}
+                 onClick={this.goToSignView}
                />
              }
 

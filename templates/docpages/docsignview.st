@@ -19,16 +19,18 @@ $htmlopentag()$
       </div>
   </div>
   <script type="text/javascript">
-   require(['jquery', 'legacy_code'], function(jQuery) {
+   require(['jquery', 'React', 'login/brandedlogin', 'legacy_code'], function(jQuery,React,BrandedLogin) {
     jQuery(document).ready(function() {
-      jQuery('.inner').append(new Login({
-                                         branded : true,
-                                         referer:   "/to-sign",
-                                         logolink:   "$if(logolink)$$logolink$$else$/img/logo_email.png$endif$",
-                                         buttoncolorclass : "$buttoncolorclass$",
-                                         servicelinkcolour: $if(servicelinkcolour)$"$servicelinkcolour$"$else$null$endif$,
-                                         textscolour: $if(textscolour)$"$textscolour$"$else$null$endif$,
-                                         autofocus: true}).el());
+      var div = jQuery('.inner');
+      React.renderComponent(BrandedLogin({
+        referer:   "/to-sign",
+        logolink:   "$if(logolink)$$logolink$$else$/img/logo_email.png$endif$",
+        servicelinkcolour: $if(servicelinkcolour)$"$servicelinkcolour$"$else$null$endif$,
+        textscolour: $if(textscolour)$"$textscolour$"$else$null$endif$,
+        autofocus: true,
+        pad : true,
+        nolinks : true
+      }),div[0]);
       mixpanel.register({
         Context : 'Login page - branded'
       });

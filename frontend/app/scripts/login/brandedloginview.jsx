@@ -77,23 +77,24 @@ return React.createClass({
               </div>
               <div className="position" style={{textAlign:"center"}}>
                 <Button
-                  size="tiny"
                   color={model.buttoncolorclass()}
                   text={localization.loginModal.login}
-                  style={{"width":"245px;"}}
+                  style={{"width":"235px;"}}
                   onClick={this.tryLogin}
                 />
               </div>
-              <div className='position' style={{textAlign:"center",marginTop:"20px"}}>
-               <label className='label-with-link'
-                      style={{color:model.textscolour()}}
-                      dangerouslySetInnerHTML={{__html: this.toLinkWithColor(localization.loginModal.dontHaveAccount)}}
-               />
-               <label className='label-with-link'
-                      style={{color:model.textscolour()}}
-                      dangerouslySetInnerHTML={{__html: this.toLinkWithColor(localization.visitOurPricingPage)}}
-               />
-              </div>
+              {/*if*/ (!model.nolinks()) &&
+                <div className='position' style={{textAlign:"center",marginTop:"20px"}}>
+                  <label className='label-with-link'
+                        style={{color:model.textscolour()}}
+                        dangerouslySetInnerHTML={{__html: this.toLinkWithColor(localization.loginModal.dontHaveAccount)}}
+                  />
+                  <label className='label-with-link'
+                        style={{color:model.textscolour()}}
+                        dangerouslySetInnerHTML={{__html: this.toLinkWithColor(localization.visitOurPricingPage)}}
+                  />
+                </div>
+              }
             </div>
           </div>
         </div>

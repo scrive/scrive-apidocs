@@ -681,7 +681,7 @@ apiCallGet did = api $ do
 
 apiCallList :: Kontrakcja m => m Response
 apiCallList = api $ do
-  (user, _actor, _) <- getAPIUser APIDocCheck
+  (user, _actor, _) <- getAPIUserWithPad APIDocCheck
   ctx <- getContext
   modifyContext (\ctx' -> ctx' {ctxmaybeuser = Just user});
   res <- jsonDocumentsList

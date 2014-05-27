@@ -159,4 +159,5 @@ handleLoginPost = do
 handleLogout :: Kontrakcja m => m Response
 handleLogout = do
     logUserToContext Nothing
+    logPadUserToContext Nothing
     (sendRedirect . LinkExternal) =<< getHttpHostpart
