@@ -64,7 +64,7 @@ docForListJSON user padqueue doc = do
     J.objects "subfields" $ map (signatoryFieldsListForJSON padqueue doc) (filter sigFilter (documentsignatorylinks doc))
     J.value "link" $ show link
     J.value "isauthor" $ fromMaybe False (isAuthor <$> getSigLinkFor user doc)
-    J.value "docauthorcompanysameasuser" $ Just (usercompany user) == documentauthorcompanyid doc
+    J.value "docauthorcompanysameasuser" $ usercompany user == documentauthorcompanyid doc
 
 docFieldsListForJSON :: TemplatesMonad m => UserID -> PadQueue -> Document -> JSONGenT m ()
 docFieldsListForJSON userid padqueue doc = do
