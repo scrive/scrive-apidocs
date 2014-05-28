@@ -203,6 +203,7 @@ define(['Backbone', 'legacy_code'], function() {
         dontHaveAccount.find('a').attr('href', '/login');
 
         var paymentsPage = $("<label class='label-with-link'/>").html(localization.visitOurPricingPage);
+        paymentsPage.find('a').attr('href', '/pricing');
 
         if (model.textscolour() != undefined)  {
           dontHaveAccount.css('color', model.textscolour());

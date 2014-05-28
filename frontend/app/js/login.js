@@ -367,10 +367,10 @@ var LoginBrandedView = Backbone.View.extend({
 
       button_position.append(loginButton.el());
 
-
-
       var dontHaveAccount = $("<label class='label-with-link'/>").html(localization.loginModal.dontHaveAccount);
+      dontHaveAccount.find('a').attr('href', '/signup');
       var paymentsPage = $("<label class='label-with-link'/>").html(localization.visitOurPricingPage);
+      paymentsPage.find('a').attr('href', '/pricing');
 
       if (model.textscolour() != undefined) {
         dontHaveAccount.css("color",model.textscolour());
