@@ -50,7 +50,7 @@ return React.createClass({
                   autocomplete={true}
                   inputStyle={{width : "245px", padding: "7px 14px"}}
                   style={{width : "273px", padding: "0px", fontSize : "16px"}}
-                  focus={model.email() == "" && model.autofocus()}
+                  focus={(model.email() == undefined || model.email() == "") && model.autofocus()}
                 />
               </div>
               <div className='position'>
@@ -62,7 +62,7 @@ return React.createClass({
                   name="password"
                   onEnter={this.tryLogin}
                   style={{width : "245px", padding : "7px 14px", fontSize : "16px" }}
-                  focus={model.email() != "" && model.autofocus()}
+                  focus={!(model.email() == undefined || model.email() == "") && model.autofocus()}
                 />
               </div>
               <div className='position' style={{textAlign:"left",height:"30px"}}>

@@ -45,7 +45,7 @@ return React.createClass({
                     name = "email"
                     autocomplete = {true}
                     onEnter = {this.tryLogin}
-                    focus={model.email() == "" && model.autofocus()}
+                    focus={(model.email() == undefined || model.email() == "") && model.autofocus()}
                   />
                 </div>
                 <div className='position'>
@@ -57,7 +57,7 @@ return React.createClass({
                     className = "big-input"
                     name = "password"
                     onEnter = {this.tryLogin}
-                    focus={model.email() != "" && model.autofocus()}
+                    focus={!(model.email() == undefined || model.email() == "") && model.autofocus()}
                   />
                 </div>
                 <div className="position">
