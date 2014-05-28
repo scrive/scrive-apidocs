@@ -1,4 +1,4 @@
-{
+{ 
 "_DeletePDF":"",
 "_RequestedAttachments":"",
 "_ReviewPDF":"",
@@ -36,7 +36,6 @@
 "_filladitionfields":"",
 "_filladitionfieldsdescription":"Veuillez renseigner des informations complémentaires sur vous.",
 "_firstname":"Prénom",
-"_firstnameAndLastName":"Nom et prénom",
 "_followTheArrow":"",
 "_invalidPhone":"",
 "_invalidPin":"",

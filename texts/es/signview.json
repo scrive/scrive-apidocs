@@ -1,4 +1,4 @@
-{
+{ 
 "_DeletePDF":"Eliminar",
 "_RequestedAttachments":"Anexos solicitados",
 "_ReviewPDF":"Revisar",
@@ -36,7 +36,6 @@
 "_filladitionfields":"Detalles adicionales",
 "_filladitionfieldsdescription":"Por favor, envíe información adicional sobre usted. ",
 "_firstname":"Nombre",
-"_firstnameAndLastName":"Nombre y apellidos",
 "_followTheArrow":"siga la <span class='arrowtext'>flecha</span>",
 "_invalidPhone":"Formato erróneo. El formato correcto es +46701234567",
 "_invalidPin":"PIN incorrecto, por favor inténtalo de nuevo",
@@ -52,10 +51,10 @@
 "_mailContractClosedContentLinkedAccount":"El documento ha sido guardado en su cuenta de Scrive.",
 "_mailContractClosedContentLinkedAccountButton":"Ir a su cuenta",
 "_mailContractClosedContentLinkedNoAccount":"Estará disponible para su descarga hasta $availabledate$.",
-"_mailContractClosedContentLinkedNoAccountButton":"Bajar el documento ",
+"_mailContractClosedContentLinkedNoAccountButton":"Descargar el documento ",
 "_mailContractClosedContentSignedBy":"El documento <strong>$documenttitle$</strong> ha sido firmado por $partylist:noescape()$.",
 "_mailDocumentClosedTitleContract":"$_mailDocumentCorrectionOrConfirmation()$: documento firmado electrónicamente $documenttitle$",
-"_mailDocumentCorrectionBody":"A las $closingtime$ el documento <strong>$documenttitle$</strong> fue firmado y le enviamos una copia del documento.<br/><br/>Hemos detectado un problema técnico cuando el documento estaba terminado según nuestro sistema de firma electrónica. El problema impedía la firma electrónica del sistema del sellado del documento con una firma digital. El problema ha sido corregido y el documento ha sido ahora sellado con una firma digital.<br/><br/>Encuentra adjunto el documento con una nueva firma digital. Para evitar confusiones futuras por favor mantenga este documento y descarte la versión anterior.<br/><br/>Si estás interesado en aprender más sobre el propósito de las firmas digitales le recomendamos que lea este artículo: <a href='http://en.wikipedia.org/wiki/Digital_signature'>http://en.wikipedia.org/wiki/Digital_signature</a>",
+"_mailDocumentCorrectionBody":"A las $closingtime$ el documento <strong>$documenttitle$</strong> fue firmado y le enviamos una copia del documento.<br/><br/>Hemos detectado un problema técnico cuando el documento estaba terminado según nuestro sistema de firma electrónica. El problema impedía la firma electrónica del sistema del sellado del documento con una firma digital. El problema ha sido corregido y el documento ha sido ahora sellado con una firma digital.<br/><br/>El documento se encuntra adjunto con una nueva firma digital. Para evitar confusiones futuras por favor mantenga este documento y descarte la versión anterior.<br/><br/>Si estás interesado en aprender más sobre el propósito de las firmas digitales le recomendamos que lea este artículo: <a href='http://en.wikipedia.org/wiki/Digital_signature'>http://en.wikipedia.org/wiki/Digital_signature</a>",
 "_mailDocumentLinked":"El documento era muy grande para adjuntarlo a este email. Estará disponible para su descarga hasta $availabledate$.",
 "_mailDocumentLinkedButton":"Descargar el documento",
 "_mailInvitationCustomInvitationHeader":"Mensaje de <strong>$creatorname$</strong>",

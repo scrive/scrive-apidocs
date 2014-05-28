@@ -1,4 +1,4 @@
-{
+{ 
 "_DeletePDF":"Löschen",
 "_RequestedAttachments":"Angeforderte Anhänge",
 "_ReviewPDF":"Überprüfen",
@@ -36,7 +36,6 @@
 "_filladitionfields":"Zusätzliche Details",
 "_filladitionfieldsdescription":"Bitte, schreiben Sie zusätzliche Informationen von Ihnen auf.",
 "_firstname":"Vorname",
-"_firstnameAndLastName":"Vor- und Nachname",
 "_followTheArrow":"",
 "_invalidPhone":"Falsches Format. Richtiges Format ist +46701234567",
 "_invalidPin":"Falsche PIN, bitte versuchen Sie erneut",
