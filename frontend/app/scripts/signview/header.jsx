@@ -6,6 +6,7 @@ define(['React', 'Backbone', 'common/backbone_mixim'], function(React, Backbone,
   return React.createClass({
     propTypes: {
       signviewbranding: React.PropTypes.signviewbranding,
+      fullWidth : React.PropTypes.bool,
       link : React.PropTypes.object
     },
     mixins: [BackboneMixin.BackboneMixin],
@@ -16,7 +17,6 @@ define(['React', 'Backbone', 'common/backbone_mixim'], function(React, Backbone,
       var signviewbranding = this.props.signviewbranding;
       var hasLink = this.props.link != undefined;
       var showHeader = signviewbranding.ready() && !BrowserInfo.isSmallScreen() && signviewbranding.showheader();
-
       var bgImage = signviewbranding.signviewbarscolour() != undefined ?  'none' : ''
       var bgColor = signviewbranding.signviewbarscolour() != undefined ?  signviewbranding.signviewbarscolour() : ''
       var color = signviewbranding.signviewbarstextcolour() != undefined ? signviewbranding.signviewbarstextcolour() : ''
@@ -27,7 +27,8 @@ define(['React', 'Backbone', 'common/backbone_mixim'], function(React, Backbone,
         return (<div/>);
       else
         return (
-          <div className="pageheader" style={{backgroundImage: bgImage, backgroundColor: bgColor, color: color,fontFamily : font}}>
+          <div className={"pageheader " + (this.props.fullWidth ? "full-width-header" : "")}
+               style={{backgroundImage: bgImage, backgroundColor: bgColor, color: color,fontFamily : font}}>
             <div className="content">
               <div className="logowrapper">
                 <img className="logo"

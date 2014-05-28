@@ -60,7 +60,7 @@
 
     .content {
       display: table;
-      height: 120px;
+      height: auto;
       margin: auto;
       width: 1018px;
 
@@ -90,16 +90,21 @@
     }
 
     .logowrapper {
-      display:inline-block;
-      *display: inline; // IE7 hack - http://stackoverflow.com/a/6545033/337587
-      float:left;
+      display:table-cell;
       line-height: 30px;
-      margin-bottom: 45px;
-      margin-top: 45px;
+      margin-bottom: 25px;
+      margin-top: 25px;
+      vertical-align : middle;
       zoom: 1; // IE7 hack - http://stackoverflow.com/a/6545033/337587
 
       .logo {
         margin-left: 38px;
+      }
+    }
+
+    &.full-width-header {
+      .logowrapper .logo {
+        margin-left: 0px;
       }
     }
   }
@@ -534,6 +539,12 @@
 
   .sender .inner {
     margin-right: 37px;
+    margin-top: 25px;
+    margin-bottom: 25px;
+  }
+
+  .full-width-header .sender .inner {
+    margin-right: 0px;
   }
 
   .section {

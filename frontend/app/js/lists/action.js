@@ -84,7 +84,7 @@ define(['Backbone', 'legacy_code'], function() {
                                       size : model.size(),
                                       text  : model.name(),
                                       width : model.width(),
-                                      onClick : function() { return self.onSelect();},
+                                      onClick : function() { return self.onSelect();}
                 });
             $(this.el).addClass(model.cssClass()).append(button.el());
         }
