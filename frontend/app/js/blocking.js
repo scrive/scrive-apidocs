@@ -125,6 +125,7 @@ define(['Backbone', 'legacy_code'], function() {
             if(model.isFree() && model.docsLeft() > 0 ) {
                 var res = $("<span>" + localization.blocking.free.has.headline + "</span>");
                 $(".put-docs-used-here",res).text(model.docsUsed());
+                span.find('a').attr('href', '#');
                 return res;
             }
             else if(model.isFree())
@@ -182,7 +183,10 @@ define(['Backbone', 'legacy_code'], function() {
                 span.find('a').attr('href', this.supportEmailHref);
                 return span;
             } else if(model.willCancel()) {
-                return localization.blocking.willcancel.subtext1;
+                var span = $('<span />');
+                span.html(localization.willcancel.subtext1);
+                span.find('a').attr('href', this.subscriptionPageHref);
+                return span;
             }
         },
         subtext2: function() {
@@ -257,17 +261,17 @@ define(['Backbone', 'legacy_code'], function() {
                 });
             }
             else if(model.hasUsedAll())
-                window.location = 'mailto:support@scrive.com';
+                window.location = this.supportEmailHref;
             else if(model.isOverdue())
-                window.location = '/account#subscription';
+                window.location = this.subscriptionPageHref;
             else if(model.isDunning())
-                window.location = '/account#subscription';
+                window.location = this.subscriptionPageHref;
             else if(model.isCanceled())
-                window.location = '/account#subscription';
+                window.location = this.subscriptionPageHref;
             else if(model.isDeactivated())
-                window.location = 'mailto:support@scrive.com';
+                window.location = this.supportEmailHref;
             else if(model.willCancel())
-                window.location = '/account#subscription';
+                window.location = this.subscriptionPageHref;
         },
         paymentsPopup: function(opts) {
             var div = $('<div />').addClass('price-plan');
@@ -319,11 +323,14 @@ define(['Backbone', 'legacy_code'], function() {
             });
         },
         freeCSVMessage: function() {
-            return localization.blocking.free.csv.header;
+            var span = $('<span />').html(localization.blocking.free.csv.header);
+            span.find('a').attr('href', this.subscriptionPageHref);
+            return span;
         },
         overdueCreatePopup: function() {
             var p = $('<p />');
             p.html(localization.blocking.overdue.create.body);
+            p.find('a').attr('href', this.subscriptionPageHref);
             new Confirmation({
                 title: localization.blocking.overdue.create.title,
                 content: p,
@@ -361,36 +368,41 @@ define(['Backbone', 'legacy_code'], function() {
         deactivatedCreatePopup: function() {
             var p = $('<p />');
             p.html(localization.blocking.deactivated.create.body);
+            p.find('a').attr('href', this.supportEmailHref);
             new Confirmation({
                 title: localization.blocking.deactivated.create.title,
                 content: p,
                 acceptText: localization.blocking.button.contact,
                 acceptColor: "green",
                 onAccept: function() {
-                    window.location = "mailto:support@scrive.com";
+                    window.location = this.supportEmailHref;
                 }
             });
         },
         deactivatedCSVMessage: function() {
             var span = $('<span />').html(localization.blocking.deactivated.csv.body);
-            span.find('a').attr('href', 'mailto:support@scrive.com');
+            span.find('a').attr('href', this.supportEmailHref);
             return span;
         },
         payingCreatePopup: function() {
             var p = $('<p />');
             p.html(localization.blocking.paying.create.body);
+            p.find('a').attr('href', this.supportEmailHref);
             new Confirmation({
                 title: localization.blocking.paying.create.title,
                 content: p,
                 acceptText: localization.blocking.button.contact,
                 acceptColor: "green",
                 onAccept: function() {
-                    window.location = "mailto:support@scrive.com";
+                    window.location = this.supportEmailHref;
                 }
             });
         },
         payingCSVMessage: function() {
             return localization.blocking.paying.csv.body;
+            var span = $('<span />').html(localization.blocking.paying.csv.body);
+            span.find('a').attr('href', this.supportEmailHref);
+            return span;
         }
     });
 
