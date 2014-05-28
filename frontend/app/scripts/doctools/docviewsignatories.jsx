@@ -93,6 +93,7 @@ var DocumentViewSignatoriesView = React.createClass({
                     var status = s.status();
                     return (
                       <DocumentViewSignatoryForList
+                        key = {s.signatoryid() + ""}
                         signatory = {s}
                         textstyle = {model.textstyle()}
                         onSelect =  {function() {self.setCurrentIndex(i);}}

@@ -66,5 +66,8 @@ var require = {
       deps: ['tinyMCE']
     }
   },
-  deps: ['jquery', 'Underscore', 'Backbone']
+  deps: ['jquery', 'Underscore', 'Backbone'],
+  // All scripts that are not used by other components, but refered from string templates should be listed here
+  include: ['signview/header', 'signview/footer', 'login/login', 'login/brandedlogin']
+
 };
