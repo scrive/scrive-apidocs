@@ -314,6 +314,7 @@ define(['Backbone', 'legacy_code'], function() {
         canceledCreatePopup: function() {
             var p = $('<p />');
             p.html(localization.blocking.canceled.create.body);
+            p.find('a').attr('href', '/account#subscription');
             new Confirmation({
                 title: localization.blocking.canceled.create.title,
                 content: p,
