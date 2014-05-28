@@ -33,7 +33,7 @@ javascriptLocalisation =
                     return  '$_tbsGenerationMessage1()$ "' + doctitle + '" $_tbsGenerationMessage2()$ "' + docid + '" $_tbsGenerationMessage3()$'
                      }
              , ie6NotSupported : "$_ie6NotSupported()$"
-             , name : "$_firstnameAndLastName()$"
+             , personalName : "$_fullName()$"
              , fstname : "$_firstname()$"
              , sndname : "$_lastname()$"
              , email : "$_email()$"
@@ -406,7 +406,7 @@ javascriptLocalisation =
              , addMultisend: "$_designViewAddMultisend()$"
              , viewCSV: "$_designViewViewCSV()$"
              , participantsInFile: "$_participantsIncludedInFile()$"
-             , fullName: "$_designViewFullName()$"
+             , fullName: "$_fullName()$"
              , mandatoryForRecipient: "$_designViewMandatoryForRecipient()$"
              , mandatoryForSender: "$_designViewMandatoryForSender()$"
              , documentName: "$_designViewDocumentName()$"

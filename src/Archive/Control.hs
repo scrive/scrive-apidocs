@@ -197,7 +197,7 @@ jsonDocumentsList = do
                                 , pageSize   = docsPageSize
                                 , listLength = allDocsCount
                                 }
-          docsJSONs <- mapM (docForListJSON user padqueue) $ list docs
+          docsJSONs <- forM allDocs $ docForListJSON user padqueue
           return $ Right $ runJSONGen $ do
               value "list" docsJSONs
               value "paging" $ pagingParamsJSON docs

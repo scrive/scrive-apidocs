@@ -36,6 +36,7 @@ import CompanyAccountsTest
 import CompanyControlTest
 import CompanyStateTest
 import DocAPITest
+import ArchiveTest
 import DocControlTest
 import DocStateTest
 import DumpEvidenceTexts
@@ -72,6 +73,7 @@ allTests = tail tests
       , companyStateTests
       , csvUtilTests
       , docAPITests
+      , archiveTests
       , docControlTests
       , docStateTests
       , evidenceAttachmentsTest

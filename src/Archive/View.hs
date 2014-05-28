@@ -53,7 +53,7 @@ pageArchive user mt = renderTemplate "pageDocumentsList" $ do
                     F.value "month" $ mtMonth mt
                     F.value "year" $ mtYear mt
 
-docForListJSON :: TemplatesMonad m => User -> PadQueue ->  Document -> m JSValue
+docForListJSON :: TemplatesMonad m => User -> PadQueue -> Document -> m JSValue
 docForListJSON user padqueue doc = do
   let link = case getSigLinkFor user doc of
         Just sl | not $ isAuthor sl -> LinkSignDoc doc sl
@@ -64,6 +64,7 @@ docForListJSON user padqueue doc = do
     J.objects "subfields" $ map (signatoryFieldsListForJSON padqueue doc) (filter sigFilter (documentsignatorylinks doc))
     J.value "link" $ show link
     J.value "isauthor" $ fromMaybe False (isAuthor <$> getSigLinkFor user doc)
+    J.value "docauthorcompanysameasuser" $ usercompany user == documentauthorcompanyid doc
 
 docFieldsListForJSON :: TemplatesMonad m => UserID -> PadQueue -> Document -> JSONGenT m ()
 docFieldsListForJSON userid padqueue doc = do

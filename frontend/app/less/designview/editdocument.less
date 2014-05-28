@@ -28,6 +28,7 @@
   display: inline-block;
   position: relative;
   text-align: center;
+  width: 190px;
 
   .box-sizing(border-box);
 
@@ -42,34 +43,19 @@
   }
 
   &.help1 {
-    margin-left: 35px;
-    width: 196px;
+    margin-left: 20px;
 
     .icon {
       background-position: 0px 0px;
       margin-left: 2px;
     }
-
-    .text {
-      max-width: 135px;
-      min-width: 123px;
-      margin-left: 10px;
-    }
   }
 
   &.help2 {
     margin-left: 12px;
-    max-width: 190px;
-    min-width: 156px;
-    
+
     .icon {
       background-position: 38px 0px;
-    }
-    .text {
-      margin-left: 4px;
-      margin-right: 14px;
-      max-width: 125px;
-      min-width: 83px;
     }
   }
 
@@ -89,8 +75,11 @@
     .text {
       display: inline-block;
       line-height: 16px;
+      margin-left: 10px;
+      margin-right: 6px;
       text-align : left;
       vertical-align: middle;
+      width: 125px;
     }
   }
 }
@@ -103,40 +92,29 @@
   height: 100%;
   position: relative;
   vertical-align:top;
-  
+
   .box-sizing(border-box);
 
   &.design-view-action-document-draggable-textbox {
-    margin-left: 30px;
+    margin-left: 26px;
 
     .design-view-action-document-draggable-icon {
       background-position: 0px 0px;
     }
-
-    .design-view-action-document-draggable-text {
-      width: 110px;
-    }
   }
 
   &.design-view-action-document-draggable-signature {
-    
+
     .design-view-action-document-draggable-icon {
       background-position: 44px 0px;
-    }
-
-    .design-view-action-document-draggable-text {
-      width: 116px;
     }
   }
 
   &.design-view-action-document-draggable-checkbox {
-    
+      margin-right: 20px;
+
     .design-view-action-document-draggable-icon {
       background-position: 21px 0px;
-    }
-    
-    .design-view-action-document-draggable-text {
-      width:94px;
     }
   }
 
@@ -157,6 +135,7 @@
     background-color: @brand-secondary;
     border-radius: 2px 0px 0px 2px;
     display: inline-block;
+    float: left;
     height: 100%;
     text-align: center;
     width: 44px;
@@ -164,14 +143,18 @@
 
   .design-view-action-document-draggable-text {
     display:inline-block;
+    float: left;
+    height: 44px;
+    line-height: 44px;
     text-align:center;
-    position: relative;
-    top: -7px;
+    width: 118px;
 
     span {
       color: @white;
-      position: relative;
-      top: 2px;
+      display: inline-block;
+      line-height: 16px;
+      margin: 0 4px 0 4px;
+      vertical-align: middle;
     }
   }
 

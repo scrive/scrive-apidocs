@@ -316,6 +316,7 @@ insertDocumentAsIs document@(Document
                    documentapicallbackurl
                    documentobjectversion
                    documentmagichash
+                   _documentauthorcompanyid
                  ) = do
     runQuery_ . sqlInsert "documents" $ do
         sqlSet "title" documenttitle
