@@ -86,9 +86,9 @@ return Backbone.Model.extend({
                                    {Message: 'login failed due to IP restriction',
                                    IP: resp.ipaddr,
                                    Admin: resp.adminname});
-                    var text = localization.loginModal.loginFailedBadIP;
-                    text = text.replace("ipaddr", resp.ipaddr);
-                    text = text.replace("adminname", resp.adminname);
+                    var text = $("<span>" + localization.loginModal.loginFailedBadIP + "</span>");
+                    $(".put-ip-here",text).text(resp.ipaddr);
+                    $(".put-adminname-here",text).text(resp.adminname);
                     new FlashMessage({ content: text, color: "red"});
                 }
                 else {

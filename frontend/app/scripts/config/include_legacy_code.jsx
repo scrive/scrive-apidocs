@@ -38,7 +38,6 @@ define([
   '../js/ajaxqueue',
   '../js/confirmations',
   '../js/selects',
-  '../js/login',
   '../js/new_password',
   '../js/account_setup',
   '../js/accept_tos',
