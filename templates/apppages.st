@@ -238,7 +238,7 @@ $else$
                   <a href="tel:$_pageFooterPhone()$">$_pageFooterPhone()$</a>
               </li>
               <li class="branch">
-                  <a href="mailto:info@scrive.com">$_pageFooterMail()$</a>
+                  <a href="mailto:info@scrive.com">info@scrive.com</a>
               </li>
           </ul>
       </div>
