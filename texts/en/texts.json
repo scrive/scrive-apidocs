@@ -77,7 +77,7 @@
 "_apiConfiramtionEnterEmailAdress":"Enter your email address",
 "_apiConfiramtionFooterLogged":"Click the button to grant privileges.",
 "_apiConfiramtionFooterNotLogged":"Log in to your Scrive account to grant privileges. If you don't have a Scrive account please follow the instructions to create an account.",
-"_apiConfiramtionHeader":" is requesting permission to perform the following actions in Scrive on your behalf:",
+"_apiConfiramtionHeader":"is requesting permission to perform the following actions in Scrive on your behalf:",
 "_apiConfiramtionLoginAndAccept":"Log in and grant privileges",
 "_apiConfiramtionLoginAndAcceptTitle":"Log in and grant privileges",
 "_apiConfiramtionReadPermission":"Access documents",
