@@ -94,6 +94,8 @@ define(['Backbone', 'legacy_code'], function() {
         initialize: function(args) {
             _.bindAll(this);
             this.model.bind('change reset fetch', this.render);
+            this.subscriptionPageHref = '/account#subscription';
+            this.supportEmailHref = 'mailto:support@scrive.com';
         },
         setStyle: function() {
             var view = this;
@@ -150,22 +152,38 @@ define(['Backbone', 'legacy_code'], function() {
             var view = this;
             var model = view.model;
 
-            if(model.isFree() && model.docsLeft() > 0)
+            if(model.isFree() && model.docsLeft() > 0) {
                 return "";
-            else if(model.isFree())
-                return localization.blocking.free.hasNot.subtext1;
-            else if(model.hasUsedAll())
-                return localization.blocking.usedall.subtext1;
-            else if(model.isOverdue())
-                return localization.blocking.overdue.subtext1;
-            else if(model.isDunning())
+            } else if(model.isFree()) { 
+                var span = $('<span />');
+                span.html(localization.blocking.free.hasNot.subtext1);
+                span.find('a').attr('href', this.subscriptionPageHref);
+                return span;
+            } else if(model.hasUsedAll()) {
+                var span = $('<span />');
+                span.html(localization.blocking.usedall.subtext1);
+                span.find('a').attr('href', this.supportEmailHref);
+                return span;
+            } else if(model.isOverdue()) {
+                var span = $('<span />');
+                span.html(localization.blocking.overdue.subtext1);
+                span.find('a').attr('href', this.subscriptionPageHref);
+                return span;
+            } else if(model.isDunning()) {
                 return localization.blocking.dunning.subtext1;
-            else if(model.isCanceled())
-                return localization.blocking.canceled.subtext1;
-            else if(model.isDeactivated())
-                return localization.blocking.deactivated.subtext1;
-            else if(model.willCancel())
+            } else if(model.isCanceled()) {
+                var span = $('<span />');
+                span.html(localization.blocking.canceled.subtext1);
+                span.find('a').attr('href', this.subscriptionPageHref);
+                return span;
+            } else if(model.isDeactivated()) {
+                var span = $('<span />');
+                span.html(localization.blocking.deactivated.subtext1);
+                span.find('a').attr('href', this.supportEmailHref);
+                return span;
+            } else if(model.willCancel()) {
                 return localization.blocking.willcancel.subtext1;
+            }
         },
         subtext2: function() {
             var view = this;
@@ -176,12 +194,22 @@ define(['Backbone', 'legacy_code'], function() {
                 return "";
             else if(model.hasUsedAll())
                 return "";
-            else if(model.isOverdue())
-                return localization.blocking.overdue.subtext2;
-            else if(model.isDunning())
-                return localization.blocking.dunning.subtext2;
-            else if(model.isCanceled())
-                return localization.blocking.canceled.subtext2;
+            else if(model.isOverdue()) {
+                var span = $('<span />');
+                span.html(localization.blocking.overdue.subtext2);
+                span.find('a').attr('href', this.subscriptionPageHref);
+                return span;
+            } else if(model.isDunning()) {
+                var span = $('<span />');
+                span.html(localization.blocking.dunning.subtext2);
+                span.find('a').attr('href', this.subscriptionPageHref);
+                return span;
+            } else if(model.isCanceled()) {
+                var span = $('<span />');
+                span.html(localization.blocking.canceled.subtext2);
+                span.find('a').attr('href', this.subscriptionPageHref);
+                return span;
+            }
             else if(model.isDeactivated())
                 return "";
             else if(model.willCancel())
