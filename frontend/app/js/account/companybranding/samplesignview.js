@@ -80,7 +80,7 @@ var SampleSignViewView = Backbone.View.extend({
     this.mandatoryField.append(this.mandatoryFieldFront).append(this.mandatoryFieldLabel).append(this.mandatoryFieldBack);
 
     var document = $('<div class="document"/>');
-    
+
     document.append(this.downarrow);
     document.append(this.mandatoryField);
     document.append(this.optionalField);
@@ -95,7 +95,8 @@ var SampleSignViewView = Backbone.View.extend({
 
     this.rejectbuttoncontainer = $('<div class="buttoncontainer reject" />');
     this.rejectbutton = new Button({size: 'tiny',
-                                    cssClass: 'button-gray not-clickable',
+                                    color: 'black',
+                                    cssClass: 'not-clickable',
                                     text: 'Reject and reply',
                                     onClick: function() {}}).el();
     this.rejectbuttoncontainer.append(this.rejectbutton);
@@ -153,7 +154,7 @@ var SampleSignViewView = Backbone.View.extend({
         signviewbranding.signviewlogo().onChange(function(logo) {self.changeLogo(logo);});
         signviewbranding.signviewprimarycolour().onChange(_.debounce(function(colour, customised) {self.changePrimaryColour(colour, customised)}, 100));
         signviewbranding.signviewprimarytextcolour().onChange(function(colour) {self.changePrimaryTextColour(colour)});
-        signviewbranding.signviewsecondarycolour().onChange(_.debounce(function(colour) {self.changeSecondaryColour(colour)})); 
+        signviewbranding.signviewsecondarycolour().onChange(_.debounce(function(colour) {self.changeSecondaryColour(colour)}));
         signviewbranding.signviewsecondarytextcolour().onChange(function(colour) {self.changeSecondaryTextColour(colour)});
       }
 
