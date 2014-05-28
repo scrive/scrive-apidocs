@@ -28,7 +28,7 @@
 "_ProlongDocumentEvidenceTextNotArchive":"Η προσθεσμία υπογραφής παρατάθηκε από τον/την $actor$.  ",
 "_RejectDocumentEvidenceTextSimpleArchive":"Η πρόσκληση υπογραφής απορρίφθηκε.$if(text)$ Το μήνυμα απόρριψης ήταν: <BR/> <i>$text:noescape()$</i>$endif$ ",
 "_RejectDocumentEvidenceTextSimpleNotArchive":"Η πρόσκληση υπογραφής απορρίφθηκε από τον/την $actor$.$if(text)$ Το μήνυμα απόρριψης από τον/την $actor$ ήταν: <BR/> <i>$text:noescape()$</i>$endif$   ",
-"_ReminderSendTextToReviewArchive":"Μια υπενθύμιση ελέγχου εστάλη στον/στην  $signatory$  μέσω $_delivery_method()$.$if(text)$ Το μήνυμα υπενθύμισης ήταν: <BR/> <i>$text:noescape()$</i>$endif$ ",
+"_ReminderSendTextToReviewArchive":"Μια υπενθύμιση ελέγχου εστάλη στον/στην $signatory$ μέσω $_delivery_method()$.$if(text)$ Το μήνυμα υπενθύμισης ήταν: <BR/> <i>$text:noescape()$</i>$endif$ ",
 "_ReminderSendTextToReviewNotArchive":"Η υπενθύμιση ελέγχου εστάλη στον/στην $signatory$ μέσω $_delivery_method()$ μετά από αίτημα του/της $actor$.$if(text)$ Το μήνυμα υπενθύμισης από τον/την $actor$ ήταν: <BR/> <i>$text:noescape()$</i>$endif$ ",
 "_ReminderSendTextToSignArchive":"Μια υπενθύμιση υπογραφής εστάλη στον/στην $signatory$ μέσω $_delivery_method()$.$if(text)$ Το μήνυμα υπενθύμισης ήταν: <BR/> <i>$text:noescape()$</i>$endif$  ",
 "_ReminderSendTextToSignNotArchive":"Μια υπενθύμιση υπογραφής εστάλη στον/στην $signatory$ μέσω $_delivery_method()$ μετά από αίτημα του/της $actor$.$if(text)$ Το μήνυμα υπενθύμισης από τον/την $actor$ ήταν: <BR/> <i>$text:noescape()$</i>$endif$ ",

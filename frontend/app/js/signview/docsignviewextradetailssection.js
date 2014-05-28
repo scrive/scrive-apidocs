@@ -107,7 +107,7 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
     var focused = false;
     var field = signatory.fstnameField();
     var iti =  new InfoTextInput({
-      infotext: localization.name,
+      infotext: localization.personalName,
       cssClass: 'obligatory-input',
       value: field.value(),
       onFocus: function() {
@@ -269,7 +269,7 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
     var table = $("<table/>");
 
     if (DocumentExtraDetails.askForName(signatory)) {
-      var tr = $("<tr/>").append($("<td/>").text(localization.name));
+      var tr = $("<tr/>").append($("<td/>").text(localization.personalName));
       tr.append($("<td/>").append(this.nameInput(signatory)));
       table.append(tr);
     }
@@ -424,7 +424,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
     var focused = false;
     var field = signatory.fstnameField();
     var iti = new InfoTextInput({
-      infotext: localization.name,
+      infotext: localization.personalName,
       value: field.value(),
       cssClass: 'obligatory-input',
       onFocus: function() {

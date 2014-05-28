@@ -3,6 +3,7 @@ module Doc.API (
   , apiCallCreateFromFile      -- Exported for tests
   , apiCallCreateFromTemplate  -- Exported for tests
   , apiCallGet                 -- Exported for tests
+  , apiCallList                -- Exported for tests
   , apiCallUpdate              -- Exported for tests
   , apiCallReady               -- Exported for tests
   , apiCallSign                -- Exported for tests

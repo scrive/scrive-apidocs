@@ -1,4 +1,4 @@
-{
+{ 
 "_DeletePDF":"Slet",
 "_RequestedAttachments":"Anmodninger om vedhæftede filer",
 "_ReviewPDF":"Gennemgå",
@@ -36,7 +36,6 @@
 "_filladitionfields":"Yderligere detaljer",
 "_filladitionfieldsdescription":"Indsend venligst yderligere oplysninger om dig selv.",
 "_firstname":"Fornavn",
-"_firstnameAndLastName":"Fornavn og efternavn",
 "_followTheArrow":"følg venligst <span class='arrowtext'>pilen</span>",
 "_invalidPhone":"Forkert format. Det korrekte format er +46701234567",
 "_invalidPin":"Forkert PIN. Prøv venligst igen.",

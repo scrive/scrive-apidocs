@@ -1,4 +1,4 @@
-{
+{ 
 "_DeletePDF":"Radera",
 "_RequestedAttachments":"Begärda bilagor",
 "_ReviewPDF":"Granska",
@@ -36,7 +36,6 @@
 "_filladitionfields":"Extra uppgifter",
 "_filladitionfieldsdescription":"Vänligen uppge extra information om dig själv.",
 "_firstname":"Förnamn",
-"_firstnameAndLastName":"Förnamn & efternamn",
 "_followTheArrow":"följ <span class='arrowtext'>pilen</span>",
 "_invalidPhone":"Fel format. Korrekt format är +46701234567",
 "_invalidPin":"Fel PIN, vänligen försök igen",

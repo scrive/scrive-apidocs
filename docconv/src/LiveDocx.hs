@@ -32,6 +32,7 @@ import LiveDocxTypes
 
 data LiveDocxContext = LiveDocxContext {
     ctxurl :: String
+  , ctxserviceurl :: String
   , ctxcookiefile :: FilePath
 }
 
@@ -40,6 +41,7 @@ type LiveDocx m a = ReaderT LiveDocxContext m (Either LiveDocxError a)
 mkLiveDocxContext :: LiveDocxConf -> FilePath -> LiveDocxContext
 mkLiveDocxContext conf cookiefile = LiveDocxContext {
     ctxurl = url conf
+  , ctxserviceurl = serviceURL conf
   , ctxcookiefile = cookiefile
 }
 
@@ -51,7 +53,7 @@ makeLiveDocxCall request = do
   eresult <- makeSoapCallWithCookies
     (ctxurl ctx)
     (ctxcookiefile ctx)
-    (liveDocxNamespace ++ xmlNamespace request)
+    (ctxserviceurl ctx ++ xmlNamespace request)
     request
   return $ case eresult of
     Left msg -> Left $ LiveDocxSoapError msg
@@ -62,29 +64,34 @@ ignoreIfRight (Left x) = return $ Left x
 ignoreIfRight (Right _) = return $ Right ()
 
 logIn :: forall m. (Log.MonadLog m, MonadBaseControl IO m) => String -> String -> LiveDocx m ()
-logIn username password = ignoreIfRight =<<
+logIn username password = ignoreIfRight =<< do
+  LiveDocxContext{ctxserviceurl} <- ask
   (makeLiveDocxCall
-    (LogIn username password) :: LiveDocx m LogInResponse)
+    (LogIn username password ctxserviceurl) :: LiveDocx m LogInResponse)
 
 logOut :: forall m. (Log.MonadLog m, MonadBaseControl IO m) => LiveDocx m ()
-logOut = ignoreIfRight =<<
+logOut = ignoreIfRight =<< do
+  LiveDocxContext{ctxserviceurl} <- ask
   (makeLiveDocxCall
-    LogOut :: LiveDocx m LogOutResponse)
+    (LogOut ctxserviceurl) :: LiveDocx m LogOutResponse)
 
 setLocalTemplate :: forall m. (Log.MonadLog m, MonadBaseControl IO m) => BS.ByteString -> FileFormat ->  LiveDocx m ()
-setLocalTemplate filecontents format = ignoreIfRight =<<
+setLocalTemplate filecontents format = ignoreIfRight =<< do
+  LiveDocxContext{ctxserviceurl} <- ask
   (makeLiveDocxCall
-    (SetLocalTemplate filecontents format) :: LiveDocx m SetLocalTemplateResponse)
+    (SetLocalTemplate filecontents format ctxserviceurl) :: LiveDocx m SetLocalTemplateResponse)
 
 createDocument :: forall m. (Log.MonadLog m, MonadBaseControl IO m) => LiveDocx m ()
-createDocument = ignoreIfRight =<<
+createDocument = ignoreIfRight =<< do
+  LiveDocxContext{ctxserviceurl} <- ask
   (makeLiveDocxCall
-    CreateDocument :: LiveDocx m CreateDocumentResponse)
+    (CreateDocument ctxserviceurl) :: LiveDocx m CreateDocumentResponse)
 
 retrieveDocument :: forall m. (Log.MonadLog m, MonadBaseControl IO m) => String ->  LiveDocx m BS.ByteString
 retrieveDocument format = do
+  LiveDocxContext{ctxserviceurl} <- ask
   result <- makeLiveDocxCall
-              (RetrieveDocument format)
+              (RetrieveDocument format ctxserviceurl)
   case result of
     Right (RetrieveDocumentResponse pdfcontents) -> return $ Right pdfcontents
     Left msg -> return $ Left msg
@@ -142,17 +149,14 @@ convertToPDF conf filecontents format = do
 class HasXmlNamespace a where
   xmlNamespace :: a -> String
 
-liveDocxNamespace :: String
-liveDocxNamespace = "http://api.livedocx.com/2.1/mailmerge/"
-
-data LogIn = LogIn String String
+data LogIn = LogIn String String String
   deriving (Eq,Ord,Show,Read)
 
 instance HTypeable LogIn where
     toHType _ = Defined "LogIn" [] []
 instance XmlContent LogIn where
-  toContents (LogIn username password) =
-    [CElem (Elem (N "LogIn") [mkAttr "xmlns" liveDocxNamespace]
+  toContents (LogIn username password namespace) =
+    [CElem (Elem (N "LogIn") [mkAttr "xmlns" namespace]
       [ mkElemC "username" (toText username)
       , mkElemC "password" (toText password)
       ]) ()]
@@ -172,14 +176,14 @@ instance XmlContent LogInResponse where
     ; return LogInResponse
     } `adjustErr` ("in <LogInResponse>, " ++)
 
-data LogOut = LogOut
+data LogOut = LogOut String
   deriving (Eq,Ord,Show,Read)
 
 instance HTypeable LogOut where
     toHType _ = Defined "LogOut" [] []
 instance XmlContent LogOut where
-  toContents LogOut =
-    [CElem (Elem (N "LogOut") [mkAttr "xmlns" liveDocxNamespace] []) ()]
+  toContents (LogOut namespace) =
+    [CElem (Elem (N "LogOut") [mkAttr "xmlns" namespace] []) ()]
   parseContents = error "Please do not parse a LogOut"
 instance HasXmlNamespace LogOut where
   xmlNamespace = const "LogOut"
@@ -196,15 +200,15 @@ instance XmlContent LogOutResponse where
     ; return LogOutResponse
     } `adjustErr` ("in <LogOutResponse>, " ++)
 
-data SetLocalTemplate = SetLocalTemplate BS.ByteString FileFormat
+data SetLocalTemplate = SetLocalTemplate BS.ByteString FileFormat String
   deriving (Eq,Ord,Show,Read)
 
 instance HTypeable SetLocalTemplate where
     toHType _ = Defined "SetLocalTemplate" [] []
 instance XmlContent SetLocalTemplate where
-  toContents (SetLocalTemplate template format) =
+  toContents (SetLocalTemplate template format namespace) =
     let base64data = BSC.unpack (Base64.encode template) in
-    [CElem (Elem (N "SetLocalTemplate") [mkAttr "xmlns" liveDocxNamespace]
+    [CElem (Elem (N "SetLocalTemplate") [mkAttr "xmlns" namespace]
       [ mkElemC "template" (toText base64data)
       , mkElemC "format" (toText $ show format)
       ]) ()]
@@ -224,14 +228,14 @@ instance XmlContent SetLocalTemplateResponse where
     ; return SetLocalTemplateResponse
     } `adjustErr` ("in <SetLocalTemplateResponse>, " ++)
 
-data CreateDocument = CreateDocument
+data CreateDocument = CreateDocument String
   deriving (Eq,Ord,Show,Read)
 
 instance HTypeable CreateDocument where
     toHType _ = Defined "CreateDocument" [] []
 instance XmlContent CreateDocument where
-  toContents CreateDocument =
-    [CElem (Elem (N "CreateDocument") [mkAttr "xmlns" liveDocxNamespace] []) ()]
+  toContents (CreateDocument namespace) =
+    [CElem (Elem (N "CreateDocument") [mkAttr "xmlns" namespace] []) ()]
   parseContents = error "Please do not parse a CreateDocument"
 instance HasXmlNamespace CreateDocument where
   xmlNamespace = const "CreateDocument"
@@ -248,14 +252,14 @@ instance XmlContent CreateDocumentResponse where
     ; return CreateDocumentResponse
     } `adjustErr` ("in <CreateDocumentResponse>, " ++)
 
-data RetrieveDocument = RetrieveDocument String
+data RetrieveDocument = RetrieveDocument String String
   deriving (Eq,Ord,Show,Read)
 
 instance HTypeable RetrieveDocument where
     toHType _ = Defined "RetrieveDocument" [] []
 instance XmlContent RetrieveDocument where
-  toContents (RetrieveDocument format) =
-    [CElem (Elem (N "RetrieveDocument") [mkAttr "xmlns" liveDocxNamespace]
+  toContents (RetrieveDocument format namespace) =
+    [CElem (Elem (N "RetrieveDocument") [mkAttr "xmlns" namespace]
       [ mkElemC "format" (toText format)
       ]) ()]
   parseContents = error "Please do not parse a RetrieveDocument"
