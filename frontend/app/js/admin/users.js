@@ -38,7 +38,7 @@ define(['Backbone', 'legacy_code'], function() {
               var tr6 = jQuery("<tr/>").append(jQuery("<td/>").text("Language:"));
               var lang = jQuery("<select name='lang'>"
                                   + '<option value="sv">Swedish</option>'
-                                  + '<option value="en">Britain</option>'
+                                  + '<option value="en">English</option>'
                                   + '<option value="de">German</option>'
                                   + '<option value="fr">French</option>'
                                   + '<option value="nl">Dutch</option>'
