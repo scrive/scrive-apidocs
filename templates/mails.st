@@ -504,6 +504,8 @@ $_legalparagraphBody()$
 supportmaillink=
 <a href='mailto:supporþ@scrive.com'>support@scrive.com</a>
 ####
+accountingmaillink=
+<a href='mailto:supporþ@scrive.com'>accounting@scrive.com</a>
 ####
 #### DOCUMENT INFORMATION PREVIEW FOR MAIL
 ####
