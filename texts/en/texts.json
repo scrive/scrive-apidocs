@@ -139,7 +139,7 @@
 "_backToStepTwoAndFillPersonNumber":"Go back to step 1 and enter ID number.",
 "_bankidAlreadyInProgress":"A login for this ID number is already in progress, press \"cancel\" in the app for Mobile BankID and try again.",
 "_bankidEnterCode":"Please enter the security code to your app for Mobile BankID.",
-"_bankidExpiredTransaction":"No reply from your mobile device. Check that you have started the app for Mobile BankID and that you have connection, then follow the instructions in your mobile device and try again. ",
+"_bankidExpiredTransaction":"No reply from your mobile device. Check that you have started the app for Mobile BankID and that you have connection, then follow the instructions in your mobile device and try again.",
 "_bankidInternalError":"Technical error. Please try again.",
 "_bankidInvalidDevices":"An internal technical error has occured. Update your app for Mobile BankID and try again.",
 "_bankidInvalidParameters":"Invalid personal ID number",
