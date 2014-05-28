@@ -3,7 +3,6 @@
 "_questionnaireCloseFaster":"With e-signing, documents get signed quicker",
 "_questionnaireCuriosity":"And out of curiousity...",
 "_questionnaireEasyToSign":"You saw how easy it was to sign...",
-"_questionnaireEmailScan":"Email & Scan",
 "_questionnaireEnjoySigning":"Did you enjoy your e-signing experience?",
 "_questionnaireEsigning":"E-signing",
 "_questionnaireGreat":"Great! We hope you don't mind us asking...",
@@ -18,7 +17,6 @@
 "_questionnaireOtherBenefitsP2":"create, send & track",
 "_questionnaireOtherBenefitsP3":" your documents.",
 "_questionnaireOurEsignService":"Our e-signing service powered the signing experience you just had.",
-"_questionnairePenPaper":"Pen & paper in-person",
 "_questionnairePhoneNumber":"Work phone number",
 "_questionnaireQuickQuestion":"Quick question...",
 "_questionnaireSeeHowSimple":"Do you want me to call you about the benefits of e-signing and Scrive?",
@@ -26,10 +24,8 @@
 "_questionnaireSendDownP1":"Do you ever send your own documents that require signatures?",
 "_questionnaireSendDownP2":"i.e. sales contracts, employment contracts, etc...",
 "_questionnaireSendFeedback":"Send feedback",
-"_questionnaireSendingToday":"How do you usually engage in legally-binding agreements?",
 "_questionnaireShowDemo":"Yes please",
 "_questionnaireSorry":"We're sorry you didn't enjoy the experience",
 "_questionnaireThanksForYourTime":"Thanks for taking the time to answer our questions!",
-"_questionnaireVoiceAgreements":"Voice agreement",
 "_questionnaireYes":"Yes"
 }
