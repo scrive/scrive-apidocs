@@ -502,7 +502,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
          }
        };
        this.rejectButton = new Button({
-                                        color: "black"
+                                        color: "black",
                                         text: localization.process.rejectbuttontext,
                                         onClick: function() {
                                             mixpanel.track('Click Reject');
