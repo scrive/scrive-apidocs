@@ -58,6 +58,16 @@ whiteList = S.fromList [ "emailFieldName"
                        , "morethenonelistnormal"
                        , "nomorethanonelist"
                        , "nomorethanonelistnormal"
+                       , "mailForwardSigned"
+                       , "mailDocumentError"
+                       , "mailForwardSigned"
+                       , "remindMailSigned"
+                       , "mailContractClosed"
+                       , "mailInvitationToSignContract"
+                       , "remindMailNotSignedContract"
+                       , "mailRejectContractMail"
+                       , "mailDocumentAwaitingForAuthor"
+                       , "dumpAllEvidenceTexts"
                        ]
 
 kontraExtensions :: [Extension]
