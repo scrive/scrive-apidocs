@@ -7,17 +7,17 @@ module Main where
 -- regex currently parses valid tokens like 'localization2' as 'localization',
 -- which results in a false-positive.
 
-import Data.List (isPrefixOf, unfoldr, intersperse)
+import Data.List (isPrefixOf,isSuffixOf, unfoldr, intersperse)
 import Data.Foldable (foldlM)
 import Data.Maybe
 import Control.Monad (forM)
 import Control.Applicative
 import Language.JavaScript.Parser
 import Text.Regex.TDFA
-import System.FilePath.Find
 import qualified Data.Map as Map
 import System.IO
 import System.Exit
+import System.Directory
 
 ------------------------------
 -- WHITELIST
@@ -68,7 +68,7 @@ whitelist =
                           , ("phoneFormDescription", d)
                           , ("phoneSubmitButtonLabel", d)
                           , ("phoneConfirmationText", d)
-                          , ("startButtonLabel", d) 
+                          , ("startButtonLabel", d)
                           ])
        , ("payments", o[ ("plans", o[ ("team", o[ ("name", d)
                                                , ("tag", d)
@@ -225,7 +225,7 @@ propsToLocalization path props = do
           aux (NN (JSPropertyNameandValue (NT (JSIdentifier varName) _ _) _ [NN (JSObjectLiteral _ props' _)])) = do
               children <- propsToLocalization (path ++ "." ++ varName) props'
               return $ Map.singleton varName children
-          aux (NN (JSPropertyNameandValue (NT (JSIdentifier varName) _ _) _ [NN (JSFunctionExpression _ _ _ _ _ _)])) =
+          aux (NN (JSPropertyNameandValue (NT (JSIdentifier varName) _ _) _ [NN (JSFunctionExpression _ _ _ _ _ _ _ _)])) =
               return $ Map.singleton varName $ Value "<function>"
           aux (NN (JSPropertyNameandValue (NT (JSIdentifier varName) _ _) _ [NN (JSArrayLiteral _ _ _)])) =
               return $ Map.singleton varName $ Value "<array>"
@@ -381,7 +381,9 @@ readLocalizations paths = concat <$> mapM aux paths
 main :: IO ()
 main = do
   mainLocalization <- localizationsFromFile "templates/javascript-langs.st"
-  files <- find (return True) (extension ==? ".js") "public/js"
+  normal_js_files <-  filter (".js" `isSuffixOf`) <$> directoryFilesRecursive "frontend/app/js"
+  jsx_compiled_files <- filter (".js" `isSuffixOf`) <$> directoryFilesRecursive "frontend/app/compiled_jsx"
+  let files = normal_js_files ++ jsx_compiled_files
   localizationCalls <- readLocalizations files
   let results = map (\lc -> removeLocalizationCallFromLocalization lc whitelist mainLocalization) localizationCalls
       (logs, cleanedLocalizations) = splitEithers results
@@ -392,3 +394,26 @@ main = do
   putStrLn "******************************"
   putStrLn "Unused localization calls:"
   print $ pruneLocalization unusedLocalization
+
+
+
+-- UTILS
+
+directoryEntriesRecursive :: FilePath -- ^ dir path to be searched for recursively
+                          -> IO ([FilePath], [FilePath]) -- ^ (list of all subdirs, list of all files)
+directoryEntriesRecursive path | "." `isSuffixOf` path = return ([], [])
+                               | otherwise = do
+  isDir <- doesDirectoryExist path
+  if isDir then do
+      entries <- getDirectoryContents path
+      let properEntries = map ((path ++ "/")++) entries
+      results <- mapM directoryEntriesRecursive properEntries
+      let (dirs, files) = biConcat results
+      return (path:dirs, files)
+   else
+      return ([], [path])
+ where biConcat = (\(x, y) -> (concat x, concat y)) . unzip
+
+directoryFilesRecursive :: FilePath -- ^ dir path to be searched for recursively
+                        -> IO [FilePath] -- ^ list of all files in that dir
+directoryFilesRecursive path = snd `fmap` directoryEntriesRecursive path
