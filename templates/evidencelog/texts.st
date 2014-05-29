@@ -257,7 +257,7 @@ SetDocumentInviteTimeEvidenceText=The signing process was started by $actor$.
 ###
 SignDocumentEvidenceTextSMSPinFull=The document was signed by $actor$$_using_identification_method()$. $pinWasSent()$
 ###
-SignDocumentEvidenceTextElegFull=The document was signed by $actor$$_using_identification_method()$. $elegVerified()$
+SignDocumentEvidenceTextElegFull=The document was signed by $actor$$_using_identification_method()$. $elegVerification()$
 ###
 SignDocumentEvidenceTextFull=The document was signed$_using_identification_method()$.
 ###

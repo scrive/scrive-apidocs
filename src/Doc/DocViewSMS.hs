@@ -59,8 +59,8 @@ smsInvitationToAuthor doc sl = do
 smsReminder :: (MailContextMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> m SMS
 smsReminder doc sl = mkSMS doc sl smsdata =<< renderLocalTemplate doc template (smsFields doc sl)
   where (smsdata, template) = case maybesigninfo sl of
-          Nothing -> (Invitation (documentid doc) (signatorylinkid sl), "_smsReminder")
-          Just _  -> (None, "_smsReminderSigned")
+          Nothing -> (Invitation (documentid doc) (signatorylinkid sl), templateName "_smsReminder")
+          Just _  -> (None, templateName "_smsReminderSigned")
 
 smsClosedNotification :: (MailContextMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> Bool -> Bool -> m SMS
 smsClosedNotification doc sl withEmail sealFixed = do
