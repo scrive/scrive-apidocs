@@ -20,6 +20,7 @@ if [ "$2" == "" ]; then
 else
     export SELENIUM_TEST_LANG="$2"
 fi
+set -- "$1"  # clear second arg
 if [ "$1" == "all" ]; then
   run $(dirname "$0")/src/specs/*.rb
 else
