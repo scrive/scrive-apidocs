@@ -12,8 +12,13 @@ function run {
 }
 
 if [ "$1" == "" ]; then
-  echo "usage: $0 [all|<spec-name.rb>]"
+  echo "usage: $0 [all|<spec-name.rb>] [lang_code]"
   exit 1
+fi
+if [ "$2" == "" ]; then
+    export SELENIUM_TEST_LANG=en
+else
+    export SELENIUM_TEST_LANG="$2"
 fi
 if [ "$1" == "all" ]; then
   run $(dirname "$0")/src/specs/*.rb

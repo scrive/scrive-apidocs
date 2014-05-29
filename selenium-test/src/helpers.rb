@@ -15,6 +15,7 @@ class Helpers
   attr_accessor :emailhelper
   attr_accessor :loginhelper
   attr_accessor :dochelper
+  attr_accessor :lang
 
   def initialize
     @wait = Selenium::WebDriver::Wait.new(:timeout => 60)
@@ -24,6 +25,7 @@ class Helpers
     @emailhelper = EmailHelper.new(@ctx, @driver, self)
     @loginhelper = LoginHelper.new(@ctx, @driver, self)
     @dochelper = DocHelper.new(@ctx, @driver, self)
+    @lang = ENV['SELENIUM_TEST_LANG']
   end
 
   def quit
