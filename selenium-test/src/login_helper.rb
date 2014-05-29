@@ -12,7 +12,8 @@ class LoginHelper
 
   def login_as(email, password)
     sleep 1
-    @driver.navigate().to(@ctx.createKontrakcjaURL "/login")
+    @driver.navigate().to(@ctx.createKontrakcjaURL ("/" + @h.lang + "/login"))
+    @driver.manage.add_cookie(:name => 'lang', :value => '"LANG_' + @h.lang.upcase + '"')
     (@h.wait_until { @driver.find_element :css => ".short-input-container" })
     sleep 1
     (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='email']" }).click
