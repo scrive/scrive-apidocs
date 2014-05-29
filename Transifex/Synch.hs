@@ -1,4 +1,4 @@
-module Synch (push, merge, diff, fix )where
+module Transifex.Synch (push, merge, diff, fix, fetchLocal)where
 
 
 import Data.CSV (csvFile)
