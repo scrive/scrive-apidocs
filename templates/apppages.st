@@ -453,6 +453,7 @@ langSwitcher=
                     , {value : "nl", name : "$DutchInDutch()$", hidden : true}
                     , {value : "da", name : "$DanishInDanish()$", hidden : true}
                     , {value : "no", name : "$NorwegianInNorwegian()$", hidden : true}
+                    , {value : "el", name : "$GreekInGreek()$", hidden : true}
                    ]
                    var lname = _.findWhere(languages, {value : "$langcode$"}).name;
 

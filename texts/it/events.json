@@ -25,7 +25,6 @@
 "_PreparationToPendingEvidenceTextSimpleArchive":"Il processo di firma ha avuto inizio. ",
 "_PreparationToPendingEvidenceTextSimpleNotArchive":"$actor$ ha ultimato la preparazione delle impostazioni per il processo di firma. Il processo ha avuto inizio. ",
 "_ProlongDocumentEvidenceTextArchive":"La data ultima per la firma è stata prorogata.",
-"_ProlongDocumentEvidenceTextNotArchive":"La data ultima per la firma è stata prorogata da $actor$.",
 "_RejectDocumentEvidenceTextSimpleArchive":"L'invito a firmare è stato respinto.$if(text)$ Il messaggio con la motivazione del rifiuto è: <BR/> <i>$text:noescape()$</i>$endif$",
 "_RejectDocumentEvidenceTextSimpleNotArchive":"L'invito a firmare è stato respinto da $actor$.$if(text)$ Il messaggio di $actor$ con la motivazione del rifiuto è: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToReviewArchive":"È stato inviato un promemoria per la revisione a $signatory$ tramite $_delivery_method()$.$if(text)$ Il testo del promemoria è: <BR/> <i>$text:noescape()$</i>$endif$",

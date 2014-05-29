@@ -25,7 +25,6 @@
 "_PreparationToPendingEvidenceTextSimpleArchive":"Het ondertekeningsproces is begonnen. ",
 "_PreparationToPendingEvidenceTextSimpleNotArchive":"De voorbereiding van de ondertekeningsproces-instellingen werd beëindigd door $actor$. Het ondertekeningsproces is begonnen. ",
 "_ProlongDocumentEvidenceTextArchive":"De deadline voor ondertekening is verlengd. ",
-"_ProlongDocumentEvidenceTextNotArchive":"De deadline voor ondertekening is verlengd door $actor$. ",
 "_RejectDocumentEvidenceTextSimpleArchive":"De uitnodiging om te ondertekenen werd afgekeurd. $if(text)$ Het afkeuringsbericht is: <BR/> <i>$text:noescape()$</i>$endif$",
 "_RejectDocumentEvidenceTextSimpleNotArchive":"De uitnodiging om te ondertekenen werd afgekeurd door $actor$.$if(text)$ Het afkeuringsbericht van $actor$ is: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToReviewArchive":"Een herinnering om te herzien werd gestuurd naar $signatory$ using $_delivery_method()$.$if(text)$ Het herinneringsbericht is: <BR/> <i>$text:noescape()$</i>$endif$",
@@ -49,5 +48,5 @@
 "_delivery_method":"$if(email)$e-mail$elseif(mobile)$SMS$elseif(emailmobile)$e-mail en SMS$endif$",
 "_invitationCustomMessageTextToReview":"$if(text)$$if(!mobile)$ De uitnodiging om te herzien bevatte het volgende bericht: <BR/> <i>$text:noescape()$</i>$endif$$endif$",
 "_invitationCustomMessageTextToSign":"$if(text)$$if(!mobile)$ De uitnodiging om te ondertekenen bevatte de volgende mededeling: <BR/> <i>$text:noescape()$</i>$endif$$endif$",
-"_using_identification_method":"$if(eleg)$ met gebruik van eID als identificatiemethode$elseif(sms_pin)$ met gebruik van PIN via SMS als identificatiemethode $endif$"
+"_using_identification_method":"$if(eleg)$ met behulp van eID als identificatiemethode$elseif(sms_pin)$ met behulp van PIN via SMS als identificatiemethode $endif$"
 }

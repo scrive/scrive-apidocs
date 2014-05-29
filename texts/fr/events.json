@@ -25,7 +25,6 @@
 "_PreparationToPendingEvidenceTextSimpleArchive":"Le processus de signature est en cours.",
 "_PreparationToPendingEvidenceTextSimpleNotArchive":"La préparation des paramètres de signature a été effectuée par $actor$. Le processus de signature est en cours.",
 "_ProlongDocumentEvidenceTextArchive":"La date limite de signature a été prolongée.",
-"_ProlongDocumentEvidenceTextNotArchive":"La date limite de signature a été prolongée par $actor$.",
 "_RejectDocumentEvidenceTextSimpleArchive":"L'invitation à signer le document a été refusée.$if(text)$ Le message de refus était: <BR/> <i>$text:noescape()$</i>$endif$",
 "_RejectDocumentEvidenceTextSimpleNotArchive":"L'invitation à signer le document a été refusée par $actor$.$if(text)$  Le message de refus de $actor$ était: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToReviewArchive":"Un rappel de la nécessité de consulter les documents a été envoyé à $signatory$ par $_delivery_method()$.$if(text)$ Le message de rappel était: <BR/> <i>$text:noescape()$</i>$endif$",

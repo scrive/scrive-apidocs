@@ -25,7 +25,6 @@
 "_PreparationToPendingEvidenceTextSimpleArchive":"Signeringsprocessen inleddes.",
 "_PreparationToPendingEvidenceTextSimpleNotArchive":"Redigeringen av dokumentet avslutades av $actor$. Signeringsprocessen inleddes.",
 "_ProlongDocumentEvidenceTextArchive":"Förfallodatumet för signering förlängdes.",
-"_ProlongDocumentEvidenceTextNotArchive":"Förfallodatumet för signering förlängdes av $actor$.",
 "_RejectDocumentEvidenceTextSimpleArchive":"Inbjudan att signera avvisades.$if(text)$ Avvisningsmeddelandet var: <BR/> <i>$text:noescape()$</i>$endif$",
 "_RejectDocumentEvidenceTextSimpleNotArchive":"Inbjudan att signera avvisades av $actor$.$if(text)$ Avvisningsmeddelandet från $actor$ var: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToReviewArchive":"En påminnelse att signera skickades till $signatory$ via $_delivery_method()$.$if(text)$ Meddelandet var: <BR/><i>$text:noescape()$</i>$endif$",
