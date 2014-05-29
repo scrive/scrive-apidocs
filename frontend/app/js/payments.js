@@ -873,12 +873,11 @@ define(['Backbone', 'legacy_code'], function() {
 
             var header = $('<header />')
                 .append($('<h1 />').text(model.header()))
-                .append($('<h4 />').text('')); //localization.payments.subheader
+                .append($('<h4 />').text(''));
 
 
             if (!this.noheaders)
               div.append(header);
-            //div.append($('<h3 />').text(localization.payments.chooseplan));
 
             div.append(view.teamBox.el)
                 .append(view.formBox.el);

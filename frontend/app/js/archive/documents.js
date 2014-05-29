@@ -39,7 +39,6 @@ window.DocumentCellsDefinition = function(archive) { return  [
                         if (listobject.field("inpadqueue") && listobject.subfield(idx,"inpadqueue"))
                             {
                                 actionIcon.addClass("removefromqueue");
-                                ToolTip.set({on: actionIcon,  tip : localization.pad.removeFromPadQueue});
                                 actionIcon.click(function() {
                                     mixpanel.track('Click clear pad queue');
                                     new Submit({

@@ -70,10 +70,8 @@ window.PadGiveToNextSignatoryView = Backbone.View.extend({
                                     return false;
                                 }
                               }).el();
-           var giveForSigning =  $("<span class='giveForSigning'/>").append($("<span/>").text(localization.pad.signingOnSameDeviceFor1))
-                                                                .append(giveForSigningSelector)
-                                                                .append($("<span/>").text(localization.pad.signingOnSameDeviceFor2))
-                                                                .append(giveForSigningButton);
+           var giveForSigning =  $("<span class='giveForSigning'/>").append(giveForSigningSelector)
+                                                                    .append(giveForSigningButton);
 
            box.append(giveForSigning);
            return box;

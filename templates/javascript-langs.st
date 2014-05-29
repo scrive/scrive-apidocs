@@ -197,7 +197,6 @@ javascriptLocalisation =
                cancelmodaltext: "$_contractcancelmodaltext()$",
                cancelmodaltextwithsignatures: "$_contractcancelmodaltextwithsignatures()$",
                rejectbuttontext: "$_contractrejectbuttontext()$",
-               signatorysignmodaltitle: "$_contractsignatorysignmodaltitle()$",
                signatorysignmodaltitlefromsignatorydrawing: "$_contractsignatorysignmodaltitlefromsignaturedrawing()$",
                signatorysignmodaltitleeleg: "$_contractsignatorysignmodaltitleeleg()$",
                signatorysignmodalcontent: "<p>$_contractsignatorysignmodalcontent()$ </p>",
@@ -208,7 +207,6 @@ javascriptLocalisation =
                signbuttontext: "$_contractsignbuttontext()$",
                signbuttontextfromsignaturedrawing: "$_contractsignbuttontextfromsignaturedrawing()$",
                signatorycancelmodaltitle: "$_contractsignatorycancelmodaltitle()$",
-               mobileBankID: "$_mobileBankID()$",
                remindagainbuttontext: "$_contractremindagainbuttontext()$",
                authorname: "$_contractauthorname()$",
                authorsignatoryname: "$_contractauthorsignatoryname()$",
@@ -230,8 +228,6 @@ javascriptLocalisation =
            , filterByAuthor : {
                 showAnyAuthor : "$_anyAuthor()$"
             }
-           , editInviteDialogHead : "$_editInviteTextDialogHead()$"
-           , to : "$_to()$"
            , toNoSpaces : "$_toNoSpaces()$"
            , uploadButton: "$_signStepsBodyUploadBoxStepButtonChooseFile()$"
            , ok : "$_ok()$"
@@ -292,10 +288,6 @@ javascriptLocalisation =
              , sendDownP1: "$_questionnaireSendDownP1()$"
              , sendDownP2: "$_questionnaireSendDownP2()$"
              , sendDown2: "$_questionnaireSendDown2()$"
-             , curiosity: "$_questionnaireCuriosity()$"
-             , mail: "$_questionnaireMail()$"
-             , esigning: "$_questionnaireEsigning()$"
-             , other: "$_questionnaireOther()$"
              , closeFaster: "$_questionnaireCloseFaster()$"
              , showDemo: "$_questionnaireShowDemo()$"
              , seeHowSimple: "$_questionnaireSeeHowSimple()$"
@@ -337,7 +329,6 @@ javascriptLocalisation =
                       missingOrWrongEmail : "$_emptyOrNotValidEmail()$"
                     , missingOrWrongPersonalNumber : "$_backToStepTwoAndFillPersonNumber()$"
                     , missingOrWrongMobile : "$_emptyOrNotValidMobile()$"
-                    , wrongMobile : "$_notValidMobile()$"
                     , missingOrWrongPlacedAuthorField : "$_missingPlacedAuthorFieldValue()$"
                     , notReadyField : "$_setAllFields()$"
                     , pleaseSelectField : "$_validationPleaseSelectField()$"
@@ -374,7 +365,6 @@ javascriptLocalisation =
              }
              , editParticipants: "$_designViewEditParticipants()$"
              , editDocument: "$_designViewEditDocument()$"
-             , optional: "$_designViewOptional()$"
              , optionalField: "$_designViewOptionalField()$"
              , editSigningProcess: "$_designViewEditSigningProcess()$"
              , startSigning: "$_designViewStartSigning()$"
@@ -412,7 +402,6 @@ javascriptLocalisation =
              , request: "$_designViewRequest()$"
              , editInvitation: "$_designViewEditInvitation()$"
              , editConfirmation: "$_designViewEditConfirmation()$"
-             , previewInvitation: "$_designViewPreviewInvitation()$"
              , signatureBox: "$_designViewSignatureBox()$"
              , signatureBoxSettings: "$_designViewSignatureBoxSettings()$"
              , freeTextBox: "$_designViewFreeTextBox()$"
@@ -459,8 +448,7 @@ javascriptLocalisation =
               , passwordOldPasswordNotValid : "$_flashMessageBadOldPassword()$"
          }
          , pad : {
-                delivery : "$_padDelivery()$"
-             ,  signingOnSameDevice : "$_padSigningOnSameDevice()$"
+                signingOnSameDevice : "$_padSigningOnSameDevice()$"
              ,  signingOnSameDeviceConfirmHeader : "$_padSigningOnSameDeviceConfirmHeader()$"
              ,  signingOnSameDeviceConfirmText : "$_padSigningOnSameDeviceConfirmText()$"
              ,  addToPadQueue : "$_padAddToPadQueue()$"
@@ -536,8 +524,7 @@ javascriptLocalisation =
              , goToSignView : "$_authorviewGoToSignview()$"
              , downloadPdf : "$_DownloadPDF()$"
              , firsttime : {
-                   counterpart: "$_you()$"
-                 , emailDelivered : "$InvitationDeliveredByEmailText(signatory='ACTOR';signing='TRUE')$"
+                   emailDelivered : "$InvitationDeliveredByEmailText(signatory='ACTOR';signing='TRUE')$"
                  , emailRead : "$MarkInvitationReadEvidenceText(signatory_email='EMAIL';signing='TRUE')$"
                  , tryYourself : "$_authorviewFTUETryYourself()$"
                  , linkOpened : "$SignatoryLinkVisitedText(actor='ACTOR')$"
@@ -568,7 +555,6 @@ javascriptLocalisation =
              , signedAndClosedSubText: "$_signedAndClosedSubText()$"
              , unavailableForSign: "$_unavailableForSign()$"
              , dueDate: "$_dueDate()$"
-             , showDetails: "$_showDetails()$"
              , companyNumberLabel: "$_companyNumberLabel()$"
              , personalNumberLabel: "$_personalNumberLabel()$"
              , authorAttachmentsTitleForOne: "$_signViewAuthorAttachmentsTitleForOne()$"
@@ -606,8 +592,6 @@ javascriptLocalisation =
              , optionalAction: "$_optionalAction()$"
              , promoBannerButton: "$_promoBannerButton()$"
              , signupButtonText: "$_signupButtonText()$"
-             , padTitle: "$_padTitle()$"
-             , padSubtitle: "$_padSubtitle()$"
              , titleText: "$_titleText()$"
              , subtitleText: "$_subtitleText()$"
              , pinSigning : {
@@ -1143,6 +1127,5 @@ javascriptLocalisation =
       , signingErrorMessage1 : "$_signingErrorMessage1()$"
       , signingErrorMessage2 : "$_signingErrorMessage2()$"
       , signingErrorReload   : "$_signingErrorReload()$"
-      , signNowFromSignatureModal : "$_signNowFromSignatureModal()$"
     };
 ###

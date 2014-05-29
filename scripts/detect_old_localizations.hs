@@ -382,7 +382,7 @@ main :: IO ()
 main = do
   mainLocalization <- localizationsFromFile "templates/javascript-langs.st"
   normal_js_files <-  filter (".js" `isSuffixOf`) <$> directoryFilesRecursive "frontend/app/js"
-  jsx_compiled_files <- filter (".js" `isSuffixOf`) <$> directoryFilesRecursive "frontend/app/compiled_jsx"
+  jsx_compiled_files <- filter (".jsx" `isSuffixOf`) <$> directoryFilesRecursive "frontend/app/scripts"
   let files = normal_js_files ++ jsx_compiled_files
   localizationCalls <- readLocalizations files
   let results = map (\lc -> removeLocalizationCallFromLocalization lc whitelist mainLocalization) localizationCalls
