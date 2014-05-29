@@ -24,7 +24,6 @@
 "_PreparationToPendingEvidenceTextSimpleArchive":"The signing process was initiated.",
 "_PreparationToPendingEvidenceTextSimpleNotArchive":"The preparation of the signing process settings was finished by $actor$. The signing process was initiated.",
 "_ProlongDocumentEvidenceTextArchive":"The due date for signing was prolonged.",
-"_ProlongDocumentEvidenceTextNotArchive":"The due date for signing was prolonged by $actor$.",
 "_RejectDocumentEvidenceTextSimpleArchive":"The invitation to sign was rejected.$if(text)$ The rejection message was: <BR/> <i>$text:noescape()$</i>$endif$",
 "_RejectDocumentEvidenceTextSimpleNotArchive":"The invitation to sign was rejected by $actor$.$if(text)$ The rejection message from $actor$ was: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToReviewArchive":"A reminder to review was sent to $signatory$ using $_delivery_method()$.$if(text)$ The reminder message was: <BR/> <i>$text:noescape()$</i>$endif$",

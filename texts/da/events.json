@@ -25,7 +25,6 @@
 "_PreparationToPendingEvidenceTextSimpleArchive":"Signeringsprocessen blev påbegyndt.",
 "_PreparationToPendingEvidenceTextSimpleNotArchive":"Udarbejdelsen af ​​signeringsprocessen blev færdiggjort af $actor$. Signeringsprocessen blev påbegyndt.",
 "_ProlongDocumentEvidenceTextArchive":"Forfaldsdatoen for signeringen blev forlænget.",
-"_ProlongDocumentEvidenceTextNotArchive":"Forfaldsdatoen for signeringen blev forlænget af $actor$.",
 "_RejectDocumentEvidenceTextSimpleArchive":"Invitationen til at underskrive blev afvist.$if(text)$ Beskeden for afvisningen var. <BR/> <i>$text:noescape()$</i>$endif$",
 "_RejectDocumentEvidenceTextSimpleNotArchive":"Invitationen til at underskrive blev afvist af $actor$.$if(text)$  Beskeden for afvisningen fra $actor$ var. <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToReviewArchive":"En påmindelse om gennemgang blev sendt til $signatory$ ved hjælp af $_delivery_method()$.$if(text)$ Påmindelsen var: <BR/> <i>$text:noescape()$</i>$endif$",

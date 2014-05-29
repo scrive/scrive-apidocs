@@ -25,7 +25,6 @@
 "_PreparationToPendingEvidenceTextSimpleArchive":"El proceso de firma fue iniciado.",
 "_PreparationToPendingEvidenceTextSimpleNotArchive":"La preparación del escenario para proceso de firma fue finalizado por $actor$. El proceso de firma fue iniciado. ",
 "_ProlongDocumentEvidenceTextArchive":"La fecha de cierre para firmar fue prolongada. ",
-"_ProlongDocumentEvidenceTextNotArchive":"La fecha de cierre para firmar fue prolongada por $actor$.",
 "_RejectDocumentEvidenceTextSimpleArchive":"La invitación a firmar fue rechazada. $if(text)$ El mensaje de rechazo era: <BR/> <i>$text:noescape()$</i>$endif$",
 "_RejectDocumentEvidenceTextSimpleNotArchive":"La invitación a firmar fue rechazada por $actor$.$if(text)$ El mensaje de rechazo de $actor$ era: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToReviewArchive":"Un recordatorio de revisión fue enviado a $signatory$ usando $_delivery_method()$.$if(text)$ El amensaje de aviso era: \n<i>$text:noescape()$</i>$endif$",

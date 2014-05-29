@@ -21,13 +21,5 @@ bankidEnterCode=$_bankidEnterCode()$
 ##
 bankidStartApp=$_bankidStartApp()$
 ##
-bankidPersInfoMismatch=$_bankidPersInfoMismatch()$: $message$
-##
 bankidVerificationFailed=$_bankidVerificationFailed()$
-##
-bankidNameMismatch=$_bankidNameMismatch()$
-###
-bankidNoNumber=$_bankidNoNumber()$
-##
-bankidNumberMismatch=$_bankidNumberMismatch()$: '$contract$' $_and()$ '$eleg$'.
 ##

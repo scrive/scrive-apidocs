@@ -25,7 +25,6 @@
 "_PreparationToPendingEvidenceTextSimpleArchive":"O processo de assinatura foi iniciado.",
 "_PreparationToPendingEvidenceTextSimpleNotArchive":"A preparação das definições do processo de assinatura foi concluída por $actor$. O processo de assinatura foi iniciado.",
 "_ProlongDocumentEvidenceTextArchive":"O prazo de assinatura foi prolongado.",
-"_ProlongDocumentEvidenceTextNotArchive":"O prazo de assinatura foi prolongado por $actor$.",
 "_RejectDocumentEvidenceTextSimpleArchive":"O convite de assinatura foi rejeitado.$if(text)$ A mensagem de rejeição foi a seguinte: <BR/> <i>$text:noescape()$</i>$endif$",
 "_RejectDocumentEvidenceTextSimpleNotArchive":"O convite de assinatura foi rejeitado por $actor$.$if(text)$ A mensagem de rejeição de $actor$ foi a seguinte: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToReviewArchive":"Um lembrete de revisão foi enviado para $signatory$ using $_delivery_method()$.$if(text)$ A mensagem de lembrete foi a seguinte: <BR/> <i>$text:noescape()$</i>$endif$",

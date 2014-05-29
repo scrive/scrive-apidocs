@@ -25,7 +25,6 @@
 "_PreparationToPendingEvidenceTextSimpleArchive":"Η διαδικασία υπογραφής ξεκίνησε. ",
 "_PreparationToPendingEvidenceTextSimpleNotArchive":"Η προετοιμασία των ρυθμίσεων της διαδικασίας υπογραφής ολοκληρώθηκε από τον/την $actor$ . Η διαδικασία υπογραφής ξεκίνησε.  ",
 "_ProlongDocumentEvidenceTextArchive":"Η προθεσμία υπογραφής παρατάθηκε.  ",
-"_ProlongDocumentEvidenceTextNotArchive":"Η προσθεσμία υπογραφής παρατάθηκε από τον/την $actor$.  ",
 "_RejectDocumentEvidenceTextSimpleArchive":"Η πρόσκληση υπογραφής απορρίφθηκε.$if(text)$ Το μήνυμα απόρριψης ήταν: <BR/> <i>$text:noescape()$</i>$endif$ ",
 "_RejectDocumentEvidenceTextSimpleNotArchive":"Η πρόσκληση υπογραφής απορρίφθηκε από τον/την $actor$.$if(text)$ Το μήνυμα απόρριψης από τον/την $actor$ ήταν: <BR/> <i>$text:noescape()$</i>$endif$   ",
 "_ReminderSendTextToReviewArchive":"Μια υπενθύμιση ελέγχου εστάλη στον/στην $signatory$ μέσω $_delivery_method()$.$if(text)$ Το μήνυμα υπενθύμισης ήταν: <BR/> <i>$text:noescape()$</i>$endif$ ",

@@ -238,7 +238,7 @@ $else$
                   <a href="tel:$_pageFooterPhone()$">$_pageFooterPhone()$</a>
               </li>
               <li class="branch">
-                  <a href="mailto:$_pageFooterMail()$">$_pageFooterMail()$</a>
+                  <a href="mailto:info@scrive.com">info@scrive.com</a>
               </li>
           </ul>
       </div>
@@ -453,6 +453,7 @@ langSwitcher=
                     , {value : "nl", name : "$DutchInDutch()$", hidden : true}
                     , {value : "da", name : "$DanishInDanish()$", hidden : true}
                     , {value : "no", name : "$NorwegianInNorwegian()$", hidden : true}
+                    , {value : "el", name : "$GreekInGreek()$", hidden : true}
                    ]
                    var lname = _.findWhere(languages, {value : "$langcode$"}).name;
 

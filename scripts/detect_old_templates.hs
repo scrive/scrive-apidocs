@@ -12,12 +12,13 @@ import Data.Maybe
 import Control.Applicative
 import System.IO
 import Language.Haskell.Exts
-import System.FilePath.Find
 import Text.StringTemplates.Files
 import qualified Data.Map as Map
 import Text.StringTemplate
-import Data.CSV
-import qualified Text.ParserCombinators.Parsec as Parsec (parse)
+import System.Directory
+import Data.List (isSuffixOf)
+import Transifex.Synch
+import Transifex.Utils
 
 whiteList :: S.Set String
 whiteList = S.fromList [ "emailFieldName"
@@ -57,7 +58,41 @@ whiteList = S.fromList [ "emailFieldName"
                        , "morethenonelistnormal"
                        , "nomorethanonelist"
                        , "nomorethanonelistnormal"
+                       , "mailForwardSigned"
+                       , "mailDocumentError"
+                       , "mailForwardSigned"
+                       , "remindMailSigned"
+                       , "mailContractClosed"
+                       , "mailInvitationToSignContract"
+                       , "remindMailNotSignedContract"
+                       , "mailRejectContractMail"
+                       , "mailDocumentAwaitingForAuthor"
+                       , "dumpAllEvidenceTexts"
                        ]
+
+kontraExtensions :: [Extension]
+kontraExtensions = map EnableExtension [
+    BangPatterns
+  , DeriveDataTypeable
+  , FlexibleContexts
+  , FlexibleInstances
+  , GeneralizedNewtypeDeriving
+  , MultiParamTypeClasses
+  , NamedFieldPuns
+  , OverloadedStrings
+  , PatternGuards
+  , RankNTypes
+  , RecordWildCards
+  , ScopedTypeVariables
+  , StandaloneDeriving
+  , TemplateHaskell
+  , TupleSections
+  , TypeFamilies
+  , TypeOperators
+  , TypeSynonymInstances
+  , UndecidableInstances
+  , LambdaCase
+  ]
 
 ------------------------------
 -- code for extracting expressions from haskell source files
@@ -73,27 +108,7 @@ fileExps path = do
       hPutStrLn stderr $ path ++ ":" ++ show line ++ ": " ++ e
       return S.empty
   where mode' = defaultParseMode{ fixities   = Just []
-                                , extensions = map EnableExtension
-                                               [ BangPatterns
-                                               , DeriveDataTypeable
-                                               , FlexibleContexts
-                                               , FlexibleInstances
-                                               , GeneralizedNewtypeDeriving
-                                               , MultiParamTypeClasses
-                                               , NamedFieldPuns
-                                               , OverloadedStrings
-                                               , PatternGuards
-                                               , RankNTypes
-                                               , RecordWildCards
-                                               , ScopedTypeVariables
-                                               , StandaloneDeriving
-                                               , TemplateHaskell
-                                               , TupleSections
-                                               , TypeFamilies
-                                               , TypeOperators
-                                               , TypeSynonymInstances
-                                               , UndecidableInstances
-                                               ]
+                                , extensions = kontraExtensions
                                 }
 
 moduleExps :: Module -> S.Set Exp
@@ -164,6 +179,9 @@ expExps e = e `S.insert`
       RightArrApp e1 e2 -> expExps e1 `S.union` expExps e2
       LeftArrHighApp e1 e2 -> expExps e1 `S.union` expExps e2
       RightArrHighApp e1 e2 -> expExps e1 `S.union` expExps e2
+      MultiIf ifs -> S.unions $ map (\(IfAlt e1 e2) -> expExps e1 `S.union` expExps e2) ifs
+      LCase alts -> S.unions $ map altExps alts
+
 
 bindsExps :: Binds -> S.Set Exp
 bindsExps (BDecls decls) = S.unions $ map declExps decls
@@ -197,10 +215,13 @@ qualStmtExps _ = S.empty
 -- these are needed, because every event types has associated template
 elogEvents :: IO (S.Set String)
 elogEvents = do
-  ParseOk (Module _ _ _ _ _ _ decls) <- parseFile "src/EvidenceLog/Model.hs"
-  let documentEvidenceEventDeclCtors (DataDecl _ DataType _ (Ident "EvidenceEventType") _ ctors _) = Just ctors
-      documentEvidenceEventDeclCtors _ = Nothing
-      eventCtorDecls = head $ catMaybes $ map documentEvidenceEventDeclCtors decls
+  ParseOk (Module _ _ _ _ _ _ decls) <- parseFileWithExts kontraExtensions "src/EvidenceLog/Model.hs"
+  let documentCurrentEvidenceEventDeclCtors (DataDecl _ DataType _ (Ident "CurrentEvidenceEventType") _ ctors _) = Just ctors
+      documentCurrentEvidenceEventDeclCtors _ = Nothing
+      documentObsoleteEvidenceEventDeclCtors (DataDecl _ DataType _ (Ident "ObsoleteEvidenceEventType") _ ctors _) = Just ctors
+      documentObsoleteEvidenceEventDeclCtors _ = Nothing
+      currentEventCtorDecls = head $ catMaybes $ map documentCurrentEvidenceEventDeclCtors decls
+      obsoleteEventCtorDecls = head $ catMaybes $ map documentObsoleteEvidenceEventDeclCtors decls
 
       nameToString (Ident x) = x
       nameToString (Symbol x) = x
@@ -209,7 +230,7 @@ elogEvents = do
       eventCtor (QualConDecl _ _ _ (InfixConDecl _ name' _)) = nameToString name'
       eventCtor (QualConDecl _ _ _ (RecDecl name' _)) = nameToString name'
 
-  return $ S.fromList $ map eventCtor eventCtorDecls
+  return $ S.fromList $ map eventCtor (currentEventCtorDecls ++ obsoleteEventCtorDecls)
 
 --------------------------------------------------
 -- returns template name from expression of certain forms
@@ -268,29 +289,43 @@ go allTmpls seenTmpls tmpls | S.null tmpls = seenTmpls
 setCatMaybes :: Ord a => S.Set (Maybe a) -> S.Set a
 setCatMaybes = S.fromList . catMaybes . S.toList
 
-basicCSVParser :: String -> IO [[String]]
-basicCSVParser path =
-    withFile path ReadMode $ \h -> do
-    hSetEncoding h utf8
-    content <- hGetContents h
-    case Parsec.parse csvFile path content of
-        Right csv -> return csv
-        Left s -> error $ "CSV parse error in " ++ path ++ ": " ++ show s
-
 main :: IO ()
 main = do
-  files <- find (return True) (extension ==? ".hs") "."
+  files <- filter (".hs" `isSuffixOf`) <$> directoryFilesRecursive "src"
   exps <- S.unions <$> mapM fileExps files
   let topLevelTemplatesFromSources = setCatMaybes $ S.map expTemplateName exps
   events <- elogEvents
   let elogTemplates = S.map (++"Text") events
   let topLevelTemplates = S.unions [elogTemplates, topLevelTemplatesFromSources, whiteList]
-  translationsLines <- tail <$> basicCSVParser "texts/everything.csv"
-  let translations = map (\fields -> (fields !! 0, fields !! 1)) translationsLines
-  templatesFilesPath <- find (return True) (extension ==? ".st") "templates"
+  translations <- fmap concat $ mapM (fetchLocal "en") allResources
+  templatesFilesPath <-filter (".st" `isSuffixOf`) <$>  directoryFilesRecursive "templates"
   templates <- concat <$> mapM getTemplates templatesFilesPath
   let templatesMap = Map.fromList $ templates ++ translations
       allTemplates = S.fromList $ Map.keys templatesMap
       knownTemplates = go templatesMap S.empty topLevelTemplates
       unusedTemplates = allTemplates S.\\ knownTemplates
+  putStrLn "Templates that could be removed. Please double check them:"
   putStr $ unlines $ filter (not.null) $ S.toList $ unusedTemplates
+
+
+-- UTILS
+
+directoryEntriesRecursive :: FilePath -- ^ dir path to be searched for recursively
+                          -> IO ([FilePath], [FilePath]) -- ^ (list of all subdirs, list of all files)
+directoryEntriesRecursive path | "." `isSuffixOf` path = return ([], [])
+                               | otherwise = do
+  isDir <- doesDirectoryExist path
+  if isDir then do
+      entries <- getDirectoryContents path
+      let properEntries = map ((path ++ "/")++) entries
+      results <- mapM directoryEntriesRecursive properEntries
+      let (dirs, files) = biConcat results
+      return (path:dirs, files)
+   else
+      return ([], [path])
+ where biConcat = (\(x, y) -> (concat x, concat y)) . unzip
+
+directoryFilesRecursive :: FilePath -- ^ dir path to be searched for recursively
+                        -> IO [FilePath] -- ^ list of all files in that dir
+directoryFilesRecursive path = snd `fmap` directoryEntriesRecursive path
+

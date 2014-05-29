@@ -78,7 +78,6 @@ window.SignviewSettingsPopup = function(args) {
   var popup = new Confirmation({
     content: settingsView.el,
     title: localization.designview.signviewsettings.title,
-    subtitle : localization.designview.signviewsettings.subtitle,
     icon: undefined,
     acceptText: localization.save,
     width: 900,
@@ -87,7 +86,7 @@ window.SignviewSettingsPopup = function(args) {
       document.setShowrejectoption(model.showRejectOption().checked());
       document.setShowpdfdownload(model.showPDFDownload().checked());
       document.setShowfooter(model.showFooter().checked());
-      
+
       return true;
     }
   });
