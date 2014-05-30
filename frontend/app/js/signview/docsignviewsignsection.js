@@ -310,8 +310,10 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
 
       if (signatory.elegAuthentication()) {
         var subhead = $("<h3/>").text(localization.sign.eleg.subhead);
-        var a = $("<a target='_new' />").text(localization.sign.eleg.clickHere).attr("href", "http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86");
-        var p = $("<p/>").append(localization.sign.eleg.body1).append(a).append(localization.sign.eleg.body2);
+        var p = $("<p/>").append(localization.sign.eleg.body);
+        var a = p.find('a');
+        a.attr("target", "_new");
+        a.attr("href", "http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86");
         content.add($("<span/>").append(subhead).append(p));
       }
       return content;

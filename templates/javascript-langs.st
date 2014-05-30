@@ -80,9 +80,7 @@ javascriptLocalisation =
              , sign :  {
                           eleg : {
                                      subhead : "$_pageDocumentForSignContentElegSubhead()$"
-                                   , body1: " $_pageDocumentForSignContentElegBody1()$ "
-                                   , clickHere : "$_pageDocumentForSignContentElegBody2ClickHere()$"
-                                   , body2 : " $_pageDocumentForSignContentElegBody3()$ "
+                                   , body: " $_pageDocumentForSignContentElegBody()$ "
                                    , telia: "$_telia()$"
                                    , mobilebankid: "$_mobileBankID()$"
                                    , bankid: "$_bankid()$"
