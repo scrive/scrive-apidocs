@@ -33,10 +33,12 @@ describe "sign up after signing a document" do
 
     puts "we should be given the option to save the doc in the archive and create an account"
     sleep 10 # wait 10s so we make sure that we know how and what emails are sent.
+    @h.screenshot 'sign_up_after_signing_1'
     @h.wait_until { @h.driver.find_element :css => "a.button.button-large" }.click
 
     puts "should be logged in and able to upload a document"
     @h.wait_until { @h.driver.find_element :css => ".psv-archive" }
+    @h.screenshot 'sign_up_after_signing_2'
     @h.driver.get(@h.ctx.createKontrakcjaURL "/d")
     @h.wait_until { @h.driver.find_element :css => ".archive" }
 
@@ -47,6 +49,7 @@ describe "sign up after signing a document" do
     @h.driver.execute_script("$('a.blue.button').click()")
     sleep 1
     @h.wait_until { (@h.driver.find_element :css => ".flash.error.active").displayed? }
+    @h.screenshot 'sign_up_after_signing_3'
     @h.driver.execute_script("$('.flash-close img').click()")
 
     puts "fill in the password details incorrectly and make sure we get invalid elements"
@@ -56,6 +59,7 @@ describe "sign up after signing a document" do
     @h.driver.execute_script("$('a.blue.button').click()")
     sleep 1
     @h.wait_until { (@h.driver.find_element :css => ".flash.error.active").displayed? }
+    @h.screenshot 'sign_up_after_signing_4'
     @h.driver.execute_script("$('.flash-close img').click()")
 
     puts "clear password2 and really activate"
@@ -69,6 +73,7 @@ describe "sign up after signing a document" do
 
     puts "should be logged in"
     @h.wait_until { @h.driver.find_element :css => "a.js-logout" }
+    @h.screenshot 'sign_up_after_signing_5'
     @h.driver.get(@h.ctx.createKontrakcjaURL "/d")
     @h.wait_until { @h.driver.find_element :css => ".archive" }
 

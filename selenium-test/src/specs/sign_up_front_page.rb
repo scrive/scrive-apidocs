@@ -14,7 +14,7 @@ describe "sign up on front page and modify account settings" do
 
   def reset_password(email, password)
     puts "reset password for "+email+" to "+password
-    @h.driver.navigate().to(@h.ctx.createKontrakcjaURL "/login")
+    @h.driver.get(@h.ctx.createKontrakcjaURL ("/" + @h.lang + "/login"))
     (@h.wait_until { @h.driver.find_element :css => "a.s-forgot-password" }).click
     (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-body .big-input input" }).click
     (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-body .big-input input" }).clear
@@ -33,7 +33,7 @@ describe "sign up on front page and modify account settings" do
 
     random_email = @h.emailhelper.random_email()
 
-    @h.driver.get(@h.ctx.createKontrakcjaURL "/signup")
+    @h.driver.get(@h.ctx.createKontrakcjaURL ("/" + @h.lang + "/signup"))
 
     puts "request an account and make sure you get a green flash back"
     (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-body .big-input input" }).send_keys random_email

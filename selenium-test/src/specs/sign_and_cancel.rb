@@ -25,7 +25,10 @@ describe "Sign a document and then cancel it" do
     puts "After sign and send"
     (@h.wait_until { @h.driver.find_element :css => "a.s-withdraw-button" }).click
     sleep 1
-    (@h.wait_until { @h.driver.find_element :css => ".s-withdraw-confirmation .modal-footer a.float-right" }).click
+    @h.wait_until { @h.driver.find_element :css => ".s-withdraw-confirmation .modal-footer a.float-right" }
+    @h.screenshot 'sign_and_cancel_1'
+    (@h.driver.find_element :css => ".s-withdraw-confirmation .modal-footer a.float-right").click
+
     @h.wait_until { @h.driver.find_element :css => ".icon.status.cancelled" }
 
     @h.loginhelper.logout
@@ -34,6 +37,7 @@ describe "Sign a document and then cancel it" do
 
     @h.emailhelper.follow_link_in_latest_mail_for @h.ctx.props.first_counterpart_email
     @h.wait_until { @h.driver.find_element :css => "span.icon.status.cancelled" }
+    @h.screenshot 'sign_and_cancel_2'
   end
 
 end

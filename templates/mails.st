@@ -370,6 +370,21 @@ invitationMailUndeliveredMainP =
        <br/>
        $_invitationMailUndeliveredContentBodyFirst()$
        <div style="margin-left: 50px;">
+        <ol>
+           <li>
+             $_invitationMailUndeliveredContentInstructionSteps()$
+             <br/>
+             <div style="margin-bottom: 10px;"></div>
+             $nicebutton(link=concat(a1=ctxhostpart;a2=unsigneddoclink); text=_invitationMailUndeliveredContentBodyButton())$
+             <div style="margin-bottom: 10px;"></div>
+           </li>
+           <li>
+             $_invitationMailUndeliveredContentInstructionStep1()$
+           </li>
+           <li>
+             $_invitationMailUndeliveredContentInstructionStep2()$
+           </li>
+         </ol>
          $_invitationMailUndeliveredContentInstruction()$
        </div>
 #######
@@ -390,7 +405,21 @@ invitationSMSUndeliveredMainP =
        <br/>
        $_invitationSMSUndeliveredContentBodyFirst()$
        <div style="margin-left: 50px;">
-         $_invitationSMSUndeliveredContentInstruction()$
+         <ol>
+           <li>
+             $_invitationSMSUndeliveredContentInstructionSteps()$
+             <br/>
+             <div style="margin-bottom: 10px;"></div>
+             $nicebutton(link=concat(a1=ctxhostpart;a2=unsigneddoclink); text=_invitationMailUndeliveredContentBodyButton())$
+             <br/>
+           </li>
+           <li>
+             $_invitationSMSUndeliveredContentInstructionStep1()$
+           </li>
+           <li>
+             $_invitationSMSUndeliveredContentInstructionStep2()$
+           </li>
+         </ol>
        </div>
 ####
 #### DOCUMENT ERROR
