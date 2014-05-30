@@ -10,11 +10,11 @@ notFound=
     <div class='short-input-container-body-wrapper'>
       <div class='short-input-container-body'>
         <p class='position first'>
-         $_afterErrorGoTo()$
+         $_afterErrorGoToInstruction()$
         </p>
-        <p class='position' style='height:44px;'>
+        <p class="position" style='height:44px;'>
           <a class='button float-left' style='width:100px;' href='/'>
-            $_afterErrorGoHome()$
+            $_afterErrorGoHomepage()$
           </a>
           <a href='#' class='button float-right' style='width:100px;' onClick='history.go(-1);return false;'>
             $_afterErrorGoBack()$

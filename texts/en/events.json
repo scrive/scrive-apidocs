@@ -1,4 +1,4 @@
-{
+{ 
 "_AttachExtendedSealedFileEvidenceTextSimple":"The document was sealed with a keyless digital signature.",
 "_AttachGuardtimeSealedFileEvidenceTextSimple":"The document was sealed with a digital signature.",
 "_AttachSealedFileEvidenceTextSimpleArchive":"Scrive prepared the final PDF.",
@@ -7,6 +7,7 @@
 "_CancelDocumentEvidenceTextSimpleArchive":"The invitation to sign was withdrawn.",
 "_CancelDocumentEvidenceTextSimpleNotArchive":"The invitation to sign was withdrawn by $actor$.",
 "_CloseDocumentEvidenceTextSimple":"Scrive locked the document from further modifications by the signing parties.",
+"_Greek":"Greek",
 "_InvitationDeliveredByEmailTextToReviewSimple":"The invitation to review was delivered to $signatory$ by email.",
 "_InvitationDeliveredByEmailTextToSignSimple":"The invitation to sign was delivered to $signatory$ by email.",
 "_InvitationDeliveredBySMSTextToReviewSimple":"The invitation to review was delivered to $signatory$ by SMS.",
@@ -47,6 +48,5 @@
 "_delivery_method":"$if(email)$email$elseif(mobile)$SMS$elseif(emailmobile)$email and SMS$endif$",
 "_invitationCustomMessageTextToReview":"$if(text)$$if(!mobile)$ The invitation to review contained the following message: <BR/> <i>$text:noescape()$</i>$endif$$endif$",
 "_invitationCustomMessageTextToSign":"$if(text)$$if(!mobile)$ The invitation to sign contained the following message: <BR/> <i>$text:noescape()$</i>$endif$$endif$",
-"_using_identification_method":"$if(eleg)$ using eID as identification method$elseif(sms_pin)$ using PIN by SMS as identification method$endif$",
-"_Greek":"Greek"
+"_using_identification_method":"$if(eleg)$ using eID as identification method$elseif(sms_pin)$ using PIN by SMS as identification method$endif$"
 }
