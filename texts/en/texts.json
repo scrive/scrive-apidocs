@@ -757,7 +757,7 @@
 "_tbsYouSignWithEleg":"You are signing  \"$documentname$\" with transactional number \"$documentnumber$\". The signing parties are: $tbssigentries$",
 "_textField":"Text field settings",
 "_textFieldDone":"Save",
-"_textFieldFor":"Party ",
+"_textFieldFor":"Party",
 "_textFieldObligatory":"Mandatory to sign here",
 "_title":"Your signed document has now been safely stored in your own e-archive",
 "_titleText":"Save a safety copy",
