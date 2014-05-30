@@ -120,8 +120,11 @@ define(['Backbone', 'legacy_code'], function() {
         headline: function() {
             var view = this;
             var model = view.model;
-            if(model.isFree() && model.docsLeft() > 0 )
-                return localization.blocking.free.has.headline.replace('XX', model.docsUsed());
+            if(model.isFree() && model.docsLeft() > 0 ) {
+                var res = $("<span>" + localization.blocking.free.has.headline + "</span>");
+                $(".put-docs-used-here",res).text(model.docsUsed());
+                return res;
+            }
             else if(model.isFree())
                 return localization.blocking.free.hasNot.headline;
             else if(model.hasUsedAll())
@@ -130,12 +133,18 @@ define(['Backbone', 'legacy_code'], function() {
                 return localization.blocking.overdue.headline;
             else if(model.isDunning())
                 return localization.blocking.dunning.headline;
-            else if(model.isCanceled())
-                return localization.blocking.canceled.headline + " " + model.docsUsed();
+            else if(model.isCanceled()) {
+                var res = $("<span>" + localization.blocking.canceled.headline  + "</span>");
+                $(".put-docs-used-here",res).text(model.docsUsed());
+                return res;
+            }
             else if(model.isDeactivated())
                 return localization.blocking.deactivated.headline;
-            else if(model.willCancel())
-                return localization.blocking.willcancel.headline.replace('XX', model.daysLeft());
+            else if(model.willCancel()) {
+                var res = $("<span>" + localization.blocking.willcancel.headline + "</span>");
+                $(".put-days-left-here",res).text(model.daysLeft());
+                return res;
+            }
         },
         subtext1: function() {
             var view = this;
@@ -368,8 +377,11 @@ define(['Backbone', 'legacy_code'], function() {
             createPopup: function() {
                 view.createPopup();
             },
-            csvMessage: function(n) {
-                return view.csvMessage().replace('X1', n).replace('X2', model.docsLeft());
+            csvMessage: function(no_of_parties) {
+              var msg = $("<span>" + view.csvMessage() + "</span>");
+              $(".put-no-of-parties-here",msg).text(no_of_parties);
+              $(".put-docs-left-here",msg).text(model.docsLeft());
+              return msg;
             },
             reload: function() {
                 model.reload();

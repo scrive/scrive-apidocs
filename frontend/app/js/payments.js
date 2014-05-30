@@ -1179,11 +1179,13 @@ define(['Backbone', 'legacy_code'], function() {
             var canceledDate = model.subscription() && model.subscription().cancelled() && new Date(model.subscription().cancelled());
 
             var message;
-            if(canceledDate)
-                message = localization.payments.canceledDate.replace('X1', moment(canceledDate).format("YYYY-MM-DD"));
+            if(canceledDate) {
+                message = $("<span>" + localization.payments.canceledDate + "</span>");
+                $(".put-date-here",message).text(moment(canceledDate).format("YYYY-MM-DD"));
+            }
             else
-                message = localization.payments.wasCanceled;
-            billingform.text(message);
+                message = $("<span>" + localization.payments.wasCanceled + "</span>");
+            billingform.append(message);
             //billingform.append(view.renewButton());
             $el.html($().add(billingheader).add(billingform).add(view.renewButton()));
         },
@@ -1199,12 +1201,12 @@ define(['Backbone', 'legacy_code'], function() {
                                       text: localization.payments.renewSubscription,
                                       onClick: function() {
                                           mixpanel.track('Click renew subscription');
-                                          var message = localization.payments.renewDialog.replace("X1", price);
-
+                                          var message = $("<p>" + localization.payments.renewDialog+"</p>");
+                                          $(".put-price-here",message).text(price);
                                           var popup = new Confirmation({
                                               title: localization.payments.renewSubscription,
                                               acceptText: localization.payments.renewSubscription,
-                                              content: $('<p />').text(message),
+                                              content: message,
                                               submit: new Submit({url: "/payments/changeplan",
                                                                   method: "POST",
                                                                   plan: "team",
