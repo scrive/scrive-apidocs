@@ -47,12 +47,13 @@ define(['Backbone', 'legacy_code'], function() {
       var tosAccept = $("<div class='position first'/>");
       var tosCBox = $("<input type='checkbox' id='tosCBox' name='tos' class='s-accept-tos-cbox' style='margin-right:10px;margin-top: -2px'/>");
       tosAccept.append(tosCBox);
-      var thref = "http://" + location.host + location.pathname.substring(0, 3) + "/terms";
-      tosAccept.append($('<span/>')
-                  .append($("<label/>").text(localization.accountSetupModal.modalAccountSetupBodyAccept))
-                  .append($("<a class='clickable' target='_blank'/>").attr('href',thref).text(" " + localization.accountSetupModal.modalAccountSetupBodyTOS))
-                );
-      tosAccept.append($('<br/>'));
+      var tosLabel = $("<span/>").append($(localization.accountSetupModal.modalAccountSetupTOS));
+      var tosA = tosLabel.find('a');
+      tosA.attr("class", "clickable");
+      tosA.attr("target", "_blank");
+      tosA.attr("href", "/terms");
+      tosA.text(" " + tosA.text());
+      tosAccept.append(tosLabel);
       body.append(tosAccept);
       tosCBox.change(function() {
         if (tosCBox.attr('checked')) {

@@ -305,19 +305,18 @@ define(['Backbone', 'legacy_code'], function() {
         }));
       });
       tosAccept.append(tosCBox);
-      var thref = "http://" + location.host + location.pathname.substring(0, 3) + "/terms";
-      var toslink = $("<a class='clickable' target='_blank'/>").attr('href',thref).text(" " + localization.accountSetupModal.modalAccountSetupBodyTOS);
+      var tosLabel = $("<span/>").append($(localization.accountSetupModal.modalAccountSetupTOS));
+      tosLabel.find('label').click(toggleCheckBox);
+      var tosA = tosLabel.find('a');
+      tosA.attr("class", "clickable");
+      tosA.attr("target", "_blank");
+      tosA.attr("href", "/terms");
+      tosA.text(" " + tosA.text());
       if (model.servicelinkcolour()) {
-        toslink.css('color', model.servicelinkcolour());
+        tosA.css("color", model.servicelinkcolour());
       }
-      var tosAcceptText = $('<span class="clickable"/>').text(localization.accountSetupModal.modalAccountSetupBodyAccept + " ");
-      tosAcceptText.click(toggleCheckBox);
-      tosAccept.append($('<label/>')
-                  .append(tosAcceptText)
-                  .append(toslink)
-                );
-      tosAccept.append($('<br/>'));
 
+      tosAccept.append(tosLabel);
       body.append(tosAccept);
 
       var acceptButton = new Button({

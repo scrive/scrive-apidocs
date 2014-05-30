@@ -485,8 +485,7 @@ javascriptLocalisation =
          }
          , visitOurPricingPage : "$_visitOurPricingPage()$"
          , accountSetupModal: {
-             modalAccountSetupBodyAccept: "$_modalAccountSetupBodyAccept()$"
-           , modalAccountSetupBodyTOS   : "$_modalAccountSetupBodyTOS()$"
+             modalAccountSetupTOS: "$_modalAccountSetupTOS()$"
            , modalAccountSetupChoosePassword: "$_modalAccountSetupChoosePassword()$"
            , modalAccountSetupRepeatPassword: "$_modalAccountSetupRepeatPassword()$"
            , modalAccountSetupPhone: "$_modalAccountSetupPhone()$"
