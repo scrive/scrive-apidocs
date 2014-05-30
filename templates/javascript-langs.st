@@ -100,12 +100,6 @@ javascriptLocalisation =
                     }
              , signByAuthor : {
                           modalTitle : "$_dialogConfirmSignByAuthorHead()$"
-                        , eleg : {
-                                     subhead : "$_dialogConfirmSignByAuthorElegSubHead()$"
-                                   , body1: " $_dialogConfirmSignByAuthorElegBody()$ "
-                                   , clickHere : "$_dialogConfirmSignByAuthorElegClickHere1()$"
-                                   , body2 : " $_dialogConfirmSignByAuthorElegClickHere2()$"
-                                 }
 
                }
              , reject : {

@@ -294,9 +294,11 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
           content.append(localization.process.signatorysignmodalcontent);
 
      if (signatory.elegAuthentication()) {
-        var subhead = $("<h3/>").text(localization.signByAuthor.eleg.subhead);
-        var a = $("<a target='_new' />").text(localization.signByAuthor.eleg.clickHere).attr("href", "http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86");
-        var p = $("<p/>").append(localization.signByAuthor.eleg.body1).append(a).append(localization.signByAuthor.eleg.body2);
+        var subhead = $("<h3/>").text(localization.sign.eleg.subhead);
+        var p = $("<p/>").append(localization.sign.eleg.body);
+        var a = p.find('a');
+        a.attr("target", "_new");
+        a.attr("href", "http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86");
         content.add($("<span/>").append(subhead).append(p));
       }
       return content;
