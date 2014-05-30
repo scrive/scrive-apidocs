@@ -42,4 +42,8 @@ class Helpers
   def wait_until (&block)
     return @wait.until { yield }
   end
+
+  def screenshot(screenshot_name)
+    @driver.save_screenshot('selenium_screenshots/' + @lang + '_' + screenshot_name + '.png')
+  end
 end

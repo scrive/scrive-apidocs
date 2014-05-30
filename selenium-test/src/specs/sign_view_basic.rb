@@ -18,6 +18,7 @@ describe "basic signing" do
     puts "Logged in"
     begin
       @h.dochelper.uploadContract
+      @h.screenshot 'test_screenshot'
       puts "Fill in counterpart"
       @h.dochelper.addPart
       @h.dochelper.enterCounterpart(@h.ctx.props.first_counterpart_fstname, @h.ctx.props.first_counterpart_sndname, @h.ctx.props.first_counterpart_email)

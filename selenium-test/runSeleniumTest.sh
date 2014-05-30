@@ -3,6 +3,7 @@
 errors=0
 
 function run {
+  mkdir -p selenium_screenshots
   for t in "$@"; do
     flvrec.py -P ~/.vnc_pwdfile -o $(basename "$t" .rb).flv localhost:1 &
     FLVREC_PID=$!
