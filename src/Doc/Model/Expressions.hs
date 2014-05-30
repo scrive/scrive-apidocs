@@ -49,10 +49,10 @@ statusClassCaseExpression =
   "(CASE"
    <+> "WHEN documents.status = " <?> (DocumentError "") <+> "THEN" <?> SCError
    <+> "WHEN documents.status = " <?> Preparation        <+> "THEN" <?> SCDraft
+   <+> "WHEN signatory_links.sign_time IS NOT NULL THEN"            <?> SCSigned
    <+> "WHEN documents.status = " <?> Canceled           <+> "THEN" <?> SCCancelled
    <+> "WHEN documents.status = " <?> Timedout           <+> "THEN" <?> SCTimedout
    <+> "WHEN documents.status = " <?> Rejected           <+> "THEN" <?> SCRejected
-   <+> "WHEN signatory_links.sign_time IS NOT NULL THEN"         <?> SCSigned
    <+> "WHEN signatory_links.seen_time IS NOT NULL THEN"         <?> SCOpened
    <+> "WHEN signatory_links.read_invitation IS NOT NULL THEN"   <?> SCRead
    <+> "WHEN signatory_links.mail_invitation_delivery_status = " <?> Undelivered <+> "THEN" <?> SCDeliveryProblem
