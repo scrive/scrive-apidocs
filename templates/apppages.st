@@ -9,7 +9,17 @@ notFound=
   <div class='short-input-container'>
     <div class='short-input-container-body-wrapper'>
       <div class='short-input-container-body'>
-           $_afterErrorGoHome()$
+        <p class='position first'>
+         $_afterErrorGoTo()$
+        </p>
+        <p class='position' style='height:44px;'>
+          <a class='button float-left' style='width:100px;' href='/'>
+            $_afterErrorGoHome()$
+          </a>
+          <a href='#' class='button float-right' style='width:100px;' onClick='history.go(-1);return false;'>
+            $_afterErrorGoBack()$
+          </a>
+        </p>
       </div>
     </div>
   </div>
