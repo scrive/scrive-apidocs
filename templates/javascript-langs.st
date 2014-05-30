@@ -153,9 +153,7 @@ javascriptLocalisation =
                        ]
 
             , selectFileToUpload : "$_selectFileToUpload()$"
-            , onlyFileWithTypeAllowed : function(t) {
-                return "$_onlyFileWithTypeAllowed1()$" + t + "$_onlyFileWithTypeAllowed2()$"
-              }
+            , onlyFiletypeAllowed : "$_onlyFiletypeAllowed()$"
             , fileTooLarge: "$_fileTooLarge()$"
             , couldNotUpload: "$_couldNotUpload()$"
             , flashDocumentRestarted : "$_flashMessageContractRestarted()$"
