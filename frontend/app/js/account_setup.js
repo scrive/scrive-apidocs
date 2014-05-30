@@ -310,7 +310,7 @@ define(['Backbone', 'legacy_code'], function() {
       if (model.servicelinkcolour()) {
         toslink.css('color', model.servicelinkcolour());
       }
-      var tosAcceptText = $('<span class="clickable"/>').text(localization.accountSetupModal.modalAccountSetupBodyAccept);
+      var tosAcceptText = $('<span class="clickable"/>').text(localization.accountSetupModal.modalAccountSetupBodyAccept + " ");
       tosAcceptText.click(toggleCheckBox);
       tosAccept.append($('<label/>')
                   .append(tosAcceptText)
