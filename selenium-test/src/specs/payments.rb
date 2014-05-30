@@ -16,7 +16,7 @@ describe "subscribe with a credit card" do
     random_email = @h.emailhelper.random_email()
 
     puts "go to price plan page"
-    @h.driver.get(@h.ctx.createKontrakcjaURL "/en/pricing")
+    @h.driver.get(@h.ctx.createKontrakcjaURL ("/" + @h.lang + "/pricing"))
     (@h.wait_until { (@h.driver.find_element :css => ".plan-container.team a.button.action-sign-up").displayed? })
     (@h.wait_until { @h.driver.find_element :css => ".plan-container.team a.button.action-sign-up" }).click
     
@@ -44,7 +44,7 @@ describe "subscribe with a credit card" do
     random_email = @h.emailhelper.random_email()
 
     puts "go to price plan page"
-    @h.driver.get(@h.ctx.createKontrakcjaURL "/en/pricing")
+    @h.driver.get(@h.ctx.createKontrakcjaURL ("/" + @h.lang + "/pricing"))
     (@h.wait_until { (@h.driver.find_element :css => ".plan-container.team a.button.action-sign-up").displayed? })
     (@h.wait_until { @h.driver.find_element :css => ".plan-container.team a.button.action-sign-up" }).click
     
@@ -83,7 +83,7 @@ describe "subscribe with a credit card" do
   it "new user can pay on the inside with popup" do
     random_email = @h.emailhelper.random_email()
 
-    @h.driver.get(@h.ctx.createKontrakcjaURL "/en/signup")
+    @h.driver.get(@h.ctx.createKontrakcjaURL ("/" + @h.lang + "/signup"))
 
     puts "request an account and make sure you get a flash back"
     (@h.wait_until { @h.driver.find_element :css => ".signup input" }).send_keys random_email
@@ -142,7 +142,7 @@ describe "subscribe with a credit card" do
   it "new user can pay on the inside with subscription tab" do
     random_email = @h.emailhelper.random_email()
 
-    @h.driver.get(@h.ctx.createKontrakcjaURL "/en/signup")
+    @h.driver.get(@h.ctx.createKontrakcjaURL ("/" + @h.lang + "/signup"))
 
     puts "request an account and make sure you get a flash back"
     (@h.wait_until { @h.driver.find_element :css => ".signup input" }).send_keys random_email

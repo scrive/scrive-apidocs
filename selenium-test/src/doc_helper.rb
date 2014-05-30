@@ -29,9 +29,9 @@ class DocHelper
 
   def enterCounterpart(fstname, sndname, email, part=2)
     p = partno(part)
-    @h.wait_until { (@driver.find_element :xpath => p + "//input[@placeholder='Full name']").displayed? }
-    (@driver.find_element :xpath => p + "//input[@placeholder='Full name']").send_keys(fstname + " " + sndname)
-    (@h.wait_until { @driver.find_element :xpath => p + "//input[@placeholder='Email']" }).send_keys email
+    @h.wait_until { (@driver.find_element :xpath => p + "//div[contains(@class, 's-input-fullname')]").displayed? }
+    (@driver.find_element :xpath => p + "//div[contains(@class, 's-input-fullname')]/input").send_keys(fstname + " " + sndname)
+    (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class, 's-input-email')]/input" }).send_keys email
     (@h.wait_until { @driver.find_element :css => ".design-view-action-participant-done a.button" }).click
   end
 

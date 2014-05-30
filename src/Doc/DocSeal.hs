@@ -329,6 +329,8 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
       staticTexts <- renderLocalTemplate document "contractsealingtexts" $ do
                         documentInfoFields document
                         F.value "hostpart" hostpart
+                        F.value "verifyurl" ("https://scrive.com/verify"::String) -- This could take subdomain into account using hostpart, but for now let's not.
+
       -- Log.mixlog_ ("finished staticTexts: " ++ show staticTexts)
       readtexts <- case maybeRead staticTexts of
                      Just x -> return x
