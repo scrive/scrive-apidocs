@@ -145,7 +145,10 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
       cssClass: 'bankid',
       color: 'blue',
       oneClick: true,
-      onClick: function() { return makeCallback('BankID', Eleg.bankidSign); }
+      onClick: function() {
+        setTimeout(function() {bankid.setNotClicked();},1000); // Prevent double clicks
+        return makeCallback('BankID', Eleg.bankidSign);
+      }
     });
 
     var telia = new Button({
@@ -153,7 +156,10 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
       cssClass: 'bankid',
       color: 'blue',
       oneClick: true,
-      onClick: function() { return makeCallback('Telia', Eleg.teliaSign); }
+      onClick: function() {
+        setTimeout(function() {telia.setNotClicked();},1000); // Prevent double clicks
+        return makeCallback('Telia', Eleg.teliaSign);
+      }
     });
 
     var mbi = new Button({
@@ -161,7 +167,10 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
       cssClass: 'bankid mbi',
       color: 'blue',
       oneClick: true,
-      onClick: function() { return makeCallback('Mobile BankID', Eleg.mobileBankIDSign, signatory.personalnumberField().value()); }
+      onClick: function() {
+        setTimeout(function() {mbi.setNotClicked();},1000); // Prevent double clicks
+        return makeCallback('Mobile BankID', Eleg.mobileBankIDSign, signatory.personalnumberField().value());
+      }
     });
 
     return $("<span class='elegButtonFooter' />").append(bankid.el()).append(mbi.el()).append(telia.el());
