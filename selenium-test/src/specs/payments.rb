@@ -18,6 +18,7 @@ describe "subscribe with a credit card" do
     puts "go to price plan page"
     @h.driver.get(@h.ctx.createKontrakcjaURL ("/" + @h.lang + "/pricing"))
     (@h.wait_until { (@h.driver.find_element :css => ".plan-container.team a.button.action-sign-up").displayed? })
+    @h.screenshot 'payments_1'
     (@h.wait_until { @h.driver.find_element :css => ".plan-container.team a.button.action-sign-up" }).click
     
     puts "fill in a name"
@@ -33,10 +34,14 @@ describe "subscribe with a credit card" do
     end.click
 
     (@h.wait_until { @h.driver.find_element :css => ".plan-container.team .field.cvv input" }).send_keys "111"
+    @h.screenshot 'payments_2'
 
     (@h.wait_until { @h.driver.find_element :css => ".plan-container.team a.s-subscribe" }).click
 
-    (@h.wait_until { @h.driver.find_element :css => ".modal-footer a .label"}).click
+    @h.wait_until { @h.driver.find_element :css => ".modal-footer a .label"}
+    sleep 1
+    @h.screenshot 'payments_3'
+    (@h.driver.find_element :css => ".modal-footer a .label").click
 
   end
 
@@ -186,7 +191,8 @@ describe "subscribe with a credit card" do
     (@h.wait_until { @h.driver.find_element :css => ".plan-container.team .s-subscribe" }).click
 
     @h.wait_until { @h.driver.find_element :css => ".changebilling-form"}
-
+    sleep 1
+    @h.screenshot 'payments_4'
   end
 
   #  it "allows a user to pay with a credit card" do
