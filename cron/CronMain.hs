@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wwarn #-}
 module CronMain where
 
 import Control.Concurrent
