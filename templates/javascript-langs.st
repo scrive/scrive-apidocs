@@ -398,7 +398,7 @@ javascriptLocalisation =
              , chooseDocument: "$_designViewChooseDocument()$"
              , attached : "$_designViewAttached()$"
              , attachmentRequested : "$_designViewAttachmentRequested()$"
-             , requestedFrom : "$_designViewRequestedFrom()$"
+             , requestFieldFrom : "$_designViewRequestFieldFrom()$"
              , draggablehelp1 : "$_designviewdraggablehelp1()$"
              , draggablehelp2 : "$_designviewdraggablehelp2()$"
              , days :"$_designviewdays()$"

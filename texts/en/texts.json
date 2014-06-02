@@ -314,7 +314,7 @@
 "_designViewRecipientsLanguage":"Recipient's language",
 "_designViewRemoveThisDocument":"Remove document",
 "_designViewRequest":"Request attachments",
-"_designViewRequestedFrom":"requested from",
+"_designViewRequestFieldFrom":"<span class='put-field-name'/> requested from <span class='put-person-name'/>",
 "_designViewSignatureBox":"Signature box",
 "_designViewSignatureBoxSettings":"Signature settings",
 "_designViewSigningDeadline":"Signing deadline",
