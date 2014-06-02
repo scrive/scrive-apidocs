@@ -14,10 +14,10 @@ ssh dev@dev.scrive.com bash -xe -s <<EOF
 
 cd kontrakcja
 
-supervisorctl stop dev-messenger dev-mailer dev
+supervisorctl stop dev-cron dev-messenger dev-mailer dev
 
 ./dist/build/kontrakcja-migrate/kontrakcja-migrate
 
-supervisorctl start dev-messenger dev-mailer dev
+supervisorctl start dev-cron dev-messenger dev-mailer dev
 
 EOF
