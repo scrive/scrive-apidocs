@@ -349,7 +349,7 @@
 "_documentSentBy":"Sent by $identifier$",
 "_documentText":"Document",
 "_documentTitle":"DEMO of electronic signing",
-"_dontHaveAccount":"Don't have an account?<a> Sign up for free.</a>",
+"_dontHaveAccount":"Don't have an account? <a>Sign up for free.</a>",
 "_editMessagePlaceholder":"Message available for email delivery only.",
 "_emailCanBeChangedInAccountSection":"Your email can be changed in your account settings",
 "_emptyOrNotValidEmail":"You have not entered an email address or the email address is incorrect. Please try again.",
