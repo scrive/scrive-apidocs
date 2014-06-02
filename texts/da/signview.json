@@ -62,7 +62,7 @@
 "_mailInvitationToSignTitleContract":"Dokument til e-sign: $documenttitle$",
 "_mailInvitationToViewDefaultHeader":"<strong>$creatorname$</strong> har inviteret dig til at gennemlæse dokumentet <strong>$documenttitle$</strong>.",
 "_mailInvitationToViewTitleContract":"Dokument til gennemgang: $documenttitle$",
-"_mailRejectMailContentRejected":"<strong>$rejectorName$</strong> har afvist at underskrive dokumentet <strong>$documenttitle$</strong>. Processen med at underskrive er derfor blevet annulleret af Scrive systemet.<br/>Du skal logge ind på din konto for at redigere og genstarte processen.",
+"_mailRejectMailContentRejected":"<strong>$rejectorName$</strong> har afvist at underskrive dokumentet <strong>$documenttitle$</strong>. Processen med at underskrive er derfor blevet annulleret af Scrive systemet.<br/><br/>Du skal logge ind på din konto for at redigere og genstarte processen.",
 "_mailRejectMailContentRejectedButton":"Log ind",
 "_mailRejectMailTitleContract":"Afvist dokument: $documenttitle$",
 "_mailRejectionCustomInvitationHeader":"Meddelelse fra <strong>$rejectorName$</strong>",

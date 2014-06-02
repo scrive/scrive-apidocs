@@ -27,7 +27,7 @@
 "_ProlongDocumentEvidenceTextArchive":"La fecha de cierre para firmar fue prolongada. ",
 "_RejectDocumentEvidenceTextSimpleArchive":"La invitación a firmar fue rechazada. $if(text)$ El mensaje de rechazo era: <BR/> <i>$text:noescape()$</i>$endif$",
 "_RejectDocumentEvidenceTextSimpleNotArchive":"La invitación a firmar fue rechazada por $actor$.$if(text)$ El mensaje de rechazo de $actor$ era: <BR/> <i>$text:noescape()$</i>$endif$",
-"_ReminderSendTextToReviewArchive":"Un recordatorio de revisión fue enviado a $signatory$ usando $_delivery_method()$.$if(text)$ El amensaje de aviso era: \n<i>$text:noescape()$</i>$endif$",
+"_ReminderSendTextToReviewArchive":"Un recordatorio de revisión fue enviado a $signatory$ usando $_delivery_method()$.$if(text)$ El amensaje de aviso era: \n<BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToReviewNotArchive":"Un recordatorio de revisión fue enviado a $signatory$ usando $_delivery_method()$a petición de $actor$.$if(text)$. El aviso del mensaje de $actor$ era: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToSignArchive":"Un recordatorio de firma fue enviado a $signatory$ usando $_delivery_method()$.$if(text)$. El mensaje de aviso era: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToSignNotArchive":"Un recordatorio de firma fue enviado a $signatory$ usando $_delivery_method()$ a petición de $actor$.$if(text)$ El mensaje de aviso de $actor$ era:  <BR/> <i>$text:noescape()$</i>$endif$",

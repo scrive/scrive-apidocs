@@ -226,7 +226,7 @@
 "_contractauthorname":"No hay destinatario para firmar",
 "_contractauthorsignatoryname":"Parte",
 "_contractcancelbuttontext":"Retirar invitación",
-"_contractcancelmodaltext":"Si una parte presiona el link para firmar después de que usted haya retirado la invitación, dicha parte será informada de que ya no es posible firmar.<br/>No será enviado ningún mensaje adicional.<br/><br/>¿Está seguro de que quiere retirar esta invitación?",
+"_contractcancelmodaltext":"Si una parte presiona el link para firmar después de que usted haya retirado la invitación, dicha parte será informada de que ya no es posible firmar.<br/>No será enviado ningún mensaje adicional.<br/>¿Está seguro de que quiere retirar esta invitación?",
 "_contractcancelmodaltextwithsignatures":"Retirando esta invitación convertirá en inválidas todas las firmas.<br/>Además, si una parte presiona el link para firmar después de que usted haya retirado la invitación, dicha parte será informada de que ya no es posible firmar.<br/>Ningún mensaje adicional será enviado.<br/>Está seguro de que quiere retirar esta invitación?",
 "_contractcancelmodaltitle":"Retirar la invitación para firmar",
 "_contractconfirmsendtext":"Está seguro de que quiere enviar el documento",

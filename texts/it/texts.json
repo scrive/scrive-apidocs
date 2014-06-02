@@ -172,7 +172,7 @@
 "_blockingFreeCSVHeader":"Il file contiene <span class='put-no-of-parties-here'/> destinatari e hai solo <span class='put-docs-left-here'/> documenti liberi lasciati da inviare. Per inviare prega di <a href='/Scrive/account#subscription'>acquistare una sottoscrizione</a>.",
 "_blockingFreeClickTitle":"Acquistare una sottoscrizione",
 "_blockingFreeCreateTitle":"Acquista un sottoscrizione",
-"_blockingFreeHasHeadline":"Hai inviato questa <span class='put-docs-used-here'/> dei vostri 3 documenti gratuiti di questo mese. <a href='#'>Ora l'upgrade per inviare più.</ a>",
+"_blockingFreeHasHeadline":"Hai inviato questa <span class='put-docs-used-here'/> dei vostri 3 documenti gratuiti di questo mese. <a href='#'>Ora l'upgrade per inviare più.</a>",
 "_blockingFreeHasNotHeadline":"Hai inviato tutti i documenti gratis disponibili per questo mese.",
 "_blockingFreeHasNotSubtext1":"<a>Acquista un sottoscrizione per inviare più documenti questo mese</a>",
 "_blockingFreeHeading":"Hai inviato tutti i tuoi documenti gratis per questo mese. Acquista una sottoscrizione per poterne inviare di più. ",
