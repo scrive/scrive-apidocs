@@ -27,12 +27,18 @@ class DocHelper
     return "(//div[contains(@class,'design-view-action-participant-container-participants-box')]//div[contains(@class,'design-view-action-participant-inner')])[" + no.to_s() + "]"
   end
 
-  def enterCounterpart(fstname, sndname, email, part=2)
+  def enterCounterpart(fstname, sndname, email, options = {})
+    part = options[:part] || 2
+    screenshot_name = options[:screenshot_name] || nil
     p = partno(part)
     @h.wait_until { (@driver.find_element :xpath => p + "//div[contains(@class, 's-input-fullname')]").displayed? }
     (@driver.find_element :xpath => p + "//div[contains(@class, 's-input-fullname')]/input").send_keys(fstname + " " + sndname)
     (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class, 's-input-email')]/input" }).send_keys email
-    (@h.wait_until { @driver.find_element :css => ".design-view-action-participant-done a.button" }).click
+    @h.wait_until { @driver.find_element :css => ".design-view-action-participant-done a.button" }
+    if screenshot_name then
+      @h.screenshot screenshot_name
+    end
+    (@driver.find_element :css => ".design-view-action-participant-done a.button").click
   end
 
   def switchtab(n)
@@ -160,9 +166,13 @@ class DocHelper
     puts "reviewed attachment"
   end
 
-  def partSignStart
+  def partSignStart(options = {})
+    screenshot_name = options[:screenshot_name] || nil
     puts "bring up sign dialog"
     @h.wait_until { (@driver.find_element :css => "div.sign a").displayed? }
+    if screenshot_name then
+      @h.screenshot screenshot_name
+    end
     (@driver.find_element :css => "div.sign a").click
   end
 
@@ -176,7 +186,8 @@ class DocHelper
   end
 
 
-  def signAndSend
+  def signAndSend(options = {})
+    screenshot_name = options[:screenshot_name] || nil
     puts "Sign and send"
     sleep 2
     # the build server has a really tiny screen where the sendbutton is not always visible, so
@@ -184,6 +195,9 @@ class DocHelper
     @driver.execute_script("$('.sendButton').click()");
     puts "Final approval modal"
     sleep 1
+    if screenshot_name then
+      @h.screenshot screenshot_name
+    end
     acceptStandardModal
     puts "Waiting for history to show up"
     (@h.wait_until { @driver.find_element :css => ".document-history-container" })

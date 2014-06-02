@@ -31,11 +31,11 @@ describe "sign view all functionalities" do
 
       puts "set the second counterpart to have no fields"
       @h.dochelper.addPart
-      @h.dochelper.enterCounterpart(@h.ctx.props.second_counterpart_fstname, @h.ctx.props.second_counterpart_sndname, @h.ctx.props.second_counterpart_email, 3)
+      @h.dochelper.enterCounterpart(@h.ctx.props.second_counterpart_fstname, @h.ctx.props.second_counterpart_sndname, @h.ctx.props.second_counterpart_email, part: 3)
 
       puts "set the third counterpart to have one filled field"
       @h.dochelper.addPart
-      @h.dochelper.enterCounterpart(@h.ctx.props.third_counterpart_fstname, @h.ctx.props.third_counterpart_sndname, @h.ctx.props.third_counterpart_email, 4)
+      @h.dochelper.enterCounterpart(@h.ctx.props.third_counterpart_fstname, @h.ctx.props.third_counterpart_sndname, @h.ctx.props.third_counterpart_email, part: 4)
       @h.dochelper.addCustomField(4,"part3FN1","part3FV1")
 
       puts "Loading first author attachment"
