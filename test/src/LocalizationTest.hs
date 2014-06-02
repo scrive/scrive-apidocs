@@ -17,6 +17,9 @@ import Data.String.Utils
 import Data.Maybe
 --import qualified Log as Log
 import Control.Applicative
+import Text.XML.HaXml.Parse (xmlParse')
+import Text.XML.HaXml.Posn
+import Text.XML.HaXml.Types
 
 localizationTest :: TestEnvSt -> Test
 localizationTest _ = testGroup "Localization Test"
@@ -24,6 +27,7 @@ localizationTest _ = testGroup "Localization Test"
       [
           testCase "tests if translations are valid JSONS and are ordered" testTranslationFilesAreJSONSAndSorted
         , testCase "text templates have same structure" testTranslationsHaveSameStructure
+        , testCase "text templates have same html structure" testTranslationsHaveSameHtmlStructure
       ]
     ]
 
@@ -76,3 +80,60 @@ compareTranslations s t =
       else if ((sort <$> mst) /= (sort <$> mtt))
             then Just $ "Subtemplates dont match : " ++ show mst ++ " vs." ++ show mtt
             else Nothing
+
+
+testTranslationsHaveSameHtmlStructure :: Assertion
+testTranslationsHaveSameHtmlStructure = do
+  templates <- getTextTemplates "texts"
+  let sourceTemplates = sort $ templates ! "en"
+  lErrors <- forM (allValues :: [Lang]) $ \l -> do
+    let translationTemplates = sort $ templates ! (codeFromLang l)
+    let errors = catMaybes $ checkHtmlStructureTexts sourceTemplates translationTemplates
+    case errors of
+       [] -> return Nothing
+       errs -> return $ Just $ "For lang " ++ show (codeFromLang l) ++ "\n" ++ concat errs
+  case catMaybes lErrors of
+       [] -> return ()
+       lErrs -> assertFailure $ "Some translation texts had different structure then base texts\n" ++ concat lErrs
+
+checkHtmlStructureTexts :: [(String,String)] -> [(String,String)] ->  [Maybe String]
+checkHtmlStructureTexts _ [] = []
+checkHtmlStructureTexts [] _ = []
+checkHtmlStructureTexts src@((sn,sv):ss) tar@((tn,tv):tt)
+  | (sn < tn) = checkHtmlStructureTexts ss tar
+  | (sn > tn) = checkHtmlStructureTexts src tt
+  | (strip tv == "") = checkHtmlStructureTexts ss tt
+  | otherwise = ((\s -> "In " ++ tn ++ " " ++ s ++ "\n") <$> compareHTMLStructure sv tv) : (checkHtmlStructureTexts ss tt)
+
+
+
+compareHTMLStructure:: String -> String -> Maybe String
+compareHTMLStructure s t =
+     case (parseStringAsXML s,parseStringAsXML t) of
+       (Just (Document _ _ se _),Just (Document _ _ te _)) -> matchElement se te
+       _ -> Just "Can't parse HTML"
+
+parseStringAsXML :: String -> Maybe (Document Posn)
+parseStringAsXML rawtxt =
+  let preparedtxt = "<template>\n" ++ rawtxt ++ "\n</template>"
+  in case xmlParse' "Translation text" preparedtxt of
+    Left _ -> Nothing
+    Right r -> Just r
+
+matchElement :: Element Posn -> Element Posn -> Maybe String
+matchElement (Elem n1 _a1 c1) (Elem n2 _a2 c2) =
+  if (n1 /= n2)
+     then Just $ "Can match " ++ show n1 ++ " with " ++ show n2
+     else matchContent c1 c2
+
+matchContent  :: [Content Posn] -> [Content Posn] -> Maybe String
+matchContent ((CElem e1 _) : e1s) ((CElem e2 _) : e2s) = (matchElement e1 e2) `mplus` (matchContent e1s e2s)
+matchContent ((CElem e1 p1) : e1s) (_ : e2s) = matchContent ((CElem e1 p1) : e1s) e2s
+matchContent ((CElem (Elem n1 _ _) _) : _) [] = Just $ "Can match " ++ show n1 ++ " from source"
+matchContent (_ : e1s) ((CElem e2 p2) : e2s) = matchContent e1s ((CElem e2 p2) : e2s)
+matchContent [] ((CElem (Elem n2 _ _) _) : _) = Just $ "Can match " ++ show n2 ++ " from translation"
+matchContent (_ : e1s) e2s = matchContent e1s e2s
+matchContent [] (_ : e2s) = matchContent [] e2s
+matchContent [] [] = Nothing
+
+

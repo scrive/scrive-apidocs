@@ -12,7 +12,7 @@
 "_contractrejectbuttontext":"Rechazar y responder",
 "_contractsignatorycancelmodaltitle":"Rechazar el documento",
 "_contractsignatoryname":"Parte",
-"_contractsignatorysignmodalcontent":"Haciendo clic en el botón usted firmará el documento <b class='documenttitle'>$documenttitle$</b> y su firma será registrada por el servicio de e-firma de Scrive. ",
+"_contractsignatorysignmodalcontent":"",
 "_contractsignatorysignmodalcontentauthoronly":"Cuando haya firmado el documento <strong class='documenttitle'>$documenttitle$</strong> su firma será registrada por el servicio de e-firma de Scrive. ",
 "_contractsignatorysignmodalcontentdesignvieweleg":"Seleccione su DNIe. Cuando lo haya seleccionado, el software para firmar con el DNIe se abrirá. ",
 "_contractsignatorysignmodalcontentfromsignaturedrawing":"Cuando hagas clic en el botón, el servicio de e-firma de Scrive registrará que usted ha firmado. ",
