@@ -675,7 +675,7 @@
 "_pendingcompanyaccount":"Pending",
 "_personalNumberText":"ID no.",
 "_poweredByScrive":"E-signing powered by Scrive",
-"_preparingDocumentFor":"Preparing document for",
+"_preparingDocument":"Preparing document for <span class='put-person-name'/>",
 "_problemContactingServer":"We're experiencing difficulties handling your document.<br/>Please reload the page and try again.",
 "_prolongModalButton":"Extend",
 "_prolongModalDays":"day(s)",

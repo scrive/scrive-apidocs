@@ -404,7 +404,7 @@ javascriptLocalisation =
              , saved : "$_designviewsaved()$"
              , fromCSV : "$_fromCSV()$"
              , partOf : "$_partOf()$"
-             , preparingDocumentFor : "$_preparingDocumentFor()$"
+             , preparingDocument : "$_preparingDocument()$"
              , fieldWithSameNameExists : "$_fieldWithSameNameExists()$"
              , emailCanBeChangedInAccountSection : "$_emailCanBeChangedInAccountSection()$"
              , nameCanBeChangedInAccountSection : "$_nameCanBeChangedInAccountSection()$"

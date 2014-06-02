@@ -439,7 +439,9 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
       if (doc.csv() != undefined && doc.csv().length > 2) {
         doc.clone(function(doc2) {
             var name = doc.normalizeWithFirstCSVLine();
-            LoadingDialog.open(localization.designview.preparingDocumentFor + " " + name, index + " " + localization.designview.partOf + " " + totalCount);
+            var copy_docFor = $("<span>" + localization.designview.preparingDocument + "</span>");
+            $('.put-person-name',copy_docFor).text(name);
+            LoadingDialog.open(copy_docFor, index + " " + localization.designview.partOf + " " + totalCount);
             doc.save();
             doc.afterSave(function() {
               doc.makeReadyForSigning().add("skipauthorinvitation","YES").sendAjax(function(docdata) {
@@ -459,8 +461,11 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
       } else {
             var singleDocument = !doc.isCsv();
             var name = doc.normalizeWithFirstCSVLine();
-            if (!singleDocument)
-            LoadingDialog.open(localization.designview.preparingDocumentFor + " " + name, index + " " + localization.designview.partOf + " " + totalCount);
+            if (!singleDocument) {
+              var copy_docFor = $("<span>" + localization.designview.preparingDocument + "</span>");
+              $('.put-person-name',copy_docFor).text(name);
+              LoadingDialog.open(copy_docFor, index + " " + localization.designview.partOf + " " + totalCount);
+            }
             doc.save();
             doc.afterSave(function() {
             doc.makeReadyForSigning().add("skipauthorinvitation","YES").sendAjax(function(docdata) {
@@ -478,7 +483,9 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
       if (doc.csv() != undefined && doc.csv().length > 2) {
         doc.clone(function(doc2) {
             var name = doc.normalizeWithFirstCSVLine();
-            LoadingDialog.open(localization.designview.preparingDocumentFor + " " + name, index + " " + localization.designview.partOf + " " + totalCount);
+            var copy_docFor = $("<span>" + localization.designview.preparingDocument + "</span>");
+            $('.put-person-name',copy_docFor).text(name);
+            LoadingDialog.open(copy_docFor, index + " " + localization.designview.partOf + " " + totalCount);
             doc.save();
             doc.afterSave(function() {
               doc.makeReadyForSigning().sendAjax(function() {
@@ -493,8 +500,11 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
       } else {
             var singleDocument = !doc.isCsv();
             var name = doc.normalizeWithFirstCSVLine();
-            if (!singleDocument)
-            LoadingDialog.open(localization.designview.preparingDocumentFor + " " + name, index + " " + localization.designview.partOf + " " + totalCount);
+            if (!singleDocument) {
+              var copy_docFor = $("<span>" + localization.designview.preparingDocument + "</span>");
+              $('.put-person-name',copy_docFor).text(name);
+              LoadingDialog.open(copy_docFor, index + " " + localization.designview.partOf + " " + totalCount);
+            }
             doc.save();
             doc.afterSave(function() {
             doc.makeReadyForSigning().sendAjax(function() {
