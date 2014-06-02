@@ -10,11 +10,15 @@ class LoginHelper
     @h = helper
   end
 
-  def login_as(email, password)
+  def login_as(email, password, options = {})
+    screenshot_name = options[:screenshot_name] || nil
     sleep 1
     @driver.navigate().to(@ctx.createKontrakcjaURL ("/" + @h.lang + "/login"))
     @driver.manage.add_cookie(:name => 'lang', :value => '"LANG_' + @h.lang.upcase + '"')
     (@h.wait_until { @driver.find_element :css => ".short-input-container" })
+    if screenshot_name then
+      @h.screenshot screenshot_name
+    end
     sleep 1
     (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='email']" }).click
     puts "just clicked email input"
