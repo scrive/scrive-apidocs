@@ -245,7 +245,7 @@ $else$
                   $_pageFooterWorkDay()$
               </li>
               <li class="branch">
-                  <a href="tel:$_pageFooterPhone()$">$_pageFooterPhone()$</a>
+                  <a href="tel:+46851977900">+46 8 519 779 00</a>
               </li>
               <li class="branch">
                   <a href="mailto:info@scrive.com">info@scrive.com</a>
