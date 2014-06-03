@@ -52,7 +52,7 @@ uniqueIndexOnColumns columns = TableIndex {
 }
 
 indexName :: RawSQL () -> TableIndex -> RawSQL ()
-indexName tname TableIndex{..} = mconcat [
+indexName tname TableIndex{..} = flip rawSQL () $ BS.take 63 . unRawSQL $ mconcat [
     if idxUnique then "unique_idx__" else "idx__"
   , tname
   , "__"

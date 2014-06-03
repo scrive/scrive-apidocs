@@ -1162,27 +1162,51 @@ addUniqueContrainsTypeOnFields=
   Migration {
     mgrTable = tableSignatoryLinkFields
   , mgrFrom = 6
-  , mgrDo =  runQuery_ $ sqlCreateIndex "signatory_link_fields" (uniqueIndexOnColumns ["signatory_link_id","type","custom_name"])
-    {-
-    runQuery_ $ sqlUpdate "signatory_link_fields" $ do
-                 sqlSet "obligatory" False
-                 sqlWhereInSql "id" $ do
-                   sqlSelect "documents as d, signatory_links as s, signatory_link_fields as f" $ do
-                     sqlResult "f.id"
-                     sqlWhereEq "f.placements" ("[]"::String)
-                     sqlWhereEq "f.value" (""::String)
-                     sqlWhereEqSql "f.signatory_link_id" "s.id"
-                     sqlWhereEqSql "d.id" "s.document_id"
-                     sqlWhereNotEq "d.status" Closed
-                     sqlWhereAny $ do
-                       sqlWhereAll $ do
-                         sqlWhereEq "f.type" PersonalNumberFT
-                         sqlWhereNotEq "s.authentication_method" ELegAuthentication
-                       sqlWhereAll $ do
-                         sqlWhereEq "f.type" (MobileFT)
-                         sqlWhereNotIn "s.delivery_method" [MobileDelivery,EmailAndMobileDelivery]
-                         sqlWhereNotIn "s.confirmation_delivery_method" [MobileConfirmationDelivery,EmailAndMobileConfirmationDelivery]
-                         -}
+  , mgrDo = let
+
+         fixFields = do
+            runQuery_ $ sqlSelect "signatory_link_fields as s1, signatory_link_fields as s2" $ do
+                          sqlWhereEqSql "s1.signatory_link_id" "s2.signatory_link_id"
+                          sqlWhereEqSql "s1.type" "s2.type"
+                          sqlWhereEqSql "s1.custom_name" "s2.custom_name"
+                          sqlWhere      "s1.id < s2.id"
+                          sqlOrderBy "s1.id,s2.id"
+                          sqlResult "s1.id,s1.type, s1.custom_name,s1.value,s1.placements,s2.id,s2.value,s2.placements"
+                          sqlLimit 1
+            values :: [(FieldType, String , Int64, String, [FieldPlacement], Int64, String, [FieldPlacement])] <- fetchMany id
+            case values of
+                [] -> return ()
+                (e:_) -> fixUniqField e >> fixFields
+
+         fixUniqField f@(ft,_,_,_,_,_,_,_) = do
+            case ft of
+              FirstNameFT      -> fixStandardField f
+              LastNameFT       -> fixStandardField f
+              EmailFT          -> fixStandardField f
+              MobileFT         -> fixStandardField f
+              CompanyFT        -> fixStandardField f
+              PersonalNumberFT -> fixStandardField f
+              CompanyNumberFT  -> fixStandardField f
+              SignatureFT _    -> fixCustomField f
+              CustomFT _ _     -> fixCustomField f
+              CheckboxFT _     -> fixCustomField f
+
+         fixStandardField (_,_,fid1,fv1,fp1,fid2,fv2,fp2) = do
+                runQuery_ $ sqlUpdate "signatory_link_fields" $ do
+                  sqlWhereEq "id" fid1
+                  sqlSet "value" (if (null fv1) then fv2 else fv1)
+                  sqlSet "placements" (fp1 ++ fp2)
+                runQuery_ $ sqlDelete "signatory_link_fields" $ do
+                  sqlWhereEq "id" fid2
+
+         fixCustomField (_,fn,_,_,_,fid2,_,_) = do
+                runQuery_ $ sqlUpdate "signatory_link_fields" $ do
+                  sqlWhereEq "id" fid2
+                  sqlSet "custom_name" (fn ++ "_")
+
+      in do
+         fixFields
+         runQuery_ $ sqlCreateIndex "signatory_link_fields" (uniqueIndexOnColumns ["signatory_link_id","type","custom_name"])
   }
 
 
