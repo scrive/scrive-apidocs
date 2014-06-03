@@ -33,7 +33,7 @@
 "_ReminderSendTextToSignNotArchive":"Μια υπενθύμιση υπογραφής εστάλη στον/στην $signatory$ μέσω $_delivery_method()$ μετά από αίτημα του/της $actor$.$if(text)$ Το μήνυμα υπενθύμισης από τον/την $actor$ ήταν: <BR/> <i>$text:noescape()$</i>$endif$ ",
 "_RestartDocumentEvidenceTextSimpleArchive":"Το έγγραφο ανοίχθηκε προς διόρθωση.  ",
 "_RestartDocumentEvidenceTextSimpleNotArchive":"Το έγγραφο ανοίχθηκε προς διόρθωση από τον/την $actor$ με διασύνδεση της υπηρεσίας Scrive για τον σχεδιασμό διαδικασιών υπογραφής.     ",
-"_SMSPinDeliveredEvidenceText":"Το SMS με τον κωδικό PIN παραδόθηκε στο $text$ για τον/την $signatory$ προς χρήση ταυτοποίησης.  ",
+"_SMSPinDeliveredEvidenceText":"Το SMS με τον κωδικό PIN παραδόθηκε στο $text$ προς τον/την $signatory$ προς χρήση ταυτοποίησης.   ",
 "_SMSPinSendEvidenceText":"To SMS με τον κωδικό PIN εστάλη στο $text$ για τον/την $signatory$  προς χρήση ταυτοποίησης.  ",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Το έγγραφο υπογράφηκε$_using_identification_method()$.   ",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Το έγγραφο υπογράφηκε$_using_identification_method()$.   ",
