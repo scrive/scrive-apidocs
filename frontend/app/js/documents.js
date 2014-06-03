@@ -858,8 +858,8 @@ window.DocumentDataFiller = {
                 unsignedparty.push(localization.you);
             }
             else if (signatories[i].isCsv()) {
-                unsignedparty.push(localization.csvFilePersons);
-                unsignedpartynotcurrent.push(localization.csvFilePersons);
+                unsignedparty.push(" " + localization.csvFilePersons + " ");
+                unsignedpartynotcurrent.push(" " + localization.csvFilePersons + " ");
             }
             else
             {

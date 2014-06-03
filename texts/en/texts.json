@@ -246,7 +246,7 @@
 "_country":"Country",
 "_createFromTemplateDescription":"Select a template to continue",
 "_createNewTemplate":"Create template",
-"_csvFilePersons":" one person for each row defined in the .csv file ",
+"_csvFilePersons":"one person for each row defined in the .csv file",
 "_customiseBorderColourLabel":"Border colour",
 "_customiseButtonColourLabel":"Button colour",
 "_customiseEmailBackgroundColourLabel":"Email background colour",
