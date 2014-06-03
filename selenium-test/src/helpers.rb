@@ -40,6 +40,7 @@ class Helpers
     @loginhelper = LoginHelper.new(@ctx, @driver, self)
     @dochelper = DocHelper.new(@ctx, @driver, self)
     @lang = ENV['SELENIUM_TEST_LANG']
+    @screenshots_enabled = ENV['SELENIUM_TAKE_SCREENSHOTS']
   end
 
   def quit
@@ -58,6 +59,9 @@ class Helpers
   end
 
   def screenshot(screenshot_name)
+    if not @screenshots_enabled then
+      return
+    end
     path = 'selenium_screenshots/' + @lang + '_' + screenshot_name + '.png'
     print 'Saving screenshot to ' + path
     STDOUT.flush
