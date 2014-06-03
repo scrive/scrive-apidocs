@@ -125,25 +125,23 @@ define(['Backbone', 'legacy_code'], function() {
             if(model.isFree() && model.docsLeft() > 0 ) {
                 var res = $("<span>" + localization.blocking.free.has.headline + "</span>");
                 $(".put-docs-used-here",res).text(model.docsUsed());
-                span.find('a').attr('href', '#');
+                res.find('a').attr('href', '#');
                 return res;
-            }
-            else if(model.isFree())
+            } else if(model.isFree()) {
                 return localization.blocking.free.hasNot.headline;
-            else if(model.hasUsedAll())
+            } else if(model.hasUsedAll()) {
                 return localization.blocking.usedall.headline;
-            else if(model.isOverdue())
+            } else if(model.isOverdue()) {
                 return localization.blocking.overdue.headline;
-            else if(model.isDunning())
+            } else if(model.isDunning()) {
                 return localization.blocking.dunning.headline;
-            else if(model.isCanceled()) {
+            } else if(model.isCanceled()) {
                 var res = $("<span>" + localization.blocking.canceled.headline  + "</span>");
                 $(".put-docs-used-here",res).text(model.docsUsed());
                 return res;
-            }
-            else if(model.isDeactivated())
+            } else if(model.isDeactivated()) {
                 return localization.blocking.deactivated.headline;
-            else if(model.willCancel()) {
+            } else if(model.willCancel()) {
                 var res = $("<span>" + localization.blocking.willcancel.headline + "</span>");
                 $(".put-days-left-here",res).text(model.daysLeft());
                 return res;
@@ -192,13 +190,13 @@ define(['Backbone', 'legacy_code'], function() {
         subtext2: function() {
             var view = this;
             var model = view.model;
-            if(model.isFree() && model.docsLeft() > 0)
+            if(model.isFree() && model.docsLeft() > 0) {
                 return "";
-            else if(model.isFree())
+            } else if(model.isFree()) {
                 return "";
-            else if(model.hasUsedAll())
+            } else if(model.hasUsedAll()) {
                 return "";
-            else if(model.isOverdue()) {
+            } else if(model.isOverdue()) {
                 var span = $('<span />');
                 span.html(localization.blocking.overdue.subtext2);
                 span.find('a').attr('href', this.subscriptionPageHref);
@@ -213,11 +211,12 @@ define(['Backbone', 'legacy_code'], function() {
                 span.html(localization.blocking.canceled.subtext2);
                 span.find('a').attr('href', this.subscriptionPageHref);
                 return span;
+            } else if(model.isDeactivated()) {
+                return "";
+            } else if(model.willCancel()) {
+                return "";
             }
-            else if(model.isDeactivated())
-                return "";
-            else if(model.willCancel())
-                return "";
+
             return "";
         },
         makeBox: function() {

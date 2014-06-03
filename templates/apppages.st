@@ -1,16 +1,4 @@
 ###
-errorGoHomeOrBack=
-<p class='position first'>
-$_visitAnyOfThesePagesAfterError()$
-</p>
-<p class='position' style='height:44px;'><a class='button float-left' style='width:100px;' href='/'>
-$_homepage()$
-</p>
-<a href='#' class='button float-right' style='width:100px;' onClick='history.go(-1);return false;'>
-$_back()$
-</a>
-</p>
-###
 notFound=
 <div class='mainContainer big'>
 <img width="1920" height="800" src="/img/bg-home.jpg" class="bg"/>
@@ -21,7 +9,17 @@ notFound=
   <div class='short-input-container'>
     <div class='short-input-container-body-wrapper'>
       <div class='short-input-container-body'>
-           $errorGoHomeOrBack()$
+        <p class='position first'>
+         $_afterErrorGoToInstruction()$
+        </p>
+        <p class="position" style='height:44px;'>
+          <a class='button float-left' style='width:100px;' href='/'>
+            $_afterErrorGoHomepage()$
+          </a>
+          <a href='#' class='button float-right' style='width:100px;' onClick='history.go(-1);return false;'>
+            $_afterErrorGoBack()$
+          </a>
+        </p>
       </div>
     </div>
   </div>
@@ -44,7 +42,7 @@ internalServerError=
   <div class='short-input-container'>
     <div class='short-input-container-body-wrapper'>
       <div class='short-input-container-body'>
-           $errorGoHomeOrBack()$
+           $_afterErrorGoHome()$
       </div>
     </div>
   </div>

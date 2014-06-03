@@ -736,7 +736,7 @@ define(['Backbone', 'legacy_code'], function() {
                          .html(localization.payments.already));
 
                 var goSpan = $('<span />').html(localization.payments.alreadyGo);
-                goSpan.find('a').attr('href', '/account#subscirption');
+                goSpan.find('a').attr('href', '/account#subscription');
 
                 f.append($('<h4 />')
                          .html(goSpan)
