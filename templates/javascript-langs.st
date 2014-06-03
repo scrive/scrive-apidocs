@@ -402,7 +402,7 @@ javascriptLocalisation =
              , days :"$_designviewdays()$"
              , saved : "$_designviewsaved()$"
              , fromCSV : "$_fromCSV()$"
-             , partOf : "$_partOf()$"
+             , numPartOfNum : "$_numPartOfNum()$"
              , preparingDocument : "$_preparingDocument()$"
              , fieldWithSameNameExists : "$_fieldWithSameNameExists()$"
              , emailCanBeChangedInAccountSection : "$_emailCanBeChangedInAccountSection()$"
