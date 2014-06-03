@@ -169,7 +169,7 @@
 "_blockingFreeCreateTitle":"Purchase a subscription",
 "_blockingFreeHasHeadline":"You have sent <span class='put-docs-used-here'/> of your 3 free documents this month. <a class='put-link-to-payments-here'>Upgrade now to send unlimited documents.</a>",
 "_blockingFreeHasNotHeadline":"You have sent all your free documents this month.",
-"_blockingFreeHasNotSubtext1":"<a class='put-link-to-payments-here'>Purchase a subscription to send more this month</a>",
+"_blockingFreeHasNotSubtext1":"Purchase a subscription to send more this month",
 "_blockingFreeHeading":"You have sent all your free documents this month. Purchase a subscription to send more this month.",
 "_blockingOverdueCSVBody":"There was something wrong with your last payment. Please visit the <a class='put-link-to-payments-here'>payments page</a> and double-check your billing information. You cannot send more documents until this is resolved.",
 "_blockingOverdueCreateBody":"There was something wrong with your last payment. Please visit the <a class='put-link-to-payments-here'>payments page</a> and double-check your billing information. You cannot send more documents until this is resolved.",

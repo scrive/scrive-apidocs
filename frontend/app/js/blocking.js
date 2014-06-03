@@ -155,8 +155,8 @@ define(['Backbone', 'legacy_code'], function() {
                 return "";
             } else if(model.isFree()) {
                 var span = $('<span />');
-                span.html(localization.blocking.free.hasNot.subtext1);
-                span.find('.put-link-to-payments-here').attr('href', this.subscriptionPageHref);
+                span.html($('<a/>').text(localization.blocking.free.hasNot.subtext1)
+                        .attr('href', this.subscriptionPageHref));
                 return span;
             } else if(model.hasUsedAll()) {
                 var span = $('<span />');
