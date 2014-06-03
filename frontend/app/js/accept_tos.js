@@ -48,10 +48,10 @@ define(['Backbone', 'legacy_code'], function() {
       var tosCBox = $("<input type='checkbox' id='tosCBox' name='tos' class='s-accept-tos-cbox' style='margin-right:10px;margin-top: -2px'/>");
       tosAccept.append(tosCBox);
       var tosLabel = $("<span/>").append($(localization.accountSetupModal.modalAccountSetupTOS));
-      var tosA = tosLabel.find('a');
-      tosA.attr("class", "clickable");
-      tosA.attr("target", "_blank");
-      tosA.attr("href", "/terms");
+      var tosA = tosLabel.find('.is-TOS')
+                .attr("class", "clickable")
+                .attr("target", "_blank")
+                .attr("href", "/terms");
       tosA.text(" " + tosA.text());
       tosAccept.append(tosLabel);
       body.append(tosAccept);

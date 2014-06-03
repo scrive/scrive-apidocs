@@ -511,7 +511,7 @@
 "_may":"May",
 "_missingPlacedAuthorFieldValue":"All author fields must be filled.",
 "_modalAccountPasswordRequirements":"Minimum 8 characters. At least one letter and one number.",
-"_modalAccountSetupTOS":"<label>I have read and accept the</label><a>Terms of Service</a>",
+"_modalAccountSetupTOS":"<label>I have read and accept the</label><a class='is-TOS'>Terms of Service</a>",
 "_modalAccountSetupChoosePassword":"Choose password",
 "_modalAccountSetupCompany":"Company",
 "_modalAccountSetupFooter":"Create account",

@@ -307,10 +307,10 @@ define(['Backbone', 'legacy_code'], function() {
       tosAccept.append(tosCBox);
       var tosLabel = $("<span/>").append($(localization.accountSetupModal.modalAccountSetupTOS));
       tosLabel.find('label').click(toggleCheckBox);
-      var tosA = tosLabel.find('a');
-      tosA.attr("class", "clickable");
-      tosA.attr("target", "_blank");
-      tosA.attr("href", "/terms");
+      var tosA = tosLabel.find('.is-TOS')
+                .attr("class", "clickable")
+                .attr("target", "_blank")
+                .attr("href", "/terms");
       tosA.text(" " + tosA.text());
       if (model.servicelinkcolour()) {
         tosA.css("color", model.servicelinkcolour());
