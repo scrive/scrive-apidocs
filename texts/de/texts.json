@@ -477,7 +477,7 @@
 "_loadingFile":"Wird hochgeladen. . .",
 "_login":"Anmelden",
 "_loginModalForgotPasswordSendNewPassword":"Zurücksetzen",
-"_loginOrSignup":"Gehen Sie zurück zu <a class='stylablelink' href='/en/login'>anmelden</a> oder <a class='stylablelink' href='/en/signup'>an melden</a>.",
+"_loginOrSignup":"",
 "_mailActivateAccountButton":"Bitte aktivieren Sie Ihr Konto",
 "_mailDocumentAwaitingForAuthorContentReadyForSigning":"Das Dokument <strong>$documenttitle$</strong> ist bereit zu unterzeichnen.",
 "_mailDocumentAwaitingForAuthorContentSignedBy":"Sie haben  $partylist:noescape()$ eingeladen um das Dokument <strong>$documenttitle$</strong> zu unterzeichnen  Dieses Dokument wurde von  $partylistSigned:noescape()$ unterzeichnet. .<br/><br/> Sie sind jetzt an der Reihe zu unterzeichnen.",

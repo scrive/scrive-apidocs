@@ -1,4 +1,4 @@
-{ 
+{
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Are you sure you want to send reminders to the parties involved in the <span class='put-number-of-documents-here'></span> documents?",
@@ -477,7 +477,7 @@
 "_loadingFile":"Uploading . . .",
 "_login":"Log in",
 "_loginModalForgotPasswordSendNewPassword":"Reset",
-"_loginOrSignup":"Go back to <a class='stylablelink' href='/en/login'>login</a> or <a class='stylablelink' href='/en/signup'>sign up</a>.",
+"_loginOrSignup":"Go back to <a class='stylablelink' href='/$langcode$/login'>login</a> or <a class='stylablelink' href='/$langcode$/signup'>sign up</a>.",
 "_mailActivateAccountButton":"Activate account",
 "_mailDocumentAwaitingForAuthorContentReadyForSigning":"The document <strong>$documenttitle$</strong> is ready to sign.",
 "_mailDocumentAwaitingForAuthorContentSignedBy":"You have invited $partylist:noescape()$ to sign the document <strong>$documenttitle$</strong>. This document has been signed by $partylistSigned:noescape()$.<br/><br/>It is now your turn to sign.",

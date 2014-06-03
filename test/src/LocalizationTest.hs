@@ -28,6 +28,7 @@ localizationTest _ = testGroup "Localization Test"
           testCase "tests if translations are valid JSONS and are ordered" testTranslationFilesAreJSONSAndSorted
         , testCase "text templates have same structure" testTranslationsHaveSameStructure
         , testCase "text templates have same html structure" testTranslationsHaveSameHtmlStructure
+        , testCase "text templates have same number of excaped \\\" " testTranslationsHaveSameEscapeSequences
       ]
     ]
 
@@ -121,10 +122,17 @@ parseStringAsXML rawtxt =
     Right r -> Just r
 
 matchElement :: Element Posn -> Element Posn -> Maybe String
-matchElement (Elem n1 _a1 c1) (Elem n2 _a2 c2) =
+matchElement (Elem n1 a1 c1) (Elem n2 a2 c2) =
   if (n1 /= n2)
-     then Just $ "Can match " ++ show n1 ++ " with " ++ show n2
-     else matchContent c1 c2
+     then Just $ "Can't match " ++ show n1 ++ " with " ++ show n2
+     else if (not $ matchAttributes a1 a2)
+      then Just $ "Can't match attributes for " ++ show (n1,a1) ++ " with " ++ show (n2,a2)
+      else matchContent c1 c2
+
+matchAttributes :: [(QName, AttValue)] -> [(QName, AttValue)] -> Bool
+matchAttributes ((n1,v1):a1s) ((n2,v2):a2s) = (n1 == n2) && (v1 == v2) && matchAttributes a1s a2s
+matchAttributes [] [] =  True
+matchAttributes _ _  =  False
 
 matchContent  :: [Content Posn] -> [Content Posn] -> Maybe String
 matchContent ((CElem e1 _) : e1s) ((CElem e2 _) : e2s) = (matchElement e1 e2) `mplus` (matchContent e1s e2s)
@@ -136,4 +144,37 @@ matchContent (_ : e1s) e2s = matchContent e1s e2s
 matchContent [] (_ : e2s) = matchContent [] e2s
 matchContent [] [] = Nothing
 
+testTranslationsHaveSameEscapeSequences:: Assertion
+testTranslationsHaveSameEscapeSequences = do
+  templates <- getTextTemplates "texts"
+  let sourceTemplates = sort $ templates ! "en"
+  lErrors <- forM (allValues :: [Lang]) $ \l -> do
+    let translationTemplates = sort $ templates ! (codeFromLang l)
+    let errors = catMaybes $ checkEscapeSequencesTexts sourceTemplates translationTemplates
+    case errors of
+       [] -> return Nothing
+       errs -> return $ Just $ "For lang " ++ show (codeFromLang l) ++ "\n" ++ concat errs
+  case catMaybes lErrors of
+       [] -> return ()
+       lErrs -> assertFailure $ "Some translation texts had different escapes structure then base texts\n" ++ concat lErrs
 
+checkEscapeSequencesTexts :: [(String,String)] -> [(String,String)] ->  [Maybe String]
+checkEscapeSequencesTexts _ [] = []
+checkEscapeSequencesTexts [] _ = []
+checkEscapeSequencesTexts src@((sn,sv):ss) tar@((tn,tv):tt)
+  | (sn < tn) = checkEscapeSequencesTexts ss tar
+  | (sn > tn) = checkEscapeSequencesTexts src tt
+  | (strip tv == "") = checkEscapeSequencesTexts ss tt
+  | otherwise = ((\s -> "In " ++ tn ++ " " ++ s ++ "\n") <$> compareEscapeSequeces sv tv) : (checkEscapeSequencesTexts ss tt)
+
+
+-- We need to extend this one day with " and '
+compareEscapeSequeces:: String -> String -> Maybe String
+compareEscapeSequeces s t =
+  if (countEscapes1 s /= countEscapes1 t || countEscapes2 s /= countEscapes2 t || countEscapes3 s /= countEscapes3 t)
+    then Just "Escaped sequences don't match"
+    else Nothing
+  where
+    countEscapes1 str = length $ split "\\\"" str
+    countEscapes2 str = length $ split "\\\\\"" str
+    countEscapes3 str = length $ split "\\\\\\\"" str

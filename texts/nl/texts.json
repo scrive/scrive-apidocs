@@ -477,7 +477,7 @@
 "_loadingFile":"Uploaden. . .",
 "_login":"Inloggen",
 "_loginModalForgotPasswordSendNewPassword":"Herstel",
-"_loginOrSignup":"Ga terug naar <a class='stylablelink' href='/en/login'>inloggen</a> of <a class='stylablelink' href='/en/signup'>aanmelden</a>.",
+"_loginOrSignup":"",
 "_mailActivateAccountButton":"Account activeren",
 "_mailDocumentAwaitingForAuthorContentReadyForSigning":"Het document <strong>$documenttitle$</strong> is klaar voor signeren.",
 "_mailDocumentAwaitingForAuthorContentSignedBy":"U hebt $partylist:noescape()$ uitgenodigd om het document <strong>$documenttitle$</strong> te signeren. Dit document is gesigneerd door $partylistSigned:noescape()$.<br/><br/>Het is nu uw beurt om te signeren.",

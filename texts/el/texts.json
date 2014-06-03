@@ -477,7 +477,7 @@
 "_loadingFile":"Μεταφόρτωση ηλεκτρονικών δεδομένων . . .  ",
 "_login":"Σύνδεση",
 "_loginModalForgotPasswordSendNewPassword":"Επανατοποθέτηση ",
-"_loginOrSignup":"Πηγαίνετε πίσω στο <a class='stylablelink' href='/en/login'>login</a> ή στο <a class='stylablelink' href='/en/signup'>sign up</a>. ",
+"_loginOrSignup":"",
 "_mailActivateAccountButton":"Ενεργοποίηση λογαριασμού",
 "_mailDocumentAwaitingForAuthorContentReadyForSigning":"Το έγγραφο <strong>$documenttitle$</strong> είναι έτοιμο να υπογραφεί. ",
 "_mailDocumentAwaitingForAuthorContentSignedBy":"Έχετε προσκαλέσει το $partylist:noescape()$ για να υπογράψει το έγγραφο <strong>$documenttitle$</strong>. Αυτό το έγγραφο έχει υπογραφεί από $partylistSigned:noescape()$.<br/><br/>Είναι τώρα η σειρά σας να υπογράψετε. ",

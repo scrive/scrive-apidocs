@@ -689,7 +689,7 @@ data Document = Document {
   , documentinvitetext             :: String
   , documentconfirmtext            :: String
   , documentshowheader             :: Bool
-  , documentshowpdfdownload       :: Bool
+  , documentshowpdfdownload        :: Bool
   , documentshowrejectoption       :: Bool
   , documentshowfooter             :: Bool
   , documentsharing                :: DocumentSharing

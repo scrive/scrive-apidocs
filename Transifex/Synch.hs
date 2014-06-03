@@ -199,7 +199,11 @@ main' ("push":_)   = error "Invalid parameters. Usage: transifex.sh push user pa
 main' ("push-lang":(user:(password:(lang:_)))) = mapM_ (push user password lang) allResources
 main' ("push-lang":_)   = error "Invalid parameters. Usage: transifex.sh push-lang user password lang"
 main' ("merge-lang":(user:(password:(lang:_)))) = mapM_ (merge user password lang) allResources
-main' ("merge-lang":_)   = error "Invalid parameters. Usage: transifex.sh pull-lang user password lang"
+main' ("merge-lang":_)   = error "Invalid parameters. Usage: transifex.sh merge-lang user password lang"
+
+main' ("merge-all":(user:(password:_))) =  forM_ allLangs $ \lang -> putStrLn ("Merging language " ++ lang) >>  mapM_ (merge user password lang) allResources
+main' ("merge-all":_)   = error "Invalid parameters. Usage: transifex.sh merge-all user password"
+
 main' ("move":(source:(sres:(tres:_)))) = case (readResource sres, readResource tres) of
                                                      (Just sres',Just tres') -> move source sres' tres'
                                                      _ -> error "Invalid parameters. One of resources is invalid"

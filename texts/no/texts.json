@@ -477,7 +477,7 @@
 "_loadingFile":"Opplasting . . .",
 "_login":"Logg inn",
 "_loginModalForgotPasswordSendNewPassword":"Nullstill",
-"_loginOrSignup":"Gå tilbake til <a class='stylablelink' href='/en/login'>innlogging</a> eller <a class='stylablelink' href='/en/signup'>registrering</a>.",
+"_loginOrSignup":"",
 "_mailActivateAccountButton":"Aktiver konto",
 "_mailDocumentAwaitingForAuthorContentReadyForSigning":"Dokumentet <strong>$documenttitle$</strong> er klart til å signeres.",
 "_mailDocumentAwaitingForAuthorContentSignedBy":"Du har invitert $partylist:noescape()$ til å signere dokumentet <strong>$documenttitle$</strong>. Dette dokumentet har blitt signert av $partylistSigned:noescape()$.<br/><br/>Det er nå din tur til å signere.",
