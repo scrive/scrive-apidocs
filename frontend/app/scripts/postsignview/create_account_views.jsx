@@ -29,6 +29,14 @@ define(['React', 'Backbone'], function(React, Backbone) {
       registerUser: React.PropTypes.func.isRequired,
       isSmallScreen: React.PropTypes.bool.isRequired
     },
+    makeTOSCopyWithLink: function() {
+      var res = $("<span>" + localization.docsignview.acceptTOS + "</span>");
+      var a = $('a',res);
+      a.addClass('terms clickable');
+      a.attr('target','_blank');
+      a.attr('href','/terms');
+      return res.html();
+    },
 
     render: function() {
       var cx = React.addons.classSet;
@@ -56,7 +64,7 @@ define(['React', 'Backbone'], function(React, Backbone) {
 
               <div className="clearfix"></div>
               <div className="acceptbutton">
-                <label className="label">{ localization.docsignview.acceptTOSpart1 }<a className="terms clickable" target="_blank" href='/sv/terms'>{ localization.docsignview.acceptTOSpart2 }</a></label>
+                <label className="label" dangerouslySetInnerHTML={{__html: this.makeTOSCopyWithLink()}} />
                 <a onClick={this.props.registerUser} className="green button button-large button-green button-round">
                   <div className="label">{ localization.docsignview.signupButtonText }</div>
                 </a>
