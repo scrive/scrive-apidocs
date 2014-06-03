@@ -143,7 +143,7 @@
 "_signedAndClosed":"Dokument signert!",
 "_signedAndClosedSubText":"Det signerte dokumentet har blitt sendt til deg via",
 "_signedNotClosed":"Du har signert",
-"_signedNotClosedSubText":"Når hver part har signert det endelige dokumentet vil det bli sendt til deg via",
+"_signedNotClosedSubText":"Når hver part har signert det ferdigstilte dokumentet vil det bli sendt til deg via",
 "_signingErrorMessage1":"Vi opplever problemer med håndteringen av ditt dokument.",
 "_signingErrorMessage2":"Vennligst last inn siden på nytt.",
 "_signingErrorReload":"Last inn siden på nytt",
