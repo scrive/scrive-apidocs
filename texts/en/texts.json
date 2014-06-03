@@ -491,17 +491,6 @@
 "_mailForwardMailContent1":"<strong>$creatorname$</strong> has requested we send the document <strong>$documenttitle$</strong> to you. It was signed through the Scrive e-signing service.",
 "_mailForwardMailContent2":"Please find the document attached.",
 "_mailForwardMailTitle":"E-signed document: $documenttitle$",
-<<<<<<< HEAD
-=======
-"_mailMismatchAuthorButton":"Log in",
-"_mailMismatchAuthorContentBodySecond":"The signing process for <strong>$documenttitle$</strong> has therefore been cancelled and all involved parties have been informed by email. You may log in to your account to restart the signing process.",
-"_mailMismatchAuthorContentBodyThird":"If you have any questions don't hesitate to contact Scrive support at $supportmaillink$.",
-"_mailMismatchAuthorTitle":"Mismatched information",
-"_mailMismatchSignatoryContentBodyButton":"Log in",
-"_mailMismatchSignatoryContentBodySecond":"The signing process for <strong>$documenttitle$</strong> has therefore been cancelled and all involved parties have been informed by email. You may log in to your account online to restart the signing process.",
-"_mailMismatchSignatoryContentBodyThird":"If you have any questions don't hesitate to contact Scrive support at $supportmaillink$.",
-"_mailMismatchSignatoryTitle":"Mismatched information",
->>>>>>> Cleanup of payment page and some payment emails.
 "_mailNewAccountCreatedByAdminButton":"Activate account",
 "_mailNewAccountCreatedByAdminContentBody":"Please click the button below to activate your account.",
 "_mailNewAccountCreatedByAdminContentHeaderBodyFirst":"<strong>$creatorname$</strong> has created an account for you at Scrive.",
@@ -618,7 +607,6 @@
 "_paymentNumberOfUsers":"Number of users",
 "_paymentPlanAlreadySubscribed":"You already have a subscription",
 "_paymentPlanAlreadySubscribedGo":"Please go to <a>your subscription settings</a> to manage your subscription.",
-"'_paymentPlanAskViktor":"To change your plan, please contact <a>our sales department</a>.",
 "_paymentPlanCancelSubscription":"Cancel subscription",
 "_paymentPlanChangeBilling":"Change billing information",
 "_paymentPlanContact":"Contact us",

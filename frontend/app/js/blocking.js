@@ -184,7 +184,7 @@ define(['Backbone', 'legacy_code'], function() {
                 return span;
             } else if(model.willCancel()) {
                 var span = $('<span />');
-                span.html(localization.willcancel.subtext1);
+                span.html(localization.blocking.willcancel.subtext1);
                 span.find('a').attr('href', this.subscriptionPageHref);
                 return span;
             }
