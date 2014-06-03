@@ -27,12 +27,18 @@ class DocHelper
     return "(//div[contains(@class,'design-view-action-participant-container-participants-box')]//div[contains(@class,'design-view-action-participant-inner')])[" + no.to_s() + "]"
   end
 
-  def enterCounterpart(fstname, sndname, email, part=2)
+  def enterCounterpart(fstname, sndname, email, options = {})
+    part = options[:part] || 2
+    screenshot_name = options[:screenshot_name] || nil
     p = partno(part)
     @h.wait_until { (@driver.find_element :xpath => p + "//div[contains(@class, 's-input-fullname')]").displayed? }
     (@driver.find_element :xpath => p + "//div[contains(@class, 's-input-fullname')]/input").send_keys(fstname + " " + sndname)
     (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class, 's-input-email')]/input" }).send_keys email
-    (@h.wait_until { @driver.find_element :css => ".design-view-action-participant-done a.button" }).click
+    @h.wait_until { @driver.find_element :css => ".design-view-action-participant-done a.button" }
+    if screenshot_name then
+      @h.screenshot screenshot_name
+    end
+    (@driver.find_element :css => ".design-view-action-participant-done a.button").click
   end
 
   def switchtab(n)
@@ -58,13 +64,14 @@ class DocHelper
     switchtab(3)
   end
 
-  def addCustomField(part,fieldname, fieldvalue)
+  def addCustomField(part,fieldname, fieldvalue, options = {})
     p = partno(part)
     partytab
     (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class,'design-view-action-participant-info-box')]"}).click
     sleep 1
     @driver.execute_script("$('div.design-view-action-participant-new-field-selector a.button').click()")
     sleep 1
+    @h.screenshot options[:screenshot_name1] if options[:screenshot_name1]
     (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class,'design-view-action-participant-new-field-select')]//div[contains(@class,'select-button')]"}).click
     puts "XXX selecting last item"
     @driver.execute_script("$('ul.select-opts li').last().click()")
@@ -82,7 +89,10 @@ class DocHelper
     (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'text-field-placement-setter-field-selector')]//ul[contains(@class,'select-opts')]//li[" + part.to_s() + "]"}).click
 
     (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'text-field-placement-setter-field-field-selector')]//div[contains(@class,'select-button')]"}).click
-    (@h.wait_until { @driver.find_element :xpath => "//ul[contains(@class,'select-opts')]//li/span[text()='" + fieldname + "']"}).click
+    @h.wait_until { @driver.find_element :xpath => "//ul[contains(@class,'select-opts')]//li/span[text()='" + fieldname + "']"}
+    @h.screenshot options[:screenshot_name2] if options[:screenshot_name2]
+    (@driver.find_element :xpath => "//ul[contains(@class,'select-opts')]//li/span[text()='" + fieldname + "']").click
+    @h.screenshot options[:screenshot_name3] if options[:screenshot_name3]
     (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'fieldTypeSetter-container')]//a[contains(@class,'button-green')]"}).click
 
 # this doesn't work, possibly due to a bug in the Firefox driver:
@@ -111,14 +121,16 @@ class DocHelper
     (@driver.find_elements :xpath => "//div[@id='tooltip-attachmentlist']/div").length
   end
 
-  def loadAuthorAttachment(no, filepath)
+  def loadAuthorAttachment(no, filepath, options = {})
     processtab
     (@h.wait_until { @driver.find_element :css => "a.design-view-action-process-left-column-attachments-author-button" }).click
     sleep 1
     puts "Uploading attachment"
+    @h.wait_until { @driver.find_element :css => ".modal.active .selectAuthorAttachmentPopupContent input.multiFileInput" }
     (@h.wait_until { @driver.find_element :css => ".modal.active .selectAuthorAttachmentPopupContent input.multiFileInput" }).send_keys filepath
     sleep 1
     puts "Closing attachment modal"
+    @h.screenshot options[:screenshot_name] if options[:screenshot_name]
     @driver.execute_script("$('.modal.active .modal-footer .button.button-green').click()")
     puts "Modal closed"
     sleep 1
@@ -126,11 +138,18 @@ class DocHelper
     puts "We seen that attachent has been added"
   end
 
-  def requestSigAttachment(attname, attdesc, counterparts)
+  def requestSigAttachment(attname, attdesc, counterparts, options = {})
     processtab
     (@h.wait_until { @driver.find_element :css => "a.design-view-action-process-left-column-attachments-signatory-button" }).click
     sleep 2
+    @h.screenshot options[:screenshot_name] if options[:screenshot_name]
     counterparts.each do |counterpart|
+      if counterpart.class == Array then
+        screenshot_name = counterpart[1]
+        counterpart = counterpart[0]
+      else
+        screenshot_name = nil
+      end
       sleep 2
       @driver.execute_script("$('.modal.active div.modal-body .button-large').focus().click()")
       (@h.wait_until { @driver.find_elements :css => ".modal.active input.editSignatoryAttachmentName" }).last.send_keys attname
@@ -139,6 +158,8 @@ class DocHelper
       @driver.execute_script("$('.modal.active  textarea.editSignatoryAttachmentDescription').change()");
       (@h.wait_until { @driver.find_element :xpath => "(//td[contains(@class,'editSignatoryAttachmentTDSelect')])[last()]//div[contains(@class,'select-button')]"}).click
       (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'select-exp')]//ul[contains(@class,'select-opts')]//span[contains(text(),'" + counterpart + "')]"}).click
+      sleep 1 if screenshot_name
+      @h.screenshot screenshot_name if screenshot_name
     end
      @driver.execute_script("$('.modal.active .modal-footer .button.button-green').click()")
      sleep 2
@@ -149,9 +170,10 @@ class DocHelper
     @h.wait_until { @driver.find_element :css => ".opened" }
   end
 
-  def uploadAttachment(pdf_path)
+  def uploadAttachment(pdf_path, options = {})
     uploaded = (@driver.find_elements :css => ".s-review-sigattachment").length
     puts "uploading attachment: " + pdf_path
+    @h.screenshot options[:screenshot_name] if options[:screenshot_name]
     (@driver.find_elements :css => ".multiFileInput")[0].send_keys pdf_path
     puts "review attachment"
     @h.wait_until { (@driver.find_elements :css => ".s-review-sigattachment").length == uploaded + 1 }
@@ -160,9 +182,13 @@ class DocHelper
     puts "reviewed attachment"
   end
 
-  def partSignStart
+  def partSignStart(options = {})
+    screenshot_name = options[:screenshot_name] || nil
     puts "bring up sign dialog"
     @h.wait_until { (@driver.find_element :css => "div.sign a").displayed? }
+    if screenshot_name then
+      @h.screenshot screenshot_name
+    end
     (@driver.find_element :css => "div.sign a").click
   end
 
@@ -176,7 +202,8 @@ class DocHelper
   end
 
 
-  def signAndSend
+  def signAndSend(options = {})
+    screenshot_name = options[:screenshot_name] || nil
     puts "Sign and send"
     sleep 2
     # the build server has a really tiny screen where the sendbutton is not always visible, so
@@ -184,6 +211,9 @@ class DocHelper
     @driver.execute_script("$('.sendButton').click()");
     puts "Final approval modal"
     sleep 1
+    if screenshot_name then
+      @h.screenshot screenshot_name
+    end
     acceptStandardModal
     puts "Waiting for history to show up"
     (@h.wait_until { @driver.find_element :css => ".document-history-container" })

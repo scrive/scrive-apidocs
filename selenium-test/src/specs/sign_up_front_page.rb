@@ -20,9 +20,12 @@ describe "sign up on front page and modify account settings" do
     (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-body .big-input input" }).clear
     (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-body .big-input input" }).send_keys email
     (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-body a.button" }).click
+    @h.screenshot 'sign_up_front_page_9'
     @h.emailhelper.follow_link_in_latest_mail_for email
     puts "We have real change password form"
-    (@h.wait_until { @h.driver.find_element :name => "password" }).send_keys password
+    @h.wait_until { @h.driver.find_element :name => "password" }
+    @h.screenshot 'sign_up_front_page_10'
+    (@h.driver.find_element :name => "password").send_keys password
     (@h.wait_until { @h.driver.find_element :name => "password2" }).send_keys password
     (@h.wait_until { @h.driver.find_element :css => "div.label" }).click
     puts "Change password request send"
@@ -34,20 +37,23 @@ describe "sign up on front page and modify account settings" do
     random_email = @h.emailhelper.random_email()
 
     @h.driver.get(@h.ctx.createKontrakcjaURL ("/" + @h.lang + "/signup"))
-
+    @h.screenshot 'sign_up_front_page_1'
     puts "request an account and make sure you get a green flash back"
     (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-body .big-input input" }).send_keys random_email
     (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-body a.button" }).click
     @h.wait_until { @h.driver.find_element :css => ".flash-body" }
+    @h.screenshot 'sign_up_front_page_2'
 
     puts "we should get an email to a page where we can accept the tos"
-    @h.emailhelper.follow_link_in_latest_mail_for random_email
+    @h.loginhelper.login_as @h.ctx.props.tester_email, @h.ctx.props.tester_password, screenshot_name: 'sign_up_front_page_3'
+    @h.emailhelper.follow_link_in_latest_mail_for random_email, skip_login: true
     @h.wait_until { @h.driver.find_element :css => ".checkbox" }
 
     puts "make sure we get a red flash if we try to activate without signing the tos"
     (@h.wait_until { @h.driver.find_element :css => "div.short-input-container a.green.button" }).click
 
     @h.wait_until { @h.driver.find_element :css => ".failed-validation" }
+    @h.screenshot 'sign_up_front_page_4'
 
     puts "accept the tos"
     (@h.wait_until { @h.driver.find_element :css => ".checkbox" }).click
@@ -55,6 +61,7 @@ describe "sign up on front page and modify account settings" do
     puts "make sure we get a red flash if we try to activate without filling in a name"
     (@h.wait_until { @h.driver.find_element :css => "div.short-input-container a.green.button" }).click
     @h.wait_until { @h.driver.find_element :css => ".failed-validation" }
+    @h.screenshot 'sign_up_front_page_5'
 
 
     puts "fill in a name"
@@ -71,6 +78,7 @@ describe "sign up on front page and modify account settings" do
     (@h.wait_until { @h.driver.find_element :name => "password2" }).send_keys "password-123"
     (@h.wait_until { @h.driver.find_element :css => "div.short-input-container a.green.button" }).click
     @h.wait_until { @h.driver.find_element :css => ".failed-validation" }
+    @h.screenshot 'sign_up_front_page_6'
 
 
     puts "fill in the password details correctly"
@@ -85,6 +93,7 @@ describe "sign up on front page and modify account settings" do
 
     puts "should be logged in and able to upload a document"
     @h.wait_until { @h.driver.find_element :css => "a.js-logout" }
+    @h.screenshot 'sign_up_front_page_7'
     @h.driver.get(@h.ctx.createKontrakcjaURL "/d")
     @h.wait_until { @h.driver.find_element :css => ".archive" }
 
@@ -92,6 +101,7 @@ describe "sign up on front page and modify account settings" do
 
     puts "make sure we can login and out as our new user"
     @h.loginhelper.login_as(random_email, password)
+    @h.screenshot 'sign_up_front_page_8'
     @h.loginhelper.logout
 
     puts "reset password for new user"
@@ -115,13 +125,16 @@ describe "sign up on front page and modify account settings" do
     (@h.wait_until { @h.driver.find_element :name => "newemail" }).send_keys new_email
     (@h.wait_until { @h.driver.find_element :name => "newemailagain" }).send_keys new_email
     (@h.wait_until { @h.driver.find_element :css => "a.float-right" }).click
+    sleep 1
+    @h.screenshot 'sign_up_front_page_11'
     # wait for flash message to go away to avoid race condition
-    sleep 5
+    sleep 4
     @h.loginhelper.logout
 
     @h.emailhelper.follow_link_in_latest_mail_for new_email
     puts "just followed link"
     sleep 1
+    @h.screenshot 'sign_up_front_page_12'
     (@h.wait_until { @h.driver.find_element :css => ".short-input-container input[name='email']" }).click
     (@h.wait_until { @h.driver.find_element :css => ".short-input-container input[name='email']" }).send_keys [:control, 'a']
 
@@ -141,9 +154,13 @@ describe "sign up on front page and modify account settings" do
     puts "waiting for recovery-container"
     @h.wait_until { @h.driver.find_element :css => "div.recovery-container" }
     puts "waiting for password"
-    (@h.wait_until { @h.driver.find_element :name => "password" }).send_keys new_password
+    @h.wait_until { @h.driver.find_element :name => "password" }
+    @h.screenshot 'sign_up_front_page_13'
+    (@h.driver.find_element :name => "password").send_keys new_password
     puts "about to accept"
     @h.dochelper.acceptStandardModal
+    sleep 2
+    @h.screenshot 'sign_up_front_page_14'
     puts "about to logout"
     @h.loginhelper.logout
 

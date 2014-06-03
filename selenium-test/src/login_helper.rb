@@ -10,11 +10,15 @@ class LoginHelper
     @h = helper
   end
 
-  def login_as(email, password)
+  def login_as(email, password, options = {})
+    screenshot_name = options[:screenshot_name] || nil
     sleep 1
     @driver.navigate().to(@ctx.createKontrakcjaURL ("/" + @h.lang + "/login"))
     @driver.manage.add_cookie(:name => 'lang', :value => '"LANG_' + @h.lang.upcase + '"')
     (@h.wait_until { @driver.find_element :css => ".short-input-container" })
+    if screenshot_name then
+      @h.screenshot screenshot_name
+    end
     sleep 1
     (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='email']" }).click
     puts "just clicked email input"
@@ -43,9 +47,14 @@ class LoginHelper
     @h.wait_until { @driver.find_element :css => ".archive" }
   end
 
-  def set_name(fstname, sndname)
+  def set_name(fstname, sndname, options = {})
+    screenshot_name = options[:screenshot_name] || nil
     (@h.wait_until { @driver.find_element :css => "#page-account" }).click
-    (@h.wait_until { @driver.find_element :name => "fstname" }).clear
+    @h.wait_until { @driver.find_element :name => "fstname" }
+    if screenshot_name then
+      @h.screenshot screenshot_name
+    end
+    (@driver.find_element :name => "fstname").clear
     (@h.wait_until { @driver.find_element :name => "fstname" }).send_keys fstname
     (@h.wait_until { @driver.find_element :name => "sndname" }).clear
     (@h.wait_until { @driver.find_element :name => "sndname" }).send_keys sndname

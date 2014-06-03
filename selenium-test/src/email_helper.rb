@@ -22,10 +22,12 @@ class EmailHelper
     return email
   end
 
-  def follow_link_in_latest_mail_for email
-
+  def follow_link_in_latest_mail_for(email, options = {})
+    skip_login = options[:skip_login] || false
     link = ""
-    @loginhelper.login_as(@ctx.props.tester_email, @ctx.props.tester_password)
+    if not skip_login then
+      @loginhelper.login_as(@ctx.props.tester_email, @ctx.props.tester_password)
+    end
     begin
       @driver.navigate().to(@ctx.createKontrakcjaURL("/dave/backdoor/" + email))
       @h.wait_until { @driver.find_element :css => ".bodyContent a" }

@@ -31,6 +31,8 @@ describe "rejecting document" do
 
     puts "reject the document"
     (@h.wait_until { @h.driver.find_element :css => ".rejectwrapper a" }).click
+    sleep 2
+    @h.screenshot 'sign_view_basic_reject_1'
     @h.driver.execute_script "$('.modal-container a.button.float-right').click();"
 
     puts "make sure there's a cancelled signatory"

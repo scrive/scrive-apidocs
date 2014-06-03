@@ -20,6 +20,7 @@ if [ "$2" == "" ]; then
     export SELENIUM_TEST_LANG=en
 else
     export SELENIUM_TEST_LANG="$2"
+    export SELENIUM_TAKE_SCREENSHOTS="1"
 fi
 set -- "$1"  # clear second arg
 if [ "$1" == "all" ]; then
