@@ -9,7 +9,13 @@ require_relative "login_helper.rb"
 require_relative "doc_helper.rb"
 
 def screenshotter(driver, path)
-  driver.save_screenshot(path)
+  begin
+    driver.save_screenshot(path)
+    Thread.current[:output] = true
+  rescue => e
+    puts ("Selenium screenshot failed with: " + e.message)
+    Thread.current[:output] = false
+  end
 end
 
 def killer(thread)
@@ -69,7 +75,7 @@ class Helpers
     t2 = Thread.new{killer(t1)}
     t2.join
     t1.join
-    if t1.instance_variable_get("@killed") then
+    if t1.instance_variable_get("@killed") or not t1[:output] then
       puts 'falling back to non-selenium screenshot taking method'
       passwd_file = ENV['HOME'] + '/.vnc_pwdfile'
       `vncsnapshot -passwd #{passwd_file} 127.0.0.1 #{path}`
