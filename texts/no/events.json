@@ -1,8 +1,8 @@
 { 
 "_AttachExtendedSealedFileEvidenceTextSimple":"Dokumentet ble forseglet med en nøkkelfri digital signatur.",
 "_AttachGuardtimeSealedFileEvidenceTextSimple":"Dokumentet ble forseglet med en digital signatur.",
-"_AttachSealedFileEvidenceTextSimpleArchive":"Scrive utarbeidet den endelige PDF-en.",
-"_AttachSealedFileEvidenceTextSimpleNotArchive":"Scrive utarbeidet den endelige PDF-en inkludert bevis samlet inn av Scrive før den ble forseglet med en digital signatur.",
+"_AttachSealedFileEvidenceTextSimpleArchive":"Scrive utarbeidet den ferdigstilte PDF-en.",
+"_AttachSealedFileEvidenceTextSimpleNotArchive":"Scrive utarbeidet den ferdigstilte PDF-en inkludert bevis samlet inn av Scrive før den ble forseglet med en digital signatur.",
 "_AutomaticReminderSentTextSimple":"En automatisk påminnelse om å signere ble sendt til $signatory$ via $_delivery_method()$.",
 "_CancelDocumentEvidenceTextSimpleArchive":"Invitasjonen til å signere ble trukket tilbake.",
 "_CancelDocumentEvidenceTextSimpleNotArchive":"Invitasjonen til å signere ble trukket tilbake av $actor$.",
