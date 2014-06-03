@@ -124,8 +124,7 @@ define(['Backbone', 'legacy_code'], function() {
             var model = view.model;
             if(model.isFree() && model.docsLeft() > 0 ) {
                 var res = $("<span>" + localization.blocking.free.has.headline + "</span>");
-                $(".put-docs-used-here",res).text(model.docsUsed());
-                // This is a bit strange, but headline is a special case.
+                res.find('.put-docs-used-here').text(model.docsUsed());
                 res.find('.put-link-to-payments-here').attr('href', '#');
                 return res;
             } else if(model.isFree()) {
@@ -154,7 +153,7 @@ define(['Backbone', 'legacy_code'], function() {
 
             if(model.isFree() && model.docsLeft() > 0) {
                 return "";
-            } else if(model.isFree()) { 
+            } else if(model.isFree()) {
                 var span = $('<span />');
                 span.html(localization.blocking.free.hasNot.subtext1);
                 span.find('.put-link-to-payments-here').attr('href', this.subscriptionPageHref);

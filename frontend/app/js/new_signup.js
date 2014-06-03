@@ -200,7 +200,7 @@ define(['Backbone', 'legacy_code'], function() {
         body.append($("<div class='position' style='text-align:center;margin-top:10px;'/>").append(signupButton.el()));
 
         var alreadyHaveAccount = $("<label class='label-with-link'/>").html(localization.signupModal.alreadyHaveAnAccount);
-        alreadyHaveAccount.find('.put-link-to-loign-here').attr('href', '/login');
+        alreadyHaveAccount.find('.put-link-to-login-here').attr('href', '/login');
 
         var paymentsPage = $("<label class='label-with-link'/>").html(localization.visitOurPricingPage);
         paymentsPage.find('.put-link-to-pricing-here').attr('href', '/pricing');
