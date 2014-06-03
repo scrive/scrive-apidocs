@@ -58,6 +58,7 @@
 "_mailDocumentLinked":"Il n'a pas été possible de joindre le document à ce mail car il était trop volumineux. Vous pourrez le télécharger à partir du $availabledate$.",
 "_mailDocumentLinkedButton":"Télécharger le document",
 "_mailInvitationCustomInvitationHeader":"Message de <strong>$creatorname$</strong>",
+"_mailInvitationFromPart":"",
 "_mailInvitationToSignContractDefaultHeader":"<strong>$creatorname$</strong>  vous a invité à signer électroniquement le document <strong>$documenttitle$</strong> via le système de signature numérique Scrive.",
 "_mailInvitationToSignTitleContract":"Document à signer électroniquement: $documenttitle$",
 "_mailInvitationToViewDefaultHeader":"<strong>$creatorname$</strong> vous a invité à passer en revue le document <strong>$documenttitle$</strong>.",

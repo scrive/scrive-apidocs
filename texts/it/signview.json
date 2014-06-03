@@ -58,6 +58,7 @@
 "_mailDocumentLinked":"Il documento firmato era troppo pesante da allegare a questa email. Sarà disponibile per il download entro $availabledate$.",
 "_mailDocumentLinkedButton":"Scarica il documento",
 "_mailInvitationCustomInvitationHeader":"Messaggio da parte di <strong>$creatorname$</strong>",
+"_mailInvitationFromPart":"",
 "_mailInvitationToSignContractDefaultHeader":"<strong>$creatorname$</strong> ti ha invitato a firmare elettronicamente il documento <strong>$documenttitle$</strong> tramite Scrive E-sign.",
 "_mailInvitationToSignTitleContract":"Documento da firmare con e-sign: $documenttitle$",
 "_mailInvitationToViewDefaultHeader":"<strong>$creatorname$</strong> ti ha invitato a rivedere il documento <strong>$documenttitle$</strong>.",

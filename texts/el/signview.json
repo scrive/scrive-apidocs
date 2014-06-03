@@ -58,6 +58,7 @@
 "_mailDocumentLinked":"Το έγγραφο ήταν πολύ μεγάλο για να επισυναφθεί σε αυτό το email. Θα είναι διαθέσιμο για λήψη μέχρι $availabledate$. ",
 "_mailDocumentLinkedButton":"Λήψη εγγράφου ",
 "_mailInvitationCustomInvitationHeader":"Μήνυμα από <strong>$creatorname$</strong> ",
+"_mailInvitationFromPart":"",
 "_mailInvitationToSignContractDefaultHeader":"Ο/η <strong>$creatorname$</strong> σας προσκάλεσε να υπογράψετε το έγγραφο <strong>$documenttitle$</strong> ηλεκτρονικά μέσω της υπηρεσίας Scrive E-sign.",
 "_mailInvitationToSignTitleContract":"Έγγραφο προς ηλεκτρονική υπογραφή: $documenttitle$",
 "_mailInvitationToViewDefaultHeader":"Ο/η <strong>$creatorname$</strong> σας προσκάλεσε να ελέγξετε το έγγραφο <strong>$documenttitle$</strong>. ",
