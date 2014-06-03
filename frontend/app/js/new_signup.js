@@ -199,20 +199,23 @@ define(['Backbone', 'legacy_code'], function() {
         body.append($("<div class='position withEmail'/>").append(emailInput.el().attr("autocomplete","false").css("width","245px").css("padding","7px 14px").css("font-size","16px")));
         body.append($("<div class='position' style='text-align:center;margin-top:10px;'/>").append(signupButton.el()));
 
-        var dontHaveAccount = $("<label class='label-with-link'/>").html(localization.signupModal.alreadyHaveAnAccount);
+        var alreadyHaveAccount = $("<label class='label-with-link'/>").html(localization.signupModal.alreadyHaveAnAccount);
+        alreadyHaveAccount.find('.put-link-to-login-here').attr('href', '/login');
+
         var paymentsPage = $("<label class='label-with-link'/>").html(localization.visitOurPricingPage);
+        paymentsPage.find('.put-link-to-pricing-here').attr('href', '/pricing');
 
         if (model.textscolour() != undefined)  {
-          dontHaveAccount.css('color', model.textscolour());
+          alreadyHaveAccount.css('color', model.textscolour());
           paymentsPage.css('color', model.textscolour());
         }
 
         if (model.servicelinkcolour()) {
-          dontHaveAccount.find('a').css('color', model.servicelinkcolour());
+          alreadyHaveAccount.find('a').css('color', model.servicelinkcolour());
           paymentsPage.find('a').css('color', model.servicelinkcolour());
         }
 
-        body.append($("<div class='position' style='text-align:center;margin-top:20px;'/>").append(dontHaveAccount).append(paymentsPage));
+        body.append($("<div class='position' style='text-align:center;margin-top:20px;'/>").append(alreadyHaveAccount).append(paymentsPage));
 
         $(this.el).append(content);
       }

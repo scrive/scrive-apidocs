@@ -58,6 +58,7 @@
 "_mailDocumentLinked":"O documento era demasiado grande para enviar como anexo deste email. Estará disponível para transferência até $availabledate$.",
 "_mailDocumentLinkedButton":"Transferir o documento",
 "_mailInvitationCustomInvitationHeader":"Mensagem de <strong>$creatorname$</strong>",
+"_mailInvitationFromPart":"",
 "_mailInvitationToSignContractDefaultHeader":"<strong>$creatorname$</strong>  convidou-o a assinar o documento <strong>$documenttitle$</strong> electronicamente através do Scrive E-sign.",
 "_mailInvitationToSignTitleContract":"Documento a e-assinar: $documenttitle$",
 "_mailInvitationToViewDefaultHeader":"<strong>$creatorname$</strong> convidou-o a rever o documento <strong>$documenttitle$</strong>.",

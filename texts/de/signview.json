@@ -58,6 +58,7 @@
 "_mailDocumentLinked":"Das Dokument war zu groß, um es dieser E-Mail beizufügen. Sie können es bis $availabledate$ herunterladen.  ",
 "_mailDocumentLinkedButton":"Das Dokument herunterladen",
 "_mailInvitationCustomInvitationHeader":"Nachricht von <strong>$creatorname$</strong>",
+"_mailInvitationFromPart":"",
 "_mailInvitationToSignContractDefaultHeader":"<strong>$creatorname$</strong> bittet Sie, das Dokument <strong>$documenttitle$</strong> elektronisch über Scrive E-sign zu signieren.",
 "_mailInvitationToSignTitleContract":"Zum E-Signieren vorgelegtes Dokument: $documenttitle$",
 "_mailInvitationToViewDefaultHeader":"<strong>$creatorname$</strong> bittet Sie, das Dokument <strong>$documenttitle$</strong> zu überprüfen.",

@@ -94,6 +94,8 @@ define(['Backbone', 'legacy_code'], function() {
         initialize: function(args) {
             _.bindAll(this);
             this.model.bind('change reset fetch', this.render);
+            this.subscriptionPageHref = '/account#subscription';
+            this.supportEmailHref = 'mailto:support@scrive.com';
         },
         setStyle: function() {
             var view = this;
@@ -122,25 +124,24 @@ define(['Backbone', 'legacy_code'], function() {
             var model = view.model;
             if(model.isFree() && model.docsLeft() > 0 ) {
                 var res = $("<span>" + localization.blocking.free.has.headline + "</span>");
-                $(".put-docs-used-here",res).text(model.docsUsed());
+                res.find('.put-docs-used-here').text(model.docsUsed());
+                res.find('.put-link-to-payments-here').attr('href', '#');
                 return res;
-            }
-            else if(model.isFree())
+            } else if(model.isFree()) {
                 return localization.blocking.free.hasNot.headline;
-            else if(model.hasUsedAll())
+            } else if(model.hasUsedAll()) {
                 return localization.blocking.usedall.headline;
-            else if(model.isOverdue())
+            } else if(model.isOverdue()) {
                 return localization.blocking.overdue.headline;
-            else if(model.isDunning())
+            } else if(model.isDunning()) {
                 return localization.blocking.dunning.headline;
-            else if(model.isCanceled()) {
+            } else if(model.isCanceled()) {
                 var res = $("<span>" + localization.blocking.canceled.headline  + "</span>");
                 $(".put-docs-used-here",res).text(model.docsUsed());
                 return res;
-            }
-            else if(model.isDeactivated())
+            } else if(model.isDeactivated()) {
                 return localization.blocking.deactivated.headline;
-            else if(model.willCancel()) {
+            } else if(model.willCancel()) {
                 var res = $("<span>" + localization.blocking.willcancel.headline + "</span>");
                 $(".put-days-left-here",res).text(model.daysLeft());
                 return res;
@@ -150,42 +151,72 @@ define(['Backbone', 'legacy_code'], function() {
             var view = this;
             var model = view.model;
 
-            if(model.isFree() && model.docsLeft() > 0)
+            if(model.isFree() && model.docsLeft() > 0) {
                 return "";
-            else if(model.isFree())
-                return localization.blocking.free.hasNot.subtext1;
-            else if(model.hasUsedAll())
-                return localization.blocking.usedall.subtext1;
-            else if(model.isOverdue())
-                return localization.blocking.overdue.subtext1;
-            else if(model.isDunning())
+            } else if(model.isFree()) {
+                var span = $('<span />');
+                span.html(localization.blocking.free.hasNot.subtext1);
+                span.find('.put-link-to-payments-here').attr('href', this.subscriptionPageHref);
+                return span;
+            } else if(model.hasUsedAll()) {
+                var span = $('<span />');
+                span.html(localization.blocking.usedall.subtext1);
+                span.find('.put-link-to-mail-support-here').attr('href', this.supportEmailHref);
+                return span;
+            } else if(model.isOverdue()) {
+                var span = $('<span />');
+                span.html(localization.blocking.overdue.subtext1);
+                span.find('.put-link-to-payments-here').attr('href', this.subscriptionPageHref);
+                return span;
+            } else if(model.isDunning()) {
                 return localization.blocking.dunning.subtext1;
-            else if(model.isCanceled())
-                return localization.blocking.canceled.subtext1;
-            else if(model.isDeactivated())
-                return localization.blocking.deactivated.subtext1;
-            else if(model.willCancel())
-                return localization.blocking.willcancel.subtext1;
+            } else if(model.isCanceled()) {
+                var span = $('<span />');
+                span.html(localization.blocking.canceled.subtext1);
+                span.find('.put-link-to-payments-here').attr('href', this.subscriptionPageHref);
+                return span;
+            } else if(model.isDeactivated()) {
+                var span = $('<span />');
+                span.html(localization.blocking.deactivated.subtext1);
+                span.find('.put-link-to-mail-support-here').attr('href', this.supportEmailHref);
+                return span;
+            } else if(model.willCancel()) {
+                var span = $('<span />');
+                span.html(localization.blocking.willcancel.subtext1);
+                span.find('.put-link-to-payments-here').attr('href', this.subscriptionPageHref);
+                return span;
+            }
         },
         subtext2: function() {
             var view = this;
             var model = view.model;
-            if(model.isFree() && model.docsLeft() > 0)
+            if(model.isFree() && model.docsLeft() > 0) {
                 return "";
-            else if(model.isFree())
+            } else if(model.isFree()) {
                 return "";
-            else if(model.hasUsedAll())
+            } else if(model.hasUsedAll()) {
                 return "";
-            else if(model.isOverdue())
-                return localization.blocking.overdue.subtext2;
-            else if(model.isDunning())
-                return localization.blocking.dunning.subtext2;
-            else if(model.isCanceled())
-                return localization.blocking.canceled.subtext2;
-            else if(model.isDeactivated())
+            } else if(model.isOverdue()) {
+                var span = $('<span />');
+                span.html(localization.blocking.overdue.subtext2);
+                span.find('.put-link-to-payments-here').attr('href', this.subscriptionPageHref);
+                return span;
+            } else if(model.isDunning()) {
+                var span = $('<span />');
+                span.html(localization.blocking.dunning.subtext2);
+                span.find('.put-link-to-payments-here').attr('href', this.subscriptionPageHref);
+                return span;
+            } else if(model.isCanceled()) {
+                var span = $('<span />');
+                span.html(localization.blocking.canceled.subtext2);
+                span.find('.put-link-to-payments-here').attr('href', this.subscriptionPageHref);
+                return span;
+            } else if(model.isDeactivated()) {
                 return "";
-            else if(model.willCancel())
+            } else if(model.willCancel()) {
                 return "";
+            }
+
             return "";
         },
         makeBox: function() {
@@ -229,17 +260,17 @@ define(['Backbone', 'legacy_code'], function() {
                 });
             }
             else if(model.hasUsedAll())
-                window.location = 'mailto:support@scrive.com';
+                window.location = this.supportEmailHref;
             else if(model.isOverdue())
-                window.location = '/account#subscription';
+                window.location = this.subscriptionPageHref;
             else if(model.isDunning())
-                window.location = '/account#subscription';
+                window.location = this.subscriptionPageHref;
             else if(model.isCanceled())
-                window.location = '/account#subscription';
+                window.location = this.subscriptionPageHref;
             else if(model.isDeactivated())
-                window.location = 'mailto:support@scrive.com';
+                window.location = this.supportEmailHref;
             else if(model.willCancel())
-                window.location = '/account#subscription';
+                window.location = this.subscriptionPageHref;
         },
         paymentsPopup: function(opts) {
             var div = $('<div />').addClass('price-plan');
@@ -291,11 +322,14 @@ define(['Backbone', 'legacy_code'], function() {
             });
         },
         freeCSVMessage: function() {
-            return localization.blocking.free.csv.header;
+            var span = $('<span />').html(localization.blocking.free.csv.header);
+            span.find('.put-link-to-payments-here').attr('href', this.subscriptionPageHref);
+            return span;
         },
         overdueCreatePopup: function() {
             var p = $('<p />');
             p.html(localization.blocking.overdue.create.body);
+            p.find('.put-link-to-payments-here').attr('href', this.subscriptionPageHref);
             new Confirmation({
                 title: localization.blocking.overdue.create.title,
                 content: p,
@@ -307,11 +341,14 @@ define(['Backbone', 'legacy_code'], function() {
             });
         },
         overdueCSVMessage: function() {
-            return localization.blocking.overdue.csv.body;
+            var span = $('<span />').html(localization.blocking.overdue.csv.body);
+            span.find('.put-link-to-payments-here').attr('href', '/account#subscription');
+            return span;
         },
         canceledCreatePopup: function() {
             var p = $('<p />');
             p.html(localization.blocking.canceled.create.body);
+            p.find('.put-link-to-payments-here').attr('href', '/account#subscription');
             new Confirmation({
                 title: localization.blocking.canceled.create.title,
                 content: p,
@@ -323,39 +360,48 @@ define(['Backbone', 'legacy_code'], function() {
             });
         },
         canceledCSVMessage: function() {
-            return localization.blocking.canceled.csv.body;
+            var span = $('<span />').html(localization.blocking.canceled.csv.body);
+            span.find('.put-link-to-payments-here').attr('href', '/account#subscription');
+            return span;
         },
         deactivatedCreatePopup: function() {
             var p = $('<p />');
             p.html(localization.blocking.deactivated.create.body);
+            p.find('.put-link-to-mail-support-here').attr('href', this.supportEmailHref);
             new Confirmation({
                 title: localization.blocking.deactivated.create.title,
                 content: p,
                 acceptText: localization.blocking.button.contact,
                 acceptColor: "green",
                 onAccept: function() {
-                    window.location = "mailto:support@scrive.com";
+                    window.location = this.supportEmailHref;
                 }
             });
         },
         deactivatedCSVMessage: function() {
-            return localization.blocking.deactivated.csv.body;
+            var span = $('<span />').html(localization.blocking.deactivated.csv.body);
+            span.find('.put-link-to-mail-support-here').attr('href', this.supportEmailHref);
+            return span;
         },
         payingCreatePopup: function() {
             var p = $('<p />');
             p.html(localization.blocking.paying.create.body);
+            p.find('.put-link-to-mail-support-here').attr('href', this.supportEmailHref);
             new Confirmation({
                 title: localization.blocking.paying.create.title,
                 content: p,
                 acceptText: localization.blocking.button.contact,
                 acceptColor: "green",
                 onAccept: function() {
-                    window.location = "mailto:support@scrive.com";
+                    window.location = this.supportEmailHref;
                 }
             });
         },
         payingCSVMessage: function() {
             return localization.blocking.paying.csv.body;
+            var span = $('<span />').html(localization.blocking.paying.csv.body);
+            span.find('.put-link-to-mail-support-here').attr('href', this.supportEmailHref);
+            return span;
         }
     });
 

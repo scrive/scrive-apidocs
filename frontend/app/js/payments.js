@@ -734,8 +734,12 @@ define(['Backbone', 'legacy_code'], function() {
 
                 f.append($('<h3 />')
                          .html(localization.payments.already));
+
+                var goSpan = $('<span />').html(localization.payments.alreadyGo);
+                goSpan.find('.put-link-to-payments-here').attr('href', '/account#subscription');
+
                 f.append($('<h4 />')
-                         .html(localization.payments.alreadyGo)
+                         .html(goSpan)
                          .click(function() {
                              location = '/account#subscription';
                          }));
@@ -923,7 +927,8 @@ define(['Backbone', 'legacy_code'], function() {
 	  table.append(planInformation);
 
 	  var askviktor = $('<p class="askviktor"></p>').html(localization.payments.askviktor);
-	  table.append(askviktor);
+          askviktor.find('.put-link-to-mail-sales-here').attr('href', 'mailto:viktor@scrive.com').attr('target', '_blank');
+          table.append(askviktor);
 
           $el.html(div.append(header).append(table));
         }

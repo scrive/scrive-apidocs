@@ -58,6 +58,7 @@
 "_mailDocumentLinked":"Dokumentet var för stort för att bifogas med detta e-postmeddelande. Det kommer att vara tillgängligt för nedladdning till och med $availabledate$.",
 "_mailDocumentLinkedButton":"Ladda ner dokumentet",
 "_mailInvitationCustomInvitationHeader":"Meddelande från <strong>$creatorname$</strong>",
+"_mailInvitationFromPart":"",
 "_mailInvitationToSignContractDefaultHeader":"<strong>$creatorname$</strong> har bjudit in dig att signera dokumentet <strong>$documenttitle$</strong> elektroniskt genom tjänsten Scrive E-sign.",
 "_mailInvitationToSignTitleContract":"Dokument att e-signera: $documenttitle$",
 "_mailInvitationToViewDefaultHeader":"<strong>$creatorname$</strong> har bjudit in dig att granska dokumentet <strong>$documenttitle$</strong>.",

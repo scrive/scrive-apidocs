@@ -58,6 +58,7 @@
 "_mailDocumentLinked":"Het document is te groot om als bijlage aan deze e-mail toe te voegen. Het is beschikbaar om te downloaden tot en met$availabledate$.",
 "_mailDocumentLinkedButton":"Document downloaden",
 "_mailInvitationCustomInvitationHeader":"Bericht van <strong>$creatorname$</strong>",
+"_mailInvitationFromPart":"",
 "_mailInvitationToSignContractDefaultHeader":"<strong>$creatorname$</strong> heeft u uitgenodigd om het document<strong>$documenttitle$</strong> electronisch te ondertekenen via Scrive E-sign.",
 "_mailInvitationToSignTitleContract":"Document om te e-signen: $documenttitle$",
 "_mailInvitationToViewDefaultHeader":"<strong>$creatorname$</strong> heeft u uitgenodigd om het document<strong>$documenttitle$</strong> te herzien.",

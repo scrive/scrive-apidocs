@@ -501,12 +501,15 @@ mailRequestChangeEmailP=
 legalparagraph=
 $_legalparagraphBody()$
 ####
+supportmaillink=
+<a href='mailto:support@scrive.com'>support@scrive.com</a>
 ####
+accountingmaillink=
+<a href='mailto:accounting@scrive.com'>accounting@scrive.com</a>
 ####
 #### DOCUMENT INFORMATION PREVIEW FOR MAIL
 ####
 ####
 concat=$a1:noescape()$$a2:noescape()$$a3:noescape()$
 ####
-mailInvitationFromPart=$authorname$ $_through()$ $originator$
-#####
+
