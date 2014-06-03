@@ -62,10 +62,8 @@ define(['React', 'common/button'], function(React, Button) {
             <div className="question">
               <h6 className="yourcompany">
                 { localization.questionnaire.easyToSign }<br/>
-                <span>
-                  { localization.questionnaire.otherBenefitsP1 }
-                  <span className="green-text">{ localization.questionnaire.otherBenefitsP2 }</span>
-                  { localization.questionnaire.otherBenefitsP3 }
+                <span
+                  dangerouslySetInnerHTML={{__html: localization.questionnaire.otherBenefitsP}}>
                 </span>
               </h6>
               <h6 className="wanttotry">{ localization.questionnaire.seeHowSimple }</h6>
@@ -210,8 +208,9 @@ define(['React', 'common/button'], function(React, Button) {
           <div className="inner">
             <h1>{ localization.questionnaire.great }</h1>
             <div className="question">
-              <h6>{ localization.questionnaire.sendDownP1 }</h6>
-              <h6>{ localization.questionnaire.sendDownP2 }</h6>
+              <h6
+                dangerouslySetInnerHTML={{__html: localization.questionnaire.sendDownP}}>
+              </h6>
 
               <div className="yesnobuttons">
                 <Button
@@ -244,7 +243,7 @@ define(['React', 'common/button'], function(React, Button) {
           </div>
       );
     }
-    
+
   });
 
   return expose;

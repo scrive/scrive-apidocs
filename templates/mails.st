@@ -508,5 +508,4 @@ $_legalparagraphBody()$
 ####
 concat=$a1:noescape()$$a2:noescape()$$a3:noescape()$
 ####
-mailInvitationFromPart=$authorname$ $_through()$ $originator$
-#####
+

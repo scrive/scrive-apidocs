@@ -43,7 +43,7 @@ scheduleEmailSendoutWithDocumentAuthorSender did c m = do
   doc <- dbQuery $ GetDocumentByDocumentID did
   name <- case (getAuthorName doc) of
       ("") -> return $ (originator m)
-      (an) -> renderLocalTemplate doc "mailInvitationFromPart" $ do
+      (an) -> renderLocalTemplate doc "_mailInvitationFromPart" $ do
                 F.value "authorname" an
                 F.value "originator" (originator m)
   scheduleEmailSendout' name c m
