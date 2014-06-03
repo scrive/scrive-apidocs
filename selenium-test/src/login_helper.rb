@@ -47,9 +47,14 @@ class LoginHelper
     @h.wait_until { @driver.find_element :css => ".archive" }
   end
 
-  def set_name(fstname, sndname)
+  def set_name(fstname, sndname, options = {})
+    screenshot_name = options[:screenshot_name] || nil
     (@h.wait_until { @driver.find_element :css => "#page-account" }).click
-    (@h.wait_until { @driver.find_element :name => "fstname" }).clear
+    @h.wait_until { @driver.find_element :name => "fstname" }
+    if screenshot_name then
+      @h.screenshot screenshot_name
+    end
+    (@driver.find_element :name => "fstname").clear
     (@h.wait_until { @driver.find_element :name => "fstname" }).send_keys fstname
     (@h.wait_until { @driver.find_element :name => "sndname" }).clear
     (@h.wait_until { @driver.find_element :name => "sndname" }).send_keys sndname
