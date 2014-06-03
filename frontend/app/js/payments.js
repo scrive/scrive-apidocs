@@ -736,7 +736,7 @@ define(['Backbone', 'legacy_code'], function() {
                          .html(localization.payments.already));
 
                 var goSpan = $('<span />').html(localization.payments.alreadyGo);
-                goSpan.find('a').attr('href', '/account#subscription');
+                goSpan.find('.put-link-to-payments-here').attr('href', '/account#subscription');
 
                 f.append($('<h4 />')
                          .html(goSpan)
@@ -927,7 +927,7 @@ define(['Backbone', 'legacy_code'], function() {
 	  table.append(planInformation);
 
 	  var askviktor = $('<p class="askviktor"></p>').html(localization.payments.askviktor);
-          askviktor.find('a').attr('href', 'mailto:viktor@scrive.com').attr('target', '_blank');
+          askviktor.find('.put-link-to-mail-sales-here').attr('href', 'mailto:viktor@scrive.com').attr('target', '_blank');
           table.append(askviktor);
 
           $el.html(div.append(header).append(table));

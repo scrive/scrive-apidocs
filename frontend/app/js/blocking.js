@@ -125,7 +125,8 @@ define(['Backbone', 'legacy_code'], function() {
             if(model.isFree() && model.docsLeft() > 0 ) {
                 var res = $("<span>" + localization.blocking.free.has.headline + "</span>");
                 $(".put-docs-used-here",res).text(model.docsUsed());
-                res.find('a').attr('href', '#');
+                // This is a bit strange, but headline is a special case.
+                res.find('.put-link-to-payments-here').attr('href', '#');
                 return res;
             } else if(model.isFree()) {
                 return localization.blocking.free.hasNot.headline;
@@ -156,34 +157,34 @@ define(['Backbone', 'legacy_code'], function() {
             } else if(model.isFree()) { 
                 var span = $('<span />');
                 span.html(localization.blocking.free.hasNot.subtext1);
-                span.find('a').attr('href', this.subscriptionPageHref);
+                span.find('.put-link-to-payments-here').attr('href', this.subscriptionPageHref);
                 return span;
             } else if(model.hasUsedAll()) {
                 var span = $('<span />');
                 span.html(localization.blocking.usedall.subtext1);
-                span.find('a').attr('href', this.supportEmailHref);
+                span.find('.put-link-to-mail-support-here').attr('href', this.supportEmailHref);
                 return span;
             } else if(model.isOverdue()) {
                 var span = $('<span />');
                 span.html(localization.blocking.overdue.subtext1);
-                span.find('a').attr('href', this.subscriptionPageHref);
+                span.find('.put-link-to-payments-here').attr('href', this.subscriptionPageHref);
                 return span;
             } else if(model.isDunning()) {
                 return localization.blocking.dunning.subtext1;
             } else if(model.isCanceled()) {
                 var span = $('<span />');
                 span.html(localization.blocking.canceled.subtext1);
-                span.find('a').attr('href', this.subscriptionPageHref);
+                span.find('.put-link-to-payments-here').attr('href', this.subscriptionPageHref);
                 return span;
             } else if(model.isDeactivated()) {
                 var span = $('<span />');
                 span.html(localization.blocking.deactivated.subtext1);
-                span.find('a').attr('href', this.supportEmailHref);
+                span.find('.put-link-to-mail-support-here').attr('href', this.supportEmailHref);
                 return span;
             } else if(model.willCancel()) {
                 var span = $('<span />');
                 span.html(localization.blocking.willcancel.subtext1);
-                span.find('a').attr('href', this.subscriptionPageHref);
+                span.find('.put-link-to-payments-here').attr('href', this.subscriptionPageHref);
                 return span;
             }
         },
@@ -199,17 +200,17 @@ define(['Backbone', 'legacy_code'], function() {
             } else if(model.isOverdue()) {
                 var span = $('<span />');
                 span.html(localization.blocking.overdue.subtext2);
-                span.find('a').attr('href', this.subscriptionPageHref);
+                span.find('.put-link-to-payments-here').attr('href', this.subscriptionPageHref);
                 return span;
             } else if(model.isDunning()) {
                 var span = $('<span />');
                 span.html(localization.blocking.dunning.subtext2);
-                span.find('a').attr('href', this.subscriptionPageHref);
+                span.find('.put-link-to-payments-here').attr('href', this.subscriptionPageHref);
                 return span;
             } else if(model.isCanceled()) {
                 var span = $('<span />');
                 span.html(localization.blocking.canceled.subtext2);
-                span.find('a').attr('href', this.subscriptionPageHref);
+                span.find('.put-link-to-payments-here').attr('href', this.subscriptionPageHref);
                 return span;
             } else if(model.isDeactivated()) {
                 return "";
@@ -323,13 +324,13 @@ define(['Backbone', 'legacy_code'], function() {
         },
         freeCSVMessage: function() {
             var span = $('<span />').html(localization.blocking.free.csv.header);
-            span.find('a').attr('href', this.subscriptionPageHref);
+            span.find('.put-link-to-payments-here').attr('href', this.subscriptionPageHref);
             return span;
         },
         overdueCreatePopup: function() {
             var p = $('<p />');
             p.html(localization.blocking.overdue.create.body);
-            p.find('a').attr('href', this.subscriptionPageHref);
+            p.find('.put-link-to-payments-here').attr('href', this.subscriptionPageHref);
             new Confirmation({
                 title: localization.blocking.overdue.create.title,
                 content: p,
@@ -342,13 +343,13 @@ define(['Backbone', 'legacy_code'], function() {
         },
         overdueCSVMessage: function() {
             var span = $('<span />').html(localization.blocking.overdue.csv.body);
-            span.find('a').attr('href', '/account#subscription');
+            span.find('.put-link-to-payments-here').attr('href', '/account#subscription');
             return span;
         },
         canceledCreatePopup: function() {
             var p = $('<p />');
             p.html(localization.blocking.canceled.create.body);
-            p.find('a').attr('href', '/account#subscription');
+            p.find('.put-link-to-payments-here').attr('href', '/account#subscription');
             new Confirmation({
                 title: localization.blocking.canceled.create.title,
                 content: p,
@@ -361,13 +362,13 @@ define(['Backbone', 'legacy_code'], function() {
         },
         canceledCSVMessage: function() {
             var span = $('<span />').html(localization.blocking.canceled.csv.body);
-            span.find('a').attr('href', '/account#subscription');
+            span.find('.put-link-to-payments-here').attr('href', '/account#subscription');
             return span;
         },
         deactivatedCreatePopup: function() {
             var p = $('<p />');
             p.html(localization.blocking.deactivated.create.body);
-            p.find('a').attr('href', this.supportEmailHref);
+            p.find('.put-link-to-mail-support-here').attr('href', this.supportEmailHref);
             new Confirmation({
                 title: localization.blocking.deactivated.create.title,
                 content: p,
@@ -380,13 +381,13 @@ define(['Backbone', 'legacy_code'], function() {
         },
         deactivatedCSVMessage: function() {
             var span = $('<span />').html(localization.blocking.deactivated.csv.body);
-            span.find('a').attr('href', this.supportEmailHref);
+            span.find('.put-link-to-mail-support-here').attr('href', this.supportEmailHref);
             return span;
         },
         payingCreatePopup: function() {
             var p = $('<p />');
             p.html(localization.blocking.paying.create.body);
-            p.find('a').attr('href', this.supportEmailHref);
+            p.find('.put-link-to-mail-support-here').attr('href', this.supportEmailHref);
             new Confirmation({
                 title: localization.blocking.paying.create.title,
                 content: p,
@@ -400,7 +401,7 @@ define(['Backbone', 'legacy_code'], function() {
         payingCSVMessage: function() {
             return localization.blocking.paying.csv.body;
             var span = $('<span />').html(localization.blocking.paying.csv.body);
-            span.find('a').attr('href', this.supportEmailHref);
+            span.find('.put-link-to-mail-support-here').attr('href', this.supportEmailHref);
             return span;
         }
     });
