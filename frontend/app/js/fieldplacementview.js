@@ -413,7 +413,7 @@ var TextTypeSetterView = Backbone.View.extend({
 
         var copy = $("<div class='title'>" + localization.designview.requestFieldFrom + "</div>");
         $('.put-field-name',copy).text(fname);
-        $('.put-person-name',copy).text(sname).prepend($("<br/>"));
+        $('.put-person-name',copy).text(sname);
         return copy;
     },
     doneOption : function() {

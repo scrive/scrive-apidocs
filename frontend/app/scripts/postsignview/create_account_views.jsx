@@ -31,10 +31,10 @@ define(['React', 'Backbone'], function(React, Backbone) {
     },
     makeTOSCopyWithLink: function() {
       var res = $("<span>" + localization.docsignview.acceptTOS + "</span>");
-      var a = $('a',res);
-      a.addClass('terms clickable');
-      a.attr('target','_blank');
-      a.attr('href','/terms');
+      $('.is-TOS',res)
+        .addClass('terms clickable')
+        .attr('target','_blank')
+        .attr('href','/terms');
       return res.html();
     },
 
