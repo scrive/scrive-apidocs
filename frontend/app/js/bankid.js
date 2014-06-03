@@ -80,9 +80,7 @@ define(['Backbone', 'legacy_code'], function() {
 window.Eleg = {
   // generate a TBS from the available data
    generateTBS : function(doctitle, docid, signatories) {
-     var text = localization.tbsGenerationMessage;
-     $('.put-doctitle',text).text(doctitle);
-     $('.put-docid',text).text(docid);
+     var text = localization.tbsGenerationMessage(doctitle, docid);
      $(signatories).each(function() {
          text = text + "\n" + this.fstname() + " " + this.sndname() + ", " + this.personalnumber();
      });

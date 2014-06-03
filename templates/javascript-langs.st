@@ -28,7 +28,9 @@ javascriptLocalisation =
              , noBankIdInstalled  : "$_noBankIdInstalled()$"
              , verifyingSignature : "$_verifyingSignature()$"
              , signviewAttachmentUploadedInOtherWindow : "$_signviewAttachmentUploadedInOtherWindow()$"
-             , tbsGenerationMessage : "$_tbsGenerationMessage()$"
+             , tbsGenerationMessage : function(doctitle, docid){
+                    return  '$_tbsGenerationMessage1()$ "' + doctitle + '" $_tbsGenerationMessage2()$ "' + docid + '" $_tbsGenerationMessage3()$'
+                     }
              , ie6NotSupported : "$_ie6NotSupported()$"
              , personalName : "$_fullName()$"
              , fstname : "$_firstname()$"
