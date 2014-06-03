@@ -21,22 +21,11 @@ import Transifex.Synch
 import Transifex.Utils
 
 whiteList :: S.Set String
-whiteList = S.fromList [ "_phone"
-                       , "newTemplateTitle"
-                       , "th" -- JS is unsure if this is being used, but it's so hard to make sure.
+whiteList = S.fromList [ "newTemplateTitle"
                        , "morethenonelist"
                        , "morethenonelistnormal"
                        , "nomorethanonelist"
                        , "nomorethanonelistnormal"
-                       , "mailForwardSigned"
-                       , "mailDocumentError"
-                       , "mailForwardSigned"
-                       , "remindMailSigned"
-                       , "mailContractClosed"
-                       , "mailInvitationToSignContract"
-                       , "remindMailNotSignedContract"
-                       , "mailRejectContractMail"
-                       , "mailDocumentAwaitingForAuthor"
                        , "dumpAllEvidenceTexts"
                        ]
 

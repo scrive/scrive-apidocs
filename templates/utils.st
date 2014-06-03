@@ -16,9 +16,6 @@ nomorethanonelistnormal=
 makeEditable=
     <div class="editable" name="$name$">$this:noescape()$</div>
 ####
-###
-th=<th style="width:60px;text-align:center">$it:noescape()$</th>
-###
 #### Puts an invisible box with flash messages. jScripts do all show magic.
 #### Bellow is a hack for (if(flash)) for String templates syntax
 ####

@@ -1,7 +1,3 @@
-######
-flashRemindMailSentSigned=
-	$_flashRemindMailSentSigned()$ $personname$
-
 #####
 flashMessageMustAcceptTOS=
 	$_flashMessageMustAcceptTOS()$
