@@ -224,7 +224,7 @@ nicebutton=
 poweredByScrive=
 <a style="text-decoration: none;" href="$ctxhostpart$">
   <span class="h3" style="color: $if(!textcolor)$#7a94b8$else$$textcolor$$endif$; display: block; font-family: $nicemailfont()$; font-size: 16px; font-weight: normal; line-height: 150%; text-align: left; margin-left: 10px;">
-    $_poweredByScrive()$
+    $PoweredByScrive()$
   </span>
 </a>
 ####

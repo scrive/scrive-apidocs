@@ -10,7 +10,7 @@ javascriptLocalisation =
              , reloadPage : "$_reloadPage()$"
              , from : "$_from()$"
              , problemContactingServer : "$_problemContactingServer()$"
-             , esigningpoweredbyscrive : "E-signing powered by Scrive"
+             , esigningpoweredbyscrive : "$PoweredByScrive()$"
              , sessionTimedoutInSignview : "$_sessionTimedoutInSignview()$"
              , sessionTimedoutInSignviewAfterHistoryBackMessage : "$_sessionTimedoutInSignviewAfterHistoryBackMessage()$"
              , sessionTimedoutInSignviewAfterHistoryBackTitle : "$_sessionTimedoutInSignviewAfterHistoryBackTitle()$"

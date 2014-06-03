@@ -58,3 +58,5 @@ NorwegianInNorwegian=Norsk
 ####
 GreekInGreek=ελληνικά
 ###
+PoweredByScrive=E-signing powered by Scrive
+###
