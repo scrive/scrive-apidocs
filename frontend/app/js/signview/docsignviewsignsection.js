@@ -298,7 +298,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
         var p = $("<p/>").append(localization.sign.eleg.body);
         var a = p.find('a');
         a.attr("target", "_new");
-        a.attr("href", localization.sign.eleg.link);
+        a.attr("href", "http://www.e-legitimation.se/");
         content.add($("<span/>").append(subhead).append(p));
       }
       return content;
@@ -315,7 +315,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
         var p = $("<p/>").append(localization.sign.eleg.body);
         var a = p.find('a');
         a.attr("target", "_new");
-        a.attr("href", localization.sign.eleg.link);
+        a.attr("href", "http://www.e-legitimation.se/");
         content.add($("<span/>").append(subhead).append(p));
       }
       return content;

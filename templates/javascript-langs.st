@@ -80,7 +80,6 @@ javascriptLocalisation =
                           eleg : {
                                      subhead : "$_pageDocumentForSignContentElegSubhead()$"
                                    , body: "$_pageDocumentForSignContentElegBody()$ "
-                                   , link: "http://www.e-legitimation.se/"
                                    , telia: "$_telia()$"
                                    , mobilebankid: "$_mobileBankID()$"
                                    , bankid: "$_bankid()$"

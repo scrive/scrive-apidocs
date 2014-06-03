@@ -89,7 +89,7 @@
 "_padTypeSignature":"type your signature",
 "_padTypeSignatureBoxHeader":"Type your signature",
 "_padTypeSignatureNameField":"Please type your name",
-"_pageDocumentForSignContentElegBody":"No eID? You can download an eID from your online bank or from Telia. <a>Click here</a> to read more.",
+"_pageDocumentForSignContentElegBody":"No eID? You can download an eID from your online bank or from Telia. <a class='is-click-here'>Click here</a> to read more.",
 "_pageDocumentForSignContentElegSubhead":"Select type of eID",
 "_pageDocumentForSignContentRejectFooterOwnMessage":"Write own message",
 "_pageDocumentForSignContentRejectFooterReject":"Reject",

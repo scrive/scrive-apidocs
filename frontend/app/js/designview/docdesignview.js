@@ -366,9 +366,9 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             if (signatory.elegAuthentication()) {
                 var subhead = $("<h6/>").text(localization.sign.eleg.subhead);
                 var p = $("<p/>").append(localization.sign.eleg.body);
-                var a = p.find('a');
+                var a = $('.is-click-here',p);
                 a.attr("target", "_new");
-                a.attr("href", localization.sign.eleg.link);
+                a.attr("href", "http://www.e-legitimation.se/");
                 content = content.add($("<span/>").append(subhead).append(p));
             }
             self.confirmationpopup = new Confirmation({
