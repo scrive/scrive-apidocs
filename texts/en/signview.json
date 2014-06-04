@@ -1,4 +1,4 @@
-{
+{ 
 "_DeletePDF":"Delete",
 "_RequestedAttachments":"Requested attachments",
 "_ReviewPDF":"Review",
@@ -54,6 +54,7 @@
 "_mailDocumentLinked":"The document was too large to attach to this email. It will be available to download until $availabledate$.",
 "_mailDocumentLinkedButton":"Download the document",
 "_mailInvitationCustomInvitationHeader":"Message from <strong>$creatorname$</strong>",
+"_mailInvitationFromPart":"$authorname$ through $originator$",
 "_mailInvitationToSignContractDefaultHeader":"<strong>$creatorname$</strong>  has invited you to sign the document <strong>$documenttitle$</strong> electronically through Scrive E-sign.",
 "_mailInvitationToSignTitleContract":"Document to e-sign: $documenttitle$",
 "_mailInvitationToViewDefaultHeader":"<strong>$creatorname$</strong> has invited you to review the document <strong>$documenttitle$</strong>.",
@@ -156,6 +157,5 @@
 "_smsReminderSigned":"Hi $personname$, the signed document $documenttitle$ has been resent to you at the request of $creatorname$. Find the document by following this link: $link$",
 "_telia":"Telia",
 "_unavailableForSign":"The document is no longer available for signing",
-"_waitingForSignature":"Waiting for signature",
-"_mailInvitationFromPart":"$authorname$ through $originator$"
+"_waitingForSignature":"Waiting for signature"
 }
