@@ -8,7 +8,6 @@ javascriptLocalisation =
         {      code : "$code$"
              , welcomeback : "$_welcomeback()$"
              , reloadPage : "$_reloadPage()$"
-             , from : "$_from()$"
              , problemContactingServer : "$_problemContactingServer()$"
              , esigningpoweredbyscrive : "$PoweredByScrive()$"
              , sessionTimedoutInSignview : "$_sessionTimedoutInSignview()$"
@@ -80,9 +79,7 @@ javascriptLocalisation =
              , sign :  {
                           eleg : {
                                      subhead : "$_pageDocumentForSignContentElegSubhead()$"
-                                   , body1: " $_pageDocumentForSignContentElegBody1()$ "
-                                   , clickHere : "$_pageDocumentForSignContentElegBody2ClickHere()$"
-                                   , body2 : " $_pageDocumentForSignContentElegBody3()$ "
+                                   , body: "$_pageDocumentForSignContentElegBody()$ "
                                    , telia: "$_telia()$"
                                    , mobilebankid: "$_mobileBankID()$"
                                    , bankid: "$_bankid()$"
@@ -102,12 +99,6 @@ javascriptLocalisation =
                     }
              , signByAuthor : {
                           modalTitle : "$_dialogConfirmSignByAuthorHead()$"
-                        , eleg : {
-                                     subhead : "$_dialogConfirmSignByAuthorElegSubHead()$"
-                                   , body1: " $_dialogConfirmSignByAuthorElegBody()$ "
-                                   , clickHere : "$_dialogConfirmSignByAuthorElegClickHere1()$"
-                                   , body2 : " $_dialogConfirmSignByAuthorElegClickHere2()$"
-                                 }
 
                }
              , reject : {
@@ -153,9 +144,7 @@ javascriptLocalisation =
                        ]
 
             , selectFileToUpload : "$_selectFileToUpload()$"
-            , onlyFileWithTypeAllowed : function(t) {
-                return "$_onlyFileWithTypeAllowed1()$" + t + "$_onlyFileWithTypeAllowed2()$"
-              }
+            , onlyFiletypeAllowed : "$_onlyFiletypeAllowed()$"
             , fileTooLarge: "$_fileTooLarge()$"
             , couldNotUpload: "$_couldNotUpload()$"
             , flashDocumentRestarted : "$_flashMessageContractRestarted()$"
@@ -406,15 +395,15 @@ javascriptLocalisation =
              , removeThisDocument: "$_designViewRemoveThisDocument()$"
              , chooseDocument: "$_designViewChooseDocument()$"
              , attached : "$_designViewAttached()$"
-             , attachmentRequested : "$_designViewAttachmentRequested()$"
-             , requestedFrom : "$_designViewRequestedFrom()$"
+             , attachmentRequestedFrom : "$_designViewAttachmentRequestedFrom()$"
+             , requestFieldFrom : "$_designViewRequestFieldFrom()$"
              , draggablehelp1 : "$_designviewdraggablehelp1()$"
              , draggablehelp2 : "$_designviewdraggablehelp2()$"
              , days :"$_designviewdays()$"
              , saved : "$_designviewsaved()$"
              , fromCSV : "$_fromCSV()$"
-             , partOf : "$_partOf()$"
-             , preparingDocumentFor : "$_preparingDocumentFor()$"
+             , numPartOfNum : "$_numPartOfNum()$"
+             , preparingDocument : "$_preparingDocument()$"
              , fieldWithSameNameExists : "$_fieldWithSameNameExists()$"
              , emailCanBeChangedInAccountSection : "$_emailCanBeChangedInAccountSection()$"
              , nameCanBeChangedInAccountSection : "$_nameCanBeChangedInAccountSection()$"
@@ -494,8 +483,7 @@ javascriptLocalisation =
          }
          , visitOurPricingPage : "$_visitOurPricingPage()$"
          , accountSetupModal: {
-             modalAccountSetupBodyAccept: "$_modalAccountSetupBodyAccept()$"
-           , modalAccountSetupBodyTOS   : "$_modalAccountSetupBodyTOS()$"
+             modalAccountSetupTOS: "$_modalAccountSetupTOS()$"
            , modalAccountSetupChoosePassword: "$_modalAccountSetupChoosePassword()$"
            , modalAccountSetupRepeatPassword: "$_modalAccountSetupRepeatPassword()$"
            , modalAccountSetupPhone: "$_modalAccountSetupPhone()$"
@@ -560,8 +548,7 @@ javascriptLocalisation =
              , signatoryAttachmentsTitleForLots: "$_signViewSignatoryAttachmentsTitleForLots()$"
              , signatoryAttachmentsSupportedFormats : "$_signatoryAttachmentsSupportedFormats()$"
              , signatoriesTitle: "$_signViewSignatoriesTitle()$"
-             , acceptTOSpart1: "$_acceptTOSpart1()$"
-             , acceptTOSpart2: "$_acceptTOSpart2()$"
+             , acceptTOS: "$_acceptTOS()$"
              , notEntered: "$_notEntered()$"
              , checkbox: "$_signViewCheckbox()$"
              , textfield: "$_signViewTextField()$"
@@ -961,8 +948,7 @@ javascriptLocalisation =
               , mismatchedEmails : "$_flashMessageMismatchedEmails()$"
               , invalidEmail : "$_flashMessageInvalidEmailFormat()$"
               , emailAlreadyInUse : "$_flashCantChangeEmail()$"
-              , changeEmailMailSent1 : "$_flashMessageChangeEmailMailSent1()$"
-              , changeEmailMailSent2 : "$_flashMessageChangeEmailMailSent2()$"
+              , changeEmailMailSent : "$_flashMessageChangeEmailMailSent()$"
               , smsOriginator : "$_smsOriginator()$"
               , smsOriginatorDescription : "$_smsOriginatorDescription()$"
             }

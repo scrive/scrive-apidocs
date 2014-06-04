@@ -407,20 +407,14 @@ var TextTypeSetterView = Backbone.View.extend({
         var view = this;
         var placement = view.model;
         var field = placement.field();
-
-        var div = $("<div class='title'/>");
-
-        //.text(localization.designview.textFields.textField);
-
         var fname = field.nicename();
-
         var signatory = placement.signatory();
         var sname = signatory.nameOrEmail() || signatory.nameInDocument();
 
-        div.text(fname + ' ' + localization.designview.requestedFrom);
-        div.append($('<br/>'));
-        div.append(document.createTextNode(sname));
-        return div;
+        var copy = $("<div class='title'>" + localization.designview.requestFieldFrom + "</div>");
+        $('.put-field-name',copy).text(fname);
+        $('.put-person-name',copy).text(sname);
+        return copy;
     },
     doneOption : function() {
         var view = this;

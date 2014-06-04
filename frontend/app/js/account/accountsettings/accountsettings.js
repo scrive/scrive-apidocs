@@ -154,7 +154,9 @@ var AccountSettingsModel = Backbone.Model.extend({
       ajaxsuccess : function(rs) {
         var res = JSON.parse(rs);
         if (res.send) {
-            new FlashMessage({content: localization.account.accountDetails.changeEmailMailSent1 + self.newemail() + localization.account.accountDetails.changeEmailMailSent2, color: "green"});
+            var msg = $("<span>" + localization.account.accountDetails.changeEmailMailSent + "</span>");
+            msg.find('.email-confirmation-address').text(self.newemail());
+            new FlashMessage({content: msg, color: "green"});
         }
         else {
             new FlashMessage({content: localization.account.accountDetails.emailAlreadyInUse, color: "red"});

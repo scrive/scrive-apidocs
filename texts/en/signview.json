@@ -1,4 +1,4 @@
-{
+{ 
 "_DeletePDF":"Delete",
 "_RequestedAttachments":"Requested attachments",
 "_ReviewPDF":"Review",
@@ -24,10 +24,6 @@
 "_deliveryEmail":"email",
 "_deliveryEmailMobile":"email and SMS",
 "_deliveryMobile":"SMS",
-"_dialogConfirmSignByAuthorElegBody":"No eID? You can download an eID from your online bank or from Telia.",
-"_dialogConfirmSignByAuthorElegClickHere1":"Click here",
-"_dialogConfirmSignByAuthorElegClickHere2":"to read more.",
-"_dialogConfirmSignByAuthorElegSubHead":"Select type of eID",
 "_dialogConfirmSignByAuthorHead":"Sign",
 "_dueDate":"Due date ",
 "_email":"Email",
@@ -58,6 +54,7 @@
 "_mailDocumentLinked":"The document was too large to attach to this email. It will be available to download until $availabledate$.",
 "_mailDocumentLinkedButton":"Download the document",
 "_mailInvitationCustomInvitationHeader":"Message from <strong>$creatorname$</strong>",
+"_mailInvitationFromPart":"$authorname$ through $originator$",
 "_mailInvitationToSignContractDefaultHeader":"<strong>$creatorname$</strong>  has invited you to sign the document <strong>$documenttitle$</strong> electronically through Scrive E-sign.",
 "_mailInvitationToSignTitleContract":"Document to e-sign: $documenttitle$",
 "_mailInvitationToViewDefaultHeader":"<strong>$creatorname$</strong> has invited you to review the document <strong>$documenttitle$</strong>.",
@@ -93,9 +90,7 @@
 "_padTypeSignature":"type your signature",
 "_padTypeSignatureBoxHeader":"Type your signature",
 "_padTypeSignatureNameField":"Please type your name",
-"_pageDocumentForSignContentElegBody1":"No eID? You can download an eID from your online bank or from Telia.",
-"_pageDocumentForSignContentElegBody2ClickHere":"Click here",
-"_pageDocumentForSignContentElegBody3":"to read more",
+"_pageDocumentForSignContentElegBody":"No eID? You can download an eID from your online bank or from Telia. <a class='is-click-here'>Click here</a> to read more.",
 "_pageDocumentForSignContentElegSubhead":"Select type of eID",
 "_pageDocumentForSignContentRejectFooterOwnMessage":"Write own message",
 "_pageDocumentForSignContentRejectFooterReject":"Reject",
@@ -162,6 +157,5 @@
 "_smsReminderSigned":"Hi $personname$, the signed document $documenttitle$ has been resent to you at the request of $creatorname$. Find the document by following this link: $link$",
 "_telia":"Telia",
 "_unavailableForSign":"The document is no longer available for signing",
-"_waitingForSignature":"Waiting for signature",
-"_mailInvitationFromPart":"$authorname$ through $originator$"
+"_waitingForSignature":"Waiting for signature"
 }

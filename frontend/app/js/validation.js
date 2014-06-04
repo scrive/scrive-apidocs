@@ -145,6 +145,11 @@ window.UserNameValidation = Validation.extend({
     lastName: function() {
       return this.get('lastName');
     },
+    makeCopyForField: function(fieldName, copyText) {
+      var res = $("<span>" + copyText + "<span/>");
+      $('.put-field-name',res).text(fieldName);
+      return res.html();
+    },
     defaults: {
             validates: function(t) {
                 var words = _.filter(t.split(' '), function(x) { return x.trim() != '';});
@@ -156,19 +161,23 @@ window.UserNameValidation = Validation.extend({
                 var lastName = _.rest(words).join(' ');
 
                 if (firstName.length === 0) {
-                    this.setMessage(this.firstName() + ' ' + localization.validation.required);
+                    var text = this.makeCopyForField(this.firstName(), localization.validation.required);
+                    this.setMessage(text);
                     return false;
                 }
                 if (firstName.length > 100) {
-                    this.setMessage(this.firstName() + ' ' + localization.validation.toolong);
+                    var text = this.makeCopyForField(this.firstName(), localization.validation.toolong);
+                    this.setMessage(text);
                     return false;
                 }
                 if (lastName.length === 0) {
-                    this.setMessage(this.lastName() + ' ' + localization.validation.required);
+                    var text = this.makeCopyForField(this.lastName(), localization.validation.required);
+                    this.setMessage(text);
                     return false;
                 }
                 if (lastName.length > 100) {
-                    this.setMessage(this.lastName() + ' ' + localization.validation.toolong);
+                    var text = this.makeCopyForField(this.lastName(), localization.validation.toolong);
+                    this.setMessage(text);
                     return false;
                 }
 
@@ -176,11 +185,13 @@ window.UserNameValidation = Validation.extend({
                 // http://stackoverflow.com/questions/1073412/javascript-validation-issue-with-international-characters
 
                 if (/[^a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF-' ]/i.test(firstName)) {
-                    this.setMessage(this.firstName() + ' ' + localization.validation.invalidnamechars);
+                    var text = this.makeCopyForField(this.firstName(), localization.validation.invalidnamechars);
+                    this.setMessage(text);
                     return false;
                 }
                 if (/[^a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF-' ]/i.test(lastName)) {
-                    this.setMessage(this.lastName() + ' ' + localization.validation.invalidnamechars);
+                    var text = this.makeCopyForField(this.lastName(), localization.validation.invalidnamechars);
+                    this.setMessage(text);
                     return false;
                 }
 

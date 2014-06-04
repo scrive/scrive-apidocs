@@ -42,7 +42,9 @@ var DesignAttachmentsListView = Backbone.View.extend({
         text = sig.nameInDocument();
       var icon = $("<td class='icon-td'/>").append("<div class='signatory-attachment-icon'>");
       var tr = $("<tr/>");
-      var name = $("<td class='name-td'/>").text(localization.designview.attachmentRequested + " " + a.name() + " " + localization.from + " " + text.trim());
+      var name = $("<td class='name-td'>" + localization.designview.attachmentRequestedFrom + "</td>");
+      $('.put-attachment-name',name).text(a.name());
+      $('.put-person-name',name).text(text.trim());
       var remove = $("<td class='remove-td'/>")
             .append($("<div class='remove-icon'/>")
                     .click(function() {

@@ -303,9 +303,9 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
           content.append(localization.process.signatorysignmodalcontent);
 
      if (signatory.elegAuthentication()) {
-        var subhead = $("<h3/>").text(localization.signByAuthor.eleg.subhead);
-        var a = $("<a target='_new' />").text(localization.signByAuthor.eleg.clickHere).attr("href", "http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86");
-        var p = $("<p/>").append(localization.signByAuthor.eleg.body1).append(a).append(localization.signByAuthor.eleg.body2);
+        var subhead = $("<h3/>").text(localization.sign.eleg.subhead);
+        var p = $("<p/>").append(localization.sign.eleg.body);
+        $('.put-person-name',p).attr("target", "_new").attr("href", "http://www.e-legitimation.se/");
         content.add($("<span/>").append(subhead).append(p));
       }
       return content;
@@ -319,8 +319,8 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
 
       if (signatory.elegAuthentication()) {
         var subhead = $("<h3/>").text(localization.sign.eleg.subhead);
-        var a = $("<a target='_new' />").text(localization.sign.eleg.clickHere).attr("href", "http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86");
-        var p = $("<p/>").append(localization.sign.eleg.body1).append(a).append(localization.sign.eleg.body2);
+        var p = $("<p/>").append(localization.sign.eleg.body);
+        $('.put-person-name',p).attr("target", "_new").attr("href", "http://www.e-legitimation.se/");
         content.add($("<span/>").append(subhead).append(p));
       }
       return content;

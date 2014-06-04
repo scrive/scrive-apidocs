@@ -365,8 +365,10 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             DocumentDataFiller.fill(document, content);
             if (signatory.elegAuthentication()) {
                 var subhead = $("<h6/>").text(localization.sign.eleg.subhead);
-                var a = $("<a target='_new' />").text(localization.sign.eleg.clickHere).attr("href","http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86");
-                var p = $("<p/>").append(localization.sign.eleg.body1).append(a).append(localization.sign.eleg.body2);
+                var p = $("<p/>").append(localization.sign.eleg.body);
+                var a = $('.is-click-here',p);
+                a.attr("target", "_new");
+                a.attr("href", "http://www.e-legitimation.se/");
                 content = content.add($("<span/>").append(subhead).append(p));
             }
             self.confirmationpopup = new Confirmation({
@@ -437,7 +439,12 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
       if (doc.csv() != undefined && doc.csv().length > 2) {
         doc.clone(function(doc2) {
             var name = doc.normalizeWithFirstCSVLine();
-            LoadingDialog.open(localization.designview.preparingDocumentFor + " " + name, index + " " + localization.designview.partOf + " " + totalCount);
+            var copyDocFor = $("<span>" + localization.designview.preparingDocument + "</span>");
+            $('.put-person-name',copyDocFor).text(name);
+            var copyPartOf = $("<span>" + localization.designview.numPartOfNum + "</span>");
+            $('.put-current-index',copyPartOf).text(index);
+            $('.put-total-count',copyPartOf).text(totalCount);
+            LoadingDialog.open(copyDocFor, copyPartOf);
             doc.save();
             doc.afterSave(function() {
               doc.makeReadyForSigning().add("skipauthorinvitation","YES").sendAjax(function(docdata) {
@@ -457,8 +464,14 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
       } else {
             var singleDocument = !doc.isCsv();
             var name = doc.normalizeWithFirstCSVLine();
-            if (!singleDocument)
-            LoadingDialog.open(localization.designview.preparingDocumentFor + " " + name, index + " " + localization.designview.partOf + " " + totalCount);
+            if (!singleDocument) {
+              var copyDocFor = $("<span>" + localization.designview.preparingDocument + "</span>");
+              $('.put-person-name',copyDocFor).text(name);
+              var copyPartOf = $("<span>" + localization.designview.numPartOfNum + "</span>");
+              $('.put-current-index',copyPartOf).text(index);
+              $('.put-total-count',copyPartOf).text(totalCount);
+              LoadingDialog.open(copyDocFor, copyPartOf);
+            }
             doc.save();
             doc.afterSave(function() {
             doc.makeReadyForSigning().add("skipauthorinvitation","YES").sendAjax(function(docdata) {
@@ -476,7 +489,12 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
       if (doc.csv() != undefined && doc.csv().length > 2) {
         doc.clone(function(doc2) {
             var name = doc.normalizeWithFirstCSVLine();
-            LoadingDialog.open(localization.designview.preparingDocumentFor + " " + name, index + " " + localization.designview.partOf + " " + totalCount);
+            var copyDocFor = $("<span>" + localization.designview.preparingDocument + "</span>");
+            $('.put-person-name',copyDocFor).text(name);
+            var copyPartOf = $("<span>" + localization.designview.numPartOfNum + "</span>");
+            $('.put-current-index',copyPartOf).text(index);
+            $('.put-total-count',copyPartOf).text(totalCount);
+            LoadingDialog.open(copyDocFor, copyPartOf);
             doc.save();
             doc.afterSave(function() {
               doc.makeReadyForSigning().sendAjax(function() {
@@ -491,8 +509,14 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
       } else {
             var singleDocument = !doc.isCsv();
             var name = doc.normalizeWithFirstCSVLine();
-            if (!singleDocument)
-            LoadingDialog.open(localization.designview.preparingDocumentFor + " " + name, index + " " + localization.designview.partOf + " " + totalCount);
+            if (!singleDocument) {
+              var copyDocFor = $("<span>" + localization.designview.preparingDocument + "</span>");
+              $('.put-person-name',copyDocFor).text(name);
+              var copyPartOf = $("<span>" + localization.designview.numPartOfNum + "</span>");
+              $('.put-current-index',copyPartOf).text(index);
+              $('.put-total-count',copyPartOf).text(totalCount);
+              LoadingDialog.open(copyDocFor, copyPartOf);
+            }
             doc.save();
             doc.afterSave(function() {
             doc.makeReadyForSigning().sendAjax(function() {
