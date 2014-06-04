@@ -255,11 +255,11 @@ SendToPadDeviceText=The signing invitation for signatory $signatory$ was set by 
 ###
 SetDocumentInviteTimeEvidenceText=The signing process was started by $actor$.
 ###
-SignDocumentEvidenceTextSMSPinFull=The document was signed by $actor$$_using_identification_method()$. $pinWasSent()$
+SignDocumentEvidenceTextSMSPinFull=The document was signed by $actor$ using PIN by SMS as identification method. $pinWasSent()$
 ###
-SignDocumentEvidenceTextElegFull=The document was signed by $actor$$_using_identification_method()$. $elegVerification()$
+SignDocumentEvidenceTextElegFull=The document was signed by $actor$ using eID as identification method. $elegVerification()$
 ###
-SignDocumentEvidenceTextFull=The document was signed$_using_identification_method()$.
+SignDocumentEvidenceTextFull=The document was signed.
 ###
 SignDocumentEvidenceText=*
 $if(sms_pin)$
