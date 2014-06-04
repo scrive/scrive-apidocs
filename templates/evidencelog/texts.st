@@ -29,13 +29,29 @@ $else$
   $endif$
 $endif$
 ###
-AutomaticReminderSentTextFull=An automatic reminder to sign was sent to $signatory$ using $_delivery_method()$ at the request of $author$.
+AutomaticReminderSentTextFullEmail=An automatic reminder to sign was sent to $signatory$ using email at the request of $author$.
+###
+AutomaticReminderSentTextFullSMS=An automatic reminder to sign was sent to $signatory$ using SMS at the request of $author$.
+###
+AutomaticReminderSentTextFullEmailSMS=An automatic reminder to sign was sent to $signatory$ using email and SMS at the request of $author$.
 ###
 AutomaticReminderSentText=*
 $if(full)$
-  $AutomaticReminderSentTextFull()$
+  $if(email)$
+    $AutomaticReminderSentTextFullEmail()$
+  $elseif(mobile)$
+    $AutomaticReminderSentTextFullSMS()$
+  $elseif(emailmobile)$
+    $AutomaticReminderSentTextFullEmailSMS()$
+  $endif$
 $else$
-  $_AutomaticReminderSentTextSimple()$
+  $if(email)$
+    $_AutomaticReminderSentTextSimpleEmail()$
+  $elseif(mobile)$
+    $_AutomaticReminderSentTextSimpleSMS()$
+  $elseif(emailmobile)$
+    $_AutomaticReminderSentTextSimpleEmailSMS()$
+  $endif$
 $endif$
 ###
 CancelDocumentEvidenceTextFull=The invitation to sign was withdrawn by $actor$. The possibility to sign was disabled by Scrive E-sign.
@@ -106,29 +122,73 @@ $else$
   $endif$
 $endif$
 ###
-SigningInvitationEvidenceTextFull=An invitation to sign was sent to $signatory$ using $_delivery_method()$. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $_invitationCustomMessageTextToSign()$
+SigningInvitationEvidenceTextFullEmail=An invitation to sign was sent to $signatory$ using email. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $_invitationCustomMessageTextToSign()$
 ###
-ReviewInvitationEvidenceTextFull=An invitation to review was sent to $signatory$ using $_delivery_method()$. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $_invitationCustomMessageTextToReview()$
+SigningInvitationEvidenceTextFullSMS=An invitation to sign was sent to $signatory$ using SMS. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $_invitationCustomMessageTextToSign()$
+###
+SigningInvitationEvidenceTextFullEmailSMS=An invitation to sign was sent to $signatory$ using email and SMS. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $_invitationCustomMessageTextToSign()$
+###
+ReviewInvitationEvidenceTextFullEmail=An invitation to review was sent to $signatory$ using email. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $_invitationCustomMessageTextToReview()$
+###
+ReviewInvitationEvidenceTextFullSMS=An invitation to review was sent to $signatory$ using SMS. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $_invitationCustomMessageTextToReview()$
+###
+ReviewInvitationEvidenceTextFullEmailSMS=An invitation to review was sent to $signatory$ using email and SMS. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $_invitationCustomMessageTextToReview()$
 ###
 InvitationEvidenceText=*
 $if(signing)$
   $if(full)$
-    $SigningInvitationEvidenceTextFull()$
+    $if(email)$
+        $SigningInvitationEvidenceTextFullEmail()$
+    $elseif(mobile)$
+        $SigningInvitationEvidenceTextFullSMS()$
+    $elseif(emailmobile)$
+        $SigningInvitationEvidenceTextFullEmailSMS()$
+    $endif$
   $else$
     $if(archive)$
-      $_InvitationEvidenceTextToSignArchiveSimple()$
+      $if(email)$
+            $_InvitationEvidenceTextToSignArchiveSimpleEmail()$
+      $elseif(mobile)$
+            $_InvitationEvidenceTextToSignArchiveSimpleSMS()$
+      $elseif(emailmobile)$
+            $_InvitationEvidenceTextToSignArchiveSimpleEmailSMS()$
+      $endif$
     $else$
-      $_InvitationEvidenceTextToSignNotArchiveSimple()$
+      $if(email)$
+            $_InvitationEvidenceTextToSignNotArchiveSimpleEmail()$
+      $elseif(mobile)$
+            $_InvitationEvidenceTextToSignNotArchiveSimpleSMS()$
+      $elseif(emailmobile)$
+            $_InvitationEvidenceTextToSignNotArchiveSimpleEmailSMS()$
+      $endif$
     $endif$
   $endif$
 $elseif(viewing)$
   $if(full)$
-    $ReviewInvitationEvidenceTextFull()$
+    $if(email)$
+        $ReviewInvitationEvidenceTextFullEmail()$
+    $elseif(mobile)$
+        $ReviewInvitationEvidenceTextFullSMS()$
+    $elseif(emailmobile)$
+        $ReviewInvitationEvidenceTextFullEmailSMS()$
+    $endif$
   $else$
     $if(archive)$
-      $_InvitationEvidenceTextToReviewArchiveSimple()$
+      $if(email)$
+            $_InvitationEvidenceTextToReviewArchiveSimpleEmail()$
+      $elseif(mobile)$
+            $_InvitationEvidenceTextToReviewArchiveSimpleSMS()$
+      $elseif(emailmobile)$
+            $_InvitationEvidenceTextToReviewArchiveSimpleEmailSMS()$
+      $endif$
     $else$
-      $_InvitationEvidenceTextToReviewNotArchiveSimple()$
+      $if(email)$
+            $_InvitationEvidenceTextToReviewNotArchiveSimpleEmail()$
+      $elseif(mobile)$
+            $_InvitationEvidenceTextToReviewNotArchiveSimpleSMS()$
+      $elseif(emailmobile)$
+            $_InvitationEvidenceTextToReviewNotArchiveSimpleEmailSMS()$
+      $endif$
     $endif$
   $endif$
 $endif$
@@ -216,15 +276,39 @@ $endif$
 ReminderSendText=*
 $if(archive)$
   $if(signing)$
-    $_ReminderSendTextToSignArchive()$
+    $if(email)$
+        $_ReminderSendTextToSignArchiveEmail()$
+    $elseif(mobile)$
+        $_ReminderSendTextToSignArchiveSMS()$
+    $elseif(emailmobile)$
+        $_ReminderSendTextToSignArchiveEmailSMS()$
+    $endif$
   $elseif(viewing)$
-    $_ReminderSendTextToReviewArchive()$
+    $if(email)$
+        $_ReminderSendTextToReviewArchiveEmail()$
+    $elseif(mobile)$
+        $_ReminderSendTextToReviewArchiveSMS()$
+    $elseif(emailmobile)$
+        $_ReminderSendTextToReviewArchiveEmailSMS()$
+    $endif$
   $endif$
 $else$
   $if(signing)$
-    $_ReminderSendTextToSignNotArchive()$
+    $if(email)$
+        $_ReminderSendTextToSignNotArchiveEmail()$
+    $elseif(mobile)$
+        $_ReminderSendTextToSignNotArchiveSMS()$
+    $elseif(emailmobile)$
+        $_ReminderSendTextToSignNotArchiveEmailSMS()$
+    $endif$
   $elseif(viewing)$
-    $_ReminderSendTextToReviewNotArchive()$
+    $if(email)$
+        $_ReminderSendTextToReviewNotArchiveEmail()$
+    $elseif(mobile)$
+        $_ReminderSendTextToReviewNotArchiveSMS()$
+    $elseif(emailmobile)$
+        $_ReminderSendTextToReviewNotArchiveEmailSMS()$
+    $endif$
   $endif$
 $endif$
 ###
