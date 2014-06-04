@@ -461,8 +461,7 @@ var DocumentViewSignatoryView = React.createClass({
              {/*if*/ model.hasRemoveFromPadQueueOption() &&
                <Button
                  color="black"
-                 text={[localization.pad.removeFromPadQueue1, localization.pad.removeFromPadQueue2]}
-                 multiline={true}
+                 text={localization.pad.removeFromPadQueue}
                  onClick={this.handleRemoveFromPadQueue}
                />
              }
