@@ -1,4 +1,4 @@
-{ 
+{
 "_CompanyAccounts":"Brugere",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Er du sikker på, at du vil sende en reminder til de parter, der er involveret i dokumenterne <span class='put-number-of-documents-here'></span> ?",
@@ -168,7 +168,7 @@
 "_blockingFreeCreateTitle":"Køb et abonnement",
 "_blockingFreeHasHeadline":"Du har sendt <span class='put-docs-used-here'/> af dine 3 gratis dokumenter pr. måned. <a class='put-link-to-payments-here'>Opgrader nu og få et ubegrænset antal dokumenter.</a> ",
 "_blockingFreeHasNotHeadline":"Du har sendt alle dine gratis dokumenter i denne måned.",
-"_blockingFreeHasNotSubtext1":"<a class='put-link-to-payments-here'>Køb et abonnement for at sende mere i denne måned</a>\n ",
+"_blockingFreeHasNotSubtext1":"",
 "_blockingFreeHeading":"Du har sendt alle dine gratis dokumenter i denne måned. Køb et abonnement for at sende flere i denne måned. ",
 "_blockingOverdueCSVBody":"Der var noget galt med din seneste betaling. Besøg venligst <a class='put-link-to-payments-here'>betalingsside</a> og dobbelttjek dine faktureringsoplysninger. Du kan ikke sende flere dokumenter, før dette er løst.",
 "_blockingOverdueCreateBody":"Der var noget galt med din seneste betaling. Besøg venligst <a class='put-link-to-payments-here'>betalingsside</a> og dobbelttjek dine faktureringsoplysninger. Du kan ikke sende flere dokumenter, før dette er løst. ",

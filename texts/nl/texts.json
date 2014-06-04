@@ -1,4 +1,4 @@
-{ 
+{
 "_CompanyAccounts":"Gebruikers",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Weet u zeker dat u herinneringen wilt versturen aan de partijen betrokken bij de volgende documenten: <span class='put-number-of-documents-here'></span>?",
@@ -168,7 +168,7 @@
 "_blockingFreeCreateTitle":"Koop een abonnement",
 "_blockingFreeHasHeadline":"U heeft <span class='put-docs-used-here'/>van uw 3 gratis documenten voor deze maand verstuurd.  <a class='put-link-to-payments-here'>Upgrade nu om ongelimiteerd documenten te versturen.</a>",
 "_blockingFreeHasNotHeadline":"U heeft al uw gratis documenten voor deze maand verstuurd.",
-"_blockingFreeHasNotSubtext1":"<a class='put-link-to-payments-here'>Koop een abonnement om deze maand meer te versturen</a>",
+"_blockingFreeHasNotSubtext1":"",
 "_blockingFreeHeading":"U heeft al uw gratis documenten voor deze maand verzonden. Koop een abonnement om deze maand meer te versturen. ",
 "_blockingOverdueCSVBody":"Er is iets misgegaan met uw laatste betaling. Bezoek de <a class='put-link-to-payments-here'>betalingspagina</a> en controleer uw betalingsgegevvens. U kunt geen verdere documenten versturen to dit probleem is verholpen. ",
 "_blockingOverdueCreateBody":"Er is iets misgegaan met uw laatste betaling. Bezoek de <a class='put-link-to-payments-here'>betalingspagina</a> en controleer uw betalingsgegevvens. U kunt geen verdere documenten versturen to dit probleem is verholpen. ",

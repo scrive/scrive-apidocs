@@ -1,4 +1,4 @@
-{ 
+{
 "_CompanyAccounts":"Användare",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"",
@@ -168,7 +168,7 @@
 "_blockingFreeCreateTitle":"Köp ett abonnemang",
 "_blockingFreeHasHeadline":"",
 "_blockingFreeHasNotHeadline":"Du har skickat alla dina fria dokument denna månad.",
-"_blockingFreeHasNotSubtext1":"<a class='put-link-to-payments-here'>Köp ett abonnemang för att skicka mer denna månad</a>",
+"_blockingFreeHasNotSubtext1":"",
 "_blockingFreeHeading":"Du har skickat alla dina fria dokument denna månad. Köp ett abonnemang för att kunna skicka mer denna månad.",
 "_blockingOverdueCSVBody":"",
 "_blockingOverdueCreateBody":"",
