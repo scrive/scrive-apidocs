@@ -32,7 +32,7 @@ import Control.Monad.Trans
 import Util.Actor
 import qualified Log
 import Data.Maybe
-import DB.TimeZoneName (mkTimeZoneName)
+import DB.TimeZoneName (defaultTimeZoneName, mkTimeZoneName)
 
 mailsTests :: TestEnvSt -> Test
 mailsTests env  = testGroup "Mails" [
@@ -86,7 +86,7 @@ sendDocumentMails author = do
       _ <- dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { lang = l }
       let aa = authorActor ctx author
       req <- mkRequest POST []
-      runTestKontra req ctx $ (fromJust <$> randomUpdate (NewDocument author "Document title" Signable 0 aa)) `withDocumentM` do
+      runTestKontra req ctx $ (fromJust <$> randomUpdate (NewDocument author "Document title" Signable defaultTimeZoneName 0 aa)) `withDocumentM` do
         True <- dbUpdate $ SetDocumentLang l (systemActor $ ctxtime ctx)
 
         asl <- head . documentsignatorylinks <$> theDocument

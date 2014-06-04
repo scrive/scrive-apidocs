@@ -216,6 +216,7 @@ insertAuthorAttachmentsAsAre documentid attachments = do
 
 insertMainFilesAsAre :: MonadDB m => DocumentID -> [MainFile] -> m [MainFile]
 insertMainFilesAsAre _documentid [] = return []
+
 insertMainFilesAsAre documentid rfiles = do
   let files = reverse rfiles -- rfiles should be inserted with descending id: newer files come first in rfiles
   runQuery_ . sqlInsert "main_files" $ do
@@ -288,36 +289,7 @@ insertSignatoryScreenshots l = do
            sqlSetList "file_id"           $ fileids
 
 insertDocumentAsIs :: (Log.MonadLog m, MonadDB m) => Document -> m (Maybe Document)
-insertDocumentAsIs document@(Document
-                   _documentid
-                   documenttitle
-                   documentsignatorylinks
-                   documentmainfiles
-                   documentstatus
-                   documenttype
-                   documentctime
-                   documentmtime
-                   documentdaystosign
-                   documentdaystoremind
-                   documenttimeouttime
-                   _documentautoremindtime
-                   documentinvitetime
-                   documentinvitetext
-                   documentconfirmtext
-                   documentshowheader
-                   documentshowpdfdownload
-                   documentshowrejectoption
-                   documentshowfooter
-                   documentsharing
-                   documenttags
-                   documentauthorattachments
-                   documentlang
-                   _documentstatusclass
-                   documentapicallbackurl
-                   documentobjectversion
-                   documentmagichash
-                   _documentauthorcompanyid
-                 ) = do
+insertDocumentAsIs document@(Document{..}) = do
     runQuery_ . sqlInsert "documents" $ do
         sqlSet "title" documenttitle
         sqlSet "status" documentstatus
@@ -343,8 +315,8 @@ insertDocumentAsIs document@(Document
         sqlSet "object_version" documentobjectversion
         sqlSet "api_callback_url" documentapicallbackurl
         sqlSet "token" documentmagichash
+        sqlSet "time_zone_name" documenttimezonename
         sqlResult "documents.id"
-
     mdid <- fetchMaybe unSingle
     case mdid of
       Nothing -> return Nothing
@@ -705,9 +677,9 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m MarkInvitationRead Bo
         actor
     return success
 
-data NewDocument = NewDocument User String DocumentType Int Actor
+data NewDocument = NewDocument User String DocumentType TimeZoneName Int Actor
 instance (CryptoRNG m, MonadDB m, Log.MonadLog m, TemplatesMonad m) => DBUpdate m NewDocument (Maybe Document) where
-  update (NewDocument user title documenttype nrOfOtherSignatories actor) = do
+  update (NewDocument user title documenttype timezone nrOfOtherSignatories actor) = do
     let ctime = actorTime actor
     magichash <- random
     authorFields <- signatoryFieldsFromUser user
@@ -729,6 +701,7 @@ instance (CryptoRNG m, MonadDB m, Log.MonadLog m, TemplatesMonad m) => DBUpdate 
                   , documentmtime                = ctime
                   , documentauthorattachments    = []
                   , documentmagichash            = token
+                  , documenttimezonename         = timezone
                   }
 
     midoc <- insertDocumentAsIs doc

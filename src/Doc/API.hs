@@ -201,7 +201,8 @@ apiCallCreateFromFile = api $ do
                                       Left _ -> return (Left m)
       fileid' <- dbUpdate $ NewFile filename pdfcontent
       return (Just fileid', takeBaseName filename)
-  guardJustM (dbUpdate $ NewDocument user title doctype 0 actor) `withDocumentM` do
+  timezone <- mkTimeZoneName =<< (fromMaybe "Europe/Stockholm" <$> getField "timezone")
+  guardJustM (dbUpdate $ NewDocument user title doctype timezone 0 actor) `withDocumentM` do
     when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft True
     case mfile of
       Nothing -> return ()

@@ -165,5 +165,6 @@ kontraMigrations = [
   , createSignatorySMSPinsTable
   , createBrandedDomainsTable
   , usersTableChangeAssociatedDomainToForeignKey
+  , addTimeZoneNameToDocuments
   ] ++ mailerMigrations
     ++ messengerMigrations

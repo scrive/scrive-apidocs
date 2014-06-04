@@ -5,7 +5,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = tblTable {
     tblName = "documents"
-  , tblVersion = 33
+  , tblVersion = 34
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "title", colType = TextT, colNullable = False }
@@ -32,6 +32,7 @@ tableDocuments = tblTable {
     , tblColumn { colName = "show_footer", colType = BoolT, colNullable = False, colDefault = Just "true" }
     , tblColumn { colName = "token", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "confirm_text", colType = TextT, colNullable = False, colDefault = Just "''::text" }
+    , tblColumn { colName = "time_zone_name", colType = TextT, colNullable = False, colDefault = Just "'Europe/Stockholm'::text" }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   }

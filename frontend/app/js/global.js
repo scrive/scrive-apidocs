@@ -63,6 +63,7 @@ window.createnewdocument = function(event) {
       new Submit({
           method : "POST",
           url : "/api/frontend/createfromfile",
+          timezone : jstz.determine().name(),
           ajax: true,
           expectedType : "text",
           ajaxsuccess: function(d) {
