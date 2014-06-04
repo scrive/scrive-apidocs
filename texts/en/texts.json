@@ -479,7 +479,6 @@
 "_mailDocumentAwaitingForAuthorContentReadyForSigning":"The document <strong>$documenttitle$</strong> is ready to sign.",
 "_mailDocumentAwaitingForAuthorContentSignedBy":"You have invited $partylist:noescape()$ to sign the document <strong>$documenttitle$</strong>. This document has been signed by $partylistSigned:noescape()$.<br/><br/>It is now your turn to sign.",
 "_mailDocumentAwaitingForAuthorTitle":"Document to e-sign: $documenttitle$",
-"_mailDocumentCorrectionOrConfirmation":"$if(sealFixed)$Correction$else$Confirmation$endif$",
 "_mailDocumentErrorContentBodyFirst":"Unfortunately Scrive E-sign could not handle the document file <strong>$documenttitle$</strong>. Therefore the signing process has been cancelled. Our technicians have been notified of this issue.",
 "_mailDocumentErrorContentBodyFourth":"We are sorry for the inconvenience",
 "_mailDocumentErrorContentBodySecond":"If you have any comments or questions regarding this issue, please contact Scrive support at $supportmaillink$.",

@@ -55,14 +55,21 @@ $endif$
 ##### CLOSED MAIL
 #####
 mailContractClosed=
-    $_mailDocumentClosedTitleContract()$
+    $mailDocumentClosedTitleContract()$
     $nicemail(
-        mailheader = _mailDocumentClosedTitleContract();
+        mailheader = mailDocumentClosedTitleContract();
         mailp1 = mailContractClosedMainP();
         footer = footer
     )$
 
 ####
+mailDocumentClosedTitleContract=
+    $if(sealFixed)$
+        $_mailDocumentClosedTitleContractCorrection()$
+    $else$
+        $_mailDocumentClosedTitleContractConfirmation()$
+    $endif$
+###
 mailContractClosedMainP =
     $if(sealFixed)$ $_mailDocumentCorrectionBody()$ $else$ $_mailContractClosedContentSignedBy()$ $endif$
     <br/>
