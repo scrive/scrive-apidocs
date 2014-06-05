@@ -54,7 +54,7 @@
 "_mailDocumentLinked":"Dokumentet var for stort til å legges ved denne e-posten. Det vil være tilgjengelig for nedlasting frem til $availabledate$.",
 "_mailDocumentLinkedButton":"Last ned dokument",
 "_mailInvitationCustomInvitationHeader":"Melding fra <strong>$creatorname$</strong>",
-"_mailInvitationFromPart":"$authorname$ via $originator$",
+"_mailInvitationFromPart":"$authorname$ gjennom $originator$",
 "_mailInvitationToSignContractDefaultHeader":"<strong>$creatorname$</strong> har invitert deg til å signere dokumentet <strong>$documenttitle$</strong> elektronisk via Scrive E-sign.",
 "_mailInvitationToSignTitleContract":"Dokument til å e-signere: $documenttitle$",
 "_mailInvitationToViewDefaultHeader":"<strong>$creatorname$</strong> har invitert deg til å lese gjennom dokumentet <strong>$documenttitle$</strong>.",

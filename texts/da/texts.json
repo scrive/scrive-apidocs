@@ -471,7 +471,7 @@
 "_listcancelbody":"Er du sikker på, du ønsker at tilbagetrække udvalgte dokumenter?",
 "_listcancelbuttontext":"Tilbagetræk",
 "_listcanceledflashmessagesuccess":"Udvalgte dokumenter er blevet tilbagetrukket.",
-"_loadingFile":"Uploading . . .",
+"_loadingFile":"Uploader . . .",
 "_login":"Log ind",
 "_loginModalForgotPasswordSendNewPassword":"Genstart",
 "_loginOrSignup":"Gå tilbage til <a class='stylablelink' href='/$langcode$/login'>log ind</a> eller <a class='stylablelink' href='/$langcode$/signup'>tilmeld dig</a>.",
@@ -807,7 +807,7 @@
 "_withoutConfirmation":"uden bekræftelse",
 "_you":"dig",
 "_youCancelledSigning":"Signering annulleret. Vælg dit eID igen.",
-"_youCantCancelThisDocuments":"Nogle af de valgte dokumenter kan ikke tilbagekaldes.",
+"_youCantCancelThisDocuments":"Nogle af de valgte dokumenter kan ikke tilbagetrækkes.",
 "_youCantSendRemindersToThisDocuments":"Påmindelser kan ikke sendes til nogle af de udvalgte dokumenter. ",
 "_yourSigningPluginFailed":"Dit signerings plug-in fejlede i at underskrive dokumentet. Kontakt din eID-udbyder. ",
 "_zip":"Zip"
