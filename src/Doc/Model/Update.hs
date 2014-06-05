@@ -1152,17 +1152,14 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m TimeoutDocument () wh
         (return ())
         actor
 
-data ProlongDocument = ProlongDocument Int32 (Maybe TimeZoneName) Actor
+data ProlongDocument = ProlongDocument Int32 TimeZoneName Actor
 instance (DocumentMonad m, MonadBaseControl IO m, TemplatesMonad m) => DBUpdate m ProlongDocument () where
-  update (ProlongDocument days mtzn actor) = do
+  update (ProlongDocument days tzn actor) = do
     updateDocumentWithID $ \did -> do
       -- Whole TimeZome behaviour is a clone of what is happending with making document ready for signing.
       let time = actorTime actor
-      let timestamp = case mtzn of
-                    Just tzn -> formatTime defaultTimeLocale "%F" (toUTCTime time) ++ " " ++ TimeZoneName.toString tzn
-                    Nothing  -> formatTime defaultTimeLocale "%F %T %Z" (toUTCTime time)
-      dstTz <- mkTimeZoneName "Europe/Stockholm"
-      withTimeZone dstTz $ kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
+      let timestamp = formatTime defaultTimeLocale "%F" (toUTCTime time) ++ " " ++ TimeZoneName.toString tzn
+      kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
          sqlSet "status" Pending
          sqlSet "mtime" time
          sqlSetCmd "timeout_time" $ "cast (" <?> timestamp <+> "as timestamp with time zone)"
@@ -1181,6 +1178,15 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetDocumentAPICallbac
     runQuery01 . sqlUpdate "documents" $ do
       sqlSet "api_callback_url" mac
       sqlWhereEq "id" did
+
+data SetDocumentTimeZoneName = SetDocumentTimeZoneName TimeZoneName
+instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetDocumentTimeZoneName Bool where
+  update (SetDocumentTimeZoneName timezone) = updateDocumentWithID $ \did -> do
+    runQuery01 . sqlUpdate "documents" $ do
+      sqlSet "time_zone_name" timezone
+      sqlWhereEq "id" did
+
+
 
 data PostReminderSend = PostReminderSend SignatoryLink (Maybe String) Bool Actor
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m PostReminderSend () where
@@ -1331,6 +1337,7 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m UpdateDraft Bool wher
     , update $ SetShowFooter (documentshowfooter document) actor
     , update $ SetDocumentTags (documenttags document) actor
     , update $ SetDocumentAPICallbackURL (documentapicallbackurl document)
+    , update $ SetDocumentTimeZoneName (documenttimezonename document)
     , updateMTimeAndObjectVersion (actorTime actor) >> return True
     ]
 

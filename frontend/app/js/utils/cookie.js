@@ -20,7 +20,7 @@ define(function() {
       return cookies[name];
     },
     set : function(name,value) {
-      document.cookie = name + '=' + value;
+      document.cookie = name + '=' + value +';path=/';
     }
   };
 

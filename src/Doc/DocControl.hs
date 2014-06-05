@@ -98,6 +98,7 @@ import Analytics.Include
 import Data.String.Utils (replace)
 import Util.Zlib (decompressIfPossible)
 import Doc.API.Callback.Model
+import Happstack.MonadPlus (runMPlusT)
 
 
 handleNewDocument :: Kontrakcja m => m KontraLink
@@ -108,7 +109,8 @@ handleNewDocument = do
         user <- guardJustM $ ctxmaybeuser <$> getContext
         title <- renderTemplate_ "newDocumentTitle"
         actor <- guardJustM $ mkAuthorActor <$> getContext
-        timezone <- mkTimeZoneName =<< (fromMaybe "Europe/Stockholm" <$> getField "timezone")
+        mtimezonename <- runMPlusT $ lookCookieValue "timezone"
+        timezone <- mkTimeZoneName  (fromMaybe "Europe/Stockholm" mtimezonename)
         Just doc <- dbUpdate $ NewDocument user (replace "  " " " $ title ++ " " ++ formatMinutesTimeSimple (ctxtime ctx)) Signable timezone 0 actor
         withDocument doc $ dbUpdate $ SetDocumentUnsavedDraft True
         return $ LinkIssueDoc (documentid doc)

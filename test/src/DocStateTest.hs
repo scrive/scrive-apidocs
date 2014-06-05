@@ -340,7 +340,7 @@ testProlongDocument = do
   addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending) `withDocumentM` do
     success <- randomUpdate $ \t->TimeoutDocument (systemActor t)
     assert success
-    randomUpdate $ \t -> ProlongDocument 2 Nothing (systemActor t)
+    randomUpdate $ \t -> ProlongDocument 2 defaultTimeZoneName (systemActor t)
     pending <- (\d ->  (Pending == documentstatus d))  <$> theDocument
     assert pending
     lg <- dbQuery . GetEvidenceLog =<< theDocumentID
