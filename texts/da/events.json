@@ -2,7 +2,7 @@
 "_AttachExtendedSealedFileEvidenceTextSimple":"Dokumentet blev forseglet med en nøglefri digital signatur.",
 "_AttachGuardtimeSealedFileEvidenceTextSimple":"Dokumentet blev forseglet med en digital signatur.",
 "_AttachSealedFileEvidenceTextSimpleArchive":"Scrive har udarbejdet den endelige PDF.",
-"_AttachSealedFileEvidenceTextSimpleNotArchive":"Scrive har udarbejdet den endelige PDF, herunder beviser indsamlet af Scrive før forsegling med en digital signatur.",
+"_AttachSealedFileEvidenceTextSimpleNotArchive":"Scrive har udarbejdet den endelige PDF, inklusive beviser indsamlet af Scrive, før forsegling med en digital signatur.",
 "_AutomaticReminderSentTextSimple":"En automatisk påmindelse om at underskrive blev sendt til $signatory$ ved hjælp af $_delivery_method()$.",
 "_CancelDocumentEvidenceTextSimpleArchive":"Invitationen til at underskrive blev trukket tilbage.",
 "_CancelDocumentEvidenceTextSimpleNotArchive":"Invitationen til at underskrive blev trukket tilbage af $actor$.",
