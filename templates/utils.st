@@ -60,3 +60,13 @@ GreekInGreek=ελληνικά
 ###
 PoweredByScrive=E-signing powered by Scrive
 ###
+FormPricePerDocument=15 SEK
+###
+TeamPricePerMonth=299 SEK
+###
+FormPricePerMonth=3000 SEK
+###
+### This represents the number of users
+###
+FormPrice50=50
+###
