@@ -27,13 +27,13 @@ pageDoYouWantToBeCompanyAccount=
  require(['jquery', 'legacy_code'], function(jQuery) {
   jQuery(document).ready(function() {
     var content = jQuery('<div/>').addClass('recovery-container');
-    content.append(jQuery('<p/>').append('$_modalDoYouWantToBeCompanyAccountBody()$'));
+    content.append(jQuery('<p/>').append("$_modalDoYouWantToBeCompanyAccountBody()$"));
     new Confirmation({onAccept: function() {
                                     new Submit({method: 'POST', url: ''}).send();
                                   },
                         onReject : function() { window.location = '/account' ; },
-                        title: '$_modalDoYouWantToBeCompanyAccountHeader()$',
-                        acceptButtonText: '$_modalDoYouWantToBeCompanyAccountFooterAccept()$',
+                        title: "$_modalDoYouWantToBeCompanyAccountHeader()$",
+                        acceptButtonText: "$_modalDoYouWantToBeCompanyAccountFooterAccept()$",
                         content: content});
   });
  });
@@ -48,7 +48,7 @@ pageDoYouWantToChangeEmail=
  require(['jquery', 'legacy_code'], function(jQuery) {
   jQuery(document).ready(function() {
     var content = jQuery('<div/>').addClass('recovery-container');
-    content.append(jQuery('<p/>').append('$_modalDoYouWantToChangeEmailBody()$'));
+    content.append(jQuery('<p/>').append("$_modalDoYouWantToChangeEmailBody()$"));
     var password_input = jQuery('<input type="password" name="password" autocomplete="off"/>');
     content.append(jQuery('<p/>').append(password_input));
     new Confirmation({onAccept: function() {
@@ -57,7 +57,7 @@ pageDoYouWantToChangeEmail=
                                                 password: password_input.val()}).send();
                                   },
                         onReject : function() { window.location = '/account' ; },
-                        title: '$_modalDoYouWantToChangeEmailHeader()$',
+                        title: "$_modalDoYouWantToChangeEmailHeader()$",
                         acceptButtonText: 'OK',
                         content: content});
   });

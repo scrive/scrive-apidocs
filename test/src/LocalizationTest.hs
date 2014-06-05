@@ -171,10 +171,11 @@ checkEscapeSequencesTexts src@((sn,sv):ss) tar@((tn,tv):tt)
 -- We need to extend this one day with " and '
 compareEscapeSequeces:: String -> String -> Maybe String
 compareEscapeSequeces s t =
-  if (countEscapes1 s /= countEscapes1 t || countEscapes2 s /= countEscapes2 t || countEscapes3 s /= countEscapes3 t)
+  if (countEscapes1 s /= countEscapes1 t || countEscapes2 s /= countEscapes2 t || countEscapes3 s /= countEscapes3 t || countEOLs s /= countEOLs t)
     then Just "Escaped sequences don't match"
     else Nothing
   where
     countEscapes1 str = length $ split "\\\"" str
     countEscapes2 str = length $ split "\\\\\"" str
     countEscapes3 str = length $ split "\\\\\\\"" str
+    countEOLs str = length $ split "\n" str
