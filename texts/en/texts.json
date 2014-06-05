@@ -636,7 +636,7 @@
 "_paymentsContactAdmin":"Your account is part of a company account. Only the administrator of your company can purchase a subscription. Please contact your administrator to purchase a subscription for the company.",
 "_paymentsCreditCardNumber":"Credit card number",
 "_paymentsDeclinedEmailButton":"Update my billing information",
-"_paymentsDeclinedEmailCheck":"To ensure the continuation of your subscription, please update your billing information by clicking the button below. If you have any questions, please contact $accountingmaillink$.",
+"_paymentsDeclinedEmailCheck":"To ensure the continuation of your subscription, please update your billing information by clicking the button below. If you have any questions, please contact $accountingmaillink()$.",
 "_paymentsDeclinedEmailHeader":"Problem billing your credit card",
 "_paymentsDeclinedEmailSorry":"We regret to inform you that your most recent subscription payment was declined. Please verify that your billing information matches that given on your credit card. Below are the details of your declined payment.",
 "_paymentsDeclinedEmailSubject":"Problem billing your credit card",
