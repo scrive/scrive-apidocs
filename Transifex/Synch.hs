@@ -196,7 +196,8 @@ main' ("push":(user:(password:(lang:(res:_)))))  = case (readResource res) of
                                                      Just res' -> push user password lang res'
                                                      _ -> error "Invalid parameters. Resource name is invalid"
 main' ("push":_)   = error "Invalid parameters. Usage: transifex.sh push user password lang resource"
-main' ("push-lang":(user:(password:(lang:_)))) = mapM_ (push user password lang) allResources
+main' ("push-lang":(user:(password:("en":_)))) = mapM_ (push user password "en") allResources
+main' ("push-lang":(user:(password:(lang:_)))) =  error "Invalid parameters. Usage: transifex.sh push-lang user password lang is allowed only with en lang"
 main' ("push-lang":_)   = error "Invalid parameters. Usage: transifex.sh push-lang user password lang"
 main' ("merge-lang":(user:(password:(lang:_)))) = mapM_ (merge user password lang) allResources
 main' ("merge-lang":_)   = error "Invalid parameters. Usage: transifex.sh merge-lang user password lang"
