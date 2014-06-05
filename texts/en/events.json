@@ -47,5 +47,5 @@
 "_TimeoutDocumentEvidenceTextSimple":"The due date for signing the document passed.",
 "_delivery_method":"$if(email)$email$elseif(mobile)$SMS$elseif(emailmobile)$email and SMS$endif$",
 "_invitationCustomMessageTextToReview":"$if(text)$$if(!mobile)$ The invitation to review contained the following message: <BR/> <i>$text:noescape()$</i>$endif$$endif$",
-"_invitationCustomMessageTextToSign":"$if(text)$$if(!mobile)$ The invitation to sign contained the following message: <BR/> <i>$text:noescape()$</i>$endif$$endif$",
+"_invitationCustomMessageTextToSign":"$if(text)$$if(!mobile)$ The invitation to sign contained the following message: <BR/> <i>$text:noescape()$</i>$endif$$endif$"
 }
