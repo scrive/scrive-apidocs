@@ -283,7 +283,8 @@ window.ForwardApiCall = ApiCall.extend({
         defaults: {
             name : "Forward email with signed document",
             documentid : LocalStorage.get("api","documentid"),
-            email : "vip@gmail.com"
+            email : "vip@gmail.com",
+            noContent : undefined
         },
         documentid : function() {return this.get("documentid");},
         setDocumentid : function(documentid) {
@@ -294,7 +295,10 @@ window.ForwardApiCall = ApiCall.extend({
         setEmail: function(email) {
             return this.set({"email" : email});
         },
-
+        noContent : function() {return this.get("noContent");},
+        setNoContent: function(bool) {
+            return this.set({"noContent" : bool});
+        },
         initialize: function (args) {
         },
         isForward : function() {return true;},
@@ -303,7 +307,7 @@ window.ForwardApiCall = ApiCall.extend({
             this.call("forward/" + model.documentid(), {
                 type: 'POST',
                 cache: false,
-                data : { email : model.email()},
+                data : { email : model.email(), nocontent : this.noContent() ? "true" : undefined},
                 success : function(res) {
                     model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
                 },
@@ -1120,11 +1124,17 @@ window.ForwardApiCallView = Backbone.View.extend({
             var emailInput = $("<input type='text'/>").val(model.email());
             emailInput.change(function() {model.setEmail(emailInput.val()); return false;})
 
+            var noContentCheckbox = $("<input type='checkbox' />");
+            if (model.noContent())
+              noContentCheckbox.prop('checked',model.noContent);
+            noContentCheckbox.change(function() {model.setNoContent(noContentCheckbox.prop('checked'))});
             var button = $("<input type='button' value='Send request'/>");
             button.click(function() {model.send(); return false;});
             boxLeft.append($("<div>Document #: <BR/></div>").append(documentidInput))
                    .append($("<div>Email : <BR/></div>").append(emailInput))
+                   .append($("<div>No content : </div>").append(noContentCheckbox))
                    .append($("<div/>").append(button));
+
             this.render();
         },
         render : function() {

@@ -314,14 +314,17 @@ sendAllReminderEmailsWithFilter f actor automatic = do
     Send a forward email
 -}
 sendForwardEmail :: (Log.MonadLog m, TemplatesMonad m,MonadIO m, CryptoRNG m, DocumentMonad m, MailContextMonad m) =>
-                          String -> SignatoryLink -> m ()
-sendForwardEmail email asiglink = do
+                          String -> Bool -> SignatoryLink -> m ()
+sendForwardEmail email noContent asiglink = do
   mctx <- getMailContext
   mailattachments <- makeMailAttachments =<< theDocument
   mail <- mailForwardSigned asiglink (not (null mailattachments)) =<< theDocument
   did <- documentid <$> theDocument
   scheduleEmailSendoutWithDocumentAuthorSender did (mctxmailsconfig mctx) $ mail {
                                to = [MailAddress "" email]
+                             , content =  if (noContent)
+                                             then ""
+                                             else content mail
                              , attachments = mailattachments
                              }
   return ()
