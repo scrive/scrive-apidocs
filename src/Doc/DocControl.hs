@@ -277,7 +277,8 @@ handleIssueShowGet docid = checkUserTOSGet $ do
   ctx <- getContext
   case (ispreparation, msiglink) of
     (True,  _)                       -> do
-       Left <$> (simpleHtmlResonseClrFlash =<< pageDocumentDesign ctx document ad)
+       -- Never cache design view. IE8 hack. Should be fixed in different wasy
+       Left <$> (setHeaderBS "Cache-Control" "no-cache" <$> (simpleHtmlResonseClrFlash =<< pageDocumentDesign ctx document ad))
     (False, _) | isauthororincompany -> do
        Right <$> pageDocumentView document msiglink (isincompany)
     (False, Just siglink)            -> do
