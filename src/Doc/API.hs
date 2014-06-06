@@ -55,7 +55,7 @@ import Util.MonadUtils (guardJustM)
 import Happstack.Server.RqData
 import Doc.Rendering
 import DB
-import DB.TimeZoneName (mkTimeZoneName)
+import DB.TimeZoneName (mkTimeZoneName, defaultTimeZoneName)
 import MagicHash (MagicHash)
 import Kontra
 import Doc.DocUtils
@@ -103,6 +103,7 @@ import Doc.DocMails
 import Doc.AutomaticReminder.Model
 import Utils.Monoid
 import Doc.SMSPin.Model
+import qualified Data.Traversable as T
 
 documentAPI :: Route (KontraPlus Response)
 documentAPI = dir "api" $ choice
@@ -201,7 +202,8 @@ apiCallCreateFromFile = api $ do
                                       Left _ -> return (Left m)
       fileid' <- dbUpdate $ NewFile filename pdfcontent
       return (Just fileid', takeBaseName filename)
-  timezone <- mkTimeZoneName =<< (fromMaybe "Europe/Stockholm" <$> getField "timezone")
+  mtimezone <- getField "timezone"
+  timezone <- fromMaybe defaultTimeZoneName <$> T.sequence (mkTimeZoneName <$> mtimezone)
   guardJustM (dbUpdate $ NewDocument user title doctype timezone 0 actor) `withDocumentM` do
     when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft True
     case mfile of

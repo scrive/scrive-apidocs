@@ -113,7 +113,7 @@ import Text.StringTemplates.Templates
 import EvidenceLog.Model
 import Util.HasSomeUserInfo
 import qualified Text.StringTemplates.Fields as F
-import DB.TimeZoneName (TimeZoneName, mkTimeZoneName, withTimeZone)
+import DB.TimeZoneName (TimeZoneName, withTimeZone, defaultTimeZoneName)
 import qualified DB.TimeZoneName as TimeZoneName
 import Company.Model
 
@@ -566,8 +566,7 @@ instance (MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m) => DBUpdate 
             -- interval addition advances the time properly across DST changes
             -- (i.e., so that we stay on midnight)
             -- http://www.postgresql.org/docs/9.2/static/functions-datetime.html
-            dstTz <- mkTimeZoneName "Europe/Stockholm"
-            withTimeZone dstTz $ do
+            withTimeZone defaultTimeZoneName $ do
               lang :: Lang <- kRunAndFetch1OrThrowWhyNot unSingle $ sqlUpdate "documents" $ do
                 sqlSet "status" Pending
                 sqlSetCmd "timeout_time" $ "cast (" <?> timestamp <+> "as timestamp with time zone)"
@@ -1159,7 +1158,7 @@ instance (DocumentMonad m, MonadBaseControl IO m, TemplatesMonad m) => DBUpdate 
       -- Whole TimeZome behaviour is a clone of what is happending with making document ready for signing.
       let time = actorTime actor
       let timestamp = formatTime defaultTimeLocale "%F" (toUTCTime time) ++ " " ++ TimeZoneName.toString tzn
-      kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
+      withTimeZone defaultTimeZoneName $ kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
          sqlSet "status" Pending
          sqlSet "mtime" time
          sqlSetCmd "timeout_time" $ "cast (" <?> timestamp <+> "as timestamp with time zone)"
