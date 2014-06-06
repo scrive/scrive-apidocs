@@ -168,7 +168,7 @@
 "_blockingFreeCreateTitle":"Kauf ein Abonnement",
 "_blockingFreeHasHeadline":"Sie haben <span class='put-docs-used-here'/>von Ihren 3 freie Dokumente in diesem Monat gesendet.<a class='put-link-to-payments-here'>Jetzt aufrüsten um unbegrenzte Dokumente zu senden.</a>",
 "_blockingFreeHasNotHeadline":"Sie haben alle Ihre kostenlose Dokumente  in diesem Monat gesendet.",
-"_blockingFreeHasNotSubtext1":"<a class='put-link-to-payments-here'>Schliessen Sie ein Abonnement ab um mehr in diesem Monat zu senden</a>",
+"_blockingFreeHasNotSubtext1":"",
 "_blockingFreeHeading":"Sie haben alle Ihre kostenlose Dokumente in diesem Monat gesendet. Kaufen Sie ein Abonnement, um mehr in diesem Monat zu senden ",
 "_blockingOverdueCSVBody":"Etwas mit Ihrer letzten Zahlung stimmt nicht. Bitte besuchen Sie die Seite <a class='put-link-to-payments-here'>Zahlungen</a>und überprüfen Sie Ihre Zahlungsinformationen. Sie können keine Dokumente senden, bis dieses Problem behoben ist.",
 "_blockingOverdueCreateBody":"Etwas mit Ihrer letzten Zahlung stimmt nicht. Bitte besuchen Sie die Seite <a class='put-link-to-payments-here'>Zahlungen</a> und überprüfen Sie Ihre Zahlungsinformationen. Sie können keine Dokumente senden, bis dieses Problem behoben ist.",
