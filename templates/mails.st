@@ -392,7 +392,6 @@ invitationMailUndeliveredMainP =
              $_invitationMailUndeliveredContentInstructionStep2()$
            </li>
          </ol>
-         $_invitationMailUndeliveredContentInstruction()$
        </div>
 #######
 ### UNDELIVERED SMS
