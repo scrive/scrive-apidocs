@@ -10,11 +10,20 @@ class LoginHelper
     @h = helper
   end
 
+  def add_cookie
+    lang = @h.lang
+    if lang == "el" then
+      # greek language uses langcode el, but cookie should be LANG_GR
+      lang = "gr"
+    end
+    @driver.manage.add_cookie(:name => 'lang', :value => '"LANG_' + lang.upcase + '"')
+  end
+
   def login_as(email, password, options = {})
     screenshot_name = options[:screenshot_name] || nil
     sleep 1
     @driver.navigate().to(@ctx.createKontrakcjaURL ("/" + @h.lang + "/login"))
-    @driver.manage.add_cookie(:name => 'lang', :value => '"LANG_' + @h.lang.upcase + '"')
+    self.add_cookie
     (@h.wait_until { @driver.find_element :css => ".short-input-container" })
     if screenshot_name then
       @h.screenshot screenshot_name
