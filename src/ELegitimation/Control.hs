@@ -72,13 +72,13 @@ generateBankIDTransaction docid signid = do
   -- sanity check
   document <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash docid signid magic
 
-  nonceresponse <- liftIO $ generateChallenge ctxlogicaconf provider
+  nonceresponse <- generateChallenge ctxlogicaconf provider
   case nonceresponse of
         Left (ImplStatus _a _b code msg) -> generationFailed "Generate Challenge failed" code msg
         Right (nonce, transactionid) -> do
             -- encode the text to be signed
             tbs <- getTBS document
-            encodetbsresponse <- liftIO $ encodeTBS ctxlogicaconf provider tbs transactionid
+            encodetbsresponse <- encodeTBS ctxlogicaconf provider tbs transactionid
             case encodetbsresponse of
                 Left (ImplStatus _a _b code msg) -> generationFailed "EncodeTBS failed" code msg
                 Right txt -> do
@@ -114,13 +114,13 @@ generateBankIDTransactionForAuthor  docid = do
         _              -> internalError
     unless (isAuthor (document, author)) internalError -- necessary because someone other than author cannot initiate eleg
 
-    nonceresponse <- liftIO $ generateChallenge logicaconf provider
+    nonceresponse <- generateChallenge logicaconf provider
     case nonceresponse of
         Left (ImplStatus _a _b code msg) -> generationFailed "Generate Challenge failed" code msg
         Right (nonce, transactionid) -> do
             -- encode the text to be signed
 
-            encodetbsresponse <- liftIO $ encodeTBS logicaconf provider tbs transactionid
+            encodetbsresponse <- encodeTBS logicaconf provider tbs transactionid
             case encodetbsresponse of
                 Left (ImplStatus _a _b code msg) -> generationFailed "EncodeTBS failed" code msg
                 Right txt -> do
@@ -188,7 +188,7 @@ verifySignatureAndGetSignInfo signid magic fields provider signature transaction
      -- end validation
     Log.mixlog_ $ "Successfully found eleg transaction: " ++ show transactionid
     -- send signature to ELeg
-    res <- liftIO $ verifySignature logicaconf provider
+    res <- verifySignature logicaconf provider
                 etbs
                 signature
                 ( transactionnonce <|  provider == BankIDProvider |> Nothing )
@@ -272,7 +272,7 @@ verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = 
     Log.mixlog_ $ ("Document " ++ show docid ) ++ ": Document matched"
 
     Log.mixlog_ $ ("Document " ++ show docid ) ++ ": Document allows eleg"
-    res <- liftIO $ verifySignature logicaconf provider
+    res <- verifySignature logicaconf provider
                       etbs
                       signature
                       ( transactionnonce <|  provider == BankIDProvider |> Nothing )
@@ -326,7 +326,7 @@ initiateMobileBankID docid slid = do
 
     tbs <- getTBS document
 
-    eresponse <- liftIO $ mbiRequestSignature logicaconf pn tbs
+    eresponse <- mbiRequestSignature logicaconf pn tbs
     case eresponse of
       Left e -> mobileBankIDErrorJSON e pn
       Right (tid, oref) -> do
@@ -352,7 +352,7 @@ initiateMobileBankIDForAuthor docid = do
     tbs <-getTBS document
     sl <- guardJust $ getAuthorSigLink document
     let pn = getPersonalNumber sl
-    eresponse <- liftIO $ mbiRequestSignature logicaconf pn tbs
+    eresponse <- mbiRequestSignature logicaconf pn tbs
     case eresponse of
       Left e -> mobileBankIDErrorJSON e pn
       Right (tid, oref) -> do
@@ -399,7 +399,7 @@ collectMobileBankID docid slid = do
       return $ runJSONGen $ J.value "status" "complete"
     _ -> do
       oref <- guardJust transactionoref
-      eresponse <- liftIO $ mbiRequestCollect logicaconf tid oref
+      eresponse <- mbiRequestCollect logicaconf tid oref
       case eresponse of
         Left e -> do
           dbUpdate . MergeELegTransaction $ trans { transactionstatus = Left e }
@@ -449,7 +449,7 @@ collectMobileBankIDForAuthor docid = do
         J.value "status" "complete"
         J.value "personalNumber" pn
     _ -> do
-      eresponse <- liftIO $ mbiRequestCollect logicaconf tid oref
+      eresponse <- mbiRequestCollect logicaconf tid oref
       case eresponse of
         Left e -> do
           dbUpdate . MergeELegTransaction $ trans { transactionstatus = Left e }
