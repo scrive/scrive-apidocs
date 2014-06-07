@@ -66,7 +66,7 @@ import Control.Monad
 import qualified Data.ByteString as BS
 
 selectTablesForDocumentSelectors :: State.State SqlSelect () -> SqlSelect
-selectTablesForDocumentSelectors = sqlSelect2 "documents as documents LEFT JOIN document_automatic_reminders as document_automatic_reminders ON documents.id = document_automatic_reminders.document_id LEFT JOIN signatory_links AS signatory_links_authors ON documents.id = signatory_links_authors.document_id and signatory_links_authors.is_author = true LEFT JOIN users as user_authors ON signatory_links_authors.user_id = user_authors.id"
+selectTablesForDocumentSelectors = sqlSelect2 "documents as documents LEFT JOIN document_automatic_reminders as document_automatic_reminders ON documents.id = document_automatic_reminders.document_id LEFT JOIN signatory_links AS signatory_links_authors ON documents.id = signatory_links_authors.document_id LEFT JOIN users as user_authors ON signatory_links_authors.user_id = user_authors.id"
 
 documentsSelectors :: [SQL]
 documentsSelectors =
@@ -98,7 +98,7 @@ documentsSelectors =
   , documentStatusClassExpression
   ]
 
-fetchDocument :: (DocumentID, String, DocumentStatus, Maybe String, DocumentType, MinutesTime, MinutesTime, Int32, Maybe Int32, Maybe MinutesTime, Maybe MinutesTime, Maybe MinutesTime, Maybe IPAddress, String, String, Bool, Bool, Bool, Bool, Lang, DocumentSharing, Maybe String, Int64, MagicHash, CompanyID, StatusClass) -> Document
+fetchDocument :: (DocumentID, String, DocumentStatus, Maybe String, DocumentType, MinutesTime, MinutesTime, Int32, Maybe Int32, Maybe MinutesTime, Maybe MinutesTime, Maybe MinutesTime, Maybe IPAddress, String, String, Bool, Bool, Bool, Bool, Lang, DocumentSharing, Maybe String, Int64, MagicHash, Maybe CompanyID, StatusClass) -> Document
 fetchDocument (did, title, status, error_text, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text,  show_header, show_pdf_download, show_reject_option, show_footer, lang, sharing, apicallback, objectversion, token, author_company_id, status_class)
        = Document {
          documentid = did
@@ -380,6 +380,7 @@ instance MonadDB m => DBQuery m GetDocuments2 (Int,[Document]) where
   query (GetDocuments2 allowZeroResults domains filters orderbys (offset,limit,softlimit)) = do
     selectDocumentsWithSoftLimit allowZeroResults softlimit $ selectTablesForDocumentSelectors $ do
       mapM_ sqlResult documentsSelectors
+      sqlWhere "signatory_links_authors.is_author = true"
       mapM_ (sqlOrderBy . documentOrderByAscDescToSQL) orderbys
       sqlOffset $ fromIntegral offset
       sqlLimit $ fromIntegral limit
