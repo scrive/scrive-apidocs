@@ -17,17 +17,23 @@ var newUserInCompanyButton = function(companyid) {
               var tr1 = jQuery("<tr/>").append(jQuery("<td/>").text("First name:"));
               var fstname = jQuery("<input type='text' name='fstname' autocomplete='off' />");
               tr1.append(jQuery("<td/>").append(fstname));
-              table.append(tr1);
+              var tr1ErrorRow = $('<tr class="validation-tr"><td/><td><div class="validation-failed-msg">Wrong first name format!</div></td></tr>');
+              tr1ErrorRow.css('display', 'none');
+              table.append(tr1).append(tr1ErrorRow);
 
               var tr2 = jQuery("<tr/>").append(jQuery("<td/>").text("Second name:"));
               var sndname = jQuery("<input type='text' name='sndname' autocomplete='off' />");
               tr2.append(jQuery("<td/>").append(sndname));
-              table.append(tr2);
+              var tr2ErrorRow = $('<tr class="validation-tr"><td/><td><div class="validation-failed-msg">Wrong second name format!</div></td></tr>');
+              tr2ErrorRow.css('display', 'none');
+              table.append(tr2).append(tr2ErrorRow);
 
               var tr5 = jQuery("<tr/>").append(jQuery("<td/>").text("Email address:"));
               var email = jQuery("<input type='text' name='email' autocomplete='off' />");
               tr5.append(jQuery("<td/>").append(email));
-              table.append(tr5);
+              var tr5ErrorRow = $('<tr class="validation-tr"><td/><td><div class="validation-failed-msg">Wrong email format!</div></td></tr>');
+              tr5ErrorRow.css('display', 'none');
+              table.append(tr5).append(tr5ErrorRow);
 
               var tr6 = jQuery("<tr/>").append(jQuery("<td/>").text("Language:"));
               var lang = jQuery("<select name='lang'>"
@@ -68,24 +74,30 @@ var newUserInCompanyButton = function(companyid) {
 
               new Confirmation({
                 onAccept : function() {
-                              var callback = function(t,e,v) {
-                                  jQuery(document.createElement('div'))
-                                      .attr("class", "validation-failed-msg")
-                                      .append(v.message())
-                                      .appendTo(e.parent());
-                              };
+                              // Hide validation rows
+                              tr1ErrorRow.css('display', 'none');
+                              tr2ErrorRow.css('display', 'none');
+                              tr5ErrorRow.css('display', 'none');
 
-                              //delete messages
-                              jQuery('.validation-failed-msg').remove();
+                              // Validate fields
+                              var validationResult = true;
+                              if(!new NameValidation().validateData(fstname.val())) {
+                                  tr1ErrorRow.css('display','');
+                                  validationResult = false;
+                              }
+                              if(!new NameValidation().validateData(sndname.val())) {
+                                  tr2ErrorRow.css('display','');
+                                  validationResult = false;
+                              }
+                              if(!new NotEmptyValidation().validateData(email.val())
+                                 ||
+                                 !new EmailValidation().validateData(email.val())
+                                ) {
+                                  tr5ErrorRow.css('display','');
+                                  validationResult = false;
+                              }
 
-                              var vresult = [
-                                  fstname.validate(new NameValidation({callback: callback, message: "Wrong first name format!"})),
-                                  sndname.validate(new NameValidation({callback: callback, message: "Wrong second name format!"})),
-                                  email.validate((new NotEmptyValidation({callback: callback, message: "Email cannot be empty!"})).concat(new EmailValidation({callback: callback}))),
-                                  lang.validate(new NotEmptyValidation({callback: callback, message:"Language cannot be empty!"}))
-                                  ];
-
-                              if (vresult.every(function(a) {return a;})) {
+                              if (validationResult) {
                                   new Submit({
                                       method: "POST",
                                       url: "/adminonly/companyadmin/users/" + companyid,

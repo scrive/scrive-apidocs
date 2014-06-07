@@ -6,19 +6,28 @@
     font-size: 15px;
     font-weight: 300;
   }
-  
-  table td {
-    font-weight: 300;
-    text-align: left;
-    padding: 5px;
 
-    input {
-      height: 28px;
-      width: 317px;
+
+  table {
+    td {
+      font-weight: 300;
+      padding: 5px;
+      text-align: left;
+
+      input {
+        height: 28px;
+        width: 317px;
+      }
+
+      &:first-child {
+        width: 85px;
+      }
     }
 
-    &:first-child {
-      width: 85px;
+    tr.validation-tr {
+      td {
+        padding: 0 0 0 5px;
+      }
     }
   }
 }
