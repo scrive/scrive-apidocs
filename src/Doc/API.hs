@@ -183,7 +183,7 @@ apiCallCreateFromFile = api $ do
       (content'', filename) <- case mformat of
         Nothing -> return (content', filename')
         Just format -> do
-          eres <- liftIO $ convertToPDF (ctxlivedocxconf ctx) (BS.concat $ BSL.toChunks content') format
+          eres <- convertToPDF (ctxlivedocxconf ctx) (BS.concat $ BSL.toChunks content') format
           case eres of
             Left (LiveDocxIOError e) -> throwIO . SomeKontraException $ serverError $ show e
             Left (LiveDocxSoapError s)-> throwIO . SomeKontraException $ serverError s
@@ -192,7 +192,7 @@ apiCallCreateFromFile = api $ do
               let filename = takeBaseName filename' ++ ".pdf"
               return $ (BSL.fromChunks [res], filename)
 
-      pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ liftIO $ do
+      pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ do
                      cres <- preCheckPDF (concatChunks content'')
                      case cres of
                         Right c -> return (Right c)
@@ -294,7 +294,7 @@ apiCallSetAuthorAttachemnts did = api $ do
               case inp of
                    Just (Input (Left filepath) (Just filename) _contentType) -> do
                        content <- liftIO $ BSL.readFile filepath
-                       cres <- liftIO $ preCheckPDF (concatChunks content)
+                       cres <- preCheckPDF (concatChunks content)
                        case cres of
                          Left _ -> do
                            throwIO . SomeKontraException $ (badInput $ "AttachFile " ++ show i ++ " file is not a valid PDF")
@@ -907,12 +907,12 @@ apiCallChangeMainFile docid = api $ do
           Nothing -> return content'
           Just format -> do
             ctx <- getContext
-            eres <- liftIO $ convertToPDF (ctxlivedocxconf ctx) (BS.concat $ BSL.toChunks content') format
+            eres <- convertToPDF (ctxlivedocxconf ctx) (BS.concat $ BSL.toChunks content') format
             case eres of
               Left (LiveDocxIOError e) -> throwIO . SomeKontraException $ serverError $ show e
               Left (LiveDocxSoapError s)-> throwIO . SomeKontraException $ serverError s
               Right res -> return $ BSL.fromChunks [res]
-        pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ liftIO $ do
+        pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ do
                        cres <- preCheckPDF (concatChunks content'')
                        case cres of
                           Right c -> return (Right c)
@@ -977,7 +977,7 @@ apiCallSetSignatoryAttachment did sid aname = api $ do
                   Left filepath -> liftIO $ BSL.readFile filepath
                   Right content -> return content
                 content <- if (".pdf" `isSuffixOf` (map toLower filename))
-                  then apiGuardL (badInput "The PDF was invalid.") $ liftIO $ preCheckPDF (concatChunks content1)
+                  then apiGuardL (badInput "The PDF was invalid.") $ preCheckPDF (concatChunks content1)
                   else if (".png" `isSuffixOf` (map toLower filename) || ".jpg" `isSuffixOf` (map toLower filename))
                     then return $ Binary $ concatChunks content1
                     else throwIO . SomeKontraException $ badInput "Only pdf files or images can be attached."
