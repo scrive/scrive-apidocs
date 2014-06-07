@@ -19,7 +19,6 @@ import Happstack.Fields
 import Util.MonadUtils
 import Text.JSON.Gen
 import System.Exit
-import System.IO.Temp
 import System.Process
 import Happstack.Server hiding (dir, simpleHTTP)
 import Control.Monad.Trans
@@ -27,6 +26,7 @@ import Log as Log
 import Numeric
 import Data.Maybe
 import Utils.String
+import Utils.Directory
 import Utils.IO
 import Data.Char (ord)
 import System.Directory (getCurrentDirectory)
@@ -105,9 +105,9 @@ handleTextToImage = do
     transparent <- isFieldSet "transparent"
     left <- isFieldSet "left"
 
-    mfcontent <- liftIO $ withSystemTempDirectory "text_to_image" $ \tmppath -> do
+    mfcontent <- withSystemTempDirectory' "text_to_image" $ \tmppath -> do
       let fpath = tmppath ++ "/text_to_image.png"
-      (_,_,_, drawer) <- createProcess $ proc "convert"
+      (_,_,_, drawer) <- liftIO $ createProcess $ proc "convert"
             [ "-size", (show width ++ "x" ++ show height)
             , "-background", if (transparent) then "transparent" else "white"
             , "-pointsize", show (pointSize width height (length text) fontSize)
@@ -115,12 +115,12 @@ handleTextToImage = do
             , "-font", font
             , "label:" ++ (if null text then " " else text)
             , "PNG32:" ++ fpath ]
-      drawerexitcode <- waitForProcess drawer
+      drawerexitcode <- liftIO $ waitForProcess drawer
       case drawerexitcode of
           ExitFailure msg -> do
             Log.mixlog_ $ "Problem text_to_image " ++ show msg
             return Nothing
-          ExitSuccess -> (BSL.readFile fpath) >>= (return . Just)
+          ExitSuccess -> (liftIO $ BSL.readFile fpath) >>= (return . Just)
     case mfcontent of
          Just fcontent -> if base64
                              then ok $ toResponseBS (BSUTF8.fromString "text/plain") $ BSL.fromChunks [BSUTF8.fromString "data:image/png;base64,", B64.encode $ concatChunks fcontent]
