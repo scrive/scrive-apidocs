@@ -540,7 +540,7 @@ handleVerify = do
                     return pth
             _ -> internalError
       ctx <- getContext
-      liftIO $ toJSValue <$> GuardTime.verify (ctxgtconf ctx) filepath
+      toJSValue <$> GuardTime.verify (ctxgtconf ctx) filepath
 
 handleMarkAsSaved :: Kontrakcja m => DocumentID -> m JSValue
 handleMarkAsSaved docid = do
