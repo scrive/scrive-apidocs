@@ -35,9 +35,11 @@ import File.FileID
 import GHC.Stack
 import BrandedDomain.Model
 
-import Control.Concurrent (MVar, modifyMVar, threadDelay)
+import Control.Concurrent.Lifted (MVar, modifyMVar, threadDelay, readMVar)
 import Control.Concurrent.MVar.Util (tryReadMVar)
 import Control.Monad.Error
+import Control.Monad.Trans.Control
+import Control.Monad.Base
 import Data.Functor
 import Data.Maybe
 import Data.Typeable
@@ -85,18 +87,18 @@ getStandardLang muser = do
   addCookie (MaxAge (60*60*24*366)) newlangcookie
   return newlang
 
-maybeReadTemplates :: Bool -> MVar (UTCTime, KontrakcjaGlobalTemplates) -> IO KontrakcjaGlobalTemplates
-maybeReadTemplates production mvar = modifyMVar mvar $ \(modtime, templates) -> do
-        if (production)
-         then return ((modtime, templates), templates)
-         else do
-              modtime' <- getTemplatesModTime
-              if modtime /= modtime'
-               then do
-                   Log.mixlog_ $ "Reloading templates"
-                   templates' <- readGlobalTemplates
-                   return ((modtime', templates'), templates')
-               else return ((modtime, templates), templates)
+maybeReadTemplates :: (MonadBaseControl IO m, Log.MonadLog m)
+                   => Bool
+                   -> MVar (UTCTime, KontrakcjaGlobalTemplates) -> m KontrakcjaGlobalTemplates
+maybeReadTemplates production mvar | production = snd <$> readMVar mvar
+maybeReadTemplates _ mvar = modifyMVar mvar $ \(modtime, templates) -> do
+  modtime' <- liftBase getTemplatesModTime
+  if modtime /= modtime'
+    then do
+      Log.mixlog_ $ "Reloading templates"
+      templates' <- liftBase readGlobalTemplates
+      return ((modtime', templates'), templates')
+    else return ((modtime, templates), templates)
 
 -- | Show nicely formated headers. Same header lines can appear
 -- multiple times in HTTP so we need to beautifully show them.  We
@@ -309,7 +311,7 @@ appHandler handleRoutes appConf appGlobals = catchEverything . enhanceYourCalm $
             return []
 
       -- do reload templates in non-production code
-      templates2 <- liftIO $ maybeReadTemplates (production appConf) (templates appGlobals)
+      templates2 <- maybeReadTemplates (production appConf) (templates appGlobals)
 
       -- work out the language
       userlang <- getStandardLang muser
