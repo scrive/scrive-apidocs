@@ -180,7 +180,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                                      size: 'big',
                                      shape: 'rounded',
                                      text: localization.uploadButton,
-                                     width: 245,
+                                     width: 250,
                                      name: 'file',
                                      maxlength: 2,
                                      cssClass : 'design-view-document-buttons-upload-button',
