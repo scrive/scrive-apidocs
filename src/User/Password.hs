@@ -13,7 +13,10 @@ import Crypto.RNG.Utils
 data Password = Password {
     pwdHash :: Binary BS.ByteString
   , pwdSalt :: Binary BS.ByteString
-  } deriving (Eq, Ord, Show)
+  } deriving (Eq, Ord)
+
+instance Show Password where
+  show _ = "Password (hash and salt are not visible for logging)"
 
 createPassword :: (MonadIO m, CryptoRNG m) => String -> m Password
 createPassword password = do
