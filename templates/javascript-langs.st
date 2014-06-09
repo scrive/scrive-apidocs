@@ -528,7 +528,6 @@ javascriptLocalisation =
              , party : "$_historyParty()$"
              , description : "$_historyDescription()$"
              , expand : "$_historyExpand()$"
-             , available : "$_historyAvailable()$"
              , hide : "$_historyHide()$"
            }
          , docsignview : {

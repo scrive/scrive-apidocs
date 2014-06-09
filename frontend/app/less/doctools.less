@@ -125,36 +125,23 @@
   }
 
   .document-history-footer {
-    height: 30px;
-    padding: 5px;
+    border-top: 1px solid @dark-border;
     width: 100%;
   }
 
   .document-history-footer .option {
     cursor: pointer;
-    display: inline-block;
-    float: right;
-    height: 14px;
-    margin: 8px 12px;
+    padding: 10px;
+    text-align: center;
   }
 
   .document-history-footer .option .label {
-    color: #007cac;
-    display: inline-block;
-    float: left;
-    font-size: 12px;
-    margin-left: 2px;
-  }
-
-  .document-history-footer .option .expandable {
-    background: url(~"@{img-base-url}/iconPlus.png") no-repeat scroll 0 0 transparent;
-    display: inline-block;
-    float: left;
-    height: 16px;
-    width: 16px;
-  }
-
-  .document-history-footer .option .expandable.expanded {
-    background: url(~"@{img-base-url}/iconMinus.png") no-repeat scroll 0 0 transparent;
+    color: @text-medium;
+    &:hover {
+      color: @text-dark;
+    }
+    &:active {
+      color: @text-light;
+    }
   }
 }
