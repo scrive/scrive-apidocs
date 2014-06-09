@@ -54,6 +54,7 @@ $(deriveInspectXML ''User)
 $(deriveInspectXML ''UserHistory)
 $(deriveInspectXML ''UserHistoryEvent)
 $(deriveInspectXML ''SignatoryLink)
+$(deriveInspectXML ''PlacementAnchor)
 
 instance InspectXML SignatoryField where
   inspectXML field =

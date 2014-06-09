@@ -493,7 +493,7 @@ dropPixelSizeFormSignatureSignatoryLinkFieldsAndNormalizeFields = Migration {
                           side       <- fromJSValueField "tip"
                           return (FieldPlacement <$> xrel <*> yrel
                                                  <*> wrel <*> hrel <*> fsrel
-                                                 <*> page <*> Just side)
+                                                 <*> page <*> Just side <*> Just [])
                      , do x          <- fromJSValueField "x"
                           y          <- fromJSValueField "y"
                           page       <- fromJSValueField "page"
@@ -507,7 +507,7 @@ dropPixelSizeFormSignatureSignatoryLinkFieldsAndNormalizeFields = Migration {
                           let fsrel = Just 0
                           return (FieldPlacement <$> xrel <*> yrel
                                                  <*> wrel <*> hrel <*> fsrel
-                                                 <*> page <*> Just side)
+                                                 <*> page <*> Just side <*> Just [])
                      , do x          <- fromJSValueField "placementx"
                           y          <- fromJSValueField "placementy"
                           page       <- fromJSValueField "placementpage"
@@ -521,7 +521,7 @@ dropPixelSizeFormSignatureSignatoryLinkFieldsAndNormalizeFields = Migration {
                           let fsrel = Just 0
                           return (FieldPlacement <$> xrel <*> yrel
                                                  <*> wrel <*> hrel <*> fsrel
-                                                 <*> page <*> (Just $ Control.Monad.join $ maybeRead <$> tipside))
+                                                 <*> page <*> (Just $ Control.Monad.join $ maybeRead <$> tipside) <*> Just [])
                      ]
 
 addShouldBeFilledBySenderColumnToSignatoryLinkFields :: MonadDB m => Migration m

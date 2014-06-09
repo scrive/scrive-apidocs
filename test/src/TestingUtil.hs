@@ -299,6 +299,7 @@ instance Arbitrary FieldPlacement where
                             , placementfsrel      = fromIntegral e / fromIntegral x
                             , placementpage       = f
                             , placementtipside    = Nothing
+                            , placementanchors    = []
                             }
 
 instance Arbitrary FieldType where

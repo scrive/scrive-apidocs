@@ -20,6 +20,7 @@ module Doc.DocStateData (
   , SignatoryField(..)
   , FieldType(..)
   , TipSide(..)
+  , PlacementAnchor(..)
   , SignatoryLink(..)
   , SignatureInfo(..)
   , AuthorAttachment(..)
@@ -389,6 +390,12 @@ instance Eq SignatoryField where
            sfShouldBeFilledBySender a == sfShouldBeFilledBySender b &&
            sfPlacements a == sfPlacements b
 
+data PlacementAnchor = PlacementAnchor
+  { placementanchortext  :: String
+  , placementanchorindex :: Int
+  , placementanchorpages :: [Int]
+  } deriving (Eq, Ord, Show, Data, Typeable)
+
 data FieldPlacement = FieldPlacement
   { placementxrel       :: Double
   , placementyrel       :: Double
@@ -397,16 +404,19 @@ data FieldPlacement = FieldPlacement
   , placementfsrel      :: Double
   , placementpage       :: Int
   , placementtipside    :: Maybe TipSide
+  , placementanchors    :: [PlacementAnchor]
   } deriving (Ord, Show, Data, Typeable)
 
 instance Eq FieldPlacement where
-    (==) a b = eqByEpsilon placementxrel &&
-               eqByEpsilon placementyrel &&
-               eqByEpsilon placementwrel &&
-               eqByEpsilon placementhrel &&
-               eqByEpsilon placementfsrel &&
-               placementpage a == placementpage b &&
-               placementtipside a == placementtipside b
+    (==) a b = all id [ eqByEpsilon placementxrel
+                      , eqByEpsilon placementyrel
+                      , eqByEpsilon placementwrel
+                      , eqByEpsilon placementhrel
+                      , eqByEpsilon placementfsrel
+                      , placementpage a == placementpage b
+                      , placementtipside a == placementtipside b
+                      , placementanchors a == placementanchors b
+                      ]
       where
         eqByEpsilon func = abs (func a - func b) < 0.00001
 
@@ -829,6 +839,15 @@ instance ToSQL DeliveryStatus where
   toSQL Unknown = toSQL (3::Int16)
   toSQL Deferred = toSQL (4::Int16)
 
+instance FromJSValue PlacementAnchor where
+  fromJSValue = do
+    text        <- fromJSValueField "text"
+    index       <- fromMaybe (Just 1) <$> fromJSValueField "index"
+    pages       <- fromJSValueField "pages"
+    return (PlacementAnchor <$> text
+            <*> index
+            <*> pages)
+
 instance FromJSValue FieldPlacement where
   fromJSValue = do
                   xrel       <- fromJSValueField "xrel"
@@ -838,9 +857,11 @@ instance FromJSValue FieldPlacement where
                   fsrel      <- fromJSValueField "fsrel"
                   page       <- fromJSValueField "page"
                   side       <- fromJSValueField "tip"
+                  anchors    <- fromMaybe (Just []) <$> fromJSValueField "anchors"
                   return (FieldPlacement <$> xrel <*> yrel
                                          <*> wrel <*> hrel <*> fsrel
-                                         <*> page <*> Just side)
+                                         <*> page <*> Just side
+                                         <*> anchors)
 
 instance FromJSValue TipSide where
     fromJSValue = do
