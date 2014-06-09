@@ -258,8 +258,9 @@ formatMinutesTimeForVerificationPage tz mt = do
   where
     zoneDiff mt1 mt2 = let
                          secDiff = (toMinutes mt1) - (toMinutes mt2)
+                         mDiff = (secDiff `mod` 60)
                          hDiff = (secDiff `div` 60) `mod` 24
-                         hDiffText = show (hDiff `div` 10) ++ show (hDiff `mod` 10)  ++ "00"
+                         hDiffText = show (hDiff `div` 10) ++ show (hDiff `mod` 10)  ++ show (mDiff `div` 10) ++ show (mDiff `mod` 10)
                        in if (secDiff >= 0)
                             then "+" ++ hDiffText
                             else "-" ++ hDiffText
