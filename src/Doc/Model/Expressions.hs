@@ -250,7 +250,8 @@ fetchSignatoryAttachments = foldlM decoder M.empty
 
 signatoryLinkFieldsSelectors :: [SQL]
 signatoryLinkFieldsSelectors =
-  [ "signatory_link_id"
+  [ "id"
+  , "signatory_link_id"
   , "type"
   , "custom_name"
   , "is_author_filled"
@@ -263,10 +264,11 @@ signatoryLinkFieldsSelectors =
 fetchSignatoryLinkFields :: MonadDB m => m (M.Map SignatoryLinkID [SignatoryField])
 fetchSignatoryLinkFields = foldlM decoder M.empty
   where
-    decoder acc (slid, xtype, custom_name, is_author_filled, v, obligatory, should_be_filled_by_sender, placements) = return $
+    decoder acc (slfid, slid, xtype, custom_name, is_author_filled, v, obligatory, should_be_filled_by_sender, placements) = return $
       M.insertWith' (++) slid
          [SignatoryField
-          { sfValue = v
+          { sfID = slfid
+          , sfValue = v
           , sfPlacements = placements
           , sfType = case xtype of
                         CustomFT{} -> CustomFT custom_name is_author_filled
@@ -278,4 +280,3 @@ fetchSignatoryLinkFields = foldlM decoder M.empty
           , sfObligatory = obligatory
           , sfShouldBeFilledBySender = should_be_filled_by_sender
           }] acc
-

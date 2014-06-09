@@ -16,6 +16,7 @@ import Doc.Model
 import Doc.DocumentMonad (DocumentT, theDocument, theDocumentID, withDocumentM, withDocument, withDocumentID)
 import Doc.DocUtils
 import Doc.DocStateData
+import Doc.SignatoryFieldID
 import Doc.Action (findAndDoPostDocumentClosedActions, findAndExtendDigitalSignatures)
 import Templates (getTemplatesModTime, readGlobalTemplates)
 import ActionQueue.Monad (ActionQueueT)
@@ -552,12 +553,12 @@ testCancelDocumentReturnsLeftIfDocInWrongState = doTimes 10 $ do
 testSignatories1 :: Assertion
 testSignatories1 =
   let s1 = defaultValue { signatoryfields =
-              [ SignatoryField FirstNameFT "Eric" True False []
-                ,SignatoryField LastNameFT "Normand" True False []
-                ]}
+              [ SignatoryField (unsafeSignatoryFieldID 0) FirstNameFT "Eric" True False []
+              , SignatoryField (unsafeSignatoryFieldID 0) LastNameFT "Normand" True False []
+              ]}
       s2 = defaultValue { signatoryfields =
-              [SignatoryField LastNameFT "Normand" True False []
-              ,SignatoryField FirstNameFT "Eric" True False []
+              [ SignatoryField (unsafeSignatoryFieldID 0) LastNameFT "Normand" True False []
+              , SignatoryField (unsafeSignatoryFieldID 0) FirstNameFT "Eric" True False []
               ]}
   in assertBool "Signatories fields should be equal" (s1 == s2)
 

@@ -9,6 +9,7 @@ import API.Monad (serverError,badInput)
 import Control.Exception.Lifted (throwIO)
 import Doc.DocInfo (isPreparation)
 import Doc.DocStateData
+import Doc.SignatoryFieldID
 import Utils.Monad
 import Data.Maybe
 import Kontra
@@ -96,7 +97,7 @@ instance FromJSValueWithUpdate SignatoryField where
                         EmailFT -> strip v
                         SignatureFT _ -> ""
                         _ -> v
-              return $ Just $ SignatoryField ft v' obligatory filledbysender placements
+              return $ Just $ SignatoryField (maybe (unsafeSignatoryFieldID 0) sfID msf) ft v' obligatory filledbysender placements
           _ -> return Nothing
       where
        updateWithDefaultAndField :: a -> (SignatoryField -> a) -> Maybe a -> a

@@ -1445,7 +1445,7 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                          , checkEqualBy "signatorylinkdeleted" signatorylinkdeleted
                          , checkEqualBy "signatorylinkreallydeleted" signatorylinkreallydeleted
                          , checkEqualBy "signatorylinkcsvupload" signatorylinkcsvupload
-                         , checkEqualBy "signatoryfields" (sort . signatoryfields)
+                         , checkEqualBy "signatoryfields" (signatoryfields)
                          , checkEqualBy "signatoryisauthor" (signatoryisauthor)
                          , checkEqualBy "signatoryispartner" (signatoryispartner)
                          , checkEqualBy "signatorysignorder" (signatorysignorder)

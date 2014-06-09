@@ -48,6 +48,7 @@ import File.FileID
 import Doc.SealStatus (SealStatus, HasGuardtimeSignature(..))
 import Doc.DocumentID
 import Doc.SignatoryLinkID
+import Doc.SignatoryFieldID
 import Database.PostgreSQL.PQTypes
 import Data.List
 import ELegitimation.SignatureProvider
@@ -373,12 +374,20 @@ instance ToSQL FieldType where
   toSQL MobileFT         = toSQL (10::Int16)
 
 data SignatoryField = SignatoryField
-  { sfType       :: FieldType
-  , sfValue      :: String
-  , sfObligatory :: Bool
+  { sfID                     :: SignatoryFieldID
+  , sfType                   :: FieldType
+  , sfValue                  :: String
+  , sfObligatory             :: Bool
   , sfShouldBeFilledBySender :: Bool
-  , sfPlacements :: [FieldPlacement]
-  } deriving (Eq, Ord, Show, Data, Typeable)
+  , sfPlacements             :: [FieldPlacement]
+  } deriving (Ord, Show, Data, Typeable)
+
+instance Eq SignatoryField where
+  a == b = sfType a == sfType b &&
+           sfValue a == sfValue b &&
+           sfObligatory a == sfObligatory b &&
+           sfShouldBeFilledBySender a == sfShouldBeFilledBySender b &&
+           sfPlacements a == sfPlacements b
 
 data FieldPlacement = FieldPlacement
   { placementxrel       :: Double

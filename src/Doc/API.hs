@@ -29,6 +29,7 @@ import Doc.DocStateData
 import Doc.Model
 import Doc.SealStatus (SealStatus(..))
 import Doc.SignatoryLinkID
+import Doc.SignatoryFieldID
 import File.File
 import Doc.DocumentID
 import Doc.Tokens.Model
@@ -483,7 +484,7 @@ apiCallSign  did slid = api $ do
                               Log.attention_ $ "Eleg verification for document #" ++ show did ++ " failed with message: " ++ msg
                               (Left . Failed) <$> (runJSONGenT $ return ())
                             BankID.Mismatch (onname,onnumber) (sfn,sln,spn) -> do
-                              handleMismatch slid ((\(t,v) -> SignatoryField t v False False []) <$> fields) sfn sln spn
+                              handleMismatch slid ((\(t,v) -> SignatoryField (unsafeSignatoryFieldID 0) t v False False []) <$> fields) sfn sln spn
                               Log.attention_ $ "Eleg verification for document #" ++ show did ++ " failed with mismatch " ++ show ((onname,onnumber),(sfn,sln,spn))
                               (Left . Failed) <$> (runJSONGenT $ value "mismatch" True >> value "onName" onname >> value "onNumber" onnumber)
                             BankID.Sign sinfo -> do

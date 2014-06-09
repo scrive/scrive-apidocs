@@ -13,6 +13,7 @@ import Data.Word
 import Test.QuickCheck
 import Happstack.Server
 import Doc.DocUtils
+import Doc.SignatoryFieldID
 import Doc.DocumentMonad (withDocumentID)
 import Doc.SealStatus (SealStatus(..))
 import Test.QuickCheck.Gen
@@ -278,9 +279,9 @@ instance Arbitrary [SignatoryField] where
     em <- arbEmail
     (f1,f2,f3,f4,f5) <-  arbitrary
     return $ filter (\f->notElem (sfType f) [FirstNameFT, LastNameFT, EmailFT]) (filterSingleFieldType [f1,f2,f3,f4,f5])
-                                                  ++ [ SignatoryField FirstNameFT fn True False []
-                                                     , SignatoryField LastNameFT  ln True False []
-                                                     , SignatoryField EmailFT     em True False []]
+                                                  ++ [ SignatoryField (unsafeSignatoryFieldID 0) FirstNameFT fn True False []
+                                                     , SignatoryField (unsafeSignatoryFieldID 0) LastNameFT  ln True False []
+                                                     , SignatoryField (unsafeSignatoryFieldID 0) EmailFT     em True False []]
 
 instance Arbitrary FieldPlacement where
   arbitrary = do  -- We loose precision with conversion, so please watch out for this
@@ -311,7 +312,8 @@ instance Arbitrary SignatoryField where
     t <- arbitrary
     v <- arbString 1 100
     p <- arbitrary
-    return $ SignatoryField { sfType = t
+    return $ SignatoryField { sfID = unsafeSignatoryFieldID 0
+                            , sfType = t
                             , sfValue = v
                             , sfPlacements = p
                             , sfObligatory = True
@@ -434,14 +436,14 @@ signatoryLinkExample1 = defaultValue { signatorylinkid = unsafeSignatoryLinkID 0
                                       , signatoryisauthor = False
                                       , signatoryispartner = True
                                       , signatorysignorder = SignOrder 1
-                                      , signatoryfields = [ SignatoryField FirstNameFT "Eric" True False []
-                                                            , SignatoryField LastNameFT "Normand" True False []
-                                                            , SignatoryField EmailFT "eric@scrive.com" True False []
-                                                            , SignatoryField CompanyFT "Scrive" True False []
-                                                            , SignatoryField CompanyNumberFT "1234" True False []
-                                                            , SignatoryField PersonalNumberFT "9101112" True False []
-                                                            , SignatoryField (CustomFT "phone" True) "504-302-3742" True False []
-                                                            ]
+                                      , signatoryfields = [ SignatoryField (unsafeSignatoryFieldID 0) FirstNameFT "Eric" True False []
+                                                          , SignatoryField (unsafeSignatoryFieldID 0) LastNameFT "Normand" True False []
+                                                          , SignatoryField (unsafeSignatoryFieldID 0) EmailFT "eric@scrive.com" True False []
+                                                          , SignatoryField (unsafeSignatoryFieldID 0) CompanyFT "Scrive" True False []
+                                                          , SignatoryField (unsafeSignatoryFieldID 0) CompanyNumberFT "1234" True False []
+                                                          , SignatoryField (unsafeSignatoryFieldID 0) PersonalNumberFT "9101112" True False []
+                                                          , SignatoryField (unsafeSignatoryFieldID 0) (CustomFT "phone" True) "504-302-3742" True False []
+                                                          ]
                                       , signatorylinkcsvupload = Nothing
                                       , signatoryattachments   = []
                                       , signatorylinkstatusclass = SCDraft

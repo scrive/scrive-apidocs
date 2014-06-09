@@ -7,6 +7,7 @@ import Data.Maybe (fromJust, isNothing)
 import DB (MonadDB)
 import Doc.DocStateData (SignatoryField(..), SignatoryLink(..), FieldType(..), DeliveryMethod(..))
 import Doc.DocumentID (unsafeDocumentID)
+import Doc.SignatoryFieldID
 import Doc.DocumentMonad (withDocumentID)
 import EvidenceLog.View (simpleEvents, simplyfiedEventText, eventForVerificationPage)
 import Text.StringTemplates.Templates (TemplatesMonad, renderTemplate)
@@ -56,9 +57,9 @@ dumpEvidenceTexts now lang = do
   let sl = Just defaultValue
   let asl = Just defaultValue
             { signatoryfields =
-                  [ SignatoryField FirstNameFT "Sven" True False []
-                  , SignatoryField LastNameFT "Signatory" True False []
-                  , SignatoryField EmailFT "signatory@example.com" True False []
+                  [ SignatoryField (unsafeSignatoryFieldID 0) FirstNameFT "Sven" True False []
+                  , SignatoryField (unsafeSignatoryFieldID 0) LastNameFT "Signatory" True False []
+                  , SignatoryField (unsafeSignatoryFieldID 0) EmailFT "signatory@example.com" True False []
                   ]
             , signatoryispartner = True
             , signatorylinkdeliverymethod = EmailAndMobileDelivery

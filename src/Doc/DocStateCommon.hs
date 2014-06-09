@@ -4,6 +4,7 @@ import Data.Maybe
 import Doc.DocStateData
 import Doc.DocUtils
 import Doc.SignatoryLinkID
+import Doc.SignatoryFieldID
 import MagicHash (MagicHash)
 import User.Model
 import Util.HasSomeCompanyInfo
@@ -60,9 +61,9 @@ signatoryLinkClearField field =  case sfType field of
 
 emptySignatoryFields :: [SignatoryField]
 emptySignatoryFields = [
-          SignatoryField FirstNameFT "" True  True  []
-        , SignatoryField LastNameFT  "" True  True  []
-        , SignatoryField EmailFT     "" True  True  []
+          SignatoryField (unsafeSignatoryFieldID 0) FirstNameFT "" True  True  []
+        , SignatoryField (unsafeSignatoryFieldID 0) LastNameFT  "" True  True  []
+        , SignatoryField (unsafeSignatoryFieldID 0) EmailFT     "" True  True  []
         ]
 
 checkResetSignatoryData :: Document -> [SignatoryLink] -> [String]

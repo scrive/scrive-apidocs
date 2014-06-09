@@ -22,6 +22,7 @@ import Context
 import DB
 import Doc.Model
 import Doc.DocStateData
+import Doc.SignatoryFieldID
 import Doc.DocControl
 import Doc.Screenshot (Screenshot(..))
 import Doc.SignatoryScreenshots(emptySignatoryScreenshots, SignatoryScreenshots(signing))
@@ -122,9 +123,9 @@ testLastPersonSigningADocumentClosesIt = do
                                       , signatoryisauthor = False
                                       , signatoryispartner = True
                                       , signatoryfields = [
-                                          SignatoryField FirstNameFT "Fred" True False []
-                                        , SignatoryField LastNameFT "Frog"  True False []
-                                        , SignatoryField EmailFT "fred@frog.com" True False []
+                                          SignatoryField (unsafeSignatoryFieldID 0) FirstNameFT "Fred" True False []
+                                        , SignatoryField (unsafeSignatoryFieldID 0) LastNameFT "Frog"  True False []
+                                        , SignatoryField (unsafeSignatoryFieldID 0) EmailFT "fred@frog.com" True False []
                                         ]})
                  ]) (systemActor $ documentctime d)
 
@@ -185,10 +186,10 @@ testSigningWithPin = do
                                       , signatoryispartner = True
                                       , signatorylinkauthenticationmethod = SMSPinAuthentication
                                       , signatoryfields = [
-                                          SignatoryField FirstNameFT "Fred" True False []
-                                        , SignatoryField LastNameFT "Frog"  True False []
-                                        , SignatoryField EmailFT "fred@frog.com" True False []
-                                        , SignatoryField MobileFT "+47 666 111 777" True False []
+                                          SignatoryField (unsafeSignatoryFieldID 0) FirstNameFT "Fred" True False []
+                                        , SignatoryField (unsafeSignatoryFieldID 0) LastNameFT "Frog"  True False []
+                                        , SignatoryField (unsafeSignatoryFieldID 0) EmailFT "fred@frog.com" True False []
+                                        , SignatoryField (unsafeSignatoryFieldID 0) MobileFT "+47 666 111 777" True False []
                                         ]})
                  ]) (systemActor $ documentctime d)
 
