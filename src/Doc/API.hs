@@ -80,7 +80,7 @@ import qualified Data.ByteString.Base64 as B64
 import Text.JSON.Gen
 import MinutesTime
 import Text.StringTemplates.Templates
-import Data.Map as Map hiding (map)
+import qualified Data.Map as Map hiding (map)
 
 import Doc.DocSeal as DocSeal
 import qualified Data.ByteString.UTF8 as BS hiding (length)
@@ -882,9 +882,55 @@ runJavaTextExtract json content = do
           Log.attention_ $ "Extract texts failed for configuration: " ++ show json
           apiGuardL (serverError "Extract texts failed on PDF") (return Nothing)
 
+getAnchorPositions :: (Monad m) => BS.ByteString -> [PlacementAnchor] -> m (Map.Map PlacementAnchor (Int,Double,Double))
+getAnchorPositions _pdfcontent _anchors = return Map.empty
+
 recalcuateAnchoredFieldPlacements :: (Kontrakcja m,DocumentMonad m) => FileID -> FileID -> m ()
-recalcuateAnchoredFieldPlacements _oldfileid _fileid = do
-  _ <- theDocument
+recalcuateAnchoredFieldPlacements oldfileid newfileid = do
+  doc <- theDocument
+  -- Algo:
+  -- 1. Enumerate all anchors.
+  -- 2. Calculate all anchors.
+  -- 3. Iterate over fields, move a field based on anchor information.
+  -- 4. Update.
+  -- Note: Check if there are any anchors, if none skip all of this.
+
+  let anchors = [ anc | sig <- documentsignatorylinks doc,
+                        fld <- signatoryfields sig,
+                        plc <- sfPlacements fld,
+                        anc <- placementanchors plc ]
+
+  when (not (null anchors)) $ do
+    oldfilecontents <- getFileIDContents oldfileid
+    newfilecontents <- getFileIDContents newfileid
+    oldAnchorPositions <- getAnchorPositions oldfilecontents anchors
+    newAnchorPositions <- getAnchorPositions newfilecontents anchors
+    -- oldAnchorPositions and newAnchorPositions are maps from anchors
+    -- to extracted positions. Note that it is possible not evey
+    -- anchor was found in the documents. In that case we just do not
+    -- move a field and that should be good enough as debugging
+    -- information.
+
+    -- For now database is an issue, but that is for later
+    let maybeMoveFieldPlacement :: FieldPlacement -> Maybe FieldPlacement
+        maybeMoveFieldPlacement plc = do
+          -- find first anchor that was found (first-first)
+          (_oldAnchorPosPage,oldAnchorPosX,oldAnchorPosY) <-
+            msum (map (\anchor -> Map.lookup anchor oldAnchorPositions) (placementanchors plc))
+          (newAnchorPosPage,newAnchorPosX,newAnchorPosY) <-
+            msum (map (\anchor -> Map.lookup anchor newAnchorPositions) (placementanchors plc))
+          return (plc { placementxrel = placementxrel plc - oldAnchorPosX + newAnchorPosX,
+                        placementyrel = placementyrel plc - oldAnchorPosY + newAnchorPosY,
+                        placementpage = newAnchorPosPage })
+    forM_ [fld | sig <- documentsignatorylinks doc,
+                 fld <- signatoryfields sig ] $ \fld -> do
+      let plcpairs :: [(FieldPlacement, Maybe FieldPlacement)]
+          plcpairs = map (\p -> (p,maybeMoveFieldPlacement p)) (sfPlacements fld)
+      when (any (isJust . snd) plcpairs) $ do
+        let _newplc = map (\(k,v) -> fromMaybe k v) plcpairs
+        -- dbUpdate $ SetFieldPlacements ....
+        return ()
+
   return ()
 
 -- this one must be standard post with post params because it needs to
