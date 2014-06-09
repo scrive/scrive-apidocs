@@ -66,7 +66,7 @@ import Control.Monad
 import qualified Data.ByteString as BS
 
 selectTablesForDocumentSelectors :: State.State SqlSelect () -> SqlSelect
-selectTablesForDocumentSelectors = sqlSelect2 "documents as documents LEFT JOIN document_automatic_reminders as document_automatic_reminders ON documents.id = document_automatic_reminders.document_id LEFT JOIN signatory_links AS signatory_links_authors ON documents.id = signatory_links_authors.document_id LEFT JOIN users as user_authors ON signatory_links_authors.user_id = user_authors.id"
+selectTablesForDocumentSelectors = sqlSelect2 "documents as documents LEFT JOIN document_automatic_reminders as document_automatic_reminders ON documents.id = document_automatic_reminders.document_id LEFT JOIN signatory_links AS signatory_links_authors ON documents.id = signatory_links_authors.document_id and signatory_links_authors.is_author = true LEFT JOIN users as user_authors ON signatory_links_authors.user_id = user_authors.id"
 
 documentsSelectors :: [SQL]
 documentsSelectors =
@@ -380,7 +380,6 @@ instance MonadDB m => DBQuery m GetDocuments2 (Int,[Document]) where
   query (GetDocuments2 allowZeroResults domains filters orderbys (offset,limit,softlimit)) = do
     selectDocumentsWithSoftLimit allowZeroResults softlimit $ selectTablesForDocumentSelectors $ do
       mapM_ sqlResult documentsSelectors
-      sqlWhere "signatory_links_authors.is_author = true"
       mapM_ (sqlOrderBy . documentOrderByAscDescToSQL) orderbys
       sqlOffset $ fromIntegral offset
       sqlLimit $ fromIntegral limit
