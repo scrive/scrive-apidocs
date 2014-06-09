@@ -42,7 +42,7 @@
 "_SignDocumentEvidenceTextSimpleNotArchiveSMSPin":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveStandard":"",
 "_SignWithELegFailureEvidenceTextSimple":"Scrive rechazó el intento de $signatory$ a firmar el documento. La razón fue que la información de la identidad de $signatory$ no encajaba con la información recibida por el sistema externo de DNIe.",
-"_SignatoryLinkVisitedTextArchiveSimple":"El documento fue abierto por internet.",
+"_SignatoryLinkVisitedTextArchiveSimple":"El documento fue abierto en internet.",
 "_SignatoryLinkVisitedTextNotArchiveSimple":"El documento fue abierto por $actor$ por internet. ",
 "_TimeoutDocumentEvidenceTextSimple":"La fecha límite para firmar del documento pasó.",
 "_delivery_method":"$if(email)$email$elseif(mobile)$SMS$elseif(emailmobile)$email y SMS$endif$",
