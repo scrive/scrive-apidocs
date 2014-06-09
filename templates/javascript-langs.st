@@ -414,7 +414,7 @@ javascriptLocalisation =
              }
              , cantRemoveAllIdentificationFieldsText : "$_cantRemoveAllIdentificationFieldsText()$"
              , cantMakeAllIdentificationFieldsOptionalText : "$_cantMakeAllIdentificationFieldsOptionalText()$"
-
+             , information : "$_information()$"
            }
 
          , validation : {

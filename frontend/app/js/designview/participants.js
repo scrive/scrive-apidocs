@@ -783,7 +783,7 @@ define(['Backbone', 'legacy_code'], function() {
 
             var div = $('<div />');
             div.addClass('design-view-action-participant-details-information-header');
-            div.text('Information');
+            div.text(localization.designview.information);
 
             return div;
         },
