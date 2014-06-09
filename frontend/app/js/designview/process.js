@@ -145,7 +145,7 @@ define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_the
             var label = $("<div class='design-view-action-process-left-column-language-label''/>").text(labelText);
 
             var select = new Select({
-                options: _.filter(languages, function(l) { return l.value !=  lang && !l.hidden;}),
+                options: _.filter(languages, function(l) { return !l.hidden;}),
                 textWidth: "130px",
                 name: lname,
                 cssClass : 'design-view-action-process-left-column-language-field',

@@ -700,7 +700,7 @@ data Document = Document {
   , documentapicallbackurl         :: Maybe String
   , documentobjectversion          :: Int64
   , documentmagichash              :: MagicHash
-  , documentauthorcompanyid        :: CompanyID
+  , documentauthorcompanyid        :: Maybe CompanyID
   } deriving (Eq, Ord, Show)
 
 
@@ -733,7 +733,7 @@ instance HasDefaultValue Document where
           , documentapicallbackurl       = Nothing
           , documentobjectversion        = 0
           , documentmagichash            = unsafeMagicHash 0
-          , documentauthorcompanyid      = unsafeCompanyID 0
+          , documentauthorcompanyid      = Nothing
           }
 
 instance HasLang Document where

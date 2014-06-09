@@ -98,7 +98,7 @@ documentsSelectors =
   , documentStatusClassExpression
   ]
 
-fetchDocument :: (DocumentID, String, DocumentStatus, Maybe String, DocumentType, MinutesTime, MinutesTime, Int32, Maybe Int32, Maybe MinutesTime, Maybe MinutesTime, Maybe MinutesTime, Maybe IPAddress, String, String, Bool, Bool, Bool, Bool, Lang, DocumentSharing, Maybe String, Int64, MagicHash, CompanyID, StatusClass) -> Document
+fetchDocument :: (DocumentID, String, DocumentStatus, Maybe String, DocumentType, MinutesTime, MinutesTime, Int32, Maybe Int32, Maybe MinutesTime, Maybe MinutesTime, Maybe MinutesTime, Maybe IPAddress, String, String, Bool, Bool, Bool, Bool, Lang, DocumentSharing, Maybe String, Int64, MagicHash, Maybe CompanyID, StatusClass) -> Document
 fetchDocument (did, title, status, error_text, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text,  show_header, show_pdf_download, show_reject_option, show_footer, lang, sharing, apicallback, objectversion, token, author_company_id, status_class)
        = Document {
          documentid = did
