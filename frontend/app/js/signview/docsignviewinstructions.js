@@ -46,22 +46,25 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     if (!(signatory.hasSigned() && (document.pending() || document.closed()))) {
       return '';
     }
-    var text;
+    var text = '';
     if (document.closed()) {
-      text = localization.docsignview.signedAndClosedSubText;
+      if (signatory.emailConfirmationDelivery()) {
+        text = localization.docsignview.subtitleSignedClosedByEmail;
+      } else if (signatory.mobileConfirmationDelivery()) {
+        text = localization.docsignview.subtitleSignedClosedByMobile;
+      } else if (signatory.emailMobileConfirmationDelivery()) {
+        text = localization.docsignview.subtitleSignedClosedByEmailMobile;
+      }
     } else {
-      text = localization.docsignview.signedNotClosedSubText;
+      if (signatory.emailConfirmationDelivery()) {
+        text = localization.docsignview.subtitleSignedNotClosedByEmail;
+      } else if (signatory.mobileConfirmationDelivery()) {
+        text = localization.docsignview.subtitleSignedNotClosedByMobile;
+      } else if (signatory.emailMobileConfirmationDelivery()) {
+        text = localization.docsignview.subtitleSignedNotClosedByEmailMobile;
+      }
     }
-    text += ' ';
-    if (signatory.emailConfirmationDelivery()) {
-      text += localization.delivery.email + '.';
-    } else if (signatory.mobileConfirmationDelivery()) {
-      text += localization.delivery.mobile + '.';
-    } else if (signatory.emailMobileConfirmationDelivery()) {
-      text += localization.delivery.email_mobile + '.';
-    } else {
-      text = '';
-    }
+
     return text;
   },
   // Description of due date
@@ -104,7 +107,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     var arrowLegend = $("<div class='arrow-legend'/>");
     var mandatoryIcon = $("<span class='icon-legend mandatory' />");
     var optionalIcon = $("<span class='icon-legend optional' />");
-    
+
     if (primarycolour) {
       BrandedImageUtil.setBrandedImageBackground(mandatoryIcon, 'icon-legend-mandatory.png', primarycolour);
     }

@@ -1,4 +1,4 @@
-{ 
+{
 "_DeletePDF":"Delete",
 "_RequestedAttachments":"Requested attachments",
 "_ReviewPDF":"Review",
@@ -137,9 +137,13 @@
 "_signatureConfirm":"Apply signature",
 "_signaturePlaceYour":"Click here to draw signature",
 "_signedAndClosed":"Document signed!",
-"_signedAndClosedSubText":"The signed document has been sent to you by",
 "_signedNotClosed":"You have signed",
-"_signedNotClosedSubText":"When every party has signed the finalised document will be sent to you by",
+"_subtitleSignedClosedByEmail":"The signed document has been sent to you by email.",
+"_subtitleSignedClosedByMobile":"The signed document has been sent to you by SMS",
+"_subtitleSignedClosedByEmailMobile":"The signed document has been sent to you by email and SMS.",
+"_subtitleSignedNotClosedByEmail":"When every party has signed the finalised document will be sent to you by email.",
+"_subtitleSignedNotClosedByMobile":"When every party has signed the finalised document will be sent to you by SMS.",
+"_subtitleSignedNotClosedByEmailMobile":"When every party has signed the finalised document will be sent to you by email and SMS.",
 "_signingErrorMessage1":"We're experiencing difficulties handling your document.",
 "_signingErrorMessage2":"Please reload the page.",
 "_signingErrorReload":"Reload page",
