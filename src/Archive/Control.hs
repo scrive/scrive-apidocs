@@ -18,14 +18,15 @@ import KontraLink
 import Kontra
 import DB
 import Doc.DocStateData
-import Doc.DocumentMonad (withDocument, withDocumentID, theDocument, theDocumentID)
+import Doc.DocumentMonad (withDocument, theDocument, DocumentT)
 import Doc.Model
 import User.Model
 import User.Utils
 import Util.MonadUtils
+import Data.List
 
 import Control.Applicative
-import Control.Conditional (whenM, unlessM)
+import Control.Conditional (unlessM)
 import Util.SignatoryLinkUtils
 import Util.Actor
 import Text.JSON
@@ -39,7 +40,6 @@ import Text.JSON.FromJSValue
 import Doc.Action
 import Doc.DocInfo (isPending)
 import Doc.DocMails
-import Doc.DocStateQuery
 import Control.Monad
 import Codec.Archive.Zip
 import Util.ZipUtil
@@ -48,7 +48,6 @@ import qualified Data.ByteString as BSS
 import Data.Char
 import File.Storage as F
 import qualified Log
-import Control.Logic
 import Text.JSON.String (runGetJSON)
 import Doc.DocDraft()
 import Data.String.Utils (splitWs)
@@ -57,73 +56,71 @@ import AppView
 import Happstack.Server(Response)
 import qualified Text.StringTemplates.Fields as F
 
+handleArchiveDocumentsAction :: Kontrakcja m => String -> (User -> Document -> Bool) -> ((User, Actor) -> DocumentT m a) -> m [a]
+handleArchiveDocumentsAction actionStr docPermission m = do
+  ctx@Context{ctxmaybeuser = Just user} <- getContext
+  ids <- getCriticalField asValidDocIDList "documentids"
+  docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser $ userid user] [DocumentFilterByDocumentIDs ids] [] (0, 100)
+  when (sort (map documentid docs) /= sort ids) $ failWithMsg user ids "Retrieved documents didn't match specified document ids"
+  if all (docPermission user) docs
+  then do
+    let actor = userActor ctx user
+    forM docs $ flip withDocument $ m (user, actor)
+  else do
+    failWithMsg user ids $ "User didn't have permission to " ++ actionStr
+  where
+    failWithMsg user ids msg = do
+      Log.mixlog msg $ do
+        J.value "user_id" $ show $ userid user
+        J.value "documentids" $ show ids
+      internalError
+
+handleArchiveDocumentsAction' :: Kontrakcja m => String -> (User -> Document -> Bool) -> ((User, Actor) -> DocumentT m a) -> m JSValue
+handleArchiveDocumentsAction' actionStr docPermission m = do
+  _ <- handleArchiveDocumentsAction actionStr docPermission m
+  J.runJSONGenT (return ())
+
 handleDelete :: Kontrakcja m => m JSValue
 handleDelete = do
-    ctx@(Context { ctxmaybeuser = Just user }) <- getContext
-    docids <- getCriticalField asValidDocIDList "documentids"
-    let actor = userActor ctx user
-    docs <- getDocsByDocIDs docids
-    forM_ docs $ flip withDocument $ do
-              usl <- getSigLinkFor user <$> theDocument
-              csl <- (\d -> (getAuthorSigLink $ documentsignatorylinks d) <| (useriscompanyadmin user) |> Nothing) <$> theDocument
-              let msl =  usl `mplus` csl
-              when (isNothing msl) $ do
-                theDocumentID >>= \did -> Log.mixlog_ $ "User #" ++ show (userid user) ++ " has no rights to deleted document #" ++ show did
-                internalError
-              whenM (isPending <$> theDocument) $
-                 if (isAuthor msl)
-                 then do
-                   dbUpdate $ CancelDocument actor
-                   postDocumentCanceledChange =<< theDocument
-                 else do
-                   dbUpdate $ RejectDocument (signatorylinkid $ fromJust msl) Nothing actor
-                   theDocument >>= postDocumentRejectedChange (signatorylinkid $ fromJust msl)
-              dbUpdate $ ArchiveDocument (userid user) actor
-    J.runJSONGenT $ return ()
+  handleArchiveDocumentsAction' "cancel/reject documents" isDocumentVisibleToUser $ \(user, actor) -> do
+        doc <- theDocument
+        when (isPending doc) $
+           if isAuthorOrAuthorsAdmin user doc
+           then do
+             dbUpdate $ CancelDocument actor
+             postDocumentCanceledChange =<< theDocument
+           else do
+             -- user must be a regular signatory
+             let Just SignatoryLink{signatorylinkid} = getSigLinkFor user doc
+             dbUpdate $ RejectDocument signatorylinkid  Nothing actor
+             theDocument >>= postDocumentRejectedChange signatorylinkid
+        dbUpdate $ ArchiveDocument (userid user) actor
 
 handleSendReminders :: Kontrakcja m => m JSValue
-handleSendReminders = do
-    ids <- getCriticalField asValidDocIDList "documentids"
-    actor <- guardJustM $ fmap mkAuthorActor getContext
-    remindedsiglinks <- fmap concat . sequence . map (flip withDocumentID (sendAllReminderEmailsExceptAuthor actor False)) $ ids
-    case (length remindedsiglinks) of
-      0 -> internalError
-      _ -> J.runJSONGenT $ return ()
+handleSendReminders = handleArchiveDocumentsAction' "send reminders" isAuthorOrAuthorsAdmin $ \(_, actor) -> do
+  remindedsiglinks <- sendAllReminderEmailsExceptAuthor actor False
+  when (null remindedsiglinks) internalError
 
 handleCancel :: Kontrakcja m =>  m JSValue
-handleCancel = do
-  docids <- getCriticalField asValidDocIDList "documentids"
-  forM_ docids $ flip withDocumentID $ do
-    actor <- guardJustM $ mkAuthorActor <$> getContext
-    unlessM (isPending <$> theDocument) internalError
-    dbUpdate $ CancelDocument actor
-    postDocumentCanceledChange =<< theDocument
-  J.runJSONGenT $ return ()
+handleCancel = handleArchiveDocumentsAction' "cancel documents" isAuthorOrAuthorsAdmin $ \(_, actor) -> do
+  unlessM (isPending <$> theDocument) internalError
+  dbUpdate $ CancelDocument actor
+  postDocumentCanceledChange =<< theDocument
 
 handleRestore :: Kontrakcja m => m JSValue
-handleRestore = do
-  user <- guardJustM $ ctxmaybeuser <$> getContext
-  actor <- guardJustM $ mkAuthorActor <$> getContext
-  docids <- getCriticalField asValidDocIDList "documentids"
-  mapM_ (flip withDocumentID $ dbUpdate $ RestoreArchivedDocument user actor) docids
-  J.runJSONGenT $ return ()
+handleRestore = handleArchiveDocumentsAction' "restore documents" isDocumentVisibleToUser $ \(user, actor) -> dbUpdate $ RestoreArchivedDocument user actor
 
 handleShare :: Kontrakcja m => m JSValue
-handleShare =  do
-    _ <- guardJustM $ ctxmaybeuser <$> getContext
-    ids <- getCriticalField asValidDocIDList "documentids"
-    _ <- dbUpdate $ SetDocumentSharing ids True
-    J.runJSONGenT $ return ()
+handleShare = handleArchiveDocumentsAction' "share documents" isAuthorOrAuthorsAdmin $ const $ do
+  doc <- theDocument
+  dbUpdate $ SetDocumentSharing [documentid doc] True
 
 handleZip :: Kontrakcja m => m ZipArchive
 handleZip = do
   Log.mixlog_ $ "Downloading zip list"
-  docids <- take 100 <$> getCriticalField asValidDocIDList "documentids"
-  mentries <- forM docids $ \did -> do
-                Log.mixlog_ "Getting file for zip download"
-                doc <- getDocByDocID did
-                docToEntry doc
-  return $ ZipArchive "selectedfiles.zip" $ foldr addEntryToArchive emptyArchive $ map fromJust $ filter isJust $ mentries
+  mentries <- handleArchiveDocumentsAction "download zipped documents" isDocumentVisibleToUser $ const $ do
+               docToEntry =<< theDocument
+  return $ ZipArchive "selectedfiles.zip" $ foldr addEntryToArchive emptyArchive $ catMaybes $ mentries
 {- |
    Constructs a list of documents (Arkiv) to show to the user.
  -}

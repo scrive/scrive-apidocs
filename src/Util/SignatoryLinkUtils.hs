@@ -17,6 +17,8 @@ module Util.SignatoryLinkUtils (
   getAuthorName,
   hasSigned,
   isAuthor,
+  isAuthorOrAuthorsAdmin,
+  isDocumentVisibleToUser,
   isSignatory,
   isDeletedFor,
   getSigLinkFor,
@@ -158,6 +160,12 @@ hasSeen msl = maybe False (isJust . maybeseeninfo) (getMaybeSignatoryLink msl)
  -}
 isAuthor :: (MaybeSignatoryLink msl) => msl -> Bool
 isAuthor = isSigLinkFor signatoryisauthor
+
+isAuthorOrAuthorsAdmin :: User -> Document -> Bool
+isAuthorOrAuthorsAdmin user doc = isAuthor (doc, user) || (useriscompanyadmin user && documentauthorcompanyid doc == Just (usercompany user))
+
+isDocumentVisibleToUser :: User -> Document -> Bool
+isDocumentVisibleToUser user doc = isSignatory (doc, user) || isAuthorOrAuthorsAdmin user doc
 
 {- |
    Is the given SignatoryLink marked as a signatory (someone who can must sign)?
