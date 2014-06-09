@@ -1,4 +1,4 @@
-{
+{ 
 "_AttachExtendedSealedFileEvidenceTextSimple":"Dokumentet blev forseglet med en nøglefri digital signatur.",
 "_AttachGuardtimeSealedFileEvidenceTextSimple":"Dokumentet blev forseglet med en digital signatur.",
 "_AttachSealedFileEvidenceTextSimpleArchive":"Scrive har udarbejdet den endelige PDF.",
@@ -25,12 +25,12 @@
 "_PreparationToPendingEvidenceTextSimpleArchive":"Signeringsprocessen blev påbegyndt.",
 "_PreparationToPendingEvidenceTextSimpleNotArchive":"Udarbejdelsen af ​​signeringsprocessen blev færdiggjort af $actor$. Signeringsprocessen blev påbegyndt.",
 "_ProlongDocumentEvidenceTextArchive":"Forfaldsdatoen for signeringen blev forlænget.",
-"_RejectDocumentEvidenceTextSimpleArchive":"Invitationen til at signere blev afvist.$if(text)$ Beskeden for afvisningen var. <BR/> <i>$text:noescape()$</i>$endif$",
-"_RejectDocumentEvidenceTextSimpleNotArchive":"Invitationen til at signere blev afvist af $actor$.$if(text)$  Beskeden for afvisningen fra $actor$ var. <BR/> <i>$text:noescape()$</i>$endif$",
+"_RejectDocumentEvidenceTextSimpleArchive":"Invitationen til at signere blev afvist.$if(text)$ Beskeden for afvisningen lød: <BR/> <i>$text:noescape()$</i>$endif$",
+"_RejectDocumentEvidenceTextSimpleNotArchive":"Invitationen til at signere blev afvist af $actor$.$if(text)$  Beskeden for afvisningen fra $actor$ lød. <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToReviewArchive":"En påmindelse om gennemgang blev sendt til $signatory$ ved hjælp af $_delivery_method()$.$if(text)$ Påmindelsen var: <BR/> <i>$text:noescape()$</i>$endif$",
-"_ReminderSendTextToReviewNotArchive":"En påmindelse om gennemgang blev sendt til $signatory$ ved hjælp af $_delivery_method()$på opfordring fra $actor$.$if(text)$ Påmindelsen fra $actor$ var: <BR/> <i>$text:noescape()$</i>$endif$",
-"_ReminderSendTextToSignArchive":"En påmindelse om at signere blev sendt til $signatory$ ved hjælp af $_delivery_method()$.$if(text)$ Påmindelsen var: <BR/> <i>$text:noescape()$</i>$endif$",
-"_ReminderSendTextToSignNotArchive":"En påmindelse om at signere blev sendt til $signatory$ ved hjælp af $_delivery_method()$ på opfordring af $actor$.$if(text)$ Påmindelsen fra $actor$ var: <BR/> <i>$text:noescape()$</i>$endif$",
+"_ReminderSendTextToReviewNotArchive":"",
+"_ReminderSendTextToSignArchive":"En påmindelse om at signere blev sendt til $signatory$ ved hjælp af $_delivery_method()$.$if(text)$ Påmindelsen lød: <BR/> <i>$text:noescape()$</i>$endif$",
+"_ReminderSendTextToSignNotArchive":"En påmindelse om at signere blev sendt til $signatory$ ved hjælp af $_delivery_method()$ på opfordring af $actor$.$if(text)$ Påmindelsen fra $actor$ lød: <BR/> <i>$text:noescape()$</i>$endif$",
 "_RestartDocumentEvidenceTextSimpleArchive":"Dokumentet blev åbnet for redigering.",
 "_RestartDocumentEvidenceTextSimpleNotArchive":"Dokumentet blev åbnet for redigering af $actor$ i Scrives interface til design af signeringsprocesser.",
 "_SMSPinDeliveredEvidenceText":"SMS med PIN blev leveret til $text$, så $signatory$ kan bruge den til identifikation.",
@@ -41,12 +41,11 @@
 "_SignDocumentEvidenceTextSimpleNotArchiveEleg":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveSMSPin":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveStandard":"",
-"_SignWithELegFailureEvidenceTextSimple":"Scrive afviste forsøget fra $signatory $ til at underskrive dokumentet. Årsagen var, at identitetsoplysningerne på $signatory$ ikke svarer til de identitetsoplysninger, vi har modtaget fra det eksterne eID system.",
+"_SignWithELegFailureEvidenceTextSimple":"Scrive afviste forsøget fra $signatory $ til at signere dokumentet. Årsagen var, at identitetsoplysningerne på $signatory$ ikke svarer til de identitetsoplysninger, vi har modtaget fra det eksterne eID system.",
 "_SignatoryLinkVisitedTextArchiveSimple":"Dokumentet blev åbnet online.",
 "_SignatoryLinkVisitedTextNotArchiveSimple":"Dokumentet blev åbnet online af $actor$.",
 "_TimeoutDocumentEvidenceTextSimple":"Forfaldsdatoen for at signere dokumentet er overskredet.",
 "_delivery_method":"$if(email)$e-mail$elseif(mobile)$SMS$elseif(emailmobile)$e-mail og SMS$endif$",
 "_invitationCustomMessageTextToReview":"$if(text)$$if(!mobile)$ Invitationen til gennemgang indeholdt følgende besked: <BR/> <i>$text:noescape()$</i>$endif$$endif$",
-"_invitationCustomMessageTextToSign":"$if(text)$$if(!mobile)$ Invitationen til at signere indeholdt følgende besked: <BR/> <i>$text:noescape()$</i>$endif$$endif$",
-"_using_identification_method":"$if(eleg)$ anvender eID som identifikationsmetode$elseif(sms_pin)$ ved hjælp af PIN via SMS som identifikationsmetode$endif$"
+"_invitationCustomMessageTextToSign":"$if(text)$$if(!mobile)$ Invitationen til at signere indeholdt følgende besked: <BR/> <i>$text:noescape()$</i>$endif$$endif$"
 }

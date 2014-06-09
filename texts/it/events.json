@@ -28,7 +28,7 @@
 "_RejectDocumentEvidenceTextSimpleArchive":"L'invito a firmare è stato respinto.$if(text)$ Il messaggio con la motivazione del rifiuto è: <BR/> <i>$text:noescape()$</i>$endif$",
 "_RejectDocumentEvidenceTextSimpleNotArchive":"L'invito a firmare è stato respinto da $actor$.$if(text)$ Il messaggio di $actor$ con la motivazione del rifiuto è: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToReviewArchive":"È stato inviato un promemoria per la revisione a $signatory$ tramite $_delivery_method()$.$if(text)$ Il testo del promemoria è: <BR/> <i>$text:noescape()$</i>$endif$",
-"_ReminderSendTextToReviewNotArchive":"È stato inviato un promemoria per la revisione a $signatory$ tramite $_delivery_method()$su richiesta di $actor$.$if(text)$ Il testo del promemoria di $actor$ è: <BR/> <i>$text:noescape()$</i>$endif$",
+"_ReminderSendTextToReviewNotArchive":"",
 "_ReminderSendTextToSignArchive":"È stato inviato un promemoria per la firma a $signatory$ tramite $_delivery_method()$.$if(text)$ Il testo del promemoria è: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToSignNotArchive":" È stato inviato un promemoria per la firma a $signatory$ tramite $_delivery_method()$ su richiesta di $actor$.$if(text)$ Il testo del promemoria di $actor$ è: <BR/> <i>$text:noescape()$</i>$endif$",
 "_RestartDocumentEvidenceTextSimpleArchive":"Il documento è stato aperto per la correzione.",
@@ -47,6 +47,5 @@
 "_TimeoutDocumentEvidenceTextSimple":"La data ultima per la firma del documento è scaduta.",
 "_delivery_method":"$if(email)$email$elseif(mobile)$SMS$elseif(emailmobile)$email e SMS$endif$",
 "_invitationCustomMessageTextToReview":"$if(text)$$if(!mobile)$ L'invito a rivedere contiene il seguente messaggio: <BR/> <i>$text:noescape()$</i>$endif$$endif$",
-"_invitationCustomMessageTextToSign":"$if(text)$$if(!mobile)$ L'invito a firmare contiene il seguente messaggio: <BR/> <i>$text:noescape()$</i>$endif$$endif$",
-"_using_identification_method":"$if(eleg)$ uso di eID come metodo di identificazione$elseif(sms_pin)$ uso di codice PIN via SMS come metodo di identificazione$endif$"
+"_invitationCustomMessageTextToSign":"$if(text)$$if(!mobile)$ L'invito a firmare contiene il seguente messaggio: <BR/> <i>$text:noescape()$</i>$endif$$endif$"
 }

@@ -28,9 +28,9 @@
 "_RejectDocumentEvidenceTextSimpleArchive":"Invitasjonen til å signere ble avvist.$if(text)$ Avslagsmeldingen var: <BR/> <i>$text:noescape()$</i>$endif$",
 "_RejectDocumentEvidenceTextSimpleNotArchive":"Invitasjonen til å signere ble avvist av $actor$.$if(text)$ Avslagsmeldingen fra $actor$ var: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToReviewArchive":"En påminnelse om å lese gjennom ble sendt til $signatory$ via $_delivery_method()$.$if(text)$ Påminnelsesmeldingen var: <BR/> <i>$text:noescape()$</i>$endif$",
-"_ReminderSendTextToReviewNotArchive":"En påminnelse om å lese gjennom ble sendt til $signatory$ via $_delivery_method()$etter en anmodning fra $actor$.$if(text)$ Påminnelsesmeldingen fra $actor$ var: <BR/> <i>$text:noescape()$</i>$endif$",
+"_ReminderSendTextToReviewNotArchive":"",
 "_ReminderSendTextToSignArchive":"En påminnelse om å signere ble sendt til $signatory$ via $_delivery_method()$.$if(text)$ Påminnelsesmeldingen var: <BR/> <i>$text:noescape()$</i>$endif$",
-"_ReminderSendTextToSignNotArchive":"En påminnelse om å signere ble sendt til $signatory$ via $_delivery_method()$ etter en anmodning fra $actor$.$if(text)$ Påminnelsesmeldingen fra $actor$ var: <BR/> <i>$text:noescape()$</i>$endif$",
+"_ReminderSendTextToSignNotArchive":"En påminnelse om å signere ble sendt til $signatory$ via $_delivery_method()$ etter en forespørsel fra $actor$.$if(text)$ Påminnelsesmeldingen fra $actor$ var: <BR/> <i>$text:noescape()$</i>$endif$",
 "_RestartDocumentEvidenceTextSimpleArchive":"Dokumentet ble åpnet for redigering.",
 "_RestartDocumentEvidenceTextSimpleNotArchive":"Dokumentet ble åpnet for redigering av $actor$ i Scrive sitt grensesnitt for å utforme signeringsprosesser.",
 "_SMSPinDeliveredEvidenceText":"SMS-en med PIN-koden ble levert til $text$ for $signatory$ sin bruk som identifikasjon.",
@@ -47,6 +47,5 @@
 "_TimeoutDocumentEvidenceTextSimple":"Forfallsdatoen for å signere dokumentet har utløpt.",
 "_delivery_method":"$if(email)$e-post$elseif(mobile)$SMS$elseif(emailmobile)$e-post og SMS$endif$",
 "_invitationCustomMessageTextToReview":"$if(text)$$if(!mobile)$ Invitasjonen til å lese gjennom inneholdt følgende melding: <BR/> <i>$text:noescape()$</i>$endif$$endif$",
-"_invitationCustomMessageTextToSign":"$if(text)$$if(!mobile)$ Invitasjonen til å signere inneholdt følgende melding: <BR/> <i>$text:noescape()$</i>$endif$$endif$",
-"_using_identification_method":"$if(eleg)$ bruker e-ID som identifikasjonsmetode$elseif(sms_pin)$ med PIN fra SMS som identifikasjonsmetode$endif$"
+"_invitationCustomMessageTextToSign":"$if(text)$$if(!mobile)$ Invitasjonen til å signere inneholdt følgende melding: <BR/> <i>$text:noescape()$</i>$endif$$endif$"
 }

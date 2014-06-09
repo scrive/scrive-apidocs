@@ -28,7 +28,7 @@
 "_RejectDocumentEvidenceTextSimpleArchive":"O convite de assinatura foi rejeitado.$if(text)$ A mensagem de rejeição foi a seguinte: <BR/> <i>$text:noescape()$</i>$endif$",
 "_RejectDocumentEvidenceTextSimpleNotArchive":"O convite de assinatura foi rejeitado por $actor$.$if(text)$ A mensagem de rejeição de $actor$ foi a seguinte: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToReviewArchive":"Um lembrete de revisão foi enviado para $signatory$ using $_delivery_method()$.$if(text)$ A mensagem de lembrete foi a seguinte: <BR/> <i>$text:noescape()$</i>$endif$",
-"_ReminderSendTextToReviewNotArchive":"Um lembrete de revisão foi enviado para $signatory$ usando $_delivery_method()$at the request of $actor$.$if(text)$ A mensagem de lembrete de $actor$ foi a seguinte: <BR/> <i>$text:noescape()$</i>$endif$",
+"_ReminderSendTextToReviewNotArchive":"",
 "_ReminderSendTextToSignArchive":"Um lembrete de assinatura foi enviado para $signatory$ usando $_delivery_method()$.$if(text)$ A mensagem de lembrete foi a seguinte: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToSignNotArchive":"Um lembrete de assinatura foi enviado para $signatory$ usando $_delivery_method()$ at the request of $actor$.$if(text)$ A mensagem de lembrete de $actor$ foi a seguinte: <BR/> <i>$text:noescape()$</i>$endif$",
 "_RestartDocumentEvidenceTextSimpleArchive":"O documento foi aberto para edição.",
@@ -47,6 +47,5 @@
 "_TimeoutDocumentEvidenceTextSimple":"O prazo de assinatura do documento passou.",
 "_delivery_method":"$if(email)$email$elseif(mobile)$SMS$elseif(emailmobile)$email e SMS$endif$",
 "_invitationCustomMessageTextToReview":"$if(text)$$if(!mobile)$ O convite de revisão continha a seguinte mensagem: <BR/> <i>$text:noescape()$</i>$endif$$endif$",
-"_invitationCustomMessageTextToSign":"$if(text)$$if(!mobile)$ O convite de assinatura continha a seguinte mensagem: <BR/> <i>$text:noescape()$</i>$endif$$endif$",
-"_using_identification_method":"$if(eleg)$ usando eID como método de identificação$elseif(sms_pin)$ usando PIN por SMS como método de identificação$endif$"
+"_invitationCustomMessageTextToSign":"$if(text)$$if(!mobile)$ O convite de assinatura continha a seguinte mensagem: <BR/> <i>$text:noescape()$</i>$endif$$endif$"
 }

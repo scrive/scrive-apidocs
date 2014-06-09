@@ -1,4 +1,4 @@
-{
+{ 
 "_AttachExtendedSealedFileEvidenceTextSimple":"Le document a été scellé à l'aide d'une signature numérique sans clé.",
 "_AttachGuardtimeSealedFileEvidenceTextSimple":"Le document a été scellé à l'aide d'une signature numérique.",
 "_AttachSealedFileEvidenceTextSimpleArchive":"Scrive a préparé le document PDF finalisé.",
@@ -24,11 +24,11 @@
 "_MarkInvitationReadEvidenceTextToSignSimple":"L'invitation à signer le document (envoyée à $signatory_email$) a été ouverte.",
 "_PreparationToPendingEvidenceTextSimpleArchive":"Le processus de signature a été initié.",
 "_PreparationToPendingEvidenceTextSimpleNotArchive":"La préparation des paramètres de signature a été effectuée par $actor$. Le processus de signature a été initié.",
-"_ProlongDocumentEvidenceTextArchive":"La date limite de signature a été prolongée.",
+"_ProlongDocumentEvidenceTextArchive":"La date limite de signature a été repoussée.",
 "_RejectDocumentEvidenceTextSimpleArchive":"L'invitation à signer le document a été refusée.$if(text)$ Le message de refus était: <BR/> <i>$text:noescape()$</i>$endif$",
 "_RejectDocumentEvidenceTextSimpleNotArchive":"L'invitation à signer le document a été refusée par $actor$.$if(text)$  Le message de refus de $actor$ était: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToReviewArchive":"Un rappel de demande de passage en revue du document a été envoyé à $signatory$ par $_delivery_method()$.$if(text)$ Le message de rappel était: <BR/> <i>$text:noescape()$</i>$endif$",
-"_ReminderSendTextToReviewNotArchive":"Un rappel de demande de passage en revue du document a été envoyé à $signatory$ par $_delivery_method()$ sur demande de $actor$.$if(text)$ Le message de rappel de $actor$ était: <BR/> <i>$text:noescape()$</i>$endif$",
+"_ReminderSendTextToReviewNotArchive":"",
 "_ReminderSendTextToSignArchive":"Un rappel de demande de signature a été envoyé à $signatory$ par $_delivery_method()$.$if(text)$ Le message de rappel était: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToSignNotArchive":"Un rappel de demande de signature été envoyé à $signatory$ par $_delivery_method()$ sur demande de $actor$.$if(text)$ Le message de rappel de $actor$ était: <BR/> <i>$text:noescape()$</i>$endif$",
 "_RestartDocumentEvidenceTextSimpleArchive":"Le document a été ouvert à des fins de modifications.",
@@ -41,12 +41,11 @@
 "_SignDocumentEvidenceTextSimpleNotArchiveEleg":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveSMSPin":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveStandard":"",
-"_SignWithELegFailureEvidenceTextSimple":"Scrive a refusé la tentative de $signatory$ de signer le document car les informations d'identification de $signatory$ ne correspondaient pas aux informations d'identification reçues par le système externe d'ID numériques.",
+"_SignWithELegFailureEvidenceTextSimple":"Scrive a refusé la tentative de signature de $signatory$ car les informations d'identification de $signatory$ ne correspondaient pas aux informations d'identification reçues par le système externe d'eID.",
 "_SignatoryLinkVisitedTextArchiveSimple":"Le document a été ouvert en ligne.",
 "_SignatoryLinkVisitedTextNotArchiveSimple":"Le document a été ouvert en ligne par $actor$.",
 "_TimeoutDocumentEvidenceTextSimple":"La date limite de signature du document a expirée.",
 "_delivery_method":"$if(email)$email$elseif(mobile)$SMS$elseif(emailmobile)$email et SMS$endif$",
 "_invitationCustomMessageTextToReview":"$if(text)$$if(!mobile)$ Le message figurant dans l'invitation à consulter le document était le suivant: <BR/> <i>$text:noescape()$</i>$endif$$endif$",
-"_invitationCustomMessageTextToSign":"$if(text)$$if(!mobile)$ Le message figurant dans l'invitation à signer le document était le suivant: <BR/> <i>$text:noescape()$</i>$endif$$endif$",
-"_using_identification_method":"$if(eleg)$ utilisant l’eID comme moyen d’identification$elseif(sms_pin)$ utilisant le code PIN reçu par SMS comme moyen d’identification$endif$"
+"_invitationCustomMessageTextToSign":"$if(text)$$if(!mobile)$ Le message figurant dans l'invitation à signer le document était le suivant: <BR/> <i>$text:noescape()$</i>$endif$$endif$"
 }
