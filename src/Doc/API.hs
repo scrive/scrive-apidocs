@@ -882,6 +882,11 @@ runJavaTextExtract json content = do
           Log.attention_ $ "Extract texts failed for configuration: " ++ show json
           apiGuardL (serverError "Extract texts failed on PDF") (return Nothing)
 
+recalcuateAnchoredFieldPlacements :: (Kontrakcja m,DocumentMonad m) => FileID -> FileID -> m ()
+recalcuateAnchoredFieldPlacements _oldfileid _fileid = do
+  _ <- theDocument
+  return ()
+
 -- this one must be standard post with post params because it needs to
 -- be posted from a browser form
 -- Change main file, file stored in input "file" OR templateid stored in "template"
@@ -896,6 +901,7 @@ apiCallChangeMainFile docid = api $ do
     when (not $ (auid == userid user)) $ do
           throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
 
+    moldfileid <- documentfile  <$> theDocument
     fileinput <- getDataFn' (lookInput "file")
 
     mft <- case fileinput of
@@ -924,12 +930,18 @@ apiCallChangeMainFile docid = api $ do
                                         Right dcontent -> preCheckPDF dcontent
                                         Left _ -> return (Left m)
         fileid' <- dbUpdate $ NewFile filename pdfcontent
+        case moldfileid of
+          Just oldfileid -> recalcuateAnchoredFieldPlacements oldfileid fileid'
+          Nothing -> return ()
         return $ Just (fileid', takeBaseName filename)
 
     case mft of
       Just  (fileid,filename) -> do
         dbUpdate $ AttachFile fileid actor
         apiGuardL' $ dbUpdate $ SetDocumentTitle filename actor
+        case moldfileid of
+          Just oldfileid -> recalcuateAnchoredFieldPlacements oldfileid fileid
+          Nothing -> return ()
       Nothing -> dbUpdate $ DetachFile actor
     Accepted <$> (documentJSON (Just user) False True True Nothing Nothing =<< theDocument)
 
