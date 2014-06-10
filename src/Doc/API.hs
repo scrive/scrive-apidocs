@@ -887,7 +887,8 @@ _getAnchorPositionsTest :: IO (Map.Map PlacementAnchor (Int, Double, Double))
 _getAnchorPositionsTest = do
   telia <- BS.readFile "test/pdfs/telia.pdf"
   getAnchorPositions telia
-        [PlacementAnchor "mobilabonnemang" 1 [1]]
+        [PlacementAnchor "mobilabonnemang" 1 [1],
+         PlacementAnchor "non existing text" 1 [1]]
 
 getAnchorPositions :: (Monad m, MonadBaseControl IO m,Log.MonadLog m,MonadIO m) => BS.ByteString -> [PlacementAnchor] -> m (Map.Map PlacementAnchor (Int,Double,Double))
 getAnchorPositions _pdfcontent [] = return Map.empty
@@ -911,18 +912,23 @@ getAnchorPositions pdfcontent anchors = do
 
     case code of
       ExitSuccess -> do
-        let matches :: [(PlacementAnchor, (Int,Double,Double))]
+        let matches :: Maybe (Maybe [Maybe (PlacementAnchor, (Int,Double,Double))])
             Right stdoutjs = J.runGetJSON readJSValue (BSL.toString stdout)
-            Just (Just matches) = withJSValue stdoutjs $ fromJSValueFieldCustom "matches" $ fromJSValueCustomMany $ do
+            matches = withJSValue stdoutjs $ fromJSValueFieldCustom "matches" $ fromJSValueCustomMany $ ((do
               text                 <- fromJSValueField "text"
               index                <- fromMaybe (Just 1) <$> fromJSValueField "index"
               pages                <- fromJSValueField "pages"
               page                 <- fromJSValueField "page"
-              Just [coordx,coordy] <- fromJSValueField "coords"
-              return ((,) <$> (PlacementAnchor <$> text <*> index <*> pages)
-                      <*> ((,,) <$> page <*> coordx <*> coordy))
-        liftIO $ mapM_ print matches
-        return (Map.fromList matches)
+              coords               <- fromJSValueField "coords"
+              let coordx = fst <$> coords
+              let coordy = snd <$> coords
+              return (Just ((,) <$> (PlacementAnchor <$> text <*> index <*> pages)
+                      <*> ((,,) <$> page <*> coordx <*> coordy)))))
+        case matches of
+          Just (Just realMatches) -> do
+            return (Map.fromList (catMaybes realMatches))
+          _ -> do
+            return Map.empty
       ExitFailure _ -> do
         Log.attention_ $ BSL.toString stderr
         return Map.empty
