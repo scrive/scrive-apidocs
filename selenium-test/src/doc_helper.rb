@@ -156,7 +156,8 @@ class DocHelper
       @driver.execute_script("$('.modal.active input.editSignatoryAttachmentName').change()");
       (@h.wait_until { @driver.find_elements :css => ".modal.active textarea.editSignatoryAttachmentDescription" }).last.send_keys attdesc
       @driver.execute_script("$('.modal.active  textarea.editSignatoryAttachmentDescription').change()");
-      (@h.wait_until { @driver.find_element :xpath => "(//td[contains(@class,'editSignatoryAttachmentTDSelect')])[last()]//div[contains(@class,'select-button')]"}).click
+      select_button = @h.wait_until { @driver.find_element :xpath => "(//td[contains(@class,'editSignatoryAttachmentTDSelect')])[last()]//div[contains(@class,'select-button')]"}
+      @driver.action.move_to(select_button).click(select_button).perform
       (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'select-exp')]//ul[contains(@class,'select-opts')]//span[contains(text(),'" + counterpart + "')]"}).click
       sleep 1 if screenshot_name
       @h.screenshot screenshot_name if screenshot_name
