@@ -1088,8 +1088,7 @@ javascriptLocalisation =
                title : "$_signinginprogressmodalTitle()$"
              , action1 : "$_signinginprogressmodalAction1()$"
              , action2 : "$_signinginprogressmodalAction2()$"
-             , youHaveSigned : "$_signinginprogressmodalYouHaveSigned()$"
-             , pleaseWaitWhile : "$_signinginprogressmodalPleaseWaitWhile()$"
+             , youHaveSignedPleaseWait : "$_signinginprogressmodalYouHaveSignedPleaseWait()$"
       }
       , signingInProgressDontCloseWindow : "$_signingInProgressDontCloseWindow()$"
       , signingErrorMessage1 : "$_signingErrorMessage1()$"

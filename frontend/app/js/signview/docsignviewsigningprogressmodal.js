@@ -119,8 +119,8 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
       var container = $(this.el);
       var imgUrl = "/pages/" + model.document().mainfile().fileid() + "/1" + model.document().mainfile().queryPart();
       var docImage = $('<img class="img-doc" >').attr("alt",model.document().title()).attr("src",imgUrl);
-      var title = $('<p class="title">'+localization.signinginprogressmodal.youHaveSigned+' <strong/>. '+localization.signinginprogressmodal.pleaseWaitWhile+'</p>');
-      $("strong",title).text(model.document().title());
+      var title = $('<p class="title">' + localization.signinginprogressmodal.youHaveSignedPleaseWait + '</p>');
+      $('.put-doctitle', title).text(model.document().title());
 
       this.spinnerCheckboxList = $('<ul class="spinner-checkbox-list">');
       var leftContainer = $('<div class="left-container">');
