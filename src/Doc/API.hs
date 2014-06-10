@@ -20,6 +20,7 @@ import Happstack.StaticRouting
 import Text.JSON hiding (Ok)
 import qualified Text.JSON as J
 import qualified Text.JSON.Pretty as J (pp_value)
+import qualified Text.JSON.String as J
 import KontraMonad
 import Happstack.Server.Types
 import Routing
@@ -882,8 +883,50 @@ runJavaTextExtract json content = do
           Log.attention_ $ "Extract texts failed for configuration: " ++ show json
           apiGuardL (serverError "Extract texts failed on PDF") (return Nothing)
 
-getAnchorPositions :: (Monad m) => BS.ByteString -> [PlacementAnchor] -> m (Map.Map PlacementAnchor (Int,Double,Double))
-getAnchorPositions _pdfcontent _anchors = return Map.empty
+_getAnchorPositionsTest :: IO (Map.Map PlacementAnchor (Int, Double, Double))
+_getAnchorPositionsTest = do
+  telia <- BS.readFile "test/pdfs/telia.pdf"
+  getAnchorPositions telia
+        [PlacementAnchor "mobilabonnemang" 1 [1]]
+
+getAnchorPositions :: (Monad m, MonadBaseControl IO m,Log.MonadLog m,MonadIO m) => BS.ByteString -> [PlacementAnchor] -> m (Map.Map PlacementAnchor (Int,Double,Double))
+getAnchorPositions _pdfcontent [] = return Map.empty
+getAnchorPositions pdfcontent anchors = do
+  withSystemTempDirectory' ("find-text-") $ \tmppath -> do
+    let inputpath = tmppath ++ "/input.pdf"
+        config = runJSONGen $ do
+          value "input" inputpath
+          objects "matches" (map anchorToJS anchors)
+        anchorToJS anc = do
+          value "text" (placementanchortext anc)
+          value "index" (placementanchorindex anc)
+          value "pages" (placementanchorpages anc)
+        configpath = tmppath ++ "/find-texts.json"
+
+    liftIO $ BS.writeFile inputpath pdfcontent
+    liftIO $ BS.writeFile configpath (BS.fromString $ show $ J.pp_value (toJSValue config))
+
+    (code,stdout,stderr) <- liftIO $ do
+      readProcessWithExitCode' "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "find-texts", configpath] (BSL.empty)
+
+    case code of
+      ExitSuccess -> do
+        let matches :: [(PlacementAnchor, (Int,Double,Double))]
+            Right stdoutjs = J.runGetJSON readJSValue (BSL.toString stdout)
+            Just (Just matches) = withJSValue stdoutjs $ fromJSValueFieldCustom "matches" $ fromJSValueCustomMany $ do
+              text                 <- fromJSValueField "text"
+              index                <- fromMaybe (Just 1) <$> fromJSValueField "index"
+              pages                <- fromJSValueField "pages"
+              page                 <- fromJSValueField "page"
+              Just [coordx,coordy] <- fromJSValueField "coords"
+              return ((,) <$> (PlacementAnchor <$> text <*> index <*> pages)
+                      <*> ((,,) <$> page <*> coordx <*> coordy))
+        liftIO $ mapM_ print matches
+        return (Map.fromList matches)
+      ExitFailure _ -> do
+        Log.attention_ $ BSL.toString stderr
+        return Map.empty
+
 
 recalcuateAnchoredFieldPlacements :: (Kontrakcja m,DocumentMonad m) => FileID -> FileID -> m ()
 recalcuateAnchoredFieldPlacements oldfileid newfileid = do
