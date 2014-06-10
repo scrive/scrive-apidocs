@@ -36,6 +36,7 @@ module Doc.Model.Update
   , SetDocumentTags(..)
   , SetDocumentTitle(..)
   , SetEmailInvitationDeliveryStatus(..)
+  , SetFieldPlacements(..)
   , SetSMSInvitationDeliveryStatus(..)
   , SetInviteText(..)
   , SetConfirmText(..)
@@ -72,6 +73,7 @@ import Data.Monoid.Space
 import DB
 import Doc.Model.Expressions
 import Doc.Model.Query (GetSignatoryLinkByID(..), GetDocumentByDocumentID(..), GetDocumentTags(..), GetDocsSentBetween(..), GetDocsSent(..), GetSignatoriesByEmail(..))
+import Doc.SignatoryFieldID
 import MagicHash
 import Crypto.RNG
 import Doc.Conditions
@@ -858,6 +860,14 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SaveSigAttachment () 
             F.value "description" $ signatoryattachmentdescription sigattach
             F.value "author" $ getIdentifier $ $(fromJust) $ getAuthorSigLink doc)
         actor
+
+
+data SetFieldPlacements = SetFieldPlacements SignatoryFieldID [FieldPlacement]
+instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetFieldPlacements () where
+  update (SetFieldPlacements fieldid placements) =
+    runQuery_ . sqlUpdate "signatory_link_fields" $ do
+      sqlSet "placements" $ placements
+      sqlWhereEq "id" fieldid
 
 data SetDocumentTags = SetDocumentTags (S.Set DocumentTag) Actor
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetDocumentTags Bool where

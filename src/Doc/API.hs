@@ -976,8 +976,8 @@ recalcuateAnchoredFieldPlacements oldfileid newfileid = do
       let plcpairs :: [(FieldPlacement, Maybe FieldPlacement)]
           plcpairs = map (\p -> (p,maybeMoveFieldPlacement p)) (sfPlacements fld)
       when (any (isJust . snd) plcpairs) $ do
-        let _newplc = map (\(k,v) -> fromMaybe k v) plcpairs
-        -- dbUpdate $ SetFieldPlacements ....
+        let newplc = map (\(k,v) -> fromMaybe k v) plcpairs
+        dbUpdate $ SetFieldPlacements (sfID fld) newplc
         return ()
 
   return ()
