@@ -25,7 +25,7 @@ window.createFieldPlacementPlacedView = function (args) {
     else return new TextPlacementPlacedView(args);
 };
 
-window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction, heightFunction, cursorNormalize, fontSize)
+window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction, heightFunction, cursorNormalize, fontSize, onFieldAdded)
 {
     var droppedInside = false;
     var helper;
@@ -137,6 +137,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
             droppedInside = true;
             var signatory = field.signatory();
             if( !_.find(signatory.fields(), function(f) { return f==field; })) {
+                if (onFieldAdded != undefined) onFieldAdded(field);
                 signatory.addField(field);
             }
 
