@@ -55,7 +55,7 @@ import Util.MonadUtils (guardJustM)
 import Happstack.Server.RqData
 import Doc.Rendering
 import DB
-import DB.TimeZoneName (mkTimeZoneName)
+import DB.TimeZoneName (mkTimeZoneName, defaultTimeZoneName)
 import MagicHash (MagicHash)
 import Kontra
 import Doc.DocUtils
@@ -103,6 +103,7 @@ import Doc.DocMails
 import Doc.AutomaticReminder.Model
 import Utils.Monoid
 import Doc.SMSPin.Model
+import qualified Data.Traversable as T
 
 documentAPI :: Route (KontraPlus Response)
 documentAPI = dir "api" $ choice
@@ -201,7 +202,9 @@ apiCallCreateFromFile = api $ do
                                       Left _ -> return (Left m)
       fileid' <- dbUpdate $ NewFile filename pdfcontent
       return (Just fileid', takeBaseName filename)
-  guardJustM (dbUpdate $ NewDocument user title doctype 0 actor) `withDocumentM` do
+  mtimezone <- getField "timezone"
+  timezone <- fromMaybe defaultTimeZoneName <$> T.sequence (mkTimeZoneName <$> mtimezone)
+  guardJustM (dbUpdate $ NewDocument user title doctype timezone 0 actor) `withDocumentM` do
     when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft True
     case mfile of
       Nothing -> return ()
@@ -341,15 +344,14 @@ apiCallReady did =  api $ do
             checkObjectVersionIfProvidedAndThrowError did $ (conflictError "Document is not a draft")
       whenM (isTemplate <$> theDocument) $ do
             checkObjectVersionIfProvidedAndThrowError did $ (serverError "Document is not a draft")
-      timezone <- mkTimeZoneName =<< (fromMaybe "Europe/Stockholm" <$> getField "timezone")
       whenM ((\doc -> (not $ all ((/=EmailDelivery) . signatorylinkdeliverymethod ||^ isGood . asValidEmail . getEmail) (documentsignatorylinks doc))) <$> theDocument) $ do
             throwIO . SomeKontraException $ serverError "Some signatories don't have a valid email address set."
       whenM (isNothing . documentfile <$> theDocument) $ do
             throwIO . SomeKontraException $ serverError "File must be provided before document can be made ready."
       t <- ctxtime <$> getContext
+      timezone <- documenttimezonename <$> theDocument
       dbUpdate $ PreparationToPending actor timezone
       dbUpdate $ SetDocumentInviteTime t actor
-
       skipauthorinvitation <- isFieldSet "skipauthorinvitation"
       postDocumentPreparationChange skipauthorinvitation timezone
       Accepted <$> (documentJSON (Just user) False True True Nothing Nothing =<< theDocument)
@@ -563,8 +565,8 @@ apiCallProlong did =  api $ do
            Just n -> if (n < 1 || n > 90)
                               then throwIO . SomeKontraException $ (badInput "Number of days to sign must be a valid number, between 1 and 90")
                               else return n
-      timezone <- mkTimeZoneName =<< (fromMaybe "Europe/Stockholm" <$> getField "timezone")
-      dbUpdate $ ProlongDocument days (Just timezone) actor
+      timezone <- documenttimezonename <$> theDocument
+      dbUpdate $ ProlongDocument days timezone actor
       triggerAPICallbackIfThereIsOne =<< theDocument
       Accepted <$> (documentJSON (Just user) False True True Nothing Nothing =<< theDocument)
 
@@ -587,7 +589,7 @@ apiCallSetAutoReminder did =  api $ do
                         if n < 1 || (isJust tot && n `daysAfter` (ctxtime ctx) > fromJust tot)
                           then throwIO . SomeKontraException $ (badInput "Number of days to send autoreminder must be a valid number, between 1 and number of days left till document deadline")
                           else return $ Just (fromIntegral n :: Int32)
-      timezone <- mkTimeZoneName =<< (fromMaybe "Europe/Stockholm" <$> getField "timezone")
+      timezone <- documenttimezonename <$> theDocument
       setAutoreminder did days timezone
       triggerAPICallbackIfThereIsOne =<< theDocument
       Accepted <$> (documentJSON (Just $ user) False True True Nothing Nothing =<< theDocument)

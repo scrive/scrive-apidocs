@@ -30,6 +30,8 @@ import Data.Monoid
 import Data.Monoid.Space
 import DB
 import DB.RowCache (GetRow(..))
+import DB.TimeZoneName
+
 import Doc.Model.Domain
 import Doc.Model.Expressions
 import Doc.Model.Filter
@@ -94,12 +96,13 @@ documentsSelectors =
   , "documents.api_callback_url"
   , "documents.object_version"
   , "documents.token"
+  , "documents.time_zone_name"
   , "user_authors.company_id"
   , documentStatusClassExpression
   ]
 
-fetchDocument :: (DocumentID, String, DocumentStatus, Maybe String, DocumentType, MinutesTime, MinutesTime, Int32, Maybe Int32, Maybe MinutesTime, Maybe MinutesTime, Maybe MinutesTime, Maybe IPAddress, String, String, Bool, Bool, Bool, Bool, Lang, DocumentSharing, Maybe String, Int64, MagicHash, Maybe CompanyID, StatusClass) -> Document
-fetchDocument (did, title, status, error_text, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text,  show_header, show_pdf_download, show_reject_option, show_footer, lang, sharing, apicallback, objectversion, token, author_company_id, status_class)
+fetchDocument :: (DocumentID, String, DocumentStatus, Maybe String, DocumentType, MinutesTime, MinutesTime, Int32, Maybe Int32, Maybe MinutesTime, Maybe MinutesTime, Maybe MinutesTime, Maybe IPAddress, String, String, Bool, Bool, Bool, Bool, Lang, DocumentSharing, Maybe String, Int64, MagicHash, TimeZoneName, Maybe CompanyID, StatusClass) -> Document
+fetchDocument (did, title, status, error_text, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text,  show_header, show_pdf_download, show_reject_option, show_footer, lang, sharing, apicallback, objectversion, token, time_zone_name, author_company_id, status_class)
        = Document {
          documentid = did
        , documenttitle = title
@@ -136,6 +139,7 @@ fetchDocument (did, title, status, error_text, doc_type, ctime, mtime, days_to_s
        , documentobjectversion = objectversion
        , documentmagichash = token
        , documentauthorcompanyid = author_company_id
+       , documenttimezonename = time_zone_name
        }
 
 selectSignatoryLinksSQL :: SQL

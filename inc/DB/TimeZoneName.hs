@@ -1,5 +1,7 @@
 module DB.TimeZoneName
   ( TimeZoneName
+  , defaultTimeZoneName
+  , unsafeTimeZoneName
   , mkTimeZoneName
   , withTimeZone
   , toString
@@ -17,6 +19,13 @@ import qualified Control.Exception.Lifted as E
 -- http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 newtype TimeZoneName = TimeZoneName String
   deriving (Eq, Show, Ord, Typeable)
+
+defaultTimeZoneName :: TimeZoneName
+defaultTimeZoneName = TimeZoneName "Europe/Stockholm"
+
+unsafeTimeZoneName :: String -> TimeZoneName
+unsafeTimeZoneName = TimeZoneName
+
 
 mkTimeZoneName :: (MonadBaseControl IO m, MonadDB m) => String -> m TimeZoneName
 mkTimeZoneName s

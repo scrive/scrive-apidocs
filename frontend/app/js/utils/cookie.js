@@ -20,7 +20,8 @@ define(function() {
       return cookies[name];
     },
     set : function(name,value) {
-      document.cookie = name + '=' + value;
+      // Add path to cookie, else it will not be send to server
+      document.cookie = name + '=' + value +';path=/';
     }
   };
 

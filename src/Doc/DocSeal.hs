@@ -16,6 +16,7 @@ import Control.Monad.Trans.Control
 import Control.Monad.Reader
 import Data.Function (on)
 import Data.Maybe
+import Data.Monoid.Space
 import Data.List
 import Doc.DocStateData
 import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
@@ -28,7 +29,7 @@ import Doc.DocView
 import Doc.DocUtils
 import qualified HostClock.Model as HC
 import MailContext (MailContext(..), MailContextMonad, getMailContext)
-import MinutesTime (MinutesTime, daysBefore, toCalendarTime)
+import MinutesTime
 import Utils.Directory
 import Utils.Read
 import Utils.IO
@@ -37,12 +38,9 @@ import System.Exit
 import Kontra
 import Text.HTML.TagSoup (Tag(..), parseTags)
 import Text.StringTemplates.Templates
-import Text.Printf
 import Text.JSON.Gen
 import Text.JSON.Pretty (pp_value)
 import System.FilePath (takeFileName, takeExtension, (</>))
-import System.Time
-import System.Locale
 import Templates
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
@@ -59,6 +57,7 @@ import Util.SignatoryLinkUtils
 import File.Model
 import Crypto.RNG
 import DB
+import DB.TimeZoneName
 import Control.Applicative
 import EvidenceLog.Model
 import EvidenceLog.View
@@ -69,9 +68,12 @@ import Utils.Prelude
 import qualified Amazon as AWS
 import Data.Char
 
-personFromSignatory :: (BS.ByteString,BS.ByteString) -> SignatoryLink -> Seal.Person
-personFromSignatory boxImages signatory =
-    Seal.Person { Seal.fullname = getFullName signatory
+personFromSignatory :: (MonadDB m,MonadBaseControl IO m) => TimeZoneName -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> m Seal.Person
+personFromSignatory tz boxImages signatory = do
+    stime <- case  maybesigninfo signatory of
+                  Nothing -> return ""
+                  Just si -> formatMinutesTimeForVerificationPage tz $ signtime si
+    return $ Seal.Person { Seal.fullname = getFullName signatory
                 , Seal.company = getCompanyName signatory
                 , Seal.email = getEmail signatory
                 , Seal.phone = getMobile signatory
@@ -83,21 +85,22 @@ personFromSignatory boxImages signatory =
                 , Seal.emailverified = True
                 , Seal.phoneverified = False
                 , Seal.fields = fieldsFromSignatory boxImages signatory
-                , Seal.signtime = maybe "" (formatMinutesTimeForVerificationPage . signtime) $ maybesigninfo signatory
+                , Seal.signtime = stime
                 }
 
-personExFromSignatoryLink :: (BS.ByteString,BS.ByteString) -> SignatoryLink -> (Seal.Person, String)
-personExFromSignatoryLink boxImages (sl@SignatoryLink { signatorysignatureinfo
+personExFromSignatoryLink :: (MonadDB m,MonadBaseControl IO m) =>  TimeZoneName -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> m (Seal.Person, String)
+personExFromSignatoryLink tz boxImages (sl@SignatoryLink { signatorysignatureinfo
                                                       , signatorylinkdeliverymethod
                                                       , signatorylinkauthenticationmethod
-                                                      }) =
-  ((personFromSignatory boxImages sl)
-     { Seal.emailverified    = signatorylinkdeliverymethod == EmailDelivery
+                                                      }) = do
+  person <- personFromSignatory tz boxImages sl
+  return ((person {
+       Seal.emailverified    = signatorylinkdeliverymethod == EmailDelivery
      , Seal.fullnameverified = fullnameverified
      , Seal.companyverified  = False
      , Seal.numberverified   = numberverified
      , Seal.phoneverified    = (signatorylinkdeliverymethod == MobileDelivery) || (signatorylinkauthenticationmethod == SMSPinAuthentication)
-     }
+     })
     , map head $ words $ getFullName sl
     )
   where fullnameverified = maybe False (\s -> signaturefstnameverified s
@@ -246,14 +249,23 @@ evidenceOfIntentAttachment title sls = do
 {-
  formatCalendarTime does not support %z as modifier. We have to implement it ourselves here.
 -}
-formatMinutesTimeForVerificationPage :: MinutesTime -> String
-formatMinutesTimeForVerificationPage mt = formatCalendarTime defaultTimeLocale "%Y-%m-%d %H:%M:%S %Z" caltime ++ " (" ++ tzinfo ++ ")"
+formatMinutesTimeForVerificationPage :: (MonadDB m,MonadBaseControl IO m) => TimeZoneName -> MinutesTime -> m String
+formatMinutesTimeForVerificationPage tz mt = do
+  withTimeZone tz $ do
+    runQuery_ $ "select TO_CHAR(" <?> mt <+> ",'YYYY-MM-DD HH24:MI:SS TZ')"
+    (ftime::String) <- fetchOne unSingle
+    return $ ftime ++ " (" ++ (zoneDiff (fromJust $ parseMinutesTimeUTC $ take 19 ftime) mt) ++ ")"
   where
-    caltime = MinutesTime.toCalendarTime mt
-    tzoffset = ctTZ caltime `div` 60 -- convert seconds into minutes
-    tzinfo = printf "%+03d%02d"  (tzoffset `div` 60) (tzoffset `mod` 60)
+    zoneDiff mt1 mt2 = let
+                         secDiff = (toMinutes mt1) - (toMinutes mt2)
+                         mDiff = (secDiff `mod` 60)
+                         hDiff = (secDiff `div` 60) `mod` 24
+                         hDiffText = show (hDiff `div` 10) ++ show (hDiff `mod` 10)  ++ show (mDiff `div` 10) ++ show (mDiff `mod` 10)
+                       in if (secDiff >= 0)
+                            then "+" ++ hDiffText
+                            else "-" ++ hDiffText
 
-sealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, Log.MonadLog m, AWS.AmazonMonad m)
+sealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadBaseControl IO m, Log.MonadLog m, AWS.AmazonMonad m)
                      => (BS.ByteString,BS.ByteString)
                      -> String
                      -> Document
@@ -274,7 +286,7 @@ sealSpecFromDocument boxImages hostpart document elog ces content tmppath inputp
 
   sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath outputpath additionalAttachments docs
 
-sealSpecFromDocument2 :: (TemplatesMonad m, MonadDB m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m)
+sealSpecFromDocument2 :: (TemplatesMonad m, MonadDB m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m, MonadBaseControl IO m)
                      => (BS.ByteString,BS.ByteString)
                      -> String
                      -> Document
@@ -288,37 +300,36 @@ sealSpecFromDocument2 :: (TemplatesMonad m, MonadDB m, Log.MonadLog m, MonadIO m
                      -> m Seal.SealSpec
 sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath outputpath additionalAttachments docs =
   let docid = documentid document
-      Just authorsiglink = getAuthorSigLink document
-
-      signatories = [ personExFromSignatoryLink boxImages s
-                        | s <- documentsignatorylinks document
-                        , signatoryispartner $ s
-                    ]
-
-      secretaries = [ personFromSignatory boxImages $ s
-                        | s <- documentsignatorylinks document
-                        , not . signatoryispartner $ s
-                    ]
-
-      initiator | signatoryispartner authorsiglink = Nothing
-                | otherwise = Just (personFromSignatory boxImages authorsiglink)
-
-      (persons, initialsx) = unzip signatories
       paddeddocid = pad0 20 (show docid)
-
-      initials = intercalate ", " initialsx
-
+      Just authorsiglink = getAuthorSigLink document
       removeTags s = concat [t | TagText t <- parseTags s]
-
       mkHistEntry ev = do
         actor <- approximateActor True document ev
         comment <- removeTags <$> simplyfiedEventText (Just actor) document ev
-        return $ Seal.HistEntry{ Seal.histdate = formatMinutesTimeForVerificationPage $ evTime ev
+        etime <- formatMinutesTimeForVerificationPage (documenttimezonename document) (evTime ev)
+        return $ Seal.HistEntry{ Seal.histdate = etime
                                , Seal.histcomment = comment
                                , Seal.histaddress = maybe "" show $ evIP4 ev
                                }
 
   in do
+      signatories <- sequence $ [ personExFromSignatoryLink (documenttimezonename document) boxImages s
+                        | s <- documentsignatorylinks document
+                        , signatoryispartner $ s
+                    ]
+
+      secretaries <- sequence $ [ personFromSignatory (documenttimezonename document) boxImages $ s
+                        | s <- documentsignatorylinks document
+                        , not . signatoryispartner $ s
+                    ]
+
+      initiator <- if (signatoryispartner authorsiglink)
+                    then return Nothing
+                    else Just <$> (personFromSignatory (documenttimezonename document) boxImages authorsiglink)
+
+      let (persons, initialsx) = unzip signatories
+      let initials = intercalate ", " initialsx
+
       -- Log.mixlog_ "Creating seal spec from file."
       -- Remove events induced by resealing and non-signing party activities
       let eventsForHistory = filter eventForVerificationPage . filter (not . viewingParty)

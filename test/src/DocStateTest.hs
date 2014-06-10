@@ -34,7 +34,7 @@ import MinutesTime
 import Test.HUnit.Base (Assertion)
 import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
-import DB.TimeZoneName (mkTimeZoneName)
+import DB.TimeZoneName (defaultTimeZoneName, mkTimeZoneName)
 
 import Data.Functor
 import Data.Maybe
@@ -340,7 +340,7 @@ testProlongDocument = do
   addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending) `withDocumentM` do
     success <- randomUpdate $ \t->TimeoutDocument (systemActor t)
     assert success
-    randomUpdate $ \t -> ProlongDocument 2 Nothing (systemActor t)
+    randomUpdate $ \t -> ProlongDocument 2 defaultTimeZoneName (systemActor t)
     pending <- (\d ->  (Pending == documentstatus d))  <$> theDocument
     assert pending
     lg <- dbQuery . GetEvidenceLog =<< theDocumentID
@@ -494,7 +494,7 @@ performNewDocumentWithRandomUser mcompany doctype title = do
   user <- maybe addNewRandomUser (\c -> addNewRandomCompanyUser (companyid c) False) mcompany
   ctx <- mkContext defaultValue
   let aa = authorActor ctx user
-  mdoc <- randomUpdate $ NewDocument user title doctype 0 aa
+  mdoc <- randomUpdate $ NewDocument user title doctype defaultTimeZoneName 0 aa
   return (user, ctxtime ctx, maybe (Left "no document") Right mdoc)
 
 assertGoodNewDocument :: Maybe Company -> DocumentType -> String -> (User, MinutesTime, Either String Document) -> TestEnv ()
@@ -740,7 +740,7 @@ testNewDocumentDependencies = doTimes 10 $ do
   -- execute
   ctx <- mkContext defaultValue
   let aa = authorActor ctx author
-  mdoc <- randomUpdate $ (\title doctype -> NewDocument author (fromSNN title) doctype 0 aa)
+  mdoc <- randomUpdate $ (\title doctype -> NewDocument author (fromSNN title) doctype defaultTimeZoneName 0 aa)
   -- assert
   assertJust mdoc
   assertInvariants $ fromJust mdoc
@@ -751,7 +751,7 @@ testDocumentCanBeCreatedAndFetchedByID = doTimes 10 $ do
   author <- addNewRandomUser
   ctx <- mkContext defaultValue
   let aa = authorActor ctx author
-  mdoc <- randomUpdate $ (\title doctype -> NewDocument author (fromSNN title) doctype 0 aa)
+  mdoc <- randomUpdate $ (\title doctype -> NewDocument author (fromSNN title) doctype defaultTimeZoneName 0 aa)
   let doc = case mdoc of
           Nothing -> error "No document"
           Just d  -> d

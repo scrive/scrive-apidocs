@@ -5,7 +5,7 @@ module Doc.DocDraft (
     draftIsChangingDocument
   ) where
 
-import API.Monad (serverError)
+import API.Monad (serverError,badInput)
 import Control.Exception.Lifted (throwIO)
 import Doc.DocInfo (isPreparation)
 import Doc.DocStateData
@@ -18,6 +18,7 @@ import Data.List
 import User.Lang
 import Doc.Model
 import DB
+import DB.TimeZoneName
 import Util.Actor
 import Text.JSON.FromJSValue
 import qualified Data.Set as Set
@@ -32,6 +33,8 @@ import Doc.DocumentMonad (DocumentMonad, theDocument)
 import Doc.DocUtils
 import Data.String.Utils (strip)
 import Doc.SignatoryLinkID
+import qualified Control.Exception.Lifted as E
+
 -- JSON instances
 
 instance MatchWithJSValue SignatoryLink where
@@ -179,6 +182,7 @@ instance FromJSValueWithUpdate Document where
         delivery <-  fromJSValueField "delivery"
         signatories <-  fromJSValueFieldCustom "signatories" (fromJSValueManyWithUpdate (fromMaybe [] $ documentsignatorylinks <$> mdoc))
         lang <- fromJSValueField "lang"
+        mtimezone <- fromJSValueField "timezone"
         doctype <- fmap (\t -> if t then Template else Signable) <$> fromJSValueField "template"
         tags <- fromJSValueFieldCustom "tags" $ fromJSValueCustomMany  fromJSValue
         (apicallbackurl :: Maybe (Maybe String)) <- fromJSValueField "apicallbackurl"
@@ -207,7 +211,8 @@ instance FromJSValueWithUpdate Document where
             documentauthorattachments = updateWithDefaultAndField [] documentauthorattachments (fmap AuthorAttachment <$> authorattachments),
             documenttags = updateWithDefaultAndField Set.empty documenttags (Set.fromList <$> tags),
             documenttype = updateWithDefaultAndField Signable documenttype doctype,
-            documentapicallbackurl = updateWithDefaultAndField Nothing documentapicallbackurl apicallbackurl
+            documentapicallbackurl = updateWithDefaultAndField Nothing documentapicallbackurl apicallbackurl,
+            documenttimezonename = updateWithDefaultAndField defaultTimeZoneName documenttimezonename (unsafeTimeZoneName <$> mtimezone)
           }
       where
        updateWithDefaultAndField :: a -> (Document -> a) -> Maybe a -> a
@@ -220,8 +225,14 @@ instance FromJSValueWithUpdate Document where
        mapAuth (Just au) sls = map (\sl -> sl {signatorylinkauthenticationmethod = au}) sls
 
 
+checkDraftTimeZoneName ::  (Kontrakcja m) =>  Document -> m ()
+checkDraftTimeZoneName draft = do
+  void $  (mkTimeZoneName $ toString (documenttimezonename draft))
+    `E.catch` (\(_::E.SomeException) ->  throwIO $ SomeKontraException $ badInput "Timezone name is invalid.")
+
 applyDraftDataToDocument :: (Kontrakcja m, DocumentMonad m) =>  Document -> Actor -> m ()
 applyDraftDataToDocument draft actor = do
+    checkDraftTimeZoneName draft
     unlessM (isPreparation <$> theDocument) $ do
       theDocument >>= \doc -> Log.attention_ $ "Document is not in preparation, is in " ++ show (documentstatus doc)
       throwIO $ SomeKontraException $ serverError "applyDraftDataToDocument failed"
@@ -238,6 +249,7 @@ applyDraftDataToDocument draft actor = do
                                 , documentlang = documentlang draft
                                 , documenttags = documenttags draft
                                 , documentapicallbackurl = documentapicallbackurl draft
+                                , documenttimezonename = documenttimezonename draft
                                 } actor
     whenM ((\doc -> isTemplate draft && (not $ isTemplate doc)) <$> theDocument) $ do
          dbUpdate $ TemplateFromDocument actor
@@ -298,6 +310,7 @@ draftIsChangingDocument draft doc =
      || (documentshowpdfdownload draft /= documentshowpdfdownload doc)
      || (documentshowrejectoption draft /= documentshowrejectoption doc)
      || (documentshowfooter draft /= documentshowfooter doc)
+     || (documenttimezonename draft /= documenttimezonename doc)
      || (draftIsChangingDocumentSignatories (documentsignatorylinks draft) (documentsignatorylinks doc))
 
 draftIsChangingDocumentSignatories :: [SignatoryLink] -> [SignatoryLink] -> Bool

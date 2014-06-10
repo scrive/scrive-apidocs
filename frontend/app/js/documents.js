@@ -41,6 +41,7 @@ window.Document = Backbone.Model.extend({
         authentication: "standard",
         delivery: "email",
         template: false,
+        timezone : "Europe/Stockholm",
         saveQueue : new AjaxQueue(),
         screenshots : {}
     }},
@@ -426,7 +427,8 @@ window.Document = Backbone.Model.extend({
           showheader: this.get("showheader") != undefined ? this.get("showheader") : null,
           showpdfdownload: this.get("showpdfdownload") != undefined ? this.get("showpdfdownload") : null,
           showrejectoption: this.get("showrejectoption") != undefined ? this.get("showrejectoption") : null,
-          showfooter: this.get("showfooter") != undefined ? this.get("showfooter") : null
+          showfooter: this.get("showfooter") != undefined ? this.get("showfooter") : null,
+          timezone : this.get("timezone")
       };
     },
     status: function() {
@@ -702,6 +704,7 @@ window.Document = Backbone.Model.extend({
        showfooter: args.showfooter,
        invitationmessage: args.invitationmessage,
        confirmationmessage: args.confirmationmessage,
+       timezone: args.timezone,
        ready: true
      };
     },

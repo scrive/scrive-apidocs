@@ -32,6 +32,7 @@ module Doc.DocControl(
 import AppView
 import Attachment.AttachmentID (AttachmentID)
 import DB
+import DB.TimeZoneName
 import Doc.DocMails
 import Doc.Model
 import Doc.DocStateData
@@ -97,7 +98,8 @@ import Analytics.Include
 import Data.String.Utils (replace)
 import Util.Zlib (decompressIfPossible)
 import Doc.API.Callback.Model
-
+import Happstack.MonadPlus (runMPlusT)
+import qualified Data.Traversable as T
 
 handleNewDocument :: Kontrakcja m => m KontraLink
 handleNewDocument = do
@@ -107,7 +109,9 @@ handleNewDocument = do
         user <- guardJustM $ ctxmaybeuser <$> getContext
         title <- renderTemplate_ "newDocumentTitle"
         actor <- guardJustM $ mkAuthorActor <$> getContext
-        Just doc <- dbUpdate $ NewDocument user (replace "  " " " $ title ++ " " ++ formatMinutesTimeSimple (ctxtime ctx)) Signable 0 actor
+        mtimezonename <- runMPlusT $ lookCookieValue "timezone"
+        timezone <- fromMaybe defaultTimeZoneName <$> T.sequence (mkTimeZoneName <$> mtimezonename)
+        Just doc <- dbUpdate $ NewDocument user (replace "  " " " $ title ++ " " ++ formatMinutesTimeSimple (ctxtime ctx)) Signable timezone 0 actor
         withDocument doc $ dbUpdate $ SetDocumentUnsavedDraft True
         return $ LinkIssueDoc (documentid doc)
      else return $ LinkLogin (ctxlang ctx) LoginTry

@@ -63,6 +63,7 @@ window.createnewdocument = function(event) {
       new Submit({
           method : "POST",
           url : "/api/frontend/createfromfile",
+          timezone : jstz.determine().name(),
           ajax: true,
           expectedType : "text",
           ajaxsuccess: function(d) {
@@ -222,6 +223,13 @@ $(document).ready(function() {
             $("body").append(alertModal);
     }
 });
+
+
+// We always set timezone cookie, so it can be reused if we will get a sudden redirect to /newdocument
+$(document).ready(function() {
+    Cookie.set("timezone",jstz.determine().name());
+});
+
 
 });
 

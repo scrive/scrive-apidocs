@@ -37,6 +37,7 @@ import Data.Int
 import Data.Maybe
 import DB.Derive
 import DB.RowCache (ID, HasID(..))
+import DB.TimeZoneName
 import IPAddress
 import MagicHash
 import MinutesTime
@@ -701,6 +702,7 @@ data Document = Document {
   , documentobjectversion          :: Int64
   , documentmagichash              :: MagicHash
   , documentauthorcompanyid        :: Maybe CompanyID
+  , documenttimezonename           :: TimeZoneName
   } deriving (Eq, Ord, Show)
 
 
@@ -734,6 +736,7 @@ instance HasDefaultValue Document where
           , documentobjectversion        = 0
           , documentmagichash            = unsafeMagicHash 0
           , documentauthorcompanyid      = Nothing
+          , documenttimezonename         = defaultTimeZoneName
           }
 
 instance HasLang Document where

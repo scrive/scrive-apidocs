@@ -37,6 +37,7 @@ import Data.List (sortBy, nub)
 import File.Model
 import File.File
 import DB
+import DB.TimeZoneName
 import PadQueue.Model
 import Text.JSON.Gen hiding (value)
 import qualified Text.JSON.Gen as J
@@ -116,6 +117,7 @@ documentJSON muser includeEvidenceAttachments forapi forauthor pq msl doc = do
         J.value "canbecanceled" $ (isAuthor msl || fromMaybe False (useriscompanyadmin <$> muser)) && documentstatus doc == Pending
         J.value "canseeallattachments" $ isAuthor msl || fromMaybe False (useriscompanyadmin <$> muser)
       J.value "accesstoken" $ show (documentmagichash doc)
+      J.value "timezone" $ toString $ documenttimezonename doc
 
 authenticationJSON :: AuthenticationMethod -> JSValue
 authenticationJSON StandardAuthentication = toJSValue "standard"

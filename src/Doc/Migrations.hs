@@ -1203,6 +1203,15 @@ addConfirmTextToDocuments =
         return ()
       }
 
+addTimeZoneNameToDocuments :: MonadDB m => Migration m
+addTimeZoneNameToDocuments =
+  Migration {
+      mgrTable = tableDocuments
+    , mgrFrom = 33
+    , mgrDo = do
+        runSQL_ "ALTER TABLE documents ADD COLUMN time_zone_name TEXT NOT NULL DEFAULT 'Europe/Stockholm'"
+        return ()
+      }
 
 fixSignatureFieldsWithAnySize :: MonadDB m => Migration m
 fixSignatureFieldsWithAnySize =

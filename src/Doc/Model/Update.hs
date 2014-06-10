@@ -113,7 +113,7 @@ import Text.StringTemplates.Templates
 import EvidenceLog.Model
 import Util.HasSomeUserInfo
 import qualified Text.StringTemplates.Fields as F
-import DB.TimeZoneName (TimeZoneName, mkTimeZoneName, withTimeZone)
+import DB.TimeZoneName (TimeZoneName, withTimeZone, defaultTimeZoneName)
 import qualified DB.TimeZoneName as TimeZoneName
 import Company.Model
 
@@ -216,6 +216,7 @@ insertAuthorAttachmentsAsAre documentid attachments = do
 
 insertMainFilesAsAre :: MonadDB m => DocumentID -> [MainFile] -> m [MainFile]
 insertMainFilesAsAre _documentid [] = return []
+
 insertMainFilesAsAre documentid rfiles = do
   let files = reverse rfiles -- rfiles should be inserted with descending id: newer files come first in rfiles
   runQuery_ . sqlInsert "main_files" $ do
@@ -288,36 +289,7 @@ insertSignatoryScreenshots l = do
            sqlSetList "file_id"           $ fileids
 
 insertDocumentAsIs :: (Log.MonadLog m, MonadDB m) => Document -> m (Maybe Document)
-insertDocumentAsIs document@(Document
-                   _documentid
-                   documenttitle
-                   documentsignatorylinks
-                   documentmainfiles
-                   documentstatus
-                   documenttype
-                   documentctime
-                   documentmtime
-                   documentdaystosign
-                   documentdaystoremind
-                   documenttimeouttime
-                   _documentautoremindtime
-                   documentinvitetime
-                   documentinvitetext
-                   documentconfirmtext
-                   documentshowheader
-                   documentshowpdfdownload
-                   documentshowrejectoption
-                   documentshowfooter
-                   documentsharing
-                   documenttags
-                   documentauthorattachments
-                   documentlang
-                   _documentstatusclass
-                   documentapicallbackurl
-                   documentobjectversion
-                   documentmagichash
-                   _documentauthorcompanyid
-                 ) = do
+insertDocumentAsIs document@(Document{..}) = do
     runQuery_ . sqlInsert "documents" $ do
         sqlSet "title" documenttitle
         sqlSet "status" documentstatus
@@ -343,8 +315,8 @@ insertDocumentAsIs document@(Document
         sqlSet "object_version" documentobjectversion
         sqlSet "api_callback_url" documentapicallbackurl
         sqlSet "token" documentmagichash
+        sqlSet "time_zone_name" documenttimezonename
         sqlResult "documents.id"
-
     mdid <- fetchMaybe unSingle
     case mdid of
       Nothing -> return Nothing
@@ -594,8 +566,7 @@ instance (MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m) => DBUpdate 
             -- interval addition advances the time properly across DST changes
             -- (i.e., so that we stay on midnight)
             -- http://www.postgresql.org/docs/9.2/static/functions-datetime.html
-            dstTz <- mkTimeZoneName "Europe/Stockholm"
-            withTimeZone dstTz $ do
+            withTimeZone defaultTimeZoneName $ do
               lang :: Lang <- kRunAndFetch1OrThrowWhyNot unSingle $ sqlUpdate "documents" $ do
                 sqlSet "status" Pending
                 sqlSetCmd "timeout_time" $ "cast (" <?> timestamp <+> "as timestamp with time zone)"
@@ -705,9 +676,9 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m MarkInvitationRead Bo
         actor
     return success
 
-data NewDocument = NewDocument User String DocumentType Int Actor
+data NewDocument = NewDocument User String DocumentType TimeZoneName Int Actor
 instance (CryptoRNG m, MonadDB m, Log.MonadLog m, TemplatesMonad m) => DBUpdate m NewDocument (Maybe Document) where
-  update (NewDocument user title documenttype nrOfOtherSignatories actor) = do
+  update (NewDocument user title documenttype timezone nrOfOtherSignatories actor) = do
     let ctime = actorTime actor
     magichash <- random
     authorFields <- signatoryFieldsFromUser user
@@ -729,6 +700,7 @@ instance (CryptoRNG m, MonadDB m, Log.MonadLog m, TemplatesMonad m) => DBUpdate 
                   , documentmtime                = ctime
                   , documentauthorattachments    = []
                   , documentmagichash            = token
+                  , documenttimezonename         = timezone
                   }
 
     midoc <- insertDocumentAsIs doc
@@ -1179,17 +1151,14 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m TimeoutDocument () wh
         (return ())
         actor
 
-data ProlongDocument = ProlongDocument Int32 (Maybe TimeZoneName) Actor
+data ProlongDocument = ProlongDocument Int32 TimeZoneName Actor
 instance (DocumentMonad m, MonadBaseControl IO m, TemplatesMonad m) => DBUpdate m ProlongDocument () where
-  update (ProlongDocument days mtzn actor) = do
+  update (ProlongDocument days tzn actor) = do
     updateDocumentWithID $ \did -> do
       -- Whole TimeZome behaviour is a clone of what is happending with making document ready for signing.
       let time = actorTime actor
-      let timestamp = case mtzn of
-                    Just tzn -> formatTime defaultTimeLocale "%F" (toUTCTime time) ++ " " ++ TimeZoneName.toString tzn
-                    Nothing  -> formatTime defaultTimeLocale "%F %T %Z" (toUTCTime time)
-      dstTz <- mkTimeZoneName "Europe/Stockholm"
-      withTimeZone dstTz $ kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
+      let timestamp = formatTime defaultTimeLocale "%F" (toUTCTime time) ++ " " ++ TimeZoneName.toString tzn
+      withTimeZone defaultTimeZoneName $ kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
          sqlSet "status" Pending
          sqlSet "mtime" time
          sqlSetCmd "timeout_time" $ "cast (" <?> timestamp <+> "as timestamp with time zone)"
@@ -1208,6 +1177,15 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetDocumentAPICallbac
     runQuery01 . sqlUpdate "documents" $ do
       sqlSet "api_callback_url" mac
       sqlWhereEq "id" did
+
+data SetDocumentTimeZoneName = SetDocumentTimeZoneName TimeZoneName
+instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetDocumentTimeZoneName Bool where
+  update (SetDocumentTimeZoneName timezone) = updateDocumentWithID $ \did -> do
+    runQuery01 . sqlUpdate "documents" $ do
+      sqlSet "time_zone_name" timezone
+      sqlWhereEq "id" did
+
+
 
 data PostReminderSend = PostReminderSend SignatoryLink (Maybe String) Bool Actor
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m PostReminderSend () where
@@ -1358,6 +1336,7 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m UpdateDraft Bool wher
     , update $ SetShowFooter (documentshowfooter document) actor
     , update $ SetDocumentTags (documenttags document) actor
     , update $ SetDocumentAPICallbackURL (documentapicallbackurl document)
+    , update $ SetDocumentTimeZoneName (documenttimezonename document)
     , updateMTimeAndObjectVersion (actorTime actor) >> return True
     ]
 
