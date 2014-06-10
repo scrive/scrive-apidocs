@@ -31,9 +31,13 @@ tableBrandedDomains = tblTable {
     , tblColumn { colName = "sms_originator",                colType = TextT, colNullable = False }
     , tblColumn { colName = "email_originator",              colType = TextT, colNullable = False }
     , tblColumn { colName = "contact_email",                 colType = TextT, colNullable = False }
+    , tblColumn { colName = "logo"                           colType = BigIntT, colNullable = True}
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblIndexes = [
       indexOnColumn "url"
+    ]
+  , tblForeignKeys = [
+      fkOnColumn "logo" "files" "id"
     ]
   }
