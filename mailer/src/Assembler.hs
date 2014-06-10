@@ -96,7 +96,7 @@ assembleContent Mail{..} = do
 
 -- from simple utf-8 to =?UTF-8?Q?zzzzzzz?=
 mailEncode :: String -> String
-mailEncode source = unwords $ map encodeWord w
+mailEncode source = unwords $ map encodeWord $ map convW $ words source
   where
     -- here we really want to use latin1 encoding to treat chars as bytes
     -- the QuotedPrintable encoder treats chars as bytes
@@ -106,8 +106,9 @@ mailEncode source = unwords $ map encodeWord w
     -- and (important!) converts \r and \n to space.
     --
     -- please keep these conversions as the are security measure
-    w = words $ unescapeHTML $ map w2c $ BS.unpack $ BSU.fromString source
     wordNeedsEncoding word = any charNeedsEncoding word
+    convW t = unescapeHTML $ map w2c $ BS.unpack $ BSU.fromString t
+    -- The character à resulted in a \160 char, which is a non-breaking space, and thus words removed that char. Which broke the subject of a few french emails.
     -- FIXME: needs to check if this is full list of exceptions
     charNeedsEncoding char = char <= ' ' || char >= '\x7f' || char == '='
     encodeWord wa | wordNeedsEncoding wa = "=?UTF-8?Q?" ++ QP.encode (map c2w wa) ++ "?="
