@@ -21,7 +21,7 @@ import Data.Monoid.Space
 import Text.JSON
 import Text.JSON.Gen
 import qualified Version
-import qualified Control.Exception as E
+import qualified Control.Exception.Lifted as E
 
 import DB
 import IPAddress

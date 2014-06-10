@@ -10,7 +10,7 @@ import System.Posix.Signals
 import System.Posix.IO (stdInput)
 import System.Posix.Terminal (queryTerminal)
 import System.Process
-import qualified Control.Exception as C
+import qualified Control.Exception.Lifted as C
 import qualified Data.ByteString.Lazy as BSL
 import Data.List (sort)
 import qualified Data.ByteString.Lazy.UTF8 as BSL (toString)

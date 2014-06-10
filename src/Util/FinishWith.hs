@@ -3,7 +3,7 @@ module Util.FinishWith where
 import Control.Monad.IO.Class
 import Data.Typeable
 import Happstack.Server hiding (finishWith)
-import qualified Control.Exception as E
+import qualified Control.Exception.Lifted as E
 
 import Context
 import KontraMonad

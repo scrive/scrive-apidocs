@@ -15,7 +15,7 @@ import Utils.Enum
 import Utils.List
 import Utils.Read
 import Utils.Default
-import qualified Control.Exception as E
+import qualified Control.Exception.Lifted as E
 
 import Database.PostgreSQL.PQTypes
 import Happstack.Server

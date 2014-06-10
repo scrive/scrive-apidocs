@@ -57,7 +57,7 @@ import Text.JSON.Gen
 import Text.JSON
 import Control.Applicative
 import Utils.Default
-import qualified Control.Exception as E
+import qualified Control.Exception.Lifted as E
 import qualified Data.Set as S
 
 newtype SignOrder = SignOrder { unSignOrder :: Int32 }

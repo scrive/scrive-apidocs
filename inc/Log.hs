@@ -19,11 +19,11 @@ module Log
 
   ) where
 
-import Control.Exception (bracket)
+import Control.Exception.Lifted (bracket)
 import Control.Monad.Trans
 import Prelude hiding (error)
 import qualified Control.Concurrent as C
-import qualified Control.Exception as C
+import qualified Control.Exception.Lifted as C
 
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BSU
@@ -50,7 +50,7 @@ import Database.PostgreSQL.PQTypes
 import Text.StringTemplates.Templates
 import Happstack.Server (ServerPartT)
 
-import qualified Control.Exception as E
+import qualified Control.Exception.Lifted as E
 
 import Text.JSON.Gen
 import Text.JSON

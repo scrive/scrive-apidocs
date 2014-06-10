@@ -7,7 +7,7 @@ import Data.Function (on)
 import Data.Int
 import Data.Typeable (Typeable)
 import Database.PostgreSQL.PQTypes
-import qualified Control.Exception as E
+import qualified Control.Exception.Lifted as E
 
 data SealStatus =
    UnknownSealStatus   -- ^ The file's digital signature status has not been determined

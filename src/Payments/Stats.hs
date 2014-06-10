@@ -8,7 +8,7 @@ import Control.Monad.Base
 import Data.Int
 import Data.Maybe
 import Data.Monoid
-import qualified Control.Exception as E
+import qualified Control.Exception.Lifted as E
 
 import MinutesTime
 import DB

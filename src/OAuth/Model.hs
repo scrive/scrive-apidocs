@@ -6,7 +6,7 @@ import MinutesTime
 import DB
 import User.Model
 import MagicHash
-import qualified Control.Exception as E
+import qualified Control.Exception.Lifted as E
 
 import Crypto.RNG
 import Data.Int

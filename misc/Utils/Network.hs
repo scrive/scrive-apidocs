@@ -4,7 +4,7 @@ module Utils.Network where
 import Data.Word
 import Network.BSD
 import Network.Socket
-import qualified Control.Exception as E
+import qualified Control.Exception.Lifted as E
 
 foreign import ccall unsafe "htonl" htonl :: Word32 -> Word32
 

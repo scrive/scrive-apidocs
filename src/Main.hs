@@ -6,7 +6,7 @@ import Happstack.Server hiding (waitForTermination)
 import Happstack.StaticRouting
 import System.Environment
 import System.IO
-import qualified Control.Exception as E
+import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
 
 import AppConf

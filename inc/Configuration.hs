@@ -7,7 +7,7 @@ import Control.Monad
 import System.Console.GetOpt
 import System.Exit
 import Text.Show.Pretty
-import qualified Control.Exception as E
+import qualified Control.Exception.Lifted as E
 
 class (Read a, Show a) => Configuration a where
   confDefault :: a

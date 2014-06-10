@@ -4,7 +4,7 @@ module Version (versionID) where
 import Language.Haskell.TH.Syntax
 import Language.Haskell.TH.Lib
 import System.Environment
-import Control.Exception as E
+import Control.Exception.Lifted as E
 
 {-# NOINLINE versionID #-}
 versionID :: String

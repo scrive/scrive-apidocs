@@ -7,7 +7,7 @@ import Data.Int
 import Data.Monoid
 import Data.Monoid.Space
 import Data.Typeable
-import qualified Control.Exception as E
+import qualified Control.Exception.Lifted as E
 
 import Company.Model
 import DB

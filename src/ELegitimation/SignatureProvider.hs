@@ -5,7 +5,7 @@ module ELegitimation.SignatureProvider (
 import Data.Int
 import Database.PostgreSQL.PQTypes
 import Happstack.Server.SimpleHTTP
-import qualified Control.Exception as E
+import qualified Control.Exception.Lifted as E
 
 import Utils.Enum
 import Utils.Read

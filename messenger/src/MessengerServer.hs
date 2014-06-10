@@ -3,7 +3,7 @@ module MessengerServer where
 import Control.Concurrent
 import System.Environment
 import Happstack.Server hiding (waitForTermination)
-import qualified Control.Exception as E
+import qualified Control.Exception.Lifted as E
 import qualified Happstack.StaticRouting as R
 
 import Cleaner

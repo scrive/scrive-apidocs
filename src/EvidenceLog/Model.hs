@@ -23,7 +23,7 @@ import Data.Monoid
 import Data.Monoid.Space
 import DB
 import Doc.DocumentMonad (DocumentMonad, theDocumentID)
-import qualified Control.Exception as E
+import qualified Control.Exception.Lifted as E
 import qualified HostClock.Model as HC
 import IPAddress
 import MinutesTime

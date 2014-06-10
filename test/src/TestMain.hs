@@ -11,7 +11,7 @@ import System.Environment.UTF8
 import System.IO
 import Test.Framework
 import qualified Log
-import qualified Control.Exception as E
+import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
 
 import AppDBTables
@@ -164,4 +164,3 @@ main :: IO ()
 main = do
   args <- getArgs
   testMany (args, allTests)
-
