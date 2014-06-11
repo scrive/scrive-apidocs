@@ -486,7 +486,7 @@
 "_mailDocumentErrorContentBodyFourth":"We are sorry for the inconvenience",
 "_mailDocumentErrorContentBodySecond":"If you have any comments or questions regarding this issue, please contact Scrive support at $supportmaillink()$.",
 "_mailDocumentErrorTitle":"Problem with file format",
-"_mailForwardMailContent1":"<strong>$creatorname$</strong> has requested we send the document <strong>$documenttitle$</strong> to you. It was signed through the Scrive e-signing service.",
+"_mailForwardMailContent1":"<strong>$creatorname$</strong> has requested we send the document <strong>$documenttitle$</strong> to you. It was signed through Scrive E-sign.",
 "_mailForwardMailContent2":"Please find the document attached.",
 "_mailForwardMailTitle":"E-signed document: $documenttitle$",
 "_mailNewAccountCreatedByAdminButton":"Activate account",
