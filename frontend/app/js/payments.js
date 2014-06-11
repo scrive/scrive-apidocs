@@ -546,7 +546,7 @@ define(['Backbone', 'legacy_code'], function() {
                 var q = model.quantity() || 1;
                 quantbox.val(q);
                 var usertext = q === 1 ? localization.payments.user : localization.payments.users;
-                quantbox.after($('<span class="quantity" />').text(q + " " + usertext));
+                quantbox.after($('<span class="quantity lowercase" />').text(q + " " + usertext));
                 form.find('.quantity .label').hide();
             } else {
                 quantbox.val(1);
@@ -921,7 +921,7 @@ define(['Backbone', 'legacy_code'], function() {
 
 	  var planInformation = $('<div class="plan-information" />');
           var planName = $('<p class="plan-name"></p>').text(localization.payments.plans[model.paidPlan()].name);
-          var numberOfUsers = $('<p></p>').text(localization.payments.numberOfUsers + " : " + model.quantity() + " " + localization.payments.users);
+          var numberOfUsers = $('<p></p>').text(localization.payments.numberOfUsers + " : " + model.quantity() + " ").append($('<span class="lowercase"/>').text(localization.payments.users));
 	  planInformation.append(planName);
 	  planInformation.append(numberOfUsers);
 	  table.append(planInformation);
