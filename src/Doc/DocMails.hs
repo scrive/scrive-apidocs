@@ -228,7 +228,10 @@ sendClosedEmails sealFixed document = do
                else return $ Nothing
       let sendMail = do
             mail <- mailDocumentClosed False ml sl sealFixed (not (null mailattachments)) document
-            scheduleEmailSendout (mctxmailsconfig mctx) $
+            let scheduleEmailFunc
+                  | signatoryisauthor sl = scheduleEmailSendout
+                  | otherwise            = scheduleEmailSendoutWithDocumentAuthorSender (documentid document)
+            scheduleEmailFunc (mctxmailsconfig mctx) $
                                  mail { to = [getMailAddress sl]
                                       , attachments = mailattachments
                                       }
