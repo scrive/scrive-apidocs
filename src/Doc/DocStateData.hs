@@ -57,6 +57,7 @@ import Text.JSON.FromJSValue
 import Text.JSON.Gen
 import Text.JSON
 import Control.Applicative
+import Control.Monad
 import Utils.Default
 import qualified Control.Exception.Lifted as E
 import qualified Data.Set as S
@@ -848,6 +849,13 @@ instance FromJSValue PlacementAnchor where
             <*> index
             <*> pages)
 
+instance ToJSValue PlacementAnchor where
+  toJSValue anchor = runJSONGen $ do
+    value "text" (placementanchortext anchor)
+    when (placementanchorindex anchor /=1 ) $ do
+      value "index" (placementanchorindex anchor)
+    value "pages" (placementanchorpages anchor)
+
 instance FromJSValue FieldPlacement where
   fromJSValue = do
                   xrel       <- fromJSValueField "xrel"
@@ -890,6 +898,8 @@ instance ToSQL [FieldPlacement] where
         value "hrel" $ placementhrel placement
         value "fsrel" $ placementfsrel placement
         value "page" $ placementpage placement
+        when (not (null (placementanchors placement))) $ do
+          value "anchors" $ placementanchors placement
         value "tip" $ case (placementtipside placement) of
           Just LeftTip -> Just ("left" :: String)
           Just RightTip -> Just "right"

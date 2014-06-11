@@ -239,6 +239,8 @@ placementJSON placement = runJSONGen $ do
     J.value "hrel" $ placementhrel placement
     J.value "fsrel" $ placementfsrel placement
     J.value "page" $ placementpage placement
+    when (not (null (placementanchors placement))) $ do
+      J.value "anchors" $ placementanchors placement
     J.value "tip" $ case (placementtipside placement) of
                          Just LeftTip -> Just "left"
                          Just RightTip -> Just "right"
