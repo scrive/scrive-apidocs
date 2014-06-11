@@ -865,6 +865,7 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SaveSigAttachment () 
 data SetFieldPlacements = SetFieldPlacements SignatoryFieldID [FieldPlacement]
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetFieldPlacements () where
   update (SetFieldPlacements fieldid placements) =
+    updateDocumentWithID $ const $
     runQuery_ . sqlUpdate "signatory_link_fields" $ do
       sqlSet "placements" $ placements
       sqlWhereEq "id" fieldid
