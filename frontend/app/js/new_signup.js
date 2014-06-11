@@ -2,7 +2,6 @@ define(['Backbone', 'legacy_code'], function() {
 
   var SignupModel = Backbone.Model.extend({
     defaults: {
-        logolink : "",
         servicelinkcolour : "",
         textscolour : ""
     },
@@ -14,9 +13,6 @@ define(['Backbone', 'legacy_code'], function() {
     },
     setEmail: function(email) {
       this.set('email', email);
-    },
-    logolink : function() {
-     return this.get("logolink");
     },
     servicelinkcolour : function() {
       return this.get("servicelinkcolour");
@@ -150,7 +146,7 @@ define(['Backbone', 'legacy_code'], function() {
         var body = $("<div/>");
         var header = $("<div style='margin-bottom: 103px;text-align: center;'/>");
 
-        header.append($("<img alt='logo'/>").attr('src',model.logolink()));
+        header.append($("<img alt='logo' src='/brandedlogo'/>"));
         header.append($("<div class='divider-line'/>"));
 
         var poweredLabel = $("<label style='text-align:center;width:275px;'/>").text(localization.esigningpoweredbyscrive);

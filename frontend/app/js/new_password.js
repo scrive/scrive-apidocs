@@ -24,9 +24,6 @@ define(['Backbone', 'legacy_code'], function() {
     setPassword2: function(password) {
       this.set('password2', password);
     },
-    logolink : function() {
-     return this.get("logolink");
-    },
     buttoncolorclass: function() {
      return this.get("buttoncolorclass");
     },
@@ -152,7 +149,7 @@ define(['Backbone', 'legacy_code'], function() {
       var wrapper = $("<div/>");
       var body = $("<div/>");
       var header = $("<div style='margin-bottom: 103px'/>");
-      header.append($("<img alt='logo'/>").attr('src',model.logolink()));
+      header.append($("<img alt='logo' src='/brandedlogo'/>"));
       header.append($("<div class='divider-line'/>"));
 
       var poweredLabel = $("<label style='text-align:center;width:275px;'/>").text(localization.esigningpoweredbyscrive);

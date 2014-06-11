@@ -5,11 +5,10 @@ import DB
 tableBrandedDomains :: Table
 tableBrandedDomains = tblTable {
   tblName = "branded_domains"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblColumns =
     [ tblColumn { colName = "id",                            colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "url",                           colType = TextT, colNullable = False }
-    , tblColumn { colName = "logolink",                      colType = TextT, colNullable = False }
     , tblColumn { colName = "bars_color",                    colType = TextT, colNullable = False }
     , tblColumn { colName = "bars_text_color",               colType = TextT, colNullable = False }
     , tblColumn { colName = "bars_secondary_color",          colType = TextT, colNullable = False }
@@ -31,13 +30,10 @@ tableBrandedDomains = tblTable {
     , tblColumn { colName = "sms_originator",                colType = TextT, colNullable = False }
     , tblColumn { colName = "email_originator",              colType = TextT, colNullable = False }
     , tblColumn { colName = "contact_email",                 colType = TextT, colNullable = False }
-    , tblColumn { colName = "logo"                           colType = BigIntT, colNullable = True}
+    , tblColumn { colName = "logo",                          colType = BinaryT, colNullable = True}
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblIndexes = [
       indexOnColumn "url"
-    ]
-  , tblForeignKeys = [
-      fkOnColumn "logo" "files" "id"
     ]
   }

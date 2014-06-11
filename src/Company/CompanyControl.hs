@@ -155,7 +155,7 @@ handleGetCompanyJSON mcid = do
       value "companycustombarstextcolour" $ fromMaybe "" $ companycustombarstextcolour $ companyui
       value "companycustombarssecondarycolour" $ fromMaybe "" $ companycustombarssecondarycolour $ companyui
       value "companycustombackgroundcolour" $ fromMaybe "" $ companycustombackgroundcolour $ companyui
-      value "domaincustomlogo" $ fromMaybe "" $ bdlogolink <$> ctxbrandeddomain ctx
+      value "domaincustomlogo" $ fromMaybe ""  $ ((++) "data:image/png;base64,")  <$> BS.toString .  B64.encode . unBinary <$> join (bdlogo <$> ctxbrandeddomain ctx)
       value "domainbarscolour" $ fromMaybe "" $ bdbarscolour <$> ctxbrandeddomain ctx
       value "domainbarstextcolour" $ fromMaybe "" $ bdbarstextcolour <$> ctxbrandeddomain ctx
       value "domainbarssecondarycolour" $ fromMaybe "" $ bdbarssecondarycolour <$> ctxbrandeddomain ctx

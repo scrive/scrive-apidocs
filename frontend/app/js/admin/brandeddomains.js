@@ -47,11 +47,11 @@ window.BrandedDomainAdminListDefinition = function() {
                         return jQuery("<a/>").text(doc.field("sms_originator")).attr("href", "/adminonly/brandeddomain/"+doc.field("id"));
                     }
         }),
-        new Cell({name: "Logo", width:"80px", field: "url", special: "rendered",
+        new Cell({name: "Logo", width:"80px", field: "logo", special: "rendered",
                     rendering: function(_, _, doc) {
-                        var imgurl = doc.field("logolink");
-                        if( imgurl!=undefined && imgurl!=null && imgurl!="" ) {
-                            return jQuery("<img style=\"max-height: 25px; max-width: 50px\"/>").attr("src",imgurl);
+                        var imgdata = doc.field("logo");
+                        if( imgdata!=undefined && imgdata!=null && imgdata!="" ) {
+                            return jQuery("<img style=\"max-height: 25px; max-width: 50px\"/>").attr("src",imgdata);
                         }
                         else {
                             return jQuery("<div/>");
@@ -95,7 +95,7 @@ var AdminBrandedDomainModel = Backbone.Model.extend({
         url : "/adminonly/brandeddomain/details/change/" + this.get("id"),
         method : "POST",
         bdurl: this.get("url"),
-        logolink: this.get("logolink"),
+        logo: this.get("logo"),
         bars_color: this.get("bars_color"),
         bars_text_color: this.get("bars_text_color"),
         bars_secondary_color: this.get("bars_secondary_color"),
@@ -141,14 +141,9 @@ var AdminBrandedDomainView = Backbone.View.extend({
           tr.append($("<td/>").append($("<label/>").text(field)));
           tr.append($("<td/>").append(input));
           var colimm;
-          var imgimm;
           if( type=="color" ) {
               colimm = $("<div>").css({height: "25px", width: "50px", "background-color":value});
               tr.append($("<td/>").append(colimm));
-          }
-          else if( type=="imglink" ) {
-              imgimm = $("<img style=\"max-height: 25px; max-width: 50px\">").attr("src",value);
-              tr.append($("<td/>").append(imgimm));
           }
           table.append(tr);
 
@@ -163,20 +158,50 @@ var AdminBrandedDomainView = Backbone.View.extend({
               if( colimm ) {
                   colimm.css({"background-color":value});
               }
-              if( imgimm ) {
-                  imgimm.attr("src",value);
-                  if(value=="" ) {
-                      imgimm.hide();
-                  }
-                  else {
-                      imgimm.show();
-                  }
-              }
               model.set(changes, {silent: true});
           });
       };
+      var addTableRowForLogo = function() {
+          var value = model.get("logo");
+          var input = $("<input type='text'/>").val(value);
+          var tr = $("<tr/>");
+          tr.append($("<td/>").append($("<label/>").text("logo")));
+          var buttonTD = $("<td/>");
+          tr.append($(buttonTD));
+          var imgimm = $("<img style=\"max-height: 25px; max-width: 50px\">").attr("src",value);
+          tr.append($("<td/>").append(imgimm));
+          table.append(tr);
+
+          buttonTD.append(new UploadButton({color: 'green',
+                            text: "Upload",
+                            width: 100,
+                            size : 'tiny',
+                            name: 'logo',
+                            maxlength: 2,
+                            onAppend: function(input, title, multifile) {
+                                       var submit = new Submit({
+                                          method: 'POST',
+                                          url: '/serialize_image',
+                                          ajax: true,
+                                          ajaxsuccess: function (rs) {
+                                            var response = JSON.parse(rs);
+                                            var logo_base64 = response.logo_base64;
+                                            var logo_src = 'data:image/png;base64,' + logo_base64;
+                                            model.set({"logo" : logo_src}, {silent: true})
+                                            imgimm.attr("src",logo_src);
+
+                                          }
+                                        });
+                                       submit.addInputs($(input).attr("name", "logo"));
+                                       setTimeout(function() {
+                                          submit.sendAjax();
+                                       },10);
+                                     }
+                                    }
+          ).el());
+      };
       addTableRow("url");
-      addTableRow("logolink", "imglink");
+      addTableRowForLogo();
       addTableRow("bars_color", "color");
       addTableRow("bars_text_color", "color");
       addTableRow("bars_secondary_color", "color");

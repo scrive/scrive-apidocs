@@ -333,5 +333,7 @@ brandingMailFields mbd companyui = do
       F.value "logo" $ (isJust $ join $ companyemaillogo <$> companyui) || (isJust $ mbd)
       F.value "logoLink" $ if (isJust $ join $ companyemaillogo <$> companyui)
                               then (show <$> LinkCompanyEmailLogo <$> companyuicompanyid <$> companyui)
-                              else (bdlogolink <$> mbd)
+                              else if (isJust $ join $ bdlogo <$> mbd)
+                                      then return $ show $ LinkBrandedDomainLogo
+                                      else Nothing
   where ensureHexRGB' s = fromMaybe s $ ensureHexRGB s
