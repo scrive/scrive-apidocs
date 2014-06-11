@@ -10,6 +10,9 @@ module Doc.API (
   , apiCallSetAutoReminder     -- Exported for tests
   , apiCallDownloadMainFile    -- Exported for tests
   , apiCallDownloadFile        -- Exported for tests
+  , apiCallChangeMainFile
+
+  , getAnchorPositions
   ) where
 
 import AppView (respondWithPDF)
