@@ -2,7 +2,7 @@
    Internally canvas is used.
  */
 
-define(['Backbone', 'legacy_code'], function() {
+define(['utils/browserinfo', 'Backbone', 'legacy_code'], function(BrowserInfo) {
 
 var SignatureDrawerModel = Backbone.Model.extend({
   defaults: {
@@ -162,12 +162,29 @@ var SignatureDrawerView = Backbone.View.extend({
     },
     xPos : function(e) {
       if (e.changedTouches != undefined && e.changedTouches[0] != undefined) e = e.changedTouches[0];
-      return e.pageX - this.canvas.offset().left;
+      var canvasLeft = this.canvas.offset().left;
+      /*
+       * There is a problem with modern IE on touch devices and using jQuery's offset:
+       * http://connect.microsoft.com/IE/feedback/details/768781/ie10-window-pageyoffset-incorrect-value-when-page-zoomed-breaks-jquery-etc
+       * http://bugs.jquery.com/ticket/14742 (marked as 'cantfix' as browser don't expose zoom information through an API
+       */
+      if (BrowserInfo.isIETouch()) {
+        // pageXOffset (used in jquery offset()) changes when zoomed on MS Touch devices, whereas scrollLeft is constant.
+        canvasLeft -= window.pageXOffset;
+        canvasLeft += document.documentElement.scrollLeft;
+      }
+      return e.pageX - canvasLeft;
     },
     yPos : function(e) {
       if (e.changedTouches != undefined && e.changedTouches[0] != undefined) e = e.changedTouches[0];
-      var extra = 0;
-      return e.pageY + extra - this.canvas.offset().top;
+      var canvasTop = this.canvas.offset().top;
+      // See xPos to why we do this.
+      if (BrowserInfo.isIETouch()) { 
+        // pageXOffset (used in jquery offset()) changes when zoomed on MS Touch devices, whereas scrollLeft is constant.
+        canvasTop -= window.pageYOffset;
+        canvasTop += document.documentElement.scrollTop;
+      }
+      return e.pageY - canvasTop;
     },
     initDrawing : function() {
            var view = this;
@@ -177,7 +194,8 @@ var SignatureDrawerView = Backbone.View.extend({
             this.canvas[0].addEventListener('touchend',function(e) {e.preventDefault(); e.stopPropagation();view.drawingtoolUp(view.xPos(e), view.yPos(e));});
            } else if (navigator.msPointerEnabled) {
             this.canvas[0].addEventListener("MSPointerDown",function(e) {e.preventDefault(); e.stopPropagation(); view.drawingtoolDown(view.xPos(e), view.yPos(e)); return false;},true);
-            this.canvas[0].addEventListener("MSPointerMove",function(e) {e.preventDefault(); e.stopPropagation();view.drawingtoolMove(view.xPos(e), view.yPos(e)); return false;},true);
+            this.canvas[0].addEventListener("MSPointerMove",function(e) {e.preventDefault(); e.stopPropagation(); view.drawingtoolMove(view.xPos(e), view.yPos(e)); return false;},
+            true);
             this.canvas[0].addEventListener("MSPointerUp",function(e) {e.preventDefault(); e.stopPropagation();view.drawingtoolUp(view.xPos(e), view.yPos(e)); return false;},true);
            } else {
             this.canvas.mousedown(function(e) {e.preventDefault(); e.stopPropagation();e.target.style.cursor = 'default';view.drawingtoolDown(view.xPos(e), view.yPos(e),e);});

@@ -21,6 +21,9 @@ window.BrowserInfo = {
     isIE : function() {
         return navigator.userAgent.match(/MSIE|Trident/i) != null; // MSIE for IE <=10 and Trident for IE 11=<
     },
+    isIETouch: function() {
+        return navigator.msPointerEnabled;
+    },
     isIE9orLower : function() {
       return BrowserInfo.isIE() && ($.browser.version > "3" && $.browser.version <= "9.0");
     },
