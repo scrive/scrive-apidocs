@@ -38,11 +38,12 @@ instance MonadDB m => DBUpdate m CreateEmail MailID where
   update (CreateEmail token sender to to_be_sent) =
     $(fromJust) `liftM` insertEmail False token sender to to_be_sent 0
 
-data AddContentToEmail = AddContentToEmail MailID String String [Attachment] XSMTPAttrs
+data AddContentToEmail = AddContentToEmail MailID String [Address] String [Attachment] XSMTPAttrs
 instance MonadDB m => DBUpdate m AddContentToEmail Bool where
-  update (AddContentToEmail mid title content attachments xsmtpapi) = do
+  update (AddContentToEmail mid title reply_to content attachments xsmtpapi) = do
     result <- runQuery01 $ sqlUpdate "mails" $ do
       sqlSet "title" title
+      sqlSet "reply_to" reply_to
       sqlSet "content" content
       sqlSet "x_smtp_attrs" xsmtpapi
       sqlWhereEq "id" mid
@@ -186,6 +187,7 @@ sqlSelectMails refine = sqlSelect "mails" $ do
   sqlResult "mails.x_smtp_attrs"
   sqlResult "mails.service_test"
   sqlResult "mails.attempt"
+  sqlResult "mails.reply_to"
   sqlOrderBy "service_test ASC"
   sqlOrderBy "id"
   refine
@@ -216,8 +218,8 @@ getUnreadEvents service_test = do
     sqlOrderBy "mail_events.id"
   fetchMany id
 
-fetchMail :: (MailID, MagicHash, Address, [Address], String, String, XSMTPAttrs, Bool, Int32) -> Mail
-fetchMail (mid, token, sender, receivers, title, content, x_smtp_attrs, service_test, attempt) = Mail {
+fetchMail :: (MailID, MagicHash, Address, [Address], String, String, XSMTPAttrs, Bool, Int32, [Address]) -> Mail
+fetchMail (mid, token, sender, receivers, title, content, x_smtp_attrs, service_test, attempt, reply_to) = Mail {
   mailID = mid
 , mailToken = token
 , mailFrom = sender
@@ -228,6 +230,7 @@ fetchMail (mid, token, sender, receivers, title, content, x_smtp_attrs, service_
 , mailXSMTPAttrs = x_smtp_attrs
 , mailServiceTest = service_test
 , mailAttempt = attempt
+, mailReplyTo = reply_to
 }
 
 fetchMailAttachments :: MonadDB m => m (Map.Map MailID [Attachment])

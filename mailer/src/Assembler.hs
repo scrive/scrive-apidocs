@@ -46,6 +46,7 @@ assembleContent Mail{..} = do
         "Subject: " ++ mailEncode mailTitle ++ "\r\n" ++
         "To: " ++ createMailTos mailTo ++ "\r\n" ++
         "From: " ++ mailEncode (addrName mailFrom) ++ " <" ++ addrEmail mailFrom ++ ">\r\n" ++
+        "Reply-To: " ++ createMailTos  mailReplyTo ++ "\r\n" ++
         "X-SMTPAPI: " ++ J.encode xsmtpapi ++ "\r\n" ++
         "X-Mailgun-Variables: " ++ J.encode mailgundata ++ "\r\n" ++
         "MIME-Version: 1.0\r\n" ++

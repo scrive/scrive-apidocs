@@ -16,6 +16,7 @@ mailerMigrations = [
   , moveAtachmentsToSeparateTable
   , addFileIdToAttachmentsTable
   , addAttemptCountToMails
+  , addReplyToToMails
   ]
 
 addTestServiceToMails :: MonadDB m => Migration m
@@ -75,4 +76,13 @@ addFileIdToAttachmentsTable =
   , mgrDo = do
       runSQL_ $ "ALTER TABLE mail_attachments ADD COLUMN file_id BIGINT,"
             <+> "ALTER COLUMN content DROP NOT NULL"
+  }
+
+addReplyToToMails :: MonadDB m => Migration m
+addReplyToToMails =
+  Migration {
+    mgrTable = tableMails
+  , mgrFrom = 4
+  , mgrDo = do
+      runSQL_ "ALTER TABLE mails ADD COLUMN reply_to TEXT NOT NULL DEFAULT '[]'"
   }
