@@ -786,6 +786,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
 
             cssClass: 'text-field-placement-setter-field-selector',
             border : "1px solid #f33",
+            textWidth: "",
             onSelect: function(s) {
                 mixpanel.track('Select placement signatory');
                 placement.setSignatory(s);
@@ -836,6 +837,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
             options: options,
             cssClass: 'text-field-placement-setter-field-field-selector',
             border : "1px solid " + (signatory.color() || "#f33"),
+            textWidth : "",
             onSelect: function(o) {
                 var f = signatory.field(o.name, o.type);
 
