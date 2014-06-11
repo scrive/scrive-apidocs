@@ -938,6 +938,8 @@ getAnchorPositions pdfcontent anchors = do
 
 
 recalcuateAnchoredFieldPlacements :: (Kontrakcja m,DocumentMonad m) => FileID -> FileID -> m ()
+recalcuateAnchoredFieldPlacements oldfileid newfileid | oldfileid == newfileid = do
+    return ()
 recalcuateAnchoredFieldPlacements oldfileid newfileid = do
   doc <- theDocument
   -- Algo:
@@ -957,16 +959,15 @@ recalcuateAnchoredFieldPlacements oldfileid newfileid = do
     newfilecontents <- getFileIDContents newfileid
     oldAnchorPositions <- getAnchorPositions oldfilecontents anchors
     newAnchorPositions <- getAnchorPositions newfilecontents anchors
+
     -- oldAnchorPositions and newAnchorPositions are maps from anchors
-    -- to extracted positions. Note that it is possible not evey
+    -- to extracted positions. Note that it is possible that not every
     -- anchor was found in the documents. In that case we just do not
     -- move a field and that should be good enough as debugging
     -- information.
-
-    -- For now database is an issue, but that is for later
     let maybeMoveFieldPlacement :: FieldPlacement -> Maybe FieldPlacement
         maybeMoveFieldPlacement plc = do
-          -- find first anchor that was found (first-first)
+          -- find first anchor that was found
           (_oldAnchorPosPage,oldAnchorPosX,oldAnchorPosY) <-
             msum (map (\anchor -> Map.lookup anchor oldAnchorPositions) (placementanchors plc))
           (newAnchorPosPage,newAnchorPosX,newAnchorPosY) <-
@@ -1028,13 +1029,10 @@ apiCallChangeMainFile docid = api $ do
                                         Right dcontent -> preCheckPDF dcontent
                                         Left _ -> return (Left m)
         fileid' <- dbUpdate $ NewFile filename pdfcontent
-        case moldfileid of
-          Just oldfileid -> recalcuateAnchoredFieldPlacements oldfileid fileid'
-          Nothing -> return ()
         return $ Just (fileid', takeBaseName filename)
 
     case mft of
-      Just  (fileid,filename) -> do
+      Just (fileid,filename) -> do
         dbUpdate $ AttachFile fileid actor
         apiGuardL' $ dbUpdate $ SetDocumentTitle filename actor
         case moldfileid of
