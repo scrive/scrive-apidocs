@@ -68,6 +68,16 @@
             <stringProp name="Argument.value">${__property(client_credentials_secret,,00b33ab9b0817c6b)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
+          <elementProp name="number_of_concurrent_users" elementType="Argument">
+            <stringProp name="Argument.name">number_of_concurrent_users</stringProp>
+            <stringProp name="Argument.value">${__property(number_of_concurrent_users,,1)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="number_of_loops" elementType="Argument">
+            <stringProp name="Argument.name">number_of_loops</stringProp>
+            <stringProp name="Argument.value">${__property(number_of_loops,,1)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
         </collectionProp>
       </Arguments>
       <hashTree/>
@@ -203,9 +213,9 @@
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
           <boolProp name="LoopController.continue_forever">false</boolProp>
-          <stringProp name="LoopController.loops">30</stringProp>
+          <stringProp name="LoopController.loops">${number_of_loops}</stringProp>
         </elementProp>
-        <stringProp name="ThreadGroup.num_threads">30</stringProp>
+        <stringProp name="ThreadGroup.num_threads">${number_of_concurrent_users}</stringProp>
         <stringProp name="ThreadGroup.ramp_time">1</stringProp>
         <longProp name="ThreadGroup.start_time">1401987290000</longProp>
         <longProp name="ThreadGroup.end_time">1401987290000</longProp>
