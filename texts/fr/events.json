@@ -36,7 +36,7 @@
 "_SMSPinDeliveredEvidenceText":"Le SMS contenant le code PIN à utiliser pour s'identifier a été envoyé à $text$ pour $signatory$.",
 "_SMSPinSendEvidenceText":"Un SMS contenant un code PIN à utiliser pour s'identifier a été envoyé à $text$ pour $signatory$. ",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Le document a été signé avec le méthode d'identification eID.",
-"_SignDocumentEvidenceTextSimpleArchiveSMSPin":"",
+"_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Le document a été signé ",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Le document a été signé.",
 "_SignDocumentEvidenceTextSimpleNotArchiveEleg":"Le document a été signé par $actor$ avec eID comme méthode d'identification.",
 "_SignDocumentEvidenceTextSimpleNotArchiveSMSPin":"Le document a été signé par $actor$ avec comme méthode d'identification un code PIN envoyé par SMS.",
