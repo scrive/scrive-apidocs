@@ -4,10 +4,12 @@ module User.Email (
 
 import Control.Applicative
 import DB
+import Data.Aeson
+import Data.Typeable
 
 -- newtypes
 newtype Email = Email { unEmail :: String }
-  deriving (Eq, Ord, PQFormat)
+  deriving (Eq, Ord, PQFormat, Typeable)
 $(newtypeDeriveUnderlyingReadShow ''Email)
 
 instance FromSQL Email where
@@ -16,3 +18,9 @@ instance FromSQL Email where
 instance ToSQL Email where
   type PQDest Email = PQDest String
   toSQL (Email n) = toSQL n
+
+instance FromJSON Email where
+  parseJSON = fmap Email . parseJSON
+
+instance ToJSON Email where
+  toJSON = toJSON . unEmail
