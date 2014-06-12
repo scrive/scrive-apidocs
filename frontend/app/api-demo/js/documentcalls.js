@@ -60,7 +60,7 @@ window.ChangeMainFileApiCall = ApiCall.extend({
             var model = this;
             var form = $("<form method='post' style='display:none;' enctype='multipart/form-data'/>");
             $("body").append(form);
-            form.append(this.file().clone());
+            form.append(this.file());
             var formData = new FormData(form[0]);
             this.call("changemainfile/" + this.documentid(), {
                 type: 'POST',

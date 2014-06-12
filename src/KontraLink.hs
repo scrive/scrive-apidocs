@@ -65,6 +65,7 @@ data KontraLink
     | LinkOAuthCallback URI APIToken (Maybe MagicHash)
     | LinkExternal String
     | LinkBrandedDomainLogo
+    | LinkBrandedDomainLogoWithMD5 String
     | LinkDesignView
     deriving (Eq)
 
@@ -126,7 +127,8 @@ instance Show KontraLink where
       (++) (show $ setParams url [("oauth_token", show token), ("denied", "true")])
     showsPrec _ (LinkAttachmentView attid) = (++) ("/a/" ++ show attid)
     showsPrec _ (LinkDesignView) = (++) "/newdocument"
-    showsPrec _ (LinkBrandedDomainLogo) =(++) "/brandedlogo"
+    showsPrec _ (LinkBrandedDomainLogo) =(++) "/branding/logo"
+    showsPrec _ (LinkBrandedDomainLogoWithMD5 md5) = (++) ("/branding/logo/" ++ md5)
     showsPrec _ (LinkExternal s) = (++) s
 
 

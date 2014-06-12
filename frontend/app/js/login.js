@@ -291,7 +291,7 @@ var LoginBrandedView = Backbone.View.extend({
           model.login();
       };
       model.setEmail(LocalStorage.get('login','last_login_email'));
-      header.append($("<img alt='logo' src='/brandedlogo'/>"));
+      header.append($("<img alt='logo' src='/branding/logo'/>"));
       header.append($("<div class='divider-line'/>"));
       var poweredLabel = $("<label style='text-align:center;width:275px;'/>").text(localization.esigningpoweredbyscrive);
       if (model.textscolour() != undefined) poweredLabel.css("color",model.textscolour());
@@ -389,7 +389,7 @@ var LoginBrandedView = Backbone.View.extend({
       var body = $("<div/>");
       var header = $("<div style='margin-bottom: 103px;text-align:center;'/>");
 
-      header.append($("<img alt='logo' src='/brandedlogo'/>"));
+      header.append($("<img alt='logo' src='/branding/logo'/>"));
       header.append($("<div class='divider-line'/>"));
 
       var poweredLabel = $("<label style='text-align:center;width:275px;'/>").text(localization.esigningpoweredbyscrive);

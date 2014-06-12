@@ -29,7 +29,7 @@ $htmlopentag()$
     </div>
     <div style='width:275px;margin:20px auto;'>
       <div style="margin-bottom: 100px; margin-top: 50px;">
-        <img alt="logo" src="/brandedlogo"/>
+        <img alt="logo" src="/branding/logo"/>
         <div class="divider-line"></div>
         <label style="text-align:center;width:275px;$if(externaltextcolour)$color:$externaltextcolour$;$endif$">E-signing powered by Scrive</label>
       </div>

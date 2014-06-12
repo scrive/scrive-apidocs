@@ -741,7 +741,7 @@ jsonBrandedDomainHelper bd = do
   -- keep this 1to1 consistent with fields in the database
   value "id"                            $ show (bdid bd)
   value "url"                           $ bdurl bd
-  value "logo"                          $ fromMaybe ""  $ ((++) "data:image/png;base64,")  <$> BS.toString .  B64.encode . unBinary <$> (bdlogo $ bd)
+  value "logo"                          $ fromMaybe ""  $ BS.toString . BS.append (BS.fromString "data:image/png;base64,") .  B64.encode . unBinary <$> (bdlogo $ bd)
   value "bars_color"                    $ bdbarscolour bd
   value "bars_text_color"               $ bdbarstextcolour bd
   value "bars_secondary_color"          $ bdbarssecondarycolour bd

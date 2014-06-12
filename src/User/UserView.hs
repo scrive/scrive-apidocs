@@ -55,6 +55,7 @@ import Text.JSON
 import Text.JSON.Gen
 import qualified Text.StringTemplates.Fields as F
 import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
 import DB
 import BrandedDomain.BrandedDomain
@@ -81,8 +82,8 @@ userJSON ctx user (company,companyui) = runJSONGenT $ do
 
 companyUIJson :: Monad m => Context -> CompanyUI -> m JSValue
 companyUIJson ctx companyui = runJSONGenT $ do
-    value "companyemaillogo" $ fromMaybe "" $ ((++) "data:image/png;base64,")  <$> BS.toString . B64.encode . unBinary <$> (companyemaillogo $ companyui)
-    value "companysignviewlogo" $ fromMaybe ""  $ ((++) "data:image/png;base64,")  <$> BS.toString .  B64.encode . unBinary <$> (companysignviewlogo $ companyui)
+    value "companyemaillogo" $ fromMaybe "" $ BS.toString . BS.append (BS.fromString "data:image/png;base64,") . B64.encode . unBinary <$> (companyemaillogo $ companyui)
+    value "companysignviewlogo" $ fromMaybe ""  $ BS.toString . BS.append (BS.fromString "data:image/png;base64,") .  B64.encode . unBinary <$> (companysignviewlogo $ companyui)
     value "companyemailfont" $ fromMaybe "" $ companyemailfont $ companyui
     value "companyemailbordercolour" $ fromMaybe "" $ companyemailbordercolour $ companyui
     value "companyemailbuttoncolour" $ fromMaybe "" $ companyemailbuttoncolour $ companyui
@@ -98,12 +99,12 @@ companyUIJson ctx companyui = runJSONGenT $ do
     value "companysignviewbarscolour" $ fromMaybe "" $ companysignviewbarscolour $ companyui
     value "companysignviewbarstextcolour" $ fromMaybe "" $ companysignviewbarstextcolour $ companyui
     value "companysignviewbackgroundcolour" $ fromMaybe "" $ companysignviewbackgroundcolour $ companyui
-    value "companycustomlogo" $ fromMaybe ""  $ ((++) "data:image/png;base64,")  <$> BS.toString .  B64.encode . unBinary <$> (companycustomlogo $ companyui)
+    value "companycustomlogo" $ fromMaybe ""  $ BS.toString . BS.append (BS.fromString "data:image/png;base64,") .  B64.encode . unBinary <$> (companycustomlogo $ companyui)
     value "companycustombarscolour" $ fromMaybe "" $ companycustombarscolour $ companyui
     value "companycustombarstextcolour" $ fromMaybe "" $ companycustombarstextcolour $ companyui
     value "companycustombarssecondarycolour" $ fromMaybe "" $ companycustombarssecondarycolour $ companyui
     value "companycustombackgroundcolour" $ fromMaybe "" $ companycustombackgroundcolour $ companyui
-    value "domaincustomlogo" $  fromMaybe ""  $ ((++) "data:image/png;base64,")  <$> BS.toString .  B64.encode . unBinary <$> join (bdlogo <$> ctxbrandeddomain ctx)
+    value "domaincustomlogo" $  fromMaybe ""  $ BS.toString . BS.append (BS.fromString "data:image/png;base64,") . B64.encode . unBinary <$> join (bdlogo <$> ctxbrandeddomain ctx)
     value "domainbarscolour" $ fromMaybe "" $ bdbarscolour <$> ctxbrandeddomain ctx
     value "domainbarstextcolour" $ fromMaybe "" $ bdbarstextcolour <$> ctxbrandeddomain ctx
     value "domainbarssecondarycolour" $ fromMaybe "" $ bdbarssecondarycolour <$> ctxbrandeddomain ctx

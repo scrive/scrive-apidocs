@@ -25,6 +25,7 @@ module AppView( kontrakcja
               , handleTermsOfService
               , enableCookiesPage
               , brandedLogo
+              , brandedLogoWithMD5
               ) where
 
 import FlashMessage
@@ -55,6 +56,7 @@ import User.Model
 import Control.Monad
 import BrandedDomain.BrandedDomain
 import ThirdPartyStats.Core
+import qualified Crypto.Hash.MD5 as MD5
 
 {- |
    The name of our application (the codebase is known as kontrakcja,
@@ -332,11 +334,22 @@ analyticsLoaderScript = do
              F.object "analytics" $ analyticsTemplates ad
    ok $ toResponseBS (BS.fromString "text/javascript;charset=utf-8") $ BSL.fromString script
 
-brandedLogo :: Kontrakcja m => m Response
+
+-- | This servers branded logo. It allows smart caching/
+-- | /branding/logo is not cached, and redirects to /branding/logo/$MD5$
+-- |  /branding/logo/$MD5$ is cached.
+brandedLogo :: Kontrakcja m => m KontraLink
 brandedLogo = do
   mbdlogo <- join <$> fmap bdlogo <$> ctxbrandeddomain <$> getContext
   case mbdlogo of
-    Nothing -> notFoundPage
+    Nothing -> respond404
+    Just l  -> return $ LinkBrandedDomainLogoWithMD5 $ BS.toString $ B16.encode $ MD5.hash $ unBinary l
+
+brandedLogoWithMD5 :: Kontrakcja m => String  -> m Response
+brandedLogoWithMD5 _ = do
+  mbdlogo <- join <$> fmap bdlogo <$> ctxbrandeddomain <$> getContext
+  case mbdlogo of
+    Nothing -> respond404
     Just l  -> do
-      return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") $
+      return $ setHeaderBS "Cache-Control" "max-age=31536000" $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") $
         Response 200 Map.empty nullRsFlags (BSL.fromChunks $ [unBinary l]) Nothing

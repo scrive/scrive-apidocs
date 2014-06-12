@@ -149,7 +149,7 @@ define(['Backbone', 'legacy_code'], function() {
       var wrapper = $("<div/>");
       var body = $("<div/>");
       var header = $("<div style='margin-bottom: 103px'/>");
-      header.append($("<img alt='logo' src='/brandedlogo'/>"));
+      header.append($("<img alt='logo' src='/branding/logo'/>"));
       header.append($("<div class='divider-line'/>"));
 
       var poweredLabel = $("<label style='text-align:center;width:275px;'/>").text(localization.esigningpoweredbyscrive);
