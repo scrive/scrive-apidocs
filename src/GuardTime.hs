@@ -30,12 +30,28 @@ import Control.Monad.Reader (ReaderT(..), runReaderT, ask)
 import Control.Monad.State (StateT(..))
 import Control.Monad.Trans (MonadTrans, lift)
 import Control.Monad.Trans.Control (MonadBaseControl(..), MonadTransControl(..), ComposeSt, defaultLiftWith, defaultRestoreT, defaultLiftBaseWith, defaultRestoreM)
+import Data.Unjson
 
 data GuardTimeConf = GuardTimeConf
     { guardTimeURL ::  String
     , guardTimeExtendingServiceURL :: String
     , guardTimeControlPublicationsURL :: String
     } deriving (Eq, Ord, Show, Read)
+
+unjsonGuardTimeConf :: UnjsonDef GuardTimeConf
+unjsonGuardTimeConf = objectOf $ pure GuardTimeConf
+  <*> field' "url"
+      guardTimeURL
+      "GuardTime URL"
+  <*> field' "extending_service_url"
+      guardTimeExtendingServiceURL
+      "GuardTime Extendind Service URL"
+  <*> field' "control_publications_url"
+      guardTimeControlPublicationsURL
+      "GuardTime Control Publications URL"
+
+instance Unjson GuardTimeConf where
+  unjsonDef = unjsonGuardTimeConf
 
 class GuardTimeConfMonad m where
   getGuardTimeConf :: m GuardTimeConf
