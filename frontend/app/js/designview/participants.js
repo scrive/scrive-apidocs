@@ -1019,9 +1019,17 @@ define(['Backbone', 'legacy_code'], function() {
                       sndnameField.setValueSilent(s);
                       fstnameField.setValue(f);
                       sndnameField.setValue(s);
+                      // .setValueSilent() doesnt bubble any events to the document,
+                      // because it's silent. second setValue() also doesn't bubble
+                      // anything, because it's setting the same value that was
+                      // there before (setValueSilent() set the same value before)
+                      // so we have to triggerBubble() manually
+                      fstnameField.triggerBubble();
+                      sndnameField.triggerBubble();
                     } else {
                       fstnameField.setValueSilent(str);
                       fstnameField.setValue(str);
+                      fstnameField.triggerBubble();
                     }
                 }
             });
