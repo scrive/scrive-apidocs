@@ -129,6 +129,7 @@ Executable kontrakcja-server
   Build-depends: threads
   Build-depends: transformers
   Build-depends: transformers-base
+  Build-depends: unjson
   Build-depends: utf8-string
   Build-depends: zip-archive
   Build-depends: zlib
@@ -226,6 +227,7 @@ Executable cron
   Build-depends: threads
   Build-depends: transformers
   Build-depends: transformers-base
+  Build-depends: unjson
   Build-depends: utf8-string
   Build-depends: zip-archive
   Build-depends: zlib
@@ -328,6 +330,7 @@ Executable kontrakcja-migrate
   Build-depends: threads
   Build-depends: transformers
   Build-depends: transformers-base
+  Build-depends: unjson
   Build-depends: utf8-string
   Build-depends: zip-archive
   Build-depends: zlib
@@ -428,6 +431,7 @@ Executable mailing-server
   Build-depends: threads
   Build-depends: transformers
   Build-depends: transformers-base
+  Build-depends: unjson
   Build-depends: utf8-string
   Build-depends: zip-archive
   Build-depends: zlib
@@ -528,6 +532,7 @@ Executable messenger-server
   Build-depends: threads
   Build-depends: transformers
   Build-depends: transformers-base
+  Build-depends: unjson
   Build-depends: utf8-string
   Build-depends: zip-archive
   Build-depends: zlib
@@ -629,6 +634,7 @@ Executable kontrakcja-test
   Build-depends: threads
   Build-depends: transformers
   Build-depends: transformers-base
+  Build-depends: unjson
   Build-depends: utf8-string
   Build-depends: zip-archive
   Build-depends: zlib
