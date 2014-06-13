@@ -145,6 +145,28 @@ data NewBrandedDomain = NewBrandedDomain
 instance (MonadDB m, Log.MonadLog m) => DBUpdate m NewBrandedDomain BrandedDomainID where
   update (NewBrandedDomain) = do
     runQuery_ . sqlInsert "branded_domains" $ do
-      -- skip all columns, they should get a default value
+      sqlSet "url" ("" :: String)
+      sqlSet "logo" (Nothing :: Maybe (Binary BS.ByteString))
+      sqlSet "bars_color"  ("" :: String)
+      sqlSet "bars_text_color"  ("" :: String)
+      sqlSet "bars_secondary_color"  ("" :: String)
+      sqlSet "background_color" ("" :: String)
+      sqlSet "background_color_external"  ("" :: String)
+      sqlSet "mails_background_color"  ("" :: String)
+      sqlSet "mails_button_color" ("" :: String)
+      sqlSet "mails_text_color" ("" :: String)
+      sqlSet "signview_primary_color" ("" :: String)
+      sqlSet "signview_primary_text_color" ("" :: String)
+      sqlSet "signview_secondary_color" ("" :: String)
+      sqlSet "signview_secondary_text_color" ("" :: String)
+      sqlSet "button_class" ("" :: String)
+      sqlSet "service_link_color" ("" :: String)
+      sqlSet "external_text_color" ("" :: String)
+      sqlSet "header_color" ("" :: String)
+      sqlSet "text_color" ("" :: String)
+      sqlSet "price_color" ("" :: String)
+      sqlSet "sms_originator" ("" :: String)
+      sqlSet "email_originator" ("" :: String)
+      sqlSet "contact_email" ("" :: String)
       sqlResult "id"
     fetchOne unSingle
