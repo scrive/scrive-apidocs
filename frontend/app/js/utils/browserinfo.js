@@ -1,6 +1,6 @@
 /* Getting some information about browsers */
 
-define(['Backbone', 'legacy_code'], function() {
+define(['legacy_code'], function() {
 
 window.BrowserInfo = {
     doesNotSupportHoverPseudoclassSelector : function() {

@@ -1,4 +1,4 @@
-define(function() {
+define(['legacy_code'],function() {
 
   /**
    *  Reading and settings browser cookies
