@@ -2,7 +2,7 @@
    Internally canvas is used.
  */
 
-define(['utils/browserinfo', 'Backbone', 'legacy_code'], function(BrowserInfo) {
+define(['Backbone', 'legacy_code'], function(BrowserInfo) {
 
 var SignatureDrawerModel = Backbone.Model.extend({
   defaults: {
@@ -179,7 +179,7 @@ var SignatureDrawerView = Backbone.View.extend({
       if (e.changedTouches != undefined && e.changedTouches[0] != undefined) e = e.changedTouches[0];
       var canvasTop = this.canvas.offset().top;
       // See xPos to why we do this.
-      if (BrowserInfo.isIETouch()) { 
+      if (BrowserInfo.isIETouch()) {
         // pageXOffset (used in jquery offset()) changes when zoomed on MS Touch devices, whereas scrollLeft is constant.
         canvasTop -= window.pageYOffset;
         canvasTop += document.documentElement.scrollTop;
