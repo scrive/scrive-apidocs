@@ -187,7 +187,7 @@ var AdminBrandedDomainView = Backbone.View.extend({
                                             var response = JSON.parse(rs);
                                             var logo_base64 = response.logo_base64;
                                             var logo_src = 'data:image/png;base64,' + logo_base64;
-                                            model.set({"logo" : logo_src}, {silent: true})
+                                            model.set({"logo" : logo_src}, {silent: true});
                                             imgimm.attr("src",logo_src);
 
                                           }
