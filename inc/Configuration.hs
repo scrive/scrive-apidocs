@@ -13,6 +13,9 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL (toString)
 import Data.Unjson
 import Data.Aeson.Encode.Pretty
+import Data.Aeson
+import qualified Data.Text as Text
+
 
 readConfig :: forall a m . (Read a, Show a, HasDefaultValue a, Monad m, MonadBaseControl IO m) => (String -> m ()) -> String -> [String] -> FilePath -> m a
 readConfig logger _appname _args path = do
@@ -29,24 +32,53 @@ readConfig logger _appname _args path = do
       logger $ ppShow (defaultValue :: a)
       liftBase exitFailure
 
+--
+-- Error handling here:
+-- 1. When no file: please create file and full docs
+-- 2. When looks like json but not parse as json: info where it did not parse, no other info
+-- 3. When does not look like json and does not readIO: full docs
+-- 4. When unjson has issue, then just info about specific problems
+
 readConfig2 :: forall a m . (Unjson a, Read a, HasDefaultValue a, Monad m, MonadBaseControl IO m) => (String -> m ()) -> FilePath -> m a
 readConfig2 logger path = do
-  logger "Reading configuration file..."
-  bsl' <- liftBase (BSL.readFile path)
+  logger $ "Reading configuration " ++ path ++ "..."
+  bsl' <- either logExceptionAndPrintFullDocs return =<<
+          E.try (liftBase (BSL.readFile path))
+
   let bsl = BSL.dropWhile (`elem` [10,13,32]) bsl'
-  res <- E.try $ if "{" `BSL.isPrefixOf` bsl
-    then do -- json mode!
-      parseEither bsl
+
+
+  res <- if "{" `BSL.isPrefixOf` bsl
+    then do
+      js <- either logString return $
+            eitherDecode bsl
+      case parse ud (Anchored [] js) of
+        Result value [] -> return value
+        Result _ problems -> do
+          mapM_ logProblem problems
+          fail "There were issues with the content of configuration"
     else do
-      liftBase (readIO (BSL.toString bsl))
-  case res of
-    Right app_conf -> do
-      logger "Configuration file read and parsed."
-      return app_conf
-    Left (e::E.SomeException) -> do
-      let ud :: UnjsonDef a = unjsonDef
-      logger $ "Error while reading '" ++ path ++ "' config file: " ++ show e
-      logger $ "Configuration documentation:\n" ++ render ud
-      logger $ "Example configuration:\n" ++ BSL.toString (encodePretty' (defConfig { confSort = compare }) (serialize ud (defaultValue :: a)))
-      logger ""
-      liftBase exitFailure
+      case reads (BSL.toString bsl) of
+        [(a, "")] -> return a
+        ((_,g):_) -> logString ("Garbage at the end of file: " ++ g)
+        _ -> logString "Unable to parse configuration file (it is better to use json)"
+
+  logger "Configuration file read and parsed."
+  return res
+  where
+    ud :: UnjsonDef a = unjsonDef
+    logString :: String -> m g
+    logString ex = do
+      logger $ ex
+      fail ex
+    logExceptionAndPrintFullDocs :: E.SomeException -> m g
+    logExceptionAndPrintFullDocs ex = do
+      logger $ show ex ++ "\n" ++ render ud ++ "\n" ++
+             BSL.toString (encodePretty' (defConfig { confCompare = compare }) (serialize ud (defaultValue :: a)))
+      fail (show ex)
+    logProblem (Anchored xpath msg) = do
+        case renderForPath xpath ud of
+          Just moreInfo -> do
+            logger $ Text.unpack (showPath True xpath) ++ ": " ++ Text.unpack msg ++ "\n" ++ moreInfo
+          Nothing -> do
+            logger $ Text.unpack (showPath True xpath) ++ ": " ++ Text.unpack msg
