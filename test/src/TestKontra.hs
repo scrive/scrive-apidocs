@@ -39,7 +39,6 @@ import qualified Data.Map as M
 
 import qualified Amazon as AWS
 import Control.Monad.Trans.Control.Util
-import Configuration
 import Crypto.RNG
 import DB
 import GuardTime (GuardTimeConf(..))
@@ -274,7 +273,7 @@ mkContext lang = do
         , ctxglobaltemplates = globaltemplates
         , ctxlang = lang
         , ctxmailsconfig = defaultMailsConfig
-        , ctxlivedocxconf = confDefault
+        , ctxlivedocxconf = defaultValue
         , ctxlogicaconf = LogicaConfig { logicaEndpoint = "https://eidt.funktionstjanster.se:18898/osif"
                                        , logicaCertFile = "certs/steria3.pem"
                                        , logicaServiceID = "logtest004"

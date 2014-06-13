@@ -3,7 +3,7 @@ module AppConf (
       AppConf(..)
   ) where
 
-import Configuration
+import Utils.Default
 import HostClock.System (defaultNtpServers)
 import User.Email
 import Mails.MailsConfig
@@ -48,8 +48,8 @@ data AppConf = AppConf {
 
 -- | Default application configuration that does nothing.
 --
-instance Configuration AppConf where
-  confDefault = AppConf {
+instance HasDefaultValue AppConf where
+  defaultValue = AppConf {
       httpBindAddress    = (0x7f000001, 8000)
     , hostpart           = "http://localhost:8000"
     , useHttps           = True
@@ -62,7 +62,7 @@ instance Configuration AppConf where
                                          , guardTimeControlPublicationsURL = "http://verify.guardtime.com/gt-controlpublications.bin"
                                          }
     , mailsConfig        = defaultMailsConfig
-    , liveDocxConfig     = confDefault
+    , liveDocxConfig     = defaultValue
     , logicaConfig       = LogicaConfig { logicaEndpoint = "https://eidt.funktionstjanster.se:18898/osif"
                                         , logicaServiceID = "logtest004"
                                         , logicaCertFile = "certs/steria3.pem"

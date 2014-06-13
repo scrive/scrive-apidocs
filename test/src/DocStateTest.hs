@@ -2,7 +2,6 @@ module DocStateTest{- (docStateTests)-} where
 
 import qualified Amazon as AWS
 import AppConf (AppConf(dbConfig))
-import Configuration (confDefault)
 import Context (ctxtime)
 import Control.Arrow (first)
 import Control.Concurrent (newMVar)
@@ -1703,7 +1702,7 @@ testStatusClassSignedWhenAllSigned = doTimes 10 $ do
 
 runScheduler :: MonadIO m => ActionQueueT (AWS.AmazonMonadT m) SchedulerData a -> m a
 runScheduler m = do
-  let appConf = confDefault { dbConfig = "" }
+  let appConf = defaultValue { dbConfig = "" }
   templates <- liftIO $ newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates
   filecache <- MemCache.new BS.length 52428800
   CronEnv.runScheduler appConf filecache templates m

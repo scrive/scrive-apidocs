@@ -4,7 +4,7 @@ module MailingServerConf (
   ) where
 
 import Data.Word
-import Configuration
+import Utils.Default
 import Mails.Data
 import qualified Data.ByteString as BS
 
@@ -37,8 +37,8 @@ data SenderConfig = SMTPSender {
 --   , smtpPassword = "zimowisko"
 -- }
 
-instance Configuration MailingServerConf where
-  confDefault = MailingServerConf {
+instance HasDefaultValue MailingServerConf where
+  defaultValue = MailingServerConf {
       mscHttpBindAddress = (0x7f000001, 6666)
     , mscDBConfig = "user='kontra' password='kontra' dbname='kontrakcja'"
     , mscMasterSender = LocalSender {

@@ -4,7 +4,7 @@ module MessengerServerConf (
   ) where
 
 import Data.Word
-import Configuration
+import Utils.Default
 import qualified Data.ByteString as BS
 
 data MessengerServerConf = MessengerServerConf
@@ -24,8 +24,8 @@ data SenderConfig = GlobalMouthSender
   , localOpenCommand   :: Maybe String
   } deriving (Read, Show)
 
-instance Configuration MessengerServerConf where
-  confDefault = MessengerServerConf {
+instance HasDefaultValue MessengerServerConf where
+  defaultValue = MessengerServerConf {
       mscHttpBindAddress = (0x7f000001, 6668)
     , mscDBConfig = "user='kontra' password='kontra' dbname='kontrakcja'"
     , mscMasterSender = LocalSender {

@@ -1,6 +1,5 @@
 module Configuration (
-    Configuration(..)
-  , readConfig
+    readConfig
   ) where
 
 import System.Exit
@@ -8,11 +7,9 @@ import Text.Show.Pretty
 import qualified Control.Exception.Lifted as E
 import Control.Monad.Base
 import Control.Monad.Trans.Control
+import Utils.Default
 
-class (Read a, Show a) => Configuration a where
-  confDefault :: a
-
-readConfig :: forall a m . (Configuration a, Monad m, MonadBaseControl IO m) => (String -> m ()) -> String -> [String] -> FilePath -> m a
+readConfig :: forall a m . (Read a, Show a, HasDefaultValue a, Monad m, MonadBaseControl IO m) => (String -> m ()) -> String -> [String] -> FilePath -> m a
 readConfig logger _appname _args path = do
   logger "Reading configuration file..."
   res <- E.try $ (liftBase (readFile path >>= readIO))
@@ -24,5 +21,5 @@ readConfig logger _appname _args path = do
       logger $ "Error while trying to read config file: " ++ show e
       logger $ "Please provide proper config file: " ++ path
       logger $ "Example configuration:"
-      logger $ ppShow (confDefault :: a)
+      logger $ ppShow (defaultValue :: a)
       liftBase exitFailure
