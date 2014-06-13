@@ -183,7 +183,7 @@ function parseQueryString() {
     return urlParams;
 }
 
-require(['Backbone', 'utils/cookie', 'legacy_code'], function(Backbone, Cookie) {
+require(['Backbone', 'legacy_code'], function() {
 
 /**
  * For Cross-Site Request Forgery (CSRF) Attacks
@@ -210,24 +210,10 @@ safeReady(function() {
   });
 });
 
-//Checking
-$(document).ready(function() {
-    if (BrowserInfo.isIE6orLower()) {
-            mixpanel.track('Old IE popup', {'Browser version' : $.browser.version});
-            var alertModal = $("<div class='modal active'><div class='modal-container' style='top:400px'><div class='modal-body'><div class='modal-content'><div class='body'>" +
-                             "<center>" +
-                                "<h6 class='loadingmessage'>"+localization.ie6NotSupported+"</h6>" +
-                             "</center>" +
-                        "</div></div></div></div></div>");
-            $("body").html("");
-            $("body").append(alertModal);
-    }
-});
-
-
 // We always set timezone cookie, so it can be reused if we will get a sudden redirect to /newdocument
 $(document).ready(function() {
-    Cookie.set("timezone",jstz.determine().name());
+    if (window.Cookies != undefined)
+      Cookies.set("timezone",jstz.determine().name());
 });
 
 
