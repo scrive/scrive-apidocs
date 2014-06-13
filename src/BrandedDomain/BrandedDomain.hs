@@ -4,13 +4,15 @@ module BrandedDomain.BrandedDomain
   ) where
 
 import BrandedDomain.BrandedDomainID
+import DB
+import qualified Data.ByteString.Char8 as BS
 
 type BrandedDomains = [BrandedDomain]
 
 data BrandedDomain = BrandedDomain {
                           bdid :: BrandedDomainID
                         , bdurl :: String
-                        , bdlogolink :: String
+                        , bdlogo :: Maybe (Binary BS.ByteString)
                         , bdbarscolour :: String
                         , bdbarstextcolour :: String
                         , bdbarssecondarycolour :: String
@@ -32,4 +34,4 @@ data BrandedDomain = BrandedDomain {
                         , bdsmsoriginator :: String
                         , bdemailoriginator :: String
                         , bdcontactemail :: String
-                      } deriving (Read, Eq, Ord, Show)
+                      } deriving (Eq, Ord, Show)

@@ -37,7 +37,7 @@ createBrandedDomainsTable =
     , tblColumn { colName = "price_color",                   colType = TextT, colNullable = False }
     , tblColumn { colName = "sms_originator",                colType = TextT, colNullable = False }
     , tblColumn { colName = "email_originator",              colType = TextT, colNullable = False }
-    , tblColumn { colName = "contact_email",                 colType = TextT, colNullable = False }
+    , tblColumn { colName = "contact_email",                 colType = BinaryT, colNullable = True }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblIndexes = [
@@ -46,3 +46,14 @@ createBrandedDomainsTable =
   }
 
 }
+
+
+addLogoImageDataToBrandedDomain :: MonadDB m => Migration m
+addLogoImageDataToBrandedDomain =
+  Migration {
+      mgrTable = tableBrandedDomains
+    , mgrFrom = 1
+    , mgrDo = do
+        runSQL_ "ALTER TABLE branded_domains DROP COLUMN logolink"
+        runSQL_ "ALTER TABLE branded_domains ADD COLUMN logo BYTEA NULL"
+    }

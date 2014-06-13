@@ -352,7 +352,6 @@ handleAccessNewAccountGet uid token = do
           ad <- getAnalyticsData
           content <- renderTemplate "accessNewAccountPageWithBranding" $ do
                         F.value "linkchangepassword" $ changePassLink
-                        F.value "logolink" $ bdlogolink bd
                         F.value "background" $ bdbackgroundcolorexternal $ bd
                         F.value "buttoncolorclass" $ bdbuttonclass $ bd
                         F.value "textscolour" $ bdexternaltextcolour bd
@@ -416,7 +415,6 @@ handlePasswordReminderGet uid token = do
           ad <- getAnalyticsData
           content <- renderTemplate "changePasswordPageWithBranding" $ do
                         F.value "linkchangepassword" $ changePassLink
-                        F.value "logolink" $ bdlogolink bd
                         F.value "background" $ bdbackgroundcolorexternal $ bd
                         F.value "textscolour" $ bdexternaltextcolour bd
                         F.value "buttoncolorclass" $ bdbuttonclass $ bd

@@ -24,6 +24,8 @@ module AppView( kontrakcja
               , companyUIForPage
               , handleTermsOfService
               , enableCookiesPage
+              , brandedLogo
+              , brandedLogoWithMD5
               ) where
 
 import FlashMessage
@@ -54,6 +56,7 @@ import User.Model
 import Control.Monad
 import BrandedDomain.BrandedDomain
 import ThirdPartyStats.Core
+import qualified Crypto.Hash.MD5 as MD5
 
 {- |
    The name of our application (the codebase is known as kontrakcja,
@@ -145,7 +148,9 @@ brandingFields mbd mcompanyui = do
   F.value "customlogo" $ (isJust mbd) || (isJust $ (join $ companycustomlogo <$> mcompanyui))
   F.value "customlogolink" $ if (isJust $ (join $ companycustomlogo <$> mcompanyui))
                                 then show <$> LinkCompanyCustomLogo <$> companyuicompanyid <$> mcompanyui
-                                else bdlogolink <$> mbd
+                                else if (isJust $ join $ bdlogo <$> mbd)
+                                      then return $ show $ LinkBrandedDomainLogo
+                                      else Nothing
   F.value "custombarscolour" $ mcolour bdbarscolour companycustombarscolour
   F.value "custombarstextcolour" $ mcolour bdbarstextcolour companycustombarstextcolour
   F.value "custombarshighlightcolour" $ mcolour bdbarssecondarycolour companycustombarssecondarycolour
@@ -176,7 +181,6 @@ priceplanPage = do
        Just bd -> do
           ad <- getAnalyticsData
           content <- renderTemplate "priceplanPageWithBranding" $ do
-            F.value "logolink" $ bdlogolink bd
             F.value "background" $ bdbackgroundcolorexternal $ bd
             F.value "buttoncolorclass" $ bdbuttonclass bd
             F.value "headercolour" $ bdheadercolour bd
@@ -218,7 +222,6 @@ handleTermsOfService = withAnonymousContext $ do
        Just bd -> do
           ad <- getAnalyticsData
           content <- renderTemplate "termsOfServiceWithBranding" $ do
-            F.value "logolink" $ bdlogolink bd
             F.value "background" $ bdbackgroundcolorexternal $ bd
             F.value "buttoncolorclass" $ bdbuttonclass bd
             F.value "headercolour" $ bdheadercolour bd
@@ -331,3 +334,22 @@ analyticsLoaderScript = do
              F.object "analytics" $ analyticsTemplates ad
    ok $ toResponseBS (BS.fromString "text/javascript;charset=utf-8") $ BSL.fromString script
 
+
+-- | This servers branded logo. It allows smart caching/
+-- | /branding/logo is not cached, and redirects to /branding/logo/$MD5$
+-- |  /branding/logo/$MD5$ is cached.
+brandedLogo :: Kontrakcja m => m KontraLink
+brandedLogo = do
+  mbdlogo <- join <$> fmap bdlogo <$> ctxbrandeddomain <$> getContext
+  case mbdlogo of
+    Nothing -> respond404
+    Just l  -> return $ LinkBrandedDomainLogoWithMD5 $ BS.toString $ B16.encode $ MD5.hash $ unBinary l
+
+brandedLogoWithMD5 :: Kontrakcja m => String  -> m Response
+brandedLogoWithMD5 _ = do
+  mbdlogo <- join <$> fmap bdlogo <$> ctxbrandeddomain <$> getContext
+  case mbdlogo of
+    Nothing -> respond404
+    Just l  -> do
+      return $ setHeaderBS "Cache-Control" "max-age=31536000" $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") $
+        Response 200 Map.empty nullRsFlags (BSL.fromChunks $ [unBinary l]) Nothing

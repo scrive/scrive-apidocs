@@ -77,6 +77,8 @@ import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
 import Happstack.StaticRouting(Route, choice, dir)
 import Text.JSON.Gen
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Base64 as B64
+import qualified Data.ByteString.UTF8 as BS
 import File.Model
 import File.Storage
 
@@ -739,7 +741,7 @@ jsonBrandedDomainHelper bd = do
   -- keep this 1to1 consistent with fields in the database
   value "id"                            $ show (bdid bd)
   value "url"                           $ bdurl bd
-  value "logolink"                      $ bdlogolink bd
+  value "logo"                          $ fromMaybe ""  $ BS.toString . BS.append (BS.fromString "data:image/png;base64,") .  B64.encode . unBinary <$> (bdlogo $ bd)
   value "bars_color"                    $ bdbarscolour bd
   value "bars_text_color"               $ bdbarstextcolour bd
   value "bars_secondary_color"          $ bdbarssecondarycolour bd
@@ -767,7 +769,7 @@ updateBrandedDomain xbdid = onlySalesOrAdmin $ do
 
     -- keep this 1to1 consistent with fields in the database
     post_url <- look "bdurl"
-    post_logolink <- look "logolink"
+    post_logo <- getField "logo"
     post_bars_color <- look "bars_color"
     post_bars_text_color <- look "bars_text_color"
     post_bars_secondary_color <- look "bars_secondary_color"
@@ -793,7 +795,7 @@ updateBrandedDomain xbdid = onlySalesOrAdmin $ do
     let bd = BrandedDomain {
         bdid = xbdid,
         bdurl = post_url,
-        bdlogolink = post_logolink,
+        bdlogo = (Binary . B64.decodeLenient) <$> BS.fromString <$>  drop 1 <$> dropWhile ((/=) ',') <$> post_logo,
         bdbarscolour = post_bars_color,
         bdbarstextcolour = post_bars_text_color,
         bdbarssecondarycolour = post_bars_secondary_color,

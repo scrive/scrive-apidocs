@@ -41,7 +41,6 @@ $htmlopentag()$
       jQuery('.inner').append(new Login({
                                          branded : true,
                                          referer:   referer,
-                                         logolink:   "$logolink$",
                                          buttoncolorclass : "$buttoncolorclass$",
                                          servicelinkcolour: $if(servicelinkcolour)$"$servicelinkcolour$"$else$null$endif$,
                                          textscolour: $if(textscolour)$"$textscolour$"$else$null$endif$,
@@ -108,7 +107,6 @@ $htmlopentag()$
     jQuery('.inner').append(new NewPassword({
                         linkchangepassword: "$linkchangepassword$",
                         branded : true,
-                        logolink:   "$logolink$",
                         textscolour: $if(textscolour)$"$textscolour$"$else$null$endif$,
                         buttoncolorclass : "$buttoncolorclass$"
 
@@ -141,7 +139,6 @@ $htmlopentag()$
                         linkchangepassword: "$linkchangepassword$",
                         accessnewaccount: true,
                         branded : true,
-                        logolink:   "$logolink$",
                         textscolour: $if(textscolour)$"$textscolour$"$else$null$endif$,
                         buttoncolorclass : "$buttoncolorclass$"
                        }).el());
@@ -185,7 +182,6 @@ $htmlopentag()$
       mixpanel.track('Visit signup page');
       jQuery('.inner').append(new Signup({
                                          branded : true,
-                                         logolink:   "$logolink$",
                                          buttoncolorclass : "$buttoncolorclass$",
                                          servicelinkcolour: $if(servicelinkcolour)$"$servicelinkcolour$"$else$null$endif$,
                                          textscolour: $if(textscolour)$"$textscolour$"$else$null$endif$,

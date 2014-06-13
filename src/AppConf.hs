@@ -13,7 +13,6 @@ import LiveDocx (LiveDocxConf(..))
 import ELegitimation.Config (LogicaConfig(..))
 import GuardTime (GuardTimeConf(..))
 import Payments.Config (RecurlyConfig(..))
-import qualified BrandedDomain.BrandedDomain.Legacy as Legacy
 import Salesforce.Conf
 
 -- | Defines the application's configuration.  This includes amongst
@@ -42,7 +41,6 @@ data AppConf = AppConf {
   , googleanalyticsToken      :: String                -- ^ for google-analytics integration
   , homebase           :: String                       -- ^ url fragment where to fetch scripts
   , ntpServers         :: [String]                     -- ^ List of NTP servers to contact to get estimate of host clock error
-  , brandedDomains     :: [Legacy.BrandedDomain]     -- ^ List of branded domains
   , salesforceConf     :: SalesforceConf             -- ^ Configuration of salesforce
   } deriving (Read, Eq, Ord, Show)
 
@@ -80,7 +78,6 @@ instance HasDefaultValue AppConf where
     , googleanalyticsToken = "f25e59c70a8570a12fe57e7835d1d881"
     , homebase           = "https://staging.scrive.com"
     , ntpServers         = defaultNtpServers
-    , brandedDomains     = [Legacy.BrandedDomain "https://domain.scrive.com" "/img/logo.png" "#000000" "#000000" "#FFFFFF" "#FFFFFF" "#FFFFFF" "#DDDDDD" "#CCCCCCC" "#AAAAAA" "#53B688" "#FFFFFF" "#33B1DD" "#FFFFFF" "blue" "hsl(215,30%,60%)" "#666666" "#364963" "#7A94B8" "#C2000A" "Scrive SMS" "Scrive Email" "info@scrive.com"]
     , salesforceConf     = SalesforceConf
                               { salesforceAuthenticationUrl = "https://login.salesforce.com/services/oauth2/authorize"
                               , salesforceTokenUrl = "https://login.salesforce.com/services/oauth2/token"
