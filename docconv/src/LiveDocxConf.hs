@@ -19,4 +19,3 @@ instance Configuration LiveDocxConf where
     , password = "unitt3stsarenecessary"
   }
   confOptions = []
-  confVerify _ = return $ Right ()

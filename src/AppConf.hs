@@ -108,7 +108,6 @@ instance Configuration AppConf where
       (NoArg (\ c -> c { production = True }))
       "Turn on production environment"
     ]
-  confVerify _ = return $ Right ()
 
 instance HasSalesforceConf AppConf where
   getSalesforceConf =  salesforceConf

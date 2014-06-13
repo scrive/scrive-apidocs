@@ -50,4 +50,3 @@ instance Configuration MailingServerConf where
     , testReceivers   = [Address { addrName = "test",   addrEmail = "your@email.scrive.com" }]
   }
   confOptions = []
-  confVerify _ = return $ Right ()

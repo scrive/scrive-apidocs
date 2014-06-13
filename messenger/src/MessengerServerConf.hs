@@ -34,4 +34,3 @@ instance Configuration MessengerServerConf where
     }
   }
   confOptions = []
-  confVerify _ = return $ Right ()
