@@ -71,12 +71,8 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
         this.model = args.model;
         this.render();
     },
-    uploadButtonBox : function() {
-        var view = this;
-        var attachmentsList = this.model;
-        var box = $("<div class='option-box'>");
-        var header = $("<div class='header'/>").text(localization.selectFileToUpload);
-        this.uploadButton = new UploadButton({
+    uploadButton : function() {
+        var uploadButton = new UploadButton({
                 color : "black",
                 size: 'big',
                 shape: 'rounded',
@@ -95,16 +91,10 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
                                               }));
                 },
                 onError : function() {}
-            });
-        box.append(header);
-        box.append($("<div class='buttonbox'/>").append(this.uploadButton.el()));
-        return box;
+        });
+        return uploadButton.el();
     },
-    selectFromTemplateButtonBox : function() {
-        var view = this;
-        var attachmentsList = this.model;
-        var box = $("<div class='option-box'>");
-        var header = $("<div class='header'/>").text(localization.authorattachments.selectFromScrive);
+    selectFromTemplateButton : function () {
         var selectAttachmentButton = new Button({
             color : "black",
             shape: 'rounded',
@@ -116,10 +106,23 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
                 view.showAvaibleAttachmentsList = true;
                 view.render();
             }
-          });
-        box.append(header);
-        box.append($("<div class='buttonbox'/>").append(selectAttachmentButton.el()));
-        return box;
+        });
+        return selectAttachmentButton.el();
+    },
+    attachmentButtonsTable : function () {
+        var table = $('<table>').append($('<tbody>'));
+
+        var headlineRow = $('<tr>');
+        var uploadHeader = $('<div class="header"/>').text(localization.selectFileToUpload);
+        var selectHeader = $('<div class="header"/>').text(localization.authorattachments.selectFromScrive);
+        headlineRow.append($('<td class="header-td">').append(uploadHeader))
+                   .append($('<td class="header-td">').append(selectHeader));
+
+        var buttonsRow = $('<tr>').append($('<td>').append(this.uploadButton()))
+                                  .append($('<td>').append(this.selectFromTemplateButton()));
+
+        table.append(headlineRow).append(buttonsRow);
+        return table;
     },
     avaibleAttachmentsList : function() {
         var box = $("<div>");
@@ -189,14 +192,7 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
         this.container.addClass("selectAuthorAttachmentPopupContent");
         this.container.empty();
         if (!this.showAvaibleAttachmentsList) {
-            var c1  = $("<td/>");
-            c1.append(this.uploadButtonBox());
-
-            var c2  = $("<td/>");
-            c2.append(this.selectFromTemplateButtonBox());
-
-            var table = $("<table/>").append($("<tbody/>").append($("<tr>").append(c1).append(c2)));
-            this.container.append(table);
+            this.container.append(this.attachmentButtonsTable());
         }
         else
         {
