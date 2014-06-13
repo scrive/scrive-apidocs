@@ -33,4 +33,3 @@ instance Configuration MessengerServerConf where
       , localOpenCommand = Nothing
     }
   }
-  confOptions = []

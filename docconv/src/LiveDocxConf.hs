@@ -18,4 +18,3 @@ instance Configuration LiveDocxConf where
     , username = "unittests"
     , password = "unitt3stsarenecessary"
   }
-  confOptions = []

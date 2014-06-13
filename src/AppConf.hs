@@ -9,7 +9,6 @@ import User.Email
 import Mails.MailsConfig
 import Data.ByteString (ByteString)
 import Data.Word
-import System.Console.GetOpt
 import LiveDocx (LiveDocxConf(..))
 import ELegitimation.Config (LogicaConfig(..))
 import GuardTime (GuardTimeConf(..))
@@ -92,22 +91,6 @@ instance Configuration AppConf where
                               , salesforceIntegrationAPISecret = "a1033b2caa"
                               }
     }
-  confOptions = [
-  {-
-    , Option [] ["no-validate"]
-      (NoArg (\ c -> c { httpConf = (httpConf c) { validator = Nothing } }))
-      "Turn off HTML validation"
-    , Option [] ["validate"]
-      (NoArg (\ c -> c { httpConf = (httpConf c) { validator = Just wdgHTMLValidator } }))
-      "Turn on HTML validation"
-    -}
-      Option [] ["store"]
-      (ReqArg (\h c -> c {store = h}) "PATH")
-      "The directory used for database storage."
-    , Option [] ["production"]
-      (NoArg (\ c -> c { production = True }))
-      "Turn on production environment"
-    ]
 
 instance HasSalesforceConf AppConf where
   getSalesforceConf =  salesforceConf

@@ -49,4 +49,3 @@ instance Configuration MailingServerConf where
     , mscAmazonConfig = Nothing
     , testReceivers   = [Address { addrName = "test",   addrEmail = "your@email.scrive.com" }]
   }
-  confOptions = []
