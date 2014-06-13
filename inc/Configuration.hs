@@ -52,18 +52,16 @@ readConfig2 logger path = do
     then do
       js <- either logString return $
             eitherDecode bsl
-      case parse ud (Anchored [] js) of
+      case parse ud (Anchored mempty js) of
         Result value [] -> return value
-        Result _ problems -> do
-          mapM_ logProblem problems
-          fail "There were issues with the content of configuration"
+        Result _ problems -> logProblems problems
     else do
       case reads (BSL.toString bsl) of
         [(a, "")] -> return a
-        ((_,g):_) -> logString ("Garbage at the end of file: " ++ g)
-        _ -> logString "Unable to parse configuration file (it is better to use json)"
+        ((_,g):_) -> logString ("Garbage at the end of " ++ path ++ " file: " ++ g)
+        _ -> logString $ "Unable to parse configuration file (it is better to use json) " ++ path
 
-  logger "Configuration file read and parsed."
+  logger $ "Configuration file " ++ path ++ " read and parsed."
   return res
   where
     ud :: UnjsonDef a = unjsonDef
@@ -79,6 +77,10 @@ readConfig2 logger path = do
     logProblem (Anchored xpath msg) = do
         case renderForPath xpath ud of
           Just moreInfo -> do
-            logger $ Text.unpack (showPath True xpath) ++ ": " ++ Text.unpack msg ++ "\n" ++ moreInfo
+            logger $ show xpath ++ ": " ++ Text.unpack msg ++ "\n" ++ moreInfo
           Nothing -> do
-            logger $ Text.unpack (showPath True xpath) ++ ": " ++ Text.unpack msg
+            logger $ show xpath ++ ": " ++ Text.unpack msg
+    logProblems problems = do
+      logger $ "There were issues with the content of configuration " ++ path
+      mapM_ logProblem problems
+      fail $ "There were issues with the content of configuration " ++ path
