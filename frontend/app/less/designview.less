@@ -68,12 +68,33 @@ input.daystosign {
   margin: auto;
   width: 610px;
 
-  .option-box {
-    margin: 15px;
-    width: auto;
+  .attachmentsButtonsTable {
+    height: 130px;
+    padding: 26px 15px 25px 15px;
+    text-align: center;
+  }
 
-    .label {
-      font-size: 17px;
+  table {
+    .header-td {
+      vertical-align: top;
+    }
+    td {
+      padding: 0 10px 0 10px;
+      width: 305px;
+
+      .button {
+        width: 200px;
+      }
+
+      .header {
+        color: @text-dark;
+        font-size: 16px;
+        margin: 5px 5px 13px 5px;
+      }
+
+      .label {
+        font-size: 17px;
+      }
     }
   }
 }
@@ -100,7 +121,6 @@ input.daystosign {
   overflow-x: auto;
 }
 
-.selectAuthorAttachmentPopupContent .header,
 .designCSVSignatoryPopupContent .header {
   color: @text-dark;
   font-size: 16px;

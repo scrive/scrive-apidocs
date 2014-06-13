@@ -72,12 +72,13 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
         this.render();
     },
     uploadButton : function() {
+        var attachmentsList = this.model;
         var uploadButton = new UploadButton({
                 color : "black",
                 size: 'big',
                 shape: 'rounded',
                 text: localization.authorattachments.selectFile,
-                width: 256,
+                width: 'auto',
                 maxlength: 2,
                 onAppend : function(input,title,multifile) {
                     mixpanel.track('Upload attachment');
@@ -95,12 +96,13 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
         return uploadButton.el();
     },
     selectFromTemplateButton : function () {
+        var view = this;
         var selectAttachmentButton = new Button({
             color : "black",
             shape: 'rounded',
             size: 'big',
             text: localization.authorattachments.selectAttachment,
-            width: 256,
+            width: 'auto',
             onClick : function() {
                 mixpanel.track('Click select attachment');
                 view.showAvaibleAttachmentsList = true;
@@ -122,7 +124,8 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
                                   .append($('<td>').append(this.selectFromTemplateButton()));
 
         table.append(headlineRow).append(buttonsRow);
-        return table;
+
+        return $('<div class="attachmentsButtonsTable">').append(table);
     },
     avaibleAttachmentsList : function() {
         var box = $("<div>");
