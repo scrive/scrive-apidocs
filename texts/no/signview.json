@@ -49,7 +49,7 @@
 "_mailContractClosedContentLinkedNoAccount":"Det vil være tilgjengelig for nedlastning frem til $availabledate$.",
 "_mailContractClosedContentLinkedNoAccountButton":"Last ned dokument",
 "_mailContractClosedContentSignedBy":"Dokumentet <strong>$documenttitle$</strong> har blitt signert av $partylist:noescape()$.",
-"_mailDocumentClosedTitleContractConfirmation":"Rettelse: e-signert dokument $documenttitle$",
+"_mailDocumentClosedTitleContractConfirmation":"Bekreftelse: e-signert dokument $documenttitle$",
 "_mailDocumentClosedTitleContractCorrection":"Rettelse: e-signert dokument $documenttitle$",
 "_mailDocumentCorrectionBody":"Ved $closingtime$ ble dokumentet <strong>$documenttitle$</strong> signert og vi sendte deg en kopi av dokumentet.<br/><br/>Vi har funnet ut at det var et teknisk problem da dokumentet ble ferdigstilt av vårt e-signeringssystem. Problemet hindret e-signeringssystemet fra å forsegle dokumentet med en digital signatur. Problemet har blitt rettet og dokumentet har nå blitt forseglet med en digital signatur.<br/><br/>Du finner dokumentet med den nye digitale signaturen vedlagt. For å unngå fremtidig forveksling, vennligst behold dette dokumentet og slett den forrige versjonen.<br/><br/>Hvis du er interessert i å lære mer om hensikten med digitale signaturer anbefaler vi denne artikkelen: <a href='http://en.wikipedia.org/wiki/Digital_signature'>http://en.wikipedia.org/wiki/Digital_signature</a>",
 "_mailDocumentLinked":"Dokumentet var for stort til å legges ved denne e-posten. Det vil være tilgjengelig for nedlasting frem til $availabledate$.",
