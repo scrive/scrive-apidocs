@@ -6,14 +6,16 @@ module Configuration (
 import System.Exit
 import Text.Show.Pretty
 import qualified Control.Exception.Lifted as E
+import Control.Monad.Base
+import Control.Monad.Trans.Control
 
 class (Read a, Show a) => Configuration a where
   confDefault :: a
 
-readConfig :: forall a. Configuration a => (String -> IO ()) -> String -> [String] -> FilePath -> IO a
+readConfig :: forall a m . (Configuration a, Monad m, MonadBaseControl IO m) => (String -> m ()) -> String -> [String] -> FilePath -> m a
 readConfig logger _appname _args path = do
   logger "Reading configuration file..."
-  res <- E.try $ readFile path >>= readIO
+  res <- E.try $ (liftBase (readFile path >>= readIO))
   case res of
     Right app_conf -> do
       logger "Configuration file read and parsed."
@@ -23,4 +25,4 @@ readConfig logger _appname _args path = do
       logger $ "Please provide proper config file: " ++ path
       logger $ "Example configuration:"
       logger $ ppShow (confDefault :: a)
-      exitFailure
+      liftBase exitFailure
