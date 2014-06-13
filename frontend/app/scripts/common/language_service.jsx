@@ -1,6 +1,6 @@
-define(['Underscore', 'jquery', 'utils/cookie'], function(_, $, Cookie) {
+define(['Underscore', 'jquery'], function(_, $) {
   var expose = {};
-  
+
   /**
    *  @description
    *  Get which language is loaded right now, with localization file

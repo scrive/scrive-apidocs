@@ -33,8 +33,6 @@ var require = {
     /**
      *  Legacy code imports
      */
-    'utils/cookie': '../js/utils/cookie',
-    'utils/browserinfo': '../js/utils/browserinfo',
     'legacy_code': 'config/include_legacy_code'
   },
   shim: {

@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React', 'utils/browserinfo', 'common/language_service', 'postsignview/questionnaire_view', 'postsignview/create_account_views', 'postsignview/user_service', 'Backbone', 'Underscore'], function(React, BrowserInfo, LanguageService, QuestionareView, CreateAccountViews, UserService, Backbone, _) {
+define(['React', 'common/language_service', 'postsignview/questionnaire_view', 'postsignview/create_account_views', 'postsignview/user_service', 'Backbone', 'Underscore', 'legacy_code'], function(React, LanguageService, QuestionareView, CreateAccountViews, UserService, Backbone, _) {
   var expose = {};
 
   /**
