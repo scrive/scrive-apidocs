@@ -1,7 +1,6 @@
 module MailingServer where
 
 import Control.Concurrent
-import System.Environment
 import Happstack.Server hiding (waitForTermination)
 import qualified Control.Exception.Lifted as E
 import qualified Happstack.StaticRouting as R
@@ -28,8 +27,7 @@ import qualified Amazon as AWS
 
 main :: IO ()
 main = Log.withLogger $ do
-  appname <- getProgName
-  conf <- readConfig Log.mixlog_ appname [] "mailing_server.conf"
+  conf <- readConfig Log.mixlog_ "mailing_server.conf"
   checkExecutables
 
   let connSource = defaultSource $ defaultSettings { csConnInfo = mscDBConfig conf }

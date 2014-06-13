@@ -1,10 +1,7 @@
 module Configuration (
     readConfig
-    , readConfig2
   ) where
 
-import System.Exit
-import Text.Show.Pretty
 import qualified Control.Exception.Lifted as E
 import Control.Monad.Base
 import Control.Monad.Trans.Control
@@ -17,21 +14,6 @@ import Data.Aeson
 import qualified Data.Text as Text
 
 
-readConfig :: forall a m . (Read a, Show a, HasDefaultValue a, Monad m, MonadBaseControl IO m) => (String -> m ()) -> String -> [String] -> FilePath -> m a
-readConfig logger _appname _args path = do
-  logger "Reading configuration file..."
-  res <- E.try $ (liftBase (readFile path >>= readIO))
-  case res of
-    Right app_conf -> do
-      logger "Configuration file read and parsed."
-      return app_conf
-    Left (e::E.SomeException) -> do
-      logger $ "Error while trying to read config file: " ++ show e
-      logger $ "Please provide proper config file: " ++ path
-      logger $ "Example configuration:"
-      logger $ ppShow (defaultValue :: a)
-      liftBase exitFailure
-
 --
 -- Error handling here:
 -- 1. When no file: please create file and full docs
@@ -39,8 +21,8 @@ readConfig logger _appname _args path = do
 -- 3. When does not look like json and does not readIO: full docs
 -- 4. When unjson has issue, then just info about specific problems
 
-readConfig2 :: forall a m . (Unjson a, Read a, HasDefaultValue a, Monad m, MonadBaseControl IO m) => (String -> m ()) -> FilePath -> m a
-readConfig2 logger path = do
+readConfig :: forall a m . (Unjson a, Read a, HasDefaultValue a, Monad m, MonadBaseControl IO m) => (String -> m ()) -> FilePath -> m a
+readConfig logger path = do
   logger $ "Reading configuration " ++ path ++ "..."
   bsl' <- either logExceptionAndPrintFullDocs return =<<
           E.try (liftBase (BSL.readFile path))

@@ -38,7 +38,7 @@ main = Log.withLogger $ do
   Log.mixlog_ $ "Starting kontrakcja-server build " ++ Version.versionID
 
   appConf <- do
-    readConfig2 Log.mixlog_ "kontrakcja.conf"
+    readConfig Log.mixlog_ "kontrakcja.conf"
 
   checkExecutables
 

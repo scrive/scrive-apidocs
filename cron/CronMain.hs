@@ -5,7 +5,6 @@ import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Trans.Control
 import qualified CronEnv
-import System.Environment
 import qualified System.Time
 import Data.Maybe (catMaybes)
 
@@ -46,9 +45,7 @@ import ThirdPartyStats.Mixpanel
 main :: IO ()
 main = Log.withLogger $ do
   appConf <- do
-    appname <- getProgName
-    args <- getArgs
-    readConfig Log.mixlog_ appname args "kontrakcja.conf"
+    readConfig Log.mixlog_ "kontrakcja.conf"
 
   checkExecutables
 
