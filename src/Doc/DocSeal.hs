@@ -265,6 +265,50 @@ formatMinutesTimeForVerificationPage tz mt = do
                             then "+" ++ hDiffText
                             else "-" ++ hDiffText
 
+createSealingTextsForDocument :: (TemplatesMonad m) => Document -> String -> m Seal.SealingTexts
+createSealingTextsForDocument document hostpart = do
+
+  let render templ = renderLocalTemplate document templ $ do
+        documentInfoFields document
+        F.value "hostpart" hostpart
+        F.value "verifyurl" ("https://scrive.com/verify"::String)
+
+  verificationTitle' <- render "_contractsealingtexts"
+  docPrefix' <- render "_sealingtextsdocPrefix"
+  signedText' <- render "_contractsealingtextssignedText"
+  partnerText' <- render "_contractsealingtextspartnerText"
+  initiatorText' <- render "_contractsealingtextsinitiatorText"
+  documentText' <- render "_documentText"
+  orgNumberText' <- render "_contractsealingtextsorgNumberText"
+  personalNumberText' <- render "_personalNumberText"
+  eventsText' <- render "_contractsealingtextseventsText"
+  dateText' <- render "_contractsealingtextsdateText"
+  historyText' <- render "_contractsealingtextshistoryText"
+  verificationFooter' <- render "_verificationFooter"
+  hiddenAttachmentText' <- render "_contractsealingtextshiddenAttachment"
+  onePageText' <- render "_numberOfPagesIs1"
+  signedAtText' <- render "_signedAt"
+
+  let sealingTexts = Seal.SealingTexts
+        { verificationTitle    = verificationTitle'
+        , docPrefix            = docPrefix'
+        , signedText           = signedText'
+        , partnerText          = partnerText'
+        , initiatorText        = initiatorText'
+        , documentText         = documentText'
+        , orgNumberText        = orgNumberText'
+        , personalNumberText   = personalNumberText'
+        , eventsText           = eventsText'
+        , dateText             = dateText'
+        , historyText          = historyText'
+        , verificationFooter   = verificationFooter'
+        , hiddenAttachmentText = hiddenAttachmentText'
+        , onePageText          = onePageText'
+        , signedAtText         = signedAtText'
+        }
+
+  return sealingTexts
+
 sealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadBaseControl IO m, Log.MonadLog m, AWS.AmazonMonad m)
                      => (BS.ByteString,BS.ByteString)
                      -> String
@@ -336,19 +380,8 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
           viewingParty e = viewer (evAffectedSigLink e) || viewer (evSigLink e)
                where viewer s = (signatoryispartner <$> s) == Just False
       history <- (mapM mkHistEntry . eventsForHistory) =<< getSignatoryLinks (eventsForLog elog)
-      -- Log.mixlog_ ("about to render staticTexts")
-      staticTexts <- renderLocalTemplate document "contractsealingtexts" $ do
-                        documentInfoFields document
-                        F.value "hostpart" hostpart
-                        F.value "verifyurl" ("https://scrive.com/verify"::String) -- This could take subdomain into account using hostpart, but for now let's not.
 
-      -- Log.mixlog_ ("finished staticTexts: " ++ show staticTexts)
-      readtexts <- case maybeRead staticTexts of
-                     Just x -> return x
-                     Nothing -> do
-                       --Log.mixlog_ $ "Cannot read SealingTexts: " ++ staticTexts
-                       error $ "Cannot read SealingTexts: " ++ staticTexts
-      -- Log.mixlog_ ("read texts: " ++ show readtexts)
+      staticTexts <- createSealingTextsForDocument document hostpart
 
       -- Creating HTML Evidence Log
       htmllogs <- htmlDocFromEvidenceLog (documenttitle document) (suppressRepeatedEvents elog) ces
@@ -388,7 +421,7 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
             , Seal.history        = history
             , Seal.initials       = initials
             , Seal.hostpart       = hostpart
-            , Seal.staticTexts    = readtexts
+            , Seal.staticTexts    = staticTexts
             , Seal.attachments    = docAttachments ++ [evidenceattachment, evidenceOfIntent]
             , Seal.filesList      =
               [ Seal.FileDesc { fileTitle = documenttitle document
