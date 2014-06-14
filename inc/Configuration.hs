@@ -32,7 +32,7 @@ readConfig logger path = do
 
   res <- if "{" `BSL.isPrefixOf` bsl
     then do
-      js <- either logString return $
+      js <- either logStringAndBlameJsonParser return $
             eitherDecode bsl
       case parse ud (Anchored mempty js) of
         Result value [] -> return value
@@ -41,7 +41,7 @@ readConfig logger path = do
       case reads (BSL.toString bsl) of
         [(a, "")] -> return a
         ((_,g):_) -> logString ("Garbage at the end of " ++ path ++ " file: " ++ g)
-        _ -> logString $ "Unable to parse configuration file (it is better to use json) " ++ path
+        _ -> logStringAndPrintFullDocs $ "Unable to parse configuration file (it is better to use json) " ++ path
 
   logger $ "Configuration file " ++ path ++ " read and parsed."
   return res
@@ -51,9 +51,16 @@ readConfig logger path = do
     logString ex = do
       logger $ ex
       fail ex
+    logStringAndBlameJsonParser :: String -> m g
+    logStringAndBlameJsonParser ex = do
+      -- sadly parsing issues in aeson as reported as badly as anything else
+      logger $ ex
+      logString $ "Configuration file '" ++ path ++ "' has syntax errors and is not a valid json"
     logExceptionAndPrintFullDocs :: E.SomeException -> m g
-    logExceptionAndPrintFullDocs ex = do
-      logger $ show ex ++ "\n" ++ render ud ++ "\n" ++
+    logExceptionAndPrintFullDocs ex = logStringAndPrintFullDocs (show ex)
+    logStringAndPrintFullDocs :: String -> m g
+    logStringAndPrintFullDocs ex = do
+      logger $ ex ++ "\n" ++ render ud ++ "\n" ++
              BSL.toString (encodePretty' (defConfig { confCompare = compare }) (serialize ud (defaultValue :: a)))
       fail (show ex)
     logProblem (Anchored xpath msg) = do
