@@ -6,11 +6,13 @@ import qualified Control.Exception.Lifted as E
 import Control.Monad.Base
 import Control.Monad.Trans.Control
 import Utils.Default
+import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL (toString)
 import Data.Unjson
 import Data.Aeson.Encode.Pretty
-import Data.Aeson
+import Data.Char
+import qualified Data.Yaml as Yaml
 import qualified Data.Text as Text
 
 
@@ -32,36 +34,44 @@ readConfig logger path = do
 
   res <- if "{" `BSL.isPrefixOf` bsl
     then do
-      js <- either logStringAndBlameJsonParser return $
-            eitherDecode bsl
+      js <- either logYamlParseExceptionAndBlameJsonParser return $
+            Yaml.decodeEither' (BS.concat (BSL.toChunks bsl))
       case parse ud (Anchored mempty js) of
         Result value [] -> return value
         Result _ problems -> logProblems problems
     else do
       case reads (BSL.toString bsl) of
-        [(a, "")] -> return a
-        ((_,g):_) -> logString ("Garbage at the end of " ++ path ++ " file: " ++ g)
+        [(a, g)] | all isSpace g -> do
+          logger $ "It is better to use json/yaml format for configuration. Your configuration as json:\n" ++
+             configAsJsonString a
+          return a
+        ((_, g):_) -> do
+          logStringAndFail ("Garbage at the end of " ++ path ++ " file: " ++ g)
         _ -> logStringAndPrintFullDocs $ "Unable to parse configuration file (it is better to use json) " ++ path
 
   logger $ "Configuration file " ++ path ++ " read and parsed."
   return res
   where
-    ud :: UnjsonDef a = unjsonDef
-    logString :: String -> m g
-    logString ex = do
+    ud :: UnjsonDef a
+    ud = unjsonDef
+    logStringAndFail :: String -> m g
+    logStringAndFail ex = do
       logger $ ex
       fail ex
+    logYamlParseExceptionAndBlameJsonParser :: Yaml.ParseException -> m g
+    logYamlParseExceptionAndBlameJsonParser ex = do
+      -- sadly parsing issues in aeson as reported as badly as anything else
+      logStringAndBlameJsonParser $ showNiceYamlParseException path ex
     logStringAndBlameJsonParser :: String -> m g
     logStringAndBlameJsonParser ex = do
       -- sadly parsing issues in aeson as reported as badly as anything else
       logger $ ex
-      logString $ "Configuration file '" ++ path ++ "' has syntax errors and is not a valid json"
+      logStringAndFail $ "Configuration file '" ++ path ++ "' has syntax errors and is not a valid json"
     logExceptionAndPrintFullDocs :: E.SomeException -> m g
     logExceptionAndPrintFullDocs ex = logStringAndPrintFullDocs (show ex)
     logStringAndPrintFullDocs :: String -> m g
     logStringAndPrintFullDocs ex = do
-      logger $ ex ++ "\n" ++ render ud ++ "\n" ++
-             BSL.toString (encodePretty' (defConfig { confCompare = compare }) (serialize ud (defaultValue :: a)))
+      logger $ ex ++ "\n" ++ render ud ++ "\n" ++ configAsJsonString defaultValue
       fail (show ex)
     logProblem (Anchored xpath msg) = do
         case renderForPath xpath ud of
@@ -73,3 +83,18 @@ readConfig logger path = do
       logger $ "There were issues with the content of configuration " ++ path
       mapM_ logProblem problems
       fail $ "There were issues with the content of configuration " ++ path
+    configAsJsonString :: a -> String
+    configAsJsonString a = BSL.toString (encodePretty' (defConfig { confCompare = compare }) (serialize ud a))
+
+showNiceYamlParseException :: FilePath -> Yaml.ParseException -> String
+showNiceYamlParseException filepath parseException =
+  case parseException of
+    Yaml.NonScalarKey -> filepath ++ ": non scalar key"
+    Yaml.UnknownAlias anchorName -> filepath ++ ": unknown alias " ++ anchorName
+    Yaml.UnexpectedEvent received expected -> filepath ++ ": unknown event received " ++ show received ++ " when expected " ++ show expected
+    Yaml.InvalidYaml Nothing -> filepath ++ ": invalid yaml (no further info available)"
+    Yaml.InvalidYaml (Just (Yaml.YamlException ex)) -> filepath ++ ": invalid yaml: " ++ ex
+    Yaml.InvalidYaml (Just (Yaml.YamlParseException problem context (Yaml.YamlMark _index line column))) ->
+      filepath ++ ":" ++ show line ++ ":" ++ show column ++ ": " ++ problem ++ " " ++ context
+    Yaml.AesonException ex -> filepath ++ ": " ++ ex
+    Yaml.OtherParseException ex -> filepath ++ ": " ++ show ex
