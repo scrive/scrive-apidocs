@@ -13,6 +13,7 @@ import Data.Unjson
 import Control.Applicative
 import Data.Maybe
 
+
 data MailingServerConf = MailingServerConf {
     mscHttpBindAddress :: (Word32, Word16)
   , mscDBConfig        :: BS.ByteString
@@ -22,12 +23,14 @@ data MailingServerConf = MailingServerConf {
   , testReceivers      :: [Address]
   } deriving (Read, Show)
 
+
 unjsonMailingServerConf :: UnjsonDef MailingServerConf
 unjsonMailingServerConf = objectOf $ pure MailingServerConf
   <*> (pure (,)
-         <*> fieldDef' "bind_ip" 0
+         <*> fieldDefBy "bind_ip" 0
             (fst . mscHttpBindAddress)
             "IP to listen on, defaults to 0.0.0.0"
+            unjsonIPv4AsWord32
          <*> field' "bind_port"
             (snd . mscHttpBindAddress)
             "Port to listen on")
