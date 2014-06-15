@@ -19,9 +19,10 @@ data MessengerServerConf = MessengerServerConf
 unjsonMessengerServerConf :: UnjsonDef MessengerServerConf
 unjsonMessengerServerConf = objectOf $ pure MessengerServerConf
   <*> (pure (,)
-         <*> fieldDef' "bind_ip" 0
+         <*> fieldDefBy "bind_ip" 0
             (fst . mscHttpBindAddress)
             "IP to listen on, defaults to 0.0.0.0"
+            unjsonIPv4AsWord32
          <*> field' "bind_port"
             (snd . mscHttpBindAddress)
             "Port to listen on")

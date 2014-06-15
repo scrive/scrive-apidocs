@@ -50,9 +50,10 @@ data AppConf = AppConf {
 unjsonAppConf :: UnjsonDef AppConf
 unjsonAppConf = objectOf $ pure AppConf
   <*> (pure (,)
-         <*> fieldDef' "bind_ip" 0
+         <*> fieldDefBy "bind_ip" 0
             (fst . httpBindAddress)
             "IP to listen on, defaults to 0.0.0.0"
+            unjsonIPv4AsWord32
          <*> field' "bind_port"
             (snd . httpBindAddress)
             "Port to listen on")
