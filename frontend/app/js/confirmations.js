@@ -243,7 +243,6 @@ var ConfirmationView = Backbone.View.extend({
        this.acceptButton = model.acceptButton() != undefined ?  model.acceptButton().addClass("float-right") :
             new Button({         color:model.acceptColor(),
                                  style : BrowserInfo.isSmallScreen() ? "margin-top:-10px" : "",
-                                 shape: "rounded",
                                  cssClass: "float-right",
                                  text: this.model.acceptText(),
                                  onClick : function() {

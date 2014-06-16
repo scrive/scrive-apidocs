@@ -333,7 +333,6 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             } else {
                 acceptButton = new Button({
                     color : "green",
-                    shape : "rounded",
                     text : localization.designview.sign,
                     oneClick : true,
                     onClick : function() {
@@ -413,7 +412,6 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                 icon: otherSignatoriesSignInPerson ? '/img/modal-icons/start-signing.png' : '/img/modal-icons/send.png',
                 acceptButton : new Button({
                     color : "green",
-                    shape : "rounded",
                     text : otherSignatoriesSignInPerson ? localization.process.startsigningbuttontext : localization.process.sendbuttontext,
                     oneClick : true,
                     onClick : function() {

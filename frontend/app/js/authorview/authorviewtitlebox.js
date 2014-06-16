@@ -74,7 +74,6 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     return new Button({
       color: "red",
       size: "big",
-      shape: "rounded",
       text: localization.process.restartbuttontext,
       oneClick : true,
       onClick: function() {
@@ -92,7 +91,6 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     return new Button({
       color: "green",
       size: "big",
-      shape: "rounded",
       text: localization.process.prolongbuttontext,
       onClick: function() {
         mixpanel.track('Click prolong button');
@@ -105,7 +103,6 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     var document = this.model.document();
     return new Button({
       size: "big",
-      shape: "rounded",
       color: "red",
       text: localization.process.cancelbuttontext,
       cssClass: "s-withdraw-button",
@@ -143,7 +140,6 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     return new Button({
       color: "green",
       size: "big",
-      shape: "rounded",
       text: localization.authorview.goToSignView,
       onClick: function() {
           mixpanel.track('Click go to sign view');
@@ -160,7 +156,6 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     return new Button({
       color: "green",
       size: "big",
-      shape: "rounded",
       text: localization.authorview.goToSignView,
       onClick: function() {
           //Refactor this when we will get confirmation that this is what viktor needs.

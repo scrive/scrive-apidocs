@@ -65,7 +65,7 @@ define(['React', 'Backbone'], function(React, Backbone) {
               <div className="clearfix"></div>
               <div className="acceptbutton">
                 <label className="label" dangerouslySetInnerHTML={{__html: this.makeTOSCopyWithLink()}} />
-                <a onClick={this.props.registerUser} className="green button button-large button-green button-round">
+                <a onClick={this.props.registerUser} className="green button button-large button-green">
                   <div className="label">{ localization.docsignview.signupButtonText }</div>
                 </a>
               </div>

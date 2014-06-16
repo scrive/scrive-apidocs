@@ -76,7 +76,6 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
         var uploadButton = new UploadButton({
                 color : "black",
                 size: 'big',
-                shape: 'rounded',
                 text: localization.authorattachments.selectFile,
                 width: 'auto',
                 maxlength: 2,
@@ -99,7 +98,6 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
         var view = this;
         var selectAttachmentButton = new Button({
             color : "black",
-            shape: 'rounded',
             size: 'big',
             text: localization.authorattachments.selectAttachment,
             width: 'auto',

@@ -201,7 +201,6 @@ var CsvSignatoryDesignView = Backbone.View.extend({
          var uploadButton = new UploadButton({
                     name: "csv",
                     color : "black",
-                    shape: 'rounded',
                     width: 280,
                     size: "big",
                     text: localization.csv.selectFile,

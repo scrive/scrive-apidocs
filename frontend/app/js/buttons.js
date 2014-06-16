@@ -21,7 +21,6 @@ var ButtonModel = Backbone.Model.extend({
       textcolor : undefined,
       size  : "small",
       text  : "",
-      shape : "square",
       onClick : function() {return false;},
       icon : jQuery(""),
       width: undefined,
@@ -70,12 +69,6 @@ var ButtonModel = Backbone.Model.extend({
   },
   width: function() {
        return this.get("width");
-  },
-  shape : function() {
-    return this.get("shape");
-  },
-  isRounded : function() {
-    return this.shape() == "rounded";
   },
   style: function() {
     return this.get("style");
@@ -147,12 +140,6 @@ var ButtonView = Backbone.View.extend({
 
         if (this.model.textcolor()) {
           $(this.el).attr("style", ($(this.el).attr("style") || '') + "; color: " + this.model.textcolor() + " !important;");
-        }
-
-        if (this.model.isRounded()) {
-            $(this.el).addClass("button-round");
-            if (BrowserInfo.isIE9orLower())
-              $(this.el).css("filter","none"); // CSS filter is in conflict with border-radius in IE9. Older IE does not support it anyway.
         }
 
         var label = $("<div class='label'/>").text(this.model.text());

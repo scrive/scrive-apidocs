@@ -84,7 +84,6 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
         return new Button({
             size: 'big',
             color: 'black',
-            shape: 'rounded',
             text: localization.signatoryAttachments.addAttachment,
             onClick: function() {
                 mixpanel.track('Click add sig attachment (popup)');

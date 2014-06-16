@@ -230,7 +230,6 @@ var ConfirmationWithEmailView = Backbone.View.extend({
        this.editOption = new Button({color: 'black',
                                     style: 'margin-left: 15px',
                                     cssClass: 'float-left',
-                                    shape: 'rounded',
                                     text: this.model.editText(),
                                     onClick: function() {
                                         view.edit();
@@ -253,7 +252,6 @@ var ConfirmationWithEmailView = Backbone.View.extend({
        var accept = new Button({color:model.acceptColor(),
                                  style : BrowserInfo.isSmallScreen() ? "margin-top:-10px" : "",
                                  cssClass: "float-right",
-                                 shape: "rounded",
                                  text: this.model.acceptText(),
                                  onClick : function() {
 									 var customtext = mailview.customtext();

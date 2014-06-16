@@ -9,7 +9,6 @@
       color       : string, red | green | black | light-blue | signview-blue, one of predefined colors
       customcolor : string, custom color for button, overwrites color
       size        : string, tiny | small | big
-      shape       : string, rounded | square, where square is default
       textcolor   : string, color for text on button, else default value for predefined color will be used.
       width       : integer, final width of button, if not set, button will adjust to text
       cssClass    : additional css classes
@@ -38,7 +37,6 @@ define(['React'], function(React) {
       color       : React.PropTypes.string,
       customcolor : React.PropTypes.string,
       size        : React.PropTypes.string,
-      shape       : React.PropTypes.string,
       textcolor   : React.PropTypes.string,
       width       : React.PropTypes.string,
       cssClass    : React.PropTypes.string,
@@ -52,7 +50,6 @@ define(['React'], function(React) {
           "text"      : "",
           "color"     : "green",
           "size"      : "small",
-          "shape"     : "square",
           "multiline" : false,
           "style"     : {}
         };
@@ -104,10 +101,6 @@ define(['React'], function(React) {
      else if (this.props.color == "signview-blue")
         return {"button-signview-blue":true};
     },
-    shapeClass : function() {
-       if (this.props.shape == "rounded" )
-         return {"button-round":true};
-    },
     multilineClass : function() {
       return {"button-signleline": !this.props.multiline};
     },
@@ -116,8 +109,7 @@ define(['React'], function(React) {
                             {button: true},
                             this.sizeClass(),
                             this.colorClass(),
-                            this.multilineClass(),
-                            this.shapeClass()
+                            this.multilineClass()
              ));
     },
     style : function() {

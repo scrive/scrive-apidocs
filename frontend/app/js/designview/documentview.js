@@ -178,7 +178,6 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
              });
             return new UploadButton({    color: 'green',
                                      size: 'big',
-                                     shape: 'rounded',
                                      text: localization.uploadButton,
                                      width: 250,
                                      name: 'file',

@@ -122,7 +122,7 @@ define(['React', 'Backbone', 'postsignview/user_service', 'common/language_servi
                         <h5 className="great-thing">{ localization.archive.ftue.subtitleSaved }</h5>
                         <h5>{ localization.archive.ftue.subtitleIsntThisHowSimple }</h5>
                       </div>
-                      <a onClick={ this.sendExampleDocument } className="design-view-document-buttons-upload-button green button button-large button-green button-round">
+                      <a onClick={ this.sendExampleDocument } className="design-view-document-buttons-upload-button green button button-large button-green">
                         <div className="label">{ localization.archive.ftue.button }</div>
                       </a>
                     </div>

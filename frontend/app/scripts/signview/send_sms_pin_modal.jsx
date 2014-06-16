@@ -160,7 +160,6 @@ define(['React','common/button','common/backbone_mixim','Backbone', 'tinycolor',
       var acceptButton =  new Button({
         size:  "small",
         color: "green",
-        shape: BrowserInfo.isSmallScreen() ? "" : "rounded",
         customcolor: this.model.usebranding() ? this.model.signviewbranding().signviewprimarycolour() : undefined,
         textcolor: this.model.usebranding() ? this.model.signviewbranding().signviewprimarytextcolour() : undefined,
         cssClass: 'greybg',

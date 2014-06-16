@@ -42,21 +42,13 @@
   margin: 16px auto;
 
   .box-sizing(border-box);
-}
 
-.design-view-document-buttons-upload-button-circle {
-  filter: alpha(opacity=25);
-  opacity: 0.25;
-  zoom: 1;
-}
-
-.design-view-document-buttons-upload-button-label {
-  font-size: 20px;
-  line-height: 1em;
-  text-align: center;
-
-  .center-vh(80px, 2em);
-  .box-sizing(border-box);
+  .design-view-document-buttons-upload-button {
+    .button {
+      .border-radius(32px, 32px, 32px, 32px);
+      border: #eeeeee 5px solid;
+    }
+  }
 }
 
 // the little "or" in the middle
@@ -120,4 +112,10 @@
 
 .design-view-document-pages {
   margin: 20px 0 90px;
+}
+
+.modal .modal-container .modal-footer .spinner-container {
+  left: -20px;
+  position: absolute;
+  top: 21px;
 }
