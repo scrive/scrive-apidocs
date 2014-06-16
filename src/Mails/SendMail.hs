@@ -25,6 +25,7 @@ import Control.Logic
 import Data.Char
 import MessageData
 import MinutesTime
+import Data.String.Utils
 
 -- Needed only for FROM address
 import User.Lang
@@ -54,7 +55,7 @@ scheduleEmailSendout' authorname  MailsConfig{..} mail@Mail{..} = do
   if unsendable to
     then Log.attention_ $ "Email " ++ show mail ++ " is unsendable, discarding."
     else do
-      fromAddr <- return Address {addrName = authorname, addrEmail = ourInfoEmail }
+      fromAddr <- return Address {addrName = authorname, addrEmail = originatorEmail }
       token <- random
       now <- getMinutesTime
       mid <- dbUpdate $ CreateEmail token fromAddr (map toAddress to) now
@@ -103,6 +104,10 @@ kontramailHelper mc mbd renderFunc tname fields = do
     let (title,content) = span (/= '\n') $ dropWhile (isControl ||^ isSpace) wholemail
     return $ emptyMail {
                          originator = fromMaybe (ourInfoEmailNiceName mc) (fmap bdemailoriginator mbd)
+                       , originatorEmail = case (fmap (strip . bdnoreplyemail) mbd) of
+                                             Nothing -> ourInfoEmail mc
+                                             Just "" -> ourInfoEmail mc
+                                             Just s -> s
                        , title   = title
                        , content = content
                        }

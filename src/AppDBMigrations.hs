@@ -167,5 +167,6 @@ kontraMigrations = [
   , usersTableChangeAssociatedDomainToForeignKey
   , addTimeZoneNameToDocuments
   , addLogoImageDataToBrandedDomain
+  , addNoReplyEmailToBrandedDomain
   ] ++ mailerMigrations
     ++ messengerMigrations

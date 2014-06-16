@@ -34,4 +34,5 @@ data BrandedDomain = BrandedDomain {
                         , bdsmsoriginator :: String
                         , bdemailoriginator :: String
                         , bdcontactemail :: String
+                        , bdnoreplyemail  :: String
                       } deriving (Eq, Ord, Show)

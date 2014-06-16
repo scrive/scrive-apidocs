@@ -116,7 +116,8 @@ var AdminBrandedDomainModel = Backbone.Model.extend({
         price_color: this.get("price_color"),
         sms_originator: this.get("sms_originator"),
         email_originator: this.get("email_originator"),
-        contact_email: this.get("contact_email")
+        contact_email: this.get("contact_email"),
+        noreply_email: this.get("noreply_email")
     });
   }
 });
@@ -134,12 +135,14 @@ var AdminBrandedDomainView = Backbone.View.extend({
       var table = $("<table style='border-collapse: separate; border-spacing: 10px;'/>");
       box.append(table);
 
-      var addTableRow = function(field,type) {
+      var addTableRow = function(field,type,info) {
           var value = model.get(field);
           var input = $("<input type='text'/>").val(value);
           var tr = $("<tr/>");
           tr.append($("<td/>").append($("<label/>").text(field)));
           tr.append($("<td/>").append(input));
+          if (info)
+            tr.append($("<td/>").append(info));
           var colimm;
           if( type=="color" ) {
               colimm = $("<div>").css({height: "25px", width: "50px", "background-color":value});
@@ -220,9 +223,10 @@ var AdminBrandedDomainView = Backbone.View.extend({
       addTableRow("header_color", "color");
       addTableRow("text_color", "color");
       addTableRow("price_color", "color");
-      addTableRow("sms_originator");
-      addTableRow("email_originator");
-      addTableRow("contact_email");
+      addTableRow("sms_originator","text");
+      addTableRow("email_originator","text");
+      addTableRow("contact_email","text");
+      addTableRow("noreply_email","text", "Setting this adress may cause mail delivery issues");
 
       return box;
     },

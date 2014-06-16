@@ -12,8 +12,9 @@ data MailAddress = MailAddress {
 -- | Structure for holding mails. If from is not set mail will be send
 -- as SkrivaPa admin (fromMails Config).
 data Mail = Mail {
-    to          :: [MailAddress]
-  , originator   :: String -- Name of service sending email. Default is Scrive
+    to              :: [MailAddress]
+  , originator      :: String -- Name of service sending email. Default is Scrive
+  , originatorEmail :: String -- Adress of no reply email
   , title       :: String
   , content     :: String
   , attachments :: [(String, Either BS.ByteString FileID)] -- list of attachments (name,content)
@@ -22,10 +23,11 @@ data Mail = Mail {
 
 emptyMail :: Mail
 emptyMail = Mail {
-    to             = []
-  , originator     = "Scrive"
-  , title          = []
-  , content        = []
-  , attachments    = []
-  , mailInfo       = None
+    to              = []
+  , originator      = "Scrive"
+  , originatorEmail = "noreply@scrive.com"
+  , title           = []
+  , content         = []
+  , attachments     = []
+  , mailInfo        = None
 }

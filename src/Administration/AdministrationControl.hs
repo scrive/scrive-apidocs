@@ -763,6 +763,7 @@ jsonBrandedDomainHelper bd = do
   value "sms_originator"                $ bdsmsoriginator bd
   value "email_originator"              $ bdemailoriginator bd
   value "contact_email"                 $ bdcontactemail bd
+  value "noreply_email"                 $ bdnoreplyemail bd
 
 updateBrandedDomain :: Kontrakcja m => BrandedDomainID -> m ()
 updateBrandedDomain xbdid = onlySalesOrAdmin $ do
@@ -791,6 +792,7 @@ updateBrandedDomain xbdid = onlySalesOrAdmin $ do
     post_sms_originator <- look "sms_originator"
     post_email_originator <- look "email_originator"
     post_contact_email <- look "contact_email"
+    post_noreply_email <- look "noreply_email"
 
     let bd = BrandedDomain {
         bdid = xbdid,
@@ -816,7 +818,8 @@ updateBrandedDomain xbdid = onlySalesOrAdmin $ do
         bdpricecolour = post_price_color,
         bdsmsoriginator = post_sms_originator,
         bdemailoriginator = post_email_originator,
-        bdcontactemail = post_contact_email
+        bdcontactemail = post_contact_email,
+        bdnoreplyemail = post_noreply_email
              }
 
     _ <- dbUpdate $ UpdateBrandedDomain bd

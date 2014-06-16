@@ -17,8 +17,8 @@ import qualified Data.ByteString.Char8 as BS
 
 
 
-fetchBrandedDomain :: (BrandedDomainID, String, Maybe (Binary BS.ByteString), String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String) -> BrandedDomain
-fetchBrandedDomain (xid, url, logo, barscolour, barstextcolour, barssecondarycolour, backgroundcolour, backgroundcolorexternal, mailsbackgroundcolor, mailsbuttoncolor, mailstextcolor, signviewprimarycolour, signviewprimarytextcolour, signviewsecondarycolour, signviewsecondarytextcolour, buttonclass, servicelinkcolour, externaltextcolour, headercolour, textcolour, pricecolour, smsoriginator, emailoriginator, contactemail)
+fetchBrandedDomain :: (BrandedDomainID, String, Maybe (Binary BS.ByteString), String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String) -> BrandedDomain
+fetchBrandedDomain (xid, url, logo, barscolour, barstextcolour, barssecondarycolour, backgroundcolour, backgroundcolorexternal, mailsbackgroundcolor, mailsbuttoncolor, mailstextcolor, signviewprimarycolour, signviewprimarytextcolour, signviewsecondarycolour, signviewsecondarytextcolour, buttonclass, servicelinkcolour, externaltextcolour, headercolour, textcolour, pricecolour, smsoriginator, emailoriginator, contactemail, noreplyemail)
        = BrandedDomain
          { bdid                          = xid
          , bdurl                         = url
@@ -44,6 +44,7 @@ fetchBrandedDomain (xid, url, logo, barscolour, barstextcolour, barssecondarycol
          , bdsmsoriginator               = smsoriginator
          , bdemailoriginator             = emailoriginator
          , bdcontactemail                = contactemail
+         , bdnoreplyemail                = noreplyemail
          }
 
 brandedDomainSelector :: [SQL]
@@ -72,6 +73,7 @@ brandedDomainSelector = [
   , "sms_originator"
   , "email_originator"
   , "contact_email"
+  , "noreply_email"
   ]
 
 
@@ -139,6 +141,7 @@ instance (MonadDB m, Log.MonadLog m) => DBUpdate m UpdateBrandedDomain () where
       sqlSet "sms_originator" $ bdsmsoriginator bd
       sqlSet "email_originator" $ bdemailoriginator bd
       sqlSet "contact_email" $ bdcontactemail bd
+      sqlSet "noreply_email" $ bdnoreplyemail bd
       sqlWhereEq "id" (bdid bd)
 
 data NewBrandedDomain = NewBrandedDomain
@@ -168,5 +171,6 @@ instance (MonadDB m, Log.MonadLog m) => DBUpdate m NewBrandedDomain BrandedDomai
       sqlSet "sms_originator" ("" :: String)
       sqlSet "email_originator" ("" :: String)
       sqlSet "contact_email" ("" :: String)
+      sqlSet "noreply_email" ("" :: String)
       sqlResult "id"
     fetchOne unSingle

@@ -57,3 +57,13 @@ addLogoImageDataToBrandedDomain =
         runSQL_ "ALTER TABLE branded_domains DROP COLUMN logolink"
         runSQL_ "ALTER TABLE branded_domains ADD COLUMN logo BYTEA NULL"
     }
+
+addNoReplyEmailToBrandedDomain :: MonadDB m => Migration m
+addNoReplyEmailToBrandedDomain =
+  Migration {
+      mgrTable = tableBrandedDomains
+    , mgrFrom = 2
+    , mgrDo = do
+        runSQL_ "ALTER TABLE branded_domains ADD COLUMN noreply_email TEXT NOT NULL"
+    }
+
