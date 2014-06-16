@@ -67,12 +67,6 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
 
     return text;
   },
-  // Description of due date
-  dueDateDescription : function() {
-      var timeout = this.model.document().timeouttime();
-      var timeoutText = moment(timeout).format("YYYY-MM-DD");
-      return localization.docsignview.dueDate + " " + timeoutText;
-  },
   // Box with next signatory selection, used only on ipad
   giveToNextPadSignatoryOption :  function() {
       var document = this.model.document();
