@@ -18,8 +18,6 @@ var FlashMessageModel = Backbone.Model.extend({
   initialize: function(attr) {
        if (!(attr.color == "red" || attr.color == "blue" || attr.color == "green"))
             console.log("FlashMessage error: Bad color selected ( "  + attr.color +" )");
-        if (!_.isString(attr.content) || attr.content.length === 0 )
-            console.log("FlashMessage error: No content provided");
   },
   flashType : function() {
     if (this.get("color") == "red")
