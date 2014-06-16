@@ -82,7 +82,7 @@ define(['Backbone', 'legacy_code'], function() {
                     'Subscription status' : model.status(),
                     'Documents used'      : model.docsUsed(),
                     'Documents total'     : model.docsTotal(),
-                    'Billing ends'        : model.billingEnds(),
+                    'Billing ends'        : model.billingEnds().toString(),
                     'Dunning?'            : model.isDunning()
                 });
             }});
