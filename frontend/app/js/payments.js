@@ -5,7 +5,7 @@
   Author and Maintainer: Eric Normand
 
 */
-define(['Backbone', 'legacy_code'], function() {
+define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
     var PaymentsPendingModel = Backbone.Model.extend({
         name: function() {

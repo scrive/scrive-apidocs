@@ -1,4 +1,4 @@
-define(['Backbone', 'legacy_code'], function() {
+define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
     /*
       Holds information relevant to blocking for a user.
