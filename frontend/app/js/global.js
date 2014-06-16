@@ -224,14 +224,19 @@ function capitaliseFirstLetter(string)
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-// http://ecommerce.shopify.com/c/ecommerce-design/t/ordinal-number-in-javascript-1st-2nd-3rd-4th-29259
-function englishOrdinal(n) {
-    var s=["th","st","nd","rd"],
-        v=n%100;
-    return n+(s[(v-20)%10]||s[v]||s[0]);
-}
+require(['moment'], function(moment) {
+  window.localized_ordinal = function(n, lang_code) {
+    if (lang_code === 'sv') {
+      // apparently moment.js swedish version is incorrect for this use case
+      // fallback to the old code
+      var letter = (n === 1 || n === 2) ? 'a' : 'e';
+      return '' + n + ':' + letter;
+    }
 
-function swedishOrdinal(n) {
-    var letter = (n === 1 || n === 2) ? 'a' : 'e';
-    return '' + n + ':' + letter;
-}
+    if (lang_code === 'no') {
+      // moment.js uses different lang code for norwegian
+      lang_code = 'nn';
+    }
+    return moment.langData(lang_code).ordinal(n);
+  }
+});
