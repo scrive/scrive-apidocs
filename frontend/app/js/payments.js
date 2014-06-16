@@ -1143,7 +1143,9 @@ define(['Backbone', 'legacy_code'], function() {
                                             model.fetch({success:function() {
                                                 LoadingDialog.close();
                                                 model.trigger('fetch');
-                                                new FlashMessage({color:'green', content: localization.blocking.willcancel.headline.replace('XX', Math.ceil(moment.duration(model.subscription().billingEnds() - moment()).asDays())) });
+                                                var message_content = $('<span>' + localization.blocking.willcancel.headline + '</span>');
+                                                $('.put-days-left-here', message_content).text(Math.ceil(moment.duration(some_model.subscription().billingEnds() - moment()).asDays()));
+                                                new FlashMessage({color: 'green', content: message_content});
 						model.trigger('subscriptionCancelled');
                                             }});
                                         },
