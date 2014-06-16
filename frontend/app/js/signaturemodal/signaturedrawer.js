@@ -2,7 +2,7 @@
    Internally canvas is used.
  */
 
-define(['Backbone', 'legacy_code'], function(BrowserInfo) {
+define(['Backbone', 'legacy_code'], function() {
 
 var SignatureDrawerModel = Backbone.Model.extend({
   defaults: {
