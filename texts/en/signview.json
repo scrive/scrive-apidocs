@@ -151,7 +151,7 @@
 "_signviewSigningFailed":"Sorry, something went wrong while signing the document. Please try again.",
 "_smsInvitationToSign":"Hi, $creatorname$ has invited you to e-sign. Click here to start: $link$",
 "_smsPinSendout":"Your PIN for $documenttitle$ is $pin$",
-"_smsRejectNotification":"Hi $personname$, $rejectorName$ has rejected to sign the document $documenttitle$. The signing process has therefore been canceled. Follow the link to view the document: $link$",
+"_smsRejectNotification":"Hi $personname$, $rejectorName$ has rejected to sign the document $documenttitle$. The signing process has therefore been cancelled. Follow the link to view the document: $link$",
 "_smsReminder":"Hi $personname$, this is a reminder from $creatorname$ that you have not yet signed the document $documenttitle$. Open the link to review the document: $link$",
 "_smsReminderSigned":"Hi $personname$, the signed document $documenttitle$ has been resent to you at the request of $creatorname$. Find the document by following this link: $link$",
 "_subtitleSignedClosedByEmail":"The signed document has been sent to you by email.",
