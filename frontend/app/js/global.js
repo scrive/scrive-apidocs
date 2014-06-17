@@ -238,5 +238,5 @@ require(['moment'], function(moment) {
       lang_code = 'nn';
     }
     return moment.langData(lang_code).ordinal(n);
-  }
+  };
 });
