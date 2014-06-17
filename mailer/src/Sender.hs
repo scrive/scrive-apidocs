@@ -57,7 +57,9 @@ createExternalSender name program createargs = Sender { senderName = name, sendM
             Log.mixlog_ $ unlines [
                 "Subject: " ++ subject
               , "To: " ++ intercalate ", " (map addrEmail mailTo)
-              , "Reply-To: " ++ intercalate ", " (map addrEmail mailReplyTo)
+              , case mailReplyTo of
+                     Just addr -> "Reply-To: " ++ addrEmail addr
+                     Nothing   -> ""
               , "Attachments: " ++ show (length mailAttachments)
               , htmlToTxt mailContent
               ]

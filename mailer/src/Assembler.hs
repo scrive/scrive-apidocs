@@ -40,13 +40,16 @@ assembleContent Mail{..} = do
         forM_ (fromXSMTPAttrs mailXSMTPAttrs) $ uncurry J.value
       mailgundata = runJSONGen datafields
       xsmtpapi = runJSONGen $ J.object "unique_args" datafields
+      lineReplyTo = case mailReplyTo of
+                     Just addr -> "Reply-To: " ++ createAddrString addr ++ "\r\n"
+                     Nothing   -> ""
   let -- FIXME: add =?UTF8?B= everywhere it is needed here
       headerEmail =
         -- FIXME: encoded word should not be longer than 75 bytes including everything
         "Subject: " ++ mailEncode mailTitle ++ "\r\n" ++
         "To: " ++ createMailTos mailTo ++ "\r\n" ++
-        "From: " ++ mailEncode (addrName mailFrom) ++ " <" ++ addrEmail mailFrom ++ ">\r\n" ++
-        "Reply-To: " ++ createMailTos  mailReplyTo ++ "\r\n" ++
+        "From: " ++ createAddrString mailFrom ++ "\r\n" ++
+        lineReplyTo ++
         "X-SMTPAPI: " ++ J.encode xsmtpapi ++ "\r\n" ++
         "X-Mailgun-Variables: " ++ J.encode mailgundata ++ "\r\n" ++
         "MIME-Version: 1.0\r\n" ++
@@ -116,8 +119,10 @@ mailEncode source = unwords $ map encodeWord $ map convW $ words source
                   | otherwise = wa
 
 createMailTos :: [Address] -> String
-createMailTos = intercalate ", "
-  . map (\Address{..} -> mailEncode addrName ++ " <" ++ addrEmail ++ ">")
+createMailTos = intercalate ", " . map (\a -> createAddrString a)
+
+createAddrString :: Address -> String
+createAddrString Address{..} = mailEncode addrName ++ " <" ++ addrEmail ++ ">"
 
 createBoundaries :: (MonadIO m, CryptoRNG m) => m (String, String)
 createBoundaries = return (,) `ap` f `ap` f

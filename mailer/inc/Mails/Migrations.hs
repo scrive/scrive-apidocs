@@ -84,5 +84,5 @@ addReplyToToMails =
     mgrTable = tableMails
   , mgrFrom = 4
   , mgrDo = do
-      runSQL_ "ALTER TABLE mails ADD COLUMN reply_to TEXT NOT NULL DEFAULT '[]'"
+      runSQL_ "ALTER TABLE mails ADD COLUMN reply_to TEXT"
   }

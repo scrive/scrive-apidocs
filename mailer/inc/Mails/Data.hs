@@ -134,5 +134,5 @@ data Mail = Mail {
   , mailXSMTPAttrs  :: XSMTPAttrs
   , mailServiceTest :: Bool
   , mailAttempt     :: Int32
-  , mailReplyTo     :: [Address]
+  , mailReplyTo     :: Maybe Address
   } deriving (Eq, Ord, Show)

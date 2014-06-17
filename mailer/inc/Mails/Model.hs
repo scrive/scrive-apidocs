@@ -23,7 +23,7 @@ import Control.Monad
 import Control.Applicative
 import Control.Monad.State
 import Data.Int
-import Data.Maybe hiding (fromJust)
+import qualified Data.Maybe as Maybe
 import Data.Monoid.Space
 
 import DB
@@ -38,12 +38,12 @@ instance MonadDB m => DBUpdate m CreateEmail MailID where
   update (CreateEmail token sender to to_be_sent) =
     $(fromJust) `liftM` insertEmail False token sender to to_be_sent 0
 
-data AddContentToEmail = AddContentToEmail MailID String [Address] String [Attachment] XSMTPAttrs
+data AddContentToEmail = AddContentToEmail MailID String (Maybe Address) String [Attachment] XSMTPAttrs
 instance MonadDB m => DBUpdate m AddContentToEmail Bool where
   update (AddContentToEmail mid title reply_to content attachments xsmtpapi) = do
     result <- runQuery01 $ sqlUpdate "mails" $ do
       sqlSet "title" title
-      sqlSet "reply_to" reply_to
+      when (Maybe.isJust reply_to) $ sqlSet "reply_to" (Maybe.fromJust reply_to)
       sqlSet "content" content
       sqlSet "x_smtp_attrs" xsmtpapi
       sqlWhereEq "id" mid
@@ -144,7 +144,7 @@ instance MonadDB m => DBQuery m GetEmail (Maybe Mail) where
     mails <- selectMails . sqlSelectMails $ do
       sqlWhereEq "id" mid
       sqlWhereEq "token" token
-    return $ listToMaybe mails
+    return $ Maybe.listToMaybe mails
 
 data ResendEmailsSentSince = ResendEmailsSentSince MinutesTime
 instance MonadDB m => DBUpdate m ResendEmailsSentSince Int where
@@ -218,7 +218,7 @@ getUnreadEvents service_test = do
     sqlOrderBy "mail_events.id"
   fetchMany id
 
-fetchMail :: (MailID, MagicHash, Address, [Address], String, String, XSMTPAttrs, Bool, Int32, [Address]) -> Mail
+fetchMail :: (MailID, MagicHash, Address, [Address], String, String, XSMTPAttrs, Bool, Int32, Maybe Address) -> Mail
 fetchMail (mid, token, sender, receivers, title, content, x_smtp_attrs, service_test, attempt, reply_to) = Mail {
   mailID = mid
 , mailToken = token

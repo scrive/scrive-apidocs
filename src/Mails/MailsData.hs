@@ -15,7 +15,7 @@ data Mail = Mail {
     to              :: [MailAddress]
   , originator      :: String -- Name of service sending email. Default is Scrive
   , originatorEmail :: String -- Adress of no reply email
-  , replyTo     :: [MailAddress]
+  , replyTo     :: Maybe MailAddress
   , title       :: String
   , content     :: String
   , attachments :: [(String, Either BS.ByteString FileID)] -- list of attachments (name,content)
@@ -27,7 +27,7 @@ emptyMail = Mail {
     to              = []
   , originator      = "Scrive"
   , originatorEmail = "noreply@scrive.com"
-  , replyTo         = []
+  , replyTo         = Nothing
   , title           = []
   , content         = []
   , attachments     = []

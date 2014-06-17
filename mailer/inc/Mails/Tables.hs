@@ -30,7 +30,7 @@ tableMails = tblTable {
     , tblColumn { colName = "sent", colType = TimestampWithZoneT }
     , tblColumn { colName = "service_test", colType = BoolT, colNullable = False }
     , tblColumn { colName = "attempt", colType = IntegerT, colNullable = False, colDefault = Just "0"}
-    , tblColumn { colName = "reply_to", colType = TextT, colNullable = False, colDefault = Just "'[]'::text" }
+    , tblColumn { colName = "reply_to", colType = TextT }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   }

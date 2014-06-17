@@ -22,7 +22,7 @@ serviceAvailabilityChecker conf rng cs (master, slave) msender interruptible = d
       token <- random
       now <- getMinutesTime
       mid <- dbUpdate $ CreateServiceTest token testSender (testReceivers conf) now
-      success <- dbUpdate $ AddContentToEmail mid "test" [] "test" [] mempty
+      success <- dbUpdate $ AddContentToEmail mid "test" (Just testSender) "test" [] mempty
       Log.mixlog_ $ "Creating service testing email #" ++ show mid ++ "..."
       when (not success) $
         Log.mixlog_ $ "CRITICAL: Couldn't add content to created service testing email."

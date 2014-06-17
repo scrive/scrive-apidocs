@@ -20,7 +20,7 @@ testMailAttachments = do
   let token = unsafeMagicHash 12341234
       sender = Address "Jarek" "xx@asd.com"
       to = [Address "Genowefa""a1@ss.com", Address "Brunhilda" "b3@dd.com"]
-      reply_to = [Address "Luluka" "k2@ba.uk"]
+      reply_to = Just (Address "Luluka" "k2@ba.uk")
       to_be_sent = fromSeconds 213123
       attachments = [ Attachment "name1" (Left "content 123")
                     , Attachment "name2" (Left "contenty 314124")
@@ -52,7 +52,7 @@ testMailOrder = do
       sender = Address "Jarek" senderAddrSpec
       to1 = [Address "Genowefa" "aa@ss.com", Address "Brunhilda" "b3@dd.com"]
       to2 = [Address "Genowefa2" "a@ss.com", Address "Brunhilda" "b3@dd.com"]
-      reply_to = [Address "Luluka" "k2@ba.uk"]
+      reply_to = Just (Address "Luluka" "k2@ba.uk")
       to_be_sent = fromSeconds 213123
       attachments = [ Attachment "name1" (Left "content 123")
                     , Attachment "name2" (Left "contenty 314124")
