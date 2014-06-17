@@ -64,6 +64,14 @@ addNoReplyEmailToBrandedDomain =
       mgrTable = tableBrandedDomains
     , mgrFrom = 2
     , mgrDo = do
-        runSQL_ "ALTER TABLE branded_domains ADD COLUMN noreply_email TEXT NOT NULL"
+        runSQL_ "ALTER TABLE branded_domains ADD COLUMN noreply_email TEXT NOT NULL DEFAULT ''"
     }
 
+addNoReplyEmailToBrandedDomainSetDefault :: MonadDB m => Migration m
+addNoReplyEmailToBrandedDomainSetDefault =
+  Migration {
+      mgrTable = tableBrandedDomains
+    , mgrFrom = 3
+    , mgrDo = do
+        runSQL_ "ALTER TABLE branded_domains ALTER COLUMN noreply_email SET DEFAULT ''"
+    }

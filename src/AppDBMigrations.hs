@@ -168,5 +168,6 @@ kontraMigrations = [
   , addTimeZoneNameToDocuments
   , addLogoImageDataToBrandedDomain
   , addNoReplyEmailToBrandedDomain
+  , addNoReplyEmailToBrandedDomainSetDefault
   ] ++ mailerMigrations
     ++ messengerMigrations
