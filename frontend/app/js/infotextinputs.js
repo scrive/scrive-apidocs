@@ -206,7 +206,7 @@ var InfoTextInputView = Backbone.View.extend({
         if (model.hasOkOption()){
             this.okButton = $("<div class='ok-button'>OK</div>")
                                 .attr("style",model.okStyle())
-                                .click(function() { model.onOk(); })
+                                .click(function() { model.onOk(); });
 
             $(this.el).append(this.okButton);
         }

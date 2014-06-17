@@ -226,7 +226,7 @@ var SampleSignViewView = Backbone.View.extend({
     this.mandatoryPlacedField.unbind('mouseenter mouseleave').hover(
       function() {self.mandatoryPlacedField.css('border-color', colour);},
       function() {self.mandatoryPlacedField.css('border-color', standardBorderColor);}
-    )
+    );
     this.signbutton.css('background-color', colour);
 
     this.greenarrowtext.css('color', colour);
@@ -252,7 +252,7 @@ var SampleSignViewView = Backbone.View.extend({
     this.optionalPlacedField.unbind('mouseenter mouseleave').hover(
       function() {self.optionalPlacedField.css('border-color', colour);},
       function() {self.optionalPlacedField.css('border-color', standardBorderColor);}
-    )
+    );
 
   },
   changeSecondaryTextColour : function(colour) {

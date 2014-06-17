@@ -1033,14 +1033,14 @@ var TextPlacementPlacedView = Backbone.View.extend({
 
          place.toggleClass("empty-text-field",field.value() == "");
 
-         self.updateBorderColor()
+         self.updateBorderColor();
          setTimeout(function() {self.updateBorderColor()},10); // We need to do it in timeout since :hover selector may now work instantly
          place.hover(
            function() {
-             self.updateBorderColor()
+             self.updateBorderColor();
            },
            function() {
-             self.updateBorderColor()
+             self.updateBorderColor();
            }
          );
 
@@ -1394,15 +1394,15 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
               if (field.obligatory())
                 place.addClass("obligatory");
 
-              self.updateBorderColor()
+              self.updateBorderColor();
               place.hover(
                 function() {
                   self.hovered = true;
-                  self.updateBorderColor()
+                  self.updateBorderColor();
                 },
                 function() {
                   self.hovered = false;
-                  self.updateBorderColor()
+                  self.updateBorderColor();
                 }
               );
         }
@@ -1463,7 +1463,7 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
         this.branding = args.signviewbranding;
         this.arrow = args.arrow;
         this.signview = args.signview;
-        this.useDefaultBackground  = args.useDefaultBackground || false
+        this.useDefaultBackground  = args.useDefaultBackground || false;
 
         // Setting up all standard colors, so we don't have to recalculate that
         this.standardColor = this.model.isObligatory() ? "rgb(83, 182, 136)" : "rgb(41, 158, 204)";
@@ -1541,15 +1541,15 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
                 box.append(img);
             }
 
-            self.updateBorderColor()
+            self.updateBorderColor();
             box.hover(
               function() {
                 self.hovered = true;
-                self.updateBorderColor()
+                self.updateBorderColor();
               },
               function() {
                 self.hovered = false;
-                self.updateBorderColor()
+                self.updateBorderColor();
               }
             );
 
