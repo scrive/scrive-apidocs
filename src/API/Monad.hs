@@ -53,6 +53,7 @@ import Util.ZipUtil
 import Control.Exception.Lifted
 import Control.Monad.Base
 import Data.Typeable
+import qualified Log as Log
 
 -- | Respond with a 200 Created status
 data Ok a = Ok a
@@ -204,7 +205,8 @@ jsonError rest = runJSONGen $ do
 -- This defines the possible outputs of the api.
 api :: (Kontrakcja m, ToAPIResponse v) => m v -> m Response
 api acc = (toAPIResponse <$> acc)
-          `catches` [ Handler $ \ex@(SomeKontraException e) ->
+          `catches` [ Handler $ \ex@(SomeKontraException e) -> do
+                        Log.mixlogjs "API error catched " (toJSValue e)
                         return $ ((toAPIResponse $ toJSValue e) { rsCode = httpCodeFromSomeKontraException ex })
                     ]
 
