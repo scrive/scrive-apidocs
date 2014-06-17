@@ -465,14 +465,14 @@ langSwitcher=
                    var languages = [
                       {value : "en", name : "$EnglishInEnglish()$"}
                     , {value : "sv", name : "$SwedishInSwedish()$"}
-                    , {value : "de", name : "$GermanInGerman()$", hidden : true}
+                    , {value : "de", name : "$GermanInGerman()$"}
                     , {value : "fr", name : "$FrenchInFrench()$", hidden : true}
                     , {value : "it", name : "$ItalianInItalian()$", hidden : true}
                     , {value : "es", name : "$SpanishInSpanish()$", hidden : true}
                     , {value : "pt", name : "$PortugueseInPortuguese()$", hidden : true}
                     , {value : "nl", name : "$DutchInDutch()$", hidden : true}
-                    , {value : "da", name : "$DanishInDanish()$", hidden : true}
-                    , {value : "no", name : "$NorwegianInNorwegian()$", hidden : true}
+                    , {value : "da", name : "$DanishInDanish()$"}
+                    , {value : "no", name : "$NorwegianInNorwegian()$"}
                     , {value : "el", name : "$GreekInGreek()$", hidden : true}
                    ]
                    var lname = _.findWhere(languages, {value : "$langcode$"}).name;
@@ -482,6 +482,7 @@ langSwitcher=
                                               textWidth: 80,
                                               border: "none",
                                               onSelect : function(v) {changeLang(v);},
+                                              adjustHeightOnExpand : true,
                                               options: _.filter(languages, function(l) { return l.value != "$langcode$" && !l.hidden; })
                                  })
                    jQuery('.langSwitcher').append(select.el());

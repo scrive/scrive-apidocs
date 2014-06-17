@@ -31,7 +31,7 @@
 "_ReminderSendTextToReviewNotArchive":"È stato inviato un promemoria per la revisione a $signatory$ tramite $_delivery_method() $su richiesta di $actor$.$if(text)$ Il testo del promemoria da $actor$ è: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToSignArchive":"È stato inviato un promemoria per la firma a $signatory$ tramite $_delivery_method()$.$if(text)$ Il testo del promemoria è: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToSignNotArchive":" È stato inviato un promemoria per la firma a $signatory$ tramite $_delivery_method()$ su richiesta di $actor$.$if(text)$ Il testo del promemoria di $actor$ è: <BR/> <i>$text:noescape()$</i>$endif$",
-"_RestartDocumentEvidenceTextSimpleArchive":"Il documento è stato aperto per la correzione.",
+"_RestartDocumentEvidenceTextSimpleArchive":"Il documento è stato aperto per la modifica.",
 "_RestartDocumentEvidenceTextSimpleNotArchive":"Il documento è stato aperto da $actor$ per la modifica nell'interfaccia di Scrive adibita alla progettazione dei processi di firma.",
 "_SMSPinDeliveredEvidenceText":"È stato consegnato un SMS contenente il PIN a $text$ da usare per l'identificazione di $signatory$.",
 "_SMSPinSendEvidenceText":"È stato inviato un SMS contenente il PIN a $text$ da usare per l'identificazione di $signatory$.",

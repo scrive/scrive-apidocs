@@ -24,7 +24,7 @@
 "_MarkInvitationReadEvidenceTextToSignSimple":"Die Einladung, zu signieren (versendet an $signatory_email$), wurde geöffnet.",
 "_PreparationToPendingEvidenceTextSimpleArchive":"Der Signierungsprozess wurde eingeleitet.",
 "_PreparationToPendingEvidenceTextSimpleNotArchive":"Die Vorbereitung für den Signierungsprozess wurde von $actor$ beendet. Der Signierungssprozess wurde eingeleitet.",
-"_ProlongDocumentEvidenceTextArchive":"Das Frist für die Signierung wurde verlängert.",
+"_ProlongDocumentEvidenceTextArchive":"Die Frist für die Signierung wurde verlängert.",
 "_RejectDocumentEvidenceTextSimpleArchive":"Die Einladung, zu signieren, wurde abgelehnt. $if(text)$ Der Ablehnungsbescheid lautete: <BR/> <i>$text:noescape()$</i>$endif$",
 "_RejectDocumentEvidenceTextSimpleNotArchive":"Die Einladung, zu signieren, wurde von $actor$ abgelehnt. $if(text)$ Der Ablehnungsbescheid von $actor$ lautete: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToReviewArchive":"Eine Erinnerung zur Überprüfung wurde an $signatory$ per $_delivery_method()$ gesendet.$if(text)$ Der Erinnerungsbescheid lautete: <BR/> <i>$text:noescape()$</i>$endif$",
@@ -44,7 +44,7 @@
 "_SignWithELegFailureEvidenceTextSimple":"Scrive hat den Versuch von $signatory$, das Dokument zu unterzeichen, abgelehnt, weil die Informationen zur Identität von $signatory$ nicht mit den Informationen aus dem externen eID-System übereinstimmen.",
 "_SignatoryLinkVisitedTextArchiveSimple":"Das Dokument wurde online geöffnet.",
 "_SignatoryLinkVisitedTextNotArchiveSimple":"Das Dokument wurde von $actor$ online geöffnet.",
-"_TimeoutDocumentEvidenceTextSimple":"Das Frist für die Signierung des Dokuments ist abgelaufen.",
+"_TimeoutDocumentEvidenceTextSimple":"Die Frist für die Signierung des Dokuments ist abgelaufen.",
 "_delivery_method":"$if(email)$E-Mail$elseif(mobile)$SMS$elseif(emailmobile)$E-Mail und SMS$endif$",
 "_invitationCustomMessageTextToReview":"$if(text)$$if(!mobile)$ Die Aufforderung zur Überprüfung enthält folgende Nachricht: <BR/> <i>$text:noescape()$</i>$endif$$endif$",
 "_invitationCustomMessageTextToSign":"$if(text)$$if(!mobile)$ Die Einladung, zu unterzeichnen, enthält folgende Nachricht: <BR/> <i>$text:noescape()$</i>$endif$$endif$"

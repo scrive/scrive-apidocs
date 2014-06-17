@@ -151,7 +151,7 @@
 "_signviewSigningFailed":"Λυπούμαστε, έγινε κάποιο λάθος ενώ υπογράφατε το έγγραφο. Παρακαλώ προσπαθήστε ξανά.  ",
 "_smsInvitationToSign":"Γεια σας, ο $creatorname$ σας έχει προσκαλέσει να υπογράψετε ηλεκτρονικά. Πιέστε εδώ για να ξεκινήσετε: $link$ ",
 "_smsPinSendout":"Το PIN σας για το $documenttitle$ είναι $pin$ ",
-"_smsRejectNotification":"Γεια σας $personname$, ο $rejectorName$ έχει απορρίψει την εντολή να υπογράψει το έγγραφο$documenttitle$. Επομένως η διαδικασία υπογραφής έχει ακυρωθεί. Ακολουθήστε το σύνδεσμο για να δείτε το έγγραφο: $link$ ",
+"_smsRejectNotification":"",
 "_smsReminder":"Γεια σας $personname$, αυτή είναι μια υπενθύμιση από τον $creatorname$ ότι δεν έχετε υπογράψει ακόμα το έγγραφο $documenttitle$. Ανοίξτε τον σύνδεσμο για να ελέγξετε το έγγραφο: $link$ ",
 "_smsReminderSigned":"Γεια σας $personname$, το υπογεγραμμένο έγγραφο $documenttitle$ σας έχει αποσταλεί ξανά μετά από αίτημα του $creatorname$. Βρείτε το έγγραφο ακολουθώντας αυτό το σύνδεσμο: $link$",
 "_subtitleSignedClosedByEmail":"Το υπογεγραμμένο έγγραφο σας έχει αποσταλεί με email. ",
