@@ -1,4 +1,4 @@
-{ 
+{
 "_CompanyAccounts":"Χρήστες ",
 "_CompanySettings":"Επωνυμία ",
 "_ContractReminderBodyMulti":"Είστε σίγουρος ότι θέλετε αν αποστείλετε υπενθυμίσεις στους μετέχοντες που περιλαμβάνονται στα <span class='put-number-of-documents-here'></span> έγγραφα;",
@@ -714,7 +714,7 @@
 "_signStepsMenuEmptyStepSaveAsTemplate":"Αποθήκευση ως πρότυπο",
 "_signUp":"Εγγραφείτε",
 "_signViewNotsignedbymeAttachmentBoxHead":"Συνημμένα ",
-"_signaturePlaceFor":"θα υπογράψετε εδώ",
+"_signaturePlaceFor":"",
 "_signedAt":"Υπογράφηκε ",
 "_signupButtonText":"Αποθήκευση αντίγραφου ασφαλείας",
 "_signviewBranding":"Εμπορική προσαρμογή Sign view  ",

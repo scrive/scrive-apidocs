@@ -1,4 +1,4 @@
-{
+{ 
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Are you sure you want to send reminders to the parties involved in the <span class='put-number-of-documents-here'></span> documents?",
@@ -204,6 +204,8 @@
 "_checkboxObligatory":"Mandatory to check",
 "_checkboxPrechecked":"Pre-checked",
 "_city":"City",
+"_clickThere":"Click there",
+"_clickToDraw":"Click to draw signature",
 "_closedDocuments":"Closed documents",
 "_closedSignatures":"Closed signatures",
 "_companyBrandingBarsColour":"Header/footer colour",
@@ -714,7 +716,7 @@
 "_signStepsMenuEmptyStepSaveAsTemplate":"Save as template",
 "_signUp":"Sign up",
 "_signViewNotsignedbymeAttachmentBoxHead":"Attachments",
-"_signaturePlaceFor":"will sign here",
+"_signaturePlaceFor":"<span class='put-name-here'></span> signature",
 "_signedAt":"Signed",
 "_signupButtonText":"Save safety copy",
 "_signviewBranding":"Sign view branding",

@@ -30,6 +30,7 @@ var require = {
     tinyMCE_theme: '../libs/tiny_mce/themes/modern/theme.min',
     tinyMCE_noneeditable: '../libs/tiny_mce/plugins/noneditable/plugin.min',
     tinyMCE_paste: '../libs/tiny_mce/plugins/paste/plugin.min',
+    tinycolor : '../libs/tinycolor-min',
     /**
      *  Legacy code imports
      */

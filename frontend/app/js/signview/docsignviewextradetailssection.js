@@ -1,5 +1,5 @@
 
-define(['../../libs/tinycolor-min', 'Backbone', 'legacy_code'], function(tinycolor) {
+define(['tinycolor', 'Backbone', 'legacy_code'], function(tinycolor) {
 
 window.DocumentExtraDetailsModal = Backbone.View.extend({
   initialize: function(args) {
@@ -625,7 +625,8 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
       width: 260,
       arrow: this.arrow,
       signview: this.signview,
-      signviewbranding: this.branding
+      signviewbranding: this.branding,
+      useDefaultBackground : true
     }).el;
   },
   render: function() {

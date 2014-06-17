@@ -45,24 +45,24 @@ define(['Backbone', 'legacy_code'], function() {
 
             return div;
         },
-	createDraggable: function(fieldOrPlacementFN, buttonText, cssClass, onFieldAdded) {
-	    var div = $("<div class='design-view-action-document-draggable design-view-action-document-draggable-" + cssClass + "' />");
-            var wra = $("<div class='design-view-action-document-draggable-wrapper'/>");
-            var innerWrapper = $("<div class='design-view-action-document-draggable-inner-wrapper'/>");
-	    var iconWrapper = $("<div class='design-view-action-document-draggable-icon-wrapper' />");
-            var imgdiv = $("<div class='design-view-action-document-draggable-icon' />");
-	    var txt = $("<div class='design-view-action-document-draggable-text'/>");
 
+	createDraggable: function(fieldOrPlacementFN, buttonText, cssClass, fontSize, onFieldAdded) {
+          var div = $("<div class='design-view-action-document-draggable design-view-action-document-draggable-" + cssClass + "' />");
+          var wra = $("<div class='design-view-action-document-draggable-wrapper'/>");
+          var innerWrapper = $("<div class='design-view-action-document-draggable-inner-wrapper'/>");
+          var iconWrapper = $("<div class='design-view-action-document-draggable-icon-wrapper' />");
+          var imgdiv = $("<div class='design-view-action-document-draggable-icon' />");
+          var txt = $("<div class='design-view-action-document-draggable-text'/>");
+          draggebleField(div, fieldOrPlacementFN, undefined, undefined, true,fontSize,onFieldAdded);
 
-            draggebleField(div, fieldOrPlacementFN, undefined, undefined, true, undefined, onFieldAdded);
-            div.append(wra);
-            wra.append(innerWrapper);
-	    innerWrapper.append(iconWrapper);
-	    innerWrapper.append(txt);
-            iconWrapper.append(imgdiv);
-            txt.append($('<span>').text(buttonText));
+          div.append(wra);
+          wra.append(innerWrapper);
+          innerWrapper.append(iconWrapper);
+          innerWrapper.append(txt);
+          iconWrapper.append(imgdiv);
+          txt.append($('<span>').text(buttonText));
 
-            return div;
+          return div;
 	},
         checkbox: function() {
             var model = this.model;
@@ -75,7 +75,7 @@ define(['Backbone', 'legacy_code'], function() {
                 });
             };
 
-        return this.createDraggable(fieldOrPlacementFN, localization.designview.checkbox, 'checkbox',function(f) { f.setName(model.document().newCheckboxName());});
+        return this.createDraggable(fieldOrPlacementFN, localization.designview.checkbox, 'checkbox',undefined,function(f) { f.setName(model.document().newCheckboxName());});
         },
         signature: function() {
             var model = this.model;
@@ -88,7 +88,7 @@ define(['Backbone', 'legacy_code'], function() {
                   name: "temp-signature"});
             };
 
-	    return this.createDraggable(fieldOrPlacementFN, localization.designview.signatureBox, 'signature', function(f) { f.setName(model.document().newSignatureName());});
+	    return this.createDraggable(fieldOrPlacementFN, localization.designview.signatureBox, 'signature', undefined, function(f) { f.setName(model.document().newSignatureName());});
         },
         text: function() {
             var model = this.model;
@@ -99,7 +99,7 @@ define(['Backbone', 'legacy_code'], function() {
 				  value: localization.designview.freeTextBox});
             };
 
-	    return this.createDraggable(fieldOrPlacementFN, localization.designview.freeTextBox, 'textbox');
+	    return this.createDraggable(fieldOrPlacementFN, localization.designview.freeTextBox, 'textbox', 16);
 	}
 	});
 

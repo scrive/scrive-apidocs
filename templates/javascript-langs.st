@@ -262,9 +262,12 @@ javascriptLocalisation =
               , atLeast1Party : "$_dialogCsvuploadAtLeast1Party()$"
             }
          , signature : {
-               placeFor : function(s) { return s + " $_signaturePlaceFor()$"; }
+               placeFor : "$_signaturePlaceFor()$"
              , placeYour : "$_signaturePlaceYour()$"
              , confirmSignature : "$_signatureConfirm()$"
+             , clickThere : "$_clickThere()$"
+             , clickToDraw : "$_clickToDraw()$"
+
            }
           , questionnaire : {
                heyImViktor: "$_questionnaireHeyImViktor()$"

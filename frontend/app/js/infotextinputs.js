@@ -48,8 +48,11 @@ var InfoTextInputModel = Backbone.Model.extend({
       cssClass : "",
       style : "",
       inputStyle : "",
+      okStyle : "",
       autocomplete : false,
-      readonly : false
+      readonly : false,
+      autoGrowth : false,
+      onAutoGrowth : undefined
   },
   infotext : function(){
        return this.get("infotext");
@@ -65,6 +68,9 @@ var InfoTextInputModel = Backbone.Model.extend({
   },
   inputStyle: function() {
        return this.get("inputStyle");
+  },
+  okStyle: function() {
+       return this.get("okStyle");
   },
   value: function() {
        return this.get("value");
@@ -127,6 +133,13 @@ var InfoTextInputModel = Backbone.Model.extend({
   },
   readonly : function() {
        return this.get("readonly");
+  },
+  autoGrowth: function() {
+       return this.get("autoGrowth");
+  },
+  onAutoGrowth : function() {
+       if (this.get("onAutoGrowth") != undefined)
+          this.get("onAutoGrowth")();
   }
 });
 
@@ -169,13 +182,33 @@ var InfoTextInputView = Backbone.View.extend({
                   .toggleClass("readonly",model.readonly() == true)
                   .append(this.input);
 
+        // Autogrowth
+        if(this.model.autoGrowth()) {
+          this.growthPart = $("<span>")
+                              .attr("style",model.inputStyle())
+                              .css("width","auto")
+                              .css("height","0px")
+                              .css("opacity","0")
+                              .css("z-index","-1")
+                              .css("white-space", "nowrap")
+                              .css("position","absolute")
+                              .css("top","0px")
+                              .css("left","0px");
+          $(this.el).append(this.growthPart);
+        }
+
         // Remove (x) icon in top left corner
         if (model.hasRemoveOption()){
-            $(this.el).append($("<div class='closer'/>").click(function() { model.onRemove();}));
+            $(this.el).append($("<div class='closer'/>")
+                                  .click(function() { model.onRemove();}));
         }
         // Ok button at the end of input
         if (model.hasOkOption()){
-            $(this.el).append($("<div class='ok-button'>OK</div>").click(function() { model.onOk(); }));
+            this.okButton = $("<div class='ok-button'>OK</div>")
+                                .attr("style",model.okStyle())
+                                .click(function() { model.onOk(); })
+
+            $(this.el).append(this.okButton);
         }
 
         this.render();
@@ -184,8 +217,9 @@ var InfoTextInputView = Backbone.View.extend({
         var model = this.model;
         if (model.isValueSet())
         {
-            if (this.input.val() != model.value())
+            if (this.input.val() != model.value()) {
                 this.input.val(model.value());
+            }
             if(this.input.hasClass("grayed"))
                 this.input.removeClass("grayed");
         }
@@ -204,6 +238,20 @@ var InfoTextInputView = Backbone.View.extend({
           this.input.val("");
           this.input.removeClass("grayed");
         }
+
+        if (model.autoGrowth()) {
+          if (this.minWidth == undefined) this.minWidth = this.input.width();
+          this.growthPart.text(model.value());
+          var newWidthWithText = this.growthPart.width() + 20 + (model.hasOkOption() ? this.okButton.width() : 0);
+          this.growthPart.text(model.infotext());
+          var newWidthWithPlaceholder = this.growthPart.width() + 20 + (model.hasOkOption() ? this.okButton.width() : 0);
+          var newWidth = Math.max(newWidthWithText,newWidthWithPlaceholder);
+          newWidth = Math.max(this.minWidth,newWidth);
+          if (Math.abs(this.input.width(),newWidth) > 10)
+            this.input.width(newWidth);
+          this.model.onAutoGrowth();
+        }
+
         return this;
     },
     addFocus: function(){

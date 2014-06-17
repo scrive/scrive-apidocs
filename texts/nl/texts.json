@@ -1,4 +1,4 @@
-{ 
+{
 "_CompanyAccounts":"Gebruikers",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Weet u zeker dat u herinneringen wilt versturen aan de partijen betrokken bij de <span class='put-number-of-documents-here'></span> documenten?",
@@ -714,7 +714,7 @@
 "_signStepsMenuEmptyStepSaveAsTemplate":"Sla op als template",
 "_signUp":"Aanmelden",
 "_signViewNotsignedbymeAttachmentBoxHead":"Bijlagen",
-"_signaturePlaceFor":"ondertekent hier",
+"_signaturePlaceFor":"",
 "_signedAt":"",
 "_signupButtonText":"Veiligheidskopie opslaan",
 "_signviewBranding":"Ondertekeningsweergave Branding",

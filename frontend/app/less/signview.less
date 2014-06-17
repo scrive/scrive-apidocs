@@ -589,20 +589,32 @@
 
     .fillbox {
       float: right;
-      width: 260px;
+      width: 262px;
 
       .info-text-input {
-  	    margin-bottom: 15px;
+        margin-bottom: 15px;
         padding: 8px;
-  	    width: 248px;
+        width: 244px;
       }
 
       .signatureBox.withImage {
-	      border: 1px solid #C6DADE;
-	      border-radius: 4px;
-	      margin-top: 5px;
-        padding: 2px;
+
+        border: 1px solid #C6DADE !important; // Since color for that is set in JavaScript, I need to overwrite it here
+        cursor: pointer;
+        margin: 0px;
+        .border-radius(0, 0, 0, 0);
+
       }
+
+      .signatureBox.forDrawing.signaturePlaceholder {
+        border-width: 1px;
+        cursor: pointer;
+        margin: 0px;
+
+        .border-radius(0, 0, 0, 0);
+
+      }
+
     }
   }
 
@@ -612,15 +624,42 @@
   }
 
   .signatureBox.forDrawing {
-    border-width: 0px;
-    margin-top: 5px;
-    padding-bottom: 4px;
-    padding-top: 2px;
+    border-width: 2px;
+    margin-left: -2px;
+    margin-top: -2px;
+
+    &.signaturePlaceholder {
+      color: @text-dark;
+      font-size: 16px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+
+      &.obligatory{
+        border : 2px solid @brand-secondary;
+
+        &.filled {
+          background-color: @obligatory-color-for-background;
+        }
+      }
+
+      &.optional {
+        border : 2px solid @brand-primary-complementary;
+
+        &.filled {
+          background-color: @optional-color-for-background;
+        }
+      }
+    }
   }
 
   .document-pages {
 
     .placedfield {
+
+      &.empty-text-field {
+        background: @white-with-opacity;
+      }
 
      .placedcheckbox,
      .placedcheckbox.checked {
@@ -632,6 +671,21 @@
 
       &.to-fill-now {
         border: 2px solid @brand-primary-complementary;
+        overflow: hidden;
+
+        .placedfield-placement-wrapper {
+          overflow: hidden;
+        }
+
+        &.active {
+            background-color: @white;
+        }
+
+        &.empty-text-field {
+          .placedfield-placement-wrapper {
+            background-color: @optional-color-for-background;
+          }
+        }
 
         .placedcheckbox {
           padding: 9px;
@@ -639,8 +693,33 @@
 
         &.obligatory {
           border: 2px solid @brand-secondary;
+
+          &.empty {
+            .placedfield-placement-wrapper {
+              background-color: @obligatory-color-for-background;
+            }
+          }
         }
       }
+
+      input::-webkit-input-placeholder {
+        color: @text-medium;
+      }
+
+      input:-moz-placeholder {
+        color: @text-medium;
+      }
+
+      input:-ms-input-placeholder {
+        color: @text-medium;
+      }
+
+      input.grayed {
+        color: @text-medium;
+      }
+
+
+
     }
   }
 }
@@ -769,6 +848,7 @@
   .clearfix {
     width: 100%; // Without the width the clerfix will not work on IE7 in this case
   }
+
 }
 
 .sign-confirmation-modal {

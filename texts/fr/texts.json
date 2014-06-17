@@ -1,4 +1,4 @@
-{ 
+{
 "_CompanyAccounts":"Utilisateurs",
 "_CompanySettings":"Personnalisation",
 "_ContractReminderBodyMulti":"Êtes-vous sûr de vouloir envoyer des rappels aux parties concernées par <span class='put-number-of-documents-here'></span> ces documents?",
@@ -714,7 +714,7 @@
 "_signStepsMenuEmptyStepSaveAsTemplate":"Enregistrer comme modèle",
 "_signUp":"S'inscrire",
 "_signViewNotsignedbymeAttachmentBoxHead":"Pièces jointes",
-"_signaturePlaceFor":"signera ici",
+"_signaturePlaceFor":"",
 "_signedAt":"",
 "_signupButtonText":"Enregistrer une copie de sauvegarde",
 "_signviewBranding":"Personnalisation de l'interface de signature",

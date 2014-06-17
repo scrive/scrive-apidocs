@@ -1,4 +1,4 @@
-define(['Backbone', 'legacy_code'], function() {
+define(['tinycolor', 'Backbone', 'legacy_code'], function(tinycolor) {
 
 /* Margins for text placements. Such placements have some internal margin and we need to adjust it*/
 var textPlacementTopMargin  = 8;
@@ -7,6 +7,11 @@ var textPlacementLeftMargin = 7;
 /* Margins for checkbox placement. */
 var checkboxPlacementTopMargin  = 1;
 var checkboxPlacementLeftMargin = 1;
+
+/* Margins for signature placement. */
+var signaturePlacementTopMargin = 2;
+var signaturePlacementLeftMargin = 2;
+
 
 // !!! Not placed views model field, not placement
 window.createFieldPlacementView = function (args) {
@@ -133,6 +138,9 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
             } else if (field.isCheckbox()) {
               x += checkboxPlacementLeftMargin;
               y += checkboxPlacementTopMargin;
+            } else if (field.isSignature()) {
+              x += signaturePlacementLeftMargin;
+              y += signaturePlacementTopMargin;
             }
             droppedInside = true;
             var signatory = field.signatory();
@@ -527,7 +535,7 @@ var TextPlacementView = Backbone.View.extend({
         }
         if (this.fontSize != undefined) {
             box.css("font-size"  ,this.fontSize + "px");
-            box.css("line-height",this.fontSize + "px");
+            box.css("line-height",this.fontSize + 4 + "px");
         }
 
         this.updateColor();
@@ -542,6 +550,20 @@ var TextPlacementPlacedView = Backbone.View.extend({
         var field =  placement.field();
         var signatory = field?field.signatory():placement.signatory();
         this.branding = args.signviewbranding;
+        this.arrow = args.arrow;
+
+        // Setting up all standard colors, so we don't have to recalculate that
+        this.standardColor = field.isObligatory() ? "rgb(83, 182, 136)" : "rgb(41, 158, 204)";
+        if (this.branding) {
+            this.standardColor = (field.isObligatory() ? this.branding.signviewprimarycolour() : this.branding.signviewsecondarycolour()) || this.standardColor;
+        }
+        this.emptyBackgroundColor = tinycolor(this.standardColor);
+        this.emptyBackgroundColor.setAlpha(0.2);
+        this.standardBorderColor = tinycolor(this.standardColor);
+        this.standardBorderColor.setAlpha(0.6);
+        this.highlightBorderColor = tinycolor(this.standardColor);
+
+
         this.model.bind('removed', this.clear, this);
         this.model.bind('change:field change:signatory change:step change:withTypeSetter change:fsrel', this.render);
         this.model.bind('change:xrel change:yrel change:wrel change:hrel', this.updatePosition, this);
@@ -553,7 +575,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
     },
     fontSize : function() {
         var parent = $(this.el).parent();
-        if( parent.length>0 ) return this.model.fsrel() * parent.width();
+        if( parent.length>0 ) return Math.floor(this.model.fsrel() * parent.width());
         return 16;
     },
     updatePosition: function() {
@@ -578,7 +600,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
             place.css({
                 left: Math.floor(placement.xrel() * parentWidth + 1.5) - textPlacementLeftMargin,
                 top: Math.floor(placement.yrel() * parentHeight + 1.5) - textPlacementTopMargin,
-                fontSize: placement.fsrel() * parentWidth
+                fontSize: Math.floor(placement.fsrel() * parentWidth)
             });
         }
     },
@@ -631,7 +653,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
         }
 
         view.inlineediting = true;
-        var width = place.width() > 100 ? place.width() : 100;
+        var width = place.width() > 30 ? place.width() : 30;
         var parent = place.parent();
         if( parent.length>0 ) { // Check max width so we don't expand inline editing over page width.
           var maxWidth = (1 - placement.xrel()) * parent.width() - 36;
@@ -648,18 +670,41 @@ var TextPlacementPlacedView = Backbone.View.extend({
                       field.signatory().trigger('change');
                       view.render();
                       field.trigger('change:inlineedited');
-
         };
 
+
+        var bcolor = field.isObligatory() ? "rgb(83, 182, 136)" : "rgb(41, 158, 204)";
+        if (this.branding) {
+          bcolor = (field.isObligatory() ? this.branding.signviewprimarycolour() : this.branding.signviewsecondarycolour()) || bcolor;
+        }
+        var bcolorWithAlpha = tinycolor(bcolor);
+        bcolorWithAlpha.setAlpha(0.2);
+        var background = bcolorWithAlpha.toRgbString();
+
         var input = new InfoTextInput({
-          infotext: field.nicetext(),
+          infotext: field.nicename(),
           value : field.value(),
+          autoGrowth : true,
           style: "font-size:" + this.fontSize() + "px;" +
-                 "line-height: " + (this.fontSize() + 1) +  "px;" +
-                 "height:"+ (this.fontSize() + 2) +"px;" +
-                 "border-radius: 2px;",
-          inputStyle : "font-size:" + this.fontSize() + "px ; line-height: " + (this.fontSize() + 1) + "px; height:"+ (this.fontSize() + 4) +"px; width: " + width +"px;",
+                 "line-height: 1;" +
+                 "height:"+ (this.fontSize() + 4) +"px;" +
+                 "border-width: 0px;" +
+                 "padding-left:7px;" +
+                 "background:"+background+";",
+
+          inputStyle : "font-size:" + this.fontSize() + "px ;" +
+                       "line-height: " + (this.fontSize()+ 4) + "px;" +
+                       "height:"+ (this.fontSize() + 4) +"px;" +
+                       "width: " + width +"px;"+
+                       "background:transparent;",
+          okStyle :  "font-size:" + this.fontSize() + "px ;" +
+                     "line-height: " + (this.fontSize()+ 2) + "px;" +
+                     "height:"+ (this.fontSize() + 2) +"px;",
           onEnter : accept,
+          onAutoGrowth : function() {
+            if (self.arrow() != undefined)
+              self.arrow().updatePosition();
+          },
           onTab : accept,
           onBlur : accept,
           onOk : accept
@@ -672,6 +717,17 @@ var TextPlacementPlacedView = Backbone.View.extend({
                    input.focus();
         }
         return false;
+    },
+    updateBorderColor : function() {
+       var self = this;
+       var place = $(self.el);
+       var hovered = $(":hover").is(place); // We can't user hovered flag, since this object changes shape
+       if (hovered)
+         place.css('border-color',self.highlightBorderColor);
+       else if (self.inlineediting)
+         place.css('border-color',self.highlightBorderColor);
+       else
+         place.css('border-color',self.standardBorderColor);
     },
     updateErrorBackground: function() {
         var placement = this.model;
@@ -920,12 +976,13 @@ var TextPlacementPlacedView = Backbone.View.extend({
           this.model.fixWHRel($(this.el).width(),$(this.el).height());
     },
     render: function() {
-        var view = this;
+        var self = this;
         var placement = this.model;
         var field =  placement.field();
         var signatory = placement.signatory()||field.signatory();
         var document = signatory.document();
         var place = $(this.el);
+        var placewrapper = $("<div class='placedfield-placement-wrapper'>");
 
         place.addClass('placedfield');
         this.updateErrorBackground();
@@ -948,38 +1005,54 @@ var TextPlacementPlacedView = Backbone.View.extend({
         } else if(field.noName()) {
             place.append(this.fieldNamer());
             place.find('input').focus();
-        } else if(view.hasTypeSetter() && !field.isCsvField() && !field.isAuthorUnchangeableField()) {
+        } else if(self.hasTypeSetter() && !field.isCsvField() && !field.isAuthorUnchangeableField()) {
             var editor = this.editor();
             place.append(editor.el());
             editor.focus(); // We need to focus when element is appended;
         } else {
-            place.append(new TextPlacementView({model: field, fontSize: this.fontSize()}).el);
+            place.append(placewrapper.append(new TextPlacementView({model: field, fontSize: this.fontSize()}).el));
         }
 
         place.unbind('click');
         if (document.allowsDD()) {
             draggebleField(place, placement, undefined , undefined, false, this.fontSize());
             place.click(function(){
-                if (!view.hasTypeSetter()) {
-                    view.addTypeSetter();
+                if (!self.hasTypeSetter()) {
+                    self.addTypeSetter();
                     placement.trigger('change:step');
                 }
                 //else
-                //    view.closeTypeSetter();
+                //    self.closeTypeSetter();
                 return false;
             });
         }
-        if (field && signatory.canSign() && !field.isClosed() && field.signatory().current() && view.inlineediting != true && !document.readOnlyView()) {
+        if (field && signatory.canSign() && !field.isClosed() && field.signatory().current() && self.inlineediting != true && !document.readOnlyView()) {
          place.addClass("to-fill-now");
          if (field.obligatory())
             place.addClass("obligatory");
 
-         if (this.branding) {
-           place.css('border-color', field.obligatory() ? this.branding.signviewprimarycolour() : this.branding.signviewsecondarycolour());
+         place.toggleClass("empty-text-field",field.value() == "");
+
+         self.updateBorderColor()
+         setTimeout(function() {self.updateBorderColor()},10); // We need to do it in timeout since :hover selector may now work instantly
+         place.hover(
+           function() {
+             self.updateBorderColor()
+           },
+           function() {
+             self.updateBorderColor()
+           }
+         );
+
+         if (field.value() == "") {
+            placewrapper.css('background-color', self.emptyBackgroundColor);
+         } else {
+            placewrapper.css('background-color','');
          }
 
+
           place.click(function() {
-                return view.startInlineEditing();
+                return self.startInlineEditing();
           });
         }
         else if (!document.preparation() && (field.value() == undefined || field.value()=="") ) {
@@ -993,8 +1066,8 @@ var TextPlacementPlacedView = Backbone.View.extend({
         if (placement.withTypeSetter()) {
           this.addTypeSetter();
         }
-        this.stopListening(undefined,undefined,view.fixWHRel);
-        this.listenTo(placement.field(), 'change', view.fixWHRel );
+        this.stopListening(undefined,undefined,self.fixWHRel);
+        this.listenTo(placement.field(), 'change', self.fixWHRel );
         this.fixWHRel();
         return this;
     }
@@ -1235,9 +1308,27 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
         this.model.field().bind('change', this.render);
         this.model.view = this;
         this.branding = args.signviewbranding;
+
+        // Setting up all standard colors, so we don't have to recalculate that
+        this.standardColor = this.model.field().isObligatory() ? "rgb(83, 182, 136)" : "rgb(41, 158, 204)";
+        if (this.branding) {
+            this.standardColor = (this.model.field().isObligatory() ? this.branding.signviewprimarycolour() : this.branding.signviewsecondarycolour()) || this.standardColor;
+        }
+        this.standardBorderColor = tinycolor(this.standardColor);
+        this.standardBorderColor.setAlpha(0.6);
+        this.highlightBorderColor = tinycolor(this.standardColor);
+
         var view = this;
         this.model.bind('change:withTypeSetter', this.closeTypeSetterIfNeeded);
         this.render();
+    },
+   updateBorderColor : function() {
+       var self = this;
+       var place = $(self.el);
+       if (self.hovered)
+         place.css('border-color',self.highlightBorderColor);
+       else
+         place.css('border-color',self.standardBorderColor);
     },
     closeTypeSetterIfNeeded : function() {
        if(!this.model.withTypeSetter())
@@ -1290,7 +1381,7 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
          }
     },
     render: function() {
-        var view = this;
+        var self = this;
         var placement = this.model;
         var field =  placement.field();
         var document = field.signatory().document();
@@ -1303,9 +1394,17 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
               if (field.obligatory())
                 place.addClass("obligatory");
 
-              if (this.branding) {
-                place.css('border-color', field.obligatory() ? this.branding.signviewprimarycolour() : this.branding.signviewsecondarycolour());
-              }
+              self.updateBorderColor()
+              place.hover(
+                function() {
+                  self.hovered = true;
+                  self.updateBorderColor()
+                },
+                function() {
+                  self.hovered = false;
+                  self.updateBorderColor()
+                }
+              );
         }
         this.updatePosition();
 
@@ -1317,15 +1416,15 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
 
             draggebleField(place, placement);
             innerPlace.click(function(){
-                if (!view.hasTypeSetter())
-                    view.addTypeSetter();
+                if (!self.hasTypeSetter())
+                    self.addTypeSetter();
                 else
-                    view.closeTypeSetter();
+                    self.closeTypeSetter();
                 return false;
             });
         }
         if (field.signatory().canSign() && !field.isClosed() &&
-            field.signatory().current() && view.inlineediting != true &&
+            field.signatory().current() && self.inlineediting != true &&
             !document.readOnlyView()) {
             innerPlace.click(function() {
                 if (field.value() == "")
@@ -1364,6 +1463,18 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
         this.branding = args.signviewbranding;
         this.arrow = args.arrow;
         this.signview = args.signview;
+        this.useDefaultBackground  = args.useDefaultBackground || false
+
+        // Setting up all standard colors, so we don't have to recalculate that
+        this.standardColor = this.model.isObligatory() ? "rgb(83, 182, 136)" : "rgb(41, 158, 204)";
+        if (this.branding) {
+            this.standardColor = (this.model.isObligatory() ? this.branding.signviewprimarycolour() : this.branding.signviewsecondarycolour()) || this.standardColor;
+        }
+        this.standardBorderColor = tinycolor(this.standardColor);
+        this.standardBorderColor.setAlpha(0.6);
+        this.highlightBorderColor = tinycolor(this.standardColor);
+        this.emptyBackgroundColor = tinycolor(this.standardColor);
+        this.emptyBackgroundColor.setAlpha(0.2);
         this.render();
     },
     clear: function() {
@@ -1372,8 +1483,16 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
         this.model.unbind('change', this.render);
         $(this.el).remove();
     },
+    updateBorderColor : function() {
+       var self = this;
+       var place = $(self.el);
+       if (self.hovered)
+         place.css('border-color',self.highlightBorderColor);
+       else
+         place.css('border-color',self.standardBorderColor);
+    },
     render: function() {
-            var view = this;
+            var self = this;
             var field = this.model;
             var box = $(this.el);
             var width =  this.width;
@@ -1388,46 +1507,23 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
             box.addClass('signatureBox').addClass('forDrawing');
             if (image == "")
             {
-                console.log("Place for drawing - rendering no value");
-                box.removeClass('withImage');
-                var bwidth = 253;
-                var bheight = 48;
-                // Lukas wanted the width and height to be set directly,
-                // without a minimum, to be able to fit into small form
-                // fields. -- Eric
-                //box.width(Math.max(this.signature.width(),bwidth));
-                //box.height(Math.max(this.signature.height(),bheight));
+                box.removeClass('withImage').addClass('signaturePlaceholder');
+                if (field.obligatory())
+                  box.addClass("obligatory");
+                else
+                  box.addClass("optional");
+
                 box.width(width);
                 box.height(height);
-
-                var customcolor = undefined;
-                var textcolor = undefined;
-                if (branding) {
-                  customcolor = field.obligatory() ? branding.signviewprimarycolour() : branding.signviewsecondarycolour();
-                  textcolor = field.obligatory() ? branding.signviewprimarytextcolour() : branding.signviewsecondarytextcolour();
+                box.css("line-height",Math.floor(height) + "px");
+                if(!this.useDefaultBackground) {
+                  box.css('background-color',self.emptyBackgroundColor);
                 }
-
-                var button = new Button({
-                  color: field.obligatory() ? "green" : "signview-blue",
-                  customcolor: customcolor,
-                  textcolor: textcolor,
-                  text: localization.signature.placeYour
-                }).el();
-
-                var document = field.signatory().document();
-
-                if (width > bwidth) {
-                    button.css("margin-left", Math.floor((width - bwidth) / 2) + "px");
-                }
-                if (height >bheight) {
-
-                    button.css("margin-top", Math.floor((height - bheight) / 2) + "px");
-                }
-                box.append(button);
+                box.text(localization.signature.clickToDraw);
             }
             else {
                 console.log("Place for drawing - rendering with value");
-                box.addClass('withImage');
+                box.removeClass("signaturePlaceholder").addClass('withImage');
                 var img = $("<img alt=''/>");
                 box.css("width",width);
                 box.css("height",height);
@@ -1435,6 +1531,7 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
                   // IE 7 cannot handle data uris
                   img.attr('src', '/img/img-signature-saved-' + localization.code + '.png');
                 } else {
+
                   img.css("width",width);
                   img.attr("width",width);
                   img.css("height",height);
@@ -1443,6 +1540,19 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
                 }
                 box.append(img);
             }
+
+            self.updateBorderColor()
+            box.hover(
+              function() {
+                self.hovered = true;
+                self.updateBorderColor()
+              },
+              function() {
+                self.hovered = false;
+                self.updateBorderColor()
+              }
+            );
+
             box.click(function() {
               new SignatureDrawOrTypeModal({
                 field: field,
@@ -1469,6 +1579,9 @@ var SignaturePlacementViewWithoutPlacement = Backbone.View.extend({
         this.off();
         $(this.el).remove();
     },
+    ddIcon : function() {
+        return $("<div class='signatureDDIcon'/>");
+    },
     header : function() {
         var field = this.model;
         var signatory = this.model.signatory();
@@ -1481,7 +1594,9 @@ var SignaturePlacementViewWithoutPlacement = Backbone.View.extend({
             else
              sname =  localization.process.signatoryname + " " + signatory.signIndex();
         }
-            box.text(localization.signature.placeFor(sname));
+        var text = $("<span>" + localization.signature.placeFor + "</span>");
+        text.find(".put-name-here").text(sname);
+        box.append(text);
         return box;
     },
     render: function() {
@@ -1490,6 +1605,7 @@ var SignaturePlacementViewWithoutPlacement = Backbone.View.extend({
             var width =  this.width != undefined ? this.width : 260;
             var height = this.height != undefined ? this.height : 102;
             box.addClass('signatureBox');
+            box.append(this.ddIcon());
             box.append(this.header());
             box.width(width);
             box.height(height);
@@ -1664,6 +1780,9 @@ var SignaturePlacementView = Backbone.View.extend({
             this.model.field().signatory().sndnameField().unbind('change', this.render);
         $(this.el).remove();
     },
+    ddIcon : function() {
+        return $("<div class='signatureDDIcon'/>");
+    },
     header : function() {
         var placement = this.model;
         var signatory = this.model.field().signatory();
@@ -1676,8 +1795,13 @@ var SignaturePlacementView = Backbone.View.extend({
             else
              sname =  localization.process.signatoryname + " " + signatory.signIndex();
         }
-        if (placement.field().value() == "")
-            box.text(localization.signature.placeFor(sname));
+
+        if (placement.field().value() == "") {
+            var text = $("<span>" + localization.signature.placeFor + "</span>");
+            text.find(".put-name-here").text(sname);
+            box.append(text);
+        }
+
         return box;
     },
     updateColor : function() {
@@ -1694,6 +1818,7 @@ var SignaturePlacementView = Backbone.View.extend({
             if (placement.field().value() == "")
             {
                 box.addClass('signatureBox');
+                box.append(this.ddIcon());
                 box.append(this.header());
                 signatory.bind('change', function() {
                     $(".signatureHeader",box).replaceWith(view.header());
@@ -1719,12 +1844,28 @@ var SignaturePlacementView = Backbone.View.extend({
                 box.resizable({
                     stop: function(e, ui) {
                         _.each(placement.field().placements(), function(p) {
-                            p.fixWHRel(Math.floor(ui.size.width),Math.floor(ui.size.height));
+                            p.fixWHRel(Math.floor(box.width()),Math.floor(box.height()));
                             if(p.typeSetter)
                                 p.typeSetter.place();
                         });
                     },
                     resize: function(e, ui) {
+
+                        if (ui.size.width < 44) {
+                          ui.size.width = 44;
+                          box.width(44);
+                        }
+                        if (ui.size.height < 22) {
+                          ui.size.height = 22;
+                          box.height(22);
+                        }
+
+                        if (ui.size.height >  ui.size.width) {
+                            box.height(ui.size.width);
+                        } else if (3 * ui.size.height <  ui.size.width ) {
+                            box.height(ui.size.width/3);
+                        }
+
                         if(placement.typeSetter)
                             placement.typeSetter.place();
                     }
@@ -1800,6 +1941,8 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
         place.empty();
 
         place.addClass('placedfield');
+        place.toggleClass("empty-signature",field.value() == "");
+
         if ((field.signatory() == document.currentSignatory() && document.currentSignatoryCanSign()) || document.preparation())
               place.css('cursor','pointer');
         this.updatePosition();

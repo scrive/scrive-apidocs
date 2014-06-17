@@ -4,7 +4,7 @@
  *   $('body').append(new DocumentSignSignSection(model : document).el);
  */
 
-define(['signview/send_sms_pin_modal', '../../libs/tinycolor-min','Backbone', 'legacy_code'], function(SendSMSPinModal,tinycolor) {
+define(['signview/send_sms_pin_modal', 'tinycolor','Backbone', 'legacy_code'], function(SendSMSPinModal,tinycolor) {
 
 
 window.DocumentSignConfirmation = function(args) {

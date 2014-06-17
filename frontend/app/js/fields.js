@@ -158,10 +158,13 @@ window.Field = Backbone.Model.extend({
         return name;
     },
     nicetext : function() {
-        if (this.value() != "")
-          return this.value();
-        else
-          return this.nicename();
+        var res = this.value() || this.nicename();
+
+        // If text is empty add magic space to force some height
+        if (res.trim() == "")
+          res = '\xa0';
+
+        return res;
     },
     validation: function(forSigning) {
         var field = this;

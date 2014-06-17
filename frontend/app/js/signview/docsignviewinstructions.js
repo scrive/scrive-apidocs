@@ -2,7 +2,7 @@
  * Has some extra options in some cases.
  */
 
-define(['Backbone', 'legacy_code', '../../libs/tinycolor-min'], function(notUsed, notUsed2, tinycolor) {
+define(['tinycolor', 'Backbone', 'legacy_code'], function(tinycolor) {
 
 window.DocumentSignInstructionsView = Backbone.View.extend({
   initialize: function(args) {

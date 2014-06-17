@@ -1,4 +1,4 @@
-{ 
+{
 "_CompanyAccounts":"Brukere",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Er du sikker på at du vil sende en påminnelse til de involverte partene av <span class='put-number-of-documents-here'></span> dokumentene?",
@@ -714,7 +714,7 @@
 "_signStepsMenuEmptyStepSaveAsTemplate":"Lagre som mal",
 "_signUp":"Registrer deg",
 "_signViewNotsignedbymeAttachmentBoxHead":"Vedlegg",
-"_signaturePlaceFor":"vil signere her",
+"_signaturePlaceFor":"",
 "_signedAt":"",
 "_signupButtonText":"Lagre sikkerhetskopi",
 "_signviewBranding":"Branding av signeringsvisning",

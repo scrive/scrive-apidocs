@@ -187,7 +187,6 @@ var FilePageView = Backbone.View.extend({
         this.signviewbranding = args.signviewbranding;
         this.signview = args.signview;
         this.arrow = args.arrow;
-
         this.listenTo(this.model,'change:dragables', this.renderDragables);
         this.render();
     },
@@ -233,8 +232,8 @@ var FilePageView = Backbone.View.extend({
             if (!placement.placed() && placement.page()==page.number()) {
                 var elem = $("<div />").appendTo(container);
                 createFieldPlacementPlacedView({
-                  model: placement, 
-                  signviewbranding: view.signviewbranding, 
+                  model: placement,
+                  signviewbranding: view.signviewbranding,
                   signview: view.signview,
                   arrow: view.arrow,
                   el: elem
@@ -327,8 +326,8 @@ var FileView = Backbone.View.extend({
             this.pageviews = [];
             _.each(file.pages(),function(page){
                  var pageview = new FilePageView({
-                   model : page, 
-                   signviewbranding: view.signviewbranding, 
+                   model : page,
+                   signviewbranding: view.signviewbranding,
                    arrow: view.arrow,
                    signview: view.signview,
                    el: $("<div/>")

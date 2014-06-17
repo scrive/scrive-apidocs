@@ -1,4 +1,4 @@
-{ 
+{
 "_CompanyAccounts":"Utenti",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Sei sicuro di voler inviare un promemoria alle parti coinvolte nei <span class='put-number-of-documents-here'></span> documenti?",
@@ -714,7 +714,7 @@
 "_signStepsMenuEmptyStepSaveAsTemplate":"Salva come modello",
 "_signUp":"Iscriviti",
 "_signViewNotsignedbymeAttachmentBoxHead":"Allegati",
-"_signaturePlaceFor":"firmerà qui",
+"_signaturePlaceFor":"",
 "_signedAt":"",
 "_signupButtonText":"Salva copia di sicurezza",
 "_signviewBranding":"Branding della pagina per firmare",

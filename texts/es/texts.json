@@ -1,4 +1,4 @@
-{ 
+{
 "_CompanyAccounts":"Usuarios",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"¿Está seguro de que quiere enviar recordatorios a las partes involucradas en los <span class='put-number-of-documents-here'></span> documentos?",
@@ -714,7 +714,7 @@
 "_signStepsMenuEmptyStepSaveAsTemplate":"Guardar como plantilla",
 "_signUp":"Inscríbase",
 "_signViewNotsignedbymeAttachmentBoxHead":"Anexos",
-"_signaturePlaceFor":"firmará aquí",
+"_signaturePlaceFor":"",
 "_signedAt":"",
 "_signupButtonText":"Guardar una copia de seguridad",
 "_signviewBranding":"Branding de la vista para firmar",

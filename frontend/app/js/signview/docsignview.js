@@ -211,7 +211,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
       if (this.get('extradetailssection') === undefined) {
         var extradetailssection = new DocumentSignExtraDetailsSection({model: this.document().currentSignatory(),
                                                                        textstyle: textstyle,
-                                                                       arrow: function() { return model.get("arrow"); },
+                                                                       arrow: function() { return model.arrow(); },
                                                                        signview: this,
                                                                        signviewbranding: this.usebranding() ? signviewbranding : undefined});
         this.set({'extradetailssection': extradetailssection}, {silent: true});
@@ -227,7 +227,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
                             document: this.document(),
                             signviewbranding: this.usebranding() ? this.signviewbranding() : undefined,
                             signview: this,
-                            arrow: function() { return model.get("arrow"); }
+                            arrow : function() {return model.arrow();}
                         })
         }, {silent : true} );
         this.get('mainfile').view.bind("ready", function() {

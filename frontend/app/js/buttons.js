@@ -12,7 +12,7 @@
  *
  * button.el()
 */
-define(['Backbone', 'legacy_code', '../libs/tinycolor-min'], function(notUsed, notUsed2, tinycolor) {
+define(['tinycolor','Backbone', 'legacy_code'], function(tinycolor) {
 
 var ButtonModel = Backbone.Model.extend({
   defaults : {

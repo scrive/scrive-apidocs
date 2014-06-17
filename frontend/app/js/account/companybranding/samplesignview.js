@@ -3,7 +3,7 @@
  *
  * TODO where to put this file?
  */
-define(['Backbone', 'legacy_code'], function() {
+define(['tinycolor', 'Backbone', 'legacy_code'], function(tinycolor) {
 
 var SampleSignViewModel = Backbone.Model.extend({
   defaults: {
@@ -210,12 +210,23 @@ var SampleSignViewView = Backbone.View.extend({
     this.rightheader.css('color', color);
   },
   changePrimaryColour : function(colour, customized) {
+    var self = this;
+    var emptyBackgroundColor = tinycolor(colour);
+    emptyBackgroundColor.setAlpha(0.2);
+    var standardBorderColor = tinycolor(colour);
+    standardBorderColor.setAlpha(0.6);
+
     BrandedImageUtil.setBrandedImageBackground(this.arrowlegendmandatoryimage, 'icon-legend-mandatory.png', colour);
     BrandedImageUtil.setBrandedImageBackground(this.downarrow, 'sign-arrow-down.png', colour);
     BrandedImageUtil.setBrandedImageBackground(this.mandatoryFieldFront, 'sign-arrow-action-right-front.png', colour);
     BrandedImageUtil.setBrandedImageBackground(this.mandatoryFieldLabel, 'sign-arrow-action-label.png', colour);
     BrandedImageUtil.setBrandedImageBackground(this.mandatoryFieldBack, 'sign-arrow-action-right-back.png', colour);
-    this.mandatoryPlacedField.css('border-color', colour);
+    this.mandatoryPlacedField.css('border-color', standardBorderColor);
+    this.mandatoryPlacedField.css('background-color', emptyBackgroundColor);
+    this.mandatoryPlacedField.unbind('mouseenter mouseleave').hover(
+      function() {self.mandatoryPlacedField.css('border-color', colour);},
+      function() {self.mandatoryPlacedField.css('border-color', standardBorderColor);}
+    )
     this.signbutton.css('background-color', colour);
 
     this.greenarrowtext.css('color', colour);
@@ -226,9 +237,23 @@ var SampleSignViewView = Backbone.View.extend({
     this.mandatoryFieldLabel.css('color', colour);
   },
   changeSecondaryColour : function(colour) {
+    var self = this;
+    var emptyBackgroundColor = tinycolor(colour);
+    emptyBackgroundColor.setAlpha(0.2);
+    var standardBorderColor = tinycolor(colour);
+    standardBorderColor.setAlpha(0.6);
+
     BrandedImageUtil.setBrandedImageBackground(this.arrowlegendoptionalimage, 'icon-legend-optional.png', colour);
     this.reviewButton.css('background-color', colour);
     this.optionalPlacedField.css('border-color', colour);
+
+    this.optionalPlacedField.css('border-color', standardBorderColor);
+    this.optionalPlacedField.css('background-color', emptyBackgroundColor);
+    this.optionalPlacedField.unbind('mouseenter mouseleave').hover(
+      function() {self.optionalPlacedField.css('border-color', colour);},
+      function() {self.optionalPlacedField.css('border-color', standardBorderColor);}
+    )
+
   },
   changeSecondaryTextColour : function(colour) {
     this.reviewButton.css('color', ''); // reset colour

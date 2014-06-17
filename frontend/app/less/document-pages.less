@@ -69,7 +69,7 @@
 
   .pagejpg {
     // Show page image in full width and height comes from aspect ratio of bitmap
-    
+
     background-color: #fafafa;
     width: 100%;
   }
@@ -149,13 +149,9 @@
 // -------------------------
 
 .placedfieldvalue {
-  background-color: @white;
   font-size: 10px * @page-div-width / @a4-width-in-pt;
   line-height: 10px * @page-div-width / @a4-width-in-pt;
-  margin: 8px 7px 6px 7px;
-  -moz-opacity: 0.95;
-  filter: ~"alpha(opacity=95)";
-  opacity: 0.95;
+  margin: 5px 7px 5px 7px;
   white-space: nowrap;
 }
 
@@ -166,7 +162,7 @@
 
 .designview .placedfieldvalue {
   margin: 0;
-  padding: 8px 7px 6px 7px;
+  padding: 5px 7px 5px 7px;
 }
 
 .designview .placedfield.invalid {
@@ -187,33 +183,52 @@
   background: url(~"@{img-base-url}/checkbox-blue-checked.png") no-repeat scroll 0 0;
 }
 
+
+
 .signatureBox {
-  background-color: @white;
+  background-color: @white-with-little-opacity;
   border: 1px solid #999999;
   min-width: 10px;
-  -moz-opacity: 0.95;
-  filter: ~"alpha(opacity=95)";
-  opacity: 0.95;
   -moz-border-radius: 2px;
   -webkit-border-radius: 2px;
   border-radius: 2px;
   text-align: center;
-}
+  margin-left: -2px;
+  margin-top: -2px;
 
-.signatureBox.forDrawing{
-  background-color: transparent;
-}
+  // If we don't have image, background will be little transparent.
+  // Else whole image needs to be little transparent
+  &.withImage {
+    background-color: transparent;
+  }
 
-.signatureBox .signatureHeader {
-  background-image: url(~"@{img-base-url}/drag.png");
-  background-repeat: no-repeat;
-  background-position: 2px 2px;
-  color: #666666;
-  font-size: 12px;
-  font-style: italic;
-  min-height: 10px;
-  overflow: auto;
-  padding-bottom: 2px;
-  padding-top: 2px;
-  width: 100%;
+  img {
+    -moz-opacity: 0.95;
+    filter: ~"alpha(opacity=95)";
+    opacity: 0.95;
+  }
+  .signatureDDIcon {
+    background-image: url(~"@{img-base-url}/drag.png");
+    background-repeat: no-repeat;
+    background-position: 2px 2px;
+    color: #666666;
+    font-size: 12px;
+    font-style: italic;
+    min-height: 10px;
+    overflow: auto;
+    padding-bottom: 2px;
+    padding-top: 2px;
+  }
+
+  .signatureHeader {
+    position : absolute;
+    top : 50%;
+    margin-top: -13px;
+    color: @text-dark;
+    font-size: 16px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    white-space: nowrap;
+  }
 }

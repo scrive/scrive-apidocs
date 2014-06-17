@@ -1,4 +1,4 @@
-{ 
+{
 "_CompanyAccounts":"Brugere",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Er du sikker på, at du vil sende en reminder til de parter, der er involveret i dokumenterne <span class='put-number-of-documents-here'></span> ?",
@@ -714,7 +714,7 @@
 "_signStepsMenuEmptyStepSaveAsTemplate":"Gem som skabelon",
 "_signUp":"Tilmeld dig",
 "_signViewNotsignedbymeAttachmentBoxHead":"Vedhæftede filer",
-"_signaturePlaceFor":"vil signere her",
+"_signaturePlaceFor":"",
 "_signedAt":"",
 "_signupButtonText":"Gem sikkerhedskopi",
 "_signviewBranding":"Branding af Sign View",
