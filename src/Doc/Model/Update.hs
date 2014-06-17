@@ -411,7 +411,7 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m AttachFile () where
 data DetachFile = DetachFile Actor
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m DetachFile () where
   update (DetachFile a) = updateDocumentWithID $ \did -> do
-    kRunManyOrThrowWhyNot $ sqlDelete "main_files" $ do
+    runQuery_ $ sqlDelete "main_files" $ do
       sqlWhereEq "document_id" did
       sqlWhereEq "document_status" Preparation
       sqlWhereExists $ sqlSelect "documents" $ do
