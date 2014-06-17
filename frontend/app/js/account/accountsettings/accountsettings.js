@@ -307,14 +307,14 @@ var AccountSettingsView = Backbone.View.extend({
       var languages = [
           {name: localization.account.accountSecurity.langEN, value: "en"}
         , {name: localization.account.accountSecurity.langSV, value: "sv"}
-        , {name: localization.account.accountSecurity.langDE, value: "de", hidden : true}
+        , {name: localization.account.accountSecurity.langDE, value: "de"}
         , {name: localization.account.accountSecurity.langFR, value: "fr", hidden : true}
         , {name: localization.account.accountSecurity.langIT, value: "it", hidden : true}
         , {name: localization.account.accountSecurity.langES, value: "es", hidden : true}
         , {name: localization.account.accountSecurity.langPT, value: "pt", hidden : true}
         , {name: localization.account.accountSecurity.langNL, value: "nl", hidden : true}
-        , {name: localization.account.accountSecurity.langDA, value: "da", hidden : true}
-        , {name: localization.account.accountSecurity.langNO, value: "no", hidden : true}
+        , {name: localization.account.accountSecurity.langDA, value: "da"}
+        , {name: localization.account.accountSecurity.langNO, value: "no"}
         , {name: localization.account.accountSecurity.langEL, value: "el", hidden : true}
       ];
       var lname = _.findWhere(languages, {value : model.lang()}).name;

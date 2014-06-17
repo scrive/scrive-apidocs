@@ -164,7 +164,7 @@
 "_blockingDeactivatedHeadline":"Votre compte a été désactivé par le service administratif de Scrive",
 "_blockingDeactivatedSubtext1":"Veuillez contacter <a class='put-link-to-mail-support-here'>l'équipe d'assistance de Scrive</a> pour réactiver le compte",
 "_blockingDunningHeadline":"Paiement échoué",
-"_blockingDunningSubtext1":"Nous essayons toujours de traiter le paiement de ce mois. Nous continuerons d'essayer pendant sept jours de plus. D'ici là, vous pouvez continuer à utiliser le service normalement.",
+"_blockingDunningSubtext1":"Nous essayons toujours de traiter votre paiement de ce mois. Nous continuerons d'essayer pendant sept jours de plus. D'ici là, vous pouvez continuer à utiliser le service normalement.",
 "_blockingDunningSubtext2":"",
 "_blockingFreeCSVHeader":"Votre fichier comporte <span class='put-no-of-parties-here'/> destinataires et il ne vous reste que <span class='put-docs-left-here'/> documents à envoyer gratuitement. Pour les envoyer, veuillez <a class='put-link-to-payments-here'>souscrire un abonnement</a>.",
 "_blockingFreeClickTitle":"Souscrire un abonnement",

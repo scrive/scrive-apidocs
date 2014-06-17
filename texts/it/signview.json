@@ -151,7 +151,7 @@
 "_signviewSigningFailed":"Siamo spiacenti, qualcosa è andato storto durante la firma del documento. Ti preghiamo di riprovare.",
 "_smsInvitationToSign":"Ciao, $creatorname$ ti ha invitato a firmare elettronicamente. Clicca qui per iniziare: $link$",
 "_smsPinSendout":"Il tuo PIN per $documenttitle$ è $pin$",
-"_smsRejectNotification":"Ciao $personname$, $rejectorName$ ha rifiutato di firmare il documento $documenttitle$. Il processo di firma è stato perciò annullato. Segui il link per vedere il documento: $link$",
+"_smsRejectNotification":"",
 "_smsReminder":"Ciao $personname$, questo è un promemoria da parte di $creatorname$ per ricordarti che non hai ancora firmato il documento $documenttitle$. Apri il link per rivedere il documento: $link$",
 "_smsReminderSigned":"Ciao $personname$, il documento firmato $documenttitle$ ti è stato inviato nuovamente su richiesta di $creatorname$. Troverai il documento a questo link: $link$",
 "_subtitleSignedClosedByEmail":"Il documento firmato ti è stato inviato via email.",

@@ -151,7 +151,7 @@
 "_signviewSigningFailed":"Helaas, er is iets misgeggaan terwijl het document werd getekend. Probeer het a.ub. opnieuw.",
 "_smsInvitationToSign":"Hallo, $creatorname$ heeft u uitgenodigd om te e-ondertekenen. Klik hier om te starten: $link$ ",
 "_smsPinSendout":"Uw PIN voor $documenttitle$ is $pin$",
-"_smsRejectNotification":"Hi $personname$, $rejectorName$ heeft ondertekening van het document $documenttitle$ afgewezen. Het ondertekeningsproces is daarom afgebroken. Volg de link om het document te bekijken: $link$ ",
+"_smsRejectNotification":"",
 "_smsReminder":"Hallo $personname$, dit is een herinnering van $creatorname$ dat u het document $documenttitle$ nog niet ondertekend heeft. Open de link om het document te bekijken: $link$ ",
 "_smsReminderSigned":"Hoi $personname$, het ondertekende document $documenttitle$ is opnieuw aan u verstuurd op verzoek van $creatorname$. Bekijk het document via de volgende link: $link$",
 "_subtitleSignedClosedByEmail":"",

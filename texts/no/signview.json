@@ -151,7 +151,7 @@
 "_signviewSigningFailed":"Beklager, noe gikk galt under signering av dokumentet. Vennligst prøv igjen.",
 "_smsInvitationToSign":"Hei, $creatorname$ har invitert deg til å e-signere. Klikk her for å starte: $link$",
 "_smsPinSendout":"Din PIN for $documenttitle$ er $pin$",
-"_smsRejectNotification":"Hei $personname$, $rejectorName$ har avslått å signere dokumentet $documenttitle$. Signeringsprosessen er derfor avbrutt. Følg lenken for å se dokumentet: $link$",
+"_smsRejectNotification":"",
 "_smsReminder":"Hei $personname$, dette er en påminnelse fra $creatorname$ at du ennå ikke har signert dokumentet $documenttitle$. Åpne lenken for å lese gjenom dokumentet: $link$",
 "_smsReminderSigned":"Hei $personname$, det signerte dokumentet $documenttitle$ har blitt sendt til deg på nytt etter forespørsel fra $creatorname$. Du finner dokumentet ved å følge denne lenken: $link$",
 "_subtitleSignedClosedByEmail":"Det signerte dokumentet har blitt sendt til deg via e-post.",

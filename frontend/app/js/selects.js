@@ -82,7 +82,8 @@ var SelectModel = Backbone.Model.extend({
       optionsWidth : "200px",
       style : "",
       cssClass : "",
-      inactive : false
+      inactive : false,
+      adjustHeightOnExpand : false
 
   },
   initialize: function(args){
@@ -158,6 +159,9 @@ var SelectModel = Backbone.Model.extend({
   },
   style : function() {
      return this.get("style");
+  },
+  adjustHeightOnExpand : function() {
+     return this.get("adjustHeightOnExpand");
   }
 });
 
@@ -228,6 +232,7 @@ var SelectView = Backbone.View.extend({
         if (model.inactive()) $(this.el).addClass("inactive");
         //If we are rerendering we remove expanded part.
         if (this.expButton != undefined) $(this.expButton).remove();
+        if (model.adjustHeightOnExpand()) $(this.el).css("height","");
 
         if (!model.expanded()) {
           // We are rerendering button if it is not expanded. We start with cleaning old buttons
@@ -273,6 +278,9 @@ var SelectView = Backbone.View.extend({
 
               // Adding expanded button directly to page
               $('body').append(this.expButton);
+              if (model.adjustHeightOnExpand()) {
+                $(this.el).css("height",(options.height()) + "px");
+              }
             }
         return this;
     }
