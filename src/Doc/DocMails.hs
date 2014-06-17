@@ -58,6 +58,7 @@ import Util.SignatoryLinkUtils
 import ActionQueue.UserAccountRequest
 import User.Action
 import Data.Maybe hiding (fromJust)
+import Data.List (find)
 import qualified Data.ByteString as BS
 import Doc.API.Callback.Model
 import Company.Model
@@ -234,6 +235,11 @@ sendClosedEmails sealFixed document = do
             scheduleEmailFunc (mctxmailsconfig mctx) $
                                  mail { to = [getMailAddress sl]
                                       , attachments = mailattachments
+                                      , replyTo =
+                                          let maybeAuthor = find signatoryisauthor signatorylinks
+                                          in if signatoryisauthor sl && isJust maybeAuthor
+                                                then Nothing
+                                                else fmap getMailAddress maybeAuthor
                                       }
       let sendSMS withMail = (scheduleSMS =<< smsClosedNotification document sl withMail sealFixed)
       let useMail = isGood $ asValidEmail $ getEmail sl
