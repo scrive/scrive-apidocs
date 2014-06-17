@@ -125,12 +125,6 @@ unjsonAppConf = objectOf $ pure AppConf
                               ]
       ntpServers
       "List of NTP servers to contact to get estimate of host clock error"
-      {-
-  <*> fieldDef' "brandedDomains" []
-      brandedDomains
-      "List of branded domains"
--}
-  <*> pure [] -- ignore branded domains
   <*> field "salesforce"
       salesforceConf
       "Configuration of salesforce"
