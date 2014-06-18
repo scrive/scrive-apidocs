@@ -17,8 +17,8 @@ define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_the
             _.bindAll(view);
             view.render();
             view.model.document().bind('change', view.render);
-        view.model.document().bind('change:daystosign', view.updateDaysToSign);
-        view.model.document().bind('change:daystoremind', view.updateDaysToRemind);
+            view.model.document().bind('change:daystosign', view.updateDaysToSign);
+            view.model.document().bind('change:daystoremind', view.updateDaysToRemind);
         },
         render: function() {
             var view = this;
@@ -29,7 +29,6 @@ define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_the
             div.append(view.rightColumn());
 
             view.$el.html(div.children());
-            //view.setupTinyMCE();
             return view;
         },
         hideAllCalendars: function() {
@@ -338,6 +337,10 @@ define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_the
             var doc = viewmodel.document();
 
             var div = $('<div />');
+
+            // If the document is not ready, don't initialize tinyMCE for invitation or confirmation boxes.
+            // If we do, it leads to race conditions within tinyMCE as we remove/init 3 times in a normal pageload to design view.
+            if (!doc.ready()) { return div; }
 
             if (view.invitationmessagewrapper != undefined) React.unmountComponentAtNode(view.invitationmessagewrapper[0]);
             view.invitationmessagewrapper = $('<div />');

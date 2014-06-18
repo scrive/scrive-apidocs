@@ -1,4 +1,4 @@
-define(['Backbone', 'legacy_code'], function() {
+define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
     /*
       Holds information relevant to blocking for a user.
@@ -82,7 +82,7 @@ define(['Backbone', 'legacy_code'], function() {
                     'Subscription status' : model.status(),
                     'Documents used'      : model.docsUsed(),
                     'Documents total'     : model.docsTotal(),
-                    'Billing ends'        : model.billingEnds(),
+                    'Billing ends'        : model.billingEnds() && model.billingEnds().toString(),
                     'Dunning?'            : model.isDunning()
                 });
             }});

@@ -119,13 +119,13 @@ define(['Backbone', 'legacy_code'], function() {
 
             var options = [];
             for(i=1;i<=model.document().maxPossibleSignOrder();i++) {
-                var ordinal = localization.code == 'sv' ? swedishOrdinal(i) : englishOrdinal(i);
+                var ordinal = localized_ordinal(i, localization.code);
                 options.push({name: ordinal + ' ' +
                               localization.designview.toReceiveDocument,
                               value: i});
             }
 
-            var ordinal = localization.code == 'sv' ? swedishOrdinal(order) : englishOrdinal(order);
+            var ordinal = localized_ordinal(order, localization.code);
             var select = new Select({
                 options: options,
                 name: ordinal + ' ' +

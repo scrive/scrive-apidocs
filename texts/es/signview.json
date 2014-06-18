@@ -151,7 +151,7 @@
 "_signviewSigningFailed":"Lo sentimos, hubo algún fallo durante la firma del documento. Por favor inténtelo de nuevo. ",
 "_smsInvitationToSign":"Hola, $creatorname$ le ha invitado a firmar electrónicamente. Presione aquí para empezar: $link$",
 "_smsPinSendout":"Su código PIN para $documenttitle$ es $pin$",
-"_smsRejectNotification":"",
+"_smsRejectNotification":"Hola $personname$, $rejectorName$ ha rechazado firmar el documento $documenttitle$. Por lo tanto, el proceso de firma ha sido cancelado. Siga el link para ver el documento: $link$",
 "_smsReminder":"Hola $personname$, este es un recordatorio de $creatorname$ de que no ha firmado todavía el documento $documenttitle$. Abra el link para revisar el documento: $link$",
 "_smsReminderSigned":"Hola $personname$, el documento firmado $documenttitle$ se le ha reenviado a petición de  $creatorname$. Encuentre el documento siguiendo este link: $link$",
 "_subtitleSignedClosedByEmail":"El documento firmado le ha sido enviado por email.",

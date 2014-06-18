@@ -13,7 +13,8 @@
     "requirejs-text": "~2.0.10",
     "imagesloaded": "~3.1.0",
     "react": "~0.8.0",
-    "javascript-state-machine": "~2.2.0"
+    "javascript-state-machine": "~2.2.0",
+    "moment": "~2.7.0"
   },
   "homepage": "https://github.com/Jenso/Scrive-Frontend",
   "authors": [

@@ -6,7 +6,7 @@
 "_questionnaireGreat":"Parfait! Nous espérons que vous ne verrez pas d'inconvénients à ce que nous vous demandions...",
 "_questionnaireHaveAGreatDay":"Bonne journée et bonne signature!",
 "_questionnaireHeyImViktor":"Bonjour, mon nom est Viktor et je travaille pour",
-"_questionnaireImprovements":"Avez-vous quelques idées sur les éléments qui auraient pu rendre votre expérience en matière d'e-signature plus agréable? Si oui, n'hésitez pas à laisser vos suggestions ci-dessous!",
+"_questionnaireImprovements":"Avez-vous des suggestions qui pourraient rendre votre expérience en matière d'e-signature plus agréable? Si oui, n'hésitez pas à nous les communiquer ci-dessous!",
 "_questionnaireLastQuestion":"Juste une dernière question...",
 "_questionnaireNo":"Non",
 "_questionnaireOtherBenefitsP":"Grâce à l'e-signing il est également facile de <span class='green-text'>créer, envoyer et suivre </span> vos documents.",
@@ -15,10 +15,10 @@
 "_questionnaireQuickQuestion":"Juste une question rapide...",
 "_questionnaireSeeHowSimple":"Souhaitez-vous que je vous contacte au sujet des avantages de l'e-signature et de Scrive?",
 "_questionnaireSendDown2":"Avez-vous déjà eu l'impression de prendre du retard à cause de contrats tardant à être signés?",
-"_questionnaireSendDownP":"",
+"_questionnaireSendDownP":"Avez-vous déjà envoyé vos propres documents nécessitant des signatures?<BR/>ex: contrats de vente, contrats d'embauche, etc...",
 "_questionnaireSendFeedback":"Envoyer vos commentaires",
 "_questionnaireShowDemo":"Oui, merci",
-"_questionnaireSorry":"Nous sommes désolés de constater que vous n'avez pas été satisfait de votre expérience d'e-signature.",
+"_questionnaireSorry":"Nous sommes désolés que vous n'ayez pas été satisfait par votre expérience d'e-signature.",
 "_questionnaireThanksForYourTime":"Merci d'avoir pris le temps de répondre à nos questions!",
 "_questionnaireYes":"Oui"
 }

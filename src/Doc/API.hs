@@ -43,7 +43,7 @@ import Happstack.Fields
 import Utils.String
 import Utils.Monad
 import System.Exit
-import System.FilePath
+import Utils.FilePath
 import Utils.Directory
 import Utils.IO
 import Data.Maybe

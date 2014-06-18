@@ -13,7 +13,6 @@ define([
   '../libs/jquery.mCustomScrollbar.concat.min',
   '../libs/livequery',
   '../libs/recurly',
-  '../libs/moment.min',
   '../libs/iso8601.min',
   '../libs/html2canvas',
   '../js/utils/browserinfo',

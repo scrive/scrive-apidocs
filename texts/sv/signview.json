@@ -151,7 +151,7 @@
 "_signviewSigningFailed":"Något gick fel vid signeringen. Vänligen försök igen.",
 "_smsInvitationToSign":"Hej, $creatorname$ har bjudit in dig att e-signera. Klicka här för att starta: $link$",
 "_smsPinSendout":"Din PIN för $documenttitle$ är $pin$",
-"_smsRejectNotification":"",
+"_smsRejectNotification":"Hej $personname$, $rejectorName$ har avvisat signering av dokumentet $documenttitle$. Signeringsprocessen har därmed avbrutits. Öppna länken för att se dokumentet: $link$",
 "_smsReminder":"Hej $personname$, detta är en påminnelse från $creatorname$ att du inte signerat dokumentet $documenttitle$ ännu. Öppna följande länk för att granska dokumentet: $link$",
 "_smsReminderSigned":"Hej $personname$, det signerade dokumentet $documenttitle$ har skickats till dig på nytt på begäran av $creatorname$. Du hittar dokumentet genom att följa länken: $link$",
 "_subtitleSignedClosedByEmail":"Det signerade dokumentet har skickats till dig med e-post.",

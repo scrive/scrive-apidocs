@@ -37,7 +37,7 @@
 "_SMSPinSendEvidenceText":"En SMS med PIN blev sendt til $text$, så $signatory$ kan bruge den til identifikation.",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Dokumentet blev signeret ved hjælp af eID som identifikationsmetode.",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Dokumentet blev signeret ved hjælp af PIN via SMS som identifikationsmetode.",
-"_SignDocumentEvidenceTextSimpleArchiveStandard":"Dokumentet blev signeret",
+"_SignDocumentEvidenceTextSimpleArchiveStandard":"Dokumentet blev signeret.",
 "_SignDocumentEvidenceTextSimpleNotArchiveEleg":"Dokumentet blev signeret af $actor$ ved hjælp af eID som identifikationsmetode.",
 "_SignDocumentEvidenceTextSimpleNotArchiveSMSPin":"Dokumentet blev signeret af $actor$ ved hjælp af PIN via SMS som identifikationsmetode.",
 "_SignDocumentEvidenceTextSimpleNotArchiveStandard":"Dokumentet blev signeret af $actor$.",
