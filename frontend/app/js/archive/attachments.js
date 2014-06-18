@@ -79,20 +79,19 @@ window.AttachmentsListDefinition = function(archive) {
                 emptyMessage :  localization.archive.attachments.remove.emptyMessage,
                 avaible : function(){return true;},
                 onSelect: function(docs){
-                             var confirmtext = jQuery("<p/>").append(localization.archive.attachments.remove.body + " ");
-                             var label = jQuery("<strong/>");
-                             if (docs.length == 1) {
-                               confirmtext.append(jQuery("<strong/>").text(docs[0].field("title")));
-                             } else {
-                               confirmtext.append(docs.length + (" " + localization.attachments).toLowerCase());
-                             }
-                             confirmtext.append("?");
+                        var confirmationText = $('<span />').html(localization.archive.attachments.remove.body);
+                        var listElement = confirmationText.find('.put-one-or-more-things-to-be-deleted-here');
+                        if (docs.length == 1) {
+                          listElement.html($('<strong />').text(docs[0].field("title")));
+                        } else {
+                          listElement.text(docs.length + (" " + localization.attachments).toLowerCase());
+                        }
                              new Confirmation({
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.attachments.remove.action,
                                 icon: '/img/modal-icons/delete.png',
-                                content: confirmtext,
+                                content: confirmationText,
                                 onAccept : function() {
                                     new Submit({
                                                 url: "/a/delete",

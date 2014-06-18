@@ -114,20 +114,19 @@ window.TemplatesListDefinition = function(archive) { return {
                 emptyMessage :  localization.archive.templates.remove.emptyMessage,
                 avaible : function() {return true;},
                 onSelect: function(docs){
-                             var confirmtext = jQuery("<p/>").append(localization.archive.templates.remove.body + " ");
-                             var label = jQuery("<strong/>");
-                             if (docs.length == 1) {
-                               confirmtext.append(jQuery("<strong/>").text(docs[0].field("title")));
-                             } else {
-                               confirmtext.append(docs.length + (" " + localization.templates).toLowerCase());
-                             }
-                             confirmtext.append("?");
+                        var confirmationText = $('<span />').html(localization.archive.templates.remove.body);
+                        var listElement = confirmationText.find('.put-one-or-more-things-to-be-deleted-here');
+                        if (docs.length == 1) {
+                          listElement.html($('<strong />').text(docs[0].field("title")));
+                        } else {
+                          listElement.text(docs.length + (" " + localization.templates).toLowerCase());
+                        }
                              var confirmationPopup = new Confirmation({
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.templates.remove.action,
                                 icon: '/img/modal-icons/delete.png',
-                                content: confirmtext,
+                                content: confirmationText,
                                 onAccept : function() {
                                     new Submit({
                                                 url: "/d/delete",

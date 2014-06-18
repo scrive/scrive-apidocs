@@ -467,7 +467,7 @@
 "_last30Days":"Past 30 days",
 "_last6Months":"Past 6 months",
 "_lastNameField":"Last name",
-"_listLocalDialogsBody":"Are you sure that you want to delete",
+"_listLocalDialogsBody":"Are you sure that you want to delete <span class='put-one-or-more-things-to-be-deleted-here'></span>?",
 "_listRestoreDialogBody":"Would you like to restore the selected documents?",
 "_listRestoreDialogHead":"Restore",
 "_listShareDialogBody":"Do you want to share this with everyone in your organisation?",

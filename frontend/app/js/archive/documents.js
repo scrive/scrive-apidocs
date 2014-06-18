@@ -229,20 +229,19 @@ window.DocumentsListDefinition = function(archive) { return {
             size: 'normal',
             avaible : function(doc){ return true;},
             onSelect : function(docs) {
-                         var confirmtext = jQuery("<p/>").append(localization.archive.documents.remove.body + " ");
-                             var label = jQuery("<strong/>");
-                             if (docs.length == 1) {
-                               confirmtext.append(jQuery("<strong/>").text(docs[0].field("title")));
-                             } else {
-                               confirmtext.append(docs.length + (" " + localization.documents).toLowerCase());
-                             }
-                             confirmtext.append("?");
+                        var confirmationText = $('<span />').html(localization.archive.documents.remove.body);
+                        var listElement = confirmationText.find('.put-one-or-more-things-to-be-deleted-here');
+                        if (docs.length == 1) {
+                          listElement.html($('<strong />').text(docs[0].field("title")));
+                        } else {
+                          listElement.text(docs.length + (" " + localization.documents).toLowerCase());
+                        }
                              var confirmationPopup = new Confirmation({
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.documents.remove.action,
                                 icon: '/img/modal-icons/delete.png',
-                                content: confirmtext,
+                                content: confirmationText,
                                 onAccept : function() {
                                     mixpanel.track('Delete document');
                                     new Submit({

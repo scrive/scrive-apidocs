@@ -178,9 +178,9 @@ var CompanyAccountsModel = Backbone.Model.extend({
                               if (user.field("deletable")) {
                                 return $("<a class='icon delete'>").click(function() {
                                     mixpanel.track('Click delete user');
-                                    var text = localization.account.companyAccounts.deleteModalBody + self.userFullName(user) + "?";
-                                    var content = jQuery("<p/>").text(text);
-                                    console.log("text: " + text);
+                                    var confirmationText = $('<span />').html(localization.account.companyAccounts.deleteModalBody);
+                                    var listElement = confirmationText.find('.put-one-or-more-things-to-be-deleted-here').text(self.userFullName(user));
+                                    var content = jQuery("<p/>").append(confirmationText);
                                     var popup = new Confirmation({
                                       onAccept: function() {
                                         mixpanel.track('Click delete user');
