@@ -570,7 +570,7 @@
 "_padRemoveFromPadQueue2":"external device",
 "_padSigningOnSameDevice":"Give for signing on this device",
 "_padSigningOnSameDeviceConfirmHeader":"Are you sure you want to sign on the same device?",
-"_padSigningOnSameDeviceConfirmText":"You are about to hand over this device for signing the document?",
+"_padSigningOnSameDeviceConfirmText":"You are about to hand over this device for signing the document.",
 "_pageAttachmentAttachments":"Attachments:",
 "_pageAttachmentListNewAttachment":"New attachment",
 "_pageAttachmentListSearchInfo":"Search",
