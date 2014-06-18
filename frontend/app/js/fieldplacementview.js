@@ -1473,9 +1473,16 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
         this.standardBorderColor = tinycolor(this.standardColor);
         this.standardBorderColor.setAlpha(0.6);
         this.highlightBorderColor = tinycolor(this.standardColor);
-        this.emptyBackgroundColor = tinycolor(this.standardColor);
-        this.emptyBackgroundColor.setAlpha(0.2);
+        this.emptyBackgroundColor = this.emptyBackgroundColorWithAlpha(tinycolor(this.standardColor));
         this.render();
+    },
+    emptyBackgroundColorWithAlpha : function(baseColor) {
+      // This is alpha color composition that coresponds to a box with base color with opacity 0.2
+      // placed over box with white background with opacity 0.8.
+      var r = Math.floor(baseColor.toRgb().r * 0.24 + 255*0.76);
+      var g = Math.floor(baseColor.toRgb().g * 0.24 + 255*0.76);
+      var b = Math.floor(baseColor.toRgb().b * 0.24 + 255*0.76);
+      return tinycolor("rgba("+r+","+g+","+b + "," + (1 - (0.8 * 0.2)));
     },
     clear: function() {
         this.off();
