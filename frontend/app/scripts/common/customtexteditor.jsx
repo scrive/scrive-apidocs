@@ -25,6 +25,12 @@ return React.createClass({
     setupTinyMCE: function() {
       var self = this;
       if (!this.isMounted()) return;
+
+      // cleanup before setting up a new tinymce, else init() will do nothing.
+      if (tinyMCE.editors[self.props.id]) {
+        tinyMCE.remove('#' + self.props.id);
+      }
+
       tinyMCE.baseURL = '/libs/tiny_mce';
       tinyMCE.init({
         selector: '#' + self.props.id,
@@ -40,9 +46,10 @@ return React.createClass({
         setup: function(editor) {
           editor.on('init', function() {
             $(editor.getDoc()).blur(function() {
-                //if (view.emaildeliveryused) {
-                self.props.onChange(editor.getContent());
-                //}
+                var text = editor.getContent();
+                if ($(text).text() == self.props.placeholder)
+                  text = "";
+                self.props.onChange(text);
             });
             if (!self.props.editable) {
                     editor.getWin().document.body.style.color = '#AAAAAA';
@@ -55,7 +62,11 @@ return React.createClass({
           });
 
           editor.on('change', function () {
-             self.props.onChange(editor.getContent());
+            var text = editor.getContent();
+            if ($(text).text() == self.props.placeholder) {
+              text = "";
+            }
+            self.props.onChange(text);
           });
 
 
