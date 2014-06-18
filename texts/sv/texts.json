@@ -166,7 +166,7 @@
 "_blockingDunningHeadline":"Misslyckad betalning",
 "_blockingDunningSubtext1":"Vi försöker fortfarande att bearbeta denna månads betalning. Vi fortsätter försöka i 7 dagar till. Du kan fortsätta att använda tjänsten som vanligt tills vidare.",
 "_blockingDunningSubtext2":"Vänligen gå till <a class='put-link-to-payments-here'>abonnemangssidan</a> och kontrollera din betalningsinformation för att undvika avbrott i användningen.",
-"_blockingFreeCSVHeader":"Denna fil innehåller <span class='put-no-of-parties-here'/> mottagare och du har endast <span class='put-docs-left-here'/> gratisdokument kvar att använda. Vänligen <a class='put-link-to-payments-here'>köp en prenumeration</a> för att kunna skicka.",
+"_blockingFreeCSVHeader":"Denna fil innehåller <span class='put-no-of-parties-here'/> mottagare och du har endast <span class='put-docs-left-here'/> gratisdokument kvar att använda. Vänligen <a class='put-link-to-payments-here'>köp ett abonnemang</a> för att kunna skicka.",
 "_blockingFreeClickTitle":"Köp ett abonnemang",
 "_blockingFreeCreateTitle":"Köp ett abonnemang",
 "_blockingFreeHasHeadline":"Du har skickat <span class='put-docs-used-here'/> av dina 3 gratisdokument den här månaden. <a class='put-link-to-payments-here'>Uppgradera nu för att skicka fler.</a>",
