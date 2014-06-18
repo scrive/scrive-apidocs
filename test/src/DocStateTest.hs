@@ -371,13 +371,16 @@ testMarkInvitationReadEvidenceLog = do
     let me = find (\e -> evType e == Current MarkInvitationReadEvidence) lg
     assertJust me
     let Just e = me
-    let expected simple = (if simple then "The" else "Scrive E-sign’s external email delivery system reported that the") ++ " invitation to "
+    let expectedFull = "Scrive E-sign’s external email delivery system reported that the invitation to "
                 ++ (if signatoryispartner sl then "sign" else "review")
                 ++ " (sent to " ++ getEmail sl ++ ") was opened."
-    assertEqual "Correct event text" (expected False) (evText e)
+    assertEqual "Correct event text full" (expectedFull) (evText e)
+    let expectedSimple = "The invitation to "
+                ++ (if signatoryispartner sl then "sign" else "review")
+                ++ " the document (sent to " ++ getEmail sl ++ ") was opened."
     [e'] <- getSignatoryLinks [e]
     simpletext <- theDocument >>= \d -> simplyfiedEventText (Just "author") d{ documentlang = LANG_EN } e'
-    assertEqual "Correct simplified event text" (expected True) simpletext
+    assertEqual "Correct simplified event text" (expectedSimple) simpletext
 
 testSaveSigAttachmentEvidenceLog :: TestEnv ()
 testSaveSigAttachmentEvidenceLog = do

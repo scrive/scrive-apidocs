@@ -23,7 +23,6 @@ import Control.Monad
 import Control.Applicative
 import Control.Monad.State
 import Data.Int
-import qualified Data.Maybe as Maybe
 import Data.Monoid.Space
 
 import DB
@@ -32,6 +31,7 @@ import Mails.Data
 import MinutesTime
 import OurPrelude
 import qualified Data.Map as Map
+import Data.Maybe hiding (fromJust)
 
 data CreateEmail = CreateEmail MagicHash Address [Address] MinutesTime
 instance MonadDB m => DBUpdate m CreateEmail MailID where
@@ -43,7 +43,7 @@ instance MonadDB m => DBUpdate m AddContentToEmail Bool where
   update (AddContentToEmail mid title reply_to content attachments xsmtpapi) = do
     result <- runQuery01 $ sqlUpdate "mails" $ do
       sqlSet "title" title
-      when (Maybe.isJust reply_to) $ sqlSet "reply_to" (Maybe.fromJust reply_to)
+      sqlSet "reply_to" reply_to
       sqlSet "content" content
       sqlSet "x_smtp_attrs" xsmtpapi
       sqlWhereEq "id" mid
@@ -144,7 +144,7 @@ instance MonadDB m => DBQuery m GetEmail (Maybe Mail) where
     mails <- selectMails . sqlSelectMails $ do
       sqlWhereEq "id" mid
       sqlWhereEq "token" token
-    return $ Maybe.listToMaybe mails
+    return $ listToMaybe mails
 
 data ResendEmailsSentSince = ResendEmailsSentSince MinutesTime
 instance MonadDB m => DBUpdate m ResendEmailsSentSince Int where
