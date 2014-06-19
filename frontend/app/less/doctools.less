@@ -2,7 +2,7 @@
 @import 'branding/variables';
 
 .authorattachments {
-  
+
   &.small-screen {
 
     > h2 {
@@ -70,7 +70,7 @@
 
     .desc {
       width: 420px;
-      
+
       .description {
         font-style: italic;
       }
@@ -98,11 +98,11 @@
 
     thead {
       background-color: #f3f3f3;
-      
+
       tr {
-        
+
         th {
-          
+
           span {
             font-size: 14px;
           }
@@ -111,7 +111,7 @@
     }
 
     tbody {
-      
+
       tr td.row {
         line-height: 24px;
         padding-bottom: 5px;
@@ -126,7 +126,11 @@
 
   .document-history-footer {
     border-top: 1px solid @dark-border;
+    height: 41px;
     width: 100%;
+    &:hover {
+      background: @slightly-darker-grey-background;
+    }
   }
 
   .document-history-footer .option {
@@ -139,9 +143,6 @@
     color: @text-medium;
     &:hover {
       color: @text-dark;
-    }
-    &:active {
-      color: @text-light;
     }
   }
 }
