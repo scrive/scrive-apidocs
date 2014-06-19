@@ -169,7 +169,7 @@
 "_blockingFreeCSVHeader":"Ihre Datei enthält <span class='put-no-of-parties-here'/> Empfänger, aber Sie können nur noch <span class='put-docs-left-here'/> freie Dokumente senden. Um die Datei zu senden, bitte ein <a class='put-link-to-payments-here'>Abonnement abschließen</a>.",
 "_blockingFreeClickTitle":"Ein Abonnement kaufen",
 "_blockingFreeCreateTitle":"Erwerben Sie ein Abonnement",
-"_blockingFreeHasHeadline":"Sie haben <span class='put-docs-used-here'/> von Ihren 3 freien Dokumenten in diesem Monat gesendet.<a class='put-link-to-payments-here'>Jetzt aufbessern, um unbegrenzt Dokumente zu versenden.</a>",
+"_blockingFreeHasHeadline":"Sie haben <span class='put-docs-used-here'/> von Ihren 3 freien Dokumenten in diesem Monat gesendet. <a class='put-link-to-payments-here'>Jetzt aufbessern, um unbegrenzt Dokumente zu versenden.</a>",
 "_blockingFreeHasNotHeadline":"Sie haben alle Ihre kostenlose Dokumente  in diesem Monat gesendet.",
 "_blockingFreeHasNotSubtext1":"Schließen Sie ein Abonnement ab, um mehr in diesem Monat zu senden",
 "_blockingFreeHeading":"Sie haben alle Ihre kostenlosen Dokumente in diesem Monat gesendet. Kaufen Sie ein Abonnement, um mehr in diesem Monat zu senden.",
