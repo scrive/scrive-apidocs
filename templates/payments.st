@@ -31,7 +31,7 @@ $_paymentsEmailNextTransactionDate()$: $enddate$
 ###
 paymentsSignupEmail3=
 <p>
-$_paymentsEmailBilledTo()$:
+$_paymentsEmailBilledTo()$
 </p>
 <p>
 <strong>$fullname$</strong><br />
@@ -63,7 +63,7 @@ $_paymentsDeclinedEmailSorry()$
 ###
 paymentsDeclinedEmail2=
 <p>
-$_paymentsEmailBilledTo()$:
+$_paymentsEmailBilledTo()$
 </p>
 <p>
 <strong>$fullname$</strong><br />

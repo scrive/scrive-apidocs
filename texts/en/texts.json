@@ -644,7 +644,7 @@
 "_paymentsDeclinedEmailHeader":"Problem billing your credit card",
 "_paymentsDeclinedEmailSorry":"We regret to inform you that your most recent subscription payment was declined. Please verify that your billing information matches that given on your credit card. Below are the details of your declined payment.",
 "_paymentsDeclinedEmailSubject":"Problem billing your credit card",
-"_paymentsEmailBilledTo":"Billed to",
+"_paymentsEmailBilledTo":"Billed to:",
 "_paymentsEmailCreditCardCharged":"Your credit card has been charged",
 "_paymentsEmailDescription":"Price plan",
 "_paymentsEmailExpiredQuestions":"Thank you for your purchase! Please keep this email for your records. If you have any questions, please contact $accountingmaillink()$.",
