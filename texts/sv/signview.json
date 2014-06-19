@@ -1,4 +1,4 @@
-{ 
+{
 "_DeletePDF":"Radera",
 "_RequestedAttachments":"Begärda bilagor",
 "_ReviewPDF":"Granska",
@@ -103,7 +103,7 @@
 "_reloadPage":"Ladda om sidan",
 "_remindMailNotSignedContractBody":"<strong>$authorname$</strong> vill påminna dig om att du inte har signerat dokumentet <strong>$documenttitle$</strong> än.",
 "_remindMailNotSignedTitleContract":"Påminnelse att e-signera dokument: $documenttitle$",
-"_remindMailSignedContractStandardHeaderSendRequest":"Du har tidigare signerat dokumentet <strong>$documenttitle$</strong> genom e-signeringstjänsten Scrive. <strong>$creatorname$</strong> har begärt att vi ska skicka dokumentet <strong>$documenttitle$</strong> till dig på nytt.",
+"_remindMailSignedContractStandardHeaderSendRequest":"",
 "_remindMailSignedContractStandardHeaderSendRequest2":"Dokumentet är bifogat med detta mail.",
 "_remindMailSignedTitle":"Dokument skickat på nytt: $documenttitle$",
 "_reviewDocument":"Dokument för granskning",

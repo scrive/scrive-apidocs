@@ -480,7 +480,7 @@
 "_loginOrSignup":"Vuelva a <a class='stylablelink' href='/$langcode$/login'>iniciar sesión</a> o<a class='stylablelink' href='/$langcode$/signup'>inscríbase</a>.",
 "_mailActivateAccountButton":"Active su cuenta",
 "_mailDocumentAwaitingForAuthorContentReadyForSigning":"El documento <strong>$documenttitle$</strong> está preparado para ser firmado.",
-"_mailDocumentAwaitingForAuthorContentSignedBy":"Usted ha invitado a $partylist:noescape()$ a firmar el documento <strong>$documenttitle$</strong>. Este documento ha sido firmado por $partylistSigned:noescape()$.<br/><br/>Es ahora su turno para firmar.",
+"_mailDocumentAwaitingForAuthorContentSignedBy":"",
 "_mailDocumentAwaitingForAuthorTitle":"Documento a firmar electrónicamente: $documenttitle$",
 "_mailDocumentErrorContentBodyFirst":"Desafortunadamente Scrive E-sign no pudo manejar el documento <strong>$documenttitle$</strong>. Por lo tanto el proceso de firma ha sido cancelado. Nuestros técnicos han sido notificados de este problema.",
 "_mailDocumentErrorContentBodyFourth":"Sentimos los posibles inconvenientes causados",

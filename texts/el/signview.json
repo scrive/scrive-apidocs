@@ -1,4 +1,4 @@
-{ 
+{
 "_DeletePDF":"Διαγραφή ",
 "_RequestedAttachments":"Απαιτούμενα συνημμένα ",
 "_ReviewPDF":"Έλεγχος ",
@@ -103,7 +103,7 @@
 "_reloadPage":"Επανοφόρτωση σελίδας",
 "_remindMailNotSignedContractBody":"Ο <strong>$authorname$</strong>θα ήθελε να σας υπενθυμίσει ότι δεν έχετε υπογράψει ακόμα το έγγραφο <strong>$documenttitle$</strong>. ",
 "_remindMailNotSignedTitleContract":"Υπενθύμιση για υπογραφή εγγράφου με ηλεκτρονική υπογραφή: $documenttitle$ ",
-"_remindMailSignedContractStandardHeaderSendRequest":"Έχετε προηγουμένως υπογράψει το έγγραφο <strong>$documenttitle$</strong> μέσω της υπηρεσίας Scrive E-sign. Ο <strong>$creatorname$</strong> ζήτησε να αποστείλουμε ξανά το έγγραφο<strong>$documenttitle$</strong> σε εσάς.",
+"_remindMailSignedContractStandardHeaderSendRequest":"",
 "_remindMailSignedContractStandardHeaderSendRequest2":"Παρακαλώ βρείτε το έγγραφο επισυναπτόμενο. ",
 "_remindMailSignedTitle":"Αποστείλετε ξανά το έγγραφο: $documenttitle$ ",
 "_reviewDocument":"Έγγραφο προς έλεγχο ",

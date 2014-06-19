@@ -49,7 +49,6 @@ import OurPrelude
 import User.Model
 import User.Email
 import Util.HasSomeUserInfo
-import Util.HasSomeCompanyInfo
 import qualified Log
 import Templates (runTemplatesT)
 import Text.StringTemplates.Templates (TemplatesMonad, TemplatesT)
@@ -224,11 +223,8 @@ sendClosedEmails sealFixed document = do
     mailattachments <- makeMailAttachments document
     let signatorylinks = documentsignatorylinks document
     forM_ signatorylinks $ \sl -> do
-      ml <- if (isGood $ asValidEmail $ getEmail sl)
-               then handlePostSignSignup (Email $ getEmail sl) (getFirstName sl) (getLastName sl) (getCompanyName sl) (getCompanyNumber sl)
-               else return $ Nothing
       let sendMail = do
-            mail <- mailDocumentClosed False ml sl sealFixed (not (null mailattachments)) document
+            mail <- mailDocumentClosed False sl sealFixed (not (null mailattachments)) document
             let scheduleEmailFunc
                   | signatoryisauthor sl = scheduleEmailSendout
                   | otherwise            = scheduleEmailSendoutWithDocumentAuthorSender (documentid document)

@@ -480,7 +480,7 @@
 "_loginOrSignup":"Retourner à <a class='stylablelink' href='/$langcode$/login'>connexion</a> ou <a class='stylablelink' href='/$langcode$/signup'>déconnexion</a>.",
 "_mailActivateAccountButton":"Activer votre compte",
 "_mailDocumentAwaitingForAuthorContentReadyForSigning":"Le document <strong>$documenttitle$</strong> est prêt à être signé.",
-"_mailDocumentAwaitingForAuthorContentSignedBy":"Vous avez invité $partylist:noescape()$ à signer le document <strong>$documenttitle$</strong>. Ce document a été signé par $partylistSigned:noescape()$.<br/><br/>A votre tour de signer.",
+"_mailDocumentAwaitingForAuthorContentSignedBy":"",
 "_mailDocumentAwaitingForAuthorTitle":"Document à e-signer: $documenttitle$",
 "_mailDocumentErrorContentBodyFirst":"Scrive E-sign n'a malheureusement pas pu traiter le fichier <strong>$documenttitle$</strong>. Le processus de signature a par conséquent été annulé. Nos techniciens ont été informés de ce problème.",
 "_mailDocumentErrorContentBodyFourth":"Nous vous prions de nous excuser pour la gêne occasionnée",

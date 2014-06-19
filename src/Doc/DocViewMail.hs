@@ -35,7 +35,6 @@ import Utils.Prelude
 import Utils.Color
 import Text.StringTemplates.Templates
 import Templates
-import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import DB
 import Control.Monad
@@ -44,6 +43,7 @@ import Data.Maybe
 import File.Model
 import User.Model
 import Util.HasSomeCompanyInfo
+import Util.HasSomeUserInfo
 import qualified Text.StringTemplates.Fields as F
 import BrandedDomain.BrandedDomain
 
@@ -170,39 +170,18 @@ mailInvitation :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
 mailInvitation forMail
                invitationto
                msiglink
-               document@Document{documentinvitetext, documenttitle } = do
+               document = do
     mctx <- getMailContext
     authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
-    let creatorname = getSmartName $ fromJust $ getAuthorSigLink document
     let personname = maybe "" getSmartName msiglink
     let mainfile =  fromMaybe (unsafeFileID 0) (documentfile document) -- There always should be main file but tests fail without it
-    allMailFields <- documentMailFields document mctx
     documentMailWithDocLang document (templateName "mailInvitationToSignContract") $ do
         fieldsInvitationTo invitationto
         F.value "nojavascriptmagic" $ forMail
         F.value "javascriptmagic" $ not forMail
-        F.valueM "header" $ do
-          defaultHeader <- if isSignatory msiglink || not forMail
-                            then
-                              renderLocalTemplate document "mailInvitationToSignContractDefaultHeader" $ do
-                                F.value "creatorname" $ creatorname
-                                F.value "personname" $ Just personname <| personname /= "" |> Nothing
-                                F.value "documenttitle" $ documenttitle
-                                F.value "hascustommessage" $ not $ null documentinvitetext
-                            else
-                              renderLocalTemplate document "mailInvitationToViewDefaultHeader" $ do
-                                F.value "creatorname" creatorname
-                                F.value "personname" personname
-                                F.value "documenttitle" $ documenttitle
-                                F.value "hascustommessage" $ not $ null documentinvitetext
-
-          if null documentinvitetext then
-            return defaultHeader
-           else
-            renderLocalTemplate document "mailInvitationCustomInvitationHeader" $ do
-              F.value "defaultheader" defaultHeader
-              F.valueM "custommessage" $ makeEditable "customtext" documentinvitetext
-              allMailFields
+        F.value "personname" $ Just personname <| personname /= "" |> Nothing
+        F.value "hascustommessage" $ not $ null $ documentinvitetext document
+        F.valueM "custommessage" $ makeEditable "customtext" $ documentinvitetext document
         F.value "link" $ case msiglink of
           Just siglink -> Just $ makeFullLink mctx $ show (LinkSignDoc document siglink)
           Nothing -> Nothing
@@ -235,10 +214,10 @@ mailClosedContent :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
                       -> Document
                       -> m String
 mailClosedContent ispreview document = do
-     content <$> mailDocumentClosed ispreview Nothing (fromJust $ getAuthorSigLink document) False True document
+     content <$> mailDocumentClosed ispreview (fromJust $ getAuthorSigLink document) False True document
 
-mailDocumentClosed :: (MonadDB m, TemplatesMonad m, MailContextMonad m) => Bool -> Maybe KontraLink -> SignatoryLink -> Bool -> Bool -> Document -> m Mail
-mailDocumentClosed ispreview l sl sealFixed documentAttached document = do
+mailDocumentClosed :: (MonadDB m, TemplatesMonad m, MailContextMonad m) => Bool -> SignatoryLink -> Bool -> Bool -> Document -> m Mail
+mailDocumentClosed ispreview sl sealFixed documentAttached document = do
    mctx <- getMailContext
    partylist <- renderLocalListTemplate document $ map getSmartName $ filter isSignatory (documentsignatorylinks document)
    let mainfile = fromMaybe (unsafeFileID 0) (documentsealedfile document `mplus` documentfile document) -- For preview we don't have a sealedd file yet
@@ -246,9 +225,6 @@ mailDocumentClosed ispreview l sl sealFixed documentAttached document = do
         F.value "partylist" $ partylist
         F.value "signatoryname" $ getSmartName sl
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
-        F.value "confirmationlink" $ if ispreview
-                                       then Nothing
-                                       else Just $ (++) (mctxhostpart mctx) <$> show <$> l
         F.value "doclink" $ if ispreview
                              then Nothing
                              else Just $ if isAuthor sl

@@ -480,7 +480,7 @@
 "_loginOrSignup":"Voltar a <a class='stylablelink' href='/$langcode$/login'>iniciar sessão</a> ou <a class='stylablelink' href='/$langcode$/signup'>inscrição</a>.",
 "_mailActivateAccountButton":"Activar conta",
 "_mailDocumentAwaitingForAuthorContentReadyForSigning":"O documento <strong>$documenttitle$</strong> está pronto a assinar.",
-"_mailDocumentAwaitingForAuthorContentSignedBy":"Convidou $partylist:noescape()$ para assinar o documento <strong>$documenttitle$</strong>. Este documento foi assinado por $partylistSigned:noescape()$.<br/><br/>É agora a sua vez de assinar.",
+"_mailDocumentAwaitingForAuthorContentSignedBy":"",
 "_mailDocumentAwaitingForAuthorTitle":"Documento a e-assinar: $documenttitle$",
 "_mailDocumentErrorContentBodyFirst":"Lamentamos, mas o Scrive E-sign não conseguiu processar o ficheiro do documento <strong>$documenttitle$</strong>. O processo de assinatura foi assim cancelado. Os nossos técnicos foram informados desta questão.",
 "_mailDocumentErrorContentBodyFourth":"Lamentamos qualquer inconveniente",

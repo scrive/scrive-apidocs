@@ -1,4 +1,4 @@
-{ 
+{
 "_DeletePDF":"Slett",
 "_RequestedAttachments":"Forespurte vedlegg",
 "_ReviewPDF":"Les gjennom",
@@ -103,7 +103,7 @@
 "_reloadPage":"Last inn siden på nytt",
 "_remindMailNotSignedContractBody":"<strong>$authorname$</strong> ønsker å minne deg på at du ennå ikke har signert dokumentet <strong>$documenttitle$</strong>.",
 "_remindMailNotSignedTitleContract":"Påminnelse om å e-signere dokument: $documenttitle$",
-"_remindMailSignedContractStandardHeaderSendRequest":"Du har tidligere signert dokumentet <strong>$documenttitle$</strong> via Scrive E-sign. <strong>$creatorname$</strong> har bedt om at vi sender dokumentet <strong>$documenttitle$</strong> på nytt til deg.",
+"_remindMailSignedContractStandardHeaderSendRequest":"",
 "_remindMailSignedContractStandardHeaderSendRequest2":"Vennligst finn dokumentet vedlagt.",
 "_remindMailSignedTitle":"Gjensendt dokument: $documenttitle$",
 "_reviewDocument":"Dokument for å lese gjennom",

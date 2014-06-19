@@ -480,7 +480,7 @@
 "_loginOrSignup":"Gehen Sie zurück zu<a class='stylablelink' href='/$langcode$/login'>Anmelden</a> oder zu <a class='stylablelink' href='/$langcode$/signup'>Registrieren</a>.",
 "_mailActivateAccountButton":"Bitte aktivieren Sie Ihr Konto",
 "_mailDocumentAwaitingForAuthorContentReadyForSigning":"Das Dokument <strong>$documenttitle$</strong> liegt bereit zum Signieren.",
-"_mailDocumentAwaitingForAuthorContentSignedBy":"Sie haben $partylist:noescape()$ eingeladen, um das Dokument <strong>$documenttitle$</strong> zu signieren. Dieses Dokument wurde von $partylistSigned:noescape()$ signiert.<br/><br/>Sie sind jetzt an der Reihe zu signieren.",
+"_mailDocumentAwaitingForAuthorContentSignedBy":"",
 "_mailDocumentAwaitingForAuthorTitle":"Dokument zum E-Signieren: $documenttitle$",
 "_mailDocumentErrorContentBodyFirst":"Leider konnte Scrive E-Sign die Dokumentendatei <strong>$documenttitle$</strong> nicht bearbeiten. Deshalb wurde der Signierungsprozess abgebrochen. Unsere Techniker wurden über das Problem informiert.",
 "_mailDocumentErrorContentBodyFourth":"Wir entschuldigen uns für die Unannehmlichkeiten",

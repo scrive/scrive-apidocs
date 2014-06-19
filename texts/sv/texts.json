@@ -480,7 +480,7 @@
 "_loginOrSignup":"Gå tillbaka till <a class='stylablelink' href='/$langcode$/login'>inloggningssidan</a> eller <a class='stylablelink' href='/$langcode$/signup'>skapa konto</a>.",
 "_mailActivateAccountButton":"Aktivera konto",
 "_mailDocumentAwaitingForAuthorContentReadyForSigning":"Dokumentet <strong>$documenttitle$</strong> är färdigt att signeras.",
-"_mailDocumentAwaitingForAuthorContentSignedBy":"Du har bjudit in $partylist:noescape()$ att signera dokumentet <strong>$documenttitle$</strong>. Dokumentet har signerats av $partylistSigned:noescape()$. <br/><br/> Det är nu din tur att signera.",
+"_mailDocumentAwaitingForAuthorContentSignedBy":"",
 "_mailDocumentAwaitingForAuthorTitle":"Dokument att e-signera: $documenttitle$",
 "_mailDocumentErrorContentBodyFirst":"Tyvärr kunde inte Scrives system hantera filformatet för dokumentet <strong>$documenttitle$</strong>. Signeringsprocessen har därmed avbrutits. Våra tekniker har fått ett meddelande om problemet.",
 "_mailDocumentErrorContentBodyFourth":"Vi beklagar för eventuellt besvär som detta orsakar",
