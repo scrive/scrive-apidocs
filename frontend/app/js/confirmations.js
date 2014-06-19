@@ -5,7 +5,7 @@ var ConfirmationModel = Backbone.Model.extend({
       title  : "",
       subtitle: "",
       icon: undefined,
-      acceptText: "Ok",
+      acceptText: localization.ok,
       rejectText: localization.cancel,
       acceptColor : "green",
       content  : jQuery("<p/>"),
