@@ -106,7 +106,7 @@
 "_remindMailNotSignedContractBody":"<strong>$authorname$</strong> want to remind you that you have not yet e-signed the document <strong>$documenttitle$</strong>.",
 "_remindMailNotSignedContractBodyFurther":"Click the button for further instructions.",
 "_remindMailNotSignedTitleContract":"Reminder to e-sign document: $documenttitle$",
-"_remindMailSignedContractStandardHeaderSendRequest":"You have previously e-signed the document<strong>$documenttitle$</strong>. <strong>$creatorname$</strong> has requested to resend the finalised document to you",
+"_remindMailSignedContractStandardHeaderSendRequest":"You have previously e-signed the document <strong>$documenttitle$</strong>. <strong>$creatorname$</strong> has requested to resend the finalised document to you.",
 "_remindMailSignedContractStandardHeaderSendRequest2":"Find the document attached.",
 "_remindMailSignedTitle":"Resent document: $documenttitle$",
 "_reviewDocument":"Document for review",

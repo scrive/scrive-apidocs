@@ -21,6 +21,8 @@ $if(someonesigned)$
  $_mailDocumentAwaitingForAuthorContentSignedBy()$
 $else$
  $_mailDocumentAwaitingForAuthorContentReadyForSigning()$
+$endif$
+<br/>
 <br/>
  $_mailDocumentAwaitingForAuthorFurtherInstructions()$
 $endif$
