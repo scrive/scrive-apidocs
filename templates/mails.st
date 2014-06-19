@@ -169,37 +169,39 @@ mailInvitationToSignContract=
     $mailInvitationTitleContract()$
      $nicemail(
         mailheader= mailInvitationTitleContract();
-        mailp1 = header;
+        mailp1 = mailInvitationCustomHeader();
         mailspacing1 = "<br/>";
         mailp2 = mailInvitationToSignContractIntructions();
-        mailp3 = footer;
+        mailspacing2 = "<br/>";
+        mailp3 = mainInvitationCustomMessage();
         footer = legalparagraph()
     )$
 ###
 mailInvitationToSignContractIntructions=
-    $nicebutton(link=link; text=_mailReviewOnlineDocument())$
+    $nicebutton(link=link; text=_mailGoToDocument())$
 ####
-mailInvitationToSignContractDefaultHeader=
-$_mailInvitationToSignContractDefaultHeader()$
-<br/>
-$if(!hascustommessage)$
-<div class="editable" name="customtext">
-</div>
+mailInvitationCustomHeader=
+$if(sign)$
+  $_mailInvitationToSignContractDefaultHeader()$
+  <br/>
+  <br/>
+  $_mailInvitationToSignFollowInstructions()$
+  <br/>
+$elseif(view)$
+  $_mailInvitationToViewDefaultHeader()$
+  <br/>
+  <br/>
+  $_mailInvitationToSignFollowInstructions()$
+  <br/>
 $endif$
-####
-mailInvitationToViewDefaultHeader=
-<br/>
-$_mailInvitationToViewDefaultHeader()$
-<br/>
-<div class="editable" name="customtext">
-</div>
 ###
-mailInvitationCustomInvitationHeader=
-$defaultheader:noescape()$
-<br/>
-$_mailInvitationCustomInvitationHeader()$:
-<br/>
-<i style="color: $nicemailfgcolour()$">$custommessage:noescape()$</i>
+mainInvitationCustomMessage=
+$if(hascustommessage)$
+  <br/>
+  $_mailInvitationCustomInvitationHeader()$:
+  <br/>
+  <i style="color: $nicemailfgcolour()$">$custommessage:noescape()$</i>
+$endif$
 ###
 ### Reminding mails - SIGNED
 ###

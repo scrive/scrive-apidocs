@@ -170,39 +170,18 @@ mailInvitation :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
 mailInvitation forMail
                invitationto
                msiglink
-               document@Document{documentinvitetext, documenttitle } = do
+               document = do
     mctx <- getMailContext
     authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
-    let creatorname = getSmartName $ fromJust $ getAuthorSigLink document
     let personname = maybe "" getSmartName msiglink
     let mainfile =  fromMaybe (unsafeFileID 0) (documentfile document) -- There always should be main file but tests fail without it
-    allMailFields <- documentMailFields document mctx
     documentMailWithDocLang document (templateName "mailInvitationToSignContract") $ do
         fieldsInvitationTo invitationto
         F.value "nojavascriptmagic" $ forMail
         F.value "javascriptmagic" $ not forMail
-        F.valueM "header" $ do
-          defaultHeader <- if isSignatory msiglink || not forMail
-                            then
-                              renderLocalTemplate document "mailInvitationToSignContractDefaultHeader" $ do
-                                F.value "creatorname" $ creatorname
-                                F.value "personname" $ Just personname <| personname /= "" |> Nothing
-                                F.value "documenttitle" $ documenttitle
-                                F.value "hascustommessage" $ not $ null documentinvitetext
-                            else
-                              renderLocalTemplate document "mailInvitationToViewDefaultHeader" $ do
-                                F.value "creatorname" creatorname
-                                F.value "personname" personname
-                                F.value "documenttitle" $ documenttitle
-                                F.value "hascustommessage" $ not $ null documentinvitetext
-
-          if null documentinvitetext then
-            return defaultHeader
-           else
-            renderLocalTemplate document "mailInvitationCustomInvitationHeader" $ do
-              F.value "defaultheader" defaultHeader
-              F.valueM "custommessage" $ makeEditable "customtext" documentinvitetext
-              allMailFields
+        F.value "personname" $ Just personname <| personname /= "" |> Nothing
+        F.value "hascustommessage" $ not $ null $ documentinvitetext document
+        F.valueM "custommessage" $ makeEditable "customtext" $ documentinvitetext document
         F.value "link" $ case msiglink of
           Just siglink -> Just $ makeFullLink mctx $ show (LinkSignDoc document siglink)
           Nothing -> Nothing
