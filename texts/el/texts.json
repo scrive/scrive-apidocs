@@ -540,7 +540,7 @@
 "_name":"Όνομα",
 "_nameCanBeChangedInAccountSection":"Το όνομά σας μπορεί να αλλαχθεί στις ρυθμίσεις του λογαριασμού σας",
 "_nameInvalidChars":"<span class='put-field-name'/> μπορεί να περιέχει μόνο αλφαβητικούς χαρακτήρες, αποστρόφους, παύλες και κενά.",
-"_nameRequired":"<span class='put-field-name'/> απαιτείται.",
+"_nameRequired":"Απαιτείται <span class='put-field-name'/>. ",
 "_nameTooLong":"<span class='put-field-name'/> μπορεί να περιέχει έως 100 χαρακτήρες.",
 "_newCompanyAccountButtonText":"Νέος λογαριασμός ",
 "_newDocumentTitle":"Χωρίς τίτλο",
