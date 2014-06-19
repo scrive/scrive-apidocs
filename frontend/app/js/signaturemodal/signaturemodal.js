@@ -81,7 +81,9 @@ var SignatureDrawOrTypeModel= Backbone.Model.extend({
     var incompleteSignatoryAttachmentsTasks = _.filter(incompleteTasks, function(task) { return task.isSignatoryAttachmentTask(); });
     var incompleteExtraDetailsTasks = _.filter(incompleteTasks, function(task) { return task.isExtraDetailsTask(); });
 
-    var fieldsLeftToFillIn = incompleteFieldTasks.length > 1 || (incompleteFieldTasks.length == 1 && signatureDrawn);
+    var fieldsLeftToFillIn = (   incompleteFieldTasks.length > 0
+                              || incompleteExtraDetailsTasks.length > 1
+                              || (incompleteExtraDetailsTasks.length == 1 && signatureDrawn));
     var attachmentsLeft = incompleteSignatoryAttachmentsTasks.length > 0;
 
     var extraDetailsLeft = DocumentExtraDetails.detailsMissing(signatory);
