@@ -25,7 +25,6 @@ $endif$
 <br/>
 <br/>
  $_mailDocumentAwaitingForAuthorFurtherInstructions()$
-$endif$
 #####
 mailClosedCustomeMessage=
 $if(custommessage)$
