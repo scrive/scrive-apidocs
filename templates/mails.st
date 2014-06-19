@@ -12,7 +12,7 @@ mailDocumentAwaitingForAuthor=
     $nicemail(
         mailheader= _mailDocumentAwaitingForAuthorTitle();
         mailp1 = mailDocumentAwaitingForAuthorText();
-        mailp2 = nicebutton(link=documentlink; text=_mailReviewOnlineDocument());
+        mailp2 = nicebutton(link=documentlink; text=_mailGoToDocument());
         footer = legalparagraph()
     )$
 #####
@@ -21,6 +21,8 @@ $if(someonesigned)$
  $_mailDocumentAwaitingForAuthorContentSignedBy()$
 $else$
  $_mailDocumentAwaitingForAuthorContentReadyForSigning()$
+<br/>
+ $_mailDocumentAwaitingForAuthorFurtherInstructions()$
 $endif$
 #####
 mailClosedCustomeMessage=
@@ -29,27 +31,6 @@ $if(custommessage)$
   <br/>
   <i>$custommessage:noescape()$</i>
 <br/>
-$endif$
-#####
-mailClosedSignup=
-$if(confirmationlink)$
-$_mailClosedSignup()$
-<br/>
-<br/>
-$if(custommessage)$
-  $mailClosedCustomeMessage()$
-  <br/>
-$endif$
-$nicebutton(link=confirmationlink; text=_mailClosedButton())$
-$else$
-$_mailClosedLoginText()$
-<br/>
-<br/>
-$if(custommessage)$
-  $mailClosedCustomeMessage()$
-  <br/>
-$endif$
-$nicebutton(link=doclink; text=_mailClosedLoginButtonText())$
 $endif$
 #####
 ##### CLOSED MAIL
@@ -71,12 +52,21 @@ mailDocumentClosedTitleContract=
     $endif$
 ###
 mailContractClosedMainP =
-    $if(sealFixed)$ $_mailDocumentCorrectionBody()$ $else$ $_mailContractClosedContentSignedBy()$ $endif$
+    $if(sealFixed)$
+      $_mailDocumentCorrectionBody()$
+    $else$
+      $_mailContractClosedContentSignedBy()$
+    $endif$
     <br/>
     <br/>
     $if(documentAttached)$
       $_mailContractClosedContentAttached()$
-      $mailClosedSignup()$
+      <br/>
+      <br/>
+      $if(custommessage)$
+        $mailClosedCustomeMessage()$
+        <br/>
+      $endif$
     $else$
       $_mailContractClosedContentLinked()$
       $if(confirmationlink)$
@@ -172,8 +162,6 @@ mailInvitationToSignContract=
         mailp1 = mailInvitationCustomHeader();
         mailspacing1 = "<br/>";
         mailp2 = mailInvitationToSignContractIntructions();
-        mailspacing2 = "<br/>";
-        mailp3 = mainInvitationCustomMessage();
         footer = legalparagraph()
     )$
 ###
@@ -194,15 +182,13 @@ $elseif(view)$
   $_mailInvitationToSignFollowInstructions()$
   <br/>
 $endif$
-###
-mainInvitationCustomMessage=
+
 $if(hascustommessage)$
   <br/>
   $_mailInvitationCustomInvitationHeader()$:
   <br/>
   <i style="color: $nicemailfgcolour()$">$custommessage:noescape()$</i>
 $endif$
-###
 ### Reminding mails - SIGNED
 ###
 ###
@@ -219,11 +205,11 @@ $if(custommessage)$
   $_mailInvitationCustomInvitationHeader()$:
   <br/>
   <i>$custommessage:noescape()$</i>
+  <br/>
+
 $else$
       <div class="editable" name="custommessage"></div>
 $endif$
-<br/>
-<br/>
 $if(!documentAttached)$
   $nicebutton(link=mainfilelink; text=_mailDocumentLinkedButton())$
 $endif$
@@ -247,22 +233,27 @@ remindMailNotSignedContract=
 
     $nicemail(
         mailheader=_remindMailNotSignedTitleContract();
-        mailp1=_remindMailNotSignedContractBody();
+        mailp1=remindMailNotSignedContractBody();
         mailp2=remindMailNotSignedContractP2();
         footer= legalparagraph()
     )$
+#####
+remindMailNotSignedContractBody=
+$_remindMailNotSignedContractBody()$
+<BR/>
+<BR/>
+$_remindMailNotSignedContractBodyFurther()$
 #####
 remindMailNotSignedContractP2=
 $if(custommessage)$
   $_mailInvitationCustomInvitationHeader()$:
   <br/>
   <i>$custommessage:noescape()$</i>
+  <br/>
 $else$
       <div class="editable" name="custommessage"></div>
 $endif$
-<br/>
-<br/>
-$nicebutton(link=link; text=_mailReviewOnlineDocument())$
+$nicebutton(link=link; text=_mailGoToDocument())$
 ###
 ###
 ###  NEW USER MAIN
