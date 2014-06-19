@@ -480,7 +480,7 @@
 "_loginOrSignup":"Πηγαίνετε πίσω στο <a class='stylablelink' href='/$langcode$/login'>συνδεθείτε</a> ή <a class='stylablelink' href='/$langcode$/signup'>εγγραφείτε</a>.",
 "_mailActivateAccountButton":"Ενεργοποίηση λογαριασμού",
 "_mailDocumentAwaitingForAuthorContentReadyForSigning":"Το έγγραφο <strong>$documenttitle$</strong> είναι έτοιμο να υπογραφεί. ",
-"_mailDocumentAwaitingForAuthorContentSignedBy":"Έχετε προσκαλέσει το $partylist:noescape()$ για να υπογράψει το έγγραφο <strong>$documenttitle$</strong>. Αυτό το έγγραφο έχει υπογραφεί από τον $partylistSigned:noescape()$.<br/><br/>Είναι τώρα η σειρά σας να υπογράψετε. ",
+"_mailDocumentAwaitingForAuthorContentSignedBy":"",
 "_mailDocumentAwaitingForAuthorTitle":"Έγγραφο προς ηλεκτρονική υπογραφή: $documenttitle$ ",
 "_mailDocumentErrorContentBodyFirst":"Δυστυχώς η υπηρεσία Scrive  δεν μπόρεσε να διαχειριστεί το αρχείο εγγράφων <strong>$documenttitle$</strong>. Επομένως η διαδικασία υπογραφής έχει ακυρωθεί. Οι τεχνικοί μας έχουν ειδοποιηθεί για το θέμα. ",
 "_mailDocumentErrorContentBodyFourth":"Λυπούμαστε για την αναστάτωση ",

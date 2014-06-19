@@ -1,4 +1,4 @@
-{ 
+{
 "_DeletePDF":"Supprimer",
 "_RequestedAttachments":"Pièces jointes requises",
 "_ReviewPDF":"Passer en revue",
@@ -103,7 +103,7 @@
 "_reloadPage":"Recharger la page",
 "_remindMailNotSignedContractBody":"<strong>$authorname$</strong> voudrais vous rappeler que vous n'avez pas encore signé le document <strong>$documenttitle$</strong>.",
 "_remindMailNotSignedTitleContract":"Rappel d'e-signature du document: $documenttitle$",
-"_remindMailSignedContractStandardHeaderSendRequest":"Vous avez précédemment signé le document <strong>$documenttitle$</strong> via le système Scrive E-sign. <strong>$creatorname$</strong> nous a demandé de vous renvoyer le document <strong>$documenttitle$</strong>.",
+"_remindMailSignedContractStandardHeaderSendRequest":"",
 "_remindMailSignedContractStandardHeaderSendRequest2":"Veuillez trouver le document ci-joint.",
 "_remindMailSignedTitle":"Renvoyer le document: $documenttitle$",
 "_reviewDocument":"Document à passer en revue",

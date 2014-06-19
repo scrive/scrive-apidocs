@@ -480,7 +480,7 @@
 "_loginOrSignup":"Torna a <a class='stylablelink' href='/$langcode$/login'>accedi</a> o <a class='stylablelink' href='/$langcode$/signup'>registrati</a>.",
 "_mailActivateAccountButton":"Attiva l'account",
 "_mailDocumentAwaitingForAuthorContentReadyForSigning":"Il documento <strong>$documenttitle$</strong> è pronto per la firma.",
-"_mailDocumentAwaitingForAuthorContentSignedBy":"Hai invitato $partylist:noescape()$ a firmare il documento <strong>$documenttitle$</strong>. Questo documento è stato firmato da $partylistSigned:noescape()$.<br/><br/>Ora è il tuo turno per firmare.",
+"_mailDocumentAwaitingForAuthorContentSignedBy":"",
 "_mailDocumentAwaitingForAuthorTitle":"Documento da firmare elettronicamente: $documenttitle$",
 "_mailDocumentErrorContentBodyFirst":"Purtroppo Scrive E-sign non ha potuto gestire il documento <strong>$documenttitle$</strong>. Pertanto il processo di firma è stato annullato. Abbiamo informato il nostro staff tecnico del problema.",
 "_mailDocumentErrorContentBodyFourth":"Ci scusiamo per l'inconveniente",

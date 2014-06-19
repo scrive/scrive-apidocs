@@ -480,7 +480,7 @@
 "_loginOrSignup":"Ga terug naar <a class='stylablelink' href='/$langcode$/login'>inloggen</a> of <a class='stylablelink' href='/$langcode$/signup'>aanmelden</a>.",
 "_mailActivateAccountButton":"Account activeren",
 "_mailDocumentAwaitingForAuthorContentReadyForSigning":"Het document <strong>$documenttitle$</strong> is klaar voor ondertekening.",
-"_mailDocumentAwaitingForAuthorContentSignedBy":"U hebt $partylist:noescape()$ uitgenodigd om het document <strong>$documenttitle$</strong> te ondertekenen. Dit document is ondertekend door $partylistSigned:noescape()$.<br/><br/>Het is nu uw beurt om te ondertekenen.",
+"_mailDocumentAwaitingForAuthorContentSignedBy":"",
 "_mailDocumentAwaitingForAuthorTitle":"Document om te e-ondertekenen: $documenttitle$",
 "_mailDocumentErrorContentBodyFirst":"Helaas kon Scrive E-sign het document <strong>$documenttitle$</strong> niet hanteren. Daarom is het ondertekeningsproces geannuleerd. Onze technici zijn van dit probleem op de hoogte gesteld.",
 "_mailDocumentErrorContentBodyFourth":"Onze verontschuldigingen voor het ongemak",

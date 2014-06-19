@@ -1,4 +1,4 @@
-{ 
+{
 "_DeletePDF":"verwijderen",
 "_RequestedAttachments":"Aangevraagde bijlagen",
 "_ReviewPDF":"Bekijk",
@@ -103,7 +103,7 @@
 "_reloadPage":"Ververs pagina",
 "_remindMailNotSignedContractBody":"<strong>$authorname$</strong> wilt u eraan herinneren dat u het document <strong>$documenttitle$</strong> nog niet heeft ondertekend.",
 "_remindMailNotSignedTitleContract":"Herinnering om het document $documenttitle$ te e-ondertekenen",
-"_remindMailSignedContractStandardHeaderSendRequest":"U heeft eerder het document <strong>$documenttitle$</strong> ondertekend via Scrive E-sign. <strong>$creatorname$</strong> heeft ons gevraagd het document <strong>$documenttitle$</strong> opnieuw naar u te sturen.",
+"_remindMailSignedContractStandardHeaderSendRequest":"",
 "_remindMailSignedContractStandardHeaderSendRequest2":"Zie bijgevoegd document.",
 "_remindMailSignedTitle":"Opnieuw verstuurde document: $documenttitle$ ",
 "_reviewDocument":"Document om te bekijken",

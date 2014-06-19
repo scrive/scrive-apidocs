@@ -1,4 +1,4 @@
-{ 
+{
 "_DeletePDF":"Eliminar",
 "_RequestedAttachments":"Anexos solicitados",
 "_ReviewPDF":"Revisar",
@@ -103,7 +103,7 @@
 "_reloadPage":"Recargar la página",
 "_remindMailNotSignedContractBody":"<strong>$authorname$</strong> quiere recordarle que usted no ha firmado todavía el documento <strong>$documenttitle$</strong>.",
 "_remindMailNotSignedTitleContract":"Recordatorio para firmar electrónicamente el documento: $documenttitle$",
-"_remindMailSignedContractStandardHeaderSendRequest":"Anteriormente ha firmado el documento <strong>$documenttitle$</strong> con Scrive E-sign. <strong>$creatorname$</strong> nos ha solicitado que le reenviemos el documento <strong>$documenttitle$</strong> a usted.",
+"_remindMailSignedContractStandardHeaderSendRequest":"",
 "_remindMailSignedContractStandardHeaderSendRequest2":"Por favor encuentre adjuntado el documento.",
 "_remindMailSignedTitle":"Reenviar documento: $documenttitle$",
 "_reviewDocument":"Documento a revisar",
