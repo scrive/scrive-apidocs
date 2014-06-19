@@ -63,13 +63,12 @@ describe "sign view all functionalities" do
     end
 
     puts "first sign as the first person"
-    @h.emailhelper.follow_link_in_latest_mail_for @h.ctx.props.first_counterpart_email
 
-    @h.screenshot 'sign_view_advanced_10'
+    @h.emailhelper.follow_link_in_latest_mail_for @h.ctx.props.first_counterpart_email
 
     puts "make sure it's got the sign button"
     @h.wait_until { @h.driver.find_element :css => "div.sign" }
-
+    @h.screenshot 'sign_view_advanced_10'
     @h.dochelper.uploadAttachment(@h.ctx.props.first_sig_attachment_pdf_path, screenshot_name: 'sign_view_advanced_11')
     @h.dochelper.uploadAttachment(@h.ctx.props.second_sig_attachment_pdf_path)
 # FIXME: check for unfilled custom value (this one has a default one filled in at the moment)
