@@ -475,6 +475,7 @@ langSwitcher=
                     , {value : "no", name : "$NorwegianInNorwegian()$"}
                     , {value : "el", name : "$GreekInGreek()$", hidden : true}
                    ]
+                   languages = _.sortBy(languages, function(l) {return l.name;});
                    var lname = _.findWhere(languages, {value : "$langcode$"}).name;
 
                    var select = new Select({  name : lname,

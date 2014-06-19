@@ -317,6 +317,7 @@ var AccountSettingsView = Backbone.View.extend({
         , {name: localization.account.accountSecurity.langNO, value: "no"}
         , {name: localization.account.accountSecurity.langEL, value: "el", hidden : true}
       ];
+      languages = _.sortBy(languages, function(l) {return l.name;});
       var lname = _.findWhere(languages, {value : model.lang()}).name;
       this.langselect = new Select({
                              name : lname,

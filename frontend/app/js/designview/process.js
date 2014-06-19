@@ -135,6 +135,7 @@ define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_the
               , {name: localization.languages.no, value: "no"}
               , {name: localization.languages.el, value: "el", hidden : true}
             ];
+            languages = _.sortBy(languages, function(l) {return l.name;});
             var lname = _.findWhere(languages, {value :lang}).name;
 
 
