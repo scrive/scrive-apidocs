@@ -283,7 +283,7 @@ define(['Backbone', 'legacy_code'], function() {
       });
 
       body.append($("<div class='position'/>")
-                    .append($("<label style='text-align:left;margin-left: 32px;width:100%'></label>").text(localization.accountSetupModal.modalAccountPasswordRequirements))
+                    .append($("<label class='big-input-description'></label>").text(localization.accountSetupModal.modalAccountPasswordRequirements))
                     .append(passwordInput.el())
                     .append(password2Input.el()));
 
