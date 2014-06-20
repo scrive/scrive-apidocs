@@ -202,7 +202,7 @@ var CsvSignatoryDesignView = Backbone.View.extend({
                     name: "csv",
                     color : "black",
                     shape: 'rounded',
-                    width: 250,
+                    width: 280,
                     size: "big",
                     text: localization.csv.selectFile,
                     type: "application/csv",
