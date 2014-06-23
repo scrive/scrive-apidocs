@@ -1092,7 +1092,13 @@ catchKontra m f = m `E.catch` (\e -> case fromKontraException e of
 data SomeKontraException = forall e. (Show e, KontraException e) => SomeKontraException e
   deriving (Typeable)
 
-instance Exception SomeKontraException
+instance Exception SomeKontraException where
+  toException = SomeException
+  fromException (SomeException e) = msum [ cast e
+                                         , do
+                                              DBException {dbeError = e'} <- cast e
+                                              cast e'
+                                         ]
 
 deriving instance Show SomeKontraException
 
