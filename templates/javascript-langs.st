@@ -31,7 +31,6 @@ javascriptLocalisation =
              , tbsGenerationMessage : function(doctitle, docid){
                     return  '$_tbsGenerationMessage1()$ "' + doctitle + '" $_tbsGenerationMessage2()$ "' + docid + '" $_tbsGenerationMessage3()$'
                      }
-             , ie6NotSupported : "$_ie6NotSupported()$"
              , personalName : "$_fullName()$"
              , fstname : "$_firstname()$"
              , sndname : "$_lastname()$"
@@ -263,9 +262,7 @@ javascriptLocalisation =
             }
          , signature : {
                placeFor : "$_signaturePlaceFor()$"
-             , placeYour : "$_signaturePlaceYour()$"
              , confirmSignature : "$_signatureConfirm()$"
-             , clickThere : "$_clickThere()$"
              , clickToDraw : "$_clickToDraw()$"
 
            }
@@ -332,8 +329,7 @@ javascriptLocalisation =
                }
              , sign : "$_sign()$"
              , textFields : {
-                      textField: "$_textField()$"
-                    , obligatory: "$_textFieldObligatory()$"
+                      obligatory: "$_textFieldObligatory()$"
                     , forThis : "$_textFieldFor()$"
                     , done : "$_textFieldDone()$"
              }
