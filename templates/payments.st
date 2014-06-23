@@ -17,21 +17,21 @@ paymentsSignupEmail1=
 $_paymentsEmailThanksForChoosingScrive()$. $_paymentsEmailSeeDetailsBelow()$
 </p>
 <p>
-$_paymentsEmailDescription()$: $planname$<br />
+$_paymentsEmailDescription()$ $planname$<br />
 $if(quantity)$$_CompanyAccounts()$: $quantity$<br />$endif$
-$_paymentsEmailTotal()$: $total$ $currency$ $_paymentPlanPerMonth()$<br />
+$_paymentsEmailTotal()$ $total$ $currency$ $_paymentPlanPerMonth()$<br />
 </p>
 ###
 paymentsSignupEmail2=
 <p>
-$_paymentsEmailCreditCardCharged()$: $total$ $currency$ <br />
-$_paymentsEmailTransactionDate()$: $startdate$<br /><br />
-$_paymentsEmailNextTransactionDate()$: $enddate$
+$_paymentsEmailCreditCardCharged()$ $total$ $currency$ <br />
+$_paymentsEmailTransactionDate()$ $startdate$<br /><br />
+$_paymentsEmailNextTransactionDate()$ $enddate$
 </p>
 ###
 paymentsSignupEmail3=
 <p>
-$_paymentsEmailBilledTo()$:
+$_paymentsEmailBilledTo()$
 </p>
 <p>
 <strong>$fullname$</strong><br />
@@ -63,7 +63,7 @@ $_paymentsDeclinedEmailSorry()$
 ###
 paymentsDeclinedEmail2=
 <p>
-$_paymentsEmailBilledTo()$:
+$_paymentsEmailBilledTo()$
 </p>
 <p>
 <strong>$fullname$</strong><br />
