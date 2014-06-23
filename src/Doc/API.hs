@@ -183,28 +183,27 @@ apiCallCreateFromFile = api $ do
     Just (Input contentspec (Just filename'') _contentType) -> do
       let filename' = dropFilePathFromWindows filename''
       let mformat = getFileFormatForConversion filename'
-      content' <- case contentspec of
-        Left filepath -> liftIO $ BSL.readFile filepath
-        Right content -> return content
+      content1' <- case contentspec of
+        Left filepath -> liftIO $ BS.readFile filepath
+        Right content -> return (BS.concat $ BSL.toChunks content)
+
+      -- This is some kind of Salesforce hack that was supposed to be
+      -- dropped with Happstack 7.0.4. It seems to be used till now
+      -- for example by Avis.
+      let content' = either (const content1') id (B64.decode content1')
       (content'', filename) <- case mformat of
         Nothing -> return (content', filename')
         Just format -> do
-          eres <- convertToPDF (ctxlivedocxconf ctx) (BS.concat $ BSL.toChunks content') format
+          eres <- convertToPDF (ctxlivedocxconf ctx) content' format
           case eres of
             Left (LiveDocxIOError e) -> throwIO . SomeKontraException $ serverError $ show e
             Left (LiveDocxSoapError s)-> throwIO . SomeKontraException $ serverError s
             Right res -> do
               -- change extension from .doc, .docx and others to .pdf
               let filename = takeBaseName filename' ++ ".pdf"
-              return $ (BSL.fromChunks [res], filename)
+              return $ (res, filename)
 
-      pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ do
-                     cres <- preCheckPDF (concatChunks content'')
-                     case cres of
-                        Right c -> return (Right c)
-                        Left m -> case (B64.decode $ (concatChunks content'')) of -- Salesforce hack. Drop this decoding when happstack-7.0.4 is included.
-                                      Right dcontent -> preCheckPDF dcontent
-                                      Left _ -> return (Left m)
+      pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ preCheckPDF content''
       fileid' <- dbUpdate $ NewFile filename pdfcontent
       return (Just fileid', takeBaseName filename)
   mtimezone <- getField "timezone"
@@ -910,25 +909,25 @@ apiCallChangeMainFile docid = api $ do
       Just (Input contentspec (Just filename') _contentType) -> do
         let filename = takeBaseName filename' ++ ".pdf"
         let mformat = getFileFormatForConversion filename'
-        content' <- case contentspec of
-          Left filepath -> liftIO $ BSL.readFile filepath
-          Right content -> return content
+        content1' <- case contentspec of
+          Left filepath -> liftIO $ BS.readFile filepath
+          Right content -> return (BS.concat (BSL.toChunks content))
+
+        -- This is some kind of Salesforce hack that was supposed to be
+        -- dropped with Happstack 7.0.4. It seems to be used till now
+        -- for example by Avis.
+        let content' = either (const content1') id (B64.decode content1')
+
         content'' <- case mformat of
           Nothing -> return content'
           Just format -> do
             ctx <- getContext
-            eres <- convertToPDF (ctxlivedocxconf ctx) (BS.concat $ BSL.toChunks content') format
+            eres <- convertToPDF (ctxlivedocxconf ctx) content' format
             case eres of
               Left (LiveDocxIOError e) -> throwIO . SomeKontraException $ serverError $ show e
               Left (LiveDocxSoapError s)-> throwIO . SomeKontraException $ serverError s
-              Right res -> return $ BSL.fromChunks [res]
-        pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ do
-                       cres <- preCheckPDF (concatChunks content'')
-                       case cres of
-                          Right c -> return (Right c)
-                          Left m -> case (B64.decode $ (concatChunks content'')) of -- Salesforce hack. Drop this decoding when happstack-7.0.4 is included.
-                                        Right dcontent -> preCheckPDF dcontent
-                                        Left _ -> return (Left m)
+              Right res -> return $ res
+        pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ preCheckPDF content''
         fileid' <- dbUpdate $ NewFile filename pdfcontent
         return $ Just (fileid', takeBaseName filename)
 
