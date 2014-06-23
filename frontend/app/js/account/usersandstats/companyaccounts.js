@@ -23,17 +23,17 @@ var CompanyAccountsModel = Backbone.Model.extend({
             var body = jQuery("<div class='standard-input-table'>");
             var table = jQuery("<table/>");
 
-            var tr1 = jQuery("<tr/>").append(jQuery("<td/>").text(localization.fstname + ":"));
+            var tr1 = jQuery("<tr/>").append(jQuery("<td/>").text(localization.fstname));
             var fstname = jQuery("<input type='text' name='fstname' autocomplete='off' />");
             tr1.append(jQuery("<td/>").append(fstname));
             table.append(tr1);
 
-            var tr2 = jQuery("<tr/>").append(jQuery("<td/>").text(localization.sndname + ":"));
+            var tr2 = jQuery("<tr/>").append(jQuery("<td/>").text(localization.sndname));
             var sndname = jQuery("<input type='text' name='sndname' autocomplete='off' />");
             tr2.append(jQuery("<td/>").append(sndname));
             table.append(tr2);
 
-            var tr5 = jQuery("<tr/>").append(jQuery("<td/>").text(localization.email + ":"));
+            var tr5 = jQuery("<tr/>").append(jQuery("<td/>").text(localization.email));
             var email = jQuery("<input type='text' name='email' autocomplete='off' />");
             tr5.append(jQuery("<td/>").append(email));
             table.append(tr5);
