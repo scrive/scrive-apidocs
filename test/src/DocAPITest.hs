@@ -41,24 +41,42 @@ testUpdateDoc updateJsonPath = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
 
-  req <- mkRequest POST [ ("expectedType", inText "text")
-                       , ("file", inFile "test/pdfs/simple.pdf")]
-  (_, _ctx') <- runTestKontra req ctx $ apiCallCreateFromFile
+  do
+     req <- mkRequest POST [ ("expectedType", inText "text")
+                           , ("file", inFile "test/pdfs/simple.pdf")]
+     (_, _ctx') <- runTestKontra req ctx $ apiCallCreateFromFile
+     return ()
 
   docs <- randomQuery $ GetDocumentsByAuthor (userid user)
-  assertEqual "just one doc" 1 (length docs)
+  assertEqual "Just one doc" 1 (length docs)
   let doc = head docs
 
-  req' <- mkRequest POST [("json", inText cont)]
-  _ <- runTestKontra req' ctx $ apiCallUpdate $ documentid doc
+  do
+     req <- mkRequest POST [("json_is_missing", inText cont)]
+     (rsp,_) <- runTestKontra req ctx $ apiCallUpdate $ documentid doc
+     assertEqual "Status code when json field is missing" 400 (rsCode rsp)
+     return ()
 
-  req'' <- mkRequest POST []
-  (rsp, _) <- runTestKontra req'' ctx $ apiCallReady $ documentid doc
-  let rspString = BS.toString $ rsBody rsp
-      Ok (JSObject response) = decode rspString
-      Just (JSString sts) = lookup "status" $ fromJSObject response
+  do
+     req <- mkRequest POST [ ("json", inText cont)
+                           , ("objectversion", inText "3412342341")]
+     (rsp,_) <- runTestKontra req ctx $ apiCallUpdate $ documentid doc
+     assertEqual "Status code for invalid objectversion is 409" 409 (rsCode rsp)
+     return ()
 
-  assertEqual "status is pending" "Pending" (fromJSString sts)
+  do
+     req <- mkRequest POST [("json", inText cont)]
+     _ <- runTestKontra req ctx $ apiCallUpdate $ documentid doc
+     return ()
+
+  do
+     req <- mkRequest POST []
+     (rsp, _) <- runTestKontra req ctx $ apiCallReady $ documentid doc
+     let rspString = BS.toString $ rsBody rsp
+         Ok (JSObject response) = decode rspString
+         Just (JSString sts) = lookup "status" $ fromJSObject response
+
+     assertEqual "Status is pending" "Pending" (fromJSString sts)
 
   return ctx
 
