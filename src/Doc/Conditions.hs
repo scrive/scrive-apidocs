@@ -216,17 +216,20 @@ sqlWhereSignatoryIsNotAuthor = sqlWhereE SignatoryIsAuthor $
 
 
 data SignatoryHasAlreadySigned = SignatoryHasAlreadySigned
+  { signatoryHasAlreadySignedTime :: MinutesTime
+  }
   deriving (Eq, Ord, Show, Typeable)
 
 instance ToJSValue SignatoryHasAlreadySigned where
-  toJSValue (SignatoryHasAlreadySigned) = runJSONGen $ do
-                     value "message" ("Signatory has already signed" :: String)
+  toJSValue (SignatoryHasAlreadySigned {..}) = runJSONGen $ do
+    value "message" ("Signatory has already signed" :: String)
+    value "sign_time" (show signatoryHasAlreadySignedTime)
 
 instance KontraException SignatoryHasAlreadySigned
 
 sqlWhereSignatoryHasNotSigned :: (MonadState v m, SqlWhere v)
                                  => m ()
-sqlWhereSignatoryHasNotSigned = sqlWhereE SignatoryHasAlreadySigned $
+sqlWhereSignatoryHasNotSigned = sqlWhereEV (SignatoryHasAlreadySigned,"signatory_links.sign_time") $
   "signatory_links.sign_time IS NULL"
 
 

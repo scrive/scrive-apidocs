@@ -386,7 +386,7 @@ apiCallReject did slid = api $ do
     switchLang . getLang =<< theDocument
     (dbUpdate . RejectDocument slid customtext =<< signatoryActor ctx sll)
         `catchKontra` (\(DocumentStatusShouldBe _ _ i) -> throwIO . SomeKontraException $ conflictError $ "Document not pending but " ++ show i)
-        `catchKontra` (\(SignatoryHasAlreadySigned) -> throwIO . SomeKontraException $ conflictError $ "Signatory has already signed")
+        `catchKontra` (\(SignatoryHasAlreadySigned {}) -> throwIO . SomeKontraException $ conflictError $ "Signatory has already signed")
     postDocumentRejectedChange slid =<< theDocument
     Accepted <$> (documentJSON mu False True True Nothing Nothing =<< theDocument)
 
@@ -497,7 +497,7 @@ apiCallSign  did slid = api $ do
                               (Right . Accepted) <$> (documentJSON mu False True True Nothing Nothing =<< theDocument)
    )
     `catchKontra` (\(DocumentStatusShouldBe _ _ i) -> throwIO . SomeKontraException $ conflictError $ "Document not pending but " ++ show i)
-    `catchKontra` (\(SignatoryHasAlreadySigned) -> throwIO . SomeKontraException $ conflictError $ "Signatory has already signed")
+    `catchKontra` (\(SignatoryHasAlreadySigned {}) -> throwIO . SomeKontraException $ conflictError $ "Signatory has already signed")
 
 {- | Utils for signing with eleg -}
 getValidPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [(FieldType,String)] -> m (Maybe String)
