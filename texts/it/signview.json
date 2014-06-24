@@ -119,7 +119,7 @@
 "_signViewSignatoryAttachmentsTitleForOne":"Carica allegato",
 "_signViewTextField":"Scrivi lì",
 "_signWithSMSPin":"Accedi con PIN via SMS",
-"_signatoryAttachmentsSupportedFormats":"",
+"_signatoryAttachmentsSupportedFormats":"Formati supportati: PDF, JPG e PNG",
 "_signatoryMessageIfCancelled":"Annullato",
 "_signatoryMessageIfElse":"Inviato",
 "_signatoryMessageIfSignatoryDatamismatch":"ID errata",

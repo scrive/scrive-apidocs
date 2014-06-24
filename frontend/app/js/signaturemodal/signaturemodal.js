@@ -31,13 +31,6 @@ var SignatureDrawOrTypeModel= Backbone.Model.extend({
   drawingMode : function() {
      return !this.typingMode();
   },
-  toogleMode : function() {
-    this.set({typingMode: !this.typingMode()});
-
-    var tmp = this.field().valueTMP();
-    if (tmp != undefined ) tmp.typingMode = this.typingMode();
-
-  },
   onClose : function() {
      return this.get("onClose")();
   },
@@ -152,13 +145,6 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
         header.append($("<div style='font-size:28px;line-height:32px'>").text(this.model.drawingMode() ? localization.pad.drawSignatureBoxHeader : localization.pad.typeSignatureBoxHeader));
         var row1 = $("<div>");
         header.append(row1);
-        if (!BrowserInfo.isIE8orLower() && !BrowserInfo.isIphone()) {
-        row1.append($("<div style='display:inline-block'/>").text(localization.pad.or).append($("<label class='clickable' style='margin-left:5px'/>")
-                                                            .text(this.model.drawingMode() ? localization.pad.typeSignature : localization.pad.drawSignature)
-                                                            .click(function() { self.model.toogleMode(); return false;}))
-                   );
-        }
-
         header.append($("<a class='modal-close'/>").click(function() { self.model.onClose();}));
         if (!this.model.drawingMode()) {
           this.textInput = new InfoTextInput({

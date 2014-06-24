@@ -119,7 +119,7 @@
 "_signViewSignatoryAttachmentsTitleForOne":"Carregar anexo",
 "_signViewTextField":"Escrever aqui",
 "_signWithSMSPin":"Assinar com PIN por SMS",
-"_signatoryAttachmentsSupportedFormats":"",
+"_signatoryAttachmentsSupportedFormats":"Formatos de ficheiro suportados: PDF, JPG e PNG",
 "_signatoryMessageIfCancelled":"Cancelado",
 "_signatoryMessageIfElse":"Enviado",
 "_signatoryMessageIfSignatoryDatamismatch":"eID incorrecta",

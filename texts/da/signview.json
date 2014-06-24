@@ -119,7 +119,7 @@
 "_signViewSignatoryAttachmentsTitleForOne":"Upload vedhæftet fil",
 "_signViewTextField":"Skriv der",
 "_signWithSMSPin":"Signer med PIN via SMS",
-"_signatoryAttachmentsSupportedFormats":"",
+"_signatoryAttachmentsSupportedFormats":"Understøttede filformater: PDF, JPG og PNG",
 "_signatoryMessageIfCancelled":"Annulleret",
 "_signatoryMessageIfElse":"Sendt",
 "_signatoryMessageIfSignatoryDatamismatch":"Forkert eID",
