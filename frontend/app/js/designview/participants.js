@@ -3,7 +3,7 @@
  *
  */
 
-define(['Backbone', 'legacy_code'], function() {
+define(['Backbone', 'common/language_service', 'legacy_code'], function(Backbone, LanguageService) {
     // model is Signatory
     var DesignViewNewFieldSelector = Backbone.View.extend({
         className: 'design-view-action-participant-new-field-selector',
@@ -119,16 +119,14 @@ define(['Backbone', 'legacy_code'], function() {
 
             var options = [];
             for(i=1;i<=model.document().maxPossibleSignOrder();i++) {
-                var ordinal = localized_ordinal(i, localization.code);
-                options.push({name: ordinal + ' ' +
+                options.push({name: LanguageService.localizedOrdinal(i) + ' ' +
                               localization.designview.toReceiveDocument,
                               value: i});
             }
 
-            var ordinal = localized_ordinal(order, localization.code);
             var select = new Select({
                 options: options,
-                name: ordinal + ' ' +
+                name: LanguageService.localizedOrdinal(order) + ' ' +
                     localization.designview.toReceiveDocument,
                  textWidth : "145px",
 

@@ -28,15 +28,15 @@ processMixpanelEvent token SetUserProps props
       Success              -> return OK
   | otherwise = do
     return (Failed "Tried to set Mixpanel prop without user ID!")
-processMixpanelEvent token (NamedEvent name) props
-  | Just (uid, props') <- extractUID props = do
-    res <- liftIO $ Mixpanel.track token (show uid) name (map mixpanelProperty props')
+processMixpanelEvent token (NamedEvent name) props = do
+    let (distinctid, props') = case extractUID props of
+                                Just (uid, props'') -> (Just (show uid), props'')
+                                Nothing -> (Nothing, props)
+    res <- liftIO $ Mixpanel.track token distinctid name (map mixpanelProperty props')
     case res of
       HTTPError reason     -> return (Failed reason)
       MixpanelError reason -> return (Failed reason)
       Success              -> return OK
-  | otherwise = do
-    return (Failed "Tried to track Mixpanel event without user ID!")
 processMixpanelEvent _ (UploadDocInfo _) _ =
   -- We only do this for Precog
   return OK
