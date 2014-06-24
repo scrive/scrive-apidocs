@@ -682,6 +682,17 @@ window.Signatory = Backbone.Model.extend({
       // Explaination: If email, phone or personal number has no placements, it will be interpreted as optional,
       // unless it will be required to be obligatory by one of ensureXXX functions.
 
+      if (signatory.fstnameField() != undefined && !signatory.fstnameField().hasPlacements())
+      {
+        signatory.fstnameField().authorObligatory = 'optional';
+        signatory.fstnameField().set({"obligatory":true, "shouldbefilledbysender" : false});
+      }
+      if (signatory.sndnameField() != undefined && !signatory.sndnameField().hasPlacements())
+      {
+        signatory.sndnameField().authorObligatory = 'optional';
+        signatory.sndnameField().set({"obligatory":true, "shouldbefilledbysender" : false});
+      }
+
       if (signatory.personalnumberField() != undefined && !signatory.personalnumberField().hasPlacements())
       {
         signatory.personalnumberField().authorObligatory = 'optional';

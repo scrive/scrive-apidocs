@@ -362,7 +362,9 @@ window.Field = Backbone.Model.extend({
        this.set({placements : newplacements});
        if (this.isCheckbox() && newplacements.length == 0)
            this.signatory().deleteField(this);
-
+       else if ((this.isFstName() || this.isSndName()) && newplacements.length == 0){
+           this.signatory().trigger('change'); // Signatory will fallback to defaults obligatoriness if names don't have placements
+       }
     },
     removeAllPlacements : function() {
         _.each(this.placements(), function(p) {p.remove();});
