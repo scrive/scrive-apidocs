@@ -238,7 +238,14 @@ attention_ title = mixlog_ (title ++ " (ATTENTION!)")
 
 -- | Cannonicalize a string for yaml output. Yaml has a lot of different
 -- ways to encode strings, we choose double quoted style as canonical.
+--
+-- This function outputs 'undefined' when anything in the string is
+-- not defined.
 showStringYaml :: String -> String
+showStringYaml str | isBottom (goOverString str) = "undefined"
+  where
+        goOverString [] = ()
+        goOverString (c:r) = c `seq` goOverString r
 showStringYaml str = "\"" ++ concatMap escape str ++ "\""
   where escape '"' = "\\\""
         escape '\\' = "\\\\"
@@ -272,22 +279,32 @@ isBottom f = unsafePerformIO $
     , E.Handler (\(_ :: E.RecUpdError)      -> return True)
     ]
 
--- | Show JSON as Yaml in defined by us canonical form. Important is
--- that it does not introduce spurious newlines so it can be reliably
--- grepped.
+-- | Show JSON as Yaml in defined by us canonical form. It does not
+-- introduce spurious newlines so it can be reliably grepped.
+--
+-- This function tries very hard to extract as much info as possible
+-- even if there are some bottom values present here and there.
 jsonShowYamlLn :: JSValue -> [String]
 jsonShowYamlLn ev | isBottom ev = ["undefined"]
 jsonShowYamlLn JSNull = ["null"]
 jsonShowYamlLn (JSBool True) = ["true"]
 jsonShowYamlLn (JSBool False) = ["false"]
+jsonShowYamlLn (JSRational _asFloat val) | isBottom (denominator val) || isBottom (numerator val) = ["undefined"]
 jsonShowYamlLn (JSRational _asFloat val) | denominator val == 1 = [show (numerator val)]
 jsonShowYamlLn (JSRational _asFloat val) = [showFFloat Nothing (fromRational val) ""]
 jsonShowYamlLn (JSString val) = [showStringYaml (fromJSString val)]
+jsonShowYamlLn (JSArray ev) | isBottom (length ev) = ["undefined"]
 jsonShowYamlLn (JSArray []) = ["[]"]
 jsonShowYamlLn (JSArray vals) = concatMap p vals
   where p val = zipWith (\prep line -> prep ++ line) ("- " : repeat "  ") (jsonShowYamlLn val)
+jsonShowYamlLn (JSObject vals) | isBottom (length (fromJSObject vals)) = ["undefined"]
 jsonShowYamlLn (JSObject vals) | null (fromJSObject vals) = ["{}"]
 jsonShowYamlLn (JSObject vals) = concatMap p (fromJSObject vals)
-  where p (key,val@(JSObject con)) | not (null (fromJSObject con)) = (showStringYaml key ++ ": ") : map ("  " ++) (jsonShowYamlLn val)
-        p (key,val@(JSArray con)) | not (null con) = (showStringYaml key ++ ": ") : map ("  " ++) (jsonShowYamlLn val)
+  where p (key,val) | isNonEmptyContainer val = (showStringYaml key ++ ": ") : map ("  " ++) (jsonShowYamlLn val)
         p (key,val) = zipWith (\prep line -> prep ++ line) ((showStringYaml key ++ ": ") : repeat "  ") (jsonShowYamlLn val)
+        isNonEmptyContainer val | isBottom val = False
+        isNonEmptyContainer (JSObject con) | isBottom (length (fromJSObject con)) = False
+        isNonEmptyContainer (JSObject con) = not (null (fromJSObject con))
+        isNonEmptyContainer (JSArray con) | isBottom (length con) = False
+        isNonEmptyContainer (JSArray con) = not (null con)
+        isNonEmptyContainer _ = False
