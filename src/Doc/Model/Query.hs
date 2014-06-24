@@ -472,7 +472,8 @@ instance MonadDB m => DBQuery m CheckDocumentObjectVersionIs () where
   query (CheckDocumentObjectVersionIs did ov) = do
     _ :: Bool <- kRunAndFetch1OrThrowWhyNot unSingle $ sqlSelect "documents" $ do
        sqlResult "TRUE"
-       sqlWhereDocumentObjectVersionIs did ov
+       sqlWhereDocumentIDIs did
+       sqlWhereDocumentObjectVersionIs ov
     return ()
 
 instance MonadDB m => GetRow Document m where
