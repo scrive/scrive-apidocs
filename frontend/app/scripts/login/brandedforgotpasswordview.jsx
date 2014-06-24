@@ -19,7 +19,7 @@ return React.createClass({
       return (
         <div style={{"width":"275px","margin" : "20px auto"}}>
           <div style={{marginBottom: "50px", marginTop: "50px", textAlign: "center"}} >
-            <img alt='logo' src={model.logolink()} />
+            <img alt='logo' src="/branding/logo" />
             <div className='divider-line'/>
             <label style={{"textAlign":"center", "width":"275px", color : model.textscolour()}}>
               {localization.esigningpoweredbyscrive}

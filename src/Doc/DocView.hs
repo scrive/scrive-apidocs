@@ -40,6 +40,7 @@ import Data.List (sortBy, nub)
 import File.Model
 import File.File
 import DB
+import DB.TimeZoneName
 import Text.JSON.Gen hiding (value)
 import qualified Text.JSON.Gen as J
 import qualified Text.StringTemplates.Fields as F
@@ -336,7 +337,6 @@ pageDocumentPadListLogin ctx ad = do
   let  mbd = ctxbrandeddomain ctx
   renderTemplate "padLogin" $ do
       standardPageFields ctx kontrakcja ad
-      F.value "logolink" $ bdlogolink <$> mbd
       F.value "servicelinkcolour" $ bdservicelinkcolour <$> mbd
       F.value "textscolour" $ bdexternaltextcolour <$> mbd
       F.value "background" $ bdbackgroundcolorexternal <$> mbd

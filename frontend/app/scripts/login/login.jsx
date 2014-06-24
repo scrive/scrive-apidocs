@@ -10,7 +10,6 @@ return React.createClass({
         referer : React.PropTypes.string,
         autofocus: React.PropTypes.bool,
         pad : React.PropTypes.bool,
-        logolink : React.PropTypes.string,
         servicelinkcolour : React.PropTypes.string,
         textscolour : React.PropTypes.string
     },
@@ -28,7 +27,6 @@ return React.createClass({
         referer : props.referer,
         pad : props.pad,
         autofocus: props.autofocus,
-        logolink : props.logolink,
         servicelinkcolour : props.servicelinkcolour,
         textscolour : props.textscolour
       });

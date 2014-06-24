@@ -342,7 +342,7 @@ brandedLogo :: Kontrakcja m => m KontraLink
 brandedLogo = do
   mbdlogo <- join <$> fmap bdlogo <$> ctxbrandeddomain <$> getContext
   case mbdlogo of
-    Nothing -> respond404
+    Nothing -> return $ LinkMainLogo
     Just l  -> return $ LinkBrandedDomainLogoWithMD5 $ BS.toString $ B16.encode $ MD5.hash $ unBinary l
 
 brandedLogoWithMD5 :: Kontrakcja m => String  -> m Response

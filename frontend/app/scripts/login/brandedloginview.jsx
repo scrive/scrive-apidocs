@@ -16,6 +16,11 @@ return React.createClass({
       $("a",res).css("color",this.props.model.servicelinkcolour())
       return res.html();
     },
+    textWithLink : function(text,link) {
+      var res = $("<div>" + text + "</div>");
+      $("a",res).attr('href',link);
+      return res.html();
+    },
     tryLogin : function() {
       this.props.model.login();
     },
@@ -26,7 +31,7 @@ return React.createClass({
       return (
         <div style={{"width":"275px","margin" : "20px auto"}}>
           <div style={{marginBottom: "50px", marginTop: "50px", textAlign: "center"}} >
-            <img alt='logo' src={model.logolink()} />
+            <img alt='logo' src="/branding/logo" />
             <div className='divider-line'/>
             <label style={{"textAlign":"center", "width":"275px", color : model.textscolour()}}>
               {localization.esigningpoweredbyscrive}
@@ -87,11 +92,11 @@ return React.createClass({
                 <div className='position' style={{textAlign:"center",marginTop:"20px"}}>
                   <label className='label-with-link'
                         style={{color:model.textscolour()}}
-                        dangerouslySetInnerHTML={{__html: this.toLinkWithColor(localization.loginModal.dontHaveAccount)}}
+                        dangerouslySetInnerHTML={{__html: this.toLinkWithColor(this.textWithLink(localization.loginModal.dontHaveAccount,'/signup'))}}
                   />
                   <label className='label-with-link'
                         style={{color:model.textscolour()}}
-                        dangerouslySetInnerHTML={{__html: this.toLinkWithColor(localization.visitOurPricingPage)}}
+                        dangerouslySetInnerHTML={{__html: this.toLinkWithColor(this.textWithLink(localization.visitOurPricingPage,'/pricing'))}}
                   />
                 </div>
               }

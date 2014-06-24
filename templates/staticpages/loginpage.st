@@ -45,7 +45,6 @@ $htmlopentag()$
       var div = jQuery('.inner');
       React.renderComponent(BrandedLogin({
         referer:   referer,
-        logolink:   "$logolink$",
         buttoncolorclass : "$buttoncolorclass$",
         servicelinkcolour: $if(servicelinkcolour)$"$servicelinkcolour$"$else$null$endif$,
         textscolour: $if(textscolour)$"$textscolour$"$else$null$endif$,

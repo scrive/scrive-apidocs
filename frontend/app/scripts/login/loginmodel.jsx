@@ -9,7 +9,6 @@ return Backbone.Model.extend({
         password : "",
         referer : "",
         autofocus: false,
-        logolink : "",
         servicelinkcolour : '',
         textscolour : '',
         nolinks : false
@@ -38,9 +37,6 @@ return Backbone.Model.extend({
   },
   password : function() {
      return this.get("password");
-  },
-  logolink : function() {
-     return this.get("logolink");
   },
   servicelinkcolour : function() {
      return this.get("servicelinkcolour");
