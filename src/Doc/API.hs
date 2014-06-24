@@ -1009,14 +1009,14 @@ checkObjectVersionIfProvided did = do
     case mov of
         Just ov -> dbQuery $ CheckDocumentObjectVersionIs did ov
         Nothing -> return ()
-  `catchKontra` (\DocumentObjectVersionDoesNotMatch -> throwIO . SomeKontraException $ conflictError $ "Document object version does not match")
+  `catchKontra` (\DocumentObjectVersionDoesNotMatch {} -> throwIO . SomeKontraException $ conflictError $ "Document object version does not match")
 
 checkObjectVersionIfProvidedAndThrowError ::  (Kontrakcja m) => DocumentID -> APIError -> m ()
 checkObjectVersionIfProvidedAndThrowError did err = do
     mov <- readField "objectversion"
     case mov of
         Just ov -> (dbQuery $ CheckDocumentObjectVersionIs did ov)
-                      `catchKontra` (\DocumentObjectVersionDoesNotMatch -> throwIO . SomeKontraException $ conflictError $ "Document object version does not match")
+                      `catchKontra` (\DocumentObjectVersionDoesNotMatch {} -> throwIO . SomeKontraException $ conflictError $ "Document object version does not match")
         Nothing -> return ()
     throwIO . SomeKontraException $ err
 

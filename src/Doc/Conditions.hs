@@ -245,18 +245,26 @@ sqlWhereSignatoryLinkMagicHashIs mh = sqlWhereE SignatoryTokenDoesNotMatch $
   "signatory_links.token = " <?> mh
 
 data DocumentObjectVersionDoesNotMatch = DocumentObjectVersionDoesNotMatch
+    { documentObjectVersionShouldBe :: Int64
+    , documentObjectVersionIs       :: Int64
+    }
   deriving (Eq, Ord, Show, Typeable)
 
 instance ToJSValue DocumentObjectVersionDoesNotMatch where
-  toJSValue (DocumentObjectVersionDoesNotMatch) = runJSONGen $ do
-                     value "message" ("Document object version don't match" :: String)
+  toJSValue (DocumentObjectVersionDoesNotMatch {..}) = runJSONGen $ do
+    value "message" ("Document object version does not match" :: String)
+    value "expected" (show documentObjectVersionShouldBe)
+    value "actual" (show documentObjectVersionIs)
 
 instance KontraException DocumentObjectVersionDoesNotMatch
 
 sqlWhereDocumentObjectVersionIs :: (MonadState v m, SqlWhere v)
                                  => DocumentID -> Int64 -> m ()
-sqlWhereDocumentObjectVersionIs did object_version = sqlWhereE DocumentObjectVersionDoesNotMatch $
+sqlWhereDocumentObjectVersionIs did object_version = sqlWhereEV (DocumentObjectVersionDoesNotMatch object_version, "documents.object_version") $
  ("documents.object_version = " <?> object_version)  <+> ("AND documents.id = " <?> did)
+-- FIXME: sqlWhereDocumentObjectVersionIs, there is a discrepancy here
+-- as the part "AND documents.id = ?" will not be present when
+-- extracting actual object_version. This is not a good thing.
 
 data DocumentWasPurged = DocumentWasPurged DocumentID String MinutesTime
   deriving (Eq, Ord, Show, Typeable)
