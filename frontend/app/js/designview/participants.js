@@ -1009,48 +1009,46 @@ define(['Backbone', 'legacy_code'], function() {
                         f = str.trim();
                         s = '';
                     }
-                    /*
-                     * First we need to set the value silently, then
-                     * broadcast the info about changes to the world.
-                     * Otherwise the hard link to full name breaks.
-                     */
                     if (sndnameField != undefined) {
-                      fstnameField.setValueSilent(f);
-                      sndnameField.setValueSilent(s);
-                      fstnameField.setValue(f);
-                      sndnameField.setValue(s);
-                      // .setValueSilent() doesnt bubble any events to the document,
-                      // because it's silent. second setValue() also doesn't bubble
-                      // anything, because it's setting the same value that was
-                      // there before (setValueSilent() set the same value before)
-                      // so we have to triggerBubble() manually
-                      fstnameField.triggerBubble();
-                      sndnameField.triggerBubble();
+                      fstnameField.setValue(f, {origin: input}); // arguments for event handler
+                      sndnameField.setValue(s, {origin: input}); // arguments for event handler
                     } else {
-                      fstnameField.setValueSilent(str);
-                      fstnameField.setValue(str);
-                      fstnameField.triggerBubble();
+                      fstnameField.setValue(str, {origin: input}); // arguments for event handler
                     }
                 }
             });
 
-            fstnameField.bind('change', function() {
-                if(!fstnameField.isValid(true))
+            fstnameField.bind('change', function(obj, args) {
+                // check both name fields to see if full name should be highlighted
+                if(!fstnameField.isValid(true) || !sndnameField.isValid(true))
                     input.el().addClass('redborder');
                 else
                     input.el().removeClass('redborder');
-                input.setValue(sig.name());
+                if (args === undefined || args.origin !== input) {
+                  // the check above was needed, to know if the change event originated
+                  // from directly editing this input (in which case we can skip
+                  // setting the value), otherwise when the input contains "John S"
+                  // and we backspace the 'S', the space is auto-removed.
+                  input.setValue(sig.name());
+                }
             });
             if (sndnameField != undefined) {
-              sndnameField.bind('change', function() {
-                  if(!fstnameField.isValid(true) )
+              sndnameField.bind('change', function(obj, args) {
+                // check both name fields to see if full name should be highlighted
+                if(!fstnameField.isValid(true) || !sndnameField.isValid(true))
                       input.el().addClass('redborder');
                   else
                       input.el().removeClass('redborder');
+                if (args === undefined || args.origin !== input) {
+                  // the check above was needed, to know if the change event originated
+                  // from directly editing this input (in which case we can skip
+                  // setting the value), otherwise when the input contains "John S"
+                  // and we backspace the 'S', the space is auto-removed.
                   input.setValue(sig.name());
+                }
               });
             }
-            if(!fstnameField.isValid(true))
+            if(!fstnameField.isValid(true) || !sndnameField.isValid(true))
                     input.el().addClass('redborder');
             else
                     input.el().removeClass('redborder');
