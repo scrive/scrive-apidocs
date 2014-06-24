@@ -119,7 +119,7 @@
 "_signViewSignatoryAttachmentsTitleForOne":"Anhang hochladen",
 "_signViewTextField":"Schreiben Sie hier",
 "_signWithSMSPin":"Signieren mit PIN per SMS",
-"_signatoryAttachmentsSupportedFormats":"",
+"_signatoryAttachmentsSupportedFormats":"Unterstützte Dateiformate: PDF, JPG und PNG",
 "_signatoryMessageIfCancelled":"Abgebrochen",
 "_signatoryMessageIfElse":"Gesendet",
 "_signatoryMessageIfSignatoryDatamismatch":"Falsche eID",

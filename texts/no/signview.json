@@ -119,7 +119,7 @@
 "_signViewSignatoryAttachmentsTitleForOne":"Last opp vedlegg",
 "_signViewTextField":"Skriv der",
 "_signWithSMSPin":"Signer med PIN fra SMS",
-"_signatoryAttachmentsSupportedFormats":"",
+"_signatoryAttachmentsSupportedFormats":"Støttede filformater: PDF, JPG og PNG",
 "_signatoryMessageIfCancelled":"Avbrutt",
 "_signatoryMessageIfElse":"Sendt",
 "_signatoryMessageIfSignatoryDatamismatch":"Feil e-ID",

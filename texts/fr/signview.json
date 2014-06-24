@@ -119,7 +119,7 @@
 "_signViewSignatoryAttachmentsTitleForOne":"Attacher la pièce jointe requise",
 "_signViewTextField":"Écrire à cet endroit",
 "_signWithSMSPin":"Connectez-vous à partir du code PIN reçu par SMS",
-"_signatoryAttachmentsSupportedFormats":"",
+"_signatoryAttachmentsSupportedFormats":"Formats de fichiers pris en charge: PDF, JPG et PNG",
 "_signatoryMessageIfCancelled":"Annulé",
 "_signatoryMessageIfElse":"Envoyé",
 "_signatoryMessageIfSignatoryDatamismatch":"Votre identifiant numérique est incorrect",

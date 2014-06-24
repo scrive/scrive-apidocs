@@ -119,7 +119,7 @@
 "_signViewSignatoryAttachmentsTitleForOne":"Cargar anexo",
 "_signViewTextField":"Escriba allí",
 "_signWithSMSPin":"Firmado con PIN por SMS",
-"_signatoryAttachmentsSupportedFormats":"",
+"_signatoryAttachmentsSupportedFormats":"Acepta formatos: PDF, JPG y PNG",
 "_signatoryMessageIfCancelled":"Cancelado",
 "_signatoryMessageIfElse":"Enviado",
 "_signatoryMessageIfSignatoryDatamismatch":"DNIe incorrecto",

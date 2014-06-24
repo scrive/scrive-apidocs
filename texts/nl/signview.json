@@ -119,7 +119,7 @@
 "_signViewSignatoryAttachmentsTitleForOne":"Upload bijlage",
 "_signViewTextField":"Schrijf hier",
 "_signWithSMSPin":"Onderteken met PIN via SMS",
-"_signatoryAttachmentsSupportedFormats":"",
+"_signatoryAttachmentsSupportedFormats":"Ondersteunde bestandsformaten: PDF, JPG en PNG",
 "_signatoryMessageIfCancelled":"Geannuleerd",
 "_signatoryMessageIfElse":"Verstuurd",
 "_signatoryMessageIfSignatoryDatamismatch":"Incorrect eID",
