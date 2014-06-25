@@ -212,6 +212,9 @@ $else$
       <div class="editable" name="custommessage"></div>
 $endif$
 $if(!documentAttached)$
+  $if(custommessage)$
+    <br/>
+  $endif$
   $nicebutton(link=mainfilelink; text=_mailDocumentLinkedButton())$
 $endif$
 ####

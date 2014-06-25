@@ -34,7 +34,7 @@ import Doc.Model
 import Doc.DocumentID
 import Data.Maybe
 import BrandedDomain.BrandedDomain
-
+import Util.HasSomeUserInfo
 
 scheduleEmailSendout :: (CryptoRNG m, MonadDB m, Log.MonadLog m) => MailsConfig -> Mail -> m ()
 scheduleEmailSendout c m =  scheduleEmailSendout' (originator m) c m
@@ -42,7 +42,7 @@ scheduleEmailSendout c m =  scheduleEmailSendout' (originator m) c m
 scheduleEmailSendoutWithDocumentAuthorSender :: (CryptoRNG m, MonadDB m, Log.MonadLog m, T.TemplatesMonad m) => DocumentID  -> MailsConfig -> Mail -> m ()
 scheduleEmailSendoutWithDocumentAuthorSender did c m = do
   doc <- dbQuery $ GetDocumentByDocumentID did
-  name <- case (getAuthorName doc) of
+  name <- case (maybe "" getFullName $ getAuthorSigLink doc) of
       ("") -> return $ (originator m)
       (an) -> renderLocalTemplate doc "_mailInvitationFromPart" $ do
                 F.value "authorname" an

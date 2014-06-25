@@ -223,20 +223,3 @@ function capitaliseFirstLetter(string)
 {   if (string == undefined || string.length == 0) return string;
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
-
-require(['moment'], function(moment) {
-  window.localized_ordinal = function(n, lang_code) {
-    if (lang_code === 'sv') {
-      // apparently moment.js swedish version is incorrect for this use case
-      // fallback to the old code
-      var letter = (n === 1 || n === 2) ? 'a' : 'e';
-      return '' + n + ':' + letter;
-    }
-
-    if (lang_code === 'no') {
-      // moment.js uses different lang code for norwegian
-      lang_code = 'nn';
-    }
-    return moment.langData(lang_code).ordinal(n);
-  };
-});

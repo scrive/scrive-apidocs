@@ -505,7 +505,7 @@
 "_mailTakeoverPrivateUserInviteAcceptButton":"Transfer account",
 "_mailTakeoverPrivateUserInviteContentBodyFirst":"<strong>$invitername$</strong> has invited you to convert your private Scrive account into a company account with <strong>$companyname$</strong>. If you accept this invitation, your account and documents will be owned by <strong>$companyname$</strong>.",
 "_mailTakeoverPrivateUserInviteContentBodySecond":"You should not have any private documents in your account when accepting, so please follow the steps below before accepting this request:",
-"_mailTakeoverPrivateUserInviteContentInstructionSecond":"<li>Check your Scrive e-archive for private or personal documents</li><li>Download and save these documents and then remove them from your e-archive</li><li>When you have completed these steps, press the \"Transfer account\" button at the bottom of this email</li><li>Follow the instructions online</li>",
+"_mailTakeoverPrivateUserInviteContentInstructionSecond":"<li>Check your Scrive e-archive for private or personal documents</li><li>Download and save these documents and then remove them from your e-archive</li><li>Then press the button below</li><li>Follow the instructions online</li>",
 "_mailTakeoverPrivateUserInviteContentInstructionThird":"Ensure you have completed steps 1 and 2 above, before pressing the button below.",
 "_mailTakeoverPrivateUserInviteTitle":"Request to transfer your account",
 "_mainDocument":"Main document",
