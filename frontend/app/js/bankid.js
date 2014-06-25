@@ -80,11 +80,15 @@ define(['Backbone', 'legacy_code'], function() {
 window.Eleg = {
   // generate a TBS from the available data
    generateTBS : function(doctitle, docid, signatories) {
-     var text = localization.tbsGenerationMessage(doctitle, docid);
+     var span = $('<span />').html(localization.tbsMessage);
+     span.find('.put-document-name-here').text(doctitle);
+     span.find('.put-document-id-here').text(docid);
+     var signatoryList = "";
      $(signatories).each(function() {
-         text = text + "\n" + this.fstname() + " " + this.sndname() + ", " + this.personalnumber();
+         signatoryList += "\n" + this.fstname() + " " + this.sndname() + ", " + this.personalnumber();
      });
-     return text;
+     span.find('.put-signing-parties-here').text(signatoryList);
+     return span.text();
    },
    isUserCancelError: function(res) {
      var res = new String(res);
