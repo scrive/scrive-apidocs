@@ -1,8 +1,11 @@
-module Utils.String(concatChunks, pureString, maxLev, maybeS, escapeString, trim) where
+module Utils.String(concatChunks, pureString, maxLev, maybeS, escapeString, firstNonEmpty) where
 
 import Data.Char
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
+import Data.String.Utils
+import Data.List
+import Data.Maybe
 
 concatChunks :: BSL.ByteString -> BS.ByteString
 concatChunks = BS.concat . BSL.toChunks
@@ -36,5 +39,6 @@ escapeString =  concatMap escape
               escape '\\' = "\\\\"
               escape c   = [c]
 
-trim :: String -> String
-trim = reverse . dropWhile isSpace . reverse . dropWhile isSpace
+-- | Pick first non-empty element or return empty list
+firstNonEmpty :: [String] -> String
+firstNonEmpty = fromMaybe "" . find (not . null) . map strip

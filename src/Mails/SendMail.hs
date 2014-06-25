@@ -5,7 +5,8 @@ module Mails.SendMail
     , MailAddress(..)
     , MessageData(..)
     , scheduleEmailSendout
-    , scheduleEmailSendoutWithDocumentAuthorSender
+    , scheduleEmailSendoutWithAuthorSender
+    , scheduleEmailSendoutWithAuthorSenderThroughService
     , kontramail
     , kontramaillocal
     ) where
@@ -35,18 +36,33 @@ import Doc.DocumentID
 import Data.Maybe
 import BrandedDomain.BrandedDomain
 import Util.HasSomeUserInfo
+import Util.HasSomeCompanyInfo
+import Utils.String
+import Control.Applicative
 
 scheduleEmailSendout :: (CryptoRNG m, MonadDB m, Log.MonadLog m) => MailsConfig -> Mail -> m ()
 scheduleEmailSendout c m =  scheduleEmailSendout' (originator m) c m
 
-scheduleEmailSendoutWithDocumentAuthorSender :: (CryptoRNG m, MonadDB m, Log.MonadLog m, T.TemplatesMonad m) => DocumentID  -> MailsConfig -> Mail -> m ()
-scheduleEmailSendoutWithDocumentAuthorSender did c m = do
+
+-- Sending mail with from address like 'Mariusz throught Scrive'
+scheduleEmailSendoutWithAuthorSenderThroughService :: (CryptoRNG m, MonadDB m, Log.MonadLog m, T.TemplatesMonad m) => DocumentID  -> MailsConfig -> Mail -> m ()
+scheduleEmailSendoutWithAuthorSenderThroughService did c m = do
   doc <- dbQuery $ GetDocumentByDocumentID did
   name <- case (maybe "" getFullName $ getAuthorSigLink doc) of
       ("") -> return $ (originator m)
       (an) -> renderLocalTemplate doc "_mailInvitationFromPart" $ do
                 F.value "authorname" an
                 F.value "originator" (originator m)
+  scheduleEmailSendout' name c m
+
+-- Sending mail with from address like 'Mariusz'
+scheduleEmailSendoutWithAuthorSender :: (CryptoRNG m, MonadDB m, Log.MonadLog m, T.TemplatesMonad m) => DocumentID  -> MailsConfig -> Mail -> m ()
+scheduleEmailSendoutWithAuthorSender did c m = do
+  doc <- dbQuery $ GetDocumentByDocumentID did
+  let names = [getFullName <$> getAuthorSigLink doc, getCompanyName <$> getAuthorSigLink doc]
+  name <- case firstNonEmpty (fromMaybe "" <$> names) of
+      ("") -> return $ (originator m)
+      (an) -> return an
   scheduleEmailSendout' name c m
 
 scheduleEmailSendout' :: (CryptoRNG m, MonadDB m, Log.MonadLog m) => String -> MailsConfig -> Mail ->  m ()
