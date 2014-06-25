@@ -28,9 +28,7 @@ javascriptLocalisation =
              , noBankIdInstalled  : "$_noBankIdInstalled()$"
              , verifyingSignature : "$_verifyingSignature()$"
              , signviewAttachmentUploadedInOtherWindow : "$_signviewAttachmentUploadedInOtherWindow()$"
-             , tbsGenerationMessage : function(doctitle, docid){
-                    return  '$_tbsGenerationMessage1()$ "' + doctitle + '" $_tbsGenerationMessage2()$ "' + docid + '" $_tbsGenerationMessage3()$'
-                     }
+             , tbsMessage : "$_tbsYouSignWithElegHtml()$"
              , personalName : "$_fullName()$"
              , fstname : "$_firstname()$"
              , sndname : "$_lastname()$"
