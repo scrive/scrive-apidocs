@@ -1,4 +1,4 @@
-{
+{ 
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Are you sure you want to send reminders to the parties involved in the <span class='put-number-of-documents-here'></span> documents?",
@@ -747,8 +747,8 @@
 "_tablestatusesSent":"Sent",
 "_tablestatusesSigned":"Signed",
 "_tablestatusesViewedOnline":"Reviewed online",
-"_tbsYouSignWithElegHtml": "You are signing <span class='put-document-name-here' /> with transactional number <span class='put-document-id-here'/>. The signing parties are: <span class='put-signing-parties-here'/>",
 "_tbsYouSignWithEleg":"You are signing  \"$documentname$\" with transactional number \"$documentnumber$\". The signing parties are: $tbssigentries$",
+"_tbsYouSignWithElegHtml":"You are signing <span class='put-document-name-here' /> with transactional number <span class='put-document-id-here'/>. The signing parties are: <span class='put-signing-parties-here'/>",
 "_textFieldDone":"Save",
 "_textFieldFor":"Party",
 "_textFieldObligatory":"Mandatory to sign here",
