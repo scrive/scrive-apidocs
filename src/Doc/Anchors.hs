@@ -56,6 +56,7 @@ getAnchorPositions pdfcontent anchors = do
       ExitSuccess -> do
         stdoutjs <- either (\e -> do Log.attention "scrivepdftools/scrivepdftools.jar find-texts did not produce valid json" $ do
                                        value "message" e
+                                       value "stdout" (BSL.toString stdout)
                                      fail "scrivepdftools/scrivepdftools.jar find-texts did not produce valid json"
                                   ) return $
                     J.runGetJSON J.readJSValue (BSL.toString stdout)
