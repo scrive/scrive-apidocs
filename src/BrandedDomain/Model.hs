@@ -17,8 +17,8 @@ import qualified Data.ByteString.Char8 as BS
 
 
 
-fetchBrandedDomain :: (BrandedDomainID, String, Maybe (Binary BS.ByteString), String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String) -> BrandedDomain
-fetchBrandedDomain (xid, url, logo, barscolour, barstextcolour, barssecondarycolour, backgroundcolour, backgroundcolorexternal, mailsbackgroundcolor, mailsbuttoncolor, mailstextcolor, signviewprimarycolour, signviewprimarytextcolour, signviewsecondarycolour, signviewsecondarytextcolour, buttonclass, servicelinkcolour, externaltextcolour, headercolour, textcolour, pricecolour, smsoriginator, emailoriginator, contactemail, noreplyemail)
+fetchBrandedDomain :: (BrandedDomainID, String, Maybe (Binary BS.ByteString), String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String) -> BrandedDomain
+fetchBrandedDomain (xid, url, logo, barscolour, barstextcolour, barssecondarycolour, backgroundcolour, backgroundcolorexternal, mailsbackgroundcolor, mailsbuttoncolor, mailstextcolor, mailsbordercolor, signviewprimarycolour, signviewprimarytextcolour, signviewsecondarycolour, signviewsecondarytextcolour, buttonclass, servicelinkcolour, externaltextcolour, headercolour, textcolour, pricecolour, smsoriginator, emailoriginator, contactemail, noreplyemail)
        = BrandedDomain
          { bdid                          = xid
          , bdurl                         = url
@@ -31,6 +31,7 @@ fetchBrandedDomain (xid, url, logo, barscolour, barstextcolour, barssecondarycol
          , bdmailsbackgroundcolor        = mailsbackgroundcolor
          , bdmailsbuttoncolor            = mailsbuttoncolor
          , bdmailstextcolor              = mailstextcolor
+         , bdmailsbordercolor            = mailsbordercolor
          , bdsignviewprimarycolour       = signviewprimarycolour
          , bdsignviewprimarytextcolour   = signviewprimarytextcolour
          , bdsignviewsecondarycolour     = signviewsecondarycolour
@@ -60,6 +61,7 @@ brandedDomainSelector = [
   , "mails_background_color"
   , "mails_button_color"
   , "mails_text_color"
+  , "mails_border_color"
   , "signview_primary_color"
   , "signview_primary_text_color"
   , "signview_secondary_color"
@@ -128,6 +130,7 @@ instance (MonadDB m, Log.MonadLog m) => DBUpdate m UpdateBrandedDomain () where
       sqlSet "mails_background_color" $ bdmailsbackgroundcolor bd
       sqlSet "mails_button_color" $ bdmailsbuttoncolor bd
       sqlSet "mails_text_color" $ bdmailstextcolor bd
+      sqlSet "mails_border_color" $ bdmailsbordercolor bd
       sqlSet "signview_primary_color" $ bdsignviewprimarycolour bd
       sqlSet "signview_primary_text_color" $ bdsignviewprimarytextcolour bd
       sqlSet "signview_secondary_color" $ bdsignviewsecondarycolour bd
@@ -158,6 +161,7 @@ instance (MonadDB m, Log.MonadLog m) => DBUpdate m NewBrandedDomain BrandedDomai
       sqlSet "mails_background_color"  ("" :: String)
       sqlSet "mails_button_color" ("" :: String)
       sqlSet "mails_text_color" ("" :: String)
+      sqlSet "mails_border_color" ("" :: String)
       sqlSet "signview_primary_color" ("" :: String)
       sqlSet "signview_primary_text_color" ("" :: String)
       sqlSet "signview_secondary_color" ("" :: String)

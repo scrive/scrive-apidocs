@@ -302,7 +302,7 @@ brandingMailFields mbd companyui = do
     F.value "background"  $ companyemailbackgroundcolour <$> companyui
     F.value "textcolor" $ (join $ companyemailtextcolour <$> companyui) `mplus`(bdmailstextcolor <$> mbd)
     F.value "font"  $ companyemailfont <$> companyui
-    F.value "bordercolour"  $ companyemailbordercolour <$> companyui
+    F.value "bordercolour"  $ nothingIfEmpty $ fromMaybe "" $ (join (companyemailbordercolour <$> companyui)) `mplus` (bdmailsbordercolor <$> mbd)
     F.value "buttoncolour"  $ ensureHexRGB' <$> (join $ companyemailbuttoncolour <$> companyui) `mplus` (bdmailsbuttoncolor <$> mbd)
     F.value "emailbackgroundcolour"  $ (join $ companyemailemailbackgroundcolour <$> companyui) `mplus` (bdmailsbackgroundcolor <$> mbd)
     when (isJust companyui || isJust mbd) $ do

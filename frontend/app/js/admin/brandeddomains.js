@@ -104,6 +104,7 @@ var AdminBrandedDomainModel = Backbone.Model.extend({
         mails_background_color: this.get("mails_background_color"),
         mails_button_color: this.get("mails_button_color"),
         mails_text_color: this.get("mails_text_color"),
+        mails_border_color: this.get("mails_border_color"),
         signview_primary_color: this.get("signview_primary_color"),
         signview_primary_text_color: this.get("signview_primary_text_color"),
         signview_secondary_color: this.get("signview_secondary_color"),
@@ -213,6 +214,7 @@ var AdminBrandedDomainView = Backbone.View.extend({
       addTableRow("mails_background_color", "color");
       addTableRow("mails_button_color", "color");
       addTableRow("mails_text_color", "color");
+      addTableRow("mails_border_color", "color");
       addTableRow("signview_primary_color", "color");
       addTableRow("signview_primary_text_color", "color");
       addTableRow("signview_secondary_color", "color");

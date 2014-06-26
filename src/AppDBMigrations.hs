@@ -169,5 +169,6 @@ kontraMigrations = [
   , addLogoImageDataToBrandedDomain
   , addNoReplyEmailToBrandedDomain
   , addNoReplyEmailToBrandedDomainSetDefault
+  , addMailsBorderColorToBrandedDomain
   ] ++ mailerMigrations
     ++ messengerMigrations

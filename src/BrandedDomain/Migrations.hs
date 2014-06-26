@@ -75,3 +75,12 @@ addNoReplyEmailToBrandedDomainSetDefault =
     , mgrDo = do
         runSQL_ "ALTER TABLE branded_domains ALTER COLUMN noreply_email SET DEFAULT ''"
     }
+
+addMailsBorderColorToBrandedDomain :: MonadDB m => Migration m
+addMailsBorderColorToBrandedDomain =
+  Migration {
+      mgrTable = tableBrandedDomains
+    , mgrFrom = 4
+    , mgrDo = do
+        runSQL_ "ALTER TABLE branded_domains ADD COLUMN mails_border_color TEXT NOT NULL DEFAULT ''"
+    }
