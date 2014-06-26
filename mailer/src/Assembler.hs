@@ -7,14 +7,12 @@ module Assembler (
 import Control.Arrow
 import Control.Monad
 import Control.Monad.IO.Class
-import Data.ByteString.Internal (c2w, w2c)
 import Data.Char
 import Data.List
 import Data.Maybe
 import Text.HTML.TagSoup
 import Text.HTML.TagSoup.Entity
 import Text.JSON.Gen as J
-import qualified Codec.Binary.QuotedPrintable as QP
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BSU
@@ -25,6 +23,7 @@ import qualified Text.JSON as J
 
 import Crypto.RNG
 import Crypto.RNG.Utils
+import Data.ByteString.Utils (splitEvery)
 import Mails.Model
 import File.Storage
 import DB
@@ -46,7 +45,7 @@ assembleContent Mail{..} = do
   let -- FIXME: add =?UTF8?B= everywhere it is needed here
       headerEmail =
         -- FIXME: encoded word should not be longer than 75 bytes including everything
-        "Subject: " ++ mailEncode mailTitle ++ "\r\n" ++
+        mailHeader "Subject" mailTitle ++
         "To: " ++ createMailTos mailTo ++ "\r\n" ++
         "From: " ++ createAddrString mailFrom ++ "\r\n" ++
         lineReplyTo ++
@@ -75,8 +74,8 @@ assembleContent Mail{..} = do
                         else "application/octet-stream"
 
       headerAttach fname = "\r\n--" ++ boundaryMixed ++ "\r\n" ++
-        "Content-Disposition: inline; filename=\"" ++ mailEncode fname ++"\"\r\n" ++
-        "Content-Type: "++attachmentType fname++"; name=\"" ++ mailEncode fname ++ "\"\r\n" ++
+        "Content-Disposition: inline; filename=\"" ++ mailEncode Nothing fname ++"\"\r\n" ++
+        "Content-Type: "++attachmentType fname++"; name=\"" ++ mailEncode Nothing fname ++ "\"\r\n" ++
         "Content-Transfer-Encoding: base64\r\n" ++
         "\r\n"
       attach Attachment{..} = do
@@ -98,31 +97,42 @@ assembleContent Mail{..} = do
     ] ++ atts
       ++ [BSLU.fromString footerEmail]
 
--- from simple utf-8 to =?UTF-8?Q?zzzzzzz?=
-mailEncode :: String -> String
-mailEncode source = unwords $ map encodeWord $ map convW $ words source
+
+mailHeader :: String -> String -> String
+mailHeader headerName headerValue = prefix ++ mailEncode (Just $ 75 - length prefix) headerValue ++ "\r\n"
+    where prefix = headerName ++ ": "
+
+-- from simple utf-8 to =?UTF-8?B?zzzzzzz?=
+mailEncode :: Maybe Int -> String -> String
+mailEncode mFirstLineLength source = concat $ intersperse "\r\n\t" $ map encodeWord chunksBeforeEncoding
   where
-    -- here we really want to use latin1 encoding to treat chars as bytes
-    -- the QuotedPrintable encoder treats chars as bytes
-    -- overall this is UTF-8 encoded
-    --
-    -- also: this removes spaces at front, spaces at the end, double spaces
-    -- and (important!) converts \r and \n to space.
-    --
-    -- please keep these conversions as the are security measure
-    wordNeedsEncoding word = any charNeedsEncoding word
-    convW t = unescapeHTML $ map w2c $ BS.unpack $ BSU.fromString t
-    -- The character à resulted in a \160 char, which is a non-breaking space, and thus words removed that char. Which broke the subject of a few french emails.
-    -- FIXME: needs to check if this is full list of exceptions
-    charNeedsEncoding char = char <= ' ' || char >= '\x7f' || char == '='
-    encodeWord wa | wordNeedsEncoding wa = "=?UTF-8?Q?" ++ QP.encode (map c2w wa) ++ "?="
-                  | otherwise = wa
+    -- Use encoded-words from rfc 1342 (using utf-8 and base64)
+    -- Every encoded-word cannot be longer than 75 chars
+    -- (including delimiters and encoding/charset specifiers),
+    -- so we split text into 45 char chunks (45 bytes after base64 encoding
+    -- is 60 characters, and after adding 12 characters of encoded-word syntax
+    -- is almost at the limit. 46 bytes would end up using 76 chars)
+    -- Last chunk could be shorter than 45 bytes.
+    -- If mFirstLineLength is Just number, we use that as the first chunk size,
+    -- because first encoded-word may end up in the same line as header name.
+
+    -- encode utf-8 encoded byte string with base64 and add encoded-word syntax
+    encodeWord :: BS.ByteString -> String
+    encodeWord chunk = "=?UTF-8?B?" ++ (BSU.toString $ Base64.encode chunk) ++ "?="
+
+    -- calculate number of bytes that will fit in desired encoded chunk size
+    -- 12 chars for encoded-word syntax, (`div` 4) . (*3) for base64 overhead
+    preEncodeChunkSize desiredEncodedSize = 3 * ((desiredEncodedSize - 12) `div` 4)
+
+    cleanedUpSource = unwords $ words source
+    (firstLineBeforeEncoding, restBeforeEncoding) = BS.splitAt (preEncodeChunkSize $ fromMaybe 75 mFirstLineLength) $ BSU.fromString cleanedUpSource
+    chunksBeforeEncoding = firstLineBeforeEncoding:splitEvery (preEncodeChunkSize 75) restBeforeEncoding
 
 createMailTos :: [Address] -> String
 createMailTos = intercalate ", " . map (\a -> createAddrString a)
 
 createAddrString :: Address -> String
-createAddrString Address{..} = mailEncode addrName ++ " <" ++ addrEmail ++ ">"
+createAddrString Address{..} = mailEncode Nothing addrName ++ " <" ++ addrEmail ++ ">"
 
 createBoundaries :: (MonadIO m, CryptoRNG m) => m (String, String)
 createBoundaries = return (,) `ap` f `ap` f
