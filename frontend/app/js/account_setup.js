@@ -299,7 +299,7 @@ define(['Backbone', 'legacy_code'], function() {
       model.setTosValidator(function() {
         tosCBox.validate(new CheckboxReqValidation({
           callback: function(t, e, v) {
-                      $("<div class='failed-validation validation-failed-msg' />").css({'margin-left': '2px', 'margin-top': '-10px', 'display': 'block'}).append(v.message()).appendTo(tosCBox.parent());
+                      $("<div class='failed-validation validation-failed-msg' />").append(v.message()).appendTo(tosCBox.parent());
           },
           message: localization.validation.mustAcceptTOS
         }));
