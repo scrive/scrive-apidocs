@@ -288,6 +288,13 @@ javascriptLocalisation =
              , anyoneElse: "$_questionnaireAnyoneElse()$"
              , phoneNumber: "$_questionnairePhoneNumber()$"
          }
+         , brandingPreview: {
+               headerSend: "$_headerSend()$"
+             , headerTemplate: "$_headerTemplate()$"
+             , headerArchive: "$_headerArchive()$"
+             , headerAccount: "$_headerAccount()$"
+             , headerLogOut: "$_headerLogOut()$"
+         }
          , ftue : {
                step1: "$_FTUEstep1()$"
              , step2: "$_FTUEstep2()$"
@@ -1021,6 +1028,9 @@ javascriptLocalisation =
              , customiseBorderColourLabel : "$_customiseBorderColourLabel()$"
              , customiseButtonColourLabel : "$_customiseButtonColourLabel()$"
              , customiseEmailBackgroundColour : "$_customiseEmailBackgroundColourLabel()$"
+             , sampleAttachmentFilename : "$_sampleSignViewAttachmentFilename()$"
+             , sampleDemoDocumentName : "$_sampleSignViewDemoDocumentName()$"
+             , sampleSignViewHeader : "$_sampleSignViewHeader()$"
              , sampleEmailButtonLabel : "$_sampleEmailButtonLabel()$"
              , sampleEmailFooter : "$_sampleEmailFooter()$"
              , primaryColour: "$_companyBrandingPrimaryColour()$"

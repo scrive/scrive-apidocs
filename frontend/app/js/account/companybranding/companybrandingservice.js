@@ -71,51 +71,45 @@ window.CompanyBrandingServiceViewSampleView = Backbone.View.extend({
   prerender: function() {
     var company = this.model;
 
-    this.container = $("<div class='sample-custom-view' style='margin:auto; width: 560px;border: 1px solid #EEEEEE;background: #F7F7F7'/>");
-    this.header = $("<div class='sample-custom-view-header' style='width: 100%; display: table; border-bottom: 1px solid #DEE4ED;'/>");
-    this.subheader = $("<div style='width:560px;height:0px;position:absolute;margin-top:2px;'/>");
-    this.header.append(this.subheader);
+    this.container = $("<div class='sample-custom-view'/>");
+    this.header = $("<div class='sample-custom-view-header'/>");
 
-    this.innerheader = $("<div style='display: table-cell; vertical-align: bottom; text-align: right;'/>");
+    this.innerheader = $("<div class='sample-custom-view-innerheader'/>");
 
-    this.header1 = $('<div style="float: left;margin-left:20px;"/>');
-    this.logowrapper = $("<a class='hoverable logo' style='padding: 5px 0;' />");
-    this.logo = $("<img style='max-width: 165px; max-height: 72px;' />");
+    this.header1 = $('<div class="sample-custom-view-logo"/>');
+    this.logowrapper = $("<a class='hoverable logo'/>");
+    this.logo = $("<img/>");
     this.header1.append(this.logowrapper.append(this.logo));
 
-    this.header2 = $('<div style="display: inline-block; margin: 7px 2px;"/>');
-    this.header2.append(new Button({size: 'tiny', color: 'blue', text: 'Start new process', style:"padding: 4px 8px;font-size:9px", onClick : function() {return false;}}).el());
+    this.header2 = $('<div class="sample-custom-view-header-button"/>');
+    this.header2.append(new Button({size: 'tiny', color: 'blue', text: localization.brandingPreview.headerSend, onClick : function() {return false;}}).el());
 
-    this.header3 = $('<div style="display: inline-block; margin: 7px 14px 7px 2px;"/>');
-    this.header3.append(new Button({size: 'tiny', color: 'blue', text: 'Start document from template', style:"padding: 4px 8px;font-size:9px", onClick : function() {return false;}}).el());
+    this.header3 = $('<div class="sample-custom-view-header-button sample-custom-view-header-button-last"/>');
+    this.header3.append(new Button({size: 'tiny', color: 'blue', text: localization.brandingPreview.headerTemplate, onClick : function() {return false;}}).el());
 
-    this.header4 = $('<div style="display: inline-block; line-height: 15px; font-size:10px;"/>');
-    this.header4content = $("<a class='hoverable'>Archive</a>");
+    this.header4 = $('<div class="sample-custom-view-header-text"/>');
+    this.header4content = $("<a class='hoverable'/>").text(localization.brandingPreview.headerArchive);
     this.header4.append(this.header4content);
 
-    this.header5 = $('<div style="display: inline-block; line-height: 15px; font-size:10px;"/>');
-    this.header5content = $("<a class='hoverable'>Account</a>");
+    this.header5 = $('<div class="sample-custom-view-header-text"/>');
+    this.header5content = $("<a class='hoverable'/>").text(localization.brandingPreview.headerAccount);
     this.header5.append(this.header5content);
 
 
-    this.header6 = $('<div style="display: inline-block; line-height: 15px; font-size:10px; margin-right: 22px;"/>');
-    this.header6content = $("<a class='hoverable'>Log out</a>");
+    this.header6 = $('<div class="sample-custom-view-header-text sample-custom-view-header-text-last"/>');
+    this.header6content = $("<a class='hoverable'/>").text(localization.brandingPreview.headerLogOut);
     this.header6.append(this.header6content);
 
     this.header.append(this.header1);
     this.header.append(this.innerheader);
     this.innerheader.append(this.header2).append(this.header3).append(this.header4).append(this.header5).append(this.header6).append($('<div style="clear:both;"/>'));
-    this.header.append("<style>"
-                          + ".sample-custom-view-header .hoverable {display:block;padding: 12px 4px;}"
-                        +"</style>");
 
     this.stylepeace = $("<style></style>");
     this.header.append(this.stylepeace);
 
-    this.content = $('<div style="padding:20px;text-align:center"><img src="/img/branding-archive-sample.png"></div>');
-    this.footercontent = $('<div style="text-align: center;"/>');
-    this.footercontent.text('Powered by Scrive');
-    this.footer = $('<div style="height: 20px; padding:10px;font-size: 10px;"/>');
+    this.content = $('<div class="sample-custom-view-content">').append('<img src="/img/branding-archive-sample.png"></div>');
+    this.footercontent = $('<div/>').text('Powered by Scrive');
+    this.footer = $('<div class="sample-custom-view-footer"/>');
     this.footer.append(this.footercontent);
 
     this.container.append(this.header).append(this.content).append(this.footer);
@@ -181,7 +175,6 @@ window.CompanyBrandingServiceViewSampleView = Backbone.View.extend({
     this.header6content.css("border-color",color);
     this.logowrapper.css("border-color",color);
     this.header.css("border-color",color);
-    this.subheader.css("border-color",color);
     this.footer.css("border-color",color);
     this.stylepeace.remove();
     this.stylepeace = $("<style>.sample-custom-view-header .hoverable:hover {color: "+color+ "}</style>");

@@ -1,5 +1,79 @@
 @import 'branding/variables';
 
+.sample-custom-view {
+  background: @gray-3-percent;
+  border: 1px solid #eeeeee;
+  margin: auto;
+  width: 560px;
+
+  .sample-custom-view-header {
+    border-bottom: 1px solid @blue-border;
+    display: table;
+    width: 100%;
+
+    .sample-custom-view-innerheader {
+      display: table-cell;
+      text-align: right;
+      vertical-align: bottom;
+    }
+
+    .sample-custom-view-logo {
+      float: left;
+      margin-left: 20px;
+
+      a {
+        padding: 5px 0;
+
+        img {
+          max-height: 72px;
+          max-width: 165px;
+        }
+      }
+    }
+
+    .sample-custom-view-header-button {
+      display: inline-block;
+      margin: 7px 2px;
+
+      &.sample-custom-view-header-button {
+        margin: 7px 14px 7px 2px;
+      }
+
+      a {
+        padding: 4px 8px;
+        font-size: 9px;
+      }
+    }
+
+    .sample-custom-view-header-text {
+      display: inline-block;
+      font-size: 10px;
+      line-height: 15px;
+
+      &.sample-custom-view-header-text-last {
+        margin-right: 22px;
+      }
+    }
+
+    .hoverable {
+      display: block;
+      padding: 12px 4px;
+    }
+  }
+
+  .sample-custom-view-content {
+    padding: 20px;
+    text-align: center;
+  }
+
+  .sample-custom-view-footer {
+    font-size: 10px;
+    height: 20px;
+    padding: 10px;
+    text-align: center;
+  }
+}
+
 .sample-sign-view {
   border: 1px solid @gray-border;
   margin: auto;
@@ -51,7 +125,7 @@
     padding-top: 5px;
     font-size: 12px;
     background-color: white;
-    border: 1px solid @gray-border; 
+    border: 1px solid @gray-border;
     border-bottom-width: 0;
 
     p {
@@ -64,16 +138,13 @@
         display: none;
       }
       background: url(../img/senddoc.png) no-repeat;
-      padding-left: 20px;
+      background-position: 0px 2px;
+      display: inline-block;
       font-size: 11px;
       font-weight: normal;
-      display: inline-block;
-      background-position: 0px 2px;
-      position: relative;
-      left: -10px;
-      color: @blue-medium;
+      padding-left: 20px;
     }
-    
+
     .highlight-green {
       font-weight: 600;
       color: @brand-secondary;
@@ -83,6 +154,16 @@
       font-size: 18px;
       margin-bottom: 0px;
       margin-top: 10px;
+
+      .arrowtext {
+        color: @brand-secondary;
+        cursor: pointer;
+        font-weight: 600;
+        text-transform: uppercase;
+        &:hover {
+          color: @brand-secondary-dark;
+        }
+      }
     }
 
   }
@@ -118,11 +199,10 @@
       position: absolute;
       margin-top: 3px;
     }
-    
+
     .mandatoryfield {
       bottom: 553px;
       left: 75px;
-      width: 167px;
 
       .front {
         background-image: url('../img/sign-arrow-action-right-front.png');
@@ -167,7 +247,7 @@
       float: left;
       border: 2px solid;
       font-size: 12px;
-      z-index: 1; 
+      z-index: 1;
     }
 
     .optionalplacedfield {
@@ -204,7 +284,7 @@
       .file-container {
         float: right;
         margin-top: 6px;
-        
+
         .name {
           font-size: 11px;
           margin-right: 150px;

@@ -33,28 +33,28 @@ var SampleSignViewView = Backbone.View.extend({
     var leftheader = $('<div class="logo" />');
     leftheader.append(this.logo);
     this.rightheader = $('<div class="header-text" />');
-    this.rightheader.text('HEADER TEXT');
+    this.rightheader.text(localization.companyBranding.sampleSignViewHeader);
     this.header.append(leftheader).append(this.rightheader).append($('<div style="clear:both;"/>'));
 
     var arrowlegend = $('<div class="arrow-legend" />');
     var arrowlegendmandatorycontainer = $('<p />');
     this.arrowlegendmandatoryimage = $('<span class="mandatory arrow-icon" />');
-    var arrowlegendmandatorylegend = $('<span class="copy">Mandatory action</span>');
+    var arrowlegendmandatorylegend = $('<span class="copy"/>').text(localization.docsignview.mandatoryAction);
     var arrowlegendoptionalcontainer = $('<p class="optionalcontainer" />');
     this.arrowlegendoptionalimage = $('<span class="optional arrow-icon" />');
-    var arrowlegendoptionallegend = $('<span class="copy">Optional action</span>');
+    var arrowlegendoptionallegend = $('<span class="copy"/>').text(localization.docsignview.optionalAction);
     arrowlegendmandatorycontainer.append(this.arrowlegendmandatoryimage).append(arrowlegendmandatorylegend);
     arrowlegendoptionalcontainer.append(this.arrowlegendoptionalimage).append(arrowlegendoptionallegend);
     arrowlegend.append(arrowlegendmandatorycontainer).append(arrowlegendoptionalcontainer);
 
     var extradocumentdetailscontainer = $('<span />');
-    this.downloaddoc = $('<p class="download">Sales contract demo</p>');
+    this.downloaddoc = $('<a class="download clickable"/>').text(localization.companyBranding.sampleDemoDocumentName);
     extradocumentdetailscontainer.append(this.downloaddoc);
 
     this.contentheader = $('<div class="contentheader" />');
-    this.greenarrowtext = $('<span class="highlight-green">ARROW</span>');
-    var instructionswrapper = $('<div class="instructions" />');
-    instructionswrapper.append('<span>Follow the </span>').append(this.greenarrowtext);
+    var instructionswrapper = $('<div class="instructions capitalize-first-letter" />');
+    var arrowinstructiontext = $('<span/>').html(localization.docsignview.followTheArrow);
+    instructionswrapper.append(arrowinstructiontext);
 
     this.contentheader.append(instructionswrapper);
     this.contentheader.append(extradocumentdetailscontainer);
@@ -66,16 +66,16 @@ var SampleSignViewView = Backbone.View.extend({
 
     this.optionalField = $('<div class="field optionalfield" />');
     this.optionalPlacedField = $('<div class="placedfield optionalplacedfield" />')
-      .append($('<div class="placedfieldvalue">Phone</div>'));
+      .append($('<div class="placedfieldvalue"/>').text(localization.phone));
     this.optionalField.append(this.optionalPlacedField);
 
     this.mandatoryField = $('<div class="field mandatoryfield" />');
     this.mandatoryPlacedField = $('<div class="placedfield mandatoryplacedfield" />')
-      .append($('<div class="placedfieldvalue">Email</div>'));
+      .append($('<div class="placedfieldvalue"/>').text(localization.email));
     this.mandatoryField.append(this.mandatoryPlacedField);
 
     this.mandatoryFieldFront = $('<div class="front">');
-    this.mandatoryFieldLabel = $('<div class="label">').text('Write there');
+    this.mandatoryFieldLabel = $('<div class="label"/>').text(localization.docsignview.textfield);
     this.mandatoryFieldBack = $('<div class="back">');
     this.mandatoryField.append(this.mandatoryFieldFront).append(this.mandatoryFieldLabel).append(this.mandatoryFieldBack);
 
@@ -88,32 +88,31 @@ var SampleSignViewView = Backbone.View.extend({
 
     this.reviewButton = new Button({size: 'tiny',
                                     color: 'signview-blue',
-                                    width: 35,
                                     cssClass: 'not-clickable',
-                                    text: 'Review',
+                                    text: localization.reviewPDF,
                                     onClick: function() {}}).el();
 
     this.rejectbuttoncontainer = $('<div class="buttoncontainer reject" />');
     this.rejectbutton = new Button({size: 'tiny',
                                     color: 'black',
                                     cssClass: 'not-clickable',
-                                    text: 'Reject and reply',
+                                    text: localization.process.rejectbuttontext,
                                     onClick: function() {}}).el();
     this.rejectbuttoncontainer.append(this.rejectbutton);
     this.signbuttoncontainer = $('<div class="buttoncontainer sign" />');
     this.signbutton = new Button({size: 'tiny',
                                   color: 'green',
                                   cssClass: 'not-clickable',
-                                  text: 'Sign',
+                                  text: localization.process.signbuttontext,
                                   onClick: function() {}}).el();
     this.signbuttoncontainer.append(this.signbutton);
     var attachments = $('<div class="section attachments" />');
     var attachmentsContainer = $('<div class="attachments-container" />');
     var fileContainer = $('<div class="file-container" />');
     fileContainer.append($('<img src="/img/attachment-icon.png" class="icon" />'));
-    fileContainer.append($('<span class="name">file.pdf</span>'));
+    fileContainer.append($('<span class="name"/>').text(localization.companyBranding.sampleAttachmentFilename));
     fileContainer.append(this.reviewButton);
-    attachmentsContainer.append($('<h2>Read attachment</h2>'));
+    attachmentsContainer.append($('<h2>').text(localization.docsignview.authorAttachmentsTitleForOne));
     attachmentsContainer.append(fileContainer);
     attachments.append(attachmentsContainer);
     this.buttons = $('<div class="section buttons" />');
@@ -229,7 +228,7 @@ var SampleSignViewView = Backbone.View.extend({
     );
     this.signbutton.css('background-color', colour);
 
-    this.greenarrowtext.css('color', colour);
+    $('.arrowtext', this.arrowinstructiontext).css('color', colour);
   },
   changePrimaryTextColour : function(colour) {
     this.signbutton.css('color', ''); // reset colour
