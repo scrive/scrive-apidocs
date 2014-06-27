@@ -119,15 +119,19 @@ define(['Backbone', 'common/language_service', 'legacy_code'], function(Backbone
 
             var options = [];
             for(i=1;i<=model.document().maxPossibleSignOrder();i++) {
-                options.push({name: LanguageService.localizedOrdinal(i) + ' ' +
-                              localization.designview.toReceiveDocument,
+                var ordinal = LanguageService.localizedOrdinal(i);
+                var temporarySpan = $('<span />').html(localization.designview.toReceiveDocument);
+                temporarySpan.find('.put-ordinal-here').text(ordinal);
+                options.push({name: temporarySpan.text(),
                               value: i});
             }
 
+            var ordinal = LanguageService.localizedOrdinal(order);
+            var temporarySpan = $('<span />').html(localization.designview.toReceiveDocument);
+            temporarySpan.find('.put-ordinal-here').text(ordinal);
             var select = new Select({
                 options: options,
-                name: LanguageService.localizedOrdinal(order) + ' ' +
-                    localization.designview.toReceiveDocument,
+                name: temporarySpan.text(),
                  textWidth : "145px",
 
                 optionsWidth : "177px",
