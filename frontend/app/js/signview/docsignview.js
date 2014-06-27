@@ -310,10 +310,15 @@ var DocumentSignViewModel = Backbone.Model.extend({
                 if (!placement.field().signatory().current()) return;
                 var elem = $(placement.view.el);
                 var label = "";
-                if (placement.field().isText() && placement.field().isObligatory())
-                    label = localization.docsignview.textfield;
-                else if (placement.field().isCheckbox() && placement.field().isObligatory())
-                    label = localization.docsignview.checkbox;
+                if (placement.field().isObligatory()) {
+                    if (placement.field().isText()) {
+                        label = localization.docsignview.textfield;
+                    } else if (placement.field().isCheckbox()) {
+                        label = localization.docsignview.checkbox;
+                    } else if (placement.field().isSignature()) {
+                        label = localization.docsignview.signature;
+                    }
+                }
 
                 var task = new PageTask({
                     type: 'field',
