@@ -121,7 +121,8 @@ window.FieldPlacement = Backbone.Model.extend({
         hrel : this.hrel(),
         fsrel : this.fsrel(),
         page : page != undefined ? page.number() : this.get("page"),
-        tip : this.get("tip")
+        tip : this.get("tip"),
+        anchors : this.get("anchors")
       };
       return draft;
     },
