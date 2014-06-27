@@ -321,7 +321,7 @@
 "_designViewSignatureBoxSettings":"Impostazioni di firma",
 "_designViewSigningDeadline":"Scadenza per la firma",
 "_designViewStartSigning":"Inizia a firmare",
-"_designViewToReceiveDocument":"per ricevere documenti",
+"_designViewToReceiveDocument":"<span class='put-ordinal-here' />",
 "_designViewViewCSV":"Visualizza CSV",
 "_designViewWhatField":"Di che campo si tratta?",
 "_designViewWithEleg":"con eID svedese",

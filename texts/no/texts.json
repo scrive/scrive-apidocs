@@ -321,7 +321,7 @@
 "_designViewSignatureBoxSettings":"Signaturinnstillinger",
 "_designViewSigningDeadline":"Signeringsfrist",
 "_designViewStartSigning":"Start signering",
-"_designViewToReceiveDocument":"til å motta dokument",
+"_designViewToReceiveDocument":"<span class='put-ordinal-here' />",
 "_designViewViewCSV":"Vis CSV",
 "_designViewWhatField":"Hvilket felt er det?",
 "_designViewWithEleg":"med svensk e-ID",

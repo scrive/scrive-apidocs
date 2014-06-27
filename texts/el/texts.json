@@ -321,7 +321,7 @@
 "_designViewSignatureBoxSettings":"Ρυθμίσεις υπογραφής ",
 "_designViewSigningDeadline":"Προθεσμία υπογραφής ",
 "_designViewStartSigning":"Ξεκινήστε να υπογράφετε ",
-"_designViewToReceiveDocument":"για να λαμβάνετε έγγραφα ",
+"_designViewToReceiveDocument":"<span class='put-ordinal-here' />",
 "_designViewViewCSV":"Έλεγχος CSV",
 "_designViewWhatField":"Τι πεδίο είναι αυτό; ",
 "_designViewWithEleg":"με σουηδική ηλεκτρονική ταυτότητα ",

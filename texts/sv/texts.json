@@ -321,7 +321,7 @@
 "_designViewSignatureBoxSettings":"Inställningar för signeringsfält",
 "_designViewSigningDeadline":"Förfallodatum",
 "_designViewStartSigning":"Starta signering",
-"_designViewToReceiveDocument":"att ta emot dokument",
+"_designViewToReceiveDocument":"<span class='put-ordinal-here' />",
 "_designViewViewCSV":"Se CSV",
 "_designViewWhatField":"Vilket fält är det?",
 "_designViewWithEleg":"med e-legitimation",

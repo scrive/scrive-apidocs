@@ -321,7 +321,7 @@
 "_designViewSignatureBoxSettings":"Paramètres de signature",
 "_designViewSigningDeadline":"Echéance de signature",
 "_designViewStartSigning":"Commencer à signer",
-"_designViewToReceiveDocument":"à recevoir le document",
+"_designViewToReceiveDocument":"<span class='put-ordinal-here' />",
 "_designViewViewCSV":"Consulter le CSV",
 "_designViewWhatField":"De quel champ s'agit-il?",
 "_designViewWithEleg":"avec identifiant numérique suédois",

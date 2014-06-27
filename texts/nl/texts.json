@@ -321,7 +321,7 @@
 "_designViewSignatureBoxSettings":"Handtekening instellingen",
 "_designViewSigningDeadline":"Ondertekeningsdeadline",
 "_designViewStartSigning":"Begin met ondertekenen",
-"_designViewToReceiveDocument":"om het document te ontvangen",
+"_designViewToReceiveDocument":"<span class='put-ordinal-here' />",
 "_designViewViewCSV":"Bekijk CSV",
 "_designViewWhatField":"Welk veld is dit? ",
 "_designViewWithEleg":"Met Zweeds eID",
