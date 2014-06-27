@@ -141,12 +141,12 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
     },
     header: function() {
         var self = this;
-        var header =  $("<div class='header' style='text-align:left;margin-right:20px;margin: 25px 40px;'/>");
+        var header =  $("<div class='header' style='text-align:left;margin-right:20px;margin: 25px 39px;'/>");
         header.append($("<div style='font-size:28px;line-height:32px'>").text(this.model.drawingMode() ? localization.pad.drawSignatureBoxHeader : localization.pad.typeSignatureBoxHeader));
         var row1 = $("<div>");
         header.append(row1);
         header.append($("<a class='modal-close'/>").click(function() { self.model.onClose();}));
-        if (!this.model.drawingMode()) {
+        if (this.model.typingMode()) {
           this.textInput = new InfoTextInput({
                                infotext : localization.pad.typeSignatureNameField,
                                cssClass : "float-left",
@@ -187,10 +187,11 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
                                    , onSelect: function() {self.model.typerOrDrawer().setFont('TheOnlyException');self.render();return true;} }
                                 ]
                             });
-          var row2 = $("<div style='margin:4px 0px;height:42px'>");
+          var row2 = $("<div style='margin:13px 0px;height:42px'>");
           header.append(row2);
           row2.append(this.textInput.el())
               .append($("<div style='width:200px;float:left;'/>").append(fontSelect.el()));
+          header.css("margin-bottom","0px");
         }
         return header;
     },

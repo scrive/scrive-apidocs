@@ -93,7 +93,7 @@ sendDocumentErrorEmail author document = do
       sendNotifications signatorylink
         (do
           mail <- mailDocumentErrorForSignatory document
-          scheduleEmailSendoutWithDocumentAuthorSender (documentid document) (mctxmailsconfig mctx) $ mail {
+          scheduleEmailSendoutWithAuthorSenderThroughService (documentid document) (mctxmailsconfig mctx) $ mail {
                                    to = [getMailAddress signatorylink]
                                  , mailInfo = Invitation (documentid document) (signatorylinkid signatorylink)
                                  })
@@ -141,7 +141,7 @@ sendInvitationEmail1 signatorylink | not (isAuthor signatorylink) = do
       mail <- theDocument >>= mailInvitation True (Sign <| isSignatory signatorylink |> View) (Just signatorylink)
       -- ?? Do we need to read in the contents? -EN
       -- _attachmentcontent <- liftIO $ documentFileID document >>= getFileContents ctx
-      scheduleEmailSendoutWithDocumentAuthorSender did (mctxmailsconfig mctx) $
+      scheduleEmailSendoutWithAuthorSenderThroughService did (mctxmailsconfig mctx) $
                            mail { to = [getMailAddress signatorylink]
                                 , mailInfo = Invitation did (signatorylinkid signatorylink)
                                 })
@@ -179,7 +179,7 @@ sendReminderEmail custommessage  actor automatic siglink = do
        mailattachments <- makeMailAttachments doc
        mail <- mailDocumentRemind custommessage siglink (not (null mailattachments)) doc
        docid <- theDocumentID
-       scheduleEmailSendoutWithDocumentAuthorSender docid (mctxmailsconfig mctx) $ mail {
+       scheduleEmailSendoutWithAuthorSenderThroughService docid (mctxmailsconfig mctx) $ mail {
                                                              to = [getMailAddress siglink]
                                                            , mailInfo = Invitation docid (signatorylinkid siglink)
                                                            , attachments = if isJust $ maybesigninfo siglink
@@ -227,7 +227,7 @@ sendClosedEmails sealFixed document = do
             mail <- mailDocumentClosed False sl sealFixed (not (null mailattachments)) document
             let scheduleEmailFunc
                   | signatoryisauthor sl = scheduleEmailSendout
-                  | otherwise            = scheduleEmailSendoutWithDocumentAuthorSender (documentid document)
+                  | otherwise            = scheduleEmailSendoutWithAuthorSender (documentid document)
             scheduleEmailFunc (mctxmailsconfig mctx) $
                                  mail { to = [getMailAddress sl]
                                       , attachments = mailattachments
@@ -325,7 +325,7 @@ sendForwardEmail email noContent asiglink = do
   mailattachments <- makeMailAttachments =<< theDocument
   mail <- mailForwardSigned asiglink (not (null mailattachments)) =<< theDocument
   did <- documentid <$> theDocument
-  scheduleEmailSendoutWithDocumentAuthorSender did (mctxmailsconfig mctx) $ mail {
+  scheduleEmailSendoutWithAuthorSenderThroughService did (mctxmailsconfig mctx) $ mail {
                                to = [MailAddress "" email]
                              , content =  if (noContent)
                                              then ""

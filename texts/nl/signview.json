@@ -117,6 +117,7 @@
 "_signViewSignatoriesTitle":"",
 "_signViewSignatoryAttachmentsTitleForLots":"Bijlagen uploaden",
 "_signViewSignatoryAttachmentsTitleForOne":"Upload bijlage",
+"_signViewSignature":"",
 "_signViewTextField":"Schrijf hier",
 "_signWithSMSPin":"Onderteken met PIN via SMS",
 "_signatoryAttachmentsSupportedFormats":"Ondersteunde bestandsformaten: PDF, JPG en PNG",

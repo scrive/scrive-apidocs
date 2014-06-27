@@ -112,6 +112,7 @@ companyUIJson ctx companyui = runJSONGenT $ do
     value "domainmailsbackgroundcolor" $ fromMaybe "" $ bdmailsbackgroundcolor <$> ctxbrandeddomain ctx
     value "domainmailsbuttoncolor" $ fromMaybe "" $ bdmailsbuttoncolor <$> ctxbrandeddomain ctx
     value "domainmailstextcolor" $ fromMaybe "" $ bdmailstextcolor <$> ctxbrandeddomain ctx
+    value "domainmailsbordercolor" $ fromMaybe "" $ bdmailsbordercolor <$> ctxbrandeddomain ctx
     value "domainsignviewprimarycolour" $ fromMaybe "" $ bdsignviewprimarycolour <$> ctxbrandeddomain ctx
     value "domainsignviewprimarytextcolour" $ fromMaybe "" $ bdsignviewprimarytextcolour <$> ctxbrandeddomain ctx
     value "domainsignviewsecondarycolour" $ fromMaybe "" $ bdsignviewsecondarycolour <$> ctxbrandeddomain ctx

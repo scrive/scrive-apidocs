@@ -27,6 +27,7 @@ import User.Model
 import Mails.MailsData
 import Data.String.Utils
 import User.Email
+import Utils.String
 
 -- | Anything that might have a first name and last name, or personalnumber
 class HasSomeUserInfo a where
@@ -115,11 +116,3 @@ getMailAddress a = MailAddress {
     fullname = getFullName a
   , email    = getEmail a
   }
-
--- | Pick first non-empty element or return empty list
-firstNonEmpty :: [String] -> String
-firstNonEmpty = f . map strip where
-  f [a]                = a
-  f (a:as) | null a    = firstNonEmpty as
-           | otherwise = a
-  f []                 = error "firstNonEmpty"

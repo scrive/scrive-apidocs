@@ -54,8 +54,14 @@ getAnchorPositions pdfcontent anchors = do
 
     case code of
       ExitSuccess -> do
+        stdoutjs <- either (\e -> do Log.attention "scrivepdftools/scrivepdftools.jar find-texts did not produce valid json" $ do
+                                       value "message" e
+                                       value "stdout" (BSL.toString stdout)
+                                     fail "scrivepdftools/scrivepdftools.jar find-texts did not produce valid json"
+                                  ) return $
+                    J.runGetJSON J.readJSValue (BSL.toString stdout)
+
         let matches :: Maybe (Maybe [Maybe (PlacementAnchor, (Int,Double,Double))])
-            Right stdoutjs = J.runGetJSON J.readJSValue (BSL.toString stdout)
             matches = withJSValue stdoutjs $ fromJSValueFieldCustom "matches" $ fromJSValueCustomMany $ ((do
               text                 <- fromJSValueField "text"
               index                <- fromMaybe (Just 1) <$> fromJSValueField "index"

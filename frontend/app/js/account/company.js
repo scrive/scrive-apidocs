@@ -114,6 +114,9 @@ window.CompanyUI = Backbone.Model.extend({
   domainmailstextcolor: function() {
     return this.get('domainmailstextcolor');
   },
+  domainmailsbordercolor: function() {
+    return this.get('domainmailsbordercolor');
+  },
   ready : function() {
     return this.get("ready");
   },
@@ -151,7 +154,9 @@ window.CompanyUI = Backbone.Model.extend({
             domainbackgroundcolour: args.domainbackgroundcolour,
             domainmailsbackgroundcolor: args.domainmailsbackgroundcolor,
             domainmailsbuttoncolor: args.domainmailsbuttoncolor,
-            domainmailstextcolor: args.domainmailstextcolor};
+            domainmailstextcolor: args.domainmailstextcolor,
+            domainmailsbordercolor: args.domainmailsbordercolor
+    };
   },
   parse: function(args) {
     var parsed_args = this.parseArgs(args);

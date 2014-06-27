@@ -750,6 +750,7 @@ jsonBrandedDomainHelper bd = do
   value "mails_background_color"        $ bdmailsbackgroundcolor bd
   value "mails_button_color"            $ bdmailsbuttoncolor bd
   value "mails_text_color"              $ bdmailstextcolor bd
+  value "mails_border_color"            $ bdmailsbordercolor bd
   value "signview_primary_color"        $ bdsignviewprimarycolour bd
   value "signview_primary_text_color"   $ bdsignviewprimarytextcolour bd
   value "signview_secondary_color"      $ bdsignviewsecondarycolour bd
@@ -779,6 +780,7 @@ updateBrandedDomain xbdid = onlySalesOrAdmin $ do
     post_mails_background_color <- look "mails_background_color"
     post_mails_button_color <- look "mails_button_color"
     post_mails_text_color <- look "mails_text_color"
+    post_mails_border_color <- look "mails_border_color"
     post_signview_primary_color <- look "signview_primary_color"
     post_signview_primary_text_color <- look "signview_primary_text_color"
     post_signview_secondary_color <- look "signview_secondary_color"
@@ -806,6 +808,7 @@ updateBrandedDomain xbdid = onlySalesOrAdmin $ do
         bdmailsbackgroundcolor = post_mails_background_color,
         bdmailsbuttoncolor = post_mails_button_color,
         bdmailstextcolor = post_mails_text_color,
+        bdmailsbordercolor = post_mails_border_color,
         bdsignviewprimarycolour = post_signview_primary_color,
         bdsignviewprimarytextcolour = post_signview_primary_text_color,
         bdsignviewsecondarycolour = post_signview_secondary_color,

@@ -550,6 +550,7 @@ javascriptLocalisation =
              , acceptTOS: "$_acceptTOS()$"
              , notEntered: "$_notEntered()$"
              , checkbox: "$_signViewCheckbox()$"
+             , signature: "$_signViewSignature()$"
              , textfield: "$_signViewTextField()$"
              , filladitionfields : "$_filladitionfields()$"
              , filladitionfieldsdescription : "$_filladitionfieldsdescription()$"
