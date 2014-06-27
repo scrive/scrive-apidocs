@@ -117,6 +117,7 @@
 "_signViewSignatoriesTitle":"Parter",
 "_signViewSignatoryAttachmentsTitleForLots":"Upload vedhæftede filer",
 "_signViewSignatoryAttachmentsTitleForOne":"Upload vedhæftet fil",
+"_signViewSignature":"",
 "_signViewTextField":"Skriv der",
 "_signWithSMSPin":"Signer med PIN via SMS",
 "_signatoryAttachmentsSupportedFormats":"Understøttede filformater: PDF, JPG og PNG",

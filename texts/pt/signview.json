@@ -117,6 +117,7 @@
 "_signViewSignatoriesTitle":"Partes",
 "_signViewSignatoryAttachmentsTitleForLots":"Carregar anexos",
 "_signViewSignatoryAttachmentsTitleForOne":"Carregar anexo",
+"_signViewSignature":"",
 "_signViewTextField":"Escrever aqui",
 "_signWithSMSPin":"Assinar com PIN por SMS",
 "_signatoryAttachmentsSupportedFormats":"Formatos de ficheiro suportados: PDF, JPG e PNG",

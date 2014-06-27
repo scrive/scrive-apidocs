@@ -117,6 +117,7 @@
 "_signViewSignatoriesTitle":"Parties",
 "_signViewSignatoryAttachmentsTitleForLots":"Ajouter les pièces jointes requises",
 "_signViewSignatoryAttachmentsTitleForOne":"Attacher la pièce jointe requise",
+"_signViewSignature":"",
 "_signViewTextField":"Écrire à cet endroit",
 "_signWithSMSPin":"Connectez-vous à partir du code PIN reçu par SMS",
 "_signatoryAttachmentsSupportedFormats":"Formats de fichiers pris en charge: PDF, JPG et PNG",

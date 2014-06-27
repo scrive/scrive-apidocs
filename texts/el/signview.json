@@ -117,6 +117,7 @@
 "_signViewSignatoriesTitle":"Συμβαλλόμενα μέρη ",
 "_signViewSignatoryAttachmentsTitleForLots":"Μεταφόρτωση συνημμένων ",
 "_signViewSignatoryAttachmentsTitleForOne":"Μεταφόρτωση συνημμένου",
+"_signViewSignature":"",
 "_signViewTextField":"Γράψτε εδώ ",
 "_signWithSMSPin":"Υπογράψτε με PIN μέσω SMS",
 "_signatoryAttachmentsSupportedFormats":"Υποστηριζόμενες μορφές αρχείου: PDF, JPG και PNG ",

@@ -117,6 +117,7 @@
 "_signViewSignatoriesTitle":"Parter",
 "_signViewSignatoryAttachmentsTitleForLots":"Ladda upp bilagor",
 "_signViewSignatoryAttachmentsTitleForOne":"Ladda upp bilaga",
+"_signViewSignature":"",
 "_signViewTextField":"Skriv där",
 "_signWithSMSPin":"Signerna med PIN via SMS",
 "_signatoryAttachmentsSupportedFormats":"Filformat som stöds: PDF, JPG och PNG",
