@@ -5,12 +5,6 @@ $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
     $standardHeaderContents()$
-    <script>
-     require(['Backbone', 'legacy_code'], function(Backbone) {
-       // need Backbone to be definied before we load this file
-       require(['$homebase$/js/docsignviewcreateaccount.js'], function() {});
-     });
-    </script>
   </head>
   <body $if(custombackground)$style="background:$custombackground$;"$endif$ class='designview'>
     $header()$
