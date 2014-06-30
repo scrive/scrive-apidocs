@@ -6,6 +6,8 @@
 # This script assumes TRGMH which is ssh string to target server (builds@prod.scrive.lan)
 # This script assumes TRGMH2 which is ssh string to target secondary server (builds@staging.scrive.lan)
 # This script assumes SRV2 which is the name of the secondary server (api-testbed)
+# This script assumes TRGMH3 which is ssh string to target one more server (Needed for load balancer/avis now)
+# This script assumes SRV3 which is the name of this extra server (Needed for load balancer/avis now)
 # This script assumes AMZN which is a boolean whether to upload to Amazon
 
 if [ -z "$1" ]; then
@@ -113,6 +115,15 @@ if [ ! -z "$SRV2" ]; then
    echo "Copying deployment file to /tmp on $SRV2 server"
    ssh $TRGMH2 "rm -rf /tmp/"$SRV2"_deployment && mkdir /tmp/"$SRV2"_deployment"
    cat "$TMP/$finalfile" | ssh $TRGMH2 "cd /tmp/"$SRV2"_deployment && tar -zx ; exit \$?"
+  fi
+fi
+
+if [ ! -z "$SRV3" ]; then
+  if [ ! -z "$TRGMH3" ]; then
+
+   echo "Copying deployment file to /tmp on $SRV3 server"
+   ssh $TRGMH3 "rm -rf /tmp/"$SRV3"_deployment && mkdir /tmp/"$SRV3"_deployment"
+   cat "$TMP/$finalfile" | ssh $TRGMH3 "cd /tmp/"$SRV3"_deployment && tar -zx ; exit \$?"
   fi
 fi
 
