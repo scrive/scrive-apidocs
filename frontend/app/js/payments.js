@@ -1144,7 +1144,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                                                 LoadingDialog.close();
                                                 model.trigger('fetch');
                                                 var message_content = $('<span>' + localization.blocking.willcancel.headline + '</span>');
-                                                $('.put-days-left-here', message_content).text(Math.ceil(moment.duration(some_model.subscription().billingEnds() - moment()).asDays()));
+                                                $('.put-days-left-here', message_content).text(Math.ceil(moment.duration(model.subscription().billingEnds() - moment()).asDays()));
                                                 new FlashMessage({color: 'green', content: message_content});
 						model.trigger('subscriptionCancelled');
                                             }});
