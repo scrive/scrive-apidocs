@@ -195,18 +195,20 @@ eventForVerificationPage = not . (`elem` map Current [AttachGuardtimeSealedFileE
 -- text is for the verification page, otherwise it is for the archive.
 simplyfiedEventText :: (HasLang doc, TemplatesMonad m) => Maybe String -> doc -> DocumentEvidenceEventWithSignatoryLink -> m String
 simplyfiedEventText mactor doc dee = case evType dee of
+  Obsolete CancelDocumenElegEvidence -> renderEvent "CancelDocumenElegEvidenceText"
+  Current et -> renderEvent $ eventTextTemplateName et
   Obsolete _ -> return ""
-  Current et -> (if isJust mactor then renderLocalTemplate doc else renderTemplate) (eventTextTemplateName et) $ do
-    let siglink = evAffectedSigLink dee
-    F.value "text" $ strip . filterTagsNL <$> evMessageText dee
-    F.value "signatory" $ getIdentifier <$> siglink
-    -- signatory email: there are events that are missing affected
-    -- signatory, but happen to have evEmail set to what we want
-    F.value "signatory_email" $ (getEmail <$> siglink) <|> evEmail dee
-    case mactor of
-      Nothing    -> F.value "archive" True
-      Just actor -> F.value "actor" actor
-    maybe (return ()) signatoryLinkTemplateFields siglink
+  where renderEvent eventTemplateName = (if isJust mactor then renderLocalTemplate doc else renderTemplate) eventTemplateName $ do
+          let siglink = evAffectedSigLink dee
+          F.value "text" $ strip . filterTagsNL <$> evMessageText dee
+          F.value "signatory" $ getIdentifier <$> siglink
+          -- signatory email: there are events that are missing affected
+          -- signatory, but happen to have evEmail set to what we want
+          F.value "signatory_email" $ (getEmail <$> siglink) <|> evEmail dee
+          case mactor of
+            Nothing    -> F.value "archive" True
+            Just actor -> F.value "actor" actor
+          maybe (return ()) signatoryLinkTemplateFields siglink
 
 showClockError :: Word8 -> Double -> String
 showClockError decimals e = show (realFracToDecimal decimals (e * 1000)) ++ " ms"
