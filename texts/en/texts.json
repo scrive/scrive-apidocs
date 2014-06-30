@@ -730,7 +730,7 @@
 "_smsOriginator":"SMS label",
 "_smsOriginatorDescription":"The name that is displayed to the recipient when receiving a document via SMS. Maximum 11 alpha-numeric characters.",
 "_standard":"Standard",
-"_startFreeTrial":"Start free trial",
+"_startFreeTrial":"Free trial",
 "_startingSaveSigning":"Initiates secure signing...",
 "_statsOrgTotal":"Organisation total",
 "_statsSender":"Sender",
