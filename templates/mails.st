@@ -70,7 +70,7 @@ mailContractClosedMainP =
       $endif$
     $else$
       $_mailContractClosedContentLinked()$
-      $if(confirmationlink)$
+      $if(!hasaccount)$
         $_mailContractClosedContentLinkedNoAccount()$
         $if(custommessage)$
           <br/>

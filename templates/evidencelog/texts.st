@@ -434,3 +434,5 @@ $if(text)$$if(!mobile)$ $_invitationCustomMessageTextToSign()$ $endif$$endif$
 invitationCustomMessageTextToReviewIfThereIsOne=
 $if(text)$$if(!mobile)$ $_invitationCustomMessageTextToReview()$ $endif$$endif$
 ###
+CancelDocumenElegEvidenceText=$_CancelDocumenElegEvidenceText()$
+###

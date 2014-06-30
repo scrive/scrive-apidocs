@@ -6,6 +6,7 @@
 "_AutomaticReminderSentTextSimpleEmail":"An automatic reminder to sign the document was sent to $signatory$ using email.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"An automatic reminder to sign the document was sent to $signatory$ using email and SMS.",
 "_AutomaticReminderSentTextSimpleSMS":"An automatic reminder to sign the document was sent to $signatory$ using SMS.",
+"_CancelDocumenElegEvidenceText":"Scrive rejected the attempt by $signatory$ to sign the document. The reason was that the identity information of $signatory$ did not match the identity information received from the external eID system.",
 "_CancelDocumentEvidenceTextSimpleArchive":"The invitation to sign the document was withdrawn.",
 "_CancelDocumentEvidenceTextSimpleNotArchive":"The invitation to sign the document was withdrawn by $actor$.",
 "_CloseDocumentEvidenceTextSimple":"Scrive locked the document from further modifications by the signing parties.",

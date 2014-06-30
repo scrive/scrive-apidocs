@@ -6,6 +6,7 @@
 "_AutomaticReminderSentTextSimpleEmail":"Μια αυτόματη υπενθύμιση υπογραφής του εγγράφου απεστάλη στον $signatory$ μέσω email. ",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Μια αυτόματη υπενθύμιση υπογραφής του εγγράφου απεστάλη στον $signatory$ μέσω email και SMS. ",
 "_AutomaticReminderSentTextSimpleSMS":"Μια αυτόματη υπενθύμιση υπογραφής του εγγράφου απεστάλη στον $signatory$ μέσω SMS. ",
+"_CancelDocumenElegEvidenceText":"",
 "_CancelDocumentEvidenceTextSimpleArchive":"Η πρόσκληση υπογραφής του εγγράφου έχει αποσυρθεί. ",
 "_CancelDocumentEvidenceTextSimpleNotArchive":"Η πρόσκληση υπογραφής του εγγράφου έχει αποσυρθεί από τον $actor$. ",
 "_CloseDocumentEvidenceTextSimple":"Η υπηρεσία Scrive κλείδωσε το έγγραφο σε περαιτέρω τροποποιήσεις από τα υπογραφόμενα μέλη. ",

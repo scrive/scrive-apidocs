@@ -6,6 +6,7 @@
 "_AutomaticReminderSentTextSimpleEmail":"En automatisk påminnelse att signera dokumentet skickades till $signatory$ via e-post.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"En automatisk påminnelse att signera dokumentet skickades till $signatory$ via e-post och SMS.",
 "_AutomaticReminderSentTextSimpleSMS":"En automatisk påminnelse att signera dokumentet skickades till $signatory$ via SMS.",
+"_CancelDocumenElegEvidenceText":"",
 "_CancelDocumentEvidenceTextSimpleArchive":"Inbjudan att signera dokumentet återkallades.",
 "_CancelDocumentEvidenceTextSimpleNotArchive":"Inbjudan att signera dokumentet återkallades av $actor$.",
 "_CloseDocumentEvidenceTextSimple":"Scrive låste dokumentet för ytterligare ändringar av de signerande parterna.",

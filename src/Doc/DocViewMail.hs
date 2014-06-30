@@ -225,6 +225,7 @@ mailDocumentClosed ispreview sl sealFixed documentAttached document = do
         F.value "partylist" $ partylist
         F.value "signatoryname" $ getSmartName sl
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
+        F.value "hasaccount" $ isJust $ maybesignatory sl
         F.value "doclink" $ if ispreview
                              then Nothing
                              else Just $ if isAuthor sl
