@@ -62,19 +62,30 @@ var SignatureDrawerView = Backbone.View.extend({
     modal : function() {
       return this.get("modal");
     },
-    lineWith : function() {
-        return 3;
+    lineWidth : function() {
+        return 8;
+    },
+    colorForRGBA : function(opacity) {
+      return "rgba(27,19,127,"+opacity+")";
     },
     updateDrawingPoint : function(x,y) {
       this.drawingPointX = x;
       this.drawingPointY = y;
     },
+    drawDot: function(x, y, color, radius) {
+            this.picture.fillStyle = color;
+            // Use canvas.arc to draw a circle with the diameter of width 
+            this.picture.arc(x, y,  radius, 0,  Math.PI*2, true);
+            this.picture.fill();
+    },
     drawCircle : function(x,y) {
-
             if (!this.drawing)
               this.picture.beginPath();
-            this.picture.fillStyle = "#000000";
-            this.picture.arc(x, y,  2 , 0,  Math.PI*2, true);
+            var radius = this.lineWidth()/2;
+            this.drawDot(x, y, this.colorForRGBA(0.05), radius+1);
+            this.drawDot(x, y, this.colorForRGBA(0.3), radius);
+            this.drawDot(x, y, this.colorForRGBA(0.5), radius-1);
+            this.drawDot(x, y, this.colorForRGBA(1), radius-2);
             this.picture.fill();
             if (!this.drawing)
               this.picture.closePath();
@@ -99,12 +110,9 @@ var SignatureDrawerView = Backbone.View.extend({
       this.y_ = undefined;
       this.x = x;
       this.y = y;
-      this.picture.lineWidth = this.lineWith();
+      this.picture.lineWidth = this.lineWidth();
       this.picture.lineCap = 'round';
       this.picture.lineJoin = 'round';
-
-
-
     },
     drawingtoolMove : function(x,y) {
       if (this.drawing) {
@@ -122,20 +130,22 @@ var SignatureDrawerView = Backbone.View.extend({
       }
     },
     drawNiceLine : function(sx,sy,ex,ey) {
-        this.drawLine(sx,sy,ex,ey,this.lineWith() + 1, "#FEFEFE", 'butt');
-        this.drawLine(sx,sy,ex,ey,this.lineWith()    , "#555555", 'round');
-        this.drawLine(sx,sy,ex,ey,this.lineWith() - 1, "#222222", 'round');
-        this.drawLine(sx,sy,ex,ey,this.lineWith() - 2, "#000000", 'round');
-    },
-    drawNiceCurve : function(sx,sy,cx,cy,ex,ey) {
-        this.drawCurve(sx,sy,cx,cy,ex,ey,this.lineWith() + 1, "#FEFEFE", 'butt');
-        this.drawCurve(sx,sy,cx,cy,ex,ey,this.lineWith()    , "#555555", 'round');
-        this.drawCurve(sx,sy,cx,cy,ex,ey,this.lineWith() - 1, "#222222", 'round');
-        this.drawCurve(sx,sy,cx,cy,ex,ey,this.lineWith() - 2, "#000000", 'round');
-    },
-    drawCurve : function(sx,sy,cx,cy,ex,ey,w,c ,lc) {
         this.picture.closePath();
         this.picture.beginPath();
+        this.drawLine(sx,sy,ex,ey,this.lineWidth() + 1, this.colorForRGBA(0.05), 'butt');
+        this.drawLine(sx,sy,ex,ey,this.lineWidth()    , this.colorForRGBA(0.3), 'round');
+        this.drawLine(sx,sy,ex,ey,this.lineWidth() - 1, this.colorForRGBA(0.5), 'round');
+        this.drawLine(sx,sy,ex,ey,this.lineWidth() - 2, this.colorForRGBA(1), 'round');
+    },
+    drawNiceCurve : function(sx,sy,cx,cy,ex,ey) {
+        this.picture.closePath();
+        this.picture.beginPath();
+        this.drawCurve(sx,sy,cx,cy,ex,ey,this.lineWidth() + 1, this.colorForRGBA(0.05), 'butt');
+        this.drawCurve(sx,sy,cx,cy,ex,ey,this.lineWidth()    , this.colorForRGBA(0.3), 'round');
+        this.drawCurve(sx,sy,cx,cy,ex,ey,this.lineWidth() - 1, this.colorForRGBA(0.5), 'round');
+        this.drawCurve(sx,sy,cx,cy,ex,ey,this.lineWidth() - 2, this.colorForRGBA(1), 'round');
+    },
+    drawCurve : function(sx,sy,cx,cy,ex,ey,w,c ,lc) {
         this.picture.moveTo(sx, sy);
         this.picture.strokeStyle = c;
         this.picture.lineWidth = w;
@@ -144,15 +154,13 @@ var SignatureDrawerView = Backbone.View.extend({
         this.picture.stroke();
     },
     drawLine : function(sx,sy,ex,ey,w,c, lc)
-    {   this.picture.closePath();
-        this.picture.beginPath();
+    {   
         this.picture.moveTo(sx, sy);
         this.picture.strokeStyle = c;
         this.picture.lineWidth = w;
         this.picture.lineCap = lc;
         this.picture.lineTo(ex, ey);
         this.picture.stroke();
-
     },
     drawingtoolUp : function(x,y) {
       this.picture.lineTo(x, y);
@@ -218,12 +226,12 @@ var SignatureDrawerView = Backbone.View.extend({
                var canvas = $("<canvas class='signatureCanvas' />");
                canvas.attr("width",820);
                canvas.attr("height",Math.floor(820 * self.model.height()/ self.model.width()));
-               canvas[0].getContext('2d').fillStyle = "#ffffff";
+               canvas[0].getContext('2d').fillStyle = "rgba(255,255,255,1)";
                canvas[0].getContext('2d').fillRect(0,0,820,Math.floor(820 * self.model.height()/ self.model.width()));
                canvas[0].getContext('2d').drawImage(img,0,0,820,Math.floor(820 * self.model.height()/ self.model.width()));
 
 
-               field.setValue(canvas[0].toDataURL("image/jpeg",1.0));
+               field.setValue(canvas[0].toDataURL("image/png",1.0));
                var tmp = field.valueTMP();
                if (tmp != undefined) {
                   tmp.img = image;
