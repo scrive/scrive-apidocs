@@ -494,11 +494,11 @@ contactUsVivocha=
 <aside class="contact">
   <nav class="contact">
   <ul>
-    <li class="call-vivocha vivocha_widget_openmedia_voip">
+    <li class="call">
       <a class="" href="tel:+46 8 519 779 00">
         <div class="icon"><img src="/img/phone.png" width="32" height="32" alt="Call"/></div>
         <div class="hover">
-          <p>Call us now, click here</p>
+          <p>Call us now</p>
           <small>+46 8 519 779 00</small>
         </div>
       </a>
