@@ -6,6 +6,7 @@
 "_AutomaticReminderSentTextSimpleEmail":"Un rappel automatique de la nécessité de signer le document a été envoyé à $signatory$ via mail.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Un rappel automatique de la nécessité de signer le document a été envoyé à $signatory$ via mail et SMS.",
 "_AutomaticReminderSentTextSimpleSMS":"Un rappel automatique de la nécessité de signer le document a été envoyé à $signatory$ via SMS.",
+"_CancelDocumenElegEvidenceText":"",
 "_CancelDocumentEvidenceTextSimpleArchive":"L'invitation à signer le document a été supprimée.",
 "_CancelDocumentEvidenceTextSimpleNotArchive":"L'invitation à signer le document a été supprimée par $actor$.",
 "_CloseDocumentEvidenceTextSimple":"Scrive a verrouillé le document le protégeant contre toute éventuelle modification ultérieure par les signataires.",
