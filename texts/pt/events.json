@@ -6,7 +6,7 @@
 "_AutomaticReminderSentTextSimpleEmail":"Foi enviado um lembrete automático para assinar o documento para $signatory$ utilizando o email.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Foi enviado um lembrete automático para assinar o documento para $signatory$ utilizando o email e SMS.",
 "_AutomaticReminderSentTextSimpleSMS":"Foi enviado um lembrete automático para assinar o documento para $signatory$ utilizando SMS.",
-"_CancelDocumenElegEvidenceText":"",
+"_CancelDocumenElegEvidenceText":"O Scrive rejeitou a tentativa de $signatory$ para assinar o documento. O motivo reside no facto de a informação da identidade de $signatory$ não coincidir com a informação da identidade recebida do sistema de eID externo.",
 "_CancelDocumentEvidenceTextSimpleArchive":"O convite para assinar o documento foi retirado.",
 "_CancelDocumentEvidenceTextSimpleNotArchive":"O convite para assinar o documento foi retirado por $actor$.",
 "_CloseDocumentEvidenceTextSimple":"Scrive bloqueou o documento impedindo modificações adicionais pelas partes co-signatárias.",
