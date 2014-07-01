@@ -13,6 +13,7 @@ module Util.HasSomeUserInfo (
   getMailAddress,
   getFullName,
   getSmartName,
+  getSmartNameOrPlaceholder,
   getIdentifier,
   getSignatoryIdentifier,
   HasSomeUserInfo(..)
@@ -23,6 +24,7 @@ import Control.Applicative ((<$>))
 import Data.List (findIndex)
 import Doc.DocStateData
 import Doc.DocumentMonad (DocumentMonad, theDocument)
+import Text.StringTemplates.Templates
 import User.Model
 import Mails.MailsData
 import Data.String.Utils
@@ -85,6 +87,12 @@ getFullName a = strip $ (strip $ getFirstName a) ++ " " ++ (strip $ getLastName 
 -- for use in frontend.  May not be unique.
 getSmartName :: (HasSomeUserInfo a) => a -> String
 getSmartName a = firstNonEmpty $ [getFullName a, getEmail a, getMobile a]
+
+-- | Uses '_notNamedParty' localized source text with `getSmartNameFromMaybe`.
+getSmartNameOrPlaceholder :: (HasSomeUserInfo a, TemplatesMonad m) => a -> m String
+getSmartNameOrPlaceholder a = do
+    notNamed <- renderTemplate_ "_notNamedParty"
+    return $ firstNonEmpty [getSmartName a, notNamed]
 
 -- | Return the full name plus first non-empty of person number,
 -- email or mobile number.

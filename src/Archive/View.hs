@@ -72,7 +72,8 @@ docFieldsListForJSON userid padqueue doc = do
     J.value "title" $ documenttitle doc
     J.value "status" $ show $ documentstatusclass doc
     J.value "state"  $ show $ documentstatus doc
-    J.value "party" $ intercalate ", " $ map getSmartName $ getSignatoryPartnerLinks doc
+    signingParties <- lift $ mapM getSmartNameOrPlaceholder $ getSignatoryPartnerLinks doc
+    J.value "party" $ intercalate ", " signingParties
     J.value "partner" $ intercalate ", " $ map getSmartName $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)
     J.value "partnercomp" $ intercalate ", " $ map getCompanyName $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)
     J.value "author" $ intercalate ", " $ map getSmartName $ filter isAuthor $ (documentsignatorylinks doc)
