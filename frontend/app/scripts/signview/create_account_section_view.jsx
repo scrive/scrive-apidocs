@@ -45,15 +45,8 @@ define(['React', 'common/language_service', 'postsignview/questionnaire_view', '
       return;
     }
 
-    if(document.author().company() === 'Phone House') {
-      // Phone house, create account banner
-      promotionName = "Phone House";
-      component = CreateAccountViews.BrandedBanner({
-        bannerType: 'phone-house',
-        language: language,
-        registerUser: _.partial(bannerRegisterUser, document, 'Phone House', sectionElementRaw)
-      });
-      React.renderComponent(component, sectionElementRaw);
+    if(null !== /^avis.*scrive.com/.exec(location.host)) {
+      return; // No option to do anything in the PSV for AVIS.
     } else if(null !== /^nj.*scrive.com/.exec(location.host)) {
       promotionName = "NJ";
       // Nordsteds juridik, create account section
