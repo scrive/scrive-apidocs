@@ -47,7 +47,7 @@ import Data.Functor
 import Doc.DocViewMail
 
 processEvents :: Scheduler ()
-processEvents = dbQuery GetUnreadEvents >>= mapM_ processEvent
+processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ processEvent -- We limit processing to 50 events not to have issues with large number of documents locked.
   where
     processEvent (eid, _mid, XSMTPAttrs [("mailinfo", mi)], eventType) = do
       case maybeRead mi of
