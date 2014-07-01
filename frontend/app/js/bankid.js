@@ -272,11 +272,23 @@ window.Eleg = {
                                                                "eleg"  : "mobilebankid"
                                                               });
                                                  }
-                                                 ,errorcallback: function() {
-                                                     // TODO: see #240 in trello concerning the wrong error message here.
-                                                     new FlashMessage({ content: localization.yourSigningPluginFailed, color: "red"});
-                                                     LoadingDialog.close();
-                                                     return;
+                                                 ,errorcallback: function(errormessage) {
+                                                    var message = "";
+
+                                                    LoadingDialog.close();
+
+                                                    if (errormessage && errormessage.indexOf("USER_CANCEL")) {
+                                                      // This means the user cancelled by clicking the right button in the interface
+                                                      message = localization.youCancelledSigning;
+                                                    } else {
+                                                      // Unknown error, probably there has not been a mobile bankid issued for this person number.
+                                                      message = localization.yourSigningPluginFailed;
+                                                    }
+
+                                                    // TODO: see #240 in trello concerning the wrong error message here.
+                                                    new FlashMessage({ content: message, color: "red"});
+
+                                                    return;
                                                  }
                                                 });
                 var mv = new MobileBankIDPollingView({model:m});

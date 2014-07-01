@@ -79,7 +79,7 @@ define(['Backbone', 'legacy_code'], function() {
                                            polling.status("error");
                                            if (!polling.done()) {
                                              polling.setDone();
-                                             polling.errorcallback();
+                                             polling.errorcallback(d.error);
                                            }
                                        } else {
                                            polling.status(d.status);
