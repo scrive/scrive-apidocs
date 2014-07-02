@@ -145,7 +145,7 @@
 "_bankidInvalidDevices":"An internal technical error has occured. Update your app for Mobile BankID and try again.",
 "_bankidInvalidParameters":"Invalid personal ID number",
 "_bankidStartApp":"Start your Mobile BankID app.",
-"_bankidUnknownUser":"The eID you chose cannot be used. Please select a different eID or contact your bank to order a new eID.",
+"_bankidUnknownUser":"The SSN you entered does not have a Mobile BankID",
 "_bankidUserCancel":"Operation aborted",
 "_bankidVerificationFailed":"The eID service provider failed to verify your signature.",
 "_blockingButtonContact":"Contact us",

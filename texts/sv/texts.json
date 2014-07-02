@@ -145,7 +145,7 @@
 "_bankidInvalidDevices":"Det har inträffat ett internt tekniskt fel. Uppdatera din BankID säkerhetsapp och försök igen.",
 "_bankidInvalidParameters":"Ogiltigt personnummer",
 "_bankidStartApp":"Starta din Mobilt BankID-app.",
-"_bankidUnknownUser":"Den e-legitimation du valde går inte att använda. Vänligen välj en annan e-legitimation eller kontakta din bank för att beställa en ny.",
+"_bankidUnknownUser":"Det angivna personnumret saknar ett fungerande Mobilt BankID.",
 "_bankidUserCancel":"Åtgärden avbruten",
 "_bankidVerificationFailed":"E-legitimationstjänsten misslyckades att verifiera din signatur",
 "_blockingButtonContact":"Kontakt oss",
