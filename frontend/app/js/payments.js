@@ -423,7 +423,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
             var submit = $('<li class="field submit" />');
             submit.append($('<div class="input" />')
-                          .append($('<input type="submit" id="input-submit" class="button button-blue" />')
+                          .append($('<input type="submit" id="input-submit" class="button button-green" />')
                                   .val(localization.payments.sendmsg)));
             ul.append(submit);
 

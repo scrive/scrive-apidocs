@@ -273,7 +273,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                 window.location = this.subscriptionPageHref;
         },
         paymentsPopup: function(opts) {
-            var div = $('<div />').addClass('price-plan');
+            var div = $('<div />').addClass('price-plan').addClass('blocking-modal');
             new Confirmation({
                 title: opts.title,
                 content: div,
