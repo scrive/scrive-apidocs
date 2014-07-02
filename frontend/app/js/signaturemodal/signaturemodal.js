@@ -74,9 +74,20 @@ var SignatureDrawOrTypeModel= Backbone.Model.extend({
     var incompleteSignatoryAttachmentsTasks = _.filter(incompleteTasks, function(task) { return task.isSignatoryAttachmentTask(); });
     var incompleteExtraDetailsTasks = _.filter(incompleteTasks, function(task) { return task.isExtraDetailsTask(); });
 
-    var fieldsLeftToFillIn = (   incompleteFieldTasks.length > 0
-                              || incompleteExtraDetailsTasks.length > 1
-                              || (incompleteExtraDetailsTasks.length == 1 && signatureDrawn));
+    var numberOfIncompleteFieldTasks = incompleteFieldTasks.length;
+
+    // Account for if this signature has already been drawn or if this signature task is the only *field* task left
+    // This assumes that there is not a signature in the extra details field AND placed on the document (this is always true at the moment)
+    var isSignatureFieldOnDocument = !DocumentExtraDetails.askForSignature(signatory);
+    var isThisSignatureFieldTheLastField = !signatureDrawn && numberOfIncompleteFieldTasks == 1;
+    if (isSignatureFieldOnDocument && isThisSignatureFieldTheLastField) { 
+      numberOfIncompleteFieldTasks = 0; 
+    }
+
+    var fieldsLeftToFillIn = (   numberOfIncompleteFieldTasks > 0 // Are there more things to do on the document?
+                              || incompleteExtraDetailsTasks.length > 1 // Are there more than 2 extra details fields?
+                              || (incompleteExtraDetailsTasks.length == 1 && signatureDrawn)); // Is the only extra details field left NOT a signature field?
+
     var attachmentsLeft = incompleteSignatoryAttachmentsTasks.length > 0;
 
     var extraDetailsLeft = DocumentExtraDetails.detailsMissing(signatory);

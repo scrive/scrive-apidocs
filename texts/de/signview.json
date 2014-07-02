@@ -101,7 +101,7 @@
 "_remindMailNotSignedContractBody":"<strong>$authorname$</strong> möchte Sie daran erinnern, dass Sie das Dokument <strong>$documenttitle$</strong> noch nicht e-signiert haben.",
 "_remindMailNotSignedContractBodyFurther":"Klicken Sie die Schaltfläche für weitere Instruktionen.",
 "_remindMailNotSignedTitleContract":"Erinnerung zur E-Signierung des Dokuments: $documenttitle$",
-"_remindMailSignedContractStandardHeaderSendRequest":"",
+"_remindMailSignedContractStandardHeaderSendRequest":"Sie haben das Dokument <strong>$documenttitle$</strong> bereits e-signiert. <strong>$creatorname$</strong> hat beantragt, Ihnen das endgültige Dokument erneut zuzusenden.",
 "_remindMailSignedContractStandardHeaderSendRequest2":"Das Dokument ist beigefügt",
 "_remindMailSignedTitle":"Erneut gesendetes Dokument: $documenttitle$",
 "_reviewDocument":"Dokument zur Überprüfung",

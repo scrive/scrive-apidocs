@@ -6,7 +6,7 @@
 "_AutomaticReminderSentTextSimpleEmail":"Un promemoria automatico per firmare il documento è stato spedito a $signatory$ via email.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Un promemoria automatico per firmare il documento è stato spedito a $signatory$ via email e SMS.",
 "_AutomaticReminderSentTextSimpleSMS":"Un promemoria automatico per firmare il documento è stato spedito a $signatory$ via SMS.",
-"_CancelDocumenElegEvidenceText":"",
+"_CancelDocumenElegEvidenceText":"Scrive ha respinto il tentativo di firma del documento da parte di $signatory$. Il motivo è che le informazioni sull'identità di $signatory$ non corrispondono alle informazioni ricevute dal sistema eID esterno.",
 "_CancelDocumentEvidenceTextSimpleArchive":"L'invito a firmare il documento è stato revocato.",
 "_CancelDocumentEvidenceTextSimpleNotArchive":"L'invito a firmare il documento è stato revocato da $actor$.",
 "_CloseDocumentEvidenceTextSimple":"Scrive ha protetto il documento da ulteriori modifiche da parte dei firmatari.",

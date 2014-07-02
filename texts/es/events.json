@@ -6,7 +6,7 @@
 "_AutomaticReminderSentTextSimpleEmail":"Un aviso automático para firmar el documento fue enviado a $signatory$ por email.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Un aviso automático para firmar el documento fue enviado a $signatory$ por email y SMS.",
 "_AutomaticReminderSentTextSimpleSMS":"Un aviso automático para firmar el documento fue enviado a $signatory$ por SMS.",
-"_CancelDocumenElegEvidenceText":"",
+"_CancelDocumenElegEvidenceText":"Scrive rechazó la tentativa de $signatory$ de firmar el documento. La razón fue que la identidad informativa de $signatory$ no encajaba con la identidad informativa recibida por el sistema externo del DNIe.",
 "_CancelDocumentEvidenceTextSimpleArchive":"La invitación a firmar el documento fue retirada. ",
 "_CancelDocumentEvidenceTextSimpleNotArchive":"La invitación a firmar el documento fue retirada por $actor$.",
 "_CloseDocumentEvidenceTextSimple":"Scrive bloqueó el documento de posibles modificaciones de las partes firmantes. ",
