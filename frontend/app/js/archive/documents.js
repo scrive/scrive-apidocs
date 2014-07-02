@@ -32,8 +32,15 @@ window.DocumentCellsDefinition = function(archive) { return  [
                        {
                             return $("<a class='s-archive-document-title'/>").text(listobject.field("title")).attr("href",listobject.link());
                        }
+
+                    // Only show icons when the party can actually still sign the document
+                    var status = listobject.subfield(idx,"status");
+                    if (status != "opened" && status != "sent") {
+                      return $('<span />');
+                    }
+
                     //For pad we show extra icon
-                    if (idx != undefined && listobject.subfield(idx,"delivery") == "pad" && listobject.field("status") != "signed")
+                    if (idx != undefined && listobject.subfield(idx,"delivery") == "pad")
                       {
                         var actionIcon = $("<a class='actionIcon'/>");
                         if (listobject.field("inpadqueue") && listobject.subfield(idx,"inpadqueue"))
