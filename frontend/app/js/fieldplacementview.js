@@ -223,7 +223,6 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
        model is field
      **/
     var FieldOptionsView = Backbone.View.extend({
-        className: 'design-view-action-participant-details-information-field-options-wrapper',
         initialize: function(args) {
             var view = this;
             view.options = args.options;
@@ -273,7 +272,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                 options: options,
                 inactive: (options.length == 0),
                 name: selectedName,
-                cssClass : 'design-view-action-participant-details-information-field-options ' + (view.extraClass || ""),
+                cssClass : (view.extraClass || ""),
                 style: 'font-size: 16px; width: 220px;',
                 textWidth: "191px",
                 optionsWidth: "218px",
