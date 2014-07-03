@@ -10,7 +10,7 @@ $htmlopentag()$
     <div class="signview">
       <div class="mainContainer" >
         $flashmessages()$
-        <div class="body-container pad-list">
+        <div class="pad-list">
           <div class="list-container"></div>
           <script>
            require(['jquery', 'React' , 'signview/header', 'signview/footer',  'legacy_code'], function(jQuery,React,Header,Footer) {
@@ -43,9 +43,9 @@ $htmlopentag()$
                 Footer({
                    signviewbranding: svb
                 }), footerDiv[0]);
-              jQuery(".body-container").prepend(headerDiv);
+              jQuery(".pad-list").prepend(headerDiv);
               jQuery(".list-container").append(padlist.el());
-              jQuery(".body-container").append(footerDiv);
+              jQuery(".pad-list").append(footerDiv);
 
             });
 

@@ -18,7 +18,6 @@ window.PadGiveToNextSignatoryModel = Backbone.Model.extend({
     },
     giveForSigning: function() {
         var sig = this.selectedSignatory();
-        LocalStorage.set("pad","from-list","false");
         sig.giveForPadSigning().send();
     }
 });

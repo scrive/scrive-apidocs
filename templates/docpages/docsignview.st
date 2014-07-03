@@ -83,7 +83,6 @@ $htmlopentag()$
                   var component = React.renderComponent(
                     Header({
                       signviewbranding: svb,
-                        forPad : true
                     }), headerDiv[0]);
 
                   var footerDiv = jQuery('<div/>');
@@ -124,12 +123,6 @@ $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
     $standardHeaderContents()$
-    <script>
-     require(['Backbone', 'legacy_code'], function(Backbone) {
-       // need Backbone to be definied before we load this file
-       require(['$homebase$/js/docsignviewcreateaccount.js'], function() {});
-     });
-    </script>
   </head>
   <body>
     <div class="signview">

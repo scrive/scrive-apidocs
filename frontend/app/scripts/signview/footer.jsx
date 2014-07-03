@@ -5,8 +5,7 @@ define(['React', 'Backbone', 'common/backbone_mixim'], function(React, Backbone,
 
   return React.createClass({
     propTypes: {
-      signviewbranding: React.PropTypes.signviewbranding,
-      forPad : React.PropTypes.pad
+      signviewbranding: React.PropTypes.signviewbranding
     },
     mixins: [BackboneMixin.BackboneMixin],
     getBackboneModels : function() {
@@ -14,7 +13,6 @@ define(['React', 'Backbone', 'common/backbone_mixim'], function(React, Backbone,
     },
     render: function() {
       var signviewbranding = this.props.signviewbranding;
-      var forPad =  this.props.forPad;
       var showFooter = signviewbranding.ready() && !BrowserInfo.isSmallScreen() && signviewbranding.showfooter();
 
       $('.signview').toggleClass("nofooter",!showFooter) // We need to toogle this class here
