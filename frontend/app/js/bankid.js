@@ -285,10 +285,7 @@ window.Eleg = {
                                                       message = localization.yourSigningPluginFailed;
                                                     }
 
-                                                    // TODO: see #240 in trello concerning the wrong error message here.
                                                     new FlashMessage({ content: message, color: "red"});
-
-                                                    return;
                                                  }
                                                 });
                 var mv = new MobileBankIDPollingView({model:m});
