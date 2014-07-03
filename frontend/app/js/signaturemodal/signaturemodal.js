@@ -386,7 +386,7 @@ window.SignatureDrawOrTypeModal = function(args){
         var modal = $("<div class='modal'></div>").css("height", $(document).height()).css("min-width", "1018px");
         var container = $("<div class='modal-container drawing-modal'/>").css("width",width);
         var innerHeight = 820 * args.height / args.width;
-        var containerTop = window.innerHeight - innerHeight - 240;
+        var containerTop = $(window).height() - innerHeight - 240;
 
         container.css("top",$(window).scrollTop())
                  .css("margin-top", containerTop)
