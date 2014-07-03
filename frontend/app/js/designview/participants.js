@@ -128,20 +128,22 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
 
             var ordinal = LanguageService.localizedOrdinal(order);
             var temporarySpan = $('<span />').html(localization.designview.toReceiveDocument);
+            temporarySpan.find('.put-ordinal-here').text(ordinal);
+
             var select = $("<div/>")
 
             React.renderComponent(
               NewSelect.Select({
                 options: options,
-                name: emporarySpan.text(),
-                textWidth : "195px",
-                optionsWidth : "225px",
+                name: temporarySpan.text(),
+                textWidth : "145px",
+                optionsWidth : "177px",
                 cssClass : 'design-view-action-participant-details-participation-order',
                 onSelect: function(v) {
                   mixpanel.track('Choose sign order', {
                     Where: 'select'
                   });
-                model.setSignOrder(v);
+                  model.setSignOrder(v);
                   return true;
                 }
               })
@@ -235,8 +237,8 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                   return {name: roleTexts[t], value:t};
                 }),
                 name: roleTexts[role],
-                textWidth : "195px",
-                optionsWidth : "225px",
+                textWidth : "145px",
+                optionsWidth : "177px",
                 cssClass : 'design-view-action-participant-details-participation-role',
                 onSelect: function(v) {
                   mixpanel.track('Choose participant role', {
@@ -271,8 +273,8 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                   return {name: authTexts[t], value:t};
                 }),
                 name: authTexts[auth],
-                textWidth : "195px",
-                optionsWidth : "225px",
+                textWidth : "145px",
+                optionsWidth : "177px",
                 cssClass : 'design-view-action-participant-details-participation-auth',
                 onSelect: function(v) {
                   mixpanel.track('Choose auth', {
