@@ -226,7 +226,7 @@ var SignatureDrawerView = Backbone.View.extend({
                var canvas = $("<canvas class='signatureCanvas' />");
                canvas.attr("width",820);
                canvas.attr("height",Math.floor(820 * self.model.height()/ self.model.width()));
-               canvas[0].getContext('2d').fillStyle = "rgba(255,255,255,1)";
+               canvas[0].getContext('2d').fillStyle = "rgba(255,255,255,0)";
                canvas[0].getContext('2d').fillRect(0,0,820,Math.floor(820 * self.model.height()/ self.model.width()));
                canvas[0].getContext('2d').drawImage(img,0,0,820,Math.floor(820 * self.model.height()/ self.model.width()));
 
