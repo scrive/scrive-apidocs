@@ -1046,9 +1046,11 @@ var TextPlacementPlacedView = Backbone.View.extend({
          );
 
          if (field.value() == "") {
-            placewrapper.css('background-color', self.emptyBackgroundColor);
+            placewrapper.css({'background-color': self.emptyBackgroundColor,
+                              'filter': self.emptyBackgroundColor.toFilter()}); // filter is a IE8 version of rgba bg-color
          } else {
-            placewrapper.css('background-color','');
+            placewrapper.css({'background-color': '',
+                              'filter': ''}); // filter is a IE8 version of rgba bg-color
          }
 
 
@@ -1525,7 +1527,8 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
                 box.height(height);
                 box.css("line-height",Math.floor(height) + "px");
                 if(!this.useDefaultBackground) {
-                  box.css('background-color',self.emptyBackgroundColor);
+                  box.css({'background-color': self.emptyBackgroundColor,
+                           'filter': self.emptyBackgroundColor.toFilter()}); // filter is a IE8 version of rgba bg-color
                 }
                 box.text(localization.signature.clickToDraw);
             }
