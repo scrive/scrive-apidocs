@@ -362,7 +362,7 @@
 "_filterBySent":"Awaiting signature",
 "_firstNameField":"First name",
 "_flashCantChangeEmail":"We are sorry, the selected email is taken.",
-"_flashCompanyAccountInviteNotSent":"Sorry, you are not able to send an invite to this user because they are registered to a different company. Please contact Scrive if you want to merge the accounts of two companies.",
+"_flashCompanyAccountInviteNotSent":"Sorry, you are not able to send an invite to this user because they are registered to a different company. Contact Scrive if you want to merge the accounts.",
 "_flashCompanyAccountInviteResent":"The invitation has been sent again.",
 "_flashCompanyAccountInviteSent":"An invitation has been sent.",
 "_flashCompanyInviteNotSentSameCompany":"This user is already in your company.",
