@@ -3,7 +3,7 @@
  *
  */
 
-define(['Backbone', 'common/language_service', 'legacy_code'], function(Backbone, LanguageService) {
+define(['React','common/select','Backbone', 'common/language_service', 'legacy_code'], function(React,NewSelect,Backbone, LanguageService) {
     // model is Signatory
     var DesignViewNewFieldSelector = Backbone.View.extend({
         className: 'design-view-action-participant-new-field-selector',
@@ -129,23 +129,26 @@ define(['Backbone', 'common/language_service', 'legacy_code'], function(Backbone
             var ordinal = LanguageService.localizedOrdinal(order);
             var temporarySpan = $('<span />').html(localization.designview.toReceiveDocument);
             temporarySpan.find('.put-ordinal-here').text(ordinal);
-            var select = new Select({
+
+            var select = $("<div/>")
+
+            React.renderComponent(
+              NewSelect.Select({
                 options: options,
                 name: temporarySpan.text(),
-                 textWidth : "145px",
-
+                textWidth : "145px",
                 optionsWidth : "177px",
                 cssClass : 'design-view-action-participant-details-participation-order',
                 onSelect: function(v) {
-                    mixpanel.track('Choose sign order', {
-                        Where: 'select'
-                    });
-                    model.setSignOrder(v);
-                    return true;
+                  mixpanel.track('Choose sign order', {
+                    Where: 'select'
+                  });
+                  model.setSignOrder(v);
+                  return true;
                 }
-            });
-
-            return select.el();
+              })
+              , select[0]);
+            return select;
         },
         detailsParticipationFieldsDelivery: function() {
             var view = this;
@@ -162,24 +165,26 @@ define(['Backbone', 'common/language_service', 'legacy_code'], function(Backbone
 
             var deliveryTypes = ['email', 'pad', 'mobile', 'email_mobile'];
 
-            var select = new Select({
+            var select = $("<div/>")
+            React.renderComponent(
+              NewSelect.Select({
                 options: _.map(deliveryTypes, function(t) {
-                    return {name: deliveryTexts[t], value:t};
+                  return {name: deliveryTexts[t], value:t};
                 }),
                 name: deliveryTexts[delivery],
-                 textWidth : "145px",
-
+                textWidth : "145px",
                 optionsWidth : "177px",
                 cssClass : 'design-view-action-participant-details-participation-delivery',
                 onSelect: function(v) {
-                    mixpanel.track('Choose delivery method', {
-                        Where: 'select'
-                    });
-                    sig.setDelivery(v);
+                  mixpanel.track('Choose delivery method', {
+                    Where: 'select'
+                  });
+                  sig.setDelivery(v);
                     return true;
-                }
-            });
-            return select.el();
+                  }
+             })
+             , select[0]);
+            return select;
         },
         detailsParticipationFieldsConfirmationDelivery: function() {
             var view = this;
@@ -225,28 +230,29 @@ define(['Backbone', 'common/language_service', 'legacy_code'], function(Backbone
             };
 
             var roleTypes = ['signatory', 'viewer'];
-
-            var select = new Select({
+            var select = $("<div/>")
+            React.renderComponent(
+              NewSelect.Select({
                 options: _.map(roleTypes, function(t) {
-                    return {name: roleTexts[t], value:t};
+                  return {name: roleTexts[t], value:t};
                 }),
                 name: roleTexts[role],
-                 textWidth : "145px",
-
+                textWidth : "145px",
                 optionsWidth : "177px",
                 cssClass : 'design-view-action-participant-details-participation-role',
                 onSelect: function(v) {
-                    mixpanel.track('Choose participant role', {
-                        Where: 'Icon'
-                    });
-                    if(v === 'signatory')
-                        sig.makeSignatory();
-                    else if(v === 'viewer')
-                        sig.makeViewer();
-                    return true;
+                  mixpanel.track('Choose participant role', {
+                    Where: 'Icon'
+                  });
+                  if(v === 'signatory')
+                    sig.makeSignatory();
+                  else if(v === 'viewer')
+                    sig.makeViewer();
+                  return true;
                 }
-            });
-            return select.el();
+               })
+              , select[0]);
+          return select;
         },
         detailsParticipationFieldsAuth: function() {
             var view = this;
@@ -260,25 +266,26 @@ define(['Backbone', 'common/language_service', 'legacy_code'], function(Backbone
             };
 
             var authTypes = ['standard', 'eleg', 'sms_pin'];
-
-            var select = new Select({
+            var select = $("<div/>")
+            React.renderComponent(
+              NewSelect.Select({
                 options: _.map(authTypes, function(t) {
-                    return {name: authTexts[t], value:t};
+                  return {name: authTexts[t], value:t};
                 }),
                 name: authTexts[auth],
-                 textWidth : "145px",
-
-                optionsWidth : "200px",
+                textWidth : "145px",
+                optionsWidth : "177px",
                 cssClass : 'design-view-action-participant-details-participation-auth',
                 onSelect: function(v) {
-                    mixpanel.track('Choose auth', {
-                        Where: 'select'
-                    });
-                    sig.setAuthentication(v);
-                    return true;
+                  mixpanel.track('Choose auth', {
+                    Where: 'select'
+                  });
+                  sig.setAuthentication(v);
+                  return true;
                 }
-            });
-            return select.el();
+              })
+              , select[0]);
+            return select;
         }
     });
 
@@ -942,43 +949,42 @@ define(['Backbone', 'common/language_service', 'legacy_code'], function(Backbone
                 name = localization.designview.customField;
             else
                 name = view.placeholder(view.selected.name);
-
-            var select = new Select({
+            var select = $("<div/>")
+            React.renderComponent(
+              NewSelect.Select({
                 options: options,
                 name: name,
                 cssClass : 'design-view-action-participant-new-field-select',
                 border : "1px solid red",
                 optionsWidth: "297px",
                 onRemove : function() {
-                    mixpanel.track('Click remove field', {
-                        Type: field.type(),
-                        Name: field.name()
-                    });
-                    field.removeAllPlacements();
-                    sig.deleteField(field);
+                  mixpanel.track('Click remove field', {
+                    Type: field.type(),
+                    Name: field.name()
+                  });
+                  field.removeAllPlacements();
+                  sig.deleteField(field);
                 },
                 onSelect: function(v) {
-                    if(v.name === '--custom') {
-                        mixpanel.track('Select field type', {
-                            Type: 'custom'
-                        });
-                        field.setType('custom');
-                    } else {
-                        field.setType(v.type);
-                        field.setName(v.name);
-                        mixpanel.track('Select field type', {
-                            Type: v.type,
-                            Name: v.name
-                        });
-                    }
-                    sig.trigger('change:fields');
-                    return true;
+                  if(v.name === '--custom') {
+                    mixpanel.track('Select field type', {
+                      Type: 'custom'
+                    });
+                    field.setType('custom');
+                  } else {
+                    field.setType(v.type);
+                    field.setName(v.name);
+                    mixpanel.track('Select field type', {
+                      Type: v.type,
+                      Name: v.name
+                    });
+                  }
+                  sig.trigger('change:fields');
+                  return true;
                 }
-            });
-
-            div.append(select.el());
-
-
+              })
+              , select[0]);
+            div.append(select);
             return div;
 
         },

@@ -16,7 +16,7 @@ var require = {
      *  Libraries
      */
     jquery: '../bower_components/jquery/jquery.min',
-    React: '../bower_components/react/react-with-addons',
+    React: '../bower_components/react/react-with-addons.min',
     Backbone: '../bower_components/backbone/backbone',
     Underscore: '../bower_components/underscore/underscore-min',
     text: '../bower_components/requirejs-text/text',
