@@ -661,7 +661,7 @@
 "_paymentsExpires":"Expira",
 "_paymentsGetInTouch":"Obtenha um orçamento hoje",
 "_paymentsMustBeAdmin":"Não foi possível processar a sua compra",
-"_paymentsQuote":"Citar",
+"_paymentsQuote":"Orçamento",
 "_paymentsRenewDialog":"Tem a certeza de que pretende renovar a sua subscrição? Ser-lhe-á cobrado <span class='put-price-here'/> mensalmente.",
 "_paymentsRenewSubscription":"Renovar subscrição",
 "_paymentsRenewingSubscription":"A renovar subscrição",

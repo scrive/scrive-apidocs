@@ -126,7 +126,9 @@ mailEncode mFirstLineLength source = concat $ intersperse "\r\n\t" $ map encodeW
 
     cleanedUpSource = unwords $ words source
     (firstLineBeforeEncoding, restBeforeEncoding) = BS.splitAt (preEncodeChunkSize $ fromMaybe 75 mFirstLineLength) $ BSU.fromString cleanedUpSource
-    chunksBeforeEncoding = firstLineBeforeEncoding:splitEvery (preEncodeChunkSize 75) restBeforeEncoding
+    chunksBeforeEncoding = if (BS.null restBeforeEncoding)
+                              then [firstLineBeforeEncoding] -- Lets not encode empty lines
+                              else firstLineBeforeEncoding:splitEvery (preEncodeChunkSize 75) restBeforeEncoding
 
 createMailTos :: [Address] -> String
 createMailTos = intercalate ", " . map (\a -> createAddrString a)

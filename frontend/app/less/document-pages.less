@@ -187,6 +187,8 @@
 
 .signatureBox {
   background-color: @white-with-little-opacity;
+  // this is fallback for IE8 which doesn't support rgba()
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f2ffffff', endColorstr='#f2ffffff',GradientType=0);
   border: 1px solid #999999;
   min-width: 10px;
   -moz-border-radius: 2px;

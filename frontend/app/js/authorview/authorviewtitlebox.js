@@ -163,7 +163,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
           self.signatory = document.signatoriesThatCanSignNow()[0];
           var modalContent = function() {
             var div = $("<div style='height:32px;'/>");
-            var label = $("<label style='float:left;padding-right:10px;line-height: 32px;'>").text(localization.pad.giveForSigningThisDevice + " " );
+            var label = $('<label style="float: left; padding-right: 10px; line-height: 32px;"></label>').text(localization.pad.giveForSigningThisDevice + " " );
             div.append(label);
             if (document.signatoriesThatCanSignNowOnPad().length > 1)
             {
