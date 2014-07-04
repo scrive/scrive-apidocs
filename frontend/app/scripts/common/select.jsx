@@ -198,12 +198,12 @@ var SelectExpandedView = React.createClass({
                     {o.name()}
                   </span>
                 </li>
-              )
+              );
             })
             }
           </ul>
         </div>
-      )
+      );
     }
 });
 
@@ -231,7 +231,7 @@ var SelectView = React.createClass({
       return {
         expandedDiv : div,
         expandedComponent : component
-      }
+      };
     },
     closeIfNeeded : function() {
         var model = this.props.model;
@@ -265,8 +265,8 @@ var SelectView = React.createClass({
       var model = this.props.model;
 
       if (model.expanded()) {
-        this.state.expandedDiv.css('left',$(this.getDOMNode()).offset().left + "px")
-        this.state.expandedDiv.css('top',$(this.getDOMNode()).offset().top + "px")
+        this.state.expandedDiv.css('left',$(this.getDOMNode()).offset().left + "px");
+        this.state.expandedDiv.css('top',$(this.getDOMNode()).offset().top + "px");
         $('body').append(this.state.expandedDiv);
       }
       else
@@ -288,7 +288,7 @@ var SelectView = React.createClass({
               }
           </div>
         </div>
-      )
+      );
     }
 });
 
@@ -329,7 +329,7 @@ var Select = React.createClass({
         onSelect : props.onSelect,
         onRemove : props.onRemove,
         options: props.options
-      })
+      });
       return {model: model};
     },
     render: function() {

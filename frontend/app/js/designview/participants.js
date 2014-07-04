@@ -130,7 +130,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             var temporarySpan = $('<span />').html(localization.designview.toReceiveDocument);
             temporarySpan.find('.put-ordinal-here').text(ordinal);
 
-            var select = $("<div/>")
+            var select = $("<div/>");
 
             React.renderComponent(
               NewSelect.Select({
@@ -165,7 +165,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
 
             var deliveryTypes = ['email', 'pad', 'mobile', 'email_mobile'];
 
-            var select = $("<div/>")
+            var select = $("<div/>");
             React.renderComponent(
               NewSelect.Select({
                 options: _.map(deliveryTypes, function(t) {
@@ -230,7 +230,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             };
 
             var roleTypes = ['signatory', 'viewer'];
-            var select = $("<div/>")
+            var select = $("<div/>");
             React.renderComponent(
               NewSelect.Select({
                 options: _.map(roleTypes, function(t) {
@@ -266,7 +266,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             };
 
             var authTypes = ['standard', 'eleg', 'sms_pin'];
-            var select = $("<div/>")
+            var select = $("<div/>");
             React.renderComponent(
               NewSelect.Select({
                 options: _.map(authTypes, function(t) {
@@ -949,7 +949,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                 name = localization.designview.customField;
             else
                 name = view.placeholder(view.selected.name);
-            var select = $("<div/>")
+            var select = $("<div/>");
             React.renderComponent(
               NewSelect.Select({
                 options: options,
