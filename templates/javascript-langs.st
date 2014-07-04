@@ -288,13 +288,6 @@ javascriptLocalisation =
              , anyoneElse: "$_questionnaireAnyoneElse()$"
              , phoneNumber: "$_questionnairePhoneNumber()$"
          }
-         , brandingPreview: {
-               headerSend: "$_headerSend()$"
-             , headerTemplate: "$_headerTemplate()$"
-             , headerArchive: "$_headerArchive()$"
-             , headerAccount: "$_headerAccount()$"
-             , headerLogOut: "$_headerLogOut()$"
-         }
          , ftue : {
                step1: "$_FTUEstep1()$"
              , step2: "$_FTUEstep2()$"
@@ -1020,6 +1013,28 @@ javascriptLocalisation =
             }
           , subscription : "$_Subscription()$"
       }
+      , sampleServiceView : {
+            headerSend: "$_sampleServiceViewHeaderSend()$"
+          , headerTemplate: "$_sampleServiceViewHeaderTemplate()$"
+          , headerArchive: "$_sampleServiceViewHeaderArchive()$"
+          , headerAccount: "$_sampleServiceViewHeaderAccount()$"
+          , headerLogOut: "$_sampleServiceViewHeaderLogOut()$"
+      }
+      , sampleSignView : {
+            mandatoryAction: "$_sampleSignViewMandatoryAction()$"
+          , optionalAction: "$_sampleSignViewOptionalAction()$"
+          , followTheArrow: "$_sampleSignViewFollowTheArrow()$"
+          , phone : "$_sampleSignViewPhone()$"
+          , email : "$_sampleSignViewEmail()$"
+          , textField : "$_sampleSignViewTextField()$"
+          , reviewPDF : "$_sampleSignViewReviewPDF()$"
+          , rejectButton : "$_sampleSignViewRejectButton()$"
+          , signButton : "$_sampleSignViewSignButton()$"
+          , attachmentsTitle : "$_sampleSignViewAttachmentsTitle()$"
+          , attachmentFilename : "$_sampleSignViewAttachmentFilename()$"
+          , demoDocumentName : "$_sampleSignViewDemoDocumentName()$"
+          , signViewHeader : "$_sampleSignViewHeader()$"
+      }
       , companyBranding : {
                customiseFontLabel : "$_customiseFontLabel()$"
              , customiseSignViewBackgroundColour : "$_customiseSignViewBackgroundColour()$"
@@ -1028,11 +1043,6 @@ javascriptLocalisation =
              , customiseBorderColourLabel : "$_customiseBorderColourLabel()$"
              , customiseButtonColourLabel : "$_customiseButtonColourLabel()$"
              , customiseEmailBackgroundColour : "$_customiseEmailBackgroundColourLabel()$"
-             , sampleAttachmentFilename : "$_sampleSignViewAttachmentFilename()$"
-             , sampleDemoDocumentName : "$_sampleSignViewDemoDocumentName()$"
-             , sampleSignViewHeader : "$_sampleSignViewHeader()$"
-             , sampleEmailButtonLabel : "$_sampleEmailButtonLabel()$"
-             , sampleEmailFooter : "$_sampleEmailFooter()$"
              , primaryColour: "$_companyBrandingPrimaryColour()$"
              , primaryTextColour: "$_companyBrandingPrimaryTextColour()$"
              , secondaryColour: "$_companyBrandingSecondaryColour()$"
@@ -1046,8 +1056,12 @@ javascriptLocalisation =
              , customiseBackgroundColour: "$_CustomiseBackgroundColour()$"
              , customiseTextColour: "$_CustomiseTextColour()$"
              , selectImageLabel: "$_SelectImageLabel()$"
-             , sampleEmailContent: "$_SampleEmailContent()$"
              , customize : "$_companyBrandingCustomize()$"
+             , brandingPreview: {
+                   emailButtonLabel : "$_sampleEmailButtonLabel()$"
+                 , emailContent: "$_SampleEmailContent()$"
+                 , emailFooter : "$_sampleEmailFooter()$"
+             }
       }
       , fontSize: {
                name : "$_fontSizeName()$"

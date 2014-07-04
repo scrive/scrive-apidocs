@@ -91,8 +91,8 @@ window.CompanyBrandingEmailSampleView = Backbone.View.extend({
     this.logo = $('<img class="emailpreviewlogo" />');
     var logorow = $('<tr/>').append($('<td/>').append($('<table/>').append($('<tr/>').append($('<td/>').append(this.logo)))));
 
-    var previewtextcontent = $('<div class="emailpreviewcontent"/>').append(localization.companyBranding.sampleEmailContent);
-    this.emailpreviewbutton = $('<a href="#" onclick="return false" class="emailpreviewbutton"/>').text(localization.companyBranding.sampleEmailButtonLabel);
+    var previewtextcontent = $('<div class="emailpreviewcontent"/>').append(localization.companyBranding.brandingPreview.emailContent);
+    this.emailpreviewbutton = $('<a href="#" onclick="return false" class="emailpreviewbutton"/>').text(localization.companyBranding.brandingPreview.emailButtonLabel);
     var divcontent = $('<div class="divcontent"/>');
     divcontent.append(previewtextcontent);
     divcontent.append($('<br/>'));
@@ -115,7 +115,7 @@ window.CompanyBrandingEmailSampleView = Backbone.View.extend({
 
     var contentmainrow = $('<tr/>').append($('<td/>').append(this.contenttable));
 
-    this.emailpreviewfooter = $('<div class="emailpreviewfooter"/>').text(localization.companyBranding.sampleEmailFooter);
+    this.emailpreviewfooter = $('<div class="emailpreviewfooter"/>').text(localization.companyBranding.brandingPreview.emailFooter);
     var emailpreviewfootercell = $('<td/>');
     emailpreviewfootercell.append(this.emailpreviewfooter);
 

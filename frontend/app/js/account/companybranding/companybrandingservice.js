@@ -82,22 +82,22 @@ window.CompanyBrandingServiceViewSampleView = Backbone.View.extend({
     this.header1.append(this.logowrapper.append(this.logo));
 
     this.header2 = $('<div class="sample-custom-view-header-button"/>');
-    this.header2.append(new Button({size: 'tiny', color: 'blue', text: localization.brandingPreview.headerSend, onClick : function() {return false;}}).el());
+    this.header2.append(new Button({size: 'tiny', color: 'blue', text: localization.sampleServiceView.headerSend, onClick : function() {return false;}}).el());
 
     this.header3 = $('<div class="sample-custom-view-header-button sample-custom-view-header-button-last"/>');
-    this.header3.append(new Button({size: 'tiny', color: 'blue', text: localization.brandingPreview.headerTemplate, onClick : function() {return false;}}).el());
+    this.header3.append(new Button({size: 'tiny', color: 'blue', text: localization.sampleServiceView.headerTemplate, onClick : function() {return false;}}).el());
 
     this.header4 = $('<div class="sample-custom-view-header-text"/>');
-    this.header4content = $("<a class='hoverable'/>").text(localization.brandingPreview.headerArchive);
+    this.header4content = $("<a class='hoverable'/>").text(localization.sampleServiceView.headerArchive);
     this.header4.append(this.header4content);
 
     this.header5 = $('<div class="sample-custom-view-header-text"/>');
-    this.header5content = $("<a class='hoverable'/>").text(localization.brandingPreview.headerAccount);
+    this.header5content = $("<a class='hoverable'/>").text(localization.sampleServiceView.headerAccount);
     this.header5.append(this.header5content);
 
 
     this.header6 = $('<div class="sample-custom-view-header-text sample-custom-view-header-text-last"/>');
-    this.header6content = $("<a class='hoverable'/>").text(localization.brandingPreview.headerLogOut);
+    this.header6content = $("<a class='hoverable'/>").text(localization.sampleServiceView.headerLogOut);
     this.header6.append(this.header6content);
 
     this.header.append(this.header1);
