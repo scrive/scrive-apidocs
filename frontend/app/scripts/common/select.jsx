@@ -1,10 +1,10 @@
 /** @jsx React.DOM */
 
 /*
-  Standard select boxes used by our system.
+  Standard select boxes used by our system. Rewritten in react.
   Usage:
 
-   var select = new Select({
+   <Select
       name : "Option 1"              // Name on main button
       cssClass* : "select-1"         // Class to be added
       expandSide* : "right"          // What direction should it expand ("left" or "right")
@@ -28,11 +28,9 @@
                         onSelect* : function(v) {}
                       },
                   ]
-   });
+   />
 
-  Component itself exposes two aditional methods:
-      .open()        // Expand select box. Note that it will be automaticly closed if mouse is not over it.
-      .setName(name) // Allows a dynamic change of component name
+  Component does not expose any addtional methods. If you feel like you need some extra function like open or setName, you are probably wrong.
 
   Details:
     - It does not use <select> tag internally.
@@ -63,8 +61,9 @@ var SelectOptionModel = Backbone.Model.extend({
        return this.get("style");
   },
   selected : function() {
-       if (this.get("onSelect")(this.value()) == true)
-           this.trigger("done");
+    var closeAfter = this.get("onSelect")(this.value());
+    if (closeAfter == true)
+      this.trigger("close");
   },
   disabled : function() {
       return this.get("disabled");
@@ -93,7 +92,7 @@ var SelectModel = Backbone.Model.extend({
       var options = _.map(args.options,function(e) {
                         e.onSelect = e.onSelect || args.onSelect;
                         var option = new SelectOptionModel(e);
-                        option.bind("done", function() {model.set({"expanded" : false});});
+                        model.listenTo(option,"close", function() {model.set({"expanded" : false});});
                         return option;
                     });
       this.set({"options" : options});
@@ -175,11 +174,14 @@ var SelectExpandedView = React.createClass({
     },
     render: function() {
       var model = this.props.model;
+      var mainStyle = _.extend({color: model.color(),border : model.border()},model.style());
+      var labelStyle = _.extend({width: model.textWidth()},model.style());
+      var optionStyle = {border:model.border(), minWidth:model.optionsWidth()};
       return (
-        <div className={'select select-exp ' + model.cssClass()}  style={_.extend({color: model.color(),border : model.border()},model.style())}>
+        <div className={'select select-exp ' + model.cssClass()}  style={mainStyle}>
           <div className='select-button' onClick={this.handleExpand}>
             <div className='select-button-left'/>
-            <div className='select-button-label' style={_.extend({width: model.textWidth()},model.style())}>
+            <div className='select-button-label' style={labelStyle}>
               {model.name()}
             </div>
             <div className='select-button-right'/>
@@ -188,7 +190,7 @@ var SelectExpandedView = React.createClass({
               }
           </div>
 
-          <ul className={'select-opts '+ model.expandSide()} style={{border:model.border(), minWidth:model.optionsWidth()}}>
+          <ul className={'select-opts '+ model.expandSide()} style={optionStyle}>
             {_.map(model.activeOptions(),function(o,i) {
               return (
                 <li key={i} onClick={function() {o.selected()}}>
@@ -329,12 +331,6 @@ var Select = React.createClass({
         options: props.options
       })
       return {model: model};
-    },
-    open : function() {
-      return;
-    },
-    setName : function(i) {
-      return;
     },
     render: function() {
       return (
