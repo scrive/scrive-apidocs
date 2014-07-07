@@ -197,6 +197,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
             content :self.padNextSignatoryModalContent,
             onAccept : function() {
                 mixpanel.track('Give for pad signing to some pad signatory - opening signview');
+                LocalStorage.set("pad","from-list","false");
                 model.giveToPadSignatory(self.signatory);
             }
           });

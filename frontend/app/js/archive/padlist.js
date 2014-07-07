@@ -53,14 +53,40 @@ var SelectPartyModal = function(signingIndexes,listobject) {
 
 }
 
+window.PadListRefresher = function(padlist) {
+  var currentCounter = 1;
+  var currentInterval = 1;
+  return {
+    resetCounter : function() {
+      currentCounter = 1;
+      currentInterval = 1;
+    },
+    step : function() {
+      currentCounter--;
+      if (currentCounter <= 0) {
+            padlist.fetchWithCallback(function(currentlist,newlist) {
+            if (currentlist.length != newlist.length) {
+              padlist.recall({silent : true});
+              currentCounter = 1;
+              currentInterval = 1;
+            }
+        });
+        currentInterval = Math.min(currentInterval + 1,30);
+        currentCounter = currentInterval;
+      }
+    }
+  }
+}
+
 window.PadList = function() {
+    var refresher;// This will be initated later due to dependency to list;
     var list = new KontraList({
       name : "Sign now list",
       schema: new Schema({
       url: "/api/frontend/list",
       extraParams : { documentType : "DocumentsForPad"},
       sorting: new Sorting({ fields: ["title", "time"]}),
-      paging: new Paging({}),
+      paging: new Paging({showOnlyForMultiplePages : true}),
       minRows: 7,
       cells :  [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
@@ -116,6 +142,8 @@ window.PadList = function() {
            acceptEmpty : true,
            onSelect : function() {
              list.recall();
+             if (refresher != undefined)
+               refresher.resetCounter();
           }
          }),
          new ListAction({
@@ -160,19 +188,15 @@ window.PadList = function() {
       })
 
     });
-    // This refresh method is quite dummy, but should work for now. In long run we should get a dedicated API call.
-    var refreshListIn = function(list,i) {
+
+    refresher = new PadListRefresher(list);
+    var refresherStep = function() {
       setTimeout(function() {
-        list.fetchWithCallback(function(currentlist,newlist) {
-            if (currentlist.length != newlist.length) {
-              list.recall({silent : true});
-              i = 1;
-            }
-            refreshListIn(list,Math.min(i+1,30));
-        });
-      },1000 * i);
-    }
-    refreshListIn(list,1);
+        refresher.step();
+        refresherStep();
+      },1000);
+    };
+    refresherStep();
     return list;
   };
 });

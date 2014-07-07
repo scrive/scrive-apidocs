@@ -14,7 +14,8 @@ define(['Backbone', 'legacy_code'], function() {
             pageSize: 0,
             // Maximal number of pages that are sown
             maxNextPages : 5,
-            showLimit : undefined
+            showLimit : undefined,
+            showOnlyForMultiplePages : false
         },
         disabled: function() {
             return this.get("disabled") != undefined && this.get("disabled") == true;
@@ -54,6 +55,12 @@ define(['Backbone', 'legacy_code'], function() {
         },
         setShowLimit : function(i) {
             this.set({ "showLimit": i });
+        },
+        hasManyPages : function() {
+            return this.pageSize() <= this.itemMax();
+        },
+        showOnlyForMultiplePages : function() {
+            return this.get("showOnlyForMultiplePages");
         }
     });
 
@@ -70,22 +77,26 @@ define(['Backbone', 'legacy_code'], function() {
             var paging = this.model;
             var main = $("<div class='pages'>");
             var pages = $("<div />");
-            var writePage = function(t,n) {
-                var a = $("<span class='page-change' />").text(t);
-                a.click(paging.changePageFunction(n));
-                pages.append(a);
-                return a;
-            };
             var maxNextPages = paging.maxNextPages();
             var maxPage = paging.pageCurrent() + maxNextPages - 1;
-            for(var i=0;i < maxPage && i*paging.pageSize() < paging.itemMax();i++) {
-                var a = writePage((i+1)+"", i);
-                if (i == paging.pageCurrent())
-                    a.addClass("current");
+            if (paging.hasManyPages() || !paging.showOnlyForMultiplePages()) {
+
+              var writePage = function(t,n) {
+                  var a = $("<span class='page-change' />").text(t);
+                  a.click(paging.changePageFunction(n));
+                  pages.append(a);
+                  return a;
+              };
+
+              for(var i=0;i < maxPage && i*paging.pageSize() <= paging.itemMax();i++) {
+                  var a = writePage((i+1)+"", i);
+                  if (i == paging.pageCurrent())
+                      a.addClass("current");
+              }
+              if (maxPage*paging.pageSize() < paging.itemMax())
+                  writePage(" > ", maxPage);
             }
-            if (maxPage*paging.pageSize() < paging.itemMax())
-                writePage(" > ", maxPage);
-    
+
             main.append(pages);
 
             $(this.el).append(main);
