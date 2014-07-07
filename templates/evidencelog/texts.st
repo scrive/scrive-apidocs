@@ -387,9 +387,9 @@ $else$
   $_SignWithELegFailureEvidenceTextSimple()$
 $endif$
 ###
-SignatorySignLinkVisitedText=The link in the invitation to sign was clicked by $actor$. The document was opened by $actor$ in Scrive E-sign’s online interface to sign documents.
+SignatorySignLinkVisitedText=The document was opened by $actor$ in Scrive E-sign’s online interface to sign documents.
 ###
-SignatoryReviewLinkVisitedText=The link in the invitation to review was clicked by $actor$. The document was opened by $actor$  in Scrive E-sign’s online interface to sign documents.
+SignatoryReviewLinkVisitedText=The document was opened by $actor$  in Scrive E-sign’s online interface to sign documents.
 ###
 SignatoryLinkVisitedText=*
 $if(full)$

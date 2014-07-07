@@ -74,14 +74,14 @@ var SignatureDrawerView = Backbone.View.extend({
     },
     drawDot: function(x, y, color, radius) {
             this.picture.fillStyle = color;
-            // Use canvas.arc to draw a circle with the diameter of width 
+            // Use canvas.arc to draw a circle with the diameter of width
             this.picture.arc(x, y,  radius, 0,  Math.PI*2, true);
             this.picture.fill();
     },
     drawCircle : function(x,y) {
             if (!this.drawing)
               this.picture.beginPath();
-            var radius = this.lineWidth()/2;
+            var radius = this.lineWidth()/2 - 1; // This works really wrong. It looks like we have no control of when we need to end path. Try adding circle(red,1) at end of this call.
             this.drawDot(x, y, this.colorForRGBA(0.05), radius+1);
             this.drawDot(x, y, this.colorForRGBA(0.3), radius);
             this.drawDot(x, y, this.colorForRGBA(0.5), radius-1);
@@ -154,7 +154,7 @@ var SignatureDrawerView = Backbone.View.extend({
         this.picture.stroke();
     },
     drawLine : function(sx,sy,ex,ey,w,c, lc)
-    {   
+    {
         this.picture.moveTo(sx, sy);
         this.picture.strokeStyle = c;
         this.picture.lineWidth = w;
