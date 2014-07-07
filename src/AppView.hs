@@ -139,7 +139,7 @@ companyForPage = do
 companyUIForPage  :: Kontrakcja m => m (Maybe CompanyUI)
 companyUIForPage = do
   ctx <- getContext
-  case (ctxmaybeuser ctx `mplus` ctxmaybepaduser ctx) of
+  case (ctxmaybeuser ctx) of
        Just User{usercompany = cid} -> Just <$> (dbQuery $ GetCompanyUI cid)
        _ -> return Nothing
 
