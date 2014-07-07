@@ -87,7 +87,7 @@ window.PadList = function() {
       extraParams : { documentType : "DocumentsForPad"},
       sorting: new Sorting({ fields: ["title", "time"]}),
       paging: new Paging({showOnlyForMultiplePages : true}),
-      minRows: 7,
+      minRows: 8,
       cells :  [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
         new Cell({name: localization.archive.documents.columns.status, width:"62px", field:"status",

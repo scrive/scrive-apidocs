@@ -59,6 +59,10 @@ define(['Backbone', 'legacy_code'], function() {
         hasManyPages : function() {
             return this.pageSize() <= this.itemMax();
         },
+        // Returns true, if there are no positions for current page, but there are some for earlier pages.
+        shouldSwitchToEarlierPage : function() {
+           return this.pageCurrent() > 0 && (this.itemMax() <  (this.pageCurrent()) * this.pageSize());
+        },
         showOnlyForMultiplePages : function() {
             return this.get("showOnlyForMultiplePages");
         }

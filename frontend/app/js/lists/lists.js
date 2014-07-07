@@ -500,7 +500,12 @@ define(['Backbone', 'legacy_code'], function() {
              * and next one to connect them to ListObjectViews. Gives much better performance.
              */
             var trs = "";
-            for(var i=0;i<Math.max(elems.length,schema.minRows());i++) {
+            var trCount = elems.length;
+            // We add dummy rows - but only if they are defined in schema and we are on first page
+            if (schema.paging() != undefined && schema.paging().pageCurrent() == 0) {
+              trCount = Math.max(elems.length,schema.minRows());
+            }
+            for(var i=0;i<trCount;i++) {
               trs += "<tr/>";
             }
             trs = $(trs);
@@ -517,15 +522,16 @@ define(['Backbone', 'legacy_code'], function() {
                 else
                   $(trs[i]).replaceWith(e.view.el);
             }
-
-           for(var i=elems.length;i<Math.max(elems.length,schema.minRows());i++) {
-              new ListObjectViewDummy({
-                        schema: schema,
-                        el: $(trs[i])
-              });
-            }
-
-            return this;
+           // We add dummy rows - but only if they are defined in schema and we are on first page
+           if (schema.paging() != undefined && schema.paging().pageCurrent() == 0) {
+            for(var i=elems.length;i<Math.max(elems.length,schema.minRows());i++) {
+                new ListObjectViewDummy({
+                          schema: schema,
+                          el: $(trs[i])
+                });
+              }
+           }
+           return this;
         },
         toggleSelectAll: function() {
             this.model.off('change');
@@ -578,6 +584,9 @@ define(['Backbone', 'legacy_code'], function() {
                                   if (!silent)
                                     view.stopLoading();
                                   isReady = true;
+                                  //We detect here that we are looking at empty page - and we jump one page back.
+                                  if (schema.paging().shouldSwitchToEarlierPage())
+                                    schema.paging().changePage(schema.paging().pageCurrent() - 1);
                                 },
                                 error : function(list,resp) {
                                   if (resp != undefined && resp.status != undefined && resp.status == 403)
