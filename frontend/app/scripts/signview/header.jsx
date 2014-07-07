@@ -37,7 +37,7 @@ define(['React', 'Backbone', 'common/backbone_mixim'], function(React, Backbone,
               </div>
               {/*if*/ hasLink &&
                 <div className="sender" style={{color: color,fontFamily : font}}>
-                  <div className="inner" onClick={this.props.link.onClick}>
+                  <div className="inner clickable" onClick={this.props.link.onClick}>
                       <a className='link' style={{color: color}}>
                         {this.props.link.text}
                       </a>
