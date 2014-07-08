@@ -58,8 +58,6 @@ data DocumentDomain
 --     b. there is another user in the same company that can see the document
 --     c. document is not in preparation state
 --
--- A really_deleted document is never shown.
---
 -- To do anything with document a user has at least see it. Usually
 -- more strict rules apply.
 documentDomainToSQL :: (MonadState v m, SqlWhere v)
@@ -75,14 +73,12 @@ documentDomainToSQL (DocumentsVisibleToUser uid) =
       sqlWhereEq "same_company_users.id" uid
       sqlWhere "users.id = same_company_users.id"
       sqlWhere "signatory_links.is_author"
-      sqlWhere "(signatory_links.deleted IS NULL OR signatory_links.deleted + ('30days' :: INTERVAL) > now())"
     sqlWhereAll $ do           -- 2. see signables as partner
       sqlWhereEq "same_company_users.id" uid
       sqlWhere "users.id = same_company_users.id"
       sqlWhereNotEq "documents.status" Preparation
       sqlWhereEq "documents.type" $ Signable
       sqlWhere "signatory_links.is_partner"
-      sqlWhere "(signatory_links.deleted IS NULL OR signatory_links.deleted + ('30days' :: INTERVAL) > now())"
       sqlWhereNotExists $ sqlSelect "signatory_links AS earlier_signatory_links" $ do
                             sqlWhere "signatory_links.document_id = earlier_signatory_links.document_id"
                             sqlWhere "earlier_signatory_links.is_partner"
@@ -94,16 +90,13 @@ documentDomainToSQL (DocumentsVisibleToUser uid) =
       sqlWhereNotEq "documents.status" Preparation
       sqlWhereEq "documents.type" $ Signable
       sqlWhere "NOT signatory_links.is_partner"
-      sqlWhere "(signatory_links.deleted IS NULL OR signatory_links.deleted + ('30days' :: INTERVAL) > now())"
     sqlWhereAll $ do           -- 4. see shared templates
       sqlWhereEq "same_company_users.id" uid
       sqlWhereEq "documents.sharing" Shared
       sqlWhereEq "documents.type" $ Template
       sqlWhere "signatory_links.is_author"
-      sqlWhere "(signatory_links.deleted IS NULL OR signatory_links.deleted + ('30days' :: INTERVAL) > now())"
     sqlWhereAll $ do           -- 5: see documents of subordinates
       sqlWhereEq "same_company_users.id" uid
       sqlWhere "same_company_users.is_company_admin"
       sqlWhere "signatory_links.is_author"
       sqlWhereNotEq "documents.status" Preparation
-      sqlWhere "(signatory_links.deleted IS NULL OR signatory_links.deleted + ('30days' :: INTERVAL) > now())"

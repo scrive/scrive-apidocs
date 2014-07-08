@@ -1358,6 +1358,13 @@ data PurgeDocuments = PurgeDocuments Int Int
 instance MonadDB m => DBUpdate m PurgeDocuments Int where
   update (PurgeDocuments savedDocumentLingerDays unsavedDocumentLingerDays') = do
 
+    runQuery_ $ "UPDATE signatory_links"
+            <+> "  SET really_deleted = now()"
+            <+> "WHERE signatory_links.user_id IS NOT NULL" -- document belongs to somebody
+            <+> "  AND signatory_links.deleted IS NOT NULL" -- somebody deleted that document long time ago
+            <+> "  AND signatory_links.deleted + (" <?> (show savedDocumentLingerDays ++ "days") <> "::INTERVAL) <= now()"
+            <+> "  AND signatory_links.really_deleted IS NULL" -- we did not notice this until now
+
     runQuery_ $ "CREATE TEMP TABLE documents_to_purge(id, title) AS"
         <+> "SELECT documents.id, documents.title"
         <+> "  FROM documents"
@@ -1368,9 +1375,8 @@ instance MonadDB m => DBUpdate m PurgeDocuments Int where
         <+> "                    FROM signatory_links"
         <+> "                   WHERE signatory_links.document_id = documents.id"
         <+> "                     AND signatory_links.user_id IS NOT NULL"
-                                  -- not deleted or linger time hasn't elapsed
-        <+> "                     AND (signatory_links.deleted IS NULL OR"
-        <+> "                          signatory_links.deleted + (" <?> (show savedDocumentLingerDays ++ "days") <+> " :: INTERVAL) > now()))"
+                                  -- not really_deleted yet
+        <+> "                     AND signatory_links.really_deleted IS NULL)"
 
         -- is not saved but time to save the document went by
         <+> "   AND NOT EXISTS(SELECT TRUE"

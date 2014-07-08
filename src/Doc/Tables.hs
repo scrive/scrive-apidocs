@@ -122,14 +122,6 @@ tableSignatoryLinks = tblTable {
     , tblColumn { colName = "signinfo_last_name_verified", colType = BoolT }
     , tblColumn { colName = "signinfo_personal_number_verified", colType = BoolT }
     , tblColumn { colName = "deleted", colType = TimestampWithZoneT }
-    -- The column 'really_deleted' is a wart of history. At this point
-    -- it means 'do not show in thrash'. This flag should be removed
-    -- as soon as document purging is run for the first time. Then
-    -- 'purged_time' is taking the semantics over with the proper
-    -- addition of removal of sensitive data from the system.
-    --
-    -- FIXME: Remove 'really_deleted' when docuent purging has run for
-    -- he firsy time.
     , tblColumn { colName = "really_deleted", colType = TimestampWithZoneT }
     , tblColumn { colName = "csv_title", colType = TextT }
     , tblColumn { colName = "csv_contents", colType = TextT }
