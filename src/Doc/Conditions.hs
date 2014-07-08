@@ -285,6 +285,67 @@ sqlWhereDocumentWasNotPurged = sqlWhereEVVV (DocumentWasPurged,
                                              "documents.id", "documents.title","documents.purged_time")
                                "documents.purged_time IS NULL"
 
+------------------------------------------------------------
+data DocumentIsDeleted = DocumentIsDeleted DocumentID String SignatoryLinkID MinutesTime
+  deriving (Eq, Ord, Show, Typeable)
+
+instance ToJSValue DocumentIsDeleted where
+  toJSValue (DocumentIsDeleted did title slid time) = runJSONGen $ do
+    value "message" ("Document is deleted" :: String)
+    value "document_id" (show did)
+    value "signatory_link_id" (show slid)
+    value "deleted_time" (show time)
+    value "title" title
+
+instance KontraException DocumentIsDeleted
+
+sqlWhereDocumentIsNotDeleted :: (MonadState v m, SqlWhere v)
+                             => m ()
+sqlWhereDocumentIsNotDeleted = sqlWhereEVVVV (DocumentIsDeleted,
+                                             "signatory_links.document_id", "(SELECT title FROM documents WHERE documents.id = document_id)","signatory_links.id", "signatory_links.deleted")
+                               "signatory_links.deleted IS NULL"
+
+------------------------------------------------------------
+
+data DocumentIsNotDeleted = DocumentIsNotDeleted DocumentID String SignatoryLinkID
+  deriving (Eq, Ord, Show, Typeable)
+
+instance ToJSValue DocumentIsNotDeleted where
+  toJSValue (DocumentIsNotDeleted did title slid) = runJSONGen $ do
+    value "message" ("Document is not deleted" :: String)
+    value "document_id" (show did)
+    value "signatory_link_id" (show slid)
+    value "title" title
+
+instance KontraException DocumentIsNotDeleted
+
+sqlWhereDocumentIsDeleted :: (MonadState v m, SqlWhere v)
+                             => m ()
+sqlWhereDocumentIsDeleted = sqlWhereEVVV (DocumentIsNotDeleted,
+                                             "signatory_links.document_id", "(SELECT title FROM documents WHERE documents.id = document_id)","signatory_links.id")
+                               "signatory_links.deleted IS NOT NULL"
+
+------------------------------------------------------------
+data DocumentIsReallyDeleted = DocumentIsReallyDeleted DocumentID String SignatoryLinkID MinutesTime
+  deriving (Eq, Ord, Show, Typeable)
+
+instance ToJSValue DocumentIsReallyDeleted where
+  toJSValue (DocumentIsReallyDeleted did title slid time) = runJSONGen $ do
+    value "message" ("Document is really deleted" :: String)
+    value "document_id" (show did)
+    value "signatory_link_id" (show slid)
+    value "deleted_time" (show time)
+    value "title" title
+
+instance KontraException DocumentIsReallyDeleted
+
+sqlWhereDocumentIsNotReallyDeleted :: (MonadState v m, SqlWhere v)
+                             => m ()
+sqlWhereDocumentIsNotReallyDeleted = sqlWhereEVVVV (DocumentIsReallyDeleted,
+                                             "signatory_links.id", "(SELECT title FROM documents WHERE documents.id = document_id)","signatory_links.id", "signatory_links.really_deleted")
+                               "signatory_links.really_deleted IS NULL"
+
+------------------------------------------------------------
 
 data SignatoryAuthenticationDoesNotMatch = SignatoryAuthenticationDoesNotMatch DocumentID SignatoryLinkID AuthenticationMethod AuthenticationMethod
   deriving (Eq, Ord, Show, Typeable)
