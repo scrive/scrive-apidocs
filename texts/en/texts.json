@@ -1,4 +1,4 @@
-{
+{ 
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Are you sure you want to send reminders to the parties involved in the <span class='put-number-of-documents-here'></span> documents?",
@@ -563,6 +563,8 @@
 "_padAddToPadQueueConfirmHeader":"Sign on another device",
 "_padAddToPadQueueConfirmText":"Are you sure you want to send this document for signing on another device?",
 "_padAddToPadQueueNotAdded":"Document could not be send to the external device",
+"_padBackToDocument":"Back to document",
+"_padBackToList":"Back to list",
 "_padGiveForSigningThisDevice":"Give for signing on this device to",
 "_padRemoveFromPadQueue":"Remove from signing on external device",
 "_padSigningOnSameDevice":"Give for signing on this device",
@@ -824,7 +826,5 @@
 "_youCantCancelThisDocuments":"Some of the selected documents can't be withdrawn.",
 "_youCantSendRemindersToThisDocuments":"Reminders can’t be sent for some of the selected documents.",
 "_yourSigningPluginFailed":"Your signing plug-in failed to sign the document. Please contact your eID provider.",
-"_zip":"ZIP",
-"_padBackToList":"Back to list",
-"_padBackToDocument":"Back to document"
+"_zip":"ZIP"
 }
