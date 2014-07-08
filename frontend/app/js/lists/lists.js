@@ -155,12 +155,12 @@ define(['Backbone', 'legacy_code'], function() {
       },
       render: function() {
         $(this.el).children().detach();
-        var res = ""
+        var res = "";
         for (var i = 0; i < this.schema.size(); i++)
           res += "<td class='row '/>";
         $(this.el).append(res);
       }
-    })
+    });
 
     var ListObjectView = Backbone.View.extend({
         model: ListObject,

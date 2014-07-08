@@ -13,7 +13,7 @@ return React.createClass({
     },
     toLinkWithColor : function(text) {
       var res = $("<div>" + text + "</div>");
-      $("a",res).css("color",this.props.model.servicelinkcolour())
+      $("a",res).css("color",this.props.model.servicelinkcolour());
       return res.html();
     },
     textWithLink : function(text,link) {

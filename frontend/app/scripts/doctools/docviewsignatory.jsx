@@ -117,7 +117,7 @@ var DocumentViewSignatoryModel = Backbone.Model.extend({
     return  this.hasRemindOption()
          || this.hasChangeEmailOption()
          || this.hasChangePhoneOption()
-         || this.hasGoToSignviewOption()
+         || this.hasGoToSignviewOption();
 
  },
  hasAnyDetails : function() {

@@ -18,7 +18,7 @@ var SelectPartyModal = function(signingIndexes,listobject) {
                   name: (currentName != "" ? currentName : localization.process.signatoryname + " " + signingIndexes[i]),
                   value : i
                 });
-            };
+            }
             var currentName = listobject.subfield(signingIndexes[self.current],"name").trim();
             var select = new Select({
                 name : ( currentName != "" ? currentName : localization.process.signatoryname + " " + signingIndexes[self.current]),
@@ -49,9 +49,7 @@ var SelectPartyModal = function(signingIndexes,listobject) {
                 }).send();
             }
           });
-
-
-}
+};
 
 window.PadListRefresher = function(padlist) {
   var currentCounter = 1;
@@ -75,8 +73,8 @@ window.PadListRefresher = function(padlist) {
         currentCounter = currentInterval;
       }
     }
-  }
-}
+  };
+};
 
 window.PadList = function() {
     var refresher;// This will be initated later due to dependency to list;
@@ -122,7 +120,7 @@ window.PadList = function() {
                                   if (listobject.subfield(i,"cansignnow") == true && listobject.subfield(i,"delivery") =="pad")
                                     signingIndexes.push(i);
                               if (signingIndexes.length > 1) {
-                                    new SelectPartyModal(signingIndexes,listobject)
+                                    new SelectPartyModal(signingIndexes,listobject);
                               }
                               else
                                 new Submit({

@@ -70,7 +70,6 @@ define(['React'], function(React) {
       return {value: this.props.value, focus : this.props.focus};
     },
     componentDidMount : function() {
-      console.log("Maybe will focus " + this.props.focus)
       if (this.props.focus)
         this.focus();
     },
@@ -97,7 +96,7 @@ define(['React'], function(React) {
     onChange : function(event) {
         var newvalue = event.target.value;
         if (this.props.suppressSpace)
-          newvalue.replace(/\s/g,'')
+          newvalue.replace(/\s/g,'');
         this.setState({value :newvalue});
         this.props.onChange(newvalue);
     },

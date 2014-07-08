@@ -15,12 +15,12 @@ define(['React', 'Backbone', 'common/backbone_mixim'], function(React, Backbone,
       var signviewbranding = this.props.signviewbranding;
       var showFooter = signviewbranding.ready() && !BrowserInfo.isSmallScreen() && signviewbranding.showfooter();
 
-      $('.signview').toggleClass("nofooter",!showFooter) // We need to toogle this class here
+      $('.signview').toggleClass("nofooter",!showFooter); // We need to toogle this class here
 
-      var bgImage = signviewbranding.signviewbarscolour() != undefined ?  'none' : ''
-      var bgColor = signviewbranding.signviewbarscolour() != undefined ?  signviewbranding.signviewbarscolour() : ''
-      var color = signviewbranding.signviewbarstextcolour() != undefined ? signviewbranding.signviewbarstextcolour() : ''
-      var font = signviewbranding.signviewtextfont() != undefined ? signviewbranding.signviewtextfont() : ''
+      var bgImage = signviewbranding.signviewbarscolour() != undefined ?  'none' : '';
+      var bgColor = signviewbranding.signviewbarscolour() != undefined ?  signviewbranding.signviewbarscolour() : '';
+      var color = signviewbranding.signviewbarstextcolour() != undefined ? signviewbranding.signviewbarstextcolour() : '';
+      var font = signviewbranding.signviewtextfont() != undefined ? signviewbranding.signviewtextfont() : '';
 
 
       if (!showFooter)
