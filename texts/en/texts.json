@@ -373,7 +373,7 @@
 "_flashMessageBadOldPassword":"Current password is incorrect.",
 "_flashMessageBecomeCompanyLogInDifferentUser":"Another user is currently logged in. To transfer account, please log out and log in to the account you would like to transfer.",
 "_flashMessageBulkDocumentRemindsSent":"Reminders have been sent to all recipients who have not yet signed.",
-"_flashMessageChangeEmailMailSent":"A link has been emailed to <span class='email-confirmation-address'/>. Follow the link to complete the change.",
+"_flashMessageChangeEmailMailSent":"We have sent a confirmation link to <span class='email-confirmation-address'/>. Please follow the link to complete the change.",
 "_flashMessageChangePasswordEmailSend":"A new password has been sent to your email address.",
 "_flashMessageCompanyAccountDeleted":"The account was successfully removed.",
 "_flashMessageContractRestarted":"You have restarted the process and can now adjust the settings and send the invitation again.",
