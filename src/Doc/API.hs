@@ -139,6 +139,7 @@ versionedAPI _version = choice [
   dir "remind"             $ hPost $ toK1 $ apiCallRemind,
   dir "forward"           $ hPost $ toK1 $ apiCallForward,
   dir "delete"             $ hDeleteAllowHttp  $ toK1 $ apiCallDelete,
+  dir "reallydelete"       $ hDeleteAllowHttp  $ toK1 $ apiCallReallyDelete,
   dir "get"                $ hGetAllowHttp $ toK1 $ apiCallGet,
 
   dir "list"               $ hGetAllowHttp $ apiCallList,
@@ -639,6 +640,22 @@ apiCallDelete did =  api $ do
 
     Accepted <$> (runJSONGenT $ return ())
 
+
+apiCallReallyDelete :: Kontrakcja m => DocumentID -> m Response
+apiCallReallyDelete did =  api $ do
+  (user, actor, _) <- getAPIUser APIDocSend
+  withDocumentID did $ do
+    mauser <- theDocument >>= \d -> case join $ maybesignatory <$> getAuthorSigLink d of
+                         Just auid -> dbQuery $ GetUserByIDIncludeDeleted auid
+                         _ -> return Nothing
+    msl <- getSigLinkFor user <$> theDocument
+    let haspermission = (isJust msl)
+                     || (isJust mauser && usercompany (fromJust mauser) == usercompany user && (useriscompanyadmin user))
+    when (not haspermission) $ do
+           throwIO . SomeKontraException $ serverError "Permission problem. Not connected to document."
+    dbUpdate $ ReallyDeleteDocument (userid user) actor
+
+    Accepted <$> (runJSONGenT $ return ())
 
 
 
