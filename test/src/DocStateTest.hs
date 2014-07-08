@@ -189,12 +189,15 @@ docStateTests env = testGroup "DocState" [
   testThat "ArchiveDocument succeeds if the archiving user is a company admin" env testArchiveDocumentCompanyAdminRight,
   testThat "RestoreArchivedDocument succeeds if the restoring user is the author" env testRestoreArchivedDocumentAuthorRight,
   testThat "RestoreArchivedDocument succeeds if the restoring user is the company admin" env testRestoreArchiveDocumentCompanyAdminRight,
-  -- for this stuff postgres implementation is stricter, with happstack it just left the doc unchanged
 
   testThat "ArchiveDocument fails if the archiving user is an unrelated user" env testArchiveDocumentUnrelatedUserLeft,
   testThat "ArchiveDocument fails if the archiving user is just another standard company user" env testArchiveDocumentCompanyStandardLeft,
   testThat "RestoreArchivedDocument fails if the storing user is an unrelated user" env testRestoreArchivedDocumentUnrelatedUserLeft,
   testThat "RestoreArchivedDocument fails if the restoring user is just another standard company user" env testRestoreArchiveDocumentCompanyStandardLeft,
+
+  testThat "ReallyDeleteDocument works for author" env testReallyDeleteDocument,
+  testThat "ReallyDeleteDocument works for author admin" env testReallyDeleteDocumentCompanyAdmin,
+  testThat "ReallyDeleteDocument does not work for somebody else" env testReallyDeleteDocumentSomebodyElse,
 
   testThat "PurgeDocuments purges documents" env testPurgeDocument,
   testThat "PurgeDocuments does not purge documents for saved users" env testPurgeDocumentUserSaved,
@@ -572,6 +575,8 @@ propSignatoryDetailsNEq :: SignOrder -> SignOrder -> SignatoryLink -> Property
 propSignatoryDetailsNEq o1 o2 sd =
   (o1 /= o2) ==> sd{signatorysignorder = o1} /= sd{signatorysignorder = o2}
 
+
+--------------------------------------------------------------------------------
 assertOneArchivedSigLink :: MonadIO m => Document -> m ()
 assertOneArchivedSigLink doc =
   assertEqual "Expected one archived sig link"
@@ -630,6 +635,48 @@ testRestoreArchiveDocumentCompanyAdminRight = doTimes 10 $ do
     randomUpdate $ \t->RestoreArchivedDocument adminuser (systemActor t)
 
     assertNoArchivedSigLink =<< theDocument
+--------------------------------------------------------------------------------
+testReallyDeleteDocument :: TestEnv ()
+testReallyDeleteDocument = doTimes 10 $ do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (not . isPending)
+
+  assertRaisesKontra (\DocumentIsNotDeleted {} -> True) $
+    withDocument doc $ randomUpdate $ \t->ReallyDeleteDocument (userid author) (systemActor t)
+  withDocument doc $ randomUpdate $ \t->ArchiveDocument (userid author) (systemActor t)
+  withDocument doc $ randomUpdate $ \t->ReallyDeleteDocument (userid author) (systemActor t)
+  assertRaisesKontra (\DocumentIsReallyDeleted {} -> True) $
+    withDocument doc $ randomUpdate $ \t->ReallyDeleteDocument (userid author) (systemActor t)
+
+testReallyDeleteDocumentCompanyAdmin :: TestEnv ()
+testReallyDeleteDocumentCompanyAdmin = doTimes 10 $ do
+  company <- addNewCompany
+  author <- addNewRandomCompanyUser (companyid company) False
+  adminuser <- addNewRandomCompanyUser (companyid company) True
+  addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d) `withDocumentM` do
+    assertRaisesKontra (\DocumentIsNotDeleted {} -> True) $
+      randomUpdate $ \t->ReallyDeleteDocument (userid adminuser) (systemActor t)
+    randomUpdate $ \t->ArchiveDocument (userid adminuser) (systemActor t)
+    randomUpdate $ \t->ReallyDeleteDocument (userid adminuser) (systemActor t)
+    assertOneArchivedSigLink =<< theDocument
+
+testReallyDeleteDocumentSomebodyElse :: TestEnv ()
+testReallyDeleteDocumentSomebodyElse = doTimes 10 $ do
+  company <- addNewCompany
+  author <- addNewRandomCompanyUser (companyid company) False
+  other <- addNewRandomCompanyUser (companyid company) False
+  addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d) `withDocumentM` do
+    assertRaisesKontra (\UserShouldBeSelfOrCompanyAdmin {} -> True) $
+      randomUpdate $ \t->ReallyDeleteDocument (userid other) (systemActor t)
+    assertRaisesKontra (\UserShouldBeSelfOrCompanyAdmin {} -> True) $
+      randomUpdate $ \t->ArchiveDocument (userid other) (systemActor t)
+    assertRaisesKontra (\UserShouldBeSelfOrCompanyAdmin {} -> True) $
+      randomUpdate $ \t->ReallyDeleteDocument (userid other) (systemActor t)
+    doc <- theDocument
+    assertEqual "Expected no archived signatory links"
+              0
+              (length . filter (isJust . signatorylinkdeleted) . documentsignatorylinks $ doc)
+--------------------------------------------------------------------------------
 
 
 testPurgeDocument :: TestEnv ()
