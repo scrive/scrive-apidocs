@@ -1,5 +1,5 @@
-{
-"_AttachExtendedSealedFileEvidenceTextSimple":"",
+{ 
+"_AttachExtendedSealedFileEvidenceTextSimple":"Il documento è stato protetto con firma digitale senza chiave.",
 "_AttachGuardtimeSealedFileEvidenceTextSimple":"Il documento è stato protetto con firma digitale.",
 "_AttachSealedFileEvidenceTextSimpleArchive":"Scrive ha creato il PDF definitivo.",
 "_AttachSealedFileEvidenceTextSimpleNotArchive":"Scrive ha creato il PDF definitivo, includendo le prove raccolte da Scrive, prima della sigillatura con una firma digitale.",

@@ -1,4 +1,4 @@
-{
+{ 
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Are you sure you want to send reminders to the parties involved in the <span class='put-number-of-documents-here'></span> documents?",
@@ -449,7 +449,7 @@
 "_invitationMailUndeliveredContentBodyButton":"Open document",
 "_invitationMailUndeliveredContentBodyFirst":"To confirm the email address and resend the invitation:",
 "_invitationMailUndeliveredContentInstructionStep1":"Click \"Change email\"",
-"_invitationMailUndeliveredContentInstructionStep2":" Confirm the email address and send again",
+"_invitationMailUndeliveredContentInstructionStep2":"Confirm the email address and send again",
 "_invitationMailUndeliveredContentInstructionSteps":"Access the document from your e-archive or by clicking the button below",
 "_invitationMailUndeliveredTitle":"Delivery failure",
 "_invitationSMSUndeliveredContentBody":"We have not been able to deliver the invitation to e-sign the document <strong>$documenttitle$</strong> to <strong>$name$ ($mobile$)</strong>. This may be because the phone number you have provided is incorrect.",

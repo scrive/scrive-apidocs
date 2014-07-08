@@ -1,10 +1,10 @@
-{
+{ 
 "_DeletePDF":"Delete",
 "_RequestedAttachments":"Requested attachments",
 "_ReviewPDF":"Review",
 "_bankid":"BankID",
 "_cancel":"Cancel",
-"_changePartyTo":"Change signing party to ",
+"_changePartyTo":"Change signing party to",
 "_changeSignatoryButtonText":"Change",
 "_checkYourPhone":"Check your phone",
 "_company":"Company",
@@ -25,7 +25,7 @@
 "_deliveryEmailMobile":"email and SMS",
 "_deliveryMobile":"SMS",
 "_dialogConfirmSignByAuthorHead":"Sign",
-"_dueDate":"Due date ",
+"_dueDate":"Due date",
 "_email":"Email",
 "_enterPhoneForPinDelivery":"Enter your phone number",
 "_enterSMSPin":"Enter your SMS PIN",
