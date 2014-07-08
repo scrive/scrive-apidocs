@@ -226,7 +226,7 @@ window.SendPasswordResetMailApiCall = ApiCall.extend({
 
 window.SetPasswordApiCall = ApiCall.extend({
         defaults: {
-             name : "Add to padqueue API call",
+             name : "Set password API call",
              oldpassword : LocalStorage.get("api","oldpassword"),
              newpassword : LocalStorage.get("api","newpassword"),
 
