@@ -40,7 +40,7 @@
     - Select box will be closed on selection only if onSelect for selected option will return true.
 */
 
-define(['React','common/backbone_mixim','Backbone', 'legacy_code'], function(React,BackboneMixin) {
+define(['React','common/backbone_mixin','Backbone', 'legacy_code'], function(React,BackboneMixin) {
 
 var expose = {};
 

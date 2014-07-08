@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
 
 
-define(['React','common/button','common/backbone_mixim','Backbone', 'legacy_code'], function(React, Button, BackboneMixin, Backbone) {
+define(['React','common/button','common/backbone_mixin','Backbone', 'legacy_code'], function(React, Button, BackboneMixin, Backbone) {
 
 var expose = {};
 

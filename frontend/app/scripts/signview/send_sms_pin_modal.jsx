@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React','common/button','common/backbone_mixim','Backbone', 'tinycolor', 'legacy_code'], function(React, NewButton, BackboneMixin, Backbone,tinycolor) {
+define(['React','common/button','common/backbone_mixin','Backbone', 'tinycolor', 'legacy_code'], function(React, NewButton, BackboneMixin, Backbone,tinycolor) {
 
 
 

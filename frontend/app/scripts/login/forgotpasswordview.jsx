@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React','common/backbone_mixim','common/button','common/infotextinput', 'login/loginmodel' ,'legacy_code'], function(React, BackboneMixin, Button, InfoTextInput, LoginModel) {
+define(['React','common/backbone_mixin','common/button','common/infotextinput', 'login/loginmodel' ,'legacy_code'], function(React, BackboneMixin, Button, InfoTextInput, LoginModel) {
 
 return React.createClass({
     mixins: [BackboneMixin.BackboneMixin],

@@ -573,20 +573,24 @@ define(['Backbone', 'legacy_code'], function() {
                 });
             };
             this.recall = function(p) {
-              var silent = false || p && p.silent;
-              if (!silent)
+              var silent = p != undefined && p.silent;
+              if (!silent) {
                 view.startLoading();
+              }
               model.fetch({ data: schema.getSchemaUrlParams(),
                                 processData: true,
                                 cache: false,
                                 reset: true,
                                 success: function() {
-                                  if (!silent)
+                                  if (!silent) {
                                     view.stopLoading();
+                                  }
                                   isReady = true;
+
                                   //We detect here that we are looking at empty page - and we jump one page back.
-                                  if (schema.paging().shouldSwitchToEarlierPage())
+                                  if (schema.paging().shouldSwitchToEarlierPage()) {
                                     schema.paging().changePage(schema.paging().pageCurrent() - 1);
+                                  }
                                 },
                                 error : function(list,resp) {
                                   if (resp != undefined && resp.status != undefined && resp.status == 403)

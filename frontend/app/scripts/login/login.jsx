@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React', 'common/backbone_mixim', 'login/loginmodel','login/loginview', 'login/forgotpasswordview','legacy_code'], function(React, BackboneMixin, LoginModel, LoginView, ForgotPasswordView) {
+define(['React', 'common/backbone_mixin', 'login/loginmodel','login/loginview', 'login/forgotpasswordview','legacy_code'], function(React, BackboneMixin, LoginModel, LoginView, ForgotPasswordView) {
 
 return React.createClass({
     propTypes: {

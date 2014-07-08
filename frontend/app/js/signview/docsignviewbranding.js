@@ -52,16 +52,16 @@ window.BrandingForSignView = Backbone.Model.extend({
       return this.get("signviewbackgroundcolour");
   },
   showheader: function() {
-      return this.get("showheader") || true;
+      return this.get("showheader");
   },
   showpdfdownload: function() {
-      return this.get("showpdfdownload") || true;
+      return this.get("showpdfdownload");
   },
   showrejectoption: function() {
-      return this.get("showrejectoption") || true;
+      return this.get("showrejectoption");
   },
   showfooter: function() {
-      return this.get("showfooter") || true;
+      return this.get("showfooter");
   },
   fullname: function() {
       return this.get("fullname");
@@ -90,9 +90,10 @@ window.BrandingForSignView = Backbone.Model.extend({
         signviewbarscolour: args.signviewbarscolour,
         signviewbarstextcolour : args.signviewbarstextcolour,
         signviewbackgroundcolour: args.signviewbackgroundcolour,
-        showheader: args.showheader,
-        showrejectoption: args.showrejectoption,
-        showfooter: args.showfooter,
+        showheader: args.showheader != undefined ? args.showheader : true,
+        showpdfdownload: args.showpdfdownload != undefined ? args.showpdfdownload : true,
+        showrejectoption: args.showrejectoption!= undefined ? args.showrejectoption : true,
+        showfooter: args.showfooter!= undefined ? args.showfooter : true,
         fullname: args.fullname,
         email: args.email,
         company: args.company,

@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
 
 
-define(['React', 'Backbone', 'common/backbone_mixim'], function(React, Backbone, BackboneMixin) {
+define(['React', 'Backbone', 'common/backbone_mixin'], function(React, Backbone, BackboneMixin) {
 
   return React.createClass({
     propTypes: {
