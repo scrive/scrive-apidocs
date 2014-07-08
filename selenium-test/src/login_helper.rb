@@ -73,7 +73,7 @@ class LoginHelper
   def logout
     puts "logout"
     (@h.wait_until { (@driver.find_element :css => "a.js-logout") }).click
-    @h.wait_until { @driver.find_element :css => "a#page-login" }
+    @h.wait_until { @driver.find_element :css => "a#page-signin" }
     puts "logged out"
   end
 end
