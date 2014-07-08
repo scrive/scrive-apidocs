@@ -201,15 +201,12 @@ data SealingTexts = SealingTexts
   , partnerText        :: String -- Header for partner list
   , initiatorText      :: String -- Header for initiator
   , documentText       :: String -- Header for documents list
-  , orgNumberText      :: String -- Info about partner subtext
-  , personalNumberText :: String -- Info about partner subtext
   , eventsText         :: String -- history table preheader
   , dateText           :: String -- history table date header
   , historyText        :: String -- history table event header
   , verificationFooter :: String -- Long text all the end saying that doc was verified
   , hiddenAttachmentText :: String -- "Concealed Attachment"
   , onePageText        :: String -- "1 page"
-  , signedAtText       :: String -- "Signed at"
   }
   deriving (Eq,Ord,Show,Read)
 
@@ -221,12 +218,9 @@ instance J.ToJSValue SealingTexts where
    J.value "partnerText" partnerText
    J.value "initiatorText" initiatorText
    J.value "documentText" documentText
-   J.value "orgNumberText" orgNumberText
-   J.value "personalNumberText" personalNumberText
    J.value "eventsText" eventsText
    J.value "dateText" dateText
    J.value "historyText" historyText
    J.value "verificationFooter" verificationFooter
    J.value "hiddenAttachmentText" hiddenAttachmentText
    J.value "onePageText" onePageText
-   J.value "signedAtText" signedAtText

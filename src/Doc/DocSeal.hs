@@ -295,15 +295,12 @@ createSealingTextsForDocument document hostpart = do
   partnerText' <- render "_contractsealingtextspartnerText"
   initiatorText' <- render "_contractsealingtextsinitiatorText"
   documentText' <- render "_documentText"
-  orgNumberText' <- render "_contractsealingtextsorgNumberText"
-  personalNumberText' <- render "_personalNumberText"
   eventsText' <- render "_contractsealingtextseventsText"
   dateText' <- render "_contractsealingtextsdateText"
   historyText' <- render "_contractsealingtextshistoryText"
   verificationFooter' <- render "_verificationFooter"
   hiddenAttachmentText' <- render "_contractsealingtextshiddenAttachment"
   onePageText' <- render "_numberOfPagesIs1"
-  signedAtText' <- render "_signedAt"
 
   let sealingTexts = Seal.SealingTexts
         { verificationTitle    = verificationTitle'
@@ -312,15 +309,12 @@ createSealingTextsForDocument document hostpart = do
         , partnerText          = partnerText'
         , initiatorText        = initiatorText'
         , documentText         = documentText'
-        , orgNumberText        = orgNumberText'
-        , personalNumberText   = personalNumberText'
         , eventsText           = eventsText'
         , dateText             = dateText'
         , historyText          = historyText'
         , verificationFooter   = verificationFooter'
         , hiddenAttachmentText = hiddenAttachmentText'
         , onePageText          = onePageText'
-        , signedAtText         = signedAtText'
         }
 
   return sealingTexts
