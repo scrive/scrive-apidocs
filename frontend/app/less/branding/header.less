@@ -30,6 +30,11 @@ header.site {
   
       &.thin { 
         width: 960px; // related to tablets, can't be wider in ipad
+
+        // padding between buttons should be smaller for logged out users (because there's more buttons)
+        li a.page {
+          padding: 0 8px;
+        }
       }
 
       // right-container is used to align the items to the bottom
