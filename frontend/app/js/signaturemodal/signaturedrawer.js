@@ -75,35 +75,20 @@ var SignatureDrawerView = Backbone.View.extend({
     drawDot: function(x, y, color, radius) {
             this.picture.fillStyle = color;
             // Use canvas.arc to draw a circle with the diameter of width
-            this.picture.arc(x, y,  radius, 0,  Math.PI*2, true);
+            this.picture.arc(x, y,  radius / 2, 0,  Math.PI*2, true);
             this.picture.fill();
     },
     drawCircle : function(x,y) {
-            if (!this.drawing)
-              this.picture.beginPath();
-            var radius = this.lineWidth()/2 - 1; // This works really wrong. It looks like we have no control of when we need to end path. Try adding circle(red,1) at end of this call.
-            this.drawDot(x, y, this.colorForRGBA(0.05), radius+1);
-            this.drawDot(x, y, this.colorForRGBA(0.3), radius);
-            this.drawDot(x, y, this.colorForRGBA(0.5), radius-1);
-            this.drawDot(x, y, this.colorForRGBA(1), radius-2);
-            this.picture.fill();
-            if (!this.drawing)
-              this.picture.closePath();
+            this.picture.beginPath();
+            var radius = this.lineWidth();
+            this.drawDot(x, y, this.colorForRGBA(1), radius);
+            this.picture.closePath();
     },
     drawingtoolDown : function(x,y) {
-      var view = this;
       this.empty = false;
       this.startDrawing();
-      view.uped = false;
-      var circleDraw = function(i) {
-          if (view.uped)
-            {
-                view.drawCircle(x,y);
-            }
-          else if (i < 2 )
-              setTimeout(function() {circleDraw(i+1)}, 100);
-      };
-      circleDraw(0);
+      this.drawnAnyLine = false;
+
       this.picture.beginPath();
       this.picture.moveTo(x, y);
       this.x_ = undefined;
@@ -116,6 +101,7 @@ var SignatureDrawerView = Backbone.View.extend({
     },
     drawingtoolMove : function(x,y) {
       if (this.drawing) {
+        this.drawnAnyLine = true;
         var moved = function(x1,x2) { return (x1 * 2 + x2 * 1) / 3; };
         if (this.x_ != undefined && this.y_ != undefined) {
             this.drawNiceCurve(this.x_, this.y_ ,this.x, this.y, moved(this.x,x), moved(this.y,y));
@@ -128,6 +114,14 @@ var SignatureDrawerView = Backbone.View.extend({
         this.x = x;
         this.y = y;
       }
+    },
+    drawingtoolUp : function(x,y) {
+      this.picture.lineTo(x, y);
+      this.picture.closePath();
+      if (!this.drawnAnyLine) {
+        this.drawCircle(x,y);
+      }
+      this.stopDrawing();
     },
     drawNiceLine : function(sx,sy,ex,ey) {
         this.picture.closePath();
@@ -161,12 +155,6 @@ var SignatureDrawerView = Backbone.View.extend({
         this.picture.lineCap = lc;
         this.picture.lineTo(ex, ey);
         this.picture.stroke();
-    },
-    drawingtoolUp : function(x,y) {
-      this.picture.lineTo(x, y);
-      this.picture.closePath();
-      this.stopDrawing();
-      this.uped = true;
     },
     xPos : function(e) {
       if (e.changedTouches != undefined && e.changedTouches[0] != undefined) e = e.changedTouches[0];
