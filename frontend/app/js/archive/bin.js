@@ -40,7 +40,45 @@ window.BinListDefinition = function(archive) { return {
                               });
                             return true;
                           }
-               })
+               }),
+        new ListAction({
+            name : localization.archive.documents.remove.action,
+            emptyMessage :  localization.archive.documents.cancel.emptyMessage,
+            size: 'normal',
+            avaible : function(doc){ return true;},
+            onSelect : function(docs) {
+                        var confirmationText = $('<span />').html(localization.archive.documents.remove.body);
+                        confirmationText.append(" ");
+                        confirmationText.append($('<span />').html(localization.archive.documents.remove.cannotUndo));
+                        var listElement = confirmationText.find('.put-one-or-more-things-to-be-deleted-here');
+                        if (docs.length == 1) {
+                          listElement.html($('<strong />').text(docs[0].field("title")));
+                        } else {
+                          listElement.text(docs.length + (" " + localization.documents).toLowerCase());
+                        }
+                             var confirmationPopup = new Confirmation({
+                                acceptText: localization.ok,
+                                rejectText: localization.cancel,
+                                title: localization.archive.documents.remove.action,
+                                icon: '/img/modal-icons/delete.png',
+                                content: confirmationText,
+                                onAccept : function() {
+                                    mixpanel.track('Delete document');
+                                    new Submit({
+                                                url: "/d/reallydelete",
+                                                method: "POST",
+                                                documentids: "[" + _.map(docs, function(doc){return doc.field("id");}) + "]",
+                                                ajaxsuccess : function() {
+                                                    new FlashMessage({color : "green", content : localization.archive.documents.remove.successMessage});
+                                                    archive.bin().recall();
+                                                    confirmationPopup.clear();
+                                                }
+                                          }).sendAjax();
+                                }
+                              });
+                             return true;
+            }
+        })
               ]
 
     })

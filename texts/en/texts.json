@@ -782,6 +782,7 @@
 "_tooltipsent":"Sent",
 "_tooltipsigned":"Signed",
 "_tooltiptimedout":"Timed-out",
+"_thisActionCannotBeUndone":"You can't undo this action",
 "_unsupportedBrowserHeader":"We don't support the version of the browser you are using:",
 "_unsupportedBrowserInstruction1":"Update your browser to a newer version of Internet Explorer.",
 "_unsupportedBrowserInstruction2":"Open the link in a different browser (e.g. Chrome or Firefox).",
