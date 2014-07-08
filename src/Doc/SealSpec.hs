@@ -4,19 +4,22 @@ module Doc.SealSpec where
 import qualified Text.JSON.Gen as J
 
 data Person =
-    Person { fullname         :: String
-           , company          :: String
-           , personalnumber   :: String
-           , companynumber    :: String
-           , email            :: String
-           , phone            :: String
-           , fullnameverified :: Bool
-           , companyverified  :: Bool
-           , numberverified   :: Bool
-           , emailverified    :: Bool
-           , phoneverified    :: Bool
-           , fields           :: [Field]
-           , signtime         :: String
+    Person { fullname            :: String
+           , company             :: String
+           , personalnumber      :: String
+           , companynumber       :: String
+           , email               :: String
+           , phone               :: String
+           , fullnameverified    :: Bool
+           , companyverified     :: Bool
+           , numberverified      :: Bool
+           , emailverified       :: Bool
+           , phoneverified       :: Bool
+           , fields              :: [Field]
+           , signtime            :: String
+           , signedAtText2       :: String
+           , personalNumberText2 :: String
+           , companyNumberText2  :: String
            }
     deriving (Eq,Ord,Show,Read)
 
@@ -35,6 +38,9 @@ instance J.ToJSValue Person where
     J.value "phoneverified" $ phoneverified person
     J.value "fields" $ map J.toJSValue $ fields person
     J.value "signtime" $ signtime person
+    J.value "signedAtText" $ signedAtText2 person
+    J.value "personalNumberText" $ personalNumberText2 person
+    J.value "companyNumberText" $ companyNumberText2 person
 
 -- | Field coordinates are in screen coordinate space. That means:
 --

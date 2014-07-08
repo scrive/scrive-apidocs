@@ -68,11 +68,23 @@ import Utils.Prelude
 import qualified Amazon as AWS
 import Data.Char
 
-personFromSignatory :: (MonadDB m,MonadBaseControl IO m) => TimeZoneName -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> m Seal.Person
+
+personFromSignatory :: (MonadDB m,MonadBaseControl IO m, TemplatesMonad m)
+                    => TimeZoneName -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> m Seal.Person
 personFromSignatory tz boxImages signatory = do
     stime <- case  maybesigninfo signatory of
                   Nothing -> return ""
                   Just si -> formatMinutesTimeForVerificationPage tz $ signtime si
+    signedAtText <- renderTemplate "_contractsealingtextssignedAtText" $ F.value "time" stime
+    let personalnumber = getPersonalNumber signatory
+        companynumber = getCompanyNumber signatory
+    companyNumberText <- if (not (null companynumber))
+                            then renderTemplate "_contractsealingtextsorgNumberText2" $ F.value "companynumber" companynumber
+                         else return ""
+    personalNumberText <- if (not (null personalnumber))
+                            then renderTemplate "_contractsealingtextspersonalNumberText2" $ F.value "personalnumber" personalnumber
+                         else return ""
+
     return $ Seal.Person { Seal.fullname = getFullName signatory
                 , Seal.company = getCompanyName signatory
                 , Seal.email = getEmail signatory
@@ -86,9 +98,13 @@ personFromSignatory tz boxImages signatory = do
                 , Seal.phoneverified = False
                 , Seal.fields = fieldsFromSignatory boxImages signatory
                 , Seal.signtime = stime
+                , Seal.signedAtText2 = signedAtText
+                , Seal.personalNumberText2 = personalNumberText
+                , Seal.companyNumberText2 = companyNumberText
                 }
 
-personExFromSignatoryLink :: (MonadDB m,MonadBaseControl IO m) =>  TimeZoneName -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> m (Seal.Person, String)
+personExFromSignatoryLink :: (MonadDB m,MonadBaseControl IO m, TemplatesMonad m)
+                          =>  TimeZoneName -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> m (Seal.Person, String)
 personExFromSignatoryLink tz boxImages (sl@SignatoryLink { signatorysignatureinfo
                                                       , signatorylinkdeliverymethod
                                                       , signatorylinkauthenticationmethod
