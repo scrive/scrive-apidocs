@@ -107,6 +107,7 @@ module DB.SQL
   , sqlWhereEV
   , sqlWhereEVV
   , sqlWhereEVVV
+  , sqlWhereEVVVV
   , sqlWhereEq
   , sqlWhereEqE
   , sqlWhereEqSql
@@ -615,6 +616,11 @@ sqlWhereEVVV :: (MonadState v m, SqlWhere v, KontraException e, FromSQL a, FromS
 sqlWhereEVVV (exc, vsql1, vsql2, vsql3) sql = modify (\cmd -> sqlWhere1 cmd (SqlPlainCondition sql (SqlWhyNot True exc2 [vsql1, vsql2, vsql3])))
   where
     exc2 (v1, v2, v3) = exc v1 v2 v3
+
+sqlWhereEVVVV :: (MonadState v m, SqlWhere v, KontraException e, FromSQL a, FromSQL b, FromSQL c, FromSQL d) => (a -> b -> c -> d -> e, SQL, SQL, SQL, SQL) -> SQL -> m ()
+sqlWhereEVVVV (exc, vsql1, vsql2, vsql3, vsql4) sql = modify (\cmd -> sqlWhere1 cmd (SqlPlainCondition sql (SqlWhyNot True exc2 [vsql1, vsql2, vsql3, vsql4])))
+  where
+    exc2 (v1, v2, v3, v4) = exc v1 v2 v3 v4
 
 sqlWhereEq :: (MonadState v m, SqlWhere v, Show a, ToSQL a) => SQL -> a -> m ()
 sqlWhereEq name value = sqlWhere $ name <+> "=" <?> value
