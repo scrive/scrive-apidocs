@@ -26,6 +26,7 @@ module Doc.Model.Update
   , RestartDocument(..)
   , ProlongDocument(..)
   , RestoreArchivedDocument(..)
+  , ReallyDeleteDocument(..)
   , SaveDocumentForUser(..)
   , SaveSigAttachment(..)
   , SetDaysToSign(..)
@@ -370,6 +371,30 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m ArchiveDocument () wh
           sqlWhere $ "signatory_links.document_id = " <?> did
           sqlWhere "documents.id = signatory_links.document_id"
 
+          sqlWhereDocumentIsNotDeleted
+          sqlWhereDocumentStatusIsOneOf [Preparation, Closed, Canceled, Timedout, Rejected, DocumentError ""]
+
+data ReallyDeleteDocument = ReallyDeleteDocument UserID Actor
+instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m ReallyDeleteDocument () where
+  update (ReallyDeleteDocument uid _actor) = updateDocumentWithID $ \did -> do
+    kRunManyOrThrowWhyNot $ sqlUpdate "signatory_links" $ do
+        sqlSetCmd "really_deleted" "now()"
+
+        sqlWhereExists $ sqlSelect "users" $ do
+          sqlJoinOn "users AS same_company_users" "(users.company_id = same_company_users.company_id OR users.id = same_company_users.id)"
+          sqlWhere "signatory_links.user_id = users.id"
+
+          sqlWhereUserIsDirectlyOrIndirectlyRelatedToDocument uid
+          sqlWhereUserIsSelfOrCompanyAdmin
+
+        sqlWhereExists $ sqlSelect "documents" $ do
+          sqlJoinOn "users AS same_company_users" "TRUE"
+
+          sqlWhere $ "signatory_links.document_id = " <?> did
+          sqlWhere "documents.id = signatory_links.document_id"
+
+          sqlWhereDocumentIsDeleted
+          sqlWhereDocumentIsNotReallyDeleted
           sqlWhereDocumentStatusIsOneOf [Preparation, Closed, Canceled, Timedout, Rejected, DocumentError ""]
 
 
