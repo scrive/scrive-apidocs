@@ -246,8 +246,6 @@ data CurrentEvidenceEventType =
   DeleteSigAttachmentEvidence                     |
   RejectDocumentEvidence                          |
   InvitationEvidence                              |
-  SendToPadDevice                                 |
-  RemovedFromPadDevice                            |
   ResealedPDF                                     |
   ReminderSend                                    |  --Renamed
   InvitationDeliveredByEmail                      |
@@ -325,7 +323,9 @@ data ObsoleteEvidenceEventType =
   AuthorUsesCSVEvidence                           |
   ErrorDocumentEvidence                           |
   SetDocumentInviteTimeEvidence                   |
-  CancelDocumenElegEvidence
+  CancelDocumenElegEvidence                       |
+  SendToPadDevice                                 |
+  RemovedFromPadDevice
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 
@@ -387,8 +387,8 @@ instance ToSQL EvidenceEventType where
   toSQL (Obsolete SignableFromDocumentEvidence)                    = toSQL (51::Int16)
   toSQL (Obsolete TemplateFromDocumentEvidence)                    = toSQL (52::Int16)
   toSQL (Obsolete AttachCSVUploadEvidence)                         = toSQL (53::Int16)
-  toSQL (Current SendToPadDevice)                                  = toSQL (54::Int16)
-  toSQL (Current RemovedFromPadDevice)                             = toSQL (55::Int16)
+  toSQL (Obsolete SendToPadDevice)                                 = toSQL (54::Int16)
+  toSQL (Obsolete RemovedFromPadDevice)                            = toSQL (55::Int16)
   toSQL (Obsolete AddSignatoryEvidence)                            = toSQL (56::Int16)
   toSQL (Obsolete RemoveSignatoryEvidence)                         = toSQL (57::Int16)
   toSQL (Obsolete AddFieldEvidence)                                = toSQL (58::Int16)
@@ -480,8 +480,8 @@ instance FromSQL EvidenceEventType where
       51 -> return (Obsolete SignableFromDocumentEvidence)
       52 -> return (Obsolete TemplateFromDocumentEvidence)
       53 -> return (Obsolete AttachCSVUploadEvidence)
-      54 -> return (Current SendToPadDevice)
-      55 -> return (Current RemovedFromPadDevice)
+      54 -> return (Obsolete SendToPadDevice)
+      55 -> return (Obsolete RemovedFromPadDevice)
       56 -> return (Obsolete AddSignatoryEvidence)
       57 -> return (Obsolete RemoveSignatoryEvidence)
       58 -> return (Obsolete AddFieldEvidence)
