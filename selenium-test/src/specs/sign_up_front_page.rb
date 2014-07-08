@@ -150,7 +150,7 @@ describe "sign up on front page and modify account settings" do
     puts "just clicked email input"
     sleep 1
     (@h.wait_until { @h.driver.find_element :css => ".short-input-container input[name='email']" }).send_keys random_email
-    (@h.wait_until { @h.driver.find_element :css => ".short-input-container a.login-button" }).click
+    (@h.wait_until { @h.driver.find_element :css => ".short-input-container a.button-green" }).click
     puts "waiting for recovery-container"
     @h.wait_until { @h.driver.find_element :css => "div.recovery-container" }
     puts "waiting for password"
