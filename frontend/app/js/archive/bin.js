@@ -10,6 +10,7 @@ window.BinListDefinition = function(archive) { return {
     extraParams : { documentType : "Rubbish" },
     sorting: new Sorting({ fields: ["title", "time"]}),
     paging: new Paging({}),
+    subheadline: localization.archive.bin.subheadline,
     textfiltering: new TextFiltering({text: "", infotext: localization.archive.bin.search}),
     selectfiltering : new DocumentSelectsDefinition(archive),
     cells : new DocumentCellsDefinition(archive,false),

@@ -783,6 +783,7 @@ javascriptLocalisation =
                             , successMessage : "$_flashMessageRubbishRestoreDone()$"
                             , emptyMessage : "$_noDocumentChosen()$"
                         }
+                    , subheadline : "$_thrashBinSubheadline()$"
                     ,  search : "$_SearchDoc()$"
                }
         }

@@ -770,6 +770,7 @@
 "_toNoSpaces":"to",
 "_tooLargeAttachment":"The file exceeds the maximum size of 10 MB. Try to make it smaller.",
 "_tooLargeAttachments":"The files exceed the maximum size of 10 MB. Try with one file at a time.",
+"_thrashBinSubheadline": "Documents that have been in Thrash for more than 30 days will be automatically deleted.",
 "_tooltipcancelled":"Withdrawn",
 "_tooltipdelivered":"Delivered",
 "_tooltipdeliveryproblem":"Delivery problem",
