@@ -1,4 +1,4 @@
-{ 
+{
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Are you sure you want to send reminders to the parties involved in the <span class='put-number-of-documents-here'></span> documents?",
@@ -559,17 +559,9 @@
 "_numberOfPagesIs1":"1 page",
 "_october":"October",
 "_onlyFiletypeAllowed":"Sorry, only <span class='put-filetype'/> uploads are allowed. Please try another file.",
-"_padAddToPadQueue":"Sign on another device",
-"_padAddToPadQueueConfirmHeader":"Sign on another device",
-"_padAddToPadQueueConfirmText":"Are you sure you want to send this document for signing on another device?",
-"_padAddToPadQueueNotAdded":"Document could not be send to the external device",
 "_padBackToDocument":"Back to document",
 "_padBackToList":"Back to list",
 "_padGiveForSigningThisDevice":"Give for signing on this device to",
-"_padRemoveFromPadQueue":"Remove from signing on external device",
-"_padSigningOnSameDevice":"Give for signing on this device",
-"_padSigningOnSameDeviceConfirmHeader":"Are you sure you want to sign on the same device?",
-"_padSigningOnSameDeviceConfirmText":"You are about to hand over this device for signing the document.",
 "_pageAttachmentAttachments":"Attachments:",
 "_pageAttachmentListNewAttachment":"New attachment",
 "_pageAttachmentListSearchInfo":"Search",

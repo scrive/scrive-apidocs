@@ -1,4 +1,4 @@
-{ 
+{
 "_DeletePDF":"Delete",
 "_RequestedAttachments":"Requested attachments",
 "_ReviewPDF":"Review",
@@ -78,14 +78,11 @@
 "_optionalAction":"Optional action",
 "_orgnumber":"Company reg. no.",
 "_padCleanImage":"Clear signature and try again",
-"_padDrawSignature":" draw your signature",
 "_padDrawSignatureBoxHeader":"Sign in the box below",
 "_padFillInExtraDetails":"Next",
 "_padFont1":"Font style 1",
 "_padFont2":"Font style 2",
 "_padFont3":"Font style 3",
-"_padOR":"OR",
-"_padTypeSignature":"type your signature",
 "_padTypeSignatureBoxHeader":"Type your signature",
 "_padTypeSignatureNameField":"Please type your name",
 "_pageDocumentForSignContentElegBody":"No eID? You can download an eID from your online bank or from Telia. <a class='is-click-here'>Click here</a> to read more.",
