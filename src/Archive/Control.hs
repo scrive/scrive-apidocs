@@ -1,6 +1,7 @@
 module Archive.Control
        (
        handleDelete,
+       handleReallyDelete,
        handleSendReminders,
        handleRestore,
        handleShare,
@@ -94,6 +95,11 @@ handleDelete = do
              dbUpdate $ RejectDocument signatorylinkid  Nothing actor
              theDocument >>= postDocumentRejectedChange signatorylinkid
         dbUpdate $ ArchiveDocument (userid user) actor
+
+handleReallyDelete :: Kontrakcja m => m JSValue
+handleReallyDelete = do
+  handleArchiveDocumentsAction' "really delete documents" isDocumentVisibleToUser $ \(user, actor) -> do
+    dbUpdate $ ReallyDeleteDocument (userid user) actor
 
 handleSendReminders :: Kontrakcja m => m JSValue
 handleSendReminders = handleArchiveDocumentsAction' "send reminders" isAuthorOrAuthorsAdmin $ \(_, actor) -> do

@@ -91,6 +91,7 @@ staticRoutes production = choice
      , dir "d" $ dir "eleg" $ dir "mbi" $ hGet  $ toK1 $ BankID.collectMobileBankIDForAuthor
      , dir "d" $ dir "save"         $ hPost $ toK1 $ DocControl.handleMarkAsSaved
      , dir "d" $ dir "delete"       $ hPost $ toK0 $ ArchiveControl.handleDelete
+     , dir "d" $ dir "reallydelete" $ hPost $ toK0 $ ArchiveControl.handleReallyDelete
      , dir "d" $ dir "remind"       $ hPost $ toK0 $ ArchiveControl.handleSendReminders
      , dir "d" $ dir "restore"      $ hPost $ toK0 $ ArchiveControl.handleRestore
      , dir "d" $ dir "share"        $ hPost $ toK0 $ ArchiveControl.handleShare
