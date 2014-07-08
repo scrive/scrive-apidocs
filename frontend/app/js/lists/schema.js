@@ -59,6 +59,7 @@ define(['Backbone', 'legacy_code'], function() {
             options: [],
             actions: [],
             extraParams: {},
+            subheadline: undefined,
             expandedByDefault : false,
             minRows : 0
         },
@@ -109,6 +110,9 @@ define(['Backbone', 'legacy_code'], function() {
         },
         options: function() {
             return this.get("options");
+        },
+        subheadline: function() {
+            return this.get("subheadline");
         },
         actions : function() {
             return this.get("actions");

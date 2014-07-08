@@ -16,12 +16,13 @@
  * the table looks and behaves.
  *
  * Important parts of schema:
- *   url       - where to take data from
- *   cells     - definition of table columns with data binding and l&f details
- *   sorting   - if sorting is active and at what columns
- *   paging    - if paging is available
- *   filtering - if filtering is allowed
- *   options   - If there should be some options (select-like input, top left)
+ *   url         - where to take data from
+ *   cells       - definition of table columns with data binding and l&f details
+ *   sorting     - if sorting is active and at what columns
+ *   paging      - if paging is available
+ *   filtering   - if filtering is allowed
+ *   options     - If there should be some options (select-like input, top left)
+ *   subheadline - HTML to put just below header
  *
  *  On load or when some changes occur (like new sorting set) this
  *  table will download new data from server (using this url param) as
@@ -42,6 +43,7 @@ define(['Backbone', 'legacy_code'], function() {
         defaults: {
             fields: [],
             subfields: [],
+            subheadline: undefined,
             selected: false,
             expanded: false,
             unsaved: false
@@ -466,7 +468,11 @@ define(['Backbone', 'legacy_code'], function() {
                }
                headline.append(th);
             }
-            return $("<thead />").append(headline);
+            var thead = $("<thead />").append(headline);
+            if( schema.subheadline()!=undefined ) {
+              thead.append($("<tr>").append($("<th class='subheadline' colspan='" + schema.size() + "'></tr>").html(schema.subheadline())));
+            }
+            return thead;
         },
         render: function() {
 

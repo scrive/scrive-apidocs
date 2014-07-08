@@ -21,20 +21,22 @@
         text-align: left;
         vertical-align: bottom;
 
-        span {
-          color: @black !important;
-          font-family: @font-family-source;
-          font-size : 15px;
-          font-weight: 300;
-          text-decoration: none;
-          word-wrap: break-word;
+        color: @black !important;
+        font-family: @font-family-source;
+        font-size : 15px;
+        font-weight: 300;
+        text-decoration: none;
+        word-wrap: break-word;
 
-          &.sortable {
-            cursor: pointer;
+        &.subheadline {
+          text-align: center;
+        }
 
-            &:hover {
-              color: @blue-dark !important;
-            }
+        &.sortable {
+          cursor: pointer;
+
+          &:hover {
+            color: @blue-dark !important;
           }
         }
       }
