@@ -241,6 +241,15 @@ window.Signatory = Backbone.Model.extend({
         else
          return this.nameOrEmailOrMobile();
     },
+    nameForLists : function() {
+        if (this.isCsv()) {
+          return localization.csvFilePersons;
+        } else if (this.smartname().trim() != "") {
+          return this.smartname();
+        } else {
+          return this.nameInDocument();
+        }
+    },
     nameOrEmail: function() {
          if (this.name() != "")
          return this.name();

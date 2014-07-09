@@ -52,7 +52,6 @@ javascriptLocalisation =
                  , timeouted       : "$_tooltiptimedout()$"
                  , problem           : "$_tooltiperror()$"
              }
-             , and : "$_and()$"
              , listand : "$_listand()$"
              , you : "$_you()$"
              , searchBoxButtonText : "$_searchBoxButtonText()$"
@@ -172,8 +171,6 @@ javascriptLocalisation =
                sendbuttontext: "$_contractsendbuttontext()$",
                changesignatorybuttontext: "$_changeSignatoryButtonText()$",
                startsigningbuttontext: "$_contractstartsigningbuttontext()$",
-               confirmsendtext: "$_contractconfirmsendtext()$",
-               confirmstartsigningtext: "$_contractconfirmstartsigningtext()$",
                confirmsendtitle: "$_contractconfirmsendtitle()$",
                startsigningtitle: "$_contractstartsigningtitle()$",
                restartbuttontext: "$_contractrestartbuttontext()$",
@@ -187,7 +184,6 @@ javascriptLocalisation =
                signatorysignmodaltitleeleg: "$_contractsignatorysignmodaltitleeleg()$",
                signatorysignmodalcontent: "<p>$_contractsignatorysignmodalcontent()$ </p>",
                signatorysignmodalcontentfromsignaturedrawing: "<p>$_contractsignatorysignmodalcontentfromsignaturedrawing()$ </p>",
-               signatorysignmodalcontentdesignvieweleg: "<p>$_contractsignatorysignmodalcontentdesignvieweleg()$ </p>",
                signatorysignmodalcontentsignvieweleg: "<p>$_contractsignatorysignmodalcontentdesignvieweleg()$ </p>",
                signatorysignmodalcontentauthoronly: "<p>$_contractsignatorysignmodalcontentauthoronly()$ </p>",
                signbuttontext: "$_contractsignbuttontext()$",
@@ -214,7 +210,6 @@ javascriptLocalisation =
            , filterByAuthor : {
                 showAnyAuthor : "$_anyAuthor()$"
             }
-           , toNoSpaces : "$_toNoSpaces()$"
            , uploadButton: "$_signStepsBodyUploadBoxStepButtonChooseFile()$"
            , ok : "$_ok()$"
            , selectFiles: "$_selectFilesYouWantToUpload()$"
@@ -414,8 +409,13 @@ javascriptLocalisation =
              , cantRemoveAllIdentificationFieldsText : "$_cantRemoveAllIdentificationFieldsText()$"
              , cantMakeAllIdentificationFieldsOptionalText : "$_cantMakeAllIdentificationFieldsOptionalText()$"
              , information : "$_information()$"
-           }
-
+             , signModalContentAuthorOnly : "<p>$_designViewSignModalContentAuthorOnly()$</p>"
+             , signModalContentEleg : "<p>$_designViewSignModalContentEleg()$</p>"
+             , signModalContent : "<p>$_designViewSignModalContent()$</p>"
+             , startSigningModalTextWithPad : "$_designViewStartSigningModalTextWithPad()$"
+             , startSigningModalText : "$_designViewSigningModalText()$"
+             , startSigningModalTextWithSendout : "$_designViewStartSigningModalTextWithSendout()$"
+         }
          , validation : {
                 required: "$_nameRequired()$"
               , toolong: "$_nameTooLong()$"

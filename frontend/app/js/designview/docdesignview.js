@@ -354,14 +354,24 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                 }).el();
             }
             var content = $("<span/>");
-            if (document.authorIsOnlySignatory())
-                content = $(localization.process.signatorysignmodalcontentauthoronly);
-            else if (signatory.elegAuthentication())
-                content = $(localization.process.signatorysignmodalcontentdesignvieweleg);
-            else
-                content = $(localization.process.signatorysignmodalcontent);
-
-            DocumentDataFiller.fill(document, content);
+            if (document.authorIsOnlySignatory()) {
+                content = $(localization.designview.signModalContentAuthorOnly);
+                content.find('.put-document-title-here').text(document.title());
+            }
+            else if (signatory.elegAuthentication()) {
+                content = $(localization.designview.signModalContentEleg);
+            }
+            else {
+                content = $(localization.designview.signModalContent);
+                content.find('.put-document-title-here').text(document.title());
+                var parties = _.filter(document.signatories(), function(signatory) {
+                                      return signatory.signs() && !signatory.current();
+                               });
+                var partiesNames = _.map(parties, function(signatory) {
+                                      return signatory.nameForLists();
+                               })
+                content.find('.put-names-of-parties-here').append(buildBoldList(partiesNames));
+            }
             if (signatory.elegAuthentication()) {
                 var subhead = $("<h6/>").text(localization.sign.eleg.subhead);
                 var p = $("<p/>").append(localization.sign.eleg.body);
@@ -394,14 +404,20 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
 
             var content;
             if (otherSignatoriesSignInPerson) {
-               content = $("<p/>").append($("<span/>").append(localization.process.confirmstartsigningtext));
-              box.append(content);
+              content = $("<p/>").append($("<span/>").append(localization.designview.startSigningModalTextWithPad));
+            } else if (document.authorIsOnlySignatory()) {
+              content = $("<p/>").append($("<span/>").append(localization.designview.startSigningModalText));
             } else {
-              content = $("<p/>").append($("<span/>").append(localization.process.confirmsendtext));
-              if (!document.authorIsOnlySignatory())
-                content.append($("<span/>").text(' ' + localization.toNoSpaces + ': ')).append("<br /><span class='unsignedpartynotcurrent'/>");
-              box.append(DocumentDataFiller.fill(document,content));
+              content = $("<p/>").append($("<span/>").append(localization.designview.startSigningModalTextWithSendout));
+              var parties = _.filter(document.signatories(), function(signatory) {
+                                      return signatory.signs() && !signatory.current();
+                               });
+              var partiesNames = _.map(parties, function(signatory) {
+                                      return signatory.nameForLists();
+                               })
+              content.find('.put-names-of-parties-here').append(buildBoldList(partiesNames));
             }
+            box.append(content);
 
             var spinner = this.spinnerSmall();
             var spinnerContainer = $("<span class='spinner-container' />");

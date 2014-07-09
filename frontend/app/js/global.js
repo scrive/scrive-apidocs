@@ -223,3 +223,26 @@ function capitaliseFirstLetter(string)
 {   if (string == undefined || string.length == 0) return string;
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
+
+// Utility that allows changing of names into nicely localized span on <strong> tags, separated with ',' and localized 'and'
+// This function will escape texts from the list
+// Example: buildBoldList(['a','b','c']) -> <strong>a</strong>, <strong>b</strong> and <strong>c</strong>
+function buildBoldList(list) {
+    var strongsString = "";
+    for(var i=0;i<list.length;i++) {
+      if (list.length - i > 2) {
+        strongsString += "<strong/>, ";
+      } else if (list.length - i == 2) {
+        strongsString += "<strong/> " + localization.listand + " ";
+      } else {
+        strongsString += "<strong/>"
+      }
+    }
+    var res = $("<span/>").html(strongsString);
+    var strongs = res.find("strong");
+    for(var i=0;i<list.length;i++) {
+      $(strongs[i]).text(list[i]);
+    }
+    return res;
+}
+
