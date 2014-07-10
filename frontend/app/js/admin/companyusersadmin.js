@@ -109,7 +109,7 @@ window.CompanyUsersList = function(args) {
                 } else {
                   new FlashMessage({color: 'red', content: resp.error_message});
                 }
-              }
+              };
               new Submit({
                 method: "POST",
                 url: "/adminonly/companyadmin/users/" + companyid,
