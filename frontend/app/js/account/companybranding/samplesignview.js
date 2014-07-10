@@ -52,7 +52,7 @@ var SampleSignViewView = Backbone.View.extend({
     extradocumentdetailscontainer.append(this.downloaddoc);
 
     this.contentheader = $('<div class="contentheader" />');
-    var instructionswrapper = $('<div class="instructions capitalize-first-letter" />');
+    var instructionswrapper = $('<div class="instructions" />');
     var arrowinstructiontext = $('<span/>').html(localization.sampleSignView.followTheArrow);
     instructionswrapper.append(arrowinstructiontext);
 

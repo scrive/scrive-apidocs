@@ -519,6 +519,7 @@ javascriptLocalisation =
            }
          , docsignview : {
                followTheArrow: "$_followTheArrow()$"
+             , followTheArrowWithUserName: "$_followTheArrowWithUserName()$"
              , reviewDocument: "$_reviewDocument()$"
              , signedNotClosed: "$_signedNotClosed()$"
              , signedAndClosed: "$_signedAndClosed()$"

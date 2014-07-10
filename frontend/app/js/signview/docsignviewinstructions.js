@@ -10,34 +10,39 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     this.model.bind('change', this.render);
     this.render();
   },
-  welcomeText : function() {
-    return $('<span />').text(this.model.document().currentSignatory().name() + ', ');
-  },
   // Big instruction or information about document state
-  generateHeadlineText: function(capitalize) {
+  generateHeadlineText: function() {
     var document = this.model.document();
-    var string = "";
-    if (document.isSigning()) {
-      string = localization.docsignview.followTheArrow;
+
+    // Keep this as a string to preserve the ability to have HTML in the translation strings.
+    var span = function(s) {
+      return $('<span>' + s + '</span>');
+    };
+
+    var signatory = document.currentSignatory();
+    var welcomeUser = signatory != undefined &&
+                      signatory.name() !="" &&
+                      signatory.canSign() &&
+                      !signatory.author();
+
+    if (document.isSigning() && welcomeUser) {
+      var result = $('<span>' + localization.docsignview.followTheArrowWithUserName + '</span>');
+      $('.signatory-name', result).text(this.model.document().currentSignatory().name());
+      return result;
+    } else if (document.isSigning()) {
+      return $('<span>' + localization.docsignview.followTheArrow + '</span>');
     } else if (document.isReviewing()) {
-      string = localization.docsignview.reviewDocument;
+      return $('<span>' + localization.docsignview.reviewDocument + '</span>');
     } else if (document.isSignedAndClosed()) {
-      string = localization.docsignview.signedAndClosed;
+      return $('<span>' + localization.docsignview.signedAndClosed + '</span>');
     } else if (document.isSignedNotClosed()) {
-      string = localization.docsignview.signedNotClosed;
+      return $('<span>' + localization.docsignview.signedNotClosed + '</span>');
     } else if (document.isUnavailableForSign()) {
-      string = localization.docsignview.unavailableForSign;
+      return $('<span>' + localization.docsignview.unavailableForSign + '</span>');
     } else {
       console.error("Unsure what state we're in");
-      string = localization.docsignview.unavailableForSign;
+      return $('<span>' + localization.docsignview.unavailableForSign + '</span>');
     }
-    // Keep this as a string to preserve the ability to have HTML in the translation strings.
-    result = $("<span>" + string + "</span>");
-    if (capitalize) {
-      result.css('display', 'inline-block');
-      result.addClass('capitalize-first-letter');
-    }
-    return result;
   },
   // Smaller text with more details on some states
   subtext: function() {
@@ -124,17 +129,8 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
         container.addClass("small-screen");
     }
 
-    var welcomeUser = document.currentSignatory() != undefined &&
-                      document.currentSignatory().name()!="" &&
-                      document.currentSignatory().canSign() &&
-                      !document.currentSignatory().author();
-
     var headline = $("<div class='headline' />");
-    if (welcomeUser) {
-      headline.append(this.welcomeText());
-    }
-
-    var headlineText = this.generateHeadlineText(headline.text() == "");
+    var headlineText = this.generateHeadlineText();
     var view = this;
     headlineText.find('.arrowtext').click(function() {
       mixpanel.track('Click arrow text');
