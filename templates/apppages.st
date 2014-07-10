@@ -424,7 +424,7 @@ $endif$
       </ul>
       $else$
       <li class="session-login float-right">
-        <a class="button" id="page-login" href="$langprefix()$login">$_login()$ </a>
+        <a class="button" id="page-signin" href="$langprefix()$login">$_login()$ </a>
         <a class="button" id="page-signup" href="$langprefix()$signup">$_startFreeTrial()$</a>
       </li>
       <li class="float-right"  >

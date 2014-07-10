@@ -43,7 +43,7 @@ class LoginHelper
     sleep 1
     (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='email']" }).send_keys [:control, 'a']
     (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='email']" }).send_keys email
-    (@h.wait_until { @driver.find_element :css => ".short-input-container a.login-button" }).click
+    (@h.wait_until { @driver.find_element :css => ".short-input-container a.button-green" }).click
     (@h.wait_until { @driver.find_element :css => "a.js-logout" })
 
     if (@driver.find_elements :css => ".s-accept-tos").length>0 then
@@ -73,7 +73,7 @@ class LoginHelper
   def logout
     puts "logout"
     (@h.wait_until { (@driver.find_element :css => "a.js-logout") }).click
-    @h.wait_until { @driver.find_element :css => "a#page-signin, a.login-button" }
+    @h.wait_until { @driver.find_element :css => "a#page-signin" }
     puts "logged out"
   end
 end

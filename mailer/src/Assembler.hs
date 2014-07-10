@@ -74,7 +74,7 @@ assembleContent Mail{..} = do
                         else "application/octet-stream"
 
       headerAttach fname = "\r\n--" ++ boundaryMixed ++ "\r\n" ++
-        "Content-Disposition: inline; filename=\"" ++ mailEncode Nothing fname ++"\"\r\n" ++
+        "Content-Disposition: attachment; filename=\"" ++ mailEncode Nothing fname ++"\"\r\n" ++
         "Content-Type: "++attachmentType fname++"; name=\"" ++ mailEncode Nothing fname ++ "\"\r\n" ++
         "Content-Transfer-Encoding: base64\r\n" ++
         "\r\n"
