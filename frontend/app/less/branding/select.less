@@ -2,6 +2,11 @@
 .select-expanded-wrapper {
   position: absolute;
   z-index: 5000;
+
+  // New selectboxes (in react) use select-expanded-wrapper. In that case only wrapper has to be positioned absolute
+  .select.select-exp {
+    position: relative;
+  }
 }
 
 .select{

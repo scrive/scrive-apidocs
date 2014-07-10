@@ -467,14 +467,14 @@ langSwitcher=
                       {value : "en", name : "$EnglishInEnglish()$"}
                     , {value : "sv", name : "$SwedishInSwedish()$"}
                     , {value : "de", name : "$GermanInGerman()$"}
-                    , {value : "fr", name : "$FrenchInFrench()$", hidden : true}
-                    , {value : "it", name : "$ItalianInItalian()$", hidden : true}
-                    , {value : "es", name : "$SpanishInSpanish()$", hidden : true}
-                    , {value : "pt", name : "$PortugueseInPortuguese()$", hidden : true}
-                    , {value : "nl", name : "$DutchInDutch()$", hidden : true}
+                    , {value : "fr", name : "$FrenchInFrench()$"}
+                    , {value : "it", name : "$ItalianInItalian()$"}
+                    , {value : "es", name : "$SpanishInSpanish()$"}
+                    , {value : "pt", name : "$PortugueseInPortuguese()$"}
+                    , {value : "nl", name : "$DutchInDutch()$"}
                     , {value : "da", name : "$DanishInDanish()$"}
                     , {value : "no", name : "$NorwegianInNorwegian()$"}
-                    , {value : "el", name : "$GreekInGreek()$", hidden : true}
+                    , {value : "el", name : "$GreekInGreek()$"}
                    ]
                    languages = _.sortBy(languages, function(l) {return l.name;});
                    var lname = _.findWhere(languages, {value : "$langcode$"}).name;

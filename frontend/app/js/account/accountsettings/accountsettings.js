@@ -1,7 +1,7 @@
 /*
  * Defines the account settings page.
  */
-define(['Backbone', 'legacy_code'], function() {
+define(['React','common/select','Backbone', 'legacy_code'], function(React,NewSelect) {
 
 var AccountSettingsModel = Backbone.Model.extend({
   initialize : function() {
@@ -295,7 +295,7 @@ var AccountSettingsView = Backbone.View.extend({
         });
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companyposition))).append($("<td/>").append(companypositioninput)));
 
-      table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountSecurity.lang))).append($("<td/>").append(this.langSelect().el())));
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountSecurity.lang))).append($("<td/>").append(this.langSelect())));
 
 
       return box;
@@ -308,25 +308,45 @@ var AccountSettingsView = Backbone.View.extend({
           {name: localization.account.accountSecurity.langEN, value: "en"}
         , {name: localization.account.accountSecurity.langSV, value: "sv"}
         , {name: localization.account.accountSecurity.langDE, value: "de"}
-        , {name: localization.account.accountSecurity.langFR, value: "fr", hidden : true}
-        , {name: localization.account.accountSecurity.langIT, value: "it", hidden : true}
-        , {name: localization.account.accountSecurity.langES, value: "es", hidden : true}
-        , {name: localization.account.accountSecurity.langPT, value: "pt", hidden : true}
-        , {name: localization.account.accountSecurity.langNL, value: "nl", hidden : true}
+        , {name: localization.account.accountSecurity.langFR, value: "fr"}
+        , {name: localization.account.accountSecurity.langIT, value: "it"}
+        , {name: localization.account.accountSecurity.langES, value: "es"}
+        , {name: localization.account.accountSecurity.langPT, value: "pt"}
+        , {name: localization.account.accountSecurity.langNL, value: "nl"}
         , {name: localization.account.accountSecurity.langDA, value: "da"}
         , {name: localization.account.accountSecurity.langNO, value: "no"}
-        , {name: localization.account.accountSecurity.langEL, value: "el", hidden : true}
+        , {name: localization.account.accountSecurity.langEL, value: "el"}
       ];
       languages = _.sortBy(languages, function(l) {return l.name;});
       var lname = _.findWhere(languages, {value : model.lang()}).name;
-      this.langselect = new Select({
+      self.langselect = $("<div/>");
+
+
+      React.renderComponent(
+              NewSelect.Select({
                              name : lname,
-                             onSelect : function(v) {model.setLang(v); self.langselect.el().replaceWith(self.langSelect().el()); return true;},
+                             onSelect : function(v) {
+                               model.setLang(v);
+                               React.unmountComponentAtNode(self.langselect[0]);
+                               self.langselect.replaceWith(self.langSelect());
+                               return true;
+                             },
                              options: _.filter(languages, function(l) { return l.value !=  model.lang() && !l.hidden;}),
                              textWidth : "213px",
-                             optionsWidth : "240px"
-                           });
-      return this.langselect;
+                             optionsWidth : "240px",
+                             // This is a hack - since footer has a fixes heigth, and this select box is very big
+                             // it may cause problems. So we expand the footer to match its size.
+                             onOpen: function() {
+                                $(".body-container").css("padding-bottom","260px");
+                                $("footer").css("height","145px");
+                             },
+                             onClose: function() {
+                                $(".body-container").css("padding-bottom","");
+                                $("footer").css("height","");
+                             }
+              })
+              , self.langselect[0]);
+      return self.langselect;
     },
     companySettings : function() {
       // Building frame

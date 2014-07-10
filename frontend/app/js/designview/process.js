@@ -126,14 +126,14 @@ define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_the
                 {name: localization.languages.en, value: "en"}
               , {name: localization.languages.sv, value: "sv"}
               , {name: localization.languages.de, value: "de"}
-              , {name: localization.languages.fr, value: "fr", hidden : true}
-              , {name: localization.languages.it, value: "it", hidden : true}
-              , {name: localization.languages.es, value: "es", hidden : true}
-              , {name: localization.languages.pt, value: "pt", hidden : true}
-              , {name: localization.languages.nl, value: "nl", hidden : true}
+              , {name: localization.languages.fr, value: "fr"}
+              , {name: localization.languages.it, value: "it"}
+              , {name: localization.languages.es, value: "es"}
+              , {name: localization.languages.pt, value: "pt"}
+              , {name: localization.languages.nl, value: "nl"}
               , {name: localization.languages.da, value: "da"}
               , {name: localization.languages.no, value: "no"}
-              , {name: localization.languages.el, value: "el", hidden : true}
+              , {name: localization.languages.el, value: "el"}
             ];
             languages = _.sortBy(languages, function(l) {return l.name;});
             var lname = _.findWhere(languages, {value :lang}).name;
