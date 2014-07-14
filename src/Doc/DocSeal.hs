@@ -79,10 +79,10 @@ personFromSignatory tz boxImages signatory = do
     let personalnumber = getPersonalNumber signatory
         companynumber = getCompanyNumber signatory
     companyNumberText <- if (not (null companynumber))
-                            then renderTemplate "_contractsealingtextsorgNumberText2" $ F.value "companynumber" companynumber
+                            then renderTemplate "_contractsealingtextsorgNumberText" $ F.value "companynumber" companynumber
                          else return ""
     personalNumberText <- if (not (null personalnumber))
-                            then renderTemplate "_contractsealingtextspersonalNumberText2" $ F.value "personalnumber" personalnumber
+                            then renderTemplate "_contractsealingtextspersonalNumberText" $ F.value "personalnumber" personalnumber
                          else return ""
 
     return $ Seal.Person { Seal.fullname = getFullName signatory
