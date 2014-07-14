@@ -75,7 +75,9 @@ personFromSignatory tz boxImages signatory = do
     stime <- case  maybesigninfo signatory of
                   Nothing -> return ""
                   Just si -> formatMinutesTimeForVerificationPage tz $ signtime si
-    signedAtText <- renderTemplate "_contractsealingtextssignedAtText" $ F.value "time" stime
+    signedAtText <- if (null stime)
+                       then return ""
+                    else renderTemplate "_contractsealingtextssignedAtText" $ F.value "time" stime
     let personalnumber = getPersonalNumber signatory
         companynumber = getCompanyNumber signatory
     companyNumberText <- if (not (null companynumber))
