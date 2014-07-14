@@ -243,7 +243,7 @@
 "_contractsealingtextsinitiatorText":"Der Initiator",
 "_contractsealingtextsorgNumberText":"Handelsregister-Nr. $companynumber$",
 "_contractsealingtextspartnerText":"Signierende Parteien",
-"_contractsealingtextspersonalNumberText":"ID-Nummer $personalnumber$",
+"_contractsealingtextspersonalNumberText":"ID-Nummer $idnumber$",
 "_contractsealingtextssignedAtText":"Signiert $time$",
 "_contractsendbuttontext":"Senden",
 "_contractstartsigningbuttontext":"Signierung starten",

@@ -243,7 +243,7 @@
 "_contractsealingtextsinitiatorText":"Iniziatore",
 "_contractsealingtextsorgNumberText":"N° di registrazione aziendale $companynumber$",
 "_contractsealingtextspartnerText":"Firmatari",
-"_contractsealingtextspersonalNumberText":"Numero ID $personalnumber$",
+"_contractsealingtextspersonalNumberText":"Numero ID $idnumber$",
 "_contractsealingtextssignedAtText":"Firmato $time$",
 "_contractsendbuttontext":"Invia",
 "_contractstartsigningbuttontext":"Inizia a firmare",

@@ -243,7 +243,7 @@
 "_contractsealingtextsinitiatorText":"Initiativtaker",
 "_contractsealingtextsorgNumberText":"Organisasjonsnr. $companynumber$",
 "_contractsealingtextspartnerText":"Signerende parter",
-"_contractsealingtextspersonalNumberText":"Fødselsnummer $personalnumber$",
+"_contractsealingtextspersonalNumberText":"Fødselsnummer $idnumber$",
 "_contractsealingtextssignedAtText":"Signert $time$",
 "_contractsendbuttontext":"Send",
 "_contractstartsigningbuttontext":"Start signering",

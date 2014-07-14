@@ -243,7 +243,7 @@
 "_contractsealingtextsinitiatorText":"Initiativtager",
 "_contractsealingtextsorgNumberText":"CVR-nr. $companynumber$",
 "_contractsealingtextspartnerText":"Signerende parter",
-"_contractsealingtextspersonalNumberText":"ID-nummer $personalnumber$",
+"_contractsealingtextspersonalNumberText":"ID-nummer $idnumber$",
 "_contractsealingtextssignedAtText":"Signeret $time$",
 "_contractsendbuttontext":"Send",
 "_contractstartsigningbuttontext":"Start signering",

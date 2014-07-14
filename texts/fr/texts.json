@@ -243,7 +243,7 @@
 "_contractsealingtextsinitiatorText":"Initiateur",
 "_contractsealingtextsorgNumberText":"Numéro d'enregistrement de la société $companynumber$",
 "_contractsealingtextspartnerText":"Parties signataires",
-"_contractsealingtextspersonalNumberText":"n° ID. $personalnumber$",
+"_contractsealingtextspersonalNumberText":"n° ID. $idnumber$",
 "_contractsealingtextssignedAtText":"Signé $time$",
 "_contractsendbuttontext":"Envoyer",
 "_contractstartsigningbuttontext":"Commencer à signer",

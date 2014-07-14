@@ -243,7 +243,7 @@
 "_contractsealingtextsinitiatorText":"Εκκινητής ",
 "_contractsealingtextsorgNumberText":"Α.Μ. εταιρείας $companynumber$",
 "_contractsealingtextspartnerText":"Υπογραφόμενοι",
-"_contractsealingtextspersonalNumberText":"Α.Δ.Τ. $personalnumber$",
+"_contractsealingtextspersonalNumberText":"Α.Δ.Τ. $idnumber$",
 "_contractsealingtextssignedAtText":"Υπογράφηκε  $time$",
 "_contractsendbuttontext":"Αποστολή ",
 "_contractstartsigningbuttontext":"Ξεκινήστε να υπογράφετε",

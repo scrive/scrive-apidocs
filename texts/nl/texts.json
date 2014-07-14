@@ -243,7 +243,7 @@
 "_contractsealingtextsinitiatorText":"Initiatiefnemer",
 "_contractsealingtextsorgNumberText":"Bedrijfsregistratienr. $companynumber$",
 "_contractsealingtextspartnerText":"Ondertekenende partijen",
-"_contractsealingtextspersonalNumberText":"ID-nummer $personalnumber$",
+"_contractsealingtextspersonalNumberText":"ID-nummer $idnumber$",
 "_contractsealingtextssignedAtText":"Ondertekend $time$",
 "_contractsendbuttontext":"Verstuur",
 "_contractstartsigningbuttontext":"Begin met ondertekenen",

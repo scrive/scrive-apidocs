@@ -243,7 +243,7 @@
 "_contractsealingtextsinitiatorText":"Iniciador",
 "_contractsealingtextsorgNumberText":"N° reg. de empresa $companynumber$",
 "_contractsealingtextspartnerText":"Partes firmantes",
-"_contractsealingtextspersonalNumberText":"Número de DNI $personalnumber$",
+"_contractsealingtextspersonalNumberText":"Número de DNI $idnumber$",
 "_contractsealingtextssignedAtText":"Firmado $time$",
 "_contractsendbuttontext":"Enviar",
 "_contractstartsigningbuttontext":"Empezar a firmar",
