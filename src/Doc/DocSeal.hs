@@ -98,9 +98,9 @@ personFromSignatory tz boxImages signatory = do
                 , Seal.phoneverified = False
                 , Seal.fields = fieldsFromSignatory boxImages signatory
                 , Seal.signtime = stime
-                , Seal.signedAtText2 = signedAtText
-                , Seal.personalNumberText2 = personalNumberText
-                , Seal.companyNumberText2 = companyNumberText
+                , Seal.signedAtText = signedAtText
+                , Seal.personalNumberText = personalNumberText
+                , Seal.companyNumberText = companyNumberText
                 }
 
 personExFromSignatoryLink :: (MonadDB m,MonadBaseControl IO m, TemplatesMonad m)
@@ -290,8 +290,6 @@ createSealingTextsForDocument document hostpart = do
         F.value "verifyurl" ("https://scrive.com/verify"::String)
 
   verificationTitle' <- render "_contractsealingtexts"
-  docPrefix' <- render "_sealingtextsdocPrefix"
-  signedText' <- render "_contractsealingtextssignedText"
   partnerText' <- render "_contractsealingtextspartnerText"
   initiatorText' <- render "_contractsealingtextsinitiatorText"
   documentText' <- render "_documentText"
@@ -304,8 +302,6 @@ createSealingTextsForDocument document hostpart = do
 
   let sealingTexts = Seal.SealingTexts
         { verificationTitle    = verificationTitle'
-        , docPrefix            = docPrefix'
-        , signedText           = signedText'
         , partnerText          = partnerText'
         , initiatorText        = initiatorText'
         , documentText         = documentText'
@@ -421,15 +417,21 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
       mainDocumentText <- renderLocalTemplate document "_mainDocument"
                           $ (return ())
 
+      documentNumberText <- renderLocalTemplate document "_contractsealingtextsDocumentNumber" $ do
+        F.value "documentnumber" $ paddeddocid
+
+      initialsText <- renderLocalTemplate document "_contractsealingtextsInitialsText" $ do
+        F.value "initials" $ initials
+
       return $ Seal.SealSpec
             { Seal.input          = inputpath
             , Seal.output         = outputpath
-            , Seal.documentNumber = paddeddocid
+            , Seal.documentNumberText = documentNumberText
             , Seal.persons        = persons
             , Seal.secretaries    = secretaries
             , Seal.initiator      = initiator
             , Seal.history        = history
-            , Seal.initials       = initials
+            , Seal.initialsText       = initialsText
             , Seal.hostpart       = hostpart
             , Seal.staticTexts    = staticTexts
             , Seal.attachments    = docAttachments ++ [evidenceattachment, evidenceOfIntent]

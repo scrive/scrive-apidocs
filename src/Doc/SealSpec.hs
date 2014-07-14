@@ -17,9 +17,9 @@ data Person =
            , phoneverified       :: Bool
            , fields              :: [Field]
            , signtime            :: String
-           , signedAtText2       :: String
-           , personalNumberText2 :: String
-           , companyNumberText2  :: String
+           , signedAtText        :: String
+           , personalNumberText  :: String
+           , companyNumberText   :: String
            }
     deriving (Eq,Ord,Show,Read)
 
@@ -38,9 +38,9 @@ instance J.ToJSValue Person where
     J.value "phoneverified" $ phoneverified person
     J.value "fields" $ map J.toJSValue $ fields person
     J.value "signtime" $ signtime person
-    J.value "signedAtText" $ signedAtText2 person
-    J.value "personalNumberText" $ personalNumberText2 person
-    J.value "companyNumberText" $ companyNumberText2 person
+    J.value "signedAtText" $ signedAtText person
+    J.value "personalNumberText" $ personalNumberText person
+    J.value "companyNumberText" $ companyNumberText person
 
 -- | Field coordinates are in screen coordinate space. That means:
 --
@@ -116,12 +116,12 @@ instance J.ToJSValue SealAttachment where
 data SealSpec = SealSpec
     { input          :: String
     , output         :: String
-    , documentNumber :: String
+    , documentNumberText :: String
     , persons        :: [Person]
     , secretaries    :: [Person]
     , initiator      :: Maybe Person
     , history        :: [HistEntry]
-    , initials       :: String
+    , initialsText   :: String
     , hostpart       :: String
     , staticTexts    :: SealingTexts
     , attachments    :: [SealAttachment]
@@ -133,12 +133,12 @@ instance J.ToJSValue SealSpec where
   toJSValue SealSpec{..} = J.runJSONGen $ do
     J.value "input" input
     J.value "output" output
-    J.value "documentNumber" documentNumber
+    J.value "documentNumberText" documentNumberText
     J.value "persons" persons
     J.value "secretaries" secretaries
     J.value "initiator" initiator
     J.value "history" history
-    J.value "initials" initials
+    J.value "initialsText" initialsText
     J.value "hostpart" hostpart
     J.value "staticTexts" staticTexts
     J.value "attachments" attachments
@@ -196,8 +196,6 @@ instance J.ToJSValue HistEntry where
 -}
 data SealingTexts = SealingTexts
   { verificationTitle  :: String -- Big title at last page
-  , docPrefix          :: String -- ex. Doc. nr (last page and all footers)
-  , signedText         :: String -- ex. Underteknat (all footers)
   , partnerText        :: String -- Header for partner list
   , initiatorText      :: String -- Header for initiator
   , documentText       :: String -- Header for documents list
@@ -213,8 +211,6 @@ data SealingTexts = SealingTexts
 instance J.ToJSValue SealingTexts where
   toJSValue SealingTexts{..} = J.runJSONGen $ do
    J.value "verificationTitle" verificationTitle
-   J.value "docPrefix" docPrefix
-   J.value "signedText" signedText
    J.value "partnerText" partnerText
    J.value "initiatorText" initiatorText
    J.value "documentText" documentText
