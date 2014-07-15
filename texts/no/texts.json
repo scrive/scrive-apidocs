@@ -696,7 +696,7 @@
 "_sampleSignViewAttachmentsTitle":"Les vedlegg",
 "_sampleSignViewDemoDocumentName":"Demo-dokument",
 "_sampleSignViewEmail":"E-post",
-"_sampleSignViewFollowTheArrow":"",
+"_sampleSignViewFollowTheArrow":"Følg <span class='arrowtext'>pilen</span>",
 "_sampleSignViewHeader":"Navn",
 "_sampleSignViewMandatoryAction":"Obligatorisk handling",
 "_sampleSignViewOptionalAction":"Valgfri handling",

@@ -696,7 +696,7 @@
 "_sampleSignViewAttachmentsTitle":"Läs bilaga",
 "_sampleSignViewDemoDocumentName":"Demo-dokument",
 "_sampleSignViewEmail":"E-post",
-"_sampleSignViewFollowTheArrow":"",
+"_sampleSignViewFollowTheArrow":"Följ <span class='arrowtext'>pilen</span>",
 "_sampleSignViewHeader":"Namn",
 "_sampleSignViewMandatoryAction":"Obligatoriskt att fylla i",
 "_sampleSignViewOptionalAction":"Valfritt att fylla i",
