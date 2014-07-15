@@ -52,7 +52,8 @@ window.PageTask = Backbone.Model.extend({
     labelCss: {},
     arrowColour: undefined,
     pointSelector : undefined,
-    type: undefined
+    type: undefined,
+    field: undefined,
   },
   initialize: function(args) {
     _.bindAll(this, 'update');
@@ -81,6 +82,9 @@ window.PageTask = Backbone.Model.extend({
   },
   isSignatoryAttachmentTask : function() {
     return this.get("type") == 'signatory-attachment';
+  },
+  field : function() {
+    return this.get("field");
   },
   isSignTask : function() {
     return this.get("type") == 'sign';

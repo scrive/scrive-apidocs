@@ -79,7 +79,7 @@ var SignatureDrawOrTypeModel= Backbone.Model.extend({
     // Account for if this signature has already been drawn or if this signature task is the only *field* task left
     // This assumes that there is not a signature in the extra details field AND placed on the document (this is always true at the moment)
     var isSignatureFieldOnDocument = !DocumentExtraDetails.askForSignature(signatory);
-    var isThisSignatureFieldTheLastField = !signatureDrawn && numberOfIncompleteFieldTasks == 1;
+    var isThisSignatureFieldTheLastField = numberOfIncompleteFieldTasks == 1 && incompleteFieldTasks[0].field() == this.field();
     if (isSignatureFieldOnDocument && isThisSignatureFieldTheLastField) { 
       numberOfIncompleteFieldTasks = 0; 
     }

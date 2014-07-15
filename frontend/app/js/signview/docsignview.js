@@ -322,6 +322,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
 
                 var task = new PageTask({
                     type: 'field',
+                    field: placement.field(),
                     isComplete: function() {
                     return placement.field().readyForSign();
                     },
