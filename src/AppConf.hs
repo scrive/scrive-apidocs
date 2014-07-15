@@ -98,32 +98,28 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> field "logica"
       logicaConfig
       "Logica (Elegitimation) configuration"
-  <*> fieldDef "admins" []
+  <*> field "admins"
       admins
       "email addresses of people regarded as admins"
-  <*> fieldDef "sales" []
+  <*> field "sales"
       sales
       "email addresses of people regarded as sales admins"
-  <*> fieldDef "initial_users" []
+  <*> field "initial_users"
       initialUsers
       "email and passwords for initial users"
   <*> field "recurly"
       recurlyConfig
       "Recurly configuration for payments"
-  <*> fieldDef "mixpanel" ""
+  <*> field "mixpanel"
       mixpanelToken
       "Token for Mixpanel"
-  <*> fieldDef "google_analytics" ""
+  <*> field "google_analytics"
       googleanalyticsToken
       "Token for Google Analytics"
-  <*> fieldDef "homebase" ""
+  <*> field "homebase"
       homebase
       "url fragment where to fetch scripts"
-  <*> fieldDef "ntp_servers" [ "0.ubuntu.pool.ntp.org"
-                              , "1.ubuntu.pool.ntp.org"
-                              , "2.ubuntu.pool.ntp.org"
-                              , "3.ubuntu.pool.ntp.org"
-                              ]
+  <*> field "ntp_servers"
       ntpServers
       "List of NTP servers to contact to get estimate of host clock error"
   <*> field "salesforce"

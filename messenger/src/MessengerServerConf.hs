@@ -19,7 +19,7 @@ data MessengerServerConf = MessengerServerConf
 unjsonMessengerServerConf :: UnjsonDef MessengerServerConf
 unjsonMessengerServerConf = objectOf $ pure MessengerServerConf
   <*> (pure (,)
-         <*> fieldDefBy "bind_ip" 0
+         <*> fieldBy "bind_ip"
             (fst . mscHttpBindAddress)
             "IP to listen on, defaults to 0.0.0.0"
             unjsonIPv4AsWord32

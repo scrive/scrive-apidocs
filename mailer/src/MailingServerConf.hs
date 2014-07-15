@@ -27,7 +27,7 @@ data MailingServerConf = MailingServerConf {
 unjsonMailingServerConf :: UnjsonDef MailingServerConf
 unjsonMailingServerConf = objectOf $ pure MailingServerConf
   <*> (pure (,)
-         <*> fieldDefBy "bind_ip" 0
+         <*> fieldBy "bind_ip"
             (fst . mscHttpBindAddress)
             "IP to listen on, defaults to 0.0.0.0"
             unjsonIPv4AsWord32
@@ -57,7 +57,7 @@ unjsonMailingServerConf = objectOf $ pure MailingServerConf
        <*> field "secret_key"
          (\(_,_,x) -> x)
          "Amazon secret key")
-  <*> fieldDef "test_receivers" []
+  <*> field "test_receivers"
       testReceivers
       "Email addresses of people regarded as admins"
 
