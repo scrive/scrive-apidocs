@@ -265,7 +265,7 @@ javascriptLocalisation =
 
            }
           , questionnaire : {
-               heyImViktor: "$_questionnaireHeyImViktor()$"
+               heyImViktorFromScrive: "$_questionnaireHeyImViktorFromScrive()$"
              , ourEsignService: "$_questionnaireOurEsignService()$"
              , quickQuestion: "$_questionnaireQuickQuestion()$"
              , enjoySigning: "$_questionnaireEnjoySigning()$"

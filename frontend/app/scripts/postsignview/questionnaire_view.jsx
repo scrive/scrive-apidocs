@@ -114,7 +114,10 @@ define(['React', 'StateMachine', 'postsignview/questionnaire_question_views'], f
                 <div className="wrapper">
                   <img className="viktor" src="/img/questionnaire/viktor.png" />
                   <div className="heyimviktor">
-                    { localization.questionnaire.heyImViktor } <span className="normal-weight">Scrive!</span><br />
+                    <span
+                      dangerouslySetInnerHTML={{__html: localization.questionnaire.heyImViktorFromScrive}}>
+                    </span>
+                    <br />
                     { localization.questionnaire.ourEsignService }
                   </div>
                   <div className="notch"></div>
