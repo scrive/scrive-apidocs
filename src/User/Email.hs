@@ -6,6 +6,7 @@ import Control.Applicative
 import DB
 import Data.Aeson
 import Data.Typeable
+import Data.Unjson
 
 -- newtypes
 newtype Email = Email { unEmail :: String }
@@ -24,3 +25,6 @@ instance FromJSON Email where
 
 instance ToJSON Email where
   toJSON = toJSON . unEmail
+
+instance Unjson Email where
+  unjsonDef = unjsonAeson
