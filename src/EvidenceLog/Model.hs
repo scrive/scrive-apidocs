@@ -264,7 +264,8 @@ data CurrentEvidenceEventType =
   UpdateFieldSignatureEvidence                    |
   UpdateFieldTextEvidence                         |
   SMSPinSendEvidence                              |
-  SMSPinDeliveredEvidence
+  SMSPinDeliveredEvidence                         |
+  ChangeAuthenticationMethodEvidence
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 -- Evidence types that are not generated anymore by the system.  Not
@@ -421,6 +422,7 @@ instance ToSQL EvidenceEventType where
   toSQL (Current UpdateFieldTextEvidence)                          = toSQL (85::Int16)
   toSQL (Current SMSPinSendEvidence)                               = toSQL (86::Int16)
   toSQL (Current SMSPinDeliveredEvidence)                          = toSQL (87::Int16)
+  toSQL (Current ChangeAuthenticationMethodEvidence)               = toSQL (88::Int16)
 
 instance FromSQL EvidenceEventType where
   type PQBase EvidenceEventType = PQBase Int16
@@ -514,6 +516,7 @@ instance FromSQL EvidenceEventType where
       85 -> return (Current UpdateFieldTextEvidence)
       86 -> return (Current SMSPinSendEvidence)
       87 -> return (Current SMSPinDeliveredEvidence)
+      88 -> return (Current ChangeAuthenticationMethodEvidence)
       _ -> E.throwIO $ RangeError {
         reRange = [(1, 82)]
       , reValue = n

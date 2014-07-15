@@ -10,6 +10,7 @@ module Doc.Model.Update
   , LogSignWithELegFailureForDocument(..)
   , ChangeSignatoryEmailWhenUndelivered(..)
   , ChangeSignatoryPhoneWhenUndelivered(..)
+  , ChangeAuthenticationMethod(..)
   , CloseDocument(..)
   , DeleteSigAttachment(..)
   , RemoveOldDrafts(..)
@@ -566,6 +567,86 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m ChangeSignatoryPhoneW
           ChangeSignatoryPhoneWhenUndeliveredEvidence
           (F.value "oldphone" oldphone >> F.value "newphone" phone)
           actor
+
+data ChangeAuthenticationMethod = ChangeAuthenticationMethod SignatoryLinkID AuthenticationMethod (Maybe String) Actor
+instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m ChangeAuthenticationMethod () where
+  update (ChangeAuthenticationMethod slid authenticationMethod valueM actor) = do
+      let extraInfoAuth StandardAuthentication = False
+          extraInfoAuth ELegAuthentication     = True
+          extraInfoAuth SMSPinAuthentication   = True
+          fieldType auth = case auth of
+                                StandardAuthentication ->
+                                    error "ChangeAuthenticationMethod fieldType got called on StandardAuthentication"
+                                ELegAuthentication     -> PersonalNumberFT
+                                SMSPinAuthentication   -> MobileFT
+      (oldauth, sl) <- updateDocumentWithID $ const $ do
+        -- Set the new authentication method in signatory_links
+        -- Return the old authentication method
+        (oldauth :: AuthenticationMethod) <- kRunAndFetch1OrThrowWhyNot unSingle $ sqlUpdate "signatory_links" $ do
+            sqlFrom "signatory_links AS signatory_links_old"
+            sqlWhere "signatory_links.id = signatory_links_old.id"
+            sqlSet "authentication_method" authenticationMethod
+            sqlResult "signatory_links_old.authentication_method"
+            sqlWhereEq "signatory_links.id" slid
+            sqlWhereExists $ sqlSelect "documents" $ do
+                sqlWhere "documents.id = signatory_links.document_id"
+                sqlWhereDocumentStatusIs Pending
+        -- Get the `SignatoryLink`
+        sl <- theDocumentID >>= \did -> dbQuery $ GetSignatoryLinkByID did slid Nothing
+        -- When the old authentication method needed extra info and the new one
+        -- isin't the same type, then we need to make the field for the old
+        -- authentication method non obligatory
+        when (extraInfoAuth oldauth && oldauth /= authenticationMethod) $ do
+            kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
+                sqlSet "obligatory" False
+                sqlWhereEq "signatory_link_id" slid
+                sqlWhereEq "type" $ fieldType oldauth
+        -- When the new authentication method needs extra info then we need to
+        -- either add it (if provided) or make obligatory for the signatory
+        when (extraInfoAuth authenticationMethod) $ do
+          case getFieldOfType (fieldType authenticationMethod) (signatoryfields sl) of
+               Just _  -> kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
+                   case valueM of
+                        Just a  -> sqlSet "value" a
+                        Nothing -> return ()
+                   sqlSet "obligatory" True
+                   sqlWhereEq "signatory_link_id" slid
+                   sqlWhereEq "type" $ fieldType authenticationMethod
+               -- Note: default in table for `obligatory` is true
+               Nothing -> runQuery_ . sqlInsert "signatory_link_fields" $ do
+                   case valueM of
+                        Just a  -> sqlSet "value" a
+                        Nothing -> return ()
+                   sqlSet "signatory_link_id" slid
+                   sqlSet "type" $ fieldType authenticationMethod
+                   sqlSet "placements" ("[]"::String)
+        updateMTimeAndObjectVersion (actorTime actor)
+        return (oldauth, sl)
+      -- Evidence Events
+      -- One for changing the value, the other for changing authentication method
+      when (extraInfoAuth authenticationMethod && isJust valueM) $ do
+          void $ update $ InsertEvidenceEvent
+              UpdateFieldTextEvidence
+              (F.value "fieldname" (case fieldType authenticationMethod of
+                   PersonalNumberFT -> "ID number" :: String
+                   MobileFT         -> "Mobile number"
+                   _                -> ""
+                   )
+              >> F.value "value" (fromMaybe "" valueM))
+              actor
+      when (authenticationMethod /= oldauth) $ do
+          let authName :: AuthenticationMethod -> String
+              authName a = case a of
+                  StandardAuthentication -> "no extra authentication"
+                  ELegAuthentication     -> "eID"
+                  SMSPinAuthentication   -> "PIN by SMS"
+          void $ update $ InsertEvidenceEvent
+              ChangeAuthenticationMethodEvidence
+              (F.value "signatory" (getSmartName sl)
+              >> F.value "oldauth" (authName oldauth)
+              >> F.value "newauth" (authName authenticationMethod)
+              )
+              actor
 
 data PreparationToPending = PreparationToPending Actor TimeZoneName
 instance (MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m) => DBUpdate m PreparationToPending () where

@@ -131,9 +131,10 @@ versionedAPI _version = choice [
 
   dir "sendsmspin"            $ hPost $ toK2 $ apiCallSendSMSPinCode,
 
-  dir "restart"            $ hPost $ toK1 $ apiCallRestart,
-  dir "prolong"            $ hPost $ toK1 $ apiCallProlong,
-  dir "setautoreminder"    $ hPost $ toK1 $ apiCallSetAutoReminder,
+  dir "restart"              $ hPost $ toK1 $ apiCallRestart,
+  dir "prolong"              $ hPost $ toK1 $ apiCallProlong,
+  dir "setautoreminder"      $ hPost $ toK1 $ apiCallSetAutoReminder,
+  dir "changeauthentication" $ hPost $ toK2 $ apiChangeAuthentication,
 
 
   dir "remind"             $ hPost $ toK1 $ apiCallRemind,
@@ -573,7 +574,7 @@ apiCallProlong did =  api $ do
       Accepted <$> (documentJSON (Just user) False True True Nothing =<< theDocument)
 
 
-apiCallSetAutoReminder :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> m Response
+apiCallSetAutoReminder :: (MonadBaseControl IO m, Kontrakcja m) => DocumentID -> m Response
 apiCallSetAutoReminder did =  api $ do
     ctx <- getContext
     checkObjectVersionIfProvided did
@@ -596,6 +597,42 @@ apiCallSetAutoReminder did =  api $ do
       triggerAPICallbackIfThereIsOne =<< theDocument
       Accepted <$> (documentJSON (Just $ user) False True True Nothing =<< theDocument)
 
+apiChangeAuthentication :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
+apiChangeAuthentication did slid = api $ do
+  (user, actor, _) <- getAPIUser APIDocSend
+  withDocumentID did $ do
+      -- Security and validity checks
+      auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
+      when (auid /= userid user) $
+          throwIO . SomeKontraException $ forbidden'
+      unlessM (isPending <$> theDocument) $
+          throwIO . SomeKontraException $ badInput "Document status must be pending"
+      doc <- theDocument
+      let getSignatoryLinkFromIDinDocument :: Document -> SignatoryLinkID -> Maybe SignatoryLink
+          getSignatoryLinkFromIDinDocument d siglid = find (\a -> signatorylinkid a == siglid) (documentsignatorylinks d)
+          siglink = getSignatoryLinkFromIDinDocument doc slid
+      when (isNothing siglink) $
+          throwIO . SomeKontraException $ badInput $ "Signatory link id " ++ (show slid) ++ " not valid for document id " ++ (show did)
+      when (maybe False (isJust . maybesigninfo) siglink) $
+          throwIO . SomeKontraException $ badInput $ "Signatory link id " ++ (show slid) ++ " has already signed"
+      -- Get the POST data and check it
+      authentication_type <- getDataFn' (look "authentication_type")
+      maybeAuthValue      <- getDataFn' (look "authentication_value")
+      when (isNothing authentication_type) $
+          throwIO . SomeKontraException $ badInput $ "`authentication_type` must be given. "
+                                          ++ "Supported values are: `standard`, `eleg`, `sms_pin`."
+      let authenticationMethod = case fromMaybe "" authentication_type of
+              "standard" -> Right StandardAuthentication
+              "eleg"     -> Right ELegAuthentication
+              "sms_pin"  -> Right SMSPinAuthentication
+              a -> Left a
+      -- Change authentication method (if input is a valid method)
+      case authenticationMethod of
+           Right a -> dbUpdate $ ChangeAuthenticationMethod slid a maybeAuthValue actor
+           Left  a -> throwIO . SomeKontraException
+                      $ badInput $ "Invalid authentication method: `" ++ a ++ "` was given. "
+                        ++ "Supported values are: `standard`, `eleg`, `sms_pin`."
+      Accepted <$> (documentJSON (Just user) False True True Nothing =<< theDocument)
 
 apiCallRemind :: Kontrakcja m => DocumentID -> m Response
 apiCallRemind did =  api $ do

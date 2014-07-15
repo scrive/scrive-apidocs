@@ -71,6 +71,8 @@ ChangeSignatoryEmailWhenUndeliveredEvidenceText=The email address for the signat
 ###
 ChangeSignatoryPhoneWhenUndeliveredEvidenceText=The phone number for the signatory was changed from $oldphone$ to $newphone$ by $actor$.
 ###
+ChangeAuthenticationMethodEvidenceText=$actor$ changed authentication for $signatory$ from “$oldauth$” to “$newauth$”.
+###
 CloseDocumentEvidenceTextFull=Scrive E-sign locked the document from further modifications by the signing parties.
 ###
 CloseDocumentEvidenceText=*
