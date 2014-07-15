@@ -53,7 +53,7 @@ window.PageTask = Backbone.Model.extend({
     arrowColour: undefined,
     pointSelector : undefined,
     type: undefined,
-    field: undefined,
+    field: undefined
   },
   initialize: function(args) {
     _.bindAll(this, 'update');
