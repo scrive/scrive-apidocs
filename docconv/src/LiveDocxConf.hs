@@ -15,16 +15,16 @@ data LiveDocxConf = LiveDocxConf {
 
 unjsonLiveDocxConf :: UnjsonDef LiveDocxConf
 unjsonLiveDocxConf = objectOf $ pure LiveDocxConf
-  <*> field' "url"
+  <*> field "url"
       url
       "URL"
-  <*> field' "service_url"
+  <*> field "service_url"
       serviceURL
       "Service URL"
-  <*> field' "username"
+  <*> field "username"
       username
       "Username"
-  <*> field' "password"
+  <*> field "password"
       password
       "Password"
 

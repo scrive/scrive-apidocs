@@ -11,13 +11,13 @@ data RecurlyConfig = RecurlyConfig { recurlySubdomain  :: String
 
 unjsonRecurlyConfig :: UnjsonDef RecurlyConfig
 unjsonRecurlyConfig = objectOf $ pure RecurlyConfig
-  <*> field' "subdomain"
+  <*> field "subdomain"
       recurlySubdomain
       "Recurly subdomain"
-  <*> field' "api_key"
+  <*> field "api_key"
       recurlyAPIKey
       "Recurly API key"
-  <*> field' "private_key"
+  <*> field "private_key"
       recurlyPrivateKey
       "Recurly private key"
 

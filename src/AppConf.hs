@@ -54,35 +54,36 @@ unjsonAppConf = objectOf $ pure AppConf
             (fst . httpBindAddress)
             "IP to listen on, defaults to 0.0.0.0"
             unjsonIPv4AsWord32
-         <*> field' "bind_port"
+         <*> field "bind_port"
             (snd . httpBindAddress)
             "Port to listen on")
-  <*> field' "hostpart"
+  <*> field "hostpart"
       hostpart
       "A string how this server is visible on outside"
-  <*> fieldDef' "https" True
+  <*> fieldDef "https" True
       useHttps
       "Should use https"
-  <*> field' "store"
+  <*> field "store"
       store
       "Where to put database files"
   <*> fieldOptBy "amazon"
       amazonConfig
       "Amazon configuration"
       (objectOf $ pure (,,)
-       <*> field' "bucket"
+       <*> field "bucket"
          (\(x,_,_) -> x)
          "In which bucket to store new files"
-       <*> field' "access_key"
+       <*> field "access_key"
          (\(_,x,_) -> x)
          "Amazon access key"
-       <*> field' "secret_key"
+       <*> field "secret_key"
          (\(_,_,x) -> x)
          "Amazon secret key")
-  <*> field' "database"
+  <*> fieldBy "database"
       dbConfig
       "Database connection string"
-  <*> fieldDef' "production" False
+      unjsonAeson
+  <*> fieldDef "production" False
       production
       "Is this production server"
   <*> field "guardtime"
@@ -97,28 +98,28 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> field "logica"
       logicaConfig
       "Logica (Elegitimation) configuration"
-  <*> fieldDef' "admins" []
+  <*> fieldDef "admins" []
       admins
       "email addresses of people regarded as admins"
-  <*> fieldDef' "sales" []
+  <*> fieldDef "sales" []
       sales
       "email addresses of people regarded as sales admins"
-  <*> fieldDef' "initial_users" []
+  <*> fieldDef "initial_users" []
       initialUsers
       "email and passwords for initial users"
   <*> field "recurly"
       recurlyConfig
       "Recurly configuration for payments"
-  <*> fieldDef' "mixpanel" ""
+  <*> fieldDef "mixpanel" ""
       mixpanelToken
       "Token for Mixpanel"
-  <*> fieldDef' "google_analytics" ""
+  <*> fieldDef "google_analytics" ""
       googleanalyticsToken
       "Token for Google Analytics"
-  <*> fieldDef' "homebase" ""
+  <*> fieldDef "homebase" ""
       homebase
       "url fragment where to fetch scripts"
-  <*> fieldDef' "ntp_servers" [ "0.ubuntu.pool.ntp.org"
+  <*> fieldDef "ntp_servers" [ "0.ubuntu.pool.ntp.org"
                               , "1.ubuntu.pool.ntp.org"
                               , "2.ubuntu.pool.ntp.org"
                               , "3.ubuntu.pool.ntp.org"

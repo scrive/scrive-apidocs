@@ -74,10 +74,10 @@ data Address = Address {
 
 unjsonAddress :: UnjsonDef Address
 unjsonAddress = objectOf $ pure Address
-  <*> field' "name"
+  <*> field "name"
      addrName
      "Name in email address"
-  <*> field' "email"
+  <*> field "email"
      addrEmail
      "Email address"
 

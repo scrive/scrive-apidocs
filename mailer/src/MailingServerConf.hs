@@ -31,12 +31,13 @@ unjsonMailingServerConf = objectOf $ pure MailingServerConf
             (fst . mscHttpBindAddress)
             "IP to listen on, defaults to 0.0.0.0"
             unjsonIPv4AsWord32
-         <*> field' "bind_port"
+         <*> field "bind_port"
             (snd . mscHttpBindAddress)
             "Port to listen on")
-  <*> field' "database"
+  <*> fieldBy "database"
       mscDBConfig
       "Database connection string"
+      (unjsonAeson)
   <*> field "master_sender"
       mscMasterSender
       "Master sender"
@@ -47,13 +48,13 @@ unjsonMailingServerConf = objectOf $ pure MailingServerConf
       mscAmazonConfig
       "Amazon configuration"
       (objectOf $ pure (,,)
-       <*> field' "bucket"
+       <*> field "bucket"
          (\(x,_,_) -> x)
          "In which bucket to store new files"
-       <*> field' "access_key"
+       <*> field "access_key"
          (\(_,x,_) -> x)
          "Amazon access key"
-       <*> field' "secret_key"
+       <*> field "secret_key"
          (\(_,_,x) -> x)
          "Amazon secret key")
   <*> fieldDef "test_receivers" []

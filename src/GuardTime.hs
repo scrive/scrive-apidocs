@@ -40,13 +40,13 @@ data GuardTimeConf = GuardTimeConf
 
 unjsonGuardTimeConf :: UnjsonDef GuardTimeConf
 unjsonGuardTimeConf = objectOf $ pure GuardTimeConf
-  <*> field' "url"
+  <*> field "url"
       guardTimeURL
       "GuardTime URL"
-  <*> field' "extending_service_url"
+  <*> field "extending_service_url"
       guardTimeExtendingServiceURL
       "GuardTime Extendind Service URL"
-  <*> field' "control_publications_url"
+  <*> field "control_publications_url"
       guardTimeControlPublicationsURL
       "GuardTime Control Publications URL"
 

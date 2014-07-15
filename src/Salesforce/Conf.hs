@@ -23,25 +23,25 @@ data SalesforceConf = SalesforceConf {
 
 unjsonSalesforceConf :: UnjsonDef SalesforceConf
 unjsonSalesforceConf = objectOf $ pure SalesforceConf
-  <*> field' "authentication_url"
+  <*> field "authentication_url"
       salesforceAuthenticationUrl
       "SalesForce OAuth authentication url"
-  <*> field' "token_url"
+  <*> field "token_url"
       salesforceTokenUrl
       "SalesForce OAuth token url"
-  <*> field' "consumer_key"
+  <*> field "consumer_key"
       salesforceConsumerKey
       "SalesForce OAuth consumer key"
-  <*> field' "consumer_secret"
+  <*> field "consumer_secret"
       salesforceConsumerSecret
       "SalesForce OAuth consumer secret"
-  <*> field' "redirect_url"
+  <*> field "redirect_url"
       salesforceRedirectUrl
       "SalesForce OAuth redirect url"
-  <*> field' "api_token"
+  <*> field "api_token"
       salesforceIntegrationAPIToken
       "SalesForce OAuth API token"
-  <*> field' "api_secret"
+  <*> field "api_secret"
       salesforceIntegrationAPISecret
       "SalesForce OAuth API secret"
 

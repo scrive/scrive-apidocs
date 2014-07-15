@@ -13,19 +13,19 @@ data LogicaConfig = LogicaConfig { logicaEndpoint      :: String,  -- ^ URL to L
 
 unjsonLogicaConfig :: UnjsonDef LogicaConfig
 unjsonLogicaConfig = objectOf $ pure LogicaConfig
-  <*> field' "endpoint"
+  <*> field "endpoint"
       logicaEndpoint
       "URL"
-  <*> field' "service_id"
+  <*> field "service_id"
       logicaServiceID
       "Service ID"
-  <*> field' "cert_file"
+  <*> field "cert_file"
       logicaCertFile
       "Path to certification file"
-  <*> field' "mbi_display_name"
+  <*> field "mbi_display_name"
       logicaMBIDisplayName
       "Mobile BankiD display name"
-  <*> field' "mbi_endpoint"
+  <*> field "mbi_endpoint"
       logicaMBIEndpoint
       "Mobile BankiD endpoint"
 

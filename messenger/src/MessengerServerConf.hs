@@ -23,12 +23,13 @@ unjsonMessengerServerConf = objectOf $ pure MessengerServerConf
             (fst . mscHttpBindAddress)
             "IP to listen on, defaults to 0.0.0.0"
             unjsonIPv4AsWord32
-         <*> field' "bind_port"
+         <*> field "bind_port"
             (snd . mscHttpBindAddress)
             "Port to listen on")
-  <*> field' "database"
+  <*> fieldBy "database"
       mscDBConfig
       "Database connection string"
+      unjsonAeson
   <*> field "master_sender"
       mscMasterSender
       "Master sender"

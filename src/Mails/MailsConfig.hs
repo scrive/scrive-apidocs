@@ -27,13 +27,13 @@ data MailsConfig = MailsConfig {
 
 unjsonMailsConfig :: UnjsonDef MailsConfig
 unjsonMailsConfig = objectOf $ pure MailsConfig
-  <*> fieldDef' "backdoor_open" False
+  <*> fieldDef "backdoor_open" False
       isBackdoorOpen
       "Should backdoor be open"
-  <*> field' "info_email"
+  <*> field "info_email"
       ourInfoEmail
       "Info email"
-  <*> field' "info_email_nice_name"
+  <*> field "info_email_nice_name"
       ourInfoEmailNiceName
       "Info email nice name"
 
