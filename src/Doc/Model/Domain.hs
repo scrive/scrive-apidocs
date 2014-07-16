@@ -71,6 +71,7 @@ documentDomainToSQL (DocumentsVisibleViaAccessToken token) = do
   sqlWhereEq "documents.token" token
 documentDomainToSQL (DocumentsVisibleToUser uid) = do
   sqlWhereDocumentWasNotPurged
+  sqlWhereDocumentIsNotReallyDeleted
   sqlWhereAny $ do
     sqlWhereAll $ do           -- 1: see own documents
       sqlWhereEq "same_company_users.id" uid
