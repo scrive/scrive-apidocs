@@ -1652,7 +1652,7 @@ testGetDocumentsByCompanyWithFilteringCompany = doTimes 10 $ do
     _ <- dbUpdate $ SetDocumentTags (S.singleton $ DocumentTag name value) actor
     docs' <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [] [] (0,maxBound)
 
-    assertEqual "Should have 1 document returned" (length docs') 1
+    assertEqual "Should have 1 document returned" 1 (length docs')
 
 
 testGetDocumentsByCompanyWithFilteringFilters :: TestEnv ()
