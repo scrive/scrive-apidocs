@@ -366,8 +366,6 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m ArchiveDocument () wh
           sqlWhereUserIsSelfOrCompanyAdmin
 
         sqlWhereExists $ sqlSelect "documents" $ do
-          sqlJoinOn "users AS same_company_users" "TRUE"
-
           sqlWhere $ "signatory_links.document_id = " <?> did
           sqlWhere "documents.id = signatory_links.document_id"
 
@@ -388,8 +386,6 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m ReallyDeleteDocument 
           sqlWhereUserIsSelfOrCompanyAdmin
 
         sqlWhereExists $ sqlSelect "documents" $ do
-          sqlJoinOn "users AS same_company_users" "TRUE"
-
           sqlWhere $ "signatory_links.document_id = " <?> did
           sqlWhere "documents.id = signatory_links.document_id"
 
