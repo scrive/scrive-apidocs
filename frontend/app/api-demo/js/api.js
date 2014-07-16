@@ -12,6 +12,7 @@ window.ApiCall = Backbone.Model.extend({
         },
         isCreateFromFile : function() {return false;},
         isChangeMainFile : function() {return false;},
+        isChangeAuthenticationMethod : function() {return false;},
         isCreateFromTemplate : function() {return false;},
         isUpdate : function() {return false;},
         isSetAttachments : function() {return false;},
@@ -68,6 +69,8 @@ window.ApiCallView = function(args) {
            return new CreateFromFileApiCallView(args);
         if (args.model.isChangeMainFile())
            return new ChangeMainFileApiCallView(args);
+        else if (args.model.isChangeAuthenticationMethod())
+           return new ChangeAuthenticationMethodApiCallView(args);
         else if (args.model.isCreateFromTemplate())
            return new CreateFromTemplateApiCallView(args);
         else if (args.model.isUpdate())
