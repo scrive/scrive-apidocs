@@ -26,6 +26,7 @@ window.BinListDefinition = function(archive) { return {
                                 title: localization.archive.bin.restore.head,
                                 icon: '/img/modal-icons/restore.png',
                                 content: jQuery("<p class='center'/>").text(localization.archive.bin.restore.body),
+                                oneClick: true,
                                 onAccept : function() {
                                   new Submit({
                                                 url: "/d/restore",

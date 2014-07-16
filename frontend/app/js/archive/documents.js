@@ -208,6 +208,7 @@ window.DocumentsListDefinition = function(archive) { return {
                                 title: localization.archive.documents.remove.action,
                                 icon: '/img/modal-icons/delete.png',
                                 content: confirmationText,
+                                oneClick: true,
                                 onAccept : function() {
                                     mixpanel.track('Delete document');
                                     new Submit({

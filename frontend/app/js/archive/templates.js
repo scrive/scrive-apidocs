@@ -127,6 +127,7 @@ window.TemplatesListDefinition = function(archive) { return {
                                 title: localization.archive.templates.remove.action,
                                 icon: '/img/modal-icons/delete.png',
                                 content: confirmationText,
+                                oneClick: true,
                                 onAccept : function() {
                                     new Submit({
                                                 url: "/d/delete",
