@@ -17,6 +17,9 @@ define(['React', 'Backbone', 'common/backbone_mixin'], function(React, Backbone,
       var signviewbranding = this.props.signviewbranding;
       var hasLink = this.props.link != undefined;
       var showHeader = signviewbranding.ready() && !BrowserInfo.isSmallScreen() && signviewbranding.showheader();
+
+      $('.signview').toggleClass("noheader",!showHeader); // We need to toogle this class here
+
       var bgImage = signviewbranding.signviewbarscolour() != undefined ?  'none' : '';
       var bgColor = signviewbranding.signviewbarscolour() != undefined ?  signviewbranding.signviewbarscolour() : '';
       var color = signviewbranding.signviewbarstextcolour() != undefined ? signviewbranding.signviewbarstextcolour() : '';
