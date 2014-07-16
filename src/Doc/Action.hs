@@ -245,8 +245,7 @@ findAndDoPostDocumentClosedActions
         Just hours -> [DocumentFilterByLatestSignTimeAfter ((60 * hours) `minutesBefore` now)]
 
   docs <- dbQuery $ GetDocuments [DocumentsOfWholeUniverse]
-            ([ DocumentFilterPurged False
-             , DocumentFilterStatuses [Closed] -- here we could include DocumentError as well to get automatic resealing attempted periodically
+            ([ DocumentFilterStatuses [Closed] -- here we could include DocumentError as well to get automatic resealing attempted periodically
              , DocumentFilterBySealStatus [Missing] -- sealed file lacks digital signature, or no sealed file at all
              , DocumentFilterByLatestSignTimeBefore (5 `minutesBefore` now) -- avoid documents that the server is processing in its post-closed thread.
              ] ++ signtimefilter)
@@ -264,8 +263,7 @@ findAndExtendDigitalSignatures = do
   lpt <- latest_publication_time
   Log.mixlog_ $ "extendSignatures: latest publication time is " ++ show lpt
   docs <- dbQuery $ GetDocuments [DocumentsOfWholeUniverse]
-            [ DocumentFilterPurged False
-            , DocumentFilterStatuses [Closed]
+            [ DocumentFilterStatuses [Closed]
             , DocumentFilterByLatestSignTimeBefore lpt
             , DocumentFilterBySealStatus
               [ Guardtime{ extended = False, private = True }

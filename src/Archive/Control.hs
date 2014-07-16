@@ -181,7 +181,7 @@ jsonDocumentsList = do
   let sorting    = docSortingFromParams params
       searching  = docSearchingFromParams params
       pagination2 = ((listParamsOffset params),(listParamsLimit params), Just docsPageSize)
-      filters = filters1 ++ filters2 ++ tagsFilters ++ [DocumentFilterPurged False]
+      filters = filters1 ++ filters2 ++ tagsFilters
 
   format <- getField "format"
   case format of
