@@ -10,6 +10,7 @@ import Doc.DocStateData
 import Control.Monad.State.Class
 import MagicHash
 import Data.Typeable
+import Doc.Conditions
 
 -- | Document security domain.
 --
@@ -64,10 +65,12 @@ documentDomainToSQL :: (MonadState v m, SqlWhere v)
                     => DocumentDomain
                     -> m ()
 documentDomainToSQL (DocumentsOfWholeUniverse) = do
-  sqlWhere "TRUE"
+  sqlWhereDocumentWasNotPurged
 documentDomainToSQL (DocumentsVisibleViaAccessToken token) = do
+  sqlWhereDocumentWasNotPurged
   sqlWhereEq "documents.token" token
-documentDomainToSQL (DocumentsVisibleToUser uid) =
+documentDomainToSQL (DocumentsVisibleToUser uid) = do
+  sqlWhereDocumentWasNotPurged
   sqlWhereAny $ do
     sqlWhereAll $ do           -- 1: see own documents
       sqlWhereEq "same_company_users.id" uid

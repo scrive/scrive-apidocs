@@ -147,12 +147,6 @@ sqlWhereDocumentIDIs :: (MonadState v m, SqlWhere v)
                      => DocumentID -> m ()
 sqlWhereDocumentIDIs did = do
   sqlWhereE (DocumentDoesNotExist did) ("documents.id = " <?> did)
-  sqlWhereDocumentWasNotPurged
-
-sqlWhereDocumentIDIsIncludingPurged :: (MonadState v m, SqlWhere v)
-                                    => DocumentID -> m ()
-sqlWhereDocumentIDIsIncludingPurged did = do
-  sqlWhereE (DocumentDoesNotExist did) ("documents.id = " <?> did)
 
 data SignatoryLinkDoesNotExist = SignatoryLinkDoesNotExist SignatoryLinkID
   deriving (Eq, Ord, Show, Typeable)
