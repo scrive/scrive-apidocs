@@ -18,6 +18,7 @@ var ConfirmationModel = Backbone.Model.extend({
       textfont : undefined,
       textcolor : undefined,
       margin: undefined,
+      oneClick: false,
       signview: false
   },
   initialize : function(args) {
@@ -116,6 +117,9 @@ var ConfirmationModel = Backbone.Model.extend({
   },
   closeVisible : function() {
       return this.get("closeVisible");
+  },
+  oneClick : function() {
+       return this.get("oneClick");
   },
   footerVisible : function() {
       return this.get("footerVisible");
@@ -245,6 +249,7 @@ var ConfirmationView = Backbone.View.extend({
                                  style : BrowserInfo.isSmallScreen() ? "margin-top:-10px" : "",
                                  cssClass: "float-right",
                                  text: this.model.acceptText(),
+                                 oneClick: this.model.oneClick(),
                                  onClick : function() {
                                      if (model.accept() == true)
                                          view.clear();
