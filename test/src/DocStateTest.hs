@@ -647,6 +647,10 @@ testReallyDeleteDocument = doTimes 10 $ do
   withDocument doc $ randomUpdate $ \t->ReallyDeleteDocument (userid author) (systemActor t)
   assertRaisesKontra (\DocumentIsReallyDeleted {} -> True) $
     withDocument doc $ randomUpdate $ \t->ReallyDeleteDocument (userid author) (systemActor t)
+  docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [DocumentFilterByDocumentID (documentid doc)]
+                     [] (0,1)
+  assertEqual "Really deleted documents are not visible to user" [] (map documentid docs)
+
 
 testReallyDeleteDocumentCompanyAdmin :: TestEnv ()
 testReallyDeleteDocumentCompanyAdmin = doTimes 10 $ do
@@ -659,6 +663,10 @@ testReallyDeleteDocumentCompanyAdmin = doTimes 10 $ do
     randomUpdate $ \t->ArchiveDocument (userid adminuser) (systemActor t)
     randomUpdate $ \t->ReallyDeleteDocument (userid adminuser) (systemActor t)
     assertOneArchivedSigLink =<< theDocument
+    doc <- theDocument
+    docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [DocumentFilterByDocumentID (documentid doc)]
+                       [] (0,1)
+    assertEqual "Really deleted documents are not visible to user" [] (map documentid docs)
 
 testReallyDeleteDocumentSomebodyElse :: TestEnv ()
 testReallyDeleteDocumentSomebodyElse = doTimes 10 $ do
