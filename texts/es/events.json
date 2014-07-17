@@ -48,7 +48,7 @@
 "_ReminderSendTextToSignArchiveEmailSMS":"Un recordatorio de firma del documento fue enviado a $signatory$ por email y SMS.$if(text)$ El mensaje de aviso era: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToSignArchiveSMS":"Un recordatorio de firma del documento fue enviado a $signatory$ por SMS.$if(text)$ El mensaje de aviso era: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToSignNotArchiveEmail":"Un recordatorio de firma del documento fue enviado a $signatory$ por email a petición de $actor$.$if(text)$. El aviso del mensaje de $actor$ era: <BR/> <i>$text:noescape()$</i>$endif$",
-"_ReminderSendTextToSignNotArchiveEmailSMS":"Un recordatorio de firma del documento fue enviado a $signatory$ por email y SMS a petición de $actor$.$if(text)$. El aviso del mensaje de $actor$ era: <BR/> <i>$text:noescape()$</i>$endif$",
+"_ReminderSendTextToSignNotArchiveEmailSMS":"Un recordatorio de firma del documento fue enviado a $signatory$ por email y SMS a petición de $actor$.$if(text)$ El aviso del mensaje de $actor$ era: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToSignNotArchiveSMS":"Un recordatorio de firma del documento fue enviado a $signatory$ por SMS a petición de $actor$.$if(text)$ El aviso del mensaje de $actor$ era: <BR/> <i>$text:noescape()$</i>$endif$",
 "_RestartDocumentEvidenceTextSimpleArchive":"El documento fue abierto para ser editado.",
 "_RestartDocumentEvidenceTextSimpleNotArchive":"El documento fue abierto para ser editado por $actor$ en la interfaz de Scrive para diseñar los procesos de firma. ",
