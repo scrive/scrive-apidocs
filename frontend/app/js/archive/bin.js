@@ -44,14 +44,14 @@ window.BinListDefinition = function(archive) { return {
                           }
                }),
         new ListAction({
-            name : localization.archive.documents.remove.action,
-            emptyMessage :  localization.archive.documents.cancel.emptyMessage,
+            name : localization.archive.bin.remove.action,
+            emptyMessage :  localization.archive.bin.cancel.emptyMessage,
             size: 'normal',
             avaible : function(doc){ return true;},
             onSelect : function(docs) {
-                        var confirmationText = $('<span />').html(localization.archive.documents.remove.body);
+                        var confirmationText = $('<span />').html(localization.archive.bin.remove.body);
                         confirmationText.append(" ");
-                        confirmationText.append($('<span />').html(localization.archive.documents.remove.cannotUndo));
+                        confirmationText.append($('<span />').html(localization.archive.bin.remove.cannotUndo));
                         var listElement = confirmationText.find('.put-one-or-more-things-to-be-deleted-here');
                         if (docs.length == 1) {
                           listElement.html($('<strong />').text(docs[0].field("title")));
@@ -61,7 +61,7 @@ window.BinListDefinition = function(archive) { return {
                              var confirmationPopup = new Confirmation({
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
-                                title: localization.archive.documents.remove.action,
+                                title: localization.archive.bin.remove.action,
                                 icon: '/img/modal-icons/delete.png',
                                 content: confirmationText,
                                 onAccept : function() {
@@ -71,7 +71,7 @@ window.BinListDefinition = function(archive) { return {
                                                 method: "POST",
                                                 documentids: "[" + _.map(docs, function(doc){return doc.field("id");}) + "]",
                                                 ajaxsuccess : function() {
-                                                    new FlashMessage({color : "green", content : localization.archive.documents.remove.successMessage});
+                                                    new FlashMessage({color : "green", content : localization.archive.bin.remove.successMessage});
                                                     archive.bin().recall();
                                                     confirmationPopup.clear();
                                                 }

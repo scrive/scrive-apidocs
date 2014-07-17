@@ -696,7 +696,6 @@ javascriptLocalisation =
                     ,  remove : {
                               action: "$_delete()$"
                             , body : "$_listLocalDialogsBody()$"
-                            , cannotUndo: "$_thisActionCannotBeUndone()$"
                             , successMessage : "$_flashMessageDocumentArchiveDone()$"
                         }
                     , csv : {
@@ -782,6 +781,12 @@ javascriptLocalisation =
                             , body : "$_listRestoreDialogBody()$"
                             , successMessage : "$_flashMessageRubbishRestoreDone()$"
                             , emptyMessage : "$_noDocumentChosen()$"
+                        }
+                    ,  remove : {
+                              action: "$_delete()$"
+                            , body : "$_listLocalDialogsBody()$"
+                            , cannotUndo: "$_thisActionCannotBeUndone()$"
+                            , successMessage : "$_flashMessageDocumentArchiveDone()$"
                         }
                     , subheadline : "$_trashBinSubheadline()$"
                     ,  search : "$_SearchDoc()$"
