@@ -14,6 +14,7 @@ import Control.Concurrent.STM
 import qualified Control.Concurrent.Thread.Group as TG
 import qualified Control.Exception.Lifted as E
 import Control.Monad.Base
+import Control.Monad.Trans.Control
 import qualified Log
 
 newtype CronInfo = CronInfo (TVar (WorkerState, Command))
@@ -100,16 +101,16 @@ forkCron_ waitfirst name seconds action = forkCron waitfirst name seconds (\_ ->
 
 -- | Stops given cron thread. Use that before calling wait with appropriate
 -- ThreadGroup object.
-stopCron :: CronInfo -> IO ()
-stopCron (CronInfo ctrl) = atomically . modifyTVar' ctrl $ second (const Finish)
+stopCron :: (MonadBase IO m) => CronInfo -> m ()
+stopCron (CronInfo ctrl) = liftBase (atomically . modifyTVar' ctrl $ second (const Finish))
 
 -- | Start a list of jobs in a local thread group, then perform an action, and finally stop the jobs and wait for the thread group.
-withCronJobs :: [TG.ThreadGroup -> IO CronInfo] -> ((TG.ThreadGroup, [CronInfo]) -> IO a) -> IO a
+withCronJobs :: (MonadBaseControl IO m) => [TG.ThreadGroup -> m CronInfo] -> ((TG.ThreadGroup, [CronInfo]) -> m a) -> m a
 withCronJobs jobs = E.bracket start stop where
   start = do
-    tg <- TG.new
+    tg <- liftBase TG.new
     cil <- sequence (map ($ tg) jobs)
     return (tg, cil)
   stop (tg, cil) = do
     mapM_ stopCron cil
-    TG.wait tg
+    liftBase (TG.wait tg)
