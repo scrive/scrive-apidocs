@@ -9,7 +9,7 @@ module Utils.Cron (
 import Control.Applicative
 import Control.Arrow hiding (loop)
 import Control.Monad
-import Control.Concurrent
+import Control.Concurrent.Lifted
 import Control.Concurrent.STM
 import qualified Control.Concurrent.Thread.Group as TG
 import qualified Control.Exception.Lifted as E
@@ -37,26 +37,28 @@ data Command = Continue | Finish
 -- call to stopCron issued when action is running, but within interruptible section
 -- will interrupt the action immediately (this is particurarly useful when action
 -- has to block for a period of time and it's safe to interrupt it in such state).
-forkCron :: Bool -- ^ If True, wait t seconds before starting the action.
-         -> String -> Integer -> ((forall a. IO a -> IO a) -> IO ()) -> TG.ThreadGroup -> IO CronInfo
+forkCron :: forall m . (MonadBaseControl IO m) => Bool -- ^ If True, wait t seconds before starting the action.
+         -> String -> Integer -> ((forall a. m a -> m a) -> m ()) -> TG.ThreadGroup -> m CronInfo
 forkCron waitfirst name seconds action tg = do
-  vars@(ctrl, _) <- atomically ((,) <$> newTVar (Waiting, Continue) <*> newTVar False)
-  _ <- forkIO $ controller vars
+  vars@(ctrl, _) <- liftBase $ atomically ((,) <$> newTVar (Waiting, Continue) <*> newTVar False)
+  _ <- fork $ controller vars
   return $ CronInfo ctrl
   where
     controller (ctrl, int) = do
-      (wid, _) <- TG.forkIO tg worker
+      (wid, _) <- liftBaseDiscard (TG.forkIO tg) worker
       let (times::Int, rest::Int) = fromInteger *** fromInteger $ (seconds * 1000000) `divMod` (fromIntegral(maxBound::Int)::Integer)
-      let wait = do
-            replicateM_ times $ threadDelay maxBound
-            threadDelay rest
+      let wait :: m ()
+          wait = do
+            liftBase $ replicateM_ times $ threadDelay maxBound
+            liftBase $ threadDelay rest
             start
+          start :: m ()
           start = do
             -- start worker...
-            atomically . modifyTVar' ctrl $ first (const Running)
+            liftBase $ atomically . modifyTVar' ctrl $ first (const Running)
             -- ... and wait until it's done (unless it's in interruptible
             -- section and we want to finish, then we just kill it).
-            kill_worker <- atomically $ do
+            kill_worker <- liftBase $ atomically $ do
               (ws, cmd) <- readTVar ctrl
               interruptible <- readTVar int
               let kill_worker = cmd == Finish && interruptible
@@ -64,24 +66,25 @@ forkCron waitfirst name seconds action tg = do
               return kill_worker
             case kill_worker of
               True  -> do
-                killThread wid
+                liftBase $ killThread wid
                 -- mark thread as not running, so STM transaction
                 -- in release function can pass
-                atomically $ modifyTVar' ctrl $ first (const Waiting)
+                liftBase $ atomically $ modifyTVar' ctrl $ first (const Waiting)
               False -> wait
       if waitfirst then wait else start
       where
-        release :: IO a -> IO a
+        release :: m a -> m a
         release m = do
-          atomically $ writeTVar int True
-          E.finally m . atomically $ do
+          liftBase $ atomically $ writeTVar int True
+          E.finally m $ liftBase $ atomically $ do
             (ws, cmd) <- readTVar ctrl
             -- if worker was ordered to finish, just wait until controller
             -- kills it, do not re-enter noninterruptible section again.
             when (ws == Running && cmd == Finish) retry
             writeTVar int False
+        worker :: m ()
         worker = do
-          st <- atomically $ do
+          st <- liftBase $ atomically $ do
             st@(ws, cmd) <- readTVar ctrl
             when (ws == Waiting && cmd == Continue) retry
             return st
@@ -89,14 +92,14 @@ forkCron waitfirst name seconds action tg = do
             (Running, Continue) -> do
               action release `E.catch` \(e::E.SomeException) ->
                 liftBase $ Log.attentionIO ("forkCron: exception caught in thread " ++ name ++ ": " ++ show e) (return ())
-              atomically . modifyTVar' ctrl $ first (const Waiting)
+              liftBase $ atomically . modifyTVar' ctrl $ first (const Waiting)
               worker
             (_, Finish) -> liftBase $ Log.mixlogIO ("forkCron: finishing " ++ name ++ "...") (return ())
             (Waiting, Continue) -> liftBase $ Log.attentionIO ("forkCron: (Waiting, Continue) after (/= (Waiting, Continue)) condition. Something bad happened, exiting.") (return ())
 
 -- | Same as forkCron, but there is no way to make parts
 -- of passed action interruptible
-forkCron_ :: Bool -> String -> Integer -> IO () -> TG.ThreadGroup -> IO CronInfo
+forkCron_ :: (MonadBaseControl IO m) => Bool -> String -> Integer -> m () -> TG.ThreadGroup -> m CronInfo
 forkCron_ waitfirst name seconds action = forkCron waitfirst name seconds (\_ -> action)
 
 -- | Stops given cron thread. Use that before calling wait with appropriate
