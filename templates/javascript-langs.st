@@ -787,6 +787,7 @@ javascriptLocalisation =
                             , body : "$_listLocalDialogsBody()$"
                             , cannotUndo: "$_thisActionCannotBeUndone()$"
                             , successMessage : "$_flashMessageDocumentArchiveDone()$"
+                            , emptyMessage : "$_noDocumentChosen()$"
                         }
                     , subheadline : "$_trashBinSubheadline()$"
                     ,  search : "$_SearchDoc()$"
