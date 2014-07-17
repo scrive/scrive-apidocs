@@ -65,7 +65,7 @@ window.BinListDefinition = function(archive) { return {
                                 icon: '/img/modal-icons/delete.png',
                                 content: confirmationText,
                                 onAccept : function() {
-                                    mixpanel.track('Delete document');
+                                    mixpanel.track('Really delete document');
                                     new Submit({
                                                 url: "/d/reallydelete",
                                                 method: "POST",
