@@ -45,7 +45,7 @@ window.BinListDefinition = function(archive) { return {
                }),
         new ListAction({
             name : localization.archive.bin.remove.action,
-            emptyMessage :  localization.archive.bin.cancel.emptyMessage,
+            emptyMessage :  localization.archive.bin.remove.emptyMessage,
             size: 'normal',
             avaible : function(doc){ return true;},
             onSelect : function(docs) {
