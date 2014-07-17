@@ -59,7 +59,7 @@ window.BinListDefinition = function(archive) { return {
                           listElement.text(docs.length + (" " + localization.documents).toLowerCase());
                         }
                              var confirmationPopup = new Confirmation({
-                                acceptText: localization.ok,
+                                acceptText: localization.archive.bin.remove.action,
                                 rejectText: localization.cancel,
                                 title: localization.archive.bin.remove.action,
                                 icon: '/img/modal-icons/delete.png',

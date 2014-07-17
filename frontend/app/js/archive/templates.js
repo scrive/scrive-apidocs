@@ -122,7 +122,7 @@ window.TemplatesListDefinition = function(archive) { return {
                           listElement.text(docs.length + (" " + localization.templates).toLowerCase());
                         }
                              var confirmationPopup = new Confirmation({
-                                acceptText: localization.ok,
+                                acceptText: localization.archive.templates.remove.action,
                                 rejectText: localization.cancel,
                                 title: localization.archive.templates.remove.action,
                                 icon: '/img/modal-icons/delete.png',
