@@ -347,7 +347,7 @@
 "_dialogCsvuploadAtLeast3Columns":"Åtminstone 3 kolumner måste vara definierade",
 "_dialogCsvuploadFormatError":"Formatfel",
 "_docListTabsAttachemtns":"Bilagor",
-"_docListTabsBin":"Raderade dokument",
+"_docListTabsTrash":"Raderade dokument",
 "_docListTabsDocs":"Dokument",
 "_docListTabsTemplates":"Mallar",
 "_documentAttachedBy":"Bifogat av $identifier$",

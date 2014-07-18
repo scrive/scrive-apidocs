@@ -347,7 +347,7 @@
 "_dialogCsvuploadAtLeast3Columns":"Minst 3 kolonner må defineres",
 "_dialogCsvuploadFormatError":"Formatfeil",
 "_docListTabsAttachemtns":"Vedlegg",
-"_docListTabsBin":"Slettede dokumenter",
+"_docListTabsTrash":"Slettede dokumenter",
 "_docListTabsDocs":"Dokumenter",
 "_docListTabsTemplates":"Maler",
 "_documentAttachedBy":"Lagt ved av $identifier$",

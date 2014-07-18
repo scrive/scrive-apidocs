@@ -347,7 +347,7 @@
 "_dialogCsvuploadAtLeast3Columns":"Vous devez définir au moins 3 colonnes",
 "_dialogCsvuploadFormatError":"Erreur de format",
 "_docListTabsAttachemtns":"Pièces jointes",
-"_docListTabsBin":"Documents supprimés",
+"_docListTabsTrash":"Documents supprimés",
 "_docListTabsDocs":"Documents",
 "_docListTabsTemplates":"Modèles",
 "_documentAttachedBy":"Joint par $identifier$",

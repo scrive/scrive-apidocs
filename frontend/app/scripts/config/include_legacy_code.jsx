@@ -102,7 +102,7 @@ define([
   '../js/archive/documents',
   '../js/archive/templates',
   '../js/archive/attachments',
-  '../js/archive/bin',
+  '../js/archive/trash',
   '../js/archive/archive',
   '../js/archive/padlist',
   '../js/admin/admin',

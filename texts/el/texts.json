@@ -347,7 +347,7 @@
 "_dialogCsvuploadAtLeast3Columns":"Τουλάχιστον 3 στήλες πρέπει να οριστούν",
 "_dialogCsvuploadFormatError":"Σφάλμα μορφοποίησης",
 "_docListTabsAttachemtns":"Συνημμένα ",
-"_docListTabsBin":"Ακυρωθέντα έγγραφα ",
+"_docListTabsTrash":"Ακυρωθέντα έγγραφα ",
 "_docListTabsDocs":"Έγγραφα",
 "_docListTabsTemplates":"Πρότυπα  ",
 "_documentAttachedBy":"Επισυνάφθηκε από $identifier$",

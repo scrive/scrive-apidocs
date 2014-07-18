@@ -30,10 +30,10 @@ var ArchiveModel = Backbone.Model.extend({
         this.set({ "attachments" : new KontraList(AttachmentsListDefinition(this)) });
         return this.attachments();
   },
-  bin : function() {
-        if (this.get("bin") != undefined) return this.get("bin");
-        this.set({ "bin" : new KontraList(BinListDefinition(this)) });
-        return this.bin();
+  trash : function() {
+        if (this.get("trash") != undefined) return this.get("trash");
+        this.set({ "trash" : new KontraList(TrashListDefinition(this)) });
+        return this.trash();
 
   },
   documentsTab : function() {
@@ -75,16 +75,16 @@ var ArchiveModel = Backbone.Model.extend({
                         }
                     });
   },
-  binTab : function() {
+  trashTab : function() {
                     var archive = this;
                     return  new Tab({
-                        name: localization.archive.bin.name,
-                        elems: [function() {return $(archive.bin().el());}],
-                        pagehash : "bin",
+                        name: localization.archive.trash.name,
+                        elems: [function() {return $(archive.trash().el());}],
+                        pagehash : "trash",
                         onActivate : function() {
-                            archive.bin().recall();
-                            mixpanel.register({Subcontext : 'Bin tab'});
-                            mixpanel.track('View Bin Tab');
+                            archive.trash().recall();
+                            mixpanel.register({Subcontext : 'Trash tab'});
+                            mixpanel.track('View Trash Tab');
                         }
                     });
   }
@@ -116,7 +116,7 @@ var ArchiveView = Backbone.View.extend({
        var archive = this.model;
        var view = this;
        var tabs = new KontraTabs({
-        tabs: [ archive.documentsTab(), archive.templatesTab(), archive.attachmentsTab(), archive.binTab() ]
+        tabs: [ archive.documentsTab(), archive.templatesTab(), archive.attachmentsTab(), archive.trashTab() ]
        });
        container.append(tabs.el());
        return this;

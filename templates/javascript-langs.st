@@ -773,8 +773,8 @@ javascriptLocalisation =
 
                        }
                 }
-            ,  bin: {
-                       name :  "$_docListTabsBin()$"
+            ,  trash: {
+                       name :  "$_docListTabsTrash()$"
                     ,  restore : {
                               action: "$_restore()$"
                             , head : "$_listRestoreDialogHead()$"
@@ -789,7 +789,7 @@ javascriptLocalisation =
                             , successMessage : "$_flashMessageDocumentArchiveDone()$"
                             , emptyMessage : "$_noDocumentChosen()$"
                         }
-                    , subheadline : "$_trashBinSubheadline()$"
+                    , subheadline : "$_trashSubheadline()$"
                     ,  search : "$_SearchDoc()$"
                }
         }

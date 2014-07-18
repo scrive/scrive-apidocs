@@ -1,8 +1,8 @@
-/* Definition of rubish bin archive */
+/* Definition of document trash */
 
 define(['Backbone', 'legacy_code'], function() {
 
-window.BinListDefinition = function(archive) { return {
+window.TrashListDefinition = function(archive) { return {
     name : "Trash table",
     loadOnInit : false,
     schema: new Schema({
@@ -10,22 +10,22 @@ window.BinListDefinition = function(archive) { return {
     extraParams : { documentType : "Rubbish" },
     sorting: new Sorting({ fields: ["title", "time"]}),
     paging: new Paging({}),
-    subheadline: localization.archive.bin.subheadline,
-    textfiltering: new TextFiltering({text: "", infotext: localization.archive.bin.search}),
+    subheadline: localization.archive.trash.subheadline,
+    textfiltering: new TextFiltering({text: "", infotext: localization.archive.trash.search}),
     selectfiltering : new DocumentSelectsDefinition(archive),
     cells : new DocumentCellsDefinition(archive,false),
     actions : [
       new ListAction({
-                name : localization.archive.bin.restore.action,
-                emptyMessage :  localization.archive.bin.restore.emptyMessage,
+                name : localization.archive.trash.restore.action,
+                emptyMessage :  localization.archive.trash.restore.emptyMessage,
                 avaible : function() {return true;},
                 onSelect: function(docs){
                             var confirmationPopup = new Confirmation({
-                                acceptText: localization.archive.bin.restore.head,
+                                acceptText: localization.archive.trash.restore.head,
                                 rejectText: localization.cancel,
-                                title: localization.archive.bin.restore.head,
+                                title: localization.archive.trash.restore.head,
                                 icon: '/img/modal-icons/restore.png',
-                                content: jQuery("<p class='center'/>").text(localization.archive.bin.restore.body),
+                                content: jQuery("<p class='center'/>").text(localization.archive.trash.restore.body),
                                 oneClick: true,
                                 onAccept : function() {
                                   new Submit({
@@ -33,8 +33,8 @@ window.BinListDefinition = function(archive) { return {
                                                 method: "POST",
                                                 documentids: "[" + _.map(docs, function(doc){return doc.field("id");}) + "]",
                                                 ajaxsuccess : function() {
-                                                    new FlashMessage({color : "green", content : localization.archive.bin.restore.successMessage});
-                                                    archive.bin().recall();
+                                                    new FlashMessage({color : "green", content : localization.archive.trash.restore.successMessage});
+                                                    archive.trash().recall();
                                                     confirmationPopup.clear();
                                                 }
                                           }).sendAjax();
@@ -44,14 +44,14 @@ window.BinListDefinition = function(archive) { return {
                           }
                }),
         new ListAction({
-            name : localization.archive.bin.remove.action,
-            emptyMessage :  localization.archive.bin.remove.emptyMessage,
+            name : localization.archive.trash.remove.action,
+            emptyMessage :  localization.archive.trash.remove.emptyMessage,
             size: 'normal',
             avaible : function(doc){ return true;},
             onSelect : function(docs) {
-                        var confirmationText = $('<span />').html(localization.archive.bin.remove.body);
+                        var confirmationText = $('<span />').html(localization.archive.trash.remove.body);
                         confirmationText.append(" ");
-                        confirmationText.append($('<span />').html(localization.archive.bin.remove.cannotUndo));
+                        confirmationText.append($('<span />').html(localization.archive.trash.remove.cannotUndo));
                         var listElement = confirmationText.find('.put-one-or-more-things-to-be-deleted-here');
                         if (docs.length == 1) {
                           listElement.html($('<strong />').text(docs[0].field("title")));
@@ -59,9 +59,9 @@ window.BinListDefinition = function(archive) { return {
                           listElement.text(docs.length + (" " + localization.documents).toLowerCase());
                         }
                              var confirmationPopup = new Confirmation({
-                                acceptText: localization.archive.bin.remove.action,
+                                acceptText: localization.archive.trash.remove.action,
                                 rejectText: localization.cancel,
-                                title: localization.archive.bin.remove.action,
+                                title: localization.archive.trash.remove.action,
                                 icon: '/img/modal-icons/delete.png',
                                 content: confirmationText,
                                 onAccept : function() {
@@ -71,8 +71,8 @@ window.BinListDefinition = function(archive) { return {
                                                 method: "POST",
                                                 documentids: "[" + _.map(docs, function(doc){return doc.field("id");}) + "]",
                                                 ajaxsuccess : function() {
-                                                    new FlashMessage({color : "green", content : localization.archive.bin.remove.successMessage});
-                                                    archive.bin().recall();
+                                                    new FlashMessage({color : "green", content : localization.archive.trash.remove.successMessage});
+                                                    archive.trash().recall();
                                                     confirmationPopup.clear();
                                                 }
                                           }).sendAjax();

@@ -347,7 +347,7 @@
 "_dialogCsvuploadAtLeast3Columns":"Ten minste 3 kolommen moeten gedefinieerd zijn",
 "_dialogCsvuploadFormatError":"Formatteringsfout",
 "_docListTabsAttachemtns":"Bijlagen",
-"_docListTabsBin":"Verwijderde documenten",
+"_docListTabsTrash":"Verwijderde documenten",
 "_docListTabsDocs":"Documenten",
 "_docListTabsTemplates":"Templates",
 "_documentAttachedBy":"Bijlage toegevoegd door $identifier$",
