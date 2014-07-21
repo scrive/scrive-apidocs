@@ -474,6 +474,14 @@ window.Signatory = Backbone.Model.extend({
     padSigningURL : function() {
         return "/padqueue";
     },
+    changeAuthentication: function(type, value) {
+        return new Submit({
+                url: "/api/frontend/changeauthentication/" + this.document().documentid() + "/" + this.signatoryid(),
+                method: "POST",
+                authentication_type: type,
+                authentication_value: value
+        });
+    },
     changeEmail: function(email) {
         return new Submit({
                 url: "/changeemail/" + this.document().documentid() + "/" + this.signatoryid(),

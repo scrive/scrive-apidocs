@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
 
 
-define(['React','common/button','common/backbone_mixin','Backbone', 'legacy_code'], function(React, Button, BackboneMixin, Backbone) {
+define(['React','common/button','common/backbone_mixin','Backbone','common/language_service','doctools/changeauthentication', 'legacy_code'], function(React, Button, BackboneMixin, Backbone, LanguageService, ChangeAuthentication) {
 
 var expose = {};
 
@@ -9,10 +9,12 @@ var DocumentViewSignatoryModel = Backbone.Model.extend({
   defaults : {
     onAction : function() {},
     forSigning : false,
-    textstyle : {}
+    textstyle : {},
+    newAuthenticationValueInvalid : false
   },
   initialize: function (args) {
     var self = this;
+    this.setNewAuthenticationMethod(this.signatory().authentication());
     this.listenTo(args.signatory, "change", function() {self.trigger("change");});
   },
   triggerOnAction : function() {
@@ -33,6 +35,36 @@ var DocumentViewSignatoryModel = Backbone.Model.extend({
   },
   status : function() {
     return this.signatory().status();
+  },
+  newAuthenticationMethod : function() {
+    return this.get('newAuthenticationMethod');
+  },
+  newAuthenticationValue : function() {
+    return this.get('newAuthenticationValue');
+  },
+  newAuthenticationValueInvalid : function() {
+    return this.get('newAuthenticationValueInvalid');
+  },
+  setNewAuthenticationValueInvalid : function(v) {
+    this.set({newAuthenticationValueInvalid : v});
+  },
+  setNewAuthenticationMethod : function (method) {
+    if(method != this.newAuthenticationMethod()) {
+        var signatory = this.signatory();
+        if(method == 'sms_pin') {
+            this.setNewAuthenticationValue(signatory.mobile());
+        }
+        else if(method == 'eleg') {
+            this.setNewAuthenticationValue(signatory.personalnumber());
+        }
+        else {
+            this.setNewAuthenticationValue('');
+        }
+    }
+    this.set({newAuthenticationMethod : method});
+  },
+  setNewAuthenticationValue :  function(value) {
+    this.set({newAuthenticationValue : value});
   },
   signatorySummary: function() {
       var signatory = this.signatory();
@@ -95,6 +127,15 @@ var DocumentViewSignatoryModel = Backbone.Model.extend({
           && signatory.document().signingInProcess()
           && signatory.document().pending()
           && (signatory.emailDelivery() || signatory.emailMobileDelivery());
+ },
+ hasChangeAuthentication: function() {
+   var signatory = this.signatory();
+   return    !this.forSigning()
+          && (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
+          && signatory.document().signingInProcess()
+          && signatory.document().pending()
+          && signatory.signs()
+          && !signatory.hasSigned()
  },
  hasChangePhoneOption: function() {
    var signatory = this.signatory();
@@ -299,6 +340,57 @@ var DocumentViewSignatoryView = React.createClass({
        });
      }
     },
+    handleChangeAuthenticationMethod : function() {
+      model = this.props.model;
+      signatory = model.signatory();
+      var content = $('<div class="docview-changeauthentication-modal">');
+      React.renderComponent(ChangeAuthentication({
+          model : model
+      }), content[0]);
+      new Confirmation({
+        title : localization.docview.changeAuthentication.title,
+        acceptText : localization.docview.changeAuthentication.accept,
+        content : content,
+        width : 420,
+        onAccept : function() {
+          var authmethod = model.newAuthenticationMethod();
+          var authvalue = model.newAuthenticationValue();
+          if(authmethod == 'sms_pin' &&
+              ! new PhoneValidation().validateData(authvalue) &&
+              ! new EmptyValidation().validateData(authvalue)
+            ) {
+              model.setNewAuthenticationValueInvalid(true);
+              new FlashMessage({ content : localization.docview.changeAuthentication.errorPhone
+                               , color : 'red' });
+              return false;
+          }
+          if(authmethod == 'eleg' &&
+              ! new NumberValidation().validateData(authvalue) &&
+              ! new EmptyValidation().validateData(authvalue)
+            ) {
+              model.setNewAuthenticationValueInvalid(true);
+              new FlashMessage({ content : localization.docview.changeAuthentication.errorEID
+                               , color : 'red' });
+              return false;
+          }
+          trackTimeout('Accept',
+              {'Accept' : 'change authentication',
+               'Signatory index' : signatory.signIndex(),
+               'Authentication method' : authmethod,
+               'Authentication value' : authvalue});
+          LoadingDialog.open();
+          signatory.changeAuthentication(authmethod, authvalue).sendAjax(
+              function() { model.triggerOnAction();}
+            , function () {
+                LoadingDialog.close();
+                new FlashMessage({ content : localization.docview.changeAuthentication.errorSigned
+                                 , color : 'red' });
+            }
+          );
+          return true;
+        }
+      });
+    },
     goToSignView : function() {
       var model= this.props.model;
       var signatory = model.signatory();
@@ -307,6 +399,64 @@ var DocumentViewSignatoryView = React.createClass({
               {'Signatory index':signatory.signIndex(),
                'Accept' : 'give for signing'});
       signatory.giveForPadSigning().send();
+    },
+    getDeliveryMethod : function() {
+      var model = this.props.model;
+      var signatory = model.signatory();
+      if(signatory.emailDelivery()) {
+          return localization.docview.signatory.invitationEmail;
+      }
+      else if (signatory.padDelivery()) {
+          return localization.docview.signatory.invitationPad;
+      }
+      else if (signatory.mobileDelivery()) {
+          return localization.docview.signatory.invitationSMS;
+      }
+      else if (signatory.emailMobileDelivery()) {
+          return localization.docview.signatory.invitationEmailSMS;
+      }
+      else if (signatory.apiDelivery()) {
+          return localization.docview.signatory.invitationAPI;
+      }
+    },
+    getRole : function() {
+      var model = this.props.model;
+      var signatory = model.signatory();
+      if(signatory.signs()) {
+          return localization.docview.signatory.roleSignatory;
+      }
+      else {
+          return localization.docview.signatory.roleViewer;
+      }
+    },
+    getAuthenticationMethod : function() {
+      var model = this.props.model;
+      var signatory = model.signatory();
+      if(signatory.standardAuthentication()) {
+          return localization.docview.signatory.authenticationStandard;
+      }
+      else if (signatory.smsPinAuthentication()) {
+          return localization.docview.signatory.authenticationSMSPin;
+      }
+      else if (signatory.elegAuthentication()) {
+          return localization.docview.signatory.authenticationELeg;
+      }
+    },
+    getConfirmationMethod : function() {
+      var model = this.props.model;
+      var signatory = model.signatory();
+      if(signatory.emailConfirmationDelivery()) {
+          return localization.docview.signatory.confirmationEmail;
+      }
+      else if(signatory.mobileConfirmationDelivery()) {
+          return localization.docview.signatory.confirmationSMS;
+      }
+      else if(signatory.emailMobileConfirmationDelivery()) {
+          return localization.docview.signatory.confirmationEmailSMS;
+      }
+      else if(signatory.noneConfirmationDelivery()) {
+          return localization.docview.signatory.confirmationNone;
+      }
     },
     render: function() {
       var model = this.props.model;
@@ -353,6 +503,33 @@ var DocumentViewSignatoryView = React.createClass({
                   {localization.docsignview.personalNumberLabel}: {signatory.personalnumber().trim() || localization.docsignview.notEntered}
                 </div>
                }
+            </div>
+          </div>
+
+          <div className="inner spacing">
+            <div className="details">
+                <div className="signorder field" style={textstyle} title={LanguageService.localizedOrdinal(signatory.signorder())}>
+                    {localization.docview.signatory.invitationOrder}: {LanguageService.localizedOrdinal(signatory.signorder())}
+                </div>
+                <div className="deliverymethod field" style={textstyle} title={this.getDeliveryMethod()}>
+                    {localization.docview.signatory.invitationMethod}: {this.getDeliveryMethod()}
+                </div>
+                <div className="role field" style={textstyle} title={this.getRole()}>
+                    {localization.docview.signatory.role}: {this.getRole()}
+                </div>
+
+                {/*if*/ signatory.signs() &&
+                 <div className="authentication field" style={textstyle} title={this.getAuthenticationMethod()}>
+                     {localization.docview.signatory.authentication}: {this.getAuthenticationMethod()}
+                     {/*if*/ model.hasChangeAuthentication() &&
+                      <a className="edit clickable" onClick={this.handleChangeAuthenticationMethod}>Edit</a>
+                     }
+                 </div>
+                }
+
+                <div className="confirmationmethod field" style={textstyle} title={this.getConfirmationMethod()}>
+                    {localization.docview.signatory.confirmation}: {this.getConfirmationMethod()}
+                </div>
             </div>
           </div>
 
