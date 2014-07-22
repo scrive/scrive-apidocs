@@ -122,11 +122,11 @@ $else$
   $endif$
 $endif$
 ###
-SigningInvitationEvidenceTextFullEmail=An invitation to sign was sent to $signatory$ using email. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $_invitationCustomMessageTextToSign()$
+SigningInvitationEvidenceTextFullEmail=An invitation to sign was sent to $signatory$ using email. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $invitationCustomMessageTextToSignIfThereIsOne()$
 ###
-SigningInvitationEvidenceTextFullSMS=An invitation to sign was sent to $signatory$ using SMS. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $_invitationCustomMessageTextToSign()$
+SigningInvitationEvidenceTextFullSMS=An invitation to sign was sent to $signatory$ using SMS. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $invitationCustomMessageTextToSignIfThereIsOne()$
 ###
-SigningInvitationEvidenceTextFullEmailSMS=An invitation to sign was sent to $signatory$ using email and SMS. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $_invitationCustomMessageTextToSign()$
+SigningInvitationEvidenceTextFullEmailSMS=An invitation to sign was sent to $signatory$ using email and SMS. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $invitationCustomMessageTextToSignIfThereIsOne()$
 ###
 ReviewInvitationEvidenceTextFullEmail=An invitation to review was sent to $signatory$ using email. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $_invitationCustomMessageTextToReview()$
 ###
