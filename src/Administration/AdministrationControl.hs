@@ -434,14 +434,8 @@ handleCreateUser = onlySalesOrAdmin $ do
     -- FIXME: where to redirect?
     return LoopBack
 
-handlePostAdminCompanyUsers :: Kontrakcja m => CompanyID -> m KontraLink
+handlePostAdminCompanyUsers :: Kontrakcja m => CompanyID -> m JSValue
 handlePostAdminCompanyUsers companyid = onlySalesOrAdmin $ do
-  handleCreateCompanyUser companyid
-  return $ LoopBack
-
-
-handleCreateCompanyUser :: Kontrakcja m => CompanyID -> m ()
-handleCreateCompanyUser companyid = onlySalesOrAdmin $ do
   email <- getCriticalField asValidEmail "email"
   fstname <- getCriticalField asValidName "fstname"
   sndname <- getCriticalField asValidName "sndname"
@@ -450,9 +444,13 @@ handleCreateCompanyUser companyid = onlySalesOrAdmin $ do
   lang <- guardJustM $ join <$> fmap langFromCode <$> getField "lang"
   admin <- isFieldSet "iscompanyadmin"
   muser <- createNewUserByAdmin email (fstname, sndname) custommessage (companyid, admin) lang
-  when (isNothing muser) $
-      addFlashM flashMessageUserWithSameEmailExists
-  return ()
+  runJSONGenT $ case muser of
+    Nothing -> do
+      value "success" False
+      valueM "error_message" $ renderTemplate_ "flashMessageUserWithSameEmailExists"
+    Just _ -> do
+      value "success" True
+      value "error_message" (Nothing :: Maybe String)
 
 {- | Reads params and returns function for conversion of company info.  With no param leaves fields unchanged -}
 getCompanyInfoChange :: Kontrakcja m => m (CompanyInfo -> CompanyInfo)

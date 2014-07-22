@@ -265,7 +265,7 @@ javascriptLocalisation =
 
            }
           , questionnaire : {
-               heyImViktor: "$_questionnaireHeyImViktor()$"
+               heyImViktorFromScrive: "$_questionnaireHeyImViktorFromScrive()$"
              , ourEsignService: "$_questionnaireOurEsignService()$"
              , quickQuestion: "$_questionnaireQuickQuestion()$"
              , enjoySigning: "$_questionnaireEnjoySigning()$"
@@ -519,6 +519,7 @@ javascriptLocalisation =
            }
          , docsignview : {
                followTheArrow: "$_followTheArrow()$"
+             , followTheArrowWithUserName: "$_followTheArrowWithUserName()$"
              , reviewDocument: "$_reviewDocument()$"
              , signedNotClosed: "$_signedNotClosed()$"
              , signedAndClosed: "$_signedAndClosed()$"

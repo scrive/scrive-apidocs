@@ -77,7 +77,8 @@ var SelectModel = Backbone.Model.extend({
       options : [],
       expandSide : "left",
       expanded : false,
-      onOpen : function() {return true;},
+      onOpen  : function() {return true;},
+      onClose : function() {return true;},
       color: "black",
       border: "1px solid #ddd",
       textWidth : "160px",
@@ -127,15 +128,23 @@ var SelectModel = Backbone.Model.extend({
   },
   unexpand: function() {
        this.set({"expanded" : false});
+       this.onClose();
   },
   expand : function() {
-     if (!this.expanded() && this.onOpen() && this.options().length > 0)
+     if (!this.expanded() && this.options().length > 0) {
        this.set({"expanded" : true});
+       this.onOpen();
+     }
   },
   onOpen : function(){
-       if (this.get("onOpen") != undefined)
-        return this.get("onOpen")();
-       return true;
+       if (this.get("onOpen") != undefined) {
+        this.get("onOpen")();
+       }
+  },
+  onClose : function(){
+       if (this.get("onClose") != undefined) {
+        this.get("onClose")();
+       }
   },
   onRemove : function(){
        if (this.get("onRemove") != undefined)
@@ -213,6 +222,7 @@ var SelectExpandedView = React.createClass({
 var SelectView = React.createClass({
     componentWillUnmount : function() {
         this.state.expandedComponent.unmountComponent(); //We need to clear this component on unmount for garbage collection
+        this.state.expandedDiv.remove();
     },
     mixins: [BackboneMixin.BackboneMixin],
     getBackboneModels : function() {
@@ -272,14 +282,17 @@ var SelectView = React.createClass({
       else
         this.state.expandedDiv.detach();
 
+      var mainStyle = _.extend({color: model.color(),border : model.border()},model.style());
+      var labelStyle = _.extend({width: model.textWidth()},model.style());
+
       return (
-        <div className={'select ' + model.cssClass()}  style={_.extend({color: model.color(),border : model.border()},model.style())}
+        <div className={'select ' + model.cssClass()}  style={mainStyle}
              onMouseEnter={this.handleMouseEnter}
              onMouseOut={this.handleMouseOut}
              >
           <div className='select-button' onClick={this.handleExpand}>
             <div className='select-button-left'/>
-            <div className='select-button-label' style={_.extend({width: model.textWidth()},model.style())}>
+            <div className='select-button-label' style={labelStyle}>
               {model.name()}
             </div>
             <div className='select-button-right'/>
@@ -303,7 +316,7 @@ var Select = React.createClass({
       optionsWidth : React.PropTypes.string,
       color : React.PropTypes.string,
       border : React.PropTypes.string,
-      style :  React.PropTypes.string,
+      style :  React.PropTypes.object,
       onOpen :React.PropTypes.func,
       onSelect : React.PropTypes.func,
       onRemove : React.PropTypes.func,
@@ -315,6 +328,10 @@ var Select = React.createClass({
     componentWillReceiveProps: function(props) {
       this.setState(this.stateFromProps(props));
     },
+    // When we are removing a selectbox - it's safer to remove it when it is closed;
+    componentWillUnmount : function() {
+      this.state.model.unexpand();
+    },
     stateFromProps : function(props) {
         var model = new SelectModel({
         name : props.name,
@@ -325,7 +342,8 @@ var Select = React.createClass({
         color : props.color,
         border : props.border,
         style :  props.style,
-        onOpen :props.onOpen,
+        onOpen : props.onOpen,
+        onClose :props.onClose,
         onSelect : props.onSelect,
         onRemove : props.onRemove,
         options: props.options

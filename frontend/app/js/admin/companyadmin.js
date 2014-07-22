@@ -14,7 +14,7 @@ var CompanyAdminModel = Backbone.Model.extend({
   },
   companyusers: function() {
         if (this.get("companyusers") != undefined) return this.get("companyusers");
-        this.set({ "companyusers" : new KontraList(CompanyUsersListDefinition({ companyid: this.companyid() })) });
+        this.set({ "companyusers" : new CompanyUsersList({companyid: this.companyid()})});
         return this.companyusers();
   },
   companybranding: function() {
