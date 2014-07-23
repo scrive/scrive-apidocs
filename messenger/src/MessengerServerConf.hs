@@ -7,8 +7,8 @@ import Data.Word
 import Utils.Default
 import qualified Data.ByteString as BS
 import Data.Unjson
-import Data.Maybe
 import Control.Applicative
+import Data.Data
 
 data MessengerServerConf = MessengerServerConf
   { mscHttpBindAddress :: (Word32, Word16)
@@ -46,50 +46,30 @@ data SenderConfig = GlobalMouthSender
   | LocalSender
   { localDirectory     :: FilePath
   , localOpenCommand   :: Maybe String
-  } deriving (Read, Show)
+  } deriving (Read, Show, Typeable, Data)
 
-mkSenderConfig :: Maybe String
-               -> Maybe String
-               -> Maybe String
-               -> Maybe String
-               -> Maybe String
-               -> SenderConfig
-mkSenderConfig (Just gmURL') gmSenderUser' gmSenderPassword' _localDirectory' _localOpenCommand' =
-  GlobalMouthSender { gmURL = gmURL',
-                      gmSenderUser = fromMaybe "" gmSenderUser',
-                      gmSenderPassword = fromMaybe "" gmSenderPassword' }
-
-mkSenderConfig _serviceName' _smtpAddr' _smtpUser' localDirectory' localOpenCommand' =
-  LocalSender { localDirectory = fromMaybe "" localDirectory',
-                localOpenCommand = localOpenCommand' }
 
 unjsonSenderConfig :: UnjsonDef SenderConfig
-unjsonSenderConfig = objectOf $ pure mkSenderConfig
-  <*> fieldOpt "url"
-     (\s -> case s of
-         GlobalMouthSender v _ _ -> Just v
-         _ -> Nothing)
-     "SMTP address to contact"
-  <*> fieldOpt "username"
-     (\s -> case s of
-         GlobalMouthSender _ v _ -> Just v
-         _ -> Nothing)
-      "Username for GlobalMouth service"
-  <*> fieldOpt "password"
-     (\s -> case s of
-         GlobalMouthSender _ _ v -> Just v
-         _ -> Nothing)
-      "Password for GlobalMouth service"
-  <*> fieldOpt "dir"
-     (\s -> case s of
-         LocalSender v _ -> Just v
-         _ -> Nothing)
-      "Local directory to save 'eml' files to (ignored if SMTP)"
-  <*> fieldOpt "open"
-     (\s -> case s of
-         LocalSender _ v -> v
-         _ -> Nothing)
-      "Local open command to open 'eml' files ('/usr/bin/open', 'gnome-open', 'kde-open') (ignored if SMTP)"
+unjsonSenderConfig = DisjointUnjsonDef "type"
+                     [("global_mouth", unjsonIsConstrByName "GlobalMouthSender",
+                       pure GlobalMouthSender
+                       <*> field "username"
+                       gmSenderUser
+                       "Username for GlobalMouth service"
+                       <*> field "password"
+                       gmSenderPassword
+                       "Password for GlobalMouth service"
+                       <*> field "url"
+                       gmURL
+                       "GlobalMouth address to contact")
+                     ,("local", unjsonIsConstrByName "LocalSender",
+                       pure LocalSender
+                       <*> field "dir"
+                       localDirectory
+                       "Local directory to save 'sms' files"
+                       <*> fieldOpt "open"
+                       localOpenCommand
+                       "Local open command to open 'eml' files ('/usr/bin/open', 'gnome-open', 'kde-open')")]
 
 instance Unjson SenderConfig where
   unjsonDef = unjsonSenderConfig
