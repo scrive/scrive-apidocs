@@ -11,8 +11,7 @@ import Mails.Data
 import qualified Data.ByteString as BS
 import Data.Unjson
 import Control.Applicative
-import Data.Maybe
-
+import Data.Data
 
 data MailingServerConf = MailingServerConf {
     mscHttpBindAddress :: (Word32, Word16)
@@ -59,7 +58,7 @@ unjsonMailingServerConf = objectOf $ pure MailingServerConf
          "Amazon secret key")
   <*> field "test_receivers"
       testReceivers
-      "Email addresses of people regarded as admins"
+      "Email addresses for testing services"
 
 instance Unjson MailingServerConf where
   unjsonDef = unjsonMailingServerConf
@@ -75,70 +74,34 @@ data SenderConfig = SMTPSender {
   , localOpenCommand   :: Maybe String
   }
   | NullSender
-  deriving (Read, Show)
-
-data SMTPUser = SMTPUser {
-    smtpAccount  :: String
-  , smtpPassword :: String
-}  deriving (Read, Show)
-
-
--- SMTP user that is dedicated only to email where from address matched given address 
-data SMTPDedicatedUser = SMTPDedicatedUser {
-    smtpFromDedicatedAddress :: String
-  , smtpDedicatedUser    :: SMTPUser
-} deriving (Read, Show)
-
-mkSenderConfig :: Maybe String
-               -> Maybe String
-               -> Maybe String
-               -> Maybe String
-               -> Maybe String
-               -> Maybe String
-               -> SenderConfig
-mkSenderConfig serviceName' (Just smtpAddr') smtpUser' smtpPassword' _localDirectory' _localOpenCommand' =
-  SMTPSender { serviceName = fromMaybe "" serviceName',
-               smtpAddr = smtpAddr',
-               smtpUser = fromMaybe "" smtpUser',
-               smtpPassword = fromMaybe "" smtpPassword' }
-
-mkSenderConfig _serviceName' _smtpAddr' _smtpUser' _smtpPassword' (Just localDirectory') localOpenCommand' =
-  LocalSender { localDirectory = localDirectory',
-                localOpenCommand = localOpenCommand' }
-mkSenderConfig _ _ _ _ _ _ = NullSender
+  deriving (Read, Show, Typeable, Data)
 
 unjsonSenderConfig :: UnjsonDef SenderConfig
-unjsonSenderConfig = objectOf $ pure mkSenderConfig
-  <*> fieldOpt "name"
-     (\s -> case s of
-         SMTPSender v _ _ _ -> Just v
-         _ -> Nothing)
-     "Name of this sender service"
-  <*> fieldOpt "smtp_addr"
-     (\s -> case s of
-         SMTPSender _ v _ _ -> Just v
-         _ -> Nothing)
-     "SMTP address to contact"
-  <*> fieldOpt "username"
-     (\s -> case s of
-         SMTPSender _ _ v _ -> Just v
-         _ -> Nothing)
-      "Username for SMTP service"
-  <*> fieldOpt "password"
-     (\s -> case s of
-         SMTPSender _ _ _ v -> Just v
-         _ -> Nothing)
-      "Password for SMTP service"
-  <*> fieldOpt "dir"
-     (\s -> case s of
-         LocalSender v _ -> Just v
-         _ -> Nothing)
-      "Local directory to save 'eml' files to (ignored if SMTP)"
-  <*> fieldOpt "open"
-     (\s -> case s of
-         LocalSender _ v -> v
-         _ -> Nothing)
-      "Local open command to open 'eml' files ('/usr/bin/open', 'gnome-open', 'kde-open') (ignored if SMTP)"
+unjsonSenderConfig = DisjointUnjsonDef "type"
+                     [("smtp", unjsonIsConstrByName "SMTPSender",
+                       pure SMTPSender
+                               <*> field "name"
+                                   serviceName
+                                   "Name of this sender service"
+                               <*> field "smtp_addr"
+                                   smtpAddr
+                                   "SMTP address to contact"
+                               <*> field "username"
+                                   smtpUser
+                                   "Username for SMTP service"
+                               <*> field "password"
+                                   smtpPassword
+                                   "Password for SMTP service")
+                     ,("local", unjsonIsConstrByName "LocalSender",
+                       pure LocalSender
+                               <*> field "dir"
+                                   localDirectory
+                                   "Local directory to save 'eml' files"
+                               <*> fieldOpt "open"
+                                   localOpenCommand
+                                   "Local open command to open 'eml' files ('/usr/bin/open', 'gnome-open', 'kde-open')")
+                     ,("null", unjsonIsConstrByName "NullSender",
+                       pure NullSender)]
 
 instance Unjson SenderConfig where
   unjsonDef = unjsonSenderConfig
