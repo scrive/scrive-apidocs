@@ -546,7 +546,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                 var q = model.quantity() || 1;
                 quantbox.val(q);
                 var usertext = q === 1 ? localization.payments.user : localization.payments.users;
-                quantbox.after($('<span class="quantity lowercase" />').text(q + " " + usertext));
+                quantbox.after($('<span class="quantity" />').text(q + " " + usertext));
                 form.find('.quantity .label').hide();
             } else {
                 quantbox.val(1);
