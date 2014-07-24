@@ -626,7 +626,8 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
       arrow: this.arrow,
       signview: this.signview,
       signviewbranding: this.branding,
-      useDefaultBackground : true
+      useDefaultBackground : true,
+      useDefaultValidBorderColor: true
     }).el;
   },
   render: function() {
