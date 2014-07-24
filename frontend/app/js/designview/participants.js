@@ -83,31 +83,34 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
 
             var div = $('<div />');
 
-            div.append(view.detailsParticipationHeader());
-            div.append(view.detailsParticipationFields());
+            div.append(view.detailsPartcipationFieldsWithLabels());
 
             view.$el.html(div.children());
             return view;
         },
-        detailsParticipationHeader: function() {
-            var view = this;
-
+        detailsPartcipationFieldsWithLabels: function() {
             var div = $('<div />');
-            div.addClass('design-view-action-participant-details-participation-header');
-            div.text(localization.designview.defineParticipation);
-            return div;
-        },
-        detailsParticipationFields: function() {
-            var view = this;
-
-            var div = $('<div />');
-            div.addClass('design-view-action-participant-details-participation-fields');
-            div.append(view.detailsParticipationFieldsSignOrder());
-            div.append(view.detailsParticipationFieldsDelivery());
-            div.append(view.detailsParticipationFieldsRole());
-            div.append(view.detailsParticipationFieldsAuth());
-            div.append(view.detailsParticipationFieldsConfirmationDelivery());
-            return div;
+            div.append($('<span class=design-view-action-participant-details-participation-box>')
+                .append($('<label class="label">').text(localization.designview.addParties.invitationOrder))
+                .append(this.detailsParticipationFieldsSignOrder())
+                );
+            div.append($('<span class=design-view-action-participant-details-participation-box>')
+                .append($('<label class="label">').text(localization.designview.addParties.invitation))
+                .append(this.detailsParticipationFieldsDelivery())
+                );
+            div.append($('<span class=design-view-action-participant-details-participation-box>')
+                .append($('<label class="label">').text(localization.designview.addParties.role))
+                .append(this.detailsParticipationFieldsRole())
+                );
+            div.append($('<span class=design-view-action-participant-details-participation-box>')
+                .append($('<label class="label">').text(localization.designview.addParties.authentication))
+                .append(this.detailsParticipationFieldsAuth())
+                );
+            div.append($('<span class=design-view-action-participant-details-participation-box>')
+                .append($('<label class="label">').text(localization.designview.addParties.confirmation))
+                .append(this.detailsParticipationFieldsConfirmationDelivery())
+                );
+            return div.children();
         },
         detailsParticipationFieldsSignOrder: function() {
             var view = this;
@@ -120,25 +123,20 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             var options = [];
             for(i=1;i<=model.document().maxPossibleSignOrder();i++) {
                 var ordinal = LanguageService.localizedOrdinal(i);
-                var temporarySpan = $('<span />').html(localization.designview.toReceiveDocument);
-                temporarySpan.find('.put-ordinal-here').text(ordinal);
-                options.push({name: temporarySpan.text(),
+                options.push({name: ordinal,
                               value: i});
             }
 
             var ordinal = LanguageService.localizedOrdinal(order);
-            var temporarySpan = $('<span />').html(localization.designview.toReceiveDocument);
-            temporarySpan.find('.put-ordinal-here').text(ordinal);
 
             var select = $("<div/>");
 
             React.renderComponent(
               NewSelect.Select({
                 options: options,
-                name: temporarySpan.text(),
-                textWidth : "145px",
-                optionsWidth : "177px",
-                cssClass : 'design-view-action-participant-details-participation-order',
+                name: ordinal,
+                textWidth : "151px",
+                optionsWidth : "178px",
                 onSelect: function(v) {
                   mixpanel.track('Choose sign order', {
                     Where: 'select'
@@ -156,10 +154,10 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             var delivery = sig.delivery();
 
             var deliveryTexts = {
-                email : localization.designview.byEmail,
-                pad : localization.designview.onThisTablet,
-                mobile : localization.designview.bySMS,
-                email_mobile : localization.designview.byEmailAndSMS,
+                email        : localization.designview.addParties.invitationEmail,
+                pad          : localization.designview.addParties.invitationInPerson,
+                mobile       : localization.designview.addParties.invitationSMS,
+                email_mobile : localization.designview.addParties.invitationEmailSMS,
                 api : localization.designview.byAPI
             };
 
@@ -172,9 +170,8 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                   return {name: deliveryTexts[t], value:t};
                 }),
                 name: deliveryTexts[delivery],
-                textWidth : "145px",
-                optionsWidth : "177px",
-                cssClass : 'design-view-action-participant-details-participation-delivery',
+                textWidth : "151px",
+                optionsWidth : "178px",
                 onSelect: function(v) {
                   mixpanel.track('Choose delivery method', {
                     Where: 'select'
@@ -192,10 +189,10 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             var delivery = sig.confirmationdelivery();
 
             var deliveryTexts = {
-                email : localization.designview.withEmailConfirmation,
-                mobile : localization.designview.withMobileConfirmation,
-                email_mobile : localization.designview.withEmailMobileConfirmation,
-                none : localization.designview.withoutConfirmation
+                email        : localization.designview.addParties.confirmationEmail,
+                mobile       : localization.designview.addParties.confirmationSMS,
+                email_mobile : localization.designview.addParties.confirmationEmailSMS,
+                none         : localization.designview.addParties.confirmationNone
             };
 
             var deliveryTypes = ['email', 'mobile', 'email_mobile', 'none'];
@@ -205,10 +202,8 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                     return {name: deliveryTexts[t], value:t};
                 }),
                 name: deliveryTexts[delivery],
-                 textWidth : "145px",
-
-                optionsWidth : "225px",
-                cssClass : 'design-view-action-participant-details-participation-confirmation-delivery',
+                textWidth : "151px",
+                optionsWidth : "178px",
                 onSelect: function(v) {
                     mixpanel.track('Choose confirmation delivery method', {
                         Where: 'select'
@@ -225,8 +220,8 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             var role = sig.signs() ? 'signatory' : 'viewer';
 
             var roleTexts = {
-                'signatory' : localization.designview.forSigning,
-                'viewer'    : localization.designview.forViewing
+                'signatory' : localization.designview.addParties.roleSignatory,
+                'viewer'    : localization.designview.addParties.roleViewer
             };
 
             var roleTypes = ['signatory', 'viewer'];
@@ -237,9 +232,8 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                   return {name: roleTexts[t], value:t};
                 }),
                 name: roleTexts[role],
-                textWidth : "145px",
-                optionsWidth : "177px",
-                cssClass : 'design-view-action-participant-details-participation-role',
+                textWidth : "151px",
+                optionsWidth : "178px",
                 onSelect: function(v) {
                   mixpanel.track('Choose participant role', {
                     Where: 'Icon'
@@ -260,9 +254,9 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             var auth = sig.authentication();
 
             var authTexts = {
-                standard : localization.designview.noIDControl,
-                eleg : localization.designview.withEleg,
-                sms_pin : localization.designview.withSMSPin
+                standard : localization.designview.addParties.authenticationStandard,
+                eleg     : localization.designview.addParties.authenticationELeg,
+                sms_pin  : localization.designview.addParties.authenticationSMSPin
             };
 
             var authTypes = ['standard', 'eleg', 'sms_pin'];
@@ -273,9 +267,8 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                   return {name: authTexts[t], value:t};
                 }),
                 name: authTexts[auth],
-                textWidth : "145px",
-                optionsWidth : "177px",
-                cssClass : 'design-view-action-participant-details-participation-auth',
+                textWidth : "151px",
+                optionsWidth : "178px",
                 onSelect: function(v) {
                   mixpanel.track('Choose auth', {
                     Where: 'select'
@@ -781,18 +774,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
 
             var div = $('<div />');
             div.addClass('design-view-action-participant-details-information');
-            div.append(view.detailsInformationHeader());
             div.append(view.detailsInformationFields());
-
-            return div;
-        },
-        detailsInformationHeader: function() {
-            var view = this;
-            var sig = view.model;
-
-            var div = $('<div />');
-            div.addClass('design-view-action-participant-details-information-header');
-            div.text(localization.designview.information);
 
             return div;
         },
