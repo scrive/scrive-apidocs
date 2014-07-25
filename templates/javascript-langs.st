@@ -393,7 +393,6 @@ javascriptLocalisation =
              , freeTextBox: "$_designViewFreeTextBox()$"
              , checkbox: "$_checkBoxFieldName()$"
              , removeThisDocument: "$_designViewRemoveThisDocument()$"
-             , chooseDocument: "$_designViewChooseDocument()$"
              , attached : "$_designViewAttached()$"
              , attachmentRequestedFrom : "$_designViewAttachmentRequestedFrom()$"
              , requestFieldFrom : "$_designViewRequestFieldFrom()$"

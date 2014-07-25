@@ -119,22 +119,13 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             this.innerDiv = $("<div class='design-view-document-buttons-inner'/>");
             div.append(this.innerDiv);
 
-            this.innerDiv.append(view.title()).append(view.buttons());
+            this.innerDiv.append(view.buttons());
             innerWrapper.append(div);
             this.wrapperDiv.append(innerWrapper);
 
             this.refreshMargins();
 
             return this.wrapperDiv;
-        },
-        title: function() {
-            var view = this;
-            var div = $('<div />');
-            div.addClass('design-view-document-buttons-title');
-
-            div.text(localization.designview.chooseDocument);
-
-            return div;
         },
         buttons: function() {
             var view = this;
