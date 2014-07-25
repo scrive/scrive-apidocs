@@ -158,7 +158,7 @@ window.PadList = function() {
                listElement.text(docs.length + (" " + localization.documents).toLowerCase());
              }
              var confirmationPopup = new Confirmation({
-               acceptText: localization.ok,
+               acceptText: localization.archive.documents.remove.action,
                rejectText: localization.cancel,
                title: localization.archive.documents.remove.action,
                icon: '/img/modal-icons/delete.png',
