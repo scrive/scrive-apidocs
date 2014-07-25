@@ -1,5 +1,5 @@
 { 
-"_CompanyAccounts":"Utenti",
+"_CompanyAccounts":"",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Sei sicuro di voler inviare un promemoria alle parti coinvolte nei <span class='put-number-of-documents-here'></span> documenti?",
 "_ContractReminderBodySingel":"Sei sicuro di voler inviare un sollecito alle parti coinvolte nel documento <span class='put-document-name-here'> </span>?",
@@ -665,7 +665,7 @@
 "_paymentsSubscribeHeader":"Tutte le caratteristiche incluse nella tua sottoscrizione mensile.",
 "_paymentsSubscriptionRenewed":"Il tuo sottoscrizione è stato rinnovato.",
 "_paymentsTeamPrice":"$TeamPricePerMonth()$/al mese",
-"_paymentsUser":"Utente",
+"_paymentsUser":"",
 "_paymentsVat":"Tutti i prezzi sono IVA esclusa.",
 "_paymentsVat25":"IVA al 25%",
 "_paymentsWasCanceled":"Hai scelto di non rinnovare il tuo sottoscrizione.",

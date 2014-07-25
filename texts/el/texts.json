@@ -1,5 +1,5 @@
 { 
-"_CompanyAccounts":"Χρήστες ",
+"_CompanyAccounts":"",
 "_CompanySettings":"Επωνυμία ",
 "_ContractReminderBodyMulti":"Είστε σίγουρος ότι θέλετε αν αποστείλετε υπενθυμίσεις στους μετέχοντες που περιλαμβάνονται στα <span class='put-number-of-documents-here'></span> έγγραφα;",
 "_ContractReminderBodySingel":"Είστε σίγουρος ότι θέλετε να αποστείλετε υπενθύμιση στους μετέχοντες που περιλαμβάνονται στο έγγραφο <span class='put-document-name-here'></span>? ",
@@ -665,7 +665,7 @@
 "_paymentsSubscribeHeader":"Λειτουργίες μηνιαίας συνδρομής. ",
 "_paymentsSubscriptionRenewed":"Η συνδρομή σας έχει ανανεωθεί. ",
 "_paymentsTeamPrice":"$TeamPricePerMonth()$/μήνα",
-"_paymentsUser":"Χρήστης ",
+"_paymentsUser":"",
 "_paymentsVat":"Όλες οι τιμές είναι χωρίς ΦΠΑ. ",
 "_paymentsVat25":"25% ΦΠΑ ",
 "_paymentsWasCanceled":"Έχετε επιλέξει να διακόψετε τη συνδρομή σας. ",
