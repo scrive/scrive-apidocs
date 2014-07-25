@@ -150,14 +150,13 @@ window.PadList = function() {
            size: 'normal',
            avaible : function(doc){ return true;},
            onSelect : function(docs) {
-             var confirmtext = jQuery("<p/>").append(localization.archive.documents.remove.body + " ");
-             var label = jQuery("<strong/>");
+             var confirmtext = $('<span />').html(localization.archive.documents.remove.body);
+             var listElement = confirmtext.find('.put-one-or-more-things-to-be-deleted-here');
              if (docs.length == 1) {
-               confirmtext.append(jQuery("<strong/>").text(docs[0].field("title")));
+               listElement.html($('<strong />').text(docs[0].field("title")));
              } else {
-               confirmtext.append(docs.length + (" " + localization.documents).toLowerCase());
+               listElement.text(docs.length + (" " + localization.documents).toLowerCase());
              }
-             confirmtext.append("?");
              var confirmationPopup = new Confirmation({
                acceptText: localization.ok,
                rejectText: localization.cancel,
