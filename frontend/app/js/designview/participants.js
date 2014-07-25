@@ -385,7 +385,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
 
             var button = new Button({
                 color: 'green',
-                text: localization.save,
+                text: localization.designview.addParties.close,
                 onClick: function() {
                     mixpanel.track('Close participant');
                     model.setParticipantDetail(null);

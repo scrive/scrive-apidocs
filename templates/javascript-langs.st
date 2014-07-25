@@ -372,6 +372,9 @@ javascriptLocalisation =
              , withEmailMobileConfirmation: "$_withEmailMobileConfirmation()$"
              , withoutConfirmation: "$_withoutConfirmation()$"
              , addParty: "$_designViewAddParty()$"
+             , addParties : {
+                 close : "$_designViewAddPartiesClose()$"
+             }
              , addMultisend: "$_designViewAddMultisend()$"
              , viewCSV: "$_designViewViewCSV()$"
              , participantsInFile: "$_participantsIncludedInFile()$"

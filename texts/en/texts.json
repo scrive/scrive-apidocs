@@ -288,6 +288,7 @@
 "_designViewAddField":"Add field",
 "_designViewAddMultisend":"Add multi send",
 "_designViewAddParty":"Add party",
+"_designViewAddPartiesClose":"Close",
 "_designViewAddRemove":"Add attachments",
 "_designViewAttached":"Added attachment",
 "_designViewAttachmentRequestedFrom":"Requested attachment <span class='put-attachment-name'/> from <span class='put-person-name'/>",
