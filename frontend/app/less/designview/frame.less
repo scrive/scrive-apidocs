@@ -37,7 +37,7 @@ body.designview .mainContainer {
   height: 60px;
   margin: 0 auto;
   width: 1018px;
-  
+
   .box-sizing(border-box);
 }
 
@@ -52,10 +52,10 @@ body.designview .mainContainer {
 }
 
 .designview {
-  
+
   .pagediv {
     margin-top: 15px;
-    
+
     &#page1 {
       margin-top: 0px;
     }
@@ -63,7 +63,7 @@ body.designview .mainContainer {
 
   .tab-viewer {
     width: 100%;
-    
+
     .tab-viewer-header {
       margin-bottom: 0px;
       position:relative;
@@ -81,10 +81,12 @@ body.designview .mainContainer {
       li {
         line-height: 32px;
         padding: 22px 24px 18px 24px;
-        
+
         &.inactive,
         &.inactive:hover {
-          
+          border-top-color: @white;
+          cursor: default;
+
           .design-view-tab-text {
             color: #aaaaaa;
 
@@ -99,7 +101,7 @@ body.designview .mainContainer {
           background: none repeat scroll 0 0 @white;
           border-top: 4px solid @brand-primary-darker;
           padding: 18px 24px 18px 24px;
-          
+
           h5 {
             color : #333333;
           }
@@ -136,7 +138,7 @@ body.designview .mainContainer {
             // ie8 doesn't understand box-shadow, fallback to a border
             border-left: 1px solid #cccccc;
           }
-          
+
           .design-view-tab-text {
             width: 291px;
           }
@@ -203,7 +205,7 @@ body.designview .mainContainer {
   position: fixed;
   width: 100%;
   z-index: 1001;
-  
+
   .box-shadow(0px -4px rgba(0, 0, 0, 0.05));
 }
 
@@ -223,8 +225,8 @@ body.designview .mainContainer {
     &.disabled {
       @disabled: @brand-primary-darker;
 
-      color: #6b6b6b !important;
       background-color: @disabled;
+      color: #6b6b6b !important;
 
       &:hover {
         background-color: darken(@disabled, 10%);
