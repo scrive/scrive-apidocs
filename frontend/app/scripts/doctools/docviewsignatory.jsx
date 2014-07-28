@@ -471,66 +471,87 @@ var DocumentViewSignatoryView = React.createClass({
             </div>
           </div>
 
-          <div className={model.hasAnyDetails() ? "inner spacing" : ""} >
-            <div className={model.hasAnyDetails() ? "details" : ""} >
+          <div className={model.hasAnyDetails() ? "inner fields" : ""} >
 
-               {/*if*/ signatory.company() &&
-                 <div className="company field" style={textstyle} title={signatory.company()}>
-                   {localization.company}: {signatory.company()}
-                 </div>
-               }
-
-               {/*if*/ signatory.email() &&
-                 <div className="email field" style={textstyle}  display={false} title={signatory.email()}>
-                   {localization.email}: {signatory.email()}
-                 </div>
-               }
-
-               {/*if*/ signatory.mobile() &&
-                <div className="mobile field" style={textstyle} title={signatory.mobile()}>
-                   {localization.phone}: {signatory.mobile()}
-                </div>
-               }
-
-               {/*if*/ signatory.companynumber() &&
-                <div className="orgnum field" style={textstyle} title={signatory.companynumber()}>
-                  {localization.docsignview.companyNumberLabel}: {signatory.companynumber().trim() || localization.docsignview.notEntered}
-                </div>
-               }
-
-               {/*if*/ signatory.personalnumber() &&
-                <div className="persnum field" style={textstyle} title={signatory.personalnumber()}>
-                  {localization.docsignview.personalNumberLabel}: {signatory.personalnumber().trim() || localization.docsignview.notEntered}
-                </div>
-               }
+            {/*if*/ signatory.company() &&
+            <div className="fieldrow">
+              <span className="company field" style={textstyle} title={signatory.company()}>
+                {localization.company}: {signatory.company()}
+              </span>
             </div>
+            }
+
+            {/*if*/ signatory.email() &&
+            <div className="fieldrow">
+              <span className="email field" style={textstyle}  display={false} title={signatory.email()}>
+                {localization.email}: {signatory.email()}
+              </span>
+            </div>
+            }
+
+            {/*if*/ signatory.mobile() &&
+            <div className="fieldrow">
+              <span className="mobile field" style={textstyle} title={signatory.mobile()}>
+                {localization.phone}: {signatory.mobile()}
+              </span>
+            </div>
+            }
+
+            {/*if*/ signatory.companynumber() &&
+            <div className="fieldrow">
+              <span className="orgnum field" style={textstyle} title={signatory.companynumber()}>
+                {localization.docsignview.companyNumberLabel}: {signatory.companynumber().trim() || localization.docsignview.notEntered}
+              </span>
+            </div>
+            }
+
+            {/*if*/ signatory.personalnumber() &&
+            <div className="fieldrow">
+              <span className="persnum field" style={textstyle} title={signatory.personalnumber()}>
+                {localization.docsignview.personalNumberLabel}: {signatory.personalnumber().trim() || localization.docsignview.notEntered}
+              </span>
+            </div>
+            }
+
           </div>
 
-          <div className="inner spacing">
-            <div className="details">
-                <div className="signorder field" style={textstyle} title={LanguageService.localizedOrdinal(signatory.signorder())}>
-                    {localization.docview.signatory.invitationOrder}: {LanguageService.localizedOrdinal(signatory.signorder())}
-                </div>
-                <div className="deliverymethod field" style={textstyle} title={this.getDeliveryMethod()}>
-                    {localization.docview.signatory.invitationMethod}: {this.getDeliveryMethod()}
-                </div>
-                <div className="role field" style={textstyle} title={this.getRole()}>
-                    {localization.docview.signatory.role}: {this.getRole()}
-                </div>
+          <div className="inner fields">
 
-                {/*if*/ signatory.signs() &&
-                 <div className="authentication field" style={textstyle} title={this.getAuthenticationMethod()}>
-                     {localization.docview.signatory.authentication}: {this.getAuthenticationMethod()}
-                     {/*if*/ model.hasChangeAuthentication() &&
-                      <a className="edit clickable" onClick={this.handleChangeAuthenticationMethod}>Edit</a>
-                     }
-                 </div>
-                }
-
-                <div className="confirmationmethod field" style={textstyle} title={this.getConfirmationMethod()}>
-                    {localization.docview.signatory.confirmation}: {this.getConfirmationMethod()}
-                </div>
+            <div className="fieldrow">
+              <span className="signorder field" style={textstyle} title={LanguageService.localizedOrdinal(signatory.signorder())}>
+                {localization.docview.signatory.invitationOrder}: {LanguageService.localizedOrdinal(signatory.signorder())}
+              </span>
             </div>
+
+            <div className="fieldrow">
+              <span className="deliverymethod field" style={textstyle} title={this.getDeliveryMethod()}>
+                {localization.docview.signatory.invitationMethod}: {this.getDeliveryMethod()}
+              </span>
+            </div>
+
+            <div className="fieldrow">
+              <span className="role field" style={textstyle} title={this.getRole()}>
+                {localization.docview.signatory.role}: {this.getRole()}
+              </span>
+            </div>
+
+            {/*if*/ signatory.signs() &&
+            <div className="fieldrow">
+              {/*if*/ model.hasChangeAuthentication() &&
+               <a className="edit clickable" onClick={this.handleChangeAuthenticationMethod}>Edit</a>
+              }
+              <span className="authentication field" style={textstyle} title={this.getAuthenticationMethod()}>
+                {localization.docview.signatory.authentication}: {this.getAuthenticationMethod()}
+              </span>
+            </div>
+            }
+
+            <div className="fieldrow">
+              <span className="confirmationmethod field" style={textstyle} title={this.getConfirmationMethod()}>
+                {localization.docview.signatory.confirmation}: {this.getConfirmationMethod()}
+              </span>
+            </div>
+
           </div>
 
           <div className={"statusbox " + (model.hasAnyOptions() ? "" : "last")} >

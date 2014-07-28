@@ -594,8 +594,10 @@ javascriptLocalisation =
                 title: "$_docviewChangeAuthenticationModalTitle()$"
               , accept: "$_docviewChangeAuthenticationModalAccept()$"
               , methodLabel: "$_docviewChangeAuthenticationModalMethodLabel()$"
+              , placeholderEID: "$_docviewChangeAuthenticationModalPlaceholderEID()$"
+              , placeholderPhone: "$_docviewChangeAuthenticationModalPlaceholderPhone()$"
               , valueInfotext: "$_docviewChangeAuthenticationModalValueInfotext()$"
-              , errorSigned: "$_docviewChangeAuthenticationModalErrorFlashMessage()$"
+              , errorSigned: "$_docviewChangeAuthenticationModalErrorSigned()$"
               , errorPhone: "$_docviewChangeAuthenticationModalErrorPhone()$"
               , errorEID: "$_docviewChangeAuthenticationModalErrorEID()$"
             }

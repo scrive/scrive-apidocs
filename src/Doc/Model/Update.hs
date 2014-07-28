@@ -624,7 +624,11 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m ChangeAuthenticationM
         return (oldauth, sl)
       -- Evidence Events
       -- One for changing the value, the other for changing authentication method
-      when (extraInfoAuth authenticationMethod && isJust valueM) $ do
+      let previousValueM = fmap sfValue $ getFieldOfType (fieldType authenticationMethod) (signatoryfields sl)
+      when (extraInfoAuth authenticationMethod
+            && isJust valueM
+            && fromMaybe False (liftM2 (/=) valueM previousValueM)
+           ) $ do
           void $ update $ InsertEvidenceEvent
               UpdateFieldTextEvidence
               (F.value "fieldname" (case fieldType authenticationMethod of

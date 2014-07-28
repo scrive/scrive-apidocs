@@ -37,32 +37,36 @@ define(['React','common/backbone_mixin','Backbone','common/select', 'legacy_code
             $('.put-person-name',selectLabel).html($('<strong>').text(signatory.smartname()));
             return (
                 <div>
-                    <p dangerouslySetInnerHTML={{__html: selectLabel.html()}} />
+                    <label dangerouslySetInnerHTML={{__html: selectLabel.html()}} />
                     <SelectComponent
                              name={this.authenticationMethodName()}
                              onSelect={this.setAuthenticationMethod}
+                             textWidth="321px"
+                             optionsWidth="348px"
                              options={ [ { name : localization.docview.signatory.authenticationStandard,
                                            value : "standard"
                                          }
-                                       , { name : localization.docview.signatory.authenticationSMSPin,
-                                           value : "sms_pin"
-                                         }
                                        , { name : localization.docview.signatory.authenticationELeg,
                                            value : "eleg"
+                                         }
+                                       , { name : localization.docview.signatory.authenticationSMSPin,
+                                           value : "sms_pin"
                                          }
                                        ] }
                     />
                     {/*if*/ model.newAuthenticationMethod() != 'standard' &&
                     <div>
-                        <p>{model.newAuthenticationMethod() == 'sms_pin' ? localization.phone : localization.docsignview.personalNumberLabel}</p>
+                        <label>{model.newAuthenticationMethod() == 'sms_pin' ? localization.phone : localization.docsignview.personalNumberLabel}</label>
                         <div className={model.newAuthenticationValueInvalid() ?
                                         'info-text-input obligatory-input' : 'info-text-input'}>
                             <input type='text'
+                                   placeholder={model.newAuthenticationMethod() == 'sms_pin' ?
+                                       localization.docview.changeAuthentication.placeholderPhone : localization.docview.changeAuthentication.placeholderEID}
                                    value={model.newAuthenticationValue()}
                                    onChange={this.setAuthenticationValue}
                             />
                         </div>
-                        <p className='gray-50-percent'>{localization.docview.changeAuthentication.valueInfotext}</p>
+                        <label className='infotext'>{localization.docview.changeAuthentication.valueInfotext}</label>
                     </div>
                     }
                 </div>
