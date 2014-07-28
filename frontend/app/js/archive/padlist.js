@@ -135,7 +135,7 @@ window.PadList = function() {
        ],
        actions : [
          new ListAction({
-           name : "Update",
+           name : localization.padlist.updateAction,
            cssClass : "float-right",
            acceptEmpty : true,
            onSelect : function() {

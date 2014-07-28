@@ -794,6 +794,9 @@ javascriptLocalisation =
                     ,  search : "$_SearchDoc()$"
                }
         }
+      , padlist : {
+              updateAction : "$_padlistUpdateAction()$"
+        }
       , login : "$_login()$"
       , loginModal : {
              login : "$_login()$"
