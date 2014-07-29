@@ -5,7 +5,7 @@ import DB
 tableCompanies :: Table
 tableCompanies = tblTable {
     tblName = "companies"
-  , tblVersion = 14
+  , tblVersion = 15
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "name", colType = TextT, colNullable = False, colDefault = Just "''::text" }
@@ -16,7 +16,7 @@ tableCompanies = tblTable {
     , tblColumn { colName = "country", colType = TextT, colNullable = False, colDefault = Just "''::text" }
     , tblColumn { colName = "ip_address_mask_list", colType = TextT }
     , tblColumn { colName = "sms_originator", colType = TextT, colNullable = False, colDefault = Just "''::text" }
-
+    , tblColumn { colName = "allow_save_safety_copy", colType = BoolT, colNullable = False, colDefault = Just "true" }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   }

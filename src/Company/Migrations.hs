@@ -205,3 +205,11 @@ moveCompanyUIsToSeparateTable =
 
       runQuery_ $ "ALTER TABLE companies" <+> sqlConcatComma (map (\column -> "DROP COLUMN" <+> column) columnsToMove)
   }
+
+addAllowSaveSafetyCopyToCompanies :: MonadDB m => Migration m
+addAllowSaveSafetyCopyToCompanies = Migration {
+    mgrTable = tableCompanies
+  , mgrFrom = 14
+  , mgrDo = do
+    runSQL_ "ALTER TABLE companies ADD COLUMN allow_save_safety_copy BOOL NOT NULL DEFAULT true"
+}

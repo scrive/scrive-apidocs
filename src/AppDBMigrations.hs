@@ -166,5 +166,6 @@ kontraMigrations = [
   , addMailsBorderColorToBrandedDomain
   , addAPIVersionToDocument
   , addUniqueContraintsTypeOnFields
+  , addAllowSaveSafetyCopyToCompanies
   ] ++ mailerMigrations
     ++ messengerMigrations
