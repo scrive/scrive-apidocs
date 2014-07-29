@@ -1,5 +1,5 @@
 { 
-"_CompanyAccounts":"users",
+"_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Are you sure you want to send reminders to the parties involved in the <span class='put-number-of-documents-here'></span> documents?",
 "_ContractReminderBodySingel":"Are you sure you want to send a reminder to the parties involved in the document <span class='put-document-name-here'></span>?",
@@ -667,6 +667,7 @@
 "_paymentsSubscriptionRenewed":"Your subscription has been renewed.",
 "_paymentsTeamPrice":"$TeamPricePerMonth()$/m",
 "_paymentsUser":"user",
+"_paymentsUsers":"users",
 "_paymentsVat":"All prices are exclusive of VAT.",
 "_paymentsVat25":"25% VAT",
 "_paymentsWasCanceled":"You have chosen to discontinue your subscription.",

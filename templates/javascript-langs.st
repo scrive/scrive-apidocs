@@ -577,7 +577,7 @@ javascriptLocalisation =
 
           }
         , payments: {
-             users: "$_CompanyAccounts()$"
+             users: "$_paymentsUsers()$"
            , user: "$_paymentsUser()$"
            , vat: "$_paymentsVat()$"
            , vat25: "$_paymentsVat25()$"
