@@ -1467,6 +1467,7 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
         this.arrow = args.arrow;
         this.signview = args.signview;
         this.useDefaultBackground  = args.useDefaultBackground || false;
+        this.useDefaultValidBorderColor = args.useDefaultValidBorderColor || false;
 
         // Setting up all standard colors, so we don't have to recalculate that
         this.standardColor = this.model.isObligatory() ? "rgb(83, 182, 136)" : "rgb(41, 158, 204)";
@@ -1476,6 +1477,7 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
         this.standardBorderColor = tinycolor(this.standardColor);
         this.standardBorderColor.setAlpha(0.6);
         this.highlightBorderColor = tinycolor(this.standardColor);
+        this.validBorderColor = '#ddd';
         this.emptyBackgroundColor = this.emptyBackgroundColorWithAlpha(tinycolor(this.standardColor));
         this.render();
     },
@@ -1494,12 +1496,20 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
         $(this.el).remove();
     },
     updateBorderColor : function() {
+       console.log('updateBorderColor');
        var self = this;
+       var image = self.model.value();
+       var valid = image !== '';
        var place = $(self.el);
-       if (self.hovered)
+       if (valid && self.useDefaultValidBorderColor) {
+         place.css('border-color', self.validBorderColor);
+         return;
+       }
+       if (self.hovered) {
          place.css('border-color',self.highlightBorderColor);
-       else
+       } else {
          place.css('border-color',self.standardBorderColor);
+       }
     },
     render: function() {
             var self = this;

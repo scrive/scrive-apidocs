@@ -580,7 +580,7 @@ javascriptLocalisation =
 
           }
         , payments: {
-             users: "$_CompanyAccounts()$"
+             users: "$_paymentsUsers()$"
            , user: "$_paymentsUser()$"
            , vat: "$_paymentsVat()$"
            , vat25: "$_paymentsVat25()$"
@@ -796,6 +796,9 @@ javascriptLocalisation =
                     , subheadline : "$_trashSubheadline()$"
                     ,  search : "$_SearchDoc()$"
                }
+        }
+      , padlist : {
+              updateAction : "$_padlistUpdateAction()$"
         }
       , login : "$_login()$"
       , loginModal : {
