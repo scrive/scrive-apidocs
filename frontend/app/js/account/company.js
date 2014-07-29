@@ -176,6 +176,7 @@ window.Company = Backbone.Model.extend({
       country    : "",
       smsoriginator : "",
       ipaddressmasklist : "",
+      allowsavesafetycopy : false,
       companyui : undefined,
       ready : false
   },
@@ -212,6 +213,9 @@ window.Company = Backbone.Model.extend({
   smsoriginator : function() {
      return this.get("smsoriginator");
   },
+  allowsavesafetycopy: function() {
+     return this.get("allowsavesafetycopy");
+  },
   companyui : function() {
      return this.get("companyui");
   },
@@ -230,6 +234,7 @@ window.Company = Backbone.Model.extend({
       country    : args.country,
       ipaddressmasklist : args.ipaddressmasklist,
       smsoriginator : args.smsoriginator,
+      allowsavesafetycopy : args.allow_save_safety_copy,
       companyui   : args.companyui != undefined ? new CompanyUI(args.companyui) : undefined,
       ready : true
     };

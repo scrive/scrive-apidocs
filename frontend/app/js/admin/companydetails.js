@@ -72,6 +72,12 @@ var AdminCompanyDetailsModel = Backbone.Model.extend({
   setCompanyipaddressmasklist : function(v) {
      this.set({"companyipaddressmasklist" : v});
   },
+  companyallowsavesafetycopy: function() {
+    return this.get("companyallowsavesafetycopy");
+  },
+  setCompanyallowsavesafetycopy: function(v) {
+    return this.set({"companyallowsavesafetycopy":v});
+  },
   newcompanyid : function() {
     return this.get("newcompanyid");
   },
@@ -89,6 +95,7 @@ var AdminCompanyDetailsModel = Backbone.Model.extend({
       , companycountry :  this.company().country()
       , companyipaddressmasklist : this.company().ipaddressmasklist()
       , companysmsoriginator : this.company().smsoriginator()
+      , companyallowsavesafetycopy : this.company().allowsavesafetycopy()
     }, {silent : true});
     this.trigger("reset");
   },
@@ -103,7 +110,8 @@ var AdminCompanyDetailsModel = Backbone.Model.extend({
         companycity : this.companycity(),
         companycountry : this.companycountry(),
         companyipaddressmasklist : this.companyipaddressmasklist(),
-        companysmsoriginator : this.companysmsoriginator()
+        companysmsoriginator : this.companysmsoriginator(),
+        companyallowsavesafetycopy : this.companyallowsavesafetycopy()
     });
   },
   mergeToDifferentCompany : function() {
@@ -184,6 +192,12 @@ var AdminCompanyDetailsView = Backbone.View.extend({
               model.setCompanysmsoriginator(companysmsoriginatorinput.val());
       });
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text("SMS originator"))).append($("<td/>").append(companysmsoriginatorinput)));
+
+      var companyallowsavesafetycopyinput = $("<input type='checkbox'/>").attr("checked",model.companyallowsavesafetycopy());
+      companyallowsavesafetycopyinput.change(function() {
+              model.setCompanyallowsavesafetycopy(companyallowsavesafetycopyinput.is(":checked"));
+      });
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Allow Save Docs"))).append($("<td/>").append(companyallowsavesafetycopyinput)));
 
       return box;
     },
