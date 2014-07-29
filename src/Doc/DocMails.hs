@@ -181,7 +181,11 @@ sendReminderEmail custommessage  actor automatic siglink = do
        docid <- theDocumentID
        scheduleEmailSendoutWithAuthorSenderThroughService docid (mctxmailsconfig mctx) $ mail {
                                                              to = [getMailAddress siglink]
-                                                           , mailInfo = Invitation docid (signatorylinkid siglink)
+                                                             -- We only collect delivery information, if signatory had not signed yet
+                                                           , mailInfo = if (isNothing $ maybesigninfo siglink) 
+                                                                        then Invitation docid (signatorylinkid siglink)
+                                                                        else None
+                                                             -- We only add attachment after document is signed	 
                                                            , attachments = if isJust $ maybesigninfo siglink
                                                                            then mailattachments
                                                                            else []
