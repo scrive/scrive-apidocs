@@ -33,7 +33,7 @@ define(['React','common/button','common/backbone_mixin','Backbone', 'tinycolor',
                         signatoryid : this.document().currentSignatory().signatoryid(),
                         phone: this.phone()
       });
-      this.document().requestPin(success, function() {new OpenSigningFailedAndReloadModal();}).send();
+      this.document().requestPin(success, function(xhr) {new OpenSigningFailedAndReloadModal(xhr);}).send();
     },
     mobileField : function() {
        return this.document().currentSignatory().mobileField();

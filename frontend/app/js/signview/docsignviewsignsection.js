@@ -24,7 +24,12 @@ window.DocumentSignConfirmation = function(args) {
 };
 
 
-window.OpenSigningFailedAndReloadModal = function() {
+window.OpenSigningFailedAndReloadModal = function(xhr) {
+  mixpanel.track('Error', {
+      Message      : 'Signing failed: reload modal',
+      Status       : xhr.status,
+      ResponseText : xhr.responseText
+  });
   var text = $("<div>").append($("<span/>").text(localization.signingErrorMessage1))
                        .append("<BR/>")
                        .append($("<span/>").text(localization.signingErrorMessage2));
@@ -109,7 +114,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
             new FlashMessage({content: localization.sign.eleg.failed,
                               color: 'red'});
         } else {
-            new OpenSigningFailedAndReloadModal();
+            new OpenSigningFailedAndReloadModal(xhr);
         }
     };
 
@@ -246,7 +251,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
               if (xhr.status == 403)
                 ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
               else
-                new OpenSigningFailedAndReloadModal();
+                new OpenSigningFailedAndReloadModal(xhr);
             }
         };
 
