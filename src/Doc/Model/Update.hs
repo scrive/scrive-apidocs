@@ -1478,7 +1478,16 @@ instance MonadDB m => DBUpdate m PurgeDocuments Int where
                                   -- not really_deleted yet
         <+> "                     AND signatory_links.really_deleted IS NULL)"
 
-        -- is not saved but time to save the document went by
+        -- session is still in progress
+        <+> "   AND NOT EXISTS(SELECT TRUE"
+        <+> "                    FROM signatory_links"
+        <+> "                   WHERE signatory_links.document_id = documents.id"
+        <+> "                     AND signatory_links.user_id IS NULL"
+        <+> "                     AND EXISTS (SELECT TRUE"
+        <+> "                                   FROM document_session_tokens"
+        <+> "                                  WHERE document_session_tokens.signatory_link_id = signatory_links.id))"
+
+        -- is not saved but time to save the document went by although it was allowed by author's company settings
         <+> "   AND NOT EXISTS(SELECT TRUE"
         <+> "                    FROM signatory_links"
         <+> "                   WHERE signatory_links.document_id = documents.id"
