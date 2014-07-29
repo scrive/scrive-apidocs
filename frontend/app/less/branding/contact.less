@@ -12,8 +12,12 @@ aside.contact nav.contact {
   margin-top: -90px;
   position: fixed;
   top: 50%;
-  z-index: 1097;
+  z-index: 97;
   width: 60px;
+
+  &.inactive {
+    display: none;
+  }
 
   ul {
 
@@ -21,14 +25,11 @@ aside.contact nav.contact {
       height: 60px;
       position: relative;
       width: 60px;
-
-      &:last-child a .hover {
-        height: 36px;
-      }
       
       a {
         display: block;
         border-left: 4px solid transparent;
+        box-sizing: border-box;
         margin-left: -4px;
         margin-top: -1px;
         transition: .15s ease-in-out all;
@@ -37,6 +38,7 @@ aside.contact nav.contact {
         .icon {
           background: @white;
           border: 1px solid @blue-border;
+          box-sizing: border-box;
           height: 60px;
           position: relative;
           text-align: center;
@@ -54,8 +56,11 @@ aside.contact nav.contact {
           background: @white;
           border: 1px solid @blue-border;
           border-left: none;
-          height: 34px;
+          box-sizing: border-box;
+          font-size: 16px;
+          height: 60px;
           left: -180px;
+          line-height: 12px;
           padding: 12px 16px;
           position: absolute;
           opacity: 0;
@@ -64,20 +69,22 @@ aside.contact nav.contact {
           z-index: 0;
 
           p {
-            color: @primary-font-color;
-            font: 14px/1 @font-family-source;
+            color: @dark-text;
+            font: bold 14px/1 @font-family-source;
             margin: 0;
             margin-bottom: 0;
           }
 
           small {
             color: @text-dark;
+            display: inline-block;
             font: .75em/1 @font-family-source;
+            padding-top: 8px;
           }
         }
 
         &:hover {
-          border-color: @blue-medium;
+          border-color: @text-dark;
 
           .icon {
 
