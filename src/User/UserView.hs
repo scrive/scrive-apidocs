@@ -132,6 +132,7 @@ companyJSON ctx company companyui = runJSONGenT $ do
     value "smsoriginator" $ companysmsoriginator $ companyinfo company
     value "ipaddressmasklist" $ intercalate "," $ fmap show $ companyipaddressmasklist $ companyinfo company
     valueM "companyui" $ companyUIJson ctx companyui
+    value "allow_save_safety_copy" $ companyallowsavesafetycopy (companyinfo company)
 
 documentSignviewBrandingJSON :: Monad m => Context -> User -> Company -> CompanyUI -> Document -> JSONGenT m ()
 documentSignviewBrandingJSON ctx user company companyui document = do

@@ -109,6 +109,7 @@ instance Arbitrary CompanyInfo where
                          , companycountry    = f
                          , companyipaddressmasklist = []
                          , companysmsoriginator = g
+                         , companyallowsavesafetycopy = True
                          }
 
 instance Arbitrary MagicHash where
@@ -480,6 +481,7 @@ addNewCompany = do
          , companycountry = companycountry
          , companyipaddressmasklist = []
          , companysmsoriginator = companysmsoriginator
+         , companyallowsavesafetycopy = True
          }
     Just company <- dbQuery $ GetCompany cid
     return company

@@ -38,6 +38,7 @@ data CompanyInfo = CompanyInfo {
   , companycountry :: String
   , companyipaddressmasklist :: [IPAddressWithMask]
   , companysmsoriginator :: String
+  , companyallowsavesafetycopy :: Bool
   } deriving (Eq, Ord, Show)
 
 data CompanyFilter
@@ -157,6 +158,7 @@ instance MonadDB m => DBUpdate m SetCompanyInfo Bool where
                                         [] -> Nothing
                                         x -> Just (show x)
       sqlSet "sms_originator" companysmsoriginator
+      sqlSet "allow_save_safety_copy" companyallowsavesafetycopy
       sqlWhereEq "id" cid
 
 -- helpers
@@ -172,9 +174,10 @@ selectCompaniesSelectors = do
   sqlResult "companies.country"
   sqlResult "companies.ip_address_mask_list"
   sqlResult "companies.sms_originator"
+  sqlResult "companies.allow_save_safety_copy"
 
-fetchCompany :: (CompanyID, String, String, String, String, String, String, Maybe String, String) -> Company
-fetchCompany (cid, name, number, address, zip', city, country, ip_address_mask_list, sms_originator) = Company {
+fetchCompany :: (CompanyID, String, String, String, String, String, String, Maybe String, String, Bool) -> Company
+fetchCompany (cid, name, number, address, zip', city, country, ip_address_mask_list, sms_originator, allow_save_safety_copy) = Company {
   companyid = cid
 , companyinfo = CompanyInfo {
     companyname = name
@@ -185,5 +188,6 @@ fetchCompany (cid, name, number, address, zip', city, country, ip_address_mask_l
   , companycountry = country
   , companyipaddressmasklist = maybe [] $(read) ip_address_mask_list
   , companysmsoriginator = sms_originator
+  , companyallowsavesafetycopy = allow_save_safety_copy
   }
 }

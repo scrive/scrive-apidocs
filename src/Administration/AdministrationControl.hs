@@ -463,6 +463,7 @@ getCompanyInfoChange = do
   mcompanycountry <- getField "companycountry"
   mcompanyipaddressmasklist <- getOptionalField asValidIPAddressWithMaskList "companyipaddressmasklist"
   mcompanysmsoriginator <- getField "companysmsoriginator"
+  mcompanyallowsavesafetycopy <- getField "companyallowsavesafetycopy"
   return $ \CompanyInfo{..} ->  CompanyInfo {
         companyname        = fromMaybe companyname mcompanyname
       , companynumber      = fromMaybe companynumber mcompanynumber
@@ -472,6 +473,7 @@ getCompanyInfoChange = do
       , companycountry     = fromMaybe companycountry mcompanycountry
       , companyipaddressmasklist = fromMaybe companyipaddressmasklist mcompanyipaddressmasklist
       , companysmsoriginator = fromMaybe companysmsoriginator mcompanysmsoriginator
+      , companyallowsavesafetycopy = maybe companyallowsavesafetycopy (=="true") mcompanyallowsavesafetycopy
     }
 
 {- | Reads params and returns function for conversion of user settings.  No param leaves fields unchanged -}
