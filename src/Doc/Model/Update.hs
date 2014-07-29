@@ -1493,7 +1493,14 @@ instance MonadDB m => DBUpdate m PurgeDocuments Int where
         <+> "                   WHERE signatory_links.document_id = documents.id"
         <+> "                     AND signatory_links.user_id IS NULL"
                                   -- linger time hasn't elapsed yet
-        <+> "                     AND documents.mtime + (" <?> (show unsavedDocumentLingerDays' ++ "days") <+> " :: INTERVAL) > now())"
+        <+> "                     AND documents.mtime + (" <?> (show unsavedDocumentLingerDays' ++ "days") <+> " :: INTERVAL) > now()"
+                                  -- linger time is allowed by author's company settings
+        <+> "                     AND (SELECT companies.allow_save_safety_copy"
+        <+> "                            FROM companies, users, signatory_links"
+        <+> "                           WHERE signatory_links.document_id = documents.id"
+        <+> "                             AND signatory_links.is_author"
+        <+> "                             AND users.id = signatory_links.user_id"
+        <+> "                             AND users.company_id = companies.id))"
 
     -- set purged time on documents
     rows <- runSQL $ "UPDATE documents"
