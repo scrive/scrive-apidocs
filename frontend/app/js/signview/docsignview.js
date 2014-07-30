@@ -101,7 +101,8 @@ var DocumentSignViewModel = Backbone.Model.extend({
              && document.currentSignatory().email() //We assume that if this email is set - then it is valid
              && !document.currentSignatory().padDelivery()
              && !document.currentSignatory().apiDelivery()
-             && document.currentSignatory().hasSigned();
+             && document.currentSignatory().hasSigned()
+             && this.signviewbranding().allowsavesafetycopy();
   },
 
   createAccountSection: function() {
@@ -508,7 +509,6 @@ var DocumentSignViewView = Backbone.View.extend({
      subcontainerWrapper.prepend(this.model.instructionssection().el);
 
       if(this.model.hasCreateAccountSection()) {
-	//console.log(this.model.createAccountSection());
 	this.subcontainer.append(this.model.createAccountSection());
         this.model.showRetargetingPixel();
       }

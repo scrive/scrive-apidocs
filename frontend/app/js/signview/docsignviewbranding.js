@@ -63,6 +63,9 @@ window.BrandingForSignView = Backbone.Model.extend({
   showfooter: function() {
       return this.get("showfooter");
   },
+  allowsavesafetycopy: function() {
+      return this.get("allowsavesafetycopy");
+  },
   fullname: function() {
       return this.get("fullname");
   },
@@ -99,6 +102,7 @@ window.BrandingForSignView = Backbone.Model.extend({
         company: args.company,
         phone: args.phone,
         position: args.position,
+        allowsavesafetycopy: args.allowsavesafetycopy,
         ready : true
 
     };
