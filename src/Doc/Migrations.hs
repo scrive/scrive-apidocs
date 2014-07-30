@@ -1208,7 +1208,7 @@ addUniqueContrainsTypeOnFields=
                        sqlWhereEqSql "s1.custom_name" "s2.custom_name"
                        sqlWhere      "s1.id < s2.id"
                        sqlOrderBy "s1.id,s2.id"
-                       sqlResult "s1.id,s1.type, s1.custom_name,s1.value,s1.placements,s2.id,s2.value,s2.placements"
+                       sqlResult "s1.type, s1.custom_name,s1.id,s1.value,s1.placements,s2.id,s2.value,s2.placements"
                        sqlLimit 1
          values :: [(FieldType, String , Int64, String, [FieldPlacement], Int64, String, [FieldPlacement])] <- fetchMany id
          case values of
@@ -1229,7 +1229,8 @@ addUniqueContrainsTypeOnFields=
            CheckboxFT _     -> fixCustomField f
 
        fixStandardField (_,_,fid1,fv1,fp1,fid2,fv2,fp2) = do
-         Log.mixlog_ $ "Migration: Merging standard fields that should be joined: " ++ show fid1 ++ " " ++ show fid2
+         Log.mixlog_ $ "Migration: Merging standard fields that should be joined: " ++ show fid1 ++ " " ++ show fid2 ++ ".\n" ++
+                       "Values that are merged are: '" ++ fv1 ++"' and '" ++ fv2 ++ "'. Value '"++(if (null fv1) then fv2 else fv1)++"' will be used."    
          runQuery_ $ sqlUpdate "signatory_link_fields" $ do
            sqlWhereEq "id" fid1
            sqlSet "value" (if (null fv1) then fv2 else fv1)
