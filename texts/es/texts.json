@@ -40,6 +40,7 @@
 "_RepeatNewPassword":"Confirmar la nueva contraseña",
 "_ReviewAttachment":"Revisar",
 "_SampleEmailContent":"<strong>John Smith</strong> le ha invitado a firmar electrónicamente el documento <strong>Demo Document</strong>.",
+"_SampleEmailInstructions":"",
 "_SaveChanges":"Guardar cambios",
 "_SaveSettings":"Guardar cambios",
 "_SearchCompanyAccount":"Buscar una cuenta",

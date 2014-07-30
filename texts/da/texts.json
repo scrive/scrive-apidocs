@@ -40,6 +40,7 @@
 "_RepeatNewPassword":"Bekræft ny adgangskode",
 "_ReviewAttachment":"Gennemse",
 "_SampleEmailContent":"<strong>John Smith</strong> har inviteret dig til at e-signere dokumentet <strong>Demo Document</strong>.",
+"_SampleEmailInstructions":"",
 "_SaveChanges":"Gem ændringer",
 "_SaveSettings":"Gem indstillinger",
 "_SearchCompanyAccount":"Søg konto",
