@@ -667,6 +667,7 @@
 "_paymentsSubscriptionRenewed":"Votre abonnement a été renouvelé.",
 "_paymentsTeamPrice":"$TeamPricePerMonth()$/m",
 "_paymentsUser":"",
+"_paymentsUsers":"",
 "_paymentsVat":"Tous les prix s'entendent hors TVA.",
 "_paymentsVat25":"TVA à 25%",
 "_paymentsWasCanceled":"Vous avez choisi de mettre fin à votre abonnement.",

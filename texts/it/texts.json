@@ -667,6 +667,7 @@
 "_paymentsSubscriptionRenewed":"Il tuo sottoscrizione è stato rinnovato.",
 "_paymentsTeamPrice":"$TeamPricePerMonth()$/al mese",
 "_paymentsUser":"",
+"_paymentsUsers":"",
 "_paymentsVat":"Tutti i prezzi sono IVA esclusa.",
 "_paymentsVat25":"IVA al 25%",
 "_paymentsWasCanceled":"Hai scelto di non rinnovare il tuo sottoscrizione.",

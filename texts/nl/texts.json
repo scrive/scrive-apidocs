@@ -667,6 +667,7 @@
 "_paymentsSubscriptionRenewed":"Uw abonnement is vernieuwd. ",
 "_paymentsTeamPrice":"$TeamPricePerMonth()$/m",
 "_paymentsUser":"",
+"_paymentsUsers":"",
 "_paymentsVat":"Alle prijzen zijn exclusief BTW.",
 "_paymentsVat25":"25% BTW",
 "_paymentsWasCanceled":"U heeft ervoor gekozen om uw abonnement stop te zetten.",

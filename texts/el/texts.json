@@ -667,6 +667,7 @@
 "_paymentsSubscriptionRenewed":"Η συνδρομή σας έχει ανανεωθεί. ",
 "_paymentsTeamPrice":"$TeamPricePerMonth()$/μήνα",
 "_paymentsUser":"",
+"_paymentsUsers":"",
 "_paymentsVat":"Όλες οι τιμές είναι χωρίς ΦΠΑ. ",
 "_paymentsVat25":"25% ΦΠΑ ",
 "_paymentsWasCanceled":"Έχετε επιλέξει να διακόψετε τη συνδρομή σας. ",
