@@ -1063,6 +1063,7 @@ javascriptLocalisation =
              , brandingPreview: {
                    emailButtonLabel : "$_sampleEmailButtonLabel()$"
                  , emailContent: "$_SampleEmailContent()$"
+                 , emailInstructions: "$_SampleEmailInstructions()$"
                  , emailFooter : "$_sampleEmailFooter()$"
              }
       }
