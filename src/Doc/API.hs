@@ -11,6 +11,7 @@ module Doc.API (
   , apiCallDownloadMainFile    -- Exported for tests
   , apiCallDownloadFile        -- Exported for tests
   , apiCallChangeMainFile
+  , apiChangeAuthentication    -- Exported for tests
 
   , getAnchorPositions
   ) where
