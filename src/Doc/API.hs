@@ -641,16 +641,14 @@ apiChangeAuthentication did slid = api $ do
       unlessM (isPending <$> theDocument) $
           throwIO . SomeKontraException $ badInput "Document status must be pending"
       doc <- theDocument
-      let getSignatoryLinkFromIDinDocument :: Document -> SignatoryLinkID -> Maybe SignatoryLink
-          getSignatoryLinkFromIDinDocument d siglid = find (\a -> signatorylinkid a == siglid) (documentsignatorylinks d)
-          siglink = getSignatoryLinkFromIDinDocument doc slid
+      let siglink = getSigLinkFor slid doc
       when (isNothing siglink) $
           throwIO . SomeKontraException $ badInput $ "Signatory link id " ++ (show slid) ++ " not valid for document id " ++ (show did)
       when (maybe False (isJust . maybesigninfo) siglink) $
           throwIO . SomeKontraException $ badInput $ "Signatory link id " ++ (show slid) ++ " has already signed"
       -- Get the POST data and check it
-      authentication_type <- getDataFn' (look "authentication_type")
-      maybeAuthValue      <- getDataFn' (look "authentication_value")
+      authentication_type <- getField "authentication_type"
+      maybeAuthValue      <- getField "authentication_value"
       when (isNothing authentication_type) $
           throwIO . SomeKontraException $ badInput $ "`authentication_type` must be given. "
                                           ++ "Supported values are: `standard`, `eleg`, `sms_pin`."
