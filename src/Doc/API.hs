@@ -405,8 +405,7 @@ apiCallCheckSign did slid = api $ do
       (throwIO . SomeKontraException $ conflictError $ "Document not pending")
     whenM (hasSigned <$> fromJust . getSigLinkFor slid <$> theDocument) $ do -- We can use fromJust since else we would not get access to document
       (throwIO . SomeKontraException $ conflictError $ "Document already signed")
-    isAuthenticationAndValueOK <- checkAuthenticationMethodAndValue slid
-    either (\str -> throwIO . SomeKontraException $ conflictError str) (return) isAuthenticationAndValueOK
+    checkAuthenticationMethodAndValue slid
     authorization <- signatorylinkauthenticationmethod <$> fromJust . getSigLinkFor slid <$> theDocument
     fields <- getFieldForSigning
     case authorization of
@@ -451,8 +450,7 @@ apiCallSign  did slid = api $ do
       (throwIO . SomeKontraException $ conflictError $ "Document not pending")
     whenM (hasSigned <$> fromJust . getSigLinkFor slid <$> theDocument) $ do -- We can use fromJust since else we would not get access to document
       (throwIO . SomeKontraException $ conflictError $ "Document already signed")
-    isAuthenticationAndValueOK <- checkAuthenticationMethodAndValue slid
-    either (\str -> throwIO . SomeKontraException $ conflictError str) (return) isAuthenticationAndValueOK
+    checkAuthenticationMethodAndValue slid
     authorization <- signatorylinkauthenticationmethod <$> fromJust . getSigLinkFor slid <$> theDocument
 
     case authorization of
@@ -504,7 +502,7 @@ apiCallSign  did slid = api $ do
     `catchKontra` (\(SignatoryHasAlreadySigned {}) -> throwIO . SomeKontraException $ conflictError $ "Signatory has already signed")
 
 {- | Utils for signing with eleg -}
-checkAuthenticationMethodAndValue :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m (Either String ())
+checkAuthenticationMethodAndValue :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
 checkAuthenticationMethodAndValue slid = do
   mAuthType  :: Maybe String <- getField "authentication_type"
   mAuthValue :: Maybe String <- getField "authentication_value"
@@ -516,20 +514,22 @@ checkAuthenticationMethodAndValue slid = do
                     siglink <- fromJust . getSigLinkFor slid <$> theDocument
                     let authOK = authMethod == signatorylinkauthenticationmethod siglink
                     case (authOK, authMethod) of
-                         (False, _) ->
-                             return $ Left "`authentication_type` does not match"
-                         (True, StandardAuthentication) -> return $ Right ()
+                         (False, _) -> throwIO . SomeKontraException $
+                             conflictError "`authentication_type` does not match"
+                         (True, StandardAuthentication) -> return ()
                          (True, ELegAuthentication)   ->
                              if (authValue == getPersonalNumber siglink)
-                                then return $ Right ()
-                                else return $ Left "`authentication_value` for personal number does not match"
+                                then return ()
+                                else throwIO . SomeKontraException $
+                                    conflictError "`authentication_value` for personal number does not match"
                          (True, SMSPinAuthentication) ->
                              if (authValue == getMobile siglink)
-                                then return $ Right ()
-                                else return $ Left "`authentication_value` for phone number does not match"
+                                then return ()
+                                else throwIO . SomeKontraException $
+                                    conflictError "`authentication_value` for phone number does not match"
                 Nothing ->
                     throwIO . SomeKontraException $ badInput "`authentication_type` was not a valid"
-       (Nothing, Nothing) -> return $ Right ()
+       (Nothing, Nothing) -> return ()
        _ -> throwIO . SomeKontraException $ badInput "Only one of `authentication_type` and `authentication_value` provided"
 
 getValidPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [(FieldType,String)] -> m (Maybe String)
