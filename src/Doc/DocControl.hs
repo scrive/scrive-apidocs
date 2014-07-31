@@ -284,6 +284,8 @@ handleIssueGoToSignviewPad docid slid= do
   case (isAuthor <$> getMaybeSignatoryLink (doc,user), getMaybeSignatoryLink (doc,slid)) of
     (Just True,Just sl) -> do
       dbUpdate $ AddDocumentSessionToken (signatorylinkid sl) (signatorymagichash sl)
+      withDocument doc $ void $
+        dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg SignatoryLinkVisited  (return ()) (Just sl) Nothing =<< signatoryActor ctx sl
       return $ LinkSignDocPad docid slid
     _ -> return LoopBack
 
