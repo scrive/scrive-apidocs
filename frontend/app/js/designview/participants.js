@@ -1254,13 +1254,8 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                             view.innerDiv.css({overflow:'visible'});
 
                             view.viewmodel.trigger('visibility:participantopen');
-                            $(window).resize();
                             view.opened = true;
                             view.active = false;
-                        },
-                        step: function() {
-                            // we change the position of the document box, so we need to trigger resize
-                            $(window).resize();
                         }
                     });
                 } else {
@@ -1284,14 +1279,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                     view.innerDiv.css({'overflow': 'hidden'});
                     view.innerDiv.animate({height:46}, {
                         duration: 250,
-                        easing: "linear",
-                        step: function() {
-                            // we change the position of the document box, so we need to trigger resize
-                            $(window).resize();
-                        },
-                        complete: function() {
-                            $(window).resize();
-                        }
+                        easing: "linear"
                     });
                     view.active = false;
                     view.opened = false;
@@ -1315,7 +1303,6 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             else
                 view.close();
 
-            $(window).resize();
             return view;
         },
         inner: function() {
