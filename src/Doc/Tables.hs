@@ -188,8 +188,7 @@ tableSignatoryLinkFields = tblTable {
   , tblForeignKeys = [
       (fkOnColumn "signatory_link_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }
     ]
-  , tblIndexes = [   indexOnColumn "signatory_link_id"
-                   , uniqueIndexOnColumns ["signatory_link_id","custom_name","type"]
+  , tblIndexes = [  uniqueIndexOnColumns ["signatory_link_id","type","custom_name"]
                  ]
   }
 

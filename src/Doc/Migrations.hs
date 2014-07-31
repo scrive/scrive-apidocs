@@ -1157,8 +1157,8 @@ changeSomeStandardFieldsToOptional=
   }
 
 -- Personal number used to be obligatory, but we didn't asked about it in extra details section
-addUniqueContrainsTypeOnFields :: (MonadDB m,Log.MonadLog m) => Migration m
-addUniqueContrainsTypeOnFields=
+addUniqueContraintsTypeOnFields :: (MonadDB m,Log.MonadLog m) => Migration m
+addUniqueContraintsTypeOnFields=
   Migration {
     mgrTable = tableSignatoryLinkFields
   , mgrFrom = 6
@@ -1199,7 +1199,8 @@ addUniqueContrainsTypeOnFields=
        -- We are expecting to have less then 500 other fields, that need to be fixed. So it should be ok to do a separate update for each of them
        fixOtherFields
        -- When we fixed all fields, we can introduce a contrain
-       runQuery_ $ sqlCreateIndex "signatory_link_fields" (uniqueIndexOnColumns ["signatory_link_id","custom_name","type"])
+       runQuery_ $ sqlDropIndex "signatory_link_fields" (indexOnColumn "signatory_link_id")
+       runQuery_ $ sqlCreateIndex "signatory_link_fields" (uniqueIndexOnColumns ["signatory_link_id","type","custom_name"])
   }
   where
        fixOtherFields = do

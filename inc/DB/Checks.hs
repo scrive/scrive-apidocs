@@ -409,7 +409,7 @@ fetchTableCheck (name, condition) = TableCheck {
 sqlGetIndexes :: Table -> SQL
 sqlGetIndexes table = toSQLCommand . sqlSelect "pg_catalog.pg_class c" $ do
   sqlResult "c.relname::text" -- index name
-  sqlResult "array(SELECT a.attname::text FROM pg_catalog.pg_attribute a WHERE a.attrelid = i.indexrelid)" -- array of affected columns
+  sqlResult "array(SELECT a.attname::text FROM pg_catalog.pg_attribute a WHERE a.attrelid = i.indexrelid ORDER BY attnum) " -- array of affected columns
   sqlResult "i.indisunique" -- is it unique?
   sqlResult "CASE WHEN pg_get_indexdef(i.indexrelid, 0, true) LIKE '%WHERE%' THEN regexp_replace(pg_get_indexdef(i.indexrelid, 0, true), '.*WHERE (.*)', '\\1') ELSE NULL END" -- if partial, get constraint def
   sqlJoinOn "pg_catalog.pg_index i" "c.oid = i.indexrelid"
