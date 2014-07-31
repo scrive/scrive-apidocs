@@ -1199,7 +1199,7 @@ addUniqueContrainsTypeOnFields=
        -- We are expecting to have less then 500 other fields, that need to be fixed. So it should be ok to do a separate update for each of them
        fixOtherFields
        -- When we fixed all fields, we can introduce a contrain
-       runQuery_ $ sqlCreateIndex "signatory_link_fields" (uniqueIndexOnColumns ["custom_name","signatory_link_id","type"])
+       runQuery_ $ sqlCreateIndex "signatory_link_fields" (uniqueIndexOnColumns ["signatory_link_id","custom_name","type"])
   }
   where
        fixOtherFields = do
