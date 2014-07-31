@@ -652,6 +652,19 @@ window.Signatory = Backbone.Model.extend({
         this.set({authentication:a});
         return this;
     },
+    authenticationFieldValue: function() {
+        var authenticationValue;
+        if(this.elegAuthentication()) {
+            authenticationValue = this.personalnumber();
+        }
+        else if(this.smsPinAuthentication()) {
+            authenticationValue = this.mobile();
+        }
+        else {
+            authenticationValue = '';
+        }
+        return authenticationValue;
+    },
     hasProblems: function(forSigning) {
         return this.hasFieldProblems(forSigning);
     },

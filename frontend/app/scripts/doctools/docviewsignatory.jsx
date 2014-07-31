@@ -429,7 +429,7 @@ var DocumentViewSignatoryView = React.createClass({
           return localization.docview.signatory.roleViewer;
       }
     },
-    getAuthenticationMethod : function() {
+    getAuthenticationMethodText : function() {
       var model = this.props.model;
       var signatory = model.signatory();
       if(signatory.standardAuthentication()) {
@@ -540,8 +540,8 @@ var DocumentViewSignatoryView = React.createClass({
               {/*if*/ model.hasChangeAuthentication() &&
                <a className="edit clickable" onClick={this.handleChangeAuthenticationMethod}>Edit</a>
               }
-              <span className="authentication field" style={textstyle} title={this.getAuthenticationMethod()}>
-                {localization.docview.signatory.authentication}: {this.getAuthenticationMethod()}
+              <span className="authentication field" style={textstyle} title={this.getAuthenticationMethodText()}>
+                {localization.docview.signatory.authentication}: {this.getAuthenticationMethodText()}
               </span>
             </div>
             }

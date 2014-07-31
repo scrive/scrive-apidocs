@@ -335,16 +335,6 @@ window.Document = Backbone.Model.extend({
     checksign: function(successCallback, errorCallback,extraSignFields) {
         var document = this;
         var signatory = document.currentSignatory();
-        var authenticationValue;
-        if(signatory.elegAuthentication()) {
-            authenticationValue = signatory.personalnumber();
-        }
-        else if(signatory.smsPinAuthentication()) {
-            authenticationValue = signatory.mobile();
-        }
-        else {
-            authenticationValue = '';
-        }
         var fields = this.fieldsForSigning();
         extraSignFields = extraSignFields || {};
         return new Submit({
@@ -352,7 +342,7 @@ window.Document = Backbone.Model.extend({
             method: "POST",
             fields: JSON.stringify(fields),
             authentication_type: signatory.authentication(),
-            authentication_value: authenticationValue,
+            authentication_value: signatory.authenticationFieldValue(),
             ajax: true,
             expectedType : "text",
             ajaxsuccess : successCallback,
@@ -362,16 +352,6 @@ window.Document = Backbone.Model.extend({
     sign: function(errorCallback, successCallback,extraSignFields) {
         var document = this;
         var signatory = document.currentSignatory();
-        var authenticationValue;
-        if(signatory.elegAuthentication()) {
-            authenticationValue = signatory.personalnumber();
-        }
-        else if(signatory.smsPinAuthentication()) {
-            authenticationValue = signatory.mobile();
-        }
-        else {
-            authenticationValue = '';
-        }
         var fields = this.fieldsForSigning();
         extraSignFields = extraSignFields || {};
         return new Submit({
@@ -380,7 +360,7 @@ window.Document = Backbone.Model.extend({
             screenshots: JSON.stringify(document.get("screenshots")),
             fields: JSON.stringify(fields),
             authentication_type: signatory.authentication(),
-            authentication_value: authenticationValue,
+            authentication_value: signatory.authenticationFieldValue(),
             ajax: true,
             expectedType : "text",
             ajaxsuccess : function(newDocumentRaw) {
