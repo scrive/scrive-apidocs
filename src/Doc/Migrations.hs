@@ -1164,7 +1164,7 @@ addUniqueContrainsTypeOnFields=
   , mgrFrom = 6
   , mgrDo = do
        -- We have a large number of duplicated signature fields (10K+) - they have same value and same name, but only one of them has placement
-       runQuery_ $ sqlDelete "signatory_link_fields" $ do
+       n1 <- runQuery $ sqlDelete "signatory_link_fields" $ do
                   sqlWhereInSql "id" $ do
                     sqlSelect "signatory_link_fields as s1, signatory_link_fields as s2" $ do
                      -- We select fields for same signatory, with same values and names
@@ -1178,10 +1178,10 @@ addUniqueContrainsTypeOnFields=
                      -- We select one without placement
                      sqlWhereEq "s1.placements" ("[]" :: String)
                      sqlResult "s1.id"
-
+       Log.mixlog_ $ "Migration (unique fields): " ++ show n1 ++" duplicated signature fields removed by first iteration"
        -- We do two iterations, since sometimes field with placement set has lower id, and sometimes not.
        -- We could do it in one iteration but it would be more complex
-       runQuery_ $ sqlDelete "signatory_link_fields" $ do
+       n2 <- runQuery $ sqlDelete "signatory_link_fields" $ do
                   sqlWhereInSql "id" $ do
                     sqlSelect "signatory_link_fields as s1, signatory_link_fields as s2" $ do
                      -- We select fields for same signatory, with same values and names
@@ -1195,6 +1195,7 @@ addUniqueContrainsTypeOnFields=
                      -- We select one without placement
                      sqlWhereEq "s2.placements" ("[]" :: String)
                      sqlResult "s2.id"
+       Log.mixlog_ $ "Migration (unique fields): " ++ show n2 ++" duplicated signature fields removed by second iteration"              
        -- We are expecting to have less then 500 other fields, that need to be fixed. So it should be ok to do a separate update for each of them
        fixOtherFields
        -- When we fixed all fields, we can introduce a contrain
@@ -1229,7 +1230,7 @@ addUniqueContrainsTypeOnFields=
            CheckboxFT _     -> fixCustomField f
 
        fixStandardField (_,_,fid1,fv1,fp1,fid2,fv2,fp2) = do
-         Log.mixlog_ $ "Migration: Merging standard fields that should be joined: " ++ show fid1 ++ " " ++ show fid2 ++ ".\n" ++
+         Log.mixlog_ $ "Migration (unique fields): Merging standard fields that should be joined: " ++ show fid1 ++ " " ++ show fid2 ++ ".\n" ++
                        "Values that are merged are: '" ++ fv1 ++"' and '" ++ fv2 ++ "'. Value '"++(if (null fv1) then fv2 else fv1)++"' will be used."    
          runQuery_ $ sqlUpdate "signatory_link_fields" $ do
            sqlWhereEq "id" fid1
@@ -1239,7 +1240,7 @@ addUniqueContrainsTypeOnFields=
            sqlWhereEq "id" fid2
 
        fixCustomField (_,fn,_,_,_,fid2,_,_) = do
-         Log.mixlog_ $ "Migration: Renaming field " ++ show fid2 
+         Log.mixlog_ $ "Migration (unique fields): Renaming field " ++ show fid2 
          runQuery_ $ sqlUpdate "signatory_link_fields" $ do
            sqlWhereEq "id" fid2
            sqlSet "custom_name" (fn ++ "_")
