@@ -633,26 +633,24 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m ChangeAuthenticationM
       let mPreviousValue = fmap sfValue $ getFieldOfType (fieldType authenticationMethod) (signatoryfields sig)
       when (extraInfoAuth authenticationMethod && mValue == mPreviousValue) $ do
           void $ update $ InsertEvidenceEvent
-              UpdateFieldTextEvidence
-              (F.value "fieldname" (case fieldType authenticationMethod of
-                   PersonalNumberFT -> "ID number" :: String
-                   MobileFT         -> "Mobile number"
-                   _                -> ""
-                   )
-              >> F.value "value" (fromMaybe "" mValue))
+              (getEvidenceTextForUpdateField $ fieldType authenticationMethod)
+              (F.value "value" (fromMaybe "" mValue))
               actor
       when (authenticationMethod /= oldauth) $ do
-          let authName :: AuthenticationMethod -> String
-              authName a = case a of
-                  StandardAuthentication -> "no extra authentication"
-                  ELegAuthentication     -> "eID"
-                  SMSPinAuthentication   -> "PIN by SMS"
+          let changeAuthenticationEvidenceText = case (oldauth, authenticationMethod) of
+                  (StandardAuthentication, ELegAuthentication)   -> ChangeAuthenticationMethodStandardToELegEvidence
+                  (StandardAuthentication, SMSPinAuthentication) -> ChangeAuthenticationMethodStandardToSMSEvidence
+                  (ELegAuthentication, StandardAuthentication)   -> ChangeAuthenticationMethodELegToStandardEvidence
+                  (ELegAuthentication, SMSPinAuthentication)     -> ChangeAuthenticationMethodELegToSMSEvidence
+                  (SMSPinAuthentication, StandardAuthentication) -> ChangeAuthenticationMethodSMSToStandardEvidence
+                  (SMSPinAuthentication, ELegAuthentication)     -> ChangeAuthenticationMethodSMSToElegEvidence
+                  (StandardAuthentication, StandardAuthentication) -> error errStr
+                  (ELegAuthentication, ELegAuthentication) -> error errStr
+                  (SMSPinAuthentication, SMSPinAuthentication) -> error errStr
+                  where errStr = "The impossible happened as `oldauth` /= `authenticationMethod`."
           void $ update $ InsertEvidenceEvent
-              ChangeAuthenticationMethodEvidence
-              (F.value "signatory" (getSmartName sig)
-              >> F.value "oldauth" (authName oldauth)
-              >> F.value "newauth" (authName authenticationMethod)
-              )
+              changeAuthenticationEvidenceText
+              (F.value "signatory" (getSmartName sig))
               actor
 
 data PreparationToPending = PreparationToPending Actor TimeZoneName
@@ -1366,24 +1364,14 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m UpdateFieldsForSignin
                           Just f | sfValue f == fvalue -> False
                           _                            -> True
           when (updated/=0 && changed) $ do
-            let (event, efields) =
-                  case fieldtype of
-                    SignatureFT _ -> (UpdateFieldSignatureEvidence, return ())
-                    CheckboxFT _  -> (UpdateFieldCheckboxEvidence, when (not (null fvalue)) $ F.value "checked" True)
-                    _             -> (UpdateFieldTextEvidence, return ())
-            void $ update $ InsertEvidenceEvent event
+            let eventEvidenceText = getEvidenceTextForUpdateField fieldtype
+            void $ update $ InsertEvidenceEvent eventEvidenceText
                (do F.value "value" fvalue
-                   F.value "fieldname" $ case fieldtype of
-                     FirstNameFT      -> "First name"
-                     LastNameFT       -> "Last name"
-                     CompanyFT        -> "Company"
-                     PersonalNumberFT -> "ID number"
-                     CompanyNumberFT  -> "Company number"
-                     EmailFT          -> "Email"
-                     CustomFT s _     -> s
-                     MobileFT         -> "Mobile number"
-                     _                -> ""
-                   efields
+                   when (eventEvidenceText == UpdateFieldCustomTextEvidence) $ do
+                       let CustomFT s _ = fieldtype
+                       F.value "customfieldname" s
+                   when (eventEvidenceText == UpdateFieldCheckboxEvidence && not (null fvalue))
+                       (F.value "checked" True)
                    case mfield of
                      Just f | not (null ps) -> do
                        F.objects "placements" $ for ps $ \p -> do
@@ -1528,6 +1516,18 @@ instance MonadDB m => DBUpdate m PurgeDocuments Int where
 
 
 -- Update utilities
+getEvidenceTextForUpdateField :: FieldType -> CurrentEvidenceEventType
+getEvidenceTextForUpdateField FirstNameFT      = UpdateFieldFirstNameTextEvidence
+getEvidenceTextForUpdateField LastNameFT       = UpdateFieldLastNameTextEvidence
+getEvidenceTextForUpdateField CompanyFT        = UpdateFieldCompanyTextEvidence
+getEvidenceTextForUpdateField PersonalNumberFT = UpdateFieldPersonalNumberTextEvidence
+getEvidenceTextForUpdateField CompanyNumberFT  = UpdateFieldCompanyNumberTextEvidence
+getEvidenceTextForUpdateField EmailFT          = UpdateFieldEmailTextEvidence
+getEvidenceTextForUpdateField (CustomFT _ _)   = UpdateFieldCustomTextEvidence
+getEvidenceTextForUpdateField MobileFT         = UpdateFieldMobileTextEvidence
+getEvidenceTextForUpdateField (SignatureFT _)  = UpdateFieldSignatureEvidence
+getEvidenceTextForUpdateField (CheckboxFT _)   = UpdateFieldCheckboxEvidence
+
 updateWithoutEvidence :: (DocumentMonad m, Show a, ToSQL a) => SQL -> a -> m Bool
 updateWithoutEvidence col newValue = updateDocumentWithID $ \did -> do
   runQuery01 $ "UPDATE" <+> raw (tblName tableDocuments) <+> "SET" <+> (col <+> "=" <?> newValue <+> "WHERE id =" <?> did)
