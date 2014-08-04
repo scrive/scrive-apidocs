@@ -29,7 +29,7 @@ import File.File
 import KontraLink
 import MailContext (MailContextMonad(..), getMailContext, MailContext(..))
 import Mails.SendMail
-import MinutesTime (formatMinutesTime, getMinutesTime, showDateYMD, daysAfter)
+import MinutesTime (formatMinutesTime, getMinutesTime, showDateYMD, daysAfter, minutesAfter, formatMinutesTimeSimple)
 import Utils.Monoid
 import Utils.Prelude
 import Utils.Color
@@ -99,8 +99,16 @@ documentAttachedFields forMail signlink documentAttached document = do
   mctx <- getMailContext
   F.value "documentAttached" documentAttached
   F.value "mainfilelink" $ protectLink forMail mctx $ LinkMainFile document signlink
-  now <- lift $ getMinutesTime
-  F.value "availabledate" $ showDateYMD $ (unsavedDocumentLingerDays-1) `daysAfter` now
+  mcompany <- case join $ maybesignatory <$> getAuthorSigLink document of
+    Just suid ->  fmap Just $ (lift (dbQuery $ GetCompanyByUserID $ suid))
+    Nothing -> return Nothing
+  if ((companyallowsavesafetycopy . companyinfo) <$> mcompany) == Just True
+     then do
+       now <- lift $ getMinutesTime
+       F.value "availabledate" $ showDateYMD $ (unsavedDocumentLingerDays-1) `daysAfter` now
+    else do
+       now <- lift $ getMinutesTime
+       F.value "availabledate" $ formatMinutesTimeSimple $ (60 `minutesAfter` now)
 
 remindMailSigned :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
                  => Bool
