@@ -1482,7 +1482,6 @@ instance MonadDB m => DBUpdate m PurgeDocuments Int where
         <+> "   AND NOT EXISTS(SELECT TRUE"
         <+> "                    FROM signatory_links"
         <+> "                   WHERE signatory_links.document_id = documents.id"
-        <+> "                     AND signatory_links.user_id IS NULL"
         <+> "                     AND EXISTS (SELECT TRUE"
         <+> "                                   FROM document_session_tokens"
         <+> "                                  WHERE document_session_tokens.signatory_link_id = signatory_links.id))"
