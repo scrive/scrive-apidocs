@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
 
 
-define(['React','common/button','common/backbone_mixin','Backbone','common/language_service','doctools/changeauthentication', 'legacy_code'], function(React, Button, BackboneMixin, Backbone, LanguageService, ChangeAuthentication) {
+define(['React','common/button','common/backbone_mixin','Backbone','common/language_service','doctools/changeauthenticationmodal', 'legacy_code'], function(React, Button, BackboneMixin, Backbone, LanguageService, ChangeAuthenticationModal) {
 
 var expose = {};
 
@@ -10,11 +10,9 @@ var DocumentViewSignatoryModel = Backbone.Model.extend({
     onAction : function() {},
     forSigning : false,
     textstyle : {},
-    newAuthenticationValueInvalid : false
   },
   initialize: function (args) {
     var self = this;
-    this.setNewAuthenticationMethod(this.signatory().authentication());
     this.listenTo(args.signatory, "change", function() {self.trigger("change");});
   },
   triggerOnAction : function() {
@@ -35,36 +33,6 @@ var DocumentViewSignatoryModel = Backbone.Model.extend({
   },
   status : function() {
     return this.signatory().status();
-  },
-  newAuthenticationMethod : function() {
-    return this.get('newAuthenticationMethod');
-  },
-  newAuthenticationValue : function() {
-    return this.get('newAuthenticationValue');
-  },
-  newAuthenticationValueInvalid : function() {
-    return this.get('newAuthenticationValueInvalid');
-  },
-  setNewAuthenticationValueInvalid : function(v) {
-    this.set({newAuthenticationValueInvalid : v});
-  },
-  setNewAuthenticationMethod : function (method) {
-    if(method != this.newAuthenticationMethod()) {
-        var signatory = this.signatory();
-        if(method == 'sms_pin') {
-            this.setNewAuthenticationValue(signatory.mobile());
-        }
-        else if(method == 'eleg') {
-            this.setNewAuthenticationValue(signatory.personalnumber());
-        }
-        else {
-            this.setNewAuthenticationValue('');
-        }
-    }
-    this.set({newAuthenticationMethod : method});
-  },
-  setNewAuthenticationValue :  function(value) {
-    this.set({newAuthenticationValue : value});
   },
   signatorySummary: function() {
       var signatory = this.signatory();
@@ -341,54 +309,9 @@ var DocumentViewSignatoryView = React.createClass({
      }
     },
     handleChangeAuthenticationMethod : function() {
-      model = this.props.model;
-      signatory = model.signatory();
-      var content = $('<div class="docview-changeauthentication-modal">');
-      React.renderComponent(ChangeAuthentication({
-          model : model
-      }), content[0]);
-      new Confirmation({
-        title : localization.docview.changeAuthentication.title,
-        acceptText : localization.docview.changeAuthentication.accept,
-        content : content,
-        width : 420,
-        onAccept : function() {
-          var authmethod = model.newAuthenticationMethod();
-          var authvalue = model.newAuthenticationValue();
-          if(authmethod == 'sms_pin' &&
-              ! new PhoneValidation().validateData(authvalue) &&
-              ! new EmptyValidation().validateData(authvalue)
-            ) {
-              model.setNewAuthenticationValueInvalid(true);
-              new FlashMessage({ content : localization.docview.changeAuthentication.errorPhone
-                               , color : 'red' });
-              return false;
-          }
-          if(authmethod == 'eleg' &&
-              ! new NumberValidation().validateData(authvalue) &&
-              ! new EmptyValidation().validateData(authvalue)
-            ) {
-              model.setNewAuthenticationValueInvalid(true);
-              new FlashMessage({ content : localization.docview.changeAuthentication.errorEID
-                               , color : 'red' });
-              return false;
-          }
-          trackTimeout('Accept',
-              {'Accept' : 'change authentication',
-               'Signatory index' : signatory.signIndex(),
-               'Authentication method' : authmethod,
-               'Authentication value' : authvalue});
-          LoadingDialog.open();
-          signatory.changeAuthentication(authmethod, authvalue).sendAjax(
-              function() { model.triggerOnAction();}
-            , function () {
-                LoadingDialog.close();
-                new FlashMessage({ content : localization.docview.changeAuthentication.errorSigned
-                                 , color : 'red' });
-            }
-          );
-          return true;
-        }
+      new ChangeAuthenticationModal({
+        signatory : this.props.model.signatory(),
+        triggerOnAction : this.props.model.triggerOnAction()
       });
     },
     goToSignView : function() {

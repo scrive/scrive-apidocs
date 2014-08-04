@@ -24,25 +24,23 @@ window.DocumentSignConfirmation = function(args) {
 };
 
 
-window.OpenSigningFailedAndReloadModal = {
-    open: function(xhr) {
-        mixpanel.track('Error', {
-            Message      : 'Signing failed: reload modal',
-            Status       : xhr.status,
-            ResponseText : xhr.responseText
-        });
-        var text = $("<div>").append($("<span/>").text(localization.signingErrorMessage1))
-                             .append("<BR/>")
-                             .append($("<span/>").text(localization.signingErrorMessage2));
-        var button = new Button({color: 'green',
-                                 style : "margin:20px",
-                                 text: localization.signingErrorReload,
-                                 onClick : function() {
-                                      new Submit().send(); // Same as window.location.reload(), but will reset scrolling
-                                 }
-                               }).el();
-        return ScreenBlockingDialog.open({header:text,  content : button});
+window.ReloadDueToErrorModal = function(xhr) {
+  mixpanel.track('Error', {
+    Message      : 'Signing failed: reload modal',
+    Status       : xhr.status,
+    ResponseText : xhr.responseText
+  });
+  var text = $("<div>").append($("<span/>").text(localization.signingErrorMessage1))
+    .append("<BR/>")
+    .append($("<span/>").text(localization.signingErrorMessage2));
+  var button = new Button({color: 'green',
+    style : "margin:20px",
+    text: localization.signingErrorReload,
+    onClick : function() {
+      new Submit().send(); // Same as window.location.reload(), but will reset scrolling
     }
+  }).el();
+  return ScreenBlockingDialog.open({header:text, content : button});
 };
 
 window.DocumentSignConfirmationForSigning = Backbone.View.extend({
@@ -116,7 +114,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
             new FlashMessage({content: localization.sign.eleg.failed,
                               color: 'red'});
         } else {
-            OpenSigningFailedAndReloadModal.open(xhr);
+          new ReloadDueToErrorModal(xhr);
         }
     };
 
@@ -253,7 +251,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
               if (xhr.status == 403)
                 ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
               else
-                OpenSigningFailedAndReloadModal.open(xhr);
+                new ReloadDueToErrorModal(xhr);
             }
         };
 
