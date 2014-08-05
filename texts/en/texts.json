@@ -40,6 +40,7 @@
 "_RepeatNewPassword":"Confirm new password",
 "_ReviewAttachment":"Review",
 "_SampleEmailContent":"<strong>John Smith</strong> has invited you to e-sign the document <strong>Demo Document</strong>.",
+"_SampleEmailInstructions":"Click the button for further instructions.",
 "_SaveChanges":"Save changes",
 "_SaveSettings":"Save settings",
 "_SearchCompanyAccount":"Search account",

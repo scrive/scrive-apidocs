@@ -92,6 +92,7 @@ window.CompanyBrandingEmailSampleView = Backbone.View.extend({
     var logorow = $('<tr/>').append($('<td/>').append($('<table/>').append($('<tr/>').append($('<td/>').append(this.logo)))));
 
     var previewtextcontent = $('<div class="emailpreviewcontent"/>').append(localization.companyBranding.brandingPreview.emailContent);
+    previewtextcontent.append($('<br/>')).append($('<br/>')).append($('<div />').text(localization.companyBranding.brandingPreview.emailInstructions));
     this.emailpreviewbutton = $('<a href="#" onclick="return false" class="emailpreviewbutton"/>').text(localization.companyBranding.brandingPreview.emailButtonLabel);
     var divcontent = $('<div class="divcontent"/>');
     divcontent.append(previewtextcontent);
