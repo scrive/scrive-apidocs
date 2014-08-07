@@ -288,12 +288,23 @@ window.Document = Backbone.Model.extend({
         }
         window.takeScreenshot(
             function(canvas) {
-                var shot = { "time" : new Date().toISOString(),
+                try {
+                  var shot = { "time" : new Date().toISOString(),
                              "image": canvas.toDataURL("image/jpeg",0.7) };
-                if (first)
-                    document.get("screenshots").first = shot;
-                else
-                    document.get("screenshots").signing = shot;
+                  if (first)
+                      document.get("screenshots").first = shot;
+                  else
+                      document.get("screenshots").signing = shot;
+                } catch(e) {
+                  // Some old browsers can throw exception here. We need to catch it, to execute callDone later.
+                  mixpanel.track('Take screenshot failed',{
+                    'Reason': "Canvas exception",
+                    'Exception': e,
+                    'Browser': $.browser.name,
+                    'Browser version': $.browser.version,
+                    'Platform': $.browser.platform 
+                  });
+                }
                 callDone();
             },
             function(e) { callDone() },
