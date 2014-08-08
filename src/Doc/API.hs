@@ -635,9 +635,14 @@ apiChangeAuthentication did slid = api $ do
   (user, actor, _) <- getAPIUser APIDocSend
   withDocumentID did $ do
       -- Security and validity checks
-      auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
-      when (auid /= userid user) $
+      docUserID <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
+      docUser   <- apiGuardJustM (serverError "No user found for author") $ dbQuery $ GetUserByID docUserID
+      let hasPermission = (docUserID == userid user) ||
+                          ((usercompany docUser == usercompany user)
+                            && (useriscompanyadmin user))
+      when (not hasPermission) $
           throwIO . SomeKontraException $ forbidden'
+      -- Document status and input checks
       unlessM (isPending <$> theDocument) $
           throwIO . SomeKontraException $ badInput "Document status must be pending"
       doc <- theDocument
