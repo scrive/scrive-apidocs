@@ -270,14 +270,14 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationMethodELegToSMSEvidence      |
   ChangeAuthenticationMethodSMSToStandardEvidence  |
   ChangeAuthenticationMethodSMSToElegEvidence      |
-  UpdateFieldFirstNameTextEvidence                 |
-  UpdateFieldLastNameTextEvidence                  |
-  UpdateFieldCompanyTextEvidence                   |
-  UpdateFieldPersonalNumberTextEvidence            |
-  UpdateFieldCompanyNumberTextEvidence             |
-  UpdateFieldEmailTextEvidence                     |
-  UpdateFieldCustomTextEvidence                    |
-  UpdateFieldMobileTextEvidence
+  UpdateFieldFirstNameEvidence                 |
+  UpdateFieldLastNameEvidence                  |
+  UpdateFieldCompanyEvidence                   |
+  UpdateFieldPersonalNumberEvidence            |
+  UpdateFieldCompanyNumberEvidence             |
+  UpdateFieldEmailEvidence                     |
+  UpdateFieldCustomEvidence                    |
+  UpdateFieldMobileEvidence
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 -- Evidence types that are not generated anymore by the system.  Not
@@ -441,14 +441,14 @@ instance ToSQL EvidenceEventType where
   toSQL (Current ChangeAuthenticationMethodELegToSMSEvidence     ) = toSQL (91::Int16)
   toSQL (Current ChangeAuthenticationMethodSMSToStandardEvidence ) = toSQL (92::Int16)
   toSQL (Current ChangeAuthenticationMethodSMSToElegEvidence     ) = toSQL (93::Int16)
-  toSQL (Current UpdateFieldFirstNameTextEvidence                ) = toSQL (94::Int16)
-  toSQL (Current UpdateFieldLastNameTextEvidence                 ) = toSQL (95::Int16)
-  toSQL (Current UpdateFieldCompanyTextEvidence                  ) = toSQL (96::Int16)
-  toSQL (Current UpdateFieldPersonalNumberTextEvidence           ) = toSQL (97::Int16)
-  toSQL (Current UpdateFieldCompanyNumberTextEvidence            ) = toSQL (98::Int16)
-  toSQL (Current UpdateFieldEmailTextEvidence                    ) = toSQL (99::Int16)
-  toSQL (Current UpdateFieldCustomTextEvidence                   ) = toSQL (100::Int16)
-  toSQL (Current UpdateFieldMobileTextEvidence                   ) = toSQL (101::Int16)
+  toSQL (Current UpdateFieldFirstNameEvidence                ) = toSQL (94::Int16)
+  toSQL (Current UpdateFieldLastNameEvidence                 ) = toSQL (95::Int16)
+  toSQL (Current UpdateFieldCompanyEvidence                  ) = toSQL (96::Int16)
+  toSQL (Current UpdateFieldPersonalNumberEvidence           ) = toSQL (97::Int16)
+  toSQL (Current UpdateFieldCompanyNumberEvidence            ) = toSQL (98::Int16)
+  toSQL (Current UpdateFieldEmailEvidence                    ) = toSQL (99::Int16)
+  toSQL (Current UpdateFieldCustomEvidence                   ) = toSQL (100::Int16)
+  toSQL (Current UpdateFieldMobileEvidence                   ) = toSQL (101::Int16)
 
 instance FromSQL EvidenceEventType where
   type PQBase EvidenceEventType = PQBase Int16
@@ -548,14 +548,14 @@ instance FromSQL EvidenceEventType where
       91 -> return (Current ChangeAuthenticationMethodELegToSMSEvidence     )
       92 -> return (Current ChangeAuthenticationMethodSMSToStandardEvidence )
       93 -> return (Current ChangeAuthenticationMethodSMSToElegEvidence     )
-      94 -> return (Current UpdateFieldFirstNameTextEvidence                )
-      95 -> return (Current UpdateFieldLastNameTextEvidence                 )
-      96 -> return (Current UpdateFieldCompanyTextEvidence                  )
-      97 -> return (Current UpdateFieldPersonalNumberTextEvidence           )
-      98 -> return (Current UpdateFieldCompanyNumberTextEvidence            )
-      99 -> return (Current UpdateFieldEmailTextEvidence                    )
-      100 -> return (Current UpdateFieldCustomTextEvidence                  )
-      101 -> return (Current UpdateFieldMobileTextEvidence                  )
+      94 -> return (Current UpdateFieldFirstNameEvidence                )
+      95 -> return (Current UpdateFieldLastNameEvidence                 )
+      96 -> return (Current UpdateFieldCompanyEvidence                  )
+      97 -> return (Current UpdateFieldPersonalNumberEvidence           )
+      98 -> return (Current UpdateFieldCompanyNumberEvidence            )
+      99 -> return (Current UpdateFieldEmailEvidence                    )
+      100 -> return (Current UpdateFieldCustomEvidence                  )
+      101 -> return (Current UpdateFieldMobileEvidence                  )
       _ -> E.throwIO $ RangeError {
         reRange = [(1, 82)]
       , reValue = n

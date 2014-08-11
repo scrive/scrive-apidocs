@@ -1365,7 +1365,7 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m UpdateFieldsForSignin
             let eventEvidenceText = getEvidenceTextForUpdateField fieldtype
             void $ update $ InsertEvidenceEvent eventEvidenceText
                (do F.value "value" fvalue
-                   when (eventEvidenceText == UpdateFieldCustomTextEvidence) $ do
+                   when (eventEvidenceText == UpdateFieldCustomEvidence) $ do
                        let CustomFT s _ = fieldtype
                        F.value "customfieldname" s
                    when (eventEvidenceText == UpdateFieldCheckboxEvidence && not (null fvalue))
@@ -1515,14 +1515,14 @@ instance MonadDB m => DBUpdate m PurgeDocuments Int where
 
 -- Update utilities
 getEvidenceTextForUpdateField :: FieldType -> CurrentEvidenceEventType
-getEvidenceTextForUpdateField FirstNameFT      = UpdateFieldFirstNameTextEvidence
-getEvidenceTextForUpdateField LastNameFT       = UpdateFieldLastNameTextEvidence
-getEvidenceTextForUpdateField CompanyFT        = UpdateFieldCompanyTextEvidence
-getEvidenceTextForUpdateField PersonalNumberFT = UpdateFieldPersonalNumberTextEvidence
-getEvidenceTextForUpdateField CompanyNumberFT  = UpdateFieldCompanyNumberTextEvidence
-getEvidenceTextForUpdateField EmailFT          = UpdateFieldEmailTextEvidence
-getEvidenceTextForUpdateField (CustomFT _ _)   = UpdateFieldCustomTextEvidence
-getEvidenceTextForUpdateField MobileFT         = UpdateFieldMobileTextEvidence
+getEvidenceTextForUpdateField FirstNameFT      = UpdateFieldFirstNameEvidence
+getEvidenceTextForUpdateField LastNameFT       = UpdateFieldLastNameEvidence
+getEvidenceTextForUpdateField CompanyFT        = UpdateFieldCompanyEvidence
+getEvidenceTextForUpdateField PersonalNumberFT = UpdateFieldPersonalNumberEvidence
+getEvidenceTextForUpdateField CompanyNumberFT  = UpdateFieldCompanyNumberEvidence
+getEvidenceTextForUpdateField EmailFT          = UpdateFieldEmailEvidence
+getEvidenceTextForUpdateField (CustomFT _ _)   = UpdateFieldCustomEvidence
+getEvidenceTextForUpdateField MobileFT         = UpdateFieldMobileEvidence
 getEvidenceTextForUpdateField (SignatureFT _)  = UpdateFieldSignatureEvidence
 getEvidenceTextForUpdateField (CheckboxFT _)   = UpdateFieldCheckboxEvidence
 

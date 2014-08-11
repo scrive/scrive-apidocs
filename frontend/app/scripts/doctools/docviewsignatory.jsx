@@ -9,7 +9,7 @@ var DocumentViewSignatoryModel = Backbone.Model.extend({
   defaults : {
     onAction : function() {},
     forSigning : false,
-    textstyle : {},
+    textstyle : {}
   },
   initialize: function (args) {
     var self = this;
@@ -103,7 +103,7 @@ var DocumentViewSignatoryModel = Backbone.Model.extend({
           && signatory.document().signingInProcess()
           && signatory.document().pending()
           && signatory.signs()
-          && !signatory.hasSigned()
+          && !signatory.hasSigned();
  },
  hasChangePhoneOption: function() {
    var signatory = this.signatory();

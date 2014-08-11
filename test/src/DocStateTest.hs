@@ -650,13 +650,13 @@ testChangeAuthenticationMethod = doTimes 10 $ do
       randomUpdate $ \t->ChangeAuthenticationMethod (signatorylinkid sl) SMSPinAuthentication Nothing (systemActor t)
       lg1 <- dbQuery . GetEvidenceLog  =<< theDocumentID
       assertJust $ find (\e -> evType e == Current ChangeAuthenticationMethodStandardToSMSEvidence) lg1
-      assertNothing $ find (\e -> evType e == Current UpdateFieldMobileTextEvidence) lg1
+      assertNothing $ find (\e -> evType e == Current UpdateFieldMobileEvidence) lg1
 
       randomUpdate $ \t->ChangeAuthenticationMethod (signatorylinkid sl) SMSPinAuthentication (Just "+486543222112") (systemActor t)
       lg2 <- dbQuery . GetEvidenceLog  =<< theDocumentID
       assertEqual "Too many evidence logs for change authentication method"
         (length $ filter (\e -> evType e == Current ChangeAuthenticationMethodStandardToSMSEvidence) lg2) 1
-      assertJust $ find (\e -> evType e == Current UpdateFieldMobileTextEvidence) lg2
+      assertJust $ find (\e -> evType e == Current UpdateFieldMobileEvidence) lg2
 
 --------------------------------------------------------------------------------
 testReallyDeleteDocument :: TestEnv ()
