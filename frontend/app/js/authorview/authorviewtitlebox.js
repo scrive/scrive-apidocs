@@ -174,7 +174,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
                 });
               });
               var select = new Select({
-                name : (model.padNextSignatory().smartname() != "" ? model.padNextSignatory().smartname() : sig.nameInDocument()),
+                name : (model.padNextSignatory().smartname() != "" ? model.padNextSignatory().smartname() : model.padNextSignatory().nameInDocument()),
                 cssClass : "float-left",
                 options : options
               });
