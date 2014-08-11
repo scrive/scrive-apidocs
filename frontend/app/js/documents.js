@@ -334,12 +334,15 @@ window.Document = Backbone.Model.extend({
     },
     checksign: function(successCallback, errorCallback,extraSignFields) {
         var document = this;
+        var signatory = document.currentSignatory();
         var fields = this.fieldsForSigning();
         extraSignFields = extraSignFields || {};
         return new Submit({
             url : "/api/frontend/checksign/" + document.documentid() +  "/" + document.currentSignatory().signatoryid(),
             method: "POST",
             fields: JSON.stringify(fields),
+            authentication_type: signatory.authentication(),
+            authentication_value: signatory.authenticationFieldValue(),
             ajax: true,
             expectedType : "text",
             ajaxsuccess : successCallback,
@@ -348,6 +351,7 @@ window.Document = Backbone.Model.extend({
     },
     sign: function(errorCallback, successCallback,extraSignFields) {
         var document = this;
+        var signatory = document.currentSignatory();
         var fields = this.fieldsForSigning();
         extraSignFields = extraSignFields || {};
         return new Submit({
@@ -355,6 +359,8 @@ window.Document = Backbone.Model.extend({
             method: "POST",
             screenshots: JSON.stringify(document.get("screenshots")),
             fields: JSON.stringify(fields),
+            authentication_type: signatory.authentication(),
+            authentication_value: signatory.authenticationFieldValue(),
             ajax: true,
             expectedType : "text",
             ajaxsuccess : function(newDocumentRaw) {

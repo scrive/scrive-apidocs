@@ -568,6 +568,40 @@ javascriptLocalisation =
 
              }
         }
+        , docview : {
+            signatory : {
+                invitationOrder: "$_docviewSignatoryInvitationOrderLabel()$"
+              , invitationMethod: "$_docviewSignatoryInvitationMethodLabel()$"
+              , invitationEmail: "$_docviewSignatoryInvitationEmail()$"
+              , invitationPad: "$_docviewSignatoryInvitationPad()$"
+              , invitationSMS: "$_docviewSignatoryInvitationSMS()$"
+              , invitationEmailSMS: "$_docviewSignatoryInvitationEmailSMS()$"
+              , invitationAPI: "$_docviewSignatoryInvitationAPI()$"
+              , role: "$_docviewSignatoryRoleLabel()$"
+              , roleSignatory: "$_docviewSignatoryRoleSignatory()$"
+              , roleViewer: "$_docviewSignatoryRoleViewer()$"
+              , authentication: "$_docviewSignatoryAuthenticationMethodLabel()$"
+              , authenticationStandard: "$_docviewSignatoryAuthenticationStandard()$"
+              , authenticationSMSPin: "$_docviewSignatoryAuthenticationSMSPin()$"
+              , authenticationELeg: "$_docviewSignatoryAuthenticationELeg()$"
+              , confirmation: "$_docviewSignatoryConfirmationMethodLabel()$"
+              , confirmationEmail: "$_docviewSignatoryConfirmationEmail()$"
+              , confirmationSMS: "$_docviewSignatoryConfirmationSMS()$"
+              , confirmationEmailSMS: "$_docviewSignatoryConfirmationEmailSMS()$"
+              , confirmationNone: "$_docviewSignatoryConfirmationNone()$"
+            },
+            changeAuthentication : {
+                title: "$_docviewChangeAuthenticationModalTitle()$"
+              , accept: "$_docviewChangeAuthenticationModalAccept()$"
+              , methodLabel: "$_docviewChangeAuthenticationModalMethodLabel()$"
+              , placeholderEID: "$_docviewChangeAuthenticationModalPlaceholderEID()$"
+              , placeholderPhone: "$_docviewChangeAuthenticationModalPlaceholderPhone()$"
+              , valueInfotext: "$_docviewChangeAuthenticationModalValueInfotext()$"
+              , errorSigned: "$_docviewChangeAuthenticationModalErrorSigned()$"
+              , errorPhone: "$_docviewChangeAuthenticationModalErrorPhone()$"
+              , errorEID: "$_docviewChangeAuthenticationModalErrorEID()$"
+            }
+        }
         , verification : {
                 success: "$_verificationSuccess()$"
              ,  failed: "$_verificationFailed()$"

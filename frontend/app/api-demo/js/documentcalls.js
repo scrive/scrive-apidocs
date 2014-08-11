@@ -41,6 +41,67 @@ window.CreateFromFileApiCall = ApiCall.extend({
         }
 });
 
+window.ChangeAuthenticationMethodApiCall = ApiCall.extend({
+        defaults: {
+            name : "Change authentication method API call",
+            documentid : LocalStorage.get("api","documentid"),
+            signatorylinkid : LocalStorage.get("api","signatorylinkid"),
+            authenticationtype : "",
+            authenticationvalue : "",
+            sendauthenticationvalue : false
+        },
+        initialize: function (args) {
+        },
+        isChangeAuthenticationMethod : function() {return true;},
+        documentid : function() {return this.get("documentid");},
+        setDocumentid : function(documentid) {
+             LocalStorage.set("api","documentid",documentid);
+            return this.set({"documentid" : documentid});
+        },
+        signatorylinkid : function() {return this.get("signatorylinkid");},
+        setSignatorylinkid : function(signatorylinkid) {
+            LocalStorage.set("api","signatorylinkid",signatorylinkid);
+            return this.set({"signatorylinkid" : signatorylinkid});
+        },
+        authenticationtype : function() {return this.get("authenticationtype");},
+        setAuthenticationtype : function(authenticationtype) {
+            LocalStorage.set("api","authenticationtype",authenticationtype);
+            return this.set({"authenticationtype" : authenticationtype});
+        },
+        authenticationvalue : function() {return this.get("authenticationvalue");},
+        setAuthenticationvalue : function(authenticationvalue) {
+            LocalStorage.set("api","authenticationvalue",authenticationvalue);
+            return this.set({"authenticationvalue" : authenticationvalue});
+        },
+        sendauthenticationvalue : function() {return this.get("sendauthenticationvalue");},
+        setSendauthenticationvalue : function(sendauthenticationvalue) {
+            LocalStorage.set("api","sendauthenticationvalue",sendauthenticationvalue);
+            return this.set({"sendauthenticationvalue" : sendauthenticationvalue});
+        },
+        send : function() {
+            var model = this;
+            var apiData;
+            if(this.sendauthenticationvalue()) {
+                apiData = { authentication_type : this.authenticationtype(),
+                            authentication_value : this.authenticationvalue() };
+            }
+            else {
+                apiData = {authentication_type : this.authenticationtype()};
+            }
+            this.call("changeauthentication/" + model.documentid() + "/" + model.signatorylinkid(), {
+                type: 'POST',
+                cache: false,
+                data : apiData,
+                success : function(res) {
+                    model.setResult(res);
+                },
+                error : function(res) {
+                    model.setResult(JSON.stringify(res.responseText,undefined," "));
+                }
+            });
+        }
+});
+
 window.ChangeMainFileApiCall = ApiCall.extend({
         defaults: {
             name : "Change main file API call",
@@ -868,6 +929,49 @@ window.CreateFromFileApiCallView = Backbone.View.extend({
                 this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
             this.filebox.append(model.file())
 
+        }
+});
+
+window.ChangeAuthenticationMethodApiCallView = Backbone.View.extend({
+        initialize: function(args) {
+            _.bindAll(this, 'render');
+            this.model.bind('change', this.render);
+            this.prerender();
+        },
+        prerender : function() {
+            var model = this.model;
+            var box = $(this.el);
+            box.children().detach();
+            var boxLeft  = $("<div class='left-box'>");
+            this.boxRight = $("<div class='right-box'>");
+            box.append(this.boxRight).append(boxLeft);
+            var button = $("<input type='button' value='Send request'/>");
+            button.click(function() {model.send(); return false;});
+            var documentidInput = $("<input type='text'/>").val(model.documentid());
+            documentidInput.change(function() {model.setDocumentid(documentidInput.val()); return false;})
+            var signatorylinkidInput = $("<input type='text'/>").val(model.signatorylinkid());
+            signatorylinkidInput.change(function() {model.setSignatorylinkid(signatorylinkidInput.val()); return false;})
+            // TODO make this a dropdown
+            var authenticationtypeInput = $("<input type='text'/>").val(model.authenticationtype());
+            authenticationtypeInput.change(function() {model.setAuthenticationtype(authenticationtypeInput.val()); return false;})
+            var authenticationvalueInput = $("<input type='text'/>").val(model.authenticationvalue());
+            authenticationvalueInput.change(function() {model.setAuthenticationvalue(authenticationvalueInput.val()); return false;})
+            var sendauthenticationvalueInput = $("<input type='checkbox'/>").attr("checked",model.sendauthenticationvalue());
+            sendauthenticationvalueInput.change(function() {model.setSendauthenticationvalue(sendauthenticationvalueInput.is(":checked")); return false;})
+
+            boxLeft.append($("<div>Document # : <BR/></div>").append(documentidInput))
+                   .append($("<div>Signatory link Id : <BR/></div>").append(signatorylinkidInput))
+                   .append($("<div>Authentication method : <BR/></div>").append(authenticationtypeInput))
+                   .append($("<div>Authentication method value : <BR/></div>").append(authenticationvalueInput)
+                                                                              .append(sendauthenticationvalueInput))
+                   .append($("<div/>")).append(button);
+            this.render();
+        },
+        render : function() {
+            this.boxRight.empty();
+            var model = this.model;
+            if (model.result() != undefined)
+                this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
         }
 });
 

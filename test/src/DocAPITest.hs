@@ -26,6 +26,7 @@ docAPITests env = testGroup "DocAPI" $
     testThat "settings auto reminder works" env testSetAutoReminder
   , testThat "change main file works" env testChangeMainFile
   , testThat "change main file moves placements" env testChangeMainFileMovePlacements
+  , testThat "Changing authentication method works" env testChangeAuthenticationMethod
   ]
 
 jsonDocs :: [String]
@@ -89,6 +90,30 @@ testSetAutoReminder = do
   (res, _) <- runTestKontra req ctx $ apiCallSetAutoReminder (documentid doc)
 
   assertEqual "response code is 202" 202 (rsCode res)
+
+testChangeAuthenticationMethod :: TestEnv ()
+testChangeAuthenticationMethod = do
+  ctx@Context{ctxmaybeuser = Just user} <- testUpdateDoc $ head jsonDocs
+  [doc] <- randomQuery $ GetDocumentsByAuthor (userid user)
+  let siglinks = documentsignatorylinks doc
+      validsiglinkid = signatorylinkid $ head $ filter signatoryispartner siglinks
+
+  reqNoAuthMethod <- mkRequest POST [("authentication_value", inText "+46701234567")]
+  (resNoAuthMethod, _) <- runTestKontra reqNoAuthMethod ctx $ apiChangeAuthentication (documentid doc) validsiglinkid
+  assertEqual "Response code is not 400" 400 (rsCode resNoAuthMethod)
+
+  reqInvalidMethod <- mkRequest POST [("authentication_type", inText "god_is_witness")]
+  (resInvalidMethod, _) <- runTestKontra reqInvalidMethod ctx $ apiChangeAuthentication (documentid doc) validsiglinkid
+  assertEqual "Response code is not 400" 400 (rsCode resInvalidMethod)
+
+  req <- mkRequest POST [("authentication_type", inText "sms_pin"),("authentication_value", inText "+46701234567")]
+  (res, _) <- runTestKontra req ctx $ apiChangeAuthentication (documentid doc) validsiglinkid
+  assertEqual "Response code is not 202" 202 (rsCode res)
+
+  user2 <- addNewRandomUser
+  ctx2 <- (\c -> c { ctxmaybeuser = Just user2 }) <$> mkContext defaultValue
+  (resBadUser, _) <- runTestKontra req ctx2 $ apiChangeAuthentication (documentid doc) validsiglinkid
+  assertEqual "Response code is not 403" 403 (rsCode resBadUser)
 
 testChangeMainFile :: TestEnv ()
 testChangeMainFile = do

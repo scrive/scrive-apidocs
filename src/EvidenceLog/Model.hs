@@ -233,38 +233,51 @@ data EvidenceEventType =
 -- that will be included in the author's view and on the verification
 -- page.
 data CurrentEvidenceEventType =
-  TimeoutDocumentEvidence                         |
-  SignDocumentEvidence                            |
-  SaveSigAttachmentEvidence                       |
-  RestartDocumentEvidence                         |
-  MarkInvitationReadEvidence                      |
-  CloseDocumentEvidence                           |
-  ChangeSignatoryEmailWhenUndeliveredEvidence     |
-  CancelDocumentEvidence                          |
-  AttachSealedFileEvidence                        |
-  PreparationToPendingEvidence                    |
-  DeleteSigAttachmentEvidence                     |
-  RejectDocumentEvidence                          |
-  InvitationEvidence                              |
-  ResealedPDF                                     |
-  ReminderSend                                    |  --Renamed
-  InvitationDeliveredByEmail                      |
-  InvitationUndeliveredByEmail                    |
-  SignatoryLinkVisited                            |
-  ProlongDocumentEvidence                         |
-  ChangeSignatoryPhoneWhenUndeliveredEvidence     |
-  InvitationDeliveredBySMS                        |
-  InvitationUndeliveredBySMS                      |
-  AttachGuardtimeSealedFileEvidence               |
-  AttachExtendedSealedFileEvidence                |
-  ErrorSealingDocumentEvidence                    |
-  AutomaticReminderSent                           |
-  SignWithELegFailureEvidence                     |
-  UpdateFieldCheckboxEvidence                     |
-  UpdateFieldSignatureEvidence                    |
-  UpdateFieldTextEvidence                         |
-  SMSPinSendEvidence                              |
-  SMSPinDeliveredEvidence
+  TimeoutDocumentEvidence                          |
+  SignDocumentEvidence                             |
+  SaveSigAttachmentEvidence                        |
+  RestartDocumentEvidence                          |
+  MarkInvitationReadEvidence                       |
+  CloseDocumentEvidence                            |
+  ChangeSignatoryEmailWhenUndeliveredEvidence      |
+  CancelDocumentEvidence                           |
+  AttachSealedFileEvidence                         |
+  PreparationToPendingEvidence                     |
+  DeleteSigAttachmentEvidence                      |
+  RejectDocumentEvidence                           |
+  InvitationEvidence                               |
+  ResealedPDF                                      |
+  ReminderSend                                     |  --Renamed
+  InvitationDeliveredByEmail                       |
+  InvitationUndeliveredByEmail                     |
+  SignatoryLinkVisited                             |
+  ProlongDocumentEvidence                          |
+  ChangeSignatoryPhoneWhenUndeliveredEvidence      |
+  InvitationDeliveredBySMS                         |
+  InvitationUndeliveredBySMS                       |
+  AttachGuardtimeSealedFileEvidence                |
+  AttachExtendedSealedFileEvidence                 |
+  ErrorSealingDocumentEvidence                     |
+  AutomaticReminderSent                            |
+  SignWithELegFailureEvidence                      |
+  UpdateFieldCheckboxEvidence                      |
+  UpdateFieldSignatureEvidence                     |
+  SMSPinSendEvidence                               |
+  SMSPinDeliveredEvidence                          |
+  ChangeAuthenticationMethodStandardToELegEvidence |
+  ChangeAuthenticationMethodStandardToSMSEvidence  |
+  ChangeAuthenticationMethodELegToStandardEvidence |
+  ChangeAuthenticationMethodELegToSMSEvidence      |
+  ChangeAuthenticationMethodSMSToStandardEvidence  |
+  ChangeAuthenticationMethodSMSToElegEvidence      |
+  UpdateFieldFirstNameEvidence                 |
+  UpdateFieldLastNameEvidence                  |
+  UpdateFieldCompanyEvidence                   |
+  UpdateFieldPersonalNumberEvidence            |
+  UpdateFieldCompanyNumberEvidence             |
+  UpdateFieldEmailEvidence                     |
+  UpdateFieldCustomEvidence                    |
+  UpdateFieldMobileEvidence
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 -- Evidence types that are not generated anymore by the system.  Not
@@ -325,7 +338,8 @@ data ObsoleteEvidenceEventType =
   SetDocumentInviteTimeEvidence                   |
   CancelDocumenElegEvidence                       |
   SendToPadDevice                                 |
-  RemovedFromPadDevice
+  RemovedFromPadDevice                            |
+  UpdateFieldTextEvidence
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 
@@ -418,9 +432,23 @@ instance ToSQL EvidenceEventType where
   toSQL (Current SignWithELegFailureEvidence)                      = toSQL (82::Int16)
   toSQL (Current UpdateFieldCheckboxEvidence)                      = toSQL (83::Int16)
   toSQL (Current UpdateFieldSignatureEvidence)                     = toSQL (84::Int16)
-  toSQL (Current UpdateFieldTextEvidence)                          = toSQL (85::Int16)
+  toSQL (Obsolete UpdateFieldTextEvidence)                         = toSQL (85::Int16)
   toSQL (Current SMSPinSendEvidence)                               = toSQL (86::Int16)
   toSQL (Current SMSPinDeliveredEvidence)                          = toSQL (87::Int16)
+  toSQL (Current ChangeAuthenticationMethodStandardToELegEvidence) = toSQL (88::Int16)
+  toSQL (Current ChangeAuthenticationMethodStandardToSMSEvidence ) = toSQL (89::Int16)
+  toSQL (Current ChangeAuthenticationMethodELegToStandardEvidence) = toSQL (90::Int16)
+  toSQL (Current ChangeAuthenticationMethodELegToSMSEvidence     ) = toSQL (91::Int16)
+  toSQL (Current ChangeAuthenticationMethodSMSToStandardEvidence ) = toSQL (92::Int16)
+  toSQL (Current ChangeAuthenticationMethodSMSToElegEvidence     ) = toSQL (93::Int16)
+  toSQL (Current UpdateFieldFirstNameEvidence                ) = toSQL (94::Int16)
+  toSQL (Current UpdateFieldLastNameEvidence                 ) = toSQL (95::Int16)
+  toSQL (Current UpdateFieldCompanyEvidence                  ) = toSQL (96::Int16)
+  toSQL (Current UpdateFieldPersonalNumberEvidence           ) = toSQL (97::Int16)
+  toSQL (Current UpdateFieldCompanyNumberEvidence            ) = toSQL (98::Int16)
+  toSQL (Current UpdateFieldEmailEvidence                    ) = toSQL (99::Int16)
+  toSQL (Current UpdateFieldCustomEvidence                   ) = toSQL (100::Int16)
+  toSQL (Current UpdateFieldMobileEvidence                   ) = toSQL (101::Int16)
 
 instance FromSQL EvidenceEventType where
   type PQBase EvidenceEventType = PQBase Int16
@@ -511,9 +539,23 @@ instance FromSQL EvidenceEventType where
       82 -> return (Current SignWithELegFailureEvidence)
       83 -> return (Current UpdateFieldCheckboxEvidence)
       84 -> return (Current UpdateFieldSignatureEvidence)
-      85 -> return (Current UpdateFieldTextEvidence)
+      85 -> return (Obsolete UpdateFieldTextEvidence)
       86 -> return (Current SMSPinSendEvidence)
       87 -> return (Current SMSPinDeliveredEvidence)
+      88 -> return (Current ChangeAuthenticationMethodStandardToELegEvidence)
+      89 -> return (Current ChangeAuthenticationMethodStandardToSMSEvidence )
+      90 -> return (Current ChangeAuthenticationMethodELegToStandardEvidence)
+      91 -> return (Current ChangeAuthenticationMethodELegToSMSEvidence     )
+      92 -> return (Current ChangeAuthenticationMethodSMSToStandardEvidence )
+      93 -> return (Current ChangeAuthenticationMethodSMSToElegEvidence     )
+      94 -> return (Current UpdateFieldFirstNameEvidence                )
+      95 -> return (Current UpdateFieldLastNameEvidence                 )
+      96 -> return (Current UpdateFieldCompanyEvidence                  )
+      97 -> return (Current UpdateFieldPersonalNumberEvidence           )
+      98 -> return (Current UpdateFieldCompanyNumberEvidence            )
+      99 -> return (Current UpdateFieldEmailEvidence                    )
+      100 -> return (Current UpdateFieldCustomEvidence                  )
+      101 -> return (Current UpdateFieldMobileEvidence                  )
       _ -> E.throwIO $ RangeError {
         reRange = [(1, 82)]
       , reValue = n

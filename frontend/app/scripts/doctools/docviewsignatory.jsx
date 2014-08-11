@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
 
 
-define(['React','common/button','common/backbone_mixin','Backbone', 'legacy_code'], function(React, Button, BackboneMixin, Backbone) {
+define(['React','common/button','common/backbone_mixin','Backbone','common/language_service','doctools/changeauthenticationmodal', 'legacy_code'], function(React, Button, BackboneMixin, Backbone, LanguageService, ChangeAuthenticationModal) {
 
 var expose = {};
 
@@ -95,6 +95,15 @@ var DocumentViewSignatoryModel = Backbone.Model.extend({
           && signatory.document().signingInProcess()
           && signatory.document().pending()
           && (signatory.emailDelivery() || signatory.emailMobileDelivery());
+ },
+ hasChangeAuthentication: function() {
+   var signatory = this.signatory();
+   return    !this.forSigning()
+          && (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
+          && signatory.document().signingInProcess()
+          && signatory.document().pending()
+          && signatory.signs()
+          && !signatory.hasSigned();
  },
  hasChangePhoneOption: function() {
    var signatory = this.signatory();
@@ -299,6 +308,12 @@ var DocumentViewSignatoryView = React.createClass({
        });
      }
     },
+    handleChangeAuthenticationMethod : function() {
+      new ChangeAuthenticationModal({
+        signatory : this.props.model.signatory(),
+        onAction : this.props.model.get("onAction")
+      });
+    },
     goToSignView : function() {
       var model= this.props.model;
       var signatory = model.signatory();
@@ -307,6 +322,64 @@ var DocumentViewSignatoryView = React.createClass({
               {'Signatory index':signatory.signIndex(),
                'Accept' : 'give for signing'});
       signatory.giveForPadSigning().send();
+    },
+    getDeliveryMethod : function() {
+      var model = this.props.model;
+      var signatory = model.signatory();
+      if(signatory.emailDelivery()) {
+          return localization.docview.signatory.invitationEmail;
+      }
+      else if (signatory.padDelivery()) {
+          return localization.docview.signatory.invitationPad;
+      }
+      else if (signatory.mobileDelivery()) {
+          return localization.docview.signatory.invitationSMS;
+      }
+      else if (signatory.emailMobileDelivery()) {
+          return localization.docview.signatory.invitationEmailSMS;
+      }
+      else if (signatory.apiDelivery()) {
+          return localization.docview.signatory.invitationAPI;
+      }
+    },
+    getRole : function() {
+      var model = this.props.model;
+      var signatory = model.signatory();
+      if(signatory.signs()) {
+          return localization.docview.signatory.roleSignatory;
+      }
+      else {
+          return localization.docview.signatory.roleViewer;
+      }
+    },
+    getAuthenticationMethodText : function() {
+      var model = this.props.model;
+      var signatory = model.signatory();
+      if(signatory.standardAuthentication()) {
+          return localization.docview.signatory.authenticationStandard;
+      }
+      else if (signatory.smsPinAuthentication()) {
+          return localization.docview.signatory.authenticationSMSPin;
+      }
+      else if (signatory.elegAuthentication()) {
+          return localization.docview.signatory.authenticationELeg;
+      }
+    },
+    getConfirmationMethod : function() {
+      var model = this.props.model;
+      var signatory = model.signatory();
+      if(signatory.emailConfirmationDelivery()) {
+          return localization.docview.signatory.confirmationEmail;
+      }
+      else if(signatory.mobileConfirmationDelivery()) {
+          return localization.docview.signatory.confirmationSMS;
+      }
+      else if(signatory.emailMobileConfirmationDelivery()) {
+          return localization.docview.signatory.confirmationEmailSMS;
+      }
+      else if(signatory.noneConfirmationDelivery()) {
+          return localization.docview.signatory.confirmationNone;
+      }
     },
     render: function() {
       var model = this.props.model;
@@ -321,39 +394,87 @@ var DocumentViewSignatoryView = React.createClass({
             </div>
           </div>
 
-          <div className={model.hasAnyDetails() ? "inner spacing" : ""} >
-            <div className={model.hasAnyDetails() ? "details" : ""} >
+          <div className={model.hasAnyDetails() ? "inner fields" : ""} >
 
-               {/*if*/ signatory.company() &&
-                 <div className="company field" style={textstyle} title={signatory.company()}>
-                   {localization.company}: {signatory.company()}
-                 </div>
-               }
-
-               {/*if*/ signatory.email() &&
-                 <div className="email field" style={textstyle}  display={false} title={signatory.email()}>
-                   {localization.email}: {signatory.email()}
-                 </div>
-               }
-
-               {/*if*/ signatory.mobile() &&
-                <div className="mobile field" style={textstyle} title={signatory.mobile()}>
-                   {localization.phone}: {signatory.mobile()}
-                </div>
-               }
-
-               {/*if*/ signatory.companynumber() &&
-                <div className="orgnum field" style={textstyle} title={signatory.companynumber()}>
-                  {localization.docsignview.companyNumberLabel}: {signatory.companynumber().trim() || localization.docsignview.notEntered}
-                </div>
-               }
-
-               {/*if*/ signatory.personalnumber() &&
-                <div className="persnum field" style={textstyle} title={signatory.personalnumber()}>
-                  {localization.docsignview.personalNumberLabel}: {signatory.personalnumber().trim() || localization.docsignview.notEntered}
-                </div>
-               }
+            {/*if*/ signatory.company() &&
+            <div className="fieldrow">
+              <span className="company field" style={textstyle} title={signatory.company()}>
+                {localization.company}: {signatory.company()}
+              </span>
             </div>
+            }
+
+            {/*if*/ signatory.email() &&
+            <div className="fieldrow">
+              <span className="email field" style={textstyle}  display={false} title={signatory.email()}>
+                {localization.email}: {signatory.email()}
+              </span>
+            </div>
+            }
+
+            {/*if*/ signatory.mobile() &&
+            <div className="fieldrow">
+              <span className="mobile field" style={textstyle} title={signatory.mobile()}>
+                {localization.phone}: {signatory.mobile()}
+              </span>
+            </div>
+            }
+
+            {/*if*/ signatory.companynumber() &&
+            <div className="fieldrow">
+              <span className="orgnum field" style={textstyle} title={signatory.companynumber()}>
+                {localization.docsignview.companyNumberLabel}: {signatory.companynumber().trim() || localization.docsignview.notEntered}
+              </span>
+            </div>
+            }
+
+            {/*if*/ signatory.personalnumber() &&
+            <div className="fieldrow">
+              <span className="persnum field" style={textstyle} title={signatory.personalnumber()}>
+                {localization.docsignview.personalNumberLabel}: {signatory.personalnumber().trim() || localization.docsignview.notEntered}
+              </span>
+            </div>
+            }
+
+          </div>
+
+          <div className="inner fields">
+
+            <div className="fieldrow">
+              <span className="signorder field" style={textstyle} title={LanguageService.localizedOrdinal(signatory.signorder())}>
+                {localization.docview.signatory.invitationOrder}: {LanguageService.localizedOrdinal(signatory.signorder())}
+              </span>
+            </div>
+
+            <div className="fieldrow">
+              <span className="deliverymethod field" style={textstyle} title={this.getDeliveryMethod()}>
+                {localization.docview.signatory.invitationMethod}: {this.getDeliveryMethod()}
+              </span>
+            </div>
+
+            <div className="fieldrow">
+              <span className="role field" style={textstyle} title={this.getRole()}>
+                {localization.docview.signatory.role}: {this.getRole()}
+              </span>
+            </div>
+
+            {/*if*/ signatory.signs() &&
+            <div className="fieldrow">
+              {/*if*/ model.hasChangeAuthentication() &&
+               <a className="edit clickable" onClick={this.handleChangeAuthenticationMethod}>Edit</a>
+              }
+              <span className="authentication field" style={textstyle} title={this.getAuthenticationMethodText()}>
+                {localization.docview.signatory.authentication}: {this.getAuthenticationMethodText()}
+              </span>
+            </div>
+            }
+
+            <div className="fieldrow">
+              <span className="confirmationmethod field" style={textstyle} title={this.getConfirmationMethod()}>
+                {localization.docview.signatory.confirmation}: {this.getConfirmationMethod()}
+              </span>
+            </div>
+
           </div>
 
           <div className={"statusbox " + (model.hasAnyOptions() ? "" : "last")} >

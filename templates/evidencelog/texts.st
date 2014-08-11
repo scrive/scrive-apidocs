@@ -71,6 +71,18 @@ ChangeSignatoryEmailWhenUndeliveredEvidenceText=The email address for the signat
 ###
 ChangeSignatoryPhoneWhenUndeliveredEvidenceText=The phone number for the signatory was changed from $oldphone$ to $newphone$ by $actor$.
 ###
+ChangeAuthenticationMethodStandardToELegEvidenceText=$actor$ changed authentication for $signatory$ from “no extra authentication” to “eID”.
+###
+ChangeAuthenticationMethodStandardToSMSEvidenceText=$actor$ changed authentication for $signatory$ from “no extra authentication” to “PIN by SMS”.
+###
+ChangeAuthenticationMethodELegToStandardEvidenceText=$actor$ changed authentication for $signatory$ from “eID” to “no extra authentication”.
+###
+ChangeAuthenticationMethodELegToSMSEvidenceText=$actor$ changed authentication for $signatory$ from “eID” to “PIN by SMS”.
+###
+ChangeAuthenticationMethodSMSToStandardEvidenceText=$actor$ changed authentication for $signatory$ from “PIN by SMS” to “no extra authentication”.
+###
+ChangeAuthenticationMethodSMSToElegEvidenceText=$actor$ changed authentication for $signatory$ from “PIN by SMS” to “eID”.
+###
 CloseDocumentEvidenceTextFull=Scrive E-sign locked the document from further modifications by the signing parties.
 ###
 CloseDocumentEvidenceText=*
@@ -419,7 +431,21 @@ UpdateFieldCheckboxEvidenceText=A checkbox was $if(checked)$checked$else$uncheck
 ###
 UpdateFieldSignatureEvidenceText=A signature field was signed by $actor$.<br/><img alt="signature" src="$value$" width="100" height="50"></img><br/>$updatePlacements()$
 ###
-UpdateFieldTextEvidenceText=The value of the field “$fieldname$” was changed by $actor$ to “$value$”.$updatePlacements()$
+UpdateFieldFirstNameEvidenceText=The value of the field “First name” was changed by $actor$ to “$value$”.$updatePlacements()$
+###
+UpdateFieldLastNameEvidenceText=The value of the field “Last name” was changed by $actor$ to “$value$”.$updatePlacements()$
+###
+UpdateFieldCompanyEvidenceText=The value of the field “Company” was changed by $actor$ to “$value$”.$updatePlacements()$
+###
+UpdateFieldPersonalNumberEvidenceText=The value of the field “ID number” was changed by $actor$ to “$value$”.$updatePlacements()$
+###
+UpdateFieldCompanyNumberEvidenceText=The value of the field “Company number” was changed by $actor$ to “$value$”.$updatePlacements()$
+###
+UpdateFieldEmailEvidenceText=The value of the field “Email” was changed by $actor$ to “$value$”.$updatePlacements()$
+###
+UpdateFieldCustomEvidenceText=The value of the field “$customfieldname$” was changed by $actor$ to “$value$”.$updatePlacements()$
+###
+UpdateFieldMobileEvidenceText=The value of the field “Mobile number” was changed by $actor$ to “$value$”.$updatePlacements()$
 ###
 updatePlacements=$if(placements)$ The field had the following placements in the document:<table class="placements"><tr><td>Page</td><td>X</td><td>Y</td></tr>$placements:{placement|<tr><td>$placement.page$</td><td>$placement.x$</td><td>$placement.y$</td></tr>}$</table>$endif$
 ###

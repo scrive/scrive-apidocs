@@ -6,10 +6,13 @@ define(['Backbone', 'legacy_code'], function() {
 var expose = {};
 
 var BackboneMixin = {
-  componentDidMount: function() {
-    // Whenever there may be a change in the Backbone data, trigger a reconcile.
+  updateBackboneModelsBinding: function() {
     this.getBackboneModels().forEach(this.injectModel, this);
   },
+  // Whenever there may be a change in the Backbone data, trigger a reconcile.
+  componentDidMount: function() { this.updateBackboneModelsBinding() },
+  // The backbone models might depend on state or props, and we need to re-inject if the models have changed.
+  componentDidUpdate: function() { this.updateBackboneModelsBinding() },
   componentWillUnmount: function() {
     // Ensure that we clean up any dangling references when the component is
     // destroyed.
