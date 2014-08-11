@@ -645,8 +645,7 @@ apiChangeAuthentication did slid = api $ do
       -- Document status and input checks
       unlessM (isPending <$> theDocument) $
           throwIO . SomeKontraException $ badInput "Document status must be pending"
-      doc <- theDocument
-      let siglink = getSigLinkFor slid doc
+      siglink <- getSigLinkFor slid <$> theDocument
       when (isNothing siglink) $
           throwIO . SomeKontraException $ badInput $ "Signatory link id " ++ (show slid) ++ " not valid for document id " ++ (show did)
       when (maybe False (isJust . maybesigninfo) siglink) $

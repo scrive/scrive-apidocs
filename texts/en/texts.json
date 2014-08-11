@@ -359,7 +359,7 @@
 "_docviewChangeAuthenticationModalErrorEID":"Invalid personal ID number",
 "_docviewChangeAuthenticationModalErrorPhone":"Wrong format. Correct format is +46701234567",
 "_docviewChangeAuthenticationModalErrorSigned":"As the recipient has already signed, it's not possible to change the authentication.",
-"_docviewChangeAuthenticationModalMethodLabel":"Authentication method for <span class='put-person-name'/>",
+"_docviewChangeAuthenticationModalMethodLabel":"Authentication method for <strong class='put-person-name'/>",
 "_docviewChangeAuthenticationModalPlaceholderEID":"YYMMDDNNNN",
 "_docviewChangeAuthenticationModalPlaceholderPhone":"E.g. +46712345678",
 "_docviewChangeAuthenticationModalTitle":"Authentication",

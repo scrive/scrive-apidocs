@@ -570,16 +570,16 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m ChangeSignatoryPhoneW
 
 data ChangeAuthenticationMethod = ChangeAuthenticationMethod SignatoryLinkID AuthenticationMethod (Maybe String) Actor
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m ChangeAuthenticationMethod () where
-  update (ChangeAuthenticationMethod slid authenticationMethod mValue actor) = do
+  update (ChangeAuthenticationMethod slid newAuth mValue actor) = do
     let extraInfoField StandardAuthentication = Nothing
         extraInfoField ELegAuthentication     = Just PersonalNumberFT
         extraInfoField SMSPinAuthentication   = Just MobileFT
-    (oldauth, sig) <- updateDocumentWithID $ const $ do
+    (oldAuth, sig) <- updateDocumentWithID $ const $ do
       -- Set the new authentication method in signatory_links
       -- Return the old authentication method
-      (prvAuth :: AuthenticationMethod) <- kRunAndFetch1OrThrowWhyNot unSingle $ sqlUpdate "signatory_links" $ do
+      (oldAuth' :: AuthenticationMethod) <- kRunAndFetch1OrThrowWhyNot unSingle $ sqlUpdate "signatory_links" $ do
         sqlFrom "signatory_links AS signatory_links_old"
-        sqlSet "authentication_method" authenticationMethod
+        sqlSet "authentication_method" newAuth
         sqlResult "signatory_links_old.authentication_method"
         sqlWhere "signatory_links.id = signatory_links_old.id"
         sqlWhereEq "signatory_links.id" slid
@@ -594,10 +594,10 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m ChangeAuthenticationM
       let signatoryLinkHasPlacementOfType :: SignatoryLink -> FieldType -> Bool
           signatoryLinkHasPlacementOfType sl ft = fieldPlacements == []
             where fieldPlacements = maybe [] sfPlacements $ find ((==) ft . sfType) $ signatoryfields sl
-      case extraInfoField prvAuth of
+      case extraInfoField oldAuth' of
         Nothing -> return ()
         Just prvAuthField ->
-          when ( prvAuth /= authenticationMethod
+          when ( oldAuth' /= newAuth
                  && signatoryLinkHasPlacementOfType siglink prvAuthField
                )
                ( kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
@@ -607,7 +607,7 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m ChangeAuthenticationM
                )
       -- When the new authentication method needs extra info then we need to
       -- either add it (if provided) or make obligatory for the signatory
-      case extraInfoField authenticationMethod of
+      case extraInfoField newAuth of
         Nothing -> return ()
         Just authMethodField ->
           case getFieldOfType authMethodField (signatoryfields siglink) of
@@ -627,10 +627,10 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m ChangeAuthenticationM
                  sqlSet "type" $ authMethodField
                  sqlSet "placements" ("[]"::String)
       updateMTimeAndObjectVersion (actorTime actor)
-      return (prvAuth, siglink)
+      return (oldAuth', siglink)
     -- Evidence Events
     -- One for changing the value, the other for changing authentication method
-    case extraInfoField authenticationMethod of
+    case extraInfoField newAuth of
          Nothing -> return ()
          Just authMethodField -> do
            let mPreviousValue = fmap sfValue $ getFieldOfType authMethodField (signatoryfields sig)
@@ -642,7 +642,7 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m ChangeAuthenticationM
                 )
     let insertEvidence e = void $ update $ InsertEvidenceEvent e
           (F.value "signatory" (getSmartName sig)) actor
-    case (oldauth, authenticationMethod) of
+    case (oldAuth, newAuth) of
          (StandardAuthentication, ELegAuthentication)   -> insertEvidence ChangeAuthenticationMethodStandardToELegEvidence
          (StandardAuthentication, SMSPinAuthentication) -> insertEvidence ChangeAuthenticationMethodStandardToSMSEvidence
          (ELegAuthentication, StandardAuthentication)   -> insertEvidence ChangeAuthenticationMethodELegToStandardEvidence

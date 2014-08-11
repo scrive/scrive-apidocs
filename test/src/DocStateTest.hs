@@ -652,7 +652,7 @@ testChangeAuthenticationMethod = doTimes 10 $ do
       assertJust $ find (\e -> evType e == Current ChangeAuthenticationMethodStandardToSMSEvidence) lg1
       assertNothing $ find (\e -> evType e == Current UpdateFieldMobileTextEvidence) lg1
 
-      randomUpdate $ \p t->ChangeAuthenticationMethod (signatorylinkid sl) SMSPinAuthentication (Just p) (systemActor t)
+      randomUpdate $ \t->ChangeAuthenticationMethod (signatorylinkid sl) SMSPinAuthentication (Just "+486543222112") (systemActor t)
       lg2 <- dbQuery . GetEvidenceLog  =<< theDocumentID
       assertEqual "Too many evidence logs for change authentication method"
         (length $ filter (\e -> evType e == Current ChangeAuthenticationMethodStandardToSMSEvidence) lg2) 1
