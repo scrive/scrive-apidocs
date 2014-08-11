@@ -634,7 +634,7 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m ChangeAuthenticationM
          Nothing -> return ()
          Just authMethodField -> do
            let mPreviousValue = fmap sfValue $ getFieldOfType authMethodField (signatoryfields sig)
-           when (mValue == mPreviousValue)
+           when (mValue /= mPreviousValue)
                 (void $ update $ InsertEvidenceEvent
                   (getEvidenceTextForUpdateField authMethodField)
                   (F.value "value" (fromMaybe "" mValue))

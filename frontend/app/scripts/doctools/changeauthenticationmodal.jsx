@@ -10,7 +10,7 @@
  * Example usage:
  *    new ChangeAuthenticationModal({
  *      signatory : ___,
- *      triggerOnAction : ___
+ *      onAction : ___
  *    });
  *
  */
@@ -18,16 +18,11 @@ define(['React','common/backbone_mixin','Backbone','common/select', 'legacy_code
 
 var ChangeAuthenticationModalModel = Backbone.Model.extend({
   defaults : {
-    onAction : function() {},
     newAuthenticationValueInvalid : false
   },
   initialize: function (args) {
     var self = this;
     this.setNewAuthenticationMethod(this.signatory().authentication());
-  },
-  triggerOnAction : function() {
-    if (this.get("onAction"))
-      this.get("onAction")();
   },
   document :function() {
      return this.signatory().document();
@@ -48,7 +43,9 @@ var ChangeAuthenticationModalModel = Backbone.Model.extend({
     this.set({newAuthenticationValueInvalid : v});
   },
   setNewAuthenticationMethod : function (method) {
-    if(method != this.newAuthenticationMethod()) {
+    var prvMethod = this.newAuthenticationMethod();
+    this.set({newAuthenticationMethod : method});
+    if(prvMethod != this.newAuthenticationMethod()) {
       var signatory = this.signatory();
       if(this.isNewAuthenticationPINbySMS()) {
         this.setNewAuthenticationValue(signatory.mobile());
@@ -60,7 +57,6 @@ var ChangeAuthenticationModalModel = Backbone.Model.extend({
         this.setNewAuthenticationValue('');
       }
     }
-    this.set({newAuthenticationMethod : method});
   },
   setNewAuthenticationValue :  function(value) {
     this.set({newAuthenticationValue : value});
@@ -132,6 +128,7 @@ var ChangeAuthenticationModalView = React.createClass({
     model.setNewAuthenticationValue(event.target.value);
   },
   getAuthenticationValueLabelText : function() {
+    var model = this.props.model;
     var text = '';
     if(model.isNewAuthenticationPINbySMS()) {
       text = localization.phone;
@@ -142,12 +139,13 @@ var ChangeAuthenticationModalView = React.createClass({
     return text;
   },
   getAuthenticationValuePlaceholderText : function() {
+    var model = this.props.model;
     var text = '';
     if(model.isNewAuthenticationPINbySMS()) {
       text = localization.docview.changeAuthentication.placeholderPhone;
     }
     else if(model.isNewAuthenticationELeg()) {
-      localization.docview.changeAuthentication.placeholderEID;
+      text = localization.docview.changeAuthentication.placeholderEID;
     }
     return text;
   },
@@ -155,7 +153,7 @@ var ChangeAuthenticationModalView = React.createClass({
    var model = this.props.model;
    var signatory = model.signatory();
    var SelectComponent =  Select.Select;
-   var selectLabel = $('<div>').text(localization.docview.changeAuthentication.methodLabel);
+   var selectLabel = $('<div>').html(localization.docview.changeAuthentication.methodLabel);
    $('.put-person-name',selectLabel).html($('<strong>').text(signatory.smartname()));
    return (
        <div>
@@ -196,9 +194,7 @@ var ChangeAuthenticationModalView = React.createClass({
 });
 
 return function(args) {
-  var model = new ChangeAuthenticationModalModel({
-    signatory: args.signatory,
-    triggerOnAction : args.triggerOnAction});
+  var model = new ChangeAuthenticationModalModel({signatory: args.signatory});
   var content = $('<div class="docview-changeauthentication-modal">');
   React.renderComponent(ChangeAuthenticationModalView({
       model : model
@@ -219,17 +215,19 @@ return function(args) {
       }
       trackTimeout('Accept',
           {'Accept' : 'change authentication',
-           'Signatory index' : model.signatory.signIndex(),
+           'Signatory index' : model.signatory().signIndex(),
            'Authentication method' : authmethod,
            'Authentication value' : authvalue});
       LoadingDialog.open();
-      model.signatory.changeAuthentication(authmethod, authvalue).sendAjax(
-          function() { model.triggerOnAction();}
+      model.signatory().changeAuthentication(authmethod, authvalue).sendAjax(
+          function() {
+            args.onAction();
+          }
         , function () {
             LoadingDialog.close();
             new FlashMessage({ content : localization.docview.changeAuthentication.errorSigned
                              , color : 'red' });
-        }
+          }
       );
       return true;
     }

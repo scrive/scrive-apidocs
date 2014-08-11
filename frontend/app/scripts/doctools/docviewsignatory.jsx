@@ -311,7 +311,7 @@ var DocumentViewSignatoryView = React.createClass({
     handleChangeAuthenticationMethod : function() {
       new ChangeAuthenticationModal({
         signatory : this.props.model.signatory(),
-        triggerOnAction : this.props.model.triggerOnAction()
+        onAction : this.props.model.get("onAction")
       });
     },
     goToSignView : function() {
