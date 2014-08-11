@@ -474,6 +474,14 @@ window.Signatory = Backbone.Model.extend({
     padSigningURL : function() {
         return "/padqueue";
     },
+    changeAuthentication: function(type, value) {
+        return new Submit({
+                url: "/api/frontend/changeauthentication/" + this.document().documentid() + "/" + this.signatoryid(),
+                method: "POST",
+                authentication_type: type,
+                authentication_value: value
+        });
+    },
     changeEmail: function(email) {
         return new Submit({
                 url: "/changeemail/" + this.document().documentid() + "/" + this.signatoryid(),
@@ -643,6 +651,19 @@ window.Signatory = Backbone.Model.extend({
         // standard, eleg
         this.set({authentication:a});
         return this;
+    },
+    authenticationFieldValue: function() {
+        var authenticationValue;
+        if(this.elegAuthentication()) {
+            authenticationValue = this.personalnumber();
+        }
+        else if(this.smsPinAuthentication()) {
+            authenticationValue = this.mobile();
+        }
+        else {
+            authenticationValue = '';
+        }
+        return authenticationValue;
     },
     hasProblems: function(forSigning) {
         return this.hasFieldProblems(forSigning);

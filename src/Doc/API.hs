@@ -11,6 +11,7 @@ module Doc.API (
   , apiCallDownloadMainFile    -- Exported for tests
   , apiCallDownloadFile        -- Exported for tests
   , apiCallChangeMainFile
+  , apiChangeAuthentication    -- Exported for tests
 
   , getAnchorPositions
   ) where
@@ -131,9 +132,10 @@ versionedAPI _version = choice [
 
   dir "sendsmspin"            $ hPost $ toK2 $ apiCallSendSMSPinCode,
 
-  dir "restart"            $ hPost $ toK1 $ apiCallRestart,
-  dir "prolong"            $ hPost $ toK1 $ apiCallProlong,
-  dir "setautoreminder"    $ hPost $ toK1 $ apiCallSetAutoReminder,
+  dir "restart"              $ hPost $ toK1 $ apiCallRestart,
+  dir "prolong"              $ hPost $ toK1 $ apiCallProlong,
+  dir "setautoreminder"      $ hPost $ toK1 $ apiCallSetAutoReminder,
+  dir "changeauthentication" $ hPost $ toK2 $ apiChangeAuthentication,
 
 
   dir "remind"             $ hPost $ toK1 $ apiCallRemind,
@@ -403,6 +405,7 @@ apiCallCheckSign did slid = api $ do
       (throwIO . SomeKontraException $ conflictError $ "Document not pending")
     whenM (hasSigned <$> fromJust . getSigLinkFor slid <$> theDocument) $ do -- We can use fromJust since else we would not get access to document
       (throwIO . SomeKontraException $ conflictError $ "Document already signed")
+    checkAuthenticationMethodAndValue slid
     authorization <- signatorylinkauthenticationmethod <$> fromJust . getSigLinkFor slid <$> theDocument
     fields <- getFieldForSigning
     case authorization of
@@ -447,6 +450,7 @@ apiCallSign  did slid = api $ do
       (throwIO . SomeKontraException $ conflictError $ "Document not pending")
     whenM (hasSigned <$> fromJust . getSigLinkFor slid <$> theDocument) $ do -- We can use fromJust since else we would not get access to document
       (throwIO . SomeKontraException $ conflictError $ "Document already signed")
+    checkAuthenticationMethodAndValue slid
     authorization <- signatorylinkauthenticationmethod <$> fromJust . getSigLinkFor slid <$> theDocument
 
     case authorization of
@@ -498,6 +502,36 @@ apiCallSign  did slid = api $ do
     `catchKontra` (\(SignatoryHasAlreadySigned {}) -> throwIO . SomeKontraException $ conflictError $ "Signatory has already signed")
 
 {- | Utils for signing with eleg -}
+checkAuthenticationMethodAndValue :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
+checkAuthenticationMethodAndValue slid = do
+  mAuthType  :: Maybe String <- getField "authentication_type"
+  mAuthValue :: Maybe String <- getField "authentication_value"
+  case (mAuthType, mAuthValue) of
+       (Just authType, Just authValue) -> do
+           let mAuthMethod = fromJSValue $ toJSValue authType
+           case mAuthMethod of
+                Just authMethod -> do
+                    siglink <- fromJust . getSigLinkFor slid <$> theDocument
+                    let authOK = authMethod == signatorylinkauthenticationmethod siglink
+                    case (authOK, authMethod) of
+                         (False, _) -> throwIO . SomeKontraException $
+                             conflictError "`authentication_type` does not match"
+                         (True, StandardAuthentication) -> return ()
+                         (True, ELegAuthentication)   ->
+                             if (authValue == getPersonalNumber siglink)
+                                then return ()
+                                else throwIO . SomeKontraException $
+                                    conflictError "`authentication_value` for personal number does not match"
+                         (True, SMSPinAuthentication) ->
+                             if (authValue == getMobile siglink)
+                                then return ()
+                                else throwIO . SomeKontraException $
+                                    conflictError "`authentication_value` for phone number does not match"
+                Nothing ->
+                    throwIO . SomeKontraException $ badInput "`authentication_type` was not a valid"
+       (Nothing, Nothing) -> return ()
+       _ -> throwIO . SomeKontraException $ badInput "Only one of `authentication_type` and `authentication_value` provided"
+
 getValidPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [(FieldType,String)] -> m (Maybe String)
 getValidPin slid fields = do
   pin <- apiGuardJustM (badInput "Pin not provided or invalid.") $ getField "pin"
@@ -573,7 +607,7 @@ apiCallProlong did =  api $ do
       Accepted <$> (documentJSON (Just user) False True True Nothing =<< theDocument)
 
 
-apiCallSetAutoReminder :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> m Response
+apiCallSetAutoReminder :: (MonadBaseControl IO m, Kontrakcja m) => DocumentID -> m Response
 apiCallSetAutoReminder did =  api $ do
     ctx <- getContext
     checkObjectVersionIfProvided did
@@ -596,6 +630,42 @@ apiCallSetAutoReminder did =  api $ do
       triggerAPICallbackIfThereIsOne =<< theDocument
       Accepted <$> (documentJSON (Just $ user) False True True Nothing =<< theDocument)
 
+apiChangeAuthentication :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
+apiChangeAuthentication did slid = api $ do
+  (user, actor, _) <- getAPIUser APIDocSend
+  withDocumentID did $ do
+      -- Security and validity checks
+      docUserID <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
+      docUser   <- apiGuardJustM (serverError "No user found for author") $ dbQuery $ GetUserByID docUserID
+      let hasPermission = (docUserID == userid user) ||
+                          ((usercompany docUser == usercompany user)
+                            && (useriscompanyadmin user))
+      when (not hasPermission) $
+          throwIO . SomeKontraException $ forbidden'
+      -- Document status and input checks
+      unlessM (isPending <$> theDocument) $
+          throwIO . SomeKontraException $ badInput "Document status must be pending"
+      siglink <- getSigLinkFor slid <$> theDocument
+      when (isNothing siglink) $
+          throwIO . SomeKontraException $ badInput $ "Signatory link id " ++ (show slid) ++ " not valid for document id " ++ (show did)
+      when (maybe False (isJust . maybesigninfo) siglink) $
+          throwIO . SomeKontraException $ badInput $ "Signatory link id " ++ (show slid) ++ " has already signed"
+      -- Get the POST data and check it
+      authentication_type <- getField "authentication_type"
+      maybeAuthValue      <- getField "authentication_value"
+      when (isNothing authentication_type) $
+          throwIO . SomeKontraException $ badInput $ "`authentication_type` must be given. "
+                                          ++ "Supported values are: `standard`, `eleg`, `sms_pin`."
+      let authenticationMethod = case fromJSValue $ toJSValue $ fromMaybe "" authentication_type of
+              Just am -> Right am
+              Nothing -> Left $ fromMaybe "" authentication_type
+      -- Change authentication method (if input is a valid method)
+      case authenticationMethod of
+           Right a -> dbUpdate $ ChangeAuthenticationMethod slid a maybeAuthValue actor
+           Left  a -> throwIO . SomeKontraException
+                      $ badInput $ "Invalid authentication method: `" ++ a ++ "` was given. "
+                        ++ "Supported values are: `standard`, `eleg`, `sms_pin`."
+      Accepted <$> (documentJSON (Just user) False True True Nothing =<< theDocument)
 
 apiCallRemind :: Kontrakcja m => DocumentID -> m Response
 apiCallRemind did =  api $ do

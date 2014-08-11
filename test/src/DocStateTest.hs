@@ -205,7 +205,9 @@ docStateTests env = testGroup "DocState" [
 
   testThat "GetDocumentsByAuthor doesn't return archived docs" env testGetDocumentsByAuthorNoArchivedDocs,
   testThat "When document is signed it's status class is signed" env testStatusClassSignedWhenAllSigned,
-  testThat "When document is pending and some invitation is undelivered it's status is undelivered" env testStatusClassSignedWhenAllSigned
+  testThat "When document is pending and some invitation is undelivered it's status is undelivered" env testStatusClassSignedWhenAllSigned,
+
+  testThat "ChangeAuthenticationMethod works and evidence is as expected" env testChangeAuthenticationMethod
   ]
 
 dataStructureProperties :: Test
@@ -635,6 +637,27 @@ testRestoreArchiveDocumentCompanyAdminRight = doTimes 10 $ do
     randomUpdate $ \t->RestoreArchivedDocument adminuser (systemActor t)
 
     assertNoArchivedSigLink =<< theDocument
+
+testChangeAuthenticationMethod :: TestEnv ()
+testChangeAuthenticationMethod = doTimes 10 $ do
+  author <- addNewRandomUser
+  addRandomDocumentWithAuthorAndCondition author (
+      isSignable &&^ isPending &&^ ((<=) 2 . length . documentsignatorylinks)
+      &&^ ( all ((==) StandardAuthentication . signatorylinkauthenticationmethod) . documentsignatorylinks)
+    ) `withDocumentM` do
+      Just sl <- getSigLinkFor (not . (isAuthor::SignatoryLink->Bool)) <$> theDocument
+
+      randomUpdate $ \t->ChangeAuthenticationMethod (signatorylinkid sl) SMSPinAuthentication Nothing (systemActor t)
+      lg1 <- dbQuery . GetEvidenceLog  =<< theDocumentID
+      assertJust $ find (\e -> evType e == Current ChangeAuthenticationMethodStandardToSMSEvidence) lg1
+      assertNothing $ find (\e -> evType e == Current UpdateFieldMobileTextEvidence) lg1
+
+      randomUpdate $ \t->ChangeAuthenticationMethod (signatorylinkid sl) SMSPinAuthentication (Just "+486543222112") (systemActor t)
+      lg2 <- dbQuery . GetEvidenceLog  =<< theDocumentID
+      assertEqual "Too many evidence logs for change authentication method"
+        (length $ filter (\e -> evType e == Current ChangeAuthenticationMethodStandardToSMSEvidence) lg2) 1
+      assertJust $ find (\e -> evType e == Current UpdateFieldMobileTextEvidence) lg2
+
 --------------------------------------------------------------------------------
 testReallyDeleteDocument :: TestEnv ()
 testReallyDeleteDocument = doTimes 10 $ do

@@ -112,19 +112,29 @@
   }
 
 
-  .inner {
+
+  .fields {
     border-top: 1px solid @border-grey;
     color: #505050;
-  }
-
-  .field {
-    height: 16px;
     font-size: 14px;
-    line-height: 15px;
-    margin-bottom: 5px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    line-height: 16px;
+    padding: 10px 0 10px 10px;
+
+    .fieldrow {
+      padding-bottom: 5px;
+
+      .edit {
+        float: right;
+        position: relative;
+      }
+
+      .field {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
   }
 
   .statustext {

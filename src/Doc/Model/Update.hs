@@ -10,6 +10,7 @@ module Doc.Model.Update
   , LogSignWithELegFailureForDocument(..)
   , ChangeSignatoryEmailWhenUndelivered(..)
   , ChangeSignatoryPhoneWhenUndelivered(..)
+  , ChangeAuthenticationMethod(..)
   , CloseDocument(..)
   , DeleteSigAttachment(..)
   , RemoveOldDrafts(..)
@@ -566,6 +567,89 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m ChangeSignatoryPhoneW
           ChangeSignatoryPhoneWhenUndeliveredEvidence
           (F.value "oldphone" oldphone >> F.value "newphone" phone)
           actor
+
+data ChangeAuthenticationMethod = ChangeAuthenticationMethod SignatoryLinkID AuthenticationMethod (Maybe String) Actor
+instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m ChangeAuthenticationMethod () where
+  update (ChangeAuthenticationMethod slid newAuth mValue actor) = do
+    let extraInfoField StandardAuthentication = Nothing
+        extraInfoField ELegAuthentication     = Just PersonalNumberFT
+        extraInfoField SMSPinAuthentication   = Just MobileFT
+    (oldAuth, sig) <- updateDocumentWithID $ const $ do
+      -- Set the new authentication method in signatory_links
+      -- Return the old authentication method
+      (oldAuth' :: AuthenticationMethod) <- kRunAndFetch1OrThrowWhyNot unSingle $ sqlUpdate "signatory_links" $ do
+        sqlFrom "signatory_links AS signatory_links_old"
+        sqlSet "authentication_method" newAuth
+        sqlResult "signatory_links_old.authentication_method"
+        sqlWhere "signatory_links.id = signatory_links_old.id"
+        sqlWhereEq "signatory_links.id" slid
+        sqlWhereExists $ sqlSelect "documents" $ do
+          sqlWhere "documents.id = signatory_links.document_id"
+          sqlWhereDocumentStatusIs Pending
+      -- Get the `SignatoryLink`
+      siglink <- theDocumentID >>= \did -> dbQuery $ GetSignatoryLinkByID did slid Nothing
+      -- When the old authentication method needed extra info and the new one
+      -- isin't the same type, then we need to make the field for the old
+      -- authentication method non obligatory
+      let signatoryLinkHasPlacementOfType :: SignatoryLink -> FieldType -> Bool
+          signatoryLinkHasPlacementOfType sl ft = fieldPlacements == []
+            where fieldPlacements = maybe [] sfPlacements $ find ((==) ft . sfType) $ signatoryfields sl
+      case extraInfoField oldAuth' of
+        Nothing -> return ()
+        Just prvAuthField ->
+          when ( oldAuth' /= newAuth
+                 && signatoryLinkHasPlacementOfType siglink prvAuthField
+               )
+               ( kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
+                   sqlSet "obligatory" False
+                   sqlWhereEq "signatory_link_id" slid
+                   sqlWhereEq "type" $ prvAuthField
+               )
+      -- When the new authentication method needs extra info then we need to
+      -- either add it (if provided) or make obligatory for the signatory
+      case extraInfoField newAuth of
+        Nothing -> return ()
+        Just authMethodField ->
+          case getFieldOfType authMethodField (signatoryfields siglink) of
+               Just _  -> kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
+                 case mValue of
+                      Just a  -> sqlSet "value" a
+                      Nothing -> return ()
+                 sqlSet "obligatory" True
+                 sqlWhereEq "signatory_link_id" slid
+                 sqlWhereEq "type" $ authMethodField
+               -- Note: default in table for `obligatory` is true
+               Nothing -> runQuery_ . sqlInsert "signatory_link_fields" $ do
+                 case mValue of
+                      Just a  -> sqlSet "value" a
+                      Nothing -> return ()
+                 sqlSet "signatory_link_id" slid
+                 sqlSet "type" $ authMethodField
+                 sqlSet "placements" ("[]"::String)
+      updateMTimeAndObjectVersion (actorTime actor)
+      return (oldAuth', siglink)
+    -- Evidence Events
+    -- One for changing the value, the other for changing authentication method
+    case extraInfoField newAuth of
+         Nothing -> return ()
+         Just authMethodField -> do
+           let mPreviousValue = fmap sfValue $ getFieldOfType authMethodField (signatoryfields sig)
+           when (mValue /= mPreviousValue)
+                (void $ update $ InsertEvidenceEvent
+                  (getEvidenceTextForUpdateField authMethodField)
+                  (F.value "value" (fromMaybe "" mValue))
+                  actor
+                )
+    let insertEvidence e = void $ update $ InsertEvidenceEvent e
+          (F.value "signatory" (getSmartName sig)) actor
+    case (oldAuth, newAuth) of
+         (StandardAuthentication, ELegAuthentication)   -> insertEvidence ChangeAuthenticationMethodStandardToELegEvidence
+         (StandardAuthentication, SMSPinAuthentication) -> insertEvidence ChangeAuthenticationMethodStandardToSMSEvidence
+         (ELegAuthentication, StandardAuthentication)   -> insertEvidence ChangeAuthenticationMethodELegToStandardEvidence
+         (ELegAuthentication, SMSPinAuthentication)     -> insertEvidence ChangeAuthenticationMethodELegToSMSEvidence
+         (SMSPinAuthentication, StandardAuthentication) -> insertEvidence ChangeAuthenticationMethodSMSToStandardEvidence
+         (SMSPinAuthentication, ELegAuthentication)     -> insertEvidence ChangeAuthenticationMethodSMSToElegEvidence
+         _ -> return()
 
 data PreparationToPending = PreparationToPending Actor TimeZoneName
 instance (MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m) => DBUpdate m PreparationToPending () where
@@ -1278,24 +1362,14 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m UpdateFieldsForSignin
                           Just f | sfValue f == fvalue -> False
                           _                            -> True
           when (updated/=0 && changed) $ do
-            let (event, efields) =
-                  case fieldtype of
-                    SignatureFT _ -> (UpdateFieldSignatureEvidence, return ())
-                    CheckboxFT _  -> (UpdateFieldCheckboxEvidence, when (not (null fvalue)) $ F.value "checked" True)
-                    _             -> (UpdateFieldTextEvidence, return ())
-            void $ update $ InsertEvidenceEvent event
+            let eventEvidenceText = getEvidenceTextForUpdateField fieldtype
+            void $ update $ InsertEvidenceEvent eventEvidenceText
                (do F.value "value" fvalue
-                   F.value "fieldname" $ case fieldtype of
-                     FirstNameFT      -> "First name"
-                     LastNameFT       -> "Last name"
-                     CompanyFT        -> "Company"
-                     PersonalNumberFT -> "ID number"
-                     CompanyNumberFT  -> "Company number"
-                     EmailFT          -> "Email"
-                     CustomFT s _     -> s
-                     MobileFT         -> "Mobile number"
-                     _                -> ""
-                   efields
+                   when (eventEvidenceText == UpdateFieldCustomTextEvidence) $ do
+                       let CustomFT s _ = fieldtype
+                       F.value "customfieldname" s
+                   when (eventEvidenceText == UpdateFieldCheckboxEvidence && not (null fvalue))
+                       (F.value "checked" True)
                    case mfield of
                      Just f | not (null ps) -> do
                        F.objects "placements" $ for ps $ \p -> do
@@ -1440,6 +1514,18 @@ instance MonadDB m => DBUpdate m PurgeDocuments Int where
 
 
 -- Update utilities
+getEvidenceTextForUpdateField :: FieldType -> CurrentEvidenceEventType
+getEvidenceTextForUpdateField FirstNameFT      = UpdateFieldFirstNameTextEvidence
+getEvidenceTextForUpdateField LastNameFT       = UpdateFieldLastNameTextEvidence
+getEvidenceTextForUpdateField CompanyFT        = UpdateFieldCompanyTextEvidence
+getEvidenceTextForUpdateField PersonalNumberFT = UpdateFieldPersonalNumberTextEvidence
+getEvidenceTextForUpdateField CompanyNumberFT  = UpdateFieldCompanyNumberTextEvidence
+getEvidenceTextForUpdateField EmailFT          = UpdateFieldEmailTextEvidence
+getEvidenceTextForUpdateField (CustomFT _ _)   = UpdateFieldCustomTextEvidence
+getEvidenceTextForUpdateField MobileFT         = UpdateFieldMobileTextEvidence
+getEvidenceTextForUpdateField (SignatureFT _)  = UpdateFieldSignatureEvidence
+getEvidenceTextForUpdateField (CheckboxFT _)   = UpdateFieldCheckboxEvidence
+
 updateWithoutEvidence :: (DocumentMonad m, Show a, ToSQL a) => SQL -> a -> m Bool
 updateWithoutEvidence col newValue = updateDocumentWithID $ \did -> do
   runQuery01 $ "UPDATE" <+> raw (tblName tableDocuments) <+> "SET" <+> (col <+> "=" <?> newValue <+> "WHERE id =" <?> did)
