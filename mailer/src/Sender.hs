@@ -20,6 +20,7 @@ import OurPrelude
 import qualified Log
 import DB
 import qualified Amazon as AWS
+import Data.Maybe (fromMaybe)
 
 data Sender = Sender {
     senderName :: String
@@ -73,12 +74,17 @@ createSMTPSender config = createExternalSender (serviceName config) "curl" creat
       , "<" ++ addrEmail addr ++ ">"
       ]
     createargs Mail{mailFrom, mailTo} =
+      let smtpUserForThisMail = fromMaybe (smtpUser config) $ 
+                                  fmap smtpDedicatedUser $ 
+                                    find (\du -> smtpFromDedicatedAddress du == addrEmail mailFrom) (smtpDedicatedUsers config)
+      in
       [ "-s", "-S"                   -- show no progress information but show error messages
       , "-k", "--ssl"                -- use SSL but do not fret over self-signed or outdated certifcate
-      ] ++ (if null (smtpUser config) && null (smtpPassword config)
+      , "-T", "."                    -- input from stdin. Else curl goes into interactive mode, tries to do VRFY, etc.
+      ] ++ (if null (smtpAccount smtpUserForThisMail) && null (smtpPassword smtpUserForThisMail)
            then [] else
            [ "--user"
-           , smtpUser config ++ ":" ++ smtpPassword config
+           , smtpAccount smtpUserForThisMail ++ ":" ++ smtpPassword smtpUserForThisMail
            ]) ++
       [ smtpAddr config
       , "--mail-from", "<" ++ addrEmail mailFrom ++ ">"

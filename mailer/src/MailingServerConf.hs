@@ -1,6 +1,8 @@
 module MailingServerConf (
     MailingServerConf(..)
   , SenderConfig(..)
+  , SMTPUser(..)
+  , SMTPDedicatedUser(..)
   ) where
 
 import Data.Word
@@ -20,8 +22,8 @@ data MailingServerConf = MailingServerConf {
 data SenderConfig = SMTPSender {
     serviceName        :: String
   , smtpAddr           :: String
-  , smtpUser           :: String
-  , smtpPassword       :: String
+  , smtpUser           :: SMTPUser
+  , smtpDedicatedUsers :: [SMTPDedicatedUser]
   }
   | LocalSender {
     localDirectory     :: FilePath
@@ -29,6 +31,19 @@ data SenderConfig = SMTPSender {
   }
   | NullSender
   deriving (Read, Show)
+
+data SMTPUser = SMTPUser {
+    smtpAccount  :: String
+  , smtpPassword :: String
+}  deriving (Read, Show)
+
+
+-- SMTP user that is dedicated only to email where from address matched given address 
+data SMTPDedicatedUser = SMTPDedicatedUser {
+    smtpFromDedicatedAddress :: String
+  , smtpDedicatedUser    :: SMTPUser
+} deriving (Read, Show)
+
 
 -- SMTPSender {
 --     serviceName = "SendGrid"
