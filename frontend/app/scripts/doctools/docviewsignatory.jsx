@@ -96,6 +96,11 @@ var DocumentViewSignatoryModel = Backbone.Model.extend({
           && signatory.document().pending()
           && (signatory.emailDelivery() || signatory.emailMobileDelivery());
  },
+ hasExtraSignatoryDetails: function() {
+   var signatory = this.signatory();
+   return    !this.forSigning()
+          && (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin());
+ },
  hasChangeAuthentication: function() {
    var signatory = this.signatory();
    return    !this.forSigning()
@@ -438,6 +443,7 @@ var DocumentViewSignatoryView = React.createClass({
 
           </div>
 
+          {/*if*/ model.hasExtraSignatoryDetails() &&
           <div className="inner fields">
 
             <div className="fieldrow">
@@ -476,6 +482,7 @@ var DocumentViewSignatoryView = React.createClass({
             </div>
 
           </div>
+          }
 
           <div className={"statusbox " + (model.hasAnyOptions() ? "" : "last")} >
             <div className="spacing butt" >
