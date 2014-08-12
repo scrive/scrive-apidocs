@@ -42,25 +42,20 @@ import IPAddress (noIP)
 import File.Model
 import File.File
 import Kontra
-import KontraLink
 import MailContext (getMailContext, MailContext(..), MailContextMonad, MailContextT, runMailContextT)
 import Mails.SendMail
 import OurPrelude
 import User.Model
-import User.Email
 import Util.HasSomeUserInfo
 import qualified Log
 import Templates (runTemplatesT)
 import Text.StringTemplates.Templates (TemplatesMonad, TemplatesT)
 import Util.Actor
 import Util.SignatoryLinkUtils
-import ActionQueue.UserAccountRequest
-import User.Action
 import Data.Maybe hiding (fromJust)
 import Data.List (find)
 import qualified Data.ByteString as BS
 import Doc.API.Callback.Model
-import Company.Model
 import MinutesTime
 
 {- |
@@ -352,37 +347,6 @@ sendPinCode sl phone pin = do
               (Just phone)
               =<< (signatoryActor ctx sl)
   scheduleSMS =<< smsPinCodeSendout doc sl phone pin
-
-{- |
-   Try to sign up a new user. Returns the confirmation link for the new user.
-   Nothing means there is already an account or there was an error creating the user.
- -}
-handlePostSignSignup :: (CryptoRNG m, MonadDB m, TemplatesMonad m, MailContextMonad m) => Email -> String -> String -> String -> String -> m (Maybe KontraLink)
-handlePostSignSignup email fn ln cnm cnr = do
-  mctx <- getMailContext
-  muser <- dbQuery $ GetUserByEmail email
-  case (muser, muser >>= userhasacceptedtermsofservice) of
-    (Just user, Nothing) -> do
-      -- there is an existing user that hasn't been activated
-      -- return the existing link
-      l <- newUserAccountRequestLink (lang $ usersettings user) (userid user) BySigning
-      return $ Just l
-    (Nothing, Nothing) -> do
-      -- this email address is new to the system, so create the user
-      -- and send an invite
-      company <- dbUpdate $ CreateCompany
-
-      _ <- dbUpdate $ SetCompanyInfo (companyid company) $ (companyinfo company) {
-                    companyname = cnm
-                  , companynumber = cnr
-              }
-      mnewuser <- createUser email (fn, ln) (companyid company,True) (mctxlang mctx)
-      case mnewuser of
-        Nothing -> return Nothing
-        Just newuser -> do
-          l <- newUserAccountRequestLink (mctxlang mctx) (userid newuser) BySigning
-          return $ Just l
-    (_, _) -> return Nothing
 
 
 -- Notification sendout
