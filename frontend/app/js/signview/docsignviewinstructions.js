@@ -107,10 +107,10 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     var mandatoryIcon = $("<span class='icon-legend mandatory' />");
     var optionalIcon = $("<span class='icon-legend optional' />");
 
-    if (primarycolour) {
+    if (this.model.usebranding() && primarycolour) {
       BrandedImageUtil.setBrandedImageBackground(mandatoryIcon, 'icon-legend-mandatory.png', primarycolour);
     }
-    if (secondarycolour) {
+    if (this.model.usebranding() && secondarycolour) {
       BrandedImageUtil.setBrandedImageBackground(optionalIcon, 'icon-legend-optional.png', secondarycolour);
     }
 
