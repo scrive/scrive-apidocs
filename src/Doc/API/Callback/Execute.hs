@@ -77,6 +77,7 @@ executeSalesforceCallback doc rtoken url = do
                       "-X", "POST"
                     , "-f" -- make curl return exit code (22) if it got anything else but 2XX
                     , "-L" -- make curl follow redirects
+                    , "--post302" -- make curl still post after redirect
                     , "-d",  urlEncodeVars [
                               ("documentid", show (documentid doc))
                             , ("signedAndSealed", (if (isClosed doc && (isJust $ documentsealedfile doc)) then "true" else "false") )
