@@ -543,7 +543,7 @@ var TextPlacementView = Backbone.View.extend({
         var signatory = field.signatory();
         var color = signatory?signatory.color():'red';
         if (color) {
-          $(this.el).css('border', '1px solid ' + color);
+          $(this.el).css('border', '2px solid ' + color);
         }
     },
     render: function() {
