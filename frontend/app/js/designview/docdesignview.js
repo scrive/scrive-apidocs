@@ -369,7 +369,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                                });
                 var partiesNames = _.map(parties, function(signatory) {
                                       return signatory.nameForLists();
-                               })
+                               });
                 content.find('.put-names-of-parties-here').append(buildBoldList(partiesNames));
             }
             if (signatory.elegAuthentication()) {
@@ -414,7 +414,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                                });
               var partiesNames = _.map(parties, function(signatory) {
                                       return signatory.nameForLists();
-                               })
+                               });
               content.find('.put-names-of-parties-here').append(buildBoldList(partiesNames));
             }
             box.append(content);

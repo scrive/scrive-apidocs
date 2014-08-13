@@ -235,7 +235,7 @@ function buildBoldList(list) {
       } else if (list.length - i == 2) {
         strongsString += "<strong/> " + localization.listand + " ";
       } else {
-        strongsString += "<strong/>"
+        strongsString += "<strong/>";
       }
     }
     var res = $("<span/>").html(strongsString);
