@@ -29,7 +29,7 @@ $htmlopentag()$
                       text : "$_headerLogOut()$",
                       onClick : function() {
                         new Submit({
-                          url : "/logout",
+                          url : "/logout_ajax",
                           ajax : true,
                           ajaxsuccess : function() {
                             window.location.reload();}

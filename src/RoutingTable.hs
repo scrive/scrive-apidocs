@@ -149,6 +149,7 @@ staticRoutes production = choice
 
      -- account stuff
      , dir "logout"      $ hGet  $ toK0 $ handleLogout
+     , dir "logout_ajax" $ hGet  $ toK0 $ handleLogoutAJAX
      , allLangDirs $ dir "login" $ hGet $ toK0 $ handleLoginGet
      , dir "login" $ hPostNoXToken $ toK0 $ handleLoginPost
      , allLangDirs $ dir "signup"      $ hGetAllowHttp $ toK0 $ signupPageGet
