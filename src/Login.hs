@@ -3,6 +3,7 @@ module Login (
   , handleLoginGet
   , handleLoginPost
   , handleLogout
+  , handleLogoutAJAX
   ) where
 
 import DB
@@ -155,9 +156,18 @@ handleLoginPost = do
 
 {- |
    Handles the logout, and sends user back to main page.
+
+   This should be removed when we rewrite header to React,
+   and we should only use handleLogoutAJAX then
 -}
 handleLogout :: Kontrakcja m => m Response
 handleLogout = do
     logUserToContext Nothing
     logPadUserToContext Nothing
     (sendRedirect . LinkExternal) =<< getHttpHostpart
+
+handleLogoutAJAX :: Kontrakcja m => m JSValue
+handleLogoutAJAX = do
+    logUserToContext Nothing
+    logPadUserToContext Nothing
+    runJSONGenT $ value "success" True

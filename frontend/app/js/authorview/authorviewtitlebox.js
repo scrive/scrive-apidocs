@@ -37,7 +37,7 @@ var AuthorViewTitleBoxModel = Backbone.Model.extend({
     return this.document().currentViewerIsAuthor() && this.document().currentSignatoryCanSign() && this.document().pending();
   },
   canGiveToNextSignatoryPad : function() {
-    return !this.canGoToSignView() && this.document().currentViewerIsAuthor() && this.document().pending() && _.any(this.document().signatoriesThatCanSignNow(), function(s) {return s.padDelivery();}) && this.document().signatoriesThatCanSignNow().length > 0;
+    return !this.canGoToSignView() && this.document().currentViewerIsAuthor() && this.document().pending() && this.document().signatoriesThatCanSignNowOnPad().length > 0;
   },
   goToSignView : function() {
     new Submit({method: 'POST', url : '/d/signview/' + this.document().documentid()}).send();
@@ -149,7 +149,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     var self = this;
     var model = this.model;
     var document = this.model.document();
-    var sig = document.signatoriesThatCanSignNow()[0];
+    var sig = document.signatoriesThatCanSignNowOnPad()[0];
     if (sig == undefined) return; // Should never happend
     return new Button({
       color: "green",
