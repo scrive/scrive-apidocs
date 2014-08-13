@@ -1289,9 +1289,23 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
         },
         inner: function() {
             var view = this;
-            view.innerDiv = $("<div class='design-view-action-participant-inner'/>");
+            var signatory = view.model;
+            var innerDiv = $("<div class='design-view-action-participant-inner'/>");
+            view.innerDiv = innerDiv;
             view.innerDiv.append(view.infoBox());
             view.innerDiv.append(view.detailsView.el);
+
+            var participantInnerHasProblems = function() {
+              if(signatory.hasProblems()) {
+                innerDiv.addClass('is-has-problems');
+              }
+              else {
+                innerDiv.removeClass('is-has-problems');
+              }
+            }
+            participantInnerHasProblems();
+            signatory.bind('bubble', participantInnerHasProblems);
+
             return view.innerDiv;
         },
         closeBox: function() {
