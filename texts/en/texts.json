@@ -1,4 +1,4 @@
-{
+{ 
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Are you sure you want to send reminders to the parties involved in the <span class='put-number-of-documents-here'></span> documents?",
@@ -318,10 +318,16 @@
 "_designViewRemoveThisDocument":"Remove document",
 "_designViewRequest":"Request attachments",
 "_designViewRequestFieldFrom":"<span class='put-field-name'/> requested from <br/><span class='put-person-name'/>",
+"_designViewSignModalContent":"By clicking the button you will sign the document <strong class='put-document-title-here'/> with the parties <span class='put-names-of-parties-here'/> and your signature will be registered by the e-signing service Scrive.",
+"_designViewSignModalContentAuthorOnly":"When you've signed the document <strong class='put-document-title-here'/> your signature will be registered by the e-signing service Scrive.",
+"_designViewSignModalContentEleg":"Select eID. When you have selected, the software for signing with eID will be opened.",
 "_designViewSignatureBox":"Signature box",
 "_designViewSignatureBoxSettings":"Signature settings",
 "_designViewSigningDeadline":"Signing deadline",
+"_designViewSigningModalText":"Are you sure you want to send the document?",
 "_designViewStartSigning":"Start signing",
+"_designViewStartSigningModalTextWithPad":"Are you sure you want to start the signing process?",
+"_designViewStartSigningModalTextWithSendout":"Are you sure you want to send the document to: <BR/> <span class='put-names-of-parties-here'/>",
 "_designViewToReceiveDocument":"<span class='put-ordinal-here' /> to receive document",
 "_designViewViewCSV":"View CSV",
 "_designViewWhatField":"What field is it?",
@@ -847,11 +853,5 @@
 "_youCantCancelThisDocuments":"Some of the selected documents can't be withdrawn.",
 "_youCantSendRemindersToThisDocuments":"Reminders can’t be sent for some of the selected documents.",
 "_yourSigningPluginFailed":"Your signing plug-in failed to sign the document. Please contact your eID provider.",
-"_zip":"ZIP",
-"_designViewSignModalContentAuthorOnly":"When you've signed the document <strong class='put-document-title-here'/> your signature will be registered by the e-signing service Scrive.",
-"_designViewSignModalContentEleg":"Select eID. When you have selected, the software for signing with eID will be opened.",
-"_designViewSignModalContent":"By clicking the button you will sign the document <strong class='put-document-title-here'/> with the parties <span class='put-names-of-parties-here'/> and your signature will be registered by the e-signing service Scrive.",
-"_designViewStartSigningModalTextWithPad":"Are you sure you want to start the signing process?",
-"_designViewSigningModalText":"Are you sure you want to send the document?",
-"_designViewStartSigningModalTextWithSendout":"Are you sure you want to send the document to: <BR/> <span class='put-names-of-parties-here'/>"
+"_zip":"ZIP"
 }
