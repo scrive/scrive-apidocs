@@ -7,6 +7,7 @@ var  CreateFromTemplateModel = Backbone.Model.extend({
     if (this.get("list") == undefined)
       this.set({"list" : new KontraList({
         loadOnInit : false,
+        headerExtras : $("<div class='headline'>").text(localization.createFromTemplateDescription),
         schema: new Schema({
               url: "/api/frontend/list",
               extraParams : { documentType : "Template" },
@@ -88,15 +89,9 @@ var CreateFromTemplateView = Backbone.View.extend({
     _.bindAll(this, 'render');
     this.render();
   },
-  header : function() {
-    var box = $("<div class='header'/>");
-    box.append($("<div class='headline'>").text(localization.createFromTemplateDescription));
-    return box;
-  },
   render: function() {
      var model = this.model;
      var container = $(this.el);
-     container.append(this.header());
      model.list().recall();
      container.append(model.list().el());
      return this;
