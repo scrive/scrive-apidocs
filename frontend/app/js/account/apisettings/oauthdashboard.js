@@ -1,4 +1,4 @@
-define(['Backbone', 'legacy_code'], function() {
+define(['Backbone', 'React', 'account/apisettings/callbackscheme', 'account/apisettings/callbackschemeview','legacy_code'], function(Backbone, React, CallbackScheme, CallbackSchemeView) {
 
 var OauthDashboardModel = Backbone.Model.extend({
   personalTokensTable : function() {
@@ -142,10 +142,17 @@ var OauthDashboardModel = Backbone.Model.extend({
                       }})
           ]})});
 
+  },
+  apiCallbackView : function() {
+      var div = $("<div>");
+      var callbackscheme = new CallbackScheme({});
+      callbackscheme.fetch();
+      React.renderComponent(
+        CallbackSchemeView({
+                model: callbackscheme
+      }), div[0]);
+      return div;
   }
-
-
-
 });
 
 var OauthDashboardView = Backbone.View.extend({
@@ -170,8 +177,10 @@ var OauthDashboardView = Backbone.View.extend({
                       .append($("<label class='oauth-section-header'/>").text(localization.apiDashboard.apiTokens))
                       .append($("<label class='oauth-section-label'/>").text(localization.apiDashboard.apiTokenDescription))
                       .append($("<div/>").append(model.apiTokensTable().el()));
-
-       $(this.el).append(section1).append(section2).append(section3);
+                      
+      var section4 =  $("<div class='oauth-section'>").append(model.apiCallbackView());
+      
+      $(this.el).append(section1).append(section2).append(section3).append(section4);
     }
 });
 

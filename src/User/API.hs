@@ -50,6 +50,7 @@ import ActionQueue.Core
 import ActionQueue.PasswordReminder
 import KontraLink
 import Utils.Monad
+import User.CallbackScheme.Model
 
 userAPI :: Route (KontraPlus Response)
 userAPI = dir "api" $ choice
@@ -70,7 +71,9 @@ versionedAPI _version = choice [
   dir "changeemail"     $ hPost $ toK0 $ apiCallChangeEmail,
   dir "addflash"        $ hPost $ toK0 $ apiCallAddFlash,
   dir "paymentinfo"     $ hGet $ toK0 $ apiCallPaymentInfo,
-  dir "userbrandingforsignview" $ hGet $ toK0 $ apiCallUserSignviewBranding
+  dir "userbrandingforsignview" $ hGet $ toK0 $ apiCallUserSignviewBranding,
+  dir "getcallbackscheme" $ hGet $ toK0 $ apiCallUserGetCallbackScheme,
+  dir "testsalesforceintegration" $ hGet $ toK0 $ apiCallTestSalesforceIntegration
   ]
 
 
@@ -309,3 +312,28 @@ apiCallPaymentInfo = api $ do
         value "quantity"  quantity
         value "billingEnds" billingEnds
         value "docsTotal" (docTotal::Int)
+        
+apiCallUserGetCallbackScheme :: Kontrakcja m => m Response
+apiCallUserGetCallbackScheme = api $ do
+  (user, _ , _) <- getAPIUser APIPersonal
+  scheme <- dbQuery $ GetUserCallbackSchemeByUserID $ userid user
+  fmap Ok $ case scheme of                 
+      Just (ConstantUrlScheme url) -> runJSONGenT $ do
+                    value "scheme" ("constant"::String)
+                    value "url" url                    
+      Just (SalesforceScheme _key)  -> runJSONGenT $ do
+                    value "scheme" ("salesforce"::String)
+      Nothing -> runJSONGenT $ do
+                    value "scheme" ("none"::String)
+
+
+apiCallTestSalesforceIntegration :: Kontrakcja m => m Response
+apiCallTestSalesforceIntegration = api $ do
+  (user, _ , _) <- getAPIUser APIPersonal
+  scheme <- dbQuery $ GetUserCallbackSchemeByUserID $ userid user
+  fmap Ok $ case scheme of                    
+      Just (SalesforceScheme key)  -> runJSONGenT $ do
+                    value "scheme" ("salesforce"::String)
+                    value "key" key                   
+      _ -> throwIO . SomeKontraException $ conflictError "Selesforce callback is not set for this user" 
+                    
