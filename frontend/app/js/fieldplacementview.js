@@ -427,7 +427,7 @@ var TextTypeSetterView = Backbone.View.extend({
     doneOption : function() {
         var view = this;
         var field = this.model.field();
-        return new Button({color:"green",
+        return new Button({color:"black",
                             size: "tiny",
                             text: localization.designview.textFields.done,
                             cssClass : "fieldTypeSetter-button",
@@ -1244,7 +1244,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
     doneOption : function() {
         var view = this;
         var field = this.model.field();
-        return new Button({color:"green",
+        return new Button({color:"black",
                             size: "tiny",
                             text: localization.designview.checkboxes.done,
                             cssClass : "fieldTypeSetter-button",
@@ -1694,7 +1694,7 @@ var SignatureTypeSetterView = Backbone.View.extend({
     doneOption : function() {
         var view = this;
         var field = this.model.field();
-        return new Button({color:"green",
+        return new Button({color:"black",
                             size: "tiny",
                             text: localization.designview.textFields.done,
                             cssClass : "fieldTypeSetter-button",
