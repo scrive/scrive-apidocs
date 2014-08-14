@@ -322,18 +322,30 @@ define(['Backbone', 'legacy_code'], function() {
             $(this.el).append(this.pretablebox);
             this.pretablebox.append(this.pretableboxleft).append(this.pretableboxright);
         },
+        // Has first box if there are header extras defined, or dropdown filtering options available
         hasFirstTopBox : function() {
-            return this.headerExtras != undefined || this.schema.allFiltering().length > 0 || !this.schema.textfiltering().disabled();
+            return this.headerExtras != undefined
+                   || (this.schema.allFiltering() != undefined && this.schema.allFiltering().length > 0);
         },
-        hasSecoundTopBox : function() {
-            return this.schema.options().length > 0 || this.schema.actions().length > 0;
+        // Has second box if there are extra options or actions available.
+        // OR also if there is text filtering in second box (i.e. it is not in first)
+        hasSecondTopBox : function() {
+            return this.schema.options().length > 0
+                || this.schema.actions().length > 0
+                || this.hasTextFilteringInSecondBox();
+        },
+        hasTextFilteringInFirstBox : function() {
+            return this.hasFirstTopBox() && !this.schema.textfiltering().disabled();
+        },
+        hasTextFilteringInSecondBox : function() {
+            return !this.hasFirstTopBox() && !this.schema.textfiltering().disabled();
         },
 
         prerender: function() {
             var view = this;
             this.pretableboxleft = $("<div class='col float-left'/>");
             this.pretableboxright = $("<div class='col float-right'/>");
-              this.pretablebox = $("<div class='tab-content'/>");
+            this.pretablebox = $("<div class='tab-content'/>");
             this.tableoptionbox = $("<div class='option-top-box' />");
             this.pretableboxsubbox = $("<div class='subbox empty'/>");
             this.tablebox = $("<div class='table'/>");
@@ -342,44 +354,50 @@ define(['Backbone', 'legacy_code'], function() {
             this.tablebox.append(this.tableboxfooter);
             this.pretablebox = $("<div/>");
 
-            if (this.hasFirstTopBox() || this.hasSecoundTopBox()) {
-                this.tableoptionbox = $("<div class='option-top-box' />");
-                $(this.el).append(this.tableoptionbox);
-                // Top box - for filters
-                if (this.hasFirstTopBox()) {
-                    this.pretablebox = $("<div/>");
-                    this.pretableboxleft = $("<div class='col float-left'/>");
-                    this.pretableboxright = $("<div class='col float-right'/>");
-                    this.pretablebox.append(this.pretableboxleft).append(this.pretableboxright).append("<div class='clearfix'/>");
-                    this.tableoptionbox.append(this.pretablebox);
-                    if (this.headerExtras != undefined) {
-                        if (typeof(this.headerExtras) == "function")
-                            this.pretableboxleft.append(this.headerExtras());
-                        else
-                            this.pretableboxleft.append(this.headerExtras);
-                    }
-                    _.each(this.schema.allFiltering(),function(f) {
-                        var filter = new FilteringView({model: f, el: $("<div class='float-left'/>")});
-                        view.pretableboxleft.append(filter.el);
-                    });
-                    if (!this.schema.textfiltering().disabled()) {
-                        var filter = new FilteringView({model: this.schema.textfiltering(), el: $("<div style='height:30px'/>")});
-                        this.pretableboxright.append(filter.el);
-                    }
+            /* Option boxes */
+            this.tableoptionbox = $("<div class='option-top-box' />");
+            // Top box - for filters
+            if (this.hasFirstTopBox()) {
+                this.pretablebox = $("<div/>");
+                this.pretableboxleft = $("<div class='col float-left'/>");
+                this.pretableboxright = $("<div class='col float-right'/>");
+                this.pretablebox.append(this.pretableboxleft).append(this.pretableboxright).append("<div class='clearfix'/>");
+                this.tableoptionbox.append(this.pretablebox);
+                if (this.headerExtras != undefined) {
+                    if (typeof(this.headerExtras) == "function")
+                        this.pretableboxleft.append(this.headerExtras());
+                    else
+                        this.pretableboxleft.append(this.headerExtras);
                 }
-                // Secound top box - for actions
-                if (this.hasSecoundTopBox())
-                {
-                    this.pretableboxsubbox = $("<div class='subbox'/>");
-                    this.tableoptionbox.append(this.pretableboxsubbox);
-                    if (this.schema.actionsAvaible()) {
-                        this.prepareActions();
-                    }
-                    if (this.schema.optionsAvaible()) {
-                        this.prepareOptions();
-                    }
+                _.each(this.schema.allFiltering(),function(f) {
+                    var filter = new FilteringView({model: f, el: $("<div class='float-left'/>")});
+                    view.pretableboxleft.append(filter.el);
+                });
+                if (this.hasTextFilteringInFirstBox()) {
+                    var filter = new FilteringView({model: this.schema.textfiltering(), el: $("<div style='height:30px'/>")});
+                    this.pretableboxright.append(filter.el);
                 }
             }
+            // Second top box - for actions
+            if (this.hasSecondTopBox()) {
+                this.pretableboxsubbox = $("<div class='subbox'/>");
+                this.tableoptionbox.append(this.pretableboxsubbox);
+                if (this.schema.actionsAvaible()) {
+                    this.prepareActions();
+                }
+                if (this.schema.optionsAvaible()) {
+                    this.prepareOptions();
+                }
+                if(this.hasTextFilteringInSecondBox()) {
+                    var filter = new FilteringView({model: this.schema.textfiltering(), el: $("<div style='height:30px'/>")});
+                    this.pretableboxsubbox.append(filter.el);
+                }
+            }
+            if (this.hasFirstTopBox() || this.hasSecondTopBox()) {
+                $(this.el).append(this.tableoptionbox);
+            }
+
+
             $(this.el).append(this.tablebox);
             if (this.bottomExtras != undefined) {
                 if (this.bottomExtras instanceof jQuery)
