@@ -71,8 +71,8 @@ executeSalesforceCallback :: (MonadDB m, Log.MonadLog m, MonadIO m, MonadReader 
 executeSalesforceCallback doc rtoken url = do
   mtoken <- getAccessTokenFromRefreshToken rtoken
   case mtoken of
-       Nothing -> return False
-       Just token -> do
+       Left _ -> return False
+       Right token -> do
         (exitcode, _ , stderr) <- readCurl [
                       "-X", "POST"
                     , "-f" -- make curl return exit code (22) if it got anything else but 2XX

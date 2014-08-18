@@ -51,6 +51,8 @@ import ActionQueue.PasswordReminder
 import KontraLink
 import Utils.Monad
 import User.CallbackScheme.Model
+import Salesforce.AuthorizationWorkflow
+import Salesforce.Conf
 
 userAPI :: Route (KontraPlus Response)
 userAPI = dir "api" $ choice
@@ -312,15 +314,15 @@ apiCallPaymentInfo = api $ do
         value "quantity"  quantity
         value "billingEnds" billingEnds
         value "docsTotal" (docTotal::Int)
-        
+
 apiCallUserGetCallbackScheme :: Kontrakcja m => m Response
 apiCallUserGetCallbackScheme = api $ do
   (user, _ , _) <- getAPIUser APIPersonal
   scheme <- dbQuery $ GetUserCallbackSchemeByUserID $ userid user
-  fmap Ok $ case scheme of                 
+  fmap Ok $ case scheme of
       Just (ConstantUrlScheme url) -> runJSONGenT $ do
                     value "scheme" ("constant"::String)
-                    value "url" url                    
+                    value "url" url
       Just (SalesforceScheme _key)  -> runJSONGenT $ do
                     value "scheme" ("salesforce"::String)
       Nothing -> runJSONGenT $ do
@@ -329,11 +331,17 @@ apiCallUserGetCallbackScheme = api $ do
 
 apiCallTestSalesforceIntegration :: Kontrakcja m => m Response
 apiCallTestSalesforceIntegration = api $ do
-  (user, _ , _) <- getAPIUser APIPersonal
+  (user, _ , _) <- getAPIUser APIDocCheck
   scheme <- dbQuery $ GetUserCallbackSchemeByUserID $ userid user
-  fmap Ok $ case scheme of                    
-      Just (SalesforceScheme key)  -> runJSONGenT $ do
-                    value "scheme" ("salesforce"::String)
-                    value "key" key                   
-      _ -> throwIO . SomeKontraException $ conflictError "Selesforce callback is not set for this user" 
-                    
+  murl <- getField "url"
+  when (isNothing murl) $ do
+    throwIO . SomeKontraException $ badInput $ "No url provided"
+  let url = fromJust murl
+  fmap Ok $ case scheme of
+      Just (SalesforceScheme token)  -> do
+        ctx <- getContext
+        res <- withSalesforceConf ctx $ testSalesforce token url
+        case res of
+          Nothing -> runJSONGenT $ value "status" ("ok"::String)
+          Just e  -> throwIO . SomeKontraException $ badInput $ "Selesforce integration did not work. Message: " ++ show e
+      _ -> throwIO . SomeKontraException $ conflictError "Selesforce callback scheme is not set for this user"

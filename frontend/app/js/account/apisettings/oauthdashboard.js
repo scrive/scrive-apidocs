@@ -177,9 +177,9 @@ var OauthDashboardView = Backbone.View.extend({
                       .append($("<label class='oauth-section-header'/>").text(localization.apiDashboard.apiTokens))
                       .append($("<label class='oauth-section-label'/>").text(localization.apiDashboard.apiTokenDescription))
                       .append($("<div/>").append(model.apiTokensTable().el()));
-                      
+
       var section4 =  $("<div class='oauth-section'>").append(model.apiCallbackView());
-      
+
       $(this.el).append(section1).append(section2).append(section3).append(section4);
     }
 });

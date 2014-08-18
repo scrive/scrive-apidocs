@@ -70,3 +70,13 @@ FormPricePerMonth=3000 SEK
 ###
 FormPrice50=50
 ###
+### Texts for integration settings - they are not translated, since this only affect very specyfic users
+###
+salesforce=Salesforce
+###
+salesforceDescription=Salesforce integration is active for this account
+###
+constantUrlCallback=Callbacks
+###
+constantUrlCallbackDescription=All callbacks for this account will be redirected to <strong class='put-url-here'/>
+###

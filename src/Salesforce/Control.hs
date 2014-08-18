@@ -28,8 +28,8 @@ handleSalesforceIntegration  = withUserGet $ do
        (Just code) -> do
          mtoken <- withSalesforceConf ctx (getRefreshTokenFromCode code)
          case mtoken of
-              Nothing -> internalError
-              Just token -> do
+              Left _ -> internalError
+              Right token -> do
                 dbUpdate $ UpdateUserCallbackScheme (userid $ fromJust $ ctxmaybeuser ctx) (SalesforceScheme token)
                 return $ fromMaybe LinkDesignView (LinkExternal <$> mstate)
        _ ->  LinkExternal <$> (withSalesforceConf ctx (initAuthorizationWorkflowUrl mstate))
