@@ -17,7 +17,7 @@ return React.createClass({
       var self = this;
       var model = this.props.model;
       if (!model.ready) {
-          return (<div/>)
+          return (<div/>);
       }
       return (
         <div>
