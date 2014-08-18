@@ -42,12 +42,12 @@ var ApiDemoView = Backbone.View.extend({
             var none = $("<option value=''></option>")
             var createFromFile = $("<option value='cff' >Create from file</option>");
             var changeFile = $("<option value='changeFile' >Change file</option>");
-            var changeAuth = $("<option value='changeAuth'>Change authentication method</option>");
             var createFromTemplate = $("<option value='cft'>Create from template</option>");
             var update = $("<option value='u'>Update</option>");
             var setattachments = $("<option value='setatt'>Set attachments</option>");
             var ready = $("<option value='g'>Ready</option>");
             var sendReminder = $("<option value='s'>Send reminder</option>");
+            var changeAuth = $("<option value='changeAuth'>Change authentication</option>");
             var sendForward = $("<option value='fw'>Forward with mail</option>");
             var cancel = $("<option value='cc'>Cancel</option>");
             var restart = $("<option value='restart'>Restart</option>");
@@ -71,8 +71,8 @@ var ApiDemoView = Backbone.View.extend({
             var passwordreset = $("<option value='passwordreset'>Reset password</option>");
             var checkclient  = $("<option value='check'>Check client</option>");
 
-            select.append(none).append(createFromFile).append(changeFile).append(changeAuth).append(createFromTemplate).append(update).append(setattachments)
-                  .append(ready).append(sendReminder).append(sendForward).append(cancel).append(restart).append(prolong).append(del).append(check).append(history)
+            select.append(none).append(createFromFile).append(changeFile).append(createFromTemplate).append(update).append(setattachments)
+                  .append(ready).append(sendReminder).append(changeAuth).append(sendForward).append(cancel).append(restart).append(prolong).append(del).append(check).append(history)
                   .append(list).append(download).append(downloadmf).append(extracttexts).append(reject).append(setsigatt).append(sign)
                   .append($("<option>---------</option>"))
                   .append(profile).append(payments).append(language).append(password).append(signup).append(passwordreset).append(updateprofile)
@@ -83,8 +83,6 @@ var ApiDemoView = Backbone.View.extend({
                     createFromFile.attr("selected", "true");
                 else if (model.selectedApiCall().isChangeMainFile())
                     changeFile.attr("selected", "true");
-                else if (model.selectedApiCall().isChangeAuthenticationMethod())
-                    changeAuth.attr("selected", "true");
                 else if (model.selectedApiCall().isCreateFromTemplate())
                     createFromTemplate.attr("selected", "true");
                 else if (model.selectedApiCall().isUpdate())
@@ -95,6 +93,8 @@ var ApiDemoView = Backbone.View.extend({
                     ready.attr("selected", "true");
                 else if (model.selectedApiCall().isSendReminder())
                     sendReminder.attr("selected", "true");
+                else if (model.selectedApiCall().isChangeAuthenticationMethod())
+                    changeAuth.attr("selected", "true");
                 else if (model.selectedApiCall().isForward())
                     sendForward.attr("selected", "true");
                 else if (model.selectedApiCall().isCancel())

@@ -12,12 +12,12 @@ window.ApiCall = Backbone.Model.extend({
         },
         isCreateFromFile : function() {return false;},
         isChangeMainFile : function() {return false;},
-        isChangeAuthenticationMethod : function() {return false;},
         isCreateFromTemplate : function() {return false;},
         isUpdate : function() {return false;},
         isSetAttachments : function() {return false;},
         isReady : function() {return false;},
         isSendReminder : function() {return false;},
+        isChangeAuthenticationMethod : function() {return false;},
         isForward : function() {return false},
         isCancel : function() {return false;},
         isRestart : function() {return false;},
@@ -69,8 +69,6 @@ window.ApiCallView = function(args) {
            return new CreateFromFileApiCallView(args);
         if (args.model.isChangeMainFile())
            return new ChangeMainFileApiCallView(args);
-        else if (args.model.isChangeAuthenticationMethod())
-           return new ChangeAuthenticationMethodApiCallView(args);
         else if (args.model.isCreateFromTemplate())
            return new CreateFromTemplateApiCallView(args);
         else if (args.model.isUpdate())
@@ -81,6 +79,8 @@ window.ApiCallView = function(args) {
            return new ReadyApiCallView(args);
         else if (args.model.isSendReminder())
            return new SendReminderApiCallView(args);
+        else if (args.model.isChangeAuthenticationMethod())
+           return new ChangeAuthenticationMethodApiCallView(args);
         else if (args.model.isForward())
            return new ForwardApiCallView(args);
         else if (args.model.isCancel())
