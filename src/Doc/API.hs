@@ -518,12 +518,12 @@ checkAuthenticationMethodAndValue slid = do
                              conflictError "`authentication_type` does not match"
                          (True, StandardAuthentication) -> return ()
                          (True, ELegAuthentication)   ->
-                             if (authValue == getPersonalNumber siglink)
+                             if (authValue == getPersonalNumber siglink || null (getPersonalNumber siglink))
                                 then return ()
                                 else throwIO . SomeKontraException $
                                     conflictError "`authentication_value` for personal number does not match"
                          (True, SMSPinAuthentication) ->
-                             if (authValue == getMobile siglink)
+                             if (authValue == getMobile siglink || null (getMobile siglink))
                                 then return ()
                                 else throwIO . SomeKontraException $
                                     conflictError "`authentication_value` for phone number does not match"
