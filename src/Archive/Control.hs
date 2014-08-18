@@ -186,7 +186,7 @@ jsonDocumentsList = do
   format <- getField "format"
   case format of
        Just "csv" -> do
-          allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting (0,-1)
+          allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting (0, 1000)
           let docsCSVs = concat $ zipWith docForListCSV  [1..] allDocs
           return $ Left $ CSV { csvFilename = "documents.csv"
                               , csvHeader = docForListCSVHeader
