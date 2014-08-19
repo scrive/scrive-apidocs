@@ -13,7 +13,6 @@ import Happstack.StaticRouting
 import KontraMonad
 import Happstack.Server.Types
 import Routing
-import API.APIVersion (APIVersion(..))
 import Control.Applicative
 import Control.Exception.Lifted
 import User.Model
@@ -56,13 +55,14 @@ import Salesforce.Conf
 
 userAPI :: Route (KontraPlus Response)
 userAPI = dir "api" $ choice
-  [ dir "frontend" $ versionedAPI Frontend
-  , versionedAPI V1 -- Temporary backwards compatibility for clients accessing version-less API
-  , dir "v1" $ versionedAPI V1
+  [ dir "frontend" $ userAPI'
+  , userAPI' -- Temporary backwards compatibility for clients accessing version-less API
+  , dir "v1" $ userAPI'
+  , dir "v2" $ userAPI' -- V2 does not introduce any changes to user API
   ]
 
-versionedAPI :: APIVersion -> Route (KontraPlus Response)
-versionedAPI _version = choice [
+userAPI' :: Route (KontraPlus Response)
+userAPI' = choice [
   dir "getpersonaltoken"     $ hPost $ toK0 $ apiCallGetUserPersonalToken,
   dir "signup"          $ hPost $ toK0 $ apiCallSignup,
   dir "sendpasswordresetmail" $ hPost $ toK0 $ apiCallSendPasswordReminder,

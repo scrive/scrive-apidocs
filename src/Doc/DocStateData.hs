@@ -61,6 +61,7 @@ import Control.Monad
 import Utils.Default
 import qualified Control.Exception.Lifted as E
 import qualified Data.Set as S
+import API.APIVersion
 
 newtype SignOrder = SignOrder { unSignOrder :: Int32 }
   deriving (Eq, Ord, PQFormat)
@@ -723,6 +724,7 @@ data Document = Document {
   , documentmagichash              :: MagicHash
   , documentauthorcompanyid        :: Maybe CompanyID
   , documenttimezonename           :: TimeZoneName
+  , documentapiversion             :: APIVersion
   } deriving (Eq, Ord, Show)
 
 
@@ -757,6 +759,7 @@ instance HasDefaultValue Document where
           , documentmagichash            = unsafeMagicHash 0
           , documentauthorcompanyid      = Nothing
           , documenttimezonename         = defaultTimeZoneName
+          , documentapiversion           = defaultValue
           }
 
 instance HasLang Document where

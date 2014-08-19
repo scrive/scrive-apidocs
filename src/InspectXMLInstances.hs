@@ -33,6 +33,7 @@ import File.File
 import Data.List
 import BrandedDomain.BrandedDomainID
 import DB.TimeZoneName
+import API.APIVersion
 
 instance (InspectXML a, Show a) => InspectXML [a] where
     inspectXML l = "<ul>" ++ (concatMap (\s -> "<li>" ++ (inspectXML s) ++ "</li>") l) ++ "</ul>"
@@ -133,3 +134,4 @@ instance InspectXML JSValue where
 instance InspectXML StatusClass where
 instance InspectXML SealStatus
 instance InspectXML TimeZoneName
+instance InspectXML APIVersion

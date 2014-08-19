@@ -1213,6 +1213,16 @@ addTimeZoneNameToDocuments =
         return ()
       }
 
+addAPIVersionToDocument :: MonadDB m => Migration m
+addAPIVersionToDocument =
+  Migration {
+      mgrTable = tableDocuments
+    , mgrFrom = 34
+    , mgrDo = do
+        runSQL_ "ALTER TABLE documents ADD COLUMN api_version SMALLINT NOT NULL DEFAULT 1"
+        return ()
+      }
+
 fixSignatureFieldsWithAnySize :: MonadDB m => Migration m
 fixSignatureFieldsWithAnySize =
   Migration {

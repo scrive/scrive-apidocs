@@ -7,7 +7,6 @@ import Happstack.StaticRouting
 import KontraMonad
 import Happstack.Server.Types
 import Routing
-import API.APIVersion (APIVersion(..))
 import Kontra
 import API.Monad
 import Control.Exception.Lifted
@@ -19,13 +18,14 @@ import Text.JSON.Types (JSValue(JSNull))
 
 padApplicationAPI :: Route (KontraPlus Response)
 padApplicationAPI = dir "api" $ choice
-  [ dir "frontend" $ versionedAPI Frontend
-  , versionedAPI V1 -- Temporary backwards compatibility for clients accessing version-less API
-  , dir "v1" $ versionedAPI V1
+  [ dir "frontend" $ padApplicationAPI'
+  , padApplicationAPI' -- Temporary backwards compatibility for clients accessing version-less API
+  , dir "v1" $ padApplicationAPI'
+  , dir "v2" $ padApplicationAPI'
   ]
 
-versionedAPI :: APIVersion -> Route (KontraPlus Response)
-versionedAPI _version = choice [
+padApplicationAPI' :: Route (KontraPlus Response)
+padApplicationAPI' = choice [
   dir "checkclient"     $ hPostNoXTokenHttp $ toK0 $ apiCallCheckClient
   ]
 

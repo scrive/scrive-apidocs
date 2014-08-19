@@ -12,8 +12,6 @@ module Doc.API (
   , apiCallDownloadFile        -- Exported for tests
   , apiCallChangeMainFile
   , apiChangeAuthentication    -- Exported for tests
-
-  , getAnchorPositions
   ) where
 
 import AppView (respondWithPDF)
@@ -27,7 +25,7 @@ import qualified Text.JSON.Pretty as J (pp_value)
 import KontraMonad
 import Happstack.Server.Types
 import Routing
-import API.APIVersion (APIVersion(..))
+-- import API.APIVersion (APIVersion(..))
 import Doc.DocStateQuery
 import Doc.DocStateData
 import Doc.Model
@@ -108,16 +106,19 @@ import Utils.Monoid
 import Doc.SMSPin.Model
 import Doc.Anchors
 import qualified Data.Traversable as T
+import Doc.APIV2
+import API.APIVersion
 
 documentAPI :: Route (KontraPlus Response)
 documentAPI = dir "api" $ choice
-  [ dir "frontend" $ versionedAPI Frontend
-  , versionedAPI V1 -- Temporary backwards compatibility for clients accessing version-less API
-  , dir "v1" $ versionedAPI V1
+  [ dir "frontend" $ documentAPIV1
+  , documentAPIV1 -- Temporary backwards compatibility for clients accessing version-less API
+  , dir "v1" $ documentAPIV1
+  , dir "v2" $ documentAPIV2
   ]
 
-versionedAPI :: APIVersion -> Route (KontraPlus Response)
-versionedAPI _version = choice [
+documentAPIV1 ::  Route (KontraPlus Response)
+documentAPIV1  = choice [
 
   dir "createfromfile"     $ hPost $ toK0 $ apiCallCreateFromFile,
   dir "createfromtemplate" $ hPostAllowHttp $ toK1 $ apiCallCreateFromTemplate,
@@ -139,7 +140,7 @@ versionedAPI _version = choice [
 
 
   dir "remind"             $ hPost $ toK1 $ apiCallRemind,
-  dir "forward"           $ hPost $ toK1 $ apiCallForward,
+  dir "forward"            $ hPost $ toK1 $ apiCallForward,
   dir "delete"             $ hDeleteAllowHttp  $ toK1 $ apiCallDelete,
   dir "reallydelete"       $ hDeleteAllowHttp  $ toK1 $ apiCallReallyDelete,
   dir "get"                $ hGetAllowHttp $ toK1 $ apiCallGet,
@@ -208,7 +209,7 @@ apiCallCreateFromFile = api $ do
       return (Just fileid', takeBaseName filename)
   mtimezone <- getField "timezone"
   timezone <- fromMaybe defaultTimeZoneName <$> T.sequence (mkTimeZoneName <$> mtimezone)
-  guardJustM (dbUpdate $ NewDocument user title doctype timezone 0 actor) `withDocumentM` do
+  guardJustM (dbUpdate $ NewDocument V1 user title doctype timezone 0 actor) `withDocumentM` do
     when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft True
     case mfile of
       Nothing -> return ()
@@ -226,7 +227,7 @@ apiCallCreateFromTemplate did =  api $ do
                       (usercompany auser == usercompany user &&  isDocumentShared template)
   unless (isTemplate template && haspermission) $ do
     throwIO $ SomeKontraException $ serverError "Id did not matched template or you do not have right to access document"
-  (apiGuardJustM (serverError "Can't clone given document") (dbUpdate $ CloneDocumentWithUpdatedAuthor user template actor) >>=) $ flip withDocumentID $ do
+  (apiGuardJustM (serverError "Can't clone given document") (dbUpdate $ CloneDocumentWithUpdatedAuthor V1 user template actor) >>=) $ flip withDocumentID $ do
     dbUpdate $ DocumentFromTemplate actor
     when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft True
     Created <$> (documentJSON (Just user) False True True Nothing =<< theDocument)
@@ -238,7 +239,7 @@ apiCallClone did =  api $ do
   doc <- dbQuery $ GetDocumentByDocumentID $ did
   if isAuthor (doc,user)
      then do
-         mndid <- dbUpdate $ CloneDocumentWithUpdatedAuthor user doc actor
+         mndid <- dbUpdate $ CloneDocumentWithUpdatedAuthor V1 user doc actor
          when (isNothing mndid) $
              throwIO . SomeKontraException $ serverError "Can't clone given document"
          newdoc <- dbQuery $ GetDocumentByDocumentID $ (fromJust mndid)

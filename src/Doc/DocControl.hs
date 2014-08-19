@@ -103,6 +103,7 @@ import Util.Zlib (decompressIfPossible)
 import Doc.API.Callback.Model
 import Happstack.MonadPlus (runMPlusT)
 import qualified Data.Traversable as T
+import Utils.Default
 
 handleNewDocument :: Kontrakcja m => m KontraLink
 handleNewDocument = do
@@ -114,7 +115,7 @@ handleNewDocument = do
         actor <- guardJustM $ mkAuthorActor <$> getContext
         mtimezonename <- runMPlusT $ lookCookieValue "timezone"
         timezone <- fromMaybe defaultTimeZoneName <$> T.sequence (mkTimeZoneName <$> mtimezonename)
-        Just doc <- dbUpdate $ NewDocument user (replace "  " " " $ title ++ " " ++ formatMinutesTimeSimple (ctxtime ctx)) Signable timezone 0 actor
+        Just doc <- dbUpdate $ NewDocument defaultValue user (replace "  " " " $ title ++ " " ++ formatMinutesTimeSimple (ctxtime ctx)) Signable timezone 0 actor
         withDocument doc $ dbUpdate $ SetDocumentUnsavedDraft True
         return $ LinkIssueDoc (documentid doc)
      else return $ LinkLogin (ctxlang ctx) LoginTry
