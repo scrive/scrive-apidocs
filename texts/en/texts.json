@@ -386,6 +386,7 @@
 "_docviewSignatoryRoleLabel":"Role",
 "_docviewSignatoryRoleSignatory":"signing party",
 "_docviewSignatoryRoleViewer":"viewer",
+"_docviewSignatoryeditAuthenticationMethod":"Edit",
 "_dontHaveAccount":"Don't have an account? <a class='put-link-to-signup-here'>Sign up for free.</a>",
 "_editMessagePlaceholder":"Message available for email delivery only.",
 "_emailCanBeChangedInAccountSection":"Your email can be changed in your account settings",

@@ -570,7 +570,8 @@ javascriptLocalisation =
         }
         , docview : {
             signatory : {
-                invitationOrder: "$_docviewSignatoryInvitationOrderLabel()$"
+                editAuthenticationMethod: "$_docviewSignatoryeditAuthenticationMethod()$"
+              , invitationOrder: "$_docviewSignatoryInvitationOrderLabel()$"
               , invitationMethod: "$_docviewSignatoryInvitationMethodLabel()$"
               , invitationEmail: "$_docviewSignatoryInvitationEmail()$"
               , invitationPad: "$_docviewSignatoryInvitationPad()$"

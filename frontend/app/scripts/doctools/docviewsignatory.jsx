@@ -467,7 +467,7 @@ var DocumentViewSignatoryView = React.createClass({
             {/*if*/ signatory.signs() &&
             <div className="fieldrow">
               {/*if*/ model.hasChangeAuthentication() &&
-               <a className="edit clickable" onClick={this.handleChangeAuthenticationMethod}>Edit</a>
+               <a className="edit clickable" onClick={this.handleChangeAuthenticationMethod}>{localization.docview.signatory.editAuthenticationMethod}</a>
               }
               <span className="authentication field" style={textstyle} title={this.getAuthenticationMethodText()}>
                 {localization.docview.signatory.authentication}: {this.getAuthenticationMethodText()}
