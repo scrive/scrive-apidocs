@@ -386,6 +386,7 @@
 "_docviewSignatoryRoleLabel":"",
 "_docviewSignatoryRoleSignatory":"",
 "_docviewSignatoryRoleViewer":"",
+"_docviewSignatoryeditAuthenticationMethod":"",
 "_dontHaveAccount":"Não tem uma conta? <a class='put-link-to-signup-here'>Inscreva-se gratuitamente.</a>",
 "_editMessagePlaceholder":"Mensagem disponível apenas para entrega por email.",
 "_emailCanBeChangedInAccountSection":"É possível alterar o seu email nas definições da conta",

@@ -386,6 +386,7 @@
 "_docviewSignatoryRoleLabel":"Rolle",
 "_docviewSignatoryRoleSignatory":"signerende part",
 "_docviewSignatoryRoleViewer":"ikke-signerende part",
+"_docviewSignatoryeditAuthenticationMethod":"",
 "_dontHaveAccount":"Har du ikke en konto? <a class='put-link-to-signup-here'>Registrer deg gratis.</a>",
 "_editMessagePlaceholder":"Meldingen er kun tilgjengelig via e-postlevering.",
 "_emailCanBeChangedInAccountSection":"Din e-post kan endres under dine kontoinnstillinger",

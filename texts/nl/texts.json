@@ -386,6 +386,7 @@
 "_docviewSignatoryRoleLabel":"Rol",
 "_docviewSignatoryRoleSignatory":"ondertekenende partij",
 "_docviewSignatoryRoleViewer":"kijker",
+"_docviewSignatoryeditAuthenticationMethod":"",
 "_dontHaveAccount":"Geen account? <a class='put-link-to-signup-here'>Meld u gratis aan.</a>",
 "_editMessagePlaceholder":"Bericht alleen beschikbaar voor verzending via e-mail.",
 "_emailCanBeChangedInAccountSection":"Uw e-mailadres kan veranderd worden in uw accountinstellingen",

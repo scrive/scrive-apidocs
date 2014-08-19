@@ -386,6 +386,7 @@
 "_docviewSignatoryRoleLabel":"",
 "_docviewSignatoryRoleSignatory":"",
 "_docviewSignatoryRoleViewer":"",
+"_docviewSignatoryeditAuthenticationMethod":"",
 "_dontHaveAccount":"Δεν έχετε λογαριασμό; <a class='put-link-to-signup-here'>Εγγραφείτε δωρεάν.</a>",
 "_editMessagePlaceholder":"Μήνυμα διαθέσιμο μόνο για παράδοση μέσω email. ",
 "_emailCanBeChangedInAccountSection":"Το email σας μπορεί να αλλαχθεί στις ρυθμίσεις του λογαριασμού σας",

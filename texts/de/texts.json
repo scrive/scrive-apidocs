@@ -386,6 +386,7 @@
 "_docviewSignatoryRoleLabel":"Rolle",
 "_docviewSignatoryRoleSignatory":"signierende Partei",
 "_docviewSignatoryRoleViewer":"Zuschauer",
+"_docviewSignatoryeditAuthenticationMethod":"",
 "_dontHaveAccount":"Sie haben noch kein Konto? <a class='put-link-to-signup-here'>Kostenlos anmelden.</a>",
 "_editMessagePlaceholder":"Nachricht nur per E-Mail zustellbar.",
 "_emailCanBeChangedInAccountSection":"Ihre E-Mail können Sie in Ihren Kontoeinstellungen ändern.",

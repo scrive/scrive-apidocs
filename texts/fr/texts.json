@@ -386,6 +386,7 @@
 "_docviewSignatoryRoleLabel":"",
 "_docviewSignatoryRoleSignatory":"",
 "_docviewSignatoryRoleViewer":"",
+"_docviewSignatoryeditAuthenticationMethod":"",
 "_dontHaveAccount":"Pas de compte?<a class='put-link-to-signup-here'> Inscrivez-vous gratuitement.</a>",
 "_editMessagePlaceholder":"Message délivré uniquement par mail.",
 "_emailCanBeChangedInAccountSection":"Vous pouvez modifier votre adresse mail à partir des paramètres de votre compte",
