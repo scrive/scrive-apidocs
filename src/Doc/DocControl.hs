@@ -90,7 +90,6 @@ import qualified Data.Map as Map
 import Text.JSON hiding (Result)
 import Text.JSON.Gen hiding (value)
 import qualified Text.JSON.Gen as J
-import Doc.DocDraft() -- Import instances only
 import qualified User.Action
 import Util.Actor
 import qualified GuardTime as GuardTime
