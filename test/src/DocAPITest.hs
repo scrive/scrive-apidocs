@@ -17,7 +17,7 @@ import Utils.Default
 import User.Model
 import TestingUtil
 import TestKontra as T
-import Doc.API
+import Doc.API.V1.Calls
 
 docAPITests :: TestEnvSt -> Test
 docAPITests env = testGroup "DocAPI" $
@@ -45,7 +45,7 @@ testUpdateDoc updateJsonPath = do
   do
      req <- mkRequest POST [ ("expectedType", inText "text")
                            , ("file", inFile "test/pdfs/simple.pdf")]
-     (_, _ctx') <- runTestKontra req ctx $ apiCallCreateFromFile
+     (_, _ctx') <- runTestKontra req ctx $ apiCallV1CreateFromFile
      return ()
 
   docs <- randomQuery $ GetDocumentsByAuthor (userid user)
@@ -54,25 +54,25 @@ testUpdateDoc updateJsonPath = do
 
   do
      req <- mkRequest POST [("json_is_missing", inText cont)]
-     (rsp,_) <- runTestKontra req ctx $ apiCallUpdate $ documentid doc
+     (rsp,_) <- runTestKontra req ctx $ apiCallV1Update $ documentid doc
      assertEqual "Status code when json field is missing" 400 (rsCode rsp)
      return ()
 
   do
      req <- mkRequest POST [ ("json", inText cont)
                            , ("objectversion", inText "3412342341")]
-     (rsp,_) <- runTestKontra req ctx $ apiCallUpdate $ documentid doc
+     (rsp,_) <- runTestKontra req ctx $ apiCallV1Update $ documentid doc
      assertEqual "Status code for invalid objectversion is 409" 409 (rsCode rsp)
      return ()
 
   do
      req <- mkRequest POST [("json", inText cont)]
-     _ <- runTestKontra req ctx $ apiCallUpdate $ documentid doc
+     _ <- runTestKontra req ctx $ apiCallV1Update $ documentid doc
      return ()
 
   do
      req <- mkRequest POST []
-     (rsp, _) <- runTestKontra req ctx $ apiCallReady $ documentid doc
+     (rsp, _) <- runTestKontra req ctx $ apiCallV1Ready $ documentid doc
      let rspString = BS.toString $ rsBody rsp
          Ok (JSObject response) = decode rspString
          Just (JSString sts) = lookup "status" $ fromJSObject response
@@ -87,7 +87,7 @@ testSetAutoReminder = do
   [doc] <- randomQuery $ GetDocumentsByAuthor (userid user)
 
   req <- mkRequest POST [("days", inText "3")]
-  (res, _) <- runTestKontra req ctx $ apiCallSetAutoReminder (documentid doc)
+  (res, _) <- runTestKontra req ctx $ apiCallV1SetAutoReminder (documentid doc)
 
   assertEqual "response code is 202" 202 (rsCode res)
 
@@ -99,20 +99,20 @@ testChangeAuthenticationMethod = do
       validsiglinkid = signatorylinkid $ head $ filter signatoryispartner siglinks
 
   reqNoAuthMethod <- mkRequest POST [("authentication_value", inText "+46701234567")]
-  (resNoAuthMethod, _) <- runTestKontra reqNoAuthMethod ctx $ apiChangeAuthentication (documentid doc) validsiglinkid
+  (resNoAuthMethod, _) <- runTestKontra reqNoAuthMethod ctx $ apiCallV1ChangeAuthentication (documentid doc) validsiglinkid
   assertEqual "Response code is not 400" 400 (rsCode resNoAuthMethod)
 
   reqInvalidMethod <- mkRequest POST [("authentication_type", inText "god_is_witness")]
-  (resInvalidMethod, _) <- runTestKontra reqInvalidMethod ctx $ apiChangeAuthentication (documentid doc) validsiglinkid
+  (resInvalidMethod, _) <- runTestKontra reqInvalidMethod ctx $ apiCallV1ChangeAuthentication (documentid doc) validsiglinkid
   assertEqual "Response code is not 400" 400 (rsCode resInvalidMethod)
 
   req <- mkRequest POST [("authentication_type", inText "sms_pin"),("authentication_value", inText "+46701234567")]
-  (res, _) <- runTestKontra req ctx $ apiChangeAuthentication (documentid doc) validsiglinkid
+  (res, _) <- runTestKontra req ctx $ apiCallV1ChangeAuthentication (documentid doc) validsiglinkid
   assertEqual "Response code is not 202" 202 (rsCode res)
 
   user2 <- addNewRandomUser
   ctx2 <- (\c -> c { ctxmaybeuser = Just user2 }) <$> mkContext defaultValue
-  (resBadUser, _) <- runTestKontra req ctx2 $ apiChangeAuthentication (documentid doc) validsiglinkid
+  (resBadUser, _) <- runTestKontra req ctx2 $ apiCallV1ChangeAuthentication (documentid doc) validsiglinkid
   assertEqual "Response code is not 403" 403 (rsCode resBadUser)
 
 testChangeMainFile :: TestEnv ()
@@ -122,7 +122,7 @@ testChangeMainFile = do
 
   req <- mkRequest POST [ ("expectedType", inText "text")
                         , ("file", inFile "test/pdfs/simple.pdf")]
-  (rsp1, _ctx') <- runTestKontra req ctx $ apiCallCreateFromFile
+  (rsp1, _ctx') <- runTestKontra req ctx $ apiCallV1CreateFromFile
 
   let rspString = BS.toString $ rsBody rsp1
       Ok (JSObject response) = decode rspString
@@ -131,7 +131,7 @@ testChangeMainFile = do
   docid <- liftIO $ readIO (fromJSString sts)
   req' <- mkRequest POST [ ("file", inFile "test/pdfs/simple.pdf")]
 
-  (rsp,_) <- runTestKontra req' ctx $ apiCallChangeMainFile $ docid
+  (rsp,_) <- runTestKontra req' ctx $ apiCallV1ChangeMainFile $ docid
 
   assertEqual "suceeded" 202 (rsCode rsp)
 
@@ -153,7 +153,6 @@ mapObjectEntry key func old@(JSObject obj) =
 
 mapObjectEntry _key _func somethingElse = somethingElse
 
-
 testChangeMainFileMovePlacements :: TestEnv ()
 testChangeMainFileMovePlacements = do
   let anchorpdf1 = "test/pdfs/anchor-Signature.pdf"
@@ -166,7 +165,7 @@ testChangeMainFileMovePlacements = do
 
   req <- mkRequest POST [ ("expectedType", inText "text")
                         , ("file", inFile anchorpdf1)]
-  (rsp1, _ctx') <- runTestKontra req ctx $ apiCallCreateFromFile
+  (rsp1, _ctx') <- runTestKontra req ctx $ apiCallV1CreateFromFile
 
   let rspString = BS.toString $ rsBody rsp1
       Ok jsvalue@(JSObject response) = decode rspString
@@ -230,35 +229,35 @@ testChangeMainFileMovePlacements = do
   do
     liftIO $ putStrLn "POST update"
     req' <- mkRequest POST [("json", inText (encode updatejs))]
-    (rsp,_) <- runTestKontra req' ctx $ apiCallUpdate $ docid
+    (rsp,_) <- runTestKontra req' ctx $ apiCallV1Update $ docid
     assertEqual "update call suceeded" 200 (rsCode rsp)
     poss <- getPositionsFromResponse rsp
     assertEqual "positions in initial anchors-Signature" [(1,0.5,0.5)] poss
 
   do
     req' <- mkRequest POST [ ("file", inFile anchorpdf2)]
-    (rsp,_) <- runTestKontra req' ctx $ apiCallChangeMainFile $ docid
+    (rsp,_) <- runTestKontra req' ctx $ apiCallV1ChangeMainFile $ docid
     assertEqual "suceeded" 202 (rsCode rsp)
     poss <- getPositionsFromResponse rsp
     assertEqual "positions after change to anchors-Namnteckning" [(2,0.5,0.800784)] poss
 
   do
     req' <- mkRequest POST [ ("file", inFile noanchorpdf)]
-    (rsp,_) <- runTestKontra req' ctx $ apiCallChangeMainFile $ docid
+    (rsp,_) <- runTestKontra req' ctx $ apiCallV1ChangeMainFile $ docid
     assertEqual "suceeded" 202 (rsCode rsp)
     poss <- getPositionsFromResponse rsp
     assertEqual "positions after change to no anchors document" [(2,0.5,0.800784)] poss
 
   do
     req' <- mkRequest POST [ ("file", inFile anchorpdf2)]
-    (rsp,_) <- runTestKontra req' ctx $ apiCallChangeMainFile $ docid
+    (rsp,_) <- runTestKontra req' ctx $ apiCallV1ChangeMainFile $ docid
     assertEqual "suceeded" 202 (rsCode rsp)
     poss <- getPositionsFromResponse rsp
     assertEqual "positions after change back to anchors-Namnteckning" [(2,0.5,0.800784)] poss
 
   do
     req' <- mkRequest POST [ ("file", inFile anchorpdf3)]
-    (rsp,_) <- runTestKontra req' ctx $ apiCallChangeMainFile $ docid
+    (rsp,_) <- runTestKontra req' ctx $ apiCallV1ChangeMainFile $ docid
     assertEqual "suceeded" 202 (rsCode rsp)
     poss <- getPositionsFromResponse rsp
     assertEqual "positions after change to anchors-Unterschrift-2" [(3,0.5,1.1015681)] poss
@@ -266,7 +265,7 @@ testChangeMainFileMovePlacements = do
   do
     -- it should return to the original position at this point
     req' <- mkRequest POST [ ("file", inFile anchorpdf1)]
-    (rsp,_) <- runTestKontra req' ctx $ apiCallChangeMainFile $ docid
+    (rsp,_) <- runTestKontra req' ctx $ apiCallV1ChangeMainFile $ docid
     assertEqual "suceeded" 202 (rsCode rsp)
     poss <- getPositionsFromResponse rsp
     -- we are almost exactly in the place we started

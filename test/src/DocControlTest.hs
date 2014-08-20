@@ -34,7 +34,7 @@ import User.Model
 import Util.SignatoryLinkUtils
 import Util.Actor
 import File.FileID
-import Doc.API
+import Doc.API.V1.Calls
 import ELegitimation.BankIDUtils
 import DB.TimeZoneName (mkTimeZoneName)
 import MagicHash
@@ -85,7 +85,7 @@ uploadDocAsNewUser = do
     <$> mkContext defaultValue
 
   req <- mkRequest POST [ ("file", inFile "test/pdfs/simple.pdf") ]
-  (rsp, _ctx') <- runTestKontra req ctx $ apiCallCreateFromFile
+  (rsp, _ctx') <- runTestKontra req ctx $ apiCallV1CreateFromFile
   return (user, rsp)
 
 
@@ -148,7 +148,7 @@ testLastPersonSigningADocumentClosesIt = do
 
     req <- mkRequest POST [ ("fields", inText "[]"), signScreenshots]
     (_link, _ctx') <- updateDocumentWithID $ \did ->
-                      lift . runTestKontra req ctx' $ apiCallSign did (signatorylinkid siglink)
+                      lift . runTestKontra req ctx' $ apiCallV1Sign did (signatorylinkid siglink)
 
     assertEqual "In closed state" Closed .documentstatus =<< theDocument
     --TODO: this should be commented out really, I guess it's a bug
@@ -211,19 +211,19 @@ testSigningWithPin = do
 
     req1 <- mkRequest POST [ ("fields", inText "[]"), signScreenshots]
     (_link, _ctx') <- updateDocumentWithID $ \did ->
-                      lift . runTestKontra req1 ctx' $ apiCallSign did (signatorylinkid siglink)
+                      lift . runTestKontra req1 ctx' $ apiCallV1Sign did (signatorylinkid siglink)
 
     assertEqual "Document is not closed if no pin is provided" Pending .documentstatus =<< theDocument
 
     req2 <- mkRequest POST [ ("fields", inText "[]"),("pin",inText $ pin ++ "4"), signScreenshots]
     (_link, _ctx') <- updateDocumentWithID $ \did ->
-                      lift . runTestKontra req2 ctx' $ apiCallSign did (signatorylinkid siglink)
+                      lift . runTestKontra req2 ctx' $ apiCallV1Sign did (signatorylinkid siglink)
 
     assertEqual "Document is not closed if pin is not valid" Pending .documentstatus =<< theDocument
 
     req3 <- mkRequest POST [ ("fields", inText "[]"),("pin",inText pin), signScreenshots]
     (_link, _ctx') <- updateDocumentWithID $ \did ->
-                      lift . runTestKontra req3 ctx' $ apiCallSign did (signatorylinkid siglink)
+                      lift . runTestKontra req3 ctx' $ apiCallV1Sign did (signatorylinkid siglink)
 
     assertEqual "Document is closed if pin is valid" Closed .documentstatus =<< theDocument
 
@@ -327,7 +327,7 @@ testDownloadFile = do
     <$> mkContext defaultValue
 
   reqfile <- mkRequest POST [ ("file", inFile "test/pdfs/simple.pdf") ]
-  (_rsp, _ctx') <- runTestKontra reqfile ctxuser $ apiCallCreateFromFile
+  (_rsp, _ctx') <- runTestKontra reqfile ctxuser $ apiCallV1CreateFromFile
   [doc] <- randomQuery $ GetDocumentsByAuthor (userid user)
 
   assertBool "Document access token should not be zero" (documentmagichash doc /= unsafeMagicHash 0)
@@ -359,13 +359,13 @@ testDownloadFile = do
   forM_ cases $ \(shouldallow, ctx, params, comment) -> do
     req1 <- mkRequest GET params
     result1 <- E.try $ runTestKontra req1 ctx $
-                  apiCallDownloadFile (documentid doc) fid "anything.pdf"
-    sortOutResult "apiCallDownloadFile" shouldallow result1 comment
+                  apiCallV1DownloadFile (documentid doc) fid "anything.pdf"
+    sortOutResult "apiCallV1DownloadFile" shouldallow result1 comment
 
     result2 <- E.try $ runTestKontra req1 ctx $
-                  apiCallDownloadMainFile (documentid doc) "anything.pdf"
+                  apiCallV1DownloadMainFile (documentid doc) "anything.pdf"
 
-    sortOutResult "apiCallDownloadMainFile" shouldallow result2 comment
+    sortOutResult "apiCallV1DownloadMainFile" shouldallow result2 comment
 
 testSendingReminderClearsDeliveryInformation :: TestEnv ()
 testSendingReminderClearsDeliveryInformation = do
@@ -400,7 +400,7 @@ testDocumentFromTemplate = do
     ctx <- (\c -> c { ctxmaybeuser = Just user })
       <$> mkContext defaultValue
     req <- mkRequest POST []
-    _ <- runTestKontra req ctx $ apiCallCreateFromTemplate (documentid doc)
+    _ <- runTestKontra req ctx $ apiCallV1CreateFromTemplate (documentid doc)
     docs2 <- randomQuery $ GetDocumentsByAuthor (userid user)
     assertBool "No new document" (length docs2 == 1+ length docs1)
 
@@ -417,7 +417,7 @@ testDocumentFromTemplateShared = do
     ctx <- (\c -> c { ctxmaybeuser = Just user })
       <$> mkContext defaultValue
     req <- mkRequest POST []
-    _ <- runTestKontra req ctx $ apiCallCreateFromTemplate (documentid doc)
+    _ <- runTestKontra req ctx $ apiCallV1CreateFromTemplate (documentid doc)
     docs2 <- randomQuery $ GetDocumentsByAuthor (userid user)
     assertEqual "New document should have been created" (1+length docs1) (length docs2)
 
@@ -455,7 +455,7 @@ testGetLoggedIn = do
   doc <- addRandomDocumentWithAuthor user
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
   req <- mkRequest GET []
-  (res,_) <- runTestKontra req ctx $ apiCallGet doc
+  (res,_) <- runTestKontra req ctx $ apiCallV1Get doc
   assertEqual "Response code is 200" 200 (rsCode res)
 
 
@@ -465,7 +465,7 @@ testGetNotLoggedIn = do
   doc <- addRandomDocumentWithAuthor user
   ctx <- mkContext defaultValue
   req <- mkRequest GET []
-  (res,_) <- runTestKontra req ctx $ apiCallGet doc
+  (res,_) <- runTestKontra req ctx $ apiCallV1Get doc
   assertEqual "Response code is 403" 403 (rsCode res)
 
 
@@ -475,5 +475,5 @@ testGetBadHeader = do
   doc <- addRandomDocumentWithAuthor user
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
   req <- mkRequestWithHeaders GET [] [("authorization", ["ABC"])]
-  (res,_) <- runTestKontra req ctx $ apiCallGet doc
+  (res,_) <- runTestKontra req ctx $ apiCallV1Get doc
   assertEqual "Response code is 403" 403 (rsCode res)

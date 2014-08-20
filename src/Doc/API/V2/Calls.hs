@@ -1,4 +1,4 @@
-module Doc.APIV2 (
+module Doc.API.V2.Calls (
     documentAPIV2
   ) where
 

@@ -18,7 +18,7 @@ import Utils.Default
 import User.Model
 import TestingUtil
 import TestKontra as T
-import Doc.API
+import Doc.API.V1.Calls
 
 archiveTests :: TestEnvSt -> Test
 archiveTests env = testGroup "Archive" $
@@ -34,35 +34,35 @@ testListDocs = do
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
   req <- mkRequest POST [ ("expectedType", inText "text")
                        , ("file", inFile "test/pdfs/simple.pdf")]
-  _ <- runTestKontra req ctx $ apiCallCreateFromFile
+  _ <- runTestKontra req ctx $ apiCallV1CreateFromFile
   doc:_ <- randomQuery $ GetDocumentsByAuthor (userid user)
   req' <- mkRequest POST [("json", inText cont)]
-  _ <- runTestKontra req' ctx $ apiCallUpdate $ documentid doc
+  _ <- runTestKontra req' ctx $ apiCallV1Update $ documentid doc
   req'' <- mkRequest POST []
-  _ <- runTestKontra req'' ctx $ apiCallReady $ documentid doc
+  _ <- runTestKontra req'' ctx $ apiCallV1Ready $ documentid doc
 
   -- send a doc to author from someoneelse
   (Just user2) <- addNewUser "Jackie" "Chan" "jackie@chan.com"
   ctx2 <- (\c -> c { ctxmaybeuser = Just user2 }) <$> mkContext defaultValue
   req2 <- mkRequest POST [ ("expectedType", inText "text")
                         , ("file", inFile "test/pdfs/simple.pdf")]
-  _ <- runTestKontra req2 ctx2 $ apiCallCreateFromFile
+  _ <- runTestKontra req2 ctx2 $ apiCallV1CreateFromFile
   doc2:_ <- randomQuery $ GetDocumentsByAuthor (userid user2)
   let cont2 = replace "example@example.com" "bob@blue.com" $ -- send to bob
                 replace "\"signorder\":2" "\"signorder\":1" cont -- reset sign order to 1
   req2' <- mkRequest POST [("json", inText cont2)]
-  _ <- runTestKontra req2' ctx2 $ apiCallUpdate $ documentid doc2
+  _ <- runTestKontra req2' ctx2 $ apiCallV1Update $ documentid doc2
   req2'' <- mkRequest POST []
-  _ <- runTestKontra req2'' ctx2 $ apiCallReady $ documentid doc2
+  _ <- runTestKontra req2'' ctx2 $ apiCallV1Ready $ documentid doc2
 
   req3 <- mkRequest GET []
-  (rsp, _) <- runTestKontra req3 ctx $ apiCallList
+  (rsp, _) <- runTestKontra req3 ctx $ apiCallV1List
   let rspString = BS.unpack $ rsBody rsp
 
   let Right json = runGetJSON readJSObject rspString
   withJSValue json $ do
     Just (list :: [JSValue])  <- fromJSValueField  "list"
-    assertBool "Test apiCallList number of docs" $ length list == 2
+    assertBool "Test apiCallV1List number of docs" $ length list == 2
 
     Just (authors :: [String]) <- fromJSValueFieldCustom "list" $
                                   fromJSValueCustomMany $
@@ -74,12 +74,12 @@ testListDocs = do
 
     Just (isAuthors :: [Bool]) <- fromJSValueFieldCustom "list" $
                                   fromJSValueCustomMany (fromJSValueField "isauthor")
-    assertBool "Test apiCallList isauthor for author is True" $ isAuthors !! doc1Index
-    assertBool "Test apiCallList isauthor for recipient is False" $ not $ isAuthors !! doc2Index
+    assertBool "Test apiCallV1List isauthor for author is True" $ isAuthors !! doc1Index
+    assertBool "Test apiCallV1List isauthor for recipient is False" $ not $ isAuthors !! doc2Index
 
     Just (docauthorcompanysameasusers :: [Bool]) <- fromJSValueFieldCustom "list" $
                                   fromJSValueCustomMany (fromJSValueField "docauthorcompanysameasuser")
-    assertBool "Test apiCallList docauthorcompanysameasuser for author is True" $ docauthorcompanysameasusers !! doc1Index
-    assertBool "Test apiCallList docauthorcompanysameasuser for recipient is False" $ not $ docauthorcompanysameasusers !! doc2Index 
+    assertBool "Test apiCallV1List docauthorcompanysameasuser for author is True" $ docauthorcompanysameasusers !! doc1Index
+    assertBool "Test apiCallV1List docauthorcompanysameasuser for recipient is False" $ not $ docauthorcompanysameasusers !! doc2Index
 
   return ()
