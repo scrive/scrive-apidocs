@@ -31,7 +31,6 @@ import Doc.DocSeal (sealDocument)
 import Doc.DocStateData
 import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID, withDocument)
 import Doc.DocUtils
-import Doc.DocView
 import Doc.Model
 import Doc.SealStatus (SealStatus(..), hasGuardtimeSignature)
 import Doc.SignatoryLinkID
@@ -108,9 +107,6 @@ postDocumentPreparationChange skipauthorinvitation tzn = do
                               someProp "Last Doc Sent" now,
                               numProp "Docs sent" (fromIntegral $ docssent)
                               ]
-  json <- documentJSON Nothing False True False Nothing =<< theDocument
-  asyncLogEvent (UploadDocInfo json) [UserIDProp (userid author),
-                                      DocIDProp docid]
   theDocument >>= logDocEvent "Doc Sent" author []
 
   sendInvitationEmails skipauthorinvitation

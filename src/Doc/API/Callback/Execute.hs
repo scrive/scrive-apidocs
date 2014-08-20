@@ -21,7 +21,7 @@ import Control.Applicative
 import User.CallbackScheme.Model
 import Util.SignatoryLinkUtils
 import Text.JSON
-import Doc.DocView (documentJSON)
+import Doc.API.V1.DocumentJSON
 import Amazon
 import Network.HTTP as HTTP
 import Text.JSON.Gen
@@ -40,7 +40,7 @@ execute DocumentAPICallback{..} = do
 
 executeStandardCallback :: (AmazonMonad m, MonadDB m, Log.MonadLog m, MonadIO m, MonadReader c m, HasSalesforceConf c) => Document -> String -> m Bool
 executeStandardCallback doc url = do
-  dJSON <- documentJSON Nothing False False True Nothing doc
+  dJSON <- documentJSONV1 Nothing False False True Nothing doc
   (exitcode, _ , stderr) <- readCurl
      [ "-X", "POST"
      , "-f" -- make curl return exit code (22) if it got anything else but 2XX

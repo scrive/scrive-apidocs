@@ -67,7 +67,6 @@ import API.Monad
 import Control.Monad.Error
 import qualified Log
 import LiveDocx
-import Doc.DocView
 import Doc.DocInfo
 import Doc.DocumentMonad (DocumentMonad, withDocument, withDocumentID, withDocumentM, theDocument)
 import Doc.Action
@@ -107,6 +106,7 @@ import Doc.SMSPin.Model
 import Doc.Anchors
 import qualified Data.Traversable as T
 import API.APIVersion
+import Doc.API.V1.DocumentJSON
 
 documentAPIV1 ::  Route (KontraPlus Response)
 documentAPIV1  = choice [
@@ -206,7 +206,7 @@ apiCallV1CreateFromFile = api $ do
       Nothing -> return ()
       Just fileid' -> do
         dbUpdate $ AttachFile fileid' actor
-    Created <$> (documentJSON (Just user) False True True Nothing =<< theDocument)
+    Created <$> (documentJSONV1 (Just user) False True True Nothing =<< theDocument)
 
 apiCallV1CreateFromTemplate :: Kontrakcja m => DocumentID -> m Response
 apiCallV1CreateFromTemplate did =  api $ do
@@ -221,7 +221,7 @@ apiCallV1CreateFromTemplate did =  api $ do
   (apiGuardJustM (serverError "Can't clone given document") (dbUpdate $ CloneDocumentWithUpdatedAuthor V1 user template actor) >>=) $ flip withDocumentID $ do
     dbUpdate $ DocumentFromTemplate actor
     when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft True
-    Created <$> (documentJSON (Just user) False True True Nothing =<< theDocument)
+    Created <$> (documentJSONV1 (Just user) False True True Nothing =<< theDocument)
 
 
 apiCallV1Clone :: Kontrakcja m => DocumentID -> m Response
@@ -234,7 +234,7 @@ apiCallV1Clone did =  api $ do
          when (isNothing mndid) $
              throwIO . SomeKontraException $ serverError "Can't clone given document"
          newdoc <- dbQuery $ GetDocumentByDocumentID $ (fromJust mndid)
-         Created <$> documentJSON (Just $ user) False True  True Nothing newdoc
+         Created <$> documentJSONV1 (Just $ user) False True  True Nothing newdoc
      else throwIO . SomeKontraException $ serverError "Id did not matched template or you do not have right to access document"
 
 
@@ -260,7 +260,7 @@ apiCallV1Update did = api $ do
       checkObjectVersionIfProvided did -- If we will change document, then we want to be sure that object version is ok.
     applyDraftDataToDocument draftData actor
     triggerAPICallbackIfThereIsOne =<< theDocument
-    Ok <$> (documentJSON (Just user) False True True Nothing =<< theDocument)
+    Ok <$> (documentJSONV1 (Just user) False True True Nothing =<< theDocument)
 
 apiCallV1SetAuthorAttachemnts  :: Kontrakcja m => DocumentID -> m Response
 apiCallV1SetAuthorAttachemnts did = api $ do
@@ -275,7 +275,7 @@ apiCallV1SetAuthorAttachemnts did = api $ do
     (documentauthorattachments <$> theDocument >>=) $ mapM_ $ \att -> dbUpdate $ RemoveDocumentAttachment (authorattachmentfile att) actor
     forM_ attachments $ \att -> dbUpdate $ AddDocumentAttachment att actor
     triggerAPICallbackIfThereIsOne =<< theDocument
-    Ok <$> (documentJSON (Just user) False True True Nothing =<< theDocument)
+    Ok <$> (documentJSONV1 (Just user) False True True Nothing =<< theDocument)
      where
           getAttachments :: Kontrakcja m => Int -> Document -> m [FileID]
           getAttachments i doc = do
@@ -331,7 +331,7 @@ apiCallV1Ready did =  api $ do
   withDocumentID did $ do
     auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) .getAuthorSigLink) <$> theDocument
     ifM ((isPending  &&^ not . any hasSigned . documentsignatorylinks) <$> theDocument)
-     {-then-} (Accepted <$> (documentJSON (Just user) False True True Nothing =<< theDocument))
+     {-then-} (Accepted <$> (documentJSONV1 (Just user) False True True Nothing =<< theDocument))
      {-else-} $ do
       checkObjectVersionIfProvided did
       when (not $ (auid == userid user)) $ do
@@ -350,7 +350,7 @@ apiCallV1Ready did =  api $ do
       dbUpdate $ SetDocumentInviteTime t actor
       skipauthorinvitation <- isFieldSet "skipauthorinvitation"
       postDocumentPreparationChange skipauthorinvitation timezone
-      Accepted <$> (documentJSON (Just user) False True True Nothing =<< theDocument)
+      Accepted <$> (documentJSONV1 (Just user) False True True Nothing =<< theDocument)
 
 apiCallV1Cancel :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> m Response
 apiCallV1Cancel did =  api $ do
@@ -364,7 +364,7 @@ apiCallV1Cancel did =  api $ do
             throwIO . SomeKontraException $ (conflictError "Document is not pending")
       dbUpdate $ CancelDocument actor
       postDocumentCanceledChange =<< theDocument
-      Accepted <$> (documentJSON (Just user) False True True Nothing =<< theDocument)
+      Accepted <$> (documentJSONV1 (Just user) False True True Nothing =<< theDocument)
 
 
 apiCallV1Reject :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> SignatoryLinkID -> m Response
@@ -380,7 +380,7 @@ apiCallV1Reject did slid = api $ do
         `catchKontra` (\(DocumentStatusShouldBe _ _ i) -> throwIO . SomeKontraException $ conflictError $ "Document not pending but " ++ show i)
         `catchKontra` (\(SignatoryHasAlreadySigned {}) -> throwIO . SomeKontraException $ conflictError $ "Signatory has already signed")
     postDocumentRejectedChange slid =<< theDocument
-    Accepted <$> (documentJSON mu False True True Nothing =<< theDocument)
+    Accepted <$> (documentJSONV1 mu False True True Nothing =<< theDocument)
 
 
 apiCallV1CheckSign :: Kontrakcja m
@@ -450,7 +450,7 @@ apiCallV1Sign  did slid = api $ do
                   signDocument slid mh fields Nothing Nothing screenshots
                   postDocumentPendingChange olddoc
                   handleAfterSigning slid
-                  (Right . Accepted) <$> (documentJSON mu False True True Nothing =<< theDocument)
+                  (Right . Accepted) <$> (documentJSONV1 mu False True True Nothing =<< theDocument)
 
       SMSPinAuthentication -> do
                   validPin <- getValidPin slid fields
@@ -459,7 +459,7 @@ apiCallV1Sign  did slid = api $ do
                       signDocument slid mh fields Nothing validPin screenshots
                       postDocumentPendingChange olddoc
                       handleAfterSigning slid
-                      (Right . Accepted) <$> (documentJSON mu False True True Nothing =<< theDocument)
+                      (Right . Accepted) <$> (documentJSONV1 mu False True True Nothing =<< theDocument)
                     else (Left . Failed) <$> (runJSONGenT $ return ())
       ELegAuthentication -> do
         mprovider <- readField "eleg"
@@ -468,7 +468,7 @@ apiCallV1Sign  did slid = api $ do
                         signDocument slid mh fields Nothing Nothing screenshots
                         postDocumentPendingChange olddoc
                         handleAfterSigning slid
-                        (Right . Accepted) <$> (documentJSON mu False True True Nothing =<< theDocument)
+                        (Right . Accepted) <$> (documentJSONV1 mu False True True Nothing =<< theDocument)
                     Just provider -> do
                         transactionid <- getDataFnM $ look "transactionid"
                         esigninfo <- case provider of
@@ -488,7 +488,7 @@ apiCallV1Sign  did slid = api $ do
                               signDocument slid mh fields (Just sinfo) Nothing screenshots
                               postDocumentPendingChange olddoc
                               handleAfterSigning slid
-                              (Right . Accepted) <$> (documentJSON mu False True True Nothing =<< theDocument)
+                              (Right . Accepted) <$> (documentJSONV1 mu False True True Nothing =<< theDocument)
    )
     `catchKontra` (\(DocumentStatusShouldBe _ _ i) -> throwIO . SomeKontraException $ conflictError $ "Document not pending but " ++ show i)
     `catchKontra` (\(SignatoryHasAlreadySigned {}) -> throwIO . SomeKontraException $ conflictError $ "Signatory has already signed")
@@ -575,7 +575,7 @@ apiCallV1Restart did =  api $ do
     when (documentstatus doc `elem` [Pending,Preparation, Closed] ) $ do
           throwIO . SomeKontraException $ (conflictError "Document can not be restarted")
     newdocument <- apiGuardJustM (serverError "Document can't be restarted") $ dbUpdate $ RestartDocument doc actor
-    Accepted <$> documentJSON (Just $ user) False True True Nothing newdocument
+    Accepted <$> documentJSONV1 (Just $ user) False True True Nothing newdocument
 
 apiCallV1Prolong :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> m Response
 apiCallV1Prolong did =  api $ do
@@ -596,7 +596,7 @@ apiCallV1Prolong did =  api $ do
       timezone <- documenttimezonename <$> theDocument
       dbUpdate $ ProlongDocument days timezone actor
       triggerAPICallbackIfThereIsOne =<< theDocument
-      Accepted <$> (documentJSON (Just user) False True True Nothing =<< theDocument)
+      Accepted <$> (documentJSONV1 (Just user) False True True Nothing =<< theDocument)
 
 
 apiCallV1SetAutoReminder :: (MonadBaseControl IO m, Kontrakcja m) => DocumentID -> m Response
@@ -620,7 +620,7 @@ apiCallV1SetAutoReminder did =  api $ do
       timezone <- documenttimezonename <$> theDocument
       setAutoreminder did days timezone
       triggerAPICallbackIfThereIsOne =<< theDocument
-      Accepted <$> (documentJSON (Just $ user) False True True Nothing =<< theDocument)
+      Accepted <$> (documentJSONV1 (Just $ user) False True True Nothing =<< theDocument)
 
 apiCallV1ChangeAuthentication :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 apiCallV1ChangeAuthentication did slid = api $ do
@@ -657,7 +657,7 @@ apiCallV1ChangeAuthentication did slid = api $ do
            Left  a -> throwIO . SomeKontraException
                       $ badInput $ "Invalid authentication method: `" ++ a ++ "` was given. "
                         ++ "Supported values are: `standard`, `eleg`, `sms_pin`."
-      Accepted <$> (documentJSON (Just user) False True True Nothing =<< theDocument)
+      Accepted <$> (documentJSONV1 (Just user) False True True Nothing =<< theDocument)
 
 apiCallV1Remind :: Kontrakcja m => DocumentID -> m Response
 apiCallV1Remind did =  api $ do
@@ -669,7 +669,7 @@ apiCallV1Remind did =  api $ do
     when (not $ (auid == userid user)) $ do
           throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
     _ <- sendAllReminderEmailsExceptAuthor actor False
-    Accepted <$> (documentJSON (Just user) False True True Nothing =<< theDocument)
+    Accepted <$> (documentJSONV1 (Just user) False True True Nothing =<< theDocument)
 
 apiCallV1Forward :: Kontrakcja m => DocumentID -> m Response
 apiCallV1Forward did =  api $ do
@@ -684,7 +684,7 @@ apiCallV1Forward did =  api $ do
     email <- apiGuardJustM (badInput "Email adress is no valid.") $ getOptionalField  asValidEmail "email"
     noContent <- (== Just "true") <$> getField  "nocontent"
     _ <- sendForwardEmail email noContent asiglink -- Make sure we only send out the document with the author's signatory link when it is closed, otherwise the link may be abused
-    Accepted <$> (documentJSON (Just user) False True True Nothing =<< theDocument)
+    Accepted <$> (documentJSONV1 (Just user) False True True Nothing =<< theDocument)
 
 apiCallV1Delete :: Kontrakcja m => DocumentID -> m Response
 apiCallV1Delete did =  api $ do
@@ -737,7 +737,7 @@ apiCallV1Get did = api $ do
                        =<< signatoryActor ctx sl
        switchLang . getLang =<< theDocument
 
-       Ok <$> (documentJSON Nothing includeEvidenceAttachments False False (Just sl) =<< theDocument)
+       Ok <$> (documentJSONV1 Nothing includeEvidenceAttachments False False (Just sl) =<< theDocument)
     _ -> do
       (user, _actor, external) <- getAPIUser APIDocCheck
       msiglink <- getSigLinkFor user <$> theDocument
@@ -755,7 +755,7 @@ apiCallV1Get did = api $ do
                        || (isJust mauser && usercompany (fromJust mauser) == usercompany user && (useriscompanyadmin user || isDocumentShared d))
       if (haspermission)
         then do
-          Ok <$> (documentJSON (Just user) includeEvidenceAttachments external ((userid <$> mauser) == (Just $ userid user)) msiglink =<< theDocument)
+          Ok <$> (documentJSONV1 (Just user) includeEvidenceAttachments external ((userid <$> mauser) == (Just $ userid user)) msiglink =<< theDocument)
         else throwIO . SomeKontraException $ serverError "You do not have right to access document"
 
 apiCallV1List :: Kontrakcja m => m Response
@@ -1004,7 +1004,7 @@ apiCallV1ChangeMainFile docid = api $ do
           Just oldfileid -> recalcuateAnchoredFieldPlacements oldfileid fileid
           Nothing -> return ()
       Nothing -> dbUpdate $ DetachFile actor
-    Accepted <$> (documentJSON (Just user) False True True Nothing =<< theDocument)
+    Accepted <$> (documentJSONV1 (Just user) False True True Nothing =<< theDocument)
 
 
 apiCallV1SendSMSPinCode :: Kontrakcja m => DocumentID -> SignatoryLinkID ->  m Response
@@ -1066,7 +1066,7 @@ apiCallV1SetSignatoryAttachment did sid aname = api $ do
                        `catchKontra` (\(DBBaseLineConditionIsFalse _) -> throwIO . SomeKontraException $ conflictError $ "Inconsistent state - attachment is already set")
       Nothing -> dbUpdate . DeleteSigAttachment sid sigattach =<< signatoryActor ctx sl
 
-    Accepted <$> (documentJSON mu False True False (Just sl) =<< theDocument)
+    Accepted <$> (documentJSONV1 mu False True False (Just sl) =<< theDocument)
 
 checkObjectVersionIfProvided ::  (Kontrakcja m) => DocumentID -> m ()
 checkObjectVersionIfProvided did = do
