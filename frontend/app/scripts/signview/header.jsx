@@ -13,6 +13,22 @@ define(['React', 'Backbone', 'common/backbone_mixin'], function(React, Backbone,
     getBackboneModels : function() {
       return [this.props.signviewbranding];
     },
+    componentDidMount : function() {
+      // HACK!!!
+      // Chrome on OSX has a bug, that displays some garbage in the header
+      // (weird straight white line in the right part of the header)
+      // let's force a redraw to make it disappear
+      var pageheader = this.getDOMNode();
+      var signviewbranding = this.props.signviewbranding;
+      var bgColor = signviewbranding.signviewbarscolour() != undefined ?  signviewbranding.signviewbarscolour() : '';
+      setTimeout(function() {
+        jQuery(pageheader).css('background', '#fff');
+        setTimeout(function() {
+          jQuery(pageheader).css('background', bgColor);
+        }, 1);
+      }, 1000);
+      // END OF HACK
+    },
     render: function() {
       var signviewbranding = this.props.signviewbranding;
       var hasLink = this.props.link != undefined;
