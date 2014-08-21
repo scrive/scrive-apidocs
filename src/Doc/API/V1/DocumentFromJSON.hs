@@ -16,8 +16,73 @@ import Data.Functor
 import Utils.Default
 import Data.String.Utils (strip)
 import Doc.SignatoryLinkID
+import Control.Applicative
 
 -- JSON instances
+
+instance FromJSValue AuthenticationMethod where
+  fromJSValue = do
+    j <- fromJSValue
+    return $ case j of
+      Just "standard" -> Just StandardAuthentication
+      Just "eleg"     -> Just ELegAuthentication
+      Just "sms_pin"  -> Just SMSPinAuthentication
+      _               -> Nothing
+
+instance FromJSValue DeliveryMethod where
+  fromJSValue = do
+    j <- fromJSValue
+    return $ case j of
+      Just "email" -> Just EmailDelivery
+      Just "pad"   -> Just PadDelivery
+      Just "api"   -> Just APIDelivery
+      Just "mobile"-> Just MobileDelivery
+      Just "email_mobile"-> Just EmailAndMobileDelivery
+      _            -> Nothing
+
+instance FromJSValue ConfirmationDeliveryMethod where
+  fromJSValue = do
+    j <- fromJSValue
+    return $ case j of
+      Just "email" -> Just EmailConfirmationDelivery
+      Just "mobile"-> Just MobileConfirmationDelivery
+      Just "email_mobile"-> Just EmailAndMobileConfirmationDelivery
+      Just "none"-> Just NoConfirmationDelivery
+      _            -> Nothing
+
+
+instance FromJSValue TipSide where
+    fromJSValue = do
+      s <- fromJSValue
+      case s of
+          Just "left"  -> return $ Just LeftTip
+          Just "right" -> return $ Just RightTip
+          _ ->            return $ Nothing
+
+instance FromJSValue PlacementAnchor where
+  fromJSValue = do
+    text        <- fromJSValueField "text"
+    index       <- fromMaybe (Just 1) <$> fromJSValueField "index"
+    pages       <- fromJSValueField "pages"
+    return (PlacementAnchor <$> text
+            <*> index
+            <*> pages)
+
+instance FromJSValue FieldPlacement where
+  fromJSValue = do
+                  xrel       <- fromJSValueField "xrel"
+                  yrel       <- fromJSValueField "yrel"
+                  wrel       <- fromJSValueField "wrel"
+                  hrel       <- fromJSValueField "hrel"
+                  fsrel      <- fromJSValueField "fsrel"
+                  page       <- fromJSValueField "page"
+                  side       <- fromJSValueField "tip"
+                  anchors    <- fromMaybe (Just []) <$> fromJSValueField "anchors"
+                  return (FieldPlacement <$> xrel <*> yrel
+                                         <*> wrel <*> hrel <*> fsrel
+                                         <*> page <*> Just side
+                                         <*> anchors)
+
 
 instance MatchWithJSValue SignatoryLink where
     matchesWithJSValue s = do

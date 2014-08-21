@@ -46,7 +46,6 @@ import qualified Log
 import AppView
 import Happstack.Server(Response)
 import qualified Text.StringTemplates.Fields as F
-import Doc.API.V1.DocumentFromJSON()
 
 handleArchiveDocumentsAction :: Kontrakcja m => String -> (User -> Document -> Bool) -> ((User, Actor) -> DocumentT m a) -> m [a]
 handleArchiveDocumentsAction actionStr docPermission m = do

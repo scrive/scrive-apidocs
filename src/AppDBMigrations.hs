@@ -88,7 +88,6 @@ kontraMigrations = [
   , removeSignatoryLinksInternalInsertOrder
   , addUnsavedDraftToDocument
   , expandEventsWithAffectedSignatoryAndTextMessage
-  , addObligatoryColumnToSignatoryLinkFields
   , addIPAddressMaskListToCompanies
   , dropTrustWeaverReferenceFromDocuments
   , dropCSVSignatoryIndexFromSignatoryLinks
@@ -104,7 +103,6 @@ kontraMigrations = [
   , dropMailFooterFromDocuments
   , moveDeliveryMethodFromDocumentsToSignatoryLinks
   , dropDeliveryMethodFromDocuments
-  , dropPixelSizeFormSignatureSignatoryLinkFieldsAndNormalizeFields
   , addObjectVersionToDocuments
   , addShouldBeFilledBySenderColumnToSignatoryLinkFields
   , addCustomBrandingOptions

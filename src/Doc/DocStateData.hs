@@ -191,33 +191,6 @@ instance ToSQL AuthenticationMethod where
   toSQL ELegAuthentication     = toSQL (2::Int16)
   toSQL SMSPinAuthentication   = toSQL (3::Int16)
 
-instance FromJSValue AuthenticationMethod where
-  fromJSValue = do
-    j <- fromJSValue
-    return $ case j of
-      Just "standard" -> Just StandardAuthentication
-      Just "eleg"     -> Just ELegAuthentication
-      Just "sms_pin"  -> Just SMSPinAuthentication
-      _               -> Nothing
-
-instance FromJSValue DeliveryMethod where
-  fromJSValue = do
-    j <- fromJSValue
-    return $ case j of
-      Just "email" -> Just EmailDelivery
-      Just "pad"   -> Just PadDelivery
-      Just "api"   -> Just APIDelivery
-      Just "mobile"-> Just MobileDelivery
-      Just "email_mobile"-> Just EmailAndMobileDelivery
-      _            -> Nothing
-
-instance ToJSValue DeliveryMethod where
-  toJSValue EmailDelivery  = toJSValue "email"
-  toJSValue PadDelivery    = toJSValue "pad"
-  toJSValue APIDelivery    = toJSValue "api"
-  toJSValue MobileDelivery = toJSValue "mobile"
-  toJSValue EmailAndMobileDelivery = toJSValue "email_mobile"
-
 data DeliveryMethod = EmailDelivery
                     | PadDelivery
                     | APIDelivery
@@ -250,24 +223,6 @@ instance ToSQL DeliveryMethod where
   toSQL APIDelivery            = toSQL (3::Int16)
   toSQL MobileDelivery         = toSQL (4::Int16)
   toSQL EmailAndMobileDelivery = toSQL (5::Int16)
-
-
-instance FromJSValue ConfirmationDeliveryMethod where
-  fromJSValue = do
-    j <- fromJSValue
-    return $ case j of
-      Just "email" -> Just EmailConfirmationDelivery
-      Just "mobile"-> Just MobileConfirmationDelivery
-      Just "email_mobile"-> Just EmailAndMobileConfirmationDelivery
-      Just "none"-> Just NoConfirmationDelivery
-      _            -> Nothing
-
-instance ToJSValue ConfirmationDeliveryMethod where
-  toJSValue EmailConfirmationDelivery  = toJSValue "email"
-  toJSValue MobileConfirmationDelivery = toJSValue "mobile"
-  toJSValue EmailAndMobileConfirmationDelivery = toJSValue "email_mobile"
-  toJSValue NoConfirmationDelivery = toJSValue "none"
-
 
 data ConfirmationDeliveryMethod = EmailConfirmationDelivery
                     | MobileConfirmationDelivery
@@ -843,44 +798,6 @@ instance ToSQL DeliveryStatus where
   toSQL Unknown = toSQL (3::Int16)
   toSQL Deferred = toSQL (4::Int16)
 
-instance FromJSValue PlacementAnchor where
-  fromJSValue = do
-    text        <- fromJSValueField "text"
-    index       <- fromMaybe (Just 1) <$> fromJSValueField "index"
-    pages       <- fromJSValueField "pages"
-    return (PlacementAnchor <$> text
-            <*> index
-            <*> pages)
-
-instance ToJSValue PlacementAnchor where
-  toJSValue anchor = runJSONGen $ do
-    value "text" (placementanchortext anchor)
-    when (placementanchorindex anchor /=1 ) $ do
-      value "index" (placementanchorindex anchor)
-    value "pages" (placementanchorpages anchor)
-
-instance FromJSValue FieldPlacement where
-  fromJSValue = do
-                  xrel       <- fromJSValueField "xrel"
-                  yrel       <- fromJSValueField "yrel"
-                  wrel       <- fromJSValueField "wrel"
-                  hrel       <- fromJSValueField "hrel"
-                  fsrel      <- fromJSValueField "fsrel"
-                  page       <- fromJSValueField "page"
-                  side       <- fromJSValueField "tip"
-                  anchors    <- fromMaybe (Just []) <$> fromJSValueField "anchors"
-                  return (FieldPlacement <$> xrel <*> yrel
-                                         <*> wrel <*> hrel <*> fsrel
-                                         <*> page <*> Just side
-                                         <*> anchors)
-
-instance FromJSValue TipSide where
-    fromJSValue = do
-      s <- fromJSValue
-      case s of
-          Just "left"  -> return $ Just LeftTip
-          Just "right" -> return $ Just RightTip
-          _ ->            return $ Nothing
 
 
 instance PQFormat [FieldPlacement] where
@@ -888,7 +805,30 @@ instance PQFormat [FieldPlacement] where
 
 instance FromSQL [FieldPlacement] where
   type PQBase [FieldPlacement] = PQBase String
-  fromSQL = jsonFromSQL' $ nothingToResult . (fromJSValueCustomMany fromJSValue)
+  fromSQL = jsonFromSQL' $ fmap nothingToResult $ fromJSValueCustomMany $ do
+                  xrel       <- fromJSValueField "xrel"
+                  yrel       <- fromJSValueField "yrel"
+                  wrel       <- fromJSValueField "wrel"
+                  hrel       <- fromJSValueField "hrel"
+                  fsrel      <- fromJSValueField "fsrel"
+                  page       <- fromJSValueField "page"
+                  side       <- fromJSValueFieldCustom "tip" $ do
+                                  s <- fromJSValue
+                                  case s of
+                                      Just "left"  -> return $ Just LeftTip
+                                      Just "right" -> return $ Just RightTip
+                                      _ ->            return $ Nothing
+                  anchors    <- fmap (fromMaybe []) <$> fromJSValueFieldCustom "anchors" $ fromJSValueCustomMany $ do
+                                  text        <- fromJSValueField "text"
+                                  index       <- fromMaybe (Just 1) <$> fromJSValueField "index"
+                                  pages       <- fromJSValueField "pages"
+                                  return (PlacementAnchor <$> text
+                                                          <*> index
+                                                          <*> pages)
+                  return (FieldPlacement <$> xrel <*> yrel
+                                         <*> wrel <*> hrel <*> fsrel
+                                         <*> page <*> Just side
+                                         <*> Just anchors)
 
 instance ToSQL [FieldPlacement] where
   type PQDest [FieldPlacement] = PQDest String
@@ -902,7 +842,11 @@ instance ToSQL [FieldPlacement] where
         value "fsrel" $ placementfsrel placement
         value "page" $ placementpage placement
         when (not (null (placementanchors placement))) $ do
-          value "anchors" $ placementanchors placement
+          value "anchors" $ (flip map) (placementanchors placement) $ \anchor -> runJSONGen $ do
+              value "text" (placementanchortext anchor)
+              when (placementanchorindex anchor /=1 ) $ do
+                value "index" (placementanchorindex anchor)
+              value "pages" (placementanchorpages anchor)
         value "tip" $ case (placementtipside placement) of
           Just LeftTip -> Just ("left" :: String)
           Just RightTip -> Just "right"

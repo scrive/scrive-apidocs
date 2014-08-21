@@ -1,4 +1,6 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Doc.API.V1.DocumentJSON (
       documentJSONV1
     , docForListJSONV1
@@ -233,6 +235,26 @@ placementJSON placement = runJSONGen $ do
                          Just LeftTip -> Just "left"
                          Just RightTip -> Just "right"
                          _ -> Nothing
+
+instance ToJSValue PlacementAnchor where
+  toJSValue anchor = runJSONGen $ do
+    J.value "text" (placementanchortext anchor)
+    when (placementanchorindex anchor /=1 ) $ do
+      J.value "index" (placementanchorindex anchor)
+    J.value "pages" (placementanchorpages anchor)
+
+instance ToJSValue ConfirmationDeliveryMethod where
+  toJSValue EmailConfirmationDelivery  = toJSValue "email"
+  toJSValue MobileConfirmationDelivery = toJSValue "mobile"
+  toJSValue EmailAndMobileConfirmationDelivery = toJSValue "email_mobile"
+  toJSValue NoConfirmationDelivery = toJSValue "none"
+
+instance ToJSValue DeliveryMethod where
+  toJSValue EmailDelivery  = toJSValue "email"
+  toJSValue PadDelivery    = toJSValue "pad"
+  toJSValue APIDelivery    = toJSValue "api"
+  toJSValue MobileDelivery = toJSValue "mobile"
+  toJSValue EmailAndMobileDelivery = toJSValue "email_mobile"
 
 jsonDate :: Maybe MinutesTime -> JSValue
 jsonDate mdate = toJSValue $ formatMinutesTimeRealISO <$> mdate
