@@ -103,7 +103,7 @@ import Doc.SMSPin.Model
 import Doc.Anchors
 import qualified Data.Traversable as T
 import API.APIVersion
-import Doc.API.V1.DocumentJSON
+import Doc.API.V1.DocumentToJSON
 import Doc.API.V1.DocumentFromJSON()
 import Doc.API.V1.DocumentUpdateUtils
 import Util.MonadUtils
