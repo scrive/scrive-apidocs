@@ -22,6 +22,28 @@ import Payments.Control
 
 import Recurly
 
+{- About this test
+
+It requires a real recurly account to be there. Access is controled with recurlyToken.
+Current test account settings:
+  mariusz+recurly@scrive.com / admin123
+
+Test account requirements:
+  1) One payment plan named "team" with price set to 299 SEK
+  2) Currency set to SEK
+  3) No address required. This can be set Site Settings / Address Requirement
+
+Note that failure to set any of the above can result in strange test errors.
+
+
+-}
+
+recurlyToken :: String
+recurlyToken =  "7f780028adce4ca0a0e043f93487e074"
+
+recurlyPlanName :: String
+recurlyPlanName ="team"
+
 paymentsTests  :: TestEnvSt -> Test
 paymentsTests env = testGroup "Payments" [
     testThat "Company with no users has 0 quantity" env testNewCompanyNoUserZeroQuantity
@@ -201,18 +223,17 @@ testRecurlySavesAccount = do
   let ac = show $ toSeconds t -- generate a random account code to avoid collisions
       email = "eric+" ++ ac ++ "@scrive.com"
 
-  cs <- liftIO $ createSubscription "curl" "e9760e8fcfc24ffeab761e791ad5f58b" "pay" "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" 5
-
+  cs <- liftIO $ createSubscription "curl" recurlyToken recurlyPlanName "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" 5
   assertRight cs
 
-  gs <- liftIO $ getSubscriptionsForAccount "curl" "e9760e8fcfc24ffeab761e791ad5f58b" ac
+  gs <- liftIO $ getSubscriptionsForAccount "curl" recurlyToken ac
   assertRight gs
 
   case gs of
     Right [sub] -> do
       assertBool "quantity should be equal" $ subQuantity sub == 5
       assertBool "currency should be equal" $ subCurrency sub == "SEK"
-      is <- liftIO $ getInvoicesForAccount "curl" "e9760e8fcfc24ffeab761e791ad5f58b" ac
+      is <- liftIO $ getInvoicesForAccount "curl" recurlyToken ac
 
       assertRight is
 
@@ -230,24 +251,24 @@ testRecurlyChangeAccount = do
   let ac = show $ toSeconds t -- generate a random account code to avoid collisions
       email = "eric+" ++ ac ++ "@scrive.com"
 
-  cs <- liftIO $ createSubscription "curl" "e9760e8fcfc24ffeab761e791ad5f58b" "pay" "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" 5
+  cs <- liftIO $ createSubscription "curl" recurlyToken recurlyPlanName "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" 5
   assertRight cs
 
-  gs <- liftIO $ getSubscriptionsForAccount "curl" "e9760e8fcfc24ffeab761e791ad5f58b" ac
+  gs <- liftIO $ getSubscriptionsForAccount "curl" recurlyToken ac
   assertRight gs
 
   let Right [sub] = gs
-  cc <- liftIO $ changeAccount "curl" "e9760e8fcfc24ffeab761e791ad5f58b" (subID sub) "pay" 100 True
+  cc <- liftIO $ changeAccount "curl" recurlyToken (subID sub) recurlyPlanName 100 True
   assertRight cc
 
-  gs2 <- liftIO $ getSubscriptionsForAccount "curl" "e9760e8fcfc24ffeab761e791ad5f58b" ac
+  gs2 <- liftIO $ getSubscriptionsForAccount "curl" recurlyToken ac
   assertRight gs2
 
   case gs2 of
     Right [sub2] -> do
       assertBool "quantity should be equal" $ subQuantity sub2 == 100
       assertBool "currency should be equal" $ subCurrency sub2 == "SEK"
-      is <- liftIO $ getInvoicesForAccount "curl" "e9760e8fcfc24ffeab761e791ad5f58b" ac
+      is <- liftIO $ getInvoicesForAccount "curl" recurlyToken ac
 
       assertRight is
       case is of
@@ -265,19 +286,19 @@ testRecurlyChangeAccountDefer = do
   let ac = show $ toSeconds t -- generate a random account code to avoid collisions
       email = "eric+" ++ ac ++ "@scrive.com"
 
-  cs <- liftIO $ createSubscription "curl" "e9760e8fcfc24ffeab761e791ad5f58b" "pay" "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" 5
+  cs <- liftIO $ createSubscription "curl" recurlyToken recurlyPlanName "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" 5
 
   assertRight cs
 
 
-  gs <- liftIO $ getSubscriptionsForAccount "curl" "e9760e8fcfc24ffeab761e791ad5f58b" ac
+  gs <- liftIO $ getSubscriptionsForAccount "curl" recurlyToken ac
   assertRight gs
 
   let Right [sub] = gs
-  cc <- liftIO $ changeAccount "curl" "e9760e8fcfc24ffeab761e791ad5f58b" (subID sub) "pay" 100 False
+  cc <- liftIO $ changeAccount "curl" recurlyToken (subID sub) recurlyPlanName 100 False
   assertRight cc
 
-  gs2 <- liftIO $ getSubscriptionsForAccount "curl" "e9760e8fcfc24ffeab761e791ad5f58b" ac
+  gs2 <- liftIO $ getSubscriptionsForAccount "curl" recurlyToken ac
   assertRight gs2
 
   case gs2 of
@@ -289,7 +310,7 @@ testRecurlyChangeAccountDefer = do
       let Just p = subPending sub2
       assertBool "pending quantity should be right" $ penQuantity p == 100
 
-      is <- liftIO $ getInvoicesForAccount "curl" "e9760e8fcfc24ffeab761e791ad5f58b" ac
+      is <- liftIO $ getInvoicesForAccount "curl" recurlyToken ac
 
       assertRight is
       case is of
@@ -308,28 +329,28 @@ testRecurlyCancelReactivate = do
   let ac = show $ toSeconds t -- generate a random account code to avoid collisions
       email = "eric+" ++ ac ++ "@scrive.com"
 
-  cs <- liftIO $ createSubscription "curl" "e9760e8fcfc24ffeab761e791ad5f58b" "pay" "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" 5
+  cs <- liftIO $ createSubscription "curl" recurlyToken recurlyPlanName "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" 5
   assertRight cs
 
-  gs <- liftIO $ getSubscriptionsForAccount "curl" "e9760e8fcfc24ffeab761e791ad5f58b" ac
+  gs <- liftIO $ getSubscriptionsForAccount "curl" recurlyToken ac
   assertRight gs
 
   let Right [sub] = gs
 
-  cancel <- liftIO $ cancelSubscription "curl" "e9760e8fcfc24ffeab761e791ad5f58b" (subID sub)
+  cancel <- liftIO $ cancelSubscription "curl" recurlyToken (subID sub)
   assertRight cancel
 
-  gs2 <- liftIO $ getSubscriptionsForAccount "curl" "e9760e8fcfc24ffeab761e791ad5f58b" ac
+  gs2 <- liftIO $ getSubscriptionsForAccount "curl" recurlyToken ac
   assertRight gs2
 
   let Right [sub2] = gs2
 
   assertBool ("Should be 'canceled', was '" ++ subState sub2 ++ "'") $ subState sub2 == "canceled"
 
-  react <- liftIO $ reactivateSubscription "curl" "e9760e8fcfc24ffeab761e791ad5f58b" (subID sub)
+  react <- liftIO $ reactivateSubscription "curl" recurlyToken (subID sub)
   assertRight react
 
-  gs3 <- liftIO $ getSubscriptionsForAccount "curl" "e9760e8fcfc24ffeab761e791ad5f58b" ac
+  gs3 <- liftIO $ getSubscriptionsForAccount "curl" recurlyToken ac
   assertRight gs3
 
   let Right [sub3] = gs3
