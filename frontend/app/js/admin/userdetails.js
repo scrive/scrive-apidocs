@@ -195,17 +195,17 @@ var AdminUserDetailsView = Backbone.View.extend({
       var model = this.model;
 
       var languages = [
-          {name: localization.account.accountSecurity.langEN, value: "en"}
-        , {name: localization.account.accountSecurity.langSV, value: "sv"}
-        , {name: localization.account.accountSecurity.langDE, value: "de"}
-        , {name: localization.account.accountSecurity.langFR, value: "fr"}
-        , {name: localization.account.accountSecurity.langIT, value: "it"}
-        , {name: localization.account.accountSecurity.langES, value: "es"}
-        , {name: localization.account.accountSecurity.langPT, value: "pt"}
-        , {name: localization.account.accountSecurity.langNL, value: "nl"}
-        , {name: localization.account.accountSecurity.langDA, value: "da"}
-        , {name: localization.account.accountSecurity.langNO, value: "no"}
-        , {name: localization.account.accountSecurity.langEL, value: "el"}
+          {name: localization.languages.enInEn, value: "en"}
+        , {name: localization.languages.svInSv, value: "sv"}
+        , {name: localization.languages.deInDe, value: "de"}
+        , {name: localization.languages.frInFr, value: "fr"}
+        , {name: localization.languages.itInIt, value: "it"}
+        , {name: localization.languages.esInEs, value: "es"}
+        , {name: localization.languages.ptInPt, value: "pt"}
+        , {name: localization.languages.nlInNl, value: "nl"}
+        , {name: localization.languages.daInDa, value: "da"}
+        , {name: localization.languages.noInNo, value: "no"}
+        , {name: localization.languages.elInEl, value: "el"}
       ];
       languages = _.sortBy(languages, function(l) {return l.name;});
       var lname = _.findWhere(languages, {value :model.lang()}).name;

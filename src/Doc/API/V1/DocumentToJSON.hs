@@ -1,7 +1,7 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Doc.API.V1.DocumentJSON (
+module Doc.API.V1.DocumentToJSON (
       documentJSONV1
     , docForListJSONV1
     , docForListCSVV1

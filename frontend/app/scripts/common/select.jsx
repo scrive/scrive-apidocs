@@ -16,6 +16,7 @@
       style* :  "font-size :16px"     // Extra style applied to main label
       onSelect* : function(v) {}     // Function to be called when value is selected. If can be overwitten by onSelect from options. If true is returned select will be closed.
       onRemove* : function(v) {}     // If provided, remove (x) icon will be displayed over select. Functon will be executed when this icon will be clicked
+      odjustHeightOnExpand : false   // If expanded select area should increase the size of stuff bellow it. Usefull for select boxes in footer.
       options: [
                       { name : "Option 1" // Name on option label
                         value* : "1" // Value that will be propagated to onSelect
@@ -84,7 +85,8 @@ var SelectModel = Backbone.Model.extend({
       textWidth : "160px",
       optionsWidth : "200px",
       style : {},
-      cssClass : ""
+      cssClass : "",
+      adjustHeightOnExpand : false
 
   },
   initialize: function(args){
@@ -165,6 +167,9 @@ var SelectModel = Backbone.Model.extend({
   },
   style : function() {
      return this.get("style");
+  },
+  adjustHeightOnExpand : function() {
+     return this.get("adjustHeightOnExpand");
   }
 });
 
@@ -180,6 +185,10 @@ var SelectExpandedView = React.createClass({
       var model = this.props.model;
       model.unexpand();
       return false;
+    },
+    totalHeight : function() {
+      if (this.refs.options != undefined && this.refs.options.getDOMNode()!= undefined && this.getDOMNode() != undefined)
+        return $(this.refs.options.getDOMNode()).height() + $(this.getDOMNode()).height() -1; // There is 1px overlap in CSS
     },
     render: function() {
       var model = this.props.model;
@@ -199,7 +208,7 @@ var SelectExpandedView = React.createClass({
               }
           </div>
 
-          <ul className={'select-opts '+ model.expandSide()} style={optionStyle}>
+          <ul className={'select-opts '+ model.expandSide()} style={optionStyle} ref="options">
             {_.map(model.activeOptions(),function(o,i) {
               return (
                 <li key={i} onClick={function() {o.selected()}}>
@@ -284,7 +293,9 @@ var SelectView = React.createClass({
 
       var mainStyle = _.extend({color: model.color(),border : model.border()},model.style());
       var labelStyle = _.extend({width: model.textWidth()},model.style());
-
+      if (model.expanded() && model.adjustHeightOnExpand()) {
+        mainStyle = _.extend(mainStyle,{height:  this.state.expandedComponent.totalHeight()});
+      }
       return (
         <div className={'select ' + model.cssClass()}  style={mainStyle}
              onMouseEnter={this.handleMouseEnter}
@@ -320,7 +331,8 @@ var Select = React.createClass({
       onOpen :React.PropTypes.func,
       onSelect : React.PropTypes.func,
       onRemove : React.PropTypes.func,
-      options: React.PropTypes.array.isRequired
+      options: React.PropTypes.array.isRequired,
+      adjustHeightOnExpand : React.PropTypes.bool
     },
     getInitialState: function() {
       return this.stateFromProps(this.props);
@@ -346,7 +358,8 @@ var Select = React.createClass({
         onClose :props.onClose,
         onSelect : props.onSelect,
         onRemove : props.onRemove,
-        options: props.options
+        options: props.options,
+        adjustHeightOnExpand : props.adjustHeightOnExpand
       });
       return {model: model};
     },

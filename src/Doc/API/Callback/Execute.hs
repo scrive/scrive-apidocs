@@ -21,7 +21,7 @@ import Control.Applicative
 import User.CallbackScheme.Model
 import Util.SignatoryLinkUtils
 import Text.JSON
-import Doc.API.V1.DocumentJSON
+import Doc.API.V1.DocumentToJSON
 import Amazon
 import Network.HTTP as HTTP
 import Text.JSON.Gen

@@ -171,142 +171,28 @@ analyticsLoaderKontrakcja=
 </script>
 ###
 pageFooter=
-<style>
-$if(custombarscolour)$
-  footer.site {
-      background: $custombarscolour$ !important;
-  }
-$endif$
-
-
-$if(custombarshighlightcolour)$
-  footer.site {
-      border-top-color: $custombarshighlightcolour$;
-  }
-$endif$
-
-$if(custombarstextcolour)$
-    footer.site .poweredbyscrive {
-      color: $custombarstextcolour$;
-      text-shadow: none;
-    }
-$endif$
-
-
-</style>
-
-<!-- Styling of the design view footer -->
-<style>
-$if(custombarscolour)$
-  .design-view-button-bar {
-      background: $custombarscolour$ !important;
-  }
-$endif$
-</style>
-
-$if(logged)$
-
-<footer class="site $if(thin)$thin$endif$ logged-in">
-    <div class="poweredbyscrive">
-        $if(!custombarscolour)$
-        <div class='text'>Powered by <div class='logo'/></div>
-        $else$
-        <div class='text'>Powered by Scrive</div>
-        $endif$
-      </div>
+<div class='place-for-footer'>
   $postPageCode()$
-</footer>
+</div>
+<script>
+require(['jquery', 'React' , 'pages/footer','legacy_code'], function(jQuery,React,Footer) {
 
-$else$
-<footer class="site thin">
-  <div class="ct $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
-
-    <div class="visions">
-      <p>E-sign with peace of mind.</p>
-    </div>
-
-    <nav>
-      <header><h4>$_pageFooterExplore()$</h4></header>
-      <div class="content">
-        <ul class="tree">
-          <li class="branch"><a href="$httplink$$langprefix()$api" id="nav-api"> $_pageFooterAPI()$</a></li>
-          <li class="branch"><a href="$httplink$$langprefix()$jobs" id="nav-jobs"> $_pageFooterWork()$</a></li>
-          <li class="branch"><a href="$langprefix()$verify" id="nav-privacy">$_footerVerifyDocument()$</a></li>
-          <li class="branch"><a href="$httplink$$langprefix()$get-started">$_headerGetStarted()$</a></li>
-        </ul>
-      </div>
-    </nav>
-
-    <nav>
-      <header><h4>$_pageFooterTerms()$</h4></header>
-      <div class="content">
-        <ul class="tree">
-          <li class="branch"><a href="$httplink$$langprefix()$terms" id="nav-terms">$_pageFooterTOS()$</a></li>
-          <li class="branch"><a href="$httplink$$langprefix()$environment" id="nav-environment">$_pageFooterEnvironmentalPolicy()$</a></li>
-          <li class="branch"><a href="$httplink$$langprefix()$privacy" id="nav-privacy">$_pageFooterPrivacyPolicy()$</a></li>
-        </ul>
-      </div>
-    </nav>
-
-    <nav>
-      <header><h4>$_pageFooterContact()$</h4></header>
-      <div class="content">
-          <ul class="tree">
-              <li class="branch">
-                  $_pageFooterWorkDay()$
-              </li>
-              <li class="branch">
-                  <a href="tel:+46851977900">+46 8 519 779 00</a>
-              </li>
-              <li class="branch">
-                  <a href="mailto:info@scrive.com">info@scrive.com</a>
-              </li>
-          </ul>
-      </div>
-  </nav>
-
-  <nav>
-      <header><h4>$_pageFooterAddress()$</h4></header>
-      <div class="content">
-          <ul class="tree">
-              <li class="branch">$_pageFooterAddress1()$</li>
-              <li class="branch">$_pageFooterAddress2()$</li>
-              <li class="branch">$_pageFooterAddress3()$</li>
-              <li class="branch">$_pageFooterAddress4()$</li>
-          </ul>
-      </div>
-  </nav>
-
-    <nav class="last">
-      <div class="content">
-        <ul class="icons">
-          <li>
-            <a href="http://www.linkedin.com/company/scrive" target="_blank">
-              <img src="/img/sm-linkedin.png" width="32" height="32" alt="LinkedIn" />
-            </a>
-          </li>
-          <li>
-            <a href="https://twitter.com/scrive" target="_blank">
-              <img src="/img/sm-twitter.png" width="32" height="32" alt="Twitter" />
-            </a>
-          </li>
-          <li class="last">
-            <a href="https://www.facebook.com/pages/Scrive/237391196280189" target="_blank">
-              <img src="/img/sm-facebook.png" width="32" height="32" alt="Facebook" />
-            </a>
-          </li>
-        </ul>
-        <ul class="tree">
-          <li class="branch">
-            $langSwitcher()$
-          </li>
-        </ul>
-      </div>
-    </nav>
-  </div>
-  $postPageCode()$
-</footer>
-$endif$
+  jQuery(function(){
+    React.renderComponent(
+      Footer({
+        logged: $if(logged)$ true $else$ false $endif$,
+        thin : $if(thin)$ true $else$ false $endif$,
+        httplink : "$httplink$",
+        langprefix : "$langprefix()$",
+        color :  "$custombarscolour$",
+        textcolor :  "$custombarstextcolour$",
+        highlightcolor : "$custombarshighlightcolour$"
+      })
+    , jQuery('.place-for-footer')[0]);
+  });
+  
+});
+</script>
 ####
 postPageCode=
 
@@ -449,49 +335,7 @@ $endif$
     </ul>
   </nav>
 </header>
-####
-langSwitcher=
-<div class='langSwitcher'></div>
-<script>
- require(['jquery', 'Backbone', 'legacy_code'], function(jQuery) {
-              jQuery(function() {
-                   var changeLang = function(l) {
-                      mixpanel.track('Click switch languages', { 'Language' : l });
-                      $if(logged)$
-                        Language.changeForPageAndUserAndReload(l);
-                      $else$
-                        Language.changeForPageAndReload(l);
-                      $endif$
-                   }
-                   var languages = [
-                      {value : "en", name : "$EnglishInEnglish()$"}
-                    , {value : "sv", name : "$SwedishInSwedish()$"}
-                    , {value : "de", name : "$GermanInGerman()$"}
-                    , {value : "fr", name : "$FrenchInFrench()$"}
-                    , {value : "it", name : "$ItalianInItalian()$"}
-                    , {value : "es", name : "$SpanishInSpanish()$"}
-                    , {value : "pt", name : "$PortugueseInPortuguese()$"}
-                    , {value : "nl", name : "$DutchInDutch()$"}
-                    , {value : "da", name : "$DanishInDanish()$"}
-                    , {value : "no", name : "$NorwegianInNorwegian()$"}
-                    , {value : "el", name : "$GreekInGreek()$"}
-                   ]
-                   languages = _.sortBy(languages, function(l) {return l.name;});
-                   var lname = _.findWhere(languages, {value : "$langcode$"}).name;
-
-                   var select = new Select({  name : lname,
-                                              cssClass: "change-language",
-                                              textWidth: 80,
-                                              border: "none",
-                                              onSelect : function(v) {changeLang(v);},
-                                              adjustHeightOnExpand : true,
-                                              options: _.filter(languages, function(l) { return l.value != "$langcode$" && !l.hidden; })
-                                 })
-                   jQuery('.langSwitcher').append(select.el());
-              })
-});
-</script>
-####
+###
 contactUsVivocha=
 <aside class="contact">
   <nav class="contact">

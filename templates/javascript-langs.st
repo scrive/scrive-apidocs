@@ -244,6 +244,17 @@ javascriptLocalisation =
               , da : "$_Danish()$"
               , no : "$_Norwegian()$"
               , el : "$_Greek()$"
+              , svInSv :"$SwedishInSwedish()$"
+              , enInEn : "$EnglishInEnglish()$"
+              , deInDe : "$GermanInGerman()$"
+              , frInFr : "$FrenchInFrench()$"
+              , itInIt : "$ItalianInItalian()$"
+              , esInEs : "$SpanishInSpanish()$"
+              , ptInPt : "$PortugueseInPortuguese()$"
+              , nlInNl : "$DutchInDutch()$"
+              , daInDa : "$DanishInDanish()$"
+              , noInNo : "$NorwegianInNorwegian()$"
+              , elInEl : "$GreekInGreek()$"
             }
          , csv : {
                 title : "$_dialogCsvupload1Head()$"
@@ -1002,17 +1013,6 @@ javascriptLocalisation =
               , newpassword1    : "$_NewPassword()$"
               , newpassword2    : "$_RepeatNewPassword()$"
               , lang            : "$_UserLanguage()$"
-              , langSV          : "$SwedishInSwedish()$"
-              , langEN          : "$EnglishInEnglish()$"
-              , langDE          : "$GermanInGerman()$"
-              , langFR          : "$FrenchInFrench()$"
-              , langIT          : "$ItalianInItalian()$"
-              , langES          : "$SpanishInSpanish()$"
-              , langPT          : "$PortugueseInPortuguese()$"
-              , langNL          : "$DutchInDutch()$"
-              , langDA          : "$DanishInDanish()$"
-              , langNO          : "$NorwegianInNorwegian()$"
-              , langEL          : "$GreekInGreek()$"
             }
           , companySettings : "$_CompanySettings()$"
           , companyAccounts : {
@@ -1162,6 +1162,24 @@ javascriptLocalisation =
             , salesforceDescription : "$salesforceDescription()$"
             , constantUrlCallback : "$constantUrlCallback()$"
             , constantUrlCallbackDescription : "$constantUrlCallbackDescription()$"
+      }
+      , footer : {
+              explore              : "$_pageFooterExplore()$"
+            , api                  : "$_pageFooterAPI()$"
+            , jobs                 : "$_pageFooterWork()$"
+            , verify               : "$_footerVerifyDocument()$"
+            , getStarted           : "$_headerGetStarted()$"
+            , terms                : "$_pageFooterTerms()$"
+            , tos                  : "$_pageFooterTOS()$"
+            , environmentalPolicy  : "$_pageFooterEnvironmentalPolicy()$"
+            , privacyPolicy        : "$_pageFooterPrivacyPolicy()$"
+            , contact              : "$_pageFooterContact()$"
+            , workday              : "$_pageFooterWorkDay()$"
+            , address              : "$_pageFooterAddress()$"
+            , address1             : "$_pageFooterAddress1()$"
+            , address2             : "$_pageFooterAddress2()$"
+            , address3             : "$_pageFooterAddress3()$"
+            , address4             : "$_pageFooterAddress4()$"
       }
     };
 ###
