@@ -57,18 +57,6 @@ var DocumentViewSignatoryModel = Backbone.Model.extend({
           return localization.signatoryMessage[signatory.status()];
       return localization.signatoryMessage["other"];
  },
- signatoryViewerySummary: function() {
-   var signatory = this.signatory();
-   if (!signatory.isViewer()) {
-     return this.signatorySummary(signatory);
-   } else if (signatory.status() === 'sent') {
-     return localization.signatoryMessage.sentViewer;
-   } else if (signatory.status() === 'opened') {
-     return localization.signatoryMessage.openedViewer;
-   } else {
-     return this.signatorySummary(signatory);
-   }
-  },
  hasRemindOption: function() {
    var signatory = this.signatory();
    return    !this.forSigning()
@@ -175,7 +163,7 @@ var DocumentViewSignatoryForListView = React.createClass({
                   </div>
                   <div className='middle'>
                     <div className={"statustext " + model.status()} style={model.textstyle()}>
-                        {model.signatoryViewerySummary()}
+                        {model.signatorySummary()}
                     </div>
                   </div>
                   <div className='middle details'>
