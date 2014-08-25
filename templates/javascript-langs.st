@@ -412,7 +412,16 @@ javascriptLocalisation =
              , draggablehelp1 : "$_designviewdraggablehelp1()$"
              , draggablehelp2 : "$_designviewdraggablehelp2()$"
              , days :"$_designviewdays()$"
-             , saved : "$_designviewsaved()$"
+             , saveAsDraftButton : "$_designViewSaveAsDraftButton()$"
+             , saveAsTemplateButton : "$_designViewSaveAsTemplateButton()$"
+             , saveDraftButton : "$_designViewSaveDraftButton()$"
+             , saveTemplateButton : "$_designViewSaveTemplateButton()$"
+             , saved : {
+                 saveDraft       : "$_designViewSaveDraftFlashMessage()$"
+               , saveTemplate    : "$_designViewSaveTemplateFlashMessage()$"
+               , savedAsDraft    : "$_designViewSavedAsDraftFlashMessage()$"
+               , savedAsTemplate : "$_designViewSavedAsTemplateFlashMessage()$"
+             }
              , fromCSV : "$_fromCSV()$"
              , numPartOfNum : "$_numPartOfNum()$"
              , preparingDocument : "$_preparingDocument()$"

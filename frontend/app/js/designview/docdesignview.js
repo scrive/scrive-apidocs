@@ -45,6 +45,41 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
         resetColor: function() {
             this.currentColorIndex = 0;
             return this;
+        },
+        saveDraft: function() {
+            var document = this.document();
+            var savedOnce = document.savedOnce();
+            document.save(function() {
+                new Submit({
+                    ajax : 'true',
+                    method : 'POST',
+                    url : '/d/save/' + document.documentid(),
+                    ajaxsuccess : function() {
+                        console.log("saveDraft " + document.documentid());
+                        var flashMsg;
+                        if(savedOnce) {
+                          flashMsg = localization.designview.saved.saveDraft;
+                        } else {
+                          flashMsg = localization.designview.saved.savedAsDraft;
+                        }
+                        new FlashMessage({color: 'green', content: flashMsg});
+                    }
+                }).send();
+            });
+        },
+        saveTemplate: function() {
+            var document = this.document();
+            var savedOnce = document.savedOnce();
+            document.makeTemplate();
+            document.save(function() {
+                var flashMsg;
+                if(savedOnce) {
+                  flashMsg = localization.designview.saved.saveTemplate;
+                } else {
+                  flashMsg = localization.designview.saved.savedAsTemplate;
+                }
+                new FlashMessage({color: 'green', content: flashMsg});
+            });
         }
     });
 
@@ -92,21 +127,28 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             var view = this;
             var model = view.model;
 
+            var txt;
+            if(model.document().savedOnce()) {
+                txt = localization.designview.saveDraftButton;
+            }
+            else {
+                txt = localization.designview.saveAsDraftButton;
+            }
+
             var saveAsDraftButton = new Button({
-                text: localization.saveAsDraft,
+                text: txt,
                 color: 'blue',
-                onClick: function() {
+                onClick: function(e) {
                     mixpanel.track('Click save as draft');
-                    model.document().save(function() {
-                      new Submit({
-                        ajax : 'true',
-                        method : 'POST',
-                        url : '/d/save/' + view.model.document().documentid(),
-                        ajaxsuccess : function() {
-                          new FlashMessage({color: "green", content : localization.designview.saved});
-                        }
-                      }).send();
-                    });
+                    model.saveDraft();
+                    var txt = localization.designview.saveDraftButton;
+                    if(e.target.children.length == 0) {
+                      e.target.innerText = txt;
+                    }
+                    else {
+                      var label = $('.label', e.target);
+                      label.text(txt);
+                    }
                 }
             });
 
@@ -116,13 +158,28 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             var view = this;
             var model = view.model;
 
+            var txt;
+            if(model.document().isTemplate() && model.document().savedOnce()) {
+                txt = localization.designview.saveTemplateButton;
+            }
+            else {
+                txt = localization.designview.saveAsTemplateButton;
+            }
+
             var saveAsTemplateButton = new Button({
-                text: localization.saveAsTemplate,
+                text: txt,
                 color: 'blue',
-                onClick: function() {
-                    model.document().makeTemplate();
-                    model.document().save();
+                onClick: function(e) {
                     mixpanel.track('Click save as template');
+                    model.saveTemplate();
+                    var txt = localization.designview.saveTemplateButton;
+                    if(e.target.children.length == 0) {
+                      e.target.innerText = txt;
+                    }
+                    else {
+                      var label = $('.label', e.target);
+                      label.text(txt);
+                    }
                 }
             });
 
