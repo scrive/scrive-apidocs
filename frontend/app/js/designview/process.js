@@ -312,9 +312,15 @@ define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_the
                 text: localization.designview.request,
                 cssClass: 'design-view-action-process-left-column-attachments-signatory-button',
                 onClick: function() {
-                    mixpanel.track('Open sig attachments');
+                  if(document.signatoriesWhoSign().length < 2) {
+                    mixpanel.track('Open signatory attachments but not enough participants');
+                    new FlashMessage({ color: 'red'
+                                     , content: localization.designview.validation.requestAttachmentFlashMessage});
+                  } else {
+                    mixpanel.track('Open signatory attachments');
                     document.save();
                     new DesignSignatoryAttachmentsPopup({document: document});
+                  }
                 }
             });
 

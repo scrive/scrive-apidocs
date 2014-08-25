@@ -228,6 +228,7 @@ javascriptLocalisation =
               , requestAttachments : "$_pageDocumentForAuthorHelpersLocalDialogsHead()$"
               , defineRequests :     "$_pageDocumentForAuthorHelpersLocalDialogsDefineRequests()$"
               , uniqueAttachmentNamesError : "$_pageDocumentForAuthorHelpersLocalDialogsUniqueAttachmentNamesError()$"
+              , errorFlashMessage : "$_pageDocumentForAuthorHelpersLocalDialogsErrorFlashMessage()$"
             }
           , save : "$_save()$"
           , languages : {
@@ -320,6 +321,7 @@ javascriptLocalisation =
                     , missingOrWrongPlacedAuthorField : "$_missingPlacedAuthorFieldValue()$"
                     , notReadyField : "$_setAllFields()$"
                     , pleaseSelectField : "$_validationPleaseSelectField()$"
+                    , requestAttachmentFlashMessage : "$_designViewAttachmentRequestedFlashMessage()$"
                 }
              , signviewsettings : {
                   showheader: "$_signviewSettingsShowHeader()$"
