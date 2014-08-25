@@ -31,10 +31,10 @@ define(['React', 'Backbone', 'common/backbone_mixin', 'common/select'], function
      var self = this;
      var options = _.filter(this.languages(), function(l) { return ('/' + l.value + '/') !=  self.props.langprefix });
      var lname = _.find(this.languages(), function(l) {return ('/' + l.value + '/') == self.props.langprefix}).name;
-     var select = NewSelect.Select
+     var Select = NewSelect.Select
      return (
       <div className='langSwitcher'>
-        <NewSelect.Select
+        <Select
           options={options}
           name={lname}
           border="none"
