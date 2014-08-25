@@ -29,7 +29,7 @@ define(['React', 'common/language_service', 'postsignview/questionnaire_view', '
       return null !== /^nj.*scrive.com/.exec(location.host);
     },
     isQuestionaire : function() {
-      return (this.props.document.currentSignatory().company() !== '')
+      return (this.props.document.currentSignatory().company() !== '');
     },
     isSaveCopy : function() {
       return !this.isHidden() && !this.isNJ() && !this.isQuestionaire();
@@ -65,7 +65,7 @@ define(['React', 'common/language_service', 'postsignview/questionnaire_view', '
          />
         );
       } else if(this.isQuestionaire()) {
-        return (<QuestionareView document={document}/>)
+        return (<QuestionareView document={document}/>);
       } else if (this.isSaveCopy()) {
         var SaveBackupCopy = CreateAccountViews.SaveBackupCopy;
         return (<SaveBackupCopy
