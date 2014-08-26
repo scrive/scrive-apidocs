@@ -7,18 +7,18 @@ header.site {
   top: 0;
   width: 100%;
   z-index: 100;
-  
+
   &.thin {
     min-width: 960px; // related to tablets
-  } 
-  
+  }
+
   nav {
     border-bottom : 1px solid black;
     min-height: 80px;
     position: relative;
-    
+
     .box-shadow(0 4px 0 rgba(0, 0, 0, 0.1));
-    
+
     ul.ct {
 
       margin: 0 auto;
@@ -27,8 +27,8 @@ header.site {
       width: 1018px;
 
       .clearfix;
-  
-      &.thin { 
+
+      &.thin {
         width: 960px; // related to tablets, can't be wider in ipad
 
         // padding between buttons should be smaller for logged out users (because there's more buttons)
@@ -48,7 +48,7 @@ header.site {
       li {
         height: 24px;
         margin: 32px 0 24px;
-        
+
         a.page {
           border-top: 4px solid transparent;
           color: @text-lighter;
@@ -63,7 +63,7 @@ header.site {
           &:hover {
             color: @text-very-light;
           }
-          
+
           &.active {
             color: @text-very-light;
             cursor: pointer;
@@ -74,9 +74,9 @@ header.site {
         &.session-login {
           margin-top: 23px;
           width: auto;
-          
+
           .clearfix;
-          
+
           a.button {
             float: left;
             font-weight: 300;
@@ -94,12 +94,12 @@ header.site {
 
         &.session-create {
           padding-right: 10px;
-          
+
           .clearfix;
 
-          &.fromtemplate2 {
+          &.fromtemplate {
             // be careful with this, sometimes we pop down from the header in branded domains
-            padding-right: 40px; 
+            padding-right: 40px;
           }
 
           a.button {
@@ -121,7 +121,7 @@ header.site {
 
         &#branding {
           .clearfix;
-          
+
           border-left: none;
           float: left;
           margin-bottom: 0px;
@@ -132,7 +132,7 @@ header.site {
             display: block;
             padding: 0px;
             text-align: left;
-            
+
             img {
               max-height: 140px;
               max-width: 350px;

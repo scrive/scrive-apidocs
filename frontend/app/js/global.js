@@ -49,50 +49,6 @@ window.trackTimeout = function(name, props, trackTimeoutCallBack, ms) {
     }, ms);
 };
 
-window.createnewdocument = function(event) {
-  if( event.preventDefault ) {
-      event.preventDefault();
-  }
-  else {
-      event.returnValue = false;
-  }
-  if( event.stopImmediatePropagation ) event.stopImmediatePropagation();
-  if( event.stopPropagation ) event.stopPropagation();
-  if( event.stop ) event.stop();
-  trackTimeout('Click start new process', {}, function() {
-      new Submit({
-          method : "POST",
-          url : "/api/frontend/createfromfile",
-          timezone : jstz.determine().name(),
-          ajax: true,
-          expectedType : "text",
-          ajaxsuccess: function(d) {
-              try {
-                  window.location.href = "/d/"+JSON.parse(d).id;
-              } catch(e) {
-                  LoadingDialog.close();
-              }
-          }
-      }).send();
-  });
-};
-
-window.createfromtemplate = function(event) {
-  if( event.preventDefault ) {
-      event.preventDefault();
-  }
-  else {
-      event.returnValue = false;
-  }
-  if( event.stopImmediatePropagation ) event.stopImmediatePropagation();
-  if( event.stopPropagation ) event.stopPropagation();
-  if( event.stop ) event.stop();
-    trackTimeout('Click create from template', {}, function() {
-        window.location.href = "/fromtemplate";
-    });
-    return false;
-};
-
 });
 
 //make sure we've got console logging

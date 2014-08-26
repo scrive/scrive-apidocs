@@ -16,7 +16,7 @@ var require = {
      *  Libraries
      */
     jquery: '../bower_components/jquery/jquery.min',
-    React: '../bower_components/react/react-with-addons.min',
+    React: '../bower_components/react/react-with-addons',
     Backbone: '../bower_components/backbone/backbone',
     Underscore: '../bower_components/underscore/underscore-min',
     text: '../bower_components/requirejs-text/text',
@@ -68,6 +68,6 @@ var require = {
   },
   deps: ['jquery', 'Underscore', 'Backbone'],
   // All scripts that are not used by other components, but refered from string templates should be listed here
-  include: ['signview/header', 'signview/footer', 'login/login', 'login/brandedlogin', 'pages/footer']
+  include: ['signview/header', 'signview/footer', 'login/login', 'login/brandedlogin', 'pages/header', 'pages/footer']
 
 };

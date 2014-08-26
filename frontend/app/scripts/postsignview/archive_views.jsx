@@ -20,7 +20,7 @@ define(['React', 'Backbone', 'postsignview/user_service', 'common/language_servi
         url += '.base64.pdf';
         return url;
       };
-      
+
       var title = localization.ftue.documentTitle;
 
       DocumentUploader.uploadByURL(function(documentData) {
@@ -41,14 +41,14 @@ define(['React', 'Backbone', 'postsignview/user_service', 'common/language_servi
       mixpanel.register({
         'Welcome modal accepted': true
       });
-      
+
       mixpanel.track('Welcome modal accept');
       LoadingDialog.open();
       SessionStorage.set('welcome', 'accepted', true);
 
       this.uploadSampleAndRedirect();
     },
-    
+
     render: function() {
       return (
           <div className="wrapper-position-footer">
@@ -59,7 +59,6 @@ define(['React', 'Backbone', 'postsignview/user_service', 'common/language_servi
                     <a id="logo" className="page" href="/">
                       <img src="/img/logo.png"/>
                     </a>
-                    <div id="tagline" className="h3"></div>
                   </li>
                 </ul>
               </nav>
@@ -136,5 +135,5 @@ define(['React', 'Backbone', 'postsignview/user_service', 'common/language_servi
       );
     }
   });
- 
+
 });

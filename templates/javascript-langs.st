@@ -1181,5 +1181,20 @@ javascriptLocalisation =
             , address3             : "$_pageFooterAddress3()$"
             , address4             : "$_pageFooterAddress4()$"
       }
+      , header : {
+              login : "$_login()$"
+            , startFreeTrial : "$_startFreeTrial()$"
+            , contact : "$_headerContakt()$"
+            , about : "$_headerAbout()$"
+            , cases : "$_headerCases()$"
+            , pricing : "$_headerPricing()$"
+            , legal :  "$_headerLegal()$"
+            , features : "$_headerFeatures()$"
+            , logout :  "$_headerLogOut()$"
+            , account : "$_headerAccount()$"
+            , archive : "$_headerArchive()$"
+            , template : "$_headerTemplate()$"
+            , send     : "$_headerSend()$"
+      }
     };
 ###

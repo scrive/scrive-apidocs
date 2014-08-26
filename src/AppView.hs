@@ -238,7 +238,6 @@ renderTemplateAsPage ctx templateName showCreateAccount f = do
   ad <- getAnalyticsData
   renderTemplate templateName $ do
     contextInfoFields ctx
-    mainLinksFields $ ctxlang ctx
     F.value "langcode" $ codeFromLang $ ctxlang ctx
     F.value "showCreateAccount" $ showCreateAccount && (isNothing $ ctxmaybeuser ctx)
     F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
@@ -248,7 +247,6 @@ renderTemplateAsPage ctx templateName showCreateAccount f = do
 standardPageFields :: TemplatesMonad m => Context -> String -> AnalyticsData -> Fields m ()
 standardPageFields ctx title ad = do
   F.value "title" title
-  mainLinksFields $ ctxlang ctx
   F.value "langcode" $ codeFromLang $ ctxlang ctx
   contextInfoFields ctx
   F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
@@ -288,16 +286,6 @@ respondWithPDF forceDownload contents =
   setHeaderBS "Content-Type" "application/pdf" $
   (if forceDownload then setHeaderBS "Content-Disposition" "attachment" else id) $
   Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
-
-{- |
-   Defines the main links as fields handy for substituting into templates.
--}
-mainLinksFields :: Monad m => Lang -> Fields m ()
-mainLinksFields lang = do
-  F.value "linkaccount"          $ show (LinkAccount)
-  F.value "linkissue"            $ show LinkArchive
-  F.value "linklogin"            $ show (LinkLogin lang LoginTry)
-  F.value "linklogout"           $ show LinkLogout
 
 {- |
    Defines some standard context information as fields handy for substitution

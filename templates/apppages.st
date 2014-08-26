@@ -190,7 +190,7 @@ require(['jquery', 'React' , 'pages/footer','legacy_code'], function(jQuery,Reac
       })
     , jQuery('.place-for-footer')[0]);
   });
-  
+
 });
 </script>
 ####
@@ -226,16 +226,34 @@ postPageCode=
 ###
 langprefix=/$langcode$/
 ####
+#### Style part below is just to stop pushing content down on login page (before rendering). You can remove it when whole this is in react.
+####
 header=
-$if(logged)$
+$headerStyles()$
+$headerAddons()$
+<div class='place-for-header' $if(!logged)$ style="height:81px;background-color: #495259" $endif$>
+  $postPageCode()$
+</div>
 <script>
+require(['jquery', 'React' , 'pages/header','legacy_code'], function(jQuery,React,Header) {
 
- require(['Backbone', 'legacy_code'], function() {
-   window.BlockingInfo = Blocking();
- });
+  jQuery(function(){
+    React.renderComponent(
+      Header({
+        logged: $if(logged)$ true $else$ false $endif$,
+        customlogourl : "$customlogolink$",
+        httplink : "$httplink$",
+        langprefix : "$langprefix()$",
+        archive : $if(archive)$true$else$false$endif$,
+        account : $if(account)$true$else$false$endif$
+      })
+    , jQuery('.place-for-header')[0]);
+  });
+
+});
 </script>
-$endif$
-
+####
+headerStyles=
 <style>
 $if(custombarshighlightcolour)$
 header.site nav ul.ct li a.page:hover {
@@ -280,62 +298,17 @@ $if(custombarscolour)$
 $endif$
 
 </style>
+####
+headerAddons=
+$if(logged)$
+<script>
 
-
-
-<header class="site $if(!logged)$thin$endif$">
-  <nav>
-    <ul class="ct $if(!logged)$thin$endif$">
-      <li id="branding">
-        <a id="logo" class="page" href="$httplink$$langprefix()$"><img $if(customlogo)$ src="$customlogolink$"  style="margin:0px" $else$ src="/img/logo.png" width="120" height="23" $endif$ /></a>
-        <div id="tagline" class="h3"></div>
-      </li>
-      $if(logged)$
-      <ul class="right-container">
-        <li class="float-right" >
-          <a class="page js-logout"  href="$linklogout$">$_headerLogOut()$</a>
-        </li>
-        <li class="float-right" >
-            <a class="page $if(account)$active$endif$" id='page-account'  href="$linkaccount$">$_headerAccount()$</a>
-        </li>
-        <li class="page-first float-right" >
-            <a class="s-archive page $if(archive)$active$endif$ "  id='page-archive' href="$linkissue$">$_headerArchive()$</a>
-        </li>
-        <li class="session-create float-right fromtemplate2">
-            <a class="button button fromtemplate" onclick='createfromtemplate(event)' href="/fromtemplate">$_headerTemplate()$ </a>
-        </li>
-        <li class="session-create float-right">
-            <a class="button button js-create-document"            onclick='createnewdocument(event)' href="/newdocument">$_headerSend()$ </a>
-        </li>
-      </ul>
-      $else$
-      <li class="session-login float-right">
-        <a class="button" id="page-signin" href="$langprefix()$login">$_login()$ </a>
-        <a class="button" id="page-signup" href="$langprefix()$signup">$_startFreeTrial()$</a>
-      </li>
-      <li class="float-right"  >
-          <a class="page"   href="$httplink$$langprefix()$contact">$_headerContakt()$</a>
-      </li>
-      <li class="float-right" >
-          <a class="page"  href="$httplink$$langprefix()$about">$_headerAbout()$</a>
-      </li>
-      <li class="float-right" >
-          <a class="page"  href="$httplink$$langprefix()$cases">$_headerCases()$</a>
-      </li>
-      <li class="float-right" >
-          <a class="page price-plan-page-link"  href="$httplink$$langprefix()$pricing">$_headerPricing()$</a>
-      </li>
-      <li class="float-right" >
-          <a class="page"  href="$httplink$$langprefix()$legal">$_headerLegal()$</a>
-      </li>
-      <li class="float-right" >
-          <a class="page"  href="$httplink$$langprefix()$features">$_headerFeatures()$</a>
-      </li>
-      $endif$
-    </ul>
-  </nav>
-</header>
-###
+ require(['Backbone', 'legacy_code'], function() {
+   window.BlockingInfo = Blocking();
+ });
+</script>
+$endif$
+####
 contactUsVivocha=
 <aside class="contact">
   <nav class="contact">
