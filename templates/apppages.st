@@ -167,7 +167,6 @@ analyticsLoaderKontrakcja=
   $analyticsLoaderBase()$
   mixpanel.track_links('.js-logout', 'Click Logout');
   mixpanel.track_links('#logo', 'Click Logo');
-  mixpanel.track_links('.fromtemplate', 'Click from template');
 </script>
 ###
 pageFooter=
