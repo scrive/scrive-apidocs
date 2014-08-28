@@ -140,6 +140,7 @@ define(['Backbone', 'legacy_code'], function() {
               };
               mixpanel.register(ps);
               mixpanel.people.set(ps);
+              _gaq.push(['_trackEvent', 'ToS', 'Signed']);
               trackTimeout('Sign TOS', {}, function() {
                   window.location = resp.location;
               }, 1000);

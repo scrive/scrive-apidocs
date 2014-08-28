@@ -43,6 +43,7 @@ define(['Backbone', 'legacy_code'], function() {
             resp = JSON.parse($(rs).text());
           }
           if (resp.sent === true) {
+            _gaq.push(['_trackEvent', 'Signup', 'Clicked']);
             mixpanel.track('Create new account', {
                 'Email' : model.email()
             });

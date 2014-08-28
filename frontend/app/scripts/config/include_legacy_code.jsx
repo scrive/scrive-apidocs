@@ -77,6 +77,7 @@ define([
   '../js/signview/docsignviewattachments',
   '../js/signview/docsignview',
   '../js/signview/docsignviewsigningprogressmodal',
+  '../js/signview/docsignviewretargeting',
   '../js/designview/participants',
   '../js/designview/editdocument',
   '../js/designview/documentview',

@@ -105,7 +105,6 @@ var DocumentSignViewModel = Backbone.Model.extend({
   },
 
   createAccountSection: function() {
-
     if (this.createAccountSectionEle == undefined) {
       this.createAccountSectionEle = $('<div />');
         var component = React.renderComponent(
@@ -114,6 +113,14 @@ var DocumentSignViewModel = Backbone.Model.extend({
         }), this.createAccountSectionEle[0]);
     }
     return this.createAccountSectionEle;
+  },
+
+  showRetargetingPixel: function() {
+        if (this.get("retargeted") == undefined) {
+            this.set({'retargeted': true}, {silent: true});
+            // At the moment, nothing has to be added to the DOM.
+            new RetargetingSection({model : this});
+        }
   },
 
   signsection : function() {
@@ -501,6 +508,7 @@ var DocumentSignViewView = Backbone.View.extend({
       if(this.model.hasCreateAccountSection()) {
 	//console.log(this.model.createAccountSection());
 	this.subcontainer.append(this.model.createAccountSection());
+        this.model.showRetargetingPixel();
       }
 
      if (   this.model.hasMainFileSection()
