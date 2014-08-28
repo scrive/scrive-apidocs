@@ -165,7 +165,6 @@ typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var
 analyticsLoaderKontrakcja=
 <script>
   $analyticsLoaderBase()$
-  mixpanel.track_links('.js-logout', 'Click Logout');
   mixpanel.track_links('#logo', 'Click Logo');
 </script>
 ###

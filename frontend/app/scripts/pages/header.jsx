@@ -30,11 +30,19 @@ define(['React', 'Backbone', 'common/button'], function(React, Backbone, NewButt
           }
         }).send();
       });
+      return false;
     },
     handleNewFromTemplate : function() {
       trackTimeout("Click create from template",{}, function(e) {
               window.location.href = "/fromtemplate";
         });
+      return false;
+    },
+    handleLogout : function() {
+      trackTimeout( "Click Logout",{}, function(e) {
+              window.location.href = "/logout";
+      });
+      return false;
     },
     render: function() {
      return (
@@ -53,7 +61,7 @@ define(['React', 'Backbone', 'common/button'], function(React, Backbone, NewButt
             </li>
             <ul className="right-container">
               <li className="float-right" >
-                <a className="page js-logout"  href="/logout">{localization.header.logout}</a>
+                <a className="page js-logout" onClick={this.handleLogout} href="#">{localization.header.logout}</a>
               </li>
               <li className="float-right" >
                 <a className={"page" + (this.props.account ? " active" : "")} id='page-account'  href="/account">{localization.header.account}</a>
