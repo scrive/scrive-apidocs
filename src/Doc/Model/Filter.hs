@@ -61,6 +61,19 @@ documentFilterToSQL (DocumentFilterBySealStatus statuses) = do
     sqlWhere "main_files.document_id = documents.id"
     sqlWhere "main_files.id = (SELECT (max(id)) FROM main_files where document_id = documents.id)"
     sqlWhereIn "main_files.seal_status" statuses
+
+
+-- Filter on statuses is much faster then on status class. We need to keep it for compatibility reasons
+-- but it should be gone with new API version since it's very expensive
+documentFilterToSQL (DocumentFilterByStatusClass [SCDraft]) = do
+  documentFilterToSQL (DocumentFilterStatuses [Preparation])
+documentFilterToSQL (DocumentFilterByStatusClass [SCCancelled,SCRejected,SCError]) = do
+  documentFilterToSQL (DocumentFilterStatuses [Canceled, Rejected, Timedout, DocumentError ""])
+documentFilterToSQL (DocumentFilterByStatusClass [SCSent,SCDelivered,SCRead,SCOpened, SCDeliveryProblem]) = do
+  documentFilterToSQL (DocumentFilterStatuses [Pending])
+documentFilterToSQL (DocumentFilterByStatusClass [SCSigned]) = do
+  documentFilterToSQL (DocumentFilterStatuses [Closed])
+
 documentFilterToSQL (DocumentFilterByStatusClass statuses) = do
   -- I think here we can use the result that we define on select
   -- check this one out later
