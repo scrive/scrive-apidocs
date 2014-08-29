@@ -67,7 +67,7 @@ documentFilterToSQL (DocumentFilterBySealStatus statuses) = do
 -- but it should be gone with new API version since it's very expensive
 documentFilterToSQL (DocumentFilterByStatusClass [SCDraft]) = do
   documentFilterToSQL (DocumentFilterStatuses [Preparation])
-documentFilterToSQL (DocumentFilterByStatusClass [SCCancelled,SCRejected,SCError]) = do
+documentFilterToSQL (DocumentFilterByStatusClass [SCCancelled,SCRejected,SCTimedout, SCError]) = do
   documentFilterToSQL (DocumentFilterStatuses [Canceled, Rejected, Timedout, DocumentError ""])
 documentFilterToSQL (DocumentFilterByStatusClass [SCSent,SCDelivered,SCRead,SCOpened, SCDeliveryProblem]) = do
   documentFilterToSQL (DocumentFilterStatuses [Pending])
