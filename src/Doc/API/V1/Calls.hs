@@ -868,8 +868,8 @@ apiCallV1CheckAvailable = api $ do
   let ids = fromJust mids
   when (length ids > 10000) $ do
     throwIO . SomeKontraException $ serverError "This request can't check more then 10000 documents"
-  docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser $ userid user] [DocumentFilterDeleted False,DocumentFilterByDocumentIDs ids] [] (0,-1)
-  Ok <$> (runJSONGenT $ value "ids" (show . documentid <$> docs))
+  docids <- dbQuery $ GetDocumentsIDs [DocumentsVisibleToUser $ userid user] [DocumentFilterDeleted False,DocumentFilterByDocumentIDs ids] []
+  Ok <$> (runJSONGenT $ value "ids" (show <$> docids))
 
 
 

@@ -107,7 +107,7 @@ window.CompanyBrandingServiceViewSampleView = Backbone.View.extend({
     this.stylepeace = $("<style></style>");
     this.header.append(this.stylepeace);
 
-    this.content = $('<div class="sample-custom-view-content">').append('<img src="/img/branding-archive-sample.png"></div>');
+    this.content = $('<div class="sample-custom-view-content" />').append('<img src="/img/branding-archive-sample.png">');
     this.footercontent = $('<div/>').text('Powered by Scrive');
     this.footer = $('<div class="sample-custom-view-footer"/>');
     this.footer.append(this.footercontent);

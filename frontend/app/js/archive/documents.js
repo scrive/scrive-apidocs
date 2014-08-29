@@ -42,8 +42,8 @@ window.DocumentSelectsDefinition = function(archive) { return  _.flatten([
                              textWidth : "135px",
                              options: [{name: localization.filterByStatus.showAnyStatus, value: ""},
                                        {name: localization.filterByStatus.showDraft,     value: "[draft]"},
-                                       {name: localization.filterByStatus.showCancelled, value: "[cancelled,rejected,timeouted,deliveryproblem,problem]"},
-                                       {name: localization.filterByStatus.showSent,      value: "[sent,delivered,read,opened]"},
+                                       {name: localization.filterByStatus.showCancelled, value: "[cancelled,rejected,timeouted,problem]"},
+                                       {name: localization.filterByStatus.showSent,      value: "[sent,delivered,read,opened,deliveryproblem]"},
                                        {name: localization.filterByStatus.showSigned,    value: "[signed]"}
                                       ]}),
             archive.forCompanyAdmin() ?

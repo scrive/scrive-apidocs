@@ -7,6 +7,7 @@ module Doc.Model.Query
   , FileInDocument(..)
   , GetDocuments(..)
   , GetDocuments2(..)
+  , GetDocumentsIDs(..)
   , GetDocumentByDocumentID(..)
   , GetDocumentBySignatoryLinkID(..)
   , GetDocumentsBySignatoryLinkIDs(..)
@@ -397,6 +398,20 @@ instance MonadDB m => DBQuery m GetDocuments2 (Int,[Document]) where
         sqlWhereAny (mapM_ (sqlWhereAll . documentDomainToSQL) domains)
         mapM_ documentFilterToSQL filters
 
+data GetDocumentsIDs = GetDocumentsIDs [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy]
+instance MonadDB m => DBQuery m GetDocumentsIDs [DocumentID] where
+  query (GetDocumentsIDs domains filters orderbys) = do
+    runQuery_ $ toSQLCommand $ selectTablesForDocumentSelectors $ do
+      sqlResult "documents.id"
+      mapM_ (sqlOrderBy . documentOrderByAscDescToSQL) orderbys
+      sqlWhereExists $ sqlSelect "signatory_links" $ do
+        sqlWhere "documents.id = signatory_links.document_id"
+        sqlLeftJoinOn "users" "signatory_links.user_id = users.id"
+        sqlLeftJoinOn "companies" "users.company_id = companies.id"
+        sqlLeftJoinOn "users AS same_company_users" "users.company_id = same_company_users.company_id OR users.id = same_company_users.id"
+        sqlWhereAny (mapM_ (sqlWhereAll . documentDomainToSQL) domains)
+        mapM_ documentFilterToSQL filters
+    fetchMany unSingle
 
 {- |
     All documents authored by the user that have never been deleted.

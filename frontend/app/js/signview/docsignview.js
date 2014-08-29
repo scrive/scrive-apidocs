@@ -108,7 +108,10 @@ var DocumentSignViewModel = Backbone.Model.extend({
 
     if (this.createAccountSectionEle == undefined) {
       this.createAccountSectionEle = $('<div />');
-      CreateAccountSection.render(this.document(), this.createAccountSectionEle);
+        var component = React.renderComponent(
+        CreateAccountSection({
+          document : this.document()
+        }), this.createAccountSectionEle[0]);
     }
     return this.createAccountSectionEle;
   },
