@@ -1511,6 +1511,14 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
          place.css('border-color',self.standardBorderColor);
        }
     },
+    updateSize: function(width, height) {
+      this.width = width;
+      this.height = height;
+      var box = $(this.el);
+      box.width(width);
+      box.height(height);
+      box.css("line-height",Math.floor(height) + "px");
+    },
     render: function() {
             var self = this;
             var field = this.model;
@@ -1922,6 +1930,9 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
                 top: Math.floor(placement.yrel() * parentHeight + 0.5),
                 fontSize: placement.fsrel() * parentWidth
             });
+            if (this.placeForDrawing !== undefined) {
+              this.placeForDrawing.updateSize(placement.wrel() * parentWidth, placement.hrel() * parentHeight);
+            }
         }
     },
     clear: function() {
@@ -1969,14 +1980,15 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
         this.updatePosition();
 
         if (document.signingInProcess() && signatory.document().currentSignatoryCanSign() && signatory.current() && !signatory.document().readOnlyView()) {
-            place.append(new SignaturePlacementViewForDrawing({
+            this.placeForDrawing = new SignaturePlacementViewForDrawing({
                                                                 model: placement.field(),
                                                                 width : placement.wrel() * place.parent().width(),
                                                                 height : placement.hrel() * place.parent().height(),
                                                                 signviewbranding: this.signviewbranding,
                                                                 signview: this.signview,
                                                                 arrow: this.arrow
-                                                              }).el);
+                                                              });
+            place.append(this.placeForDrawing.el);
         }
         else if (document.preparation()) {
             var placementView = $(new SignaturePlacementView({model: placement, resizable : true}).el);
