@@ -386,7 +386,9 @@ window.SignatureDrawOrTypeModal = function(args){
         var modal = $("<div class='modal'></div>").css("height", $(document).height()).css("min-width", "1018px");
         var container = $("<div class='modal-container drawing-modal'/>").css("width",width);
         var innerHeight = 820 * args.height / args.width;
-        var containerTop = $(window).height() - innerHeight - 240;
+
+        var windowHeight = $(window).height() || window.innerHeight; // SF1 displays our signing page in a android WebView in which $(window).height() returns 0.
+        var containerTop = windowHeight - innerHeight - 240;
 
         container.css("top",$(window).scrollTop())
                  .css("margin-top", containerTop)
