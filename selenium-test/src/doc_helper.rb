@@ -93,7 +93,7 @@ class DocHelper
     @h.screenshot options[:screenshot_name2] if options[:screenshot_name2]
     (@driver.find_element :xpath => "//ul[contains(@class,'select-opts')]//li/span[text()='" + fieldname + "']").click
     @h.screenshot options[:screenshot_name3] if options[:screenshot_name3]
-    (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'fieldTypeSetter-container')]//a[contains(@class,'button-green')]"}).click
+    (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'fieldTypeSetter-container')]//a[contains(@class,'button-gray')]"}).click
 
 # this doesn't work, possibly due to a bug in the Firefox driver:
 # http://code.google.com/p/selenium/issues/detail?id=3729

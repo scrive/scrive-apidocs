@@ -5,6 +5,17 @@ wrapperopentag=
 wrapperclosingtag=
 </div>
 ########
+signviewAnalyticsVariables=
+<script>
+  var _gaq = _gaq || [];
+  _gaq.push(['_setCustomVar',
+    1, // custom var slot (arbitrary between 1-5)
+    'Signing Page', // name
+    'true', // value (always a string)
+    2 // set this custom var to this session, not this visitor
+  ]);
+</script>
+####
 padLogin=
 $doctype()$
 $htmlopentag()$
@@ -47,6 +58,7 @@ $doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
+    $signviewAnalyticsVariables()$
     $standardHeaderContents()$
   </head>
   <body  $if(usestandardheaders)$ $if(custombackground)$style="background:$custombackground$;"$endif$    $endif$ >
@@ -122,6 +134,7 @@ $doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
+    $signviewAnalyticsVariables()$
     $standardHeaderContents()$
   </head>
   <body>
