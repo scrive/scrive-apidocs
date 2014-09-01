@@ -1164,87 +1164,92 @@ addUniqueContraintsTypeOnFields=
   , mgrFrom = 6
   , mgrDo = do
        -- We have a large number of duplicated signature fields (10K+) - they have same value and same name, but only one of them has placement
-       n1 <- runQuery $ sqlDelete "signatory_link_fields" $ do
-                  sqlWhereInSql "id" $ do
-                    sqlSelect "signatory_link_fields as s1, signatory_link_fields as s2" $ do
-                     -- We select fields for same signatory, with same values and names
-                     sqlWhereEqSql "s1.signatory_link_id" "s2.signatory_link_id"
-                     sqlWhereEqSql "s1.type" "s2.type"
-                     sqlWhereEqSql "s1.custom_name " "s2.custom_name"
-                     sqlWhereEq "s1.type" (8::Int16) -- SignatureFT
-                     sqlWhereEqSql "md5(s1.value)" "md5(s2.value)" -- We need to compare MD5, since simple value comparision is very slow
-                     -- We order them, so each pair is selected only one time
-                     sqlWhere   "s1.id < s2.id"    
-                     -- We select one without placement
-                     sqlWhereEq "s1.placements" ("[]" :: String)
-                     sqlResult "s1.id"
-       Log.mixlog_ $ "Migration (unique fields): " ++ show n1 ++" duplicated signature fields removed by first iteration"
-       -- We do two iterations, since sometimes field with placement set has lower id, and sometimes not.
-       -- We could do it in one iteration but it would be more complex
-       n2 <- runQuery $ sqlDelete "signatory_link_fields" $ do
-                  sqlWhereInSql "id" $ do
-                    sqlSelect "signatory_link_fields as s1, signatory_link_fields as s2" $ do
-                     -- We select fields for same signatory, with same values and names
-                     sqlWhereEqSql "s1.signatory_link_id" "s2.signatory_link_id"
-                     sqlWhereEqSql "s1.type" "s2.type"
-                     sqlWhereEqSql "s1.custom_name " "s2.custom_name"
-                     sqlWhereEq "s1.type" (8::Int16) -- SignatureFT
-                     sqlWhereEqSql "md5(s1.value)" "md5(s2.value)" -- We need to compare MD5, since simple value comparision is very slow
-                     -- We order them, so each pair is selected only one time
-                     sqlWhere   "s1.id < s2.id"                    
-                     -- We select one without placement
-                     sqlWhereEq "s2.placements" ("[]" :: String)
-                     sqlResult "s2.id"
-       Log.mixlog_ $ "Migration (unique fields): " ++ show n2 ++" duplicated signature fields removed by second iteration"              
-       -- We are expecting to have less then 500 other fields, that need to be fixed. So it should be ok to do a separate update for each of them
+       Log.mixlog_ "Migration of fields started"
+       -- We create index first so that rest of the migration runs on somewhat ok speed
+
+       let migrateOnce = do
+             n1 <- runQuery $ sqlDelete "signatory_link_fields" $ do
+               sqlFrom "signatory_link_fields as s2"
+               -- We select fields for same signatory, with same values and names
+               sqlWhere "signatory_link_fields.signatory_link_id = s2.signatory_link_id"
+               sqlWhere "signatory_link_fields.type = s2.type"
+               sqlWhere "signatory_link_fields.custom_name = s2.custom_name"
+               sqlWhereEq "signatory_link_fields.type" (8::Int16) -- SignatureFT
+               -- We need to compare MD5, since simple value comparision is very slow
+               sqlWhere "md5(signatory_link_fields.value) = md5(s2.value)"
+               -- We select one without placement that has a signature
+               -- in order lower or a signature with placements
+               -- (anywhere in order).
+               sqlWhere "(signatory_link_fields.id > s2.id OR s2.placements <> '[]')"
+               sqlWhereEq "signatory_link_fields.placements" ("[]" :: String)
+             Log.mixlog_ $ "Migration (unique fields): " ++ show n1 ++" duplicated signature fields removed"
+       migrateOnce
+       -- We are expecting to have less then 500 other fields, that
+       -- need to be fixed. So it should be ok to do a separate update
+       -- for each of them
+       Log.mixlog_ "About to rename unmergeable custom fields"
+       renameUnmergeableFields
+       Log.mixlog_ "About to fix other fields"
        fixOtherFields
-       -- When we fixed all fields, we can introduce a contrain
+       Log.mixlog_ "Fields fixed, creating indexes"
+       -- When we fixed all fields, we can introduce a contraint
        runQuery_ $ sqlDropIndex "signatory_link_fields" (indexOnColumn "signatory_link_id")
        runQuery_ $ sqlCreateIndex "signatory_link_fields" (uniqueIndexOnColumns ["signatory_link_id","type","custom_name"])
+       Log.mixlog_ "Migration of fields ended"
   }
   where
+       renameUnmergeableFields = do
+         n <- runQuery $ sqlUpdate "signatory_link_fields" $ do
+
+           -- Calculate number of fields that have the same name but
+           -- are before this one in order.
+           let calc = "SELECT count(*)"
+                  <+>   "FROM signatory_link_fields s3"
+                  <+>  "WHERE signatory_link_fields.signatory_link_id = s3.signatory_link_id"
+                  <+>    "AND signatory_link_fields.type = s3.type"
+                  <+>    "AND signatory_link_fields.custom_name = s3.custom_name"
+                  <+>    "AND s3.id < signatory_link_fields.id"
+           -- Append as many '_' as there are fields before this one
+           sqlSetCmd "custom_name" ("custom_name || rpad('', (" <> calc <> ") :: INT, '_')")
+           -- We fix only custom fields this way
+           sqlWhereIn "type" [SignatureFT undefined, CustomFT undefined undefined, CheckboxFT undefined]
+           -- Make sure that we alter only the problemtic
+           -- fields. Otherwise Postgresql will happily reqwrite whole
+           -- table.
+           sqlWhereExists $ sqlSelect "signatory_link_fields as s3" $ do
+             sqlWhere "signatory_link_fields.signatory_link_id = s3.signatory_link_id"
+             sqlWhere "signatory_link_fields.type = s3.type"
+             sqlWhere "signatory_link_fields.custom_name = s3.custom_name"
+             sqlWhere "s3.id < signatory_link_fields.id"
+         Log.mixlog_ $ "Renamed " ++ show n ++ " unmergeable fields"
+
        fixOtherFields = do
-         runQuery_ $ sqlSelect "signatory_link_fields as s1, signatory_link_fields as s2" $ do
-                       sqlWhereEqSql "s1.signatory_link_id" "s2.signatory_link_id"
-                       sqlWhereEqSql "s1.type" "s2.type"
-                       sqlWhereEqSql "s1.custom_name" "s2.custom_name"
-                       sqlWhere      "s1.id < s2.id"
-                       sqlOrderBy "s1.id,s2.id"
-                       sqlResult "s1.type, s1.custom_name,s1.id,s1.value,s1.placements,s2.id,s2.value,s2.placements"
-                       sqlLimit 1
-         values :: [(FieldType, String , Int64, String, [FieldPlacement], Int64, String, [FieldPlacement])] <- fetchMany id
-         case values of
-           [] -> return ()
-           (e:_) -> fixUniqField e >> fixOtherFields
+         runQuery_ $ sqlSelect "signatory_link_fields" $ do
+                       sqlWhereExists $ sqlSelect "signatory_link_fields as s2" $ do
+                         sqlWhere   "signatory_link_fields.signatory_link_id = s2.signatory_link_id"
+                         sqlWhere   "signatory_link_fields.type = s2.type"
+                         sqlWhere   "signatory_link_fields.custom_name = s2.custom_name"
+                         sqlWhere   "signatory_link_fields.id <> s2.id"
+                       sqlResult  "signatory_link_fields.id, signatory_link_fields.signatory_link_id, signatory_link_fields.type, signatory_link_fields.custom_name, signatory_link_fields.value, signatory_link_fields.placements"
+         values :: [(Int64, Int64, FieldType, String, String, [FieldPlacement])] <- fetchMany id
+         fixUniqField values
 
-       fixUniqField f@(ft,_,_,_,_,_,_,_) = do
-         case ft of
-           FirstNameFT      -> fixStandardField f
-           LastNameFT       -> fixStandardField f
-           EmailFT          -> fixStandardField f
-           MobileFT         -> fixStandardField f
-           CompanyFT        -> fixStandardField f
-           PersonalNumberFT -> fixStandardField f
-           CompanyNumberFT  -> fixStandardField f
-           SignatureFT _    -> fixCustomField f
-           CustomFT _ _     -> fixCustomField f
-           CheckboxFT _     -> fixCustomField f
+       fixUniqField ((fid1,fslid1,ft1,fcn1,fv1,fp1) : (fid2,fslid2,ft2,fcn2,fv2,fp2) : rest) |
+         ft1==ft2 && fslid1==fslid2 && fcn1==fcn2 = do
+           fixStandardField (fid1,fv1,fp1,fid2,fv2,fp2)
+           fixUniqField ( (fid1,fslid1,ft1,fcn1,(if (null fv1) then fv2 else fv1),fp1 ++ fp2) : rest)
+       fixUniqField (_ : rest)  = fixUniqField rest
+       fixUniqField [] = return ()
 
-       fixStandardField (_,_,fid1,fv1,fp1,fid2,fv2,fp2) = do
+       fixStandardField (fid1,fv1,fp1,fid2,fv2,fp2) = do
          Log.mixlog_ $ "Migration (unique fields): Merging standard fields that should be joined: " ++ show fid1 ++ " " ++ show fid2 ++ ".\n" ++
-                       "Values that are merged are: '" ++ fv1 ++"' and '" ++ fv2 ++ "'. Value '"++(if (null fv1) then fv2 else fv1)++"' will be used."    
+                       "Values that are merged are: '" ++ fv1 ++"' and '" ++ fv2 ++ "'. Value '"++(if (null fv1) then fv2 else fv1)++"' will be used."
          runQuery_ $ sqlUpdate "signatory_link_fields" $ do
            sqlWhereEq "id" fid1
            sqlSet "value" (if (null fv1) then fv2 else fv1)
            sqlSet "placements" (fp1 ++ fp2)
          runQuery_ $ sqlDelete "signatory_link_fields" $ do
            sqlWhereEq "id" fid2
-
-       fixCustomField (_,fn,_,_,_,fid2,_,_) = do
-         Log.mixlog_ $ "Migration (unique fields): Renaming field " ++ show fid2 
-         runQuery_ $ sqlUpdate "signatory_link_fields" $ do
-           sqlWhereEq "id" fid2
-           sqlSet "custom_name" (fn ++ "_")
 
 
 makeSealStatusNonNullInMainFiles  :: MonadDB m => Migration m
