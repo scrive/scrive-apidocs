@@ -721,6 +721,9 @@ instance SqlFrom SqlInsertSelect where
 instance SqlFrom SqlUpdate where
   sqlFrom1 cmd sql = cmd { sqlUpdateFrom = sqlUpdateFrom cmd <+> sql }
 
+instance SqlFrom SqlDelete where
+  sqlFrom1 cmd sql = cmd { sqlDeleteUsing = sqlDeleteUsing cmd <+> sql }
+
 sqlFrom :: (MonadState v m, SqlFrom v) => SQL -> m ()
 sqlFrom sql = modify (\cmd -> sqlFrom1 cmd sql)
 
