@@ -8,7 +8,7 @@ window.RetargetingSection = Backbone.View.extend({
   initialize: function() {
     var trackingPixel = new Image(1,1);
     trackingPixel.src = "//googleads.g.doubleclick.net/pagead/viewthroughconversion/1009530676/?value=0&label=bYPcCKyX6QMQtO6w4QM&guid=ON&script=0";
-  },
+  }
 });
 
 });
