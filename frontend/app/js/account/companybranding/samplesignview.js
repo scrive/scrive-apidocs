@@ -228,7 +228,7 @@ var SampleSignViewView = Backbone.View.extend({
     );
     this.signbutton.css('background-color', colour);
 
-    $('.arrowtext', this.arrowinstructiontext).css('color', colour);
+    $('.arrowtext', this.contentheader).css('color', colour);
   },
   changePrimaryTextColour : function(colour) {
     this.signbutton.css('color', ''); // reset colour
