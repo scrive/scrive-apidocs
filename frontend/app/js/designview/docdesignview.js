@@ -365,17 +365,9 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                 var parties = _.filter(document.signatories(), function(signatory) {
                                       return signatory.signs() && !signatory.current();
                                });
-                if (parties.length === 1) {
-                  content = $(localization.designview.signModalContentSingle);
-                } else {
-                  content = $(localization.designview.signModalContentMulti);
-                }
+                content = $(localization.designview.signModalContent);
                 content.find('.put-document-title-here').text(document.title());
 
-                var partiesNames = _.map(parties, function(signatory) {
-                                      return signatory.nameForLists();
-                               });
-                content.find('.put-names-of-parties-here').append(buildBoldList(partiesNames));
             }
             if (signatory.elegAuthentication()) {
                 var subhead = $("<h6/>").text(localization.sign.eleg.subhead);
