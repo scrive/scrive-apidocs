@@ -3,7 +3,7 @@
  * Instrumented for Mixpanel
  */
 
-define(['React', 'signview/create_account_section_view', 'doctools/docviewsignatories', 'Backbone', 'Underscore', 'legacy_code'], function(React, CreateAccountSection,DocumentViewSignatories) {
+define(['React', 'signview/create_account_section_view', 'doctools/docviewsignatories', 'common/retargeting_service', 'Backbone', 'Underscore', 'legacy_code'], function(React, CreateAccountSection,DocumentViewSignatories, RetargetingService) {
 
 var DocumentSignViewModel = Backbone.Model.extend({
   defaults : {
@@ -119,7 +119,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
         if (this.get("retargeted") == undefined) {
             this.set({'retargeted': true}, {silent: true});
             // At the moment, nothing has to be added to the DOM.
-            new RetargetingSection({model : this});
+            RetargetingService.addRetargeting();
         }
   },
 
