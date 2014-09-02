@@ -20,8 +20,38 @@ data MailingServerConf = MailingServerConf {
   , mscSlaveSender     :: Maybe SenderConfig
   , mscAmazonConfig    :: Maybe (String, String, String)
   , testReceivers      :: [Address]
-  } deriving (Read, Show)
+  } deriving (Read, Show, Typeable)
 
+data SMTPUser = SMTPUser {
+    smtpAccount  :: String
+  , smtpPassword :: String
+}  deriving (Read, Show, Typeable, Data)
+
+unjsonSMTPUser :: UnjsonDef SMTPUser
+unjsonSMTPUser = objectOf $ pure SMTPUser
+  <*> field "account"
+      smtpAccount
+      "Account"
+  <*> field "password"
+      smtpPassword
+      "Password"
+
+
+-- SMTP user that is dedicated only to email where from address matched given address 
+data SMTPDedicatedUser = SMTPDedicatedUser {
+    smtpFromDedicatedAddress :: String
+  , smtpDedicatedUser    :: SMTPUser
+} deriving (Read, Show, Typeable, Data)
+
+unjsonSMTPDedicatedUser :: UnjsonDef SMTPDedicatedUser
+unjsonSMTPDedicatedUser = objectOf $ pure SMTPDedicatedUser
+  <*> field "from"
+      smtpFromDedicatedAddress
+      "Address to use for 'Fron:' field in emails"
+  <*> fieldBy "user"
+      smtpDedicatedUser
+      "User to use this configuration for"
+      unjsonSMTPUser
 
 unjsonMailingServerConf :: UnjsonDef MailingServerConf
 unjsonMailingServerConf = objectOf $ pure MailingServerConf
@@ -86,12 +116,14 @@ unjsonSenderConfig = DisjointUnjsonDef "type"
                                <*> field "smtp_addr"
                                    smtpAddr
                                    "SMTP address to contact"
-                               <*> field "username"
+                               <*> fieldBy "username"
                                    smtpUser
                                    "Username for SMTP service"
-                               <*> field "password"
-                                   smtpPassword
-                                   "Password for SMTP service")
+                                   unjsonSMTPUser
+                               <*> fieldBy "password"
+                                   smtpDedicatedUsers
+                                   "Credentials for specific accounts"
+                                   (arrayOf unjsonSMTPDedicatedUser))
                      ,("local", unjsonIsConstrByName "LocalSender",
                        pure LocalSender
                                <*> field "dir"
@@ -125,3 +157,4 @@ instance HasDefaultValue MailingServerConf where
     , mscAmazonConfig = Nothing
     , testReceivers   = [Address { addrName = "test",   addrEmail = "your@email.scrive.com" }]
   }
+ 
