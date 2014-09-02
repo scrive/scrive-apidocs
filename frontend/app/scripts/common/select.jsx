@@ -95,7 +95,7 @@ var SelectModel = Backbone.Model.extend({
       var options = _.map(args.options,function(e) {
                         e.onSelect = e.onSelect || args.onSelect;
                         var option = new SelectOptionModel(e);
-                        model.listenTo(option,"close", function() {model.set({"expanded" : false});});
+                        model.listenTo(option,"close", function() { model.set({"expanded" : false});});
                         return option;
                     });
       this.set({"options" : options});
@@ -211,7 +211,11 @@ var SelectExpandedView = React.createClass({
           <ul className={'select-opts '+ model.expandSide()} style={optionStyle} ref="options">
             {_.map(model.activeOptions(),function(o,i) {
               return (
-                <li key={i} onClick={function() {o.selected()}}>
+                <li key={i}
+                  onClick={function() {
+                    o.selected();
+                  }}
+                >
                   <span style={model.style()}>
                     {o.name()}
                   </span>
@@ -230,14 +234,20 @@ var SelectExpandedView = React.createClass({
 
 var SelectView = React.createClass({
     componentWillUnmount : function() {
-        this.state.expandedComponent.unmountComponent(); //We need to clear this component on unmount for garbage collection
-        this.state.expandedDiv.remove();
+        this.removeExpandedView();
     },
     mixins: [BackboneMixin.BackboneMixin],
     getBackboneModels : function() {
       return [this.props.model];
     },
     getInitialState: function() {
+      return this.stateFromProps(this.props);
+    },
+    componentWillReceiveProps: function(props) {
+      this.removeExpandedView();
+      this.setState(this.stateFromProps(props));
+    },
+    stateFromProps : function(props) {
       var self = this;
       // Temporary div. It will be stored in local state and appended to <body> on expantion
       // It contains SelectExpandedView inside.
@@ -245,12 +255,21 @@ var SelectView = React.createClass({
                   .mouseenter(function() {self.handleMouseEnter();})
                   .mouseout(function() {self.handleMouseOut();});
       var component = React.renderComponent(
-            SelectExpandedView({model : this.props.model})
+            SelectExpandedView({model : props.model})
             , div[0]);
       return {
         expandedDiv : div,
         expandedComponent : component
       };
+    },
+    //We need to clear subcomponents for garbage collection. On unmounth or when we change props.
+    removeExpandedView : function() {
+      if (this.state.expandedComponent) {
+        this.state.expandedComponent.unmountComponent();
+      }
+      if (this.state.expandedDiv) {
+        this.state.expandedDiv.remove();
+      }
     },
     closeIfNeeded : function() {
         var model = this.props.model;
@@ -282,7 +301,6 @@ var SelectView = React.createClass({
     },
     render: function() {
       var model = this.props.model;
-
       if (model.expanded()) {
         this.state.expandedDiv.css('left',$(this.getDOMNode()).offset().left + "px");
         this.state.expandedDiv.css('top',$(this.getDOMNode()).offset().top + "px");
