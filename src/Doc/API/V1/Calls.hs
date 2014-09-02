@@ -42,7 +42,6 @@ import Happstack.Fields
 import Utils.String
 import Utils.Monad
 import System.Exit
-import Utils.FilePath
 import Utils.Directory
 import Utils.IO
 import Data.Maybe
@@ -111,6 +110,7 @@ import Util.CSVUtil
 import ListUtil
 import Text.JSON.String (runGetJSON)
 import Data.String.Utils (splitWs)
+import System.FilePath.Posix (takeBaseName)
 
 documentAPIV1 ::  Route (KontraPlus Response)
 documentAPIV1  = choice [

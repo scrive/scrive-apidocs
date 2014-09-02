@@ -99,6 +99,12 @@ define(['React', 'Backbone', 'common/button'], function(React, Backbone, NewButt
       httplink :  React.PropTypes.string,
       langprefix : React.PropTypes.string
     },
+    // We don't have static pages for some languages. In that case we should redirect people to version in english.
+    langprefixForStaticPages : function() {
+      if (this.props.langprefix == "/en/" || this.props.langprefix == "/sv/" )
+        return this.props.langprefix;
+      return "/en/";
+    },
     render: function() {
      return (
        <header className="site thin">
@@ -119,22 +125,22 @@ define(['React', 'Backbone', 'common/button'], function(React, Backbone, NewButt
               <a className="button" id="page-signup" href={this.props.langprefix + "signup"}>{localization.header.startFreeTrial}</a>
             </li>
             <li className="float-right"  >
-                <a className="page"   href={this.props.httplink + this.props.langprefix + "contact"}>{localization.header.contact}</a>
+                <a className="page"   href={this.props.httplink + this.langprefixForStaticPages() + "contact"}>{localization.header.contact}</a>
             </li>
             <li className="float-right" >
-                <a className="page"  href={this.props.httplink + this.props.langprefix + "about"}>{localization.header.about}</a>
+                <a className="page"  href={this.props.httplink + this.langprefixForStaticPages() + "about"}>{localization.header.about}</a>
             </li>
             <li className="float-right" >
-                <a className="page"  href={this.props.httplink + this.props.langprefix + "cases"}>{localization.header.cases}</a>
+                <a className="page"  href={this.props.httplink + this.langprefixForStaticPages() + "cases"}>{localization.header.cases}</a>
             </li>
             <li className="float-right" >
-                <a className="page price-plan-page-link"  href={this.props.httplink + this.props.langprefix + "pricing"}>{localization.header.pricing}</a>
+                <a className="page price-plan-page-link"  href={this.props.langprefix + "pricing"}>{localization.header.pricing}</a>
             </li>
             <li className="float-right" >
-                <a className="page"  href={this.props.httplink + this.props.langprefix + "legal"}>{localization.header.legal}</a>
+                <a className="page"  href={this.props.httplink + this.langprefixForStaticPages() + "legal"}>{localization.header.legal}</a>
             </li>
             <li className="float-right" >
-                <a className="page"  href={this.props.httplink + this.props.langprefix +"features"}>{localization.header.features}</a>
+                <a className="page"  href={this.props.httplink + this.langprefixForStaticPages() +"features"}>{localization.header.features}</a>
             </li>
           </ul>
         </nav>
