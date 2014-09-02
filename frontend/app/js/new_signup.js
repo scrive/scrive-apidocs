@@ -1,4 +1,4 @@
-define(['Backbone', 'legacy_code'], function() {
+define(['common/adwords_conversion_service', 'Backbone', 'legacy_code'], function(AdwordsConversionService) {
 
   var SignupModel = Backbone.Model.extend({
     defaults: {
@@ -44,6 +44,7 @@ define(['Backbone', 'legacy_code'], function() {
           }
           if (resp.sent === true) {
             _gaq.push(['_trackEvent', 'Signup', 'Clicked']);
+            AdwordsConversionService.markAsSignupConversion();
             mixpanel.track('Create new account', {
                 'Email' : model.email()
             });
