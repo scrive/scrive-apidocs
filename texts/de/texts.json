@@ -801,7 +801,7 @@
 "_textFieldDone":"",
 "_textFieldFor":"Partei",
 "_textFieldObligatory":"Sie müssen hier signieren",
-"_thisActionCannotBeUndone":"Sie können diese Aktion nicht rückgängig machen",
+"_thisActionCannotBeUndone":"",
 "_title":"Ihr signiertes Dokument wurde sicher in Ihrem E-Archiv gespeichert",
 "_titleText":"Eine Sicherheitkopie speichern",
 "_toFilter":"An:",

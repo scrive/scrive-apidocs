@@ -801,7 +801,7 @@
 "_textFieldDone":"",
 "_textFieldFor":"Parte",
 "_textFieldObligatory":"Obligatorio firmar aquí",
-"_thisActionCannotBeUndone":"No es posible deshacer esta acción",
+"_thisActionCannotBeUndone":"",
 "_title":"Su documento firmado ha sido guardado sin problemas en su propio archivo electrónico",
 "_titleText":"Guardar una copia segura",
 "_toFilter":"A:",

@@ -801,7 +801,7 @@
 "_textFieldDone":"",
 "_textFieldFor":"Part",
 "_textFieldObligatory":"Obligatorisk å signere her",
-"_thisActionCannotBeUndone":"Du kan ikke angre denne handlingen",
+"_thisActionCannotBeUndone":"",
 "_title":"Ditt signerte dokument er nå sikkert lagret i ditt eget e-arkiv",
 "_titleText":"Lagre en sikkerhetskopi",
 "_toFilter":"Til:",
