@@ -1,4 +1,4 @@
-{
+{ 
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Are you sure you want to send reminders to the parties involved in the <span class='put-number-of-documents-here'></span> documents?",
@@ -319,9 +319,9 @@
 "_designViewRemoveThisDocument":"Remove document",
 "_designViewRequest":"Request attachments",
 "_designViewRequestFieldFrom":"<span class='put-field-name'/> requested from <br/><span class='put-person-name'/>",
+"_designViewSignModalContent":"By clicking the button you will sign the document <strong class='put-document-title-here'/> and your signature will be registered by the e-signing service Scrive.",
 "_designViewSignModalContentAuthorOnly":"When you've signed the document <strong class='put-document-title-here'/> your signature will be registered by the e-signing service Scrive.",
 "_designViewSignModalContentEleg":"Select eID. When you have selected, the software for signing with eID will be opened.",
-"_designViewSignModalContent":"By clicking the button you will sign the document <strong class='put-document-title-here'/> and your signature will be registered by the e-signing service Scrive.",
 "_designViewSignatureBox":"Signature box",
 "_designViewSignatureBoxSettings":"Signature settings",
 "_designViewSigningDeadline":"Signing deadline",
