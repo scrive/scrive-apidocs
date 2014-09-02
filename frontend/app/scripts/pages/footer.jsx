@@ -94,6 +94,12 @@ define(['React', 'Backbone', 'common/backbone_mixin', 'common/select'], function
       highlightcolor : React.PropTypes.string,
       textcolor :  React.PropTypes.string
     },
+    // We don't have static pages for some languages. In that case we should redirect people to version in english.
+    langprefixForStaticPages : function() {
+      if (this.props.langprefix == "/en/" || this.props.langprefix == "/sv/" )
+        return this.props.langprefix;
+      return "/en/";
+    },
     render: function() {
      var mainStyle =  {background : this.props.color, borderTopColor: this.props.highlightcolor};
      var labelStyle = this.props.color ? {textShadow : "none", color : this.props.textcolor} : {};
@@ -112,10 +118,10 @@ define(['React', 'Backbone', 'common/backbone_mixin', 'common/select'], function
              <header><h4>{localization.footer.explore}</h4></header>
              <div className="content">
                <ul className="tree">
-                 <li className="branch"><a href={this.props.httplink + this.props.langprefix + 'api'} id="nav-api"> {localization.footer.api}</a></li>
-                 <li className="branch"><a href={this.props.httplink + this.props.langprefix + 'jobs'} id="nav-jobs">{localization.footer.jobs}</a></li>
+                 <li className="branch"><a href={this.props.httplink + this.langprefixForStaticPages() + 'api'} id="nav-api"> {localization.footer.api}</a></li>
+                 <li className="branch"><a href={this.props.httplink + this.langprefixForStaticPages() + 'jobs'} id="nav-jobs">{localization.footer.jobs}</a></li>
                  <li className="branch"><a href={this.props.langprefix + 'verify'} id="nav-privacy">{localization.footer.verify}</a></li>
-                 <li className="branch"><a href={this.props.httplink + this.props.langprefix + 'get-started'}>{localization.footer.getStarted}</a></li>
+                 <li className="branch"><a href={this.props.httplink + this.langprefixForStaticPages() + 'get-started'}>{localization.footer.getStarted}</a></li>
                </ul>
              </div>
            </nav>
@@ -124,9 +130,9 @@ define(['React', 'Backbone', 'common/backbone_mixin', 'common/select'], function
              <header><h4>{localization.footer.terms}</h4></header>
              <div className="content">
                <ul className="tree">
-                 <li className="branch"><a href={this.props.httplink + this.props.langprefix + 'terms'} id="nav-terms">{localization.footer.tos}</a></li>
-                 <li className="branch"><a href={this.props.httplink + this.props.langprefix + 'environment'} id="nav-environment">{localization.footer.environmentalPolicy}</a></li>
-                 <li className="branch"><a href={this.props.httplink + this.props.langprefix + 'privacy'} id="nav-privacy">{localization.footer.privacyPolicy}</a></li>
+                 <li className="branch"><a href={this.props.langprefix + 'terms'} id="nav-terms">{localization.footer.tos}</a></li>
+                 <li className="branch"><a href={this.props.httplink + this.langprefixForStaticPages() + 'environment'} id="nav-environment">{localization.footer.environmentalPolicy}</a></li>
+                 <li className="branch"><a href={this.props.httplink + this.langprefixForStaticPages() + 'privacy'} id="nav-privacy">{localization.footer.privacyPolicy}</a></li>
                </ul>
              </div>
            </nav>
