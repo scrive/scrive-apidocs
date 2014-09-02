@@ -37,7 +37,7 @@ fetch :: String -> String -> String -> TranslationResource -> IO [(String,String
 fetch user password lang resource = do
   mjson <- readProcess "curl" ["--compressed", "--user", user++":" ++ password, "-s" ,"-X", "GET" , apiURL ++ "project/" ++ project ++ "/resource/" ++ resourceslug resource ++ "/translation/"++lang++"/strings/"] ""
   case decode mjson of
-     Ok js -> return $ sort $ textsFromStringJSON $ js
+     Ok js -> return $ sort $ textsFromStringJSON (lang == "en") js -- English strings don't have to be reviewed, since this is our source language
      _ -> error $ "Can't parse response from Transifex: " ++ mjson
 
 

@@ -128,8 +128,6 @@
 "_signatoryMessageIfSignatorySeendate":"Ελέγχθηκε online ",
 "_signatoryMessageIfSigned":"Υπογράφηκε ",
 "_signatoryMessageIfTimedout":"Έληξε",
-"_signatoryMessageOpenedViewer":"Ελέγχθηκε online (ως θεατής) ",
-"_signatoryMessageSentViewer":"Εστάλη (για έλεγχο) ",
 "_signatoryMessageWaiting":"Εν αναμονή προγενέστερων υπογραφών",
 "_signatureConfirm":"Εφαρμόστε την υπογραφή",
 "_signedAndClosed":"Το έγγραφο υπογράφηκε! ",
