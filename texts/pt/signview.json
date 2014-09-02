@@ -128,8 +128,6 @@
 "_signatoryMessageIfSignatorySeendate":"Revisto online",
 "_signatoryMessageIfSigned":"Assinado",
 "_signatoryMessageIfTimedout":"Expirado",
-"_signatoryMessageOpenedViewer":"Revisto online (como visualizador)",
-"_signatoryMessageSentViewer":"Enviado (para visualização)",
 "_signatoryMessageWaiting":"A aguardar assinaturas prévias",
 "_signatureConfirm":"Aplicar assinatura",
 "_signedAndClosed":"Documento assinado!",

@@ -53,12 +53,14 @@ textsFromJSON (JSObject jso) = map (\(a,JSString js) -> (a, fromJSString js)) (f
 textsFromJSON _ = error "While decoding JSON with translations"
 
 
-textsFromStringJSON  :: JSValue -> [(String,String)]
-textsFromStringJSON js =  fromJust $ runIdentity $ withJSValue js $ fromJSValueCustomMany $ do
+textsFromStringJSON  :: Bool -> JSValue -> [(String,String)]
+textsFromStringJSON acceptNotReviewed js =  fromJust $ runIdentity $ withJSValue js $ fromJSValueCustomMany $ do
                                 mk <- fromJSValueField "key"
                                 mv <- fromJSValueField "translation"
-                                case (mk,mv) of
-                                     (Just k, Just v) -> return $ Just (k,v)
+                                isReviewed <- fmap (fromMaybe False) $ fromJSValueField "reviewed"
+                                case (mk,mv,acceptNotReviewed || isReviewed) of
+                                     (Just k, Just v,True) -> return $ Just (k,v)
+                                     (Just k, Just v,False) -> return $ Just (k,"")
                                      _ -> return Nothing
 
 textsToJSON :: [(String,String)] -> JSValue
