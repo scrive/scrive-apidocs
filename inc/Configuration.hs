@@ -95,6 +95,6 @@ showNiceYamlParseException filepath parseException =
     Yaml.InvalidYaml Nothing -> filepath ++ ": invalid yaml (no further info available)"
     Yaml.InvalidYaml (Just (Yaml.YamlException ex)) -> filepath ++ ": invalid yaml: " ++ ex
     Yaml.InvalidYaml (Just (Yaml.YamlParseException problem context (Yaml.YamlMark _index line column))) ->
-      filepath ++ ":" ++ show line ++ ":" ++ show column ++ ": " ++ problem ++ " " ++ context
+      filepath ++ ":" ++ show (line+1) ++ ":" ++ show (column+1) ++ ": " ++ problem ++ " " ++ context
     Yaml.AesonException ex -> filepath ++ ": " ++ ex
     Yaml.OtherParseException ex -> filepath ++ ": " ++ show ex
