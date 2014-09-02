@@ -1,4 +1,4 @@
-{ 
+{
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Are you sure you want to send reminders to the parties involved in the <span class='put-number-of-documents-here'></span> documents?",
@@ -801,7 +801,7 @@
 "_textFieldDone":"Close",
 "_textFieldFor":"Party",
 "_textFieldObligatory":"Mandatory to sign here",
-"_thisActionCannotBeUndone":"You can't undo this action",
+"_thisActionCannotBeUndone":"You can't undo this action.",
 "_title":"Your signed document has now been safely stored in your own e-archive",
 "_titleText":"Save a safety copy",
 "_toFilter":"To:",
