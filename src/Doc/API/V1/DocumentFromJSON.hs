@@ -17,7 +17,7 @@ import Utils.Default
 import Data.String.Utils (strip)
 import Doc.SignatoryLinkID
 import Control.Applicative
-
+import Data.List
 -- JSON instances
 
 instance FromJSValue AuthenticationMethod where
@@ -106,7 +106,9 @@ instance FromJSValueWithUpdate SignatoryLink where
              (Just fields) -> return $ Just $ defaultValue {
                     signatorylinkid            = fromMaybe (unsafeSignatoryLinkID 0) (signatorylinkid <$> ms)
                   , signatorysignorder     = updateWithDefaultAndField (SignOrder 1) signatorysignorder (SignOrder <$> signorder)
-                  , signatoryfields        = fields
+                  -- nubBy comment: We accepted at some point documents with not uniqueue fields for signatory.
+                  -- To keep current workflow for some clients, we have to manually clean fields, else DB will reject update with contraints error
+                  , signatoryfields        = nubBy (\f1 f2 -> sfType f1 == sfType f2) fields
                   , signatoryisauthor      = updateWithDefaultAndField False signatoryisauthor author
                   , signatoryispartner     = updateWithDefaultAndField False signatoryispartner signs
                   , signatorylinkcsvupload       = updateWithDefaultAndField Nothing signatorylinkcsvupload csv
@@ -121,10 +123,6 @@ instance FromJSValueWithUpdate SignatoryLink where
       where
        updateWithDefaultAndField :: a -> (SignatoryLink -> a) -> Maybe a -> a
        updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` (fmap uf ms))
-
-
-
-
 
 instance FromJSValue SignatoryField where
     fromJSValue = fromJSValueWithUpdate Nothing
