@@ -80,10 +80,11 @@ getStandardLang :: (HasLang a, HasRqData m, ServerMonad m, FilterMonad Response 
 
 getStandardLang muser = do
   rq <- askRq
-  currentcookielang <- runMPlusT $ readCookieValue "lang" -- MPLusT captures evil use of rqDataError
+  langcookie <- runMPlusT $ lookCookie "lang" -- MPLusT captures evil use of rqDataError
+  let mcookielang = join $ langFromCode <$> cookieValue <$> langcookie
   let browserlang = langFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
-      newlang = fromMaybe browserlang $ msum [(getLang <$> muser), currentcookielang]
-      newlangcookie = mkCookie "lang" (show newlang)
+      newlang = fromMaybe browserlang $ msum [(getLang <$> muser), mcookielang]
+      newlangcookie = mkCookie "lang" (codeFromLang newlang)
   addCookie (MaxAge (60*60*24*366)) newlangcookie
   return newlang
 

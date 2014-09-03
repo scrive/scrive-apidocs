@@ -57,7 +57,6 @@ import Control.Monad
 import BrandedDomain.BrandedDomain
 import ThirdPartyStats.Core
 import qualified Crypto.Hash.MD5 as MD5
-
 {- |
    The name of our application (the codebase is known as kontrakcja,
    and this is the pretty public name)
@@ -168,10 +167,19 @@ brandingFields mbd mcompanyui = do
 
 
 notFoundPage :: Kontrakcja m => m Response
-notFoundPage = renderTemplate_ "notFound" >>= renderFromBody kontrakcja
+notFoundPage = pageWhereLanguageCanBeInUrl $ renderTemplate_ "notFound" >>= renderFromBody kontrakcja
 
 internalServerErrorPage :: Kontrakcja m => m Response
-internalServerErrorPage = renderTemplate_ "internalServerError" >>= renderFromBody kontrakcja
+internalServerErrorPage = pageWhereLanguageCanBeInUrl $ renderTemplate_ "internalServerError" >>= renderFromBody kontrakcja
+
+
+pageWhereLanguageCanBeInUrl :: Kontrakcja m => m Response -> m Response
+pageWhereLanguageCanBeInUrl handler = do
+  language <- fmap langFromCode <$> rqPaths <$> askRq
+  case (language) of
+       (Just lang:_) -> switchLang lang >> handler
+       _ -> handler
+
 
 priceplanPage :: Kontrakcja m => m Response
 priceplanPage = do
