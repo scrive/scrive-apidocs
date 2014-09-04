@@ -29,12 +29,12 @@ data SMTPUser = SMTPUser {
 
 unjsonSMTPUser :: UnjsonDef SMTPUser
 unjsonSMTPUser = objectOf $ pure SMTPUser
-  <*> field "account"
+  <*> field "smtp_account"
       smtpAccount
-      "Account"
-  <*> field "password"
+      "SMTP account name"
+  <*> field "smtp_password"
       smtpPassword
-      "Password"
+      "SMTP account password"
 
 
 -- SMTP user that is dedicated only to email where from address matched given address 
@@ -45,12 +45,12 @@ data SMTPDedicatedUser = SMTPDedicatedUser {
 
 unjsonSMTPDedicatedUser :: UnjsonDef SMTPDedicatedUser
 unjsonSMTPDedicatedUser = objectOf $ pure SMTPDedicatedUser
-  <*> field "from"
+  <*> field "from_address"
       smtpFromDedicatedAddress
-      "Address to use for 'Fron:' field in emails"
+      "'From:' address for for which this credentials should be used"
   <*> fieldBy "user"
       smtpDedicatedUser
-      "User to use this configuration for"
+      "SMTP account credentials"
       unjsonSMTPUser
 
 unjsonMailingServerConf :: UnjsonDef MailingServerConf
@@ -116,13 +116,13 @@ unjsonSenderConfig = DisjointUnjsonDef "type"
                                <*> field "smtp_addr"
                                    smtpAddr
                                    "SMTP address to contact"
-                               <*> fieldBy "username"
+                               <*> fieldBy "user"
                                    smtpUser
-                                   "Username for SMTP service"
+                                   "SMTP account credentials for default SMTP service"
                                    unjsonSMTPUser
-                               <*> fieldBy "password"
+                               <*> fieldBy "dedicated_users"
                                    smtpDedicatedUsers
-                                   "Credentials for specific accounts"
+                                   "SMTP accounts credentials for SMTP services with dedicated 'From:' addresses"
                                    (arrayOf unjsonSMTPDedicatedUser))
                      ,("local", unjsonIsConstrByName "LocalSender",
                        pure LocalSender
