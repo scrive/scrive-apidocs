@@ -1037,13 +1037,17 @@ var TextPlacementPlacedView = Backbone.View.extend({
          place.toggleClass("empty-text-field",field.value() == "");
 
          self.updateBorderColor();
-         setTimeout(function() {self.updateBorderColor()},10); // We need to do it in timeout since :hover selector may now work instantly
+         setTimeout(function() {self.updateBorderColor()},10);
+         // We need to do it in timeout since :hover selector may now work instantly
+         // Same case for events handlers bellow.
          place.hover(
            function() {
              self.updateBorderColor();
+             setTimeout(function() {self.updateBorderColor()},10);
            },
            function() {
              self.updateBorderColor();
+              setTimeout(function() {self.updateBorderColor()},10);
            }
          );
 
@@ -1498,7 +1502,6 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
         $(this.el).remove();
     },
     updateBorderColor : function() {
-       console.log('updateBorderColor');
        var self = this;
        var image = self.model.value();
        var valid = image !== '';
