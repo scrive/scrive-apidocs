@@ -339,7 +339,9 @@ var DocumentSignViewModel = Backbone.Model.extend({
                     el: elem,
                     pointSelector : (placement.field().isSignature() ? ".button" : undefined),
                     onActivate: function() {
-                        if (placement.view != undefined && placement.view.startInlineEditing != undefined && !placement.field().readyForSign())
+                        // It the window does not have focus (for some old browsers we can't really tell), we should not start inline editing.
+                        var windowIsFocused = window.document.hasFocus == undefined || window.document.hasFocus();
+                        if (placement.view != undefined && placement.view.startInlineEditing != undefined && !placement.field().readyForSign() && windowIsFocused)
                         {
                           placement.view.startInlineEditing();
                             mixpanel.track('Begin editing field',
