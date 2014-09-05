@@ -1,4 +1,4 @@
-{
+{ 
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Are you sure you want to send reminders to the parties involved in the <span class='put-number-of-documents-here'></span> documents?",
@@ -24,6 +24,7 @@
 "_FTUEstep4":"Step 4",
 "_FTUEstep4description":"Click \\\\\"Start signing\\\\\" to sign and send the document!",
 "_FTUEuseSampleDocument":"Use the sample document",
+"_Finnish":"Finnish",
 "_French":"French",
 "_German":"German",
 "_HeadUsageStats":"Usage stats",

@@ -51,6 +51,7 @@ window.CompanyUsersList = function(args) {
                           + '<option value="es">Spanish</option>'
                           + '<option value="da">Danish</option>'
                           + '<option value="el">Greek</option>'
+                          + '<option value="fi">Finnish</option>'
                           + "</select>");
         tr6.append(jQuery("<td/>").append(lang));
         table.append(tr6);

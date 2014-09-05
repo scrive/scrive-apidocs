@@ -58,6 +58,8 @@ NorwegianInNorwegian=Norsk
 ####
 GreekInGreek=ελληνικά
 ###
+FinnishInFinish=Suomi
+###
 PoweredByScrive=E-signing powered by Scrive
 ###
 FormPricePerDocument=15 SEK
