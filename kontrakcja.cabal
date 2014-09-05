@@ -584,7 +584,7 @@ Executable messenger-server
 
 Executable kontrakcja-test
 
-  Hs-source-dirs: inc misc test/src src mailer/inc docconv/src docconv/test/src messenger/src messenger/inc pdftools
+  Hs-source-dirs: inc misc test/src src mailer/inc mailer/src docconv/src docconv/test/src messenger/src messenger/inc pdftools
 
   GHC-Options: -Werror -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
