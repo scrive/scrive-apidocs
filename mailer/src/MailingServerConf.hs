@@ -3,6 +3,7 @@ module MailingServerConf (
   , SenderConfig(..)
   , SMTPUser(..)
   , SMTPDedicatedUser(..)
+  , unjsonMailingServerConf
   ) where
 
 import Data.Word
@@ -20,12 +21,12 @@ data MailingServerConf = MailingServerConf {
   , mscSlaveSender     :: Maybe SenderConfig
   , mscAmazonConfig    :: Maybe (String, String, String)
   , testReceivers      :: [Address]
-  } deriving (Read, Show, Typeable)
+  } deriving (Eq, Ord, Read, Show, Typeable)
 
 data SMTPUser = SMTPUser {
     smtpAccount  :: String
   , smtpPassword :: String
-}  deriving (Read, Show, Typeable, Data)
+}  deriving (Eq, Ord, Read, Show, Typeable, Data)
 
 unjsonSMTPUser :: UnjsonDef SMTPUser
 unjsonSMTPUser = objectOf $ pure SMTPUser
@@ -41,7 +42,7 @@ unjsonSMTPUser = objectOf $ pure SMTPUser
 data SMTPDedicatedUser = SMTPDedicatedUser {
     smtpFromDedicatedAddress :: String
   , smtpDedicatedUser    :: SMTPUser
-} deriving (Read, Show, Typeable, Data)
+} deriving (Eq, Ord, Read, Show, Typeable, Data)
 
 unjsonSMTPDedicatedUser :: UnjsonDef SMTPDedicatedUser
 unjsonSMTPDedicatedUser = objectOf $ pure SMTPDedicatedUser
@@ -104,7 +105,7 @@ data SenderConfig = SMTPSender {
   , localOpenCommand   :: Maybe String
   }
   | NullSender
-  deriving (Read, Show, Typeable, Data)
+  deriving (Eq, Ord, Read, Show, Typeable, Data)
 
 unjsonSenderConfig :: UnjsonDef SenderConfig
 unjsonSenderConfig = DisjointUnjsonDef "type"
