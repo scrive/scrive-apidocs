@@ -96,7 +96,6 @@ Executable kontrakcja-server
   Build-depends: QuickCheck
   Build-depends: aeson
   Build-depends: yaml
-  Build-depends: aeson-pretty
   Build-depends: attoparsec
   Build-depends: base16-bytestring
   Build-depends: base64-bytestring
@@ -198,7 +197,6 @@ Executable cron
   Build-depends: QuickCheck
   Build-depends: aeson
   Build-depends: yaml
-  Build-depends: aeson-pretty
   Build-depends: attoparsec
   Build-depends: base16-bytestring
   Build-depends: base64-bytestring
@@ -305,7 +303,6 @@ Executable kontrakcja-migrate
   Build-depends: QuickCheck
   Build-depends: aeson
   Build-depends: yaml
-  Build-depends: aeson-pretty
   Build-depends: attoparsec
   Build-depends: base16-bytestring
   Build-depends: base64-bytestring
@@ -410,7 +407,6 @@ Executable mailing-server
   Build-depends: QuickCheck
   Build-depends: aeson
   Build-depends: yaml
-  Build-depends: aeson-pretty
   Build-depends: attoparsec
   Build-depends: base16-bytestring
   Build-depends: base64-bytestring
@@ -515,7 +511,6 @@ Executable messenger-server
   Build-depends: QuickCheck
   Build-depends: aeson
   Build-depends: yaml
-  Build-depends: aeson-pretty
   Build-depends: attoparsec
   Build-depends: base16-bytestring
   Build-depends: base64-bytestring
@@ -621,7 +616,6 @@ Executable kontrakcja-test
   Build-depends: QuickCheck
   Build-depends: aeson
   Build-depends: yaml
-  Build-depends: aeson-pretty
   Build-depends: attoparsec
   Build-depends: base16-bytestring
   Build-depends: base64-bytestring

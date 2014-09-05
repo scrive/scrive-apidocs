@@ -10,10 +10,10 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL (toString)
 import Data.Unjson
-import Data.Aeson.Encode.Pretty
 import Data.Char
 import qualified Data.Yaml as Yaml
 import qualified Data.Text as Text
+import Data.Monoid
 
 
 --
@@ -84,7 +84,7 @@ readConfig logger path = do
       mapM_ logProblem problems
       fail $ "There were issues with the content of configuration " ++ path
     configAsJsonString :: a -> String
-    configAsJsonString a = BSL.toString (encodePretty' (defConfig { confCompare = compare }) (serialize ud a))
+    configAsJsonString a = BSL.toString (unjsonToByteStringLazyPretty ud a)
 
 showNiceYamlParseException :: FilePath -> Yaml.ParseException -> String
 showNiceYamlParseException filepath parseException =
