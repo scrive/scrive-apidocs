@@ -1,6 +1,7 @@
 module MessengerServerConf (
     MessengerServerConf(..)
   , SenderConfig(..)
+  , unjsonMessengerServerConf
   ) where
 
 import Data.Word
@@ -14,7 +15,7 @@ data MessengerServerConf = MessengerServerConf
   { mscHttpBindAddress :: (Word32, Word16)
   , mscDBConfig        :: BS.ByteString
   , mscMasterSender    :: SenderConfig
-  } deriving (Read, Show)
+  } deriving (Eq, Ord, Read, Show)
 
 unjsonMessengerServerConf :: UnjsonDef MessengerServerConf
 unjsonMessengerServerConf = objectOf $ pure MessengerServerConf
@@ -46,7 +47,7 @@ data SenderConfig = GlobalMouthSender
   | LocalSender
   { localDirectory     :: FilePath
   , localOpenCommand   :: Maybe String
-  } deriving (Read, Show, Typeable, Data)
+  } deriving (Eq, Ord, Read, Show, Typeable, Data)
 
 
 unjsonSenderConfig :: UnjsonDef SenderConfig
