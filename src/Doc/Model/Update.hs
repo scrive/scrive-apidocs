@@ -635,11 +635,18 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m ChangeAuthenticationM
     case extraInfoField newAuth of
          Nothing -> return ()
          Just authMethodField -> do
-           let mPreviousValue = fmap sfValue $ getFieldOfType authMethodField (signatoryfields sig)
-           when (mValue /= mPreviousValue)
+           let previousValue = fromMaybe "" $ fmap sfValue $ getFieldOfType authMethodField (signatoryfields sig)
+               value         = fromMaybe "" mValue
+           when (value /= previousValue)
                 (void $ update $ InsertEvidenceEvent
                   (getEvidenceTextForUpdateField authMethodField)
-                  (F.value "value" (fromMaybe "" mValue))
+                  (do F.value "value" value
+                      F.value "previousvalue" previousValue
+                      when (value == "") $
+                          F.value "newblank" True
+                      when (previousValue == "") $
+                          F.value "prvblank" True
+                  )
                   actor
                 )
     let insertEvidence e = void $ update $ InsertEvidenceEvent e
@@ -1345,6 +1352,7 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m UpdateFieldsForSignin
                               CheckboxFT xname -> xname
                               SignatureFT xname -> xname
                               _ -> ""
+              oldValue = getValueOfType fieldtype (signatoryfields sl)
           updated <- runQuery . sqlUpdate "signatory_link_fields" $ do
                    sqlSet "value" fvalue
                    sqlWhereEq "signatory_link_id" slid
@@ -1370,11 +1378,18 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m UpdateFieldsForSignin
             let eventEvidenceText = getEvidenceTextForUpdateField fieldtype
             void $ update $ InsertEvidenceEvent eventEvidenceText
                (do F.value "value" fvalue
+                   F.value "previousvalue" oldValue
+                   when (fvalue == "") $
+                       F.value "newblank" True
+                   when (oldValue == "") $
+                       F.value "prvblank" True
                    when (eventEvidenceText == UpdateFieldCustomEvidence) $ do
                        let CustomFT s _ = fieldtype
                        F.value "customfieldname" s
-                   when (eventEvidenceText == UpdateFieldCheckboxEvidence && not (null fvalue))
-                       (F.value "checked" True)
+                   when (eventEvidenceText == UpdateFieldCheckboxEvidence && not (null fvalue)) $
+                       F.value "checked" True
+                   when (custom_name /= "") $
+                       F.value "fieldname" custom_name
                    case mfield of
                      Just f | not (null ps) -> do
                        F.objects "placements" $ for ps $ \p -> do
