@@ -106,13 +106,7 @@ digitallyExtendFile ctxtime ctxgtconf pdfpath pdfname = do
   code <- GT.digitallyExtend ctxgtconf pdfpath
   mr <- case code of
     ExitSuccess -> do
-      vr1 <- GT.verify ctxgtconf pdfpath
-      vr <- case vr1 of
-        GT.Invalid "SYNTACTIC_CHECK_FAILURE" -> do
-          Log.mixlog_ "Verification failed with SYNTACTIC_CHECK_FAILURE - trying temporary Guardtime extension tool"
-          _ <- GT.digitallyExtendCore1 pdfpath
-          GT.verify ctxgtconf pdfpath
-        _ -> return vr1
+      vr <- GT.verify ctxgtconf pdfpath
       case vr of
            GT.Valid gsig | GT.extended gsig -> do
                 res <- liftIO $ BS.readFile pdfpath

@@ -1,7 +1,6 @@
 module GuardTime
        ( digitallySign
        , digitallyExtend
-       , digitallyExtendCore1
        , verify
        , VerifyResult(..)
        , GuardtimeSignature(..)
@@ -125,23 +124,6 @@ digitallyExtend conf inputFileName = do
       Log.mixlog_ $ "GuardTime stdout  : " ++ BSL.toString stdout
     when (not (BSL.null stderr)) $ do
       Log.mixlog_ $ "GuardTime errout  : " ++ BSL.toString stderr
-
-  return code
-
--- Invoke special extender to deal with certain signatures (see GuardTime/fix-incorrect-core/mail.eml)
-
-digitallyExtendCore1 :: (Log.MonadLog m, MonadIO m) => String -> m ExitCode
-digitallyExtendCore1 inputFileName = do
-  (code,stdout,stderr) <- invokeGuardtimeTool "fix-incorrect-core/Core1-CheckPDF"
-             [ "ext"
-             , inputFileName
-             ]
-  when (not (BSL.null stderr)) $ do
-    Log.mixlog_ $ "digitallyExtendCore1 stderr  : " ++ BSL.toString stderr
-  when (not (BSL.null stdout)) $ do
-    Log.mixlog_ $ "GuardTime stdout  : " ++ BSL.toString stdout
-  when (code /= ExitSuccess) $ do
-    Log.mixlog_ $ "GuardTime exit code " ++ show code
 
   return code
 
