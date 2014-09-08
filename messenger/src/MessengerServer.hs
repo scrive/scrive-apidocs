@@ -1,7 +1,6 @@
 module MessengerServer where
 
 import Control.Concurrent
-import System.Environment
 import Happstack.Server hiding (waitForTermination)
 import qualified Control.Exception.Lifted as E
 import qualified Happstack.StaticRouting as R
@@ -24,8 +23,7 @@ import qualified Log
 
 main :: IO ()
 main = Log.withLogger $ do
-  appname <- getProgName
-  conf <- readConfig Log.mixlog_ appname [] "messenger_server.conf"
+  conf <- readConfig Log.mixlog_ "messenger_server.conf"
   checkExecutables
 
   let connSource = defaultSource $ defaultSettings { csConnInfo = mscDBConfig conf }

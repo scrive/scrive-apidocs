@@ -35,6 +35,7 @@ import CSVUtilTest
 import CompanyAccountsTest
 import CompanyControlTest
 import CompanyStateTest
+import ConfigTests
 import DocAPITest
 import ArchiveTest
 import DocControlTest
@@ -70,6 +71,7 @@ allTests = tail tests
       , companyAccountsTests
       , companyControlTests
       , companyStateTests
+      , configTests
       , csvUtilTests
       , docAPITests
       , archiveTests

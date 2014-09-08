@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module AppConf (
       AppConf(..)
+      , unjsonAppConf
   ) where
 
 import Utils.Default
@@ -14,6 +15,8 @@ import ELegitimation.Config (LogicaConfig(..))
 import GuardTime (GuardTimeConf(..))
 import Payments.Config (RecurlyConfig(..))
 import Salesforce.Conf
+import Control.Applicative
+import Data.Unjson
 
 -- | Defines the application's configuration.  This includes amongst
 -- other things the http port number, amazon, trust weaver and email
@@ -43,6 +46,88 @@ data AppConf = AppConf {
   , ntpServers         :: [String]                     -- ^ List of NTP servers to contact to get estimate of host clock error
   , salesforceConf     :: SalesforceConf             -- ^ Configuration of salesforce
   } deriving (Read, Eq, Ord, Show)
+
+unjsonAppConf :: UnjsonDef AppConf
+unjsonAppConf = objectOf $ pure AppConf
+  <*> (pure (,)
+         <*> fieldDefBy "bind_ip" 0
+            (fst . httpBindAddress)
+            "IP to listen on, defaults to 0.0.0.0"
+            unjsonIPv4AsWord32
+         <*> field "bind_port"
+            (snd . httpBindAddress)
+            "Port to listen on")
+  <*> field "hostpart"
+      hostpart
+      "A string how this server is visible on outside"
+  <*> fieldDef "https" True
+      useHttps
+      "Should use https"
+  <*> field "store"
+      store
+      "Where to put database files"
+  <*> fieldOptBy "amazon"
+      amazonConfig
+      "Amazon configuration"
+      (objectOf $ pure (,,)
+       <*> field "bucket"
+         (\(x,_,_) -> x)
+         "In which bucket to store new files"
+       <*> field "access_key"
+         (\(_,x,_) -> x)
+         "Amazon access key"
+       <*> field "secret_key"
+         (\(_,_,x) -> x)
+         "Amazon secret key")
+  <*> fieldBy "database"
+      dbConfig
+      "Database connection string"
+      unjsonAeson
+  <*> fieldDef "production" False
+      production
+      "Is this production server"
+  <*> field "guardtime"
+      guardTimeConf
+      "GuardTime configuration"
+  <*> field "mails"
+      mailsConfig
+      "Mails configuration"
+  <*> field "livedocx"
+      liveDocxConfig
+      "LiveDocx doc conversion configuration"
+  <*> field "logica"
+      logicaConfig
+      "Logica (Elegitimation) configuration"
+  <*> field "admins"
+      admins
+      "email addresses of people regarded as admins"
+  <*> field "sales"
+      sales
+      "email addresses of people regarded as sales admins"
+  <*> field "initial_users"
+      initialUsers
+      "email and passwords for initial users"
+  <*> field "recurly"
+      recurlyConfig
+      "Recurly configuration for payments"
+  <*> field "mixpanel"
+      mixpanelToken
+      "Token for Mixpanel"
+  <*> field "google_analytics"
+      googleanalyticsToken
+      "Token for Google Analytics"
+  <*> field "homebase"
+      homebase
+      "url fragment where to fetch scripts"
+  <*> field "ntp_servers"
+      ntpServers
+      "List of NTP servers to contact to get estimate of host clock error"
+  <*> field "salesforce"
+      salesforceConf
+      "Configuration of salesforce"
+
+instance Unjson AppConf where
+  unjsonDef = unjsonAppConf
 
 -- | Default application configuration that does nothing.
 --

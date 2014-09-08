@@ -4,7 +4,6 @@ import Control.Concurrent
 import Control.Monad
 import Happstack.Server hiding (waitForTermination)
 import Happstack.StaticRouting
-import System.Environment
 import System.IO
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
@@ -39,9 +38,7 @@ main = Log.withLogger $ do
   Log.mixlog_ $ "Starting kontrakcja-server build " ++ Version.versionID
 
   appConf <- do
-    appname <- getProgName
-    args <- getArgs
-    readConfig Log.mixlog_ appname args "kontrakcja.conf"
+    readConfig Log.mixlog_ "kontrakcja.conf"
 
   checkExecutables
 

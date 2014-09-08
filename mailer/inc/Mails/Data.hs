@@ -9,6 +9,7 @@ module Mails.Data (
   , MailGunEvent(..)
   , Event(..)
   , Mail(..)
+  , unjsonAddress
   ) where
 
 import Control.Applicative
@@ -21,6 +22,7 @@ import qualified Data.ByteString.Char8 as BS
 import DB.Derive
 import MagicHash (MagicHash)
 import File.FileID
+import Data.Unjson
 
 newtype MailID = MailID Int64
   deriving (Eq, Ord, PQFormat)
@@ -69,6 +71,19 @@ data Address = Address {
     addrName  :: String
   , addrEmail :: String
   } deriving (Eq, Ord, Read, Show, Data, Typeable)
+
+unjsonAddress :: UnjsonDef Address
+unjsonAddress = objectOf $ pure Address
+  <*> field "name"
+     addrName
+     "Name in email address"
+  <*> field "email"
+     addrEmail
+     "Email address"
+
+instance Unjson Address where
+  unjsonDef = unjsonAddress
+
 
 instance PQFormat Address where
   pqFormat _ = pqFormat (undefined::String)

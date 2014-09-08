@@ -15,12 +15,30 @@ module Mails.MailsConfig
     , defaultMailsConfig
     ) where
 
+import Data.Unjson
+import Control.Applicative
+
 -- | Configuration of mails
 data MailsConfig = MailsConfig {
     isBackdoorOpen       :: Bool
   , ourInfoEmail         :: String
   , ourInfoEmailNiceName :: String
   } deriving (Read, Eq, Ord, Show)
+
+unjsonMailsConfig :: UnjsonDef MailsConfig
+unjsonMailsConfig = objectOf $ pure MailsConfig
+  <*> field "backdoor_open"
+      isBackdoorOpen
+      "Should backdoor be open"
+  <*> field "info_email"
+      ourInfoEmail
+      "Info email"
+  <*> field "info_email_nice_name"
+      ourInfoEmailNiceName
+      "Info email nice name"
+
+instance Unjson MailsConfig where
+  unjsonDef = unjsonMailsConfig
 
 defaultMailsConfig :: MailsConfig
 defaultMailsConfig = MailsConfig {

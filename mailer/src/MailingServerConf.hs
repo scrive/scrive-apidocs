@@ -3,12 +3,16 @@ module MailingServerConf (
   , SenderConfig(..)
   , SMTPUser(..)
   , SMTPDedicatedUser(..)
+  , unjsonMailingServerConf
   ) where
 
 import Data.Word
 import Utils.Default
 import Mails.Data
 import qualified Data.ByteString as BS
+import Data.Unjson
+import Control.Applicative
+import Data.Data
 
 data MailingServerConf = MailingServerConf {
     mscHttpBindAddress :: (Word32, Word16)
@@ -16,8 +20,79 @@ data MailingServerConf = MailingServerConf {
   , mscMasterSender    :: SenderConfig
   , mscSlaveSender     :: Maybe SenderConfig
   , mscAmazonConfig    :: Maybe (String, String, String)
-  , testReceivers     :: [Address]
-  } deriving (Read, Show)
+  , testReceivers      :: [Address]
+  } deriving (Eq, Ord, Read, Show, Typeable)
+
+data SMTPUser = SMTPUser {
+    smtpAccount  :: String
+  , smtpPassword :: String
+}  deriving (Eq, Ord, Read, Show, Typeable, Data)
+
+unjsonSMTPUser :: UnjsonDef SMTPUser
+unjsonSMTPUser = objectOf $ pure SMTPUser
+  <*> field "smtp_account"
+      smtpAccount
+      "SMTP account name"
+  <*> field "smtp_password"
+      smtpPassword
+      "SMTP account password"
+
+
+-- SMTP user that is dedicated only to email where from address matched given address 
+data SMTPDedicatedUser = SMTPDedicatedUser {
+    smtpFromDedicatedAddress :: String
+  , smtpDedicatedUser    :: SMTPUser
+} deriving (Eq, Ord, Read, Show, Typeable, Data)
+
+unjsonSMTPDedicatedUser :: UnjsonDef SMTPDedicatedUser
+unjsonSMTPDedicatedUser = objectOf $ pure SMTPDedicatedUser
+  <*> field "from_address"
+      smtpFromDedicatedAddress
+      "'From:' address for for which this credentials should be used"
+  <*> fieldBy "user"
+      smtpDedicatedUser
+      "SMTP account credentials"
+      unjsonSMTPUser
+
+unjsonMailingServerConf :: UnjsonDef MailingServerConf
+unjsonMailingServerConf = objectOf $ pure MailingServerConf
+  <*> (pure (,)
+         <*> fieldBy "bind_ip"
+            (fst . mscHttpBindAddress)
+            "IP to listen on, defaults to 0.0.0.0"
+            unjsonIPv4AsWord32
+         <*> field "bind_port"
+            (snd . mscHttpBindAddress)
+            "Port to listen on")
+  <*> fieldBy "database"
+      mscDBConfig
+      "Database connection string"
+      (unjsonAeson)
+  <*> field "master_sender"
+      mscMasterSender
+      "Master sender"
+  <*> fieldOpt "slave_sender"
+      mscSlaveSender
+      "Slave sender"
+  <*> fieldOptBy "amazon"
+      mscAmazonConfig
+      "Amazon configuration"
+      (objectOf $ pure (,,)
+       <*> field "bucket"
+         (\(x,_,_) -> x)
+         "In which bucket to store new files"
+       <*> field "access_key"
+         (\(_,x,_) -> x)
+         "Amazon access key"
+       <*> field "secret_key"
+         (\(_,_,x) -> x)
+         "Amazon secret key")
+  <*> field "test_receivers"
+      testReceivers
+      "Email addresses for testing services"
+
+instance Unjson MailingServerConf where
+  unjsonDef = unjsonMailingServerConf
 
 data SenderConfig = SMTPSender {
     serviceName        :: String
@@ -30,20 +105,39 @@ data SenderConfig = SMTPSender {
   , localOpenCommand   :: Maybe String
   }
   | NullSender
-  deriving (Read, Show)
+  deriving (Eq, Ord, Read, Show, Typeable, Data)
 
-data SMTPUser = SMTPUser {
-    smtpAccount  :: String
-  , smtpPassword :: String
-}  deriving (Read, Show)
+unjsonSenderConfig :: UnjsonDef SenderConfig
+unjsonSenderConfig = DisjointUnjsonDef "type"
+                     [("smtp", unjsonIsConstrByName "SMTPSender",
+                       pure SMTPSender
+                               <*> field "name"
+                                   serviceName
+                                   "Name of this sender service"
+                               <*> field "smtp_addr"
+                                   smtpAddr
+                                   "SMTP address to contact"
+                               <*> fieldBy "user"
+                                   smtpUser
+                                   "SMTP account credentials for default SMTP service"
+                                   unjsonSMTPUser
+                               <*> fieldBy "dedicated_users"
+                                   smtpDedicatedUsers
+                                   "SMTP accounts credentials for SMTP services with dedicated 'From:' addresses"
+                                   (arrayOf unjsonSMTPDedicatedUser))
+                     ,("local", unjsonIsConstrByName "LocalSender",
+                       pure LocalSender
+                               <*> field "dir"
+                                   localDirectory
+                                   "Local directory to save 'eml' files"
+                               <*> fieldOpt "open"
+                                   localOpenCommand
+                                   "Local open command to open 'eml' files ('/usr/bin/open', 'gnome-open', 'kde-open')")
+                     ,("null", unjsonIsConstrByName "NullSender",
+                       pure NullSender)]
 
-
--- SMTP user that is dedicated only to email where from address matched given address 
-data SMTPDedicatedUser = SMTPDedicatedUser {
-    smtpFromDedicatedAddress :: String
-  , smtpDedicatedUser    :: SMTPUser
-} deriving (Read, Show)
-
+instance Unjson SenderConfig where
+  unjsonDef = unjsonSenderConfig
 
 -- SMTPSender {
 --     serviceName = "SendGrid"
@@ -64,3 +158,4 @@ instance HasDefaultValue MailingServerConf where
     , mscAmazonConfig = Nothing
     , testReceivers   = [Address { addrName = "test",   addrEmail = "your@email.scrive.com" }]
   }
+ 

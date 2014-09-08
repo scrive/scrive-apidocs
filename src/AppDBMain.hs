@@ -4,7 +4,6 @@ module AppDBMain (
 
 import Control.Monad.IO.Class
 import System.IO
-import System.Environment
 import AppConf
 import Configuration
 import DB
@@ -21,9 +20,7 @@ main = do
   hSetEncoding stderr utf8
 
   appConf <- do
-    appname <- getProgName
-    args <- getArgs
-    readConfig (liftIO . putStrLn) appname args "kontrakcja.conf"
+    readConfig putStrLn "kontrakcja.conf"
 
   let connSource = defaultSource . pgConnSettings $ dbConfig appConf
   withPostgreSQL connSource $ do
