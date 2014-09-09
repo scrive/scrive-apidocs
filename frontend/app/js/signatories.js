@@ -662,17 +662,13 @@ window.Signatory = Backbone.Model.extend({
         return this;
     },
     authenticationFieldValue: function() {
-        var authenticationValue;
         if(this.elegAuthentication()) {
-            authenticationValue = this.personalnumber();
+            return this.personalnumber();
         }
         else if(this.smsPinAuthentication()) {
-            authenticationValue = this.mobile();
+            return this.mobile();
         }
-        else {
-            authenticationValue = '';
-        }
-        return authenticationValue;
+        return '';
     },
     hasProblems: function(forSigning) {
         return this.hasFieldProblems(forSigning);
