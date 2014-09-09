@@ -73,6 +73,7 @@ define(['Backbone', 'legacy_code'], function() {
                                    "data" : {
                                        "transactionid" : polling.trid()
                                    },
+                                   "cache" : false,
                                    "dataType": "json",
                                    "success": function(d) {
                                        if(d.error) {

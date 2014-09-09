@@ -46,7 +46,7 @@ executeStandardCallback doc url = do
      , "-f" -- make curl return exit code (22) if it got anything else but 2XX
      , "-L" -- make curl follow redirects
      , "--data-binary", "@-"          -- take binary data from stdin
-     , "-H", "Content-type: application/x-www-form-urlencoded; charset=utf-8"
+     , "-H", "Content-type: application/x-www-form-urlencoded; charset=UTF-8"
      , url
      ] (BSL.fromString (urlEncodeVars [ ("documentid", show (documentid doc))
                                       , ("signedAndSealed", (if (isClosed doc && (isJust $ documentsealedfile doc))
