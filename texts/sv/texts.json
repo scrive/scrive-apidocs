@@ -836,7 +836,7 @@
 "_verificationDescription":"Genom att ladda upp dokumentet kan du kontrollera dokumentets äkthet för att säkerställa att det inte har komprometterats.",
 "_verificationError":"Problem",
 "_verificationErrorMessage":"Ett fel inträffade när dokumentets äkthet skulle verifieras. Vänligen försök igen.",
-"_verificationFailed":"Verifiering har misslyckats",
+"_verificationFailed":"Verifieringen misslyckades",
 "_verificationFailedMessage":"Detta dokument har inte signerats genom Scrive eller så har någon ändrat i originalet.",
 "_verificationFooter":"Detta verifikat är utfärdat av Scrive. Kursiverad information är säkert verifierad. Tidsstämpeln säkerställer att dokumentets äkthet går att bevisa matematiskt och oberoende av Scrive. För mer information se den juridiska bilagan (använd en PDF-läsare som kan visa dolda bilagor). För er bekvämlighet tillhandahåller Scrive även en tjänst för att kontrollera dokumentets äkthet automatiskt på: $verifyurl$",
 "_verificationGateway":"Gateway",

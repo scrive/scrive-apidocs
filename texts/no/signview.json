@@ -12,7 +12,7 @@
 "_contractrejectbuttontext":"Avvis og svar",
 "_contractsignatorycancelmodaltitle":"Avvis dokument",
 "_contractsignatoryname":"Part",
-"_contractsignatorysignmodalcontent":"",
+"_contractsignatorysignmodalcontent":"Ved å klikke på knappen vil du signere dokumentet og din signatur vil bli registrert av e-signeringstjenesten Scrive.",
 "_contractsignatorysignmodalcontentauthoronly":"Når du har signert dokumentet vil din signatur bli registrert av e-signeringstjenesten Scrive.",
 "_contractsignatorysignmodalcontentdesignvieweleg":"Velg e-ID. Når du har valgt, vil programvaren for å signere med e-ID åpnes.",
 "_contractsignatorysignmodalcontentfromsignaturedrawing":"Når du har klikket på knappen vil e-signeringstjenesten Scrive registrere at du har signert.",
