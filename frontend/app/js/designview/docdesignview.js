@@ -110,12 +110,12 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
 
 
             if(model.document().isTemplate()) {
-                div.append(view.saveAsTemplate());
+                div.append(view.saveTemplate());
                 if(model.document().mainfile())
                     div.append(view.removeDocumentButton());
             } else {
-                div.append(view.saveAsDraft());
-                div.append(view.saveAsTemplate());
+                div.append(view.saveDraft());
+                div.append(view.saveTemplate());
                 if(model.document().mainfile())
                     div.append(view.removeDocumentButton());
                 div.append(view.send());
@@ -123,67 +123,58 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
 
             return div;
         },
-        saveAsDraft: function() {
-            var view = this;
-            var model = view.model;
-
-            var txt;
-            if(model.document().savedOnce()) {
-                txt = localization.designview.saveDraftButton;
+        saveDraft: function() {
+          var view = this;
+          this.saveDraftButton = new Button({
+            text: view.saveDraftButtonText(),
+            color: 'blue',
+            cssClass: 'button-save-draft',
+            onClick: function(e) {
+              mixpanel.track('Click save as draft');
+              view.model.saveDraft();
+              view.updateSaveDraftButton();
             }
-            else {
-                txt = localization.designview.saveAsDraftButton;
-            }
-
-            var saveAsDraftButton = new Button({
-                text: txt,
-                color: 'blue',
-                onClick: function(e) {
-                    mixpanel.track('Click save as draft');
-                    model.saveDraft();
-                    var txt = localization.designview.saveDraftButton;
-                    if(e.target.children.length == 0) {
-                      e.target.innerText = txt;
-                    }
-                    else {
-                      var label = $('.label', e.target);
-                      label.text(txt);
-                    }
-                }
-            });
-
-            return saveAsDraftButton.el();
+          }).el();
+          return this.saveDraftButton;
         },
-        saveAsTemplate: function() {
-            var view = this;
-            var model = view.model;
-
-            var txt;
-            if(model.document().isTemplate() && model.document().savedOnce()) {
-                txt = localization.designview.saveTemplateButton;
+        saveDraftButtonText : function() {
+          if(this.model.document().savedOnce()) {
+            return localization.designview.saveDraftButton;
+          }
+          return localization.designview.saveAsDraftButton;
+        },
+        updateSaveDraftButton : function() {
+          if(this.saveDraftButton != undefined) {
+            var label = $('.label', this.saveDraftButton);
+            label.text(this.saveDraftButtonText());
+          }
+        },
+        saveTemplate: function() {
+          var view = this;
+          this.saveTemplateButton = new Button({
+            text: view.saveTemplateButtonText(),
+            color: 'blue',
+            cssClass: 'button-save-template',
+            onClick: function(e) {
+              mixpanel.track('Click save as template');
+              view.model.saveTemplate();
+              view.updateSaveTemplateButton();
             }
-            else {
-                txt = localization.designview.saveAsTemplateButton;
-            }
-
-            var saveAsTemplateButton = new Button({
-                text: txt,
-                color: 'blue',
-                onClick: function(e) {
-                    mixpanel.track('Click save as template');
-                    model.saveTemplate();
-                    var txt = localization.designview.saveTemplateButton;
-                    if(e.target.children.length == 0) {
-                      e.target.innerText = txt;
-                    }
-                    else {
-                      var label = $('.label', e.target);
-                      label.text(txt);
-                    }
-                }
-            });
-
-            return saveAsTemplateButton.el();
+          }).el();
+          return this.saveTemplateButton;
+        },
+        saveTemplateButtonText : function() {
+          var document = this.model.document();
+          if(document.isTemplate() && document.savedOnce()) {
+            return localization.designview.saveTemplateButton;
+          }
+          return localization.designview.saveAsTemplateButton;
+        },
+        updateSaveTemplateButton : function() {
+          if(this.saveTemplateButton != undefined) {
+            var label = $('.label', this.saveTemplateButton);
+            label.text(this.saveTemplateButtonText());
+          }
         },
         send: function() {
             var view = this;
