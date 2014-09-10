@@ -286,9 +286,9 @@ mkContext lang = do
         , ctxsalesaccounts = []
         , ctxmaybepaduser = Nothing
         , ctxusehttps = False
-        , ctxgtconf = GuardTimeConf { guardTimeURL = "http://stamper.guardtime.net/gt-signingservice"
-                                    , guardTimeExtendingServiceURL = "http://verifier.guardtime.net/gt-extendingservice"
-                                    , guardTimeControlPublicationsURL = "http://verify.guardtime.com/gt-controlpublications.bin"
+        , ctxgtconf = GuardTimeConf { guardTimeURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-signingservice"
+                                    , guardTimeExtendingServiceURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-extendingservice"
+                                    , guardTimeControlPublicationsURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-controlpublications.bin"
                                     }
         , ctxrecurlyconfig = RecurlyConfig { recurlySubdomain  = "scrive-test"
                                            , recurlyAPIKey     = "c31afaf14af3457895ee93e7e08e4451"

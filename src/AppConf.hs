@@ -140,9 +140,9 @@ instance HasDefaultValue AppConf where
     , amazonConfig       = Nothing
     , dbConfig           = "user='kontra' password='kontra' dbname='kontrakcja'"
     , production         = True
-    , guardTimeConf      = GuardTimeConf { guardTimeURL = "http://stamper.guardtime.net/gt-signingservice"
-                                         , guardTimeExtendingServiceURL = "http://verifier.guardtime.net/gt-extendingservice"
-                                         , guardTimeControlPublicationsURL = "http://verify.guardtime.com/gt-controlpublications.bin"
+    , guardTimeConf      = GuardTimeConf { guardTimeURL="http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-signingservice"
+                                         , guardTimeExtendingServiceURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-extendingservice"
+                                         , guardTimeControlPublicationsURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-controlpublications.bin"
                                          }
     , mailsConfig        = defaultMailsConfig
     , liveDocxConfig     = defaultValue
