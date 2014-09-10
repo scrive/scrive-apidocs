@@ -2,11 +2,11 @@
 
 var LIVERELOAD_PORT = 35729;
 var lrSnippet = require('connect-livereload')({ port: LIVERELOAD_PORT });
-var mountFolder = function (connect, dir) {
+var mountFolder = function(connect, dir) {
   return connect.static(require('path').resolve(dir));
 };
 
-module.exports = function (grunt) {
+module.exports = function(grunt) {
   require('load-grunt-tasks')(grunt);
   require('time-grunt')(grunt);
   grunt.loadNpmTasks('grunt-shell-spawn');
@@ -50,7 +50,7 @@ module.exports = function (grunt) {
           debug: true,
           hostname: '*',
           port: 9000,
-          middleware: function (connect, options) {
+          middleware: function(connect, options) {
             // Configure grunt-connect-proxy
 
             var config = [ // Serve static files.
@@ -69,16 +69,16 @@ module.exports = function (grunt) {
             context: ['/js', '/libs', '/compiled_jsx', '/img', '/css', '/bower_components'],
             host: '127.0.0.1',
             port: 9001,
-            https: false,
+            https: false
           },
           // this gives access to kontraktcja under root
           {
             context: ['/'],
             host: '127.0.0.1',
             port: 8000,
-            https: false,
-          },
-        ],
+            https: false
+          }
+        ]
       },
       livereload: {
         // this is the main server for serving static files
@@ -86,7 +86,7 @@ module.exports = function (grunt) {
           // Change this to '0.0.0.0' to access the server from outside.
           hostname: '*',
           port: 9001,
-          middleware: function (connect) {
+          middleware: function(connect) {
             return [
               lrSnippet,
               mountFolder(connect, '.tmp'),
@@ -98,7 +98,7 @@ module.exports = function (grunt) {
       test: {
         options: {
           port: 9005,
-          middleware: function (connect) {
+          middleware: function(connect) {
             return [
               mountFolder(connect, '.tmp'),
               mountFolder(connect, 'test')
@@ -109,7 +109,7 @@ module.exports = function (grunt) {
       dist: {
         options: {
           port: 9001,
-          middleware: function (connect) {
+          middleware: function(connect) {
             return [
               mountFolder(connect, yeomanConfig.dist)
             ];
@@ -127,7 +127,7 @@ module.exports = function (grunt) {
         singleRun: false,
         configFile: 'test/karma-unit.conf.js',
         autoWatch: true
-      },
+      }
     },
     open: {
       server: {
@@ -176,7 +176,7 @@ module.exports = function (grunt) {
             dot: true,
             src: [
               '.tmp',
-              '<%= yeoman.app %>/compiled_jsx/',
+              '<%= yeoman.app %>/compiled_jsx/'
             ]
           }
         ]
@@ -244,7 +244,7 @@ module.exports = function (grunt) {
         }
       },
       compileJsx: {
-        command: 'jsx -x jsx <%= yeoman.app %>/scripts/ <%= yeoman.app %>/compiled_jsx/',
+        command: 'jsx -x jsx <%= yeoman.app %>/scripts/ <%= yeoman.app %>/compiled_jsx/'
       }
     },
     copy: {
@@ -287,7 +287,10 @@ module.exports = function (grunt) {
         }
       },
       all: {
-        src: ['<%= yeoman.app %>/js/**/*.js', '<%= yeoman.app %>/compiled_jsx/**/*.js']
+        src: [
+          '<%= yeoman.app %>/js/**/*.js',
+          '<%= yeoman.app %>/compiled_jsx/**/*.js'
+        ]
       }
     },
     cssmin: {
@@ -296,12 +299,17 @@ module.exports = function (grunt) {
       },
       dist: {
         files: {
-          '<%= yeoman.dist %>/all-styling-minified.css': ['<%= yeoman.app %>/css/*.css', '<%= yeoman.app %>/less/less-compiled.css']
+          '<%= yeoman.dist %>/all-styling-minified.css': [
+            '<%= yeoman.app %>/css/*.css',
+            '<%= yeoman.app %>/less/less-compiled.css'
+          ]
         }
       },
       dev: {
         files: {
-          '<%= yeoman.app %>/less/regular-css-compiled.css': ['<%= yeoman.app %>/css/*.css']
+          '<%= yeoman.app %>/less/regular-css-compiled.css': [
+            '<%= yeoman.app %>/css/*.css'
+          ]
         }
       }
     },
@@ -320,7 +328,7 @@ module.exports = function (grunt) {
         },
         files: {
           "<%= yeoman.app %>/less/less-compiled.css": "<%= yeoman.app %>/less/index.less"
-        },
+        }
       }
     }
   });
@@ -330,11 +338,11 @@ module.exports = function (grunt) {
    *  User facing Grunt Tasks
    */
 
-  grunt.registerTask('compileJsxWatch', function (target) {
+  grunt.registerTask('compileJsxWatch', function(target) {
     return grunt.task.run([
       // compiled_jsx directory need to exist for it to start watch, i.e. run compileJsx first
       'shell:compileJsx',
-      'shell:compileJsxWatch',
+      'shell:compileJsxWatch'
     ]);
   });
 
@@ -346,11 +354,11 @@ module.exports = function (grunt) {
    *  Expects 'grunt build' to have been run.
    *
    */
-  grunt.registerTask('server:dist_run', function (target) {
+  grunt.registerTask('server:dist_run', function(target) {
     grunt.task.run([
       'configureProxies:proxyserver',
       'connect:proxyserver',
-      'connect:dist:keepalive',
+      'connect:dist:keepalive'
     ]);
   });
 
@@ -368,7 +376,7 @@ module.exports = function (grunt) {
   /**
    *  Serve and compile static files, while developing.
    */
-  grunt.registerTask('server', function (target) {
+  grunt.registerTask('server', function(target) {
     grunt.task.run([
       'clean:server',
       'less:compile',
@@ -387,7 +395,7 @@ module.exports = function (grunt) {
    *
    *  All tests expects 'grunt build' to have been run
    */
-  grunt.registerTask('test', function (target) {
+  grunt.registerTask('test', function(target) {
     if (target === 'unit') {
       return grunt.task.run([
         'unittests:singleRun'
@@ -398,7 +406,7 @@ module.exports = function (grunt) {
         'connect:proxyserver',
         'connect:dist',
         'connect:test',
-        'karma:unitSingleRun',
+        'karma:unitSingleRun'
       ]);
     }
   });
@@ -420,11 +428,11 @@ module.exports = function (grunt) {
   /**
    *  Build files for production
    */
-  grunt.registerTask('build', function (target) {
+  grunt.registerTask('build', function(target) {
     var tasks = [
       'clean:dist',
       'concurrent:dist',
-      'shell:compileJsx',
+      'shell:compileJsx'
     ];
 
     if (target === 'sourcemap') {
