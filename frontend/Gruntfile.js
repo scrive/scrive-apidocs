@@ -64,7 +64,7 @@ module.exports = function (grunt) {
           }
         },
         proxies: [
-	  // Serve most of the static files with grunt (since it's faster atleast on mac)
+          // Serve most of the static files with grunt (since it's faster atleast on mac)
           {
             context: ['/js', '/libs', '/compiled_jsx', '/img', '/css', '/bower_components'],
             host: '127.0.0.1',
@@ -85,7 +85,7 @@ module.exports = function (grunt) {
         options: {
           // Change this to '0.0.0.0' to access the server from outside.
           hostname: '*',
-	  port: 9001,
+          port: 9001,
           middleware: function (connect) {
             return [
               lrSnippet,
@@ -108,7 +108,7 @@ module.exports = function (grunt) {
       },
       dist: {
         options: {
-	  port: 9001,
+          port: 9001,
           middleware: function (connect) {
             return [
               mountFolder(connect, yeomanConfig.dist)
@@ -136,24 +136,24 @@ module.exports = function (grunt) {
     },
     requirejs: {
       options: {
-	baseUrl: '<%= yeoman.app %>/compiled_jsx/',
-	mainConfigFile: '<%= yeoman.app %>/compiled_jsx/requirejs_config.js',
-	out: '<%= yeoman.dist %>/optimized-system.js',
-	include: ['../bower_components/requirejs/require.js'],
-	name: 'app',
-	preserveLicenseComments: false
+        baseUrl: '<%= yeoman.app %>/compiled_jsx/',
+        mainConfigFile: '<%= yeoman.app %>/compiled_jsx/requirejs_config.js',
+        out: '<%= yeoman.dist %>/optimized-system.js',
+        include: ['../bower_components/requirejs/require.js'],
+        name: 'app',
+        preserveLicenseComments: false
       },
       withSourceMap: {
-	options: {
-	  optimize: "uglify2",
-	  generateSourceMaps: true
-	}
+        options: {
+          optimize: "uglify2",
+          generateSourceMaps: true
+        }
       },
       noSourceMap: {
-	options: {
-	  optimize: "none",
-	  generateSourceMaps: false
-	}
+        options: {
+          optimize: "none",
+          generateSourceMaps: false
+        }
       }
     },
     clean: {
@@ -163,7 +163,7 @@ module.exports = function (grunt) {
             dot: true,
             src: [
               '.tmp',
-	      '<%= yeoman.app %>/compiled_jsx/',
+              '<%= yeoman.app %>/compiled_jsx/',
               '<%= yeoman.dist %>/*',
               '!<%= yeoman.dist %>/.git*'
             ]
@@ -171,15 +171,15 @@ module.exports = function (grunt) {
         ]
       },
       server: {
-	files: [
-	  {
+        files: [
+          {
             dot: true,
             src: [
-	      '.tmp',
-	      '<%= yeoman.app %>/compiled_jsx/',
+              '.tmp',
+              '<%= yeoman.app %>/compiled_jsx/',
             ]
-	  }
-	]
+          }
+        ]
       }
     },
     jshint: {
@@ -201,7 +201,7 @@ module.exports = function (grunt) {
             '<%= yeoman.dist %>/*.css'
           ]
         },
-	htmlFile: '<%= yeoman.dist %>/index.html'
+        htmlFile: '<%= yeoman.dist %>/index.html'
       }
     },
     // Disabled until we get a better image structure (all images under one directory)
@@ -224,7 +224,7 @@ module.exports = function (grunt) {
         failOnError: true
       },
       findFocusSelectors: {
-	command: 'custom_grunt_tasks/check_for_focus_selectors.sh <%= yeoman.app %>/js'
+        command: 'custom_grunt_tasks/check_for_focus_selectors.sh <%= yeoman.app %>/js'
       },
       tar: {
         command: [
@@ -238,13 +238,13 @@ module.exports = function (grunt) {
       // TODO(jens): Move this compilation to a grunt plugin
       // The existing grunt-react plugin doesnt support -w parameter as far as I can see
       compileJsxWatch: {
-	command: 'jsx -x jsx -w <%= yeoman.app %>/scripts/ <%= yeoman.app %>/compiled_jsx/',
-	options: {
+        command: 'jsx -x jsx -w <%= yeoman.app %>/scripts/ <%= yeoman.app %>/compiled_jsx/',
+        options: {
           async: true
-	}
+        }
       },
       compileJsx: {
-	command: 'jsx -x jsx <%= yeoman.app %>/scripts/ <%= yeoman.app %>/compiled_jsx/',
+        command: 'jsx -x jsx <%= yeoman.app %>/scripts/ <%= yeoman.app %>/compiled_jsx/',
       }
     },
     copy: {
@@ -256,21 +256,21 @@ module.exports = function (grunt) {
             cwd: '<%= yeoman.app %>',
             dest: '<%= yeoman.dist %>',
             src: [
-	      './*.{html,xml,jpg,png,ico,txt}',
-	      'api-demo/**/*',
-	      'enable-cookies/**/*',
-	      'css/fonts/*',
-	      'fonts/**/*',
-	      'img/**/*',
-	      'newsletter/**/*',
-	      'pdf/**/*',
-	      'libs/tiny_mce/**/*',
+              './*.{html,xml,jpg,png,ico,txt}',
+              'api-demo/**/*',
+              'enable-cookies/**/*',
+              'css/fonts/*',
+              'fonts/**/*',
+              'img/**/*',
+              'newsletter/**/*',
+              'pdf/**/*',
+              'libs/tiny_mce/**/*',
 
-	      // Shims that need to be loaded separately
-          'libs/html5shiv.js',
+              // Shims that need to be loaded separately
+              'libs/html5shiv.js',
 
-	      'bower_components/json3/**',
-	      'bower_components/es5-shim/**'
+              'bower_components/json3/**',
+              'bower_components/es5-shim/**'
             ]
           },
         ]
@@ -278,31 +278,31 @@ module.exports = function (grunt) {
     },
     gjslint: {
       options: {
-	flags: [
+        flags: [
           '--disable 1,2,5,110,120,131,220', // TODO(jens): Fix so these pass
-	  '--custom_jsdoc_tags jsx,note,description'
-	],
-	reporter: {
+          '--custom_jsdoc_tags jsx,note,description'
+        ],
+        reporter: {
           name: 'console'
-	}
+        }
       },
       all: {
-	src: ['<%= yeoman.app %>/js/**/*.js', '<%= yeoman.app %>/compiled_jsx/**/*.js']
+        src: ['<%= yeoman.app %>/js/**/*.js', '<%= yeoman.app %>/compiled_jsx/**/*.js']
       }
     },
     cssmin: {
       options: {
-	report: true
+        report: true
       },
       dist: {
-	files: {
-	  '<%= yeoman.dist %>/all-styling-minified.css': ['<%= yeoman.app %>/css/*.css', '<%= yeoman.app %>/less/less-compiled.css']
-	}
+        files: {
+          '<%= yeoman.dist %>/all-styling-minified.css': ['<%= yeoman.app %>/css/*.css', '<%= yeoman.app %>/less/less-compiled.css']
+        }
       },
       dev: {
- 	files: {
-	  '<%= yeoman.app %>/less/regular-css-compiled.css': ['<%= yeoman.app %>/css/*.css']
-	}
+        files: {
+          '<%= yeoman.app %>/less/regular-css-compiled.css': ['<%= yeoman.app %>/css/*.css']
+        }
       }
     },
     concurrent: {
@@ -312,15 +312,15 @@ module.exports = function (grunt) {
     },
     less: {
       compile: {
-	options: {
+        options: {
           paths: ['<%= yeoman.app %>/less'],
-	  sourceMap: true,
-	  sourceMapFilename: '<%= yeoman.app %>/less/less-compiled.css.map',
-	  sourceMapURL: '/less/less-compiled.css.map'
-	},
-	files: {
+          sourceMap: true,
+          sourceMapFilename: '<%= yeoman.app %>/less/less-compiled.css.map',
+          sourceMapURL: '/less/less-compiled.css.map'
+        },
+        files: {
           "<%= yeoman.app %>/less/less-compiled.css": "<%= yeoman.app %>/less/index.less"
-	},
+        },
       }
     }
   });
