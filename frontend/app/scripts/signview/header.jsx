@@ -5,7 +5,7 @@ define(['React', 'Backbone', 'common/backbone_mixin'], function(React, Backbone,
 
   return React.createClass({
     propTypes: {
-      signviewbranding: React.PropTypes.signviewbranding,
+      signviewbranding: React.PropTypes.object,
       fullWidth : React.PropTypes.bool,
       link : React.PropTypes.object
     },

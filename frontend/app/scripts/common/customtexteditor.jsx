@@ -9,14 +9,12 @@ return React.createClass({
       onChange: React.PropTypes.func.isRequired,
       onPreview: React.PropTypes.func.isRequired,
       editable : React.PropTypes.bool,
-      width : React.PropTypes.int,
+      width : React.PropTypes.number,
       customtext: React.PropTypes.string,
       label : React.PropTypes.string.isRequired,
       placeholder: React.PropTypes.string.isRequired,
       disabledPlaceholder : React.PropTypes.string,
       previewLabel : React.PropTypes.string.isRequired
-    },
-    getInitialState: function() {
     },
     componentDidMount : function() {
       var self = this;
