@@ -676,6 +676,7 @@ data Document = Document {
   , documentlang                   :: Lang
   , documentstatusclass            :: StatusClass
   , documentapicallbackurl         :: Maybe String
+  , documentunsaveddraft           :: Bool
   , documentobjectversion          :: Int64
   , documentmagichash              :: MagicHash
   , documentauthorcompanyid        :: Maybe CompanyID
@@ -711,6 +712,7 @@ instance HasDefaultValue Document where
           , documentlang                 = defaultValue
           , documentstatusclass          = SCDraft
           , documentapicallbackurl       = Nothing
+          , documentunsaveddraft         = False
           , documentobjectversion        = 0
           , documentmagichash            = unsafeMagicHash 0
           , documentauthorcompanyid      = Nothing

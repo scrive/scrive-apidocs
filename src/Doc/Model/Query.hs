@@ -94,6 +94,7 @@ documentsSelectors =
   , "documents.lang"
   , "documents.sharing"
   , "documents.api_callback_url"
+  , "documents.unsaved_draft"
   , "documents.object_version"
   , "documents.token"
   , "documents.time_zone_name"
@@ -102,8 +103,8 @@ documentsSelectors =
   , documentStatusClassExpression
   ]
 
-fetchDocument :: (DocumentID, String, DocumentStatus, Maybe String, DocumentType, UTCTime, UTCTime, Int32, Maybe Int32, Maybe UTCTime, Maybe UTCTime, Maybe UTCTime, Maybe IPAddress, String, String, Bool, Bool, Bool, Bool, Lang, DocumentSharing, Maybe String, Int64, MagicHash, TimeZoneName, APIVersion,  Maybe CompanyID, StatusClass) -> Document
-fetchDocument (did, title, status, error_text, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text,  show_header, show_pdf_download, show_reject_option, show_footer, lang, sharing, apicallback, objectversion, token, time_zone_name, api_version, author_company_id, status_class)
+fetchDocument :: (DocumentID, String, DocumentStatus, Maybe String, DocumentType, UTCTime, UTCTime, Int32, Maybe Int32, Maybe UTCTime, Maybe UTCTime, Maybe UTCTime, Maybe IPAddress, String, String, Bool, Bool, Bool, Bool, Lang, DocumentSharing, Maybe String, Bool, Int64, MagicHash, TimeZoneName, APIVersion,  Maybe CompanyID, StatusClass) -> Document
+fetchDocument (did, title, status, error_text, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text,  show_header, show_pdf_download, show_reject_option, show_footer, lang, sharing, apicallback, unsaved_draft, objectversion, token, time_zone_name, api_version, author_company_id, status_class)
        = Document {
          documentid = did
        , documenttitle = title
@@ -137,6 +138,7 @@ fetchDocument (did, title, status, error_text, doc_type, ctime, mtime, days_to_s
        , documentlang = lang
        , documentstatusclass = status_class
        , documentapicallbackurl = apicallback
+       , documentunsaveddraft = unsaved_draft
        , documentobjectversion = objectversion
        , documentmagichash = token
        , documentauthorcompanyid = author_company_id
