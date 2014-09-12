@@ -130,7 +130,7 @@ var AdminCompanyDetailsView = Backbone.View.extend({
     accountDetails: function() {
       var self = this;
       var model = this.model;
-      var box = $("<di/>");
+      var box = $("<div/>");
       var table = $("<table style='border-collapse: separate; border-spacing: 10px;'/>");
       box.append(table);
 
