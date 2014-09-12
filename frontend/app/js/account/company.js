@@ -234,7 +234,7 @@ window.Company = Backbone.Model.extend({
       country    : args.country,
       ipaddressmasklist : args.ipaddressmasklist,
       smsoriginator : args.smsoriginator,
-      allowsavesafetycopy : args.allow_save_safety_copy,
+      allowsavesafetycopy : args.allowsavesafetycopy,
       companyui   : args.companyui != undefined ? new CompanyUI(args.companyui) : undefined,
       ready : true
     };
