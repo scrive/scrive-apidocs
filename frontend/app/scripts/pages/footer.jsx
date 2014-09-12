@@ -30,7 +30,8 @@ define(['React', 'Backbone', 'common/backbone_mixin', 'common/select'], function
     },
     render: function() {
      var self = this;
-     var options = _.filter(this.languages(), function(l) { return ('/' + l.value + '/') !=  self.props.langprefix });
+     var visibleLanguages = _.filter(this.languages(), function(l) { return !l.hidden;});
+     var options = _.filter(visibleLanguages, function(l) { return ('/' + l.value + '/') !=  self.props.langprefix });
      var lname = _.find(this.languages(), function(l) {return ('/' + l.value + '/') == self.props.langprefix}).name;
      var Select = NewSelect.Select;
      return (
