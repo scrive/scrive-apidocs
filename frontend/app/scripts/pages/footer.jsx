@@ -18,8 +18,8 @@ define(['React', 'Backbone', 'common/backbone_mixin', 'common/select'], function
         , {value : "sv", name : localization.languages.svInSv}
         , {value : "de", name : localization.languages.deInDe}
         , {value : "fr", name : localization.languages.frInFr}
-        , {value : "it", name : localization.languages.enInEn}
-        , {value : "es", name : localization.languages.itInIt}
+        , {value : "it", name : localization.languages.itInIt}
+        , {value : "es", name : localization.languages.esInEs}
         , {value : "pt", name : localization.languages.ptInPt}
         , {value : "nl", name : localization.languages.nlInNl}
         , {value : "da", name : localization.languages.daInDa}
