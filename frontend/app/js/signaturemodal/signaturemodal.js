@@ -1,7 +1,6 @@
 /* Modal for drawing or typing signature. For old IE only typing mode is available.
  * Value, as Base64 image is saved to field value.
- * valueTMP of field is ussed to store some internal values (for reediting).
- *
+ * valueTMP of field is used to store some internal values (for reediting, text mode only).
  * Usage:
  *
  *    new SignatureDrawOrTypeModal({
@@ -22,8 +21,6 @@ var SignatureDrawOrTypeModel= Backbone.Model.extend({
         typingMode: false
   },
   initialize : function() {
-    var tmp = this.field().valueTMP();
-    if (tmp != undefined && tmp.typingMode) this.set({typingMode : true});
   },
   typingMode : function() {
      return this.get("typingMode") == true;
@@ -80,8 +77,8 @@ var SignatureDrawOrTypeModel= Backbone.Model.extend({
     // This assumes that there is not a signature in the extra details field AND placed on the document (this is always true at the moment)
     var isSignatureFieldOnDocument = !DocumentExtraDetails.askForSignature(signatory);
     var isThisSignatureFieldTheLastField = numberOfIncompleteFieldTasks == 1 && incompleteFieldTasks[0].field() == this.field();
-    if (isSignatureFieldOnDocument && isThisSignatureFieldTheLastField) { 
-      numberOfIncompleteFieldTasks = 0; 
+    if (isSignatureFieldOnDocument && isThisSignatureFieldTheLastField) {
+      numberOfIncompleteFieldTasks = 0;
     }
 
     var fieldsLeftToFillIn = (   numberOfIncompleteFieldTasks > 0 // Are there more things to do on the document?
@@ -147,7 +144,6 @@ var SignatureDrawOrTypeModel= Backbone.Model.extend({
 var SignatureDrawOrTypeView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
-        this.model.bind('change:typingMode', this.render);
         this.render();
     },
     header: function() {
