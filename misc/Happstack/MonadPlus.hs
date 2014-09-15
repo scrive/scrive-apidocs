@@ -9,6 +9,7 @@ module Happstack.MonadPlus
   , runMPlusT
   )  where
 
+import Control.Applicative
 import Control.Monad (MonadPlus(..), liftM)
 import Control.Monad.IO.Class (MonadIO(..), liftIO)
 import Control.Monad.Trans.Class (MonadTrans (..))
@@ -18,13 +19,17 @@ import Happstack.Server (FilterMonad(..), WebMonad(..), ServerMonad(..), HasRqDa
 -- | Capture 'MonadPlus' contexts using 'MaybeT'.  Useful as a wrapper
 -- around backtracking Happstack functions.
 newtype MPlusT m a = MPlusT { unMPlusT :: MaybeT m a }
-  deriving (Monad, Functor)
+  deriving (Applicative, Functor, Monad)
 
 runMPlusT :: MPlusT m a -> m (Maybe a)
 runMPlusT = runMaybeT . unMPlusT
 
 instance MonadTrans MPlusT where
   lift m = MPlusT $ lift m
+
+instance (Functor m, Monad m) => Alternative (MPlusT m) where
+  empty = MPlusT empty
+  MPlusT a <|> MPlusT b = MPlusT $ a <|> b
 
 instance Monad m => MonadPlus (MPlusT m) where
   mzero = MPlusT $ mzero

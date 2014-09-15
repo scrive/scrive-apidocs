@@ -10,6 +10,7 @@ import Data.Typeable
 import ActionQueue.Core
 import ActionQueue.Scheduler
 import Crypto.RNG
+import Database.PostgreSQL.PQTypes.Class.Instances.Overlapping ()
 import DB
 import MinutesTime
 import MagicHash
