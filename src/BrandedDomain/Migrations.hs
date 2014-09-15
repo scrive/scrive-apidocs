@@ -37,7 +37,7 @@ createBrandedDomainsTable =
     , tblColumn { colName = "price_color",                   colType = TextT, colNullable = False }
     , tblColumn { colName = "sms_originator",                colType = TextT, colNullable = False }
     , tblColumn { colName = "email_originator",              colType = TextT, colNullable = False }
-    , tblColumn { colName = "contact_email",                 colType = BinaryT, colNullable = True }
+    , tblColumn { colName = "contact_email",                 colType = TextT, colNullable = False }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblIndexes = [
