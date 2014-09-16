@@ -32,7 +32,7 @@ echo "STARTING CRON SERVER"
 if [ -z "$1" ]; then
     echo ""
     echo "STARTING GRUNT SERVER"
-    if grep --quiet ".*production.*=.*True.*" kontrakcja.conf; then
+    if grep --quiet ".*production.*:.*true.*" kontrakcja.conf; then
         GRUNT_TASK="server:dist"
     else
         GRUNT_TASK="server"
