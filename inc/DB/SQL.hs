@@ -169,11 +169,7 @@ module DB.SQL
   , sqlDelete
   , SqlDelete(..)
 
-  , SqlAny(..)
   , sqlWhereAny
-
-  , SqlAll(..)
-  , sqlWhereAll
 
   , SqlResult
   , SqlSet
@@ -342,10 +338,8 @@ data SqlDelete = SqlDelete
   , sqlDeleteWith    :: [(SQL, SQL)]
   }
 
-data SqlAny = SqlAny
-  { sqlAnyWhere :: [SqlCondition]
-  }
-
+-- | This is not exported and is used as an implementation detail in
+-- 'sqlWhereAll'.
 data SqlAll = SqlAll
   { sqlAllWhere :: [SqlCondition]
   }
@@ -366,9 +360,6 @@ instance Show SqlDelete where
   show = show . toSQLCommand
 
 instance Show SqlAll where
-  show = show . toSQLCommand
-
-instance Show SqlAny where
   show = show . toSQLCommand
 
 emitClause :: Sqlable sql => SQL -> sql -> SQL
@@ -472,11 +463,6 @@ instance Sqlable SqlDelete where
         emitClausesSep "WHERE" "AND" (map toSQLCommand $ sqlDeleteWhere cmd) <+>
     emitClausesSepComma "RETURNING" (sqlDeleteResult cmd)
 
-instance Sqlable SqlAny where
-  toSQLCommand cmd | null (sqlAnyWhere cmd) = "FALSE"
-  toSQLCommand cmd =
-    "(" <+> smintercalate "OR" (map (parenthesize . toSQLCommand) (sqlAnyWhere cmd)) <+> ")"
-
 instance Sqlable SqlAll where
   toSQLCommand cmd | null (sqlAllWhere cmd) = "TRUE"
   toSQLCommand cmd =
@@ -565,10 +551,6 @@ instance SqlWhere SqlUpdate where
 instance SqlWhere SqlDelete where
   sqlWhere1 cmd cond = cmd { sqlDeleteWhere = sqlDeleteWhere cmd ++ [cond] }
   sqlGetWhereConditions = sqlDeleteWhere
-
-instance SqlWhere SqlAny where
-  sqlWhere1 cmd cond = cmd { sqlAnyWhere = sqlAnyWhere cmd ++ [cond] }
-  sqlGetWhereConditions = sqlAnyWhere
 
 instance SqlWhere SqlAll where
   sqlWhere1 cmd cond = cmd { sqlAllWhere = sqlAllWhere cmd ++ [cond] }
@@ -702,12 +684,9 @@ sqlWhereIsNULLE :: (MonadState v m, SqlWhere v, KontraException e, Show a, FromS
                 => (a -> e) -> SQL -> m ()
 sqlWhereIsNULLE exc col = sqlWhereEV (exc, col) $ col <+> "IS NULL"
 
-sqlWhereAny :: (MonadState v m, SqlWhere v) => State SqlAny () -> m ()
-sqlWhereAny = sqlWhere . toSQLCommand . flip execState (SqlAny [])
-
-sqlWhereAll :: (MonadState v m, SqlWhere v) => State SqlAll () -> m ()
-sqlWhereAll = sqlWhere . toSQLCommand . flip execState (SqlAll [])
-
+sqlWhereAny :: (MonadState v m, SqlWhere v) => [State SqlAll ()] -> m ()
+sqlWhereAny [] = sqlWhere "FALSE"
+sqlWhereAny l = sqlWhere $ "(" <+> smintercalate "OR" (map (parenthesize . toSQLCommand . flip execState (SqlAll [])) l) <+> ")"
 
 class SqlFrom a where
   sqlFrom1 :: a -> SQL -> a

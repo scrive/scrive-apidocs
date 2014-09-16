@@ -134,7 +134,7 @@ instance MonadDB m => DBQuery m GetAttachments [Attachment] where
   query (GetAttachments domains filters orderbys (offset,limit)) = do
     runQuery_ . sqlSelect "attachments" $ do
       sqlAttachmentResults
-      sqlWhereAny (mapM_ (sqlWhere . domainToSQLCommand) domains)
+      sqlWhereAny (map (sqlWhere . domainToSQLCommand) domains)
       mapM_ sqlWhereAttachmentFilter filters
       mapM_ (sqlOrderBy . orderToSQLCommand) orderbys
       sqlOffset $ fromIntegral offset

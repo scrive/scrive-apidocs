@@ -1146,14 +1146,15 @@ changeSomeStandardFieldsToOptional=
                      sqlWhereEqSql "f.signatory_link_id" "s.id"
                      sqlWhereEqSql "d.id" "s.document_id"
                      sqlWhereNotEq "d.status" Closed
-                     sqlWhereAny $ do
-                       sqlWhereAll $ do
+                     sqlWhereAny
+                       [ do
                          sqlWhereEq "f.type" PersonalNumberFT
                          sqlWhereNotEq "s.authentication_method" ELegAuthentication
-                       sqlWhereAll $ do
+                       , do
                          sqlWhereEq "f.type" (MobileFT)
                          sqlWhereNotIn "s.delivery_method" [MobileDelivery,EmailAndMobileDelivery]
                          sqlWhereNotIn "s.confirmation_delivery_method" [MobileConfirmationDelivery,EmailAndMobileConfirmationDelivery]
+                       ]
   }
 
 -- Personal number used to be obligatory, but we didn't asked about it in extra details section

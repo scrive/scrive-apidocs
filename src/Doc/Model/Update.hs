@@ -1350,11 +1350,12 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m UpdateFieldsForSignin
                    sqlWhereEq "signatory_link_id" slid
                    sqlWhereEq "custom_name" custom_name
                    sqlWhereEq "type" fieldtype
-                   sqlWhereAny $ do
-                       sqlWhereAll $ do
+                   sqlWhereAny
+                       [ do
                          sqlWhereEq "value" (""::String) -- Note: if we allow values to be overwritten, the evidence events need to be adjusted to reflect the old value.
                          sqlWhereIn "type" [CustomFT "" False, FirstNameFT,LastNameFT,EmailFT,CompanyFT,PersonalNumberFT,PersonalNumberFT,CompanyNumberFT, MobileFT]
-                       sqlWhereIn "type" [CheckboxFT "", SignatureFT ""]
+                       , sqlWhereIn "type" [CheckboxFT "", SignatureFT ""]
+                       ]
                    sqlWhereExists $ sqlSelect "documents" $ do
                      sqlWhere "signatory_links.id = signatory_link_id"
                      sqlLeftJoinOn "signatory_links" "documents.id = signatory_links.document_id"

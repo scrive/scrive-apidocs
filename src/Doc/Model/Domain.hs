@@ -72,12 +72,12 @@ documentDomainToSQL (DocumentsVisibleViaAccessToken token) = do
 documentDomainToSQL (DocumentsVisibleToUser uid) = do
   sqlWhereDocumentWasNotPurged
   sqlWhereDocumentIsNotReallyDeleted
-  sqlWhereAny $ do
-    sqlWhereAll $ do           -- 1: see own documents
+  sqlWhereAny
+    [ do           -- 1: see own documents
       sqlWhereEq "same_company_users.id" uid
       sqlWhere "users.id = same_company_users.id"
       sqlWhere "signatory_links.is_author"
-    sqlWhereAll $ do           -- 2. see signables as partner
+    , do           -- 2. see signables as partner
       sqlWhereEq "same_company_users.id" uid
       sqlWhere "users.id = same_company_users.id"
       sqlWhereNotEq "documents.status" Preparation
@@ -88,19 +88,20 @@ documentDomainToSQL (DocumentsVisibleToUser uid) = do
                             sqlWhere "earlier_signatory_links.is_partner"
                             sqlWhere "earlier_signatory_links.sign_time IS NULL"
                             sqlWhere "earlier_signatory_links.sign_order < signatory_links.sign_order"
-    sqlWhereAll $ do           -- 3. see signables as viewer
+    , do           -- 3. see signables as viewer
       sqlWhereEq "same_company_users.id" uid
       sqlWhere "users.id = same_company_users.id"
       sqlWhereNotEq "documents.status" Preparation
       sqlWhereEq "documents.type" $ Signable
       sqlWhere "NOT signatory_links.is_partner"
-    sqlWhereAll $ do           -- 4. see shared templates
+    , do           -- 4. see shared templates
       sqlWhereEq "same_company_users.id" uid
       sqlWhereEq "documents.sharing" Shared
       sqlWhereEq "documents.type" $ Template
       sqlWhere "signatory_links.is_author"
-    sqlWhereAll $ do           -- 5: see documents of subordinates
+    , do           -- 5: see documents of subordinates
       sqlWhereEq "same_company_users.id" uid
       sqlWhere "same_company_users.is_company_admin"
       sqlWhere "signatory_links.is_author"
       sqlWhereNotEq "documents.status" Preparation
+    ]

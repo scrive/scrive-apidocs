@@ -60,9 +60,10 @@ companyFilterToWhereClause (CompanyFilterByString text) = do
       escape c = [c]
 
 companyFilterToWhereClause (CompanyManyUsers) = do
-  sqlWhereAny $ do
-    sqlWhere $ "((SELECT count(*) FROM users WHERE users.company_id = companies.id) > 1)"
-    sqlWhere $ "((SELECT count(*) FROM companyinvites WHERE companyinvites.company_id = companies.id) > 0)"
+  sqlWhereAny
+    [ sqlWhere $ "((SELECT count(*) FROM users WHERE users.company_id = companies.id) > 1)"
+    , sqlWhere $ "((SELECT count(*) FROM companyinvites WHERE companyinvites.company_id = companies.id) > 0)"
+    ]
 
 
 data CompanyOrderBy

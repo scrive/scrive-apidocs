@@ -395,7 +395,7 @@ instance MonadDB m => DBQuery m GetDocuments2 (Int,[Document]) where
         sqlLeftJoinOn "users" "signatory_links.user_id = users.id"
         sqlLeftJoinOn "companies" "users.company_id = companies.id"
         sqlLeftJoinOn "users AS same_company_users" "users.company_id = same_company_users.company_id OR users.id = same_company_users.id"
-        sqlWhereAny (mapM_ (sqlWhereAll . documentDomainToSQL) domains)
+        sqlWhereAny (map documentDomainToSQL domains)
         mapM_ documentFilterToSQL filters
 
 data GetDocumentsIDs = GetDocumentsIDs [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy]
@@ -409,7 +409,7 @@ instance MonadDB m => DBQuery m GetDocumentsIDs [DocumentID] where
         sqlLeftJoinOn "users" "signatory_links.user_id = users.id"
         sqlLeftJoinOn "companies" "users.company_id = companies.id"
         sqlLeftJoinOn "users AS same_company_users" "users.company_id = same_company_users.company_id OR users.id = same_company_users.id"
-        sqlWhereAny (mapM_ (sqlWhereAll . documentDomainToSQL) domains)
+        sqlWhereAny (map documentDomainToSQL domains)
         mapM_ documentFilterToSQL filters
     fetchMany unSingle
 
