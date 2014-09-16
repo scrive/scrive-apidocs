@@ -280,6 +280,23 @@ var ConfirmationView = Backbone.View.extend({
       this.container.css("margin-left",left > 20 ? left : 20);
       this.container.width(this.model.width());
     },
+    fixHeight: function() {
+      var height = $(document).height();
+      if (BrowserInfo.isIE8orLower()) {
+        // WORKAROUND FOR IE8 BUG
+        // overlay (this.el) is absolute and has opacity filter
+        // which breaks IE8 calculation of the document height
+        // we temporarily disable opacity, calculate the height
+        // of the overlay and use it later.
+        // when we reenable opacity the document height is calculated properly
+        // because of explicitly set overlay height
+        var filter = $(this.el).css('filter');
+        $(this.el).css('filter', '');
+        height = $(document).height();
+        $(this.el).css('filter', filter);
+      }
+      $(this.el).height(height);
+    },
     reject: function(silent){
         var self = this;
         $(this.el).removeClass("active");
@@ -306,7 +323,6 @@ window.Confirmation = function (args) {
           var topMargin = 20;
           if (args.cssClass != undefined)
             overlay.addClass(args.cssClass);
-          overlay.height($(document).height());
 
           if (BrowserInfo.isPadDevice()) {
             //Pad devices have a different aproach to body.width
@@ -334,7 +350,7 @@ window.Confirmation = function (args) {
             });
             overlay.removeClass("no-transition");
             view.container.css("opacity", 1);
-            overlay.height($(document).height());
+            view.fixHeight();
             view.onRender();
           } else {
             $("body").append(overlay).each(function() {
@@ -354,7 +370,7 @@ window.Confirmation = function (args) {
               setTimeout(function() {
                 // Sometimes when the overlay pushes the document down,
                 // we have to make sure that the overlay covers the whole doc.
-                overlay.height($(document).height());
+                view.fixHeight();
                 view.onRender();
               }, 1000);
             }, 100);
@@ -384,7 +400,7 @@ window.Confirmation = function (args) {
 
          // Export the interface
          return {
-           fixOverlay : function() { overlay.height($(document).height()); },
+           fixOverlay : function() { view.fixHeight(); },
            clear      : function() { view.clear();},
            close      : function(fast) { model.close();},
            margin     : function() { return model.margin(); },
