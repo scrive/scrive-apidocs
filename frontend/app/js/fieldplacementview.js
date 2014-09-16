@@ -1,8 +1,21 @@
 define(['tinycolor', 'Backbone', 'legacy_code'], function(tinycolor) {
 
+/* Borders for all placements */
+var placementBorder = 2;
+
 /* Margins for text placements. Such placements have some internal margin and we need to adjust it*/
-var textPlacementTopMargin  = 8;
-var textPlacementLeftMargin = 7;
+var textPlacementHorSpace = 7;
+var textPlacementExtraLineHeight = 4;
+var textPlacementVerSpace = 5;
+var textPlacementSpacingString = textPlacementVerSpace + 'px ' + textPlacementHorSpace + 'px ' + textPlacementVerSpace + 'px ' + textPlacementHorSpace + 'px';
+var textPlacementXOffset = placementBorder + textPlacementHorSpace;
+var textPlacementYOffset = placementBorder + textPlacementVerSpace + textPlacementExtraLineHeight;
+
+/* Font sizes for text placements */
+var fontSizeSmall  = 12;
+var fontSizeNormal = 16;
+var fontSizeLarge  = 20;
+var fontSizeHuge   = 24;
 
 /* Margins for checkbox placement. */
 var checkboxPlacementTopMargin  = 1;
@@ -102,8 +115,8 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                 var xAxisOffset = 0;
                 var yAxisOffset = 0;
                 if (field.isText() || field.isFake()) {
-                  xAxisOffset = textPlacementLeftMargin;
-                  yAxisOffset = textPlacementTopMargin;
+                  xAxisOffset = textPlacementXOffset;
+                  yAxisOffset = textPlacementYOffset;
                 }
                 field.signatory().document().mainfile().view.showCoordinateAxes(ui.helper,verticaloffset, xAxisOffset, yAxisOffset);
             }
@@ -138,8 +151,8 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                 var xAxisOffset = 0;
                 var yAxisOffset = 0;
                 if (field.isText() || field.isFake()) {
-                  xAxisOffset = textPlacementLeftMargin;
-                  yAxisOffset = textPlacementTopMargin;
+                  xAxisOffset = textPlacementXOffset;
+                  yAxisOffset = textPlacementYOffset;
                 }
                 field.signatory().document().mainfile().view.showCoordinateAxes(ui.helper, verticaloffset, xAxisOffset, yAxisOffset);
                 field.signatory().document().mainfile().view.moveCoordinateAxes(ui.helper, verticaloffset, xAxisOffset, yAxisOffset);
@@ -147,8 +160,8 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
         },
         onDrop: function(page, x, y, w, h) {
             if (field.isText() || field.isFake() ) {
-              x += textPlacementLeftMargin;
-              y += textPlacementTopMargin;
+              x += textPlacementXOffset;
+              y += textPlacementYOffset;
             } else if (field.isCheckbox()) {
               x += checkboxPlacementLeftMargin;
               y += checkboxPlacementTopMargin;
@@ -170,6 +183,8 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
 
             if( placement!=undefined ) {
                 if( placement.page()==page.number() ) {
+                    console.log('xrel: ' + x/w);
+                    console.log('yrel: ' + y/h);
                     placement.set({ xrel: x/w,
                                     yrel: y/h,
                                     wrel: $(helper).width()/w,
@@ -408,13 +423,13 @@ var TextTypeSetterView = Backbone.View.extend({
         var placement = this.model;
         var fontSizeName = localization.fontSize.custom;
         var currSize = placement.fsrel() * page.width();
-        if (Math.abs(currSize - 12) < 1)
+        if (Math.abs(currSize - fontSizeSmall) < 1)
           fontSizeName = localization.fontSize.small;
-        if (Math.abs(currSize - 16) < 1)
+        if (Math.abs(currSize - fontSizeNormal) < 1)
           fontSizeName = localization.fontSize.normal;
-        if (Math.abs(currSize - 20) < 1)
+        if (Math.abs(currSize - fontSizeLarge) < 1)
           fontSizeName = localization.fontSize.big;
-        if (Math.abs(currSize - 24) < 1)
+        if (Math.abs(currSize - fontSizeHuge) < 1)
           fontSizeName = localization.fontSize.large;
         return new Select({name : localization.fontSize.name + ": " + fontSizeName,
                            textWidth: "191px",
@@ -422,17 +437,17 @@ var TextTypeSetterView = Backbone.View.extend({
                            style: "font-size: 16px; width: 220px;",
                            options: [
                               { name : localization.fontSize.small,
-                                style: "font-size: 12px",
-                                onSelect: function() {placement.setFSRel(12/page.width()); return true;}},
+                                style: "font-size: " + fontSizeSmall + "px",
+                                onSelect: function() {placement.setFSRel(fontSizeSmall/page.width()); return true;}},
                               { name : localization.fontSize.normal,
-                                style: "font-size: 16px",
-                                onSelect: function() {placement.setFSRel(16/page.width()); return true;}},
+                                style: "font-size: " + fontSizeNormal + "px",
+                                onSelect: function() {placement.setFSRel(fontSizeNormal/page.width()); return true;}},
                               { name : localization.fontSize.big,
-                                style: "font-size: 20px",
-                                onSelect: function() {placement.setFSRel(20/page.width()); return true;}},
+                                style: "font-size: " + fontSizeLarge + "px",
+                                onSelect: function() {placement.setFSRel(fontSizeLarge/page.width()); return true;}},
                               { name : localization.fontSize.large,
-                                style: "font-size: 24px",
-                                onSelect: function() {placement.setFSRel(24/page.width()); return true;}}
+                                style: "font-size: " + fontSizeHuge + "px",
+                                onSelect: function() {placement.setFSRel(fontSizeHuge/page.width()); return true;}}
                            ] }).el;
     },
     title : function() {
@@ -543,13 +558,14 @@ var TextPlacementView = Backbone.View.extend({
         var signatory = field.signatory();
         var color = signatory?signatory.color():'red';
         if (color) {
-          $(this.el).css('border', '2px solid ' + color);
+          $(this.el).css('border', placementBorder + 'px solid ' + color);
         }
     },
     render: function() {
             var field =   this.model;
             var box = $(this.el);
             box.addClass('placedfieldvalue value');
+            box.css("padding", textPlacementSpacingString);
         if(field) {
             box.text(field.nicetext());
             field.bind('change', function() {
@@ -560,7 +576,7 @@ var TextPlacementView = Backbone.View.extend({
         }
         if (this.fontSize != undefined) {
             box.css("font-size"  ,this.fontSize + "px");
-            box.css("line-height",this.fontSize + 4 + "px");
+            box.css("line-height",this.fontSize + textPlacementExtraLineHeight + "px");
         }
 
         this.updateColor();
@@ -610,8 +626,8 @@ var TextPlacementPlacedView = Backbone.View.extend({
             var parentWidth = parent.width();
             var parentHeight = parent.height();
             place.css({
-                left: Math.floor(placement.xrel() * parentWidth + 1.5) - textPlacementLeftMargin,
-                top: Math.floor(placement.yrel() * parentHeight + 1.5) - textPlacementTopMargin,
+                left: Math.floor(placement.xrel() * parentWidth + 1.5) - textPlacementXOffset,
+                top: Math.floor(placement.yrel() * parentHeight + 1.5) - textPlacementYOffset,
                 fontSize: Math.floor(placement.fsrel() * parentWidth)
             });
         }
@@ -695,12 +711,12 @@ var TextPlacementPlacedView = Backbone.View.extend({
                  "border-width: 0px;" +
                  "padding-left:7px;",
           inputStyle : "font-size:" + this.fontSize() + "px ;" +
-                       "line-height: " + (this.fontSize()+ 4) + "px;" +
+                       "line-height: " + (this.fontSize()+ textPlacementExtraLineHeight) + "px;" +
                        "height:"+ (this.fontSize() + 4) +"px;" +
                        "width: " + width +"px;"+
                        "background:transparent;",
           okStyle :  "font-size:" + this.fontSize() + "px ;" +
-                     "line-height: " + (this.fontSize()+ 2) + "px;" +
+                     "line-height: " + (this.fontSize()+ textPlacementExtraLineHeight) + "px;" +
                      "height:"+ (this.fontSize() + 2) +"px;",
           onEnter : accept,
           onAutoGrowth : function() {
@@ -777,7 +793,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
             options: options,
 
             cssClass: 'text-field-placement-setter-field-selector',
-            border : "1px solid #f33",
+            border : placementBorder + "px solid #f33",
             textWidth: "",
             onSelect: function(s) {
                 mixpanel.track('Select placement signatory');
@@ -828,7 +844,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
             name: name,
             options: options,
             cssClass: 'text-field-placement-setter-field-field-selector',
-            border : "1px solid " + (signatory.color() || "#f33"),
+            border : placementBorder + "px solid " + (signatory.color() || "#f33"),
             textWidth : "",
             onSelect: function(o) {
                 var f = signatory.field(o.name, o.type);
@@ -947,10 +963,15 @@ var TextPlacementPlacedView = Backbone.View.extend({
             cssClass: 'text-field-placement-setter-field-editor',
             infotext: field.nicename(),
             style: "font-size:" + this.fontSize() + "px ;" +
-                   "line-height: " + (this.fontSize() + 2) +  "px;" +
+                   "line-height: " + (this.fontSize() + textPlacementExtraLineHeight) +  "px;" +
                    "height:"+ (this.fontSize() + 4) +"px; " +
-                    ((field && field.signatory() && field.signatory().color()) ? "border-color : "  + field.signatory().color() + ";": ""),
-            inputStyle : "font-size:" + this.fontSize() + "px ; line-height: " + (this.fontSize() + 2) + "px; height:"+ (this.fontSize() + 4) +"px",
+                    ((field && field.signatory() && field.signatory().color()) ? "border-color : "  + field.signatory().color() + ";": "") +
+                   "border-width:" + placementBorder + "px; " +
+                   "padding:" + textPlacementSpacingString + ";",
+            inputStyle : "font-size:" + this.fontSize() + "px ; " +
+                         "line-height: " + (this.fontSize() + textPlacementExtraLineHeight) + "px; " +
+                         "height:"+ (this.fontSize() + 4) +"px; " +
+                         "vertical-align: top;",
             value: field.value(),
             suppressSpace: (field.name()=="fstname"),
             onChange: function(val) {
