@@ -46,40 +46,53 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             this.currentColorIndex = 0;
             return this;
         },
-        saveDraft: function() {
+        saveDocument: function() {
+            var viewmodel = this;
             var document = this.document();
-            var savedOnce = document.savedOnce();
             document.save(function() {
-                new Submit({
-                    ajax : 'true',
-                    method : 'POST',
-                    url : '/d/save/' + document.documentid(),
-                    ajaxsuccess : function() {
-                        console.log("saveDraft " + document.documentid());
-                        var flashMsg;
-                        if(savedOnce) {
-                          flashMsg = localization.designview.saved.saveDraft;
-                        } else {
-                          flashMsg = localization.designview.saved.savedAsDraft;
-                        }
-                        new FlashMessage({color: 'green', content: flashMsg});
-                    }
-                }).send();
+              if(document.isTemplate()) {
+                viewmodel.saveTemplateFlashMessage();
+              }
+              else {
+                viewmodel.saveDraft();
+              }
+              document.setSavedDraft();
             });
         },
-        saveTemplate: function() {
+        saveDraft: function() {
+            var viewmodel = this;
             var document = this.document();
-            var savedOnce = document.savedOnce();
-            document.makeTemplate();
-            document.save(function() {
-                var flashMsg;
-                if(savedOnce) {
-                  flashMsg = localization.designview.saved.saveTemplate;
-                } else {
-                  flashMsg = localization.designview.saved.savedAsTemplate;
+            new Submit({
+                ajax : 'true',
+                method : 'POST',
+                url : '/d/save/' + document.documentid(),
+                ajaxsuccess : function() {
+                    console.log("saveDraft " + document.documentid());
+                    viewmodel.saveDraftFlashMessage();
                 }
-                new FlashMessage({color: 'green', content: flashMsg});
-            });
+            }).send();
+        },
+        saveDraftFlashMessage: function() {
+            var flashMsg;
+            if(this.document().unsavedDraft()) {
+              flashMsg = localization.designview.saved.savedAsDraft;
+            } else {
+              flashMsg = localization.designview.saved.saveDraft;
+            }
+            new FlashMessage({color: 'green', content: flashMsg});
+        },
+        saveTemplate: function() {
+            this.document().makeTemplate();
+            this.saveDocument();
+        },
+        saveTemplateFlashMessage: function() {
+            var flashMsg;
+            if(this.document().unsavedDraft()) {
+              flashMsg = localization.designview.saved.savedAsTemplate;
+            } else {
+              flashMsg = localization.designview.saved.saveTemplate;
+            }
+            new FlashMessage({color: 'green', content: flashMsg});
         }
     });
 
@@ -92,6 +105,8 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             view.render();
             view.model.document().bind('change:template change:file', view.render);
             view.model.document().bind('bubble',view.updateSaveButton);
+            view.model.document().bind('change', view.updateSaveDraftButton);
+            view.model.document().bind('change', view.updateSaveTemplateButton);
         },
         render: function() {
             var view = this;
@@ -131,17 +146,17 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             cssClass: 'button-save-draft',
             onClick: function(e) {
               mixpanel.track('Click save as draft');
-              view.model.saveDraft();
+              view.model.saveDocument();
               view.updateSaveDraftButton();
             }
           }).el();
           return this.saveDraftButton;
         },
         saveDraftButtonText : function() {
-          if(this.model.document().savedOnce()) {
-            return localization.designview.saveDraftButton;
+          if(this.model.document().unsavedDraft()) {
+            return localization.designview.saveAsDraftButton;
           }
-          return localization.designview.saveAsDraftButton;
+          return localization.designview.saveDraftButton;
         },
         updateSaveDraftButton : function() {
           if(this.saveDraftButton != undefined) {
@@ -165,7 +180,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
         },
         saveTemplateButtonText : function() {
           var document = this.model.document();
-          if(document.isTemplate() && document.savedOnce()) {
+          if(document.isTemplate() && !document.unsavedDraft()) {
             return localization.designview.saveTemplateButton;
           }
           return localization.designview.saveAsTemplateButton;

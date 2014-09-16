@@ -43,7 +43,7 @@ window.Document = Backbone.Model.extend({
         template: false,
         timezone : "Europe/Stockholm",
         saveQueue : new AjaxQueue(),
-        savedOnce : false,
+        unsaveddraft : true,
         screenshots : {}
     }},
     initialize: function(args) {
@@ -418,23 +418,16 @@ window.Document = Backbone.Model.extend({
               method: "POST",
               json: JSON.stringify(this.draftData()),
               ajaxsuccess : function() {if (callback != undefined) callback();}
-          }), function(ec) {if (ec == 403) window.location.reload()});
-         this.set({savedOnce : true});
+         }), function(ec) {if (ec == 403) window.location.reload()});
     },
     afterSave: function(f) {
         this.get("saveQueue").finishWith(f);
     },
-    savedOnce: function() {
-        if(this.mtime() > this.ctime() ) {
-          this.set({savedOnce : true});
-        }
-        return this.get("savedOnce");
+    unsavedDraft: function() {
+        return this.get("unsaveddraft");
     },
-    ctime: function() {
-        return this.get("ctime");
-    },
-    mtime: function() {
-        return this.get("mtime");
+    setSavedDraft: function() {
+        this.set({unsaveddraft:false});
     },
     setAttachments: function() {
         return new Submit({
@@ -736,8 +729,7 @@ window.Document = Backbone.Model.extend({
        invitationmessage: args.invitationmessage,
        confirmationmessage: args.confirmationmessage,
        timezone: args.timezone,
-       ctime: args.ctime,
-       mtime: args.time,
+       unsaveddraft : args.unsaveddraft,
        ready: true
      };
     },

@@ -179,7 +179,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                                        document.markAsNotReady();
                                        submit.addInputs(input);
 
-                                       view.viewmodel.saveDraft();
+                                       view.viewmodel.saveDocument();
                                        document.afterSave(function() {
                                            submit.sendAjax();
                                         });
