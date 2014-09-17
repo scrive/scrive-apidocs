@@ -1486,20 +1486,19 @@ instance MonadDB m => DBUpdate m PurgeDocuments Int where
         <+> "                                   FROM document_session_tokens"
         <+> "                                  WHERE document_session_tokens.signatory_link_id = signatory_links.id))"
 
-        -- is not saved but time to save the document went by although it was allowed by author's company settings
+        -- company settings require to wait time to allow saving (we
+        -- wait even if there is nobody to wait for to make things
+        -- simple and more predictable).
         <+> "   AND NOT EXISTS(SELECT TRUE"
-        <+> "                    FROM signatory_links"
+        <+> "                    FROM companies, users, signatory_links"
         <+> "                   WHERE signatory_links.document_id = documents.id"
-        <+> "                     AND signatory_links.user_id IS NULL"
-                                  -- linger time hasn't elapsed yet
+                                   -- linger time is allowed by author's company settings
+        <+> "                     AND companies.allow_save_safety_copy"
+                                   -- linger time hasn't elapsed yet
         <+> "                     AND documents.mtime + (" <?> (show unsavedDocumentLingerDays' ++ "days") <+> " :: INTERVAL) > now()"
-                                  -- linger time is allowed by author's company settings
-        <+> "                     AND (SELECT companies.allow_save_safety_copy"
-        <+> "                            FROM companies, users, signatory_links"
-        <+> "                           WHERE signatory_links.document_id = documents.id"
-        <+> "                             AND signatory_links.is_author"
-        <+> "                             AND users.id = signatory_links.user_id"
-        <+> "                             AND users.company_id = companies.id))"
+        <+> "                     AND signatory_links.is_author"
+        <+> "                     AND users.id = signatory_links.user_id"
+        <+> "                     AND users.company_id = companies.id)"
 
     -- set purged time on documents
     rows <- runSQL $ "UPDATE documents"
