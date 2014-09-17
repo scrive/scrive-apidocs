@@ -163,77 +163,107 @@ window.Field = Backbone.Model.extend({
 
         return res;
     },
+    // Validate the state of the field (not fake, not blank, etc) and the input
+    // TODO JJ: remove all use of `forSigning` and figure this out from the signatory instead
     validation: function(forSigning) {
-        var field = this;
-        var name  = this.name();
-        var signatory = this.signatory();
+      var field = this;
 
-        if (field.isFake())
-           return new NoValidation();
+      if(field.isFake()) {
+        return new NoValidation();
+      }
+      if(field.isBlank()) {
+        var msg = localization.designview.validation.pleaseSelectField;
+        return new Validation({validates: function() {
+          return field.type() && field.name();
+        }, message: msg});
+      }
+      if(field.noName()) {
+        var msg = localization.designview.validation.notReadyField;
+        return new Validation({validates: function() {
+          return !field.noName();
+        }, message: msg});
+      }
 
-        if( field.isBlank() ) {
-            var msg = localization.designview.validation.pleaseSelectField;
-            return new Validation({validates: function() {
-                return field.type() && field.name();
-            }, message: msg});
-        }
+      return this.validateInput(forSigning);
+    },
+    // Only validate the input, may be in invalid state (e.g. 'fake' field)
+    validateInput: function(forSigning) {
+      var field = this;
 
-        if(field.noName()) {
-            var msg = localization.designview.validation.notReadyField;
-            return new Validation({validates: function() {
-                return !field.noName();
-            }, message: msg});
+      if(forSigning && field.isObligatory() && field.shouldbefilledbysender()) {
+        var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
+        return new NotEmptyValidation({message: msg});
+      }
+      if(forSigning &&field.signatory().author() &&
+          (field.isCheckbox() || field.isText()) &&
+          field.hasPlacements() &&
+          field.isObligatory()
+        ) {
+        var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
+        return new NotEmptyValidation({message: msg});
+      }
 
-        }
+      if((field.isFstName || field.isSndName()) && field.validateNames() != undefined) {
+        return field.validateNames();
+      }
+      if(field.isEmail() && field.validateEmail() != undefined) {
+        return field.validateEmail();
+      }
+      if(field.isMobile() && field.validateMobile() != undefined) {
+        return field.validateMobile();
+      }
+      if(field.isSSN() && field.validateSSN(forSigning) != undefined) {
+        return field.validateSSN(forSigning);
+      }
+      if(field.isCheckbox() && field.validateCheckbox() != undefined) {
+        return field.validateCheckbox();
+      }
 
-        if (   this.isEmail()
-            && (signatory.emailDelivery() || signatory.emailMobileDelivery())
-           ){
-            var msg = localization.designview.validation.missingOrWrongEmail;
-            return new EmailValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
-        }
-        if ((this.isFstName() || this.isSndName()) && signatory.author())
-            return new NoValidation();
+      return new Validation();
+    },
+    validateNames: function() {
+      if(this.signatory().author()) {
+        return new NoValidation();
+      }
+    },
+    validateSSN: function(forSigning) {
+      var signatory = this.signatory();
+      if(forSigning && signatory.author() && signatory.elegAuthentication()) {
+        var msg = localization.designview.validation.missingOrWrongPersonalNumber;
+        return new NotEmptyValidation({message: msg});
+      }
+    },
+    validateCheckbox: function() {
+      var validation = new Validation({ validates: function() {
+          return field.name() != undefined && field.name() != ""
+        }, message: localization.designview.validation.notReadyField});
+      return validation;
+    },
+    validateMobile: function() {
+      var signatory = this.signatory();
+      if(signatory.mobileDelivery() || signatory.emailMobileDelivery()) {
+        var msg = localization.designview.validation.missingOrWrongMobile;
+        return new PhoneValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
+      }
+      if(signatory.smsPinAuthentication()            ||
+         signatory.emailMobileConfirmationDelivery() ||
+         signatory.mobileConfirmationDelivery
+        ) {
+        return new PhoneValidation().or(new EmptyValidation());
+      }
+    },
+    validateEmail: function() {
+      var field = this;
+      var signatory = this.signatory();
 
-        if ( this.isEmail() && this.value() != undefined && this.value() != "") {
-            var msg = localization.designview.validation.missingOrWrongEmail;
-            return new EmailValidation({message: msg});
-        }
-
-        if (   this.isMobile()
-            && (signatory.mobileDelivery() || signatory.emailMobileDelivery())
-           ){
-            var msg = localization.designview.validation.missingOrWrongMobile;
-            return new PhoneValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
-        }
-
-        if (   this.isMobile()
-            && (   signatory.smsPinAuthentication()
-                || signatory.emailMobileConfirmationDelivery()
-                || signatory.mobileConfirmationDelivery())) {
-            return new PhoneValidation().or(new EmptyValidation());
-        }
-
-        if (forSigning && signatory.author() && signatory.elegAuthentication() && this.isSSN()) {
-            var msg = localization.designview.validation.missingOrWrongPersonalNumber;
-            return new NotEmptyValidation({message: msg});
-        }
-
-        if(this.isObligatory() && forSigning && this.shouldbefilledbysender()) {
-            var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
-            return new NotEmptyValidation({message: msg});
-        }
-
-        if (signatory.author() && (this.isCheckbox() || this.isText()) && this.hasPlacements() && this.isObligatory() && forSigning) {
-          var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
-          return new NotEmptyValidation({message: msg});
-        }
-
-        if (this.isCheckbox()) {
-            var validation = new Validation({validates: function() {return field.name() != undefined && field.name() != "" }, message: localization.designview.validation.notReadyField});
-            return validation;
-        }
-        return new Validation();
+      if(signatory.emailDelivery() || signatory.emailMobileDelivery()) {
+        var msg = localization.designview.validation.missingOrWrongEmail;
+        return new EmailValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
+      }
+      if (field.value() != undefined && field.value() != "") {
+        var msg = localization.designview.validation.missingOrWrongEmail;
+        return new EmailValidation({message: msg});
+      }
     },
     isEmail: function() {
         return  this.isStandard() && this.name() == "email";
