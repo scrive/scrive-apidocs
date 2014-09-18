@@ -729,8 +729,8 @@ window.Document = Backbone.Model.extend({
         this.set({ready:false});
     },
     // validation
-    hasProblems: function(forSigning) {
-        return this.hasDocumentProblems() || this.hasSignatoryProblems(forSigning);
+    hasProblems: function() {
+        return this.hasDocumentProblems() || this.hasSignatoryProblems();
     },
     hasDocumentProblems: function() {
         return !this.hasAtLeastOneSignatory() ||
@@ -740,10 +740,10 @@ window.Document = Backbone.Model.extend({
         var signing = this.signatoriesWhoSign();
         return signing.length >= 1;
     },
-    hasSignatoryProblems: function(forSigning) {
+    hasSignatoryProblems: function() {
         var sigs = this.signatories();
         return _.some(sigs, function(sig) {
-            return sig.hasProblems(forSigning);
+            return sig.hasProblems();
         });
     },
     newCheckboxName: function() {

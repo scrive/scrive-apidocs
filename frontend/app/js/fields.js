@@ -164,8 +164,7 @@ window.Field = Backbone.Model.extend({
         return res;
     },
     // Validate the state of the field (not fake, not blank, etc) and the input
-    // TODO JJ: remove all use of `forSigning` and figure this out from the signatory instead
-    validation: function(forSigning) {
+    validation: function() {
       var field = this;
 
       if(field.isFake()) {
@@ -184,21 +183,20 @@ window.Field = Backbone.Model.extend({
         }, message: msg});
       }
 
-      return this.validateInput(forSigning);
+      return this.validateInput();
     },
     // Only validate the input, may be in invalid state (e.g. 'fake' field)
-    validateInput: function(forSigning) {
+    validateInput: function() {
       var field = this;
+      var signatory = field.signatory();
 
-      if(forSigning && field.isObligatory() && field.shouldbefilledbysender()) {
-        var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
-        return new NotEmptyValidation({message: msg});
-      }
-      if(forSigning &&field.signatory().author() &&
-          (field.isCheckbox() || field.isText()) &&
-          field.hasPlacements() &&
-          field.isObligatory()
-        ) {
+      var senderMustFill = field.isObligatory() && field.shouldbefilledbysender();
+      var willSignNowAndFieldNeeded = signatory.author()
+        && signatory.ableToSign()
+        && (!signatory.hasPlacedSignatures())
+        && field.isObligatory()
+        && (field.isText() || field.isCheckbox());
+      if(senderMustFill || willSignNowAndFieldNeeded) {
         var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
         return new NotEmptyValidation({message: msg});
       }
@@ -212,8 +210,8 @@ window.Field = Backbone.Model.extend({
       if(field.isMobile() && field.validateMobile() != undefined) {
         return field.validateMobile();
       }
-      if(field.isSSN() && field.validateSSN(forSigning) != undefined) {
-        return field.validateSSN(forSigning);
+      if(field.isSSN() && field.validateSSN() != undefined) {
+        return field.validateSSN();
       }
       if(field.isCheckbox() && field.validateCheckbox() != undefined) {
         return field.validateCheckbox();
@@ -226,9 +224,9 @@ window.Field = Backbone.Model.extend({
         return new NoValidation();
       }
     },
-    validateSSN: function(forSigning) {
+    validateSSN: function() {
       var signatory = this.signatory();
-      if(forSigning && signatory.author() && signatory.elegAuthentication()) {
+      if(signatory.ableToSign() && signatory.author() && signatory.elegAuthentication()) {
         var msg = localization.designview.validation.missingOrWrongPersonalNumber;
         return new NotEmptyValidation({message: msg});
       }
@@ -399,20 +397,15 @@ window.Field = Backbone.Model.extend({
     removeAllPlacements : function() {
         _.each(this.placements(), function(p) {p.remove();});
     },
-    isValid: function(forSigning) {
+    isValid: function() {
         var self = this;
         if (!this.isCsvField())
-          return this.validation(forSigning).validateData(this.value());
+          return this.validation().validateData(this.value());
         else {
             var csvValues = this.csvFieldValues();
-            console.log("Validating " + self.name() + " res: " + _.all(this.csvFieldValues(),function(v) {return self.validation(forSigning).validateData(v); }));
-            return _.all(this.csvFieldValues(),function(v) {return self.validation(forSigning).validateData(v); });
+            console.log("Validating " + self.name() + " res: " + _.all(this.csvFieldValues(),function(v) {return self.validation().validateData(v); }));
+            return _.all(this.csvFieldValues(),function(v) {return self.validation().validateData(v); });
         }
-    },
-    doValidate: function(forSigning, callback) {
-        return this.validation(forSigning)
-            .setCallback(callback)
-            .validateData(this.value());
     },
     requiredForParticipation: function() {
         var field = this;

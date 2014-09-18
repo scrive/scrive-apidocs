@@ -1301,7 +1301,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
         },
         innerHasProblems: function() {
           var signatory = this.model;
-          if(signatory.hasProblems(true)) {
+          if(signatory.hasProblems()) {
             this.innerDiv.addClass('is-has-problems');
           }
           else {

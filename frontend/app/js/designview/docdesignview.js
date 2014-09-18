@@ -141,7 +141,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
         },
         updateSaveButton : function() {
            if (this.sendButton != undefined) {
-             if (this.model.document().hasProblems(true) || !this.model.document().ready()) {
+             if (this.model.document().hasProblems() || !this.model.document().ready()) {
               this.sendButton.addClass('disabled');
               this.sendButton.unbind('click').click(this.cantSignModal);
              } else  {
@@ -185,7 +185,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             return removeDocumentButton.el();
         },
         cantSignModal: function() {
-          if(!this.model.document().hasProblems(true)) {
+          if(!this.model.document().hasProblems()) {
             return;
           }
 
@@ -226,7 +226,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             });
 
             document.save();
-            if(document.hasProblems(true)) {
+            if(document.hasProblems()) {
                 return;
             }
 

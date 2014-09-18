@@ -670,12 +670,9 @@ window.Signatory = Backbone.Model.extend({
         }
         return '';
     },
-    hasProblems: function(forSigning) {
-        return this.hasFieldProblems(forSigning);
-    },
-    hasFieldProblems: function(forSigning) {
+    hasProblems: function() {
         return _.some(this.fields(), function(field) {
-            return !field.isValid(forSigning) || field.hasNotReadyPlacements();
+            return !field.isValid() || field.hasNotReadyPlacements();
         });
     },
     role: function() {
