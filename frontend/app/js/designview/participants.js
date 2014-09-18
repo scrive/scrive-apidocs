@@ -1188,14 +1188,14 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
 
             viewmodel.bind('change:participantDetail', view.updateOpened);
             viewmodel.bind('change:step', view.render);
-            viewmodel.document().bind('bubble', view.innerHasProblems);
+            viewmodel.document().bind('bubble', view.checkInnerProblems);
             sig.bind('change:fields', view.updateOpened);
             view.render();
         },
         destroy : function() {
           this.viewmodel.unbind('change:participantDetail', this.updateOpened);
           this.viewmodel.unbind('change:step', this.render);
-          this.viewmodel.unbind('bubble', this.innerHasProblems);
+          this.viewmodel.unbind('bubble', this.checkInnerProblems);
           this.model.unbind('change:fields', this.updateOpened);
           this.off();
           if (this.detailsView != undefined)
@@ -1296,12 +1296,16 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             view.innerDiv = innerDiv;
             view.innerDiv.append(view.infoBox());
             view.innerDiv.append(view.detailsView.el);
-            this.innerHasProblems();
+            this.checkInnerProblems();
             return view.innerDiv;
         },
-        innerHasProblems: function() {
+        checkInnerProblems: function() {
           var signatory = this.model;
-          if(signatory.hasProblems()) {
+          // Check only validity of field
+          var innerProblems = _.some(signatory.fields(), function(field) {
+            return !field.isValid()
+          });
+          if(innerProblems) {
             this.innerDiv.addClass('is-has-problems');
           }
           else {
