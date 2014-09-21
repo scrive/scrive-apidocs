@@ -370,7 +370,7 @@ emitClause name s = case toSQLCommand s of
 
 emitClausesSep :: SQL -> SQL -> [SQL] -> SQL
 emitClausesSep _name _sep [] = mempty
-emitClausesSep name sep sqls = name <+> smintercalate sep (filter (not . isSqlEmpty) sqls)
+emitClausesSep name sep sqls = name <+> smintercalate sep (filter (not . isSqlEmpty) $ map parenthesize sqls)
 
 emitClausesSepComma :: SQL -> [SQL] -> SQL
 emitClausesSepComma _name [] = mempty
