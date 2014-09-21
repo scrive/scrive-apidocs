@@ -15,7 +15,7 @@ import AppConf
 import qualified Amazon as AWS
 import AppView as V
 import Crypto.RNG
-import DB
+import DB hiding (ErrorCode(..))
 import DB.PostgreSQL
 import IPAddress
 import Text.JSON.Gen

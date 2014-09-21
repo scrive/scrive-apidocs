@@ -59,7 +59,7 @@ Flag test-coverage
 
 Executable kontrakcja-server
 
-  Hs-source-dirs: inc misc src mailer/inc docconv/src messenger/src messenger/inc pdftools
+  Hs-source-dirs: inc misc src cron/inc mailer/inc docconv/src messenger/src messenger/inc pdftools
 
   GHC-Options: -Werror -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
@@ -163,7 +163,7 @@ Executable kontrakcja-server
 
 Executable cron
 
-  Hs-source-dirs: inc misc src cron mailer/inc docconv/src messenger/inc pdftools
+  Hs-source-dirs: inc misc src cron/inc cron/src mailer/inc docconv/src messenger/inc pdftools
 
   GHC-Options: -Werror -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
@@ -238,8 +238,8 @@ Executable cron
   Build-depends: zip-archive
   Build-depends: zlib
 
-  Main-is: CronMain.hs
-  GHC-options: -main-is CronMain
+  Main-is: Cron.hs
+  GHC-options: -main-is Cron
 
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns,
@@ -266,7 +266,7 @@ Executable cron
               UndecidableInstances
 
 Executable kontrakcja-migrate
-  Hs-source-dirs: inc misc src messenger/inc mailer/inc docconv/src
+  Hs-source-dirs: inc misc src cron/inc messenger/inc mailer/inc docconv/src
 
   GHC-Options: -Werror -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
@@ -579,7 +579,7 @@ Executable messenger-server
 
 Executable kontrakcja-test
 
-  Hs-source-dirs: inc misc test/src src mailer/inc mailer/src docconv/src docconv/test/src messenger/src messenger/inc pdftools
+  Hs-source-dirs: inc misc test/src src cron/inc mailer/inc mailer/src docconv/src docconv/test/src messenger/src messenger/inc pdftools
 
   GHC-Options: -Werror -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts

@@ -10,6 +10,7 @@ import Data.Int
 import Data.Maybe
 import Data.Monoid
 import Data.Monoid.Space
+import Data.Monoid.Utils
 import Database.PostgreSQL.PQTypes
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BSU
@@ -117,6 +118,17 @@ checkUnknownTables logger tables = do
 createTable :: MonadDB m => Table -> m ()
 createTable table@Table{..} = do
   forM_ createTableSQLs runQuery_
+
+  case tblInitialData of
+    NoRows -> return ()
+    Rows cols rows -> forM_ rows $ runQuery_ . rawSQL (smconcat [
+        "INSERT INTO" <+> unRawSQL tblName
+      , "(" <> mintercalate ", " cols <> ")"
+      , "VALUES"
+      , "(" <> mintercalate ", " colnums <> ")"
+      ])
+      where
+        colnums = take (length cols) $ map (BS.pack . ('$':) . show) [1..]
 
   runQuery_ . sqlInsert "table_versions" $ do
     sqlSet "name" (tblNameString table)

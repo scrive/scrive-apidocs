@@ -6,6 +6,7 @@ import DB
 import ActionQueue.Migrations
 import Company.Migrations
 import CompanyAccounts.Migrations
+import Cron.Migrations
 import Doc.Migrations
 import Doc.AutomaticReminder.Tables
 import Doc.API.Callback.Migrations
@@ -167,5 +168,6 @@ kontraMigrations = [
   , addAPIVersionToDocument
   , addUniqueContraintsTypeOnFields
   , addAllowSaveSafetyCopyToCompanies
-  ] ++ mailerMigrations
+  ] ++ cronMigrations
+    ++ mailerMigrations
     ++ messengerMigrations

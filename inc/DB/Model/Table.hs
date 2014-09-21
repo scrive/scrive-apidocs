@@ -1,3 +1,4 @@
+{-# LANGUAGE GADTs #-}
 module DB.Model.Table (
     ColumnType(..)
   , columnTypeToSQL
@@ -6,12 +7,14 @@ module DB.Model.Table (
   , sqlAddColumn
   , sqlAlterColumn
   , sqlDropColumn
+  , Rows(..)
   , Table(..)
   , tblTable
   , sqlCreateTable
   , sqlAlterTable
   ) where
 
+import Data.ByteString (ByteString)
 import Data.Char
 import Data.Int
 import Data.Monoid.Space
@@ -31,6 +34,7 @@ data ColumnType
   | DateT
   | DoubleT
   | IntegerT
+  | IntervalT
   | SmallIntT
   | TextT
   | VarCharT -- for compatibility, do not use this
@@ -50,6 +54,7 @@ instance FromSQL ColumnType where
       "date" -> return DateT
       "double precision" -> return DoubleT
       "integer" -> return IntegerT
+      "interval" -> return IntervalT
       "smallint" -> return SmallIntT
       "text" -> return TextT
       "character varying" -> return VarCharT
@@ -64,6 +69,7 @@ columnTypeToSQL BoolT = "BOOLEAN"
 columnTypeToSQL DateT = "DATE"
 columnTypeToSQL DoubleT = "DOUBLE PRECISION"
 columnTypeToSQL IntegerT = "INTEGER"
+columnTypeToSQL IntervalT = "INTERVAL"
 columnTypeToSQL SmallIntT = "SMALLINT"
 columnTypeToSQL TextT = "TEXT"
 columnTypeToSQL VarCharT = "VARCHAR"
@@ -103,6 +109,10 @@ sqlDropColumn cname = "DROP COLUMN" <+> cname
 
 ----------------------------------------
 
+data Rows where
+  Rows   :: forall row. (Show row, ToRow row) => [ByteString] -> [row] -> Rows
+  NoRows :: Rows
+
 data Table = Table {
   tblName          :: RawSQL ()
 , tblVersion       :: Int32
@@ -111,6 +121,7 @@ data Table = Table {
 , tblChecks        :: [TableCheck]
 , tblForeignKeys   :: [ForeignKey]
 , tblIndexes       :: [TableIndex]
+, tblInitialData   :: Rows
 }
 
 tblTable :: Table
@@ -122,6 +133,7 @@ tblTable = Table {
 , tblChecks = []
 , tblForeignKeys = []
 , tblIndexes = []
+, tblInitialData = NoRows
 }
 
 sqlCreateTable :: RawSQL () -> RawSQL ()

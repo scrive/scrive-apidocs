@@ -61,6 +61,9 @@ findM f (a:as) = do
     then return $ Just a'
     else findM f as
 
+rlookup :: Eq b => b -> [(a, b)] -> Maybe a
+rlookup v = fmap fst . find ((== v) . snd)
+
 firstOrNothing :: Monad m => [m (Maybe a)] -> m (Maybe a)
 firstOrNothing l = join `liftM` findM isJust l
 

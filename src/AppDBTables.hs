@@ -9,6 +9,7 @@ import DB.SQLFunction
 import ActionQueue.Tables
 import Company.Tables
 import CompanyAccounts.Tables
+import Cron.Tables
 import Doc.Tables
 import Doc.API.Callback.Tables
 import Doc.Tokens.Tables
@@ -75,5 +76,6 @@ kontraTables =
   , tableCompanyUIs
   , tableDocumentAutomaticReminders
   , tableSignatorySMSPins
-  ] ++ mailerTables
+  ] ++ cronTables
+    ++ mailerTables
     ++ messengerTables
