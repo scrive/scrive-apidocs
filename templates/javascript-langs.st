@@ -64,7 +64,7 @@ javascriptLocalisation =
              , send : "$_send()$"
              , csvFilePersons : "$_csvFilePersons()$"
 			 , reminder : {
-					     send : "$_sendReminder()$"
+					     send : "$_authorviewSignatoriesSendReminderButton()$"
 					   , formHead : "$_reminderFormHead()$"
 					   , formSend :	"$_reminderFormSendReminder()$"
                        , formOwnMessage : "$_reminderFormFooterOwnMessage()$"
@@ -732,7 +732,7 @@ javascriptLocalisation =
                             , signed :    "$_tablestatusesSigned()$"
                        }
                     ,  sendreminder : {
-                              action: "$_SendReminder()$"
+                              action: "$_archiveSendReminder()$"
                             , bodymulti : "$_ContractReminderBodyMulti()$"
                             , bodysingle : "$_ContractReminderBodySingel()$"
                             , successMessage : "$_flashMessageBulkDocumentRemindsSent()$"
