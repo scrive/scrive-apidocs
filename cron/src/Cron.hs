@@ -177,7 +177,12 @@ main = Log.withLogger $ do
   flip E.finally cleanup $ do
     -- spawn task dispatcher
     forkForever $ do
-      mtt <- runDBT connPool serializable . dbUpdate $ ReserveTask wid
+      mtt <- runDBT connPool serializable $ do
+        -- add a small delay between consecutive attempts to reserve
+        -- a task. the purpose is to drastically reduce number of
+        -- transaction restarts when more than one worker is running.
+        liftIO $ threadDelay 25000
+        dbUpdate $ ReserveTask wid
       case mtt of
         Nothing -> threadDelay 5000000 -- pause for 5 seconds if there are no tasks
         Just tt -> void . TG.forkIO tg $ do
