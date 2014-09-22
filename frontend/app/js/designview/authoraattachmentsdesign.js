@@ -183,6 +183,7 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
 
 window.DesignAuthorAttachmentsPopup = function(args) {
          var document = args.document;
+         var viewmodel = args.viewmodel;
          var model = new DesignAuthorAttachments({ document : document  });
          var view = new DesignAuthorAttachmentsView({model : model, el : $("<div/>")});
          var popup = new Confirmation({
@@ -194,6 +195,7 @@ window.DesignAuthorAttachmentsPopup = function(args) {
               width: 740,
               onAccept : function() {
                   mixpanel.track('Save attachments', {documentid:document.documentid()});
+                  viewmodel.saveDocument();
                   document.afterSave( function() {
                       var submit = document.setAttachments();
                       var counter = 0;

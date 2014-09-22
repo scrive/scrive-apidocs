@@ -225,7 +225,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                     mixpanel.track('Click remove file');
                     doc.markAsNotReady();
                     doc.removeTypeSetters();
-                    doc.save();
+                    model.saveDocument();
                     doc.afterSave(function() {
                         new Submit({
                             method : "POST",
