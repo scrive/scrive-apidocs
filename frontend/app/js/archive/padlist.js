@@ -15,13 +15,13 @@ var SelectPartyModal = function(signingIndexes,listobject) {
                 var currentName = listobject.subfield(signingIndexes[i],"name").trim();
                 if (i != self.current)
                 options.push({
-                  name: (currentName != "" ? currentName : localization.process.signatoryname + " " + signingIndexes[i]),
+                  name: (currentName != "" ? currentName : localization.process.signatoryname + " " + (signingIndexes[i] + 1)),
                   value : i
                 });
             }
             var currentName = listobject.subfield(signingIndexes[self.current],"name").trim();
             var select = new Select({
-                name : ( currentName != "" ? currentName : localization.process.signatoryname + " " + signingIndexes[self.current]),
+                name : ( currentName != "" ? currentName : localization.process.signatoryname + " " + (signingIndexes[self.current] + 1)),
                 cssClass : "float-left",
                 options : options,
                 onSelect : function(v) {

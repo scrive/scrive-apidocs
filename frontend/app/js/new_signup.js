@@ -186,7 +186,7 @@ define(['common/adwords_conversion_service', 'Backbone', 'legacy_code'], functio
             size  : 'tiny',
             color : model.buttoncolorclass(),
             text: localization.signup,
-            style : "width:245px;",
+            style : "width:251px;",
             onClick: function() {
               self.clearValidationMessages();
               if (emailInput.value().validate(new EmailValidation({callback: self.validationCallback, message: localization.validation.wrongEmail})))

@@ -51,13 +51,18 @@ window.trackTimeout = function(name, props, trackTimeoutCallBack, ms) {
 
 });
 
-//make sure we've got console logging
-if (!window.console || !window.console.log) {
-  if (window.console && !window.console.log) {
-    mixpanel.track('window.console is defined, but not log method');
-  }
-  window.console = {
-    log: function() {}
+//make sure we've got console logging/warning
+if (!window.console) {
+  window.console = {};
+}
+
+if (!window.console.log) {
+  window.console.log = function() {};
+}
+
+if (!window.console.warn) {
+  window.console.warn = function(s) {
+    mixpanel.track('window.console.warn() stub: ' + s);
   };
 }
 

@@ -231,7 +231,7 @@ accountSetupPage=
             jQuery('.mainContainer').append( new AccountSetup({
                                                   fstname: "$fstname$",
                                                   sndname: "$sndname$",
-                                                  company : "$company$",
+                                                  company : _.unescape("$company$"), // company name can contain some funky chars like &
                                                   userid : "$userid$",
                                                   signupmethod : "$signupmethod$",
                                                   companyAdmin : $if(companyAdmin)$true$else$false$endif$,
