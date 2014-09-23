@@ -421,9 +421,11 @@ apiCallV1CheckSign did slid = api $ do
                       BankID.verifySignatureAndGetSignInfo slid mh fields provider signature transactionid
              case esigninfo of
                  BankID.Sign _ -> return $ Right $ Ok ()
-                 BankID.Mismatch (onname,onnumber) _ -> do
+                 BankID.Mismatch (onname,onnumber) (sfn,sln,spn) -> do
+                     Log.attention_ $ "Eleg verification for document #" ++ show did ++ " failed with mismatch " ++ show ((onname,onnumber),(sfn,sln,spn))
                      (Left . Failed) <$> (runJSONGenT $ value "elegProblem" True >> value "mismatch" True >> value "onName" onname >> value "onNumber" onnumber)
-                 _ -> do
+                 BankID.Problem msg -> do
+                     Log.attention_ $ "Eleg verification for document #" ++ show did ++ " failed with message: " ++ msg
                      (Left . Failed) <$> (runJSONGenT $ value "elegProblem" True)
 
 
