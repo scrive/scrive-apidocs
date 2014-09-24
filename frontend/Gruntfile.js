@@ -223,9 +223,6 @@ module.exports = function(grunt) {
         stderr: true,
         failOnError: true
       },
-      findFocusSelectors: {
-        command: 'custom_grunt_tasks/check_for_focus_selectors.sh <%= yeoman.app %>/js'
-      },
       tar: {
         command: [
           'echo "Version $VER" > <%= yeoman.dist %>/VERSION',
@@ -457,8 +454,7 @@ module.exports = function(grunt) {
   ]);
 
   grunt.registerTask('validateJs', [
-    'gjslint',
-    'shell:findFocusSelectors'
+    'gjslint'
   ]);
 
   grunt.registerTask('default', [
