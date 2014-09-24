@@ -305,6 +305,7 @@ window.InfoTextInput = function (args) {
           this.value =  function() {return model.value();};
           this.setValue = function(v) {model.setValue(v);};
           this.focus = function() {view.focus();};
+          this.render = function() {view.render();};
 };
 
 });

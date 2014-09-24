@@ -46,6 +46,7 @@ window.PageTask = Backbone.Model.extend({
     complete   : false, // Cache for isCompleate
     isComplete : function() {return false;},
     onActivate : function() {return false;},
+    onScrollWhenActive : function() {return false;},
     onDeactivate : function() {return false;},
     tipSide : "right",
     label:"",
@@ -70,6 +71,9 @@ window.PageTask = Backbone.Model.extend({
   },
   onActivate: function() {
     return this.get("onActivate")();
+  },
+  onScrollWhenActive: function() {
+    return this.get("onScrollWhenActive")();
   },
   onDeactivate : function() {
     return this.get("onDeactivate")();
@@ -283,7 +287,11 @@ var PageTasksArrowView = Backbone.View.extend({
     var document = this.document;
     $(this.el).addClass('arrows');
     $(window).resize(function() {view.updateArrow();});
-    $(window).scroll(function() {view.updateArrow();});
+    $(window).scroll(function() {
+      view.updateArrow();
+      if (view.model.active() != undefined)
+        view.model.active().onScrollWhenActive();
+    });
     view.updateArrow();
   }
 });

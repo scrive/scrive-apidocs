@@ -350,6 +350,14 @@ var DocumentSignViewModel = Backbone.Model.extend({
                           //task.trigger("change"); This causes JS stack overflow, but might be needed
                         }
                     },
+                    onScrollWhenActive : function() {
+                        var windowIsFocused = window.document.hasFocus == undefined || window.document.hasFocus();
+                        var nothingHasFocus = $(":focus").size() == 0;
+                        if (placement.view != undefined && placement.view.startInlineEditing != undefined && !placement.field().readyForSign() && windowIsFocused && nothingHasFocus)
+                        {
+                          placement.view.startInlineEditing();
+                        }
+                    },
                     onDeactivate: function() {
                         mixpanel.track('Finish editing field',
                                        {Label : placement.field().name()});

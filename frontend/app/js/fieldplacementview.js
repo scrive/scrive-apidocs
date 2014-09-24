@@ -645,7 +645,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
         var self = this;
         if (self.inlineediting == true) {
           if (self.input != undefined) {
-               if ($(window).scrollTop() + $(window).height() > this.input.offset().top && $(window).scrollTop() < this.input.offset().top) {
+               if ($(window).scrollTop() + $(window).height() > self.input.el().offset().top && $(window).scrollTop() < self.input.el().offset().top) {
                   self.input.focus();
                }
 
@@ -666,7 +666,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
         var accept = function() {
                       view.inlineediting = false;
                       place.removeClass('active');
-                      var val = input.value();
+                      var val = self.input.value();
                       field.setValue(val);
                       field.signatory().trigger('change');
                       view.render();
@@ -682,7 +682,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
         bcolorWithAlpha.setAlpha(0.2);
         var background = bcolorWithAlpha.toRgbString();
 
-        var input = new InfoTextInput({
+        self.input = new InfoTextInput({
           infotext: field.nicename(),
           value : field.value(),
           autoGrowth : true,
@@ -710,12 +710,13 @@ var TextPlacementPlacedView = Backbone.View.extend({
           onBlur : accept,
           onOk : accept
         });
-        place.empty().css("z-index","1").append(input.el());
+        place.empty().css("z-index","1").append(self.input.el());
+        self.input.render(); // Input has autogrowth on it - and it can't determine proper width before element is mounted. Render forces autogrowth recalculation.
         field.trigger('change:inlineedited');
         field.bind('change',function() { view.inlineediting  = false;place.removeClass('active'); view.render();});
 
-        if ($(window).scrollTop() + $(window).height() > input.el().offset().top && $(window).scrollTop() < input.el().offset().top) {
-                   input.focus();
+        if ($(window).scrollTop() + $(window).height() > self.input.el().offset().top && $(window).scrollTop() < self.input.el().offset().top) {
+                   self.input.focus();
         }
         return false;
     },
