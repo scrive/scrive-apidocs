@@ -298,6 +298,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             $.ajax('/payments/userexists',
                    {data: {email:email},
                     timeout: 500,
+                    cache: false,
                     dataType: 'json',
                     success: callback,
                     error: function() {

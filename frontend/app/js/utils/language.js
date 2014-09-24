@@ -19,10 +19,12 @@ window.Language = {
         if (callback != undefined) callback();
        }
        else
-         $.get('/' + code + '/localization/'+window.versioncode +'.js', function(localization_script) {
-           eval(localization_script);
-           if (callback != undefined) callback();
-         });
+         $.ajax('/' + code + '/localization/'+window.versioncode +'.js',
+                {cache: false,
+                 success: function(localization_script) {
+                   eval(localization_script);
+                   if (callback != undefined) callback();
+                 }});
     },
     changeForPageAndUserAndReload : function(code) {
         $.post('/api/frontend/changelanguage', {lang: code }, function() {

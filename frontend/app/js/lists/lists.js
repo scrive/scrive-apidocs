@@ -588,6 +588,7 @@ define(['Backbone', 'legacy_code'], function() {
             this.fetchWithCallback = function(callback,errorcallback) {
                 $.ajax({
                   url : schema.url(),
+                  cache: false,
                   method: "GET",
                   data : schema.getSchemaUrlParams(),
                   success : function(res) {

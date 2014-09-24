@@ -52,6 +52,7 @@ window.ApiCall = Backbone.Model.extend({
           if (authenticate) {
             arg.headers.authorization = this.authorization();
           }
+          arg.cache = false;
           $.ajax(Scrive.apiUrl()+urlsuffix, arg);
         },
         unauthenticatedCall : function(urlsuffix, arg) {
