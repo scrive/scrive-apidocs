@@ -355,7 +355,12 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             }
             var content = $("<span/>");
             if (document.authorIsOnlySignatory()) {
-                content = $(localization.designview.signModalContentAuthorOnly);
+                if (document.author().name().trim() !== '') {
+                  content = $(localization.designview.signModalContentAuthorOnlyWithName);
+                  content.find('.put-signatory-name-here').text(document.author().name());
+                } else {
+                  content = $(localization.designview.signModalContentAuthorOnly);
+                }
                 content.find('.put-document-title-here').text(document.title());
             }
             else if (signatory.elegAuthentication()) {
@@ -365,7 +370,12 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                 var parties = _.filter(document.signatories(), function(signatory) {
                                       return signatory.signs() && !signatory.current();
                                });
-                content = $(localization.designview.signModalContent);
+                if (document.author().name().trim() !== '') {
+                  content = $(localization.designview.signModalContentWithName);
+                  content.find('.put-signatory-name-here').text(document.author().name());
+                } else {
+                  content = $(localization.designview.signModalContent);
+                }
                 content.find('.put-document-title-here').text(document.title());
 
             }

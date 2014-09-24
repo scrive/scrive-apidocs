@@ -116,15 +116,17 @@ define(['Backbone', 'legacy_code'], function() {
         },
         getMoreOptions: function(callback) {
             var self = this;
-            $.get(self.optionsURL(), function(res) {
-              var currentValue = self.selectedValue();
-              var newOptions = self.optionsParse()(JSON.parse(res));
-              newOptions.unshift({name : self.defaultName(), value : ""});
-              self.set({options : newOptions}, {silent : true});
-              self.select(currentValue);
-              self.trigger("more-options-available"); // We might not rendered with select, since probably we just changed options, but not selected one.
-              callback();
-            });
+            $.ajax(self.optionsURL(),
+                   {cache: false,
+                    success: function(res) {
+                      var currentValue = self.selectedValue();
+                      var newOptions = self.optionsParse()(JSON.parse(res));
+                      newOptions.unshift({name : self.defaultName(), value : ""});
+                      self.set({options : newOptions}, {silent : true});
+                      self.select(currentValue);
+                      self.trigger("more-options-available"); // We might not rendered with select, since probably we just changed options, but not selected one.
+                      callback();
+                    }});
         },
         select: function(v) {
             if (this.find(v) != undefined) {

@@ -18,6 +18,7 @@ window.OAuthRequest = Backbone.Model.extend({
                         return false;
                     },
                     type : 'GET',
+                    cache: false,
                     responseType : 'x-www-form-urlencoded'
                 })
         }

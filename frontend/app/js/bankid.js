@@ -118,6 +118,7 @@ window.Eleg = {
       $.ajax({
             'url': url,
             'dataType': 'json',
+            'cache': false,
             'data': { 'provider' : 'bankid',
                       'tbs' : tbs
                     },
@@ -181,6 +182,7 @@ window.Eleg = {
         $.ajax({
             'url': url,
             'dataType': 'json',
+            'cache': false,
             'data': { 'provider' : 'telia',
                       'tbs' : tbs
                     },

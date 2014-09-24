@@ -53,22 +53,24 @@ define(['Backbone', 'legacy_code'], function() {
             var xtoken = Cookies.get('xtoken');
             var boundary = '-------SCRIVESCRIVESCRIVE';
 
-            $.get(url, function(data) {
-                var fakeUpload = getFakeFileUpload(data, title, xtoken, boundary);
-
-                $.ajax('/api/frontend/createfromfile/', {
-                    'contentType': "multipart/form-data; boundary="+boundary,
-                    data: fakeUpload,
-                    'type': 'POST',
-                    'dataType': 'json',
+            $.ajax(url,
+                   {cache: false,
                     success: function(data) {
-                        successCallback(data);
-                    },
-                    error: function() {
-                        errorCallback();
-                    }
-                });
-            });
+                      var fakeUpload = getFakeFileUpload(data, title, xtoken, boundary);
+
+                      $.ajax('/api/frontend/createfromfile/', {
+                        'contentType': "multipart/form-data; boundary="+boundary,
+                        data: fakeUpload,
+                        'type': 'POST',
+                        'dataType': 'json',
+                        success: function(data) {
+                          successCallback(data);
+                        },
+                        error: function() {
+                          errorCallback();
+                        }
+                      });
+                    }});
         }
     };
 
