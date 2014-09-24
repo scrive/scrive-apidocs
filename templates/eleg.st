@@ -1,8 +1,5 @@
 tbs=$_tbsYouSignWithEleg()$
 ##
-tbssig=  $firstname$ $lastname$, $number$
-
-##
 bankidInvalidParameters=$_bankidInvalidParameters()$
 ##
 bankidInternalError=$_bankidInternalError()$

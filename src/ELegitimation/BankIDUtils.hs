@@ -1,8 +1,6 @@
 module ELegitimation.BankIDUtils (
              mergeInfo
            , getTBS
-           , getSigEntries
-           , getSigEntry
            , fieldvaluebyid
            , normalizeNumber
            , compareNumbers
@@ -18,10 +16,10 @@ import Data.Maybe
 import Data.Functor
 
 import Doc.DocStateData as D
-import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Utils.String
 import Text.StringTemplates.Templates
+import Templates (renderLocalTemplate)
 import qualified Text.StringTemplates.Fields as F
 
 data MergeResult = MergeMatch
@@ -39,23 +37,16 @@ mergeInfo (contractFirst, contractLast, contractNumber) (elegFirst, elegLast, el
 
 
 getTBS :: TemplatesMonad m => D.Document -> m String
-getTBS doc = renderTemplate "tbs" $ do
+getTBS doc = renderLocalTemplate doc "tbs" $ do
   F.value "documentname"   $ documenttitle doc
   F.value "documentnumber" $ show $ documentid doc
-  F.valueM "tbssigentries" $ getSigEntries doc
-
-getSigEntries :: TemplatesMonad m => D.Document -> m String
-getSigEntries doc = do
-    s <- mapM getSigEntry $ filter signatoryispartner $ documentsignatorylinks doc
-    return $ intercalate "\n" s
-
-getSigEntry :: TemplatesMonad m => SignatoryLink -> m String
-getSigEntry signatory =
-    renderTemplate "tbssig" $ do
-        F.value "firstname" $ getFirstName signatory
-        F.value "lastname"  $ getLastName signatory
-        F.value "company"   $ getCompanyName signatory
-        F.value "number"    $ getPersonalNumber signatory
+  F.value "tbssigentries" $ unlines' $ map getSigEntry signatories
+  where unlines' = intercalate "\n" -- like unlines, but without final newline
+        signatories = filter signatoryispartner $ documentsignatorylinks doc
+        getSigEntry signatory = unwords [ getFirstName signatory
+                                        , getLastName signatory ++ ","
+                                        , getPersonalNumber signatory
+                                        ]
 
 fieldvaluebyid :: String -> [(String, String)] -> String
 fieldvaluebyid _ [] = ""
