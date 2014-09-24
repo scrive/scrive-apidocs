@@ -300,12 +300,16 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
 
     if (signatory.author()) {
      var content = $("<div />");
-     if (document.authorIsOnlySignatory())
-            content = $(localization.process.signatorysignmodalcontentauthoronly);
-     else if (signatory.elegAuthentication())
+     if (document.authorIsOnlySignatory()) {
+       content = $(localization.process.signatorysignmodalcontentauthoronly);
+       content.find('.put-signatory-name-here').text(signatory.name());
+     } else if (signatory.elegAuthentication())
           content.append(localization.process.signatorysignmodalcontentsignvieweleg);
-     else
-          content.append(localization.process.signatorysignmodalcontent);
+     else {
+       var copy = $(localization.process.signatorysignmodalcontent);
+       copy.find('.put-signatory-name-here').text(signatory.name());
+       content.append(copy);
+     }
 
      if (signatory.elegAuthentication()) {
         var subhead = $("<h3/>").text(localization.sign.eleg.subhead);
@@ -319,7 +323,15 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
       if (signatory.elegAuthentication())
           content.append(localization.process.signatorysignmodalcontentsignvieweleg);
       else {
-        content.append(this.signaturesPlaced ? localization.process.signatorysignmodalcontentfromsignaturedrawing : localization.process.signatorysignmodalcontent);
+        if (this.signaturesPlaced) {
+          var copy = $(localization.process.signatorysignmodalcontentfromsignaturedrawing);
+          copy.find('.put-signatory-name-here').text(signatory.name());
+          content.append(copy);
+        } else {
+          var copy = $(localization.process.signatorysignmodalcontent);
+          copy.find('.put-signatory-name-here').text(signatory.name());
+          content.append(copy);
+        }
       }
 
       if (signatory.elegAuthentication()) {
