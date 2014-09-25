@@ -65,6 +65,31 @@ internalServerError=
  });
 </script>
 ###
+sessionTimeOut=
+<div class='mainContainer big'>
+  <img width="1920" height="800" src="/img/bg-home.jpg" class="bg"/>
+  <div class='short-input-section'>
+    <div class="shadowed">
+      <h1>$_sessionTimeOutHeader()$</h1>
+      <h4>$_sessionTimeOutContent1()$</h4>
+      <h4>$_sessionTimeOutContent2()$</h4>
+    </div>
+  </div>
+</div>
+<script>
+  require(['jquery', 'legacy_code'], function(jQuery) {
+    jQuery(document).ready(function() {
+      var cookies = Cookies.buildCookieMap();
+      var cookieNames = [];
+      for(var key in cookies) {
+        cookieNames.push(key);
+      }
+      mixpanel.track('Cookies enabled but timeouted', {'cookie': cookieNames.toString(),
+                                                       'user-agent': navigator.userAgent});
+    });
+  });
+</script>
+###
 wholePage=
     $doctype()$
     $htmlopentag()$

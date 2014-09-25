@@ -56,6 +56,7 @@ import User.Model
 import Control.Monad
 import BrandedDomain.BrandedDomain
 import ThirdPartyStats.Core
+import qualified Log
 import qualified Crypto.Hash.MD5 as MD5
 {- |
    The name of our application (the codebase is known as kontrakcja,
@@ -208,6 +209,9 @@ unsupportedBrowserPage = do
 enableCookiesPage :: Kontrakcja m => m Response
 enableCookiesPage = do
   cookies <- rqCookies <$> askRq
+  let cookieNames = show $ map fst cookies
+      mixpanel event = asyncLogEvent (NamedEvent event) [SomeProp "cookies" $ PVString cookieNames]
+  Log.mixlog_ $ show cookies
   case cookies of
     [] -> do
       -- there are still no cookies, client probably disabled them
@@ -219,8 +223,7 @@ enableCookiesPage = do
       mixpanel "Enable cookies page load attempt with cookies"
       -- internalServerError is a happstack function, it's not our internalError
       -- this will not rollback the transaction
-      internalServerErrorPage >>= internalServerError
-  where mixpanel event = asyncLogEvent (NamedEvent event) []
+      pageWhereLanguageCanBeInUrl $ renderTemplate_ "sessionTimeOut" >>= renderFromBody kontrakcja >>= internalServerError
 
 handleTermsOfService :: Kontrakcja m => m Response
 handleTermsOfService = withAnonymousContext $ do

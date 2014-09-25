@@ -32,9 +32,14 @@ $endif$
 $analyticsLoaderKontrakcja()$
 
 <script>
-  require(['jquery'], function(jQuery) {
+  require(['jquery', 'legacy_code'], function(jQuery) {
     jQuery(document).ready(function() {
-      mixpanel.track('Cookies not enabled', {'cookie': document.cookie,
+      var cookies = Cookies.buildCookieMap();
+      var cookieNames = [];
+      for(var key in cookies) {
+        cookieNames.push(key);
+      }
+      mixpanel.track('Cookies not enabled', {'cookie': cookieNames.toString(),
                                              'user-agent': navigator.userAgent});
     });
   });
