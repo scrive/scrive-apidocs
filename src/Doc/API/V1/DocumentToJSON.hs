@@ -181,12 +181,10 @@ signatoryFieldsJSON doc sl = JSArray $
                                   ((not $ null $ sfValue)  && (not $ isPreparation doc))
                                   sfObligatory sfShouldBeFilledBySender sfPlacements
       CompanyFT             -> fieldJSON "standard" "sigco"     sfValue
-                                  ((not $ null $ sfValue)  && (null sfPlacements) &&
-                                      (ELegAuthentication /= signatorylinkauthenticationmethod sl) &&
-                                      (not $ isPreparation doc))
+                                  ((not $ null $ sfValue)  && (not $ isPreparation doc))
                                   sfObligatory sfShouldBeFilledBySender sfPlacements
       CompanyNumberFT       -> fieldJSON "standard" "sigcompnr"  sfValue
-                                  (closedF sf && (not $ isPreparation doc))
+                                  ((not $ null $ sfValue)  && (not $ isPreparation doc))
                                   sfObligatory sfShouldBeFilledBySender sfPlacements
       SignatureFT label     -> fieldJSON "signature" label sfValue
                                   (closedSignatureF sf && (not $ isPreparation doc))
@@ -198,7 +196,6 @@ signatoryFieldsJSON doc sl = JSArray $
                                   False
                                   sfObligatory sfShouldBeFilledBySender sfPlacements
   where
-    closedF sf = ((not $ null $ sfValue sf) || (null $ sfPlacements sf))
     closedSignatureF sf = ((not $ null $ dropWhile (/= ',') $ sfValue sf) && (null $ sfPlacements sf) && ((PadDelivery /= signatorylinkdeliverymethod sl)))
     orderedFields = sortBy (\f1 f2 -> ftOrder (sfType f1) (sfType f2)) (signatoryfields sl)
     ftOrder FirstNameFT _ = LT
