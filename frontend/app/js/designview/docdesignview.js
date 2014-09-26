@@ -52,11 +52,11 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             document.save(function() {
               if(document.isTemplate()) {
                 viewmodel.saveTemplateFlashMessage();
+                document.setSavedDraft();
               }
               else {
                 viewmodel.saveDraft();
               }
-              document.setSavedDraft();
             });
         },
         saveDraft: function() {
@@ -69,6 +69,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                 ajaxsuccess : function() {
                     console.log("saveDraft " + document.documentid());
                     viewmodel.saveDraftFlashMessage();
+                    document.setSavedDraft();
                 }
             }).send();
         },
