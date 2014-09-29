@@ -190,6 +190,7 @@ window.Field = Backbone.Model.extend({
       var field = this;
       var signatory = field.signatory();
 
+      var concatValidations = new Validation();
       var senderMustFill = field.isObligatory() && field.shouldbefilledbysender();
       var willSignNowAndFieldNeeded = signatory.author()
         && signatory.ableToSign()
@@ -198,26 +199,26 @@ window.Field = Backbone.Model.extend({
         && (field.isText() || field.isCheckbox());
       if(senderMustFill || willSignNowAndFieldNeeded) {
         var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
-        return new NotEmptyValidation({message: msg});
+        concatValidations = new NotEmptyValidation({message: msg});
       }
 
       if((field.isFstName || field.isSndName()) && field.validateNames() != undefined) {
-        return field.validateNames();
+        concatValidations.concat(field.validateNames())
       }
       if(field.isEmail() && field.validateEmail() != undefined) {
-        return field.validateEmail();
+        concatValidations.concat(field.validateEmail());
       }
       if(field.isMobile() && field.validateMobile() != undefined) {
-        return field.validateMobile();
+        concatValidations.concat(field.validateMobile());
       }
       if(field.isSSN() && field.validateSSN() != undefined) {
-        return field.validateSSN();
+        concatValidations.concat(field.validateSSN());
       }
       if(field.isCheckbox() && field.validateCheckbox() != undefined) {
-        return field.validateCheckbox();
+        concatValidations.concat(field.validateCheckbox());
       }
 
-      return new Validation();
+      return concatValidations;
     },
     validateNames: function() {
       if(this.signatory().author()) {
@@ -232,6 +233,7 @@ window.Field = Backbone.Model.extend({
       }
     },
     validateCheckbox: function() {
+      var field = this;
       var validation = new Validation({ validates: function() {
           return field.name() != undefined && field.name() != ""
         }, message: localization.designview.validation.notReadyField});
