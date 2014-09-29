@@ -105,7 +105,7 @@
 "_reviewDocument":"Dokument för granskning",
 "_send":"Skicka",
 "_sessionTimedoutInSignview":"Det tog för lång tid att slutföra signeringen. För att fortsätta klicka på länken i mailet igen.",
-"_sessionTimedoutInSignviewAfterHistoryBackMessage":"För att fortsätta måste du klicka på länken med inbjudan igen.",
+"_sessionTimedoutInSignviewAfterHistoryBackMessage":"För att fortsätta måste du klicka på länken i inbjudan igen.",
 "_sessionTimedoutInSignviewAfterHistoryBackTitle":"Session avbruten",
 "_signElegFailed":"Vi har problem att hantera din e-legitimation.",
 "_signViewAuthorAttachmentsTitleForLots":"Granska bilagor",

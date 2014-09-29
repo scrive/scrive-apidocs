@@ -1,2 +1,24 @@
-{
+{ 
+"_questionnaireAnyoneElse":"Haluatko, että lähetän sinulle sähköpostin siitä, kuinka voit tehdä organisaatiostasi tehokkaamman e-allekirjoituksessa?",
+"_questionnaireCloseFaster":"E-allekirjoituksella dokumentit voidaan allekirjoittaa nopeammin",
+"_questionnaireEasyToSign":"Näit kuinka helppoa allekirjoittaminen oli...",
+"_questionnaireEnjoySigning":"Nautitko e-allekirjoitus kokemuksestasi?",
+"_questionnaireGreat":"Hienoa! Toivomme, että sinua ei haittaa, jos kysymme...",
+"_questionnaireHaveAGreatDay":"Hyvää päivänjatkoa ja iloista allekirjoittamista!",
+"_questionnaireHeyImViktorFromScrive":"Hei, olen Viktor <span class='normal-weight'>Scrive:ltä!</span>",
+"_questionnaireImprovements":"Onko sinulla ajatuksia siitä, mikä olisi tehnyt e-allekirjoituskokemuksestasi miellyttävämmän? Jos on, niin ole hyvä ja jätä meille viesti alla!",
+"_questionnaireLastQuestion":"Viimeinen kysymys...",
+"_questionnaireNo":"Ei",
+"_questionnaireOtherBenefitsP":"E-allekirjoitus mahdollistaa dokumenttiesi helpon <span class='green-text'>luomisen, lähettämisen & seuraamisen</span>.",
+"_questionnaireOurEsignService":"Meidän e-allekirjoitus palvelu mahdollisti juuri saamasi allekirjoituskokemuksen.",
+"_questionnairePhoneNumber":"Työ puhelinnumero",
+"_questionnaireQuickQuestion":"Nopea kysymys...",
+"_questionnaireSeeHowSimple":"Haluatko, että soitan sinulle liittyen e-allekirjoituksen ja Scrive:n etuihin?",
+"_questionnaireSendDown2":"Tuntuuko sinusta koskaan, että viivästyt sopimusten allekirjoittamisen odotuksen takia?",
+"_questionnaireSendDownP":"Lähetätkö koskaan omia dokumentteja, jotka tarvitsevat allekirjoituksia? <BR/>esim. myyntisopimuksia, työsopimuksia, jne...",
+"_questionnaireSendFeedback":"Lähetä palautetta",
+"_questionnaireShowDemo":"Kyllä, kiitos",
+"_questionnaireSorry":"Olemme pahoillamme, että kokemus ei miellyttänyt sinua",
+"_questionnaireThanksForYourTime":"Kiitos, että otit aikaa kysymyksiimme vastaamiseen!",
+"_questionnaireYes":"Kyllä"
 }
