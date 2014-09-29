@@ -120,13 +120,13 @@ createTable table@Table{..} = do
   forM_ createTableSQLs runQuery_
 
   case tblInitialData of
-    NoRows -> return ()
-    Rows cols rows -> forM_ rows $ runQuery_ . rawSQL (smconcat [
+    Nothing -> return ()
+    Just (Rows cols rows) -> forM_ rows $ \row -> runQuery_ $ rawSQL (smconcat [
         "INSERT INTO" <+> unRawSQL tblName
       , "(" <> mintercalate ", " cols <> ")"
       , "VALUES"
       , "(" <> mintercalate ", " colnums <> ")"
-      ])
+      ]) row
       where
         colnums = take (length cols) $ map (BS.pack . ('$':) . show) [1..]
 

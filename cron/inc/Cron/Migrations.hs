@@ -46,7 +46,7 @@ createCronTasksTable = Migration {
         fkOnDelete = ForeignKeySetNull
       }
     ]
-  , tblInitialData = Rows ["type", "frequency"] ([
+  , tblInitialData = Just $ Rows ["type", "frequency"] ([
       ("amazon_deletion", ihours 3)
     , ("amazon_upload", iminutes 1)
     , ("async_events_processing", iseconds 10)

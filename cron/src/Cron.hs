@@ -158,7 +158,7 @@ main = Log.withLogger $ do
 
       serializable = defaultTransactionSettings {
         tsIsolationLevel = Serializable
-      , tsRestartPredicate = RestartPredicate $ const . ((SerializationFailure ==) . qeErrorCode)
+      , tsRestartPredicate = Just . RestartPredicate $ const . ((SerializationFailure ==) . qeErrorCode)
       }
 
   tg <- TG.new

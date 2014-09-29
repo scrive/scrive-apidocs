@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE ExistentialQuantification #-}
 module DB.Model.Table (
     ColumnType(..)
   , columnTypeToSQL
@@ -109,9 +109,7 @@ sqlDropColumn cname = "DROP COLUMN" <+> cname
 
 ----------------------------------------
 
-data Rows where
-  Rows   :: forall row. (Show row, ToRow row) => [ByteString] -> [row] -> Rows
-  NoRows :: Rows
+data Rows = forall row. (Show row, ToRow row) => Rows [ByteString] [row]
 
 data Table = Table {
   tblName          :: RawSQL ()
@@ -121,7 +119,7 @@ data Table = Table {
 , tblChecks        :: [TableCheck]
 , tblForeignKeys   :: [ForeignKey]
 , tblIndexes       :: [TableIndex]
-, tblInitialData   :: Rows
+, tblInitialData   :: Maybe Rows
 }
 
 tblTable :: Table
@@ -133,7 +131,7 @@ tblTable = Table {
 , tblChecks = []
 , tblForeignKeys = []
 , tblIndexes = []
-, tblInitialData = NoRows
+, tblInitialData = Nothing
 }
 
 sqlCreateTable :: RawSQL () -> RawSQL ()
