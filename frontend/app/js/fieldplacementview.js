@@ -183,8 +183,6 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
 
             if( placement!=undefined ) {
                 if( placement.page()==page.number() ) {
-                    console.log('xrel: ' + x/w);
-                    console.log('yrel: ' + y/h);
                     placement.set({ xrel: x/w,
                                     yrel: y/h,
                                     wrel: $(helper).width()/w,
@@ -491,7 +489,8 @@ var TextTypeSetterView = Backbone.View.extend({
     place : function() {
         var placement = this.model;
         var offset = $(placement.view.el).offset();
-        $(this.el).css("left",offset.left + Math.max($(placement.view.el).width()+18));
+        var arrowOffset = 18;
+        $(this.el).css("left",offset.left + Math.max($(placement.view.el).width() + arrowOffset));
         $(this.el).css("top",offset.top - 19);
     },
     render: function() {
@@ -709,15 +708,16 @@ var TextPlacementPlacedView = Backbone.View.extend({
                  "line-height: 1;" +
                  "height:"+ (this.fontSize() + 4) +"px;" +
                  "border-width: 0px;" +
-                 "padding-left:7px;",
+                 "padding:" + textPlacementSpacingString + ";" +
+                 "background:"+background+";",
           inputStyle : "font-size:" + this.fontSize() + "px ;" +
                        "line-height: " + (this.fontSize()+ textPlacementExtraLineHeight) + "px;" +
-                       "height:"+ (this.fontSize() + 4) +"px;" +
+                       "height:"+ (this.fontSize() + textPlacementExtraLineHeight) +"px;" +
                        "width: " + width +"px;"+
                        "background:transparent;",
           okStyle :  "font-size:" + this.fontSize() + "px ;" +
                      "line-height: " + (this.fontSize()+ textPlacementExtraLineHeight) + "px;" +
-                     "height:"+ (this.fontSize() + 2) +"px;",
+                     "height:"+ (this.fontSize() + textPlacementExtraLineHeight/2) +"px;",
           onEnter : accept,
           onAutoGrowth : function() {
             if (self.arrow() != undefined)
@@ -964,13 +964,13 @@ var TextPlacementPlacedView = Backbone.View.extend({
             infotext: field.nicename(),
             style: "font-size:" + this.fontSize() + "px ;" +
                    "line-height: " + (this.fontSize() + textPlacementExtraLineHeight) +  "px;" +
-                   "height:"+ (this.fontSize() + 4) +"px; " +
+                   "height:"+ (this.fontSize() + textPlacementExtraLineHeight) +"px; " +
                     ((field && field.signatory() && field.signatory().color()) ? "border-color : "  + field.signatory().color() + ";": "") +
                    "border-width:" + placementBorder + "px; " +
                    "padding:" + textPlacementSpacingString + ";",
             inputStyle : "font-size:" + this.fontSize() + "px ; " +
                          "line-height: " + (this.fontSize() + textPlacementExtraLineHeight) + "px; " +
-                         "height:"+ (this.fontSize() + 4) +"px; " +
+                         "height:"+ (this.fontSize() + textPlacementExtraLineHeight) +"px; " +
                          "vertical-align: top;",
             value: field.value(),
             suppressSpace: (field.name()=="fstname"),
@@ -1082,7 +1082,7 @@ var CheckboxPlacementView = Backbone.View.extend({
     },
     updateColor : function() {
       if(this.model.signatory().color())
-                $(this.el).css({'border': '2px solid ' + this.model.signatory().color(),
+                $(this.el).css({'border': placementBorder + 'px solid ' + this.model.signatory().color(),
                          'background-position': '-1px -1px',
                          'width': 10,
                          'height': 10});
@@ -1279,8 +1279,10 @@ var CheckboxTypeSetterView = Backbone.View.extend({
     place : function() {
         var placement = this.model;
         var offset = $(placement.view.el).offset();
-        $(this.el).css("left",offset.left + 32);
-        $(this.el).css("top",offset.top - 22);
+        var horizontalOffset = 32;
+        var verticalOffset = -22;
+        $(this.el).css("left",offset.left + horizontalOffset);
+        $(this.el).css("top",offset.top + verticalOffset);
     },
     render: function() {
            var view = this;
@@ -1296,8 +1298,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
            body.append(this.title());
            body.append(this.selector());
            body.append(this.precheckedOption());
-           body.append(this.obligatoryOption().css(style='margin-top','5px'));
-
+           body.append(this.obligatoryOption());
            body.append(this.doneOption());
            this.place();
            return this;
@@ -1677,7 +1678,7 @@ var SignatureTypeSetterView = Backbone.View.extend({
         });
 
         box.text(localization.designview.textFields.forThis + " ");
-        box.append($("<div style='margin-top:5px;margin-bottom:10px;'>").append(selector.el()));
+        box.append($("<div class='fieldTypeSetter-subtitle-select'>").append(selector.el()));
 
         return box;
     },
@@ -1685,8 +1686,10 @@ var SignatureTypeSetterView = Backbone.View.extend({
         var placement = this.model;
         var el = $(placement.view.el);
         var offset = el.offset();
-        $(this.el).css("left", offset.left + el.width() + 18);
-        $(this.el).css("top", offset.top - 19);
+        var horizontalOffset = 18;
+        var verticalOffset = -19;
+        $(this.el).css("left", offset.left + el.width() + horizontalOffset);
+        $(this.el).css("top", offset.top + verticalOffset);
     },
     render: function() {
            var view = this;
