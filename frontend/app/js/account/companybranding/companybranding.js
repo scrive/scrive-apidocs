@@ -111,7 +111,7 @@ window.CompanyBrandingModel = Backbone.Model.extend({
     },
     save : function() {
           var self = this;
-          LoadingDialog.open(localization.companyBranding.saveBranding);
+          LoadingDialog.open({header: localization.companyBranding.saveBranding});
           new Submit({
               method: "POST",
               url: self.submiturl,

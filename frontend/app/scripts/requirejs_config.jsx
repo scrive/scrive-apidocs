@@ -68,6 +68,5 @@ var require = {
   },
   deps: ['jquery', 'Underscore', 'Backbone'],
   // All scripts that are not used by other components, but refered from string templates should be listed here
-  include: ['signview/header', 'signview/footer', 'login/login', 'login/brandedlogin', 'pages/header', 'pages/footer', 'lists/list', 'padlist/padlist', 'createfromtemplate/createfromtemplate', 'postsignview/archive_views', 'postsignview/psv_document_model']
-
+  include: ['signview/header', 'signview/footer', 'login/login', 'login/brandedlogin', 'pages/header', 'pages/footer', 'lists/list', 'padlist/padlist', 'createfromtemplate/createfromtemplate', 'postsignview/archive_views', 'postsignview/psv_document_model', 'to-start/to-start']
 };

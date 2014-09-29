@@ -64,19 +64,10 @@ window.Field = Backbone.Model.extend({
         this.triggerSignatoryPostChanges();
     },
     triggerSignatoryPostChanges : function() {
-        var name = this.name();
+        // Let's try to be at least a little efficient with not triggering change too often
         if (this.isStandard()) {
-            if (name == "fstname")
-                this.signatory().trigger('change:name');
-            if (name == "sndname" )
-                this.signatory().trigger('change:name');
-            if (name == "email")
-                this.signatory().trigger('change:email');
-            if (name == "sigco")
-                this.signatory().trigger('change:company');
+          this.signatory().trigger('change');
         }
-
-
     },
     setValueTMP : function(value) {
         this.set({"valueTMP" : value});

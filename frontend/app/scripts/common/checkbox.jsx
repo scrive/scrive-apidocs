@@ -9,7 +9,7 @@
  * onChange, a callback function being called every time the checkbox is checked or unchecked.
  *
  * Example usage: 
- * var checkbox = React.renderComponent(Checkbox.Checkbox({
+ * var checkbox = React.renderComponent(Checkbox({
  *    initiallyChecked: args.checked,
  *    label: args.label
  * }), div);
@@ -17,17 +17,20 @@
  */
 
 define(['React'], function(React) {
-  var expose = {};
-
-  var Checkbox = React.createClass({
+  return React.createClass({
     propTypes: {
       label: React.PropTypes.string.isRequired,
       initiallyChecked: React.PropTypes.bool.isRequired,
-      onChange: React.PropTypes.func
+      onChange: React.PropTypes.func,
+      style: React.PropTypes.object
     },
 
     getInitialState: function() {
       return {checked: this.props.initiallyChecked};
+    },
+
+    handleKeyDn: function(ev) {
+      if (ev.key == " ") { this.handleClick(); ev.preventDefault(); }
     },
 
     handleClick: function() {
@@ -51,15 +54,15 @@ define(['React'], function(React) {
 
       return (
         <div className="checkbox-box" onClick={this.handleClick}>
-          <div className={classes} />
-          <label>{this.props.label}</label>
+          <div className={classes} style={this.props.style} tabIndex="0" onKeyDown={this.handleKeyDn}>
+            <div className="checkmark" />
+          </div>
+          { this.props.label &&
+            <label>{this.props.label}</label>
+          }
         </div>
       );
     }
   });
-
-  expose.Checkbox = Checkbox;
-
-  return expose;
 });
 

@@ -12,7 +12,7 @@ var updateLoadingDialogWithBankIDStatus = function(bankID) {
       }));
     }
   }
-  LoadingDialog.open(div);
+  LoadingDialog.open({header: div});
 };
 
 var addBankIDIframeIfItsNeeded = function(bankID) {

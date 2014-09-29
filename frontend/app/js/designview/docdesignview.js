@@ -437,7 +437,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             var copyPartOf = $("<span>" + localization.designview.numPartOfNum + "</span>");
             $('.put-current-index',copyPartOf).text(index);
             $('.put-total-count',copyPartOf).text(totalCount);
-            LoadingDialog.open(copyDocFor, copyPartOf);
+            LoadingDialog.open({header: copyDocFor, subheader: copyPartOf});
             doc.save();
             doc.afterSave(function() {
               doc.makeReadyForSigning().add("authorsignsimmediately","YES").sendAjax(function(docdata) {
@@ -463,7 +463,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
               var copyPartOf = $("<span>" + localization.designview.numPartOfNum + "</span>");
               $('.put-current-index',copyPartOf).text(index);
               $('.put-total-count',copyPartOf).text(totalCount);
-              LoadingDialog.open(copyDocFor, copyPartOf);
+              LoadingDialog.open({header: copyDocFor, subheader: copyPartOf});
             }
             doc.save();
             doc.afterSave(function() {
@@ -487,7 +487,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             var copyPartOf = $("<span>" + localization.designview.numPartOfNum + "</span>");
             $('.put-current-index',copyPartOf).text(index);
             $('.put-total-count',copyPartOf).text(totalCount);
-            LoadingDialog.open(copyDocFor, copyPartOf);
+            LoadingDialog.open({header: copyDocFor, subheader: copyPartOf});
             doc.save();
             doc.afterSave(function() {
               doc.makeReadyForSigning().sendAjax(function() {
@@ -508,7 +508,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
               var copyPartOf = $("<span>" + localization.designview.numPartOfNum + "</span>");
               $('.put-current-index',copyPartOf).text(index);
               $('.put-total-count',copyPartOf).text(totalCount);
-              LoadingDialog.open(copyDocFor, copyPartOf);
+              LoadingDialog.open({header: copyDocFor, subheader: copyPartOf});
             }
             doc.save();
             doc.afterSave(function() {

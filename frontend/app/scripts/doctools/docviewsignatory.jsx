@@ -49,7 +49,7 @@ var DocumentViewSignatoryModel = Backbone.Model.extend({
           return localization.signatoryMessage.waiting;
       else if (localization.signatoryMessage[signatory.status()] != undefined)
           return localization.signatoryMessage[signatory.status()];
-      return localization.signatoryMessage["other"];
+      return localization.signatoryMessage.other;
  },
  hasRemindOption: function() {
    var signatory = this.signatory();
@@ -128,8 +128,6 @@ var DocumentViewSignatoryModel = Backbone.Model.extend({
        || signatory.personalnumber();
  }
 });
-
-
 
 var DocumentViewSignatoryForListView = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
@@ -304,7 +302,7 @@ var DocumentViewSignatoryView = React.createClass({
     goToSignView : function() {
       var model= this.props.model;
       var signatory = model.signatory();
-      LocalStorage.set("pad","from-list","false");
+      LocalStorage.set("backlink","target", "to-sign");
       mixpanel.track('Accept',
               {'Signatory index':signatory.signIndex(),
                'Accept' : 'give for signing'});
@@ -556,7 +554,6 @@ var DocumentViewSignatoryForList = React.createClass({
       );
     }
   });
-
 
 var DocumentViewSignatory = React.createClass({
     propTypes: {

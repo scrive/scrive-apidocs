@@ -25,7 +25,10 @@ return React.createClass({
               (<div
                 className="checkbox"
                 onClick={function() {self.props.model.list().toogleSelect();}}
-               />)
+               >
+                 <div className="checkmark" />
+               </div>
+               )
             }
             {/*else if*/ (!this.isSelect() && this.isSortable()) &&
               (
@@ -55,7 +58,9 @@ return React.createClass({
               (<div
                 className={"checkbox " + (this.props.data.isSelected() ? "checked" : "")}
                 onClick={function() {self.props.data.toogleSelect();}}
-               />)
+               >
+                <div className="checkmark" />
+              </div>)
             }
             {/*else*/ (!this.isSelect()) &&
               (this.props.rendering(this.props.data))

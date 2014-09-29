@@ -253,6 +253,12 @@ javascriptLocalisation =
              , clickToDraw : "$_clickToDraw()$"
 
            }
+          , toStart: {
+               sendForSigning: "$_sendForSigning()$"
+               , backFromSigningPage: "$_afterErrorGoBack()$"
+               , someFieldsNotFilledInCorrectly: "$_flashMessageSomeFieldsAreIncorrectlyFilledIn()$"
+               , couldNotRefreshDocument: "$_flashMessageCouldNotRefreshDocumentStatus()$"
+          }
           , questionnaire : {
                heyImViktorFromScrive: "$_questionnaireHeyImViktorFromScrive()$"
              , ourEsignService: "$_questionnaireOurEsignService()$"

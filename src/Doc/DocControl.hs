@@ -34,6 +34,8 @@ module Doc.DocControl(
     , handleSignviewCSS
     , handleSignviewCSSWithoutDocument
     , handleSignviewCSSWithoutDocumentAndWithoutUser
+    , handleToStart
+    , handleToStartShow
 ) where
 
 import Control.Applicative
@@ -242,6 +244,17 @@ handleSignShow documentid signatorylinkid = do
         content <- theDocument >>= \d -> pageDocumentSignView ctx d invitedlink ad
         simpleHtmlResonseClrFlash content
     Nothing -> handleCookieFail signatorylinkid documentid
+
+-- |
+--   /ts/[documentid] (doc has to be a draft)
+{-# NOINLINE handleToStartShow #-}
+handleToStartShow :: Kontrakcja m => DocumentID -> m (Either KontraLink Response)
+handleToStartShow documentid = checkUserTOSGet $ do
+  ctx <- getContext
+  document <- getDocByDocIDForAuthor documentid
+  ad <- getAnalyticsData 
+  content <- pageDocumentToStartView ctx document ad
+  simpleHtmlResonseClrFlash content
 
 -- |
 --   /sp/[documentid]/[signatorylinkid]
@@ -528,6 +541,14 @@ handlePostSignview = do
   ad <- getAnalyticsData
   _ <- guardJust $ ctxmaybeuser ctx
   simpleHtmlResonseClrFlash =<< pagePostSignview ctx  ad
+
+handleToStart :: Kontrakcja m => m Response
+handleToStart = do
+  ctx <- getContext
+  ad <- getAnalyticsData
+  case (ctxmaybeuser ctx) of
+    Just _ -> simpleHtmlResonseClrFlash =<< pageDocumentToStartList ctx  ad
+    _ -> simpleHtmlResonseClrFlash =<< pageDocumentToStartLogin ctx  ad
 
 checkFileAccess :: Kontrakcja m => FileID -> m ()
 checkFileAccess fid = do

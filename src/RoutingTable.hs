@@ -73,6 +73,10 @@ staticRoutes production = choice
      , allLangDirs $ dir "padqueue" $ hGet $ toK0 $ return LinkPadList -- Backward compatibility, redirects back to /to-sign
      , allLangDirs $ dir "postsignview" $ hGet $ toK0 $ DocControl.handlePostSignview
 
+     -- Simple sending
+     , allLangDirs $ dir "to-start" $ hGet $ toK0 $ DocControl.handleToStart
+     , dir "ts" $ hGet $ toK1 $ DocControl.handleToStartShow
+
      -- Attachments
      , dir "a" $ dir "rename"      $ hPost $ toK1 $ AttachmentControl.handleRename
      , dir "a" $ dir "share"       $ hPost $ toK0 $ AttachmentControl.handleShare

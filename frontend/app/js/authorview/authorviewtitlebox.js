@@ -11,9 +11,6 @@ var AuthorViewTitleBoxModel = Backbone.Model.extend({
   document :function() {
      return this.authorview().document();
   },
-  hasButtons : function() {
-    return this.canBeRestarted() || this.canBeWithdrawn() || this.canGoToSignView();
-  },
   canBeRestarted : function() {
     return (this.document().canberestarted() && this.document().currentViewerIsAuthor());
   },
@@ -84,6 +81,18 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
            var newdocdata = JSON.parse(resp);
            new FlashMessage({color: 'green', content : localization.flashDocumentRestarted, withRedirect : true, redirect : '/d/'+ newdocdata.id});
         });
+      }
+    }).el();
+  },
+  downloadPDFButton: function() {
+    var model = this.model;
+    var document = this.model.document();
+    return new Button({
+      size: "big",
+      text: localization.authorview.downloadPdf,
+      color: "black",
+      onClick: function() {
+        window.location = document.mainfile().downloadLinkForMainFile(document.title());
       }
     }).el();
   },
@@ -201,7 +210,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
             content :self.padNextSignatoryModalContent,
             onAccept : function() {
                 mixpanel.track('Give for pad signing to some pad signatory - opening signview');
-                LocalStorage.set("pad","from-list","false");
+                LocalStorage.set("backlink","target","authorview");
                 model.giveToPadSignatory(self.signatory);
             }
           });
@@ -216,30 +225,24 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     var container = $("<div class='titlebox' />");
     container.append($("<div class='headline' />").text( document.title() ));
 
-
-    var smallerbits = $("<div class='subheadline'/>");
-    container.append(smallerbits);
-
-    smallerbits.append($("<a target='_blank' class='download clickable' />").attr("href", document.mainfile().downloadLinkForMainFile(document.title())).text(localization.authorview.downloadPdf));
-      mixpanel.track_links('.download', 'Download PDF');
-
     $(this.el).append(container);
 
-    if (this.model.hasButtons()) {
-      console.log("Generating buttons");
-      var buttonbox = $("<div class='buttonbox'/>");
-      if (this.model.canBeRestarted())
-        buttonbox.append(this.restartButton());
-      if (this.model.canBeProlonged())
-        buttonbox.append(this.prolongButton());
-      if (this.model.canBeWithdrawn())
-        buttonbox.append(this.withdrawnButton());
-      if (this.model.canGoToSignView())
-        buttonbox.append(this.goToSignViewButton());
-      else if (this.model.canGiveToNextSignatoryPad())
-        buttonbox.append(this.giveToNextSignatoryPadButton());
-      container.append(buttonbox);
-    }
+    var buttonbox = $("<div class='buttonbox'/>");
+    if (this.model.canBeRestarted())
+      buttonbox.append(this.restartButton());
+    if (this.model.canBeProlonged())
+      buttonbox.append(this.prolongButton());
+    if (this.model.canBeWithdrawn())
+      buttonbox.append(this.withdrawnButton());
+    if (this.model.canGoToSignView())
+      buttonbox.append(this.goToSignViewButton());
+    else if (this.model.canGiveToNextSignatoryPad())
+      buttonbox.append(this.giveToNextSignatoryPadButton());
+
+    buttonbox.append(this.downloadPDFButton());
+
+    container.append(buttonbox);
+
     return this;
   }
 

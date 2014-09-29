@@ -1,24 +1,31 @@
 .checkbox {
-  background: url(~"@{img-base-url}/checkboxes-blue.png") top left no-repeat;
   cursor: pointer;  
-  height: 12px;
+  height: 10px;
   margin: 10px 0 10px 0;
-  width: 12px;
+  width: 10px;
+  border: 1px solid @checkbox-grey-border-color;
 
-  &:hover  {
-    background-position: 0 -12px;
+  .checkmark {
+    background: url(~"@{img-base-url}/checkboxes-blue.png") top left no-repeat;
+    width: 10px;
+    height: 10px;
+  }
+
+  &:hover, &:focus  {
+    border-color: @checkbox-border-color;
   }
 
   &:active,
   &.active,
   &.checked {
-    background-position: 0 -24px;
+    .checkmark { 
+      background-position: 0 -10px;
+    }
+    border-color: @checkbox-border-color;
   }
 }
 
 .checkbox-box {
-  mix-height: 32px;
-  
   .checkbox{
     margin: 0;
   }

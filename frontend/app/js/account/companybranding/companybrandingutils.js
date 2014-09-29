@@ -45,7 +45,7 @@ var CompanyBrandingColourView = Backbone.View.extend({
     var model = this.model;
     var self = this;
     var checkboxbox = $("<div class='checkbox-box'/>");
-    this.checkbox = $("<div class='checkbox'/>");
+    this.checkbox = $("<div class='checkbox'><div class='checkmark'/></div>");
     this.checkbox.click(function() {
         if(!self.checkbox.hasClass("checked"))
             mixpanel.track('Check ' + model.label().toLowerCase());
@@ -172,7 +172,7 @@ var CompanyBrandingFontView = Backbone.View.extend({
     var model = this.model;
     var self = this;
     var checkboxbox = $("<div class='checkbox-box'/>");
-    this.checkbox = $("<div class='checkbox'/>");
+    this.checkbox = $("<div class='checkbox'><div class='checkmark' /></div>");
     this.checkbox.click(function() {
         if(!self.checkbox.hasClass('checked'))
             mixpanel.track('Check ' + model.label().toLowerCase());
@@ -363,7 +363,7 @@ var CompanyBrandingLogoView = Backbone.View.extend({
     var self = this;
 
     var checkboxbox = $("<div class='checkbox-box'/>");
-    this.checkbox = $("<div class='checkbox'/>");
+    this.checkbox = $("<div class='checkbox'><div class='checkmark'></div>");
     this.checkbox.click(function() {
         if(!self.checkbox.hasClass("checked"))
             mixpanel.track('Check ' + model.label().toLowerCase());

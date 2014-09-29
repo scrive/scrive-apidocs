@@ -2,7 +2,8 @@
  *
  * Open with ScreenBlockingDialog.open({'header': some html/jquery object,
  *                                      'subheader': some html/jquery object,
- *                                      'content': some html/jquery object});
+ *                                      'content': some html/jquery object
+ *                                      });
  * Close with ScreenBlockingDialog.close();
 */
 
@@ -68,7 +69,7 @@ window.ScreenBlockingDialog = {
       modalcontainer.css('top', $(window).scrollTop());
       modalcontainer.css('margin-top', ($(window).height()- 200) /2);
       modalcontainer.css('left', $(window).scrollLeft());
-      modalcontainer.css('margin-left', ($(window).width() - 650) / 2);
+      modalcontainer.css('margin-left', ($(window).width() - (modalcontainer.width() || 950)) / 2);
       dialog.height($(document).height());
     },
     open: function (cfg) {

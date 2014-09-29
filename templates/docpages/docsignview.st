@@ -163,11 +163,14 @@ $htmlopentag()$
 
               var headerDiv = jQuery('<div/>');
               var link = {};
-              if (LocalStorage.get("pad","from-list") == "true") {
+              var target = LocalStorage.get("backlink", "target");
+              if (target == "to-sign") {
                 link.text= localization.pad.backToList;
                 link.onClick = function() {window.location = "/to-sign"};
-              }
-              else {
+              } else if (target == "to-start") {
+                link.text = localization.toStart.backFromSigningPage;
+                link.onClick = function() {window.location = "/ts/$documentid$"};
+              } else {
                 link.text = localization.pad.backToDocument;
                 link.onClick = function() {window.location = "/d/$documentid$"};
               }

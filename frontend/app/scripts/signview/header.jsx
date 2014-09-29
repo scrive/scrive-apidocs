@@ -7,7 +7,8 @@ define(['React', 'Backbone', 'common/backbone_mixin', 'tinycolor'], function(Rea
     propTypes: {
       signviewbranding: React.PropTypes.object,
       fullWidth : React.PropTypes.bool,
-      link : React.PropTypes.object
+      link : React.PropTypes.object,
+      forceShowing: React.PropTypes.bool // Overrides sign view branding setting "showheader"
     },
     mixins: [BackboneMixin.BackboneMixin],
     getBackboneModels : function() {
@@ -16,7 +17,11 @@ define(['React', 'Backbone', 'common/backbone_mixin', 'tinycolor'], function(Rea
     render: function() {
       var signviewbranding = this.props.signviewbranding;
       var hasLink = this.props.link != undefined;
+
+      // In usual cases we don't show the header (with the logo etc) on small screen devices, but some cases (to-sign and to-start view) override this behaviour.
       var showHeader = signviewbranding.ready() && !BrowserInfo.isSmallScreen() && signviewbranding.showheader();
+
+      if (signviewbranding.ready() && this.props.forceShowing) showHeader = true;
 
       $('.signview').toggleClass("noheader",!showHeader); // We need to toogle this class here
       if (!showHeader || !signviewbranding.ready())

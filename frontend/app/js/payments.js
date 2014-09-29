@@ -578,8 +578,6 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                                             model.firstName(),
                                             model.lastName(),
                                             function(data) {
-                                                //LoadingDialog.close();
-                                                //loadingicon.hide();
                                                 if(data.sent)
                                                     form.submit();
                                                 // what else?
@@ -588,7 +586,6 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                     }
                 } else if(data.user_exists && !data.has_plan && !data.is_admin) {
                     loadingicon.hide();
-                    //LoadingDialog.close();
                     var popup = new Confirmation({
                         title: localization.payments.mustBeAdmin,
                         content: $('<p />').text(localization.payments.contactAdmin),
@@ -597,8 +594,6 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                         }
                     });
                 } else if(data.user_exists && !data.has_plan &&  data.is_admin) {
-                    //LoadingDialog.close();
-                    //loadingicon.hide();
                     if(work) {
                         work = false;
                         form.submit();
@@ -606,7 +601,6 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                     }
                 } else {
                     // show message (they should log in)
-                    //LoadingDialog.close();
                     loadingicon.hide();
                     var text = localization.payments.outside.sorryExistingUser;
                     var header = localization.payments.outside.sorryExistingUserHeader;
@@ -629,7 +623,6 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                                       onClick: function() {
                                           form.find('.coupon .check').click();
                                           view.validator.validate(function success() {
-                                              //LoadingDialog.open(localization.payments.loading);
                                               loadingicon.css({display:'inline'});
                                               if(model.type() === 'user') {
                                                   handlechargeaccount({
@@ -803,8 +796,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                 }
                 , successHandler: function(stuff) {
 
-                    LoadingDialog.open(localization.payments.savingsubscription);
-                    //loadingicon.css({display:'inline'});
+                    LoadingDialog.open({header: localization.payments.savingsubscription});
                     model.submitSubscription(function() {
                         var text;
                         var header;
@@ -1074,7 +1066,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                                                text:localization.payments.savechanges,
                                                onClick: function() {
                                                    if(work) {
-                                                       LoadingDialog.open(localization.payments.savingsubscription);
+                                                       LoadingDialog.open({header: localization.payments.savingsubscription});
                                                        work = false;
                                                        $('.changebilling-form form').submit();
                                                        work = true;
@@ -1154,7 +1146,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                                             mixpanel.track('Accept',
                                                            {'Accept' : 'Cancel subscription'});
                                             popup.clear();
-                                            LoadingDialog.open(localization.payments.cancelingSubscription);
+                                            LoadingDialog.open({header: localization.payments.cancelingSubscription});
                                         }
                                        })
                 });
@@ -1232,7 +1224,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                                                                       mixpanel.track('Accept',
                                                                                      {'Accept' : 'Renew subscription'});
                                                                       popup.clear();
-                                                                      LoadingDialog.open(localization.payments.renewingSubscription);
+                                                                      LoadingDialog.open({header: localization.payments.renewingSubscription});
                                                                   }
                                                                  })
                                           });

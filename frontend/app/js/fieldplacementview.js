@@ -1199,7 +1199,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
     obligatoryOption : function() {
         var self = this;
         var option = $("<div class='fieldTypeSetter-option checkbox-box'/>");
-        self.obligatoryCheckbox = $("<div class='checkbox'>");
+        self.obligatoryCheckbox = $("<div class='checkbox'><div class='checkmark'/></div>");
         var label = $("<label/>").text(localization.designview.checkboxes.obligatory);
         var field = self.model.field();
         option.append(self.obligatoryCheckbox).append(label);
@@ -1233,7 +1233,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
     precheckedOption: function() {
         var self = this;
         var option = $("<div class='fieldTypeSetter-option checkbox-box'/>");
-        self.precheckedCheckbox = $("<div class='checkbox'>");
+        self.precheckedCheckbox = $("<div class='checkbox'><div class='checkmark'/></div>");
         var label = $("<label/>").text(localization.designview.checkboxes.prechecked);
         var field = self.model.field();
         option.append(self.precheckedCheckbox).append(label);
@@ -1626,7 +1626,7 @@ var SignatureTypeSetterView = Backbone.View.extend({
     obligatoryOption : function() {
         var self = this;
         var option = $("<div class='fieldTypeSetter-option checkbox-box'/>");
-        self.obligatoryCheckbox = $("<div class='checkbox'>");
+        self.obligatoryCheckbox = $("<div class='checkbox'><div class='checkmark'/></div>");
         var label = $("<label/>").text(localization.designview.textFields.obligatory);
         var field = self.model.field();
         option.append(self.obligatoryCheckbox).append(label);

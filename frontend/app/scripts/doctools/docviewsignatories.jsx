@@ -85,7 +85,6 @@ var DocumentViewSignatoriesView = React.createClass({
               {/*if*/ model.hasList() &&
                 <div className='list spacing grey-box' style={{padding:"0px;"}}>
                   {model.signatories().map(function(s,i) {
-                    var status = s.status();
                     return (
                       <DocumentViewSignatoryForList
                         key = {s.signatoryid() + ""}

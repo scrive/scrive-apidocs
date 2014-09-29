@@ -847,7 +847,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
 
                     field.setName(self.input.value());
                     sig.trigger('change:fields');
-                    field.unbind('change:name', changer);
+                    field.unbind('change', changer);
                 }
             };
             var remover = function() {
@@ -872,7 +872,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                 onRemove : remover
             });
 
-            field.bind('change:name', changer);
+            field.bind('change', changer);
 
             if(!field.isValid(true))
                 $(self.input.el()).addClass('redborder');
@@ -1384,7 +1384,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                     txt.text(sig.name());
                 };
 
-                sig.bind('change:name', f);
+                sig.bind('change', f);
 
             }
 
@@ -1414,7 +1414,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                 txt.text(sig.email());
             };
 
-            sig.bind('change:email change:fields', f);
+            sig.bind('change change:fields', f);
 
             div.append(txt);
             return div;
@@ -1434,7 +1434,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                 };
 
 
-                sig.bind('change:company change:fields', f);
+                sig.bind('change change:fields', f);
             }
             div.append(txt);
             return div;

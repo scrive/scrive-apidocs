@@ -1,0 +1,268 @@
+@import 'branding/variables';
+
+.signview.responsive {
+  min-width: 0;
+
+  .pageheader {
+    min-width: 0;
+  }
+
+  .pagefooter {
+    min-width: 0;
+
+    .content {
+      width: 320px;
+    }
+  }
+}
+
+.mainContainer .to-start {
+  .create-from-template {
+    min-width: 320px;
+    max-width: 1018px;
+    width: auto;
+
+    .list-container { 
+      padding-top: 0; 
+
+      .col {
+        max-width: 1018px;
+      }
+
+      .table table tr:hover {
+        background: @gray-5-percent;
+      }
+    }
+
+    .headline {
+      padding: 15px;
+      background: white;
+      max-width: 986px;
+      min-width: 320px;
+      text-align: center;
+      font-size: 25px;
+      line-height: 47px;
+      margin-top: 25px;
+      border: 1px solid @gray-10-percent;
+      border-bottom-width: 0;
+    }
+  }
+
+  .form-container {
+
+    @party-container-padding: 15px;
+
+    margin: auto;
+    min-width: 320px;
+    max-width: 1018px;
+    margin-bottom: 25px;
+
+    padding-left: @party-container-padding;
+    padding-right: @party-container-padding;
+
+    .header-container {
+
+      .headline {
+        display: inline-block;
+      }
+
+      .arrow-container {
+        float: right;
+        display: inline-block;
+        cursor: pointer;
+
+        .background {
+          width: 60px;
+          height: 60px;
+          background: @gray-5-percent; 
+
+          position: absolute;
+          top: 0px;
+          right: 0px;
+
+          .arrow {
+            width: 15px;
+            margin: 0 auto;
+            padding-top: 21px;
+            display: block;
+          }
+        }
+      }
+    }
+
+    .party-container {
+      padding: @party-container-padding;
+      background-color: white;
+      margin-top: 25px;
+      position: relative;
+
+      .box-shadow(0 0 8px rgba(80, 80, 80, 0.31));
+
+      &.sign-button-container {
+        text-align: center;
+        padding: 30px;
+      }
+
+      .field-wrapper {
+        width: 100%;
+        display: inline-block;
+        box-sizing: border-box; // Used to make 50% play nice
+      }
+
+      @media (min-width: 545px) { 
+        .field-wrapper {
+          max-width: 50%;
+          &:nth-child(odd) {
+            padding-left: 10px;
+          }
+        }
+      }
+
+      @media (min-width: 750px) { 
+        .field-wrapper {
+          max-width: 33.3%;
+          padding-right: 10px;
+          &:nth-child(3n+1) {
+            padding-right: 0;
+          }
+          &:nth-child(odd) {
+            padding-left: 0;
+          }
+        }
+      }
+
+      &.minified {
+        background: @gray-5-percent;
+        cursor: pointer;
+
+        .field-wrapper, .extra-info, .status {
+          display: none;
+        }
+      }
+
+      .extra-info {
+        background: @gray-3-percent;
+        padding: 15px;
+        margin-left: -15px;
+        margin-right: -15px;
+        margin-bottom: -15px;
+        margin-top: 15px;
+
+        .delivery {
+          margin-top: 5px;
+        }
+
+        .button {
+          margin-top: 15px;
+        }
+      }
+
+      &.instructions {
+        margin-top: 25px !important; // Has to be !important as it is in signview.less
+        padding: 30px;
+
+        .headline {
+          margin-bottom: 0;
+        }
+
+        @media (max-width: 545px) { 
+          border: none;
+          .box-shadow(0 0 8px rgba(80, 80, 80, 0.21));
+        }
+        
+        .arrow-legend {
+          .row {
+            float: none;
+          }
+        }
+      }
+    }
+    
+    label {
+      display: block;
+      color: @text-dark;
+      margin-top: 15px;
+    }
+
+    .send-button {
+      .label {
+        margin: 0 20px 0 20px;
+      }
+    }
+
+    .checkbox {
+      border-width: 1px;
+    }
+
+    .needs-sender-action .checkbox {
+      border: 1px solid;
+    }
+
+    .checkbox-input {
+      .checkbox {
+        margin-top: 10px;
+      }
+    }
+
+    div.field-input {
+      display: block;
+
+      &.optional-input {
+        &.filled-in:not(.readonly) { 
+          border-color: @gray-border;
+          background: white;
+          input { background: white; }
+        }
+        input { background: transparent; }
+      }
+      &.needs-sender-action {
+        input { 
+          background: transparent;
+        }
+      }
+      &.readonly {
+        background: @gray-2-percent;
+        input { background: @gray-2-percent };
+        border-color: @gray-border;
+      }
+    }
+  }
+}
+
+// --- Tooltip ---
+.tooltip-container.to-start {
+  width: 186px;
+
+  .icon {
+    display: inline-block;
+  }
+
+  p {
+    display: inline-block;
+    vertical-align: top;
+    margin-top: 9px;
+    padding: 0;
+    margin-left: 5px;
+  }
+
+  .tooltip-arrow {
+    left: auto;
+    right: -17px;
+    background: url(~"@{img-base-url}/tooltip-arrow-right.png");
+  }
+
+  .tooltip-body {
+    width: 168px;
+    padding: 5px;
+  }
+}
+
+.signview .to-start .subcontainer {
+  // There was some overlap between the .authorview and the .signview, causing issues with the AuthorView document-pages-wrapper
+  background: transparent;
+  border: 0;
+  padding: 0;
+  width: 1018px;
+  margin-bottom: 20px;
+
+}

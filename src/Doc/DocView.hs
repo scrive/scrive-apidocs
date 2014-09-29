@@ -15,6 +15,9 @@ module Doc.DocView (
   , pageDocumentPadList
   , pageDocumentPadListLogin
   , pagePostSignview
+  , pageDocumentToStartList
+  , pageDocumentToStartLogin
+  , pageDocumentToStartView
   , gtVerificationPage
   , documentSignviewBrandingCSS
   ) where
@@ -142,6 +145,48 @@ pagePostSignview ctx ad = do
       standardPageFields ctx kontrakcja ad
       brandingFields mbd mcompany
 
+{- To start, list + login + show view -}
+
+pageDocumentToStartList :: Kontrakcja m
+                           => Context
+                           -> AnalyticsData
+                           -> m String
+pageDocumentToStartList ctx ad = do
+  let  mbd = ctxbrandeddomain ctx
+  mcompany <- companyUIForPage
+  renderTemplate "pageToStartListView" $ do
+      standardPageFields ctx kontrakcja ad
+      brandingFields mbd mcompany
+
+pageDocumentToStartLogin:: Kontrakcja m
+                    => Context
+                    -> AnalyticsData
+                    -> m String
+pageDocumentToStartLogin ctx ad = do
+  let  mbd = ctxbrandeddomain ctx
+  renderTemplate "toStartLogin" $ do
+      standardPageFields ctx kontrakcja ad
+      F.value "servicelinkcolour" $ bdservicelinkcolour <$> mbd
+      F.value "textscolour" $ bdexternaltextcolour <$> mbd
+      F.value "background" $ bdbackgroundcolorexternal <$> mbd
+      brandingFields mbd Nothing
+
+pageDocumentToStartView :: Kontrakcja m
+                    => Context
+                    -> Document
+                    -> AnalyticsData
+                    -> m String
+pageDocumentToStartView ctx document ad = do
+  let  mbd = ctxbrandeddomain ctx
+  mcompany <- companyUIForPage
+  renderTemplate "pageToStartDocumentView" $ do
+      F.value "documentid" $ show $ documentid document
+      F.value "documenttitle" $ documenttitle document
+      standardPageFields ctx kontrakcja ad
+      brandingFields mbd mcompany
+
+
+
 
 -- | Basic info about document , name, id ,author
 documentInfoFields :: Monad m => Document -> Fields m ()
@@ -203,8 +248,9 @@ signviewBrandingLess mbd mcompanyui = unlines
     bcolor "secondarycolor" $ (companysignviewsecondarycolour   =<< mcompanyui) `mplus` (bdsignviewsecondarycolour <$> mbd),
     bcolor "backgroundcolor" $ (companysignviewbackgroundcolour =<< mcompanyui) `mplus` (bdbackgroundcolour <$> mbd),
     bfont "font" $ (companysignviewtextfont  =<< mcompanyui),
-    -- Only last part will generate some css. Previews ones are just definitions
-    "@import 'signviewbranding/signviewbranding';"
+    -- Only last part will generate some css. Previous ones are just definitions
+    "@import 'signviewbranding/signviewbranding';",
+    "@import 'signviewbranding/to-startbranding';"
     ]
   where
     -- Some sanity checks on data. Note that this are provided by users

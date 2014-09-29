@@ -20,7 +20,7 @@ htmlTests :: TestEnvSt -> Test
 htmlTests _ = testGroup "HTML"
     [ testGroup "static checks"
         [ testCase "templates make valid xml" testValidXml,
-          testCase "no unecssary double divs" testNoUnecessaryDoubleDivs ,
+          testCase "no unnecessary double divs" testNoUnecessaryDoubleDivs ,
           testCase "no nested p tags when templates are rendered" testNoNestedP
           ]
     ]

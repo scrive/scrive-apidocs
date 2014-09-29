@@ -202,7 +202,6 @@ priceplanPage = do
             standardPageFields ctx kontrakcja ad
           simpleHtmlResonseClrFlash content
 
-
 unsupportedBrowserPage :: Kontrakcja m => m Response
 unsupportedBrowserPage = do
   res <- renderTemplate "unsupportedBrowser" $ return ()

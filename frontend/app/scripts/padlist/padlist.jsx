@@ -81,7 +81,7 @@ return React.createClass({
     },
     openPadSigningView : function(doc) {
       var signingIndexes = [];
-      LocalStorage.set("pad","from-list","true");
+      LocalStorage.set("backlink","target","to-sign");
 
       for(var i=0; i< doc.field("subfields").length; i++) {
         if (doc.field("subfields")[i].cansignnow == true &&  doc.field("subfields")[i].delivery =="pad")

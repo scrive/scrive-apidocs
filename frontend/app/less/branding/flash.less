@@ -1,3 +1,25 @@
+// Some responsivenessy feeling.
+@media(max-width: 640px) {
+  .flash {
+    .flash-content.multiline {
+      height: auto;
+
+      .flash-body {
+        float: none;
+        padding-left: 68px; // 60px (width of the icon) + 8 (padding above)
+      }
+    }
+
+    .flash-content-wrapper {
+      width: 320px;
+    }
+
+    .flash-body {
+      width: 205px;
+    }
+  }
+}
+
 .flash-content-wrapper {
   border: 6px solid rgba(255, 255, 255, 0.05);
   border-radius: 3px;
@@ -36,7 +58,7 @@
   padding-left: 16px;
   text-align: left;
 
-  &.twoLines {
+  .multiline & {
     line-height: 22px;
     padding-bottom: 8px;
     padding-top: 8px;

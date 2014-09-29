@@ -289,7 +289,7 @@ define(['Backbone', 'legacy_code'], function() {
                     .append(password2Input.el()));
 
       var tosAccept = $("<div class='checkbox-box' style='text-align: left;'/>");
-      var tosCBox = $("<div class='checkbox' name='tos' style='margin-left:3px'/>");
+      var tosCBox = $("<div class='checkbox' name='tos' style='margin-left:3px'><div class='checkmark' /></div>");
       if (model.accepted()) tosCBox.addClass('checked');
       var toggleCheckBox = function() {
         tosCBox.toggleClass('checked');

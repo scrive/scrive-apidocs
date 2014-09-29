@@ -17,6 +17,7 @@ kontrakcja-test.tix
 jslint.txt
 .hpc/
 *.less.css
+regular-css-compiled.css
 .cabal-sandbox/
 cabal.sandbox.config
 
