@@ -1188,15 +1188,15 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
 
             viewmodel.bind('change:participantDetail', view.updateOpened);
             viewmodel.bind('change:step', view.render);
-            viewmodel.document().bind('bubble', view.checkInnerProblems);
             sig.bind('change:fields', view.updateOpened);
+            view.listenTo(viewmodel.document(), 'bubble', view.checkInnerProblems);
             view.render();
         },
         destroy : function() {
           this.viewmodel.unbind('change:participantDetail', this.updateOpened);
           this.viewmodel.unbind('change:step', this.render);
-          this.viewmodel.unbind('bubble', this.checkInnerProblems);
           this.model.unbind('change:fields', this.updateOpened);
+          this.stopListening();
           this.off();
           if (this.detailsView != undefined)
             this.detailsView.destroy();
@@ -1302,15 +1302,10 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
         checkInnerProblems: function() {
           var signatory = this.model;
           // Check only validity of field
-          var innerProblems = _.some(signatory.fields(), function(field) {
+          var innerProblems = _.any(signatory.fields(), function(field) {
             return !field.isValid()
           });
-          if(innerProblems) {
-            this.innerDiv.addClass('is-has-problems');
-          }
-          else {
-            this.innerDiv.removeClass('is-has-problems');
-          }
+          this.innerDiv.toggleClass('is-has-problems', innerProblems);
         },
         closeBox: function() {
             var view = this;

@@ -166,6 +166,7 @@ window.Field = Backbone.Model.extend({
     // Validate the state of the field (not fake, not blank, etc) and the input
     validation: function() {
       var field = this;
+      var signatory = field.signatory();
 
       if(field.isFake()) {
         return new NoValidation();
@@ -183,13 +184,6 @@ window.Field = Backbone.Model.extend({
         }, message: msg});
       }
 
-      return this.validateInput();
-    },
-    // Only validate the input, may be in invalid state (e.g. 'fake' field)
-    validateInput: function() {
-      var field = this;
-      var signatory = field.signatory();
-
       var concatValidations = new Validation();
       var senderMustFill = field.isObligatory() && field.shouldbefilledbysender();
       var willSignNowAndFieldNeeded = signatory.author()
@@ -202,28 +196,23 @@ window.Field = Backbone.Model.extend({
         concatValidations = new NotEmptyValidation({message: msg});
       }
 
-      if((field.isFstName || field.isSndName()) && field.validateNames() != undefined) {
-        concatValidations.concat(field.validateNames())
+      if(signatory.author() && (field.isFstName() || field.isSndName())) {
+        return new NoValidation();
       }
-      if(field.isEmail() && field.validateEmail() != undefined) {
+      if(field.isEmail()) {
         concatValidations.concat(field.validateEmail());
       }
-      if(field.isMobile() && field.validateMobile() != undefined) {
+      if(field.isMobile()) {
         concatValidations.concat(field.validateMobile());
       }
-      if(field.isSSN() && field.validateSSN() != undefined) {
+      if(field.isSSN()) {
         concatValidations.concat(field.validateSSN());
       }
-      if(field.isCheckbox() && field.validateCheckbox() != undefined) {
+      if(field.isCheckbox()) {
         concatValidations.concat(field.validateCheckbox());
       }
 
       return concatValidations;
-    },
-    validateNames: function() {
-      if(this.signatory().author()) {
-        return new NoValidation();
-      }
     },
     validateSSN: function() {
       var signatory = this.signatory();
@@ -231,6 +220,7 @@ window.Field = Backbone.Model.extend({
         var msg = localization.designview.validation.missingOrWrongPersonalNumber;
         return new NotEmptyValidation({message: msg});
       }
+      return new Validation();
     },
     validateCheckbox: function() {
       var field = this;
@@ -251,6 +241,7 @@ window.Field = Backbone.Model.extend({
         ) {
         return new PhoneValidation().or(new EmptyValidation());
       }
+      return new Validation();
     },
     validateEmail: function() {
       var field = this;
@@ -264,6 +255,7 @@ window.Field = Backbone.Model.extend({
         var msg = localization.designview.validation.missingOrWrongEmail;
         return new EmailValidation({message: msg});
       }
+      return new Validation();
     },
     isEmail: function() {
         return  this.isStandard() && this.name() == "email";
