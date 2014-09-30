@@ -418,7 +418,7 @@ instance Sqlable SqlInsert where
     emitClausesSepComma "WITH" (map (\(name,command) -> name <+> "AS" <+> parenthesize command) (sqlInsertWith cmd)) <+>
     "INSERT INTO" <+> sqlInsertWhat cmd <+>
     parenthesize (sqlConcatComma (map fst (sqlInsertSet cmd))) <+>
-    emitClausesSep "VALUES" "," (map makeClause (transpose (map (makeLongEnough . snd) (sqlInsertSet cmd)))) <+>
+    emitClausesSep "VALUES" "," (map sqlConcatComma (transpose (map (makeLongEnough . snd) (sqlInsertSet cmd)))) <+>
     emitClausesSepComma "RETURNING" (sqlInsertResult cmd)
    where
       -- this is the longest list of values
@@ -427,7 +427,6 @@ instance Sqlable SqlInsert where
       lengthOfEither (Many x) = length x
       makeLongEnough (Single x) = take longest (repeat x)
       makeLongEnough (Many x) = take longest (x ++ repeat "DEFAULT")
-      makeClause = parenthesize . sqlConcatComma
 
 instance Sqlable SqlInsertSelect where
   toSQLCommand cmd =
