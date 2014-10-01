@@ -338,6 +338,16 @@ var TextTypeSetterView = Backbone.View.extend({
         });
         self.listenTo(self.model.field(),'change:value',self.updatePosition);
 
+        _.each(self.model.field().signatory().document().signatories(), function(s) {
+          _.each(s.fields(), function(f) {
+            _.each(f.placements(), function(p) {
+              if(self.model != p && p.typeSetter) {
+                p.typeSetter.clear();
+              }
+            });
+          });
+        });
+
         self.fixPlaceFunction = function(){
             self.place();
         };
@@ -1076,17 +1086,29 @@ var CheckboxPlacementView = Backbone.View.extend({
 var CheckboxTypeSetterView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render' , 'clear');
-        this.model.bind('removed', this.clear);
-        this.model.field().bind('change', this.render);
-        this.model.field().signatory().bind("change:fields",this.render);
-        this.model.field().signatory().document().bind("change:signatories",this.render);
-        var view = this;
-        this.fixPlaceFunction = function(){
+        var self = this;
+        self.model.bind('removed', self.clear);
+        self.model.field().bind('change', self.render);
+        self.model.field().signatory().bind("change:fields",self.render);
+        self.model.field().signatory().document().bind("change:signatories",self.render);
+
+        _.each(self.model.field().signatory().document().signatories(), function(s) {
+          _.each(s.fields(), function(f) {
+            _.each(f.placements(), function(p) {
+              if(self.model != p && p.typeSetter) {
+                p.typeSetter.clear();
+              }
+            });
+          });
+        });
+
+        var view = self;
+        self.fixPlaceFunction = function(){
             view.place();
         };
         $(window).scroll(view.fixPlaceFunction); // To deal with resize;
         $(window).resize(view.fixPlaceFunction);
-        this.render();
+        self.render();
     },
     clear: function() {
         this.off();
@@ -1517,18 +1539,29 @@ var SignaturePlacementViewWithoutPlacement = Backbone.View.extend({
 var SignatureTypeSetterView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this);
-        this.model.bind('removed', this.clear);
-        this.model.field().bind('change:signatory', this.render);
-        this.model.field().signatory().bind("change:fields",this.render);
-        this.model.field().signatory().document().bind("change:signatories",this.render);
+        var self = this;
+        self.model.bind('removed', self.clear);
+        self.model.field().bind('change:signatory', self.render);
+        self.model.field().signatory().bind("change:fields",self.render);
+        self.model.field().signatory().document().bind("change:signatories",self.render);
 
-        var view = this;
-        this.fixPlaceFunction = function(){
+        _.each(self.model.field().signatory().document().signatories(), function(s) {
+          _.each(s.fields(), function(f) {
+            _.each(f.placements(), function(p) {
+              if(self.model != p && p.typeSetter) {
+                p.typeSetter.clear();
+              }
+            });
+          });
+        });
+
+        var view = self;
+        self.fixPlaceFunction = function(){
             view.place();
         };
         $(window).scroll(view.fixPlaceFunction); // To deal with resize;
         $(window).resize(view.fixPlaceFunction);
-        this.render();
+        self.render();
     },
     clear: function() {
         this.off();
