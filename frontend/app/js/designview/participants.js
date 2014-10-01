@@ -79,7 +79,6 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
         },
         render: function() {
             var view = this;
-            var signatory = view.model;
 
             var div = $('<div />');
 
@@ -1186,9 +1185,9 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             view.detailsView = new DesignViewParticipantDetailsView({model:view.model,
                                                                      viewmodel: view.viewmodel});
 
-            viewmodel.bind('change:participantDetail', view.updateOpened);
-            viewmodel.bind('change:step', view.render);
-            sig.bind('change:fields', view.updateOpened);
+            view.listenTo(viewmodel, 'change:participantDetail', view.updateOpened);
+            view.listenTo(viewmodel, 'change:step', view.render);
+            view.listenTo(sig, 'change:fields', view.updateOpened);
             view.listenTo(viewmodel.document(), 'bubble', view.checkInnerProblems);
             view.render();
         },
@@ -1291,7 +1290,6 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
         },
         inner: function() {
             var view = this;
-            var signatory = view.model;
             var innerDiv = $("<div class='design-view-action-participant-inner'/>");
             view.innerDiv = innerDiv;
             view.innerDiv.append(view.infoBox());

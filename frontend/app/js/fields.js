@@ -172,16 +172,14 @@ window.Field = Backbone.Model.extend({
         return new NoValidation();
       }
       if(field.isBlank()) {
-        var msg = localization.designview.validation.pleaseSelectField;
         return new Validation({validates: function() {
           return field.type() && field.name();
-        }, message: msg});
+        }});
       }
       if(field.noName()) {
-        var msg = localization.designview.validation.notReadyField;
         return new Validation({validates: function() {
           return !field.noName();
-        }, message: msg});
+        }});
       }
 
       var concatValidations = new Validation();
@@ -192,8 +190,7 @@ window.Field = Backbone.Model.extend({
         && field.isObligatory()
         && (field.isText() || field.isCheckbox());
       if(senderMustFill || willSignNowAndFieldNeeded) {
-        var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
-        concatValidations = new NotEmptyValidation({message: msg});
+        concatValidations = new NotEmptyValidation();
       }
 
       if(signatory.author() && (field.isFstName() || field.isSndName())) {
@@ -217,8 +214,7 @@ window.Field = Backbone.Model.extend({
     validateSSN: function() {
       var signatory = this.signatory();
       if(signatory.ableToSign() && signatory.author() && signatory.elegAuthentication()) {
-        var msg = localization.designview.validation.missingOrWrongPersonalNumber;
-        return new NotEmptyValidation({message: msg});
+        return new NotEmptyValidation();
       }
       return new Validation();
     },
@@ -232,8 +228,7 @@ window.Field = Backbone.Model.extend({
     validateMobile: function() {
       var signatory = this.signatory();
       if(signatory.mobileDelivery() || signatory.emailMobileDelivery()) {
-        var msg = localization.designview.validation.missingOrWrongMobile;
-        return new PhoneValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
+        return new PhoneValidation().concat(new NotEmptyValidation());
       }
       if(signatory.smsPinAuthentication()            ||
          signatory.emailMobileConfirmationDelivery() ||
@@ -248,12 +243,10 @@ window.Field = Backbone.Model.extend({
       var signatory = this.signatory();
 
       if(signatory.emailDelivery() || signatory.emailMobileDelivery()) {
-        var msg = localization.designview.validation.missingOrWrongEmail;
-        return new EmailValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
+        return new EmailValidation().concat(new NotEmptyValidation());
       }
       if (field.value() != undefined && field.value() != "") {
-        var msg = localization.designview.validation.missingOrWrongEmail;
-        return new EmailValidation({message: msg});
+        return new EmailValidation();
       }
       return new Validation();
     },
