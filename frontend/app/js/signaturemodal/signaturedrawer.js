@@ -191,25 +191,15 @@ var SignatureDrawerView = Backbone.View.extend({
           this.model.field().setValue("");
           if (callback != undefined) callback();
         } else {
-          var self = this;
           var field = this.model.field();
-          var image = this.canvas[0].toDataURL("image/png",1.0);
-          var img = new Image();
-          img.type = 'image/png';
-          img.src = image;
-          img.onload = function() {
-               var canvas = $("<canvas class='signatureCanvas' />");
-               canvas.attr("width",820);
-               canvas.attr("height",Math.floor(820 * self.model.height()/ self.model.width()));
-               canvas[0].getContext('2d').fillStyle = "rgba(255,255,255,0)";
-               canvas[0].getContext('2d').fillRect(0,0,820,Math.floor(820 * self.model.height()/ self.model.width()));
-               canvas[0].getContext('2d').drawImage(img,0,0,820,Math.floor(820 * self.model.height()/ self.model.width()));
-
-
-               field.setValue(canvas[0].toDataURL("image/png",1.0));
-               if (callback != undefined) callback();
-         };
-       }
+          var height = Math.floor(820 * this.model.height() / this.model.width());
+          ImageUtil.addTransparentBGAndSerializeCanvas(this.canvas[0], 820, height, function(imageData) {
+            field.setValue(imageData);
+            if (callback != undefined) {
+              callback();
+            }
+          });
+        }
     },
     clear: function() {
           this.canvas[0].getContext('2d').clearRect(0,0,820,820 * this.model.height()/ this.model.width());
