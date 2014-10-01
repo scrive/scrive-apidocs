@@ -16,7 +16,7 @@ class LoginHelper
       # greek language uses langcode el, but cookie should be LANG_GR
       lang = "gr"
     end
-    @driver.manage.add_cookie(:name => 'lang', :value => '"LANG_' + lang.upcase + '"')
+    @driver.manage.add_cookie(:name => 'lang', :value => '"' + lang + '"')
   end
 
   def login_as(email, password, options = {})
