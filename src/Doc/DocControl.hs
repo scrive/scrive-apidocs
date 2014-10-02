@@ -114,7 +114,7 @@ handleNewDocument = do
         actor <- guardJustM $ mkAuthorActor <$> getContext
         mtimezonename <- runMPlusT $ lookCookieValue "timezone"
         timezone <- fromMaybe defaultTimeZoneName <$> T.sequence (mkTimeZoneName <$> mtimezonename)
-        Just doc <- dbUpdate $ NewDocument defaultValue user (replace "  " " " $ title ++ " " ++ formatMinutesTimeSimple (ctxtime ctx)) Signable timezone 0 actor
+        Just doc <- dbUpdate $ NewDocument defaultValue user (replace "  " " " $ title ++ " " ++ formatTimeSimple (ctxtime ctx)) Signable timezone 0 actor
         withDocument doc $ dbUpdate $ SetDocumentUnsavedDraft True
         return $ LinkIssueDoc (documentid doc)
      else return $ LinkLogin (ctxlang ctx) LoginTry

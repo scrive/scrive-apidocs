@@ -22,7 +22,7 @@ import User.Model
 
 data AccessNewAccount = AccessNewAccount {
     aUserID :: UserID
-  , aExpires :: MinutesTime
+  , aExpires :: UTCTime
   , aToken :: MagicHash
   } deriving (Show, Typeable)
 
@@ -59,7 +59,7 @@ getAccessNewAccountUser uid token = runMaybeT $ do
 newAccessNewAccount :: (MonadDB m, CryptoRNG m) => UserID -> m AccessNewAccount
 newAccessNewAccount uid = do
   token <- random
-  expires <- (14 `daysAfter`) `liftM` getMinutesTime
+  expires <- (14 `daysAfter`) `liftM` currentTime
   dbUpdate $ NewAction accessNewAccount expires (uid, token)
 
 newAccessNewAccountLink :: (MonadDB m, CryptoRNG m) => UserID -> m KontraLink

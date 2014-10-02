@@ -42,7 +42,7 @@ import Instances ()
 import Kontra
 import qualified Log
 import MailContext (MailContextMonad(..), MailContext(..))
-import MinutesTime (MinutesTime, getMinutesTime, minutesBefore)
+import MinutesTime (currentTime, minutesBefore)
 import OurPrelude
 import Templates (runTemplatesT)
 import Text.StringTemplates.Templates (TemplatesMonad)
@@ -63,7 +63,7 @@ import DB.TimeZoneName
 logDocEvent :: (MailContextMonad m, MonadDB m) => EventName -> User -> [EventProperty] -> Document -> m ()
 logDocEvent name user extraProps doc = do
   comp <- getCompanyForUser user
-  now <- getMinutesTime
+  now <- currentTime
   ip <- mctxipnumber <$> getMailContext
   let uid = userid user
       email = Email $ getEmail user
@@ -99,7 +99,7 @@ postDocumentPreparationChange skipauthorinvitation tzn = do
   theDocument >>= \d -> Log.mixlog_ $ "Sending invitation emails for document #" ++ show docid ++ ": " ++ documenttitle d
 
   -- Stat logging
-  now <- getMinutesTime
+  now <- currentTime
   author <- getDocAuthor =<< theDocument
   docssent <- dbQuery $ GetDocsSent (userid author)
   -- Log the current time as the last doc sent time
@@ -190,7 +190,7 @@ postDocumentClosedActions
   whenM ((\d -> forceSealDocument || isNothing (documentsealedfile d)) <$> theDocument) $ do
 
     whenM (isDocumentError <$> theDocument) $ do
-      getMinutesTime >>= dbUpdate . FixClosedErroredDocument . systemActor
+      currentTime >>= dbUpdate . FixClosedErroredDocument . systemActor
 
     sealDocument
 
@@ -235,7 +235,7 @@ findAndDoPostDocumentClosedActions :: (MonadReader SchedulerData m, MonadBaseCon
 findAndDoPostDocumentClosedActions
   mhours -- ^ Only consider documents signed within the latest number of hours given.
   = do
-  now <- getMinutesTime
+  now <- currentTime
   let signtimefilter = case mhours of
         Nothing    -> []
         Just hours -> [DocumentFilterByLatestSignTimeAfter ((60 * hours) `minutesBefore` now)]
@@ -277,8 +277,8 @@ findAndExtendDigitalSignatures = do
 
 -- | Estimate when the latest Guardtime publication code was published
 -- (sometime after the 15th of the month).
-latest_publication_time :: MonadDB m => m MinutesTime
-latest_publication_time = localTimeToUTC utc . f . utcToLocalTime utc <$> getMinutesTime
+latest_publication_time :: MonadDB m => m UTCTime
+latest_publication_time = localTimeToUTC utc . f . utcToLocalTime utc <$> currentTime
   where
     f LocalTime{..} = LocalTime {
         localDay = if localDay > fifteenth
@@ -336,7 +336,7 @@ saveDocumentForSignatories =
 -- so that we don't choke the server in case there are many documents to time out
 findAndTimeoutDocuments :: (MonadBaseControl IO m, MonadReader SchedulerData m, MonadIO m, MonadDB m, Log.MonadLog m) => m ()
 findAndTimeoutDocuments = do
-  now <- getMinutesTime
+  now <- currentTime
   docs <- dbQuery $ GetTimeoutedButPendingDocumentsChunk now 100
   forM_ docs $ flip withDocument $ do
     gt <- getGlobalTemplates

@@ -335,7 +335,7 @@ insertDocumentAsIs document@(Document{..}) = do
 
 insertNewDocument :: (MonadDB m, Log.MonadLog m, MonadIO m,CryptoRNG m) => Document -> m Document
 insertNewDocument doc = do
-  now <- getMinutesTime
+  now <- currentTime
   magichash <- random
   let docWithTime = doc {documentmtime  = now, documentctime = now, documentmagichash = magichash}
   newdoc <- insertDocumentAsIs docWithTime
@@ -674,7 +674,7 @@ instance (MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m) => DBUpdate 
             --   Example: if actor time is 13:00 October 24, and days to sign is 1, then timeout is October 26 12:59:59
             --   Rationale: Signatories will have at least until the end of the intended last day to sign.
             -- We try to match expectation when one day after 24 december is understood as till last minute of 25 december.
-            let timestamp = showMinutesTime "%F" time ++ " " ++ TimeZoneName.toString tzn
+            let timestamp = formatTime' "%F" time ++ " " ++ TimeZoneName.toString tzn
             -- Need to temporarily set session timezone to any one
             -- that recognizes daylight savings so that the day
             -- interval addition advances the time properly across DST changes
@@ -703,7 +703,7 @@ instance (MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m) => DBUpdate 
                 PreparationToPendingEvidence
                 (  F.value "timezone" (TimeZoneName.toString tzn)
                 >> F.value "lang" (show lang)
-                >> F.value "timeouttime" (formatMinutesTimeUTC tot))
+                >> F.value "timeouttime" (formatTimeUTC tot))
                 actor
 
 data CloseDocument = CloseDocument Actor
@@ -918,7 +918,7 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m RestoreArchivedDocume
   update (RestoreArchivedDocument user _actor) = updateDocumentWithID $ \did -> do
     kRunManyOrThrowWhyNot $ sqlUpdate "signatory_links" $ do
 
-      sqlSet "deleted" (Nothing :: Maybe MinutesTime)
+      sqlSet "deleted" (Nothing :: Maybe UTCTime)
 
       sqlWhereExists $ sqlSelect "users" $ do
           sqlJoinOn "users AS same_company_users" "(users.company_id = same_company_users.company_id OR users.id = same_company_users.id)"
@@ -997,7 +997,7 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetDocumentTags Bool 
         return True
 
 
-data SetDocumentInviteTime = SetDocumentInviteTime MinutesTime Actor
+data SetDocumentInviteTime = SetDocumentInviteTime UTCTime Actor
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetDocumentInviteTime () where
   update (SetDocumentInviteTime invitetime actor) = updateDocumentWithID $ \did -> do
     let ipaddress  = fromMaybe noIP $ actorIP actor
@@ -1282,7 +1282,7 @@ instance (DocumentMonad m, MonadBaseControl IO m, TemplatesMonad m) => DBUpdate 
     updateDocumentWithID $ \did -> do
       -- Whole TimeZome behaviour is a clone of what is happending with making document ready for signing.
       let time = actorTime actor
-      let timestamp = showMinutesTime "%F" time ++ " " ++ TimeZoneName.toString tzn
+      let timestamp = formatTime' "%F" time ++ " " ++ TimeZoneName.toString tzn
       withTimeZone defaultTimeZoneName $ kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
          sqlSet "status" Pending
          sqlSet "mtime" time
@@ -1319,7 +1319,7 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m PostReminderSend () w
        let docid = documentid doc
        kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
          sqlFrom "documents"
-         sqlSet "read_invitation" (Nothing :: Maybe MinutesTime)
+         sqlSet "read_invitation" (Nothing :: Maybe UTCTime)
          sqlSet "mail_invitation_delivery_status" Unknown
          sqlSet "sms_invitation_delivery_status" Unknown
          sqlWhere "documents.id = signatory_links.document_id"
@@ -1562,7 +1562,7 @@ updateWithoutEvidence :: (DocumentMonad m, Show a, ToSQL a) => SQL -> a -> m Boo
 updateWithoutEvidence col newValue = updateDocumentWithID $ \did -> do
   runQuery01 $ "UPDATE" <+> raw (tblName tableDocuments) <+> "SET" <+> (col <+> "=" <?> newValue <+> "WHERE id =" <?> did)
 
-updateMTimeAndObjectVersion :: DocumentMonad m  => MinutesTime -> m ()
+updateMTimeAndObjectVersion :: DocumentMonad m  => UTCTime -> m ()
 updateMTimeAndObjectVersion mtime = updateDocumentWithID $ \did -> do
   runQuery_ . sqlUpdate "documents" $ do
        sqlSetInc "object_version"

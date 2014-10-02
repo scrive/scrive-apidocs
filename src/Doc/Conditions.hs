@@ -210,7 +210,7 @@ sqlWhereSignatoryIsNotAuthor = sqlWhereE SignatoryIsAuthor $
 
 
 data SignatoryHasAlreadySigned = SignatoryHasAlreadySigned
-  { signatoryHasAlreadySignedTime :: MinutesTime
+  { signatoryHasAlreadySignedTime :: UTCTime
   }
   deriving (Eq, Ord, Show, Typeable)
 
@@ -261,7 +261,7 @@ sqlWhereDocumentObjectVersionIs :: (MonadState v m, SqlWhere v)
 sqlWhereDocumentObjectVersionIs object_version = sqlWhereEVV (\did actual -> DocumentObjectVersionDoesNotMatch did object_version actual, "documents.id", "documents.object_version") $
  ("documents.object_version = " <?> object_version)
 
-data DocumentWasPurged = DocumentWasPurged DocumentID String MinutesTime
+data DocumentWasPurged = DocumentWasPurged DocumentID String UTCTime
   deriving (Eq, Ord, Show, Typeable)
 
 instance ToJSValue DocumentWasPurged where
@@ -280,7 +280,7 @@ sqlWhereDocumentWasNotPurged = sqlWhereEVVV (DocumentWasPurged,
                                "documents.purged_time IS NULL"
 
 ------------------------------------------------------------
-data DocumentIsDeleted = DocumentIsDeleted DocumentID String SignatoryLinkID MinutesTime
+data DocumentIsDeleted = DocumentIsDeleted DocumentID String SignatoryLinkID UTCTime
   deriving (Eq, Ord, Show, Typeable)
 
 instance ToJSValue DocumentIsDeleted where
@@ -320,7 +320,7 @@ sqlWhereDocumentIsDeleted = sqlWhereEVVV (DocumentIsNotDeleted,
                                "signatory_links.deleted IS NOT NULL"
 
 ------------------------------------------------------------
-data DocumentIsReallyDeleted = DocumentIsReallyDeleted DocumentID String SignatoryLinkID MinutesTime
+data DocumentIsReallyDeleted = DocumentIsReallyDeleted DocumentID String SignatoryLinkID UTCTime
   deriving (Eq, Ord, Show, Typeable)
 
 instance ToJSValue DocumentIsReallyDeleted where

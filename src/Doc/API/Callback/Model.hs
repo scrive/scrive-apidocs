@@ -68,7 +68,7 @@ documentAPICallback = Action {
           return ()
         evaluateAgainAfter n = do
           Log.mixlog_ $ "Deferring call for " ++ show n ++ " minutes"
-          expires <- minutesAfter n <$> getMinutesTime
+          expires <- minutesAfter n <$> currentTime
           _ <- dbUpdate . UpdateAction documentAPICallback $ dac {
               dacExpires = expires
             , dacAttempt = dacAttempt + 1
@@ -92,7 +92,7 @@ triggerAPICallbackIfThereIsOne doc = do
     addAPICallback url = do
           -- Race condition. Andrzej said that he can fix it later.
           Log.mixlog_ $ "Triggering API callback for document " ++ show (documentid doc)
-          now <- getMinutesTime
+          now <- currentTime
           _ <- dbUpdate $ DeleteAction documentAPICallback (documentid doc)
           _ <- dbUpdate $ NewAction documentAPICallback now (documentid doc, url)
           return ()

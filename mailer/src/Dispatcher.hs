@@ -37,7 +37,7 @@ dispatcher rng master msender cs amazonconf = withPostgreSQL cs . runCryptoRNGT 
 
          Log.mixlog_ $ "Sending email #" ++ show mailID ++ " using " ++ show mailer ++ "..."
          success <- sendMail mailer mail
-         now <- getMinutesTime
+         now <- currentTime
          if success
            then do
              res <- dbUpdate $ MarkEmailAsSent mailID now

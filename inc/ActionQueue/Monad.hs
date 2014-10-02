@@ -45,7 +45,7 @@ runQueue qd queue =
 -- | Gets 'expired' actions and evaluates them
 actionQueue :: (MonadDB m, Log.MonadLog m, MonadBaseControl IO m, Show t)
             => Action idx t con (ActionQueueT m qd) -> ActionQueueT m qd ()
-actionQueue qa = getMinutesTime
+actionQueue qa = currentTime
   >>= dbQuery . GetExpiredActions qa
   >>= mapM_ (\a -> do
     res <- E.try $ qaEvaluateExpired qa a

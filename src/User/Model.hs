@@ -98,7 +98,7 @@ instance FromReqURI SignupMethod where
   fromReqURI = maybeRead
 
 data UserUsageStats = UserUsageStats
-                    { uusTimeSpan         :: (MinutesTime, MinutesTime)
+                    { uusTimeSpan         :: (UTCTime, UTCTime)
                     , uusUser             :: Maybe (UserID, String, String)
                     , uusCompany          :: Maybe (CompanyID, String)
                     , uusDocumentsSent    :: !Int64
@@ -112,7 +112,7 @@ data User = User {
   , userpassword                  :: Maybe Password
   , useriscompanyadmin            :: Bool
   , useraccountsuspended          :: Bool
-  , userhasacceptedtermsofservice :: Maybe MinutesTime
+  , userhasacceptedtermsofservice :: Maybe UTCTime
   , usersignupmethod              :: SignupMethod
   , userinfo                      :: UserInfo
   , usersettings                  :: UserSettings
@@ -274,7 +274,7 @@ instance MonadDB m => DBUpdate m AddUser (Maybe User) where
             sqlSet "salt" $ pwdSalt <$> mpwd
             sqlSet "is_company_admin" admin
             sqlSet "account_suspended" False
-            sqlSet "has_accepted_terms_of_service" (Nothing :: Maybe MinutesTime)
+            sqlSet "has_accepted_terms_of_service" (Nothing :: Maybe UTCTime)
             sqlSet "signup_method" AccountRequest
             sqlSet "company_id" cid
             sqlSet "first_name" fname
@@ -284,7 +284,7 @@ instance MonadDB m => DBUpdate m AddUser (Maybe User) where
             sqlSet "phone" ("" :: String)
             sqlSet "email" $ map toLower email
             sqlSet "lang" l
-            sqlSet "deleted" (Nothing :: Maybe MinutesTime)
+            sqlSet "deleted" (Nothing :: Maybe UTCTime)
             sqlSet "associated_domain_id" mad
             mapM_ sqlResult selectUsersSelectorsList
         fetchMaybe fetchUser
@@ -331,7 +331,7 @@ instance MonadDB m => DBUpdate m SetUserSettings Bool where
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
 
-data AcceptTermsOfService = AcceptTermsOfService UserID MinutesTime
+data AcceptTermsOfService = AcceptTermsOfService UserID UTCTime
 instance MonadDB m => DBUpdate m AcceptTermsOfService Bool where
   update (AcceptTermsOfService uid time) = do
     runQuery01 . sqlUpdate "users" $ do
@@ -360,7 +360,7 @@ instance MonadDB m => DBUpdate m SetUserCompanyAdmin Bool where
         sqlWhereIsNULL "deleted"
 
 
-fetchUserUsageStats :: (MinutesTime, MinutesTime, Maybe CompanyID, Maybe String, Maybe UserID, Maybe String, Maybe String, Int64, Int64, Int64) -> UserUsageStats
+fetchUserUsageStats :: (UTCTime, UTCTime, Maybe CompanyID, Maybe String, Maybe UserID, Maybe String, Maybe String, Int64, Int64, Int64) -> UserUsageStats
 fetchUserUsageStats (time_begin, time_end, maybe_company_id, maybe_company_name, maybe_user_id, maybe_user_email, maybe_user_name, documents_sent, documents_closed, signatures_closed) = UserUsageStats {
   uusTimeSpan         = (time_begin, time_end)
 , uusUser             = (,,) <$> maybe_user_id <*> maybe_user_email <*> maybe_user_name
@@ -460,7 +460,7 @@ selectUsersSelectorsList =
 selectUsersSelectors :: SQL
 selectUsersSelectors = sqlConcatComma selectUsersSelectorsList
 
-fetchUser :: (UserID, Maybe (Binary ByteString), Maybe (Binary ByteString), Bool, Bool, Maybe MinutesTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, Maybe BrandedDomainID) -> User
+fetchUser :: (UserID, Maybe (Binary ByteString), Maybe (Binary ByteString), Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, Maybe BrandedDomainID) -> User
 fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id) = User {
   userid = uid
 , userpassword = maybePassword (password, salt)
@@ -515,7 +515,7 @@ selectUsersWithCompaniesSQL = "SELECT"
   <> "  LEFT JOIN companies c ON users.company_id = c.id"
   <> "  WHERE users.deleted IS NULL"
 
-fetchUserWithCompany :: (UserID, Maybe (Binary ByteString), Maybe (Binary ByteString), Bool, Bool, Maybe MinutesTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, Maybe BrandedDomainID, Maybe CompanyID, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Bool) -> (User, Company)
+fetchUserWithCompany :: (UserID, Maybe (Binary ByteString), Maybe (Binary ByteString), Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, Maybe BrandedDomainID, Maybe CompanyID, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Bool) -> (User, Company)
 fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, cid, name, number, address, zip', city, country, ip_address_mask, sms_originator, allow_save_safety_copy) = (user, company)
   where
     user = User {

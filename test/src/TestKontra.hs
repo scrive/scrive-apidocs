@@ -254,7 +254,7 @@ mkRequestWithHeaders method vars headers = liftIO $ do
 mkContext :: Lang -> TestEnv Context
 mkContext lang = do
   globaltemplates <- teGlobalTemplates <$> ask
-  time <- getMinutesTime
+  time <- currentTime
   liftIO $ do
     docs <- MemCache.new RenderedPages.pagesCount 500
     memcache <- MemCache.new BS.length 52428800

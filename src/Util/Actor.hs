@@ -35,9 +35,9 @@ mkAdminActor ctx = case ctxmaybeuser ctx of
 -- | Actor describes who is performing an action and when
 data Actor = Actor {
     -- | the time the action is taken
-    actorTime      :: MinutesTime
+    actorTime      :: UTCTime
     -- | the client time the action is taken
-  , actorClientTime :: Maybe MinutesTime
+  , actorClientTime :: Maybe UTCTime
     -- | the client name
   , actorClientName :: Maybe String
     -- | If the action is originated on another machine, its IP
@@ -67,7 +67,7 @@ contextActor ctx = Actor
   , actorWho = ""
   }
 
-systemActor :: MinutesTime -> Actor
+systemActor :: UTCTime -> Actor
 systemActor time = Actor {
     actorTime = time
   , actorClientTime = Nothing
@@ -99,7 +99,7 @@ signatoryActor ctx s = do
       }
 
 -- | For delivery/reading notifications from the mail system
-mailSystemActor :: MinutesTime -> Maybe UserID -> String -> SignatoryLinkID -> Actor
+mailSystemActor :: UTCTime -> Maybe UserID -> String -> SignatoryLinkID -> Actor
 mailSystemActor time muid email slid = Actor {
     actorTime = time
   , actorIP = Nothing

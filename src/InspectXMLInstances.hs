@@ -108,7 +108,7 @@ instance InspectXML DocumentType where
 instance InspectXML DocumentTag where
 instance InspectXML SignInfo where
 instance InspectXML MagicHash where
-instance InspectXML MinutesTime where
+instance InspectXML UTCTime where
 instance InspectXML Password where
 instance InspectXML FlashMessage where
 instance InspectXML Email where

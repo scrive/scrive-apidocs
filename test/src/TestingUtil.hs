@@ -123,7 +123,7 @@ instance Arbitrary DeliveryStatus where
                        , Deferred
                        ]
 
-instance Arbitrary MinutesTime where
+instance Arbitrary UTCTime where
   arbitrary = posixSecondsToUTCTime . fromInteger <$> arbitrary
 
 {- | Sometimes we get and object that is not as random as we would expect (from some reason)
@@ -608,7 +608,7 @@ addRandomDocument rda = do
 
 addRandomDocumentWithFile :: FileID -> RandomDocumentAllows -> TestEnv Document
 addRandomDocumentWithFile file rda = do
-  now <- getMinutesTime
+  now <- currentTime
   let user = randomDocumentAuthor rda
       p = randomDocumentCondition rda
   mcompany <-  dbQuery $ GetCompany $ usercompany user

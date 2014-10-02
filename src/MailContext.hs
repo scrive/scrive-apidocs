@@ -17,7 +17,7 @@ import Control.Monad.Trans (MonadIO, MonadTrans, lift)
 import Control.Monad.Trans.Control (MonadBaseControl(..), MonadTransControl(..), ComposeSt, defaultLiftBaseWith, defaultRestoreM, defaultLiftWith, defaultRestoreT)
 import IPAddress (IPAddress)
 import Mails.MailsConfig (MailsConfig)
-import MinutesTime (MinutesTime)
+import MinutesTime (UTCTime)
 import User.Model (User, Lang)
 
 data MailContext = MailContext
@@ -26,7 +26,7 @@ data MailContext = MailContext
   , mctxlang :: Lang
   , mctxcurrentBrandedDomain :: Maybe BrandedDomain
   , mctxipnumber :: IPAddress
-  , mctxtime :: MinutesTime
+  , mctxtime :: UTCTime
   , mctxmaybeuser :: Maybe User
   }
   deriving Show

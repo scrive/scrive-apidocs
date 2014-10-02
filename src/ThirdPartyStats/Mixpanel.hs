@@ -58,7 +58,7 @@ mixpanelProperty (SomeProp name val) = mkMixpanelProperty val
         CustomNumber name n
       mkMixpanelProperty (PVString str) =
         CustomString name str
-      mkMixpanelProperty (PVMinutesTime t) =
+      mkMixpanelProperty (PVUTCTime t) =
         CustomTime name t
       mkMixpanelProperty (PVBool b) =
         CustomBool name b

@@ -9,7 +9,7 @@ import MinutesTime
 
 data DocumentAPICallback = DocumentAPICallback {
     dacDocumentID :: DocumentID
-  , dacExpires :: MinutesTime
+  , dacExpires :: UTCTime
   , dacURL :: String
   , dacAttempt :: Int32
   } deriving (Show, Typeable)

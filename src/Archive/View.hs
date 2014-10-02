@@ -29,8 +29,8 @@ flashMessageAttachmentArchiveDone :: TemplatesMonad m => m FlashMessage
 flashMessageAttachmentArchiveDone =
   toFlashMsg OperationDone <$> renderTemplate_ "flashMessageAttachmentArchiveDone"
 
-pageArchive :: TemplatesMonad m => User -> MinutesTime -> m String
+pageArchive :: TemplatesMonad m => User -> UTCTime -> m String
 pageArchive user mt = renderTemplate "pageDocumentsList" $ do
   F.value "isadmin" $ useriscompanyadmin user
-  F.value "month" $ showMinutesTime "%m" mt
-  F.value "year" $ showMinutesTime "%Y" mt
+  F.value "month" $ formatTime' "%m" mt
+  F.value "year" $ formatTime' "%Y" mt

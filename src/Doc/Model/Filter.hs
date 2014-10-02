@@ -48,9 +48,9 @@ data DocumentFilter
   | DocumentFilterLinkIsAuthor Bool           -- ^ Only documents visible by signatory_links.is_author equal to param
   | DocumentFilterLinkIsPartner Bool          -- ^ Only documents visible by signatory_links.is_partner equal to param
   | DocumentFilterUnsavedDraft Bool           -- ^ Only documents with unsaved draft flag equal to this one
-  | DocumentFilterByModificationTimeAfter MinutesTime -- ^ That were modified after given time
-  | DocumentFilterByLatestSignTimeBefore MinutesTime  -- ^ With latest sign time before given time
-  | DocumentFilterByLatestSignTimeAfter MinutesTime   -- ^ With latest sign time after given time
+  | DocumentFilterByModificationTimeAfter UTCTime -- ^ That were modified after given time
+  | DocumentFilterByLatestSignTimeBefore UTCTime  -- ^ With latest sign time before given time
+  | DocumentFilterByLatestSignTimeAfter UTCTime   -- ^ With latest sign time after given time
   deriving Show
 
 documentFilterToSQL :: (State.MonadState v m, SqlWhere v) => DocumentFilter -> m ()

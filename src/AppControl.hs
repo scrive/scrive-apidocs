@@ -292,9 +292,9 @@ appHandler handleRoutes appConf appGlobals = catchEverything . enhanceYourCalm $
 
       currhostpart <- getHostpart
       reshostpart <- getResourceHostpart
-      minutestime <- getMinutesTime
+      minutestime <- currentTime
       let clientName = BS.toString <$> getHeader "client-name" rq
-          clientTime = parseMinutesTimeISO =<< (BS.toString <$> getHeader "client-time" rq)
+          clientTime = parseTimeISO =<< (BS.toString <$> getHeader "client-time" rq)
           userAgent  = BS.toString <$> getHeader "user-agent" rq
       muser <- getUserFromSession session
       mpaduser <- getPadUserFromSession session

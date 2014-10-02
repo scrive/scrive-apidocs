@@ -23,7 +23,7 @@ import User.Model
 
 data PasswordReminder = PasswordReminder {
     prUserID :: UserID
-  , prExpires :: MinutesTime
+  , prExpires :: UTCTime
   , prRemainedEmails :: Int32
   , prToken :: MagicHash
   } deriving (Show, Typeable)
@@ -64,7 +64,7 @@ getPasswordReminderUser uid token = runMaybeT $ do
 newPasswordReminder :: (MonadDB m, CryptoRNG m) => UserID -> m PasswordReminder
 newPasswordReminder uid = do
   token <- random
-  expires <- minutesAfter (12*60) `liftM` getMinutesTime
+  expires <- minutesAfter (12*60) `liftM` currentTime
   dbUpdate $ NewAction passwordReminder expires (uid, 9, token)
 
 newPasswordReminderLink :: (MonadDB m, CryptoRNG m) => UserID -> m KontraLink

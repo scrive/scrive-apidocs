@@ -109,7 +109,7 @@ handleCompanyAccountsInternal cid = do
                 value "deletable" $ cadeletable f
                 value "activated" $ caactivated f
                 value "isctxuser" $ userid user == camaybeuserid f
-                value "tos"       $ formatMinutesTimeISO <$> (catos f)
+                value "tos"       $ formatTimeISO <$> (catos f)
 
     value "paging" $ pagingParamsJSON companypage
 
@@ -126,7 +126,7 @@ data CompanyAccount = CompanyAccount
   , carole        :: Role         -- ^ the account's role (always Standard for invites)
   , cadeletable   :: Bool         -- ^ can the account be deleted, or do they have pending documents (always True for invites)?
   , caactivated   :: Bool         -- ^ is the account a full company user with accepted tos? (always False for invites)
-  , catos         :: Maybe MinutesTime -- ^ TOS time if any (always Nothing for invites)
+  , catos         :: Maybe UTCTime -- ^ TOS time if any (always Nothing for invites)
   }
 
 data Role = RoleAdmin    -- ^ an admin user

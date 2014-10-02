@@ -61,6 +61,6 @@ showTotal q tc = insertDecimal $ show (q * tc)
         insertDecimal (x:xs) = x : insertDecimal xs
 
 showDate :: String -> String
-showDate s = case parseMinutesTime "%Y-%m-%dT%H:%M:%S%Z" s of
+showDate s = case parseTime' "%Y-%m-%dT%H:%M:%S%Z" s of
   Nothing -> "unknown date"
-  Just d -> showDateYMD d
+  Just d -> formatTimeYMD d

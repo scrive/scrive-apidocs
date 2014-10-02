@@ -208,34 +208,34 @@ handleUsageStatsJSONForUserMonths = do
 getDaysStats :: Kontrakcja m => Either UserID CompanyID -> m JSValue
 getDaysStats euc = do
   ctxtime <- ctxtime <$> getContext
-  let timespans = [ (showDateYMD t, showDateYMD $ daysAfter 1 t)
+  let timespans = [ (formatTimeYMD t, formatTimeYMD $ daysAfter 1 t)
                      | daysBack <- [0 .. 30]
                      , t <- [daysBefore daysBack ctxtime]
                     ]
   case euc of
     Left uid -> do
       stats <- dbQuery $ GetUsageStats (Left uid) timespans
-      return $ singlePageListToJSON $ userStatsToJSON showDateYMD stats
+      return $ singlePageListToJSON $ userStatsToJSON formatTimeYMD stats
     Right cid -> do
       totalS <- renderTemplate_ "statsOrgTotal"
       stats <- dbQuery $ GetUsageStats (Right cid) timespans
-      return $ singlePageListToJSON $ companyStatsToJSON showDateYMD totalS stats
+      return $ singlePageListToJSON $ companyStatsToJSON formatTimeYMD totalS stats
 
 getMonthsStats :: Kontrakcja m => Either UserID CompanyID -> m JSValue
 getMonthsStats euc = do
   ctxtime <- ctxtime <$> getContext
-  let timespans = [ (showMinutesTime "%Y-%m-01" t, showMinutesTime "%Y-%m-01" (monthsBefore (-1) t))
+  let timespans = [ (formatTime' "%Y-%m-01" t, formatTime' "%Y-%m-01" (monthsBefore (-1) t))
                      | monthsBack <- [0 .. 6]
                      , t <- [monthsBefore monthsBack ctxtime]
                     ]
   case euc of
     Left uid -> do
       stats <- dbQuery $ GetUsageStats (Left uid) timespans
-      return $ singlePageListToJSON $ userStatsToJSON (showMinutesTime "%Y-%m") stats
+      return $ singlePageListToJSON $ userStatsToJSON (formatTime' "%Y-%m") stats
     Right cid -> do
       totalS <- renderTemplate_ "statsOrgTotal"
       stats <- dbQuery $ GetUsageStats (Right cid) timespans
-      return $ singlePageListToJSON $ companyStatsToJSON (showMinutesTime "%Y-%m") totalS stats
+      return $ singlePageListToJSON $ companyStatsToJSON (formatTime' "%Y-%m") totalS stats
 
 {- |
     Checks for live documents owned by the user.

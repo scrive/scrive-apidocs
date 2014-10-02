@@ -86,8 +86,8 @@ data PaymentPlan = PaymentPlan {
 , ppPendingQuantity     :: Int
 , ppPaymentPlanProvider :: PaymentPlanProvider
 , ppDunningStep         :: Maybe Int
-, ppDunningDate         :: Maybe MinutesTime
-, ppBillingEndDate      :: MinutesTime
+, ppDunningDate         :: Maybe UTCTime
+, ppBillingEndDate      :: UTCTime
 } deriving (Eq, Show)
 
 data PaymentPlanStatus = ActiveStatus      -- everything is great (unblocked)
@@ -224,7 +224,7 @@ instance (MonadDB m) => DBQuery m GetPaymentPlanByAccountCode (Maybe PaymentPlan
       sqlWhereEq "account_code" ac
     fetchMaybe fetchPaymentPlan
 
-fetchPaymentPlan :: (AccountCode, CompanyID, PricePlan, PaymentPlanStatus, Int32, PricePlan, PaymentPlanStatus, Int32, PaymentPlanProvider, Maybe Int16, Maybe MinutesTime, MinutesTime) -> PaymentPlan
+fetchPaymentPlan :: (AccountCode, CompanyID, PricePlan, PaymentPlanStatus, Int32, PricePlan, PaymentPlanStatus, Int32, PaymentPlanProvider, Maybe Int16, Maybe UTCTime, UTCTime) -> PaymentPlan
 fetchPaymentPlan (ac, cid, p, s, q, pp, sp, qp, pr, mds, mdd, be) = PaymentPlan {
   ppAccountCode         = ac
 , ppCompanyID           = cid
@@ -245,7 +245,7 @@ daysBeforeSync :: Int
 daysBeforeSync = 7
 
 --tested
-data PaymentPlansRequiringSync = PaymentPlansRequiringSync PaymentPlanProvider MinutesTime
+data PaymentPlansRequiringSync = PaymentPlansRequiringSync PaymentPlanProvider UTCTime
 instance MonadDB m => DBQuery m PaymentPlansRequiringSync [PaymentPlan] where
   query (PaymentPlansRequiringSync prov time) = do
     let past = daysBefore daysBeforeSync time
@@ -266,7 +266,7 @@ instance MonadDB m => DBQuery m PaymentPlansRequiringSync [PaymentPlan] where
     fetchMany fetchPaymentPlan
 
 --tested
-data PaymentPlansExpiredDunning = PaymentPlansExpiredDunning MinutesTime
+data PaymentPlansExpiredDunning = PaymentPlansExpiredDunning UTCTime
 instance MonadDB m => DBQuery m PaymentPlansExpiredDunning [PaymentPlan] where
   query (PaymentPlansExpiredDunning time) = do
     runQuery_ $ rawSQL ("SELECT account_code, company_id, plan, status, quantity, " <>
@@ -278,7 +278,7 @@ instance MonadDB m => DBQuery m PaymentPlansExpiredDunning [PaymentPlan] where
     fetchMany fetchPaymentPlan
 
 -- tested
-data SavePaymentPlan = SavePaymentPlan PaymentPlan MinutesTime
+data SavePaymentPlan = SavePaymentPlan PaymentPlan UTCTime
 instance MonadDB m => DBUpdate m SavePaymentPlan Bool where
   update (SavePaymentPlan PaymentPlan{..} tm) = do
     let

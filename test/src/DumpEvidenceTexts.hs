@@ -34,15 +34,15 @@ dumpAllEvidenceTexts :: TestEnvSt -> Test
 dumpAllEvidenceTexts env = testThat "Generating all evidence texts" env $ do
   forM_ [minBound .. maxBound] $ \lang -> do
     gts <- asks teGlobalTemplates
-    now <- getMinutesTime
+    now <- currentTime
     t <- runTemplatesT (lang, gts) $ dumpEvidenceTexts now lang
     case teOutputDirectory env of
       Just d  -> liftIO $ writeFile (d </> "evidence-texts-" ++ codeFromLang lang ++ ".html") t
       Nothing -> t == t `seq` return ()
 
-dumpEvidenceTexts :: (MonadDB m, TemplatesMonad m) => MinutesTime -> Lang -> m String
+dumpEvidenceTexts :: (MonadDB m, TemplatesMonad m) => UTCTime -> Lang -> m String
 dumpEvidenceTexts now lang = do
-  let Just time = parseMinutesTime "%d-%m-%Y" "01-01-2013"
+  let Just time = parseTime' "%d-%m-%Y" "01-01-2013"
   let actor = Actor { actorTime = time
                     , actorClientTime = Nothing
                     , actorClientName = Nothing
@@ -76,7 +76,7 @@ dumpEvidenceTexts now lang = do
         F.value "newphone" ("good-12 34 56" :: String)
         F.value "oldemail" ("bad@example.com" :: String)
         F.value "oldphone" ("bad-12 34 56" :: String)
-        F.value "timeouttime" $ formatMinutesTimeUTC time
+        F.value "timeouttime" $ formatTimeUTC time
         F.value "timezone" ("Europe/Stockholm" :: String)
         F.value "value" ("field value" :: String)
         F.value "fieldname" ("field name" :: String)

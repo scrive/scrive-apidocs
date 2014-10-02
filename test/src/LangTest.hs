@@ -98,7 +98,7 @@ testDocumentLangSwitchToSwedish = do
   assertEqual "Initial lang is English" LANG_EN (getLang doc)
 
 
-createTestElegDoc :: User -> MinutesTime -> TestEnv Document
+createTestElegDoc :: User -> UTCTime -> TestEnv Document
 createTestElegDoc user _ctxtime = do
   doc <- addRandomDocumentWithAuthorAndCondition user
            (\d -> documentstatus d == Preparation)

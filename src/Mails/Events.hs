@@ -95,7 +95,7 @@ processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ processEvent -- 
     processEvent (eid, _ , _, _) = markEventAsRead eid
 
     markEventAsRead eid = do
-      now <- getMinutesTime
+      now <- currentTime
       success <- dbUpdate $ MarkEventAsRead eid now
       when (not success) $
         Log.attention_ $ "Couldn't mark event #" ++ show eid ++ " as read"
@@ -111,7 +111,7 @@ handleDeliveredInvitation mbd hostpart mc signlinkid = do
         theDocument >>= \d -> scheduleEmailSendout mc $ mail {
           to = [getMailAddress $ fromJust $ getAuthorSigLink d]
         }
-      time <- getMinutesTime
+      time <- currentTime
       let actor = mailSystemActor time (maybesignatory signlink) (getEmail signlink) signlinkid
       _ <- dbUpdate $ SetEmailInvitationDeliveryStatus signlinkid Delivered actor
       return ()
@@ -119,14 +119,14 @@ handleDeliveredInvitation mbd hostpart mc signlinkid = do
 
 handleOpenedInvitation :: (DocumentMonad m, TemplatesMonad m, MonadIO m) => SignatoryLinkID -> String -> Maybe UserID -> m ()
 handleOpenedInvitation signlinkid email muid = do
-  now  <- getMinutesTime
+  now  <- currentTime
   _ <- dbUpdate $ MarkInvitationRead signlinkid
           (mailSystemActor now muid email signlinkid)
   return ()
 
 handleDeferredInvitation :: (CryptoRNG m, Log.MonadLog m, DocumentMonad m, TemplatesMonad m) => Maybe BrandedDomain -> String -> MailsConfig -> SignatoryLinkID -> String -> m ()
 handleDeferredInvitation mbd hostpart mc signlinkid email = do
-  time <- getMinutesTime
+  time <- currentTime
   getSigLinkFor signlinkid <$> theDocument >>= \case
     Just sl -> do
       let actor = mailSystemActor time (maybesignatory sl) email signlinkid
@@ -142,7 +142,7 @@ handleUndeliveredInvitation :: (CryptoRNG m, Log.MonadLog m, DocumentMonad m, Te
 handleUndeliveredInvitation mbd hostpart mc signlinkid = do
   getSigLinkFor signlinkid <$> theDocument >>= \case
     Just signlink -> do
-      time <- getMinutesTime
+      time <- currentTime
       let actor = mailSystemActor time (maybesignatory signlink) (getEmail signlink) signlinkid
       _ <- dbUpdate $ SetEmailInvitationDeliveryStatus signlinkid Undelivered actor
       mail <- mailUndeliveredInvitation mc mbd hostpart signlink =<< theDocument

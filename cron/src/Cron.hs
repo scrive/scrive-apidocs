@@ -145,7 +145,7 @@ main = Log.withLogger $ do
           Log.mixlog_ $ "OldDraftsRemoval: removed" <+> show delCount <+> "old, unsaved draft documents."
         PasswordRemindersEvaluation -> runScheduler $ actionQueue passwordReminder
         RecurlySynchronization -> inDB $ do
-          time <- getMinutesTime
+          time <- currentTime
           ltime <- liftIO $ utcToLocalZonedTime time
           temps <- snd `liftM` liftIO (readMVar templates)
           when ((todHour . localTimeOfDay . zonedTimeToLocalTime) ltime == 0) $ do -- midnight

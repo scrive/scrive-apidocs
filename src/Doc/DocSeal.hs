@@ -75,7 +75,7 @@ personFromSignatory :: (MonadDB m,MonadBaseControl IO m, TemplatesMonad m)
 personFromSignatory tz boxImages signatory = do
     stime <- case  maybesigninfo signatory of
                   Nothing -> return ""
-                  Just si -> formatMinutesTimeForVerificationPage tz $ signtime si
+                  Just si -> formatUTCTimeForVerificationPage tz $ signtime si
     signedAtText <- if (null stime)
                        then return ""
                     else renderTemplate "_contractsealingtextssignedAtText" $ F.value "time" stime
@@ -268,11 +268,11 @@ evidenceOfIntentAttachment title sls = do
 {-
  formatCalendarTime does not support %z as modifier. We have to implement it ourselves here.
 -}
-formatMinutesTimeForVerificationPage :: (MonadDB m, MonadBaseControl IO m) => TimeZoneName -> MinutesTime -> m String
-formatMinutesTimeForVerificationPage tz mt = withTimeZone tz $ do
+formatUTCTimeForVerificationPage :: (MonadDB m, MonadBaseControl IO m) => TimeZoneName -> UTCTime -> m String
+formatUTCTimeForVerificationPage tz mt = withTimeZone tz $ do
   runQuery_ $ rawSQL "SELECT $1, to_char($1, 'TZ')" (Single mt)
   (t::ZonedTime, tmz) <- fetchOne id
-  return $ showMinutesTime ("%Y-%m-%d %H:%M:%S" <+> tmz <+> "(%z)") t
+  return $ formatTime' ("%Y-%m-%d %H:%M:%S" <+> tmz <+> "(%z)") t
 
 createSealingTextsForDocument :: (TemplatesMonad m) => Document -> String -> m Seal.SealingTexts
 createSealingTextsForDocument document hostpart = do
@@ -349,7 +349,7 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
       mkHistEntry ev = do
         actor <- approximateActor True document ev
         comment <- removeTags <$> simplyfiedEventText (Just actor) document ev
-        etime <- formatMinutesTimeForVerificationPage (documenttimezonename document) (evTime ev)
+        etime <- formatUTCTimeForVerificationPage (documenttimezonename document) (evTime ev)
         return $ Seal.HistEntry{ Seal.histdate = etime
                                , Seal.histcomment = comment
                                , Seal.histaddress = maybe "" show $ evIP4 ev

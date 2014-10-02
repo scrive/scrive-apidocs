@@ -24,7 +24,7 @@ data Session = Session {
     sesID        :: SessionID
   , sesUserID    :: Maybe UserID
   , sesPadUserID :: Maybe UserID
-  , sesExpires   :: MinutesTime
+  , sesExpires   :: UTCTime
   , sesToken     :: MagicHash
   , sesCSRFToken :: MagicHash
   , sesDomain    :: String
@@ -32,7 +32,7 @@ data Session = Session {
 
 emptySession :: (CryptoRNG m, MonadDB m, ServerMonad m) => m Session
 emptySession = do
-  now <- getMinutesTime
+  now <- currentTime
   token <- random
   csrf_token <- random
   domain <- currentDomain

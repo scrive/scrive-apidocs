@@ -1,23 +1,23 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module MinutesTime (
-    MinutesTime
+    UTCTime
+  , currentTime
   , unixEpoch
-  , getMinutesTime
-  , showMinutesTime
+  , formatTime'
+  , parseTime'
+  , formatTimeAPI
+  , formatTimeYMD
+  , formatTimeUTC
+  , parseTimeUTC
+  , formatTimeISO
+  , parseTimeISO
+  , formatTimeSimple
+  , parseTimeSimple
   , minutesAfter
   , minutesBefore
-  , showDateYMD
-  , showMinutesTimeForAPI
-  , formatMinutesTimeUTC
-  , formatMinutesTimeSimple
-  , parseMinutesTimeSimple
-  , formatMinutesTimeISO
-  , parseMinutesTimeUTC
-  , parseMinutesTimeISO
-  , parseMinutesTime
-  , monthsBefore
-  , daysBefore
   , daysAfter
+  , daysBefore
+  , monthsBefore
   , beginingOfMonth
   ) where
 
@@ -29,90 +29,86 @@ import Database.PostgreSQL.PQTypes
 import System.Locale
 import qualified Data.Binary as B
 
-type MinutesTime = UTCTime
-
-instance B.Binary MinutesTime where
+-- | FIXME: this really needs to go.
+instance B.Binary UTCTime where
   put t = B.put (floor $ utcTimeToPOSIXSeconds t :: Int64)
   get = do
     n :: Int64 <- B.get
     return . posixSecondsToUTCTime . fromIntegral $ n
 
-unixEpoch :: MinutesTime
-unixEpoch = posixSecondsToUTCTime 0
-
-getMinutesTime :: MonadDB m => m MinutesTime
-getMinutesTime = do
+currentTime :: MonadDB m => m UTCTime
+currentTime = do
   runSQL_ "SELECT now()"
   fetchOne unSingle
 
-parseMinutesTime :: ParseTime t => String -> String -> Maybe t
-parseMinutesTime = parseTime defaultTimeLocale
+unixEpoch :: UTCTime
+unixEpoch = posixSecondsToUTCTime 0
 
-showMinutesTime :: FormatTime t => String -> t -> String
-showMinutesTime = formatTime defaultTimeLocale
+----------------------------------------
 
--- | Show time in %Y-%m-%d %H:%M:%S %Z format.
+formatTime' :: FormatTime t => String -> t -> String
+formatTime' = formatTime defaultTimeLocale
+
+parseTime' :: ParseTime t => String -> String -> Maybe t
+parseTime' = parseTime defaultTimeLocale
+
+-- | Show time as %Y-%m-%d %H:%M:%S %Z.
 -- This change was requested by Upsales. Should not affect much.
-showMinutesTimeForAPI :: MinutesTime -> String
-showMinutesTimeForAPI = showMinutesTime "%Y-%m-%d %H:%M:%S %Z"
+formatTimeAPI :: UTCTime -> String
+formatTimeAPI = formatTime' "%Y-%m-%d %H:%M:%S %Z"
 
--------------
+-- | Format time as %Y-%m-%d.
+formatTimeYMD :: UTCTime -> String
+formatTimeYMD = formatTime' "%Y-%m-%d"
 
-parseMinutesTimeUTC :: String -> Maybe MinutesTime
-parseMinutesTimeUTC = parseMinutesTime "%Y-%m-%d %H:%M:%S%Q"
+-- | Format time as %Y-%m-%d %H:%M.
+formatTimeSimple :: UTCTime -> String
+formatTimeSimple = formatTime' "%Y-%m-%d %H:%M"
 
-formatMinutesTimeUTC :: MinutesTime -> String
-formatMinutesTimeUTC = showMinutesTime "%Y-%m-%d %H:%M:%S%Q"
+-- | Parse time as %Y-%m-%d %H:%M.
+parseTimeSimple :: String -> Maybe UTCTime
+parseTimeSimple = parseTime' "%Y-%m-%d %H:%M"
 
--------------
+-- | Format time as %Y-%m-%d %H:%M:%S%Q.
+formatTimeUTC :: UTCTime -> String
+formatTimeUTC = formatTime' "%Y-%m-%d %H:%M:%S%Q"
 
-parseMinutesTimeISO :: String -> Maybe MinutesTime
-parseMinutesTimeISO s = msum [
-    parseMinutesTime "%Y-%m-%dT%H:%M:%S%QZ" s
-  , parseMinutesTime "%Y-%m-%dT%H:%M:%S%Q%z" s
+-- | Parse time as %Y-%m-%d %H:%M:%S%Q.
+parseTimeUTC :: String -> Maybe UTCTime
+parseTimeUTC = parseTime' "%Y-%m-%d %H:%M:%S%Q"
+
+-- | Format time as %Y-%m-%dT%H:%M:%S%QZ.
+formatTimeISO :: UTCTime -> String
+formatTimeISO = formatTime' "%Y-%m-%dT%H:%M:%S%QZ"
+
+-- | Parse time as %Y-%m-%dT%H:%M:%S%QZ or %Y-%m-%dT%H:%M:%S%Q%z.
+parseTimeISO :: String -> Maybe UTCTime
+parseTimeISO s = msum [
+    parseTime' "%Y-%m-%dT%H:%M:%S%QZ" s
+  , parseTime' "%Y-%m-%dT%H:%M:%S%Q%z" s
   ]
 
-formatMinutesTimeISO :: MinutesTime -> String
-formatMinutesTimeISO = showMinutesTime "%Y-%m-%dT%H:%M:%S%QZ"
+----------------------------------------
 
--------------
-
-formatMinutesTimeSimple :: MinutesTime -> String
-formatMinutesTimeSimple = showMinutesTime "%Y-%m-%d %H:%M"
-
-parseMinutesTimeSimple :: String -> Maybe MinutesTime
-parseMinutesTimeSimple = parseMinutesTime "%Y-%m-%d %H:%M"
-
--------------
-
--- | Show date as %Y-%m-%d.
-showDateYMD :: MinutesTime -> String
-showDateYMD = showMinutesTime "%Y-%m-%d"
-
--------------
-
-minutesAfter :: Int -> MinutesTime -> MinutesTime
+minutesAfter :: Int -> UTCTime -> UTCTime
 minutesAfter = addUTCTime . fromIntegral
 
-minutesBefore :: Int -> MinutesTime -> MinutesTime
+minutesBefore :: Int -> UTCTime -> UTCTime
 minutesBefore = minutesAfter . negate
 
--------------
-
-daysAfter :: Int -> MinutesTime -> MinutesTime
+daysAfter :: Int -> UTCTime -> UTCTime
 daysAfter = minutesAfter . (60 * 24 *)
 
-daysBefore :: Int -> MinutesTime -> MinutesTime
+daysBefore :: Int -> UTCTime -> UTCTime
 daysBefore = daysAfter . negate
 
--------------
-
-monthsBefore :: Int -> MinutesTime -> MinutesTime
+monthsBefore :: Int -> UTCTime -> UTCTime
 monthsBefore i = localTimeToUTC utc . f . utcToLocalTime utc
   where
     f t = t { localDay = addGregorianMonthsClip (fromIntegral $ -i) $ localDay t }
 
-beginingOfMonth :: MinutesTime -> MinutesTime
+-- | Transform the time to the beginning of the current month.
+beginingOfMonth :: UTCTime -> UTCTime
 beginingOfMonth = localTimeToUTC utc . f . utcToLocalTime utc
   where
     f LocalTime{..} = LocalTime {

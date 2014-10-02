@@ -368,7 +368,7 @@ type MailT m = MailContextT (TemplatesT m)
 runMailTInScheduler :: (MonadReader SchedulerData m, MonadIO m, MonadDB m,Log.MonadLog m) => Document -> MailT m a -> m a
 runMailTInScheduler doc m = do
   appConf <- asks sdAppConf
-  now <- getMinutesTime
+  now <- currentTime
   mauthor <- maybe (return Nothing) (dbQuery . GetUserByID) $ join $ maybesignatory <$> getAuthorSigLink doc
   mbd <- maybe (return Nothing) (dbQuery . GetBrandedDomainByUserID) (userid <$> mauthor)
   let mctx = MailContext { mctxhostpart = fromMaybe (hostpart appConf) (bdurl <$> mbd)
