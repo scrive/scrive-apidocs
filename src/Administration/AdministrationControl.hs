@@ -310,7 +310,7 @@ jsonUsersList = onlySalesOrAdmin $ do
                     value "companyposition" $ usercompanyposition $ userinfo user
                     value "company"  $ getCompanyName mcompany
                     value "phone"    $ userphone $ userinfo user
-                    value "tos"      $ formatMinutesTimeRealISO <$> (userhasacceptedtermsofservice user)
+                    value "tos"      $ formatMinutesTimeISO <$> (userhasacceptedtermsofservice user)
                 value "link" $ show $ LinkUserAdmin $ userid user
             value "paging" $ pagingParamsJSON users
 

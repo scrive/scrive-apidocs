@@ -18,6 +18,7 @@ import Data.Function (on)
 import Data.Maybe
 import Data.Monoid.Space
 import Data.List
+import Data.Time
 import Doc.DocStateData
 import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
 import Doc.Model
@@ -267,21 +268,11 @@ evidenceOfIntentAttachment title sls = do
 {-
  formatCalendarTime does not support %z as modifier. We have to implement it ourselves here.
 -}
-formatMinutesTimeForVerificationPage :: (MonadDB m,MonadBaseControl IO m) => TimeZoneName -> MinutesTime -> m String
-formatMinutesTimeForVerificationPage tz mt = do
-  withTimeZone tz $ do
-    runQuery_ $ "select TO_CHAR(" <?> mt <+> ",'YYYY-MM-DD HH24:MI:SS TZ')"
-    (ftime::String) <- fetchOne unSingle
-    return $ ftime ++ " (" ++ (zoneDiff (fromJust $ parseMinutesTimeUTC $ take 19 ftime) mt) ++ ")"
-  where
-    zoneDiff mt1 mt2 = let
-                         secDiff = (toMinutes mt1) - (toMinutes mt2)
-                         mDiff = (secDiff `mod` 60)
-                         hDiff = (secDiff `div` 60) `mod` 24
-                         hDiffText = show (hDiff `div` 10) ++ show (hDiff `mod` 10)  ++ show (mDiff `div` 10) ++ show (mDiff `mod` 10)
-                       in if (secDiff >= 0)
-                            then "+" ++ hDiffText
-                            else "-" ++ hDiffText
+formatMinutesTimeForVerificationPage :: (MonadDB m, MonadBaseControl IO m) => TimeZoneName -> MinutesTime -> m String
+formatMinutesTimeForVerificationPage tz mt = withTimeZone tz $ do
+  runQuery_ $ rawSQL "SELECT $1, to_char($1, 'TZ')" (Single mt)
+  (t::ZonedTime, tmz) <- fetchOne id
+  return $ showMinutesTime ("%Y-%m-%d %H:%M:%S" <+> tmz <+> "(%z)") t
 
 createSealingTextsForDocument :: (TemplatesMonad m) => Document -> String -> m Seal.SealingTexts
 createSealingTextsForDocument document hostpart = do

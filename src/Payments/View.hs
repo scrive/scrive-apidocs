@@ -18,7 +18,6 @@ import qualified Text.StringTemplates.Fields as F
 import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
 import Control.Monad
-import Control.Applicative
 import BrandedDomain.BrandedDomain
 import Mails.MailsConfig
 
@@ -62,6 +61,6 @@ showTotal q tc = insertDecimal $ show (q * tc)
         insertDecimal (x:xs) = x : insertDecimal xs
 
 showDate :: String -> String
-showDate s = case showDateDMYYYY <$> parseMinutesTime "%Y-%m-%dT%H:%M:%S%Z" s of
+showDate s = case parseMinutesTime "%Y-%m-%dT%H:%M:%S%Z" s of
   Nothing -> "unknown date"
-  Just d -> d
+  Just d -> showDateYMD d

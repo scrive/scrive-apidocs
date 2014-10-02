@@ -153,7 +153,7 @@ attFieldsListForJSON :: TemplatesMonad m =>  Attachment -> JSONGenT m ()
 attFieldsListForJSON att = do
     J.value "id" $ show $ attachmentid att
     J.value "title" $ attachmenttitle att
-    J.value "time" $ formatMinutesTimeRealISO (attachmentmtime att)
+    J.value "time" $ formatMinutesTimeISO (attachmentmtime att)
     J.value "shared" $ attachmentshared att
     J.value "file" $ show $ attachmentfile att
 

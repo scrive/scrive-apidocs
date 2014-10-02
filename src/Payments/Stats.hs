@@ -70,7 +70,7 @@ instance (MonadBase IO m, MonadDB m) => DBQuery m GetPaymentsStats [[String]] wh
       where f :: [[String]] -> (MinutesTime, AccountCode, CompanyID, Int32, PricePlan, PaymentPlanProvider, MinutesTime, PaymentPlanStatus, Maybe String) -> m [[String]]
             f acc (t, ac, cid, q, pp, pr, be, st, cn) =
               let smartname = fromMaybe "" cn
-              in return $ [formatMinutesTimeISO t, show ac, show cid, show q, show pp, show pr, formatMinutesTimeISO be, show st, smartname] : acc
+              in return $ [formatMinutesTimeUTC t, show ac, show cid, show q, show pp, show pr, formatMinutesTimeUTC be, show st, smartname] : acc
 
 
 

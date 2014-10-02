@@ -11,7 +11,8 @@ import Control.Monad (when)
 import Data.Int
 import DB
 import Data.Maybe (isJust)
-import MinutesTime (MinutesTime, toSeconds)
+import Data.Time
+import MinutesTime
 
 data InsertClockOffsetFrequency = InsertClockOffsetFrequency (Maybe Double) Double
 instance MonadDB m => DBUpdate m InsertClockOffsetFrequency Int where
@@ -43,7 +44,7 @@ instance MonadDB m => DBQuery m GetLatestClockErrorEstimate (Maybe ClockErrorEst
 -- unsynchronized since the estimate, and that the clock was drifting
 -- according to the estimate's PLL frequency.
 maxClockError :: MinutesTime -> ClockErrorEstimate -> Double
-maxClockError t e = fromIntegral (toSeconds t - toSeconds (time e)) * abs (frequency e) + abs (offset e)
+maxClockError t e = realToFrac (diffUTCTime t $ time e) * abs (frequency e) + abs (offset e)
 
 data ClockErrorStatistics = ClockErrorStatistics
   { max       :: Maybe Double -- ^ clock error maximum (ignoring frequency)

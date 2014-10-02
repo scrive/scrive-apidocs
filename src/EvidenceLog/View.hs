@@ -96,7 +96,7 @@ approximateActor useIdentifier doc dee | systemEvents $ evType dee = return "Scr
 eventJSValue :: (MonadDB m, TemplatesMonad m) => Document -> DocumentEvidenceEventWithSignatoryLink -> JSONGenT m ()
 eventJSValue doc dee = do
     J.value "status" $ show $ getEvidenceEventStatusClass (evType dee)
-    J.value "time"   $ formatMinutesTimeRealISO (evTime dee)
+    J.value "time"   $ formatMinutesTimeISO (evTime dee)
     J.valueM "party" $ approximateActor False doc dee
     J.valueM "text"  $ simplyfiedEventText Nothing doc dee
 

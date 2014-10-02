@@ -691,8 +691,8 @@ instance HasDefaultValue Document where
           , documentmainfiles            = []
           , documentstatus               = Preparation
           , documenttype                 = Signable
-          , documentctime                = fromSeconds 0
-          , documentmtime                = fromSeconds 0
+          , documentctime                = unixEpoch
+          , documentmtime                = unixEpoch
           , documentdaystosign           = 14
           , documentdaystoremind         = Nothing
           , documenttimeouttime          = Nothing

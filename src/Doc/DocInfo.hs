@@ -79,7 +79,7 @@ isDocumentShared doc = Shared == documentsharing doc
 -}
 getLastSignedTime :: Document -> MinutesTime
 getLastSignedTime doc =
-  maximum $ fromSeconds 0 : [signtime si | SignatoryLink {maybesigninfo = Just si} <- documentsignatorylinks doc]
+  maximum $ unixEpoch : [signtime si | SignatoryLink {maybesigninfo = Just si} <- documentsignatorylinks doc]
 
 
 

@@ -21,6 +21,7 @@ import Data.Int
 import Data.Monoid
 import Data.Binary
 import Data.String
+import Data.Time.Clock.POSIX
 import Control.Monad.IO.Class
 import Control.Applicative
 import qualified DB (Binary (..))
@@ -347,7 +348,7 @@ instance Arbitrary PropValue where
       PVNumber <$> arbitrary,
       PVString <$> arbitrary,
       PVBool <$> arbitrary,
-      PVMinutesTime . fromSeconds <$> arbitrary]
+      PVMinutesTime . posixSecondsToUTCTime . fromInteger <$> arbitrary]
 
 -- Note that IP addresses are completely arbitrary 32 bit words here!
 instance Arbitrary EventProperty where
@@ -358,7 +359,7 @@ instance Arbitrary EventProperty where
       (1, LastNameProp <$> arbitrary),
       (1, FirstNameProp <$> arbitrary),
       (1, UserIDProp . unsafeUserID <$> arbitrary),
-      (1, TimeProp . fromSeconds <$> arbitrary),
+      (1, TimeProp . posixSecondsToUTCTime . fromInteger <$> arbitrary),
       (1, DocIDProp . unsafeDocumentID <$> arbitrary),
       (1, CompanyIDProp . unsafeCompanyID <$> arbitrary),
       (5, SomeProp <$> arbitrary <*> arbitrary)]

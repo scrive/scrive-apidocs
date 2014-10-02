@@ -220,7 +220,7 @@ testPaymentPlansExpiredDunning = do
 testRecurlySavesAccount :: TestEnv ()
 testRecurlySavesAccount = do
   t <- getMinutesTime
-  let ac = show $ toSeconds t -- generate a random account code to avoid collisions
+  let ac = getEmailId t -- generate a random account code to avoid collisions
       email = "eric+" ++ ac ++ "@scrive.com"
 
   cs <- liftIO $ createSubscription "curl" recurlyToken recurlyPlanName "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" 5
@@ -248,7 +248,7 @@ testRecurlySavesAccount = do
 testRecurlyChangeAccount :: TestEnv ()
 testRecurlyChangeAccount = do
   t <- getMinutesTime
-  let ac = show $ toSeconds t -- generate a random account code to avoid collisions
+  let ac = getEmailId t -- generate a random account code to avoid collisions
       email = "eric+" ++ ac ++ "@scrive.com"
 
   cs <- liftIO $ createSubscription "curl" recurlyToken recurlyPlanName "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" 5
@@ -283,7 +283,7 @@ testRecurlyChangeAccount = do
 testRecurlyChangeAccountDefer :: TestEnv ()
 testRecurlyChangeAccountDefer = do
   t <- getMinutesTime
-  let ac = show $ toSeconds t -- generate a random account code to avoid collisions
+  let ac = getEmailId t -- generate a random account code to avoid collisions
       email = "eric+" ++ ac ++ "@scrive.com"
 
   cs <- liftIO $ createSubscription "curl" recurlyToken recurlyPlanName "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" 5
@@ -326,7 +326,7 @@ testRecurlyChangeAccountDefer = do
 testRecurlyCancelReactivate :: TestEnv ()
 testRecurlyCancelReactivate = do
   t <- getMinutesTime
-  let ac = show $ toSeconds t -- generate a random account code to avoid collisions
+  let ac = getEmailId t -- generate a random account code to avoid collisions
       email = "eric+" ++ ac ++ "@scrive.com"
 
   cs <- liftIO $ createSubscription "curl" recurlyToken recurlyPlanName "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" 5
@@ -357,3 +357,5 @@ testRecurlyCancelReactivate = do
 
   assertBool ("Should be 'active', was '" ++ subState sub3 ++ "'") $ subState sub3 == "active"
 
+getEmailId :: MinutesTime -> String
+getEmailId = showMinutesTime "%H%M%S%q"

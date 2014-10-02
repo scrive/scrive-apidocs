@@ -9,6 +9,7 @@ import Control.Applicative
 import Control.Arrow
 import Control.Concurrent.STM
 import Data.Char
+import Data.Time.Clock.POSIX
 import Data.Word
 import Test.QuickCheck
 import Happstack.Server
@@ -123,7 +124,7 @@ instance Arbitrary DeliveryStatus where
                        ]
 
 instance Arbitrary MinutesTime where
-  arbitrary = fromSeconds <$> arbitrary
+  arbitrary = posixSecondsToUTCTime . fromInteger <$> arbitrary
 
 {- | Sometimes we get and object that is not as random as we would expect (from some reason)
      Like author signatorylink that by default does not have any fields attached
@@ -427,8 +428,8 @@ signatoryLinkExample1 :: SignatoryLink
 signatoryLinkExample1 = defaultValue { signatorylinkid = unsafeSignatoryLinkID 0
                                       , signatorymagichash = unsafeMagicHash 0
                                       , maybesignatory = Nothing
-                                      , maybesigninfo = Just $ SignInfo (fromSeconds 0) noIP
-                                      , maybeseeninfo = Just $ SignInfo (fromSeconds 0) noIP
+                                      , maybesigninfo = Just $ SignInfo unixEpoch noIP
+                                      , maybeseeninfo = Just $ SignInfo unixEpoch noIP
                                       , maybereadinvite = Nothing
                                       , mailinvitationdeliverystatus = Delivered
                                       , smsinvitationdeliverystatus = Delivered

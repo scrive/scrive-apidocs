@@ -7,7 +7,7 @@ import Data.Maybe (isJust)
 import Database.PostgreSQL.PQTypes (Binary(..))
 import qualified Data.ByteString.RFC2397 as RFC2397
 import qualified Data.ByteString.UTF8 as BS
-import MinutesTime (MinutesTime,parseMinutesTimeRealISO, formatMinutesTimeRealISO)
+import MinutesTime
 import Text.JSON.FromJSValue (FromJSValue(..), fromJSValueField)
 import Text.JSON.Gen (value, runJSONGen)
 import Text.JSON.ToJSValue (ToJSValue(..))
@@ -27,10 +27,10 @@ instance FromJSValue Screenshot where
       then f time' image'
       else f (fst <$> s) (snd <$> s) -- old array format
    where f :: Maybe String -> Maybe String -> Maybe Screenshot
-         f t i = Screenshot <$> (parseMinutesTimeRealISO =<< t)
+         f t i = Screenshot <$> (parseMinutesTimeISO =<< t)
                              <*> (fmap (Binary . snd) . RFC2397.decode . BS.fromString =<< i)
 
 instance ToJSValue Screenshot where
   toJSValue (Screenshot time' (Binary image')) = runJSONGen $ do
-    value "time"  $ toJSValue $ formatMinutesTimeRealISO time'
+    value "time"  $ toJSValue $ formatMinutesTimeISO time'
     value "image" $ toJSValue $ BS.toString $ RFC2397.encode "image/jpeg" image'

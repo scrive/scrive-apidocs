@@ -109,7 +109,7 @@ handleCompanyAccountsInternal cid = do
                 value "deletable" $ cadeletable f
                 value "activated" $ caactivated f
                 value "isctxuser" $ userid user == camaybeuserid f
-                value "tos"       $ formatMinutesTimeRealISO <$> (catos f)
+                value "tos"       $ formatMinutesTimeISO <$> (catos f)
 
     value "paging" $ pagingParamsJSON companypage
 

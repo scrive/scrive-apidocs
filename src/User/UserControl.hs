@@ -46,7 +46,7 @@ import KontraLink
 import MagicHash (MagicHash)
 import Mails.SendMail
 import User.Email
-import MinutesTime hiding (toClockTime)
+import MinutesTime
 import Happstack.Fields
 import Redirect
 import Text.StringTemplates.Templates
@@ -208,34 +208,34 @@ handleUsageStatsJSONForUserMonths = do
 getDaysStats :: Kontrakcja m => Either UserID CompanyID -> m JSValue
 getDaysStats euc = do
   ctxtime <- ctxtime <$> getContext
-  let timespans = [ (formatMinutesTime "%Y-%m-%d" t, formatMinutesTime "%Y-%m-%d" (daysAfter 1 t))
+  let timespans = [ (showDateYMD t, showDateYMD $ daysAfter 1 t)
                      | daysBack <- [0 .. 30]
                      , t <- [daysBefore daysBack ctxtime]
                     ]
   case euc of
     Left uid -> do
       stats <- dbQuery $ GetUsageStats (Left uid) timespans
-      return $ singlePageListToJSON $ userStatsToJSON (formatMinutesTime "%Y-%m-%d") stats
+      return $ singlePageListToJSON $ userStatsToJSON showDateYMD stats
     Right cid -> do
       totalS <- renderTemplate_ "statsOrgTotal"
       stats <- dbQuery $ GetUsageStats (Right cid) timespans
-      return $ singlePageListToJSON $ companyStatsToJSON (formatMinutesTime "%Y-%m-%d") totalS stats
+      return $ singlePageListToJSON $ companyStatsToJSON showDateYMD totalS stats
 
 getMonthsStats :: Kontrakcja m => Either UserID CompanyID -> m JSValue
 getMonthsStats euc = do
   ctxtime <- ctxtime <$> getContext
-  let timespans = [ (formatMinutesTime "%Y-%m-01" t, formatMinutesTime "%Y-%m-01" (monthsBefore (-1) t))
+  let timespans = [ (showMinutesTime "%Y-%m-01" t, showMinutesTime "%Y-%m-01" (monthsBefore (-1) t))
                      | monthsBack <- [0 .. 6]
                      , t <- [monthsBefore monthsBack ctxtime]
                     ]
   case euc of
     Left uid -> do
       stats <- dbQuery $ GetUsageStats (Left uid) timespans
-      return $ singlePageListToJSON $ userStatsToJSON (formatMinutesTime "%Y-%m") stats
+      return $ singlePageListToJSON $ userStatsToJSON (showMinutesTime "%Y-%m") stats
     Right cid -> do
       totalS <- renderTemplate_ "statsOrgTotal"
       stats <- dbQuery $ GetUsageStats (Right cid) timespans
-      return $ singlePageListToJSON $ companyStatsToJSON (formatMinutesTime "%Y-%m") totalS stats
+      return $ singlePageListToJSON $ companyStatsToJSON (showMinutesTime "%Y-%m") totalS stats
 
 {- |
     Checks for live documents owned by the user.

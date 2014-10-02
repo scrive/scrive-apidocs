@@ -23,6 +23,7 @@ import Crypto.RNG
 import DB
 import Data.List hiding (head, tail)
 import Data.Maybe hiding (fromJust)
+import Data.Time
 import Doc.API.Callback.Model
 import Doc.DigitalSignature (addDigitalSignature, extendDigitalSignature)
 import Doc.DocInfo
@@ -41,9 +42,8 @@ import Instances ()
 import Kontra
 import qualified Log
 import MailContext (MailContextMonad(..), MailContext(..))
-import MinutesTime (MinutesTime, getMinutesTime, toCalendarTimeInUTC, fromClockTime, minutesBefore)
+import MinutesTime (MinutesTime, getMinutesTime, minutesBefore)
 import OurPrelude
-import System.Time (toClockTime, CalendarTime(..), Month(..))
 import Templates (runTemplatesT)
 import Text.StringTemplates.Templates (TemplatesMonad)
 import ThirdPartyStats.Core
@@ -278,17 +278,17 @@ findAndExtendDigitalSignatures = do
 -- | Estimate when the latest Guardtime publication code was published
 -- (sometime after the 15th of the month).
 latest_publication_time :: MonadDB m => m MinutesTime
-latest_publication_time = do
-  now <- toCalendarTimeInUTC `fmap` getMinutesTime
-  let fifteenth = now{ ctDay = 15, ctHour = 0, ctMin = 0, ctSec = 0, ctPicosec = 0 }
-  return $ fromClockTime $ toClockTime $
-    if now > fifteenth
-    then fifteenth
-    else if ctMonth fifteenth == January
-         then fifteenth{ ctYear = pred (ctYear fifteenth)
-                       , ctMonth = December
-                       }
-         else fifteenth{ ctMonth = pred (ctMonth fifteenth)}
+latest_publication_time = localTimeToUTC utc . f . utcToLocalTime utc <$> getMinutesTime
+  where
+    f LocalTime{..} = LocalTime {
+        localDay = if localDay > fifteenth
+          then fifteenth
+          else addGregorianMonthsClip (-1) fifteenth
+      , localTimeOfDay = midnight
+      }
+      where
+        fifteenth = fromGregorian year month 15
+        (year, month, _) = toGregorian localDay
 
 stateMismatchError :: (MonadBase IO m, Log.MonadLog m) => String -> DocumentStatus -> Document -> m a
 stateMismatchError funame expected Document{documentstatus, documentid} = do

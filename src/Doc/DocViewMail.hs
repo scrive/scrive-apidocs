@@ -29,7 +29,7 @@ import File.File
 import KontraLink
 import MailContext (MailContextMonad(..), getMailContext, MailContext(..))
 import Mails.SendMail
-import MinutesTime (formatMinutesTime, getMinutesTime, showDateYMD, daysAfter, minutesAfter, formatMinutesTimeSimple)
+import MinutesTime
 import Utils.Monoid
 import Utils.Prelude
 import Utils.Color
@@ -242,7 +242,7 @@ mailDocumentClosed ispreview sl sealFixed documentAttached document = do
         F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (Nothing <| ispreview |> Just sl) (mainfile)
         F.value "sealFixed" $ sealFixed
         documentAttachedFields True sl documentAttached document
-        F.value "closingtime" $ formatMinutesTime "%Y-%m-%d %H:%M %Z" $ getLastSignedTime document
+        F.value "closingtime" $ showMinutesTime "%Y-%m-%d %H:%M %Z" $ getLastSignedTime document
         F.value "custommessage" $ if (isAuthor sl && not ispreview)
                                     then Nothing
                                     else case (documentconfirmtext document) of

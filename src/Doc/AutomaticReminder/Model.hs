@@ -24,8 +24,6 @@ import Crypto.RNG
 import Data.Typeable
 import DB.TimeZoneName (TimeZoneName, defaultTimeZoneName, withTimeZone)
 import qualified DB.TimeZoneName as TimeZoneName
-import Data.Time.Format (formatTime)
-import System.Locale (defaultTimeLocale)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.Base
 
@@ -72,7 +70,7 @@ setAutoreminder did mdays tzn = do
         Nothing   -> return ()
         Just days -> do
             time <- getMinutesTime
-            let timestamp = formatTime defaultTimeLocale "%F" (toUTCTime time) ++ " " ++ TimeZoneName.toString tzn
+            let timestamp = showMinutesTime "%F" time ++ " " ++ TimeZoneName.toString tzn
             withTimeZone defaultTimeZoneName $
               void . runQuery_ . sqlInsert "document_automatic_reminders" $ do
                 sqlSetCmd "expires" $ "cast (" <?> timestamp <+> "as timestamp with time zone)"

@@ -92,8 +92,6 @@ import Doc.DocumentID
 import OurPrelude
 import Doc.DocStateData
 import Data.Maybe hiding (fromJust)
-import Data.Time.Format (formatTime)
-import System.Locale (defaultTimeLocale)
 import Utils.Default
 import Utils.Monad
 import Utils.Monoid
@@ -676,7 +674,7 @@ instance (MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m) => DBUpdate 
             --   Example: if actor time is 13:00 October 24, and days to sign is 1, then timeout is October 26 12:59:59
             --   Rationale: Signatories will have at least until the end of the intended last day to sign.
             -- We try to match expectation when one day after 24 december is understood as till last minute of 25 december.
-            let timestamp = formatTime defaultTimeLocale "%F" (toUTCTime time) ++ " " ++ TimeZoneName.toString tzn
+            let timestamp = showMinutesTime "%F" time ++ " " ++ TimeZoneName.toString tzn
             -- Need to temporarily set session timezone to any one
             -- that recognizes daylight savings so that the day
             -- interval addition advances the time properly across DST changes
@@ -1284,7 +1282,7 @@ instance (DocumentMonad m, MonadBaseControl IO m, TemplatesMonad m) => DBUpdate 
     updateDocumentWithID $ \did -> do
       -- Whole TimeZome behaviour is a clone of what is happending with making document ready for signing.
       let time = actorTime actor
-      let timestamp = formatTime defaultTimeLocale "%F" (toUTCTime time) ++ " " ++ TimeZoneName.toString tzn
+      let timestamp = showMinutesTime "%F" time ++ " " ++ TimeZoneName.toString tzn
       withTimeZone defaultTimeZoneName $ kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
          sqlSet "status" Pending
          sqlSet "mtime" time

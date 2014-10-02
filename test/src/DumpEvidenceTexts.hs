@@ -42,7 +42,7 @@ dumpAllEvidenceTexts env = testThat "Generating all evidence texts" env $ do
 
 dumpEvidenceTexts :: (MonadDB m, TemplatesMonad m) => MinutesTime -> Lang -> m String
 dumpEvidenceTexts now lang = do
-  let Just time = parseMinutesTimeDMY "01-01-2013"
+  let Just time = parseMinutesTime "%d-%m-%Y" "01-01-2013"
   let actor = Actor { actorTime = time
                     , actorClientTime = Nothing
                     , actorClientName = Nothing
