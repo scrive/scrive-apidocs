@@ -43,7 +43,7 @@ window.Document = Backbone.Model.extend({
         template: false,
         timezone : "Europe/Stockholm",
         saveQueue : new AjaxQueue(),
-        unsaveddraft : true,
+        saved : false,
         screenshots : {}
     }},
     initialize: function(args) {
@@ -423,11 +423,11 @@ window.Document = Backbone.Model.extend({
     afterSave: function(f) {
         this.get("saveQueue").finishWith(f);
     },
-    unsavedDraft: function() {
-        return this.get("unsaveddraft");
+    saved : function() {
+        return this.get("saved");
     },
-    setSavedDraft: function() {
-        this.set({unsaveddraft:false});
+    setSaved : function() {
+        this.set({saved:true});
     },
     setAttachments: function() {
         return new Submit({
@@ -452,6 +452,7 @@ window.Document = Backbone.Model.extend({
           showpdfdownload: this.get("showpdfdownload") != undefined ? this.get("showpdfdownload") : null,
           showrejectoption: this.get("showrejectoption") != undefined ? this.get("showrejectoption") : null,
           showfooter: this.get("showfooter") != undefined ? this.get("showfooter") : null,
+          saved: this.get("saved"),
           timezone : this.get("timezone")
       };
     },
@@ -729,7 +730,7 @@ window.Document = Backbone.Model.extend({
        invitationmessage: args.invitationmessage,
        confirmationmessage: args.confirmationmessage,
        timezone: args.timezone,
-       unsaveddraft : args.unsaveddraft,
+       saved: args.saved,
        ready: true
      };
     },

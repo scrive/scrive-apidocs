@@ -216,11 +216,12 @@ window.DesignSignatoryAttachmentsPopup = function(args) {
                           description: att.description()
                         }));
                   });
-                  viewmodel.saveDocument();
+                  document.save();
                   document.afterSave(function() {
                       document.recall(function() {
                           document.trigger("change:attachments");
                           popup.reject();
+                          viewmodel.saveDocument();
                       });
                   });
                   return true;

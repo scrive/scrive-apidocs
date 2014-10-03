@@ -55,10 +55,10 @@ var ButtonModel = Backbone.Model.extend({
   isClicked : function() {
        return this.get("isClicked");
   },
-  clicked : function(e){
+  clicked : function(){
     if (!this.oneClick() || !this.isClicked()) // We call onClick, only if we don't count clicks or button was not clicked
      { this.set({isClicked : true});
-       this.get("onClick")(e);
+       this.get("onClick")();
      }
   },
   setNotClicked : function() {
@@ -149,8 +149,8 @@ var ButtonView = Backbone.View.extend({
         $(this.el).append(label);
         return this;
     },
-    clicked: function(e){
-        this.model.clicked(e);
+    clicked: function(){
+        this.model.clicked();
     }
 
 });
