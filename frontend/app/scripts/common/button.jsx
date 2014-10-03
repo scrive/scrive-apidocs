@@ -11,7 +11,7 @@
       size        : string, tiny | small | big
       textcolor   : string, color for text on button, else default value for predefined color will be used.
       width       : integer, final width of button, if not set, button will adjust to text
-      cssClass    : additional css classes
+      className    : additional css classes
       style       : style object (react format)
       onClick     : func, functiona to be called on click
       multiline   : bool, if button should support multiline labels (if true, text must be an array of strings)
@@ -38,8 +38,8 @@ define(['React'], function(React) {
       customcolor : React.PropTypes.string,
       size        : React.PropTypes.string,
       textcolor   : React.PropTypes.string,
-      width       : React.PropTypes.string,
-      cssClass    : React.PropTypes.string,
+      width       : React.PropTypes.number,
+      className   : React.PropTypes.string,
       style       : React.PropTypes.object,
       onClick     : React.PropTypes.func,
       multiline   : React.PropTypes.bool,
@@ -81,43 +81,40 @@ define(['React'], function(React) {
     },
     width: function() {
       if (this.props.width)
-        return this.props.width() - 2*this.borderWidth() - 2* this.labelPadding();
+        return this.props.width - 2*this.borderWidth() - 2* this.labelPadding();
     },
     sizeClass : function() {
      if (this.props.size == "tiny")
-         return {"button-small":true};
+         return "button-small";
      else if (this.props.size == "big")
-         return {"button-large":true};
+         return "button-large";
+     return "";
     },
     colorClass : function() {
      if (this.props.color  == "red" )
-        return {"button-red":true};
+        return "button-red";
      else if (this.props.color  == "green" )
-        return {"button-green":true};
+        return "button-green";
      else if (this.props.color  == "black")
-        return {"button-gray":true};
+        return "button-gray";
      else if (this.props.color == "light-blue")
-        return {"button-light-blue":true};
+        return "button-light-blue";
      else if (this.props.color == "signview-blue")
-        return {"button-signview-blue":true};
+        return "button-signview-blue";
+     return "";
     },
     multilineClass : function() {
-      return {"button-signleline": !this.props.multiline};
+      return this.props.multiline ? "button-signleline": "";
     },
-    cssClasses : function() {
-      return React.addons.classSet(_.extend(
-                            {button: true},
-                            this.sizeClass(),
-                            this.colorClass(),
-                            this.multilineClass()
-             ));
+    className : function() {
+      return (this.props.className || "") + " button " + this.sizeClass() + " " + this.colorClass() + " " + this.multilineClass();
     },
     style : function() {
       return  _.extend({width: this.width()},this.props.style);
     },
     render: function() {
       return (
-        <a className={this.cssClasses()} onClick={this.handleClick} style={this.style()}>
+        <a className={this.className()} onClick={this.handleClick} style={this.style()}>
           <div className="label">
             {/*if*/ this.props.multiline &&
               this.props.text.map(function(text) {

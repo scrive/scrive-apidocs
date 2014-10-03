@@ -1,7 +1,7 @@
 /* Main admin only site definition. Its a tab based set of different lists.
  * This is the entry point for /adminonly/. */
 
-define(['Backbone', 'legacy_code'], function() {
+define(['React','admin/companyusersadminlist','admin/documentslist','Backbone', 'legacy_code'], function(React,CompanieUsersAdminList,DocumentsList) {
 
 var CompanyAdminModel = Backbone.Model.extend({
   companyid : function() {
@@ -11,11 +11,6 @@ var CompanyAdminModel = Backbone.Model.extend({
         if (this.get("companydetails") != undefined) return this.get("companydetails");
         this.set({ "companydetails" :new AdminCompanyDetails({ companyid: this.companyid() })});
         return this.companydetails();
-  },
-  companyusers: function() {
-        if (this.get("companyusers") != undefined) return this.get("companyusers");
-        this.set({ "companyusers" : new CompanyUsersList({companyid: this.companyid()})});
-        return this.companyusers();
   },
   companybranding: function() {
         if (this.get("companybranding") != undefined) return this.get("companybranding");
@@ -31,11 +26,6 @@ var CompanyAdminModel = Backbone.Model.extend({
         if (this.get("companystatistics") != undefined) return this.get("companystatistics");
         this.set({ "companystatistics" : new Stats({ companyid: this.companyid(), withCompany : true}) });
         return this.companystatistics();
-  },
-  companydocuments: function() {
-        if (this.get("companydocuments") != undefined) return this.get("companydocuments");
-        this.set({ "companydocuments" : new KontraList(DocumentAdminListDefinition(true, undefined, this.companyid())) });
-        return this.companydocuments();
   },
   backToAdminTab : function() {
      return new Tab({
@@ -56,12 +46,17 @@ var CompanyAdminModel = Backbone.Model.extend({
   },
   companyusersTab : function() {
                     var self = this;
+                    var div = $('<div/>');
+                    var list = React.renderComponent(new CompanieUsersAdminList({
+                      companyid : this.companyid(),
+                      loadLater : true
+                    }),div[0]);
                     return new Tab({
                         name: "Users",
-                        elems: [function() { return $(self.companyusers().el()); }],
+                        elems: [function() { return div; }],
                         pagehash : "users",
                         onActivate : function() {
-                            self.companyusers().recall();
+                            list.reload();
                         }
                     });
   },
@@ -100,12 +95,18 @@ var CompanyAdminModel = Backbone.Model.extend({
   },
   companydocumentsTab : function() {
                     var self = this;
+                    var div = $('<div/>');
+                    var list = React.renderComponent(new DocumentsList({
+                      forAdmin : true, // For some reason we always show dave here
+                      companyid : this.companyid(),
+                      loadLater : true
+                    }),div[0]);
                     return new Tab({
                         name: "Documents",
-                        elems: [function() { return $(self.companydocuments().el()); }],
+                        elems: [function() { return div; }],
                         pagehash : "documents",
                         onActivate : function() {
-                            self.companydocuments().recall();
+                            list.reload();
                         }
                     });
   }

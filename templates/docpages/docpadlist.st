@@ -13,15 +13,22 @@ $htmlopentag()$
         <div class="pad-list">
           <div class="list-container"></div>
           <script>
-           require(['jquery', 'React' , 'signview/header', 'signview/footer',  'legacy_code'], function(jQuery,React,Header,Footer) {
+           require(['jquery', 'React' , 'signview/header', 'signview/footer', 'padlist/padlist',  'legacy_code'], function(jQuery,React,Header,Footer,PadList) {
               var svb =  new BrandingForSignView({});
               svb.fetch({ processData:  true, cache : false});
 
              jQuery(function(){
-              var padlist = new PadList({});
-
+              var padlistDiv = jQuery('<div/>')
+              var padlist = React.renderComponent( new PadList({}),padlistDiv[0]);
+              var refresherPadListStep = function() {
+                setTimeout(function() {
+                  padlist.refreshStep();
+                  refresherPadListStep();
+                },1000);
+              };
+              refresherPadListStep();
               var headerDiv = jQuery('<div/>');
-              var component = React.renderComponent(
+              React.renderComponent(
                 Header({
                    signviewbranding: svb,
                    fullWidth: true,
@@ -39,12 +46,12 @@ $htmlopentag()$
                 }), headerDiv[0]);
 
               var footerDiv = jQuery('<div/>');
-              var component = React.renderComponent(
+              React.renderComponent(
                 Footer({
                    signviewbranding: svb
                 }), footerDiv[0]);
               jQuery(".pad-list").prepend(headerDiv);
-              jQuery(".list-container").append(padlist.el());
+              jQuery(".list-container").append(padlistDiv);
               jQuery(".pad-list").append(footerDiv);
 
             });

@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
 
 
-define(['React', 'Backbone', 'common/backbone_mixin', 'common/select'], function(React, Backbone, BackboneMixin, NewSelect) {
+define(['React', 'Backbone', 'common/select'], function(React, Backbone, NewSelect) {
 
 
   var LanguageSwitcher = React.createClass({

@@ -341,6 +341,7 @@ var AccountSettingsView = Backbone.View.extend({
                              onOpen: function() {
                                 $(".body-container").css("padding-bottom","260px");
                                 $("footer").css("height","145px");
+                                return true;
                              },
                              onClose: function() {
                                 $(".body-container").css("padding-bottom","");

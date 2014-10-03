@@ -1,7 +1,7 @@
 /* Main admin only site definition. Its a tab based set of different lists.
  * This is the entry point for /adminonly/. */
 
-define(['Backbone', 'legacy_code'], function() {
+define(['React','admin/documentslist','Backbone', 'legacy_code'], function(React,DocumentsList) {
 
 var UserAdminModel = Backbone.Model.extend({
   userid : function() {
@@ -16,11 +16,6 @@ var UserAdminModel = Backbone.Model.extend({
         if (this.get("userstatistics") != undefined) return this.get("userstatistics");
         this.set({ "userstatistics" : new Stats({ userid: this.userid(), withCompany : false})});
         return this.userstatistics();
-  },
-  userdocuments: function() {
-        if (this.get("userdocuments") != undefined) return this.get("userdocuments");
-        this.set({ "userdocuments" : new KontraList(DocumentAdminListDefinition(true, this.userid())) });
-        return this.userdocuments();
   },
   backToAdminTab : function() {
      return new Tab({
@@ -52,12 +47,18 @@ var UserAdminModel = Backbone.Model.extend({
   },
   userdocumentsTab : function() {
                     var self = this;
+                    var div = $("<div/>");
+                    var list = React.renderComponent(new DocumentsList({
+                      forAdmin : true, // For some reason we always show dave here
+                      userid : this.userid(),
+                      loadLater : true
+                    }),div[0]);
                     return new Tab({
                         name: "Documents",
-                        elems: [function() { return $(self.userdocuments().el()); }],
+                        elems: [function() { return div;}],
                         pagehash : "documents",
                         onActivate : function() {
-                            self.userdocuments().recall();
+                            list.reload();
                         }
                     });
   }

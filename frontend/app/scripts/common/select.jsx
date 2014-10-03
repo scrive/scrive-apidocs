@@ -133,15 +133,15 @@ var SelectModel = Backbone.Model.extend({
        this.onClose();
   },
   expand : function() {
-     if (!this.expanded() && this.options().length > 0) {
+     if (!this.expanded() && this.onOpen() && this.options().length > 0) {
        this.set({"expanded" : true});
-       this.onOpen();
      }
   },
   onOpen : function(){
        if (this.get("onOpen") != undefined) {
-        this.get("onOpen")();
+        return this.get("onOpen")();
        }
+       return true;
   },
   onClose : function(){
        if (this.get("onClose") != undefined) {
@@ -233,10 +233,10 @@ var SelectExpandedView = React.createClass({
 /* View for not expanded box. On expand original box will be placed above it (z-index)*/
 
 var SelectView = React.createClass({
+    mixins: [BackboneMixin.BackboneMixin],
     componentWillUnmount : function() {
         this.removeExpandedView();
     },
-    mixins: [BackboneMixin.BackboneMixin],
     getBackboneModels : function() {
       return [this.props.model];
     },
@@ -264,10 +264,8 @@ var SelectView = React.createClass({
     },
     //We need to clear subcomponents for garbage collection. On unmounth or when we change props.
     removeExpandedView : function() {
-      if (this.state.expandedComponent) {
-        this.state.expandedComponent.unmountComponent();
-      }
       if (this.state.expandedDiv) {
+        React.unmountComponentAtNode(this.state.expandedDiv[0]);
         this.state.expandedDiv.remove();
       }
     },
@@ -361,6 +359,9 @@ var Select = React.createClass({
     // When we are removing a selectbox - it's safer to remove it when it is closed;
     componentWillUnmount : function() {
       this.state.model.unexpand();
+    },
+    open : function() {
+       this.state.model.expand();
     },
     stateFromProps : function(props) {
         var model = new SelectModel({

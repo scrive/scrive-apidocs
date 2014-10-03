@@ -1,5 +1,5 @@
 /* Main archive definition. Its a tab based set of different documents lists. */
-define(['Backbone', 'legacy_code'], function() {
+define(['React', 'account/usersandstats/daysstatstable', 'legacy_code'], function(React,DaysStatsTable) {
 
 var StatsModel = Backbone.Model.extend({
   withCompany : function() {
@@ -19,24 +19,11 @@ var StatsModel = Backbone.Model.extend({
      else
        return  "/account/usagestats/days/json" ;
   },
-  dayTable : function() {
-        if (this.get("dayTable") != undefined) return this.get("dayTable");
-        this.set({ "dayTable" : new KontraList({
-              name : "Past Month Table",
-              loadOnInit : false,
-              schema: new Schema({
-                extraParams : (this.withCompany() ? {withCompany : "true"} : {}),
-                url:this.dayTableUrl(),
-                cells : _.flatten([
-                    [new Cell({name: localization.account.stats.columnDate,   width:"100px", field:"date"})],
-                    (this.withCompany() ? [new Cell({name:  localization.account.stats.columnSender, width:"100px", field:"name", special:"expandable"})] : []),
-                    [new Cell({name:  localization.account.stats.columnClosedDocuments,  width:"70px",  field:"closed", tdclass: 'num'})],
-                    [new Cell({name:  localization.account.stats.columnSendDocuments,    width:"70px",  field:"sent", tdclass: 'num'})],
-                    [new Cell({name:  localization.account.stats.columnClosedSignatures, width:"70px",  field:"signatures", tdclass: 'num'})]
-                ])})
-          })
-        });
-        return this.dayTable();
+  dayTableDef : function() {
+    return DaysStatsTable({
+      withCompany: this.withCompany(),
+      url : this.dayTableUrl() + (this.withCompany() ? "?withCompany=true" : "")
+   });
   },
   monthTableUrl : function() {
      if (this.userid())
@@ -46,28 +33,11 @@ var StatsModel = Backbone.Model.extend({
      else
        return  "/account/usagestats/months/json" ;
   },
-  monthTable : function() {
-        if (this.get("monthTable") != undefined) return this.get("monthTable");
-        this.set({ "monthTable" :   new KontraList({
-              name : "Past 6 Month Table",
-              loadOnInit : false,
-              schema: new Schema({
-                extraParams : (this.withCompany() ? {withCompany : "true"} : {}),
-                url: this.monthTableUrl(),
-                cells : _.flatten([
-                    [new Cell({name: localization.account.stats.columnMonth,   width:"100px", field:"date"})],
-                    (this.withCompany() ? [new Cell({name: localization.account.stats.columnSender, width:"100px", field:"name", special:"expandable"})] : []),
-                    [new Cell({name: localization.account.stats.columnClosedDocuments,  width:"70px",  field:"closed", tdclass: 'num'})],
-                    [new Cell({name: localization.account.stats.columnSendDocuments,    width:"70px",  field:"sent", tdclass: 'num'})],
-                    [new Cell({name: localization.account.stats.columnClosedSignatures, width:"70px",  field:"signatures", tdclass: 'num'})]
-                ])})
-          })
-        });
-        return this.monthTable();
-  },
-  refresh : function() {
-                    this.dayTable().recall();
-                    this.monthTable().recall();
+  monthTableDef : function() {
+    return DaysStatsTable({
+      withCompany: this.withCompany(),
+      url : this.monthTableUrl() + (this.withCompany() ? "?withCompany=true" : "")
+    });
   }
 });
 
@@ -78,14 +48,27 @@ var StatsView = Backbone.View.extend({
         _.bindAll(this, 'render');
         this.render();
     },
+    refresh : function() {
+      if(this.daytable != undefined)
+        this.daytable.reload();
+      if(this.monthtable != undefined)
+        this.monthtable.reload();
+    },
     render: function () {
        var container = $(this.el);
        var model = this.model;
        var subbox = $("<div class='tab-content account usagestats'/>");
+
        subbox.append($("<h2/>").text(localization.account.stats.last30days));
-       subbox.append($("<div class='jsdaytable'></div>").append(model.dayTable().el()));
+       var daytable = $("<div class='jsdaytable'></div>");
+       subbox.append($(daytable));
+       this.daytable = React.renderComponent(model.dayTableDef(),daytable[0]);
+
        subbox.append($("<h2/>").text(localization.account.stats.last6months));
-       subbox.append($("<div class='jsmonthtable'></div>").append(model.monthTable().el()));
+       var monthstable = $("<div class='jsmonthtable'></div>");
+       subbox.append($(monthstable));
+       this.monthtable = React.renderComponent(model.monthTableDef(),monthstable[0]);
+
        container.append(subbox);
        return this;
     }
@@ -96,7 +79,7 @@ window.Stats = function(args) {
           var model = new StatsModel(args);
           var view =  new StatsView({model : model, el : $("<div class='tab-container'/>")});
           return {
-              refresh : function() {model.refresh();},
+              refresh : function() {view.refresh();},
               el  : function() {return $(view.el);}
             };
 };

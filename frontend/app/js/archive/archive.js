@@ -1,6 +1,6 @@
 /* Main archive definition. Its a tab based set of different documents lists. */
 
-define(['Backbone', 'legacy_code'], function() {
+define(['React', 'archive/documents','archive/templates', 'archive/attachments', 'archive/trash', 'Backbone', 'legacy_code'], function(React,DocumentsList,TemplatesList,AttachmentsList,TrashList) {
 
 var ArchiveModel = Backbone.Model.extend({
   month : function() {
@@ -15,35 +15,22 @@ var ArchiveModel = Backbone.Model.extend({
   forNewUser: function() {
     return this.get("forNewUser");
   },
-  documents : function() {
-        if (this.get("documents") != undefined) return this.get("documents");
-        this.set({ "documents" : new KontraList(DocumentsListDefinition(this)) });
-        return this.documents();
-  },
-  templates : function() {
-        if (this.get("templates") != undefined) return this.get("templates");
-        this.set({ "templates" : new KontraList(TemplatesListDefinition(this)) });
-        return this.templates();
-  },
-  attachments : function() {
-        if (this.get("attachments") != undefined) return this.get("attachments");
-        this.set({ "attachments" : new KontraList(AttachmentsListDefinition(this)) });
-        return this.attachments();
-  },
-  trash : function() {
-        if (this.get("trash") != undefined) return this.get("trash");
-        this.set({ "trash" : new KontraList(TrashListDefinition(this)) });
-        return this.trash();
-
-  },
   documentsTab : function() {
                     var archive = this;
+                    var div = $('<div/>');
+                    var list = React.renderComponent(
+                      new DocumentsList({
+                          forCompanyAdmin : this.forCompanyAdmin(),
+                          year : this.year(),
+                          month : this.month(),
+                          loadLater : true
+                      }),div[0]);
                     return new Tab({
                         name: localization.archive.documents.name,
-                        elems: [function() {return $(archive.documents().el());}],
+                        elems: [function() {return div;}],
                         pagehash : "documents",
                         onActivate : function() {
-                             archive.documents().recall();
+                            list.reload();
                             mixpanel.register({Subcontext : 'Documents tab'});
                             mixpanel.track('View Documents Tab');
                         }
@@ -51,12 +38,16 @@ var ArchiveModel = Backbone.Model.extend({
   },
   templatesTab : function() {
                     var archive = this;
+                    var div = $('<div/>');
+                    var list = React.renderComponent(new TemplatesList({
+                      loadLater : true
+                    }),div[0]);
                     return  new Tab({
                         name: localization.archive.templates.name,
-                        elems: [function() {return $(archive.templates().el());}],
+                        elems: [function() {return div;}],
                         pagehash : "templates",
                         onActivate : function() {
-                            archive.templates().recall();
+                            list.reload();
                             mixpanel.register({Subcontext : 'Templates tab'});
                             mixpanel.track('View Templates Tab');
                         }
@@ -64,12 +55,16 @@ var ArchiveModel = Backbone.Model.extend({
   },
   attachmentsTab : function() {
                     var archive = this;
+                    var div = $('<div/>');
+                    var list = React.renderComponent(new AttachmentsList({
+                      loadLater : true
+                    }),div[0]);
                     return  new Tab({
                         name: localization.archive.attachments.name,
-                        elems: [function() {return $(archive.attachments().el());}],
+                        elems: [function() {return div;}],
                         pagehash : "attachments",
                         onActivate : function() {
-                            archive.attachments().recall();
+                            list.reload();
                             mixpanel.register({Subcontext : 'Attachments tab'});
                             mixpanel.track('View Attachments Tab');
                         }
@@ -77,12 +72,19 @@ var ArchiveModel = Backbone.Model.extend({
   },
   trashTab : function() {
                     var archive = this;
+                    var div = $('<div/>');
+                    var list = React.renderComponent(new TrashList({
+                         forCompanyAdmin : this.forCompanyAdmin(),
+                         year : this.year(),
+                         month : this.month(),
+                         loadLater : true
+                    }),div[0]);
                     return  new Tab({
                         name: localization.archive.trash.name,
-                        elems: [function() {return $(archive.trash().el());}],
+                        elems: [function() {return div;}],
                         pagehash : "trash",
                         onActivate : function() {
-                            archive.trash().recall();
+                            list.reload();
                             mixpanel.register({Subcontext : 'Trash tab'});
                             mixpanel.track('View Trash Tab');
                         }

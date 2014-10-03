@@ -1,8 +1,8 @@
 /* Use Submit object to skip usage of form elements.
  * Usage
  *  var new Submit({
- *              url: "/docs/123/789" | on what to set the tooltip
- *              method: "" | text to be put there
+ *              url: "/docs/123/789"
+ *              method: "POST"
  *              });
 */
 

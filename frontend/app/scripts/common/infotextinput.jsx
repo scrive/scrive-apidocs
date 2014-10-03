@@ -11,7 +11,7 @@
       shape       : string, rounded | square, where square is default
       textcolor   : string, color for text on button, else default value for predefined color will be used.
       width       : integer, final width of button, if not set, button will adjust to text
-      cssClass    : additional css classes
+      className    : additional css classes
       style       : style object (react format)
       onClick     : func, functiona to be called on click
       multiline   : bool, if button should support multiline labels (if true, text must be an array of strings)
@@ -98,7 +98,8 @@ define(['React'], function(React) {
         if (this.props.suppressSpace)
           newvalue.replace(/\s/g,'');
         this.setState({value :newvalue});
-        this.props.onChange(newvalue);
+        if (this.props.onChange)
+          this.props.onChange(newvalue);
     },
     onOk : function() {
       if (this.props.onOk != undefined)

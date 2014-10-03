@@ -1,8 +1,8 @@
 /* This is component for uploding author attachments (with upload and for server attachments).
  */
-define(['Backbone', 'legacy_code'], function() {
+define(['React','designview/attachmentslist','Backbone', 'legacy_code'], function(React,AttachmentsList) {
 
-  var DesignAuthorAttachment = Backbone.Model.extend({
+window.DesignAuthorAttachment = Backbone.Model.extend({
   defaults : {
       name : "",
       serverFileId : undefined,
@@ -138,35 +138,9 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
               return false;
         });
         box.append(arrowBack);
-
-        var documentsTable = new KontraList({
-                name : "Attachments table",
-                schema: new Schema({
-                    url: "/a",
-                    extraParams : { domain : "All" },
-                    cells : [
-                        new Cell({name: localization.authorattachments.selectAttachment,
-                                  width:"400px",
-                                  field:"title",
-                                  rendering : function(title, _mainrow, listobject) {
-                                      var link = jQuery("<a/>").text(title);
-                                      var attachment_file = listobject.field("file");
-                                      link.click(function(){
-                                          mixpanel.track('Select attachment from list');
-                                          attachmentsList.addAttachment(
-                                              new DesignAuthorAttachment({
-                                                    name : title,
-                                                    serverFileId : attachment_file
-                                                }));
-                                          return false;
-                                      });
-                                      return link;
-                                  }
-                                 })
-                    ]
-                })
-            });
-        box.append(documentsTable.el());
+        var attachmentTable = $('<div/>');
+        React.renderComponent(AttachmentsList({model : attachmentsList}), attachmentTable[0]);
+        box.append(attachmentTable);
         return box;
     },
     attachmentList : function() {
