@@ -166,7 +166,7 @@ signviewBrandingJSON ctx user company companyui = do
     value "signviewbackgroundcolour" $ (companysignviewbackgroundcolour $ companyui) `mplus` (bdbackgroundcolour <$> mbd)
     value "allowsavesafetycopy" $ companyallowsavesafetycopy (companyinfo company)
 
-userStatsToJSON :: (MinutesTime -> String) -> [UserUsageStats] -> [JSValue]
+userStatsToJSON :: (UTCTime -> String) -> [UserUsageStats] -> [JSValue]
 userStatsToJSON formatTime uuss = map tojson uuss
   where
     tojson uus = runJSONGen . object "fields" $ do
@@ -175,7 +175,7 @@ userStatsToJSON formatTime uuss = map tojson uuss
       value "sent" (uusDocumentsSent uus)
       value "signatures" (uusSignaturesClosed uus)
 
-companyStatsToJSON :: (MinutesTime -> String) -> String -> [UserUsageStats] -> [JSValue]
+companyStatsToJSON :: (UTCTime -> String) -> String -> [UserUsageStats] -> [JSValue]
 companyStatsToJSON formatTime totalText uuss = map f summarized
   where
     uusGrouped :: [[UserUsageStats]]

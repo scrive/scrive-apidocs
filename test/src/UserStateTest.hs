@@ -229,7 +229,7 @@ test_setUserSettings = do
 test_acceptTermsOfService :: TestEnv ()
 test_acceptTermsOfService = do
   Just User{userid} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  now <- getMinutesTime
+  now <- currentTime
   res <- dbUpdate $ AcceptTermsOfService userid now
   assertBool "User updated correctly" res
   Just User{userhasacceptedtermsofservice = accepted} <- dbQuery $ GetUserByID userid

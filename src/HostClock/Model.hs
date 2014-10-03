@@ -11,7 +11,7 @@ import Control.Monad (when)
 import Data.Int
 import DB
 import Data.Maybe (isJust)
-import MinutesTime (MinutesTime, toSeconds)
+import Data.Time
 
 data InsertClockOffsetFrequency = InsertClockOffsetFrequency (Maybe Double) Double
 instance MonadDB m => DBUpdate m InsertClockOffsetFrequency Int where
@@ -22,7 +22,7 @@ instance MonadDB m => DBUpdate m InsertClockOffsetFrequency Int where
       sqlSet "clock_frequency" frequency
 
 data ClockErrorEstimate = ClockErrorEstimate
-  { time :: MinutesTime
+  { time :: UTCTime
   , offset :: Double
   , frequency :: Double
   }
@@ -42,8 +42,8 @@ instance MonadDB m => DBQuery m GetLatestClockErrorEstimate (Maybe ClockErrorEst
 -- error estimate, assuming that the host clock had been
 -- unsynchronized since the estimate, and that the clock was drifting
 -- according to the estimate's PLL frequency.
-maxClockError :: MinutesTime -> ClockErrorEstimate -> Double
-maxClockError t e = fromIntegral (toSeconds t - toSeconds (time e)) * abs (frequency e) + abs (offset e)
+maxClockError :: UTCTime -> ClockErrorEstimate -> Double
+maxClockError t e = realToFrac (diffUTCTime t $ time e) * abs (frequency e) + abs (offset e)
 
 data ClockErrorStatistics = ClockErrorStatistics
   { max       :: Maybe Double -- ^ clock error maximum (ignoring frequency)
@@ -54,7 +54,7 @@ data ClockErrorStatistics = ClockErrorStatistics
   }
   deriving Show
 
-data GetClockErrorStatistics = GetClockErrorStatistics (Maybe MinutesTime) (Maybe MinutesTime)
+data GetClockErrorStatistics = GetClockErrorStatistics (Maybe UTCTime) (Maybe UTCTime)
 instance MonadDB m => DBQuery m GetClockErrorStatistics ClockErrorStatistics where
   query (GetClockErrorStatistics from to) = do
     runQuery_ $ sqlSelect "host_clock" $ do

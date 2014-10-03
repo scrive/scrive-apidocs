@@ -77,7 +77,7 @@ instance ToJSValue AnalyticsData where
     mnop (J.value "userid") $ show <$> userid <$> aUser
 
     mnop (J.value "Signup Method") $ show <$> usersignupmethod <$> aUser
-    mnop (J.value "TOS Date" . formatMinutesTimeRealISO) $ join $ userhasacceptedtermsofservice <$> aUser
+    mnop (J.value "TOS Date" . formatTimeISO) $ join $ userhasacceptedtermsofservice <$> aUser
     mnop (J.value "Full Name") $ maybeS $ escapeString <$> getFullName <$> aUser
     mnop (J.value "Smart Name") $ maybeS $ escapeString <$> getSmartName <$> aUser
     mnop (J.value "$first_name") $ maybeS $ escapeString <$> getFirstName <$> aUser

@@ -44,7 +44,7 @@ instance (Show idx, ToSQL idx, MonadDB m) => DBQuery m (GetAction idx t con n) (
         <+> "AND (expires - now()) < 0.9 * interval '" <> qaExpirationDelay <> "'"
     return result
 
-data GetExpiredActions idx t con n = GetExpiredActions (Action idx t con n) MinutesTime
+data GetExpiredActions idx t con n = GetExpiredActions (Action idx t con n) UTCTime
 instance MonadDB m => DBQuery m (GetExpiredActions idx t con n) [t] where
   query (GetExpiredActions Action{..} time) = do
     runQuery_ $ "SELECT" <+> sqlConcatComma qaSelectFields
@@ -52,7 +52,7 @@ instance MonadDB m => DBQuery m (GetExpiredActions idx t con n) [t] where
         <+> "FOR UPDATE"
     fetchMany qaDecode
 
-data NewAction idx t con n = NewAction (Action idx t con n) MinutesTime con
+data NewAction idx t con n = NewAction (Action idx t con n) UTCTime con
 instance (MonadDB m, Typeable t) => DBUpdate m (NewAction idx t con n) t where
   update (NewAction Action{..} expires con) = do
     runQuery_ $ sqlInsert (raw $ tblName qaTable) $ do

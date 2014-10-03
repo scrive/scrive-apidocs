@@ -95,7 +95,7 @@ sendDocumentMails author = do
 
         islf <- rand 10 arbitrary
 
-        now <- getMinutesTime
+        now <- currentTime
         let sigs = [defaultValue {signatoryfields = signatoryfields asl, signatoryisauthor = True,signatoryispartner = True, maybesignatory = maybesignatory asl} , defaultValue {signatoryfields = islf, signatoryispartner = True}]
         True <- randomUpdate $ ResetSignatoryDetails sigs (systemActor now)
         tz <- mkTimeZoneName "Europe/Stockholm"

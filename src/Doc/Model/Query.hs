@@ -103,7 +103,7 @@ documentsSelectors =
   , documentStatusClassExpression
   ]
 
-fetchDocument :: (DocumentID, String, DocumentStatus, Maybe String, DocumentType, MinutesTime, MinutesTime, Int32, Maybe Int32, Maybe MinutesTime, Maybe MinutesTime, Maybe MinutesTime, Maybe IPAddress, String, String, Bool, Bool, Bool, Bool, Lang, DocumentSharing, Maybe String, Int64, MagicHash, TimeZoneName, APIVersion,  Maybe CompanyID, StatusClass) -> Document
+fetchDocument :: (DocumentID, String, DocumentStatus, Maybe String, DocumentType, UTCTime, UTCTime, Int32, Maybe Int32, Maybe UTCTime, Maybe UTCTime, Maybe UTCTime, Maybe IPAddress, String, String, Bool, Bool, Bool, Bool, Lang, DocumentSharing, Maybe String, Int64, MagicHash, TimeZoneName, APIVersion,  Maybe CompanyID, StatusClass) -> Document
 fetchDocument (did, title, status, error_text, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text,  show_header, show_pdf_download, show_reject_option, show_footer, lang, sharing, apicallback, objectversion, token, time_zone_name, api_version, author_company_id, status_class)
        = Document {
          documentid = did
@@ -195,7 +195,7 @@ instance (MonadDB m, Log.MonadLog m, MonadIO m, Amazon.AmazonMonad m) => DBQuery
     let folder ((slid', s):a) (slid, ty, time, i) | slid' == slid = (slid, mkss ty time i s):a
         folder a (slid, ty, time, i) = (slid, mkss ty time i emptySignatoryScreenshots) : a
 
-        mkss :: String -> MinutesTime -> Binary BS.ByteString -> SignatoryScreenshots -> SignatoryScreenshots
+        mkss :: String -> UTCTime -> Binary BS.ByteString -> SignatoryScreenshots -> SignatoryScreenshots
         mkss "first"     time i s = s{ first = Just $ Screenshot time i }
         mkss "signing"   time i s = s{ signing = Just $ Screenshot time i }
         mkss "reference" time i s = s{ reference = Just $ Right $ Screenshot time i }
@@ -434,7 +434,7 @@ instance MonadDB m => DBQuery m GetAvailableTemplates [Document] where
                             [Asc DocumentOrderByMTime]
                             (0,maxBound))
 
-data GetTimeoutedButPendingDocumentsChunk = GetTimeoutedButPendingDocumentsChunk MinutesTime Int
+data GetTimeoutedButPendingDocumentsChunk = GetTimeoutedButPendingDocumentsChunk UTCTime Int
 instance MonadDB m => DBQuery m GetTimeoutedButPendingDocumentsChunk [Document] where
   query (GetTimeoutedButPendingDocumentsChunk mtime size) = do
     selectDocuments $ selectTablesForDocumentSelectors $ do
@@ -443,7 +443,7 @@ instance MonadDB m => DBQuery m GetTimeoutedButPendingDocumentsChunk [Document] 
       sqlWhere $ "timeout_time IS NOT NULL AND timeout_time < " <?> mtime
       sqlLimit (fromIntegral size)
 
-data GetDocsSentBetween = GetDocsSentBetween UserID MinutesTime MinutesTime
+data GetDocsSentBetween = GetDocsSentBetween UserID UTCTime UTCTime
 instance MonadDB m => DBQuery m GetDocsSentBetween Int64 where
   query (GetDocsSentBetween uid start end) = do
     runQuery_ $ "SELECT count(documents.id) " <>
@@ -471,7 +471,7 @@ instance MonadDB m => DBQuery m GetDocsSent Int64 where
 
 -- | Get the signatories that belong to this email that were viewed or signed
 --   since time
-data GetSignatoriesByEmail = GetSignatoriesByEmail Email MinutesTime
+data GetSignatoriesByEmail = GetSignatoriesByEmail Email UTCTime
 instance MonadDB m => DBQuery m GetSignatoriesByEmail [(DocumentID, SignatoryLinkID)] where
   query (GetSignatoriesByEmail email time) = do
     runQuery_ $ "SELECT DISTINCT signatory_links.document_id, signatory_links.id " <+>

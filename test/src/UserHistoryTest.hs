@@ -52,7 +52,7 @@ userHistoryTests env = testGroup "User's history" [
 testLoginAttempt :: TestEnv ()
 testLoginAttempt = do
     User{userid} <- createTestUser
-    now <- getMinutesTime
+    now <- currentTime
     success <- dbUpdate $ LogHistoryLoginAttempt userid noIP now
     assertBool "LogHistoryLoginAttempt inserted correctly" success
     history <- dbQuery $ GetUserHistoryByUserID userid
@@ -61,7 +61,7 @@ testLoginAttempt = do
 testLoginSuccess :: TestEnv ()
 testLoginSuccess = do
     User{userid} <- createTestUser
-    now <- getMinutesTime
+    now <- currentTime
     success <- dbUpdate $ LogHistoryLoginSuccess userid noIP now
     assertBool "LogHistoryLoginSuccess inserted correctly" success
     history <- dbQuery $ GetUserHistoryByUserID userid
@@ -70,7 +70,7 @@ testLoginSuccess = do
 testPasswordSetup :: TestEnv ()
 testPasswordSetup = do
     User{userid} <- createTestUser
-    now <- getMinutesTime
+    now <- currentTime
     success <- dbUpdate $ LogHistoryPasswordSetup userid noIP now Nothing
     assertBool "LogHistoryPasswordSetup inserted correctly" success
     history <- dbQuery $ GetUserHistoryByUserID userid
@@ -79,7 +79,7 @@ testPasswordSetup = do
 testPasswordSetupReq :: TestEnv ()
 testPasswordSetupReq = do
     User{userid} <- createTestUser
-    now <- getMinutesTime
+    now <- currentTime
     success <- dbUpdate $ LogHistoryPasswordSetupReq userid noIP now Nothing
     assertBool "LogHistoryPasswordSetupReq inserted correctly" success
     history <- dbQuery $ GetUserHistoryByUserID userid
@@ -88,7 +88,7 @@ testPasswordSetupReq = do
 testAccountCreated :: TestEnv ()
 testAccountCreated = do
     User{userid} <- createTestUser
-    now <- getMinutesTime
+    now <- currentTime
     success <- dbUpdate $ LogHistoryAccountCreated userid noIP now
       (Email "test@test.com") Nothing
     assertBool "LogHistoryAccountCreated inserted correctly" success
@@ -98,7 +98,7 @@ testAccountCreated = do
 testTOSAccept :: TestEnv ()
 testTOSAccept = do
     User{userid} <- createTestUser
-    now <- getMinutesTime
+    now <- currentTime
     success <- dbUpdate $ LogHistoryTOSAccept userid noIP now Nothing
     assertBool "LogHistoryTOSAccept inserted correctly" success
     history <- dbQuery $ GetUserHistoryByUserID userid
@@ -107,7 +107,7 @@ testTOSAccept = do
 testDetailsChanged :: TestEnv ()
 testDetailsChanged = do
     User{userid} <- createTestUser
-    now <- getMinutesTime
+    now <- currentTime
     success <- dbUpdate $ LogHistoryDetailsChanged userid noIP now
       [("email", "test@test.com", "test2@test.com")] Nothing
     assertBool "LogHistoryTOSAccept inserted correctly" success

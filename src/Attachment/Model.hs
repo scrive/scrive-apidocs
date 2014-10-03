@@ -27,8 +27,8 @@ import Control.Monad.State.Class
 data Attachment = Attachment
   { attachmentid      :: AttachmentID
   , attachmenttitle   :: String
-  , attachmentctime   :: MinutesTime
-  , attachmentmtime   :: MinutesTime
+  , attachmentctime   :: UTCTime
+  , attachmentmtime   :: UTCTime
   , attachmentfile    :: FileID
   , attachmentuser    :: UserID
   , attachmentshared  :: Bool
@@ -46,7 +46,7 @@ sqlAttachmentResults = do
   sqlResult "shared"
   sqlResult "deleted"
 
-fetchAttachment :: (AttachmentID, String, MinutesTime, MinutesTime, FileID, UserID, Bool, Bool) -> Attachment
+fetchAttachment :: (AttachmentID, String, UTCTime, UTCTime, FileID, UserID, Bool, Bool) -> Attachment
 fetchAttachment (aid, title, ctime, mtime, file_id, user_id, shared, deleted) = Attachment {
   attachmentid      = aid
 , attachmenttitle   = title

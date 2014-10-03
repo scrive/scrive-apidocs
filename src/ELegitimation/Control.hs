@@ -20,6 +20,7 @@ import qualified Log
 import Control.Conditional (unlessM)
 import Control.Logic
 import Control.Monad.State
+import Data.Time.Clock.POSIX
 import Doc.DocStateData
 import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
 import Doc.Tokens.Model
@@ -30,7 +31,6 @@ import Doc.Model
 import Kontra
 import Doc.DocumentID
 import MagicHash (MagicHash)
-import MinutesTime
 import Happstack.Fields
 import Text.XML.HaXml.XmlContent.Parser hiding (Document)
 import Util.HasSomeUserInfo
@@ -67,7 +67,6 @@ generateBankIDTransaction docid signid = do
 
   magic    <- guardJustM $ dbQuery $ GetDocumentSessionToken signid
   provider <- guardJustM $ readField "provider"
-  let seconds = toSeconds ctxtime
 
   -- sanity check
   document <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash docid signid magic
@@ -97,7 +96,7 @@ generateBankIDTransaction docid signid = do
                     Log.mixlog_ "Eleg challenge generation sucessfull"
                     return $ runJSONGen $ do
                         J.value "status"        (0::Int)
-                        J.value "servertime" $  show seconds
+                        J.value "servertime" .  floor $ utcTimeToPOSIXSeconds ctxtime
                         J.value "nonce"         nonce
                         J.value "tbs"           txt
                         J.value "transactionid" transactionid
@@ -138,7 +137,7 @@ generateBankIDTransactionForAuthor  docid = do
                                         }
                     return $ runJSONGen $ do
                         J.value "status" (0::Int)
-                        J.value "servertime"  $ show $ toSeconds time
+                        J.value "servertime" . floor $ utcTimeToPOSIXSeconds time
                         J.value "nonce" nonce
                         J.value "tbs" txt
                         J.value "transactionid"  transactionid

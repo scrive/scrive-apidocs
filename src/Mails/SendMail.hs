@@ -73,7 +73,7 @@ scheduleEmailSendout' authorname  MailsConfig{..} mail@Mail{..} = do
     else do
       fromAddr <- return Address {addrName = authorname, addrEmail = originatorEmail }
       token <- random
-      now <- getMinutesTime
+      now <- currentTime
       mid <- dbUpdate $ CreateEmail token fromAddr (map toAddress to) now
       let xsmtpapi = XSMTPAttrs [("mailinfo", show mailInfo)]
       _ <- dbUpdate $ AddContentToEmail mid title (fmap toAddress replyTo) (wrapHTML content) (map toAttachment attachments) xsmtpapi

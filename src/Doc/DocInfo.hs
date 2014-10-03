@@ -75,11 +75,11 @@ isDocumentShared :: Document -> Bool
 isDocumentShared doc = Shared == documentsharing doc
 
 {- |
-  Get the time of the last signature as Int. Returns MinutesTime 0 when there are no signatures.
+  Get the time of the last signature as Int. Returns unixEpoch when there are no signatures.
 -}
-getLastSignedTime :: Document -> MinutesTime
+getLastSignedTime :: Document -> UTCTime
 getLastSignedTime doc =
-  maximum $ fromSeconds 0 : [signtime si | SignatoryLink {maybesigninfo = Just si} <- documentsignatorylinks doc]
+  maximum $ unixEpoch : [signtime si | SignatoryLink {maybesigninfo = Just si} <- documentsignatorylinks doc]
 
 
 

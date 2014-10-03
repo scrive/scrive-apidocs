@@ -96,7 +96,7 @@ approximateActor useIdentifier doc dee | systemEvents $ evType dee = return "Scr
 eventJSValue :: (MonadDB m, TemplatesMonad m) => Document -> DocumentEvidenceEventWithSignatoryLink -> JSONGenT m ()
 eventJSValue doc dee = do
     J.value "status" $ show $ getEvidenceEventStatusClass (evType dee)
-    J.value "time"   $ formatMinutesTimeRealISO (evTime dee)
+    J.value "time"   $ formatTimeISO (evTime dee)
     J.valueM "party" $ approximateActor False doc dee
     J.valueM "text"  $ simplyfiedEventText Nothing doc dee
 
@@ -237,10 +237,10 @@ htmlDocFromEvidenceLog title elog ces = do
     F.value "ce_collected" $ HC.collected ces
     F.value "ce_missed"    $ HC.missed ces
     F.objects "entries" $ for (filter (not . htmlSkipedEvidenceType . evType) elog) $ \entry -> do
-      F.value "time" $ formatMinutesTimeUTC (evTime entry) ++ " UTC"
+      F.value "time" $ formatTimeUTC (evTime entry) ++ " UTC"
                        ++ maybe "" (\e -> " ±" ++ showClockError 0 e)
                                    (HC.maxClockError (evTime entry) <$> evClockErrorEstimate entry)
-      F.value "ces_time" $ maybe "" ((++" UTC") . formatMinutesTimeUTC . HC.time)
+      F.value "ces_time" $ maybe "" ((++" UTC") . formatTimeUTC . HC.time)
                                     (evClockErrorEstimate entry)
       F.value "ip"   $ show <$> evIP4 entry
       F.value "text" $ evText entry
@@ -269,7 +269,7 @@ evidenceOfIntentHTML title l = do
     F.value "documenttitle" title
     let values Nothing = return ()
         values (Just s) = do
-          F.value "time" $ formatMinutesTimeUTC (Screenshot.time s) ++ " UTC"
+          F.value "time" $ formatTimeUTC (Screenshot.time s) ++ " UTC"
           F.value "image" $ RFC2397.encode (detectImageMimeType (unBinary (Screenshot.image s)))
                                            (unBinary (Screenshot.image s))
     F.objects "entries" $ for l $ \(sl, entry) -> do

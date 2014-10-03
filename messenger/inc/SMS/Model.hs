@@ -37,12 +37,12 @@ fetchSMS (smsid, originator, msisdn, body, sdata, attempt) = ShortMessage {
 , smAttempt    = attempt
 }
 
-data CreateSMS = CreateSMS String String String String MinutesTime
+data CreateSMS = CreateSMS String String String String UTCTime
 instance MonadDB m => DBUpdate m CreateSMS ShortMessageID where
   update (CreateSMS originator msisdn body sdata to_be_sent) =
     $fromJust `fmap` insertSMS originator msisdn body sdata to_be_sent 0
 
-insertSMS :: MonadDB m => String -> String -> String -> String -> MinutesTime -> Int32 -> m (Maybe ShortMessageID)
+insertSMS :: MonadDB m => String -> String -> String -> String -> UTCTime -> Int32 -> m (Maybe ShortMessageID)
 insertSMS originator msisdn body sdata to_be_sent attempt = do
   runQuery_ . sqlInsert "smses" $ do
     sqlSet "originator" originator
@@ -59,14 +59,14 @@ instance MonadDB m => DBQuery m GetIncomingSMSes [ShortMessage] where
   query GetIncomingSMSes = selectSMSes . sqlSelectSMSes $ do
     sqlWhere "body IS NOT NULL AND to_be_sent <= now() AND sent IS NULL"
 
-data MarkSMSAsSent = MarkSMSAsSent ShortMessageID MinutesTime
+data MarkSMSAsSent = MarkSMSAsSent ShortMessageID UTCTime
 instance MonadDB m => DBUpdate m MarkSMSAsSent Bool where
   update (MarkSMSAsSent mid time) = do
     runQuery01 . sqlUpdate "smses" $ do
       sqlSet "sent" time
       sqlWhereEq "id" mid
 
-data DeferSMS = DeferSMS ShortMessageID MinutesTime
+data DeferSMS = DeferSMS ShortMessageID UTCTime
 instance MonadDB m => DBUpdate m DeferSMS Bool where
   update (DeferSMS mid time) =
     runQuery01 $ sqlUpdate "smses" $ do

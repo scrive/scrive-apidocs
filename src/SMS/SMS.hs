@@ -27,7 +27,7 @@ scheduleSMS :: (Log.MonadLog m, MonadDB m) => SMS -> m ()
 scheduleSMS msg@SMS{..} = do
     if (smsMSISDN /= "")
        then do
-        now <- getMinutesTime
+        now <- currentTime
         sid <- dbUpdate $ CreateSMS (fixOriginator smsOriginator) (fixPhoneNumber smsMSISDN) smsBody (show smsData) now
         Log.mixlog_ $ "SMS " ++ show msg ++ " with id #" ++ show sid ++ " scheduled for sendout"
         return ()

@@ -74,7 +74,6 @@ Executable kontrakcja-server
   Build-depends: base < 6
   Build-depends: bytestring
   Build-depends: template-haskell
-  Build-depends: old-time
   Build-depends: containers
   Build-depends: unix
   Build-depends: directory
@@ -175,7 +174,6 @@ Executable cron
   Build-depends: base < 6
   Build-depends: bytestring
   Build-depends: template-haskell
-  Build-depends: old-time
   Build-depends: containers
   Build-depends: unix
   Build-depends: directory
@@ -281,7 +279,6 @@ Executable kontrakcja-migrate
   Build-depends: base < 6
   Build-depends: bytestring
   Build-depends: template-haskell
-  Build-depends: old-time
   Build-depends: containers
   Build-depends: unix
   Build-depends: directory
@@ -385,7 +382,6 @@ Executable mailing-server
   Build-depends: base < 6
   Build-depends: bytestring
   Build-depends: template-haskell
-  Build-depends: old-time
   Build-depends: containers
   Build-depends: unix
   Build-depends: directory
@@ -489,7 +485,6 @@ Executable messenger-server
   Build-depends: base < 6
   Build-depends: bytestring
   Build-depends: template-haskell
-  Build-depends: old-time
   Build-depends: containers
   Build-depends: unix
   Build-depends: directory
@@ -594,7 +589,6 @@ Executable kontrakcja-test
   Build-depends: base < 6
   Build-depends: bytestring
   Build-depends: template-haskell
-  Build-depends: old-time
   Build-depends: containers
   Build-depends: unix
   Build-depends: directory

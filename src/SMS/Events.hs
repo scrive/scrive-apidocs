@@ -95,7 +95,7 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent
           case (eventType,msl) of
                (SMSEvent phone SMSDelivered, Just sl) -> runTemplatesT (defaultValue, templates) $ do
                  Log.mixlog_ $ "SMS with PIN delivered to " ++ phone
-                 time <- getMinutesTime
+                 time <- currentTime
                  let actor = mailSystemActor time (maybesignatory sl) (getEmail sl) slid
                  void $ dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                                 SMSPinDeliveredEvidence
@@ -122,7 +122,7 @@ handleDeliveredInvitation signlinkid = do
   theDocumentID >>= \did -> Log.mixlog_ $ "handleDeliveredInvitation: docid=" ++ show did ++ ", siglinkid=" ++ show signlinkid
   getSigLinkFor signlinkid <$> theDocument >>= \case
     Just signlink -> do
-      time <- getMinutesTime
+      time <- currentTime
       let actor = mailSystemActor time (maybesignatory signlink) (getEmail signlink) signlinkid
       _ <- dbUpdate $ SetSMSInvitationDeliveryStatus signlinkid Delivered actor
       return ()
@@ -133,7 +133,7 @@ handleUndeliveredSMSInvitation mbd hostpart mc signlinkid = do
   theDocumentID >>= \did -> Log.mixlog_ $ "handleUndeliveredSMSInvitation: docid=" ++ show did ++ ", siglinkid=" ++ show signlinkid
   getSigLinkFor signlinkid <$> theDocument >>= \case
     Just signlink -> do
-      time <- getMinutesTime
+      time <- currentTime
       let actor = mailSystemActor time (maybesignatory signlink) (getEmail signlink) signlinkid
       _ <- dbUpdate $ SetSMSInvitationDeliveryStatus signlinkid Undelivered actor
       mail <- theDocument >>= \d -> smsUndeliveredInvitation mc mbd hostpart d signlink

@@ -27,7 +27,7 @@ dispatcher rng _master msender cs = withPostgreSQL cs . runCryptoRNGT rng $ do
 
          Log.mixlog_ $ "Sending sms #" ++ show smID ++ " using " ++ show messenger ++ "..."
          success <- sendSMS messenger sms
-         now <- getMinutesTime
+         now <- currentTime
          if success
            then do
              res <- dbUpdate $ MarkSMSAsSent smID now

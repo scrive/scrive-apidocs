@@ -18,6 +18,7 @@ import AppView (respondWithPDF)
 import Control.Conditional (whenM, unlessM, ifM)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Int
+import Data.Time
 import Happstack.StaticRouting
 import Text.JSON hiding (Ok)
 import qualified Text.JSON as J
@@ -174,7 +175,7 @@ apiCallV1CreateFromFile = api $ do
   (mfile, title) <- case minput of
     Nothing -> do
       title <- renderTemplate_ ("newDocumentTitle" <| not isTpl |> "newTemplateTitle")
-      return (Nothing,  replace "  " " " $ title ++ " " ++ formatMinutesTimeSimple (ctxtime ctx))
+      return (Nothing,  replace "  " " " $ title ++ " " ++ formatTimeSimple (ctxtime ctx))
     Just (Input _ Nothing _) -> throwIO . SomeKontraException $ badInput "Missing file"
     Just (Input contentspec (Just filename'') _contentType) -> do
       let filename' = dropFilePathFromWindows filename''
@@ -788,7 +789,7 @@ apiCallV1List = api $ do
                                     (((Nothing ,Just to'),""):_) -> [DocumentFilterByMonthYearTo to']
                                     (((Just from',Nothing),""):_)   -> [DocumentFilterByMonthYearFrom from']
                                     _ -> []
-      fltSpec ("mtime", tostr) = case parseMinutesTimeRealISO tostr of
+      fltSpec ("mtime", tostr) = case parseTimeISO tostr of
                                     Just mtime -> [DocumentFilterByModificationTimeAfter mtime]
                                     _ -> []
       fltSpec ("sender", tostr) = case reads tostr of
@@ -915,10 +916,10 @@ apiCallV1DownloadMainFile did _nameForBrowser = api $ do
   content <- case documentstatus doc of
                 Closed -> do
                   when (documentsealstatus doc == Just Missing) $ do
-                    now <- getMinutesTime
+                    now <- currentTime
                     -- Give Guardtime signing a few seconds to complete before we respond
-                    when (toSeconds now - toSeconds (documentmtime doc) < 8) $ do
-                      Log.mixlog_ $ "Waiting for Guardtime signing, document was modified " ++ show (toSeconds now - toSeconds (getLastSignedTime doc)) ++ " seconds ago"
+                    when (diffUTCTime now (documentmtime doc) < 8) $ do
+                      Log.mixlog_ $ "Waiting for Guardtime signing, document was modified " ++ show (diffUTCTime now (documentmtime doc)) ++ " ago"
                       throwIO $ SomeKontraException $ noAvailableYet "Digitally sealed document not ready"
                   file <- apiGuardJustM (noAvailableYet "Not ready, please try later") $ documentsealedfileM doc
                   getFileIDContents $ fileid file

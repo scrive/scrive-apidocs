@@ -24,7 +24,7 @@ import qualified Log
 
 data UserAccountRequest = UserAccountRequest {
     uarUserID :: UserID
-  , uarExpires :: MinutesTime
+  , uarExpires :: UTCTime
   , uarToken :: MagicHash
   } deriving (Show, Typeable)
 
@@ -67,7 +67,7 @@ getUserAccountRequestUser uid token = runMaybeT $ do
 newUserAccountRequest :: (MonadDB m, CryptoRNG m) => UserID -> m UserAccountRequest
 newUserAccountRequest uid = do
   token <- random
-  expires <- (14 `daysAfter`) `liftM` getMinutesTime
+  expires <- (14 `daysAfter`) `liftM` currentTime
   -- FIXME: highly unlikely, but possible race condition
   ma <- dbQuery $ GetAction userAccountRequest uid
   case ma of

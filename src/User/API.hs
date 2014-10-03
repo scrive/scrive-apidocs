@@ -295,7 +295,7 @@ apiCallPaymentInfo = api $ do
       status      = maybe "active" (show . ppStatus) mpaymentplan
       dunning     = maybe False (isJust . ppDunningStep) mpaymentplan
       canceled    = Just CanceledStatus == (ppPendingStatus <$> mpaymentplan)
-      billingEnds = (formatMinutesTimeRealISO . ppBillingEndDate) <$> mpaymentplan
+      billingEnds = (formatTimeISO . ppBillingEndDate) <$> mpaymentplan
       docTotal = case (ppStatus <$> mpaymentplan, ppPricePlan <$> mpaymentplan) of
         (Just DeactivatedStatus, _)   -> 0
         (Just CanceledStatus, _)      -> 3

@@ -20,7 +20,7 @@ serviceAvailabilityChecker conf rng cs (master, slave) msender interruptible = d
     Log.mixlog_ $ "Running service checker"
     mid <- inDB $ do
       token <- random
-      now <- getMinutesTime
+      now <- currentTime
       mid <- dbUpdate $ CreateServiceTest token testSender (testReceivers conf) now
       success <- dbUpdate $ AddContentToEmail mid "test" (Just testSender) "test" [] mempty
       Log.mixlog_ $ "Creating service testing email #" ++ show mid ++ "..."
@@ -42,7 +42,7 @@ serviceAvailabilityChecker conf rng cs (master, slave) msender interruptible = d
           oldsender <- liftIO $ takeMVar msender
           when (oldsender == master) $ do
             Log.mixlog_ $ "Switching to " ++ show slave ++ " and resending all emails that were sent within this time."
-            time <- minutesBefore 10 `fmap` getMinutesTime
+            time <- minutesBefore 10 `fmap` currentTime
             n <- dbUpdate $ ResendEmailsSentSince time
             Log.mixlog_ $ show n ++ " emails set to be resent."
           liftIO $ putMVar msender slave

@@ -78,7 +78,7 @@ setMandatoryExpirationTimeInDocument = Migration {
     --   Draft => default days to sign
     --   All other documents => set days to sign to 0
     let pendingDaysToSign = 90
-    timeout <- (pendingDaysToSign `daysAfter`) `liftM` getMinutesTime
+    timeout <- (pendingDaysToSign `daysAfter`) `liftM` currentTime
     runQuery_ $ "UPDATE documents SET days_to_sign =" <?> documentdaystosign defaultValue
         <+> "WHERE status =" <?> Preparation <+> "AND days_to_sign IS NULL"
     runQuery_ $ "UPDATE documents SET days_to_sign =" <?> (fromIntegral pendingDaysToSign :: Int32)
@@ -821,7 +821,7 @@ removeOldDocumentLog =
   { mgrTable = tableDocuments
   , mgrFrom = 7
   , mgrDo = do
-      now <- getMinutesTime
+      now <- currentTime
       runSQL_ $ "INSERT INTO evidence_log(document_id,time,text,event_type,version_id)"
         <> " SELECT id, " <?> now <> ", log, " <?> Obsolete OldDocumentHistory <> ", " <?> versionID <> " FROM documents"
       runSQL_ "ALTER TABLE documents DROP COLUMN log"

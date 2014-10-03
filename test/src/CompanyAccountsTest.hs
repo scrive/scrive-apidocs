@@ -324,5 +324,5 @@ mkInvite company user =
 
 getAccountCreatedActions :: TestEnv [UserAccountRequest]
 getAccountCreatedActions = do
-  expirytime <- (30 `daysAfter`) <$> getMinutesTime
+  expirytime <- (30 `daysAfter`) <$> currentTime
   dbQuery $ GetExpiredActions userAccountRequest expirytime

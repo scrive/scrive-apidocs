@@ -21,6 +21,7 @@ import Data.Int
 import Data.Monoid
 import Data.Binary
 import Data.String
+import Data.Time.Clock.POSIX
 import Control.Monad.IO.Class
 import Control.Applicative
 import qualified DB (Binary (..))
@@ -42,14 +43,14 @@ data PropValue
   = PVNumber      Double
   | PVString      String
   | PVBool        Bool
-  | PVMinutesTime MinutesTime
+  | PVUTCTime UTCTime
     deriving (Show, Eq)
 
 instance Binary PropValue where
   put (PVNumber d)      = putWord8 0 >> put d
   put (PVString s)      = putWord8 1 >> put s
   put (PVBool b)        = putWord8 2 >> put b
-  put (PVMinutesTime t) = putWord8 3 >> put t
+  put (PVUTCTime t) = putWord8 3 >> put t
 
   get = do
     tag <- getWord8
@@ -57,7 +58,7 @@ instance Binary PropValue where
       0 -> PVNumber      <$> get
       1 -> PVString      <$> get
       2 -> PVBool        <$> get
-      3 -> PVMinutesTime <$> get
+      3 -> PVUTCTime <$> get
       n -> fail $ "Couldn't parse PropValue constructor tag: " ++ show n
 
 instance Binary J.JSString where
@@ -102,8 +103,8 @@ instance SomeProperty Double where
 instance SomeProperty Bool where
   someProp s = SomeProp s . PVBool
 
-instance SomeProperty MinutesTime where
-  someProp s = SomeProp s . PVMinutesTime
+instance SomeProperty UTCTime where
+  someProp s = SomeProp s . PVUTCTime
 
 
 -- | Create a named property with a Double value.
@@ -150,7 +151,7 @@ data EventProperty
   | IPProp        IPAddress
   | NameProp      String
   | UserIDProp    UserID
-  | TimeProp      MinutesTime
+  | TimeProp      UTCTime
   | DocIDProp     DocumentID
   | CompanyIDProp CompanyID
   | FirstNameProp String
@@ -347,7 +348,7 @@ instance Arbitrary PropValue where
       PVNumber <$> arbitrary,
       PVString <$> arbitrary,
       PVBool <$> arbitrary,
-      PVMinutesTime . fromSeconds <$> arbitrary]
+      PVUTCTime . posixSecondsToUTCTime . fromInteger <$> arbitrary]
 
 -- Note that IP addresses are completely arbitrary 32 bit words here!
 instance Arbitrary EventProperty where
@@ -358,7 +359,7 @@ instance Arbitrary EventProperty where
       (1, LastNameProp <$> arbitrary),
       (1, FirstNameProp <$> arbitrary),
       (1, UserIDProp . unsafeUserID <$> arbitrary),
-      (1, TimeProp . fromSeconds <$> arbitrary),
+      (1, TimeProp . posixSecondsToUTCTime . fromInteger <$> arbitrary),
       (1, DocIDProp . unsafeDocumentID <$> arbitrary),
       (1, CompanyIDProp . unsafeCompanyID <$> arbitrary),
       (5, SomeProp <$> arbitrary <*> arbitrary)]

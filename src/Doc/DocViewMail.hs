@@ -29,7 +29,7 @@ import File.File
 import KontraLink
 import MailContext (MailContextMonad(..), getMailContext, MailContext(..))
 import Mails.SendMail
-import MinutesTime (formatMinutesTime, getMinutesTime, showDateYMD, daysAfter, minutesAfter, formatMinutesTimeSimple)
+import MinutesTime
 import Utils.Monoid
 import Utils.Prelude
 import Utils.Color
@@ -104,11 +104,11 @@ documentAttachedFields forMail signlink documentAttached document = do
     Nothing -> return Nothing
   if ((companyallowsavesafetycopy . companyinfo) <$> mcompany) == Just True
      then do
-       now <- lift $ getMinutesTime
-       F.value "availabledate" $ showDateYMD $ (unsavedDocumentLingerDays-1) `daysAfter` now
+       now <- lift $ currentTime
+       F.value "availabledate" $ formatTimeYMD $ (unsavedDocumentLingerDays-1) `daysAfter` now
     else do
-       now <- lift $ getMinutesTime
-       F.value "availabledate" $ formatMinutesTimeSimple $ (60 `minutesAfter` now)
+       now <- lift $ currentTime
+       F.value "availabledate" $ formatTimeSimple $ (60 `minutesAfter` now)
 
 remindMailSigned :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
                  => Bool
@@ -242,7 +242,7 @@ mailDocumentClosed ispreview sl sealFixed documentAttached document = do
         F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (Nothing <| ispreview |> Just sl) (mainfile)
         F.value "sealFixed" $ sealFixed
         documentAttachedFields True sl documentAttached document
-        F.value "closingtime" $ formatMinutesTime "%Y-%m-%d %H:%M %Z" $ getLastSignedTime document
+        F.value "closingtime" $ formatTime' "%Y-%m-%d %H:%M %Z" $ getLastSignedTime document
         F.value "custommessage" $ if (isAuthor sl && not ispreview)
                                     then Nothing
                                     else case (documentconfirmtext document) of

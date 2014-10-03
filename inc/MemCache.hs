@@ -18,9 +18,9 @@ where
 import Control.Concurrent.MVar
 import qualified Data.Map as Map
 import Control.Monad.Trans
-import System.Time (getClockTime, ClockTime)
+import Data.Time
 
-data MemCache' k v = MemCache' (v -> Int) Int Int (Map.Map k (ClockTime,v))
+data MemCache' k v = MemCache' (v -> Int) Int Int (Map.Map k (UTCTime, v))
 
 newtype MemCache k v = MemCache (MVar (MemCache' k v))
 
@@ -36,7 +36,7 @@ put :: (MonadIO m, Ord k, Show k, Show v) => k -> v -> MemCache k v -> m ()
 put k v (MemCache mc) = do
   liftIO $ modifyMVar_ mc $ \(MemCache' sizefun sizelimit csize mmap) ->
       do
-        now <- getClockTime
+        now <- getCurrentTime
         let (mmap', csize') = if (csize + sizefun v > sizelimit && sizefun v > 0)
                                 then cleanMap sizefun sizelimit (mmap,csize)
                                 else (mmap,csize)
@@ -64,7 +64,7 @@ get k (MemCache mc) = liftIO $ do
       case Map.lookup k mmap of
            Nothing -> return (MemCache' sf sl cs mmap, Nothing)
            Just (_,v) -> do
-               now <- getClockTime
+               now <- getCurrentTime
                return (MemCache' sf sl cs (Map.insert k (now,v) mmap), Just v)
 
 -- | Get current cache size. This is the sum of all objects inside
@@ -78,7 +78,7 @@ alter :: (MonadIO m, Ord k, Show k) => (Maybe v -> Maybe v) -> k -> MemCache k v
 alter f k (MemCache mc) = do
   liftIO $ modifyMVar_ mc $ \(MemCache' sizefun sizelimit _csize mmap) ->
       do
-        now <- getClockTime
+        now <- getCurrentTime
         let f2 Nothing = case f Nothing of
                            Nothing -> Nothing
                            Just v -> Just (now,v)

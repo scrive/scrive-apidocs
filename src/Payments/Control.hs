@@ -127,7 +127,7 @@ handleChangePlan = do
       return ()
     RTerminate -> return ()
 
-cachePlan :: (MonadDB m, Log.MonadLog m) => MinutesTime -> Stats.PaymentsAction -> AccountCode -> Subscription -> String -> CompanyID -> Maybe Int -> Maybe MinutesTime -> m Bool
+cachePlan :: (MonadDB m, Log.MonadLog m) => UTCTime -> Stats.PaymentsAction -> AccountCode -> Subscription -> String -> CompanyID -> Maybe Int -> Maybe UTCTime -> m Bool
 cachePlan time pa ac subscription invoicestatus cid mds mdd = do
   let p       = fromRecurlyPricePlan $ subPricePlan subscription
       (s, sp) = if invoicestatus == "failed"
@@ -136,7 +136,7 @@ cachePlan time pa ac subscription invoicestatus cid mds mdd = do
       q       = subQuantity subscription
       pp      = maybe p (fromRecurlyPricePlan . penPricePlan) $ subPending subscription
       qp      = maybe q penQuantity                           $ subPending subscription
-      be      = fromMaybe (daysAfter 30 time) $ parseMinutesTime "%Y-%m-%dT%H:%M:%S%Z" $ subCurrentBillingEnds subscription
+      be      = fromMaybe (daysAfter 30 time) $ parseTime' "%Y-%m-%dT%H:%M:%S%Z" $ subCurrentBillingEnds subscription
   let paymentplan = PaymentPlan { ppAccountCode         = ac
                                 , ppCompanyID           = cid
                                 , ppPricePlan           = p
@@ -158,7 +158,7 @@ cachePlan time pa ac subscription invoicestatus cid mds mdd = do
 
 
 {- Should be run once per day, preferably at night -}
-handleSyncWithRecurly :: (MonadBase IO m, MonadIO m, MonadDB m, Log.MonadLog m, CryptoRNG m) => AppConf -> MailsConfig -> KontrakcjaGlobalTemplates -> String -> MinutesTime -> m ()
+handleSyncWithRecurly :: (MonadBase IO m, MonadIO m, MonadDB m, Log.MonadLog m, CryptoRNG m) => AppConf -> MailsConfig -> KontrakcjaGlobalTemplates -> String -> UTCTime -> m ()
 handleSyncWithRecurly appConf mailsconfig templates recurlyapikey time = do
   Log.mixlog_ "Syncing with Recurly."
   plans <- dbQuery $ PaymentPlansRequiringSync RecurlyProvider time
@@ -226,7 +226,7 @@ handleSyncWithRecurly appConf mailsconfig templates recurlyapikey time = do
                 return ()
       _ -> return ()
 
-handleSyncNoProvider :: (MonadIO m, MonadDB m, Log.MonadLog m, CryptoRNG m) => MinutesTime -> m ()
+handleSyncNoProvider :: (MonadIO m, MonadDB m, Log.MonadLog m, CryptoRNG m) => UTCTime -> m ()
 handleSyncNoProvider time = do
   Log.mixlog_ "Syncing accounts with no provider."
   plans <- dbQuery $ PaymentPlansRequiringSync NoProvider time
