@@ -54,6 +54,9 @@ applyDraftDataToDocument draft actor = do
                                 , documentapicallbackurl = documentapicallbackurl draft
                                 , documenttimezonename = documenttimezonename draft
                                 } actor
+    -- Only allow transition from 'unsaveddraft: true' to 'unsaveddraft: false'
+    whenM ((\doc -> (documentunsaveddraft doc) && not (documentunsaveddraft draft)) <$> theDocument) $ do
+         dbUpdate $ SetDocumentUnsavedDraft (documentunsaveddraft draft)
     whenM ((\doc -> isTemplate draft && (not $ isTemplate doc)) <$> theDocument) $ do
          dbUpdate $ TemplateFromDocument actor
     documentauthorattachments <$> theDocument >>= \atts -> forM_ atts $ \att -> do
@@ -115,6 +118,7 @@ draftIsChangingDocument draft doc =
      || (documentshowfooter draft /= documentshowfooter doc)
      || (documenttimezonename draft /= documenttimezonename doc)
      || (draftIsChangingDocumentSignatories (documentsignatorylinks draft) (documentsignatorylinks doc))
+     || (documentunsaveddraft draft /= documentunsaveddraft doc)
 
 draftIsChangingDocumentSignatories :: [SignatoryLink] -> [SignatoryLink] -> Bool
 draftIsChangingDocumentSignatories (sl':sls') (sl:sls) = (newSignatorySignatoryLinkIsChangingSignatoryLink sl' sl) || (draftIsChangingDocumentSignatories sls' sls)

@@ -232,6 +232,7 @@ instance FromJSValueWithUpdate Document where
         doctype <- fmap (\t -> if t then Template else Signable) <$> fromJSValueField "template"
         tags <- fromJSValueFieldCustom "tags" $ fromJSValueCustomMany  fromJSValue
         (apicallbackurl :: Maybe (Maybe String)) <- fromJSValueField "apicallbackurl"
+        saved <- fromJSValueField "saved"
         authorattachments <- fromJSValueFieldCustom "authorattachments" $ fromJSValueCustomMany $ fmap (join . (fmap maybeRead)) $ (fromJSValueField "id")
         let daystosign'  = min 90 $ max 1 $ updateWithDefaultAndField 14 documentdaystosign daystosign
         let daystoremind' = min daystosign' <$> max 1 <$> updateWithDefaultAndField Nothing documentdaystoremind daystoremind
@@ -258,6 +259,7 @@ instance FromJSValueWithUpdate Document where
             documenttags = updateWithDefaultAndField Set.empty documenttags (Set.fromList <$> tags),
             documenttype = updateWithDefaultAndField Signable documenttype doctype,
             documentapicallbackurl = updateWithDefaultAndField Nothing documentapicallbackurl apicallbackurl,
+            documentunsaveddraft = updateWithDefaultAndField False documentunsaveddraft (fmap not saved),
             documenttimezonename = updateWithDefaultAndField defaultTimeZoneName documenttimezonename (unsafeTimeZoneName <$> mtimezone)
           }
       where

@@ -94,7 +94,7 @@ documentJSONV1 muser includeEvidenceAttachments forapi forauthor msl doc = do
                                     J.value "name"  n
                                     J.value "value" v
       J.value "apicallbackurl" $ documentapicallbackurl doc
-      J.value "unsaveddraft" $ documentunsaveddraft doc
+      J.value "saved" $ not (documentunsaveddraft doc)
       J.value "deleted" $ fromMaybe False $ documentDeletedForUser doc <$> userid <$> muser
       J.value "reallydeleted" $ fromMaybe False $ documentReallyDeletedForUser doc <$> userid <$>  muser
       when (isJust muser) $
