@@ -45,7 +45,7 @@ getNonTempSessionID = do
     insertEmptySession = do
       token <- random
       csrf_token <- random
-      expires <- sessionNowModifier `liftM` getMinutesTime
+      expires <- sessionNowModifier `liftM` currentTime
       domain <- currentDomain
       update (NewAction session expires (Nothing, Nothing, token, csrf_token, domain))
         >>= return . sesID
@@ -74,7 +74,7 @@ updateSession old_ses ses = do
         let uid = fromJust $ sesUserID ses
         n <- deleteSuperfluousUserSessions uid
         Log.mixlog_ $ show n ++ " superfluous sessions of user with id = " ++ show uid ++ " removed from the database"
-      expires <- sessionNowModifier `liftM` getMinutesTime
+      expires <- sessionNowModifier `liftM` currentTime
       let Session{..} = ses
       dbUpdate (NewAction session expires (sesUserID, sesPadUserID, sesToken, sesCSRFToken, sesDomain))
         >>= startSessionCookie
@@ -100,7 +100,7 @@ getPadUserFromSession Session{sesPadUserID} = case sesPadUserID of
   Just uid -> dbQuery $ GetUserByID uid
   Nothing  -> return Nothing
 
-sessionNowModifier :: MinutesTime -> MinutesTime
+sessionNowModifier :: UTCTime -> UTCTime
 sessionNowModifier = (120 `minutesAfter`)
 
 isSessionEmpty :: Session -> Bool

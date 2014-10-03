@@ -71,7 +71,7 @@ testSavePaymentPlan :: TestEnv ()
 testSavePaymentPlan = do
   user <- addNewRandomUser
   ac <- dbUpdate $ GetAccountCode
-  time <- getMinutesTime
+  time <- currentTime
   let pp = PaymentPlan { ppAccountCode = ac
                        , ppCompanyID = (usercompany user)
                        , ppPricePlan = TeamPricePlan
@@ -102,7 +102,7 @@ testSavePaymentPlan = do
 
 testPaymentPlansRequiringSync :: TestEnv ()
 testPaymentPlansRequiringSync = do
-  now <- getMinutesTime
+  now <- currentTime
   let past = daysBefore 12 now
   forM_ [False, True] $ \c ->
     forM_ [4, 10, 20] $ \q ->
@@ -154,7 +154,7 @@ testPaymentPlansRequiringSync = do
 
 testPaymentPlansNoProviderRequiringSync :: TestEnv ()
 testPaymentPlansNoProviderRequiringSync = do
-  now <- getMinutesTime
+  now <- currentTime
   company <- addNewCompany
   forM_ [0..9] $ \(i::Int) -> do
     user <- addNewRandomUser
@@ -193,7 +193,7 @@ testPaymentPlansNoProviderRequiringSync = do
 
 testPaymentPlansExpiredDunning :: TestEnv ()
 testPaymentPlansExpiredDunning = do
-  now <- getMinutesTime
+  now <- currentTime
   let past = daysBefore 12 now
   forM_ [NoProvider, RecurlyProvider] $ \prov ->
     forM_ [Just now, Just past, Nothing] $ \dun -> do
@@ -219,8 +219,8 @@ testPaymentPlansExpiredDunning = do
 
 testRecurlySavesAccount :: TestEnv ()
 testRecurlySavesAccount = do
-  t <- getMinutesTime
-  let ac = show $ toSeconds t -- generate a random account code to avoid collisions
+  t <- currentTime
+  let ac = getEmailId t -- generate a random account code to avoid collisions
       email = "eric+" ++ ac ++ "@scrive.com"
 
   cs <- liftIO $ createSubscription "curl" recurlyToken recurlyPlanName "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" 5
@@ -247,8 +247,8 @@ testRecurlySavesAccount = do
 
 testRecurlyChangeAccount :: TestEnv ()
 testRecurlyChangeAccount = do
-  t <- getMinutesTime
-  let ac = show $ toSeconds t -- generate a random account code to avoid collisions
+  t <- currentTime
+  let ac = getEmailId t -- generate a random account code to avoid collisions
       email = "eric+" ++ ac ++ "@scrive.com"
 
   cs <- liftIO $ createSubscription "curl" recurlyToken recurlyPlanName "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" 5
@@ -282,8 +282,8 @@ testRecurlyChangeAccount = do
 
 testRecurlyChangeAccountDefer :: TestEnv ()
 testRecurlyChangeAccountDefer = do
-  t <- getMinutesTime
-  let ac = show $ toSeconds t -- generate a random account code to avoid collisions
+  t <- currentTime
+  let ac = getEmailId t -- generate a random account code to avoid collisions
       email = "eric+" ++ ac ++ "@scrive.com"
 
   cs <- liftIO $ createSubscription "curl" recurlyToken recurlyPlanName "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" 5
@@ -325,8 +325,8 @@ testRecurlyChangeAccountDefer = do
 
 testRecurlyCancelReactivate :: TestEnv ()
 testRecurlyCancelReactivate = do
-  t <- getMinutesTime
-  let ac = show $ toSeconds t -- generate a random account code to avoid collisions
+  t <- currentTime
+  let ac = getEmailId t -- generate a random account code to avoid collisions
       email = "eric+" ++ ac ++ "@scrive.com"
 
   cs <- liftIO $ createSubscription "curl" recurlyToken recurlyPlanName "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" 5
@@ -357,3 +357,5 @@ testRecurlyCancelReactivate = do
 
   assertBool ("Should be 'active', was '" ++ subState sub3 ++ "'") $ subState sub3 == "active"
 
+getEmailId :: UTCTime -> String
+getEmailId = formatTime' "%H%M%S%q"

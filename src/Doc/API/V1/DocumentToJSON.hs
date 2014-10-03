@@ -253,8 +253,8 @@ instance ToJSValue DeliveryMethod where
   toJSValue MobileDelivery = toJSValue "mobile"
   toJSValue EmailAndMobileDelivery = toJSValue "email_mobile"
 
-jsonDate :: Maybe MinutesTime -> JSValue
-jsonDate mdate = toJSValue $ formatMinutesTimeRealISO <$> mdate
+jsonDate :: Maybe UTCTime -> JSValue
+jsonDate mdate = toJSValue $ formatTimeISO <$> mdate
 
 fileJSON :: File -> JSValue
 fileJSON file = runJSONGen $ do
@@ -287,9 +287,9 @@ docFieldsListForJSON userid doc = do
     J.value "partner" $ intercalate ", " $ map getSmartName $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)
     J.value "partnercomp" $ intercalate ", " $ map getCompanyName $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)
     J.value "author" $ intercalate ", " $ map getSmartName $ filter isAuthor $ (documentsignatorylinks doc)
-    J.value "time" $ formatMinutesTimeRealISO (documentmtime doc)
-    J.value "ctime" $ formatMinutesTimeRealISO (documentctime doc)
-    J.value "timeouttime" $ formatMinutesTimeRealISO <$> documenttimeouttime doc
+    J.value "time" $ formatTimeISO (documentmtime doc)
+    J.value "ctime" $ formatTimeISO (documentctime doc)
+    J.value "timeouttime" $ formatTimeISO <$> documenttimeouttime doc
     J.value "template" $ isTemplate doc
     J.value "partiescount" $ length $ (documentsignatorylinks doc)
     J.value "type" $ case documenttype doc of
@@ -328,7 +328,7 @@ signatoryFieldsListForJSON doc sl = do
     J.value "name" $ case strip (getCompanyName sl) of
                        "" -> getSmartName sl
                        _  -> getSmartName sl ++ " (" ++ getCompanyName sl ++ ")"
-    J.value "time" $ fromMaybe "" $ formatMinutesTimeRealISO <$> (sign `mplus` reject `mplus` seen `mplus` open)
+    J.value "time" $ fromMaybe "" $ formatTimeISO <$> (sign `mplus` reject `mplus` seen `mplus` open)
     J.value "invitationundelivered" $ Pending == documentstatus doc && (Undelivered == mailinvitationdeliverystatus sl || Undelivered == smsinvitationdeliverystatus sl)
     J.value "inpadqueue" $  False
     J.value "isauthor" $ isAuthor sl
@@ -359,11 +359,11 @@ signatoryForListCSV _agr doc msl = [
             , documenttitle doc
             , show $ documentstatusclass doc
             , getAuthorName $ doc
-            , csvTime $ (documentctime doc)
-            , maybe "" csvTime $ signtime <$> documentinvitetime doc
-            , maybe "" csvTime $ join $ maybereadinvite <$> msl
-            , maybe "" csvTime $ signtime <$> (join $ maybeseeninfo <$> msl)
-            , maybe "" csvTime $ signtime <$> (join $ maybesigninfo <$> msl)
+            , formatTimeSimple $ (documentctime doc)
+            , maybe "" formatTimeSimple $ signtime <$> documentinvitetime doc
+            , maybe "" formatTimeSimple $ join $ maybereadinvite <$> msl
+            , maybe "" formatTimeSimple $ signtime <$> (join $ maybeseeninfo <$> msl)
+            , maybe "" formatTimeSimple $ signtime <$> (join $ maybesigninfo <$> msl)
             , fromMaybe  "" $ getFullName <$> msl
             , fromMaybe  "" $ getEmail <$> msl
             , fromMaybe  "" $ getPersonalNumber <$> msl
@@ -371,7 +371,6 @@ signatoryForListCSV _agr doc msl = [
             , fromMaybe  "" $ getCompanyNumber <$> msl
             ] ++ (map fieldValue $ sortBy fieldNameSort customFieldsOrCheckbox)
     where
-        csvTime = formatMinutesTime "%Y-%m-%d %H:%M"
         customFieldsOrCheckbox = filter isCustomOrCheckbox  $ concat $ maybeToList $ signatoryfields <$> msl
         fieldNameSort sf1 sf2 = case (sfType sf1, sfType sf2) of
                                   (CustomFT n1 _, CustomFT n2 _) -> compare n1 n2

@@ -49,7 +49,6 @@ import Happstack.Server.Internal.Cookie
 import Network.Socket
 
 import System.Directory
-import System.Time
 import Data.Time.Clock
 
 import qualified Control.Exception.Lifted as E
@@ -156,7 +155,7 @@ appHandler :: KontraPlus (Maybe Response) -> AppConf -> AppGlobals -> ServerPart
 appHandler handleRoutes appConf appGlobals = catchEverything . enhanceYourCalm $
   withPostgreSQL (connsource appGlobals) . runCryptoRNGT (cryptorng appGlobals) $
     AWS.runAmazonMonadT amazoncfg $ do
-    startTime <- liftIO getClockTime
+    startTime <- liftIO getCurrentTime
     let quota = 10000000
     temp <- liftIO getTemporaryDirectory
     decodeBody (defaultBodyPolicy temp quota quota quota)
@@ -195,13 +194,12 @@ appHandler handleRoutes appConf appGlobals = catchEverything . enhanceYourCalm $
     -- places that can be fixed.
 
     stats <- getConnectionStats
-    finishTime <- liftIO getClockTime
-    let TOD ss sp = startTime
-        TOD fs fp = finishTime
-        diff = (fs - ss) * 1000000000000 + fp - sp
-
-    Log.mixlog_ $ "SQL stats: " ++ rqUri rq ++ rqQuery rq ++
-                "\n    " ++ show stats ++ ", time: " ++ show (diff `div` 1000000000) ++ "ms"
+    finishTime <- liftIO getCurrentTime
+    Log.mixlog_ $ concat [
+        "Statistics for " ++ rqUri rq ++ rqQuery rq ++ ":\n"
+      , "* " ++ show stats ++ "\n"
+      , "* Time: " ++ show (diffUTCTime finishTime startTime)
+      ]
 
     case res of
       Right response -> return response
@@ -294,9 +292,9 @@ appHandler handleRoutes appConf appGlobals = catchEverything . enhanceYourCalm $
 
       currhostpart <- getHostpart
       reshostpart <- getResourceHostpart
-      minutestime <- getMinutesTime
+      minutestime <- currentTime
       let clientName = BS.toString <$> getHeader "client-name" rq
-          clientTime = parseMinutesTimeRealISO =<< (BS.toString <$> getHeader "client-time" rq)
+          clientTime = parseTimeISO =<< (BS.toString <$> getHeader "client-time" rq)
           userAgent  = BS.toString <$> getHeader "user-agent" rq
       muser <- getUserFromSession session
       mpaduser <- getPadUserFromSession session

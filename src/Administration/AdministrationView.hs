@@ -38,7 +38,7 @@ adminDomainBrandingPage bdid = renderTemplate "domainbranding" $ (F.value "id" $
 adminUserPage :: TemplatesMonad m => UserID -> m String
 adminUserPage uid = renderTemplate "adminuser" $ (F.value "userid" $ show uid)
 
-statisticsFields :: Monad m => (MinutesTime -> String) -> [UserUsageStats] -> [F.Fields m ()]
+statisticsFields :: Monad m => (UTCTime -> String) -> [UserUsageStats] -> [F.Fields m ()]
 statisticsFields formatTime = map f
   where f uus = do
                 F.value "date" $ formatTime (fst $ uusTimeSpan uus)
@@ -46,7 +46,7 @@ statisticsFields formatTime = map f
                 F.value "signatures" $ uusSignaturesClosed uus
                 F.value "sent" $ uusDocumentsSent uus
 
-statisticsCompanyFields :: Monad m => (MinutesTime -> String) -> [UserUsageStats] -> [F.Fields m ()]
+statisticsCompanyFields :: Monad m => (UTCTime -> String) -> [UserUsageStats] -> [F.Fields m ()]
 statisticsCompanyFields formatTime = map f . appendTotalsPerTimespan . filter nonZero
   where f uus = do
                 F.value "date" $ formatTime (fst $ uusTimeSpan uus)

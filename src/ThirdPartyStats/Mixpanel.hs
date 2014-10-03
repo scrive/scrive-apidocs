@@ -7,7 +7,6 @@ import ThirdPartyStats.Core
 import ThirdPartyStats.Utils
 import Mixpanel.Event as Mixpanel
 import Mixpanel.Engage as Mixpanel (set)
-import MinutesTime (toUTCTime)
 import User.Email
 
 -- | Token identifying us to Mixpanel.
@@ -47,7 +46,7 @@ mixpanelProperty :: EventProperty -> Mixpanel.Property
 mixpanelProperty (MailProp mail)     = CustomString "$email" (unEmail mail)
 mixpanelProperty (IPProp ip)         = IP (show ip)
 mixpanelProperty (NameProp name)     = FullName name
-mixpanelProperty (TimeProp t)        = Time (toUTCTime t)
+mixpanelProperty (TimeProp t)        = Time t
 mixpanelProperty (UserIDProp _)      = error "User ID prop in the wrong place!"
 mixpanelProperty (DocIDProp did)     = CustomString "Document ID" (show did)
 mixpanelProperty (CompanyIDProp cid) = CustomString "Company ID" (show cid)
@@ -59,7 +58,7 @@ mixpanelProperty (SomeProp name val) = mkMixpanelProperty val
         CustomNumber name n
       mkMixpanelProperty (PVString str) =
         CustomString name str
-      mkMixpanelProperty (PVMinutesTime t) =
-        CustomTime name (toUTCTime t)
+      mkMixpanelProperty (PVUTCTime t) =
+        CustomTime name t
       mkMixpanelProperty (PVBool b) =
         CustomBool name b

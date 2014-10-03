@@ -310,7 +310,7 @@ jsonUsersList = onlySalesOrAdmin $ do
                     value "companyposition" $ usercompanyposition $ userinfo user
                     value "company"  $ getCompanyName mcompany
                     value "phone"    $ userphone $ userinfo user
-                    value "tos"      $ formatMinutesTimeRealISO <$> (userhasacceptedtermsofservice user)
+                    value "tos"      $ formatTimeISO <$> (userhasacceptedtermsofservice user)
                 value "link" $ show $ LinkUserAdmin $ userid user
             value "paging" $ pagingParamsJSON users
 
@@ -530,8 +530,8 @@ jsonDocuments = onlySalesOrAdmin $ do
             valueM "list" $ forM (take docsPageSize $ list documents) $ \doc-> runJSONGenT $ do
                  object "fields" $ do
                    value "id" $ show $ documentid doc
-                   value "ctime" $ showMinutesTimeForAPI $ documentctime doc
-                   value "mtime" $ showMinutesTimeForAPI $ documentmtime doc
+                   value "ctime" $ formatTimeAPI $ documentctime doc
+                   value "mtime" $ formatTimeAPI $ documentmtime doc
                    object "author" $ do
                           value "name" $ getAuthorName doc
                           value "email" $ maybe "" getEmail $ getAuthorSigLink doc

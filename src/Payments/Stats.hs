@@ -18,7 +18,7 @@ import Company.Model
 import Payments.Model
 import Util.CSVUtil
 
-record :: MonadDB m => MinutesTime -> PaymentsAction -> PaymentPlanProvider -> Int -> PricePlan -> CompanyID -> AccountCode -> m Bool
+record :: MonadDB m => UTCTime -> PaymentsAction -> PaymentPlanProvider -> Int -> PricePlan -> CompanyID -> AccountCode -> m Bool
 record time action provider quantity plan cid ac =
   dbUpdate $ AddPaymentsStat time provider action quantity plan cid ac
 
@@ -31,7 +31,7 @@ handlePaymentsStatsCSV = onlySalesOrAdmin $ do
                , csvContent  = stats
                }
 
-data AddPaymentsStat = AddPaymentsStat { psTime        :: MinutesTime
+data AddPaymentsStat = AddPaymentsStat { psTime        :: UTCTime
                                        , psProvider    :: PaymentPlanProvider
                                        , psAction      :: PaymentsAction
                                        , psQuantity    :: Int
@@ -67,10 +67,10 @@ instance (MonadBase IO m, MonadDB m) => DBQuery m GetPaymentsStats [[String]] wh
                      "LEFT OUTER JOIN companies ON payment_plans.company_id = companies.id " <>
                      "ORDER BY payment_plans.account_code DESC"
     foldlM f []
-      where f :: [[String]] -> (MinutesTime, AccountCode, CompanyID, Int32, PricePlan, PaymentPlanProvider, MinutesTime, PaymentPlanStatus, Maybe String) -> m [[String]]
+      where f :: [[String]] -> (UTCTime, AccountCode, CompanyID, Int32, PricePlan, PaymentPlanProvider, UTCTime, PaymentPlanStatus, Maybe String) -> m [[String]]
             f acc (t, ac, cid, q, pp, pr, be, st, cn) =
               let smartname = fromMaybe "" cn
-              in return $ [formatMinutesTimeISO t, show ac, show cid, show q, show pp, show pr, formatMinutesTimeISO be, show st, smartname] : acc
+              in return $ [formatTimeUTC t, show ac, show cid, show q, show pp, show pr, formatTimeUTC be, show st, smartname] : acc
 
 
 

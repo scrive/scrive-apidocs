@@ -1,11 +1,11 @@
 module MailModelTest (mailModelTests) where
 
+import Data.Time.Clock.POSIX
 import Test.Framework
 
 import DB
 import TestingUtil
-import TestKontra as T
-import MinutesTime
+import TestKontra
 import Mails.Model
 import MagicHash
 
@@ -21,7 +21,7 @@ testMailAttachments = do
       sender = Address "Jarek" "xx@asd.com"
       to = [Address "Genowefa""a1@ss.com", Address "Brunhilda" "b3@dd.com"]
       reply_to = Just (Address "Luluka" "k2@ba.uk")
-      to_be_sent = fromSeconds 213123
+      to_be_sent = posixSecondsToUTCTime 213123
       attachments = [ Attachment "name1" (Left "content 123")
                     , Attachment "name2" (Left "contenty 314124")
                     , Attachment "name3" (Left "contenty 314124 sffadsfa")
@@ -53,7 +53,7 @@ testMailOrder = do
       to1 = [Address "Genowefa" "aa@ss.com", Address "Brunhilda" "b3@dd.com"]
       to2 = [Address "Genowefa2" "a@ss.com", Address "Brunhilda" "b3@dd.com"]
       reply_to = Just (Address "Luluka" "k2@ba.uk")
-      to_be_sent = fromSeconds 213123
+      to_be_sent = posixSecondsToUTCTime 213123
       attachments = [ Attachment "name1" (Left "content 123")
                     , Attachment "name2" (Left "contenty 314124")
                     , Attachment "name3" (Left "contenty 314124 sffadsfa")

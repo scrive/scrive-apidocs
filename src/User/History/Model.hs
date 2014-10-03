@@ -36,7 +36,7 @@ data UserHistory = UserHistory {
     uhuserid           :: UserID
   , uhevent            :: UserHistoryEvent
   , uhip               :: IPAddress
-  , uhtime             :: MinutesTime
+  , uhtime             :: UTCTime
   , uhsystemversion    :: String
   , uhperforminguserid :: Maybe UserID -- Nothing means no user changed it (like the system)
   }
@@ -104,7 +104,7 @@ instance MonadDB m => DBQuery m GetUserHistoryByUserID [UserHistory] where
       <+> "WHERE user_id =" <?> uid <+> "ORDER BY time"
     fetchMany fetchUserHistory
 
-data LogHistoryLoginAttempt = LogHistoryLoginAttempt UserID IPAddress MinutesTime
+data LogHistoryLoginAttempt = LogHistoryLoginAttempt UserID IPAddress UTCTime
 instance MonadDB m => DBUpdate m LogHistoryLoginAttempt Bool where
   update (LogHistoryLoginAttempt userid ip time) = addUserHistory
     userid
@@ -113,7 +113,7 @@ instance MonadDB m => DBUpdate m LogHistoryLoginAttempt Bool where
     time
     Nothing
 
-data LogHistoryLoginSuccess = LogHistoryLoginSuccess UserID IPAddress MinutesTime
+data LogHistoryLoginSuccess = LogHistoryLoginSuccess UserID IPAddress UTCTime
 instance MonadDB m => DBUpdate m LogHistoryLoginSuccess Bool where
   update (LogHistoryLoginSuccess userid ip time) = addUserHistory
     userid
@@ -122,7 +122,7 @@ instance MonadDB m => DBUpdate m LogHistoryLoginSuccess Bool where
     time
     (Just userid)
 
-data LogHistoryPadLoginAttempt = LogHistoryPadLoginAttempt UserID IPAddress MinutesTime
+data LogHistoryPadLoginAttempt = LogHistoryPadLoginAttempt UserID IPAddress UTCTime
 instance MonadDB m => DBUpdate m LogHistoryPadLoginAttempt Bool where
   update (LogHistoryPadLoginAttempt userid ip time) = addUserHistory
     userid
@@ -131,7 +131,7 @@ instance MonadDB m => DBUpdate m LogHistoryPadLoginAttempt Bool where
     time
     Nothing
 
-data LogHistoryPadLoginSuccess = LogHistoryPadLoginSuccess UserID IPAddress MinutesTime
+data LogHistoryPadLoginSuccess = LogHistoryPadLoginSuccess UserID IPAddress UTCTime
 instance MonadDB m => DBUpdate m LogHistoryPadLoginSuccess Bool where
   update (LogHistoryPadLoginSuccess userid ip time) = addUserHistory
     userid
@@ -141,7 +141,7 @@ instance MonadDB m => DBUpdate m LogHistoryPadLoginSuccess Bool where
     (Just userid)
 
 
-data LogHistoryPasswordSetup = LogHistoryPasswordSetup UserID IPAddress MinutesTime (Maybe UserID)
+data LogHistoryPasswordSetup = LogHistoryPasswordSetup UserID IPAddress UTCTime (Maybe UserID)
 instance MonadDB m => DBUpdate m LogHistoryPasswordSetup Bool where
   update (LogHistoryPasswordSetup userid ip time mpuser) = addUserHistory
     userid
@@ -150,7 +150,7 @@ instance MonadDB m => DBUpdate m LogHistoryPasswordSetup Bool where
     time
     mpuser
 
-data LogHistoryPasswordSetupReq = LogHistoryPasswordSetupReq UserID IPAddress MinutesTime (Maybe UserID)
+data LogHistoryPasswordSetupReq = LogHistoryPasswordSetupReq UserID IPAddress UTCTime (Maybe UserID)
 instance MonadDB m => DBUpdate m LogHistoryPasswordSetupReq Bool where
   update (LogHistoryPasswordSetupReq userid ip time mpuser) = addUserHistory
     userid
@@ -159,7 +159,7 @@ instance MonadDB m => DBUpdate m LogHistoryPasswordSetupReq Bool where
     time
     mpuser
 
-data LogHistoryAccountCreated = LogHistoryAccountCreated UserID IPAddress MinutesTime Email (Maybe UserID)
+data LogHistoryAccountCreated = LogHistoryAccountCreated UserID IPAddress UTCTime Email (Maybe UserID)
 instance MonadDB m => DBUpdate m LogHistoryAccountCreated Bool where
   update (LogHistoryAccountCreated userid ip time email mpuser) = addUserHistory
     userid
@@ -175,7 +175,7 @@ instance MonadDB m => DBUpdate m LogHistoryAccountCreated Bool where
     time
     mpuser
 
-data LogHistoryTOSAccept = LogHistoryTOSAccept UserID IPAddress MinutesTime (Maybe UserID)
+data LogHistoryTOSAccept = LogHistoryTOSAccept UserID IPAddress UTCTime (Maybe UserID)
 instance MonadDB m => DBUpdate m LogHistoryTOSAccept Bool where
   update (LogHistoryTOSAccept userid ip time mpuser) = addUserHistory
     userid
@@ -184,7 +184,7 @@ instance MonadDB m => DBUpdate m LogHistoryTOSAccept Bool where
     time
     mpuser
 
-data LogHistoryDetailsChanged = LogHistoryDetailsChanged UserID IPAddress MinutesTime [(String, String, String)] (Maybe UserID)
+data LogHistoryDetailsChanged = LogHistoryDetailsChanged UserID IPAddress UTCTime [(String, String, String)] (Maybe UserID)
 instance MonadDB m => DBUpdate m LogHistoryDetailsChanged Bool where
   update (LogHistoryDetailsChanged userid ip time details mpuser) = addUserHistory
     userid
@@ -199,7 +199,7 @@ instance MonadDB m => DBUpdate m LogHistoryDetailsChanged Bool where
     time
     mpuser
 
-data LogHistoryUserInfoChanged = LogHistoryUserInfoChanged UserID IPAddress MinutesTime UserInfo UserInfo (Maybe UserID)
+data LogHistoryUserInfoChanged = LogHistoryUserInfoChanged UserID IPAddress UTCTime UserInfo UserInfo (Maybe UserID)
 instance MonadDB m => DBUpdate m LogHistoryUserInfoChanged Bool where
   update (LogHistoryUserInfoChanged userid ip time oldinfo newinfo mpuser) = do
     let diff = diffUserInfos oldinfo newinfo
@@ -234,7 +234,7 @@ diffUserInfos old new = fstNameDiff
       then [("email", unEmail $ useremail old, unEmail $ useremail new)]
       else []
 
-addUserHistory :: MonadDB m => UserID -> UserHistoryEvent -> IPAddress -> MinutesTime -> Maybe UserID -> m Bool
+addUserHistory :: MonadDB m => UserID -> UserHistoryEvent -> IPAddress -> UTCTime -> Maybe UserID -> m Bool
 addUserHistory user event ip time mpuser =
   runQuery01 $ sqlInsert "users_history" $ do
     sqlSet "user_id" user
@@ -256,7 +256,7 @@ selectUserHistorySQL = "SELECT"
   <> ", performing_user_id"
   <> "  FROM users_history"
 
-fetchUserHistory :: (UserID, UserHistoryEventType, Maybe String, IPAddress, MinutesTime, String, Maybe UserID) -> UserHistory
+fetchUserHistory :: (UserID, UserHistoryEventType, Maybe String, IPAddress, UTCTime, String, Maybe UserID) -> UserHistory
 fetchUserHistory (userid, eventtype, meventdata, ip, time, sysver, mpuser) = UserHistory {
   uhuserid = userid
 , uhevent = UserHistoryEvent {

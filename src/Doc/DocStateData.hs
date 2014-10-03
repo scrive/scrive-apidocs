@@ -390,18 +390,18 @@ data SignatoryLink = SignatoryLink {
   , maybesignatory             :: Maybe UserID        -- ^ if this document has been saved to an account, that is the user id
   , maybesigninfo              :: Maybe SignInfo      -- ^ when a person has signed this document
   , maybeseeninfo              :: Maybe SignInfo      -- ^ when a person has first seen this document
-  , maybereadinvite            :: Maybe MinutesTime   -- ^ when we receive confirmation that a user has read
+  , maybereadinvite            :: Maybe UTCTime   -- ^ when we receive confirmation that a user has read
   , mailinvitationdeliverystatus  :: DeliveryStatus -- ^ status of email delivery
   , smsinvitationdeliverystatus   :: DeliveryStatus -- ^ status of email delivery
   , signatorysignatureinfo     :: Maybe SignatureInfo -- ^ info about what fields have been filled for this person
-  , signatorylinkdeleted       :: Maybe MinutesTime   -- ^ when was put in recycle bin
-  , signatorylinkreallydeleted :: Maybe MinutesTime   -- ^ when was purged from the system
+  , signatorylinkdeleted       :: Maybe UTCTime   -- ^ when was put in recycle bin
+  , signatorylinkreallydeleted :: Maybe UTCTime   -- ^ when was purged from the system
   , signatorylinkcsvupload     :: Maybe CSVUpload
   , signatoryattachments       :: [SignatoryAttachment]
   , signatorylinkstatusclass   :: StatusClass
   , signatorylinksignredirecturl :: Maybe String
   , signatorylinkrejectredirecturl :: Maybe String
-  , signatorylinkrejectiontime   :: Maybe MinutesTime
+  , signatorylinkrejectiontime   :: Maybe UTCTime
   , signatorylinkrejectionreason :: Maybe String
   , signatorylinkauthenticationmethod   :: AuthenticationMethod
   , signatorylinkelegdatamismatchmessage        :: Maybe String
@@ -483,7 +483,7 @@ data CSVUpload = CSVUpload {
   } deriving (Eq, Ord, Show)
 
 data SignInfo = SignInfo {
-    signtime :: MinutesTime
+    signtime :: UTCTime
   , signipnumber :: IPAddress
   } deriving (Eq, Ord, Show)
 
@@ -656,12 +656,12 @@ data Document = Document {
   , documentmainfiles              :: [MainFile] -- order: most recently added files first
   , documentstatus                 :: DocumentStatus
   , documenttype                   :: DocumentType
-  , documentctime                  :: MinutesTime
-  , documentmtime                  :: MinutesTime
+  , documentctime                  :: UTCTime
+  , documentmtime                  :: UTCTime
   , documentdaystosign             :: Int32
   , documentdaystoremind           :: Maybe Int32
-  , documenttimeouttime            :: Maybe MinutesTime
-  , documentautoremindtime         :: Maybe MinutesTime
+  , documenttimeouttime            :: Maybe UTCTime
+  , documentautoremindtime         :: Maybe UTCTime
   , documentinvitetime             :: Maybe SignInfo
   , documentinvitetext             :: String
   , documentconfirmtext            :: String
@@ -691,8 +691,8 @@ instance HasDefaultValue Document where
           , documentmainfiles            = []
           , documentstatus               = Preparation
           , documenttype                 = Signable
-          , documentctime                = fromSeconds 0
-          , documentmtime                = fromSeconds 0
+          , documentctime                = unixEpoch
+          , documentmtime                = unixEpoch
           , documentdaystosign           = 14
           , documentdaystoremind         = Nothing
           , documenttimeouttime          = Nothing

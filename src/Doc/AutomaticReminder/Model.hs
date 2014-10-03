@@ -24,14 +24,12 @@ import Crypto.RNG
 import Data.Typeable
 import DB.TimeZoneName (TimeZoneName, defaultTimeZoneName, withTimeZone)
 import qualified DB.TimeZoneName as TimeZoneName
-import Data.Time.Format (formatTime)
-import System.Locale (defaultTimeLocale)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.Base
 
 data DocumentAutomaticReminder = DocumentAutomaticReminder {
     reminderDocumentID :: DocumentID
-  , reminderSentTime :: MinutesTime
+  , reminderSentTime :: UTCTime
   } deriving (Show,Typeable)
 
 
@@ -55,7 +53,7 @@ documentAutomaticReminder = Action {
   where
     sentReminder :: (Log.MonadLog m, CryptoRNG m, MonadDB m, MonadBase IO m, MonadReader SchedulerData m) => DocumentAutomaticReminder -> m ()
     sentReminder dar = do
-      now <- getMinutesTime
+      now <- currentTime
       _ <- dbQuery (GetDocumentByDocumentID (reminderDocumentID dar)) >>= \doc -> runMailTInScheduler doc $
         withDocument doc $ sendAllReminderEmails (systemActor now) True
       void $ dbUpdate $ DeleteAction documentAutomaticReminder (reminderDocumentID dar)
@@ -71,8 +69,8 @@ setAutoreminder did mdays tzn = do
       case mdays of
         Nothing   -> return ()
         Just days -> do
-            time <- getMinutesTime
-            let timestamp = formatTime defaultTimeLocale "%F" (toUTCTime time) ++ " " ++ TimeZoneName.toString tzn
+            time <- currentTime
+            let timestamp = formatTime' "%F" time ++ " " ++ TimeZoneName.toString tzn
             withTimeZone defaultTimeZoneName $
               void . runQuery_ . sqlInsert "document_automatic_reminders" $ do
                 sqlSetCmd "expires" $ "cast (" <?> timestamp <+> "as timestamp with time zone)"

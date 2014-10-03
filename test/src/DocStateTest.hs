@@ -237,7 +237,7 @@ testExtendDigitalSignatures = do
   file1 <- addNewFile filename filecontent
   file2 <- addNewFile filename filecontent
   addRandomDocumentWithAuthorAndConditionAndFile author (isSignable &&^ isClosed) file `withDocumentM` do
-    now <- getMinutesTime
+    now <- currentTime
     let actor = systemActor (2 `monthsBefore` now)
     -- Append a file to tweak the modification time
     dbUpdate $ AppendSealedFile file1 Guardtime{ extended = False, private = False } actor
@@ -285,7 +285,7 @@ testRestartDocumentEvidenceLog = do
 
 getScreenshots :: (MonadIO m, MonadDB m) => m SignatoryScreenshots.SignatoryScreenshots
 getScreenshots = do
-  now <- getMinutesTime
+  now <- currentTime
   first_ <- liftIO $ BS.readFile "test/screenshots/s1.jpg"
   signing <- liftIO $ BS.readFile "test/screenshots/s2.jpg"
   let mkss i = Just $ Screenshot.Screenshot{ Screenshot.time = now
@@ -345,7 +345,7 @@ testMarkInvitationReadEvidenceLog = do
   author <- addNewRandomUser
   addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending) `withDocumentM` do
     Just sl <- getAuthorSigLink <$> theDocument
-    now <- getMinutesTime
+    now <- currentTime
     success <- randomUpdate $ MarkInvitationRead (signatorylinkid sl) (mailSystemActor now Nothing (getEmail sl) (signatorylinkid sl))
     assert success
     lg <- dbQuery . GetEvidenceLog =<< theDocumentID
@@ -476,7 +476,7 @@ testCloseDocumentEvidenceLog = do
     assertJust $ find (\e -> evType e == Current CloseDocumentEvidence) lg
 
 
-performNewDocumentWithRandomUser :: Maybe Company -> DocumentType -> String -> TestEnv (User, MinutesTime, Either String Document)
+performNewDocumentWithRandomUser :: Maybe Company -> DocumentType -> String -> TestEnv (User, UTCTime, Either String Document)
 performNewDocumentWithRandomUser mcompany doctype title = do
   user <- maybe addNewRandomUser (\c -> addNewRandomCompanyUser (companyid c) False) mcompany
   ctx <- mkContext defaultValue
@@ -484,7 +484,7 @@ performNewDocumentWithRandomUser mcompany doctype title = do
   mdoc <- randomUpdate $ NewDocument defaultValue user title doctype defaultTimeZoneName 0 aa
   return (user, ctxtime ctx, maybe (Left "no document") Right mdoc)
 
-assertGoodNewDocument :: Maybe Company -> DocumentType -> String -> (User, MinutesTime, Either String Document) -> TestEnv ()
+assertGoodNewDocument :: Maybe Company -> DocumentType -> String -> (User, UTCTime, Either String Document) -> TestEnv ()
 assertGoodNewDocument mcompany doctype title (user, time, edoc) = do
     let (Right doc) = edoc
     assertRight edoc
@@ -694,7 +694,7 @@ testPurgeDocument = doTimes 10 $ do
   company <- addNewCompany
   author <- addNewRandomCompanyUser (companyid company) False
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
-  now <- getMinutesTime
+  now <- currentTime
   archived1 <- dbUpdate $ PurgeDocuments 0 0
   assertEqual "Purged zero documents when not deleted" 0 archived1
   withDocument doc $ randomUpdate $ \t -> ArchiveDocument (userid author) ((systemActor t) { actorTime = now })
@@ -711,7 +711,7 @@ testPurgeDocumentUserSaved = doTimes 10 $ do
   author <- addNewRandomCompanyUser (companyid company) False
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
   archived1 <- dbUpdate $ PurgeDocuments 1 0
-  now <- getMinutesTime
+  now <- currentTime
   withDocument doc $ randomUpdate $ \t->ArchiveDocument (userid author) ((systemActor t) { actorTime = now })
   archived2 <- dbUpdate $ PurgeDocuments 1 0
   assertEqual "Purged zero documents before delete" 0 archived1
@@ -722,7 +722,7 @@ testPurgeDocumentActiveSignLink = doTimes 10 $ do
   company <- addNewCompany
   author <- addNewRandomCompanyUser (companyid company) False
   addRandomDocumentWithAuthorAndCondition author (isClosed &&^ (not . null . filter (isSignatory &&^ (not . isAuthor)). documentsignatorylinks)) `withDocumentM` do
-    now <- getMinutesTime
+    now <- currentTime
     randomUpdate $ \t -> ArchiveDocument (userid author) ((systemActor t) { actorTime = now })
     updateMTimeAndObjectVersion now
     archived <- dbUpdate $ PurgeDocuments 0 1
@@ -891,7 +891,7 @@ testDocumentAppendSealedPendingRight = doTimes 10 $ do
 
     --execute
 
-    now <- getMinutesTime
+    now <- currentTime
     success <- randomUpdate $ AppendExtendedSealedFile file Missing $ systemActor now
 
     --assert
@@ -1414,7 +1414,7 @@ testMarkInvitationRead = doTimes 10 $ do
 
     sl' <- rand 10 . elements . documentsignatorylinks =<< theDocument
     let slid = signatorylinkid sl'
-    time <- getMinutesTime
+    time <- currentTime
     success <- dbUpdate . MarkInvitationRead slid =<< signatoryActor ctx{ ctxtime = time } sl'
 
     assert success
@@ -1640,7 +1640,7 @@ testSetDocumentDaysToSignRight = doTimes 10 $ do
 
 assertInvariants :: (MonadIO m, MonadDB m) => Document -> m ()
 assertInvariants document = do
-  now <- getMinutesTime
+  now <- currentTime
   case invariantProblems now document of
     Nothing -> assertSuccess
     Just a  -> assertFailure a
@@ -1654,7 +1654,7 @@ testGetDocumentsByCompanyWithFilteringCompany = doTimes 10 $ do
   Just author' <- dbQuery $ GetUserByID (userid author)
   did <- addRandomDocumentWithAuthor author'
   withDocumentID did $ do
-    time <- getMinutesTime
+    time <- currentTime
     let actor = systemActor time
     _ <- dbUpdate $ SetDocumentTags (S.singleton $ DocumentTag name value) actor
     docs' <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [] [] (0,maxBound)
@@ -1711,7 +1711,7 @@ testGetDocumentsByCompanyWithFilteringFinds = doTimes 10 $ do
   _ <- dbUpdate $ SetUserCompany (userid author) (companyid company)
   Just author' <- dbQuery $ GetUserByID (userid author)
   did <- addRandomDocumentWithAuthor author'
-  time <- getMinutesTime
+  time <- currentTime
   let actor = systemActor time
   _ <- withDocumentID did $ dbUpdate $ SetDocumentTags (S.singleton $ DocumentTag name value) actor
   docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [DocumentFilterByTags [DocumentTag name value]] [] (0,maxBound)
@@ -1729,7 +1729,7 @@ testGetDocumentsByCompanyWithFilteringFindsMultiple = doTimes 10 $ do
    then do
     company <- addNewCompany
     author <- addNewRandomUser
-    time <- getMinutesTime
+    time <- currentTime
     let actor = systemActor time
     _ <- dbUpdate $ SetUserCompany (userid author) (companyid company)
     Just author' <- dbQuery $ GetUserByID (userid author)

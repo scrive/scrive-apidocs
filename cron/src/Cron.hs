@@ -46,10 +46,10 @@ import Control.Concurrent
 import Control.Monad
 import Control.Monad.Trans
 import qualified CronEnv
-import qualified System.Time
 import Data.Maybe
 import Data.Monoid ((<>))
 import Data.Monoid.Space
+import Data.Time
 import qualified Control.Concurrent.Thread.Group as TG
 import qualified Control.Exception as E
 
@@ -145,13 +145,13 @@ main = Log.withLogger $ do
           Log.mixlog_ $ "OldDraftsRemoval: removed" <+> show delCount <+> "old, unsaved draft documents."
         PasswordRemindersEvaluation -> runScheduler $ actionQueue passwordReminder
         RecurlySynchronization -> inDB $ do
-          mtime <- getMinutesTime
-          ctime <- liftIO $ System.Time.toCalendarTime (toClockTime mtime)
+          time <- currentTime
+          ltime <- liftIO $ utcToLocalZonedTime time
           temps <- snd `liftM` liftIO (readMVar templates)
-          when (System.Time.ctHour ctime == 0) $ do -- midnight
+          when ((todHour . localTimeOfDay . zonedTimeToLocalTime) ltime == 0) $ do -- midnight
             handleSyncWithRecurly appConf (mailsConfig appConf)
-              temps (recurlyAPIKey $ recurlyConfig appConf) mtime
-            handleSyncNoProvider mtime
+              temps (recurlyAPIKey $ recurlyConfig appConf) time
+            handleSyncNoProvider time
         SessionsEvaluation -> runScheduler $ actionQueue session
         SMSEventsProcessing -> runScheduler SMS.Events.processEvents
         UserAccountRequestEvaluation -> runScheduler $ actionQueue userAccountRequest

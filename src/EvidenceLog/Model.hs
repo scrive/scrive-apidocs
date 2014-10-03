@@ -122,8 +122,8 @@ type DocumentEvidenceEventWithSignatoryLink = DocumentEvidenceEvent' SignatoryLi
 
 data DocumentEvidenceEvent' s = DocumentEvidenceEvent {
     evDocumentID :: DocumentID
-  , evTime       :: MinutesTime
-  , evClientTime :: Maybe MinutesTime
+  , evTime       :: UTCTime
+  , evClientTime :: Maybe UTCTime
   , evClientName :: Maybe String
   , evClockErrorEstimate :: Maybe HC.ClockErrorEstimate
   , evText       :: String

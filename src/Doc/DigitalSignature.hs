@@ -43,7 +43,7 @@ addDigitalSignature = theDocumentID >>= \did ->
   content <- getFileContents file
   let mainpath = tmppath </> "main.pdf"
   liftIO $ BS.writeFile mainpath content
-  now <- getMinutesTime
+  now <- currentTime
   gtconf <- getGuardTimeConf
   -- GuardTime signs in place
   code <- GT.digitallySign gtconf mainpath
@@ -79,7 +79,7 @@ extendDigitalSignature = do
     content <- getFileContents file
     let sealedpath = tmppath </> "sealed.pdf"
     liftIO $ BS.writeFile sealedpath content
-    now <- getMinutesTime
+    now <- currentTime
     gtconf <- asks (guardTimeConf . sdAppConf)
     templates <- getGlobalTemplates
     res <- runTemplatesT (defaultValue, templates) $ digitallyExtendFile now gtconf sealedpath (filename file)
@@ -100,7 +100,7 @@ extendDigitalSignature = do
     -- the verified document was extensible.
 
 digitallyExtendFile :: (TemplatesMonad m, CryptoRNG m, Log.MonadLog m, MonadIO m, DocumentMonad m)
-                    => MinutesTime -> GuardTimeConf -> FilePath -> String -> m Bool
+                    => UTCTime -> GuardTimeConf -> FilePath -> String -> m Bool
 digitallyExtendFile ctxtime ctxgtconf pdfpath pdfname = do
   documentid <- theDocumentID
   code <- GT.digitallyExtend ctxgtconf pdfpath

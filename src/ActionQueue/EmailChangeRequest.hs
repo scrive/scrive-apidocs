@@ -26,7 +26,7 @@ import User.Email
 
 data EmailChangeRequest = EmailChangeRequest {
     ecrUserID :: UserID
-  , ecrExpires :: MinutesTime
+  , ecrExpires :: UTCTime
   , ecrNewEmail :: Email
   , ecrToken :: MagicHash
   } deriving (Show, Typeable)
@@ -71,7 +71,7 @@ getEmailChangeRequestNewEmail uid token = runMaybeT $ do
 newEmailChangeRequest :: (MonadDB m, CryptoRNG m) => UserID -> Email -> m EmailChangeRequest
 newEmailChangeRequest uid new_email = do
   token <- random
-  expires <- (1 `daysAfter`) `liftM` getMinutesTime
+  expires <- (1 `daysAfter`) `liftM` currentTime
   -- only one email change request can be active at a time, so we want
   -- to remove old one before we insert new one. this could potentially
   -- lead to race condition (when we introduce possibility of one user
