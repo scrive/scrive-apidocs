@@ -137,7 +137,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
       var component = React.renderComponent(
         DocumentViewSignatories.DocumentViewSignatories({
           forSigning: true,
-          document : this.document(),
+          document : this.document()
         }), div[0]);
     }
 
@@ -158,7 +158,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
                                         ((this.document().currentSignatory().attachments().length > 1) ?
                                             localization.docsignview.signatoryAttachmentsTitleForLots :
                                             localization.docsignview.signatoryAttachmentsTitleForOne),
-                                subtitle :   this.document().currentSignatory().hasSigned() ? undefined : localization.docsignview.signatoryAttachmentsSupportedFormats,
+                                subtitle :   this.document().currentSignatory().hasSigned() ? undefined : localization.docsignview.signatoryAttachmentsSupportedFormats
                             })
             }, {silent : true});
         return this.get('signatoryattachmentsection');
@@ -172,7 +172,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
                             el: $("<div class='section spacing'/>"),
                             title: (this.document().currentSignatory().attachments().length > 1) ?
                                     localization.docsignview.authorAttachmentsTitleForLots :
-                                    localization.docsignview.authorAttachmentsTitleForOne,
+                                    localization.docsignview.authorAttachmentsTitleForOne
                         })
         }, {silent : true});
       return this.get('authorattachmentssection');
@@ -183,7 +183,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
       if (this.get('extradetailssection') === undefined) {
         var extradetailssection = new DocumentSignExtraDetailsSection({model: this.document().currentSignatory(),
                                                                        arrow: function() { return model.arrow(); },
-                                                                       signview: this,
+                                                                       signview: this
         });
         this.set({'extradetailssection': extradetailssection}, {silent: true});
       }
@@ -312,7 +312,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
                                        {Label : placement.field().name()});
                     },
                     tipSide : placement.tip(),
-                    label: label,
+                    label: label
                 });
                 placement.field().bind("change", function() { task.update();});
                 placement.field().bind("change", function() { task.update();});

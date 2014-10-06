@@ -131,7 +131,7 @@ var ConfirmationWithEmailModel = Backbone.Model.extend({
       rejectText: localization.cancel,
       editText : "Edit",
       acceptColor : "green",
-      onEdit: function() {},
+      onEdit: function() {}
   },
   initialize : function() {
   },

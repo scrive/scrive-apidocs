@@ -22,7 +22,6 @@ define(['React', 'Backbone', 'common/backbone_mixin', 'tinycolor'], function(Rea
       if (!showHeader || !signviewbranding.ready())
         return (<div/>);
       else {
-        console.log("Rendering signview header " + new Date().getTime())
         return (
           <div className={"pageheader " + (this.props.fullWidth ? "full-width-header" : "")} >
             <div className="content">

@@ -127,7 +127,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
             new FlashMessagesCleaner(); // We clean all flash message, so they don't land on screenshot
             self.signinprogressmodal = new SigningInProgressModal({
                                             document : document,
-                                            margin: self.confirmation.margin(),
+                                            margin: self.confirmation.margin()
                                        });
             self.screenshotDone = false;
             document.takeSigningScreenshot(function() {
@@ -260,7 +260,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
           new FlashMessagesCleaner(); // We clean all flash message, so they don't land on screenshot
           self.signinprogressmodal = new SigningInProgressModal({
                                           document : document,
-                                          margin: modalTop + "px auto 0",
+                                          margin: modalTop + "px auto 0"
                                      });
           self.screenshotDone = false;
           document.takeSigningScreenshot(function() {
@@ -355,7 +355,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
           },
           inputtype: 'text',
           cssClass : "pin-input " + (BrowserInfo.isSmallScreen() ? "small-screen" : ""),
-          name: 'pin',
+          name: 'pin'
         });
 
     var el = iti.el();

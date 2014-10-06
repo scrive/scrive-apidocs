@@ -9,7 +9,7 @@ var expose = {};
 var DocumentViewSignatoriesModel = Backbone.Model.extend({
   defaults : function() { return {
      onAction : function() {},
-     forSigning : false,
+     forSigning : false
     };
   },
   initialize: function (args) {
