@@ -49,9 +49,6 @@ var SignatureDrawOrTypeModel= Backbone.Model.extend({
   width: function() {
      return this.get("width");
   },
-  branding: function() {
-     return this.get("branding");
-  },
   signview: function() {
      return this.get("signview");
   },
@@ -210,14 +207,11 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
     },
     applyButton : function() {
         var self = this;
-        var branding = this.model.branding();
         var signatory = this.model.field().signatory();
         var button = new Button({
                     color : 'green',
-                    customcolor: branding ? branding.signviewprimarycolour() : undefined,
-                    textcolor: branding ? branding.signviewprimarytextcolour() : undefined,
                     size: 'small',
-                    cssClass: 'bottom-button',
+                    cssClass: 'bottom-button accept-button',
                     text: localization.signature.confirmSignature,
                     onClick : function(){
                         self.model.typerOrDrawer().saveImage();
@@ -230,16 +224,13 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
     },
     extraDetailsButton: function() {
         var self = this;
-        var branding = this.model.branding();
         var signatory = this.model.field().signatory();
         var document = signatory.document();
         var signview = this.model.signview();
         var button = new Button({
                     color : 'green',
-                    customcolor: branding ? branding.signviewprimarycolour() : undefined,
-                    textcolor: branding ? branding.signviewprimarytextcolour() : undefined,
                     size: 'small',
-                    cssClass: 'bottom-button',
+                    cssClass: 'bottom-button accept-button',
                     text: localization.pad.fillInExtraDetails,
                     onClick : function(){
                         var arrow = self.model.arrow();
@@ -253,7 +244,6 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
                           var modal = new DocumentExtraDetailsModal({
                             model: signview,
                             arrow: arrow,
-                            branding: branding ? branding : undefined,
                             margin: self.model.containerTop() + "px auto 0",
                             bottom: true
                           });
@@ -275,16 +265,13 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
     },
     signButton: function() {
         var self = this;
-        var branding = this.model.branding();
         var signatory = this.model.field().signatory();
         var document = signatory.document();
         var signview = this.model.signview();
         var button = new Button({
                     color : 'green',
-                    customcolor: branding ? branding.signviewprimarycolour() : undefined,
-                    textcolor: branding ? branding.signviewprimarytextcolour() : undefined,
                     size: 'small',
-                    cssClass: 'bottom-button',
+                    cssClass: 'bottom-button accept-button',
                     text: localization.next,
                     onClick : function(){
                         var arrow = self.model.arrow();
@@ -396,7 +383,6 @@ window.SignatureDrawOrTypeModal = function(args){
         var model = new SignatureDrawOrTypeModel({field : args.field,
                                                   width: args.width,
                                                   height: args.height,
-                                                  branding: args.branding,
                                                   arrow: arrow,
                                                   signview: args.signview,
                                                   modal : modal,

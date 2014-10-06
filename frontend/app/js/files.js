@@ -184,7 +184,6 @@ var FilePageView = Backbone.View.extend({
     model : FilePage,
     initialize: function (args) {
         _.bindAll(this, 'render', 'renderDragables', 'updateDragablesPosition');
-        this.signviewbranding = args.signviewbranding;
         this.signview = args.signview;
         this.arrow = args.arrow;
         this.listenTo(this.model,'change:dragables', this.renderDragables);
@@ -233,7 +232,6 @@ var FilePageView = Backbone.View.extend({
                 var elem = $("<div />").appendTo(container);
                 createFieldPlacementPlacedView({
                   model: placement,
-                  signviewbranding: view.signviewbranding,
                   signview: view.signview,
                   arrow: view.arrow,
                   el: elem
@@ -285,7 +283,6 @@ var FileView = Backbone.View.extend({
         this.model.on('change', this.render);
         this.model.view = this;
         this.pageviews = [];
-        this.signviewbranding = args.signviewbranding;
         this.arrow = args.arrow;
         this.signview = args.signview;
         this.model.fetch({data: { signatoryid: this.model.signatoryid()},
@@ -327,7 +324,6 @@ var FileView = Backbone.View.extend({
             _.each(file.pages(),function(page){
                  var pageview = new FilePageView({
                    model : page,
-                   signviewbranding: view.signviewbranding,
                    arrow: view.arrow,
                    signview: view.signview,
                    el: $("<div/>")
@@ -418,7 +414,6 @@ window.KontraFile = function(args){
         }
         this.view = new FileView({
             model: this.model,
-            signviewbranding: args.signviewbranding,
             signview: args.signview,
             arrow: args.arrow,
             el : $("<div class='document-pages'/>")

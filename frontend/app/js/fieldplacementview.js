@@ -550,20 +550,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
         var placement = this.model;
         var field =  placement.field();
         var signatory = field?field.signatory():placement.signatory();
-        this.branding = args.signviewbranding;
         this.arrow = args.arrow;
-
-        // Setting up all standard colors, so we don't have to recalculate that
-        this.standardColor = field.isObligatory() ? "rgb(83, 182, 136)" : "rgb(41, 158, 204)";
-        if (this.branding) {
-            this.standardColor = (field.isObligatory() ? this.branding.signviewprimarycolour() : this.branding.signviewsecondarycolour()) || this.standardColor;
-        }
-        this.emptyBackgroundColor = tinycolor(this.standardColor);
-        this.emptyBackgroundColor.setAlpha(0.2);
-        this.standardBorderColor = tinycolor(this.standardColor);
-        this.standardBorderColor.setAlpha(0.6);
-        this.highlightBorderColor = tinycolor(this.standardColor);
-
 
         this.model.bind('removed', this.clear, this);
         this.model.bind('change:field change:signatory change:step change:withTypeSetter change:fsrel', this.render);
@@ -673,26 +660,16 @@ var TextPlacementPlacedView = Backbone.View.extend({
                       field.trigger('change:inlineedited');
         };
 
-
-        var bcolor = field.isObligatory() ? "rgb(83, 182, 136)" : "rgb(41, 158, 204)";
-        if (this.branding) {
-          bcolor = (field.isObligatory() ? this.branding.signviewprimarycolour() : this.branding.signviewsecondarycolour()) || bcolor;
-        }
-        var bcolorWithAlpha = tinycolor(bcolor);
-        bcolorWithAlpha.setAlpha(0.2);
-        var background = bcolorWithAlpha.toRgbString();
-
         self.input = new InfoTextInput({
           infotext: field.nicename(),
           value : field.value(),
+          cssClass : "text-inline-editing",
           autoGrowth : true,
           style: "font-size:" + this.fontSize() + "px;" +
                  "line-height: 1;" +
                  "height:"+ (this.fontSize() + 4) +"px;" +
                  "border-width: 0px;" +
-                 "padding-left:7px;" +
-                 "background:"+background+";",
-
+                 "padding-left:7px;",
           inputStyle : "font-size:" + this.fontSize() + "px ;" +
                        "line-height: " + (this.fontSize()+ 4) + "px;" +
                        "height:"+ (this.fontSize() + 4) +"px;" +
@@ -719,17 +696,6 @@ var TextPlacementPlacedView = Backbone.View.extend({
                    self.input.focus();
         }
         return false;
-    },
-    updateBorderColor : function() {
-       var self = this;
-       var place = $(self.el);
-       var hovered = $(":hover").is(place); // We can't user hovered flag, since this object changes shape
-       if (hovered)
-         place.css('border-color',self.highlightBorderColor);
-       else if (self.inlineediting)
-         place.css('border-color',self.highlightBorderColor);
-       else
-         place.css('border-color',self.standardBorderColor);
     },
     updateErrorBackground: function() {
         var placement = this.model;
@@ -990,15 +956,11 @@ var TextPlacementPlacedView = Backbone.View.extend({
 
         place.addClass('placedfield');
         this.updateErrorBackground();
-        //this.updateColor();
 
         if ((signatory == document.currentSignatory() && document.currentSignatoryCanSign()) || document.preparation())
               place.css('cursor','pointer');
 
         this.updatePosition();
-
-        var pField;
-
 
         place.empty();
 
@@ -1036,30 +998,6 @@ var TextPlacementPlacedView = Backbone.View.extend({
             place.addClass("obligatory");
 
          place.toggleClass("empty-text-field",field.value() == "");
-
-         self.updateBorderColor();
-         setTimeout(function() {self.updateBorderColor()},10);
-         // We need to do it in timeout since :hover selector may now work instantly
-         // Same case for events handlers bellow.
-         place.hover(
-           function() {
-             self.updateBorderColor();
-             setTimeout(function() {self.updateBorderColor()},10);
-           },
-           function() {
-             self.updateBorderColor();
-              setTimeout(function() {self.updateBorderColor()},10);
-           }
-         );
-
-         if (field.value() == "") {
-            placewrapper.css({'background-color': self.emptyBackgroundColor,
-                              'filter': self.emptyBackgroundColor.toFilter()}); // filter is a IE8 version of rgba bg-color
-         } else {
-            placewrapper.css({'background-color': '',
-                              'filter': ''}); // filter is a IE8 version of rgba bg-color
-         }
-
 
           place.click(function() {
                 return self.startInlineEditing();
@@ -1317,28 +1255,10 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
         this.model.bind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
         this.model.field().bind('change', this.render);
         this.model.view = this;
-        this.branding = args.signviewbranding;
-
-        // Setting up all standard colors, so we don't have to recalculate that
-        this.standardColor = this.model.field().isObligatory() ? "rgb(83, 182, 136)" : "rgb(41, 158, 204)";
-        if (this.branding) {
-            this.standardColor = (this.model.field().isObligatory() ? this.branding.signviewprimarycolour() : this.branding.signviewsecondarycolour()) || this.standardColor;
-        }
-        this.standardBorderColor = tinycolor(this.standardColor);
-        this.standardBorderColor.setAlpha(0.6);
-        this.highlightBorderColor = tinycolor(this.standardColor);
 
         var view = this;
         this.model.bind('change:withTypeSetter', this.closeTypeSetterIfNeeded);
         this.render();
-    },
-   updateBorderColor : function() {
-       var self = this;
-       var place = $(self.el);
-       if (self.hovered)
-         place.css('border-color',self.highlightBorderColor);
-       else
-         place.css('border-color',self.standardBorderColor);
     },
     closeTypeSetterIfNeeded : function() {
        if(!this.model.withTypeSetter())
@@ -1403,18 +1323,6 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
               place.addClass("to-fill-now");
               if (field.obligatory())
                 place.addClass("obligatory");
-
-              self.updateBorderColor();
-              place.hover(
-                function() {
-                  self.hovered = true;
-                  self.updateBorderColor();
-                },
-                function() {
-                  self.hovered = false;
-                  self.updateBorderColor();
-                }
-              );
         }
         this.updatePosition();
 
@@ -1470,52 +1378,16 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
         this.model.bind('change', this.render);
         this.height = args.height;
         this.width = args.width;
-        this.branding = args.signviewbranding;
         this.arrow = args.arrow;
         this.signview = args.signview;
-        this.useDefaultBackground  = args.useDefaultBackground || false;
-        this.useDefaultValidBorderColor = args.useDefaultValidBorderColor || false;
 
-        // Setting up all standard colors, so we don't have to recalculate that
-        this.standardColor = this.model.isObligatory() ? "rgb(83, 182, 136)" : "rgb(41, 158, 204)";
-        if (this.branding) {
-            this.standardColor = (this.model.isObligatory() ? this.branding.signviewprimarycolour() : this.branding.signviewsecondarycolour()) || this.standardColor;
-        }
-        this.standardBorderColor = tinycolor(this.standardColor);
-        this.standardBorderColor.setAlpha(0.6);
-        this.highlightBorderColor = tinycolor(this.standardColor);
-        this.validBorderColor = '#ddd';
-        this.emptyBackgroundColor = this.emptyBackgroundColorWithAlpha(tinycolor(this.standardColor));
         this.render();
-    },
-    emptyBackgroundColorWithAlpha : function(baseColor) {
-      // This is alpha color composition that coresponds to a box with base color with opacity 0.2
-      // placed over box with white background with opacity 0.8.
-      var r = Math.floor(baseColor.toRgb().r * 0.24 + 255*0.76);
-      var g = Math.floor(baseColor.toRgb().g * 0.24 + 255*0.76);
-      var b = Math.floor(baseColor.toRgb().b * 0.24 + 255*0.76);
-      return tinycolor("rgba("+r+","+g+","+b + "," + (1 - (0.8 * 0.2)));
     },
     clear: function() {
         this.off();
         this.model.unbind('removed', this.clear);
         this.model.unbind('change', this.render);
         $(this.el).remove();
-    },
-    updateBorderColor : function() {
-       var self = this;
-       var image = self.model.value();
-       var valid = image !== '';
-       var place = $(self.el);
-       if (valid && self.useDefaultValidBorderColor) {
-         place.css('border-color', self.validBorderColor);
-         return;
-       }
-       if (self.hovered) {
-         place.css('border-color',self.highlightBorderColor);
-       } else {
-         place.css('border-color',self.standardBorderColor);
-       }
     },
     updateSize: function(width, height) {
       this.width = width;
@@ -1531,7 +1403,6 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
             var box = $(this.el);
             var width =  this.width;
             var height = this.height;
-            var branding = this.branding;
             var arrow = this.arrow;
             var signview = this.signview;
             var image = field.value();
@@ -1550,10 +1421,6 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
                 box.width(width);
                 box.height(height);
                 box.css("line-height",Math.floor(height) + "px");
-                if(!this.useDefaultBackground) {
-                  box.css({'background-color': self.emptyBackgroundColor,
-                           'filter': self.emptyBackgroundColor.toFilter()}); // filter is a IE8 version of rgba bg-color
-                }
                 box.text(localization.signature.clickToDraw);
             }
             else {
@@ -1576,24 +1443,11 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
                 box.append(img);
             }
 
-            self.updateBorderColor();
-            box.hover(
-              function() {
-                self.hovered = true;
-                self.updateBorderColor();
-              },
-              function() {
-                self.hovered = false;
-                self.updateBorderColor();
-              }
-            );
-
             box.click(function() {
               new SignatureDrawOrTypeModal({
                 field: field,
                 width: width,
                 height: height,
-                branding: branding,
                 arrow: arrow,
                 signview: signview
               });
@@ -1919,7 +1773,6 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
         this.model.bind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
         this.model.bind('change:withTypeSetter', this.closeTypeSetter);
         this.model.view = this;
-        this.signviewbranding = args.signviewbranding;
         this.signview = args.signview;
         this.arrow = args.arrow;
         this.render();
@@ -1990,7 +1843,6 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
                                                                 model: placement.field(),
                                                                 width : placement.wrel() * place.parent().width(),
                                                                 height : placement.hrel() * place.parent().height(),
-                                                                signviewbranding: this.signviewbranding,
                                                                 signview: this.signview,
                                                                 arrow: this.arrow
                                                               });

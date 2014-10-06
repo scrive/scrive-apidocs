@@ -15,6 +15,7 @@ module Doc.DocView (
   , pageDocumentPadList
   , pageDocumentPadListLogin
   , gtVerificationPage
+  , documentSignviewBrandingCSS
   ) where
 
 import AppView (kontrakcja, standardPageFields, brandingFields, companyUIForPage, renderFromBody)
@@ -29,7 +30,17 @@ import Data.Maybe
 import qualified Text.StringTemplates.Fields as F
 import Analytics.Include
 import Happstack.Server.SimpleHTTP
+import Company.CompanyUI
 import BrandedDomain.BrandedDomain
+import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.Lazy.UTF8 as BSL
+import Utils.IO
+import qualified Log as Log
+import System.Exit
+import Control.Monad.Trans
+import Control.Monad
+import Utils.Color
+import Utils.Font
 
 pageCreateFromTemplate :: TemplatesMonad m => m String
 pageCreateFromTemplate = renderTemplate_ "createFromTemplatePage"
@@ -152,3 +163,49 @@ documentStatusFields document = do
 -- Page for GT verification
 gtVerificationPage :: Kontrakcja m => m Response
 gtVerificationPage = renderFromBody kontrakcja =<< renderTemplate_ "gtVerificationPage"
+
+
+-- Signview branding CSS. Generated using less
+documentSignviewBrandingCSS ::  Maybe BrandedDomain -> Maybe CompanyUI -> IO BSL.ByteString
+documentSignviewBrandingCSS mbd mcui = do
+    (code,stdout,stderr) <- liftIO $ do
+      readProcessWithExitCode' "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
+        (BSL.fromString $ signviewBrandingLess mbd mcui)
+    case code of
+      ExitSuccess -> do
+          return $ stdout
+      ExitFailure _ -> do
+          Log.attention_ $ "Creating sign view branding failed : " ++ BSL.toString stderr
+          return BSL.empty
+
+
+signviewBrandingLess :: Maybe BrandedDomain -> Maybe CompanyUI -> String
+signviewBrandingLess mbd mcompanyui = unlines
+   [
+    "@import 'branding/variables';", -- This is imported so we can use color variables from there
+    "@import 'signviewbranding/signviewbrandingdefaultvariables';", -- This will set default signview branding
+    -- Following settings will overwrite default values
+    bcolor "barscolor" $ (companysignviewbarscolour  =<< mcompanyui) `mplus` (bdbarscolour <$> mbd),
+    bcolor "barstextcolor" $ (companysignviewbarstextcolour =<< mcompanyui) `mplus` (bdbarstextcolour <$> mbd),
+    bcolor "textcolor" $  (companysignviewtextcolour =<< mcompanyui),
+    bcolor "primarycolor" $ (companysignviewprimarycolour =<< mcompanyui) `mplus` (bdsignviewprimarycolour <$> mbd),
+    bcolor "primarytextcolor" $ (companysignviewprimarytextcolour   =<< mcompanyui) `mplus` (bdsignviewprimarytextcolour <$> mbd),
+    bcolor "secondarycolor" $ (companysignviewsecondarytextcolour   =<< mcompanyui) `mplus` (bdsignviewsecondarytextcolour <$> mbd),
+    bcolor "secondarycolor" $ (companysignviewsecondarycolour   =<< mcompanyui) `mplus` (bdsignviewsecondarycolour <$> mbd),
+    bcolor "backgroundcolor" $ (companysignviewbackgroundcolour =<< mcompanyui) `mplus` (bdbackgroundcolour <$> mbd),
+    bfont "font" $ (companysignviewtextfont  =<< mcompanyui),
+    -- Only last part will generate some css. Previews ones are just definitions
+    "@import 'signviewbranding/signviewbranding';"
+    ]
+  where
+    -- Some sanity checks on data. Note that this are provided by users
+    bcolor :: String -> Maybe String -> String
+    bcolor _ Nothing = ""
+    bcolor n (Just c) = if (isValidColor c)
+                          then "@" ++ n ++ ": " ++ c ++ ";"
+                          else ""
+    bfont :: String -> Maybe String -> String
+    bfont _ Nothing = ""
+    bfont n (Just c) = if (isValidFont c)
+                          then "@" ++ n ++ ": " ++ c ++ ";"
+                          else ""

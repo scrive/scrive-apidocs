@@ -8,8 +8,7 @@ var expose = {};
 var DocumentViewSignatoryModel = Backbone.Model.extend({
   defaults : {
     onAction : function() {},
-    forSigning : false,
-    textstyle : {}
+    forSigning : false
   },
   initialize: function (args) {
     var self = this;
@@ -21,9 +20,6 @@ var DocumentViewSignatoryModel = Backbone.Model.extend({
   },
   forSigning : function() {
     return this.get("forSigning");
-  },
-  textstyle: function() {
-    return this.get("textstyle");
   },
   document :function() {
      return this.signatory().document();
@@ -148,13 +144,12 @@ var DocumentViewSignatoryForListView = React.createClass({
     render: function() {
       var model = this.props.model;
       var signatory = model.signatory();
-      var textstyle= model.textstyle();
       return (
         <div onClick={this.onSelect} className={"sig " +  (this.props.first ? "first " :"") + (this.props.last ? "last " : "") + (this.props.active  ? "active " : "")}>
                 {/*if*/ (this.props.active ) &&
                   <div className='arrow'/>
                 }
-                <div className='name' style={model.textstyle()}>
+                <div className='name'>
                   {signatory.nameOrEmailOrMobile()}{'\u00A0'}
                 </div>
                 <div className='line'>
@@ -162,7 +157,7 @@ var DocumentViewSignatoryForListView = React.createClass({
                     <div className={"icon status " + model.status() }> </div>
                   </div>
                   <div className='middle'>
-                    <div className={"statustext " + model.status()} style={model.textstyle()}>
+                    <div className={"statustext " + model.status()}>
                         {model.signatorySummary()}
                     </div>
                   </div>
@@ -377,12 +372,11 @@ var DocumentViewSignatoryView = React.createClass({
     render: function() {
       var model = this.props.model;
       var signatory = model.signatory();
-      var textstyle= model.textstyle();
       return (
         <div className='grey-box'>
 
           <div className="titleinfo spacing">
-            <div className="name" style={textstyle}>
+            <div className="name">
               {signatory.nameOrEmailOrMobile()}{'\u00A0'}
             </div>
           </div>
@@ -391,7 +385,7 @@ var DocumentViewSignatoryView = React.createClass({
 
             {/*if*/ signatory.company() &&
             <div className="fieldrow">
-              <span className="company field" style={textstyle} title={signatory.company()}>
+              <span className="company field" title={signatory.company()}>
                 {localization.company}: {signatory.company()}
               </span>
             </div>
@@ -399,7 +393,7 @@ var DocumentViewSignatoryView = React.createClass({
 
             {/*if*/ signatory.email() &&
             <div className="fieldrow">
-              <span className="email field" style={textstyle}  display={false} title={signatory.email()}>
+              <span className="email field" display={false} title={signatory.email()}>
                 {localization.email}: {signatory.email()}
               </span>
             </div>
@@ -407,7 +401,7 @@ var DocumentViewSignatoryView = React.createClass({
 
             {/*if*/ signatory.mobile() &&
             <div className="fieldrow">
-              <span className="mobile field" style={textstyle} title={signatory.mobile()}>
+              <span className="mobile field" title={signatory.mobile()}>
                 {localization.phone}: {signatory.mobile()}
               </span>
             </div>
@@ -415,7 +409,7 @@ var DocumentViewSignatoryView = React.createClass({
 
             {/*if*/ signatory.companynumber() &&
             <div className="fieldrow">
-              <span className="orgnum field" style={textstyle} title={signatory.companynumber()}>
+              <span className="orgnum field" title={signatory.companynumber()}>
                 {localization.docsignview.companyNumberLabel}: {signatory.companynumber().trim() || localization.docsignview.notEntered}
               </span>
             </div>
@@ -423,7 +417,7 @@ var DocumentViewSignatoryView = React.createClass({
 
             {/*if*/ signatory.personalnumber() &&
             <div className="fieldrow">
-              <span className="persnum field" style={textstyle} title={signatory.personalnumber()}>
+              <span className="persnum field" title={signatory.personalnumber()}>
                 {localization.docsignview.personalNumberLabel}: {signatory.personalnumber().trim() || localization.docsignview.notEntered}
               </span>
             </div>
@@ -435,19 +429,19 @@ var DocumentViewSignatoryView = React.createClass({
           <div className="inner fields">
 
             <div className="fieldrow">
-              <span className="signorder field" style={textstyle} title={LanguageService.localizedOrdinal(signatory.signorder())}>
+              <span className="signorder field" title={LanguageService.localizedOrdinal(signatory.signorder())}>
                 {localization.docview.signatory.invitationOrder}: {LanguageService.localizedOrdinal(signatory.signorder())}
               </span>
             </div>
 
             <div className="fieldrow">
-              <span className="deliverymethod field" style={textstyle} title={this.getDeliveryMethod()}>
+              <span className="deliverymethod field" title={this.getDeliveryMethod()}>
                 {localization.docview.signatory.invitationMethod}: {this.getDeliveryMethod()}
               </span>
             </div>
 
             <div className="fieldrow">
-              <span className="role field" style={textstyle} title={this.getRole()}>
+              <span className="role field" title={this.getRole()}>
                 {localization.docview.signatory.role}: {this.getRole()}
               </span>
             </div>
@@ -457,14 +451,14 @@ var DocumentViewSignatoryView = React.createClass({
               {/*if*/ model.hasChangeAuthentication() &&
                <a className="edit clickable" onClick={this.handleChangeAuthenticationMethod}>{localization.docview.signatory.editAuthenticationMethod}</a>
               }
-              <span className="authentication field" style={textstyle} title={this.getAuthenticationMethodText()}>
+              <span className="authentication field" title={this.getAuthenticationMethodText()}>
                 {localization.docview.signatory.authentication}: {this.getAuthenticationMethodText()}
               </span>
             </div>
             }
 
             <div className="fieldrow">
-              <span className="confirmationmethod field" style={textstyle} title={this.getConfirmationMethod()}>
+              <span className="confirmationmethod field" title={this.getConfirmationMethod()}>
                 {localization.docview.signatory.confirmation}: {this.getConfirmationMethod()}
               </span>
             </div>
@@ -475,7 +469,7 @@ var DocumentViewSignatoryView = React.createClass({
           <div className={"statusbox " + (model.hasAnyOptions() ? "" : "last")} >
             <div className="spacing butt" >
               <span className={'icon status '+ model.status()}></span>
-              <span className={'status statustext ' + model.status()} style={textstyle}>
+              <span className={'status statustext ' + model.status()}>
                 {model.signatorySummary()}
               </span>
             </div>
@@ -561,7 +555,6 @@ var DocumentViewSignatoryView = React.createClass({
 var DocumentViewSignatoryForList = React.createClass({
     propTypes: {
       signatory: React.PropTypes.object,
-      textstyle: React.PropTypes.object,
       first    : React.PropTypes.bool.isRequired,
       last     : React.PropTypes.bool.isRequired,
       active   : React.PropTypes.bool.isRequired,
@@ -575,8 +568,7 @@ var DocumentViewSignatoryForList = React.createClass({
     },
     stateFromProps : function(props) {
       var model = new DocumentViewSignatoryModel({
-        signatory: props.signatory,
-        textstyle : props.textstyle
+        signatory: props.signatory
       });
       return {model: model};
     },
@@ -598,7 +590,6 @@ var DocumentViewSignatory = React.createClass({
     propTypes: {
       signatory: React.PropTypes.object,
       forSigning: React.PropTypes.bool.isRequired,
-      textstyle:  React.PropTypes.object,
       onAction: React.PropTypes.func
     },
     getInitialState: function() {
@@ -611,7 +602,6 @@ var DocumentViewSignatory = React.createClass({
       var model = new DocumentViewSignatoryModel({
         signatory: props.signatory,
         forSigning : props.forSigning,
-        textstyle : props.textstyle,
         onAction : props.onAction
       });
       return {model: model};

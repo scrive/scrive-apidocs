@@ -11,7 +11,7 @@
       shape       : string, rounded | square, where square is default
       textcolor   : string, color for text on button, else default value for predefined color will be used.
       width       : integer, final width of button, if not set, button will adjust to text
-      className    : additional css classes
+      className   : additional css classes
       style       : style object (react format)
       onClick     : func, functiona to be called on click
       multiline   : bool, if button should support multiline labels (if true, text must be an array of strings)
@@ -33,7 +33,7 @@ define(['React'], function(React) {
       inputtype     : React.PropTypes.string,
       name          : React.PropTypes.string,
 
-      cssClass      : React.PropTypes.string,
+      className      : React.PropTypes.string,
       style         : React.PropTypes.object,
       inputStyle    : React.PropTypes.object,
 
@@ -59,7 +59,7 @@ define(['React'], function(React) {
           "suppressSpace" : false,
           "inputtype" : "text",
           "name" : "",
-          "cssClass" : "",
+          "className" : "",
           "style" : {},
           "inputStyle" : {},
           "autocomplete" : false,

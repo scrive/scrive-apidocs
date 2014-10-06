@@ -202,10 +202,8 @@ var SampleSignViewView = Backbone.View.extend({
   },
   changeBarsColor : function(color) {
     this.header.css('background-color', color);
-    this.footer.css('background-color', color);
   },
   changeBarsTextColor : function(color) {
-    this.footercontent.css('color', color);
     this.rightheader.css('color', color);
   },
   changePrimaryColour : function(colour, customized) {

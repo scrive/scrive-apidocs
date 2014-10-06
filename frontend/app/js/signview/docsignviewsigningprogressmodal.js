@@ -154,8 +154,6 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
       cancelVisible: false,
       closeVisible : false,
       acceptVisible: false,
-      textcolor : args.textcolor,
-      textfont : args.textfont,
       content: $(view.el),
       width: BrowserInfo.isSmallScreen() ? 825 : 520,
       margin : args.margin || (BrowserInfo.isSmallScreen() ? '150px auto 0px' : undefined)

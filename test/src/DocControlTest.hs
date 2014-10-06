@@ -4,6 +4,8 @@ module DocControlTest(
 
 import Control.Applicative
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.Lazy.UTF8 as BSL
 import Data.Maybe
 import Control.Monad
 import Control.Monad.Trans
@@ -23,6 +25,7 @@ import DB
 import Doc.Model
 import Doc.DocStateData
 import Doc.SignatoryFieldID
+import Doc.DocView (documentSignviewBrandingCSS)
 import Doc.DocControl
 import Doc.Screenshot (Screenshot(..))
 import Doc.SignatoryScreenshots(emptySignatoryScreenshots, SignatoryScreenshots(signing))
@@ -30,6 +33,7 @@ import Archive.Control
 import Doc.DocumentMonad (withDocumentM, withDocumentID, theDocument, updateDocumentWithID)
 import Doc.DocUtils
 import Company.Model
+import Company.CompanyUI
 import User.Model
 import Util.SignatoryLinkUtils
 import Util.Actor
@@ -42,7 +46,7 @@ import Doc.SMSPin.Model
 import Util.HasSomeUserInfo
 
 docControlTests :: TestEnvSt -> Test
-docControlTests env = testGroup "Templates" [
+docControlTests env = testGroup "DocControl" [
     testThat "Sending a reminder updates last modified date on doc" env testSendReminderEmailUpdatesLastModifiedDate
   , testThat "Create document from template" env testDocumentFromTemplate
   , testThat "Uploading file as contract makes doc" env testUploadingFile
@@ -58,6 +62,9 @@ docControlTests env = testGroup "Templates" [
   , testThat "Document bulk delete works fast" env testDocumentDeleteInBulk
   , testThat "Bankid mismatch happends when it should" env testBankIDMismatch
   , testThat "Download file and download main file obey access rights" env testDownloadFile
+
+  , testThat "Signview branding generation block nasty input " env testSignviewBrandingBlocksNastyInput
+  , testThat "We can download signview branding if we have access to document" env testDownloadSignviewBrandingAccess
   ]
 
 testUploadingFile :: TestEnv ()
@@ -477,3 +484,104 @@ testGetBadHeader = do
   req <- mkRequestWithHeaders GET [] [("authorization", ["ABC"])]
   (res,_) <- runTestKontra req ctx $ apiCallV1Get doc
   assertEqual "Response code is 403" 403 (rsCode res)
+
+-- Some test for signview branding generation
+
+testSignviewBrandingBlocksNastyInput:: TestEnv ()
+testSignviewBrandingBlocksNastyInput = do
+  emptyBrandingCSS <- liftIO $ documentSignviewBrandingCSS Nothing Nothing
+  assertBool "CSS generated for empty branding is not empty" (not $ BSL.null $ emptyBrandingCSS)
+  company<- addNewCompany
+  companyui <- dbQuery $ GetCompanyUI (companyid company)
+  companyCSS <- liftIO $ documentSignviewBrandingCSS Nothing (Just companyui)
+  assertBool "CSS generated for random company branding is not empty" (not $ BSL.null $ companyCSS)
+
+  let
+    nasty1 = "nastyColor \n \n";
+    nasty2 =  "alert('Nasty color')"
+    nasty3 = "& very nasty font {}"
+    nastyCompanyUI = companyui {
+        companysignviewsecondarycolour  = Just nasty1
+      , companysignviewbackgroundcolour = Just nasty2
+      , companysignviewtextfont = Just nasty3
+    }
+  nastyCSS <- liftIO $ documentSignviewBrandingCSS Nothing (Just nastyCompanyUI)
+  assertBool "CSS generated for nasty company branding is not empty" (not $ BSL.null $ nastyCSS)
+  assertBool "CSS generated for nasty company branding does not contain nasty strings" $
+       (not $ nasty1 `isInfixOf ` (BSL.toString $ nastyCSS))
+    && (not $ nasty2 `isInfixOf ` (BSL.toString $ nastyCSS))
+    && (not $ nasty2 `isInfixOf ` (BSL.toString $ nastyCSS))
+
+testDownloadSignviewBrandingAccess :: TestEnv ()
+testDownloadSignviewBrandingAccess = do
+  -- Create file and make it ready for signing
+  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
+  let filename = "test/pdfs/simple.pdf"
+  filecontent <- liftIO $ BS.readFile filename
+  file <- addNewFile filename filecontent
+
+  doc <- addRandomDocumentWithAuthorAndConditionAndFile
+            user
+            (\d -> documentstatus d == Preparation
+                     && (case documenttype d of
+                          Signable -> True
+                          _ -> False)
+                     && all ((==) EmailDelivery . signatorylinkdeliverymethod) (documentsignatorylinks d))
+            file
+  siglink <- withDocumentID (documentid doc) $ do
+    d <- theDocument
+    _ <- randomUpdate $ ResetSignatoryDetails ([
+                      (defaultValue {   signatoryfields = (signatoryfields $ fromJust $ getAuthorSigLink d)
+                                      , signatoryisauthor = True
+                                      , signatoryispartner = False
+                                      , maybesignatory = Just $ userid user })
+                    , (defaultValue {   signatorysignorder = SignOrder 1
+                                      , signatoryisauthor = False
+                                      , signatoryispartner = True
+                                      , signatoryfields = [
+                                          SignatoryField (unsafeSignatoryFieldID 0) FirstNameFT "Fred" True False []
+                                        , SignatoryField (unsafeSignatoryFieldID 0) LastNameFT "Frog"  True False []
+                                        , SignatoryField (unsafeSignatoryFieldID 0) EmailFT "fred@frog.com" True False []
+                                        ]})
+                 ]) (systemActor $ documentctime d)
+    t <- documentctime <$> theDocument
+    tz <- mkTimeZoneName "Europe/Stockholm"
+    randomUpdate $ PreparationToPending (systemActor t) tz
+    let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
+    head . filter isUnsigned .documentsignatorylinks <$> theDocument
+
+  -- We have a document, now proper tests will take place
+
+  -- 1) Check access to main signview branding
+  emptyContext <- mkContext defaultValue
+  svbr1 <- mkRequest GET [ ]
+  resp1 <- E.try $  runTestKontra svbr1 emptyContext $ handleSignviewCSS (documentid doc) (signatorylinkid siglink) "some_name.css"
+  case resp1 of
+    Right _ ->   assertFailure "CSS for signing is available for anyone, and thats bad"
+    Left (_ :: E.SomeException) -> return ()
+
+
+  preq <- mkRequest GET [ ]
+  (_,ctxWithSignatory) <- runTestKontra preq emptyContext $ handleSignShowSaveMagicHash (documentid doc) (signatorylinkid siglink) (signatorymagichash siglink)
+
+  svbr2 <- mkRequest GET [ ]
+  (cssResp2, _) <- runTestKontra svbr2 ctxWithSignatory $ handleSignviewCSS (documentid doc) (signatorylinkid siglink) "some_name.css"
+  assertBool "CSS for signing is available for signatories" (rsCode cssResp2 == 200)
+
+  -- 2) Check access to main signview branding for author. Used when logged in a to-sign view.
+
+  svbr3 <- mkRequest GET [ ]
+  resp3 <- E.try $ runTestKontra svbr3 emptyContext $ handleSignviewCSSWithoutDocument  "some_name.css"
+  case resp3 of
+    Right _ ->   assertFailure "CSS for signing without document is available for anyone, and thats bad"
+    Left (_ :: E.SomeException) -> return ()
+
+  let ctxWithAuthor = emptyContext {ctxmaybeuser = Just user}
+  svbr4 <- mkRequest GET [ ]
+  (cssResp4, _) <- runTestKontra svbr4 ctxWithAuthor $ handleSignviewCSSWithoutDocument  "some_name.css"
+  assertBool "CSS for signing is available for author" (rsCode cssResp4 == 200)
+
+  -- 3) Check access to main signview branding for branded domain (no user or document). Used for logging in to to-sign view.
+  svbr5 <- mkRequest GET [ ]
+  (cssResp5, _) <- runTestKontra svbr5 emptyContext $ handleSignviewCSSWithoutDocumentAndWithoutUser  "some_name.css"
+  assertBool "CSS for signing for branded domain is available for anyone" (rsCode cssResp5 == 200)

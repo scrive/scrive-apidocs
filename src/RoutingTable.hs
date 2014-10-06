@@ -188,6 +188,9 @@ staticRoutes production = choice
      , dir "scale_image" $ hPost $ toK0 $ ServerUtils.handleScaleImage
      , dir "text_to_image" $ hGet $ toK0 $ ServerUtils.handleTextToImage
      , dir "branded_signview_image" $ hGet $ toK0 $ ServerUtils.brandedSignviewImage
+     , dir "document_signview_branding" $ hGet $ toK3 $ DocControl.handleSignviewCSS
+     , dir "padlist_signview_branding" $ hGet $ toK1 $ DocControl.handleSignviewCSSWithoutDocument
+     , dir "internal_signview_branding" $ hGet $ toK1 $ DocControl.handleSignviewCSSWithoutDocumentAndWithoutUser
    ]
   where
     staticDir = if (production)

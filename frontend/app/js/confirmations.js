@@ -15,8 +15,6 @@ var ConfirmationModel = Backbone.Model.extend({
       closeVisible  : true,
       cancelVisible : true,
       extraOption : undefined,
-      textfont : undefined,
-      textcolor : undefined,
       margin: undefined,
       oneClick: false,
       signview: false
@@ -90,12 +88,6 @@ var ConfirmationModel = Backbone.Model.extend({
   },
   setWidth: function(width) {
     this.set('width', width);
-  },
-  textfont: function() {
-      return this.get("textfont");
-  },
-  textcolor: function() {
-      return this.get("textcolor");
   },
   margin: function() {
       return this.get("margin");
@@ -205,11 +197,6 @@ var ConfirmationView = Backbone.View.extend({
          title.css('font-style', 'bold');
        }
        title.append(this.model.title());
-       if (model.textcolor())
-         title.css("color",model.textcolor());
-       if (model.textfont())
-         title.css("font-family",model.textfont());
-
        if (model.icon() == null) {
          header.addClass('no-icon');
        } else {
@@ -226,17 +213,11 @@ var ConfirmationView = Backbone.View.extend({
        header.append(inner);
        var body = $("<div class='modal-body'>");
        var content = $("<div class='modal-content'/>");
-       if (model.textcolor())
-         content.css("color",model.textcolor());
-       if (model.textfont())
-         content.css("font-family",model.textfont());
        content.append($("<div class='body'/>").html(this.model.content()));
        body.append(content);
        var footer = $("<div class='modal-footer'/>");
 
        this.cancelButton = $("<label class='cancel clickable close float-left'/>");
-       if (model.textfont())
-          this.cancelButton.css("font-family",model.textfont());
        this.cancelButton.text(this.model.rejectText());
        footer.append(this.cancelButton);
        this.renderCancelButton();

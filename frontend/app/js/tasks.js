@@ -50,8 +50,6 @@ window.PageTask = Backbone.Model.extend({
     onDeactivate : function() {return false;},
     tipSide : "right",
     label:"",
-    labelCss: {},
-    arrowColour: undefined,
     pointSelector : undefined,
     type: undefined,
     field: undefined
@@ -98,12 +96,6 @@ window.PageTask = Backbone.Model.extend({
   },
   isExtraDetailsTask : function() {
     return this.get("type") == 'extra-details';
-  },
-  labelCss : function() {
-    return this.get('labelCss');
-  },
-  arrowColour : function() {
-    return this.get('arrowColour');
   },
   tipSide : function() {
     return this.get("tipSide");
@@ -167,7 +159,6 @@ var PageTasksArrowView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'render');
     var view = this;
-    this.arrowcolour = args.arrowcolour;
     this.model.bind("change", function() {view.render()});
     this.render();
   },
@@ -202,14 +193,12 @@ var PageTasksArrowView = Backbone.View.extend({
             return new Arrow({      type: task.tipSide() != "right" ? 'point-left' : 'point-right'
                                    , point : $(task.el())
                                    , text : task.label()
-                                   , labelCss: task.labelCss()
-                                   , arrowColour: this.arrowcolour
                               });
         }
         else if ((elbottom + bottommargin) > scrollbottom)
-            return new Arrow({type: 'scroll-down', arrowColour: this.arrowcolour,  point : $(task.el()), scrollDone : function() {task.onActivate();} });
+            return new Arrow({type: 'scroll-down', point : $(task.el()), scrollDone : function() {task.onActivate();} });
         else
-            return new Arrow({type: 'scroll-up',  arrowColour: this.arrowcolour, point : $(task.el()), scrollDone : function() {task.onActivate();} });
+            return new Arrow({type: 'scroll-up', point : $(task.el()), scrollDone : function() {task.onActivate();} });
   },
   arrowShouldChange : function(newtask) {
         var view = this;
@@ -298,10 +287,8 @@ var PageTasksArrowView = Backbone.View.extend({
 
 window.PageTasksArrow = function(args){
         var model = args.tasks;
-        var arrowcolour = args.arrowcolour;
         var view = new PageTasksArrowView({
                         model: model,
-                        arrowcolour: arrowcolour,
                         el : $("<div/>")
                     });
         return {

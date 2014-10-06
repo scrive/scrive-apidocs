@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React','common/button','common/backbone_mixin','Backbone', 'tinycolor', 'legacy_code'], function(React, NewButton, BackboneMixin, Backbone,tinycolor) {
+define(['React','common/button','common/infotextinput', 'common/backbone_mixin','Backbone', 'tinycolor', 'legacy_code'], function(React, NewButton, NewInfoTextInput, BackboneMixin, Backbone,tinycolor) {
 
 
 
@@ -55,12 +55,6 @@ define(['React','common/button','common/backbone_mixin','Backbone', 'tinycolor',
     },
     setPhone: function(v) {
       this.set({phone: v});
-    },
-    usebranding : function() {
-      return this.model().usebranding();
-    },
-    signviewbranding : function() {
-      return this.model().signviewbranding();
     }
   });
 
@@ -74,56 +68,27 @@ define(['React','common/button','common/backbone_mixin','Backbone', 'tinycolor',
         return [this.props.model];
       },
       getInitialState: function() {
-        return {focus: false, hover : false};
+        return {active: false};
       },
-      setPhone : function(event) {
-        this.props.model.setPhone(event.target.value);
-      },
-      borderColor: function() {
-        var model = this.props.model;
-        var color = model.usebranding() && model.signviewbranding().signviewprimarycolour() ? model.signviewbranding().signviewprimarycolour() : '#53b688';
-        var standardBorderColor = tinycolor(color);
-        standardBorderColor.setAlpha(0.6);
-        var highlightedBorderColor = tinycolor(color);
-        highlightedBorderColor.setAlpha(1);
-        var validBorderColor = '#ddd';
-        if (this.props.model.hasValidPhone())
-           return validBorderColor;
-        if (this.state.focus || this.state.hover)
-          return highlightedBorderColor;
-        return standardBorderColor;
-
-      },
-      inputOnFocus: function() {
-        this.setState({focus : true});
-      },
-      inputOnBlur : function() {
-        this.setState({focus : false});
-      },
-      inputOnMouseEnter : function() {
-        this.setState({hover : true});
-      },
-      inputOnMouseLeave : function() {
-        this.setState({hover : false});
+      setPhone : function(value) {
+        this.props.model.setPhone(value);
       },
       render: function() {
+        var self = this;
         return (
           <div>
              {/*if*/ this.props.model.phoneCanChange() &&
                <div>
                 <div>{localization.docsignview.pinSigning.enterPhoneForPinDelivery}</div>
-                  <div className="info-text-input"  style={{borderColor:this.borderColor()}}>
-                     <input
-                        style={{width: "200px"}}
-                        onMouseEnter={this.inputOnMouseEnter}
-                        onMouseLeave={this.inputOnMouseLeave}
-                        onFocus={this.inputOnFocus}
-                        onBlur={this.inputOnBlur}
-                        placeholder={localization.phonePlaceholder}
-                        type='text' value={this.props.model.phone()}
-                        onChange={this.setPhone}
-                     />
-                 </div>
+                   <NewInfoTextInput
+                      className={"phone-input " + (this.props.model.hasValidPhone() ? "valid " : "") +  (this.state.active ? "active" : "")}
+                      style={{width: "200px"}}
+                      infotext={localization.phonePlaceholder}
+                      type='text' value={this.props.model.phone()}
+                      onFocus={function() {self.setState({active :true})}}
+                      onBlur={function() {self.setState({active : false})}}
+                      onChange={this.setPhone}
+                   />
                </div>
              }
              {/*else*/ !this.props.model.phoneCanChange() &&
@@ -162,9 +127,7 @@ define(['React','common/button','common/backbone_mixin','Backbone', 'tinycolor',
       var acceptButton =  new Button({
         size:  "small",
         color: "green",
-        customcolor: this.model.usebranding() ? this.model.signviewbranding().signviewprimarycolour() : undefined,
-        textcolor: this.model.usebranding() ? this.model.signviewbranding().signviewprimarytextcolour() : undefined,
-        cssClass: 'greybg',
+        cssClass: 'greybg accept-sms-pin',
         text: localization.docsignview.pinSigning.next,
         onClick: function() {
           if (self.model.hasValidPhone())
@@ -179,12 +142,10 @@ define(['React','common/button','common/backbone_mixin','Backbone', 'tinycolor',
                   title: localization.docsignview.pinSigning.signWithSMSPin,
                   content: content,
                   width: BrowserInfo.isSmallScreen() ? 825 : 424,
-                  cssClass: 'grey',
+                  cssClass: 'grey sms-pin-modal',
                   signview : self.model.margin() != undefined ? false : true,
                   fast : self.model.fast(),
                   margin : self.model.margin(),
-                  textcolor : this.model.usebranding() ? this.model.signviewbranding().signviewtextcolour() : undefined,
-                  textfont : this.model.usebranding() ? this.model.signviewbranding().signviewtextfont() : undefined,
                   onReject : function() { },
                   acceptButton : acceptButton.el()
           });

@@ -60,6 +60,11 @@ $htmlopentag()$
     <title>$pagetitle()$</title>
     $signviewAnalyticsVariables()$
     $standardHeaderContents()$
+    $if(!usestandardheaders)$
+      <link href='/document_signview_branding/$documentid$/$siglinkid$/branding.css' rel='stylesheet' type='text/css'>
+    $else$
+      <link href='/internal_signview_branding/branding.css' rel='stylesheet' type='text/css'>
+    $endif$
   </head>
   <body  $if(usestandardheaders)$ $if(custombackground)$style="background:$custombackground$;"$endif$    $endif$ >
     $if(usestandardheaders)$
@@ -71,7 +76,7 @@ $htmlopentag()$
         $flashmessages()$
         <div class="body-container">
           <script>
-           require(['jquery', 'React' , 'signview/header', 'signview/footer',  'legacy_code'], function(jQuery,React,Header,Footer) {
+           require(['jquery', 'React' , 'signview/header', 'signview/footer', 'legacy_code'], function(jQuery,React,Header,Footer) {
               var svb =  new BrandingForSignView({ documentid : "$documentid$" , signatoryid : "$siglinkid$" });
               svb.fetch({ processData:  true, cache : false});
 
@@ -81,14 +86,13 @@ $htmlopentag()$
                       signviewbranding : svb
                       $if(usestandardheaders)$
                       ,  ignoredoclang : true
-                      ,  usebranding : false
-                      $else$
-                      ,  usebranding : true
                       $endif$
                       , viewer : new DocumentViewer({
                           signatoryid : "$siglinkid$"
                          })
                   });
+
+
                 $if(!usestandardheaders)$
 
                   var headerDiv = jQuery('<div/>');
@@ -136,22 +140,22 @@ $htmlopentag()$
     <title>$pagetitle()$</title>
     $signviewAnalyticsVariables()$
     $standardHeaderContents()$
+    <link href='/document_signview_branding/$documentid$/$siglinkid$/branding.css' rel='stylesheet' type='text/css'>
   </head>
   <body>
     <div class="signview">
       <div class="mainContainer" >
         $flashmessages()$
+
         <div class="body-container">
           <script>
-           require(['jquery', 'React' , 'signview/header', 'signview/footer',  'legacy_code'], function(jQuery,React,Header,Footer) {
+           require(['jquery', 'React' , 'signview/header', 'signview/footer', 'legacy_code'], function(jQuery,React,Header,Footer) {
               var svb =  new BrandingForSignView({ documentid : "$documentid$" , signatoryid : "$siglinkid$" });
               svb.fetch({ processData:  true, cache : false});
-
               jQuery(function(){
                   var docview = new DocumentSignView({
                       id:"$documentid$",
                       signviewbranding : svb,
-                      usebranding : true,
                       viewer : new DocumentViewer({
                           signatoryid : "$siglinkid$"
                       })

@@ -22,18 +22,6 @@ var DocumentAuthorAttachmentsModel = Backbone.Model.extend({
   },
   title : function() {
      return this.get("title");
-  },
-  textcolour : function() {
-     return this.get("textcolour");
-  },
-  textfont : function() {
-     return this.get("textfont");
-  },
-  secondarycolour : function() {
-     return this.get("secondarycolour");
-  },
-  secondarytextcolour : function() {
-     return this.get("secondarytextcolour");
   }
 });
 
@@ -45,28 +33,25 @@ var DocumentAuthorAttachmentsView = Backbone.View.extend({
   destroy : function() {
     $(this.el).remove();
   },
-  authorAttachmentDesc: function(attachment, labelCss) {
+  authorAttachmentDesc: function(attachment) {
     var container = $("<div class='item' />");
     container.append($("<div class='icon' />"));
     var label = $("<div class='label' />");
     var name = $("<div class='name' />");
-    name.css(labelCss);
     label.append(name.text(attachment.name()));
     container.append(label);
     container.append($("<div class='clearfix' />"));
     return container;
   },
-  authorAttachmentFile: function(attachment, secondarycolour, secondarytextcolour) {
+  authorAttachmentFile: function(attachment) {
     var model = this.model;
     var container = $("<div class='item' />");
     var buttonSize = 'small';
     var button = new Button({
-      color: model.forSigning() ? "signview-blue" : "black", 
-      customcolor: model.forSigning() ? secondarycolour : undefined,
-      textcolor: model.forSigning() ? secondarytextcolour : undefined,
-      text: localization.reviewPDF, 
-      cssClass: 'float-right', 
-      size: buttonSize, 
+      color: model.forSigning() ? "signview-blue" : "black",
+      text: localization.reviewPDF,
+      cssClass: "float-right attachment-download-button " +  (model.forSigning() ? "for-signing" : ""),
+      size: buttonSize,
       onClick: function() {
         window.open(attachment.downloadLink(), '_blank');
       }
@@ -90,18 +75,10 @@ var DocumentAuthorAttachmentsView = Backbone.View.extend({
     }
 
     var document = this.model.document();
-    var labelCss = {};
-    var secondarycolour = this.model.secondarycolour();
-    var secondarytextcolour = this.model.secondarytextcolour();
+
 
     var header = $("<h2/>");
-    if (this.model.textcolour()) {
-      labelCss['color'] = this.model.textcolour();
-    }
-    if (this.model.textfont()) {
-      labelCss['font-family'] = this.model.textfont();
-    }
-    header.css(labelCss);
+
     container.append(header.text(this.model.title()));
 
     var table = $("<table class='list'/>");
@@ -110,8 +87,8 @@ var DocumentAuthorAttachmentsView = Backbone.View.extend({
     _.each(this.model.document().authorattachments(), function(attachment) {
       var tr = $("<tr/>");
 
-      tr.append($("<td class='desc'>").append(self.authorAttachmentDesc(attachment, labelCss)));
-      tr.append($("<td class='file'>").append(self.authorAttachmentFile(attachment, secondarycolour, secondarytextcolour)));
+      tr.append($("<td class='desc'>").append(self.authorAttachmentDesc(attachment)));
+      tr.append($("<td class='file'>").append(self.authorAttachmentFile(attachment)));
       tbody.append(tr);
     });
 

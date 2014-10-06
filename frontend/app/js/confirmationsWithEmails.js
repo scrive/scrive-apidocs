@@ -132,8 +132,6 @@ var ConfirmationWithEmailModel = Backbone.Model.extend({
       editText : "Edit",
       acceptColor : "green",
       onEdit: function() {},
-      textfont : undefined,
-      textcolor : undefined
   },
   initialize : function() {
   },
@@ -151,12 +149,6 @@ var ConfirmationWithEmailModel = Backbone.Model.extend({
   },
   rejectText: function() {
        return this.get("rejectText");
-  },
-  textfont: function() {
-      return this.get("textfont");
-  },
-  textcolor: function() {
-      return this.get("textcolor");
   },
   editText: function() {
        return this.get("editText");
@@ -203,10 +195,6 @@ var ConfirmationWithEmailView = Backbone.View.extend({
 	   //Modal header
        var header = $("<div class='modal-header no-icon'></div>");
        var title = $("<span class='modal-title'/>");
-       if (model.textcolor())
-         title.css("color",model.textcolor());
-       if (model.textfont())
-         title.css("font-family",model.textfont());
        title.append(this.model.title());
        header.append(title);
        header.append($("<a class='modal-close'></a>").click(function() {view.reject(); return false;}));
@@ -235,15 +223,12 @@ var ConfirmationWithEmailView = Backbone.View.extend({
                                         view.edit();
                                     }
        });
-       if (model.textfont()) {
-         cancelOption.css("font-family",model.textfont());
-       }
+
        footer.append(cancelOption);
 
        if (!BrowserInfo.isSmallScreen()) { // We skip editing message on small screens
          this.editOption = this.editOption.el(); // make it hideable from other places.
          if (model.editText()) {
-            if (model.textfont()) this.editOption.css("font-family",model.textfont());
             footer.append(this.editOption);
         }
        }
@@ -261,7 +246,6 @@ var ConfirmationWithEmailView = Backbone.View.extend({
 								}
        });
        var acceptButton = accept.el();
-       if (model.textfont()) acceptButton.css("font-family",model.textfont());
 
        footer.append(acceptButton);
        container.append(header);

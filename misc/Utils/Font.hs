@@ -1,0 +1,14 @@
+module Utils.Font (isValidFont) where
+
+import Text.Regex.TDFA
+import Data.String.Utils
+
+-- Our font's don't have " in their definition
+isValidFont :: String -> Bool
+isValidFont c =
+      c' /= (""::String)
+   && (not $  '\n' `elem` c)
+   && (length c' < 50)
+   && c' =~ ("([A-z|0-9| |-]+,)*([A-z|0-9| |-]+)"::String) == c'
+  where
+    c' = strip c

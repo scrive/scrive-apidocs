@@ -10,16 +10,12 @@ var DocumentViewSignatoriesModel = Backbone.Model.extend({
   defaults : function() { return {
      onAction : function() {},
      forSigning : false,
-     textstyle : {}
     };
   },
   initialize: function (args) {
   },
   forSigning : function() {
     return this.get("forSigning");
-  },
-  textstyle: function() {
-    return this.get("textstyle");
   },
   signatories: function() {
         var signatories = this.document().signatories();
@@ -73,15 +69,14 @@ var DocumentViewSignatoriesView = React.createClass({
       var self = this;
       var model = this.props.model;
       var signatories = model.signatories();
-      var textstyle= model.textstyle();
       var AuthorViewAutomaticReminders = Reminders.AuthorViewAutomaticReminders;
       var DocumentViewSignatory = SignatoryView.DocumentViewSignatory;
       var DocumentViewSignatoryForList = SignatoryView.DocumentViewSignatoryForList;
 
       return (
-        <div className='signatories section' style={model.textstyle()}>
+        <div className='signatories section' >
           <div className='column first'>
-            <h2 style={_.extend({width: "260px", float:"none", paddingLeft:"0px"},model.textstyle())}>
+            <h2 style={{width: "260px", float:"none", paddingLeft:"0px"}}>
              {model.forSigning() ? localization.docsignview.signatoriesTitle : localization.authorview.signatoriesTitle }
             </h2>
           </div>
@@ -95,7 +90,6 @@ var DocumentViewSignatoriesView = React.createClass({
                       <DocumentViewSignatoryForList
                         key = {s.signatoryid() + ""}
                         signatory = {s}
-                        textstyle = {model.textstyle()}
                         onSelect =  {function() {self.setCurrentIndex(i);}}
                         first  = {i == 0}
                         last   = {i == model.signatories().length - 1}
@@ -111,7 +105,6 @@ var DocumentViewSignatoriesView = React.createClass({
                   signatory  = {model.signatories()[0]}
                   onAction   = {model.onAction()}
                   forSigning = {model.forSigning()}
-                  textstyle  = {model.textstyle()}
                 />
               }
 
@@ -121,7 +114,6 @@ var DocumentViewSignatoriesView = React.createClass({
                   signatory  = {model.signatories()[model.hasList() ? self.currentIndex() : (model.isSingleSignatory() ? 0 : 1)]}
                   onAction   = {model.onAction()}
                   forSigning = {model.forSigning()}
-                  textstyle  = {model.textstyle()}
                 />
 
               {/*if*/ model.hasAutomaticReminder()&&
@@ -143,7 +135,6 @@ var DocumentViewSignatories = React.createClass({
     propTypes: {
       document: React.PropTypes.object,
       forSigning: React.PropTypes.bool,
-      textstyle:  React.PropTypes.object,
       onAction: React.PropTypes.func
     },
     getInitialState: function() {
@@ -156,7 +147,6 @@ var DocumentViewSignatories = React.createClass({
       var model = new DocumentViewSignatoriesModel({
         document: props.document,
         forSigning : props.forSigning,
-        textstyle : props.textstyle,
         onAction : props.onAction
       });
       return {model: model};

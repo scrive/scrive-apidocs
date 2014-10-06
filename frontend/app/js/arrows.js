@@ -8,8 +8,6 @@ var ArrowModel = Backbone.Model.extend({
   defaults : {
       type : undefined,
       text  : undefined,
-      labelCss: undefined,
-      arrowColour: undefined,
       point : undefined,
       blinks : 0 // Persistent blinking. If > 0 then arrow is in middle of blinking.
   },
@@ -24,12 +22,6 @@ var ArrowModel = Backbone.Model.extend({
   },
   text : function(){
        return this.get("text");
-  },
-  labelCss: function(){
-       return this.get('labelCss');
-  },
-  arrowColour: function(){
-       return this.get('arrowColour');
   },
   point: function() {
        return this.get("point");
@@ -108,14 +100,8 @@ var PointLeftArrowView = Backbone.View.extend({
        var label = $('<div class="label" />');
        var back = $('<div class="back" />');
 
-       if (this.model.arrowColour()) {
-         BrandedImageUtil.setBrandedImageBackground(front, 'sign-arrow-action-left-front.png', this.model.arrowColour());
-         BrandedImageUtil.setBrandedImageBackground(label, 'sign-arrow-action-label.png', this.model.arrowColour());
-         BrandedImageUtil.setBrandedImageBackground(back, 'sign-arrow-action-left-back.png', this.model.arrowColour());
-       }
-
        container.append(front);
-       container.append(label.text(this.model.text() || "" ).css(this.model.labelCss() || {}));
+       container.append(label.text(this.model.text() || "" ));
        container.append(back);
        this.updatePosition();
        return this;
@@ -168,14 +154,8 @@ var PointRightArrowView = Backbone.View.extend({
        var label = $('<div class="label" />');
        var back = $('<div class="back" />');
 
-       if (this.model.arrowColour()) {
-         BrandedImageUtil.setBrandedImageBackground(front, 'sign-arrow-action-right-front.png', this.model.arrowColour());
-         BrandedImageUtil.setBrandedImageBackground(label, 'sign-arrow-action-label.png', this.model.arrowColour());
-         BrandedImageUtil.setBrandedImageBackground(back, 'sign-arrow-action-right-back.png', this.model.arrowColour());
-       }
-
        container.append(front);
-       container.append(label.text(this.model.text() || "" ).css(this.model.labelCss() || {}));
+       container.append(label.text(this.model.text() || "" ));
        container.append(back);
 
        this.updatePosition();
@@ -202,9 +182,6 @@ var ScrollUpArrowView = Backbone.View.extend({
     render: function () {
         var view = this;
         $(this.el).addClass("up").addClass("arrow").css("cursor", "pointer");
-        if (this.model.arrowColour()) {
-          BrandedImageUtil.setBrandedImageBackground(this.el, 'sign-arrow-up.png', this.model.arrowColour());
-        }
         this.updateRightMargin();
         return this;
     },
@@ -256,9 +233,6 @@ var ScrollDownArrowView = Backbone.View.extend({
     render: function () {
         var view = this;
         $(this.el).addClass("down").addClass("arrow").css("cursor", "pointer");
-        if (this.model.arrowColour()) {
-          BrandedImageUtil.setBrandedImageBackground(this.el, 'sign-arrow-down.png', this.model.arrowColour());
-        }
         this.updateRightMargin();
         return this;
     },
@@ -306,8 +280,6 @@ window.Arrow = function (args) {
   var model = new ArrowModel({
     type  : args.type,
       text  : args.text,
-      labelCss : args.labelCss,
-      arrowColour : args.arrowColour,
       point : args.point,
       scrollDone : args.scrollDone
   });

@@ -3,30 +3,19 @@ define(['tinycolor', 'Backbone', 'legacy_code'], function(tinycolor) {
 
 window.DocumentExtraDetailsModal = Backbone.View.extend({
   initialize: function(args) {
-    this.branding = args.branding;
     this.arrow = args.arrow;
     this.margin = args.margin;
-
-    var color = this.branding && this.branding.signviewprimarycolour() ? this.branding.signviewprimarycolour() : '#53b688';
-    this.standardBorderColor = tinycolor(color);
-    this.highlightedBorderColor = tinycolor(color);
-    this.validBorderColor = '#ddd';
-
-    this.highlightedBorderColor.setAlpha(1);
-    this.standardBorderColor.setAlpha(0.6);
   },
 
 
   acceptButton: function() {
     var self = this;
     var signatory = this.model.document().currentSignatory();
-    var branding = this.branding;
     var signatory = this.model.document().currentSignatory();
 
     return new Button({
       color: "green",
-      customcolor: branding ? branding.signviewprimarycolour() : undefined,
-      textcolor: branding ? branding.signviewprimarytextcolour() : undefined,
+      cssClass : "accept-button",
       text: localization.next,
       onClick: function() {
         if (!DocumentExtraDetails.detailsMissing(signatory)) {
@@ -47,164 +36,73 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
 
   emailInput: function() {
     var self = this;
-    var branding = this.branding;
     var signatory = this.model.document().currentSignatory();
-    var valid = !DocumentExtraDetails.askForEmail(signatory);
-    var focused = false;
     var field = signatory.emailField();
     var iti = new InfoTextInput({
       infotext: localization.email,
       value: field.value(),
       cssClass: 'obligatory-input',
       onFocus: function() {
-        if (valid) return;
-
-        focused = true;
-        iti.el().css("border-color", self.highlightedBorderColor);
+        iti.el().addClass("active");
       },
       onBlur: function() {
-        if (valid) return;
-
-        focused = false;
-        iti.el().css("border-color", self.standardBorderColor);
+        iti.el().removeClass("active");
       },
       onChange : function(value) {
           field.setValue(value);
           signatory.trigger("change");
+          iti.el().toggleClass("valid",!DocumentExtraDetails.askForEmail(signatory));
 
-          if (!DocumentExtraDetails.askForEmail(signatory)) {
-            valid = true;
-            iti.el().css("border-color", self.validBorderColor);
-          } else {
-            // I don't know if I'm in hover or focused mode here.
-            valid = false;
-            iti.el().css("border-color", self.highlightedBorderColor);
-          }
       }
     });
-    var el = iti.el();
-    iti.el().css("border-color", this.standardBorderColor);
-
-    if (valid) {
-      iti.el().css("border-color", this.validBorderColor);
-    }
-
-    el.hover(function() {
-      if (focused || valid) return;
-      iti.el().css("border-color", self.highlightedBorderColor);
-    }, function() {
-      if (focused || valid) return;
-      iti.el().css("border-color", self.standardBorderColor);
-    });
-
-    return el;
+    iti.el().toggleClass("valid",!DocumentExtraDetails.askForEmail(signatory));
+    return iti.el();
   },
   nameInput: function() {
     var self = this;
-    var branding = this.branding;
     var signatory = this.model.document().currentSignatory();
-    var valid = !DocumentExtraDetails.askForName(signatory);
-    var focused = false;
     var field = signatory.fstnameField();
     var iti =  new InfoTextInput({
       infotext: localization.personalName,
       cssClass: 'obligatory-input',
       value: field.value(),
       onFocus: function() {
-        if (valid) return;
-
-        focused = true;
-        iti.el().css("border-color", self.highlightedBorderColor);
+        iti.el().addClass("active");
       },
       onBlur: function() {
-        if (valid) return;
-
-        focused = false;
-        iti.el().css("border-color", self.standardBorderColor);
+        iti.el().removeClass("active");
       },
       onChange : function(value) {
           field.setValue(value);
           signatory.trigger("change");
-
-          if (!DocumentExtraDetails.askForName(signatory)) {
-            valid = true;
-            iti.el().css("border-color", self.validBorderColor);
-          } else {
-            valid = false;
-            iti.el().css("border-color", self.highlightedBorderColor);
-          }
+          iti.el().toggleClass("valid",!DocumentExtraDetails.askForName(signatory));
       }
     });
-    var el = iti.el();
-    iti.el().css("border-color", this.standardBorderColor);
-
-    if (valid) {
-      iti.el().css("border-color", this.validBorderColor);
-    }
-
-    el.hover(function() {
-      if (focused || valid) return;
-      iti.el().css("border-color", self.highlightedBorderColor);
-    }, function() {
-      if (focused || valid) return;
-      iti.el().css("border-color", self.standardBorderColor);
-    });
-
-    return el;
+    iti.el().toggleClass("valid",!DocumentExtraDetails.askForName(signatory));
+    return iti.el();
   },
   ssnInput: function() {
     var self = this;
-    var branding = this.branding;
     var signatory = this.model.document().currentSignatory();
     var field = signatory.personalnumberField();
-    var valid = !DocumentExtraDetails.askForSSN(signatory);
-    var focused = false;
     var iti = new InfoTextInput({
       infotext: localization.personalNumber,
       cssClass: 'obligatory-input',
       value: field.value(),
       onFocus: function() {
-        if (valid) return;
-
-        focused = true;
-        iti.el().css("border-color", self.highlightedBorderColor);
+        iti.el().addClass("active");
       },
       onBlur: function() {
-        if (valid) return;
-
-        focused = false;
-        iti.el().css("border-color", self.standardBorderColor);
+        iti.el().removeClass("active");
       },
       onChange : function(value) {
           field.setValue(value);
           signatory.trigger("change");
-
-          if (!DocumentExtraDetails.askForSSN(signatory)) {
-            valid = true;
-            iti.el().css("border-color", self.validBorderColor);
-          } else {
-            valid = false;
-            iti.el().css("border-color", self.highlightedBorderColor);
-          }
+          iti.el().toggleClass("valid",!DocumentExtraDetails.askForSSN(signatory));
       }
     });
-    var el = iti.el();
-    iti.el().css("border-color", this.standardBorderColor);
-
-    if (valid) {
-      iti.el().css("border-color", this.validBorderColor);
-
-    }
-
-    el.hover(function() {
-      if (focused || valid) return;
-      iti.el().css("border-color", self.highlightedBorderColor);
-    }, function() {
-      if (focused || valid) return;
-      iti.el().css("border-color", self.standardBorderColor);
-    });
-
-    return el;
+    iti.el().toggleClass("valid",!DocumentExtraDetails.askForSSN(signatory));
+    return iti.el();
   },
   phoneInput: function() {
     var self = this;
@@ -218,47 +116,19 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
       cssClass: 'obligatory-input',
       value: field.value(),
       onFocus: function() {
-        if (valid) return;
-
-        focused = true;
-        iti.el().css("border-color", self.highlightedBorderColor);
+        iti.el().addClass("active");
       },
       onBlur: function() {
-        if (valid) return;
-
-        focused = false;
-        iti.el().css("border-color", self.standardBorderColor);
+        iti.el().removeClass("active");
       },
       onChange : function(value) {
           field.setValue(value);
           signatory.trigger("change");
-
-          if (!DocumentExtraDetails.askForPhone(signatory)) {
-            valid = true;
-            iti.el().css("border-color", self.validBorderColor);
-          } else {
-            valid = false;
-            iti.el().css("border-color", self.highlightedBorderColor);
-          }
+          iti.el().toggleClass("valid",!DocumentExtraDetails.askForPhone(signatory));
       }
     });
-    var el = iti.el();
-    iti.el().css("border-color", this.standardBorderColor);
-
-    if (valid) {
-      iti.el().css("border-color", this.validBorderColor);
-
-    }
-
-    el.hover(function() {
-      if (focused || valid) return;
-      iti.el().css("border-color", self.highlightedBorderColor);
-    }, function() {
-      if (focused || valid) return;
-      iti.el().css("border-color", self.standardBorderColor);
-    });
-
-    return el;
+    iti.el().toggleClass("valid",!DocumentExtraDetails.askForPhone(signatory));
+    return iti.el();
   },
 
   content: function() {
@@ -335,27 +205,14 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
  */
 window.DocumentSignExtraDetailsSection = Backbone.View.extend({
   initialize : function(args){
-    this.textstyle = args.textstyle;
     this.arrow = args.arrow;
     this.signview = args.signview;
-    this.branding = args.signviewbranding;
-
-    var color = this.branding && this.branding.signviewprimarycolour() ? this.branding.signviewprimarycolour() : '#53b688';
-    this.standardBorderColor = tinycolor(color);
-    this.highlightedBorderColor = tinycolor(color);
-    this.validBorderColor = '#ddd';
-
-    this.highlightedBorderColor.setAlpha(1);
-    this.standardBorderColor.setAlpha(0.6);
-
     this.render();
   },
 
   emailInput: function() {
     var self = this;
-    var branding = this.branding;
     var signatory = this.model.document().currentSignatory();
-    var valid = !DocumentExtraDetails.askForEmail(signatory);
     var focused = false;
     var field = signatory.emailField();
     var iti = new InfoTextInput({
@@ -363,64 +220,29 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
       value: field.value(),
       cssClass: 'obligatory-input',
       onFocus: function() {
-        if (valid) return;
-
-        focused = true;
-        iti.el().css("border-color", self.highlightedBorderColor);
+        iti.el().addClass("active");
       },
       onBlur: function() {
-        if (valid) return;
-
-        focused = false;
-        iti.el().css("border-color", self.standardBorderColor);
+        iti.el().removeClass("active");
       },
       onChange : function(value) {
           field.setValue(value);
           signatory.trigger("change");
-
-          if (!DocumentExtraDetails.askForEmail(signatory)) {
-            valid = true;
-            iti.el().css("border-color", self.validBorderColor);
-          } else {
-            valid = false;
-            iti.el().css("border-color", self.highlightedBorderColor);
-          }
+          iti.el().toggleClass("valid",!DocumentExtraDetails.askForEmail(signatory));
       }
     });
-    var el = iti.el();
-    iti.el().css("border-color", this.standardBorderColor);
-
-    if (valid) {
-      iti.el().css("border-color", this.validBorderColor);
-    }
-
-    el.hover(function() {
-      if (focused || valid) return;
-      iti.el().css("border-color", self.highlightedBorderColor);
-    }, function() {
-      if (focused || valid) return;
-      iti.el().css("border-color", self.standardBorderColor);
-    });
+    iti.el().toggleClass("valid",!DocumentExtraDetails.askForEmail(signatory));
 
     field.bind("change", function() {
       iti.setValue(field.value());
-
-      if (!DocumentExtraDetails.askForEmail(signatory)) {
-        valid = true;
-        iti.el().css("border-color", self.validBorderColor);
-      } else {
-        valid = false;
-        iti.el().css("border-color", self.highlightedBorderColor);
-      }
+      iti.el().toggleClass("valid",!DocumentExtraDetails.askForEmail(signatory));
     });
 
-    return el;
+    return iti.el();
   },
   nameInput: function() {
     var self = this;
-    var branding = this.branding;
     var signatory = this.model.document().currentSignatory();
-    var valid = !DocumentExtraDetails.askForName(signatory);
     var focused = false;
     var field = signatory.fstnameField();
     var iti = new InfoTextInput({
@@ -428,190 +250,87 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
       value: field.value(),
       cssClass: 'obligatory-input',
       onFocus: function() {
-        if (valid) return;
-
-        focused = true;
-        iti.el().css("border-color", self.highlightedBorderColor);
+        iti.el().addClass("active");
       },
       onBlur: function() {
-        if (valid) return;
-
-        focused = false;
-        iti.el().css("border-color", self.standardBorderColor);
+        iti.el().removeClass("active");
       },
       onChange : function(value) {
           field.setValue(value);
           signatory.trigger("change");
-
-          if (!DocumentExtraDetails.askForName(signatory)) {
-            valid = true;
-            iti.el().css("border-color", self.validBorderColor);
-          } else {
-            valid = false;
-            iti.el().css("border-color", self.highlightedBorderColor);
-          }
+          iti.el().toggleClass("valid",!DocumentExtraDetails.askForName(signatory));
       }
     });
-    var el = iti.el();
-    iti.el().css("border-color", this.standardBorderColor);
+    iti.el().toggleClass("valid",!DocumentExtraDetails.askForName(signatory));
 
-    if (valid) {
-      iti.el().css("border-color", this.validBorderColor);
-    }
-
-    el.hover(function() {
-      if (focused || valid) return;
-      iti.el().css("border-color", self.highlightedBorderColor);
-    }, function() {
-      if (focused || valid) return;
-      iti.el().css("border-color", self.standardBorderColor);
-    });
 
     field.bind("change", function() {
       iti.setValue(field.value());
-
-      if (!DocumentExtraDetails.askForName(signatory)) {
-        valid = true;
-        iti.el().css("border-color", self.validBorderColor);
-      } else {
-        valid = false;
-        iti.el().css("border-color", self.highlightedBorderColor);
-      }
+      iti.el().toggleClass("valid",!DocumentExtraDetails.askForName(signatory));
     });
 
-    return el;
+    return  iti.el();
   },
   ssnInput: function() {
     var self = this;
-    var branding = this.branding;
     var signatory = this.model.document().currentSignatory();
     var field = signatory.personalnumberField();
-    var valid = !DocumentExtraDetails.askForSSN(signatory);
     var focused = false;
     var iti = new InfoTextInput({
       infotext: localization.personalNumber,
       value: field.value(),
       cssClass: 'obligatory-input',
       onFocus: function() {
-        if (valid) return;
-
-        focused = true;
-        iti.el().css("border-color", self.highlightedBorderColor);
+        iti.el().addClass("active");
       },
       onBlur: function() {
-        if (valid) return;
-
-        focused = false;
-        iti.el().css("border-color", self.standardBorderColor);
+        iti.el().removeClass("active");
       },
       onChange : function(value) {
           field.setValue(value);
           signatory.trigger("change");
-
-          if (!DocumentExtraDetails.askForSSN(signatory)) {
-            valid = true;
-            iti.el().css("border-color", self.validBorderColor);
-          } else {
-            valid = false;
-            iti.el().css("border-color", self.highlightedBorderColor);
-          }
+          iti.el().toggleClass("valid",!DocumentExtraDetails.askForSSN(signatory));
       }
     });
-    var el = iti.el();
-    iti.el().css("border-color", this.standardBorderColor);
-
-    if (valid) {
-      iti.el().css("border-color", this.validBorderColor);
-
-    }
-
-    el.hover(function() {
-      if (focused || valid) return;
-      iti.el().css("border-color", self.highlightedBorderColor);
-    }, function() {
-      if (focused || valid) return;
-      iti.el().css("border-color", self.standardBorderColor);
-    });
+    iti.el().toggleClass("valid",!DocumentExtraDetails.askForSSN(signatory));
 
     field.bind("change", function() {
       iti.setValue(field.value());
-
-      if (!DocumentExtraDetails.askForSSN(signatory)) {
-        valid = true;
-        iti.el().css("border-color", self.validBorderColor);
-      } else {
-        valid = false;
-        iti.el().css("border-color", self.highlightedBorderColor);
-      }
+      iti.el().toggleClass("valid",!DocumentExtraDetails.askForSSN(signatory));
     });
 
-    return el;
+    return iti.el();
   },
   phoneInput: function() {
     var self = this;
-    var branding = this.branding;
     var signatory = this.model.document().currentSignatory();
     var field = signatory.mobileField();
-    var valid = !DocumentExtraDetails.askForPhone(signatory);
-    var focused = false;
     var iti = new InfoTextInput({
       infotext: localization.phonePlaceholder,
       value: field.value(),
       cssClass: 'obligatory-input',
       onFocus: function() {
-        if (valid) return;
-
-        focused = true;
-        iti.el().css("border-color", self.highlightedBorderColor);
+        iti.el().addClass("active");
       },
       onBlur: function() {
-        if (valid) return;
-
-        focused = false;
-        iti.el().css("border-color", self.standardBorderColor);
+        iti.el().removeClass("active");
       },
       onChange : function(value) {
           field.setValue(value);
           signatory.trigger("change");
-
-          if (!DocumentExtraDetails.askForPhone(signatory)) {
-            valid = true;
-            iti.el().css("border-color", self.validBorderColor);
-          } else {
-            valid = false;
-            iti.el().css("border-color", self.highlightedBorderColor);
-          }
+          iti.el().toggleClass("valid",!DocumentExtraDetails.askForPhone(signatory));
       }
     });
-    var el = iti.el();
-    iti.el().css("border-color", this.standardBorderColor);
+    iti.el().toggleClass("valid",!DocumentExtraDetails.askForPhone(signatory));
 
-    if (valid) {
-      iti.el().css("border-color", this.validBorderColor);
-
-    }
-
-    el.hover(function() {
-      if (focused || valid) return;
-      iti.el().css("border-color", self.highlightedBorderColor);
-    }, function() {
-      if (focused || valid) return;
-      iti.el().css("border-color", self.standardBorderColor);
-    });
 
     field.bind("change", function() {
       iti.setValue(field.value());
-
-      if (!DocumentExtraDetails.askForPhone(signatory)) {
-        valid = true;
-        iti.el().css("border-color", self.validBorderColor);
-      } else {
-        valid = false;
-        iti.el().css("border-color", self.highlightedBorderColor);
-      }
+      iti.el().toggleClass("valid",!DocumentExtraDetails.askForPhone(signatory));
     });
 
-    return el;
+    return iti.el();
+
   },
   signatureInput: function() {
     var signatory = this.model.document().currentSignatory();
@@ -624,10 +343,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
       height: 102,
       width: 260,
       arrow: this.arrow,
-      signview: this.signview,
-      signviewbranding: this.branding,
-      useDefaultBackground : true,
-      useDefaultValidBorderColor: true
+      signview: this.signview
     }).el;
   },
   render: function() {
@@ -635,9 +351,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
 
       var box = $(this.el).addClass('section').addClass('spacing').addClass('extradetails');
       var header = $("<h2 class='title'/>").text(localization.docsignview.filladitionfields);
-      header.css(this.textstyle);
       var description = $("<div class='column spacing descriptionbox'/>").text(localization.docsignview.filladitionfieldsdescription);
-      description.css(this.textstyle);
       this.fillBox = $("<div class='column spacing fillbox'/>");
 
       if (DocumentExtraDetails.askForName(signatory)) {

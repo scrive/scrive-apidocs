@@ -30,6 +30,9 @@ module Doc.DocControl(
     , handleMarkAsSaved
     , handleAfterSigning
     , handlePadList
+    , handleSignviewCSS
+    , handleSignviewCSSWithoutDocument
+    , handleSignviewCSSWithoutDocumentAndWithoutUser
 ) where
 
 import AppView
@@ -102,6 +105,8 @@ import Doc.API.Callback.Model
 import Happstack.MonadPlus (runMPlusT)
 import qualified Data.Traversable as T
 import Utils.Default
+import Company.CompanyUI
+import Company.Model
 
 handleNewDocument :: Kontrakcja m => m KontraLink
 handleNewDocument = do
@@ -611,3 +616,38 @@ handleMarkAsSaved docid = do
   getDocByDocID docid `withDocumentM` do
     whenM (isPreparation <$> theDocument) $ dbUpdate $ SetDocumentUnsavedDraft False
     runJSONGenT $ return ()
+
+-- Used to brand signview
+handleSignviewCSS :: Kontrakcja m => DocumentID ->  SignatoryLinkID -> String -> m Response
+handleSignviewCSS did slid _ = do
+  ctx <- getContext
+  magichash <- guardJustM  $ dbQuery $ GetDocumentSessionToken slid
+  doc <- dbQuery $ GetDocumentByDocumentID did
+  sl <- guardJustM $ return $ getMaybeSignatoryLink (doc,slid)
+  when (signatorymagichash sl /= magichash) $ internalError
+  authorid <- guardJustM $ return $ getAuthorSigLink doc >>= maybesignatory
+  user <- guardJustM $ dbQuery $ GetUserByIDIncludeDeleted authorid
+  company <- getCompanyForUser user
+  companyui <- dbQuery $ GetCompanyUI (companyid company)
+  brandingCSS <- liftIO $ documentSignviewBrandingCSS (ctxbrandeddomain ctx) (Just companyui)
+  let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
+  return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
+
+-- Used to brand some view with signview branding but without any particular document. It requires some user to be logged in.
+handleSignviewCSSWithoutDocument :: Kontrakcja m => String -> m Response
+handleSignviewCSSWithoutDocument _ = do
+  ctx <- getContext
+  user <-  guardJust $ mplus (ctxmaybeuser ctx) (ctxmaybepaduser ctx)
+  company <- getCompanyForUser user
+  companyui <- dbQuery $ GetCompanyUI (companyid company)
+  brandingCSS <- liftIO $  documentSignviewBrandingCSS (ctxbrandeddomain ctx) (Just companyui)
+  let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
+  return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
+
+-- Used to brand signview with only settings from domain. Company branding is ignored.
+handleSignviewCSSWithoutDocumentAndWithoutUser :: Kontrakcja m => String -> m Response
+handleSignviewCSSWithoutDocumentAndWithoutUser _ = do
+  ctx <- getContext
+  brandingCSS <- liftIO $  documentSignviewBrandingCSS (ctxbrandeddomain ctx) Nothing
+  let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
+  return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res

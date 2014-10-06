@@ -128,8 +128,6 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
             self.signinprogressmodal = new SigningInProgressModal({
                                             document : document,
                                             margin: self.confirmation.margin(),
-                                            textcolor : self.model.usebranding() ? self.model.signviewbranding().signviewtextcolour() : undefined,
-                                            textfont : self.model.usebranding() ? self.model.signviewbranding().signviewtextfont() : undefined
                                        });
             self.screenshotDone = false;
             document.takeSigningScreenshot(function() {
@@ -216,14 +214,11 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
   },
   createSignButtonElems: function() {
     var document = this.document();
-    var signviewbranding = this.model.signviewbranding();
     var signatory = document.currentSignatory();
     var self = this;
     var button =  new Button({
       size: BrowserInfo.isSmallScreen() ? "big" : "small",
       color: "green",
-      customcolor: this.model.usebranding() ? signviewbranding.signviewprimarycolour() : undefined,
-      textcolor: this.model.usebranding() ? signviewbranding.signviewprimarytextcolour() : undefined,
       cssClass: 'greybg signbutton',
       text: this.signaturesPlaced ? localization.process.signbuttontextfromsignaturedrawing : localization.process.signbuttontext,
       oneClick : true,
@@ -266,8 +261,6 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
           self.signinprogressmodal = new SigningInProgressModal({
                                           document : document,
                                           margin: modalTop + "px auto 0",
-                                          textcolor : self.model.usebranding() ? self.model.signviewbranding().signviewtextcolour() : undefined,
-                                          textfont : self.model.usebranding() ? self.model.signviewbranding().signviewtextfont() : undefined
                                      });
           self.screenshotDone = false;
           document.takeSigningScreenshot(function() {
@@ -346,13 +339,6 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
 
   pinCodeInput : function() {
     var self = this;
-    var signviewbranding = this.model.signviewbranding();
-    var color = this.model.usebranding() && signviewbranding.signviewprimarycolour() ? signviewbranding.signviewprimarycolour() : '#53b688';
-    var standardBorderColor = tinycolor(color);
-    var highlightedBorderColor = tinycolor(color);
-    highlightedBorderColor.setAlpha(1);
-    standardBorderColor.setAlpha(0.6);
-    var focused = false;
     var p = $("<p>");
     p.append("<span/>").text(localization.docsignview.pinSigning.enterSMSPin);
     var iti = new InfoTextInput({
@@ -361,30 +347,18 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
           onChange: function(v) {
             self.pin = v;
           },
+          onFocus: function() {
+            iti.el().addClass("active");
+          },
+          onBlur: function() {
+            iti.el().removeClass("active");
+          },
           inputtype: 'text',
           cssClass : "pin-input " + (BrowserInfo.isSmallScreen() ? "small-screen" : ""),
           name: 'pin',
-          onFocus: function() {
-            focused = true;
-            iti.el().css("border-color", highlightedBorderColor);
-          },
-          onBlur: function() {
-            focused = false;
-            iti.el().css("border-color", standardBorderColor);
-          }
         });
 
     var el = iti.el();
-    el.css("border-color", standardBorderColor);
-
-    el.hover(function() {
-      if (focused) return;
-      iti.el().css("border-color", highlightedBorderColor);
-    }, function() {
-      if (focused) return;
-      iti.el().css("border-color", standardBorderColor);
-    });
-
     p.append(iti.el());
     return p;
   },
@@ -408,7 +382,6 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
 
   popup: function() {
     var document = this.document();
-    var signviewbranding = this.model.signviewbranding();
     var arrow = this.model.arrow();
     var signatory = document.currentSignatory();
     var self = this;
@@ -438,8 +411,6 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
       // use default width for eleg, as there is less text
       width: signatory.elegAuthentication() ? undefined : (isSmallScreen ? 825 : 520),
       margin : this.margin || (isSmallScreen ? '150px auto 0px' : undefined),
-      textcolor : this.model.usebranding() ? signviewbranding.signviewtextcolour() : undefined,
-      textfont : this.model.usebranding() ? signviewbranding.signviewtextfont() : undefined,
       onReject: function() {
         if (arrow) {
           arrow.enable();
@@ -492,7 +463,6 @@ window.DocumentSignSignSection = Backbone.View.extend({
    },
    render: function() {
        var model = this.model;
-       var signviewbranding = this.model.signviewbranding();
        var document = this.model.document();
        var box = $(this.el).addClass('section').addClass('spacing').addClass('signbuttons');
 
@@ -539,13 +509,11 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                             mail: document.currentSignatory().rejectMail(),
                                             icon: null,
                                             signview: true,
-                                            cssClass: "grey",
+                                            cssClass: "grey reject-modal",
                                             acceptText: localization.reject.send,
                                             editText: localization.reject.editMessage,
                                             rejectText: localization.cancel,
                                             acceptColor: "red",
-                                            textcolor : model.usebranding() ? signviewbranding.signviewtextcolour() : undefined,
-                                            textfont : model.usebranding() ? signviewbranding.signviewtextfont() : undefined,
                                             oneClick : true,
                                             onAccept: function(customtext) {
                                                 trackTimeout('Accept',
@@ -579,8 +547,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
 
        this.signButton = new Button({
                             color: "green",
-                            customcolor: model.usebranding() ? signviewbranding.signviewprimarycolour() : undefined,
-                            textcolor: model.usebranding() ? signviewbranding.signviewprimarytextcolour() : undefined,
+                            cssClass: "sign-button",
                             text: signButtonText,
                             onClick: function() {
 

@@ -43,9 +43,8 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
       width : 230,
       size : 'small',
       name: "file",
+      cssClass: "attachment-upload-button",
       text: localization.signatoryAttachmentUploadButton,
-      customcolor: this.signview.usebranding() ? this.signview.signviewbranding().signviewprimarycolour() : undefined,
-      textcolor: this.signview.usebranding() ? this.signview.signviewbranding().signviewprimarytextcolour() : undefined,
       submitOnUpload: true,
       showLoadingDialog: false,
       onClick: function() {
@@ -131,21 +130,15 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
     _.bindAll(this, 'render');
     this.title = args.title;
     this.subtitle = args.subtitle;
-    this.textcolour = args.textcolour;
-    this.textfont = args.textfont;
-    this.primarycolour = args.primarycolour;
-    this.primarytextcolour = args.primarytextcolour;
-    this.secondarycolour = args.secondarycolour;
-    this.secondarytextcolour = args.secondarytextcolour;
     this.uploadElems = [];
     this.render();
   },
-  signatoryAttachmentDescription: function(attachment, labelCss) {
+  signatoryAttachmentDescription: function(attachment) {
     var self = this;
     var container = $("<div class='item' />");
-    var filename = $("<div class='label' />").css(labelCss);
-    var name = $("<div class='name' />").css(labelCss);
-    var desc = $("<div class='description' />").css(labelCss);
+    var filename = $("<div class='label' />");
+    var name = $("<div class='name' />");
+    var desc = $("<div class='description' />");
     if (attachment.file() != undefined)
       container.append($("<div class='filename'/>").append($("<div class='icon'/>")).append(filename.text(attachment.file().name())));
     container.append(name.text(attachment.name()));
@@ -173,25 +166,22 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
 
     var document = this.model.document().signatories()[0].document();
 
-    var labelCss = {};
 
     var header = $("<h2/>");
-    if (this.textcolour) { labelCss['color'] = this.textcolour; }
-    if (this.textfont) { labelCss['font-family'] = this.textfont; }
 
     var container = $("<div class='signatoryattachments' />");
     var header = $("<div class='header'/>");
     container.append(header);
-    header.append($("<h2/>").text(this.title == undefined ? localization.requestedAttachments : this.title).css(labelCss));
+    header.append($("<h2/>").text(this.title == undefined ? localization.requestedAttachments : this.title));
     if (this.subtitle != undefined)
-      header.append($("<div class='subtitle'/>").text(this.subtitle).css(labelCss));
+      header.append($("<div class='subtitle'/>").text(this.subtitle));
     var table = $("<table class='list'/>");
     var tbody = $("<tbody/>");
     table.append(tbody);
     _.each(this.model.document().currentSignatory().attachments(), function(attachment) {
-      var desc = $("<td class='desc'>").append(self.signatoryAttachmentDescription(attachment, labelCss));
+      var desc = $("<td class='desc'>").append(self.signatoryAttachmentDescription(attachment));
       var file = $("<td class='file'>").append(self.signatoryAttachmentFile(attachment));
-      self.listenTo(attachment, 'change', function() {desc.empty().append(self.signatoryAttachmentDescription(attachment, labelCss));});
+      self.listenTo(attachment, 'change', function() {desc.empty().append(self.signatoryAttachmentDescription(attachment));});
       tbody.append($("<tr/>").append(desc).append(file));
     });
 

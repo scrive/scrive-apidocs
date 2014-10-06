@@ -82,10 +82,6 @@
         .phone {
           vertical-align: middle;
         }
-
-        .link:hover {
-          color: @white;
-        }
       }
     }
 
@@ -528,10 +524,6 @@
     padding-left: 14px;
     padding-top: 22px;
     padding-right: 14px;
-    &.clickable:hover {
-      color: @white;
-    }
-
   }
 
   .full-width-header .sender .inner {
@@ -638,32 +630,14 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-
-      &.obligatory{
-        border : 2px solid @brand-secondary;
-
-        &.filled {
-          background-color: @obligatory-color-for-background;
-        }
-      }
-
-      &.optional {
-        border : 2px solid @brand-primary-complementary;
-
-        &.filled {
-          background-color: @optional-color-for-background;
-        }
-      }
+      border-width: 2px;
+      border-style: solid;
     }
   }
 
   .document-pages {
 
     .placedfield {
-
-      &.empty-text-field {
-        background: @white-with-opacity;
-      }
 
      .placedcheckbox,
      .placedcheckbox.checked {
@@ -674,35 +648,16 @@
       }
 
       &.to-fill-now {
-        border: 2px solid @brand-primary-complementary;
+      border-style: solid;
+      border-width : 2px;
         overflow: hidden;
 
         .placedfield-placement-wrapper {
           overflow: hidden;
         }
 
-        &.active {
-            background-color: @white;
-        }
-
-        &.empty-text-field {
-          .placedfield-placement-wrapper {
-            background-color: @optional-color-for-background;
-          }
-        }
-
         .placedcheckbox {
           padding: 9px;
-        }
-
-        &.obligatory {
-          border: 2px solid @brand-secondary;
-
-          &.empty {
-            .placedfield-placement-wrapper {
-              background-color: @obligatory-color-for-background;
-            }
-          }
         }
       }
 

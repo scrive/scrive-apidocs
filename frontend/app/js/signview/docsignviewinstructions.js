@@ -78,41 +78,12 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
       var padGiveToNextSignatoryModel = new PadGiveToNextSignatoryModel({document : document});
       return $(new PadGiveToNextSignatoryView({model : padGiveToNextSignatoryModel}).el);
   },
-  styleText: function(elem) {
-    var signviewbranding = this.model.signviewbranding();
-    var textcolour = signviewbranding.signviewtextcolour();
-    var textfont = signviewbranding.signviewtextfont();
-    var primarycolour = signviewbranding.signviewprimarycolour();
-
-    if (this.model.usebranding() && textcolour) {
-      elem.css('color', textcolour);
-    }
-    if (this.model.usebranding() && textfont) {
-      elem.css('font-family', textfont);
-    }
-    if (this.model.usebranding() && primarycolour) {
-      elem.find('.arrowtext').css('color', primarycolour).hover(function() {
-        $(this).css('color', tinycolor.lighten(primarycolour, 10).toRgbString());
-      }, function() {
-        $(this).css('color', primarycolour);
-      });
-    }
-  },
   renderArrowLegend: function() {
-    var signviewbranding = this.model.signviewbranding();
-    var primarycolour = signviewbranding.signviewprimarycolour();
-    var secondarycolour = signviewbranding.signviewsecondarycolour();
+
 
     var arrowLegend = $("<div class='arrow-legend'/>");
     var mandatoryIcon = $("<span class='icon-legend mandatory' />");
     var optionalIcon = $("<span class='icon-legend optional' />");
-
-    if (this.model.usebranding() && primarycolour) {
-      BrandedImageUtil.setBrandedImageBackground(mandatoryIcon, 'icon-legend-mandatory.png', primarycolour);
-    }
-    if (this.model.usebranding() && secondarycolour) {
-      BrandedImageUtil.setBrandedImageBackground(optionalIcon, 'icon-legend-optional.png', secondarycolour);
-    }
 
     arrowLegend.append($("<p class='row'/>").append(mandatoryIcon).append("<span class='copy'>" + localization.docsignview.mandatoryAction + "</span>"));
     arrowLegend.append($("<p class='row'/>").append(optionalIcon).append("<span class='copy'>" + localization.docsignview.optionalAction + "</span>"));
@@ -121,7 +92,6 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
   },
   render: function() {
     var document = this.model.document();
-    var signviewbranding = this.model.signviewbranding();
     $(this.el).empty();
 
     var container = $("<div class='instructions section spacing' />");
@@ -137,11 +107,9 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
       view.model.arrow().goToCurrentTask();
     });
     container.append(headline.append(headlineText));
-    this.styleText(headline);
 
     var subheadline = $("<div class='subheadline' />");
     container.append(subheadline.text(this.subtext()));
-    this.styleText(subheadline);
 
 
     if (document.currentSignatory().padDelivery() && document.isSignedNotClosed() && document.signatoriesThatCanSignNowOnPad().length > 0)
@@ -151,7 +119,6 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
 
     if (document.showpdfdownload() && !BrowserInfo.isSmallScreen()) {
         var link = $("<a target='_blank' class='download clickable' />").attr("href", document.mainfile().downloadLinkForMainFile(document.title())).text(document.title() + ".pdf");
-        this.styleText(link);
         smallerbit.append(link);
     }
 
