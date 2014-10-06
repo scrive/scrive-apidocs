@@ -5,7 +5,7 @@ $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
     $standardHeaderContents()$
-    <link href='/padlist_signview_branding/branding.css' rel='stylesheet' type='text/css'>
+    <link href='/padlist_signview_branding/branding.css' rel='stylesheet' type='text/css'/>
   </head>
   <body>
     <div class="signview">

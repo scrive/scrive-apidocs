@@ -61,9 +61,9 @@ $htmlopentag()$
     $signviewAnalyticsVariables()$
     $standardHeaderContents()$
     $if(!usestandardheaders)$
-      <link href='/document_signview_branding/$documentid$/$siglinkid$/branding.css' rel='stylesheet' type='text/css'>
+      <link href='/document_signview_branding/$documentid$/$siglinkid$/branding.css' rel='stylesheet' type='text/css'/>
     $else$
-      <link href='/internal_signview_branding/branding.css' rel='stylesheet' type='text/css'>
+      <link href='/internal_signview_branding/branding.css' rel='stylesheet' type='text/css'/>
     $endif$
   </head>
   <body  $if(usestandardheaders)$ $if(custombackground)$style="background:$custombackground$;"$endif$    $endif$ >
@@ -140,7 +140,7 @@ $htmlopentag()$
     <title>$pagetitle()$</title>
     $signviewAnalyticsVariables()$
     $standardHeaderContents()$
-    <link href='/document_signview_branding/$documentid$/$siglinkid$/branding.css' rel='stylesheet' type='text/css'>
+    <link href='/document_signview_branding/$documentid$/$siglinkid$/branding.css' rel='stylesheet' type='text/css'/>
   </head>
   <body>
     <div class="signview">
