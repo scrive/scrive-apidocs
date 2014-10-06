@@ -40,7 +40,8 @@
     "grunt": "~0.4.1",
     "grunt-cli": "~0.1.9",
     "karma": "~0.10.2",
-    "react-tools": "~0.11.1"
+    "react-tools": "~0.11.1",
+    "less": "~1.7.5"
   },
   "engines": {
     "node": ">=0.10.15"
