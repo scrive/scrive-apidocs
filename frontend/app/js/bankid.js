@@ -102,7 +102,9 @@ window.Eleg = {
       if (window.Eleg.isUserCancelError(res))
         return localization.youCancelledSigning;
 
-      return localization.yourSigningPluginFailed + " " + res;
+      var message = $('<div />').html(localization.yourSigningPluginFailedWithReason);
+      message.find('.put-error-message-here').text(res);
+      return message;
    },
    bankidSign : function(document, signatory, callback) {
       if (!checkPlugin(hasSign2PluginIE, hasSign2PluginMozilla, flashBankIDMessage))
