@@ -407,6 +407,7 @@
 "_emptyOrNotValidMobile":"Vous n'avez pas entré de numéro de téléphone portable, ou le numéro entré est incorrect. Veillez à ce que ce numéro soit au format international, débutant par un signe + suivi du code pays.",
 "_evidenceAttachmentBoxHeader":"Pièces jointes tenant lieu de preuves",
 "_february":"février",
+"_fieldWithSameNameExists":"",
 "_fileTooLarge":"Le fichier que vous avez sélectionné dépasse notre limite maximale autorisée de 4 MB. Veuillez sélectionner un fichier moins volumineux.",
 "_filterBySent":"En attente de signature",
 "_firstNameField":"Prénom",
@@ -485,6 +486,7 @@
 "_historyHide":"Masquer",
 "_historyParty":"Partie",
 "_historyTime":"Heure",
+"_information":"",
 "_internalServerError":"<h1>Un problème est survenu</h1><h4>Si le problème persiste, veuillez contacter notre équipe d'assistance via l'adresse support@scrive.com ou le numéro de téléphone +46 8 519 779 00.</h4>",
 "_invalidAttachments":"Désolé, ce format de fichier n'est pas pris en charge. Choisissez plutôt le format PDF.",
 "_invitationMailDeferredContentBodyFirst":"Nous rencontrons malheureusement des difficultés lors de l'envoi de l'invitation à la signature numérique <strong>$counterpartname$ &lt;$counterpartemail$&gt;</strong>. L'adresse mail est incorrecte ou le serveur de messagerie rencontre des problèmes.",
@@ -865,5 +867,6 @@
 "_youCantCancelThisDocuments":"Certains documents sélectionnés ne peuvent être retirés.",
 "_youCantSendRemindersToThisDocuments":"Il est impossible d'envoyer un rappel pour certains des documents sélectionnés.",
 "_yourSigningPluginFailed":"Votre plug-in de signature n'a pas pu signer le document. Veuillez contacter votre fournisseur d'identifiant numérique.",
+"_yourSigningPluginFailedWithReason":"",
 "_zip":"ZIP"
 }

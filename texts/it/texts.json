@@ -407,6 +407,7 @@
 "_emptyOrNotValidMobile":"Non hai inserito il numero cellulare o questo numero non è corretto. Ti ricordiamo che il numero deve essere nel formato internazionale, con il segno + e il prefisso nazionale all'inizio.",
 "_evidenceAttachmentBoxHeader":"Prove in allegato",
 "_february":"Febbraio",
+"_fieldWithSameNameExists":"",
 "_fileTooLarge":"Il file selezionato supera il nostro limite massimo di 4 MB. Prova con un file più piccolo.",
 "_filterBySent":"In attesa di firma",
 "_firstNameField":"Nome",
@@ -485,6 +486,7 @@
 "_historyHide":"Nascondi",
 "_historyParty":"Parte",
 "_historyTime":"Tempo",
+"_information":"",
 "_internalServerError":"<h1>Qualcosa è andato storto</h1><h4>Se il problema persiste, contatta la nostra assistenza all'indirizzo support@scrive.com o al numero +46 8 519 779 00.</h4>",
 "_invalidAttachments":"Questo formato di file non è supportato. Ti preghiamo di selezionare un file PDF.",
 "_invitationMailDeferredContentBodyFirst":"Purtroppo stiamo riscontrando difficoltà a consegnare l'invito a firmare a <strong>$counterpartname$ &lt;$counterpartemail$&gt;</strong>. Può darsi che l'indirizzo email sia errato o che il server di posta del destinatario abbia un problema.",
@@ -865,5 +867,6 @@
 "_youCantCancelThisDocuments":"Alcuni documenti selezionati non possono essere revocati.",
 "_youCantSendRemindersToThisDocuments":"Non si possono inviare promemoria per alcuni dei documenti selezionati.",
 "_yourSigningPluginFailed":"Il tuo plug-in per la firma non ha potuto firmare il documento. Ti preghiamo di contattare il tuo provider eID.",
+"_yourSigningPluginFailedWithReason":"",
 "_zip":"CAP"
 }

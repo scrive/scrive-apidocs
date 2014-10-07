@@ -407,6 +407,7 @@
 "_emptyOrNotValidMobile":"Não introduziu um número de telemóvel ou o número fornecido está incorrecto. O número deve ser introduzido no formato internacional começando com um sinal +, seguido do código do país.",
 "_evidenceAttachmentBoxHeader":"Anexos de prova",
 "_february":"Fevereiro",
+"_fieldWithSameNameExists":"",
 "_fileTooLarge":"O ficheiro seleccionado excede o nosso limite máximo de 4 MB. Experimente com um ficheiro mais pequeno.",
 "_filterBySent":"A aguardar assinatura",
 "_firstNameField":"Nome",
@@ -485,6 +486,7 @@
 "_historyHide":"Ocultar",
 "_historyParty":"Parte",
 "_historyTime":"Hora",
+"_information":"",
 "_internalServerError":"<h1>Ocorreu um problema</h1><h4>Se o problema persistir, contacte o nosso apoio através de support@scrive.com ou +46 8 519 779 00.</h4>",
 "_invalidAttachments":"Lamentamos, mas este formato de ficheiro não é suportado. Seleccione um ficheiro PDF em alternativa.",
 "_invitationMailDeferredContentBodyFirst":"Lamentamos, mas estamos a ter dificuldades em entregar o convite de assinatura electrónica a <strong>$counterpartname$ &lt$counterpartemail$&gt;</strong>. O endereço de email fornecido está incorrecto ou o respectivo servidor de correio electrónico está a ter problemas.",
@@ -865,5 +867,6 @@
 "_youCantCancelThisDocuments":"Não é possível retirar alguns dos documentos seleccionados.",
 "_youCantSendRemindersToThisDocuments":"Não é possível enviar lembretes sobre alguns dos documentos seleccionados.",
 "_yourSigningPluginFailed":"Ocorreu uma falha do plug-in de assinatura ao assinar o documento. Contacte o seu fornecedor da eID.",
+"_yourSigningPluginFailedWithReason":"",
 "_zip":"Código Postal"
 }
