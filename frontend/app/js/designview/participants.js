@@ -984,7 +984,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             var csvname = localization.designview.fullName + "(" + localization.designview.fromCSV + ")";
 
             var input = new InfoTextInput({
-                cssClass: 'design-view-action-participant-details-information-field s-input-fullname' + (csvfield || sig.author() ? "transparent" : "" ),
+                cssClass: 'design-view-action-participant-details-information-field s-input-fullname' + (csvfield || sig.author() ? " transparent" : "" ),
                 infotext: csvfield ? csvname : localization.designview.fullName,
                 readonly : csvfield || sig.author(),
                 value: value,
