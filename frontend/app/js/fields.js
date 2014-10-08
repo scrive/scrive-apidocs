@@ -221,7 +221,7 @@ window.Field = Backbone.Model.extend({
     validateCheckbox: function() {
       var field = this;
       var validation = new Validation({ validates: function() {
-          return field.name() != undefined && field.name() != ""
+          return field.name() != undefined && field.name() != "";
         }, message: localization.designview.validation.notReadyField});
       return validation;
     },

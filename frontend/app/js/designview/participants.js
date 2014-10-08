@@ -1164,7 +1164,6 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
         className: 'design-view-action-participant',
         initialize: function(args) {
             var view = this;
-            var sig = view.model;
             var viewmodel = args.viewmodel;
             view.viewmodel = args.viewmodel;
             _.bindAll(view);
@@ -1187,14 +1186,11 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
 
             view.listenTo(viewmodel, 'change:participantDetail', view.updateOpened);
             view.listenTo(viewmodel, 'change:step', view.render);
-            view.listenTo(sig, 'change:fields', view.updateOpened);
+            view.listenTo(view.model, 'change:fields', view.updateOpened);
             view.listenTo(viewmodel.document(), 'bubble', view.checkInnerProblems);
             view.render();
         },
         destroy : function() {
-          this.viewmodel.unbind('change:participantDetail', this.updateOpened);
-          this.viewmodel.unbind('change:step', this.render);
-          this.model.unbind('change:fields', this.updateOpened);
           this.stopListening();
           this.off();
           if (this.detailsView != undefined)
@@ -1301,7 +1297,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
           var signatory = this.model;
           // Check only validity of field
           var innerProblems = _.any(signatory.fields(), function(field) {
-            return !field.isValid()
+            return !field.isValid();
           });
           this.innerDiv.toggleClass('is-has-problems', innerProblems);
         },
