@@ -7,6 +7,7 @@ import Test.Framework.Providers.HUnit (testCase)
 
 import Control.Applicative
 import Control.Arrow
+import Control.Monad.Catch
 import Control.Concurrent.STM
 import Data.Char
 import Data.Time.Clock.POSIX
@@ -20,7 +21,6 @@ import Doc.SealStatus (SealStatus(..))
 import Test.QuickCheck.Gen
 import Control.Monad (unless)
 import Control.Monad.Trans
-import Control.Monad.Trans.Control
 import Data.Maybe
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
@@ -41,7 +41,6 @@ import ELegitimation.ELegTransaction.Model
 import KontraError (internalError)
 import KontraMonad
 import MinutesTime
-import Control.Exception.Lifted
 import User.Model
 import User.Email
 import Doc.SignatoryLinkID
@@ -487,16 +486,16 @@ addNewCompany = do
     Just company <- dbQuery $ GetCompany cid
     return company
 
-addNewFile :: (Applicative m, CryptoRNG m, MonadDB m) => String -> BS.ByteString -> m FileID
+addNewFile :: (CryptoRNG m, MonadDB m, MonadThrow m) => String -> BS.ByteString -> m FileID
 addNewFile filename content = dbUpdate $ NewFile filename $ Binary content
 
-addNewRandomFile :: (Applicative m, CryptoRNG m, MonadDB m) => m FileID
+addNewRandomFile :: (CryptoRNG m, MonadDB m, MonadThrow m) => m FileID
 addNewRandomFile = do
   fn <- rand 10 $ arbString 3 30
   cnt <- rand 10 $ arbString 3 30
   addNewFile fn (BS.fromString cnt)
 
-addNewUser :: MonadDB m => String -> String -> String -> m (Maybe User)
+addNewUser :: (MonadDB m, MonadThrow m) => String -> String -> String -> m (Maybe User)
 addNewUser firstname secondname email = do
   company <- dbUpdate $ CreateCompany
   dbUpdate $ AddUser (firstname, secondname) email Nothing (companyid company,True) defaultValue Nothing
@@ -505,7 +504,7 @@ addNewCompanyUser :: String -> String -> String -> CompanyID -> TestEnv (Maybe U
 addNewCompanyUser firstname secondname email cid =
   dbUpdate $ AddUser (firstname, secondname) email Nothing (cid,True) defaultValue Nothing
 
-addNewRandomUser :: (CryptoRNG m, MonadDB m, Log.MonadLog m) => m User
+addNewRandomUser :: (CryptoRNG m, MonadDB m, MonadThrow m, Log.MonadLog m) => m User
 addNewRandomUser = do
   fn <- rand 10 $ arbString 3 30
   ln <- rand 10 $ arbString 3 30
@@ -825,7 +824,7 @@ assertString = liftIO . T.assertString
 assertionPredicate :: (T.AssertionPredicable t, MonadIO m) => t -> m Bool
 assertionPredicate = liftIO . T.assertionPredicate
 
-assertRaisesKontra :: forall e v m. (KontraException e, Show v, MonadIO m, MonadBaseControl IO m)
+assertRaisesKontra :: forall e v m. (KontraException e, Show v, MonadIO m, MonadMask m)
              => (e -> Bool) -> m v -> m ()
 assertRaisesKontra correctException action =
   (action >>= \r -> assertString $ "Expected KontraException " ++ typeOfE ++ ", instead returned result " ++ show r) `catches` [

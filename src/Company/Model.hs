@@ -14,6 +14,7 @@ module Company.Model (
   , CompanyOrderBy(..)
   ) where
 
+import Control.Monad.Catch
 import Data.Monoid
 import Data.Monoid.Space
 import Data.Typeable
@@ -103,7 +104,7 @@ instance MonadDB m => DBQuery m GetCompanies [Company] where
     fetchMany fetchCompany
 
 data GetCompany = GetCompany CompanyID
-instance MonadDB m => DBQuery m GetCompany (Maybe Company) where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetCompany (Maybe Company) where
   query (GetCompany cid) = do
     runQuery_ $ sqlSelect "companies" $ do
       sqlJoinOn "company_uis" "company_uis.company_id = companies.id"
@@ -112,7 +113,7 @@ instance MonadDB m => DBQuery m GetCompany (Maybe Company) where
     fetchMaybe fetchCompany
 
 data GetCompanyByUserID = GetCompanyByUserID UserID
-instance MonadDB m => DBQuery m GetCompanyByUserID Company where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetCompanyByUserID Company where
   query (GetCompanyByUserID uid) = do
     runQuery_ $ sqlSelect "companies" $ do
       sqlJoinOn "users" "users.company_id = companies.id"
@@ -122,7 +123,7 @@ instance MonadDB m => DBQuery m GetCompanyByUserID Company where
     fetchOne fetchCompany
 
 data CreateCompany = CreateCompany
-instance MonadDB m => DBUpdate m CreateCompany Company where
+instance (MonadDB m, MonadThrow m) => DBUpdate m CreateCompany Company where
   update (CreateCompany) = do
     runQuery_ $ sqlInsert "companies" $ do
       sqlSetCmd "id" "DEFAULT"
@@ -138,14 +139,14 @@ instance MonadDB m => DBUpdate m CreateCompany Company where
     fetchOne fetchCompany
 
 data SetCompanyIPAddressMaskList = SetCompanyIPAddressMaskList CompanyID [IPAddress]
-instance MonadDB m => DBUpdate m SetCompanyIPAddressMaskList Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m SetCompanyIPAddressMaskList Bool where
   update (SetCompanyIPAddressMaskList cid ads) =
     runQuery01 . sqlUpdate "companies" $ do
       sqlSet "ip_address_mask" $ show ads
       sqlWhereEq "id" cid
 
 data SetCompanyInfo = SetCompanyInfo CompanyID CompanyInfo
-instance MonadDB m => DBUpdate m SetCompanyInfo Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m SetCompanyInfo Bool where
   update (SetCompanyInfo cid CompanyInfo{..}) =
     runQuery01 $ sqlUpdate "companies" $ do
       sqlSet "name" companyname

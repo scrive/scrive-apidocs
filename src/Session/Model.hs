@@ -8,6 +8,7 @@ module Session.Model (
   ) where
 
 import Control.Monad
+import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Maybe
 import Data.Maybe
@@ -33,7 +34,7 @@ import Utils.HTTP
 -- inserted into the database, but current session is temporary), also
 -- modifying Context to carry modified id.
 
-getNonTempSessionID :: (CryptoRNG m, KontraMonad m, MonadDB m, ServerMonad m)
+getNonTempSessionID :: (CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m, ServerMonad m)
                     => m SessionID
 getNonTempSessionID = do
   sid <- ctxsessionid `liftM` getContext
@@ -54,7 +55,7 @@ getNonTempSessionID = do
 
 -- | Get current session based on cookies set.
 -- If no session is available, return new, empty session.
-getCurrentSession :: (CryptoRNG m, HasRqData m, MonadDB m, MonadPlus m, ServerMonad m, Log.MonadLog m)
+getCurrentSession :: (CryptoRNG m, HasRqData m, MonadDB m, MonadThrow m, MonadPlus m, ServerMonad m, Log.MonadLog m)
                   => m Session
 getCurrentSession = withDataFn currentSessionInfoCookies $ getSessionFromCookies
   where
@@ -66,7 +67,7 @@ getCurrentSession = withDataFn currentSessionInfoCookies $ getSessionFromCookies
         Nothing  -> getSessionFromCookies css
     getSessionFromCookies [] = emptySession
 
-updateSession :: (FilterMonad Response m, Log.MonadLog m, MonadDB m, ServerMonad m, MonadIO m)
+updateSession :: (FilterMonad Response m, Log.MonadLog m, MonadDB m, MonadThrow m, ServerMonad m, MonadIO m)
               => Session -> Session -> m ()
 updateSession old_ses ses = do
   case sesID ses == tempSessionID of
@@ -92,12 +93,12 @@ updateSession old_ses ses = do
         Log.mixlog_ "UpdateAction didn't update session where it should have to"
     _ -> return ()
 
-getUserFromSession :: MonadDB m => Session -> m (Maybe User)
+getUserFromSession :: (MonadDB m, MonadThrow m) => Session -> m (Maybe User)
 getUserFromSession Session{sesUserID} = case sesUserID of
   Just uid -> dbQuery $ GetUserByID uid
   Nothing  -> return Nothing
 
-getPadUserFromSession :: MonadDB m => Session -> m (Maybe User)
+getPadUserFromSession :: (MonadDB m, MonadThrow m) => Session -> m (Maybe User)
 getPadUserFromSession Session{sesPadUserID} = case sesPadUserID of
   Just uid -> dbQuery $ GetUserByID uid
   Nothing  -> return Nothing
@@ -108,7 +109,7 @@ sessionNowModifier = (120 `minutesAfter`)
 isSessionEmpty :: Session -> Bool
 isSessionEmpty Session{..} = isNothing sesUserID && isNothing sesPadUserID
 
-getSession :: MonadDB m => SessionID -> MagicHash -> String -> m (Maybe Session)
+getSession :: (MonadDB m, MonadThrow m) => SessionID -> MagicHash -> String -> m (Maybe Session)
 getSession sid token domain = runMaybeT $ do
   Just ses@Session{sesToken,sesDomain} <- dbQuery $ GetAction session sid
   guard $ sesToken == token

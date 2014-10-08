@@ -17,6 +17,7 @@ import Control.Applicative
 import Control.Conditional (whenM, unlessM, ifM)
 import Control.Logic
 import Control.Monad.Base (MonadBase)
+import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Crypto.RNG
@@ -59,7 +60,7 @@ import Doc.AutomaticReminder.Model
 import DB.TimeZoneName
 
 -- | Log a document event, adding some standard properties.
-logDocEvent :: (MailContextMonad m, MonadDB m) => EventName -> User -> [EventProperty] -> Document -> m ()
+logDocEvent :: (MailContextMonad m, MonadDB m, MonadThrow m) => EventName -> User -> [EventProperty] -> Document -> m ()
 logDocEvent name user extraProps doc = do
   comp <- getCompanyForUser user
   now <- currentTime
@@ -141,7 +142,7 @@ postDocumentCanceledChange doc@Document{..} = do
 
 -- | After a party has signed - check if we need to close document and
 -- take further actions.
-postDocumentPendingChange :: (CryptoRNG m, TemplatesMonad m, AmazonMonad m, MonadBaseControl IO m, MonadBase IO m, DocumentMonad m, Log.MonadLog m, MonadIO m, KontraMonad m, GuardTimeConfMonad m, MailContextMonad m)
+postDocumentPendingChange :: (CryptoRNG m, TemplatesMonad m, AmazonMonad m, MonadBaseControl IO m, DocumentMonad m, MonadMask m, Log.MonadLog m, MonadIO m, KontraMonad m, GuardTimeConfMonad m, MailContextMonad m)
                           => Document -> m ()
 postDocumentPendingChange olddoc = do
   unlessM (isPending <$> theDocument) $
@@ -173,8 +174,7 @@ postDocumentPendingChange olddoc = do
 -- | Prepare final PDF if needed, apply digital signature, and send
 -- out confirmation emails if there has been a change in the seal status.  Precondition: document must be
 -- closed or in error.
-postDocumentClosedActions :: ( TemplatesMonad m, MailContextMonad m, CryptoRNG m, MonadIO m, Log.MonadLog m, AmazonMonad m
-                             , MonadBaseControl IO m, DocumentMonad m , GuardTimeConfMonad m)
+postDocumentClosedActions :: (TemplatesMonad m, MailContextMonad m, CryptoRNG m, MonadIO m, Log.MonadLog m, AmazonMonad m, MonadBaseControl IO m, MonadMask m, DocumentMonad m, GuardTimeConfMonad m)
                           => Bool -> Bool -> m ()
 postDocumentClosedActions
   commitAfterSealing -- ^ Commit to DB after we have sealed the document
@@ -230,7 +230,7 @@ postDocumentClosedActions
       theDocument >>= triggerAPICallbackIfThereIsOne
 
 -- | Post-process documents that lack final PDF or digital signature
-findAndDoPostDocumentClosedActions :: (MonadReader SchedulerData m, MonadBaseControl IO m, CryptoRNG m, MonadDB m, MonadIO m, Log.MonadLog m, AmazonMonad m) => Maybe Int -> m ()
+findAndDoPostDocumentClosedActions :: (MonadReader SchedulerData m, MonadBaseControl IO m, CryptoRNG m, MonadDB m, MonadMask m, MonadIO m, Log.MonadLog m, AmazonMonad m) => Maybe Int -> m ()
 findAndDoPostDocumentClosedActions
   mhours -- ^ Only consider documents signed within the latest number of hours given.
   = do
@@ -253,7 +253,7 @@ findAndDoPostDocumentClosedActions
     commit
 
 -- | Extend (replace with keyless) signatures of documents older than latest publication code (if they are not already extended)
-findAndExtendDigitalSignatures :: (MonadBaseControl IO m, MonadReader SchedulerData m, CryptoRNG m, AmazonMonad m, MonadDB m, MonadIO m, Log.MonadLog m) => m ()
+findAndExtendDigitalSignatures :: (MonadBaseControl IO m, MonadReader SchedulerData m, CryptoRNG m, AmazonMonad m, MonadDB m, MonadMask m, MonadIO m, Log.MonadLog m) => m ()
 findAndExtendDigitalSignatures = do
   lpt <- latest_publication_time
   Log.mixlog_ $ "extendSignatures: latest publication time is " ++ show lpt
@@ -276,7 +276,7 @@ findAndExtendDigitalSignatures = do
 
 -- | Estimate when the latest Guardtime publication code was published
 -- (sometime after the 15th of the month).
-latest_publication_time :: MonadDB m => m UTCTime
+latest_publication_time :: (MonadDB m, MonadThrow m) => m UTCTime
 latest_publication_time = localTimeToUTC utc . f . utcToLocalTime utc <$> currentTime
   where
     f LocalTime{..} = LocalTime {
@@ -294,7 +294,7 @@ stateMismatchError funame expected Document{documentstatus, documentid} = do
   Log.mixlog_ $ funame ++ ": document #" ++ show documentid ++ " in " ++ show documentstatus ++ " state, expected " ++ show expected
   internalError
 
-getDocAuthor :: (MonadDB m, MonadBase IO m) => Document -> m User
+getDocAuthor :: (MonadDB m, MonadThrow m, MonadBase IO m) => Document -> m User
 getDocAuthor doc = do
   authorid <- guardJust $ getAuthorSigLink doc >>= maybesignatory
   guardJustM $ dbQuery $ GetUserByID authorid
@@ -333,7 +333,7 @@ saveDocumentForSignatories =
 
 -- | Time out documents once per day after midnight.  Do it in chunks
 -- so that we don't choke the server in case there are many documents to time out
-findAndTimeoutDocuments :: (MonadBaseControl IO m, MonadReader SchedulerData m, MonadIO m, MonadDB m, Log.MonadLog m) => m ()
+findAndTimeoutDocuments :: (MonadBaseControl IO m, MonadReader SchedulerData m, MonadIO m, MonadDB m, MonadThrow m, Log.MonadLog m) => m ()
 findAndTimeoutDocuments = do
   now <- currentTime
   docs <- dbQuery $ GetTimeoutedButPendingDocumentsChunk now 100

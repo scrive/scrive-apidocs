@@ -1,5 +1,6 @@
 module SMS.Model where
 
+import Control.Monad.Catch
 import Control.Monad.State
 import Data.Int
 import Data.Monoid.Space
@@ -38,11 +39,11 @@ fetchSMS (smsid, originator, msisdn, body, sdata, attempt) = ShortMessage {
 }
 
 data CreateSMS = CreateSMS String String String String UTCTime
-instance MonadDB m => DBUpdate m CreateSMS ShortMessageID where
+instance (MonadDB m, MonadThrow m) => DBUpdate m CreateSMS ShortMessageID where
   update (CreateSMS originator msisdn body sdata to_be_sent) =
     $fromJust `fmap` insertSMS originator msisdn body sdata to_be_sent 0
 
-insertSMS :: MonadDB m => String -> String -> String -> String -> UTCTime -> Int32 -> m (Maybe ShortMessageID)
+insertSMS :: (MonadDB m, MonadThrow m) => String -> String -> String -> String -> UTCTime -> Int32 -> m (Maybe ShortMessageID)
 insertSMS originator msisdn body sdata to_be_sent attempt = do
   runQuery_ . sqlInsert "smses" $ do
     sqlSet "originator" originator
@@ -60,14 +61,14 @@ instance MonadDB m => DBQuery m GetIncomingSMSes [ShortMessage] where
     sqlWhere "body IS NOT NULL AND to_be_sent <= now() AND sent IS NULL"
 
 data MarkSMSAsSent = MarkSMSAsSent ShortMessageID UTCTime
-instance MonadDB m => DBUpdate m MarkSMSAsSent Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m MarkSMSAsSent Bool where
   update (MarkSMSAsSent mid time) = do
     runQuery01 . sqlUpdate "smses" $ do
       sqlSet "sent" time
       sqlWhereEq "id" mid
 
 data DeferSMS = DeferSMS ShortMessageID UTCTime
-instance MonadDB m => DBUpdate m DeferSMS Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m DeferSMS Bool where
   update (DeferSMS mid time) =
     runQuery01 $ sqlUpdate "smses" $ do
       sqlSet "to_be_sent" time
@@ -82,7 +83,7 @@ instance MonadDB m => DBUpdate m DeleteSMSesOlderThenDays Int where
       sqlWhere $ "now() > to_be_sent + interval '" <+> unsafeSQL (show days) <+> "days'"
 
 data UpdateWithSMSEvent = UpdateWithSMSEvent ShortMessageID SMSEvent
-instance MonadDB m => DBUpdate m UpdateWithSMSEvent Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateWithSMSEvent Bool where
   update (UpdateWithSMSEvent mid ev) = do
     runQuery01 . sqlInsert "sms_events" $ do
       sqlSet "sms_id" mid
@@ -104,13 +105,13 @@ instance MonadDB m => DBQuery m GetUnreadSMSEvents [(SMSEventID, ShortMessageID,
     fetchMany id
 
 data DeleteSMS = DeleteSMS ShortMessageID
-instance MonadDB m => DBUpdate m DeleteSMS Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m DeleteSMS Bool where
   update (DeleteSMS smsid) = do
     runQuery01 . sqlDelete "smses" $ do
       sqlWhereEq "id" smsid
 
 data MarkSMSEventAsRead = MarkSMSEventAsRead SMSEventID
-instance MonadDB m => DBUpdate m MarkSMSEventAsRead Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m MarkSMSEventAsRead Bool where
   update (MarkSMSEventAsRead eid) =
     runQuery01 . sqlUpdate "sms_events" $ do
       sqlSetCmd "event_read" "now()"

@@ -7,6 +7,7 @@ module ActionQueue.EmailChangeRequest (
   ) where
 
 import Control.Monad
+import Control.Monad.Catch
 import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
 import Data.Typeable
@@ -57,7 +58,7 @@ emailChangeRequest = Action {
     return ()
   }
 
-getEmailChangeRequestNewEmail :: (MonadDB m, KontraMonad m) => UserID -> MagicHash -> m (Maybe Email)
+getEmailChangeRequestNewEmail :: (MonadDB m, MonadThrow m, KontraMonad m) => UserID -> MagicHash -> m (Maybe Email)
 getEmailChangeRequestNewEmail uid token = runMaybeT $ do
   Just EmailChangeRequest{..} <- dbQuery $ GetAction emailChangeRequest uid
   guard $ ecrToken == token
@@ -68,7 +69,7 @@ getEmailChangeRequestNewEmail uid token = runMaybeT $ do
   Nothing <- dbQuery $ GetUserByEmail ecrNewEmail
   return ecrNewEmail
 
-newEmailChangeRequest :: (MonadDB m, CryptoRNG m) => UserID -> Email -> m EmailChangeRequest
+newEmailChangeRequest :: (MonadDB m, MonadThrow m, CryptoRNG m) => UserID -> Email -> m EmailChangeRequest
 newEmailChangeRequest uid new_email = do
   token <- random
   expires <- (1 `daysAfter`) `liftM` currentTime
@@ -81,7 +82,7 @@ newEmailChangeRequest uid new_email = do
   _ <- dbUpdate $ DeleteAction emailChangeRequest uid
   dbUpdate $ NewAction emailChangeRequest expires (uid, new_email, token)
 
-newEmailChangeRequestLink :: (MonadDB m, CryptoRNG m) => UserID -> Email -> m KontraLink
+newEmailChangeRequestLink :: (MonadDB m, MonadThrow m, CryptoRNG m) => UserID -> Email -> m KontraLink
 newEmailChangeRequestLink uid new_email = do
   ecr <- newEmailChangeRequest uid new_email
   return $ LinkChangeUserEmail (ecrUserID ecr) (ecrToken ecr)

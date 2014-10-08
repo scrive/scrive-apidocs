@@ -50,6 +50,7 @@ import DB
 import qualified Text.StringTemplates.Fields as F
 
 import Control.Monad
+import Control.Monad.Catch
 import Data.List hiding (insert)
 import Data.Maybe
 import File.Model
@@ -174,7 +175,7 @@ documentcurrentsignorder doc =
 {- |
    Build signatory fields from user
  -}
-signatoryFieldsFromUser :: (MonadDB m) => User -> m [SignatoryField]
+signatoryFieldsFromUser :: (MonadDB m, MonadThrow m) => User -> m [SignatoryField]
 signatoryFieldsFromUser user = do
   company <- dbQuery $ GetCompanyByUserID (userid user)
   return $
@@ -262,10 +263,10 @@ getSignatoryAttachment slid name doc = join $ find (\a -> name == signatoryattac
                                        <$> signatoryattachments
                                        <$> (find (\sl -> slid == signatorylinkid sl) $ documentsignatorylinks doc)
 
-documentfileM :: MonadDB m => Document -> m (Maybe File)
+documentfileM :: (MonadDB m, MonadThrow m) => Document -> m (Maybe File)
 documentfileM = maybe (return Nothing) (fmap Just . dbQuery . GetFileByFileID) . documentfile
 
-documentsealedfileM :: MonadDB m => Document -> m (Maybe File)
+documentsealedfileM :: (MonadDB m, MonadThrow m) => Document -> m (Maybe File)
 documentsealedfileM = maybe (return Nothing) (fmap Just . dbQuery . GetFileByFileID) . documentsealedfile
 
 

@@ -6,6 +6,7 @@ module DB.Checks (
 
 import Control.Applicative
 import Control.Monad.Reader
+import Control.Monad.Catch
 import Data.Int
 import Data.Maybe
 import Data.Monoid
@@ -28,7 +29,8 @@ instance Monoid ValidationResult where
   mappend (ValidationResult a) (ValidationResult b) = ValidationResult (a ++ b)
 
 -- | Runs all checks on a database
-migrateDatabase :: MonadDB m => (String -> m ()) -> [Table] -> [Migration m] -> m ()
+migrateDatabase :: (MonadDB m, MonadThrow m)
+                => (String -> m ()) -> [Table] -> [Migration m] -> m ()
 migrateDatabase logger tables migrations = do
   set <- setByteaOutput logger
   when set $ do
@@ -43,7 +45,7 @@ migrateDatabase logger tables migrations = do
   -- everything is OK, commit changes
   commit
 
-checkDatabase :: MonadDB m => (String -> m ()) -> [Table] -> m ()
+checkDatabase :: (MonadDB m, MonadThrow m) => (String -> m ()) -> [Table] -> m ()
 checkDatabase logger tables = do
   versions <- mapM checkTableVersion tables
   let tablesWithVersions = zip tables (map (fromMaybe 0) versions)
@@ -66,7 +68,7 @@ checkDatabase logger tables = do
 
 
 -- | Return SQL fragment of current catalog within quotes
-currentCatalog :: MonadDB m => m (RawSQL ())
+currentCatalog :: (MonadDB m, MonadThrow m) => m (RawSQL ())
 currentCatalog = do
   runSQL_ "SELECT current_catalog::text"
   dbname <- fetchOne unSingle
@@ -79,7 +81,7 @@ checkNeededExtensions logger = do
   return ()
 
 -- |  Checks whether database returns timestamps in UTC
-checkDBTimeZone :: MonadDB m => (String -> m ()) -> m Bool
+checkDBTimeZone :: (MonadDB m, MonadThrow m) => (String -> m ()) -> m Bool
 checkDBTimeZone logger = do
   runSQL_ "SHOW timezone"
   timezone :: String <- fetchOne unSingle
@@ -91,7 +93,7 @@ checkDBTimeZone logger = do
       return True
     else return False
 
-setByteaOutput :: MonadDB m => (String -> m ()) -> m Bool
+setByteaOutput :: (MonadDB m, MonadThrow m) => (String -> m ()) -> m Bool
 setByteaOutput logger = do
   runSQL_ "SHOW bytea_output"
   bytea_output :: String <- fetchOne unSingle
@@ -145,7 +147,7 @@ createTable table@Table{..} = do
       ]
 
 -- | Checks whether database is consistent (performs migrations if necessary)
-checkDBStructure :: forall m. MonadDB m
+checkDBStructure :: forall m. (MonadDB m, MonadThrow m)
                    => (String -> m ()) -> [Table]
                    -> m ()
 checkDBStructure logger tables = do
@@ -270,7 +272,7 @@ checkDBStructure logger tables = do
           ]
 
 -- | Checks whether database is consistent (performs migrations if necessary)
-checkDBConsistency :: forall m. MonadDB m
+checkDBConsistency :: forall m. (MonadDB m, MonadThrow m)
                    => (String -> m ()) -> [Table] -> [Migration m]
                    -> m ()
 checkDBConsistency logger tables migrations = do
@@ -321,7 +323,7 @@ checkDBConsistency logger tables migrations = do
             sqlWhereEq "name" $ tblNameString (mgrTable migration)
         logger "Running migrations... done."
 
-normalizePropertyNames :: MonadDB m => (String -> m ()) -> Table -> m ()
+normalizePropertyNames :: (MonadDB m, MonadThrow m) => (String -> m ()) -> Table -> m ()
 normalizePropertyNames logger table@Table{..} = do
   runQuery_ $ sqlGetPrimaryKey table
   pk <- join <$> fetchMaybe fetchPrimaryKey
@@ -361,7 +363,7 @@ normalizePropertyNames logger table@Table{..} = do
           ]
         ]
 
-checkTableVersion :: MonadDB m => Table -> m (Maybe Int32)
+checkTableVersion :: (MonadDB m, MonadThrow m) => Table -> m (Maybe Int32)
 checkTableVersion table = do
   doesExist <- runQuery01 . sqlSelect "pg_catalog.pg_class c" $ do
     sqlResult "TRUE"

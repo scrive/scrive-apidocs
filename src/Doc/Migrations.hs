@@ -2,6 +2,7 @@
 module Doc.Migrations where
 
 import Control.Monad
+import Control.Monad.Catch
 import Data.Int
 import Data.Monoid
 import Data.Monoid.Space
@@ -68,7 +69,7 @@ addSealStatusToDocument = Migration {
   , mgrDo = runSQL_ "ALTER TABLE documents ADD COLUMN seal_status SMALLINT NULL"
 }
 
-setMandatoryExpirationTimeInDocument :: MonadDB m => Migration m
+setMandatoryExpirationTimeInDocument :: (MonadDB m, MonadThrow m) => Migration m
 setMandatoryExpirationTimeInDocument = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 12
@@ -661,7 +662,7 @@ addDocumentIdIndexOnSignatoryLinks =
       return ()
   }
 
-addIdSerialOnSignatoryLinks :: (MonadDB m, Log.MonadLog m) => Migration m
+addIdSerialOnSignatoryLinks :: (MonadDB m, MonadThrow m, Log.MonadLog m) => Migration m
 addIdSerialOnSignatoryLinks =
   Migration {
     mgrTable = tableSignatoryLinks
@@ -677,7 +678,7 @@ addIdSerialOnSignatoryLinks =
       runSQL_ "ALTER TABLE signatory_links ALTER id SET DEFAULT nextval('signatory_links_id_seq')"
   }
 
-addIdSerialOnDocuments :: (MonadDB m, Log.MonadLog m) => Migration m
+addIdSerialOnDocuments :: (MonadDB m, MonadThrow m, Log.MonadLog m) => Migration m
 addIdSerialOnDocuments =
   Migration {
     mgrTable = tableDocuments
@@ -815,7 +816,7 @@ moveAttachmentsFromDocumentsToAttachments =
          Log.mixlog_  $ "Migration from documents to attachments done. Migrated: " ++ show inserted ++ ". Lost attachments due to missing files: " ++ show (deleted - inserted)
   }
 
-removeOldDocumentLog :: MonadDB m => Migration m
+removeOldDocumentLog :: (MonadDB m, MonadThrow m) => Migration m
 removeOldDocumentLog =
   Migration
   { mgrTable = tableDocuments
@@ -967,7 +968,7 @@ addRejectRedirectURL =
       runSQL_ $ "ALTER TABLE signatory_links ADD COLUMN reject_redirect_url VARCHAR NULL DEFAULT NULL"
   }
 
-migrateDocumentsMoveFilesToMainFilesTable :: MonadDB m => Migration m
+migrateDocumentsMoveFilesToMainFilesTable :: (MonadDB m, MonadThrow m) => Migration m
 migrateDocumentsMoveFilesToMainFilesTable =
   Migration
     { mgrTable = tableDocuments

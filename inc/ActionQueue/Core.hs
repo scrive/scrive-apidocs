@@ -8,6 +8,7 @@ module ActionQueue.Core (
   , DeleteAction(..)
   ) where
 
+import Control.Monad.Catch
 import Control.Monad.State
 import Data.Monoid
 import Data.Monoid.Space
@@ -27,7 +28,7 @@ data Action idx t con n = forall row. FromRow row => Action {
   }
 
 data GetAction idx t con n = GetAction (Action idx t con n) idx
-instance (Show idx, ToSQL idx, MonadDB m) => DBQuery m (GetAction idx t con n) (Maybe t) where
+instance (Show idx, ToSQL idx, MonadDB m, MonadThrow m) => DBQuery m (GetAction idx t con n) (Maybe t) where
   query (GetAction Action{..} aid) = do
     -- Updating 'expires' on every access is costly and results in
     -- quite a lot of database races for a single row in database, at
@@ -53,7 +54,7 @@ instance MonadDB m => DBQuery m (GetExpiredActions idx t con n) [t] where
     fetchMany qaDecode
 
 data NewAction idx t con n = NewAction (Action idx t con n) UTCTime con
-instance (MonadDB m, Typeable t) => DBUpdate m (NewAction idx t con n) t where
+instance (MonadDB m, MonadThrow m, Typeable t) => DBUpdate m (NewAction idx t con n) t where
   update (NewAction Action{..} expires con) = do
     runQuery_ $ sqlInsert (raw $ tblName qaTable) $ do
       sqlSet "expires" expires
@@ -62,10 +63,10 @@ instance (MonadDB m, Typeable t) => DBUpdate m (NewAction idx t con n) t where
     fetchOne qaDecode
 
 data UpdateAction idx t con n = UpdateAction (Action idx t con n) t
-instance MonadDB m => DBUpdate m (UpdateAction idx t con n) Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m (UpdateAction idx t con n) Bool where
   update (UpdateAction Action{..} obj) = runQuery01 $ qaUpdateSQL obj
 
 data DeleteAction idx t con n = DeleteAction (Action idx t con n) idx
-instance (Show idx, ToSQL idx, MonadDB m) => DBUpdate m (DeleteAction idx t con n) Bool where
+instance (Show idx, ToSQL idx, MonadDB m, MonadThrow m) => DBUpdate m (DeleteAction idx t con n) Bool where
   update (DeleteAction Action{..} aid) =
     runQuery01 $ "DELETE FROM" <+> raw (tblName qaTable) <+> "WHERE" <+> qaIndexField <+> "=" <?> aid

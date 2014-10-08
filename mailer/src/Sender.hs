@@ -4,6 +4,7 @@ module Sender (
   , createSender
   ) where
 
+import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Data.List hiding (head)
 import System.Exit
@@ -24,7 +25,7 @@ import Data.Maybe (fromMaybe)
 
 data Sender = Sender {
     senderName :: String
-  , sendMail   :: (CryptoRNG m, MonadDB m, MonadIO m, Log.MonadLog m, AWS.AmazonMonad m)
+  , sendMail   :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadIO m, Log.MonadLog m, AWS.AmazonMonad m)
                => Mail -> m Bool
   }
 
@@ -43,7 +44,7 @@ createSender mc = case mc of
 createExternalSender :: String -> String -> (Mail -> [String]) -> Sender
 createExternalSender name program createargs = Sender { senderName = name, sendMail = send }
   where
-    send :: (CryptoRNG m, MonadDB m, MonadIO m, Log.MonadLog m, AWS.AmazonMonad m) => Mail -> m Bool
+    send :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadIO m, Log.MonadLog m, AWS.AmazonMonad m) => Mail -> m Bool
     send mail@Mail{..} = do
       content <- assembleContent mail
       liftIO $ do
@@ -94,7 +95,7 @@ createSMTPSender config = createExternalSender (serviceName config) "curl" creat
 createLocalSender :: SenderConfig -> Sender
 createLocalSender config = Sender { senderName = "localSender", sendMail = send }
   where
-    send :: (CryptoRNG m, MonadDB m, MonadIO m, Log.MonadLog m, AWS.AmazonMonad m) => Mail -> m Bool
+    send :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadIO m, Log.MonadLog m, AWS.AmazonMonad m) => Mail -> m Bool
     send mail@Mail{..} = do
       content <- assembleContent mail
       let filename = localDirectory config ++ "/Email-" ++ addrEmail ($(head) mailTo) ++ "-" ++ show mailID ++ ".eml"

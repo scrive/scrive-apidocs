@@ -5,6 +5,7 @@ module Doc.EvidenceAttachments
   ) where
 
 import Control.Applicative((<$>))
+import Control.Monad.Catch
 import DB (MonadDB)
 import Data.Maybe (listToMaybe, fromMaybe)
 import Doc.DocStateData (Document(..), documentsealedfile)
@@ -23,7 +24,7 @@ data Attachment = Attachment
   , content  :: BSL.ByteString
   } deriving (Eq, Ord, Show)
 
-fetch :: (Log.MonadLog m, MonadDB m, MonadIO m, AWS.AmazonMonad m) => Document -> m [Attachment]
+fetch :: (Log.MonadLog m, MonadDB m, MonadThrow m, MonadIO m, AWS.AmazonMonad m) => Document -> m [Attachment]
 fetch doc = do
   case documentsealedfile doc of
     Nothing -> return []

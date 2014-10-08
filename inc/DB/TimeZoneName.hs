@@ -10,7 +10,7 @@ module DB.TimeZoneName
 
 import Data.Char
 import Data.Typeable
-import Control.Monad.Trans.Control
+import Control.Monad.Catch
 import Data.Monoid.Space
 import Database.PostgreSQL.PQTypes
 import qualified Control.Exception.Lifted as E
@@ -26,14 +26,13 @@ defaultTimeZoneName = TimeZoneName "Europe/Stockholm"
 unsafeTimeZoneName :: String -> TimeZoneName
 unsafeTimeZoneName = TimeZoneName
 
-
-mkTimeZoneName :: (MonadBaseControl IO m, MonadDB m) => String -> m TimeZoneName
+mkTimeZoneName :: (MonadDB m, MonadCatch m) => String -> m TimeZoneName
 mkTimeZoneName s
   | not (sanityCheck s) = fail $ "mkTimeZoneName: illegal time zone string: " ++ show s
   | otherwise = do
     -- Check if we can use the string to form a valid SQL 'timestamp with time zone' value.
     runSQL_ ("SELECT cast(" <?> ("2000-01-01 " ++ s) <+> "as timestamp with time zone)")
-      `E.catch` \(E.SomeException e) -> do
+      `catch` \(E.SomeException e) -> do
         fail $ "mkTimeZoneName: time zone not recognized by database: " ++ show (s, e)
     return $ TimeZoneName s
 
@@ -42,9 +41,9 @@ sanityCheck s = case break (=='/') s of
   (as@(_:_),'/':bs) -> all isAlpha as && all (\b -> isAlphaNum b || b `elem` "/+-_") bs
   _                 -> all (\b -> isAlphaNum b || b `elem` "/+-_") s
 
-withTimeZone :: forall m a. (MonadDB m, MonadBaseControl IO m)
+withTimeZone :: forall m a. (MonadDB m, MonadMask m)
              => TimeZoneName -> m a -> m a
-withTimeZone (TimeZoneName tz) = E.bracket setNewTz setTz . const
+withTimeZone (TimeZoneName tz) = bracket setNewTz setTz . const
   where
     setNewTz = do
       runSQL_ "SHOW timezone"

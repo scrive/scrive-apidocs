@@ -4,6 +4,7 @@ module Doc.Tokens.Model (
   ) where
 
 import Control.Monad
+import Control.Monad.Catch
 import Context
 import Crypto.RNG
 import DB
@@ -14,7 +15,7 @@ import Session.Model
 import Happstack.Server (ServerMonad)
 
 data GetDocumentSessionToken = GetDocumentSessionToken SignatoryLinkID
-instance (KontraMonad m, MonadDB m) => DBQuery m GetDocumentSessionToken (Maybe MagicHash) where
+instance (KontraMonad m, MonadDB m, MonadThrow m) => DBQuery m GetDocumentSessionToken (Maybe MagicHash) where
   query (GetDocumentSessionToken slid) = do
     sid <- ctxsessionid `liftM` getContext
     runQuery_ . sqlSelect "document_session_tokens" $ do
@@ -24,7 +25,7 @@ instance (KontraMonad m, MonadDB m) => DBQuery m GetDocumentSessionToken (Maybe 
     fetchMaybe unSingle
 
 data AddDocumentSessionToken = AddDocumentSessionToken SignatoryLinkID MagicHash
-instance (ServerMonad m,CryptoRNG m, KontraMonad m, MonadDB m) => DBUpdate m AddDocumentSessionToken () where
+instance (ServerMonad m,CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m) => DBUpdate m AddDocumentSessionToken () where
   update (AddDocumentSessionToken slid token) = do
     sid <- getNonTempSessionID
     runQuery_ $ rawSQL "SELECT insert_document_session_token($1, $2, $3)" (sid, slid, token)

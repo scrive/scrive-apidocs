@@ -5,6 +5,7 @@ module Doc.AutomaticReminder.Model (
   ) where
 
 import Control.Monad
+import Control.Monad.Catch
 import ActionQueue.Core
 import ActionQueue.Scheduler
 import Data.Int
@@ -24,7 +25,6 @@ import Crypto.RNG
 import Data.Typeable
 import DB.TimeZoneName (TimeZoneName, defaultTimeZoneName, withTimeZone)
 import qualified DB.TimeZoneName as TimeZoneName
-import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.Base
 
 data DocumentAutomaticReminder = DocumentAutomaticReminder {
@@ -51,7 +51,7 @@ documentAutomaticReminder = Action {
   , qaEvaluateExpired = sentReminder
   }
   where
-    sentReminder :: (Log.MonadLog m, CryptoRNG m, MonadDB m, MonadIO m, MonadBase IO m, MonadReader SchedulerData m) => DocumentAutomaticReminder -> m ()
+    sentReminder :: (Log.MonadLog m, MonadThrow m, CryptoRNG m, MonadDB m, MonadIO m, MonadBase IO m, MonadReader SchedulerData m) => DocumentAutomaticReminder -> m ()
     sentReminder dar = do
       now <- currentTime
       _ <- dbQuery (GetDocumentByDocumentID (reminderDocumentID dar)) >>= \doc -> runMailTInScheduler doc $
@@ -60,10 +60,10 @@ documentAutomaticReminder = Action {
 
 
 
-scheduleAutoreminderIfThereIsOne :: (MonadDB m, MonadBaseControl IO m) => TimeZoneName -> Document -> m ()
+scheduleAutoreminderIfThereIsOne :: (MonadDB m, MonadMask m) => TimeZoneName -> Document -> m ()
 scheduleAutoreminderIfThereIsOne tzn doc = setAutoreminder (documentid doc) (documentdaystoremind doc) tzn
 
-setAutoreminder :: (MonadDB m, MonadBaseControl IO m) => DocumentID -> Maybe Int32 -> TimeZoneName -> m ()
+setAutoreminder :: (MonadDB m, MonadMask m) => DocumentID -> Maybe Int32 -> TimeZoneName -> m ()
 setAutoreminder did mdays tzn = do
       void $  dbUpdate $ DeleteAction documentAutomaticReminder did
       case mdays of

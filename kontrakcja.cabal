@@ -102,6 +102,7 @@ Executable kontrakcja-server
   Build-depends: crypto-api
   Build-depends: cryptohash
   Build-depends: dataenc
+  Build-depends: exceptions
   Build-depends: explicit-exception
   Build-depends: fields-json
   Build-depends: hS3
@@ -204,6 +205,7 @@ Executable cron
   Build-depends: crypto-api
   Build-depends: cryptohash
   Build-depends: dataenc
+  Build-depends: exceptions
   Build-depends: explicit-exception
   Build-depends: fields-json
   Build-depends: hS3
@@ -310,6 +312,7 @@ Executable kontrakcja-migrate
   Build-depends: crypto-api
   Build-depends: cryptohash
   Build-depends: dataenc
+  Build-depends: exceptions
   Build-depends: explicit-exception
   Build-depends: fields-json
   Build-depends: hS3
@@ -413,6 +416,7 @@ Executable mailing-server
   Build-depends: crypto-api
   Build-depends: cryptohash
   Build-depends: dataenc
+  Build-depends: exceptions
   Build-depends: explicit-exception
   Build-depends: fields-json
   Build-depends: hS3
@@ -516,6 +520,7 @@ Executable messenger-server
   Build-depends: crypto-api
   Build-depends: cryptohash
   Build-depends: dataenc
+  Build-depends: exceptions
   Build-depends: explicit-exception
   Build-depends: fields-json
   Build-depends: hS3
@@ -620,6 +625,7 @@ Executable kontrakcja-test
   Build-depends: crypto-api
   Build-depends: cryptohash
   Build-depends: dataenc
+  Build-depends: exceptions
   Build-depends: explicit-exception
   Build-depends: fields-json
   Build-depends: hS3

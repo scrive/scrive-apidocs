@@ -7,6 +7,7 @@ module User.Action (
   ) where
 
 import Control.Monad
+import Control.Monad.Catch
 import Data.Functor
 import Data.Maybe
 
@@ -137,13 +138,13 @@ handleActivate mfstname msndname (actvuser,company) signupmethod = do
         Log.mixlog_ $ "Create account attempt failed (params missing)"
         return Nothing
 
-scheduleNewAccountMail :: (TemplatesMonad m, CryptoRNG m, MonadDB m, Log.MonadLog m) => Context -> User -> m ()
+scheduleNewAccountMail :: (TemplatesMonad m, CryptoRNG m, MonadDB m, MonadThrow m, Log.MonadLog m) => Context -> User -> m ()
 scheduleNewAccountMail ctx user = do
   link <- newAccessNewAccountLink $ userid user
   mail <- accessNewAccountMail ctx user link
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress user] }
 
-createUser :: (CryptoRNG m, MailContextMonad m, MonadDB m, TemplatesMonad m) => Email -> (String, String) -> (CompanyID,Bool) -> Lang -> m (Maybe User)
+createUser :: (CryptoRNG m, MailContextMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => Email -> (String, String) -> (CompanyID,Bool) -> Lang -> m (Maybe User)
 createUser email names companyandrole lang = do
   mctx <- getMailContext
   passwd <- createPassword =<< randomPassword

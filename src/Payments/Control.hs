@@ -11,6 +11,7 @@ module Payments.Control (
                         ,handleSyncNewSubscriptionWithRecurlyOutside)
        where
 
+import Control.Monad.Catch
 import Control.Monad.State
 import Data.Functor
 import Data.Maybe
@@ -127,7 +128,7 @@ handleChangePlan = do
       return ()
     RTerminate -> return ()
 
-cachePlan :: (MonadDB m, Log.MonadLog m) => UTCTime -> Stats.PaymentsAction -> AccountCode -> Subscription -> String -> CompanyID -> Maybe Int -> Maybe UTCTime -> m Bool
+cachePlan :: (MonadDB m, MonadThrow m, Log.MonadLog m) => UTCTime -> Stats.PaymentsAction -> AccountCode -> Subscription -> String -> CompanyID -> Maybe Int -> Maybe UTCTime -> m Bool
 cachePlan time pa ac subscription invoicestatus cid mds mdd = do
   let p       = fromRecurlyPricePlan $ subPricePlan subscription
       (s, sp) = if invoicestatus == "failed"
@@ -158,7 +159,7 @@ cachePlan time pa ac subscription invoicestatus cid mds mdd = do
 
 
 {- Should be run once per day, preferably at night -}
-handleSyncWithRecurly :: (MonadBase IO m, MonadIO m, MonadDB m, Log.MonadLog m, CryptoRNG m) => AppConf -> MailsConfig -> KontrakcjaGlobalTemplates -> String -> UTCTime -> m ()
+handleSyncWithRecurly :: (MonadBase IO m, MonadIO m, MonadDB m, MonadThrow m, Log.MonadLog m, CryptoRNG m) => AppConf -> MailsConfig -> KontrakcjaGlobalTemplates -> String -> UTCTime -> m ()
 handleSyncWithRecurly appConf mailsconfig templates recurlyapikey time = do
   Log.mixlog_ "Syncing with Recurly."
   plans <- dbQuery $ PaymentPlansRequiringSync RecurlyProvider time
@@ -226,7 +227,7 @@ handleSyncWithRecurly appConf mailsconfig templates recurlyapikey time = do
                 return ()
       _ -> return ()
 
-handleSyncNoProvider :: (MonadIO m, MonadDB m, Log.MonadLog m, CryptoRNG m) => UTCTime -> m ()
+handleSyncNoProvider :: (MonadDB m, MonadThrow m, Log.MonadLog m, CryptoRNG m) => UTCTime -> m ()
 handleSyncNoProvider time = do
   Log.mixlog_ "Syncing accounts with no provider."
   plans <- dbQuery $ PaymentPlansRequiringSync NoProvider time
@@ -461,7 +462,7 @@ sendInvoiceEmail user company subscription = do
                                      fullname = getFullName user
                                    , email = getEmail user }]})
 
-sendInvoiceFailedEmail :: (MonadDB m, Log.MonadLog m, CryptoRNG m) => MailsConfig -> Maybe BrandedDomain -> String -> MailsConfig -> Lang -> KontrakcjaGlobalTemplates -> User -> Company -> Invoice -> m ()
+sendInvoiceFailedEmail :: (MonadDB m, MonadThrow m, Log.MonadLog m, CryptoRNG m) => MailsConfig -> Maybe BrandedDomain -> String -> MailsConfig -> Lang -> KontrakcjaGlobalTemplates -> User -> Company -> Invoice -> m ()
 sendInvoiceFailedEmail mc mbd hostpart mailsconfig lang templates user company invoice = do
   mail <- runTemplatesT (lang, templates) $ mailFailed mc mbd hostpart user company invoice
   scheduleEmailSendout mailsconfig

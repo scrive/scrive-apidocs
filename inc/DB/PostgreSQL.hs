@@ -1,6 +1,7 @@
 module DB.PostgreSQL where
 
-import Control.Monad.Trans.Control
+import Control.Monad.Base
+import Control.Monad.Catch
 import Database.PostgreSQL.PQTypes
 import qualified Data.ByteString as BS
 
@@ -17,5 +18,6 @@ createPoolSource cs = poolSource cs
   10 -- connection linger time after returned to pool
   50 -- high water mark
 
-withPostgreSQL :: MonadBaseControl IO m => ConnectionSource -> DBT m a -> m a
+withPostgreSQL :: (MonadBase IO m, MonadMask m)
+               => ConnectionSource -> DBT m a -> m a
 withPostgreSQL cs = runDBT cs defaultTransactionSettings

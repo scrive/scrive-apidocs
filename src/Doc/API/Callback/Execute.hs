@@ -5,6 +5,7 @@ import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL (toString, fromString)
 
 import DB
+import Control.Monad.Catch
 import Control.Monad.IO.Class
 
 import Utils.IO
@@ -26,7 +27,7 @@ import Amazon
 import Network.HTTP as HTTP
 import Text.JSON.Gen
 
-execute :: (AmazonMonad m, MonadDB m, Log.MonadLog m, MonadIO m, MonadReader c m, HasSalesforceConf c) => DocumentAPICallback -> m Bool
+execute :: (AmazonMonad m, MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, MonadReader c m, HasSalesforceConf c) => DocumentAPICallback -> m Bool
 execute DocumentAPICallback{..} = do
   doc <- dbQuery $ GetDocumentByDocumentID dacDocumentID
   do
@@ -38,7 +39,7 @@ execute DocumentAPICallback{..} = do
                   Just (SalesforceScheme rtoken) -> executeSalesforceCallback doc rtoken dacURL
                   _ -> executeStandardCallback doc dacURL
 
-executeStandardCallback :: (AmazonMonad m, MonadDB m, Log.MonadLog m, MonadIO m, MonadReader c m, HasSalesforceConf c) => Document -> String -> m Bool
+executeStandardCallback :: (AmazonMonad m, MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, MonadReader c m, HasSalesforceConf c) => Document -> String -> m Bool
 executeStandardCallback doc url = do
   dJSON <- documentJSONV1 Nothing False False True Nothing doc
   (exitcode, _ , stderr) <- readCurl

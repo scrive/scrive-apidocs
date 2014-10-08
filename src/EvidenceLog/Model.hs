@@ -17,6 +17,7 @@ module EvidenceLog.Model (
   ) where
 
 import Control.Applicative ((<$>), (<*>))
+import Control.Monad.Catch
 import Data.Int
 import Data.Maybe (fromMaybe)
 import Data.Monoid
@@ -92,7 +93,7 @@ evidenceLogText event textFields masl mmsg actor = do
    ts <- getTextTemplatesByLanguage $ codeFromLang LANG_EN
    return $ runIdentity $ renderHelper ts (eventTextTemplateName event) fields
 
-instance (DocumentMonad m, MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsg Bool where
+instance (DocumentMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsg Bool where
   update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields masl mmsg actor) = do
    text <- evidenceLogText event textFields masl mmsg actor
    did <- theDocumentID
@@ -112,7 +113,7 @@ instance (DocumentMonad m, MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvid
       sqlSet "client_time" $ actorClientTime actor
       sqlSet "client_name" $ actorClientName actor
 
-instance (DocumentMonad m, MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEvent Bool where
+instance (DocumentMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => DBUpdate m InsertEvidenceEvent Bool where
   update (InsertEvidenceEvent event textFields actor) = update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields Nothing Nothing actor)
 
 type DocumentEvidenceEvent = DocumentEvidenceEvent' SignatoryLinkID

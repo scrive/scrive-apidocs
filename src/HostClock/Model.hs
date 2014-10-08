@@ -8,6 +8,7 @@ module HostClock.Model
   ) where
 
 import Control.Monad (when)
+import Control.Monad.Catch
 import Data.Int
 import DB
 import Data.Maybe (isJust)
@@ -29,7 +30,7 @@ data ClockErrorEstimate = ClockErrorEstimate
   deriving (Eq, Ord, Show)
 
 data GetLatestClockErrorEstimate = GetLatestClockErrorEstimate
-instance MonadDB m => DBQuery m GetLatestClockErrorEstimate (Maybe ClockErrorEstimate) where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetLatestClockErrorEstimate (Maybe ClockErrorEstimate) where
   query (GetLatestClockErrorEstimate) = do
     runQuery_ . sqlSelect "host_clock" $ do
       sqlWhere "time = (SELECT MAX(time) FROM host_clock WHERE clock_offset IS NOT NULL)"
@@ -55,7 +56,7 @@ data ClockErrorStatistics = ClockErrorStatistics
   deriving Show
 
 data GetClockErrorStatistics = GetClockErrorStatistics (Maybe UTCTime) (Maybe UTCTime)
-instance MonadDB m => DBQuery m GetClockErrorStatistics ClockErrorStatistics where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetClockErrorStatistics ClockErrorStatistics where
   query (GetClockErrorStatistics from to) = do
     runQuery_ $ sqlSelect "host_clock" $ do
       when (isJust from) $ sqlWhere $ "time >=" <?> from

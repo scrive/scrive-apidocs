@@ -208,7 +208,7 @@ module DB.SQL
   )
   where
 
---import Control.Applicative
+import Control.Monad.Catch
 import Control.Monad.State
 import Control.Monad.Trans.Control
 import Data.List (transpose, findIndex, inits)
@@ -1107,7 +1107,8 @@ instance Show SomeKontraException where
 
 data ExceptionMaker = forall row. FromRow row => ExceptionMaker (row -> SomeKontraException)
 
-kWhyNot1Ex :: forall m s. (SqlTurnIntoSelect s, MonadDB m) => s -> m (Bool, SomeKontraException)
+kWhyNot1Ex :: forall m s. (SqlTurnIntoSelect s, MonadDB m, MonadThrow m)
+           => s -> m (Bool, SomeKontraException)
 kWhyNot1Ex cmd = do
   let newSelect = sqlTurnIntoSelect cmd
       newWhyNotSelect = sqlTurnIntoWhyNotSelect newSelect
@@ -1133,7 +1134,8 @@ kWhyNot1Ex cmd = do
        result <- fetchOne exception
        return (important, result)
 
-kWhyNot1 :: (SqlTurnIntoSelect s, MonadDB m) => s -> m SomeKontraException
+kWhyNot1 :: (SqlTurnIntoSelect s, MonadDB m, MonadThrow m)
+         => s -> m SomeKontraException
 kWhyNot1 cmd = snd `fmap` kWhyNot1Ex cmd
 
 enumerateWhyNotExceptions :: (SQL, [SqlCondition])
@@ -1158,34 +1160,34 @@ enumerateWhyNotExceptions (from,condsUpTillNow) conds = concatMap worker (zip co
                        else from <> ", " <> sqlSelectFrom s
 
 
-kRunManyOrThrowWhyNot :: (SqlTurnIntoSelect s, MonadDB m)
+kRunManyOrThrowWhyNot :: (SqlTurnIntoSelect s, MonadDB m, MonadThrow m)
                    => s -> m ()
 kRunManyOrThrowWhyNot sqlable = do
   success <- runQuery $ toSQLCommand sqlable
   when (success == 0) $ do
     exception <- kWhyNot1 sqlable
-    throwDB exception
+    throwM exception
 
 
-kRun1OrThrowWhyNot :: (SqlTurnIntoSelect s, MonadDB m)
+kRun1OrThrowWhyNot :: (SqlTurnIntoSelect s, MonadDB m, MonadThrow m)
                    => s -> m ()
 kRun1OrThrowWhyNot sqlable = do
   success <- runQuery01 $ toSQLCommand sqlable
   when (not success) $ do
     exception <- kWhyNot1 sqlable
-    throwDB exception
+    throwM exception
 
 
-kRun1OrThrowWhyNotAllowIgnore :: (SqlTurnIntoSelect s, MonadDB m)
+kRun1OrThrowWhyNotAllowIgnore :: (SqlTurnIntoSelect s, MonadDB m, MonadThrow m)
                                 => s -> m ()
 kRun1OrThrowWhyNotAllowIgnore sqlable = do
   success <- runQuery01 $ toSQLCommand sqlable
   when (not success) $ do
     (important, exception) <- kWhyNot1Ex sqlable
     when (important) $
-      throwDB exception
+      throwM exception
 
-kRunAndFetch1OrThrowWhyNot :: (IsSQL s, FromRow row, MonadDB m, SqlTurnIntoSelect s)
+kRunAndFetch1OrThrowWhyNot :: (IsSQL s, FromRow row, MonadDB m, MonadThrow m, SqlTurnIntoSelect s)
                            => (row -> a) -> s -> m a
 kRunAndFetch1OrThrowWhyNot decoder sqlcommand = do
   runQuery_ sqlcommand
@@ -1193,9 +1195,9 @@ kRunAndFetch1OrThrowWhyNot decoder sqlcommand = do
   case results of
     [] -> do
       exception <- kWhyNot1 sqlcommand
-      throwDB exception
+      throwM exception
     [r] -> return r
-    _ -> throwDB AffectedRowsMismatch {
+    _ -> throwM AffectedRowsMismatch {
       rowsExpected = [(1, 1)]
     , rowsDelivered = length results
     }

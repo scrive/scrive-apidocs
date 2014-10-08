@@ -13,6 +13,7 @@ module Amazon (
 
 import Control.Applicative
 import Control.Monad.Base
+import Control.Monad.Catch
 import Control.Monad.Trans
 import Control.Monad.Trans.Control
 import Control.Concurrent
@@ -56,7 +57,7 @@ mkAWSAction amazonConfig = AWS.S3Action {
     (bucket, accessKey, secretKey) = fromMaybe ("","","") $ amazonConfig
 
 newtype AmazonMonadT m a = AmazonMonadT { unAmazonMonadT :: ReaderT AmazonConfig m a }
-  deriving (Alternative, Applicative, Functor, Monad, MonadDB, MonadIO, Log.MonadLog, CryptoRNG, MonadTrans, MonadPlus, MonadBase b)
+  deriving (Alternative, Applicative, Functor, Monad, MonadDB, MonadIO, Log.MonadLog, CryptoRNG, MonadTrans, MonadPlus, MonadBase b, MonadThrow, MonadCatch, MonadMask)
 
 runAmazonMonadT :: Monad m => AmazonConfig -> AmazonMonadT m a -> m a
 runAmazonMonadT ac = flip runReaderT ac . unAmazonMonadT
@@ -78,7 +79,7 @@ instance MonadBaseControl IO m => MonadBaseControl IO (AmazonMonadT m) where
 instance Monad m => AmazonMonad (AmazonMonadT m) where
   getAmazonConfig = AmazonMonadT ask
 
-uploadFilesToAmazon :: (AmazonMonad m, MonadIO m, Log.MonadLog m, MonadDB m, CryptoRNG m) => m ()
+uploadFilesToAmazon :: (AmazonMonad m, MonadIO m, Log.MonadLog m, MonadDB m, MonadThrow m, CryptoRNG m) => m ()
 uploadFilesToAmazon = do
   mfile <- dbQuery GetFileThatShouldBeMovedToAmazon
   case mfile of

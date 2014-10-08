@@ -16,6 +16,7 @@ import Version (versionID)
 
 import Control.Applicative ((<$>))
 import Control.Monad (forM, forM_, when)
+import Control.Monad.Catch
 import Control.Monad.Reader (asks)
 import Control.Monad.Trans (liftIO)
 import MinutesTime
@@ -40,7 +41,7 @@ dumpAllEvidenceTexts env = testThat "Generating all evidence texts" env $ do
       Just d  -> liftIO $ writeFile (d </> "evidence-texts-" ++ codeFromLang lang ++ ".html") t
       Nothing -> t == t `seq` return ()
 
-dumpEvidenceTexts :: (MonadDB m, TemplatesMonad m) => UTCTime -> Lang -> m String
+dumpEvidenceTexts :: (MonadDB m, MonadThrow m, TemplatesMonad m) => UTCTime -> Lang -> m String
 dumpEvidenceTexts now lang = do
   let Just time = parseTime' "%d-%m-%Y" "01-01-2013"
   let actor = Actor { actorTime = time

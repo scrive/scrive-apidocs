@@ -3,6 +3,7 @@ module SMS.SMS (
   , scheduleSMS
   ) where
 
+import Control.Monad.Catch
 import DB
 import SMS.Model
 import qualified Log
@@ -23,7 +24,7 @@ data SMS = SMS {
 -- Transliterate is used since eg. polish characters are not supported by
 -- latin1, but we still want messages containing such characters to be sent
 -- successfully.
-scheduleSMS :: (Log.MonadLog m, MonadDB m) => SMS -> m ()
+scheduleSMS :: (Log.MonadLog m, MonadDB m, MonadThrow m) => SMS -> m ()
 scheduleSMS msg@SMS{..} = do
     if (smsMSISDN /= "")
        then do

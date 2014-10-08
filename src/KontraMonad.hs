@@ -6,6 +6,7 @@ module KontraMonad (
     ) where
 
 import Control.Monad.Base
+import Control.Monad.Catch
 import Control.Monad.State
 import Control.Monad.Trans.Control
 import Happstack.Server
@@ -30,6 +31,7 @@ type Kontrakcja m = (
   , MailContextMonad m
   , Log.MonadLog m
   , MonadDB m
+  , MonadMask m
   , MonadBase IO m
   , MonadBaseControl IO m
   , MonadIO m

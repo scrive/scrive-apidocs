@@ -22,6 +22,7 @@ import Control.Arrow
 import Control.Concurrent
 import Control.Concurrent.STM
 import Control.Monad.Base
+import Control.Monad.Catch
 import Control.Monad.Error
 import Control.Monad.Reader
 import Control.Monad.State
@@ -75,7 +76,7 @@ data TestEnvSt = TestEnvSt {
 type InnerTestEnv = ReaderT TestEnvSt (DBT IO)
 
 newtype TestEnv a = TestEnv { unTestEnv :: InnerTestEnv a }
-  deriving (Applicative, Functor, Monad, MonadIO, MonadReader TestEnvSt, MonadBase IO)
+  deriving (Applicative, Functor, Monad, MonadCatch, MonadThrow, MonadMask, MonadIO, MonadReader TestEnvSt, MonadBase IO)
 
 instance Log.MonadLog TestEnv where
   mixlogjs title js = liftBase (Log.mixlogjsIO title js)
@@ -104,7 +105,6 @@ instance MonadDB TestEnv where
   setTransactionSettings = TestEnv . setTransactionSettings
   foldlM = foldLeftM
   foldrM = foldRightM
-  throwDB = TestEnv . throwDB
   withNewConnection (TestEnv m) = do
     -- we run TestEnv with static connection source that uses
     -- the same connection over and over again. however, when

@@ -5,6 +5,7 @@ module ELegitimation.ELegTransaction.Model (
   ) where
 
 import Control.Monad
+import Control.Monad.Catch
 import Control.Monad.State
 import Data.Data
 
@@ -48,7 +49,7 @@ data ELegTransaction = ELegTransaction {
   } deriving (Eq, Ord, Show, Typeable)
 
 data MergeELegTransaction = MergeELegTransaction ELegTransaction
-instance (ServerMonad m, CryptoRNG m, KontraMonad m, MonadDB m) => DBUpdate m MergeELegTransaction () where
+instance (ServerMonad m, CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m) => DBUpdate m MergeELegTransaction () where
   update (MergeELegTransaction ELegTransaction{..}) = do
     sid <- getNonTempSessionID
     runQuery_ $ rawSQL "SELECT merge_eleg_transaction($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)" (
@@ -79,7 +80,7 @@ instance (ServerMonad m, CryptoRNG m, KontraMonad m, MonadDB m) => DBUpdate m Me
       toCRAttributes _ = Nothing
 
 data GetELegTransaction = GetELegTransaction String
-instance (KontraMonad m, MonadDB m) => DBQuery m GetELegTransaction (Maybe ELegTransaction) where
+instance (KontraMonad m, MonadDB m, MonadThrow m) => DBQuery m GetELegTransaction (Maybe ELegTransaction) where
   query (GetELegTransaction tid) = do
     sid <- ctxsessionid `liftM` getContext
     runQuery_ . selectTransactions $ do

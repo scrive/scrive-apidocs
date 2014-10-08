@@ -5,10 +5,10 @@ module Payments.Stats (
   ) where
 
 import Control.Monad.Base
+import Control.Monad.Catch
 import Data.Int
 import Data.Maybe
 import Data.Monoid
-import qualified Control.Exception.Lifted as E
 
 import MinutesTime
 import DB
@@ -18,7 +18,7 @@ import Company.Model
 import Payments.Model
 import Util.CSVUtil
 
-record :: MonadDB m => UTCTime -> PaymentsAction -> PaymentPlanProvider -> Int -> PricePlan -> CompanyID -> AccountCode -> m Bool
+record :: (MonadDB m, MonadThrow m) => UTCTime -> PaymentsAction -> PaymentPlanProvider -> Int -> PricePlan -> CompanyID -> AccountCode -> m Bool
 record time action provider quantity plan cid ac =
   dbUpdate $ AddPaymentsStat time provider action quantity plan cid ac
 
@@ -39,7 +39,7 @@ data AddPaymentsStat = AddPaymentsStat { psTime        :: UTCTime
                                        , psCompanyID   :: CompanyID
                                        , psAccountCode :: AccountCode
                                        }
-instance MonadDB m => DBUpdate m AddPaymentsStat Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m AddPaymentsStat Bool where
   update AddPaymentsStat{..} = do
     runQuery01 $ rawSQL ("INSERT INTO payment_stats (time, provider, action, quantity, plan, company_id, account_code) "
       <> "      SELECT $1, $2, $3, $4, $5, $6, $7"
@@ -102,7 +102,7 @@ instance FromSQL PaymentsAction where
       7 -> return SyncAction
       8 -> return PushAction
       9 -> return OwnerSwitchAction
-      _ -> E.throwIO $ RangeError {
+      _ -> throwM RangeError {
         reRange = [(1, 9)]
       , reValue = n
       }

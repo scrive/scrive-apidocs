@@ -15,13 +15,13 @@ module User.History.Model (
   , GetUserHistoryByUserID(..)
   ) where
 
+import Control.Monad.Catch
 import Data.Int
 import Data.Monoid
 import Data.Monoid.Space
 import Text.JSON
 import Text.JSON.Gen
 import qualified Version
-import qualified Control.Exception.Lifted as E
 
 import DB
 import IPAddress
@@ -80,7 +80,7 @@ instance FromSQL UserHistoryEventType where
       7 -> return UserTOSAccept
       8 -> return UserPadLoginAttempt
       9 -> return UserPadLoginSuccess
-      _ -> E.throwIO $ RangeError {
+      _ -> throwM RangeError {
         reRange = [(1, 9)]
       , reValue = n
       }
@@ -105,7 +105,7 @@ instance MonadDB m => DBQuery m GetUserHistoryByUserID [UserHistory] where
     fetchMany fetchUserHistory
 
 data LogHistoryLoginAttempt = LogHistoryLoginAttempt UserID IPAddress UTCTime
-instance MonadDB m => DBUpdate m LogHistoryLoginAttempt Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryLoginAttempt Bool where
   update (LogHistoryLoginAttempt userid ip time) = addUserHistory
     userid
     UserHistoryEvent {uheventtype = UserLoginAttempt, uheventdata = Nothing}
@@ -114,7 +114,7 @@ instance MonadDB m => DBUpdate m LogHistoryLoginAttempt Bool where
     Nothing
 
 data LogHistoryLoginSuccess = LogHistoryLoginSuccess UserID IPAddress UTCTime
-instance MonadDB m => DBUpdate m LogHistoryLoginSuccess Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryLoginSuccess Bool where
   update (LogHistoryLoginSuccess userid ip time) = addUserHistory
     userid
     UserHistoryEvent {uheventtype = UserLoginSuccess, uheventdata = Nothing}
@@ -123,7 +123,7 @@ instance MonadDB m => DBUpdate m LogHistoryLoginSuccess Bool where
     (Just userid)
 
 data LogHistoryPadLoginAttempt = LogHistoryPadLoginAttempt UserID IPAddress UTCTime
-instance MonadDB m => DBUpdate m LogHistoryPadLoginAttempt Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryPadLoginAttempt Bool where
   update (LogHistoryPadLoginAttempt userid ip time) = addUserHistory
     userid
     UserHistoryEvent {uheventtype = UserPadLoginAttempt, uheventdata = Nothing}
@@ -132,7 +132,7 @@ instance MonadDB m => DBUpdate m LogHistoryPadLoginAttempt Bool where
     Nothing
 
 data LogHistoryPadLoginSuccess = LogHistoryPadLoginSuccess UserID IPAddress UTCTime
-instance MonadDB m => DBUpdate m LogHistoryPadLoginSuccess Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryPadLoginSuccess Bool where
   update (LogHistoryPadLoginSuccess userid ip time) = addUserHistory
     userid
     UserHistoryEvent {uheventtype = UserPadLoginSuccess, uheventdata = Nothing}
@@ -142,7 +142,7 @@ instance MonadDB m => DBUpdate m LogHistoryPadLoginSuccess Bool where
 
 
 data LogHistoryPasswordSetup = LogHistoryPasswordSetup UserID IPAddress UTCTime (Maybe UserID)
-instance MonadDB m => DBUpdate m LogHistoryPasswordSetup Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryPasswordSetup Bool where
   update (LogHistoryPasswordSetup userid ip time mpuser) = addUserHistory
     userid
     UserHistoryEvent {uheventtype = UserPasswordSetup, uheventdata = Nothing}
@@ -151,7 +151,7 @@ instance MonadDB m => DBUpdate m LogHistoryPasswordSetup Bool where
     mpuser
 
 data LogHistoryPasswordSetupReq = LogHistoryPasswordSetupReq UserID IPAddress UTCTime (Maybe UserID)
-instance MonadDB m => DBUpdate m LogHistoryPasswordSetupReq Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryPasswordSetupReq Bool where
   update (LogHistoryPasswordSetupReq userid ip time mpuser) = addUserHistory
     userid
     UserHistoryEvent {uheventtype = UserPasswordSetupReq, uheventdata = Nothing}
@@ -160,7 +160,7 @@ instance MonadDB m => DBUpdate m LogHistoryPasswordSetupReq Bool where
     mpuser
 
 data LogHistoryAccountCreated = LogHistoryAccountCreated UserID IPAddress UTCTime Email (Maybe UserID)
-instance MonadDB m => DBUpdate m LogHistoryAccountCreated Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryAccountCreated Bool where
   update (LogHistoryAccountCreated userid ip time email mpuser) = addUserHistory
     userid
     UserHistoryEvent {
@@ -176,7 +176,7 @@ instance MonadDB m => DBUpdate m LogHistoryAccountCreated Bool where
     mpuser
 
 data LogHistoryTOSAccept = LogHistoryTOSAccept UserID IPAddress UTCTime (Maybe UserID)
-instance MonadDB m => DBUpdate m LogHistoryTOSAccept Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryTOSAccept Bool where
   update (LogHistoryTOSAccept userid ip time mpuser) = addUserHistory
     userid
     UserHistoryEvent {uheventtype = UserTOSAccept, uheventdata = Nothing}
@@ -185,7 +185,7 @@ instance MonadDB m => DBUpdate m LogHistoryTOSAccept Bool where
     mpuser
 
 data LogHistoryDetailsChanged = LogHistoryDetailsChanged UserID IPAddress UTCTime [(String, String, String)] (Maybe UserID)
-instance MonadDB m => DBUpdate m LogHistoryDetailsChanged Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryDetailsChanged Bool where
   update (LogHistoryDetailsChanged userid ip time details mpuser) = addUserHistory
     userid
     UserHistoryEvent {
@@ -200,7 +200,7 @@ instance MonadDB m => DBUpdate m LogHistoryDetailsChanged Bool where
     mpuser
 
 data LogHistoryUserInfoChanged = LogHistoryUserInfoChanged UserID IPAddress UTCTime UserInfo UserInfo (Maybe UserID)
-instance MonadDB m => DBUpdate m LogHistoryUserInfoChanged Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryUserInfoChanged Bool where
   update (LogHistoryUserInfoChanged userid ip time oldinfo newinfo mpuser) = do
     let diff = diffUserInfos oldinfo newinfo
     case diff of
@@ -234,7 +234,7 @@ diffUserInfos old new = fstNameDiff
       then [("email", unEmail $ useremail old, unEmail $ useremail new)]
       else []
 
-addUserHistory :: MonadDB m => UserID -> UserHistoryEvent -> IPAddress -> UTCTime -> Maybe UserID -> m Bool
+addUserHistory :: (MonadDB m, MonadThrow m) => UserID -> UserHistoryEvent -> IPAddress -> UTCTime -> Maybe UserID -> m Bool
 addUserHistory user event ip time mpuser =
   runQuery01 $ sqlInsert "users_history" $ do
     sqlSet "user_id" user

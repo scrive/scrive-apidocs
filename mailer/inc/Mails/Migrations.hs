@@ -2,6 +2,7 @@ module Mails.Migrations (
     mailerMigrations
   ) where
 
+import Control.Monad.Catch
 import Data.Int
 import Data.Monoid.Space
 
@@ -10,7 +11,7 @@ import Mails.Tables
 import qualified Log
 
 -- Note: ALWAYS append new migrations TO THE END of this list.
-mailerMigrations :: (MonadDB m, Log.MonadLog m) => [Migration m]
+mailerMigrations :: (MonadDB m, MonadThrow m, Log.MonadLog m) => [Migration m]
 mailerMigrations = [
     addTestServiceToMails
   , moveAtachmentsToSeparateTable
@@ -30,7 +31,7 @@ addTestServiceToMails =
       runSQL_ "ALTER TABLE mails ALTER COLUMN service_test SET NOT NULL"
   }
 
-moveAtachmentsToSeparateTable :: (MonadDB m, Log.MonadLog m) => Migration m
+moveAtachmentsToSeparateTable :: (MonadDB m, MonadThrow m, Log.MonadLog m) => Migration m
 moveAtachmentsToSeparateTable =
   Migration {
     mgrTable = tableMails

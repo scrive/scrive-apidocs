@@ -26,6 +26,7 @@ module Doc.Model.Query
   ) where
 
 import Control.Monad.IO.Class
+import Control.Monad.Catch
 import Data.Int
 import Data.Monoid
 import Data.Monoid.Space
@@ -175,7 +176,7 @@ selectSignatoryLinkFieldsSQL = "SELECT"
   <+> "FROM signatory_link_fields "
 
 data GetSignatoryScreenshots = GetSignatoryScreenshots [SignatoryLinkID]
-instance (MonadDB m, Log.MonadLog m, MonadIO m, Amazon.AmazonMonad m) => DBQuery m GetSignatoryScreenshots [(SignatoryLinkID, SignatoryScreenshots)] where
+instance (MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, Amazon.AmazonMonad m) => DBQuery m GetSignatoryScreenshots [(SignatoryLinkID, SignatoryScreenshots)] where
   query (GetSignatoryScreenshots l) = do
     runQuery_ . sqlSelect "signatory_screenshots" $ do
                 sqlWhereIn "signatory_link_id" l
@@ -202,7 +203,7 @@ instance (MonadDB m, Log.MonadLog m, MonadIO m, Amazon.AmazonMonad m) => DBQuery
     return $ foldl' folder [] screenshotsWithBinaryData
 
 data FileInDocument = FileInDocument DocumentID FileID
-instance (MonadDB m) => DBQuery m FileInDocument Bool where
+instance (MonadDB m, MonadThrow m) => DBQuery m FileInDocument Bool where
   query (FileInDocument did fid) = do
     let s1 = sqlSelect "main_files" $ do
                    sqlWhereEq "file_id" fid
@@ -222,13 +223,13 @@ instance (MonadDB m) => DBQuery m FileInDocument Bool where
                        "EXISTS (" <> toSQLCommand s3 <> ")"
     fetchOne unSingle
 
-selectDocuments :: MonadDB m => SqlSelect -> m [Document]
+selectDocuments :: (MonadDB m, MonadThrow m) => SqlSelect -> m [Document]
 selectDocuments sqlquery = snd <$> selectDocumentsWithSoftLimit True Nothing sqlquery
 
-selectDocument :: MonadDB m => SqlSelect -> m Document
+selectDocument :: (MonadDB m, MonadThrow m) => SqlSelect -> m Document
 selectDocument sqlquery = $(head) . snd <$> selectDocumentsWithSoftLimit False Nothing sqlquery
 
-selectDocumentsWithSoftLimit :: MonadDB m => Bool ->  Maybe Int -> SqlSelect -> m (Int,[Document])
+selectDocumentsWithSoftLimit :: (MonadDB m, MonadThrow m) => Bool ->  Maybe Int -> SqlSelect -> m (Int,[Document])
 selectDocumentsWithSoftLimit allowzeroresults softlimit sqlquery = do
 
     {-
@@ -256,7 +257,7 @@ selectDocumentsWithSoftLimit allowzeroresults softlimit sqlquery = do
       runSQL_ "DROP TABLE docs"
       exception <- kWhyNot1 sqlquery
 
-      throwDB exception
+      throwM exception
 
     runSQL_ "SELECT * FROM docs"
     docs <- fetchMany fetchDocument
@@ -303,7 +304,7 @@ instance MonadDB m => DBQuery m GetDocumentTags (S.Set DocumentTag) where
     fromMaybe S.empty . listToMaybe . map snd . M.toList <$> fetchDocumentTags
 
 data GetSignatoryLinkByID = GetSignatoryLinkByID DocumentID SignatoryLinkID (Maybe MagicHash)
-instance (MonadDB m) => DBQuery m GetSignatoryLinkByID SignatoryLink where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetSignatoryLinkByID SignatoryLink where
   query (GetSignatoryLinkByID did slid mmh) = do
     let queryx = selectSignatoryLinksX $ do
                   sqlWhereDocumentIDIs did
@@ -323,17 +324,17 @@ instance (MonadDB m) => DBQuery m GetSignatoryLinkByID SignatoryLink where
       Nothing -> do
          exception <- kWhyNot1 queryx
 
-         throwDB exception
+         throwM exception
 
 data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
-instance MonadDB m => DBQuery m GetDocumentByDocumentID Document where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentByDocumentID Document where
   query (GetDocumentByDocumentID did) = do
     selectDocument $ selectTablesForDocumentSelectors $ do
       mapM_ sqlResult documentsSelectors
       sqlWhereDocumentIDIs did
 
 data GetDocumentBySignatoryLinkID = GetDocumentBySignatoryLinkID SignatoryLinkID
-instance MonadDB m => DBQuery m GetDocumentBySignatoryLinkID (Maybe Document) where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentBySignatoryLinkID (Maybe Document) where
   query (GetDocumentBySignatoryLinkID slid) =
      (Just <$> (selectDocument $ selectTablesForDocumentSelectors $ do
        mapM_ sqlResult documentsSelectors
@@ -342,7 +343,7 @@ instance MonadDB m => DBQuery m GetDocumentBySignatoryLinkID (Maybe Document) wh
          sqlWhere "signatory_links.document_id = documents.id"))
 
 data GetDocumentsBySignatoryLinkIDs = GetDocumentsBySignatoryLinkIDs [SignatoryLinkID]
-instance MonadDB m => DBQuery m GetDocumentsBySignatoryLinkIDs [Document] where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsBySignatoryLinkIDs [Document] where
   query (GetDocumentsBySignatoryLinkIDs slids) =
      selectDocuments $ selectTablesForDocumentSelectors $ do
        mapM_ sqlResult documentsSelectors
@@ -351,7 +352,7 @@ instance MonadDB m => DBQuery m GetDocumentsBySignatoryLinkIDs [Document] where
          sqlWhere "signatory_links.document_id = documents.id"
 
 data GetDocumentByDocumentIDSignatoryLinkIDMagicHash = GetDocumentByDocumentIDSignatoryLinkIDMagicHash DocumentID SignatoryLinkID MagicHash
-instance MonadDB m => DBQuery m GetDocumentByDocumentIDSignatoryLinkIDMagicHash Document where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentByDocumentIDSignatoryLinkIDMagicHash Document where
   query (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) = do
     selectDocument $ selectTablesForDocumentSelectors $ do
       mapM_ sqlResult documentsSelectors
@@ -377,12 +378,12 @@ instance MonadDB m => DBQuery m GetDocumentByDocumentIDSignatoryLinkIDMagicHash 
 -- GetDocuments returns documents in proper order, no reverse is needed.
 --
 data GetDocuments = GetDocuments [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy] (Int,Int)
-instance MonadDB m => DBQuery m GetDocuments [Document] where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetDocuments [Document] where
   query (GetDocuments domains filters orderbys (offset,limit)) =
     snd <$> query (GetDocuments2 True domains filters orderbys (offset,limit,Nothing))
 
 data GetDocuments2 = GetDocuments2 Bool [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy] (Int,Int,Maybe Int)
-instance MonadDB m => DBQuery m GetDocuments2 (Int,[Document]) where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetDocuments2 (Int,[Document]) where
   query (GetDocuments2 allowZeroResults domains filters orderbys (offset,limit,softlimit)) = do
     selectDocumentsWithSoftLimit allowZeroResults softlimit $ selectTablesForDocumentSelectors $ do
       mapM_ sqlResult documentsSelectors
@@ -416,17 +417,17 @@ instance MonadDB m => DBQuery m GetDocumentsIDs [DocumentID] where
     All documents authored by the user that have never been deleted.
 -}
 data GetDocumentsByAuthor = GetDocumentsByAuthor UserID
-instance MonadDB m => DBQuery m GetDocumentsByAuthor [Document] where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsByAuthor [Document] where
   query (GetDocumentsByAuthor uid) =
     query (GetDocuments [DocumentsVisibleToUser uid] [DocumentFilterByAuthor uid, DocumentFilterDeleted False] [Asc DocumentOrderByMTime] (0,maxBound))
 
 data GetTemplatesByAuthor = GetTemplatesByAuthor UserID
-instance MonadDB m => DBQuery m GetTemplatesByAuthor [Document] where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetTemplatesByAuthor [Document] where
   query (GetTemplatesByAuthor uid) =
     query (GetDocuments [DocumentsVisibleToUser uid] [DocumentFilterByAuthor uid, DocumentFilterDeleted False, DocumentFilterTemplate] [Asc DocumentOrderByMTime] (0,maxBound))
 
 data GetAvailableTemplates = GetAvailableTemplates UserID
-instance MonadDB m => DBQuery m GetAvailableTemplates [Document] where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetAvailableTemplates [Document] where
   query (GetAvailableTemplates uid) =
     query (GetDocuments [DocumentsVisibleToUser uid]
                             [DocumentFilterTemplate, DocumentFilterDeleted False]
@@ -434,7 +435,7 @@ instance MonadDB m => DBQuery m GetAvailableTemplates [Document] where
                             (0,maxBound))
 
 data GetTimeoutedButPendingDocumentsChunk = GetTimeoutedButPendingDocumentsChunk UTCTime Int
-instance MonadDB m => DBQuery m GetTimeoutedButPendingDocumentsChunk [Document] where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetTimeoutedButPendingDocumentsChunk [Document] where
   query (GetTimeoutedButPendingDocumentsChunk mtime size) = do
     selectDocuments $ selectTablesForDocumentSelectors $ do
       mapM_ sqlResult documentsSelectors
@@ -484,7 +485,7 @@ instance MonadDB m => DBQuery m GetSignatoriesByEmail [(DocumentID, SignatoryLin
     fetchMany id
 
 data CheckDocumentObjectVersionIs = CheckDocumentObjectVersionIs DocumentID Int64
-instance MonadDB m => DBQuery m CheckDocumentObjectVersionIs () where
+instance (MonadDB m, MonadThrow m) => DBQuery m CheckDocumentObjectVersionIs () where
   query (CheckDocumentObjectVersionIs did ov) = do
     _ :: Bool <- kRunAndFetch1OrThrowWhyNot unSingle $ sqlSelect "documents" $ do
        sqlResult "TRUE"
@@ -492,5 +493,5 @@ instance MonadDB m => DBQuery m CheckDocumentObjectVersionIs () where
        sqlWhereDocumentObjectVersionIs ov
     return ()
 
-instance MonadDB m => GetRow Document m where
+instance (MonadDB m, MonadThrow m) => GetRow Document m where
   getRow did = dbQuery $ GetDocumentByDocumentID did

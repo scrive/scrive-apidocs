@@ -2,12 +2,13 @@ module Doc.SMSPin.Model (
     GetSignatoryPin(..)
   ) where
 
+import Control.Monad.Catch
 import Crypto.RNG
 import DB
 import Doc.SignatoryLinkID
 
 data GetSignatoryPin = GetSignatoryPin SignatoryLinkID String
-instance (MonadDB m,CryptoRNG m) => DBQuery m GetSignatoryPin String where
+instance (MonadDB m, MonadThrow m, CryptoRNG m) => DBQuery m GetSignatoryPin String where
   query (GetSignatoryPin slid phone) = do
     runQuery_ . sqlSelect "signatory_sms_pins" $ do
       sqlResult "pin"

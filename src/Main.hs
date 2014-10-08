@@ -2,6 +2,7 @@ module Main where
 
 import Control.Concurrent
 import Control.Monad
+import Control.Monad.Catch
 import Happstack.Server hiding (waitForTermination)
 import Happstack.StaticRouting
 import System.IO
@@ -86,7 +87,7 @@ startSystem appGlobals appConf = E.bracket startServer stopServer waitForTerm
       waitForTermination
       Log.mixlog_ $ "Termination request received"
 
-initDatabaseEntries :: (CryptoRNG m, MonadDB m) => [(Email, String)] -> m ()
+initDatabaseEntries :: (CryptoRNG m, MonadDB m, MonadThrow m) => [(Email, String)] -> m ()
 initDatabaseEntries = mapM_ $ \(email, passwordstring) -> do
   -- create initial database entries
   passwd <- createPassword passwordstring

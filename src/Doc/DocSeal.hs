@@ -12,6 +12,7 @@ module Doc.DocSeal
   , presealDocumentFile
   ) where
 
+import Control.Monad.Catch hiding (handle)
 import Control.Monad.Trans.Control
 import Control.Monad.Reader
 import Data.Function (on)
@@ -70,7 +71,7 @@ import qualified Amazon as AWS
 import Data.Char
 
 
-personFromSignatory :: (MonadDB m,MonadBaseControl IO m, TemplatesMonad m)
+personFromSignatory :: (MonadDB m, MonadMask m, TemplatesMonad m)
                     => TimeZoneName -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> m Seal.Person
 personFromSignatory tz boxImages signatory = do
     stime <- case  maybesigninfo signatory of
@@ -106,7 +107,7 @@ personFromSignatory tz boxImages signatory = do
                 , Seal.companyNumberText = companyNumberText
                 }
 
-personExFromSignatoryLink :: (MonadDB m,MonadBaseControl IO m, TemplatesMonad m)
+personExFromSignatoryLink :: (MonadDB m, MonadMask m, TemplatesMonad m)
                           =>  TimeZoneName -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> m (Seal.Person, String)
 personExFromSignatoryLink tz boxImages (sl@SignatoryLink { signatorysignatureinfo
                                                       , signatorylinkdeliverymethod
@@ -200,7 +201,7 @@ listAttachmentsFromDocument document =
   concatMap extract (documentsignatorylinks document)
   where extract sl = map (\at -> (at,sl)) (signatoryattachments sl)
 
-findOutAttachmentDesc :: (MonadIO m, MonadDB m, Log.MonadLog m, TemplatesMonad m, AWS.AmazonMonad m) => String -> Document -> m [Seal.FileDesc]
+findOutAttachmentDesc :: (MonadIO m, MonadDB m, MonadThrow m, Log.MonadLog m, TemplatesMonad m, AWS.AmazonMonad m) => String -> Document -> m [Seal.FileDesc]
 findOutAttachmentDesc tmppath document = do
   a <- mapM findAttachmentsForAuthorAttachment authorAttsNumbered
   b <- mapM findAttachmentsForSignatoryAttachment attAndSigsNumbered
@@ -255,7 +256,7 @@ findOutAttachmentDesc tmppath document = do
                                x -> reverse (drop 1 x)
 
 
-evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m) => String -> [SignatoryLink] -> m Seal.SealAttachment
+evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m) => String -> [SignatoryLink] -> m Seal.SealAttachment
 evidenceOfIntentAttachment title sls = do
   ss <- dbQuery $ GetSignatoryScreenshots (map signatorylinkid sls)
   let sortBySignTime = sortBy (on compare (fmap signtime . maybesigninfo . fst))
@@ -268,7 +269,7 @@ evidenceOfIntentAttachment title sls = do
 {-
  formatCalendarTime does not support %z as modifier. We have to implement it ourselves here.
 -}
-formatUTCTimeForVerificationPage :: (MonadDB m, MonadBaseControl IO m) => TimeZoneName -> UTCTime -> m String
+formatUTCTimeForVerificationPage :: (MonadDB m, MonadMask m) => TimeZoneName -> UTCTime -> m String
 formatUTCTimeForVerificationPage tz mt = withTimeZone tz $ do
   runQuery_ $ rawSQL "SELECT $1, to_char($1, 'TZ')" (Single mt)
   (t::ZonedTime, tmz) <- fetchOne id
@@ -308,7 +309,7 @@ createSealingTextsForDocument document hostpart = do
 
   return sealingTexts
 
-sealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadBaseControl IO m, Log.MonadLog m, AWS.AmazonMonad m)
+sealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m, Log.MonadLog m, AWS.AmazonMonad m)
                      => (BS.ByteString,BS.ByteString)
                      -> String
                      -> Document
@@ -329,7 +330,7 @@ sealSpecFromDocument boxImages hostpart document elog ces content tmppath inputp
 
   sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath outputpath additionalAttachments docs
 
-sealSpecFromDocument2 :: (TemplatesMonad m, MonadDB m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m, MonadBaseControl IO m)
+sealSpecFromDocument2 :: (TemplatesMonad m, MonadDB m, MonadMask m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m)
                      => (BS.ByteString,BS.ByteString)
                      -> String
                      -> Document
@@ -446,7 +447,7 @@ presealSpecFromDocument boxImages document inputpath outputpath =
             }
 
 
-sealDocument :: (CryptoRNG m, MonadBaseControl IO m, MailContextMonad m, DocumentMonad m, TemplatesMonad m, MonadIO m, Log.MonadLog m, AWS.AmazonMonad m) => m ()
+sealDocument :: (CryptoRNG m, MonadBaseControl IO m, MailContextMonad m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadMask m, Log.MonadLog m, AWS.AmazonMonad m) => m ()
 sealDocument = theDocumentID >>= \did -> do
   mfile <- theDocument >>= documentfileM
   case mfile of
@@ -458,14 +459,14 @@ sealDocument = theDocumentID >>= \did -> do
       Log.mixlog_ $ "Sealing of document #" ++ show did ++ " failed because it has no main file attached"
       internalError
 
-collectClockErrorStatistics :: MonadDB m => [DocumentEvidenceEvent] -> m HC.ClockErrorStatistics
+collectClockErrorStatistics :: (MonadDB m, MonadThrow m) => [DocumentEvidenceEvent] -> m HC.ClockErrorStatistics
 collectClockErrorStatistics [] = return $ HC.ClockErrorStatistics Nothing Nothing Nothing 0 0
 collectClockErrorStatistics elog = do
   let endtime   = maximum (map evTime elog)
       starttime = minimum (map evTime elog) `min` (1 `daysBefore` endtime)
   dbQuery $ HC.GetClockErrorStatistics (Just starttime) (Just endtime)
 
-sealDocumentFile :: (CryptoRNG m, MonadBaseControl IO m, MailContextMonad m, DocumentMonad m, TemplatesMonad m, MonadIO m, Log.MonadLog m, AWS.AmazonMonad m)
+sealDocumentFile :: (CryptoRNG m, MonadMask m, MonadBaseControl IO m, MailContextMonad m, DocumentMonad m, TemplatesMonad m, MonadIO m, Log.MonadLog m, AWS.AmazonMonad m)
                  => File
                  -> m ()
 sealDocumentFile file@File{fileid, filename} = theDocumentID >>= \documentid ->

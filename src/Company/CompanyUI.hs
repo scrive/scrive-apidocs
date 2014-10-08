@@ -8,6 +8,7 @@ module Company.CompanyUI (
 import Data.Typeable
 import DB
 import Company.CompanyID
+import Control.Monad.Catch
 import Control.Monad.State
 import OurPrelude
 import qualified Data.ByteString.Char8 as BS
@@ -39,7 +40,7 @@ data CompanyUI = CompanyUI
 } deriving (Eq, Ord, Show, Typeable)
 
 data GetCompanyUI = GetCompanyUI CompanyID
-instance MonadDB m => DBQuery m GetCompanyUI CompanyUI where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetCompanyUI CompanyUI where
   query (GetCompanyUI cid) = do
     runQuery_ . sqlSelect "company_uis" $ do
       sqlWhereEq "company_id" cid
@@ -47,7 +48,7 @@ instance MonadDB m => DBQuery m GetCompanyUI CompanyUI where
     fetchOne fetchCompanyUI
 
 data SetCompanyUI = SetCompanyUI CompanyID CompanyUI
-instance MonadDB m => DBUpdate m SetCompanyUI Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m SetCompanyUI Bool where
   update (SetCompanyUI cid cui) = do
     runQuery01 . sqlUpdate "company_uis" $ do
       sqlSet "email_bordercolour" $ companyemailbordercolour cui

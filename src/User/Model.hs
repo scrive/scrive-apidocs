@@ -40,6 +40,7 @@ module User.Model (
   ) where
 
 import Control.Applicative
+import Control.Monad.Catch
 import Data.ByteString (ByteString)
 import Data.Int
 import Data.Monoid
@@ -185,19 +186,19 @@ instance MonadDB m => DBQuery m GetUsers [User] where
     fetchMany fetchUser
 
 data GetUserByID = GetUserByID UserID
-instance MonadDB m => DBQuery m GetUserByID (Maybe User) where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetUserByID (Maybe User) where
   query (GetUserByID uid) = do
     runQuery_ $ selectUsersSQL <+> "WHERE id =" <?> uid <+> "AND deleted IS NULL"
     fetchMaybe fetchUser
 
 data GetUserByIDIncludeDeleted = GetUserByIDIncludeDeleted UserID
-instance MonadDB m => DBQuery m GetUserByIDIncludeDeleted (Maybe User) where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetUserByIDIncludeDeleted (Maybe User) where
   query (GetUserByIDIncludeDeleted uid) = do
     runQuery_ $ selectUsersSQL <+> "WHERE id =" <?> uid
     fetchMaybe fetchUser
 
 data GetUserByEmail = GetUserByEmail Email
-instance MonadDB m => DBQuery m GetUserByEmail (Maybe User) where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetUserByEmail (Maybe User) where
   query (GetUserByEmail email) = do
     runQuery_ $ selectUsersSQL <+> "WHERE deleted IS NULL AND email =" <?> map toLower (unEmail email)
     fetchMaybe fetchUser
@@ -215,7 +216,7 @@ instance MonadDB m => DBQuery m GetCompanyAdmins [User] where
     fetchMany fetchUser
 
 data SetUserCompany = SetUserCompany UserID CompanyID
-instance MonadDB m => DBUpdate m SetUserCompany Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserCompany Bool where
   update (SetUserCompany uid cid) =
     runQuery01 $ sqlUpdate "users" $ do
       sqlSet "company_id" cid
@@ -239,7 +240,7 @@ instance MonadDB m => DBQuery m IsUserDeletable Bool where
 
 -- | Marks a user as deleted so that queries won't return them any more.
 data DeleteUser = DeleteUser UserID
-instance MonadDB m => DBUpdate m DeleteUser Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m DeleteUser Bool where
   update (DeleteUser uid) = do
     runQuery01 $ sqlUpdate "users" $ do
       sqlSetCmd "deleted" "now()"
@@ -248,7 +249,7 @@ instance MonadDB m => DBUpdate m DeleteUser Bool where
 
 -- | Removes user who didn't accept TOS from the database
 data RemoveInactiveUser = RemoveInactiveUser UserID
-instance MonadDB m => DBUpdate m RemoveInactiveUser Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m RemoveInactiveUser Bool where
   update (RemoveInactiveUser uid) = do
     -- There is a chance that a signatory_links gets connected to an
     -- yet not active account the true fix is to not have inactive
@@ -263,7 +264,7 @@ instance MonadDB m => DBUpdate m RemoveInactiveUser Bool where
        runQuery01 $ "DELETE FROM users WHERE id = " <?> uid <+> "AND has_accepted_terms_of_service IS NULL"
 
 data AddUser = AddUser (String, String) String (Maybe Password) (CompanyID,Bool) Lang (Maybe BrandedDomainID)
-instance MonadDB m => DBUpdate m AddUser (Maybe User) where
+instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where
   update (AddUser (fname, lname) email mpwd (cid, admin) l mad) = do
     mu <- query $ GetUserByEmail $ Email email
     case mu of
@@ -290,7 +291,7 @@ instance MonadDB m => DBUpdate m AddUser (Maybe User) where
         fetchMaybe fetchUser
 
 data SetUserEmail = SetUserEmail UserID Email
-instance MonadDB m => DBUpdate m SetUserEmail Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserEmail Bool where
   update (SetUserEmail uid email) = do
     res <- runQuery01 . sqlUpdate "users" $ do
       sqlSet "email" $ map toLower $ unEmail email
@@ -300,7 +301,7 @@ instance MonadDB m => DBUpdate m SetUserEmail Bool where
     return res
 
 data SetUserPassword = SetUserPassword UserID Password
-instance MonadDB m => DBUpdate m SetUserPassword Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserPassword Bool where
   update (SetUserPassword uid pwd) = do
     runQuery01 . sqlUpdate "users" $ do
       sqlSet "password" $ pwdHash pwd
@@ -309,7 +310,7 @@ instance MonadDB m => DBUpdate m SetUserPassword Bool where
       sqlWhereIsNULL "deleted"
 
 data SetUserInfo = SetUserInfo UserID UserInfo
-instance MonadDB m => DBUpdate m SetUserInfo Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserInfo Bool where
   update (SetUserInfo uid info) = do
     res <- runQuery01 . sqlUpdate "users" $ do
       sqlSet "first_name" $ userfstname info
@@ -324,7 +325,7 @@ instance MonadDB m => DBUpdate m SetUserInfo Bool where
     return res
 
 data SetUserSettings = SetUserSettings UserID UserSettings
-instance MonadDB m => DBUpdate m SetUserSettings Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserSettings Bool where
   update (SetUserSettings uid us) = do
     runQuery01 . sqlUpdate "users" $ do
       sqlSet "lang" $ getLang us
@@ -332,7 +333,7 @@ instance MonadDB m => DBUpdate m SetUserSettings Bool where
       sqlWhereIsNULL "deleted"
 
 data AcceptTermsOfService = AcceptTermsOfService UserID UTCTime
-instance MonadDB m => DBUpdate m AcceptTermsOfService Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m AcceptTermsOfService Bool where
   update (AcceptTermsOfService uid time) = do
     runQuery01 . sqlUpdate "users" $ do
       sqlSet "has_accepted_terms_of_service" time
@@ -340,7 +341,7 @@ instance MonadDB m => DBUpdate m AcceptTermsOfService Bool where
       sqlWhereIsNULL "deleted"
 
 data SetSignupMethod = SetSignupMethod UserID SignupMethod
-instance MonadDB m => DBUpdate m SetSignupMethod Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m SetSignupMethod Bool where
   update (SetSignupMethod uid signupmethod) = do
     runQuery01 . sqlUpdate "users" $ do
       sqlSet "signup_method" signupmethod
@@ -348,7 +349,7 @@ instance MonadDB m => DBUpdate m SetSignupMethod Bool where
       sqlWhereIsNULL "deleted"
 
 data SetUserCompanyAdmin = SetUserCompanyAdmin UserID Bool
-instance MonadDB m => DBUpdate m SetUserCompanyAdmin Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserCompanyAdmin Bool where
   update (SetUserCompanyAdmin uid iscompanyadmin) = do
     runQuery_ $ "SELECT company_id FROM users WHERE id =" <?> uid <+> "AND deleted IS NULL FOR UPDATE"
     mcid <- fetchMaybe unSingle
@@ -568,7 +569,7 @@ instance MonadDB m => DBQuery m GetUsersWithCompanies [(User, Company)] where
     fetchMany fetchUserWithCompany
 
 data UpdateDraftsAndTemplatesWithUserData = UpdateDraftsAndTemplatesWithUserData UserID
-instance MonadDB m => DBUpdate m UpdateDraftsAndTemplatesWithUserData () where
+instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateDraftsAndTemplatesWithUserData () where
  update (UpdateDraftsAndTemplatesWithUserData userid) = do
    muser <- query $ GetUserByID userid
    case muser of

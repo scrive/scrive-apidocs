@@ -8,10 +8,10 @@ module File.Model (
     ) where
 
 import Control.Applicative
+import Control.Monad.Catch
 import Data.Int
 
 import Crypto
-import Crypto.RNG
 import DB
 import File.File
 import File.FileID
@@ -20,7 +20,7 @@ import qualified Data.ByteString as BS
 import qualified Crypto.Hash.SHA1 as SHA1
 
 data GetFileByFileID = GetFileByFileID FileID
-instance MonadDB m => DBQuery m GetFileByFileID File where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetFileByFileID File where
   query (GetFileByFileID fid) = do
     kRunAndFetch1OrThrowWhyNot fetchFile $ sqlSelect "files" $ do
       mapM_ sqlResult filesSelectors
@@ -28,7 +28,7 @@ instance MonadDB m => DBQuery m GetFileByFileID File where
       sqlWhereFileWasNotPurged
 
 data NewFile = NewFile String (Binary BS.ByteString)
-instance (Applicative m, CryptoRNG m, MonadDB m) => DBUpdate m NewFile FileID where
+instance (MonadDB m, MonadThrow m) => DBUpdate m NewFile FileID where
   update (NewFile filename content) = do
     runQuery_ $ sqlInsert "files" $ do
         sqlSet "name" filename
@@ -51,7 +51,7 @@ instance MonadDB m => DBUpdate m FileMovedToAWS () where
         sqlWhereFileWasNotPurged
 
 data GetFileThatShouldBeMovedToAmazon = GetFileThatShouldBeMovedToAmazon
-instance MonadDB m => DBQuery m GetFileThatShouldBeMovedToAmazon (Maybe File) where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetFileThatShouldBeMovedToAmazon (Maybe File) where
   query GetFileThatShouldBeMovedToAmazon = do
     runQuery_ $ sqlSelect "files" $ do
       sqlWhere "content IS NOT NULL"
@@ -60,7 +60,7 @@ instance MonadDB m => DBQuery m GetFileThatShouldBeMovedToAmazon (Maybe File) wh
     fetchMaybe fetchFile
 
 data PurgeFile = PurgeFile FileID
-instance MonadDB m => DBUpdate m PurgeFile () where
+instance (MonadDB m, MonadThrow m) => DBUpdate m PurgeFile () where
   update (PurgeFile fid) = do
     kRun1OrThrowWhyNot $ sqlUpdate "files" $ do
       sqlSetCmd "purged_time" "now()"

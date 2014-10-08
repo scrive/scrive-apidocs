@@ -8,6 +8,7 @@ module Doc.API.V1.DocumentToJSON (
     , docForListCSVHeaderV1
   ) where
 
+import Control.Monad.Catch
 import Doc.DocStateData
 import Doc.DocUtils
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
@@ -40,8 +41,7 @@ import Util.HasSomeUserInfo
 import Data.List (intercalate)
 import Data.String.Utils (strip)
 
-
-documentJSONV1 :: (MonadDB m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m) => (Maybe User) -> Bool -> Bool -> Bool ->  Maybe SignatoryLink -> Document -> m JSValue
+documentJSONV1 :: (MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m) => (Maybe User) -> Bool -> Bool -> Bool ->  Maybe SignatoryLink -> Document -> m JSValue
 documentJSONV1 muser includeEvidenceAttachments forapi forauthor msl doc = do
     file <- documentfileM doc
     sealedfile <- documentsealedfileM doc
@@ -115,7 +115,7 @@ authenticationJSON ELegAuthentication     = toJSValue "eleg"
 authenticationJSON SMSPinAuthentication   = toJSValue "sms_pin"
 
 
-signatoryJSON :: (MonadDB m) => Bool -> Bool -> Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
+signatoryJSON :: (MonadDB m, MonadThrow m) => Bool -> Bool -> Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
 signatoryJSON forapi forauthor doc viewer siglink = do
     J.value "id" $ show $ signatorylinkid siglink
     J.value "current" $ isCurrent
@@ -151,7 +151,7 @@ signatoryJSON forapi forauthor doc viewer siglink = do
       isCurrent = (signatorylinkid <$> viewer) == (Just $ signatorylinkid siglink) || (forauthor &&  isAuthor siglink)
       rejectedDate = signatorylinkrejectiontime siglink
 
-signatoryAttachmentJSON :: MonadDB m => SignatoryAttachment -> JSONGenT m ()
+signatoryAttachmentJSON :: (MonadDB m, MonadThrow m) => SignatoryAttachment -> JSONGenT m ()
 signatoryAttachmentJSON sa = do
   mfile <- lift $ case (signatoryattachmentfile sa) of
     Just fid -> fmap Just $ dbQuery $ GetFileByFileID fid

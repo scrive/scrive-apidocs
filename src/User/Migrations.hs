@@ -6,6 +6,7 @@ import User.Tables
 import User.Model (UserID)
 import Company.Model (CompanyID)
 import Control.Monad
+import Control.Monad.Catch
 
 addUserCustomFooter :: MonadDB m => Migration m
 addUserCustomFooter =
@@ -140,7 +141,7 @@ removeIsFree =
     , mgrDo = runSQL_ "ALTER TABLE users DROP COLUMN is_free"
     }
 
-allUsersMustHaveCompany :: MonadDB m => Migration m
+allUsersMustHaveCompany :: (MonadDB m, MonadThrow m) => Migration m
 allUsersMustHaveCompany =
   Migration {
       mgrTable = tableUsers

@@ -19,6 +19,7 @@ import Doc.API.Callback.Execute
 import User.CallbackScheme.Model
 import Util.SignatoryLinkUtils
 import Control.Monad
+import Control.Monad.Catch
 
 documentAPICallback :: Action DocumentID DocumentAPICallback (DocumentID, String) Scheduler
 documentAPICallback = Action {
@@ -76,7 +77,7 @@ documentAPICallback = Action {
           return ()
 
 
-triggerAPICallbackIfThereIsOne :: (MonadDB m, Log.MonadLog m) => Document -> m ()
+triggerAPICallbackIfThereIsOne :: (MonadDB m, MonadThrow m, Log.MonadLog m) => Document -> m ()
 triggerAPICallbackIfThereIsOne doc = do
       case (documentapicallbackurl doc) of
         Nothing -> do

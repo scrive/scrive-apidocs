@@ -7,6 +7,7 @@ module ActionQueue.PasswordReminder (
   ) where
 
 import Control.Monad
+import Control.Monad.Catch
 import Control.Monad.Trans.Maybe
 import Data.Int
 import Data.Typeable
@@ -54,20 +55,20 @@ passwordReminder = Action {
     return ()
   }
 
-getPasswordReminderUser :: MonadDB m => UserID -> MagicHash -> m (Maybe User)
+getPasswordReminderUser :: (MonadDB m, MonadThrow m) => UserID -> MagicHash -> m (Maybe User)
 getPasswordReminderUser uid token = runMaybeT $ do
   Just pr <- dbQuery $ GetAction passwordReminder uid
   guard $ prToken pr == token
   Just user <- dbQuery $ GetUserByID $ prUserID pr
   return user
 
-newPasswordReminder :: (MonadDB m, CryptoRNG m) => UserID -> m PasswordReminder
+newPasswordReminder :: (MonadDB m, MonadThrow m, CryptoRNG m) => UserID -> m PasswordReminder
 newPasswordReminder uid = do
   token <- random
   expires <- minutesAfter (12*60) `liftM` currentTime
   dbUpdate $ NewAction passwordReminder expires (uid, 9, token)
 
-newPasswordReminderLink :: (MonadDB m, CryptoRNG m) => UserID -> m KontraLink
+newPasswordReminderLink :: (MonadDB m, MonadThrow m, CryptoRNG m) => UserID -> m KontraLink
 newPasswordReminderLink uid = do
   pr <- newPasswordReminder uid
   return $ LinkPasswordReminder (prUserID pr) (prToken pr)

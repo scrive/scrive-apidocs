@@ -22,6 +22,7 @@ module MinutesTime (
   ) where
 
 import Control.Monad
+import Control.Monad.Catch
 import Data.Int
 import Data.Time
 import Data.Time.Clock.POSIX
@@ -36,7 +37,7 @@ instance B.Binary UTCTime where
     n :: Int64 <- B.get
     return . posixSecondsToUTCTime . fromIntegral $ n
 
-currentTime :: MonadDB m => m UTCTime
+currentTime :: (MonadDB m, MonadThrow m) => m UTCTime
 currentTime = do
   runSQL_ "SELECT now()"
   fetchOne unSingle

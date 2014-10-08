@@ -1,5 +1,6 @@
 module File.Migrations where
 
+import Control.Monad.Catch
 import Data.Int
 
 import DB
@@ -40,7 +41,7 @@ addCryptoColumnsToFilesTable = Migration {
     runSQL_ "ALTER TABLE files ADD COLUMN aes_iv BYTEA NULL"
   }
 
-addFileIdSequence :: (MonadDB m, Log.MonadLog m) => Migration m
+addFileIdSequence :: (MonadDB m, MonadThrow m, Log.MonadLog m) => Migration m
 addFileIdSequence = Migration {
     mgrTable = tableFiles
   , mgrFrom = 1

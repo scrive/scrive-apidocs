@@ -4,6 +4,7 @@ import qualified Amazon as AWS
 import AppConf (AppConf(dbConfig))
 import Context (ctxtime)
 import Control.Arrow (first)
+import Control.Monad.Catch
 import Control.Concurrent (newMVar)
 import Control.Logic
 import qualified CronEnv
@@ -283,7 +284,7 @@ testRestartDocumentEvidenceLog = do
   lg2 <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == Current CancelDocumentEvidence) lg2
 
-getScreenshots :: (MonadIO m, MonadDB m) => m SignatoryScreenshots.SignatoryScreenshots
+getScreenshots :: (MonadIO m, MonadDB m, MonadThrow m) => m SignatoryScreenshots.SignatoryScreenshots
 getScreenshots = do
   now <- currentTime
   first_ <- liftIO $ BS.readFile "test/screenshots/s1.jpg"
@@ -1638,7 +1639,7 @@ testSetDocumentDaysToSignRight = doTimes 10 $ do
     assert success1
     assertEqual "Days to sign is set properly" daystosign . documentdaystosign =<< theDocument
 
-assertInvariants :: (MonadIO m, MonadDB m) => Document -> m ()
+assertInvariants :: (MonadIO m, MonadDB m, MonadThrow m) => Document -> m ()
 assertInvariants document = do
   now <- currentTime
   case invariantProblems now document of

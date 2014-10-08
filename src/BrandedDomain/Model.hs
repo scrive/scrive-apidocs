@@ -9,13 +9,12 @@ module BrandedDomain.Model
 
 import BrandedDomain.BrandedDomainID
 import BrandedDomain.BrandedDomain
+import Control.Monad.Catch
 import DB
 import qualified Log
 import Data.Monoid
 import User.UserID
 import qualified Data.ByteString.Char8 as BS
-
-
 
 fetchBrandedDomain :: (BrandedDomainID, String, Maybe (Binary BS.ByteString), String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String) -> BrandedDomain
 fetchBrandedDomain (xid, url, logo, barscolour, barstextcolour, barssecondarycolour, backgroundcolour, backgroundcolorexternal, mailsbackgroundcolor, mailsbuttoncolor, mailstextcolor, mailsbordercolor, signviewprimarycolour, signviewprimarytextcolour, signviewsecondarycolour, signviewsecondarytextcolour, buttonclass, servicelinkcolour, externaltextcolour, headercolour, textcolour, pricecolour, smsoriginator, emailoriginator, contactemail, noreplyemail)
@@ -88,7 +87,7 @@ instance (MonadDB m, Log.MonadLog m) => DBQuery m GetBrandedDomains [BrandedDoma
     fetchMany fetchBrandedDomain
 
 data GetBrandedDomainByURL = GetBrandedDomainByURL String
-instance (MonadDB m, Log.MonadLog m) => DBQuery m GetBrandedDomainByURL (Maybe BrandedDomain) where
+instance (MonadDB m, MonadThrow m, Log.MonadLog m) => DBQuery m GetBrandedDomainByURL (Maybe BrandedDomain) where
   query (GetBrandedDomainByURL url) = do
     runQuery_ . sqlSelect "branded_domains" $ do
       mapM_ sqlResult $ brandedDomainSelector
@@ -99,7 +98,7 @@ instance (MonadDB m, Log.MonadLog m) => DBQuery m GetBrandedDomainByURL (Maybe B
     fetchMaybe fetchBrandedDomain
 
 data GetBrandedDomainByUserID = GetBrandedDomainByUserID UserID
-instance (MonadDB m, Log.MonadLog m) => DBQuery m GetBrandedDomainByUserID (Maybe BrandedDomain) where
+instance (MonadDB m, MonadThrow m, Log.MonadLog m) => DBQuery m GetBrandedDomainByUserID (Maybe BrandedDomain) where
   query (GetBrandedDomainByUserID uid) = do
     runQuery_ . sqlSelect "branded_domains" $ do
       mapM_ sqlResult $ brandedDomainSelector
@@ -109,7 +108,7 @@ instance (MonadDB m, Log.MonadLog m) => DBQuery m GetBrandedDomainByUserID (Mayb
     fetchMaybe fetchBrandedDomain
 
 data GetBrandedDomainByID = GetBrandedDomainByID BrandedDomainID
-instance (MonadDB m, Log.MonadLog m) => DBQuery m GetBrandedDomainByID (Maybe BrandedDomain) where
+instance (MonadDB m, MonadThrow m, Log.MonadLog m) => DBQuery m GetBrandedDomainByID (Maybe BrandedDomain) where
   query (GetBrandedDomainByID uid) = do
     runQuery_ . sqlSelect "branded_domains" $ do
       mapM_ sqlResult $ brandedDomainSelector
@@ -148,7 +147,7 @@ instance (MonadDB m, Log.MonadLog m) => DBUpdate m UpdateBrandedDomain () where
       sqlWhereEq "id" (bdid bd)
 
 data NewBrandedDomain = NewBrandedDomain
-instance (MonadDB m, Log.MonadLog m) => DBUpdate m NewBrandedDomain BrandedDomainID where
+instance (MonadDB m, MonadThrow m, Log.MonadLog m) => DBUpdate m NewBrandedDomain BrandedDomainID where
   update (NewBrandedDomain) = do
     runQuery_ . sqlInsert "branded_domains" $ do
       sqlSet "url" ("" :: String)

@@ -5,12 +5,14 @@ module Messenger (
 
 import Control.Applicative
 import Control.Monad.Base
+import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Database.PostgreSQL.PQTypes.Class.Instances.Overlapping ()
 import Happstack.Server
 
 import Control.Monad.Trans.Control.Util
+import Control.Monad.Trans.Instances ()
 import Crypto.RNG
 import DB
 import Happstack.Server.Instances ()
@@ -19,7 +21,7 @@ import qualified Log
 type InnerMessenger = CryptoRNGT (DBT (ServerPartT IO))
 
 newtype Messenger a = Messenger { unMessenger :: InnerMessenger a }
-  deriving (Alternative, Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadDB, MonadIO, MonadPlus, ServerMonad, Log.MonadLog)
+  deriving (Alternative, Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadCatch, MonadDB, MonadIO, MonadMask, MonadPlus, MonadThrow, ServerMonad, Log.MonadLog)
 
 instance MonadBaseControl IO Messenger where
   newtype StM Messenger a = StMessenger { unStMessenger :: StM InnerMessenger a }

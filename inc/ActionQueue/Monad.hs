@@ -7,6 +7,7 @@ module ActionQueue.Monad (
 
 import Control.Applicative
 import Control.Monad.Base
+import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import qualified Control.Exception.Lifted as E
@@ -26,7 +27,7 @@ type ActionQueue = ActionQueueT (AmazonMonadT (CryptoRNGT (DBT IO)))
 type InnerAQ m qd = ReaderT qd m
 
 newtype ActionQueueT m qd a = AQ { unAQ :: InnerAQ m qd a }
-  deriving (Applicative, CryptoRNG, Functor, Monad, MonadDB, MonadIO, MonadReader qd, AmazonMonad, MonadBase b)
+  deriving (Applicative, CryptoRNG, Functor, Monad, MonadCatch, MonadDB, MonadIO, MonadMask, MonadReader qd, MonadThrow, AmazonMonad, MonadBase b)
 
 instance (MonadBase IO m) => Log.MonadLog (ActionQueueT m qd) where
   mixlogjs title js = liftBase (Log.mixlogjsIO title js)
@@ -43,12 +44,12 @@ runQueue qd queue =
   runReaderT (unAQ queue) qd
 
 -- | Gets 'expired' actions and evaluates them
-actionQueue :: (MonadDB m, Log.MonadLog m, MonadBaseControl IO m, Show t)
+actionQueue :: (MonadDB m, MonadBase IO m, MonadCatch m, Log.MonadLog m, Show t)
             => Action idx t con (ActionQueueT m qd) -> ActionQueueT m qd ()
 actionQueue qa = currentTime
   >>= dbQuery . GetExpiredActions qa
   >>= mapM_ (\a -> do
-    res <- E.try $ qaEvaluateExpired qa a
+    res <- try $ qaEvaluateExpired qa a
     case res of
       Left (e::E.SomeException) -> do
         printError a e

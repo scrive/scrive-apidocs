@@ -18,6 +18,7 @@ module Doc.Rendering
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Catch hiding (handle)
 import Control.Monad.Error
 import Data.Typeable
 import DB
@@ -62,7 +63,7 @@ readNumberedFiles pathFromNumber currentNumber accum = do
 {- |
    Convert PDF to jpeg images of pages
  -}
-runRendering :: forall m . (KontraMonad m, Log.MonadLog m, MonadDB m, MonadIO m, MonadBaseControl IO m, AWS.AmazonMonad m)
+runRendering :: (KontraMonad m, Log.MonadLog m, MonadDB m, MonadThrow m, MonadIO m, MonadBaseControl IO m, AWS.AmazonMonad m)
                      => RenderedPagesCache
                      -> FileID
                      -> Int

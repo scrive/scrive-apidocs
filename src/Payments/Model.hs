@@ -1,13 +1,12 @@
 module Payments.Model where
 
 import Control.Applicative
+import Control.Monad.Catch
 import Control.Monad.State
-import Control.Monad.Base
 import Data.Int
 import Data.Monoid
 import Data.Monoid.Space
 import Data.Typeable
-import qualified Control.Exception.Lifted as E
 
 import Company.Model
 import DB
@@ -50,7 +49,7 @@ instance FromSQL PricePlan where
       2 -> return FormPricePlan
       3 -> return EnterprisePricePlan
       4 -> return TrialPricePlan
-      _ -> E.throwIO $ RangeError {
+      _ -> throwM RangeError {
         reRange = [(0, 4)]
       , reValue = n
       }
@@ -121,7 +120,7 @@ instance FromSQL PaymentPlanStatus where
       2 -> return OverdueStatus
       3 -> return CanceledStatus
       4 -> return DeactivatedStatus
-      _ -> E.throwIO $ RangeError {
+      _ -> throwM RangeError {
         reRange = [(1, 4)]
       , reValue = n
       }
@@ -147,7 +146,7 @@ instance FromSQL PaymentPlanProvider where
     case n :: Int16 of
       0 -> return NoProvider
       1 -> return RecurlyProvider
-      _ -> E.throwIO $ RangeError {
+      _ -> throwM RangeError {
         reRange = [(0, 1)]
       , reValue = n
       }
@@ -161,14 +160,14 @@ instance ToSQL PaymentPlanProvider where
 
 {- | Get a new, unique account code. -}
 data GetAccountCode = GetAccountCode -- tested
-instance (MonadBase IO m, MonadDB m) => DBUpdate m GetAccountCode AccountCode where
+instance (MonadDB m, MonadThrow m) => DBUpdate m GetAccountCode AccountCode where
   update GetAccountCode = do
     runSQL_ "SELECT nextval('payment_plans_account_code_seq')"
     fetchOne unSingle
 
 {- | Get the quantity of users that should be charged in a company. -}
 data GetCompanyQuantity = GetCompanyQuantity CompanyID --tested
-instance MonadDB m => DBQuery m GetCompanyQuantity Int where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetCompanyQuantity Int where
   query (GetCompanyQuantity cid) = do
     runQuery_ $ "SELECT count(email) " <+>
                 "FROM ((SELECT users.email " <+>
@@ -186,7 +185,7 @@ instance (MonadDB m) => DBUpdate m DeletePaymentPlan () where
 
 -- tested
 data GetPaymentPlan = GetPaymentPlan CompanyID
-instance (MonadDB m) => DBQuery m GetPaymentPlan (Maybe PaymentPlan) where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetPaymentPlan (Maybe PaymentPlan) where
   query (GetPaymentPlan cid) = do
     runQuery_ $ sqlSelect "payment_plans" $ do
       sqlResult "account_code"
@@ -206,7 +205,7 @@ instance (MonadDB m) => DBQuery m GetPaymentPlan (Maybe PaymentPlan) where
 
 -- tested
 data GetPaymentPlanByAccountCode = GetPaymentPlanByAccountCode AccountCode
-instance (MonadDB m) => DBQuery m GetPaymentPlanByAccountCode (Maybe PaymentPlan) where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetPaymentPlanByAccountCode (Maybe PaymentPlan) where
   query (GetPaymentPlanByAccountCode ac) = do
     runQuery_ $ sqlSelect "payment_plans" $ do
       sqlResult "account_code"
@@ -279,7 +278,7 @@ instance MonadDB m => DBQuery m PaymentPlansExpiredDunning [PaymentPlan] where
 
 -- tested
 data SavePaymentPlan = SavePaymentPlan PaymentPlan UTCTime
-instance MonadDB m => DBUpdate m SavePaymentPlan Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m SavePaymentPlan Bool where
   update (SavePaymentPlan PaymentPlan{..} tm) = do
     let
     updated <- runQuery01 . sqlUpdate "payment_plans" $ do

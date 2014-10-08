@@ -22,6 +22,7 @@ import qualified Doc.Screenshot as Screenshot
 import Text.StringTemplates.Templates
 
 import Control.Applicative
+import Control.Monad.Catch
 
 import MinutesTime
 import Templates (renderLocalTemplate)
@@ -46,11 +47,11 @@ import Control.Logic
 import Data.String.Utils
 
 -- | Evidence log for web page - short and simplified texts
-eventsJSListFromEvidenceLog ::  (MonadDB m, TemplatesMonad m) => Document -> [DocumentEvidenceEvent] -> m [JSValue]
+eventsJSListFromEvidenceLog ::  (MonadDB m, MonadThrow m, TemplatesMonad m) => Document -> [DocumentEvidenceEvent] -> m [JSValue]
 eventsJSListFromEvidenceLog doc dees = mapM (J.runJSONGenT . eventJSValue doc) =<< getSignatoryLinks (eventsForLog dees)
 
 -- | Lookup signatory links in events
-getSignatoryLinks :: MonadDB m => [DocumentEvidenceEvent] -> m [DocumentEvidenceEventWithSignatoryLink]
+getSignatoryLinks :: (MonadDB m, MonadThrow m) => [DocumentEvidenceEvent] -> m [DocumentEvidenceEventWithSignatoryLink]
 getSignatoryLinks evs = do
   let docids = Set.fromList $ catMaybes $ map evSigLink evs ++ map evAffectedSigLink evs
   docs <- dbQuery $ GetDocumentsBySignatoryLinkIDs $ Set.toList docids
@@ -65,7 +66,7 @@ eventsForLog :: [DocumentEvidenceEvent] -> [DocumentEvidenceEvent]
 eventsForLog = cleanUnimportantAfterSigning . filter ((simpleEvents . evType) &&^ (not . emptyEvent))
 
 -- TODO: Consider saving actor name in event instead, this is likely to become broken
-approximateActor :: (MonadDB m, TemplatesMonad m) => Bool -> Document -> DocumentEvidenceEventWithSignatoryLink -> m String
+approximateActor :: (MonadDB m, MonadThrow m, TemplatesMonad m) => Bool -> Document -> DocumentEvidenceEventWithSignatoryLink -> m String
 approximateActor useIdentifier doc dee | systemEvents $ evType dee = return "Scrive"
                                        | otherwise =
   case evSigLink dee of
@@ -93,7 +94,7 @@ approximateActor useIdentifier doc dee | systemEvents $ evType dee = return "Scr
         getId | useIdentifier = getIdentifier
               | otherwise     = getSmartName
 
-eventJSValue :: (MonadDB m, TemplatesMonad m) => Document -> DocumentEvidenceEventWithSignatoryLink -> JSONGenT m ()
+eventJSValue :: (MonadDB m, MonadThrow m, TemplatesMonad m) => Document -> DocumentEvidenceEventWithSignatoryLink -> JSONGenT m ()
 eventJSValue doc dee = do
     J.value "status" $ show $ getEvidenceEventStatusClass (evType dee)
     J.value "time"   $ formatTimeISO (evTime dee)

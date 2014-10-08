@@ -1,10 +1,9 @@
+module File.Storage (
+    getFileContents
+  , getFileIDContents
+  ) where
 
-
-module File.Storage
-    ( getFileContents
-    , getFileIDContents
-    ) where
-
+import Control.Monad.Catch
 import Control.Monad.Trans
 import DB
 import qualified Amazon as AWS
@@ -32,7 +31,7 @@ getFileContents file = do
             MemCache.put (fileid file) contentAWS (AWS.fileCache ac)
             return contentAWS
 
-getFileIDContents :: (MonadDB m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m) => FileID -> m BS.ByteString
+getFileIDContents :: (MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m) => FileID -> m BS.ByteString
 getFileIDContents fid = do
   file <- dbQuery $ GetFileByFileID fid
   getFileContents file

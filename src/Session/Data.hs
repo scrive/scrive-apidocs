@@ -6,6 +6,7 @@ module Session.Data (
   , session
   ) where
 
+import Control.Monad.Catch
 import Data.Typeable
 import ActionQueue.Core
 import ActionQueue.Scheduler
@@ -30,7 +31,7 @@ data Session = Session {
   , sesDomain    :: String
   } deriving (Eq, Show, Typeable)
 
-emptySession :: (CryptoRNG m, MonadDB m, ServerMonad m) => m Session
+emptySession :: (CryptoRNG m, MonadDB m, MonadThrow m, ServerMonad m) => m Session
 emptySession = do
   now <- currentTime
   token <- random

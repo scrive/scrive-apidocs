@@ -12,6 +12,7 @@ module Attachment.Model
   )
 where
 
+import Control.Monad.Catch
 import Data.ByteString (ByteString)
 import Data.Monoid.Space
 import DB
@@ -59,7 +60,7 @@ fetchAttachment (aid, title, ctime, mtime, file_id, user_id, shared, deleted) = 
 }
 
 data NewAttachment = NewAttachment UserID String String (Binary ByteString) Actor
-instance (CryptoRNG m, MonadDB m) => DBUpdate m NewAttachment Attachment where
+instance (MonadDB m, MonadThrow m) => DBUpdate m NewAttachment Attachment where
   update (NewAttachment uid title filename filecontents actor) = do
     let ctime = actorTime actor
     fileid <- update $ NewFile filename filecontents

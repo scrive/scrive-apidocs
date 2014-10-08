@@ -2,6 +2,7 @@ module AppDBMigrations (
     kontraMigrations
   ) where
 
+import Control.Monad.Catch
 import DB
 import ActionQueue.Migrations
 import Company.Migrations
@@ -28,7 +29,7 @@ import Doc.SMSPin.Tables
 -- Note: ALWAYS append new migrations TO THE END of this list.
 -- (mailerMigrations always stay at the end though. They are
 -- disjoint with kontrakcja, so it can be done that way).
-kontraMigrations :: (MonadDB m, Log.MonadLog m) => [Migration m]
+kontraMigrations :: (MonadDB m, MonadThrow m, Log.MonadLog m) => [Migration m]
 kontraMigrations = [
     addRegionToUserSettings
   , removeSystemServer

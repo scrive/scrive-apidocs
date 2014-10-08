@@ -12,6 +12,7 @@ module CompanyAccounts.Model (
   ) where
 
 import Control.Monad
+import Control.Monad.Catch
 import Control.Monad.State
 
 import Company.Model
@@ -30,7 +31,7 @@ data CompanyInvite = CompanyInvite {
   } deriving (Eq, Ord, Show)
 
 data AddCompanyInvite = AddCompanyInvite CompanyInvite
-instance MonadDB m => DBUpdate m AddCompanyInvite CompanyInvite where
+instance (MonadDB m, MonadThrow m) => DBUpdate m AddCompanyInvite CompanyInvite where
   update (AddCompanyInvite CompanyInvite{..}) = do
     runSQL_ "LOCK TABLE companyinvites IN ACCESS EXCLUSIVE MODE"
     runQuery_ . sqlDelete "companyinvites" $ do
@@ -42,20 +43,20 @@ instance MonadDB m => DBUpdate m AddCompanyInvite CompanyInvite where
     $fromJust `liftM` query (GetCompanyInvite invitingcompany inviteduserid)
 
 data RemoveCompanyInvite = RemoveCompanyInvite CompanyID UserID
-instance MonadDB m => DBUpdate m RemoveCompanyInvite Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m RemoveCompanyInvite Bool where
   update (RemoveCompanyInvite companyid user_id) = do
     runQuery01 . sqlDelete "companyinvites" $ do
       sqlWhereEq "company_id" companyid
       sqlWhereEq "user_id"user_id
 
 data RemoveUserCompanyInvites = RemoveUserCompanyInvites UserID
-instance MonadDB m => DBUpdate m RemoveUserCompanyInvites Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m RemoveUserCompanyInvites Bool where
   update (RemoveUserCompanyInvites user_id) = do
     runQuery01 . sqlDelete "companyinvites" $ do
       sqlWhereEq "user_id" user_id
 
 data GetCompanyInvite = GetCompanyInvite CompanyID UserID
-instance MonadDB m => DBQuery m GetCompanyInvite (Maybe CompanyInvite) where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetCompanyInvite (Maybe CompanyInvite) where
   query (GetCompanyInvite companyid uid) = do
     runQuery_ . selectCompanyInvites $ do
       sqlWhereEq "ci.company_id" companyid

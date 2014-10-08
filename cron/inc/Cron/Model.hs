@@ -12,6 +12,7 @@ module Cron.Model (
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Catch
 import Data.Int
 import Data.Maybe hiding (fromJust)
 import Data.Monoid.Space
@@ -103,7 +104,7 @@ instance ToSQL TaskType where
 ----------------------------------------
 
 data ReserveTask = ReserveTask WorkerID
-instance MonadDB m => DBUpdate m ReserveTask (Maybe TaskType) where
+instance (MonadDB m, MonadThrow m) => DBUpdate m ReserveTask (Maybe TaskType) where
   update (ReserveTask wid) = do
     runQuery_ . sqlSelect "cron_tasks" $ do
       sqlResult "type"
@@ -135,7 +136,7 @@ instance MonadDB m => DBUpdate m ReleaseTask () where
 ----------------------------------------
 
 data RegisterWorker = RegisterWorker
-instance MonadDB m => DBUpdate m RegisterWorker WorkerID where
+instance (MonadDB m, MonadThrow m) => DBUpdate m RegisterWorker WorkerID where
   update RegisterWorker = do
     runQuery_ . sqlInsert "cron_workers" $ do
       sqlSetCmd "last_activity" "now()"

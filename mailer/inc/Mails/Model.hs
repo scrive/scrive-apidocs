@@ -19,8 +19,9 @@ module Mails.Model (
   , GetEmailsByRecipient(..)
   ) where
 
-import Control.Monad
 import Control.Applicative
+import Control.Monad
+import Control.Monad.Catch
 import Control.Monad.State
 import Data.Int
 import Data.Monoid.Space
@@ -34,12 +35,12 @@ import qualified Data.Map as Map
 import Data.Maybe hiding (fromJust)
 
 data CreateEmail = CreateEmail MagicHash Address [Address] UTCTime
-instance MonadDB m => DBUpdate m CreateEmail MailID where
+instance (MonadDB m, MonadThrow m) => DBUpdate m CreateEmail MailID where
   update (CreateEmail token sender to to_be_sent) =
     $(fromJust) `liftM` insertEmail False token sender to to_be_sent 0
 
 data AddContentToEmail = AddContentToEmail MailID String (Maybe Address) String [Attachment] XSMTPAttrs
-instance MonadDB m => DBUpdate m AddContentToEmail Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m AddContentToEmail Bool where
   update (AddContentToEmail mid title reply_to content attachments xsmtpapi) = do
     result <- runQuery01 $ sqlUpdate "mails" $ do
       sqlSet "title" title
@@ -59,14 +60,14 @@ instance MonadDB m => DBUpdate m AddContentToEmail Bool where
     return result
 
 data MarkEventAsRead = MarkEventAsRead EventID UTCTime
-instance MonadDB m => DBUpdate m MarkEventAsRead Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m MarkEventAsRead Bool where
   update (MarkEventAsRead eid time) =
     runQuery01 $ sqlUpdate "mail_events" $ do
       sqlSet "event_read" time
       sqlWhereEq "id" eid
 
 data DeleteEmail = DeleteEmail MailID
-instance MonadDB m => DBUpdate m DeleteEmail Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m DeleteEmail Bool where
   update (DeleteEmail mid) = do
     runQuery01 $ sqlDelete "mails" $ do
       sqlWhereEq "id" mid
@@ -130,7 +131,7 @@ instance MonadDB m => DBQuery m GetEmailsByRecipient [Mail] where
 -- here for now. do not use it though.
 
 data CreateServiceTest = CreateServiceTest MagicHash Address [Address] UTCTime
-instance MonadDB m => DBUpdate m CreateServiceTest MailID where
+instance (MonadDB m, MonadThrow m) => DBUpdate m CreateServiceTest MailID where
   update (CreateServiceTest token sender to to_be_sent) =
     $(fromJust) `liftM` insertEmail True token sender to to_be_sent 0
 
@@ -155,7 +156,7 @@ instance MonadDB m => DBUpdate m ResendEmailsSentSince Int where
       sqlWhere $ "sent >= " <?> time
 
 data DeferEmail = DeferEmail MailID UTCTime
-instance MonadDB m => DBUpdate m DeferEmail Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m DeferEmail Bool where
   update (DeferEmail mid time) =
     runQuery01 $ sqlUpdate "mails" $ do
       sqlSet "to_be_sent" time
@@ -163,14 +164,14 @@ instance MonadDB m => DBUpdate m DeferEmail Bool where
       sqlWhereEq "id" mid
 
 data MarkEmailAsSent = MarkEmailAsSent MailID UTCTime
-instance MonadDB m => DBUpdate m MarkEmailAsSent Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m MarkEmailAsSent Bool where
   update (MarkEmailAsSent mid time) = do
     runQuery01 . sqlUpdate "mails" $ do
       sqlSet "sent" time
       sqlWhereEq "id" mid
 
 data UpdateWithEvent = UpdateWithEvent MailID Event
-instance MonadDB m => DBUpdate m UpdateWithEvent Bool where
+instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateWithEvent Bool where
   update (UpdateWithEvent mid ev) = do
     runQuery01 . sqlInsert "mail_events" $ do
       sqlSet "mail_id" mid
@@ -192,7 +193,7 @@ sqlSelectMails refine = sqlSelect "mails" $ do
   sqlOrderBy "id"
   refine
 
-insertEmail :: MonadDB m => Bool -> MagicHash -> Address -> [Address] -> UTCTime -> Int32 -> m (Maybe MailID)
+insertEmail :: (MonadDB m, MonadThrow m) => Bool -> MagicHash -> Address -> [Address] -> UTCTime -> Int32 -> m (Maybe MailID)
 insertEmail service_test token sender to to_be_sent attempt = do
   runQuery_ . sqlInsert "mails" $ do
     sqlSet "token" token

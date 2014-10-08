@@ -5,6 +5,7 @@ module Purging.Files
     ) where
 
 import Control.Monad
+import Control.Monad.Catch
 import Data.Int
 import Data.Monoid.Space
 
@@ -101,7 +102,7 @@ instance MonadDB m => DBQuery m FindFilesForPurging [(FileID,Maybe String,Maybe 
         <+> "   LIMIT" <?> (fromIntegral limit :: Int32)
     fetchMany id
 
-purgeSomeFiles :: (MonadDB m, Log.MonadLog m, MonadIO m, AmazonMonad m) => m ()
+purgeSomeFiles :: (MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, AmazonMonad m) => m ()
 purgeSomeFiles = do
   someFiles <- dbQuery $ FindFilesForPurging 10
   mapM_ purge someFiles

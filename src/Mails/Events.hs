@@ -16,6 +16,7 @@ module Mails.Events (
   ) where
 
 import Data.Maybe
+import Control.Monad.Catch
 import Control.Monad.Reader
 
 import AppConf
@@ -101,7 +102,7 @@ processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ processEvent -- 
       when (not success) $
         Log.attention_ $ "Couldn't mark event #" ++ show eid ++ " as read"
 
-handleDeliveredInvitation :: (CryptoRNG m, Log.MonadLog m, DocumentMonad m, TemplatesMonad m)
+handleDeliveredInvitation :: (CryptoRNG m, MonadThrow m, Log.MonadLog m, DocumentMonad m, TemplatesMonad m)
                           => Maybe BrandedDomain -> String -> MailsConfig -> SignatoryLinkID -> m ()
 handleDeliveredInvitation mbd hostpart mc signlinkid = do
   getSigLinkFor signlinkid <$> theDocument >>= \case
@@ -118,14 +119,14 @@ handleDeliveredInvitation mbd hostpart mc signlinkid = do
       return ()
     Nothing -> return ()
 
-handleOpenedInvitation :: (DocumentMonad m, TemplatesMonad m, MonadIO m) => SignatoryLinkID -> String -> Maybe UserID -> m ()
+handleOpenedInvitation :: (DocumentMonad m, TemplatesMonad m, MonadThrow m) => SignatoryLinkID -> String -> Maybe UserID -> m ()
 handleOpenedInvitation signlinkid email muid = do
   now  <- currentTime
   _ <- dbUpdate $ MarkInvitationRead signlinkid
           (mailSystemActor now muid email signlinkid)
   return ()
 
-handleDeferredInvitation :: (CryptoRNG m, Log.MonadLog m, DocumentMonad m, TemplatesMonad m) => Maybe BrandedDomain -> String -> MailsConfig -> SignatoryLinkID -> String -> m ()
+handleDeferredInvitation :: (CryptoRNG m, MonadThrow m, Log.MonadLog m, DocumentMonad m, TemplatesMonad m) => Maybe BrandedDomain -> String -> MailsConfig -> SignatoryLinkID -> String -> m ()
 handleDeferredInvitation mbd hostpart mc signlinkid email = do
   time <- currentTime
   getSigLinkFor signlinkid <$> theDocument >>= \case
@@ -139,7 +140,7 @@ handleDeferredInvitation mbd hostpart mc signlinkid email = do
         }
     Nothing -> return ()
 
-handleUndeliveredInvitation :: (CryptoRNG m, Log.MonadLog m, DocumentMonad m, TemplatesMonad m) => Maybe BrandedDomain -> String -> MailsConfig -> SignatoryLinkID -> m ()
+handleUndeliveredInvitation :: (CryptoRNG m, MonadThrow m, Log.MonadLog m, DocumentMonad m, TemplatesMonad m) => Maybe BrandedDomain -> String -> MailsConfig -> SignatoryLinkID -> m ()
 handleUndeliveredInvitation mbd hostpart mc signlinkid = do
   getSigLinkFor signlinkid <$> theDocument >>= \case
     Just signlink -> do
