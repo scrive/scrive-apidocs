@@ -27,6 +27,8 @@ docAPITests env = testGroup "DocAPI" $
   , testThat "change main file works" env testChangeMainFile
   , testThat "change main file moves placements" env testChangeMainFileMovePlacements
   , testThat "Changing authentication method works" env testChangeAuthenticationMethod
+  , testThat "Save flag in update call works" env (testUpdateDocToSaved False)
+  , testThat "Save flag works when using API (OAuth)" env (testUpdateDocToSaved True)
   ]
 
 jsonDocs :: [String]
@@ -90,6 +92,91 @@ testSetAutoReminder = do
   (res, _) <- runTestKontra req ctx $ apiCallV1SetAutoReminder (documentid doc)
 
   assertEqual "response code is 202" 202 (rsCode res)
+
+testUpdateDocToSaved :: Bool -> TestEnv ()
+testUpdateDocToSaved useOAuth = do
+  user <- addNewRandomUser
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
+
+  authStr <- if useOAuth then do
+      -- Create OAuth API tokens
+      let uid = userid user
+      _ <- dbUpdate $ CreateAPIToken uid
+      (apitoken, apisecret) : _ <- dbQuery $ GetAPITokensForUser uid
+      time <- rand 10 arbitrary
+      Just (tok, sec) <- dbUpdate $ RequestTempCredentials
+        (OAuthTempCredRequest
+          { tcCallback   = fromJust $ parseURI "http://www.google.com/"
+          , tcAPIToken   = apitoken
+          , tcAPISecret  = apisecret
+          , tcPrivileges = [APIDocCreate]
+          }
+        ) time
+      Just (_, ver) <- dbUpdate $ VerifyCredentials tok uid time
+      Just (t, s) <- dbUpdate $ RequestAccessToken
+        (OAuthTokenRequest
+          { trAPIToken = apitoken
+          , trAPISecret = apisecret
+          , trTempToken = tok
+          , trTempSecret = sec
+          , trVerifier = ver
+          }
+        ) time
+      return $ Just $ "oauth_signature_method=\"PLAINTEXT\""
+                   ++ ",oauth_consumer_key=\"" ++ show apitoken ++ "\""
+                   ++ ",oauth_token=\"" ++ show t ++"\""
+                   ++ ",oauth_signature=\"" ++ show apisecret ++ "&" ++ show s ++ "\""
+    else return Nothing
+
+  reqDocJSON <- mkRequest GET []
+  let mkDocJSON d = runTestKontra reqDocJSON ctx $ documentJSONV1 (Just user) False True True Nothing d
+
+  reqDoc <- if useOAuth
+    then mkRequestWithHeaders POST [ ("expectedType", inText "text")
+                                   , ("file", inFile "test/pdfs/simple.pdf")
+                                   ]
+                                   [("authorization", [fromJust authStr])]
+    else mkRequest POST [ ("expectedType", inText "text")
+                        , ("file", inFile "test/pdfs/simple.pdf")]
+  (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  assertEqual "We should get a 201 response" 201 (rsCode resDoc)
+  let rds = BS.toString $ rsBody resDoc
+      Ok (JSObject rdsr) = decode rds
+      Just (JSBool newSaved) = lookup "saved" $ fromJSObject rdsr
+      Just (JSString docidStr) = lookup "id" $ fromJSObject rdsr
+  did <- liftIO $ readIO (fromJSString docidStr)
+  doc <- dbQuery $ GetDocumentByDocumentID did
+  when useOAuth $ do
+    assertEqual "The API created document should be saved (JSON)" True newSaved
+    assertEqual "The API created document should be saved (DB)" False (documentunsaveddraft doc)
+  when (not useOAuth) $ do
+    assertEqual "The created document should not be saved (JSON)" False newSaved
+    assertEqual "The created document should not be saved (DB)" True (documentunsaveddraft doc)
+
+  -- Make document saved using update API call and check if it works
+  (resDocSavedJSON, _) <- mkDocJSON doc{documentunsaveddraft = False}
+  reqDocSaved <- mkRequest POST [("json", inText $ encode resDocSavedJSON)]
+  (resDocSaved, _) <- runTestKontra reqDocSaved ctx $ apiCallV1Update did
+  assertEqual "Updating document did not return HTTP 200" 200 (rsCode resDocSaved)
+  let rdss = BS.toString $ rsBody resDocSaved
+      Ok (JSObject rdssr) = decode rdss
+      Just (JSBool saved) = lookup "saved" $ fromJSObject rdssr
+  assertEqual "Document should be saved (JSON)" True saved
+  docSaved <- dbQuery $ GetDocumentByDocumentID did
+  assertEqual "Document should be saved (DB)" False (documentunsaveddraft docSaved)
+
+  -- Try to make document not saved using update API call and make sure it
+  -- cannot happen
+  (resUnsaveJSON, _) <- mkDocJSON docSaved{documentunsaveddraft = True}
+  reqUnsave <- mkRequest POST [("json", inText $ encode resUnsaveJSON)]
+  (resUnsave, _) <- runTestKontra reqUnsave ctx $ apiCallV1Update did
+  assertEqual "Updating document did not return HTTP 200" 200 (rsCode resUnsave)
+  let rus = BS.toString $ rsBody resUnsave
+      Ok (JSObject rusr) = decode rus
+      Just (JSBool unsaved) = lookup "saved" $ fromJSObject rusr
+  assertEqual "Document should still be saved (JSON)" True unsaved
+  docUnsaved <- dbQuery $ GetDocumentByDocumentID did
+  assertEqual "Document should still be saved (DB)" False (documentunsaveddraft docUnsaved)
 
 testChangeAuthenticationMethod :: TestEnv ()
 testChangeAuthenticationMethod = do
