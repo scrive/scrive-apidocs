@@ -14,6 +14,8 @@ import Data.Char
 import Data.List
 import Data.Maybe
 import Data.Functor
+import qualified Data.Text.ICU.Normalize as ICU
+import qualified Data.Text as T
 
 import Doc.DocStateData as D
 import Util.HasSomeUserInfo
@@ -59,8 +61,11 @@ fieldvaluebyid fid ((k, v):xs)
 -}
 compareNames :: String -> String -> MergeResult
 compareNames fnContractName fnElegName =
-        let matchAnyElegData w = any (\x -> maxLev w x 2 ) $ words $ map toLower fnElegName
-            matches = length $ filter matchAnyElegData $ words $ map toLower fnContractName
+        let normalizeString = T.unpack . ICU.normalize ICU.NFC . T.pack
+            fnContractName' = normalizeString fnContractName
+            fnElegName' = normalizeString fnElegName
+            matchAnyElegData w = any (\x -> maxLev w x 2 ) $ words $ map toLower fnElegName'
+            matches = length $ filter matchAnyElegData $ words $ map toLower fnContractName'
         in if matches >= 2
             then MergeMatch
             else MergeFail
