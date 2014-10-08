@@ -558,7 +558,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             quantbox.hide();
 
             var permonth = $('<span />');
-            permonth.text(localization.payments.table.total + " " + localization.payments.permonth);
+            permonth.text(localization.payments.table.totalpermonth);
 
             form.find('.due_now .title').html(permonth);
 

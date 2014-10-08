@@ -671,7 +671,7 @@ javascriptLocalisation =
                     }
             }
            , table: { currentplan : "$_paymentPlanCurrentPlan()$"
-                    , total       : "$_paymentPlanTotal()$"
+                    , totalpermonth: "$_paymentPlanTotalPerMonth()$"
                     , payments    : "$_paymentPlanPayments()$"
                     , nextpayment : "$_paymentPlanNextPayment()$"
                     , previouspayments : "$_paymentPlanPreviousPayments()$"
@@ -682,7 +682,6 @@ javascriptLocalisation =
             , purchase: "$_paymentPlanPurchase()$"
             , subscribeheader : "$_paymentsSubscribeHeader()$"
             , savechanges : "$_SaveChanges()$"
-            , permonth: "$_paymentPlanPerMonth()$"
             , savingsubscription : "$_paymentPlanSavingSubscription()$"
             , loading : "$_paymentPlanLoading()$"
             , askviktor : "$_paymentPlanAskViktor()$"
