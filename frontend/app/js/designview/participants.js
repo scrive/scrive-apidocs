@@ -90,23 +90,23 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
         },
         detailsPartcipationFieldsWithLabels: function() {
             var div = $('<div />');
-            div.append($('<span class=design-view-action-participant-details-participation-box>')
+            div.append($('<span class=design-view-action-participant-details-participation-box />')
                 .append($('<label class="label">').text(localization.designview.addParties.invitationOrder))
                 .append(this.detailsParticipationFieldsSignOrder())
                 );
-            div.append($('<span class=design-view-action-participant-details-participation-box>')
+            div.append($('<span class=design-view-action-participant-details-participation-box />')
                 .append($('<label class="label">').text(localization.designview.addParties.invitation))
                 .append(this.detailsParticipationFieldsDelivery())
                 );
-            div.append($('<span class=design-view-action-participant-details-participation-box>')
+            div.append($('<span class=design-view-action-participant-details-participation-box />')
                 .append($('<label class="label">').text(localization.designview.addParties.role))
                 .append(this.detailsParticipationFieldsRole())
                 );
-            div.append($('<span class=design-view-action-participant-details-participation-box>')
+            div.append($('<span class=design-view-action-participant-details-participation-box />')
                 .append($('<label class="label">').text(localization.designview.addParties.authentication))
                 .append(this.detailsParticipationFieldsAuth())
                 );
-            div.append($('<span class=design-view-action-participant-details-participation-box>')
+            div.append($('<span class=design-view-action-participant-details-participation-box />')
                 .append($('<label class="label">').text(localization.designview.addParties.confirmation))
                 .append(this.detailsParticipationFieldsConfirmationDelivery())
                 );
