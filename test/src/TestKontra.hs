@@ -274,10 +274,10 @@ mkContext lang = do
         , ctxlang = lang
         , ctxmailsconfig = defaultMailsConfig
         , ctxlivedocxconf = defaultValue
-        , ctxlogicaconf = LogicaConfig { logicaEndpoint = "https://eidt.funktionstjanster.se:18898/osif"
+        , ctxlogicaconf = LogicaConfig { logicaEndpoint = "https://grpt.funktionstjanster.se:18898/osif"
                                        , logicaCertFile = "certs/steria3.pem"
                                        , logicaServiceID = "logtest004"
-                                       , logicaMBIEndpoint = "https://eidt.funktionstjanster.se:18898/mbi/service"
+                                       , logicaMBIEndpoint = "https://grpt.funktionstjanster.se:18898/mbi/service"
                                        , logicaMBIDisplayName = "Test av Mobilt BankID"
                                        }
         , ctxfilecache = memcache

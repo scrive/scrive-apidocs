@@ -146,10 +146,10 @@ instance HasDefaultValue AppConf where
                                          }
     , mailsConfig        = defaultMailsConfig
     , liveDocxConfig     = defaultValue
-    , logicaConfig       = LogicaConfig { logicaEndpoint = "https://eidt.funktionstjanster.se:18898/osif"
+    , logicaConfig       = LogicaConfig { logicaEndpoint = "https://grpt.funktionstjanster.se:18898/osif"
                                         , logicaServiceID = "logtest004"
                                         , logicaCertFile = "certs/steria3.pem"
-                                        , logicaMBIEndpoint = "http://eidt.funktionstjanster.se:18899/mbi/service"
+                                        , logicaMBIEndpoint = "http://grpt.funktionstjanster.se:18899/mbi/service"
                                         , logicaMBIDisplayName = "Test av Mobilt BankID"
                                         }
     , admins             = map Email ["gracjanpolak@gmail.com", "lukas@skrivapa.se"]
