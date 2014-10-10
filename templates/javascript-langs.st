@@ -22,6 +22,7 @@ javascriptLocalisation =
              , loadingFile : "$_loadingFile()$"
              , more : "$_more()$"
              , yourSigningPluginFailed : "$_yourSigningPluginFailed()$"
+             , yourSigningPluginFailedWithReason : "$_yourSigningPluginFailedWithReason()$"
              , startingSaveSigning : "$_startingSaveSigning()$"
              , youCancelledSigning : "$_youCancelledSigning()$"
              , noTeliaInstalled  : "$_noTeliaInstalled()$"

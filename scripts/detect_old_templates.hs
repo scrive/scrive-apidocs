@@ -19,6 +19,7 @@ import System.Directory
 import Data.List (isSuffixOf)
 import Transifex.Synch
 import Transifex.Utils
+import Debug.Trace
 
 whiteList :: S.Set String
 whiteList = S.fromList [ "newTemplateTitle"
@@ -240,7 +241,7 @@ go :: Map.Map String String -> S.Set String -> S.Set String -> S.Set String
 go allTmpls seenTmpls tmpls | S.null tmpls = seenTmpls
                             | otherwise = go allTmpls seenTmpls' $ newDeps `S.union` tmpls'
     where (tmpl, tmpls') = S.deleteFindMin tmpls
-          tmplDef = fromMaybe "" $ Map.lookup tmpl allTmpls
+          tmplDef = fromMaybe (trace ("Missing template definition: " ++ tmpl) "") $ Map.lookup tmpl allTmpls
           deps = templateDeps tmplDef
           seenTmpls' = tmpl `S.insert` seenTmpls
           newDeps = deps S.\\ seenTmpls

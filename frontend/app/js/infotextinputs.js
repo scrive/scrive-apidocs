@@ -273,10 +273,13 @@ var InfoTextInputView = Backbone.View.extend({
         this.model.setValue(this.input.val());
     },
     keysEvents : function(e) {
-        if (e.keyCode == 13)
+        if (e.keyCode == 13) {
           this.model.onEnter();
-        else if (e.keyCode == 9)
+          return false;
+        } else if (e.keyCode == 9) {
           this.model.onTab();
+          return false;
+        }
     },
     suppressSpace : function(e) {
         if (this.model.get("suppressSpace")==true ) {

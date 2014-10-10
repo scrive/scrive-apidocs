@@ -407,6 +407,7 @@
 "_emptyOrNotValidMobile":"You have not entered a mobile number, or the number is incorrect. Please note that the number must be on international format starting with a + sign and country code.",
 "_evidenceAttachmentBoxHeader":"Evidence attachments",
 "_february":"February",
+"_fieldWithSameNameExists":"You already have a field with this name. Each field must have a unique name.",
 "_fileTooLarge":"The file you have chosen superseeds our max limit of 4 MB. Please try a smaller file.",
 "_filterBySent":"Awaiting signature",
 "_firstNameField":"First name",
@@ -485,6 +486,7 @@
 "_historyHide":"Hide",
 "_historyParty":"Party",
 "_historyTime":"Time",
+"_information":"Information",
 "_internalServerError":"<h1>Something went wrong</h1><h4>If the problem remains please contact our support at support@scrive.com or +46 8 519 779 00.</h4>",
 "_invalidAttachments":"Sorry, this file format is not supported. Please select a PDF file instead.",
 "_invitationMailDeferredContentBodyFirst":"Unfortunately we are experiencing difficulties delivering the invitation to e-sign to <strong>$counterpartname$ &lt;$counterpartemail$&gt;</strong>. Either their email address is incorrect or their email server is experiencing issues.",
@@ -864,5 +866,6 @@
 "_youCantCancelThisDocuments":"Some of the selected documents can't be withdrawn.",
 "_youCantSendRemindersToThisDocuments":"Reminders can’t be sent for some of the selected documents.",
 "_yourSigningPluginFailed":"Your signing plug-in failed to sign the document. Please contact your eID provider.",
+"_yourSigningPluginFailedWithReason":"Your signing plug-in failed to sign the document. Please contact your eID provider. <span class='put-error-message-here'>Error message will replace this text</span>",
 "_zip":"ZIP"
 }

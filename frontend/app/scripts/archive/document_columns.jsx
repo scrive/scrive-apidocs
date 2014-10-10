@@ -60,7 +60,7 @@ return function(args) {
             key="title"
             sorting="title"
             rendering={function(d) {
-              return (<a href={d.field("link")}>{d.field("fields").title}</a>);
+              return (<a className="s-archive-document-title" href={d.field("link")}>{d.field("fields").title}</a>);
             }}
           />,
           <List.Sublist

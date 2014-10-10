@@ -128,6 +128,7 @@ Executable kontrakcja-server
   Build-depends: test-framework-hunit
   Build-depends: test-framework-quickcheck2
   Build-depends: text
+  Build-depends: text-icu
   Build-depends: threads
   Build-depends: transformers
   Build-depends: transformers-base
@@ -645,6 +646,7 @@ Executable kontrakcja-test
   Build-depends: test-framework-hunit
   Build-depends: test-framework-quickcheck2
   Build-depends: text
+  Build-depends: text-icu
   Build-depends: threads
   Build-depends: transformers
   Build-depends: transformers-base
