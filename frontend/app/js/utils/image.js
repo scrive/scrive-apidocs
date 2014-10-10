@@ -25,6 +25,7 @@
         for (var i = 0; i < imageDataLength; i += 4) {
           if(imageData[i] || imageData[i+1] || imageData[i+2]) {
             imageIsEmpty = false;
+            break;
           }
         }
 
