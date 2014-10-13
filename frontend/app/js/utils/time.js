@@ -1,4 +1,4 @@
-define(['Backbone', 'legacy_code'], function() {
+define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
 var monthShortName = function (v) {
  switch(v)
@@ -124,14 +124,17 @@ if (!Date.prototype.fullTime) {
 
 if (!Date.prototype.diffDays) {
     Date.prototype.diffDays = function(date2) {
-    var time2 = 0;
-    if (date2 != undefined)
-        time2 = date2.getTime();
-    else
-        time2 = new Date().getTime() +1; // This +1 removes a risk that diffDays depends on speed of browser.
-    var ONE_DAY = 1000 * 60 * 60 * 24;
-    var difference_ms = Math.abs(this.getTime() - time2);
-    return Math.floor(difference_ms / ONE_DAY);
+    var date1 = new Date(this);
+
+    if (date2 === undefined) {
+        date2 = new Date();
+    }
+
+    date1.setHours(0, 0, 0, 0);
+    date2.setHours(0, 0, 0, 0);
+
+    var diff = moment(date2).diff(moment(date1), 'days');
+    return Math.abs(diff);
     };
 }
 

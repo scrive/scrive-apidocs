@@ -16,9 +16,11 @@ window.Calendar = Backbone.Model.extend({
     defaults: {
         on : $('<div/>'),
         change : function() {return false},
+        changing: false,
         maxValue : 90
     },
     initialize : function(args){
+        var self = this;
         var activator  = this.get("on");
         var onchange = this.get("change");
         activator.dateinput({
@@ -26,7 +28,10 @@ window.Calendar = Backbone.Model.extend({
             lang: LanguageService.currentLanguage(),
             value : args.days == undefined ? undefined : new Date(new Date().getTime() + args.days * 24 * 60 * 60 * 1000),
             change: function() {
-                var dist = activator.data("dateinput").getValue().diffDays() + 1;
+                if (self.get('changing')) {
+                  return;
+                }
+                var dist = activator.data("dateinput").getValue().diffDays();
                 if (activator.data("dateinput").getValue() <= new Date())
                   dist = undefined;
                 onchange(dist);
@@ -39,17 +44,21 @@ window.Calendar = Backbone.Model.extend({
         });
     },
     setDays : function(days) {
+            this.set('changing', true);
             if (days != undefined && !isNaN(days)) {
               var date = new Date();
               date.setDate(date.getDate() + days);
               this.get("on").data("dateinput").setValue(date);
             } else
               this.get("on").data("dateinput").setValue(new Date());
+            this.set('changing', false);
     },
     setMax : function(days) {
+            this.set('changing', true);
             if (days != undefined && !isNaN(days)) {
               this.get("on").data("dateinput").setMax(days);
             }
+            this.set('changing', false);
     },
     close : function() {
             this.get("on").data("dateinput").hide();
