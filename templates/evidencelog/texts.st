@@ -427,33 +427,31 @@ $else$
   $_TimeoutDocumentEvidenceTextSimple()$
 $endif$
 ###
-UpdateFieldCheckboxEvidenceText=$actor$ $if(checked)$checked$else$unchecked$endif$ the checkbox “$fieldname$”.$updatePlacementsJust()$
+UpdateFieldCheckboxEvidenceText=$actor$ $if(checked)$checked$else$unchecked$endif$ the checkbox “$fieldname$”.$if(placements)$ The checkbox’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldSignatureEvidenceText=$actor$ signed in the signature box “$fieldname$”.<br/><img alt="signature" src="$value$" width="100" height="50"></img><br/>$updatePlacementsJust()$
+UpdateFieldSignatureEvidenceText=$actor$ signed in the signature box “$fieldname$”.<br/><img alt="signature" src="$value$" width="100" height="50"></img><br/>$if(placements)$The box’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldFirstNameEvidenceText=$actor$ changed the text in the text field “First name” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$updatePlacementsJust()$
+UpdateFieldFirstNameEvidenceText=$actor$ changed the text in the text field “First name” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldLastNameEvidenceText=$actor$ changed the text in the text field “Last name” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$updatePlacementsJust()$
+UpdateFieldLastNameEvidenceText=$actor$ changed the text in the text field “Last name” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldCompanyEvidenceText=$actor$ changed the text in the text field “Company” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$updatePlacementsJust()$
+UpdateFieldCompanyEvidenceText=$actor$ changed the text in the text field “Company” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldPersonalNumberEvidenceText=$actor$ changed the text in the text field “ID number” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$updatePlacementsJust()$
+UpdateFieldPersonalNumberEvidenceText=$actor$ changed the text in the text field “ID number” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldCompanyNumberEvidenceText=$actor$ changed the text in the text field “Company number” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$updatePlacementsJust()$
+UpdateFieldCompanyNumberEvidenceText=$actor$ changed the text in the text field “Company number” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldEmailEvidenceText=$actor$ changed the text in the text field “Email” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$updatePlacementsJust()$
+UpdateFieldEmailEvidenceText=$actor$ changed the text in the text field “Email” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldCustomEvidenceText=$actor$ changed the text in the text field “$fieldname$” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$updatePlacementsJust()$
+UpdateFieldCustomEvidenceText=$actor$ changed the text in the text field “$fieldname$” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldMobileEvidenceText=$actor$ changed the text in the text field “Mobile number” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$updatePlacementsJust()$
+UpdateFieldMobileEvidenceText=$actor$ changed the text in the text field “Mobile number” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
 updateFieldPreviousValue=$if(prvblank)$blank$else$“$previousvalue$”$endif$
 ###
 updateFieldNewValue=$if(newblank)$blank$else$“$value$”$endif$
 ###
-updatePlacements=$if(placements)$ The field had the following placements in the document:<table class="placements"><tr><td>Page</td><td>X</td><td>Y</td></tr>$placements:{placement|<tr><td>$placement.page$</td><td>$placement.x$</td><td>$placement.y$</td></tr>}$</table>$endif$
-###
-updatePlacementsJust=$if(placements)$ The field’s placement in the Main Document:<table class="placements"><tr><td>Page</td><td>X</td><td>Y</td></tr>$placements:{placement|<tr><td>$placement.page$</td><td>$placement.x$</td><td>$placement.y$</td></tr>}$</table>$endif$
+updateFieldPlacements=$if(placements)$<table class="placements"><tr><td>Page</td><td>X</td><td>Y</td></tr>$placements:{placement|<tr><td>$placement.page$</td><td>$placement.x$</td><td>$placement.y$</td></tr>}$</table>$endif$
 ###
 pinWasSent=The PIN was sent to $phone$.
 ###
