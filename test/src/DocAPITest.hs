@@ -27,6 +27,7 @@ docAPITests env = testGroup "DocAPI" $
   , testThat "change main file works" env testChangeMainFile
   , testThat "change main file moves placements" env testChangeMainFileMovePlacements
   , testThat "Changing authentication method works" env testChangeAuthenticationMethod
+  , testThat "Creating doc with access credentials via API works" env testOAuthCreateDoc
   , testThat "Save flag in update call works" env (testUpdateDocToSaved False)
   , testThat "Save flag works when using API (OAuth)" env (testUpdateDocToSaved True)
   ]
@@ -83,6 +84,44 @@ testUpdateDoc updateJsonPath = do
 
   return ctx
 
+testOAuthCreateDoc :: TestEnv ()
+testOAuthCreateDoc = do
+  user <- addNewRandomUser
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
+  -- Create OAuth API tokens
+  let uid = userid user
+  _ <- dbUpdate $ CreateAPIToken uid
+  (apitoken, apisecret) : _ <- dbQuery $ GetAPITokensForUser uid
+  time <- rand 10 arbitrary
+  Just (tok, sec) <- dbUpdate $ RequestTempCredentials
+    (OAuthTempCredRequest
+      { tcCallback   = fromJust $ parseURI "http://www.google.com/"
+      , tcAPIToken   = apitoken
+      , tcAPISecret  = apisecret
+      , tcPrivileges = [APIDocCreate]
+      }
+    ) time
+  Just (_, ver) <- dbUpdate $ VerifyCredentials tok uid time
+  Just (t, s) <- dbUpdate $ RequestAccessToken
+    (OAuthTokenRequest
+      { trAPIToken = apitoken
+      , trAPISecret = apisecret
+      , trTempToken = tok
+      , trTempSecret = sec
+      , trVerifier = ver
+      }
+    ) time
+  let authStr = "oauth_signature_method=\"PLAINTEXT\""
+             ++ ",oauth_consumer_key=\"" ++ show apitoken ++ "\""
+             ++ ",oauth_token=\"" ++ show t ++"\""
+             ++ ",oauth_signature=\"" ++ show apisecret ++ "&" ++ show s ++ "\""
+  reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
+                                      , ("file", inFile "test/pdfs/simple.pdf")
+                                      ]
+                                      [("authorization", [authStr])]
+  (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  assertEqual "We should get a 201 response" 201 (rsCode resDoc)
+
 testSetAutoReminder :: TestEnv ()
 testSetAutoReminder = do
   ctx@Context{ctxmaybeuser = Just user} <- testUpdateDoc $ head jsonDocs
@@ -99,34 +138,13 @@ testUpdateDocToSaved useOAuth = do
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
 
   authStr <- if useOAuth then do
-      -- Create OAuth API tokens
-      let uid = userid user
-      _ <- dbUpdate $ CreateAPIToken uid
-      (apitoken, apisecret) : _ <- dbQuery $ GetAPITokensForUser uid
-      time <- rand 10 arbitrary
-      Just (tok, sec) <- dbUpdate $ RequestTempCredentials
-        (OAuthTempCredRequest
-          { tcCallback   = fromJust $ parseURI "http://www.google.com/"
-          , tcAPIToken   = apitoken
-          , tcAPISecret  = apisecret
-          , tcPrivileges = [APIDocCreate]
-          }
-        ) time
-      Just (_, ver) <- dbUpdate $ VerifyCredentials tok uid time
-      Just (t, s) <- dbUpdate $ RequestAccessToken
-        (OAuthTokenRequest
-          { trAPIToken = apitoken
-          , trAPISecret = apisecret
-          , trTempToken = tok
-          , trTempSecret = sec
-          , trVerifier = ver
-          }
-        ) time
-      return $ Just $ "oauth_signature_method=\"PLAINTEXT\""
-                   ++ ",oauth_consumer_key=\"" ++ show apitoken ++ "\""
-                   ++ ",oauth_token=\"" ++ show t ++"\""
-                   ++ ",oauth_signature=\"" ++ show apisecret ++ "&" ++ show s ++ "\""
-    else return Nothing
+    _ <- dbUpdate $ CreatePersonalToken (userid user)
+    Just (apitoken, apisecret, t, s) <- dbQuery $ GetPersonalToken (userid user)
+    return $ Just $ "oauth_signature_method=\"PLAINTEXT\""
+                 ++ ",oauth_consumer_key=\"" ++ show apitoken ++ "\""
+                 ++ ",oauth_token=\"" ++ show t ++"\""
+                 ++ ",oauth_signature=\"" ++ show apisecret ++ "&" ++ show s ++ "\""
+  else return Nothing
 
   reqDocJSON <- mkRequest GET []
   let mkDocJSON d = runTestKontra reqDocJSON ctx $ documentJSONV1 (Just user) False True True Nothing d
