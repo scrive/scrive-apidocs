@@ -217,7 +217,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                             },
                             ajaxsuccess: function() {
                                 doc.recall();
-                                model.saveDocument();
+                                doc.save()
                             }}).send();
                     });
                 }

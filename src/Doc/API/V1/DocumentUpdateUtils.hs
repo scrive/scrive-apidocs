@@ -56,7 +56,7 @@ applyDraftDataToDocument draft actor = do
                                 } actor
     -- Only allow transition from 'unsaveddraft: true' to 'unsaveddraft: false'
     whenM ((\doc -> (documentunsaveddraft doc) && not (documentunsaveddraft draft)) <$> theDocument) $ do
-         dbUpdate $ SetDocumentUnsavedDraft (documentunsaveddraft draft)
+         dbUpdate $ SetDocumentUnsavedDraft False
     whenM ((\doc -> isTemplate draft && (not $ isTemplate doc)) <$> theDocument) $ do
          dbUpdate $ TemplateFromDocument actor
     documentauthorattachments <$> theDocument >>= \atts -> forM_ atts $ \att -> do
