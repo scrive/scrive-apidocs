@@ -2,9 +2,9 @@ Frontend-Scrive
 ===============
 
 ## Installation
-> Install latest version of NodeJS (expected version is definied 
-> npm install -g --production // In project root
-> npm install --dev // In project root
+> Install latest version of NodeJS (expected version is defined)
+> npm install -g --production
+> npm install
 
 ### Running static files server and compilation of less and jsx
 > grunt server
