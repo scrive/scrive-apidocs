@@ -94,7 +94,7 @@ window.EmailValidation = Validation.extend({
             validates: function(t) {
                 t = t.trim();
                 // this does not allow international characters, which for the moment is good
-                if (/^[\w._%+-]+@[\w.-]+[.][a-z]{2,4}$/i.test(t))
+                if (/^[\w._%+-]+@[\w.-]+[.][a-z]{2,}$/i.test(t))
                     return true;
                 return false;
             },
