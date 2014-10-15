@@ -91,7 +91,7 @@ parseTimeISO s = msum [
 ----------------------------------------
 
 minutesAfter :: Int -> UTCTime -> UTCTime
-minutesAfter = addUTCTime . fromIntegral
+minutesAfter = addUTCTime . (60 *) . fromIntegral
 
 minutesBefore :: Int -> UTCTime -> UTCTime
 minutesBefore = minutesAfter . negate
