@@ -218,6 +218,20 @@ var InfoTextInputView = Backbone.View.extend({
         {
             if (this.input.val() != model.value()) {
                 this.input.val(model.value());
+
+                // workaround for firefox, which puts the cursor at the beginning of the input
+                // after setting its value with $.val()
+                // we have to use timeout, because this(focus event) is called in firefox before the cursor
+                // is visible
+                var self = this;
+                setTimeout(function() {
+                  try {
+                    self.input[0].setSelectionRange(model.value().length, model.value().length);
+                  } catch(err) {
+                    // probably because IE doesnt support setSelectionRange,
+                    // oh well, we tried...
+                  }
+                }, 10);
             }
             if(this.input.hasClass("grayed"))
                 this.input.removeClass("grayed");
