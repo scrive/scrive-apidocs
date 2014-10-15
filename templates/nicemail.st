@@ -161,45 +161,47 @@ $if(l)$
 $endif$
 ####
 nicebutton=
-<table bgcolor="$if(!buttoncolour)$#53b688$else$$buttoncolour$$endif$"
-       border="0"
-       cellspacing="0"
-       cellpadding="0"
-       style="cursor: pointer;
-              line-height: 16px;">
-  <tr>
-    <td width="22">
-    </td>
-    <td height="14">
-    </td>
-    <td width="22">
-    </td>
-  </tr>
-  <tr>
-    <td width="22">
-    </td>
-    <td>
-      <a $if(link)$href="$link$"$endif$
-         class="button-blue notclickableinpreview"
-         style="text-decoration: none;
-                font: 16px/16px Helvetica Neue, Arial, sans-serif;
-                display: inline-block;
-                color: #fff;">
-        <span style="display: inline-block;">$text$</span>
-      </a>
-    </td>
-    <td width="22">
-    </td>
-  </tr>
-  <tr>
-    <td width="22">
-    </td>
-    <td height="14">
-    </td>
-    <td width="22">
-    </td>
-  </tr>
-</table>
+<a $if(link)$href="$link$"$endif$
+   class="button-blue notclickableinpreview">
+  <table bgcolor="$if(!buttoncolour)$#53b688$else$$buttoncolour$$endif$"
+         border="0"
+         cellspacing="0"
+         cellpadding="0"
+         style="cursor: pointer;
+                line-height: 16px;">
+    <tr>
+      <td width="22">
+      </td>
+      <td height="14">
+      </td>
+      <td width="22">
+      </td>
+    </tr>
+    <tr>
+      <td width="22">
+      </td>
+      <td>
+        <span style="display: inline-block;
+                     text-decoration: none;
+                     font: 16px/16px Helvetica Neue, Arial, sans-serif;
+                     display: inline-block;
+                     color: #fff;">
+          $text$
+        </span>
+      </td>
+      <td width="22">
+      </td>
+    </tr>
+    <tr>
+      <td width="22">
+      </td>
+      <td height="14">
+      </td>
+      <td width="22">
+      </td>
+    </tr>
+  </table>
+</a>
 ####
 poweredByScrive=
 <a style="text-decoration: none;" href="$ctxhostpart$">
