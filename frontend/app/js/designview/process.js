@@ -199,6 +199,7 @@ define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_the
                 onChange: function(v) {
                     days = parseInt(v);
                     if (days != undefined && !isNaN(days) && (days + "" == v) && days != doc.daystosign()) {
+                      days = Math.min(90, days);
                       doc.setDaystosign(days);
                     } else if (v == "" && doc.daystosign() != 1) {
                       doc.setDaystosign(1);
