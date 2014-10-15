@@ -56,6 +56,13 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
               viewmodel.saveFlashMessage(wasSaved);
             });
         },
+        saveMaybeFlashMessage: function() {
+            var isSaved = this.document().saved();
+            this.document().save();
+            if(isSaved) {
+              this.saveFlashMessage(true);
+            }
+        },
         saveFlashMessage: function(wasSaved) {
             var flashMsg;
             if(this.document().isTemplate()) {
@@ -203,7 +210,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                     mixpanel.track('Click remove file');
                     doc.markAsNotReady();
                     doc.removeTypeSetters();
-                    doc.save();
+                    model.saveMaybeFlashMessage();
                     doc.afterSave(function() {
                         new Submit({
                             method : "POST",

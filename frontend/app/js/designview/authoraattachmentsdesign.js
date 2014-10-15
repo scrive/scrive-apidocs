@@ -183,6 +183,7 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
 
 window.DesignAuthorAttachmentsPopup = function(args) {
          var document = args.document;
+         var viewmodel = args.viewmodel;
          var model = new DesignAuthorAttachments({ document : document  });
          var view = new DesignAuthorAttachmentsView({model : model, el : $("<div/>")});
          var popup = new Confirmation({
@@ -210,6 +211,7 @@ window.DesignAuthorAttachmentsPopup = function(args) {
                             document.recall(function() {
                                 document.trigger("change:attachments");
                                 LoadingDialog.close();
+                                viewmodel.saveMaybeFlashMessage();
                                 popup.close();
                             });
                         },

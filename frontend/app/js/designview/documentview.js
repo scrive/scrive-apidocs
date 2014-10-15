@@ -140,6 +140,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
         },
         uploadFile : function() {
             var view = this;
+            var viewmodel = view.viewmodel;
             var document = view.model;
 
             var url = "/api/frontend/changemainfile/" + document.documentid();
@@ -167,7 +168,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                             }
                             document.recall();
                         }
-             });
+            });
             return new UploadButton({    color: 'green',
                                      size: 'big',
                                      text: localization.uploadButton,
@@ -178,8 +179,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                                      onAppend: function(input, title, multifile) {
                                        document.markAsNotReady();
                                        submit.addInputs(input);
-
-                                       document.save();
+                                       viewmodel.saveMaybeFlashMessage();
                                        document.afterSave(function() {
                                            submit.sendAjax();
                                        });

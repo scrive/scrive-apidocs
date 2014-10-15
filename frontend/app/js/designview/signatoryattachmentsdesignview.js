@@ -183,6 +183,7 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
 
 window.DesignSignatoryAttachmentsPopup = function(args) {
          var document = args.document;
+         var viewmodel = args.viewmodel;
          var model = new DesignSignatoryAttachments({ document : document  });
          var view = new DesignSignatoryAttachmentsView({model : model, el : $("<div/>")});
          var popup = new Confirmation({
@@ -219,6 +220,7 @@ window.DesignSignatoryAttachmentsPopup = function(args) {
                   document.afterSave(function() {
                       document.recall(function() {
                           document.trigger("change:attachments");
+                          viewmodel.saveMaybeFlashMessage();
                           popup.reject();
                       });
                   });

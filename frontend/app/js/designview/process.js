@@ -306,7 +306,7 @@ define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_the
                 onClick: function() {
                     mixpanel.track('Open author attachments');
                     document.save();
-                    new DesignAuthorAttachmentsPopup({document: document});
+                    new DesignAuthorAttachmentsPopup({document: document, viewmodel: viewmodel});
                 }
             });
 
@@ -322,7 +322,7 @@ define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_the
                   } else {
                     mixpanel.track('Open signatory attachments');
                     document.save();
-                    new DesignSignatoryAttachmentsPopup({document: document});
+                    new DesignSignatoryAttachmentsPopup({document: document, viewmodel: viewmodel});
                   }
                 }
             });
