@@ -182,7 +182,6 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                                        document.save();
                                        document.afterSave(function() {
                                            submit.sendAjax();
-                                           document.save();
                                        });
                                      }
                        }).el();

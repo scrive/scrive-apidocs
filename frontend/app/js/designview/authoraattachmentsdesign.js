@@ -194,7 +194,6 @@ window.DesignAuthorAttachmentsPopup = function(args) {
               width: 740,
               onAccept : function() {
                   mixpanel.track('Save attachments', {documentid:document.documentid()});
-                  document.save();
                   document.afterSave( function() {
                       var submit = document.setAttachments();
                       var counter = 0;
@@ -212,7 +211,6 @@ window.DesignAuthorAttachmentsPopup = function(args) {
                                 document.trigger("change:attachments");
                                 LoadingDialog.close();
                                 popup.close();
-                                document.save();
                             });
                         },
                         function(xhr) {

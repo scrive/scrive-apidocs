@@ -209,15 +209,12 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                             method : "POST",
                             url :  "/api/frontend/changemainfile/" + doc.documentid(),
                             ajax: true,
-                            onSend: function() {
-
-                            },
+                            onSend: function() {},
                             ajaxerror: function(d,a){
                                 doc.recall();
                             },
                             ajaxsuccess: function() {
                                 doc.recall();
-                                doc.save()
                             }}).send();
                     });
                 }

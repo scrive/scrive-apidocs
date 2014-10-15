@@ -220,7 +220,6 @@ window.DesignSignatoryAttachmentsPopup = function(args) {
                       document.recall(function() {
                           document.trigger("change:attachments");
                           popup.reject();
-                          document.save();
                       });
                   });
                   return true;
