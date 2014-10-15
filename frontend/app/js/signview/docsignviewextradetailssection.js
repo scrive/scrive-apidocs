@@ -1,4 +1,3 @@
-
 define(['tinycolor', 'Backbone', 'legacy_code'], function(tinycolor) {
 
 window.DocumentExtraDetailsModal = Backbone.View.extend({
@@ -10,7 +9,7 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
 
   acceptButton: function() {
     var self = this;
-    var signatory = this.model.document().currentSignatory();
+    var signview = this.model;
     var signatory = this.model.document().currentSignatory();
 
     return new Button({
@@ -18,7 +17,7 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
       cssClass: "accept-button",
       text: localization.next,
       onClick: function() {
-        if (!DocumentExtraDetails.detailsMissing(signatory)) {
+        if (!signview.hasExtraInputs()) {
           new DocumentSignConfirmation({
             model: self.model,
             fast: true,
@@ -36,6 +35,7 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
 
   emailInput: function() {
     var self = this;
+    var signview = this.model;
     var signatory = this.model.document().currentSignatory();
     var field = signatory.emailField();
     var iti = new InfoTextInput({
@@ -51,15 +51,16 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
       onChange: function(value) {
           field.setValue(value);
           signatory.trigger("change");
-          iti.el().toggleClass("valid",!DocumentExtraDetails.askForEmail(signatory));
+          iti.el().toggleClass("valid",!signview.hasExtraEmailInput());
 
       }
     });
-    iti.el().toggleClass("valid",!DocumentExtraDetails.askForEmail(signatory));
+    iti.el().toggleClass("valid",!signview.hasExtraEmailInput());
     return iti.el();
   },
   nameInput: function() {
     var self = this;
+    var signview = this.model;
     var signatory = this.model.document().currentSignatory();
     var field = signatory.fstnameField();
     var iti =  new InfoTextInput({
@@ -75,14 +76,15 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
       onChange: function(value) {
           field.setValue(value);
           signatory.trigger("change");
-          iti.el().toggleClass("valid",!DocumentExtraDetails.askForName(signatory));
+          iti.el().toggleClass("valid",!signview.hasExtraNameInput());
       }
     });
-    iti.el().toggleClass("valid",!DocumentExtraDetails.askForName(signatory));
+    iti.el().toggleClass("valid",!signview.hasExtraNameInput());
     return iti.el();
   },
   ssnInput: function() {
     var self = this;
+    var signview = this.model;
     var signatory = this.model.document().currentSignatory();
     var field = signatory.personalnumberField();
     var iti = new InfoTextInput({
@@ -98,18 +100,18 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
       onChange: function(value) {
           field.setValue(value);
           signatory.trigger("change");
-          iti.el().toggleClass("valid",!DocumentExtraDetails.askForSSN(signatory));
+          iti.el().toggleClass("valid",!signview.hasExtraSSNInput());
       }
     });
-    iti.el().toggleClass("valid",!DocumentExtraDetails.askForSSN(signatory));
+    iti.el().toggleClass("valid",!signview.hasExtraSSNInput());
     return iti.el();
   },
   phoneInput: function() {
     var self = this;
     var branding = this.branding;
+    var signview = this.model;
     var signatory = this.model.document().currentSignatory();
     var field = signatory.mobileField();
-    var valid = !DocumentExtraDetails.askForPhone(signatory);
     var focused = false;
     var iti = new InfoTextInput({
       infotext: localization.phonePlaceholder,
@@ -124,38 +126,37 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
       onChange: function(value) {
           field.setValue(value);
           signatory.trigger("change");
-          iti.el().toggleClass("valid",!DocumentExtraDetails.askForPhone(signatory));
+          iti.el().toggleClass("valid",!signview.hasExtraPhoneInput());
       }
     });
-    iti.el().toggleClass("valid",!DocumentExtraDetails.askForPhone(signatory));
+    iti.el().toggleClass("valid",!signview.hasExtraPhoneInput());
     return iti.el();
   },
 
   content: function() {
+    var signview = this.model;
     var signatory = this.model.document().currentSignatory();
 
     var body = $("<div class='standard-input-table'>");
     body.append($("<p />").text(localization.docsignview.filladitionfieldsdescription));
     var table = $("<table/>");
 
-    if (DocumentExtraDetails.askForName(signatory)) {
+    if(signview.hasExtraNameInput()) {
       var tr = $("<tr/>").append($("<td/>").text(localization.personalName));
       tr.append($("<td/>").append(this.nameInput(signatory)));
       table.append(tr);
     }
-
-    if (DocumentExtraDetails.askForEmail(signatory)) {
+    if(signview.hasExtraEmailInput()) {
       var tr = $("<tr/>").append($("<td/>").text(localization.email));
       tr.append($("<td/>").append(this.emailInput(signatory)));
       table.append(tr);
     }
-
-    if (DocumentExtraDetails.askForSSN(signatory)) {
+    if(signview.hasExtraSSNInput()) {
       var tr = $("<tr/>").append($("<td/>").text(localization.personalNumber));
       tr.append($("<td/>").append(this.ssnInput(signatory)));
       table.append(tr);
     }
-    if (DocumentExtraDetails.askForPhone(signatory)) {
+    if(signview.hasExtraPhoneInput()) {
       var tr = $("<tr/>").append($("<td/>").text(localization.phone));
       tr.append($("<td/>").append(this.phoneInput(signatory)));
       table.append(tr);
@@ -212,6 +213,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
 
   emailInput: function() {
     var self = this;
+    var signview = this.signview;
     var signatory = this.model.document().currentSignatory();
     var focused = false;
     var field = signatory.emailField();
@@ -228,20 +230,21 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
       onChange: function(value) {
           field.setValue(value);
           signatory.trigger("change");
-          iti.el().toggleClass("valid",!DocumentExtraDetails.askForEmail(signatory));
+          iti.el().toggleClass("valid",!signview.hasExtraEmailInput());
       }
     });
-    iti.el().toggleClass("valid",!DocumentExtraDetails.askForEmail(signatory));
+    iti.el().toggleClass("valid",!signview.hasExtraEmailInput());
 
     field.bind("change", function() {
       iti.setValue(field.value());
-      iti.el().toggleClass("valid",!DocumentExtraDetails.askForEmail(signatory));
+      iti.el().toggleClass("valid",!signview.hasExtraEmailInput());
     });
 
     return iti.el();
   },
   nameInput: function() {
     var self = this;
+    var signview = this.signview;
     var signatory = this.model.document().currentSignatory();
     var focused = false;
     var field = signatory.fstnameField();
@@ -258,21 +261,22 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
       onChange: function(value) {
           field.setValue(value);
           signatory.trigger("change");
-          iti.el().toggleClass("valid",!DocumentExtraDetails.askForName(signatory));
+          iti.el().toggleClass("valid", !signview.hasExtraNameInput());
       }
     });
-    iti.el().toggleClass("valid",!DocumentExtraDetails.askForName(signatory));
+    iti.el().toggleClass("valid", !signview.hasExtraNameInput());
 
 
     field.bind("change", function() {
       iti.setValue(field.value());
-      iti.el().toggleClass("valid",!DocumentExtraDetails.askForName(signatory));
+      iti.el().toggleClass("valid", !signview.hasExtraNameInput());
     });
 
     return  iti.el();
   },
   ssnInput: function() {
     var self = this;
+    var signview = this.signview;
     var signatory = this.model.document().currentSignatory();
     var field = signatory.personalnumberField();
     var focused = false;
@@ -289,20 +293,21 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
       onChange: function(value) {
           field.setValue(value);
           signatory.trigger("change");
-          iti.el().toggleClass("valid",!DocumentExtraDetails.askForSSN(signatory));
+          iti.el().toggleClass("valid", !signview.hasExtraSSNInput());
       }
     });
-    iti.el().toggleClass("valid",!DocumentExtraDetails.askForSSN(signatory));
+    iti.el().toggleClass("valid", !signview.hasExtraSSNInput());
 
     field.bind("change", function() {
       iti.setValue(field.value());
-      iti.el().toggleClass("valid",!DocumentExtraDetails.askForSSN(signatory));
+      iti.el().toggleClass("valid", !signview.hasExtraSSNInput());
     });
 
     return iti.el();
   },
   phoneInput: function() {
     var self = this;
+    var signview = this.signview;
     var signatory = this.model.document().currentSignatory();
     var field = signatory.mobileField();
     var iti = new InfoTextInput({
@@ -318,15 +323,15 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
       onChange: function(value) {
           field.setValue(value);
           signatory.trigger("change");
-          iti.el().toggleClass("valid",!DocumentExtraDetails.askForPhone(signatory));
+          iti.el().toggleClass("valid", !signview.hasExtraPhoneInput());
       }
     });
-    iti.el().toggleClass("valid",!DocumentExtraDetails.askForPhone(signatory));
+    iti.el().toggleClass("valid", !signview.hasExtraPhoneInput());
 
 
     field.bind("change", function() {
       iti.setValue(field.value());
-      iti.el().toggleClass("valid",!DocumentExtraDetails.askForPhone(signatory));
+      iti.el().toggleClass("valid", !signview.hasExtraPhoneInput());
     });
 
     return iti.el();
@@ -334,65 +339,31 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
   },
   render: function() {
       var signatory = this.model;
+      var signview = this.signview;
 
       var box = $(this.el).addClass('section').addClass('spacing').addClass('extradetails');
       var header = $("<h2 class='title'/>").text(localization.docsignview.filladitionfields);
       var description = $("<div class='column spacing descriptionbox'/>").text(localization.docsignview.filladitionfieldsdescription);
       this.fillBox = $("<div class='column spacing fillbox'/>");
 
-      if (DocumentExtraDetails.askForName(signatory)) {
+      if (signview.hasExtraNameInput()) {
        this.fillBox.append(this.nameInput(signatory));
       }
 
-      if (DocumentExtraDetails.askForEmail(signatory)) {
+      if (signview.hasExtraEmailInput()) {
        this.fillBox.append(this.emailInput(signatory));
       }
 
-      if (DocumentExtraDetails.askForSSN(signatory)) {
+      if (signview.hasExtraSSNInput()) {
        this.fillBox.append(this.ssnInput(signatory));
       }
 
-      if (DocumentExtraDetails.askForPhone(signatory)) {
+      if (signview.hasExtraPhoneInput()) {
        this.fillBox.append(this.phoneInput(signatory));
       }
 
       box.append(header).append(description).append(this.fillBox).append("<div class='clearfix' />");
   }
 });
-
-/*
- * A collection of static methods connected to the extra details.
- */
-window.DocumentExtraDetails = Backbone.Model.extend({},
-{
-  detailsMissing: function(signatory) {
-    return DocumentExtraDetails.askForName(signatory)       ||
-           DocumentExtraDetails.askForEmail(signatory)      ||
-           DocumentExtraDetails.askForSSN(signatory)        ||
-           DocumentExtraDetails.askForPhone(signatory);
-  },
-  askForEmail: function(signatory) {
-    var field = signatory.emailField();
-    return field != undefined && !new EmailValidation().validateData(field.value()) && (!field.hasPlacements()) && field.obligatory();
-  },
-  askForName: function(signatory) {
-    var field1 = signatory.fstnameField();
-    var field2 = signatory.sndnameField();
-    return (field1 != undefined && (field1.value() == "" || field1.value() == undefined) && (!field1.hasPlacements() || !field1.obligatory()) &&
-            field2 != undefined && (field2.value() == "" || field2.value() == undefined) && (!field2.hasPlacements() || !field2.obligatory()));
-
-  },
-  askForSSN: function(signatory) {
-    var field = signatory.personalnumberField();
-    return field != undefined &&
-          (field.value() == "" || field.value() == undefined || ((field.signatory().elegAuthentication()) && !new SSNForElegValidation().validateData(field.value()))) &&
-          (!field.hasPlacements()) && field.obligatory();
-  },
-  askForPhone: function(signatory) {
-    var field = signatory.mobileField();
-    return field != undefined && !new PhoneValidation().validateData(field.value()) && (!field.hasPlacements()) && field.obligatory();
-  }
-});
-
 
 });

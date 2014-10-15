@@ -60,6 +60,7 @@ var SignatureDrawOrTypeModel= Backbone.Model.extend({
       return this.get("actionButtonType");
 
     var signatureDrawn = this.hasImage();
+    var signview = this.signview();
     var signatory = this.field().signatory();
 
     var incompleteTasks = this.arrow().notCompletedTasks();
@@ -83,7 +84,7 @@ var SignatureDrawOrTypeModel= Backbone.Model.extend({
 
     var attachmentsLeft = incompleteSignatoryAttachmentsTasks.length > 0;
 
-    var extraDetailsLeft = DocumentExtraDetails.detailsMissing(signatory);
+    var extraDetailsLeft = signview.hasExtraInputs();
 
     if (attachmentsLeft || fieldsLeftToFillIn) {
       this.set({actionButtonType: "apply"}, {silent: true});

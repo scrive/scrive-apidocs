@@ -67,10 +67,46 @@ var DocumentSignViewModel = Backbone.Model.extend({
   },
   hasExtraDetailsSection : function() {
     if (!this.document().currentSignatoryCanSign()) return false;
-
+    return this.hasExtraInputs();
+  },
+  hasExtraInputs : function() {
     var signatory = this.document().currentSignatory();
+    return this.hasExtraNameInput()
+        || this.hasExtraEmailInput()
+        || this.hasExtraSSNInput()
+        || this.hasExtraPhoneInput()
+        || this.hasExtraSignatureInput();
+  },
+  hasExtraNameInput : function() {
+    var signatory = this.document().currentSignatory();
+    var field1 = signatory.fstnameField();
+    var field2 = signatory.sndnameField();
+    return (field1 != undefined && (field1.value() == "" || field1.value() == undefined) && (!field1.hasPlacements() || !field1.obligatory()) &&
+            field2 != undefined && (field2.value() == "" || field2.value() == undefined) && (!field2.hasPlacements() || !field2.obligatory()));
 
-    return DocumentExtraDetails.detailsMissing(signatory);
+  },
+  hasExtraEmailInput : function() {
+    var signatory = this.document().currentSignatory();
+    var field = signatory.emailField();
+    return field != undefined && !new EmailValidation().validateData(field.value()) && (!field.hasPlacements()) && field.obligatory();
+  },
+  hasExtraSSNInput : function() {
+    var signatory = this.document().currentSignatory();
+    var field = signatory.personalnumberField();
+    return field != undefined && (field.value() == "" || field.value() == undefined) && (!field.hasPlacements()) && field.obligatory();
+  },
+  hasExtraPhoneInput : function() {
+    var signatory = this.document().currentSignatory();
+    var field = signatory.mobileField();
+    return field != undefined && !new PhoneValidation().validateData(field.value()) && (!field.hasPlacements()) && field.obligatory();
+  },
+  hasExtraSignatureInput : function() {
+    var signatory = this.document().currentSignatory();
+    if(signatory.padDelivery() && signatory.hasSignatureField()) {
+      return !signatory.anySignatureHasImageOrPlacement();
+    }
+
+    return false;
   },
   hasSignatoriesAttachmentsSection : function() {
       return this.document().currentSignatory().attachments().length > 0;
@@ -332,9 +368,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
          var task = new PageTask({
                     type: 'extra-details',
                     isComplete: function() {
-                        var signatory = document.currentSignatory();
-
-                        return !DocumentExtraDetails.detailsMissing(signatory);
+                        return !self.hasExtraInputs();
                     },
                     el: $(self.extradetailssection().el),
                     onActivate   : function() {
