@@ -30,41 +30,40 @@ import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
 import Text.JSON (JSValue(..))
 import Text.JSON.Gen
+import Text.StringTemplates.Templates
+import qualified Text.StringTemplates.Fields as F
 
+import ActionQueue.AccessNewAccount
 import ActionQueue.Core
 import ActionQueue.EmailChangeRequest
 import ActionQueue.PasswordReminder
-import ActionQueue.AccessNewAccount
 import ActionQueue.UserAccountRequest
+import Analytics.Include
 import AppView
-import DB hiding (update, query)
-import Company.Model
+import BrandedDomain.BrandedDomain
 import Company.CompanyUI
+import Company.Model
+import DB hiding (update, query)
+import Happstack.Fields
 import InputValidation
 import Kontra
 import KontraLink
+import ListUtil
 import MagicHash (MagicHash)
 import Mails.SendMail
-import User.Email
 import MinutesTime
-import Happstack.Fields
 import Redirect
-import Text.StringTemplates.Templates
+import Routing
+import User.Action
+import User.Email
+import User.History.Model
 import User.Model
 import User.UserView
-import Util.FlashUtil
-import Util.MonadUtils
-import Util.HasSomeUserInfo
-import qualified Log
-import User.Action
 import User.Utils
-import User.History.Model
-import ListUtil
-import qualified Text.StringTemplates.Fields as F
-import Routing
-import BrandedDomain.BrandedDomain
-import Analytics.Include
-
+import Util.FlashUtil
+import Util.HasSomeUserInfo
+import Util.MonadUtils
+import qualified Log
 
 handleAccountGet :: Kontrakcja m => m (Either KontraLink Response)
 handleAccountGet = checkUserTOSGet $ do
