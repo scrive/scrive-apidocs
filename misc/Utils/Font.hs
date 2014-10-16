@@ -1,7 +1,7 @@
 module Utils.Font (isValidFont) where
 
-import Text.Regex.TDFA
 import Data.String.Utils
+import Text.Regex.TDFA
 
 -- Our font's don't have " in their definition
 isValidFont :: String -> Bool
