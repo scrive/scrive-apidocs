@@ -1,20 +1,16 @@
 module OAuth (oauthTest) where
 
---import Test.HUnit (Assertion)
-import Test.Framework
---import Test.Framework.Providers.HUnit
-import TestKontra
-import TestingUtil
-import Test.QuickCheck
-import Network.URI
 import Data.Maybe
+import Network.URI
+import Test.Framework
+import Test.QuickCheck
 
+import DB
 import MagicHash
 import OAuth.Model
+import TestingUtil
+import TestKontra
 import User.Model
-import DB
-
---import qualified Log
 
 oauthTest :: TestEnvSt -> Test
 oauthTest env = testGroup "OAuth" [
