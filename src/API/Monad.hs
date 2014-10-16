@@ -31,28 +31,27 @@ module API.Monad (
                  )
   where
 
+import Control.Applicative
+import Control.Exception.Lifted
+import Control.Monad.Base
+import Control.Monad.Error
+import Data.Typeable
 import Happstack.Server (toResponse)
 import Happstack.Server.Types
+import Network.HTTP (urlEncodeVars)
 import Text.JSON hiding (Ok)
 import Text.JSON.Gen
 import qualified Happstack.Server.Response as Web
-import Control.Monad.Error
-import Control.Applicative
-import Network.HTTP (urlEncodeVars)
 
 import DB
-import Kontra
-import User.Model
-
-import OAuth.Util
-import OAuth.Model
 import Doc.Rendering
+import Kontra
+import OAuth.Model
+import OAuth.Util
+import User.Model
 import Util.Actor
 import Util.CSVUtil
 import Util.ZipUtil
-import Control.Exception.Lifted
-import Control.Monad.Base
-import Data.Typeable
 import qualified Log as Log
 
 -- | Respond with a 200 Created status
