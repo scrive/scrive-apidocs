@@ -1,17 +1,18 @@
 module Doc.DocStateCommon where
 
 import Data.Maybe
+
+import Company.Model
 import Doc.DocStateData
 import Doc.DocUtils
-import Doc.SignatoryLinkID
 import Doc.SignatoryFieldID
+import Doc.SignatoryLinkID
 import MagicHash (MagicHash)
 import User.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
-import Company.Model
-import Utils.Default
 import Util.SignatoryLinkUtils
+import Utils.Default
 
 trueOrMessage :: Bool -> String -> Maybe String
 trueOrMessage False s = Just s
