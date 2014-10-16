@@ -1,9 +1,10 @@
 module Company.Migrations where
 
-import DB
 import Data.Monoid
 import Data.Monoid.Space
+
 import Company.Tables
+import DB
 
 addPrimaryAndSecondaryColoursToCompanyUIs :: MonadDB m => Migration m
 addPrimaryAndSecondaryColoursToCompanyUIs = Migration {
