@@ -1,34 +1,33 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 module OAuth.Control(oauth) where
 
-import Kontra
-import API.Monad
-import Routing
-import OAuth.Model
-import DB
-import Happstack.Fields
-import Utils.List
-import Utils.Read
-import KontraLink
-import Happstack.StaticRouting(Route, choice, dir)
-import Util.MonadUtils
-import Control.Exception.Lifted
-import OAuth.View
-import OAuth.Util
-import User.Model
-import qualified Log
-import ListUtil
-
-import Text.JSON.Gen hiding (value)
-import qualified Text.JSON.Gen as J
-import Text.JSON
-
-import Happstack.Server.RqData
 import Control.Applicative
-import Happstack.Server.Types
-import Data.Maybe
+import Control.Exception.Lifted
 import Control.Monad.Error
 import Data.Map (singleton)
+import Data.Maybe
+import Happstack.Server.RqData
+import Happstack.Server.Types
+import Happstack.StaticRouting(Route, choice, dir)
+import Text.JSON
+import Text.JSON.Gen hiding (value)
+import qualified Text.JSON.Gen as J
+
+import API.Monad
+import DB
+import Happstack.Fields
+import Kontra
+import KontraLink
+import ListUtil
+import OAuth.Model
+import OAuth.Util
+import OAuth.View
+import Routing
+import User.Model
+import Util.MonadUtils
+import Utils.List
+import Utils.Read
+import qualified Log
 
 oauth :: Route (KontraPlus Response)
 oauth = choice [
