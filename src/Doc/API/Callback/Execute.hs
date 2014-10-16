@@ -1,31 +1,30 @@
 module Doc.API.Callback.Execute ( execute ) where
 
+import Control.Applicative
+import Control.Monad.Catch
+import Control.Monad.IO.Class
+import Control.Monad.Reader
+import Data.Maybe
+import Network.HTTP as HTTP
 import System.Exit
+import Text.JSON
+import Text.JSON.Gen
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL (toString, fromString)
 
+import Amazon
 import DB
-import Control.Monad.Catch
-import Control.Monad.IO.Class
-
-import Utils.IO
-import qualified Log
 import Doc.API.Callback.DocumentAPICallback
-import Doc.Model
+import Doc.API.V1.DocumentToJSON
 import Doc.DocInfo
 import Doc.DocStateData
-import Data.Maybe
+import Doc.Model
 import Salesforce.AuthorizationWorkflow
 import Salesforce.Conf
-import Control.Monad.Reader
-import Control.Applicative
 import User.CallbackScheme.Model
 import Util.SignatoryLinkUtils
-import Text.JSON
-import Doc.API.V1.DocumentToJSON
-import Amazon
-import Network.HTTP as HTTP
-import Text.JSON.Gen
+import Utils.IO
+import qualified Log
 
 execute :: (AmazonMonad m, MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, MonadReader c m, HasSalesforceConf c) => DocumentAPICallback -> m Bool
 execute DocumentAPICallback{..} = do
