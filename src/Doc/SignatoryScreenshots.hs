@@ -7,18 +7,19 @@ module Doc.SignatoryScreenshots
   , validReferenceName
   ) where
 
-import API.Monad (badInput)
 import Control.Applicative ((<$>))
-import qualified Control.Exception.Lifted as E
 import Control.Monad.Base (MonadBase)
 import Control.Monad.Trans (MonadIO, liftIO)
 import Control.Monad.Trans.Control (MonadBaseControl)
-import DB.SQL (SomeKontraException(..))
-import Doc.Screenshot
 import Text.JSON(Result(..), decode, JSValue(..), fromJSString)
 import Text.JSON.FromJSValue
-import Text.JSON.ToJSValue (ToJSValue(..))
 import Text.JSON.Gen (value, runJSONGen)
+import Text.JSON.ToJSValue (ToJSValue(..))
+import qualified Control.Exception.Lifted as E
+
+import API.Monad (badInput)
+import DB.SQL (SomeKontraException(..))
+import Doc.Screenshot
 
 data SignatoryScreenshots = SignatoryScreenshots
   { first         :: Maybe Screenshot
