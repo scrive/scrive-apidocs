@@ -13,17 +13,18 @@ module Attachment.Model
 where
 
 import Control.Monad.Catch
+import Control.Monad.State.Class
 import Data.ByteString (ByteString)
 import Data.Monoid.Space
-import DB
+
 import Attachment.AttachmentID
+import Crypto.RNG
+import DB
 import File.FileID
 import File.Model
-import User.UserID
 import MinutesTime
-import Crypto.RNG
+import User.UserID
 import Util.Actor
-import Control.Monad.State.Class
 
 data Attachment = Attachment
   { attachmentid      :: AttachmentID
