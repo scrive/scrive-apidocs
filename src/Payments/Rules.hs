@@ -10,13 +10,12 @@
 
 module Payments.Rules where
 
-import Payments.Model
+import Data.Maybe
 import Recurly
 
+import Payments.Model
 import Utils.Either
 import Utils.Read
-
-import Data.Maybe
 
 data RecurlyAction = RNoAction
                    | RUpdateNow
