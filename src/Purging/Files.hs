@@ -4,19 +4,19 @@ module Purging.Files
     , purgeSomeFiles
     ) where
 
+import Control.Concurrent
 import Control.Monad
 import Control.Monad.Catch
+import Control.Monad.IO.Class
 import Data.Int
+import Data.List (sort)
 import Data.Monoid.Space
 
+import Amazon
 import DB
 import File.FileID
-import Data.List (sort)
-import Amazon
-import Control.Monad.IO.Class
 import File.Model
 import qualified Log
-import Control.Concurrent
 
 data FindFilesForPurging = FindFilesForPurging Int
 instance MonadDB m => DBQuery m FindFilesForPurging [(FileID,Maybe String,Maybe String,Bool)] where
