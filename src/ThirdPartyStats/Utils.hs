@@ -1,12 +1,13 @@
 module ThirdPartyStats.Utils (
     extractUID, extractDocID, extractCompanyID
   ) where
-import User.UserID (UserID)
-import Doc.DocumentID (DocumentID)
-import Company.CompanyID (CompanyID)
-import ThirdPartyStats.Core
 import Data.List (partition)
 import Data.Maybe (isJust)
+
+import Company.CompanyID (CompanyID)
+import Doc.DocumentID (DocumentID)
+import ThirdPartyStats.Core
+import User.UserID (UserID)
 
 -- | Separate the user ID property from the rest, if present.
 --   More than one UID is not OK either.
