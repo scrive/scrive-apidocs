@@ -12,23 +12,22 @@ module Amazon (
   ) where
 
 import Control.Applicative
+import Control.Concurrent
 import Control.Monad.Base
 import Control.Monad.Catch
-import Control.Monad.Trans
-import Control.Monad.Trans.Control
-import Control.Concurrent
 import Control.Monad.Reader
+import Control.Monad.Trans.Control
 import Data.Maybe
 import Network.AWS.Authentication
 import System.FilePath ((</>))
-import qualified Network.AWS.AWSConnection as AWS
+import Text.JSON.Gen
 import qualified Crypto.Hash.SHA1 as SHA1
 import qualified Data.ByteString.Char8 as BSC
-import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.UTF8 as BS
 import qualified Network.AWS.Authentication as AWS
+import qualified Network.AWS.AWSConnection as AWS
 import qualified Network.HTTP as HTTP
-import Text.JSON.Gen
 
 import Amazon.Class
 import Crypto
