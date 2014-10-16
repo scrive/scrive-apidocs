@@ -6,14 +6,13 @@ module Doc.SignatoryFieldID (
 
 import Control.Applicative
 import Data.Binary
+import Data.Data
 import Data.Int
 import Database.PostgreSQL.PQTypes hiding (Binary, put)
 import Happstack.Server
 
 import DB.Derive
 import Utils.Read
-import Data.Typeable
-import Data.Data
 
 newtype SignatoryFieldID = SignatoryFieldID Int64
   deriving (Eq, Ord, PQFormat, Typeable, Data)
