@@ -12,64 +12,63 @@ module Doc.DocSeal
   , presealDocumentFile
   ) where
 
+import Control.Applicative
 import Control.Monad.Catch hiding (handle)
-import Control.Monad.Trans.Control
 import Control.Monad.Reader
+import Control.Monad.Trans.Control
+import Data.Char
 import Data.Function (on)
+import Data.List
 import Data.Maybe
 import Data.Monoid.Space
-import Data.List
 import Data.Time
-import Doc.DocStateData
-import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
-import Doc.Model
-import Doc.Rendering
-import Doc.SealStatus (SealStatus(..))
-import File.Storage
-import File.File
-import Doc.DocView
-import Doc.DocUtils
-import qualified HostClock.Model as HC
-import MailContext (MailContext(..), MailContextMonad, getMailContext)
-import MinutesTime
-import Utils.Directory
-import Utils.Read
-import Utils.IO
 import System.Directory
 import System.Exit
-import Kontra
+import System.FilePath (takeFileName, takeExtension, (</>))
+import System.IO hiding (stderr)
 import Text.HTML.TagSoup (Tag(..), parseTags)
-import Text.StringTemplates.Templates
 import Text.JSON.Gen
 import Text.JSON.Pretty (pp_value)
-import System.FilePath (takeFileName, takeExtension, (</>))
-import Templates
+import Text.StringTemplates.Templates
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
-import qualified Data.ByteString.Lazy as BSL (empty)
-import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.ByteString.Base64 as B64
-import qualified Doc.SealSpec as Seal
-import qualified Log
-import System.IO.Temp
-import System.IO hiding (stderr)
-import Util.HasSomeCompanyInfo
-import Util.HasSomeUserInfo
-import Util.SignatoryLinkUtils
-import File.Model
+import qualified Data.ByteString.Lazy as BSL (empty)
+import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
+import qualified Data.ByteString.UTF8 as BS hiding (length)
+import qualified Text.StringTemplates.Fields as F
+
+import Control.Logic
 import Crypto.RNG
 import DB
 import DB.TimeZoneName
-import Control.Applicative
+import Doc.DocStateData
+import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
+import Doc.DocUtils
+import Doc.DocView
+import Doc.Model
+import Doc.Rendering
+import Doc.SealStatus (SealStatus(..))
 import EvidenceLog.Model
 import EvidenceLog.View
+import File.File
+import File.Model
+import File.Storage
+import Kontra
+import MailContext (MailContext(..), MailContextMonad, getMailContext)
+import MinutesTime
+import Templates
 import Util.Actor
-import qualified Text.StringTemplates.Fields as F
-import Control.Logic
+import Util.HasSomeCompanyInfo
+import Util.HasSomeUserInfo
+import Util.SignatoryLinkUtils
+import Utils.Directory
+import Utils.IO
 import Utils.Prelude
+import Utils.Read
 import qualified Amazon as AWS
-import Data.Char
-
+import qualified Doc.SealSpec as Seal
+import qualified HostClock.Model as HC
+import qualified Log
 
 personFromSignatory :: (MonadDB m, MonadMask m, TemplatesMonad m)
                     => TimeZoneName -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> m Seal.Person
