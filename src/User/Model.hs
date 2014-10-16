@@ -42,24 +42,24 @@ module User.Model (
 import Control.Applicative
 import Control.Monad.Catch
 import Data.ByteString (ByteString)
+import Data.Char
 import Data.Int
+import Data.Maybe
 import Data.Monoid
 import Data.Monoid.Space
-import Data.Char
 import Happstack.Server (FromReqURI(..))
 import qualified Control.Exception.Lifted as E
 
+import BrandedDomain.BrandedDomainID
 import Company.Model
 import DB
+import Doc.DocStateData (DocumentStatus(..),FieldType(..))
 import MinutesTime
+import User.Email
 import User.Lang
 import User.Password
 import User.UserID
-import Data.Maybe
-import Doc.DocStateData (DocumentStatus(..),FieldType(..))
 import Utils.Read
-import User.Email
-import BrandedDomain.BrandedDomainID
 
 data InviteType = Viral | Admin
   deriving (Eq, Ord, Show)
