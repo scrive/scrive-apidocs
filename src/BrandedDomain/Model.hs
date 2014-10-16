@@ -7,14 +7,15 @@ module BrandedDomain.Model
     , NewBrandedDomain(..)
   ) where
 
-import BrandedDomain.BrandedDomainID
-import BrandedDomain.BrandedDomain
 import Control.Monad.Catch
-import DB
-import qualified Log
 import Data.Monoid
-import User.UserID
 import qualified Data.ByteString.Char8 as BS
+
+import BrandedDomain.BrandedDomain
+import BrandedDomain.BrandedDomainID
+import DB
+import User.UserID
+import qualified Log
 
 fetchBrandedDomain :: (BrandedDomainID, String, Maybe (Binary BS.ByteString), String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String) -> BrandedDomain
 fetchBrandedDomain (xid, url, logo, barscolour, barstextcolour, barssecondarycolour, backgroundcolour, backgroundcolorexternal, mailsbackgroundcolor, mailsbuttoncolor, mailstextcolor, mailsbordercolor, signviewprimarycolour, signviewprimarytextcolour, signviewsecondarycolour, signviewsecondarytextcolour, buttonclass, servicelinkcolour, externaltextcolour, headercolour, textcolour, pricecolour, smsoriginator, emailoriginator, contactemail, noreplyemail)
