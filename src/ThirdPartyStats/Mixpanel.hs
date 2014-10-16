@@ -3,10 +3,11 @@ module ThirdPartyStats.Mixpanel (
   MixpanelToken,
   processMixpanelEvent) where
 import Control.Monad.IO.Class
+import Mixpanel.Engage as Mixpanel (set)
+import Mixpanel.Event as Mixpanel
+
 import ThirdPartyStats.Core
 import ThirdPartyStats.Utils
-import Mixpanel.Event as Mixpanel
-import Mixpanel.Engage as Mixpanel (set)
 import User.Email
 
 -- | Token identifying us to Mixpanel.
