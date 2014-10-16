@@ -14,104 +14,101 @@ module Doc.API.V1.Calls (
   , apiCallV1ChangeAuthentication    -- Exported for tests
   ) where
 
-import AppView (respondWithPDF)
-import Control.Conditional (whenM, unlessM, ifM)
-import Control.Monad.Trans.Control (MonadBaseControl)
-import Data.Int
-import Data.Time
-import Happstack.StaticRouting
-import Text.JSON hiding (Ok)
-import qualified Text.JSON as J
-import qualified Text.JSON.Pretty as J (pp_value)
-import KontraMonad
-import Happstack.Server.Types
-import Routing
--- import API.APIVersion (APIVersion(..))
-import Doc.DocStateQuery
-import Doc.DocStateData
-import Doc.Model
-import Doc.SealStatus (SealStatus(..))
-import Doc.SignatoryLinkID
-import Doc.SignatoryFieldID
-import File.File
-import Doc.DocumentID
-import Doc.Tokens.Model
 import Control.Applicative
-import Control.Logic
-import Control.Monad.Trans
-import Happstack.Fields
-import Utils.String
-import Utils.Monad
-import System.Exit
-import Utils.Directory
-import Utils.IO
+import Control.Conditional (whenM, unlessM, ifM)
+import Control.Exception.Lifted
+import Control.Monad.Error
+import Control.Monad.Trans.Control (MonadBaseControl)
+import Data.Char
+import Data.Int
+import Data.List
 import Data.Maybe
-import Doc.SignatoryScreenshots(SignatoryScreenshots, emptySignatoryScreenshots, resolveReferenceScreenshotNames)
-import qualified ELegitimation.Control as BankID
+import Data.String.Utils (replace)
+import Data.String.Utils (splitWs)
+import Data.Time
+import Happstack.Server.RqData
+import Happstack.Server.Types
+import Happstack.StaticRouting
+import System.Exit
+import System.FilePath.Posix (takeBaseName)
+import Text.JSON hiding (Ok)
+import Text.JSON.FromJSValue
+import Text.JSON.Gen
+import Text.JSON.String (runGetJSON)
+import Text.StringTemplates.Templates
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
-import Util.Actor
-import Util.SignatoryLinkUtils
-import Util.HasSomeUserInfo
-import Happstack.Server.RqData
-import Doc.Rendering
+import qualified Data.ByteString.UTF8 as BS hiding (length)
+import qualified Data.Map as Map hiding (map)
+import qualified Data.Traversable as T
+import qualified Text.JSON as J
+import qualified Text.JSON.Pretty as J (pp_value)
+
+import API.APIVersion
+import API.Monad
+import AppView (respondWithPDF)
+import Attachment.Model
+import Company.CompanyUI
+import Company.Model
+import Control.Logic
 import DB
 import DB.TimeZoneName (mkTimeZoneName, defaultTimeZoneName)
-import MagicHash (MagicHash)
-import Kontra
-import Doc.DocUtils
-import User.Model
-import API.Monad
-import Control.Monad.Error
-import qualified Log
-import LiveDocx
-import Doc.DocInfo
-import Doc.DocumentMonad (DocumentMonad, withDocument, withDocumentID, withDocumentM, theDocument)
 import Doc.Action
-import Text.JSON.FromJSValue
-import OAuth.Model
-import InputValidation
+import Doc.Anchors
 import Doc.API.Callback.Model
-import qualified Data.ByteString.Base64 as B64
-import Text.JSON.Gen
-import MinutesTime
-import Text.StringTemplates.Templates
-import qualified Data.Map as Map hiding (map)
-
+import Doc.API.V1.DocumentFromJSON()
+import Doc.API.V1.DocumentToJSON
+import Doc.API.V1.DocumentUpdateUtils
+import Doc.AutomaticReminder.Model
+import Doc.Conditions
+import Doc.DocControl
+import Doc.DocInfo
+import Doc.DocMails
 import Doc.DocSeal as DocSeal
-import qualified Data.ByteString.UTF8 as BS hiding (length)
+import Doc.DocStateData
+import Doc.DocStateQuery
+import Doc.DocumentID
+import Doc.DocumentMonad (DocumentMonad, withDocument, withDocumentID, withDocumentM, theDocument)
+import Doc.DocUtils
+import Doc.Model
+import Doc.Rendering
+import Doc.SealStatus (SealStatus(..))
+import Doc.SignatoryFieldID
+import Doc.SignatoryLinkID
+import Doc.SignatoryScreenshots(SignatoryScreenshots, emptySignatoryScreenshots, resolveReferenceScreenshotNames)
+import Doc.SMSPin.Model
+import Doc.Tokens.Model
+import EvidenceLog.Control
+import File.File
 import File.Model
 import File.Storage
-import Data.String.Utils (replace)
-import EvidenceLog.Control
-import Control.Exception.Lifted
-import Doc.DocControl
-import Doc.Conditions
-import Company.Model
-import Company.CompanyUI
-import User.Utils
-import User.UserView
-import Data.List
-import Data.Char
-import Attachment.Model
-import Utils.Read
-import Doc.DocMails
-import Doc.AutomaticReminder.Model
-import Utils.Monoid
-import Doc.SMSPin.Model
-import Doc.Anchors
-import qualified Data.Traversable as T
-import API.APIVersion
-import Doc.API.V1.DocumentToJSON
-import Doc.API.V1.DocumentFromJSON()
-import Doc.API.V1.DocumentUpdateUtils
-import Util.MonadUtils
-import Util.CSVUtil
+import Happstack.Fields
+import InputValidation
+import Kontra
 import ListUtil
-import Text.JSON.String (runGetJSON)
-import Data.String.Utils (splitWs)
-import System.FilePath.Posix (takeBaseName)
+import LiveDocx
+import MagicHash (MagicHash)
+import MinutesTime
+import OAuth.Model
+import Routing
+import User.Model
+import User.UserView
+import User.Utils
+import Util.Actor
+import Util.CSVUtil
+import Util.HasSomeUserInfo
+import Util.MonadUtils
+import Util.SignatoryLinkUtils
+import Utils.Directory
+import Utils.IO
+import Utils.Monad
+import Utils.Monoid
+import Utils.Read
+import Utils.String
+import qualified ELegitimation.Control as BankID
+import qualified Log
 
 documentAPIV1 ::  Route (KontraPlus Response)
 documentAPIV1  = choice [
