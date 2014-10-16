@@ -10,30 +10,31 @@
 
 module InspectXMLInstances() where
 import Data.Int
-import Doc.DocStateData
-import Doc.SealStatus (SealStatus)
+import Data.List
+import Text.JSON
+import qualified Data.ByteString.UTF8 as BS
+import qualified Data.Set as S
+
+import API.APIVersion
+import BrandedDomain.BrandedDomainID
 import Company.Model
+import DB.TimeZoneName
+import Doc.DocStateData
+import Doc.DocumentID
+import Doc.SealStatus (SealStatus)
+import Doc.SignatoryLinkID
+import File.File
+import File.FileID
+import FlashMessage
+import InspectXML
+import IPAddress
+import KontraLink
 import MagicHash (MagicHash)
 import MinutesTime
-import Doc.SignatoryLinkID
-import Doc.DocumentID
-import InspectXML
-import User.Model
-import User.History.Model
-import KontraLink
-import FlashMessage
-import qualified Data.Set as S
-import qualified Data.ByteString.UTF8 as BS
-import File.FileID
-import IPAddress
-import Text.JSON
-import Utils.String
 import User.Email
-import File.File
-import Data.List
-import BrandedDomain.BrandedDomainID
-import DB.TimeZoneName
-import API.APIVersion
+import User.History.Model
+import User.Model
+import Utils.String
 
 instance (InspectXML a, Show a) => InspectXML [a] where
     inspectXML l = "<ul>" ++ (concatMap (\s -> "<li>" ++ (inspectXML s) ++ "</li>") l) ++ "</ul>"
