@@ -20,9 +20,10 @@ module User.CallbackScheme.Model (
   ) where
 
 import Control.Monad.Catch
+import Data.Data
+
 import DB
 import User.Model
-import Data.Data
 
 data UserCallbackScheme = ConstantUrlScheme String
                         | SalesforceScheme String
