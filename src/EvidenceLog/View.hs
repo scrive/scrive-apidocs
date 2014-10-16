@@ -13,38 +13,36 @@ module EvidenceLog.View (
   ) where
 
 
-import Data.Char (isSpace)
-import qualified Data.Set as Set
-import Doc.DocStateData
-import Doc.Model (GetDocumentsBySignatoryLinkIDs(..))
-import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
-import qualified Doc.Screenshot as Screenshot
-import Text.StringTemplates.Templates
-
 import Control.Applicative
 import Control.Monad.Catch
+import Data.Char (isSpace)
+import Data.Decimal (realFracToDecimal)
+import Data.Maybe
+import Data.String.Utils
+import Data.Word (Word8)
+import Text.JSON
+import Text.JSON.Gen as J
+import Text.StringTemplates.Templates
+import qualified Data.ByteString.Char8 as BS
+import qualified Data.Map as Map
+import qualified Data.Set as Set
+import qualified Text.StringTemplates.Fields as F
 
+import Control.Logic
+import DB
+import Doc.DocStateData
+import Doc.Model (GetDocumentsBySignatoryLinkIDs(..))
+import EvidenceLog.Model
 import MinutesTime
 import Templates (renderLocalTemplate)
-import Text.JSON
-
-import Text.JSON.Gen as J
-import qualified Text.StringTemplates.Fields as F
-import EvidenceLog.Model
-import Utils.Prelude
+import User.Model
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
+import Utils.Prelude
 import qualified Data.ByteString.RFC2397 as RFC2397
-import qualified Data.ByteString.Char8 as BS
-import Data.Decimal (realFracToDecimal)
-import qualified Data.Map as Map
-import Data.Maybe
-import Data.Word (Word8)
+import qualified Doc.Screenshot as Screenshot
+import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 import qualified HostClock.Model as HC
-import User.Model
-import DB
-import Control.Logic
-import Data.String.Utils
 
 -- | Evidence log for web page - short and simplified texts
 eventsJSListFromEvidenceLog ::  (MonadDB m, MonadThrow m, TemplatesMonad m) => Document -> [DocumentEvidenceEvent] -> m [JSValue]
