@@ -10,13 +10,13 @@ import Control.Monad.Catch
 import Control.Monad.State
 import Control.Monad.Trans.Control
 import Happstack.Server
+import Text.StringTemplates.Templates
 
 import Context
 import Crypto.RNG
 import DB
 import GuardTime (GuardTimeConfMonad)
 import MailContext (MailContextMonad)
-import Text.StringTemplates.Templates
 import qualified Amazon as AWS
 import qualified Log
 
