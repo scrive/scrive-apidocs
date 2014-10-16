@@ -14,13 +14,13 @@ import FlashMessage
 import MagicHash (MagicHash)
 import Mails.Model
 import MinutesTime
-import Utils.Default
 import TestingUtil
 import TestKontra as T
+import User.API
 import User.Model
 import User.UserControl
 import Util.HasSomeUserInfo
-import User.API
+import Utils.Default
 
 signupTests :: TestEnvSt -> Test
 signupTests env = testGroup "Signup" [
