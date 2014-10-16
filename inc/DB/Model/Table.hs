@@ -22,8 +22,8 @@ import Data.Monoid.Utils
 import Database.PostgreSQL.PQTypes
 
 import DB.Model.Check
-import DB.Model.Index
 import DB.Model.ForeignKey
+import DB.Model.Index
 import DB.Model.PrimaryKey
 
 data ColumnType
