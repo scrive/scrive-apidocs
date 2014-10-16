@@ -3,21 +3,22 @@
 module Doc.Conditions
 where
 
-import Doc.DocStateData
 import Control.Monad.State.Class
 import Data.Int
+import Data.List
 import Data.Monoid
 import Data.Monoid.Space
 import Data.Typeable
-import DB
-import Data.List
+import Text.JSON.Gen
+
 import Company.CompanyID
-import User.UserID
+import DB
+import Doc.DocStateData
 import Doc.DocumentID
 import Doc.SignatoryLinkID
-import Text.JSON.Gen
 import MagicHash
 import MinutesTime
+import User.UserID
 
 -- This is the part where we define all possible wrongs about a document.
 
