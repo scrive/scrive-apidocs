@@ -6,31 +6,23 @@ module Analytics.Include(
 
 where
 
-import Text.StringTemplates.Templates
-import qualified Text.StringTemplates.Fields as F
-
+import Control.Applicative
+import Control.Monad
 import Text.JSON
 import Text.JSON.Gen
+import Text.StringTemplates.Templates
 import qualified Text.JSON.Gen as J
-
-import Kontra
-
-import User.Model
+import qualified Text.StringTemplates.Fields as F
 
 import Company.Model
-
-import Control.Monad
-import Control.Applicative
-
-import Util.HasSomeUserInfo
-import Util.HasSomeCompanyInfo
-import Utils.String
-
-import MinutesTime
-
 import DB
-
+import Kontra
+import MinutesTime
 import Payments.Model
+import User.Model
+import Util.HasSomeCompanyInfo
+import Util.HasSomeUserInfo
+import Utils.String
 
 data AnalyticsData = AnalyticsData { aUser           :: Maybe User
                                    , aCompany        :: Maybe Company
