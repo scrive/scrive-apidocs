@@ -8,20 +8,21 @@ module ELegitimation.BankIDRequests (
         , CollectResponse(..)
         ) where
 
-import Data.Maybe
+import Control.Monad.Trans.Control
 import Data.Char
 import Data.List
-import Utils.Enum
-import SOAP.SOAP
+import Data.Maybe
 import Text.XML.HaXml.Posn (Posn)
-import Text.XML.HaXml.XmlContent.Parser
 import Text.XML.HaXml.Types (QName(N))
+import Text.XML.HaXml.XmlContent.Parser
+import qualified Data.ByteString.Base64 as Base64
+import qualified Data.ByteString.UTF8 as BS
+
 import ELegitimation.Config
 import ELegitimation.SignatureProvider
-import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString.Base64 as Base64
+import SOAP.SOAP
+import Utils.Enum
 import qualified Log
-import Control.Monad.Trans.Control
 
 data ImplStatus = ImplStatus { errorGroup            :: Int,
                                errorGroupDescription :: String,
