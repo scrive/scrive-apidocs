@@ -4,19 +4,20 @@ module AppConf (
       , unjsonAppConf
   ) where
 
-import Utils.Default
-import HostClock.System (defaultNtpServers)
-import User.Email
-import Mails.MailsConfig
+import Control.Applicative
 import Data.ByteString (ByteString)
+import Data.Unjson
 import Data.Word
-import LiveDocx (LiveDocxConf(..))
+
 import ELegitimation.Config (LogicaConfig(..))
 import GuardTime (GuardTimeConf(..))
+import HostClock.System (defaultNtpServers)
+import LiveDocx (LiveDocxConf(..))
+import Mails.MailsConfig
 import Payments.Config (RecurlyConfig(..))
 import Salesforce.Conf
-import Control.Applicative
-import Data.Unjson
+import User.Email
+import Utils.Default
 
 -- | Defines the application's configuration.  This includes amongst
 -- other things the http port number, amazon, trust weaver and email
