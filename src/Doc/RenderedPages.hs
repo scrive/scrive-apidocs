@@ -6,10 +6,11 @@ module Doc.RenderedPages
   , RenderingMode(..)
   ) where
 
-import qualified MemCache
-import qualified Data.ByteString as BS
-import File.FileID
 import Data.Typeable
+import qualified Data.ByteString as BS
+
+import File.FileID
+import qualified MemCache
 
 data RenderedPages
   = RenderedPages Bool  -- ^ Rendering is finished
