@@ -11,39 +11,37 @@ module Mails.SendMail
     , kontramaillocal
     ) where
 
+import Control.Applicative
 import Control.Monad.Catch
-import DB
+import Data.Char
+import Data.Maybe
+import Data.String.Utils
+import qualified Text.StringTemplates.Fields as F
+import qualified Text.StringTemplates.Templates as T
+
+import BrandedDomain.BrandedDomain
+import Control.Logic
 import Crypto.RNG
+import DB
+import Doc.DocumentID
+import Doc.Model
 import InputValidation
 import Mails.MailsConfig
 import Mails.MailsData
 import Mails.Model hiding (Mail)
-import qualified Log
-import qualified Mails.Model as M
-import qualified Text.StringTemplates.Templates as T
-import qualified Text.StringTemplates.Fields as F
-import Templates
-import Control.Logic
-import Data.Char
 import MessageData
 import MinutesTime
-import Data.String.Utils
-
--- Needed only for FROM address
+import Templates
 import User.Lang
-import Util.SignatoryLinkUtils
-import Doc.Model
-import Doc.DocumentID
-import Data.Maybe
-import BrandedDomain.BrandedDomain
-import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
+import Util.HasSomeUserInfo
+import Util.SignatoryLinkUtils
 import Utils.String
-import Control.Applicative
+import qualified Log
+import qualified Mails.Model as M
 
 scheduleEmailSendout :: (CryptoRNG m, MonadDB m, MonadThrow m, Log.MonadLog m) => MailsConfig -> Mail -> m ()
 scheduleEmailSendout c m =  scheduleEmailSendout' (originator m) c m
-
 
 -- Sending mail with from address like 'Mariusz throught Scrive'
 scheduleEmailSendoutWithAuthorSenderThroughService :: (CryptoRNG m, MonadDB m, Log.MonadLog m, T.TemplatesMonad m, MonadThrow m) => DocumentID  -> MailsConfig -> Mail -> m ()
