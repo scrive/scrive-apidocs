@@ -7,15 +7,15 @@ module Session.Cookies (
 import Control.Applicative
 import Control.Arrow
 import Control.Monad.IO.Class
+import Data.Char
+import Data.Maybe
 import Happstack.Server hiding (Session, addCookie)
 
 import Cookies
 import MagicHash
+import Session.Data
 import Utils.HTTP
 import Utils.Read
-import Session.Data
-import Data.Maybe
-import Data.Char
 
 -- | Info that we store in cookies.
 data SessionCookieInfo = SessionCookieInfo {
