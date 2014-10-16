@@ -12,6 +12,7 @@ import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
+
 import MailContext.Class
 
 newtype MailContextT m a = MailContextT { unMailContextT :: ReaderT MailContext m a }
