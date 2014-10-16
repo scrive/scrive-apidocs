@@ -19,30 +19,31 @@ import Data.List
 import Data.Maybe
 import Text.JSON (JSValue(..))
 import Text.JSON.Gen
-import Utils.Prelude
 
 import ActionQueue.UserAccountRequest
-import DB
-import Company.Model
 import Company.CompanyUI
-import CompanyAccounts.Model
+import Company.Model
 import CompanyAccounts.CompanyAccountsView
+import CompanyAccounts.Model
+import DB
+import Happstack.Fields
 import InputValidation
 import Kontra
 import KontraLink
 import ListUtil
 import Mails.SendMail
+import MinutesTime
+import Payments.Model
+import User.Action
 import User.Email
-import Happstack.Fields
+import User.History.Model
+import User.UserControl
+import User.Utils
 import Util.FlashUtil
 import Util.HasSomeUserInfo
 import Util.MonadUtils
-import User.Action
-import User.Utils
-import User.UserControl
-import User.History.Model
-import Payments.Model
-import MinutesTime
+import Utils.Prelude
+
 {- |
     Gets the ajax data for the company accounts list.
 -}
