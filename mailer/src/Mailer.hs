@@ -11,8 +11,8 @@ import Control.Monad.Trans.Control
 import Database.PostgreSQL.PQTypes.Class.Instances.Overlapping ()
 import Happstack.Server
 
-import Control.Monad.Trans.Instances ()
 import Control.Monad.Trans.Control.Util
+import Control.Monad.Trans.Instances ()
 import Crypto.RNG
 import DB
 import Happstack.Server.Instances ()
