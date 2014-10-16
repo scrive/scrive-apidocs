@@ -12,8 +12,8 @@ import Control.Arrow (first)
 import Control.Monad.Catch
 import Data.Functor
 
-import DB
 import Company.Model
+import DB
 import Kontra
 import KontraLink
 import User.Model
