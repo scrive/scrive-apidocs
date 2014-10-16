@@ -4,10 +4,10 @@ import Data.Time.Clock.POSIX
 import Test.Framework
 
 import DB
+import MagicHash
+import Mails.Model
 import TestingUtil
 import TestKontra
-import Mails.Model
-import MagicHash
 
 mailModelTests :: TestEnvSt -> Test
 mailModelTests env  = testGroup "Mail Model" [
