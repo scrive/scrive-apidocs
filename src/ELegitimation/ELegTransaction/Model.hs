@@ -8,17 +8,17 @@ import Control.Monad
 import Control.Monad.Catch
 import Control.Monad.State
 import Data.Data
+import Happstack.Server (ServerMonad)
 
 import Context
 import Crypto.RNG
 import DB
+import Doc.DocumentID
+import Doc.SignatoryLinkID
 import ELegitimation.BankIDRequests
 import KontraMonad
-import Doc.SignatoryLinkID
-import Doc.DocumentID
 import MagicHash
 import Session.Model
-import Happstack.Server (ServerMonad)
 
 -- | Wrapper for conversion between SQL and list of strings, as we don't want
 -- to add instance for jsonizing [(String, String)] that is used only for that
