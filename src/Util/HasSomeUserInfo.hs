@@ -22,13 +22,14 @@ module Util.HasSomeUserInfo (
 
 import Control.Applicative ((<$>))
 import Data.List (findIndex)
+import Data.String.Utils
+import Text.StringTemplates.Templates
+
 import Doc.DocStateData
 import Doc.DocumentMonad (DocumentMonad, theDocument)
-import Text.StringTemplates.Templates
-import User.Model
 import Mails.MailsData
-import Data.String.Utils
 import User.Email
+import User.Model
 import Utils.String
 
 -- | Anything that might have a first name and last name, or personalnumber
