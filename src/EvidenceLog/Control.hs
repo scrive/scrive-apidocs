@@ -4,19 +4,18 @@ module EvidenceLog.Control
        )
        where
 
-import Kontra
-import DB
-import Doc.DocStateData
-import Doc.DocumentID
-
 import Text.JSON
 import Text.JSON.Gen
-import Utils.Prelude
 
-import ListUtil
+import DB
+import Doc.DocStateData
 import Doc.DocStateQuery
-import EvidenceLog.View
+import Doc.DocumentID
 import EvidenceLog.Model
+import EvidenceLog.View
+import Kontra
+import ListUtil
+import Utils.Prelude
 
 jsonDocumentEvidenceLog ::  Kontrakcja m => DocumentID -> m JSValue
 jsonDocumentEvidenceLog did = do
