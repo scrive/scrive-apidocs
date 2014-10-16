@@ -3,6 +3,7 @@ module Amazon.Class where
 
 import Control.Monad.Trans
 import Data.ByteString (ByteString)
+
 import File.FileID
 import MemCache
 
