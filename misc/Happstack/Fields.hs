@@ -7,11 +7,11 @@ import Happstack.Server
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
+import qualified Text.JSON as J
 
+import Utils.Monoid
 import Utils.Read
 import Utils.String
-import Utils.Monoid
-import qualified Text.JSON as J
 
 -- | Since we sometimes want to get 'Maybe' and also we wont work with
 -- newer versions of happstack here is.  This should be droped when
