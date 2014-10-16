@@ -225,13 +225,10 @@ var InfoTextInputView = Backbone.View.extend({
                 // is visible
                 var self = this;
                 setTimeout(function() {
-                  try {
-                    self.input[0].setSelectionRange(model.value().length, model.value().length);
-                  } catch(err) {
-                    // probably because IE doesnt support setSelectionRange,
-                    // oh well, we tried...
+                  if (self.input.caret() !== self.input.val().length) {
+                    self.input.caret(self.input.val().length);
                   }
-                }, 10);
+                }, 0);
             }
             if(this.input.hasClass("grayed"))
                 this.input.removeClass("grayed");
