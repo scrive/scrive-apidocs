@@ -20,21 +20,21 @@ module Log
 
   ) where
 
+import Data.Char
+import Data.List
+import Data.Ratio
+import Data.Time
+import Numeric
 import Prelude hiding (error)
+import System.IO.Unsafe
+import Text.JSON
+import Text.JSON.Gen
 import qualified Control.Concurrent as C
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BSU
-import System.IO.Unsafe
-import Data.Char
-import Data.List
-import Numeric
-import Data.Time
-import Data.Ratio
 
 import Log.Class
-import Text.JSON.Gen
-import Text.JSON
 
 -- Here we use 'ByteString.putStrLn' because 'Prelude.putStrLn' prints
 -- character by character and in case there are many thread it will
