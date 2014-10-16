@@ -3,6 +3,7 @@ module Doc.Class where
 
 import Control.Monad.Trans
 import Control.Monad.Trans.Control
+
 import Control.Monad.Trans.Control.Util
 import DB
 import Doc.DocStateData
