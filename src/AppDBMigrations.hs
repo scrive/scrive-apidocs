@@ -170,6 +170,7 @@ kontraMigrations = [
   , addAPIVersionToDocument
   , addUniqueContraintsTypeOnFields
   , addAllowSaveSafetyCopyToCompanies
+  , addIdleDocTimeout
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

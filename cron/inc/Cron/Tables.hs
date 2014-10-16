@@ -72,6 +72,7 @@ tableCronTasks = tblTable {
     , ("document_api_callback_evaluation", iseconds 10)
     , ("document_automatic_reminders_evaluation", iminutes 1)
     , ("documents_purge", iminutes 10)
+    , ("documents_archive_idle", ihours 24)
     , ("email_change_requests_evaluation", ihours 1)
     , ("find_and_do_post_document_closed_actions", ihours 6)
     , ("find_and_do_post_document_closed_actions_new", iminutes 10)

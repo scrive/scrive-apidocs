@@ -214,3 +214,12 @@ addAllowSaveSafetyCopyToCompanies = Migration {
   , mgrDo = do
     runSQL_ "ALTER TABLE companies ADD COLUMN allow_save_safety_copy BOOL NOT NULL DEFAULT true"
 }
+
+addIdleDocTimeout :: MonadDB m => Migration m
+addIdleDocTimeout = Migration {
+    mgrTable = tableCompanies
+  , mgrFrom = 15
+  , mgrDo = do
+    runQuery_ $ sqlAlterTable (tblName tableCompanies) [ sqlAddColumn (tblColumn { colName = "idle_doc_timeout", colType = SmallIntT }) ]
+}
+

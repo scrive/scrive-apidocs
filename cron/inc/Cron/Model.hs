@@ -46,6 +46,7 @@ data TaskType
   | DocumentAPICallbackEvaluation
   | DocumentAutomaticRemindersEvaluation
   | DocumentsPurge
+  | DocumentsArchiveIdle
   | EmailChangeRequestsEvaluation
   | FindAndDoPostDocumentClosedActions
   | FindAndDoPostDocumentClosedActionsNew
@@ -69,6 +70,7 @@ taskTypeBSRelation = [
   , (DocumentAPICallbackEvaluation, "document_api_callback_evaluation")
   , (DocumentAutomaticRemindersEvaluation, "document_automatic_reminders_evaluation")
   , (DocumentsPurge, "documents_purge")
+  , (DocumentsArchiveIdle, "documents_archive_idle")
   , (EmailChangeRequestsEvaluation, "email_change_requests_evaluation")
   , (FindAndDoPostDocumentClosedActions, "find_and_do_post_document_closed_actions")
   , (FindAndDoPostDocumentClosedActionsNew, "find_and_do_post_document_closed_actions_new")

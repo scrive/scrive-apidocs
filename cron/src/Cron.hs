@@ -130,6 +130,10 @@ main = Log.withLogger $ do
         DocumentsPurge -> runScheduler $ do
           purgedCount <- dbUpdate $ PurgeDocuments 30 unsavedDocumentLingerDays
           Log.mixlog_ $ "DocumentsPurge: purged" <+> show purgedCount <+> "documents."
+        DocumentsArchiveIdle -> runScheduler $ do
+          now <- currentTime
+          archived <- dbUpdate $ ArchiveIdleDocuments now
+          Log.mixlog_ $ "DocumentsArchiveIdle: archived" <+> show archived <+> "documents."
         EmailChangeRequestsEvaluation -> runScheduler $
           actionQueue emailChangeRequest
         FindAndDoPostDocumentClosedActions -> runScheduler $

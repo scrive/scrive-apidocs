@@ -203,6 +203,8 @@ docStateTests env = testGroup "DocState" [
   testThat "PurgeDocuments does not purge documents for saved users" env testPurgeDocumentUserSaved,
   testThat "PurgeDocuments does not purge documents for links waiting to be signed" env testPurgeDocumentActiveSignLink,
 
+  testThat "ArchiveIdleDocuments archives idle documents" env testArchiveIdleDocument,
+
   testThat "GetDocumentsByAuthor doesn't return archived docs" env testGetDocumentsByAuthorNoArchivedDocs,
   testThat "When document is signed it's status class is signed" env testStatusClassSignedWhenAllSigned,
   testThat "When document is pending and some invitation is undelivered it's status is undelivered" env testStatusClassSignedWhenAllSigned,
@@ -728,6 +730,20 @@ testPurgeDocumentActiveSignLink = doTimes 10 $ do
     updateMTimeAndObjectVersion now
     archived <- dbUpdate $ PurgeDocuments 0 1
     assertEqual "Purged zero documents" 0 archived
+
+testArchiveIdleDocument :: TestEnv ()
+testArchiveIdleDocument = doTimes 10 $ do
+  company <- addNewCompany
+  _ <- dbUpdate $ SetCompanyInfo (companyid company) ((companyinfo company){ companyidledoctimeout = Just 1 })
+  author <- addNewRandomCompanyUser(companyid company) False
+  author2 <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (isClosed &&^ isSignable)
+  _ <- addRandomDocumentWithAuthorAndCondition author (isTemplate ||^ isPending)
+  _ <- addRandomDocumentWithAuthorAndCondition author2 (isClosed &&^ isSignable)
+  archived1 <- dbUpdate $ ArchiveIdleDocuments (documentmtime doc)
+  assertEqual "Archived zero idle documents (too early)" 0 archived1
+  archived2 <- dbUpdate $ ArchiveIdleDocuments (2 `daysAfter` documentmtime doc)
+  assertEqual "Archived one idle document" (length (documentsignatorylinks doc)) archived2
 
 -- for this stuff postgres implementation is stricter, with happstack it just left the doc unchanged
 testArchiveDocumentUnrelatedUserLeft :: TestEnv ()

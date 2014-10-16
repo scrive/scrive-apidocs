@@ -463,6 +463,7 @@ getCompanyInfoChange = do
   mcompanyipaddressmasklist <- getOptionalField asValidIPAddressWithMaskList "companyipaddressmasklist"
   mcompanysmsoriginator <- getField "companysmsoriginator"
   mcompanyallowsavesafetycopy <- getField "companyallowsavesafetycopy"
+  mcompanyidledoctimeout <- (>>= \s -> if null s then return Nothing else Just <$> maybeRead s) <$> getField "companyidledoctimeout"
   return $ \CompanyInfo{..} ->  CompanyInfo {
         companyname        = fromMaybe companyname mcompanyname
       , companynumber      = fromMaybe companynumber mcompanynumber
@@ -473,6 +474,7 @@ getCompanyInfoChange = do
       , companyipaddressmasklist = fromMaybe companyipaddressmasklist mcompanyipaddressmasklist
       , companysmsoriginator = fromMaybe companysmsoriginator mcompanysmsoriginator
       , companyallowsavesafetycopy = maybe companyallowsavesafetycopy (=="true") mcompanyallowsavesafetycopy
+      , companyidledoctimeout = fromMaybe companyidledoctimeout mcompanyidledoctimeout
     }
 
 {- | Reads params and returns function for conversion of user settings.  No param leaves fields unchanged -}

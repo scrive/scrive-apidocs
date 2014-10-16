@@ -66,6 +66,12 @@ var AdminCompanyDetailsModel = Backbone.Model.extend({
   setCompanysmsoriginator : function(v) {
      this.set({"companysmsoriginator" : v});
   },
+  companyidledoctimeout: function() {
+     return this.get("companyidledoctimeout");
+  },
+  setCompanyidledoctimeout : function(v) {
+     this.set({"companyidledoctimeout" : v});
+  },
   companyipaddressmasklist: function() {
      return this.get("companyipaddressmasklist");
   },
@@ -95,6 +101,7 @@ var AdminCompanyDetailsModel = Backbone.Model.extend({
       , companycountry :  this.company().country()
       , companyipaddressmasklist : this.company().ipaddressmasklist()
       , companysmsoriginator : this.company().smsoriginator()
+      , companyidledoctimeout : this.company().idledoctimeout()
       , companyallowsavesafetycopy : this.company().allowsavesafetycopy()
     }, {silent : true});
     this.trigger("reset");
@@ -111,6 +118,7 @@ var AdminCompanyDetailsModel = Backbone.Model.extend({
         companycountry : this.companycountry(),
         companyipaddressmasklist : this.companyipaddressmasklist(),
         companysmsoriginator : this.companysmsoriginator(),
+        companyidledoctimeout : this.companyidledoctimeout(),
         companyallowsavesafetycopy : this.companyallowsavesafetycopy()
     });
   },
@@ -185,13 +193,19 @@ var AdminCompanyDetailsView = Backbone.View.extend({
       companyipaddressmasklistinput.change(function() {
               model.setCompanyipaddressmasklist(companyipaddressmasklistinput.val());
       });
-      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("IP adress mask"))).append($("<td/>").append(companyipaddressmasklistinput)));
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("IP address mask"))).append($("<td/>").append(companyipaddressmasklistinput)));
 
       var companysmsoriginatorinput = $("<input type='text' maxlength=11/>").val(model.companysmsoriginator());
       companysmsoriginatorinput.change(function() {
               model.setCompanysmsoriginator(companysmsoriginatorinput.val());
       });
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text("SMS originator"))).append($("<td/>").append(companysmsoriginatorinput)));
+
+      var companyidledoctimeoutinput = $("<input type='number' min='1' max='365'/>").val(model.companyidledoctimeout());
+      companyidledoctimeoutinput.change(function() {
+              model.setCompanyidledoctimeout(companyidledoctimeoutinput.val());
+      });
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Move idle documents to trash after days"))).append($("<td/>").append(companyidledoctimeoutinput)).append($("<td/>").text("Applies to all documents except pending documents and templates. If empty, documents will not be moved. Available values: 1 to 365.")));
 
       var companyallowsavesafetycopyinput = $("<input type='checkbox'/>").attr("checked",model.companyallowsavesafetycopy());
       companyallowsavesafetycopyinput.change(function() {

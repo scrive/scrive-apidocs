@@ -175,6 +175,7 @@ window.Company = Backbone.Model.extend({
       city      : "",
       country    : "",
       smsoriginator : "",
+      idledoctimeout : null,
       ipaddressmasklist : "",
       allowsavesafetycopy : false,
       companyui : undefined,
@@ -213,6 +214,9 @@ window.Company = Backbone.Model.extend({
   smsoriginator : function() {
      return this.get("smsoriginator");
   },
+  idledoctimeout : function() {
+     return this.get("idledoctimeout");
+  },
   allowsavesafetycopy: function() {
      return this.get("allowsavesafetycopy");
   },
@@ -234,6 +238,7 @@ window.Company = Backbone.Model.extend({
       country    : args.country,
       ipaddressmasklist : args.ipaddressmasklist,
       smsoriginator : args.smsoriginator,
+      idledoctimeout : args.idledoctimeout,
       allowsavesafetycopy : args.allowsavesafetycopy,
       companyui   : args.companyui != undefined ? new CompanyUI(args.companyui) : undefined,
       ready : true
