@@ -15,38 +15,38 @@ module Mails.Events (
   , mailUndeliveredInvitation
   ) where
 
-import Data.Maybe
 import Control.Monad.Catch
 import Control.Monad.Reader
+import Data.Functor
+import Data.Maybe
+import Text.StringTemplates.Templates hiding (runTemplatesT)
+import qualified Text.StringTemplates.Fields as F
 
-import AppConf
 import ActionQueue.Scheduler
+import AppConf
+import BrandedDomain.BrandedDomain
+import BrandedDomain.Model
 import Control.Monad.Trans.Instances ()
 import Crypto.RNG
 import DB
-import Doc.Model
 import Doc.DocStateData
 import Doc.DocumentMonad (DocumentMonad, theDocument, withDocumentID)
+import Doc.DocViewMail
+import Doc.Model
+import Doc.SignatoryLinkID
 import KontraLink
 import Mails.MailsConfig
 import Mails.MailsData
 import Mails.Model hiding (Mail)
 import Mails.SendMail
 import MinutesTime
-import Utils.Read
-import Text.StringTemplates.Templates hiding (runTemplatesT)
 import Templates
 import User.Model
+import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
-import Doc.SignatoryLinkID
+import Utils.Read
 import qualified Log
-import Util.Actor
-import qualified Text.StringTemplates.Fields as F
-import BrandedDomain.BrandedDomain
-import BrandedDomain.Model
-import Data.Functor
-import Doc.DocViewMail
 
 processEvents :: Scheduler ()
 processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ processEvent -- We limit processing to 50 events not to have issues with large number of documents locked.
