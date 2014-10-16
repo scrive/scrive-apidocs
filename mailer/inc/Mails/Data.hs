@@ -16,13 +16,13 @@ import Control.Applicative
 import Data.Data
 import Data.Int
 import Data.Monoid
+import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import qualified Data.ByteString.Char8 as BS
 
 import DB.Derive
-import MagicHash (MagicHash)
 import File.FileID
-import Data.Unjson
+import MagicHash (MagicHash)
 
 newtype MailID = MailID Int64
   deriving (Eq, Ord, PQFormat)
