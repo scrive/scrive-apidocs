@@ -10,34 +10,24 @@ import System.Directory (createDirectoryIfMissing)
 import System.Environment.UTF8
 import System.IO
 import Test.Framework
-import qualified Log
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
 
-import AppDBTables
-import AppDBMigrations
-import Crypto.RNG
-import DB
-import DB.Checks
-import DB.SQLFunction
-import Templates (readGlobalTemplates)
-import TestKontra
-
--- Note: if you add new testsuites here, please add them in a similar
--- manner to existing ones, i.e. wrap them around ifdefs and add appropriate
--- flags to kontrakcja.cabal to allow possibility of disabling tests selectively
--- if e.g. for some reason they stop compiling. Also, please keep them in
--- alphabetic order.
-
 import AccountInfoTest
+import AppDBMigrations
+import AppDBTables
+import ArchiveTest
 import BrandedDomainTest
-import CSVUtilTest
 import CompanyAccountsTest
 import CompanyControlTest
 import CompanyStateTest
 import ConfigTests
+import Crypto.RNG
+import CSVUtilTest
+import DB
+import DB.Checks
+import DB.SQLFunction
 import DocAPITest
-import ArchiveTest
 import DocControlTest
 import DocStateTest
 import DumpEvidenceTexts
@@ -57,47 +47,47 @@ import OAuth
 import PaymentsTest
 import SessionsTest
 import SignupTest
+import Templates (readGlobalTemplates)
+import TestKontra
 import ThirdPartyStats
 import UserHistoryTest
 import UserStateTest
+import qualified Log
 
 allTests :: [TestEnvSt -> Test]
-allTests = tail tests
-  where
-    tests = [
-        undefined
-      , accountInfoTests
-      , brandedDomainTests
-      , companyAccountsTests
-      , companyControlTests
-      , companyStateTests
-      , configTests
-      , csvUtilTests
-      , docAPITests
-      , archiveTests
-      , docControlTests
-      , docStateTests
-      , evidenceAttachmentsTest
-      , evidenceLogTests
-      , dumpAllEvidenceTexts
-      , fileTests
-      , flashMessagesTests
-      , htmlTests
-      , inputValidationTests
-      , jsonUtilTests
-      , langTests
-      , localizationTest
-      , loginTests
-      , mailModelTests
-      , mailsTests
-      , oauthTest
-      , paymentsTests
-      , sessionsTests
-      , signupTests
-      , thirdPartyStatsTests
-      , userHistoryTests
-      , userStateTests
-      ]
+allTests = [
+    accountInfoTests
+  , brandedDomainTests
+  , companyAccountsTests
+  , companyControlTests
+  , companyStateTests
+  , configTests
+  , csvUtilTests
+  , docAPITests
+  , archiveTests
+  , docControlTests
+  , docStateTests
+  , evidenceAttachmentsTest
+  , evidenceLogTests
+  , dumpAllEvidenceTexts
+  , fileTests
+  , flashMessagesTests
+  , htmlTests
+  , inputValidationTests
+  , jsonUtilTests
+  , langTests
+  , localizationTest
+  , loginTests
+  , mailModelTests
+  , mailsTests
+  , oauthTest
+  , paymentsTests
+  , sessionsTests
+  , signupTests
+  , thirdPartyStatsTests
+  , userHistoryTests
+  , userStateTests
+  ]
 
 modifyTestEnv :: [String] -> ([String], TestEnvSt -> TestEnvSt)
 modifyTestEnv [] = ([], id)
