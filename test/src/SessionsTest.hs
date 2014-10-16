@@ -7,23 +7,23 @@ import Happstack.Server
 import Test.Framework
 import Test.QuickCheck
 
+import Company.Model
 import Context
 import Control.Logic
 import DB hiding (query, update)
-import Utils.Default
+import Doc.DocInfo
+import Doc.DocStateData
+import Doc.DocUtils
+import Doc.Tokens.Model
+import ELegitimation.ELegTransaction.Model
+import KontraMonad
+import Session.Data
+import Session.Model
 import TestingUtil
 import TestKontra as T
 import User.Model
-import KontraMonad
-import Doc.DocUtils
-import Doc.DocStateData
-import ELegitimation.ELegTransaction.Model
 import Util.SignatoryLinkUtils
-import Doc.DocInfo
-import Doc.Tokens.Model
-import Session.Data
-import Session.Model
-import Company.Model
+import Utils.Default
 import Utils.HTTP
 
 sessionsTests :: TestEnvSt -> Test
