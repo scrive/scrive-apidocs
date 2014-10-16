@@ -13,74 +13,73 @@ module Administration.AdministrationControl(
           , daveRoutes
           ) where
 
-import AppView (respondWithPDF)
 import Control.Monad.State
-import Data.Functor
-import Happstack.Server hiding (simpleHTTP,dir,path,https)
-import Happstack.Fields
-import Utils.Monoid
-import Utils.Prelude
-import IPAddress ()
-import Kontra
-import Administration.AdministrationView
-import Administration.AddPaymentPlan
-import Doc.Action (postDocumentClosedActions)
-import Doc.Model
-import Doc.DocStateData
-import Doc.SignatoryLinkID
-import Doc.DocumentID
-import Doc.DocumentMonad (withDocumentID)
-import Company.Model
-import KontraLink
-import MinutesTime
-import DB
-import User.UserControl
-import User.UserView
-import User.Model
-import User.Email
-import Data.Maybe
 import Data.Char
-import Text.StringTemplates.Templates
-import Util.FlashUtil
+import Data.Functor
 import Data.List
-import Util.MonadUtils
-import qualified Log
-import Util.HasSomeUserInfo
-import InputValidation
-import User.Utils
-import Util.Actor
-import BrandedDomain.BrandedDomainID
-import BrandedDomain.BrandedDomain
-import BrandedDomain.Model
-import Payments.Action
-import Payments.Model
-import Payments.Config
-import qualified Payments.Stats
-
-import InspectXMLInstances ()
-import InspectXML
-import ListUtil
-import Text.JSON
-import Mails.Model
-import Util.HasSomeCompanyInfo
-import CompanyAccounts.Model
-import Util.SignatoryLinkUtils
-import User.History.Model
-import qualified Text.StringTemplates.Fields as F
-import Control.Logic
-import Doc.DocInfo
-import EvidenceLog.Model
-import Routing
-import Company.CompanyUI
-import qualified Company.CompanyControl as Company
-import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
+import Data.Maybe
+import Happstack.Server hiding (simpleHTTP,dir,path,https)
 import Happstack.StaticRouting(Route, choice, dir)
+import Text.JSON
 import Text.JSON.Gen
+import Text.StringTemplates.Templates
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.UTF8 as BS
+import qualified Text.StringTemplates.Fields as F
+
+import Administration.AddPaymentPlan
+import Administration.AdministrationView
+import AppView (respondWithPDF)
+import BrandedDomain.BrandedDomain
+import BrandedDomain.BrandedDomainID
+import BrandedDomain.Model
+import Company.CompanyUI
+import Company.Model
+import CompanyAccounts.Model
+import Control.Logic
+import DB
+import Doc.Action (postDocumentClosedActions)
+import Doc.DocInfo
+import Doc.DocStateData
+import Doc.DocumentID
+import Doc.DocumentMonad (withDocumentID)
+import Doc.Model
+import Doc.SignatoryLinkID
+import EvidenceLog.Model
 import File.Model
 import File.Storage
+import Happstack.Fields
+import InputValidation
+import InspectXML
+import InspectXMLInstances ()
+import IPAddress ()
+import Kontra
+import KontraLink
+import ListUtil
+import Mails.Model
+import MinutesTime
+import Payments.Action
+import Payments.Config
+import Payments.Model
+import Routing
+import User.Email
+import User.History.Model
+import User.UserControl
+import User.UserView
+import User.Utils
+import Util.Actor
+import Util.FlashUtil
+import Util.HasSomeCompanyInfo
+import Util.HasSomeUserInfo
+import Util.MonadUtils
+import Util.SignatoryLinkUtils
+import Utils.Monoid
+import Utils.Prelude
+import qualified Company.CompanyControl as Company
+import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
+import qualified Log
+import qualified Payments.Stats
 
 adminonlyRoutes :: Route (KontraPlus Response)
 adminonlyRoutes =
