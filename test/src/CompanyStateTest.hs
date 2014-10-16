@@ -3,8 +3,8 @@ module CompanyStateTest (companyStateTests) where
 import Control.Monad
 import Test.Framework
 
-import Company.Model
 import Company.CompanyUI
+import Company.Model
 import DB
 import TestingUtil
 import TestKontra
