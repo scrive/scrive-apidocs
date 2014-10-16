@@ -208,17 +208,17 @@ module DB.SQL
   )
   where
 
+import Control.Exception.Lifted as E
 import Control.Monad.Catch
 import Control.Monad.State
 import Control.Monad.Trans.Control
 import Data.List (transpose, findIndex, inits)
+import Data.Maybe
 import Data.Monoid
 import Data.Monoid.Space
 import Data.Monoid.Utils
-import Data.Maybe
 import Data.Typeable
 import Database.PostgreSQL.PQTypes hiding (Single)
-import Control.Exception.Lifted as E
 import qualified Database.PostgreSQL.PQTypes as PQ
 import qualified Text.JSON.Gen as JSON
 
