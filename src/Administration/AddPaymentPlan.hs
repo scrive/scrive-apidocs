@@ -2,14 +2,13 @@ module Administration.AddPaymentPlan(
             addCompanyPlanManual
 ) where
 import Data.Functor
-import IPAddress ()
-import Kontra
+
 import Company.Model
 import DB
+import IPAddress ()
+import Kontra
 import Payments.Model
 import qualified Payments.Stats
-
-
 
 addCompanyPlanManual :: Kontrakcja m => CompanyID -> PricePlan -> PaymentPlanStatus -> m ()
 addCompanyPlanManual companyid pp status = do
