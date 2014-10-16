@@ -5,8 +5,8 @@ module DB.Checks (
   ) where
 
 import Control.Applicative
-import Control.Monad.Reader
 import Control.Monad.Catch
+import Control.Monad.Reader
 import Data.Int
 import Data.Maybe
 import Data.Monoid
