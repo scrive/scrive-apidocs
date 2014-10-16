@@ -12,19 +12,19 @@ module CompanyAccounts.CompanyAccountsView (
     ) where
 
 import Control.Applicative ((<$>))
+import Text.StringTemplates.Templates
+import qualified Text.StringTemplates.Fields as F
 
+import Company.CompanyUI
+import Company.Model
+import Context
+import Doc.DocViewMail
 import FlashMessage
 import KontraLink
 import Mails.SendMail(Mail, kontramail, kontramaillocal)
-import Text.StringTemplates.Templates
 import User.Model
-import Company.Model
-import Company.CompanyUI
-import Doc.DocViewMail
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
-import qualified Text.StringTemplates.Fields as F
-import Context
 
 ----------------------------------------------------------------------------
 
