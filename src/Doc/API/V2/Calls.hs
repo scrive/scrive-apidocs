@@ -3,8 +3,9 @@ module Doc.API.V2.Calls (
   ) where
 
 
-import Happstack.StaticRouting
 import Happstack.Server.Types
+import Happstack.StaticRouting
+
 import Kontra
 
 documentAPIV2 ::  Route (KontraPlus Response)
