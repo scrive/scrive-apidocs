@@ -5,31 +5,33 @@ module RoutingTable (
     staticRoutes
   ) where
 
+import Happstack.Server hiding (simpleHTTP, host, https, dir, path)
+import Happstack.StaticRouting(Route, choice, dir, remainingPath)
+
+import AppView
+import Doc.API
+import Happstack.MonadPlus (runMPlusT)
 import Kontra
 import KontraLink
+import LangRouting
 import Login
+import OAuth.Control
+import PadApplication.API
 import Redirect
 import Routing
-import Happstack.MonadPlus (runMPlusT)
-import Happstack.StaticRouting(Route, choice, dir, remainingPath)
+import Salesforce.Control as Salesforce
+import User.API
 import qualified Administration.AdministrationControl as Administration
+import qualified Archive.Control as ArchiveControl
+import qualified Attachment.Control as AttachmentControl
 import qualified Company.CompanyControl as Company
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
 import qualified Doc.DocControl as DocControl
-import qualified Archive.Control as ArchiveControl
 import qualified ELegitimation.Control as BankID
-import qualified User.UserControl as UserControl
 import qualified Payments.Control as Payments
-import qualified Attachment.Control as AttachmentControl
-import Doc.API
-import User.API
-import OAuth.Control
-import LangRouting
-import Happstack.Server hiding (simpleHTTP, host, https, dir, path)
-import AppView
-import PadApplication.API
-import Salesforce.Control as Salesforce
 import qualified ServerUtils.ServerUtils as ServerUtils
+import qualified User.UserControl as UserControl
+
 {- |
    The routing table for the app.
    Routes in this table should be of the form
