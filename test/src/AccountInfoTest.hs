@@ -12,16 +12,16 @@ import FlashMessage
 import MagicHash (unsafeMagicHash)
 import Mails.Model
 import MinutesTime
-import Utils.Default
 import Redirect
 import TestingUtil
 import TestKontra as T
+import User.API
+import User.Email
 import User.Lang()
 import User.Model
-import User.Email
 import User.UserControl
 import Util.HasSomeUserInfo
-import User.API
+import Utils.Default
 
 accountInfoTests :: TestEnvSt -> Test
 accountInfoTests env = testGroup "AccountInfo" [
