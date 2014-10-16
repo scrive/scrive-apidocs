@@ -34,15 +34,16 @@ module Doc.DocStateQuery
     ) where
 
 import Control.Monad
+import Data.List
+
 import DB
-import Doc.Model
 import Doc.DocStateData
-import Doc.SignatoryLinkID
 import Doc.DocumentID
+import Doc.Model
+import Doc.SignatoryLinkID
 import Kontra
 import MagicHash
 import User.Model
-import Data.List
 import Util.SignatoryLinkUtils
 
 getDocByDocID :: Kontrakcja m => DocumentID -> m Document
