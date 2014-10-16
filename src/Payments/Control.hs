@@ -11,51 +11,50 @@ module Payments.Control (
                         ,handleSyncNewSubscriptionWithRecurlyOutside)
        where
 
+import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.State
 import Data.Functor
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
-import Control.Monad.Base
-import qualified Data.ByteString.Lazy.UTF8 as BSL
-import Mails.MailsConfig
-
-import Company.Model
-import DB hiding (update, query)
-import Kontra
-import Crypto.RNG
 import Recurly
 import Recurly.JS
 import Recurly.Push
-import Templates
-import User.Lang
 import Text.JSON
 import Text.JSON.Gen hiding (value)
-import User.Model
-import User.Email
-import Util.HasSomeCompanyInfo
-import Util.HasSomeUserInfo
-import Happstack.Fields
-import Utils.Read
-import Utils.Either
-import Utils.IO
-import qualified Log
+import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Text.JSON.Gen as J
-import MinutesTime
-import Mails.SendMail
-import Utils.Monad
 
-import Payments.JSON ()
-import Payments.Model
-import Payments.Rules
-import Payments.View
-import Payments.Config (RecurlyConfig(..))
-import Payments.Stats
-import qualified Payments.Stats as Stats
-import Util.MonadUtils
 import AppConf
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
+import Company.Model
+import Crypto.RNG
+import DB hiding (update, query)
+import Happstack.Fields
+import Kontra
+import Mails.MailsConfig
+import Mails.SendMail
+import MinutesTime
+import Payments.Config (RecurlyConfig(..))
+import Payments.JSON ()
+import Payments.Model
+import Payments.Rules
+import Payments.Stats
+import Payments.View
+import Templates
+import User.Email
+import User.Lang
+import User.Model
+import Util.HasSomeCompanyInfo
+import Util.HasSomeUserInfo
+import Util.MonadUtils
+import Utils.Either
+import Utils.IO
+import Utils.Monad
+import Utils.Read
+import qualified Log
+import qualified Payments.Stats as Stats
 
 -- to call this, user must not have an account code yet (no payment plan in table)
 handleSyncNewSubscriptionWithRecurly :: Kontrakcja m => m ()
