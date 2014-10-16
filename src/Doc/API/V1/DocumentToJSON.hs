@@ -8,38 +8,38 @@ module Doc.API.V1.DocumentToJSON (
     , docForListCSVHeaderV1
   ) where
 
-import Control.Monad.Catch
-import Doc.DocStateData
-import Doc.DocUtils
-import qualified Doc.EvidenceAttachments as EvidenceAttachments
-import KontraLink
-import MinutesTime
-import Utils.Prelude
-import Util.SignatoryLinkUtils
-import User.Model
-import Doc.DocInfo
 import Control.Applicative ((<$>))
+import Control.Monad.Catch
 import Control.Monad.Reader
-import qualified Data.ByteString.Char8 as BSC
-import Data.Maybe
-import Text.JSON
+import Data.List (intercalate)
 import Data.List (sortBy, nub)
-import File.Model
-import File.File
+import Data.Maybe
+import Data.String.Utils (strip)
+import Text.JSON
+import Text.JSON.Gen hiding (value)
+import Text.StringTemplates.Templates
+import qualified Data.ByteString.Char8 as BSC
+import qualified Data.Set as Set
+import qualified Text.JSON.Gen as J
+
+import Control.Logic
 import DB
 import DB.TimeZoneName
-import Text.JSON.Gen hiding (value)
-import qualified Text.JSON.Gen as J
-import qualified Data.Set as Set
-import qualified Amazon as AWS
-import qualified Log
-
-import Text.StringTemplates.Templates
-import Control.Logic
+import Doc.DocInfo
+import Doc.DocStateData
+import Doc.DocUtils
+import File.File
+import File.Model
+import KontraLink
+import MinutesTime
+import User.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
-import Data.List (intercalate)
-import Data.String.Utils (strip)
+import Util.SignatoryLinkUtils
+import Utils.Prelude
+import qualified Amazon as AWS
+import qualified Doc.EvidenceAttachments as EvidenceAttachments
+import qualified Log
 
 documentJSONV1 :: (MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m) => (Maybe User) -> Bool -> Bool -> Bool ->  Maybe SignatoryLink -> Document -> m JSValue
 documentJSONV1 muser includeEvidenceAttachments forapi forauthor msl doc = do
