@@ -10,10 +10,10 @@ import Control.Monad.IO.Class
 import Crypto.RNG
 import DB
 import DB.PostgreSQL
-import Sender
-import SMS.Model
-import SMS.Data
 import MinutesTime
+import Sender
+import SMS.Data
+import SMS.Model
 import qualified Log
 
 dispatcher :: CryptoRNGState -> Sender -> MVar Sender -> ConnectionSource -> IO ()
