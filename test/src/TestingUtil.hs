@@ -2,59 +2,57 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module TestingUtil where
 
-import Test.Framework
-import Test.Framework.Providers.HUnit (testCase)
-
 import Control.Applicative
 import Control.Arrow
-import Control.Monad.Catch
 import Control.Concurrent.STM
-import Data.Char
-import Data.Time.Clock.POSIX
-import Data.Word
-import Test.QuickCheck
-import Happstack.Server
-import Doc.DocUtils
-import Doc.SignatoryFieldID
-import Doc.DocumentMonad (withDocumentID)
-import Doc.SealStatus (SealStatus(..))
-import Test.QuickCheck.Gen
 import Control.Monad (unless)
-import Control.Monad.Trans
-import Data.Maybe
-import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString as BS
-import qualified Test.HUnit as T
+import Control.Monad.Catch
 import Control.Monad.Reader.Class
+import Control.Monad.Trans
+import Data.Char
+import Data.Maybe
+import Data.Time.Clock.POSIX
+import Data.Typeable
+import Data.Word
+import Happstack.Server
+import Test.Framework
+import Test.Framework.Providers.HUnit (testCase)
+import Test.QuickCheck
+import Test.QuickCheck.Gen
+import Text.JSON
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.UTF8 as BS
+import qualified Test.HUnit as T
 
-import File.FileID
+import Company.Model
 import Crypto.RNG
 import DB
-import MagicHash (MagicHash, unsafeMagicHash)
-import Company.Model
-import FlashMessage
-import qualified Log
-import Doc.Model
 import Doc.DocStateData
+import Doc.DocumentID
+import Doc.DocumentMonad (withDocumentID)
+import Doc.DocUtils
+import Doc.Model
+import Doc.SealStatus (SealStatus(..))
+import Doc.SignatoryFieldID
+import Doc.SignatoryLinkID
+import Doc.TestInvariants
 import ELegitimation.BankIDRequests
 import ELegitimation.ELegTransaction.Model
+import File.FileID
+import File.Model
+import FlashMessage
+import IPAddress
 import KontraError (internalError)
 import KontraMonad
+import MagicHash (MagicHash, unsafeMagicHash)
 import MinutesTime
-import User.Model
-import User.Email
-import Doc.SignatoryLinkID
-import Doc.DocumentID
-import Utils.Default
-import IPAddress
-import File.Model
-import Data.Typeable
-import Doc.TestInvariants
 import System.Random.CryptoRNG ()
-import Text.JSON
 import TestKontra
-
+import User.Email
+import User.Model
 import Util.Actor
+import Utils.Default
+import qualified Log
 
 newtype NotNullWord8 = NotNullWord8 { fromNNW8 :: Word8 }
   deriving (Enum, Eq, Integral, Num, Ord, Real)
