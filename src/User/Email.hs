@@ -3,10 +3,11 @@ module User.Email (
   ) where
 
 import Control.Applicative
-import DB
 import Data.Aeson
 import Data.Typeable
 import Data.Unjson
+
+import DB
 
 -- newtypes
 newtype Email = Email { unEmail :: String }
