@@ -45,47 +45,46 @@ module Cron where
 import Control.Concurrent
 import Control.Monad
 import Control.Monad.Trans
-import qualified CronEnv
 import Data.Maybe
 import Data.Monoid ((<>))
 import Data.Monoid.Space
 import Data.Time
 import qualified Control.Concurrent.Thread.Group as TG
 import qualified Control.Exception as E
+import qualified Data.ByteString as BS
 
 import ActionQueue.EmailChangeRequest
 import ActionQueue.Monad
 import ActionQueue.PasswordReminder
 import ActionQueue.UserAccountRequest
 import AppConf
+import AppDBTables
 import Configuration
 import Cron.Model
 import Crypto.RNG
-import qualified Data.ByteString as BS
 import DB
 import DB.Checks
 import DB.PostgreSQL
+import Doc.Action
 import Doc.API.Callback.Model
 import Doc.AutomaticReminder.Model
-import Doc.Action
-import AppDBTables
-import qualified MemCache
-import Utils.IO
+import Doc.Model
+import HostClock.Collector (collectClockError)
 import Mails.Events
-import SMS.Events
 import MinutesTime
 import Payments.Config
 import Payments.Control
-import HostClock.Collector (collectClockError)
-import Session.Data
 import Purging.Files
+import Session.Data
+import SMS.Events
 import Templates
-import Doc.Model
-import qualified Amazon as AWS
-import qualified Log
-
 import ThirdPartyStats.Core
 import ThirdPartyStats.Mixpanel
+import Utils.IO
+import qualified Amazon as AWS
+import qualified CronEnv
+import qualified Log
+import qualified MemCache
 
 main :: IO ()
 main = Log.withLogger $ do
