@@ -3,28 +3,29 @@ module AppDBMigrations (
   ) where
 
 import Control.Monad.Catch
-import DB
+
 import ActionQueue.Migrations
+import Attachment.Migrations
+import BrandedDomain.Migrations
 import Company.Migrations
 import CompanyAccounts.Migrations
 import Cron.Migrations
-import Doc.Migrations
-import Doc.AutomaticReminder.Tables
+import DB
 import Doc.API.Callback.Migrations
-import User.Migrations
+import Doc.AutomaticReminder.Tables
+import Doc.Migrations
+import Doc.SMSPin.Tables
+import EvidenceLog.Migrations
 import File.Migrations
 import Mails.Migrations
 import OAuth.Migrations
-import SMS.Migrations
-import EvidenceLog.Migrations
 import Payments.Migrations
-import Attachment.Migrations
+import Session.Migrations
+import SMS.Migrations
 import ThirdPartyStats.Migrations
 import User.CallbackScheme.Migrations
-import Session.Migrations
-import BrandedDomain.Migrations
+import User.Migrations
 import qualified Log
-import Doc.SMSPin.Tables
 
 -- Note: ALWAYS append new migrations TO THE END of this list.
 -- (mailerMigrations always stay at the end though. They are
