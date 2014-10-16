@@ -10,17 +10,17 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
+import Text.JSON.Gen
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
 
-import Amazon
 import ActionQueue.Core
+import Amazon
 import Control.Monad.Trans.Control.Util
 import Crypto.RNG
 import DB
 import MinutesTime
 import qualified Log
-import Text.JSON.Gen
 
 type ActionQueue = ActionQueueT (AmazonMonadT (CryptoRNGT (DBT IO)))
 
