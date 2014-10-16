@@ -10,16 +10,16 @@ import Data.Maybe
 import Happstack.Server hiding (finishWith)
 import qualified Codec.Binary.Url as URL
 import qualified Codec.Binary.UTF8.String as UTF
-import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
+import qualified Data.ByteString.UTF8 as BS
 
+import Happstack.Fields
 import Kontra
 import KontraLink
-import Happstack.Fields
-import Util.FlashUtil
-import Utils.HTTP
 import User.UserView
 import Util.FinishWith
+import Util.FlashUtil
+import Utils.HTTP
 
 seeOtherXML :: String -> Response
 seeOtherXML url = toResponseBS (BS.fromString "text/html;charset=utf-8") $ BSL.fromString $ "<a href='"++url++"' alt='303 see other'>"++ url ++ "</a>"
