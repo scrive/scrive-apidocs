@@ -3,19 +3,20 @@ module Doc.Model.Filter
   , documentFilterToSQL
   ) where
 
+import Control.Monad
 import Data.Monoid
 import Data.Monoid.Space
-import DB
-import Doc.Model.Expressions
 import qualified Control.Monad.State.Lazy as State
-import Doc.SealStatus (SealStatus(..))
-import User.UserID
-import MinutesTime
-import Doc.DocumentID
-import Control.Logic
-import Doc.DocStateData
-import Control.Monad
+
 import Company.Model
+import Control.Logic
+import DB
+import Doc.DocStateData
+import Doc.DocumentID
+import Doc.Model.Expressions
+import Doc.SealStatus (SealStatus(..))
+import MinutesTime
+import User.UserID
 
 -- | Document filtering options
 --
