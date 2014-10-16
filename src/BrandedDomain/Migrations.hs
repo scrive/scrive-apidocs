@@ -1,8 +1,8 @@
 module BrandedDomain.Migrations where
 
+import BrandedDomain.Tables
 import DB
 import DB.Checks
-import BrandedDomain.Tables
 
 createBrandedDomainsTable :: MonadDB m => Migration m
 createBrandedDomainsTable =
