@@ -10,9 +10,10 @@ module HostClock.Model
 import Control.Monad (when)
 import Control.Monad.Catch
 import Data.Int
-import DB
 import Data.Maybe (isJust)
 import Data.Time
+
+import DB
 
 data InsertClockOffsetFrequency = InsertClockOffsetFrequency (Maybe Double) Double
 instance MonadDB m => DBUpdate m InsertClockOffsetFrequency Int where
