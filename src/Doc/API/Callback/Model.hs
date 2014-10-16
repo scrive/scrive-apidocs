@@ -5,21 +5,22 @@ module Doc.API.Callback.Model (
   ) where
 
 import Control.Applicative
-import ActionQueue.Core
-import ActionQueue.Scheduler
-import Data.Int
-import DB
-import Doc.API.Callback.Tables
-import Doc.DocumentID
-import Doc.DocStateData
-import MinutesTime
-import qualified Log
-import Doc.API.Callback.DocumentAPICallback
-import Doc.API.Callback.Execute
-import User.CallbackScheme.Model
-import Util.SignatoryLinkUtils
 import Control.Monad
 import Control.Monad.Catch
+import Data.Int
+
+import ActionQueue.Core
+import ActionQueue.Scheduler
+import DB
+import Doc.API.Callback.DocumentAPICallback
+import Doc.API.Callback.Execute
+import Doc.API.Callback.Tables
+import Doc.DocStateData
+import Doc.DocumentID
+import MinutesTime
+import User.CallbackScheme.Model
+import Util.SignatoryLinkUtils
+import qualified Log
 
 documentAPICallback :: Action DocumentID DocumentAPICallback (DocumentID, String) Scheduler
 documentAPICallback = Action {
