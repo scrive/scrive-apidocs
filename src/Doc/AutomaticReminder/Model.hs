@@ -5,27 +5,28 @@ module Doc.AutomaticReminder.Model (
   ) where
 
 import Control.Monad
+import Control.Monad.Base
 import Control.Monad.Catch
-import ActionQueue.Core
-import ActionQueue.Scheduler
+import Control.Monad.Reader
 import Data.Int
 import Data.Monoid.Space
+import Data.Typeable
+
+import ActionQueue.Core
+import ActionQueue.Scheduler
+import Crypto.RNG
 import DB
+import DB.TimeZoneName (TimeZoneName, defaultTimeZoneName, withTimeZone)
+import Doc.AutomaticReminder.Tables
+import Doc.DocMails
+import Doc.DocStateData
 import Doc.DocumentID
 import Doc.DocumentMonad (withDocument)
-import MinutesTime
 import Doc.Model
-import Doc.AutomaticReminder.Tables
-import Doc.DocStateData
-import Control.Monad.Reader
-import Doc.DocMails
+import MinutesTime
 import Util.Actor
-import qualified Log
-import Crypto.RNG
-import Data.Typeable
-import DB.TimeZoneName (TimeZoneName, defaultTimeZoneName, withTimeZone)
 import qualified DB.TimeZoneName as TimeZoneName
-import Control.Monad.Base
+import qualified Log
 
 data DocumentAutomaticReminder = DocumentAutomaticReminder {
     reminderDocumentID :: DocumentID
