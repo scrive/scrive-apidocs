@@ -1,23 +1,23 @@
 module DocAPITest (docAPITests) where
 
+import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
-import Control.Applicative
 import Happstack.Server
 import Test.Framework
-import qualified Data.ByteString.Lazy.UTF8 as BS
-import Doc.DocStateData
 import Text.JSON
 import Text.JSON.FromJSValue
 import Text.JSON.Gen
+import qualified Data.ByteString.Lazy.UTF8 as BS
 
 import Context
+import Doc.API.V1.Calls
+import Doc.DocStateData
 import Doc.Model
-import Utils.Default
-import User.Model
 import TestingUtil
 import TestKontra as T
-import Doc.API.V1.Calls
+import User.Model
+import Utils.Default
 
 docAPITests :: TestEnvSt -> Test
 docAPITests env = testGroup "DocAPI" $
