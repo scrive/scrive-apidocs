@@ -5,20 +5,20 @@ import Happstack.Server
 import Test.Framework
 
 import AppControl
-import DB
-import Doc.Model
-import Doc.DocStateData
+import Company.Model
 import Context
+import DB
+import Doc.DocStateData
+import Doc.Model
 import Kontra (Kontra(..))
 import Login
 import MinutesTime
 import TestingUtil
 import TestKontra as T
+import User.API
 import User.Lang
 import User.Model
 import Utils.Default
-import User.API
-import Company.Model
 
 langTests :: TestEnvSt -> Test
 langTests env = testGroup "Lang" [
