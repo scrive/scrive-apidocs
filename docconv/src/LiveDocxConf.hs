@@ -2,9 +2,10 @@ module LiveDocxConf (
     LiveDocxConf(..)
   ) where
 
-import Utils.Default
-import Data.Unjson
 import Control.Applicative
+import Data.Unjson
+
+import Utils.Default
 
 data LiveDocxConf = LiveDocxConf {
     url :: String
