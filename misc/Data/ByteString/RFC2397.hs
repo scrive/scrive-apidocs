@@ -1,9 +1,9 @@
 module Data.ByteString.RFC2397 (decode, encode) where
 
-import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.Base64 as Base64
 import Data.Monoid ((<>))
 import Prelude hiding (break)
+import qualified Data.ByteString.Base64 as Base64
+import qualified Data.ByteString.Char8 as BS
 
 break :: Char -> BS.ByteString -> Maybe (BS.ByteString, BS.ByteString)
 break c i = case BS.break (==c) i of
