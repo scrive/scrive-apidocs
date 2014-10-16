@@ -9,9 +9,9 @@ import Happstack.Server hiding (dir, path)
 import Happstack.StaticRouting
 import System.Directory
 
+import Crypto.RNG
 import DB
 import DB.PostgreSQL
-import Crypto.RNG
 import GlobalMouth
 import Messenger
 
