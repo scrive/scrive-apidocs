@@ -6,13 +6,14 @@ module MailingServerConf (
   , unjsonMailingServerConf
   ) where
 
-import Data.Word
-import Utils.Default
-import Mails.Data
-import qualified Data.ByteString as BS
-import Data.Unjson
 import Control.Applicative
 import Data.Data
+import Data.Unjson
+import Data.Word
+import qualified Data.ByteString as BS
+
+import Mails.Data
+import Utils.Default
 
 data MailingServerConf = MailingServerConf {
     mscHttpBindAddress :: (Word32, Word16)
