@@ -4,9 +4,8 @@
 
 module MessageData (MessageData(..)) where
 
-import Doc.SignatoryLinkID
 import Doc.DocumentID
-
+import Doc.SignatoryLinkID
 
 data MessageData =
     Invitation DocumentID SignatoryLinkID
