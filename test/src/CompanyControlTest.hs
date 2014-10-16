@@ -4,21 +4,21 @@ import Control.Applicative
 import Control.Monad.Trans (liftIO)
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
-import Text.JSON.FromJSValue
 import Test.Framework
+import Text.JSON.FromJSValue
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
 
 import Company.CompanyControl
-import Company.Model
 import Company.CompanyUI
+import Company.Model
 import CompanyAccounts.Model
 import Context
 import DB
-import Utils.Default
 import Redirect
 import TestingUtil
 import TestKontra as T
+import Utils.Default
 
 companyControlTests :: TestEnvSt -> Test
 companyControlTests env = testGroup "CompanyControl" [
