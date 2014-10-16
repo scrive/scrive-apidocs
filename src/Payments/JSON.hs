@@ -3,7 +3,6 @@
 module Payments.JSON where
 
 import Recurly
-
 import Text.JSON.Gen hiding (value)
 import qualified Text.JSON.Gen as J
 
