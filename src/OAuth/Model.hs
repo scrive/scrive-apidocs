@@ -3,18 +3,18 @@ module OAuth.Model where
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Catch
-import MinutesTime
-import DB
-import User.Model
-import MagicHash
-import qualified Control.Exception.Lifted as E
-
-import Crypto.RNG
 import Data.Int
+import Data.Maybe
 import Data.Monoid
 import Data.Monoid.Space
 import Network.URI
-import Data.Maybe
+import qualified Control.Exception.Lifted as E
+
+import Crypto.RNG
+import DB
+import MagicHash
+import MinutesTime
+import User.Model
 
 data APIToken = APIToken { atID    :: Int64     -- autoincrement for uniqueness
                          , atToken :: MagicHash -- random part for security
