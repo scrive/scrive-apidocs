@@ -1,32 +1,32 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.Migrations where
 
+import Control.Applicative
 import Control.Monad
 import Control.Monad.Catch
 import Data.Int
+import Data.Maybe
 import Data.Monoid
 import Data.Monoid.Space
-import Data.Maybe
 import Text.JSON
 import Text.JSON.FromJSValue
-
-import DB
-import DB.Checks
-import Doc.Tables
-import qualified Log
-import Doc.DocumentID
-import Doc.SealStatus (SealStatus(..))
-import Utils.Default
-import Doc.DocStateData
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
-import EvidenceLog.Model
-import Version
+
+import DB
+import DB.Checks
+import Doc.DocStateData
+import Doc.DocumentID
+import Doc.SealStatus (SealStatus(..))
 import Doc.SignatoryLinkID
+import Doc.Tables
+import EvidenceLog.Model
 import MinutesTime
-import Control.Applicative
+import Utils.Default
 import Utils.Prelude
+import Version
+import qualified Log
 
 instance PQFormat [SignatoryField] where
   pqFormat _ = pqFormat (undefined::String)
