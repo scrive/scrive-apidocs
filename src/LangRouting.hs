@@ -3,8 +3,9 @@ module LangRouting
   ) where
 
 import Happstack.StaticRouting (Route, choice, dir)
-import User.Model
+
 import Kontra
+import User.Model
 
 allLangDirs :: Route (KontraPlus a) -> Route (KontraPlus a)
 allLangDirs r = choice $ r : (map (langDir r) allLangs)
