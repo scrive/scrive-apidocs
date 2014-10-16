@@ -15,35 +15,36 @@ module ELegitimation.Control
     )
     where
 
-import DB
-import qualified Log
 import Control.Conditional (unlessM)
-import Control.Logic
 import Control.Monad.State
-import Data.Time.Clock.POSIX
-import Doc.DocStateData
-import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
-import Doc.Tokens.Model
-import ELegitimation.ELegTransaction.Model
-import Happstack.Server
-import Doc.SignatoryLinkID
-import Doc.Model
-import Kontra
-import Doc.DocumentID
-import MagicHash (MagicHash)
-import Happstack.Fields
-import Text.XML.HaXml.XmlContent.Parser hiding (Document)
-import Util.HasSomeUserInfo
-import Util.SignatoryLinkUtils
-import Util.MonadUtils
-import Doc.DocStateQuery
-import Text.JSON
-import ELegitimation.BankIDUtils
-import ELegitimation.BankIDRequests
-import Text.JSON.Gen as J
-import Text.StringTemplates.Templates
 import Data.List
 import Data.Maybe
+import Data.Time.Clock.POSIX
+import Happstack.Server
+import Text.JSON
+import Text.JSON.Gen as J
+import Text.StringTemplates.Templates
+import Text.XML.HaXml.XmlContent.Parser hiding (Document)
+
+import Control.Logic
+import DB
+import Doc.DocStateData
+import Doc.DocStateQuery
+import Doc.DocumentID
+import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
+import Doc.Model
+import Doc.SignatoryLinkID
+import Doc.Tokens.Model
+import ELegitimation.BankIDRequests
+import ELegitimation.BankIDUtils
+import ELegitimation.ELegTransaction.Model
+import Happstack.Fields
+import Kontra
+import MagicHash (MagicHash)
+import Util.HasSomeUserInfo
+import Util.MonadUtils
+import Util.SignatoryLinkUtils
+import qualified Log
 
 {-
   There are two versions of almost everything for historical reasons.
