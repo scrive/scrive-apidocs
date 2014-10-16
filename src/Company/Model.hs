@@ -15,15 +15,16 @@ module Company.Model (
   ) where
 
 import Control.Monad.Catch
+import Control.Monad.State
 import Data.Monoid
 import Data.Monoid.Space
 import Data.Typeable
-import DB
+
 import Company.CompanyID
-import Control.Monad.State
-import User.UserID
+import DB
 import IPAddress
 import OurPrelude
+import User.UserID
 
 data Company = Company {
     companyid         :: CompanyID
