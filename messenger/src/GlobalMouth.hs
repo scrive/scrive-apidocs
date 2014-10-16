@@ -3,14 +3,15 @@ module GlobalMouth (
     handleGlobalMouthEvents
   ) where
 
+import Control.Exception.Lifted as E
 import Happstack.Server
+
+import DB
 import Happstack.Fields
 import Messenger
-import qualified Log
 import SMS.Data
 import SMS.Model
-import DB
-import Control.Exception.Lifted as E
+import qualified Log
 
 handleGlobalMouthEvents :: Messenger Response
 handleGlobalMouthEvents = flip E.catch (\(e :: SomeException) -> Log.mixlog_ (show e) >> throwIO e) $ do
