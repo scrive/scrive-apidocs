@@ -1,25 +1,24 @@
 module LocalizationTest (localizationTest) where
 
+import Control.Applicative
+import Control.Monad
 import Data.List
+import Data.Map ((!))
+import Data.Maybe
+import Data.String.Utils
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assertFailure, assertBool, Assertion)
-import Control.Monad
-
 import Text.JSON
-import User.Lang
-import Utils.Enum
-import TestKontra
 import Text.StringTemplate
 import Text.StringTemplates.TextTemplates
-import Data.Map ((!))
-import Data.String.Utils
-import Data.Maybe
---import qualified Log as Log
-import Control.Applicative
 import Text.XML.HaXml.Parse (xmlParse')
 import Text.XML.HaXml.Posn
 import Text.XML.HaXml.Types
+
+import TestKontra
+import User.Lang
+import Utils.Enum
 
 localizationTest :: TestEnvSt -> Test
 localizationTest _ = testGroup "Localization Test"
