@@ -6,29 +6,27 @@ module LiveDocx (
   , convertToPDF
 ) where
 
-import qualified Control.Exception.Lifted as E (catch)
-
 import Control.Monad()
+import Control.Monad.Base
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
-import Control.Monad.Base
 import Data.Char
-import Text.XML.HaXml.XmlContent.Parser
-import Text.XML.HaXml.Types (QName(N))
 import System.CPUTime
 import System.FilePath
-import System.IO.Temp
 import System.IO
+import System.IO.Temp
+import Text.XML.HaXml.Types (QName(N))
+import Text.XML.HaXml.XmlContent.Parser
+import qualified Control.Exception.Lifted as E (catch)
 import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
 
-import Utils.Read
-import SOAP.SOAP
-import qualified Log
-
 import LiveDocxConf
 import LiveDocxTypes
+import SOAP.SOAP
+import Utils.Read
+import qualified Log
 
 data LiveDocxContext = LiveDocxContext {
     ctxurl :: String
