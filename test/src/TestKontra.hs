@@ -33,34 +33,34 @@ import Database.PostgreSQL.PQTypes.Internal.State
 import Happstack.Server hiding (mkHeaders, dir, getHeader, method, path)
 import Happstack.Server.Internal.Monads
 import System.FilePath
+import Text.StringTemplates.Templates
+import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
+import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.Map as M
+import qualified Text.StringTemplates.TemplatesLoader as TL
 
-import qualified Amazon as AWS
 import Control.Monad.Trans.Control.Util
 import Crypto.RNG
 import DB
+import ELegitimation.Config (LogicaConfig(..))
 import GuardTime (GuardTimeConf(..))
-import Kontra
-import MinutesTime
-import Mails.MailsConfig
-import Utils.Default
-import Payments.Config (RecurlyConfig(..))
 import IPAddress
+import Kontra
+import Mails.MailsConfig
+import MinutesTime
+import Payments.Config (RecurlyConfig(..))
+import Salesforce.Conf
 import Session.SessionID
-import qualified Text.StringTemplates.TemplatesLoader as TL
-import Text.StringTemplates.Templates
 import Templates
-import qualified MemCache
 import User.Lang
 import Util.FinishWith
-import ELegitimation.Config (LogicaConfig(..))
-import qualified Control.Exception.Lifted as E
+import Utils.Default
+import qualified Amazon as AWS
 import qualified Doc.RenderedPages as RenderedPages
 import qualified Log
-import Salesforce.Conf
+import qualified MemCache
 
 data TestEnvSt = TestEnvSt {
     teConnSource        :: ConnectionSource
