@@ -15,8 +15,8 @@ module Mails.MailsConfig
     , defaultMailsConfig
     ) where
 
-import Data.Unjson
 import Control.Applicative
+import Data.Unjson
 
 -- | Configuration of mails
 data MailsConfig = MailsConfig {
