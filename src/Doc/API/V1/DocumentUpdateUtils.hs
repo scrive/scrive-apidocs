@@ -5,27 +5,28 @@ module Doc.API.V1.DocumentUpdateUtils (
     draftIsChangingDocument
   ) where
 
-import API.Monad (serverError,badInput)
-import Control.Exception.Lifted (throwIO)
-import Doc.DocInfo (isPreparation)
-import Doc.DocStateData
-import Utils.Monad
-import Kontra
-import Util.SignatoryLinkUtils
-import Util.HasSomeUserInfo
-import Data.List
-import Doc.Model
-import DB
-import DB.TimeZoneName
-import Util.Actor
-import qualified Log
 import Control.Conditional (whenM, unlessM)
+import Control.Exception.Lifted (throwIO)
 import Control.Monad
 import Data.Functor
+import Data.List
+import qualified Control.Exception.Lifted as E
+
+import API.Monad (serverError,badInput)
+import DB
+import DB.TimeZoneName
+import Doc.DocInfo (isPreparation)
+import Doc.DocStateData
 import Doc.DocumentMonad (DocumentMonad, theDocument)
 import Doc.DocUtils
+import Doc.Model
 import Doc.SignatoryLinkID
-import qualified Control.Exception.Lifted as E
+import Kontra
+import Util.Actor
+import Util.HasSomeUserInfo
+import Util.SignatoryLinkUtils
+import Utils.Monad
+import qualified Log
 
 checkDraftTimeZoneName ::  (Kontrakcja m) =>  Document -> m ()
 checkDraftTimeZoneName draft = do
