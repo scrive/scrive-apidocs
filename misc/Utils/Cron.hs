@@ -8,13 +8,14 @@ module Utils.Cron (
 
 import Control.Applicative
 import Control.Arrow hiding (loop)
-import Control.Monad
 import Control.Concurrent.Lifted
 import Control.Concurrent.STM
-import qualified Control.Concurrent.Thread.Group as TG
-import qualified Control.Exception.Lifted as E
+import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Trans.Control
+import qualified Control.Concurrent.Thread.Group as TG
+import qualified Control.Exception.Lifted as E
+
 import qualified Log
 
 newtype CronInfo = CronInfo (TVar (WorkerState, Command))
