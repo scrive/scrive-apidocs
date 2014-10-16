@@ -5,23 +5,22 @@ module SendGrid (
 
 import Control.Applicative
 import Control.Arrow
+import Control.Concurrent.MVar
 import Control.Monad
 import Control.Monad.Trans
-import Control.Concurrent.MVar
-
+import Control.Monad.Trans.Reader
 import Data.Maybe
 import Happstack.Server
-import qualified Data.ByteString.Lazy.UTF8 as BS
 import Text.JSON
+import Text.JSON.FromJSValue
+import qualified Data.ByteString.Lazy.UTF8 as BS
 
 import DB
 import Happstack.Fields
-import Mails.Model
 import Mailer
-import qualified Log
-import Text.JSON.FromJSValue
+import Mails.Model
 import Utils.Read
-import Control.Monad.Trans.Reader
+import qualified Log
 
 handleSendGridEventsV3 :: Mailer Response
 handleSendGridEventsV3= do
