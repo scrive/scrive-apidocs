@@ -1,38 +1,38 @@
 module MailsTest (mailsTests) where
 
 import Control.Applicative
+import Control.Monad
+import Control.Monad.Trans
+import Data.Char
+import Data.Maybe
 import Happstack.Server
 import Test.Framework
+import Test.QuickCheck
+import Text.XML.HaXml.Parse (xmlParse')
 
 import ActionQueue.UserAccountRequest
-import DB
+import Company.CompanyUI
+import Company.Model
 import Context
+import DB
+import DB.TimeZoneName (defaultTimeZoneName, mkTimeZoneName)
+import Doc.DocStateData
+import Doc.DocumentMonad (withDocumentM, theDocument)
+import Doc.DocViewMail
+import Doc.Model
+import Mails.Events
+import Mails.SendMail
+import MinutesTime
 import TestingUtil
 import TestKontra as T
 import User.Model
-import Utils.Default
-import Doc.Model
-import Doc.DocViewMail
-import Doc.DocStateData
-import Doc.DocumentMonad (withDocumentM, theDocument)
-import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
-import Mails.SendMail
-import Company.Model
-import Company.CompanyUI
-import Test.QuickCheck
-import Control.Monad
-import MinutesTime
-import Util.SignatoryLinkUtils
 import User.UserView
-import Util.HasSomeUserInfo
-import Mails.Events
-import Data.Char
-import Text.XML.HaXml.Parse (xmlParse')
-import Control.Monad.Trans
 import Util.Actor
+import Util.HasSomeUserInfo
+import Util.SignatoryLinkUtils
+import Utils.Default
+import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 import qualified Log
-import Data.Maybe
-import DB.TimeZoneName (defaultTimeZoneName, mkTimeZoneName)
 
 mailsTests :: TestEnvSt -> Test
 mailsTests env  = testGroup "Mails" [
