@@ -35,78 +35,78 @@ module Doc.DocControl(
     , handleSignviewCSSWithoutDocumentAndWithoutUser
 ) where
 
-import AppView
-import Attachment.AttachmentID (AttachmentID)
-import DB
-import DB.TimeZoneName
-import Doc.DocMails
-import Doc.Model
-import Doc.DocStateData
-import Doc.DocStateQuery
-import Doc.DocumentMonad (DocumentMonad, withDocumentM, withDocument, theDocument)
-import Doc.Rendering
-import Doc.DocUtils (documentsealedfileM)
-import Doc.DocView
-import Doc.DocViewMail
-import Doc.SignatoryLinkID
-import Doc.DocumentID
-import Doc.RenderedPages
-import qualified Doc.EvidenceAttachments as EvidenceAttachments
-import Doc.Tokens.Model
-import EvidenceLog.Model (InsertEvidenceEventWithAffectedSignatoryAndMsg(..), CurrentEvidenceEventType(..))
-import Attachment.Model
-import InputValidation
-import File.File (fileid)
-import File.Model
-import File.Storage (getFileIDContents)
-import Kontra
-import KontraLink
-import MagicHash
-import Happstack.Fields
-import Redirect
-import User.Model
-import User.Email
-import Util.HasSomeUserInfo
-import qualified Log
-import Text.StringTemplates.Templates
-import Util.FlashUtil
-import Util.SignatoryLinkUtils
-import Doc.DocInfo
-import Util.MonadUtils
-import User.Utils
 import Control.Applicative
 import Control.Concurrent
 import Control.Conditional (unlessM, whenM)
-import qualified Control.Exception.Lifted as E
-import Control.Logic ((||^))
 import Control.Monad
 import Control.Monad.Reader
 import Data.List
 import Data.Maybe
-import Happstack.Server.Types
+import Data.String.Utils (replace)
 import Happstack.Server hiding (simpleHTTP)
+import System.Directory
+import System.IO.Temp
+import Text.JSON hiding (Result)
+import Text.JSON.Gen hiding (value)
+import Text.StringTemplates.Templates
+import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length, take)
 import qualified Data.Map as Map
-import Text.JSON hiding (Result)
-import Text.JSON.Gen hiding (value)
-import qualified Text.JSON.Gen as J
-import qualified User.Action
-import Util.Actor
-import qualified GuardTime as GuardTime
-import System.IO.Temp
-import System.Directory
-import MinutesTime
-import Analytics.Include
-import Data.String.Utils (replace)
-import Util.Zlib (decompressIfPossible)
-import Doc.API.Callback.Model
-import Happstack.MonadPlus (runMPlusT)
 import qualified Data.Traversable as T
-import Utils.Default
+import qualified Text.JSON.Gen as J
+
+import Analytics.Include
+import AppView
+import Attachment.AttachmentID (AttachmentID)
+import Attachment.Model
 import Company.CompanyUI
 import Company.Model
+import Control.Logic ((||^))
+import DB
+import DB.TimeZoneName
+import Doc.API.Callback.Model
+import Doc.DocInfo
+import Doc.DocMails
+import Doc.DocStateData
+import Doc.DocStateQuery
+import Doc.DocumentID
+import Doc.DocumentMonad (DocumentMonad, withDocumentM, withDocument, theDocument)
+import Doc.DocUtils (documentsealedfileM)
+import Doc.DocView
+import Doc.DocViewMail
+import Doc.Model
+import Doc.RenderedPages
+import Doc.Rendering
+import Doc.SignatoryLinkID
+import Doc.Tokens.Model
+import EvidenceLog.Model (InsertEvidenceEventWithAffectedSignatoryAndMsg(..), CurrentEvidenceEventType(..))
+import File.File (fileid)
+import File.Model
+import File.Storage (getFileIDContents)
+import Happstack.Fields
+import Happstack.MonadPlus (runMPlusT)
+import InputValidation
+import Kontra
+import KontraLink
+import MagicHash
+import MinutesTime
+import Redirect
+import User.Email
+import User.Model
+import User.Utils
+import Util.Actor
+import Util.FlashUtil
+import Util.HasSomeUserInfo
+import Util.MonadUtils
+import Util.SignatoryLinkUtils
+import Util.Zlib (decompressIfPossible)
+import Utils.Default
+import qualified Doc.EvidenceAttachments as EvidenceAttachments
+import qualified GuardTime as GuardTime
+import qualified Log
+import qualified User.Action
 
 handleNewDocument :: Kontrakcja m => m KontraLink
 handleNewDocument = do
