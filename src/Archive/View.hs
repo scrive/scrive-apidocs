@@ -2,12 +2,10 @@
 module Archive.View (pageArchive) where
 
 import Text.StringTemplates.Templates
-import User.Model
-import MinutesTime
-
-
 import qualified Text.StringTemplates.Fields as F
 
+import MinutesTime
+import User.Model
 
 pageArchive :: TemplatesMonad m => User -> UTCTime -> m String
 pageArchive user mt = renderTemplate "pageDocumentsList" $ do
