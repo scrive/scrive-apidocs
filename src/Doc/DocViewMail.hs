@@ -16,37 +16,38 @@ module Doc.DocViewMail
     , brandingMailFields
     ) where
 
-import Company.Model
-import Company.CompanyUI
-import Control.Logic
-import Control.Monad.Trans (lift)
+import Control.Monad
 import Control.Monad.Catch
+import Control.Monad.Trans (lift)
+import Data.Functor
+import Data.Maybe
+import Text.StringTemplates.Templates
+import qualified Text.StringTemplates.Fields as F
+
+import BrandedDomain.BrandedDomain
+import Company.CompanyUI
+import Company.Model
+import Control.Logic
+import DB
 import Doc.DocInfo (getLastSignedTime)
 import Doc.DocStateData
 import Doc.DocUtils
 import Doc.Model (unsavedDocumentLingerDays)
-import File.FileID
 import File.File
+import File.FileID
+import File.Model
 import KontraLink
 import MailContext (MailContextMonad(..), getMailContext, MailContext(..))
 import Mails.SendMail
 import MinutesTime
-import Utils.Monoid
-import Utils.Prelude
-import Utils.Color
-import Text.StringTemplates.Templates
 import Templates
-import Util.SignatoryLinkUtils
-import DB
-import Control.Monad
-import Data.Functor
-import Data.Maybe
-import File.Model
 import User.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
-import qualified Text.StringTemplates.Fields as F
-import BrandedDomain.BrandedDomain
+import Util.SignatoryLinkUtils
+import Utils.Color
+import Utils.Monoid
+import Utils.Prelude
 
 mailDocumentRemind :: (MonadDB m, MonadThrow m, TemplatesMonad m, MailContextMonad m)
                    => Maybe String
