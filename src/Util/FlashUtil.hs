@@ -5,9 +5,9 @@ module Util.FlashUtil (
     , addFlashMsg
     ) where
 
-import KontraMonad
-import FlashMessage
 import Context
+import FlashMessage
+import KontraMonad
 
 class Flashable a m where
     addFlash :: a -> m ()
