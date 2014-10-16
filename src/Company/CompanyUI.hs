@@ -5,13 +5,14 @@ module Company.CompanyUI (
   , GetCompanyUI(..)
   ) where
 
-import Data.Typeable
-import DB
-import Company.CompanyID
 import Control.Monad.Catch
 import Control.Monad.State
-import OurPrelude
+import Data.Typeable
 import qualified Data.ByteString.Char8 as BS
+
+import Company.CompanyID
+import DB
+import OurPrelude
 
 data CompanyUI = CompanyUI
   { companyuicompanyid                :: CompanyID
