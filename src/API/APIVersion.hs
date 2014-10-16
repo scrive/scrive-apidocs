@@ -2,9 +2,10 @@ module API.APIVersion
  ( APIVersion(..)
  ) where
 
-import Database.PostgreSQL.PQTypes
 import Data.Int
+import Database.PostgreSQL.PQTypes
 import qualified Control.Exception.Lifted as E
+
 import Utils.Default
 
 data APIVersion =
