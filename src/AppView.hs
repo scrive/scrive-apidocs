@@ -28,36 +28,37 @@ module AppView( kontrakcja
               , brandedLogoWithMD5
               ) where
 
-import FlashMessage
-import Kontra
-import KontraLink
-
 import Control.Applicative
-import qualified Data.Map as Map
+import Control.Monad
+import Data.Char
 import Data.Maybe
+import Data.String.Utils hiding (join)
 import Happstack.Server.SimpleHTTP
+import Text.JSON
 import Text.StringTemplates.Templates
-import User.Lang
-import qualified Text.StringTemplates.Fields as F
+import qualified Crypto.Hash.MD5 as MD5
+import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString.Base16 as B16
-import Data.Char
-import Data.String.Utils hiding (join)
-import Version
-import Text.JSON
-import Utils.HTTP
+import qualified Data.Map as Map
+import qualified Text.StringTemplates.Fields as F
+
 import Analytics.Include
-import DB
-import Company.Model
-import Company.CompanyUI
-import User.Model
-import Control.Monad
 import BrandedDomain.BrandedDomain
+import Company.CompanyUI
+import Company.Model
+import DB
+import FlashMessage
+import Kontra
+import KontraLink
 import ThirdPartyStats.Core
+import User.Lang
+import User.Model
+import Utils.HTTP
+import Version
 import qualified Log
-import qualified Crypto.Hash.MD5 as MD5
+
 {- |
    The name of our application (the codebase is known as kontrakcja,
    and this is the pretty public name)
