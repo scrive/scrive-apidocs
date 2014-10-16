@@ -10,22 +10,26 @@ module Doc.Action (
   , findAndTimeoutDocuments
   ) where
 
-import ActionQueue.Scheduler
-import Amazon (AmazonMonad)
-import AppConf (guardTimeConf)
 import Control.Applicative
 import Control.Conditional (whenM, unlessM, ifM)
-import Control.Logic
 import Control.Monad.Base (MonadBase)
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Crypto.RNG
-import DB
 import Data.List hiding (head, tail)
 import Data.Maybe hiding (fromJust)
 import Data.Time
+import Text.StringTemplates.Templates (TemplatesMonad)
+
+import ActionQueue.Scheduler
+import Amazon (AmazonMonad)
+import AppConf (guardTimeConf)
+import Control.Logic
+import Crypto.RNG
+import DB
+import DB.TimeZoneName
 import Doc.API.Callback.Model
+import Doc.AutomaticReminder.Model
 import Doc.DigitalSignature (addDigitalSignature, extendDigitalSignature)
 import Doc.DocInfo
 import Doc.DocMails (sendInvitationEmails, sendRejectEmails, sendDocumentErrorEmail, sendInvitationEmailsToViewers, sendClosedEmails, runMailTInScheduler)
@@ -40,24 +44,21 @@ import ForkAction (forkAction)
 import GuardTime (GuardTimeConfMonad, runGuardTimeConfT)
 import InputValidation
 import Kontra
-import qualified Log
 import MailContext (MailContextMonad(..), MailContext(..))
 import MinutesTime (currentTime, minutesBefore)
 import OurPrelude
 import Templates (runTemplatesT)
-import Text.StringTemplates.Templates (TemplatesMonad)
 import ThirdPartyStats.Core
+import User.Email
 import User.Model
 import User.Utils
-import User.Email
 import Util.Actor
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import Utils.Default (defaultValue)
-import Doc.AutomaticReminder.Model
-import DB.TimeZoneName
+import qualified Log
 
 -- | Log a document event, adding some standard properties.
 logDocEvent :: (MailContextMonad m, MonadDB m, MonadThrow m) => EventName -> User -> [EventProperty] -> Document -> m ()
