@@ -2,11 +2,12 @@ module Doc.API (
     documentAPI
   ) where
 
-import Happstack.StaticRouting
 import Happstack.Server.Types
-import Kontra
+import Happstack.StaticRouting
+
 import Doc.API.V1.Calls
 import Doc.API.V2.Calls
+import Kontra
 
 documentAPI :: Route (KontraPlus Response)
 documentAPI = dir "api" $ choice
