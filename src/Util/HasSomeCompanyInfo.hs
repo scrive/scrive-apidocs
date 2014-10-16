@@ -13,8 +13,8 @@ module Util.HasSomeCompanyInfo (
   , HasSomeCompanyInfo
   ) where
 
-import Doc.DocStateData
 import Company.Model
+import Doc.DocStateData
 import Util.SignatoryLinkUtils
 
 -- | Anything that might have a company name and number
