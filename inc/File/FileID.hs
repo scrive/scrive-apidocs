@@ -5,12 +5,12 @@ module File.FileID (
 
 import Control.Applicative
 import Data.Int
-import Happstack.Server
+import Data.Typeable
 import Database.PostgreSQL.PQTypes
+import Happstack.Server
 
 import DB.Derive
 import Utils.Read
-import Data.Typeable
 
 newtype FileID = FileID Int64
   deriving (Eq, Ord, PQFormat, Typeable)
