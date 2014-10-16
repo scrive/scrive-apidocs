@@ -1,11 +1,11 @@
 module Utils.String(concatChunks, pureString, maxLev, maybeS, escapeString, firstNonEmpty) where
 
 import Data.Char
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy as BSL
-import Data.String.Utils
 import Data.List
 import Data.Maybe
+import Data.String.Utils
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BSL
 
 concatChunks :: BSL.ByteString -> BS.ByteString
 concatChunks = BS.concat . BSL.toChunks
