@@ -10,9 +10,8 @@ import Data.Time (UTCTime)
 
 import ActionQueue.Monad
 import AppConf
-import Templates
 import Salesforce.Conf
-
+import Templates
 
 data SchedulerData = SchedulerData {
     sdAppConf   :: AppConf
