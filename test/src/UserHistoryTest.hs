@@ -1,27 +1,28 @@
 module UserHistoryTest (userHistoryTests) where
 
-import ActionQueue.UserAccountRequest
-import Test.Framework
-import TestingUtil
-import IPAddress
-import Utils.Default
-import DB
-import MinutesTime
-import User.Model
-import User.Email
-import Company.Model
-import User.UserControl
-import User.API
-import User.History.Model
-import Context
-import TestKontra as T
 import Control.Applicative
 import Happstack.Server
+import Test.Framework
 import Text.JSON
-import Login
-import SignupTest (getAccountCreatedActions)
-import Utils.Prelude
 import Text.JSON.Gen
+
+import ActionQueue.UserAccountRequest
+import Company.Model
+import Context
+import DB
+import IPAddress
+import Login
+import MinutesTime
+import SignupTest (getAccountCreatedActions)
+import TestingUtil
+import TestKontra as T
+import User.API
+import User.Email
+import User.History.Model
+import User.Model
+import User.UserControl
+import Utils.Default
+import Utils.Prelude
 
 userHistoryTests :: TestEnvSt -> Test
 userHistoryTests env = testGroup "User's history" [
