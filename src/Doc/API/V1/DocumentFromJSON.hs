@@ -2,22 +2,23 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.API.V1.DocumentFromJSON () where
 
-import Doc.DocStateData
-import Doc.SignatoryFieldID
+import Control.Applicative
+import Control.Monad
+import Data.List
 import Data.Maybe
-import User.Lang
-import DB.TimeZoneName
+import Data.String.Utils (strip)
 import Text.JSON.FromJSValue
 import qualified Data.Set as Set
-import Utils.Read
-import Control.Monad
-import InputValidation
-import Data.Functor
-import Utils.Default
-import Data.String.Utils (strip)
+
+import DB.TimeZoneName
+import Doc.DocStateData
+import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
-import Control.Applicative
-import Data.List
+import InputValidation
+import User.Lang
+import Utils.Default
+import Utils.Read
+
 -- JSON instances
 
 instance FromJSValue AuthenticationMethod where
