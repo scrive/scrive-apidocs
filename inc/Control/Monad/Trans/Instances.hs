@@ -6,8 +6,9 @@ import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Trans.Control
-import Control.Monad.Trans.Control.Util
 import Text.StringTemplates.Templates
+
+import Control.Monad.Trans.Control.Util
 
 instance (
     Monad (t m)
