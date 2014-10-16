@@ -4,9 +4,10 @@ import Data.Char
 import Data.Int
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
-import Test.HUnit (assert, Assertion)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
+import Test.HUnit (assert, Assertion)
 import Test.QuickCheck (Arbitrary(..), Property, oneof, (==>), property, mapSize)
+
 import InputValidation
 import TestKontra
 
