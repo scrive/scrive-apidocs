@@ -13,10 +13,10 @@ module FlashMessage (
 import Control.Monad.IO.Class
 import Happstack.Server
 import qualified Codec.Compression.GZip as GZip
+import qualified Data.ByteString.Base64 as B64
+import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
-import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.Base64 as B64
 
 import Cookies
 import Utils.HTTP
