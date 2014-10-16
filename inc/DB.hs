@@ -7,7 +7,9 @@ module DB (
   ) where
 
 import Database.PostgreSQL.PQTypes
+
 import DB.Derive
 import DB.Model
 import DB.Query
 import DB.SQL
+
