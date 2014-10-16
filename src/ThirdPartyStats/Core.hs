@@ -15,28 +15,27 @@ module ThirdPartyStats.Core (
     (@@),
     catEventProcs
   ) where
-import qualified Data.ByteString.Lazy as BL
-import qualified Data.ByteString as B
+import Control.Applicative
+import Control.Monad.IO.Class
+import Data.Binary
 import Data.Int
 import Data.Monoid
-import Data.Binary
 import Data.String
 import Data.Time.Clock.POSIX
-import Control.Monad.IO.Class
-import Control.Applicative
-import qualified DB (Binary (..))
-import DB hiding (Binary, put)
-import qualified Log
-import MinutesTime
-import User.UserID (UserID, unsafeUserID)
-import Doc.DocumentID (DocumentID, unsafeDocumentID)
-import Company.CompanyID (CompanyID, unsafeCompanyID)
-import IPAddress
-import User.Email
+import Test.QuickCheck (Arbitrary (..), frequency, oneof, suchThat, Gen)
+import qualified Data.ByteString as B
+import qualified Data.ByteString.Lazy as BL
 import qualified Text.JSON as J
 
-import Test.QuickCheck (Arbitrary (..), frequency, oneof, suchThat, Gen)
-
+import Company.CompanyID (CompanyID, unsafeCompanyID)
+import DB hiding (Binary, put)
+import Doc.DocumentID (DocumentID, unsafeDocumentID)
+import IPAddress
+import MinutesTime
+import User.Email
+import User.UserID (UserID, unsafeUserID)
+import qualified DB (Binary (..))
+import qualified Log
 
 -- | The various types of values a property can take.
 data PropValue
