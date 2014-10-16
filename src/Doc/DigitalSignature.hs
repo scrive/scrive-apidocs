@@ -3,9 +3,6 @@ module Doc.DigitalSignature
   , extendDigitalSignature
   ) where
 
-import ActionQueue.Scheduler (SchedulerData, getGlobalTemplates, sdAppConf)
-import AppConf (guardTimeConf)
-import Amazon (AmazonMonad)
 import Control.Applicative ((<$>))
 import Control.Arrow (first)
 import Control.Monad (when)
@@ -13,8 +10,15 @@ import Control.Monad.Catch
 import Control.Monad.Reader (MonadReader, asks)
 import Control.Monad.Trans (MonadIO, liftIO)
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Crypto.RNG (CryptoRNG)
+import System.Exit (ExitCode(..))
+import System.FilePath ((</>))
+import Text.StringTemplates.Templates (TemplatesMonad)
 import qualified Data.ByteString as BS
+
+import ActionQueue.Scheduler (SchedulerData, getGlobalTemplates, sdAppConf)
+import Amazon (AmazonMonad)
+import AppConf (guardTimeConf)
+import Crypto.RNG (CryptoRNG)
 import DB (Binary(..), dbUpdate)
 import Doc.API.Callback.Model (triggerAPICallbackIfThereIsOne)
 import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
@@ -25,16 +29,13 @@ import File.File (filename)
 import File.Model (NewFile(..))
 import File.Storage (getFileContents)
 import GuardTime (GuardTimeConf, GuardTimeConfMonad, getGuardTimeConf)
-import qualified GuardTime as GT
-import qualified Log
 import MinutesTime
-import System.Exit (ExitCode(..))
-import System.FilePath ((</>))
 import Templates (runTemplatesT)
-import Text.StringTemplates.Templates (TemplatesMonad)
 import Util.Actor (systemActor)
 import Utils.Default (defaultValue)
 import Utils.Directory (withSystemTempDirectory')
+import qualified GuardTime as GT
+import qualified Log
 
 addDigitalSignature :: (CryptoRNG m, MonadIO m, MonadThrow m, Log.MonadLog m, MonadBaseControl IO m, DocumentMonad m, AmazonMonad m, GuardTimeConfMonad m, TemplatesMonad m) => m ()
 addDigitalSignature = theDocumentID >>= \did ->
