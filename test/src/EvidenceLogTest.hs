@@ -1,15 +1,16 @@
 module EvidenceLogTest (evidenceLogTests) where
 
-import DB
-import Data.Int
-import Data.Monoid.Space
 import Control.Monad
-import EvidenceLog.Model
+import Data.Int
+import Data.List
+import Data.Monoid.Space
 import Test.Framework
+import Text.StringTemplates.Templates
+
+import DB
+import EvidenceLog.Model
 import TestingUtil
 import TestKontra
-import Text.StringTemplates.Templates
-import Data.List
 
 evidenceLogTests :: TestEnvSt -> Test
 evidenceLogTests env = testGroup "Evidence Log" [
