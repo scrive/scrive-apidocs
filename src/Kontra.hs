@@ -18,33 +18,34 @@ module Kontra
     )
     where
 
-import Context
 import Control.Applicative
-import Control.Logic
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Trans.Control
-import Control.Monad.Trans.Instances ()
+import Database.PostgreSQL.PQTypes.Class.Instances.Overlapping ()
+import Happstack.Server
+import Text.StringTemplates.Templates
+import qualified Text.StringTemplates.TemplatesLoader as TL
+
+import Context
+import Control.Logic
 import Control.Monad.Trans.Control.Util
+import Control.Monad.Trans.Instances ()
 import Crypto.RNG
 import DB
-import Database.PostgreSQL.PQTypes.Class.Instances.Overlapping ()
 import GuardTime (GuardTimeConfMonad(..))
-import Happstack.Server
 import Happstack.Server.Instances ()
 import KontraError
 import KontraMonad
 import MailContext (MailContextMonad(..))
 import Mails.MailsConfig
-import qualified Text.StringTemplates.TemplatesLoader as TL
-import Text.StringTemplates.Templates
 import Templates
 import User.Model
 import Utils.List
-import qualified Log
 import qualified Amazon as AWS
+import qualified Log
 
 type InnerKontraPlus = StateT Context (AWS.AmazonMonadT (CryptoRNGT (DBT (ServerPartT IO))))
 
