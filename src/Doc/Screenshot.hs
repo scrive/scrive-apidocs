@@ -5,12 +5,13 @@ module Doc.Screenshot
 import Control.Applicative ((<$>), (<*>))
 import Data.Maybe (isJust)
 import Database.PostgreSQL.PQTypes (Binary(..))
-import qualified Data.ByteString.RFC2397 as RFC2397
-import qualified Data.ByteString.UTF8 as BS
-import MinutesTime
 import Text.JSON.FromJSValue (FromJSValue(..), fromJSValueField)
 import Text.JSON.Gen (value, runJSONGen)
 import Text.JSON.ToJSValue (ToJSValue(..))
+import qualified Data.ByteString.UTF8 as BS
+
+import MinutesTime
+import qualified Data.ByteString.RFC2397 as RFC2397
 
 data Screenshot = Screenshot
  { time  :: UTCTime
