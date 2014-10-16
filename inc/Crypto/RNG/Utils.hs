@@ -1,6 +1,7 @@
 module Crypto.RNG.Utils where
 
 import Control.Monad
+
 import Crypto.RNG
 
 -- | Generate random string of specified length that contains allowed
