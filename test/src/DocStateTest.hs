@@ -1,57 +1,57 @@
 module DocStateTest{- (docStateTests)-} where
 
-import qualified Amazon as AWS
-import AppConf (AppConf(dbConfig))
-import Context (ctxtime)
 import Control.Arrow (first)
-import Control.Monad.Catch
 import Control.Concurrent (newMVar)
-import Control.Logic
-import qualified CronEnv
+import Control.Monad
+import Control.Monad.Catch
+import Control.Monad.Trans
+import Data.Functor
+import Data.List
+import Data.Maybe
+import Test.Framework
+import Test.Framework.Providers.HUnit (testCase)
+import Test.Framework.Providers.QuickCheck2 (testProperty)
+import Test.HUnit.Base (Assertion)
+import Test.QuickCheck
 import qualified Data.ByteString as BS
-import DB
-import qualified MemCache
-import User.Model
-import Doc.Model
-import Doc.DocumentMonad (DocumentT, theDocument, theDocumentID, withDocumentM, withDocument, withDocumentID)
-import Doc.DocUtils
-import Doc.DocStateData
-import Doc.SignatoryFieldID
-import Doc.Action (findAndDoPostDocumentClosedActions, findAndExtendDigitalSignatures)
-import Templates (getTemplatesModTime, readGlobalTemplates)
+import qualified Data.Set as S
+
 import ActionQueue.Monad (ActionQueueT)
 import ActionQueue.Scheduler (SchedulerData(..))
-import Doc.SealStatus (SealStatus(..), hasGuardtimeSignature)
-import qualified Doc.Screenshot as Screenshot
-import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
-import Util.SignatoryLinkUtils
-import Doc.DocInfo
-import Utils.Default
-import TestingUtil
-import TestKontra
+import AppConf (AppConf(dbConfig))
 import Company.Model
-import Doc.TestInvariants
-import MinutesTime
-import Test.HUnit.Base (Assertion)
-import Util.HasSomeUserInfo
-import Util.HasSomeCompanyInfo
+import Context (ctxtime)
+import Control.Logic
+import DB
 import DB.TimeZoneName (defaultTimeZoneName, mkTimeZoneName)
-
-import Data.Functor
-import Data.Maybe
-import Control.Monad
-import Control.Monad.Trans
-import Data.List
-import Test.Framework
-import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.Framework.Providers.HUnit (testCase)
-import Test.QuickCheck
-import File.FileID
+import Doc.Action (findAndDoPostDocumentClosedActions, findAndExtendDigitalSignatures)
 import Doc.Conditions
-import qualified Data.Set as S
-import Util.Actor
+import Doc.DocInfo
+import Doc.DocStateData
+import Doc.DocumentMonad (DocumentT, theDocument, theDocumentID, withDocumentM, withDocument, withDocumentID)
+import Doc.DocUtils
+import Doc.Model
+import Doc.SealStatus (SealStatus(..), hasGuardtimeSignature)
+import Doc.SignatoryFieldID
+import Doc.TestInvariants
 import EvidenceLog.Model
 import EvidenceLog.View (getSignatoryLinks, simplyfiedEventText)
+import File.FileID
+import MinutesTime
+import Templates (getTemplatesModTime, readGlobalTemplates)
+import TestingUtil
+import TestKontra
+import User.Model
+import Util.Actor
+import Util.HasSomeCompanyInfo
+import Util.HasSomeUserInfo
+import Util.SignatoryLinkUtils
+import Utils.Default
+import qualified Amazon as AWS
+import qualified CronEnv
+import qualified Doc.Screenshot as Screenshot
+import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
+import qualified MemCache
 
 docStateTests :: TestEnvSt -> Test
 docStateTests env = testGroup "DocState" [
