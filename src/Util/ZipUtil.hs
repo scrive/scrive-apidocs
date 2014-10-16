@@ -1,8 +1,8 @@
 module Util.ZipUtil (ZipArchive(..)) where
 
-import qualified Data.ByteString.UTF8 as BS
-import Happstack.Server (ToMessage(..), setHeader)
 import Codec.Archive.Zip
+import Happstack.Server (ToMessage(..), setHeader)
+import qualified Data.ByteString.UTF8 as BS
 
 data ZipArchive = ZipArchive String Archive
     
