@@ -3,9 +3,9 @@ module File.File
     , FileStorage(..)
     ) where
 
+import Data.Int (Int32)
 import Data.Typeable
 import qualified Data.ByteString as BS
-import Data.Int (Int32)
 
 import Crypto
 import File.FileID
