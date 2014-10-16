@@ -1,20 +1,20 @@
 module HtmlTest (htmlTests) where
 
+import Control.Monad
 import Data.Char
 import Data.List
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assertFailure, assertBool, Assertion)
+import Text.StringTemplates.TemplatesLoader (renderTemplateMain)
+import Text.XML.HaXml.Html.Pretty
 import Text.XML.HaXml.Parse (xmlParse')
 import Text.XML.HaXml.Posn
-import Text.XML.HaXml.Html.Pretty
 import Text.XML.HaXml.Types
-import Control.Monad
 
 import Templates
-import Text.StringTemplates.TemplatesLoader (renderTemplateMain)
-import User.Lang
 import TestKontra
+import User.Lang
 
 htmlTests :: TestEnvSt -> Test
 htmlTests _ = testGroup "HTML"
