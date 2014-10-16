@@ -5,9 +5,9 @@ module Company.CompanyID (
   ) where
 
 import Control.Applicative
+import Data.Binary
 import Data.Int
 import Data.Typeable
-import Data.Binary
 import Database.PostgreSQL.PQTypes hiding (Binary, put)
 import Happstack.Server
 
