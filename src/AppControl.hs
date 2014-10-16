@@ -10,54 +10,51 @@ module AppControl
     , getStandardLang
     ) where
 
-import AppConf
-
-import qualified Amazon as AWS
-import AppView as V
-import Crypto.RNG
-import DB hiding (ErrorCode(..))
-import DB.PostgreSQL
-import IPAddress
-import Text.JSON.Gen
-import Kontra
-import MinutesTime
-import Utils.HTTP
-import Session.Data hiding (session)
-import Session.Model
-import Templates
-import User.Model
-import qualified Log
-import qualified FlashMessage as F
-import qualified MemCache
-import Util.FinishWith
-import Util.FlashUtil
-import File.FileID
-import GHC.Stack
-import BrandedDomain.Model
-
 import Control.Concurrent.Lifted (MVar, modifyMVar, threadDelay, readMVar)
-import Control.Concurrent.MVar.Util (tryReadMVar)
+import Control.Monad.Base
 import Control.Monad.Error
 import Control.Monad.Trans.Control
-import Control.Monad.Base
 import Data.Functor
 import Data.Maybe
+import Data.Time.Clock
 import Data.Typeable
-import Happstack.MonadPlus (runMPlusT)
+import GHC.Stack
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
 import Happstack.Server.Internal.Cookie
 import Network.Socket
-
 import System.Directory
-import Data.Time.Clock
-
+import Text.JSON.Gen
 import qualified Control.Exception.Lifted as E
-import Doc.RenderedPages
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
+
+import AppConf
+import AppView as V
+import BrandedDomain.Model
+import Control.Concurrent.MVar.Util (tryReadMVar)
+import Crypto.RNG
+import DB hiding (ErrorCode(..))
+import DB.PostgreSQL
+import Doc.RenderedPages
+import File.FileID
+import Happstack.MonadPlus (runMPlusT)
+import IPAddress
+import Kontra
+import MinutesTime
 import Salesforce.Conf
+import Session.Data hiding (session)
+import Session.Model
+import Templates
+import User.Model
+import Util.FinishWith
+import Util.FlashUtil
+import Utils.HTTP
+import qualified Amazon as AWS
+import qualified FlashMessage as F
+import qualified Log
+import qualified MemCache
 
 {- |
   Global application data
