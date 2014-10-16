@@ -12,14 +12,15 @@ import Control.Monad.Base (MonadBase)
 import Control.Monad.Reader (MonadIO, MonadTrans)
 import Control.Monad.Trans.Control (MonadBaseControl(..), MonadTransControl(..), ComposeSt, defaultLiftBaseWith, defaultRestoreM, defaultLiftWith, defaultRestoreT)
 import Data.Monoid.Space
+import Text.JSON
+import Text.JSON.Gen
+
 import DB
 import DB.RowCache (RowCacheT, GetRow, runRowCacheT, runRowCacheTID, runRowCacheTM, rowCache, rowCacheID, updateRow, updateRowWithID)
 import Doc.Class
 import Doc.DocStateData (Document)
 import Doc.DocumentID (DocumentID)
 import Log (MonadLog(..))
-import Text.JSON
-import Text.JSON.Gen
 
 -- | A monad transformer that has a 'DocumentMonad' instance
 newtype DocumentT m a = DocumentT { unDocumentT :: RowCacheT Document m a }
