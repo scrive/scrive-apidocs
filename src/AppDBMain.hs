@@ -4,15 +4,15 @@ module AppDBMain (
 
 import Control.Monad.IO.Class
 import System.IO
+
 import AppConf
+import AppDBMigrations
+import AppDBTables
 import Configuration
 import DB
 import DB.Checks
 import DB.PostgreSQL
 import DB.SQLFunction
-
-import AppDBTables
-import AppDBMigrations
 
 main :: IO ()
 main = do
