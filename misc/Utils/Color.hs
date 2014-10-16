@@ -1,8 +1,8 @@
 module Utils.Color (ensureHexRGB,isValidColor) where
 
+import Data.String.Utils
 import Numeric
 import Text.Regex.TDFA
-import Data.String.Utils
 
 -- converts strings like "rgb(1,2,3)" to "#aabbcc" notation
 -- returns Nothing for colors in other notation (or other garbage input)
