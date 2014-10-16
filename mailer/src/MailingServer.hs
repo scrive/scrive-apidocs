@@ -3,27 +3,27 @@ module MailingServer where
 import Control.Concurrent
 import Happstack.Server hiding (waitForTermination)
 import qualified Control.Exception.Lifted as E
+import qualified Data.ByteString.Char8 as BS
 import qualified Happstack.StaticRouting as R
 
 import Cleaner
-import Crypto.RNG (newCryptoRNGState)
 import Configuration
+import Crypto.RNG (newCryptoRNGState)
+import DB
+import DB.Checks
+import DB.PostgreSQL
 import Dispatcher
 import Handlers
 import MailingServerConf
+import Mails.Tables
 import Sender
 import ServiceChecker
 import Utils.Cron
 import Utils.IO
 import Utils.Network
-import DB
-import DB.PostgreSQL
-import DB.Checks
-import Mails.Tables
-import qualified Data.ByteString.Char8 as BS
-import qualified MemCache
-import qualified Log
 import qualified Amazon as AWS
+import qualified Log
+import qualified MemCache
 
 main :: IO ()
 main = Log.withLogger $ do
