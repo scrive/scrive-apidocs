@@ -1,7 +1,7 @@
 module Attachment.Migrations where
 
-import DB
 import Attachment.Tables
+import DB
 
 addProbablyMissingIndexesOnAttachments :: MonadDB m => Migration m
 addProbablyMissingIndexesOnAttachments =
