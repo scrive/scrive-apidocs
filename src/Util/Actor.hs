@@ -11,16 +11,17 @@ module Util.Actor (
   , apiActor
   ) where
 
-import Util.HasSomeUserInfo
+import Control.Monad
+import Data.Typeable
+
 import Context
+import Doc.DocStateData (SignatoryLink(..))
+import Doc.DocumentMonad (DocumentMonad)
+import Doc.SignatoryLinkID
 import IPAddress
 import MinutesTime
 import User.Model
-import Doc.SignatoryLinkID
-import Doc.DocStateData (SignatoryLink(..))
-import Doc.DocumentMonad (DocumentMonad)
-import Data.Typeable
-import Control.Monad
+import Util.HasSomeUserInfo
 
 mkAuthorActor :: Context -> Maybe Actor
 mkAuthorActor ctx = case (ctxmaybeuser ctx) `mplus` (ctxmaybepaduser ctx) of
