@@ -7,6 +7,7 @@ module Sender (
 import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Data.List hiding (head)
+import Data.Maybe (fromMaybe)
 import System.Exit
 import System.Process
 import qualified Data.ByteString.Lazy as BSL
@@ -14,14 +15,13 @@ import qualified Data.ByteString.Lazy.UTF8 as BSLU
 
 import Assembler
 import Crypto.RNG (CryptoRNG)
+import DB
 import MailingServerConf
 import Mails.Model
-import Utils.IO
 import OurPrelude
-import qualified Log
-import DB
+import Utils.IO
 import qualified Amazon as AWS
-import Data.Maybe (fromMaybe)
+import qualified Log
 
 data Sender = Sender {
     senderName :: String
