@@ -1,12 +1,13 @@
 module User.Migrations where
 
-import Data.Monoid.Space
-import DB
-import User.Tables
-import User.Model (UserID)
-import Company.Model (CompanyID)
 import Control.Monad
 import Control.Monad.Catch
+import Data.Monoid.Space
+
+import Company.Model (CompanyID)
+import DB
+import User.Model (UserID)
+import User.Tables
 
 addUserCustomFooter :: MonadDB m => Migration m
 addUserCustomFooter =
