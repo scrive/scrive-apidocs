@@ -16,9 +16,9 @@ module MemCache (MemCache, new, put, get, size, alter)
 where
 
 import Control.Concurrent.MVar
-import qualified Data.Map as Map
 import Control.Monad.Trans
 import Data.Time
+import qualified Data.Map as Map
 
 data MemCache' k v = MemCache' (v -> Int) Int Int (Map.Map k (UTCTime, v))
 
