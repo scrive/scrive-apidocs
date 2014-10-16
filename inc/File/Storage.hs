@@ -5,14 +5,14 @@ module File.Storage (
 
 import Control.Monad.Catch
 import Control.Monad.Trans
-import DB
-import qualified Amazon as AWS
-import File.Model
-import File.File
 import qualified Data.ByteString as BS
-import qualified MemCache as MemCache
-import qualified Log
 
+import DB
+import File.File
+import File.Model
+import qualified Amazon as AWS
+import qualified Log
+import qualified MemCache as MemCache
 
 {- Gets file content from somewere (Amazon for now), putting it to cache and returning as BS -}
 getFileContents :: (Log.MonadLog m, MonadIO m, AWS.AmazonMonad m) => File -> m BS.ByteString
