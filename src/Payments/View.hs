@@ -8,18 +8,19 @@ module Payments.View where
 --import MagicHash
 --import Misc
 --import OAuth.Model
-import MinutesTime
-import Mails.SendMail(Mail, kontramail)
-import Company.Model
+import Control.Monad
 import Text.StringTemplates.Templates
-import User.Model
 import qualified Recurly as Recurly
 import qualified Text.StringTemplates.Fields as F
-import Util.HasSomeUserInfo
-import Util.HasSomeCompanyInfo
-import Control.Monad
+
 import BrandedDomain.BrandedDomain
+import Company.Model
 import Mails.MailsConfig
+import Mails.SendMail(Mail, kontramail)
+import MinutesTime
+import User.Model
+import Util.HasSomeCompanyInfo
+import Util.HasSomeUserInfo
 
 mailSignup :: (TemplatesMonad m) => MailsConfig -> Maybe BrandedDomain -> String -> User -> Company -> Recurly.Subscription -> m Mail
 mailSignup mc mbd hp user company subscription = do
