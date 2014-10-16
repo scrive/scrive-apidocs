@@ -3,34 +3,31 @@ module Doc.Anchors (
   , getAnchorPositions
   ) where
 
-import Control.Monad.Trans.Control (MonadBaseControl)
-import qualified Text.JSON as J
-import qualified Text.JSON.Pretty as J (pp_value)
-import qualified Text.JSON.String as J
-import KontraMonad
-import Doc.DocStateData
-import Doc.Model
 import Control.Applicative
-import Control.Monad.Trans
-import System.Exit
-import Utils.Directory
-import Utils.IO
+import Control.Monad.Error
+import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Maybe
+import System.Exit
+import Text.JSON.FromJSValue
+import Text.JSON.Gen
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
-import DB
-import Control.Monad.Error
-import qualified Log
-import Doc.DocumentMonad
-import Text.JSON.FromJSValue
-import Text.JSON.Gen
 import qualified Data.Map as Map hiding (map)
+import qualified Text.JSON as J
+import qualified Text.JSON.Pretty as J (pp_value)
+import qualified Text.JSON.String as J
 
+import DB
+import Doc.DocStateData
+import Doc.DocumentMonad
+import Doc.Model
 import File.Model
 import File.Storage
-
-
+import KontraMonad
+import Utils.Directory
+import Utils.IO
+import qualified Log
 
 getAnchorPositions :: (Monad m, MonadBaseControl IO m,Log.MonadLog m,MonadIO m) => BS.ByteString -> [PlacementAnchor] -> m (Map.Map PlacementAnchor (Int,Double,Double))
 getAnchorPositions _pdfcontent [] = return Map.empty
