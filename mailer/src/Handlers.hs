@@ -5,20 +5,20 @@ module Handlers (
   ) where
 
 import Control.Monad.Reader
+import Data.ByteString.UTF8  as BS
+import Data.Functor
+import Data.List
+import Data.Maybe
 import Happstack.Server hiding (dir, path)
 import Happstack.StaticRouting
+import System.Directory
 
+import Crypto.RNG
 import DB
 import DB.PostgreSQL
-import Crypto.RNG
-import MailGun
 import Mailer
+import MailGun
 import SendGrid
-import System.Directory
-import Data.List
-import Data.Functor
-import Data.ByteString.UTF8  as BS
-import Data.Maybe
 
 router :: CryptoRNGState -> ConnectionSource -> Mailer Response -> ServerPartT IO Response
 router rng cs routes = withPostgreSQL cs $
