@@ -1,3 +1,14 @@
+{- |
+
+To add a new cron task, the following steps are necessary:
+
+1. Add a row corresponding to the task to Cron.Tables.tableCronTasks.tblInitialData.
+2. Write a migration that adds the same row to the existing table.
+3. Add a type constructor corresponding to the task to Cron.Model.TaskType
+4. Update Cron.Model.taskTypeBSRelation.
+5. Update dispatcher function in the main cron module.
+
+-}
 module Cron.Tables (
     cronTables
   , tableCronWorkers
