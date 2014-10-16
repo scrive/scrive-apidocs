@@ -10,25 +10,26 @@ module Doc.DocViewSMS (
     ) where
 
 import Control.Applicative
+import Control.Monad
 import Control.Monad.Catch
+import Control.Monad.Trans
+import Data.Maybe
+import Text.StringTemplates.Templates
+import qualified Text.StringTemplates.Fields as F
+
+import BrandedDomain.BrandedDomain
+import Company.Model
 import Control.Logic
+import DB
 import Doc.DocStateData
 import Doc.DocUtils
 import KontraLink
 import MailContext (MailContextMonad(..), MailContext(..))
 import Mails.SendMail
-import Text.StringTemplates.Templates
+import SMS.SMS
 import Templates
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
-import qualified Text.StringTemplates.Fields as F
-import SMS.SMS
-import Control.Monad.Trans
-import DB
-import Data.Maybe
-import Control.Monad
-import Company.Model
-import BrandedDomain.BrandedDomain
 import Utils.Monoid
 
 mkSMS :: (MonadDB m, MonadThrow m, MailContextMonad m) => Document -> SignatoryLink -> MessageData -> String -> (m SMS)
