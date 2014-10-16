@@ -5,12 +5,13 @@ module User.UserID (
   ) where
 
 import Control.Applicative
+import Data.Binary
 import Data.Int
 import Data.Typeable
 import Database.PostgreSQL.PQTypes hiding (Binary, put)
-import DB.Derive
 import Happstack.Server
-import Data.Binary
+
+import DB.Derive
 import Utils.Read
 
 newtype UserID = UserID Int64
