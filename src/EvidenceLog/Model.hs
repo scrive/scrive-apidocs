@@ -18,27 +18,28 @@ module EvidenceLog.Model (
 
 import Control.Applicative ((<$>), (<*>))
 import Control.Monad.Catch
+import Control.Monad.Identity
 import Data.Int
 import Data.Maybe (fromMaybe)
 import Data.Monoid
 import Data.Monoid.Space
-import DB
-import Doc.DocumentMonad (DocumentMonad, theDocumentID)
+import Data.Typeable
+import Text.StringTemplates.Templates
 import qualified Control.Exception.Lifted as E
-import qualified HostClock.Model as HC
+import qualified Text.StringTemplates.Fields as F
+
+import DB
+import Doc.DocStateData (SignatoryLink(..), AuthenticationMethod(..), DeliveryMethod(..))
+import Doc.DocumentID
+import Doc.DocumentMonad (DocumentMonad, theDocumentID)
+import Doc.SignatoryLinkID
 import IPAddress
 import MinutesTime
-import Data.Typeable
 import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo (getEmail, getSignatoryIdentifier)
-import Doc.SignatoryLinkID
-import Doc.DocStateData (SignatoryLink(..), AuthenticationMethod(..), DeliveryMethod(..))
 import Version
-import Doc.DocumentID
-import Text.StringTemplates.Templates
-import qualified Text.StringTemplates.Fields as F
-import Control.Monad.Identity
+import qualified HostClock.Model as HC
 
 data InsertEvidenceEventWithAffectedSignatoryAndMsg = InsertEvidenceEventWithAffectedSignatoryAndMsg
                            CurrentEvidenceEventType -- A code for the event
