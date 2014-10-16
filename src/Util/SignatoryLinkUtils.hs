@@ -33,17 +33,17 @@ module Util.SignatoryLinkUtils (
   hasSigLinkFor
        ) where
 
-import Doc.DocStateData
-import MagicHash (MagicHash)
-import User.Model
-import Util.HasSomeUserInfo
-import Doc.SignatoryLinkID
-import Utils.Prelude
-
+import Data.Functor
 import Data.List
 import Data.Maybe
-import Data.Functor
+
+import Doc.DocStateData
+import Doc.SignatoryLinkID
+import MagicHash (MagicHash)
 import User.Email
+import User.Model
+import Util.HasSomeUserInfo
+import Utils.Prelude
 
 {- |
    Anything that could identify a SignatoryLink
