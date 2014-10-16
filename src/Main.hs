@@ -11,24 +11,24 @@ import qualified Data.ByteString.Char8 as BS
 
 import AppConf
 import AppControl
+import AppDBTables (kontraTables)
+import Company.Model
 import Configuration
 import Crypto.RNG
 import DB
-import DB.PostgreSQL
 import DB.Checks
+import DB.PostgreSQL
+import RoutingTable
+import Templates
+import User.Email
+import User.Model
 import Utils.Default
 import Utils.IO
 import Utils.Network
-import RoutingTable
-import Templates
-import User.Model
-import User.Email
-import Company.Model
-import AppDBTables (kontraTables)
+import qualified Doc.RenderedPages as RenderedPages
 import qualified Log
 import qualified MemCache
 import qualified Version
-import qualified Doc.RenderedPages as RenderedPages
 
 main :: IO ()
 main = Log.withLogger $ do
