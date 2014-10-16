@@ -1,7 +1,7 @@
 module ELegitimation.Config(LogicaConfig(..)) where
 
-import Data.Unjson
 import Control.Applicative
+import Data.Unjson
 
 data LogicaConfig = LogicaConfig { logicaEndpoint      :: String,  -- ^ URL to Logica
                                    logicaServiceID     :: String,  -- ^ ServiceID from Logica
