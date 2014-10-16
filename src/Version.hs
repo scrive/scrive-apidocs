@@ -1,10 +1,10 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Version (versionID) where
 
-import Language.Haskell.TH.Syntax
-import Language.Haskell.TH.Lib
-import System.Environment
 import Control.Exception.Lifted as E
+import Language.Haskell.TH.Lib
+import Language.Haskell.TH.Syntax
+import System.Environment
 
 {-# NOINLINE versionID #-}
 versionID :: String
