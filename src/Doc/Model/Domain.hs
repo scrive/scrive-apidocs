@@ -3,14 +3,14 @@ module Doc.Model.Domain
   , documentDomainToSQL
   ) where
 
-import DB
-
-import User.UserID
-import Doc.DocStateData
 import Control.Monad.State.Class
-import MagicHash
 import Data.Typeable
+
+import DB
 import Doc.Conditions
+import Doc.DocStateData
+import MagicHash
+import User.UserID
 
 -- | Document security domain.
 --
