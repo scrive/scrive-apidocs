@@ -3,47 +3,48 @@ module DocControlTest(
 ) where
 
 import Control.Applicative
+import Control.Monad
+import Control.Monad.Trans
+import Data.List
+import Data.Maybe
+import Happstack.Server
+import Test.Framework
+import Text.JSON.Gen (toJSValue)
+import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
-import Data.Maybe
-import Control.Monad
-import Control.Monad.Trans
-import qualified Control.Exception.Lifted as E
-import Data.List
-import Happstack.Server
-import Test.Framework
-import TestingUtil
-import TestKontra as T
 import qualified Text.JSON
-import Text.JSON.Gen (toJSValue)
-import Mails.Model
-import MinutesTime
-import Utils.Default
+
+import Archive.Control
+import Company.CompanyUI
+import Company.Model
 import Context
 import DB
-import Doc.Model
-import Doc.DocStateData
-import Doc.SignatoryFieldID
-import Doc.DocView (documentSignviewBrandingCSS)
+import DB.TimeZoneName (mkTimeZoneName)
+import Doc.API.V1.Calls
 import Doc.DocControl
-import Doc.Screenshot (Screenshot(..))
-import Doc.SignatoryScreenshots(emptySignatoryScreenshots, SignatoryScreenshots(signing))
-import Archive.Control
+import Doc.DocStateData
 import Doc.DocumentMonad (withDocumentM, withDocumentID, theDocument, updateDocumentWithID)
 import Doc.DocUtils
-import Company.Model
-import Company.CompanyUI
-import User.Model
-import Util.SignatoryLinkUtils
-import Util.Actor
-import File.FileID
-import Doc.API.V1.Calls
-import ELegitimation.BankIDUtils
-import DB.TimeZoneName (mkTimeZoneName)
-import MagicHash
+import Doc.DocView (documentSignviewBrandingCSS)
+import Doc.Model
+import Doc.Screenshot (Screenshot(..))
+import Doc.SignatoryFieldID
+import Doc.SignatoryScreenshots(emptySignatoryScreenshots, SignatoryScreenshots(signing))
 import Doc.SMSPin.Model
+import ELegitimation.BankIDUtils
+import File.FileID
+import MagicHash
+import Mails.Model
+import MinutesTime
+import TestingUtil
+import TestKontra as T
+import User.Model
+import Util.Actor
 import Util.HasSomeUserInfo
+import Util.SignatoryLinkUtils
+import Utils.Default
 
 docControlTests :: TestEnvSt -> Test
 docControlTests env = testGroup "DocControl" [
