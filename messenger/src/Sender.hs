@@ -5,29 +5,28 @@ module Sender (
   ) where
 
 import Control.Monad.IO.Class
+import Data.Char
+import Data.Hash.MD5
 import Data.List hiding (head)
+import System.Exit
 import System.Process
+import Text.JSON.Gen (value)
+import Text.Regex.TDFA
+import qualified Codec.Binary.Url as URL
+import qualified Codec.Text.IConv as IConv
+import qualified Data.ByteString.Lazy as BS
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.Lazy.Char8 as BSC
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
+import qualified Data.ByteString.Lazy.UTF8 as BSU
 
 import Crypto.RNG (CryptoRNG)
 import MessengerServerConf
-import Text.JSON.Gen (value)
---import SMS.Model
-import SMS.Data
 import OurPrelude
-import qualified Log
-import Data.Char
-import Data.Hash.MD5
-import qualified Codec.Text.IConv as IConv
-import qualified Codec.Binary.Url as URL
-import qualified Data.ByteString.Lazy as BS
-import qualified Data.ByteString.Lazy.Char8 as BSC
-import qualified Data.ByteString.Lazy.UTF8 as BSU
+import SMS.Data
 import Utils.IO
 import Utils.Read
-import System.Exit
-import Text.Regex.TDFA
+import qualified Log
 
 data Sender = Sender {
     senderName :: String
