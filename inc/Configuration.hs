@@ -2,19 +2,19 @@ module Configuration (
     readConfig
   ) where
 
-import qualified Control.Exception.Lifted as E
 import Control.Monad.Base
 import Control.Monad.Trans.Control
-import Utils.Default
+import Data.Char
+import Data.Monoid
+import Data.Unjson
+import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL (toString)
-import Data.Unjson
-import Data.Char
-import qualified Data.Yaml as Yaml
 import qualified Data.Text as Text
-import Data.Monoid
+import qualified Data.Yaml as Yaml
 
+import Utils.Default
 
 --
 -- Error handling here:
