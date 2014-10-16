@@ -1,19 +1,20 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 module OAuth.View where
 
-import MagicHash
-import Utils.Prelude
 import Data.Int
-import Text.StringTemplates.Templates
-import OAuth.Model
-import qualified Text.StringTemplates.Fields as F
-import Text.JSON.Gen hiding (value)
-import qualified Text.JSON.Gen as J
-import Text.JSON
-import AppView
 import Happstack.Server.SimpleHTTP
-import Kontra
+import Text.JSON
+import Text.JSON.Gen hiding (value)
+import Text.StringTemplates.Templates
+import qualified Text.JSON.Gen as J
+import qualified Text.StringTemplates.Fields as F
+
 import Analytics.Include
+import AppView
+import Kontra
+import MagicHash
+import OAuth.Model
+import Utils.Prelude
 
 pagePrivilegesConfirm :: Kontrakcja m
                       => Context
