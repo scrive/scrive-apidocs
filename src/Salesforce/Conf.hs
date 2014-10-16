@@ -4,8 +4,8 @@ module Salesforce.Conf (
     , withSalesforceConf
   ) where
 
-import Control.Monad.Reader
 import Control.Applicative
+import Control.Monad.Reader
 import Data.Unjson
 
 data SalesforceConf = SalesforceConf {
