@@ -2,8 +2,8 @@ module KontraError where
 
 import Control.Monad.Base
 import Data.Typeable
-import qualified Control.Exception.Lifted as E
 import GHC.Stack
+import qualified Control.Exception.Lifted as E
 
 data KontraError =
     Respond404
