@@ -33,35 +33,36 @@ module Doc.DocStateData (
   , documentsealstatus
   ) where
 
+import Control.Applicative
+import Control.Monad
 import Data.Data
 import Data.Int
+import Data.List
 import Data.Maybe
+import Database.PostgreSQL.PQTypes
+import Text.JSON
+import Text.JSON.FromJSValue
+import Text.JSON.Gen
+import qualified Control.Exception.Lifted as E
+import qualified Data.Set as S
+
+import API.APIVersion
+import Company.CompanyID
 import DB.Derive
 import DB.RowCache (ID, HasID(..))
 import DB.TimeZoneName
+import Doc.DocumentID
+import Doc.SealStatus (SealStatus, HasGuardtimeSignature(..))
+import Doc.SignatoryFieldID
+import Doc.SignatoryLinkID
+import ELegitimation.SignatureProvider
+import File.FileID
 import IPAddress
 import MagicHash
 import MinutesTime
-import User.UserID
-import Company.CompanyID
 import User.Lang
-import File.FileID
-import Doc.SealStatus (SealStatus, HasGuardtimeSignature(..))
-import Doc.DocumentID
-import Doc.SignatoryLinkID
-import Doc.SignatoryFieldID
-import Database.PostgreSQL.PQTypes
-import Data.List
-import ELegitimation.SignatureProvider
-import Text.JSON.FromJSValue
-import Text.JSON.Gen
-import Text.JSON
-import Control.Applicative
-import Control.Monad
+import User.UserID
 import Utils.Default
-import qualified Control.Exception.Lifted as E
-import qualified Data.Set as S
-import API.APIVersion
 
 newtype SignOrder = SignOrder { unSignOrder :: Int32 }
   deriving (Eq, Ord, PQFormat)
