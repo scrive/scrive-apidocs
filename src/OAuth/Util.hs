@@ -4,24 +4,24 @@ module OAuth.Util(
   , getAuthorization
 ) where
 
-import Kontra
-import OAuth.Model
-import OAuth.Parse
-import Control.Logic
-import Happstack.Fields
-import Utils.Read
-
 import Control.Applicative
-import qualified Data.ByteString.UTF8 as BS hiding (length)
-import Happstack.Server.Types
-import Happstack.Server.Monads
-import qualified Data.Map as Map
-import Data.Maybe
 import Data.List
+import Data.Maybe
+import Happstack.Server.Monads
+import Happstack.Server.RqData
+import Happstack.Server.Types
 import Network.URI
 import qualified Codec.Binary.Url as URL
 import qualified Codec.Binary.UTF8.String as UTF
-import Happstack.Server.RqData
+import qualified Data.ByteString.UTF8 as BS hiding (length)
+import qualified Data.Map as Map
+
+import Control.Logic
+import Happstack.Fields
+import Kontra
+import OAuth.Model
+import OAuth.Parse
+import Utils.Read
 
 getAuthorizationHeader :: Kontrakcja m => m (Maybe [(String, String)])
 getAuthorizationHeader = do
