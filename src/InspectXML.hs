@@ -9,6 +9,7 @@
 module InspectXML where
 
 import qualified Language.Haskell.TH as TH
+
 import Utils.String
 
 class InspectXML a where
