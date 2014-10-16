@@ -10,14 +10,14 @@ module File.Model (
 import Control.Applicative
 import Control.Monad.Catch
 import Data.Int
+import qualified Crypto.Hash.SHA1 as SHA1
+import qualified Data.ByteString as BS
 
 import Crypto
 import DB
+import File.Conditions
 import File.File
 import File.FileID
-import File.Conditions
-import qualified Data.ByteString as BS
-import qualified Crypto.Hash.SHA1 as SHA1
 
 data GetFileByFileID = GetFileByFileID FileID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetFileByFileID File where
