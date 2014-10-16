@@ -1,19 +1,19 @@
 module UserStateTest (userStateTests) where
 
+import Control.Applicative
 import Control.Monad
+import Data.List
 import Data.Maybe
 import Test.Framework
 
 import Company.Model
 import DB
 import MinutesTime
-import Utils.Default
-import User.Model
-import User.Email
 import TestingUtil
 import TestKontra
-import Data.List
-import Control.Applicative
+import User.Email
+import User.Model
+import Utils.Default
 
 sortByEmail :: [User] -> [User]
 sortByEmail = sortBy (\a b -> compare (f a) (f b))
