@@ -6,6 +6,7 @@ module Dispatcher (
 import Control.Concurrent
 import Control.Monad
 import Control.Monad.IO.Class
+import Database.PostgreSQL.PQTypes.Class.Instances.Overlapping ()
 
 import Crypto.RNG
 import DB
