@@ -5,19 +5,19 @@ module Salesforce.AuthorizationWorkflow (
   , testSalesforce ) where
 
 
-import DB
 import Control.Monad.IO.Class
-import Salesforce.Conf
 import Control.Monad.Reader
-import Utils.IO
-import qualified Data.ByteString.Lazy.Char8 as BSL
-import qualified Data.ByteString.Lazy.UTF8 as BSL (toString)
-import qualified Log
-import Text.JSON.FromJSValue
 import System.Exit
 import Text.JSON hiding (Ok)
+import Text.JSON.FromJSValue
+import qualified Data.ByteString.Lazy.Char8 as BSL
+import qualified Data.ByteString.Lazy.UTF8 as BSL (toString)
 import qualified Text.JSON as J
 
+import DB
+import Salesforce.Conf
+import Utils.IO
+import qualified Log
 
 {- Returns a link. When following this link, user will be asked in salesforce to give use propper permissions-}
 initAuthorizationWorkflowUrl :: (MonadDB m, MonadIO m,MonadReader c m, HasSalesforceConf c) => (Maybe String) -> m String
