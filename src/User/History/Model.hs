@@ -21,16 +21,14 @@ import Data.Monoid
 import Data.Monoid.Space
 import Text.JSON
 import Text.JSON.Gen
-import qualified Version
 
 import DB
 import IPAddress
 import MinutesTime
 import User.Email
-
-import User.UserID
 import User.Model
 import Utils.Prelude
+import qualified Version
 
 data UserHistory = UserHistory {
     uhuserid           :: UserID
