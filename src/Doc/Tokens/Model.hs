@@ -5,6 +5,8 @@ module Doc.Tokens.Model (
 
 import Control.Monad
 import Control.Monad.Catch
+import Happstack.Server (ServerMonad)
+
 import Context
 import Crypto.RNG
 import DB
@@ -12,7 +14,6 @@ import Doc.SignatoryLinkID
 import KontraMonad
 import MagicHash
 import Session.Model
-import Happstack.Server (ServerMonad)
 
 data GetDocumentSessionToken = GetDocumentSessionToken SignatoryLinkID
 instance (KontraMonad m, MonadDB m, MonadThrow m) => DBQuery m GetDocumentSessionToken (Maybe MagicHash) where
