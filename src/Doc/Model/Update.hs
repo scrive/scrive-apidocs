@@ -65,59 +65,59 @@ module Doc.Model.Update
   , updateMTimeAndObjectVersion
   ) where
 
+import Control.Applicative
+import Control.Arrow (second)
+import Control.Monad
 import Control.Monad.Catch
 import Control.Monad.Identity (Identity)
-import Control.Monad.Trans.Instances ()
 import Data.Decimal (realFracToDecimal)
 import Data.Int
+import Data.List hiding (tail, head)
+import Data.Maybe hiding (fromJust)
 import Data.Monoid
 import Data.Monoid.Space
+import Text.StringTemplates.Templates
+import qualified Data.Map as M
+import qualified Data.Set as S
+import qualified Text.StringTemplates.Fields as F
+
+import API.APIVersion
+import Company.Model
+import Control.Monad.Trans.Instances ()
+import Crypto.RNG
 import DB
+import DB.TimeZoneName (TimeZoneName, withTimeZone, defaultTimeZoneName)
+import Doc.Conditions
+import Doc.DocStateCommon
+import Doc.DocStateData
+import Doc.DocumentID
+import Doc.DocumentMonad (updateDocumentWithID, updateDocument, DocumentMonad, withDocument, theDocument, theDocumentID)
+import Doc.DocUtils
 import Doc.Model.Expressions
 import Doc.Model.Query (GetSignatoryLinkByID(..), GetDocumentByDocumentID(..), GetDocumentTags(..), GetDocsSentBetween(..), GetDocsSent(..), GetSignatoriesByEmail(..))
+import Doc.SealStatus (SealStatus(..), hasGuardtimeSignature)
 import Doc.SignatoryFieldID
-import MagicHash
-import Crypto.RNG
-import Doc.Conditions
-import Doc.DocumentMonad (updateDocumentWithID, updateDocument, DocumentMonad, withDocument, theDocument, theDocumentID)
+import Doc.SignatoryLinkID
+import Doc.SignatoryScreenshots
+import Doc.Tables
+import EvidenceLog.Model
 import File.FileID
 import File.Model
-import Doc.SealStatus (SealStatus(..), hasGuardtimeSignature)
-import Doc.DocUtils
-import User.UserID
-import User.Model
-import Doc.SignatoryLinkID
+import IPAddress
+import MagicHash
 import MinutesTime
-import Doc.DocumentID
 import OurPrelude
-import Doc.DocStateData
-import Data.Maybe hiding (fromJust)
+import User.Model
+import Util.Actor
+import Util.HasSomeUserInfo
+import Util.SignatoryLinkUtils
 import Utils.Default
 import Utils.Monad
 import Utils.Monoid
 import Utils.Prelude (for)
-import IPAddress
-import Data.List hiding (tail, head)
-import qualified Data.Map as M
-import qualified Data.Set as S
-import Doc.SignatoryScreenshots
-import qualified Doc.Screenshot as Screenshot
-import Doc.Tables
-import Control.Applicative
-import Control.Arrow (second)
-import Util.SignatoryLinkUtils
-import Doc.DocStateCommon
-import qualified Log
-import Control.Monad
-import Util.Actor
-import Text.StringTemplates.Templates
-import EvidenceLog.Model
-import Util.HasSomeUserInfo
-import qualified Text.StringTemplates.Fields as F
-import DB.TimeZoneName (TimeZoneName, withTimeZone, defaultTimeZoneName)
 import qualified DB.TimeZoneName as TimeZoneName
-import Company.Model
-import API.APIVersion
+import qualified Doc.Screenshot as Screenshot
+import qualified Log
 
 -- For this to work well we assume that signatories are ordered: author first, then all with ids set, then all with id == 0
 insertSignatoryLinksAsAre :: MonadDB m => DocumentID -> [SignatoryLink] -> m [SignatoryLink]
