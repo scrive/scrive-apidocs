@@ -1,7 +1,8 @@
 module Cron.Migrations (cronMigrations) where
 
-import Cron.Tables
 import Data.ByteString (ByteString)
+
+import Cron.Tables
 import DB
 import DB.Checks
 
