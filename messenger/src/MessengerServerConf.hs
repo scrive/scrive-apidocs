@@ -4,12 +4,13 @@ module MessengerServerConf (
   , unjsonMessengerServerConf
   ) where
 
-import Data.Word
-import Utils.Default
-import qualified Data.ByteString as BS
-import Data.Unjson
 import Control.Applicative
 import Data.Data
+import Data.Unjson
+import Data.Word
+import qualified Data.ByteString as BS
+
+import Utils.Default
 
 data MessengerServerConf = MessengerServerConf
   { mscHttpBindAddress :: (Word32, Word16)
