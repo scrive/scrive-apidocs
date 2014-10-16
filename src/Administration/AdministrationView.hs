@@ -17,14 +17,15 @@ module Administration.AdministrationView(
             , statisticsFields
           ) where
 
-import Text.StringTemplates.Templates
-import User.Model
-import Company.Model
-import BrandedDomain.BrandedDomainID
 import Data.List
-import MinutesTime
-import Kontra
+import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
+
+import BrandedDomain.BrandedDomainID
+import Company.Model
+import Kontra
+import MinutesTime
+import User.Model
 
 adminMainPage :: TemplatesMonad m => Context -> m String
 adminMainPage ctx = renderTemplate "adminsmain" $ F.value "admin" $ isAdmin ctx
