@@ -34,28 +34,28 @@ module Doc.DocUtils(
   , MaybeUser(..)
 ) where
 
-import Control.Logic
-import Util.HasSomeCompanyInfo
-import Util.HasSomeUserInfo
-import Doc.DocStateData
-import Doc.SignatoryFieldID
-import Text.StringTemplates.Templates
-import Templates
-import User.Model
-import Doc.SignatoryLinkID
-import Util.SignatoryLinkUtils
-import Doc.DocInfo
-import Company.Model
-import DB
-import qualified Text.StringTemplates.Fields as F
-
+import Control.Applicative
 import Control.Monad
 import Control.Monad.Catch
 import Data.List hiding (insert)
 import Data.Maybe
-import File.Model
+import Text.StringTemplates.Templates
+import qualified Text.StringTemplates.Fields as F
+
+import Company.Model
+import Control.Logic
+import DB
+import Doc.DocInfo
+import Doc.DocStateData
+import Doc.SignatoryFieldID
+import Doc.SignatoryLinkID
 import File.File
-import Control.Applicative
+import File.Model
+import Templates
+import User.Model
+import Util.HasSomeCompanyInfo
+import Util.HasSomeUserInfo
+import Util.SignatoryLinkUtils
 
 renderListTemplateNormal :: TemplatesMonad m => [String] -> m String
 renderListTemplateNormal = renderListTemplateNormalHelper renderTemplate
