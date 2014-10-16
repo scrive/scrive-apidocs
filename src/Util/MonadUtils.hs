@@ -11,9 +11,9 @@ module Util.MonadUtils where
 
 import Control.Monad.Base
 import Control.Monad.Trans
-import qualified Log
 
 import KontraError
+import qualified Log
 
 {- |
    Get the value from a Just or fail if it is Nothing
