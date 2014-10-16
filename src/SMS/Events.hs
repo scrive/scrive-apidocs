@@ -15,37 +15,37 @@ module SMS.Events (
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
-import Data.Maybe
-
-import AppConf
-import ActionQueue.Scheduler
-import Crypto.RNG
-import DB
-import Doc.Model
-import Doc.DocStateData
-import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID, withDocument)
-import KontraLink
-import SMS.Model
-import SMS.Data
-import Mails.SendMail
-import Mails.MailsConfig
-import MinutesTime
-import Text.StringTemplates.Templates hiding (runTemplatesT)
-import Templates
-import User.Model
-import Util.HasSomeUserInfo
-import Util.SignatoryLinkUtils
-import Doc.SignatoryLinkID
-import qualified Log
-import Util.Actor
-import qualified Text.StringTemplates.Fields as F
-import Utils.Read
 import Data.Functor
+import Data.Maybe
+import Text.StringTemplates.Templates hiding (runTemplatesT)
+import qualified Text.StringTemplates.Fields as F
+
+import ActionQueue.Scheduler
+import AppConf
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
+import Crypto.RNG
+import DB
+import Doc.DocStateData
+import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID, withDocument)
 import Doc.DocViewMail
+import Doc.Model
+import Doc.SignatoryLinkID
 import EvidenceLog.Model
+import KontraLink
+import Mails.MailsConfig
+import Mails.SendMail
+import MinutesTime
+import SMS.Data
+import SMS.Model
+import Templates
+import User.Model
+import Util.Actor
+import Util.HasSomeUserInfo
+import Util.SignatoryLinkUtils
 import Utils.Default (defaultValue)
+import Utils.Read
+import qualified Log
 
 processEvents :: Scheduler ()
 processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent (a,b,c, fromMaybe None $ maybeRead d))
