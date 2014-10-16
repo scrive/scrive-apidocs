@@ -3,16 +3,17 @@ module Util.CSVUtil ( parseCSV
                     , CSV(..)
                     ) where
 
-import qualified Data.ByteString.Lazy.UTF8 as BSL
-import qualified Data.ByteString.UTF8 as BS hiding (length)
+import Codec.Text.IConv
+import Control.Monad.Exception.Asynchronous (Exceptional(..))
 import Data.Char
 import Data.Either
 import Data.List
 import Data.Ord
 import Data.Spreadsheet as SS
-import Control.Monad.Exception.Asynchronous (Exceptional(..))
 import Happstack.Server (ToMessage(..), setHeaderBS, setHeader)
-import Codec.Text.IConv
+import qualified Data.ByteString.Lazy.UTF8 as BSL
+import qualified Data.ByteString.UTF8 as BS hiding (length)
+
 import Utils.String
 
 {- |
