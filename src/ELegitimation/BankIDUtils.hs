@@ -11,18 +11,18 @@ module ELegitimation.BankIDUtils (
     ) where
 
 import Data.Char
+import Data.Functor
 import Data.List
 import Data.Maybe
-import Data.Functor
-import qualified Data.Text.ICU.Normalize as ICU
+import Text.StringTemplates.Templates
 import qualified Data.Text as T
+import qualified Data.Text.ICU.Normalize as ICU
+import qualified Text.StringTemplates.Fields as F
 
 import Doc.DocStateData as D
+import Templates (renderLocalTemplate)
 import Util.HasSomeUserInfo
 import Utils.String
-import Text.StringTemplates.Templates
-import Templates (renderLocalTemplate)
-import qualified Text.StringTemplates.Fields as F
 
 data MergeResult = MergeMatch
                  | MergeKeep
