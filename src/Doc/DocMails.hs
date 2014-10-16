@@ -16,48 +16,48 @@ module Doc.DocMails (
   , MailT
   ) where
 
+import Control.Applicative ((<$>), (<*>))
+import Control.Conditional (ifM)
+import Control.Monad.Catch
+import Control.Monad.Reader
+import Data.List (find)
+import Data.Maybe hiding (fromJust)
+import Text.StringTemplates.Templates (TemplatesMonad, TemplatesT)
+import qualified Data.ByteString as BS
+
 import ActionQueue.Scheduler (SchedulerData, sdAppConf, getGlobalTemplates)
 import AppConf (hostpart, mailsConfig)
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
-import Control.Applicative ((<$>), (<*>))
-import Control.Conditional (ifM)
-import Control.Monad.Catch
-import Control.Monad.Trans
-import Control.Monad.Reader
 import Control.Logic
 import Crypto.RNG
 import DB
-import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
-import Doc.Model
+import Doc.API.Callback.Model
 import Doc.DocInfo
 import Doc.DocStateData
+import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
 import Doc.DocUtils
 import Doc.DocView
 import Doc.DocViewMail
 import Doc.DocViewSMS
+import Doc.Model
 import EvidenceLog.Model (InsertEvidenceEventWithAffectedSignatoryAndMsg(..), CurrentEvidenceEventType(..))
-import SMS.SMS (scheduleSMS)
+import File.File
+import File.Model
 import InputValidation
 import IPAddress (noIP)
-import File.Model
-import File.File
 import Kontra
 import MailContext (getMailContext, MailContext(..), MailContextMonad, MailContextT, runMailContextT)
 import Mails.SendMail
-import OurPrelude
-import User.Model
-import Util.HasSomeUserInfo
-import qualified Log
-import Templates (runTemplatesT)
-import Text.StringTemplates.Templates (TemplatesMonad, TemplatesT)
-import Util.Actor
-import Util.SignatoryLinkUtils
-import Data.Maybe hiding (fromJust)
-import Data.List (find)
-import qualified Data.ByteString as BS
-import Doc.API.Callback.Model
 import MinutesTime
+import OurPrelude
+import SMS.SMS (scheduleSMS)
+import Templates (runTemplatesT)
+import User.Model
+import Util.Actor
+import Util.HasSomeUserInfo
+import Util.SignatoryLinkUtils
+import qualified Log
 
 {- |
    Send emails to all of the invited parties saying that we fucked up the process.
