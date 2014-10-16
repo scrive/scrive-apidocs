@@ -3,20 +3,20 @@ module Doc.TestInvariants (
   , documentInvariants
   ) where
 
-import Control.Logic
-import Doc.DocStateData
-import Util.SignatoryLinkUtils
-import MinutesTime
-import Doc.DocInfo
-import Doc.DocUtils
-import Doc.SignatoryLinkID
-import Utils.Prelude
-import Utils.Monoid
-import Util.HasSomeUserInfo
-import InputValidation
-
 import Data.List
 import Data.Maybe
+
+import Control.Logic
+import Doc.DocInfo
+import Doc.DocStateData
+import Doc.DocUtils
+import Doc.SignatoryLinkID
+import InputValidation
+import MinutesTime
+import Util.HasSomeUserInfo
+import Util.SignatoryLinkUtils
+import Utils.Monoid
+import Utils.Prelude
 
 invariantProblems :: UTCTime -> Document -> Maybe String
 invariantProblems now document =
