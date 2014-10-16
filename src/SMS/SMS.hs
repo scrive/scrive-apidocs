@@ -4,13 +4,14 @@ module SMS.SMS (
   ) where
 
 import Control.Monad.Catch
-import DB
-import SMS.Model
-import qualified Log
-import MessageData
-import MinutesTime
 import Data.Char
 import Data.String.Utils
+
+import DB
+import MessageData
+import MinutesTime
+import SMS.Model
+import qualified Log
 
 data SMS = SMS {
     smsMSISDN     :: String -- ^ Number of recipient in international form (+NNXXYYYYYYY)
