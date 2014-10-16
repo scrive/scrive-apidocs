@@ -4,18 +4,19 @@ module Salesforce.Control (
   ) where
 
 import Data.Functor
+import Data.Maybe
+import Text.JSON
+import Text.JSON.Gen
+
+import DB
+import Happstack.Fields
 import Kontra
 import KontraLink
-import Happstack.Fields
 import Salesforce.AuthorizationWorkflow
-import User.CallbackScheme.Model
 import Salesforce.Conf
-import User.Utils
+import User.CallbackScheme.Model
 import User.Model
-import Data.Maybe
-import DB
-import Text.JSON.Gen
-import Text.JSON
+import User.Utils
 
 {- This handlers sets SalesforceScheme for callbacks for give user -}
 
