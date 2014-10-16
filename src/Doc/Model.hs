@@ -5,3 +5,4 @@ module Doc.Model
 
 import Doc.Model.Query
 import Doc.Model.Update
+
