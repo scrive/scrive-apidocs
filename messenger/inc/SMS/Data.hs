@@ -1,8 +1,8 @@
 module SMS.Data where
 
 import Control.Applicative
-import Data.Int
 import Data.Data
+import Data.Int
 import Database.PostgreSQL.PQTypes
 
 import DB.Derive
