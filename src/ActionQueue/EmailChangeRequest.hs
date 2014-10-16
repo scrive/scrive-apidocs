@@ -18,12 +18,12 @@ import ActionQueue.Tables
 import Context
 import Crypto.RNG
 import DB
-import KontraMonad
 import KontraLink
+import KontraMonad
 import MagicHash
 import MinutesTime
-import User.Model
 import User.Email
+import User.Model
 
 data EmailChangeRequest = EmailChangeRequest {
     ecrUserID :: UserID
