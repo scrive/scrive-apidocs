@@ -3,20 +3,20 @@ module LoginTest (loginTests) where
 import Control.Applicative
 import Happstack.Server
 import Test.Framework
+import Text.JSON
+import Text.JSON.Gen as J
 
 import ActionQueue.PasswordReminder
-import DB
+import Company.Model
 import Context
+import DB
 import Login
 import TestingUtil
 import TestKontra as T
-import User.Model
-import Company.Model
-import User.UserControl
 import User.API
+import User.Model
+import User.UserControl
 import Utils.Default
-import Text.JSON.Gen as J
-import Text.JSON
 
 loginTests :: TestEnvSt -> Test
 loginTests env = testGroup "Login" [
