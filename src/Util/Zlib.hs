@@ -2,10 +2,11 @@ module Util.Zlib ( safeDecompress
                  , decompressIfPossible
                  ) where
 
-import Utils.Either (toMaybe)
-import Data.Maybe (fromMaybe)
 import Codec.Compression.Zlib.Internal
+import Data.Maybe (fromMaybe)
 import qualified Data.ByteString.Lazy.Char8 as LB
+
+import Utils.Either (toMaybe)
 
 -- | Convert & unfold the custom DecompressStream
 --   error format from zlib to a Either
