@@ -11,38 +11,37 @@ module Attachment.Control
   )
 where
 
+import Control.Applicative
+import Control.Monad.IO.Class
+import Data.Maybe
+import Happstack.Server hiding (simpleHTTP)
+import System.FilePath
+import Text.JSON
+import Text.JSON.Gen as J
+import Text.StringTemplates.Templates
+import qualified Data.ByteString.Lazy as BSL
+import qualified Text.StringTemplates.Fields as F
+
 import AppView (respondWithPDF)
 import Attachment.AttachmentID
-import InputValidation
-import KontraLink
-import Kontra
-import DB
 import Attachment.Model
-import User.Model
-import Util.MonadUtils
-import Happstack.Server hiding (simpleHTTP)
-
-import Control.Applicative
-import Util.Actor
-import Text.JSON
+import DB
+import Doc.Rendering
+import File.Model
+import File.Storage
+import Happstack.Fields
+import InputValidation
+import Kontra
+import KontraLink
 import ListUtil
 import MinutesTime
-import Data.Maybe
-import Text.JSON.Gen as J
 import Redirect
-import System.FilePath
-
-import qualified Data.ByteString.Lazy as BSL
-import qualified Log
-import Control.Monad.IO.Class
+import User.Model
 import User.Utils
-import Doc.Rendering
+import Util.Actor
+import Util.MonadUtils
 import Utils.String
-import Text.StringTemplates.Templates
-import qualified Text.StringTemplates.Fields as F
-import File.Storage
-import File.Model
-import Happstack.Fields
+import qualified Log
 
 handleRename :: Kontrakcja m => AttachmentID -> m JSValue
 handleRename attid = do
