@@ -16,17 +16,18 @@ module Doc.Model.Expressions
   ) where
 
 import Control.Applicative
-import qualified Control.Monad.State.Lazy as State
-import qualified Data.Map as M
-import qualified Data.Set as S
 import Data.Maybe (fromMaybe)
 import Data.Monoid
 import Data.Monoid.Space
+import Prelude hiding (head, tail)
+import qualified Control.Monad.State.Lazy as State
+import qualified Data.Map as M
+import qualified Data.Set as S
+
 import DB
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.SignatoryLinkID
-import Prelude hiding (head, tail)
 import OurPrelude
 
 documentLatestSignTimeExpression :: SQL
