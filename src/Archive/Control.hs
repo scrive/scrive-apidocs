@@ -11,41 +11,40 @@ module Archive.Control
        )
        where
 
-import Archive.View
-
-import InputValidation
-import KontraLink
-import Kontra
-import DB
-import Doc.DocStateData
-import Doc.DocumentMonad (withDocument, theDocument, DocumentT)
-import Doc.Model
-import User.Model
-import User.Utils
-import Util.MonadUtils
-import Data.List
-
+import Codec.Archive.Zip
 import Control.Applicative
 import Control.Conditional (unlessM)
-import Util.SignatoryLinkUtils
-import Util.Actor
-import Text.JSON
+import Control.Monad
+import Data.Char
+import Data.List
 import Data.Maybe
+import Happstack.Server(Response)
+import Text.JSON
 import Text.JSON.Gen as J
+import qualified Data.ByteString as BSS
+import qualified Data.ByteString.Lazy as BSL
+import qualified Text.StringTemplates.Fields as F
+
+import AppView
+import Archive.View
+import DB
 import Doc.Action
 import Doc.DocInfo (isPending)
 import Doc.DocMails
-import Control.Monad
-import Codec.Archive.Zip
-import Util.ZipUtil
-import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString as BSS
-import Data.Char
+import Doc.DocStateData
+import Doc.DocumentMonad (withDocument, theDocument, DocumentT)
+import Doc.Model
 import File.Storage as F
+import InputValidation
+import Kontra
+import KontraLink
+import User.Model
+import User.Utils
+import Util.Actor
+import Util.MonadUtils
+import Util.SignatoryLinkUtils
+import Util.ZipUtil
 import qualified Log
-import AppView
-import Happstack.Server(Response)
-import qualified Text.StringTemplates.Fields as F
 
 handleArchiveDocumentsAction :: Kontrakcja m => String -> (User -> Document -> Bool) -> ((User, Actor) -> DocumentT m a) -> m [a]
 handleArchiveDocumentsAction actionStr docPermission m = do
