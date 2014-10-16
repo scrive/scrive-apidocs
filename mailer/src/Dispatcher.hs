@@ -10,9 +10,9 @@ import Control.Monad.IO.Class
 import Crypto.RNG
 import DB
 import DB.PostgreSQL
-import Sender
 import Mails.Model
 import MinutesTime
+import Sender
 import qualified Amazon as AWS
 import qualified Log
 
