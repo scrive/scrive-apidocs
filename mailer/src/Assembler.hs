@@ -15,19 +15,19 @@ import Text.HTML.TagSoup
 import Text.HTML.TagSoup.Entity
 import Text.JSON.Gen as J
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString.Char8 as BSC
-import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
-import qualified Data.ByteString.Base64 as Base64
+import qualified Data.ByteString.UTF8 as BSU
 import qualified Text.JSON as J
 
 import Crypto.RNG
 import Crypto.RNG.Utils
 import Data.ByteString.Utils (splitEvery)
-import Mails.Model
-import File.Storage
 import DB
+import File.Storage
+import Mails.Model
 import qualified Amazon as AWS
 import qualified Log
 
