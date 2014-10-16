@@ -16,6 +16,7 @@ module Cron.Tables (
   ) where
 
 import Data.ByteString (ByteString)
+
 import DB
 
 cronTables :: [Table]
