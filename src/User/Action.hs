@@ -10,35 +10,35 @@ import Control.Monad
 import Control.Monad.Catch
 import Data.Functor
 import Data.Maybe
+import Text.StringTemplates.Templates
 
 import ActionQueue.AccessNewAccount (newAccessNewAccountLink)
+import Administration.AddPaymentPlan
+import BrandedDomain.BrandedDomain
 import Company.CompanyID
+import Company.Model
+import Crypto.RNG
 import DB
+import Doc.DocStateData
 import Doc.DocumentMonad (DocumentMonad, theDocument, withDocumentID)
 import Doc.Model
-import Doc.DocStateData
+import Happstack.Fields
 import InputValidation
-import User.Email
 import Kontra
 import MailContext (MailContextMonad(..), MailContext(..))
 import Mails.SendMail
-import Happstack.Fields
-import Text.StringTemplates.Templates
+import MinutesTime
+import Payments.Model
+import ThirdPartyStats.Core
+import User.Email
+import User.History.Model
 import User.Model
 import User.UserView
 import Util.FlashUtil
-import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
-import qualified Log
+import Util.HasSomeUserInfo
 import Util.MonadUtils
-import User.History.Model
-import ThirdPartyStats.Core
-import Payments.Model
-import Administration.AddPaymentPlan
-import Crypto.RNG
-import MinutesTime
-import BrandedDomain.BrandedDomain
-import Company.Model
+import qualified Log
 
 handleAccountSetupFromSign :: (Kontrakcja m, DocumentMonad m) => SignatoryLink -> m (Maybe User)
 handleAccountSetupFromSign signatorylink = do
