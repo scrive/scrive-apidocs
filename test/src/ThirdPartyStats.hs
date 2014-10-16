@@ -1,9 +1,10 @@
 module ThirdPartyStats where
+import Data.Binary
 import Test.Framework
 import Test.Framework.Providers.QuickCheck2
-import ThirdPartyStats.Core
+
 import TestKontra
-import Data.Binary
+import ThirdPartyStats.Core
 
 thirdPartyStatsTests :: TestEnvSt -> Test
 thirdPartyStatsTests _ = testGroup "Third party stats tests" [
