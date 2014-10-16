@@ -18,29 +18,30 @@ module Doc.DocView (
   , documentSignviewBrandingCSS
   ) where
 
+import Control.Applicative ((<$>))
+import Control.Monad
+import Control.Monad.Trans
+import Data.Maybe
+import Happstack.Server.SimpleHTTP
+import System.Exit
+import Text.StringTemplates.Templates
+import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.Lazy.UTF8 as BSL
+import qualified Text.StringTemplates.Fields as F
+
+import Analytics.Include
 import AppView (kontrakcja, standardPageFields, brandingFields, companyUIForPage, renderFromBody)
+import BrandedDomain.BrandedDomain
+import Company.CompanyUI
 import Doc.DocStateData
 import Doc.DocUtils
 import Doc.DocViewMail
 import Kontra
-import Text.StringTemplates.Templates
 import User.Model
-import Control.Applicative ((<$>))
-import Data.Maybe
-import qualified Text.StringTemplates.Fields as F
-import Analytics.Include
-import Happstack.Server.SimpleHTTP
-import Company.CompanyUI
-import BrandedDomain.BrandedDomain
-import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.Lazy.UTF8 as BSL
-import Utils.IO
-import qualified Log as Log
-import System.Exit
-import Control.Monad.Trans
-import Control.Monad
 import Utils.Color
 import Utils.Font
+import Utils.IO
+import qualified Log as Log
 
 pageCreateFromTemplate :: TemplatesMonad m => m String
 pageCreateFromTemplate = renderTemplate_ "createFromTemplatePage"
