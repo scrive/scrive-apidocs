@@ -10,19 +10,16 @@ module Templates ( getAllTemplates
                  , templateName
                  ) where
 
-import Data.List (isSuffixOf)
-
-import Control.Monad.Trans
 import Control.Monad.Reader
+import Data.List (isSuffixOf)
 import Data.Time.Clock
+import Text.StringTemplates.Utils (directoryFilesRecursive)
+import qualified Text.StringTemplates.Fields as F
+import qualified Text.StringTemplates.Files as TF
+import qualified Text.StringTemplates.Templates as T
+import qualified Text.StringTemplates.TemplatesLoader as TL
 
 import User.Lang
-
-import qualified Text.StringTemplates.Files as TF
-import qualified Text.StringTemplates.TemplatesLoader as TL
-import qualified Text.StringTemplates.Templates as T
-import qualified Text.StringTemplates.Fields as F
-import Text.StringTemplates.Utils (directoryFilesRecursive)
 
 templateFilesDir :: FilePath
 templateFilesDir = "templates"
