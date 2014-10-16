@@ -5,18 +5,19 @@ module Doc.EvidenceAttachments
   ) where
 
 import Control.Applicative((<$>))
+import Control.Monad
 import Control.Monad.Catch
-import DB (MonadDB)
+import Control.Monad.IO.Class
 import Data.Maybe (listToMaybe, fromMaybe)
-import Doc.DocStateData (Document(..), documentsealedfile)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
+
+import DB (MonadDB)
+import Doc.DocStateData (Document(..), documentsealedfile)
 import File.Storage (getFileIDContents)
-import Control.Monad.IO.Class
+import qualified Amazon as AWS
 import qualified Log
 import qualified PdfModel as P
-import qualified Amazon as AWS
-import Control.Monad
 
 data Attachment = Attachment
   { name     :: BS.ByteString
