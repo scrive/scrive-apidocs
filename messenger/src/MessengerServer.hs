@@ -6,16 +6,16 @@ import qualified Control.Exception.Lifted as E
 import qualified Happstack.StaticRouting as R
 
 import Cleaner
-import Crypto.RNG (newCryptoRNGState)
 import Configuration
-import Dispatcher
-import Handlers
-import SMS.Tables
+import Crypto.RNG (newCryptoRNGState)
 import DB
 import DB.Checks
 import DB.PostgreSQL
+import Dispatcher
+import Handlers
 import MessengerServerConf
 import Sender
+import SMS.Tables
 import Utils.Cron
 import Utils.IO
 import Utils.Network
