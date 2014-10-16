@@ -25,48 +25,47 @@ module Doc.Model.Query
   , CheckDocumentObjectVersionIs(..)
   ) where
 
-import Control.Monad.IO.Class
+import Control.Applicative
+import Control.Monad
 import Control.Monad.Catch
+import Control.Monad.IO.Class
 import Data.Int
+import Data.List hiding (tail, head)
+import Data.Maybe hiding (fromJust)
 import Data.Monoid
 import Data.Monoid.Space
+import Prelude hiding (head, tail)
+import qualified Control.Monad.State.Lazy as State
+import qualified Data.ByteString as BS
+import qualified Data.Map as M
+import qualified Data.Set as S
+
+import API.APIVersion
+import Company.CompanyID
 import DB
 import DB.RowCache (GetRow(..))
 import DB.TimeZoneName
-import API.APIVersion
+import Doc.Conditions
+import Doc.DocStateData
+import Doc.DocumentID
+import Doc.DocUtils
 import Doc.Model.Domain
 import Doc.Model.Expressions
 import Doc.Model.Filter
 import Doc.Model.OrderBy
-import MagicHash
-import User.Email
-import Doc.Conditions
+import Doc.Screenshot
+import Doc.SignatoryLinkID
+import Doc.SignatoryScreenshots
 import File.FileID
 import File.Storage
-import qualified Amazon
-import qualified Control.Monad.State.Lazy as State
-
-import Doc.DocUtils
-import User.UserID
-import Company.CompanyID
-import User.Model
-import Doc.SignatoryLinkID
-import Prelude hiding (head, tail)
-import MinutesTime
-import Doc.DocumentID
-import OurPrelude
-import Doc.DocStateData
-import Data.Maybe hiding (fromJust)
 import IPAddress
+import MagicHash
+import MinutesTime
+import OurPrelude
+import User.Email
+import User.Model
+import qualified Amazon
 import qualified Log
-import Data.List hiding (tail, head)
-import qualified Data.Map as M
-import qualified Data.Set as S
-import Doc.SignatoryScreenshots
-import Doc.Screenshot
-import Control.Applicative
-import Control.Monad
-import qualified Data.ByteString as BS
 
 selectTablesForDocumentSelectors :: State.State SqlSelect () -> SqlSelect
 selectTablesForDocumentSelectors = sqlSelect2 "documents as documents LEFT JOIN document_automatic_reminders as document_automatic_reminders ON documents.id = document_automatic_reminders.document_id LEFT JOIN signatory_links AS signatory_links_authors ON documents.id = signatory_links_authors.document_id and signatory_links_authors.is_author = true LEFT JOIN users as user_authors ON signatory_links_authors.user_id = user_authors.id"
