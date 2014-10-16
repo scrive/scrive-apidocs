@@ -14,26 +14,26 @@ import Data.Maybe
 import Happstack.Server hiding (dir, simpleHTTP)
 import Happstack.StaticRouting (Route, dir, choice)
 import Text.JSON
-import Text.JSON.String
 import Text.JSON.FromJSValue
-import qualified Data.ByteString.UTF8 as BS
+import Text.JSON.Gen
+import Text.JSON.String
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Base64 as B64
+import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
 
-import DB
-import Company.Model
+import BrandedDomain.BrandedDomain
 import Company.CompanyUI
+import Company.Model
+import DB
+import Happstack.Fields
 import Kontra
 import KontraLink
-import Happstack.Fields
 import Routing (hGet, hPost, toK0, toK1)
 import User.Utils
 import Util.MonadUtils
 import Utils.String
-import Text.JSON.Gen
-import BrandedDomain.BrandedDomain
 
 routes :: Route (KontraPlus Response)
 routes = choice
