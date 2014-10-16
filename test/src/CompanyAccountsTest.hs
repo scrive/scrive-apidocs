@@ -5,6 +5,8 @@ import Data.List
 import Data.Ord
 import Happstack.Server hiding (simpleHTTP)
 import Test.Framework
+import Text.JSON.Gen
+import qualified Control.Exception.Lifted as E
 
 import ActionQueue.Core
 import ActionQueue.UserAccountRequest
@@ -16,17 +18,15 @@ import DB hiding (query, update)
 import Doc.DocStateData
 import Doc.Model
 import FlashMessage
-import User.Email
 import KontraError
 import Mails.Model
 import MinutesTime
-import Utils.Default
 import Redirect
 import TestingUtil
 import TestKontra as T
+import User.Email
 import Util.HasSomeUserInfo
-import qualified Control.Exception.Lifted as E
-import Text.JSON.Gen
+import Utils.Default
 
 companyAccountsTests :: TestEnvSt -> Test
 companyAccountsTests env = testGroup "CompanyAccounts" [
