@@ -9,10 +9,11 @@ import Control.Monad
 import Data.Maybe
 import Happstack.Server
 import qualified Control.Exception.Lifted as E
+
 import DB
 import Happstack.Fields
-import Mails.Model
 import Mailer
+import Mails.Model
 import qualified Log
 
 -- Note: This function is almost the same as the one used for handling sendgrid
