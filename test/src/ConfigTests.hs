@@ -1,17 +1,17 @@
 module ConfigTests (configTests) where
 
 
-import AppConf
-import MailingServerConf
-import MessengerServerConf
-import Data.Unjson
-import Utils.Default
 import Data.Monoid
-
+import Data.Unjson
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assertEqual, Assertion)
+
+import AppConf
+import MailingServerConf
+import MessengerServerConf
 import TestKontra
+import Utils.Default
 
 configTests :: TestEnvSt -> Test
 configTests _ = testGroup "Configurations"
