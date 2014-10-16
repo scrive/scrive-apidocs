@@ -1,20 +1,21 @@
 module KontraLink(KontraLink(..), LoginRedirectReason(..), getHomeOrDesignViewLink) where
 
-import qualified Data.ByteString.Char8 as BSC
-import Doc.DocStateData
-import Doc.SignatoryLinkID
-import MagicHash
-import Doc.DocumentID
-import Utils.List
-import User.Model
-import Company.Model
-import File.FileID
-import OAuth.Model
-import Network.URI
 import Network.HTTP
-import KontraMonad
-import Context
+import Network.URI
+import qualified Data.ByteString.Char8 as BSC
+
 import Attachment.AttachmentID
+import Company.Model
+import Context
+import Doc.DocStateData
+import Doc.DocumentID
+import Doc.SignatoryLinkID
+import File.FileID
+import KontraMonad
+import MagicHash
+import OAuth.Model
+import User.Model
+import Utils.List
 
 {- |
    Defines the reason why we are redirected to login page
