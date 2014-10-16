@@ -18,32 +18,33 @@ module Doc.Rendering
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Base
 import Control.Monad.Catch hiding (handle)
 import Control.Monad.Error
+import Control.Monad.Trans.Control
+import Data.Char
+import Data.Maybe
 import Data.Typeable
+import System.Directory
+import System.Exit
+import System.IO
+import qualified Control.Exception.Lifted as E
+import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.Char8 as BSC
+import qualified Data.ByteString.Lazy.Char8 as BSL
+import qualified System.IO.Temp
+
 import DB
 import Doc.RenderedPages
 import File.Model
+import File.Storage
 import ForkAction
 import Kontra
 import Utils.IO
 import Utils.Read
-import System.Directory
-import System.Exit
-import System.IO
-import qualified System.IO.Temp
-import qualified Control.Exception.Lifted as E
-import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.Lazy.Char8 as BSL
-import qualified Data.ByteString.Char8 as BSC
-import qualified Log
 import qualified Amazon as AWS
+import qualified Log
 import qualified MemCache as MemCache
-import File.Storage
-import Data.Char
-import Data.Maybe
-import Control.Monad.Trans.Control
-import Control.Monad.Base
 
 withSystemTempDirectory :: (MonadBaseControl IO m) => String -> (String -> m a) -> m a
 withSystemTempDirectory = liftBaseOp . System.IO.Temp.withSystemTempDirectory
