@@ -24,15 +24,15 @@ import Control.Monad
 import Control.Monad.Catch
 import Control.Monad.State
 import Data.Int
+import Data.Maybe hiding (fromJust)
 import Data.Monoid.Space
+import qualified Data.Map as Map
 
 import DB
 import MagicHash
 import Mails.Data
 import MinutesTime
 import OurPrelude
-import qualified Data.Map as Map
-import Data.Maybe hiding (fromJust)
 
 data CreateEmail = CreateEmail MagicHash Address [Address] UTCTime
 instance (MonadDB m, MonadThrow m) => DBUpdate m CreateEmail MailID where
