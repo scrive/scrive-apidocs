@@ -1,14 +1,13 @@
 module CSVUtilTest (csvUtilTests) where
 
 
-import qualified Data.ByteString.Lazy as BSL
-
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assert, assertEqual, Assertion)
+import qualified Data.ByteString.Lazy as BSL
 
-import Util.CSVUtil
 import TestKontra
+import Util.CSVUtil
 
 csvUtilTests :: TestEnvSt -> Test
 csvUtilTests _ = testGroup "CSVUtil"
