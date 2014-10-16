@@ -2,33 +2,33 @@
 {-# OPTIONS_GHC -funbox-strict-fields #-}
 
 module PdfModel where
-import Prelude hiding (String)
-import qualified Prelude as P
 import Control.Applicative ((<|>), (<$>), many)
-import Control.Monad.State.Strict
-import System.IO
 import Control.Exception
-import Numeric
-import Data.Bits
-import Data.Word
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy as  BSL
-import qualified Data.ByteString.Char8 as BSC
-import qualified Data.ByteString.Lazy.Char8 as BSLC
-import qualified Data.ByteString.Internal as BSB
-import qualified Data.IntMap as IntMap
-import Data.Maybe
-import Matrix
-import qualified Data.Attoparsec.ByteString as A
-import qualified Data.Char as Char
-
-import System.IO.MMap
-import qualified Data.Binary.Builder as Bin
-import Data.Monoid
+import Control.Monad.State.Strict
 import Control.Monad.Writer.Class
-import qualified Control.Monad.Writer.Strict as Strict
-import qualified Control.Monad.State.Strict as Strict
+import Data.Bits
 import Data.List (findIndex)
+import Data.Maybe
+import Data.Monoid
+import Data.Word
+import Numeric
+import Prelude hiding (String)
+import System.IO
+import System.IO.MMap
+import qualified Control.Monad.State.Strict as Strict
+import qualified Control.Monad.Writer.Strict as Strict
+import qualified Data.Attoparsec.ByteString as A
+import qualified Data.Binary.Builder as Bin
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BSC
+import qualified Data.ByteString.Internal as BSB
+import qualified Data.ByteString.Lazy as  BSL
+import qualified Data.ByteString.Lazy.Char8 as BSLC
+import qualified Data.Char as Char
+import qualified Data.IntMap as IntMap
+import qualified Prelude as P
+
+import Matrix
 
 trace :: P.String -> a -> a
 trace _ x = x
