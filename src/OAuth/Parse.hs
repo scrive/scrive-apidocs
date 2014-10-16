@@ -4,16 +4,15 @@ module OAuth.Parse (
                    ,readPrivileges
                    ) where
 
+import Data.List
+import Data.Maybe
+import Data.String.Utils hiding (maybeRead)
+import Network.HTTP (urlDecode)
+
+import MagicHash
 import OAuth.Model
 import Utils.List
 import Utils.Read
-import MagicHash
-
-import Data.String.Utils hiding (maybeRead)
-import Data.Maybe
-import Data.List
-import Network.HTTP (urlDecode)
-
 
 splitAuthorization :: String -> [(String, String)]
 splitAuthorization s =
