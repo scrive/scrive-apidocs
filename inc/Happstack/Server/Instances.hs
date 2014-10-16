@@ -5,8 +5,9 @@ module Happstack.Server.Instances where
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Trans.Control
-import Control.Monad.Trans.Control.Util
 import Happstack.Server
+
+import Control.Monad.Trans.Control.Util
 
 instance (
     Monad (t m)
