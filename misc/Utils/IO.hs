@@ -3,19 +3,20 @@ module Utils.IO where
 import Control.Concurrent
 import Control.Monad
 import Control.Monad.IO.Class
+import Data.List (sort)
 import System.Exit
 import System.IO
 import System.IO.Temp
-import System.Posix.Signals
 import System.Posix.IO (stdInput)
+import System.Posix.Signals
 import System.Posix.Terminal (queryTerminal)
 import System.Process
+import Text.JSON.Gen
 import qualified Control.Exception.Lifted as C
 import qualified Data.ByteString.Lazy as BSL
-import Data.List (sort)
 import qualified Data.ByteString.Lazy.UTF8 as BSL (toString)
+
 import qualified Log
-import Text.JSON.Gen
 
 -- | Wait for a signal (sigINT or sigTERM).
 waitForTermination :: IO ()
