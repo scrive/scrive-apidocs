@@ -12,24 +12,24 @@ module GuardTime (
   , privateGateway
   ) where
 
-import qualified Data.ByteString.Lazy as BSL hiding (length)
-import qualified Data.ByteString.Lazy.UTF8 as BSL
-import Utils.IO
 import Control.Applicative
-import Control.Monad.IO.Class
-import System.Exit
-import qualified Log
-import Text.JSON
-import Text.JSON.String
-import Text.JSON.FromJSValue
-import Text.JSON.ToJSValue
-import Text.JSON.Gen
 import Control.Monad
 import Control.Monad.Base (MonadBase)
+import Control.Monad.IO.Class
 import Control.Monad.Reader (ReaderT(..), runReaderT, ask)
 import Control.Monad.Trans (MonadTrans)
 import Control.Monad.Trans.Control (MonadBaseControl(..), MonadTransControl(..), ComposeSt, defaultLiftWith, defaultRestoreT, defaultLiftBaseWith, defaultRestoreM)
+import System.Exit
+import Text.JSON
+import Text.JSON.FromJSValue
+import Text.JSON.Gen
+import Text.JSON.String
+import qualified Data.ByteString.Lazy as BSL hiding (length)
+import qualified Data.ByteString.Lazy.UTF8 as BSL
+
 import GuardTime.Class
+import Utils.IO
+import qualified Log
 
 newtype GuardTimeConfT m a = GuardTimeConfT { unGuardTimeConfT :: ReaderT GuardTimeConf m a }
   deriving (Alternative, Applicative, Functor, Monad, MonadPlus, MonadIO, MonadTrans, MonadBase b)
