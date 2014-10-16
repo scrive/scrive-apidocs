@@ -8,10 +8,10 @@ module DB.TimeZoneName
   ) where
 
 
-import Data.Char
-import Data.Typeable
 import Control.Monad.Catch
+import Data.Char
 import Data.Monoid.Space
+import Data.Typeable
 import Database.PostgreSQL.PQTypes
 import qualified Control.Exception.Lifted as E
 
