@@ -4,13 +4,13 @@ module JSONUtilTest (jsonUtilTests) where
 import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit (Assertion)
-import TestingUtil
-
-import TestKontra
 import Text.JSON
 import Text.JSON.FromJSValue
 import Text.JSON.String
 import qualified Data.ByteString.UTF8 as BS
+
+import TestingUtil
+import TestKontra
 
 jsonUtilTests :: TestEnvSt -> Test
 jsonUtilTests _env = testGroup "JSONUtil" [
