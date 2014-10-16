@@ -25,8 +25,8 @@ import MinutesTime
 import Session.Cookies
 import Session.Data
 import User.Model
-import qualified Log
 import Utils.HTTP
+import qualified Log
 
 -- | Gets non temporary session id from Context. If current session id
 -- is temporary, it inserts new, empty session into database and returns
