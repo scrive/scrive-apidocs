@@ -4,26 +4,27 @@ module Context (
       contextToMailContext
     ) where
 
-import File.FileID
-import Doc.RenderedPages
-import MailContext (MailContext(..))
-import MinutesTime
-import User.Model
 import qualified Data.ByteString as BS
-import Templates
-import qualified MemCache
+
+import BrandedDomain.BrandedDomain
+import Doc.RenderedPages
+import ELegitimation.Config (LogicaConfig(..))
+import File.FileID
 import FlashMessage
-import Mails.MailsConfig
+import GuardTime (GuardTimeConf(..))
+import IPAddress
 import LiveDocx (LiveDocxConf(..))
 import MagicHash (MagicHash)
-import IPAddress
-import User.Email
-import Session.SessionID
-import ELegitimation.Config (LogicaConfig(..))
-import GuardTime (GuardTimeConf(..))
+import MailContext (MailContext(..))
+import Mails.MailsConfig
+import MinutesTime
 import Payments.Config (RecurlyConfig)
-import BrandedDomain.BrandedDomain
 import Salesforce.Conf
+import Session.SessionID
+import Templates
+import User.Email
+import User.Model
+import qualified MemCache
 
 data Context = Context
     { ctxmaybeuser           :: Maybe User -- ^ The logged in user. Is Nothing when there is no one logged in.
