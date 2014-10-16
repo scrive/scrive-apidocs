@@ -1,26 +1,20 @@
 module PaymentsTest (paymentsTests
                     ) where
 
+import Control.Monad
+import Control.Monad.Trans
+import Data.Maybe
+import Recurly
+import Test.Framework
+
+import Company.Model
+import CompanyAccounts.Model
 import DB
-import User.Model
+import MinutesTime
+import Payments.Control
+import Payments.Model
 import TestingUtil
 import TestKontra
-import Company.Model
-import MinutesTime
-
-import Data.Maybe
-import Control.Monad
-import Test.Framework
-import Control.Monad.Trans
-
-import CompanyAccounts.Model
-
---import Utils.Either
-
-import Payments.Model
-import Payments.Control
-
-import Recurly
 
 {- About this test
 
