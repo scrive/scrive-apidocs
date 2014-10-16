@@ -6,33 +6,33 @@ module Login (
   , handleLogoutAJAX
   ) where
 
-import DB
-import InputValidation hiding (Result)
-import Happstack.Fields
-import Kontra
-import KontraLink
-import Redirect
-import User.Model
-import IPAddress
-import Company.Model
-import qualified Log
-import Util.HasSomeUserInfo
-import User.History.Model
-
 import Control.Applicative
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
-import Text.JSON.Gen as J
 import Text.JSON
-import User.Email
-import qualified Text.StringTemplates.Fields as F
+import Text.JSON.Gen as J
 import Text.StringTemplates.Templates
-import Routing
-import Utils.HTTP
-import ThirdPartyStats.Core
-import AppView
+import qualified Text.StringTemplates.Fields as F
+
 import Analytics.Include
+import AppView
 import BrandedDomain.BrandedDomain
+import Company.Model
+import DB
+import Happstack.Fields
+import InputValidation hiding (Result)
+import IPAddress
+import Kontra
+import KontraLink
+import Redirect
+import Routing
+import ThirdPartyStats.Core
+import User.Email
+import User.History.Model
+import User.Model
+import Util.HasSomeUserInfo
+import Utils.HTTP
+import qualified Log
 
 handleLoginGet :: Kontrakcja m => m (Either KontraLink (Either Response ThinPage))
 handleLoginGet = do
