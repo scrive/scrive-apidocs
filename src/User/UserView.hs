@@ -36,32 +36,33 @@ module User.UserView (
     ) where
 
 import Control.Applicative ((<$>))
+import Control.Monad
+import Data.List
 import Data.Maybe
-import Company.Model
+import Text.JSON
+import Text.JSON.Gen
+import Text.StringTemplate.GenericStandard()
+import Text.StringTemplates.Templates
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Base64 as B64
+import qualified Data.ByteString.UTF8 as BS
+import qualified Text.StringTemplates.Fields as F
+
+import BrandedDomain.BrandedDomain
 import Company.CompanyUI
+import Company.Model
+import DB
+import Doc.DocStateData
+import Doc.DocViewMail
+import FlashMessage
 import Kontra
 import KontraLink
 import Mails.SendMail(Mail, kontramail, kontramaillocal)
-import Text.StringTemplates.Templates
-import Text.StringTemplate.GenericStandard()
-import FlashMessage
+import MinutesTime
+import User.Email
+import User.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
-import User.Model
-import User.Email
-import MinutesTime
-import Data.List
-import Text.JSON
-import Text.JSON.Gen
-import qualified Text.StringTemplates.Fields as F
-import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Base64 as B64
-import DB
-import BrandedDomain.BrandedDomain
-import Doc.DocViewMail
-import Doc.DocStateData
-import Control.Monad
 
 showAccount :: TemplatesMonad m => User -> m String
 showAccount user = renderTemplate "showAccount" $ do
