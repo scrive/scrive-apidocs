@@ -3,10 +3,10 @@ module Utils.HTTP where
 import Control.Monad
 import Data.Char
 import Data.List
-import Happstack.Server
-import qualified Data.ByteString.UTF8 as BS
-import Network.URI hiding (scheme)
 import Data.Maybe
+import Happstack.Server
+import Network.URI hiding (scheme)
+import qualified Data.ByteString.UTF8 as BS
 
 class URLAble a where
    encodeForURL :: a -> String
