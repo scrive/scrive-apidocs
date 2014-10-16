@@ -45,7 +45,7 @@ tableCronWorkers = tblTable {
 tableCronTasks :: Table
 tableCronTasks = tblTable {
     tblName = "cron_tasks"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblColumns = [
     -- Type of the task.
       tblColumn { colName = "type",      colType = TextT, colNullable = False }

@@ -2,6 +2,7 @@ module Cron.Migrations (cronMigrations) where
 
 import Data.ByteString (ByteString)
 
+import Cron.Model (TaskType(..))
 import Cron.Tables
 import DB
 import DB.Checks
@@ -10,6 +11,7 @@ cronMigrations :: MonadDB m => [Migration m]
 cronMigrations = [
     createCronWorkersTable
   , createCronTasksTable
+  , addArchiveIdleDocumentsTask
   ]
 
 createCronWorkersTable :: MonadDB m => Migration m
@@ -69,4 +71,14 @@ createCronTasksTable = Migration {
     , ("user_account_request_evaluation", ihours 1)
     ] :: [(ByteString, Interval)])
   }
+}
+
+addArchiveIdleDocumentsTask :: MonadDB m => Migration m
+addArchiveIdleDocumentsTask = Migration {
+  mgrTable = tableCronTasks
+, mgrFrom = 1
+, mgrDo = do
+    runQuery_ $ sqlInsert "cron_tasks" $ do
+      sqlSet "type" DocumentsArchiveIdle
+      sqlSet "frequency" (ihours 24)
 }
