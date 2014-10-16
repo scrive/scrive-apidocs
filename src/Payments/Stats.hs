@@ -10,11 +10,10 @@ import Data.Int
 import Data.Maybe
 import Data.Monoid
 
-import MinutesTime
-import DB
-
-import Kontra
 import Company.Model
+import DB
+import Kontra
+import MinutesTime
 import Payments.Model
 import Util.CSVUtil
 
