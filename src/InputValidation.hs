@@ -36,25 +36,25 @@ module InputValidation
 
 import Control.Applicative
 import Data.Char
+import Data.Maybe
+import Data.Monoid
+import Data.String.Utils
+import Numeric
 import Text.Regex.TDFA ((=~))
+import Text.XML.HaXml(render)
 import Text.XML.HaXml.Parse (xmlParse')
 import Text.XML.HaXml.Posn
-import Text.XML.HaXml.Types
-import Text.XML.HaXml(render)
 import Text.XML.HaXml.Pretty(content)
+import Text.XML.HaXml.Types
 
-import Kontra
-import Doc.DocumentID
 import Attachment.AttachmentID
-import Numeric
-import IPAddress
-import User.Email
-import qualified Log
+import Doc.DocumentID
 import Happstack.Fields hiding (getFields)
+import IPAddress
+import Kontra
+import User.Email
 import User.Model
-import Data.Monoid
-import Data.Maybe
-import Data.String.Utils
+import qualified Log
 
 {- |
     The input data.
