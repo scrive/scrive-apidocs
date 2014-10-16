@@ -1,35 +1,35 @@
 module DumpEvidenceTexts (dumpAllEvidenceTexts) where
 
-import Data.Decimal (realFracToDecimal)
-import Data.Function (on)
-import Data.List (sortBy)
-import Data.Maybe (fromJust, isNothing)
-import DB (MonadDB)
-import Doc.DocStateData (SignatoryField(..), SignatoryLink(..), FieldType(..), DeliveryMethod(..))
-import Doc.DocumentID (unsafeDocumentID)
-import Doc.SignatoryFieldID
-import Doc.DocumentMonad (withDocumentID)
-import EvidenceLog.View (simpleEvents, simplyfiedEventText, eventForVerificationPage)
-import Text.StringTemplates.Templates (TemplatesMonad, renderTemplate)
-import Util.Actor (Actor(..), actorEmail, actorUserID, actorAPIString, actorIP)
-import Version (versionID)
-
 import Control.Applicative ((<$>))
 import Control.Monad (forM, forM_, when)
 import Control.Monad.Catch
 import Control.Monad.Reader (asks)
 import Control.Monad.Trans (liftIO)
-import MinutesTime
-import TestKontra (TestEnvSt, teOutputDirectory, teGlobalTemplates)
-import qualified Text.StringTemplates.Fields as F
-import EvidenceLog.Model (DocumentEvidenceEvent'(..), EvidenceEventType(..), CurrentEvidenceEventType(..), evidenceLogText)
+import Data.Decimal (realFracToDecimal)
+import Data.Function (on)
+import Data.List (sortBy)
+import Data.Maybe (fromJust, isNothing)
 import System.FilePath ((</>))
-import Templates (runTemplatesT)
 import Test.Framework (Test)
+import Text.StringTemplates.Templates (TemplatesMonad, renderTemplate)
+import qualified Text.StringTemplates.Fields as F
+
+import DB (MonadDB)
+import Doc.DocStateData (SignatoryField(..), SignatoryLink(..), FieldType(..), DeliveryMethod(..))
+import Doc.DocumentID (unsafeDocumentID)
+import Doc.DocumentMonad (withDocumentID)
+import Doc.SignatoryFieldID
+import EvidenceLog.Model (DocumentEvidenceEvent'(..), EvidenceEventType(..), CurrentEvidenceEventType(..), evidenceLogText)
+import EvidenceLog.View (simpleEvents, simplyfiedEventText, eventForVerificationPage)
+import MinutesTime
+import Templates (runTemplatesT)
 import TestingUtil (testThat)
+import TestKontra (TestEnvSt, teOutputDirectory, teGlobalTemplates)
+import User.Model (codeFromLang, Lang)
+import Util.Actor (Actor(..), actorEmail, actorUserID, actorAPIString, actorIP)
 import Utils.Default (defaultValue)
 import Utils.Prelude (for)
-import User.Model (codeFromLang, Lang)
+import Version (versionID)
 
 dumpAllEvidenceTexts :: TestEnvSt -> Test
 dumpAllEvidenceTexts env = testThat "Generating all evidence texts" env $ do
