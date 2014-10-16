@@ -1,8 +1,9 @@
 module EvidenceLog.Migrations where
 
+import Data.Monoid
+
 import DB
 import EvidenceLog.Tables
-import Data.Monoid
 
 evidenceLogFixColumns :: MonadDB m => Migration m
 evidenceLogFixColumns =
