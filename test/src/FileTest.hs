@@ -1,19 +1,18 @@
 module FileTest (fileTests) where
 
-import Crypto
-import DB
-import TestingUtil
-import TestKontra
-
+import Happstack.Server.SimpleHTTP
 import Test.Framework
 import Test.QuickCheck
-import File.Model
-
 import qualified Data.ByteString.UTF8 as BS
-import Happstack.Server.SimpleHTTP
-import File.File
+
+import Crypto
+import DB
 import File.Conditions
+import File.File
+import File.Model
 import Purging.Files
+import TestingUtil
+import TestKontra
 
 fileTests :: TestEnvSt -> Test
 fileTests env = testGroup "Files" [
