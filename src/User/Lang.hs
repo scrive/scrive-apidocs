@@ -7,18 +7,18 @@ module User.Lang (
   , allLangs
   ) where
 
+import Control.Monad
 import Data.Int
 import Data.List
 import Data.Maybe
-import Control.Monad
+import Database.PostgreSQL.PQTypes
+import Happstack.Server
+import qualified Control.Exception.Lifted as E
+
+import Utils.Default
 import Utils.Enum
 import Utils.List
 import Utils.Read
-import Utils.Default
-import qualified Control.Exception.Lifted as E
-
-import Database.PostgreSQL.PQTypes
-import Happstack.Server
 
 data Lang = LANG_SV
           | LANG_EN
