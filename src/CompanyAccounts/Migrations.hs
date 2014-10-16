@@ -1,13 +1,14 @@
 module CompanyAccounts.Migrations where
 
-import Data.Monoid
-import DB
-import CompanyAccounts.Tables
-import Company.CompanyID
 import Control.Monad
-import Data.Maybe
-import User.Model
 import Data.Char
+import Data.Maybe
+import Data.Monoid
+
+import Company.CompanyID
+import CompanyAccounts.Tables
+import DB
+import User.Model
 
 normalizeCompanyInvites :: MonadDB m => Migration m
 normalizeCompanyInvites = Migration {
