@@ -17,8 +17,8 @@ import Data.Int
 import Data.Maybe hiding (fromJust)
 import Data.Monoid.Space
 import Data.Typeable
-import qualified Data.ByteString.Char8 as BS
 import qualified Control.Exception as E
+import qualified Data.ByteString.Char8 as BS
 
 import DB
 import OurPrelude
