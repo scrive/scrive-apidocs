@@ -2,7 +2,6 @@ module Interactive where
 
 -- Use this module for interactively trying out server code and for utility scripts
 
-import qualified Amazon as AWS
 import Control.Concurrent
 import Control.Monad
 import System.Environment
@@ -16,9 +15,10 @@ import Crypto.RNG
 import DB
 import DB.PostgreSQL
 import Templates
+import qualified Amazon as AWS
+import qualified Doc.RenderedPages as RenderedPages
 import qualified Log
 import qualified MemCache
-import qualified Doc.RenderedPages as RenderedPages
 
 run :: AWS.AmazonMonadT (CryptoRNGT (DBT IO)) a -> IO a
 run m = Log.withLogger $ do
