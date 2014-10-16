@@ -12,9 +12,9 @@ module OurPrelude (
   ) where
 
 import Data.Maybe (fromMaybe)
-import Prelude hiding (head, last, maximum, minimum, read, tail)
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
+import Prelude hiding (head, last, maximum, minimum, read, tail)
 import qualified Prelude as P
 
 head :: Q Exp
