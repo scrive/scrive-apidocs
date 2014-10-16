@@ -16,23 +16,22 @@ module SOAP.SOAP
   , makeSoapCallWithCA
   , makeSoapCallWithCookies ) where
 
+import Control.Monad.Base
+import Control.Monad.Trans.Control
+import Prelude hiding (print, putStrLn, putStr)
+import System.Exit
+import Text.XML.HaXml.Posn
+import Text.XML.HaXml.Types (QName(N))
+import Text.XML.HaXml.XmlContent
+import qualified Control.Exception.Lifted as E
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length, drop)
+import qualified Data.ByteString.UTF8 as BS hiding (length, drop, break)
+
 import Utils.Either
 import Utils.IO
-import System.Exit
-import Text.XML.HaXml.XmlContent.Parser
-import Text.XML.HaXml.XmlContent
-import Text.XML.HaXml.Types (QName(N))
-import Text.XML.HaXml.Posn
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.UTF8 as BS hiding (length, drop, break)
-import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length, drop)
-import qualified Data.ByteString.Lazy as BSL
-import qualified Control.Exception.Lifted as E
-import Control.Monad.Trans.Control
-import Control.Monad.Base
 import qualified Log
-
-import Prelude hiding (print, putStrLn, putStr)
 
 data SOAP a = SOAP a
               | SOAPFault String String String
