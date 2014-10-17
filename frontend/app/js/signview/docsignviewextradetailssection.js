@@ -210,7 +210,6 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
     this.signview = args.signview;
     this.render();
   },
-
   emailInput: function() {
     var self = this;
     var signview = this.signview;
@@ -220,7 +219,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
     var iti = new InfoTextInput({
       infotext: localization.email,
       value: field.value(),
-      cssClass: 'obligatory-input',
+      cssClass: 'obligatory-input extradetails-email',
       onFocus: function() {
         iti.el().addClass("active");
       },
@@ -251,7 +250,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
     var iti = new InfoTextInput({
       infotext: localization.personalName,
       value: field.value(),
-      cssClass: 'obligatory-input',
+      cssClass: 'obligatory-input extradetails-name',
       onFocus: function() {
         iti.el().addClass("active");
       },
@@ -283,7 +282,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
     var iti = new InfoTextInput({
       infotext: localization.personalNumber,
       value: field.value(),
-      cssClass: 'obligatory-input',
+      cssClass: 'obligatory-input extradetails-ssn',
       onFocus: function() {
         iti.el().addClass("active");
       },
@@ -313,7 +312,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
     var iti = new InfoTextInput({
       infotext: localization.phonePlaceholder,
       value: field.value(),
-      cssClass: 'obligatory-input',
+      cssClass: 'obligatory-input extradetails-phone',
       onFocus: function() {
         iti.el().addClass("active");
       },
@@ -347,19 +346,19 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
       this.fillBox = $("<div class='column spacing fillbox'/>");
 
       if (signview.hasExtraNameInput()) {
-       this.fillBox.append(this.nameInput(signatory));
+       this.fillBox.append(this.nameInput());
       }
 
       if (signview.hasExtraEmailInput()) {
-       this.fillBox.append(this.emailInput(signatory));
+       this.fillBox.append(this.emailInput());
       }
 
       if (signview.hasExtraSSNInput()) {
-       this.fillBox.append(this.ssnInput(signatory));
+       this.fillBox.append(this.ssnInput());
       }
 
       if (signview.hasExtraPhoneInput()) {
-       this.fillBox.append(this.phoneInput(signatory));
+       this.fillBox.append(this.phoneInput());
       }
 
       box.append(header).append(description).append(this.fillBox).append("<div class='clearfix' />");

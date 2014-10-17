@@ -360,42 +360,62 @@ var DocumentSignViewModel = Backbone.Model.extend({
        }
        return this.get('filltasks');
   },
-  fillExtraDetailsTask : function() {
+  extraDetailsTasks : function(classSelector) {
         var self = this;
         var document = self.document();
+        var makeTask = function(classSelector, isDone) {
+          var t = new PageTask({
+            type: 'extra-details',
+            isComplete: function() {return isDone();},
+            el: $(classSelector, self.extradetailssection().el)
+          });
+          document.currentSignatory().bind("change", function() {t.update()});
+          return t;
+        };
 
-        if (self.get("fillExtraDetailsTask") == undefined) {
-         var task = new PageTask({
-                    type: 'extra-details',
-                    isComplete: function() {
-                        return !self.hasExtraInputs();
-                    },
-                    el: $(self.extradetailssection().el),
-                    onActivate   : function() {
-                       self.setHighlight($(self.extradetailssection().el), true);
-                    },
-                    onDeactivate : function() {
-                       self.setHighlight($(self.extradetailssection().el), false);
-                    }
-                });
-         document.currentSignatory().bind("change", function() { task.update()});
-         self.set({'fillExtraDetailsTask' : task }, {silent : true});
+        if (self.get("extraDetailsTasks") == undefined) {
+          var tasks = [];
+          if(this.hasExtraNameInput()) {
+            tasks.push(makeTask('.extradetails-name', function() {
+              return !self.hasExtraNameInput();}));
+          }
+          if(this.hasExtraEmailInput()) {
+            tasks.push(makeTask('.extradetails-email', function() {
+              return !self.hasExtraEmailInput();}));
+          }
+          if(this.hasExtraSSNInput()) {
+            tasks.push(makeTask('.extradetails-ssn', function() {
+              return !self.hasExtraSSNInput();}));
+          }
+          if(this.hasExtraPhoneInput()) {
+            tasks.push(makeTask('.extradetails-phone', function() {
+              return !self.hasExtraPhoneInput();}));
+          }
+          if(this.hasExtraSignatureInput()) {
+            tasks.push(makeTask('.extradetails-signature', function() {
+              return !self.hasExtraSignatureInput();}));
+          }
+          self.set({'extraDetailsTasks' : tasks }, {silent : true});
        }
-       return self.get('fillExtraDetailsTask');
+       return self.get('extraDetailsTasks');
   },
   tasks : function() {
       if (this.get("tasks") == undefined) {
         var tasks = [];
-        if (this.hasMainFileSection())
+        if (this.hasMainFileSection()) {
             tasks = _.union(tasks,this.filltasks());
-        if (this.hasExtraDetailsSection())
-            tasks.push(this.fillExtraDetailsTask());
-        if (this.hasSignatoriesAttachmentsSection())
-            tasks = _.union(tasks,this.signatoryattachmentasks());
-        if (this.hasSignSection())
-            tasks.push(this.signtask());
-        this.set({'tasks' : new PageTasks({ tasks : tasks})}, {silent : true});
         }
+        if (this.hasExtraDetailsSection()) {
+            tasks = _.union(tasks, this.extraDetailsTasks());
+        }
+        if (this.hasSignatoriesAttachmentsSection()) {
+            tasks = _.union(tasks,this.signatoryattachmentasks());
+        }
+        if (this.hasSignSection()) {
+            tasks.push(this.signtask());
+        }
+        this.set({'tasks' : new PageTasks({ tasks : tasks})}, {silent : true});
+      }
       return this.get('tasks');
   },
   arrow : function() {
