@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React', 'lists/list','archive/statustooltipmixin', 'legacy_code'], function(React, List, StatusTooltipMixin) {
+define(['React', 'lists/list','archive/statustooltipmixin', 'moment', 'legacy_code'], function(React, List, StatusTooltipMixin, moment) {
 
 
 
@@ -184,7 +184,7 @@ return React.createClass({
             width="105px"
             sorting="time"
             rendering={function(d) {
-              var time = new Date(Date.parse(d.field("fields").time));
+              var time = moment(d.field("fields").time).toDate();
               return (<span title={time.fullTime()}>{time.toTimeAbrev()}</span>);
             }}
           />
@@ -212,7 +212,7 @@ return React.createClass({
           <List.Sublist
             count={function(d) {return d.field("subfields") != undefined ? d.field("subfields").length : 0}}
             rendering={function(d,i) {
-              var time = d.field("subfields")[i].time ? new Date(Date.parse(d.field("subfields")[i].time)) : undefined;
+              var time = d.field("subfields")[i].time ? moment(d.field("subfields")[i].time).toDate() : undefined;
               return [
                 <td key="1"></td>,
                 <td key="2">

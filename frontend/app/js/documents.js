@@ -2,7 +2,7 @@
  * Also document viewer (person thet is looking at document so we can hold current signatory link id somewere)
  */
 
-define(['Backbone', 'legacy_code'], function() {
+define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
 window.DocumentViewer = Backbone.Model.extend({
     authorcompanyadmin : function() {
@@ -707,8 +707,8 @@ window.Document = Backbone.Model.extend({
        canbecanceled: args.canbecanceled,
        canseeallattachments: args.canseeallattachments,
        status: args.status,
-       timeouttime: args.timeouttime == undefined ? undefined : new Date(Date.parse(args.timeouttime)),
-       autoremindtime: args.autoremindtime == undefined ? undefined : new Date(Date.parse(args.autoremindtime)),
+       timeouttime: args.timeouttime == undefined ? undefined : moment(args.timeouttime).toDate(),
+       autoremindtime: args.autoremindtime == undefined ? undefined : moment(args.autoremindtime).toDate(),
        signorder: args.signorder,
        authentication: args.authentication,
        delivery: args.delivery,

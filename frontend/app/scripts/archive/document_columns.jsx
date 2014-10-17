@@ -69,7 +69,7 @@ return function(args) {
             rendering={function(d,i) {
               var time;
               if (d.field("subfields")[i].time)
-                time = new Date(Date.parse(d.field("subfields")[i].time));
+                time = moment(d.field("subfields")[i].time).toDate();
               return [
                 <td key="1"></td>,
                 <td key="2">
