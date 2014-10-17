@@ -2,6 +2,7 @@
 {-# OPTIONS_GHC -Wall #-}
 import Control.Applicative
 import Control.Arrow
+import Control.Exception
 import Control.Monad
 import Data.Char
 import Data.Function
@@ -136,21 +137,20 @@ main = do
     then do
       prog <- getProgName
       putStrLn $ "Usage: " ++ prog ++ " [--check] [--suffix=SUFFIX] <directories>"
-    else do
-      let (suffix, check) = get_options args
-      if check
-        then checkConsistency dirs
-        else sortImports suffix dirs
+    else case get_options args of
+      (False, suffix) -> sortImports suffix dirs
+      (True, _) -> onException (checkConsistency dirs) $ do
+        putStrLn $ "Run scripts/sort_imports.sh without --check option to fix the problem."
   where
     is_config_option = ("--" `isPrefixOf`)
     opt_suffix = "--suffix="
     opt_check  = "--check"
 
-    get_options args = (suffix, check)
+    get_options args = (check, suffix)
       where
-        suffix = case find (opt_suffix `isPrefixOf`) args of
-          Just opt -> drop (length opt_suffix) opt
-          Nothing  -> ""
         check = case find (== opt_check) args of
           Just _  -> True
           Nothing -> False
+        suffix = case find (opt_suffix `isPrefixOf`) args of
+          Just opt -> drop (length opt_suffix) opt
+          Nothing  -> ""
