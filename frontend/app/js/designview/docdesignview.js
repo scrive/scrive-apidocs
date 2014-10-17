@@ -329,7 +329,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                     document.takeSigningScreenshot(function() { Eleg.mobileBankIDSign(document,signatory,callback); });
                   }
                 });
-                acceptButton.append(bankid.el()).append(telia.el()).append(mbi.el());
+                acceptButton.append(bankid.el()).append(mbi.el());
             } else {
                 acceptButton = new Button({
                     color : "green",

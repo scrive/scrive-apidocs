@@ -178,7 +178,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
       }
     });
 
-    return $("<span class='elegButtonFooter' />").append(bankid.el()).append(mbi.el()).append(telia.el());
+    return $("<span class='elegButtonFooter' />").append(bankid.el()).append(mbi.el());
   },
 
 
