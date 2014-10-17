@@ -257,11 +257,9 @@ var DocumentSignViewModel = Backbone.Model.extend({
                             el: els[i],
                             onActivate   : function() {
                                 mixpanel.track('Begin attachment task');
-                                model.setHighlight($(model.signatoryattachmentsection().el), true);
                             },
                             onDeactivate : function() {
                                 mixpanel.track('Finish attachment task');
-                                model.setHighlight($(model.signatoryattachmentsection().el), false);
                             }
                         });
             attachment.bind("change", function() {
@@ -286,11 +284,9 @@ var DocumentSignViewModel = Backbone.Model.extend({
                                 el:  $(model.signsection().el),
                                 onActivate   : function() {
                                     mixpanel.track('Begin signature task');
-                                    model.setHighlight($(model.signsection().el), true);
                                 },
                                 onDeactivate : function() {
                                     mixpanel.track('Finish signature task');
-                                    model.setHighlight($(model.signsection().el), false);
                                 }
                                 })
             }, {silent : true});
@@ -430,9 +426,6 @@ var DocumentSignViewModel = Backbone.Model.extend({
   updateArrowPosition : function() {
       if (this.get("arrow") != undefined)
         this.get("arrow").updatePosition();
-  },
-  setHighlight: function($el, on) {
-      $el.toggleClass('highlight',on);
   },
   recall : function(f) {
       var self = this;
