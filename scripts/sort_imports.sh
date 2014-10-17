@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-runhaskell $(dirname $0)/sort_imports.hs \
+runhaskell $(dirname $0)/sort_imports.hs "$@" \
   cron/inc \
   cron/src \
   docconv/src \
