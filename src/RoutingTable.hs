@@ -174,7 +174,7 @@ staticRoutes production = choice
      , allLangDirs $ dir "unsupported_browser" $ hGet $ toK0 $ unsupportedBrowserPage
      , allLangDirs $ dir "enable-cookies" $ dir "enable-cookies.html" $ hGetAllowHttp $ toK0 $ enableCookiesPage
      , allLangDirs $ dir "terms" $ hGet $ toK0 $ handleTermsOfService
-     , dir "branding" $ dir "logo" $  hGet $ toK0 $ brandedLogo -- | Redirect to MD5 version. No cache is set on that
+     , dir "branding" $ dir "logo" $  hGet $ toK0 $ brandedLogo -- Redirect to MD5 version. No cache is set on that
      , dir "branding" $ dir "logo" $  hGet $ toK1 $ brandedLogoWithMD5
 
      , documentAPI

@@ -87,11 +87,11 @@ fetchFile (fid, fname, content, amazon_bucket, amazon_url, checksum, maes_key, m
       , filestorage =
         -- Here we need to support the following cases:
         --
-        -- * plain data in the database: just return content
-        -- * encrypted data in the database (backward compatibility only):
+        --  * plain data in the database: just return content
+        --  * encrypted data in the database (backward compatibility only):
         --      decrypt and return content
-        -- * encrypted data in Amazon S3: return (bucket, url, aes)
-        -- * invalid AES key: error out at this place
+        --  * encrypted data in Amazon S3: return (bucket, url, aes)
+        --  * invalid AES key: error out at this place
         --
         -- Binary data in database is temporary: next cron run should
         -- move it to Amazon.  Encrypted data in database is backward

@@ -194,14 +194,13 @@ apiCallChangeEmail = api $ do
 
 
 
-  {- |
+{- |
    Handles submission of the signup form.
    Normally this would create the user, (in the process mailing them an activation link),
    but if the user already exists, we check to see if they have accepted the tos.  If they haven't,
    then we send them a new activation link because probably the old one expired or was lost.
    If they have then we stop the signup.
 -}
-
 apiCallSignup :: Kontrakcja m => m Response
 apiCallSignup = api $ do
   ctx <- getContext

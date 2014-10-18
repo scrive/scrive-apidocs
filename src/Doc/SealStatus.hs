@@ -9,17 +9,18 @@ import Data.Typeable (Typeable)
 import Database.PostgreSQL.PQTypes
 import qualified Control.Exception.Lifted as E
 
-data SealStatus =
-   UnknownSealStatus   -- ^ The file's digital signature status has not been determined
-
- | Missing             -- ^ The file lacks any form of digital signature
-
- | TrustWeaver         -- ^ The file has a TrustWeaver signature
-
- | Guardtime           -- ^ The file has a Guardtime signature
-    { extended :: Bool -- ^ The signature has been extended
-    , private  :: Bool -- ^ The signature was created using Scrive's own gateway
-    }
+data SealStatus
+ -- | File's digital signature status has not been determined
+ = UnknownSealStatus
+ -- | The file lacks any form of digital signature
+ | Missing
+ -- | The file has a TrustWeaver signature
+ | TrustWeaver
+ -- | The file has a Guardtime signature
+ | Guardtime {
+    extended :: Bool -- ^ The signature has been extended
+  , private  :: Bool -- ^ The signature was created using Scrive's own gateway
+  }
   deriving (Eq, Show, Typeable)
 
 class HasGuardtimeSignature a where

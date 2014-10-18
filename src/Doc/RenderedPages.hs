@@ -13,8 +13,8 @@ import File.FileID
 import qualified MemCache
 
 data RenderedPages
-  = RenderedPages Bool  -- ^ Rendering is finished
-                  [BS.ByteString] -- ^ Pages rendered so far. Format is PNG.
+  = RenderedPages Bool  -- Rendering is finished
+                  [BS.ByteString] -- Pages rendered so far. Format is PNG.
     deriving (Eq, Ord, Show, Typeable)
 
 data RenderingMode

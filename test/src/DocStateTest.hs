@@ -999,7 +999,7 @@ testGetDocumentsSharedInCompany = doTimes 10 $ do
   user5 <- addNewRandomUser
   user6 <- addNewRandomUser
 
-  -- | This test is good only for not admins
+  -- This test is good only for not admins
   _ <- dbUpdate $ SetUserCompanyAdmin (userid user1) False
   _ <- dbUpdate $ SetUserCompanyAdmin (userid user2) False
   _ <- dbUpdate $ SetUserCompanyAdmin (userid user3) False

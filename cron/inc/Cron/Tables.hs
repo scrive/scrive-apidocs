@@ -32,9 +32,9 @@ tableCronWorkers = tblTable {
     tblName = "cron_workers"
   , tblVersion = 1
   , tblColumns = [
-    -- | Id of the worker.
+    -- Id of the worker.
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
-    -- | Last activity of the worker.
+    -- Last activity of the worker.
     , tblColumn { colName = "last_activity", colType = TimestampWithZoneT, colNullable = False }
     ]
   , tblPrimaryKey = pkOnColumn "id"
@@ -47,15 +47,15 @@ tableCronTasks = tblTable {
     tblName = "cron_tasks"
   , tblVersion = 1
   , tblColumns = [
-    -- | Type of the task.
+    -- Type of the task.
       tblColumn { colName = "type",      colType = TextT, colNullable = False }
-    -- | Interval frequency, NULL if task is a one time run.
+    -- Interval frequency, NULL if task is a one time run.
     , tblColumn { colName = "frequency", colType = IntervalT, colNullable = False }
-    -- | The time task was started. if NULL, task was never started before.
+    -- The time task was started. if NULL, task was never started before.
     , tblColumn { colName = "started",   colType = TimestampWithZoneT }
-    -- | The time task was finished. if NULL, task was never finished before.
+    -- The time task was finished. if NULL, task was never finished before.
     , tblColumn { colName = "finished",  colType = TimestampWithZoneT }
-    -- | Id of the worker that currently runs the task, NULL if the task isn't running.
+    -- Id of the worker that currently runs the task, NULL if the task isn't running.
     , tblColumn { colName = "worker_id", colType = BigIntT }
     ]
   , tblPrimaryKey = pkOnColumn "type"

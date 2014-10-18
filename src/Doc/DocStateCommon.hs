@@ -28,7 +28,7 @@ signLinkFromDetails' :: [SignatoryField]
                      -> SignatoryLink
 signLinkFromDetails' fields author partner sorder attachments magichash =
   defaultValue {  signatorylinkid = unsafeSignatoryLinkID 0
-                , signatoryfields = map signatoryLinkClearField fields -- | Clean signatures
+                , signatoryfields = map signatoryLinkClearField fields -- clean signatures
                 , signatoryisauthor  = author
                 , signatoryispartner = partner
                 , signatorysignorder  = sorder

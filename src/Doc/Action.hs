@@ -176,12 +176,10 @@ postDocumentPendingChange olddoc = do
 -- out confirmation emails if there has been a change in the seal status.  Precondition: document must be
 -- closed or in error.
 postDocumentClosedActions :: (TemplatesMonad m, MailContextMonad m, CryptoRNG m, MonadIO m, Log.MonadLog m, AmazonMonad m, MonadBaseControl IO m, MonadMask m, DocumentMonad m, GuardTimeConfMonad m)
-                          => Bool -> Bool -> m ()
-postDocumentClosedActions
-  commitAfterSealing -- ^ Commit to DB after we have sealed the document
-  forceSealDocument -- ^ Prepare final PDF even if it has already been prepared
-
-  = do
+  => Bool -- ^ Commit to DB after we have sealed the document
+  -> Bool -- ^ Prepare final PDF even if it has already been prepared
+  -> m ()
+postDocumentClosedActions commitAfterSealing forceSealDocument = do
 
   doc0 <- theDocument
 
@@ -231,9 +229,11 @@ postDocumentClosedActions
       theDocument >>= triggerAPICallbackIfThereIsOne
 
 -- | Post-process documents that lack final PDF or digital signature
-findAndDoPostDocumentClosedActions :: (MonadReader SchedulerData m, MonadBaseControl IO m, CryptoRNG m, MonadDB m, MonadMask m, MonadIO m, Log.MonadLog m, AmazonMonad m) => Maybe Int -> m ()
+findAndDoPostDocumentClosedActions :: (MonadReader SchedulerData m, MonadBaseControl IO m, CryptoRNG m, MonadDB m, MonadMask m, MonadIO m, Log.MonadLog m, AmazonMonad m)
+  => Maybe Int -- ^ Only consider documents signed within the latest number of hours given.
+  -> m ()
 findAndDoPostDocumentClosedActions
-  mhours -- ^ Only consider documents signed within the latest number of hours given.
+  mhours
   = do
   now <- currentTime
   let signtimefilter = case mhours of

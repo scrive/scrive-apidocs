@@ -117,9 +117,7 @@ handleZip = do
                docToEntry =<< theDocument
   return $ ZipArchive "selectedfiles.zip" $ foldr addEntryToArchive emptyArchive $ catMaybes $ mentries
 
-  {- |
-  Main view of the archive
- -}
+-- | Main view of the archive
 showArchive :: Kontrakcja m => m (Either KontraLink Response)
 showArchive = checkUserTOSGet $ do
     tostime <- guardJustM $ join <$> fmap userhasacceptedtermsofservice <$> ctxmaybeuser <$> getContext
