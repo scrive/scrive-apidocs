@@ -241,6 +241,7 @@ var SelectView = Backbone.View.extend({
                     .attr("style",this.model.style())
                     .css('color',this.model.color())
                     .css("border", this.model.border())
+                    .css('max-width', this.model.optionsWidth())
                     .append(this.button());
         }
         else
