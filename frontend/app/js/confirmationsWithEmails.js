@@ -3,7 +3,7 @@
  *
 */
 
-define(['Backbone', 'legacy_code'], function() {
+define(['Backbone', 'tinyMCE', 'tinyMCE_theme', 'tinyMCE_noneeditable', 'tinyMCE_paste', 'legacy_code'], function(Backbone, tinyMCE) {
 
 window.Mail = Backbone.Model.extend({
 	defaults : {
@@ -61,7 +61,7 @@ window.MailView = Backbone.View.extend({
         var wrapper = $("<div style='margin-bottom:12px;'/>").append(textarea);
         editablePart.replaceWith(wrapper);
         setTimeout( function() {
-           tinymce.init({
+           tinyMCE.init({
                       selector: '#' + id,
                       plugins: "noneditable,paste",
                       menubar: false,
