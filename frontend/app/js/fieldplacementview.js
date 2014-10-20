@@ -18,13 +18,20 @@ var fontSizeLarge  = 20;
 var fontSizeHuge   = 24;
 
 /* Margins for checkbox placement. */
-var checkboxPlacementTopMargin  = 1;
-var checkboxPlacementLeftMargin = 1;
+var checkboxSprite = 10;
+var checkboxSpriteBorder = 1;
+var checkboxPlacementMargin = placementBorder + 1;
 
 /* Margins for signature placement. */
-var signaturePlacementTopMargin = 2;
-var signaturePlacementLeftMargin = 2;
+var signaturePlacementTopMargin = placementBorder + 1;
+var signaturePlacementLeftMargin = placementBorder + 1;
 
+/* Offsets for type setter placements */
+var textTypeSetterArrowOffset = 18;
+var checkboxTypeSetterHorizontalOffset = 32;
+var checkboxTypeSetterVerticalOffset = -22;
+var signatureTypeSetterHorizontalOffset = 18;
+var signatureTypeSetterVerticalOffset = -19;
 
 // !!! Not placed views model field, not placement
 window.createFieldPlacementView = function (args) {
@@ -163,8 +170,8 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
               x += textPlacementXOffset;
               y += textPlacementYOffset;
             } else if (field.isCheckbox()) {
-              x += checkboxPlacementLeftMargin;
-              y += checkboxPlacementTopMargin;
+              x += checkboxPlacementMargin;
+              y += checkboxPlacementMargin;
             } else if (field.isSignature()) {
               x += signaturePlacementLeftMargin;
               y += signaturePlacementTopMargin;
@@ -489,8 +496,7 @@ var TextTypeSetterView = Backbone.View.extend({
     place : function() {
         var placement = this.model;
         var offset = $(placement.view.el).offset();
-        var arrowOffset = 18;
-        $(this.el).css("left",offset.left + Math.max($(placement.view.el).width() + arrowOffset));
+        $(this.el).css("left",offset.left + Math.max($(placement.view.el).width() + textTypeSetterArrowOffset));
         $(this.el).css("top",offset.top - 19);
     },
     render: function() {
@@ -555,10 +561,11 @@ var TextPlacementView = Backbone.View.extend({
     updateColor : function() {
         var field = this.model;
         var signatory = field.signatory();
-        var color = signatory?signatory.color():'red';
-        if (color) {
-          $(this.el).css('border', placementBorder + 'px solid ' + color);
+        var color = signatory.color();
+        if(field.placements().length > 0) {
+          color = field.placements()[0].signatory().color();
         }
+        $(this.el).css('border', placementBorder + 'px solid ' + color);
     },
     render: function() {
             var field =   this.model;
@@ -708,8 +715,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
                  "line-height: 1;" +
                  "height:"+ (this.fontSize() + 4) +"px;" +
                  "border-width: 0px;" +
-                 "padding:" + textPlacementSpacingString + ";" +
-                 "background:"+background+";",
+                 "padding:" + textPlacementSpacingString + ";",
           inputStyle : "font-size:" + this.fontSize() + "px ;" +
                        "line-height: " + (this.fontSize()+ textPlacementExtraLineHeight) + "px;" +
                        "height:"+ (this.fontSize() + textPlacementExtraLineHeight) +"px;" +
@@ -793,7 +799,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
             options: options,
 
             cssClass: 'text-field-placement-setter-field-selector',
-            border : placementBorder + "px solid #f33",
+            border : placementBorder + "px solid " + (sig.color() || "#f33"),
             textWidth: "",
             onSelect: function(s) {
                 mixpanel.track('Select placement signatory');
@@ -1083,9 +1089,9 @@ var CheckboxPlacementView = Backbone.View.extend({
     updateColor : function() {
       if(this.model.signatory().color())
                 $(this.el).css({'border': placementBorder + 'px solid ' + this.model.signatory().color(),
-                         'background-position': '-1px -1px',
-                         'width': 10,
-                         'height': 10});
+                         'background-position': '-' + checkboxSpriteBorder + 'px -' + checkboxSpriteBorder + 'px',
+                         'width': checkboxSprite,
+                         'height': checkboxSprite});
     },
     render: function() {
             var field =   this.model;
@@ -1279,10 +1285,8 @@ var CheckboxTypeSetterView = Backbone.View.extend({
     place : function() {
         var placement = this.model;
         var offset = $(placement.view.el).offset();
-        var horizontalOffset = 32;
-        var verticalOffset = -22;
-        $(this.el).css("left",offset.left + horizontalOffset);
-        $(this.el).css("top",offset.top + verticalOffset);
+        $(this.el).css("left",offset.left + checkboxTypeSetterHorizontalOffset);
+        $(this.el).css("top",offset.top + checkboxTypeSetterVerticalOffset);
     },
     render: function() {
            var view = this;
@@ -1330,8 +1334,8 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
             var parentWidth = parent.width();
             var parentHeight = parent.height();
             place.css({
-                left: Math.floor(placement.xrel() * parentWidth + 0.5),
-                top: Math.floor(placement.yrel() * parentHeight + 0.5),
+                left: Math.round(placement.xrel() * parentWidth) - placementBorder,
+                top: Math.round(placement.yrel() * parentHeight) - placementBorder,
                 width: Math.round(placement.wrel() * parentWidth),
                 height: Math.round(placement.hrel() * parentHeight),
                 fontSize: placement.fsrel() * parentWidth
@@ -1552,6 +1556,7 @@ var SignaturePlacementViewWithoutPlacement = Backbone.View.extend({
             var width =  this.width != undefined ? this.width : 260;
             var height = this.height != undefined ? this.height : 102;
             box.addClass('signatureBox');
+            box.css('border', placementBorder + 'px solid ' + (this.model.value() == "" ? (this.model.signatory().color() || '#999') : "transparent" ));
             box.append(this.ddIcon());
             box.append(this.header());
             box.width(width);
@@ -1686,10 +1691,8 @@ var SignatureTypeSetterView = Backbone.View.extend({
         var placement = this.model;
         var el = $(placement.view.el);
         var offset = el.offset();
-        var horizontalOffset = 18;
-        var verticalOffset = -19;
-        $(this.el).css("left", offset.left + el.width() + horizontalOffset);
-        $(this.el).css("top", offset.top + verticalOffset);
+        $(this.el).css("left", offset.left + el.width() + signatureTypeSetterHorizontalOffset);
+        $(this.el).css("top", offset.top + signatureTypeSetterVerticalOffset);
     },
     render: function() {
            var view = this;
@@ -1765,7 +1768,7 @@ var SignaturePlacementView = Backbone.View.extend({
         return box;
     },
     updateColor : function() {
-        $(this.el).css('border', '2px solid ' + (this.model.field().value() == "" ? (this.model.field().signatory().color() || '#999') : "transparent" ));
+        $(this.el).css('border', placementBorder + 'px solid ' + (this.model.field().value() == "" ? (this.model.field().signatory().color() || '#999') : "transparent" ));
     },
     render: function() {
             var placement = this.model;
@@ -1856,8 +1859,8 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
             var parentWidth = parent.width();
             var parentHeight = parent.height();
             place.css({
-                left: Math.floor(placement.xrel() * parentWidth + 0.5),
-                top: Math.floor(placement.yrel() * parentHeight + 0.5),
+                left: Math.round(placement.xrel() * parentWidth),
+                top: Math.round(placement.yrel() * parentHeight),
                 fontSize: placement.fsrel() * parentWidth
             });
             if (this.placeForDrawing !== undefined) {
