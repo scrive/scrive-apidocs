@@ -3,19 +3,25 @@ module DocAPITest (docAPITests) where
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
+import Data.Maybe
+import Doc.DocStateData
 import Happstack.Server
+import Network.URI
 import Test.Framework
+import Test.QuickCheck
 import Text.JSON
 import Text.JSON.FromJSValue
 import Text.JSON.Gen
 import qualified Data.ByteString.Lazy.UTF8 as BS
 
 import Context
+import DB
 import Doc.API.V1.Calls
-import Doc.DocStateData
+import Doc.API.V1.DocumentToJSON
 import Doc.Model
-import TestingUtil
+import OAuth.Model
 import TestKontra as T
+import TestingUtil
 import User.Model
 import Utils.Default
 
