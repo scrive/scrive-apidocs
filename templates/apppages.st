@@ -166,12 +166,24 @@ typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var
         $endif$
 
         $if(analytics.properties)$
-        var analyticsproperties = $analytics.properties:noescape()$;
+          var analyticsproperties = $analytics.properties:noescape()$;
 
-          mixpanel.register(analyticsproperties);
-          mixpanel.people.set(analyticsproperties);
-        if(analyticsproperties['Smart Name'])
-          mixpanel.name_tag(analyticsproperties['Smart Name']);
+          require(['Underscore'], function(_) {
+            // Overwrite with nicer values, like "Proffice & Foo" instead of "Proffice &amp; Foo"
+            var nicePropList = _.map(analyticsproperties, function(value, key) {
+              return [key, _.unescape(value)];
+            });
+            analyticsproperties = _.object(nicePropList);
+
+            console.log(analyticsproperties);
+
+            mixpanel.register(analyticsproperties);
+            mixpanel.people.set(analyticsproperties);
+
+            if(analyticsproperties['Smart Name'])
+              mixpanel.name_tag(analyticsproperties['Smart Name']);
+          });
+
         $endif$
    // end Mixpanel
 
