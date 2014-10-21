@@ -317,7 +317,7 @@
 "_designViewCustomMessageConfirmation":"Mensaje de confirmación",
 "_designViewCustomMessageInvitation":"Mensaje de invitación",
 "_designViewCustomMessagePreview":"Vista preliminar",
-"_designViewDNDDisabled":"",
+"_designViewDNDDisabled":"Usted tiene que añadir al menos una parte firmante mas antes de rellenar este campo.",
 "_designViewDocumentName":"Nombre del documento",
 "_designViewEditConfirmation":"Editar mensaje de confirmación",
 "_designViewEditDocument":"Insertar campos",

@@ -317,7 +317,7 @@
 "_designViewCustomMessageConfirmation":"Bekräftelsemeddelande",
 "_designViewCustomMessageInvitation":"Inbjudningsmeddelande",
 "_designViewCustomMessagePreview":"Förhandsgranska",
-"_designViewDNDDisabled":"",
+"_designViewDNDDisabled":"Du behöver lägga till minst en signerande part innan du placerar ett fält.",
 "_designViewDocumentName":"Dokumentnamn",
 "_designViewEditConfirmation":"Ändra bekräftelsemeddelande",
 "_designViewEditDocument":"Placera fält",
