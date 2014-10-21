@@ -142,6 +142,8 @@
 "_signinginprogressmodalYouHaveSignedPleaseWait":"Hai firmato il documento <strong class='put-doctitle'/>. Per favore attendi mentre Scrive firma elettronicamente:",
 "_signviewAttachmentUploadedInOtherWindow":"Siamo spiacenti, non siamo in grado di caricare il tuo file perché questo documento è aperto in un'altra finestra. Ricarica la pagina per continuare.",
 "_signviewSigningFailed":"Siamo spiacenti, qualcosa è andato storto durante la firma del documento. Ti preghiamo di riprovare.",
+"_smsDocumentErrorAuthor":"",
+"_smsDocumentErrorSignatory":"",
 "_smsInvitationToSign":"Ciao, $creatorname$ ti ha invitato a firmare elettronicamente. Clicca qui per iniziare: $link$",
 "_smsPinSendout":"Il tuo PIN per $documenttitle$ è $pin$",
 "_smsRejectNotification":"$personname$, $rejectorName$ ha rifiutato di firmare il documento $documenttitle$. Il processo di firma è stato perciò annullato. Segui il link per vedere il documento: $link$",

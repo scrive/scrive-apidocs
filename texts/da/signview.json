@@ -142,6 +142,8 @@
 "_signinginprogressmodalYouHaveSignedPleaseWait":"Du har signeret dokumentet <strong class='put-doctitle'/>. Vent venligst, mens Scrive E-sign:",
 "_signviewAttachmentUploadedInOtherWindow":"Vi beklager, men vi er ikke i stand til at uploade din fil, fordi dette dokument er åbent i et andet vindue. Genindlæs din side for at fortsætte. ",
 "_signviewSigningFailed":"Beklager, noget gik galt under signeringsprocessen af dette dokument. Prøv venligst igen.",
+"_smsDocumentErrorAuthor":"",
+"_smsDocumentErrorSignatory":"",
 "_smsInvitationToSign":"Hej, $creatorname$ har inviteret dig til at e-signere. Klik her for at starte: $link$",
 "_smsPinSendout":"Din PIN for $documenttitle$ er $pin$",
 "_smsRejectNotification":"$personname$, $rejectorName$ har afvist at signere dokumentet $documenttitle$. Signeringsprocessen er derfor blevet afbrudt. Følg linket for at se dokumentet: $link$",

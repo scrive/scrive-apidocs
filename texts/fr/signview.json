@@ -142,6 +142,8 @@
 "_signinginprogressmodalYouHaveSignedPleaseWait":"Vous avez signé le document intitulé <strong class='put-doctitle'/>. Veuillez patienter que Scrive E-sign:",
 "_signviewAttachmentUploadedInOtherWindow":"Désolé, nous ne pouvons pas télécharger votre fichier car ce document est ouvert dans une autre fenêtre. Veuillez recharger votre page pour continuer.",
 "_signviewSigningFailed":"Désolé, une erreur est survenue lors de la signature du document. Veuillez réessayer.",
+"_smsDocumentErrorAuthor":"",
+"_smsDocumentErrorSignatory":"",
 "_smsInvitationToSign":"Bonjour, $creatorname$ vous a invité à e-signer un document. Cliquez sur ce lien pour commencer: $link$",
 "_smsPinSendout":"Votre code PIN pour $documenttitle$ est $pin$",
 "_smsRejectNotification":"$personname$, $rejectorName$ a refusé de signer le document $documenttitle$. Le processus de signature a donc été annulé. Cliquez sur ce lien pour consulter le document: $link$",

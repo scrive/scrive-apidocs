@@ -142,6 +142,8 @@
 "_signinginprogressmodalYouHaveSignedPleaseWait":"Sie haben das Dokument <strong class='put-doctitle'/> signiert. Bitte warten Sie während Scrive E-Sign:",
 "_signviewAttachmentUploadedInOtherWindow":"Wir konnten die Datei leider nicht hochladen, weil sie in einem anderen Fenster geöffnet ist. Bitte laden Sie die Seite neu.",
 "_signviewSigningFailed":"Der Signierungs-Vorgang hat leider nicht funktioniert. Bitte versuchen Sie es erneut.",
+"_smsDocumentErrorAuthor":"",
+"_smsDocumentErrorSignatory":"",
 "_smsInvitationToSign":"$creatorname$ bittet Sie um eine E-Signierung. Klicken Sie hier um den Vorgang zu starten: $link$",
 "_smsPinSendout":"Ihre PIN für $documenttitle$ lautet $pin$",
 "_smsRejectNotification":"$personname$, $rejectorName$ hat es abgelehnt, das Dokument  $documenttitle$. zu signieren. Der Signierungs-Vorgang wurde deshalb abgebrochen. Um sich das Dokument anzusehen, klicken Sie auf den Link: $link$",

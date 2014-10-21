@@ -142,6 +142,8 @@
 "_signinginprogressmodalYouHaveSignedPleaseWait":"Olet allekirjoittanut dokumentin <strong class='put-doctitle'/>. Ole hyvä ja odota sillä aikaa kun Scrive E-sign:",
 "_signviewAttachmentUploadedInOtherWindow":"Pahoittelut, emme pysty lataamaan tiedostoasi, sillä dokumentti on avoinna toisessa ikkunassa. Lataa sivusi uudelleen ja jatka.",
 "_signviewSigningFailed":"Pahoittelut, jotakin meni vikaan dokumentin allekirjoittamisen aikana. Yritä uudelleen.",
+"_smsDocumentErrorAuthor":"",
+"_smsDocumentErrorSignatory":"",
 "_smsInvitationToSign":"Hei, $creatorname$ on kutsunut sinut e-allekirjoittamaan. Klikkaa tästä aloittaaksesi: $link$",
 "_smsPinSendout":"PIN-koodi dokumenttiin $documenttitle$ on $pin$",
 "_smsRejectNotification":"$personname$, $rejectorName$ on hylännyt dokumentin $documenttitle$ allekirjoittamisen. Allekirjoitusprosessi on peruttu tästä syystä. Seuraa linkkiä katsellaksesi dokumenttia: $link$",

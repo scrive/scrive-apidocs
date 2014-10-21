@@ -142,6 +142,8 @@
 "_signinginprogressmodalYouHaveSignedPleaseWait":"Assinou o documento <strong class='put-doctitle'/>. Aguarde enquanto o Scrive E-sign:",
 "_signviewAttachmentUploadedInOtherWindow":"Lamentamos, mas não é possível carregar o seu ficheiro porque este documento está aberto noutra janela. Recarregue a página para prosseguir.",
 "_signviewSigningFailed":"Lamentamos, mas ocorreu um problema ao assinar o documento. Tente novamente.",
+"_smsDocumentErrorAuthor":"",
+"_smsDocumentErrorSignatory":"",
 "_smsInvitationToSign":"Olá, $creatorname$ convidou-o a e-assinar. Clique aqui para começar: $link$",
 "_smsPinSendout":"O seu PIN para $documenttitle$ é $pin$",
 "_smsRejectNotification":"$personname$, $rejectorName$ rejeitou a assinatura do documento $documenttitle$. O processo de assinatura foi assim cancelado. Siga a hiperligação para ver o documento: $link$",
