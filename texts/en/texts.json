@@ -1,6 +1,7 @@
 { 
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
+"_designViewDNDDisabled":"You need to add at least one signing party before placing a field.",
 "_ContractReminderBodyMulti":"Are you sure you want to send reminders to the parties involved in the <span class='put-number-of-documents-here'></span> documents?",
 "_ContractReminderBodySingel":"Are you sure you want to send a reminder to the parties involved in the document <span class='put-document-name-here'></span>?",
 "_CustomiseBackgroundColour":"Background colour",

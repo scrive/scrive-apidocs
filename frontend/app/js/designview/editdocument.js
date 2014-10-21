@@ -53,7 +53,16 @@ define(['Backbone', 'legacy_code'], function() {
           var iconWrapper = $("<div class='design-view-action-document-draggable-icon-wrapper' />");
           var imgdiv = $("<div class='design-view-action-document-draggable-icon' />");
           var txt = $("<div class='design-view-action-document-draggable-text'/>");
-          draggebleField(div, fieldOrPlacementFN, undefined, undefined, true,fontSize,onFieldAdded);
+          var document = this.model.document();
+          var isDisabledCallback = function() {
+            if (document.signatoriesWhoSign().length > 0) {
+              return true;
+            } else {
+              new FlashMessage({color: 'red', content: localization.designview.dndDisabled});
+              return false;
+            }
+          };
+          draggebleField(div, fieldOrPlacementFN, undefined, undefined, true,fontSize,onFieldAdded, isDisabledCallback);
 
           div.append(wra);
           wra.append(innerWrapper);
