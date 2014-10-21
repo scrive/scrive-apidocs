@@ -56,7 +56,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
               viewmodel.saveFlashMessage(wasSaved);
             });
         },
-        saveMaybeFlashMessage: function() {
+        saveWithFlashMessageIfNeeded: function() {
             var isSaved = this.document().saved();
             this.document().save();
             if(isSaved) {
@@ -111,12 +111,12 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
 
 
             if(model.document().isTemplate()) {
-                div.append(view.makeSaveTemplateButton());
+                div.append(view.makeSaveTemplateButton().el());
                 if(model.document().mainfile())
                     div.append(view.removeDocumentButton());
             } else {
-                div.append(view.makeSaveDraftButton());
-                div.append(view.makeSaveTemplateButton());
+                div.append(view.makeSaveDraftButton().el());
+                div.append(view.makeSaveTemplateButton().el());
                 if(model.document().mainfile())
                     div.append(view.removeDocumentButton());
                 div.append(view.send());
@@ -135,7 +135,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
               view.model.saveDocument();
               view.updateSaveButtons();
             }
-          }).el();
+          });
           return this.saveDraftButton;
         },
         saveDraftButtonText : function() {
@@ -149,14 +149,13 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
           this.saveTemplateButton = new Button({
             text: view.saveTemplateButtonText(),
             color: 'blue',
-            cssClass: 'button-save-template',
             onClick: function(e) {
               mixpanel.track('Click save as template');
               view.model.document().makeTemplate();
               view.model.saveDocument();
               view.updateSaveButtons();
             }
-          }).el();
+          });
           return this.saveTemplateButton;
         },
         saveTemplateButtonText : function() {
@@ -168,12 +167,10 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
         },
         updateSaveButtons : function() {
           if(this.saveDraftButton != undefined) {
-            var label = $('.label', this.saveDraftButton);
-            label.text(this.saveDraftButtonText());
+            this.saveDraftButton.setText(this.saveDraftButtonText());
           }
           if(this.saveTemplateButton != undefined) {
-            var label = $('.label', this.saveTemplateButton);
-            label.text(this.saveTemplateButtonText());
+            this.saveTemplateButton.setText(this.saveTemplateButtonText());
           }
         },
         send: function() {
@@ -210,7 +207,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                     mixpanel.track('Click remove file');
                     doc.markAsNotReady();
                     doc.removeTypeSetters();
-                    model.saveMaybeFlashMessage();
+                    model.saveWithFlashMessageIfNeeded();
                     doc.afterSave(function() {
                         new Submit({
                             method : "POST",

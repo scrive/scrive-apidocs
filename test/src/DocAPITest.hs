@@ -127,6 +127,17 @@ testOAuthCreateDoc = do
                                       [("authorization", [authStr])]
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
+  let rds = BS.toString $ rsBody resDoc
+      Ok (JSObject rdsr) = decode rds
+      Just (JSBool newSaved) = lookup "saved" $ fromJSObject rdsr
+      Just (JSString docidStr) = lookup "id" $ fromJSObject rdsr
+  did <- liftIO $ readIO (fromJSString docidStr)
+  doc <- dbQuery $ GetDocumentByDocumentID did
+  assertEqual "The OAuth API created document should be saved (JSON)" True newSaved
+  assertEqual "The OAuth API created document should be saved (DB)" False (documentunsaveddraft doc)
+
+  (resReady, _) <- runTestKontra reqDoc ctx $ apiCallV1Ready did
+  assertEqual "Ready should fail with 403" 403 (rsCode resReady)
 
 testSetAutoReminder :: TestEnv ()
 testSetAutoReminder = do
