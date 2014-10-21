@@ -319,7 +319,7 @@ var AccountSettingsView = Backbone.View.extend({
         , {name: localization.languages.fiInFi, value: "fi", hidden : true}
       ];
 
-      languages = _.sortBy(languages, function(l) {return l.name;});
+      languages = _.sortBy(languages, function(l) {return l.name.toLowerCase();});
       var lname = _.findWhere(languages, {value : model.lang()}).name;
       self.langselect = $("<div/>");
 
