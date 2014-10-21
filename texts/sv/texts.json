@@ -317,6 +317,7 @@
 "_designViewCustomMessageConfirmation":"Bekräftelsemeddelande",
 "_designViewCustomMessageInvitation":"Inbjudningsmeddelande",
 "_designViewCustomMessagePreview":"Förhandsgranska",
+"_designViewDNDDisabled":"",
 "_designViewDocumentName":"Dokumentnamn",
 "_designViewEditConfirmation":"Ändra bekräftelsemeddelande",
 "_designViewEditDocument":"Placera fält",
