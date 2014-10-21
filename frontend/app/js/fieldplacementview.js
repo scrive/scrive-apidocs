@@ -1587,7 +1587,7 @@ var SignatureTypeSetterView = Backbone.View.extend({
         var options = [];
 
         _.each(doc.signatories(), function(s) {
-            if(s !== sig && s.signs())
+            if(s !== sig)
                 options.push({name: s.nameOrEmail() || s.nameInDocument(),
                               value: s});
         });
