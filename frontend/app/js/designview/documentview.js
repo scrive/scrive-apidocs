@@ -62,7 +62,8 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
 	        color  : '#000', // #rbg or #rrggbb
 	        speed  : 1.5,    // Rounds per second
 	        trail  : 74,     // Afterglow percentage
-	        shadow : false   // Whether to render a shadow
+	        shadow : false,  // Whether to render a shadow
+                zIndex: 100      // Don't be extreme and put spinner over error dialog
             }).spin(this.innerDiv.get(0));
             this.wrapperDiv.append(innerWrapper.append(div));
             this.refreshMargins();
