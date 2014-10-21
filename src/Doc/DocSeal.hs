@@ -265,7 +265,7 @@ evidenceOfIntentAttachment sim doc = do
   ss <- dbQuery $ GetSignatoryScreenshots (map signatorylinkid sls)
   let sortBySignTime = sortBy (on compare (fmap signtime . maybesigninfo . fst))
   html <- evidenceOfIntentHTML sim title $ sortBySignTime [ (sl, s) | (i, s) <- ss, sl <- filter ((==i) . signatorylinkid) sls ]
-  return $ Seal.SealAttachment { Seal.fileName = "Evidence_of_Intent.html"
+  return $ Seal.SealAttachment { Seal.fileName = "Appendix 5 Evidence of Intent.html"
                                , Seal.mimeType = Nothing
                                , Seal.fileContent = BS.fromString html
                                }
@@ -340,9 +340,10 @@ sealSpecFromDocument boxImages hostpart document elog ces content tmppath inputp
 
   additionalAttachments <- findOutAttachmentDesc sim tmppath document
   docs <- mapM (\f -> (takeFileName f,) <$> liftIO (BS.readFile f))
-            [ "files/Evidence_Documentation.html"
-            , "files/Digital_Signature_Documentation_Part_I.html"
-            , "files/Digital_Signature_Documentation_Part_II.html"
+            [ "files/Evidence Quality of Scrive Esigned Documents.html"
+            , "files/Appendix 1 Evidence Quality Framework.html"
+            , "files/Appendix 2 Service Description.html"
+            , "files/Appendix 6 Digital Signature Documentation.html"
             ]
 
   let docid = documentid document
@@ -388,7 +389,7 @@ sealSpecFromDocument boxImages hostpart document elog ces content tmppath inputp
   let htmlevents = suppressRepeatedEvents elog
   elogsim <- getSignatoryIdentifierMap True htmlevents
   htmllogs <- htmlDocFromEvidenceLog (documenttitle document) elogsim htmlevents ces
-  let evidenceattachment = Seal.SealAttachment { Seal.fileName = "Evidence_Log.html"
+  let evidenceattachment = Seal.SealAttachment { Seal.fileName = "Appendix 3 Evidence Log.html"
                                                , Seal.mimeType = Nothing
                                                , Seal.fileContent = BS.fromString htmllogs }
   evidenceOfIntent <- evidenceOfIntentAttachment elogsim document
