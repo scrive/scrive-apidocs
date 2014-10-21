@@ -58,8 +58,8 @@ define(['Backbone', 'legacy_code'], function() {
         callback: function() {
             return this.get("callback")();
         },
-        errorcallback: function() {
-            return this.get("errorcallback")();
+        errorcallback: function(errorMessage) {
+            return this.get("errorcallback")(errorMessage);
         },
         poll: function() {
             var polling = this;
