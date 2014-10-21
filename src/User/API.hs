@@ -287,7 +287,7 @@ apiCallPaymentInfo = api $ do
   admin <- isAdmin <$> getContext
   time <- ctxtime <$> getContext
 
-  docsusedthismonth <- dbQuery $ GetDocsSentBetween (userid user) (beginingOfMonth time) time
+  docsusedthismonth <- dbQuery $ GetDocsSentBetween (usercompany user) (beginingOfMonth time) time
   mpaymentplan <- dbQuery $ GetPaymentPlan $ (usercompany user)
   quantity <- dbQuery $ GetCompanyQuantity (usercompany user)
 
