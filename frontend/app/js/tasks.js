@@ -115,7 +115,13 @@ window.PageTasks = Backbone.Model.extend({
   },
   initialize: function(args) {
     var model = this;
-    var tasks = args.tasks.sort(function(t1,t2) {return t1.el().offset().top - t2.el().offset().top} );
+    var tasks = args.tasks.sort(function(t1, t2) {
+      var offset1 = t1.el().offset();
+      var offset2 = t2.el().offset();
+      var verticalDiff = offset1.top - offset2.top;
+      var horizontalDiff = offset1.left - offset2.left;
+      return (verticalDiff === 0 ? horizontalDiff : verticalDiff);
+    });
    _.each(tasks, function(t) {t.bind('change', function() { model.activateTask();})});
    _.each(tasks, function(t) {t.bind('change:ui', function() {model.trigger("change");})});
    this.activateTask();
