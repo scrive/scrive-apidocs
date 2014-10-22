@@ -10,9 +10,9 @@
 
 module InspectXMLInstances() where
 import Data.Int
-import Data.List
 import Text.JSON
-import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString.Char8 as B
+import qualified Data.ByteString.UTF8 as BU
 import qualified Data.Set as S
 
 import API.APIVersion
@@ -59,15 +59,18 @@ $(deriveInspectXML ''SignatoryLink)
 $(deriveInspectXML ''PlacementAnchor)
 
 instance InspectXML SignatoryField where
-  inspectXML field =
-    (show $ sfType field) ++ " " ++ useImgDataURL (sfValue field) ++ ", " ++
-    (if sfObligatory field then "obligatory, " else "optional, ") ++
-    (if sfShouldBeFilledBySender field then "filled by sender, " else "") ++
-    "<br/>placements: " ++ inspectXML (sfPlacements field)
+  inspectXML SignatoryField{..} =
+    show sfType ++ " " ++ value ++ ", " ++
+    (if sfObligatory then "obligatory, " else "optional, ") ++
+    (if sfShouldBeFilledBySender then "filled by sender, " else "") ++
+    "<br/>placements: " ++ inspectXML sfPlacements
     where
-      useImgDataURL txt | "data:image/" `isPrefixOf` txt
-                        = "<img style=\"height:100px; width=auto\" src=\"" ++ escapeString txt ++ "\">"
-      useImgDataURL txt = inspectXML txt
+      value
+        | SignatureFT{} <- sfType =
+          "<img style=\"height:100px; width=auto\" src=\"" ++ escapeString v ++ "\">"
+        | otherwise = inspectXML v
+        where
+          v = sfvEncode sfType sfValue
 
 --Link creating types
 instance InspectXML DocumentID where
@@ -89,8 +92,8 @@ instance InspectXML BrandedDomainID where
 instance InspectXML String where
   inspectXML str = "\"" ++ escapeString str ++ "\""
 
-instance InspectXML BS.ByteString where
-  inspectXML = inspectXML . BS.toString
+instance InspectXML B.ByteString where
+  inspectXML = inspectXML . BU.toString
 
 --Standard classes - we will just call show with some escaping
 instance InspectXML Bool where

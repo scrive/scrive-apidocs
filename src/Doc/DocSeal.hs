@@ -30,8 +30,8 @@ import Text.HTML.TagSoup (Tag(..), parseTags)
 import Text.JSON.Gen
 import Text.JSON.Pretty (pp_value)
 import Text.StringTemplates.Templates
-import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
+import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BSL (empty)
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
@@ -141,14 +141,14 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryLink{signatoryf
 
     makeSealField :: SignatoryField -> [Seal.Field]
     makeSealField sf = case sfType sf of
-       SignatureFT _ -> case (sfPlacements sf,drop 1 $ dropWhile (\e -> e /= ',') $ sfValue sf) of
-                           (_,"") -> []  -- We skip signature that don't have a drawing
-                           ([],v) -> maybeToList $ fieldJPEGFromSignatureField v
-                           (plsms,v) -> concatMap (maybeToList . (fieldJPEGFromPlacement v)) plsms
-       CheckboxFT _ -> map (uncheckedImageFromPlacement <| null (sfValue sf) |>  checkedImageFromPlacement) (sfPlacements sf)
+       SignatureFT _ -> case (sfPlacements sf, fromMaybe BS.empty . getBinaryField $ sfValue sf) of
+                           (_, "") -> []  -- We skip signature that don't have a drawing
+                           ([], v) -> maybeToList $ fieldJPEGFromSignatureField v
+                           (plsms, v) -> concatMap (maybeToList . (fieldJPEGFromPlacement v)) plsms
+       CheckboxFT _ -> map (uncheckedImageFromPlacement <| sfvNull (sfValue sf) |>  checkedImageFromPlacement) (sfPlacements sf)
        _ -> for (sfPlacements sf) $ fieldFromPlacement False (sfValue sf)
     fieldFromPlacement greyed sf placement =
-      Seal.Field { Seal.value            = sf
+      Seal.Field { Seal.value            = fromMaybe "" $ getTextField sf
                  , Seal.x                = placementxrel placement
                  , Seal.y                = placementyrel placement
                  , Seal.page             = placementpage placement
@@ -172,7 +172,7 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryLink{signatoryf
                  }
     fieldJPEGFromPlacement v placement =
           Just $ Seal.FieldJPG
-                 { valueBase64           = v
+                 { valueBase64           = BS.unpack $ B64.encode v
                  , Seal.x                = placementxrel placement
                  , Seal.y                = placementyrel placement
                  , Seal.page             = placementpage placement
@@ -184,7 +184,7 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryLink{signatoryf
                  }
     fieldJPEGFromSignatureField v =
           Just $ Seal.FieldJPG
-                 { valueBase64           = v
+                 { valueBase64           = BS.unpack $ B64.encode v
                  , Seal.x                = 0
                  , Seal.y                = 0
                  , Seal.page             = 0

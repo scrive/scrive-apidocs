@@ -480,7 +480,7 @@ instance MonadDB m => DBQuery m GetSignatoriesByEmail [(DocumentID, SignatoryLin
             "FROM signatory_links " <+>
             "JOIN signatory_link_fields ON (signatory_link_fields.signatory_link_id = signatory_links.id " <+>
             "                           AND signatory_link_fields.type = " <?> EmailFT <+>
-            "                           AND signatory_link_fields.value = " <?> email <+>
+            "                           AND signatory_link_fields.value_text = " <?> email <+>
             "                              )" <+>
             "WHERE sign_time > " <?> time <+>
             "   OR seen_time > " <?> time

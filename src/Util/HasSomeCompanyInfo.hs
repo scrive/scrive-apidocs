@@ -35,8 +35,8 @@ instance HasSomeCompanyInfo SignatoryLink where
   getCompanyNumber = getCompanyNumber . signatoryfields
 
 instance HasSomeCompanyInfo [SignatoryField] where
-  getCompanyName   = getValueOfType CompanyFT
-  getCompanyNumber = getValueOfType CompanyNumberFT
+  getCompanyName   = getTextValueOfType CompanyFT
+  getCompanyNumber = getTextValueOfType CompanyNumberFT
 
 instance HasSomeCompanyInfo Document where
   getCompanyName   doc = maybe "" getCompanyName   $ getAuthorSigLink doc

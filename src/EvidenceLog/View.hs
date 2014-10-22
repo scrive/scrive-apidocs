@@ -23,7 +23,6 @@ import Data.Word (Word8)
 import Text.JSON
 import Text.JSON.Gen as J
 import Text.StringTemplates.Templates
-import qualified Data.ByteString.Char8 as BS
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Text.StringTemplates.Fields as F
@@ -38,8 +37,8 @@ import Templates (renderLocalTemplate)
 import User.Model
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
+import Utils.Image
 import Utils.Prelude
-import qualified Data.ByteString.RFC2397 as RFC2397
 import qualified Doc.Screenshot as Screenshot
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 import qualified HostClock.Model as HC
@@ -253,14 +252,6 @@ filterTagsNL ('<':rest) = ' ' : (filterTagsNL (drop 1 $ dropWhile (\c -> c /= '>
 filterTagsNL (a:rest) = (if isSpace a then ' ' else a): (filterTagsNL rest)
 filterTagsNL [] = []
 
--- | Detect one of 'png' or 'jpeg' based on magic numbers in binary content.
-detectImageMimeType :: BS.ByteString -> BS.ByteString
-detectImageMimeType bs =
-  case () of
-    _ | BS.take 4 bs == BS.pack "\xff\xd8\xff\xe0"  -> BS.pack "image/jpeg"
-    _ | BS.take 4 bs == BS.pack "\x89\x50\x4e\x47"  -> BS.pack "image/png"
-    _ -> "application/octet-stream"
-
 -- | Generate evidence of intent in self-contained HTML for inclusion as attachment in PDF.
 evidenceOfIntentHTML :: TemplatesMonad m => String -> [(SignatoryLink, SignatoryScreenshots.SignatoryScreenshots)] -> m String
 evidenceOfIntentHTML title l = do
@@ -269,8 +260,7 @@ evidenceOfIntentHTML title l = do
     let values Nothing = return ()
         values (Just s) = do
           F.value "time" $ formatTimeUTC (Screenshot.time s) ++ " UTC"
-          F.value "image" $ RFC2397.encode (detectImageMimeType (unBinary (Screenshot.image s)))
-                                           (unBinary (Screenshot.image s))
+          F.value "image" $ imgEncodeRFC2397 $ unBinary $ Screenshot.image s
     F.objects "entries" $ for l $ \(sl, entry) -> do
       F.value "signatory"  $ getIdentifier sl
       F.value "ip"         $ show . signipnumber <$> maybesigninfo sl

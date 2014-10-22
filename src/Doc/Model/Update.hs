@@ -264,17 +264,19 @@ insertSignatoryLinkFieldsAsAre fields = do
                                _ -> False
   runQuery_ . sqlInsert "signatory_link_fields" $ do
          sqlSetList "signatory_link_id" $ concatMap (\(d,l) -> map (const d) l) fields
-         sqlSetList "type" $ sfType <$> concatMap snd fields
-         sqlSetList "custom_name" $ getCustomName <$> concatMap snd fields
-         sqlSetList "is_author_filled" $ isAuthorFilled <$> concatMap snd fields
-         sqlSetList "value" $ sfValue <$> concatMap snd fields
-         sqlSetList "placements" $ sfPlacements <$> concatMap snd fields
-         sqlSetList "obligatory" $ sfObligatory <$> concatMap snd fields
-         sqlSetList "should_be_filled_by_author" $ sfShouldBeFilledBySender <$> concatMap snd fields
+         sqlSetList "type" $ map sfType sigfields
+         sqlSetList "custom_name" $ map getCustomName sigfields
+         sqlSetList "is_author_filled" $ map isAuthorFilled sigfields
+         sqlSetList "value_text" $ map (getTextField . sfValue) sigfields
+         sqlSetList "value_binary" $ map (fmap Binary . getBinaryField . sfValue) sigfields
+         sqlSetList "placements" $ map sfPlacements sigfields
+         sqlSetList "obligatory" $ map sfObligatory sigfields
+         sqlSetList "should_be_filled_by_author" $ map sfShouldBeFilledBySender sigfields
          mapM_ sqlResult signatoryLinkFieldsSelectors
 
   fetchSignatoryLinkFields
-
+  where
+    sigfields = concatMap snd fields
 
 insertSignatoryScreenshots :: (MonadDB m, MonadThrow m)
                            => [(SignatoryLinkID, SignatoryScreenshots)] -> m Int
@@ -525,8 +527,8 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeS
       oldemail :: String <- kRunAndFetch1OrThrowWhyNot unSingle $ sqlUpdate "signatory_link_fields" $ do
              sqlFrom "signatory_link_fields AS signatory_link_fields_old"
              sqlWhere "signatory_link_fields.id = signatory_link_fields_old.id"
-             sqlSet "value" email
-             sqlResult "signatory_link_fields_old.value"
+             sqlSet "value_text" email
+             sqlResult "signatory_link_fields_old.value_text"
              sqlWhereEq "signatory_link_fields.signatory_link_id" slid
              sqlWhereEq "signatory_link_fields.type" EmailFT
       kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
@@ -550,8 +552,8 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeS
       oldphone :: String <- kRunAndFetch1OrThrowWhyNot unSingle $ sqlUpdate "signatory_link_fields" $ do
              sqlFrom "signatory_link_fields AS signatory_link_fields_old"
              sqlWhere "signatory_link_fields.id = signatory_link_fields_old.id"
-             sqlSet "value" phone
-             sqlResult "signatory_link_fields_old.value"
+             sqlSet "value_text" phone
+             sqlResult "signatory_link_fields_old.value_text"
              sqlWhereEq "signatory_link_fields.signatory_link_id" slid
              sqlWhereEq "signatory_link_fields.type" MobileFT
       kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
@@ -612,18 +614,14 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
         Just authMethodField ->
           case getFieldOfType authMethodField (signatoryfields siglink) of
                Just _  -> kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
-                 case mValue of
-                      Just a  -> sqlSet "value" a
-                      Nothing -> return ()
                  sqlSet "obligatory" True
+                 sqlSet "value_text" $ fromMaybe "" mValue
                  sqlWhereEq "signatory_link_id" slid
                  sqlWhereEq "type" $ authMethodField
                -- Note: default in table for `obligatory` is true
                Nothing -> runQuery_ . sqlInsert "signatory_link_fields" $ do
-                 case mValue of
-                      Just a  -> sqlSet "value" a
-                      Nothing -> return ()
                  sqlSet "signatory_link_id" slid
+                 sqlSet "value_text" $ fromMaybe "" mValue
                  sqlSet "type" $ authMethodField
                  sqlSet "placements" ("[]"::String)
       updateMTimeAndObjectVersion (actorTime actor)
@@ -633,7 +631,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
     case extraInfoField newAuth of
          Nothing -> return ()
          Just authMethodField -> do
-           let previousValue = fromMaybe "" $ fmap sfValue $ getFieldOfType authMethodField (signatoryfields sig)
+           let previousValue = fromMaybe "" $ getTextField =<< (fmap sfValue $ getFieldOfType authMethodField $ signatoryfields sig)
                value         = fromMaybe "" mValue
            when (value /= previousValue)
                 (void $ update $ InsertEvidenceEvent
@@ -1337,13 +1335,14 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m PostRem
           mmsg
           actor
 
-data UpdateFieldsForSigning = UpdateFieldsForSigning SignatoryLink [(FieldType, String)] Actor
+data UpdateFieldsForSigning = UpdateFieldsForSigning SignatoryLink [(FieldType, SignatoryFieldValue)] Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateFieldsForSigning () where
   update (UpdateFieldsForSigning sl fields actor) = updateDocumentWithID $ const $ do
     -- Document has to be in Pending state
     -- signatory could not have signed already
     let slid = signatorylinkid sl
-    let updateValue (SignatureFT _, "") = return ()
+    let updateValue :: (FieldType, SignatoryFieldValue) -> m ()
+        updateValue (SignatureFT _, fvalue) | sfvNull fvalue = return ()
         updateValue (fieldtype, fvalue) = do
           let custom_name = case fieldtype of
                               CustomFT xname _ -> xname
@@ -1352,13 +1351,14 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateF
                               _ -> ""
               oldValue = getValueOfType fieldtype (signatoryfields sl)
           updated <- runQuery . sqlUpdate "signatory_link_fields" $ do
-                   sqlSet "value" fvalue
+                   sqlSet "value_text" $ getTextField fvalue
+                   sqlSet "value_binary" $ Binary <$> getBinaryField fvalue
                    sqlWhereEq "signatory_link_id" slid
                    sqlWhereEq "custom_name" custom_name
                    sqlWhereEq "type" fieldtype
                    sqlWhereAny
                        [ do
-                         sqlWhereEq "value" (""::String) -- Note: if we allow values to be overwritten, the evidence events need to be adjusted to reflect the old value.
+                         sqlWhereEq "value_text" (""::String) -- Note: if we allow values to be overwritten, the evidence events need to be adjusted to reflect the old value.
                          sqlWhereIn "type" [CustomFT "" False, FirstNameFT,LastNameFT,EmailFT,CompanyFT,PersonalNumberFT,PersonalNumberFT,CompanyNumberFT, MobileFT]
                        , sqlWhereIn "type" [CheckboxFT "", SignatureFT ""]
                        ]
@@ -1375,16 +1375,16 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateF
           when (updated/=0 && changed) $ do
             let eventEvidenceText = getEvidenceTextForUpdateField fieldtype
             void $ update $ InsertEvidenceEvent eventEvidenceText
-               (do F.value "value" fvalue
-                   F.value "previousvalue" oldValue
-                   when (fvalue == "") $
+               (do F.value "value" $ sfvEncode fieldtype fvalue
+                   F.value "previousvalue" $ sfvEncode fieldtype fvalue
+                   when (sfvNull fvalue) $
                        F.value "newblank" True
-                   when (oldValue == "") $
+                   when (sfvNull oldValue) $
                        F.value "prvblank" True
                    when (eventEvidenceText == UpdateFieldCustomEvidence) $ do
                        let CustomFT s _ = fieldtype
                        F.value "customfieldname" s
-                   when (eventEvidenceText == UpdateFieldCheckboxEvidence && not (null fvalue)) $
+                   when (eventEvidenceText == UpdateFieldCheckboxEvidence && not (sfvNull fvalue)) $
                        F.value "checked" True
                    when (custom_name /= "") $
                        F.value "fieldname" custom_name
@@ -1530,7 +1530,8 @@ instance MonadDB m => DBUpdate m PurgeDocuments Int where
 
     -- blank out sensitive data in fields
     runSQL_ $ "UPDATE signatory_link_fields"
-        <+> "   SET value = ''"
+        <+> "   SET value_text   = CASE WHEN value_text   IS NULL THEN NULL ELSE '' END"
+        <+> "   ,   value_binary = CASE WHEN value_binary IS NULL THEN NULL ELSE ''::bytea END"
         <+> " WHERE signatory_link_fields.signatory_link_id IN"
         <+> "       (SELECT id"
         <+> "          FROM signatory_links"

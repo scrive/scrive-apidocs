@@ -21,6 +21,7 @@ import Test.QuickCheck
 import Test.QuickCheck.Gen
 import Text.JSON
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
 import qualified Test.HUnit as T
 
@@ -280,9 +281,9 @@ instance Arbitrary [SignatoryField] where
     em <- arbEmail
     (f1,f2,f3,f4,f5) <-  arbitrary
     return $ filter (\f->notElem (sfType f) [FirstNameFT, LastNameFT, EmailFT]) (filterSingleFieldType [f1,f2,f3,f4,f5])
-                                                  ++ [ SignatoryField (unsafeSignatoryFieldID 0) FirstNameFT fn True False []
-                                                     , SignatoryField (unsafeSignatoryFieldID 0) LastNameFT  ln True False []
-                                                     , SignatoryField (unsafeSignatoryFieldID 0) EmailFT     em True False []]
+                                                  ++ [ SignatoryField (unsafeSignatoryFieldID 0) FirstNameFT (TextField fn) True False []
+                                                     , SignatoryField (unsafeSignatoryFieldID 0) LastNameFT  (TextField ln) True False []
+                                                     , SignatoryField (unsafeSignatoryFieldID 0) EmailFT     (TextField em) True False []]
 
 instance Arbitrary FieldPlacement where
   arbitrary = do  -- We loose precision with conversion, so please watch out for this
@@ -316,7 +317,9 @@ instance Arbitrary SignatoryField where
     p <- arbitrary
     return $ SignatoryField { sfID = unsafeSignatoryFieldID 0
                             , sfType = t
-                            , sfValue = v
+                            , sfValue = case t of
+                              SignatureFT{} -> BinaryField $ BSC.pack v
+                              _             -> TextField v
                             , sfPlacements = p
                             , sfObligatory = True
                             , sfShouldBeFilledBySender = False

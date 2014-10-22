@@ -773,7 +773,7 @@ fixSignatoryLinksSwedishChars =
         fixSwedishChars = map fixSwedishCharsForAField
         fixSwedishCharsForAField :: SignatoryField -> SignatoryField
         fixSwedishCharsForAField f = f { sfType = fixSwedishCharsForAFieldType (sfType f)
-                                       , sfValue = fixSwedishCharsForAString (sfValue f)
+                                       , sfValue = fromMaybe (sfValue f) (TextField . fixSwedishCharsForAString <$> (getTextField $ sfValue f))
                                        }
         fixSwedishCharsForAFieldType (CustomFT s b) = CustomFT (fixSwedishCharsForAString s) b
         fixSwedishCharsForAFieldType a = a
@@ -1157,6 +1157,39 @@ changeSomeStandardFieldsToOptional=
                          sqlWhereNotIn "s.confirmation_delivery_method" [MobileConfirmationDelivery,EmailAndMobileConfirmationDelivery]
                        ]
   }
+
+signatoryLinkFieldsAddBinaryValue :: MonadDB m => Migration m
+signatoryLinkFieldsAddBinaryValue = Migration {
+  mgrTable = tableSignatoryLinkFields
+, mgrFrom = 7
+, mgrDo = do
+  let alter_table = sqlAlterTable "signatory_link_fields"
+  -- add new field according to the table definition
+  runQuery_ $ alter_table ["RENAME value TO value_text"]
+  runQuery_ $ alter_table [
+      sqlAlterColumn "value_text" "DROP DEFAULT"
+    , sqlAlterColumn "value_text" "DROP NOT NULL"
+    , sqlAddColumn tblColumn { colName = "value_binary", colType = BinaryT }
+    , sqlAddCheck $ TableCheck "check_signatory_link_fields_value_well_defined"
+        "value_text IS NOT NULL AND value_binary IS NULL OR value_text IS NULL AND value_binary IS NOT NULL"
+    ]
+
+  -- move empty signatures to bytea
+  runQuery_ . sqlUpdate "signatory_link_fields" $ do
+    sqlSet "value_text" (Nothing :: Maybe String)
+    sqlSet "value_binary" $ Binary BS.empty
+    sqlWhereEq "type" (8::Int16) -- SignatureFT
+    sqlWhereEq "value_text" (""::String)
+
+  -- move signatures stored as base64 to bytea. if regex matching fails, substring
+  -- returns NULL and therefore the whole query will fail, because the field will
+  -- not have value_text nor value_binary set as NOT NULL.
+  runQuery_ . sqlUpdate "signatory_link_fields" $ do
+    sqlSet "value_text" (Nothing :: Maybe String)
+    sqlSetCmd "value_binary" "decode(substring(value_text from 'data:(?:[a-z/]*;base64,){0,1}(.*)'), 'base64')"
+    sqlWhereEq "type" (8::Int16) -- SignatureFT
+    sqlWhereIsNULL "value_binary"
+}
 
 -- Personal number used to be obligatory, but we didn't asked about it in extra details section
 addUniqueContraintsTypeOnFields :: (MonadDB m,Log.MonadLog m) => Migration m

@@ -579,17 +579,17 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateDraftsAndTemplatesWithUse
      Just user -> do
        -- Update first name
        runQuery_ $ sqlUpdate "signatory_link_fields" $ do
-         sqlSet "value" (userfstname $ userinfo user)
+         sqlSet "value_text" (userfstname $ userinfo user)
          sqlWhereEq "type" FirstNameFT
          whereSignatoryLinkCanBeChanged
 
        runQuery_ $ sqlUpdate "signatory_link_fields" $ do
-         sqlSet "value" (usersndname $ userinfo user)
+         sqlSet "value_text" (usersndname $ userinfo user)
          sqlWhereEq "type" LastNameFT
          whereSignatoryLinkCanBeChanged
 
        runQuery_ $ sqlUpdate "signatory_link_fields" $ do
-         sqlSet "value" (useremail $ userinfo user)
+         sqlSet "value_text" (useremail $ userinfo user)
          sqlWhereEq "type" EmailFT
          whereSignatoryLinkCanBeChanged
   where

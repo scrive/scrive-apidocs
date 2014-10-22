@@ -91,9 +91,9 @@ mergeAuthorDetails sigs nsigs =
           let
             (nasig', nsigs') = partition isAuthor nsigs
             (asig, _) = partition isAuthor sigs
-            setConstantDetails a =  replaceFieldValue FirstNameFT (getFirstName a) .
-                                    replaceFieldValue LastNameFT (getLastName a) .
-                                    replaceFieldValue EmailFT   (getEmail a) .
+            setConstantDetails a =  replaceFieldValue FirstNameFT (TextField $ getFirstName a) .
+                                    replaceFieldValue LastNameFT (TextField $ getLastName a) .
+                                    replaceFieldValue EmailFT   (TextField $ getEmail a) .
                                     (\s -> s {maybesignatory = maybesignatory a}) .  -- We need to be sure that we will not disconnect author
                                     (\s -> s {signatorylinkid = signatorylinkid a})  -- And we try to keep original id of author signatory
           in case (asig, nasig') of

@@ -17,6 +17,11 @@ module Doc.DocStateData (
   , SignatureProvider(..)
   , SignInfo(..)
   , SignOrder(..)
+  , SignatoryFieldValue(..)
+  , sfvNull
+  , getTextField
+  , getBinaryField
+  , sfvEncode
   , SignatoryField(..)
   , FieldType(..)
   , TipSide(..)
@@ -28,6 +33,7 @@ module Doc.DocStateData (
   , StatusClass(..)
   , getFieldOfType
   , getValueOfType
+  , getTextValueOfType
   , documentfile
   , documentsealedfile
   , documentsealstatus
@@ -39,11 +45,15 @@ import Data.Data
 import Data.Int
 import Data.List
 import Data.Maybe
+import Data.Monoid
+import Data.Monoid.Space
+import Data.String
 import Database.PostgreSQL.PQTypes
 import Text.JSON
 import Text.JSON.FromJSValue
 import Text.JSON.Gen
 import qualified Control.Exception.Lifted as E
+import qualified Data.ByteString.Char8 as BS
 import qualified Data.Set as S
 
 import API.APIVersion
@@ -63,6 +73,7 @@ import MinutesTime
 import User.Lang
 import User.UserID
 import Utils.Default
+import Utils.Image
 
 newtype SignOrder = SignOrder { unSignOrder :: Int32 }
   deriving (Eq, Ord, PQFormat)
@@ -255,22 +266,6 @@ instance ToSQL ConfirmationDeliveryMethod where
   toSQL EmailAndMobileConfirmationDelivery  = toSQL (3::Int16)
   toSQL NoConfirmationDelivery              = toSQL (4::Int16)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 data SignatureInfo = SignatureInfo {
     signatureinfotext        :: String
   , signatureinfosignature   :: String
@@ -332,10 +327,39 @@ instance ToSQL FieldType where
   toSQL CheckboxFT{}     = toSQL (9::Int16)
   toSQL MobileFT         = toSQL (10::Int16)
 
+data SignatoryFieldValue = TextField String | BinaryField BS.ByteString
+  deriving (Ord, Eq, Show, Data, Typeable)
+
+instance IsString SignatoryFieldValue where
+  fromString = TextField
+
+sfvNull :: SignatoryFieldValue -> Bool
+sfvNull (TextField s) = null s
+sfvNull (BinaryField bs) = BS.null bs
+
+getTextField :: SignatoryFieldValue -> Maybe String
+getTextField (TextField s) = Just s
+getTextField _ = Nothing
+
+getBinaryField :: SignatoryFieldValue -> Maybe BS.ByteString
+getBinaryField (BinaryField bs) = Just bs
+getBinaryField _ = Nothing
+
+-- | Encode 'SignatoryFieldValue' to be used in a template
+sfvEncode :: FieldType -> SignatoryFieldValue -> String
+sfvEncode ft v = case (ft, v) of
+  (SignatureFT{}, BinaryField "") -> "" -- FIXME: this case shouldn't be needed
+  (SignatureFT{}, BinaryField bs) -> BS.unpack $ imgEncodeRFC2397 bs
+  (SignatureFT{}, TextField{})    -> failure
+  (_, TextField s)                -> s
+  (_, BinaryField{})              -> failure
+  where
+    failure = error $ "sfvEncode: field of type" <+> show ft <+> "has the following value:" <+> show v <> ", this is not supposed to happen"
+
 data SignatoryField = SignatoryField
   { sfID                     :: SignatoryFieldID
   , sfType                   :: FieldType
-  , sfValue                  :: String
+  , sfValue                  :: SignatoryFieldValue
   , sfObligatory             :: Bool
   , sfShouldBeFilledBySender :: Bool
   , sfPlacements             :: [FieldPlacement]
@@ -643,12 +667,17 @@ instance Ord DocumentTag where
   a `compare` b = tagname a `compare` tagname b
 
 getFieldOfType :: FieldType -> [SignatoryField] -> Maybe SignatoryField
-getFieldOfType _ [] = Nothing
-getFieldOfType t (sf:rest) =
-  if sfType sf == t then Just sf else getFieldOfType t rest
+getFieldOfType t = find ((t ==) . sfType)
 
-getValueOfType :: FieldType -> [SignatoryField] -> String
-getValueOfType t = fromMaybe "" . fmap sfValue . getFieldOfType t
+getValueOfType :: FieldType -> [SignatoryField] -> SignatoryFieldValue
+getValueOfType t = fromMaybe def . fmap sfValue . getFieldOfType t
+  where
+    def = case t of
+      SignatureFT{} -> BinaryField BS.empty
+      _             -> TextField ""
+
+getTextValueOfType :: FieldType -> [SignatoryField] -> String
+getTextValueOfType t = fromMaybe "" . getTextField . getValueOfType t
 
 data Document = Document {
     documentid                     :: DocumentID

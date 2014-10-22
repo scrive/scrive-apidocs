@@ -172,24 +172,30 @@ tableDocumentTags = tblTable {
 tableSignatoryLinkFields :: Table
 tableSignatoryLinkFields = tblTable {
     tblName = "signatory_link_fields"
-  , tblVersion = 7
+  , tblVersion = 8
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "type", colType = SmallIntT, colNullable = False }
     , tblColumn { colName = "custom_name", colType = TextT, colNullable = False, colDefault = Just "''::text" }
-    , tblColumn { colName = "value", colType = TextT, colNullable = False, colDefault = Just "''::text" }
+    , tblColumn { colName = "value_text", colType = TextT }
     , tblColumn { colName = "is_author_filled", colType = BoolT, colNullable = False, colDefault = Just "false" }
     , tblColumn { colName = "placements", colType = TextT, colNullable = False, colDefault = Just "''::text" }
     , tblColumn { colName = "obligatory", colType = BoolT, colNullable = False, colDefault = Just "true" }
     , tblColumn { colName = "should_be_filled_by_author", colType = BoolT, colNullable = False, colDefault = Just "false" }
+    , tblColumn { colName = "value_binary", colType = BinaryT }
     ]
   , tblPrimaryKey = pkOnColumn "id"
+  , tblChecks = [
+      TableCheck "check_signatory_link_fields_value_well_defined"
+        "value_text IS NOT NULL AND value_binary IS NULL OR value_text IS NULL AND value_binary IS NOT NULL"
+    ]
   , tblForeignKeys = [
       (fkOnColumn "signatory_link_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }
     ]
-  , tblIndexes = [  uniqueIndexOnColumns ["signatory_link_id","type","custom_name"]
-                 ]
+  , tblIndexes = [
+      uniqueIndexOnColumns ["signatory_link_id", "type", "custom_name"]
+    ]
   }
 
 tableSignatoryScreenshots :: Table

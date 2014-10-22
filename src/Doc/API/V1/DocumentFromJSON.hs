@@ -8,6 +8,7 @@ import Data.List
 import Data.Maybe
 import Data.String.Utils (strip)
 import Text.JSON.FromJSValue
+import qualified Data.ByteString as BS
 import qualified Data.Set as Set
 
 import DB.TimeZoneName
@@ -139,9 +140,10 @@ instance FromJSValueWithUpdate SignatoryField where
         case (ftype,value) of
           (Just ft, Just v) -> do
               let v' = case ft of
-                        EmailFT -> strip v
-                        SignatureFT _ -> ""
-                        _ -> v
+                        EmailFT -> TextField $ strip v
+                        -- FIXME: why is signature ignored HERE?
+                        SignatureFT _ -> BinaryField BS.empty
+                        _ -> TextField v
               return $ Just $ SignatoryField (maybe (unsafeSignatoryFieldID 0) sfID msf) ft v' obligatory filledbysender placements
           _ -> return Nothing
       where

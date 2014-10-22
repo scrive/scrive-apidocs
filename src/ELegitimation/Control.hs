@@ -163,7 +163,7 @@ data VerifySignatureResult  = Problem String
 verifySignatureAndGetSignInfo ::  (Kontrakcja m, DocumentMonad m) =>
                                    SignatoryLinkID
                                    -> MagicHash
-                                   -> [(FieldType, String)]
+                                   -> [(FieldType, SignatoryFieldValue)]
                                    -> SignatureProvider
                                    -> String
                                    -> String
@@ -481,7 +481,7 @@ verifySignatureAndGetSignInfoMobile :: Kontrakcja m
                                        => DocumentID
                                        -> SignatoryLinkID
                                        -> MagicHash
-                                       -> [(FieldType, String)]
+                                       -> [(FieldType, SignatoryFieldValue)]
                                        -> String
                                        -> m VerifySignatureResult
 verifySignatureAndGetSignInfoMobile docid signid magic fields transactionid = do

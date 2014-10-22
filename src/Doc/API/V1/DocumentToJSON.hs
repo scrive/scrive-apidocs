@@ -166,38 +166,38 @@ signatoryFieldsJSON doc sl = JSArray $
   for orderedFields $ \sf@SignatoryField{sfType, sfValue, sfPlacements, sfShouldBeFilledBySender, sfObligatory} -> do
 
     case sfType of
-      FirstNameFT           -> fieldJSON "standard" "fstname"   sfValue
-                                  ((not $ null $ sfValue)  && (not $ isPreparation doc))
+      FirstNameFT           -> fieldJSON "standard" "fstname"   (sfType, sfValue)
+                                  ((not $ sfvNull $ sfValue)  && (not $ isPreparation doc))
                                   sfObligatory sfShouldBeFilledBySender sfPlacements
-      LastNameFT            -> fieldJSON "standard" "sndname"   sfValue
-                                  ((not $ null $ sfValue)  && (not $ isPreparation doc))
+      LastNameFT            -> fieldJSON "standard" "sndname"   (sfType, sfValue)
+                                  ((not $ sfvNull $ sfValue)  && (not $ isPreparation doc))
                                   sfObligatory sfShouldBeFilledBySender sfPlacements
-      EmailFT               -> fieldJSON "standard" "email"     sfValue
-                                  ((not $ null $ sfValue)  && (not $ isPreparation doc))
+      EmailFT               -> fieldJSON "standard" "email"     (sfType, sfValue)
+                                  ((not $ sfvNull $ sfValue)  && (not $ isPreparation doc))
                                   sfObligatory sfShouldBeFilledBySender sfPlacements
-      MobileFT              -> fieldJSON "standard" "mobile"    sfValue
-                                  ((not $ null $ sfValue)  && (not $ isPreparation doc))
+      MobileFT              -> fieldJSON "standard" "mobile"    (sfType, sfValue)
+                                  ((not $ sfvNull $ sfValue)  && (not $ isPreparation doc))
                                   sfObligatory sfShouldBeFilledBySender sfPlacements
-      PersonalNumberFT      -> fieldJSON "standard" "sigpersnr" sfValue
-                                  ((not $ null $ sfValue)  && (not $ isPreparation doc))
+      PersonalNumberFT      -> fieldJSON "standard" "sigpersnr" (sfType, sfValue)
+                                  ((not $ sfvNull $ sfValue)  && (not $ isPreparation doc))
                                   sfObligatory sfShouldBeFilledBySender sfPlacements
-      CompanyFT             -> fieldJSON "standard" "sigco"     sfValue
-                                  ((not $ null $ sfValue)  && (not $ isPreparation doc))
+      CompanyFT             -> fieldJSON "standard" "sigco"     (sfType, sfValue)
+                                  ((not $ sfvNull $ sfValue)  && (not $ isPreparation doc))
                                   sfObligatory sfShouldBeFilledBySender sfPlacements
-      CompanyNumberFT       -> fieldJSON "standard" "sigcompnr"  sfValue
-                                  ((not $ null $ sfValue)  && (not $ isPreparation doc))
+      CompanyNumberFT       -> fieldJSON "standard" "sigcompnr"  (sfType, sfValue)
+                                  ((not $ sfvNull $ sfValue)  && (not $ isPreparation doc))
                                   sfObligatory sfShouldBeFilledBySender sfPlacements
-      SignatureFT label     -> fieldJSON "signature" label sfValue
+      SignatureFT label     -> fieldJSON "signature" label (sfType, sfValue)
                                   (closedSignatureF sf && (not $ isPreparation doc))
                                   sfObligatory sfShouldBeFilledBySender sfPlacements
-      CustomFT label closed -> fieldJSON "custom" label          sfValue
+      CustomFT label closed -> fieldJSON "custom" label          (sfType, sfValue)
                                   (closed  && (not $ isPreparation doc))
                                   sfObligatory sfShouldBeFilledBySender sfPlacements
-      CheckboxFT label      -> fieldJSON "checkbox" label sfValue
+      CheckboxFT label      -> fieldJSON "checkbox" label (sfType, sfValue)
                                   False
                                   sfObligatory sfShouldBeFilledBySender sfPlacements
   where
-    closedSignatureF sf = ((not $ null $ dropWhile (/= ',') $ sfValue sf) && (null $ sfPlacements sf) && ((PadDelivery /= signatorylinkdeliverymethod sl)))
+    closedSignatureF sf = ((not $ sfvNull $ sfValue sf) && (null $ sfPlacements sf) && ((PadDelivery /= signatorylinkdeliverymethod sl)))
     orderedFields = sortBy (\f1 f2 -> ftOrder (sfType f1) (sfType f2)) (signatoryfields sl)
     ftOrder FirstNameFT _ = LT
     ftOrder LastNameFT _ = LT
@@ -208,11 +208,11 @@ signatoryFieldsJSON doc sl = JSArray $
     ftOrder CompanyNumberFT _ = LT
     ftOrder _ _ = EQ
 
-fieldJSON :: String -> String -> String -> Bool -> Bool -> Bool -> [FieldPlacement] -> JSValue
-fieldJSON tp name v closed obligatory filledbysender placements = runJSONGen $ do
+fieldJSON :: String -> String -> (FieldType, SignatoryFieldValue) -> Bool -> Bool -> Bool -> [FieldPlacement] -> JSValue
+fieldJSON tp name (ft, v) closed obligatory filledbysender placements = runJSONGen $ do
     J.value "type" tp
     J.value "name" name
-    J.value "value" v
+    J.value "value" $ sfvEncode ft v
     J.value "closed" closed
     J.value "obligatory" obligatory
     J.value "shouldbefilledbysender" filledbysender
@@ -382,8 +382,8 @@ signatoryForListCSV _agr doc msl = [
                                   (CheckboxFT n1, CheckboxFT n2) -> compare n1 n2
                                   _ -> EQ
         fieldValue sf = case sfType sf of
-                             (CustomFT _ _) -> sfValue sf
-                             (CheckboxFT name) -> if (null $ sfValue sf)
+                             (CustomFT _ _) -> fromMaybe "" . getTextField $ sfValue sf
+                             (CheckboxFT name) -> if (sfvNull $ sfValue sf)
                                                      then name ++ " : not checked"
                                                      else name ++ " : checked"
                              _ -> ""

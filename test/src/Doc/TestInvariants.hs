@@ -160,8 +160,9 @@ maxLengthOnFields _ document =
   let maxlength = 512 :: Int
       lengths :: [Int]
       -- signature field can be longer than max
-      lengths = [length $ sfValue f | s <- documentsignatorylinks document
+      lengths = [length . fromMaybe "" . getTextField $ sfValue f | s <- documentsignatorylinks document
                                     , f <- signatoryfields $ s
+                                    , isJust . getTextField $ sfValue f
                                     , case sfType f of
                                         SignatureFT {} -> False -- filter our signatures, they might be long
                                         _ -> True ]

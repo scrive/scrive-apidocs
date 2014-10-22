@@ -117,7 +117,7 @@ documentFilterToSQL (DocumentFilterByString string) = do
                                                                  " AND sl5.id = signatory_link_fields.signatory_link_id" <>
                                    -- " FROM signatory_link_fields " <>
                                    " WHERE (signatory_link_fields.type != " <?> SignatureFT "signature" <> ") " <>
-                                           " AND (signatory_link_fields.value ILIKE" <?> sqlpat word <> "))"
+                                           " AND (signatory_link_fields.value_text ILIKE" <?> sqlpat word <> "))"
                                    --" WHERE TRUE)") []
 
       sqlpat text = "%" ++ concatMap escape text ++ "%"

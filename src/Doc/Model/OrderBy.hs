@@ -44,7 +44,7 @@ selectSignatoryLinksSmartNames is_author is_partner =
            "   AND signatory_links.is_author =" <?> is_author <+> "AND signatory_links.is_partner =" <?> is_partner <>
            " ORDER BY signatory_links.id) AS x"
   where
-    selectFieldAs xtype name = "(SELECT signatory_link_fields.value AS value" <+>
+    selectFieldAs xtype name = "(SELECT signatory_link_fields.value_text AS value" <+>
                                     "FROM signatory_link_fields" <+>
                                     "WHERE signatory_link_fields.signatory_link_id = signatory_links.id" <+>
                                     "AND type =" <?> xtype <+>

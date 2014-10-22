@@ -256,7 +256,8 @@ signatoryLinkFieldsSelectors =
   , "type"
   , "custom_name"
   , "is_author_filled"
-  , "value"
+  , "value_text"
+  , "value_binary"
   , "obligatory"
   , "should_be_filled_by_author"
   , "placements"
@@ -265,11 +266,14 @@ signatoryLinkFieldsSelectors =
 fetchSignatoryLinkFields :: MonadDB m => m (M.Map SignatoryLinkID [SignatoryField])
 fetchSignatoryLinkFields = foldlM decoder M.empty
   where
-    decoder acc (slfid, slid, xtype, custom_name, is_author_filled, v, obligatory, should_be_filled_by_sender, placements) = return $
+    decoder acc (slfid, slid, xtype, custom_name, is_author_filled, mvalue_text, mvalue_binary, obligatory, should_be_filled_by_sender, placements) = return $
       M.insertWith' (++) slid
          [SignatoryField
           { sfID = slfid
-          , sfValue = v
+          , sfValue = case (mvalue_text, mvalue_binary) of
+            (Just value_text, Nothing)   -> TextField value_text
+            (Nothing, Just (Binary value_binary)) -> BinaryField value_binary
+            _                            -> error "fetchSignatoryLinkFields: can't happen"
           , sfPlacements = placements
           , sfType = case xtype of
                         CustomFT{} -> CustomFT custom_name is_author_filled

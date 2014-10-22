@@ -15,6 +15,7 @@ module Doc.API.V1.Calls (
   ) where
 
 import Control.Applicative
+import Control.Arrow
 import Control.Conditional (whenM, unlessM, ifM)
 import Control.Exception.Lifted
 import Control.Monad.Error
@@ -36,8 +37,8 @@ import Text.JSON.FromJSValue
 import Text.JSON.Gen
 import Text.JSON.String (runGetJSON)
 import Text.StringTemplates.Templates
-import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
+import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length)
@@ -107,6 +108,7 @@ import Utils.Monad
 import Utils.Monoid
 import Utils.Read
 import Utils.String
+import qualified Data.ByteString.RFC2397 as RFC2397
 import qualified ELegitimation.Control as BankID
 import qualified Log
 
@@ -528,11 +530,11 @@ checkAuthenticationMethodAndValue slid = do
        (Nothing, Nothing) -> return ()
        _ -> throwIO . SomeKontraException $ badInput "Only one of `authentication_type` and `authentication_value` provided"
 
-getValidPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [(FieldType,String)] -> m (Maybe String)
+getValidPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [(FieldType,SignatoryFieldValue)] -> m (Maybe String)
 getValidPin slid fields = do
   pin <- apiGuardJustM (badInput "Pin not provided or invalid.") $ getField "pin"
   phone <- getMobile <$> fromJust . getSigLinkFor slid <$> theDocument
-  let phoneFromFields = fmap snd $ find (\x -> MobileFT == fst x) fields
+  let phoneFromFields = getTextField =<< (snd <$> find (\x -> MobileFT == fst x) fields)
   pin' <- dbQuery $ GetSignatoryPin slid (fromMaybe phone phoneFromFields)
   if (pin == pin')
     then return $ Just pin
@@ -541,7 +543,7 @@ getValidPin slid fields = do
 signDocument :: (Kontrakcja m, DocumentMonad m)
              => SignatoryLinkID
              -> MagicHash
-             -> [(FieldType, String)]
+             -> [(FieldType, SignatoryFieldValue)]
              -> Maybe SignatureInfo
              -> Maybe String
              -> SignatoryScreenshots
@@ -1193,18 +1195,20 @@ getMagicHashAndUserForSignatoryAction did sid = do
            Just mh''' -> return (mh''',Just $ user)
 
 
-getFieldForSigning ::(Kontrakcja m) => m [(FieldType,String)]
+getFieldForSigning ::(Kontrakcja m) => m [(FieldType, SignatoryFieldValue)]
 getFieldForSigning = do
-      eFieldsJSON <- getFieldJSON "fields"
-      case eFieldsJSON of
-           Nothing -> throwIO . SomeKontraException $ serverError "No fields description provided or fields description is not a valid JSON array"
-           Just fieldsJSON -> do
-             let mvalues = flip ($) fieldsJSON $ fromJSValueCustomMany $ do
-                  ft <- fromJSValue
-                  val <- fromJSValueField "value"
-                  return $ case (ft,val) of
-                            (Just ft', Just val') -> Just (ft',val')
-                            _ -> Nothing
-             case mvalues of
-               Nothing -> throwIO . SomeKontraException $ serverError "Fields description json has invalid format"
-               Just values -> return values
+  eFieldsJSON <- getFieldJSON "fields"
+  case eFieldsJSON of
+    Nothing -> throwIO . SomeKontraException $ serverError "No fields description provided or fields description is not a valid JSON array"
+    Just fieldsJSON -> do
+      let mvalues = flip ($) fieldsJSON $ fromJSValueCustomMany $ do
+            mft <- fromJSValue
+            mval <- fromJSValueField "value"
+            return $ case (mft, mval) of
+              (Just ft@SignatureFT{}, Just val) -> (const ft *** BinaryField)
+                <$> RFC2397.decode (BS.pack val)
+              (Just ft, Just val) -> Just (ft, TextField val)
+              _ -> Nothing
+      case mvalues of
+        Nothing -> throwIO . SomeKontraException $ serverError "Fields description json has invalid format"
+        Just values -> return values

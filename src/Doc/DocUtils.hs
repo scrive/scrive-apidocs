@@ -151,7 +151,7 @@ instance HasFields SignatoryLink where
     getAllFields =  signatoryfields
     replaceField f s = s {signatoryfields = replaceField f (signatoryfields s) }
 
-replaceFieldValue :: HasFields a =>  FieldType -> String -> a -> a
+replaceFieldValue :: HasFields a =>  FieldType -> SignatoryFieldValue -> a -> a
 replaceFieldValue ft v a = case (find (matchingFieldType ft) $ getAllFields a) of
                             Just f  -> replaceField (f { sfType = ft, sfValue = v}) a
                             Nothing -> replaceField (SignatoryField { sfID = unsafeSignatoryFieldID 0, sfType = ft, sfValue = v, sfPlacements =[], sfObligatory = True, sfShouldBeFilledBySender = False}) a
@@ -194,16 +194,16 @@ signatoryFieldsFromUser :: (MonadDB m, MonadThrow m) => User -> m [SignatoryFiel
 signatoryFieldsFromUser user = do
   company <- dbQuery $ GetCompanyByUserID (userid user)
   return $
-        [ SignatoryField (unsafeSignatoryFieldID 0) FirstNameFT (getFirstName user) True True []
-        , SignatoryField (unsafeSignatoryFieldID 0) LastNameFT (getLastName user) True True []
-        , SignatoryField (unsafeSignatoryFieldID 0) EmailFT (getEmail user) True True []
-        , SignatoryField (unsafeSignatoryFieldID 0) CompanyFT (getCompanyName company) False False []
+        [ SignatoryField (unsafeSignatoryFieldID 0) FirstNameFT (TextField $ getFirstName user) True True []
+        , SignatoryField (unsafeSignatoryFieldID 0) LastNameFT (TextField $ getLastName user) True True []
+        , SignatoryField (unsafeSignatoryFieldID 0) EmailFT (TextField $ getEmail user) True True []
+        , SignatoryField (unsafeSignatoryFieldID 0) CompanyFT (TextField $ getCompanyName company) False False []
         ] ++
-        (if (not $ null $ getPersonalNumber user) then [SignatoryField (unsafeSignatoryFieldID 0) PersonalNumberFT (getPersonalNumber user) False False []] else [])
+        (if (not $ null $ getPersonalNumber user) then [SignatoryField (unsafeSignatoryFieldID 0) PersonalNumberFT (TextField $ getPersonalNumber user) False False []] else [])
           ++
-        (if (not $ null $ getMobile user) then [SignatoryField (unsafeSignatoryFieldID 0) MobileFT (getMobile user) False False []] else [])
+        (if (not $ null $ getMobile user) then [SignatoryField (unsafeSignatoryFieldID 0) MobileFT (TextField $ getMobile user) False False []] else [])
           ++
-        (if (not $ null $ getCompanyNumber company) then [SignatoryField (unsafeSignatoryFieldID 0) CompanyNumberFT (getCompanyNumber company) False False []] else [])
+        (if (not $ null $ getCompanyNumber company) then [SignatoryField (unsafeSignatoryFieldID 0) CompanyNumberFT (TextField $ getCompanyNumber company) False False []] else [])
 
 {- |
     Checks whether a signatory link is eligible for sending a reminder.

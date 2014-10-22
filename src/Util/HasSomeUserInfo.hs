@@ -63,11 +63,11 @@ instance HasSomeUserInfo SignatoryLink where
   getMobile         = getMobile . signatoryfields
 
 instance HasSomeUserInfo [SignatoryField] where
-  getEmail          = strip . getValueOfType EmailFT
-  getFirstName      = getValueOfType FirstNameFT
-  getLastName       = getValueOfType LastNameFT
-  getPersonalNumber = getValueOfType PersonalNumberFT
-  getMobile         = getValueOfType MobileFT
+  getEmail          = strip . getTextValueOfType EmailFT
+  getFirstName      = getTextValueOfType FirstNameFT
+  getLastName       = getTextValueOfType LastNameFT
+  getPersonalNumber = getTextValueOfType PersonalNumberFT
+  getMobile         = getTextValueOfType MobileFT
 
 
 {- |

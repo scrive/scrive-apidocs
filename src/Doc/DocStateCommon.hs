@@ -1,6 +1,7 @@
 module Doc.DocStateCommon where
 
 import Data.Maybe
+import qualified Data.ByteString as BS
 
 import Company.Model
 import Doc.DocStateData
@@ -57,8 +58,8 @@ signLinkFromDetails' fields author partner sorder attachments magichash =
 
 signatoryLinkClearField :: SignatoryField -> SignatoryField
 signatoryLinkClearField field =  case sfType field of
-                                      SignatureFT _ -> field {sfValue = reverse $ dropWhile ((/=) '|' ) $ reverse $ sfValue field}
-                                      _ -> field
+  SignatureFT _ -> field { sfValue = BinaryField BS.empty }
+  _ -> field
 
 emptySignatoryFields :: [SignatoryField]
 emptySignatoryFields = [
@@ -76,6 +77,7 @@ checkResetSignatoryData doc sigs =
 
 {- |
     Pumps data into a signatory link
+    FIXME: used only in replaceSignatoryUser
 -}
 replaceSignatoryData :: SignatoryLink
                         -> String
@@ -92,14 +94,14 @@ replaceSignatoryData siglink fstname sndname email mobile company personalnumber
   where
     pumpData [] _ = []
     pumpData (sf:rest) vs = (case sfType sf of
-      FirstNameFT      -> sf { sfValue = fstname }
-      LastNameFT       -> sf { sfValue = sndname }
-      CompanyFT        -> sf { sfValue = company }
-      PersonalNumberFT -> sf { sfValue = personalnumber }
-      CompanyNumberFT  -> sf { sfValue = companynumber }
-      EmailFT          -> sf { sfValue = email }
-      MobileFT         -> sf { sfValue = mobile }
-      CustomFT label _ -> sf { sfType = CustomFT label (not $ null v), sfValue = v }
+      FirstNameFT      -> sf { sfValue = TextField fstname }
+      LastNameFT       -> sf { sfValue = TextField sndname }
+      CompanyFT        -> sf { sfValue = TextField company }
+      PersonalNumberFT -> sf { sfValue = TextField personalnumber }
+      CompanyNumberFT  -> sf { sfValue = TextField companynumber }
+      EmailFT          -> sf { sfValue = TextField email }
+      MobileFT         -> sf { sfValue = TextField mobile }
+      CustomFT label _ -> sf { sfType = CustomFT label (not $ null v), sfValue = TextField v }
       CheckboxFT _     -> sf
       SignatureFT _    -> sf)
         : pumpData rest vs'
@@ -128,5 +130,8 @@ replaceSignatoryUser siglink user company=
                        (getCompanyName    company)
                        (getPersonalNumber user)
                        (getCompanyNumber  company)
-                       (map sfValue $ filter isFieldCustom $ signatoryfields $ siglink) in
+                       (map (toText . sfValue) $ filter isFieldCustom $ signatoryfields $ siglink) in
   newsl { maybesignatory = Just $ userid user }
+  where
+    toText (TextField s) = s
+    toText BinaryField{} = error "Can't happen"

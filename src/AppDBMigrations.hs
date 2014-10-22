@@ -171,6 +171,7 @@ kontraMigrations = [
   , addUniqueContraintsTypeOnFields
   , addAllowSaveSafetyCopyToCompanies
   , addIdleDocTimeout
+  , signatoryLinkFieldsAddBinaryValue
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations
