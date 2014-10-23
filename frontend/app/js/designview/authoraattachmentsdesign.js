@@ -211,7 +211,7 @@ window.DesignAuthorAttachmentsPopup = function(args) {
                             document.recall(function() {
                                 document.trigger("change:attachments");
                                 LoadingDialog.close();
-                                viewmodel.saveWithFlashMessageIfNeeded();
+                                viewmodel.saveAndFlashMessageIfAlreadySaved();
                                 popup.close();
                             });
                         },

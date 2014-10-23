@@ -56,12 +56,13 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
               viewmodel.saveFlashMessage(wasSaved);
             });
         },
-        saveWithFlashMessageIfNeeded: function() {
+        saveAndFlashMessageIfAlreadySaved: function() {
             var isSaved = this.document().saved();
-            this.document().save();
-            if(isSaved) {
-              this.saveFlashMessage(true);
-            }
+            this.document().save(function () {
+              if(isSaved) {
+                this.saveFlashMessage(true);
+              }
+            });
         },
         saveFlashMessage: function(wasSaved) {
             var flashMsg;
@@ -207,7 +208,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                     mixpanel.track('Click remove file');
                     doc.markAsNotReady();
                     doc.removeTypeSetters();
-                    model.saveWithFlashMessageIfNeeded();
+                    model.saveAndFlashMessageIfAlreadySaved();
                     doc.afterSave(function() {
                         new Submit({
                             method : "POST",

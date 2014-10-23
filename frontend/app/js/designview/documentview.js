@@ -179,7 +179,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                                      onAppend: function(input, title, multifile) {
                                        document.markAsNotReady();
                                        submit.addInputs(input);
-                                       viewmodel.saveWithFlashMessageIfNeeded();
+                                       viewmodel.saveAndFlashMessageIfAlreadySaved();
                                        document.afterSave(function() {
                                            submit.sendAjax();
                                        });

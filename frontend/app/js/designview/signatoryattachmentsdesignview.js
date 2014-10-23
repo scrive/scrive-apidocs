@@ -220,7 +220,7 @@ window.DesignSignatoryAttachmentsPopup = function(args) {
                   document.afterSave(function() {
                       document.recall(function() {
                           document.trigger("change:attachments");
-                          viewmodel.saveWithFlashMessageIfNeeded();
+                          viewmodel.saveAndFlashMessageIfAlreadySaved();
                           popup.reject();
                       });
                   });
