@@ -102,8 +102,7 @@ var InfoTextInputModel = Backbone.Model.extend({
           this.get("onEnter")();
   },
   onTab : function() {
-      if (this.get("onTab") != undefined)
-          this.get("onTab")();
+      return this.get("onTab");
   },
   onBlur : function() {
       if (this.get("onBlur") != undefined)
@@ -219,6 +218,17 @@ var InfoTextInputView = Backbone.View.extend({
         {
             if (this.input.val() != model.value()) {
                 this.input.val(model.value());
+
+                // workaround for firefox, which puts the cursor at the beginning of the input
+                // after setting its value with $.val()
+                // we have to use timeout, because this(focus event) is called in firefox before the cursor
+                // is visible
+                var self = this;
+                setTimeout(function() {
+                  if (self.input.caret() !== self.input.val().length) {
+                    self.input.caret(self.input.val().length);
+                  }
+                }, 0);
             }
             if(this.input.hasClass("grayed"))
                 this.input.removeClass("grayed");
@@ -277,8 +287,14 @@ var InfoTextInputView = Backbone.View.extend({
           this.model.onEnter();
           return false;
         } else if (e.keyCode == 9) {
-          this.model.onTab();
-          return false;
+          var onTab = this.model.onTab();
+          if (onTab !== undefined) {
+            onTab();
+            return false;
+          } else {
+            // don't swallow events when there's no explicit handler
+            return true;
+          }
         }
     },
     suppressSpace : function(e) {

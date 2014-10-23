@@ -37,8 +37,13 @@ window.BrowserInfo = {
       return BrowserInfo.isIE() && ($.browser.version > "3" && $.browser.version < "7.0");
     },
     isSmallScreen : function() {
-     // iPad returns this as ~768, but we add a bit of margin.
-     return (window.outerWidth < 730) || (screen.width < 730) ;
+      if (window.outerWidth === 0) {
+        // probably chrome, tab was opened in background, try to rely on screen.width alone
+        return screen.width < 730;
+      } else {
+        // iPad returns this as ~768, but we add a bit of margin.
+        return window.outerWidth < 730 || screen.width < 730;
+      }
     }
 };
 

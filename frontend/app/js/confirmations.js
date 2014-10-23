@@ -344,16 +344,10 @@ window.Confirmation = function (args) {
             setTimeout(function() {
               overlay.addClass("active");
               view.container.css("opacity", 1);
-              // wait for a second so the browser has the time to
-              // render everything and display the animation
-              // animation takes 600ms, but waiting for a shorter period
-              // results in not fully rendered modals sometimes
-              setTimeout(function() {
-                // Sometimes when the overlay pushes the document down,
-                // we have to make sure that the overlay covers the whole doc.
-                view.fixHeight();
-                view.onRender();
-              }, 1000);
+              // Sometimes when the overlay pushes the document down,
+              // we have to make sure that the overlay covers the whole doc.
+              view.fixHeight();
+              view.onRender();
             }, 100);
           }
 

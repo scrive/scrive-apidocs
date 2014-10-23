@@ -1100,7 +1100,12 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                     input.el().addClass('redborder');
                 else
                     input.el().removeClass('redborder');
-                input.setValue(field.value());
+                // skip updating input value if it's the same as field value (modulo whitespace)
+                // because when someone has typed "somethin g^H" the whitespace would get deleted
+                // which is not really what we want
+                if (input.value().trim() !== field.value()) {
+                  input.setValue(field.value());
+                }
             });
 
             var optionOptions = ['optional', 'signatory', 'sender'];

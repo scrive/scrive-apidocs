@@ -1,0 +1,7 @@
+{"nottodo": [
+  {"rule_name": "Date.parse() is unreliable",
+   "reason": "Date.parse() is browser/OS dependant and often breaks in IE9, resulting in date objects full of NaN",
+   "type": "value",
+   "identifier": "Date.parse",
+   "substitute": "Date.parse(x) -> moment(x).toDate()"}
+]}

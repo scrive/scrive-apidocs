@@ -30,7 +30,7 @@ window.createFieldPlacementPlacedView = function (args) {
     else return new TextPlacementPlacedView(args);
 };
 
-window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction, heightFunction, cursorNormalize, fontSize, onFieldAdded)
+window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction, heightFunction, cursorNormalize, fontSize, onFieldAdded, onDragStart)
 {
     var droppedInside = false;
     var helper;
@@ -60,6 +60,18 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
             verticaloffset = -1;
     else if (field.isSignature())
             verticaloffset = 1;
+
+    if (onDragStart !== undefined) {
+      dragHandler.mousedown(function() {
+        if (onDragStart()) {
+          dragHandler.draggable('enable');
+          return true;
+        } else {
+          dragHandler.draggable('disable');
+          return false;
+        }
+      });
+    }
 
     dragHandler.draggable({
         appendTo : ".design-view-frame",

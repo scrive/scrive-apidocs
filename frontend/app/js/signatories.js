@@ -1,7 +1,7 @@
 /* Signatories model + basic view + signatories attachments
  */
 
-define(['Backbone', 'legacy_code'], function() {
+define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
 window.SignatoryAttachment = Backbone.Model.extend({
     defaults: {
@@ -271,7 +271,7 @@ window.Signatory = Backbone.Model.extend({
     },
     signdate: function() {
         if (this.get("signdate"))
-          return new Date(Date.parse(this.get("signdate")));
+          return moment(this.get("signdate")).toDate();
         return undefined;
     },
     datamismatch: function() {
@@ -279,18 +279,18 @@ window.Signatory = Backbone.Model.extend({
     },
     rejecteddate: function() {
         if (this.get("rejecteddate"))
-          return new Date(Date.parse(this.get("rejecteddate")));
+          return moment(this.get("rejecteddate")).toDate();
         return undefined;
     },
     seendate: function() {
         if (this.get("seendate"))
-          return new Date(Date.parse(this.get("seendate")));
+          return moment(this.get("seendate")).toDate();
         return undefined;
 
     },
     readdate: function() {
         if (this.get("readdate"))
-          return new Date(Date.parse(this.get("readdate")));
+          return moment(this.get("readdate")).toDate();
         return undefined;
     },
     deliveredInvitation: function() {

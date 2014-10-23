@@ -1,4 +1,4 @@
-define(['React', 'Backbone', 'postsignview/user_service', 'postsignview/analytics_service'], function(React, Backbone, user_service, analytics_service) {
+define(['React', 'Backbone', 'postsignview/user_service', 'postsignview/analytics_service', 'moment'], function(React, Backbone, user_service, analytics_service, moment) {
 
   return Backbone.Model.extend({
     url: '/api/frontend/list',
@@ -16,9 +16,7 @@ define(['React', 'Backbone', 'postsignview/user_service', 'postsignview/analytic
     },
 
     documentTime: function() {
-      var documentTimeRaw = this.get('time'),
-      documentTime = new Date(Date.parse(documentTimeRaw)).fullTime();
-      return documentTime;
+      return moment(this.get('time')).toDate().fullTime();
     },
     
     get: function(attr) {

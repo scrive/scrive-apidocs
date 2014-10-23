@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React', 'lists/list','legacy_code'], function(React, List) {
+define(['React', 'lists/list', 'moment', 'legacy_code'], function(React, List, moment) {
 
 
 return React.createClass({
@@ -158,7 +158,7 @@ return React.createClass({
             width="105px"
             sorting="time"
             rendering={function(d) {
-              var time = new Date(Date.parse(d.field("fields").time));
+              var time = moment(d.field("fields").time).toDate();
               return (<span title={time.fullTime()}>{time.toTimeAbrev()}</span>);
             }}
           />

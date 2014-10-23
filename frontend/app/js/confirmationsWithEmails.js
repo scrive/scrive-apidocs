@@ -3,7 +3,7 @@
  *
 */
 
-define(['Backbone', 'legacy_code'], function() {
+define(['Backbone', 'tinyMCE', 'tinyMCE_theme', 'tinyMCE_noneeditable', 'tinyMCE_paste', 'legacy_code'], function(Backbone, tinyMCE) {
 
 window.Mail = Backbone.Model.extend({
 	defaults : {
@@ -61,7 +61,7 @@ window.MailView = Backbone.View.extend({
         var wrapper = $("<div style='margin-bottom:12px;'/>").append(textarea);
         editablePart.replaceWith(wrapper);
         setTimeout( function() {
-           tinymce.init({
+           tinyMCE.init({
                       selector: '#' + id,
                       plugins: "noneditable,paste",
                       menubar: false,
@@ -301,31 +301,36 @@ window.ConfirmationWithEmail = {
 
           var view = new ConfirmationWithEmailView({model : model, el : overlay});
           $("body").append(overlay);
-          if (BrowserInfo.isIE8orLower()) {
-            // for IE7 and IE8 don't make the overlay big, append
-            // it directly and calculate it's real size, so we can increase the
-            // document+overlay size later
-            overlay_height = overlay.height();
-          }
-          setTimeout(function() {
+          var updateOverlay = function() {
+            if (!$.contains(document, overlay[0])) {
+              $(window).unbind('resize', updateOverlay);
+            }
+
+            var left = Math.floor(($(window).width() - (BrowserInfo.isSmallScreen() ? 980 : 800)) / 2);
+            overlay.find('.modal-container').css("margin-left",left > 20 ? left : 20);
+
+            if (BrowserInfo.isIE8orLower()) {
+              // for IE7 and IE8 don't make the overlay big, append
+              // it directly and calculate it's real size, so we can increase the
+              // document+overlay size later
+              overlay_height = overlay.height();
+            }
             if (model.bottom()) {
               view.container.css("margin-top", window.innerHeight - view.container.height() - 100);
             }
+            // Sometimes when the overlay pushes the document down,
+            // we have to make sure that the overlay covers the whole doc.
+            if (BrowserInfo.isIE8orLower()) {
+              // increase the overlay size (see prev comments)
+              overlay.height(overlay_height + $(document).height());
+            } else {
+              overlay.height($(document).height());
+            }
+          };
+          $(window).resize(updateOverlay);
+          setTimeout(function() {
             overlay.addClass("active");
-            // wait for a second so the browser has the time to
-            // render everything and display the animation
-            // animation takes 600ms, but waiting for a shorter period
-            // results in not fully rendered modals sometimes
-            setTimeout(function() {
-              // Sometimes when the overlay pushes the document down,
-              // we have to make sure that the overlay covers the whole doc.
-              if (BrowserInfo.isIE8orLower()) {
-                // increase the overlay size (see prev comments)
-                overlay.height(overlay_height + $(document).height());
-              } else {
-                overlay.height($(document).height());
-              }
-            }, 1000);
+            updateOverlay();
           },100);
           return model;
    }

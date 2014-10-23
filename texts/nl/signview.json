@@ -142,6 +142,8 @@
 "_signinginprogressmodalYouHaveSignedPleaseWait":"U heeft het document <strong class='put-doctitle'/> ondertekend. Wacht a.u.b. terwijl Scrive E-sign: ",
 "_signviewAttachmentUploadedInOtherWindow":"Helaas, wij kunnen uw bestand niet uploaden omdat dit document in een andere venster geopend is. Ververs uw pagina om verder te gaan.",
 "_signviewSigningFailed":"Helaas, er is iets misgeggaan terwijl het document werd getekend. Probeer het a.ub. opnieuw.",
+"_smsDocumentErrorAuthor":"Helaas kon Scrive E-sign het document $documenttitle$ niet hanteren. Daarom is het ondertekeningsproces geannuleerd. Onze technici zijn van dit probleem op de hoogte gesteld. Heeft u vragen, neem dan a.u.b. contact met ons op via support@scrive.com",
+"_smsDocumentErrorSignatory":"Helaas kon Scrive E-sign het document $documenttitle$ niet hanteren. Daarom is het ondertekeningsproces geannuleerd. Onze technici zijn van dit probleem op de hoogte gesteld. Heeft u vragen, neem dan a.u.b. contact met ons op via support@scrive.com",
 "_smsInvitationToSign":"Hallo, $creatorname$ heeft u uitgenodigd om te e-ondertekenen. Klik hier om te starten: $link$ ",
 "_smsPinSendout":"Uw PIN voor $documenttitle$ is $pin$",
 "_smsRejectNotification":"$personname$, $rejectorName$ heeft ondertekening van het document $documenttitle$ afgewezen. Het ondertekeningsproces is daarom afgebroken. Volg de link om het document te bekijken: $link$",

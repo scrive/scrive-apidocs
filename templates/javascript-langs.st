@@ -314,6 +314,7 @@ javascriptLocalisation =
            }
          , phonePlaceholder: "$_phonePlaceholder()$"
          , designview : {
+              dndDisabled: "$_designViewDNDDisabled()$",
               editMessagePlaceholder: "$_editMessagePlaceholder()$",
               chooseParticipant: "$_designViewChooseParticipant()$",
               selectField: "$_selectField()$",

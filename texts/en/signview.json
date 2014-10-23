@@ -142,6 +142,8 @@
 "_signinginprogressmodalYouHaveSignedPleaseWait":"You have signed the document <strong class='put-doctitle'/>. Please wait while Scrive E-sign:",
 "_signviewAttachmentUploadedInOtherWindow":"Sorry, we are unable to upload your file because this document is open in another window. Please reload your page to continue.",
 "_signviewSigningFailed":"Sorry, something went wrong while signing the document. Please try again.",
+"_smsDocumentErrorAuthor":"Scrive could not handle the document $documenttitle$ and the signing process has been cancelled. Our technicians have been notified of this issue. If you have any questions, please contact us at support@scrive.com",
+"_smsDocumentErrorSignatory":"Scrive could not handle the document $documenttitle$ and the signing process has been cancelled. Our technicians have been notified of this issue. If you have any questions, please contact us at support@scrive.com",
 "_smsInvitationToSign":"Hi, $creatorname$ has invited you to e-sign. Click here to start: $link$",
 "_smsPinSendout":"Your PIN for $documenttitle$ is $pin$",
 "_smsRejectNotification":"$personname$, $rejectorName$ has rejected to sign the document $documenttitle$. The signing process has therefore been cancelled. Follow the link to view the document: $link$",

@@ -442,13 +442,14 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetTimeoutedButPendingDocumentsC
       sqlWhere $ "timeout_time IS NOT NULL AND timeout_time < " <?> mtime
       sqlLimit (fromIntegral size)
 
-data GetDocsSentBetween = GetDocsSentBetween UserID UTCTime UTCTime
+data GetDocsSentBetween = GetDocsSentBetween CompanyID UTCTime UTCTime
 instance MonadDB m => DBQuery m GetDocsSentBetween Int64 where
-  query (GetDocsSentBetween uid start end) = do
+  query (GetDocsSentBetween cid start end) = do
     runQuery_ $ "SELECT count(documents.id) " <>
                "FROM documents " <>
                "JOIN signatory_links ON documents.id = signatory_links.document_id " <>
-               "WHERE signatory_links.user_id =" <?> uid <>
+               "JOIN users ON signatory_links.user_id = users.id " <>
+               "WHERE users.company_id =" <?> cid <>
                "AND is_author " <>
                "AND documents.invite_time >=" <?> start <>
                "AND documents.invite_time <" <?> end <>

@@ -5,7 +5,7 @@ if (typeof String.prototype.startsWith != 'function') {
   };
 }
 
-require(['Backbone', 'legacy_code'], function() {
+require(['Backbone', 'tinyMCE', 'tinyMCE_theme', 'tinyMCE_noneeditable', 'tinyMCE_paste', 'legacy_code'], function(Backbone, tinyMCE) {
 
 // globally track errors
 window.onerror = function(msg, url, line) {
@@ -113,7 +113,7 @@ function prepareForEdit(form, width) {
 
 function prepareEditor(textarea) {
   tinyMCE.baseURL = '/libs/tiny_mce';
-  tinymce.init({
+  tinyMCE.init({
     selector: '#' + textarea.attr('id'),
     plugins: "noneditable,paste",
     menubar: false,

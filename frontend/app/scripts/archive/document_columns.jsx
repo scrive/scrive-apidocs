@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
 /* List of columns used by out archive view. Used by both, Documents and Trash list*/
 
-define(['React','lists/list','Backbone', 'legacy_code'], function(React,List) {
+define(['React','lists/list', 'moment', 'Backbone', 'legacy_code'], function(React, List, moment) {
 
 return function(args) {
   var self = args.list;
@@ -31,7 +31,7 @@ return function(args) {
             sorting="time"
             key="time"
             rendering={function(d) {
-              var time = new Date(Date.parse(d.field("fields").time));
+              var time = moment(d.field("fields").time).toDate();
               return (<span title={time.fullTime()}>{time.toTimeAbrev()}</span>);
             }}
           />,
@@ -69,7 +69,7 @@ return function(args) {
             rendering={function(d,i) {
               var time;
               if (d.field("subfields")[i].time)
-                time = new Date(Date.parse(d.field("subfields")[i].time));
+                time = moment(d.field("subfields")[i].time).toDate();
               return [
                 <td key="1"></td>,
                 <td key="2">

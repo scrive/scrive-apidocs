@@ -10,6 +10,7 @@ define([
   '../libs/json2',
   '../libs/jstz.min',
   '../libs/jquery.form',
+  '../libs/jquery.caret',
   '../libs/jquery.mCustomScrollbar.concat.min',
   '../libs/livequery',
   '../libs/recurly',

@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React', 'lists/list','legacy_code'], function(React, List) {
+define(['React', 'lists/list', 'moment', 'legacy_code'], function(React, List, moment) {
 
 
 var openNewUserModal = function(companyid,callback) {
@@ -209,7 +209,7 @@ return React.createClass({
              }
              var time = d.field("fields").tos;
              if (time != undefined && time != "") {
-               return (<small> {new Date(Date.parse(time)).toTimeAbrev()}</small>);
+               return (<small> {moment(time).toDate().toTimeAbrev()}</small>);
              } else
                return (<span/>);
            }}

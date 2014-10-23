@@ -33,7 +33,7 @@ nicemail=
             <td align="center" valign="top">
               <!-- // Begin Template Body \\ -->
 
-              <table border="0" cellpadding="0" cellspacing="40" width="600" id="templateBody" style="border-bottom-color: $nicemailbordercolour()$; border-bottom-width: 1px; border-bottom-style: solid;">
+              <table border="0" cellpadding="0" cellspacing="40" width="600" id="templateBody" style="border-bottom-color: $nicemailbordercolour()$; border-bottom-width: 1px; border-bottom-style: solid; border-collapse: separate;">
                 <tr>
                   <td valign="top" class="bodyContent" style="background-color: $nicemailbgcolour()$">
                     <!-- // Begin Module: Standard Content \\ -->
@@ -104,7 +104,7 @@ nicemail=
 
                         <td colspan="2" valign="top">
                           <br />
-                          <div style="color: $if(!textcolor)$#999999$else$$textcolor$$endif$; font-family: $nicemailfont()$; font-style: italic; font-size: 13px; line-height: 16px; text-align: justify; padding: 0 40px; padding-top: 20px; padding-bottom: 20px;">
+                          <div style="color: $if(!textcolor)$#999999$else$$textcolor$$endif$; font-family: $nicemailfont()$; font-style: italic; font-size: 13px; line-height: 16px; text-align: justify; margin: 20px 40px;">
                             $footer:noescape()$
                           </div>
 
@@ -121,7 +121,7 @@ nicemail=
           $else$
           <tr>
             <td>
-              <div style="padding: 0 40px; padding-top: 20px; padding-bottom: 20px;">
+              <div style="margin: 20px 40px;">
                 $poweredByScrive()$
               </div>
             </td>
@@ -161,65 +161,47 @@ $if(l)$
 $endif$
 ####
 nicebutton=
-<table bgcolor="$if(!buttoncolour)$#53b688$else$$buttoncolour$$endif$"
-       border="0"
-       cellspacing="0"
-       cellpadding="0">
-  <tr>
-    <td>
-      <a $if(link)$href="$link$"$endif$
-         class="button-blue notclickableinpreview"
-         style="$if(!buttoncolour)$
-                  background-color: rgb(83,182,136);
-                  background: rgb(83,182,136);
-                  border: 2px solid rgb(83,182,136);
-                  -webkit-box-shadow: inset rgb(83,182,136) 0 0 0 1px;
-                  -moz-box-shadow: inset rgb(83,182,136) 0 0 0 1px;
-                  -ms-box-shadow: inset rgb(83,182,136) 0 0 0 1px;
-                  -o-box-shadow: inset rgb(83,182,136) 0 0 0 1px;
-                  box-shadow: inset rgb(83,182,136) 0 0 0 1px;
-                $else$
-                  background-color: $buttoncolour$;
-                  background: $buttoncolour$;
-                  border: 2px solid $buttoncolour$;
-                  -webkit-box-shadow: $buttoncolour$ 0 0 0 1px;
-                  -moz-box-shadow: inset $buttoncolour$ 0 0 0 1px;
-                  -ms-box-shadow: inset $buttoncolour$ 0 0 0 1px;
-                  -o-box-shadow: inset $buttoncolour$ 0 0 0 1px;
-                  box-shadow: inset $buttoncolour$ 0 0 0 1px;
-                $endif$
-                text-decoration: none;
-                font: 16px/16px Helvetica Neue, Arial, sans-serif;
-                padding: 12px 20px;
-                margin: 0;
-                color: #fff;
-                text-shadow: hsla(0, 0, 0, 0.5) 0 1px 0;
-                text-align: center;
-                -webkit-transition: 0.15s ease-in-out;
-                -moz-transition: 0.15s ease-in-out;
-                -ms-transition: 0.15s ease-in-out;
-                -o-transition: 0.15s ease-in-out;
-                transition: 0.15s, ease-in-out;
-                cursor: pointer;
-                -moz-user-select: none;
-                -ms-user-select: none;
-                -o-user-select: none;
-                -webkit-user-select: none;
-                user-select: none;
-                display: inline-block;
-                -webkit-transform: translatez(0);
-                -moz-transform: translatez(0);
-                -ms-transform: translatez(0);
-                -o-transform: translatez(0);
-                transform: translatez(0);
-                zoom: 1;">
-        <div style="position: relative; background-color: $if(!buttoncolour)$ rgb(83,182,136)$else$ $buttoncolour$$endif$; color: #fff; border: 0;">
+<a $if(link)$href="$link$"$endif$
+   class="button-blue notclickableinpreview">
+  <table bgcolor="$if(!buttoncolour)$#53b688$else$$buttoncolour$$endif$"
+         border="0"
+         cellspacing="0"
+         cellpadding="0"
+         style="cursor: pointer;
+                line-height: 16px;">
+    <tr>
+      <td width="22">
+      </td>
+      <td height="14">
+      </td>
+      <td width="22">
+      </td>
+    </tr>
+    <tr>
+      <td width="22">
+      </td>
+      <td>
+        <span style="display: inline-block;
+                     text-decoration: none;
+                     font: 16px/16px Helvetica Neue, Arial, sans-serif;
+                     display: inline-block;
+                     color: #fff;">
           $text$
-        </div>
-      </a>
-    </td>
-  </tr>
-</table>
+        </span>
+      </td>
+      <td width="22">
+      </td>
+    </tr>
+    <tr>
+      <td width="22">
+      </td>
+      <td height="14">
+      </td>
+      <td width="22">
+      </td>
+    </tr>
+  </table>
+</a>
 ####
 poweredByScrive=
 <a style="text-decoration: none;" href="$ctxhostpart$">

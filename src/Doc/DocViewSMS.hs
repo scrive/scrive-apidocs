@@ -43,11 +43,11 @@ mkSMS doc sl msgData msgBody = do
 
 smsDocumentErrorAuthor :: (MailContextMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => Document -> SignatoryLink -> m SMS
 smsDocumentErrorAuthor doc sl = do
-  mkSMS doc sl None =<< renderLocalTemplate doc "smsDocumentErrorAuthor" (smsFields doc sl)
+  mkSMS doc sl None =<< renderLocalTemplate doc "_smsDocumentErrorAuthor" (smsFields doc sl)
 
 smsDocumentErrorSignatory :: (MailContextMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => Document -> SignatoryLink -> m SMS
 smsDocumentErrorSignatory doc sl = do
-  mkSMS doc sl None =<< renderLocalTemplate doc "smsDocumentErrorSignatory" (smsFields doc sl)
+  mkSMS doc sl None =<< renderLocalTemplate doc "_smsDocumentErrorSignatory" (smsFields doc sl)
 
 smsInvitation :: (MailContextMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => SignatoryLink -> Document -> m SMS
 smsInvitation sl doc = do

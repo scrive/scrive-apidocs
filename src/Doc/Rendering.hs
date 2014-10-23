@@ -96,19 +96,17 @@ runRendering _renderedPages fid widthInPixels renderingMode = do
                        , ["1" | RenderingModeFirstPageOnly <- return renderingMode] -- render only first page if so desired
                        ]) BSL.empty
 
-    result <- case exitcode of
-      ExitFailure _ -> do
-        systmp <- liftIO $ getTemporaryDirectory
-        (path,handle) <- liftIO $ openTempFile systmp ("mudraw-failed-" ++ show fid ++ "-.pdf")
-        Log.attention_ $ "Cannot mudraw of file #" ++ show fid ++ ": " ++ path
-        liftIO $ BS.hPutStr handle content
-        liftIO $ hClose handle
+    when (exitcode /= ExitSuccess) $
+      Log.attention_ $ "mudraw process for pdf->png render failed, will look for rendered images anyway"
+    pages <- readNumberedFiles pathOfPage 1 []
+    when (null pages) $ do
+      systmp <- liftIO $ getTemporaryDirectory
+      (path, handle) <- liftIO $ openTempFile systmp $ "mudraw-failed-" ++ show fid ++ "-.pdf"
+      Log.attention_ $ "Cannot mudraw of file #" ++ show fid ++ ": " ++ path
+      liftIO $ BS.hPutStr handle content
+      liftIO $ hClose handle
+    return $ RenderedPages True pages
 
-        return $ RenderedPages True []
-      ExitSuccess -> do
-        pages <- readNumberedFiles pathOfPage 1 []
-        return (RenderedPages True pages)
-    return result
 
 -- | 'getRenderedPages' returns 'RenderedPages' for document 'fileid'
 -- requested to be rendered with width 'pageWidthInPixels' and also a

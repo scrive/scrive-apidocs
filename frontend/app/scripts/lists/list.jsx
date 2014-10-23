@@ -109,6 +109,8 @@ var List = React.createClass({
       var hasFirstTopBar = header != undefined || selectfilters.length > 0 || (selectactions != undefined && textfiltering != undefined);
       var hasSecondTopBar =  actions.length >0 || selectactions != undefined ||  (!hasFirstTopBar && textfiltering != undefined);
       var hasAnyTopBar = hasFirstTopBar || hasSecondTopBar;
+      var rows = model.list() === undefined ? [] : model.list();
+      rows = this.props.showLimit === undefined ? rows : rows.slice(0, this.props.showLimit);
       return (
         <div className='list-container' style={{opacity : model.ready() ? "1" : "0.5" }}>
 
@@ -182,7 +184,7 @@ var List = React.createClass({
               </thead>
               <tbody className='selectable'>
                 {/*if*/ (model.list() != undefined) &&
-                  _.flatten([ model.list().slice(0, this.props.showLimit).map(function(d) {
+                  _.flatten([ rows.map(function(d) {
                     var sl = [];
                     if (sublist != undefined && sublist.props.count(d) > 0)
                     {

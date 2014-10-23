@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React', 'common/backbone_mixin','lists/list','legacy_code'], function(React, BackboneMixin, List) {
+define(['React', 'common/backbone_mixin','lists/list', 'moment', 'legacy_code'], function(React, BackboneMixin, List, moment) {
 
 return React.createClass({
     createFromTemplate : function(id) {
@@ -71,8 +71,8 @@ return React.createClass({
               width="100px"
               sorting="time"
               rendering={function(d) {
-                var time = new Date(Date.parse(d.field("fields").time));
-                return (<div text={time.fullTime()}>{new Date(Date.parse(time)).toYMDString()}</div>);
+                var time = moment(d.field("fields").time).toDate();
+                return (<div text={time.fullTime()}>{time.toYMDString()}</div>);
               }}
             />
 

@@ -25,9 +25,13 @@
     color: @barstextcolor;
     font-family : @font;
 
-    .inner .clickable {
+    .inner.clickable {
       color: @barstextcolor;
       font-family : @font;
+
+      &:hover {
+        color: @text-very-light;
+      }
     }
   }
 }

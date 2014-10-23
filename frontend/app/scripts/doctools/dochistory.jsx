@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React', 'common/backbone_mixin','lists/list','legacy_code'], function(React, BackboneMixin, List, _legacyCode) {
+define(['React', 'common/backbone_mixin','lists/list', 'moment', 'legacy_code'], function(React, BackboneMixin, List, moment, _legacyCode) {
 
 var DocumentHistoryView =  React.createClass({
     getDefaultProps: function() {
@@ -63,7 +63,7 @@ var DocumentHistoryView =  React.createClass({
                 return (
                   <span>
                       {/*if*/ (d.field("fields").time != undefined && d.field("fields").time != "" ) &&
-                        <span>{new Date(Date.parse(d.field("fields").time)).toTimeAbrevWithMinutes()}</span>
+                        <span>{moment(d.field("fields").time).toDate().toTimeAbrevWithMinutes()}</span>
                       }
                   </span>
                 );
