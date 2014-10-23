@@ -63,7 +63,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
 
     if (onDragStart !== undefined) {
       dragHandler.mousedown(function() {
-        if (onDragStart()) {
+        if (onDragStart(field)) {
           dragHandler.draggable('enable');
           return true;
         } else {
@@ -77,6 +77,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
         appendTo : ".design-view-frame",
         cursorAt : cursorNormalize ? { top :7 , left :7} : undefined,
         helper: function(event) {
+            initFP();
             helper = createFieldPlacementView({
                           model: field,
                           height : heightFunction != undefined ? heightFunction() : undefined,
@@ -86,6 +87,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
             return helper;
         },
         start: function(event, ui) {
+            initFP();
             if( placement!=undefined ) {
                 if (placement.typeSetter != undefined) {
                     placement.typeSetter.clear();
