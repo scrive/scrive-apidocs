@@ -663,6 +663,7 @@
 "_paymentPlanNextPayment":"Επόμενη πληρωμή ",
 "_paymentPlanNone":"Κανένας/α ",
 "_paymentPlanPayments":"Πληρωμές",
+"_paymentPlanPerMonth":"ανά μήνα",
 "_paymentPlanPerMonthPerDoc":"& $FormPricePerMonth()$/μήνα έως και $FormPrice50()$ χρήστες",
 "_paymentPlanPerUserPerMonth":"απεσταλμένα έγγραφα / χρήστη ",
 "_paymentPlanPlaceholder":"Παρακαλώ περιγράψτε τις ανάγκες σας εδώ σε λίγες προτάσεις. Θα επικοινωνήσουμε μαζί σας αμέσως. ",

@@ -663,6 +663,7 @@
 "_paymentPlanNextPayment":"Nächste Zahlung",
 "_paymentPlanNone":"Keine",
 "_paymentPlanPayments":"Zahlungen",
+"_paymentPlanPerMonth":"pro Monat",
 "_paymentPlanPerMonthPerDoc":"& $FormPricePerMonth()$/Monat für bis zu $FormPrice50()$ Benutzern",
 "_paymentPlanPerUserPerMonth":"Senden von Dokumenten pro Benutzer",
 "_paymentPlanPlaceholder":"Bitte beschreiben Sie hier in wenigen Sätzen Ihre Wünsche. Wir nehmen umgehend mit Ihnen Kontakt auf.",

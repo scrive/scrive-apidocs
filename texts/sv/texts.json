@@ -663,6 +663,7 @@
 "_paymentPlanNextPayment":"Nästa betalning",
 "_paymentPlanNone":"Ingen",
 "_paymentPlanPayments":"Betalningar",
+"_paymentPlanPerMonth":"per månad",
 "_paymentPlanPerMonthPerDoc":"& $FormPricePerMonth()$/månad upp till $FormPrice50()$ användare",
 "_paymentPlanPerUserPerMonth":"per användare som skickar dokument",
 "_paymentPlanPlaceholder":"Beskriv ditt behov här i några få meningar. Vi återkommer till dig direkt.",

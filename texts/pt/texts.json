@@ -663,6 +663,7 @@
 "_paymentPlanNextPayment":"Próximo pagamento",
 "_paymentPlanNone":"Nenhum",
 "_paymentPlanPayments":"Pagamentos",
+"_paymentPlanPerMonth":"por mês",
 "_paymentPlanPerMonthPerDoc":"& $FormPricePerMonth()$/mês até $FormPrice50()$ utilizadores",
 "_paymentPlanPerUserPerMonth":"por utilizador a enviar documentos",
 "_paymentPlanPlaceholder":"Descreva as suas necessidades aqui por meio de algumas frases. Será contactado brevemente.",
