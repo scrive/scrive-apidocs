@@ -4,7 +4,6 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
 import Data.Maybe
-import Doc.DocStateData
 import Happstack.Server
 import Network.URI
 import Test.Framework
@@ -18,10 +17,11 @@ import Context
 import DB
 import Doc.API.V1.Calls
 import Doc.API.V1.DocumentToJSON
+import Doc.DocStateData
 import Doc.Model
 import OAuth.Model
-import TestKontra as T
 import TestingUtil
+import TestKontra as T
 import User.Model
 import Utils.Default
 
