@@ -51,11 +51,11 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
       onChange: function(value) {
           field.setValue(value);
           signatory.trigger("change");
-          iti.el().toggleClass("valid",!signview.hasExtraEmailInput());
+          iti.el().toggleClass("valid",!signview.askForEmail());
 
       }
     });
-    iti.el().toggleClass("valid",!signview.hasExtraEmailInput());
+    iti.el().toggleClass("valid",!signview.askForEmail());
     return iti.el();
   },
   nameInput: function() {
@@ -76,10 +76,10 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
       onChange: function(value) {
           field.setValue(value);
           signatory.trigger("change");
-          iti.el().toggleClass("valid",!signview.hasExtraNameInput());
+          iti.el().toggleClass("valid",!signview.askForName());
       }
     });
-    iti.el().toggleClass("valid",!signview.hasExtraNameInput());
+    iti.el().toggleClass("valid",!signview.askForName());
     return iti.el();
   },
   ssnInput: function() {
@@ -100,10 +100,10 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
       onChange: function(value) {
           field.setValue(value);
           signatory.trigger("change");
-          iti.el().toggleClass("valid",!signview.hasExtraSSNInput());
+          iti.el().toggleClass("valid",!signview.askForSSN());
       }
     });
-    iti.el().toggleClass("valid",!signview.hasExtraSSNInput());
+    iti.el().toggleClass("valid",!signview.askForSSN());
     return iti.el();
   },
   phoneInput: function() {
@@ -126,10 +126,10 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
       onChange: function(value) {
           field.setValue(value);
           signatory.trigger("change");
-          iti.el().toggleClass("valid",!signview.hasExtraPhoneInput());
+          iti.el().toggleClass("valid",!signview.askForPhone());
       }
     });
-    iti.el().toggleClass("valid",!signview.hasExtraPhoneInput());
+    iti.el().toggleClass("valid",!signview.askForPhone());
     return iti.el();
   },
 
@@ -141,22 +141,22 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
     body.append($("<p />").text(localization.docsignview.filladitionfieldsdescription));
     var table = $("<table/>");
 
-    if(signview.hasExtraNameInput()) {
+    if(signview.askForName()) {
       var tr = $("<tr/>").append($("<td/>").text(localization.personalName));
       tr.append($("<td/>").append(this.nameInput(signatory)));
       table.append(tr);
     }
-    if(signview.hasExtraEmailInput()) {
+    if(signview.askForEmail()) {
       var tr = $("<tr/>").append($("<td/>").text(localization.email));
       tr.append($("<td/>").append(this.emailInput(signatory)));
       table.append(tr);
     }
-    if(signview.hasExtraSSNInput()) {
+    if(signview.askForSSN()) {
       var tr = $("<tr/>").append($("<td/>").text(localization.personalNumber));
       tr.append($("<td/>").append(this.ssnInput(signatory)));
       table.append(tr);
     }
-    if(signview.hasExtraPhoneInput()) {
+    if(signview.askForPhone()) {
       var tr = $("<tr/>").append($("<td/>").text(localization.phone));
       tr.append($("<td/>").append(this.phoneInput(signatory)));
       table.append(tr);
@@ -229,14 +229,14 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
       onChange: function(value) {
           field.setValue(value);
           signatory.trigger("change");
-          iti.el().toggleClass("valid",!signview.hasExtraEmailInput());
+          iti.el().toggleClass("valid",!signview.askForEmail());
       }
     });
-    iti.el().toggleClass("valid",!signview.hasExtraEmailInput());
+    iti.el().toggleClass("valid",!signview.askForEmail());
 
     field.bind("change", function() {
       iti.setValue(field.value());
-      iti.el().toggleClass("valid",!signview.hasExtraEmailInput());
+      iti.el().toggleClass("valid",!signview.askForEmail());
     });
 
     return iti.el();
@@ -260,15 +260,15 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
       onChange: function(value) {
           field.setValue(value);
           signatory.trigger("change");
-          iti.el().toggleClass("valid", !signview.hasExtraNameInput());
+          iti.el().toggleClass("valid", !signview.askForName());
       }
     });
-    iti.el().toggleClass("valid", !signview.hasExtraNameInput());
+    iti.el().toggleClass("valid", !signview.askForName());
 
 
     field.bind("change", function() {
       iti.setValue(field.value());
-      iti.el().toggleClass("valid", !signview.hasExtraNameInput());
+      iti.el().toggleClass("valid", !signview.askForName());
     });
 
     return  iti.el();
@@ -292,14 +292,14 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
       onChange: function(value) {
           field.setValue(value);
           signatory.trigger("change");
-          iti.el().toggleClass("valid", !signview.hasExtraSSNInput());
+          iti.el().toggleClass("valid", !signview.askForSSN());
       }
     });
-    iti.el().toggleClass("valid", !signview.hasExtraSSNInput());
+    iti.el().toggleClass("valid", !signview.askForSSN());
 
     field.bind("change", function() {
       iti.setValue(field.value());
-      iti.el().toggleClass("valid", !signview.hasExtraSSNInput());
+      iti.el().toggleClass("valid", !signview.askForSSN());
     });
 
     return iti.el();
@@ -322,15 +322,15 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
       onChange: function(value) {
           field.setValue(value);
           signatory.trigger("change");
-          iti.el().toggleClass("valid", !signview.hasExtraPhoneInput());
+          iti.el().toggleClass("valid", !signview.askForPhone());
       }
     });
-    iti.el().toggleClass("valid", !signview.hasExtraPhoneInput());
+    iti.el().toggleClass("valid", !signview.askForPhone());
 
 
     field.bind("change", function() {
       iti.setValue(field.value());
-      iti.el().toggleClass("valid", !signview.hasExtraPhoneInput());
+      iti.el().toggleClass("valid", !signview.askForPhone());
     });
 
     return iti.el();
@@ -345,19 +345,19 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
       var description = $("<div class='column spacing descriptionbox'/>").text(localization.docsignview.filladitionfieldsdescription);
       this.fillBox = $("<div class='column spacing fillbox'/>");
 
-      if (signview.hasExtraNameInput()) {
+      if (signview.askForName()) {
        this.fillBox.append(this.nameInput());
       }
 
-      if (signview.hasExtraEmailInput()) {
+      if (signview.askForEmail()) {
        this.fillBox.append(this.emailInput());
       }
 
-      if (signview.hasExtraSSNInput()) {
+      if (signview.askForSSN()) {
        this.fillBox.append(this.ssnInput());
       }
 
-      if (signview.hasExtraPhoneInput()) {
+      if (signview.askForPhone()) {
        this.fillBox.append(this.phoneInput());
       }
 
