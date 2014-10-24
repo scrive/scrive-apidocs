@@ -81,7 +81,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
               }
             }
             new FlashMessage({color: "green", content: flashMsg});
-        },
+        }
     });
 
   // expected model: DesignViewModel
