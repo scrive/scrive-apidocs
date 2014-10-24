@@ -286,7 +286,7 @@ handleIssueGoToSignviewPad docid slid= do
   doc <- getDocByDocIDForAuthor docid
   user <-  guardJust $ mplus (ctxmaybeuser ctx) (ctxmaybepaduser ctx)
   case (isAuthor <$> getMaybeSignatoryLink (doc,user), getMaybeSignatoryLink (doc,slid)) of
-    (Just True,Just sl) -> do
+    (Just True,Just sl) | signatorylinkdeliverymethod sl == PadDelivery -> do
       dbUpdate $ AddDocumentSessionToken (signatorylinkid sl) (signatorymagichash sl)
       withDocument doc $ void $
         dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg SignatoryLinkVisited  (return ()) (Just sl) Nothing =<< signatoryActor ctx sl
