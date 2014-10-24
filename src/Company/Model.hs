@@ -3,6 +3,8 @@ module Company.Model (
     module Company.CompanyID
   , Company(..)
   , CompanyInfo(..)
+  , minCompanyIdleDocTimeout
+  , maxCompanyIdleDocTimeout
   , GetCompanies(..)
   , GetCompany(..)
   , GetCompanyByUserID(..)
@@ -44,6 +46,10 @@ data CompanyInfo = CompanyInfo {
   , companyallowsavesafetycopy :: Bool
   , companyidledoctimeout :: Maybe Int16
   } deriving (Eq, Ord, Show)
+
+minCompanyIdleDocTimeout, maxCompanyIdleDocTimeout :: Int16
+minCompanyIdleDocTimeout = 1
+maxCompanyIdleDocTimeout = 365
 
 data CompanyFilter
   =   CompanyFilterByString String             -- ^ Contains the string anywhere

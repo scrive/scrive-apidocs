@@ -27,6 +27,7 @@ import qualified Text.StringTemplates.Fields as F
 
 import AppView
 import Archive.View
+import Company.Model (GetCompany(..))
 import DB
 import Doc.Action
 import Doc.DocInfo (isPending)
@@ -122,7 +123,8 @@ showArchive :: Kontrakcja m => m (Either KontraLink Response)
 showArchive = checkUserTOSGet $ do
     tostime <- guardJustM $ join <$> fmap userhasacceptedtermsofservice <$> ctxmaybeuser <$> getContext
     user    <- guardJustM $ ctxmaybeuser <$> getContext
-    pb <-  pageArchive user tostime
+    mcompany <- dbQuery $ GetCompany (usercompany user)
+    pb <-  pageArchive user mcompany tostime
     renderFromBodyWithFields kontrakcja pb (F.value "archive" True)
 
 -- Zip utils

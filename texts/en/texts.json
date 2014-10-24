@@ -377,6 +377,8 @@
 "_docListTabsTemplates":"Templates",
 "_docListTabsTrash":"Trash",
 "_documentAttachedBy":"Attached by $identifier$",
+"_documentsArchiveIdleRemark":"Idle documents will be moved to trash after $idledoctimeout$ days.",
+"_documentsArchiveIdleRemark1":"Idle documents will be moved to trash after 1 day.",
 "_documentSentBy":"Sent by $identifier$",
 "_documentText":"Document",
 "_documentTitle":"Demo of e-signing",

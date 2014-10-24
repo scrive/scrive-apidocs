@@ -76,6 +76,7 @@ import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import Utils.Monoid
 import Utils.Prelude
+import Utils.Read (maybeRead)
 import qualified Company.CompanyControl as Company
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
 import qualified Log
@@ -463,7 +464,11 @@ getCompanyInfoChange = do
   mcompanyipaddressmasklist <- getOptionalField asValidIPAddressWithMaskList "companyipaddressmasklist"
   mcompanysmsoriginator <- getField "companysmsoriginator"
   mcompanyallowsavesafetycopy <- getField "companyallowsavesafetycopy"
-  mcompanyidledoctimeout <- (>>= \s -> if null s then return Nothing else Just <$> maybeRead s) <$> getField "companyidledoctimeout"
+  mcompanyidledoctimeout <- (>>= \s -> if null s
+                                       then Just Nothing
+                                       else Just <$> [ t | t <- maybeRead s
+                                                         , t >= minCompanyIdleDocTimeout
+                                                         , t <= maxCompanyIdleDocTimeout ]) <$> getField "companyidledoctimeout"
   return $ \CompanyInfo{..} ->  CompanyInfo {
         companyname        = fromMaybe companyname mcompanyname
       , companynumber      = fromMaybe companynumber mcompanynumber

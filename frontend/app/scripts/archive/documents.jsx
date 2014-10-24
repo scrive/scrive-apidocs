@@ -207,6 +207,10 @@ return React.createClass({
          />
 
           <DocumentFilters list={self}/>
+          {self.props.idledoctimeout == null ? "" :
+            <List.ListSubHeader>
+              {self.props.idledoctimeout == 1 ? self.props.idleRemark1 : self.props.idleRemark}
+            </List.ListSubHeader>}
           <DocumentColumns list={self}/>
            <List.ListFooter>
              <div className='table-statuses'>

@@ -201,11 +201,11 @@ var AdminCompanyDetailsView = Backbone.View.extend({
       });
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text("SMS originator"))).append($("<td/>").append(companysmsoriginatorinput)));
 
-      var companyidledoctimeoutinput = $("<input type='number' min='1' max='365'/>").val(model.companyidledoctimeout());
+      var companyidledoctimeoutinput = $("<input type='number' min='"+model.company().minidledoctimeout()+"' max='"+model.company().maxidledoctimeout()+"'/>").val(model.companyidledoctimeout());
       companyidledoctimeoutinput.change(function() {
               model.setCompanyidledoctimeout(companyidledoctimeoutinput.val());
       });
-      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Move idle documents to trash after days"))).append($("<td/>").append(companyidledoctimeoutinput)).append($("<td/>").text("Applies to all documents except pending documents and templates. If empty, documents will not be moved. Available values: 1 to 365.")));
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Move idle documents to trash after days"))).append($("<td/>").append(companyidledoctimeoutinput)).append($("<td/>").text("Applies to all documents except pending documents and templates. If empty, documents will not be moved. Available values: "+model.company().minidledoctimeout()+" to "+model.company().maxidledoctimeout()+".")));
 
       var companyallowsavesafetycopyinput = $("<input type='checkbox'/>").attr("checked",model.companyallowsavesafetycopy());
       companyallowsavesafetycopyinput.change(function() {
