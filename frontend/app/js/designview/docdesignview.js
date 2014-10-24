@@ -57,10 +57,11 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             });
         },
         saveAndFlashMessageIfAlreadySaved: function() {
-            var isSaved = this.document().saved();
-            this.document().save(function () {
+            var self = this;
+            var isSaved = self.document().saved();
+            self.document().save(function () {
               if(isSaved) {
-                this.saveFlashMessage(true);
+                self.saveFlashMessage(true);
               }
             });
         },
