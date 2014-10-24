@@ -316,7 +316,7 @@ var AccountSettingsView = Backbone.View.extend({
         , {name: localization.languages.daInDa, value: "da"}
         , {name: localization.languages.noInNo, value: "no"}
         , {name: localization.languages.elInEl, value: "el"}
-        , {name: localization.languages.fiInFi, value: "fi", hidden : true}
+        , {name: localization.languages.fiInFi, value: "fi"}
       ];
 
       languages = _.sortBy(languages, function(l) {return l.name;});
