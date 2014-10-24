@@ -80,5 +80,5 @@ addArchiveIdleDocumentsTask = Migration {
 , mgrDo = do
     runQuery_ $ sqlInsert "cron_tasks" $ do
       sqlSet "type" DocumentsArchiveIdle
-      sqlSet "frequency" (ihours 24)
+      sqlSet "frequency" (ihours 6)
 }
