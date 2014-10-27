@@ -171,16 +171,17 @@
   background: url(~"@{img-base-url}/checkbox-blue-unchecked.png") no-repeat scroll 0 0;
   height: 12px;
   width: 12px;
-}
 
-.placedcheckbox:active {
-  background: url(~"@{img-base-url}/checkbox-blue-active.png") no-repeat scroll 0 0;
+  &:active {
+    background: url(~"@{img-base-url}/checkbox-blue-active.png") no-repeat scroll 0 0;
+  }
+  &.checked {
+    background: url(~"@{img-base-url}/checkbox-blue-checked.png") no-repeat scroll 0 0;
+  }
+  &.needs-sender-action {
+    background: #fff4f4;
+  }
 }
-
-.placedcheckbox.checked {
-  background: url(~"@{img-base-url}/checkbox-blue-checked.png") no-repeat scroll 0 0;
-}
-
 
 
 .signatureBox {

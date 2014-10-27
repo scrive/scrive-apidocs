@@ -384,6 +384,12 @@ window.Field = Backbone.Model.extend({
     removeAllPlacements : function() {
         _.each(this.placements(), function(p) {p.remove();});
     },
+    needsSenderAction : function() {
+      return (this.isObligatory()
+          && this.shouldbefilledbysender()
+          && !this.value()
+          ) || !this.isValid();
+    },
     isValid: function() {
         var self = this;
         if (!this.isCsvField())

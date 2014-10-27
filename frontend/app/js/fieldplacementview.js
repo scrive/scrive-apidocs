@@ -1098,16 +1098,12 @@ var CheckboxPlacementView = Backbone.View.extend({
             var box = $(this.el);
             box.addClass('placedcheckbox');
             this.updateColor();
-            if (field.value() != "")
-                box.addClass("checked");
-            else
-                box.removeClass("checked");
+            box.toggleClass('checked', field.value() != "");
+            box.toggleClass('needs-sender-action', field.needsSenderAction());
 
             field.bind('change', function() {
-                if (field.value() != undefined && field.value()  != "")
-                    box.addClass("checked");
-                else
-                    box.removeClass("checked");
+                box.toggleClass('checked', field.value() != undefined && field.value() != "");
+                box.toggleClass('needs-sender-action', field.needsSenderAction());
             });
     }
 });
