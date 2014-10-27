@@ -232,7 +232,7 @@ window.Field = Backbone.Model.extend({
       }
       if(signatory.smsPinAuthentication()            ||
          signatory.emailMobileConfirmationDelivery() ||
-         signatory.mobileConfirmationDelivery
+         signatory.mobileConfirmationDelivery()
         ) {
         return new PhoneValidation().or(new EmptyValidation());
       }
