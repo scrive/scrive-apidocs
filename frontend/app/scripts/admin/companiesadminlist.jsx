@@ -16,6 +16,7 @@ return React.createClass({
           ref='list'
         >
 
+          <List.TextFiltering text={"Search companies"} />
 
           <List.SelectFilter
             name="users"
