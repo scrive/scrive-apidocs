@@ -161,47 +161,30 @@ $if(l)$
 $endif$
 ####
 nicebutton=
-<a $if(link)$href="$link$"$endif$
-   class="button-blue notclickableinpreview">
-  <table bgcolor="$if(!buttoncolour)$#53b688$else$$buttoncolour$$endif$"
-         border="0"
-         cellspacing="0"
-         cellpadding="0"
-         style="cursor: pointer;
-                line-height: 16px;">
-    <tr>
-      <td width="22">
-      </td>
-      <td height="14">
-      </td>
-      <td width="22">
-      </td>
-    </tr>
-    <tr>
-      <td width="22">
-      </td>
-      <td>
-        <span style="display: inline-block;
-                     text-decoration: none;
-                     font: 16px/16px Helvetica Neue, Arial, sans-serif;
-                     display: inline-block;
-                     color: #fff;">
-          $text$
-        </span>
-      </td>
-      <td width="22">
-      </td>
-    </tr>
-    <tr>
-      <td width="22">
-      </td>
-      <td height="14">
-      </td>
-      <td width="22">
-      </td>
-    </tr>
-  </table>
-</a>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td>
+      <table border="0" cellspacing="0" cellpadding="0">
+        <tr>
+          <td align="center"
+              bgcolor="$if(!buttoncolour)$#53b688$else$$buttoncolour$$endif$">
+            <a $if(link)$href="$link$"$endif$
+               class="button-blue notclickableinpreview"
+               style="font-size: 16px;
+                      font-family: Helvetica Neue, Arial, sans-serif;
+                      color: #ffffff;
+                      text-decoration: none;
+                      display: inline-block;
+                      padding: 9px 22px;
+                      border: 1px solid $if(!buttoncolour)$#53b688$else$$buttoncolour$$endif$;">
+              <!--[if mso]>&nbsp;<![endif]--><!--[if mso]>&nbsp;<![endif]--><!--[if mso]>&nbsp;<![endif]-->$text$<!--[if mso]>&nbsp;<![endif]--><!--[if mso]>&nbsp;<![endif]--><!--[if mso]>&nbsp;<![endif]-->
+            </a>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
 ####
 poweredByScrive=
 <a style="text-decoration: none;" href="$ctxhostpart$">
