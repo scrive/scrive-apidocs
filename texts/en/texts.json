@@ -317,7 +317,7 @@
 "_designViewCustomMessageConfirmation":"Confirmation message",
 "_designViewCustomMessageInvitation":"Invitation message",
 "_designViewCustomMessagePreview":"Preview",
-"_designViewDNDDisabled":"You need to add at least one signing party before placing a field.",
+"_designViewDNDDisabled":"You need at least one signing party to place a signature box.",
 "_designViewDocumentName":"Document name",
 "_designViewEditConfirmation":"Edit confirmation message",
 "_designViewEditDocument":"Place fields",

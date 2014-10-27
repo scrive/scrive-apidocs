@@ -54,7 +54,11 @@ define(['Backbone', 'legacy_code'], function() {
           var imgdiv = $("<div class='design-view-action-document-draggable-icon' />");
           var txt = $("<div class='design-view-action-document-draggable-text'/>");
           var document = this.model.document();
-          var isDisabledCallback = function() {
+          var isDisabledCallback = function(field) {
+            if (field.type() !== 'signature') {
+              // we only block d&d when there are no signing parties for signatures
+              return true;
+            }
             if (document.signatoriesWhoSign().length > 0) {
               return true;
             } else {
@@ -93,7 +97,7 @@ define(['Backbone', 'legacy_code'], function() {
                   fresh:false,
                   ddSignature : true,
                   type:'signature',
-                  signatory: model.document().author(),
+                  signatory: model.document().signatoriesWhoSign()[0],
                   name: "temp-signature"});
             };
 

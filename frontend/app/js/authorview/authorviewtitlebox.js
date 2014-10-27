@@ -44,7 +44,7 @@ var AuthorViewTitleBoxModel = Backbone.Model.extend({
   },
   padNextSignatory : function() {
     if (this.get("padNextSignatory") != undefined) return this.get("padNextSignatory");
-    return this.document().signatoriesThatCanSignNow()[0];
+    return this.document().signatoriesThatCanSignNowOnPad()[0];
   },
   setPadNextSignatory : function(sig) {
     this.set("padNextSignatory",sig);

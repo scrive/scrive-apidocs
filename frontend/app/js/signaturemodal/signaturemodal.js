@@ -418,6 +418,23 @@ window.SignatureDrawOrTypeModal = function(args){
         }
 
         modal.addClass('active');
+        setTimeout(function() {
+          var height = $(document).height();
+          if (BrowserInfo.isIE8orLower()) {
+            // WORKAROUND FOR IE8 BUG
+            // overlay is absolute and has opacity filter
+            // which breaks IE8 calculation of the document height
+            // we temporarily disable opacity, calculate the height
+            // of the overlay and use it later.
+            // when we reenable opacity the document height is calculated properly
+            // because of explicitly set overlay height
+            var filter = modal.css('filter');
+            modal.css('filter', '');
+            height = $(document).height();
+            modal.css('filter', filter);
+          }
+          modal.height(height);
+        }, 600);
 };
 
 });
