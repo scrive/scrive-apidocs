@@ -42,6 +42,7 @@ if [ $# -lt 1 ]; then
   exit 0
 fi
 
-runhaskell Transifex/Synch.hs $1 $2 $3 $4 $5
+DIR=`dirname $0`
+runhaskell -i"$DIR" "$DIR/Transifex/Synch.hs" $1 $2 $3 $4 $5
 
 
