@@ -12,23 +12,7 @@ define(['React', 'Backbone', 'common/button'], function(React, Backbone, NewButt
     },
     handleNewDocument : function() {
       trackTimeout("Click start new process",{}, function(e) {
-        new Submit({
-          method : "POST",
-          url : "/api/frontend/createfromfile",
-          timezone : jstz.determine().name(),
-          ajax: true,
-          expectedType : "text",
-          ajaxsuccess: function(d) {
-              try {
-                  window.location.href = "/d/"+JSON.parse(d).id;
-              } catch(e) {
-                 mixpanel.track('Error', {
-                    Message         : 'Javascript Error - parsing response from create',
-                    'Error Message' : e
-                });
-              }
-          }
-        }).send();
+        window.location.href = "/newdocument";
       });
       return false;
     },
