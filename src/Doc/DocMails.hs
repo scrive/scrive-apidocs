@@ -182,9 +182,9 @@ sendReminderEmail custommessage  actor automatic siglink = do
                                                                         then Invitation docid (signatorylinkid siglink)
                                                                         else None
                                                              -- We only add attachment after document is signed	 
-                                                           , attachments = if isJust $ maybesigninfo siglink
-                                                                           then mailattachments
-                                                                           else []
+                                                           , attachments = attachments mail ++ (if isJust $ maybesigninfo siglink
+                                                                                                then mailattachments
+                                                                                                else [])
                                                            }
       dosms = scheduleSMS =<< smsReminder doc siglink
 
@@ -230,7 +230,7 @@ sendClosedEmails sealFixed document = do
                   | otherwise            = scheduleEmailSendoutWithAuthorSender (documentid document)
             scheduleEmailFunc (mctxmailsconfig mctx) $
                                  mail { to = [getMailAddress sl]
-                                      , attachments = mailattachments
+                                      , attachments = attachments mail ++ mailattachments
                                       , replyTo =
                                           let maybeAuthor = find signatoryisauthor signatorylinks
                                           in if signatoryisauthor sl && isJust maybeAuthor
@@ -330,7 +330,7 @@ sendForwardEmail email noContent asiglink = do
                              , content =  if (noContent)
                                              then ""
                                              else content mail
-                             , attachments = mailattachments
+                             , attachments = attachments mail ++ mailattachments
                              }
   return ()
 
