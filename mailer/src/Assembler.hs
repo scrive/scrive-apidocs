@@ -74,17 +74,21 @@ assembleContent Mail{..} = do
                         then "image/jpeg"
                         else "application/octet-stream"
 
-      headerAttach fname = "\r\n--" ++ boundaryMixed ++ "\r\n" ++
-        "Content-Disposition: attachment; filename=\"" ++ mailEncode Nothing fname ++"\"\r\n" ++
-        "Content-Type: "++attachmentType fname++"; name=\"" ++ mailEncode Nothing fname ++ "\"\r\n" ++
+      headerAttach Attachment{..} =
+        let filename = mailEncode Nothing attName
+            (disposition, contentId) = if ".pdf" `isSuffixOf` map toLower attName then
+                                           ("attachment", "")
+                                       else
+                                           ("inline", "Content-ID: <" ++ attName ++ ">\r\n")
+        in "\r\n--" ++ boundaryMixed ++ "\r\n" ++
+        "Content-Disposition: " ++ disposition ++ "; filename=\"" ++ filename ++"\"\r\n" ++
+        "Content-Type: " ++ attachmentType attName ++ "; name=\"" ++ filename ++ "\"\r\n" ++
+        contentId ++
         "Content-Transfer-Encoding: base64\r\n" ++
         "\r\n"
-      attach Attachment{..} = do
-        content <- case attContent of
-                  Left c -> return c
-                  Right file_id -> do
-                    getFileIDContents file_id
-        return $ BSLU.fromString (headerAttach attName) `BSL.append`
+      attach att@Attachment{..} = do
+        content <- either return getFileIDContents attContent
+        return $ BSLU.fromString (headerAttach att) `BSL.append`
                BSL.fromChunks [Base64.joinWith (BSC.pack "\r\n") 72 $ Base64.encode content]
   atts <- mapM attach mailAttachments
   return $ BSL.concat $ [
