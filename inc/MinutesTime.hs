@@ -78,9 +78,11 @@ formatTimeUTC = formatTime' "%Y-%m-%d %H:%M:%S%Q"
 parseTimeUTC :: String -> Maybe UTCTime
 parseTimeUTC = parseTime' "%Y-%m-%d %H:%M:%S%Q"
 
--- | Format time as %Y-%m-%dT%H:%M:%S%QZ.
+-- | Format time as %Y-%m-%dT%H:%M:%SZ. Microseconds (%Q) are
+-- not included because this may break integrations. It should
+-- be fixed to contain them in the next API version.
 formatTimeISO :: UTCTime -> String
-formatTimeISO = formatTime' "%Y-%m-%dT%H:%M:%S%QZ"
+formatTimeISO = formatTime' "%Y-%m-%dT%H:%M:%SZ"
 
 -- | Parse time as %Y-%m-%dT%H:%M:%S%QZ or %Y-%m-%dT%H:%M:%S%Q%z.
 parseTimeISO :: String -> Maybe UTCTime
