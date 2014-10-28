@@ -86,6 +86,7 @@ remindMailNotSigned forMail customMessage document signlink = do
         F.value "link" $ protectLink forMail mctx $ LinkSignDoc document signlink
         F.value "isattachments" $ length (documentauthorattachments document) > 0
         F.value "attachments" $ map filename authorattachmentfiles
+        F.value "ispreview" $ not $ forMail
         F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (Just signlink <| forMail |> Nothing) (mainfile)
         F.value "hassigattachments" $ not $ null $ concat $ signatoryattachments <$> documentsignatorylinks document
         -- We try to use generic templates and this is why we return a tuple
@@ -100,6 +101,7 @@ documentAttachedFields :: (MailContextMonad m, MonadDB m, MonadThrow m) => Bool 
 documentAttachedFields forMail signlink documentAttached document = do
   mctx <- getMailContext
   F.value "documentAttached" documentAttached
+  F.value "ispreview" $ not $ forMail
   F.value "mainfilelink" $ protectLink forMail mctx $ LinkMainFile document signlink
   mcompany <- case join $ maybesignatory <$> getAuthorSigLink document of
     Just suid ->  fmap Just $ (lift (dbQuery $ GetCompanyByUserID $ suid))
@@ -133,13 +135,15 @@ mailForwardSigned sl documentAttached document = do
 
 
 mailDocumentRejected :: (MonadDB m, MonadThrow m, TemplatesMonad m, MailContextMonad m)
-                     => Maybe String
+                     => Bool
+                     -> Maybe String
                      -> SignatoryLink
                      -> Document
                      -> m Mail
-mailDocumentRejected customMessage rejector document = do
+mailDocumentRejected forMail customMessage rejector document = do
    documentMailWithDocLang document (templateName "mailRejectContractMail") $ do
         F.value "rejectorName" $ getSmartName rejector
+        F.value "ispreview" $ not $ forMail
         F.value "customMessage" $ customMessage
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
         F.value "loginlink" $ show $ LinkIssueDoc $ documentid document
@@ -152,7 +156,7 @@ mailDocumentRejectedContent :: (MonadDB m, MonadThrow m, TemplatesMonad m, MailC
                             -> Document
                             -> m String
 mailDocumentRejectedContent customMessage rejector document =
-     content <$> mailDocumentRejected customMessage rejector document
+     content <$> mailDocumentRejected False customMessage rejector document
 
 mailDocumentErrorForAuthor :: (HasLang a, MonadDB m, MonadThrow m, TemplatesMonad m, MailContextMonad m) => a -> Document -> m Mail
 mailDocumentErrorForAuthor authorlang document = do
@@ -201,6 +205,7 @@ mailInvitation forMail
         F.value "timetosign" $ show <$> documenttimeouttime document
         F.value "isattachments" $ length (documentauthorattachments document) > 0
         F.value "attachments" $ map filename authorattachmentfiles
+        F.value "ispreview" $ not $ forMail
         F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (msiglink <| forMail |> Nothing) (mainfile)
         F.value "hassigattachments" $ length (concatMap signatoryattachments $ documentsignatorylinks document ) > 0
         -- We try to use generic templates and this is why we return a tuple
@@ -241,6 +246,7 @@ mailDocumentClosed ispreview sl sealFixed documentAttached document = do
                              else Just $ if isAuthor sl
                                then (++) (mctxhostpart mctx) $ show $ LinkIssueDoc (documentid document)
                                else (++) (mctxhostpart mctx) $ show $ LinkSignDoc document sl
+        F.value "ispreview" ispreview
         F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (Nothing <| ispreview |> Just sl) (mainfile)
         F.value "sealFixed" $ sealFixed
         documentAttachedFields True sl documentAttached document
@@ -294,7 +300,7 @@ documentMailFields doc mctx mcompanyui = return $ do
       F.value "creatorname" $ getSmartName $ fromJust $ getAuthorSigLink doc
       brandingMailFields (mctxcurrentBrandedDomain mctx) mcompanyui
 
-documentMail :: (HasLang a, MailContextMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) =>  a -> Document -> String -> Fields m () -> m Mail
+documentMail :: (HasLang a, MailContextMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => a -> Document -> String -> Fields m () -> m Mail
 documentMail haslang doc mailname otherfields = do
   mctx <- getMailContext
   mcompanyui <- case getAuthorSigLink doc >>= maybesignatory of

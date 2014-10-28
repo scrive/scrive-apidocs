@@ -277,7 +277,7 @@ sendRejectEmails customMessage signalink document = do
     void $ sendNotifications sl
       (do
          mctx <- getMailContext
-         mail <- mailDocumentRejected customMessage signalink document
+         mail <- mailDocumentRejected True customMessage signalink document
          scheduleEmailSendout (mctxmailsconfig mctx) $ mail {
                                   to = [getMailAddress sl]
                                 })
