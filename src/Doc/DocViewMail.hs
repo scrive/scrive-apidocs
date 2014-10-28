@@ -286,16 +286,8 @@ protectLink forMail mctx link
 documentMailWithDocLang :: (MonadDB m, MonadThrow m, TemplatesMonad m, MailContextMonad m) =>  Document -> String -> Fields m () -> m Mail
 documentMailWithDocLang doc mailname otherfields = documentMail doc doc mailname otherfields
 
-documentMailFields :: (MonadDB m, MonadThrow m, Monad m') => Document -> MailContext -> m (Fields m' ())
-documentMailFields doc mctx = do
-    mcompany <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
-                   Just suid ->  fmap Just $ dbQuery $ GetCompanyByUserID $ suid
-                   Nothing -> return Nothing
-    mcompanyui <- case mcompany of
-                    Just comp -> (dbQuery $ GetCompanyUI (companyid comp)) >>= return . Just
-                    Nothing -> return Nothing
-
-    return $ do
+documentMailFields :: (MonadDB m, MonadThrow m, Monad m') => Document -> MailContext -> Maybe CompanyUI -> m (Fields m' ())
+documentMailFields doc mctx mcompanyui = return $ do
       F.value "ctxhostpart" (mctxhostpart mctx)
       F.value "ctxlang" (codeFromLang $ mctxlang mctx)
       F.value "documenttitle" $ documenttitle doc
@@ -305,8 +297,19 @@ documentMailFields doc mctx = do
 documentMail :: (HasLang a, MailContextMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) =>  a -> Document -> String -> Fields m () -> m Mail
 documentMail haslang doc mailname otherfields = do
   mctx <- getMailContext
-  allfields <- documentMailFields doc mctx
-  kontramaillocal (mctxmailsconfig mctx) (mctxcurrentBrandedDomain mctx) haslang mailname $ allfields >> otherfields
+  mcompanyui <- case getAuthorSigLink doc >>= maybesignatory of
+                 Nothing -> return Nothing
+                 Just suid -> do
+                   company <- dbQuery $ GetCompanyByUserID suid
+                   fmap Just $ dbQuery $ GetCompanyUI $ companyid company
+  let companylogo = do
+        companyui <- mcompanyui
+        logoContent <- companyemaillogo companyui
+        return ("logo.png", Left $ unBinary logoContent)
+      mailAttachments = catMaybes [companylogo]
+  allfields <- documentMailFields doc mctx mcompanyui
+  mail <- kontramaillocal (mctxmailsconfig mctx) (mctxcurrentBrandedDomain mctx) haslang mailname $ allfields >> otherfields
+  return mail { attachments = attachments mail ++ mailAttachments}
 
 brandingMailFields :: Monad m => Maybe BrandedDomain -> Maybe CompanyUI -> Fields m ()
 brandingMailFields mbd companyui = do
