@@ -118,7 +118,7 @@ sendDocumentMails author = do
         --remind mails
         checkMail "Reminder notsigned" $ mailDocumentRemind Nothing sl True =<< theDocument
         --reject mail
-        checkMail "Reject"  $ mailDocumentRejected Nothing sl =<< theDocument
+        checkMail "Reject"  $ mailDocumentRejected True Nothing sl =<< theDocument
         -- awaiting author email
         checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor (defaultValue :: Lang) =<< theDocument
         -- Virtual signing
