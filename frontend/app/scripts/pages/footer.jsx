@@ -26,7 +26,7 @@ define(['React', 'Backbone', 'common/select'], function(React, Backbone, NewSele
         , {value : "no", name : localization.languages.noInNo}
         , {value : "el", name : localization.languages.elInEl}
         , {value : "fi", name : localization.languages.fiInFi}
-      ],function(l) {return l.name;});
+      ],function(l) {return l.name.toLowerCase();});
     },
     render: function() {
      var self = this;
