@@ -315,7 +315,7 @@ define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_the
                 text: localization.designview.request,
                 cssClass: 'design-view-action-process-left-column-attachments-signatory-button',
                 onClick: function() {
-                  if(document.signatoriesWhoSign().length < 2) {
+                  if(document.signatoriesWhoSign().length == 0 || document.authorIsOnlySignatory()) {
                     mixpanel.track('Open signatory attachments but not enough participants');
                     new FlashMessage({ color: 'red'
                                      , content: localization.designview.validation.requestAttachmentFlashMessage});
