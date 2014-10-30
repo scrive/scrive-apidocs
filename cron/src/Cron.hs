@@ -133,7 +133,7 @@ main = Log.withLogger $ do
         DocumentsArchiveIdle -> runScheduler $ do
           now <- currentTime
           archived <- dbUpdate $ ArchiveIdleDocuments now
-          Log.mixlog_ $ "DocumentsArchiveIdle: archived" <+> show archived <+> "documents."
+          Log.mixlog_ $ "DocumentsArchiveIdle: archived documents for" <+> show archived <+> "signatories."
         EmailChangeRequestsEvaluation -> runScheduler $
           actionQueue emailChangeRequest
         FindAndDoPostDocumentClosedActions -> runScheduler $
