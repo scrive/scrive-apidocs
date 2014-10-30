@@ -138,7 +138,24 @@ nicemailbgcolour=$if(!background)$#FFFFFF$else$$background$$endif$
 #####
 nicemailfgcolour=$if(!textcolor)$#333333$else$$textcolor$$endif$
 #####
-nicemaillogo=$if(ispreview)$$if(!logo)$$ctxhostpart$/img/logo_email.png$else$$ctxhostpart$$logoLink$$endif$$else$cid:logo.png$endif$
+nicemaillogo=
+$if(ispreview)$
+  $if(!logo)$
+    $ctxhostpart$/img/logo_email.png
+  $else$
+    $ctxhostpart$$logoLink$
+  $endif$
+$else$
+  $if(hasembeddedlogo)$
+    cid:logo.png
+  $else$
+    $if(!logo)$
+      $ctxhostpart$/img/logo_email.png
+    $else$
+      $ctxhostpart$$logoLink$
+    $endif$
+  $endif$
+$endif$
 #####
 nicemailbordercolour=$if(!bordercolour)$#dee4ed$else$$bordercolour$$endif$
 #####

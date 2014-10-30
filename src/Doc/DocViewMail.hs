@@ -313,8 +313,9 @@ documentMail haslang doc mailname otherfields = do
         logoContent <- companyemaillogo companyui
         return ("logo.png", Left $ unBinary logoContent)
       mailAttachments = catMaybes [companylogo]
+      hasEmbeddedLogo = F.value "hasembeddedlogo" $ isJust companylogo
   allfields <- documentMailFields doc mctx mcompanyui
-  mail <- kontramaillocal (mctxmailsconfig mctx) (mctxcurrentBrandedDomain mctx) haslang mailname $ allfields >> otherfields
+  mail <- kontramaillocal (mctxmailsconfig mctx) (mctxcurrentBrandedDomain mctx) haslang mailname $ allfields >> otherfields >> hasEmbeddedLogo
   return mail { attachments = attachments mail ++ mailAttachments}
 
 brandingMailFields :: Monad m => Maybe BrandedDomain -> Maybe CompanyUI -> Fields m ()
