@@ -743,7 +743,7 @@ testArchiveIdleDocument = doTimes 10 $ do
   archived1 <- dbUpdate $ ArchiveIdleDocuments (documentmtime doc)
   assertEqual "Archived zero idle documents (too early)" 0 archived1
   archived2 <- dbUpdate $ ArchiveIdleDocuments (2 `daysAfter` documentmtime doc)
-  assertEqual "Archived one idle document" (length (documentsignatorylinks doc)) archived2
+  assertEqual "Archived idle documents for one signatory" 1 archived2
 
 -- for this stuff postgres implementation is stricter, with happstack it just left the doc unchanged
 testArchiveDocumentUnrelatedUserLeft :: TestEnv ()
