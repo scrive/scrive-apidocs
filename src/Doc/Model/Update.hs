@@ -1544,11 +1544,13 @@ instance MonadDB m => DBUpdate m PurgeDocuments Int where
     runSQL_ $ "DROP TABLE documents_to_purge"
     return rows
 
-{- | Archive (move to trash) documents that are idle.  A document is idle if
-   1. it's not archived,
-   2. it's not a template,
-   3. it's not pending,
-   4. the author's company's idle_doc_timeout is set, and
+{- | Archive (move to trash) idle documents for signatories.  A
+document is idle for a signatory if
+
+   1. the document is not archived for the signatory,
+   2. the document is not a template and not pending,
+   3. the document author's company's idle_doc_timeout is set,
+   4. the signatory belongs to the same company as the author, and
    5. it's been more than idle_doc_timeout days since the document was modified.
 -}
 data ArchiveIdleDocuments = ArchiveIdleDocuments UTCTime
@@ -1559,18 +1561,21 @@ instance MonadDB m => DBUpdate m ArchiveIdleDocuments Int where
          <+> " WHERE deleted IS NULL"
          <+> "  AND EXISTS(SELECT TRUE"
          <+> "               FROM documents"
-         <+> "               JOIN signatory_links AS s"
-         <+> "                 ON s.document_id = documents.id"
-         <+> "                AND s.is_author"
+         <+> "               JOIN signatory_links AS author_sl"
+         <+> "                 ON author_sl.document_id = documents.id"
+         <+> "                AND author_sl.is_author"
+         <+> "               JOIN users AS author"
+         <+> "                 ON author.id = author_sl.user_id"
+         <+> "               JOIN companies as author_company"
+         <+> "                 ON author_company.id = author.company_id"
+         <+> "                AND author_company.idle_doc_timeout IS NOT NULL"
          <+> "               JOIN users"
-         <+> "                 ON users.id = s.user_id"
-         <+> "               JOIN companies"
-         <+> "                 ON companies.id = users.company_id"
-         <+> "                AND companies.idle_doc_timeout IS NOT NULL"
+         <+> "                 ON users.id = signatory_links.user_id"
+         <+> "                AND users.company_id = author.company_id"
          <+> "              WHERE signatory_links.document_id = documents.id"
          <+> "                AND documents.type =" <?> Signable
          <+> "                AND documents.status NOT IN (" <?> Pending <+> ")"
-         <+> "                AND documents.mtime + (interval '1 day') * companies.idle_doc_timeout <" <?> now <+> ")"
+         <+> "                AND documents.mtime + (interval '1 day') * author_company.idle_doc_timeout <" <?> now <+> ")"
 
 -- Update utilities
 getEvidenceTextForUpdateField :: FieldType -> CurrentEvidenceEventType
