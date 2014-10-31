@@ -33,10 +33,13 @@ mailSignup mc mbd hp user company subscription = do
     F.value "quantity" $ show $ Recurly.subQuantity subscription
     F.value "total" $ showTotal (Recurly.subQuantity subscription)
             (Recurly.subUnitAmountInCents subscription)
+    F.value "totalwithvat" $ showTotal (Recurly.subQuantity subscription)
+         amountInCentsWithVat
     F.value "currency" $ Recurly.subCurrency subscription
     when (not $ null $ getCompanyName company) $ do
       F.value "companyname" $ getCompanyName company
     F.value "email" $ getEmail user
+  where amountInCentsWithVat = round $ (fromIntegral $ Recurly.subUnitAmountInCents subscription) * 1.25
 
 mailFailed :: (TemplatesMonad m) => MailsConfig -> Maybe BrandedDomain ->  String -> User -> Company -> Recurly.Invoice -> m Mail
 mailFailed mc mbd hp user company invoice = do
