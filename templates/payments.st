@@ -19,12 +19,12 @@ $_paymentsEmailThanksForChoosingScrive()$. $_paymentsEmailSeeDetailsBelow()$
 <p>
 $_paymentsEmailDescription()$ $planname$<br />
 $if(quantity)$$_CompanyAccounts()$: $quantity$<br />$endif$
-$_paymentsEmailTotal()$ $total$ $currency$ $_paymentPlanPerMonth()$<br />
+$_paymentsEmailTotal()$ $total$ $currency$ $_paymentPlanPerMonth()$ $_paymentsPlusVat()$<br />
 </p>
 ###
 paymentsSignupEmail2=
 <p>
-$_paymentsEmailCreditCardCharged()$ $total$ $currency$ <br />
+$_paymentsEmailCreditCardCharged()$ $totalwithvat$ $currency$ <br />
 $_paymentsEmailTransactionDate()$ $startdate$<br /><br />
 $_paymentsEmailNextTransactionDate()$ $enddate$
 </p>

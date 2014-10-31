@@ -715,6 +715,7 @@
 "_paymentsExpires":"Expires",
 "_paymentsGetInTouch":"Get a quote today",
 "_paymentsMustBeAdmin":"Your purchase could not be processed",
+"_paymentsPlusVat":"plus VAT",
 "_paymentsQuote":"Quote",
 "_paymentsRenewDialog":"Are you sure you would like to renew your subscription? You will be charged <span class='put-price-here'/> monthly.",
 "_paymentsRenewSubscription":"Renew subscription",
