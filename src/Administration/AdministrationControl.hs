@@ -466,9 +466,10 @@ getCompanyInfoChange = do
   mcompanyallowsavesafetycopy <- getField "companyallowsavesafetycopy"
   mcompanyidledoctimeout <- (>>= \s -> if null s
                                        then Just Nothing
-                                       else Just <$> [ t | t <- maybeRead s
-                                                         , t >= minCompanyIdleDocTimeout
-                                                         , t <= maxCompanyIdleDocTimeout ]) <$> getField "companyidledoctimeout"
+                                       else Just <$> (do t <- maybeRead s
+                                                         guard $ t >= minCompanyIdleDocTimeout
+                                                         guard $ t <= maxCompanyIdleDocTimeout
+                                                         return t)) <$> getField "companyidledoctimeout"
   return $ \CompanyInfo{..} ->  CompanyInfo {
         companyname        = fromMaybe companyname mcompanyname
       , companynumber      = fromMaybe companynumber mcompanynumber
