@@ -28,13 +28,13 @@ import System.FilePath (takeFileName, takeExtension, (</>))
 import System.IO hiding (stderr)
 import Text.HTML.TagSoup (Tag(..), parseTags)
 import Text.JSON.Gen
-import Text.JSON.Pretty (pp_value)
 import Text.StringTemplates.Templates
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BSL (empty)
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
+import qualified Text.JSON.Pretty as J
 import qualified Text.StringTemplates.Fields as F
 
 import Control.Logic
@@ -160,7 +160,7 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryLink{signatoryf
     checkedImageFromPlacement = iconWithPlacement checkedBoxImage
     uncheckedImageFromPlacement = iconWithPlacement uncheckedBoxImage
     iconWithPlacement image placement = Seal.FieldJPG
-                 { valueBase64           = BS.toString $ B64.encode image
+                 { valueBinary           = image
                  , Seal.x                = placementxrel placement
                  , Seal.y                = placementyrel placement
                  , Seal.page             = placementpage placement
@@ -172,7 +172,7 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryLink{signatoryf
                  }
     fieldJPEGFromPlacement v placement =
           Just $ Seal.FieldJPG
-                 { valueBase64           = BS.unpack $ B64.encode v
+                 { valueBinary           = v
                  , Seal.x                = placementxrel placement
                  , Seal.y                = placementyrel placement
                  , Seal.page             = placementpage placement
@@ -184,7 +184,7 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryLink{signatoryf
                  }
     fieldJPEGFromSignatureField v =
           Just $ Seal.FieldJPG
-                 { valueBase64           = BS.unpack $ B64.encode v
+                 { valueBinary           = v
                  , Seal.x                = 0
                  , Seal.y                = 0
                  , Seal.page             = 0
@@ -489,7 +489,7 @@ sealDocumentFile file@File{fileid, filename} = theDocumentID >>= \documentid ->
 
     (code,_stdout,stderr) <- liftIO $ do
       let sealspecpath = tmppath ++ "/sealspec.json"
-      liftIO $ BS.writeFile sealspecpath (BS.fromString $ show $ pp_value (toJSValue config))
+      liftIO . writeFile sealspecpath . J.render . J.pp_value . toJSValue $ config
       readProcessWithExitCode' "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "add-verification-pages", sealspecpath] (BSL.empty)
 
     Log.mixlog_ $ "Sealing completed with " ++ show code
@@ -529,7 +529,7 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
 
     (code,_stdout,stderr) <- liftIO $ do
       let sealspecpath = tmppath ++ "/sealspec.json"
-      liftIO $ BS.writeFile sealspecpath (BS.fromString $ show $ pp_value (toJSValue config))
+      liftIO . writeFile sealspecpath . J.render . J.pp_value . toJSValue $ config
       readProcessWithExitCode' "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "add-verification-pages", sealspecpath] (BSL.empty)
     Log.mixlog_ $ "PreSealing completed with " ++ show code
     case code of

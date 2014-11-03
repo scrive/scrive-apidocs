@@ -1,6 +1,7 @@
-
 module Doc.SealSpec where
 
+import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.Base64 as B64
 import qualified Text.JSON.Gen as J
 
 data Person =
@@ -36,7 +37,7 @@ instance J.ToJSValue Person where
     J.value "numberverified" $ numberverified person
     J.value "emailverified" $ emailverified person
     J.value "phoneverified" $ phoneverified person
-    J.value "fields" $ map J.toJSValue $ fields person
+    J.value "fields" $ fields person
     J.value "signtime" $ signtime person
     J.value "signedAtText" $ signedAtText person
     J.value "personalNumberText" $ personalNumberText person
@@ -63,7 +64,7 @@ data Field
     , includeInSummary :: Bool   -- ^ add this field to report at the very end of document
     }
   | FieldJPG
-    { valueBase64      :: String -- ^ binary content of image to put into a field
+    { valueBinary      :: BS.ByteString -- ^ binary content of image to put into a field
     , x                :: Double -- ^ left coordinate of field in (0,0)-(1,1)
     , y                :: Double -- ^ upper coordinate of field in  (0,0)-(1,1)
     , page             :: Int    -- ^ on which page should the field be placed
@@ -85,7 +86,11 @@ instance J.ToJSValue Field where
     J.value "greyed" greyed
     J.value "includeInSummary" includeInSummary
   toJSValue FieldJPG{..} = J.runJSONGen $ do
-    J.value "valueBase64" valueBase64
+    -- Beware of changing the imports; if BS refers to
+    -- Data.ByteString, you will get [Word8] instead of
+    -- a String and the whole JSON will be badly rendered.
+    -- Yet another reason to ditch StringS.
+    J.value "valueBase64" $ BS.unpack $ B64.encode valueBinary
     J.value "x" x
     J.value "y" y
     J.value "page" page
