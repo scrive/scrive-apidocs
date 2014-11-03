@@ -106,6 +106,14 @@ return React.createClass({
     },
     render: function() {
       var self = this;
+      var idleRemark;
+      if (self.props.idledoctimeout == 1) {
+        idleRemark = localization.archive.documents.idleRemark1;
+      } else {
+        idleRemark = $("<div/>").html(localization.archive.documents.idleRemark);
+        idleRemark.find('.put-idledoctimeout-here').text(self.props.idledoctimeout);
+        idleRemark = idleRemark.text();
+      }
       return (
         <List.List
           url='/api/frontend/list?documentType=Document'
@@ -209,7 +217,7 @@ return React.createClass({
           <DocumentFilters list={self}/>
           {self.props.idledoctimeout == null ? "" :
             <List.ListSubHeader>
-              {self.props.idledoctimeout == 1 ? self.props.idleRemark1 : self.props.idleRemark}
+              {idleRemark}
             </List.ListSubHeader>}
           <DocumentColumns list={self}/>
            <List.ListFooter>

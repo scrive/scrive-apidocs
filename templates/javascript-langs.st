@@ -780,6 +780,8 @@ javascriptLocalisation =
                             , title  : "$_SortDoc()$"
 
                        }
+                    , idleRemark  : "$_documentsArchiveIdleRemark()$"
+                    , idleRemark1 : "$_documentsArchiveIdleRemark1()$"
                 }
             , ftue: {
                        title: "$_title()$"

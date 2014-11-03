@@ -380,7 +380,7 @@
 "_documentSentBy":"Sent by $identifier$",
 "_documentText":"Document",
 "_documentTitle":"Demo of e-signing",
-"_documentsArchiveIdleRemark":"Idle documents will be moved to trash after $idledoctimeout$ days.",
+"_documentsArchiveIdleRemark":"Idle documents will be moved to trash after <span class='put-idledoctimeout-here'/> days.",
 "_documentsArchiveIdleRemark1":"Idle documents will be moved to trash after 1 day.",
 "_docviewChangeAuthenticationModalAccept":"Save",
 "_docviewChangeAuthenticationModalErrorEID":"Invalid personal ID number",
