@@ -53,7 +53,8 @@ assembleContent Mail{..} = do
         "X-SMTPAPI: " ++ J.encode xsmtpapi ++ "\r\n" ++
         "X-Mailgun-Variables: " ++ J.encode mailgundata ++ "\r\n" ++
         "MIME-Version: 1.0\r\n" ++
-        "Content-Type: multipart/mixed; boundary=" ++ boundaryMixed ++ "\r\n" ++
+        "Content-Type: multipart/related;\r\n" ++
+        "        type=\"multipart/alternative\"; boundary=" ++ boundaryMixed ++ "\r\n" ++
         "\r\n"
       headerContent = "--" ++ boundaryMixed ++ "\r\n" ++
         "Content-Type: multipart/alternative; boundary=" ++ boundaryAlternative ++ "\r\n" ++ "\r\n"
