@@ -1189,6 +1189,13 @@ signatoryLinkFieldsAddBinaryValue = Migration {
     sqlSetCmd "value_binary" "decode(substring(value_text from 'data:(?:[a-z/]*;base64,){0,1}(.*)'), 'base64')"
     sqlWhereEq "type" (8::Int16) -- SignatureFT
     sqlWhereIsNULL "value_binary"
+
+  runQuery_ $ alter_table [
+      sqlAddCheck $ TableCheck "check_signatory_link_fields_value_type_correct" $ mconcat [
+        "value_binary IS NOT NULL AND type = 8" -- signature
+      , " OR value_text IS NOT NULL" -- everything else
+      ]
+    ]
 }
 
 -- Personal number used to be obligatory, but we didn't asked about it in extra details section
