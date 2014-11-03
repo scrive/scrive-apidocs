@@ -327,6 +327,9 @@ instance ToSQL FieldType where
   toSQL CheckboxFT{}     = toSQL (9::Int16)
   toSQL MobileFT         = toSQL (10::Int16)
 
+-- FIXME: this is bad. we need to integrate this into SignatoryField
+-- itself (it's needed anyway as e.g. checkboxes really are of value
+-- Bool, signature field should have at most one placement etc.).
 data SignatoryFieldValue = TextField String | BinaryField BS.ByteString
   deriving (Ord, Eq, Show, Data, Typeable)
 
