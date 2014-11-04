@@ -90,7 +90,7 @@ instance J.ToJSValue Field where
     -- Data.ByteString, you will get [Word8] instead of
     -- a String and the whole JSON will be badly rendered.
     -- Yet another reason to ditch StringS.
-    J.value "valueBase64" $ BS.unpack $ B64.encode valueBinary
+    J.value "valueBase64" (BS.unpack $ B64.encode valueBinary :: String)
     J.value "x" x
     J.value "y" y
     J.value "page" page
@@ -116,7 +116,7 @@ instance J.ToJSValue SealAttachment where
   toJSValue SealAttachment{..} = J.runJSONGen $ do
    J.value "fileName" fileName
    J.value "mimeType" mimeType
-   J.value "fileBase64Content" $ BS.unpack $ B64.encode fileContent
+   J.value "fileBase64Content" (BS.unpack $ B64.encode fileContent :: String)
 
 data SealSpec = SealSpec
     { input          :: String
