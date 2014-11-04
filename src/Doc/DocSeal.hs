@@ -29,7 +29,6 @@ import System.IO hiding (stderr)
 import Text.HTML.TagSoup (Tag(..), parseTags)
 import Text.JSON.Gen
 import Text.StringTemplates.Templates
-import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BSL (empty)
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
@@ -262,7 +261,7 @@ evidenceOfIntentAttachment title sls = do
   html <- evidenceOfIntentHTML title $ sortBySignTime [ (sl, s) | (i, s) <- ss, sl <- filter ((==i) . signatorylinkid) sls ]
   return $ Seal.SealAttachment { Seal.fileName = "Evidence_of_Intent.html"
                                , Seal.mimeType = Nothing
-                               , Seal.fileBase64Content = BS.toString $ B64.encode $ BS.fromString html
+                               , Seal.fileContent = BS.fromString html
                                }
 
 {-
@@ -321,7 +320,7 @@ sealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m, Lo
                      -> m Seal.SealSpec
 sealSpecFromDocument boxImages hostpart document elog ces content tmppath inputpath outputpath = do
   additionalAttachments <- findOutAttachmentDesc tmppath document
-  docs <- mapM (\f -> ((takeFileName f,) . BS.toString . B64.encode) <$> liftIO (BS.readFile f))
+  docs <- mapM (\f -> (takeFileName f,) <$> liftIO (BS.readFile f))
             [ "files/Evidence_Documentation.html"
             , "files/Digital_Signature_Documentation_Part_I.html"
             , "files/Digital_Signature_Documentation_Part_II.html"
@@ -339,7 +338,7 @@ sealSpecFromDocument2 :: (TemplatesMonad m, MonadDB m, MonadMask m, Log.MonadLog
                      -> String
                      -> String
                      -> [Seal.FileDesc]
-                     -> [(String, String)]
+                     -> [(String, BS.ByteString)]
                      -> m Seal.SealSpec
 sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath outputpath additionalAttachments docs =
   let docid = documentid document
@@ -386,14 +385,14 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
       htmllogs <- htmlDocFromEvidenceLog (documenttitle document) (suppressRepeatedEvents elog) ces
       let evidenceattachment = Seal.SealAttachment { Seal.fileName = "Evidence_Log.html"
                                                    , Seal.mimeType = Nothing
-                                                   , Seal.fileBase64Content = BS.toString $ B64.encode $ BS.fromString htmllogs }
+                                                   , Seal.fileContent = BS.fromString htmllogs }
       evidenceOfIntent <- evidenceOfIntentAttachment (documenttitle document) (documentsignatorylinks document)
 
       -- documentation files
       let docAttachments =
             [ Seal.SealAttachment { Seal.fileName = name
                                   , Seal.mimeType = Nothing
-                                  , Seal.fileBase64Content = doc
+                                  , Seal.fileContent = doc
                                   }
             | (name, doc) <- docs ]
 
