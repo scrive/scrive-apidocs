@@ -486,9 +486,10 @@ sealDocumentFile file@File{fileid, filename} = theDocumentID >>= \documentid ->
     ces <- collectClockErrorStatistics elog
     config <- theDocument >>= \d -> sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) mctxhostpart d elog ces content tmppath tmpin tmpout
 
+    let json_config = J.render . J.pp_value . toJSValue $ config
     (code,_stdout,stderr) <- liftIO $ do
       let sealspecpath = tmppath ++ "/sealspec.json"
-      liftIO . writeFile sealspecpath . J.render . J.pp_value . toJSValue $ config
+      liftIO $ writeFile sealspecpath json_config
       readProcessWithExitCode' "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "add-verification-pages", sealspecpath] (BSL.empty)
 
     Log.mixlog_ $ "Sealing completed with " ++ show code
@@ -502,7 +503,8 @@ sealDocumentFile file@File{fileid, filename} = theDocumentID >>= \documentid ->
         let msg = "Cannot seal document #" ++ show documentid ++ " because of file #" ++ show fileid
         Log.attention_ $ msg ++ ": " ++ path
         Log.attention_ $ BSL.toString stderr
-        Log.attention_ $ "Sealing configuration: " ++ show config
+        -- show JSON'd config as that's what the java app is fed.
+        Log.attention_ $ "Sealing configuration: " ++ json_config
         liftIO $ BS.hPutStr handle content
         liftIO $ hClose handle
         void $ dbUpdate $ ErrorDocument ("Could not seal document because of file #" ++ show fileid)
@@ -526,9 +528,10 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
     uncheckedBoxImage <- liftIO $  BS.readFile "frontend/app/img/checkbox_unchecked.jpg"
     let config = presealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) document tmpin tmpout
 
+    let json_config = J.render . J.pp_value . toJSValue $ config
     (code,_stdout,stderr) <- liftIO $ do
       let sealspecpath = tmppath ++ "/sealspec.json"
-      liftIO . writeFile sealspecpath . J.render . J.pp_value . toJSValue $ config
+      liftIO $ writeFile sealspecpath json_config
       readProcessWithExitCode' "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "add-verification-pages", sealspecpath] (BSL.empty)
     Log.mixlog_ $ "PreSealing completed with " ++ show code
     case code of
@@ -538,5 +541,6 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
           return $ Right res
       ExitFailure _ -> do
           Log.attention_ $ BSL.toString stderr
-          Log.attention_ $ "Presealing failed for configuration: " ++ show config
+          -- show JSON'd config as that's what the java app is fed.
+          Log.attention_ $ "Presealing failed for configuration: " ++ json_config
           return $ Left "Error when preprinting fields on PDF"
