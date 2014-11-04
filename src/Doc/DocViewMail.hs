@@ -246,10 +246,9 @@ mailDocumentClosed ispreview sl sealFixed documentAttached document = do
                              else Just $ if isAuthor sl
                                then (++) (mctxhostpart mctx) $ show $ LinkIssueDoc (documentid document)
                                else (++) (mctxhostpart mctx) $ show $ LinkSignDoc document sl
-        F.value "ispreview" ispreview
         F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (Nothing <| ispreview |> Just sl) (mainfile)
         F.value "sealFixed" $ sealFixed
-        documentAttachedFields True sl documentAttached document
+        documentAttachedFields (not ispreview) sl documentAttached document
         F.value "closingtime" $ formatTime' "%Y-%m-%d %H:%M %Z" $ getLastSignedTime document
         F.value "custommessage" $ if (isAuthor sl && not ispreview)
                                     then Nothing
