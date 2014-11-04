@@ -715,6 +715,7 @@
 "_paymentsExpires":"Expire",
 "_paymentsGetInTouch":"Obtenir un devis aujourd'hui",
 "_paymentsMustBeAdmin":"Nous n'avons pas pu traiter votre achat",
+"_paymentsPlusVat":"",
 "_paymentsQuote":"Devis",
 "_paymentsRenewDialog":"Êtes-vous sûr de vouloir renouveler votre abonnement? Cela impliquera une facturation <span class='put-price-here'/> mensuelle.",
 "_paymentsRenewSubscription":"Renouveler l'abonnement",

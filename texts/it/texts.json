@@ -715,6 +715,7 @@
 "_paymentsExpires":"Scade",
 "_paymentsGetInTouch":"Ottieni un preventivo oggi",
 "_paymentsMustBeAdmin":"Il tuo acquisto non può essere elaborato",
+"_paymentsPlusVat":"",
 "_paymentsQuote":"Preventivo",
 "_paymentsRenewDialog":"Sei sicuro che desideri rinnovare la sottoscrizione? Ti verranno addebitati <span class='put-price-here'/> mensili.",
 "_paymentsRenewSubscription":"Rinnova sottoscrizione",

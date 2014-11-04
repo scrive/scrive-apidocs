@@ -715,6 +715,7 @@
 "_paymentsExpires":"Λήγει ",
 "_paymentsGetInTouch":"Αποκτήστε μία σήμερα  ",
 "_paymentsMustBeAdmin":"Δεν μπόρεσε να γίνει επεξεργασία της αγοράς σας. ",
+"_paymentsPlusVat":"",
 "_paymentsQuote":"Προσφορά",
 "_paymentsRenewDialog":"Είστε σίγουρος ότι θέλετε να ανανεώσετε τη συνδρομή σας; Θα χρεωθείτε <span class='put-price-here'/> μηνιαία. ",
 "_paymentsRenewSubscription":"Ανανέωση συνδρομής ",
