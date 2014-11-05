@@ -33,7 +33,7 @@ import qualified Log
 
 assembleContent :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadIO m, Log.MonadLog m, AWS.AmazonMonad m) => Mail -> m BSL.ByteString
 assembleContent Mail{..} = do
-  (boundaryMixed, boundaryAlternative) <- createBoundaries
+  (boundaryMixed, boundaryAlternative,boundaryRelated) <- createBoundaries
   let datafields = do
         J.value "email_id" $ show mailID
         J.value "email_token" $ show mailToken
@@ -53,17 +53,20 @@ assembleContent Mail{..} = do
         "X-SMTPAPI: " ++ J.encode xsmtpapi ++ "\r\n" ++
         "X-Mailgun-Variables: " ++ J.encode mailgundata ++ "\r\n" ++
         "MIME-Version: 1.0\r\n" ++
-        "Content-Type: multipart/related;\r\n" ++
-        "        type=\"multipart/alternative\"; boundary=" ++ boundaryMixed ++ "\r\n" ++
+        "Content-Type: multipart/mixed;\r\n boundary=" ++ boundaryMixed ++ "\r\n" ++
         "\r\n"
       headerContent = "--" ++ boundaryMixed ++ "\r\n" ++
         "Content-Type: multipart/alternative; boundary=" ++ boundaryAlternative ++ "\r\n" ++ "\r\n"
       headerContentText = "\r\n--" ++ boundaryAlternative ++ "\r\n" ++
         "Content-type: text/plain; charset=utf-8\r\n" ++
         "\r\n"
-      headerContentHtml = "\r\n--" ++ boundaryAlternative ++ "\r\n" ++
+      headerContentRelated = "--" ++ boundaryAlternative ++ "\r\n" ++
+        "Content-Type: multipart/related; boundary=" ++ boundaryRelated ++ "\r\n" ++ "\r\n"
+
+      headerContentHtml = "\r\n--" ++ boundaryRelated ++ "\r\n" ++
         "Content-type: text/html; charset=utf-8\r\n" ++
         "\r\n"
+      footerRelated = "\r\n--" ++ boundaryRelated ++ "--\r\n"
       footerContent = "\r\n--" ++ boundaryAlternative ++ "--\r\n"
       footerEmail = "\r\n--" ++ boundaryMixed ++ "--\r\n"
       attachmentType fname =
@@ -75,32 +78,45 @@ assembleContent Mail{..} = do
                         then "image/jpeg"
                         else "application/octet-stream"
 
-      headerAttach Attachment{..} =
+      headerRelated Attachment{..} =
         let filename = mailEncode Nothing attName
-            (disposition, contentId) = if ".pdf" `isSuffixOf` map toLower attName then
-                                           ("attachment", "")
-                                       else
-                                           ("inline", "Content-ID: <" ++ attName ++ ">\r\n")
-        in "\r\n--" ++ boundaryMixed ++ "\r\n" ++
-        "Content-Disposition: " ++ disposition ++ "; filename=\"" ++ filename ++"\"\r\n" ++
+        in "\r\n--" ++ boundaryRelated ++ "\r\n" ++
+        "Content-Disposition: inline; filename=\"" ++ filename ++"\"\r\n" ++
         "Content-Type: " ++ attachmentType attName ++ "; name=\"" ++ filename ++ "\"\r\n" ++
-        contentId ++
+        "Content-ID: <" ++ attName ++ ">\r\n" ++
         "Content-Transfer-Encoding: base64\r\n" ++
         "\r\n"
-      attach att@Attachment{..} = do
-        content <- either return getFileIDContents attContent
-        return $ BSLU.fromString (headerAttach att) `BSL.append`
+      headerMixed Attachment{..} =
+        let filename = mailEncode Nothing attName
+        in "\r\n--" ++ boundaryMixed ++ "\r\n" ++
+        "Content-Disposition: attachment; filename=\"" ++ filename ++"\"\r\n" ++
+        "Content-Type: " ++ attachmentType attName ++ "; name=\"" ++ filename ++ "\"\r\n" ++
+        "Content-Transfer-Encoding: base64\r\n" ++
+        "\r\n"
+      (relatedAtt,mixedAtt) = partition (\att -> ".png" `isSuffixOf` attName att || ".jpg" `isSuffixOf` attName att) mailAttachments
+
+  relatedAttContent  <- forM relatedAtt $ \att -> do
+        content <- either return getFileIDContents $ attContent att
+        return $ BSLU.fromString (headerRelated att) `BSL.append`
                BSL.fromChunks [Base64.joinWith (BSC.pack "\r\n") 72 $ Base64.encode content]
-  atts <- mapM attach mailAttachments
+  mixedAttContent  <- forM mixedAtt $ \att -> do
+        content <- either return getFileIDContents $ attContent att
+        return $ BSLU.fromString (headerMixed att) `BSL.append`
+               BSL.fromChunks [Base64.joinWith (BSC.pack "\r\n") 72 $ Base64.encode content]
+
   return $ BSL.concat $ [
       BSLU.fromString headerEmail
     , BSLU.fromString headerContent
     , BSLU.fromString headerContentText
     , BSLU.fromString $ htmlToTxt mailContent
+    , BSLU.fromString headerContentRelated
     , BSLU.fromString headerContentHtml
     , BSL.fromChunks [BSU.fromString mailContent]
+    ] ++ relatedAttContent ++
+    [
+      BSLU.fromString footerRelated
     , BSLU.fromString footerContent
-    ] ++ atts
+    ] ++ mixedAttContent
       ++ [BSLU.fromString footerEmail]
 
 
@@ -142,8 +158,8 @@ createMailTos = intercalate ", " . map (\a -> createAddrString a)
 createAddrString :: Address -> String
 createAddrString Address{..} = mailEncode Nothing addrName ++ " <" ++ addrEmail ++ ">"
 
-createBoundaries :: CryptoRNG m => m (String, String)
-createBoundaries = return (,) `ap` f `ap` f
+createBoundaries :: CryptoRNG m => m (String, String,String)
+createBoundaries = return (,,) `ap` f `ap` f `ap` f
   where
     f = randomString 32 $ ['0'..'9'] ++ ['a'..'z']
 
