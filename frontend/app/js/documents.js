@@ -227,8 +227,7 @@ window.Document = Backbone.Model.extend({
     },
     cancel: function() {
           return new Submit({
-              url: "/d/cancel",
-              documentids : "[" + this.documentid() + "]",
+              url: "/api/frontend/cancel/" + this.documentid(),
               method: "POST"
           });
     },

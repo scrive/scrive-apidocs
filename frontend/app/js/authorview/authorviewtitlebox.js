@@ -29,9 +29,13 @@ var AuthorViewTitleBoxModel = Backbone.Model.extend({
   cancel : function() {
     var self = this;
     LoadingDialog.open();
+    var errorcallback = function() {
+      new FlashMessage({content: localization.cannotWithdrawAlreadySignedDocument, color: 'red'});
+      self.authorview().reload(true);
+    };
     this.document().cancel().sendAjax(function() {
       self.authorview().reload(true);
-    });
+    }, errorcallback);
   },
   canGoToSignView : function() {
     return this.document().currentViewerIsAuthor() && this.document().currentSignatoryCanSign() && this.document().pending();

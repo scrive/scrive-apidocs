@@ -188,6 +188,7 @@
 "_blockingWillCancelHeadline":"You have chosen to discontinue your subscription and it will end in <span class='put-days-left-here'/> days",
 "_blockingWillCancelSubtext1":"You may <a class='put-link-to-payments-here'>renew your subscription</a> at any time.",
 "_button":"Try sending a sample document",
+"_cannotWithdrawAlreadySignedDocument":"The document can't be withdrawn since it is already signed.",
 "_cantMakeAllIdentificationFieldsOptionalText":"At least one of these fields must be mandatory: email, phone or ID number.",
 "_cantRemoveAllIdentificationFieldsText":"At least one of these fields must be included: email, phone or ID number.",
 "_cantSendReminderNoUser":"We could not send password reminder, because we don't have user with such email.",

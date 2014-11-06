@@ -39,6 +39,7 @@ javascriptLocalisation =
              , personalNumber : "$_personnumber()$"
              , companyNumber : "$_orgnumber()$"
              , next : "$_next()$"
+             , cannotWithdrawAlreadySignedDocument : "$_cannotWithdrawAlreadySignedDocument()$"
              , statusToolTip: {
                    draft: "$_tooltipdraft()$"
                  , cancelled : "$_tooltipcancelled()$"
