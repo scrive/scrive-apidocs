@@ -15,12 +15,12 @@ module Doc.DocUtils(
   , renderLocalListTemplate
   , replaceFieldValue
   , documentcurrentsignorder
+  , documentprevioussignorder
   , signatoryFieldsFromUser
   , isEligibleForReminder
   , canAuthorSignNow
   , canSignatorySignNow
   , isActivatedSignatory
-  , isCurrentSignatory
   , isFieldCustom
   , findCustomField
   , getSignatoryAttachment
@@ -157,20 +157,27 @@ replaceFieldValue ft v a = case (find (matchingFieldType ft) $ getAllFields a) o
 
 -- OTHER UTILS
 
--- | Indicates which signatories were activated (received
--- invitation email). All signatories with sign order
--- not greater than current sign order of the document
--- are considered to be activated.
+-- | The document's current sign order is either the sign order of the
+-- next partner(s) that should sign; or in case all partners have
+-- signed already: the largest sign order among all signatories.
 documentcurrentsignorder :: Document -> SignOrder
 documentcurrentsignorder doc =
-    case filter notSigned sigs of
-         [] -> maximum $ map signorder sigs
-         xs -> minimum $ map signorder xs
+    case filter notSignedPartner sigs of
+         [] -> maximum $ map signatorysignorder sigs
+         xs -> minimum $ map signatorysignorder xs
     where
-        signorder = signatorysignorder
         sigs = documentsignatorylinks doc
-        notSigned siglnk = isNothing (maybesigninfo siglnk)
+        notSignedPartner siglnk = isNothing (maybesigninfo siglnk)
           && signatoryispartner siglnk -- we exclude non-signatories
+
+-- | The document's previous sign order is either the sign order of
+-- the last partner(s) that signed, or zero in case nobody has signed
+-- yet.
+documentprevioussignorder :: Document -> SignOrder
+documentprevioussignorder doc =
+    case filter (isJust . maybesigninfo) (documentsignatorylinks doc) of
+         [] -> SignOrder 0
+         xs -> maximum $ map signatorysignorder xs
 
 {- |
    Build signatory fields from user
@@ -210,7 +217,7 @@ isEligibleForReminder document@Document{documentstatus} siglink =
     && signatoryispartner siglink
   where
     wasNotSigned = isNothing (maybesigninfo siglink)
-    signatoryActivated = documentcurrentsignorder document >= signatorysignorder siglink
+    signatoryActivated = isActivatedSignatory (documentcurrentsignorder document) siglink
     dontShowAnyReminder = documentstatus `elem` [Timedout, Canceled, Rejected]
     documentDeliverableTosignatory =  signatorylinkdeliverymethod siglink `elem` [EmailDelivery, MobileDelivery, EmailAndMobileDelivery]
 
@@ -242,14 +249,6 @@ canSignatorySignNow doc sl =
 isActivatedSignatory :: SignOrder -> SignatoryLink -> Bool
 isActivatedSignatory signorder siglink =
   signorder >= signatorysignorder siglink
-
-{- |
-   Given a SignOrder and a SignatoryLink, determine whether the
-   SignatoryLink is the next one up.
- -}
-isCurrentSignatory :: SignOrder -> SignatoryLink -> Bool
-isCurrentSignatory signorder siglink =
-  signorder == signatorysignorder siglink
 
 isFieldCustom :: SignatoryField -> Bool
 isFieldCustom SignatoryField{sfType = CustomFT{}} = True

@@ -80,6 +80,7 @@ window.Document = Backbone.Model.extend({
         var signatories = document.signatories();
         signatories[signatories.length] = sig;
         var time = new Date().getTime();
+        this.checkLastViewerChange();
         document.trigger('change:signatories');
         document.trigger('change:signorder');
     },
@@ -484,7 +485,10 @@ window.Document = Backbone.Model.extend({
               removed = true;
           }
        this.set({signatories : newsigs});
-       this.fixSignorder();
+       this.fixSignorderAfterRemoving(sig);
+       this.checkLastViewerChange();
+       this.trigger("change:signatories");
+       this.trigger("change:signorder");
     },
     currentViewerIsAuthor: function() {
         var csig = this.currentSignatory();
@@ -652,15 +656,28 @@ window.Document = Backbone.Model.extend({
         });
     },
     maxPossibleSignOrder : function() {
-      var mpso = 0;
-      _.each(this.signatories(), function(sig) {if (sig.signs()) mpso++;});
-      return mpso == 0 ? 1 : mpso;
+      return this.signatories().length
     },
-    fixSignorder : function() {
-        var mpso = this.maxPossibleSignOrder();
-        _.each(this.signatories(), function(sig) {
-          if (sig.signorder() > mpso) sig.setSignOrder(mpso);
+    fixSignorderAfterRemoving : function(old) {
+      if (!_.any(this.signatories(), function(s) {
+        return s.signorder() == old.signorder()
+      })) {
+        _.each(this.signatories(), function(s) {
+          if (s.signorder() > old.signorder()) {
+            s.setSignOrder(s.signorder() - 1);
+          }
         });
+      }
+    },
+    isLastViewer: function(viewer) { // True if there is no signing party with signorder larger than viewer's
+      return !viewer.signs() && !_.any(this.signatories(), function(s) {
+        return s.signs() && s.signorder() > viewer.signorder();
+      });
+    },
+    checkLastViewerChange : function() {
+      _.each(this.signatories(), function(s) {
+        s.checkLastViewerChange();
+      });
     },
     needRecall : function() {
       return this.documentid() != 0 && this.closed() && this.mainfile() == undefined;

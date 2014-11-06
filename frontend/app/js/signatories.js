@@ -80,7 +80,8 @@ window.Signatory = Backbone.Model.extend({
         confirmationdelivery : "email",
         // Internal properties used by design view
         changedDelivery : false,
-        changedConfirmationDelivery : false
+        changedConfirmationDelivery : false,
+        shadowedDelivery: null
     },
 
     initialize: function(args) {
@@ -310,6 +311,7 @@ window.Signatory = Backbone.Model.extend({
     },
     setSignOrder: function(i) {
          this.set({signorder: parseInt(i + "")});
+         this.document().checkLastViewerChange();
     },
     signs: function() {
          return this.get("signs");
@@ -321,27 +323,13 @@ window.Signatory = Backbone.Model.extend({
           return this.get("rejectredirect");
     },
     makeSignatory: function() {
-      var isAuthor = this.author();
-      var authorNotSignsMode = this.document().authorNotSignsMode();
       this.set({ signs: true });
-      if( isAuthor && authorNotSignsMode) {
-        /* We need to renumber all other signatories from group 1 to group 2 */
-        _.each(this.document().signatories(),function(sig) {
-          if( !sig.author()) {
-            sig.setSignOrder(2);
-          }
-        });
-      }
-      if(!isAuthor && this.document().author().signs() && this.document().author().signorder() == 1 )
-         this.setSignOrder(2);
-      else
-         this.setSignOrder(1);
+      this.document().checkLastViewerChange();
       this.trigger("change:role");
-      this.document().fixSignorder();
     },
     makeViewer: function() {
-      var authorSignsFirstMode = this.document().authorSignsFirstMode();
       this.set({signs: false});
+      this.document().checkLastViewerChange();
       _.each(this.signatures(),function(s) {
          s.removeAllPlacements();
       });
@@ -349,14 +337,7 @@ window.Signatory = Backbone.Model.extend({
           if (field.isCheckbox()) field.remove();
       });
 
-      if( this.author() && authorSignsFirstMode) {
-        /* We need to renumber all other signatories from group 2 to group 1 */
-        _.each(this.document().signatories(),function(sig) {
-          sig.setSignOrder(1);
-        });
-      }
       this.trigger("change:role");
-      this.document().fixSignorder();
     },
     hasSigned: function() {
         return this.signdate() != undefined;
@@ -391,6 +372,25 @@ window.Signatory = Backbone.Model.extend({
     },
     isViewer : function() {
         return !this.author() && !this.signs();
+    },
+    isLastViewer : function() {
+      return this.document().isLastViewer(this);
+    },
+    checkLastViewerChange : function() {
+      var isLastViewer = this.isLastViewer();
+      var shadowedDelivery = this.get("shadowedDelivery");
+      if (isLastViewer) {
+        this.set({delivery : "pad"});
+        if (this.get("confirmationdelivery") == "none") {
+          this.set({confirmationdelivery : shadowedDelivery != null && shadowedDelivery != "none" ? shadowedDelivery : "email"});
+        }
+      } else {
+        if (shadowedDelivery == null) {
+          this.set({delivery : "email"});
+        } else {
+          this.set({delivery : shadowedDelivery});
+        }
+      }
     },
     allAttachemntHaveFile: function() {
         return _.all(this.attachments(), function(attachment) {
@@ -582,7 +582,7 @@ window.Signatory = Backbone.Model.extend({
               }),
               author: this.author(),
               signs: this.signs(),
-              signorder: this.signs() ? this.signorder() : 1,
+              signorder: this.signorder(),
               attachments: _.map(this.attachments(), function(att) {
                   return att.draftData();
               }),
@@ -601,7 +601,9 @@ window.Signatory = Backbone.Model.extend({
         return this.get('confirmationdelivery');
     },
     setDelivery: function(d) {
-        this.set({delivery:d, changedDelivery : true});
+        this.set({ delivery : d,
+                   shadowedDelivery : d,
+                   changedDelivery : true});
         if (!this.get("changedConfirmationDelivery"))
           this.synchConfirmationDelivery();
         return this;

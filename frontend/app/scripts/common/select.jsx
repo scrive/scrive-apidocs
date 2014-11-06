@@ -202,7 +202,7 @@ var SelectExpandedView = React.createClass({
             <div className='select-button-label' style={labelStyle}>
               {model.name()}
             </div>
-            <div className='select-button-right'/>
+            {/*if*/ model.activeOptions().length > 1 && <div className='select-button-right'/>}
             {/*if*/ model.hasRemoveOption()&&
                 <div className='closer' onClick={this.handleRemove}/>
               }
@@ -322,7 +322,7 @@ var SelectView = React.createClass({
             <div className='select-button-label' style={labelStyle}>
               {model.name()}
             </div>
-            <div className='select-button-right'/>
+            {/*if*/ model.activeOptions().length > 1 && <div className='select-button-right'/>}
             {/*if*/ model.hasRemoveOption()&&
                 <div className='closer' onClick={this.handleRemove}/>
               }

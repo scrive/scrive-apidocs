@@ -2,7 +2,6 @@
 module Doc.DocMails (
     sendInvitationEmails
   , sendInvitationEmail1
-  , sendInvitationEmailsToViewers
   , sendReminderEmail
   , sendAllReminderEmails
   , sendAllReminderEmailsExceptAuthor
@@ -96,31 +95,22 @@ sendDocumentErrorEmail author document = do
          (scheduleSMS =<<  smsDocumentErrorSignatory document signatorylink)
 
 {- |
-   Send emails to all of the invited parties.
+   Send emails to all of the invited parties, respecting the sign order.
    ??: Should this be in DocControl or in an email-sepecific file?
  -}
 sendInvitationEmails :: (CryptoRNG m, MonadThrow m, Log.MonadLog m, TemplatesMonad m, DocumentMonad m, MailContextMonad m) => Bool -> m ()
 sendInvitationEmails skipauthorinvitation = do
   signlinks <- theDocument >>= \d -> return
                   [sl | sl <- documentsignatorylinks d
-                      , isSignatory sl
-                      , isCurrentSignatory (documentcurrentsignorder d) sl
+                      , matchingSignOrder d sl
                       , signatorylinkdeliverymethod sl `elem` [EmailDelivery, MobileDelivery,EmailAndMobileDelivery]
                       , not $ hasSigned sl
                       , ((not $ isAuthor sl) || (isAuthor sl && not skipauthorinvitation))
                       ]
   forM_ signlinks sendInvitationEmail1
-
-sendInvitationEmailsToViewers :: (Kontrakcja m, DocumentMonad m) => m ()
-sendInvitationEmailsToViewers = do
-  signlinks <- theDocument >>= \d -> return
-                  [sl | sl <- documentsignatorylinks d
-                      , not $ isSignatory sl
-                      , not $ isAuthor sl
-                      , signatorylinkdeliverymethod sl `elem` [EmailDelivery, MobileDelivery,EmailAndMobileDelivery]
-                      ]
-  forM_ signlinks sendInvitationEmail1
-
+  where matchingSignOrder d sl = so > documentprevioussignorder d
+                              && so <= documentcurrentsignorder d
+          where so = signatorysignorder sl
 
 {- |
    Helper function to send emails to invited parties

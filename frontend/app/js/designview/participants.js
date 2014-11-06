@@ -150,17 +150,19 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
         detailsParticipationFieldsDelivery: function() {
             var view = this;
             var sig = view.model;
+            var lastViewer = sig.isLastViewer();
             var delivery = sig.delivery();
 
             var deliveryTexts = {
                 email        : localization.designview.addParties.invitationEmail,
-                pad          : localization.designview.addParties.invitationInPerson,
+                pad          : lastViewer ? localization.designview.addParties.invitationNone
+                                          : localization.designview.addParties.invitationInPerson,
                 mobile       : localization.designview.addParties.invitationSMS,
                 email_mobile : localization.designview.addParties.invitationEmailSMS,
                 api : localization.designview.byAPI
             };
 
-            var deliveryTypes = ['email', 'pad', 'mobile', 'email_mobile'];
+            var deliveryTypes = lastViewer ? ['pad'] : ['email', 'pad', 'mobile', 'email_mobile'];
 
             var select = $("<div/>");
             React.renderComponent(
@@ -171,6 +173,14 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                 name: deliveryTexts[delivery],
                 textWidth : "151px",
                 optionsWidth : "178px",
+                onOpen : function() {
+                  if (lastViewer) {
+                    new FlashMessage({color: "red", content : localization.designview.lastViewerOnlyGetsConfirmation});
+                    return false;
+                  } else {
+                    return true;
+                  }
+                },
                 onSelect: function(v) {
                   mixpanel.track('Choose delivery method', {
                     Where: 'select'
@@ -194,7 +204,8 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                 none         : localization.designview.addParties.confirmationNone
             };
 
-            var deliveryTypes = ['email', 'mobile', 'email_mobile', 'none'];
+            var deliveryTypes = sig.isLastViewer() ? ['email', 'mobile', 'email_mobile']
+                                                   : ['email', 'mobile', 'email_mobile', 'none'];
 
             var select = new Select({
                 options: _.map(deliveryTypes, function(t) {
@@ -593,14 +604,18 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                 mixpanel.track('Choose delivery method', {
                     Where: 'icon'
                 });
-                if(view.model.delivery() === 'email')
+                if(view.model.isLastViewer()) {
+                  new FlashMessage({color: "red", content : localization.designview.lastViewerOnlyGetsConfirmation});
+                  } else {
+                  if(view.model.delivery() === 'email')
                     view.model.setDelivery('pad');
-                else if(view.model.delivery() === 'pad')
+                  else if(view.model.delivery() === 'pad')
                     view.model.setDelivery('mobile');
-                else if(view.model.delivery() === 'mobile')
+                  else if(view.model.delivery() === 'mobile')
                     view.model.setDelivery('email_mobile');
-                else
+                  else
                     view.model.setDelivery('email');
+                }
 
                 return false;
             });
@@ -608,6 +623,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
         icons: {
             email: 'design-view-action-participant-icon-device-icon-email',
             pad: 'design-view-action-participant-icon-device-icon-pad',
+            none: 'design-view-action-participant-icon-device-icon-empty',
             api: 'design-view-action-participant-icon-device-icon-pad',
             mobile: 'design-view-action-participant-icon-device-icon-phone',
             email_mobile : 'design-view-action-participant-icon-device-icon-email-mobile'
@@ -622,7 +638,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                 .addClass('design-view-action-participant-icon-device-inner')
                 .append($('<div />')
                         .addClass('design-view-action-participant-icon-device-icon')
-                        .addClass(view.icons[delivery]));
+                        .addClass(view.icons[sig.isLastViewer() ? 'none' : delivery]));
             view.$el.html(div);
 
             return view;
@@ -645,7 +661,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                     view.model.setConfirmationDelivery('mobile');
                 else if(view.model.confirmationdelivery() === 'mobile')
                     view.model.setConfirmationDelivery('email_mobile');
-                else if(view.model.confirmationdelivery() === 'email_mobile')
+                else if(view.model.confirmationdelivery() === 'email_mobile' && !view.model.isLastViewer())
                     view.model.setConfirmationDelivery('none');
                 else
                     view.model.setConfirmationDelivery('email');

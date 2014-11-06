@@ -32,7 +32,7 @@ import Doc.API.Callback.Model
 import Doc.AutomaticReminder.Model
 import Doc.DigitalSignature (addDigitalSignature, extendDigitalSignature)
 import Doc.DocInfo
-import Doc.DocMails (sendInvitationEmails, sendRejectEmails, sendDocumentErrorEmail, sendInvitationEmailsToViewers, sendClosedEmails, runMailTInScheduler)
+import Doc.DocMails (sendInvitationEmails, sendRejectEmails, sendDocumentErrorEmail, sendClosedEmails, runMailTInScheduler)
 import Doc.DocSeal (sealDocument)
 import Doc.DocStateData
 import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID, withDocument)
@@ -111,7 +111,6 @@ postDocumentPreparationChange skipauthorinvitation tzn = do
   theDocument >>= logDocEvent "Doc Sent" author []
 
   sendInvitationEmails skipauthorinvitation
-  sendInvitationEmailsToViewers
   scheduleAutoreminderIfThereIsOne tzn =<< theDocument
   return ()
 

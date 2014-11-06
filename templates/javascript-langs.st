@@ -375,6 +375,7 @@ javascriptLocalisation =
                , invitation : "$_designViewAddPartiesInvitation()$"
                , invitationEmail : "$_designViewAddPartiesInvitationEmail()$"
                , invitationInPerson : "$_designViewAddPartiesInvitationInPerson()$"
+               , invitationNone : "$_designViewAddPartiesInvitationNone()$"
                , invitationSMS : "$_designViewAddPartiesInvitationSMS()$"
                , invitationEmailSMS : "$_designViewAddPartiesInvitationEmailSMS()$"
                , role : "$_designViewAddPartiesRole()$"
@@ -446,6 +447,7 @@ javascriptLocalisation =
              , startSigningModalTextWithPad : "$_designViewStartSigningModalTextWithPad()$"
              , startSigningModalText : "$_designViewSigningModalText()$"
              , startSigningModalTextWithSendout : "$_designViewStartSigningModalTextWithSendout()$"
+             , lastViewerOnlyGetsConfirmation : "$_designViewLastViewerOnlyGetsConfirmation()$"
          }
          , validation : {
                 required: "$_nameRequired()$"

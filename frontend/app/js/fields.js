@@ -183,7 +183,9 @@ window.Field = Backbone.Model.extend({
       }
 
       var concatValidations = new Validation();
-      var senderMustFill = field.isObligatory() && field.shouldbefilledbysender();
+      var senderMustFill = field.isObligatory() && field.shouldbefilledbysender()
+       || signatory.isLastViewer() && (field.isEmail() && (signatory.emailConfirmationDelivery() || signatory.emailMobileConfirmationDelivery()) ||
+                                       field.isMobile() && (signatory.mobileConfirmationDelivery() || signatory.emailMobileConfirmationDelivery()));
       var willSignNowAndFieldNeeded = signatory.author()
         && signatory.ableToSign()
         && (!signatory.hasPlacedSignatures())
