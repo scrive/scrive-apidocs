@@ -12,7 +12,7 @@ var AuthorViewAutomaticRemindersModel = Backbone.Model.extend({
   },
   initialize: function (args) {
     if (this.document().autoremindtime() != undefined)
-      this.set({newdaystoremind: this.document().autoremindtime().diffDays()+1});
+      this.set({newdaystoremind: this.document().autoremindtime().diffDays()});
     else
       this.set({newdaystoremind: Math.max(1,Math.floor(this.maxDaysLeftToSign() / 2))});
   },
