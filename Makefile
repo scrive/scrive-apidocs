@@ -10,7 +10,7 @@ CABAL_CONFIGURE=cabal configure $(CONFIGURE_FLAGS)
 .PHONY : all
 all:
 	cabal sandbox init
-	cabal install --only-dependencies
+	cabal install --only-dependencies -j
 	$(CABAL_CONFIGURE)
 	cabal build
 
