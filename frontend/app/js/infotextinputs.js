@@ -230,7 +230,7 @@ var InfoTextInputView = Backbone.View.extend({
                       self.input.caret(self.input.val().length);
                     }
                   } catch (e) {
-                    jquery.caret is broken in IE9
+                    // jquery.caret is broken in IE9
                   }
                 }, 0);
             }
