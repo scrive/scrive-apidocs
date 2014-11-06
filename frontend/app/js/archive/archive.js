@@ -15,12 +15,6 @@ var ArchiveModel = Backbone.Model.extend({
   idledoctimeout : function() {
      return this.get("idledoctimeout");
   },
-  idleRemark : function() {
-     return this.get("idleRemark");
-  },
-  idleRemark1 : function() {
-     return this.get("idleRemark1");
-  },
   forNewUser: function() {
     return this.get("forNewUser");
   },
@@ -33,9 +27,7 @@ var ArchiveModel = Backbone.Model.extend({
                           year : this.year(),
                           month : this.month(),
                           loadLater : true,
-                          idledoctimeout : this.idledoctimeout(),
-                          idleRemark: this.idleRemark(),
-                          idleRemark1: this.idleRemark1()
+                          idledoctimeout : this.idledoctimeout()
                       }),div[0]);
                     return new Tab({
                         name: localization.archive.documents.name,
