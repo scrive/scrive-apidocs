@@ -1570,9 +1570,9 @@ instance MonadDB m => DBUpdate m ArchiveIdleDocuments Int where
          <+> "                 ON author_company.id = author.company_id"
          <+> "                AND author_company.idle_doc_timeout IS NOT NULL"
          <+> "               JOIN users"
-         <+> "                 ON users.id = signatory_links.user_id"
-         <+> "                AND users.company_id = author.company_id"
-         <+> "              WHERE signatory_links.document_id = documents.id"
+         <+> "                 ON users.company_id = author.company_id"
+         <+> "              WHERE users.id = signatory_links.user_id"
+         <+> "                AND signatory_links.document_id = documents.id"
          <+> "                AND documents.type =" <?> Signable
          <+> "                AND documents.status NOT IN (" <?> Pending <+> ")"
          <+> "                AND documents.mtime + (interval '1 day') * author_company.idle_doc_timeout <" <?> now <+> ")"
