@@ -100,10 +100,16 @@ window.FieldPlacement = Backbone.Model.extend({
        this.trigger("removed");
        var document = this.field().signatory().document();
        var page = document.file().page(this.get("page"));
-       page.removePlacement(this);
-        this.set({placed:false});
+       if (page !== undefined) {
+         // page can be undefined if the field was placed in template
+         // on a second page, but after starting from template, doc
+         // was switched to a single page pdf
+         page.removePlacement(this);
+       }
+       this.set({placed:false});
        this.field().removePlacement(this);
        this.off();
+       this.die();
     },
     fixWHRel : function(w,h) {
       var page =  this.field().signatory().document().mainfile().page(this.get("page"));
