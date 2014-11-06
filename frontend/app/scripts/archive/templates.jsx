@@ -179,9 +179,10 @@ return React.createClass({
           />
           <List.Column
             name={localization.archive.templates.columns.shared}
-            width="50px"
+            width="75px"
+            className="archive-table-shared-column-header"
             rendering={function(d) {
-              return (<div className={(d.field("fields").shared) ? "sharedIcon" : "notSharedIcon"}/>);
+              return (<div className={"archive-table-shared-column " + ((d.field("fields").shared) ? "sharedIcon" : "notSharedIcon")}/>);
             }}
           />
 

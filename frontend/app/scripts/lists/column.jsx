@@ -5,6 +5,10 @@ define(['React','legacy_code'],function(React) {
 
 return React.createClass({
     propTypes: {
+      className: React.PropTypes.string
+    },
+    className: function() {
+      return (this.props.className || "");
     },
     isSelect : function() {
       return this.props.select == true;
@@ -16,7 +20,7 @@ return React.createClass({
       var self = this;
       if (!this.props.data) { // We render a generic header for list - since there are no data to bind
         return (
-          <th style={{"width" : this.props.width}}>
+          <th className={this.className()} style={{"width" : this.props.width}}>
             {/*if*/ (this.isSelect()) &&
               (<div
                 className="checkbox"
@@ -46,7 +50,7 @@ return React.createClass({
           </th>);
       } else {
         return (
-          <td className="row">
+          <td className="row {this.className()}">
             {/*if*/ (this.isSelect()) &&
               (<div
                 className={"checkbox " + (this.props.data.isSelected() ? "checked" : "")}
