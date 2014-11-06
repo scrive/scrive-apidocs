@@ -225,8 +225,12 @@ var InfoTextInputView = Backbone.View.extend({
                 // is visible
                 var self = this;
                 setTimeout(function() {
-                  if (self.input.caret() !== self.input.val().length) {
-                    self.input.caret(self.input.val().length);
+                  try {
+                    if (self.input.caret() !== self.input.val().length) {
+                      self.input.caret(self.input.val().length);
+                    }
+                  } catch (e) {
+                    jquery.caret is broken in IE9
                   }
                 }, 0);
             }
