@@ -704,7 +704,7 @@
 "_paymentsEmailQuestion":"Bitte bewahren Sie diese E-Mail für Ihre Unterlagen auf. Wenn Sie Fragen haben, kontaktieren Sie bitte $accountingmaillink()$.",
 "_paymentsEmailSeeDetailsBelow":"Ihre Bestelldaten finden Sie unten.",
 "_paymentsEmailThanksForChoosingScrive":"Vielen Dank für Ihre Anmeldung bei Scrive",
-"_paymentsEmailTotal":"Gesamt:",
+"_paymentsEmailTotal":"",
 "_paymentsEmailTransactionDate":"Transaktionsdatum:",
 "_paymentsErrorsAcceptTOS":"Bitte akzeptieren Sie die Nutzungsbedingungen",
 "_paymentsErrorsCardDeclined":"Transaktion abgelehnt",

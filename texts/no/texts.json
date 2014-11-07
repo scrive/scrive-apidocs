@@ -704,7 +704,7 @@
 "_paymentsEmailQuestion":"Vennligst behold denne e-postmeldingen for din bokføring. Om du har noen spørsmål kan du kontakte $accountingmaillink()$.",
 "_paymentsEmailSeeDetailsBelow":"Se dine bestillingsdetaljer nedenfor.",
 "_paymentsEmailThanksForChoosingScrive":"Takk for at du abonnerer på Scrive",
-"_paymentsEmailTotal":"Totalt:",
+"_paymentsEmailTotal":"",
 "_paymentsEmailTransactionDate":"Transaksjonsdato:",
 "_paymentsErrorsAcceptTOS":"Vennligst godta tjenestevilkårene.",
 "_paymentsErrorsCardDeclined":"Transaksjon avvist",

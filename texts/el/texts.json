@@ -704,7 +704,7 @@
 "_paymentsEmailQuestion":"Παρακαλώ κρατήστε αυτό το email  στα αρχεία σας. Αν έχετε ερωτήσεις, παρακαλώ επικοινωνήστε με το $accountingmaillink()$.",
 "_paymentsEmailSeeDetailsBelow":"Δείτε τις λεπτομέρειες της παραγγελίας σας παρακάτω. ",
 "_paymentsEmailThanksForChoosingScrive":"Ευχαριστούμε που γίνατε συνδρομητής στην υπηρεσία  Scrive ",
-"_paymentsEmailTotal":"Συνολικά: ",
+"_paymentsEmailTotal":"",
 "_paymentsEmailTransactionDate":"Ημερομηνία συναλλαγής: ",
 "_paymentsErrorsAcceptTOS":"Παρακαλώ αποδεχτείτε τους όρους της υπηρεσίας. ",
 "_paymentsErrorsCardDeclined":"Η συναλλαγή απορρίφθηκε",

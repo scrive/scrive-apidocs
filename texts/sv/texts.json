@@ -704,7 +704,7 @@
 "_paymentsEmailQuestion":"Spara detta e-postmeddelande för din bokföring. Om du har några frågor, vänligen kontakta $accountingmaillink()$.",
 "_paymentsEmailSeeDetailsBelow":"Se detaljer nedan.",
 "_paymentsEmailThanksForChoosingScrive":"Tack för att du valt Scrive",
-"_paymentsEmailTotal":"Totalt:",
+"_paymentsEmailTotal":"",
 "_paymentsEmailTransactionDate":"Transaktionsdatum:",
 "_paymentsErrorsAcceptTOS":"Var vänlig acceptera användarvillkoren.",
 "_paymentsErrorsCardDeclined":"Transaktion nekad",

@@ -704,7 +704,7 @@
 "_paymentsEmailQuestion":"Bewaar deze e-mail a.u.b. voor uw administratie. Indien u vragen heeft, neem dan graag contact op met $accountingmaillink()$.",
 "_paymentsEmailSeeDetailsBelow":"Bekijk uw bestellingsdetails hieronder.",
 "_paymentsEmailThanksForChoosingScrive":"Bedankt voor uw abonnement op Scrive",
-"_paymentsEmailTotal":"Totaal:",
+"_paymentsEmailTotal":"",
 "_paymentsEmailTransactionDate":"Transactiedatum: ",
 "_paymentsErrorsAcceptTOS":"Accepteer a.u.b. deAlgemene Voorwaarden.",
 "_paymentsErrorsCardDeclined":"Transactie afgewezen",

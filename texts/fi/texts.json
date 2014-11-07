@@ -704,7 +704,7 @@
 "_paymentsEmailQuestion":"Pidä tämä sähköposti tallessa. Jos sinulla on kysymyksiä, ota yhteyttä: $accountingmaillink()$.",
 "_paymentsEmailSeeDetailsBelow":"Näe tietosi alla.",
 "_paymentsEmailThanksForChoosingScrive":"Kiitos Scrive-tilisi tilauksesta",
-"_paymentsEmailTotal":"Kokonaissumma:",
+"_paymentsEmailTotal":"",
 "_paymentsEmailTransactionDate":"Tapahtuman päivämäärä:",
 "_paymentsErrorsAcceptTOS":"Hyväksy palveluehdot.",
 "_paymentsErrorsCardDeclined":"Tapahtuma hylätty",

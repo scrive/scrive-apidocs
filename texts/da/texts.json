@@ -704,7 +704,7 @@
 "_paymentsEmailQuestion":"Opbevar venligst denne e-mail til dit regnskab. Hvis du har spørgsmål, bedes du venligst kontakte $accountingmaillink()$.",
 "_paymentsEmailSeeDetailsBelow":"Se dine ordreoplysninger nedenfor.",
 "_paymentsEmailThanksForChoosingScrive":"Tak, fordi du abonnerer på Scrive",
-"_paymentsEmailTotal":"Total:",
+"_paymentsEmailTotal":"",
 "_paymentsEmailTransactionDate":"Transaktionsdato:",
 "_paymentsErrorsAcceptTOS":"Venligst accepter servicevilkårene.",
 "_paymentsErrorsCardDeclined":"Transaktionen blev afvist",

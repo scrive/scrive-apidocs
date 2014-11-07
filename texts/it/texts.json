@@ -704,7 +704,7 @@
 "_paymentsEmailQuestion":"Si prega di conservare quest'email per future consultazioni. Per eventuali domande, contatta $accountingmaillink()$.",
 "_paymentsEmailSeeDetailsBelow":"Guarda i dettagli del tuo ordine qui sotto.",
 "_paymentsEmailThanksForChoosingScrive":"Grazie per la sottoscrizione a Scrive",
-"_paymentsEmailTotal":"Totale:",
+"_paymentsEmailTotal":"",
 "_paymentsEmailTransactionDate":"Data della transazione",
 "_paymentsErrorsAcceptTOS":"Ti preghiamo di accettare i termini di servizio,",
 "_paymentsErrorsCardDeclined":"Transazione respinta",
