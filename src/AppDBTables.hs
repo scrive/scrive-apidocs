@@ -6,6 +6,7 @@ module AppDBTables (
 import ActionQueue.Tables
 import Attachment.Tables
 import BrandedDomain.Tables
+import Chargeable.Tables
 import Company.Tables
 import CompanyAccounts.Tables
 import Cron.Tables
@@ -75,6 +76,7 @@ kontraTables =
   , tableCompanyUIs
   , tableDocumentAutomaticReminders
   , tableSignatorySMSPins
+  , tableChargeableItems
   ] ++ cronTables
     ++ mailerTables
     ++ messengerTables

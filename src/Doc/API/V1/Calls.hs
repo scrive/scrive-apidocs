@@ -50,6 +50,7 @@ import API.APIVersion
 import API.Monad
 import AppView (respondWithPDF)
 import Attachment.Model
+import Chargeable.Model
 import Company.CompanyUI
 import Company.Model
 import Control.Logic
@@ -489,6 +490,8 @@ apiCallV1Sign  did slid = api $ do
                               Log.attention_ $ "Eleg verification for document #" ++ show did ++ " failed with mismatch " ++ show ((onname,onnumber),(sfn,sln,spn))
                               (Left . Failed) <$> (runJSONGenT $ value "mismatch" True >> value "onName" onname >> value "onNumber" onnumber)
                             BankID.Sign sinfo -> do
+                              -- charge company of the author of the document for the signature
+                              dbUpdate $ ChargeCompanyForElegSignature did
                               signDocument slid mh fields (Just sinfo) Nothing screenshots
                               postDocumentPendingChange olddoc
                               handleAfterSigning slid

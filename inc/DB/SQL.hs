@@ -101,6 +101,9 @@ fullfill each one separatelly.
 
 -}
 
+-- TODO: clean this up and fix the mess with
+-- "randomly" wrapping stuff in parentheses.
+
 module DB.SQL
   ( sqlWhere
   , sqlWhereE
