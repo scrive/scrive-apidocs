@@ -19,7 +19,7 @@ $_paymentsEmailThanksForChoosingScrive()$. $_paymentsEmailSeeDetailsBelow()$
 <p>
 $_paymentsEmailDescription()$ $planname$<br />
 $if(quantity)$$_CompanyAccounts()$: $quantity$<br />$endif$
-$_paymentsEmailTotal()$ $total$ $currency$ $_paymentPlanPerMonth()$ $_paymentsPlusVat()$<br />
+$_paymentsEmailTotal()$<br />
 </p>
 ###
 paymentsSignupEmail2=
