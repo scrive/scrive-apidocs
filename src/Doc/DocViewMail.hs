@@ -22,9 +22,9 @@ import Control.Monad.Trans (lift)
 import Data.Functor
 import Data.Maybe
 import Text.StringTemplates.Templates
+import qualified Crypto.Hash.MD5 as MD5
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Char8 as BS
-import qualified Crypto.Hash.MD5 as MD5
 import qualified Text.StringTemplates.Fields as F
 
 import BrandedDomain.BrandedDomain
