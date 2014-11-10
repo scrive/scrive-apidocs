@@ -1,11 +1,11 @@
 /*
-  html2canvas 0.5.0-rc1 <http://html2canvas.hertzen.com>
+  html2canvas 0.5.0-alpha <http://html2canvas.hertzen.com>
   Copyright (c) 2014 Niklas von Hertzen
 
   Released under MIT License
 */
 
-(function(window, document, undefined){
+(function(window, document, module, exports, global, define, undefined){
 
 /*
  Copyright (c) 2013 Yehuda Katz, Tom Dale, and contributors
@@ -37,7 +37,538 @@ if (typeof(Object.create) !== "function" || typeof(document.createElement("canva
     return;
 }
 
+/*! https://mths.be/punycode v1.3.1 by @mathias */
+;(function(root) {
+
+	/** Detect free variables */
+	var freeExports = typeof exports == 'object' && exports &&
+		!exports.nodeType && exports;
+	var freeModule = typeof module == 'object' && module &&
+		!module.nodeType && module;
+	var freeGlobal = typeof global == 'object' && global;
+	if (
+		freeGlobal.global === freeGlobal ||
+		freeGlobal.window === freeGlobal ||
+		freeGlobal.self === freeGlobal
+	) {
+		root = freeGlobal;
+	}
+
+	/**
+	 * The `punycode` object.
+	 * @name punycode
+	 * @type Object
+	 */
+	var punycode,
+
+	/** Highest positive signed 32-bit float value */
+	maxInt = 2147483647, // aka. 0x7FFFFFFF or 2^31-1
+
+	/** Bootstring parameters */
+	base = 36,
+	tMin = 1,
+	tMax = 26,
+	skew = 38,
+	damp = 700,
+	initialBias = 72,
+	initialN = 128, // 0x80
+	delimiter = '-', // '\x2D'
+
+	/** Regular expressions */
+	regexPunycode = /^xn--/,
+	regexNonASCII = /[^\x20-\x7E]/, // unprintable ASCII chars + non-ASCII chars
+	regexSeparators = /[\x2E\u3002\uFF0E\uFF61]/g, // RFC 3490 separators
+
+	/** Error messages */
+	errors = {
+		'overflow': 'Overflow: input needs wider integers to process',
+		'not-basic': 'Illegal input >= 0x80 (not a basic code point)',
+		'invalid-input': 'Invalid input'
+	},
+
+	/** Convenience shortcuts */
+	baseMinusTMin = base - tMin,
+	floor = Math.floor,
+	stringFromCharCode = String.fromCharCode,
+
+	/** Temporary variable */
+	key;
+
+	/*--------------------------------------------------------------------------*/
+
+	/**
+	 * A generic error utility function.
+	 * @private
+	 * @param {String} type The error type.
+	 * @returns {Error} Throws a `RangeError` with the applicable error message.
+	 */
+	function error(type) {
+		throw RangeError(errors[type]);
+	}
+
+	/**
+	 * A generic `Array#map` utility function.
+	 * @private
+	 * @param {Array} array The array to iterate over.
+	 * @param {Function} callback The function that gets called for every array
+	 * item.
+	 * @returns {Array} A new array of values returned by the callback function.
+	 */
+	function map(array, fn) {
+		var length = array.length;
+		var result = [];
+		while (length--) {
+			result[length] = fn(array[length]);
+		}
+		return result;
+	}
+
+	/**
+	 * A simple `Array#map`-like wrapper to work with domain name strings or email
+	 * addresses.
+	 * @private
+	 * @param {String} domain The domain name or email address.
+	 * @param {Function} callback The function that gets called for every
+	 * character.
+	 * @returns {Array} A new string of characters returned by the callback
+	 * function.
+	 */
+	function mapDomain(string, fn) {
+		var parts = string.split('@');
+		var result = '';
+		if (parts.length > 1) {
+			// In email addresses, only the domain name should be punycoded. Leave
+			// the local part (i.e. everything up to `@`) intact.
+			result = parts[0] + '@';
+			string = parts[1];
+		}
+		var labels = string.split(regexSeparators);
+		var encoded = map(labels, fn).join('.');
+		return result + encoded;
+	}
+
+	/**
+	 * Creates an array containing the numeric code points of each Unicode
+	 * character in the string. While JavaScript uses UCS-2 internally,
+	 * this function will convert a pair of surrogate halves (each of which
+	 * UCS-2 exposes as separate characters) into a single code point,
+	 * matching UTF-16.
+	 * @see `punycode.ucs2.encode`
+	 * @see <https://mathiasbynens.be/notes/javascript-encoding>
+	 * @memberOf punycode.ucs2
+	 * @name decode
+	 * @param {String} string The Unicode input string (UCS-2).
+	 * @returns {Array} The new array of code points.
+	 */
+	function ucs2decode(string) {
+		var output = [],
+		    counter = 0,
+		    length = string.length,
+		    value,
+		    extra;
+		while (counter < length) {
+			value = string.charCodeAt(counter++);
+			if (value >= 0xD800 && value <= 0xDBFF && counter < length) {
+				// high surrogate, and there is a next character
+				extra = string.charCodeAt(counter++);
+				if ((extra & 0xFC00) == 0xDC00) { // low surrogate
+					output.push(((value & 0x3FF) << 10) + (extra & 0x3FF) + 0x10000);
+				} else {
+					// unmatched surrogate; only append this code unit, in case the next
+					// code unit is the high surrogate of a surrogate pair
+					output.push(value);
+					counter--;
+				}
+			} else {
+				output.push(value);
+			}
+		}
+		return output;
+	}
+
+	/**
+	 * Creates a string based on an array of numeric code points.
+	 * @see `punycode.ucs2.decode`
+	 * @memberOf punycode.ucs2
+	 * @name encode
+	 * @param {Array} codePoints The array of numeric code points.
+	 * @returns {String} The new Unicode string (UCS-2).
+	 */
+	function ucs2encode(array) {
+		return map(array, function(value) {
+			var output = '';
+			if (value > 0xFFFF) {
+				value -= 0x10000;
+				output += stringFromCharCode(value >>> 10 & 0x3FF | 0xD800);
+				value = 0xDC00 | value & 0x3FF;
+			}
+			output += stringFromCharCode(value);
+			return output;
+		}).join('');
+	}
+
+	/**
+	 * Converts a basic code point into a digit/integer.
+	 * @see `digitToBasic()`
+	 * @private
+	 * @param {Number} codePoint The basic numeric code point value.
+	 * @returns {Number} The numeric value of a basic code point (for use in
+	 * representing integers) in the range `0` to `base - 1`, or `base` if
+	 * the code point does not represent a value.
+	 */
+	function basicToDigit(codePoint) {
+		if (codePoint - 48 < 10) {
+			return codePoint - 22;
+		}
+		if (codePoint - 65 < 26) {
+			return codePoint - 65;
+		}
+		if (codePoint - 97 < 26) {
+			return codePoint - 97;
+		}
+		return base;
+	}
+
+	/**
+	 * Converts a digit/integer into a basic code point.
+	 * @see `basicToDigit()`
+	 * @private
+	 * @param {Number} digit The numeric value of a basic code point.
+	 * @returns {Number} The basic code point whose value (when used for
+	 * representing integers) is `digit`, which needs to be in the range
+	 * `0` to `base - 1`. If `flag` is non-zero, the uppercase form is
+	 * used; else, the lowercase form is used. The behavior is undefined
+	 * if `flag` is non-zero and `digit` has no uppercase form.
+	 */
+	function digitToBasic(digit, flag) {
+		//  0..25 map to ASCII a..z or A..Z
+		// 26..35 map to ASCII 0..9
+		return digit + 22 + 75 * (digit < 26) - ((flag != 0) << 5);
+	}
+
+	/**
+	 * Bias adaptation function as per section 3.4 of RFC 3492.
+	 * http://tools.ietf.org/html/rfc3492#section-3.4
+	 * @private
+	 */
+	function adapt(delta, numPoints, firstTime) {
+		var k = 0;
+		delta = firstTime ? floor(delta / damp) : delta >> 1;
+		delta += floor(delta / numPoints);
+		for (/* no initialization */; delta > baseMinusTMin * tMax >> 1; k += base) {
+			delta = floor(delta / baseMinusTMin);
+		}
+		return floor(k + (baseMinusTMin + 1) * delta / (delta + skew));
+	}
+
+	/**
+	 * Converts a Punycode string of ASCII-only symbols to a string of Unicode
+	 * symbols.
+	 * @memberOf punycode
+	 * @param {String} input The Punycode string of ASCII-only symbols.
+	 * @returns {String} The resulting string of Unicode symbols.
+	 */
+	function decode(input) {
+		// Don't use UCS-2
+		var output = [],
+		    inputLength = input.length,
+		    out,
+		    i = 0,
+		    n = initialN,
+		    bias = initialBias,
+		    basic,
+		    j,
+		    index,
+		    oldi,
+		    w,
+		    k,
+		    digit,
+		    t,
+		    /** Cached calculation results */
+		    baseMinusT;
+
+		// Handle the basic code points: let `basic` be the number of input code
+		// points before the last delimiter, or `0` if there is none, then copy
+		// the first basic code points to the output.
+
+		basic = input.lastIndexOf(delimiter);
+		if (basic < 0) {
+			basic = 0;
+		}
+
+		for (j = 0; j < basic; ++j) {
+			// if it's not a basic code point
+			if (input.charCodeAt(j) >= 0x80) {
+				error('not-basic');
+			}
+			output.push(input.charCodeAt(j));
+		}
+
+		// Main decoding loop: start just after the last delimiter if any basic code
+		// points were copied; start at the beginning otherwise.
+
+		for (index = basic > 0 ? basic + 1 : 0; index < inputLength; /* no final expression */) {
+
+			// `index` is the index of the next character to be consumed.
+			// Decode a generalized variable-length integer into `delta`,
+			// which gets added to `i`. The overflow checking is easier
+			// if we increase `i` as we go, then subtract off its starting
+			// value at the end to obtain `delta`.
+			for (oldi = i, w = 1, k = base; /* no condition */; k += base) {
+
+				if (index >= inputLength) {
+					error('invalid-input');
+				}
+
+				digit = basicToDigit(input.charCodeAt(index++));
+
+				if (digit >= base || digit > floor((maxInt - i) / w)) {
+					error('overflow');
+				}
+
+				i += digit * w;
+				t = k <= bias ? tMin : (k >= bias + tMax ? tMax : k - bias);
+
+				if (digit < t) {
+					break;
+				}
+
+				baseMinusT = base - t;
+				if (w > floor(maxInt / baseMinusT)) {
+					error('overflow');
+				}
+
+				w *= baseMinusT;
+
+			}
+
+			out = output.length + 1;
+			bias = adapt(i - oldi, out, oldi == 0);
+
+			// `i` was supposed to wrap around from `out` to `0`,
+			// incrementing `n` each time, so we'll fix that now:
+			if (floor(i / out) > maxInt - n) {
+				error('overflow');
+			}
+
+			n += floor(i / out);
+			i %= out;
+
+			// Insert `n` at position `i` of the output
+			output.splice(i++, 0, n);
+
+		}
+
+		return ucs2encode(output);
+	}
+
+	/**
+	 * Converts a string of Unicode symbols (e.g. a domain name label) to a
+	 * Punycode string of ASCII-only symbols.
+	 * @memberOf punycode
+	 * @param {String} input The string of Unicode symbols.
+	 * @returns {String} The resulting Punycode string of ASCII-only symbols.
+	 */
+	function encode(input) {
+		var n,
+		    delta,
+		    handledCPCount,
+		    basicLength,
+		    bias,
+		    j,
+		    m,
+		    q,
+		    k,
+		    t,
+		    currentValue,
+		    output = [],
+		    /** `inputLength` will hold the number of code points in `input`. */
+		    inputLength,
+		    /** Cached calculation results */
+		    handledCPCountPlusOne,
+		    baseMinusT,
+		    qMinusT;
+
+		// Convert the input in UCS-2 to Unicode
+		input = ucs2decode(input);
+
+		// Cache the length
+		inputLength = input.length;
+
+		// Initialize the state
+		n = initialN;
+		delta = 0;
+		bias = initialBias;
+
+		// Handle the basic code points
+		for (j = 0; j < inputLength; ++j) {
+			currentValue = input[j];
+			if (currentValue < 0x80) {
+				output.push(stringFromCharCode(currentValue));
+			}
+		}
+
+		handledCPCount = basicLength = output.length;
+
+		// `handledCPCount` is the number of code points that have been handled;
+		// `basicLength` is the number of basic code points.
+
+		// Finish the basic string - if it is not empty - with a delimiter
+		if (basicLength) {
+			output.push(delimiter);
+		}
+
+		// Main encoding loop:
+		while (handledCPCount < inputLength) {
+
+			// All non-basic code points < n have been handled already. Find the next
+			// larger one:
+			for (m = maxInt, j = 0; j < inputLength; ++j) {
+				currentValue = input[j];
+				if (currentValue >= n && currentValue < m) {
+					m = currentValue;
+				}
+			}
+
+			// Increase `delta` enough to advance the decoder's <n,i> state to <m,0>,
+			// but guard against overflow
+			handledCPCountPlusOne = handledCPCount + 1;
+			if (m - n > floor((maxInt - delta) / handledCPCountPlusOne)) {
+				error('overflow');
+			}
+
+			delta += (m - n) * handledCPCountPlusOne;
+			n = m;
+
+			for (j = 0; j < inputLength; ++j) {
+				currentValue = input[j];
+
+				if (currentValue < n && ++delta > maxInt) {
+					error('overflow');
+				}
+
+				if (currentValue == n) {
+					// Represent delta as a generalized variable-length integer
+					for (q = delta, k = base; /* no condition */; k += base) {
+						t = k <= bias ? tMin : (k >= bias + tMax ? tMax : k - bias);
+						if (q < t) {
+							break;
+						}
+						qMinusT = q - t;
+						baseMinusT = base - t;
+						output.push(
+							stringFromCharCode(digitToBasic(t + qMinusT % baseMinusT, 0))
+						);
+						q = floor(qMinusT / baseMinusT);
+					}
+
+					output.push(stringFromCharCode(digitToBasic(q, 0)));
+					bias = adapt(delta, handledCPCountPlusOne, handledCPCount == basicLength);
+					delta = 0;
+					++handledCPCount;
+				}
+			}
+
+			++delta;
+			++n;
+
+		}
+		return output.join('');
+	}
+
+	/**
+	 * Converts a Punycode string representing a domain name or an email address
+	 * to Unicode. Only the Punycoded parts of the input will be converted, i.e.
+	 * it doesn't matter if you call it on a string that has already been
+	 * converted to Unicode.
+	 * @memberOf punycode
+	 * @param {String} input The Punycoded domain name or email address to
+	 * convert to Unicode.
+	 * @returns {String} The Unicode representation of the given Punycode
+	 * string.
+	 */
+	function toUnicode(input) {
+		return mapDomain(input, function(string) {
+			return regexPunycode.test(string)
+				? decode(string.slice(4).toLowerCase())
+				: string;
+		});
+	}
+
+	/**
+	 * Converts a Unicode string representing a domain name or an email address to
+	 * Punycode. Only the non-ASCII parts of the domain name will be converted,
+	 * i.e. it doesn't matter if you call it with a domain that's already in
+	 * ASCII.
+	 * @memberOf punycode
+	 * @param {String} input The domain name or email address to convert, as a
+	 * Unicode string.
+	 * @returns {String} The Punycode representation of the given domain name or
+	 * email address.
+	 */
+	function toASCII(input) {
+		return mapDomain(input, function(string) {
+			return regexNonASCII.test(string)
+				? 'xn--' + encode(string)
+				: string;
+		});
+	}
+
+	/*--------------------------------------------------------------------------*/
+
+	/** Define the public API */
+	punycode = {
+		/**
+		 * A string representing the current Punycode.js version number.
+		 * @memberOf punycode
+		 * @type String
+		 */
+		'version': '1.3.1',
+		/**
+		 * An object of methods to convert from JavaScript's internal character
+		 * representation (UCS-2) to Unicode code points, and back.
+		 * @see <https://mathiasbynens.be/notes/javascript-encoding>
+		 * @memberOf punycode
+		 * @type Object
+		 */
+		'ucs2': {
+			'decode': ucs2decode,
+			'encode': ucs2encode
+		},
+		'decode': decode,
+		'encode': encode,
+		'toASCII': toASCII,
+		'toUnicode': toUnicode
+	};
+
+	/** Expose `punycode` */
+	// Some AMD build optimizers, like r.js, check for specific condition patterns
+	// like the following:
+	if (
+		typeof define == 'function' &&
+		typeof define.amd == 'object' &&
+		define.amd
+	) {
+		define('punycode', function() {
+			return punycode;
+		});
+	} else if (freeExports && freeModule) {
+		if (module.exports == freeExports) { // in Node.js or RingoJS v0.8.0+
+			freeModule.exports = punycode;
+		} else { // in Narwhal or RingoJS v0.7.0-
+			for (key in punycode) {
+				punycode.hasOwnProperty(key) && (freeExports[key] = punycode[key]);
+			}
+		}
+	} else { // in Rhino or a web browser
+		root.punycode = punycode;
+	}
+
+}(this));
+
 var html2canvasNodeAttribute = "data-html2canvas-node";
+var html2canvasCanvasCloneAttribute = "data-html2canvas-canvas-clone";
+var html2canvasCanvasCloneIndex = 0;
 
 window.html2canvas = function(nodeList, options) {
     options = options || {};
@@ -47,11 +578,23 @@ window.html2canvas = function(nodeList, options) {
     }
 
     options.async = typeof(options.async) === "undefined" ? true : options.async;
+    options.allowTaint = typeof(options.allowTaint) === "undefined" ? false : options.allowTaint;
     options.removeContainer = typeof(options.removeContainer) === "undefined" ? true : options.removeContainer;
+    options.javascriptEnabled = typeof(options.javascriptEnabled) === "undefined" ? false : options.javascriptEnabled;
+    options.imageTimeout = typeof(options.imageTimeout) === "undefined" ? 10000 : options.imageTimeout;
+
+    if (typeof(nodeList) === "string") {
+        if (typeof(options.proxy) !== "string") {
+            return Promise.reject("Proxy must be used when rendering url");
+        }
+        return loadUrlDocument(absoluteUrl(nodeList), options.proxy, document, window.innerWidth, window.innerHeight, options).then(function(container) {
+            return renderWindow(container.contentWindow.document.documentElement, container, options, window.innerWidth, window.innerHeight);
+        });
+    }
 
     var node = ((nodeList === undefined) ? [document.documentElement] : ((nodeList.length) ? nodeList : [nodeList]))[0];
     node.setAttribute(html2canvasNodeAttribute, "true");
-    return renderDocument(node.ownerDocument, options, window.innerWidth, window.innerHeight).then(function(canvas) {
+    return renderDocument(node.ownerDocument, options, node.ownerDocument.defaultView.innerWidth, node.ownerDocument.defaultView.innerHeight).then(function(canvas) {
         if (typeof(options.onrendered) === "function") {
             log("options.onrendered is deprecated, html2canvas returns a Promise containing the canvas");
             options.onrendered(canvas);
@@ -60,28 +603,54 @@ window.html2canvas = function(nodeList, options) {
     });
 };
 
+window.html2canvas.punycode = this.punycode;
+window.html2canvas.proxy = {};
+
 function renderDocument(document, options, windowWidth, windowHeight) {
-    return createWindowClone(document, windowWidth, windowHeight, options).then(function(container) {
+    return createWindowClone(document, document, windowWidth, windowHeight, options).then(function(container) {
         log("Document cloned");
         var selector = "[" + html2canvasNodeAttribute + "='true']";
         document.querySelector(selector).removeAttribute(html2canvasNodeAttribute);
         var clonedWindow = container.contentWindow;
         var node = clonedWindow.document.querySelector(selector);
-        var support = new Support(clonedWindow.document);
-        var imageLoader = new ImageLoader(options, support);
-        var bounds = getBounds(node);
-        var width = options.type === "view" ? Math.min(bounds.width, windowWidth) : documentWidth();
-        var height = options.type === "view" ? Math.min(bounds.height, windowHeight) : documentHeight();
-        var renderer = new CanvasRenderer(width, height, imageLoader);
-        var parser = new NodeParser(node, renderer, support, imageLoader, options);
-        return parser.ready.then(function() {
-            log("Finished rendering");
-            if (options.removeContainer) {
-                container.parentNode.removeChild(container);
-            }
-            return (options.type !== "view" && (node === clonedWindow.document.body || node === clonedWindow.document.documentElement)) ? renderer.canvas : crop(renderer.canvas, bounds);
+        var oncloneHandler = (typeof(options.onclone) === "function") ? Promise.resolve(options.onclone(clonedWindow.document)) : Promise.resolve(true);
+        return oncloneHandler.then(function() {
+            return renderWindow(node, container, options, windowWidth, windowHeight);
         });
     });
+}
+
+function renderWindow(node, container, options, windowWidth, windowHeight) {
+    var clonedWindow = container.contentWindow;
+    var support = new Support(clonedWindow.document);
+    var imageLoader = new ImageLoader(options, support);
+    var bounds = getBounds(node);
+    var width = options.type === "view" ? windowWidth : documentWidth(clonedWindow.document);
+    var height = options.type === "view" ? windowHeight : documentHeight(clonedWindow.document);
+    var renderer = new CanvasRenderer(width, height, imageLoader, options, document);
+    var parser = new NodeParser(node, renderer, support, imageLoader, options);
+    return parser.ready.then(function() {
+        log("Finished rendering");
+        var canvas;
+
+        if (options.type === "view") {
+            canvas = crop(renderer.canvas, {width: renderer.canvas.width, height: renderer.canvas.height, top: 0, left: 0, x: 0, y: 0});
+        } else if (node === clonedWindow.document.body || node === clonedWindow.document.documentElement || options.canvas != null) {
+            canvas = renderer.canvas;
+        } else {
+            canvas = crop(renderer.canvas, {width:  options.width != null ? options.width : bounds.width, height: options.height != null ? options.height : bounds.height, top: bounds.top, left: bounds.left, x: clonedWindow.pageXOffset, y: clonedWindow.pageYOffset});
+        }
+
+        cleanupContainer(container, options);
+        return canvas;
+    });
+}
+
+function cleanupContainer(container, options) {
+    if (options.removeContainer) {
+        container.parentNode.removeChild(container);
+        log("Cleaned up container");
+    }
 }
 
 function crop(canvas, bounds) {
@@ -90,27 +659,27 @@ function crop(canvas, bounds) {
     var x2 = Math.min(canvas.width, Math.max(1, bounds.left + bounds.width));
     var y1 = Math.min(canvas.height - 1, Math.max(0, bounds.top));
     var y2 = Math.min(canvas.height, Math.max(1, bounds.top + bounds.height));
-    var width = croppedCanvas.width = x2 - x1;
-    var height = croppedCanvas.height =  y2 - y1;
-    log("Cropping canvas at:", "left:", bounds.left, "top:", bounds.top, "width:", bounds.width, "height:", bounds.height);
-    log("Resulting crop with width", width, "and height", height, " with x", x1, "and y", y1);
-    croppedCanvas.getContext("2d").drawImage(canvas, x1, y1, width, height, 0, 0, width, height);
+    croppedCanvas.width = bounds.width;
+    croppedCanvas.height =  bounds.height;
+    log("Cropping canvas at:", "left:", bounds.left, "top:", bounds.top, "width:", (x2-x1), "height:", (y2-y1));
+    log("Resulting crop with width", bounds.width, "and height", bounds.height, " with x", x1, "and y", y1);
+    croppedCanvas.getContext("2d").drawImage(canvas, x1, y1, x2-x1, y2-y1, bounds.x, bounds.y, x2-x1, y2-y1);
     return croppedCanvas;
 }
 
-function documentWidth () {
+function documentWidth (doc) {
     return Math.max(
-        Math.max(document.body.scrollWidth, document.documentElement.scrollWidth),
-        Math.max(document.body.offsetWidth, document.documentElement.offsetWidth),
-        Math.max(document.body.clientWidth, document.documentElement.clientWidth)
+        Math.max(doc.body.scrollWidth, doc.documentElement.scrollWidth),
+        Math.max(doc.body.offsetWidth, doc.documentElement.offsetWidth),
+        Math.max(doc.body.clientWidth, doc.documentElement.clientWidth)
     );
 }
 
-function documentHeight () {
+function documentHeight (doc) {
     return Math.max(
-        Math.max(document.body.scrollHeight, document.documentElement.scrollHeight),
-        Math.max(document.body.offsetHeight, document.documentElement.offsetHeight),
-        Math.max(document.body.clientHeight, document.documentElement.clientHeight)
+        Math.max(doc.body.scrollHeight, doc.documentElement.scrollHeight),
+        Math.max(doc.body.offsetHeight, doc.documentElement.offsetHeight),
+        Math.max(doc.body.clientHeight, doc.documentElement.clientHeight)
     );
 }
 
@@ -118,9 +687,10 @@ function smallImage() {
     return "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 }
 
-function createWindowClone(ownerDocument, width, height, options) {
+function createWindowClone(ownerDocument, containerDocument, width, height, options) {
+    labelCanvasElements(ownerDocument);
     var documentElement = ownerDocument.documentElement.cloneNode(true),
-        container = ownerDocument.createElement("iframe");
+        container = containerDocument.createElement("iframe");
 
     container.style.visibility = "hidden";
     container.style.position = "absolute";
@@ -128,7 +698,7 @@ function createWindowClone(ownerDocument, width, height, options) {
     container.width = width;
     container.height = height;
     container.scrolling = "no"; // ios won't scroll without it
-    ownerDocument.body.appendChild(container);
+    containerDocument.body.appendChild(container);
 
     return new Promise(function(resolve) {
         var documentClone = container.contentWindow.document;
@@ -136,17 +706,88 @@ function createWindowClone(ownerDocument, width, height, options) {
         if window url is about:blank, we can assign the url to current by writing onto the document
          */
         container.contentWindow.onload = container.onload = function() {
-            resolve(container);
+            var interval = setInterval(function() {
+                if (documentClone.body.childNodes.length > 0) {
+                    cloneCanvasContents(ownerDocument, documentClone);
+                    clearInterval(interval);
+                    if (options.type === "view") {
+                        container.contentWindow.scrollTo(x, y);
+                    }
+                    resolve(container);
+                }
+            }, 50);
         };
 
-        documentClone.open();
-        documentClone.write("<!DOCTYPE html>");
-        documentClone.close();
+        var x = ownerDocument.defaultView.pageXOffset;
+        var y = ownerDocument.defaultView.pageYOffset;
 
-        documentClone.replaceChild(removeScriptNodes(documentClone.adoptNode(documentElement)), documentClone.documentElement);
-        if (options.type === "view") {
-            container.contentWindow.scrollTo(window.pageXOffset, window.pageYOffset);
+        documentClone.open();
+        documentClone.write("<!DOCTYPE html><html></html>");
+
+        // Chrome scrolls the parent document for some reason after the write to the cloned window???
+        if (x !== ownerDocument.defaultView.pageXOffset || y !== ownerDocument.defaultView.pageYOffset) {
+            ownerDocument.defaultView.scrollTo(x, y);
         }
+        documentClone.replaceChild(options.javascriptEnabled === true ? documentClone.adoptNode(documentElement) : removeScriptNodes(documentClone.adoptNode(documentElement)), documentClone.documentElement);
+        documentClone.close();
+    });
+}
+
+function loadUrlDocument(src, proxy, document, width, height, options) {
+    return new Proxy(src, proxy, window.document).then(documentFromHTML(src)).then(function(doc) {
+        return createWindowClone(doc, document, width, height, options);
+    });
+}
+
+function documentFromHTML(src) {
+    return function(html) {
+        var parser = new DOMParser(), doc;
+        try {
+            doc = parser.parseFromString(html, "text/html");
+        } catch(e) {
+            log("DOMParser not supported, falling back to createHTMLDocument");
+            doc = document.implementation.createHTMLDocument("");
+            try {
+                doc.open();
+                doc.write(html);
+                doc.close();
+            } catch(ee) {
+                log("createHTMLDocument write not supported, falling back to document.body.innerHTML");
+                doc.body.innerHTML = html; // ie9 doesnt support writing to documentElement
+            }
+        }
+
+        var b = doc.querySelector("base");
+        if (!b || !b.href.host) {
+            var base = doc.createElement("base");
+            base.href = src;
+            doc.head.insertBefore(base, doc.head.firstChild);
+        }
+
+        return doc;
+    };
+}
+
+
+function labelCanvasElements(ownerDocument) {
+    [].slice.call(ownerDocument.querySelectorAll("canvas"), 0).forEach(function(canvas) {
+        canvas.setAttribute(html2canvasCanvasCloneAttribute, "canvas-" + html2canvasCanvasCloneIndex++);
+    });
+}
+
+function cloneCanvasContents(ownerDocument, documentClone) {
+    [].slice.call(ownerDocument.querySelectorAll("[" + html2canvasCanvasCloneAttribute + "]"), 0).forEach(function(canvas) {
+        try {
+            var clonedCanvas = documentClone.querySelector('[' + html2canvasCanvasCloneAttribute + '="' + canvas.getAttribute(html2canvasCanvasCloneAttribute) + '"]');
+            if (clonedCanvas) {
+                clonedCanvas.width = canvas.width;
+                clonedCanvas.height = canvas.height;
+                clonedCanvas.getContext("2d").putImageData(canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height), 0, 0);
+            }
+        } catch(e) {
+            log("Unable to copy canvas content from", canvas, e);
+        }
+        canvas.removeAttribute(html2canvasCanvasCloneAttribute);
     });
 }
 
@@ -163,6 +804,13 @@ function removeScriptNodes(parent) {
 
 function isElementNode(node) {
     return node.nodeType === Node.ELEMENT_NODE;
+}
+
+function absoluteUrl(url) {
+    var link = document.createElement("a");
+    link.href = url;
+    link.href = link.href;
+    return link;
 }
 
 function DummyImageContainer(src) {
@@ -243,6 +891,31 @@ FontMetrics.prototype.getMetrics = function(family, size) {
     return this.data[family + "-" + size];
 };
 
+function FrameContainer(container, sameOrigin, options) {
+    this.image = null;
+    this.src = container;
+    var self = this;
+    var bounds = getBounds(container);
+    this.promise = (!sameOrigin ? this.proxyLoad(options.proxy, bounds, options) : new Promise(function(resolve) {
+        if (container.contentWindow.document.URL === "about:blank" || container.contentWindow.document.documentElement == null) {
+            container.contentWindow.onload = container.onload = function() {
+                resolve(container);
+            };
+        } else {
+            resolve(container);
+        }
+    })).then(function(container) {
+        return html2canvas(container.contentWindow.document.documentElement, {type: 'view', width: container.width, height: container.height, proxy: options.proxy, javascriptEnabled: options.javascriptEnabled, removeContainer: options.removeContainer, allowTaint: options.allowTaint, imageTimeout: options.imageTimeout / 2});
+    }).then(function(canvas) {
+        return self.image = canvas;
+    });
+}
+
+FrameContainer.prototype.proxyLoad = function(proxy, bounds, options) {
+    var container = this.src;
+    return loadUrlDocument(container.src, proxy, container.ownerDocument, bounds.width, bounds.height, options);
+};
+
 function GradientContainer(imageData) {
     this.src = imageData.value;
     this.colorStops = [];
@@ -263,6 +936,7 @@ function ImageContainer(src, cors) {
     this.src = src;
     this.image = new Image();
     var self = this;
+    this.tainted = null;
     this.promise = new Promise(function(resolve, reject) {
         self.image.onload = resolve;
         self.image.onerror = reject;
@@ -273,11 +947,6 @@ function ImageContainer(src, cors) {
         if (self.image.complete === true) {
             resolve(self.image);
         }
-    })['catch'](function() {
-        var dummy = new DummyImageContainer(src);
-        return dummy.promise.then(function(image) {
-            self.image = image;
-        });
     });
 }
 
@@ -285,12 +954,27 @@ function ImageLoader(options, support) {
     this.link = null;
     this.options = options;
     this.support = support;
-    this.origin = window.location.protocol + window.location.hostname;
+    this.origin = this.getOrigin(window.location.href);
 }
 
 ImageLoader.prototype.findImages = function(nodes) {
     var images = [];
-    nodes.filter(isImage).map(urlImage).forEach(this.addImage(images, this.loadImage), this);
+    nodes.reduce(function(imageNodes, container) {
+        switch(container.node.nodeName) {
+        case "IMG":
+            return imageNodes.concat([{
+                args: [container.node.src],
+                method: "url"
+            }]);
+        case "svg":
+        case "IFRAME":
+            return imageNodes.concat([{
+                args: [container.node],
+                method: container.node.nodeName
+            }]);
+        }
+        return imageNodes;
+    }, []).forEach(this.addImage(images, this.loadImage), this);
     return images;
 };
 
@@ -301,10 +985,12 @@ ImageLoader.prototype.findBackgroundImage = function(images, container) {
 
 ImageLoader.prototype.addImage = function(images, callback) {
     return function(newImage) {
-        if (!this.imageExists(images, newImage)) {
-            images.splice(0, 0, callback.apply(this, arguments));
-            log('Added image #' + (images.length), newImage);
-        }
+        newImage.args.forEach(function(image) {
+            if (!this.imageExists(images, image)) {
+                images.splice(0, 0, callback.call(this, newImage));
+                log('Added image #' + (images.length), typeof(image) === "string" ? image.substring(0, 100) : image);
+            }
+        }, this);
     };
 };
 
@@ -315,9 +1001,11 @@ ImageLoader.prototype.hasImageBackground = function(imageData) {
 ImageLoader.prototype.loadImage = function(imageData) {
     if (imageData.method === "url") {
         var src = imageData.args[0];
-        if (src.match(/data:image\/.*;base64,/i)) {
+        if (this.isSVG(src) && !this.support.svg && !this.options.allowTaint) {
+            return new SVGContainer(src);
+        } else if (src.match(/data:image\/.*;base64,/i)) {
             return new ImageContainer(src.replace(/url\(['"]{0,}|['"]{0,}\)$/ig, ''), false);
-        } else if (this.isSameOrigin(src) || this.options.allowTaint === true) {
+        } else if (this.isSameOrigin(src) || this.options.allowTaint === true || this.isSVG(src)) {
             return new ImageContainer(src, false);
         } else if (this.support.cors && !this.options.allowTaint && this.options.useCORS) {
             return new ImageContainer(src, true);
@@ -330,7 +1018,17 @@ ImageLoader.prototype.loadImage = function(imageData) {
         return new LinearGradientContainer(imageData);
     } else if (imageData.method === "gradient") {
         return new WebkitGradientContainer(imageData);
+    } else if (imageData.method === "svg") {
+        return new SVGNodeContainer(imageData.args[0], this.support.svg);
+    } else if (imageData.method === "IFRAME") {
+        return new FrameContainer(imageData.args[0], this.isSameOrigin(imageData.args[0].src), this.options);
+    } else {
+        return new DummyImageContainer(imageData);
     }
+};
+
+ImageLoader.prototype.isSVG = function(src) {
+    return src.substring(src.length - 3).toLowerCase() === "svg" || SVGContainer.prototype.isInline(src);
 };
 
 ImageLoader.prototype.imageExists = function(images, src) {
@@ -340,15 +1038,23 @@ ImageLoader.prototype.imageExists = function(images, src) {
 };
 
 ImageLoader.prototype.isSameOrigin = function(url) {
+    return (this.getOrigin(url) === this.origin);
+};
+
+ImageLoader.prototype.getOrigin = function(url) {
     var link = this.link || (this.link = document.createElement("a"));
     link.href = url;
     link.href = link.href; // IE9, LOL! - http://jsfiddle.net/niklasvh/2e48b/
-    var origin = link.protocol + link.hostname;
-    return (origin === this.origin);
+    return link.protocol + link.hostname + link.port;
 };
 
 ImageLoader.prototype.getPromise = function(container) {
-    return container.promise;
+    return this.timeout(container, this.options.imageTimeout)['catch'](function() {
+        var dummy = new DummyImageContainer(container.src);
+        return dummy.promise.then(function(image) {
+            container.image = image;
+        });
+    });
 };
 
 ImageLoader.prototype.get = function(src) {
@@ -362,54 +1068,96 @@ ImageLoader.prototype.fetch = function(nodes) {
     this.images = nodes.reduce(bind(this.findBackgroundImage, this), this.findImages(nodes));
     this.images.forEach(function(image, index) {
         image.promise.then(function() {
-            log("Succesfully loaded image #"+ (index+1));
-        }, function() {
-            log("Failed loading image #"+ (index+1));
+            log("Succesfully loaded image #"+ (index+1), image);
+        }, function(e) {
+            log("Failed loading image #"+ (index+1), image, e);
         });
     });
-    this.ready = Promise.all(this.images.map(this.getPromise));
+    this.ready = Promise.all(this.images.map(this.getPromise, this));
     log("Finished searching images");
     return this;
 };
 
-function isImage(container) {
-    return container.node.nodeName === "IMG";
-}
-
-function urlImage(container) {
-    return {
-        args: [container.node.src],
-        method: "url"
-    };
-}
+ImageLoader.prototype.timeout = function(container, timeout) {
+    var timer;
+    return Promise.race([container.promise, new Promise(function(res, reject) {
+        timer = setTimeout(function() {
+            log("Timed out loading image", container);
+            reject(container);
+        }, timeout);
+    })]).then(function(container) {
+        clearTimeout(timer);
+        return container;
+    });
+};
 
 function LinearGradientContainer(imageData) {
     GradientContainer.apply(this, arguments);
     this.type = this.TYPES.LINEAR;
 
-    imageData.args[0].split(" ").forEach(function(position) {
-        switch(position) {
-            case "left":
-                this.x0 = 0;
-                this.x1 = 1;
-                break;
-            case "top":
-                this.y0 = 0;
-                this.y1 = 1;
-                break;
-            case "right":
-                this.x0 = 1;
-                this.x1 = 0;
-                break;
-            case "bottom":
-                this.y0 = 1;
-                this.y1 = 0;
-                break;
-        }
+    var hasDirection = imageData.args[0].match(this.stepRegExp) === null;
+
+    if (hasDirection) {
+        imageData.args[0].split(" ").reverse().forEach(function(position) {
+            switch(position) {
+                case "left":
+                    this.x0 = 0;
+                    this.x1 = 1;
+                    break;
+                case "top":
+                    this.y0 = 0;
+                    this.y1 = 1;
+                    break;
+                case "right":
+                    this.x0 = 1;
+                    this.x1 = 0;
+                    break;
+                case "bottom":
+                    this.y0 = 1;
+                    this.y1 = 0;
+                    break;
+                case "to":
+                    var y0 = this.y0;
+                    var x0 = this.x0;
+                    this.y0 = this.y1;
+                    this.x0 = this.x1;
+                    this.x1 = x0;
+                    this.y1 = y0;
+                    break;
+            }
+        }, this);
+    } else {
+        this.y0 = 0;
+        this.y1 = 1;
+    }
+
+    this.colorStops = imageData.args.slice(hasDirection ? 1 : 0).map(function(colorStop) {
+        var colorStopMatch = colorStop.match(this.stepRegExp);
+        return {
+            color: colorStopMatch[1],
+            stop: colorStopMatch[3] === "%" ? colorStopMatch[2] / 100 : null
+        };
     }, this);
 
-    imageData.args.slice(1).forEach(function(colorStop) {
-       // console.log(colorStop, colorStop.match(this.stepRegExp));
+    if (this.colorStops[0].stop === null) {
+        this.colorStops[0].stop = 0;
+    }
+
+    if (this.colorStops[this.colorStops.length - 1].stop === null) {
+        this.colorStops[this.colorStops.length - 1].stop = 1;
+    }
+
+    this.colorStops.forEach(function(colorStop, index) {
+        if (colorStop.stop === null) {
+            this.colorStops.slice(index).some(function(find, count) {
+                if (find.stop !== null) {
+                    colorStop.stop = ((find.stop - this.colorStops[index - 1].stop) / (count + 1)) + this.colorStops[index - 1].stop;
+                    return true;
+                } else {
+                    return false;
+                }
+            }, this);
+        }
     }, this);
 }
 
@@ -428,6 +1176,9 @@ function NodeContainer(node, parent) {
     this.parent = parent;
     this.stack = null;
     this.bounds = null;
+    this.borders = null;
+    this.clip = [];
+    this.backgroundClip = [];
     this.offsetBounds = null;
     this.visible = null;
     this.computedStyles = null;
@@ -435,7 +1186,25 @@ function NodeContainer(node, parent) {
     this.backgroundImages = null;
     this.transformData = null;
     this.transformMatrix = null;
+    this.isPseudoElement = false;
+    this.opacity = null;
 }
+
+NodeContainer.prototype.cloneTo = function(stack) {
+    stack.visible = this.visible;
+    stack.borders = this.borders;
+    stack.bounds = this.bounds;
+    stack.clip = this.clip;
+    stack.backgroundClip = this.backgroundClip;
+    stack.computedStyles = this.computedStyles;
+    stack.styles = this.styles;
+    stack.backgroundImages = this.backgroundImages;
+    stack.opacity = this.opacity;
+};
+
+NodeContainer.prototype.getOpacity = function() {
+    return this.opacity === null ? (this.opacity = this.cssFloat('opacity')) : this.opacity;
+};
 
 NodeContainer.prototype.assignStack = function(stack) {
     this.stack = stack;
@@ -443,12 +1212,17 @@ NodeContainer.prototype.assignStack = function(stack) {
 };
 
 NodeContainer.prototype.isElementVisible = function() {
-    return this.node.nodeType === Node.TEXT_NODE ? this.parent.visible : (this.css('display') !== "none" && this.css('visibility') !== "hidden" && !this.node.hasAttribute("data-html2canvas-ignore"));
+    return this.node.nodeType === Node.TEXT_NODE ? this.parent.visible : (
+        this.css('display') !== "none" &&
+        this.css('visibility') !== "hidden" &&
+        !this.node.hasAttribute("data-html2canvas-ignore") &&
+        (this.node.nodeName !== "INPUT" || this.node.getAttribute("type") !== "hidden")
+    );
 };
 
 NodeContainer.prototype.css = function(attribute) {
     if (!this.computedStyles) {
-        this.computedStyles = this.computedStyle(null);
+        this.computedStyles = this.isPseudoElement ? this.parent.computedStyle(this.before ? ":before" : ":after") : this.computedStyle(null);
     }
 
     return this.styles[attribute] || (this.styles[attribute] = this.computedStyles[attribute]);
@@ -483,14 +1257,27 @@ NodeContainer.prototype.cssFloat = function(attribute) {
 NodeContainer.prototype.fontWeight = function() {
     var weight = this.css("fontWeight");
     switch(parseInt(weight, 10)){
-        case 401:
-            weight = "bold";
-            break;
-        case 400:
-            weight = "normal";
-            break;
+    case 401:
+        weight = "bold";
+        break;
+    case 400:
+        weight = "normal";
+        break;
     }
     return weight;
+};
+
+NodeContainer.prototype.parseClip = function() {
+    var matches = this.css('clip').match(this.CLIP);
+    if (matches) {
+        return {
+            top: parseInt(matches[1], 10),
+            right: parseInt(matches[2], 10),
+            bottom: parseInt(matches[3], 10),
+            left: parseInt(matches[4], 10)
+        };
+    }
+    return null;
 };
 
 NodeContainer.prototype.parseBackgroundImages = function() {
@@ -576,8 +1363,8 @@ NodeContainer.prototype.parseTextShadows = function() {
             var s = shadows[i].match(this.TEXT_SHADOW_VALUES);
             results.push({
                 color: s[0],
-                offsetX: s[1] ? s[1].replace('px', '') : 0,
-                offsetY: s[2] ? s[2].replace('px', '') : 0,
+                offsetX: s[1] ? parseFloat(s[1].replace('px', '')) : 0,
+                offsetY: s[2] ? parseFloat(s[2].replace('px', '')) : 0,
                 blur: s[3] ? s[3].replace('px', '') : 0
             });
         }
@@ -632,6 +1419,7 @@ NodeContainer.prototype.getValue = function() {
 NodeContainer.prototype.MATRIX_PROPERTY = /(matrix)\((.+)\)/;
 NodeContainer.prototype.TEXT_SHADOW_PROPERTY = /((rgba|rgb)\([^\)]+\)(\s-?\d+px){0,})/g;
 NodeContainer.prototype.TEXT_SHADOW_VALUES = /(-?\d+px)|(#.+)|(rgb\(.+\))|(rgba\(.+\))/g;
+NodeContainer.prototype.CLIP = /^rect\((\d+)px,? (\d+)px,? (\d+)px,? (\d+)px\)$/;
 
 function selectionValue(node) {
     var option = node.options[node.selectedIndex || 0];
@@ -684,55 +1472,54 @@ function parseBackgrounds(backgroundImage) {
             return;
         }
         switch(c) {
-            case '"':
-                if(!quote) {
-                    quote = c;
-                }
-                else if(quote === c) {
-                    quote = null;
-                }
+        case '"':
+            if(!quote) {
+                quote = c;
+            } else if(quote === c) {
+                quote = null;
+            }
+            break;
+        case '(':
+            if(quote) {
                 break;
-            case '(':
-                if(quote) {
-                    break;
-                } else if(mode === 0) {
-                    mode = 1;
+            } else if(mode === 0) {
+                mode = 1;
+                block += c;
+                return;
+            } else {
+                numParen++;
+            }
+            break;
+        case ')':
+            if (quote) {
+                break;
+            } else if(mode === 1) {
+                if(numParen === 0) {
+                    mode = 0;
                     block += c;
-                    return;
-                } else {
-                    numParen++;
-                }
-                break;
-            case ')':
-                if (quote) {
-                    break;
-                } else if(mode === 1) {
-                    if(numParen === 0) {
-                        mode = 0;
-                        block += c;
-                        appendResult();
-                        return;
-                    } else {
-                        numParen--;
-                    }
-                }
-                break;
-
-            case ',':
-                if (quote) {
-                    break;
-                } else if(mode === 0) {
                     appendResult();
                     return;
-                } else if (mode === 1) {
-                    if (numParen === 0 && !method.match(/^url$/i)) {
-                        args.push(definition);
-                        definition = '';
-                        block += c;
-                        return;
-                    }
+                } else {
+                    numParen--;
                 }
+            }
+            break;
+
+        case ',':
+            if (quote) {
                 break;
+            } else if(mode === 0) {
+                appendResult();
+                return;
+            } else if (mode === 1) {
+                if (numParen === 0 && !method.match(/^url$/i)) {
+                    args.push(definition);
+                    definition = '';
+                    block += c;
+                    return;
+                }
+            }
+            break;
         }
 
         block += c;
@@ -758,15 +1545,14 @@ function asFloat(str) {
 function getBounds(node) {
     if (node.getBoundingClientRect) {
         var clientRect = node.getBoundingClientRect();
-        var isBody = node.nodeName === "BODY";
-        var width = isBody ? node.scrollWidth : node.offsetWidth;
+        var width = node.offsetWidth == null ? clientRect.width : node.offsetWidth;
         return {
             top: clientRect.top,
             bottom: clientRect.bottom || (clientRect.top + clientRect.height),
             right: clientRect.left + width,
             left: clientRect.left,
             width:  width,
-            height: isBody ? node.scrollHeight : node.offsetHeight
+            height: node.offsetHeight == null ? clientRect.height : node.offsetHeight
         };
     }
     return {};
@@ -794,20 +1580,29 @@ function NodeParser(element, renderer, support, imageLoader, options) {
     this.renderQueue = [];
     this.stack = new StackingContext(true, 1, element.ownerDocument, null);
     var parent = new NodeContainer(element, null);
+    if (element === element.ownerDocument.documentElement) {
+        // http://www.w3.org/TR/css3-background/#special-backgrounds
+        var canvasBackground = new NodeContainer(this.renderer.isTransparent(parent.css('backgroundColor')) ? element.ownerDocument.body : element.ownerDocument.documentElement, null);
+        renderer.rectangle(0, 0, renderer.width, renderer.height, canvasBackground.css('backgroundColor'));
+    }
     parent.visibile = parent.isElementVisible();
     this.createPseudoHideStyles(element.ownerDocument);
+    this.disableAnimations(element.ownerDocument);
     this.nodes = flatten([parent].concat(this.getChildren(parent)).filter(function(container) {
         return container.visible = container.isElementVisible();
     }).map(this.getPseudoElements, this));
     this.fontMetrics = new FontMetrics();
-    log("Fetched nodes");
+    log("Fetched nodes, total:", this.nodes.length);
+    log("Calculate overflow clips");
+    this.calculateOverflowClips();
+    log("Start fetching images");
     this.images = imageLoader.fetch(this.nodes.filter(isElement));
-    log("Creating stacking contexts");
-    this.createStackingContexts();
-    log("Sorting stacking contexts");
-    this.sortStackingContexts(this.stack);
     this.ready = this.images.ready.then(bind(function() {
         log("Images loaded, starting parsing");
+        log("Creating stacking contexts");
+        this.createStackingContexts();
+        log("Sorting stacking contexts");
+        this.sortStackingContexts(this.stack);
         this.parse(this.stack);
         log("Render queue created with " + this.renderQueue.length + " items");
         return new Promise(bind(function(resolve) {
@@ -816,12 +1611,49 @@ function NodeParser(element, renderer, support, imageLoader, options) {
                 resolve();
             } else if (typeof(options.async) === "function") {
                 options.async.call(this, this.renderQueue, resolve);
-            } else {
+            } else if (this.renderQueue.length > 0){
                 this.renderIndex = 0;
                 this.asyncRenderer(this.renderQueue, resolve);
+            } else {
+                resolve();
             }
         }, this));
     }, this));
+}
+
+NodeParser.prototype.calculateOverflowClips = function() {
+    this.nodes.forEach(function(container) {
+        if (isElement(container)) {
+            if (isPseudoElement(container)) {
+                container.appendToDOM();
+            }
+            container.borders = this.parseBorders(container);
+            var clip = (container.css('overflow') === "hidden") ? [container.borders.clip] : [];
+            var cssClip = container.parseClip();
+            if (cssClip && ["absolute", "fixed"].indexOf(container.css('position')) !== -1) {
+                clip.push([["rect",
+                        container.bounds.left + cssClip.left,
+                        container.bounds.top + cssClip.top,
+                        cssClip.right - cssClip.left,
+                        cssClip.bottom - cssClip.top
+                ]]);
+            }
+            container.clip = hasParentClip(container) ? container.parent.clip.concat(clip) : clip;
+            container.backgroundClip = (container.css('overflow') !== "hidden") ? container.clip.concat([container.borders.clip]) : container.clip;
+            if (isPseudoElement(container)) {
+                container.cleanDOM();
+            }
+        } else if (isTextNode(container)) {
+            container.clip = hasParentClip(container) ? container.parent.clip : [];
+        }
+        if (!isPseudoElement(container)) {
+            container.bounds = null;
+        }
+    }, this);
+};
+
+function hasParentClip(container) {
+    return container.parent && container.parent.clip.length;
 }
 
 NodeParser.prototype.asyncRenderer = function(queue, resolve, asyncTimer) {
@@ -839,9 +1671,18 @@ NodeParser.prototype.asyncRenderer = function(queue, resolve, asyncTimer) {
 };
 
 NodeParser.prototype.createPseudoHideStyles = function(document) {
+    this.createStyles(document, '.' + PseudoElementContainer.prototype.PSEUDO_HIDE_ELEMENT_CLASS_BEFORE + ':before { content: "" !important; display: none !important; }' +
+        '.' + PseudoElementContainer.prototype.PSEUDO_HIDE_ELEMENT_CLASS_AFTER + ':after { content: "" !important; display: none !important; }');
+};
+
+NodeParser.prototype.disableAnimations = function(document) {
+    this.createStyles(document, '* { -webkit-animation: none !important; -moz-animation: none !important; -o-animation: none !important; animation: none !important; ' +
+        '-webkit-transition: none !important; -moz-transition: none !important; -o-transition: none !important; transition: none !important;}');
+};
+
+NodeParser.prototype.createStyles = function(document, styles) {
     var hidePseudoElements = document.createElement('style');
-    hidePseudoElements.innerHTML = '.' + this.pseudoHideClass + ':before { content: "" !important; display: none !important; }' +
-        '.' + this.pseudoHideClass + ':after { content: "" !important; display: none !important; }';
+    hidePseudoElements.innerHTML = styles;
     document.body.appendChild(hidePseudoElements);
 };
 
@@ -852,17 +1693,11 @@ NodeParser.prototype.getPseudoElements = function(container) {
         var after = this.getPseudoElement(container, ":after");
 
         if (before) {
-            container.node.insertBefore(before[0].node, container.node.firstChild);
             nodes.push(before);
         }
 
         if (after) {
-            container.node.appendChild(after[0].node);
             nodes.push(after);
-        }
-
-        if (before || after) {
-            container.node.className += " " + this.pseudoHideClass;
         }
     }
     return flatten(nodes);
@@ -883,15 +1718,14 @@ NodeParser.prototype.getPseudoElement = function(container, type) {
     var content = stripQuotes(style.content);
     var isImage = content.substr(0, 3) === 'url';
     var pseudoNode = document.createElement(isImage ? 'img' : 'html2canvaspseudoelement');
-    var pseudoContainer = new NodeContainer(pseudoNode, container);
-
+    var pseudoContainer = new PseudoElementContainer(pseudoNode, container, type);
 
     for (var i = style.length-1; i >= 0; i--) {
         var property = toCamelCase(style.item(i));
         pseudoNode.style[property] = style[property];
     }
 
-    pseudoNode.className = this.pseudoHideClass;
+    pseudoNode.className = PseudoElementContainer.prototype.PSEUDO_HIDE_ELEMENT_CLASS_BEFORE + " " + PseudoElementContainer.prototype.PSEUDO_HIDE_ELEMENT_CLASS_AFTER;
 
     if (isImage) {
         pseudoNode.src = parseBackgrounds(content)[0].args[0];
@@ -912,8 +1746,8 @@ NodeParser.prototype.getChildren = function(parentContainer) {
 };
 
 NodeParser.prototype.newStackingContext = function(container, hasOwnStacking) {
-    var stack = new StackingContext(hasOwnStacking, container.cssFloat('opacity'), container.node, container.parent);
-    stack.visible = container.visible;
+    var stack = new StackingContext(hasOwnStacking, container.getOpacity(), container.node, container.parent);
+    container.cloneTo(stack);
     var parentStack = hasOwnStacking ? stack.getParentStack(this) : stack.parent.stack;
     parentStack.contexts.push(stack);
     container.stack = stack;
@@ -940,7 +1774,7 @@ NodeParser.prototype.isRootElement = function(container) {
 };
 
 NodeParser.prototype.sortStackingContexts = function(stack) {
-    stack.contexts.sort(zIndexSort);
+    stack.contexts.sort(zIndexSort(stack.contexts.slice(0)));
     stack.contexts.forEach(this.sortStackingContexts, this);
 };
 
@@ -1010,7 +1844,13 @@ NodeParser.prototype.paint = function(container) {
         if (container instanceof ClearTransform) {
             this.renderer.ctx.restore();
         } else if (isTextNode(container)) {
+            if (isPseudoElement(container.parent)) {
+                container.parent.appendToDOM();
+            }
             this.paintText(container);
+            if (isPseudoElement(container.parent)) {
+                container.parent.cleanDOM();
+            }
         } else {
             this.paintNode(container);
         }
@@ -1027,28 +1867,45 @@ NodeParser.prototype.paintNode = function(container) {
             this.renderer.setTransform(container.parseTransform());
         }
     }
-    var bounds = container.parseBounds();
-    var borderData = this.parseBorders(container);
-    this.renderer.clip(borderData.clip, function() {
-        this.renderer.renderBackground(container, bounds, borderData.borders.map(getWidth));
-    }, this);
-    this.renderer.renderBorders(borderData.borders);
 
-    switch(container.node.nodeName) {
+    var bounds = container.parseBounds();
+    this.renderer.clip(container.backgroundClip, function() {
+        this.renderer.renderBackground(container, bounds, container.borders.borders.map(getWidth));
+    }, this);
+
+    this.renderer.clip(container.clip, function() {
+        this.renderer.renderBorders(container.borders.borders);
+    }, this);
+
+    this.renderer.clip(container.backgroundClip, function() {
+        switch (container.node.nodeName) {
+        case "svg":
+        case "IFRAME":
+            var imgContainer = this.images.get(container.node);
+            if (imgContainer) {
+                this.renderer.renderImage(container, bounds, container.borders, imgContainer);
+            } else {
+                log("Error loading <" + container.node.nodeName + ">", container.node);
+            }
+            break;
         case "IMG":
             var imageContainer = this.images.get(container.node.src);
             if (imageContainer) {
-                this.renderer.renderImage(container, bounds, borderData, imageContainer.image);
+                this.renderer.renderImage(container, bounds, container.borders, imageContainer);
             } else {
                 log("Error loading <img>", container.node.src);
             }
+            break;
+        case "CANVAS":
+            this.renderer.renderImage(container, bounds, container.borders, {image: container.node});
             break;
         case "SELECT":
         case "INPUT":
         case "TEXTAREA":
             this.paintFormValue(container);
             break;
-    }
+        }
+    }, this);
 };
 
 NodeParser.prototype.paintFormValue = function(container) {
@@ -1069,7 +1926,7 @@ NodeParser.prototype.paintFormValue = function(container) {
             }
         });
         var bounds = container.parseBounds();
-        wrapper.style.position = "absolute";
+        wrapper.style.position = "fixed";
         wrapper.style.left = bounds.left + "px";
         wrapper.style.top = bounds.top + "px";
         wrapper.textContent = container.getValue();
@@ -1081,7 +1938,11 @@ NodeParser.prototype.paintFormValue = function(container) {
 
 NodeParser.prototype.paintText = function(container) {
     container.applyTextTransform();
-    var textList = container.node.data.split(!this.options.letterRendering || noLetterSpacing(container) ? /(\b| )/ : "");
+    var characters = window.html2canvas.punycode.ucs2.decode(container.node.data);
+    var textList = (!this.options.letterRendering || noLetterSpacing(container)) && !hasUnicode(container.node.data) ? getWords(characters) : characters.map(function(character) {
+        return window.html2canvas.punycode.ucs2.encode([character]);
+    });
+
     var weight = container.parent.fontWeight();
     var size = container.parent.css('fontSize');
     var family = container.parent.css('fontFamily');
@@ -1095,33 +1956,35 @@ NodeParser.prototype.paintText = function(container) {
         this.renderer.clearShadow();
     }
 
-    textList.map(this.parseTextBounds(container), this).forEach(function(bounds, index) {
-        if (bounds) {
-            this.renderer.text(textList[index], bounds.left, bounds.bottom);
-            this.renderTextDecoration(container.parent, bounds, this.fontMetrics.getMetrics(family, size));
-        }
+    this.renderer.clip(container.parent.clip, function() {
+        textList.map(this.parseTextBounds(container), this).forEach(function(bounds, index) {
+            if (bounds) {
+                this.renderer.text(textList[index], bounds.left, bounds.bottom);
+                this.renderTextDecoration(container.parent, bounds, this.fontMetrics.getMetrics(family, size));
+            }
+        }, this);
     }, this);
 };
 
 NodeParser.prototype.renderTextDecoration = function(container, bounds, metrics) {
     switch(container.css("textDecoration").split(" ")[0]) {
-        case "underline":
-            // Draws a line at the baseline of the font
-            // TODO As some browsers display the line as more than 1px if the font-size is big, need to take that into account both in position and size
-            this.renderer.rectangle(bounds.left, Math.round(bounds.top + metrics.baseline + metrics.lineWidth), bounds.width, 1, container.css("color"));
-            break;
-        case "overline":
-            this.renderer.rectangle(bounds.left, Math.round(bounds.top), bounds.width, 1, container.css("color"));
-            break;
-        case "line-through":
-            // TODO try and find exact position for line-through
-            this.renderer.rectangle(bounds.left, Math.ceil(bounds.top + metrics.middle + metrics.lineWidth), bounds.width, 1, container.css("color"));
-            break;
+    case "underline":
+        // Draws a line at the baseline of the font
+        // TODO As some browsers display the line as more than 1px if the font-size is big, need to take that into account both in position and size
+        this.renderer.rectangle(bounds.left, Math.round(bounds.top + metrics.baseline + metrics.lineWidth), bounds.width, 1, container.css("color"));
+        break;
+    case "overline":
+        this.renderer.rectangle(bounds.left, Math.round(bounds.top), bounds.width, 1, container.css("color"));
+        break;
+    case "line-through":
+        // TODO try and find exact position for line-through
+        this.renderer.rectangle(bounds.left, Math.ceil(bounds.top + metrics.middle + metrics.lineWidth), bounds.width, 1, container.css("color"));
+        break;
     }
 };
 
 NodeParser.prototype.parseBorders = function(container) {
-    var nodeBounds = container.bounds;
+    var nodeBounds = container.parseBounds();
     var radius = getBorderRadiusData(container);
     var borders = ["Top", "Right", "Bottom", "Left"].map(function(side) {
         return {
@@ -1142,53 +2005,53 @@ NodeParser.prototype.parseBorders = function(container) {
                 var bh = nodeBounds.height - (borders[2].width);
 
                 switch(borderSide) {
-                    case 0:
-                        // top border
-                        bh = borders[0].width;
-                        border.args = drawSide({
-                                c1: [bx, by],
-                                c2: [bx + bw, by],
-                                c3: [bx + bw - borders[1].width, by + bh],
-                                c4: [bx + borders[3].width, by + bh]
-                            }, radius[0], radius[1],
-                            borderPoints.topLeftOuter, borderPoints.topLeftInner, borderPoints.topRightOuter, borderPoints.topRightInner);
-                        break;
-                    case 1:
-                        // right border
-                        bx = nodeBounds.left + nodeBounds.width - (borders[1].width);
-                        bw = borders[1].width;
+                case 0:
+                    // top border
+                    bh = borders[0].width;
+                    border.args = drawSide({
+                        c1: [bx, by],
+                        c2: [bx + bw, by],
+                        c3: [bx + bw - borders[1].width, by + bh],
+                        c4: [bx + borders[3].width, by + bh]
+                    }, radius[0], radius[1],
+                    borderPoints.topLeftOuter, borderPoints.topLeftInner, borderPoints.topRightOuter, borderPoints.topRightInner);
+                    break;
+                case 1:
+                    // right border
+                    bx = nodeBounds.left + nodeBounds.width - (borders[1].width);
+                    bw = borders[1].width;
 
-                        border.args = drawSide({
-                                c1: [bx + bw, by],
-                                c2: [bx + bw, by + bh + borders[2].width],
-                                c3: [bx, by + bh],
-                                c4: [bx, by + borders[0].width]
-                            }, radius[1], radius[2],
-                            borderPoints.topRightOuter, borderPoints.topRightInner, borderPoints.bottomRightOuter, borderPoints.bottomRightInner);
-                        break;
-                    case 2:
-                        // bottom border
-                        by = (by + nodeBounds.height) - (borders[2].width);
-                        bh = borders[2].width;
-                        border.args = drawSide({
-                                c1: [bx + bw, by + bh],
-                                c2: [bx, by + bh],
-                                c3: [bx + borders[3].width, by],
-                                c4: [bx + bw - borders[3].width, by]
-                            }, radius[2], radius[3],
-                            borderPoints.bottomRightOuter, borderPoints.bottomRightInner, borderPoints.bottomLeftOuter, borderPoints.bottomLeftInner);
-                        break;
-                    case 3:
-                        // left border
-                        bw = borders[3].width;
-                        border.args = drawSide({
-                                c1: [bx, by + bh + borders[2].width],
-                                c2: [bx, by],
-                                c3: [bx + bw, by + borders[0].width],
-                                c4: [bx + bw, by + bh]
-                            }, radius[3], radius[0],
-                            borderPoints.bottomLeftOuter, borderPoints.bottomLeftInner, borderPoints.topLeftOuter, borderPoints.topLeftInner);
-                        break;
+                    border.args = drawSide({
+                        c1: [bx + bw, by],
+                        c2: [bx + bw, by + bh + borders[2].width],
+                        c3: [bx, by + bh],
+                        c4: [bx, by + borders[0].width]
+                    }, radius[1], radius[2],
+                    borderPoints.topRightOuter, borderPoints.topRightInner, borderPoints.bottomRightOuter, borderPoints.bottomRightInner);
+                    break;
+                case 2:
+                    // bottom border
+                    by = (by + nodeBounds.height) - (borders[2].width);
+                    bh = borders[2].width;
+                    border.args = drawSide({
+                        c1: [bx + bw, by + bh],
+                        c2: [bx, by + bh],
+                        c3: [bx + borders[3].width, by],
+                        c4: [bx + bw - borders[3].width, by]
+                    }, radius[2], radius[3],
+                    borderPoints.bottomRightOuter, borderPoints.bottomRightInner, borderPoints.bottomLeftOuter, borderPoints.bottomLeftInner);
+                    break;
+                case 3:
+                    // left border
+                    bw = borders[3].width;
+                    border.args = drawSide({
+                        c1: [bx, by + bh + borders[2].width],
+                        c2: [bx, by],
+                        c3: [bx + bw, by + borders[0].width],
+                        c4: [bx + bw, by + bh]
+                    }, radius[3], radius[0],
+                    borderPoints.bottomLeftOuter, borderPoints.bottomLeftInner, borderPoints.topLeftOuter, borderPoints.topLeftInner);
+                    break;
                 }
             }
             return border;
@@ -1201,26 +2064,24 @@ NodeParser.prototype.parseBackgroundClip = function(container, borderPoints, bor
         borderArgs = [];
 
     switch(backgroundClip) {
-        case "content-box":
-        case "padding-box":
-            parseCorner(borderArgs, radius[0], radius[1], borderPoints.topLeftInner, borderPoints.topRightInner, bounds.left + borders[3].width, bounds.top + borders[0].width);
-            parseCorner(borderArgs, radius[1], radius[2], borderPoints.topRightInner, borderPoints.bottomRightInner, bounds.left + bounds.width - borders[1].width, bounds.top + borders[0].width);
-            parseCorner(borderArgs, radius[2], radius[3], borderPoints.bottomRightInner, borderPoints.bottomLeftInner, bounds.left + bounds.width - borders[1].width, bounds.top + bounds.height - borders[2].width);
-            parseCorner(borderArgs, radius[3], radius[0], borderPoints.bottomLeftInner, borderPoints.topLeftInner, bounds.left + borders[3].width, bounds.top + bounds.height - borders[2].width);
-            break;
+    case "content-box":
+    case "padding-box":
+        parseCorner(borderArgs, radius[0], radius[1], borderPoints.topLeftInner, borderPoints.topRightInner, bounds.left + borders[3].width, bounds.top + borders[0].width);
+        parseCorner(borderArgs, radius[1], radius[2], borderPoints.topRightInner, borderPoints.bottomRightInner, bounds.left + bounds.width - borders[1].width, bounds.top + borders[0].width);
+        parseCorner(borderArgs, radius[2], radius[3], borderPoints.bottomRightInner, borderPoints.bottomLeftInner, bounds.left + bounds.width - borders[1].width, bounds.top + bounds.height - borders[2].width);
+        parseCorner(borderArgs, radius[3], radius[0], borderPoints.bottomLeftInner, borderPoints.topLeftInner, bounds.left + borders[3].width, bounds.top + bounds.height - borders[2].width);
+        break;
 
-        default:
-            parseCorner(borderArgs, radius[0], radius[1], borderPoints.topLeftOuter, borderPoints.topRightOuter, bounds.left, bounds.top);
-            parseCorner(borderArgs, radius[1], radius[2], borderPoints.topRightOuter, borderPoints.bottomRightOuter, bounds.left + bounds.width, bounds.top);
-            parseCorner(borderArgs, radius[2], radius[3], borderPoints.bottomRightOuter, borderPoints.bottomLeftOuter, bounds.left + bounds.width, bounds.top + bounds.height);
-            parseCorner(borderArgs, radius[3], radius[0], borderPoints.bottomLeftOuter, borderPoints.topLeftOuter, bounds.left, bounds.top + bounds.height);
-            break;
+    default:
+        parseCorner(borderArgs, radius[0], radius[1], borderPoints.topLeftOuter, borderPoints.topRightOuter, bounds.left, bounds.top);
+        parseCorner(borderArgs, radius[1], radius[2], borderPoints.topRightOuter, borderPoints.bottomRightOuter, bounds.left + bounds.width, bounds.top);
+        parseCorner(borderArgs, radius[2], radius[3], borderPoints.bottomRightOuter, borderPoints.bottomLeftOuter, bounds.left + bounds.width, bounds.top + bounds.height);
+        parseCorner(borderArgs, radius[3], radius[0], borderPoints.bottomLeftOuter, borderPoints.topLeftOuter, bounds.left, bounds.top + bounds.height);
+        break;
     }
 
     return borderArgs;
 };
-
-NodeParser.prototype.pseudoHideClass = "___html2canvas___pseudoelement";
 
 function getCurvePoints(x, y, r1, r2) {
     var kappa = 4 * ((Math.sqrt(2) - 1) / 3);
@@ -1262,9 +2123,9 @@ function calculateCurvePoints(bounds, borderRadius, borders) {
         topRightOuter: getCurvePoints(x + topWidth, y, trh, trv).topRight.subdivide(0.5),
         topRightInner: getCurvePoints(x + Math.min(topWidth, width + borders[3].width), y + borders[0].width, (topWidth > width + borders[3].width) ? 0 :trh - borders[3].width, trv - borders[0].width).topRight.subdivide(0.5),
         bottomRightOuter: getCurvePoints(x + bottomWidth, y + rightHeight, brh, brv).bottomRight.subdivide(0.5),
-        bottomRightInner: getCurvePoints(x + Math.min(bottomWidth, width + borders[3].width), y + Math.min(rightHeight, height + borders[0].width), Math.max(0, brh - borders[1].width), Math.max(0, brv - borders[2].width)).bottomRight.subdivide(0.5),
+        bottomRightInner: getCurvePoints(x + Math.min(bottomWidth, width - borders[3].width), y + Math.min(rightHeight, height + borders[0].width), Math.max(0, brh - borders[1].width),  brv - borders[2].width).bottomRight.subdivide(0.5),
         bottomLeftOuter: getCurvePoints(x, y + leftHeight, blh, blv).bottomLeft.subdivide(0.5),
-        bottomLeftInner: getCurvePoints(x + borders[3].width, y + leftHeight, Math.max(0, blh - borders[3].width), Math.max(0, blv - borders[2].width)).bottomLeft.subdivide(0.5)
+        bottomLeftInner: getCurvePoints(x + borders[3].width, y + leftHeight, Math.max(0, blh - borders[3].width), blv - borders[2].width).bottomLeft.subdivide(0.5)
     };
 }
 
@@ -1388,7 +2249,7 @@ function renderableNode(node) {
 
 function isPositionedForStacking(container) {
     var position = container.css("position");
-    var zIndex = (position === "absolute" || position === "relative") ? container.css("zIndex") : "auto";
+    var zIndex = (["absolute", "relative", "fixed"].indexOf(position) !== -1) ? container.css("zIndex") : "auto";
     return zIndex !== "auto";
 }
 
@@ -1415,16 +2276,22 @@ function isElement(container) {
     return container.node.nodeType === Node.ELEMENT_NODE;
 }
 
+function isPseudoElement(container) {
+    return container.isPseudoElement === true;
+}
+
 function isTextNode(container) {
     return container.node.nodeType === Node.TEXT_NODE;
 }
 
-function zIndexSort(a, b) {
-    return a.cssInt("zIndex") - b.cssInt("zIndex");
+function zIndexSort(contexts) {
+    return function(a, b) {
+        return (a.cssInt("zIndex") + (contexts.indexOf(a) / contexts.length)) - (b.cssInt("zIndex") + (contexts.indexOf(b) / contexts.length));
+    };
 }
 
 function hasOpacity(container) {
-    return container.css("opacity") < 1;
+    return container.getOpacity() < 1;
 }
 
 function bind(callback, context) {
@@ -1454,68 +2321,174 @@ function stripQuotes(content) {
     return (first === content.substr(content.length - 1) && first.match(/'|"/)) ? content.substr(1, content.length - 2) : content;
 }
 
+function getWords(characters) {
+    var words = [], i = 0, onWordBoundary = false, word;
+    while(characters.length) {
+        if (isWordBoundary(characters[i]) === onWordBoundary) {
+            word = characters.splice(0, i);
+            if (word.length) {
+                words.push(window.html2canvas.punycode.ucs2.encode(word));
+            }
+            onWordBoundary =! onWordBoundary;
+            i = 0;
+        } else {
+            i++;
+        }
+
+        if (i >= characters.length) {
+            word = characters.splice(0, i);
+            if (word.length) {
+                words.push(window.html2canvas.punycode.ucs2.encode(word));
+            }
+        }
+    }
+    return words;
+}
+
+function isWordBoundary(characterCode) {
+    return [
+        32, // <space>
+        13, // \r
+        10, // \n
+        9, // \t
+        45 // -
+    ].indexOf(characterCode) !== -1;
+}
+
+function hasUnicode(string) {
+    return (/[^\u0000-\u00ff]/).test(string);
+}
+
+function Proxy(src, proxyUrl, document) {
+    var callback = createCallback(supportsCORS);
+    var url = createProxyUrl(proxyUrl, src, callback);
+
+    return supportsCORS ? XHR(url) : (jsonp(document, url, callback).then(function(response) {
+        return decode64(response.content);
+    }));
+}
+var proxyCount = 0;
+
+var supportsCORS = ('withCredentials' in new XMLHttpRequest());
+var supportsCORSImage = ('crossOrigin' in new Image());
+
+function ProxyURL(src, proxyUrl, document) {
+    var callback = createCallback(supportsCORSImage);
+    var url = createProxyUrl(proxyUrl, src, callback);
+    return (supportsCORSImage ? Promise.resolve(url) : jsonp(document, url, callback).then(function(response) {
+        return "data:" + response.type + ";base64," + response.content;
+    }));
+}
+
+function jsonp(document, url, callback) {
+    return new Promise(function(resolve, reject) {
+        var s = document.createElement("script");
+        var cleanup = function() {
+            delete window.html2canvas.proxy[callback];
+            document.body.removeChild(s);
+        };
+        window.html2canvas.proxy[callback] = function(response) {
+            cleanup();
+            resolve(response);
+        };
+        s.src = url;
+        s.onerror = function(e) {
+            cleanup();
+            reject(e);
+        };
+        document.body.appendChild(s);
+    });
+}
+
+function createCallback(useCORS) {
+    return !useCORS ? "html2canvas_" + Date.now() + "_" + (++proxyCount) + "_" + Math.round(Math.random() * 100000) : "";
+}
+
+function createProxyUrl(proxyUrl, src, callback) {
+    return proxyUrl + "?url=" + encodeURIComponent(src) + (callback.length ? "&callback=html2canvas.proxy." + callback : "");
+}
+
 function ProxyImageContainer(src, proxy) {
-    var callbackName = "html2canvas_" + proxyImageCount++;
     var script = document.createElement("script");
     var link = document.createElement("a");
     link.href = src;
     src = link.href;
-    var requestUrl = proxy + ((proxy.indexOf("?") > -1) ? "&" : "?" ) + 'url=' + encodeURIComponent(src) + '&callback=' + callbackName;
     this.src = src;
     this.image = new Image();
     var self = this;
     this.promise = new Promise(function(resolve, reject) {
+        self.image.crossOrigin = "Anonymous";
         self.image.onload = resolve;
         self.image.onerror = reject;
 
-        window[callbackName] = function(a){
-            if (a.substring(0,6) === "error:"){
-                reject();
-            } else {
-                self.image.src = a;
-            }
-            window[callbackName] = undefined; // to work with IE<9  // NOTE: that the undefined callback property-name still exists on the window object (for IE<9)
-            try {
-                delete window[callbackName];  // for all browser that support this
-            } catch(ex) {}
-            script.parentNode.removeChild(script);
-        };
-        script.setAttribute("type", "text/javascript");
-        script.setAttribute("src", requestUrl);
-        document.body.appendChild(script);
-    })['catch'](function() {
-        var dummy = new DummyImageContainer(src);
-        return dummy.promise.then(function(image) {
-            self.image = image;
-        });
+        new ProxyURL(src, proxy, document).then(function(url) {
+            self.image.src = url;
+        })['catch'](reject);
     });
 }
 
-var proxyImageCount = 0;
+function PseudoElementContainer(node, parent, type) {
+    NodeContainer.call(this, node, parent);
+    this.isPseudoElement = true;
+    this.before = type === ":before";
+}
 
-function Renderer(width, height, images) {
+PseudoElementContainer.prototype.cloneTo = function(stack) {
+    PseudoElementContainer.prototype.cloneTo.call(this, stack);
+    stack.isPseudoElement = true;
+    stack.before = this.before;
+};
+
+PseudoElementContainer.prototype = Object.create(NodeContainer.prototype);
+
+PseudoElementContainer.prototype.appendToDOM = function() {
+    if (this.before) {
+        this.parent.node.insertBefore(this.node, this.parent.node.firstChild);
+    } else {
+        this.parent.node.appendChild(this.node);
+    }
+    this.parent.node.className += " " + this.getHideClass();
+};
+
+PseudoElementContainer.prototype.cleanDOM = function() {
+    this.node.parentNode.removeChild(this.node);
+    this.parent.node.className = this.parent.node.className.replace(this.getHideClass(), "");
+};
+
+PseudoElementContainer.prototype.getHideClass = function() {
+    return this["PSEUDO_HIDE_ELEMENT_CLASS_" + (this.before ? "BEFORE" : "AFTER")];
+};
+
+PseudoElementContainer.prototype.PSEUDO_HIDE_ELEMENT_CLASS_BEFORE = "___html2canvas___pseudoelement_before";
+PseudoElementContainer.prototype.PSEUDO_HIDE_ELEMENT_CLASS_AFTER = "___html2canvas___pseudoelement_after";
+
+function Renderer(width, height, images, options, document) {
     this.width = width;
     this.height = height;
     this.images = images;
+    this.options = options;
+    this.document = document;
 }
 
-Renderer.prototype.renderImage = function(container, bounds, borderData, image) {
+Renderer.prototype.renderImage = function(container, bounds, borderData, imageContainer) {
     var paddingLeft = container.cssInt('paddingLeft'),
         paddingTop = container.cssInt('paddingTop'),
         paddingRight = container.cssInt('paddingRight'),
         paddingBottom = container.cssInt('paddingBottom'),
         borders = borderData.borders;
 
+    var width = bounds.width - (borders[1].width + borders[3].width + paddingLeft + paddingRight);
+    var height = bounds.height - (borders[0].width + borders[2].width + paddingTop + paddingBottom);
     this.drawImage(
-        image,
+        imageContainer,
         0,
         0,
-        image.width,
-        image.height,
+        imageContainer.image.width || width,
+        imageContainer.image.height || height,
         bounds.left + paddingLeft + borders[3].width,
         bounds.top + paddingTop + borders[0].width,
-        bounds.width - (borders[1].width + borders[3].width + paddingLeft + paddingRight),
-        bounds.height - (borders[0].width + borders[2].width + paddingTop + paddingBottom)
+        width,
+        height
     );
 };
 
@@ -1577,20 +2550,20 @@ Renderer.prototype.renderBackgroundRepeating = function(container, bounds, image
     var position = container.parseBackgroundPosition(bounds, imageContainer.image, index, size);
     var repeat = container.parseBackgroundRepeat(index);
     switch (repeat) {
-        case "repeat-x":
-        case "repeat no-repeat":
-            this.backgroundRepeatShape(imageContainer, position, size, bounds, bounds.left + borderData[3], bounds.top + position.top + borderData[0], 99999, imageContainer.image.height, borderData);
-            break;
-        case "repeat-y":
-        case "no-repeat repeat":
-            this.backgroundRepeatShape(imageContainer, position, size, bounds, bounds.left + position.left + borderData[3], bounds.top + borderData[0], imageContainer.image.width, 99999, borderData);
-            break;
-        case "no-repeat":
-            this.backgroundRepeatShape(imageContainer, position, size, bounds, bounds.left + position.left + borderData[3], bounds.top + position.top + borderData[0], imageContainer.image.width, imageContainer.image.height, borderData);
-            break;
-        default:
-            this.renderBackgroundRepeat(imageContainer, position, size, {top: bounds.top, left: bounds.left}, borderData[3], borderData[0]);
-            break;
+    case "repeat-x":
+    case "repeat no-repeat":
+        this.backgroundRepeatShape(imageContainer, position, size, bounds, bounds.left + borderData[3], bounds.top + position.top + borderData[0], 99999, size.height, borderData);
+        break;
+    case "repeat-y":
+    case "no-repeat repeat":
+        this.backgroundRepeatShape(imageContainer, position, size, bounds, bounds.left + position.left + borderData[3], bounds.top + borderData[0], size.width, 99999, borderData);
+        break;
+    case "no-repeat":
+        this.backgroundRepeatShape(imageContainer, position, size, bounds, bounds.left + position.left + borderData[3], bounds.top + position.top + borderData[0], size.width, size.height, borderData);
+        break;
+    default:
+        this.renderBackgroundRepeat(imageContainer, position, size, {top: bounds.top, left: bounds.left}, borderData[3], borderData[0]);
+        break;
     }
 };
 
@@ -1598,15 +2571,249 @@ Renderer.prototype.isTransparent = function(color) {
     return (!color || color === "transparent" || color === "rgba(0, 0, 0, 0)");
 };
 
+function StackingContext(hasOwnStacking, opacity, element, parent) {
+    NodeContainer.call(this, element, parent);
+    this.ownStacking = hasOwnStacking;
+    this.contexts = [];
+    this.children = [];
+    this.opacity = (this.parent ? this.parent.stack.opacity : 1) * opacity;
+}
+
+StackingContext.prototype = Object.create(NodeContainer.prototype);
+
+StackingContext.prototype.getParentStack = function(context) {
+    var parentStack = (this.parent) ? this.parent.stack : null;
+    return parentStack ? (parentStack.ownStacking ? parentStack : parentStack.getParentStack(context)) : context.stack;
+};
+
+function Support(document) {
+    this.rangeBounds = this.testRangeBounds(document);
+    this.cors = this.testCORS();
+    this.svg = this.testSVG();
+}
+
+Support.prototype.testRangeBounds = function(document) {
+    var range, testElement, rangeBounds, rangeHeight, support = false;
+
+    if (document.createRange) {
+        range = document.createRange();
+        if (range.getBoundingClientRect) {
+            testElement = document.createElement('boundtest');
+            testElement.style.height = "123px";
+            testElement.style.display = "block";
+            document.body.appendChild(testElement);
+
+            range.selectNode(testElement);
+            rangeBounds = range.getBoundingClientRect();
+            rangeHeight = rangeBounds.height;
+
+            if (rangeHeight === 123) {
+                support = true;
+            }
+            document.body.removeChild(testElement);
+        }
+    }
+
+    return support;
+};
+
+Support.prototype.testCORS = function() {
+    return typeof((new Image()).crossOrigin) !== "undefined";
+};
+
+Support.prototype.testSVG = function() {
+    var img = new Image();
+    var canvas = document.createElement("canvas");
+    var ctx =  canvas.getContext("2d");
+    img.src = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'></svg>";
+
+    try {
+        ctx.drawImage(img, 0, 0);
+        canvas.toDataURL();
+    } catch(e) {
+        return false;
+    }
+    return true;
+};
+
+function SVGContainer(src) {
+    this.src = src;
+    this.image = null;
+    var self = this;
+
+    this.promise = this.hasFabric().then(function() {
+        return (self.isInline(src) ? Promise.resolve(self.inlineFormatting(src)) : XHR(src));
+    }).then(function(svg) {
+        return new Promise(function(resolve) {
+            html2canvas.fabric.loadSVGFromString(svg, self.createCanvas.call(self, resolve));
+        });
+    });
+}
+
+SVGContainer.prototype.hasFabric = function() {
+    return !html2canvas.fabric ? Promise.reject(new Error("html2canvas.svg.js is not loaded, cannot render svg")) : Promise.resolve();
+};
+
+SVGContainer.prototype.inlineFormatting = function(src) {
+    return (/^data:image\/svg\+xml;base64,/.test(src)) ? this.decode64(this.removeContentType(src)) : this.removeContentType(src);
+};
+
+SVGContainer.prototype.removeContentType = function(src) {
+    return src.replace(/^data:image\/svg\+xml(;base64)?,/,'');
+};
+
+SVGContainer.prototype.isInline = function(src) {
+    return (/^data:image\/svg\+xml/i.test(src));
+};
+
+SVGContainer.prototype.createCanvas = function(resolve) {
+    var self = this;
+    return function (objects, options) {
+        var canvas = new html2canvas.fabric.StaticCanvas('c');
+        self.image = canvas.lowerCanvasEl;
+        canvas
+            .setWidth(options.width)
+            .setHeight(options.height)
+            .add(html2canvas.fabric.util.groupSVGElements(objects, options))
+            .renderAll();
+        resolve(canvas.lowerCanvasEl);
+    };
+};
+
+SVGContainer.prototype.decode64 = function(str) {
+    return (typeof(window.atob) === "function") ? window.atob(str) : decode64(str);
+};
+
+/*
+ * base64-arraybuffer
+ * https://github.com/niklasvh/base64-arraybuffer
+ *
+ * Copyright (c) 2012 Niklas von Hertzen
+ * Licensed under the MIT license.
+ */
+
+function decode64(base64) {
+    var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    var len = base64.length, i, encoded1, encoded2, encoded3, encoded4, byte1, byte2, byte3;
+
+    var output = "";
+
+    for (i = 0; i < len; i+=4) {
+        encoded1 = chars.indexOf(base64[i]);
+        encoded2 = chars.indexOf(base64[i+1]);
+        encoded3 = chars.indexOf(base64[i+2]);
+        encoded4 = chars.indexOf(base64[i+3]);
+
+        byte1 = (encoded1 << 2) | (encoded2 >> 4);
+        byte2 = ((encoded2 & 15) << 4) | (encoded3 >> 2);
+        byte3 = ((encoded3 & 3) << 6) | encoded4;
+        if (encoded3 === 64) {
+            output += String.fromCharCode(byte1);
+        } else if (encoded4 === 64 || encoded4 === -1) {
+            output += String.fromCharCode(byte1, byte2);
+        } else{
+            output += String.fromCharCode(byte1, byte2, byte3);
+        }
+    }
+
+    return output;
+}
+
+function SVGNodeContainer(node, native) {
+    this.src = node;
+    this.image = null;
+    var self = this;
+
+    this.promise = native ? new Promise(function(resolve, reject) {
+        self.image = new Image();
+        self.image.onload = resolve;
+        self.image.onerror = reject;
+        self.image.src = "data:image/svg+xml," + (new XMLSerializer()).serializeToString(node);
+        if (self.image.complete === true) {
+            resolve(self.image);
+        }
+    }) : this.hasFabric().then(function() {
+        return new Promise(function(resolve) {
+            html2canvas.fabric.parseSVGDocument(node, self.createCanvas.call(self, resolve));
+        });
+    });
+}
+
+SVGNodeContainer.prototype = Object.create(SVGContainer.prototype);
+
+function TextContainer(node, parent) {
+    NodeContainer.call(this, node, parent);
+}
+
+TextContainer.prototype = Object.create(NodeContainer.prototype);
+
+TextContainer.prototype.applyTextTransform = function() {
+    this.node.data = this.transform(this.parent.css("textTransform"));
+};
+
+TextContainer.prototype.transform = function(transform) {
+    var text = this.node.data;
+    switch(transform){
+        case "lowercase":
+            return text.toLowerCase();
+        case "capitalize":
+            return text.replace(/(^|\s|:|-|\(|\))([a-z])/g, capitalize);
+        case "uppercase":
+            return text.toUpperCase();
+        default:
+            return text;
+    }
+};
+
+function capitalize(m, p1, p2) {
+    if (m.length > 0) {
+        return p1 + p2.toUpperCase();
+    }
+}
+
+function WebkitGradientContainer(imageData) {
+    GradientContainer.apply(this, arguments);
+    this.type = (imageData.args[0] === "linear") ? this.TYPES.LINEAR : this.TYPES.RADIAL;
+}
+
+WebkitGradientContainer.prototype = Object.create(GradientContainer.prototype);
+
+function XHR(url) {
+    return new Promise(function(resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url);
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                resolve(xhr.responseText);
+            } else {
+                reject(new Error(xhr.statusText));
+            }
+        };
+
+        xhr.onerror = function() {
+            reject(new Error("Network Error"));
+        };
+
+        xhr.send();
+    });
+}
+
 function CanvasRenderer(width, height) {
     Renderer.apply(this, arguments);
-    this.canvas = document.createElement("canvas");
-    this.canvas.width = width;
-    this.canvas.height = height;
+    this.canvas = this.options.canvas || this.document.createElement("canvas");
+    if (!this.options.canvas) {
+        this.canvas.width = width;
+        this.canvas.height = height;
+    }
     this.ctx = this.canvas.getContext("2d");
+    if (this.options.background) {
+        this.rectangle(0, 0, width, height, this.options.background);
+    }
+    this.taintCtx = this.document.createElement("canvas").getContext("2d");
     this.ctx.textBaseline = "bottom";
     this.variables = {};
-    log("Initialized CanvasRenderer");
+    log("Initialized CanvasRenderer with size", width, "x", height);
 }
 
 CanvasRenderer.prototype = Object.create(Renderer.prototype);
@@ -1625,13 +2832,32 @@ CanvasRenderer.prototype.drawShape = function(shape, color) {
     this.setFillStyle(color).fill();
 };
 
-CanvasRenderer.prototype.drawImage = function(image, sx, sy, sw, sh, dx, dy, dw, dh) {
-    this.ctx.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh);
+CanvasRenderer.prototype.taints = function(imageContainer) {
+    if (imageContainer.tainted === null) {
+        this.taintCtx.drawImage(imageContainer.image, 0, 0);
+        try {
+            this.taintCtx.getImageData(0, 0, 1, 1);
+            imageContainer.tainted = false;
+        } catch(e) {
+            this.taintCtx = document.createElement("canvas").getContext("2d");
+            imageContainer.tainted = true;
+        }
+    }
+
+    return imageContainer.tainted;
 };
 
-CanvasRenderer.prototype.clip = function(shape, callback, context) {
+CanvasRenderer.prototype.drawImage = function(imageContainer, sx, sy, sw, sh, dx, dy, dw, dh) {
+    if (!this.taints(imageContainer) || this.options.allowTaint) {
+        this.ctx.drawImage(imageContainer.image, sx, sy, sw, sh, dx, dy, dw, dh);
+    }
+};
+
+CanvasRenderer.prototype.clip = function(shapes, callback, context) {
     this.ctx.save();
-    this.shape(shape).clip();
+    shapes.filter(hasEntries).forEach(function(shape) {
+        this.shape(shape).clip();
+    }, this);
     callback.call(context);
     this.ctx.restore();
 };
@@ -1639,14 +2865,18 @@ CanvasRenderer.prototype.clip = function(shape, callback, context) {
 CanvasRenderer.prototype.shape = function(shape) {
     this.ctx.beginPath();
     shape.forEach(function(point, index) {
-        this.ctx[(index === 0) ? "moveTo" : point[0] + "To" ].apply(this.ctx, point.slice(1));
+        if (point[0] === "rect") {
+            this.ctx.rect.apply(this.ctx, point.slice(1));
+        } else {
+            this.ctx[(index === 0) ? "moveTo" : point[0] + "To" ].apply(this.ctx, point.slice(1));
+        }
     }, this);
     this.ctx.closePath();
     return this.ctx;
 };
 
 CanvasRenderer.prototype.font = function(color, style, variant, weight, size, family) {
-    this.setFillStyle(color).font = [style, variant, weight, size, family].join(" ");
+    this.setFillStyle(color).font = [style, variant, weight, size, family].join(" ").split(",")[0];
 };
 
 CanvasRenderer.prototype.fontShadow = function(color, offsetX, offsetY, blur) {
@@ -1689,7 +2919,7 @@ CanvasRenderer.prototype.backgroundRepeatShape = function(imageContainer, backgr
         ["line", Math.round(left + width), Math.round(height + top)],
         ["line", Math.round(left), Math.round(height + top)]
     ];
-    this.clip(shape, function() {
+    this.clip([shape], function() {
         this.renderBackgroundRepeat(imageContainer, backgroundPosition, size, bounds, borderData[3], borderData[0]);
     }, this);
 };
@@ -1704,8 +2934,15 @@ CanvasRenderer.prototype.renderBackgroundRepeat = function(imageContainer, backg
 
 CanvasRenderer.prototype.renderBackgroundGradient = function(gradientImage, bounds) {
     if (gradientImage instanceof LinearGradientContainer) {
-        var gradient = this.ctx.createLinearGradient(bounds.left, bounds.top, bounds.right, bounds.bottom);
-        //console.log(gradientImage, bounds, gradient);
+        var gradient = this.ctx.createLinearGradient(
+            bounds.left + bounds.width * gradientImage.x0,
+            bounds.top + bounds.height * gradientImage.y0,
+            bounds.left +  bounds.width * gradientImage.x1,
+            bounds.top +  bounds.height * gradientImage.y1);
+        gradientImage.colorStops.forEach(function(colorStop) {
+            gradient.addColorStop(colorStop.stop, colorStop.color);
+        });
+        this.rectangle(bounds.left, bounds.top, bounds.width, bounds.height, gradient);
     }
 };
 
@@ -1723,90 +2960,8 @@ CanvasRenderer.prototype.resizeImage = function(imageContainer, size) {
     return canvas;
 };
 
-function StackingContext(hasOwnStacking, opacity, element, parent) {
-    NodeContainer.call(this, element, parent);
-    this.ownStacking = hasOwnStacking;
-    this.contexts = [];
-    this.children = [];
-    this.opacity = (this.parent ? this.parent.stack.opacity : 1) * opacity;
+function hasEntries(array) {
+    return array.length > 0;
 }
 
-StackingContext.prototype = Object.create(NodeContainer.prototype);
-
-StackingContext.prototype.getParentStack = function(context) {
-    var parentStack = (this.parent) ? this.parent.stack : null;
-    return parentStack ? (parentStack.ownStacking ? parentStack : parentStack.getParentStack(context)) : context.stack;
-};
-
-function Support(document) {
-    this.rangeBounds = this.testRangeBounds(document);
-    this.cors = this.testCORS();
-}
-
-Support.prototype.testRangeBounds = function(document) {
-    var range, testElement, rangeBounds, rangeHeight, support = false;
-
-    if (document.createRange) {
-        range = document.createRange();
-        if (range.getBoundingClientRect) {
-            testElement = document.createElement('boundtest');
-            testElement.style.height = "123px";
-            testElement.style.display = "block";
-            document.body.appendChild(testElement);
-
-            range.selectNode(testElement);
-            rangeBounds = range.getBoundingClientRect();
-            rangeHeight = rangeBounds.height;
-
-            if (rangeHeight === 123) {
-                support = true;
-            }
-            document.body.removeChild(testElement);
-        }
-    }
-
-    return support;
-};
-
-Support.prototype.testCORS = function() {
-    return typeof((new Image()).crossOrigin) !== "undefined";
-};
-
-function TextContainer(node, parent) {
-    NodeContainer.call(this, node, parent);
-}
-
-TextContainer.prototype = Object.create(NodeContainer.prototype);
-
-TextContainer.prototype.applyTextTransform = function() {
-    this.node.data = this.transform(this.parent.css("textTransform"));
-};
-
-TextContainer.prototype.transform = function(transform) {
-    var text = this.node.data;
-    switch(transform){
-        case "lowercase":
-            return text.toLowerCase();
-        case "capitalize":
-            return text.replace(/(^|\s|:|-|\(|\))([a-z])/g, capitalize);
-        case "uppercase":
-            return text.toUpperCase();
-        default:
-            return text;
-    }
-};
-
-function capitalize(m, p1, p2) {
-    if (m.length > 0) {
-        return p1 + p2.toUpperCase();
-    }
-}
-
-function WebkitGradientContainer(imageData) {
-    GradientContainer.apply(this, arguments);
-    this.type = (imageData.args[0] === "linear") ? this.TYPES.LINEAR : this.TYPES.RADIAL;
-}
-
-WebkitGradientContainer.prototype = Object.create(GradientContainer.prototype);
-
-})(window,document);
+}).call({}, window, document);

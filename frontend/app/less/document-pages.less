@@ -185,9 +185,9 @@
 
 
 .signatureBox {
-  background-color: @white-with-little-opacity;
+  background-color: @white;
   // this is fallback for IE8 which doesn't support rgba()
-  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f2ffffff', endColorstr='#f2ffffff',GradientType=0);
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=95)";
   border: 1px solid #999999;
   min-width: 10px;
   -moz-border-radius: 2px;
@@ -196,6 +196,7 @@
   text-align: center;
   margin-left: -2px;
   margin-top: -2px;
+  opacity: .95;
 
   // If we don't have image, background will be little transparent.
   // Else whole image needs to be little transparent

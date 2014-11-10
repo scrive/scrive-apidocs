@@ -330,8 +330,10 @@ window.ConfirmationWithEmail = {
           $(window).resize(updateOverlay);
           setTimeout(function() {
             overlay.addClass("active");
-            updateOverlay();
-          },100);
+            setTimeout(function() {
+              updateOverlay();
+            }, 600);
+          }, 100);
           return model;
    }
 
