@@ -50,7 +50,7 @@ return React.createClass({
           </th>);
       } else {
         return (
-          <td className="row {this.className()}">
+          <td className={"row " + this.className()}>
             {/*if*/ (this.isSelect()) &&
               (<div
                 className={"checkbox " + (this.props.data.isSelected() ? "checked" : "")}

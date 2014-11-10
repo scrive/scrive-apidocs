@@ -24,6 +24,7 @@ return React.createClass({
                 <List.Column
                   name={localization.account.stats.columnSender}
                   width="100px"
+                  className="sender"
                   rendering={function(d) {
                     return (<div onClick={function() {d.toggleExpand();}}>{d.field("fields").name}</div>);
                   }}
