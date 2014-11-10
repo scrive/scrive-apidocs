@@ -1,7 +1,7 @@
 module Doc.SealSpec where
 
-import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Base64 as B64
+import qualified Data.ByteString.Char8 as BS
 import qualified Text.JSON.Gen as J
 
 data Person =
