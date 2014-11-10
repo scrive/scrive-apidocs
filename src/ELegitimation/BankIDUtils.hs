@@ -11,7 +11,6 @@ module ELegitimation.BankIDUtils (
     ) where
 
 import Data.Char
-import Data.Functor
 import Data.List
 import Data.Maybe
 import Text.StringTemplates.Templates
@@ -101,9 +100,9 @@ getDetailsFromResponseAttrs attrs =
 compareSigLinkToElegData :: SignatoryLink ->  [(FieldType, SignatoryFieldValue)] -> [(String, String)] -> (MergeResult,MergeResult)
 compareSigLinkToElegData sl fields attrs =
   -- compare information from document (and fields) to that obtained from BankID
-  let contractFirst  = fromMaybe (getFirstName sl)      (getTextField =<< (snd <$> (find (\(ft,_) -> ft == FirstNameFT) fields)))
-      contractLast   = fromMaybe (getLastName sl)       (getTextField =<< (snd <$> (find (\(ft,_) -> ft == LastNameFT) fields)))
-      contractNumber = fromMaybe (getPersonalNumber sl) (getTextField =<< (snd <$> (find (\(ft,_) -> ft == PersonalNumberFT) fields)))
+  let contractFirst  = fromMaybe (getFirstName sl) (getTextField =<< lookup FirstNameFT fields)
+      contractLast   = fromMaybe (getLastName sl) (getTextField =<< lookup LastNameFT fields)
+      contractNumber = fromMaybe (getPersonalNumber sl) (getTextField =<< lookup PersonalNumberFT fields)
 
   in mergeInfo (contractFirst, contractLast, contractNumber) (getDetailsFromResponseAttrs attrs)
 

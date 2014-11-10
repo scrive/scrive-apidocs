@@ -271,9 +271,9 @@ fetchSignatoryLinkFields = foldlM decoder M.empty
          [SignatoryField
           { sfID = slfid
           , sfValue = case (mvalue_text, mvalue_binary) of
-            (Just value_text, Nothing)   -> TextField value_text
+            (Just value_text, Nothing) -> TextField value_text
             (Nothing, Just (Binary value_binary)) -> BinaryField value_binary
-            _                            -> error "fetchSignatoryLinkFields: can't happen"
+            _ -> error "fetchSignatoryLinkFields: can't happen due to check constraints on the table"
           , sfPlacements = placements
           , sfType = case xtype of
                         CustomFT{} -> CustomFT custom_name is_author_filled

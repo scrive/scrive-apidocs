@@ -134,4 +134,4 @@ replaceSignatoryUser siglink user company=
   newsl { maybesignatory = Just $ userid user }
   where
     toText (TextField s) = s
-    toText BinaryField{} = error "Can't happen"
+    toText BinaryField{} = error "replaceSignatoryUser: can't happen, binary fields were filtered"

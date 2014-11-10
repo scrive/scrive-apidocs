@@ -631,7 +631,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
     case extraInfoField newAuth of
          Nothing -> return ()
          Just authMethodField -> do
-           let previousValue = fromMaybe "" $ getTextField =<< (fmap sfValue $ getFieldOfType authMethodField $ signatoryfields sig)
+           let previousValue = fromMaybe "" $ getTextField =<< (sfValue <$> getFieldOfType authMethodField (signatoryfields sig))
                value         = fromMaybe "" mValue
            when (value /= previousValue)
                 (void $ update $ InsertEvidenceEvent

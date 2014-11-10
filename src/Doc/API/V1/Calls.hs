@@ -15,7 +15,6 @@ module Doc.API.V1.Calls (
   ) where
 
 import Control.Applicative
-import Control.Arrow
 import Control.Conditional (whenM, unlessM, ifM)
 import Control.Exception.Lifted
 import Control.Monad.Error
@@ -530,11 +529,11 @@ checkAuthenticationMethodAndValue slid = do
        (Nothing, Nothing) -> return ()
        _ -> throwIO . SomeKontraException $ badInput "Only one of `authentication_type` and `authentication_value` provided"
 
-getValidPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [(FieldType,SignatoryFieldValue)] -> m (Maybe String)
+getValidPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [(FieldType, SignatoryFieldValue)] -> m (Maybe String)
 getValidPin slid fields = do
   pin <- apiGuardJustM (badInput "Pin not provided or invalid.") $ getField "pin"
   phone <- getMobile <$> fromJust . getSigLinkFor slid <$> theDocument
-  let phoneFromFields = getTextField =<< (snd <$> find (\x -> MobileFT == fst x) fields)
+  let phoneFromFields = getTextField =<< lookup MobileFT fields
   pin' <- dbQuery $ GetSignatoryPin slid (fromMaybe phone phoneFromFields)
   if (pin == pin')
     then return $ Just pin
@@ -1205,8 +1204,8 @@ getFieldForSigning = do
             mft <- fromJSValue
             mval <- fromJSValueField "value"
             return $ case (mft, mval) of
-              (Just ft@SignatureFT{}, Just val) -> (const ft *** BinaryField)
-                <$> RFC2397.decode (BS.pack val)
+              (Just ft@SignatureFT{}, Just val) ->
+                (ft, ) . BinaryField . snd <$> RFC2397.decode (BS.pack val)
               (Just ft, Just val) -> Just (ft, TextField val)
               _ -> Nothing
       case mvalues of
