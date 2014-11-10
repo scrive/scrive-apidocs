@@ -22,6 +22,9 @@ import Control.Monad.Trans (lift)
 import Data.Functor
 import Data.Maybe
 import Text.StringTemplates.Templates
+import qualified Data.ByteString.Base16 as B16
+import qualified Data.ByteString.Char8 as BS
+import qualified Crypto.Hash.MD5 as MD5
 import qualified Text.StringTemplates.Fields as F
 
 import BrandedDomain.BrandedDomain
@@ -310,9 +313,10 @@ documentMail haslang doc mailname otherfields = do
   let companylogo = do
         companyui <- mcompanyui
         logoContent <- companyemaillogo companyui
-        return ("logo.png", Left $ unBinary logoContent)
+        let logomd5 = BS.unpack $ B16.encode $ MD5.hash $ unBinary logoContent
+        return ("logo-" ++ logomd5 ++ ".png", Left $ unBinary logoContent)
       mailAttachments = catMaybes [companylogo]
-      hasEmbeddedLogo = F.value "hasembeddedlogo" $ isJust companylogo
+      hasEmbeddedLogo = F.value "embeddedlogo" $ fst <$> companylogo
   allfields <- documentMailFields doc mctx mcompanyui
   mail <- kontramaillocal (mctxmailsconfig mctx) (mctxcurrentBrandedDomain mctx) haslang mailname $ allfields >> otherfields >> hasEmbeddedLogo
   return mail { attachments = attachments mail ++ mailAttachments}
