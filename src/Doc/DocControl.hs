@@ -119,13 +119,14 @@ handleNewDocument = do
         actor <- guardJustM $ mkAuthorActor <$> getContext
         mtimezonename <- runMPlusT $ lookCookieValue "timezone"
         timezone <- fromMaybe defaultTimeZoneName <$> T.sequence (mkTimeZoneName <$> mtimezonename)
-        Just doc <- dbUpdate $ NewDocument defaultValue user (replace "  " " " $ title ++ " " ++ formatTimeSimple (ctxtime ctx)) Signable timezone 1 actor
+        mDoc <- dbUpdate $ NewDocument defaultValue user (replace "  " " " $ title ++ " " ++ formatTimeSimple (ctxtime ctx)) Signable timezone 1 actor
+        doc <- guardJust mDoc
         -- Default document on the frontend has different requirements,
         -- this sets up the signatories to match those requirements.
         withDocument doc $ do
-            let siglinks = documentsignatorylinks doc
-                Just authorsiglink = getAuthorSigLink doc
-                authorsiglink' = authorsiglink {signatorylinkdeliverymethod = PadDelivery}
+            authorsiglink <- guardJust $ find (\sl -> signatoryisauthor sl) (documentsignatorylinks doc)
+            othersiglink  <- guardJust $ find (\sl -> sl /= authorsiglink)  (documentsignatorylinks doc)
+            let authorsiglink' = authorsiglink {signatorylinkdeliverymethod = PadDelivery}
                 templateField ft = SignatoryField { sfID = unsafeSignatoryFieldID 0
                                                   , sfType = ft
                                                   , sfValue = ""
@@ -133,15 +134,14 @@ handleNewDocument = do
                                                   , sfObligatory = False
                                                   , sfPlacements = []
                                                   }
-                othersiglink : _ = filter (\sl -> not $ signatoryisauthor sl) siglinks
                 othersiglink' = othersiglink { signatorysignorder = SignOrder 1
-                                              , signatoryfields = [ templateField FirstNameFT
-                                                                  , templateField LastNameFT
-                                                                  , templateField MobileFT
-                                                                  , templateField CompanyFT
-                                                                  , templateField CompanyNumberFT
-                                                                  ]
-                                              }
+                                             , signatoryfields = [ templateField FirstNameFT
+                                                                 , templateField LastNameFT
+                                                                 , templateField MobileFT
+                                                                 , templateField CompanyFT
+                                                                 , templateField CompanyNumberFT
+                                                                 ]
+                                             }
             _ <- dbUpdate $ ResetSignatoryDetails [authorsiglink', othersiglink'] actor
             dbUpdate $ SetDocumentUnsavedDraft True
         return $ LinkIssueDoc (documentid doc)
