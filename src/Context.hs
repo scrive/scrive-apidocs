@@ -4,6 +4,7 @@ module Context (
       contextToMailContext
     ) where
 
+import qualified Control.Concurrent.Thread as T
 import qualified Data.ByteString as BS
 
 import BrandedDomain.BrandedDomain
@@ -53,10 +54,12 @@ data Context = Context
     , ctxrecurlyconfig       :: RecurlyConfig
     , ctxsessionid           :: SessionID
     , ctxmixpaneltoken       :: String
-    , ctxgoogleanalyticstoken       :: String
+    , ctxgoogleanalyticstoken :: String
     , ctxhomebase            :: String
     , ctxbrandeddomain       :: Maybe BrandedDomain
     , ctxsalesforceconf      :: SalesforceConf
+    -- | Contains actions that join threads spawned with forkAction
+    , ctxthreadjoins       :: [IO (T.Result ())]
     }
 
 -- | anonymousContext changes given context into one that does not hold any user details.

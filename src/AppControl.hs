@@ -343,4 +343,5 @@ appHandler handleRoutes appConf appGlobals = catchEverything . enhanceYourCalm $
         , ctxhomebase = homebase appConf
         , ctxbrandeddomain = mbrandeddomain
         , ctxsalesforceconf = getSalesforceConf appConf
+        , ctxthreadjoins = []
         }

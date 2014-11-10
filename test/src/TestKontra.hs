@@ -34,6 +34,7 @@ import Happstack.Server hiding (mkHeaders, dir, getHeader, method, path)
 import Happstack.Server.Internal.Monads
 import System.FilePath
 import Text.StringTemplates.Templates
+import qualified Control.Concurrent.Thread as T
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
@@ -149,7 +150,12 @@ runTestKontraHelper cs rq ctx tk = do
   case mres of
     Nothing -> fail "runTestKontraHelper mzero"
     Just (Left _, _) -> fail "This should never happen since we don't use Happstack's finishWith"
-    Just (Right (res, ctx'), fs) -> return (res, ctx', fs)
+    Just (Right (res, ctx'), fs) -> do
+      -- join all of the spawned threads. since exceptions
+      -- thrown in them propagate, the testcase will fail
+      -- if any of them does.
+      liftBase $ sequence (ctxthreadjoins ctx') >>= mapM_ T.result
+      return (res, ctx', fs)
 
 -- | Typeclass for running handlers within TestKontra monad
 class RunnableTestKontra a where
@@ -300,6 +306,7 @@ mkContext lang = do
         , ctxhomebase = "https://staging.scrive.com"
         , ctxbrandeddomain = Nothing
         , ctxsalesforceconf = SalesforceConf "" "" "" "" "" "" ""
+        , ctxthreadjoins = []
     }
 
 -- pgsql database --
