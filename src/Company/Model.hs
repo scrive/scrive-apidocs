@@ -47,6 +47,7 @@ data CompanyInfo = CompanyInfo {
   , companyidledoctimeout :: Maybe Int16
   } deriving (Eq, Ord, Show)
 
+-- Synchronize these definitions with frontend/app/js/account/company.js
 minCompanyIdleDocTimeout, maxCompanyIdleDocTimeout :: Int16
 minCompanyIdleDocTimeout = 1
 maxCompanyIdleDocTimeout = 365
