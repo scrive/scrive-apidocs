@@ -235,18 +235,17 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
 
           var content = $('<div class="designview-cant-sign-modal"/>');
 
-          content.append($('<p/>').html(localization.designview.cantSignModal.info));
+          content.append($('<p/>').text(localization.designview.cantSignModal.info1));
 
           var contentP2 = $('<p/>');
-          contentP2.text(localization.designview.cantSignModal.emailFormatInfo);
-          contentP2.append($('<br/>'));
-          contentP2.append($('<div class="sample" />').text(localization.designview.cantSignModal.emailSample));
+          contentP2.html(localization.designview.cantSignModal.info2);
           content.append(contentP2);
 
-          var contentP3 = $('<p/>');
-          contentP3.html(localization.designview.cantSignModal.mobileFormatInfo);
-          contentP3.append($('<br/>'));
-          contentP3.append($('<div class="sample" />').text(localization.designview.cantSignModal.mobileSample));
+          var contentP3 = $('<ul/>');
+          contentP3.append($("<li>").text(localization.designview.cantSignModal.li1));
+          contentP3.append($("<li>").text(localization.designview.cantSignModal.li2));
+          contentP3.append($("<li>").text(localization.designview.cantSignModal.li3));
+          contentP3.append($("<li>").text(localization.designview.cantSignModal.li4));
           content.append(contentP3);
 
           new Confirmation({title: localization.designview.cantSignModal.title,

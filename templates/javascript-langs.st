@@ -351,11 +351,12 @@ javascriptLocalisation =
              }
              , cantSignModal : {
                  title : "$_designviewCantSignModalTitle()$"
-               , info : "$_designviewCantSignModalInfo()$"
-               , emailFormatInfo : "$_designviewCantSignModalEmailFormatInfo()$"
-               , emailSample : "$_designviewCantSignModalEmailSample()$"
-               , mobileFormatInfo : "$_designviewCantSignModalMobileFormatInfo()$"
-               , mobileSample : "$_designviewCantSignModalMobileSample()$"
+               , info1 : "$_designviewCantSignModalInfo1()$"
+               , info2 : "$_designviewCantSignModalInfo2()$"
+               , li1 : "$_designviewCantSignModalLi1()$"
+               , li2 : "$_designviewCantSignModalLi2()$"
+               , li3 : "$_designviewCantSignModalLi3()$"
+               , li4 : "$_designviewCantSignModalLi4()$"
              }
              , editParticipants: "$_designViewEditParticipants()$"
              , editDocument: "$_designViewEditDocument()$"
