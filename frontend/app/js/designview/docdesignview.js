@@ -235,13 +235,13 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
 
           var content = $('<div class="designview-cant-sign-modal"/>');
 
-          content.append($('<p/>').text(localization.designview.cantSignModal.info1));
+          content.append($('<p class="paragraph"/>').text(localization.designview.cantSignModal.info1));
 
-          var contentP2 = $('<p/>');
+          var contentP2 = $('<p class="paragraph"/>');
           contentP2.html(localization.designview.cantSignModal.info2);
           content.append(contentP2);
 
-          var contentP3 = $('<ul/>');
+          var contentP3 = $('<ul class="unordered-list"/>');
           contentP3.append($("<li>").text(localization.designview.cantSignModal.li1));
           contentP3.append($("<li>").text(localization.designview.cantSignModal.li2));
           contentP3.append($("<li>").text(localization.designview.cantSignModal.li3));
