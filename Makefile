@@ -12,7 +12,7 @@ all:
 	cabal sandbox init
 	cabal install --only-dependencies -j
 	$(CABAL_CONFIGURE)
-	cabal build
+	cabal build -j
 
 # Make "pretty" diagram of database model (requires postgresql-autodoc and graphwiz)
 .PHONY: dot
@@ -70,6 +70,6 @@ restore-test-db: reset-test-db
 .PHONY : profiling
 profiling:
 	cabal sandbox init
-	cabal install --only-dependencies --enable-library-profiling --ghc-options="-auto-all -caf-all"
+	cabal install --only-dependencies --enable-library-profiling --ghc-options="-auto-all -caf-all" -j
 	$(CABAL_CONFIGURE) --enable-executable-profiling --ghc-options="-auto-all -caf-all"
-	cabal build
+	cabal build -j
