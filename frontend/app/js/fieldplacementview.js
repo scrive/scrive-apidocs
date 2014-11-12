@@ -1197,57 +1197,75 @@ var CheckboxTypeSetterView = Backbone.View.extend({
         return box;
     },
     obligatoryOption : function() {
-
+        var self = this;
         var option = $("<div class='fieldTypeSetter-option checkbox-box'/>");
-        var checkbox = $("<div class='checkbox'>");
+        self.obligatoryCheckbox = $("<div class='checkbox'>");
         var label = $("<label/>").text(localization.designview.checkboxes.obligatory);
-        var field = this.model.field();
-        option.append(checkbox).append(label);
-        if (field.isObligatory())
-            checkbox.addClass("checked");
-        checkbox.click(function(){
-            if (field.isObligatory()) {
-                mixpanel.track('Choose checkbox obligation', {
-                    Value: 'optional'
-                });
-                checkbox.removeClass("checked");
-                field.makeOptional();
-            } else {
-                mixpanel.track('Choose checkbox obligation', {
-                    Value: 'obligatory'
-                });
-                checkbox.addClass("checked");
-                field.makeObligatory();
-            }
+        var field = self.model.field();
+        option.append(self.obligatoryCheckbox).append(label);
+        if (field.isObligatory()) {
+            self.obligatoryCheckbox.addClass("checked");
+        }
+        self.obligatoryCheckbox.click(function() {
+          self.changeObligatoryOption();
+        });
+        label.click(function() {
+          self.changeObligatoryOption();
         });
 
         return option;
     },
-    precheckedOption: function() {
-        var option = $("<div class='fieldTypeSetter-option checkbox-box'/>");
-        var checkbox = $("<div class='checkbox'>");
-        var label = $("<label/>").text(localization.designview.checkboxes.prechecked);
+    changeObligatoryOption : function() {
         var field = this.model.field();
-        option.append(checkbox).append(label);
-        if (field.value() != undefined && field.value()  != "")
-            checkbox.addClass("checked");
-        checkbox.click(function(){
-            if (field.value() != undefined && field.value()  != "") {
-                mixpanel.track('Choose prechecked', {
-                    Value: 'unchecked'
-                });
-                    checkbox.removeClass("checked");
-                    field.setValue("");
-            }  else {
-                mixpanel.track('Choose prechecked', {
-                    Value: 'prechecked'
-                });
-                    checkbox.addClass("checked");
-                    field.setValue("checked");
-            }
-            field.trigger("change");
+        if (field.isObligatory()) {
+            mixpanel.track('Choose checkbox obligation', {
+                Value: 'optional'
+            });
+            field.makeOptional();
+        } else {
+            mixpanel.track('Choose checkbox obligation', {
+                Value: 'obligatory'
+            });
+            field.makeObligatory();
+        }
+        this.obligatoryCheckbox.toggleClass("checked", field.isObligatory());
+    },
+    precheckedOption: function() {
+        var self = this;
+        var option = $("<div class='fieldTypeSetter-option checkbox-box'/>");
+        self.precheckedCheckbox = $("<div class='checkbox'>");
+        var label = $("<label/>").text(localization.designview.checkboxes.prechecked);
+        var field = self.model.field();
+        option.append(self.precheckedCheckbox).append(label);
+        if (field.value() != undefined && field.value()  != "") {
+            self.precheckedCheckbox.addClass("checked");
+        }
+        self.precheckedCheckbox.click(function() {
+          self.changePrecheckedOption();
         });
+        label.click(function() {
+          self.changePrecheckedOption();
+        });
+
         return option;
+    },
+    changePrecheckedOption : function() {
+        var field = this.model.field();
+        var checkbox = this.precheckedCheckbox;
+        if (field.value() != undefined && field.value()  != "") {
+            mixpanel.track('Choose prechecked', {
+                Value: 'unchecked'
+            });
+            checkbox.removeClass("checked");
+            field.setValue("");
+        } else {
+            mixpanel.track('Choose prechecked', {
+                Value: 'prechecked'
+            });
+            checkbox.addClass("checked");
+            field.setValue("checked");
+        }
+        field.trigger("change");
     },
     doneOption : function() {
         var view = this;
@@ -1606,24 +1624,33 @@ var SignatureTypeSetterView = Backbone.View.extend({
         this.model.typeSetter = undefined;
     },
     obligatoryOption : function() {
+        var self = this;
         var option = $("<div class='fieldTypeSetter-option checkbox-box'/>");
-        var checkbox = $("<div class='checkbox'>");
+        self.obligatoryCheckbox = $("<div class='checkbox'>");
         var label = $("<label/>").text(localization.designview.textFields.obligatory);
-        var field = this.model.field();
-        option.append(checkbox).append(label);
-        if (field.isObligatory())
-            checkbox.addClass("checked");
-        checkbox.click(function(){
-            if (field.isObligatory()) {
-                    checkbox.removeClass("checked");
-                    field.makeOptional();
-            } else {
-                    checkbox.addClass("checked");
-                    field.makeObligatory();
-            }
+        var field = self.model.field();
+        option.append(self.obligatoryCheckbox).append(label);
+        if (field.isObligatory()) {
+            self.obligatoryCheckbox.addClass("checked");
+        }
+        self.obligatoryCheckbox.click(function() {
+          self.changeObligatoryOption();
+        });
+        label.click(function() {
+          self.changeObligatoryOption();
         });
 
         return option;
+    },
+    changeObligatoryOption : function() {
+        var field = this.model.field();
+        var checkbox = this.obligatoryCheckbox;
+        if (field.isObligatory()) {
+            field.makeOptional();
+        } else {
+            field.makeObligatory();
+        }
+        checkbox.toggleClass("checked", field.isObligatory());
     },
     doneOption : function() {
         var view = this;
