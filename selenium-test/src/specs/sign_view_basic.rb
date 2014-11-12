@@ -1,7 +1,6 @@
 require "rubygems"
 gem "rspec"
 require_relative "../helpers.rb"
-require "pry"
 
 describe "basic signing" do
 
