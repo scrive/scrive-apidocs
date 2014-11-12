@@ -173,21 +173,15 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                 name: deliveryTexts[delivery],
                 textWidth : "151px",
                 optionsWidth : "178px",
-                onOpen : function() {
-                  if (lastViewer) {
-                    new FlashMessage({color: "red", content : localization.designview.lastViewerOnlyGetsConfirmation});
-                    return false;
-                  } else {
-                    return true;
-                  }
-                },
                 onSelect: function(v) {
                   mixpanel.track('Choose delivery method', {
                     Where: 'select'
                   });
-                  sig.setDelivery(v);
-                    return true;
+                  if (!lastViewer) {
+                    sig.setDelivery(v);
                   }
+                  return true;
+                }
              })
              , select[0]);
             return select;

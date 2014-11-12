@@ -611,6 +611,7 @@ javascriptLocalisation =
               , invitationSMS: "$_docviewSignatoryInvitationSMS()$"
               , invitationEmailSMS: "$_docviewSignatoryInvitationEmailSMS()$"
               , invitationAPI: "$_docviewSignatoryInvitationAPI()$"
+              , invitationNone: "$_docviewSignatoryInvitationNone()$"
               , role: "$_docviewSignatoryRoleLabel()$"
               , roleSignatory: "$_docviewSignatoryRoleSignatory()$"
               , roleViewer: "$_docviewSignatoryRoleViewer()$"

@@ -332,6 +332,9 @@ var DocumentViewSignatoryView = React.createClass({
       else if (signatory.apiDelivery()) {
           return localization.docview.signatory.invitationAPI;
       }
+      else if (signatory.noneDelivery()) {
+          return localization.docview.signatory.invitationNone;
+      }
     },
     getRole : function() {
       var model = this.props.model;

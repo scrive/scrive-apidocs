@@ -669,9 +669,9 @@ window.Document = Backbone.Model.extend({
         });
       }
     },
-    isLastViewer: function(viewer) { // True if there is no signing party with signorder larger than viewer's
-      return !viewer.signs() && !_.any(this.signatories(), function(s) {
-        return s.signs() && s.signorder() > viewer.signorder();
+    isLastViewer: function(viewer) { // True if all signing parties' signorders are smaller than viewer's
+      return !viewer.signs() && _.all(this.signatories(), function(s) {
+        return !s.signs() || s.signorder() < viewer.signorder();
       });
     },
     checkLastViewerChange : function() {

@@ -81,7 +81,8 @@ window.Signatory = Backbone.Model.extend({
         // Internal properties used by design view
         changedDelivery : false,
         changedConfirmationDelivery : false,
-        shadowedDelivery: null
+        shadowedDelivery: null,
+        lastViewer: false
     },
 
     initialize: function(args) {
@@ -374,22 +375,29 @@ window.Signatory = Backbone.Model.extend({
         return !this.author() && !this.signs();
     },
     isLastViewer : function() {
-      return this.document().isLastViewer(this);
+      var i = this.document().isLastViewer(this);
+      if (i) {
+        this.set({lastViewer : true});
+      }
+      return i;
     },
     checkLastViewerChange : function() {
       var isLastViewer = this.isLastViewer();
       var shadowedDelivery = this.get("shadowedDelivery");
       if (isLastViewer) {
-        this.set({delivery : "pad"});
+        this.set({delivery : "pad", changedDelivery : true});
+        this.trigger("change:delivery");
         if (this.get("confirmationdelivery") == "none") {
-          this.set({confirmationdelivery : shadowedDelivery != null && shadowedDelivery != "none" ? shadowedDelivery : "email"});
+          this.set({confirmationdelivery : _.contains(["email", "mobile", "email_mobile"], shadowedDelivery) ? shadowedDelivery : "email"});
         }
-      } else {
+      } else if (this.get("lastViewer")) {
         if (shadowedDelivery == null) {
           this.set({delivery : "email"});
         } else {
           this.set({delivery : shadowedDelivery});
         }
+        this.trigger("change:delivery");
+        this.set({lastViewer : false});
       }
     },
     allAttachemntHaveFile: function() {
@@ -436,7 +444,7 @@ window.Signatory = Backbone.Model.extend({
           return this.get("delivery") == "email";
     },
     padDelivery : function() {
-          return this.get("delivery") == "pad";
+          return this.get("delivery") == "pad" && !this.isLastViewer();
     },
     mobileDelivery : function() {
           return this.get("delivery") == "mobile";
@@ -446,6 +454,9 @@ window.Signatory = Backbone.Model.extend({
     },
     apiDelivery : function() {
           return this.get("delivery") == "api";
+    },
+    noneDelivery : function() {
+          return this.get("delivery") == "pad" && this.isLastViewer();
     },
     emailConfirmationDelivery: function() {
           return this.get("confirmationdelivery") == "email";

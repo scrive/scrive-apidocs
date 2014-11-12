@@ -16,6 +16,7 @@ module Doc.DocUtils(
   , replaceFieldValue
   , documentcurrentsignorder
   , documentprevioussignorder
+  , isLastViewer
   , signatoryFieldsFromUser
   , isEligibleForReminder
   , canAuthorSignNow
@@ -178,6 +179,13 @@ documentprevioussignorder doc =
     case filter (isJust . maybesigninfo) (documentsignatorylinks doc) of
          [] -> SignOrder 0
          xs -> maximum $ map signatorysignorder xs
+
+-- | True if signatory is a viewer and all other document partners' signorder are smaller
+isLastViewer :: Document -> SignatoryLink -> Bool
+isLastViewer doc sl =
+      not (signatoryispartner sl)
+  && all (\s -> not (signatoryispartner s) || signatorysignorder s < signatorysignorder sl)
+         (documentsignatorylinks doc)
 
 {- |
    Build signatory fields from user

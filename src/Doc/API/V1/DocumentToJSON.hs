@@ -308,7 +308,9 @@ docFieldsListForJSON userid doc = do
       [APIDelivery]   -> "api"
       [MobileDelivery]-> "mobile"
       _                        -> "mixed"
-    J.value "deliveryMethods" $ nub (map signatorylinkdeliverymethod (documentsignatorylinks doc))
+    J.value "deliveryMethods" $ nub [ signatorylinkdeliverymethod s | s <- documentsignatorylinks doc
+                                    , not (signatorylinkdeliverymethod s == PadDelivery && isLastViewer doc s)
+                                    ]
     J.value "anyinvitationundelivered" $ Pending == documentstatus doc &&
                                             (   (any (== Undelivered) $ mailinvitationdeliverystatus <$> documentsignatorylinks doc)
                                              || (any (== Undelivered) $ smsinvitationdeliverystatus  <$> documentsignatorylinks doc)

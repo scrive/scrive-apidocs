@@ -407,6 +407,7 @@
 "_docviewSignatoryInvitationEmail":"email",
 "_docviewSignatoryInvitationEmailSMS":"email and SMS",
 "_docviewSignatoryInvitationMethodLabel":"Invitation method",
+"_docviewSignatoryInvitationNone":"none",
 "_docviewSignatoryInvitationOrderLabel":"Invitation order",
 "_docviewSignatoryInvitationPad":"in-person meeting",
 "_docviewSignatoryInvitationSMS":"SMS",
