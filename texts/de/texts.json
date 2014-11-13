@@ -864,7 +864,7 @@
 "_verificationFailedMessage":"Dieses Dokument wurde nicht über Scrive signiert oder das Original wurde von jemandem geändert.",
 "_verificationFooter":"Diese Bestätigung wurde von Scrive ausgestellt. Informationen in Kursivschrift gingen durch die Sicherheitsprüfung von Scrive. Die digitale Signatur stellt sicher, dass die Echtheit dieses Dokumentes  mathematisch und unabhängig von Scrive bewiesen werden kann. Für weitere Informationen zu diesem Dokument betrachten Sie die verborgenen Anhänge (verwenden Sie einen PDF-Reader, wie Adobe Reader, der verborgene Anhänge anzeigen kann). Scrive bietet Ihnen auch die Möglichkeit die Echtheit dieses Dokuments automatisch zu überprüfen: $verifyurl$",
 "_verificationGateway":"Gateway",
-"_verificationMethod":"Zustellungsverfahren",
+"_verificationMethod":"",
 "_verificationSuccess":"Gültige Signierung",
 "_verificationTime":"Zeit",
 "_verificationTitle":"Die Integrität des Dokuments verifizieren",

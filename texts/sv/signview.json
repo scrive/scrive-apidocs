@@ -48,7 +48,7 @@
 "_mailContractClosedContentSignedBy":"Dokumentet <strong>$documenttitle$</strong> har signerats av $partylist:noescape()$.",
 "_mailDocumentClosedTitleContractConfirmation":"Bekräftelse: e-signerat dokument $documenttitle$",
 "_mailDocumentClosedTitleContractCorrection":"Korrigering: e-signerat dokument $documenttitle$",
-"_mailDocumentCorrectionBody":"",
+"_mailDocumentCorrectionBody":"Vid tidpunkten $closingtime$ signerades dokumentet <strong>$documenttitle$</strong> och vi skickade dig ett exemplar av dokumentet.<br/><br/>Vi har upptäckt att det var ett tekniskt fel när dokumentet färdigställdes av vårt e-signeringssystem. Felet hindrade e-signeringssystemet från att försegla dokumentet med en digital signatur. Felet har nu åtgärdats och dokumentet har nu förseglats med en digital signatur.<br/><br/>Bifogat med detta mail finner du det förseglade dokumentet med en ny digital signatur. För att undvika framtida förväxling rekommenderar vi att du behåller detta dokument och slänger föregående version.<br/><br/>Om du är intresserad av att läsa mer om syftet med digitala signaturer rekommenderar vi denna artikel: <a href='http://en.wikipedia.org/wiki/Digital_signature'>http://en.wikipedia.org/wiki/Digital_signature</a>",
 "_mailDocumentLinked":"Dokumentet var för stort för att bifogas med detta e-postmeddelande. Det kommer att vara tillgängligt för nedladdning till och med $availabledate$.",
 "_mailDocumentLinkedButton":"Ladda ner dokumentet",
 "_mailGoToDocument":"Gå till dokumentet",

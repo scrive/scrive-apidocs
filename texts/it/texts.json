@@ -864,7 +864,7 @@
 "_verificationFailedMessage":"Questo documento non è stato firmato tramite Scrive o l'originale è stato alterato da qualcuno.",
 "_verificationFooter":"Questa verifica è stata rilasciata da Scrive. Le informazioni in corsivo sono state verificate in modo sicuro da Scrive. La firma digitale garantisce che l'originalità di questo documento può essere dimostrata matematicamente e indipendentemente da Scrive. Per ulteriori informazioni su questo documento consultare gli allegati nascosti (utilizzare un PDF-reader in grado di visualizzare gli allegati nascosti come Adobe Reader). Per vostra comodità Scrive fornisce anche un servizio che permette di verificare automaticamente l'originalità del documento qui: $verifyurl$ ",
 "_verificationGateway":"Gateway",
-"_verificationMethod":"Metodo di consegna",
+"_verificationMethod":"",
 "_verificationSuccess":"Firma valida",
 "_verificationTime":"Tempo",
 "_verificationTitle":"Verifica l'autenticità del documento",
