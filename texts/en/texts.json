@@ -864,7 +864,7 @@
 "_verificationFailedMessage":"This document has not been signed using Scrive or the original has been altered by someone.",
 "_verificationFooter":"This verification was issued by Scrive. Information in italics has been safely verified by Scrive. The digital signature ensures that the originality of this document can be proven mathematically and independently of Scrive. For more information about this document see the concealed attachments (use a PDF-reader that can show concealed attachments such as Adobe Reader). For your convenience Scrive also provides a service that enables you to automatically verify the document's originality at: $verifyurl$",
 "_verificationGateway":"Gateway",
-"_verificationMethod":"Delivery method",
+"_verificationMethod":"Invitation method",
 "_verificationSuccess":"Valid signature",
 "_verificationTime":"Time",
 "_verificationTitle":"Verify the document's authenticity",
