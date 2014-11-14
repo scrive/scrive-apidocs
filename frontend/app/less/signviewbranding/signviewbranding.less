@@ -400,8 +400,7 @@
     }
 
     &.signaturePlaceholder {
-        .background_with_ie_support(overlay(fade(@secondarycolor,20%),rgba(255,255,255,0.8)));
-
+      .background_with_ie_support(fade(@primarycolor,20%));
     }
 
     &.obligatory {
@@ -413,7 +412,7 @@
       }
 
       &.signaturePlaceholder {
-        .background_with_ie_support(overlay(fade(@primarycolor,20%),rgba(255,255,255,0.8)));
+        .background_with_ie_support(fade(@primarycolor,20%));
       }
     }
   }
