@@ -180,25 +180,27 @@ preCheckPDFHelper content tmppath =
     checkNormalize = do
       liftIO $ BS.writeFile sourcepath content
 
-      (exitcode,stdout1,stderr1) <- liftIO $ readProcessWithExitCode' "mutool"
+      -- dont rely on mutool exit code - for mupdf-1.6 it's always 1
+      -- just check if the output file is there
+      (_, stdout1, stderr1) <- liftIO $ readProcessWithExitCode' "mutool"
                                    [ "clean"
                                    , "-ggg"
                                    , sourcepath
                                    , normalizedpath
                                    ] BSL.empty
-      case exitcode of
-        ExitSuccess -> return ()
-        ExitFailure code -> do
-          liftIO $ do
-            systmp <- getTemporaryDirectory
-            (_path,handle) <- openTempFile systmp ("pre-normalize-failed-.pdf")
-            BS.hPutStr handle content
-            hClose handle
+      flag <- liftIO $ doesFileExist normalizedpath
+      when (not flag) $ do
+        liftIO $ do
+          systmp <- getTemporaryDirectory
+          (_path,handle) <- openTempFile systmp ("pre-normalize-failed-.pdf")
+          BS.hPutStr handle content
+          hClose handle
 
-          throwError (FileNormalizeError (BSL.pack ("Exit code " ++ show code ++ "\n") `BSL.append`
-                                          stdout1 `BSL.append`
-                                          BSL.pack "\n" `BSL.append`
-                                          stderr1))
+        throwError $ FileNormalizeError $ BSL.concat [ BSL.pack ("Exit failure \n")
+                                                     , stdout1
+                                                     , BSL.pack "\n"
+                                                     , stderr1
+                                                     ]
 
     readOutput = liftIO $ BS.readFile normalizedpath
 
