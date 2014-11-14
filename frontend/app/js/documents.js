@@ -656,11 +656,11 @@ window.Document = Backbone.Model.extend({
         });
     },
     maxPossibleSignOrder : function() {
-      return this.signatories().length
+      return this.signatories().length;
     },
     fixSignorderAfterRemoving : function(old) {
       if (!_.any(this.signatories(), function(s) {
-        return s.signorder() == old.signorder()
+        return s.signorder() == old.signorder();
       })) {
         _.each(this.signatories(), function(s) {
           if (s.signorder() > old.signorder()) {
