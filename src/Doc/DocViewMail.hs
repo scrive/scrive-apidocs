@@ -144,12 +144,16 @@ mailDocumentRejected :: (MonadDB m, MonadThrow m, TemplatesMonad m, MailContextM
                      -> Document
                      -> m Mail
 mailDocumentRejected forMail customMessage rejector document = do
-   documentMailWithDocLang document (templateName "mailRejectContractMail") $ do
+   documentMailWithDocLang document template $ do
         F.value "rejectorName" $ getSmartName rejector
         F.value "ispreview" $ not $ forMail
         F.value "customMessage" $ customMessage
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
         F.value "loginlink" $ show $ LinkIssueDoc $ documentid document
+  where template = if signatoryisauthor rejector then
+                       templateName "mailAuthorRejectContractMail"
+                   else
+                       templateName "mailRejectContractMail"
 
 
 
