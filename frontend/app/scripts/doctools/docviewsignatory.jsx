@@ -55,6 +55,9 @@ var DocumentViewSignatoryModel = Backbone.Model.extend({
  },
  hasRemindOption: function() {
    var signatory = this.signatory();
+   if (signatory.document().signingInProcess() && signatory.hasSigned()) {
+     return false;
+   }
    return    !this.forSigning()
           && (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
           && !signatory.author()
