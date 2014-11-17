@@ -1170,8 +1170,6 @@ signatoryLinkFieldsAddBinaryValue = Migration {
       sqlAlterColumn "value_text" "DROP DEFAULT"
     , sqlAlterColumn "value_text" "DROP NOT NULL"
     , sqlAddColumn tblColumn { colName = "value_binary", colType = BinaryT }
-    , sqlAddCheck $ TableCheck "check_signatory_link_fields_value_well_defined"
-        "value_text IS NOT NULL AND value_binary IS NULL OR value_text IS NULL AND value_binary IS NOT NULL"
     ]
 
   -- move empty signatures to bytea
@@ -1182,8 +1180,8 @@ signatoryLinkFieldsAddBinaryValue = Migration {
     sqlWhereEq "value_text" (""::String)
 
   -- move signatures stored as base64 to bytea. if regex matching fails, substring
-  -- returns NULL and therefore the whole query will fail, because the field will
-  -- not have value_text nor value_binary set as NOT NULL.
+  -- returns NULL and therefore the next query setting constraint checks will fail,
+  -- because the field will not have value_text nor value_binary set as NOT NULL.
   runQuery_ . sqlUpdate "signatory_link_fields" $ do
     sqlSet "value_text" (Nothing :: Maybe String)
     sqlSetCmd "value_binary" "decode(substring(value_text from 'data:(?:[a-z/]*;base64,){0,1}(.*)'), 'base64')"
@@ -1191,10 +1189,10 @@ signatoryLinkFieldsAddBinaryValue = Migration {
     sqlWhereIsNULL "value_binary"
 
   runQuery_ $ alter_table [
-      sqlAddCheck $ TableCheck "check_signatory_link_fields_value_type_correct" $ mconcat [
-        "value_binary IS NOT NULL AND type = 8" -- signature
-      , " OR value_text IS NOT NULL" -- everything else
-      ]
+      sqlAddCheck $ TableCheck "check_signatory_link_fields_signature_well_defined"
+        "type = 8 AND value_binary IS NOT NULL AND value_text IS NULL OR type <> 8"
+    , sqlAddCheck $ TableCheck "check_signatory_link_fields_text_fields_well_defined"
+        "type = 8 OR type <> 8 AND value_binary IS NULL AND value_text IS NOT NULL"
     ]
 }
 

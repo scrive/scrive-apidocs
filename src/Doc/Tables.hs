@@ -1,7 +1,5 @@
 module Doc.Tables where
 
-import Data.Monoid
-
 import DB
 
 tableDocuments :: Table
@@ -189,12 +187,10 @@ tableSignatoryLinkFields = tblTable {
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblChecks = [
-      TableCheck "check_signatory_link_fields_value_well_defined"
-        "value_text IS NOT NULL AND value_binary IS NULL OR value_text IS NULL AND value_binary IS NOT NULL"
-     , TableCheck "check_signatory_link_fields_value_type_correct" $ mconcat [
-          "value_binary IS NOT NULL AND type = 8" -- signature
-        , " OR value_text IS NOT NULL" -- everything else
-        ]
+      TableCheck "check_signatory_link_fields_signature_well_defined"
+        "type = 8 AND value_binary IS NOT NULL AND value_text IS NULL OR type <> 8"
+     , TableCheck "check_signatory_link_fields_text_fields_well_defined"
+        "type = 8 OR type <> 8 AND value_binary IS NULL AND value_text IS NOT NULL"
     ]
   , tblForeignKeys = [
       (fkOnColumn "signatory_link_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }
