@@ -137,6 +137,7 @@ handleNewDocument = do
                 othersiglink' = othersiglink { signatorysignorder = SignOrder 1
                                              , signatoryfields = [ templateField FirstNameFT
                                                                  , templateField LastNameFT
+                                                                 , templateField EmailFT
                                                                  , templateField MobileFT
                                                                  , templateField CompanyFT
                                                                  , templateField CompanyNumberFT
