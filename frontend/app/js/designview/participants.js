@@ -151,26 +151,27 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             var view = this;
             var sig = view.model;
             var lastViewer = sig.isLastViewer();
-            var delivery = sig.delivery();
 
-            var deliveryTexts = {
+            var deliveryTexts = function(t) {
+              return {
+                none         : localization.designview.addParties.invitationNone,
                 email        : localization.designview.addParties.invitationEmail,
-                pad          : lastViewer ? localization.designview.addParties.invitationNone
-                                          : localization.designview.addParties.invitationInPerson,
+                pad          : localization.designview.addParties.invitationInPerson,
                 mobile       : localization.designview.addParties.invitationSMS,
                 email_mobile : localization.designview.addParties.invitationEmailSMS,
                 api : localization.designview.byAPI
+              }[lastViewer ? "none" : t];
             };
 
-            var deliveryTypes = lastViewer ? ['pad'] : ['email', 'pad', 'mobile', 'email_mobile'];
+            var deliveryTypes = lastViewer ? [''] : ['email', 'pad', 'mobile', 'email_mobile'];
 
             var select = $("<div/>");
             React.renderComponent(
               NewSelect.Select({
                 options: _.map(deliveryTypes, function(t) {
-                  return {name: deliveryTexts[t], value:t};
+                  return {name: deliveryTexts(t), value:t};
                 }),
-                name: deliveryTexts[delivery],
+                name: deliveryTexts(sig.delivery()),
                 textWidth : "151px",
                 optionsWidth : "178px",
                 onSelect: function(v) {

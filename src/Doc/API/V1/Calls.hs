@@ -350,8 +350,8 @@ apiCallV1Ready did =  api $ do
       timezone <- documenttimezonename <$> theDocument
       dbUpdate $ PreparationToPending actor timezone
       dbUpdate $ SetDocumentInviteTime t actor
-      skipauthorinvitation <- isFieldSet "skipauthorinvitation"
-      postDocumentPreparationChange skipauthorinvitation timezone
+      authorsignsimmediately <- isFieldSet "authorsignsimmediately"
+      postDocumentPreparationChange authorsignsimmediately timezone
       Accepted <$> (documentJSONV1 (Just user) False True True Nothing =<< theDocument)
 
 apiCallV1Cancel :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> m Response

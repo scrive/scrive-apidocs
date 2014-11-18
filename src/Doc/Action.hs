@@ -86,7 +86,7 @@ logDocEvent name user extraProps doc = do
     stringProp "Signup Method" (show $ usersignupmethod user)]
 
 postDocumentPreparationChange :: (Kontrakcja m, DocumentMonad m) => Bool -> TimeZoneName -> m ()
-postDocumentPreparationChange skipauthorinvitation tzn = do
+postDocumentPreparationChange authorsignsimmediately tzn = do
   docid <- theDocumentID
   triggerAPICallbackIfThereIsOne =<< theDocument
   unlessM (isPending <$> theDocument) $
@@ -110,7 +110,7 @@ postDocumentPreparationChange skipauthorinvitation tzn = do
                               ]
   theDocument >>= logDocEvent "Doc Sent" author []
 
-  sendInvitationEmails skipauthorinvitation
+  sendInvitationEmails authorsignsimmediately
   scheduleAutoreminderIfThereIsOne tzn =<< theDocument
   return ()
 

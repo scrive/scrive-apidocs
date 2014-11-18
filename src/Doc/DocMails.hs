@@ -99,18 +99,20 @@ sendDocumentErrorEmail author document = do
    ??: Should this be in DocControl or in an email-sepecific file?
  -}
 sendInvitationEmails :: (CryptoRNG m, MonadThrow m, Log.MonadLog m, TemplatesMonad m, DocumentMonad m, MailContextMonad m) => Bool -> m ()
-sendInvitationEmails skipauthorinvitation = do
+sendInvitationEmails authorsignsimmediately = do
   signlinks <- theDocument >>= \d -> return
                   [sl | sl <- documentsignatorylinks d
                       , matchingSignOrder d sl
+                      , not (authorsignsimmediately && onlyAuthorSigns d)
                       , signatorylinkdeliverymethod sl `elem` [EmailDelivery, MobileDelivery,EmailAndMobileDelivery]
                       , not $ hasSigned sl
-                      , ((not $ isAuthor sl) || (isAuthor sl && not skipauthorinvitation))
-                      ]
+                      , ((not $ isAuthor sl) || (isAuthor sl && not authorsignsimmediately))
+                  ]
   forM_ signlinks sendInvitationEmail1
   where matchingSignOrder d sl = so > documentprevioussignorder d
                               && so <= documentcurrentsignorder d
           where so = signatorysignorder sl
+        onlyAuthorSigns d = all (\sl -> isAuthor sl || not (signatoryispartner sl)) (documentsignatorylinks d)
 
 {- |
    Helper function to send emails to invited parties

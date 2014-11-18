@@ -318,7 +318,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                       document.verifyEleg().addMany(params).sendAjax(function(resp) {
                         var resp = JSON.parse(resp);
                         if (resp.verified) {
-                          document.makeReadyForSigning().add("skipauthorinvitation","YES").sendAjax(function(docdata) {
+                          document.makeReadyForSigning().add("authorsignsimmediately","YES").sendAjax(function(docdata) {
                             var newdoc = new Document(new Document({}).parse(docdata));
                             newdoc.set({"screenshots" : document.get("screenshots")}); // We need to propagate screenshots
                             newdoc.sign().addMany(params).sendAjax(function() {
@@ -511,7 +511,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             LoadingDialog.open(copyDocFor, copyPartOf);
             doc.save();
             doc.afterSave(function() {
-              doc.makeReadyForSigning().add("skipauthorinvitation","YES").sendAjax(function(docdata) {
+              doc.makeReadyForSigning().add("authorsignsimmediately","YES").sendAjax(function(docdata) {
                   var newdoc = new Document(new Document({}).parse(docdata));
                   newdoc.set({"screenshots" : doc.get("screenshots")}); // We need to propagate screenshots
                   newdoc.sign().sendAjax(
@@ -538,7 +538,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             }
             doc.save();
             doc.afterSave(function() {
-            doc.makeReadyForSigning().add("skipauthorinvitation","YES").sendAjax(function(docdata) {
+            doc.makeReadyForSigning().add("authorsignsimmediately","YES").sendAjax(function(docdata) {
                var newdoc = new Document(new Document({}).parse(docdata));
                newdoc.set({"screenshots" : doc.get("screenshots")}); // We need to propagate screenshots
                newdoc.sign().sendAjax(function() {

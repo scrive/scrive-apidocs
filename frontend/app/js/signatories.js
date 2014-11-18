@@ -78,10 +78,11 @@ window.Signatory = Backbone.Model.extend({
         authentication: "standard",
         delivery: "email",
         confirmationdelivery : "email",
-        // Internal properties used by design view
+        // Internal properties used by design view for goldfish memory
         changedDelivery : false,
         changedConfirmationDelivery : false,
         shadowedDelivery: null,
+        shadowedConfirmationDelivery: null,
         lastViewer: false
     },
 
@@ -385,20 +386,24 @@ window.Signatory = Backbone.Model.extend({
       var isLastViewer = this.isLastViewer();
       var shadowedDelivery = this.get("shadowedDelivery");
       if (isLastViewer) {
-        this.set({delivery : "pad", changedDelivery : true});
-        this.trigger("change:delivery");
         if (this.get("confirmationdelivery") == "none") {
-          this.set({confirmationdelivery : _.contains(["email", "mobile", "email_mobile"], shadowedDelivery) ? shadowedDelivery : "email"});
+          this.set({ shadowedConfirmationDelivery: "none"
+                   , confirmationdelivery : _.contains(["email", "mobile", "email_mobile"], shadowedDelivery) ? shadowedDelivery : "email"});
+        }
+        if (!this.get("lastviewer")) {
+          this.trigger("change:delivery");
         }
       } else if (this.get("lastViewer")) {
+        this.trigger("change:delivery");
         if (shadowedDelivery == null) {
           this.set({delivery : "email"});
-        } else {
-          this.set({delivery : shadowedDelivery});
         }
-        this.trigger("change:delivery");
-        this.set({lastViewer : false});
+        if (this.get("shadowedConfirmationDelivery") != null) {
+          this.set({confirmationdelivery: this.get("shadowedConfirmationDelivery")});
+          this.set({shadowedConfirmationDelivery: null});
+        }
       }
+      this.set({lastViewer : isLastViewer});
     },
     allAttachemntHaveFile: function() {
         return _.all(this.attachments(), function(attachment) {
@@ -432,31 +437,31 @@ window.Signatory = Backbone.Model.extend({
        });
     },
     standardAuthentication: function() {
-          return this.get("authentication") == "standard";
+          return this.get("authentication") == "standard" && !this.isLastViewer();
     },
     elegAuthentication: function() {
-          return this.get("authentication") == "eleg";
+          return this.get("authentication") == "eleg" && !this.isLastViewer();
     },
     smsPinAuthentication: function() {
-          return this.get("authentication") == "sms_pin";
+          return this.get("authentication") == "sms_pin" && !this.isLastViewer();
     },
     emailDelivery: function() {
-          return this.get("delivery") == "email";
+          return this.get("delivery") == "email" && !this.isLastViewer();
     },
     padDelivery : function() {
           return this.get("delivery") == "pad" && !this.isLastViewer();
     },
     mobileDelivery : function() {
-          return this.get("delivery") == "mobile";
+          return this.get("delivery") == "mobile" && !this.isLastViewer();
     },
     emailMobileDelivery : function() {
-          return this.get("delivery") == "email_mobile";
+          return this.get("delivery") == "email_mobile" && !this.isLastViewer();
     },
     apiDelivery : function() {
-          return this.get("delivery") == "api";
+          return this.get("delivery") == "api" && !this.isLastViewer();
     },
     noneDelivery : function() {
-          return this.get("delivery") == "pad" && this.isLastViewer();
+          return this.get("delivery") == this.isLastViewer();
     },
     emailConfirmationDelivery: function() {
           return this.get("confirmationdelivery") == "email";

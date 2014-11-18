@@ -309,7 +309,7 @@ docFieldsListForJSON userid doc = do
       [MobileDelivery]-> "mobile"
       _                        -> "mixed"
     J.value "deliveryMethods" $ nub [ signatorylinkdeliverymethod s | s <- documentsignatorylinks doc
-                                    , not (signatorylinkdeliverymethod s == PadDelivery && isLastViewer doc s)
+                                    , not (isLastViewer doc s)
                                     ]
     J.value "anyinvitationundelivered" $ Pending == documentstatus doc &&
                                             (   (any (== Undelivered) $ mailinvitationdeliverystatus <$> documentsignatorylinks doc)
