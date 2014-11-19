@@ -986,6 +986,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
             },
             onEnter : function(val) {
                   view.closeTypeSetter();
+                  view.model.cleanTypeSetter();
                   view.render();
             }
         });
