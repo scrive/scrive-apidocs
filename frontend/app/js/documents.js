@@ -78,7 +78,6 @@ window.Document = Backbone.Model.extend({
     addExistingSignatory: function(sig) {
         var document = this;
         var signatories = document.signatories();
-        this.cacheLastViewers();
         signatories[signatories.length] = sig;
         var time = new Date().getTime();
         this.checkLastViewerChange();
@@ -485,7 +484,6 @@ window.Document = Backbone.Model.extend({
           {   this.signatories()[i].removed();
               removed = true;
           }
-       this.cacheLastViewers();
        this.set({signatories : newsigs});
        this.fixSignorderAfterRemoving(sig);
        this.checkLastViewerChange();
@@ -671,13 +669,6 @@ window.Document = Backbone.Model.extend({
         });
       }
     },
-    cacheLastViewers : function() {
-    // Make sure we have cached isLastViewer values before changing
-    // state, so that checkLastViewerChange can detect changes.
-      _.each(this.signatories(), function(s) {
-        s.isLastViewer();
-      });
-    },
     checkLastViewerChange : function() {
       _.each(this.signatories(), function(s) {
         s.checkLastViewerChange();
@@ -698,6 +689,11 @@ window.Document = Backbone.Model.extend({
           signatoryid: self.viewer().signatoryid()
         };
      if (self.file() != undefined) self.file().off();
+     var signatories = args.signatories || [];
+     var maxSignsSignorder = _.max(signatories, function(s) {
+         return s.signs ? s.signorder : 0;
+       }).signorder;
+
      return {
        id: args.id,
        title: args.title,
@@ -719,8 +715,8 @@ window.Document = Backbone.Model.extend({
          return new File(_.defaults(fileargs, dataForFile));
        }),
        evidenceattachments: args.evidenceattachments,
-       signatories: _.map(args.signatories || [], function(signatoryargs) {
-         return new Signatory(_.defaults(signatoryargs, { document: self }));
+       signatories: _.map(signatories, function(signatoryargs) {
+         return new Signatory(_.defaults(signatoryargs, { document: self, isLastViewer : !signatoryargs.signs && signatoryargs.signorder > maxSignsSignorder }));
        }),
        lang: (function() {
            var lang = new DocLang({lang : args.lang});
