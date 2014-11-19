@@ -78,12 +78,12 @@ window.Signatory = Backbone.Model.extend({
         authentication: "standard",
         delivery: "email",
         confirmationdelivery : "email",
-        // Internal properties used by design view for goldfish memory
+        // Internal properties used by design view for "goldfish" memory
         changedDelivery : false,
         changedConfirmationDelivery : false,
-        shadowedDelivery: null,
-        shadowedConfirmationDelivery: null,
-        lastViewer: false
+        deliveryGoldfishMemory : null,
+        confirmationDeliveryWasNone  : false,
+        isLastViewer : null
     },
 
     initialize: function(args) {
@@ -312,6 +312,7 @@ window.Signatory = Backbone.Model.extend({
          return this.get("signorder");
     },
     setSignOrder: function(i) {
+         this.document().cacheLastViewers();
          this.set({signorder: parseInt(i + "")});
          this.document().checkLastViewerChange();
     },
@@ -325,11 +326,13 @@ window.Signatory = Backbone.Model.extend({
           return this.get("rejectredirect");
     },
     makeSignatory: function() {
+      this.document().cacheLastViewers();
       this.set({ signs: true });
       this.document().checkLastViewerChange();
       this.trigger("change:role");
     },
     makeViewer: function() {
+      this.document().cacheLastViewers();
       this.set({signs: false});
       this.document().checkLastViewerChange();
       _.each(this.signatures(),function(s) {
@@ -376,34 +379,44 @@ window.Signatory = Backbone.Model.extend({
         return !this.author() && !this.signs();
     },
     isLastViewer : function() {
-      var i = this.document().isLastViewer(this);
-      if (i) {
-        this.set({lastViewer : true});
+      if (this.get("isLastViewer") == null) {
+        this.setLastViewer();
       }
-      return i;
+      return this.document().signatories().length != 0
+             ? this.get("isLastViewer")
+             : false; // don't know real answer until document is fully defined
+    },
+    setLastViewer : function() {
+      if (this.document().signatories().length != 0) {
+        mysig = this;
+        this.set({isLastViewer : !this.signs() &&
+                                 _.all(this.document().signatories(), function(s) {
+                                          return !s.signs() || s.signorder() < mysig.signorder();
+                                 })});
+      }
     },
     checkLastViewerChange : function() {
-      var isLastViewer = this.isLastViewer();
-      var shadowedDelivery = this.get("shadowedDelivery");
-      if (isLastViewer) {
-        if (this.get("confirmationdelivery") == "none") {
-          this.set({ shadowedConfirmationDelivery: "none"
-                   , confirmationdelivery : _.contains(["email", "mobile", "email_mobile"], shadowedDelivery) ? shadowedDelivery : "email"});
-        }
-        if (!this.get("lastviewer")) {
-          this.trigger("change:delivery");
-        }
-      } else if (this.get("lastViewer")) {
-        this.trigger("change:delivery");
-        if (shadowedDelivery == null) {
-          this.set({delivery : "email"});
-        }
-        if (this.get("shadowedConfirmationDelivery") != null) {
-          this.set({confirmationdelivery: this.get("shadowedConfirmationDelivery")});
-          this.set({shadowedConfirmationDelivery: null});
+      var previousLastViewerState = this.isLastViewer();
+      this.setLastViewer();
+      var lastViewerState = this.isLastViewer();
+
+      if (!previousLastViewerState && lastViewerState) {
+        this.set({ deliveryGoldfishMemory : this.get("delivery") });
+        this.set({ confirmationDeliveryWasNone : this.get("confirmationdelivery") == "none" });
+        if (this.get("confirmationDeliveryWasNone")) {
+          this.set({ confirmationdelivery : _.contains(["email", "mobile", "email_mobile"], this.get("delivery")) ? this.get("delivery") : "email"});
         }
       }
-      this.set({lastViewer : isLastViewer});
+      if (previousLastViewerState && !lastViewerState) {
+        this.set({ delivery : this.get("deliveryGoldfishMemory") == null
+                              ? "email"
+                              : this.get("deliveryGoldfishMemory") });
+
+        if (this.get("confirmationDeliveryWasNone")) {
+          this.set({confirmationdelivery: "none"});
+        }
+      }
+      this.trigger("change:delivery");
     },
     allAttachemntHaveFile: function() {
         return _.all(this.attachments(), function(attachment) {
@@ -617,9 +630,7 @@ window.Signatory = Backbone.Model.extend({
         return this.get('confirmationdelivery');
     },
     setDelivery: function(d) {
-        this.set({ delivery : d,
-                   shadowedDelivery : d,
-                   changedDelivery : true});
+        this.set({delivery : d, changedDelivery : true});
         if (!this.get("changedConfirmationDelivery"))
           this.synchConfirmationDelivery();
         return this;

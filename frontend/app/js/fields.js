@@ -183,15 +183,16 @@ window.Field = Backbone.Model.extend({
       }
 
       var concatValidations = new Validation();
-      var senderMustFill = field.isObligatory() && field.shouldbefilledbysender()
-       || !signatory.signs() && (field.isEmail() && (signatory.emailConfirmationDelivery() || signatory.emailMobileConfirmationDelivery()) ||
-                                 field.isMobile() && (signatory.mobileConfirmationDelivery() || signatory.emailMobileConfirmationDelivery()));
+      var senderMustFill = field.isObligatory() && field.shouldbefilledbysender();
+      var viewerNeedsFieldForDelivery = !signatory.signs()
+                                     && (field.isEmail() && (signatory.emailConfirmationDelivery() || signatory.emailMobileConfirmationDelivery()) ||
+                                         field.isMobile() && (signatory.mobileConfirmationDelivery() || signatory.emailMobileConfirmationDelivery()));
       var willSignNowAndFieldNeeded = signatory.author()
         && signatory.ableToSign()
         && (!signatory.hasPlacedSignatures())
         && field.isObligatory()
         && (field.isText() || field.isCheckbox());
-      if(senderMustFill || willSignNowAndFieldNeeded) {
+      if(senderMustFill || willSignNowAndFieldNeeded || viewerNeedsFieldForDelivery) {
         concatValidations = new NotEmptyValidation();
       }
 

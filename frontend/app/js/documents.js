@@ -78,6 +78,7 @@ window.Document = Backbone.Model.extend({
     addExistingSignatory: function(sig) {
         var document = this;
         var signatories = document.signatories();
+        this.cacheLastViewers();
         signatories[signatories.length] = sig;
         var time = new Date().getTime();
         this.checkLastViewerChange();
@@ -484,6 +485,7 @@ window.Document = Backbone.Model.extend({
           {   this.signatories()[i].removed();
               removed = true;
           }
+       this.cacheLastViewers();
        this.set({signatories : newsigs});
        this.fixSignorderAfterRemoving(sig);
        this.checkLastViewerChange();
@@ -669,9 +671,11 @@ window.Document = Backbone.Model.extend({
         });
       }
     },
-    isLastViewer: function(viewer) { // True if all signing parties' signorders are smaller than viewer's
-      return !viewer.signs() && _.all(this.signatories(), function(s) {
-        return !s.signs() || s.signorder() < viewer.signorder();
+    cacheLastViewers : function() {
+    // Make sure we have cached isLastViewer values before changing
+    // state, so that checkLastViewerChange can detect changes.
+      _.each(this.signatories(), function(s) {
+        s.isLastViewer();
       });
     },
     checkLastViewerChange : function() {
