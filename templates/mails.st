@@ -102,10 +102,21 @@ mailRejectContractMail=
       $nicemail(
         mailheader = _mailRejectMailTitleContract();
         mailp1 = _mailRejectMailContentRejected();
+        mailp2 = _mailRejectMailContentRejected2();
+        mailspacing2 = "";
+        mailp3 = mailRejectMailContentHeader();
+        mailspacing3 = "";
+        mailp4 = mailRejectLoginButton();
+        footer = null
+      )$
+####
+mailAuthorRejectContractMail=
+      $_mailRejectMailTitleContract()$
+      $nicemail(
+        mailheader = _mailRejectMailTitleContract();
+        mailp1 = _mailRejectMailContentRejected();
         mailspacing1 = "";
         mailp2 = mailRejectMailContentHeader();
-        mailspacing2 = "";
-        mailp3 = mailRejectLoginButton();
         footer = null
       )$
 ####

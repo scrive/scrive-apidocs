@@ -125,8 +125,8 @@ var AuthorViewAutomaticRemindersView = Backbone.View.extend({
                 width: 640,
                 icon : '/img/modal-icons/extend-duedate.png',
                 onReject : function() {
-                  if (this.calendar != undefined)
-                    this.calendar.close();
+                  if (self.calendar != undefined)
+                    self.calendar.close();
                 },
                 acceptButton : function() {
                   return self.buttonChangeForModal();
@@ -171,8 +171,8 @@ var AuthorViewAutomaticRemindersView = Backbone.View.extend({
                 width: 640,
                 icon : '/img/modal-icons/extend-duedate.png',
                 onReject : function() {
-                  if (this.calendar != undefined)
-                    this.calendar.close();
+                  if (self.calendar != undefined)
+                    self.calendar.close();
                 },
                 acceptButton : function() {
                   var box = $("<div>");

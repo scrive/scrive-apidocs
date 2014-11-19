@@ -115,6 +115,7 @@ function prepareEditor(textarea) {
   tinyMCE.baseURL = '/libs/tiny_mce';
   tinyMCE.init({
     selector: '#' + textarea.attr('id'),
+    content_css : "/css/tinymce.css",
     plugins: "noneditable,paste",
     menubar: false,
     valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul",

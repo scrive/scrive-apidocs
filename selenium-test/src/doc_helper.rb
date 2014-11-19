@@ -21,6 +21,7 @@ class DocHelper
     (@h.wait_until { @driver.find_element :css => ".design-view-document-buttons-upload-button input.multiFileInput" }).send_keys @ctx.props.contract_pdf_path
     puts "waiting for pages"
     @h.wait_until { @driver.find_element :css => "#page1" }
+    (@h.wait_until { (@driver.find_element :xpath => "(//div[contains(@class,'design-view-action-participant-container-participants-box')]//div[contains(@class,'design-view-action-participant-close')])[1]") }).click
   end
 
   def partno(no)

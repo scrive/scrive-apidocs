@@ -257,6 +257,7 @@ module.exports = function(grunt) {
               'api-demo/**/*',
               'enable-cookies/**/*',
               'css/fonts/*',
+              'css/tinymce.css',
               'fonts/**/*',
               'img/**/*',
               'newsletter/**/*',

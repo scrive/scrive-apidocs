@@ -1009,7 +1009,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
 
             fstnameField.bind('change', function(obj, args) {
                 // check both name fields to see if full name should be highlighted
-                if(!fstnameField.isValid(true) || !sndnameField.isValid(true))
+                if(!fstnameField.isValid(true) || (sndnameField != undefined && !sndnameField.isValid(true)))
                     input.el().addClass('redborder');
                 else
                     input.el().removeClass('redborder');
@@ -1037,7 +1037,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                 }
               });
             }
-            if(!fstnameField.isValid(true) || !sndnameField.isValid(true))
+            if(!fstnameField.isValid(true) || (sndnameField != undefined && !sndnameField.isValid(true)))
                     input.el().addClass('redborder');
             else
                     input.el().removeClass('redborder');

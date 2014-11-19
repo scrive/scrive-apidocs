@@ -63,6 +63,7 @@ window.MailView = Backbone.View.extend({
         setTimeout( function() {
            tinyMCE.init({
                       selector: '#' + id,
+                      content_css : "/css/tinymce.css",
                       plugins: "noneditable,paste",
                       menubar: false,
                       valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul",

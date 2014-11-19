@@ -32,6 +32,7 @@ return React.createClass({
       tinyMCE.baseURL = '/libs/tiny_mce';
       tinyMCE.init({
         selector: '#' + self.props.id,
+        content_css : "/css/tinymce.css",
         width: 275, // TODO this is overwritten by cwidth (?)
         height: 66,
         min_height: 66,

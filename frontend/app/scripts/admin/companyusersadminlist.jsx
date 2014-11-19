@@ -130,7 +130,7 @@ return React.createClass({
                      + " User will still exist in his original company.</div>"),
         onAccept : function() {
           new Submit({
-            url: "/adminonly/useradmin/deleteinvite/" + args.companyid + "/" +user.field("fields").id,
+            url: "/adminonly/useradmin/deleteinvite/" + self.props.companyid + "/" + d.field("fields").id,
             method: "POST",
             ajaxsuccess: function() {
               popup.clear();
@@ -205,7 +205,7 @@ return React.createClass({
            width="100px"
            rendering={function(d) {
              if (d.field("fields").role =="RoleInvite") {
-               return (<a style={{color:"red"}} href="#" onClick={function() {this.openDeleteInvitationModal(d)}}> Click to delete this invitation </a>);
+               return (<a style={{color:"red"}} href="#" onClick={function() {self.openDeleteInvitationModal(d)}}> Click to delete this invitation </a>);
              }
              var time = d.field("fields").tos;
              if (time != undefined && time != "") {
