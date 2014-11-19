@@ -30,6 +30,7 @@ import Data.Maybe
 import Happstack.Server(Response, Method(GET, POST, DELETE, PUT), ToMessage(..))
 import Happstack.StaticRouting
 import Text.JSON
+import qualified Data.Aeson as A
 
 import AppView as V
 import Happstack.Fields
@@ -67,6 +68,9 @@ instance ToResp ThinPage where
 
 instance ToResp JSValue where
     toResp = simpleJsonResponse
+
+instance ToResp A.Value where
+    toResp = simpleAesonResponse
 
 instance ToResp () where
     toResp _ = simpleHtmlResponse ""

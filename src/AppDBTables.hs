@@ -17,7 +17,7 @@ import Doc.AutomaticReminder.Tables
 import Doc.SMSPin.Tables
 import Doc.Tables
 import Doc.Tokens.Tables
-import ELegitimation.ELegTransaction.Tables
+import EID.CGI.GRP.Tables
 import EvidenceLog.Tables
 import File.Tables
 import HostClock.Tables
@@ -34,7 +34,7 @@ import User.Tables
 kontraFunctions :: [SQLFunction]
 kontraFunctions = [
     insertDocumentSessionToken
-  , mergeELegTransaction
+  , mergeCgiGrpTransaction
   ]
 
 kontraTables :: [Table]
@@ -69,7 +69,7 @@ kontraTables =
   , tableDocumentApiCallbacks
   , tableSessions
   , tableDocumentSessionTokens
-  , tableELegTransactions
+  , tableCgiGrpTransactions
   , tableAsyncEventQueue
   , tableHostClock
   , tableUsersCallbackScheme

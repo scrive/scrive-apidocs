@@ -45,6 +45,10 @@ import User.Model
 import Util.HasSomeUserInfo
 import Utils.Prelude
 
+-- TODO: clean up this mess. this is useless as it's so obscured by
+-- typeclasses that checking for a function that interests you takes
+-- ages.
+
 {- |
    Anything that could identify a SignatoryLink
  -}

@@ -27,6 +27,7 @@ import qualified Attachment.Control as AttachmentControl
 import qualified Company.CompanyControl as Company
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
 import qualified Doc.DocControl as DocControl
+import qualified EID.CGI.GRP.Control as EID
 import qualified ELegitimation.Control as BankID
 import qualified Payments.Control as Payments
 import qualified ServerUtils.ServerUtils as ServerUtils
@@ -74,6 +75,7 @@ staticRoutes production = choice
      , allLangDirs $ dir "to-sign" $ hGet $ toK0 $ DocControl.handlePadList
      , allLangDirs $ dir "padqueue" $ hGet $ toK0 $ return LinkPadList -- Backward compatibility, redirects back to /to-sign
 
+     , dir "eid" $ EID.grpRoutes
 
      -- Attachments
      , dir "a" $ dir "rename"      $ hPost $ toK1 $ AttachmentControl.handleRename

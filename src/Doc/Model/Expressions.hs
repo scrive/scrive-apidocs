@@ -16,7 +16,6 @@ module Doc.Model.Expressions
   ) where
 
 import Control.Applicative
-import Data.Maybe (fromMaybe)
 import Data.Monoid
 import Data.Monoid.Space
 import Prelude hiding (head, tail)

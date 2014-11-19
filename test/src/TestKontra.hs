@@ -45,7 +45,7 @@ import qualified Text.StringTemplates.TemplatesLoader as TL
 import Control.Monad.Trans.Control.Util
 import Crypto.RNG
 import DB
-import ELegitimation.Config (LogicaConfig(..))
+import EID.CGI.GRP.Config
 import GuardTime (GuardTimeConf(..))
 import IPAddress
 import Kontra
@@ -280,12 +280,13 @@ mkContext lang = do
         , ctxlang = lang
         , ctxmailsconfig = defaultMailsConfig
         , ctxlivedocxconf = defaultValue
-        , ctxlogicaconf = LogicaConfig { logicaEndpoint = "https://grpt.funktionstjanster.se:18898/osif"
-                                       , logicaCertFile = "certs/steria3.pem"
-                                       , logicaServiceID = "logtest004"
-                                       , logicaMBIEndpoint = "https://grpt.funktionstjanster.se:18898/mbi/service"
-                                       , logicaMBIDisplayName = "Test av Mobilt BankID"
-                                       }
+        , ctxlogicaconf = error "no logica config"
+        , ctxcgigrpconfig = CgiGrpConfig {
+            cgGateway = "https://grpt.funktionstjanster.se:18898/grp/v1"
+          , cgCertFile = "certs/steria3.pem"
+          , cgServiceID = "logtest004"
+          , cgDisplayName = "Funktionstjänster Test"
+          }
         , ctxfilecache = memcache
         , ctxxtoken = error "xtoken is not defined"
         , ctxadminaccounts = []

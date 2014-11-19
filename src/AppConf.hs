@@ -9,7 +9,7 @@ import Data.ByteString (ByteString)
 import Data.Unjson
 import Data.Word
 
-import ELegitimation.Config (LogicaConfig(..))
+import EID.CGI.GRP.Config
 import GuardTime (GuardTimeConf(..))
 import HostClock.System (defaultNtpServers)
 import LiveDocx (LiveDocxConf(..))
@@ -36,7 +36,7 @@ data AppConf = AppConf {
   , guardTimeConf      :: GuardTimeConf
   , mailsConfig        :: MailsConfig                  -- ^ mail sendout configuration
   , liveDocxConfig     :: LiveDocxConf                 -- ^ LiveDocx doc conversion configuration
-  , logicaConfig       :: LogicaConfig                 -- ^ Logica (Elegitimation) configuration
+  , cgiGrpConfig       :: CgiGrpConfig                 -- ^ CGI GRP (E-ID) configuration
   , admins             :: [Email]                      -- ^ email addresses of people regarded as admins
   , sales              :: [Email]                      -- ^ email addresses of people regarded as sales admins
   , initialUsers       :: [(Email,String)]             -- ^ email and passwords for initial users
@@ -46,7 +46,7 @@ data AppConf = AppConf {
   , homebase           :: String                       -- ^ url fragment where to fetch scripts
   , ntpServers         :: [String]                     -- ^ List of NTP servers to contact to get estimate of host clock error
   , salesforceConf     :: SalesforceConf             -- ^ Configuration of salesforce
-  } deriving (Read, Eq, Ord, Show)
+  } deriving (Eq, Ord, Read, Show)
 
 unjsonAppConf :: UnjsonDef AppConf
 unjsonAppConf = objectOf $ pure AppConf
@@ -96,9 +96,9 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> field "livedocx"
       liveDocxConfig
       "LiveDocx doc conversion configuration"
-  <*> field "logica"
-      logicaConfig
-      "Logica (Elegitimation) configuration"
+  <*> field "cgi_grp"
+      cgiGrpConfig
+      "CGI GRP (E-ID) configuration"
   <*> field "admins"
       admins
       "email addresses of people regarded as admins"
@@ -147,12 +147,12 @@ instance HasDefaultValue AppConf where
                                          }
     , mailsConfig        = defaultMailsConfig
     , liveDocxConfig     = defaultValue
-    , logicaConfig       = LogicaConfig { logicaEndpoint = "https://grpt.funktionstjanster.se:18898/osif"
-                                        , logicaServiceID = "logtest004"
-                                        , logicaCertFile = "certs/steria3.pem"
-                                        , logicaMBIEndpoint = "http://grpt.funktionstjanster.se:18899/mbi/service"
-                                        , logicaMBIDisplayName = "Test av Mobilt BankID"
-                                        }
+    , cgiGrpConfig       = CgiGrpConfig {
+        cgGateway = "https://grpt.funktionstjanster.se:18898/grp/v1"
+      , cgCertFile = "certs/steria3.pem"
+      , cgServiceID = "logtest004"
+      , cgDisplayName = "Funktionstjänster Test"
+      }
     , admins             = map Email ["gracjanpolak@gmail.com", "lukas@skrivapa.se"]
     , sales              = []
     , initialUsers       = []

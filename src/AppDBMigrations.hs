@@ -16,6 +16,7 @@ import Doc.API.Callback.Migrations
 import Doc.AutomaticReminder.Tables
 import Doc.Migrations
 import Doc.SMSPin.Tables
+import EID.CGI.GRP.Migrations
 import EvidenceLog.Migrations
 import File.Migrations
 import Mails.Migrations
@@ -174,6 +175,7 @@ kontraMigrations = [
   , addIdleDocTimeout
   , createChargeableItemsTable
   , signatoryLinkFieldsAddBinaryValue
+  , createCgiGrpTransactionsTable
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

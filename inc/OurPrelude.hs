@@ -8,10 +8,11 @@ module OurPrelude (
   , read
   , tail
   , fromJust
+  , module Data.Maybe
   , module Prelude
   ) where
 
-import Data.Maybe (fromMaybe)
+import Data.Maybe hiding (fromJust)
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
 import Prelude hiding (head, last, maximum, minimum, read, tail)

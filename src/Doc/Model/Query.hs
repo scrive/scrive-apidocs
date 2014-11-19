@@ -352,6 +352,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsBySignatoryLinkIDs [
          sqlWhereIn "signatory_links.id" slids
          sqlWhere "signatory_links.document_id = documents.id"
 
+-- TODO: it should return Maybe.
 data GetDocumentByDocumentIDSignatoryLinkIDMagicHash = GetDocumentByDocumentIDSignatoryLinkIDMagicHash DocumentID SignatoryLinkID MagicHash
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentByDocumentIDSignatoryLinkIDMagicHash Document where
   query (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) = do

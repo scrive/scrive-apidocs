@@ -9,6 +9,7 @@ module AppView( kontrakcja
               , notFoundPage
               , internalServerErrorPage
               , simpleJsonResponse
+              , simpleAesonResponse
               , simpleHtmlResponse
               , simpleHtmlResonseClrFlash
               , respondWithPDF
@@ -37,6 +38,7 @@ import Happstack.Server.SimpleHTTP
 import Text.JSON
 import Text.StringTemplates.Templates
 import qualified Crypto.Hash.MD5 as MD5
+import qualified Data.Aeson as A
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
@@ -275,8 +277,14 @@ standardPageFields ctx title ad = do
 -- If future we should return 'application/json' for all browsers
 -- except for IE8. We do not have access to 'Agent' string at this
 -- point though, so we go this hackish route for everybody.
-simpleJsonResponse :: (Kontrakcja m, JSON a) => a -> m Response
-simpleJsonResponse = ok . toResponseBS (BS.fromString "text/html; charset=utf-8") . BSL.fromString . encode
+jsonContentType :: BS.ByteString
+jsonContentType = "text/html; charset=utf-8"
+
+simpleJsonResponse :: (JSON a, FilterMonad Response m) => a -> m Response
+simpleJsonResponse = ok . toResponseBS jsonContentType . BSL.fromString . encode
+
+simpleAesonResponse :: (A.ToJSON a, FilterMonad Response m) => a -> m Response
+simpleAesonResponse = ok . toResponseBS jsonContentType . A.encode . A.toJSON
 
 {- |
    Changing our pages into reponses, and clearing flash messages.

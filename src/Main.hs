@@ -5,6 +5,7 @@ import Control.Monad
 import Control.Monad.Catch
 import Happstack.Server hiding (waitForTermination)
 import Happstack.StaticRouting
+import Network.Curl
 import System.IO
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
@@ -31,7 +32,7 @@ import qualified MemCache
 import qualified Version
 
 main :: IO ()
-main = Log.withLogger $ do
+main = withCurlDo . Log.withLogger $ do
   -- progname effects where state is stored and what the logfile is named
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8

@@ -7,7 +7,6 @@ module Sender (
 import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Data.List hiding (head)
-import Data.Maybe (fromMaybe)
 import System.Exit
 import System.Process
 import qualified Data.ByteString.Lazy as BSL

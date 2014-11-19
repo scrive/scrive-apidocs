@@ -85,7 +85,7 @@ updateSession old_ses ses = do
       success <- dbUpdate $ UpdateAction session ses
       -- if below condition is met, that means empty session was inserted
       -- into the database (with getNonTempSessionID) to allow inserting
-      -- document tickets/eleg transaction, but cookie wasn't created, so
+      -- document token/eid transaction, but cookie wasn't created, so
       -- we need to create it here.
       when (sesID old_ses == tempSessionID && sesID ses /= tempSessionID) $
         startSessionCookie ses
