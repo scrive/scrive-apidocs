@@ -864,7 +864,7 @@
 "_verificationFailedMessage":"Tätä dokumenttia ei ole allekirjoitettu käyttämällä Scrive:ä tai joku on muuttanut alkuperäistä versiota.",
 "_verificationFooter":"Scrive on tehnyt tämän vahvistuksen. Tiedot, jotka on merkattu italics:illa, on turvallisesti vahvistettu Scriven toimesta. Digitaalinen allekirjoitus takaa sen, että dokumentti voidaan todistaa aidoksi matemaattisesti ja ilman Scrive-palvelua. Jotta saisit enemmän tietoa tästä dokumentista, voit tutustua piilotettuihin liitteisiin (käytä PDF-lukijaa, joka voi näyttää piilotetut liitteet, esim. Adobe Reader). Scrive tarjoaa myös mahdollisuuden automaattiseen dokumentin aitouden vahvistamiseen osoitteessa: $verifyurl$",
 "_verificationGateway":"Gateway",
-"_verificationMethod":"",
+"_verificationMethod":"Kutsutapa",
 "_verificationSuccess":"Voimassa oleva allekirjoitus",
 "_verificationTime":"Aika",
 "_verificationTitle":"Vahvista dokumentin aitous",

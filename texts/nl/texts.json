@@ -864,7 +864,7 @@
 "_verificationFailedMessage":"Dit document is niet ondertekend met gebruik van Scrive, of het origineel is ",
 "_verificationFooter":"Deze verificatie is uitgevaardigd door Scrive. Informatie in cursief is veilig geverifiëerd door Scrive. De digitale handtekening waarborgt dat de originaliteit van dit document wiskundig en onafhankelijk van Scrive bewezen kan worden. Lees de verborgen bijlagen voor meer informatie over dit document (gebruik een PDF-lezer die verborgen bijlagen kan weergeven, zoals Adobe Reader). Voor uw gemak biedt Scrive ook een service aan die het mogelijk maakt de originaliteit van het document automatisch te verifiëren op: $verifyurl$",
 "_verificationGateway":"Poort",
-"_verificationMethod":"",
+"_verificationMethod":"Uitnodigingsmethode",
 "_verificationSuccess":"Geldige handtekening",
 "_verificationTime":"Tijd",
 "_verificationTitle":"Bevestig de authenticiteit van het document",
