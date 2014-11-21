@@ -1,0 +1,15 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "larryli/utopic64"
+  config.vm.box_url = "https://vagrantcloud.com/larryli/utopic64"
+
+  config.vm.provision :shell, path: "bootstrap.sh"
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+    vb.memory = 1536
+  end
+
+  config.ssh.forward_agent = true
+
+  config.vm.network "forwarded_port", guest: 8000, host: 8000
+end

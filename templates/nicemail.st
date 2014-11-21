@@ -171,7 +171,7 @@ nicebutton=
             <a $if(link)$href="$link$"$endif$
                class="button-blue notclickableinpreview"
                style="font-size: 16px;
-                      font-family: Helvetica Neue, Arial, sans-serif;
+                      font-family: $nicemailfont()$;
                       color: #ffffff;
                       text-decoration: none;
                       display: inline-block;

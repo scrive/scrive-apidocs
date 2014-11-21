@@ -183,6 +183,7 @@ window.CompanyBrandingEmailSampleView = Backbone.View.extend({
   changeFont : function(font) {
     this.documentcontent.css('font-family', font);
     this.emailpreviewfooter.css('font-family', font);
+    this.emailpreviewbutton.css('font-family',  font);
   },
   changeButtonColour : function(buttoncolour,customised) {
     if (customised) {

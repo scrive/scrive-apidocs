@@ -1,0 +1,12 @@
+* install vagrant (>=1.6) and virtualbox
+* connect to scrive's vpn
+* add your key to ssh-agent:
+source <(ssh-agent)
+ssh-add ~/.ssh/id_rsa
+* create and start virtual machine (this could take up to 2h the first time)
+vagrant up
+* connect to it
+vagrant ssh
+* you can start kontrakcja by running (inside the vm):
+cd kontrakcja; ./devRunner.sh
+* when it's running, you can access the service at http://127.0.0.1:8000/ (on the host machine) and login as test-1@skrivapa.se/test-01-password
