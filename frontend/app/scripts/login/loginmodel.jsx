@@ -61,12 +61,15 @@ return Backbone.Model.extend({
   },
   login : function() {
     var model = this;
-    LocalStorage.set('login','last_login_email',model.email());
+    var email = model.email();
+    if (email !== '' && email !== undefined && email !== null) {
+      LocalStorage.set('login','last_login_email', email);
+    }
     var submit = new Submit({
           method: "POST",
           url: "/login",
           ajax: true,
-          email : model.email(),
+          email : email,
           password : model.password(),
           ajaxsuccess: function(rs) {
             var resp = JSON.parse(rs);
