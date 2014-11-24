@@ -864,7 +864,7 @@
 "_verificationFailedMessage":"Este documento no ha sido firmado usando Scrive o el original ha sido alterado por alguien. ",
 "_verificationFooter":"Esta verificación fue llevada a cabo por Scrive. La información en itálicas ha sido verificada cuidadosamente por Scrive. La firma digital asegura que la originalidad de este documento pueda ser probada matemáticamente e independientemente con Scrive. Para más información sobre este documento mire los anexos ocultos (use un lector PDF que pueda mostrar los anexos ocultos como por ejemplo Adobe Reader). Para su comodidad Scrive también posee un servicio que le permite que usted automáticamente verifique la originalidad del documento en: $verifyurl$",
 "_verificationGateway":"Entrada",
-"_verificationMethod":"",
+"_verificationMethod":"Método de invitación",
 "_verificationSuccess":"Firma válida",
 "_verificationTime":"Tiempo",
 "_verificationTitle":"Verificar la autenticidad del documento",

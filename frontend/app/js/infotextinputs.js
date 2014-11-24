@@ -225,12 +225,16 @@ var InfoTextInputView = Backbone.View.extend({
                 // is visible
                 var self = this;
                 setTimeout(function() {
-                  try {
-                    if (self.input.caret() !== self.input.val().length) {
-                      self.input.caret(self.input.val().length);
+                  // only do this if the input is focued, otherwise changing caret can force focus
+                  // even if it wasnt focused before
+                  if (self.input.is(':focus')) {
+                    try {
+                      if (self.input.caret() !== self.input.val().length) {
+                        self.input.caret(self.input.val().length);
+                      }
+                    } catch (e) {
+                      // jquery.caret is broken in IE9
                     }
-                  } catch (e) {
-                    // jquery.caret is broken in IE9
                   }
                 }, 0);
             }

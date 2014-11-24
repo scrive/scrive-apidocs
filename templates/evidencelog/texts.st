@@ -355,7 +355,7 @@ SignDocumentEvidenceTextSMSPinFull=The document was signed by $actor$ using PIN 
 ###
 SignDocumentEvidenceTextElegFull=The document was signed by $actor$ using eID as identification method. $elegVerification()$
 ###
-SignDocumentEvidenceTextFull=The document was signed.
+SignDocumentEvidenceTextFull=The document was signed by $actor$.
 ###
 SignDocumentEvidenceText=*
 $if(sms_pin)$
