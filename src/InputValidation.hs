@@ -252,7 +252,7 @@ withFailure _        = internalError
 --  the following: Full-stop ., Hyphen -, ASCII letters a-z and A-Z,
 --  digits 0-9
 --
---  * After the full-stop there must be either two, three or four
+--  * After the full-stop there must be two or more
 --  characters and these can be: ASCII letters a-z and A-Z.
 --
 --  * Size: Up to 200 characters
@@ -271,7 +271,7 @@ asValidEmail input =
           checkFormat email | isValidFormat email = return email
                             | otherwise = Bad
           isValidFormat :: String -> Bool
-          isValidFormat = (=~ ("^[[:alnum:]._%+-]+@[[:alnum:].-]+[.][[:alpha:]]{2,4}$":: String))
+          isValidFormat = (=~ ("^[[:alnum:]._%+-]+@[[:alnum:].-]+[.][[:alpha:]]{2,}$":: String))
 
 {- |
     Creates an email that hasn't been completely validated.  It still does handy things
