@@ -708,6 +708,18 @@ javascriptLocalisation =
                       price : "$_paymentsQuote()$",
                       price3 : "$_paymentsGetInTouch()$"
                     }
+                    , store : {
+                      name : "Store",
+                      tag : "Sign documents on tablets instead of paper.",
+                      price : "400 SEK/m",
+                      price3 : "per store signing documents"
+                    }
+                    , free : {
+                      name : "Free",
+                      tag : "Try Scrive e-Sign for free",
+                      price : "0 SEK/m",
+                      price3 : "3 free documents"
+                    }
             }
            , table: { currentplan : "$_paymentPlanCurrentPlan()$"
                     , totalpermonth: "$_paymentPlanTotalPerMonth()$"

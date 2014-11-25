@@ -396,6 +396,77 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         }
     });
 
+    var FreeBoxView = Backbone.View.extend({
+        className: "plan-container",
+        initialize: function(args) {
+            _.bindAll(this);
+            args.model.bind('change:currentPlan', this.render);
+            args.model.bind('fetch', this.render);
+            this.plan = args.plan;
+            this.onClick = args.onClick;
+            var view = this;
+            this.$el.click(function() {
+                view.onClick();
+                return false;
+            });
+            this.$el.addClass(this.plan);
+            this.recurly = new RecurlyView(args);
+        },
+        render: function() {
+            var view = this;
+            var model = view.model;
+
+            var div = view.$el;
+            var div2 = $('<div class="plan" />');
+
+            var features = $('<div class="features" />');
+
+            var titleheader = $('<h4 />').text(localization.payments.plans[view.plan].name);
+            if (model.headercolour()) {
+              titleheader.css('color', model.headercolour());
+            }
+            var titlesubtext = $('<p />').html(localization.payments.plans[view.plan].tag);
+            if (model.textcolour()) {
+              titlesubtext.css('color', model.textcolour());
+            }
+            var title = $('<div class="title" />')
+                .append(titleheader)
+                .append(titlesubtext);
+
+            features.append(title);
+
+            var price = $('<span class="price" />').html(localization.payments.plans[view.plan].price);
+            if (model.pricecolour()) {
+              price.css('color', model.pricecolour());
+            }
+            var priceinfo = $('<p />').text(localization.payments.plans[view.plan].price3);
+            if (model.textcolour()) {
+              priceinfo.css('color', model.textcolour());
+            }
+            var cost = $('<div class="cost" />')
+                .append(price)
+                .append(priceinfo);
+
+            features.append(cost);
+
+            var button = $('<a class="button button-green action-sign-up" />')
+                .append($('<span class="blue" />')
+                        .text(localization.payments.purchase))
+                .append($('<span class="gray" />')
+                        .text(localization.cancel));
+
+            var action = $('<div class="action" />')
+                .append(button);
+
+            features.append(action);
+
+            div2.append(features);
+
+            div.append(div2);
+
+        }
+    });
+
     var TeamBoxView = Backbone.View.extend({
         className: "plan-container",
         initialize: function(args) {
@@ -781,6 +852,11 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         initialize: function(args){
             var view = this;
             _.bindAll(this);
+            this.freeBox = new FreeBoxView({model: args.model,
+                                            plan:'free',
+                                            onClick: function() {
+                                              window.location.href = '/signup';
+                                            }});
             this.teamBox = new TeamBoxView({model: args.model,
                                             hideContacts: args.hideContacts,
                                             plan:'team',
@@ -789,16 +865,17 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                                                 if(view.model.currentPlan() !== 'team')
                                                     view.model.setCurrentPlan('team');
                                             }});
+            this.storeBox = new ContactBoxView({model: args.model,
+                                               plan:'store',
+                                               onClick: function() {
+                                                   mixpanel.track('Click online form plan');
+                                               }});
             this.formBox = new ContactBoxView({model: args.model,
                                                plan:'form',
                                                onClick: function() {
                                                    mixpanel.track('Click online form plan');
                                                }});
-            this.enterpriseBox = new ContactBoxView({model: args.model,
-                                                     plan:'enterprise',
-                                                     onClick: function() {
-                                                         mixpanel.track('Click enterprise plan');
-                                                     }});
+            this.noheaders = args.noheaders;
             //this.recurlyForm = new RecurlyView({model: args.model, hideContacts: args.hideContacts});
             view.model.bind('fetch', this.render);
         },
@@ -815,9 +892,10 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
             div.append(header);
 
-            div.append(view.teamBox.el)
-                .append(view.formBox.el)
-                .append(view.enterpriseBox.el);
+            div.append(view.freeBox.el)
+                .append(view.teamBox.el)
+                .append(view.storeBox.el)
+                .append(view.formBox.el);
 
             div.append($('<div class="clearfix" />'));
             div.append($('<div class="vat-box" />').text(localization.payments.vat));
