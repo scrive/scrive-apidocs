@@ -1204,6 +1204,8 @@ getFieldForSigning = do
             mft <- fromJSValue
             mval <- fromJSValueField "value"
             return $ case (mft, mval) of
+              -- omg, this special case for empty value is such bullshit.
+              (Just ft@SignatureFT{}, Just "")  -> Just (ft, BinaryField "")
               (Just ft@SignatureFT{}, Just val) ->
                 (ft, ) . BinaryField . snd <$> RFC2397.decode (BS.pack val)
               (Just ft, Just val) -> Just (ft, TextField val)
