@@ -1184,7 +1184,7 @@ signatoryLinkFieldsAddBinaryValue = Migration {
   -- because the field will not have value_text nor value_binary set as NOT NULL.
   runQuery_ . sqlUpdate "signatory_link_fields" $ do
     sqlSet "value_text" (Nothing :: Maybe String)
-    sqlSetCmd "value_binary" "decode(substring(value_text from 'data:(?:[a-z/]*;base64,){0,1}(.*)'), 'base64')"
+    sqlSetCmd "value_binary" "decode(substring(value_text from 'data:(?:[a-z/-]*;base64){0,1},(.*)'), 'base64')"
     sqlWhereEq "type" (8::Int16) -- SignatureFT
     sqlWhereIsNULL "value_binary"
 
