@@ -79,7 +79,7 @@ sendDocumentErrorEmail author document = do
           scheduleEmailSendout (mctxmailsconfig mctx) $ mail {
                                    to = [getMailAddress authorlink]
                                  })
-        (scheduleSMS =<< smsDocumentErrorAuthor document authorlink)
+        (smsDocumentErrorAuthor document authorlink >>= scheduleSMS document)
 
     -- | Helper function to send emails to invited parties
     -- ??: Should this be in DocControl or in an email-specific file?
@@ -92,7 +92,7 @@ sendDocumentErrorEmail author document = do
                                    to = [getMailAddress signatorylink]
                                  , mailInfo = Invitation (documentid document) (signatorylinkid signatorylink)
                                  })
-         (scheduleSMS =<<  smsDocumentErrorSignatory document signatorylink)
+         (smsDocumentErrorSignatory document signatorylink >>= scheduleSMS document)
 
 {- |
    Send emails to all of the invited parties, respecting the sign order.
@@ -133,7 +133,7 @@ sendInvitationEmail1 signatorylink | not (isAuthor signatorylink) = do
                            mail { to = [getMailAddress signatorylink]
                                 , mailInfo = Invitation did (signatorylinkid signatorylink)
                                 })
-     (scheduleSMS =<< smsInvitation signatorylink =<< theDocument)
+     (theDocument >>= \doc -> smsInvitation signatorylink doc >>= scheduleSMS doc)
 
   when sent $ do
     documentinvitetext <$> theDocument >>= \text ->
@@ -153,7 +153,7 @@ sendInvitationEmail1 authorsiglink = do
             mail <- theDocument >>= \d -> mailDocumentAwaitingForAuthor (getLang d) d
             scheduleEmailSendout (mctxmailsconfig mctx) $
                                  mail { to = [getMailAddress authorsiglink] })
-          (scheduleSMS =<<  flip smsInvitationToAuthor authorsiglink =<< theDocument)
+          (theDocument >>= \doc -> smsInvitationToAuthor doc authorsiglink >>= scheduleSMS doc)
 
 {- |
     Send a reminder email (and update the modification time on the document)
@@ -168,17 +168,17 @@ sendReminderEmail custommessage  actor automatic siglink = do
        mail <- mailDocumentRemind custommessage siglink (not (null mailattachments)) doc
        docid <- theDocumentID
        scheduleEmailSendoutWithAuthorSenderThroughService docid (mctxmailsconfig mctx) $ mail {
-                                                             to = [getMailAddress siglink]
-                                                             -- We only collect delivery information, if signatory had not signed yet
-                                                           , mailInfo = if (isNothing $ maybesigninfo siglink) 
-                                                                        then Invitation docid (signatorylinkid siglink)
-                                                                        else None
-                                                             -- We only add attachment after document is signed	 
-                                                           , attachments = attachments mail ++ (if isJust $ maybesigninfo siglink
-                                                                                                then mailattachments
-                                                                                                else [])
-                                                           }
-      dosms = scheduleSMS =<< smsReminder doc siglink
+           to = [getMailAddress siglink]
+         -- We only collect delivery information, if signatory had not signed yet
+         , mailInfo = if (isNothing $ maybesigninfo siglink)
+           then Invitation docid (signatorylinkid siglink)
+           else None
+         -- We only add attachment after document is signed
+         , attachments = attachments mail ++ (if isJust $ maybesigninfo siglink
+          then mailattachments
+          else [])
+       }
+      dosms = scheduleSMS doc =<< smsReminder doc siglink
 
   sent <- case maybesigninfo siglink of
            Just _ -> do
@@ -229,7 +229,7 @@ sendClosedEmails sealFixed document = do
                                                 then Nothing
                                                 else fmap getMailAddress maybeAuthor
                                       }
-      let sendSMS withMail = (scheduleSMS =<< smsClosedNotification document sl withMail sealFixed)
+      let sendSMS withMail = (scheduleSMS document =<< smsClosedNotification document sl withMail sealFixed)
       let useMail = isGood $ asValidEmail $ getEmail sl
           useSMS = isGood $  asValidPhoneForSMS $ getMobile sl
       case (signatorylinkconfirmationdeliverymethod sl) of
@@ -273,7 +273,7 @@ sendRejectEmails customMessage signalink document = do
          scheduleEmailSendout (mctxmailsconfig mctx) $ mail {
                                   to = [getMailAddress sl]
                                 })
-      (scheduleSMS =<<  smsRejectNotification document sl signalink)
+      (scheduleSMS document =<< smsRejectNotification document sl signalink)
 
 {- |
    Send reminder to all parties in document that can sign
@@ -339,7 +339,7 @@ sendPinCode sl phone pin = do
               (Just sl)
               (Just phone)
               =<< (signatoryActor ctx sl)
-  scheduleSMS =<< smsPinCodeSendout doc sl phone pin
+  scheduleSMS doc =<< smsPinCodeSendout doc sl phone pin
 
 
 -- Notification sendout

@@ -7,6 +7,7 @@ import Control.Monad
 import Control.Monad.Trans
 import Data.List
 import Data.Maybe
+import Data.Monoid.Space
 import Happstack.Server
 import Test.Framework
 import Text.JSON.Gen (toJSValue)
@@ -167,8 +168,13 @@ testLastPersonSigningADocumentClosesIt = do
 
 testSigningWithPin :: TestEnv ()
 testSigningWithPin = do
-  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx <- (\c -> c { ctxmaybeuser = Just user })
+  company1 <- addNewCompany
+  company2 <- addNewCompany
+  Just user1 <- addNewUser "Bob" "Blue" "bob@blue.com"
+  Just user2 <- addNewUser "Gary" "Green" "gary@green.com"
+  True <- dbUpdate $ SetUserCompany (userid user1) (companyid company1)
+  True <- dbUpdate $ SetUserCompany (userid user2) (companyid company2)
+  ctx <- (\c -> c { ctxmaybeuser = Just user1 })
     <$> mkContext defaultValue
 
   let filename = "test/pdfs/simple.pdf"
@@ -176,34 +182,41 @@ testSigningWithPin = do
   file <- addNewFile filename filecontent
 
   addRandomDocumentWithAuthorAndConditionAndFile
-            user
+            user1
             (\d -> documentstatus d == Preparation
                      && (case documenttype d of
                           Signable -> True
                           _ -> False)
                      && all ((==) EmailDelivery . signatorylinkdeliverymethod) (documentsignatorylinks d))
             file `withDocumentM` do
-    True <- do d <- theDocument
-               randomUpdate $ ResetSignatoryDetails ([
-                      (defaultValue {   signatoryfields = (signatoryfields $ fromJust $ getAuthorSigLink d)
-                                      , signatoryisauthor = True
-                                      , signatoryispartner = False
-                                      , maybesignatory = Just $ userid user })
-                    , (defaultValue {   signatorysignorder = SignOrder 1
-                                      , signatoryisauthor = False
-                                      , signatoryispartner = True
-                                      , signatorylinkauthenticationmethod = SMSPinAuthentication
-                                      , signatoryfields = [
-                                          SignatoryField (unsafeSignatoryFieldID 0) FirstNameFT "Fred" True False []
-                                        , SignatoryField (unsafeSignatoryFieldID 0) LastNameFT "Frog"  True False []
-                                        , SignatoryField (unsafeSignatoryFieldID 0) EmailFT "fred@frog.com" True False []
-                                        , SignatoryField (unsafeSignatoryFieldID 0) MobileFT "+47 666 111 777" True False []
-                                        ]})
-                 ]) (systemActor $ documentctime d)
+    d <- theDocument
+    True <- randomUpdate $ ResetSignatoryDetails ([
+        (defaultValue {
+            signatoryfields = signatoryfields $ fromJust $ getAuthorSigLink d
+          , signatoryisauthor = True
+          , signatoryispartner = False
+          , maybesignatory = Just $ userid user1 })
+          , (defaultValue {
+              signatorysignorder = SignOrder 1
+            , signatoryisauthor = False
+            , signatoryispartner = True
+            , signatorylinkauthenticationmethod = SMSPinAuthentication
+            , signatorylinkdeliverymethod = MobileDelivery
+            , signatoryfields = [
+                SignatoryField (unsafeSignatoryFieldID 0) FirstNameFT "Fred" True False []
+              , SignatoryField (unsafeSignatoryFieldID 0) LastNameFT "Frog"  True False []
+              , SignatoryField (unsafeSignatoryFieldID 0) EmailFT "fred@frog.com" True False []
+              , SignatoryField (unsafeSignatoryFieldID 0) MobileFT "+47 666 111 777" True False []
+            ]
+          })
+      ]) (systemActor $ documentctime d)
 
-    do t <- documentctime <$> theDocument
-       tz <- mkTimeZoneName "Europe/Stockholm"
-       randomUpdate $ PreparationToPending (systemActor t) tz
+    req <- mkRequest POST []
+    (rdyrsp, _) <- lift . runTestKontra req ctx $ apiCallV1Ready $ documentid d
+    lift $ do
+      assertEqual "Ready call was successful" 202 (rsCode rdyrsp)
+      runSQL ("SELECT * FROM chargeable_items WHERE type = 1 AND user_id =" <?> userid user1 <+> "AND company_id =" <?> companyid company1 <+> "AND document_id =" <?> documentid d)
+        >>= assertBool "Author and the company get charged for the delivery" . (> 0)
     let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
     siglink <- head . filter isUnsigned .documentsignatorylinks <$> theDocument
 
@@ -234,6 +247,13 @@ testSigningWithPin = do
                       lift . runTestKontra req3 ctx' $ apiCallV1Sign did (signatorylinkid siglink)
 
     assertEqual "Document is closed if pin is valid" Closed .documentstatus =<< theDocument
+
+    -- make sure that smses are counted only for the designated company
+    runSQL ("SELECT * FROM chargeable_items WHERE type = 1 AND user_id <>" <?> userid user1)
+      >>= assertEqual "Users other than author don't get charged" 0
+
+    runSQL ("SELECT * FROM chargeable_items WHERE type = 1 AND company_id <>" <?> companyid company1)
+      >>= assertEqual "Companies other than author's one don't get charged" 0
 
 
 testSendReminderEmailUpdatesLastModifiedDate :: TestEnv ()
