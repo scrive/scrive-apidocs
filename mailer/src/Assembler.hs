@@ -60,7 +60,7 @@ assembleContent Mail{..} = do
       headerContentText = "\r\n--" ++ boundaryAlternative ++ "\r\n" ++
         "Content-type: text/plain; charset=utf-8\r\n" ++
         "\r\n"
-      headerContentRelated = "--" ++ boundaryAlternative ++ "\r\n" ++
+      headerContentRelated = "\r\n--" ++ boundaryAlternative ++ "\r\n" ++
         "Content-Type: multipart/related; boundary=" ++ boundaryRelated ++ "\r\n" ++ "\r\n"
 
       headerContentHtml = "\r\n--" ++ boundaryRelated ++ "\r\n" ++
