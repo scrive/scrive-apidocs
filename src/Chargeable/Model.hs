@@ -8,6 +8,7 @@ import Data.Int
 import Data.Typeable
 
 import DB
+import Company.CompanyID
 import Doc.DocumentID
 import User.UserID
 
@@ -45,11 +46,11 @@ instance ToSQL ChargeableItem where
 data ChargeCompanyForSMS = ChargeCompanyForSMS DocumentID Int32
 instance (MonadDB m, MonadThrow m) => DBUpdate m ChargeCompanyForSMS () where
   update (ChargeCompanyForSMS document_id sms_count) = do
-    user_id <- getAuthorID document_id
+    (user_id,company_id) <- getAuthorAndAuthorsCompanyIDs document_id
     runQuery_ . sqlInsert "chargeable_items" $ do
       sqlSetCmd "time" "now()"
-      sqlSetCmd "company_id" $ userCompanyID user_id
       sqlSet "type" SMS
+      sqlSet "company_id" $ company_id
       sqlSet "user_id" user_id
       sqlSet "document_id" document_id
       sqlSet "quantity" sms_count
@@ -58,11 +59,11 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m ChargeCompanyForSMS () where
 data ChargeCompanyForElegSignature = ChargeCompanyForElegSignature DocumentID
 instance (MonadDB m, MonadThrow m) => DBUpdate m ChargeCompanyForElegSignature () where
   update (ChargeCompanyForElegSignature document_id) = do
-    user_id <- getAuthorID document_id
+    (user_id,company_id) <- getAuthorAndAuthorsCompanyIDs document_id
     runQuery_ . sqlInsert "chargeable_items" $ do
       sqlSetCmd "time" "now()"
-      sqlSetCmd "company_id" $ userCompanyID user_id
       sqlSet "type" ELegSignature
+      sqlSet "company_id" $ company_id
       sqlSet "user_id" user_id
       sqlSet "document_id" document_id
       sqlSet "quantity" (1::Int32)
@@ -70,16 +71,12 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m ChargeCompanyForElegSignature (
 ----------------------------------------
 
 -- | Fetch id of the author of the document.
-getAuthorID :: (MonadDB m, MonadThrow m) => DocumentID -> m UserID
-getAuthorID document_id = do
-  runQuery_ . sqlSelect "signatory_links" $ do
-    sqlResult "user_id"
-    sqlWhereEq "document_id" document_id
-    sqlWhere "is_author"
-  fetchOne unSingle
-
--- | SQL for querying id of the company the user belongs to.
-userCompanyID :: UserID -> SQL
-userCompanyID user_id = parenthesize . toSQLCommand . sqlSelect "users" $ do
-  sqlResult "company_id"
-  sqlWhereEq "id" user_id
+getAuthorAndAuthorsCompanyIDs :: (MonadDB m, MonadThrow m) => DocumentID -> m (UserID,CompanyID)
+getAuthorAndAuthorsCompanyIDs document_id = do
+  runQuery_ . sqlSelect "signatory_links as sl, users as u" $ do
+    sqlResult "sl.user_id"
+    sqlResult "u.company_id"
+    sqlWhereEq "sl.document_id" document_id
+    sqlWhere "sl.is_author"
+    sqlWhere "u.id = sl.user_id"
+  fetchOne id
