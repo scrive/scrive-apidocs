@@ -7,8 +7,8 @@ import Control.Monad.Catch
 import Data.Int
 import Data.Typeable
 
-import DB
 import Company.CompanyID
+import DB
 import Doc.DocumentID
 import User.UserID
 
