@@ -325,6 +325,7 @@ clearTables = do
   runSQL_ "DELETE FROM companyinvites"
   runSQL_ "DELETE FROM payment_plans"
   runSQL_ "DELETE FROM payment_stats"
+  runSQL_ "DELETE FROM chargeable_items"
 
   runSQL_ "DELETE FROM email_change_requests"
   runSQL_ "DELETE FROM password_reminders"

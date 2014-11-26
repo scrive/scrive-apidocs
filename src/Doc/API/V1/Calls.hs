@@ -50,6 +50,7 @@ import API.APIVersion
 import API.Monad
 import AppView (respondWithPDF)
 import Attachment.Model
+import Chargeable.Model
 import Company.CompanyUI
 import Company.Model
 import Control.Logic
@@ -343,8 +344,8 @@ apiCallV1Ready did =  api $ do
             checkObjectVersionIfProvidedAndThrowError did $ (conflictError "Document is not a draft")
       whenM (isTemplate <$> theDocument) $ do
             checkObjectVersionIfProvidedAndThrowError did $ (serverError "Document is not a draft")
-      whenM ((\doc -> (not $ all ((/=EmailDelivery) . signatorylinkdeliverymethod ||^ isGood . asValidEmail . getEmail) (documentsignatorylinks doc))) <$> theDocument) $ do
-            throwIO . SomeKontraException $ serverError "Some signatories don't have a valid email address set."
+      unlessM (((all signatoryHasValidDeliverySettings) . documentsignatorylinks) <$> theDocument) $ do
+            throwIO . SomeKontraException $ serverError "Some signatories have invalid email address or phone number, and it is required for invitation delivery."
       whenM (isNothing . documentfile <$> theDocument) $ do
             throwIO . SomeKontraException $ serverError "File must be provided before document can be made ready."
       t <- ctxtime <$> getContext
@@ -354,6 +355,12 @@ apiCallV1Ready did =  api $ do
       authorsignsimmediately <- isFieldSet "authorsignsimmediately"
       postDocumentPreparationChange authorsignsimmediately timezone
       Accepted <$> (documentJSONV1 (Just user) False True True Nothing =<< theDocument)
+  where
+    signatoryHasValidDeliverySettings sl = (isAuthor sl) || case (signatorylinkdeliverymethod sl) of
+      EmailDelivery  ->  isGood $ asValidEmail $ getEmail sl
+      MobileDelivery ->  isGood $ asValidPhoneForSMS $ getMobile sl
+      EmailAndMobileDelivery -> (isGood $ asValidPhoneForSMS $ getMobile sl) && (isGood $ asValidEmail $ getEmail sl)
+      _ -> True
 
 apiCallV1Cancel :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> m Response
 apiCallV1Cancel did =  api $ do
@@ -490,6 +497,8 @@ apiCallV1Sign  did slid = api $ do
                               Log.attention_ $ "Eleg verification for document #" ++ show did ++ " failed with mismatch " ++ show ((onname,onnumber),(sfn,sln,spn))
                               (Left . Failed) <$> (runJSONGenT $ value "mismatch" True >> value "onName" onname >> value "onNumber" onnumber)
                             BankID.Sign sinfo -> do
+                              -- charge company of the author of the document for the signature
+                              dbUpdate $ ChargeCompanyForElegSignature did
                               signDocument slid mh fields (Just sinfo) Nothing screenshots
                               postDocumentPendingChange olddoc
                               handleAfterSigning slid

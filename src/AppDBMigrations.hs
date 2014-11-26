@@ -7,6 +7,7 @@ import Control.Monad.Catch
 import ActionQueue.Migrations
 import Attachment.Migrations
 import BrandedDomain.Migrations
+import Chargeable.Migrations
 import Company.Migrations
 import CompanyAccounts.Migrations
 import Cron.Migrations
@@ -171,6 +172,7 @@ kontraMigrations = [
   , addUniqueContraintsTypeOnFields
   , addAllowSaveSafetyCopyToCompanies
   , addIdleDocTimeout
+  , createChargeableItemsTable
   , signatoryLinkFieldsAddBinaryValue
   ] ++ cronMigrations
     ++ mailerMigrations

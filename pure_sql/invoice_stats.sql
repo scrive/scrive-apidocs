@@ -72,6 +72,18 @@ SELECT escape_for_csv(companies.name) AS "Company name"
                                  FROM signatory_links
                                 WHERE signatory_links.is_partner
                                   AND signatory_links.document_id = documents.id) = thetime.time)) AS "Sigs closed"
+     , (SELECT sum(chi.quantity)
+          FROM chargeable_items chi
+         WHERE chi.company_id = companies.id
+           AND chi.type = 1 -- sms
+           AND chi.time >= thetime.time
+           AND chi.time < thetime.time + interval '1 month') as "SMSes sent"
+     , (SELECT sum(chi.quantity)
+          FROM chargeable_items chi
+         WHERE chi.company_id = companies.id
+           AND chi.type = 2 -- eleg signatures
+           AND chi.time >= thetime.time
+           AND chi.time < thetime.time + interval '1 month') as "E-leg signatures"
      , (SELECT count(*)
           FROM users
          WHERE (users.deleted IS NULL OR users.deleted > thetime.time)

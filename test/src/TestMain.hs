@@ -18,6 +18,7 @@ import AppDBMigrations
 import AppDBTables
 import ArchiveTest
 import BrandedDomainTest
+import ChargeableTest
 import CompanyAccountsTest
 import CompanyControlTest
 import CompanyStateTest
@@ -58,6 +59,7 @@ allTests :: [TestEnvSt -> Test]
 allTests = [
     accountInfoTests
   , brandedDomainTests
+  , chargeableTest
   , companyAccountsTests
   , companyControlTests
   , companyStateTests
