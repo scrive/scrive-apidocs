@@ -28,7 +28,7 @@
 "_InvitationEvidenceTextToSignNotArchiveSimpleEmailSMS":"Eine Einladung, das Dokument zu signieren, wurde an $signatory$ mit E-Mail und SMS von Scrive gesendet. $invitationCustomMessageTextToSignIfThereIsOne()$",
 "_InvitationEvidenceTextToSignNotArchiveSimpleSMS":"Eine Einladung, das Dokument zu signieren, wurde an $signatory$ mit SMS von Scrive gesendet. $invitationCustomMessageTextToSignIfThereIsOne()$",
 "_InvitationUndeliveredByEmailTextSimpleArchive":"Die Einladung konnte nicht per E-Mail versendet werden und weitere Versuche wurden eingestellt.",
-"_InvitationUndeliveredByEmailTextSimpleNotArchive":"Die Einladung an $signatory$ konnte nicht per E-Mail versendet werden und weitere Versuche wurden eingestellt",
+"_InvitationUndeliveredByEmailTextSimpleNotArchive":"",
 "_InvitationUndeliveredBySMSTextSimpleArchive":"Die Einladung konnte nicht per SMS versendet werden und weitere Versuche wurden eingestellt.",
 "_InvitationUndeliveredBySMSTextSimpleNotArchive":"Die Einladung an $signatory$ konnte nicht per SMS versendet werden und weitere Versuche wurden eingestellt.",
 "_MarkInvitationReadEvidenceTextToReviewSimple":"Die Einladung, das Dokument zu überprüfen (gesendet an $signatory_email$), wurde geöffnet.",
