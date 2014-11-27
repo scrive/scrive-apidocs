@@ -38,7 +38,7 @@ import qualified Log
 grpRoutes :: Route (KontraPlus Response)
 grpRoutes = dir "cgi" . dir "grp" $ choice [
     dir "sign"    . hPost . toK2 $ handleSignRequest
-  , dir "collect" . hGet . toK2 $ handleCollectRequest
+  , dir "collect" . hGet  . toK2 $ handleCollectRequest
   ]
 
 ----------------------------------------
