@@ -50,10 +50,6 @@ signLinkFromDetails' fields author partner sorder attachments magichash =
                 , signatorylinkrejectiontime = Nothing
                 , signatorylinkrejectionreason = Nothing
                 , signatorylinkauthenticationmethod = StandardAuthentication
-                , signatorylinkelegdatamismatchmessage = Nothing
-                , signatorylinkelegdatamismatchfirstname = Nothing
-                , signatorylinkelegdatamismatchlastname = Nothing
-                , signatorylinkelegdatamismatchpersonalnumber = Nothing
                 }
 
 signatoryLinkClearField :: SignatoryField -> SignatoryField

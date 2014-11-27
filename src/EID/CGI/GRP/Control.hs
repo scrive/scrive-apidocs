@@ -25,6 +25,7 @@ import Doc.Tokens.Model
 import EID.CGI.GRP.Config
 import EID.CGI.GRP.Data
 import EID.CGI.GRP.Model
+import Happstack.Fields
 import Kontra hiding (InternalError)
 import Network.SOAP.Call
 import Network.SOAP.Transport.Curl
@@ -32,12 +33,11 @@ import OurPrelude
 import Routing
 import Templates
 import Util.HasSomeUserInfo
-import Util.SignatoryLinkUtils
 import qualified Log
 
 grpRoutes :: Route (KontraPlus Response)
 grpRoutes = dir "cgi" . dir "grp" $ choice [
-    dir "sign"    . hGet . toK2 $ handleSignRequest
+    dir "sign"    . hPostNoXToken . toK2 $ handleSignRequest
   , dir "collect" . hGet . toK2 $ handleCollectRequest
   ]
 
@@ -48,14 +48,15 @@ handleSignRequest did slid = do
   CgiGrpConfig{..} <- ctxcgigrpconfig <$> getContext
   doc <- getDocument did slid
   tbs <- textToBeSigned doc
+  pn <- getField "personal_number" `onNothing` do
+    Log.mixlog_ "No personal number"
+    respond404
 
   let transport = curlTransport SecureSSL (Just cgCertFile) cgGateway id
-      -- this is supposed to be always Just as we already got the document
-      slink = $fromJust $ getSigLinkFor slid doc
       req = SignRequest {
         srqPolicy = cgServiceID
       , srqDisplayName = cgDisplayName
-      , srqPersonalNumber = T.pack $ getPersonalNumber slink
+      , srqPersonalNumber = T.pack pn
       , srqUserVisibleData = T.decodeUtf8 . B64.encode . BSU.fromString $ tbs
       , srqProvider = "bankid"
       }
@@ -89,7 +90,8 @@ handleCollectRequest did slid = do
 
   soapCall transport "" () req parser >>= \case
     Left fault -> return $ unjsonToJSON unjsonDef fault
-    Right CollectResponse{..} -> do
+    Right cr@CollectResponse{..} -> do
+      Log.mixlog_ $ "RESPONSE: " ++ show cr
       return $ unjsonToJSON unjsonDef crsProgressStatus
 
 ----------------------------------------
@@ -98,8 +100,12 @@ handleCollectRequest did slid = do
 -- there exists appropriate document token or the author is logged in.
 getDocument :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Document
 getDocument did slid = dbQuery (GetDocumentSessionToken slid) >>= \case
-  Just mh -> dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh)
-  Nothing -> getDocByDocIDForAuthor did
+  Just mh -> do
+    Log.mixlog_ "TOKEN FOUND"
+    dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh)
+  Nothing -> do
+    Log.mixlog_ "TOKEN NOT FOUND"
+    getDocByDocIDForAuthor did
 
 -- | Generate text to be signed that represents contents of the document.
 textToBeSigned :: TemplatesMonad m => Document -> m String

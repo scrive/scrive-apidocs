@@ -25,20 +25,20 @@ newtype XMLParser a = XMLParser { runParser :: Cursor -> Maybe a }
   deriving Functor
 
 instance Applicative XMLParser where
-  pure = XMLParser . const . Just
-  XMLParser f <*> XMLParser g = XMLParser $ \c -> f c >>= (<$> g c)
+  pure = return
+  (<*>) = ap
 
 instance Alternative XMLParser where
-  empty = XMLParser $ const Nothing
-  XMLParser f <|> XMLParser g = XMLParser $ \c -> f c <|> g c
+  empty = mzero
+  (<|>) = mplus
 
 instance Monad XMLParser where
-  return = pure
+  return = XMLParser . const . Just
   XMLParser f >>= g = XMLParser $ \c -> f c >>= ($ c) . runParser . g
 
 instance MonadPlus XMLParser where
-  mzero = empty
-  mplus = (<|>)
+  mzero = XMLParser $ const Nothing
+  XMLParser f `mplus` XMLParser g = XMLParser $ \c -> f c `mplus` g c
 
 xpSOAPFault :: XMLParser SOAPFault
 xpSOAPFault = XMLParser $ \c -> listToMaybe $ c

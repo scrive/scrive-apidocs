@@ -118,6 +118,7 @@ import Utils.Monoid
 import Utils.Prelude (for)
 import qualified DB.TimeZoneName as TimeZoneName
 import qualified Doc.Screenshot as Screenshot
+import qualified EID.Signature.Provider as P
 import qualified Log
 
 -- For this to work well we assume that signatories are ordered: author first, then all with ids set, then all with id == 0
@@ -143,9 +144,6 @@ insertSignatoryLinksAsAre documentid links = do
            sqlSetList "signinfo_signature" $ fmap signatureinfosignature <$> signatorysignatureinfo <$> links
            sqlSetList "signinfo_certificate" $ fmap signatureinfocertificate <$> signatorysignatureinfo <$> links
            sqlSetList "signinfo_provider" $ fmap signatureinfoprovider <$> signatorysignatureinfo <$> links
-           sqlSetList "signinfo_first_name_verified" $ fmap signaturefstnameverified <$> signatorysignatureinfo <$> links
-           sqlSetList "signinfo_last_name_verified" $ fmap signaturelstnameverified <$> signatorysignatureinfo <$> links
-           sqlSetList "signinfo_personal_number_verified" $ fmap signaturepersnumverified <$> signatorysignatureinfo <$> links
            sqlSetList "csv_title" $ fmap csvtitle <$> signatorylinkcsvupload <$> links
            sqlSetList "csv_contents" $ fmap csvcontents <$> signatorylinkcsvupload <$> links
            sqlSetList "deleted" $ signatorylinkdeleted <$> links
@@ -156,10 +154,6 @@ insertSignatoryLinksAsAre documentid links = do
            sqlSetList "rejection_time" $ signatorylinkrejectiontime <$> links
            sqlSetList "rejection_reason" $ signatorylinkrejectionreason <$> links
            sqlSetList "authentication_method" $ signatorylinkauthenticationmethod <$> links
-           sqlSetList "eleg_data_mismatch_message" $ signatorylinkelegdatamismatchmessage <$> links
-           sqlSetList "eleg_data_mismatch_first_name" $ signatorylinkelegdatamismatchfirstname <$> links
-           sqlSetList "eleg_data_mismatch_last_name" $ signatorylinkelegdatamismatchlastname <$> links
-           sqlSetList "eleg_data_mismatch_personal_number" $ signatorylinkelegdatamismatchpersonalnumber <$> links
            sqlSetList "delivery_method" $ signatorylinkdeliverymethod <$> links
            sqlSetList "confirmation_delivery_method" $ signatorylinkconfirmationdeliverymethod <$> links
 
@@ -1139,9 +1133,6 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpd
            sqlSet "signinfo_signature"                 $ signatureinfosignature `fmap` msiginfo
            sqlSet "signinfo_certificate"               $ signatureinfocertificate `fmap` msiginfo
            sqlSet "signinfo_provider"                  $ signatureinfoprovider `fmap` msiginfo
-           sqlSet "signinfo_first_name_verified"       $ signaturefstnameverified `fmap` msiginfo
-           sqlSet "signinfo_last_name_verified"        $ signaturelstnameverified `fmap` msiginfo
-           sqlSet "signinfo_personal_number_verified"  $ signaturepersnumverified `fmap` msiginfo
            sqlSet "signinfo_ocsp_response"             $ signatureinfoocspresponse `fmap` msiginfo
            sqlWhere "documents.id = signatory_links.document_id"
            sqlWhereDocumentIDIs docid
@@ -1161,14 +1152,8 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpd
             (Just si,_) -> do
                       F.value "eleg" True
                       F.value "provider" $ case signatureinfoprovider si of
-                                            BankIDProvider -> "BankID" :: String
-                                            TeliaProvider  -> "Telia"
-                                            NordeaProvider -> "Nordea"
-                                            MobileBankIDProvider -> "Mobile BankID"
-                      F.value "fstnameverified" $ signaturefstnameverified si
-                      F.value "lstnameverified" $ signaturelstnameverified si
-                      F.value "persnumverified" $ signaturepersnumverified si
-                      F.value "fieldsverified" $  signaturefstnameverified si || signaturelstnameverified si || signaturepersnumverified si
+                        P.Obsolete provider -> $unexpectedError $ "Obsolete provider used: " ++ show provider
+                        P.Current P.CgiGrpBankID -> "BankID" :: String
                       F.value "signature" $ signatureinfosignature si
                       F.value "certificate" $ nothingIfEmpty $ signatureinfocertificate si
                       F.value "ocsp" $ signatureinfoocspresponse si
@@ -1641,10 +1626,6 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                          , checkEqualBy "signatorylinkrejectiontime" signatorylinkrejectiontime
                          , checkEqualBy "signatorylinkrejectionreason" signatorylinkrejectionreason
                          , checkEqualBy "signatorylinkauthenticationmethod" signatorylinkauthenticationmethod
-                         , checkEqualBy "signatorylinkelegdatamismatchmessage" signatorylinkelegdatamismatchmessage
-                         , checkEqualBy "signatorylinkelegdatamismatchfirstname" signatorylinkelegdatamismatchfirstname
-                         , checkEqualBy "signatorylinkelegdatamismatchlastname" signatorylinkelegdatamismatchlastname
-                         , checkEqualBy "signatorylinkelegdatamismatchpersonalnumber" signatorylinkelegdatamismatchpersonalnumber
                          , checkEqualBy "signatorylinkdeliverymethod" signatorylinkdeliverymethod
                          ]
 

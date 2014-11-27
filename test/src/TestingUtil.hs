@@ -37,8 +37,6 @@ import Doc.SealStatus (SealStatus(..))
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import Doc.TestInvariants
-import ELegitimation.BankIDRequests
-import ELegitimation.ELegTransaction.Model
 import File.FileID
 import File.Model
 import FlashMessage
@@ -189,17 +187,11 @@ instance Arbitrary SignatureInfo where
     c <- arbitrary
     d <- arbitrary
     e <- arbitrary
-    f <- arbitrary
-    g <- arbitrary
-    h <- arbitrary
     return $ SignatureInfo { signatureinfotext        = fromSNN a
                            , signatureinfosignature   = fromSNN b
                            , signatureinfocertificate = fromSNN c
                            , signatureinfoprovider    = d
-                           , signaturefstnameverified = e
-                           , signaturelstnameverified = f
-                           , signaturepersnumverified = g
-                           , signatureinfoocspresponse = fromSNN <$> h
+                           , signatureinfoocspresponse = fromSNN <$> e
                            }
 
 instance Arbitrary CSVUpload where

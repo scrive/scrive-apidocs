@@ -33,6 +33,8 @@ import Utils.Either
 import Utils.IO
 import qualified Log
 
+-- NOTICE: this module is deprecated, use Network.SOAP.Call instead.
+
 data SOAP a = SOAP a
               | SOAPFault String String String
   deriving (Eq,Ord,Show,Read)

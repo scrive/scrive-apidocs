@@ -17,6 +17,7 @@ import Doc.AutomaticReminder.Tables
 import Doc.Migrations
 import Doc.SMSPin.Tables
 import EID.CGI.GRP.Migrations
+import EID.Signature.Migrations
 import EvidenceLog.Migrations
 import File.Migrations
 import Mails.Migrations
@@ -176,6 +177,7 @@ kontraMigrations = [
   , createChargeableItemsTable
   , signatoryLinkFieldsAddBinaryValue
   , createCgiGrpTransactionsTable
+  , createEIDSignaturesTable
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

@@ -1,5 +1,6 @@
 module EID.CGI.GRP.Data (
-    GrpFault(..)
+    BankIDSignature(..)
+  , GrpFault(..)
   , xpGrpFault
   , SignRequest(..)
   , AutoStartToken
@@ -15,6 +16,7 @@ module EID.CGI.GRP.Data (
 import Control.Applicative
 import Data.Maybe
 import Data.Monoid.Space
+import Data.ByteString (ByteString)
 import Data.Text (Text)
 import Data.Unjson
 import Network.SOAP.Parsing.Cursor
@@ -22,7 +24,18 @@ import Text.XML.Cursor hiding (element)
 import Text.XML.Writer hiding (content, many, node)
 import qualified Data.Text as T
 
+import DB hiding (InternalError)
 import Network.SOAP.Call
+import OurPrelude
+
+data BankIDSignature = BankIDSignature {
+  siSignatoryName :: String
+, siData          :: Binary ByteString
+, siSignature     :: Binary ByteString
+, siOcspRespose   :: Binary ByteString
+} deriving (Eq, Ord, Show)
+
+----------------------------------------
 
 data GrpFault
   = InvalidParameters
@@ -70,7 +83,7 @@ xpGrpFault = XMLParser $ \c -> listToMaybe $ c
     "CERTIFICATE_ERR"     -> CertificateError
     "CANCELLED"           -> Cancelled
     "START_FAILED"        -> StartFailed
-    gf                    -> error $ "xpGrpFault: unknown faultStatus:" <+> T.unpack gf
+    gf                    -> $unexpectedError $ "unknown faultStatus:" <+> T.unpack gf
 
 ----------------------------------------
 

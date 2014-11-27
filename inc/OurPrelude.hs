@@ -8,15 +8,29 @@ module OurPrelude (
   , read
   , tail
   , fromJust
+  , UnexpectedError(..)
+  , unexpectedError
   , module Data.Maybe
   , module Prelude
   ) where
 
+import Control.Exception
 import Data.Maybe hiding (fromJust)
+import Data.Typeable
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
 import Prelude hiding (head, last, maximum, minimum, read, tail)
 import qualified Prelude as P
+
+data UnexpectedError = UnexpectedError {
+  ueMessage  :: String
+, ueModule   :: String
+, ueLocation :: (Int, Int)
+} deriving (Eq, Ord, Show, Typeable)
+
+instance Exception UnexpectedError
+
+----------------------------------------
 
 head :: Q Exp
 head = [| emptyList P.head $(emptyListError "head") |]
@@ -36,13 +50,23 @@ tail = [| emptyList P.tail $(emptyListError "tail") |]
 read :: Q Exp
 read = [|
   \s -> let parsedS = reads s in
-    fromMaybe (error $ "Reading failed at " ++ $(srcLocation) ++ " (input was '" ++ s ++ "', reads returned " ++ show parsedS ++ ")") $ do
+    fromMaybe ($unexpectedError $ "reading failed (input was '" ++ s ++ "', reads returned '" ++ show parsedS ++ "')") $ do
       [(v, "")] <- return parsedS
       return v
   |]
 
 fromJust :: Q Exp
-fromJust = [| fromMaybe (error $ "Nothing passed to fromJust at " ++ $(srcLocation)) |]
+fromJust = [| fromMaybe $ $unexpectedError "fromJust received Nothing" |]
+
+unexpectedError :: Q Exp
+unexpectedError = [|
+  \msg -> let (modname, loc) = $srcLocation
+          in throw UnexpectedError {
+            ueMessage = msg
+          , ueModule = modname
+          , ueLocation = loc
+          }
+  |]
 
 ---- internal stuff below ----
 
@@ -50,9 +74,12 @@ emptyList :: ([a] -> t) -> t -> [a] -> t
 emptyList f err v = if null v then err else f v
 
 emptyListError :: String -> Q Exp
-emptyListError f =  [| error $ "Empty list passed to " ++ f ++ " at " ++ $(srcLocation) |]
+emptyListError fname = [| $unexpectedError $ fname ++ " received an empty list" |]
 
 srcLocation :: Q Exp
 srcLocation = do
-  l <- qLocation
-  stringE $ loc_module l ++ ":" ++ show (fst $ loc_start l)
+  Loc{..} <- qLocation
+  let (line, pos) = loc_start
+  tupE [stringE loc_module, tupE [integerE line, integerE pos]]
+  where
+    integerE = litE . integerL . fromIntegral

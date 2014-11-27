@@ -34,7 +34,6 @@ import Doc.Screenshot (Screenshot(..))
 import Doc.SignatoryFieldID
 import Doc.SignatoryScreenshots(emptySignatoryScreenshots, SignatoryScreenshots(signing))
 import Doc.SMSPin.Model
-import ELegitimation.BankIDUtils
 import File.FileID
 import MagicHash
 import Mails.Model

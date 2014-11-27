@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 module Doc.API.V1.Calls (
     documentAPIV1
   , apiCallV1CreateFromFile      -- Exported for tests
@@ -109,7 +110,6 @@ import Utils.Monoid
 import Utils.Read
 import Utils.String
 import qualified Data.ByteString.RFC2397 as RFC2397
-import qualified ELegitimation.Control as BankID
 import qualified Log
 
 documentAPIV1 ::  Route (KontraPlus Response)
@@ -418,13 +418,17 @@ apiCallV1CheckSign did slid = api $ do
                then return $ Right $ Ok ()
                else (Left . Failed) <$> (runJSONGenT $ value "pinProblem" True)
        ELegAuthentication -> do
-             provider <-apiGuardJustM (badInput "Eleg details not provided or invalid.") $ readField "eleg"
-             transactionid <- getDataFnM $ look "transactionid"
-             esigninfo <- case provider of
-                 MobileBankIDProvider -> BankID.verifySignatureAndGetSignInfoMobile did slid mh fields transactionid
-                 _ -> do
-                      signature <- getDataFnM $ look "signature"
-                      BankID.verifySignatureAndGetSignInfo slid mh fields provider signature transactionid
+         -- temporary do the same as in the standard authentication
+         return $ Right $ Ok ()
+         {-
+             provider <- apiGuardJustM (badInput "Eleg details not provided or invalid.") $ readField "eleg"
+             case provider of
+               Legacy_BankID       -> return ()
+               Legacy_Telia        -> return ()
+               Legacy_Nordea       -> return ()
+               Legacy_MobileBankID -> return ()
+               CgiGrpBankID -> do
+                 return ()
              case esigninfo of
                  BankID.Sign _ -> return $ Right $ Ok ()
                  BankID.Mismatch (onname,onnumber) (sfn,sln,spn) -> do
@@ -433,7 +437,7 @@ apiCallV1CheckSign did slid = api $ do
                  BankID.Problem msg -> do
                      Log.attention_ $ "Eleg verification for document #" ++ show did ++ " failed (during checksign) with message: " ++ msg
                      (Left . Failed) <$> (runJSONGenT $ value "elegProblem" True)
-
+                     -}
 
 
 apiCallV1Sign :: Kontrakcja m
@@ -474,6 +478,12 @@ apiCallV1Sign  did slid = api $ do
                       (Right . Accepted) <$> (documentJSONV1 mu False True True Nothing =<< theDocument)
                     else (Left . Failed) <$> (runJSONGenT $ return ())
       ELegAuthentication -> do
+        -- temporary do the same as in the standard authentication
+        signDocument slid mh fields Nothing Nothing screenshots
+        postDocumentPendingChange olddoc
+        handleAfterSigning slid
+        (Right . Accepted) <$> (documentJSONV1 mu False True True Nothing =<< theDocument)
+        {-
         mprovider <- readField "eleg"
         case mprovider of
                     Nothing -> do
@@ -482,6 +492,7 @@ apiCallV1Sign  did slid = api $ do
                         handleAfterSigning slid
                         (Right . Accepted) <$> (documentJSONV1 mu False True True Nothing =<< theDocument)
                     Just provider -> do
+                        (Right . Accepted) <$> (documentJSONV1 mu False True True Nothing =<< theDocument)
                         transactionid <- getDataFnM $ look "transactionid"
                         esigninfo <- case provider of
                             MobileBankIDProvider -> BankID.verifySignatureAndGetSignInfoMobile did slid mh fields transactionid
@@ -502,7 +513,7 @@ apiCallV1Sign  did slid = api $ do
                               signDocument slid mh fields (Just sinfo) Nothing screenshots
                               postDocumentPendingChange olddoc
                               handleAfterSigning slid
-                              (Right . Accepted) <$> (documentJSONV1 mu False True True Nothing =<< theDocument)
+                              (Right . Accepted) <$> (documentJSONV1 mu False True True Nothing =<< theDocument)-}
    )
     `catchKontra` (\(DocumentStatusShouldBe _ _ i) -> throwIO . SomeKontraException $ conflictError $ "Document not pending but " ++ show i)
     `catchKontra` (\(SignatoryHasAlreadySigned {}) -> throwIO . SomeKontraException $ conflictError $ "Signatory has already signed")
@@ -566,17 +577,7 @@ signDocument slid mh fields msinfo mpin screenshots = do
   getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . UpdateFieldsForSigning sl fields =<< signatoryActor ctx sl
   getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . SignDocument slid mh msinfo mpin screenshots =<< signatoryActor ctx sl
 
-
-handleMismatch :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [SignatoryField] -> String -> String -> String -> m ()
-handleMismatch sid sf sfn sln spn = do
-        ctx <- getContext
-        Just sl <- getSigLinkFor sid <$> theDocument
-        Log.attention_ $ "Information from eleg did not match information stored for signatory in document."
-        dbUpdate . LogSignWithELegFailureForDocument sid (nothingIfEmpty $ getFullName sf) (nothingIfEmpty $ getPersonalNumber sf)  sfn sln spn =<< signatoryActor ctx sl
-        triggerAPICallbackIfThereIsOne =<< theDocument
-
 {- End of utils-}
-
 
 apiCallV1Restart :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> m Response
 apiCallV1Restart did =  api $ do

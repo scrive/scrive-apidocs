@@ -10,7 +10,6 @@ import qualified Data.ByteString as BS
 import BrandedDomain.BrandedDomain
 import Doc.RenderedPages
 import EID.CGI.GRP.Config
-import ELegitimation.Config (LogicaConfig(..))
 import File.FileID
 import FlashMessage
 import GuardTime (GuardTimeConf(..))
@@ -44,7 +43,6 @@ data Context = Context
     , ctxlang                :: Lang -- ^ The current context lang
     , ctxmailsconfig         :: MailsConfig
     , ctxlivedocxconf        :: LiveDocxConf -- ^ LiveDocx configuration (does doc conversion)
-    , ctxlogicaconf          :: LogicaConfig -- ^ Logica configuration (eleg)
     , ctxcgigrpconfig        :: CgiGrpConfig
     , ctxgtconf              :: GuardTimeConf -- ^ GuardTime configuration
     , ctxfilecache           :: MemCache.MemCache FileID BS.ByteString -- ^

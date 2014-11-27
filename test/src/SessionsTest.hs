@@ -15,7 +15,6 @@ import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocUtils
 import Doc.Tokens.Model
-import ELegitimation.ELegTransaction.Model
 import KontraMonad
 import Session.Data
 import Session.Model

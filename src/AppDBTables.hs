@@ -18,6 +18,7 @@ import Doc.SMSPin.Tables
 import Doc.Tables
 import Doc.Tokens.Tables
 import EID.CGI.GRP.Tables
+import EID.Signature.Tables
 import EvidenceLog.Tables
 import File.Tables
 import HostClock.Tables
@@ -70,6 +71,7 @@ kontraTables =
   , tableSessions
   , tableDocumentSessionTokens
   , tableCgiGrpTransactions
+  , tableEIDSignatures
   , tableAsyncEventQueue
   , tableHostClock
   , tableUsersCallbackScheme

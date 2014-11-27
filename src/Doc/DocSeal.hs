@@ -107,24 +107,17 @@ personFromSignatory tz boxImages signatory = do
 
 personExFromSignatoryLink :: (MonadDB m, MonadMask m, TemplatesMonad m)
                           =>  TimeZoneName -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> m (Seal.Person, String)
-personExFromSignatoryLink tz boxImages (sl@SignatoryLink { signatorysignatureinfo
-                                                      , signatorylinkdeliverymethod
-                                                      , signatorylinkauthenticationmethod
-                                                      }) = do
+personExFromSignatoryLink tz boxImages sl@SignatoryLink{..} = do
   person <- personFromSignatory tz boxImages sl
   return ((person {
        Seal.emailverified    = signatorylinkdeliverymethod == EmailDelivery
-     , Seal.fullnameverified = fullnameverified
+     , Seal.fullnameverified = False
      , Seal.companyverified  = False
-     , Seal.numberverified   = numberverified
+     , Seal.numberverified   = True
      , Seal.phoneverified    = (signatorylinkdeliverymethod == MobileDelivery) || (signatorylinkauthenticationmethod == SMSPinAuthentication)
      })
     , map head $ words $ getFullName sl
     )
-  where fullnameverified = maybe False (\s -> signaturefstnameverified s
-                                              && signaturelstnameverified s)
-                           signatorysignatureinfo
-        numberverified = maybe False signaturepersnumverified signatorysignatureinfo
 
 fieldsFromSignatory :: (BS.ByteString,BS.ByteString) -> SignatoryLink -> [Seal.Field]
 fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryLink{signatoryfields} =

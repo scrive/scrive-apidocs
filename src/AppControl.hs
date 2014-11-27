@@ -330,7 +330,6 @@ appHandler handleRoutes appConf appGlobals = catchEverything . enhanceYourCalm $
         , ctxgtconf = guardTimeConf appConf
         , ctxlivedocxconf = liveDocxConfig appConf
         , ctxcgigrpconfig = cgiGrpConfig appConf
-        , ctxlogicaconf   = error "no logica config"
         , ctxfilecache = filecache appGlobals
         , ctxxtoken = sesCSRFToken session
         , ctxadminaccounts = admins appConf

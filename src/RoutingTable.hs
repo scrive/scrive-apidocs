@@ -28,7 +28,6 @@ import qualified Company.CompanyControl as Company
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
 import qualified Doc.DocControl as DocControl
 import qualified EID.CGI.GRP.Control as EID
-import qualified ELegitimation.Control as BankID
 import qualified Payments.Control as Payments
 import qualified ServerUtils.ServerUtils as ServerUtils
 import qualified User.UserControl as UserControl
@@ -60,13 +59,13 @@ staticRoutes production = choice
      , dir "fromtemplate"                 $ hGet  $ toK0 $ DocControl.showCreateFromTemplate
      , dir "newdocument" $ hGet $ toK0 $ DocControl.handleNewDocument
 
-     -- Sign view + eleg
-     , dir "s" $ dir "eleg" $ hGet $ toK2 $ BankID.generateBankIDTransaction
-     , dir "s" $ dir "eleg" $ dir "mbi" $ hPostNoXToken $ toK2 $ BankID.initiateMobileBankID
-     , dir "s" $ dir "eleg" $ dir "mbi" $ hGet  $ toK2 $ BankID.collectMobileBankID
+     -- Sign view
      , dir "s" $ hGet $ toK0    $ sendRedirect $ LinkArchive
      , dir "s" $ hGet $ toK2    $ DocControl.handleSignShow
      , dir "s" $ hGet $ toK3    $ DocControl.handleSignShowSaveMagicHash
+
+     -- E-ID stuff
+     , dir "s" $ dir "eid" $ EID.grpRoutes
 
      , dir "s" $ dir "acceptaccount"  $ hPostNoXToken $ toK2 $ DocControl.handleAcceptAccountFromSign
 
@@ -74,8 +73,6 @@ staticRoutes production = choice
      , dir "padsign" $ hPost $ toK2 $ DocControl.handleIssueGoToSignviewPad
      , allLangDirs $ dir "to-sign" $ hGet $ toK0 $ DocControl.handlePadList
      , allLangDirs $ dir "padqueue" $ hGet $ toK0 $ return LinkPadList -- Backward compatibility, redirects back to /to-sign
-
-     , dir "eid" $ EID.grpRoutes
 
      -- Attachments
      , dir "a" $ dir "rename"      $ hPost $ toK1 $ AttachmentControl.handleRename
@@ -89,10 +86,6 @@ staticRoutes production = choice
 
      , dir "d"                     $ hGet  $ toK0 $ ArchiveControl.showArchive
      , dir "d"                     $ hGet  $ toK1 $ DocControl.handleIssueShowGet
-     , dir "d" $ dir "eleg" $ dir "verify" $ hPost $ toK1 $ BankID.verifyTransactionForAuthor
-     , dir "d" $ dir "eleg"        $ hGet  $ toK1 $ BankID.generateBankIDTransactionForAuthor
-     , dir "d" $ dir "eleg" $ dir "mbi" $ hPostNoXToken $ toK1 $ BankID.initiateMobileBankIDForAuthor
-     , dir "d" $ dir "eleg" $ dir "mbi" $ hGet  $ toK1 $ BankID.collectMobileBankIDForAuthor
      , dir "d" $ dir "save"         $ hPost $ toK1 $ DocControl.handleMarkAsSaved
      , dir "d" $ dir "delete"       $ hPost $ toK0 $ ArchiveControl.handleDelete
      , dir "d" $ dir "reallydelete" $ hPost $ toK0 $ ArchiveControl.handleReallyDelete

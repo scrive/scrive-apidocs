@@ -280,7 +280,6 @@ mkContext lang = do
         , ctxlang = lang
         , ctxmailsconfig = defaultMailsConfig
         , ctxlivedocxconf = defaultValue
-        , ctxlogicaconf = error "no logica config"
         , ctxcgigrpconfig = CgiGrpConfig {
             cgGateway = "https://grpt.funktionstjanster.se:18898/grp/v1"
           , cgCertFile = "certs/steria3.pem"

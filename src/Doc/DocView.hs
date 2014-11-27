@@ -149,8 +149,7 @@ documentStatusFields :: Monad m => Document -> Fields m ()
 documentStatusFields document = do
   F.value "preparation" $ documentstatus document == Preparation
   F.value "pending" $ documentstatus document == Pending
-  F.value "cancel" $ (documentstatus document == Canceled
-      && (all (not . isJust . signatorylinkelegdatamismatchmessage) $ documentsignatorylinks document))
+  F.value "cancel" $ documentstatus document == Canceled
   F.value "timedout" $ documentstatus document == Timedout
   F.value "rejected" $ documentstatus document == Rejected
   F.value "signed" $ documentstatus document == Closed
@@ -158,8 +157,6 @@ documentStatusFields document = do
   -- remove it when old view is removed
   -- currently it means: is the next turn for author to sign?
   F.value "awaitingauthor" $ canAuthorSignNow document
-  F.value "datamismatch" $ (documentstatus document == Canceled
-      && (any (isJust . signatorylinkelegdatamismatchmessage) $ documentsignatorylinks document))
 
 -- Page for GT verification
 gtVerificationPage :: Kontrakcja m => m Response

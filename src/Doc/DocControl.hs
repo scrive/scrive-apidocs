@@ -98,7 +98,6 @@ import User.Email
 import User.Model
 import User.Utils
 import Util.Actor
-import Util.FlashUtil
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
@@ -341,10 +340,6 @@ handleIssueShowGet :: Kontrakcja m => DocumentID -> m (Either KontraLink (Either
 handleIssueShowGet docid = checkUserTOSGet $ do
   document <- getDocByDocID docid
   muser <- ctxmaybeuser <$> getContext
-
-  let mMismatchMessage = msum (map signatorylinkelegdatamismatchmessage (documentsignatorylinks document))
-  when (isAuthor (document, muser) && isCanceled document && isJust mMismatchMessage) $
-    addFlash (OperationFailed, fromJust mMismatchMessage)
 
   authorsiglink <- guardJust $ getAuthorSigLink document
 

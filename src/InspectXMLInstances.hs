@@ -124,7 +124,7 @@ instance InspectXML AuthenticationMethod where
 instance InspectXML DeliveryMethod where
 instance InspectXML ConfirmationDeliveryMethod where
 instance InspectXML CancelationReason where
-instance InspectXML SignatureProvider where
+--instance InspectXML SignatureProvider where
 instance InspectXML SignatureInfo where
 instance InspectXML Company where
 instance InspectXML CompanyID where

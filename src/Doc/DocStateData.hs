@@ -14,7 +14,6 @@ module Doc.DocStateData (
   , DeliveryMethod(..)
   , ConfirmationDeliveryMethod(..)
   , DeliveryStatus(..)
-  , SignatureProvider(..)
   , SignInfo(..)
   , SignOrder(..)
   , SignatoryFieldValue(..)
@@ -65,7 +64,6 @@ import Doc.DocumentID
 import Doc.SealStatus (SealStatus, HasGuardtimeSignature(..))
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
-import ELegitimation.SignatureProvider
 import File.FileID
 import IPAddress
 import MagicHash
@@ -74,6 +72,7 @@ import User.Lang
 import User.UserID
 import Utils.Default
 import Utils.Image
+import qualified EID.Signature.Provider as SP
 
 newtype SignOrder = SignOrder { unSignOrder :: Int32 }
   deriving (Eq, Ord, PQFormat)
@@ -270,10 +269,10 @@ data SignatureInfo = SignatureInfo {
     signatureinfotext        :: String
   , signatureinfosignature   :: String
   , signatureinfocertificate :: String
-  , signatureinfoprovider    :: SignatureProvider
-  , signaturefstnameverified :: Bool
-  , signaturelstnameverified :: Bool
-  , signaturepersnumverified :: Bool
+  , signatureinfoprovider    :: SP.SignatureProvider
+  --, signaturefstnameverified :: Bool
+  --, signaturelstnameverified :: Bool
+  --, signaturepersnumverified :: Bool
   , signatureinfoocspresponse :: Maybe String -- verified legal evidence issued by BankID
   } deriving (Eq, Ord, Show)
 
@@ -432,10 +431,6 @@ data SignatoryLink = SignatoryLink {
   , signatorylinkrejectiontime   :: Maybe UTCTime
   , signatorylinkrejectionreason :: Maybe String
   , signatorylinkauthenticationmethod   :: AuthenticationMethod
-  , signatorylinkelegdatamismatchmessage        :: Maybe String
-  , signatorylinkelegdatamismatchfirstname      :: Maybe String
-  , signatorylinkelegdatamismatchlastname       :: Maybe String
-  , signatorylinkelegdatamismatchpersonalnumber :: Maybe String
   , signatorylinkdeliverymethod         :: DeliveryMethod
   , signatorylinkconfirmationdeliverymethod :: ConfirmationDeliveryMethod
   } deriving (Ord, Show)
@@ -465,10 +460,6 @@ instance Eq SignatoryLink where
     signatorylinkrejectiontime s1 == signatorylinkrejectiontime s2 &&
     signatorylinkrejectionreason s1 == signatorylinkrejectionreason s2 &&
     signatorylinkauthenticationmethod s1 == signatorylinkauthenticationmethod s2 &&
-    signatorylinkelegdatamismatchmessage s1 == signatorylinkelegdatamismatchmessage s2 &&
-    signatorylinkelegdatamismatchfirstname s1 == signatorylinkelegdatamismatchfirstname s2 &&
-    signatorylinkelegdatamismatchlastname s1 == signatorylinkelegdatamismatchlastname s2 &&
-    signatorylinkelegdatamismatchpersonalnumber s1 == signatorylinkelegdatamismatchpersonalnumber s2 &&
     signatorylinkdeliverymethod s1 == signatorylinkdeliverymethod s2 &&
     signatorylinkconfirmationdeliverymethod s1 == signatorylinkconfirmationdeliverymethod s2
 
@@ -497,10 +488,6 @@ instance HasDefaultValue SignatoryLink where
                   , signatorylinkrejectiontime   = Nothing
                   , signatorylinkrejectionreason = Nothing
                   , signatorylinkauthenticationmethod = StandardAuthentication
-                  , signatorylinkelegdatamismatchmessage = Nothing
-                  , signatorylinkelegdatamismatchfirstname = Nothing
-                  , signatorylinkelegdatamismatchlastname = Nothing
-                  , signatorylinkelegdatamismatchpersonalnumber = Nothing
                   , signatorylinkdeliverymethod       = EmailDelivery
                   , signatorylinkconfirmationdeliverymethod = EmailConfirmationDelivery
                   }

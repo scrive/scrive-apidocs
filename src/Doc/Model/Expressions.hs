@@ -90,9 +90,6 @@ selectSignatoryLinksX extension = sqlSelect "signatory_links" $ do
   sqlResult "signatory_links.signinfo_signature"
   sqlResult "signatory_links.signinfo_certificate"
   sqlResult "signatory_links.signinfo_provider"
-  sqlResult "signatory_links.signinfo_first_name_verified"
-  sqlResult "signatory_links.signinfo_last_name_verified"
-  sqlResult "signatory_links.signinfo_personal_number_verified"
   sqlResult "signatory_links.signinfo_ocsp_response"
   sqlResult "signatory_links.is_author"
   sqlResult "signatory_links.is_partner"
@@ -105,10 +102,6 @@ selectSignatoryLinksX extension = sqlSelect "signatory_links" $ do
   sqlResult "signatory_links.rejection_time"
   sqlResult "signatory_links.rejection_reason"
   sqlResult "signatory_links.authentication_method"
-  sqlResult "signatory_links.eleg_data_mismatch_message"
-  sqlResult "signatory_links.eleg_data_mismatch_first_name"
-  sqlResult "signatory_links.eleg_data_mismatch_last_name"
-  sqlResult "signatory_links.eleg_data_mismatch_personal_number"
   sqlResult "signatory_links.delivery_method"
   sqlResult "signatory_links.confirmation_delivery_method"
 
@@ -129,16 +122,11 @@ fetchSignatoryLinks = do
     decoder (docid, links, linksmap) (slid, document_id, user_id,
      sign_order, token, sign_time, sign_ip, seen_time, seen_ip, read_invitation,
      mail_invitation_delivery_status, sms_invitation_delivery_status, signinfo_text, signinfo_signature, signinfo_certificate,
-     signinfo_provider, signinfo_first_name_verified, signinfo_last_name_verified,
-     signinfo_personal_number_verified, signinfo_ocsp_response,
+     signinfo_provider, signinfo_ocsp_response,
      is_author, is_partner, csv_title, csv_contents,
      deleted, really_deleted, signredirecturl, rejectredirecturl,
      rejection_time, rejection_reason,
      authentication_method,
-     eleg_data_mismatch_message,
-     eleg_data_mismatch_first_name,
-     eleg_data_mismatch_last_name,
-     eleg_data_mismatch_personal_number,
      delivery_method,
      confirmation_delivery_method,
      status_class,
@@ -172,17 +160,11 @@ fetchSignatoryLinks = do
               signinfo_signature' <- signinfo_signature
               signinfo_certificate' <- signinfo_certificate
               signinfo_provider' <- signinfo_provider
-              signinfo_first_name_verified' <- signinfo_first_name_verified
-              signinfo_last_name_verified' <- signinfo_last_name_verified
-              signinfo_personal_number_verified' <- signinfo_personal_number_verified
               return $ SignatureInfo {
                   signatureinfotext        = signinfo_text'
                 , signatureinfosignature   = signinfo_signature'
                 , signatureinfocertificate = signinfo_certificate'
                 , signatureinfoprovider    = signinfo_provider'
-                , signaturefstnameverified = signinfo_first_name_verified'
-                , signaturelstnameverified = signinfo_last_name_verified'
-                , signaturepersnumverified = signinfo_personal_number_verified'
                 , signatureinfoocspresponse = signinfo_ocsp_response
                 }
           , signatorylinkdeleted = deleted
@@ -196,10 +178,6 @@ fetchSignatoryLinks = do
           , signatorylinkrejectionreason = rejection_reason
           , signatorylinkrejectiontime = rejection_time
           , signatorylinkauthenticationmethod = authentication_method
-          , signatorylinkelegdatamismatchmessage = eleg_data_mismatch_message
-          , signatorylinkelegdatamismatchfirstname = eleg_data_mismatch_first_name
-          , signatorylinkelegdatamismatchlastname = eleg_data_mismatch_last_name
-          , signatorylinkelegdatamismatchpersonalnumber = eleg_data_mismatch_personal_number
           , signatorylinkdeliverymethod = delivery_method
           , signatorylinkconfirmationdeliverymethod = confirmation_delivery_method
           }

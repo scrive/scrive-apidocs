@@ -456,7 +456,7 @@ updateFieldPlacements=$if(placements)$<table class="placements"><tr><td>Page</td
 pinWasSent=The PIN was sent to $phone$.
 ###
 elegVerification=
-<p>The text signed in the eID client was: </p><pre>$infotext$</pre> <p>E-legitimation provider: $provider$.</p> $if(fieldsverified)$ <p>Information about signatory verified by $provider$: $if(fstnameverified)$ First name; $endif$ $if(lstnameverified)$ Last name; $endif$ $if(persnumverified)$ Personal number; $endif$</p> $endif$ <p>Signature: <div style='white-space:pre'>$signature$</div></p> $if(certificate)$ <p>Certificate: <div style='white-space:pre'>$certificate$</div></p>$endif$ $if(ocsp)$ <p>Online Certificate Status Protocol (OCSP) Response: <div style='white-space:pre'>$ocsp$</div></p>$endif$
+<p>The text signed in the eID client was: </p><pre>$infotext$</pre> <p>E-legitimation provider: $provider$.</p> <p>Information about signatory verified by $provider$: Personal number</p> <p>Signature: <div style='white-space:pre'>$signature$</div></p> $if(certificate)$ <p>Certificate: <div style='white-space:pre'>$certificate$</div></p>$endif$ $if(ocsp)$ <p>Online Certificate Status Protocol (OCSP) Response: <div style='white-space:pre'>$ocsp$</div></p>$endif$
 ###
 invitationCustomMessageTextToSignIfThereIsOne=
 $if(text)$$if(!mobile)$ $_invitationCustomMessageTextToSign()$ $endif$$endif$
