@@ -95,7 +95,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
 
     dragHandler.draggable({
         appendTo : ".design-view-frame",
-        containment: ".design-view-document-pages",
+        scroll: false,
         cursorAt : cursorNormalize ? { top :7 , left :7} : undefined,
         helper: function(event) {
             initFP();
