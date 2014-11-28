@@ -3,7 +3,6 @@
 define(['React', 'lists/list','archive/statustooltipmixin', 'moment', 'legacy_code'], function(React, List, StatusTooltipMixin, moment) {
 
 
-
 var SelectPartyModal = function(signingIndexes,doc) {
           var self = this;
           self.current = 0;
@@ -140,16 +139,8 @@ return React.createClass({
           ref='list'
         >
 
-          <List.ListAction
-            name={localization.padlist.updateAction}
-            className="float-right"
-            onSelect={function() {
-              self.reload();
-              self.resetCounter();
-            }}
-          />
-           name : localization.archive.documents.remove.action,
-           emptyMessage :  localization.archive.documents.cancel.emptyMessage,
+        <List.TextFiltering text={localization.archive.documents.search} />
+
           <List.ListAction
             name={localization.archive.documents.remove.action}
             className="float-left"
@@ -159,6 +150,14 @@ return React.createClass({
                 return false;
               }
               self.openDeleteModal(selected);
+            }}
+          />
+          <List.ListAction
+            name={localization.padlist.updateAction}
+            className="float-left"
+            onSelect={function() {
+              self.reload();
+              self.resetCounter();
             }}
           />
 
