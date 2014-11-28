@@ -200,6 +200,7 @@ define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_the
                     days = parseInt(v);
                     if (days != undefined && !isNaN(days) && (days + "" == v) && days != doc.daystosign()) {
                       days = Math.min(90, days);
+                      days = Math.max(1, days);
                       doc.setDaystosign(days);
                       view.daystosigndaysinput.setValue(doc.daystosign());
                     } else if (v == "" && doc.daystosign() != 1) {
@@ -250,6 +251,8 @@ define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_the
                     days = parseInt(v);
                     if (isNaN(days))
                       days = undefined;
+                    days = Math.min(doc.daystosign(), days);
+                    days = Math.max(1, days);
                     if (days != doc.daystoremind()) {
                       doc.setDaystoremind(days);
                     } else if (days == undefined && v != "") {
