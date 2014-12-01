@@ -2,7 +2,7 @@ define([
   'jquery', // This need to be included here, before the NON-AMD libraries are included
   '../libs/jquery-migrate.min',
   '../libs/jquery-ui.min',
-  '../libs/dateinput.js',
+  '../libs/dateinput',
   '../libs/jquery.MultiFile',
   '../libs/jquery.browser.min',
   '../libs/jquery.hashchange',
