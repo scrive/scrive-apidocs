@@ -78,9 +78,6 @@ javascriptLocalisation =
                           eleg : {
                                      subhead : "$_pageDocumentForSignContentElegSubhead()$"
                                    , body: "$_pageDocumentForSignContentElegBody()$ "
-                                   , telia: "$_telia()$"
-                                   , mobilebankid: "$_mobileBankID()$"
-                                   , bankid: "$_bankid()$"
                                    , mobile : {
                                          startingMobileBankID : "$_bankidStartApp()$"
                                    }
@@ -181,10 +178,8 @@ javascriptLocalisation =
                cancelmodaltextwithsignatures: "$_contractcancelmodaltextwithsignatures()$",
                rejectbuttontext: "$_contractrejectbuttontext()$",
                signatorysignmodaltitlefromsignatorydrawing: "$_contractsignatorysignmodaltitlefromsignaturedrawing()$",
-               signatorysignmodaltitleeleg: "$_contractsignatorysignmodaltitleeleg()$",
                signatorysignmodalcontent: "<p>$_contractsignatorysignmodalcontent()$ </p>",
                signatorysignmodalcontentfromsignaturedrawing: "<p>$_contractsignatorysignmodalcontentfromsignaturedrawing()$ </p>",
-               signatorysignmodalcontentsignvieweleg: "<p>$_contractsignatorysignmodalcontentdesignvieweleg()$ </p>",
                signatorysignmodalcontentauthoronly: "<p>$_contractsignatorysignmodalcontentauthoronly()$ </p>",
                signbuttontext: "$_contractsignbuttontext()$",
                signbuttontextfromsignaturedrawing: "$_contractsignbuttontextfromsignaturedrawing()$",
@@ -599,6 +594,35 @@ javascriptLocalisation =
                 , next : "$_next()$"
                 , checkYourPhone : "$_checkYourPhone()$"
 
+             }
+             , eleg : {
+                  chooseElegModalTitle : "$_contractsignatorysignmodaltitleeleg()$"
+                , chooseElegModalContent: "<p>$_contractsignatorysignmodalcontentdesignvieweleg()$</p>"
+                , bankid : {
+                        modalAnotherDevice : "$_elegBankIDModalAnotherDevice()$"
+                      , modalThisDevice : "$_elegBankIDModalThisDevice()$"
+                      , bankid: "$_bankid()$"
+                      , mobilebankid: "$_mobileBankID()$"
+                      , faultModalTitle : "$_elegBankIDFaultModalTitle()$"
+                      , rfa1 : "$_elegBankIDRFA1()$"
+                      , rfa2 : "$_elegBankIDRFA2()$"
+                      , rfa3 : "$_elegBankIDRFA3()$"
+                      , rfa5 : "$_elegBankIDRFA5()$"
+                      , rfa6 : "$_elegBankIDRFA6()$"
+                      , rfa8 : "$_elegBankIDRFA8()$"
+                      , rfa9 : "$_elegBankIDRFA9()$"
+                      , rfa12 : "$_elegBankIDRFA12()$"
+                      , rfa13 : "$_elegBankIDRFA13()$"
+                      , rfa14Computer : "$_elegBankIDRFA14Computer()$"
+                      , rfa14Mobile : "$_elegBankIDRFA14Mobile()$"
+                      , rfa15Computer : "$_elegBankIDRFA15Computer()$"
+                      , rfa15Mobile : "$_elegBankIDRFA15Mobile()$"
+                      , rfa16 : "$_elegBankIDRFA16()$"
+                      , rfa17 : "$_elegBankIDRFA17()$"
+                      , rfa18 : "$_elegBankIDRFA18()$"
+                      , rfa19 : "$_elegBankIDRFA19()$"
+                      , rfa20 : "$_elegBankIDRFA20()$"
+                  }
              }
         }
         , docview : {

@@ -379,13 +379,6 @@ window.Document = Backbone.Model.extend({
             }
         }).addMany(extraSignFields);
     },
-    verifyEleg : function() {
-         var document = this;
-         return new Submit({
-              url : "/d/eleg/verify/" + this.documentid(),
-              method: "POST"
-          });
-    },
     clone : function(callback) {
        var document = this;
          return new Submit({
@@ -589,13 +582,13 @@ window.Document = Backbone.Model.extend({
             // We don't support drawing signature in design view
             return false;
         }
-        if (this.author().elegAuthentication() && this.isCsv()) {
-            // We don't support same eleg authorization of different documents
+        if (this.author().elegAuthentication()) {
+            // We don't support eleg authorization in design view
             return false;
         }
 
         if (this.author().smsPinAuthentication()) {
-            // We don't support same sms pin for author from design view
+            // We don't support sms pin for author from design view
             return false;
         }
 
@@ -604,20 +597,6 @@ window.Document = Backbone.Model.extend({
             return sig.signs() && sig.signorder() < aidx;
             });
 
-    },
-    authorCanSignLast: function() {
-        for (var i = 0; i < this.signatories().length; ++i) {
-            var sig = this.signatories()[i];
-            if (sig.author()) {
-                if (!sig.signs() || sig.hasSigned())
-                    return false;
-            }
-            else {
-                if (sig.signs() && !sig.hasSigned())
-                    return false;
-            }
-        }
-        return true;
     },
     authorIsOnlySignatory : function() {
        for (var i = 0; i < this.signatories().length; ++i)

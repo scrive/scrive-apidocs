@@ -754,7 +754,7 @@ window.Signatory = Backbone.Model.extend({
                 var f = new Field({name:'sigpersnr',
                                    type: 'standard',
                                    obligatory: true,
-                                   shouldbefilledbysender: signatory.author(),
+                                   shouldbefilledbysender: false,
                                    signatory: signatory});
                 f.addedByMe = true;
                 signatory.addField(f);

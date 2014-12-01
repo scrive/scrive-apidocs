@@ -83,8 +83,6 @@ define([
   '../js/designview/csvsignatorydesign',
   '../js/designview/firsttimeuserexperience',
   '../js/designview/signviewsettings',
-  '../js/mobilebankid',
-  '../js/bankid',
   '../js/validation',
   '../js/signaturemodal/signaturetyper',
   '../js/signaturemodal/signaturedrawer',

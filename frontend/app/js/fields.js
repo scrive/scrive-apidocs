@@ -189,6 +189,7 @@ window.Field = Backbone.Model.extend({
                                          field.isMobile() && (signatory.mobileConfirmationDelivery() || signatory.emailMobileConfirmationDelivery()));
       var willSignNowAndFieldNeeded = signatory.author()
         && signatory.ableToSign()
+        && (!signatory.elegAuthentication())
         && (!signatory.hasPlacedSignatures())
         && field.isObligatory()
         && (field.isText() || field.isCheckbox());
@@ -215,10 +216,7 @@ window.Field = Backbone.Model.extend({
       return concatValidations;
     },
     validateSSN: function() {
-      var signatory = this.signatory();
-      if(signatory.ableToSign() && signatory.author() && signatory.elegAuthentication()) {
-        return new NotEmptyValidation();
-      }
+      // We do not do any validation of SSN in design view
       return new Validation();
     },
     validateCheckbox: function() {

@@ -4,7 +4,7 @@
  *   $('body').append(new DocumentSignSignSection(model : document).el);
  */
 
-define(['signview/send_sms_pin_modal', 'tinycolor','Backbone', 'legacy_code'], function(SendSMSPinModal,tinycolor) {
+define(['React', 'signview/send_sms_pin_modal', 'eleg/signwithelegmodal', 'eleg/bankid', 'tinycolor','Backbone', 'legacy_code'], function(React, SendSMSPinModal, SignWithElegModal, BankID, tinycolor) {
 
 
 window.DocumentSignConfirmation = function(args) {
@@ -88,98 +88,6 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
   stopBlockingReload : function() {
     window.onbeforeunload = function() {};
   },
-
-  createElegButtonElems: function() {
-    var document = this.document();
-    var signatory = document.currentSignatory();
-    var self = this;
-
-    var errorCallback = function(xhr) {
-        self.stopBlockingReload();
-
-        if (self.confirmation != undefined)         self.confirmation.clear();
-        if (self.signinprogressmodal != undefined) self.signinprogressmodal.close();
-        var data = {};
-        try {
-          data = JSON.parse(xhr.responseText);
-        } catch (e) {}
-
-        if (xhr.status == 403) {
-            // session timed out
-            ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
-        } else if (xhr.status == 400 && data.elegProblem && data.mismatch){
-            new FlashMessage({content: self.elegMishmatchErrorMessage(data.onName,data.onNumber),
-                              color: 'red'});
-        } else if (xhr.status == 400 && data.elegProblem){
-            new FlashMessage({content: localization.sign.eleg.failed,
-                              color: 'red'});
-        } else {
-          new ReloadDueToErrorModal(xhr);
-        }
-    };
-
-    var makeCallback = function(bankName, bankSign, bankSignExtraOpt) {
-      mixpanel.track('Click ' + bankName);
-      bankSign(document, signatory, function(elegParams) {
-        document.checksign(function() {
-            self.startBlockingReload();
-            self.confirmation.clear();
-            new FlashMessagesCleaner(); // We clean all flash message, so they don't land on screenshot
-            self.signinprogressmodal = new SigningInProgressModal({
-                                            document : document,
-                                            margin: self.confirmation.margin()
-                                       });
-            self.screenshotDone = false;
-            document.takeSigningScreenshot(function() {
-                  self.screenshotDone = true;
-            });
-
-            document.sign(errorCallback, self.onSignedDocument,elegParams).sendAjax();
-
-        }, errorCallback,elegParams).send();
-
-        }, bankSignExtraOpt);
-      return false;
-
-    };
-
-    var bankid = new Button({
-      text: localization.sign.eleg.bankid,
-      cssClass: 'bankid',
-      color: 'blue',
-      oneClick: true,
-      onClick: function() {
-        setTimeout(function() {bankid.setNotClicked();},1000); // Prevent double clicks
-        return makeCallback('BankID', Eleg.bankidSign);
-      }
-    });
-
-    var telia = new Button({
-      text: localization.sign.eleg.telia,
-      cssClass: 'bankid',
-      color: 'blue',
-      oneClick: true,
-      onClick: function() {
-        setTimeout(function() {telia.setNotClicked();},1000); // Prevent double clicks
-        return makeCallback('Telia', Eleg.teliaSign);
-      }
-    });
-
-    var mbi = new Button({
-      text: localization.sign.eleg.mobilebankid,
-      cssClass: 'bankid mbi',
-      color: 'blue',
-      oneClick: true,
-      onClick: function() {
-        setTimeout(function() {mbi.setNotClicked();},1000); // Prevent double clicks
-        return makeCallback('Mobile BankID', Eleg.mobileBankIDSign, signatory.personalnumberField().value());
-      }
-    });
-
-    return $("<span class='elegButtonFooter' />").append(bankid.el()).append(mbi.el());
-  },
-
-
   /**
    *  Show different pages when a document is signed,
    *  based on a few conditions,
@@ -212,20 +120,15 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
     };
     postSign();
   },
-  createSignButtonElems: function() {
+  tryToSign : function(args) {
     var document = this.document();
     var signatory = document.currentSignatory();
     var self = this;
-    var button =  new Button({
-      size: BrowserInfo.isSmallScreen() ? "big" : "small",
-      color: "green",
-      cssClass: 'greybg signbutton',
-      text: this.signaturesPlaced ? localization.process.signbuttontextfromsignaturedrawing : localization.process.signbuttontext,
-      oneClick : true,
-      onClick: function() {
-        if (signatory.smsPinAuthentication() && (self.pin == undefined || self.pin == "")) {
+    if (signatory.smsPinAuthentication() && (self.pin == undefined || self.pin == "")) {
           new FlashMessage({content: localization.docsignview.pinSigning.noPinProvided,  color: 'red'});
-          button.setNotClicked();
+          if (args.onFail) {
+            args.onFail();
+          }
           return;
         }
 
@@ -238,7 +141,9 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
             } catch (e) {}
 
             if (xhr.status == 400 && data.pinProblem) {
-                button.setNotClicked();
+                if (args.onFail) {
+                  args.onFail();
+                }
                 new FlashMessage({content: localization.docsignview.pinSigning.invalidPin,  color: 'red'});
             } else {
               if (self.confirmation != undefined)         self.confirmation.clear();
@@ -254,9 +159,9 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
 
         document.checksign(function() {
 
-          var modalTop = self.confirmation.absoluteTop();
+          var modalTop = self.confirmation ? self.confirmation.absoluteTop() : 0;
 
-          self.confirmation.clear();
+          if (self.confirmation != undefined)  self.confirmation.clear();
           new FlashMessagesCleaner(); // We clean all flash message, so they don't land on screenshot
           self.signinprogressmodal = new SigningInProgressModal({
                                           document : document,
@@ -278,7 +183,22 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
           };
           f();
       }, errorCallback,pinParam).send();
-      return false;
+  },
+  createSignButtonElems: function() {
+    var document = this.document();
+    var signatory = document.currentSignatory();
+    var self = this;
+    var button =  new Button({
+      size: BrowserInfo.isSmallScreen() ? "big" : "small",
+      color: "green",
+      cssClass: 'greybg signbutton',
+      text: this.signaturesPlaced ? localization.process.signbuttontextfromsignaturedrawing : localization.process.signbuttontext,
+      oneClick : true,
+      onClick: function() {
+       self.tryToSign({ onFail: function() {
+         button.setNotClicked();
+       }});
+       return false;
       }
     });
 
@@ -287,51 +207,32 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
     return button.el();
   },
 
+  // TODO cleanup eleg parts from there, they should not be here
   createPreambleElems: function() {
     var document = this.document();
     var signatory = document.currentSignatory();
 
     if (signatory.author()) {
-     var content = $("<div />");
-     if (document.authorIsOnlySignatory()) {
-       content = $(localization.process.signatorysignmodalcontentauthoronly);
-       content.find('.put-signatory-name-here').text(signatory.name());
-     } else if (signatory.elegAuthentication())
-          content.append(localization.process.signatorysignmodalcontentsignvieweleg);
-     else {
-       var copy = $(localization.process.signatorysignmodalcontent);
-       copy.find('.put-signatory-name-here').text(signatory.name());
-       content.append(copy);
-     }
-
-     if (signatory.elegAuthentication()) {
-        var subhead = $("<h3/>").text(localization.sign.eleg.subhead);
-        var p = $("<p/>").append(localization.sign.eleg.body);
-        $('.is-click-here',p).attr("target", "_new").attr("href", "http://www.e-legitimation.se/");
-        content.add($("<span/>").append(subhead).append(p));
+      var content = $("<div />");
+      if (document.authorIsOnlySignatory()) {
+        content = $(localization.process.signatorysignmodalcontentauthoronly);
+        content.find('.put-signatory-name-here').text(signatory.name());
+      } else {
+        var copy = $(localization.process.signatorysignmodalcontent);
+        copy.find('.put-signatory-name-here').text(signatory.name());
+        content.append(copy);
       }
       return content;
     } else {
       var content = $("<div />");
-      if (signatory.elegAuthentication())
-          content.append(localization.process.signatorysignmodalcontentsignvieweleg);
-      else {
-        if (this.signaturesPlaced) {
-          var copy = $(localization.process.signatorysignmodalcontentfromsignaturedrawing);
-          copy.find('.put-signatory-name-here').text(signatory.name());
-          content.append(copy);
-        } else {
-          var copy = $(localization.process.signatorysignmodalcontent);
-          copy.find('.put-signatory-name-here').text(signatory.name());
-          content.append(copy);
-        }
-      }
-
-      if (signatory.elegAuthentication()) {
-        var subhead = $("<h3/>").text(localization.sign.eleg.subhead);
-        var p = $("<p/>").append(localization.sign.eleg.body);
-        $('.is-click-here',p).attr("target", "_new").attr("href", "http://www.e-legitimation.se/");
-        content.add($("<span/>").append(subhead).append(p));
+      if (this.signaturesPlaced) {
+        var copy = $(localization.process.signatorysignmodalcontentfromsignaturedrawing);
+        copy.find('.put-signatory-name-here').text(signatory.name());
+        content.append(copy);
+      } else {
+        var copy = $(localization.process.signatorysignmodalcontent);
+        copy.find('.put-signatory-name-here').text(signatory.name());
+        content.append(copy);
       }
       return content;
     }
@@ -385,16 +286,11 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
     var arrow = this.model.arrow();
     var signatory = document.currentSignatory();
     var self = this;
-    var title;
     self.signview = this.signview;
 
-    if (signatory.elegAuthentication()) {
-      title = localization.process.signatorysignmodaltitleeleg;
-    } else {
-      title = localization.signByAuthor.modalTitle;
-      if (this.signaturesPlaced)
-        title = localization.process.signatorysignmodaltitlefromsignatorydrawing;
-    }
+    var title = localization.signByAuthor.modalTitle;
+    if (this.signaturesPlaced)
+      title = localization.process.signatorysignmodaltitlefromsignatorydrawing;
 
     if (arrow) {
       arrow.disable();
@@ -402,23 +298,35 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
 
     var isSmallScreen = BrowserInfo.isSmallScreen();
 
-    self.confirmation = new Confirmation({
-      cssClass: 'grey sign-confirmation-modal' + (isSmallScreen ? ' small-device' : ''),
-      title: title,
-      signview: this.margin ? false : self.signview, // margin overrides signview
-      acceptButton: signatory.elegAuthentication() ? this.createElegButtonElems() : this.createSignButtonElems(),
-      rejectText: localization.cancel,
-      // use default width for eleg, as there is less text
-      width: signatory.elegAuthentication() ? undefined : (isSmallScreen ? 825 : 520),
-      margin : this.margin || (isSmallScreen ? '150px auto 0px' : undefined),
-      onReject: function() {
-        if (arrow) {
-          arrow.enable();
+    if(signatory.elegAuthentication()) {
+      new SignWithElegModal({
+        signatory : signatory,
+        callback  : function() {
+          self.tryToSign({});
+        },
+        errorcallback : function() {
+          alert("Error");
         }
-      },
-      fast: this.fast,
-      content: this.createContentElems
-    });
+      });
+    } else {
+      self.confirmation = new Confirmation({
+        cssClass: 'grey sign-confirmation-modal' + (isSmallScreen ? ' small-device' : ''),
+        title: title,
+        signview: this.margin ? false : self.signview, // margin overrides signview
+        acceptButton: this.createSignButtonElems(),
+        rejectText: localization.cancel,
+        // use default width for eleg, as there is less text
+        width: (isSmallScreen ? 825 : 520),
+        margin : this.margin || (isSmallScreen ? '150px auto 0px' : undefined),
+        onReject: function() {
+          if (arrow) {
+            arrow.enable();
+          }
+        },
+        fast: this.fast,
+        content: this.createContentElems
+      });
+    }
 
     // TODO rewrite me, but not on staging
     // Re-adjust the signing modal for small screen devices.
@@ -435,10 +343,6 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
 
       // Remove the modal footer but keep the button (regular or mobile bankid)
       var signButton = modalFooter.find('.button.signbutton').detach();
-      if (signatory.elegAuthentication()) {
-        signButton = modalFooter.find('.mbi').detach();
-        signButton.addClass("button-green signbutton");
-      }
       modalFooter.remove();
 
       // Styling

@@ -305,97 +305,33 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             var model = self.model;
             var document = model.document();
             var signatory = document.currentSignatory();
-            var acceptButton;
 
             var spinner = this.spinnerSmall();
             var spinnerContainer = $("<span class='spinner-container' />");
             spinnerContainer.append(spinner.el);
 
-            if (signatory.elegAuthentication()) {
-                acceptButton = $("<span />");
-                var callback = function(params) {
-                    document.afterSave(function(){
-                      document.verifyEleg().addMany(params).sendAjax(function(resp) {
-                        var resp = JSON.parse(resp);
-                        if (resp.verified) {
-                          document.makeReadyForSigning().add("authorsignsimmediately","YES").sendAjax(function(docdata) {
-                            var newdoc = new Document(new Document({}).parse(docdata));
-                            newdoc.set({"screenshots" : document.get("screenshots")}); // We need to propagate screenshots
-                            newdoc.sign().addMany(params).sendAjax(function() {
-                                window.location.reload();
-                            });
-                          });
-                        }
-                        else {
-                          new FlashMessage({color: "red", content: "Elegitimation verification failed"});
-                          if (self.confirmationpopup != undefined) self.confirmationpopup.close();
-                        }
-                      });
 
-                    });
-                };
-                var bankid = new Button({
-                  text: localization.sign.eleg.bankid,
-                  cssClass: 'bankid',
-                  color: 'blue',
-                  oneClick: true,
-                  onClick: function() {
-                    mixpanel.track('Select eleg provider', {
-                        'Eleg provider' : 'BankID'
-                    });
-                    document.takeSigningScreenshot(function() { Eleg.bankidSign(document,signatory, callback); });
-                  }
+            var acceptButton = new Button({
+              color : "green",
+              text : localization.designview.sign,
+              oneClick : true,
+              onClick : function() {
+
+                acceptButton.el().addClass('is-inactive').prepend(spinnerContainer); // Add the spinner and make inactive
+                self.confirmationpopup.hideCancel();
+                self.confirmationpopup.hideClose();
+
+                mixpanel.track('Click accept sign', {
+                 'Button' : 'sign'
                 });
-
-                var telia = new Button({
-                  text: localization.sign.eleg.telia,
-                  cssClass: 'bankid',
-                  color: 'blue',
-                  oneClick: true,
-                  onClick: function() {
-                    mixpanel.track('Select eleg provider', {
-                        'Eleg provider' : 'Telia'
-                    });
-                    document.takeSigningScreenshot(function() { Eleg.teliaSign(document,signatory, callback); });
-                  }
+                document.takeSigningScreenshot(function() {
+                  document.afterSave(function() {
+                    self.signWithCSV(document, 1 , document.isCsv() ? document.csv().length - 1 : undefined);
+                  });
                 });
+             }
+            });
 
-                var mbi = new Button({
-                  text: localization.sign.eleg.mobilebankid,
-                  cssClass: 'bankid',
-                  color: 'blue',
-                  oneClick: true,
-                  onClick: function() {
-                    mixpanel.track('Select eleg provider', {
-                        'Eleg provider' : 'Mobile BankID'
-                    });
-                    document.takeSigningScreenshot(function() { Eleg.mobileBankIDSign(document,signatory,callback); });
-                  }
-                });
-                acceptButton.append(bankid.el()).append(mbi.el());
-            } else {
-                acceptButton = new Button({
-                    color : "green",
-                    text : localization.designview.sign,
-                    oneClick : true,
-                    onClick : function() {
-
-                        acceptButton.addClass('is-inactive').prepend(spinnerContainer); // Add the spinner and make inactive
-                        self.confirmationpopup.hideCancel();
-                        self.confirmationpopup.hideClose();
-
-                        mixpanel.track('Click accept sign', {
-                            'Button' : 'sign'
-                        });
-                        document.takeSigningScreenshot(function() {
-                            document.afterSave(function() {
-                                self.signWithCSV(document, 1 , document.isCsv() ? document.csv().length - 1 : undefined);
-                            });
-                        });
-
-                    }
-                }).el();
-            }
             var content = $("<span/>");
             if (document.authorIsOnlySignatory()) {
                 if (document.author().name().trim() !== '') {
@@ -422,18 +358,11 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                 content.find('.put-document-title-here').text(document.title());
 
             }
-            if (signatory.elegAuthentication()) {
-                var subhead = $("<h6/>").text(localization.sign.eleg.subhead);
-                var p = $("<p/>").append(localization.sign.eleg.body);
-                var a = $('.is-click-here',p);
-                a.attr("target", "_new");
-                a.attr("href", "http://www.e-legitimation.se/");
-                content = content.add($("<span/>").append(subhead).append(p));
-            }
+
             self.confirmationpopup = new Confirmation({
                 title : localization.signByAuthor.modalTitle,
                 icon : '/img/modal-icons/sign.png',
-                acceptButton : acceptButton,
+                acceptButton : acceptButton.el(),
                 rejectText: localization.cancel,
                 content  : content
             });

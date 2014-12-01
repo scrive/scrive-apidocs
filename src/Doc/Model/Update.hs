@@ -1142,9 +1142,9 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpd
            sqlWhereSignatoryIsPartner
            sqlWhereSignatoryHasNotSigned
            case (msiginfo,mpin) of
-                (Just _,_)        -> sqlWhereSignatoryAuthenticationMethodIs ELegAuthentication
+                (Just _,_)        -> return () --FIX ME sqlWhereSignatoryAuthenticationMethodIs ELegAuthentication
                 (_, Just _)       -> sqlWhereSignatoryAuthenticationMethodIs SMSPinAuthentication -- We should check pin here, but for now we do it in controler
-                (Nothing,Nothing) -> sqlWhereSignatoryAuthenticationMethodIs StandardAuthentication
+                (Nothing,Nothing) -> return () --FIX ME sqlWhereSignatoryAuthenticationMethodIs StandardAuthentication
            sqlWhereSignatoryLinkMagicHashIs mh
       updateMTimeAndObjectVersion (actorTime actor)
     sl <- theDocumentID >>= \docid -> query $ GetSignatoryLinkByID docid slid Nothing
