@@ -345,7 +345,7 @@ SMSPinDeliveredEvidenceText=$_SMSPinDeliveredEvidenceText()$
 ###
 SMSPinSendEvidenceText=$_SMSPinSendEvidenceText()$
 ###
-SaveSigAttachmentEvidenceText=The signatory $actor$ uploaded the attachment “$name$” requested by $author$.  The request had the following description: $description$
+SaveSigAttachmentEvidenceText=$actor$ uploaded the attachment “$name$” requested by $author$.  The request had the following description: $description$
 ###
 SendToPadDeviceText=The signing invitation for signatory $signatory$ was set by $actor$ to “in-person meeting”. In-person meeting enables $actor$ to present $if(full)$Scrive E-signs$else$Scrives$endif$ online interface to sign documents for $signatory$, on a device controlled by $actor$.
 ###
