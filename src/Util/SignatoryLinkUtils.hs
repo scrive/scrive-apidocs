@@ -165,7 +165,7 @@ isAuthorOrAuthorsAdmin :: User -> Document -> Bool
 isAuthorOrAuthorsAdmin user doc = isAuthor (doc, user) || (useriscompanyadmin user && documentauthorcompanyid doc == Just (usercompany user))
 
 isDocumentVisibleToUser :: User -> Document -> Bool
-isDocumentVisibleToUser user doc = isSignatory (doc, user) || isAuthorOrAuthorsAdmin user doc
+isDocumentVisibleToUser user doc = isJust (getSigLinkFor user doc) || isAuthorOrAuthorsAdmin user doc
 
 {- |
    Is the given SignatoryLink marked as a signatory (someone who can must sign)?

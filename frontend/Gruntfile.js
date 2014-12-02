@@ -299,14 +299,16 @@ module.exports = function(grunt) {
         files: {
           '<%= yeoman.dist %>/all-styling-minified.css': [
             '<%= yeoman.app %>/css/*.css',
-            '<%= yeoman.app %>/less/less-compiled.css'
+            '<%= yeoman.app %>/less/less-compiled.css',
+            '!<%= yeoman.app %>/css/tinymce.css'
           ]
         }
       },
       dev: {
         files: {
           '<%= yeoman.app %>/less/regular-css-compiled.css': [
-            '<%= yeoman.app %>/css/*.css'
+            '<%= yeoman.app %>/css/*.css',
+            '!<%= yeoman.app %>/css/tinymce.css'
           ]
         }
       }

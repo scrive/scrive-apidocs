@@ -140,11 +140,11 @@ SigningInvitationEvidenceTextFullSMS=An invitation to sign was sent to $signator
 ###
 SigningInvitationEvidenceTextFullEmailSMS=An invitation to sign was sent to $signatory$ using email and SMS. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $invitationCustomMessageTextToSignIfThereIsOne()$
 ###
-ReviewInvitationEvidenceTextFullEmail=An invitation to review was sent to $signatory$ using email. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $_invitationCustomMessageTextToReview()$
+ReviewInvitationEvidenceTextFullEmail=An invitation to review was sent to $signatory$ using email. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $invitationCustomMessageTextToReviewIfThereIsOne()$
 ###
-ReviewInvitationEvidenceTextFullSMS=An invitation to review was sent to $signatory$ using SMS. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $_invitationCustomMessageTextToReview()$
+ReviewInvitationEvidenceTextFullSMS=An invitation to review was sent to $signatory$ using SMS. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $invitationCustomMessageTextToReviewIfThereIsOne()$
 ###
-ReviewInvitationEvidenceTextFullEmailSMS=An invitation to review was sent to $signatory$ using email and SMS. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $_invitationCustomMessageTextToReview()$
+ReviewInvitationEvidenceTextFullEmailSMS=An invitation to review was sent to $signatory$ using email and SMS. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $invitationCustomMessageTextToReviewIfThereIsOne()$
 ###
 InvitationEvidenceText=*
 $if(signing)$
@@ -345,7 +345,7 @@ SMSPinDeliveredEvidenceText=$_SMSPinDeliveredEvidenceText()$
 ###
 SMSPinSendEvidenceText=$_SMSPinSendEvidenceText()$
 ###
-SaveSigAttachmentEvidenceText=The signatory $actor$ uploaded the attachment “$name$” requested by $author$.  The request had the following description: $description$
+SaveSigAttachmentEvidenceText=$actor$ uploaded the attachment “$name$” requested by $author$.  The request had the following description: $description$
 ###
 SendToPadDeviceText=The signing invitation for signatory $signatory$ was set by $actor$ to “in-person meeting”. In-person meeting enables $actor$ to present $if(full)$Scrive E-signs$else$Scrives$endif$ online interface to sign documents for $signatory$, on a device controlled by $actor$.
 ###
