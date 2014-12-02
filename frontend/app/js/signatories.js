@@ -744,7 +744,6 @@ window.Signatory = Backbone.Model.extend({
       this.ensureEmail();
       this.ensureMobile();
       this.ensurePersNr();
-      this.ensureSignature();
 
     },
     ensurePersNr: function() {
@@ -861,28 +860,6 @@ window.Signatory = Backbone.Model.extend({
             email.setShouldBeFilledBySender(false);
          }
       }
-    },
-    needsSignature: function() {
-        return this.padDelivery() && this.signs();
-    },
-    ensureSignature: function() {
-        var signatory = this;
-        var document = signatory.document();
-        var signatures = signatory.signatures();
-        if(signatory.needsSignature()) {
-            if(signatures.length === 0)
-                signatory.addField(new Field({name:document.newSignatureName(),
-                                              type: 'signature',
-                                              obligatory: true,
-                                              shouldbefilledbysender: false,
-                                              signatory: signatory}));
-        } else {
-          _.each(signatures, function(s) {
-            if(!s.hasPlacements() && !s.isDDSignature()) {
-                signatory.deleteField(s);
-            }
-          });
-        }
     },
     bindBubble: function() {
         var signatory = this;

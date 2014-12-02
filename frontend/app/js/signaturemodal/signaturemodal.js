@@ -72,9 +72,8 @@ var SignatureDrawOrTypeModel= Backbone.Model.extend({
 
     // Account for if this signature has already been drawn or if this signature task is the only *field* task left
     // This assumes that there is not a signature in the extra details field AND placed on the document (this is always true at the moment)
-    var isSignatureFieldOnDocument = !DocumentExtraDetails.askForSignature(signatory);
     var isThisSignatureFieldTheLastField = numberOfIncompleteFieldTasks == 1 && incompleteFieldTasks[0].field() == this.field();
-    if (isSignatureFieldOnDocument && isThisSignatureFieldTheLastField) {
+    if (isThisSignatureFieldTheLastField) {
       numberOfIncompleteFieldTasks = 0;
     }
 
@@ -85,16 +84,6 @@ var SignatureDrawOrTypeModel= Backbone.Model.extend({
     var attachmentsLeft = incompleteSignatoryAttachmentsTasks.length > 0;
 
     var extraDetailsLeft = DocumentExtraDetails.detailsMissing(signatory);
-
-    // Are we currently in the extra details signature drawing modal and all other fields are filled in?
-    if (extraDetailsLeft &&
-        DocumentExtraDetails.askForSignature(signatory) &&
-        !DocumentExtraDetails.askForSSN(signatory)      &&
-        !DocumentExtraDetails.askForName(signatory)     &&
-        !DocumentExtraDetails.askForEmail(signatory)
-      ) {
-      extraDetailsLeft = false;
-    }
 
     if (attachmentsLeft || fieldsLeftToFillIn) {
       this.set({actionButtonType: "apply"}, {silent: true});

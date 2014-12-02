@@ -467,7 +467,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
        var box = $(this.el).addClass('section').addClass('spacing').addClass('signbuttons');
 
        var signatory = document.currentSignatory();
-       var signatoryHasPlacedSignatures = signatory.hasPlacedSignatures() || DocumentExtraDetails.askForSignature(signatory);
+       var signatoryHasPlacedSignatures = signatory.hasPlacedSignatures();
        var sps = {};
        sps['Has user?'] = signatory.hasUser();
        sps['First visit'] = !signatory.seendate();

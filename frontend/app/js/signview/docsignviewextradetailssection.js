@@ -332,20 +332,6 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
     return iti.el();
 
   },
-  signatureInput: function() {
-    var signatory = this.model.document().currentSignatory();
-    var field = signatory.signatures()[0];
-
-    field.bind("change", function() {signatory.trigger("change");});
-
-    return new SignaturePlacementViewForDrawing({
-      model: field,
-      height: 102,
-      width: 260,
-      arrow: this.arrow,
-      signview: this.signview
-    }).el;
-  },
   render: function() {
       var signatory = this.model;
 
@@ -370,10 +356,6 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
        this.fillBox.append(this.phoneInput(signatory));
       }
 
-      if (DocumentExtraDetails.askForSignature(signatory)) {
-       this.fillBox.append(this.signatureInput(signatory));
-      }
-
       box.append(header).append(description).append(this.fillBox).append("<div class='clearfix' />");
   }
 });
@@ -387,8 +369,7 @@ window.DocumentExtraDetails = Backbone.Model.extend({},
     return DocumentExtraDetails.askForName(signatory)       ||
            DocumentExtraDetails.askForEmail(signatory)      ||
            DocumentExtraDetails.askForSSN(signatory)        ||
-           DocumentExtraDetails.askForPhone(signatory)        ||
-           DocumentExtraDetails.askForSignature(signatory);
+           DocumentExtraDetails.askForPhone(signatory);
   },
   askForEmail: function(signatory) {
     var field = signatory.emailField();
@@ -408,13 +389,6 @@ window.DocumentExtraDetails = Backbone.Model.extend({},
   askForPhone: function(signatory) {
     var field = signatory.mobileField();
     return field != undefined && !new PhoneValidation().validateData(field.value()) && (!field.hasPlacements()) && field.obligatory();
-  },
-  askForSignature : function(signatory) {
-    if(signatory.padDelivery() && signatory.hasSignatureField()) {
-      return !signatory.anySignatureHasImageOrPlacement();
-    }
-
-    return false;
   }
 });
 
