@@ -344,10 +344,12 @@ window.Confirmation = function (args) {
             setTimeout(function() {
               overlay.addClass("active");
               view.container.css("opacity", 1);
-              // Sometimes when the overlay pushes the document down,
-              // we have to make sure that the overlay covers the whole doc.
-              view.fixHeight();
-              view.onRender();
+              setTimeout(function() {
+                // Sometimes when the overlay pushes the document down,
+                // we have to make sure that the overlay covers the whole doc.
+                view.fixHeight();
+                view.onRender();
+              }, 600);
             }, 100);
           }
 
