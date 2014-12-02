@@ -173,7 +173,7 @@
 "_blockingFreeHasHeadline":"Ha enviado <span class='put-docs-used-here'/> de sus 3 documentos gratis de este mes. <a class='put-link-to-payments-here'>Actualícese ahora para poder enviar más.</a>",
 "_blockingFreeHasNotHeadline":"Usted ya ha enviado todos los documentos gratis de este mes.",
 "_blockingFreeHasNotSubtext1":"Comprar una suscripción para poder enviar más este mes",
-"_blockingFreeHeading":"Usted ya ha enviado todos los documentos gratis de este mes. Compre una suscripción para poder enviar más este mes",
+"_blockingFreeHeading":"",
 "_blockingOverdueCSVBody":"Hubo algun problema con su último pago. Por favor visite la <a class='put-link-to-payments-here'>página de suscripción</a> y vuelva a revisar su información bancaria. No puede enviar más documentos hasta que este problema sea resuelto.",
 "_blockingOverdueCreateBody":"Hubo algun problema con su último pago. Por favor visite la <a class='put-link-to-payments-here'>página de suscripción</a> y vuelva a revisar su información bancaria. No puede enviar más documentos hasta que este problema sea resuelto.",
 "_blockingOverdueCreateTitle":"Fallo en el pago",

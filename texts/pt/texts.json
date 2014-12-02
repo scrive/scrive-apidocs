@@ -570,7 +570,7 @@
 "_mailTakeoverPrivateUserInviteAcceptButton":"Transferir conta",
 "_mailTakeoverPrivateUserInviteContentBodyFirst":"<strong>$invitername$</strong> convidou-o a converter a sua conta Scrive privada numa conta empresarial com <strong>$companyname$</strong>. Se aceitar este convite, a sua conta e documentos serão propriedade de <strong>$companyname$</strong>.",
 "_mailTakeoverPrivateUserInviteContentBodySecond":"Não deve ter quaisquer documentos privados na sua conta ao aceitar, pelo que deve seguir os passos abaixo antes de aceitar este pedido:",
-"_mailTakeoverPrivateUserInviteContentInstructionSecond":"<li>Consulte o seu arquivo electrónico do Scrive para aceder a documentos privados ou pessoais.</li><li>Transfira e guarde estes documentos e, em seguida, remova-os do seu arquivo electrónico.</li><li>De seguida, prima então o botão abaixo</li><li>Siga as instruções online</li>",
+"_mailTakeoverPrivateUserInviteContentInstructionSecond":"",
 "_mailTakeoverPrivateUserInviteContentInstructionThird":"Certifique-se de que completou os passos 1 e 2 antes de premir o botão abaixo.",
 "_mailTakeoverPrivateUserInviteTitle":"Pedido de transferência da sua conta",
 "_mainDocument":"Documento principal",

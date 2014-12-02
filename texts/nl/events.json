@@ -2,7 +2,7 @@
 "_AttachExtendedSealedFileEvidenceTextSimple":"Het document werd verzegeld met een sleutelloze digitale handtekening.",
 "_AttachGuardtimeSealedFileEvidenceTextSimple":"Het document werd verzegeld met een digitale handtekening.",
 "_AttachSealedFileEvidenceTextSimpleArchive":"Scrive heeft de uiteindelijke PDF voorbereid.",
-"_AttachSealedFileEvidenceTextSimpleNotArchive":"Scrive heeft de uiteindelijke PDF voorbereid, inclusief bewijs verzameld door Scrive, alvorens het met een digtale handtekening te verzegelen",
+"_AttachSealedFileEvidenceTextSimpleNotArchive":"Scrive heeft de uiteindelijke PDF voorbereid, inclusief bewijs verzameld door Scrive, alvorens het met een digtale handtekening te verzegelen.",
 "_AutomaticReminderSentTextSimpleEmail":"Een automatische herinnering om het document te ondertekenen is verstuurd naar $signatory$ via E-mail. ",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Een automatische herinnering om het document te ondertekenen is verstuurd naar $signatory$ via E-mail en SMS.",
 "_AutomaticReminderSentTextSimpleSMS":"Een automatische herinnering om het document te ondertekenen is verstuurd naar $signatory$ via SMS.",
