@@ -69,6 +69,7 @@ window.Submit = Backbone.Model.extend({
         return this.send();
     },
     send: function() {
+        var self = this;
         var form = $("<form style='display:hidden'/>");
         form.attr("action", this.get("url"));
         form.attr("method", this.get("method"));
@@ -96,8 +97,14 @@ window.Submit = Backbone.Model.extend({
         $("body").append(form);
 
         if (this.get('ajax'))
-            form.ajaxForm({success: this.get('ajaxsuccess'),
-                           error: this.get('ajaxerror'),
+            form.ajaxForm({success: function(p1,p2,p3,p4) {
+                              self.get('ajaxsuccess')(p1,p2,p3,p4)
+                              form.remove();
+                           },
+                           error: function(p1,p2,p3,p4) {
+                             self.get('ajaxerror')(p1,p2,p3,p4);
+                             form.remove();
+                           },
                            dataType: this.get('expectedType'),
                            timeout : this.get('ajaxtimeout')
             });

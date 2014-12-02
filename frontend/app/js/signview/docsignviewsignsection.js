@@ -159,7 +159,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
 
         document.checksign(function() {
 
-          var modalTop = self.confirmation ? self.confirmation.absoluteTop() : 0;
+          var modalTop = self.confirmation ? self.confirmation.absoluteTop() : (($(window).height()- 200) /2);
 
           if (self.confirmation != undefined)  self.confirmation.clear();
           new FlashMessagesCleaner(); // We clean all flash message, so they don't land on screenshot
@@ -300,12 +300,12 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
 
     if(signatory.elegAuthentication()) {
       new SignWithElegModal({
+        signview: this.margin ? false : self.signview, // margin overrides signview
+        margin : this.margin || (isSmallScreen ? '150px auto 0px' : undefined),
         signatory : signatory,
-        callback  : function() {
+        fast: this.fast,
+        onSuccess  : function() {
           self.tryToSign({});
-        },
-        errorcallback : function() {
-          alert("Error");
         }
       });
     } else {

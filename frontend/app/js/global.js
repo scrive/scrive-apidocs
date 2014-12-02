@@ -84,17 +84,6 @@ function safeReady(f) {
   });
 }
 
-//used by global.js and bankid.js
-function repeatForeverWithDelay(delay) {
-  return function() {
-    var that = this;
-    $(document).delay(delay).queue(function() {
-      $(this).dequeue();
-      $.ajax(that);
-    });
-  };
-}
-
 //used by the administration pages
 function prepareForEdit(form, width) {
   var width = width == undefined ? 540 : width;

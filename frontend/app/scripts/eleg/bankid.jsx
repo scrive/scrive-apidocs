@@ -74,11 +74,11 @@ var BankIDModalContent = React.createClass({
       title : localization.docsignview.eleg.bankid.faultModalTitle,
       cssClass : 'grey sign-eleg-bankid-fault',
       content : self.statusMessage(),
+      margin : (($(window).height()- 200) /2)  + "px auto 0",
       closeVisible : false,
       cancelVisible : false,
       onAccept : function() {
         modal.close();
-        self.props.model.runCallback();
       }
     });
     return true;
@@ -88,7 +88,6 @@ var BankIDModalContent = React.createClass({
     var buttonOnClick = function() {
       window.location.href = model.bankIdUrl();
     };
-    console.log(this.statusMessage());
     return (
       <div style={{textAlign: "center"}}>
         {/*if*/       model.isFaultStatus() &&
@@ -119,27 +118,67 @@ var BankIDModalContent = React.createClass({
   }
 });
 
+var updateLoadingDialogWithBankIDStatus = function(model) {
+  var div = $("<div style='text-align:center'/>");
+  if (!model.isFaultStatus() && !model.isWaitingForToken()) {
+    if (model.thisDevice()) {
+      var description =
+      div.append($("<div/>").append($("<small/>").text("You BankdID application should automatically open. If it does not click button bellow")));
+      div.append($("<a class='button button-green button-tiny'/>").text("Open bankid application").click(function() {window.location = model.bankIdUrl();}));
+    } else {
+      div.append($("<div/>").append($("<small/>").text("Check you Mobile BankID application to continue signing")));
+    }
+    div.append($("<p/>").html(model.statusMessage()));
+  }
+  LoadingDialog.open(div);
+};
+
+var addBankIDIframeIfItsNeeded = function(model) {
+  if (!model.isFaultStatus() && !model.isWaitingForToken() && model.thisDevice() && ($("#bankid-"+ model.autoStartToken()).size() == 0)) {
+        $("body").append($("<iframe width='0' height='0' class='bankid-iframe'/>").attr('id','bankid-'+ model.autoStartToken()).attr('src',model.bankIdUrl()));
+  }
+}
+
+var clearBankIDIframes = function() {
+    $("iframe.bankid-iframe").remove();
+}
 return function(args) {
   var model = new BankIDModel({
     signatory : args.signatory,
-    callback  : function() {
-      LoadingDialog.close();
-      args.callback();
+    onStatusChange : function() {
+      updateLoadingDialogWithBankIDStatus(model);
+      addBankIDIframeIfItsNeeded(model);
     },
-    errorcallback : function() {
+    onSuccess  : function() {
       LoadingDialog.close();
-      args.errorcallback();
+      clearBankIDIframes();
+      args.onSuccess();
+    },
+    onFail: function() {
+      LoadingDialog.close();
+      clearBankIDIframes();
+      var modal = new Confirmation({
+        title : localization.docsignview.eleg.bankid.faultModalTitle,
+        cssClass : 'grey sign-eleg-bankid-fault',
+        content : model.statusMessage(),
+        margin : (($(window).height()- 200) /2)  + "px auto 0",
+        closeVisible : false,
+        cancelVisible : false,
+        onAccept : function() {
+          modal.close();
+        }
+      });
+      return true;
+    },
+    onCriticalError : function() {
+      clearBankIDIframes();
+      new ReloadDueToErrorModal(xhr);
     },
     thisDevice : args.thisDevice
   });
-
-  var content = $('<div>');
-  React.renderComponent(BankIDModalContent({
-    model : model
-  }), content[0]);
-
-  LoadingDialog.open(content);
   model.initiateTransaction();
+  updateLoadingDialogWithBankIDStatus(model);
+
 };
 
 });

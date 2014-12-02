@@ -6,8 +6,7 @@ define(['React', 'common/button', 'eleg/bankid', 'Backbone', 'legacy_code'], fun
 var SignWithElegModalButtons = React.createClass({
   propTypes : {
     signatory : React.PropTypes.object,
-    callback  : React.PropTypes.func,
-    errorcallback : React.PropTypes.func,
+    onSuccess  : React.PropTypes.func,
     modal : React.PropTypes.object
   },
   buttonOnClick : function(thisDevice) {
@@ -15,8 +14,7 @@ var SignWithElegModalButtons = React.createClass({
     self.props.modal.close();
     BankID({
       signatory : self.props.signatory,
-      callback  : self.props.callback,
-      errorcallback  : self.props.errorcallback,
+      onSuccess  : self.props.onSuccess,
       thisDevice : thisDevice
     });
   },
@@ -52,13 +50,15 @@ return function(args) {
       title : localization.docsignview.eleg.chooseElegModalTitle,
       cssClass: 'grey sign-eleg-option-modal' + (BrowserInfo.isSmallScreen() ? ' small-device' : ''),
       content : localization.docsignview.eleg.chooseElegModalContent,
-      acceptButton : buttons
+      acceptButton : buttons,
+      signview : args.signview,
+      margin: args.margin,
+      fast: args.fast
     });
 
     React.renderComponent(SignWithElegModalButtons({
       signatory : args.signatory,
-      callback  : args.callback,
-      errorcallback  : args.errorcallback,
+      onSuccess  : args.onSuccess,
       modal : self.modal
     }), buttons[0]);
 };
