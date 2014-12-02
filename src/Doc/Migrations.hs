@@ -37,6 +37,43 @@ instance ToSQL [SignatoryField] where
   type PQDest [SignatoryField] = PQDest String
   toSQL = jsonToSQL
 
+signatoryLinksMoveSignatures :: MonadDB m => Migration m
+signatoryLinksMoveSignatures = Migration {
+  mgrTable = tableSignatoryLinks
+, mgrFrom = 25
+, mgrDo = do
+  -- NULLify empty certificate fields (set for mobile bank id)
+  runQuery_ . sqlUpdate "signatory_links" $ do
+    sqlSet "signinfo_certificate" (Nothing :: Maybe String)
+    sqlWhere "signinfo_certificate = ''"
+
+  -- move signature data to eid_signatures
+  runQuery_ . sqlInsertSelect "eid_signatures" "signatory_links sl" $ do
+    sqlSetCmd "signatory_link_id" "sl.id"
+    sqlSetCmd "provider" "sl.signinfo_provider"
+    sqlSetCmd "data" "sl.signinfo_text"
+    sqlSetCmd "signature" "decode(sl.signinfo_signature, 'base64')"
+    sqlSetCmd "certificate" "decode(sl.signinfo_certificate, 'base64')"
+    sqlSetCmd "ocsp_response" "decode(sl.signinfo_ocsp_response, 'base64')"
+    sqlWhere "sl.signinfo_provider IS NOT NULL"
+
+  -- delete data from signatory_links table
+  runQuery_ . sqlAlterTable "signatory_links" $ [
+      sqlDropColumn "signinfo_text"
+    , sqlDropColumn "signinfo_signature"
+    , sqlDropColumn "signinfo_certificate"
+    , sqlDropColumn "signinfo_provider"
+    , sqlDropColumn "signinfo_first_name_verified"
+    , sqlDropColumn "signinfo_last_name_verified"
+    , sqlDropColumn "signinfo_personal_number_verified"
+    , sqlDropColumn "signinfo_ocsp_response"
+    , sqlDropColumn "eleg_data_mismatch_message"
+    , sqlDropColumn "eleg_data_mismatch_first_name"
+    , sqlDropColumn "eleg_data_mismatch_last_name"
+    , sqlDropColumn "eleg_data_mismatch_personal_number"
+    ]
+}
+
 signatoryLinksChangeVarcharColumnsToText :: MonadDB m => Migration m
 signatoryLinksChangeVarcharColumnsToText = Migration {
     mgrTable = tableSignatoryLinks

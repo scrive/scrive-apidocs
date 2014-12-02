@@ -29,10 +29,11 @@ import Network.SOAP.Call
 import OurPrelude
 
 data BankIDSignature = BankIDSignature {
-  siSignatoryName :: String
-, siData          :: Binary ByteString
-, siSignature     :: Binary ByteString
-, siOcspRespose   :: Binary ByteString
+  bidsSignatoryName           :: !Text
+, bidsSignatoryPersonalNumber :: !Text
+, bidsSignedText              :: !Text
+, bidsSignature               :: !(Binary ByteString)
+, bidsOcspResponse            :: !(Binary ByteString)
 } deriving (Eq, Ord, Show)
 
 ----------------------------------------
@@ -195,4 +196,4 @@ xpCollectResponse = XMLParser $ \c -> listToMaybe $ c
      "NO_CLIENT"               -> NoClient
      "STARTED"                 -> Started
      "COMPLETE"                -> Complete
-     status                    -> error $ "xpCollectResponse: unknown progressStatus:" <+> T.unpack status
+     status                    -> $unexpectedError $ "xpCollectResponse: unknown progressStatus:" <+> T.unpack status

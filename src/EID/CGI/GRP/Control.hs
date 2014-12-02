@@ -4,6 +4,7 @@ module EID.CGI.GRP.Control (grpRoutes) where
 import Control.Applicative
 import Control.Monad
 import Data.List
+import Data.Monoid.Space
 import Data.Unjson
 import Happstack.Server hiding (dir)
 import Happstack.StaticRouting
@@ -24,7 +25,8 @@ import Doc.SignatoryLinkID
 import Doc.Tokens.Model
 import EID.CGI.GRP.Config
 import EID.CGI.GRP.Data
-import EID.CGI.GRP.Model
+import EID.CGI.GRP.Transaction.Model
+import EID.Signature.Model
 import Happstack.Fields
 import Kontra hiding (InternalError)
 import Network.SOAP.Call
@@ -32,7 +34,8 @@ import Network.SOAP.Transport.Curl
 import OurPrelude
 import Routing
 import Templates
-import Util.HasSomeUserInfo
+import Util.SignatoryLinkUtils
+import Util.MonadUtils
 import qualified Log
 
 grpRoutes :: Route (KontraPlus Response)
@@ -68,6 +71,7 @@ handleSignRequest did slid = do
       dbUpdate $ MergeCgiGrpTransaction CgiGrpTransaction {
         cgtSignatoryLinkID = slid
       , cgtTransactionID = srsTransactionID
+      , ctgTextToBeSigned = T.pack tbs
       , cgtOrderRef = srsOrderRef
       }
       return $ unjsonToJSON unjsonDef srsAutoStartToken
@@ -76,8 +80,9 @@ handleCollectRequest :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m A.Val
 handleCollectRequest did slid = do
   CgiGrpConfig{..} <- ctxcgigrpconfig <$> getContext
   void $ getDocument did slid
-  CgiGrpTransaction{..} <- dbQuery (GetCgiGrpTransaction slid)
-    `onNothing` (Log.mixlog_ "No active transaction" >> respond404)
+  CgiGrpTransaction{..} <- dbQuery (GetCgiGrpTransaction slid) `onNothing` do
+    Log.mixlog_ "No active transaction"
+    respond404
 
   let transport = curlTransport SecureSSL (Just cgCertFile) cgGateway id
       req = CollectRequest {
@@ -92,7 +97,23 @@ handleCollectRequest did slid = do
     Left fault -> return $ unjsonToJSON unjsonDef fault
     Right cr@CollectResponse{..} -> do
       Log.mixlog_ $ "RESPONSE: " ++ show cr
+      when (crsProgressStatus == Complete) $ do
+        -- all the required attributes are supposed to always
+        -- be there, so bail out if this is not the case.
+        dbUpdate $ InsertBankIDSignature slid BankIDSignature {
+          bidsSignatoryName = just_lookup "cert.subject.cn" crsAttributes
+        , bidsSignatoryPersonalNumber = just_lookup "cert.subject.serialnumber" crsAttributes
+        , bidsSignedText = ctgTextToBeSigned
+        , bidsSignature = mk_binary $ fromMaybe (missing "signature") crsSignature
+        , bidsOcspResponse = mk_binary $ just_lookup "Validation.ocsp.response" crsAttributes
+        }
       return $ unjsonToJSON unjsonDef crsProgressStatus
+  where
+    missing name = $unexpectedError $ "missing" <+> T.unpack name
+    just_lookup name = fromMaybe (missing name) . lookup name
+
+    invalid_b64 txt = $unexpectedError $ "invalid base64:" <+> T.unpack txt
+    mk_binary txt = either (invalid_b64 txt) Binary . B64.decode . T.encodeUtf8 $ txt
 
 ----------------------------------------
 
@@ -104,23 +125,13 @@ getDocument did slid = dbQuery (GetDocumentSessionToken slid) >>= \case
     Log.mixlog_ "TOKEN FOUND"
     dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh)
   Nothing -> do
+    -- FIXME
     Log.mixlog_ "TOKEN NOT FOUND"
     getDocByDocIDForAuthor did
 
 -- | Generate text to be signed that represents contents of the document.
 textToBeSigned :: TemplatesMonad m => Document -> m String
 textToBeSigned doc@Document{..} = renderLocalTemplate doc "tbs" $ do
-  F.value "documentname"   $ documenttitle
-  F.value "documentnumber" $ show documentid
-  F.value "tbssigentries"  $ intercalate "\n" $ map getSigEntry signatories
-  where
-    signatories = filter signatoryispartner documentsignatorylinks
-    getSigEntry signatory = unwords [
-        getFirstName signatory
-      , getLastName signatory ++ ","
-      , getPersonalNumber signatory
-      ]
-
--- | Temporary solution for the sillyness of guardJustM.
-onNothing :: Monad m => m (Maybe a) -> m a -> m a
-onNothing action handleNothing = maybe handleNothing return =<< action
+  F.value "document_title" $ documenttitle
+  F.value "document_id"   $ show documentid
+  F.value "author_name"   $ getAuthorName doc

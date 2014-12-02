@@ -26,7 +26,6 @@ module Doc.DocStateData (
   , TipSide(..)
   , PlacementAnchor(..)
   , SignatoryLink(..)
-  , SignatureInfo(..)
   , AuthorAttachment(..)
   , SignatoryAttachment(..)
   , StatusClass(..)
@@ -72,7 +71,6 @@ import User.Lang
 import User.UserID
 import Utils.Default
 import Utils.Image
-import qualified EID.Signature.Provider as SP
 
 newtype SignOrder = SignOrder { unSignOrder :: Int32 }
   deriving (Eq, Ord, PQFormat)
@@ -265,17 +263,6 @@ instance ToSQL ConfirmationDeliveryMethod where
   toSQL EmailAndMobileConfirmationDelivery  = toSQL (3::Int16)
   toSQL NoConfirmationDelivery              = toSQL (4::Int16)
 
-data SignatureInfo = SignatureInfo {
-    signatureinfotext        :: String
-  , signatureinfosignature   :: String
-  , signatureinfocertificate :: String
-  , signatureinfoprovider    :: SP.SignatureProvider
-  --, signaturefstnameverified :: Bool
-  --, signaturelstnameverified :: Bool
-  --, signaturepersnumverified :: Bool
-  , signatureinfoocspresponse :: Maybe String -- verified legal evidence issued by BankID
-  } deriving (Eq, Ord, Show)
-
 data FieldType = FirstNameFT
                | LastNameFT
                | CompanyFT
@@ -420,7 +407,6 @@ data SignatoryLink = SignatoryLink {
   , maybereadinvite            :: Maybe UTCTime   -- ^ when we receive confirmation that a user has read
   , mailinvitationdeliverystatus  :: DeliveryStatus -- ^ status of email delivery
   , smsinvitationdeliverystatus   :: DeliveryStatus -- ^ status of email delivery
-  , signatorysignatureinfo     :: Maybe SignatureInfo -- ^ info about what fields have been filled for this person
   , signatorylinkdeleted       :: Maybe UTCTime   -- ^ when was put in recycle bin
   , signatorylinkreallydeleted :: Maybe UTCTime   -- ^ when was purged from the system
   , signatorylinkcsvupload     :: Maybe CSVUpload
@@ -450,7 +436,6 @@ instance Eq SignatoryLink where
     maybereadinvite s1 == maybereadinvite s2 &&
     mailinvitationdeliverystatus s1 == mailinvitationdeliverystatus s2 &&
     smsinvitationdeliverystatus s1 == smsinvitationdeliverystatus s2 &&
-    signatorysignatureinfo s1 == signatorysignatureinfo s2 &&
     signatorylinkdeleted s1 == signatorylinkdeleted s2 &&
     signatorylinkreallydeleted s1 == signatorylinkreallydeleted s2 &&
     signatorylinkcsvupload s1 == signatorylinkcsvupload s2 &&
@@ -477,7 +462,6 @@ instance HasDefaultValue SignatoryLink where
                   , maybereadinvite              = Nothing
                   , mailinvitationdeliverystatus = Unknown
                   , smsinvitationdeliverystatus  = Unknown
-                  , signatorysignatureinfo       = Nothing
                   , signatorylinkdeleted         = Nothing
                   , signatorylinkreallydeleted   = Nothing
                   , signatorylinkcsvupload       = Nothing

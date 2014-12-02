@@ -103,7 +103,7 @@ tableSignatoryAttachments = tblTable {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = tblTable {
     tblName = "signatory_links"
-  , tblVersion = 25
+  , tblVersion = 26
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
@@ -115,28 +115,16 @@ tableSignatoryLinks = tblTable {
     , tblColumn { colName = "seen_time", colType = TimestampWithZoneT }
     , tblColumn { colName = "seen_ip", colType = IntegerT }
     , tblColumn { colName = "read_invitation", colType = TimestampWithZoneT }
-    , tblColumn { colName = "signinfo_text", colType = TextT }
-    , tblColumn { colName = "signinfo_signature", colType = TextT }
-    , tblColumn { colName = "signinfo_certificate", colType = TextT }
-    , tblColumn { colName = "signinfo_provider", colType = SmallIntT }
-    , tblColumn { colName = "signinfo_first_name_verified", colType = BoolT }
-    , tblColumn { colName = "signinfo_last_name_verified", colType = BoolT }
-    , tblColumn { colName = "signinfo_personal_number_verified", colType = BoolT }
     , tblColumn { colName = "deleted", colType = TimestampWithZoneT }
     , tblColumn { colName = "really_deleted", colType = TimestampWithZoneT }
     , tblColumn { colName = "csv_title", colType = TextT }
     , tblColumn { colName = "csv_contents", colType = TextT }
-    , tblColumn { colName = "signinfo_ocsp_response", colType = TextT }
     , tblColumn { colName = "sign_redirect_url", colType = TextT }
     , tblColumn { colName = "is_author", colType = BoolT, colNullable = False }
     , tblColumn { colName = "is_partner", colType = BoolT, colNullable = False }
     , tblColumn { colName = "rejection_time", colType = TimestampWithZoneT }
     , tblColumn { colName = "rejection_reason", colType = TextT }
     , tblColumn { colName = "authentication_method", colType = SmallIntT, colNullable = False }
-    , tblColumn { colName = "eleg_data_mismatch_message", colType = TextT }
-    , tblColumn { colName = "eleg_data_mismatch_first_name", colType = TextT }
-    , tblColumn { colName = "eleg_data_mismatch_last_name", colType = TextT }
-    , tblColumn { colName = "eleg_data_mismatch_personal_number", colType = TextT }
     , tblColumn { colName = "delivery_method", colType = SmallIntT, colNullable = False }
     , tblColumn { colName = "mail_invitation_delivery_status", colType = SmallIntT, colNullable = False, colDefault = Just "3" }
     , tblColumn { colName = "sms_invitation_delivery_status", colType = SmallIntT, colNullable = False, colDefault = Just "3" }

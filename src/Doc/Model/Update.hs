@@ -78,6 +78,7 @@ import Data.Maybe hiding (fromJust)
 import Data.Monoid
 import Data.Monoid.Space
 import Text.StringTemplates.Templates
+import qualified Data.ByteString.Base64 as B64
 import qualified Data.Map as M
 import qualified Data.Set as S
 import qualified Text.StringTemplates.Fields as F
@@ -101,6 +102,7 @@ import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots
 import Doc.Tables
+import EID.Signature.Model
 import EvidenceLog.Model
 import File.FileID
 import File.Model
@@ -114,11 +116,9 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Utils.Default
 import Utils.Monad
-import Utils.Monoid
 import Utils.Prelude (for)
 import qualified DB.TimeZoneName as TimeZoneName
 import qualified Doc.Screenshot as Screenshot
-import qualified EID.Signature.Provider as P
 import qualified Log
 
 -- For this to work well we assume that signatories are ordered: author first, then all with ids set, then all with id == 0
@@ -140,15 +140,10 @@ insertSignatoryLinksAsAre documentid links = do
            sqlSetList "read_invitation" $ maybereadinvite <$> links
            sqlSetList "mail_invitation_delivery_status" $ mailinvitationdeliverystatus <$> links
            sqlSetList "sms_invitation_delivery_status" $ smsinvitationdeliverystatus <$> links
-           sqlSetList "signinfo_text" $ fmap signatureinfotext <$> signatorysignatureinfo <$> links
-           sqlSetList "signinfo_signature" $ fmap signatureinfosignature <$> signatorysignatureinfo <$> links
-           sqlSetList "signinfo_certificate" $ fmap signatureinfocertificate <$> signatorysignatureinfo <$> links
-           sqlSetList "signinfo_provider" $ fmap signatureinfoprovider <$> signatorysignatureinfo <$> links
            sqlSetList "csv_title" $ fmap csvtitle <$> signatorylinkcsvupload <$> links
            sqlSetList "csv_contents" $ fmap csvcontents <$> signatorylinkcsvupload <$> links
            sqlSetList "deleted" $ signatorylinkdeleted <$> links
            sqlSetList "really_deleted" $ signatorylinkreallydeleted <$> links
-           sqlSetList "signinfo_ocsp_response" $ fmap signatureinfoocspresponse <$> signatorysignatureinfo <$> links
            sqlSetList "sign_redirect_url" $ signatorylinksignredirecturl <$> links
            sqlSetList "reject_redirect_url" $ signatorylinkrejectredirecturl <$> links
            sqlSetList "rejection_time" $ signatorylinkrejectiontime <$> links
@@ -1119,9 +1114,9 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetDocu
       sqlSet "unsaved_draft" flag
       sqlWhereDocumentIDIs did
 
-data SignDocument = SignDocument SignatoryLinkID MagicHash (Maybe SignatureInfo) (Maybe String) SignatoryScreenshots Actor
+data SignDocument = SignDocument SignatoryLinkID MagicHash (Maybe ESignature) (Maybe String) SignatoryScreenshots Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpdate m SignDocument () where
-  update (SignDocument slid mh msiginfo mpin screenshots actor) = do
+  update (SignDocument slid mh mesig mpin screenshots actor) = do
     updateDocumentWithID $ \docid -> do
       let ipnumber = fromMaybe noIP $ actorIP actor
           time     = actorTime actor
@@ -1129,11 +1124,6 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpd
            sqlFrom "documents"
            sqlSet "sign_ip"                            ipnumber
            sqlSet "sign_time"                          time
-           sqlSet "signinfo_text"                      $ signatureinfotext `fmap` msiginfo
-           sqlSet "signinfo_signature"                 $ signatureinfosignature `fmap` msiginfo
-           sqlSet "signinfo_certificate"               $ signatureinfocertificate `fmap` msiginfo
-           sqlSet "signinfo_provider"                  $ signatureinfoprovider `fmap` msiginfo
-           sqlSet "signinfo_ocsp_response"             $ signatureinfoocspresponse `fmap` msiginfo
            sqlWhere "documents.id = signatory_links.document_id"
            sqlWhereDocumentIDIs docid
            sqlWhereSignatoryLinkIDIs slid
@@ -1141,27 +1131,26 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpd
            sqlWhereDocumentStatusIs Pending
            sqlWhereSignatoryIsPartner
            sqlWhereSignatoryHasNotSigned
-           case (msiginfo,mpin) of
-                (Just _,_)        -> return () --FIX ME sqlWhereSignatoryAuthenticationMethodIs ELegAuthentication
+           case (mesig, mpin) of
+                (Just _, _)        -> sqlWhereSignatoryAuthenticationMethodIs ELegAuthentication
                 (_, Just _)       -> sqlWhereSignatoryAuthenticationMethodIs SMSPinAuthentication -- We should check pin here, but for now we do it in controler
-                (Nothing,Nothing) -> return () --FIX ME sqlWhereSignatoryAuthenticationMethodIs StandardAuthentication
+                (Nothing,Nothing) -> sqlWhereSignatoryAuthenticationMethodIs StandardAuthentication
            sqlWhereSignatoryLinkMagicHashIs mh
       updateMTimeAndObjectVersion (actorTime actor)
     sl <- theDocumentID >>= \docid -> query $ GetSignatoryLinkByID docid slid Nothing
-    let signatureFields = case (msiginfo,mpin) of
-            (Just si,_) -> do
-                      F.value "eleg" True
-                      F.value "provider" $ case signatureinfoprovider si of
-                        P.Obsolete provider -> $unexpectedError $ "Obsolete provider used: " ++ show provider
-                        P.Current P.CgiGrpBankID -> "BankID" :: String
-                      F.value "signature" $ signatureinfosignature si
-                      F.value "certificate" $ nothingIfEmpty $ signatureinfocertificate si
-                      F.value "ocsp" $ signatureinfoocspresponse si
-                      F.value "infotext" $ signatureinfotext si
-            (_,Just _) -> do
-              F.value "sms_pin" True
-              F.value "phone" $ getMobile sl
-            _ -> return ()
+    let signatureFields = case (mesig, mpin) of
+          (Just (BankIDSignature_ BankIDSignature{..}), _) -> do
+            F.value "eleg" True
+            F.value "signatory_name" bidsSignatoryName
+            F.value "signatory_personal_number" bidsSignatoryPersonalNumber
+            F.value "signed_text" bidsSignedText
+            F.value "provider" ("BankID" :: String)
+            F.value "signature" $ B64.encode . unBinary $ bidsSignature
+            F.value "ocsp_response" $ B64.encode . unBinary $ bidsOcspResponse
+          (_, Just _) -> do
+            F.value "sms_pin" True
+            F.value "phone" $ getMobile sl
+          _ -> return ()
     void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
         SignDocumentEvidence
         signatureFields
@@ -1615,7 +1604,6 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                          , checkEqualBy "maybereadinvite" maybereadinvite
                          , checkEqualBy "mailinvitationdeliverystatus" mailinvitationdeliverystatus
                          , checkEqualBy "smsinvitationdeliverystatus" smsinvitationdeliverystatus
-                         , checkEqualBy "signatorysignatureinfo" signatorysignatureinfo
                          , checkEqualBy "signatorylinkdeleted" signatorylinkdeleted
                          , checkEqualBy "signatorylinkreallydeleted" signatorylinkreallydeleted
                          , checkEqualBy "signatorylinkcsvupload" signatorylinkcsvupload

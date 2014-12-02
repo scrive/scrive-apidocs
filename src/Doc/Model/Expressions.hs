@@ -86,11 +86,6 @@ selectSignatoryLinksX extension = sqlSelect "signatory_links" $ do
   sqlResult "signatory_links.read_invitation"
   sqlResult "signatory_links.mail_invitation_delivery_status"
   sqlResult "signatory_links.sms_invitation_delivery_status"
-  sqlResult "signatory_links.signinfo_text"
-  sqlResult "signatory_links.signinfo_signature"
-  sqlResult "signatory_links.signinfo_certificate"
-  sqlResult "signatory_links.signinfo_provider"
-  sqlResult "signatory_links.signinfo_ocsp_response"
   sqlResult "signatory_links.is_author"
   sqlResult "signatory_links.is_partner"
   sqlResult "signatory_links.csv_title"
@@ -121,8 +116,7 @@ fetchSignatoryLinks = do
     nulldocid = unsafeDocumentID $ -1
     decoder (docid, links, linksmap) (slid, document_id, user_id,
      sign_order, token, sign_time, sign_ip, seen_time, seen_ip, read_invitation,
-     mail_invitation_delivery_status, sms_invitation_delivery_status, signinfo_text, signinfo_signature, signinfo_certificate,
-     signinfo_provider, signinfo_ocsp_response,
+     mail_invitation_delivery_status, sms_invitation_delivery_status,
      is_author, is_partner, csv_title, csv_contents,
      deleted, really_deleted, signredirecturl, rejectredirecturl,
      rejection_time, rejection_reason,
@@ -155,18 +149,6 @@ fetchSignatoryLinks = do
           , maybereadinvite = read_invitation
           , mailinvitationdeliverystatus = mail_invitation_delivery_status
           , smsinvitationdeliverystatus = sms_invitation_delivery_status
-          , signatorysignatureinfo = do -- Maybe Monad
-              signinfo_text' <- signinfo_text
-              signinfo_signature' <- signinfo_signature
-              signinfo_certificate' <- signinfo_certificate
-              signinfo_provider' <- signinfo_provider
-              return $ SignatureInfo {
-                  signatureinfotext        = signinfo_text'
-                , signatureinfosignature   = signinfo_signature'
-                , signatureinfocertificate = signinfo_certificate'
-                , signatureinfoprovider    = signinfo_provider'
-                , signatureinfoocspresponse = signinfo_ocsp_response
-                }
           , signatorylinkdeleted = deleted
           , signatorylinkreallydeleted = really_deleted
           , signatorylinkcsvupload =

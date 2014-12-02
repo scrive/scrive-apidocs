@@ -40,7 +40,6 @@ signLinkFromDetails' fields author partner sorder attachments magichash =
                 , maybereadinvite = Nothing
                 , mailinvitationdeliverystatus = Unknown
                 , smsinvitationdeliverystatus = Unknown
-                , signatorysignatureinfo = Nothing
                 , signatorylinkdeleted = Nothing
                 , signatorylinkreallydeleted = Nothing
                 , signatorylinkcsvupload = Nothing

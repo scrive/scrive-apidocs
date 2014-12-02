@@ -25,8 +25,15 @@ import qualified Prelude as P
 data UnexpectedError = UnexpectedError {
   ueMessage  :: String
 , ueModule   :: String
-, ueLocation :: (Int, Int)
-} deriving (Eq, Ord, Show, Typeable)
+, ueLine     :: Int
+, uePosition :: Int
+} deriving (Eq, Ord, Typeable)
+
+instance Show UnexpectedError where
+  showsPrec _ UnexpectedError{..} = (ueModule ++)
+    . (":" ++) . (show ueLine ++)
+    . (":" ++) . (show uePosition ++)
+    . (": " ++) . (ueMessage ++)
 
 instance Exception UnexpectedError
 
@@ -60,11 +67,12 @@ fromJust = [| fromMaybe $ $unexpectedError "fromJust received Nothing" |]
 
 unexpectedError :: Q Exp
 unexpectedError = [|
-  \msg -> let (modname, loc) = $srcLocation
+  \msg -> let (modname, line, position) = $srcLocation
           in throw UnexpectedError {
             ueMessage = msg
           , ueModule = modname
-          , ueLocation = loc
+          , ueLine = line
+          , uePosition = position
           }
   |]
 
@@ -79,7 +87,5 @@ emptyListError fname = [| $unexpectedError $ fname ++ " received an empty list" 
 srcLocation :: Q Exp
 srcLocation = do
   Loc{..} <- qLocation
-  let (line, pos) = loc_start
-  tupE [stringE loc_module, tupE [integerE line, integerE pos]]
-  where
-    integerE = litE . integerL . fromIntegral
+  let (line, position) = loc_start
+  runQ [| (loc_module, line, position) |]

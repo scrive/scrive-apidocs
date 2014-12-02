@@ -17,7 +17,7 @@ import Doc.AutomaticReminder.Tables
 import Doc.SMSPin.Tables
 import Doc.Tables
 import Doc.Tokens.Tables
-import EID.CGI.GRP.Tables
+import EID.CGI.GRP.Transaction.Tables
 import EID.Signature.Tables
 import EvidenceLog.Tables
 import File.Tables

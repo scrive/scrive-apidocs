@@ -82,6 +82,7 @@ import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots(SignatoryScreenshots, emptySignatoryScreenshots, resolveReferenceScreenshotNames)
 import Doc.SMSPin.Model
 import Doc.Tokens.Model
+import EID.Signature.Model
 import EvidenceLog.Control
 import File.File
 import File.Model
@@ -417,28 +418,11 @@ apiCallV1CheckSign did slid = api $ do
              if (isJust validPin)
                then return $ Right $ Ok ()
                else (Left . Failed) <$> (runJSONGenT $ value "pinProblem" True)
-       ELegAuthentication -> do
-         -- temporary do the same as in the standard authentication
-         return $ Right $ Ok ()
-         {-
-             provider <- apiGuardJustM (badInput "Eleg details not provided or invalid.") $ readField "eleg"
-             case provider of
-               Legacy_BankID       -> return ()
-               Legacy_Telia        -> return ()
-               Legacy_Nordea       -> return ()
-               Legacy_MobileBankID -> return ()
-               CgiGrpBankID -> do
-                 return ()
-             case esigninfo of
-                 BankID.Sign _ -> return $ Right $ Ok ()
-                 BankID.Mismatch (onname,onnumber) (sfn,sln,spn) -> do
-                     Log.attention_ $ "Eleg verification for document #" ++ show did ++ " failed (during checksign) with mismatch " ++ show ((onname,onnumber),(sfn,sln,spn))
-                     (Left . Failed) <$> (runJSONGenT $ value "elegProblem" True >> value "mismatch" True >> value "onName" onname >> value "onNumber" onnumber)
-                 BankID.Problem msg -> do
-                     Log.attention_ $ "Eleg verification for document #" ++ show did ++ " failed (during checksign) with message: " ++ msg
-                     (Left . Failed) <$> (runJSONGenT $ value "elegProblem" True)
-                     -}
-
+       ELegAuthentication -> dbQuery (GetESignature slid) >>= \case
+         Just _ -> return $ Right $ Ok ()
+         Nothing -> do
+           Log.mixlog_ "No e-signature found for a signatory"
+           return . Left . Failed $ runJSONGen $ value "noSignature" True
 
 apiCallV1Sign :: Kontrakcja m
              => DocumentID      -- ^ The DocumentID of the document to sign
@@ -463,57 +447,32 @@ apiCallV1Sign  did slid = api $ do
 
     case authorization of
       StandardAuthentication -> do
-                  signDocument slid mh fields Nothing Nothing screenshots
-                  postDocumentPendingChange olddoc
-                  handleAfterSigning slid
-                  (Right . Accepted) <$> (documentJSONV1 mu False True True Nothing =<< theDocument)
-
-      SMSPinAuthentication -> do
-                  validPin <- getValidPin slid fields
-                  if (isJust validPin)
-                    then do
-                      signDocument slid mh fields Nothing validPin screenshots
-                      postDocumentPendingChange olddoc
-                      handleAfterSigning slid
-                      (Right . Accepted) <$> (documentJSONV1 mu False True True Nothing =<< theDocument)
-                    else (Left . Failed) <$> (runJSONGenT $ return ())
-      ELegAuthentication -> do
-        -- temporary do the same as in the standard authentication
         signDocument slid mh fields Nothing Nothing screenshots
         postDocumentPendingChange olddoc
         handleAfterSigning slid
         (Right . Accepted) <$> (documentJSONV1 mu False True True Nothing =<< theDocument)
-        {-
-        mprovider <- readField "eleg"
-        case mprovider of
-                    Nothing -> do
-                        signDocument slid mh fields Nothing Nothing screenshots
-                        postDocumentPendingChange olddoc
-                        handleAfterSigning slid
-                        (Right . Accepted) <$> (documentJSONV1 mu False True True Nothing =<< theDocument)
-                    Just provider -> do
-                        (Right . Accepted) <$> (documentJSONV1 mu False True True Nothing =<< theDocument)
-                        transactionid <- getDataFnM $ look "transactionid"
-                        esigninfo <- case provider of
-                            MobileBankIDProvider -> BankID.verifySignatureAndGetSignInfoMobile did slid mh fields transactionid
-                            _ -> do
-                                  signature <- getDataFnM $ look "signature"
-                                  BankID.verifySignatureAndGetSignInfo slid mh fields provider signature transactionid
-                        case esigninfo of
-                            BankID.Problem msg -> do
-                              Log.attention_ $ "Eleg verification for document #" ++ show did ++ " failed with message: " ++ msg
-                              (Left . Failed) <$> (runJSONGenT $ return ())
-                            BankID.Mismatch (onname,onnumber) (sfn,sln,spn) -> do
-                              handleMismatch slid ((\(t,v) -> SignatoryField (unsafeSignatoryFieldID 0) t v False False []) <$> fields) sfn sln spn
-                              Log.attention_ $ "Eleg verification for document #" ++ show did ++ " failed with mismatch " ++ show ((onname,onnumber),(sfn,sln,spn))
-                              (Left . Failed) <$> (runJSONGenT $ value "mismatch" True >> value "onName" onname >> value "onNumber" onnumber)
-                            BankID.Sign sinfo -> do
-                              -- charge company of the author of the document for the signature
-                              dbUpdate $ ChargeCompanyForElegSignature did
-                              signDocument slid mh fields (Just sinfo) Nothing screenshots
-                              postDocumentPendingChange olddoc
-                              handleAfterSigning slid
-                              (Right . Accepted) <$> (documentJSONV1 mu False True True Nothing =<< theDocument)-}
+
+      SMSPinAuthentication -> do
+        validPin <- getValidPin slid fields
+        if (isJust validPin)
+          then do
+            signDocument slid mh fields Nothing validPin screenshots
+            postDocumentPendingChange olddoc
+            handleAfterSigning slid
+            (Right . Accepted) <$> (documentJSONV1 mu False True True Nothing =<< theDocument)
+          else (Left . Failed) <$> (runJSONGenT $ return ())
+
+      ELegAuthentication -> dbQuery (GetESignature slid) >>= \case
+        mesig@(Just _) -> do
+          -- charge company of the author of the document for the signature
+          dbUpdate $ ChargeCompanyForElegSignature did
+          signDocument slid mh fields mesig Nothing screenshots
+          postDocumentPendingChange olddoc
+          handleAfterSigning slid
+          (Right . Accepted) <$> (documentJSONV1 mu False True True Nothing =<< theDocument)
+        Nothing -> do
+          Log.mixlog_ "No e-signature found for a signatory"
+          return . Left . Failed $ runJSONGen $ value "noSignature" True
    )
     `catchKontra` (\(DocumentStatusShouldBe _ _ i) -> throwIO . SomeKontraException $ conflictError $ "Document not pending but " ++ show i)
     `catchKontra` (\(SignatoryHasAlreadySigned {}) -> throwIO . SomeKontraException $ conflictError $ "Signatory has already signed")
@@ -563,11 +522,11 @@ signDocument :: (Kontrakcja m, DocumentMonad m)
              => SignatoryLinkID
              -> MagicHash
              -> [(FieldType, SignatoryFieldValue)]
-             -> Maybe SignatureInfo
+             -> Maybe ESignature
              -> Maybe String
              -> SignatoryScreenshots
              -> m ()
-signDocument slid mh fields msinfo mpin screenshots = do
+signDocument slid mh fields mesig mpin screenshots = do
   switchLang =<< getLang <$> theDocument
   ctx <- getContext
   -- Note that the second 'getSigLinkFor' call below may return a
@@ -575,7 +534,7 @@ signDocument slid mh fields msinfo mpin screenshots = do
   -- don't attempt to replace the calls with a single call, or the
   -- actor identities may get wrong in the evidence log.
   getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . UpdateFieldsForSigning sl fields =<< signatoryActor ctx sl
-  getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . SignDocument slid mh msinfo mpin screenshots =<< signatoryActor ctx sl
+  getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . SignDocument slid mh mesig mpin screenshots =<< signatoryActor ctx sl
 
 {- End of utils-}
 

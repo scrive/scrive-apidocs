@@ -228,6 +228,7 @@ Executable cron
   Build-depends: random
   Build-depends: recurly
   Build-depends: regex-tdfa
+  Build-depends: soap
   Build-depends: spreadsheet
   Build-depends: stm
   Build-depends: tagsoup
@@ -241,6 +242,8 @@ Executable cron
   Build-depends: transformers-base
   Build-depends: unjson
   Build-depends: utf8-string
+  Build-depends: xml-conduit
+  Build-depends: xml-conduit-writer
   Build-depends: zip-archive
   Build-depends: zlib
 
@@ -648,6 +651,7 @@ Executable kontrakcja-test
   Build-depends: random
   Build-depends: recurly
   Build-depends: regex-tdfa
+  Build-depends: soap
   Build-depends: spreadsheet
   Build-depends: stm
   Build-depends: tagsoup
@@ -662,6 +666,8 @@ Executable kontrakcja-test
   Build-depends: transformers-base
   Build-depends: unjson
   Build-depends: utf8-string
+  Build-depends: xml-conduit
+  Build-depends: xml-conduit-writer
   Build-depends: zip-archive
   Build-depends: zlib
 
