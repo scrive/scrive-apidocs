@@ -99,7 +99,7 @@ var BankIDModalContent = React.createClass({
             {/*if*/ model.thisDevice() &&
               <div>
                 <div><small> You BankdID application should automatically open. If it does not click button bellow</small></div>
-                <Button color="green" size="tiny" text="Open bankid application" onClick={function() {window.location = model.bankIdUrl();}}/>
+                <Button color="green" size="tiny" text={localization.docsignview.eleg.bankid.tryToOpenAgain} onClick={function() {window.location = model.bankIdUrl();}}/>
                 <iframe src={model.bankIdUrl()} width='0' height='0'></iframe>
               </div>
             }
@@ -121,14 +121,10 @@ var BankIDModalContent = React.createClass({
 var updateLoadingDialogWithBankIDStatus = function(model) {
   var div = $("<div style='text-align:center'/>");
   if (!model.isFaultStatus() && !model.isWaitingForToken()) {
-    if (model.thisDevice()) {
-      var description =
-      div.append($("<div/>").append($("<small/>").text("You BankdID application should automatically open. If it does not click button bellow")));
-      div.append($("<a class='button button-green button-tiny'/>").text("Open bankid application").click(function() {window.location = model.bankIdUrl();}));
-    } else {
-      div.append($("<div/>").append($("<small/>").text("Check you Mobile BankID application to continue signing")));
-    }
     div.append($("<p/>").html(model.statusMessage()));
+    if (model.thisDevice() && model.isStatusOutstanding()) {
+      div.append($("<a class='button button-green button-tiny'/>").text("Open BankID application").click(function() {window.location = model.bankIdUrl();}));
+    }
   }
   LoadingDialog.open(div);
 };

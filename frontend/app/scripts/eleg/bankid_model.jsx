@@ -113,11 +113,11 @@ return Backbone.Model.extend({
       } else if (self.status() == 'no_client') {
         return localization.docsignview.eleg.bankid.rfa1;
       } else if (self.status() == 'already_in_progress') {
-        return '';
+        return localization.docsignview.eleg.bankid.alreadyInProgress;
       } else if (self.status() == 'cancelled') {
         return localization.docsignview.eleg.bankid.rfa3;
       } else if (self.status() == 'retry') {
-        return '';
+        return localization.docsignview.eleg.bankid.retry;
       } else if (self.status() == 'internal_error') {
         return localization.docsignview.eleg.bankid.rfa5;
       } else if (self.status() == 'user_cancel') {
@@ -146,9 +146,9 @@ return Backbone.Model.extend({
         // RP must not try the same request again. This is an internal error
         // within RP's system and must not be communicated to the user as a BankID-error.
       } else if (self.status() == 'invalid_parameters') {
-        return '';
+        return localization.docsignview.eleg.bankid.invalidParameters;
       } else if (self.status() == 'access_denied_rp') {
-        return '';
+        return localization.docsignview.eleg.bankid.accessDenied;
       } else {
         return '';
       }

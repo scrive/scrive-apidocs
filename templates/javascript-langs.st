@@ -622,6 +622,11 @@ javascriptLocalisation =
                       , rfa18 : "$_elegBankIDRFA18()$"
                       , rfa19 : "$_elegBankIDRFA19()$"
                       , rfa20 : "$_elegBankIDRFA20()$"
+                      , accessDenied : "$_elegBankAccessDenied()$"
+                      , invalidParameters : "$_elegBankInvalidParameters()$"
+                      , retry : "$_elegBankRetry()$"
+                      , alreadyInProgress : "$_elegBankAlreadyInProgress()$"
+                      , tryToOpenAgain :  "$_elegBankTryToOpenAgain()$"
                   }
              }
         }

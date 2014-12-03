@@ -49,7 +49,7 @@ return function(args) {
     self.modal = new Confirmation({
       title : localization.docsignview.eleg.chooseElegModalTitle,
       cssClass: 'grey sign-eleg-option-modal' + (BrowserInfo.isSmallScreen() ? ' small-device' : ''),
-      content : localization.docsignview.eleg.chooseElegModalContent,
+      content : localization.docsignview.eleg.bankid.rfa20,
       acceptButton : buttons,
       signview : args.signview,
       margin: args.margin,
