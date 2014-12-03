@@ -122,7 +122,7 @@ var updateLoadingDialogWithBankIDStatus = function(model) {
   var div = $("<div style='text-align:center'/>");
   if (!model.isFaultStatus() && !model.isWaitingForToken()) {
     div.append($("<p/>").html(model.statusMessage()));
-    if (model.thisDevice() && model.isStatusOutstanding()) {
+    if (model.thisDevice() && (model.isStatusOutstanding() || model.isStatusNoClient())) {
       div.append($("<a class='button button-green button-tiny'/>").text("Open BankID application").click(function() {window.location = model.bankIdUrl();}));
     }
   }
