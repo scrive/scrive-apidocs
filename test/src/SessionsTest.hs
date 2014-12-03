@@ -15,6 +15,7 @@ import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocUtils
 import Doc.Tokens.Model
+import EID.CGI.GRP.Transaction.Model
 import KontraMonad
 import Session.Data
 import Session.Model
@@ -81,21 +82,21 @@ testDocumentTicketReinsertion = doTimes 10 $ do
 
 testElegTransactionInsertion :: TestEnv ()
 testElegTransactionInsertion = doTimes 10 $ do
-  (mtrans, _) <- addElegTransaction
-  assertBool "eleg transaction successfully inserted into the database" $ isJust mtrans
+  (mtrans, _) <- addCgiGrpTransaction
+  assertBool "cgi grp transaction successfully inserted into the database" $ isJust mtrans
 
 testElegTransactionUpdate :: TestEnv ()
 testElegTransactionUpdate = doTimes 10 $ do
-  (Just trans, ctx) <- addElegTransaction
-  let newtrans = trans { transactionsignatorylinkid = Nothing }
+  (Just trans, ctx) <- addCgiGrpTransaction
+  let newtrans = trans { cgtOrderRef = "new order ref" }
   (mtrans', _) <- do
     rq <- mkRequest GET []
     runTestKontra rq ctx $ do
-      dbUpdate $ MergeELegTransaction newtrans
-      dbQuery (GetELegTransaction $ transactiontransactionid newtrans)
-  assertBool "eleg transaction present is the database" $ isJust mtrans'
+      dbUpdate $ MergeCgiGrpTransaction newtrans
+      dbQuery (GetCgiGrpTransaction $ cgtSignatoryLinkID trans)
+  assertBool "cgi grp transaction present is the database" $ isJust mtrans'
   let Just trans' = mtrans'
-  assertBool "eleg transaction properly modified" $ newtrans == trans'
+  assertBool "cgi grp transaction properly modified" $ newtrans == trans'
 
 insertNewSession :: UserID -> TestEnv (Maybe Session, Context)
 insertNewSession uid = do
@@ -129,18 +130,17 @@ addDocumentAndInsertToken = do
       updateSession sess (sess { sesID = ctxsessionid ctx' })
   return (author, doc, ctx)
 
-addElegTransaction :: TestEnv (Maybe ELegTransaction, Context)
-addElegTransaction = do
+addCgiGrpTransaction :: TestEnv (Maybe CgiGrpTransaction, Context)
+addCgiGrpTransaction = do
   (_, doc, ctx) <- addDocumentAndInsertToken
   let Just asl = getAuthorSigLink doc
   trans <- (\tr -> tr {
-      transactionsignatorylinkid = Just $ signatorylinkid asl
-    , transactiondocumentid = documentid doc
+      cgtSignatoryLinkID = signatorylinkid asl
     }) <$> rand 20 arbitrary
   rq <- mkRequest GET []
   runTestKontra rq ctx $ do
-    dbUpdate $ MergeELegTransaction trans
-    dbQuery (GetELegTransaction $ transactiontransactionid trans)
+    dbUpdate $ MergeCgiGrpTransaction trans
+    dbQuery $ GetCgiGrpTransaction $ signatorylinkid asl
 
 testUser :: TestEnv UserID
 testUser = do

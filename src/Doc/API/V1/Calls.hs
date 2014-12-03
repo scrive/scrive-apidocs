@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 module Doc.API.V1.Calls (
     documentAPIV1
   , apiCallV1CreateFromFile      -- Exported for tests
@@ -77,7 +76,6 @@ import Doc.DocUtils
 import Doc.Model
 import Doc.Rendering
 import Doc.SealStatus (SealStatus(..))
-import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots(SignatoryScreenshots, emptySignatoryScreenshots, resolveReferenceScreenshotNames)
 import Doc.SMSPin.Model
@@ -107,7 +105,6 @@ import Util.SignatoryLinkUtils
 import Utils.Directory
 import Utils.IO
 import Utils.Monad
-import Utils.Monoid
 import Utils.Read
 import Utils.String
 import qualified Data.ByteString.RFC2397 as RFC2397

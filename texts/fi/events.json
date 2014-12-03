@@ -57,7 +57,7 @@
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Dokumentti allekirjoitettiin käyttäen eID:tä tunnistautumismuotona.",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Dokumentti allekirjoitettiin käyttäen tekstiviesti PINiä tunnistautumismuotona.",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Dokumentti allekirjoitettiin.",
-"_SignDocumentEvidenceTextSimpleNotArchiveEleg":"$actor$ allekirjoitti dokumentin käyttäen eID:tä tunnistautumismuotona.",
+"_SignDocumentEvidenceTextSimpleNotArchiveEleg":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveSMSPin":"$actor$ allekirjoitti dokumentin käyttäen tekstiviesti PINiä tunnistautumismuotona.",
 "_SignDocumentEvidenceTextSimpleNotArchiveStandard":"$actor$ allekirjoitti dokumentin.",
 "_SignWithELegFailureEvidenceTextSimple":"$signatory$ yritti allekirjoittaa dokumentin, mutta Scrive hylkäsi yrityksen. $signatory$:n hylkäämiseen oli syynä henkilötietojen eriävyys verrattuna eID-järjestelmän tarjoamiin henkilötietoihin.",

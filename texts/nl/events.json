@@ -57,7 +57,7 @@
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Het document werd ondertekend met gebruik van eID als identificatie methode.",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Het document werd ondertekend met gebruik van PIN per SMS als identificatie methode.",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Het document werd ondertekend.",
-"_SignDocumentEvidenceTextSimpleNotArchiveEleg":"Het document werd ondertekend door $actor$ met gebruik van eID als identificatiemethode.",
+"_SignDocumentEvidenceTextSimpleNotArchiveEleg":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveSMSPin":"Het document werd ondertekend door $actor$ met gebruik van PIN per SMS als identificatie methode.",
 "_SignDocumentEvidenceTextSimpleNotArchiveStandard":"Het document werd ondertekend door $actor$.",
 "_SignWithELegFailureEvidenceTextSimple":"Scrive heeft de poging van $signatory$ om het document te ondertekenen afgekeurd. De reden hiervoor is dat de identiteitsinformatie van $signatory$ niet overeenskwam met de identiteitsinformatie uit het externe eID-systeem. ",

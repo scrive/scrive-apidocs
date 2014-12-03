@@ -57,7 +57,7 @@
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Le document a été signé avec la méthode d'identification eID.",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Le document a été signé avec comme méthode d'identification un code PIN envoyé par SMS.",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Le document a été signé.",
-"_SignDocumentEvidenceTextSimpleNotArchiveEleg":"Le document a été signé par $actor$ avec eID comme méthode d'identification.",
+"_SignDocumentEvidenceTextSimpleNotArchiveEleg":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveSMSPin":"Le document a été signé par $actor$ avec comme méthode d'identification un code PIN envoyé par SMS.",
 "_SignDocumentEvidenceTextSimpleNotArchiveStandard":"Le document a été signé par $actor$.",
 "_SignWithELegFailureEvidenceTextSimple":"Scrive a refusé la tentative de signature de $signatory$ car les informations d'identification de $signatory$ ne correspondaient pas aux informations d'identification reçues par le système externe d'eID.",

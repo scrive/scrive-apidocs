@@ -57,7 +57,7 @@
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Το έγγραφο υπογράφηκε με χρήση ηλεκτρονικής ταυτότητας ως μέθοδος πιστοποίησης. ",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Το έγγραφο υπογράφηκε με χρήση PIN μέσω SMS ως μέθοδος πιστοποίησης. ",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Το έγγραφο υπογράφηκε. ",
-"_SignDocumentEvidenceTextSimpleNotArchiveEleg":"Το έγγραφο υπογράφηκε από τον $actor$ με χρήση ηλεκτρονικής ταυτότητας ως μέθοδος πιστοποίησης. ",
+"_SignDocumentEvidenceTextSimpleNotArchiveEleg":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveSMSPin":"Το έγγραφο υπογράφηκε από τον $actor$ με χρήση PIN μέσω SMS ως μέθοδος πιστοποίησης.  ",
 "_SignDocumentEvidenceTextSimpleNotArchiveStandard":"Το έγγραφο υπογράφηκε από τον $actor$. ",
 "_SignWithELegFailureEvidenceTextSimple":"Η υπηρεσία Scrive απέρριψε την προσπάθεια του $signatory$ να υπογράψει το έγγραφο. Η αιτία ήταν ότι οι πληροφορίες ταυτότητας του $signatory$ δεν συνδυάστηκαν με τις πληροφορίες ταυτότητας που ελήφθησαν από το εξωτερικό σύστημα ηλεκτρονικής ταυτότητας.  ",

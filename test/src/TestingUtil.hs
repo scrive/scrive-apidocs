@@ -3,7 +3,6 @@
 module TestingUtil where
 
 import Control.Applicative
-import Control.Arrow
 import Control.Concurrent.STM
 import Control.Monad (unless)
 import Control.Monad.Catch
@@ -23,6 +22,7 @@ import Text.JSON
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
+import qualified Data.Text as T
 import qualified Test.HUnit as T
 
 import Company.Model
@@ -37,6 +37,8 @@ import Doc.SealStatus (SealStatus(..))
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import Doc.TestInvariants
+import EID.CGI.GRP.Transaction.Model
+import EID.Signature.Model
 import File.FileID
 import File.Model
 import FlashMessage
@@ -174,25 +176,6 @@ instance Arbitrary SignatoryLink where
                           , signatorylinkdeliverymethod = delivery
                           , signatorylinkauthenticationmethod = authentication
                           }
-
-instance Arbitrary SignatureProvider where
-  arbitrary = elements [ BankIDProvider
-                       , TeliaProvider
-                       ]
-
-instance Arbitrary SignatureInfo where
-  arbitrary = do
-    a <- arbitrary
-    b <- arbitrary
-    c <- arbitrary
-    d <- arbitrary
-    e <- arbitrary
-    return $ SignatureInfo { signatureinfotext        = fromSNN a
-                           , signatureinfosignature   = fromSNN b
-                           , signatureinfocertificate = fromSNN c
-                           , signatureinfoprovider    = d
-                           , signatureinfoocspresponse = fromSNN <$> e
-                           }
 
 instance Arbitrary CSVUpload where
   arbitrary = do
@@ -362,41 +345,23 @@ instance Arbitrary User where
                    <*> arbitrary
                    <*> (pure Nothing)
 
-instance Arbitrary CollectResponse where
-  arbitrary = oneof [outstanding, usersign, complete]
-    where
-      outstanding = do
-        tid <- fromSNN <$> arbitrary
-        return $ CROutstanding tid
-      usersign = do
-        tid <- fromSNN <$> arbitrary
-        return $ CRUserSign tid
-      complete = do
-        tid <- fromSNN <$> arbitrary
-        sig <- fromSNN <$> arbitrary
-        attrs <- map (fromSNN *** fromSNN) <$> arbitrary
-        return $ CRComplete tid sig attrs
+instance Arbitrary CgiGrpTransaction where
+  arbitrary = CgiGrpTransaction
+    <$> arbitrary
+    <*> (T.pack . fromSNN <$> arbitrary)
+    <*> (T.pack . fromSNN <$> arbitrary)
+    <*> (T.pack . fromSNN <$> arbitrary)
 
-instance Arbitrary ELegTransaction where
-  arbitrary = do
-    tid <- arbitrary
-    nonce <- arbitrary
-    tbs <- arbitrary
-    encodedtbs <- arbitrary
-    token <- arbitrary
-    status <- arbitrary
-    ref <- arbitrary
-    return ELegTransaction {
-        transactiontransactionid = fromSNN tid
-      , transactionnonce = fromSNN <$> nonce
-      , transactiontbs = fromSNN tbs
-      , transactionencodedtbs = fromSNN <$> encodedtbs
-      , transactionsignatorylinkid = Nothing
-      , transactiondocumentid = unsafeDocumentID 0
-      , transactionmagichash = token
-      , transactionstatus = either (Left . fromSNN) Right status
-      , transactionoref = fromSNN <$> ref
-    }
+instance Arbitrary BankIDSignature where
+  arbitrary = BankIDSignature
+    <$> (T.pack . fromSNN <$> arbitrary)
+    <*> (T.pack . fromSNN <$> arbitrary)
+    <*> (T.pack . fromSNN <$> arbitrary)
+    <*> arbitrary
+    <*> arbitrary
+
+instance Arbitrary ESignature where
+  arbitrary = BankIDSignature_ <$> arbitrary
 
 -- generate (byte)strings without \NUL in them since
 -- hdbc-postgresql plays around with these chars and
@@ -427,7 +392,6 @@ signatoryLinkExample1 = defaultValue { signatorylinkid = unsafeSignatoryLinkID 0
                                       , maybereadinvite = Nothing
                                       , mailinvitationdeliverystatus = Delivered
                                       , smsinvitationdeliverystatus = Delivered
-                                      , signatorysignatureinfo = Nothing
                                       , signatorylinkdeleted = Nothing
                                       , signatorylinkreallydeleted = Nothing
                                       , signatoryisauthor = False
@@ -448,10 +412,6 @@ signatoryLinkExample1 = defaultValue { signatorylinkid = unsafeSignatoryLinkID 0
                                       , signatorylinkrejectiontime = Nothing
                                       , signatorylinkrejectionreason = Nothing
                                       , signatorylinkauthenticationmethod = StandardAuthentication
-                                      , signatorylinkelegdatamismatchmessage = Nothing
-                                      , signatorylinkelegdatamismatchfirstname = Nothing
-                                      , signatorylinkelegdatamismatchlastname = Nothing
-                                      , signatorylinkelegdatamismatchpersonalnumber = Nothing
                                       }
 
 testThat :: String -> TestEnvSt -> TestEnv () -> Test

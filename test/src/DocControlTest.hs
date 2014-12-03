@@ -61,7 +61,6 @@ docControlTests env = testGroup "DocControl" [
   , testThat "We can't get json for document if we are not logged in" env testGetNotLoggedIn
   , testThat "We can't get json for document is we are logged in but we provided authorization header" env testGetBadHeader
   , testThat "Document bulk delete works fast" env testDocumentDeleteInBulk
-  , testThat "Bankid mismatch happends when it should" env testBankIDMismatch
   , testThat "Download file and download main file obey access rights" env testDownloadFile
 
   , testThat "Signview branding generation block nasty input " env testSignviewBrandingBlocksNastyInput
@@ -464,17 +463,6 @@ testDocumentDeleteInBulk = do
     docs2 <- dbQuery $ GetDocumentsByAuthor (userid author)
     assertEqual "Documents are deleted" 0 (length docs2)
 
-
-testBankIDMismatch :: TestEnv ()
-testBankIDMismatch = do
-    r1 <- return $ compareNames "Mariusz Rak" "Mariusz Rak"
-    assertEqual "Valid match" MergeMatch r1
-    r2 <- return $ compareNames "Mariusz Rak" "Moriusz  Rok"
-    assertEqual "Valid match" MergeMatch r2
-    r3 <- return $ compareNames "Michal Sloink" "Rak Mariusz"
-    assertBool "Invalid match " (MergeMatch /= r3)
-    r4 <- return $ compareNames "AAAA CCCC" "BBBB DDDD"
-    assertBool "Invalid match " (MergeMatch /= r4)
 
 testGetLoggedIn :: TestEnv ()
 testGetLoggedIn = do

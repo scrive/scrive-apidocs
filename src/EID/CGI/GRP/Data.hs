@@ -28,6 +28,7 @@ import DB hiding (InternalError)
 import Network.SOAP.Call
 import OurPrelude
 
+-- | Final BankID signature.
 data BankIDSignature = BankIDSignature {
   bidsSignatoryName           :: !Text
 , bidsSignatoryPersonalNumber :: !Text
@@ -38,6 +39,7 @@ data BankIDSignature = BankIDSignature {
 
 ----------------------------------------
 
+-- | Represents error codes used in GRP api.
 data GrpFault
   = InvalidParameters
   | AlreadyInProgress
@@ -52,6 +54,7 @@ data GrpFault
   | StartFailed
   deriving (Eq, Ord, Show)
 
+-- | Convert 'GrpFault' to JSON to show it to the client.
 instance Unjson GrpFault where
   unjsonDef = DisjointUnjsonDef "grp_fault" [
       InvalidParameters  <=> "invalid_parameters"
@@ -69,6 +72,7 @@ instance Unjson GrpFault where
     where
       con <=> name = (name, (== con), pure con)
 
+-- | Retrieve 'GrpFault' from SOAP response.
 xpGrpFault :: XMLParser GrpFault
 xpGrpFault = XMLParser $ \c -> listToMaybe $ c
   $/ laxElement "Fault" &/ laxElement "detail" &/ laxElement "GrpFault" &| \fault ->
@@ -88,6 +92,7 @@ xpGrpFault = XMLParser $ \c -> listToMaybe $ c
 
 ----------------------------------------
 
+-- | Sign action request.
 data SignRequest = SignRequest {
   srqPolicy          :: !Text
 , srqDisplayName     :: !Text
@@ -96,6 +101,7 @@ data SignRequest = SignRequest {
 , srqProvider        :: !Text
 } deriving (Eq, Ord, Show)
 
+-- | Construct SOAP request from the 'SignRequest'.
 instance ToXML SignRequest where
   toXML SignRequest{..} =
     element "{http://funktionstjanster.se/grp/service/v1.0.0/}SignRequest" $ do
@@ -121,12 +127,14 @@ instance Unjson AutoStartToken where
 
 ----------------------------------------
 
+-- | Sign action response.
 data SignResponse = SignResponse {
   srsTransactionID  :: !Text
 , srsOrderRef       :: !Text
 , srsAutoStartToken :: !AutoStartToken
 } deriving (Eq, Ord, Show)
 
+-- | Retrieve 'SignResponse' from SOAP response.
 xpSignResponse :: XMLParser SignResponse
 xpSignResponse = XMLParser $ \c -> listToMaybe $ c
   $/ laxElement "SignResponse" &| \sr -> SignResponse {
@@ -137,6 +145,7 @@ xpSignResponse = XMLParser $ \c -> listToMaybe $ c
 
 ----------------------------------------
 
+-- | Collect action request.
 data CollectRequest = CollectRequest {
   crqPolicy        :: !Text
 , crqTransactionID :: !Text
@@ -144,6 +153,7 @@ data CollectRequest = CollectRequest {
 , crqDisplayName   :: !Text
 } deriving (Eq, Ord, Show)
 
+-- | Construct SOAP request from the 'CollectRequest'.
 instance ToXML CollectRequest where
   toXML CollectRequest{..} =
     element "{http://funktionstjanster.se/grp/service/v1.0.0/}CollectRequest" $ do
@@ -154,6 +164,7 @@ instance ToXML CollectRequest where
 
 ----------------------------------------
 
+-- | Progress status of the BankID transaction.
 data ProgressStatus
   = OutstandingTransaction
   | UserSign
@@ -162,6 +173,7 @@ data ProgressStatus
   | Complete
   deriving (Eq, Ord, Show)
 
+-- | Convert 'ProgressStatus' to JSON and show it to the client.
 instance Unjson ProgressStatus where
   unjsonDef = DisjointUnjsonDef "progress_status" [
       OutstandingTransaction <=> "outstanding_transaction"
@@ -175,12 +187,14 @@ instance Unjson ProgressStatus where
 
 ----------------------------------------
 
+-- | Collect action response.
 data CollectResponse = CollectResponse {
   crsProgressStatus :: !ProgressStatus
 , crsSignature      :: !(Maybe Text)
 , crsAttributes     :: ![(Text, Text)]
 } deriving (Eq, Ord, Show)
 
+-- | Retrieve 'CollectResponse' from SOAP response.
 xpCollectResponse :: XMLParser CollectResponse
 xpCollectResponse = XMLParser $ \c -> listToMaybe $ c
   $/ laxElement "CollectResponse" &| \cr -> CollectResponse {

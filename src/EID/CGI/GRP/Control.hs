@@ -3,6 +3,7 @@ module EID.CGI.GRP.Control (grpRoutes) where
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Catch
 import Data.List
 import Data.Monoid.Space
 import Data.Unjson
@@ -18,7 +19,6 @@ import qualified Text.StringTemplates.Fields as F
 
 import DB hiding (InternalError)
 import Doc.DocStateData
-import Doc.DocStateQuery
 import Doc.DocumentID
 import Doc.Model
 import Doc.SignatoryLinkID
@@ -117,17 +117,26 @@ handleCollectRequest did slid = do
 
 ----------------------------------------
 
--- | Fetch the document if it can be accessed by the signatory, i.e. if
--- there exists appropriate document token or the author is logged in.
-getDocument :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Document
+-- | Fetch the document for e-signing. Checks that the document
+-- is in the correct state and the signatory hasn't signed yet.
+getDocument :: (MonadDB m, Log.MonadLog m, KontraMonad m, MonadThrow m)
+            => DocumentID -> SignatoryLinkID -> m Document
 getDocument did slid = dbQuery (GetDocumentSessionToken slid) >>= \case
   Just mh -> do
-    Log.mixlog_ "TOKEN FOUND"
-    dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh)
+    Log.mixlog_ "Document token found"
+    doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
+    when (documentstatus doc /= Pending) $ do
+      Log.mixlog_ $ "Document is" <+> show (documentstatus doc) <+> ", should be" <+> show Pending
+      respond404
+    -- this should always succeed as we already got the document
+    let slink = $fromJust $ getSigLinkFor slid doc
+    when (hasSigned slink) $ do
+      Log.mixlog_ "Signatory already signed the document"
+      respond404
+    return doc
   Nothing -> do
-    -- FIXME
-    Log.mixlog_ "TOKEN NOT FOUND"
-    getDocByDocIDForAuthor did
+    Log.mixlog_ "No document token found"
+    respond404
 
 -- | Generate text to be signed that represents contents of the document.
 textToBeSigned :: TemplatesMonad m => Document -> m String

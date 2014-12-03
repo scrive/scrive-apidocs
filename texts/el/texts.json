@@ -826,7 +826,7 @@
 "_tablestatusesSent":"Εστάλη ",
 "_tablestatusesSigned":"Υπογεγραμμένο ",
 "_tablestatusesViewedOnline":"Έλεγχος online ",
-"_tbsYouSignWithEleg":"Υπογράφετε \"$documentname$\" με αριθμό συναλλαγής \"$documentnumber$\". Τα συμβαλλομενα μέρη είναι: $tbssigentries$ ",
+"_tbsYouSignWithEleg":"",
 "_tbsYouSignWithElegHtml":"Υπογράφετε το <span class='put-document-name-here' /> με αριθμό συναλλαγής <span class='put-document-id-here'/>. Οι υπογράφοντες είναι: <span class='put-signing-parties-here'/> ",
 "_textFieldDone":"Λήξη ",
 "_textFieldFor":"Μετέχων",

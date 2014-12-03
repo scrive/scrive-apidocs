@@ -826,7 +826,7 @@
 "_tablestatusesSent":"Enviado",
 "_tablestatusesSigned":"Assinado",
 "_tablestatusesViewedOnline":"Revisto online",
-"_tbsYouSignWithEleg":"Está a assinar \"$documentname$\" com o número de transacção \"$documentnumber$\". As partes signatárias são: $tbssigentries$",
+"_tbsYouSignWithEleg":"",
 "_tbsYouSignWithElegHtml":"Está a assinar <span class='put-document-name-here' /> com o número de transacção <span class='put-document-id-here'/>. As partes signatárias são: <span class='put-signing-parties-here'/>",
 "_textFieldDone":"Fechar",
 "_textFieldFor":"Parte",

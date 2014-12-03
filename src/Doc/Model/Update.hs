@@ -1497,9 +1497,6 @@ instance MonadDB m => DBUpdate m PurgeDocuments Int where
     runSQL_ $ "UPDATE signatory_links"
         <+> "   SET sign_ip = 0"
         <+> "     , seen_ip = 0"
-        <+> "     , eleg_data_mismatch_first_name = ''"
-        <+> "     , eleg_data_mismatch_last_name = ''"
-        <+> "     , eleg_data_mismatch_personal_number = ''"
         <+> " WHERE signatory_links.document_id IN (SELECT id FROM documents_to_purge)"
 
     -- blank out sensitive data in fields

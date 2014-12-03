@@ -460,8 +460,8 @@ elegVerification=
 <pre>$signed_text$</pre>
 <p>eID provider: $provider$</p>
 <p>Data returned from the eID:
-  <br>Name: $signatory_name$
-  <br>ID number: $signatory_personal_number$
+  <br/>Name: $signatory_name$
+  <br/>ID number: $signatory_personal_number$
 </p>
 <p>Signature: <div style='white-space:pre'>$signature$</div></p>
 <p>Online Certificate Status Protocol (OCSP) Response: <div style='white-space:pre'>$ocsp_response$</div></p>

@@ -826,7 +826,7 @@
 "_tablestatusesSent":"Sendt",
 "_tablestatusesSigned":"Signert",
 "_tablestatusesViewedOnline":"Lest gjennom på nett",
-"_tbsYouSignWithEleg":"Du signerer \"$documentname$\" med transaksjonsnummer \"$documentnumber$\". De signerende partene er: $tbssigentries$",
+"_tbsYouSignWithEleg":"",
 "_tbsYouSignWithElegHtml":"Du signerer <span class='put-document-name-here' /> med transaksjonsnummer <span class='put-document-id-here'/>. De signerende partene er: <span class='put-signing-parties-here'/>",
 "_textFieldDone":"Lukk",
 "_textFieldFor":"Part",
