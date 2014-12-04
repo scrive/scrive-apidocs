@@ -20,14 +20,12 @@ return React.createClass({
       var self = this;
       setTimeout(function() {self.setupTinyMCE();},1);
     },
+    componentWillUnmount: function() {
+      tinyMCE.EditorManager.execCommand('mceRemoveEditor', false, this.props.id);
+    },
     setupTinyMCE: function() {
       var self = this;
       if (!this.isMounted()) return;
-
-      // cleanup before setting up a new tinymce, else init() will do nothing.
-      if (tinyMCE.editors[self.props.id]) {
-        tinyMCE.remove('#' + self.props.id);
-      }
 
       tinyMCE.baseURL = '/libs/tiny_mce';
       tinyMCE.init({
