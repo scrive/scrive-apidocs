@@ -379,7 +379,7 @@ window.Signatory = Backbone.Model.extend({
       return this.get("isLastViewer");
     },
     updateLastViewer : function() {
-      self = this;
+      var self = this;
       this.set({isLastViewer : !this.signs() &&
                                _.all(this.document().signatories(), function(s) {
                                         return !s.signs() || s.signorder() < self.signorder();
