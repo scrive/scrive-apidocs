@@ -179,6 +179,7 @@ kontraMigrations = [
   , createCgiGrpTransactionsTable
   , createEIDSignaturesTable
   , signatoryLinksMoveSignatures
+  , companiesAddCgiDisplayName
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

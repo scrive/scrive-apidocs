@@ -101,6 +101,7 @@ instance Arbitrary CompanyInfo where
     f <- arbitrary
     g <- arbitrary
     h <- arbitrary
+    i <- arbitrary
     return $ CompanyInfo { companyname       = a
                          , companynumber     = b
                          , companyaddress    = c
@@ -111,6 +112,7 @@ instance Arbitrary CompanyInfo where
                          , companysmsoriginator = g
                          , companyallowsavesafetycopy = True
                          , companyidledoctimeout = h
+                         , companycgidisplayname = i
                          }
 
 instance Arbitrary MagicHash where
@@ -438,6 +440,7 @@ addNewCompany = do
          , companysmsoriginator = companysmsoriginator
          , companyallowsavesafetycopy = True
          , companyidledoctimeout = Nothing
+         , companycgidisplayname = Nothing
          }
     Just company <- dbQuery $ GetCompany cid
     return company

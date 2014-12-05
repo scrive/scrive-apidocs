@@ -45,6 +45,7 @@ data CompanyInfo = CompanyInfo {
   , companysmsoriginator :: String
   , companyallowsavesafetycopy :: Bool
   , companyidledoctimeout :: Maybe Int16
+  , companycgidisplayname :: Maybe String
   } deriving (Eq, Ord, Show)
 
 -- Synchronize these definitions with frontend/app/js/account/company.js
@@ -188,9 +189,10 @@ selectCompaniesSelectors = do
   sqlResult "companies.sms_originator"
   sqlResult "companies.allow_save_safety_copy"
   sqlResult "companies.idle_doc_timeout"
+  sqlResult "companies.cgi_display_name"
 
-fetchCompany :: (CompanyID, String, String, String, String, String, String, Maybe String, String, Bool, Maybe Int16) -> Company
-fetchCompany (cid, name, number, address, zip', city, country, ip_address_mask_list, sms_originator, allow_save_safety_copy, idle_doc_timeout) = Company {
+fetchCompany :: (CompanyID, String, String, String, String, String, String, Maybe String, String, Bool, Maybe Int16, Maybe String) -> Company
+fetchCompany (cid, name, number, address, zip', city, country, ip_address_mask_list, sms_originator, allow_save_safety_copy, idle_doc_timeout, cgi_display_name) = Company {
   companyid = cid
 , companyinfo = CompanyInfo {
     companyname = name
@@ -203,5 +205,6 @@ fetchCompany (cid, name, number, address, zip', city, country, ip_address_mask_l
   , companysmsoriginator = sms_originator
   , companyallowsavesafetycopy = allow_save_safety_copy
   , companyidledoctimeout = idle_doc_timeout
+  , companycgidisplayname = cgi_display_name
   }
 }

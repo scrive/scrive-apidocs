@@ -17,6 +17,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Text.StringTemplates.Fields as F
 
+import Company.Model
 import DB hiding (InternalError)
 import Doc.DocStateData
 import Doc.DocumentID
@@ -50,6 +51,7 @@ handleSignRequest :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m A.Value
 handleSignRequest did slid = do
   CgiGrpConfig{..} <- ctxcgigrpconfig <$> getContext
   doc <- getDocument did slid
+  mcompany_display_name <- getCompanyDisplayName doc
   tbs <- textToBeSigned doc
   pn <- getField "personal_number" `onNothing` do
     Log.mixlog_ "No personal number"
@@ -58,7 +60,7 @@ handleSignRequest did slid = do
   let transport = curlTransport SecureSSL (Just cgCertFile) cgGateway id
       req = SignRequest {
         srqPolicy = cgServiceID
-      , srqDisplayName = cgDisplayName
+      , srqDisplayName = fromMaybe cgDisplayName mcompany_display_name
       , srqPersonalNumber = T.pack pn
       , srqUserVisibleData = T.decodeUtf8 . B64.encode . BSU.fromString $ tbs
       , srqProvider = "bankid"
@@ -137,6 +139,12 @@ getDocument did slid = dbQuery (GetDocumentSessionToken slid) >>= \case
   Nothing -> do
     Log.mixlog_ "No document token found"
     respond404
+
+getCompanyDisplayName :: (MonadDB m, MonadThrow m) => Document -> m (Maybe T.Text)
+getCompanyDisplayName doc = fmap T.pack . companycgidisplayname . companyinfo
+  <$> dbQuery (GetCompanyByUserID $ $fromJust $ maybesignatory author)
+  where
+    author = $fromJust $ getSigLinkFor signatoryisauthor doc
 
 -- | Generate text to be signed that represents contents of the document.
 textToBeSigned :: TemplatesMonad m => Document -> m String

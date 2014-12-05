@@ -223,3 +223,11 @@ addIdleDocTimeout = Migration {
     runQuery_ $ sqlAlterTable (tblName tableCompanies) [ sqlAddColumn (tblColumn { colName = "idle_doc_timeout", colType = SmallIntT }) ]
 }
 
+companiesAddCgiDisplayName :: MonadDB m => Migration m
+companiesAddCgiDisplayName = Migration {
+  mgrTable = tableCompanies
+, mgrFrom = 16
+, mgrDo = runQuery_ $ sqlAlterTable (tblName tableCompanies) [
+    sqlAddColumn $ tblColumn { colName = "cgi_display_name", colType = TextT }
+  ]
+}

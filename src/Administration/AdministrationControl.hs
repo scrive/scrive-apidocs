@@ -470,7 +470,9 @@ getCompanyInfoChange = do
                                                          guard $ t >= minCompanyIdleDocTimeout
                                                          guard $ t <= maxCompanyIdleDocTimeout
                                                          return t)) <$> getField "companyidledoctimeout"
-  return $ \CompanyInfo{..} ->  CompanyInfo {
+  mcompanycgidisplayname <- fmap (\s -> if null s then Nothing else Just s)
+    <$> getField "companycgidisplayname"
+  return $ \CompanyInfo{..} -> CompanyInfo {
         companyname        = fromMaybe companyname mcompanyname
       , companynumber      = fromMaybe companynumber mcompanynumber
       , companyaddress     = fromMaybe companyaddress mcompanyaddress
@@ -481,6 +483,7 @@ getCompanyInfoChange = do
       , companysmsoriginator = fromMaybe companysmsoriginator mcompanysmsoriginator
       , companyallowsavesafetycopy = maybe companyallowsavesafetycopy (=="true") mcompanyallowsavesafetycopy
       , companyidledoctimeout = fromMaybe companyidledoctimeout mcompanyidledoctimeout
+      , companycgidisplayname = fromMaybe companycgidisplayname mcompanycgidisplayname
     }
 
 {- | Reads params and returns function for conversion of user settings.  No param leaves fields unchanged -}
