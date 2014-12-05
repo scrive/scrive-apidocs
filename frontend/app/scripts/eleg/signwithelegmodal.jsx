@@ -46,12 +46,14 @@ return function(args) {
       });
       buttons.append(signThisDeviceButton.el()).append(signOtherDeviceButton.el());
     } else {
+      var copy = $(localization.process.signatorysignmodalcontent);
+      copy.find('.put-signatory-name-here').text(args.signatory.name());
       self.modal = new Confirmation({
         width: 825,
-        title : localization.docsignview.eleg.chooseElegModalTitle,
+        title : localization.process.signatorysignmodaltitleeleg, //localization.docsignview.eleg.chooseElegModalTitle,
         cssClass: 'grey sign-confirmation-modal small-device',
-        content : localization.docsignview.eleg.bankid.rfa20,
-        acceptButton : buttons,
+        content : copy, //localization.docsignview.eleg.bankid.rfa20,
+        acceptButton : undefined,
         signview : args.signview,
         margin: args.margin,
         fast: args.fast,
@@ -66,11 +68,11 @@ return function(args) {
 
       // Remove the modal footer but keep the button (regular or mobile bankid)
       var signButton = new Button({
-        color: "grey",
+        color: "green",
         size: "big",
         style:"margin-top:-10px;margin-bottom:10px",
         cssClass: "signbutton",
-        text:localization.docsignview.eleg.bankid.modalThisDevice,
+        text: localization.docsignview.eleg.bankid.mobilebankid,
         onClick:function() {
           self.modal.close();
           new BankID({
