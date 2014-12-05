@@ -119,6 +119,8 @@ window.Field = Backbone.Model.extend({
     readyForSign : function(){
         if (this.isEmail())
             return new EmailValidation().validateData(this.value());
+        if (this.isSSN() && this.signatory().elegAuthentication())
+            return new SSNForElegValidation().validateData(this.value());
         else if (this.isText() && (this.value() != ""))
             return true;
         else if (this.isOptional())

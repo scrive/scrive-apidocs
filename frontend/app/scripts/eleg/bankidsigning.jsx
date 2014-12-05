@@ -166,6 +166,15 @@ return Backbone.Model.extend({
         return 'bankid:///?autostarttoken=' + this.autoStartToken();
       }
     },
+    normalizedPersonalNumber : function() {
+      var pp = this.signatory().personalnumber();
+      pp = pp.replace(/-/g, "");
+      if (pp.length <= 10) {
+       return "19" + pp;
+      } else {
+       return pp;
+      }
+    },
     /*
     * Workflow logic functions
     */
@@ -174,7 +183,7 @@ return Backbone.Model.extend({
       new Submit({
         method : 'POST',
         url  : "/s/eid/cgi/grp/sign/" + self.document().documentid() + "/" + self.signatory().signatoryid(),
-        personal_number : self.signatory().personalnumber(),
+        personal_number : self.normalizedPersonalNumber(),
         ajaxsuccess : function(d, s, xhr) {
           var resp = JSON.parse(d);
           if(resp.auto_start_token) {
