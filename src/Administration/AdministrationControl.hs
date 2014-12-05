@@ -463,6 +463,7 @@ getCompanyInfoChange = do
   mcompanycountry <- getField "companycountry"
   mcompanyipaddressmasklist <- getOptionalField asValidIPAddressWithMaskList "companyipaddressmasklist"
   mcompanysmsoriginator <- getField "companysmsoriginator"
+  mcompanycgidisplayname <- fmap nothingIfEmpty <$> getField "companycgidisplayname"
   mcompanyallowsavesafetycopy <- getField "companyallowsavesafetycopy"
   mcompanyidledoctimeout <- (>>= \s -> if null s
                                        then Just Nothing
@@ -470,8 +471,6 @@ getCompanyInfoChange = do
                                                          guard $ t >= minCompanyIdleDocTimeout
                                                          guard $ t <= maxCompanyIdleDocTimeout
                                                          return t)) <$> getField "companyidledoctimeout"
-  mcompanycgidisplayname <- fmap (\s -> if null s then Nothing else Just s)
-    <$> getField "companycgidisplayname"
   return $ \CompanyInfo{..} -> CompanyInfo {
         companyname        = fromMaybe companyname mcompanyname
       , companynumber      = fromMaybe companynumber mcompanynumber

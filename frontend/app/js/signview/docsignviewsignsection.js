@@ -4,7 +4,7 @@
  *   $('body').append(new DocumentSignSignSection(model : document).el);
  */
 
-define(['React', 'signview/send_sms_pin_modal', 'eleg/signwithelegmodal', 'eleg/bankid', 'tinycolor','Backbone', 'legacy_code'], function(React, SendSMSPinModal, SignWithElegModal, BankID, tinycolor) {
+define(['React', 'signview/send_sms_pin_modal', 'eleg/signwithelegmodal', 'tinycolor','Backbone', 'legacy_code'], function(React, SendSMSPinModal, SignWithElegModal, tinycolor) {
 
 
 window.DocumentSignConfirmation = function(args) {

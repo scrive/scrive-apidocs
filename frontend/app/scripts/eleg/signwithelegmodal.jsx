@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['eleg/bankid', 'Backbone', 'legacy_code'], function(BankID, Backbone) {
+define(['eleg/bankidsigningmodal', 'Backbone', 'legacy_code'], function(BankIDSigningModal, Backbone) {
 
 
 return function(args) {
@@ -24,7 +24,7 @@ return function(args) {
         text:localization.docsignview.eleg.bankid.modalAnotherDevice,
         onClick:function() {
           self.modal.close();
-          new BankID({
+          new BankIDSigningModal({
               signatory : args.signatory,
               onSuccess  : args.onSuccess,
               thisDevice : false
@@ -37,7 +37,7 @@ return function(args) {
         text:localization.docsignview.eleg.bankid.modalThisDevice,
         onClick:function() {
           self.modal.close();
-          new BankID({
+          new BankIDSigningModal({
               signatory : args.signatory,
               onSuccess  : args.onSuccess,
               thisDevice : true
@@ -75,7 +75,7 @@ return function(args) {
         text: localization.docsignview.eleg.bankid.mobilebankid,
         onClick:function() {
           self.modal.close();
-          new BankID({
+          new BankIDSigningModal({
               signatory : args.signatory,
               onSuccess  : args.onSuccess,
               thisDevice : true

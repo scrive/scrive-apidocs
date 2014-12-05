@@ -104,6 +104,9 @@ return Backbone.Model.extend({
           || str == 'cancelled'
           || str == 'start_failed';
     },
+    canChangeSSN : function() {
+      return this.signatory().personalnumberField().isClosed();
+    },
     statusMessage : function() {
       var self = this;
       if(self.isWaitingForStatus() && self.thisDevice()) {
@@ -145,8 +148,10 @@ return Backbone.Model.extend({
         return localization.docsignview.eleg.bankid.rfa17;
         // RP must not try the same request again. This is an internal error
         // within RP's system and must not be communicated to the user as a BankID-error.
-      } else if (self.status() == 'invalid_parameters') {
-        return localization.docsignview.eleg.bankid.invalidParameters;
+      } else if (self.status() == 'invalid_parameters' && self.canChangeSSN()) {
+        return localization.docsignview.eleg.bankid.invalidParametersCanChange;
+      } else if (self.status() == 'invalid_parameters' && !self.canChangeSSN()) {
+        return localization.docsignview.eleg.bankid.invalidParametersCantChange;
       } else if (self.status() == 'access_denied_rp') {
         return localization.docsignview.eleg.bankid.accessDenied;
       } else {
@@ -158,9 +163,7 @@ return Backbone.Model.extend({
     */
     bankIdUrl : function() {
       if(this.autoStartToken()) {
-        return 'bankid:///?autostarttoken='
-            + this.autoStartToken()
-            + '&redirect=null';
+        return 'bankid:///?autostarttoken=' + this.autoStartToken();
       }
     },
     /*

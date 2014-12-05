@@ -66,6 +66,12 @@ var AdminCompanyDetailsModel = Backbone.Model.extend({
   setCompanysmsoriginator : function(v) {
      this.set({"companysmsoriginator" : v});
   },
+  companycgidisplayname: function() {
+     return this.get("companycgidisplayname");
+  },
+  setCompanycgidisplayname : function(v) {
+     this.set({"companycgidisplayname" : v});
+  },
   companyidledoctimeout: function() {
      return this.get("companyidledoctimeout");
   },
@@ -101,6 +107,7 @@ var AdminCompanyDetailsModel = Backbone.Model.extend({
       , companycountry :  this.company().country()
       , companyipaddressmasklist : this.company().ipaddressmasklist()
       , companysmsoriginator : this.company().smsoriginator()
+      , companycgidisplayname : this.company().cgidisplayname()
       , companyidledoctimeout : this.company().idledoctimeout()
       , companyallowsavesafetycopy : this.company().allowsavesafetycopy()
     }, {silent : true});
@@ -118,6 +125,7 @@ var AdminCompanyDetailsModel = Backbone.Model.extend({
         companycountry : this.companycountry(),
         companyipaddressmasklist : this.companyipaddressmasklist(),
         companysmsoriginator : this.companysmsoriginator(),
+        companycgidisplayname : this.companycgidisplayname(),
         companyidledoctimeout : this.companyidledoctimeout(),
         companyallowsavesafetycopy : this.companyallowsavesafetycopy()
     });
@@ -200,6 +208,13 @@ var AdminCompanyDetailsView = Backbone.View.extend({
               model.setCompanysmsoriginator(companysmsoriginatorinput.val());
       });
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text("SMS originator"))).append($("<td/>").append(companysmsoriginatorinput)));
+
+      var companycgidisplaynameinput = $("<input type='text' maxlength=30/>").val(model.companycgidisplayname());
+      companycgidisplaynameinput.change(function() {
+              model.setCompanycgidisplayname(companycgidisplaynameinput.val());
+      });
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("CGI display name (BankID only)"))).append($("<td/>").append(companycgidisplaynameinput)).append($("<td/>").text("This has to be accepted by CGI. Else BanID will not work.")));
+
 
       var companyidledoctimeoutinput = $("<input type='number' min='"+model.company().minidledoctimeout()+"' max='"+model.company().maxidledoctimeout()+"'/>").val(model.companyidledoctimeout());
       companyidledoctimeoutinput.change(function() {

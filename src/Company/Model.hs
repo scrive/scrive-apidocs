@@ -172,6 +172,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetCompanyInfo Bool where
       sqlSet "sms_originator" companysmsoriginator
       sqlSet "allow_save_safety_copy" companyallowsavesafetycopy
       sqlSet "idle_doc_timeout" companyidledoctimeout
+      sqlSet "cgi_display_name" companycgidisplayname
       sqlWhereEq "id" cid
 
 -- helpers

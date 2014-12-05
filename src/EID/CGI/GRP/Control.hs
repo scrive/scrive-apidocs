@@ -81,7 +81,8 @@ handleSignRequest did slid = do
 handleCollectRequest :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m A.Value
 handleCollectRequest did slid = do
   CgiGrpConfig{..} <- ctxcgigrpconfig <$> getContext
-  void $ getDocument did slid
+  mcompany_display_name <- getDocument did slid >>= getCompanyDisplayName
+
   CgiGrpTransaction{..} <- dbQuery (GetCgiGrpTransaction slid) `onNothing` do
     Log.mixlog_ "No active transaction"
     respond404
@@ -91,7 +92,7 @@ handleCollectRequest did slid = do
         crqPolicy = cgServiceID
       , crqTransactionID = cgtTransactionID
       , crqOrderRef = cgtOrderRef
-      , crqDisplayName = cgDisplayName
+      , crqDisplayName = fromMaybe cgDisplayName mcompany_display_name
       }
       parser = Right <$> xpCollectResponse <|> Left <$> xpGrpFault
 

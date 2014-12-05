@@ -216,7 +216,8 @@ window.Field = Backbone.Model.extend({
       return concatValidations;
     },
     validateSSN: function() {
-      // We do not do any validation of SSN in design view
+      if (this.signatory().elegAuthentication())
+        return new EmptyValidation().or(new SSNForElegValidation());
       return new Validation();
     },
     validateCheckbox: function() {

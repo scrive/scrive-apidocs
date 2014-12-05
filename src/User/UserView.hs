@@ -131,6 +131,7 @@ companyJSON ctx company companyui = runJSONGenT $ do
     value "companyname" $ getCompanyName company
     value "companynumber" $ getCompanyNumber company
     value "smsoriginator" $ companysmsoriginator $ companyinfo company
+    value "cgidisplayname" $ companycgidisplayname $ companyinfo company
     value "ipaddressmasklist" $ intercalate "," $ fmap show $ companyipaddressmasklist $ companyinfo company
     value "allowsavesafetycopy" $ companyallowsavesafetycopy (companyinfo company)
     value "idledoctimeout" $ companyidledoctimeout $ companyinfo company
