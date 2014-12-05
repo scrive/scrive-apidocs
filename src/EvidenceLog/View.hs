@@ -14,6 +14,7 @@ module EvidenceLog.View (
 
 
 import Control.Applicative
+import Control.Monad
 import Control.Monad.Catch
 import Data.Char (isSpace)
 import Data.Decimal (realFracToDecimal)
@@ -23,6 +24,7 @@ import Data.Word (Word8)
 import Text.JSON
 import Text.JSON.Gen as J
 import Text.StringTemplates.Templates
+import qualified Data.Foldable as F
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Text.StringTemplates.Fields as F
@@ -31,6 +33,7 @@ import Control.Logic
 import DB
 import Doc.DocStateData
 import Doc.Model (GetDocumentsBySignatoryLinkIDs(..))
+import EID.Signature.Model
 import EvidenceLog.Model
 import MinutesTime
 import Templates (renderLocalTemplate)
@@ -191,22 +194,37 @@ eventForVerificationPage = not . (`elem` map Current [AttachGuardtimeSealedFileE
 
 -- | Produce simplified text for an event.  If actor is provided, the
 -- text is for the verification page, otherwise it is for the archive.
-simplyfiedEventText :: (HasLang doc, TemplatesMonad m) => Maybe String -> doc -> DocumentEvidenceEventWithSignatoryLink -> m String
+simplyfiedEventText :: (HasLang doc, MonadDB m, MonadThrow m, TemplatesMonad m)
+  => Maybe String -> doc -> DocumentEvidenceEventWithSignatoryLink -> m String
 simplyfiedEventText mactor doc dee = case evType dee of
   Obsolete CancelDocumenElegEvidence -> renderEvent "CancelDocumenElegEvidenceText"
   Current et -> renderEvent $ eventTextTemplateName et
-  Obsolete _ -> return ""
-  where renderEvent eventTemplateName = (if isJust mactor then renderLocalTemplate doc else renderTemplate) eventTemplateName $ do
-          let siglink = evAffectedSigLink dee
-          F.value "text" $ strip . filterTagsNL <$> evMessageText dee
-          F.value "signatory" $ getIdentifier <$> siglink
-          -- signatory email: there are events that are missing affected
-          -- signatory, but happen to have evEmail set to what we want
-          F.value "signatory_email" $ (getEmail <$> siglink) <|> evEmail dee
-          case mactor of
-            Nothing    -> F.value "archive" True
-            Just actor -> F.value "actor" actor
-          maybe (return ()) signatoryLinkTemplateFields siglink
+  Obsolete _ -> return "" -- shouldn't we throw an error in this case?
+  where
+    render = if isJust mactor then renderLocalTemplate doc else renderTemplate
+    renderEvent eventTemplateName = render eventTemplateName $ do
+      let mslink = evAffectedSigLink dee
+      F.forM_ mslink $ \slink -> do
+        signatoryLinkTemplateFields slink
+        -- This is terribad, but another possibility is to include it
+        -- in DocumentEvidenceEvent or to include it in SignatoryLink
+        -- and none of them are better. The best thing is to think how
+        -- to rework evidence log module so that stuff like that can
+        -- be somehow painlessly done, I guess.
+        when (evType dee == Current SignDocumentEvidence) $ do
+          dbQuery (GetESignature $ signatorylinkid slink) >>= \case
+            Nothing -> return ()
+            Just esig -> case esig of
+              BankIDSignature_ BankIDSignature{..} -> do
+                F.value "eid_signatory_name" bidsSignatoryName
+      F.value "text" $ strip . filterTagsNL <$> evMessageText dee
+      F.value "signatory" $ getIdentifier <$> mslink
+      -- signatory email: there are events that are missing affected
+      -- signatory, but happen to have evEmail set to what we want
+      F.value "signatory_email" $ (getEmail <$> mslink) <|> evEmail dee
+      case mactor of
+        Nothing    -> F.value "archive" True
+        Just actor -> F.value "actor" actor
 
 showClockError :: Word8 -> Double -> String
 showClockError decimals e = show (realFracToDecimal decimals (e * 1000)) ++ " ms"
