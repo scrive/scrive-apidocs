@@ -384,7 +384,9 @@ window.DocumentExtraDetails = Backbone.Model.extend({},
   },
   askForSSN: function(signatory) {
     var field = signatory.personalnumberField();
-    return field != undefined && (field.value() == "" || field.value() == undefined) && (!field.hasPlacements()) && field.obligatory();
+    return field != undefined &&
+          (field.value() == "" || field.value() == undefined || ((field.signatory().elegAuthentication()) && !new SSNForElegValidation().validateData(field.value()))) &&
+          (!field.hasPlacements()) && field.obligatory()
   },
   askForPhone: function(signatory) {
     var field = signatory.mobileField();

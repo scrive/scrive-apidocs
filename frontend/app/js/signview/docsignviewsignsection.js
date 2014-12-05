@@ -326,35 +326,32 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
         fast: this.fast,
         content: this.createContentElems
       });
-    }
+      if (isSmallScreen) {
+        var signModal = $('.sign-confirmation-modal .modal-container');
+        var modalHeader = signModal.find('.modal-header');
+        var modalBody = signModal.find('.modal-body');
+        var modalFooter = signModal.find('.modal-footer');
+        modalHeader.remove();
 
-    // TODO rewrite me, but not on staging
-    // Re-adjust the signing modal for small screen devices.
-    if (isSmallScreen) {
-      var signModal = $('.sign-confirmation-modal .modal-container');
-      var modalHeader = signModal.find('.modal-header');
-      var modalBody = signModal.find('.modal-body');
-      var modalFooter = signModal.find('.modal-footer');
-      modalHeader.remove();
+        // Add a custom close button
+        var close = $('<a class="small-device-go-back-button">' + localization.process.cancel + '</a>');
+        close.click(function() { self.confirmation.close(); });
 
-      // Add a custom close button
-      var close = $('<a class="small-device-go-back-button">' + localization.process.cancel + '</a>');
-      close.click(function() { self.confirmation.close(); });
+        // Remove the modal footer but keep the button (regular or mobile bankid)
+        var signButton = modalFooter.find('.button.signbutton').detach();
+        modalFooter.remove();
 
-      // Remove the modal footer but keep the button (regular or mobile bankid)
-      var signButton = modalFooter.find('.button.signbutton').detach();
-      modalFooter.remove();
+        // Styling
+        modalBody.append(signButton);
+        modalBody.append(close);
 
-      // Styling
-      modalBody.append(signButton);
-      modalBody.append(close);
-
-      // Check so we didn't put the modal outside of the window, if we can help it.
-      // This is a special case that will go away when we refactor the modals / small screen modals.
-      if (window.innerHeight > signModal.height()) {
-        var modalBottom = signModal.height() + parseInt(signModal.css("margin-top"));
-        if (modalBottom > window.innerHeight) {
-          signModal.css("margin-top", window.innerHeight - signModal.height() - 100);
+        // Check so we didn't put the modal outside of the window, if we can help it.
+        // This is a special case that will go away when we refactor the modals / small screen modals.
+        if (window.innerHeight > signModal.height()) {
+          var modalBottom = signModal.height() + parseInt(signModal.css("margin-top"));
+          if (modalBottom > window.innerHeight) {
+            signModal.css("margin-top", window.innerHeight - signModal.height() - 100);
+          }
         }
       }
     }

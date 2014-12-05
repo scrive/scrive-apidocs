@@ -265,6 +265,16 @@ window.PasswordEqValidation = Validation.extend({
     }
 });
 
+window.SSNForElegValidation = Validation.extend({
+    defaults: {
+        validates: function(t) {
+           fWithoutHyphens = t.replace(/-/g, "");
+           return /^[0-9,'-']{10,12}$/i.test(fWithoutHyphens);
+        },
+        message: "Personal number for elegitimation must contain 10 or 12 digits"
+    }
+});
+
 jQuery.fn.validate = function(validationObject){
     var validationObject = validationObject || (new NotEmptyValidation);
     var validates = true;
