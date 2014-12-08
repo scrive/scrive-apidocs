@@ -230,7 +230,8 @@ return Backbone.Model.extend({
             }
           },
           ajaxerror : function(xhr, textStatus, errorThrown) {
-            self.triggerCriticalError(xhr);
+            // Don't throw error on ajax error here. Some environments trigger error, when switching to bankid native app.
+            setTimeout(poller, self.pollingInterval());
           }
         }).sendAjax();
       };

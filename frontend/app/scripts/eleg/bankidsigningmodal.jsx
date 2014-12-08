@@ -52,7 +52,7 @@ return function(args) {
       });
       return true;
     },
-    onCriticalError : function() {
+    onCriticalError : function(xhr) {
       clearBankIDIframes();
       new ReloadDueToErrorModal(xhr);
     },
