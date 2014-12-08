@@ -1,7 +1,15 @@
-module Network.SOAP.Transport.Curl where
+{-# LANGUAGE NoImplicitPrelude #-}
+module Network.SOAP.Transport.Curl (
+    SSL(..)
+  , CurlErrorHandler
+  , noopErrorHandler
+  , certErrorHandler
+  , curlTransport
+  ) where
 
 import Control.Applicative
-import Data.Maybe
+import Control.Monad.Catch
+import Data.ByteString.Lazy (ByteString)
 import Data.Monoid.Space
 import Network.Curl
 import Network.SOAP.Transport
@@ -9,21 +17,54 @@ import Network.SOAP.Transport.HTTP
 import Text.XML
 import qualified Data.Text.Lazy as TL
 
+import OurPrelude
 import Utils.Prelude
+import qualified Log
 
+-- TODO: in the future refactor curl bits, possibly create
+-- MonadCurl class, stop using curl binary for mails, smses etc.
+
+-- | Type of SSL connection to be used by curl.
 data SSL = SecureSSL | InsecureSSL
+
+type CurlErrorHandler = BodyP -> Curl -> CurlCode -> IO ByteString
+
+-- | Dummy error handler, just throws an exception.
+noopErrorHandler :: CurlErrorHandler
+noopErrorHandler _ _ = curlError
+
+-- | In case of certificate error, reconnect with
+-- disabled peer verification and log the issue.
+certErrorHandler :: CurlErrorHandler
+certErrorHandler response_parser curl CurlSSLCACert = do
+  Log.attention_ "CERTIFICATE VERIFICATION ERROR, falling back to insecure connection"
+  (final_body, fetch_body) <- newIncoming
+  setopts curl [
+      CurlWriteFunction $ gatherOutput_ fetch_body
+    , CurlSSLVerifyPeer False
+    ]
+  perform curl >>= \case
+    CurlOK -> response_parser <$> final_body
+    code   -> curlError code
+certErrorHandler _ _ code = curlError code
+
+-- | Throw an exception informing about curl error.
+curlError :: MonadThrow m => CurlCode -> m a
+curlError code = $unexpectedErrorM $ "Curl response code was" <+> show code
+
+----------------------------------------
 
 curlTransport :: SSL
               -> Maybe FilePath
               -> String
               -> BodyP
+              -> CurlErrorHandler
               -> Transport
-curlTransport ssl mcacert url body_p soap_action soap_request = do
-  putStrLn $ "RAW: " ++ show raw_request
-  h <- initialize
+curlTransport ssl mcacert url response_parser on_failure soap_action soap_request = do
+  curl <- initialize
   (final_body, fetch_body) <- newIncoming
-  maybeM (setopt h . CurlCAInfo) mcacert
-  setopts h [
+  maybeM (setopt curl . CurlCAInfo) mcacert
+  setopts curl [
       CurlWriteFunction $ gatherOutput_ fetch_body
     , CurlNoSignal True
     , CurlTimeout 2
@@ -31,18 +72,14 @@ curlTransport ssl mcacert url body_p soap_action soap_request = do
     , CurlSSLVerifyPeer $ case ssl of
         SecureSSL   -> True
         InsecureSSL -> False
-    , CurlHttpHeaders $ catMaybes [
-        Just "Content-Type: text/xml; charset=utf-8"
-      , ("SOAPAction:" <+>) <$> msoap_action
+    , CurlHttpHeaders [
+        "Content-Type: text/xml; charset=utf-8"
+      , "SOAPAction:" <+> soap_action
       ]
     , CurlPost True
-    , CurlPostFields [raw_request]
+    , CurlPostFields [TL.unpack $ renderText def soap_request]
     , CurlVerbose True
     ]
-  code <- perform h
-  case code of
-    CurlOK -> body_p <$> final_body
-    _      -> error $ "Curl response code was " ++ show code
-  where
-    msoap_action = if null soap_action then Nothing else Just soap_action
-    raw_request = TL.unpack $ renderText def soap_request
+  perform curl >>= \case
+    CurlOK -> response_parser <$> final_body
+    code   -> on_failure response_parser curl code

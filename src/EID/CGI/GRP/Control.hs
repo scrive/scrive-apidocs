@@ -57,7 +57,7 @@ handleSignRequest did slid = do
     Log.mixlog_ "No personal number"
     respond404
 
-  let transport = curlTransport SecureSSL (Just cgCertFile) cgGateway id
+  let transport = curlTransport SecureSSL (Just cgCertFile) cgGateway id certErrorHandler
       req = SignRequest {
         srqPolicy = cgServiceID
       , srqDisplayName = fromMaybe cgDisplayName mcompany_display_name
@@ -69,7 +69,8 @@ handleSignRequest did slid = do
 
   soapCall transport "" () req parser >>= \case
     Left fault -> return $ unjsonToJSON unjsonDef fault
-    Right SignResponse{..} -> do
+    Right sr@SignResponse{..} -> do
+      Log.mixlog_ $ "SOAP response:" <+> show sr
       dbUpdate $ MergeCgiGrpTransaction CgiGrpTransaction {
         cgtSignatoryLinkID = slid
       , cgtTransactionID = srsTransactionID
@@ -87,7 +88,7 @@ handleCollectRequest did slid = do
     Log.mixlog_ "No active transaction"
     respond404
 
-  let transport = curlTransport SecureSSL (Just cgCertFile) cgGateway id
+  let transport = curlTransport SecureSSL (Just cgCertFile) cgGateway id certErrorHandler
       req = CollectRequest {
         crqPolicy = cgServiceID
       , crqTransactionID = cgtTransactionID
@@ -99,7 +100,7 @@ handleCollectRequest did slid = do
   soapCall transport "" () req parser >>= \case
     Left fault -> return $ unjsonToJSON unjsonDef fault
     Right cr@CollectResponse{..} -> do
-      Log.mixlog_ $ "RESPONSE: " ++ show cr
+      Log.mixlog_ $ "SOAP response:" <+> show cr
       when (crsProgressStatus == Complete) $ do
         -- all the required attributes are supposed to always
         -- be there, so bail out if this is not the case.

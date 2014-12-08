@@ -21,6 +21,14 @@ import Text.XML.Writer hiding (empty, node)
 import qualified Data.Text.Lazy as T
 import qualified Text.XML.Writer as W
 
+import qualified Log
+
+-- | Lightweight wrapper over cursor parsers to allow for
+-- convenient transformation and combining the results.
+-- TODO: Improve logging capabilities (some thought needs to
+-- be given as a parser can either produce no results or fail,
+-- currently 'Maybe' stands for "produces no results" and failures
+-- are generally unexpected and handled with 'unexpectedError').
 newtype XMLParser a = XMLParser { runParser :: Cursor -> Maybe a }
   deriving Functor
 
@@ -40,6 +48,7 @@ instance MonadPlus XMLParser where
   mzero = XMLParser $ const Nothing
   XMLParser f `mplus` XMLParser g = XMLParser $ \c -> f c `mplus` g c
 
+-- | SOAPFault parser.
 xpSOAPFault :: XMLParser SOAPFault
 xpSOAPFault = XMLParser $ \c -> listToMaybe $ c
   $/ laxElement "Fault" &| \fault -> SOAPFault {
@@ -50,6 +59,7 @@ xpSOAPFault = XMLParser $ \c -> listToMaybe $ c
 
 ----------------------------------------
 
+-- | Make a SOAP call.
 soapCall :: (ToXML header, ToXML body, MonadBase IO m)
          => Transport
          -> String
@@ -58,23 +68,29 @@ soapCall :: (ToXML header, ToXML body, MonadBase IO m)
          -> XMLParser response
          -> m response
 soapCall transport soap_action header body parser = liftBase $ do
-  c <- transport soap_action (soap header body)
+  Log.mixlog_ $ "SOAP request body:" <+> ppDocument req
+  c <- transport soap_action req
     >>= unwrapEnvelope . fromDocument . parseLBS_ def
   case runParser (Right <$> parser <|> Left <$> xpSOAPFault) c of
     Just (Right response) -> return response
     Just (Left fault) -> throwM fault
-    Nothing -> throwM $ SOAPParsingError $ "SOAP Body parsing failed:" <+> ppCursor c
+    Nothing -> throwM $ SOAPParsingError $ "Unsuccessful parse of SOAP response body:" <+> ppCursor c
+  where
+    req = soap header body
 
 ----------------------------------------
 
+-- | Extract SOAP body from the envelope.
 unwrapEnvelope :: MonadThrow m => Cursor -> m Cursor
 unwrapEnvelope c = maybe err return . listToMaybe
   $ c $| laxElement "Envelope" &/ laxElement "Body"
   where
     err = throwM . SOAPParsingError $ "No SOAP Body:" <+> ppCursor c
 
+-- | Pretty print XML document.
 ppDocument :: Document -> String
 ppDocument = T.unpack . renderText def
 
+-- | Render cursor as an XML document and pretty print it.
 ppCursor :: Cursor -> String
 ppCursor = ppDocument . document "response" . W.node . node

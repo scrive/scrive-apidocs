@@ -10,11 +10,13 @@ module OurPrelude (
   , fromJust
   , UnexpectedError(..)
   , unexpectedError
+  , unexpectedErrorM
   , module Data.Maybe
   , module Prelude
   ) where
 
-import Control.Exception
+import Control.Monad.Catch
+import Control.Exception (throw)
 import Data.Maybe hiding (fromJust)
 import Data.Typeable
 import Language.Haskell.TH
@@ -69,6 +71,17 @@ unexpectedError :: Q Exp
 unexpectedError = [|
   \msg -> let (modname, line, position) = $srcLocation
           in throw UnexpectedError {
+            ueMessage = msg
+          , ueModule = modname
+          , ueLine = line
+          , uePosition = position
+          }
+  |]
+
+unexpectedErrorM :: Q Exp
+unexpectedErrorM = [|
+  \msg -> let (modname, line, position) = $srcLocation
+          in throwM UnexpectedError {
             ueMessage = msg
           , ueModule = modname
           , ueLine = line
