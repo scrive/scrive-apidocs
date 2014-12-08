@@ -163,7 +163,7 @@ return Backbone.Model.extend({
     */
     bankIdUrl : function() {
       if(this.autoStartToken()) {
-        return 'bankid:///?autostarttoken=' + this.autoStartToken();
+        return 'bankid:///?autostarttoken=' + this.autoStartToken() + "&redirect=null";
       }
     },
     normalizedPersonalNumber : function() {
