@@ -35,15 +35,7 @@ var SignviewSettingsView = Backbone.View.extend({
       this.model = args.model;
       this.document = args.document;
       this.companyui = args.companyui;
-      this.initCompanyUI();
-    },
-    initCompanyUI: function() {
-      var self = this;
-      this.companyui.bind("change:ready", function() {
-        if (self.companyui.ready()) {
-          self.render();
-        }
-      });
+      this.render();
     },
     render: function() {
       var view = new SampleSignView({
@@ -73,21 +65,25 @@ window.SignviewSettingsPopup = function(args) {
   var document = args.document;
   var model = new SignviewSettingsModel({document : document});
   var companyui = new CompanyUI({url: "/account/company/json"});
-  var settingsView = new SignviewSettingsView({model: model, companyui: companyui});
 
-  var popup = new Confirmation({
-    content: settingsView.el,
-    title: localization.designview.signviewsettings.title,
-    icon: undefined,
-    acceptText: localization.save,
-    width: 900,
-    onAccept : function() {
-      document.setShowheader(model.showHeader().checked());
-      document.setShowrejectoption(model.showRejectOption().checked());
-      document.setShowpdfdownload(model.showPDFDownload().checked());
-      document.setShowfooter(model.showFooter().checked());
+  companyui.bind("change:ready", function() {
+    if (companyui.ready()) {
+      var settingsView = new SignviewSettingsView({model: model, companyui: companyui});
+      var popup = new Confirmation({
+        content: settingsView.el,
+        title: localization.designview.signviewsettings.title,
+        icon: undefined,
+        acceptText: localization.save,
+        width: 900,
+        onAccept : function() {
+          document.setShowheader(model.showHeader().checked());
+          document.setShowrejectoption(model.showRejectOption().checked());
+          document.setShowpdfdownload(model.showPDFDownload().checked());
+          document.setShowfooter(model.showFooter().checked());
 
-      return true;
+          return true;
+        }
+      });
     }
   });
 };
