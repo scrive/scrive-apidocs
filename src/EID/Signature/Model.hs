@@ -3,15 +3,18 @@ module EID.Signature.Model (
     ESignature(..)
   -- from EID.CGI.GRP.Data
   , BankIDSignature(..)
-  , InsertBankIDSignature(..)
+  , MergeBankIDSignature(..)
   , GetESignature(..)
   ) where
 
+import Control.Monad
 import Control.Monad.Catch
+import Control.Monad.State
 import Data.ByteString (ByteString)
 import Data.Int
 import Data.Monoid.Space
 import Data.Text (Text)
+import Data.Time
 
 import DB
 import Doc.SignatoryLinkID
@@ -23,7 +26,7 @@ import OurPrelude
 -- type, but with underscore at the end (it would be best to
 -- have no underscore, but we also want to export all the
 -- signature types from this module and ghc complains about
--- ambiguous exports in such case.
+-- ambiguous exports in such case).
 
 data ESignature
   = BankIDSignature_ !BankIDSignature
@@ -71,18 +74,38 @@ instance ToSQL SignatureProvider where
 
 ----------------------------------------
 
--- | Insert bank id signature for a given signatory.
-data InsertBankIDSignature = InsertBankIDSignature SignatoryLinkID BankIDSignature
-instance MonadDB m => DBUpdate m InsertBankIDSignature () where
-  update (InsertBankIDSignature slid BankIDSignature{..}) = do
-    runQuery_ . sqlInsert "eid_signatures" $ do
-      sqlSet "signatory_link_id" slid
-      sqlSet "provider" CgiGrpBankID
-      sqlSet "data" bidsSignedText
-      sqlSet "signature" bidsSignature
-      sqlSet "signatory_name" bidsSignatoryName
-      sqlSet "signatory_personal_number" bidsSignatoryPersonalNumber
-      sqlSet "ocsp_response" bidsOcspResponse
+-- | Insert bank id signature for a given signatory or replace the existing one.
+data MergeBankIDSignature = MergeBankIDSignature SignatoryLinkID BankIDSignature
+instance (MonadDB m, MonadMask m) => DBUpdate m MergeBankIDSignature () where
+  update (MergeBankIDSignature slid BankIDSignature{..}) = do
+    loopOnUniqueViolation . withSavepoint "merge_bank_id_signature" $ do
+      runQuery01_ selectSignatorySignTime
+      msign_time :: Maybe UTCTime <- fetchOne unSingle
+      when (isJust msign_time) $ do
+        $unexpectedErrorM "signatory already signed, can't merge signature"
+      success <- runQuery01 . sqlUpdate "eid_signatures" $ do
+        setFields
+        sqlWhereEq "signatory_link_id" slid
+        -- replace the signature only if signatory hasn't signed yet
+        sqlWhere $ parenthesize (toSQLCommand selectSignatorySignTime) <+> "IS NULL"
+      when (not success) $ do
+        runQuery_ . sqlInsertSelect "eid_signatures" "" $ do
+          setFields
+    where
+      selectSignatorySignTime = do
+        sqlSelect "signatory_links" $ do
+          sqlResult "sign_time"
+          sqlWhereEq "id" slid
+
+      setFields :: (MonadState v n, SqlSet v) => n ()
+      setFields = do
+        sqlSet "signatory_link_id" slid
+        sqlSet "provider" CgiGrpBankID
+        sqlSet "data" bidsSignedText
+        sqlSet "signature" bidsSignature
+        sqlSet "signatory_name" bidsSignatoryName
+        sqlSet "signatory_personal_number" bidsSignatoryPersonalNumber
+        sqlSet "ocsp_response" bidsOcspResponse
 
 -- | Get signature for a given signatory.
 data GetESignature = GetESignature SignatoryLinkID

@@ -104,7 +104,7 @@ handleCollectRequest did slid = do
       when (crsProgressStatus == Complete) $ do
         -- all the required attributes are supposed to always
         -- be there, so bail out if this is not the case.
-        dbUpdate $ InsertBankIDSignature slid BankIDSignature {
+        dbUpdate $ MergeBankIDSignature slid BankIDSignature {
           bidsSignatoryName = just_lookup "cert.subject.cn" crsAttributes
         , bidsSignatoryPersonalNumber = just_lookup "cert.subject.serialnumber" crsAttributes
         , bidsSignedText = ctgTextToBeSigned

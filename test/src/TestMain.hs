@@ -32,6 +32,7 @@ import DocAPITest
 import DocControlTest
 import DocStateTest
 import DumpEvidenceTexts
+import ESignatureTest
 import EvidenceAttachmentsTest
 import EvidenceLogTest
 import FileTest
@@ -69,6 +70,7 @@ allTests = [
   , archiveTests
   , docControlTests
   , docStateTests
+  , eSignatureTests
   , evidenceAttachmentsTest
   , evidenceLogTests
   , dumpAllEvidenceTexts
