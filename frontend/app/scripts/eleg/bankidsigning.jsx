@@ -209,7 +209,7 @@ return Backbone.Model.extend({
       var poller = function() {
         new Submit({
           method : 'GET',
-          url : "/s/eid/cgi/grp/collect/" + self.document().documentid() + "/" + self.signatory().signatoryid(),
+          url : "/s/eid/cgi/grp/collect/" + self.document().documentid() + "/" + self.signatory().signatoryid() + '?cachebust=' + Math.random(),
           ajaxsuccess : function(d, s, xhr) {
             var resp = JSON.parse(d);
             if(resp.progress_status && self.checkIsProgressStatus(resp.progress_status)) {
