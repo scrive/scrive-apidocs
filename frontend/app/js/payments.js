@@ -288,7 +288,47 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         }
     });
 
-    var ContactBoxView = Backbone.View.extend({
+    var FeaturesView = Backbone.View.extend({
+      renderFeatures: function() {
+        var view = this;
+        var model = view.model;
+
+        var features = $('<div class="features" />');
+
+        var titleheader = $('<h4 />').text(localization.payments.plans[view.plan].name);
+        if (model.headercolour()) {
+          titleheader.css('color', model.headercolour());
+        }
+        var title = $('<div class="title" />').append(titleheader);
+        features.append(title);
+
+        var plandescription = $('<h4 class="description" />').text(localization.payments.plans[view.plan].description);
+        var fineprint = $('<h4 class="fineprint" />').text(localization.payments.plans[view.plan].fineprint);
+        if (model.headercolour()) {
+          plandescription.css('color', model.headercolour());
+          fineprint.css('color', model.headercolour());
+        }
+        var explanation = $('<div class="explanation" />').append(plandescription).append(fineprint);
+        features.append(explanation);
+
+        var price = $('<span class="price" />').html(localization.payments.plans[view.plan].price);
+        var priceUnit = $('<span class="unit" />').html(localization.payments.priceUnit);
+        if (model.pricecolour()) {
+          price.css('color', model.pricecolour());
+          priceUnit.css('color', model.pricecolour());
+        }
+
+        var cost = $('<div class="cost" />')
+            .append(price).append(priceUnit);
+
+        features.append(cost);
+
+        return features;
+      }
+    });
+
+
+    var ContactBoxView = FeaturesView.extend({
         className: "plan-container",
         initialize: function(args) {
             _.bindAll(this);
@@ -306,22 +346,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             var div = view.$el;
             var div2 = $('<div class="plan" />');
 
-            var features = $('<div class="features" />');
-
-            var titleheader = $('<h4 />').text(localization.payments.plans[view.plan].name);
-            var titlesubtext = $('<p />').html(localization.payments.plans[view.plan].tag);
-            var title = $('<div class="title" />')
-                .append(titleheader)
-                .append(titlesubtext);
-            features.append(title);
-
-            var price = $('<span class="price" />').html(localization.payments.plans[view.plan].price);
-            var priceinfo = $('<p />').text(localization.payments.plans[view.plan].price3);
-            var cost = $('<div class="cost" />')
-                .append(price)
-                .append(priceinfo);
-
-            features.append(cost);
+            var features = this.renderFeatures();
 
             var button = $('<a class="button action action-sign-up" />')
                 .append($('<span class="blue" />')
@@ -396,7 +421,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         }
     });
 
-    var FreeBoxView = Backbone.View.extend({
+    var FreeBoxView = FeaturesView.extend({
         className: "plan-container",
         initialize: function(args) {
             _.bindAll(this);
@@ -419,35 +444,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             var div = view.$el;
             var div2 = $('<div class="plan" />');
 
-            var features = $('<div class="features" />');
-
-            var titleheader = $('<h4 />').text(localization.payments.plans[view.plan].name);
-            if (model.headercolour()) {
-              titleheader.css('color', model.headercolour());
-            }
-            var titlesubtext = $('<p />').html(localization.payments.plans[view.plan].tag);
-            if (model.textcolour()) {
-              titlesubtext.css('color', model.textcolour());
-            }
-            var title = $('<div class="title" />')
-                .append(titleheader)
-                .append(titlesubtext);
-
-            features.append(title);
-
-            var price = $('<span class="price" />').html(localization.payments.plans[view.plan].price);
-            if (model.pricecolour()) {
-              price.css('color', model.pricecolour());
-            }
-            var priceinfo = $('<p />').text(localization.payments.plans[view.plan].price3);
-            if (model.textcolour()) {
-              priceinfo.css('color', model.textcolour());
-            }
-            var cost = $('<div class="cost" />')
-                .append(price)
-                .append(priceinfo);
-
-            features.append(cost);
+            var features = this.renderFeatures();
 
             var button = $('<a class="button button-green action-sign-up" />')
                 .append($('<span class="blue" />')
@@ -467,7 +464,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         }
     });
 
-    var TeamBoxView = Backbone.View.extend({
+    var TeamBoxView = FeaturesView.extend({
         className: "plan-container",
         initialize: function(args) {
             _.bindAll(this);
@@ -491,23 +488,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             var div = view.$el;
             var div2 = $('<div class="plan" />');
 
-            var features = $('<div class="features" />');
-
-            var titleheader = $('<h4 />').text(localization.payments.plans[view.plan].name);
-            var titlesubtext = $('<p />').html(localization.payments.plans[view.plan].tag);
-            var title = $('<div class="title" />')
-                .append(titleheader)
-                .append(titlesubtext);
-
-            features.append(title);
-
-            var price = $('<span class="price" />').html(localization.payments.plans[view.plan].price);
-            var priceinfo = $('<p />').text(localization.payments.plans[view.plan].price3);
-            var cost = $('<div class="cost" />')
-                .append(price)
-                .append(priceinfo);
-
-            features.append(cost);
+            var features = this.renderFeatures();
 
             var button = $('<a class="button action action-sign-up" />')
                 .append($('<span class="blue" />')

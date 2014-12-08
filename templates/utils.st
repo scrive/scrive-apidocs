@@ -62,11 +62,9 @@ FinnishInFinish=Suomi
 ###
 PoweredByScrive=E-signing powered by Scrive
 ###
-FormPricePerDocument=15 SEK
+TeamPricePerMonth=299
 ###
-TeamPricePerMonth=299 SEK
-###
-FormPricePerMonth=3000 SEK
+FormPricePerMonth=3000
 ###
 ### This represents the number of users
 ###

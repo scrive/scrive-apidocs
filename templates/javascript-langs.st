@@ -683,18 +683,23 @@ javascriptLocalisation =
            , placeholder : "$_paymentPlanPlaceholder()$"
            , sendmsg : "$_paymentPlanSendMessage()$"
 	   , numberOfUsers: "$_paymentNumberOfUsers()$"
+           , priceUnit: "SEK/m"
            , plans: {
                       team         : {
                       name : "$_paymentPlanTeam()$",
                       tag :"$_paymentPlanTeamTag()$",
                       price : "$_paymentsTeamPrice()$",
-                      price3 : "$_paymentPlanPerUserPerMonth()$"
+                      price3 : "$_paymentPlanPerUserPerMonth()$",
+                      description: "For teams",
+                      fineprint: "Pay per user"
                     }
                     , form : {
                       name : "$_paymentPlanForm()$",
                       tag : "$_paymentPlanFormTag()$",
                       price : "$_paymentPlanFormPrice()$",
-                      price3 : "$_paymentPlanPerMonthPerDoc()$"
+                      price3 : "$_paymentPlanPerMonthPerDoc()$",
+                      description: "For enterprise wide usage",
+                      fineprint: "Unlimited users. First 500 docs/m free."
                     }
                     , enterprise : {
                       name : "$_paymentPlanEnterprise()$",
@@ -711,14 +716,18 @@ javascriptLocalisation =
                     , store : {
                       name : "Store",
                       tag : "Sign documents on tablets instead of paper.",
-                      price : "400 SEK/m",
-                      price3 : "per store signing documents"
+                      price : "400",
+                      price3 : "per store signing documents",
+                      description: "For in-store use",
+                      fineprint: "Pay per store"
                     }
                     , free : {
                       name : "Free",
                       tag : "Try Scrive e-Sign for free",
-                      price : "0 SEK/m",
-                      price3 : "3 free documents"
+                      price : "0",
+                      price3 : "3 free documents",
+                      description: "For low volumes",
+                      fineprint: "3 documents/mo"
                     }
             }
            , table: { currentplan : "$_paymentPlanCurrentPlan()$"
