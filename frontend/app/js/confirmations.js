@@ -122,9 +122,9 @@ var ConfirmationModel = Backbone.Model.extend({
   extraOption: function() {
             return this.get("extraOption");
   },
-  close : function() {
+  close : function(silent) {
     if (this.view != undefined)
-      this.view.reject();
+      this.view.reject(silent);
   }
 });
 
@@ -377,7 +377,7 @@ window.Confirmation = function (args) {
          return {
            fixOverlay : function() { view.fixHeight(); },
            clear      : function() { view.clear();},
-           close      : function(fast) { model.close();},
+           close      : function(silent) { model.close(silent);}, // Silent will close modal, but not trigger reject action.
            margin     : function() { return model.margin(); },
            absoluteTop: function() { console.log(view.container.offset()); return view.container.offset().top - $(window).scrollTop(); },
            signview   : function() { return model.signview(); },

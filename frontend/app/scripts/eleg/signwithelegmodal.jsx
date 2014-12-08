@@ -11,11 +11,12 @@ return function(args) {
         title : localization.docsignview.eleg.chooseElegModalTitle,
         cssClass: 'grey sign-confirmation-modal',
         content : localization.docsignview.eleg.bankid.rfa20,
+        onReject : args.onReject,
         acceptButton : buttons,
         signview : args.signview,
         margin: args.margin,
         fast: args.fast,
-        width: 520,
+        width: 520
       });
 
       var signThisDeviceButton = new Button({
@@ -23,10 +24,11 @@ return function(args) {
         style: "margin-right: 15px;",
         text:localization.docsignview.eleg.bankid.modalAnotherDevice,
         onClick:function() {
-          self.modal.close();
+          self.modal.close(true);
           new BankIDSigningModal({
               signatory : args.signatory,
               onSuccess  : args.onSuccess,
+              onError    : args.onError,
               thisDevice : false
             });
         }
@@ -36,10 +38,11 @@ return function(args) {
         color: "grey",
         text:localization.docsignview.eleg.bankid.modalThisDevice,
         onClick:function() {
-          self.modal.close();
+          self.modal.close(true);
           new BankIDSigningModal({
               signatory : args.signatory,
               onSuccess  : args.onSuccess,
+              onError    : args.onError,
               thisDevice : true
             });
         }
@@ -56,7 +59,7 @@ return function(args) {
         acceptButton : undefined,
         signview : args.signview,
         margin: args.margin,
-        fast: args.fast,
+        fast: args.fast
       });
       var signModal = $('.sign-confirmation-modal .modal-container');
       var modalHeader = signModal.find('.modal-header');
@@ -64,7 +67,7 @@ return function(args) {
       var modalFooter = signModal.find('.modal-footer');
       // Add a custom close button
       var close = $('<a class="small-device-go-back-button">' + localization.process.cancel + '</a>');
-      close.click(function() { self.modal.close(); });
+      close.click(function() { self.modal.close(); args.onReject(); });
 
       // Remove the modal footer but keep the button (regular or mobile bankid)
       var signButton = new Button({
@@ -74,10 +77,11 @@ return function(args) {
         cssClass: "signbutton",
         text: localization.docsignview.eleg.bankid.mobilebankid,
         onClick:function() {
-          self.modal.close();
+          self.modal.close(true);
           new BankIDSigningModal({
               signatory : args.signatory,
               onSuccess  : args.onSuccess,
+              onError    : args.onError,
               thisDevice : true
             });
         }

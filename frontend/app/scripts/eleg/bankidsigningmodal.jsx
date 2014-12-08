@@ -19,11 +19,12 @@ var addBankIDIframeIfItsNeeded = function(bankID) {
   if (!bankID.isFaultStatus() && !bankID.isWaitingForToken() && bankID.thisDevice() && ($("#bankid-"+ bankID.autoStartToken()).size() == 0)) {
     $("body").append($("<iframe width='0' height='0' class='bankid-iframe'/>").attr('id','bankid-'+ bankID.autoStartToken()).attr('src',bankID.bankIdUrl()));
   }
-}
+};
 
 var clearBankIDIframes = function() {
     $("iframe.bankid-iframe").remove();
-}
+};
+
 return function(args) {
   var bankID = new BankIDSigning({
     signatory : args.signatory,
@@ -48,6 +49,7 @@ return function(args) {
         cancelVisible : false,
         onAccept : function() {
           modal.close();
+          args.onError();
         }
       });
       return true;

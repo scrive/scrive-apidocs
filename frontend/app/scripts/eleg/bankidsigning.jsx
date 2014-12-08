@@ -1,97 +1,97 @@
 define(['Backbone', 'legacy_code'], function(Backbone) {
 
 return Backbone.Model.extend({
-    defaults : {
-      signatory : undefined,
-      onStatusChange : function() {},
-      onSuccess : function() {},
-      onFail : function() {},
-      onCriticalError : function() {},
-      thisDevice : true,
-      pollingInterval : 3000
+    defaults: {
+      signatory: undefined,
+      onStatusChange: function() {},
+      onSuccess: function() {},
+      onFail: function() {},
+      onCriticalError: function() {},
+      thisDevice: true,
+      pollingInterval: 3000
     },
-    triggerStatusChange : function() {
+    triggerStatusChange: function() {
       this.get("onStatusChange")();
     },
-    triggerSuccess : function()  {
+    triggerSuccess: function()  {
       this.get("onSuccess")();
     },
     triggerFail: function(){
       this.get("onFail")();
     },
-    triggerCriticalError : function(xhr) {
+    triggerCriticalError: function(xhr) {
       this.get("onCriticalError")(xhr);
     },
-    document : function() {
+    document: function() {
       return this.signatory().document();
     },
-    signatory : function() {
+    signatory: function() {
       return this.get('signatory');
     },
-    thisDevice : function() {
+    thisDevice: function() {
       return this.get('thisDevice');
     },
-    pollingInterval : function() {
+    pollingInterval: function() {
       return this.get('pollingInterval');
     },
-    setAutoStartToken : function(t) {
-      this.set({'autoStartToken' : t});
+    setAutoStartToken: function(t) {
+      this.set({'autoStartToken': t});
     },
-    autoStartToken : function() {
+    autoStartToken: function() {
       return this.get('autoStartToken');
     },
-    setStatus : function(s) {
-      this.set({'status' : s}, {silent : true});
+    setStatus: function(s) {
+      this.set({'status': s}, {silent: true});
       this.trigger('change');
     },
-    status : function() {
+    status: function() {
       return this.get('status');
     },
     /*
     * State reporting
     */
-    isWaitingForToken : function() {
+    isWaitingForToken: function() {
       return this.autoStartToken() == undefined;
     },
-    isWaitingForStatus : function() {
+    isWaitingForStatus: function() {
       return this.status() == undefined;
     },
-    isProgressStatus : function() {
+    isProgressStatus: function() {
       return this.status() != undefined
           && this.checkIsProgressStatus(this.status());
     },
-    checkIsProgressStatus : function(str) {
+    checkIsProgressStatus: function(str) {
       return str == 'complete'
           || str == 'user_sign'
           || str == 'outstanding_transaction'
           || str == 'no_client'
           || str == 'started';
     },
-    isStatusOutstanding : function() {
+    isStatusOutstanding: function() {
       return this.status() != undefined
           && this.status() == 'outstanding_transaction';
     },
-    isStatusUserSign : function() {
+    isStatusUserSign: function() {
       return this.status() != undefined
           && this.status() == 'user_sign';
     },
-    isStatusNoClient : function() {
+    isStatusNoClient: function() {
       return this.status() != undefined
           && this.status() == 'no_client';
     },
-    isStatusStarted : function() {
+    isStatusStarted: function() {
       return this.status() != undefined
           && this.status() == 'started';
     },
-    isStatusComplete : function() {
+    isStatusComplete: function() {
       return this.status() != undefined
           && this.status() == 'complete';
     },
-    isFaultStatus : function() {
+    isFaultStatus: function() {
       return this.status() != undefined
           && this.checkIsFaultStatus(this.status());
     },
-    checkIsFaultStatus : function(str) {
+    checkIsFaultStatus: function(str) {
       return str == 'invalid_parameters'
           || str == 'already_in_progress'
           || str == 'access_denied_rp'
@@ -104,10 +104,10 @@ return Backbone.Model.extend({
           || str == 'cancelled'
           || str == 'start_failed';
     },
-    canChangeSSN : function() {
+    canChangeSSN: function() {
       return this.signatory().personalnumberField().isClosed();
     },
-    statusMessage : function() {
+    statusMessage: function() {
       var self = this;
       if(self.isWaitingForStatus() && self.thisDevice()) {
         return localization.docsignview.eleg.bankid.rfa13;
@@ -161,12 +161,12 @@ return Backbone.Model.extend({
     /*
     * Data Constructor methods
     */
-    bankIdUrl : function() {
+    bankIdUrl: function() {
       if(this.autoStartToken()) {
         return 'bankid:///?autostarttoken=' + this.autoStartToken() + "&redirect=null";
       }
     },
-    normalizedPersonalNumber : function() {
+    normalizedPersonalNumber: function() {
       var pp = this.signatory().personalnumber();
       pp = pp.replace(/-/g, "");
       if (pp.length <= 10) {
@@ -178,13 +178,13 @@ return Backbone.Model.extend({
     /*
     * Workflow logic functions
     */
-    initiateTransaction : function() {
+    initiateTransaction: function() {
       var self = this;
       new Submit({
-        method : 'POST',
-        url  : "/s/eid/cgi/grp/sign/" + self.document().documentid() + "/" + self.signatory().signatoryid(),
-        personal_number : self.normalizedPersonalNumber(),
-        ajaxsuccess : function(d, s, xhr) {
+        method: 'POST',
+        url: "/s/eid/cgi/grp/sign/" + self.document().documentid() + "/" + self.signatory().signatoryid(),
+        personal_number: self.normalizedPersonalNumber(),
+        ajaxsuccess: function(d, s, xhr) {
           var resp = JSON.parse(d);
           if(resp.auto_start_token) {
             self.setAutoStartToken(resp.auto_start_token);
@@ -199,18 +199,18 @@ return Backbone.Model.extend({
             self.triggerCriticalError(xhr);
           }
         },
-        ajaxerror : function(xhr, textStatus, errorThrown) {
+        ajaxerror: function(xhr, textStatus, errorThrown) {
           self.triggerCriticalError(xhr);
         }
       }).sendAjax();
     },
-    pollCollect : function() {
+    pollCollect: function() {
       var self = this;
       var poller = function() {
         new Submit({
-          method : 'GET',
-          url : "/s/eid/cgi/grp/collect/" + self.document().documentid() + "/" + self.signatory().signatoryid() + '?_=' + Math.random(),
-          ajaxsuccess : function(d, s, xhr) {
+          method: 'GET',
+          url: "/s/eid/cgi/grp/collect/" + self.document().documentid() + "/" + self.signatory().signatoryid() + '?_=' + Math.random(),
+          ajaxsuccess: function(d, s, xhr) {
             var resp = JSON.parse(d);
             if(resp.progress_status && self.checkIsProgressStatus(resp.progress_status)) {
               self.setStatus(resp.progress_status);
@@ -229,7 +229,7 @@ return Backbone.Model.extend({
               self.triggerCriticalError(xhr);
             }
           },
-          ajaxerror : function(xhr, textStatus, errorThrown) {
+          ajaxerror: function(xhr, textStatus, errorThrown) {
             // Don't throw error on ajax error here. Some environments trigger error, when switching to bankid native app.
             setTimeout(poller, self.pollingInterval());
           }

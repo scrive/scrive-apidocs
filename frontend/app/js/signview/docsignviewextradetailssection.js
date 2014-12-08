@@ -15,7 +15,7 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
 
     return new Button({
       color: "green",
-      cssClass : "accept-button",
+      cssClass: "accept-button",
       text: localization.next,
       onClick: function() {
         if (!DocumentExtraDetails.detailsMissing(signatory)) {
@@ -48,7 +48,7 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
       onBlur: function() {
         iti.el().removeClass("active");
       },
-      onChange : function(value) {
+      onChange: function(value) {
           field.setValue(value);
           signatory.trigger("change");
           iti.el().toggleClass("valid",!DocumentExtraDetails.askForEmail(signatory));
@@ -72,7 +72,7 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
       onBlur: function() {
         iti.el().removeClass("active");
       },
-      onChange : function(value) {
+      onChange: function(value) {
           field.setValue(value);
           signatory.trigger("change");
           iti.el().toggleClass("valid",!DocumentExtraDetails.askForName(signatory));
@@ -95,7 +95,7 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
       onBlur: function() {
         iti.el().removeClass("active");
       },
-      onChange : function(value) {
+      onChange: function(value) {
           field.setValue(value);
           signatory.trigger("change");
           iti.el().toggleClass("valid",!DocumentExtraDetails.askForSSN(signatory));
@@ -121,7 +121,7 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
       onBlur: function() {
         iti.el().removeClass("active");
       },
-      onChange : function(value) {
+      onChange: function(value) {
           field.setValue(value);
           signatory.trigger("change");
           iti.el().toggleClass("valid",!DocumentExtraDetails.askForPhone(signatory));
@@ -177,7 +177,7 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
       cssClass: 'grey extradetails-modal',
       title: localization.docsignview.filladitionfields,
       acceptButton: this.acceptButton().el(),
-      width: BrowserInfo.isSmallScreen() ? 825 : 535,
+      width: BrowserInfo.isSmallScreen() ? 825: 535,
       rejectText: localization.cancel,
       margin: this.margin,
       fast: true,
@@ -198,13 +198,13 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
  * Usage:
  *
  *   $('body').append(new DocumentSignSignSection({
- *     model : currentSignatory
+ *     model: currentSignatory
  *     arrow: function() { this.get("arrow"); },
  *     signview: this
  *   }).el);
  */
 window.DocumentSignExtraDetailsSection = Backbone.View.extend({
-  initialize : function(args){
+  initialize: function(args){
     this.arrow = args.arrow;
     this.signview = args.signview;
     this.render();
@@ -225,7 +225,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
       onBlur: function() {
         iti.el().removeClass("active");
       },
-      onChange : function(value) {
+      onChange: function(value) {
           field.setValue(value);
           signatory.trigger("change");
           iti.el().toggleClass("valid",!DocumentExtraDetails.askForEmail(signatory));
@@ -255,7 +255,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
       onBlur: function() {
         iti.el().removeClass("active");
       },
-      onChange : function(value) {
+      onChange: function(value) {
           field.setValue(value);
           signatory.trigger("change");
           iti.el().toggleClass("valid",!DocumentExtraDetails.askForName(signatory));
@@ -286,7 +286,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
       onBlur: function() {
         iti.el().removeClass("active");
       },
-      onChange : function(value) {
+      onChange: function(value) {
           field.setValue(value);
           signatory.trigger("change");
           iti.el().toggleClass("valid",!DocumentExtraDetails.askForSSN(signatory));
@@ -315,7 +315,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
       onBlur: function() {
         iti.el().removeClass("active");
       },
-      onChange : function(value) {
+      onChange: function(value) {
           field.setValue(value);
           signatory.trigger("change");
           iti.el().toggleClass("valid",!DocumentExtraDetails.askForPhone(signatory));
@@ -386,7 +386,7 @@ window.DocumentExtraDetails = Backbone.Model.extend({},
     var field = signatory.personalnumberField();
     return field != undefined &&
           (field.value() == "" || field.value() == undefined || ((field.signatory().elegAuthentication()) && !new SSNForElegValidation().validateData(field.value()))) &&
-          (!field.hasPlacements()) && field.obligatory()
+          (!field.hasPlacements()) && field.obligatory();
   },
   askForPhone: function(signatory) {
     var field = signatory.mobileField();

@@ -98,7 +98,7 @@ window.Submit = Backbone.Model.extend({
 
         if (this.get('ajax'))
             form.ajaxForm({success: function(p1,p2,p3,p4) {
-                              self.get('ajaxsuccess')(p1,p2,p3,p4)
+                              self.get('ajaxsuccess')(p1,p2,p3,p4);
                               form.remove();
                            },
                            error: function(p1,p2,p3,p4) {

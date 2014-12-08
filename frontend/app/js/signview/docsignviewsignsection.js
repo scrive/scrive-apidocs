@@ -1,7 +1,7 @@
 /* Signatory view of document
  * Usage:
  *
- *   $('body').append(new DocumentSignSignSection(model : document).el);
+ *   $('body').append(new DocumentSignSignSection(model: document).el);
  */
 
 define(['React', 'signview/send_sms_pin_modal', 'eleg/signwithelegmodal', 'tinycolor','Backbone', 'legacy_code'], function(React, SendSMSPinModal, SignWithElegModal, tinycolor) {
@@ -11,9 +11,9 @@ window.DocumentSignConfirmation = function(args) {
           if (args.model.document().currentSignatory().smsPinAuthentication()) {
              var modal = new SendSMSPinModal({
                 model: args.model,
-                margin : args.margin,
-                fast : args.fast,
-                onSend : function() {
+                margin: args.margin,
+                fast: args.fast,
+                onSend: function() {
                  args.fast = true;
                  args.margin = modal.modalAbsoluteTop() + "px auto 0";
                  new DocumentSignConfirmationForSigning(args).popup();
@@ -26,21 +26,21 @@ window.DocumentSignConfirmation = function(args) {
 
 window.ReloadDueToErrorModal = function(xhr) {
   mixpanel.track('Error', {
-    Message      : 'Signing failed: reload modal',
-    Status       : xhr.status,
-    ResponseText : xhr.responseText
+    Message : 'Signing failed: reload modal',
+    Status  : xhr.status,
+    ResponseText: xhr.responseText
   });
   var text = $("<div>").append($("<span/>").text(localization.signingErrorMessage1))
     .append("<BR/>")
     .append($("<span/>").text(localization.signingErrorMessage2));
   var button = new Button({color: 'green',
-    style : "margin:20px",
+    style: "margin:20px",
     text: localization.signingErrorReload,
-    onClick : function() {
+    onClick: function() {
       new Submit().send(); // Same as window.location.reload(), but will reset scrolling
     }
   }).el();
-  return ScreenBlockingDialog.open({header:text, content : button});
+  return ScreenBlockingDialog.open({header:text, content: button});
 };
 
 window.DocumentSignConfirmationForSigning = Backbone.View.extend({
@@ -52,11 +52,11 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
     this.margin = args.margin;
   },
 
-  document : function() {
+  document: function() {
     return this.model.document();
   },
 
-  elegMishmatchErrorMessage : function(onName,onNumber) {
+  elegMishmatchErrorMessage: function(onName,onNumber) {
     var document = this.document();
     var signatory = document.currentSignatory();
     var numberCanBeChanged = (signatory.personalnumberField() != undefined && !signatory.personalnumberField().isClosed());
@@ -78,14 +78,14 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
   /**
    *  Block browser from reloading page
    */
-  startBlockingReload : function() {
+  startBlockingReload: function() {
     window.onbeforeunload = function() {return localization.signingInProgressDontCloseWindow;};
   },
 
   /**
    *  Stop blocking browser from reloading page
    */
-  stopBlockingReload : function() {
+  stopBlockingReload: function() {
     window.onbeforeunload = function() {};
   },
   /**
@@ -120,7 +120,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
     };
     postSign();
   },
-  tryToSign : function(args) {
+  tryToSign: function(args) {
     var document = this.document();
     var signatory = document.currentSignatory();
     var self = this;
@@ -155,16 +155,16 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
             }
         };
 
-        var pinParam = signatory.smsPinAuthentication() ? {pin : self.pin} : {};
+        var pinParam = signatory.smsPinAuthentication() ? {pin: self.pin}: {};
 
         document.checksign(function() {
 
-          var modalTop = self.confirmation ? self.confirmation.absoluteTop() : (($(window).height()- 200) /2);
+          var modalTop = self.confirmation ? self.confirmation.absoluteTop(): (($(window).height()- 200) /2);
 
           if (self.confirmation != undefined)  self.confirmation.clear();
           new FlashMessagesCleaner(); // We clean all flash message, so they don't land on screenshot
           self.signinprogressmodal = new SigningInProgressModal({
-                                          document : document,
+                                          document: document,
                                           margin: modalTop + "px auto 0"
                                      });
           self.screenshotDone = false;
@@ -176,9 +176,9 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
               setTimeout(f, 100);
               return false;
             }
-            trackTimeout('Accept', {'Accept' : 'sign document'});
+            trackTimeout('Accept', {'Accept': 'sign document'});
 
-            var pinParam = signatory.smsPinAuthentication() ? {pin : self.pin} : {};
+            var pinParam = signatory.smsPinAuthentication() ? {pin: self.pin}: {};
             document.sign(errorCallback, self.onSignedDocument, pinParam).send();
           };
           f();
@@ -189,11 +189,11 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
     var signatory = document.currentSignatory();
     var self = this;
     var button =  new Button({
-      size: BrowserInfo.isSmallScreen() ? "big" : "small",
+      size: BrowserInfo.isSmallScreen() ? "big": "small",
       color: "green",
       cssClass: 'greybg signbutton',
-      text: this.signaturesPlaced ? localization.process.signbuttontextfromsignaturedrawing : localization.process.signbuttontext,
-      oneClick : true,
+      text: this.signaturesPlaced ? localization.process.signbuttontextfromsignaturedrawing: localization.process.signbuttontext,
+      oneClick: true,
       onClick: function() {
        self.tryToSign({ onFail: function() {
          button.setNotClicked();
@@ -203,7 +203,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
     });
 
     button.el().css('margin-top', '-10px')
-               .css('margin-bottom', BrowserInfo.isSmallScreen() ? '10px' : '0px');
+               .css('margin-bottom', BrowserInfo.isSmallScreen() ? '10px': '0px');
     return button.el();
   },
 
@@ -238,7 +238,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
     }
   },
 
-  pinCodeInput : function() {
+  pinCodeInput: function() {
     var self = this;
     var p = $("<p>");
     p.append("<span/>").text(localization.docsignview.pinSigning.enterSMSPin);
@@ -255,7 +255,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
             iti.el().removeClass("active");
           },
           inputtype: 'text',
-          cssClass : "pin-input " + (BrowserInfo.isSmallScreen() ? "small-screen" : ""),
+          cssClass: "pin-input " + (BrowserInfo.isSmallScreen() ? "small-screen": ""),
           name: 'pin'
         });
 
@@ -300,24 +300,34 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
 
     if(signatory.elegAuthentication()) {
       new SignWithElegModal({
-        signview: this.margin ? false : self.signview, // margin overrides signview
-        margin : this.margin || (isSmallScreen ? '150px auto 0px' : undefined),
-        signatory : signatory,
+        signview: this.margin ? false: self.signview, // margin overrides signview
+        margin: this.margin || (isSmallScreen ? '150px auto 0px': undefined),
+        signatory: signatory,
         fast: this.fast,
-        onSuccess  : function() {
+        onSuccess: function() {
           self.tryToSign({});
+        },
+        onReject: function() {
+          if (arrow) {
+            arrow.enable();
+          }
+        },
+        onError: function() {
+          if (arrow) {
+            arrow.enable();
+          }
         }
       });
     } else {
       self.confirmation = new Confirmation({
-        cssClass: 'grey sign-confirmation-modal' + (isSmallScreen ? ' small-device' : ''),
+        cssClass: 'grey sign-confirmation-modal' + (isSmallScreen ? ' small-device': ''),
         title: title,
-        signview: this.margin ? false : self.signview, // margin overrides signview
+        signview: this.margin ? false: self.signview, // margin overrides signview
         acceptButton: this.createSignButtonElems(),
         rejectText: localization.cancel,
         // use default width for eleg, as there is less text
-        width: (isSmallScreen ? 825 : 520),
-        margin : this.margin || (isSmallScreen ? '150px auto 0px' : undefined),
+        width: (isSmallScreen ? 825: 520),
+        margin: this.margin || (isSmallScreen ? '150px auto 0px': undefined),
         onReject: function() {
           if (arrow) {
             arrow.enable();
@@ -359,7 +369,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
 });
 
 window.DocumentSignSignSection = Backbone.View.extend({
-   initialize : function(args){
+   initialize: function(args){
       this.render();
    },
    render: function() {
@@ -415,10 +425,10 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                             editText: localization.reject.editMessage,
                                             rejectText: localization.cancel,
                                             acceptColor: "red",
-                                            oneClick : true,
+                                            oneClick: true,
                                             onAccept: function(customtext) {
                                                 trackTimeout('Accept',
-                                                             {'Accept' : 'reject document'},
+                                                             {'Accept': 'reject document'},
                                                              function() {
                                                                  document.currentSignatory().reject(customtext).sendAjax(
                                                                    function() {
