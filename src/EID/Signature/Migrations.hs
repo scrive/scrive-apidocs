@@ -2,7 +2,6 @@ module EID.Signature.Migrations where
 
 import DB
 import DB.Checks
-
 import EID.Signature.Tables
 
 createEIDSignaturesTable :: MonadDB m => Migration m

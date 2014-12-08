@@ -5,7 +5,9 @@ module EID.CGI.GRP.Transaction.Model (
   ) where
 
 import Control.Applicative
+import Control.Monad
 import Control.Monad.Catch
+import Control.Monad.State
 import Data.Text (Text)
 import Happstack.Server
 
@@ -15,6 +17,7 @@ import DB
 import Doc.SignatoryLinkID
 import KontraMonad
 import Session.Model
+import Session.SessionID
 
 data CgiGrpTransaction = CgiGrpTransaction {
   cgtSignatoryLinkID :: !SignatoryLinkID
@@ -25,14 +28,27 @@ data CgiGrpTransaction = CgiGrpTransaction {
 
 ----------------------------------------
 
--- | Insert new transaction or replace the existing one if exists.
+-- | Insert new transaction or replace the existing one.
 data MergeCgiGrpTransaction = MergeCgiGrpTransaction CgiGrpTransaction
-instance (CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m, ServerMonad m)
+instance (CryptoRNG m, KontraMonad m, MonadDB m, MonadMask m, ServerMonad m)
   => DBUpdate m MergeCgiGrpTransaction () where
     update (MergeCgiGrpTransaction CgiGrpTransaction{..}) = do
       sid <- getNonTempSessionID
-      runQuery_ $ rawSQL "SELECT merge_cgi_grp_transaction($1, $2, $3, $4, $5)"
-        (cgtSignatoryLinkID, sid, ctgTextToBeSigned, cgtTransactionID, cgtOrderRef)
+      loopOnUniqueViolation . withSavepoint "merge_cgi_grp_transaction" $ do
+        success <- runQuery01 . sqlUpdate "cgi_grp_transactions" $ do
+          setFields sid
+          sqlWhereEq "signatory_link_id" cgtSignatoryLinkID
+        when (not success) $ do
+          runQuery_ . sqlInsert "cgi_grp_transactions" $ do
+            setFields sid
+      where
+        setFields :: (MonadState v n, SqlSet v) => SessionID -> n ()
+        setFields sid = do
+          sqlSet "signatory_link_id" cgtSignatoryLinkID
+          sqlSet "session_id" sid
+          sqlSet "text_to_be_signed" ctgTextToBeSigned
+          sqlSet "transaction_id" cgtTransactionID
+          sqlSet "order_ref" cgtOrderRef
 
 data GetCgiGrpTransaction = GetCgiGrpTransaction SignatoryLinkID
 instance (KontraMonad m, MonadDB m, MonadThrow m)

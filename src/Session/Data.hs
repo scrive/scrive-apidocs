@@ -1,6 +1,5 @@
 module Session.Data (
-    SessionID
-  , tempSessionID
+    module Session.SessionID
   , Session(..)
   , emptySession
   , session

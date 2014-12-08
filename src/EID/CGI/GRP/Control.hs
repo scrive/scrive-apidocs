@@ -35,8 +35,8 @@ import Network.SOAP.Transport.Curl
 import OurPrelude
 import Routing
 import Templates
-import Util.SignatoryLinkUtils
 import Util.MonadUtils
+import Util.SignatoryLinkUtils
 import qualified Log
 
 grpRoutes :: Route (KontraPlus Response)

@@ -35,7 +35,6 @@ import User.Tables
 kontraFunctions :: [SQLFunction]
 kontraFunctions = [
     insertDocumentSessionToken
-  , mergeCgiGrpTransaction
   ]
 
 kontraTables :: [Table]

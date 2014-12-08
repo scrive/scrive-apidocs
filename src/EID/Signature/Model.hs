@@ -10,8 +10,8 @@ module EID.Signature.Model (
 import Control.Monad.Catch
 import Data.ByteString (ByteString)
 import Data.Int
-import Data.Text (Text)
 import Data.Monoid.Space
+import Data.Text (Text)
 
 import DB
 import Doc.SignatoryLinkID

@@ -14,9 +14,9 @@ module EID.CGI.GRP.Data (
   ) where
 
 import Control.Applicative
+import Data.ByteString (ByteString)
 import Data.Maybe
 import Data.Monoid.Space
-import Data.ByteString (ByteString)
 import Data.Text (Text)
 import Data.Unjson
 import Network.SOAP.Parsing.Cursor
