@@ -177,7 +177,7 @@ documentcurrentsignorder doc =
 documentprevioussignorder :: Document -> SignOrder
 documentprevioussignorder doc =
     case filter (isJust . maybesigninfo) (documentsignatorylinks doc) of
-         [] -> SignOrder 0
+         [] -> SignOrder (-1) -- Allow for signorder 0 (default value of an integer when JSON serializing and not setting a value)
          xs -> maximum $ map signatorysignorder xs
 
 -- | True if signatory is a viewer and all other document partners' signorder are smaller
