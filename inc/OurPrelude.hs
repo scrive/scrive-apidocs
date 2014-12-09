@@ -65,7 +65,7 @@ read = [|
   |]
 
 fromJust :: Q Exp
-fromJust = [| fromMaybe $ $unexpectedError "fromJust received Nothing" |]
+fromJust = [| fromMaybe $ $unexpectedError ("fromJust received Nothing"::String) |]
 
 unexpectedError :: Q Exp
 unexpectedError = [|
