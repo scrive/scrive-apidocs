@@ -632,16 +632,24 @@
       }
 
       &.to-fill-now {
-      border-style: solid;
-      border-width : 2px;
-        overflow: hidden;
+        border-style: solid;
+        border-width : 2px;
 
         .placedfield-placement-wrapper {
           overflow: hidden;
         }
 
         .placedcheckbox {
+          background: url(~"@{img-base-url}/checkbox-unchecked.png") no-repeat center center;
           padding: 9px;
+
+          &:active {
+            background: url(~"@{img-base-url}/checkbox-active.png") no-repeat center center;
+          }
+
+          &.checked {
+            background: url(~"@{img-base-url}/checkbox-checked.png") no-repeat center center;
+          }
         }
       }
 
