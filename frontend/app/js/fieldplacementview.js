@@ -108,6 +108,10 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
             return helper;
         },
         start: function(event, ui) {
+            if ($('html')[0].scrollWidth <= $(window).width()) {
+              // there's no horizontal scrollbar, so dragging away should not create one
+              $('html').css('overflow-x', 'hidden');
+            }
             initFP();
             if( placement!=undefined ) {
                 if (placement.typeSetter != undefined) {
@@ -130,6 +134,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
             }
         },
         stop: function() {
+            $('html').css('overflow-x', 'auto');
             if( placement!=undefined && !droppedInside ) {
                 placement.remove();
                 var f = placement.field();
