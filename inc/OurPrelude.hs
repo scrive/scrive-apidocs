@@ -15,8 +15,8 @@ module OurPrelude (
   , module Prelude
   ) where
 
-import Control.Monad.Catch
 import Control.Exception (throw)
+import Control.Monad.Catch
 import Data.Maybe hiding (fromJust)
 import Data.Typeable
 import Language.Haskell.TH
