@@ -78,7 +78,7 @@ class Helpers
     if t1.instance_variable_get("@killed") or not t1[:output] then
       puts 'falling back to non-selenium screenshot taking method'
       passwd_file = ENV['HOME'] + '/.vnc_pwdfile'
-      `vncsnapshot -passwd #{passwd_file} 127.0.0.1 #{path}`
+      `vncsnapshot -verbose -passwd #{passwd_file} 127.0.0.1 #{path}`
     end
     print " DONE\n"
   end

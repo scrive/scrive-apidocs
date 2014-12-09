@@ -160,15 +160,15 @@ cleanUnimportantAfterSigning :: [DocumentEvidenceEvent] -> [DocumentEvidenceEven
 cleanUnimportantAfterSigning = go Set.empty
   where go _ [] = []
         go m (e:es) | evType e `elem` [Current SignatoryLinkVisited, Current MarkInvitationReadEvidence]
-                       && any (`Set.member` m) (ids e)
-                    = go m es
+                       && ids e `Set.member` m
+                    = go m es -- the only place for skipping events, but these events always have evSigLink == Just ...
                     | evType e == Current SignDocumentEvidence
-                    = e : go (m `Set.union` Set.fromList (ids e)) es
+                    = e : go (Set.insert (ids e) m) es
                     | evType e == Current PreparationToPendingEvidence
                     = e : go Set.empty es
                     | otherwise
                     = e : go m es
-        ids e = catMaybes [Left <$> evUserID e, Right <$> evSigLink e]
+        ids e = (evUserID e, evSigLink e)
 
 -- Events that should be considered as performed as author even is actor states different.
 authorEvents  :: EvidenceEventType -> Bool

@@ -196,8 +196,8 @@ var SelectExpandedView = React.createClass({
       var labelStyle = _.extend({width: model.textWidth()},model.style());
       var optionStyle = {border:model.border(), minWidth:model.optionsWidth()};
       return (
-        <div className={'select select-exp ' + model.cssClass()}  style={mainStyle}>
-          <div className='select-button' onClick={this.handleExpand}>
+        <div className={'select select-exp ' + model.cssClass()}  style={mainStyle} onClick={this.handleExpand}>
+          <div className='select-button'>
             <div className='select-button-left'/>
             <div className='select-button-label' style={labelStyle}>
               {model.name()}
@@ -214,6 +214,7 @@ var SelectExpandedView = React.createClass({
                 <li key={i}
                   onClick={function() {
                     o.selected();
+                    return false;
                   }}
                 >
                   <span style={model.style()}>
@@ -314,10 +315,11 @@ var SelectView = React.createClass({
       }
       return (
         <div className={'select ' + model.cssClass()}  style={mainStyle}
+             onClick={this.handleExpand}
              onMouseEnter={this.handleMouseEnter}
              onMouseOut={this.handleMouseOut}
              >
-          <div className='select-button' onClick={this.handleExpand}>
+          <div className='select-button'>
             <div className='select-button-left'/>
             <div className='select-button-label' style={labelStyle}>
               {model.name()}
