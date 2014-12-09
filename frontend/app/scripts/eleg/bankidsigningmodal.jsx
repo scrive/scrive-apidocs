@@ -7,7 +7,7 @@ var updateLoadingDialogWithBankIDStatus = function(bankID) {
   if (!bankID.isFaultStatus() && !bankID.isWaitingForToken()) {
     div.append($("<p/>").html(bankID.statusMessage()));
     if (bankID.thisDevice() && (bankID.isStatusOutstanding() || bankID.isStatusNoClient()) && bankID.activeForAtLeast5Sec()) {
-      div.append($("<a class='button button-green button-tiny'/>").text("Open BankID application").click(function() {
+      div.append($("<a class='button button-green button-tiny'/>").text(localization.docsignview.eleg.bankid.rfa18).click(function() {
         window.location = bankID.bankIdUrl();
       }));
     }

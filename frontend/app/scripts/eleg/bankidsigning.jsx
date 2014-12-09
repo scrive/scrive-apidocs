@@ -121,11 +121,11 @@ return Backbone.Model.extend({
       } else if (self.status() == 'no_client') {
         return localization.docsignview.eleg.bankid.rfa1;
       } else if (self.status() == 'already_in_progress') {
-        return localization.docsignview.eleg.bankid.alreadyInProgress;
+        return localization.docsignview.eleg.bankid.rfa3;
       } else if (self.status() == 'cancelled') {
         return localization.docsignview.eleg.bankid.rfa3;
       } else if (self.status() == 'retry') {
-        return localization.docsignview.eleg.bankid.retry;
+        return localization.docsignview.eleg.bankid.rfa5;
       } else if (self.status() == 'internal_error') {
         return localization.docsignview.eleg.bankid.rfa5;
       } else if (self.status() == 'user_cancel') {
@@ -143,10 +143,8 @@ return Backbone.Model.extend({
         return localization.docsignview.eleg.bankid.rfa13;
       } else if (self.status() == 'outstanding_transaction' && !self.thisDevice()){
         return localization.docsignview.eleg.bankid.rfa1;
-      } else if (self.status() == 'started' && BrowserInfo.isSmallScreen()) {
-        return localization.docsignview.eleg.bankid.rfa14Mobile;
-      } else if (self.status() == 'started' && !BrowserInfo.isSmallScreen()){
-        return localization.docsignview.eleg.bankid.rfa14Computer;
+      } else if (self.status() == 'started') {
+        return localization.docsignview.eleg.bankid.rfa14;
       } else if (self.status() == 'certificate_err') {
         return localization.docsignview.eleg.bankid.rfa16;
       } else if (self.status() == 'start_failed') {

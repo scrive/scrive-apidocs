@@ -615,21 +615,16 @@ javascriptLocalisation =
                       , rfa9 : "$_elegBankIDRFA9()$"
                       , rfa12 : "$_elegBankIDRFA12()$"
                       , rfa13 : "$_elegBankIDRFA13()$"
-                      , rfa14Computer : "$_elegBankIDRFA14Computer()$"
-                      , rfa14Mobile : "$_elegBankIDRFA14Mobile()$"
+                      , rfa14 : "$_elegBankIDRFA14()$"
                       , rfa15Computer : "$_elegBankIDRFA15Computer()$"
                       , rfa15Mobile : "$_elegBankIDRFA15Mobile()$"
                       , rfa16 : "$_elegBankIDRFA16()$"
                       , rfa17 : "$_elegBankIDRFA17()$"
                       , rfa18 : "$_elegBankIDRFA18()$"
-                      , rfa19 : "$_elegBankIDRFA19()$"
                       , rfa20 : "$_elegBankIDRFA20()$"
                       , accessDenied : "$_elegBankAccessDenied()$"
                       , invalidParametersCanChange : "$_elegBankInvalidParametersCanChange()$"
                       , invalidParametersCantChange : "$_elegBankInvalidParametersCantChange()$"
-                      , retry : "$_elegBankRetry()$"
-                      , alreadyInProgress : "$_elegBankAlreadyInProgress()$"
-                      , tryToOpenAgain :  "$_elegBankTryToOpenAgain()$"
                   }
              }
         }
