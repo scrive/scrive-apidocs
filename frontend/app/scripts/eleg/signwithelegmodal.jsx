@@ -5,12 +5,15 @@ define(['eleg/bankidsigningmodal', 'Backbone', 'legacy_code'], function(BankIDSi
 
 return function(args) {
     var self = this;
+    var copy = $(localization.docsignview.eleg.bankid.signConfirmationText);
+    copy.find('.put-signatory-name-here').text(args.signatory.name());
+
     if (!BrowserInfo.isSmallScreen()) {
       var buttons = $("<div/>");
       self.modal = new Confirmation({
-        title : localization.docsignview.eleg.chooseElegModalTitle,
+        title : localization.docsignview.eleg.bankid.signConfirmationTitle,
         cssClass: 'grey sign-confirmation-modal',
-        content : localization.docsignview.eleg.bankid.rfa20,
+        content : $("<div/>").append(copy).append($("<p/>").text(localization.docsignview.eleg.bankid.rfa20)),
         onReject : args.onReject,
         acceptButton : buttons,
         signview : args.signview,
@@ -20,8 +23,8 @@ return function(args) {
       });
 
       var signThisDeviceButton = new Button({
-        color: "grey",
-        style: "margin-right: 15px;",
+        color: "black",
+        cssClass : "other-sign-button",
         text:localization.docsignview.eleg.bankid.modalAnotherDevice,
         onClick:function() {
           self.modal.close(true);
@@ -35,7 +38,7 @@ return function(args) {
       });
 
       var signOtherDeviceButton = new Button({
-        color: "grey",
+        color: "green",
         text:localization.docsignview.eleg.bankid.modalThisDevice,
         onClick:function() {
           self.modal.close(true);
@@ -49,13 +52,11 @@ return function(args) {
       });
       buttons.append(signThisDeviceButton.el()).append(signOtherDeviceButton.el());
     } else {
-      var copy = $(localization.process.signatorysignmodalcontent);
-      copy.find('.put-signatory-name-here').text(args.signatory.name());
       self.modal = new Confirmation({
         width: 825,
-        title : localization.process.signatorysignmodaltitleeleg, //localization.docsignview.eleg.chooseElegModalTitle,
+        title : "",
         cssClass: 'grey sign-confirmation-modal small-device',
-        content : copy, //localization.docsignview.eleg.bankid.rfa20,
+        content : copy,
         acceptButton : undefined,
         signview : args.signview,
         margin: args.margin,

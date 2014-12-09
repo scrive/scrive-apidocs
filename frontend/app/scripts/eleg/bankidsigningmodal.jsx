@@ -3,10 +3,10 @@
 define(['eleg/bankidsigning', 'legacy_code'], function(BankIDSigning, _legacyCode) {
 
 var updateLoadingDialogWithBankIDStatus = function(bankID) {
-  var div = $("<div style='text-align:center'/>");
+  var div = $("<div/>");
   if (!bankID.isFaultStatus() && !bankID.isWaitingForToken()) {
     div.append($("<p/>").html(bankID.statusMessage()));
-    if (bankID.thisDevice() && (bankID.isStatusOutstanding() || bankID.isStatusNoClient())) {
+    if (bankID.thisDevice() && (bankID.isStatusOutstanding() || bankID.isStatusNoClient()) && bankID.activeForAtLeast5Sec()) {
       div.append($("<a class='button button-green button-tiny'/>").text("Open BankID application").click(function() {
         window.location = bankID.bankIdUrl();
       }));

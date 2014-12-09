@@ -604,6 +604,8 @@ javascriptLocalisation =
                       , bankid: "$_bankid()$"
                       , mobilebankid: "$_mobileBankID()$"
                       , faultModalTitle : "$_elegBankIDFaultModalTitle()$"
+                      , signConfirmationTitle : "$_elegSignConfirmationTitle()$"
+                      , signConfirmationText : "<p>$_elegSignConfirmationText()$</p>"
                       , rfa1 : "$_elegBankIDRFA1()$"
                       , rfa2 : "$_elegBankIDRFA2()$"
                       , rfa3 : "$_elegBankIDRFA3()$"

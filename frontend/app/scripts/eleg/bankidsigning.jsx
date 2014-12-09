@@ -8,7 +8,8 @@ return Backbone.Model.extend({
       onFail: function() {},
       onCriticalError: function() {},
       thisDevice: true,
-      pollingInterval: 3000
+      pollingInterval: 3000,
+      activationTime : 0
     },
     triggerStatusChange: function() {
       this.get("onStatusChange")();
@@ -25,6 +26,10 @@ return Backbone.Model.extend({
     document: function() {
       return this.signatory().document();
     },
+    activeForAtLeast5Sec: function() {
+      // Activation time is initiated when we get autostart token.
+      return new Date().getTime() - this.get("activationTime") > 5000;
+    },
     signatory: function() {
       return this.get('signatory');
     },
@@ -35,7 +40,7 @@ return Backbone.Model.extend({
       return this.get('pollingInterval');
     },
     setAutoStartToken: function(t) {
-      this.set({'autoStartToken': t});
+      this.set({"autoStartToken": t, "activationTime" : new Date().getTime()});
     },
     autoStartToken: function() {
       return this.get('autoStartToken');

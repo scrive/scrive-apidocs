@@ -34,9 +34,12 @@ localizationTest _ = testGroup "Localization Test"
 testTranslationFilesAreJSONSAndSorted :: Assertion
 testTranslationFilesAreJSONSAndSorted = do
   forM_ (allValues :: [Lang]) $ \l -> do
-    mjson <- readFile $ "texts/" ++ codeFromLang l ++ "/texts.json"
-    case decode mjson of
-      Ok js -> isSorted js
+    mjson1 <- readFile $ "texts/" ++ codeFromLang l ++ "/texts.json"
+    mjson2 <- readFile $ "texts/" ++ codeFromLang l ++ "/events.json"
+    mjson3 <- readFile $ "texts/" ++ codeFromLang l ++ "/questionnaire.json"
+    mjson4 <- readFile $ "texts/" ++ codeFromLang l ++ "/signview.json"
+    case (decode mjson1,decode mjson2,decode mjson3,decode mjson4) of
+      (Ok js1,Ok js2,Ok js3,Ok js4) -> isSorted js1 >> isSorted js2 >> isSorted js3 >> isSorted js4
       _ -> assertFailure $ "Translation file is not a valid JSON for lang " ++ codeFromLang l
 
 
