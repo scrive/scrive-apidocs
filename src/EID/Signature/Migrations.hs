@@ -18,6 +18,7 @@ createEIDSignaturesTable = Migration {
     , tblColumn { colName = "signature", colType = BinaryT, colNullable = False }
     , tblColumn { colName = "certificate", colType = BinaryT }
     , tblColumn { colName = "signatory_name", colType = TextT }
+    , tblColumn { colName = "signatory_personal_number", colType = TextT }
     , tblColumn { colName = "ocsp_response", colType = BinaryT }
     ]
   , tblChecks = [
