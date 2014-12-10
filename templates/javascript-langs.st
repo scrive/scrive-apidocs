@@ -78,9 +78,6 @@ javascriptLocalisation =
                           eleg : {
                                      subhead : "$_pageDocumentForSignContentElegSubhead()$"
                                    , body: "$_pageDocumentForSignContentElegBody()$ "
-                                   , mobile : {
-                                         startingMobileBankID : "$_bankidStartApp()$"
-                                   }
                                    , failed : "$_signElegFailed()$"
                                    , mismatch : {
                                          mismatchOnNameAndNumberCantChange : "$_mismatchOnNameAndNumberCantChange()$"
