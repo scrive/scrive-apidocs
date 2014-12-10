@@ -76,7 +76,7 @@ moduleExps (Module _ _ _ _ _ _ decls) = S.unions $ map declExps decls
 
 -- TODO: declExps should cover more patterns
 declExps :: Decl -> S.Set Exp
-declExps (PatBind _ _ _ rhs _) = rhsExps rhs
+declExps (PatBind _ _ rhs binds') = rhsExps rhs `S.union` bindsExps binds'
 declExps (FunBind matches) = S.unions $ map matchExps matches
 declExps _ = S.empty
 
@@ -139,7 +139,11 @@ expExps e = e `S.insert`
       RightArrApp e1 e2 -> expExps e1 `S.union` expExps e2
       LeftArrHighApp e1 e2 -> expExps e1 `S.union` expExps e2
       RightArrHighApp e1 e2 -> expExps e1 `S.union` expExps e2
-      MultiIf ifs -> S.unions $ map (\(IfAlt e1 e2) -> expExps e1 `S.union` expExps e2) ifs
+      MultiIf ifs -> S.unions $ map guardedRhsExps ifs
+      ParArray _ -> error "ParArray"
+      ParArrayFromTo _ _ -> error "ParArrayFromTo"
+      ParArrayComp _ _ -> error "ParArrayComp"
+      ParArrayFromThenTo _ _ _ -> error "ParArrayFromThenTo"
       LCase alts -> S.unions $ map altExps alts
 
 
@@ -148,14 +152,8 @@ bindsExps (BDecls decls) = S.unions $ map declExps decls
 bindsExps (IPBinds _) = S.empty
 
 altExps :: Alt -> S.Set Exp
-altExps (Alt _ _ guardedAlts binds') = guardedAltsExps guardedAlts `S.union` bindsExps binds'
+altExps (Alt _ _ rhs binds') = rhsExps rhs `S.union` bindsExps binds'
 
-guardedAltsExps :: GuardedAlts -> S.Set Exp
-guardedAltsExps (UnGuardedAlt e) = expExps e
-guardedAltsExps (GuardedAlts guardedAlts) = S.unions $ map guardedAltExps guardedAlts
-
-guardedAltExps :: GuardedAlt -> S.Set Exp
-guardedAltExps (GuardedAlt _ stmts e) = (S.unions $ map stmtExps stmts) `S.union` expExps e
 
 stmtExps :: Stmt -> S.Set Exp
 stmtExps (Generator _ _ e) = expExps e
@@ -206,6 +204,7 @@ expTemplateName (App (Var (UnQual (Ident funName))) (Lit (String template)))
                      , "flashMessage"
                      , "flashMessageWithFieldName"
                      , "templateName"
+                     , "render"
                      ] = Just template
     | otherwise = Nothing
 expTemplateName (App (App (Var (UnQual (Ident funName))) _) (Lit (String template)))
@@ -228,9 +227,10 @@ expTemplateName _ = Nothing
 
 -- takes a string template and returns names of (immediately) dependent templates
 templateDeps :: String -> S.Set String
-templateDeps tmpl = fromMaybe S.empty $ S.fromList <$> immDeps
+templateDeps tmpl = fromMaybe S.empty $ S.fromList <$> deps
     where parsedTmpl = newSTMP tmpl :: StringTemplate String
           (_, _, immDeps) = checkTemplate parsedTmpl
+          deps = filter (/= "noescape") <$> immDeps
 
 -- recursive template dependency scanner
 -- takes a map from template names to template strings (all known templates in the system)
