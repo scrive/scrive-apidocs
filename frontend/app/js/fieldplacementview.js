@@ -142,8 +142,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                 if(f &&
                    f.addedByMe &&
                    f.value() === '' &&
-                   f.placements().length <= 1 &&
-                   !f.isLastIdentificationField()) {
+                   f.placements().length <= 1) {
                     s.deleteField(field);
                     placement.setField(undefined);
                     f.removePlacement(placement);
@@ -322,14 +321,6 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                             Subcontext: 'inline'
                         });
                         if(v === 'optional') {
-                            if (field.isLastNonOptionalIdentificationField())
-                            {
-                               new FlashMessage({
-                                  color: "red",
-                                  content : localization.designview.cantMakeAllIdentificationFieldsOptionalText
-                                });
-                               return true;
-                            }
                             field.makeOptional();
                             field.setShouldBeFilledBySender(false);
                             field.authorObligatory = 'optional';

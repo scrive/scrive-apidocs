@@ -70,18 +70,15 @@ approximateActor :: (MonadDB m, MonadThrow m, TemplatesMonad m) => Bool -> Docum
 approximateActor useIdentifier doc dee | systemEvents $ evType dee = return "Scrive"
                                        | otherwise =
   case evSigLink dee of
-    Just sl -> if (isAuthor sl)
-             then authorName
-             else case getId sl of
-                    "" -> renderTemplate_ "_notNamedParty" >>= \t -> return $ "(" ++ t ++ ")"
-                    name -> return name
-    Nothing -> case (evUserID dee) of
+    Just sl -> return $ getId sl
+    Nothing -> case evUserID dee of
                Just uid -> if (isAuthor (doc,uid))
                             then authorName
                             else do
                               muser <- dbQuery $ GetUserByID uid
                               case muser of
-                                Just user -> return $ getId user
+                                Just user -> return $ getSmartName user ++
+                                                      if useIdentifier then " (" ++ getEmail user ++ ")" else ""
                                 _ -> return "Scrive" -- This should not happend
                _ ->  if (authorEvents $ evType dee)
                         then authorName
@@ -90,8 +87,8 @@ approximateActor useIdentifier doc dee | systemEvents $ evType dee = return "Scr
   where authorName = case (getAuthorSigLink doc) of
                         Just sl -> return $ getId sl
                         Nothing -> renderTemplate_ "_authorParty"
-        getId :: HasSomeUserInfo a => a -> String
-        getId | useIdentifier = getIdentifier
+        getId :: SignatoryLink -> String
+        getId | useIdentifier = getIdentifier doc
               | otherwise     = getSmartName
 
 eventJSValue :: (MonadDB m, MonadThrow m, TemplatesMonad m) => Document -> DocumentEvidenceEventWithSignatoryLink -> JSONGenT m ()
@@ -194,8 +191,8 @@ eventForVerificationPage = not . (`elem` map Current [AttachGuardtimeSealedFileE
 
 -- | Produce simplified text for an event.  If actor is provided, the
 -- text is for the verification page, otherwise it is for the archive.
-simplyfiedEventText :: (HasLang doc, MonadDB m, MonadThrow m, TemplatesMonad m)
-  => Maybe String -> doc -> DocumentEvidenceEventWithSignatoryLink -> m String
+simplyfiedEventText :: (MonadDB m, MonadThrow m, TemplatesMonad m)
+  => Maybe String -> Document -> DocumentEvidenceEventWithSignatoryLink -> m String
 simplyfiedEventText mactor doc dee = case evType dee of
   Obsolete CancelDocumenElegEvidence -> renderEvent "CancelDocumenElegEvidenceText"
   Current et -> renderEvent $ eventTextTemplateName et
@@ -221,7 +218,7 @@ simplyfiedEventText mactor doc dee = case evType dee of
               LegacyMobileBankIDSignature_{} -> Nothing
               BankIDSignature_ BankIDSignature{..} -> Just bidsSignatoryName
       F.value "text" $ strip . filterTagsNL <$> evMessageText dee
-      F.value "signatory" $ getIdentifier <$> mslink
+      F.value "signatory" $ getIdentifier doc <$> mslink
       -- signatory email: there are events that are missing affected
       -- signatory, but happen to have evEmail set to what we want
       F.value "signatory_email" $ (getEmail <$> mslink) <|> evEmail dee
@@ -274,8 +271,8 @@ filterTagsNL (a:rest) = (if isSpace a then ' ' else a): (filterTagsNL rest)
 filterTagsNL [] = []
 
 -- | Generate evidence of intent in self-contained HTML for inclusion as attachment in PDF.
-evidenceOfIntentHTML :: TemplatesMonad m => String -> [(SignatoryLink, SignatoryScreenshots.SignatoryScreenshots)] -> m String
-evidenceOfIntentHTML title l = do
+evidenceOfIntentHTML :: TemplatesMonad m => Document -> String -> [(SignatoryLink, SignatoryScreenshots.SignatoryScreenshots)] -> m String
+evidenceOfIntentHTML doc title l = do
   renderTemplate "evidenceOfIntent" $ do
     F.value "documenttitle" title
     let values Nothing = return ()
@@ -283,7 +280,7 @@ evidenceOfIntentHTML title l = do
           F.value "time" $ formatTimeUTC (Screenshot.time s) ++ " UTC"
           F.value "image" $ imgEncodeRFC2397 $ unBinary $ Screenshot.image s
     F.objects "entries" $ for l $ \(sl, entry) -> do
-      F.value "signatory"  $ getIdentifier sl
+      F.value "signatory"  $ getIdentifier doc sl
       F.value "ip"         $ show . signipnumber <$> maybesigninfo sl
       F.object "first"     $ values (SignatoryScreenshots.first entry)
       F.object "signing"   $ values (SignatoryScreenshots.signing entry)

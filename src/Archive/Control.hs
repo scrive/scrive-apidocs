@@ -82,8 +82,10 @@ handleDelete = do
              postDocumentCanceledChange =<< theDocument
            else do
              -- user must be a regular signatory
-             let Just SignatoryLink{signatorylinkid} = getSigLinkFor user doc
-             dbUpdate $ RejectDocument signatorylinkid  Nothing actor
+             let Just (sl@SignatoryLink{signatorylinkid}) = getSigLinkFor user doc
+             ctx <- getContext
+             sl_actor <- signatoryActor ctx sl
+             dbUpdate $ RejectDocument signatorylinkid  Nothing sl_actor
              theDocument >>= postDocumentRejectedChange signatorylinkid
         dbUpdate $ ArchiveDocument (userid user) actor
 

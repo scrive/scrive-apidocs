@@ -70,11 +70,11 @@ import qualified HostClock.Model as HC
 import qualified Log
 
 personFromSignatory :: (MonadDB m, MonadMask m, TemplatesMonad m)
-                    => TimeZoneName -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> m Seal.Person
-personFromSignatory tz boxImages signatory = do
+                    => Document -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> m Seal.Person
+personFromSignatory doc boxImages signatory = do
     stime <- case  maybesigninfo signatory of
                   Nothing -> return ""
-                  Just si -> formatUTCTimeForVerificationPage tz $ signtime si
+                  Just si -> formatUTCTimeForVerificationPage (documenttimezonename doc) $ signtime si
     signedAtText <- if (null stime)
                        then return ""
                     else renderTemplate "_contractsealingtextssignedAtText" $ F.value "time" stime
@@ -87,7 +87,7 @@ personFromSignatory tz boxImages signatory = do
                             then renderTemplate "_contractsealingtextspersonalNumberText" $ F.value "idnumber" personalnumber
                          else return ""
 
-    return $ Seal.Person { Seal.fullname = getFullName signatory
+    return $ Seal.Person { Seal.fullname = getIdentifier doc signatory
                 , Seal.company = getCompanyName signatory
                 , Seal.email = getEmail signatory
                 , Seal.phone = getMobile signatory
@@ -106,18 +106,16 @@ personFromSignatory tz boxImages signatory = do
                 }
 
 personExFromSignatoryLink :: (MonadDB m, MonadMask m, TemplatesMonad m)
-                          =>  TimeZoneName -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> m (Seal.Person, String)
-personExFromSignatoryLink tz boxImages sl@SignatoryLink{..} = do
-  person <- personFromSignatory tz boxImages sl
-  return ((person {
+                          =>  Document -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> m Seal.Person
+personExFromSignatoryLink doc boxImages sl@SignatoryLink{..} = do
+  person <- personFromSignatory doc boxImages sl
+  return person {
        Seal.emailverified    = signatorylinkdeliverymethod == EmailDelivery
      , Seal.fullnameverified = False
      , Seal.companyverified  = False
      , Seal.numberverified   = True
      , Seal.phoneverified    = (signatorylinkdeliverymethod == MobileDelivery) || (signatorylinkauthenticationmethod == SMSPinAuthentication)
-     })
-    , map head $ words $ getFullName sl
-    )
+     }
 
 fieldsFromSignatory :: (BS.ByteString,BS.ByteString) -> SignatoryLink -> [Seal.Field]
 fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryLink{signatoryfields} =
@@ -227,7 +225,7 @@ findOutAttachmentDesc tmppath document = do
                     F.value "pages" numberOfPages
 
         attachedByText <- renderLocalTemplate document "_documentAttachedBy" $ do
-                                     F.value "identifier" $ getIdentifier sl
+                                     F.value "identifier" $ getIdentifier document sl
 
         attachmentNumText <- renderLocalTemplate document "_attachedDocument" $ do
                                      F.value "number" num
@@ -247,11 +245,13 @@ findOutAttachmentDesc tmppath document = do
                                x -> reverse (drop 1 x)
 
 
-evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m) => String -> [SignatoryLink] -> m Seal.SealAttachment
-evidenceOfIntentAttachment title sls = do
+evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m) => Document -> m Seal.SealAttachment
+evidenceOfIntentAttachment doc = do
+  let title = documenttitle doc
+  let sls = documentsignatorylinks doc
   ss <- dbQuery $ GetSignatoryScreenshots (map signatorylinkid sls)
   let sortBySignTime = sortBy (on compare (fmap signtime . maybesigninfo . fst))
-  html <- evidenceOfIntentHTML title $ sortBySignTime [ (sl, s) | (i, s) <- ss, sl <- filter ((==i) . signatorylinkid) sls ]
+  html <- evidenceOfIntentHTML doc title $ sortBySignTime [ (sl, s) | (i, s) <- ss, sl <- filter ((==i) . signatorylinkid) sls ]
   return $ Seal.SealAttachment { Seal.fileName = "Evidence_of_Intent.html"
                                , Seal.mimeType = Nothing
                                , Seal.fileContent = BS.fromString html
@@ -348,22 +348,24 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
                                }
 
   in do
-      signatories <- sequence $ [ personExFromSignatoryLink (documenttimezonename document) boxImages s
+      persons <- sequence $ [ personExFromSignatoryLink document boxImages s
                         | s <- documentsignatorylinks document
                         , signatoryispartner $ s
                     ]
 
-      secretaries <- sequence $ [ personFromSignatory (documenttimezonename document) boxImages $ s
+      secretaries <- sequence $ [ personFromSignatory document boxImages $ s
                         | s <- documentsignatorylinks document
                         , not . signatoryispartner $ s
                     ]
 
       initiator <- if (signatoryispartner authorsiglink)
                     then return Nothing
-                    else Just <$> (personFromSignatory (documenttimezonename document) boxImages authorsiglink)
+                    else Just <$> (personFromSignatory document boxImages authorsiglink)
 
-      let (persons, initialsx) = unzip signatories
-      let initials = intercalate ", " initialsx
+      let initials = intercalate ", " [ signatoryInitials document s
+                                      | s <- documentsignatorylinks document
+                                      , signatoryispartner s
+                                      ]
 
       -- Log.mixlog_ "Creating seal spec from file."
       -- Remove events induced by resealing and non-signing party activities
@@ -379,7 +381,7 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
       let evidenceattachment = Seal.SealAttachment { Seal.fileName = "Evidence_Log.html"
                                                    , Seal.mimeType = Nothing
                                                    , Seal.fileContent = BS.fromString htmllogs }
-      evidenceOfIntent <- evidenceOfIntentAttachment (documenttitle document) (documentsignatorylinks document)
+      evidenceOfIntent <- evidenceOfIntentAttachment document
 
       -- documentation files
       let docAttachments =
@@ -397,7 +399,7 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
              F.value "pages" numberOfPages
 
       attachedByText <- renderLocalTemplate document "_documentSentBy" $ do
-        F.value "identifier" $ getIdentifier authorsiglink
+        F.value "identifier" $ getIdentifier document authorsiglink
 
       mainDocumentText <- renderLocalTemplate document "_mainDocument"
                           $ (return ())

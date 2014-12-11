@@ -1088,20 +1088,12 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                 onRemove: (!field.canBeRemoved() ?
                             undefined :
                             function() {
-                              if (field.isLastIdentificationField()) {
-                                new FlashMessage({
-                                  color: "red",
-                                  content : localization.designview.cantRemoveAllIdentificationFieldsText
-                                });
-                              }
-                              else {
                                 mixpanel.track('Click remove field', {
                                     Type: field.type(),
                                     Name: field.name()
                                 });
                                 field.removeAllPlacements();
                                 sig.deleteField(field);
-                              }
                             })
             });
 

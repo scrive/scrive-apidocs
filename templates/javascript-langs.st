@@ -419,8 +419,6 @@ javascriptLocalisation =
                , confirmation : "$_designViewCustomMessageConfirmation()$"
                , preview      : "$_designViewCustomMessagePreview()$"
              }
-             , cantRemoveAllIdentificationFieldsText : "$_cantRemoveAllIdentificationFieldsText()$"
-             , cantMakeAllIdentificationFieldsOptionalText : "$_cantMakeAllIdentificationFieldsOptionalText()$"
              , signModalContentAuthorOnly : "<p>$_designViewSignModalContentAuthorOnly()$</p>"
              , signModalContentAuthorOnlyWithName : "<p>$_designViewSignModalContentAuthorOnlyWithName()$</p>"
              , signModalContentEleg : "<p>$_designViewSignModalContentEleg()$</p>"

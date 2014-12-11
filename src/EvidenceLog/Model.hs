@@ -31,13 +31,13 @@ import qualified Text.StringTemplates.Fields as F
 import DB
 import Doc.DocStateData (SignatoryLink(..), AuthenticationMethod(..), DeliveryMethod(..))
 import Doc.DocumentID
-import Doc.DocumentMonad (DocumentMonad, theDocumentID)
+import Doc.DocumentMonad (DocumentMonad, theDocumentID, theDocument)
 import Doc.SignatoryLinkID
 import IPAddress
 import MinutesTime
 import User.Model
 import Util.Actor
-import Util.HasSomeUserInfo (getEmail, getSignatoryIdentifier)
+import Util.HasSomeUserInfo (getEmail, getIdentifier)
 import Version
 import qualified HostClock.Model as HC
 
@@ -79,7 +79,7 @@ evidenceLogText event textFields masl mmsg actor = do
    msignatory <-
      case masl of
        Nothing -> return Nothing
-       Just sl -> Just <$> getSignatoryIdentifier sl
+       Just sl -> Just .  flip getIdentifier sl <$> theDocument
    let fields = do
          F.value "full" True
          F.value "actor" $ actorWho actor

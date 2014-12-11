@@ -180,8 +180,6 @@
 "_blockingWillCancelSubtext1":"You may <a class='put-link-to-payments-here'>renew your subscription</a> at any time.",
 "_button":"Try sending a sample document",
 "_cannotWithdrawAlreadySignedDocument":"The document can't be withdrawn since it is already signed.",
-"_cantMakeAllIdentificationFieldsOptionalText":"At least one of these fields must be mandatory: email, phone or ID number.",
-"_cantRemoveAllIdentificationFieldsText":"At least one of these fields must be included: email, phone or ID number.",
 "_cantSendReminderNoUser":"We could not send password reminder, because we don't have user with such email.",
 "_cantSendReminderTooMuch":"We have now sent too many password reminders to this email. Please wait 24h to try again.",
 "_changeEmail":"Change email",

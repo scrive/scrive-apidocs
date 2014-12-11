@@ -415,16 +415,6 @@ window.Field = Backbone.Model.extend({
             return false;
         return true;
     },
-    isIdentificationField : function() {
-      return this.isEmail() || this.isMobile() || this.isSSN();
-    },
-    isLastIdentificationField : function() {
-       return this.isIdentificationField() && (this.signatory().identificationFields().length == 1);
-    },
-    isLastNonOptionalIdentificationField : function() {
-       var nonOptionalIdentificationFieldCount = _.filter(this.signatory().identificationFields(),function(f) {return !f.isOptional()}).length;
-       return this.isIdentificationField() && !this.isOptional() && (nonOptionalIdentificationFieldCount == 1);
-    },
     bindBubble: function() {
         var field = this;
         field.bind('change', field.bubbleSelf);

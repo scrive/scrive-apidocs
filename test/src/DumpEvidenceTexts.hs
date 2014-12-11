@@ -15,34 +15,47 @@ import Text.StringTemplates.Templates (TemplatesMonad, renderTemplate)
 import qualified Text.StringTemplates.Fields as F
 
 import DB (MonadDB)
-import Doc.DocStateData (SignatoryField(..), SignatoryLink(..), FieldType(..), DeliveryMethod(..))
-import Doc.DocumentID (unsafeDocumentID)
-import Doc.DocumentMonad (withDocumentID)
+import Doc.DocStateData (Document(..), SignatoryField(..), SignatoryLink(..), FieldType(..), DeliveryMethod(..), documentlang)
+import Doc.DocumentMonad (withDocumentID, withDocument, theDocument)
+import Doc.SignatoryLinkID (unsafeSignatoryLinkID)
 import Doc.SignatoryFieldID
 import EvidenceLog.Model (DocumentEvidenceEvent'(..), EvidenceEventType(..), CurrentEvidenceEventType(..), evidenceLogText)
 import EvidenceLog.View (simpleEvents, simplyfiedEventText, eventForVerificationPage)
 import MinutesTime
 import Templates (runTemplatesT)
-import TestingUtil (testThat)
+import TestingUtil (testThat, addNewRandomUser, addRandomDocumentWithAuthor)
 import TestKontra (TestEnvSt, teOutputDirectory, teGlobalTemplates)
-import User.Model (codeFromLang, Lang)
+import User.Model (codeFromLang, Lang, allLangs)
 import Util.Actor (Actor(..), actorEmail, actorUserID, actorAPIString, actorIP)
+import Util.SignatoryLinkUtils (getAuthorSigLink)
 import Utils.Default (defaultValue)
 import Utils.Prelude (for)
 import Version (versionID)
 
 dumpAllEvidenceTexts :: TestEnvSt -> Test
 dumpAllEvidenceTexts env = testThat "Generating all evidence texts" env $ do
-  forM_ [minBound .. maxBound] $ \lang -> do
+  author <- addNewRandomUser
+  did <- addRandomDocumentWithAuthor author
+  withDocumentID did $ forM_ allLangs $ \lang -> do
     gts <- asks teGlobalTemplates
     now <- currentTime
-    t <- runTemplatesT (lang, gts) $ dumpEvidenceTexts now lang
+    t <- runTemplatesT (lang, gts) $ theDocument >>= dumpEvidenceTexts now lang
     case teOutputDirectory env of
       Just d  -> liftIO $ writeFile (d </> "evidence-texts-" ++ codeFromLang lang ++ ".html") t
       Nothing -> t == t `seq` return ()
 
-dumpEvidenceTexts :: (MonadDB m, MonadThrow m, TemplatesMonad m) => UTCTime -> Lang -> m String
-dumpEvidenceTexts now lang = do
+dumpEvidenceTexts :: (MonadDB m, MonadThrow m, TemplatesMonad m) => UTCTime -> Lang -> Document -> m String
+dumpEvidenceTexts now lang doc' = do
+  let Just author_sl' = getAuthorSigLink doc'
+      author_sl = author_sl'
+            { signatoryfields =
+                  [ SignatoryField (unsafeSignatoryFieldID 0) FirstNameFT "Adam" True False []
+                  , SignatoryField (unsafeSignatoryFieldID 0) LastNameFT "Author" True False []
+                  , SignatoryField (unsafeSignatoryFieldID 0) EmailFT "author@example.com" True False []
+                  ]
+            , signatoryispartner = True
+            , signatorylinkid = unsafeSignatoryLinkID 1
+            }
   let Just time = parseTime' "%d-%m-%Y" "01-01-2013"
   let actor = Actor { actorTime = time
                     , actorClientTime = Nothing
@@ -55,8 +68,7 @@ dumpEvidenceTexts now lang = do
                     , actorWho = "the author (" ++ fromJust (actorEmail actor) ++ ")"
                     }
   let evidencetypes = [minBound .. maxBound]
-  let sl = Just defaultValue
-  let asl = Just defaultValue
+  let asl = defaultValue
             { signatoryfields =
                   [ SignatoryField (unsafeSignatoryFieldID 0) FirstNameFT "Sven" True False []
                   , SignatoryField (unsafeSignatoryFieldID 0) LastNameFT "Signatory" True False []
@@ -64,7 +76,9 @@ dumpEvidenceTexts now lang = do
                   ]
             , signatoryispartner = True
             , signatorylinkdeliverymethod = EmailAndMobileDelivery
+            , signatorylinkid = unsafeSignatoryLinkID 2
             }
+  let doc = doc' { documentsignatorylinks = [author_sl, asl] }
   let messageText = Just "This is a <b>message text.</b>"
   let fields t = do
         when (t `elem` [AutomaticReminderSent, ReminderSend, DeleteSigAttachmentEvidence, SaveSigAttachmentEvidence]) $ do
@@ -85,8 +99,8 @@ dumpEvidenceTexts now lang = do
                        F.value "page" $ page
                        F.value "x" $ show $ realFracToDecimal 3 $ x
                        F.value "y" $ show $ realFracToDecimal 3 $ y
-  let mkev text msgtext evt =
-          DocumentEvidenceEvent { evDocumentID = unsafeDocumentID 0
+  let mkev msgtext evt =
+          DocumentEvidenceEvent { evDocumentID = documentid doc
                                 , evTime = time
                                 , evClientTime = Nothing
                                 , evClientName = Nothing
@@ -97,9 +111,9 @@ dumpEvidenceTexts now lang = do
                                 , evEmail = actorEmail actor
                                 , evUserID = actorUserID actor
                                 , evIP4 = actorIP actor
-                                , evSigLink = sl
+                                , evSigLink = Nothing
                                 , evAPI = actorAPIString actor
-                                , evAffectedSigLink = asl
+                                , evAffectedSigLink = Just asl
                                 , evMessageText = msgtext
                                 }
   evs <- (sortBy (compare `on` (\(evt, _, _, _) -> show evt)) <$>) $
@@ -107,9 +121,9 @@ dumpEvidenceTexts now lang = do
        let text = case evt of
                     _ | evt `elem` [SMSPinSendEvidence, SMSPinDeliveredEvidence] -> Just "+481234567890"
                       | otherwise -> messageText
-       elog <- withDocumentID (unsafeDocumentID 0) $ evidenceLogText evt (fields evt) asl messageText actor
+       elog <- withDocument doc $ evidenceLogText evt (fields evt) (Just asl) text actor
        let simpletext mactor = if simpleEvents (Current evt) && (isNothing mactor || eventForVerificationPage ev)
-                               then Just <$> simplyfiedEventText mactor lang ev
+                               then Just <$> simplyfiedEventText mactor doc{ documentlang = lang } ev
                                else return Nothing
               where ev = mkev elog text evt
        vp <- simpletext (actorEmail actor)

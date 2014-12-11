@@ -85,7 +85,7 @@ systemActor time = Actor {
 -- author to be logged in
 authorActor :: Context -> User -> Actor
 authorActor ctx u = (userActor ctx u) {
-    actorWho = "the author " ++ getIdentifier u
+    actorWho = "the author "  ++ getFullName u ++ " (" ++ getEmail u ++ ")"
 }
 
 -- | For an action requiring a signatory with siglinkid and token (such as signing)
@@ -118,17 +118,18 @@ userActor :: Context -> User -> Actor
 userActor ctx u = (contextActor ctx) {
     actorUserID = Just (userid u)
   , actorEmail = Just (getEmail u)
-  , actorWho = "the user " ++ getIdentifier u
+  , actorWho = "the user " ++ getFullName u ++ " (" ++ getEmail u ++ ")"
 }
 
 -- | For actions performed by an admin
 adminActor :: Context -> User -> Actor
 adminActor ctx u = (userActor ctx u) {
-    actorWho = "the admin (" ++ (getEmail u) ++ ")"
+    actorWho = "the admin " ++ getFullName u ++ " (" ++ getEmail u ++ ")"
 }
 
 apiActor :: Context -> User -> String -> Actor
-apiActor ctx u apistring = (userActor ctx u) {
+apiActor ctx u apistring = a{
     actorAPIString = Just apistring
-  , actorWho = "the user (" ++ show (getEmail u) ++ ") (using the API)"
+  , actorWho = actorWho a ++ " (using the API)"
   }
+  where a = userActor ctx u
