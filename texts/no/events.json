@@ -57,7 +57,7 @@
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Dokumentet ble signert ved bruk av e-ID som autentifiseringsmetode.",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Dokumentet ble signert ved bruk av PIN fra SMS som autentifiseringsmetode.",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Dokumentet ble signert.",
-"_SignDocumentEvidenceTextSimpleNotArchiveEleg":"",
+"_SignDocumentEvidenceTextSimpleNotArchiveEleg":"Dokumentet ble signert av $actor$ med e-ID som autentifiseringsmetode. Navnet som ble sendt tilbake fra e-ID var \"$eid_signatory_name$\".",
 "_SignDocumentEvidenceTextSimpleNotArchiveSMSPin":"Dokumentet ble signert av $actor$ ved bruk av PIN fra SMS som autentifiseringsmetode.",
 "_SignDocumentEvidenceTextSimpleNotArchiveStandard":"Dokumentet ble signert av $actor$.",
 "_SignWithELegFailureEvidenceTextSimple":"Scrive avviste $signatory$ sitt forsøk på å signere dokumentet. Grunnen var at identitetsinformasjonen til $signatory$ ikke samsvarte med identitetsinformasjonen mottatt fra det eksterne e-ID-systemet.",

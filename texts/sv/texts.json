@@ -814,7 +814,7 @@
 "_tablestatusesSent":"Skickat",
 "_tablestatusesSigned":"Signerat",
 "_tablestatusesViewedOnline":"Granskat online",
-"_tbsYouSignWithEleg":"",
+"_tbsYouSignWithEleg":"Jag signerar dokumentet \"$document_title$\" med transaktionsnummer \"$document_id$\" initierat av \"$author_name$\".",
 "_tbsYouSignWithElegHtml":"Du signerar <span class='put-document-name-here' /> med transaktionsnummer <span class='put-document-id-here'/>. Signerande parter är: <span class='put-signing-parties-here'/>",
 "_textFieldDone":"Stäng",
 "_textFieldFor":"Part",

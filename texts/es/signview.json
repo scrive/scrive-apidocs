@@ -176,7 +176,7 @@
 "_smsReminderSigned":"$personname$, el documento firmado $documenttitle$ se le ha reenviado a petición de $creatorname$. Encuentre el documento siguiendo este link: $link$",
 "_subtitleSignedClosedByEmail":"El documento firmado le ha sido enviado por email.",
 "_subtitleSignedClosedByEmailMobile":"El documento firmado le ha sido enviado por email y SMS.",
-"_subtitleSignedClosedByMobile":"",
+"_subtitleSignedClosedByMobile":"El documento firmado le ha sido enviado por SMS.",
 "_subtitleSignedNotClosedByEmail":"Cuando cada parte haya firmado, el documento final se le enviará a usted por email.",
 "_subtitleSignedNotClosedByEmailMobile":"Cuando cada parte haya firmado, el documento final se le enviará a usted por email y SMS.",
 "_subtitleSignedNotClosedByMobile":"Cuando cada parte haya firmado, el documento final se le enviará a usted por SMS.",
