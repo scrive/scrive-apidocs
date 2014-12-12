@@ -10,7 +10,7 @@ return function(args) {
 
     var signThisDeviceButton = new Button({
       cssClass : "other-sign-button signbutton",
-      text: BrowserInfo.isSmallScreen() ? localization.docsignview.eleg.bankid.smallScreen.modalAnotherDevice : localization.docsignview.eleg.bankid.modalAnotherDevice,
+      text:localization.docsignview.eleg.bankid.modalAnotherDevice,
       onClick:function() {
         self.modal.close(true);
         new BankIDSigningModal({
@@ -23,8 +23,8 @@ return function(args) {
     });
 
     var signOtherDeviceButton = new Button({
+      text:localization.docsignview.eleg.bankid.modalThisDevice,
       cssClass: "signbutton",
-      text: BrowserInfo.isSmallScreen() ? localization.docsignview.eleg.bankid.smallScreen.modalThisDevice : localization.docsignview.eleg.bankid.modalThisDevice,
       onClick:function() {
         self.modal.close(true);
         new BankIDSigningModal({

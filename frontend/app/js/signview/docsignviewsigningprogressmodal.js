@@ -11,7 +11,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
   var SigningInProgressModalModel = Backbone.Model.extend({
     defaults : function() { // Making defaults a function will allow us to change of language on the run
        return {
-        actions : [localization.signinginprogressmodal.action1],
+        actions : [localization.signinginprogressmodal.action1,localization.signinginprogressmodal.action2],
         currentActionIndex : 0,
         done: false,
         canFinish : false

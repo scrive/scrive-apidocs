@@ -575,11 +575,7 @@ javascriptLocalisation =
              }
              , eleg : {
                   bankid : {
-                        smallScreen: {
-                            modalAnotherDevice : "$_elegBankIDSmallScreenModalAnotherDevice()$"
-                          , modalThisDevice : "$_elegBankIDSmallScreenModalThisDevice()$"
-                        }
-                      , modalAnotherDevice : "$_elegBankIDModalAnotherDevice()$"
+                        modalAnotherDevice : "$_elegBankIDModalAnotherDevice()$"
                       , modalThisDevice : "$_elegBankIDModalThisDevice()$"
                       , mobilebankid: "$_mobileBankID()$"
                       , faultModalTitle : "$_elegBankIDFaultModalTitle()$"
