@@ -43,7 +43,7 @@
 "_elegBankInvalidParametersCanChange":"Wrong personal ID number. Change and try again.",
 "_elegBankInvalidParametersCantChange":"Wrong personal ID number. Contact the document sender to change.",
 "_elegSignConfirmationText":"<strong class='put-signatory-name-here'/>, you will sign using eID. When you have signed your signature will be registered by the e-signing service Scrive.",
-"_elegSignConfirmationTitle":"Sign with eID",
+"_elegSignConfirmationTitle":"Sign with BankID",
 "_email":"Email",
 "_enterPhoneForPinDelivery":"Enter your phone number",
 "_enterSMSPin":"Enter your SMS PIN",
