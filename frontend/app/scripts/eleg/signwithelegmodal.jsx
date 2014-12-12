@@ -13,7 +13,7 @@ return function(args) {
       self.modal = new Confirmation({
         title : localization.docsignview.eleg.bankid.signConfirmationTitle,
         cssClass: 'grey sign-confirmation-modal',
-        content : $("<div/>").append($("<p/>").text(localization.docsignview.eleg.bankid.rfa20)),
+        content : $("<div/>").append(copy).append($("<p/>").text(localization.docsignview.eleg.bankid.rfa20)),
         onReject : args.onReject,
         acceptButton : buttons,
         signview : args.signview,
@@ -23,7 +23,8 @@ return function(args) {
       });
 
       var signThisDeviceButton = new Button({
-        cssClass : "other-sign-button signbutton",
+        color: "black",
+        cssClass : "other-sign-button",
         text:localization.docsignview.eleg.bankid.modalAnotherDevice,
         onClick:function() {
           self.modal.close(true);
@@ -37,8 +38,8 @@ return function(args) {
       });
 
       var signOtherDeviceButton = new Button({
+        color: "green",
         text:localization.docsignview.eleg.bankid.modalThisDevice,
-        cssClass: "signbutton",
         onClick:function() {
           self.modal.close(true);
           new BankIDSigningModal({
@@ -49,7 +50,7 @@ return function(args) {
             });
         }
       });
-      buttons.append(signOtherDeviceButton.el()).append(signThisDeviceButton.el());
+      buttons.append(signThisDeviceButton.el()).append(signOtherDeviceButton.el());
     } else {
       self.modal = new Confirmation({
         width: 825,
