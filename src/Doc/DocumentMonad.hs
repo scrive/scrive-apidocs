@@ -72,5 +72,6 @@ withDocumentM dm = runRowCacheTM dm . unDocumentT . (lockDocument >>)
 
 -- | Lock a document so that other transactions that attempt to lock or update the document will wait until the current transaction is done.
 lockDocument :: DocumentMonad m => m ()
-lockDocument = updateDocumentWithID $ \did ->
+lockDocument = do
+  did <- theDocumentID
   runQuery_ $ "SELECT TRUE FROM documents WHERE id =" <?> did <+> "FOR UPDATE"
