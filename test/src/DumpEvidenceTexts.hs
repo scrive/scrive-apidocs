@@ -85,7 +85,7 @@ dumpEvidenceTexts now lang = do
                        F.value "page" $ page
                        F.value "x" $ show $ realFracToDecimal 3 $ x
                        F.value "y" $ show $ realFracToDecimal 3 $ y
-  let mkev text evt =
+  let mkev text msgtext evt =
           DocumentEvidenceEvent { evDocumentID = unsafeDocumentID 0
                                 , evTime = time
                                 , evClientTime = Nothing
@@ -100,15 +100,18 @@ dumpEvidenceTexts now lang = do
                                 , evSigLink = sl
                                 , evAPI = actorAPIString actor
                                 , evAffectedSigLink = asl
-                                , evMessageText = messageText
+                                , evMessageText = msgtext
                                 }
   evs <- (sortBy (compare `on` (\(evt, _, _, _) -> show evt)) <$>) $
          forM (evidencetypes) $ \evt -> do
+       let text = case evt of
+                    _ | evt `elem` [SMSPinSendEvidence, SMSPinDeliveredEvidence] -> Just "+481234567890"
+                      | otherwise -> messageText
        elog <- withDocumentID (unsafeDocumentID 0) $ evidenceLogText evt (fields evt) asl messageText actor
        let simpletext mactor = if simpleEvents (Current evt) && (isNothing mactor || eventForVerificationPage ev)
                                then Just <$> simplyfiedEventText mactor lang ev
                                else return Nothing
-              where ev = mkev elog evt
+              where ev = mkev elog text evt
        vp <- simpletext (actorEmail actor)
        av <- simpletext Nothing
        return (evt, vp, av, elog)

@@ -214,9 +214,12 @@ simplyfiedEventText mactor doc dee = case evType dee of
         when (evType dee == Current SignDocumentEvidence) $ do
           dbQuery (GetESignature $ signatorylinkid slink) >>= \case
             Nothing -> return ()
-            Just esig -> case esig of
-              BankIDSignature_ BankIDSignature{..} -> do
-                F.value "eid_signatory_name" bidsSignatoryName
+            Just esig -> F.value "eid_signatory_name" $ case esig of
+              LegacyBankIDSignature_{} -> Nothing
+              LegacyTeliaSignature_{} -> Nothing
+              LegacyNordeaSignature_{} -> Nothing
+              LegacyMobileBankIDSignature_{} -> Nothing
+              BankIDSignature_ BankIDSignature{..} -> Just bidsSignatoryName
       F.value "text" $ strip . filterTagsNL <$> evMessageText dee
       F.value "signatory" $ getIdentifier <$> mslink
       -- signatory email: there are events that are missing affected

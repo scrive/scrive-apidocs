@@ -194,7 +194,7 @@ propsToLocalization path props = do
           aux (NN (JSPropertyNameandValue (NT (JSIdentifier varName) _ _) _ [NN (JSObjectLiteral _ props' _)])) = do
               children <- propsToLocalization (path ++ "." ++ varName) props'
               return $ Map.singleton varName children
-          aux (NN (JSPropertyNameandValue (NT (JSIdentifier varName) _ _) _ [NN (JSFunctionExpression _ _ _ _ _ _ _ _)])) =
+          aux (NN (JSPropertyNameandValue (NT (JSIdentifier varName) _ _) _ [NN (JSFunctionExpression _ _ _ _ _ _)])) =
               return $ Map.singleton varName $ Value "<function>"
           aux (NN (JSPropertyNameandValue (NT (JSIdentifier varName) _ _) _ [NN (JSArrayLiteral _ _ _)])) =
               return $ Map.singleton varName $ Value "<array>"

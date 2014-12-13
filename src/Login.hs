@@ -101,9 +101,6 @@ handleLoginPost = do
                     | verifyPassword userpassword passwd
                     && ipIsOK -> do
                         Log.mixlog_ $ "User " ++ show email ++ " logged in"
-                        _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
-                          lang = ctxlang ctx
-                        }
                         muuser <- dbQuery $ GetUserByID (userid user)
 
                         case muuser of

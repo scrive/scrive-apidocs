@@ -1132,13 +1132,18 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpd
            sqlWhereSignatoryIsPartner
            sqlWhereSignatoryHasNotSigned
            case (mesig, mpin) of
-                (Just _, _)        -> sqlWhereSignatoryAuthenticationMethodIs ELegAuthentication
-                (_, Just _)       -> sqlWhereSignatoryAuthenticationMethodIs SMSPinAuthentication -- We should check pin here, but for now we do it in controler
-                (Nothing,Nothing) -> sqlWhereSignatoryAuthenticationMethodIs StandardAuthentication
+             (Just _, _) -> sqlWhereSignatoryAuthenticationMethodIs ELegAuthentication
+             (_, Just _) -> sqlWhereSignatoryAuthenticationMethodIs SMSPinAuthentication -- We should check pin here, but for now we do it in controler
+             (Nothing, Nothing) -> sqlWhereSignatoryAuthenticationMethodIs StandardAuthentication
            sqlWhereSignatoryLinkMagicHashIs mh
       updateMTimeAndObjectVersion (actorTime actor)
     sl <- theDocumentID >>= \docid -> query $ GetSignatoryLinkByID docid slid Nothing
-    let signatureFields = case (mesig, mpin) of
+    let legacy_signature_error = $unexpectedError "signing with legacy signatures is not possible"
+        signatureFields = case (mesig, mpin) of
+          (Just LegacyBankIDSignature_{}, _) -> legacy_signature_error
+          (Just LegacyTeliaSignature_{}, _) -> legacy_signature_error
+          (Just LegacyNordeaSignature_{}, _) -> legacy_signature_error
+          (Just LegacyMobileBankIDSignature_{}, _) -> legacy_signature_error
           (Just (BankIDSignature_ BankIDSignature{..}), _) -> do
             F.value "eleg" True
             F.value "signatory_name" bidsSignatoryName
@@ -1147,10 +1152,10 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpd
             F.value "provider" ("BankID" :: String)
             F.value "signature" $ B64.encode . unBinary $ bidsSignature
             F.value "ocsp_response" $ B64.encode . unBinary $ bidsOcspResponse
-          (_, Just _) -> do
+          (Nothing, Just _) -> do
             F.value "sms_pin" True
             F.value "phone" $ getMobile sl
-          _ -> return ()
+          (Nothing, Nothing) -> return ()
     void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
         SignDocumentEvidence
         signatureFields

@@ -80,8 +80,15 @@ window.SignviewSettingsPopup = function(args) {
           document.setShowrejectoption(model.showRejectOption().checked());
           document.setShowpdfdownload(model.showPDFDownload().checked());
           document.setShowfooter(model.showFooter().checked());
-
+          if (args.onClose !== undefined) {
+            args.onClose();
+          }
           return true;
+        },
+        onReject: function() {
+          if (args.onClose !== undefined) {
+            args.onClose();
+          }
         }
       });
     }

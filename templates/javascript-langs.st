@@ -21,15 +21,7 @@ javascriptLocalisation =
              , signup : "$_signUp()$"
              , loadingFile : "$_loadingFile()$"
              , more : "$_more()$"
-             , yourSigningPluginFailed : "$_yourSigningPluginFailed()$"
-             , yourSigningPluginFailedWithReason : "$_yourSigningPluginFailedWithReason()$"
-             , startingSaveSigning : "$_startingSaveSigning()$"
-             , youCancelledSigning : "$_youCancelledSigning()$"
-             , noTeliaInstalled  : "$_noTeliaInstalled()$"
-             , noBankIdInstalled  : "$_noBankIdInstalled()$"
-             , verifyingSignature : "$_verifyingSignature()$"
              , signviewAttachmentUploadedInOtherWindow : "$_signviewAttachmentUploadedInOtherWindow()$"
-             , tbsMessage : "$_tbsYouSignWithElegHtml()$"
              , personalName : "$_fullName()$"
              , fstname : "$_firstname()$"
              , sndname : "$_lastname()$"
@@ -76,13 +68,7 @@ javascriptLocalisation =
 					}
              , sign :  {
                           eleg : {
-                                     subhead : "$_pageDocumentForSignContentElegSubhead()$"
-                                   , body: "$_pageDocumentForSignContentElegBody()$ "
-                                   , mobile : {
-                                         startingMobileBankID : "$_bankidStartApp()$"
-                                   }
-                                   , failed : "$_signElegFailed()$"
-                                   , mismatch : {
+                                     mismatch : {
                                          mismatchOnNameAndNumberCantChange : "$_mismatchOnNameAndNumberCantChange()$"
                                        , mismatchOnNameAndNumberCanChange : "$_mismatchOnNameAndNumberCanChange()$"
                                        , mismatchOnNameAndCantChange : "$_mismatchOnNameAndCantChange()$"
@@ -120,8 +106,6 @@ javascriptLocalisation =
             , authorAttachmentBoxHeader : "$_signViewNotsignedbymeAttachmentBoxHead()$"
             , evidenceAttachmentBoxHeader : "$_evidenceAttachmentBoxHeader()$"
             , signatoryAttachmentUploadButton: "$_signViewSigAttachmentBoxChooseFile()$"
-            , saveAsTemplate : "$_signStepsMenuEmptyStepSaveAsTemplate()$"
-            , saveAsDraft    : "$_saveAsDraft()$"
             , months : [ "$_january()$",
                          "$_february()$",
                          "$_march()$",
@@ -315,12 +299,7 @@ javascriptLocalisation =
               chooseParticipant: "$_designViewChooseParticipant()$",
               selectField: "$_selectField()$",
               validation : {
-                      missingOrWrongEmail : "$_emptyOrNotValidEmail()$"
-                    , missingOrWrongPersonalNumber : "$_backToStepTwoAndFillPersonNumber()$"
-                    , missingOrWrongMobile : "$_emptyOrNotValidMobile()$"
-                    , missingOrWrongPlacedAuthorField : "$_missingPlacedAuthorFieldValue()$"
-                    , notReadyField : "$_setAllFields()$"
-                    , pleaseSelectField : "$_validationPleaseSelectField()$"
+                      notReadyField : "$_setAllFields()$"
                     , requestAttachmentFlashMessage : "$_designViewAttachmentRequestedFlashMessage()$"
                 }
              , signviewsettings : {
@@ -433,7 +412,6 @@ javascriptLocalisation =
              }
              , cantRemoveAllIdentificationFieldsText : "$_cantRemoveAllIdentificationFieldsText()$"
              , cantMakeAllIdentificationFieldsOptionalText : "$_cantMakeAllIdentificationFieldsOptionalText()$"
-             , information : "$_information()$"
              , signModalContentAuthorOnly : "<p>$_designViewSignModalContentAuthorOnly()$</p>"
              , signModalContentAuthorOnlyWithName : "<p>$_designViewSignModalContentAuthorOnlyWithName()$</p>"
              , signModalContentEleg : "<p>$_designViewSignModalContentEleg()$</p>"
@@ -596,18 +574,14 @@ javascriptLocalisation =
 
              }
              , eleg : {
-                  chooseElegModalTitle : "$_contractsignatorysignmodaltitleeleg()$"
-                , chooseElegModalContent: "<p>$_contractsignatorysignmodalcontentdesignvieweleg()$</p>"
-                , bankid : {
+                  bankid : {
                         modalAnotherDevice : "$_elegBankIDModalAnotherDevice()$"
                       , modalThisDevice : "$_elegBankIDModalThisDevice()$"
-                      , bankid: "$_bankid()$"
                       , mobilebankid: "$_mobileBankID()$"
                       , faultModalTitle : "$_elegBankIDFaultModalTitle()$"
                       , signConfirmationTitle : "$_elegSignConfirmationTitle()$"
                       , signConfirmationText : "<p>$_elegSignConfirmationText()$</p>"
                       , rfa1 : "$_elegBankIDRFA1()$"
-                      , rfa2 : "$_elegBankIDRFA2()$"
                       , rfa3 : "$_elegBankIDRFA3()$"
                       , rfa5 : "$_elegBankIDRFA5()$"
                       , rfa6 : "$_elegBankIDRFA6()$"
@@ -616,8 +590,6 @@ javascriptLocalisation =
                       , rfa12 : "$_elegBankIDRFA12()$"
                       , rfa13 : "$_elegBankIDRFA13()$"
                       , rfa14 : "$_elegBankIDRFA14()$"
-                      , rfa15Computer : "$_elegBankIDRFA15Computer()$"
-                      , rfa15Mobile : "$_elegBankIDRFA15Mobile()$"
                       , rfa16 : "$_elegBankIDRFA16()$"
                       , rfa17 : "$_elegBankIDRFA17()$"
                       , rfa18 : "$_elegBankIDRFA18()$"

@@ -284,9 +284,13 @@ define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_the
                 color: 'black',
                 text: localization.designview.signviewsettings.button,
                 cssClass: 'design-view-action-process-signview-settings-button',
+                oneClick: true,
                 onClick: function() {
                   mixpanel.track('Open signview settings');
-                  new SignviewSettingsPopup({document: document});
+                  new SignviewSettingsPopup({document: document,
+                                             onClose: function() {
+                                               editSignviewSettingsButton.setNotClicked();
+                                             }});
                 }
             });
 
