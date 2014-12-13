@@ -1,6 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 module EID.Signature.Model (
     ESignature(..)
+  , module EID.Signature.Legacy
   -- from EID.CGI.GRP.Data
   , BankIDSignature(..)
   , MergeBankIDSignature(..)
@@ -19,6 +20,7 @@ import Data.Time
 import DB
 import Doc.SignatoryLinkID
 import EID.CGI.GRP.Data
+import EID.Signature.Legacy
 import OurPrelude
 
 -- If one more type of a signature is to be added, follow the
@@ -29,7 +31,11 @@ import OurPrelude
 -- ambiguous exports in such case).
 
 data ESignature
-  = BankIDSignature_ !BankIDSignature
+  = LegacyBankIDSignature_ !LegacyBankIDSignature
+  | LegacyTeliaSignature_ !LegacyTeliaSignature
+  | LegacyNordeaSignature_ !LegacyNordeaSignature
+  | LegacyMobileBankIDSignature_ !LegacyMobileBankIDSignature
+  | BankIDSignature_ !BankIDSignature
   deriving (Eq, Ord, Show)
 
 ----------------------------------------
@@ -122,14 +128,29 @@ instance (MonadThrow m, MonadDB m) => DBQuery m GetESignature (Maybe ESignature)
       sqlWhereEq "signatory_link_id" slid
     fetchMaybe fetchESignature
 
--- | Fetch e-signature. We currently do not fetch legacy signatures because they
--- are not used. If this is needed in the future, just implement needed cases.
+-- | Fetch e-signature.
 fetchESignature :: (SignatureProvider, Text, Binary ByteString, Maybe (Binary ByteString), Maybe Text, Maybe Text, Maybe (Binary ByteString)) -> ESignature
-fetchESignature (provider, sdata, signature, _mcertificate, msignatory_name, msignatory_personal_number, mocsp_response) = case provider of
-  LegacyBankID -> not_implemented
-  LegacyTelia -> not_implemented
-  LegacyNordea -> not_implemented
-  LegacyMobileBankID -> not_implemented
+fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msignatory_personal_number, mocsp_response) = case provider of
+  LegacyBankID -> LegacyBankIDSignature_ LegacyBankIDSignature {
+    lbidsSignedText = sdata
+  , lbidsSignature = signature
+  , lbidsCertificate = $fromJust mcertificate
+  }
+  LegacyTelia -> LegacyTeliaSignature_ LegacyTeliaSignature {
+    ltsSignedText = sdata
+  , ltsSignature = signature
+  , ltsCertificate = $fromJust mcertificate
+  }
+  LegacyNordea -> LegacyNordeaSignature_ LegacyNordeaSignature {
+    lnsSignedText = sdata
+  , lnsSignature = signature
+  , lnsCertificate = $fromJust mcertificate
+  }
+  LegacyMobileBankID -> LegacyMobileBankIDSignature_ LegacyMobileBankIDSignature {
+    lmbidsSignedText = sdata
+  , lmbidsSignature = signature
+  , lmbidsOcspResponse = $fromJust mocsp_response
+  }
   CgiGrpBankID -> BankIDSignature_ BankIDSignature {
     bidsSignatoryName = $fromJust msignatory_name
   , bidsSignatoryPersonalNumber = $fromJust msignatory_personal_number
@@ -137,5 +158,3 @@ fetchESignature (provider, sdata, signature, _mcertificate, msignatory_name, msi
   , bidsSignature = signature
   , bidsOcspResponse = $fromJust mocsp_response
   }
-  where
-    not_implemented = $unexpectedError $ "fetching signature of type" <+> show provider <+> "is not implemented"
