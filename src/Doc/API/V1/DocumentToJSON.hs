@@ -130,7 +130,7 @@ signatoryJSON forapi forauthor doc viewer siglink = do
     J.value "signs" $ isSignatory siglink
     J.value "author" $ isAuthor siglink
     J.value "saved" $ isJust . maybesignatory $ siglink
-    J.value "datamismatch" ("" :: String)
+    J.value "datamismatch" (Nothing :: Maybe String)
     J.value "signdate" $ jsonDate $ signtime <$> maybesigninfo siglink
     J.value "seendate" $ jsonDate $ signtime <$> maybeseeninfo siglink
     J.value "readdate" $ jsonDate $ maybereadinvite siglink
