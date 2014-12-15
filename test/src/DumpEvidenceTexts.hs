@@ -19,7 +19,7 @@ import Doc.DocStateData (Document(..), SignatoryField(..), SignatoryLink(..), Fi
 import Doc.DocumentMonad (withDocumentID, withDocument, theDocument)
 import Doc.SignatoryLinkID (unsafeSignatoryLinkID)
 import Doc.SignatoryFieldID
-import EvidenceLog.Model (DocumentEvidenceEvent'(..), EvidenceEventType(..), CurrentEvidenceEventType(..), evidenceLogText)
+import EvidenceLog.Model (EventRenderTarget(..), DocumentEvidenceEvent'(..), EvidenceEventType(..), CurrentEvidenceEventType(..), evidenceLogText)
 import EvidenceLog.View (simpleEvents, simplyfiedEventText, eventForVerificationPage)
 import MinutesTime
 import Templates (runTemplatesT)
@@ -122,12 +122,12 @@ dumpEvidenceTexts now lang doc' = do
                     _ | evt `elem` [SMSPinSendEvidence, SMSPinDeliveredEvidence] -> Just "+481234567890"
                       | otherwise -> messageText
        elog <- withDocument doc $ evidenceLogText evt (fields evt) (Just asl) text actor
-       let simpletext mactor = if simpleEvents (Current evt) && (isNothing mactor || eventForVerificationPage ev)
-                               then Just <$> simplyfiedEventText mactor doc{ documentlang = lang } ev
-                               else return Nothing
+       let simpletext target mactor = if simpleEvents (Current evt) && (isNothing mactor || eventForVerificationPage ev)
+                                      then Just <$> simplyfiedEventText target mactor doc{ documentlang = lang } ev
+                                      else return Nothing
               where ev = mkev elog text evt
-       vp <- simpletext (actorEmail actor)
-       av <- simpletext Nothing
+       vp <- simpletext EventForVerificationPages (actorEmail actor)
+       av <- simpletext EventForArchive Nothing
        return (evt, vp, av, elog)
   renderTemplate "dumpAllEvidenceTexts" $ do
      F.value "lang" $ codeFromLang lang

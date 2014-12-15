@@ -1,5 +1,6 @@
 module EvidenceLog.Model (
     EvidenceEventType(..)
+  , EventRenderTarget(..)
   , CurrentEvidenceEventType(..)
   , ObsoleteEvidenceEventType(..)
   , eventTextTemplateName
@@ -55,8 +56,18 @@ data InsertEvidenceEvent = InsertEvidenceEvent
                            Actor                  -- Actor
     deriving (Typeable)
 
-eventTextTemplateName :: CurrentEvidenceEventType -> String
-eventTextTemplateName e =  show e ++ "Text"
+-- | Decides which template we should pick for rendering an event
+data EventRenderTarget =
+   EventForEvidenceLog
+ | EventForArchive
+ | EventForVerificationPages
+  deriving (Enum, Eq, Ord, Bounded, Show)
+
+eventTextTemplateName :: EventRenderTarget -> CurrentEvidenceEventType -> String
+eventTextTemplateName t e =  show e ++ suffix t
+  where suffix EventForEvidenceLog       = "Log"
+        suffix EventForArchive           = "Archive"
+        suffix EventForVerificationPages = "VerificationPages"
 
 signatoryLinkTemplateFields :: Monad m => SignatoryLink -> F.Fields m ()
 signatoryLinkTemplateFields sl = do
@@ -92,7 +103,7 @@ evidenceLogText event textFields masl mmsg actor = do
              signatoryLinkTemplateFields sl
          textFields
    ts <- getTextTemplatesByLanguage $ codeFromLang LANG_EN
-   return $ runIdentity $ renderHelper ts (eventTextTemplateName event) fields
+   return $ runIdentity $ renderHelper ts (eventTextTemplateName EventForEvidenceLog event) fields
 
 instance (DocumentMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsg Bool where
   update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields masl mmsg actor) = do
@@ -124,20 +135,22 @@ type DocumentEvidenceEventWithSignatoryLink = DocumentEvidenceEvent' SignatoryLi
 
 data DocumentEvidenceEvent' s = DocumentEvidenceEvent {
     evDocumentID :: DocumentID
-  , evTime       :: UTCTime
-  , evClientTime :: Maybe UTCTime
-  , evClientName :: Maybe String
+  , evTime       :: UTCTime       -- from actor
+  , evClientTime :: Maybe UTCTime -- from actor
+  , evClientName :: Maybe String  -- from actor
   , evClockErrorEstimate :: Maybe HC.ClockErrorEstimate
-  , evText       :: String
+  , evText       :: String -- to go into evidence log
   , evType       :: EvidenceEventType
   , evVersionID  :: String
-  , evEmail      :: Maybe String
-  , evUserID     :: Maybe UserID
+  , evEmail      :: Maybe String -- from actor; use: "signatory_email" attribute if affected signatory not set
+  , evUserID     :: Maybe UserID -- from actor; use: to fetch subject name through author siglink or through account info in approximateActor; filter events
   , evIP4        :: Maybe IPAddress
-  , evSigLink    :: Maybe s
-  , evAPI        :: Maybe String
+  , evSigLink    :: Maybe s      -- from actor; use: to fetch subject name; viewer; filter events
+  , evAPI        :: Maybe String -- from actor; not used
   , evAffectedSigLink :: Maybe s -- Some events affect only one signatory, but actor is out system or author. We express it here, since we can't with evType.
+                                 -- use: to fetch object name; viewer; to set signatoryLinkTemplateFields and "signatory" attribute; get bankID signatory name
   , evMessageText :: Maybe String -- Some events have message connected to them (like reminders). We don't store such events in documents, but they should not get lost.
+                                  -- use: "text" attribute
   }
   deriving (Eq, Ord, Show, Typeable)
 

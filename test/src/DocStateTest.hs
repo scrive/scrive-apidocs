@@ -366,7 +366,7 @@ testMarkInvitationReadEvidenceLog = do
                 ++ (if signatoryispartner sl then "sign" else "review")
                 ++ " the document (sent to " ++ getEmail sl ++ ") was opened."
     [e'] <- getSignatoryLinks [e]
-    simpletext <- theDocument >>= \d -> simplyfiedEventText (Just "author") d{ documentlang = LANG_EN } e'
+    simpletext <- theDocument >>= \d -> simplyfiedEventText EventForVerificationPages (Just "author") d{ documentlang = LANG_EN } e'
     assertEqual "Correct simplified event text" (expectedSimple) simpletext
 
 testSaveSigAttachmentEvidenceLog :: TestEnv ()

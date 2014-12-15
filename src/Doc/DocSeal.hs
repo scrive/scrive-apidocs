@@ -340,7 +340,7 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
       removeTags s = concat [t | TagText t <- parseTags s]
       mkHistEntry ev = do
         actor <- approximateActor True document ev
-        comment <- removeTags <$> simplyfiedEventText (Just actor) document ev
+        comment <- removeTags <$> simplyfiedEventText EventForVerificationPages (Just actor) document ev
         etime <- formatUTCTimeForVerificationPage (documenttimezonename document) (evTime ev)
         return $ Seal.HistEntry{ Seal.histdate = etime
                                , Seal.histcomment = comment

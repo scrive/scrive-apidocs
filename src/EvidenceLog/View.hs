@@ -96,7 +96,7 @@ eventJSValue doc dee = do
     J.value "status" $ show $ getEvidenceEventStatusClass (evType dee)
     J.value "time"   $ formatTimeISO (evTime dee)
     J.valueM "party" $ approximateActor False doc dee
-    J.valueM "text"  $ simplyfiedEventText Nothing doc dee
+    J.valueM "text"  $ simplyfiedEventText EventForArchive Nothing doc dee
 
 -- | Simple events to be included in the archive history and the verification page.  These have translations.
 simpleEvents :: EvidenceEventType -> Bool
@@ -189,16 +189,18 @@ emptyEvent _ = False
 eventForVerificationPage :: DocumentEvidenceEventWithSignatoryLink -> Bool
 eventForVerificationPage = not . (`elem` map Current [AttachGuardtimeSealedFileEvidence, AttachExtendedSealedFileEvidence]) . evType
 
--- | Produce simplified text for an event.  If actor is provided, the
--- text is for the verification page, otherwise it is for the archive.
+-- | Produce simplified text for an event (only for archive or
+-- verification pages).
 simplyfiedEventText :: (MonadDB m, MonadThrow m, TemplatesMonad m)
-  => Maybe String -> Document -> DocumentEvidenceEventWithSignatoryLink -> m String
-simplyfiedEventText mactor doc dee = case evType dee of
+  => EventRenderTarget -> Maybe String -> Document -> DocumentEvidenceEventWithSignatoryLink -> m String
+simplyfiedEventText EventForEvidenceLog _ _ _ = error "simplyfiedEventText"
+simplyfiedEventText target mactor doc dee = case evType dee of
   Obsolete CancelDocumenElegEvidence -> renderEvent "CancelDocumenElegEvidenceText"
-  Current et -> renderEvent $ eventTextTemplateName et
+  Current et -> renderEvent $ eventTextTemplateName target et
   Obsolete _ -> return "" -- shouldn't we throw an error in this case?
   where
-    render = if isJust mactor then renderLocalTemplate doc else renderTemplate
+    render | target == EventForVerificationPages = renderLocalTemplate doc
+           | otherwise                           = renderTemplate
     renderEvent eventTemplateName = render eventTemplateName $ do
       let mslink = evAffectedSigLink dee
       F.forM_ mslink $ \slink -> do
@@ -221,10 +223,14 @@ simplyfiedEventText mactor doc dee = case evType dee of
       F.value "signatory" $ getIdentifier doc <$> mslink
       -- signatory email: there are events that are missing affected
       -- signatory, but happen to have evEmail set to what we want
+
+      -- FIXME: fetching email from signatory is not guaranteed to get
+      -- the email address field of the signatory at the time of the
+      -- event, since the signatory's email may have been updated
+      -- later.
+
       F.value "signatory_email" $ (getEmail <$> mslink) <|> evEmail dee
-      case mactor of
-        Nothing    -> F.value "archive" True
-        Just actor -> F.value "actor" actor
+      F.forM_ mactor $ F.value "actor"
 
 showClockError :: Word8 -> Double -> String
 showClockError decimals e = show (realFracToDecimal decimals (e * 1000)) ++ " ms"

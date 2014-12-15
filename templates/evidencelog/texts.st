@@ -1,455 +1,422 @@
-AttachAttachExtendedSealedFileEvidenceTextFull=The document was sealed with a keyless digital signature by Scrive E-sign.
+AttachExtendedSealedFileEvidenceLog=The document was sealed with a keyless digital signature by Scrive E-sign.
 ###
-AttachExtendedSealedFileEvidenceText=*
-$if(full)$
-  $AttachAttachExtendedSealedFileEvidenceTextFull()$
-$else$
-  $_AttachExtendedSealedFileEvidenceTextSimple()$
+AttachExtendedSealedFileEvidenceArchive=$_AttachExtendedSealedFileEvidenceTextSimple()$
+###
+AttachExtendedSealedFileEvidenceVerificationPages=$_AttachExtendedSealedFileEvidenceTextSimple()$
+###
+###
+AttachGuardtimeSealedFileEvidenceLog=The document was sealed with a digital signature by Scrive E-sign.
+###
+AttachGuardtimeSealedFileEvidenceArchive=$_AttachGuardtimeSealedFileEvidenceTextSimple()$
+###
+AttachGuardtimeSealedFileEvidenceVerificationPages=$_AttachGuardtimeSealedFileEvidenceTextSimple()$
+###
+###
+AttachSealedFileEvidenceLog=Scrive E-sign prepared the final PDF, including evidence collected by Scrive E-sign, before sealing with a digital signature.
+###
+AttachSealedFileEvidenceArchive=$_AttachSealedFileEvidenceTextSimpleArchive()$
+###
+AttachSealedFileEvidenceVerificationPages=$_AttachSealedFileEvidenceTextSimpleNotArchive()$
+###
+###
+AutomaticReminderSentLogEmail=An automatic reminder to sign was sent to $signatory$ using email at the request of $author$.
+###
+AutomaticReminderSentLogSMS=An automatic reminder to sign was sent to $signatory$ using SMS at the request of $author$.
+###
+AutomaticReminderSentLogEmailSMS=An automatic reminder to sign was sent to $signatory$ using email and SMS at the request of $author$.
+###
+AutomaticReminderSentLog=*
+$if(email)$
+  $AutomaticReminderSentLogEmail()$
+$elseif(mobile)$
+  $AutomaticReminderSentLogSMS()$
+$elseif(emailmobile)$
+  $AutomaticReminderSentLogEmailSMS()$
 $endif$
 ###
-AttachGuardtimeSealedFileEvidenceTextFull=The document was sealed with a digital signature by Scrive E-sign.
-###
-AttachGuardtimeSealedFileEvidenceText=*
-$if(full)$
-  $AttachGuardtimeSealedFileEvidenceTextFull()$
-$else$
-  $_AttachGuardtimeSealedFileEvidenceTextSimple()$
+AutomaticReminderSentSimple=*
+$if(email)$
+  $_AutomaticReminderSentTextSimpleEmail()$
+$elseif(mobile)$
+  $_AutomaticReminderSentTextSimpleSMS()$
+$elseif(emailmobile)$
+  $_AutomaticReminderSentTextSimpleEmailSMS()$
 $endif$
 ###
-AttachSealedFileEvidenceTextFull=Scrive E-sign prepared the final PDF, including evidence collected by Scrive E-sign, before sealing with a digital signature.
+AutomaticReminderSentArchive=$AutomaticReminderSentSimple()$
 ###
-AttachSealedFileEvidenceText=*
-$if(full)$
-  $AttachSealedFileEvidenceTextFull()$
-$else$
-  $if(archive)$
-    $_AttachSealedFileEvidenceTextSimpleArchive()$
-  $else$
-    $_AttachSealedFileEvidenceTextSimpleNotArchive()$
-  $endif$
-$endif$
+AutomaticReminderSentVerificationPages=$AutomaticReminderSentSimple()$
 ###
-AutomaticReminderSentTextFullEmail=An automatic reminder to sign was sent to $signatory$ using email at the request of $author$.
 ###
-AutomaticReminderSentTextFullSMS=An automatic reminder to sign was sent to $signatory$ using SMS at the request of $author$.
+CancelDocumentEvidenceLog=The invitation to sign was withdrawn by $actor$. The possibility to sign was disabled by Scrive E-sign.
 ###
-AutomaticReminderSentTextFullEmailSMS=An automatic reminder to sign was sent to $signatory$ using email and SMS at the request of $author$.
+CancelDocumentEvidenceArchive=$_CancelDocumentEvidenceTextSimpleArchive()$
 ###
-AutomaticReminderSentText=*
-$if(full)$
-  $if(email)$
-    $AutomaticReminderSentTextFullEmail()$
-  $elseif(mobile)$
-    $AutomaticReminderSentTextFullSMS()$
-  $elseif(emailmobile)$
-    $AutomaticReminderSentTextFullEmailSMS()$
-  $endif$
-$else$
-  $if(email)$
-    $_AutomaticReminderSentTextSimpleEmail()$
-  $elseif(mobile)$
-    $_AutomaticReminderSentTextSimpleSMS()$
-  $elseif(emailmobile)$
-    $_AutomaticReminderSentTextSimpleEmailSMS()$
-  $endif$
-$endif$
+CancelDocumentEvidenceVerificationPages=$_CancelDocumentEvidenceTextSimpleNotArchive()$
 ###
-CancelDocumentEvidenceTextFull=The invitation to sign was withdrawn by $actor$. The possibility to sign was disabled by Scrive E-sign.
 ###
-CancelDocumentEvidenceText=*
-$if(full)$
-  $CancelDocumentEvidenceTextFull()$
-$else$
-  $if(archive)$
-    $_CancelDocumentEvidenceTextSimpleArchive()$
-  $else$
-    $_CancelDocumentEvidenceTextSimpleNotArchive()$
-  $endif$
-$endif$
+ChangeSignatoryEmailWhenUndeliveredEvidenceLog=The email address for the signatory was changed from $oldemail$ to $newemail$ by $actor$.
 ###
-ChangeSignatoryEmailWhenUndeliveredEvidenceText=The email address for the signatory was changed from $oldemail$ to $newemail$ by $actor$.
+ChangeSignatoryPhoneWhenUndeliveredEvidenceLog=The phone number for the signatory was changed from $oldphone$ to $newphone$ by $actor$.
 ###
-ChangeSignatoryPhoneWhenUndeliveredEvidenceText=The phone number for the signatory was changed from $oldphone$ to $newphone$ by $actor$.
+ChangeAuthenticationMethodStandardToELegEvidenceLog=$actor$ changed authentication for $signatory$ from “no extra authentication” to “eID”.
 ###
-ChangeAuthenticationMethodStandardToELegEvidenceText=$actor$ changed authentication for $signatory$ from “no extra authentication” to “eID”.
+ChangeAuthenticationMethodStandardToSMSEvidenceLog=$actor$ changed authentication for $signatory$ from “no extra authentication” to “PIN by SMS”.
 ###
-ChangeAuthenticationMethodStandardToSMSEvidenceText=$actor$ changed authentication for $signatory$ from “no extra authentication” to “PIN by SMS”.
+ChangeAuthenticationMethodELegToStandardEvidenceLog=$actor$ changed authentication for $signatory$ from “eID” to “no extra authentication”.
 ###
-ChangeAuthenticationMethodELegToStandardEvidenceText=$actor$ changed authentication for $signatory$ from “eID” to “no extra authentication”.
+ChangeAuthenticationMethodELegToSMSEvidenceLog=$actor$ changed authentication for $signatory$ from “eID” to “PIN by SMS”.
 ###
-ChangeAuthenticationMethodELegToSMSEvidenceText=$actor$ changed authentication for $signatory$ from “eID” to “PIN by SMS”.
+ChangeAuthenticationMethodSMSToStandardEvidenceLog=$actor$ changed authentication for $signatory$ from “PIN by SMS” to “no extra authentication”.
 ###
-ChangeAuthenticationMethodSMSToStandardEvidenceText=$actor$ changed authentication for $signatory$ from “PIN by SMS” to “no extra authentication”.
+ChangeAuthenticationMethodSMSToElegEvidenceLog=$actor$ changed authentication for $signatory$ from “PIN by SMS” to “eID”.
 ###
-ChangeAuthenticationMethodSMSToElegEvidenceText=$actor$ changed authentication for $signatory$ from “PIN by SMS” to “eID”.
 ###
-CloseDocumentEvidenceTextFull=Scrive E-sign locked the document from further modifications by the signing parties.
+CloseDocumentEvidenceLog=Scrive E-sign locked the document from further modifications by the signing parties.
 ###
-CloseDocumentEvidenceText=*
-$if(full)$
-  $CloseDocumentEvidenceTextFull()$
-$else$
-  $_CloseDocumentEvidenceTextSimple()$
-$endif$
+CloseDocumentEvidenceArchive=$_CloseDocumentEvidenceTextSimple()$
 ###
-DeleteSigAttachmentEvidenceText=The attachment “$name$” previously uploaded by $actor$ on the request of $author$ was deleted by $actor$.
+CloseDocumentEvidenceVerificationPages=$_CloseDocumentEvidenceTextSimple()$
+
 ###
-ErrorSealingDocumentEvidenceText=Due to a system error Scrive E-sign failed to finalise the document, i.e. failed to include the Verification Page, Evidence Log, Evidence of Intent, Evidence Documentation and Digital Signature Documentation into the document before sealing the Evidence Package (as defined in the Evidence Documentation) with a digital signature.
+DeleteSigAttachmentEvidenceLog=The attachment “$name$” previously uploaded by $actor$ on the request of $author$ was deleted by $actor$.
 ###
-ReviewInvitationDeliveredByEmailText=Scrive E-sign’s external email delivery system reported that the invitation to review was delivered to $signatory$ by email.
+ErrorSealingDocumentEvidenceLog=Due to a system error Scrive E-sign failed to finalise the document, i.e. failed to include the Verification Page, Evidence Log, Evidence of Intent, Evidence Documentation and Digital Signature Documentation into the document before sealing the Evidence Package (as defined in the Evidence Documentation) with a digital signature.
 ###
-SigningInvitationDeliveredByEmailText=Scrive E-sign’s external email delivery system reported that the invitation to sign was delivered to $signatory$ by email.
+ReviewInvitationDeliveredByEmailLog=Scrive E-sign’s external email delivery system reported that the invitation to review was delivered to $signatory$ by email.
 ###
-InvitationDeliveredByEmailText=*
-$if(full)$
-  $if(signing)$
-    $SigningInvitationDeliveredByEmailText()$
-  $elseif(viewing)$
-    $ReviewInvitationDeliveredByEmailText()$
-  $endif$
-$else$
-  $if(signing)$
-    $_InvitationDeliveredByEmailTextToSignSimple()$
-  $elseif(viewing)$
-    $_InvitationDeliveredByEmailTextToReviewSimple()$
-  $endif$
-$endif$
+SigningInvitationDeliveredByEmailLog=Scrive E-sign’s external email delivery system reported that the invitation to sign was delivered to $signatory$ by email.
 ###
-ReviewInvitationDeliveredBySMSText=Scrive E-sign’s external SMS delivery system reported that the invitation to review was delivered to $signatory$ by SMS.
 ###
-SigningInvitationDeliveredBySMSText=Scrive E-sign’s external SMS delivery system reported that the invitation to sign was delivered to $signatory$ by SMS.
-###
-InvitationDeliveredBySMSText=*
-$if(full)$
-  $if(signing)$
-    $SigningInvitationDeliveredBySMSText()$
-  $elseif(viewing)$
-    $ReviewInvitationDeliveredBySMSText()$
-  $endif$
-$else$
-  $if(signing)$
-    $_InvitationDeliveredBySMSTextToSignSimple()$
-  $elseif(viewing)$
-    $_InvitationDeliveredBySMSTextToReviewSimple()$
-  $endif$
-$endif$
-###
-SigningInvitationEvidenceTextFullEmail=An invitation to sign was sent to $signatory$ using email. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $invitationCustomMessageTextToSignIfThereIsOne()$
-###
-SigningInvitationEvidenceTextFullSMS=An invitation to sign was sent to $signatory$ using SMS. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $invitationCustomMessageTextToSignIfThereIsOne()$
-###
-SigningInvitationEvidenceTextFullEmailSMS=An invitation to sign was sent to $signatory$ using email and SMS. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $invitationCustomMessageTextToSignIfThereIsOne()$
-###
-ReviewInvitationEvidenceTextFullEmail=An invitation to review was sent to $signatory$ using email. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $invitationCustomMessageTextToReviewIfThereIsOne()$
-###
-ReviewInvitationEvidenceTextFullSMS=An invitation to review was sent to $signatory$ using SMS. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $invitationCustomMessageTextToReviewIfThereIsOne()$
-###
-ReviewInvitationEvidenceTextFullEmailSMS=An invitation to review was sent to $signatory$ using email and SMS. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $invitationCustomMessageTextToReviewIfThereIsOne()$
-###
-InvitationEvidenceText=*
+InvitationDeliveredByEmailLog=*
 $if(signing)$
-  $if(full)$
-    $if(email)$
-        $SigningInvitationEvidenceTextFullEmail()$
-    $elseif(mobile)$
-        $SigningInvitationEvidenceTextFullSMS()$
-    $elseif(emailmobile)$
-        $SigningInvitationEvidenceTextFullEmailSMS()$
-    $endif$
-  $else$
-    $if(archive)$
-      $if(email)$
-            $_InvitationEvidenceTextToSignArchiveSimpleEmail()$
-      $elseif(mobile)$
-            $_InvitationEvidenceTextToSignArchiveSimpleSMS()$
-      $elseif(emailmobile)$
-            $_InvitationEvidenceTextToSignArchiveSimpleEmailSMS()$
-      $endif$
-    $else$
-      $if(email)$
-            $_InvitationEvidenceTextToSignNotArchiveSimpleEmail()$
-      $elseif(mobile)$
-            $_InvitationEvidenceTextToSignNotArchiveSimpleSMS()$
-      $elseif(emailmobile)$
-            $_InvitationEvidenceTextToSignNotArchiveSimpleEmailSMS()$
-      $endif$
-    $endif$
+  $SigningInvitationDeliveredByEmailLog()$
+$elseif(viewing)$
+  $ReviewInvitationDeliveredByEmailLog()$
+$endif$
+###
+InvitationDeliveredByEmailSimple=*
+$if(signing)$
+  $_InvitationDeliveredByEmailTextToSignSimple()$
+$elseif(viewing)$
+  $_InvitationDeliveredByEmailTextToReviewSimple()$
+$endif$
+###
+InvitationDeliveredByEmailArchive=$InvitationDeliveredByEmailSimple()$
+###
+InvitationDeliveredByEmailVerificationPages=$InvitationDeliveredByEmailSimple()$
+###
+###
+ReviewInvitationDeliveredBySMSLog=Scrive E-sign’s external SMS delivery system reported that the invitation to review was delivered to $signatory$ by SMS.
+###
+SigningInvitationDeliveredBySMSLog=Scrive E-sign’s external SMS delivery system reported that the invitation to sign was delivered to $signatory$ by SMS.
+###
+###
+InvitationDeliveredBySMSLog=*
+$if(signing)$
+  $SigningInvitationDeliveredBySMSLog()$
+$elseif(viewing)$
+  $ReviewInvitationDeliveredBySMSLog()$
+$endif$
+###
+InvitationDeliveredBySMSSimple=*
+$if(signing)$
+  $_InvitationDeliveredBySMSTextToSignSimple()$
+$elseif(viewing)$
+  $_InvitationDeliveredBySMSTextToReviewSimple()$
+$endif$
+###
+InvitationDeliveredBySMSArchive=$InvitationDeliveredBySMSSimple()$
+###
+InvitationDeliveredBySMSVerificationPages=$InvitationDeliveredBySMSSimple()$
+###
+###
+SigningInvitationEvidenceLogEmail=An invitation to sign was sent to $signatory$ using email. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $invitationCustomMessageTextToSignIfThereIsOne()$
+###
+SigningInvitationEvidenceLogSMS=An invitation to sign was sent to $signatory$ using SMS. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $invitationCustomMessageTextToSignIfThereIsOne()$
+###
+SigningInvitationEvidenceLogEmailSMS=An invitation to sign was sent to $signatory$ using email and SMS. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $invitationCustomMessageTextToSignIfThereIsOne()$
+###
+ReviewInvitationEvidenceLogEmail=An invitation to review was sent to $signatory$ using email. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $invitationCustomMessageTextToReviewIfThereIsOne()$
+###
+ReviewInvitationEvidenceLogSMS=An invitation to review was sent to $signatory$ using SMS. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $invitationCustomMessageTextToReviewIfThereIsOne()$
+###
+ReviewInvitationEvidenceLogEmailSMS=An invitation to review was sent to $signatory$ using email and SMS. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $invitationCustomMessageTextToReviewIfThereIsOne()$
+###
+InvitationEvidenceLog=*
+$if(signing)$
+  $if(email)$
+      $SigningInvitationEvidenceLogEmail()$
+  $elseif(mobile)$
+      $SigningInvitationEvidenceLogSMS()$
+  $elseif(emailmobile)$
+      $SigningInvitationEvidenceLogEmailSMS()$
   $endif$
 $elseif(viewing)$
-  $if(full)$
-    $if(email)$
-        $ReviewInvitationEvidenceTextFullEmail()$
-    $elseif(mobile)$
-        $ReviewInvitationEvidenceTextFullSMS()$
-    $elseif(emailmobile)$
-        $ReviewInvitationEvidenceTextFullEmailSMS()$
-    $endif$
-  $else$
-    $if(archive)$
-      $if(email)$
-            $_InvitationEvidenceTextToReviewArchiveSimpleEmail()$
-      $elseif(mobile)$
-            $_InvitationEvidenceTextToReviewArchiveSimpleSMS()$
-      $elseif(emailmobile)$
-            $_InvitationEvidenceTextToReviewArchiveSimpleEmailSMS()$
-      $endif$
-    $else$
-      $if(email)$
-            $_InvitationEvidenceTextToReviewNotArchiveSimpleEmail()$
-      $elseif(mobile)$
-            $_InvitationEvidenceTextToReviewNotArchiveSimpleSMS()$
-      $elseif(emailmobile)$
-            $_InvitationEvidenceTextToReviewNotArchiveSimpleEmailSMS()$
-      $endif$
-    $endif$
+  $if(email)$
+      $ReviewInvitationEvidenceLogEmail()$
+  $elseif(mobile)$
+      $ReviewInvitationEvidenceLogSMS()$
+  $elseif(emailmobile)$
+      $ReviewInvitationEvidenceLogEmailSMS()$
   $endif$
 $endif$
 ###
-InvitationUndeliveredByEmailTextFull=Scrive E-sign’s external email delivery system reported that the invitation to $signatory$ could not be delivered by email and continued attempts were cancelled.
-###
-InvitationUndeliveredBySMSTextFull=Scrive E-sign’s external SMS delivery system reported that the invitation could not be delivered by SMS and continued attempts were cancelled.
-###
-InvitationUndeliveredByEmailText=*
-$if(full)$
-  $InvitationUndeliveredByEmailTextFull()$
-$else$
-  $if(archive)$
-    $_InvitationUndeliveredByEmailTextSimpleArchive()$
-  $else$
-    $_InvitationUndeliveredByEmailTextSimpleNotArchive()$
+InvitationEvidenceArchive=*
+$if(signing)$
+  $if(email)$
+        $_InvitationEvidenceTextToSignArchiveSimpleEmail()$
+  $elseif(mobile)$
+        $_InvitationEvidenceTextToSignArchiveSimpleSMS()$
+  $elseif(emailmobile)$
+        $_InvitationEvidenceTextToSignArchiveSimpleEmailSMS()$
+  $endif$
+$elseif(viewing)$
+  $if(email)$
+        $_InvitationEvidenceTextToReviewArchiveSimpleEmail()$
+  $elseif(mobile)$
+        $_InvitationEvidenceTextToReviewArchiveSimpleSMS()$
+  $elseif(emailmobile)$
+        $_InvitationEvidenceTextToReviewArchiveSimpleEmailSMS()$
   $endif$
 $endif$
 ###
-InvitationUndeliveredBySMSText=*
-$if(full)$
-  $InvitationUndeliveredBySMSTextFull()$
-$else$
-  $if(archive)$
-    $_InvitationUndeliveredBySMSTextSimpleArchive()$
-  $else$
-    $_InvitationUndeliveredBySMSTextSimpleNotArchive()$
+InvitationEvidenceVerificationPages=*
+$if(signing)$
+  $if(email)$
+        $_InvitationEvidenceTextToSignNotArchiveSimpleEmail()$
+  $elseif(mobile)$
+        $_InvitationEvidenceTextToSignNotArchiveSimpleSMS()$
+  $elseif(emailmobile)$
+        $_InvitationEvidenceTextToSignNotArchiveSimpleEmailSMS()$
+  $endif$
+$elseif(viewing)$
+  $if(email)$
+        $_InvitationEvidenceTextToReviewNotArchiveSimpleEmail()$
+  $elseif(mobile)$
+        $_InvitationEvidenceTextToReviewNotArchiveSimpleSMS()$
+  $elseif(emailmobile)$
+        $_InvitationEvidenceTextToReviewNotArchiveSimpleEmailSMS()$
   $endif$
 $endif$
 ###
-MarkSigningInvitationReadEvidenceText=Scrive E-sign’s external email delivery system reported that the invitation to sign (sent to $signatory_email$) was opened.
 ###
-MarkReviewInvitationReadEvidenceText=Scrive E-sign’s external email delivery system reported that the invitation to review (sent to $signatory_email$) was opened.
+InvitationUndeliveredByEmailLog=Scrive E-sign’s external email delivery system reported that the invitation to $signatory$ could not be delivered by email and continued attempts were cancelled.
 ###
-MarkInvitationReadEvidenceText=*
-$if(full)$
-  $if(signing)$
-    $MarkSigningInvitationReadEvidenceText()$
-  $elseif(viewing)$
-    $MarkReviewInvitationReadEvidenceText()$
+InvitationUndeliveredByEmailArchive=$_InvitationUndeliveredByEmailTextSimpleArchive()$
+###
+InvitationUndeliveredByEmailVerificationPages=$_InvitationUndeliveredByEmailTextSimpleArchive()$
+###
+###
+InvitationUndeliveredBySMSLog=Scrive E-sign’s external SMS delivery system reported that the invitation to $signatory$ could not be delivered by SMS and continued attempts were cancelled.
+###
+InvitationUndeliveredBySMSArchive=$_InvitationUndeliveredBySMSTextSimpleArchive()$
+###
+InvitationUndeliveredBySMSVerificationPages=$_InvitationUndeliveredBySMSTextSimpleNotArchive()$
+###
+MarkSigningInvitationReadEvidenceLog=Scrive E-sign’s external email delivery system reported that the invitation to sign (sent to $signatory_email$) was opened.
+###
+MarkReviewInvitationReadEvidenceLog=Scrive E-sign’s external email delivery system reported that the invitation to review (sent to $signatory_email$) was opened.
+###
+MarkInvitationReadEvidenceLog=*
+$if(signing)$
+  $MarkSigningInvitationReadEvidenceLog()$
+$elseif(viewing)$
+  $MarkReviewInvitationReadEvidenceLog()$
+$endif$
+###
+MarkInvitationReadEvidenceSimple=*
+$if(signing)$
+  $_MarkInvitationReadEvidenceTextToSignSimple()$
+$elseif(viewing)$
+  $_MarkInvitationReadEvidenceTextToReviewSimple()$
+$endif$
+###
+MarkInvitationReadEvidenceArchive=$MarkInvitationReadEvidenceSimple()$
+###
+MarkInvitationReadEvidenceVerificationPages=$MarkInvitationReadEvidenceSimple()$
+###
+###
+PreparationToPendingEvidenceLog=The preparation of the signing process settings was finished by $actor$, and Scrive E-sign locked the document from editing. The signing process language was set to $lang$, and the signing due date was set to $timeouttime$ UTC.$if(timezone)$ The time zone $timezone$ was provided by $actor$$endif$. The signing process was initiated.
+###
+PreparationToPendingEvidenceArchive=$_PreparationToPendingEvidenceTextSimpleArchive()$
+###
+PreparationToPendingEvidenceVerificationPages=$_PreparationToPendingEvidenceTextSimpleNotArchive()$
+###
+ProlongDocumentEvidenceLog=The due date for signing was prolonged by $actor$.
+###
+ProlongDocumentEvidenceArchive=$_ProlongDocumentEvidenceTextArchive()$
+###
+ProlongDocumentEvidenceVerificationPages=$ProlongDocumentEvidenceLog()$
+###
+###
+RejectDocumentEvidenceLog=The invitation to sign was rejected by $actor$. The possibility to sign was disabled by Scrive E-sign.$if(text)$ The rejection message from $actor$ was: <BR/> <i>$text:noescape()$</i>$endif$
+###
+RejectDocumentEvidenceArchive=$_RejectDocumentEvidenceTextSimpleArchive()$
+###
+RejectDocumentEvidenceVerificationPages=$_RejectDocumentEvidenceTextSimpleNotArchive()$
+###
+###
+ReminderSendLog=*
+$if(signing)$
+  $if(email)$
+      $_ReminderSendTextToSignNotArchiveEmail()$
+  $elseif(mobile)$
+      $_ReminderSendTextToSignNotArchiveSMS()$
+  $elseif(emailmobile)$
+      $_ReminderSendTextToSignNotArchiveEmailSMS()$
   $endif$
-$else$
-  $if(signing)$
-    $_MarkInvitationReadEvidenceTextToSignSimple()$
-  $elseif(viewing)$
-    $_MarkInvitationReadEvidenceTextToReviewSimple()$
+$elseif(viewing)$
+  $if(email)$
+      $_ReminderSendTextToReviewNotArchiveEmail()$
+  $elseif(mobile)$
+      $_ReminderSendTextToReviewNotArchiveSMS()$
+  $elseif(emailmobile)$
+      $_ReminderSendTextToReviewNotArchiveEmailSMS()$
   $endif$
 $endif$
 ###
-PreparationToPendingEvidenceTextFull=The preparation of the signing process settings was finished by $actor$, and Scrive E-sign locked the document from editing. The signing process language was set to $lang$, and the signing due date was set to $timeouttime$ UTC.$if(timezone)$ The time zone $timezone$ was provided by $actor$$endif$. The signing process was initiated.
-###
-PreparationToPendingEvidenceText=*
-$if(full)$
-  $PreparationToPendingEvidenceTextFull()$
-$else$
-  $if(archive)$
-    $_PreparationToPendingEvidenceTextSimpleArchive()$
-  $else$
-    $_PreparationToPendingEvidenceTextSimpleNotArchive()$
+ReminderSendArchive=*
+$if(signing)$
+  $if(email)$
+      $_ReminderSendTextToSignArchiveEmail()$
+  $elseif(mobile)$
+      $_ReminderSendTextToSignArchiveSMS()$
+  $elseif(emailmobile)$
+      $_ReminderSendTextToSignArchiveEmailSMS()$
+  $endif$
+$elseif(viewing)$
+  $if(email)$
+      $_ReminderSendTextToReviewArchiveEmail()$
+  $elseif(mobile)$
+      $_ReminderSendTextToReviewArchiveSMS()$
+  $elseif(emailmobile)$
+      $_ReminderSendTextToReviewArchiveEmailSMS()$
   $endif$
 $endif$
 ###
-ProlongDocumentEvidenceTextFull=The due date for signing was prolonged by $actor$.
+ReminderSendVerificationPages=$ReminderSendLog()$
 ###
-ProlongDocumentEvidenceText=*
-$if(archive)$
-  $_ProlongDocumentEvidenceTextArchive()$
-$else$
-  $ProlongDocumentEvidenceTextFull()$
-$endif$
 ###
-RejectDocumentEvidenceTextFull=The invitation to sign was rejected by $actor$. The possibility to sign was disabled by Scrive E-sign.$if(text)$ The rejection message from $actor$ was: <BR/> <i>$text:noescape()$</i>$endif$
+RemovedFromPadDeviceLog=The invitation to signatory $signatory$ to sign the document by in-person meeting was withdrawn by $actor$.
 ###
-RejectDocumentEvidenceText=*
-$if(full)$
-  $RejectDocumentEvidenceTextFull()$
-$else$
-  $if(archive)$
-    $_RejectDocumentEvidenceTextSimpleArchive()$
-  $else$
-    $_RejectDocumentEvidenceTextSimpleNotArchive()$
-  $endif$
-$endif$
+ResealedPDFLog=Preparation of the Evidence Package was requested by $actor$, a person authorised to administer Scrive E-sign.
 ###
-ReminderSendText=*
-$if(archive)$
-  $if(signing)$
-    $if(email)$
-        $_ReminderSendTextToSignArchiveEmail()$
-    $elseif(mobile)$
-        $_ReminderSendTextToSignArchiveSMS()$
-    $elseif(emailmobile)$
-        $_ReminderSendTextToSignArchiveEmailSMS()$
-    $endif$
-  $elseif(viewing)$
-    $if(email)$
-        $_ReminderSendTextToReviewArchiveEmail()$
-    $elseif(mobile)$
-        $_ReminderSendTextToReviewArchiveSMS()$
-    $elseif(emailmobile)$
-        $_ReminderSendTextToReviewArchiveEmailSMS()$
-    $endif$
-  $endif$
-$else$
-  $if(signing)$
-    $if(email)$
-        $_ReminderSendTextToSignNotArchiveEmail()$
-    $elseif(mobile)$
-        $_ReminderSendTextToSignNotArchiveSMS()$
-    $elseif(emailmobile)$
-        $_ReminderSendTextToSignNotArchiveEmailSMS()$
-    $endif$
-  $elseif(viewing)$
-    $if(email)$
-        $_ReminderSendTextToReviewNotArchiveEmail()$
-    $elseif(mobile)$
-        $_ReminderSendTextToReviewNotArchiveSMS()$
-    $elseif(emailmobile)$
-        $_ReminderSendTextToReviewNotArchiveEmailSMS()$
-    $endif$
-  $endif$
-$endif$
+RestartDocumentEvidenceLog=The document was opened for editing by $actor$ in Scrive E-sign’s interface to design signing processes.
 ###
-RemovedFromPadDeviceText=The invitation to signatory $signatory$ to sign the document by in-person meeting was withdrawn by $actor$.
+RestartDocumentEvidenceArchive=$_RestartDocumentEvidenceTextSimpleArchive()$
 ###
-ResealedPDFText=Preparation of the Evidence Package was requested by $actor$, a person authorised to administer Scrive E-sign.
+RestartDocumentEvidenceVerificationPages=$_RestartDocumentEvidenceTextSimpleNotArchive()$
 ###
-RestartDocumentEvidenceText=*
-$if(full)$
-  $RestartDocumentEvidenceTextFull()$
-$else$
-  $if(archive)$
-    $_RestartDocumentEvidenceTextSimpleArchive()$
-  $else$
-    $_RestartDocumentEvidenceTextSimpleNotArchive()$
-  $endif$
-$endif$
 ###
-RestartDocumentEvidenceTextFull=The document was opened for editing by $actor$ in Scrive E-sign’s interface to design signing processes.
+SMSPinDeliveredEvidenceLog=$_SMSPinDeliveredEvidenceText()$
 ###
-SMSPinDeliveredEvidenceText=$_SMSPinDeliveredEvidenceText()$
+SMSPinDeliveredEvidenceArchive=$_SMSPinDeliveredEvidenceText()$
 ###
-SMSPinSendEvidenceText=$_SMSPinSendEvidenceText()$
+SMSPinDeliveredEvidenceVerificationPages=$_SMSPinDeliveredEvidenceText()$
 ###
-SaveSigAttachmentEvidenceText=$actor$ uploaded the attachment “$name$” requested by $author$.  The request had the following description: $description$
 ###
-SendToPadDeviceText=The signing invitation for signatory $signatory$ was set by $actor$ to “in-person meeting”. In-person meeting enables $actor$ to present $if(full)$Scrive E-signs$else$Scrives$endif$ online interface to sign documents for $signatory$, on a device controlled by $actor$.
+SMSPinSendEvidenceLog=$_SMSPinSendEvidenceText()$
 ###
-SetDocumentInviteTimeEvidenceText=The signing process was started by $actor$.
+SMSPinSendEvidenceArchive=$_SMSPinSendEvidenceText()$
 ###
-SignDocumentEvidenceTextSMSPinFull=The document was signed by $actor$ using PIN by SMS as identification method. $pinWasSent()$
+SMSPinSendEvidenceVerificationPages=$_SMSPinSendEvidenceText()$
 ###
-SignDocumentEvidenceTextElegFull=The document was signed by $actor$ using eID as identification method. $elegVerification()$
 ###
-SignDocumentEvidenceTextFull=The document was signed by $actor$.
+SaveSigAttachmentEvidenceLog=$actor$ uploaded the attachment “$name$” requested by $author$.  The request had the following description: $description$
 ###
-SignDocumentEvidenceText=*
+SendToPadDeviceLog=The signing invitation for signatory $signatory$ was set by $actor$ to “in-person meeting”. In-person meeting enables $actor$ to present $if(full)$Scrive E-signs$else$Scrives$endif$ online interface to sign documents for $signatory$, on a device controlled by $actor$.
+###
+SetDocumentInviteTimeEvidenceLog=The signing process was started by $actor$.
+###
+###
+SignDocumentEvidenceLogSMSPin=The document was signed by $actor$ using PIN by SMS as identification method. $pinWasSent()$
+###
+SignDocumentEvidenceLogEleg=The document was signed by $actor$ using eID as identification method. $elegVerification()$
+###
+SignDocumentEvidenceLogStandard=The document was signed by $actor$.
+###
+SignDocumentEvidenceLog=*
 $if(sms_pin)$
-  $if(full)$
-    $SignDocumentEvidenceTextSMSPinFull()$
-  $else$
-    $if(archive)$
-      $_SignDocumentEvidenceTextSimpleArchiveSMSPin()$
-    $else$
-      $_SignDocumentEvidenceTextSimpleNotArchiveSMSPin()$
-    $endif$
-  $endif$
+    $SignDocumentEvidenceLogSMSPin()$
 $elseif(eleg)$
-  $if(full)$
-    $SignDocumentEvidenceTextElegFull()$
-  $else$
-    $if(archive)$
+    $SignDocumentEvidenceLogEleg()$
+$else$
+    $SignDocumentEvidenceLogStandard()$
+$endif$
+###
+SignDocumentEvidenceArchive=*
+$if(sms_pin)$
+      $_SignDocumentEvidenceTextSimpleArchiveSMSPin()$
+$elseif(eleg)$
       $_SignDocumentEvidenceTextSimpleArchiveEleg()$
-    $else$
+$else$
+      $_SignDocumentEvidenceTextSimpleArchiveStandard()$
+$endif$
+###
+SignDocumentEvidenceVerificationPages=*
+$if(sms_pin)$
+      $_SignDocumentEvidenceTextSimpleNotArchiveSMSPin()$
+$elseif(eleg)$
       $if(eid_signatory_name)$
         $_SignDocumentEvidenceTextSimpleNotArchiveElegWithName()$
       $else$
         $_SignDocumentEvidenceTextSimpleNotArchiveEleg()$
       $endif$
-    $endif$
-  $endif$
 $else$
-  $if(full)$
-    $SignDocumentEvidenceTextFull()$
-  $else$
-    $if(archive)$
-      $_SignDocumentEvidenceTextSimpleArchiveStandard()$
-    $else$
       $_SignDocumentEvidenceTextSimpleNotArchiveStandard()$
-    $endif$
-  $endif$
 $endif$
 ###
-SignWithELegFailureEvidenceTextFull=Scrive E-sign rejected the attempt by $signatory$ to sign the document. The reason was that the identity information of $signatory$ did not match the identity information received from the external eID system. Information given by the external eID system: $msg$.
 ###
-SignWithELegFailureEvidenceText=*
-$if(full)$
-  $SignWithELegFailureEvidenceTextFull()$
-$else$
-  $_SignWithELegFailureEvidenceTextSimple()$
+SignWithELegFailureEvidenceLog=Scrive E-sign rejected the attempt by $signatory$ to sign the document. The reason was that the identity information of $signatory$ did not match the identity information received from the external eID system. Information given by the external eID system: $msg$.
+###
+SignWithELegFailureEvidenceArchive=$_SignWithELegFailureEvidenceTextSimple()$
+###
+SignWithELegFailureEvidenceVerificationPages=$_SignWithELegFailureEvidenceTextSimple()$
+###
+###
+SignatorySignLinkVisitedLog=The document was opened by $actor$ in Scrive E-sign’s online interface to sign documents.
+###
+SignatoryReviewLinkVisitedLog=The document was opened by $actor$  in Scrive E-sign’s online interface to sign documents.
+###
+SignatoryLinkVisitedLog=*
+$if(signing)$
+  $SignatorySignLinkVisitedLog()$
+$elseif(viewing)$
+  $SignatoryReviewLinkVisitedLog()$
 $endif$
 ###
-SignatorySignLinkVisitedText=The document was opened by $actor$ in Scrive E-sign’s online interface to sign documents.
+SignatoryLinkVisitedArchive=$_SignatoryLinkVisitedTextArchiveSimple()$
 ###
-SignatoryReviewLinkVisitedText=The document was opened by $actor$  in Scrive E-sign’s online interface to sign documents.
+SignatoryLinkVisitedVerificationPages=$_SignatoryLinkVisitedTextNotArchiveSimple()$
 ###
-SignatoryLinkVisitedText=*
-$if(full)$
-  $if(signing)$
-    $SignatorySignLinkVisitedText()$
-  $elseif(viewing)$
-    $SignatoryReviewLinkVisitedText()$
-  $endif$
-$else$
-  $if(archive)$
-   $_SignatoryLinkVisitedTextArchiveSimple()$
-  $else$
-   $_SignatoryLinkVisitedTextNotArchiveSimple()$
-  $endif$
-$endif$
 ###
-TimeoutDocumentEvidenceTextFull=The due date for signing the document passed. The possibility to sign was disabled by Scrive E-sign.
+TimeoutDocumentEvidenceLog=The due date for signing the document passed. The possibility to sign was disabled by Scrive E-sign.
 ###
-TimeoutDocumentEvidenceText=*
-$if(full)$
-  $TimeoutDocumentEvidenceTextFull()$
-$else$
-  $_TimeoutDocumentEvidenceTextSimple()$
-$endif$
+TimeoutDocumentEvidenceArchive=$_TimeoutDocumentEvidenceTextSimple()$
 ###
-UpdateFieldCheckboxEvidenceText=$actor$ $if(checked)$checked$else$unchecked$endif$ the checkbox “$fieldname$”.$if(placements)$ The checkbox’s placement in the Main Document:$updateFieldPlacements()$$endif$
+TimeoutDocumentEvidenceVerificationPages=$_TimeoutDocumentEvidenceTextSimple()$
 ###
-UpdateFieldSignatureEvidenceText=$actor$ signed in the signature box “$fieldname$”.<br/><img alt="signature" src="$value$" width="100" height="50"></img><br/>$if(placements)$The box’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldFirstNameEvidenceText=$actor$ changed the text in the text field “First name” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
+UpdateFieldCheckboxEvidenceLog=$actor$ $if(checked)$checked$else$unchecked$endif$ the checkbox “$fieldname$”.$if(placements)$ The checkbox’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldLastNameEvidenceText=$actor$ changed the text in the text field “Last name” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
+UpdateFieldSignatureEvidenceLog=$actor$ signed in the signature box “$fieldname$”.<br/><img alt="signature" src="$value$" width="100" height="50"></img><br/>$if(placements)$The box’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldCompanyEvidenceText=$actor$ changed the text in the text field “Company” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
+UpdateFieldFirstNameEvidenceLog=$actor$ changed the text in the text field “First name” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldPersonalNumberEvidenceText=$actor$ changed the text in the text field “ID number” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
+UpdateFieldLastNameEvidenceLog=$actor$ changed the text in the text field “Last name” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldCompanyNumberEvidenceText=$actor$ changed the text in the text field “Company number” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
+UpdateFieldCompanyEvidenceLog=$actor$ changed the text in the text field “Company” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldEmailEvidenceText=$actor$ changed the text in the text field “Email” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
+UpdateFieldPersonalNumberEvidenceLog=$actor$ changed the text in the text field “ID number” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldCustomEvidenceText=$actor$ changed the text in the text field “$fieldname$” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
+UpdateFieldCompanyNumberEvidenceLog=$actor$ changed the text in the text field “Company number” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldMobileEvidenceText=$actor$ changed the text in the text field “Mobile number” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
+UpdateFieldEmailEvidenceLog=$actor$ changed the text in the text field “Email” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
+###
+UpdateFieldCustomEvidenceLog=$actor$ changed the text in the text field “$fieldname$” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
+###
+UpdateFieldMobileEvidenceLog=$actor$ changed the text in the text field “Mobile number” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
 updateFieldPreviousValue=$if(prvblank)$blank$else$“$previousvalue$”$endif$
 ###
@@ -476,5 +443,5 @@ $if(text)$$if(!mobile)$ $_invitationCustomMessageTextToSign()$ $endif$$endif$
 invitationCustomMessageTextToReviewIfThereIsOne=
 $if(text)$$if(!mobile)$ $_invitationCustomMessageTextToReview()$ $endif$$endif$
 ###
-CancelDocumenElegEvidenceText=$_CancelDocumenElegEvidenceText()$
+CancelDocumenElegEvidenceLog=$_CancelDocumenElegEvidenceText()$
 ###
