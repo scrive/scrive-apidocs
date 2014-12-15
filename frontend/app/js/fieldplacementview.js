@@ -1914,8 +1914,10 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
         place.addClass('placedfield');
         place.toggleClass("empty-signature",field.value() == "");
 
-        if ((field.signatory() == document.currentSignatory() && document.currentSignatoryCanSign()) || document.preparation())
+        if ((field.signatory() == document.currentSignatory() && document.currentSignatoryCanSign()) || document.preparation()) {
               place.css('cursor','pointer');
+              place.css('z-index','1');
+        }
         this.updatePosition();
 
         if (document.signingInProcess() && signatory.document().currentSignatoryCanSign() && signatory.current() && !signatory.document().readOnlyView()) {
