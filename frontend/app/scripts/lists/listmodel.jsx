@@ -159,6 +159,7 @@ return Backbone.Model.extend({
         url : this.url,
         method: "GET",
         data : this.urlParams(),
+        cache: false,
         success : function(res) {
           if (self.list() != undefined && self.dataFetcher()(JSON.parse(res)).length != self.list().length)
             changedcallback();
