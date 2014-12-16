@@ -93,7 +93,7 @@ readCurl :: MonadIO m
          => [String]                 -- ^ any arguments
          -> BSL.ByteString           -- ^ standard input
          -> m (ExitCode, BSL.ByteString, BSL.ByteString) -- ^ exitcode, stdout, stderr
-readCurl args input = readProcessWithExitCode' curl_exe (["--max-time", "20", "-s", "-S"] ++ args) input
+readCurl args input = readProcessWithExitCode' curl_exe (["--max-time", "10", "-s", "-S"] ++ args) input
 
 checkPathToExecutable :: FilePath -> IO FilePath
 checkPathToExecutable filepath = do
