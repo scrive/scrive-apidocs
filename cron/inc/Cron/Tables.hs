@@ -45,7 +45,7 @@ tableCronWorkers = tblTable {
 tableCronTasks :: Table
 tableCronTasks = tblTable {
     tblName = "cron_tasks"
-  , tblVersion = 2
+  , tblVersion = 3
   , tblColumns = [
     -- Type of the task.
       tblColumn { colName = "type",      colType = TextT, colNullable = False }
@@ -69,7 +69,7 @@ tableCronTasks = tblTable {
     , ("amazon_upload", iminutes 1)
     , ("async_events_processing", iseconds 10)
     , ("clock_error_collection", ihours 1)
-    , ("document_api_callback_evaluation", iseconds 10)
+    , ("document_api_callback_evaluation", iseconds 2)
     , ("document_automatic_reminders_evaluation", iminutes 1)
     , ("documents_purge", iminutes 10)
     , ("documents_archive_idle", ihours 24)

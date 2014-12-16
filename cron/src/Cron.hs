@@ -187,7 +187,7 @@ main = Log.withLogger $ do
         liftIO $ threadDelay 25000
         dbUpdate $ ReserveTask wid
       case mtt of
-        Nothing -> threadDelay 5000000 -- pause for 5 seconds if there are no tasks
+        Nothing -> threadDelay 2000000 -- pause for 2 seconds if there are no tasks
         Just tt -> void . TG.forkIO tg $ do
           Log.mixlog_ $ "Starting" <+> show tt <> "..."
           eres <- E.try $ dispatcher tt
