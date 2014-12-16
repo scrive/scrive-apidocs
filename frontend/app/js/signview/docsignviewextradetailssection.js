@@ -143,22 +143,22 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
 
     if(signview.askForName()) {
       var tr = $("<tr/>").append($("<td/>").text(localization.personalName));
-      tr.append($("<td/>").append(this.nameInput(signatory)));
+      tr.append($("<td/>").append(this.nameInput()));
       table.append(tr);
     }
     if(signview.askForEmail()) {
       var tr = $("<tr/>").append($("<td/>").text(localization.email));
-      tr.append($("<td/>").append(this.emailInput(signatory)));
+      tr.append($("<td/>").append(this.emailInput()));
       table.append(tr);
     }
     if(signview.askForSSN()) {
       var tr = $("<tr/>").append($("<td/>").text(localization.personalNumber));
-      tr.append($("<td/>").append(this.ssnInput(signatory)));
+      tr.append($("<td/>").append(this.ssnInput()));
       table.append(tr);
     }
     if(signview.askForPhone()) {
       var tr = $("<tr/>").append($("<td/>").text(localization.phone));
-      tr.append($("<td/>").append(this.phoneInput(signatory)));
+      tr.append($("<td/>").append(this.phoneInput()));
       table.append(tr);
     }
 

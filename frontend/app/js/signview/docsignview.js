@@ -70,7 +70,6 @@ var DocumentSignViewModel = Backbone.Model.extend({
     return this.hasExtraInputs();
   },
   hasExtraInputs : function() {
-    var signatory = this.document().currentSignatory();
     return this.askForName()
         || this.askForEmail()
         || this.askForSSN()
@@ -394,12 +393,6 @@ var DocumentSignViewModel = Backbone.Model.extend({
             tasks.push(makeTask('.extradetails-phone', function() {
               return !self.askForPhone();},
               localization.docsignview.textfield
-            ));
-          }
-          if(this.askForSignature()) {
-            tasks.push(makeTask('.extradetails-signature', function() {
-              return !self.askForSignature();},
-              localization.docsignview.signature
             ));
           }
           self.set({'extraDetailsTasks' : tasks }, {silent : true});

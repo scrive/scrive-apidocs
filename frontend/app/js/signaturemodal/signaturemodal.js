@@ -60,7 +60,6 @@ var SignatureDrawOrTypeModel= Backbone.Model.extend({
       return this.get("actionButtonType");
 
     var signatureDrawn = this.hasImage();
-    var signview = this.signview();
     var signatory = this.field().signatory();
 
     var incompleteTasks = this.arrow().notCompletedTasks();
@@ -84,11 +83,9 @@ var SignatureDrawOrTypeModel= Backbone.Model.extend({
 
     var attachmentsLeft = incompleteSignatoryAttachmentsTasks.length > 0;
 
-    var extraDetailsLeft = signview.hasExtraInputs();
-
     if (attachmentsLeft || fieldsLeftToFillIn) {
       this.set({actionButtonType: "apply"}, {silent: true});
-    } else if (extraDetailsLeft) {
+    } else if (this.signview().hasExtraInputs()) {
       this.set({actionButtonType: "extra-details"}, {silent: true});
     } else {
       // Only sign task left.
@@ -216,7 +213,6 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
         var self = this;
         var signatory = this.model.field().signatory();
         var document = signatory.document();
-        var signview = this.model.signview();
         var button = new Button({
                     color : 'green',
                     size: 'small',
@@ -232,7 +228,7 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
                           }
 
                           var modal = new DocumentExtraDetailsModal({
-                            model: signview,
+                            model: self.model.signview(),
                             arrow: arrow,
                             margin: self.model.containerTop() + "px auto 0",
                             bottom: true
@@ -257,7 +253,6 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
         var self = this;
         var signatory = this.model.field().signatory();
         var document = signatory.document();
-        var signview = this.model.signview();
         var button = new Button({
                     color : 'green',
                     size: 'small',
@@ -273,7 +268,7 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
                           }
 
                           new DocumentSignConfirmation({
-                            model: signview,
+                            model: self.model.signview(),
                             fast: true,
                             signaturesPlaced: true,
                             margin: self.model.containerTop() + "px auto 0",
