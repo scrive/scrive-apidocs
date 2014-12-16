@@ -2,7 +2,6 @@ module Cron.Migrations (cronMigrations) where
 
 import Data.ByteString (ByteString)
 
-import Cron.Model (TaskType(..))
 import Cron.Tables
 import DB
 import DB.Checks
@@ -12,6 +11,7 @@ cronMigrations = [
     createCronWorkersTable
   , createCronTasksTable
   , addArchiveIdleDocumentsTask
+  , changeAPICallbacksExecutionFrequency
   ]
 
 createCronWorkersTable :: MonadDB m => Migration m
@@ -79,6 +79,15 @@ addArchiveIdleDocumentsTask = Migration {
 , mgrFrom = 1
 , mgrDo = do
     runQuery_ $ sqlInsert "cron_tasks" $ do
-      sqlSet "type" DocumentsArchiveIdle
+      sqlSet "type" ("documents_archive_idle"::String)
       sqlSet "frequency" (ihours 6)
+}
+
+changeAPICallbacksExecutionFrequency :: MonadDB m => Migration m
+changeAPICallbacksExecutionFrequency = Migration {
+  mgrTable = tableCronTasks
+, mgrFrom = 2
+, mgrDo = runQuery_ $ sqlUpdate "cron_tasks" $ do
+    sqlSet "frequency" (iseconds 2)
+    sqlWhereEq "type" ("document_api_callback_evaluation"::String)
 }
