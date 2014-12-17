@@ -58,6 +58,7 @@
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Il documento è stato firmato usando un codice PIN via SMS come metodo di autenticazione.",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Il documento è stato firmato.",
 "_SignDocumentEvidenceTextSimpleNotArchiveEleg":"",
+"_SignDocumentEvidenceTextSimpleNotArchiveElegWithName":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveSMSPin":"Il documento è stato firmato da $actor$ usando un codice PIN via SMS come metodo di autenticazione.",
 "_SignDocumentEvidenceTextSimpleNotArchiveStandard":"Il documento è stato firmato da $actor$.",
 "_SignWithELegFailureEvidenceTextSimple":"Scrive ha respinto il tentativo di firma del documento da parte di $signatory$. Il motivo è che le informazioni sull'identità di $signatory$ non corrispondono alle informazioni ricevute dal sistema eID esterno.",

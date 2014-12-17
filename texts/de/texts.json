@@ -805,7 +805,7 @@
 "_tablestatusesSent":"Gesendet",
 "_tablestatusesSigned":"Signiert",
 "_tablestatusesViewedOnline":"Online überprüft",
-"_tbsYouSignWithEleg":"",
+"_tbsYouSignWithEleg":"Ich signiere das Dokument \"$document_title$\" mit der Tansaktionsnummer \"$document_id$\", das von \"$author_name$\" initiiert wurde.",
 "_textFieldDone":"Schließen",
 "_textFieldFor":"Partei",
 "_textFieldObligatory":"Sie müssen hier signieren",
