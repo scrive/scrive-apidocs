@@ -375,7 +375,11 @@ $elseif(eleg)$
     $if(archive)$
       $_SignDocumentEvidenceTextSimpleArchiveEleg()$
     $else$
-      $_SignDocumentEvidenceTextSimpleNotArchiveEleg()$
+      $if(eid_signatory_name)$
+        $_SignDocumentEvidenceTextSimpleNotArchiveElegWithName()$
+      $else$
+        $_SignDocumentEvidenceTextSimpleNotArchiveEleg()$
+      $endif$
     $endif$
   $endif$
 $else$
