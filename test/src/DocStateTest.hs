@@ -522,12 +522,11 @@ testCancelDocumentCancelsDocument = doTimes 10 $ do
     randomUpdate $ CancelDocument (authorActor ctx user)
 
     canceleddoc <- theDocument
-    let doNotCompareStatusClass x = x { signatorylinkstatusclass = SCDraft }
     assertEqual "In canceled state" Canceled (documentstatus canceleddoc)
     assertEqual "Updated modification time" (ctxtime ctx) (documentmtime canceleddoc)
     assertEqual "Siglinks are unchanged"
-                    (map doNotCompareStatusClass (documentsignatorylinks doc))
-                    (map doNotCompareStatusClass (documentsignatorylinks canceleddoc))
+                    (documentsignatorylinks doc)
+                    (documentsignatorylinks canceleddoc)
     assertEqual "Doc title is unchanged" (documenttitle doc) (documenttitle canceleddoc)
 
 testCancelDocumentReturnsLeftIfDocInWrongState :: TestEnv ()

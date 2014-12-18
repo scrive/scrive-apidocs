@@ -149,8 +149,14 @@ sqlWhereDocumentIDIs :: (MonadState v m, SqlWhere v)
 sqlWhereDocumentIDIs did = do
   sqlWhereE (DocumentDoesNotExist did) ("documents.id = " <?> did)
 
+sqlWhereDocumentIDForSignatoryIs :: (MonadState v m, SqlWhere v)
+                     => DocumentID -> m ()
+sqlWhereDocumentIDForSignatoryIs did = do
+  sqlWhereE (DocumentDoesNotExist did) ("signatory_links.document_id = " <?> did)
+
 data SignatoryLinkDoesNotExist = SignatoryLinkDoesNotExist SignatoryLinkID
   deriving (Eq, Ord, Show, Typeable)
+
 
 instance ToJSValue SignatoryLinkDoesNotExist where
   toJSValue (SignatoryLinkDoesNotExist d) = runJSONGen $ do

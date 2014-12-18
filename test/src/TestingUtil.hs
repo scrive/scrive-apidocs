@@ -409,7 +409,6 @@ signatoryLinkExample1 = defaultValue { signatorylinkid = unsafeSignatoryLinkID 0
                                                           ]
                                       , signatorylinkcsvupload = Nothing
                                       , signatoryattachments   = []
-                                      , signatorylinkstatusclass = SCDraft
                                       , signatorylinksignredirecturl = Nothing
                                       , signatorylinkrejectiontime = Nothing
                                       , signatorylinkrejectionreason = Nothing

@@ -411,7 +411,6 @@ data SignatoryLink = SignatoryLink {
   , signatorylinkreallydeleted :: Maybe UTCTime   -- ^ when was purged from the system
   , signatorylinkcsvupload     :: Maybe CSVUpload
   , signatoryattachments       :: [SignatoryAttachment]
-  , signatorylinkstatusclass   :: StatusClass
   , signatorylinksignredirecturl :: Maybe String
   , signatorylinkrejectredirecturl :: Maybe String
   , signatorylinkrejectiontime   :: Maybe UTCTime
@@ -440,7 +439,6 @@ instance Eq SignatoryLink where
     signatorylinkreallydeleted s1 == signatorylinkreallydeleted s2 &&
     signatorylinkcsvupload s1 == signatorylinkcsvupload s2 &&
     signatoryattachments s1 == signatoryattachments s2 &&
-    signatorylinkstatusclass s1 == signatorylinkstatusclass s2 &&
     signatorylinksignredirecturl s1 == signatorylinksignredirecturl s2 &&
     signatorylinkrejectiontime s1 == signatorylinkrejectiontime s2 &&
     signatorylinkrejectionreason s1 == signatorylinkrejectionreason s2 &&
@@ -466,7 +464,6 @@ instance HasDefaultValue SignatoryLink where
                   , signatorylinkreallydeleted   = Nothing
                   , signatorylinkcsvupload       = Nothing
                   , signatoryattachments         = []
-                  , signatorylinkstatusclass     = SCDraft
                   , signatorylinksignredirecturl = Nothing
                   , signatorylinkrejectredirecturl = Nothing
                   , signatorylinkrejectiontime   = Nothing
