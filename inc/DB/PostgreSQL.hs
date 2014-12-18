@@ -16,7 +16,7 @@ createPoolSource :: ConnectionSettings -> IO ConnectionSource
 createPoolSource cs = poolSource cs
   1  -- number of subpools, we do not need that functionality
   10 -- connection linger time after returned to pool
-  50 -- high water mark
+  15 -- high water mark
 
 withPostgreSQL :: (MonadBase IO m, MonadMask m)
                => ConnectionSource -> DBT m a -> m a
