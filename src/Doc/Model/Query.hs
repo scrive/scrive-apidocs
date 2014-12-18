@@ -308,7 +308,7 @@ data GetSignatoryLinkByID = GetSignatoryLinkByID DocumentID SignatoryLinkID (May
 instance (MonadDB m, MonadThrow m) => DBQuery m GetSignatoryLinkByID SignatoryLink where
   query (GetSignatoryLinkByID did slid mmh) = do
     let queryx = selectSignatoryLinksX $ do
-                  sqlWhereDocumentIDIs did
+                  sqlWhereDocumentIDForSignatoryIs did
                   sqlWhereSignatoryLinkIDIs slid
                   case mmh of
                     Nothing -> return ()
