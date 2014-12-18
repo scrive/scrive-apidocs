@@ -12,14 +12,16 @@ import Data.Maybe (fromJust, isNothing)
 import System.FilePath ((</>))
 import Test.Framework (Test)
 import Text.StringTemplates.Templates (TemplatesMonad, renderTemplate)
+import qualified Data.Set as Set
 import qualified Text.StringTemplates.Fields as F
 
 import DB (MonadDB)
 import Doc.DocStateData (Document(..), SignatoryField(..), SignatoryLink(..), FieldType(..), DeliveryMethod(..), documentlang)
 import Doc.DocumentMonad (withDocumentID, withDocument, theDocument)
-import Doc.SignatoryLinkID (unsafeSignatoryLinkID)
 import Doc.SignatoryFieldID
-import EvidenceLog.Model (EventRenderTarget(..), DocumentEvidenceEvent'(..), EvidenceEventType(..), CurrentEvidenceEventType(..), evidenceLogText)
+import Doc.SignatoryIdentification (signatoryIdentifierMap)
+import Doc.SignatoryLinkID (unsafeSignatoryLinkID)
+import EvidenceLog.Model (EventRenderTarget(..), DocumentEvidenceEvent(..), EvidenceEventType(..), CurrentEvidenceEventType(..), evidenceLogText)
 import EvidenceLog.View (simpleEvents, simplyfiedEventText, eventForVerificationPage)
 import MinutesTime
 import Templates (runTemplatesT)
@@ -99,7 +101,7 @@ dumpEvidenceTexts now lang doc' = do
                        F.value "page" $ page
                        F.value "x" $ show $ realFracToDecimal 3 $ x
                        F.value "y" $ show $ realFracToDecimal 3 $ y
-  let mkev msgtext evt =
+  let mkev text msgtext evt =
           DocumentEvidenceEvent { evDocumentID = documentid doc
                                 , evTime = time
                                 , evClientTime = Nothing
@@ -113,7 +115,7 @@ dumpEvidenceTexts now lang doc' = do
                                 , evIP4 = actorIP actor
                                 , evSigLink = Nothing
                                 , evAPI = actorAPIString actor
-                                , evAffectedSigLink = Just asl
+                                , evAffectedSigLink = Just (signatorylinkid asl)
                                 , evMessageText = msgtext
                                 }
   evs <- (sortBy (compare `on` (\(evt, _, _, _) -> show evt)) <$>) $
@@ -122,10 +124,11 @@ dumpEvidenceTexts now lang doc' = do
                     _ | evt `elem` [SMSPinSendEvidence, SMSPinDeliveredEvidence] -> Just "+481234567890"
                       | otherwise -> messageText
        elog <- withDocument doc $ evidenceLogText evt (fields evt) (Just asl) text actor
+       let ev = mkev elog text evt
+           sim = signatoryIdentifierMap True  [doc] (Set.fromList  [signatorylinkid asl])
        let simpletext target mactor = if simpleEvents (Current evt) && (isNothing mactor || eventForVerificationPage ev)
-                                      then Just <$> simplyfiedEventText target mactor doc{ documentlang = lang } ev
+                                      then Just <$> simplyfiedEventText target mactor doc{ documentlang = lang } sim ev
                                       else return Nothing
-              where ev = mkev elog text evt
        vp <- simpletext EventForVerificationPages (actorEmail actor)
        av <- simpletext EventForArchive Nothing
        return (evt, vp, av, elog)

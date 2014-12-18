@@ -33,6 +33,7 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BSL (empty)
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
+import qualified Data.Map as Map
 import qualified Text.JSON.Pretty as J
 import qualified Text.StringTemplates.Fields as F
 
@@ -47,6 +48,7 @@ import Doc.DocView
 import Doc.Model
 import Doc.Rendering
 import Doc.SealStatus (SealStatus(..))
+import Doc.SignatoryIdentification (SignatoryIdentifierMap, siinitials, silink, signatoryIdentifier)
 import EvidenceLog.Model
 import EvidenceLog.View
 import File.File
@@ -70,11 +72,11 @@ import qualified HostClock.Model as HC
 import qualified Log
 
 personFromSignatory :: (MonadDB m, MonadMask m, TemplatesMonad m)
-                    => Document -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> m Seal.Person
-personFromSignatory doc boxImages signatory = do
+                    => TimeZoneName -> SignatoryIdentifierMap -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> m Seal.Person
+personFromSignatory tz sim boxImages signatory = do
     stime <- case  maybesigninfo signatory of
                   Nothing -> return ""
-                  Just si -> formatUTCTimeForVerificationPage (documenttimezonename doc) $ signtime si
+                  Just si -> formatUTCTimeForVerificationPage tz $ signtime si
     signedAtText <- if (null stime)
                        then return ""
                     else renderTemplate "_contractsealingtextssignedAtText" $ F.value "time" stime
@@ -87,28 +89,28 @@ personFromSignatory doc boxImages signatory = do
                             then renderTemplate "_contractsealingtextspersonalNumberText" $ F.value "idnumber" personalnumber
                          else return ""
 
-    return $ Seal.Person { Seal.fullname = getIdentifier doc signatory
-                , Seal.company = getCompanyName signatory
-                , Seal.email = getEmail signatory
-                , Seal.phone = getMobile signatory
-                , Seal.personalnumber = getPersonalNumber signatory
-                , Seal.companynumber = getCompanyNumber signatory
-                , Seal.fullnameverified = False
-                , Seal.companyverified = False
-                , Seal.numberverified = False
-                , Seal.emailverified = True
-                , Seal.phoneverified = False
-                , Seal.fields = fieldsFromSignatory boxImages signatory
-                , Seal.signtime = stime
-                , Seal.signedAtText = signedAtText
-                , Seal.personalNumberText = personalNumberText
-                , Seal.companyNumberText = companyNumberText
-                }
+    return $ Seal.Person { Seal.fullname           = fromMaybe "" $ signatoryIdentifier sim (signatorylinkid signatory)
+                         , Seal.company            = getCompanyName signatory
+                         , Seal.email              = getEmail signatory
+                         , Seal.phone              = getMobile signatory
+                         , Seal.personalnumber     = getPersonalNumber signatory
+                         , Seal.companynumber      = getCompanyNumber signatory
+                         , Seal.fullnameverified   = False
+                         , Seal.companyverified    = False
+                         , Seal.numberverified     = False
+                         , Seal.emailverified      = True
+                         , Seal.phoneverified      = False
+                         , Seal.fields             = fieldsFromSignatory boxImages signatory
+                         , Seal.signtime           = stime
+                         , Seal.signedAtText       = signedAtText
+                         , Seal.personalNumberText = personalNumberText
+                         , Seal.companyNumberText  = companyNumberText
+                         }
 
 personExFromSignatoryLink :: (MonadDB m, MonadMask m, TemplatesMonad m)
-                          =>  Document -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> m Seal.Person
-personExFromSignatoryLink doc boxImages sl@SignatoryLink{..} = do
-  person <- personFromSignatory doc boxImages sl
+                          =>  TimeZoneName -> SignatoryIdentifierMap -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> m Seal.Person
+personExFromSignatoryLink tz sim boxImages sl@SignatoryLink{..} = do
+  person <- personFromSignatory tz sim boxImages sl
   return person {
        Seal.emailverified    = signatorylinkdeliverymethod == EmailDelivery
      , Seal.fullnameverified = False
@@ -190,8 +192,9 @@ listAttachmentsFromDocument document =
   concatMap extract (documentsignatorylinks document)
   where extract sl = map (\at -> (at,sl)) (signatoryattachments sl)
 
-findOutAttachmentDesc :: (MonadIO m, MonadDB m, MonadThrow m, Log.MonadLog m, TemplatesMonad m, AWS.AmazonMonad m) => String -> Document -> m [Seal.FileDesc]
-findOutAttachmentDesc tmppath document = do
+findOutAttachmentDesc :: (MonadIO m, MonadDB m, MonadThrow m, Log.MonadLog m, TemplatesMonad m, AWS.AmazonMonad m)
+                      => SignatoryIdentifierMap -> String -> Document -> m [Seal.FileDesc]
+findOutAttachmentDesc sim tmppath document = do
   a <- mapM findAttachmentsForAuthorAttachment authorAttsNumbered
   b <- mapM findAttachmentsForSignatoryAttachment attAndSigsNumbered
   return (a ++ b)
@@ -225,7 +228,7 @@ findOutAttachmentDesc tmppath document = do
                     F.value "pages" numberOfPages
 
         attachedByText <- renderLocalTemplate document "_documentAttachedBy" $ do
-                                     F.value "identifier" $ getIdentifier document sl
+                                     F.value "identifier" $ signatoryIdentifier sim (signatorylinkid sl)
 
         attachmentNumText <- renderLocalTemplate document "_attachedDocument" $ do
                                      F.value "number" num
@@ -312,124 +315,117 @@ sealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m, Lo
                      -> String
                      -> m Seal.SealSpec
 sealSpecFromDocument boxImages hostpart document elog ces content tmppath inputpath outputpath = do
-  additionalAttachments <- findOutAttachmentDesc tmppath document
+  -- Keep only simple events and remove events induced by resealing
+  let velog = filter eventForVerificationPage $ eventsForLog elog
+  -- Form initials from signing parties
+  sim <- getSignatoryIdentifierMap False $ filter eventForVerificationPage velog
+
+  -- Remove events generated by non-signing parties
+  -- FIXME: Should we include events for deleted documents?
+  let viewingParty e = viewer (evAffectedSigLink e) || viewer (evSigLink e)
+           where viewer s = (signatoryispartner <$> (s >>= flip Map.lookup sim >>= silink)) == Just False
+      spelog = filter (not . viewingParty) velog
+
+  additionalAttachments <- findOutAttachmentDesc sim tmppath document
   docs <- mapM (\f -> (takeFileName f,) <$> liftIO (BS.readFile f))
             [ "files/Evidence_Documentation.html"
             , "files/Digital_Signature_Documentation_Part_I.html"
             , "files/Digital_Signature_Documentation_Part_II.html"
             ]
 
-  sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath outputpath additionalAttachments docs
-
-sealSpecFromDocument2 :: (TemplatesMonad m, MonadDB m, MonadMask m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m)
-                     => (BS.ByteString,BS.ByteString)
-                     -> String
-                     -> Document
-                     -> [DocumentEvidenceEvent]
-                     -> HC.ClockErrorStatistics
-                     -> BS.ByteString
-                     -> String
-                     -> String
-                     -> [Seal.FileDesc]
-                     -> [(String, BS.ByteString)]
-                     -> m Seal.SealSpec
-sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath outputpath additionalAttachments docs =
   let docid = documentid document
       paddeddocid = pad0 20 (show docid)
       Just authorsiglink = getAuthorSigLink document
       removeTags s = concat [t | TagText t <- parseTags s]
       mkHistEntry ev = do
-        actor <- approximateActor True document ev
-        comment <- removeTags <$> simplyfiedEventText EventForVerificationPages (Just actor) document ev
+        actor <- approximateActor EventForVerificationPages document sim ev
+        comment <- removeTags <$> simplyfiedEventText EventForVerificationPages (Just actor) document sim ev
         etime <- formatUTCTimeForVerificationPage (documenttimezonename document) (evTime ev)
         return $ Seal.HistEntry{ Seal.histdate = etime
                                , Seal.histcomment = comment
                                , Seal.histaddress = maybe "" show $ evIP4 ev
                                }
 
-  in do
-      persons <- sequence $ [ personExFromSignatoryLink document boxImages s
-                        | s <- documentsignatorylinks document
-                        , signatoryispartner $ s
-                    ]
+  persons <- sequence $ [ personExFromSignatoryLink (documenttimezonename document) sim boxImages s
+                    | s <- documentsignatorylinks document
+                    , signatoryispartner $ s
+                ]
 
-      secretaries <- sequence $ [ personFromSignatory document boxImages $ s
-                        | s <- documentsignatorylinks document
-                        , not . signatoryispartner $ s
-                    ]
+  secretaries <- sequence $ [ personFromSignatory (documenttimezonename document) sim boxImages $ s
+                    | s <- documentsignatorylinks document
+                    , not . signatoryispartner $ s
+                ]
 
-      initiator <- if (signatoryispartner authorsiglink)
-                    then return Nothing
-                    else Just <$> (personFromSignatory document boxImages authorsiglink)
+  initiator <- if (signatoryispartner authorsiglink)
+                then return Nothing
+                else Just <$> (personFromSignatory (documenttimezonename document) sim boxImages authorsiglink)
 
-      let initials = intercalate ", " [ signatoryInitials document s
-                                      | s <- documentsignatorylinks document
-                                      , signatoryispartner s
-                                      ]
+  let initials = intercalate ", " $ catMaybes
+                   [ siinitials <$> Map.lookup (signatorylinkid s) sim
+                   | s <- documentsignatorylinks document
+                   , signatoryispartner s
+                   ]
 
-      -- Log.mixlog_ "Creating seal spec from file."
-      -- Remove events induced by resealing and non-signing party activities
-      let eventsForHistory = filter eventForVerificationPage . filter (not . viewingParty)
-          viewingParty e = viewer (evAffectedSigLink e) || viewer (evSigLink e)
-               where viewer s = (signatoryispartner <$> s) == Just False
-      history <- (mapM mkHistEntry . eventsForHistory) =<< getSignatoryLinks (eventsForLog elog)
+  -- Log.mixlog_ "Creating seal spec from file."
 
-      staticTexts <- createSealingTextsForDocument document hostpart
+  history <- mapM mkHistEntry spelog
 
-      -- Creating HTML Evidence Log
-      htmllogs <- htmlDocFromEvidenceLog (documenttitle document) (suppressRepeatedEvents elog) ces
-      let evidenceattachment = Seal.SealAttachment { Seal.fileName = "Evidence_Log.html"
-                                                   , Seal.mimeType = Nothing
-                                                   , Seal.fileContent = BS.fromString htmllogs }
-      evidenceOfIntent <- evidenceOfIntentAttachment document
+  staticTexts <- createSealingTextsForDocument document hostpart
 
-      -- documentation files
-      let docAttachments =
-            [ Seal.SealAttachment { Seal.fileName = name
-                                  , Seal.mimeType = Nothing
-                                  , Seal.fileContent = doc
-                                  }
-            | (name, doc) <- docs ]
+  -- Creating HTML Evidence Log
+  htmllogs <- htmlDocFromEvidenceLog (documenttitle document) (suppressRepeatedEvents elog) ces
+  let evidenceattachment = Seal.SealAttachment { Seal.fileName = "Evidence_Log.html"
+                                               , Seal.mimeType = Nothing
+                                               , Seal.fileContent = BS.fromString htmllogs }
+  evidenceOfIntent <- evidenceOfIntentAttachment document
 
-      let numberOfPages = getNumberOfPDFPages content
-      numberOfPagesText <-
-        if numberOfPages==1
-           then renderLocalTemplate document "_numberOfPagesIs1" $ return ()
-           else renderLocalTemplate document "_numberOfPages" $ do
-             F.value "pages" numberOfPages
+  -- documentation files
+  let docAttachments =
+        [ Seal.SealAttachment { Seal.fileName = name
+                              , Seal.mimeType = Nothing
+                              , Seal.fileContent = doc
+                              }
+        | (name, doc) <- docs ]
 
-      attachedByText <- renderLocalTemplate document "_documentSentBy" $ do
-        F.value "identifier" $ getIdentifier document authorsiglink
+  let numberOfPages = getNumberOfPDFPages content
+  numberOfPagesText <-
+    if numberOfPages==1
+       then renderLocalTemplate document "_numberOfPagesIs1" $ return ()
+       else renderLocalTemplate document "_numberOfPages" $ do
+         F.value "pages" numberOfPages
 
-      mainDocumentText <- renderLocalTemplate document "_mainDocument"
-                          $ (return ())
+  attachedByText <- renderLocalTemplate document "_documentSentBy" $ do
+    F.value "identifier" $ signatoryIdentifier sim (signatorylinkid authorsiglink)
 
-      documentNumberText <- renderLocalTemplate document "_contractsealingtextsDocumentNumber" $ do
-        F.value "documentnumber" $ paddeddocid
+  mainDocumentText <- renderLocalTemplate document "_mainDocument"
+                      $ (return ())
 
-      initialsText <- renderLocalTemplate document "_contractsealingtextsInitialsText" $ do
-        F.value "initials" $ initials
+  documentNumberText <- renderLocalTemplate document "_contractsealingtextsDocumentNumber" $ do
+    F.value "documentnumber" $ paddeddocid
 
-      return $ Seal.SealSpec
-            { Seal.input          = inputpath
-            , Seal.output         = outputpath
-            , Seal.documentNumberText = documentNumberText
-            , Seal.persons        = persons
-            , Seal.secretaries    = secretaries
-            , Seal.initiator      = initiator
-            , Seal.history        = history
-            , Seal.initialsText       = initialsText
-            , Seal.hostpart       = hostpart
-            , Seal.staticTexts    = staticTexts
-            , Seal.attachments    = docAttachments ++ [evidenceattachment, evidenceOfIntent]
-            , Seal.filesList      =
-              [ Seal.FileDesc { fileTitle = documenttitle document
-                              , fileRole = mainDocumentText
-                              , filePagesText = numberOfPagesText
-                              , fileAttachedBy = attachedByText
-                              , fileInput = Nothing
-                              } ] ++ additionalAttachments
-            }
+  initialsText <- renderLocalTemplate document "_contractsealingtextsInitialsText" $ do
+    F.value "initials" $ initials
+
+  return $ Seal.SealSpec
+        { Seal.input          = inputpath
+        , Seal.output         = outputpath
+        , Seal.documentNumberText = documentNumberText
+        , Seal.persons        = persons
+        , Seal.secretaries    = secretaries
+        , Seal.initiator      = initiator
+        , Seal.history        = history
+        , Seal.initialsText       = initialsText
+        , Seal.hostpart       = hostpart
+        , Seal.staticTexts    = staticTexts
+        , Seal.attachments    = docAttachments ++ [evidenceattachment, evidenceOfIntent]
+        , Seal.filesList      =
+          [ Seal.FileDesc { fileTitle = documenttitle document
+                          , fileRole = mainDocumentText
+                          , filePagesText = numberOfPagesText
+                          , fileAttachedBy = attachedByText
+                          , fileInput = Nothing
+                          } ] ++ additionalAttachments
+        }
 
 presealSpecFromDocument :: (BS.ByteString,BS.ByteString) -> Document -> String -> String -> Seal.PreSealSpec
 presealSpecFromDocument boxImages document inputpath outputpath =

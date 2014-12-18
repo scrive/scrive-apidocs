@@ -35,7 +35,7 @@ import Doc.SealStatus (SealStatus(..), hasGuardtimeSignature)
 import Doc.SignatoryFieldID
 import Doc.TestInvariants
 import EvidenceLog.Model
-import EvidenceLog.View (getSignatoryLinks, simplyfiedEventText)
+import EvidenceLog.View (getSignatoryIdentifierMap, simplyfiedEventText)
 import File.FileID
 import MinutesTime
 import Templates (getTemplatesModTime, readGlobalTemplates)
@@ -365,8 +365,8 @@ testMarkInvitationReadEvidenceLog = do
     let expectedSimple = "The invitation to "
                 ++ (if signatoryispartner sl then "sign" else "review")
                 ++ " the document (sent to " ++ getEmail sl ++ ") was opened."
-    [e'] <- getSignatoryLinks [e]
-    simpletext <- theDocument >>= \d -> simplyfiedEventText EventForVerificationPages (Just "author") d{ documentlang = LANG_EN } e'
+    sim <- getSignatoryIdentifierMap True [e]
+    simpletext <- theDocument >>= \d -> simplyfiedEventText EventForVerificationPages (Just "author") d{ documentlang = LANG_EN } sim e
     assertEqual "Correct simplified event text" (expectedSimple) simpletext
 
 testSaveSigAttachmentEvidenceLog :: TestEnv ()

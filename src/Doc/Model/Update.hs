@@ -97,6 +97,7 @@ import Doc.DocUtils
 import Doc.Model.Query (GetSignatoryLinkByID(..), GetDocumentByDocumentID(..), GetDocumentTags(..), GetDocsSentBetween(..), GetDocsSent(..), GetSignatoriesByEmail(..))
 import Doc.SealStatus (SealStatus(..), hasGuardtimeSignature)
 import Doc.SignatoryFieldID
+import Doc.SignatoryIdentification (signatoryIdentifierForEvidenceLog)
 import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots
 import Doc.Tables
@@ -680,7 +681,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m DeleteS
     void $ theDocument >>= \doc -> update $ InsertEvidenceEvent
                     DeleteSigAttachmentEvidence
                     (do F.value "name" saname
-                        F.value "author" $ getIdentifier doc $ $(fromJust) $ getAuthorSigLink doc)
+                        F.value "author" $ signatoryIdentifierForEvidenceLog doc $ $(fromJust) $ getAuthorSigLink doc)
                     actor
 
 
@@ -907,7 +908,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SaveSig
         SaveSigAttachmentEvidence
         (do F.value "name" name
             F.value "description" $ signatoryattachmentdescription sigattach
-            F.value "author" $ getIdentifier doc $ $(fromJust) $ getAuthorSigLink doc)
+            F.value "author" $ signatoryIdentifierForEvidenceLog doc $ $(fromJust) $ getAuthorSigLink doc)
         actor
 
 
@@ -1257,7 +1258,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m PostRem
 
      void $ theDocument >>= \doc -> update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
           (if automatic then AutomaticReminderSent else ReminderSend)
-          (F.value "author" $ getIdentifier doc $ $(fromJust) $ getAuthorSigLink doc)
+          (F.value "author" $ signatoryIdentifierForEvidenceLog doc $ $(fromJust) $ getAuthorSigLink doc)
           (Just sl)
           mmsg
           actor

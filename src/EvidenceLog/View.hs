@@ -1,7 +1,7 @@
 module EvidenceLog.View (
       eventsJSListFromEvidenceLog
     , eventsForLog
-    , getSignatoryLinks
+    , getSignatoryIdentifierMap
     , simplyfiedEventText
     , approximateActor
     , htmlDocFromEvidenceLog
@@ -18,6 +18,8 @@ import Control.Monad
 import Control.Monad.Catch
 import Data.Char (isSpace)
 import Data.Decimal (realFracToDecimal)
+import Data.Function (on)
+import Data.List (sortBy)
 import Data.Maybe
 import Data.String.Utils
 import Data.Word (Word8)
@@ -33,6 +35,7 @@ import Control.Logic
 import DB
 import Doc.DocStateData
 import Doc.Model (GetDocumentsBySignatoryLinkIDs(..))
+import Doc.SignatoryIdentification (SignatoryIdentifierMap, silink, sifullname, signatoryIdentifierMap, signatoryIdentifier, signatoryIdentifierForEvidenceLog)
 import EID.Signature.Model
 import EvidenceLog.Model
 import MinutesTime
@@ -48,55 +51,53 @@ import qualified HostClock.Model as HC
 
 -- | Evidence log for web page - short and simplified texts
 eventsJSListFromEvidenceLog ::  (MonadDB m, MonadThrow m, TemplatesMonad m) => Document -> [DocumentEvidenceEvent] -> m [JSValue]
-eventsJSListFromEvidenceLog doc dees = mapM (J.runJSONGenT . eventJSValue doc) =<< getSignatoryLinks (eventsForLog dees)
+eventsJSListFromEvidenceLog doc dees = do
+  let evs = eventsForLog dees
+  sim <- getSignatoryIdentifierMap True evs
+  mapM (J.runJSONGenT . eventJSValue doc sim) evs
 
--- | Lookup signatory links in events
-getSignatoryLinks :: (MonadDB m, MonadThrow m) => [DocumentEvidenceEvent] -> m [DocumentEvidenceEventWithSignatoryLink]
-getSignatoryLinks evs = do
-  let docids = Set.fromList $ catMaybes $ map evSigLink evs ++ map evAffectedSigLink evs
-  docs <- dbQuery $ GetDocumentsBySignatoryLinkIDs $ Set.toList docids
-  let slmap = Map.fromList [(signatorylinkid s, s) | d <- docs, s <- documentsignatorylinks d]
-      findsiglink s = flip Map.lookup slmap =<< s
-  return $ for evs $ \ev -> ev { evSigLink = findsiglink (evSigLink ev)
-                               , evAffectedSigLink = findsiglink (evAffectedSigLink ev)
-                               }
+-- | Get signatory identifier map from event list
+getSignatoryIdentifierMap :: (MonadDB m, MonadThrow m) => Bool -> [DocumentEvidenceEvent] -> m SignatoryIdentifierMap
+getSignatoryIdentifierMap includeviewers evs = do
+  let sigs = Set.fromList $ catMaybes $ concat [ [evSigLink ev, evAffectedSigLink ev] | ev <- evs ]
+  docs <- dbQuery $ GetDocumentsBySignatoryLinkIDs $ Set.toList sigs
+  return $ signatoryIdentifierMap includeviewers (sortBy (compare `on` documentid) docs) sigs
 
 -- | Keep only simple events, remove some redundant signatory events after signing
 eventsForLog :: [DocumentEvidenceEvent] -> [DocumentEvidenceEvent]
 eventsForLog = cleanUnimportantAfterSigning . filter ((simpleEvents . evType) &&^ (not . emptyEvent))
 
 -- TODO: Consider saving actor name in event instead, this is likely to become broken
-approximateActor :: (MonadDB m, MonadThrow m, TemplatesMonad m) => Bool -> Document -> DocumentEvidenceEventWithSignatoryLink -> m String
-approximateActor useIdentifier doc dee | systemEvents $ evType dee = return "Scrive"
-                                       | otherwise =
-  case evSigLink dee of
-    Just sl -> return $ getId sl
+approximateActor :: (MonadDB m, MonadThrow m, TemplatesMonad m) => EventRenderTarget -> Document -> SignatoryIdentifierMap -> DocumentEvidenceEvent -> m String
+approximateActor EventForEvidenceLog _ _ _ = error "approximateActor"
+approximateActor tgt doc sim dee | systemEvents $ evType dee = return "Scrive"
+                             | otherwise =
+  case evSigLink dee >>= sigid of
+    Just i -> return i
     Nothing -> case evUserID dee of
                Just uid -> if (isAuthor (doc,uid))
                             then authorName
                             else do
                               muser <- dbQuery $ GetUserByID uid
                               case muser of
-                                Just user -> return $ getSmartName user ++
-                                                      if useIdentifier then " (" ++ getEmail user ++ ")" else ""
+                                Just user -> return $ getSmartName user ++ " (" ++ getEmail user ++ ")"
                                 _ -> return "Scrive" -- This should not happend
                _ ->  if (authorEvents $ evType dee)
                         then authorName
                         else return "Scrive"
 
-  where authorName = case (getAuthorSigLink doc) of
-                        Just sl -> return $ getId sl
+  where authorName = case getAuthorSigLink doc >>= sigid . signatorylinkid of
+                        Just i -> return i
                         Nothing -> renderTemplate_ "_authorParty"
-        getId :: SignatoryLink -> String
-        getId | useIdentifier = getIdentifier doc
-              | otherwise     = getSmartName
+        sigid s | tgt == EventForArchive = sifullname <$> Map.lookup s sim
+                | otherwise              = signatoryIdentifier sim s
 
-eventJSValue :: (MonadDB m, MonadThrow m, TemplatesMonad m) => Document -> DocumentEvidenceEventWithSignatoryLink -> JSONGenT m ()
-eventJSValue doc dee = do
+eventJSValue :: (MonadDB m, MonadThrow m, TemplatesMonad m) => Document -> SignatoryIdentifierMap -> DocumentEvidenceEvent -> JSONGenT m ()
+eventJSValue doc sim dee = do
     J.value "status" $ show $ getEvidenceEventStatusClass (evType dee)
     J.value "time"   $ formatTimeISO (evTime dee)
-    J.valueM "party" $ approximateActor False doc dee
-    J.valueM "text"  $ simplyfiedEventText EventForArchive Nothing doc dee
+    J.valueM "party" $ approximateActor EventForArchive doc sim dee
+    J.valueM "text"  $ simplyfiedEventText EventForArchive Nothing doc sim dee
 
 -- | Simple events to be included in the archive history and the verification page.  These have translations.
 simpleEvents :: EvidenceEventType -> Bool
@@ -186,32 +187,43 @@ emptyEvent (DocumentEvidenceEvent {evType = Current InvitationEvidence, evAffect
 emptyEvent (DocumentEvidenceEvent {evType = Current ReminderSend,       evAffectedSigLink = Nothing }) = True
 emptyEvent _ = False
 
-eventForVerificationPage :: DocumentEvidenceEventWithSignatoryLink -> Bool
+eventForVerificationPage :: DocumentEvidenceEvent -> Bool
 eventForVerificationPage = not . (`elem` map Current [AttachGuardtimeSealedFileEvidence, AttachExtendedSealedFileEvidence]) . evType
 
 -- | Produce simplified text for an event (only for archive or
 -- verification pages).
-simplyfiedEventText :: (MonadDB m, MonadThrow m, TemplatesMonad m)
-  => EventRenderTarget -> Maybe String -> Document -> DocumentEvidenceEventWithSignatoryLink -> m String
-simplyfiedEventText EventForEvidenceLog _ _ _ = error "simplyfiedEventText"
-simplyfiedEventText target mactor doc dee = case evType dee of
+simplyfiedEventText :: (HasLang d, MonadDB m, MonadThrow m, TemplatesMonad m)
+  => EventRenderTarget -> Maybe String -> d -> SignatoryIdentifierMap -> DocumentEvidenceEvent -> m String
+simplyfiedEventText EventForEvidenceLog _ _ _ _ = error "simplyfiedEventText"
+simplyfiedEventText target mactor d sim dee = case evType dee of
   Obsolete CancelDocumenElegEvidence -> renderEvent "CancelDocumenElegEvidenceText"
   Current et -> renderEvent $ eventTextTemplateName target et
   Obsolete _ -> return "" -- shouldn't we throw an error in this case?
   where
-    render | target == EventForVerificationPages = renderLocalTemplate doc
+    render | target == EventForVerificationPages = renderLocalTemplate (getLang d)
            | otherwise                           = renderTemplate
     renderEvent eventTemplateName = render eventTemplateName $ do
-      let mslink = evAffectedSigLink dee
-      F.forM_ mslink $ \slink -> do
-        signatoryLinkTemplateFields slink
+      let mslinkid = evAffectedSigLink dee
+      F.forM_ mslinkid  $ \slinkid -> do
+        case Map.lookup slinkid sim >>= silink of
+          Just slink -> do
+            signatoryLinkTemplateFields slink
+            -- FIXME: fetching email from signatory is not guaranteed to get
+            -- the email address field of the signatory at the time of the
+            -- event, since the signatory's email may have been updated
+            -- later.
+            F.value "signatory_email" $ getEmail slink
+          Nothing -> do
+            -- signatory email: there are events that are missing affected
+            -- signatory, but happen to have evEmail set to what we want
+            F.value "signatory_email" $ evEmail dee
         -- This is terribad, but another possibility is to include it
         -- in DocumentEvidenceEvent or to include it in SignatoryLink
         -- and none of them are better. The best thing is to think how
         -- to rework evidence log module so that stuff like that can
         -- be somehow painlessly done, I guess.
         when (evType dee == Current SignDocumentEvidence) $ do
-          dbQuery (GetESignature $ signatorylinkid slink) >>= \case
+          dbQuery (GetESignature slinkid) >>= \case
             Nothing -> return ()
             Just esig -> F.value "eid_signatory_name" $ case esig of
               LegacyBankIDSignature_{} -> Nothing
@@ -220,16 +232,7 @@ simplyfiedEventText target mactor doc dee = case evType dee of
               LegacyMobileBankIDSignature_{} -> Nothing
               BankIDSignature_ BankIDSignature{..} -> Just bidsSignatoryName
       F.value "text" $ strip . filterTagsNL <$> evMessageText dee
-      F.value "signatory" $ getIdentifier doc <$> mslink
-      -- signatory email: there are events that are missing affected
-      -- signatory, but happen to have evEmail set to what we want
-
-      -- FIXME: fetching email from signatory is not guaranteed to get
-      -- the email address field of the signatory at the time of the
-      -- event, since the signatory's email may have been updated
-      -- later.
-
-      F.value "signatory_email" $ (getEmail <$> mslink) <|> evEmail dee
+      F.value "signatory" $ signatoryIdentifier sim <$> mslinkid
       F.forM_ mactor $ F.value "actor"
 
 showClockError :: Word8 -> Double -> String
@@ -286,7 +289,7 @@ evidenceOfIntentHTML doc title l = do
           F.value "time" $ formatTimeUTC (Screenshot.time s) ++ " UTC"
           F.value "image" $ imgEncodeRFC2397 $ unBinary $ Screenshot.image s
     F.objects "entries" $ for l $ \(sl, entry) -> do
-      F.value "signatory"  $ getIdentifier doc sl
+      F.value "signatory"  $ signatoryIdentifierForEvidenceLog doc sl
       F.value "ip"         $ show . signipnumber <$> maybesigninfo sl
       F.object "first"     $ values (SignatoryScreenshots.first entry)
       F.object "signing"   $ values (SignatoryScreenshots.signing entry)

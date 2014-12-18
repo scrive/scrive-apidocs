@@ -6,6 +6,7 @@ dumpAllEvidenceTexts=
     <title>Evidence texts ($lang$)</title>
     <style>
       tr:nth-child(even) { background-color: #f0f0f0; }
+      .evidencelog:first-letter { text-transform: uppercase }
     </style>
   </head>
   <body>
@@ -30,7 +31,7 @@ dumpAllEvidenceTexts=
         <h2>Evidence Log</h2>
         <table>
           $evidences:{evidence|
-          <tr><td>$evidence.name$</td><td>$evidence.evidencelog:noescape()$</td></tr>}$
+          <tr><td>$evidence.name$</td><td class="evidencelog">$evidence.evidencelog:noescape()$</td></tr>}$
         </table>
       </div>
     </div>

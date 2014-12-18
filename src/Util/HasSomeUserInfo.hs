@@ -14,21 +14,15 @@ module Util.HasSomeUserInfo (
   getFullName,
   getSmartName,
   getSmartNameOrPlaceholder,
-  getIdentifier,
   getSignatoryIdentifier,
-  signatoryInitials,
   HasSomeUserInfo(..)
   ) where
 
 
 import Control.Applicative ((<$>))
-import Data.Char (toLower)
-import Data.List (findIndex, mapAccumL)
-import Data.Maybe (fromMaybe)
+import Data.List (findIndex)
 import Data.String.Utils
 import Text.StringTemplates.Templates
-import qualified Data.Map as Map
-import qualified Data.Set as Set
 
 import Doc.DocStateData
 import Doc.DocumentMonad (DocumentMonad, theDocument)
@@ -90,7 +84,7 @@ getFullName a = strip $ (strip $ getFirstName a) ++ " " ++ (strip $ getLastName 
 
 
 -- | Return the first non-empty of full name, email or mobile number,
--- for use in frontend.  May not be unique.
+-- for use in frontend.  Not guaranteed to be unique.
 getSmartName :: (HasSomeUserInfo a) => a -> String
 getSmartName a = firstNonEmpty $ [getFullName a, getEmail a, getMobile a]
 
@@ -100,15 +94,8 @@ getSmartNameOrPlaceholder a = do
     notNamed <- renderTemplate_ "_notNamedParty"
     return $ firstNonEmpty [getSmartName a, notNamed]
 
--- | Return the full name plus initials that are unique for the current signing process.
-getIdentifier :: Document -> SignatoryLink -> String
-getIdentifier doc s | null fullName = initials
-                    | otherwise     = fullName ++ " " ++ initials
-  where fullName = getFullName s
-        initials = "(" ++ signatoryInitials doc s ++ ")"
-
 -- | Return the full name plus first non-empty of person number, email
--- or mobile number.  Temporary definition until we have implemented
+-- or mobile number.  FIXME: Temporary definition until we have implemented
 -- getIdentifer properly for event log.
 getIdentifier' :: HasSomeUserInfo a => a -> String
 getIdentifier' a | null fullName   = identifier
@@ -120,7 +107,7 @@ getIdentifier' a | null fullName   = identifier
 
 -- | Return identifier for a signatory or "(Signatory <N>)" if the
 -- identifier is empty, where the signatory is the Nth signatory of
--- the document.
+-- the document.  FIXME: Temporary
 getSignatoryIdentifier :: DocumentMonad m => SignatoryLink -> m String
 getSignatoryIdentifier sl = do
   let i = getIdentifier' sl
@@ -139,33 +126,3 @@ getMailAddress a = MailAddress {
     fullname = getFullName a
   , email    = getEmail a
   }
-
--- | Get initials for a signatory that are unique for the document's
--- current signing process. Substitude numbers for empty initials.
--- When more than one signatory has the same initials, append a unique
--- number.
-signatoryInitials :: Document -> SignatoryLink -> String
-signatoryInitials doc sl = fromMaybe (error "signatoryInitials") $ lookup (signatorylinkid sl) l where
-  l = zip (map signatorylinkid osls)
-          (uniqueStrings $ enumerateEmpty $ map initials osls)
-  initials :: SignatoryLink -> String
-  initials = map head . words . getFullName
-  osls = filter signatoryispartner sls ++ filter (not . signatoryispartner) sls
-  sls = documentsignatorylinks doc
-
--- | Replace all empty strings in a list with "1", "2", ...
-enumerateEmpty :: [String] -> [String]
-enumerateEmpty = snd . mapAccumL go 1 where
-  go n "" = (n+1,show n)
-  go n s  = (n,s)
-
--- | Make each string in a list unique (ignoring case) by appending numbers.
-uniqueStrings :: [String] -> [String]
-uniqueStrings ss = snd . mapAccumL (go 1) Set.empty $ ss where
-  go n used s | normalize sn `Set.member` used = go (n+1) used' s
-              | otherwise          = (used',sn)
-    where sn | n > 1 || Map.lookup (normalize s) ssOccurrences > Just 1 = s ++ show n -- Attempt to only append "1" if there are more occurrences down the list.
-             | otherwise                                                = s
-          used' = Set.insert (normalize sn) used
-  normalize = map toLower
-  ssOccurrences = Map.fromListWith (+) [(normalize s,1) | s <- ss]

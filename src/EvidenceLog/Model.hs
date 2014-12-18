@@ -8,9 +8,7 @@ module EvidenceLog.Model (
   , InsertEvidenceEvent(..)
   , InsertEvidenceEventWithAffectedSignatoryAndMsg(..)
   , GetEvidenceLog(..)
-  , DocumentEvidenceEvent
-  , DocumentEvidenceEventWithSignatoryLink
-  , DocumentEvidenceEvent'(..)
+  , DocumentEvidenceEvent(..)
   , evidenceLogText
   , copyEvidenceLogToNewDocument
   , copyEvidenceLogToNewDocuments
@@ -33,12 +31,13 @@ import DB
 import Doc.DocStateData (SignatoryLink(..), AuthenticationMethod(..), DeliveryMethod(..))
 import Doc.DocumentID
 import Doc.DocumentMonad (DocumentMonad, theDocumentID, theDocument)
+import Doc.SignatoryIdentification (signatoryIdentifierForEvidenceLog)
 import Doc.SignatoryLinkID
 import IPAddress
 import MinutesTime
 import User.Model
 import Util.Actor
-import Util.HasSomeUserInfo (getEmail, getIdentifier)
+import Util.HasSomeUserInfo (getEmail)
 import Version
 import qualified HostClock.Model as HC
 
@@ -90,7 +89,7 @@ evidenceLogText event textFields masl mmsg actor = do
    msignatory <-
      case masl of
        Nothing -> return Nothing
-       Just sl -> Just .  flip getIdentifier sl <$> theDocument
+       Just sl -> Just . flip signatoryIdentifierForEvidenceLog sl <$> theDocument
    let fields = do
          F.value "full" True
          F.value "actor" $ actorWho actor
@@ -128,29 +127,26 @@ instance (DocumentMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => DBUpdat
 instance (DocumentMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => DBUpdate m InsertEvidenceEvent Bool where
   update (InsertEvidenceEvent event textFields actor) = update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields Nothing Nothing actor)
 
-type DocumentEvidenceEvent = DocumentEvidenceEvent' SignatoryLinkID
 
--- | For generating evidence texts, we substitute full signatory links for their IDs
-type DocumentEvidenceEventWithSignatoryLink = DocumentEvidenceEvent' SignatoryLink
-
-data DocumentEvidenceEvent' s = DocumentEvidenceEvent {
+data DocumentEvidenceEvent = DocumentEvidenceEvent {
     evDocumentID :: DocumentID
-  , evTime       :: UTCTime       -- from actor
-  , evClientTime :: Maybe UTCTime -- from actor
-  , evClientName :: Maybe String  -- from actor
+  , evTime       :: UTCTime                    -- from actor
+  , evClientTime :: Maybe UTCTime              -- from actor
+  , evClientName :: Maybe String               -- from actor
   , evClockErrorEstimate :: Maybe HC.ClockErrorEstimate
-  , evText       :: String -- to go into evidence log
+  , evText       :: String                     -- to go into evidence log
   , evType       :: EvidenceEventType
   , evVersionID  :: String
-  , evEmail      :: Maybe String -- from actor; use: "signatory_email" attribute if affected signatory not set
-  , evUserID     :: Maybe UserID -- from actor; use: to fetch subject name through author siglink or through account info in approximateActor; filter events
+  , evEmail      :: Maybe String               -- from actor; use: "signatory_email" attribute if affected signatory not set
+  , evUserID     :: Maybe UserID               -- from actor; use: to fetch subject name through author siglink or through account info in approximateActor; filter events
   , evIP4        :: Maybe IPAddress
-  , evSigLink    :: Maybe s      -- from actor; use: to fetch subject name; viewer; filter events
-  , evAPI        :: Maybe String -- from actor; not used
-  , evAffectedSigLink :: Maybe s -- Some events affect only one signatory, but actor is out system or author. We express it here, since we can't with evType.
-                                 -- use: to fetch object name; viewer; to set signatoryLinkTemplateFields and "signatory" attribute; get bankID signatory name
-  , evMessageText :: Maybe String -- Some events have message connected to them (like reminders). We don't store such events in documents, but they should not get lost.
-                                  -- use: "text" attribute
+  , evSigLink    :: Maybe SignatoryLinkID      -- from actor; use: to fetch subject name; viewer; filter events
+  , evAPI        :: Maybe String               -- from actor; not used
+  , evAffectedSigLink :: Maybe SignatoryLinkID -- Some events affect only one signatory, but actor is our system or author. We express it here, since we can't with evType.
+                                               -- use: to fetch object name; viewer; to set signatoryLinkTemplateFields and "signatory" attribute; get bankID signatory name
+
+  , evMessageText :: Maybe String              -- Some events have message connected to them (like reminders). We don't store such events in documents, but they should not get lost.
+                                               -- use: "text" attribute
   }
   deriving (Eq, Ord, Show, Typeable)
 
