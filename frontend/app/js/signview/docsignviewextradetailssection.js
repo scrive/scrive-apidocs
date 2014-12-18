@@ -212,129 +212,140 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
   },
   emailInput: function() {
     var self = this;
-    var signview = this.signview;
-    var signatory = this.model.document().currentSignatory();
-    var focused = false;
-    var field = signatory.emailField();
-    var iti = new InfoTextInput({
-      infotext: localization.email,
-      value: field.value(),
-      cssClass: 'obligatory-input extradetails-email',
-      onFocus: function() {
-        iti.el().addClass("active");
-      },
-      onBlur: function() {
-        iti.el().removeClass("active");
-      },
-      onChange: function(value) {
-          field.setValue(value);
-          signatory.trigger("change");
-          iti.el().toggleClass("valid",!signview.askForEmail());
-      }
-    });
-    iti.el().toggleClass("valid",!signview.askForEmail());
-
-    field.bind("change", function() {
-      iti.setValue(field.value());
+    if(self.emailInfoTextInputEl == undefined) {
+      var signview = self.signview;
+      var signatory = self.model.document().currentSignatory();
+      var focused = false;
+      var field = signatory.emailField();
+      var iti = new InfoTextInput({
+        infotext: localization.email,
+        value: field.value(),
+        cssClass: 'obligatory-input',
+        onFocus: function() {
+          iti.el().addClass("active");
+        },
+        onBlur: function() {
+          iti.el().removeClass("active");
+        },
+        onChange: function(value) {
+            field.setValue(value);
+            signatory.trigger("change");
+            iti.el().toggleClass("valid",!signview.askForEmail());
+        }
+      });
       iti.el().toggleClass("valid",!signview.askForEmail());
-    });
 
-    return iti.el();
+      field.bind("change", function() {
+        iti.setValue(field.value());
+        iti.el().toggleClass("valid",!signview.askForEmail());
+      });
+
+      self.emailInfoTextInputEl = iti.el();
+    }
+    return self.emailInfoTextInputEl;
   },
   nameInput: function() {
     var self = this;
-    var signview = this.signview;
-    var signatory = this.model.document().currentSignatory();
-    var focused = false;
-    var field = signatory.fstnameField();
-    var iti = new InfoTextInput({
-      infotext: localization.personalName,
-      value: field.value(),
-      cssClass: 'obligatory-input extradetails-name',
-      onFocus: function() {
-        iti.el().addClass("active");
-      },
-      onBlur: function() {
-        iti.el().removeClass("active");
-      },
-      onChange: function(value) {
-          field.setValue(value);
-          signatory.trigger("change");
-          iti.el().toggleClass("valid", !signview.askForName());
-      }
-    });
-    iti.el().toggleClass("valid", !signview.askForName());
-
-
-    field.bind("change", function() {
-      iti.setValue(field.value());
+    if(self.nameInfoTextInputEl == undefined) {
+      var signview = self.signview;
+      var signatory = self.model.document().currentSignatory();
+      var focused = false;
+      var field = signatory.fstnameField();
+      var iti = new InfoTextInput({
+        infotext: localization.personalName,
+        value: field.value(),
+        cssClass: 'obligatory-input',
+        onFocus: function() {
+          iti.el().addClass("active");
+        },
+        onBlur: function() {
+          iti.el().removeClass("active");
+        },
+        onChange: function(value) {
+            field.setValue(value);
+            signatory.trigger("change");
+            iti.el().toggleClass("valid", !signview.askForName());
+        }
+      });
       iti.el().toggleClass("valid", !signview.askForName());
-    });
 
-    return  iti.el();
+
+      field.bind("change", function() {
+        iti.setValue(field.value());
+        iti.el().toggleClass("valid", !signview.askForName());
+      });
+
+      self.nameInfoTextInputEl = iti.el();
+    }
+    return self.nameInfoTextInputEl;
   },
   ssnInput: function() {
     var self = this;
-    var signview = this.signview;
-    var signatory = this.model.document().currentSignatory();
-    var field = signatory.personalnumberField();
-    var focused = false;
-    var iti = new InfoTextInput({
-      infotext: localization.personalNumber,
-      value: field.value(),
-      cssClass: 'obligatory-input extradetails-ssn',
-      onFocus: function() {
-        iti.el().addClass("active");
-      },
-      onBlur: function() {
-        iti.el().removeClass("active");
-      },
-      onChange: function(value) {
-          field.setValue(value);
-          signatory.trigger("change");
-          iti.el().toggleClass("valid", !signview.askForSSN());
-      }
-    });
-    iti.el().toggleClass("valid", !signview.askForSSN());
-
-    field.bind("change", function() {
-      iti.setValue(field.value());
+    if(self.ssnInfoTextInputEl == undefined) {
+      var signview = self.signview;
+      var signatory = self.model.document().currentSignatory();
+      var field = signatory.personalnumberField();
+      var focused = false;
+      var iti = new InfoTextInput({
+        infotext: localization.personalNumber,
+        value: field.value(),
+        cssClass: 'obligatory-input',
+        onFocus: function() {
+          iti.el().addClass("active");
+        },
+        onBlur: function() {
+          iti.el().removeClass("active");
+        },
+        onChange: function(value) {
+            field.setValue(value);
+            signatory.trigger("change");
+            iti.el().toggleClass("valid", !signview.askForSSN());
+        }
+      });
       iti.el().toggleClass("valid", !signview.askForSSN());
-    });
 
-    return iti.el();
+      field.bind("change", function() {
+        iti.setValue(field.value());
+        iti.el().toggleClass("valid", !signview.askForSSN());
+      });
+
+      self.ssnInfoTextInputEl = iti.el();
+    }
+    return self.ssnInfoTextInputEl;
   },
   phoneInput: function() {
     var self = this;
-    var signview = this.signview;
-    var signatory = this.model.document().currentSignatory();
-    var field = signatory.mobileField();
-    var iti = new InfoTextInput({
-      infotext: localization.phonePlaceholder,
-      value: field.value(),
-      cssClass: 'obligatory-input extradetails-phone',
-      onFocus: function() {
-        iti.el().addClass("active");
-      },
-      onBlur: function() {
-        iti.el().removeClass("active");
-      },
-      onChange: function(value) {
-          field.setValue(value);
-          signatory.trigger("change");
-          iti.el().toggleClass("valid", !signview.askForPhone());
-      }
-    });
-    iti.el().toggleClass("valid", !signview.askForPhone());
-
-
-    field.bind("change", function() {
-      iti.setValue(field.value());
+    if(self.phoneInfoTextInputEl == undefined) {
+      var signview = self.signview;
+      var signatory = self.model.document().currentSignatory();
+      var field = signatory.mobileField();
+      var iti = new InfoTextInput({
+        infotext: localization.phonePlaceholder,
+        value: field.value(),
+        cssClass: 'obligatory-input extradetails-phone',
+        onFocus: function() {
+          iti.el().addClass("active");
+        },
+        onBlur: function() {
+          iti.el().removeClass("active");
+        },
+        onChange: function(value) {
+            field.setValue(value);
+            signatory.trigger("change");
+            iti.el().toggleClass("valid", !signview.askForPhone());
+        }
+      });
       iti.el().toggleClass("valid", !signview.askForPhone());
-    });
 
-    return iti.el();
 
+      field.bind("change", function() {
+        iti.setValue(field.value());
+        iti.el().toggleClass("valid", !signview.askForPhone());
+      });
+
+      self.phoneInfoTextInputEl = iti.el();
+    }
+    return self.phoneInfoTextInputEl;
   },
   render: function() {
       var signatory = this.model;

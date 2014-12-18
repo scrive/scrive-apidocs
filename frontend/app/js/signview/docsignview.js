@@ -73,8 +73,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
     return this.askForName()
         || this.askForEmail()
         || this.askForSSN()
-        || this.askForPhone()
-        || this.askForSignature();
+        || this.askForPhone();
   },
   askForName : function() {
     var signatory = this.document().currentSignatory();
@@ -98,14 +97,6 @@ var DocumentSignViewModel = Backbone.Model.extend({
     var signatory = this.document().currentSignatory();
     var field = signatory.mobileField();
     return field != undefined && !new PhoneValidation().validateData(field.value()) && (!field.hasPlacements()) && field.obligatory();
-  },
-  askForSignature : function() {
-    var signatory = this.document().currentSignatory();
-    if(signatory.padDelivery() && signatory.hasSignatureField()) {
-      return !signatory.anySignatureHasImageOrPlacement();
-    }
-
-    return false;
   },
   hasSignatoriesAttachmentsSection : function() {
       return this.document().currentSignatory().attachments().length > 0;
@@ -358,43 +349,56 @@ var DocumentSignViewModel = Backbone.Model.extend({
   extraDetailsTasks : function() {
         var self = this;
         var document = self.document();
-        var makeTask = function(classSelector, isDone, label) {
-          var t = new PageTask({
-            type: 'extra-details',
-            label: label,
-            isComplete: function() {return isDone();},
-            el: $(classSelector, self.extradetailssection().el)
-          });
-          document.currentSignatory().bind("change", function() {t.update()});
-          return t;
-        };
+        var label = localization.docsignview.textfield;
 
         if (self.get("extraDetailsTasks") == undefined) {
           var tasks = [];
+
           if(this.askForName()) {
-            tasks.push(makeTask('.extradetails-name', function() {
-              return !self.askForName();},
-              localization.docsignview.textfield
-            ));
+            tasks.push(new PageTask({
+              type: 'extra-details',
+              label: label,
+              isComplete: function() {
+                return !self.askForName();
+              },
+              el: self.extradetailssection().nameInput()
+            }));
           }
+
           if(this.askForEmail()) {
-            tasks.push(makeTask('.extradetails-email', function() {
-              return !self.askForEmail();},
-              localization.docsignview.textfield
-            ));
+            tasks.push(new PageTask({
+              type: 'extra-details',
+              label: label,
+              isComplete: function() {
+                return !self.askForEmail();
+              },
+              el: self.extradetailssection().emailInput()
+            }));
           }
+
           if(this.askForSSN()) {
-            tasks.push(makeTask('.extradetails-ssn', function() {
-              return !self.askForSSN();},
-              localization.docsignview.textfield
-            ));
+            tasks.push(new PageTask({
+              type: 'extra-details',
+              label: label,
+              isComplete: function() {
+                return !self.askForSSN();
+              },
+              el: self.extradetailssection().ssnInput()
+            }));
           }
+
           if(this.askForPhone()) {
-            tasks.push(makeTask('.extradetails-phone', function() {
-              return !self.askForPhone();},
-              localization.docsignview.textfield
-            ));
+            tasks.push(new PageTask({
+              type: 'extra-details',
+              label: label,
+              isComplete: function() {
+                return !self.askForPhone();
+              },
+              el: self.extradetailssection().phoneInput()
+            }));
           }
+
+          document.currentSignatory().bind("change", function() {_.each(tasks, function(t) {t.update();})});
           self.set({'extraDetailsTasks' : tasks }, {silent : true});
        }
        return self.get('extraDetailsTasks');
