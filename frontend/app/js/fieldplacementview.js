@@ -314,7 +314,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                 name: selectedName,
                 cssClass : (view.extraClass || ""),
                 style: 'font-size: 16px;',
-                textWidth: "191px",
+                textWidth: 191,
                 optionsWidth: "218px",
                 onSelect: function(v) {
                     if(field) {
@@ -443,7 +443,7 @@ var TextTypeSetterView = Backbone.View.extend({
         if (Math.abs(currSize - fontSizeHuge) < 1)
           fontSizeName = localization.fontSize.large;
         return new Select({name : localization.fontSize.name + ": " + fontSizeName,
-                           textWidth: "191px",
+                           textWidth: 191,
                            optionsWidth: "218px",
                            style: "font-size: 16px;",
                            options: [
@@ -806,7 +806,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
 
             cssClass: 'text-field-placement-setter-field-selector',
             border : placementBorder + "px solid " + (sig.color() || "#f33"),
-            textWidth: "",
+            textWidth: undefined,
             onSelect: function(s) {
                 mixpanel.track('Select placement signatory');
                 placement.setSignatory(s);
@@ -857,7 +857,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
             options: options,
             cssClass: 'text-field-placement-setter-field-field-selector',
             border : placementBorder + "px solid " + (signatory.color() || "#f33"),
-            textWidth : "",
+            textWidth : undefined,
             onSelect: function(o) {
                 var f = signatory.field(o.name, o.type);
 
@@ -1175,7 +1175,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
             name: signame,
             options: options,
             cssClass: 'signature-field-placement-setter-field-selector',
-            textWidth: "191px",
+            textWidth: 191,
             optionsWidth: "218px",
             onSelect: function(s) {
                 mixpanel.track('Choose checkbox signatory');
@@ -1671,7 +1671,7 @@ var SignatureTypeSetterView = Backbone.View.extend({
         var selector = new Select({
             name: signame,
             options: options,
-            textWidth: "191px",
+            textWidth: 191,
             optionsWidth: "218px",
             cssClass: 'signature-field-placement-setter-field-selector',
             onSelect: function(s) {

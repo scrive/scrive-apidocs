@@ -147,7 +147,7 @@ define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_the
 
             var select = new Select({
                 options: _.filter(languages, function(l) { return !l.hidden;}),
-                textWidth: "130px",
+                textWidth: 130,
                 name: lname,
                 cssClass : 'design-view-action-process-left-column-language-field',
                 onSelect: function(v) {

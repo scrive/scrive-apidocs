@@ -6,7 +6,7 @@
       name : "Option 1"              // Name on main button
       cssClass* : "select-1"         // Class to be added
       expandSide* : "right"          // What direction should it expand ("left" or "right")
-      textWidth* : "100px"           // Unexpanded selectbox will not get much longer then given value. default "160px"
+      textWidth* : 100               // Unexpanded selectbox will not get much longer then given value. default 160 (px unit is implied)
       optionsWidth* : "200px"        // How long should be an expanded area
       onOpen* : function(){}         // Function to be called when box gets opened. Usefull when wanting to get options with AJAX (ask M for example)
       color* : "red"                 // Color of text
@@ -78,7 +78,7 @@ var SelectModel = Backbone.Model.extend({
       onOpen : function() {return true;},
       color: "black",
       border: "1px solid #ddd",
-      textWidth : "160px",
+      textWidth : 160,
       optionsWidth : "200px",
       style : "",
       cssClass : "",
@@ -207,12 +207,19 @@ var SelectView = Backbone.View.extend({
         var model = this.model;
         var button = $("<div class='select-button' />");
         button.append("<div class='select-button-left' />");
-        button.append($("<div class='select-button-label' />")
+        var buttonLabel = $("<div class='select-button-label' />")
                           .attr("style", model.style())
-                          .text(model.name())
-                          .css("width",model.textWidth())
-                     );
+                          .text(model.name());
+        button.append(buttonLabel);
         button.append("<div class='select-button-right' />");
+
+        if (model.textWidth() !== undefined) {
+          buttonLabel.css("width",model.textWidth() + 'px');
+
+          // .select-button-left and .select-button-right widths from select.less
+          // this must be kept in sync!
+          button.css('width', model.textWidth() + 6 + 21 + 'px');
+        }
 
         if (!model.inactive())
           button.click(function(){

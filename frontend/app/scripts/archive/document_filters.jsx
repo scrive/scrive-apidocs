@@ -9,7 +9,7 @@ return function(args) {
     <List.SelectFilter
             key="status"
             name="status"
-            textWidth="135px"
+            textWidth={135}
             options = {[
               {name: localization.filterByStatus.showAnyStatus, value: ""},
               {name: localization.filterByStatus.showDraft,     value: "[draft]"},
@@ -22,7 +22,7 @@ return function(args) {
    (<List.SelectAjaxFilter
      name="sender"
      key="sender"
-     textWidth="135px"
+     textWidth={135}
      defaultName={localization.filterByAuthor.showAnyAuthor}
      optionsURL="/companyaccounts"
      optionsParse={function(resp) {
@@ -42,7 +42,7 @@ return function(args) {
    <List.SelectFromToFilter
      key="time"
      name="time"
-     textWidth="100px"
+     textWidth={100}
      fromText={localization.filterByTime.filterForm}
      toText= {localization.filterByTime.filterTo}
      options={
