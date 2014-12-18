@@ -55,6 +55,7 @@ javascriptLocalisation =
              , deletePDF: "$_DeletePDF()$"
              , attachmentType : "$_pageAttachmentAttachments()$"
              , requestedAttachments : "$_RequestedAttachments()$"
+             , accept : "$_Accept()$"
              , send : "$_send()$"
              , csvFilePersons : "$_csvFilePersons()$"
 			 , reminder : {

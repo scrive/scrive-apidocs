@@ -67,7 +67,7 @@ define(['Backbone', 'legacy_code'], function() {
       var acceptButton = new Button({
           size: 'small',
           color: 'green',
-          text: localization.send,
+          text: localization.accept,
           onClick: function() {
             if (!model.accept())
                  tosAccept.css("border","1px solid red");
