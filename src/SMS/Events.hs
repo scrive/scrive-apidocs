@@ -51,72 +51,52 @@ processEvents :: Scheduler ()
 processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent (a,b,c, fromMaybe None $ maybeRead d))
   where
     processEvent (eid, smsid, eventType, Invitation _did slid ) = do
-
       Log.mixlog_ $ "Messages.procesEvent: " ++ show (eid, smsid, eventType, slid)
-
-      dbQuery (GetDocumentBySignatoryLinkID slid) >>= \case
-        Nothing -> do
-          _ <- dbUpdate $ MarkSMSEventAsRead eid
-          Log.mixlog_ $ "No document with signatory link id = " ++ show slid
-          deleteSMS smsid
-        Just doc' -> withDocument doc' $ do
-          _ <- dbUpdate $ MarkSMSEventAsRead eid
-          msl <- getSigLinkFor slid <$> theDocument
-          let signphone = maybe "" getMobile msl
-          templates <- getGlobalTemplates
-          appConf <- sdAppConf <$> ask
-          mbd <- (maybesignatory =<<) . getAuthorSigLink <$> theDocument >>= \case
-                          Nothing -> return Nothing
-                          Just uid -> do
-                            dbQuery $ GetBrandedDomainByUserID uid
-          let host = fromMaybe (hostpart $ appConf) (bdurl <$> mbd)
-              mc = mailsConfig $ appConf
-              -- since when email is reported deferred author has a possibility to
-              -- change email address, we don't want to send him emails reporting
-              -- success/failure for old signatory address, so we need to compare
-              -- addresses here (for dropped/bounce events)
-              handleEv (SMSEvent phone ev) = do
-                Log.mixlog_ $ signphone ++ " == " ++ phone
-                theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ case ev of
-                  SMSDelivered -> handleDeliveredInvitation slid
-                  SMSUndelivered _ -> when (signphone == phone) $ handleUndeliveredSMSInvitation mbd host mc slid
-          handleEv eventType
+      dbQuery (GetDocumentBySignatoryLinkID slid) >>= \doc' -> withDocument doc' $ do
+        _ <- dbUpdate $ MarkSMSEventAsRead eid
+        msl <- getSigLinkFor slid <$> theDocument
+        let signphone = maybe "" getMobile msl
+        templates <- getGlobalTemplates
+        appConf <- sdAppConf <$> ask
+        mbd <- (maybesignatory =<<) . getAuthorSigLink <$> theDocument >>= \case
+          Nothing -> return Nothing
+          Just uid -> dbQuery $ GetBrandedDomainByUserID uid
+        let host = fromMaybe (hostpart $ appConf) (bdurl <$> mbd)
+            mc = mailsConfig $ appConf
+            -- since when email is reported deferred author has a possibility to
+            -- change email address, we don't want to send him emails reporting
+            -- success/failure for old signatory address, so we need to compare
+            -- addresses here (for dropped/bounce events)
+            handleEv (SMSEvent phone ev) = do
+              Log.mixlog_ $ signphone ++ " == " ++ phone
+              theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ case ev of
+                SMSDelivered -> handleDeliveredInvitation slid
+                SMSUndelivered _ -> when (signphone == phone) $ do
+                  handleUndeliveredSMSInvitation mbd host mc slid
+        handleEv eventType
 
     processEvent (eid, smsid, eventType, SMSPinSendout slid) = do
       Log.mixlog_ $ "Messages.procesEvent: " ++ show (eid, smsid, eventType, slid)
-      dbQuery (GetDocumentBySignatoryLinkID slid) >>= \case
-        Nothing -> do
-          _ <- dbUpdate $ MarkSMSEventAsRead eid
-          Log.mixlog_ $ "No document with signatory link id = " ++ show slid
-          deleteSMS smsid
-        Just doc' -> withDocument doc' $ do
-          _ <- dbUpdate $ MarkSMSEventAsRead eid
-          templates <- getGlobalTemplates
-          msl <- getSigLinkFor slid <$> theDocument
-          case (eventType,msl) of
-               (SMSEvent phone SMSDelivered, Just sl) -> runTemplatesT (defaultValue, templates) $ do
-                 Log.mixlog_ $ "SMS with PIN delivered to " ++ phone
-                 time <- currentTime
-                 let actor = mailSystemActor time (maybesignatory sl) (getEmail sl) slid
-                 void $ dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
-                                SMSPinDeliveredEvidence
-                                (return ())
-                                (Just sl)
-                                (Just phone)
-                                (actor)
-               _ -> return ()
-
+      dbQuery (GetDocumentBySignatoryLinkID slid) >>= \doc' -> withDocument doc' $ do
+        _ <- dbUpdate $ MarkSMSEventAsRead eid
+        templates <- getGlobalTemplates
+        msl <- getSigLinkFor slid <$> theDocument
+        case (eventType,msl) of
+          (SMSEvent phone SMSDelivered, Just sl) -> runTemplatesT (defaultValue, templates) $ do
+            Log.mixlog_ $ "SMS with PIN delivered to " ++ phone
+            time <- currentTime
+            let actor = mailSystemActor time (maybesignatory sl) (getEmail sl) slid
+            void $ dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+              SMSPinDeliveredEvidence
+              (return ())
+              (Just sl)
+              (Just phone)
+              (actor)
+          _ -> return ()
 
     processEvent (eid, _ , _, _) = do
       _ <- dbUpdate $ MarkSMSEventAsRead eid
       return ()
-
-    deleteSMS :: (MonadDB m, MonadThrow m, Log.MonadLog m) => ShortMessageID -> m ()
-    deleteSMS mid = do
-      success <- dbUpdate $ DeleteSMS mid
-      if (not success)
-        then Log.attention_ $ "Couldn't delete sms #" ++ show mid
-        else Log.mixlog_ $ "Deleted sms #" ++ show mid
 
 handleDeliveredInvitation :: (CryptoRNG m, MonadThrow m, Log.MonadLog m, DocumentMonad m, TemplatesMonad m) => SignatoryLinkID -> m ()
 handleDeliveredInvitation signlinkid = do

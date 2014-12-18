@@ -5,7 +5,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = tblTable {
     tblName = "documents"
-  , tblVersion = 35
+  , tblVersion = 36
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "title", colType = TextT, colNullable = False }
@@ -36,6 +36,12 @@ tableDocuments = tblTable {
     , tblColumn { colName = "api_version", colType = SmallIntT, colNullable = False, colDefault = Just "1" }
     ]
   , tblPrimaryKey = pkOnColumn "id"
+  , tblIndexes = [
+      -- for list of documents in adminonly
+      indexOnColumn "mtime"
+      -- for filtering by status in archive
+    , indexOnColumn "status"
+    ]
   }
 
 tableMainFiles :: Table

@@ -613,8 +613,8 @@ sqlWhereEqE :: (MonadState v m, SqlWhere v, KontraException e, Show a, FromSQL a
             => (a -> a -> e) -> SQL -> a -> m ()
 sqlWhereEqE exc name value = sqlWhereEV (exc value, name) $ name <+> "=" <?> value
 
-sqlWhereEqSql :: (MonadState v m, SqlWhere v) => SQL -> SQL -> m ()
-sqlWhereEqSql name1 name2 = sqlWhere $ name1 <+> "=" <+> name2
+sqlWhereEqSql :: (MonadState v m, SqlWhere v, Sqlable sql) => SQL -> sql -> m ()
+sqlWhereEqSql name1 name2 = sqlWhere $ name1 <+> "=" <+> toSQLCommand name2
 
 sqlWhereNotEq :: (MonadState v m, SqlWhere v, Show a, ToSQL a) => SQL -> a -> m ()
 sqlWhereNotEq name value = sqlWhere $ name <+> "<>" <?> value
@@ -832,11 +832,11 @@ instance SqlOffsetLimit SqlInsertSelect where
   sqlOffset1 cmd num = cmd { sqlInsertSelectOffset = num }
   sqlLimit1 cmd num = cmd { sqlInsertSelectLimit = num }
 
-sqlOffset :: (MonadState v m, SqlOffsetLimit v) => Integer -> m ()
-sqlOffset val = modify (\cmd -> sqlOffset1 cmd val)
+sqlOffset :: (MonadState v m, SqlOffsetLimit v, Integral int) => int -> m ()
+sqlOffset val = modify (\cmd -> sqlOffset1 cmd $ toInteger val)
 
-sqlLimit :: (MonadState v m, SqlOffsetLimit v) => Integer -> m ()
-sqlLimit val = modify (\cmd -> sqlLimit1 cmd val)
+sqlLimit :: (MonadState v m, SqlOffsetLimit v, Integral int) => int -> m ()
+sqlLimit val = modify (\cmd -> sqlLimit1 cmd $ toInteger val)
 
 class SqlDistinct a where
   sqlDistinct1 :: a -> a

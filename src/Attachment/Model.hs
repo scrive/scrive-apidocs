@@ -139,8 +139,8 @@ instance MonadDB m => DBQuery m GetAttachments [Attachment] where
       sqlWhereAny (map (sqlWhere . domainToSQLCommand) domains)
       mapM_ sqlWhereAttachmentFilter filters
       mapM_ (sqlOrderBy . orderToSQLCommand) orderbys
-      sqlOffset $ fromIntegral offset
-      sqlLimit $ fromIntegral limit
+      sqlOffset offset
+      sqlLimit limit
     fetchMany fetchAttachment
    where
     domainToSQLCommand (AttachmentsOfAuthorDeleteValue uid del) =

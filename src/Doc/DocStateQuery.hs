@@ -27,14 +27,14 @@
 module Doc.DocStateQuery
     ( getDocByDocID
     , getDocByDocIDEx
-    , getDocsByDocIDs
     , getDocByDocIDForAuthor
     , getDocByDocIDForAuthorOrAuthorsCompanyAdmin
     , getMagicHashForDocumentSignatoryWithUser
     ) where
 
+import Control.Applicative
 import Control.Monad
-import Data.List
+import Data.Maybe
 
 import DB
 import Doc.DocStateData
@@ -49,53 +49,21 @@ import Util.SignatoryLinkUtils
 getDocByDocID :: Kontrakcja m => DocumentID -> m Document
 getDocByDocID docid = getDocByDocIDEx docid Nothing
 
-getDocByDocIDEx :: Kontrakcja m => DocumentID -> (Maybe MagicHash) -> m Document
+getDocByDocIDEx :: Kontrakcja m => DocumentID -> Maybe MagicHash -> m Document
 getDocByDocIDEx docid maccesstoken = do
-  Context { ctxmaybeuser, ctxmaybepaduser} <- getContext
+  Context{ctxmaybeuser, ctxmaybepaduser} <- getContext
   -- document will be returned if ANY of the below is true (logical OR)
-  let visibility = concat
-        [ [DocumentsVisibleToUser (userid user) | Just user <- return ctxmaybeuser]
-        , [DocumentsVisibleToUser (userid user) | Just user <- return ctxmaybepaduser]
-        , [DocumentsVisibleViaAccessToken token | Just token <- return maccesstoken]
+  let visibility = catMaybes [
+          DocumentsVisibleToUser . userid <$> ctxmaybeuser
+        , DocumentsVisibleToUser . userid <$> ctxmaybepaduser
+        , DocumentsVisibleViaAccessToken  <$> maccesstoken
         ]
+  dbQuery $ GetDocument
+    visibility
+    [DocumentFilterByDocumentID docid]
+    []
 
-  (_,mdoc) <- dbQuery (GetDocuments2 False
-                                visibility
-                                [ DocumentFilterByDocumentID docid ]
-                                [] (0,1, Nothing))
-  case mdoc of
-    [doc] -> do
-      return doc
-    _ -> error "This will never happen due to allowzeroresults=False in statement above"
-
-getDocsByDocIDs :: Kontrakcja m => [DocumentID] -> m [Document]
-getDocsByDocIDs docids = do
-  Context { ctxmaybeuser, ctxmaybepaduser} <- getContext
-  case (ctxmaybeuser `mplus` ctxmaybepaduser) of
-    Nothing -> do
-      -- we should never come to this place as user being loggen in is
-      -- guarded up in the call stack
-      internalError
-    Just user -> do
-      (_,docs) <- dbQuery (GetDocuments2 True [ DocumentsVisibleToUser (userid user)
-                                    ] [ DocumentFilterByDocumentIDs docids
-                                      ]
-                                    [] (0,-1, Nothing))
-      -- lets see if all requested documents were found
-      let documentsThatWereNotFound = docids \\ (map documentid docs)
-      -- if some documents weren't found we are going to report error
-      -- for the first one one the list
-      case documentsThatWereNotFound of
-        (d:_) -> do
-          -- the following should throw an exception
-          _ <- dbQuery (GetDocuments2 False [ DocumentsVisibleToUser (userid user)
-                                    ] [ DocumentFilterByDocumentIDs [d]
-                                      ]
-                                    [] (0,1, Nothing))
-          error "GetDocuments2 should have thrown an error in getDocsByDocIDs"
-        _ -> return docs
-
-{- | Same as getDocByDocID, but works only for author -}
+-- | Same as getDocByDocID, but works only for author
 getDocByDocIDForAuthor :: Kontrakcja m => DocumentID -> m Document
 getDocByDocIDForAuthor docid = do
   Context { ctxmaybeuser, ctxmaybepaduser} <- getContext
@@ -104,18 +72,12 @@ getDocByDocIDForAuthor docid = do
       -- we should never come to this place as user being loggen in is
       -- guarded up in the call stack
       internalError
-    Just user -> do
-      (_,mdoc) <- dbQuery (GetDocuments2 False [ DocumentsVisibleToUser (userid user)
-                                    ] [ DocumentFilterByDocumentID docid
-                                      , DocumentFilterByAuthor (userid user)
-                                      ]
-                                    [] (0,1, Nothing))
-      case mdoc of
-        [doc] -> do
-          return $ doc
-        _ -> error "This will never happen due to allowzeroresults=False in statement above"
+    Just User{userid} -> dbQuery $ GetDocument
+      [DocumentsVisibleToUser userid]
+      [DocumentFilterByDocumentID docid, DocumentFilterByAuthor userid]
+      []
 
-{- | Same as getDocByDocID, but works only for author or authors company admin-}
+-- | Same as getDocByDocID, but works only for author or authors company admin
 getDocByDocIDForAuthorOrAuthorsCompanyAdmin :: Kontrakcja m => DocumentID -> m Document
 getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid = do
   Context { ctxmaybeuser, ctxmaybepaduser} <- getContext
@@ -124,21 +86,12 @@ getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid = do
       -- we should never come to this place as user being loggen in is
       -- guarded up in the call stack
       internalError
-    Just user -> do
-      (_,mdoc) <- dbQuery (GetDocuments2 False [ DocumentsVisibleToUser (userid user)
-                                    ] [ DocumentFilterByDocumentID docid
-                                      , DocumentFilterLinkIsAuthor True
-                                      ]
-                                    [] (0,1, Nothing))
-      case mdoc of
-        [doc] -> do
-          return $ doc
-        _ -> error "This will never happen due to allowzeroresults=False in statement above"
+    Just User{userid} -> dbQuery $ GetDocument
+      [DocumentsVisibleToUser userid]
+      [DocumentFilterByDocumentID docid, DocumentFilterLinkIsAuthor True]
+      []
 
-
-{- |
-   Get a magichash for given signatory. Only possible if give user is author
- -}
+-- | Get a magichash for given signatory. Only possible if given user is author.
 getMagicHashForDocumentSignatoryWithUser :: Kontrakcja m
                                    => DocumentID
                                    -> SignatoryLinkID

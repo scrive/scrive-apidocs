@@ -28,6 +28,7 @@ import Crypto.RNG
 import CSVUtilTest
 import DB
 import DB.Checks
+import DB.PostgreSQL
 import DB.SQLFunction
 import DocAPITest
 import DocControlTest

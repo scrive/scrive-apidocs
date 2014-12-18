@@ -519,7 +519,7 @@ jsonDocuments = onlySalesOrAdmin $ do
   mcompanyid <- readField "companyid"
   let sorting    = docSortingFromParams params
       searching  = docSearchingFromParams params
-      pagination = ((listParamsOffset params),(listParamsLimit params))
+      pagination = (listParamsOffset params, listParamsLimit params, docsPageSize)
       filters    =  case mcompanyid of
                      Nothing -> []
                      Just companyid ->   [DocumentFilterByAuthorCompany companyid]
@@ -528,12 +528,12 @@ jsonDocuments = onlySalesOrAdmin $ do
                      Just userid ->   [DocumentsVisibleToUser userid]
       docsPageSize = 100
 
-  allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting pagination
+  (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit domain (searching ++ filters) sorting pagination
 
   let documents = PagedList { list       = allDocs
                             , params     = params
                             , pageSize   = docsPageSize
-                            , listLength = length allDocs
+                            , listLength = allDocsCount
                             }
   runJSONGenT $ do
             valueM "list" $ forM (take docsPageSize $ list documents) $ \doc-> runJSONGenT $ do

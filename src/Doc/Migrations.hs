@@ -37,6 +37,15 @@ instance ToSQL [SignatoryField] where
   type PQDest [SignatoryField] = PQDest String
   toSQL = jsonToSQL
 
+addMtimeStatusIndexes :: MonadDB m => Migration m
+addMtimeStatusIndexes = Migration {
+  mgrTable = tableDocuments
+, mgrFrom = 35
+, mgrDo = do
+  runQuery_ . sqlCreateIndex "documents" $ indexOnColumn "mtime"
+  runQuery_ . sqlCreateIndex "documents" $ indexOnColumn "status"
+}
+
 signatoryLinksMoveSignatures :: MonadDB m => Migration m
 signatoryLinksMoveSignatures = Migration {
   mgrTable = tableSignatoryLinks
@@ -1181,8 +1190,8 @@ changeSomeStandardFieldsToOptional=
                      sqlResult "f.id"
                      sqlWhereEq "f.placements" ("[]"::String)
                      sqlWhereEq "f.value" (""::String)
-                     sqlWhereEqSql "f.signatory_link_id" "s.id"
-                     sqlWhereEqSql "d.id" "s.document_id"
+                     sqlWhereEqSql "f.signatory_link_id" ("s.id"::SQL)
+                     sqlWhereEqSql "d.id" ("s.document_id"::SQL)
                      sqlWhereNotEq "d.status" Closed
                      sqlWhereAny
                        [ do

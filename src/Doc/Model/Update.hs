@@ -79,7 +79,6 @@ import Data.Monoid
 import Data.Monoid.Space
 import Text.StringTemplates.Templates
 import qualified Data.ByteString.Base64 as B64
-import qualified Data.Map as M
 import qualified Data.Set as S
 import qualified Text.StringTemplates.Fields as F
 
@@ -122,150 +121,117 @@ import qualified Doc.Screenshot as Screenshot
 import qualified Log
 
 -- For this to work well we assume that signatories are ordered: author first, then all with ids set, then all with id == 0
-insertSignatoryLinksAsAre :: MonadDB m => DocumentID -> [SignatoryLink] -> m [SignatoryLink]
-insertSignatoryLinksAsAre _documentid [] = return []
-insertSignatoryLinksAsAre documentid links = do
+insertSignatoryLinks :: MonadDB m => DocumentID -> [SignatoryLink] -> m ()
+insertSignatoryLinks _ [] = return ()
+insertSignatoryLinks did links = do
   runQuery_ . sqlInsert "signatory_links" $ do
-           sqlSet "document_id" documentid
-           sqlSetListWithDefaults "id" $ map (\sl -> if (unsafeSignatoryLinkID 0 == signatorylinkid sl) then Nothing else (Just $ signatorylinkid sl)) links
-           sqlSetList "user_id" $ maybesignatory <$> links
-           sqlSetList "is_author" $ signatoryisauthor <$> links
-           sqlSetList "is_partner" $ signatoryispartner <$> links
-           sqlSetList "token" $ signatorymagichash <$> links
-           sqlSetList "sign_order"$ signatorysignorder <$> links
-           sqlSetList "sign_time" $ fmap signtime <$> maybesigninfo <$> links
-           sqlSetList "sign_ip" $ fmap signipnumber <$> maybesigninfo <$> links
-           sqlSetList "seen_time" $ fmap signtime <$> maybeseeninfo <$> links
-           sqlSetList "seen_ip" $ fmap signipnumber <$> maybeseeninfo <$> links
-           sqlSetList "read_invitation" $ maybereadinvite <$> links
-           sqlSetList "mail_invitation_delivery_status" $ mailinvitationdeliverystatus <$> links
-           sqlSetList "sms_invitation_delivery_status" $ smsinvitationdeliverystatus <$> links
-           sqlSetList "csv_title" $ fmap csvtitle <$> signatorylinkcsvupload <$> links
-           sqlSetList "csv_contents" $ fmap csvcontents <$> signatorylinkcsvupload <$> links
-           sqlSetList "deleted" $ signatorylinkdeleted <$> links
-           sqlSetList "really_deleted" $ signatorylinkreallydeleted <$> links
-           sqlSetList "sign_redirect_url" $ signatorylinksignredirecturl <$> links
-           sqlSetList "reject_redirect_url" $ signatorylinkrejectredirecturl <$> links
-           sqlSetList "rejection_time" $ signatorylinkrejectiontime <$> links
-           sqlSetList "rejection_reason" $ signatorylinkrejectionreason <$> links
-           sqlSetList "authentication_method" $ signatorylinkauthenticationmethod <$> links
-           sqlSetList "delivery_method" $ signatorylinkdeliverymethod <$> links
-           sqlSetList "confirmation_delivery_method" $ signatorylinkconfirmationdeliverymethod <$> links
+    sqlSet "document_id" did
+    sqlSetListWithDefaults "id" $ map (\sl -> if (unsafeSignatoryLinkID 0 == signatorylinkid sl) then Nothing else (Just $ signatorylinkid sl)) links
+    sqlSetList "user_id" $ maybesignatory <$> links
+    sqlSetList "is_author" $ signatoryisauthor <$> links
+    sqlSetList "is_partner" $ signatoryispartner <$> links
+    sqlSetList "token" $ signatorymagichash <$> links
+    sqlSetList "sign_order"$ signatorysignorder <$> links
+    sqlSetList "sign_time" $ fmap signtime <$> maybesigninfo <$> links
+    sqlSetList "sign_ip" $ fmap signipnumber <$> maybesigninfo <$> links
+    sqlSetList "seen_time" $ fmap signtime <$> maybeseeninfo <$> links
+    sqlSetList "seen_ip" $ fmap signipnumber <$> maybeseeninfo <$> links
+    sqlSetList "read_invitation" $ maybereadinvite <$> links
+    sqlSetList "mail_invitation_delivery_status" $ mailinvitationdeliverystatus <$> links
+    sqlSetList "sms_invitation_delivery_status" $ smsinvitationdeliverystatus <$> links
+    sqlSetList "csv_title" $ fmap csvtitle <$> signatorylinkcsvupload <$> links
+    sqlSetList "csv_contents" $ fmap csvcontents <$> signatorylinkcsvupload <$> links
+    sqlSetList "deleted" $ signatorylinkdeleted <$> links
+    sqlSetList "really_deleted" $ signatorylinkreallydeleted <$> links
+    sqlSetList "sign_redirect_url" $ signatorylinksignredirecturl <$> links
+    sqlSetList "reject_redirect_url" $ signatorylinkrejectredirecturl <$> links
+    sqlSetList "rejection_time" $ signatorylinkrejectiontime <$> links
+    sqlSetList "rejection_reason" $ signatorylinkrejectionreason <$> links
+    sqlSetList "authentication_method" $ signatorylinkauthenticationmethod <$> links
+    sqlSetList "delivery_method" $ signatorylinkdeliverymethod <$> links
+    sqlSetList "confirmation_delivery_method" $ signatorylinkconfirmationdeliverymethod <$> links
+    sqlResult "id"
 
-           sqlResult "id"
+  -- update ids
+  links' <- zipWith (\sl slid -> sl { signatorylinkid = slid }) links
+    <$> fetchMany unSingle
 
-  slids :: [SignatoryLinkID] <- fetchMany unSingle
+  insertSignatoryAttachments
+    [(signatorylinkid sl, att) | sl <- links', att <- signatoryattachments sl]
 
-  runQuery_ . selectSignatoryLinksX $ do
-         sqlWhereIn "signatory_links.id" slids
-         sqlWhereEq "signatory_links.document_id" documentid
-         sqlOrderBy "signatory_links.id DESC"
+  insertSignatoryLinkFields
+    [(signatorylinkid sl, fld) | sl <- links', fld <- signatoryfields sl]
 
-  siglinks <- fetchSignatoryLinks
+insertDocumentTags :: MonadDB m => Bool -> DocumentID -> S.Set DocumentTag -> m (S.Set DocumentTag)
+insertDocumentTags fetch did tags
+  | S.null tags = return S.empty
+  | otherwise = do
+    let tags_list = S.toList tags
+    runQuery_ . sqlInsert "document_tags" $ do
+      sqlSet "document_id" did
+      sqlSetList "name" $ tagname <$> tags_list
+      sqlSetList "value" $ tagvalue <$> tags_list
+      when fetch $ mapM_ sqlResult documentTagsSelectors
+    if fetch
+      then S.fromList <$> fetchMany toComposite
+      else return S.empty
 
-  let newLinksAsList = concatMap snd $ M.toList siglinks
-
-  let replaceAttachments newlink oldlink = (signatorylinkid newlink, signatoryattachments oldlink)
-  sigattaches <- insertSignatoryAttachmentsAsAre $ zipWith replaceAttachments newLinksAsList links
-
-  let replaceFields newlink oldlink = (signatorylinkid newlink, (signatoryfields) oldlink)
-
-  fields <- insertSignatoryLinkFieldsAsAre $ zipWith replaceFields newLinksAsList links
-
-  forM newLinksAsList $ \newlink -> do
-      let newlinkid = signatorylinkid newlink
-      let newlinkfull = newlink { signatoryattachments = M.findWithDefault [] newlinkid sigattaches
-                                , signatoryfields = M.findWithDefault [] newlinkid fields
-                                }
-      return newlinkfull
-
-insertDocumentTagsAsAre :: MonadDB m => DocumentID -> [DocumentTag] -> m [DocumentTag]
-insertDocumentTagsAsAre _documentid [] = return []
-insertDocumentTagsAsAre documentid tags = do
-  runQuery_ . sqlInsert "document_tags" $ do
-         sqlSet "document_id" documentid
-         sqlSetList "name" $ tagname <$> tags
-         sqlSetList "value" $ tagvalue <$> tags
-         sqlResult "document_tags.document_id"
-         sqlResult "document_tags.name"
-         sqlResult "document_tags.value"
-
-  fetchDocumentTags
-    >>= return . concatMap (S.toList . snd) . M.toList
-
-
-insertAuthorAttachmentsAsAre :: MonadDB m => DocumentID -> [AuthorAttachment] -> m [AuthorAttachment]
-insertAuthorAttachmentsAsAre _documentid [] = return []
-insertAuthorAttachmentsAsAre documentid attachments = do
+insertAuthorAttachments :: MonadDB m => Bool -> DocumentID -> [AuthorAttachment] -> m [AuthorAttachment]
+insertAuthorAttachments _ _ [] = return []
+insertAuthorAttachments fetch did attachments = do
   runQuery_ . sqlInsert "author_attachments" $ do
-        sqlSet "document_id" documentid
-        sqlSetList "file_id" $ authorattachmentfile <$> attachments
-        sqlResult "document_id"
-        sqlResult "file_id"
+    sqlSet "document_id" did
+    sqlSetList "file_id" $ authorattachmentfile <$> attachments
+    when fetch $ mapM_ sqlResult authorAttachmentsSelectors
+  if fetch
+    then map AuthorAttachment <$> fetchMany unSingle
+    else return []
 
-  fetchAuthorAttachments
-    >>= return . concatMap snd . M.toList
-
-insertMainFilesAsAre :: MonadDB m => DocumentID -> [MainFile] -> m [MainFile]
-insertMainFilesAsAre _documentid [] = return []
-
-insertMainFilesAsAre documentid rfiles = do
-  let files = reverse rfiles -- rfiles should be inserted with descending id: newer files come first in rfiles
+insertMainFiles :: MonadDB m => Bool -> DocumentID -> [MainFile] -> m [MainFile]
+insertMainFiles _ _ [] = return []
+insertMainFiles fetch documentid rfiles = do
+   -- rfiles should be inserted with descending id: newer files come first in rfiles
+  let files = reverse rfiles
   runQuery_ . sqlInsert "main_files" $ do
-        sqlSet "document_id" documentid
-        sqlSetList "file_id" $ mainfileid <$> files
-        sqlSetList "document_status" $ mainfiledocumentstatus <$> files
-        sqlSetList "seal_status" $ mainfilesealstatus <$> files
-        mapM_ sqlResult mainFilesSelectors
-  fetchMainFiles
-    >>= return . concatMap snd . M.toList
+    sqlSet "document_id" documentid
+    sqlSetList "file_id" $ mainfileid <$> files
+    sqlSetList "document_status" $ mainfiledocumentstatus <$> files
+    sqlSetList "seal_status" $ mainfilesealstatus <$> files
+    when fetch $ mapM_ sqlResult mainFilesSelectors
+  if fetch
+    then fetchMany toComposite
+    else return []
 
-insertSignatoryAttachmentsAsAre :: MonadDB m
-                                => [(SignatoryLinkID,[SignatoryAttachment])]
-                                -> m (M.Map SignatoryLinkID [SignatoryAttachment])
-insertSignatoryAttachmentsAsAre attachments | all (null . snd) attachments = return M.empty
-insertSignatoryAttachmentsAsAre attachments = do
-  runQuery_ . sqlInsert "signatory_attachments" $ do
-          sqlSetList "signatory_link_id" $ concatMap (\(d,l) -> map (const d) l) attachments
-          sqlSetList "file_id" $ signatoryattachmentfile <$> concatMap snd attachments
-          sqlSetList "name" $ signatoryattachmentname <$> concatMap snd attachments
-          sqlSetList "description" $ signatoryattachmentdescription <$> concatMap snd attachments
-          sqlResult "signatory_link_id"
-          sqlResult "file_id"
-          sqlResult "name"
-          sqlResult "description"
+insertSignatoryAttachments :: MonadDB m => [(SignatoryLinkID, SignatoryAttachment)] -> m ()
+insertSignatoryAttachments [] = return ()
+insertSignatoryAttachments atts = runQuery_ . sqlInsert "signatory_attachments" $ do
+  sqlSetList "signatory_link_id" $ map fst atts
+  sqlSetList "file_id" $ map (signatoryattachmentfile . snd) atts
+  sqlSetList "name" $ map (signatoryattachmentname . snd) atts
+  sqlSetList "description" $ map (signatoryattachmentdescription . snd) atts
 
-  fetchSignatoryAttachments
-
-insertSignatoryLinkFieldsAsAre :: MonadDB m
-                               => [(SignatoryLinkID,[SignatoryField])]
-                               -> m (M.Map SignatoryLinkID [SignatoryField])
-insertSignatoryLinkFieldsAsAre fields | all (null . snd) fields = return M.empty
-insertSignatoryLinkFieldsAsAre fields = do
-  let getCustomName field = case sfType field of
-                              CustomFT name _ -> name
-                              CheckboxFT name -> name
-                              SignatureFT name -> name
-                              _ -> ""
-      isAuthorFilled field = case sfType field of
-                               CustomFT _ authorfilled -> authorfilled
-                               CheckboxFT _  -> False
-                               _ -> False
-  runQuery_ . sqlInsert "signatory_link_fields" $ do
-         sqlSetList "signatory_link_id" $ concatMap (\(d,l) -> map (const d) l) fields
-         sqlSetList "type" $ map sfType sigfields
-         sqlSetList "custom_name" $ map getCustomName sigfields
-         sqlSetList "is_author_filled" $ map isAuthorFilled sigfields
-         sqlSetList "value_text" $ map (getTextField . sfValue) sigfields
-         sqlSetList "value_binary" $ map (fmap Binary . getBinaryField . sfValue) sigfields
-         sqlSetList "placements" $ map sfPlacements sigfields
-         sqlSetList "obligatory" $ map sfObligatory sigfields
-         sqlSetList "should_be_filled_by_author" $ map sfShouldBeFilledBySender sigfields
-         mapM_ sqlResult signatoryLinkFieldsSelectors
-
-  fetchSignatoryLinkFields
+insertSignatoryLinkFields :: MonadDB m => [(SignatoryLinkID, SignatoryField)] -> m ()
+insertSignatoryLinkFields [] = return ()
+insertSignatoryLinkFields fields = runQuery_ . sqlInsert "signatory_link_fields" $ do
+  sqlSetList "signatory_link_id" $ map fst fields
+  sqlSetList "type" $ map (sfType . snd) fields
+  sqlSetList "custom_name" $ map (custom_name . snd) fields
+  sqlSetList "is_author_filled" $ map (author_filled . snd) fields
+  sqlSetList "value_text" $ map (getTextField . sfValue . snd) fields
+  sqlSetList "value_binary" $ map (fmap Binary . getBinaryField . sfValue . snd) fields
+  sqlSetList "placements" $ map (sfPlacements . snd) fields
+  sqlSetList "obligatory" $ map (sfObligatory . snd) fields
+  sqlSetList "should_be_filled_by_author" $ map (sfShouldBeFilledBySender . snd) fields
   where
-    sigfields = concatMap snd fields
+    custom_name field = case sfType field of
+      CustomFT name _ -> name
+      CheckboxFT name -> name
+      SignatureFT name -> name
+      _ -> ""
+    author_filled field = case sfType field of
+      CustomFT _ authorfilled -> authorfilled
+      CheckboxFT _  -> False
+      _ -> False
 
 insertSignatoryScreenshots :: (MonadDB m, MonadThrow m)
                            => [(SignatoryLinkID, SignatoryScreenshots)] -> m Int
@@ -316,10 +282,10 @@ insertDocumentAsIs document@(Document{..}) = do
     case mdid of
       Nothing -> return Nothing
       Just did -> do
-        void $ insertSignatoryLinksAsAre did documentsignatorylinks
-        void $ insertAuthorAttachmentsAsAre did documentauthorattachments
-        void $ S.fromList <$> insertDocumentTagsAsAre did (S.toList documenttags)
-        void $ insertMainFilesAsAre did documentmainfiles
+        void $ insertSignatoryLinks did documentsignatorylinks
+        void $ insertAuthorAttachments False did documentauthorattachments
+        void $ insertDocumentTags False did documenttags
+        void $ insertMainFiles False did documentmainfiles
         newdocument <- dbQuery $ GetDocumentByDocumentID did
         assertEqualDocuments document newdocument
         return (Just newdocument)
@@ -977,9 +943,10 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetDocumentTags Bool 
     let changed = doctags /= oldtags
     if changed
       then do
-        runQuery_ $ "DELETE FROM document_tags WHERE document_id =" <?> did
-        newtags <- insertDocumentTagsAsAre did (S.toList doctags)
-        return $ length newtags == S.size doctags
+        runQuery_ . sqlDelete "document_tags" $ do
+          sqlWhereEq "document_id" did
+        newtags <- insertDocumentTags True did doctags
+        return $ S.size newtags == S.size doctags
       else
         return True
 
@@ -1177,7 +1144,7 @@ instance (CryptoRNG m, Log.MonadLog m, MonadThrow m, DocumentMonad m, TemplatesM
                      return $ sl {  signatorymagichash = magichash,
                                     maybesignatory = if (isAuthor sl) then (maybesignatory sl) else Nothing
                                  }
-            _r1 <- insertSignatoryLinksAsAre documentid siglinks
+            insertSignatoryLinks documentid siglinks
             return True
 
           s -> do

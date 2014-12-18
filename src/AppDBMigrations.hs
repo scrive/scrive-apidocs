@@ -180,6 +180,7 @@ kontraMigrations = [
   , createEIDSignaturesTable
   , signatoryLinksMoveSignatures
   , companiesAddCgiDisplayName
+  , addMtimeStatusIndexes
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

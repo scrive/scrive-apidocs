@@ -1,33 +1,24 @@
-module Doc.Model.Expressions
-  ( documentLatestSignTimeExpression
+module Doc.Model.Expressions (
+    documentLatestSignTimeExpression
   , documentStatusClassExpression
   , documentSignorderExpression
   , statusClassCaseExpression
   , statusClassCaseExpressionForDocument
-  , selectSignatoryLinksX
-  , fetchSignatoryLinks
-  , fetchDocumentTags
-  , fetchAuthorAttachments
+  , documentsSelectors
+  , signatoryLinksSelectors
+  , documentTagsSelectors
+  , authorAttachmentsSelectors
   , mainFilesSelectors
-  , fetchMainFiles
-  , fetchSignatoryAttachments
-  , signatoryLinkFieldsSelectors
-  , fetchSignatoryLinkFields
+  , signatoryAttachmentsSelectors
+  , signatoryFieldsSelectors
   ) where
 
-import Control.Applicative
 import Data.Monoid
 import Data.Monoid.Space
-import Prelude hiding (head, tail)
-import qualified Control.Monad.State.Lazy as State
-import qualified Data.Map as M
-import qualified Data.Set as S
+import Data.Monoid.Utils
 
 import DB
 import Doc.DocStateData
-import Doc.DocumentID
-import Doc.SignatoryLinkID
-import OurPrelude
 
 documentLatestSignTimeExpression :: SQL
 documentLatestSignTimeExpression = "(SELECT max(signatory_links.sign_time) FROM signatory_links WHERE signatory_links.document_id = documents.id)"
@@ -72,171 +63,107 @@ statusClassCaseExpressionForDocument =
    <+> "WHEN documents.status = " <?> Rejected           <+> "THEN" <?> SCRejected
   <+> "END :: INTEGER)"
 
-selectSignatoryLinksX :: State.State SqlSelect () -> SqlSelect
-selectSignatoryLinksX extension = sqlSelect "signatory_links" $ do
-  sqlResult "signatory_links.id"
-  sqlResult "signatory_links.document_id"
-  sqlResult "signatory_links.user_id"
-  sqlResult "signatory_links.sign_order"
-  sqlResult "signatory_links.token"
-  sqlResult "signatory_links.sign_time"
-  sqlResult "signatory_links.sign_ip"
-  sqlResult "signatory_links.seen_time"
-  sqlResult "signatory_links.seen_ip"
-  sqlResult "signatory_links.read_invitation"
-  sqlResult "signatory_links.mail_invitation_delivery_status"
-  sqlResult "signatory_links.sms_invitation_delivery_status"
-  sqlResult "signatory_links.is_author"
-  sqlResult "signatory_links.is_partner"
-  sqlResult "signatory_links.csv_title"
-  sqlResult "signatory_links.csv_contents"
-  sqlResult "signatory_links.deleted"
-  sqlResult "signatory_links.really_deleted"
-  sqlResult "signatory_links.sign_redirect_url"
-  sqlResult "signatory_links.reject_redirect_url"
-  sqlResult "signatory_links.rejection_time"
-  sqlResult "signatory_links.rejection_reason"
-  sqlResult "signatory_links.authentication_method"
-  sqlResult "signatory_links.delivery_method"
-  sqlResult "signatory_links.confirmation_delivery_method"
+documentsSelectors :: [SQL]
+documentsSelectors = [
+    "documents.id"
+  , "documents.title"
+  , "ARRAY(SELECT (" <> mintercalate ", " signatoryLinksSelectors <> ")::signatory_link FROM signatory_links WHERE documents.id = signatory_links.document_id ORDER BY signatory_links.id)"
+  , "ARRAY(SELECT (" <> mintercalate ", " mainFilesSelectors <> ")::main_file FROM main_files WHERE documents.id = main_files.document_id ORDER BY main_files.id DESC)"
+  , "documents.status"
+  , "documents.error_text"
+  , "documents.type"
+  , "documents.ctime"
+  , "documents.mtime"
+  , "documents.days_to_sign"
+  , "documents.days_to_remind"
+  , "documents.timeout_time"
+  , "(SELECT dar.expires FROM document_automatic_reminders dar WHERE dar.document_id = documents.id)"
+  , "documents.invite_time"
+  , "documents.invite_ip"
+  , "documents.invite_text"
+  , "documents.confirm_text"
+  , "documents.show_header"
+  , "documents.show_pdf_download"
+  , "documents.show_reject_option"
+  , "documents.show_footer"
+  , "documents.lang"
+  , "documents.sharing"
+  , "ARRAY(SELECT (" <> mintercalate ", " documentTagsSelectors <> ")::document_tag FROM document_tags WHERE documents.id = document_tags.document_id ORDER BY document_tags.name)"
+  , "ARRAY(SELECT author_attachments.file_id FROM author_attachments WHERE documents.id = author_attachments.document_id ORDER BY author_attachments.file_id)"
+  , "documents.api_callback_url"
+  , "documents.unsaved_draft"
+  , "documents.object_version"
+  , "documents.token"
+  , "documents.time_zone_name"
+  , "documents.api_version"
+  , "(SELECT u.company_id FROM users u JOIN signatory_links sl ON u.id = sl.user_id WHERE sl.document_id = documents.id AND sl.is_author)"
+  , documentStatusClassExpression
+  ]
 
-  sqlResult "signatory_attachments.file_id AS sigfileid"
-  sqlResult "signatory_attachments.name AS signame"
-  sqlResult "signatory_attachments.description AS sigdesc"
-  sqlLeftJoinOn "signatory_attachments" "signatory_attachments.signatory_link_id = signatory_links.id"
-  extension
+signatoryLinksSelectors :: [SQL]
+signatoryLinksSelectors = [
+    "signatory_links.id"
+  , "ARRAY(SELECT (" <> mintercalate ", " signatoryFieldsSelectors <> ")::signatory_field FROM signatory_link_fields WHERE signatory_links.id = signatory_link_fields.signatory_link_id ORDER BY signatory_link_fields.id)"
+  , "signatory_links.is_author"
+  , "signatory_links.is_partner"
+  , "signatory_links.sign_order"
+  , "signatory_links.token"
+  , "signatory_links.user_id"
+  , "signatory_links.sign_time"
+  , "signatory_links.sign_ip"
+  , "signatory_links.seen_time"
+  , "signatory_links.seen_ip"
+  , "signatory_links.read_invitation"
+  , "signatory_links.mail_invitation_delivery_status"
+  , "signatory_links.sms_invitation_delivery_status"
+  , "signatory_links.deleted"
+  , "signatory_links.really_deleted"
+  , "signatory_links.csv_title"
+  , "signatory_links.csv_contents"
+  , "ARRAY(SELECT (" <> mintercalate ", " signatoryAttachmentsSelectors <> ")::signatory_attachment FROM signatory_attachments WHERE signatory_links.id = signatory_attachments.signatory_link_id ORDER BY signatory_attachments.file_id)"
+  , "signatory_links.sign_redirect_url"
+  , "signatory_links.reject_redirect_url"
+  , "signatory_links.rejection_time"
+  , "signatory_links.rejection_reason"
+  , "signatory_links.authentication_method"
+  , "signatory_links.delivery_method"
+  , "signatory_links.confirmation_delivery_method"
+  ]
 
-fetchSignatoryLinks :: MonadDB m => m (M.Map DocumentID [SignatoryLink])
-fetchSignatoryLinks = do
-  sigs <- foldlM decoder (nulldocid, [], M.empty)
-  return $ (\(d, l, m) -> M.insertWith' (++) d l m) sigs
-  where
-    nulldocid = unsafeDocumentID $ -1
-    decoder (docid, links, linksmap) (slid, document_id, user_id,
-     sign_order, token, sign_time, sign_ip, seen_time, seen_ip, read_invitation,
-     mail_invitation_delivery_status, sms_invitation_delivery_status,
-     is_author, is_partner, csv_title, csv_contents,
-     deleted, really_deleted, signredirecturl, rejectredirecturl,
-     rejection_time, rejection_reason,
-     authentication_method,
-     delivery_method,
-     confirmation_delivery_method,
-     safileid, saname, sadesc)
-      | docid == nulldocid                      = return (document_id, [link], linksmap)
-      | docid /= document_id                    = return (document_id, [link], M.insertWith' (++) docid links linksmap)
-      | signatorylinkid ($(head) links) == slid = return (docid, addSigAtt ($(head) links) : $(tail) links, linksmap)
-      | otherwise                               = return (docid, link : links, linksmap)
-      where
-        addSigAtt l = l { signatoryattachments = sigAtt ++ signatoryattachments l }
-        sigAtt = maybe [] (\name -> [SignatoryAttachment {
-            signatoryattachmentfile = safileid
-          , signatoryattachmentname = name
-          , signatoryattachmentdescription = fromMaybe "" sadesc
-          }]) saname
-        link = SignatoryLink {
-            signatorylinkid = slid
-          , signatorysignorder = sign_order
-          , signatoryfields = []
-          , signatoryisauthor = is_author
-          , signatoryispartner = is_partner
-          , signatorymagichash = token
-          , maybesignatory = user_id
-          , maybesigninfo = SignInfo <$> sign_time <*> sign_ip
-          , maybeseeninfo = SignInfo <$> seen_time <*> seen_ip
-          , maybereadinvite = read_invitation
-          , mailinvitationdeliverystatus = mail_invitation_delivery_status
-          , smsinvitationdeliverystatus = sms_invitation_delivery_status
-          , signatorylinkdeleted = deleted
-          , signatorylinkreallydeleted = really_deleted
-          , signatorylinkcsvupload =
-              CSVUpload <$> csv_title <*> csv_contents
-          , signatoryattachments = sigAtt
-          , signatorylinksignredirecturl = signredirecturl
-          , signatorylinkrejectredirecturl = rejectredirecturl
-          , signatorylinkrejectionreason = rejection_reason
-          , signatorylinkrejectiontime = rejection_time
-          , signatorylinkauthenticationmethod = authentication_method
-          , signatorylinkdeliverymethod = delivery_method
-          , signatorylinkconfirmationdeliverymethod = confirmation_delivery_method
-          }
+documentTagsSelectors :: [SQL]
+documentTagsSelectors = [
+    "document_tags.name"
+  , "document_tags.value"
+  ]
 
-fetchDocumentTags :: MonadDB m => m (M.Map DocumentID (S.Set DocumentTag))
-fetchDocumentTags = foldlM decoder M.empty
-  where
-    decoder acc (document_id, name, v) = return $
-      M.insertWith' S.union document_id
-         (S.singleton $ DocumentTag name v) acc
-
-fetchAuthorAttachments :: MonadDB m => m (M.Map DocumentID [AuthorAttachment])
-fetchAuthorAttachments = foldlM decoder M.empty
-  where
-    decoder acc (document_id, file_id) = return $
-      M.insertWith' (++) document_id [AuthorAttachment {
-        authorattachmentfile = file_id
-      }] acc
+authorAttachmentsSelectors :: [SQL]
+authorAttachmentsSelectors = [
+    "author_attachments.file_id"
+  ]
 
 mainFilesSelectors :: [SQL]
-mainFilesSelectors =
-  [ "document_id"
-  , "file_id"
-  , "document_status"
-  , "seal_status"
+mainFilesSelectors = [
+    "main_files.file_id"
+  , "main_files.document_status"
+  , "main_files.seal_status"
   ]
 
-fetchMainFiles :: MonadDB m => m (M.Map DocumentID [MainFile])
-fetchMainFiles = foldlM decoder M.empty
-  where
-    decoder acc (document_id, file_id, document_status, seal_status) = return $
-      M.insertWith' (++) document_id [MainFile {
-        mainfileid = file_id
-      , mainfiledocumentstatus = document_status
-      , mainfilesealstatus = seal_status
-      }] acc
-
-fetchSignatoryAttachments :: MonadDB m => m (M.Map SignatoryLinkID [SignatoryAttachment])
-fetchSignatoryAttachments = foldlM decoder M.empty
-  where
-    decoder acc (signatory_link_id, file_id, name, description) = return $
-      M.insertWith' (++) signatory_link_id [SignatoryAttachment {
-          signatoryattachmentfile = file_id
-        , signatoryattachmentname = name
-        , signatoryattachmentdescription = description
-        }] acc
-
-
-signatoryLinkFieldsSelectors :: [SQL]
-signatoryLinkFieldsSelectors =
-  [ "id"
-  , "signatory_link_id"
-  , "type"
-  , "custom_name"
-  , "is_author_filled"
-  , "value_text"
-  , "value_binary"
-  , "obligatory"
-  , "should_be_filled_by_author"
-  , "placements"
+signatoryAttachmentsSelectors :: [SQL]
+signatoryAttachmentsSelectors = [
+    "signatory_attachments.file_id"
+  , "signatory_attachments.name"
+  , "signatory_attachments.description"
   ]
 
-fetchSignatoryLinkFields :: MonadDB m => m (M.Map SignatoryLinkID [SignatoryField])
-fetchSignatoryLinkFields = foldlM decoder M.empty
-  where
-    decoder acc (slfid, slid, xtype, custom_name, is_author_filled, mvalue_text, mvalue_binary, obligatory, should_be_filled_by_sender, placements) = return $
-      M.insertWith' (++) slid
-         [SignatoryField
-          { sfID = slfid
-          , sfValue = case (mvalue_text, mvalue_binary) of
-            (Just value_text, Nothing) -> TextField value_text
-            (Nothing, Just (Binary value_binary)) -> BinaryField value_binary
-            _ -> error "fetchSignatoryLinkFields: can't happen due to check constraints on the table"
-          , sfPlacements = placements
-          , sfType = case xtype of
-                        CustomFT{} -> CustomFT custom_name is_author_filled
-                        CheckboxFT{} -> CheckboxFT custom_name
-                        SignatureFT{} -> SignatureFT (if null custom_name
-                                                      then "signature"
-                                                      else custom_name)
-                        _   -> xtype
-          , sfObligatory = obligatory
-          , sfShouldBeFilledBySender = should_be_filled_by_sender
-          }] acc
+signatoryFieldsSelectors :: [SQL]
+signatoryFieldsSelectors = [
+    "signatory_link_fields.id"
+  , "signatory_link_fields.type"
+  , "signatory_link_fields.custom_name"
+  , "signatory_link_fields.is_author_filled"
+  , "signatory_link_fields.value_text"
+  , "signatory_link_fields.value_binary"
+  , "signatory_link_fields.obligatory"
+  , "signatory_link_fields.should_be_filled_by_author"
+  , "signatory_link_fields.placements"
+  ]

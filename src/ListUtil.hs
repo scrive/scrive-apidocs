@@ -148,7 +148,7 @@ pagingParamsJSON :: PagedList a -> JSValue
 pagingParamsJSON (PagedList{pageSize,params,listLength}) = runJSONGen $ do
     value "pageCurrent" $ offset params `div` pageSize
     value "itemMin" $ offset params
-    value "itemMax" $ offset params + listLength - 1
+    value "itemMax" $ listLength - 1
     value "maxNextPages" $ (limit params) `div` pageSize
     value "pageSize" $ pageSize
 

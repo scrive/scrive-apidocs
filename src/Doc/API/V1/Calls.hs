@@ -771,7 +771,7 @@ apiCallV1List = api $ do
                       _ -> []
   let sorting    = docSortingFromParams params
       searching  = docSearchingFromParams params
-      pagination2 = ((listParamsOffset params),(listParamsLimit params), Just docsPageSize)
+      pagination = (listParamsOffset params, listParamsLimit params, docsPageSize)
       filters = filters1 ++ filters2 ++ tagsFilters
 
   format <- getField "format"
@@ -784,7 +784,7 @@ apiCallV1List = api $ do
                               , csvContent = docsCSVs
                               }
        _ -> do
-          (allDocsCount,allDocs) <- dbQuery $ GetDocuments2 True domain (searching ++ filters) sorting pagination2
+          (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit domain (searching ++ filters) sorting pagination
           let docs = PagedList {  list       = allDocs
                                 , params     = params
                                 , pageSize   = docsPageSize

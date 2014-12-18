@@ -1,8 +1,7 @@
-{-# LANGUAGE ExtendedDefaultRules #-}
+{-# LANGUAGE ExtendedDefaultRules, NoImplicitPrelude #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.DocStateData (
     CSVUpload(..)
-  , CancelationReason(..)
   , Document(..)
   , MainFile(..)
   , DocumentSharing(..)
@@ -49,10 +48,10 @@ import Data.String
 import Database.PostgreSQL.PQTypes
 import Text.JSON
 import Text.JSON.FromJSValue
-import Text.JSON.Gen
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Set as S
+import qualified Text.JSON.Gen as J
 
 import API.APIVersion
 import Company.CompanyID
@@ -67,6 +66,7 @@ import File.FileID
 import IPAddress
 import MagicHash
 import MinutesTime
+import OurPrelude
 import User.Lang
 import User.UserID
 import Utils.Default
@@ -354,6 +354,28 @@ data SignatoryField = SignatoryField
   , sfPlacements             :: [FieldPlacement]
   } deriving (Ord, Show, Data, Typeable)
 
+type instance CompositeRow SignatoryField = (SignatoryFieldID, FieldType, String, Bool, Maybe String, Maybe (Binary BS.ByteString), Bool, Bool, [FieldPlacement])
+
+instance PQFormat SignatoryField where
+  pqFormat _ = "%signatory_field"
+
+instance CompositeFromSQL SignatoryField where
+  toComposite (sfid, ftype, custom_name, is_author_filled, mvalue_text, mvalue_binary, obligatory, should_be_filled_by_sender, placements) = SignatoryField {
+    sfID = sfid
+  , sfType = case ftype of
+    CustomFT{} -> CustomFT custom_name is_author_filled
+    CheckboxFT{} -> CheckboxFT custom_name
+    SignatureFT{} -> SignatureFT $ if null custom_name then "signature" else custom_name
+    _   -> ftype
+  , sfValue = case (mvalue_text, mvalue_binary) of
+    (Just value_text, Nothing)   -> TextField value_text
+    (Nothing, Just value_binary) -> BinaryField $ unBinary value_binary
+    _ -> $unexpectedError "can't happen due to the checks in the database"
+  , sfObligatory = obligatory
+  , sfShouldBeFilledBySender = should_be_filled_by_sender
+  , sfPlacements = placements
+  }
+
 instance Eq SignatoryField where
   a == b = sfType a == sfType b &&
            sfValue a == sfValue b &&
@@ -419,6 +441,38 @@ data SignatoryLink = SignatoryLink {
   , signatorylinkdeliverymethod         :: DeliveryMethod
   , signatorylinkconfirmationdeliverymethod :: ConfirmationDeliveryMethod
   } deriving (Ord, Show)
+
+type instance CompositeRow SignatoryLink = (SignatoryLinkID, CompositeArray1 SignatoryField, Bool, Bool, SignOrder, MagicHash, Maybe UserID, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, DeliveryStatus, DeliveryStatus, Maybe UTCTime, Maybe UTCTime, Maybe String, Maybe [[String]], CompositeArray1 SignatoryAttachment, Maybe String, Maybe String, Maybe UTCTime, Maybe String, AuthenticationMethod, DeliveryMethod, ConfirmationDeliveryMethod)
+
+instance PQFormat SignatoryLink where
+  pqFormat _ = "%signatory_link"
+
+instance CompositeFromSQL SignatoryLink where
+  toComposite (slid, CompositeArray1 fields, is_author, is_partner, sign_order, magic_hash, muser_id, msign_time, msign_ip, mseen_time, mseen_ip, mread_invite, mail_invitation_delivery_status, sms_invitation_delivery_status, mdeleted, mreally_deleted, mcsv_title, mcsv_contents, CompositeArray1 attachments, msign_redirect_url, mreject_redirect_url, mrejection_time, mrejection_reason, authentication_method, delivery_method, confirmation_delivery_method) = SignatoryLink {
+    signatorylinkid = slid
+  , signatoryfields = fields
+  , signatoryisauthor = is_author
+  , signatoryispartner = is_partner
+  , signatorysignorder = sign_order
+  , signatorymagichash = magic_hash
+  , maybesignatory = muser_id
+  , maybesigninfo = SignInfo <$> msign_time <*> msign_ip
+  , maybeseeninfo = SignInfo <$> mseen_time <*> mseen_ip
+  , maybereadinvite = mread_invite
+  , mailinvitationdeliverystatus = mail_invitation_delivery_status
+  , smsinvitationdeliverystatus = sms_invitation_delivery_status
+  , signatorylinkdeleted = mdeleted
+  , signatorylinkreallydeleted = mreally_deleted
+  , signatorylinkcsvupload = CSVUpload <$> mcsv_title <*> mcsv_contents
+  , signatoryattachments = attachments
+  , signatorylinksignredirecturl = msign_redirect_url
+  , signatorylinkrejectredirecturl = mreject_redirect_url
+  , signatorylinkrejectiontime = mrejection_time
+  , signatorylinkrejectionreason = mrejection_reason
+  , signatorylinkauthenticationmethod = authentication_method
+  , signatorylinkdeliverymethod = delivery_method
+  , signatorylinkconfirmationdeliverymethod = confirmation_delivery_method
+  }
 
 -- | Drop this instance when we introduce Set SignatoryFields intead of list
 instance Eq SignatoryLink where
@@ -624,14 +678,16 @@ data DocumentTag = DocumentTag {
   , tagvalue :: String
   } deriving (Eq, Show, Data, Typeable)
 
-instance PQFormat [DocumentTag] where
-  pqFormat _ = pqFormat (undefined::String)
-instance FromSQL [DocumentTag] where
-  type PQBase [DocumentTag] = PQBase String
-  fromSQL = jsonFromSQL
-instance ToSQL [DocumentTag] where
-  type PQDest [DocumentTag] = PQDest String
-  toSQL = jsonToSQL
+type instance CompositeRow DocumentTag = (String, String)
+
+instance PQFormat DocumentTag where
+  pqFormat _ = "%document_tag"
+
+instance CompositeFromSQL DocumentTag where
+  toComposite (name, value) = DocumentTag {
+    tagname = name
+  , tagvalue = value
+  }
 
  -- for inserting into set
 instance Ord DocumentTag where
@@ -684,6 +740,52 @@ data Document = Document {
   , documentapiversion             :: APIVersion
   } deriving (Eq, Ord, Show)
 
+type instance CompositeRow Document = (DocumentID, String, CompositeArray1 SignatoryLink, CompositeArray1 MainFile, DocumentStatus, Maybe String, DocumentType, UTCTime, UTCTime, Int32, Maybe Int32, Maybe UTCTime, Maybe UTCTime, Maybe UTCTime, Maybe IPAddress, String, String, Bool, Bool, Bool, Bool, Lang, DocumentSharing, CompositeArray1 DocumentTag, Array1 FileID, Maybe String, Bool, Int64, MagicHash, TimeZoneName, APIVersion, Maybe CompanyID, StatusClass)
+
+instance PQFormat Document where
+  pqFormat _ = "%document"
+
+instance CompositeFromSQL Document where
+  toComposite (did, title, CompositeArray1 signatory_links, CompositeArray1 main_files, status, error_text, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text,  show_header, show_pdf_download, show_reject_option, show_footer, lang, sharing, CompositeArray1 tags, Array1 author_attachments, apicallback, unsaved_draft, objectversion, token, time_zone_name, api_version, author_company_id, status_class) = Document {
+    documentid = did
+  , documenttitle = title
+  , documentsignatorylinks = signatory_links
+  , documentmainfiles = main_files
+  , documentstatus = case (status, error_text) of
+    (DocumentError{}, Just text) -> DocumentError text
+    (DocumentError{}, Nothing) -> DocumentError "document error"
+    _ -> status
+  , documenttype = doc_type
+  , documentctime = ctime
+  , documentmtime = mtime
+  , documentdaystosign = days_to_sign
+  , documentdaystoremind = days_to_remind
+  , documenttimeouttime = timeout_time
+  , documentautoremindtime = case status of
+    Pending -> auto_remind_time
+    _ -> Nothing
+  , documentinvitetime = case invite_time of
+    Nothing -> Nothing
+    Just t -> Just (SignInfo t $ fromMaybe noIP invite_ip)
+  , documentinvitetext = invite_text
+  , documentconfirmtext = confirm_text
+  , documentshowheader = show_header
+  , documentshowpdfdownload = show_pdf_download
+  , documentshowrejectoption = show_reject_option
+  , documentshowfooter = show_footer
+  , documentsharing = sharing
+  , documenttags = S.fromList tags
+  , documentauthorattachments = map AuthorAttachment author_attachments
+  , documentlang = lang
+  , documentstatusclass = status_class
+  , documentapicallbackurl = apicallback
+  , documentunsaveddraft = unsaved_draft
+  , documentobjectversion = objectversion
+  , documentmagichash = token
+  , documentauthorcompanyid = author_company_id
+  , documenttimezonename = time_zone_name
+  , documentapiversion = api_version
+  }
 
 instance HasDefaultValue Document where
   defaultValue = Document
@@ -729,6 +831,18 @@ data MainFile = MainFile
   , mainfilesealstatus     :: SealStatus     -- ^ for files in Preparation: Missing.
   } deriving (Eq, Ord, Show)
 
+type instance CompositeRow MainFile = (FileID, DocumentStatus, SealStatus)
+
+instance PQFormat MainFile where
+  pqFormat _ = "%main_file"
+
+instance CompositeFromSQL MainFile where
+  toComposite (fid, document_status, seal_status) = MainFile {
+    mainfileid = fid
+  , mainfiledocumentstatus = document_status
+  , mainfilesealstatus = seal_status
+  }
+
 documentfile :: Document -> Maybe FileID
 documentfile = fmap mainfileid . find ((==Preparation) . mainfiledocumentstatus) . documentmainfiles
 
@@ -745,23 +859,6 @@ documentsealstatus = fmap mainfilesealstatus . documentsealedfile'
 instance HasGuardtimeSignature Document where
   hasGuardtimeSignature doc = (hasGuardtimeSignature <$> documentsealstatus doc) == Just True
 
-data CancelationReason = ManualCancel
-                        -- The data returned by ELeg server
-                        --                 msg                    fn            ln            num
-                        | ELegDataMismatch String SignatoryLinkID String String String
-  deriving (Eq, Ord, Show, Data, Typeable)
-
-instance PQFormat CancelationReason where
-  pqFormat _ = pqFormat (undefined::String)
-
-instance FromSQL CancelationReason where
-  type PQBase CancelationReason = PQBase String
-  fromSQL = jsonFromSQL
-
-instance ToSQL CancelationReason where
-  type PQDest CancelationReason = PQDest String
-  toSQL = jsonToSQL
-
 newtype AuthorAttachment = AuthorAttachment { authorattachmentfile :: FileID }
   deriving (Eq, Ord, Show)
 
@@ -770,6 +867,18 @@ data SignatoryAttachment = SignatoryAttachment {
   , signatoryattachmentname            :: String
   , signatoryattachmentdescription     :: String
   } deriving (Eq, Ord, Show)
+
+type instance CompositeRow SignatoryAttachment = (Maybe FileID, String, String)
+
+instance PQFormat SignatoryAttachment where
+  pqFormat _ = "%signatory_attachment"
+
+instance CompositeFromSQL SignatoryAttachment where
+  toComposite (mfid, name, description) = SignatoryAttachment {
+    signatoryattachmentfile = mfid
+  , signatoryattachmentname = name
+  , signatoryattachmentdescription = description
+  }
 
 data DeliveryStatus = Delivered
                          | Undelivered
@@ -837,20 +946,20 @@ instance ToSQL [FieldPlacement] where
   type PQDest [FieldPlacement] = PQDest String
   toSQL = jsonToSQL' $ JSArray . (map placementJSON)
     where
-      placementJSON placement = runJSONGen $ do
-        value "xrel" $ placementxrel placement
-        value "yrel" $ placementyrel placement
-        value "wrel" $ placementwrel placement
-        value "hrel" $ placementhrel placement
-        value "fsrel" $ placementfsrel placement
-        value "page" $ placementpage placement
+      placementJSON placement = J.runJSONGen $ do
+        J.value "xrel" $ placementxrel placement
+        J.value "yrel" $ placementyrel placement
+        J.value "wrel" $ placementwrel placement
+        J.value "hrel" $ placementhrel placement
+        J.value "fsrel" $ placementfsrel placement
+        J.value "page" $ placementpage placement
         when (not (null (placementanchors placement))) $ do
-          value "anchors" $ (flip map) (placementanchors placement) $ \anchor -> runJSONGen $ do
-              value "text" (placementanchortext anchor)
+          J.value "anchors" $ (flip map) (placementanchors placement) $ \anchor -> J.runJSONGen $ do
+              J.value "text" (placementanchortext anchor)
               when (placementanchorindex anchor /=1 ) $ do
-                value "index" (placementanchorindex anchor)
-              value "pages" (placementanchorpages anchor)
-        value "tip" $ case (placementtipside placement) of
+                J.value "index" (placementanchorindex anchor)
+              J.value "pages" (placementanchorpages anchor)
+        J.value "tip" $ case (placementtipside placement) of
           Just LeftTip -> Just ("left" :: String)
           Just RightTip -> Just "right"
           _ -> Nothing

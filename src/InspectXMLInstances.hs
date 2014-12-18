@@ -123,7 +123,6 @@ instance InspectXML UserSettings where
 instance InspectXML AuthenticationMethod where
 instance InspectXML DeliveryMethod where
 instance InspectXML ConfirmationDeliveryMethod where
-instance InspectXML CancelationReason where
 instance InspectXML Company where
 instance InspectXML CompanyID where
 instance InspectXML DocumentSharing where

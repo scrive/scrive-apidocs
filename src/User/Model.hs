@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -fcontext-stack=50 #-}
 {-# LANGUAGE ExistentialQuantification #-}
 module User.Model (
     module User.Lang

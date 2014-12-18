@@ -6,7 +6,17 @@ import Database.PostgreSQL.PQTypes
 import qualified Data.ByteString as BS
 
 pgConnSettings :: BS.ByteString -> ConnectionSettings
-pgConnSettings dbconf = defaultSettings { csConnInfo = dbconf }
+pgConnSettings dbconf = defaultSettings {
+  csConnInfo = dbconf
+, csComposites = [
+    "signatory_field"
+  , "document_tag"
+  , "main_file"
+  , "signatory_attachment"
+  , "signatory_link"
+  , "document"
+  ]
+}
 
 -- Advantages for using this source over default one:
 -- - keeps connections already established before traffic comes in (reduce latency)
