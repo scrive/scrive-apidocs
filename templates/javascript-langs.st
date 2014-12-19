@@ -326,9 +326,9 @@ javascriptLocalisation =
              , cantSignModal : {
                  title : "$_designviewCantSignModalTitle()$"
                , info1 : "$_designviewCantSignModalInfo1()$"
-               , info2 : "$_designviewCantSignModalInfo2()$"
+               , info2 : '$_designviewCantSignModalInfo2()$'
                , li1 : "$_designviewCantSignModalLi1()$"
-               , li2 : "$_designviewCantSignModalLi2()$"
+               , li2 : '$_designviewCantSignModalLi2()$'
                , li3 : "$_designviewCantSignModalLi3()$"
                , li4 : "$_designviewCantSignModalLi4()$"
              }
