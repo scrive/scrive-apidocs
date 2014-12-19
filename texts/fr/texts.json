@@ -348,7 +348,7 @@
 "_designViewViewCSV":"Consulter le CSV",
 "_designViewWhatField":"De quel champ s'agit-il?",
 "_designviewCantSignModalInfo1":"Il vous est actuellement impossible d'envoyer le document parce qu'un élément manque.",
-"_designviewCantSignModalInfo2":"Rendez-vous à l'option \"Ajouter des parties\" et vérifiez si une ou plusieurs parties sont <span class=\"highlight\">mises en évidence</span>. Cliquez sur cette partie et recherchez les champs <span class=\"highlight\">mis en évidence</span>.",
+"_designviewCantSignModalInfo2":"Rendez-vous à l’option \"Ajouter des parties\" et vérifiez si une ou plusieurs parties sont <span class=\"highlight\">mises en évidence</span>. Cliquez sur cette partie et recherchez les champs <span class=\"highlight\">mis en évidence</span>.",
 "_designviewCantSignModalLi1":"Vérifiez si l'adresse email (le cas échéant) est entrée correctement. Elle ne doit pas comporter d'espace. Voici le format indiqué: example@email.com",
 "_designviewCantSignModalLi2":"Le numéro de téléphone (le cas échéant) doit comporter un signe \"+\" suivi du code pays et le premier  \"0\" doit être supprimé. Voici le format indiqué: +46701234567",
 "_designviewCantSignModalLi3":"Veillez à remplir tous les champs obligatoires réservés à l'expéditeur.",
