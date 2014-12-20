@@ -12,6 +12,7 @@ cronMigrations = [
   , createCronTasksTable
   , addArchiveIdleDocumentsTask
   , changeAPICallbacksExecutionFrequency
+  , changeFindAndExtendDigitalSignaturesFrequency
   ]
 
 createCronWorkersTable :: MonadDB m => Migration m
@@ -91,3 +92,13 @@ changeAPICallbacksExecutionFrequency = Migration {
     sqlSet "frequency" (iseconds 2)
     sqlWhereEq "type" ("document_api_callback_evaluation"::String)
 }
+
+changeFindAndExtendDigitalSignaturesFrequency :: MonadDB m => Migration m
+changeFindAndExtendDigitalSignaturesFrequency = Migration {
+  mgrTable = tableCronTasks
+, mgrFrom = 3
+, mgrDo = runQuery_ $ sqlUpdate "cron_tasks" $ do
+    sqlSet "frequency" (iminutes 30)
+    sqlWhereEq "type" ("find_and_extend_digital_signatures"::String)
+}
+

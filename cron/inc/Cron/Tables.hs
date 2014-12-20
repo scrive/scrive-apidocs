@@ -45,7 +45,7 @@ tableCronWorkers = tblTable {
 tableCronTasks :: Table
 tableCronTasks = tblTable {
     tblName = "cron_tasks"
-  , tblVersion = 3
+  , tblVersion = 4
   , tblColumns = [
     -- Type of the task.
       tblColumn { colName = "type",      colType = TextT, colNullable = False }
@@ -76,7 +76,7 @@ tableCronTasks = tblTable {
     , ("email_change_requests_evaluation", ihours 1)
     , ("find_and_do_post_document_closed_actions", ihours 6)
     , ("find_and_do_post_document_closed_actions_new", iminutes 10)
-    , ("find_and_extend_digital_signatures", ihours 3)
+    , ("find_and_extend_digital_signatures", iminutes 30)
     , ("find_and_timeout_documents", iminutes 10)
     , ("mail_events_processing", iseconds 5)
     , ("old_drafts_removal", ihours 1)
