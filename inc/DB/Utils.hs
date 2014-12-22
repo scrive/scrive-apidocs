@@ -1,10 +1,20 @@
 module DB.Utils (
-    loopOnUniqueViolation
+    explainAnalyze
+  , loopOnUniqueViolation
   ) where
 
+import Control.Applicative
 import Control.Monad.Catch
+import Data.Monoid.Space
+import Data.String
 import Data.Typeable
 import Database.PostgreSQL.PQTypes
+
+explainAnalyze :: (IsSQL sql, IsString sql, SpaceMonoid sql, MonadDB m)
+               => sql -> m String
+explainAnalyze sql = do
+  runQuery_ $ "EXPLAIN ANALYZE VERBOSE" <+> sql
+  unlines <$> fetchMany unSingle
 
 -- | Execute monad action and loop on UniqueViolation exception.
 -- Needed for clean execution of cases "try to update a row

@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# OPTIONS_GHC -fno-warn-orphans -fno-warn-unused-imports #-}
 module Doc.Model.Query
   ( isTemplate -- fromUtils
   , DocumentFilter(..)
@@ -63,7 +63,7 @@ import User.Email
 import User.Model
 import qualified Amazon
 import qualified Log
---import Debug.Trace
+import Debug.Trace
 
 data GetSignatoryScreenshots = GetSignatoryScreenshots [SignatoryLinkID]
 instance (MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, Amazon.AmazonMonad m) => DBQuery m GetSignatoryScreenshots [(SignatoryLinkID, SignatoryScreenshots)] where
@@ -137,27 +137,41 @@ selectDocuments :: [DocumentDomain]
                 -> SqlSelect
 selectDocuments domains filters orders extend = sqlSelect "documents" $ do
   mapM_ (sqlOrderBy . documentOrderByAscDescToSQL) orders
-  sqlWhereExists $ sqlSelect "signatory_links" $ do
-    sqlWhere "documents.id = signatory_links.document_id"
-    sqlLeftJoinOn "users" "signatory_links.user_id = users.id"
-    sqlLeftJoinOn "companies" "users.company_id = companies.id"
-    sqlLeftJoinOn "users AS same_company_users" "users.company_id = same_company_users.company_id OR users.id = same_company_users.id"
-    sqlWhereAny $ map documentDomainToSQL domains
-    mapM_ documentFilterToSQL filters
+  -- There is absolutely no reason to make this huge join
+  -- when DocumentsVisibleToUser is not used. It needs to
+  -- be separated into materialized view or something else
+  -- later anyway.
+  if has_visible_by_user domains
+    then sqlWhereExists . sqlSelect "signatory_links" $ do
+      sqlWhere "documents.id = signatory_links.document_id"
+      sqlLeftJoinOn "users" "signatory_links.user_id = users.id"
+      sqlLeftJoinOn "companies" "users.company_id = companies.id"
+      sqlLeftJoinOn "users AS same_company_users" "users.company_id = same_company_users.company_id OR users.id = same_company_users.id"
+      sqlWhereAny $ map documentDomainToSQL domains
+      mapM_ documentFilterToSQL filters
+    else do
+      sqlWhereAny $ map documentDomainToSQL domains
+      mapM_ documentFilterToSQL filters
   extend
+  where
+    has_visible_by_user :: [DocumentDomain] -> Bool
+    has_visible_by_user = or . map (\case
+      DocumentsVisibleToUser{} -> True
+      _ -> False)
 
 data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentByDocumentID Document where
-  query (GetDocumentByDocumentID did) = do
-    kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
-      mapM_ sqlResult documentsSelectors
-      sqlWhereDocumentIDIs did
+  query (GetDocumentByDocumentID did) = query $ GetDocument
+    [DocumentsOfWholeUniverse]
+    [DocumentFilterByDocumentID did]
 
 data GetDocumentBySignatoryLinkID = GetDocumentBySignatoryLinkID SignatoryLinkID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentBySignatoryLinkID Document where
   query (GetDocumentBySignatoryLinkID slid) = do
+    -- FIXME: Use domains/filters.
     kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
+      sqlWhereDocumentWasNotPurged
       sqlWhereEqSql "documents.id" . sqlSelect "signatory_links" $ do
         sqlResult "signatory_links.document_id"
         sqlWhereEq "signatory_links.id" slid
@@ -165,8 +179,10 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentBySignatoryLinkID Doc
 data GetDocumentsBySignatoryLinkIDs = GetDocumentsBySignatoryLinkIDs [SignatoryLinkID]
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsBySignatoryLinkIDs [Document] where
   query (GetDocumentsBySignatoryLinkIDs slids) = do
+    -- FIXME: Use domains/filters.
     runQuery_ . sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
+      sqlWhereDocumentWasNotPurged
       sqlWhereExists $ sqlSelect "signatory_links" $ do
         sqlWhereIn "signatory_links.id" slids
         sqlWhere "signatory_links.document_id = documents.id"
@@ -175,8 +191,10 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsBySignatoryLinkIDs [
 data GetDocumentByDocumentIDSignatoryLinkIDMagicHash = GetDocumentByDocumentIDSignatoryLinkIDMagicHash DocumentID SignatoryLinkID MagicHash
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentByDocumentIDSignatoryLinkIDMagicHash Document where
   query (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) = do
+    -- FIXME: Use domains/filters.
     kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
+      sqlWhereDocumentWasNotPurged
       sqlWhereDocumentIDIs did
       sqlWhereExists $ sqlSelect "signatory_links" $ do
          sqlWhere "signatory_links.document_id = documents.id"
@@ -208,18 +226,17 @@ instance MonadDB m => DBQuery m GetDocuments [Document] where
       sqlLimit limit
     fetchMany toComposite
 
-data GetDocument = GetDocument [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy]
+data GetDocument = GetDocument [DocumentDomain] [DocumentFilter]
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocument Document where
-  query (GetDocument domains filters orders) = do
-    kRunAndFetch1OrThrowWhyNot toComposite . selectDocuments domains filters orders $ do
+  query (GetDocument domains filters) = do
+    kRunAndFetch1OrThrowWhyNot toComposite . selectDocuments domains filters [] $ do
       mapM_ sqlResult documentsSelectors
 
 data GetDocumentsWithSoftLimit = GetDocumentsWithSoftLimit [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy] (Int, Int, Int)
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsWithSoftLimit (Int, [Document]) where
   query (GetDocumentsWithSoftLimit domains filters orders (offset, limit, soft_limit)) = do
-    --runQuery_ $ "EXPLAIN ANALYZE VERBOSE" <+> toSQLCommand sql
-    --analysis <- unlines <$> fetchMany unSingle
-    --trace ("ANALYSIS:" <+> analysis) $ return ()
+    analysis <- explainAnalyze $ toSQLCommand sql
+    trace ("ANALYSIS:" <+> analysis) $ return ()
     runQuery_ sql
     (count :: Int64, CompositeArray1 documents) <- fetchOne id
     return (offset + fromIntegral count, documents)
@@ -236,7 +253,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsWithSoftLimit (Int, 
           sqlLimit soft_limit
         -- fetch total count of documents
         sqlResult $ "(SELECT COUNT(*) FROM selected_ids) AS total_count"
-        -- and a list of them, restricted by soft limit
+        -- and a list of them, restricted by the soft limit
         sqlResult $ "ARRAY(SELECT (" <> mintercalate ", " documentsSelectors <> ")::document FROM relevant_ids JOIN documents USING (id)) AS documents"
 
 data GetDocumentsIDs = GetDocumentsIDs [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy]

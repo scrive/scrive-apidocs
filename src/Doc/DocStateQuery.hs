@@ -61,7 +61,6 @@ getDocByDocIDEx docid maccesstoken = do
   dbQuery $ GetDocument
     visibility
     [DocumentFilterByDocumentID docid]
-    []
 
 -- | Same as getDocByDocID, but works only for author
 getDocByDocIDForAuthor :: Kontrakcja m => DocumentID -> m Document
@@ -75,7 +74,6 @@ getDocByDocIDForAuthor docid = do
     Just User{userid} -> dbQuery $ GetDocument
       [DocumentsVisibleToUser userid]
       [DocumentFilterByDocumentID docid, DocumentFilterByAuthor userid]
-      []
 
 -- | Same as getDocByDocID, but works only for author or authors company admin
 getDocByDocIDForAuthorOrAuthorsCompanyAdmin :: Kontrakcja m => DocumentID -> m Document
@@ -89,7 +87,6 @@ getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid = do
     Just User{userid} -> dbQuery $ GetDocument
       [DocumentsVisibleToUser userid]
       [DocumentFilterByDocumentID docid, DocumentFilterLinkIsAuthor True]
-      []
 
 -- | Get a magichash for given signatory. Only possible if given user is author.
 getMagicHashForDocumentSignatoryWithUser :: Kontrakcja m
