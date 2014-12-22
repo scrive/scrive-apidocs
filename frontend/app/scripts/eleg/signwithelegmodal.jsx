@@ -22,11 +22,12 @@ return function(args) {
         width: 520
       });
 
-      var signThisDeviceButton = new Button({
+      var signAnotherDeviceButton = new Button({
         color: "black",
         cssClass : "other-sign-button",
         text:localization.docsignview.eleg.bankid.modalAnotherDevice,
         onClick:function() {
+	  mixpanel.track('Clicked BankID on another device');
           self.modal.close(true);
           new BankIDSigningModal({
               signatory : args.signatory,
@@ -37,10 +38,11 @@ return function(args) {
         }
       });
 
-      var signOtherDeviceButton = new Button({
+      var signThisDeviceButton = new Button({
         color: "green",
         text:localization.docsignview.eleg.bankid.modalThisDevice,
         onClick:function() {
+	  mixpanel.track('Clicked BankID on this device');
           self.modal.close(true);
           new BankIDSigningModal({
               signatory : args.signatory,
@@ -50,7 +52,7 @@ return function(args) {
             });
         }
       });
-      buttons.append(signThisDeviceButton.el()).append(signOtherDeviceButton.el());
+      buttons.append(signAnotherDeviceButton.el()).append(signThisDeviceButton.el());
     } else {
       self.modal = new Confirmation({
         width: 825,
