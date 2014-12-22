@@ -3,6 +3,7 @@ module EID.CGI.GRP.Control (grpRoutes) where
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Base
 import Control.Monad.Catch
 import Data.List
 import Data.Monoid.Space
@@ -123,7 +124,7 @@ handleCollectRequest did slid = do
 
 -- | Fetch the document for e-signing. Checks that the document
 -- is in the correct state and the signatory hasn't signed yet.
-getDocument :: (MonadDB m, Log.MonadLog m, KontraMonad m, MonadThrow m)
+getDocument :: (MonadDB m, Log.MonadLog m, KontraMonad m, MonadThrow m,MonadBase IO m)
             => DocumentID -> SignatoryLinkID -> m Document
 getDocument did slid = dbQuery (GetDocumentSessionToken slid) >>= \case
   Just mh -> do

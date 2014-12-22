@@ -1,7 +1,6 @@
 module KontraError where
 
 import Control.Monad.Base
-import Control.Monad.Catch
 import Data.Typeable
 import GHC.Stack
 import qualified Control.Exception.Lifted as E
@@ -18,8 +17,8 @@ internalError = do
   stack <- liftBase currentCallStack
   E.throwIO (InternalError stack)
 
-respond404 :: MonadThrow m => m a
-respond404 = throwM Respond404
+respond404 :: MonadBase IO m => m a
+respond404 = E.throwIO Respond404
 
 {-# NOINLINE preventTailCallOptimization #-}
 preventTailCallOptimization :: (Monad m) => m ()
