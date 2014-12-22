@@ -35,11 +35,9 @@ var DocumentViewSignatoryModel = Backbone.Model.extend({
       var document = this.document();
       if (signatory.signdate() != undefined)
         return localization.signatoryMessage.signed;
-      else if (signatory.datamismatch() == true ||
-               document.timedout() ||
+      else if (document.timedout() ||
                document.canceled() ||
-               document.rejected() ||
-               document.datamismatch())
+               document.rejected())
           return localization.docsignview.unavailableForSign;
       else if (signatory.rejecteddate() != undefined)
           return localization.signatoryMessage.rejected;

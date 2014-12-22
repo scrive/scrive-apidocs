@@ -506,9 +506,6 @@ window.Document = Backbone.Model.extend({
     signingInProcess: function() {
         return this.pending();
     },
-    datamismatch: function() {
-        return _.any(this.signatory, function() {return this.datamismatch() == true;});
-    },
     timeouttime: function() {
         return this.get("timeouttime");
     },

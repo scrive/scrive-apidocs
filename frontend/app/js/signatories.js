@@ -277,9 +277,6 @@ window.Signatory = Backbone.Model.extend({
           return moment(this.get("signdate")).toDate();
         return undefined;
     },
-    datamismatch: function() {
-        return this.get("datamismatch");
-    },
     rejecteddate: function() {
         if (this.get("rejecteddate"))
           return moment(this.get("rejecteddate")).toDate();
