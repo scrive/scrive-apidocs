@@ -367,9 +367,7 @@ apiCallV1Cancel did =  api $ do
     checkObjectVersionIfProvided did
     (user, actor, _) <- getAPIUser APIDocSend
     withDocumentID did $ do
-      auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) .getAuthorSigLink) <$> theDocument
-      when (not $ (auid == userid user)) $ do
-            throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
+      guardAuthorOrAuthorsAdmin user "Permission problem. You don't have a permission to cancel this document"
       unlessM (isPending <$> theDocument) $ do
             throwIO . SomeKontraException $ (conflictError "Document is not pending")
       dbUpdate $ CancelDocument actor
@@ -599,14 +597,7 @@ apiCallV1ChangeAuthentication :: Kontrakcja m => DocumentID -> SignatoryLinkID -
 apiCallV1ChangeAuthentication did slid = api $ do
   (user, actor, _) <- getAPIUser APIDocSend
   withDocumentID did $ do
-      -- Security and validity checks
-      docUserID <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
-      docUser   <- apiGuardJustM (serverError "No user found for author") $ dbQuery $ GetUserByID docUserID
-      let hasPermission = (docUserID == userid user) ||
-                          ((usercompany docUser == usercompany user)
-                            && (useriscompanyadmin user))
-      when (not hasPermission) $
-          throwIO . SomeKontraException $ forbidden'
+      guardAuthorOrAuthorsAdmin user "Permission problem. You don't have a permission to change this document"
       -- Document status and input checks
       unlessM (isPending <$> theDocument) $
           throwIO . SomeKontraException $ badInput "Document status must be pending"
@@ -734,17 +725,8 @@ apiCallV1Get did = api $ do
 apiCallV1GetEvidenceAttachments :: Kontrakcja m => DocumentID -> m Response
 apiCallV1GetEvidenceAttachments did = api $ withDocumentID did $ do
   (user, _, _) <- getAPIUser APIDocCheck
-  msiglink <- getSigLinkFor user <$> theDocument
-  mauser <- theDocument >>= \d -> case (join $ maybesignatory <$> getAuthorSigLink d) of
-                     Just auid -> dbQuery $ GetUserByIDIncludeDeleted auid
-                     _ -> return Nothing
-  haspermission <- theDocument >>= \d -> return $
-                          isJust msiglink
-                       || (isJust mauser && usercompany (fromJust mauser) == usercompany user && (useriscompanyadmin user || isDocumentShared d))
-  if (haspermission)
-    then do
-      Ok <$> (evidenceAttachmentsJSONV1 =<< theDocument)
-    else throwIO . SomeKontraException $ serverError "You do not have right to access document"
+  guardAuthorOrAuthorsAdmin user "Permission problem. You don't have a permission to access this document"
+  Ok <$> (evidenceAttachmentsJSONV1 =<< theDocument)
 
 apiCallV1List :: Kontrakcja m => m Response
 apiCallV1List = api $ do
@@ -1162,6 +1144,15 @@ checkObjectVersionIfProvidedAndThrowError did err = do
 
 
 -- Utils
+guardAuthorOrAuthorsAdmin :: (Kontrakcja m,DocumentMonad m) => User -> String -> m ()
+guardAuthorOrAuthorsAdmin user forbidenMessage = do
+  docUserID <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
+  docUser   <- apiGuardJustM (serverError "No user found for author") $ dbQuery $ GetUserByIDIncludeDeleted docUserID
+  let hasPermission = (docUserID == userid user) ||
+                          ((usercompany docUser == usercompany user)
+                            && (useriscompanyadmin user))
+  when (not hasPermission) $
+    throwIO . SomeKontraException $ forbidden forbidenMessage
 
 getMagicHashAndUserForSignatoryAction :: (Kontrakcja m) =>  DocumentID -> SignatoryLinkID -> m (MagicHash,Maybe User)
 getMagicHashAndUserForSignatoryAction did sid = do
