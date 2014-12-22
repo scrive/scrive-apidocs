@@ -62,7 +62,7 @@ var AuthorViewModel = Backbone.Model.extend({
     return this.get("authorattachments");
   },
   hasEvidenceAttachmentsSection : function() {
-    return this.document().evidenceattachments().length > 0;
+    return this.document().closed();
   },
   evidenceattachments : function() {
     if (this.get("evidenceattachments") == undefined)
@@ -78,7 +78,7 @@ var AuthorViewModel = Backbone.Model.extend({
     return this.get("signatoryattachments");
   },
   readyToShow : function() {
-    return this.document().ready() && !this.document().needRecall() && this.history().ready() && this.file().readyToConnectToPage();
+    return this.document().ready() && !this.document().needRecall() && this.history().ready() && this.file().readyToConnectToPage() && (!this.hasEvidenceAttachmentsSection() || this.evidenceattachments().ready());
   },
   setDontRefresh : function() {
     this.history().setDontRefresh();

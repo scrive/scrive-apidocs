@@ -40,7 +40,7 @@ execute DocumentAPICallback{..} = do
 
 executeStandardCallback :: (AmazonMonad m, MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, MonadReader c m, HasSalesforceConf c) => Document -> String -> m Bool
 executeStandardCallback doc url = do
-  dJSON <- documentJSONV1 Nothing False False True Nothing doc
+  dJSON <- documentJSONV1 Nothing False True Nothing doc
   (exitcode, _ , stderr) <- readCurl
      [ "-X", "POST"
      , "-f" -- make curl return exit code (22) if it got anything else but 2XX

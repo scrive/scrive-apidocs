@@ -164,7 +164,7 @@ testUpdateDocToSaved useOAuth = do
   else return Nothing
 
   reqDocJSON <- mkRequest GET []
-  let mkDocJSON d = runTestKontra reqDocJSON ctx $ documentJSONV1 (Just user) False True True Nothing d
+  let mkDocJSON d = runTestKontra reqDocJSON ctx $ documentJSONV1 (Just user) True True Nothing d
 
   reqDoc <- if useOAuth
     then mkRequestWithHeaders POST [ ("expectedType", inText "text")

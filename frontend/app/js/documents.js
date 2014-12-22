@@ -32,7 +32,6 @@ window.Document = Backbone.Model.extend({
         file: null,
         sealedfile: null,
         authorattachments: [],
-        evidenceattachments: [],
         signatoryattachments: [],
         ready: false,
         readOnlyView: false,
@@ -47,8 +46,7 @@ window.Document = Backbone.Model.extend({
         screenshots : {}
     }},
     initialize: function(args) {
-        var params = { evidenceAttachments: args.evidenceAttachments };
-        this.url = "/api/frontend/get/" + args.id + "?" + $.param(params,true);
+        this.url = "/api/frontend/get/" + args.id ;
         _.bindAll(this);
         this.bindBubble();
     },
@@ -117,9 +115,6 @@ window.Document = Backbone.Model.extend({
     },
     removeattachment : function(a) {
         this.set({"authorattachments": _.without(this.authorattachments(), a) });
-    },
-    evidenceattachments: function() {
-        return this.get("evidenceattachments");
     },
     signatoryattachments: function() {
         return _.flatten(_.map(this.signatories(), function(sig) { return sig.attachments(); }));
@@ -693,7 +688,6 @@ window.Document = Backbone.Model.extend({
        authorattachments: _.map(args.authorattachments, function(fileargs) {
          return new File(_.defaults(fileargs, dataForFile));
        }),
-       evidenceattachments: args.evidenceattachments,
        signatories: _.map(signatories, function(signatoryargs) {
          return new Signatory(_.defaults(signatoryargs, { document: self, isLastViewer : !signatoryargs.signs && signatoryargs.signorder > maxSignsSignorder }));
        }),

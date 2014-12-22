@@ -60,6 +60,8 @@ docControlTests env = testGroup "DocControl" [
   , testThat "We can get json for document" env testGetLoggedIn
   , testThat "We can't get json for document if we are not logged in" env testGetNotLoggedIn
   , testThat "We can't get json for document is we are logged in but we provided authorization header" env testGetBadHeader
+  , testThat "We can get json for evidence attachments" env testGetEvidenceAttachmentsLoggedIn
+  , testThat "We can't get json for evidence attachments if we are not logged in" env testGetEvidenceAttachmentsNotLoggedIn
   , testThat "Document bulk delete works fast" env testDocumentDeleteInBulk
   , testThat "Download file and download main file obey access rights" env testDownloadFile
 
@@ -491,6 +493,26 @@ testGetBadHeader = do
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
   req <- mkRequestWithHeaders GET [] [("authorization", ["ABC"])]
   (res,_) <- runTestKontra req ctx $ apiCallV1Get doc
+  assertEqual "Response code is 403" 403 (rsCode res)
+
+
+-- Testing access to evidence documentation
+testGetEvidenceAttachmentsLoggedIn :: TestEnv ()
+testGetEvidenceAttachmentsLoggedIn = do
+  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
+  doc <- addRandomDocumentWithAuthor user
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
+  req <- mkRequest GET []
+  (res,_) <- runTestKontra req ctx $ apiCallV1GetEvidenceAttachments doc
+  assertEqual "Response code is 200" 200 (rsCode res)
+
+testGetEvidenceAttachmentsNotLoggedIn :: TestEnv ()
+testGetEvidenceAttachmentsNotLoggedIn = do
+  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
+  doc <- addRandomDocumentWithAuthor user
+  ctx <- mkContext defaultValue
+  req <- mkRequest GET []
+  (res,_) <- runTestKontra req ctx $ apiCallV1GetEvidenceAttachments doc
   assertEqual "Response code is 403" 403 (rsCode res)
 
 -- Some test for signview branding generation

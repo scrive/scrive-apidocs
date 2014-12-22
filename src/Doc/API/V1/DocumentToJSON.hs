@@ -2,7 +2,8 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Doc.API.V1.DocumentToJSON (
-      documentJSONV1
+      evidenceAttachmentsJSONV1
+    , documentJSONV1
     , docForListJSONV1
     , docForListCSVV1
     , docForListCSVHeaderV1
@@ -41,22 +42,27 @@ import qualified Amazon as AWS
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
 import qualified Log
 
-documentJSONV1 :: (MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m) => (Maybe User) -> Bool -> Bool -> Bool ->  Maybe SignatoryLink -> Document -> m JSValue
-documentJSONV1 muser includeEvidenceAttachments forapi forauthor msl doc = do
+evidenceAttachmentsJSONV1 :: (MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m) => Document -> m JSValue
+evidenceAttachmentsJSONV1 doc = do
+    evidenceattachments <- EvidenceAttachments.fetch doc
+    runJSONGenT $ do
+      J.objects "evidenceattachments" $ for evidenceattachments $ \a -> do
+        J.value "name"     $ BSC.unpack $ EvidenceAttachments.name a
+        J.value "mimetype" $ BSC.unpack <$> EvidenceAttachments.mimetype a
+        J.value "downloadLink" $ show $ LinkEvidenceAttachment (documentid doc) (EvidenceAttachments.name a)
+
+documentJSONV1 :: (MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m) => (Maybe User) -> Bool -> Bool ->  Maybe SignatoryLink -> Document -> m JSValue
+documentJSONV1 muser forapi forauthor msl doc = do
     file <- documentfileM doc
     sealedfile <- documentsealedfileM doc
     authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments doc)
-    evidenceattachments <- if includeEvidenceAttachments then EvidenceAttachments.fetch doc else return []
     runJSONGenT $ do
       J.value "id" $ show $ documentid doc
       J.value "title" $ documenttitle doc
       J.value "file" $ fmap fileJSON file
       J.value "sealedfile" $ fmap fileJSON sealedfile
       J.value "authorattachments" $ map fileJSON authorattachmentfiles
-      J.objects "evidenceattachments" $ for evidenceattachments $ \a -> do
-        J.value "name"     $ BSC.unpack $ EvidenceAttachments.name a
-        J.value "mimetype" $ BSC.unpack <$> EvidenceAttachments.mimetype a
-        J.value "downloadLink" $ show $ LinkEvidenceAttachment (documentid doc) (EvidenceAttachments.name a)
+      J.objects "evidenceattachments" $ ([] :: [JSONGenT m ()])
       J.value "time" $ jsonDate (Just $ documentmtime doc)
       J.value "ctime" $ jsonDate (Just $ documentctime doc)
       J.value "timeouttime" $ jsonDate $ documenttimeouttime doc
