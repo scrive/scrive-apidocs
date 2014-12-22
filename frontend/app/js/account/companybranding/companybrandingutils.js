@@ -227,7 +227,7 @@ var CompanyBrandingFontView = Backbone.View.extend({
 
     this.select = new Select({name: font_name,
                               style: 'font-family: ' + fonts[font_name] + '; width: 150px',
-                              textWidth: "120px",
+                              textWidth: 120,
                               expandOnHover: false,
                               options: options
                              });

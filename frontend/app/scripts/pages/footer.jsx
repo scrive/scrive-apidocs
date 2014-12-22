@@ -41,7 +41,7 @@ define(['React', 'Backbone', 'common/select'], function(React, Backbone, NewSele
           name={lname}
           border="none"
           cssClass="change-language"
-          textWidth="80px"
+          textWidth={80}
           adjustHeightOnExpand={true}
           onSelect={function(v) {self.changeLang(v);}}
         />

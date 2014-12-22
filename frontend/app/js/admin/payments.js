@@ -219,7 +219,7 @@ var AdminPaymentsView = Backbone.View.extend({
           ppRow.append("<label style='width:200px;float:left;'> Price plan: </label>");
           ppRow.append(new Select({
                                       name : this.priceplanNameToText(this.model.priceplan()),
-                                      textWidth : "109px",
+                                      textWidth : 109,
                                       style : "display:inline-block",
                                       onSelect: function(v) {model.setPriceplan(v); self.render(); return true;},
 
@@ -238,7 +238,7 @@ var AdminPaymentsView = Backbone.View.extend({
           statusRow.append("<label style='width:200px;float:left;'> Price plan: </label>");
           statusRow.append(new Select({
                                       name : this.priceplanStatusToText(this.model.status()),
-                                      textWidth : "109px",
+                                      textWidth : 109,
                                       style : "display:inline-block",
                                       onSelect: function(v) {model.setStatus(v); self.render(); return true;},
 

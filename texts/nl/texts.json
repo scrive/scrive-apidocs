@@ -805,7 +805,7 @@
 "_tablestatusesSent":"Gestuurd",
 "_tablestatusesSigned":"Ondertekend",
 "_tablestatusesViewedOnline":"Online bekeken",
-"_tbsYouSignWithEleg":"",
+"_tbsYouSignWithEleg":"Ik onderteken het document \"$document_title$\" met transactie nummer \"$document_id$\" geïnitieerd door \"$author_name$\".",
 "_textFieldDone":"Sluiten",
 "_textFieldFor":"Partij",
 "_textFieldObligatory":"Verplicht om hier te ondertekenen",

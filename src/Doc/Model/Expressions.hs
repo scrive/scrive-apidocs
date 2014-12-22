@@ -100,12 +100,10 @@ selectSignatoryLinksX extension = sqlSelect "signatory_links" $ do
   sqlResult "signatory_links.delivery_method"
   sqlResult "signatory_links.confirmation_delivery_method"
 
-  sqlResult (statusClassCaseExpression <> " AS status_class")
   sqlResult "signatory_attachments.file_id AS sigfileid"
   sqlResult "signatory_attachments.name AS signame"
   sqlResult "signatory_attachments.description AS sigdesc"
   sqlLeftJoinOn "signatory_attachments" "signatory_attachments.signatory_link_id = signatory_links.id"
-  sqlJoinOn "documents" "signatory_links.document_id = documents.id"
   extension
 
 fetchSignatoryLinks :: MonadDB m => m (M.Map DocumentID [SignatoryLink])
@@ -123,7 +121,6 @@ fetchSignatoryLinks = do
      authentication_method,
      delivery_method,
      confirmation_delivery_method,
-     status_class,
      safileid, saname, sadesc)
       | docid == nulldocid                      = return (document_id, [link], linksmap)
       | docid /= document_id                    = return (document_id, [link], M.insertWith' (++) docid links linksmap)
@@ -154,7 +151,6 @@ fetchSignatoryLinks = do
           , signatorylinkcsvupload =
               CSVUpload <$> csv_title <*> csv_contents
           , signatoryattachments = sigAtt
-          , signatorylinkstatusclass = status_class
           , signatorylinksignredirecturl = signredirecturl
           , signatorylinkrejectredirecturl = rejectredirecturl
           , signatorylinkrejectionreason = rejection_reason

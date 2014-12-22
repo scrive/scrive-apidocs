@@ -176,7 +176,7 @@ return React.createClass({
 
           <List.ListSelectActions
             name={localization.more}
-            textWidth="243px"
+            textWidth={243}
             optionsWidth="270px"
             actions={[
               {

@@ -334,7 +334,7 @@ var AccountSettingsView = Backbone.View.extend({
                                return true;
                              },
                              options: _.filter(languages, function(l) { return l.value !=  model.lang() && !l.hidden;}),
-                             textWidth : "213px",
+                             textWidth : 213,
                              optionsWidth : "240px",
                              // This is a hack - since footer has a fixes heigth, and this select box is very big
                              // it may cause problems. So we expand the footer to match its size.

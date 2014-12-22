@@ -161,7 +161,7 @@ var ChangeAuthenticationModalView = React.createClass({
            <SelectComponent
                     name={this.getAuthenticationMethodNameText()}
                     onSelect={this.setAuthenticationMethod}
-                    textWidth="321px"
+                    textWidth={321}
                     optionsWidth="348px"
                     options={ [ { name : localization.docview.signatory.authenticationStandard,
                                   value : "standard"

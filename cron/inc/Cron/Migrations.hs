@@ -101,4 +101,3 @@ changeFindAndExtendDigitalSignaturesFrequency = Migration {
     sqlSet "frequency" (iminutes 30)
     sqlWhereEq "type" ("find_and_extend_digital_signatures"::String)
 }
-

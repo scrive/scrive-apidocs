@@ -173,6 +173,7 @@ var ScrollUpArrowView = Backbone.View.extend({
         this.model.view = this;
         $(window).resize( this.updateRightMargin);
         this.render();
+        this.alreadyScrolling = false;
     },
     clear : function() {
         $(window).unbind('resize',this.updateRightMargin);
@@ -199,13 +200,20 @@ var ScrollUpArrowView = Backbone.View.extend({
 
     },
     scroll: function(){
-        mixpanel.track('Click fat arrow up');
+       if (this.alreadyScrolling) {
+         return false;
+       }
+       this.alreadyScrolling = true;
+       mixpanel.track('Click fat arrow up');
        var model = this.model;
        var task = this.model.point();
        if (task == undefined) return;
        $('html,body').animate({
           scrollTop: task.offset().top - 150
-       }, 1000, function() {model.scrollDone();});
+       }, 1000, function() {
+         this.alreadyScrolling = false;
+         model.scrollDone();
+       });
        return false;
     }
 
@@ -228,6 +236,7 @@ var ScrollDownArrowView = Backbone.View.extend({
         $(window).scroll(this.checkIfDownArrowInFooter);
         $(window).resize(this.updateRightMarginFunction);
         this.render();
+        this.alreadyScrolling = false;
     },
     updatePosition: function() {},
     render: function () {
@@ -260,6 +269,10 @@ var ScrollDownArrowView = Backbone.View.extend({
       }
     },
     scroll: function(){
+        if (this.alreadyScrolling) {
+          return false;
+        }
+        this.alreadyScrolling = true;
         mixpanel.track('Click fat arrow down');
         var model = this.model;
         var task = this.model.point();
@@ -267,7 +280,10 @@ var ScrollDownArrowView = Backbone.View.extend({
         var scrollbottom = task.offset().top + task.height() + 150;
         $('html,body').animate({
           scrollTop: scrollbottom - (window.innerHeight ? window.innerHeight : $(window).height())
-        }, 2000, function() {model.scrollDone();});
+        }, 2000, function() {
+          this.alreadyScrolling = false;
+          model.scrollDone();
+        });
        return false;
     }
 

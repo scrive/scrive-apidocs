@@ -134,7 +134,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
               NewSelect.Select({
                 options: options,
                 name: ordinal,
-                textWidth : "151px",
+                textWidth : 151,
                 optionsWidth : "178px",
                 onSelect: function(v) {
                   mixpanel.track('Choose sign order', {
@@ -170,7 +170,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                   return {name: deliveryTexts[t], value:t};
                 }),
                 name: deliveryTexts[lastViewer ? "none" : sig.delivery()],
-                textWidth : "151px",
+                textWidth : 151,
                 optionsWidth : "178px",
                 onSelect: function(v) {
                   mixpanel.track('Choose delivery method', {
@@ -205,7 +205,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                     return {name: deliveryTexts[t], value:t};
                 }),
                 name: deliveryTexts[delivery],
-                textWidth : "151px",
+                textWidth : 151,
                 optionsWidth : "178px",
                 onSelect: function(v) {
                     mixpanel.track('Choose confirmation delivery method', {
@@ -235,7 +235,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                   return {name: roleTexts[t], value:t};
                 }),
                 name: roleTexts[role],
-                textWidth : "151px",
+                textWidth : 151,
                 optionsWidth : "178px",
                 onSelect: function(v) {
                   mixpanel.track('Choose participant role', {
@@ -270,7 +270,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                   return {name: authTexts[t], value:t};
                 }),
                 name: authTexts[auth],
-                textWidth : "151px",
+                textWidth : 151,
                 optionsWidth : "178px",
                 onSelect: function(v) {
                   mixpanel.track('Choose auth', {

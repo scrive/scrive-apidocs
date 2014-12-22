@@ -44,7 +44,6 @@ signLinkFromDetails' fields author partner sorder attachments magichash =
                 , signatorylinkreallydeleted = Nothing
                 , signatorylinkcsvupload = Nothing
                 , signatoryattachments = attachments
-                , signatorylinkstatusclass = SCDraft
                 , signatorylinksignredirecturl = Nothing
                 , signatorylinkrejectiontime = Nothing
                 , signatorylinkrejectionreason = Nothing

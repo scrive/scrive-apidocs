@@ -137,7 +137,7 @@ signatoryJSON forapi forauthor doc viewer siglink = do
     J.value "rejecteddate" $ jsonDate rejectedDate
     J.value "rejectionreason" $ signatorylinkrejectionreason siglink
     J.value "fields" $ signatoryFieldsJSON doc siglink
-    J.value "status" $ show $ signatorylinkstatusclass siglink
+    J.value "status" $ show $ signatoryStatusClass doc siglink
     J.objects "attachments" $ map signatoryAttachmentJSON (signatoryattachments siglink)
     J.value "csv" $ csvcontents <$> signatorylinkcsvupload siglink
     J.value "inpadqueue"  $ False
@@ -327,7 +327,7 @@ docFieldsListForJSON userid doc = do
 signatoryFieldsListForJSON :: TemplatesMonad m => Document -> SignatoryLink -> JSONGenT m ()
 signatoryFieldsListForJSON doc sl = do
     J.value "id" $ show $ signatorylinkid sl
-    J.value "status" $ show $ signatorylinkstatusclass sl
+    J.value "status" $ show $ signatoryStatusClass doc sl
     J.value "name" $ case strip (getCompanyName sl) of
                        "" -> getSmartName sl
                        _  -> getSmartName sl ++ " (" ++ getCompanyName sl ++ ")"
@@ -348,6 +348,24 @@ signatoryFieldsListForJSON doc sl = do
         reject = signatorylinkrejectiontime sl
         open = maybereadinvite sl
 
+
+-- Haskell version of statusClassCaseExpression. We don't sort of filter signatories based on that, so there is no need to compute it in DB
+signatoryStatusClass :: Document -> SignatoryLink -> StatusClass
+signatoryStatusClass doc sl =
+  case (documentstatus doc,maybesigninfo sl,maybeseeninfo sl,maybereadinvite sl,  mailinvitationdeliverystatus sl, smsinvitationdeliverystatus sl) of
+    (DocumentError _,_,_,_,_,_) -> SCError
+    (Preparation,_,_,_,_,_) -> SCDraft
+    (_,Just _,_,_,_,_) -> SCSigned
+    (Canceled,_,_,_,_,_) -> SCCancelled
+    (Timedout,_,_,_,_,_) -> SCTimedout
+    (Rejected,_,_,_,_,_) -> SCRejected
+    (_,_,Just _,_,_,_) -> SCOpened
+    (_,_,_,Just _,_,_) -> SCRead
+    (_,_,_,_,Undelivered,_) -> SCDeliveryProblem
+    (_,_,_,_,_,Undelivered) -> SCDeliveryProblem
+    (_,_,_,_,Delivered,_) -> SCDelivered
+    (_,_,_,_,_,Delivered) -> SCDelivered
+    _ -> SCSent
 
 -- Converting document into entries in CSV
 docForListCSVV1::  Int -> Document -> [[String]]

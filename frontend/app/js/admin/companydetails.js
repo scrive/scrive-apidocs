@@ -213,7 +213,7 @@ var AdminCompanyDetailsView = Backbone.View.extend({
       companycgidisplaynameinput.change(function() {
               model.setCompanycgidisplayname(companycgidisplaynameinput.val());
       });
-      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("CGI display name (BankID only)"))).append($("<td/>").append(companycgidisplaynameinput)).append($("<td/>").text("This has to be accepted by CGI. Else BanID will not work.")));
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("CGI display name (BankID only)"))).append($("<td/>").append(companycgidisplaynameinput)).append($("<td/>").text("This has to be accepted by CGI. Else BankID will not work.")));
 
 
       var companyidledoctimeoutinput = $("<input type='number' min='"+model.company().minidledoctimeout()+"' max='"+model.company().maxidledoctimeout()+"'/>").val(model.companyidledoctimeout());

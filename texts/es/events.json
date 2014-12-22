@@ -58,6 +58,7 @@
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"El documento ha sido firmado utilizando PIN por SMS como método de identificación.",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"El documento fue firmado.",
 "_SignDocumentEvidenceTextSimpleNotArchiveEleg":"",
+"_SignDocumentEvidenceTextSimpleNotArchiveElegWithName":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveSMSPin":"El documeto ha sido firmado por $actor$ usando PIN por SMS como método de identificación.",
 "_SignDocumentEvidenceTextSimpleNotArchiveStandard":"El documento fue firmado por $actor$.",
 "_SignWithELegFailureEvidenceTextSimple":"Scrive rechazó el intento de $signatory$ a firmar el documento. La razón fue que la información de la identidad de $signatory$ no encajaba con la información recibida por el sistema externo de DNIe.",

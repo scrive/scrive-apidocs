@@ -20,7 +20,7 @@ return React.createClass({
 
           <List.SelectFilter
             name="users"
-            textWidth="173px"
+            textWidth={173}
             options={[
               {name: "With more then one user", value: ""},
               {name: "All", value: "all"}

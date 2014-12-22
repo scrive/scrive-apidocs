@@ -29,9 +29,10 @@ var SignatureDrawerView = Backbone.View.extend({
         this.empty = true;
         this.render();
     },
-    startDrawing : function()
+    startDrawing : function(drawingMethod)
     {
         this.drawing = true;
+        this.drawingMethod = drawingMethod;
         document.ontouchmove = function(e){
              e.preventDefault();
         };
@@ -40,6 +41,7 @@ var SignatureDrawerView = Backbone.View.extend({
     stopDrawing : function() {
         var view = this;
         this.drawing = false;
+        this.drawingMethod = undefined;
 
         document.ontouchmove = function(e){
             return true;
@@ -71,9 +73,12 @@ var SignatureDrawerView = Backbone.View.extend({
             this.drawDot(x, y, this.colorForRGBA(1), radius);
             this.picture.closePath();
     },
-    drawingtoolDown : function(x,y) {
+    drawingtoolDown : function(x, y, drawingMethod) {
+      if (this.drawing) {
+        return;
+      }
       this.empty = false;
-      this.startDrawing();
+      this.startDrawing(drawingMethod);
       this.drawnAnyLine = false;
 
       this.picture.beginPath();
@@ -86,8 +91,8 @@ var SignatureDrawerView = Backbone.View.extend({
       this.picture.lineCap = 'round';
       this.picture.lineJoin = 'round';
     },
-    drawingtoolMove : function(x,y) {
-      if (this.drawing) {
+    drawingtoolMove : function(x, y, drawingMethod) {
+      if (this.drawing && this.drawingMethod === drawingMethod) {
         this.drawnAnyLine = true;
         var moved = function(x1,x2) { return (x1 * 2 + x2 * 1) / 3; };
         if (this.x_ != undefined && this.y_ != undefined) {
@@ -102,7 +107,10 @@ var SignatureDrawerView = Backbone.View.extend({
         this.y = y;
       }
     },
-    drawingtoolUp : function(x,y) {
+    drawingtoolUp : function(x, y, drawingMethod) {
+      if (!this.drawing || this.drawingMethod !== drawingMethod) {
+        return;
+      }
       this.picture.lineTo(x, y);
       this.picture.closePath();
       if (!this.drawnAnyLine) {
@@ -172,19 +180,18 @@ var SignatureDrawerView = Backbone.View.extend({
     initDrawing : function() {
            var view = this;
            if ('ontouchstart' in document.documentElement) {
-            this.canvas[0].addEventListener('touchstart',function(e) {e.preventDefault(); e.stopPropagation();e.preventDefault(); e.stopPropagation(); view.drawingtoolDown(view.xPos(e), view.yPos(e));});
-            this.canvas[0].addEventListener('touchmove',function(e) {e.preventDefault(); e.stopPropagation();view.drawingtoolMove(view.xPos(e), view.yPos(e));});
-            this.canvas[0].addEventListener('touchend',function(e) {e.preventDefault(); e.stopPropagation();view.drawingtoolUp(view.xPos(e), view.yPos(e));});
+            this.canvas[0].addEventListener('touchstart',function(e) {e.preventDefault(); e.stopPropagation();e.preventDefault(); e.stopPropagation(); view.drawingtoolDown(view.xPos(e), view.yPos(e), 'touch');});
+            this.canvas[0].addEventListener('touchmove',function(e) {e.preventDefault(); e.stopPropagation();view.drawingtoolMove(view.xPos(e), view.yPos(e), 'touch');});
+            this.canvas[0].addEventListener('touchend',function(e) {e.preventDefault(); e.stopPropagation();view.drawingtoolUp(view.xPos(e), view.yPos(e), 'touch');});
            } else if (navigator.msPointerEnabled) {
-            this.canvas[0].addEventListener("MSPointerDown",function(e) {e.preventDefault(); e.stopPropagation(); view.drawingtoolDown(view.xPos(e), view.yPos(e)); return false;},true);
-            this.canvas[0].addEventListener("MSPointerMove",function(e) {e.preventDefault(); e.stopPropagation(); view.drawingtoolMove(view.xPos(e), view.yPos(e)); return false;},
+            this.canvas[0].addEventListener("MSPointerDown",function(e) {e.preventDefault(); e.stopPropagation(); view.drawingtoolDown(view.xPos(e), view.yPos(e), 'ms'); return false;},true);
+            this.canvas[0].addEventListener("MSPointerMove",function(e) {e.preventDefault(); e.stopPropagation(); view.drawingtoolMove(view.xPos(e), view.yPos(e), 'ms'); return false;},
             true);
-            this.canvas[0].addEventListener("MSPointerUp",function(e) {e.preventDefault(); e.stopPropagation();view.drawingtoolUp(view.xPos(e), view.yPos(e)); return false;},true);
-           } else {
-            this.canvas.mousedown(function(e) {e.preventDefault(); e.stopPropagation();e.target.style.cursor = 'default';view.drawingtoolDown(view.xPos(e), view.yPos(e),e);});
-            this.canvas.mousemove(function(e) {e.preventDefault(); e.stopPropagation();view.drawingtoolMove(view.xPos(e), view.yPos(e));});
-            this.canvas.mouseup(function(e){e.preventDefault(); e.stopPropagation();view.drawingtoolUp(view.xPos(e), view.yPos(e));} );
+            this.canvas[0].addEventListener("MSPointerUp",function(e) {e.preventDefault(); e.stopPropagation();view.drawingtoolUp(view.xPos(e), view.yPos(e), 'ms'); return false;},true);
            }
+           this.canvas.mousedown(function(e) {e.preventDefault(); e.stopPropagation();e.target.style.cursor = 'default';view.drawingtoolDown(view.xPos(e), view.yPos(e), 'mouse');});
+           this.canvas.mousemove(function(e) {e.preventDefault(); e.stopPropagation();view.drawingtoolMove(view.xPos(e), view.yPos(e), 'mouse');});
+           this.canvas.mouseup(function(e){e.preventDefault(); e.stopPropagation();view.drawingtoolUp(view.xPos(e), view.yPos(e), 'mouse');} );
     },
     saveImage : function(callback) {
         if (this.empty) {
