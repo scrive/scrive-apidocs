@@ -162,46 +162,6 @@ insertSignatoryLinks did links = do
   insertSignatoryLinkFields
     [(signatorylinkid sl, fld) | sl <- links', fld <- signatoryfields sl]
 
-insertDocumentTags :: MonadDB m => Bool -> DocumentID -> S.Set DocumentTag -> m (S.Set DocumentTag)
-insertDocumentTags fetch did tags
-  | S.null tags = return S.empty
-  | otherwise = do
-    let tags_list = S.toList tags
-    runQuery_ . sqlInsert "document_tags" $ do
-      sqlSet "document_id" did
-      sqlSetList "name" $ tagname <$> tags_list
-      sqlSetList "value" $ tagvalue <$> tags_list
-      when fetch $ mapM_ sqlResult documentTagsSelectors
-    if fetch
-      then S.fromList <$> fetchMany toComposite
-      else return S.empty
-
-insertAuthorAttachments :: MonadDB m => Bool -> DocumentID -> [AuthorAttachment] -> m [AuthorAttachment]
-insertAuthorAttachments _ _ [] = return []
-insertAuthorAttachments fetch did attachments = do
-  runQuery_ . sqlInsert "author_attachments" $ do
-    sqlSet "document_id" did
-    sqlSetList "file_id" $ authorattachmentfile <$> attachments
-    when fetch $ mapM_ sqlResult authorAttachmentsSelectors
-  if fetch
-    then map AuthorAttachment <$> fetchMany unSingle
-    else return []
-
-insertMainFiles :: MonadDB m => Bool -> DocumentID -> [MainFile] -> m [MainFile]
-insertMainFiles _ _ [] = return []
-insertMainFiles fetch documentid rfiles = do
-   -- rfiles should be inserted with descending id: newer files come first in rfiles
-  let files = reverse rfiles
-  runQuery_ . sqlInsert "main_files" $ do
-    sqlSet "document_id" documentid
-    sqlSetList "file_id" $ mainfileid <$> files
-    sqlSetList "document_status" $ mainfiledocumentstatus <$> files
-    sqlSetList "seal_status" $ mainfilesealstatus <$> files
-    when fetch $ mapM_ sqlResult mainFilesSelectors
-  if fetch
-    then fetchMany toComposite
-    else return []
-
 insertSignatoryAttachments :: MonadDB m => [(SignatoryLinkID, SignatoryAttachment)] -> m ()
 insertSignatoryAttachments [] = return ()
 insertSignatoryAttachments atts = runQuery_ . sqlInsert "signatory_attachments" $ do
@@ -233,6 +193,37 @@ insertSignatoryLinkFields fields = runQuery_ . sqlInsert "signatory_link_fields"
       CheckboxFT _  -> False
       _ -> False
 
+insertDocumentTags :: MonadDB m => Bool -> DocumentID -> S.Set DocumentTag -> m (S.Set DocumentTag)
+insertDocumentTags fetch did tags
+  | S.null tags = return S.empty
+  | otherwise = do
+    let tags_list = S.toList tags
+    runQuery_ . sqlInsert "document_tags" $ do
+      sqlSet "document_id" did
+      sqlSetList "name" $ tagname <$> tags_list
+      sqlSetList "value" $ tagvalue <$> tags_list
+      when fetch $ mapM_ sqlResult documentTagsSelectors
+    if fetch
+      then S.fromList <$> fetchMany toComposite
+      else return S.empty
+
+insertAuthorAttachments :: MonadDB m => DocumentID -> [AuthorAttachment] -> m ()
+insertAuthorAttachments _ [] = return ()
+insertAuthorAttachments did atts = runQuery_ . sqlInsert "author_attachments" $ do
+  sqlSet "document_id" did
+  sqlSetList "file_id" $ authorattachmentfile <$> atts
+
+insertMainFiles :: MonadDB m => DocumentID -> [MainFile] -> m ()
+insertMainFiles _ [] = return ()
+insertMainFiles documentid rfiles = do
+   -- rfiles should be inserted with descending id: newer files come first in rfiles
+  let files = reverse rfiles
+  runQuery_ . sqlInsert "main_files" $ do
+    sqlSet "document_id" documentid
+    sqlSetList "file_id" $ mainfileid <$> files
+    sqlSetList "document_status" $ mainfiledocumentstatus <$> files
+    sqlSetList "seal_status" $ mainfilesealstatus <$> files
+
 insertSignatoryScreenshots :: (MonadDB m, MonadThrow m)
                            => [(SignatoryLinkID, SignatoryScreenshots)] -> m Int
 insertSignatoryScreenshots l = do
@@ -248,57 +239,54 @@ insertSignatoryScreenshots l = do
            sqlSetList "time"              $ times
            sqlSetList "file_id"           $ fileids
 
-insertDocumentAsIs :: (Log.MonadLog m, MonadDB m, MonadThrow m) => Document -> m (Maybe Document)
-insertDocumentAsIs document@(Document{..}) = do
-    runQuery_ . sqlInsert "documents" $ do
-        sqlSet "title" documenttitle
-        sqlSet "status" documentstatus
-        sqlSet "error_text" $ case documentstatus of
-          DocumentError msg -> Just msg
-          _ -> Nothing
-        sqlSet "type" documenttype
-        sqlSet "ctime" documentctime
-        sqlSet "mtime" documentmtime
-        sqlSet "days_to_sign" documentdaystosign
-        sqlSet "days_to_remind" documentdaystoremind
-        sqlSet "timeout_time" documenttimeouttime
-        sqlSet "invite_time" $ signtime `fmap` documentinvitetime
-        sqlSet "invite_ip" (fmap signipnumber documentinvitetime)
-        sqlSet "invite_text" documentinvitetext
-        sqlSet "confirm_text" documentconfirmtext
-        sqlSet "show_header" documentshowheader
-        sqlSet "show_pdf_download" documentshowpdfdownload
-        sqlSet "show_reject_option" documentshowrejectoption
-        sqlSet "show_footer" documentshowfooter
-        sqlSet "lang" documentlang
-        sqlSet "sharing" documentsharing
-        sqlSet "object_version" documentobjectversion
-        sqlSet "api_callback_url" documentapicallbackurl
-        sqlSet "token" documentmagichash
-        sqlSet "time_zone_name" documenttimezonename
-        sqlSet "api_version" documentapiversion
-        sqlResult "documents.id"
-    mdid <- fetchMaybe unSingle
-    case mdid of
-      Nothing -> return Nothing
-      Just did -> do
-        void $ insertSignatoryLinks did documentsignatorylinks
-        void $ insertAuthorAttachments False did documentauthorattachments
-        void $ insertDocumentTags False did documenttags
-        void $ insertMainFiles False did documentmainfiles
-        newdocument <- dbQuery $ GetDocumentByDocumentID did
-        assertEqualDocuments document newdocument
-        return (Just newdocument)
+insertDocument :: (Log.MonadLog m, MonadDB m, MonadThrow m)
+               => Document -> m Document
+insertDocument document@(Document{..}) = do
+  runQuery_ . sqlInsert "documents" $ do
+    sqlSet "title" documenttitle
+    sqlSet "status" documentstatus
+    sqlSet "error_text" $ case documentstatus of
+      DocumentError msg -> Just msg
+      _ -> Nothing
+    sqlSet "type" documenttype
+    sqlSet "ctime" documentctime
+    sqlSet "mtime" documentmtime
+    sqlSet "days_to_sign" documentdaystosign
+    sqlSet "days_to_remind" documentdaystoremind
+    sqlSet "timeout_time" documenttimeouttime
+    sqlSet "invite_time" $ signtime <$> documentinvitetime
+    sqlSet "invite_ip" $ signipnumber <$> documentinvitetime
+    sqlSet "invite_text" documentinvitetext
+    sqlSet "confirm_text" documentconfirmtext
+    sqlSet "show_header" documentshowheader
+    sqlSet "show_pdf_download" documentshowpdfdownload
+    sqlSet "show_reject_option" documentshowrejectoption
+    sqlSet "show_footer" documentshowfooter
+    sqlSet "lang" documentlang
+    sqlSet "sharing" documentsharing
+    sqlSet "object_version" documentobjectversion
+    sqlSet "api_callback_url" documentapicallbackurl
+    sqlSet "token" documentmagichash
+    sqlSet "time_zone_name" documenttimezonename
+    sqlSet "api_version" documentapiversion
+    sqlResult "documents.id"
+  did <- fetchOne unSingle
+  insertSignatoryLinks did documentsignatorylinks
+  insertAuthorAttachments did documentauthorattachments
+  insertMainFiles did documentmainfiles
+  void $ insertDocumentTags False did documenttags
+  newdocument <- dbQuery $ GetDocumentByDocumentID did
+  assertEqualDocuments document newdocument
+  return newdocument
+
+----------------------------------------
 
 insertNewDocument :: (MonadDB m, MonadThrow m, Log.MonadLog m, CryptoRNG m) => Document -> m Document
 insertNewDocument doc = do
   now <- currentTime
   magichash <- random
   let docWithTime = doc {documentmtime  = now, documentctime = now, documentmagichash = magichash}
-  newdoc <- insertDocumentAsIs docWithTime
-  case newdoc of
-    Just d -> return d
-    Nothing -> error "insertNewDocument failed for some reason"
+  insertDocument docWithTime
 
 -- Create new document based on existing one
 newFromDocumentID :: (MonadDB m, MonadThrow m, Log.MonadLog m, CryptoRNG m) => (Document -> Document) -> DocumentID -> m (Maybe Document)
@@ -744,7 +732,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m MarkInv
     return success
 
 data NewDocument = NewDocument APIVersion User String DocumentType TimeZoneName Int Actor
-instance (CryptoRNG m, MonadDB m, MonadThrow m, Log.MonadLog m, TemplatesMonad m) => DBUpdate m NewDocument (Maybe Document) where
+instance (CryptoRNG m, MonadDB m, MonadThrow m, Log.MonadLog m, TemplatesMonad m) => DBUpdate m NewDocument Document where
   update (NewDocument apiversion user title documenttype timezone nrOfOtherSignatories actor) = do
     let ctime = actorTime actor
     magichash <- random
@@ -771,13 +759,7 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, Log.MonadLog m, TemplatesMonad m
                   , documentapiversion           = apiversion
                   }
 
-    midoc <- insertDocumentAsIs doc
-    case midoc of
-        Just _ -> return midoc
-        Nothing -> do
-          Log.mixlog_ $ "insertDocumentAsIs could not insert document #" ++ show (documentid doc) ++ " in NewDocument"
-          return Nothing
-
+    insertDocument doc
 
 data RejectDocument = RejectDocument SignatoryLinkID (Maybe String) Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m RejectDocument () where
@@ -1177,9 +1159,7 @@ instance (MonadDB m, MonadThrow m, Log.MonadLog m, TemplatesMonad m, CryptoRNG m
 
 data StoreDocumentForTesting = StoreDocumentForTesting Document
 instance (MonadDB m, MonadThrow m, Log.MonadLog m, TemplatesMonad m) => DBUpdate m StoreDocumentForTesting DocumentID where
-  update (StoreDocumentForTesting document) = do
-    Just doc <- insertDocumentAsIs document
-    return (documentid doc)
+  update (StoreDocumentForTesting document) = documentid <$> insertDocument document
 
 {-
    FIXME: this is so wrong on so many different levels

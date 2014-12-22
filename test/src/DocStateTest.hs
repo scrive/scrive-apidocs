@@ -479,18 +479,16 @@ testCloseDocumentEvidenceLog = do
     assertJust $ find (\e -> evType e == Current CloseDocumentEvidence) lg
 
 
-performNewDocumentWithRandomUser :: Maybe Company -> DocumentType -> String -> TestEnv (User, UTCTime, Either String Document)
+performNewDocumentWithRandomUser :: Maybe Company -> DocumentType -> String -> TestEnv (User, UTCTime, Document)
 performNewDocumentWithRandomUser mcompany doctype title = do
   user <- maybe addNewRandomUser (\c -> addNewRandomCompanyUser (companyid c) False) mcompany
   ctx <- mkContext defaultValue
   let aa = authorActor ctx user
-  mdoc <- randomUpdate $ NewDocument defaultValue user title doctype defaultTimeZoneName 0 aa
-  return (user, ctxtime ctx, maybe (Left "no document") Right mdoc)
+  doc <- randomUpdate $ NewDocument defaultValue user title doctype defaultTimeZoneName 0 aa
+  return (user, ctxtime ctx, doc)
 
-assertGoodNewDocument :: Maybe Company -> DocumentType -> String -> (User, UTCTime, Either String Document) -> TestEnv ()
-assertGoodNewDocument mcompany doctype title (user, time, edoc) = do
-    let (Right doc) = edoc
-    assertRight edoc
+assertGoodNewDocument :: Maybe Company -> DocumentType -> String -> (User, UTCTime, Document) -> TestEnv ()
+assertGoodNewDocument mcompany doctype title (user, time, doc) = do
     assertEqual "Correct title" title (documenttitle doc)
     assertEqual "Correct type" doctype (documenttype doc)
     assertEqual "Doc has user's lang" (getLang user) (getLang doc)
@@ -812,10 +810,9 @@ testNewDocumentDependencies = doTimes 10 $ do
   -- execute
   ctx <- mkContext defaultValue
   let aa = authorActor ctx author
-  mdoc <- randomUpdate $ (\title doctype -> NewDocument defaultValue author (fromSNN title) doctype defaultTimeZoneName 0 aa)
+  doc <- randomUpdate $ (\title doctype -> NewDocument defaultValue author (fromSNN title) doctype defaultTimeZoneName 0 aa)
   -- assert
-  assertJust mdoc
-  assertInvariants $ fromJust mdoc
+  assertInvariants doc
 
 testDocumentCanBeCreatedAndFetchedByID :: TestEnv ()
 testDocumentCanBeCreatedAndFetchedByID = doTimes 10 $ do
@@ -823,15 +820,12 @@ testDocumentCanBeCreatedAndFetchedByID = doTimes 10 $ do
   author <- addNewRandomUser
   ctx <- mkContext defaultValue
   let aa = authorActor ctx author
-  mdoc <- randomUpdate $ (\title doctype -> NewDocument defaultValue author (fromSNN title) doctype defaultTimeZoneName 0 aa)
-  let doc = case mdoc of
-          Nothing -> error "No document"
-          Just d  -> d
+  doc <- randomUpdate $ (\title doctype -> NewDocument defaultValue author (fromSNN title) doctype defaultTimeZoneName 0 aa)
   -- execute
   ndoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   -- assert
 
-  assert $ documentid doc  == documentid ndoc
+  assert $ documentid doc == documentid ndoc
   assertInvariants ndoc
 
 testDocumentAttachNotPreparationLeft :: TestEnv ()

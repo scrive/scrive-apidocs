@@ -119,8 +119,7 @@ handleNewDocument = do
         actor <- guardJustM $ mkAuthorActor <$> getContext
         mtimezonename <- runMPlusT $ lookCookieValue "timezone"
         timezone <- fromMaybe defaultTimeZoneName <$> T.sequence (mkTimeZoneName <$> mtimezonename)
-        mDoc <- dbUpdate $ NewDocument defaultValue user (replace "  " " " $ title ++ " " ++ formatTimeSimple (ctxtime ctx)) Signable timezone 1 actor
-        doc <- guardJust mDoc
+        doc <- dbUpdate $ NewDocument defaultValue user (replace "  " " " $ title ++ " " ++ formatTimeSimple (ctxtime ctx)) Signable timezone 1 actor
         -- Default document on the frontend has different requirements,
         -- this sets up the signatories to match those requirements.
         withDocument doc $ do

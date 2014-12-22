@@ -101,7 +101,6 @@ import User.Utils
 import Util.Actor
 import Util.CSVUtil
 import Util.HasSomeUserInfo
-import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import Utils.Directory
 import Utils.IO
@@ -204,7 +203,7 @@ apiCallV1CreateFromFile = api $ do
       return (Just fileid', takeBaseName filename)
   mtimezone <- getField "timezone"
   timezone <- fromMaybe defaultTimeZoneName <$> T.sequence (mkTimeZoneName <$> mtimezone)
-  guardJustM (dbUpdate $ NewDocument V1 user title doctype timezone 0 actor) `withDocumentM` do
+  (dbUpdate $ NewDocument V1 user title doctype timezone 0 actor) `withDocumentM` do
     when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft True
     case mfile of
       Nothing -> return ()
