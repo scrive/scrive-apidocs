@@ -74,10 +74,16 @@ currentCatalog = do
   dbname <- fetchOne unSingle
   return $ unsafeSQL $ "\"" ++ dbname ++ "\""
 
-checkNeededExtensions :: MonadDB m => (String -> m ()) -> m ()
+-- | Checking for needed extentions. We need to read from 'pg_extension' table, since Amazon RDS limits usage of 'CREATE EXTENSION IF NOT EXISTS'
+checkNeededExtensions :: (MonadDB m, MonadThrow m) => (String -> m ()) -> m ()
 checkNeededExtensions logger = do
-  logger $ "Enabling needed extensions"
-  runSQL_ $ "CREATE EXTENSION IF NOT EXISTS pgcrypto"
+  logger $ "Checking for 'pgcrypto' extention"
+  extentionExists <- runSQL01 $ "select TRUE from pg_extension where extname='pgcrypto'"
+  if (not $ extentionExists)
+    then do
+      logger $ "Enabling 'pgcrypto' extension"
+      runSQL_ $ "CREATE EXTENSION IF NOT EXISTS pgcrypto"
+    else logger $ "Extention 'pgcrypto' exists"
   return ()
 
 -- |  Checks whether database returns timestamps in UTC
