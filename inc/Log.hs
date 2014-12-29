@@ -1,8 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Log
-  ( teardownLogger
-  , withLogger
-  , setupLogger
+  ( withLogger
 
   , module Log.Class
 
@@ -92,20 +90,11 @@ mixlogjsIO title js = do
                      intercalate "\n" (datedTitle : map ("    " ++) (jsonShowYamlLn jsx))
                _ -> intercalate " " (datedTitle : jsonShowYamlLn jsx)
 
-setupLogger :: IO ()
-setupLogger = do
-    return ()
-
--- | Tear down the application logger; i.e. close all associated log handlers.
-teardownLogger :: () -> IO ()
-teardownLogger () = do
-    return ()
-
 -- | Bracket an IO action which denotes the whole scope where the loggers of
 -- the application are needed to installed. Sets them up before running the action
 -- and tears them down afterwards. Even in case of an exception.
 withLogger :: IO a -> IO a
-withLogger = E.bracket setupLogger teardownLogger . const
+withLogger = id
 
 -- | Log a line of text with possibly non-empty set of properties attached to the text.
 --
