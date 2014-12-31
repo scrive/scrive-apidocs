@@ -2,7 +2,7 @@ module AppDBMain (
    main
   ) where
 
-import Control.Monad.IO.Class
+import Control.Monad.Base
 import System.IO
 
 import AppConf
@@ -13,16 +13,17 @@ import DB
 import DB.Checks
 import DB.PostgreSQL
 import DB.SQLFunction
+import qualified Log
 
 main :: IO ()
-main = do
-  hSetEncoding stdout utf8
-  hSetEncoding stderr utf8
+main = Log.withLogger $ do
+  liftBase $ hSetEncoding stdout utf8
+  liftBase $ hSetEncoding stderr utf8
 
   appConf <- do
-    readConfig putStrLn "kontrakcja.conf"
+    readConfig (liftBase . putStrLn) "kontrakcja.conf"
 
   let connSource = defaultSource . pgConnSettings $ dbConfig appConf
   withPostgreSQL connSource $ do
-    migrateDatabase (liftIO . putStrLn) kontraTables kontraMigrations
+    migrateDatabase (liftBase . putStrLn) kontraTables kontraMigrations
     defineMany kontraFunctions
