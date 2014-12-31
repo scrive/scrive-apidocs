@@ -42,15 +42,14 @@ tasks it possibly reserved and didn't finish) after at most 2 minutes.
 -}
 module Cron where
 
-import Control.Concurrent
+import Control.Concurrent.Lifted
 import Control.Monad
 import Control.Monad.Trans
 import Data.Maybe
 import Data.Monoid ((<>))
 import Data.Monoid.Space
 import Data.Time
-import qualified Control.Concurrent.Thread.Group as TG
-import qualified Control.Exception as E
+import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
 
 import ActionQueue.EmailChangeRequest
@@ -82,6 +81,7 @@ import ThirdPartyStats.Core
 import ThirdPartyStats.Mixpanel
 import Utils.IO
 import qualified Amazon as AWS
+import qualified Control.Concurrent.Thread.Group.Lifted as TG
 import qualified CronEnv
 import qualified Log
 import qualified MemCache
@@ -93,16 +93,16 @@ main = Log.withLogger $ do
 
   checkExecutables
 
-  connPool <- createPoolSource . pgConnSettings $ dbConfig appConf
+  connPool <- liftIO . createPoolSource . pgConnSettings $ dbConfig appConf
   withPostgreSQL connPool $
     checkDatabase Log.mixlog_ kontraTables
 
-  templates <- newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates
+  templates <- liftIO (newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates)
   rng <- newCryptoRNGState
   filecache <- MemCache.new BS.length 52428800
 
   let runScheduler = inDB . CronEnv.runScheduler appConf filecache templates
-      inDB = liftIO . withPostgreSQL connPool . runCryptoRNGT rng
+      inDB = withPostgreSQL connPool . runCryptoRNGT rng
   -- Asynchronous event dispatcher; if you want to add a consumer to the event
   -- dispatcher, please combine the two into one dispatcher function rather
   -- than creating a new thread or something like that, since
@@ -164,8 +164,8 @@ main = Log.withLogger $ do
       , tsRestartPredicate = Just . RestartPredicate $ const . ((SerializationFailure ==) . qeErrorCode)
       }
 
-  tg <- TG.new
-  mtid <- myThreadId
+  tg <- liftIO TG.new
+  mtid <- liftIO myThreadId
   wid <- withPostgreSQL connPool . dbUpdate $ RegisterWorker
 
   let cleanup = do
@@ -175,7 +175,7 @@ main = Log.withLogger $ do
 
       -- helper threads are essential, therefore if one
       -- of them fails, let's kill the main thread.
-      forkForever = void . forkIO . flip E.onException (killThread mtid) . forever
+      forkForever = void . fork . flip E.onException (liftIO $ killThread mtid) . forever
 
   flip E.finally cleanup $ do
     -- spawn task dispatcher
@@ -188,7 +188,7 @@ main = Log.withLogger $ do
         dbUpdate $ ReserveTask wid
       case mtt of
         Nothing -> threadDelay 2000000 -- pause for 2 seconds if there are no tasks
-        Just tt -> void . TG.forkIO tg $ do
+        Just tt -> void . TG.fork tg $ do
           Log.mixlog_ $ "Starting" <+> show tt <> "..."
           eres <- E.try $ dispatcher tt
           case eres of
