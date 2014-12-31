@@ -60,17 +60,17 @@ xpSOAPFault = XMLParser $ \c -> listToMaybe $ c
 ----------------------------------------
 
 -- | Make a SOAP call.
-soapCall :: (ToXML header, ToXML body, MonadBase IO m)
+soapCall :: (ToXML header, ToXML body, MonadBase IO m, Log.MonadLog m, MonadThrow m)
          => Transport
          -> String
          -> header
          -> body
          -> XMLParser response
          -> m response
-soapCall transport soap_action header body parser = liftBase $ do
+soapCall transport soap_action header body parser = do
   Log.mixlog_ $ "SOAP request body:" <+> ppDocument req
-  c <- transport soap_action req
-    >>= unwrapEnvelope . fromDocument . parseLBS_ def
+  c <- liftBase (transport soap_action req
+    >>= unwrapEnvelope . fromDocument . parseLBS_ def)
   case runParser (Right <$> parser <|> Left <$> xpSOAPFault) c of
     Just (Right response) -> return response
     Just (Left fault) -> throwM fault
