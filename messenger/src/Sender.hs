@@ -4,6 +4,7 @@ module Sender (
   , createSender
   ) where
 
+import Control.Monad.Base
 import Control.Monad.IO.Class
 import Data.Char
 import Data.Hash.MD5
@@ -30,7 +31,7 @@ import qualified Log
 
 data Sender = Sender {
     senderName :: String
-  , sendSMS    :: (CryptoRNG m, MonadIO m) => ShortMessage -> m Bool
+  , sendSMS    :: (CryptoRNG m, MonadIO m, MonadBase IO m, Log.MonadLog m) => ShortMessage -> m Bool
   }
 
 instance Show Sender where
@@ -47,12 +48,12 @@ createSender mc = case mc of
 createGlobalMouthSender :: String -> String -> String -> Sender
 createGlobalMouthSender user password url = Sender { senderName = "GlobalMouth", sendSMS = send }
   where
-    send :: (CryptoRNG m, MonadIO m) => ShortMessage -> m Bool
-    send sms@ShortMessage{..} = liftIO $ do
+    send :: (CryptoRNG m, MonadIO m, MonadBase IO m, Log.MonadLog m) => ShortMessage -> m Bool
+    send sms@ShortMessage{..} = do
       Log.mixlog_ $ show sms
       sendSMS2 (user,password,url) smOriginator smMSISDN smBody (show smID)
 
-sendSMS2 :: (String, String, String) -> String -> String -> String -> String -> IO Bool
+sendSMS2 :: (CryptoRNG m, MonadBase IO m, MonadIO m, Log.MonadLog m) => (String, String, String) -> String -> String -> String -> String -> m Bool
 sendSMS2 (user, password, baseurl) originator msisdn body ref = do
   (code, stdout, stderr) <- readCurl [url] BS.empty
   case (code, maybeRead (takeWhile (not . isSpace) $ BSC.unpack stdout)) of
@@ -103,7 +104,7 @@ sendSMS2 (user, password, baseurl) originator msisdn body ref = do
 createLocalSender :: SenderConfig -> Sender
 createLocalSender config = Sender { senderName = "localSender", sendSMS = send }
   where
-    send :: (CryptoRNG m, MonadIO m) => ShortMessage -> m Bool
+    send :: (CryptoRNG m, MonadIO m, MonadBase IO m, Log.MonadLog m) => ShortMessage -> m Bool
     send ShortMessage{..} = do
       let matchResult = (match (makeRegex ("https?://[a-zA-Z:0-9.-]+/[a-zA-Z_:/0-9#?-]+" :: String) :: Regex) (smBody :: String) :: MatchResult String)
       let withClickableLinks = mrBefore matchResult ++ "<a href=\"" ++ mrMatch matchResult ++ "\">" ++ mrMatch matchResult ++ "</a>" ++ mrAfter matchResult
@@ -117,16 +118,15 @@ createLocalSender config = Sender { senderName = "localSender", sendSMS = send }
                     withClickableLinks ++
                     "</body></html>"
       let filename = localDirectory config ++ "/SMS-" ++ show smID ++ ".html"
-      liftIO $ do
-        BSL.writeFile filename (BSLU.fromString content)
-        Log.mixlog_ $ "SMS #" ++ show smID ++ " saved to file " ++ filename
-        case localOpenCommand config of
-          Nothing  -> return ()
-          Just cmd -> do
-            _ <- createProcess (proc cmd [filename]) {
-                std_in  = Inherit
-              , std_out = Inherit
-              , std_err = Inherit
-            }
-            return ()
-        return True
+      liftBase $ BSL.writeFile filename (BSLU.fromString content)
+      Log.mixlog_ $ "SMS #" ++ show smID ++ " saved to file " ++ filename
+      case localOpenCommand config of
+        Nothing  -> return ()
+        Just cmd -> do
+          _ <- liftBase $ createProcess (proc cmd [filename]) {
+              std_in  = Inherit
+            , std_out = Inherit
+            , std_err = Inherit
+          }
+          return ()
+      return True
