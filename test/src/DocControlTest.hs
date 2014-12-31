@@ -519,11 +519,11 @@ testGetEvidenceAttachmentsNotLoggedIn = do
 
 testSignviewBrandingBlocksNastyInput:: TestEnv ()
 testSignviewBrandingBlocksNastyInput = do
-  emptyBrandingCSS <- liftIO $ documentSignviewBrandingCSS Nothing Nothing
+  emptyBrandingCSS <- documentSignviewBrandingCSS Nothing Nothing
   assertBool "CSS generated for empty branding is not empty" (not $ BSL.null $ emptyBrandingCSS)
   company<- addNewCompany
   companyui <- dbQuery $ GetCompanyUI (companyid company)
-  companyCSS <- liftIO $ documentSignviewBrandingCSS Nothing (Just companyui)
+  companyCSS <- documentSignviewBrandingCSS Nothing (Just companyui)
   assertBool "CSS generated for random company branding is not empty" (not $ BSL.null $ companyCSS)
 
   let
@@ -535,7 +535,7 @@ testSignviewBrandingBlocksNastyInput = do
       , companysignviewbackgroundcolour = Just nasty2
       , companysignviewtextfont = Just nasty3
     }
-  nastyCSS <- liftIO $ documentSignviewBrandingCSS Nothing (Just nastyCompanyUI)
+  nastyCSS <- documentSignviewBrandingCSS Nothing (Just nastyCompanyUI)
   assertBool "CSS generated for nasty company branding is not empty" (not $ BSL.null $ nastyCSS)
   assertBool "CSS generated for nasty company branding does not contain nasty strings" $
        (not $ nasty1 `isInfixOf ` (BSL.toString $ nastyCSS))

@@ -20,7 +20,7 @@ module Doc.DocView (
 
 import Control.Applicative ((<$>))
 import Control.Monad
-import Control.Monad.Trans
+import Control.Monad.IO.Class
 import Data.Maybe
 import Happstack.Server.SimpleHTTP
 import System.Exit
@@ -164,9 +164,9 @@ gtVerificationPage = renderFromBody kontrakcja =<< renderTemplate_ "gtVerificati
 
 
 -- Signview branding CSS. Generated using less
-documentSignviewBrandingCSS ::  Maybe BrandedDomain -> Maybe CompanyUI -> IO BSL.ByteString
+documentSignviewBrandingCSS :: (MonadIO m, Log.MonadLog m) => Maybe BrandedDomain -> Maybe CompanyUI -> m BSL.ByteString
 documentSignviewBrandingCSS mbd mcui = do
-    (code,stdout,stderr) <- liftIO $ do
+    (code,stdout,stderr) <- do
       readProcessWithExitCode' "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
         (BSL.fromString $ signviewBrandingLess mbd mcui)
     case code of

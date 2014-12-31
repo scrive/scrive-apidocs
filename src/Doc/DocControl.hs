@@ -649,7 +649,7 @@ handleSignviewCSS did slid _ = do
   user <- guardJustM $ dbQuery $ GetUserByIDIncludeDeleted authorid
   company <- getCompanyForUser user
   companyui <- dbQuery $ GetCompanyUI (companyid company)
-  brandingCSS <- liftIO $ documentSignviewBrandingCSS (ctxbrandeddomain ctx) (Just companyui)
+  brandingCSS <- documentSignviewBrandingCSS (ctxbrandeddomain ctx) (Just companyui)
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
   return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
 
@@ -660,7 +660,7 @@ handleSignviewCSSWithoutDocument _ = do
   user <-  guardJust $ mplus (ctxmaybeuser ctx) (ctxmaybepaduser ctx)
   company <- getCompanyForUser user
   companyui <- dbQuery $ GetCompanyUI (companyid company)
-  brandingCSS <- liftIO $  documentSignviewBrandingCSS (ctxbrandeddomain ctx) (Just companyui)
+  brandingCSS <- documentSignviewBrandingCSS (ctxbrandeddomain ctx) (Just companyui)
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
   return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
 
@@ -668,6 +668,6 @@ handleSignviewCSSWithoutDocument _ = do
 handleSignviewCSSWithoutDocumentAndWithoutUser :: Kontrakcja m => String -> m Response
 handleSignviewCSSWithoutDocumentAndWithoutUser _ = do
   ctx <- getContext
-  brandingCSS <- liftIO $  documentSignviewBrandingCSS (ctxbrandeddomain ctx) Nothing
+  brandingCSS <- documentSignviewBrandingCSS (ctxbrandeddomain ctx) Nothing
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
   return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
