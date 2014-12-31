@@ -3,8 +3,10 @@ module Dispatcher (
     dispatcher
   ) where
 
-import Control.Concurrent
+import Control.Concurrent.Lifted
 import Control.Monad
+import Control.Monad.Base
+import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Database.PostgreSQL.PQTypes.Class.Instances.Overlapping ()
 
@@ -17,7 +19,7 @@ import Sender
 import qualified Amazon as AWS
 import qualified Log
 
-dispatcher :: CryptoRNGState -> Sender -> MVar Sender -> ConnectionSource -> AWS.AmazonConfig -> IO ()
+dispatcher :: (Log.MonadLog m, MonadMask m, MonadIO m, Monad m, Functor m, MonadBase IO m) => CryptoRNGState -> Sender -> MVar Sender -> ConnectionSource -> AWS.AmazonConfig -> m ()
 dispatcher rng master msender cs amazonconf = withPostgreSQL cs . runCryptoRNGT rng . AWS.runAmazonMonadT amazonconf $ do
   Log.mixlog_ $ "Dispatcher is starting"
   do
@@ -34,7 +36,7 @@ dispatcher rng master msender cs amazonconf = withPostgreSQL cs . runCryptoRNGT 
          -- we want to send service testing emails always with master service
          mailer <- if mailServiceTest
                    then return master
-                   else liftIO $ readMVar msender
+                   else readMVar msender
 
          Log.mixlog_ $ "Sending email #" ++ show mailID ++ " using " ++ show mailer ++ "..."
          success <- sendMail mailer mail
