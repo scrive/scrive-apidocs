@@ -3,10 +3,11 @@ module Network.SOAP.Transport.Curl (
     SSL(..)
   , CurlErrorHandler
   , noopErrorHandler
-  , certErrorHandler
+  , mkCertErrorHandler
   , curlTransport
   ) where
 
+import Control.Monad.Trans.Control
 import Control.Applicative
 import Control.Monad.Catch
 import Data.ByteString.Lazy (ByteString)
@@ -33,24 +34,28 @@ type CurlErrorHandler = BodyP -> Curl -> CurlCode -> IO ByteString
 noopErrorHandler :: CurlErrorHandler
 noopErrorHandler _ _ = curlError
 
--- | In case of certificate error, reconnect with
--- disabled peer verification and log the issue.
-certErrorHandler :: CurlErrorHandler
-certErrorHandler response_parser curl CurlSSLCACert = do
-  Log.attention_ "CERTIFICATE VERIFICATION ERROR, falling back to insecure connection"
-  (final_body, fetch_body) <- newIncoming
-  setopts curl [
-      CurlWriteFunction $ gatherOutput_ fetch_body
-    , CurlSSLVerifyPeer False
-    ]
-  perform curl >>= \case
-    CurlOK -> response_parser <$> final_body
-    code   -> curlError code
-certErrorHandler _ _ code = curlError code
-
 -- | Throw an exception informing about curl error.
 curlError :: MonadThrow m => CurlCode -> m a
 curlError code = $unexpectedErrorM $ "Curl response code was" <+> show code
+
+
+-- | In case of certificate error, reconnect with
+-- disabled peer verification and log the issue.
+mkCertErrorHandler :: (MonadBaseControl IO m, Log.MonadLog m) => m CurlErrorHandler
+mkCertErrorHandler = liftBaseWith $ \runInBase ->
+  return $ \response_parser curl code ->
+    case code of
+      CurlSSLCACert -> do
+        _ <- runInBase (Log.attention_ "CERTIFICATE VERIFICATION ERROR, falling back to insecure connection")
+        (final_body, fetch_body) <- newIncoming
+        setopts curl
+          [ CurlWriteFunction $ gatherOutput_ fetch_body
+          , CurlSSLVerifyPeer False
+          ]
+        perform curl >>= \case
+          CurlOK -> response_parser <$> final_body
+          code'  -> curlError code'
+      code' -> curlError code'
 
 ----------------------------------------
 

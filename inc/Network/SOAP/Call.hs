@@ -69,8 +69,8 @@ soapCall :: (ToXML header, ToXML body, MonadBase IO m, Log.MonadLog m, MonadThro
          -> m response
 soapCall transport soap_action header body parser = do
   Log.mixlog_ $ "SOAP request body:" <+> ppDocument req
-  c <- liftBase (transport soap_action req
-    >>= unwrapEnvelope . fromDocument . parseLBS_ def)
+  c <- liftBase (transport soap_action req)
+    >>= unwrapEnvelope . fromDocument . parseLBS_ def
   case runParser (Right <$> parser <|> Left <$> xpSOAPFault) c of
     Just (Right response) -> return response
     Just (Left fault) -> throwM fault

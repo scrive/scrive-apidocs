@@ -57,7 +57,7 @@ handleSignRequest did slid = do
   pn <- getField "personal_number" `onNothing` do
     Log.mixlog_ "No personal number"
     respond404
-
+  certErrorHandler <- mkCertErrorHandler
   let transport = curlTransport SecureSSL (Just cgCertFile) cgGateway id certErrorHandler
       req = SignRequest {
         srqPolicy = cgServiceID
@@ -89,6 +89,7 @@ handleCollectRequest did slid = do
     Log.mixlog_ "No active transaction"
     respond404
 
+  certErrorHandler <- mkCertErrorHandler
   let transport = curlTransport SecureSSL (Just cgCertFile) cgGateway id certErrorHandler
       req = CollectRequest {
         crqPolicy = cgServiceID
