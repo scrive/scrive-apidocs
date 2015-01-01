@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Log
   ( withLogger
+  , withLogger'
 
   , module Log.Class
 
@@ -16,8 +17,17 @@ module Log
   , attentiont
   , attention_
 
-  ) where
+  , LogT(..)
+  )
+where
 
+import Control.Applicative
+import Control.Monad
+import Control.Monad.Base
+import Control.Monad.Catch
+import Control.Monad.Trans
+import Control.Monad.Trans.Control
+import Control.Monad.Trans.Identity
 import Data.Char
 import Data.List
 import Data.Ratio
@@ -70,6 +80,26 @@ outputChannel = unsafePerformIO $ do
 instance MonadLog IO where
   mixlogjs = mixlogjsIO
 
+newtype LogT m a = LogT { unLogT :: IdentityT m a }
+  deriving (Monad, Functor, Applicative, Alternative, MonadBase b, MonadIO, MonadTrans, MonadMask, MonadCatch, MonadThrow)
+
+instance MonadTransControl LogT where
+  newtype StT LogT m = StLogT { unStLogT :: StT (IdentityT) m }
+  liftWith = defaultLiftWith LogT unLogT StLogT
+  restoreT = defaultRestoreT LogT unStLogT
+  {-# INLINE liftWith #-}
+  {-# INLINE restoreT #-}
+
+instance MonadBaseControl IO m => MonadBaseControl IO (LogT m) where
+  newtype StM (LogT m) a = StMLogT { unStMLogT :: ComposeSt LogT m a }
+  liftBaseWith = defaultLiftBaseWith StMLogT
+  restoreM     = defaultRestoreM unStMLogT
+  {-# INLINE liftBaseWith #-}
+  {-# INLINE restoreM #-}
+
+instance (MonadBase IO m) => MonadLog (LogT m) where
+  mixlogjs a b = liftBase (mixlogjsIO a b)
+
 mixlogjsIO :: (ToJSValue js) => String -> js -> IO ()
 mixlogjsIO title js = do
       -- FIXME: asking got time on every log line is actually a heavy task
@@ -95,6 +125,9 @@ mixlogjsIO title js = do
 -- and tears them down afterwards. Even in case of an exception.
 withLogger :: IO a -> IO a
 withLogger = id
+
+withLogger' :: LogT IO a -> IO a
+withLogger' = runIdentityT . unLogT
 
 -- | Log a line of text with possibly non-empty set of properties attached to the text.
 --
