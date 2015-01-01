@@ -7,9 +7,9 @@ module Network.SOAP.Transport.Curl (
   , curlTransport
   ) where
 
-import Control.Monad.Trans.Control
 import Control.Applicative
 import Control.Monad.Catch
+import Control.Monad.Trans.Control
 import Data.ByteString.Lazy (ByteString)
 import Data.Monoid.Space
 import Network.Curl

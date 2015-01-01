@@ -5,9 +5,8 @@ module DB.ExplainAnalyze where
 import DB.Core
 import DB.Fetcher
 import DB.Functions
-import DB.SQL2
-
 import DB.SQL
+import DB.SQL2
 
 kExplainAnalyze :: (SqlTurnIntoSelect s, MonadDB m) => s -> m String
 kExplainAnalyze cmd = do
