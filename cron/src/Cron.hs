@@ -184,7 +184,7 @@ main = Log.withLogger $ do
         -- add a small delay between consecutive attempts to reserve
         -- a task. the purpose is to drastically reduce number of
         -- transaction restarts when more than one worker is running.
-        liftIO $ threadDelay 25000
+        threadDelay 25000
         dbUpdate $ ReserveTask wid
       case mtt of
         Nothing -> threadDelay 2000000 -- pause for 2 seconds if there are no tasks
