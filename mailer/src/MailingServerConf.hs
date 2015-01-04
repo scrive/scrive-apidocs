@@ -109,7 +109,7 @@ data SenderConfig = SMTPSender {
   deriving (Eq, Ord, Read, Show, Typeable, Data)
 
 unjsonSenderConfig :: UnjsonDef SenderConfig
-unjsonSenderConfig = DisjointUnjsonDef "type"
+unjsonSenderConfig = disjointUnionOf "type"
                      [("smtp", unjsonIsConstrByName "SMTPSender",
                        pure SMTPSender
                                <*> field "name"

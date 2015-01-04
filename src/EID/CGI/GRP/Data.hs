@@ -56,7 +56,7 @@ data GrpFault
 
 -- | Convert 'GrpFault' to JSON to show it to the client.
 instance Unjson GrpFault where
-  unjsonDef = DisjointUnjsonDef "grp_fault" [
+  unjsonDef = disjointUnionOf "grp_fault" [
       InvalidParameters  <=> "invalid_parameters"
     , AlreadyInProgress  <=> "already_in_progress"
     , AccessDeniedRp     <=> "access_denied_rp"
@@ -175,7 +175,7 @@ data ProgressStatus
 
 -- | Convert 'ProgressStatus' to JSON and show it to the client.
 instance Unjson ProgressStatus where
-  unjsonDef = DisjointUnjsonDef "progress_status" [
+  unjsonDef = disjointUnionOf "progress_status" [
       OutstandingTransaction <=> "outstanding_transaction"
     , UserSign               <=> "user_sign"
     , NoClient               <=> "no_client"

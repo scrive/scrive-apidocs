@@ -1,7 +1,6 @@
 module ConfigTests (configTests) where
 
 
-import Data.Monoid
 import Data.Unjson
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
@@ -24,19 +23,19 @@ testAppConf :: Assertion
 testAppConf = do
   let conf = (defaultValue :: AppConf)
       asJson = unjsonToJSON unjsonAppConf conf
-      Result conf2 _ = parse unjsonAppConf (Anchored mempty asJson)
+      Result conf2 _ = parse unjsonAppConf asJson
   assertEqual "AppConf configuration deserializes properly" conf conf2
 
 testMailingServerConf :: Assertion
 testMailingServerConf = do
   let conf = (defaultValue :: MailingServerConf)
       asJson = unjsonToJSON unjsonMailingServerConf conf
-      Result conf2 _ = parse unjsonMailingServerConf (Anchored mempty asJson)
+      Result conf2 _ = parse unjsonMailingServerConf asJson
   assertEqual "MailingServerConf configuration deserializes properly" conf conf2
 
 testMessengerServerConf :: Assertion
 testMessengerServerConf = do
   let conf = (defaultValue :: MessengerServerConf)
       asJson = unjsonToJSON unjsonMessengerServerConf conf
-      Result conf2 _ = parse unjsonMessengerServerConf (Anchored mempty asJson)
+      Result conf2 _ = parse unjsonMessengerServerConf asJson
   assertEqual "MessengerServerConf configuration deserializes properly" conf conf2

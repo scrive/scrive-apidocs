@@ -5,7 +5,6 @@ module Configuration (
 import Control.Monad.Base
 import Control.Monad.Trans.Control
 import Data.Char
-import Data.Monoid
 import Data.Unjson
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
@@ -37,7 +36,7 @@ readConfig logger path = do
     then do
       js <- either logYamlParseExceptionAndBlameJsonParser return $
             Yaml.decodeEither' (BS.concat (BSL.toChunks bsl))
-      case parse ud (Anchored mempty js) of
+      case parse ud js of
         Result value [] -> return value
         Result _ problems -> logProblems problems
     else do

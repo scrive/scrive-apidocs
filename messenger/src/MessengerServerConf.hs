@@ -52,7 +52,7 @@ data SenderConfig = GlobalMouthSender
 
 
 unjsonSenderConfig :: UnjsonDef SenderConfig
-unjsonSenderConfig = DisjointUnjsonDef "type"
+unjsonSenderConfig = disjointUnionOf "type"
                      [("global_mouth", unjsonIsConstrByName "GlobalMouthSender",
                        pure GlobalMouthSender
                        <*> field "username"
