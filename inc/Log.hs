@@ -79,6 +79,11 @@ outputChannel = unsafePerformIO $ do
 instance MonadLog IO where
   mixlogjs = mixlogjsIO
 
+-- | LogT handles means of connection to logging server.
+--
+-- Right now this is IdentityT, but will be replaced by an environment
+-- monad that hold connection and credentials to ElasticSearch logging
+-- server.
 newtype LogT m a = LogT { unLogT :: IdentityT m a }
   deriving (Monad, Functor, Applicative, Alternative, MonadBase b, MonadIO, MonadTrans, MonadMask, MonadCatch, MonadThrow)
 
