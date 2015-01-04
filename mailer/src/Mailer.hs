@@ -18,7 +18,7 @@ import DB
 import Happstack.Server.Instances ()
 import qualified Log
 
-type InnerMailer = CryptoRNGT (DBT (ServerPartT IO))
+type InnerMailer = CryptoRNGT (DBT (ServerPartT (Log.LogT IO)))
 
 newtype Mailer a = Mailer { unMailer :: InnerMailer a }
   deriving (Alternative, Applicative, CryptoRNG, FilterMonad Response, WebMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadCatch, MonadDB, MonadIO, MonadMask, MonadPlus, MonadThrow, ServerMonad, Log.MonadLog)
@@ -30,5 +30,5 @@ instance MonadBaseControl IO Mailer where
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
-runMailer :: CryptoRNGState -> Mailer a -> DBT (ServerPartT IO) a
+runMailer :: CryptoRNGState -> Mailer a -> DBT (ServerPartT (Log.LogT IO)) a
 runMailer rng = runCryptoRNGT rng . unMailer

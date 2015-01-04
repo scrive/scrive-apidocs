@@ -14,8 +14,9 @@ import DB
 import DB.PostgreSQL
 import GlobalMouth
 import Messenger
+import qualified Log
 
-router :: CryptoRNGState -> ConnectionSource -> Messenger Response -> ServerPartT IO Response
+router :: CryptoRNGState -> ConnectionSource -> Messenger Response -> ServerPartT (Log.LogT IO) Response
 router rng cs routes = withPostgreSQL cs $ do
   let quota = 65536
   temp <- liftIO getTemporaryDirectory

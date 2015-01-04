@@ -1,6 +1,8 @@
 module MessengerServer where
 
-import Control.Concurrent
+import Control.Concurrent.Lifted
+import Control.Monad.Base
+import Control.Monad.Trans.Control
 import Happstack.Server hiding (waitForTermination)
 import qualified Control.Exception.Lifted as E
 import qualified Happstack.StaticRouting as R
@@ -40,14 +42,14 @@ main = Log.withLogger $ do
         Log.mixlog_ e
         error "static routing"
       Right r -> return (r >>= maybe (notFound (toResponse ("Not found."::String))) return)
-    socket <- listenOn (htonl iface) $ fromIntegral port
-    forkIO $ simpleHTTPWithSocket socket handlerConf (router rng connSource routes)
-   ) killThread $ \_ -> do
+    socket <- liftBase (listenOn (htonl iface) $ fromIntegral port)
+    fork $ (liftBaseWith $ \_runInBase -> simpleHTTPWithSocket socket handlerConf (mapServerPartT Log.withLogger (router rng connSource routes)))
+   ) (liftBase killThread) $ \_ -> do
      let sender = createSender $ mscMasterSender conf
      msender <- newMVar sender
      withCronJobs
        ([ forkCron_ True "SMS Dispatcher" 5 $ dispatcher rng sender msender connSource
         , forkCron_ True "SMS Cleaner" (60*60) $ cleaner rng connSource
         ]) $ \_ -> do
-            waitForTermination
+            liftBase waitForTermination
             Log.mixlog_ $ "Termination request received"

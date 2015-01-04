@@ -4,6 +4,7 @@ import Control.Applicative
 import Control.Arrow
 import Control.Concurrent.STM
 import Control.Monad
+import Control.Monad.Base
 import Control.Monad.IO.Class
 import Database.PostgreSQL.PQTypes.Internal.Connection
 import System.Directory (createDirectoryIfMissing)
@@ -100,16 +101,16 @@ modifyTestEnv ("--output-dir":d:r) = second (. (\te -> te{ teOutputDirectory = J
 modifyTestEnv (d:r) = first (d:) $ modifyTestEnv r
 
 
-testMany :: ([String], [(TestEnvSt -> Test)]) -> IO ()
-testMany (allargs, ts) = Log.withLogger $ do
-  let (args, envf) =  modifyTestEnv allargs
-  hSetEncoding stdout utf8
-  hSetEncoding stderr utf8
-  pgconf <- BS.readFile "kontrakcja_test.conf"
-  rng <- unsafeCryptoRNGState (BS.pack (replicate 128 0))
-  templates <- readGlobalTemplates
+testMany :: ([String], [(TestEnvSt -> Test)]) -> Log.LogT IO ()
+testMany (allargs, ts) = do
+  let (args, envf) = modifyTestEnv allargs
+  liftBase $ hSetEncoding stdout utf8
+  liftBase $ hSetEncoding stderr utf8
+  pgconf <- liftBase $ BS.readFile "kontrakcja_test.conf"
+  rng <- liftBase $ unsafeCryptoRNGState (BS.pack (replicate 128 0))
+  templates <- liftBase $ readGlobalTemplates
   let connSettings = defaultSettings { csConnInfo = pgconf }
-  conn <- connect connSettings
+  conn <- liftBase $ connect connSettings
   let staticSource = ConnectionSource { withConnection = ($ conn) }
       connSource = defaultSource connSettings
       dts = defaultTransactionSettings
@@ -149,12 +150,12 @@ testMany (allargs, ts) = Log.withLogger $ do
 -- | Useful for running an individual test in ghci like so:
 --
 -- >  testone flip (testThat "") testPreparationAttachCSVUploadNonExistingSignatoryLink
-testone :: (TestEnvSt -> Test) -> IO ()
+testone :: (TestEnvSt -> Test) -> Log.LogT IO ()
 testone t = do
-  args <- getArgs
+  args <- liftBase getArgs
   testMany (args, [t])
 
 main :: IO ()
-main = do
-  args <- getArgs
+main = Log.withLogger $ do
+  args <- liftBase getArgs
   testMany (args, allTests)

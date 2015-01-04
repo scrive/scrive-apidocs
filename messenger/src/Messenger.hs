@@ -18,7 +18,7 @@ import DB
 import Happstack.Server.Instances ()
 import qualified Log
 
-type InnerMessenger = CryptoRNGT (DBT (ServerPartT IO))
+type InnerMessenger = CryptoRNGT (DBT (ServerPartT (Log.LogT IO)))
 
 newtype Messenger a = Messenger { unMessenger :: InnerMessenger a }
   deriving (Alternative, Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadCatch, MonadDB, MonadIO, MonadMask, MonadPlus, MonadThrow, ServerMonad, Log.MonadLog)
@@ -30,5 +30,5 @@ instance MonadBaseControl IO Messenger where
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
-runMessenger :: CryptoRNGState -> Messenger a -> DBT (ServerPartT IO) a
+runMessenger :: CryptoRNGState -> Messenger a -> DBT (ServerPartT (Log.LogT IO)) a
 runMessenger rng = runCryptoRNGT rng . unMessenger

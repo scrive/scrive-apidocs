@@ -1,6 +1,7 @@
 module MailingServer where
 
-import Control.Concurrent
+import Control.Concurrent.Lifted
+import Control.Monad.Base
 import Happstack.Server hiding (waitForTermination)
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
@@ -46,9 +47,9 @@ main = Log.withLogger $ do
                   Log.mixlog_ e
                   error "static routing"
                 Right r -> return (r >>= maybe (notFound (toResponse ("Not found."::String))) return)
-    socket <- listenOn (htonl iface) $ fromIntegral port
-    forkIO $ simpleHTTPWithSocket socket handlerConf (router rng connSource routes)
-   ) killThread $ \_ -> do
+    socket <- liftBase $ listenOn (htonl iface) $ fromIntegral port
+    fork $ liftBase $ simpleHTTPWithSocket socket handlerConf (mapServerPartT Log.withLogger (router rng connSource routes))
+   ) (liftBase . killThread) $ \_ -> do
      let sender = createSender $ mscMasterSender conf
      msender <- newMVar sender
      withCronJobs
@@ -59,5 +60,5 @@ main = Log.withLogger $ do
           Just slave -> [ forkCron True "ServiceAvailabilityChecker" 0
                             (serviceAvailabilityChecker conf rng connSource (sender, createSender slave) msender) ]
           Nothing    -> []) $ \_ -> do
-      waitForTermination
+      liftBase $ waitForTermination
       Log.mixlog_ $ "Termination request received"

@@ -1,7 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Log
   ( withLogger
-  , withLogger'
 
   , module Log.Class
 
@@ -123,11 +122,8 @@ mixlogjsIO title js = do
 -- | Bracket an IO action which denotes the whole scope where the loggers of
 -- the application are needed to installed. Sets them up before running the action
 -- and tears them down afterwards. Even in case of an exception.
-withLogger :: IO a -> IO a
-withLogger = id
-
-withLogger' :: LogT IO a -> IO a
-withLogger' = runIdentityT . unLogT
+withLogger :: LogT IO a -> IO a
+withLogger = runIdentityT . unLogT
 
 -- | Log a line of text with possibly non-empty set of properties attached to the text.
 --

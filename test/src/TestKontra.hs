@@ -143,7 +143,7 @@ runTestKontraHelper cs rq ctx tk = do
   -- being already in progress
   commit' ts { tsAutoTransaction = False }
   mres <- E.finally (liftIO . ununWebT $ runServerPartT
-    (runDBT cs ts . runCryptoRNGT rng $
+    (mapServerPartT Log.withLogger . runDBT cs ts . runCryptoRNGT rng $
       AWS.runAmazonMonadT amazoncfg $ runStateT (unKontraPlus $ unKontra tk) noflashctx) rq)
       -- runDBT commits and doesn't run another transaction, so begin new one
       begin

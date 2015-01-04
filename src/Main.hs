@@ -1,15 +1,16 @@
 module Main where
 
-import Control.Concurrent
+import Control.Concurrent.Lifted
 import Control.Monad
+import Control.Monad.Base
 import Control.Monad.Catch
+import Control.Monad.IO.Class
 import Happstack.Server hiding (waitForTermination)
 import Happstack.StaticRouting
 import Network.Curl
 import System.IO
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
-
 import AppConf
 import AppControl
 import AppDBTables (kontraTables)
@@ -34,8 +35,8 @@ import qualified Version
 main :: IO ()
 main = withCurlDo . Log.withLogger $ do
   -- progname effects where state is stored and what the logfile is named
-  hSetEncoding stdout utf8
-  hSetEncoding stderr utf8
+  liftIO $ hSetEncoding stdout utf8
+  liftIO $ hSetEncoding stderr utf8
 
   Log.mixlog_ $ "Starting kontrakcja-server build " ++ Version.versionID
 
@@ -49,11 +50,11 @@ main = withCurlDo . Log.withLogger $ do
     checkDatabase Log.mixlog_ kontraTables
 
   appGlobals <- do
-    templates <- newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates
+    templates <- liftIO (newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates)
     filecache <- MemCache.new BS.length 50000000
     docs <- MemCache.new RenderedPages.pagesCount 1000
     rng <- newCryptoRNGState
-    connpool <- createPoolSource connSettings
+    connpool <- liftIO $ createPoolSource connSettings
     return AppGlobals {
         templates = templates
       , filecache = filecache
@@ -64,12 +65,13 @@ main = withCurlDo . Log.withLogger $ do
 
   startSystem appGlobals appConf
 
-startSystem :: AppGlobals -> AppConf -> IO ()
+startSystem :: AppGlobals -> AppConf -> Log.LogT IO ()
 startSystem appGlobals appConf = E.bracket startServer stopServer waitForTerm
   where
+    startServer :: Log.LogT IO ThreadId
     startServer = do
       let (iface,port) = httpBindAddress appConf
-      listensocket <- listenOn (htonl iface) (fromIntegral port)
+      listensocket <- liftIO $ listenOn (htonl iface) (fromIntegral port)
       routes <- case compile $ staticRoutes (production appConf) of
                   Left e -> do
                     Log.mixlog_ e
@@ -80,12 +82,13 @@ startSystem appGlobals appConf = E.bracket startServer stopServer waitForTerm
           , timeout = 120
           , logAccess = Nothing
           }
-      forkIO . simpleHTTPWithSocket listensocket conf $ appHandler routes appConf appGlobals
+
+      fork $ liftBase $ simpleHTTPWithSocket listensocket conf (mapServerPartT Log.withLogger (appHandler routes appConf appGlobals))
     stopServer = killThread
     waitForTerm _ = do
       withPostgreSQL (connsource appGlobals) . runCryptoRNGT (cryptorng appGlobals) $ do
         initDatabaseEntries $ initialUsers appConf
-      waitForTermination
+      liftIO $ waitForTermination
       Log.mixlog_ $ "Termination request received"
 
 initDatabaseEntries :: (CryptoRNG m, MonadDB m, MonadThrow m) => [(Email, String)] -> m ()

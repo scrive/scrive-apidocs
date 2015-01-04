@@ -111,7 +111,7 @@ main = Log.withLogger $ do
     ""    -> Log.mixlog_ "WARNING: no Mixpanel token present!" >> return Nothing
     token -> return $ Just $ processMixpanelEvent token
 
-  let dispatcher :: TaskType -> IO ()
+  let dispatcher :: TaskType -> Log.LogT IO ()
       dispatcher tt = case tt of
         AmazonDeletion -> if AWS.isAWSConfigOk $ amazonConfig appConf
            then runScheduler purgeSomeFiles
@@ -210,4 +210,4 @@ main = Log.withLogger $ do
       when (n > 0) $
         Log.mixlog_ $ "Unregistered" <+> show n <+> "inactive workers."
 
-    waitForTermination
+    liftIO waitForTermination
