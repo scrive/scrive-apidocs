@@ -2,6 +2,8 @@
 
 module DB.ExplainAnalyze where
 
+import Prelude
+
 import DB.Core
 import DB.Fetcher
 import DB.Functions
