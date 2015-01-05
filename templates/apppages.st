@@ -65,6 +65,19 @@ internalServerError=
  });
 </script>
 ###
+signSessionTimeOut=
+<div class='mainContainer big'>
+  <img width="1920" height="800" src="/img/bg-home.jpg" class="bg"/>
+  <div class='short-input-section'>
+    <div class="shadowed">
+     $_signSessionTimedOut()$
+    </div>
+  </div>
+</div>
+<script>
+ mixpanel.track('Sign Session Timeout', {URL : window.location.href});
+</script>
+###
 sessionTimeOut=
 <div class='mainContainer big'>
   <img width="1920" height="800" src="/img/bg-home.jpg" class="bg"/>

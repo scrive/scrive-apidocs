@@ -771,6 +771,7 @@
 "_shared":"Shared",
 "_showAnyStatusClass":"All statuses",
 "_sign":"Sign",
+"_signSessionTimedOut":"<h1>Session timed out due to inactivity</h1><h4>For your safety you need to open the invitation to sign and follow the instructions again.</h4>",
 "_signStepsBodyUploadBoxStepButtonChooseFile":"Select PDF",
 "_signUp":"Sign up",
 "_signViewNotsignedbymeAttachmentBoxHead":"Attachments",
