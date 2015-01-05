@@ -29,6 +29,7 @@ import BrandedDomain.Model
 import Control.Monad.Trans.Instances ()
 import Crypto.RNG
 import DB
+import Doc.API.Callback.Model
 import Doc.DocStateData
 import Doc.DocumentMonad (DocumentMonad, theDocument, withDocumentID)
 import Doc.DocViewMail
@@ -151,6 +152,7 @@ handleUndeliveredInvitation mbd hostpart mc signlinkid = do
       theDocument >>= \d -> scheduleEmailSendout mc $ mail {
         to = [getMailAddress $ fromJust $ getAuthorSigLink d]
       }
+      triggerAPICallbackIfThereIsOne =<< theDocument
     Nothing -> return ()
 
 mailDeliveredInvitation :: TemplatesMonad m =>  MailsConfig -> Maybe BrandedDomain -> String -> SignatoryLink -> Document -> m Mail
