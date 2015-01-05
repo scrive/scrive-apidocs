@@ -99,7 +99,7 @@ window.AjaxQueue = Backbone.Model.extend({
       queue : [] ,
       numRetries : 0,
       finishWithFunction : undefined
-    }
+    };
   },
   numRetries: function() {
     return this.get('numRetries');
