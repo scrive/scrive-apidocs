@@ -242,7 +242,7 @@ handleSignShow documentid signatorylinkid = do
         ad <- getAnalyticsData
         content <- theDocument >>= \d -> pageDocumentSignView ctx d invitedlink ad
         simpleHtmlResonseClrFlash content
-    Nothing -> handleCookieFail
+    Nothing -> handleCookieFail signatorylinkid documentid
 
 -- |
 --   /sp/[documentid]/[signatorylinkid]
@@ -262,7 +262,7 @@ handleSignPadShow documentid signatorylinkid = do
         ad <- getAnalyticsData
         content <- theDocument >>= \d -> pageDocumentSignForPadView ctx d invitedlink ad
         simpleHtmlResonseClrFlash content
-    Nothing -> handleCookieFail
+    Nothing -> handleCookieFail signatorylinkid documentid
 
 
 -- If is not magic hash in session. It may mean that the
@@ -271,15 +271,14 @@ handleSignPadShow documentid signatorylinkid = do
 -- there are any cookies, if there are none we show a page how
 -- to enable cookies on iPhone that seems to be the only
 -- offender.
-handleCookieFail :: Kontrakcja m => m Response
-handleCookieFail = do
+handleCookieFail :: Kontrakcja m => SignatoryLinkID -> DocumentID -> m Response
+handleCookieFail slid did = do
       cookies <- rqCookies <$> askRq
       if null cookies
          then sendRedirect LinkEnableCookies
          else do
-           res <- internalError
-           preventTailCallOptimization -- we would like to see the above internalError in stack trace
-           return res
+           Log.mixlog_ $ "Signview load after session timedout for slid: " ++ show slid ++ ", did: " ++ show did
+           renderTemplate_ "signSessionTimeOut" >>= renderFromBody kontrakcja
 
 {- |
    Redirect author of document to go to signview

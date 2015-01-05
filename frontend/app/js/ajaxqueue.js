@@ -94,10 +94,12 @@ var QueueRequest = Backbone.Model.extend({
 });
 
 window.AjaxQueue = Backbone.Model.extend({
-  defaults : {
+  defaults : function() {
+    return {
       queue : [] ,
       numRetries : 0,
       finishWithFunction : undefined
+    }
   },
   numRetries: function() {
     return this.get('numRetries');
@@ -113,6 +115,9 @@ window.AjaxQueue = Backbone.Model.extend({
      {
          var finishWith = this.get("finishWithFunction");
          this.set({"finishWithFunction" : undefined});
+         // We need to clean previous attributes, as this can be a source of memory leak with CSV sendout
+         this._previousAttributes.finishWithFunction = undefined;
+         this.stopListening();
          finishWith();
      }
 
@@ -126,12 +131,12 @@ window.AjaxQueue = Backbone.Model.extend({
          return;
        }
        var qr = new QueueRequest({submit : s});
-       qr.bind("success", function() {
+       ajaxQueue.listenTo(qr,"success", function() {
                 if (requestQueue[0] != qr) return; // This is a lost request and we ignore it
                 requestQueue.shift();
                 ajaxQueue.run();
             });
-       qr.bind("error", function() {
+       ajaxQueue.listenTo(qr,"error", function() {
                 if (errorCallback != undefined) errorCallback(qr.errorCode());
                 if (requestQueue[0] != qr) return; // This is a lost request and we ignore it
                 if (ajaxQueue.numRetries() < 12) {
