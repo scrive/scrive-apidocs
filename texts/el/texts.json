@@ -771,6 +771,7 @@
 "_shared":"Κοινοποιήθηκε ",
 "_showAnyStatusClass":"Όλα τα status",
 "_sign":"Υπογραφή ",
+"_signSessionTimedOut":"",
 "_signStepsBodyUploadBoxStepButtonChooseFile":"Επιλέξτε PDF ",
 "_signUp":"Εγγραφείτε",
 "_signViewNotsignedbymeAttachmentBoxHead":"Συνημμένα ",

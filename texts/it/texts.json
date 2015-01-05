@@ -771,6 +771,7 @@
 "_shared":"Condiviso",
 "_showAnyStatusClass":"Tutti gli status",
 "_sign":"Firma",
+"_signSessionTimedOut":"",
 "_signStepsBodyUploadBoxStepButtonChooseFile":"Seleziona PDF",
 "_signUp":"Iscriviti",
 "_signViewNotsignedbymeAttachmentBoxHead":"Allegati",

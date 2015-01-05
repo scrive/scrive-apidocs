@@ -771,6 +771,7 @@
 "_shared":"Compartido",
 "_showAnyStatusClass":"Todos los estados",
 "_sign":"Firmar",
+"_signSessionTimedOut":"",
 "_signStepsBodyUploadBoxStepButtonChooseFile":"Seleccione PDF",
 "_signUp":"Inscríbase",
 "_signViewNotsignedbymeAttachmentBoxHead":"Anexos",
