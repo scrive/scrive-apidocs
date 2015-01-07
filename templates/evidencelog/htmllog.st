@@ -171,7 +171,7 @@ htmlevidencelog=<!DOCTYPE html>
 
   <p>Additionally, below this evidence log, are statistics about clock error history over
   an extended period of time. This information is to serve as a reference of Scrive
-  E-sign’s time accuracy over time.</p><br>
+  E-sign’s time accuracy over time.</p><br/>
 
   <table id="event-table">
     <tr>
@@ -198,8 +198,8 @@ htmlevidencelog=<!DOCTYPE html>
         </div>
       </td>
     </tr>}$
-  </table><br>
-  <br>
+  </table><br/>
+  <br/>
 
   <h4>Clock error history statistics</h4>
 
