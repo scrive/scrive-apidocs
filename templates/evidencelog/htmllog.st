@@ -175,13 +175,13 @@ htmlevidencelog=<!DOCTYPE html>
 
   <table id="event-table">
     <tr>
-      <th id="time"><em>Time</em></td>
+      <th id="time"><em>Time</em></th>
 
-      <th id="ces"><em>CES</em></td>
+      <th id="ces"><em>CES</em></th>
 
-      <th id="ipaddr"><em>IP address</em></td>
+      <th id="ipaddr"><em>IP address</em></th>
 
-      <th id="event"><em>Event</em></td>
+      <th id="event"><em>Event</em></th>
     </tr>
 
     $entries:{entry|

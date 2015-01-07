@@ -110,11 +110,11 @@ evidenceOfIntent=<!DOCTYPE html>
 
   <table>
     <tr>
-      <th id="time"><em>Time</em></td>
+      <th id="time"><em>Time</em></th>
 
-      <th id="ipaddr"><em>IP</em></td>
+      <th id="ipaddr"><em>IP</em></th>
 
-      <th id="event"><em>Event</em></td>
+      <th id="event"><em>Event</em></th>
     </tr>$entries:{entry|$if(entry.first.time)$
 
     <tr>
