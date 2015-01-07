@@ -94,7 +94,6 @@ import Doc.DocStateData
 import Doc.DocumentID
 import Doc.DocumentMonad (updateDocumentWithID, updateDocument, DocumentMonad, withDocument, theDocument, theDocumentID)
 import Doc.DocUtils
-import Doc.Model.Expressions
 import Doc.Model.Query (GetSignatoryLinkByID(..), GetDocumentByDocumentID(..), GetDocumentTags(..), GetDocsSentBetween(..), GetDocsSent(..), GetSignatoriesByEmail(..))
 import Doc.SealStatus (SealStatus(..), hasGuardtimeSignature)
 import Doc.SignatoryFieldID
@@ -121,6 +120,7 @@ import qualified Doc.Screenshot as Screenshot
 import qualified Log
 
 -- For this to work well we assume that signatories are ordered: author first, then all with ids set, then all with id == 0
+-- FIXME: this assumption needs to be encoded in the type.
 insertSignatoryLinks :: MonadDB m => DocumentID -> [SignatoryLink] -> m ()
 insertSignatoryLinks _ [] = return ()
 insertSignatoryLinks did links = do
@@ -216,7 +216,8 @@ insertAuthorAttachments did atts = runQuery_ . sqlInsert "author_attachments" $ 
 insertMainFiles :: MonadDB m => DocumentID -> [MainFile] -> m ()
 insertMainFiles _ [] = return ()
 insertMainFiles documentid rfiles = do
-   -- rfiles should be inserted with descending id: newer files come first in rfiles
+  -- rfiles should be inserted with descending id: newer files come first in rfiles
+  -- FIXME: this is too error prone, needs to be solved at the type level.
   let files = reverse rfiles
   runQuery_ . sqlInsert "main_files" $ do
     sqlSet "document_id" documentid

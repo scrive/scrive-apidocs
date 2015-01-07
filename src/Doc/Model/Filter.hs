@@ -157,7 +157,7 @@ documentFilterToSQL (DocumentFilterByCanSign userid) = do
   sqlWhereEq "signatory_links.user_id" userid
   sqlWhereEq "documents.status" Pending
   sqlWhereIsNULL "signatory_links.sign_time"
-  sqlWhereEqSql "signatory_links.sign_order" documentSignorderExpression
+  sqlWhereEqSql "signatory_links.sign_order" documentSignOrderExpression
 
 documentFilterToSQL (DocumentFilterSignNowOnPad) = do
   sqlWhereEq "documents.status" Pending
@@ -165,7 +165,7 @@ documentFilterToSQL (DocumentFilterSignNowOnPad) = do
                       sqlWhere "sl5.document_id = signatory_links.document_id"
                       sqlWhere "sl5.is_partner"
                       sqlWhereIsNULL "sl5.sign_time"
-                      sqlWhereEqSql "sl5.sign_order" documentSignorderExpression
+                      sqlWhereEqSql "sl5.sign_order" documentSignOrderExpression
                       sqlWhereEq "sl5.delivery_method" PadDelivery
 
 documentFilterToSQL (DocumentFilterByDocumentID did) = do

@@ -28,6 +28,7 @@ import Crypto.RNG
 import CSVUtilTest
 import DB
 import DB.Checks
+import DB.PostgreSQL
 import DB.SQLFunction
 import DocAPITest
 import DocControlTest
@@ -109,7 +110,7 @@ testMany (allargs, ts) = do
   pgconf <- liftBase $ BS.readFile "kontrakcja_test.conf"
   rng <- liftBase $ unsafeCryptoRNGState (BS.pack (replicate 128 0))
   templates <- liftBase $ readGlobalTemplates
-  let connSettings = defaultSettings { csConnInfo = pgconf }
+  let connSettings = pgConnSettings pgconf
   conn <- liftBase $ connect connSettings
   let staticSource = ConnectionSource { withConnection = ($ conn) }
       connSource = defaultSource connSettings

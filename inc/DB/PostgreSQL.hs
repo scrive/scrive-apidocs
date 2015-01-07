@@ -12,6 +12,7 @@ pgConnSettings dbconf = defaultSettings {
     "signatory_field"
   , "document_tag"
   , "main_file"
+  , "author_attachment"
   , "signatory_attachment"
   , "signatory_link"
   , "document"

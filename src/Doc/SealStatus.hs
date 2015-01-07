@@ -26,6 +26,7 @@ data SealStatus
 class HasGuardtimeSignature a where
   hasGuardtimeSignature :: a -> Bool
 
+-- How can 'SealStatus' "have" digital signature?
 instance HasGuardtimeSignature SealStatus where
   hasGuardtimeSignature Guardtime{} = True
   hasGuardtimeSignature _           = False

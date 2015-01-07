@@ -161,9 +161,12 @@ selectDocuments domains filters orders extend = sqlSelect "documents" $ do
 
 data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentByDocumentID Document where
-  query (GetDocumentByDocumentID did) = query $ GetDocument
-    [DocumentsOfWholeUniverse]
-    [DocumentFilterByDocumentID did]
+  query (GetDocumentByDocumentID did) = do
+    -- FIXME: Use domains/filters.
+    kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
+      mapM_ sqlResult documentsSelectors
+      sqlWhereDocumentIDIs did
+      sqlWhereDocumentWasNotPurged
 
 data GetDocumentBySignatoryLinkID = GetDocumentBySignatoryLinkID SignatoryLinkID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentBySignatoryLinkID Document where
@@ -171,10 +174,10 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentBySignatoryLinkID Doc
     -- FIXME: Use domains/filters.
     kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
-      sqlWhereDocumentWasNotPurged
       sqlWhereEqSql "documents.id" . sqlSelect "signatory_links" $ do
         sqlResult "signatory_links.document_id"
         sqlWhereEq "signatory_links.id" slid
+      sqlWhereDocumentWasNotPurged
 
 data GetDocumentsBySignatoryLinkIDs = GetDocumentsBySignatoryLinkIDs [SignatoryLinkID]
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsBySignatoryLinkIDs [Document] where
@@ -182,10 +185,10 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsBySignatoryLinkIDs [
     -- FIXME: Use domains/filters.
     runQuery_ . sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
-      sqlWhereDocumentWasNotPurged
       sqlWhereExists $ sqlSelect "signatory_links" $ do
         sqlWhereIn "signatory_links.id" slids
         sqlWhere "signatory_links.document_id = documents.id"
+      sqlWhereDocumentWasNotPurged
     fetchMany toComposite
 
 data GetDocumentByDocumentIDSignatoryLinkIDMagicHash = GetDocumentByDocumentIDSignatoryLinkIDMagicHash DocumentID SignatoryLinkID MagicHash
@@ -194,7 +197,6 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentByDocumentIDSignatory
     -- FIXME: Use domains/filters.
     kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
-      sqlWhereDocumentWasNotPurged
       sqlWhereDocumentIDIs did
       sqlWhereExists $ sqlSelect "signatory_links" $ do
          sqlWhere "signatory_links.document_id = documents.id"
@@ -204,6 +206,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentByDocumentIDSignatory
          -- we are sloppy and let a person see the document.
          sqlWhereSignatoryLinkIDIs slid
          sqlWhereSignatoryLinkMagicHashIs mh
+      sqlWhereDocumentWasNotPurged
 
 -- | GetDocuments is central switch for documents list queries.
 --
@@ -235,8 +238,8 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocument Document where
 data GetDocumentsWithSoftLimit = GetDocumentsWithSoftLimit [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy] (Int, Int, Int)
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsWithSoftLimit (Int, [Document]) where
   query (GetDocumentsWithSoftLimit domains filters orders (offset, limit, soft_limit)) = do
-    analysis <- explainAnalyze $ toSQLCommand sql
-    trace ("ANALYSIS:" <+> analysis) $ return ()
+    --analysis <- explainAnalyze $ toSQLCommand sql
+    --trace ("ANALYSIS:" <+> analysis) $ return ()
     runQuery_ sql
     (count :: Int64, CompositeArray1 documents) <- fetchOne id
     return (offset + fromIntegral count, documents)

@@ -9,7 +9,6 @@ import Data.Monoid.Space
 
 import DB
 import Doc.DocStateData
-import Doc.Model.Expressions
 
 -- | These are possible order by clauses that make documents sorted by.
 data DocumentOrderBy
