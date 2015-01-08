@@ -88,6 +88,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             ccv: '',
             year: '',
             month: '',
+            yearlyprices: true,
             createdUser: false,
             accountCreated: false,
             currentPlan: 'team',
@@ -142,6 +143,13 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         setCompanyName: function(cn) {
             this.set({companyName:cn});
             return this;
+        },
+        setYearlyPrices: function(bool) {
+          this.set({yearlyprices: bool});
+          return this;
+        },
+        yearlyprices: function() {
+          return this.get('yearlyprices');
         },
         accountCode: function() {
             return this.get('accountCode');
@@ -285,6 +293,41 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                              email        : model.email()}
                      ,success: callback
                    });
+        }
+    });
+
+    var TopTabsView = Backbone.View.extend({
+        className: "top-tabs",
+        initialize: function(args) {
+            _.bindAll(this);
+            args.model.bind('change:yearlyprices', this.render);
+            var view = this;
+            this.render();
+        },
+        render: function() {
+            var view = this;
+            var model = view.model;
+
+            var div = this.$el;
+
+            var monthly = $("<div class='monthly'>MONTHLY</div>");
+            var yearly = $("<div class='yearly'>YEARLY</div>");
+
+            if (model.yearlyprices()) {
+              yearly.css('font-size', '22px');
+            } else {
+              monthly.css('font-size', '22px');
+            }
+
+            monthly.click(function() {
+              model.setYearlyPrices(false);
+            });
+
+            yearly.click(function() {
+              model.setYearlyPrices(true);
+            });
+
+            div.empty().append(monthly).append(yearly);
         }
     });
 
@@ -856,6 +899,9 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                                                onClick: function() {
                                                    mixpanel.track('Click online form plan');
                                                }});
+
+            this.topTabs = new TopTabsView({model: args.model});
+
             this.noheaders = args.noheaders;
             //this.recurlyForm = new RecurlyView({model: args.model, hideContacts: args.hideContacts});
             view.model.bind('fetch', this.render);
@@ -872,6 +918,8 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
 
             div.append(header);
+
+            div.append(view.topTabs.el);
 
             div.append(view.freeBox.el)
                 .append(view.teamBox.el)
