@@ -85,7 +85,7 @@ readConfig logger path = do
       mapM_ logProblem problems
       fail $ "There were issues with the content of configuration " ++ path
     configAsJsonString :: a -> String
-    configAsJsonString a = BSL.toString (unjsonToByteStringLazyPretty ud a)
+    configAsJsonString a = BSL.toString $ unjsonToByteStringLazy' (Options { pretty = True, indent = 4, nulls = False }) ud a
 
 showNiceYamlParseException :: FilePath -> Yaml.ParseException -> String
 showNiceYamlParseException filepath parseException =
