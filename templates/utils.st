@@ -62,7 +62,7 @@ FinnishInFinish=Suomi
 ###
 PoweredByScrive=E-signing powered by Scrive
 ###
-TeamPricePerMonth=299
+TeamPricePerMonth=200
 ###
 FormPricePerMonth=3000
 ###
