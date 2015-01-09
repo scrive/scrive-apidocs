@@ -15,6 +15,21 @@
 
 .body-container.pricing {
   background-color: @grey-background;
+
+  .big-title {
+    min-height: 192px;
+    text-align: center;
+    background-color: #293742;
+    width: 100%;
+    h1 {
+      color: #fff;
+      font-size: 52px;
+      font-weight: 400;
+      width: 1014px;
+      margin: 0 auto;
+      padding: 65px 0;
+    }
+  }
 }
 
 .price-plan {
@@ -24,12 +39,20 @@
     margin: auto !important;
   }
 
+  /* This only applies when the price plan is showed in the blocking modal */
   &.blocking-modal {
     margin-top: 20px !important;
+    width: 910px;
+
     .payments { 
       padding-top: 0;
       min-height: 100%;
       padding-bottom: 20px;
+
+      .plan.active {
+        left: 0;
+        width: 910px;
+      }
     }
   }
 
@@ -102,6 +125,8 @@
   .top-tabs {
     padding-bottom: 20px;
     width: 1004px;
+
+    cursor: pointer;
 
     .top-bar {
       box-sizing: border-box; // to make 50% work like expected

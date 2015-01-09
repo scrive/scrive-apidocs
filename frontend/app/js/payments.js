@@ -490,7 +490,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
             var features = this.renderFeatures();
 
-            var button = $('<a class="button button-green action-sign-up" />')
+            var button = $('<a class="button button-black action-sign-up" />')
                 .append($('<span class="blue" />')
                         .text(localization.signup))
 
@@ -525,6 +525,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             });
             this.$el.addClass(this.plan);
             this.recurly = new RecurlyView(args);
+            this.recurly.model.fetch();
         },
         render: function() {
             var view = this;
@@ -908,6 +909,8 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             this.topTabs = new TopTabsView({model: args.model});
 
             this.noheaders = args.noheaders;
+            this.notabs = args.notabs;
+            this.ccoptionsonly = args.ccoptionsonly;
             view.model.bind('fetch', this.render);
             view.model.bind('change:yearlyprices', function() {
               view.updateTeamBox();
@@ -939,16 +942,24 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                 .append($('<h4 />').text(''));
 
 
-            div.append(header);
+            if (!this.noheaders) {
+              div.append(header);
+            }
 
-            div.append(view.topTabs.el);
+            if (!this.notabs) {
+              div.append(view.topTabs.el);
+            }
 
-            console.log(view.teamBox.el);
-
-            div.append(view.freeBox.el)
-                .append(view.teamBox.el)
-                .append(view.storeBox.el)
-                .append(view.formBox.el);
+            if (!this.ccoptionsonly) {
+              div.append(view.freeBox.el)
+                  .append(view.teamBox.el)
+                  .append(view.storeBox.el)
+                  .append(view.formBox.el);
+            } else {
+              var teamBox = view.teamBox.el;
+              div.append(teamBox);
+              teamBox.click();
+            }
 
             div.append($('<div class="clearfix" />'));
             div.append($('<div class="vat-box" />').text(localization.payments.vat));
