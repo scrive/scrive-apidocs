@@ -143,9 +143,9 @@ section.pricing-cases header {
   background: @white;
   float: left;
   height: 100%;
-  padding: 0 1em;
+  padding: 0 10px;
   position: relative;
-  width: 218px;
+  width: 230px;
   z-index: 10;
 }
 
@@ -164,7 +164,7 @@ section.pricing-cases header {
 
 .plan-container > .plan .features div.title h4 {
   font-weight: 600;
-  font-size: 32px;
+  font-size: 28px;
 }
 
 .plan-container > .plan .features div.cost {
@@ -179,32 +179,38 @@ section.pricing-cases header {
   .price {
     color: @text-dark;
     display: inline-block;
-    font-size: 30px;
+    font-size: 26px;
     font-weight: 400;
     line-height: 1.5em;
+    letter-spacing: 0px;
   }
 
   .unit {
     display: inline-block;
+    font-size: 20px;
   }
 }
 
 .plan-container > .plan .features div.explanation {
   display: block;
   font-family: @font-family-source;
+  min-height: 83px;
+
+  h4 {
+    font-size: 20px;
+  }
 
   .lte8 & {
     padding-left: 10px;
     padding-right: 10px;
   }
 
-  .explanation {
-    font-weight: 400;
+  .description {
+    font-weight: 600;
   }
 
   .fineprint {
-    font-weight: 300;
-    font-size: 22px;
+    font-weight: 400;
   }
 
   .unit {

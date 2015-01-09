@@ -310,14 +310,19 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
             var div = this.$el;
 
-            var monthly = $("<div class='monthly'>MONTHLY</div>");
-            var yearly = $("<div class='yearly'>YEARLY</div>");
+            var monthly = $('<div class="top-bar monthly" />');
+            var yearly = $('<div class="top-bar yearly" />');
 
-            if (model.yearlyprices()) {
-              yearly.css('font-size', '22px');
-            } else {
-              monthly.css('font-size', '22px');
-            }
+            monthly.append($('<span class="text" />').text("Billed monthly"));
+            yearly.append(
+              $('<span class="text" />').text("Billed yearly")
+            );
+            yearly.append(
+              $('<span class="savings" />').text('(Save up to 33%)')
+            );
+
+            yearly.toggleClass("active", model.yearlyprices());
+            monthly.toggleClass("active", !model.yearlyprices());
 
             monthly.click(function() {
               model.setYearlyPrices(false);
@@ -905,12 +910,11 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             this.noheaders = args.noheaders;
             view.model.bind('fetch', this.render);
             view.model.bind('change:yearlyprices', function() {
-              view.updateteamBox();
+              view.updateTeamBox();
               view.render();
             });
-            console.log("model", view.model);
         },
-        updateteamBox: function() {
+        updateTeamBox: function() {
             var view = this;
             var teamBoxClass = view.model.yearlyprices() ? ContactBoxView : TeamBoxView;
 
@@ -921,6 +925,8 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                                                 if(view.model.currentPlan() !== 'team')
                                                     view.model.setCurrentPlan('team');
                                             }});
+
+            view.teamBox.render();
         },
         render: function() {
             var view = this;
@@ -937,7 +943,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
             div.append(view.topTabs.el);
 
-            console.log("render render");
+            console.log(view.teamBox.el);
 
             div.append(view.freeBox.el)
                 .append(view.teamBox.el)
