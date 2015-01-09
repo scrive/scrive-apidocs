@@ -53,8 +53,6 @@ staticRoutes production = choice
      ,  allLangDirs $  dir "localization"    $ hGet $ toK1 localizationScript
      ,  allLangDirs $  dir "pricing"         $ hGet $ toK0 priceplanPage
 
-     ,  dir "analyticsloader" $ hGet $ toK0 analyticsLoaderScript
-
      -- Top level handlers - buttons on top bar, when user is logged in
      , dir "fromtemplate"                 $ hGet  $ toK0 $ DocControl.showCreateFromTemplate
      , dir "newdocument" $ hGet $ toK0 $ DocControl.handleNewDocument
@@ -73,6 +71,7 @@ staticRoutes production = choice
      , dir "padsign" $ hPost $ toK2 $ DocControl.handleIssueGoToSignviewPad
      , allLangDirs $ dir "to-sign" $ hGet $ toK0 $ DocControl.handlePadList
      , allLangDirs $ dir "padqueue" $ hGet $ toK0 $ return LinkPadList -- Backward compatibility, redirects back to /to-sign
+     , allLangDirs $ dir "postsignview" $ hGet $ toK0 $ DocControl.handlePostSignview
 
      -- Attachments
      , dir "a" $ dir "rename"      $ hPost $ toK1 $ AttachmentControl.handleRename
@@ -176,7 +175,6 @@ staticRoutes production = choice
      , userAPI
      , padApplicationAPI
      , oauth
-     , dir "r" $ remainingPath GET $ (runMPlusT $ serveFile (asContentType "text/html") (staticDir++"/index.html")) >>= maybe respond404 return
      , remainingPath GET $ (runMPlusT $ serveDirectory DisableBrowsing [] staticDir) >>= maybe respond404 return
 
      -- public services

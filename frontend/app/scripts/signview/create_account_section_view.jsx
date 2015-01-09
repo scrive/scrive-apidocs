@@ -76,7 +76,7 @@ define(['React', 'common/language_service', 'postsignview/questionnaire_view', '
           isSmallScreen = {BrowserInfo.isSmallScreen()}
           registerUser =  {function() {
             UserService.registerUser(document).then(function() {
-              window.location = '/r/#/postsignview/archive';
+              window.location = '/postsignview';
             });
           }}
         />);

@@ -11,9 +11,6 @@ module.exports = function(grunt) {
     var cssFiles = [],
     jsFiles = [];
 
-    // Special case, this file is served by kontrakcja but dont want it to be cached.
-    jsFiles.push('localization/localization?' + generateVersionId());
-
     // Rename files with to have versionId in their name
     this.files.forEach(function(filePair) {
       filePair.src.forEach(function(f) {
@@ -31,39 +28,5 @@ module.exports = function(grunt) {
         grunt.log.write(f + ' ').ok(renamed);
       });
     });
-
-    // Create html code to include all production - css and js files
-    var includes = [];
-    jsFiles.forEach(function(str) {
-      includes.push(['<script src="/', str, '"></script>'].join(''));
-    });
-    cssFiles.forEach(function(str) {
-      includes.push(['<link rel="stylesheet" href="/', str, '">'].join(''));
-    });
-    
-    // Create new html file for production
-    var newLines = [],
-    inBuildBlock = false;
-    fs.readFileSync(this.data.htmlFile).toString().split('\n').forEach(function (line) { 
-      if(!inBuildBlock && line.indexOf('buildfordev') != -1) {
-	// found build for dev block
-
-	inBuildBlock = true;
-	newLines = newLines.concat(includes);	
-      } else if(line.indexOf('endbuildfordev') != -1) {
-	// found end of build for dev block
-	inBuildBlock = false;
-      } else if(!inBuildBlock) {
-	// outside build for dev block
-	newLines.push(line);
-      }
-    });
-
-    // Replace old html file with the in-memory generated html
-    fs.unlinkSync(this.data.htmlFile);
-    newLines.forEach(function(line) {
-      fs.appendFileSync(this.data.htmlFile, line + '\n');
-    }.bind(this));
-    grunt.log.write('Replaced html file >> ', this.data.htmlFile);
   });
 };

@@ -140,7 +140,6 @@ module.exports = function(grunt) {
         mainConfigFile: '<%= yeoman.app %>/compiled_jsx/requirejs_config.js',
         out: '<%= yeoman.dist %>/optimized-system.js',
         include: ['../bower_components/requirejs/require.js'],
-        name: 'app',
         preserveLicenseComments: false
       },
       withSourceMap: {
@@ -200,8 +199,7 @@ module.exports = function(grunt) {
             '<%= yeoman.dist %>/*.js',
             '<%= yeoman.dist %>/*.css'
           ]
-        },
-        htmlFile: '<%= yeoman.dist %>/index.html'
+        }
       }
     },
     // Disabled until we get a better image structure (all images under one directory)

@@ -14,6 +14,7 @@ module Doc.DocView (
   , pageDocumentSignForPadView
   , pageDocumentPadList
   , pageDocumentPadListLogin
+  , pagePostSignview
   , gtVerificationPage
   , documentSignviewBrandingCSS
   ) where
@@ -130,6 +131,16 @@ pageDocumentPadListLogin ctx ad = do
       F.value "background" $ bdbackgroundcolorexternal <$> mbd
       brandingFields mbd Nothing
 
+pagePostSignview :: Kontrakcja m
+                    => Context
+                    -> AnalyticsData
+                    -> m String
+pagePostSignview ctx ad = do
+  let  mbd = ctxbrandeddomain ctx
+  mcompany <- companyUIForPage
+  renderTemplate "pagePostSignview" $ do
+      standardPageFields ctx kontrakcja ad
+      brandingFields mbd mcompany
 
 
 -- | Basic info about document , name, id ,author

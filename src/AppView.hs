@@ -19,7 +19,6 @@ module AppView( kontrakcja
               , contextInfoFields
               , renderTemplateAsPage
               , localizationScript
-              , analyticsLoaderScript
               , brandingFields
               , companyForPage
               , companyUIForPage
@@ -334,14 +333,6 @@ localizationScript _ = do
    Context{ctxlang} <- getContext
    script <- renderTemplate "javascriptLocalisation" $ F.value "code" $ codeFromLang ctxlang
    ok $ toResponseBS (BS.fromString "text/javascript;charset=utf-8") $ BSL.fromString script
-
-analyticsLoaderScript :: Kontrakcja m => m Response
-analyticsLoaderScript = do
-   ad <- getAnalyticsData
-   script <- renderTemplate "analyticsLoaderBase" $ do
-             F.object "analytics" $ analyticsTemplates ad
-   ok $ toResponseBS (BS.fromString "text/javascript;charset=utf-8") $ BSL.fromString script
-
 
 -- | This servers branded logo. It allows smart caching/
 -- | /branding/logo is not cached, and redirects to /branding/logo/$MD5$
