@@ -1,5 +1,6 @@
 module AppDBTables (
-    kontraFunctions
+    kontraComposites
+  , kontraFunctions
   , kontraTables
   ) where
 
@@ -31,6 +32,17 @@ import ThirdPartyStats.Tables
 import User.CallbackScheme.Tables
 import User.History.Tables
 import User.Tables
+
+kontraComposites :: [CompositeType]
+kontraComposites = [
+    ctAuthorAttachment
+  , ctSignatoryAttachment
+  , ctSignatoryField
+  , ctDocumentTag
+  , ctMainFile
+  , ctSignatoryLink
+  , ctDocument
+  ]
 
 kontraFunctions :: [SQLFunction]
 kontraFunctions = [

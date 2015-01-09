@@ -4,7 +4,6 @@ import Control.Concurrent.Lifted
 import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Catch
-import Control.Monad.IO.Class
 import Happstack.Server hiding (waitForTermination)
 import Happstack.StaticRouting
 import Network.Curl
@@ -14,7 +13,7 @@ import qualified Data.ByteString.Char8 as BS
 
 import AppConf
 import AppControl
-import AppDBTables (kontraTables)
+import AppDBTables
 import Company.Model
 import Configuration
 import Crypto.RNG
@@ -36,8 +35,8 @@ import qualified Version
 main :: IO ()
 main = withCurlDo . Log.withLogger $ do
   -- progname effects where state is stored and what the logfile is named
-  liftIO $ hSetEncoding stdout utf8
-  liftIO $ hSetEncoding stderr utf8
+  liftBase $ hSetEncoding stdout utf8
+  liftBase $ hSetEncoding stderr utf8
 
   Log.mixlog_ $ "Starting kontrakcja-server build " ++ Version.versionID
 
@@ -47,15 +46,15 @@ main = withCurlDo . Log.withLogger $ do
   checkExecutables
 
   let connSettings = pgConnSettings $ dbConfig appConf
-  withPostgreSQL (defaultSource connSettings) $
+  withPostgreSQL (defaultSource $ connSettings []) $
     checkDatabase Log.mixlog_ kontraTables
 
   appGlobals <- do
-    templates <- liftIO (newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates)
+    templates <- liftBase (newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates)
     filecache <- MemCache.new BS.length 50000000
     docs <- MemCache.new RenderedPages.pagesCount 1000
     rng <- newCryptoRNGState
-    connpool <- liftIO $ createPoolSource connSettings
+    connpool <- liftBase . createPoolSource $ connSettings kontraComposites
     return AppGlobals {
         templates = templates
       , filecache = filecache
@@ -72,7 +71,7 @@ startSystem appGlobals appConf = E.bracket startServer stopServer waitForTerm
     startServer :: Log.LogT IO ThreadId
     startServer = do
       let (iface,port) = httpBindAddress appConf
-      listensocket <- liftIO $ listenOn (htonl iface) (fromIntegral port)
+      listensocket <- liftBase $ listenOn (htonl iface) (fromIntegral port)
       routes <- case compile $ staticRoutes (production appConf) of
                   Left e -> do
                     Log.mixlog_ e
@@ -89,7 +88,7 @@ startSystem appGlobals appConf = E.bracket startServer stopServer waitForTerm
     waitForTerm _ = do
       withPostgreSQL (connsource appGlobals) . runCryptoRNGT (cryptorng appGlobals) $ do
         initDatabaseEntries $ initialUsers appConf
-      liftIO $ waitForTermination
+      liftBase $ waitForTermination
       Log.mixlog_ $ "Termination request received"
 
 initDatabaseEntries :: (CryptoRNG m, MonadDB m, MonadThrow m) => [(Email, String)] -> m ()

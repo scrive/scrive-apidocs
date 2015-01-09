@@ -93,10 +93,11 @@ main = Log.withLogger $ do
 
   checkExecutables
 
-  connPool <- liftIO . createPoolSource . pgConnSettings $ dbConfig appConf
-  withPostgreSQL connPool $
+  let connSettings = pgConnSettings $ dbConfig appConf
+  withPostgreSQL (defaultSource $ connSettings []) $
     checkDatabase Log.mixlog_ kontraTables
 
+  connPool <- liftIO . createPoolSource $ connSettings kontraComposites
   templates <- liftIO (newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates)
   rng <- newCryptoRNGState
   filecache <- MemCache.new BS.length 52428800

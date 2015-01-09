@@ -5,18 +5,12 @@ import Control.Monad.Catch
 import Database.PostgreSQL.PQTypes
 import qualified Data.ByteString as BS
 
-pgConnSettings :: BS.ByteString -> ConnectionSettings
-pgConnSettings dbconf = defaultSettings {
+import DB.Model.CompositeType
+
+pgConnSettings :: BS.ByteString -> [CompositeType] -> ConnectionSettings
+pgConnSettings dbconf ctypes = defaultSettings {
   csConnInfo = dbconf
-, csComposites = [
-    "signatory_field"
-  , "document_tag"
-  , "main_file"
-  , "author_attachment"
-  , "signatory_attachment"
-  , "signatory_link"
-  , "document"
-  ]
+, csComposites = map (unRawSQL . ctName) ctypes
 }
 
 -- Advantages for using this source over default one:

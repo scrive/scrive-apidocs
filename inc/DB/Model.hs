@@ -1,5 +1,7 @@
 module DB.Model (
     module DB.Model.Check
+  , module DB.Model.ColumnType
+  , module DB.Model.CompositeType
   , module DB.Model.ForeignKey
   , module DB.Model.Index
   , module DB.Model.Migration
@@ -8,6 +10,8 @@ module DB.Model (
   ) where
 
 import DB.Model.Check
+import DB.Model.ColumnType
+import DB.Model.CompositeType
 import DB.Model.ForeignKey
 import DB.Model.Index
 import DB.Model.Migration

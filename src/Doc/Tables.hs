@@ -44,6 +44,48 @@ tableDocuments = tblTable {
     ]
   }
 
+ctDocument :: CompositeType
+ctDocument = CompositeType {
+  ctName = "document"
+, ctColumns = [
+    CompositeColumn { ccName = "id", ccType = BigIntT }
+  , CompositeColumn { ccName = "title", ccType = TextT }
+  , CompositeColumn { ccName = "signatory_links", ccType = ArrayT $ CompositeT "signatory_link" }
+  , CompositeColumn { ccName = "main_files", ccType = ArrayT $ CompositeT "main_file" }
+  , CompositeColumn { ccName = "status", ccType = SmallIntT }
+  , CompositeColumn { ccName = "error_text", ccType = TextT }
+  , CompositeColumn { ccName = "type", ccType = SmallIntT }
+  , CompositeColumn { ccName = "ctime", ccType = TimestampWithZoneT }
+  , CompositeColumn { ccName = "mtime", ccType = TimestampWithZoneT }
+  , CompositeColumn { ccName = "days_to_sign", ccType = IntegerT }
+  , CompositeColumn { ccName = "days_to_remind", ccType = IntegerT }
+  , CompositeColumn { ccName = "timeout_time", ccType = TimestampWithZoneT }
+  , CompositeColumn { ccName = "expiration_date", ccType = TimestampWithZoneT }
+  , CompositeColumn { ccName = "invite_time", ccType = TimestampWithZoneT }
+  , CompositeColumn { ccName = "invite_ip", ccType = IntegerT }
+  , CompositeColumn { ccName = "invite_text", ccType = TextT }
+  , CompositeColumn { ccName = "confirm_text", ccType = TextT }
+  , CompositeColumn { ccName = "show_header", ccType = BoolT }
+  , CompositeColumn { ccName = "show_pdf_download", ccType = BoolT }
+  , CompositeColumn { ccName = "show_reject_option", ccType = BoolT }
+  , CompositeColumn { ccName = "show_footer", ccType = BoolT }
+  , CompositeColumn { ccName = "lang", ccType = SmallIntT }
+  , CompositeColumn { ccName = "sharing", ccType = SmallIntT }
+  , CompositeColumn { ccName = "tags", ccType = ArrayT $ CompositeT "document_tag" }
+  , CompositeColumn { ccName = "author_attachments", ccType = ArrayT $ CompositeT "author_attachment" }
+  , CompositeColumn { ccName = "api_callback_url", ccType = TextT }
+  , CompositeColumn { ccName = "unsaved_draft", ccType = BoolT }
+  , CompositeColumn { ccName = "object_version", ccType = BigIntT }
+  , CompositeColumn { ccName = "token", ccType = BigIntT }
+  , CompositeColumn { ccName = "time_zone_name", ccType = TextT }
+  , CompositeColumn { ccName = "api_version", ccType = SmallIntT }
+  , CompositeColumn { ccName = "author_company_id", ccType = BigIntT }
+  , CompositeColumn { ccName = "status_class", ccType = SmallIntT }
+  ]
+}
+
+---------------------------------
+
 tableMainFiles :: Table
 tableMainFiles = tblTable {
     tblName = "main_files"
@@ -66,6 +108,18 @@ tableMainFiles = tblTable {
     ]
   }
 
+ctMainFile :: CompositeType
+ctMainFile = CompositeType {
+  ctName = "main_file"
+, ctColumns = [
+    CompositeColumn { ccName = "file_id", ccType = BigIntT }
+  , CompositeColumn { ccName = "document_status", ccType = SmallIntT }
+  , CompositeColumn { ccName = "seal_status", ccType = SmallIntT }
+  ]
+}
+
+---------------------------------
+
 tableAuthorAttachments :: Table
 tableAuthorAttachments = tblTable {
     tblName = "author_attachments"
@@ -84,6 +138,16 @@ tableAuthorAttachments = tblTable {
     , indexOnColumn "file_id"
     ]
   }
+
+ctAuthorAttachment :: CompositeType
+ctAuthorAttachment = CompositeType {
+  ctName = "author_attachment"
+, ctColumns = [
+    CompositeColumn { ccName = "id", ccType = BigIntT }
+  ]
+}
+
+---------------------------------
 
 tableSignatoryAttachments :: Table
 tableSignatoryAttachments = tblTable {
@@ -105,6 +169,18 @@ tableSignatoryAttachments = tblTable {
     , indexOnColumn "signatory_link_id"
     ]
   }
+
+ctSignatoryAttachment :: CompositeType
+ctSignatoryAttachment = CompositeType {
+  ctName = "signatory_attachment"
+, ctColumns = [
+    CompositeColumn { ccName = "file_id", ccType = BigIntT }
+  , CompositeColumn { ccName = "description", ccType = TextT }
+  , CompositeColumn { ccName = "name", ccType = TextT }
+  ]
+}
+
+---------------------------------
 
 tableSignatoryLinks :: Table
 tableSignatoryLinks = tblTable {
@@ -148,6 +224,41 @@ tableSignatoryLinks = tblTable {
     ]
   }
 
+ctSignatoryLink :: CompositeType
+ctSignatoryLink = CompositeType {
+  ctName = "signatory_link"
+, ctColumns = [
+    CompositeColumn { ccName = "id", ccType = BigIntT }
+  , CompositeColumn { ccName = "signatory_fields", ccType = ArrayT $ CompositeT "signatory_field" }
+  , CompositeColumn { ccName = "is_author", ccType = BoolT }
+  , CompositeColumn { ccName = "is_partner", ccType = BoolT }
+  , CompositeColumn { ccName = "sign_order", ccType = IntegerT }
+  , CompositeColumn { ccName = "token", ccType = BigIntT }
+  , CompositeColumn { ccName = "user_id", ccType = BigIntT }
+  , CompositeColumn { ccName = "sign_time", ccType = TimestampWithZoneT }
+  , CompositeColumn { ccName = "sign_ip", ccType = IntegerT }
+  , CompositeColumn { ccName = "seen_time", ccType = TimestampWithZoneT }
+  , CompositeColumn { ccName = "seen_ip", ccType = IntegerT }
+  , CompositeColumn { ccName = "read_invitation", ccType = TimestampWithZoneT }
+  , CompositeColumn { ccName = "mail_invitation_delivery_status", ccType = SmallIntT }
+  , CompositeColumn { ccName = "sms_invitation_delivery_status", ccType = SmallIntT }
+  , CompositeColumn { ccName = "deleted", ccType = TimestampWithZoneT }
+  , CompositeColumn { ccName = "really_deleted", ccType = TimestampWithZoneT }
+  , CompositeColumn { ccName = "csv_title", ccType = TextT }
+  , CompositeColumn { ccName = "csv_contents", ccType = TextT }
+  , CompositeColumn { ccName = "attachments", ccType = ArrayT $ CompositeT "signatory_attachment" }
+  , CompositeColumn { ccName = "sign_redirect_url", ccType = TextT }
+  , CompositeColumn { ccName = "reject_redirect_url", ccType = TextT }
+  , CompositeColumn { ccName = "rejection_time", ccType = TimestampWithZoneT }
+  , CompositeColumn { ccName = "rejection_reason", ccType = TextT }
+  , CompositeColumn { ccName = "authentication_method", ccType = SmallIntT }
+  , CompositeColumn { ccName = "delivery_method", ccType = SmallIntT }
+  , CompositeColumn { ccName = "confirmation_delivery_method", ccType = SmallIntT }
+  ]
+}
+
+---------------------------------
+
 tableDocumentTags :: Table
 tableDocumentTags = tblTable {
     tblName = "document_tags"
@@ -162,6 +273,17 @@ tableDocumentTags = tblTable {
     ]
   , tblIndexes = [indexOnColumn "document_id"]
   }
+
+ctDocumentTag :: CompositeType
+ctDocumentTag = CompositeType {
+  ctName = "document_tag"
+, ctColumns = [
+    CompositeColumn { ccName = "name", ccType = TextT }
+  , CompositeColumn { ccName = "value", ccType = TextT }
+  ]
+}
+
+---------------------------------
 
 tableSignatoryLinkFields :: Table
 tableSignatoryLinkFields = tblTable {
@@ -193,6 +315,24 @@ tableSignatoryLinkFields = tblTable {
       uniqueIndexOnColumns ["signatory_link_id", "type", "custom_name"]
     ]
   }
+
+ctSignatoryField :: CompositeType
+ctSignatoryField = CompositeType {
+  ctName = "signatory_field"
+, ctColumns = [
+    CompositeColumn { ccName = "id", ccType = BigIntT }
+  , CompositeColumn { ccName = "type", ccType = SmallIntT }
+  , CompositeColumn { ccName = "custom_name", ccType = TextT }
+  , CompositeColumn { ccName = "is_author_filled", ccType = BoolT }
+  , CompositeColumn { ccName = "value_text", ccType = TextT }
+  , CompositeColumn { ccName = "value_binary", ccType = BinaryT }
+  , CompositeColumn { ccName = "obligatory", ccType = BoolT }
+  , CompositeColumn { ccName = "should_be_filled_by_author", ccType = BoolT }
+  , CompositeColumn { ccName = "placements", ccType = TextT }
+  ]
+}
+
+---------------------------------
 
 tableSignatoryScreenshots :: Table
 tableSignatoryScreenshots = tblTable {

@@ -5,7 +5,6 @@ import Control.Arrow
 import Control.Concurrent.STM
 import Control.Monad
 import Control.Monad.Base
-import Control.Monad.IO.Class
 import Database.PostgreSQL.PQTypes.Internal.Connection
 import System.Directory (createDirectoryIfMissing)
 import System.Environment.UTF8
@@ -110,43 +109,45 @@ testMany (allargs, ts) = do
   pgconf <- liftBase $ BS.readFile "kontrakcja_test.conf"
   rng <- liftBase $ unsafeCryptoRNGState (BS.pack (replicate 128 0))
   templates <- liftBase $ readGlobalTemplates
+
   let connSettings = pgConnSettings pgconf
-  conn <- liftBase $ connect connSettings
-  let staticSource = ConnectionSource { withConnection = ($ conn) }
-      connSource = defaultSource connSettings
       dts = defaultTransactionSettings
-  runDBT connSource dts $ do
+  runDBT (defaultSource $ connSettings []) dts $ do
     migrateDatabase Log.mixlog_ kontraTables kontraMigrations
-    defineMany kontraFunctions
+    defineFunctions kontraFunctions
+    defineComposites kontraComposites
     commit
 
-    active_tests <- liftIO . atomically $ newTVar (True, 0)
-    rejected_documents <- liftIO . atomically $ newTVar 0
-    let env = envf $ TestEnvSt {
-          teConnSource = connSource
-        , teStaticConnSource = staticSource
-        , teTransSettings = dts
-        , teRNGState = rng
-        , teGlobalTemplates = templates
-        , teActiveTests = active_tests
-        , teRejectedDocuments = rejected_documents
-        , teOutputDirectory = Nothing
-        }
-    case teOutputDirectory env of
-      Nothing -> return ()
-      Just d  -> liftIO $ createDirectoryIfMissing True d
-    liftIO . E.finally (defaultMainWithArgs (map ($ env) ts) args) $ do
-      -- upon interruption (eg. Ctrl+C), prevent next tests in line
-      -- from running and wait until all that are running are finished.
-      atomically . modifyTVar' active_tests $ first (const False)
-      atomically $ do
-        n <- snd <$> readTVar active_tests
-        when (n /= 0) retry
-      runDBT staticSource dts { tsAutoTransaction = False } $ do
-        stats <- getConnectionStats
-        liftIO . putStrLn $ "SQL: " ++ show stats
-      rejs <- atomically (readTVar rejected_documents)
-      putStrLn $ "Documents generated but rejected: " ++ show rejs
+  staticSource <- (\conn -> ConnectionSource { withConnection = ($ conn) })
+    <$> liftBase (connect $ connSettings kontraComposites)
+
+  active_tests <- liftBase . atomically $ newTVar (True, 0)
+  rejected_documents <- liftBase . atomically $ newTVar 0
+  let env = envf $ TestEnvSt {
+        teConnSource = defaultSource $ connSettings kontraComposites
+      , teStaticConnSource = staticSource
+      , teTransSettings = dts
+      , teRNGState = rng
+      , teGlobalTemplates = templates
+      , teActiveTests = active_tests
+      , teRejectedDocuments = rejected_documents
+      , teOutputDirectory = Nothing
+      }
+  case teOutputDirectory env of
+    Nothing -> return ()
+    Just d  -> liftBase $ createDirectoryIfMissing True d
+  liftBase . E.finally (defaultMainWithArgs (map ($ env) ts) args) $ do
+    -- upon interruption (eg. Ctrl+C), prevent next tests in line
+    -- from running and wait until all that are running are finished.
+    atomically . modifyTVar' active_tests $ first (const False)
+    atomically $ do
+      n <- snd <$> readTVar active_tests
+      when (n /= 0) retry
+    runDBT staticSource dts { tsAutoTransaction = False } $ do
+      stats <- getConnectionStats
+      liftBase . putStrLn $ "SQL: " ++ show stats
+    rejs <- atomically (readTVar rejected_documents)
+    putStrLn $ "Documents generated but rejected: " ++ show rejs
 
 -- | Useful for running an individual test in ghci like so:
 --

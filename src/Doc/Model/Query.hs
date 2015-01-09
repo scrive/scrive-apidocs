@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -fno-warn-orphans -fno-warn-unused-imports #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.Model.Query
   ( isTemplate -- fromUtils
   , DocumentFilter(..)
@@ -49,7 +49,6 @@ import Doc.DocStateData
 import Doc.DocumentID
 import Doc.DocUtils
 import Doc.Model.Domain
-import Doc.Model.Expressions
 import Doc.Model.Filter
 import Doc.Model.OrderBy
 import Doc.Screenshot
@@ -63,7 +62,6 @@ import User.Email
 import User.Model
 import qualified Amazon
 import qualified Log
-import Debug.Trace
 
 data GetSignatoryScreenshots = GetSignatoryScreenshots [SignatoryLinkID]
 instance (MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, Amazon.AmazonMonad m) => DBQuery m GetSignatoryScreenshots [(SignatoryLinkID, SignatoryScreenshots)] where

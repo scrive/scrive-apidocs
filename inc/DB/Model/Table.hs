@@ -1,8 +1,6 @@
 {-# LANGUAGE ExistentialQuantification #-}
 module DB.Model.Table (
-    ColumnType(..)
-  , columnTypeToSQL
-  , TableColumn(..)
+    TableColumn(..)
   , tblColumn
   , sqlAddColumn
   , sqlAlterColumn
@@ -15,67 +13,16 @@ module DB.Model.Table (
   ) where
 
 import Data.ByteString (ByteString)
-import Data.Char
 import Data.Int
 import Data.Monoid.Space
 import Data.Monoid.Utils
 import Database.PostgreSQL.PQTypes
 
 import DB.Model.Check
+import DB.Model.ColumnType
 import DB.Model.ForeignKey
 import DB.Model.Index
 import DB.Model.PrimaryKey
-
-data ColumnType
-  = BigIntT
-  | BigSerialT
-  | BinaryT
-  | BoolT
-  | DateT
-  | DoubleT
-  | IntegerT
-  | IntervalT
-  | SmallIntT
-  | TextT
-  | VarCharT -- for compatibility, do not use this
-  | TimestampWithZoneT
-  deriving (Eq, Show)
-
-instance PQFormat ColumnType where
-  pqFormat _ = pqFormat (undefined::String)
-instance FromSQL ColumnType where
-  type PQBase ColumnType = PQBase String
-  fromSQL mbase = do
-    t <- fromSQL mbase
-    case map toLower t of
-      "bigint" -> return BigIntT
-      "bytea" -> return BinaryT
-      "boolean" -> return BoolT
-      "date" -> return DateT
-      "double precision" -> return DoubleT
-      "integer" -> return IntegerT
-      "interval" -> return IntervalT
-      "smallint" -> return SmallIntT
-      "text" -> return TextT
-      "character varying" -> return VarCharT
-      "timestamp with time zone" -> return TimestampWithZoneT
-      _ -> hpqTypesError $ "Unknown data type: " ++ t
-
-columnTypeToSQL :: ColumnType -> RawSQL ()
-columnTypeToSQL BigIntT = "BIGINT"
-columnTypeToSQL BigSerialT = "BIGSERIAL"
-columnTypeToSQL BinaryT = "BYTEA"
-columnTypeToSQL BoolT = "BOOLEAN"
-columnTypeToSQL DateT = "DATE"
-columnTypeToSQL DoubleT = "DOUBLE PRECISION"
-columnTypeToSQL IntegerT = "INTEGER"
-columnTypeToSQL IntervalT = "INTERVAL"
-columnTypeToSQL SmallIntT = "SMALLINT"
-columnTypeToSQL TextT = "TEXT"
-columnTypeToSQL VarCharT = "VARCHAR"
-columnTypeToSQL TimestampWithZoneT = "TIMESTAMPTZ"
-
-----------------------------------------
 
 data TableColumn = TableColumn {
   colName     :: RawSQL ()
