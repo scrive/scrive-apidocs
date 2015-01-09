@@ -14,7 +14,8 @@ var List = React.createClass({
       // New ListModel will fetch data from server, and this is never what you want to do.
     },
     stateFromProps : function(props) {
-      var model = new ListModel({
+      // This component will create if own model, unless ListModel is directly provided
+      var model = this.props.model || new ListModel({
         url : props.url,
         dataFetcher : props.dataFetcher,
         idFetcher : props.idFetcher,
@@ -25,7 +26,10 @@ var List = React.createClass({
     },
     mixins: [BackboneMixin.BackboneMixin],
     getBackboneModels : function() {
-      return [this.state.model];
+      if (this.props.externalModel)
+        return [];
+      else
+        return [this.state.model];
     },
     ready: function() {
       return this.state.model.ready();

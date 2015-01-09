@@ -81,16 +81,16 @@ window.AuthorViewFirstTime = {
 
         ctacontainer.append($('<h4 class="explore-more"></h4>').text(localization.authorview.firsttime.tryYourself));
 
-        ctacontainer.append(new Button({color: 'green', size: 'big', text: localization.authorview.firsttime.upload, onClick: function() { 
+        ctacontainer.append(new Button({ type: "action", size: 'big', text: localization.authorview.firsttime.upload, onClick: function() {
           window.location.pathname = '/newdocument';
         }}).el());
-        ctacontainer.append(new Button({color: 'black', size: 'big', text: localization.authorview.firsttime.contact, cssClass: 'contact', onClick: function() {
+        ctacontainer.append(new Button({size: 'big', text: localization.authorview.firsttime.contact, cssClass: 'contact', onClick: function() {
           mixpanel.track('FTUE Authorview contact clicked');
           var newContact = $('<h5 class="contact"></h5>').html(localization.authorview.firsttime.contactdetails);
           newContact.find('.put-link-to-mail-viktor-here').attr('href', 'viktor@scrive.com');
           ctacontainer.find('.button.contact').replaceWith(newContact);
         }}).el());
-        ctacontainer.append(new Button({color: 'black', size: 'big', text: localization.authorview.firsttime.branding, onClick: function() {
+        ctacontainer.append(new Button({ size: 'big', text: localization.authorview.firsttime.branding, onClick: function() {
           window.location.href = '/account#branding-email';
         }}).el());
 

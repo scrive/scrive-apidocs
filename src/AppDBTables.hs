@@ -29,6 +29,7 @@ import OAuth.Tables
 import Payments.Tables
 import Session.Tables
 import SMS.Tables
+import Theme.Tables
 import ThirdPartyStats.Tables
 import User.CallbackScheme.Tables
 import User.History.Tables
@@ -58,6 +59,7 @@ kontraFunctions = [
 kontraTables :: [Table]
 kontraTables =
   [ tableCompanies
+  , tableThemes
   , tableBrandedDomains
   , tableUsers
   , tableUsersHistory
@@ -96,6 +98,7 @@ kontraTables =
   , tableDocumentAutomaticReminders
   , tableSignatorySMSPins
   , tableChargeableItems
+  , tableThemeOwnership
   ] ++ cronTables
     ++ mailerTables
     ++ messengerTables

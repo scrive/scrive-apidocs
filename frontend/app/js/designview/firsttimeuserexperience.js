@@ -60,7 +60,7 @@ var FirstTimeUserExperienceView = Backbone.View.extend({
 
             // Create some buttons that will go in the step explanation.
             var addYourselfButton = new Button({
-                color: 'green',
+                type: 'action',
                 text: localization.ftue.addYourself,
                 onClick: function() {
                     // In normal circumstances, you can't add yourself, and you're not supposed to.
@@ -76,7 +76,7 @@ var FirstTimeUserExperienceView = Backbone.View.extend({
             });
 
             var addAScriverButton = new Button({
-                color: 'green',
+                type: 'action',
                 text: localization.ftue.addAScriver,
                 onClick: function() {
                     mixpanel.track('Click add signatory', {'ftuebutton': 'Add someone at Scrive'});
@@ -202,7 +202,7 @@ var FirstTimeUserExperienceView = Backbone.View.extend({
         this.previewSampleDocument.empty();
 
         var button = new Button({
-            color: 'green',
+            type: 'action',
             size: 'big',
             text: localization.ftue.useSampleDocument,
             style: 'width: 202px',

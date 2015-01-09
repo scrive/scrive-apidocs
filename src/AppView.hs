@@ -2,8 +2,8 @@
 {- |
    Defines the App level views.
 -}
-module AppView( kontrakcja
-              , renderFromBody
+module AppView(
+                renderFromBody
               , renderFromBodyWithFields
               , renderFromBodyThin
               , notFoundPage
@@ -17,26 +17,22 @@ module AppView( kontrakcja
               , unsupportedBrowserPage
               , standardPageFields
               , contextInfoFields
-              , renderTemplateAsPage
               , localizationScript
-              , brandingFields
               , companyForPage
               , companyUIForPage
               , handleTermsOfService
               , enableCookiesPage
-              , brandedLogo
-              , brandedLogoWithMD5
               ) where
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Catch
 import Data.Char
 import Data.Maybe
 import Data.String.Utils hiding (join)
 import Happstack.Server.SimpleHTTP
 import Text.JSON
 import Text.StringTemplates.Templates
-import qualified Crypto.Hash.MD5 as MD5
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Lazy as BSL
@@ -52,21 +48,14 @@ import Company.Model
 import DB
 import FlashMessage
 import Kontra
-import KontraLink
 import ThirdPartyStats.Core
 import User.Lang
 import User.Model
+import Utils.Monoid
 import Utils.HTTP
 import Version
 import qualified Log
-
-{- |
-   The name of our application (the codebase is known as kontrakcja,
-   and this is the pretty public name)
--}
-kontrakcja :: String
-kontrakcja = "Scrive"
-
+import Branding.MD5
 -- * Main Implementation
 
 {- |
@@ -74,9 +63,8 @@ kontrakcja = "Scrive"
 -}
 renderFromBody :: Kontrakcja m
                => String
-               -> String
                -> m Response
-renderFromBody title content = renderFromBodyWithFields title content (return ())
+renderFromBody content = renderFromBodyWithFields content (return ())
 
 
 {- |
@@ -84,13 +72,12 @@ renderFromBody title content = renderFromBodyWithFields title content (return ()
 -}
 renderFromBodyWithFields :: Kontrakcja m
                => String
-               -> String
                -> Fields m ()
                -> m Response
-renderFromBodyWithFields title content fields = do
+renderFromBodyWithFields content fields = do
   ctx <- getContext
   ad <- getAnalyticsData
-  res <- simpleHtmlResponse =<< pageFromBody False ctx ad title content fields
+  res <- simpleHtmlResponse =<< pageFromBody False ctx ad content fields
   clearFlashMsgs
   return res
 
@@ -100,12 +87,11 @@ renderFromBodyWithFields title content fields = do
 -}
 renderFromBodyThin :: Kontrakcja m
                => String
-               -> String
                -> m Response
-renderFromBodyThin title content = do
+renderFromBodyThin content = do
   ctx <- getContext
   ad <- getAnalyticsData
-  res <- simpleHtmlResponse =<< pageFromBody True ctx ad title content (return ())
+  res <- simpleHtmlResponse =<< pageFromBody True ctx ad content (return ())
   clearFlashMsgs
   return res
 
@@ -117,18 +103,15 @@ pageFromBody :: Kontrakcja m
              -> Context
              -> AnalyticsData
              -> String
-             -> String
              -> Fields m ()
              -> m String
-pageFromBody thin ctx ad title bodytext fields = do
+pageFromBody thin ctx ad bodytext fields = do
   mcompanyui <- companyUIForPage
-  mbd <- return $ ctxbrandeddomain ctx
   renderTemplate "wholePage" $ do
     F.value "content" bodytext
     F.value "thin" thin
-    standardPageFields ctx title ad
+    standardPageFields ctx mcompanyui ad
     F.valueM "httplink" $ getHttpHostpart
-    brandingFields mbd mcompanyui
     fields
 
 companyForPage  :: Kontrakcja m => m (Maybe Company)
@@ -145,36 +128,27 @@ companyUIForPage = do
        Just User{usercompany = cid} -> Just <$> (dbQuery $ GetCompanyUI cid)
        _ -> return Nothing
 
-brandingFields ::  Kontrakcja m => Maybe BrandedDomain -> Maybe CompanyUI -> Fields m ()
-brandingFields mbd mcompanyui = do
-  F.value "customlogo" $ (isJust mbd) || (isJust $ (join $ companycustomlogo <$> mcompanyui))
-  F.value "customlogolink" $ if (isJust $ (join $ companycustomlogo <$> mcompanyui))
-                                then show <$> LinkCompanyCustomLogo <$> companyuicompanyid <$> mcompanyui
-                                else if (isJust $ join $ bdlogo <$> mbd)
-                                      then return $ show $ LinkBrandedDomainLogo
-                                      else Nothing
-  F.value "custombarscolour" $ mcolour bdbarscolour companycustombarscolour
-  F.value "custombarstextcolour" $ mcolour bdbarstextcolour companycustombarstextcolour
-  F.value "custombarshighlightcolour" $ mcolour bdbarssecondarycolour companycustombarssecondarycolour
-  F.value "customsignviewprimarycolour" $ mcolour bdsignviewprimarycolour companysignviewprimarycolour
-  F.value "customsignviewprimarytextcolour" $ mcolour bdsignviewprimarytextcolour companysignviewprimarytextcolour
-  F.value "customsignviewsecondarycolour" $ mcolour bdsignviewsecondarycolour companysignviewsecondarycolour
-  F.value "customsignviewsecondarytextcolour" $ mcolour bdsignviewsecondarytextcolour companysignviewsecondarytextcolour
-  F.value "custombackground" $ mcolour bdbackgroundcolour companycustombackgroundcolour
-  F.value "customdomainbdbuttonclass" $ bdbuttonclass <$> mbd
-  F.value "customservicelinkcolour" $ bdservicelinkcolour <$> mbd
-  F.value "customexternaltextcolour" $ bdexternaltextcolour <$> mbd
-  F.value "hasbrandeddomain" $ isJust mbd
- where
-   mcolour df cuf =  (join $ cuf <$> mcompanyui) `mplus` (df <$> mbd)
-
-
 notFoundPage :: Kontrakcja m => m Response
-notFoundPage = pageWhereLanguageCanBeInUrl $ renderTemplate_ "notFound" >>= renderFromBody kontrakcja
+notFoundPage = pageWhereLanguageCanBeInUrl $ do
+  ctx <- getContext
+  ad <- getAnalyticsData
+  content <- if (bdMainDomain (ctxbrandeddomain ctx)||  isJust (ctxmaybeuser ctx))
+   then renderTemplate "notFound" $ do
+                    standardPageFields ctx Nothing ad
+   else renderTemplate "notFoundWithoutHeaders" $ do
+                    standardPageFields ctx Nothing ad
+  simpleHtmlResonseClrFlash content
 
 internalServerErrorPage :: Kontrakcja m => m Response
-internalServerErrorPage = pageWhereLanguageCanBeInUrl $ renderTemplate_ "internalServerError" >>= renderFromBody kontrakcja
-
+internalServerErrorPage =  pageWhereLanguageCanBeInUrl $ do
+  ctx <- getContext
+  ad <- getAnalyticsData
+  content <- if (bdMainDomain (ctxbrandeddomain ctx)||  isJust (ctxmaybeuser ctx))
+   then renderTemplate "internalServerError" $ do
+                    standardPageFields ctx Nothing ad
+   else renderTemplate "internalServerErrorWithoutHeaders" $ do
+                    standardPageFields ctx Nothing ad
+  simpleHtmlResonseClrFlash content
 
 pageWhereLanguageCanBeInUrl :: Kontrakcja m => m Response -> m Response
 pageWhereLanguageCanBeInUrl handler = do
@@ -187,20 +161,13 @@ pageWhereLanguageCanBeInUrl handler = do
 priceplanPage :: Kontrakcja m => m Response
 priceplanPage = do
   ctx <- getContext
-  case ctxbrandeddomain ctx of
-       Nothing -> renderTemplate_ "priceplanPage" >>= renderFromBody kontrakcja
-       Just bd -> do
-          ad <- getAnalyticsData
-          content <- renderTemplate "priceplanPageWithBranding" $ do
-            F.value "background" $ bdbackgroundcolorexternal $ bd
-            F.value "buttoncolorclass" $ bdbuttonclass bd
-            F.value "headercolour" $ bdheadercolour bd
-            F.value "textcolour" $ bdtextcolour bd
-            F.value "pricecolour" $ bdpricecolour bd
-            F.value "externaltextcolour" $ bdexternaltextcolour bd
-            F.value "linkcolour" $  bdservicelinkcolour bd
-            standardPageFields ctx kontrakcja ad
-          simpleHtmlResonseClrFlash content
+  ad <- getAnalyticsData
+  if( bdMainDomain $ ctxbrandeddomain ctx)
+  then do
+    content <- renderTemplate "priceplanPage" $ do
+      standardPageFields ctx Nothing ad
+    simpleHtmlResonseClrFlash content
+  else respond404
 
 unsupportedBrowserPage :: Kontrakcja m => m Response
 unsupportedBrowserPage = do
@@ -218,52 +185,41 @@ enableCookiesPage = do
       -- there are still no cookies, client probably disabled them
       mixpanel "Enable cookies page load"
       ctx <- getContext
-      simpleHtmlResponse =<< renderTemplateAsPage ctx "enableCookies" False (return ())
+      ad <- getAnalyticsData
+      content <- renderTemplate "enableCookies" $ do
+        standardPageFields ctx Nothing ad
+      simpleHtmlResponse content
     _ -> do
       -- there are some cookies after all, so no point in telling them to enable them
       mixpanel "Enable cookies page load attempt with cookies"
       -- internalServerError is a happstack function, it's not our internalError
       -- this will not rollback the transaction
-      pageWhereLanguageCanBeInUrl $ renderTemplate_ "sessionTimeOut" >>= renderFromBody kontrakcja >>= internalServerError
+      pageWhereLanguageCanBeInUrl $ renderTemplate_ "sessionTimeOut" >>= renderFromBody >>= internalServerError
 
 handleTermsOfService :: Kontrakcja m => m Response
 handleTermsOfService = withAnonymousContext $ do
   ctx <- getContext
-  case ctxbrandeddomain ctx of
-       Nothing -> renderTemplate_ "termsOfService" >>= renderFromBody kontrakcja
-       Just bd -> do
-          ad <- getAnalyticsData
-          content <- renderTemplate "termsOfServiceWithBranding" $ do
-            F.value "background" $ bdbackgroundcolorexternal $ bd
-            F.value "buttoncolorclass" $ bdbuttonclass bd
-            F.value "headercolour" $ bdheadercolour bd
-            F.value "textcolour" $ bdtextcolour bd
-            F.value "pricecolour" $ bdpricecolour bd
-            standardPageFields ctx kontrakcja ad
-          simpleHtmlResonseClrFlash content
-
-{- |
-    Render a template as an entire page.
--}
-renderTemplateAsPage :: Kontrakcja m => Context -> String -> Bool -> (Fields m ()) -> m String
-renderTemplateAsPage ctx templateName showCreateAccount f = do
   ad <- getAnalyticsData
-  renderTemplate templateName $ do
-    contextInfoFields ctx
-    F.value "langcode" $ codeFromLang $ ctxlang ctx
-    F.value "showCreateAccount" $ showCreateAccount && (isNothing $ ctxmaybeuser ctx)
-    F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
-    F.object "analytics" $ analyticsTemplates ad
-    f
+  content <- if (bdMainDomain $ ctxbrandeddomain ctx)
+                then do
+                  renderTemplate "termsOfService" $ do
+                    standardPageFields ctx Nothing ad
+                else do
+                  renderTemplate "termsOfServiceWithBranding" $ do
+                    standardPageFields ctx Nothing ad
+  simpleHtmlResonseClrFlash content
 
-standardPageFields :: TemplatesMonad m => Context -> String -> AnalyticsData -> Fields m ()
-standardPageFields ctx title ad = do
-  F.value "title" title
+standardPageFields :: (TemplatesMonad m, MonadDB m, MonadThrow m) => Context -> Maybe CompanyUI -> AnalyticsData -> Fields m ()
+standardPageFields ctx mcompanyui ad = do
   F.value "langcode" $ codeFromLang $ ctxlang ctx
   contextInfoFields ctx
   F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
   F.object "analytics" $ analyticsTemplates ad
   F.value "homebase" $ ctxhomebase ctx
+  F.valueM "brandinghash" $ brandingMD5 ctx mcompanyui
+  F.value "title" $ case (join$ nothingIfEmpty <$> strip <$> (join $ companyBrowserTitle <$> mcompanyui)) of
+                      Just ctitle -> ctitle ++ " - " ++ (bdBrowserTitle $ ctxbrandeddomain ctx)
+                      Nothing -> (bdBrowserTitle $ ctxbrandeddomain ctx)
 
 -- Official documentation states that JSON mime type is
 -- 'application/json'. IE8 for anything that starts with
@@ -312,6 +268,7 @@ respondWithPDF forceDownload contents =
 contextInfoFields :: TemplatesMonad m => Context -> Fields m ()
 contextInfoFields ctx@Context{ ctxlang } = do
   F.value "logged" $ isJust (ctxmaybeuser ctx)
+  F.value "padlogged" $ isJust (ctxmaybepaduser ctx)
   F.objects "flashmessages" $ map flashMessageFields $ ctxflashmessages ctx
   F.value "hostpart" $ ctxhostpart ctx
   F.value "resourcehostpart" $ ctxresourcehostpart ctx
@@ -322,9 +279,8 @@ contextInfoFields ctx@Context{ ctxlang } = do
 flashMessageFields :: (Monad m) => FlashMessage -> Fields m ()
 flashMessageFields flash = do
   F.value "type" $  case flashType flash of
-    SigningRelated  -> "blue"
-    OperationDone   -> "green"
-    OperationFailed -> "red"
+    OperationDone   -> ("success" :: String)
+    OperationFailed -> ("error" :: String)
   F.value "message" $ replace "\"" "'" $ filter (not . isControl) $ flashMessage flash
 
 localizationScript :: Kontrakcja m => String -> m Response
@@ -332,22 +288,3 @@ localizationScript _ = do
    Context{ctxlang} <- getContext
    script <- renderTemplate "javascriptLocalisation" $ F.value "code" $ codeFromLang ctxlang
    ok $ toResponseBS (BS.fromString "text/javascript;charset=utf-8") $ BSL.fromString script
-
--- | This servers branded logo. It allows smart caching/
--- | /branding/logo is not cached, and redirects to /branding/logo/$MD5$
--- |  /branding/logo/$MD5$ is cached.
-brandedLogo :: Kontrakcja m => m KontraLink
-brandedLogo = do
-  mbdlogo <- join <$> fmap bdlogo <$> ctxbrandeddomain <$> getContext
-  case mbdlogo of
-    Nothing -> return $ LinkMainLogo
-    Just l  -> return $ LinkBrandedDomainLogoWithMD5 $ BS.toString $ B16.encode $ MD5.hash $ unBinary l
-
-brandedLogoWithMD5 :: Kontrakcja m => String  -> m Response
-brandedLogoWithMD5 _ = do
-  mbdlogo <- join <$> fmap bdlogo <$> ctxbrandeddomain <$> getContext
-  case mbdlogo of
-    Nothing -> respond404
-    Just l  -> do
-      return $ setHeaderBS "Cache-Control" "max-age=31536000" $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") $
-        Response 200 Map.empty nullRsFlags (BSL.fromChunks $ [unBinary l]) Nothing

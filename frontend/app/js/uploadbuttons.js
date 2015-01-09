@@ -81,6 +81,9 @@ var UploadButtonModel = Backbone.Model.extend({
   type : function() {
         return this.get("type");
   },
+  fileType : function() {
+        return this.get("fileType");
+  },
   color : function() {
         return this.get("color");
   },
@@ -119,11 +122,11 @@ var UploadButtonView = Backbone.View.extend({
         var model = this.model;
         var button = model.button();
         if (!button) {
-            button = new Button({size: model.size(), color: model.color(), shape : model.shape(), width: model.width(), text: model.text(), style: model.style(), customcolor: model.customcolor(), textcolor: model.textcolor(), onClick : function() {return false;}}).el();
+            button = new Button({size: model.size(), type: model.type(), shape : model.shape(), width: model.width(), text: model.text(), style: model.style(), customcolor: model.customcolor(), textcolor: model.textcolor(), onClick : function() {return false;}}).el();
         }
         var fileinput = $("<input class='multiFileInput' type='file'/>");
-        if (model.type() != "")
-            fileinput.attr("accept",model.type());
+        if (model.fileType() != "")
+            fileinput.attr("accept",model.fileType());
         fileinput.attr("maxlength",model.maxlength());
         fileinput.attr("name",model.name());
 
@@ -147,7 +150,7 @@ var UploadButtonView = Backbone.View.extend({
                 var lasttype = splittype[splittype.length - 1].toUpperCase();
                 var msg = $("<span>" + localization.onlyFiletypeAllowed + "</span>");
                 msg.find('.put-filetype').text(lasttype);
-                new FlashMessage({content: msg, color: "red"});
+                new FlashMessage({content: msg, type: 'error'});
                 if (model.get('onError'))
                     model.get('onError')(a,b,c,d);
             },

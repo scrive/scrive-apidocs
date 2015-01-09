@@ -120,7 +120,7 @@ return React.createClass({
       return (
         <div className="custommessageeditor">
           <div className='label'>{this.props.label}</div>
-          <a   className='preview float-right clickable' onClick={this.handlePreview}>{this.props.previewLabel}</a>
+          <a   className='preview float-right' onClick={this.handlePreview}>{this.props.previewLabel}</a>
           <div className='clearfix'/>
           <div className={"custommessageeditboxwrapper "+ (!this.props.editable ? "disabled" : "")}>
             <textarea id={this.props.id}

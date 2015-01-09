@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React','common/backbone_mixin','common/button','common/infotextinput', 'login/loginmodel' ,'legacy_code'], function(React, BackboneMixin, Button, InfoTextInput, LoginModel) {
+define(['React','common/backbone_mixin','common/button','common/infotextinput', 'login/loginmodel','pages/languageselect','legacy_code'], function(React, BackboneMixin, Button, InfoTextInput, LoginModel, LanguageSelect) {
 
 
 return React.createClass({
@@ -10,11 +10,6 @@ return React.createClass({
     },
     propTypes: {
       model: React.PropTypes.object
-    },
-    toLinkWithColor : function(text) {
-      var res = $("<div>" + text + "</div>");
-      $("a",res).css("color",this.props.model.servicelinkcolour());
-      return res.html();
     },
     textWithLink : function(text,link) {
       var res = $("<div>" + text + "</div>");
@@ -29,22 +24,17 @@ return React.createClass({
       var model = this.props.model;
 
       return (
-        <div style={{"width":"275px","margin" : "20px auto"}}>
-          <div style={{marginBottom: "50px", marginTop: "50px", textAlign: "center"}} >
-            <img alt='logo' src="/branding/logo" />
+        <div className="login-box" style={{"width":"275px","margin" : "20px auto"}}>
+          <div style={{marginBottom: "20px", marginTop: "50px", textAlign: "center"}} >
+            <img alt='logo' src={"/login_logo/" + window.brandinghash} />
             <div className='divider-line'/>
-            <label style={{"textAlign":"center", "width":"275px", color : model.textscolour()}}>
+            <label style={{"textAlign":"center", "width":"275px"}}>
               {localization.esigningpoweredbyscrive}
             </label>
           </div>
           <div>
             <div>
-              <div className='position first' style={{textAlign: "left", height: "30px"}} >
-                <label style={{paddingLeft: "10px", color : model.textscolour()}}>
-                  {localization.login + ":"}
-                </label>
-              </div>
-              <div className='position' style={{marginBottom:"6px"}}>
+              <div className='position first' style={{marginBottom:"6px"}}>
                 <InfoTextInput
                   infotext={localization.loginModal.email}
                   value={model.email()}
@@ -68,21 +58,14 @@ return React.createClass({
                   onEnter={this.tryLogin}
                   style={{width : "245px", padding : "7px 14px", fontSize : "16px" }}
                   focus={!(model.email() == undefined || model.email() == "") && model.autofocus()}
+                  buttonTitle="Forgot?"
+                  onClick={function(){ model.toogleView();}}
                 />
               </div>
-              <div className='position' style={{textAlign:"left",height:"30px"}}>
-                <div style={{display:"inline-block",width:"224px",textAlign:"left",verticalAlign: "bottom", marginLeft: "4px"}}>
-                  <label className="s-forgot-password"
-                         style={{borderBottom: "1px solid #999999",color:"#999999",fontStyle:"italic",fontSize:"10px",lineHeight: "12px", color: model.textscolour()}}
-                         onClick={function(){ model.toogleView();}}
-                  >
-                   {localization.loginModal.forgotpassword}
-                  </label>
-                </div>
-              </div>
-              <div className="position" style={{textAlign:"center"}}>
+
+              <div className="position" style={{textAlign:"center",marginTop:"20px"}}>
                 <Button
-                  color={model.buttoncolorclass()}
+                  type="main"
                   text={localization.loginModal.login}
                   style={{"width":"235px;"}}
                   onClick={this.tryLogin}
@@ -91,15 +74,19 @@ return React.createClass({
               {/*if*/ (!model.nolinks()) &&
                 <div className='position' style={{textAlign:"center",marginTop:"20px"}}>
                   <label className='label-with-link'
-                        style={{color:model.textscolour()}}
-                        dangerouslySetInnerHTML={{__html: this.toLinkWithColor(this.textWithLink(localization.loginModal.dontHaveAccount,'/signup'))}}
-                  />
-                  <label className='label-with-link'
-                        style={{color:model.textscolour()}}
-                        dangerouslySetInnerHTML={{__html: this.toLinkWithColor(this.textWithLink(localization.visitOurPricingPage,'/pricing'))}}
+                        dangerouslySetInnerHTML={{__html: this.textWithLink(localization.loginModal.dontHaveAccount,"/" + localization.code + '/signup')}}
                   />
                 </div>
               }
+            </div>
+            <div className="position" style={{textAlign:"center",marginTop:"20px",width: "200px", marginRight: "auto", marginLeft: "auto"}}>
+              <LanguageSelect
+                langprefix={model.langprefix()}
+                border=""
+                cssClass="change-language-for-login"
+                optionsWidth="198px"
+                textWidth={171}
+              />
             </div>
           </div>
         </div>

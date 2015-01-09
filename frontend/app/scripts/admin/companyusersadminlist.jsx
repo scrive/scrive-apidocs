@@ -88,7 +88,7 @@ var openNewUserModal = function(companyid,callback) {
             confirmation.close();
             callback();
           } else {
-            new FlashMessage({color: 'red', content: resp.error_message});
+            new FlashMessage({type: 'error', content: resp.error_message});
           }
         };
         new Submit({
@@ -124,7 +124,7 @@ return React.createClass({
               return false;
             },
             ajaxerror: function() {
-              new FlashMessage({color: "red", content : "Failed"});
+              new FlashMessage({type: 'error', content : "Failed"});
               return false;
             }
           }).sendAjax();
@@ -145,7 +145,7 @@ return React.createClass({
 
          <List.ListAction
             name="Add new user in company"
-            color="green"
+            type="action"
             size="tiny"
             onSelect={function() {
              openNewUserModal(self.props.companyid, function() {self.reload();});

@@ -91,14 +91,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             createdUser: false,
             accountCreated: false,
             currentPlan: 'team',
-            header: localization.payments.subscribeheader,
-            buttoncolorclass: null,
-            headercolour: null,
-            textcolour: null,
-            pricecolour: null,
-            linkcolour : null,
-            externaltextcolor : null,
-            includeenterprise: true
+            header: localization.payments.subscribeheader
         },
         reset: function() {
             if(this.get('firstName'))
@@ -162,24 +155,6 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         },
         subdomain: function() {
             return this.get('subdomain');
-        },
-        buttoncolorclass: function() {
-            return this.get('buttoncolorclass');
-        },
-        headercolour: function() {
-            return this.get('headercolour');
-        },
-        textcolour: function() {
-            return this.get('textcolour');
-        },
-        externaltextcolor : function() {
-            return this.get('externaltextcolor');
-        },
-        linkcolour : function() {
-            return this.get('linkcolour');
-        },
-        pricecolour: function() {
-            return this.get('pricecolour');
         },
         currentPlan: function() {
             return this.get('currentPlan');
@@ -270,9 +245,6 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         url: function() {
             return "/payments/pricepageinfo";
         },
-        includeenterprise: function() {
-            return this.get('includeenterprise');
-        },
         createaccount: function(email, firstname, lastname, callback) {
             var model = this;
             $.ajax('/api/frontend/signup',
@@ -337,33 +309,21 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             var features = $('<div class="features" />');
 
             var titleheader = $('<h4 />').text(localization.payments.plans[view.plan].name);
-            if (model.headercolour()) {
-              titleheader.css('color', model.headercolour());
-            }
             var titlesubtext = $('<p />').html(localization.payments.plans[view.plan].tag);
-            if (model.textcolour()) {
-              titlesubtext.css('color', model.textcolour());
-            }
             var title = $('<div class="title" />')
                 .append(titleheader)
                 .append(titlesubtext);
             features.append(title);
 
             var price = $('<span class="price" />').html(localization.payments.plans[view.plan].price);
-            if (model.pricecolour()) {
-              price.css('color', model.pricecolour());
-            }
             var priceinfo = $('<p />').text(localization.payments.plans[view.plan].price3);
-            if (model.textcolour()) {
-              priceinfo.css('color', model.textcolour());
-            }
             var cost = $('<div class="cost" />')
                 .append(price)
                 .append(priceinfo);
 
             features.append(cost);
 
-            var button = $('<a class="button button-green action-sign-up" />')
+            var button = $('<a class="button action action-sign-up" />')
                 .append($('<span class="blue" />')
                         .text(localization.payments.contact))
                 .append($('<span class="gray" />')
@@ -424,7 +384,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
             var submit = $('<li class="field submit" />');
             submit.append($('<div class="input" />')
-                          .append($('<input type="submit" id="input-submit" class="button button-green" />')
+                          .append($('<input type="submit" id="input-submit" class="button action" />')
                                   .val(localization.payments.sendmsg)));
             ul.append(submit);
 
@@ -463,13 +423,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             var features = $('<div class="features" />');
 
             var titleheader = $('<h4 />').text(localization.payments.plans[view.plan].name);
-            if (model.headercolour()) {
-              titleheader.css('color', model.headercolour());
-            }
             var titlesubtext = $('<p />').html(localization.payments.plans[view.plan].tag);
-            if (model.textcolour()) {
-              titlesubtext.css('color', model.textcolour());
-            }
             var title = $('<div class="title" />')
                 .append(titleheader)
                 .append(titlesubtext);
@@ -477,20 +431,14 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             features.append(title);
 
             var price = $('<span class="price" />').html(localization.payments.plans[view.plan].price);
-            if (model.pricecolour()) {
-              price.css('color', model.pricecolour());
-            }
             var priceinfo = $('<p />').text(localization.payments.plans[view.plan].price3);
-            if (model.textcolour()) {
-              priceinfo.css('color', model.textcolour());
-            }
             var cost = $('<div class="cost" />')
                 .append(price)
                 .append(priceinfo);
 
             features.append(cost);
 
-            var button = $('<a class="button button-green action-sign-up" />')
+            var button = $('<a class="button action action-sign-up" />')
                 .append($('<span class="blue" />')
                         .text(localization.payments.purchase))
                 .append($('<span class="gray" />')
@@ -615,8 +563,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             };
             var loadingicon = $('<img src="/libs/recurly/images/submitting.gif" class="loading-icon" style="display:none" />');
             // replace button with our own
-            var button = new Button({color:'green',
-                                      //size:'big',
+            var button = new Button({ type : 'action',
                                       cssClass:'s-subscribe',
                                       text:localization.payments.subscribe,
                                       icon: loadingicon,
@@ -852,39 +799,25 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                                                      onClick: function() {
                                                          mixpanel.track('Click enterprise plan');
                                                      }});
-            this.noheaders = args.noheaders;
             //this.recurlyForm = new RecurlyView({model: args.model, hideContacts: args.hideContacts});
             view.model.bind('fetch', this.render);
-        },
-        fixlinkstyle: function() {
-          if (this.model.pricecolour()) {
-            $('.stylablelink').css('color', this.model.linkcolour());
-          }
         },
         render: function() {
             var view = this;
             var model = view.model;
             var div = $('<div />'); // container div
 
-            view.fixlinkstyle();
 
             var header = $('<header />')
                 .append($('<h1 />').text(model.header()))
                 .append($('<h4 />').text(''));
 
 
-            if (!this.noheaders)
-              div.append(header);
+            div.append(header);
 
             div.append(view.teamBox.el)
-                .append(view.formBox.el);
-            if (model.includeenterprise()) {
-                div.append(view.enterpriseBox.el);
-            } else {
-                var dummyspacing = $('<div style="" class="plan-container enterprise"/>');
-                dummyspacing.css('width', '160px');
-                div.prepend(dummyspacing);
-            }
+                .append(view.formBox.el)
+                .append(view.enterpriseBox.el);
 
             div.append($('<div class="clearfix" />'));
             div.append($('<div class="vat-box" />').text(localization.payments.vat));
@@ -1061,7 +994,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                  beforeInject: function(el) {
                      el = $(el);
                      var work = true;
-                     var button = new Button({color:'green',
+                     var button = new Button({ type : 'action',
                                                size:'small',
                                                text:localization.payments.savechanges,
                                                onClick: function() {
@@ -1088,7 +1021,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                      model.fetch({success: function() {
                          LoadingDialog.close();
                          model.trigger('fetch');
-                         new FlashMessage({ content: localization.payments.billingInfoSaved, color: "green"});
+                         new FlashMessage({ content: localization.payments.billingInfoSaved, type: 'success'});
                      }});
                  },
                  onError: function() {
@@ -1138,7 +1071,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                                                 model.trigger('fetch');
                                                 var message_content = $('<span>' + localization.blocking.willcancel.headline + '</span>');
                                                 $('.put-days-left-here', message_content).text(Math.ceil(moment.duration(model.subscription().billingEnds() - moment()).asDays()));
-                                                new FlashMessage({color: 'green', content: message_content});
+                                                new FlashMessage({type: 'success', content: message_content});
 						model.trigger('subscriptionCancelled');
                                             }});
                                         },
@@ -1195,7 +1128,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
             var price = model.quantity() * 299 + "kr";
 
-            var button = new Button({color:'green',
+            var button = new Button({ type : 'action',
                                       size: 'small',
                                       cssClass: 'renew-button',
                                       text: localization.payments.renewSubscription,
@@ -1215,7 +1148,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                                                                       model.fetch({success:function() {
                                                                           LoadingDialog.close();
                                                                           model.trigger('fetch');
-                                                                          new FlashMessage({color:'green', content: localization.payments.subscriptionRenewed });
+                                                                          new FlashMessage({type: 'success', content: localization.payments.subscriptionRenewed });
                                                                           view.unbind();
                                                                           view.remove();
                                                                       }});

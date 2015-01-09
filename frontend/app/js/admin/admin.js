@@ -1,6 +1,6 @@
 /* Main admin only site definition. Its a tab based set of different lists.
  * This is the entry point for /adminonly/. */
-define(['React','admin/brandeddomainslist','admin/companiesadminlist','admin/usersadminlist','admin/documentslist','Backbone', 'legacy_code'], function(React,BrandedDomainsList,CompaniesAdminList,UsersAdminList,DocumentsList) {
+define(['React','admin/brandeddomainslist','admin/companiesadminlist','admin/usersadminlist','admin/documentslist', 'admin/brandeddomain/brandeddomainadminpanel','Backbone', 'legacy_code'], function(React,BrandedDomainsList,CompaniesAdminList,UsersAdminList,DocumentsList,BrandedDomainAdminPanel) {
 
 var AdminModel = Backbone.Model.extend({
   isAdmin: function() {
@@ -56,6 +56,7 @@ var AdminModel = Backbone.Model.extend({
                     var admin = this;
                     var div = $('<div/>');
                     var list = React.renderComponent(new BrandedDomainsList({
+                      onSelect : function(id) { window.location.hash = "#branding-themes-mail-" + id;},
                       loadLater : true
                     }),div[0]);
                     return new Tab({
@@ -64,6 +65,29 @@ var AdminModel = Backbone.Model.extend({
                         pagehash : "brandeddomains",
                         onActivate : function() {
                             list.reload();
+                        }
+                    });
+  },
+  brandedDomainEditInvisibleTab : function() {
+                    var admin = this;
+                    var div = $('<div/>');
+                    return new Tab({
+                        name: "Branded domains",
+                        disabled : true,
+                        elems: [function() { return div; }],
+                        pagehash : function(s) {
+                          return (s.startsWith("#branding-themes-mail") ||
+                                  s.startsWith("#branding-themes-signview") ||
+                                  s.startsWith("#branding-themes-service") ||
+                                  s.startsWith("#branding-themes-login") ||
+                                  s.startsWith("#branding-settings"));
+                        },
+                        onActivate : function() {
+                            var id = window.location.hash.replace(/[^0-9]/gmi, "");
+                            React.unmountComponentAtNode(div[0])
+                            React.renderComponent(new BrandedDomainAdminPanel({
+                              domainid : id
+                            }),div[0])
                         }
                     });
   }
@@ -85,7 +109,9 @@ var AdminView = Backbone.View.extend({
            admin.salesUserAdminTab(),
            admin.companyAdminTab(),
            admin.documentsTab(),
-           admin.brandedDomainsTab()]
+           admin.brandedDomainsTab(),
+           admin.brandedDomainEditInvisibleTab()
+        ]
        });
        container.append(tabs.el());
        return this;

@@ -118,7 +118,7 @@ return React.createClass({
 
          <List.ListAction
             name="Create user with empty company"
-            color="green"
+            type="action"
             size="tiny"
             onSelect={function() {
              openCreateUserModal(function () { self.reload(); });
@@ -126,7 +126,7 @@ return React.createClass({
           />
          <List.ListAction
             name="Download list as CSV"
-            color="green"
+            type="action"
             size="tiny"
             onSelect={function() {
               window.location.href = '/adminonly/paymentsstats.csv';

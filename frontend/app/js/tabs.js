@@ -49,6 +49,9 @@ window.Tab = Backbone.Model.extend({
         }
         return false;
     }
+    else if (this.pagehash() instanceof Function) {
+        return this.pagehash()(window.location.hash);
+    }
     else
       return window.location.hash == "#" + this.pagehash()   ;
   },
@@ -65,10 +68,15 @@ window.Tab = Backbone.Model.extend({
       this.set({active: bool});
       if (bool) {
           if (this.pagehash() != undefined)
-            if (this.pagehash() instanceof Array)
-              window.location.hash = this.pagehash()[0];
-            else
-              window.location.hash = this.pagehash();
+            if (this.pagehash() instanceof Function) {
+              //Do nothing. If he have a function with pagehash as function - then we don't touch it.
+            } else if (this.pagehash() instanceof Array) {
+              if (!_.contains(this.pagehash(),window.location.hash))
+                window.location.hash = this.pagehash()[0];
+            } else {
+              if (window.location.hash != this.pagehash())
+                window.location.hash = this.pagehash();
+            }
           this.get("onActivate")();
       }
   },

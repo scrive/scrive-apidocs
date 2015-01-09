@@ -43,13 +43,62 @@
 @icon-width: 26px;
 
 .icon.status {
-  background: url(~"@{img-base-url}/status-icons.png") 0 0 no-repeat;
+  background: url(~"@{img-base-url}/sprite-archive.png") 0 0 no-repeat;
   height: @icon-height;
   width: @icon-width;
 }
 
+
+.icon.initiated {
+  background-position: (-@icon-width * 0) 0;
+}
+
+.icon.sent {
+  background-position: (-@icon-width * 1) 0;
+}
+
+.icon.delivered {
+  background-position: (-@icon-width * 2) 0;
+}
+
+.icon.opened {
+  background-position: (-@icon-width * 3) 0;
+}
+
+.icon.read {
+  background-position: (-@icon-width * 4) 0;
+}
+
 .icon.signed {
   background-position: (-@icon-width * 5) 0;
+}
+
+.icon.rejected {
+  background-position: (-@icon-width * 6) 0;
+}
+
+.icon.cancelled {
+  background-position: (-@icon-width * 7) 0;
+}
+
+.icon.timeouted {
+  background-position: (-@icon-width * 8) 0;
+}
+
+.icon.prolonged {
+  background-position: (-@icon-width * 9) 0;
+}
+
+.icon.problem, .icon.deliveryproblem {
+  background-position: (-@icon-width * 10) 0;
+}
+
+.icon.draft {
+  background-position: (-@icon-width * 11) 0;
+}
+
+.icon.template {
+  background-position: (-@icon-width * 12) 0;
 }
 
 .icon.sealed {
@@ -58,86 +107,6 @@
 
 .icon.extended {
   background-position: (-@icon-width * 14) 0;
-}
-
-.icon.draft {
-  background-position: (-@icon-width * 12) 0;
-}
-
-.icon.template {
-  background-position: (-@icon-width * 11) 0;
-}
-
-.icon.rejected {
-  background-position: (-@icon-width * 6) 0;
-  margin-right: 7px;
-}
-
-.icon.deliveryproblem,
-.icon.problem {
-  background-position: (-@icon-width * 10) 0;
-  margin-right: 7px;
-}
-
-.icon.timeouted {
-  background-position: (-@icon-width * 8) 0;
-  margin-right: 7px;
-}
-
-.icon.cancelled {
-  background-position: (-@icon-width * 7) 0;
-  margin-right: 7px;
-}
-
-.icon.initiated {
-  background-position: (-@icon-width * 0) 0;
-  margin-right: 7px;
-}
-
-.icon.sent {
-  background-position: (-@icon-width * 1) 0;
-  margin-right: 7px;
-}
-
-.icon.delivered {
-  background-position: (-@icon-width * 2) 0;
-  margin-right: 7px;
-}
-
-.icon.read {
-  background-position: (-@icon-width * 3) 0;
-  margin-right: 7px;
-}
-
-.icon.opened {
-  background-position: (-@icon-width * 4) 0;
-  margin-right: 7px;
-}
-
-.icon.prolonged {
-  background-position: (-@icon-width * 9) 0;
-  margin-right: 7px;
-}
-
-.icon.cross {
-  background: url(~"@{img-base-url}/x.png") 0 0 no-repeat;
-  display: inline-block;
-  height: 22px;
-  width: 31px;
-  margin-left: 10px;
-  position: relative;
-  top: 4px;
-}
-
-.icon.delete {
-  background: url(~"@{img-base-url}/icon-delete.png") 0 0 no-repeat;
-  display: block;
-  height: 16px;
-  width: 16px;
-
-  &.gray {
-    background: url(~"@{img-base-url}/icon-delete-gray.png") 0 0 no-repeat;
-  }
 }
 
 .icon.edit {
@@ -168,44 +137,6 @@
   background-image: url(~"@{img-base-url}/iconPen.png");
   height: 15px;
   width: 15px;
-}
-
-.sharedIcon {
-  background-image: url(~"@{img-base-url}/shared.png");
-  display: block;
-  height: 14px;
-  margin-left: 10px;
-  width: 17px;
-}
-
-.actionIcon.removefromqueue {
-  background-image: url(~"@{img-base-url}/icon-delete.png");
-  float: left;
-  height: 16px;
-  width: 16px;
-}
-
-.actionIcon.addtoqueue {
-  background-image: url(~"@{img-base-url}/foreward.png");
-  float: left;
-  height: 14px;
-  width: 14px;
-}
-
-.go-back-image {
-  background: url(~"@{img-base-url}/undo.png") 0 -0 no-repeat;
-  display: block;
-  margin: 1px;
-  height: 16px;
-  width: 16px;
-}
-
-.logout-image {
-  background: url(~"@{img-base-url}/exit.png") 0 -0 no-repeat;
-  display: block;
-  height: 16px;
-  margin:1px;
-  width: 16px;
 }
 
 .editable {
@@ -251,6 +182,7 @@
 // HOW TO MAKE FILE INPUT LOOKING LIKE A BUTTON !!!!
 // -------------------------
 
+// Input for old backbone uplod button
 .button input.multiFileInput {
   cursor: pointer;
   -ms-filter: 'progid:DXImageTransform.Microsoft.Alpha(Opacity=0)';
@@ -266,16 +198,21 @@
   z-index: 10;
 }
 
+// Input for new react uplod button
 
-// Use this class to mark some error
-// -------------------------
-
-.redborder {
-  border:1px solid red;
-}
-
-.redborder input {
-  border-color: red;
+.button.upload-button input.multiFileInput {
+  cursor: pointer;
+  -ms-filter: 'progid:DXImageTransform.Microsoft.Alpha(Opacity=0)';
+  filter: 'progid:DXImageTransform.Microsoft.Alpha(Opacity=0)';
+  float: right;
+  font-size: 90px;
+  left: 0;
+  min-height: 66px;
+  opacity: 0;
+  position: relative;
+  right: -30px;
+  top: -50px;
+  z-index: 10;
 }
 
 // Use this class to mark that an input is obligatory
@@ -284,31 +221,5 @@
 
   &:focus:not(.readonly), &:hover:not(.readonly) {
    border-color: fade(@brand-secondary, 50%);
-  }
-}
-
-.elegButtonFooter {
-  margin-top: 4px;
-  margin-right: -15px;
-}
-
-.divider-line {
-  background-image: url(~"@{img-base-url}/divider-line.png");
-  display: block;
-  height: 9px;
-  margin: 10px auto;
-  width: 166px;
-}
-
-.label-with-link a {
-  color: #5C7599;
-  font-weight: 400;
-
-  &:visited {
-    color: #425A7C;
-  }
-
-  &:hover {
-    color: #668EDA;
   }
 }

@@ -156,7 +156,7 @@ define(['common/hubspot_service', 'Backbone', 'legacy_code'], function(HubSpot) 
                   window.location = resp.location;
               }, 1000);
           } else if (resp.error == 'already_active') {
-            new FlashMessage({content: localization.accountSetupModal.flashMessageUserAlreadyActivated, color: 'red'});
+            new FlashMessage({content: localization.accountSetupModal.flashMessageUserAlreadyActivated, type: 'error'});
           } else if (resp.error == 'reload') {
             model.trigger('reload');
           }
@@ -320,10 +320,9 @@ define(['common/hubspot_service', 'Backbone', 'legacy_code'], function(HubSpot) 
         }));
       });
       tosAccept.append(tosCBox);
-      var tosLabel = $("<span/>").append($(localization.accountSetupModal.modalAccountSetupTOS));
+      var tosLabel = $("<span class='label-with-link'/>").append($(localization.accountSetupModal.modalAccountSetupTOS));
       tosLabel.find('label').click(toggleCheckBox);
       var tosA = tosLabel.find('.is-TOS')
-                .attr("class", "clickable")
                 .attr("target", "_blank")
                 .attr("href", "/terms");
       tosA.text(" " + tosA.text());
@@ -336,7 +335,7 @@ define(['common/hubspot_service', 'Backbone', 'legacy_code'], function(HubSpot) 
 
       var acceptButton = new Button({
           size: 'small',
-          color: this.model.buttoncolorclass(),
+          type: 'main',
           text: localization.signupModal.modalAccountSetupFooter,
           onClick: function() {
             view.clearValidationMessages();

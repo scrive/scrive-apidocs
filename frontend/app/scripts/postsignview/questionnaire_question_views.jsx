@@ -23,13 +23,12 @@ define(['React', 'common/button'], function(React, Button) {
 
               <div className="yesnobuttons">
                 <Button
-                   color="black"
                    text = { localization.questionnaire.no }
                    size = "small"
                    onClick = {this.noButton}
                    />
                 <Button
-                   color="green"
+                   type="action"
                    text = { localization.questionnaire.yes }
                    size = "small"
                    onClick = {this.yesButton}
@@ -71,7 +70,7 @@ define(['React', 'common/button'], function(React, Button) {
               <div className="yesnobuttons">
                 <input type="text" onChange={this.handleChange} className="phoneinput" placeholder={ localization.questionnaire.phoneNumber } />
                 <Button
-                   color="green"
+                   type="action"
                    text = { localization.questionnaire.showDemo }
                    size = "small"
                    onClick = {this.yesButton}
@@ -102,7 +101,7 @@ define(['React', 'common/button'], function(React, Button) {
               <textarea onChange={this.handleChange}></textarea>
               <br />
               <Button
-                 color="green"
+                 type="action"
                  cssClass="button-sendfeedback"
                  text = { localization.questionnaire.sendFeedback }
                  size = "small"
@@ -135,13 +134,12 @@ define(['React', 'common/button'], function(React, Button) {
 
               <div className="yesnobuttons">
                 <Button
-                   color="black"
                    text = { localization.questionnaire.no }
                    size = "small"
                    onClick = {this.noButton}
                    />
                 <Button
-                   color="green"
+                   type="action"
                    text = { localization.questionnaire.yes }
                    size = "small"
                    onClick = {this.yesButton}
@@ -174,13 +172,12 @@ define(['React', 'common/button'], function(React, Button) {
 
               <div className="yesnobuttons">
                 <Button
-                   color="black"
                    text = { localization.questionnaire.no }
                    size = "small"
                    onClick = {this.noButton}
                    />
                 <Button
-                   color="green"
+                   type="action"
                    text = { localization.questionnaire.yes }
                    size = "small"
                    onClick = {this.yesButton}
@@ -214,13 +211,12 @@ define(['React', 'common/button'], function(React, Button) {
 
               <div className="yesnobuttons">
                 <Button
-                   color="black"
                    text = { localization.questionnaire.no }
                    size = "small"
                    onClick = {this.noButton}
                    />
                 <Button
-                   color="green"
+                   type="action"
                    text = { localization.questionnaire.yes }
                    size = "small"
                    onClick = {this.yesButton}

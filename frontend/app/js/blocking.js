@@ -333,7 +333,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                 title: localization.blocking.overdue.create.title,
                 content: p,
                 acceptText: localization.blocking.button.doublecheck,
-                acceptColor: "green",
+                acceptType: "action",
                 onAccept: function() {
                     window.location = "/account#subscription";
                 }
@@ -352,7 +352,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                 title: localization.blocking.canceled.create.title,
                 content: p,
                 acceptText: localization.blocking.button.reinstate,
-                acceptColor: "green",
+                acceptType: "action",
                 onAccept: function() {
                     window.location = "/account#subscription";
                 }
@@ -371,7 +371,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                 title: localization.blocking.deactivated.create.title,
                 content: p,
                 acceptText: localization.blocking.button.contact,
-                acceptColor: "green",
+                acceptType: "action",
                 onAccept: function() {
                     window.location = this.supportEmailHref;
                 }
@@ -390,7 +390,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                 title: localization.blocking.paying.create.title,
                 content: p,
                 acceptText: localization.blocking.button.contact,
-                acceptColor: "green",
+                acceptType: "action",
                 onAccept: function() {
                     window.location = this.supportEmailHref;
                 }

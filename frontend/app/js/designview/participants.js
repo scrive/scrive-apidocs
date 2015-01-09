@@ -25,7 +25,6 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             var sig = view.model;
 
             var button = new Button({
-                color: 'black',
                 text: localization.designview.addField,
                 onClick: function() {
                     mixpanel.track('Click add field');
@@ -329,7 +328,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             div.addClass('design-view-action-participant-new-single');
 
             var button = new Button({
-                color: 'green',
+                type: 'action',
                 text: localization.designview.addParty,
                 onClick: function() {
                     mixpanel.track('Click add signatory');
@@ -357,7 +356,6 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             div.addClass('design-view-action-participant-new-multi');
 
             var button = new Button({
-                color: 'black',
                 text: localization.designview.addMultisend,
                 onClick: function() {
                     mixpanel.track('Click add CSV');
@@ -380,7 +378,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             div.addClass('design-view-action-participant-done');
 
             var button = new Button({
-                color: 'green',
+                type: 'action',
                 text: localization.designview.addParties.close,
                 onClick: function() {
                     mixpanel.track('Close participant');
@@ -441,11 +439,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             var doc = model.document();
             var sigs = doc.signatories();
 
-            model.resetColor();
-
             $.each(model.document().signatories(), function(i, s) {
-                s.setColor(model.currentColor());
-                model.advanceColor();
                 view.participants.push(new DesignViewParticipantView({model  : s,
                                                                       number : i,
                                                                       viewmodel : model
@@ -804,7 +798,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
 
             if(sig.isCsv()) {
                 var csvButton = new Button({
-                    color: 'blue',
+                    type: 'optional',
                     text: localization.designview.viewCSV,
                     onClick: function() {
                         mixpanel.track('Open CSV Popup');
@@ -836,7 +830,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                     var samenameexists = _.any(sig.customFields(), function(c) { return value == c.name() && c != field;});
                     if (samenameexists) {
                       $(input.el()).addClass("conflict");
-                      new FlashMessage({color: "red", content : localization.designview.fieldWithSameNameExists});
+                      new FlashMessage({color: "error", content : localization.designview.fieldWithSameNameExists});
                       return;
                     }
 
@@ -879,7 +873,6 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                 $(input.el()).removeClass('redborder');
 
             var button = new Button({
-                color: 'black',
                 text: localization.ok,
                 width: 64,
                 onClick: setter
@@ -944,7 +937,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                 options: options,
                 name: name,
                 cssClass : 'design-view-action-participant-new-field-select',
-                border : "1px solid red",
+                border : "",
                 optionsWidth: "297px",
                 onRemove : function() {
                   mixpanel.track('Click remove field', {
@@ -1388,8 +1381,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             var sig = view.model;
             return $('<div />')
                 .addClass('design-view-action-participant-info-color')
-                .text('')
-                .css('background-color', sig.color() || 'black');
+                .addClass('participant-' +  ((sig.signIndex() -1 ) % 6 + 1));
         },
         email: function() {
             var view = this;

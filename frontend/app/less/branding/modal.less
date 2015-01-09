@@ -147,68 +147,45 @@
 
 .modal-header {
   color: @text-very-light;
-  background: repeat scroll 0 0 @brand-secondary;
+  background: @darker-grey-background;
   border-bottom: 1px solid @blue-border;
-  height: 222px;
+  height: auto;
   padding: 25px 20px;
-
-  .grey & {
-    background: @darker-grey-background;
-  }
-
-  &.no-icon {
-    height: auto;
-    text-align: center;
-
-    .modal-title {
-      padding-top: 0;
-
-      .grey & {
-        color: @text-dark;
-        font-weight: 400;
-        margin-left: 15px;
-        text-align: left;
-      }
-    }
-  }
+  text-align: center;
 }
 
 .modal-header-inner {
-  margin: auto;
+  margin: 0;
   text-align: center;
-
-  .grey & {
-    margin: 0;
-  }
 }
 
 .modal-title {
   display: block;
+  color: @text-dark;
+  font-weight: 400;
+  text-align: left;
   font-family: @font-family-source;
   font-size: 28px;
   line-height: 25px;
-  padding-top: 28px;
+  font-weight: 400;
+  padding-top: 0;
 }
 
 .modal-subtitle {
   font-size: 16px;
-  padding-top: 5px;
+  margin-bottom: 20px;
+
+  &.centered {
+    text-align: center;
+  }
 }
 
 .modal-container.small-screen .modal-title {
   font-size: 32px;
 }
 
-.modal-icon {
-  display: block;
-  height: 60px;
-  margin: auto;
-  padding-top: 45px;
-  width: 60px;
-}
-
 .modal-close {
-  background: url(~"@{img-base-url}/sprite-green-X.png") no-repeat scroll 0 0 transparent;
+  background: url(~"@{img-base-url}/sprite-grey-X.png") no-repeat scroll 0 0 transparent;
   cursor: pointer;
   display: block;
   float: right;
@@ -217,10 +194,6 @@
   right: 15px;
   top: 20px;
   width: 12px;
-
-  .grey & {
-    background: url(~"@{img-base-url}/sprite-grey-X.png") no-repeat scroll 0 0 transparent;
-  }
 
   &:hover {
     background-position: -12px 0;
@@ -257,18 +230,11 @@
 }
 
 .modal-footer {
-  border-top: 1px solid @blue-border;
+  background: @darker-grey-background;
+  border-top: none;
   height: 32px;
-  margin-left: 35px;
-  margin-right: 35px;
-  padding: 35px 0;
-
-  .grey & {
-    background: @darker-grey-background;
-    border-top: none;
-    margin: 0; // make sure the bg goes all the way
-    padding: 21px 35px; // make it as high as the top bar
-  }
+  margin: 0;
+  padding: 21px 35px;
 
   .drawing-modal & {
     padding: 21px 45px;

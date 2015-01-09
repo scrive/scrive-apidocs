@@ -87,21 +87,20 @@ var SampleSignViewView = Backbone.View.extend({
     document.append(documentpic);
 
     this.reviewButton = new Button({size: 'tiny',
-                                    color: 'signview-blue',
+                                    type: "optional",
                                     cssClass: 'not-clickable',
                                     text: localization.sampleSignView.reviewPDF,
                                     onClick: function() {}}).el();
 
     this.rejectbuttoncontainer = $('<div class="buttoncontainer reject" />');
     this.rejectbutton = new Button({size: 'tiny',
-                                    color: 'black',
                                     cssClass: 'not-clickable',
                                     text: localization.sampleSignView.rejectButton,
                                     onClick: function() {}}).el();
     this.rejectbuttoncontainer.append(this.rejectbutton);
     this.signbuttoncontainer = $('<div class="buttoncontainer sign" />');
     this.signbutton = new Button({size: 'tiny',
-                                  color: 'green',
+                                  type: 'action',
                                   cssClass: 'not-clickable',
                                   text: localization.sampleSignView.signButton,
                                   onClick: function() {}}).el();

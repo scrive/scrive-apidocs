@@ -20,6 +20,7 @@ import qualified Text.StringTemplates.Fields as F
 import qualified Text.StringTemplates.Templates as T
 
 import BrandedDomain.BrandedDomain
+import Branding.MD5
 import Control.Logic
 import Crypto.RNG
 import DB
@@ -32,6 +33,7 @@ import Mails.Model hiding (Mail)
 import MessageData
 import MinutesTime
 import Templates
+import Theme.Model
 import User.Lang
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
@@ -107,22 +109,21 @@ wrapHTML body = concat [
   , "</html>"
   ]
 
-kontramaillocal :: (HasLang a, T.TemplatesMonad m) => MailsConfig -> Maybe BrandedDomain -> a -> String -> F.Fields m () -> m Mail
-kontramaillocal mc mbd = kontramailHelper mc mbd . renderLocalTemplate
+kontramaillocal :: (HasLang a, T.TemplatesMonad m) => BrandedDomain -> Theme -> a -> String -> F.Fields m () -> m Mail
+kontramaillocal bd theme = kontramailHelper  bd theme . renderLocalTemplate
 
-kontramail :: T.TemplatesMonad m  => MailsConfig -> Maybe BrandedDomain  -> String -> F.Fields m () -> m Mail
-kontramail mc mbd = kontramailHelper mc mbd T.renderTemplate
+kontramail :: T.TemplatesMonad m  => BrandedDomain -> Theme -> String -> F.Fields m () -> m Mail
+kontramail bd theme = kontramailHelper bd theme T.renderTemplate
 
-kontramailHelper :: T.TemplatesMonad m => MailsConfig -> Maybe BrandedDomain -> (String -> F.Fields m () -> m String) -> String -> F.Fields m () -> m Mail
-kontramailHelper mc mbd renderFunc tname fields = do
+kontramailHelper :: T.TemplatesMonad m => BrandedDomain -> Theme ->  (String -> F.Fields m () -> m String) -> String -> F.Fields m () -> m Mail
+kontramailHelper bd theme renderFunc tname fields = do
+
     wholemail <- renderFunc tname fields
     let (title,content) = span (/= '\n') $ dropWhile (isControl ||^ isSpace) wholemail
     return $ emptyMail {
-                         originator = fromMaybe (ourInfoEmailNiceName mc) (fmap bdemailoriginator mbd)
-                       , originatorEmail = case (fmap (strip . bdnoreplyemail) mbd) of
-                                             Nothing -> ourInfoEmail mc
-                                             Just "" -> ourInfoEmail mc
-                                             Just s -> s
+                         originator = bdEmailOriginator bd
+                       , originatorEmail = strip $ bdNoreplyEmail bd
                        , title   = title
                        , content = content
+                       , attachments = [("logo-"++ (imageMD5 $ themeLogo  theme) ++ ".png", Left $ unBinary $ themeLogo theme)]
                        }

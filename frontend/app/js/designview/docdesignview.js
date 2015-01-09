@@ -11,16 +11,6 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             var self = this;
             var model = this;
             _.bindAll(model);
-
-            model.currentColorIndex = 0;
-            model.colors = [
-                '#ff3377',
-                '#009999',
-                '#ffd700',
-                '#7908aa',
-                '#53df00',
-                '#990000'
-            ];
         },
         document : function() {
             return this.get("document");
@@ -33,17 +23,6 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
         },
         setParticipantDetail: function(s) {
             this.set({participantDetail : s});
-            return this;
-        },
-        currentColor: function() {
-            return this.colors[this.currentColorIndex % this.colors.length];
-        },
-        advanceColor: function() {
-            this.currentColorIndex++;
-            return this;
-        },
-        resetColor: function() {
-            this.currentColorIndex = 0;
             return this;
         },
         saveDocument: function() {
@@ -81,7 +60,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                 flashMsg = localization.designview.saved.savedAsDraft;
               }
             }
-            new FlashMessage({color: "green", content: flashMsg});
+            new FlashMessage({type: 'success', content: flashMsg});
         }
     });
 
@@ -130,7 +109,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
           var view = this;
           this.saveDraftButton = new Button({
             text: view.saveDraftButtonText(),
-            color: 'blue',
+            color: 'main',
             cssClass: 'button-save-draft',
             onClick: function(e) {
               mixpanel.track('Click save as draft');
@@ -150,7 +129,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
           var view = this;
           this.saveTemplateButton = new Button({
             text: view.saveTemplateButtonText(),
-            color: 'blue',
+            color: 'main',
             onClick: function(e) {
               mixpanel.track('Click save as template');
               view.model.document().makeTemplate();
@@ -180,7 +159,6 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
 
             this.sendButton = new Button({
                 text: localization.designview.startSigning,
-                color: 'green',
                 cssClass: 'sendButton'
             }).el();
             this.updateSendButton();
@@ -204,7 +182,6 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
 
             var removeDocumentButton = new Button({
                 text: localization.designview.removeThisDocument,
-                color: 'blue',
                 onClick: function() {
                     mixpanel.track('Click remove file');
                     doc.markAsNotReady();
@@ -310,13 +287,11 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             var spinnerContainer = $("<span class='spinner-container' />");
             spinnerContainer.append(spinner.el);
 
-
             var acceptButton = new Button({
-              color : "green",
+              type : "action",
               text : localization.designview.sign,
               oneClick : true,
               onClick : function() {
-
                 acceptButton.el().addClass('is-inactive').prepend(spinnerContainer); // Add the spinner and make inactive
                 self.confirmationpopup.hideCancel();
                 self.confirmationpopup.hideClose();
@@ -361,7 +336,6 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
 
             self.confirmationpopup = new Confirmation({
                 title : localization.signByAuthor.modalTitle,
-                icon : '/img/modal-icons/sign.png',
                 acceptButton : acceptButton.el(),
                 rejectText: localization.cancel,
                 content  : content
@@ -404,9 +378,8 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
 
             var confirmation = new Confirmation({
                 title : otherSignatoriesSignInPerson ? localization.process.startsigningtitle : localization.process.confirmsendtitle,
-                icon: otherSignatoriesSignInPerson ? '/img/modal-icons/start-signing.png' : '/img/modal-icons/send.png',
                 acceptButton : new Button({
-                    color : "green",
+                    type : "action",
                     text : otherSignatoriesSignInPerson ? localization.process.startsigningbuttontext : localization.process.sendbuttontext,
                     oneClick : true,
                     onClick : function() {

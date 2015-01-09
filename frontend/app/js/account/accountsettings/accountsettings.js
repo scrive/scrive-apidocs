@@ -111,12 +111,6 @@ var AccountSettingsModel = Backbone.Model.extend({
   setCompanycountry : function(v) {
      this.set({"companycountry" : v});
   },
-  companysmsoriginator: function() {
-     return this.get("companysmsoriginator");
-  },
-  setCompanysmsoriginator : function(v) {
-     this.set({"companysmsoriginator" : v});
-  },
   lang : function() {
     return this.get("lang");
   },
@@ -141,7 +135,6 @@ var AccountSettingsModel = Backbone.Model.extend({
       , companyzip :      this.company().zip()
       , companycity :     this.company().city()
       , companycountry :   this.company().country()
-      , companysmsoriginator : this.company().smsoriginator()
     }, {silent : true});
     this.trigger("reset");
   },
@@ -156,10 +149,10 @@ var AccountSettingsModel = Backbone.Model.extend({
         if (res.send) {
             var msg = $("<span>" + localization.account.accountDetails.changeEmailMailSent + "</span>");
             msg.find('.email-confirmation-address').text(self.newemail());
-            new FlashMessage({content: msg, color: "green"});
+            new FlashMessage({content: msg, type: 'success'});
         }
         else {
-            new FlashMessage({content: localization.account.accountDetails.emailAlreadyInUse, color: "red"});
+            new FlashMessage({content: localization.account.accountDetails.emailAlreadyInUse, type: 'error'});
         }
         if (callback!= undefined) callback();
 
@@ -187,8 +180,7 @@ var AccountSettingsModel = Backbone.Model.extend({
       companyaddress :  this.companyaddress(),
       companyzip :      this.companyzip(),
       companycity :     this.companycity(),
-      companycountry :  this.companycountry(),
-      companysmsoriginator : this.companysmsoriginator()
+      companycountry :  this.companycountry()
     }).send();
   },
   valid: function() {
@@ -201,7 +193,7 @@ var AccountSettingsModel = Backbone.Model.extend({
       message = localization.validation.companyNumberInvalidChars;
     }
     if (message !== null) {
-      new FlashMessage({content: message, color: "red"});
+      new FlashMessage({content: message, type: 'error'});
       return false;
     } else {
       return true;
@@ -216,10 +208,10 @@ var AccountSettingsModel = Backbone.Model.extend({
     this.updateProfile(function() {
       if (languageHasChanged)
         Language.changeOnCurrentPage(self.lang() , function() {
-                new FlashMessage({content : localization.account.accountDetails.detailSaved , color: "blue", withReload: true});
+                new FlashMessage({content : localization.account.accountDetails.detailSaved , type: 'success', withReload: true});
         });
       else {
-        new FlashMessage({content : localization.account.accountDetails.detailSaved , color: "blue", withReload: false});
+        new FlashMessage({content : localization.account.accountDetails.detailSaved , type: 'success', withReload: false});
         self.user().fetch({cache: false, processData: true});
       }
 
@@ -412,15 +404,6 @@ var AccountSettingsView = Backbone.View.extend({
             });
             table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companycountry))).append($("<td/>").append(companycountryinput)));
 
-            var companysmsoriginatorinput = $("<input type='text' maxlength=11/>").val(model.companysmsoriginator());
-            if (!model.companyAdmin()) companysmsoriginatorinput.attr("disabled","disabled");
-            companysmsoriginatorinput.change(function() {
-              model.setCompanysmsoriginator(companysmsoriginatorinput.val());
-            });
-            table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.smsOriginator))).append($("<td/>").append(companysmsoriginatorinput)));
-            table.append($("<tr/>").append($("<td/>")).append($("<td/>").append($("<div style='font-size:10px;line-height: 10px;color:#999999;margin:-5px 10px 0px 0px;width:234px;font-style:italic'/>").text(localization.account.accountDetails.smsOriginatorDescription))));
-
-
             body.append(table);
 
       return box;
@@ -428,7 +411,6 @@ var AccountSettingsView = Backbone.View.extend({
     changePasswordButton : function() {
       var model = this.model;
       return new Button({
-        color: "black",
         text: localization.account.accountDetails.changeEmailButton,
         cssClass : "new-mail-button",
         onClick: function() {
@@ -439,7 +421,6 @@ var AccountSettingsView = Backbone.View.extend({
     changeEmailButton : function() {
       var model = this.model;
       return new Button({
-        color: "black",
         text: localization.account.accountDetails.changeEmailButton,
         cssClass : "new-mail-button",
         onClick: function() {
@@ -467,11 +448,11 @@ var AccountSettingsView = Backbone.View.extend({
             var confirmation = new Confirmation({
               onAccept: function() {
                 if ( ! new EmailValidation().validateData(model.newemail())) {
-                  new FlashMessage({color: "red", content : localization.account.accountDetails.invalidEmail });
+                  new FlashMessage({type: 'error', content : localization.account.accountDetails.invalidEmail });
                   return false;
                 }
                 if (model.newemail() != model.newemailagain()) {
-                  new FlashMessage({color: "red", content : localization.account.accountDetails.mismatchedEmails });
+                  new FlashMessage({type: 'error', content : localization.account.accountDetails.mismatchedEmails });
                   return false;
                 }
                   trackTimeout('Accept',
@@ -493,7 +474,6 @@ var AccountSettingsView = Backbone.View.extend({
               },
               title: localization.account.accountDetails.changeEmailTitle,
               acceptButtonText: localization.account.accountDetails.changeEmailAccept,
-              icon: '/img/modal-icons/change-email.png',
               content: body
             });
             return false;
@@ -503,7 +483,7 @@ var AccountSettingsView = Backbone.View.extend({
     saveButton : function() {
       var model = this.model;
       var button = new Button({
-        color : "green",
+        type : "action",
         size: "small",
         cssClass : "save",
         text : localization.account.accountDetails.save,

@@ -1,0 +1,124 @@
+@import 'branding/elements';
+@import 'branding/variables.less';
+
+.domain-management {
+   margin: auto;
+   width: 1020px;
+
+  .domain-management-top-bar {
+    margin-bottom: 10px;
+
+    .select-theme-for-view {
+      display: inline-block;
+      margin-right:10px;
+      width:158px;
+
+      h5.select-theme-header {
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 300;
+        margin-bottom: 8px;
+        margin-left: 2px;
+
+        &.active {
+          font-weight: normal;
+        }
+      }
+    }
+
+    .select-theme-save {
+      line-height: 70px;
+
+      .save {
+        vertical-align: bottom;
+      }
+    }
+
+  }
+ 
+  .domain-settings-edit {
+    .domain-settings-edit-panel {
+      width: 1008px;
+      padding:5px;
+      border: 1px solid #DDDDDD;
+      background-color:#FFFFFF;
+
+      .domain-settings-edit-panel-title {
+        border-bottom: 1px solid #DDDDDD;
+        margin:5px;
+        padding:5px;
+        font-size: 16px;
+      }
+      .domain-settings-edit-panel-column{
+        width:480px;
+        margin:5px;
+        padding:5px;
+        display:inline-block;
+        vertical-align: top;
+        &.left {
+          border-right:1px solid #DDDDDD;
+        }
+
+        .domain-property-editor {
+          margin-top:10px;
+          width:460px;
+
+          .favicon-image {
+            margin-right:20px;
+            vertical-align: top;
+          }
+
+          .domain-color-property-editor{
+            width:100%;
+            display:inline-block;
+
+            .domain-color-property-title {
+              width: 200px;
+              display:inline-block;
+            }
+
+            .domain-color-property-editor-color-picker-with-icons {
+              display : inline-block;
+              float: right;
+
+              .domain-color-property-editor-color-picker {
+                display : inline-block;
+
+                .info-text-input  {
+                  width:60px;
+                }
+
+                .color-display {
+                  background: url(~"@{img-base-url}/colorpicker/select2.png") repeat scroll center center transparent;
+                  border: solid 1px #eeeeee;
+                  cursor: pointer;
+                  display: inline-block;
+                  margin-left: 20px;
+                  margin-top: 1px;
+                  padding: 14px 14px;
+                  vertical-align: top;
+                  width: 0;
+                }
+
+                .color-picker {
+                  position: absolute;
+                  z-index: 100;
+
+                  &.hidden {
+                    display:none;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .save-button-area {
+      width: 1020px;
+      padding-top: 20px;
+      text-align: right;
+  }
+}

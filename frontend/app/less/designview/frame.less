@@ -198,7 +198,7 @@ body.designview .mainContainer {
 // -------------------------
 
 .design-view-button-bar {
-  background: @brand-primary;
+  background: @white;
   bottom: 0;
   height: 64px;
   left: 0;
@@ -218,31 +218,4 @@ body.designview .mainContainer {
     margin-right: 11px;
     margin-top: 11px;
   }
-
-  a.sendButton {
-    float: right;
-
-    &.disabled {
-      @disabled: @brand-primary-darker;
-
-      background-color: @disabled;
-      color: #6b6b6b !important;
-
-      &:hover {
-        background-color: darken(@disabled, 10%);
-      }
-    }
-  }
-}
-
-.design-view-button-remove {
-  background-color: @white;
-  border-right: 1px solid #cccccc;
-  cursor: pointer;
-  display: inline-block;
-  height: 100%;
-  position: relative;
-  width: 20%;
-
-  .box-sizing(border-box);
 }

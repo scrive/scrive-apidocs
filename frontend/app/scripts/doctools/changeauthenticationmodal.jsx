@@ -210,7 +210,7 @@ return function(args) {
       if(model.isAuthenticationValueInvalid()) {
           model.setNewAuthenticationValueInvalid(true);
           new FlashMessage({ content : model.getAuthenticationValueInvalidFlashMessageText()
-                           , color : 'red' });
+                           , type: "error" });
           return false;
       }
       trackTimeout('Accept',
@@ -226,7 +226,7 @@ return function(args) {
         , function () {
             LoadingDialog.close();
             new FlashMessage({ content : localization.docview.changeAuthentication.errorSigned
-                             , color : 'red' });
+                             , type: "error"});
           }
       );
       return true;

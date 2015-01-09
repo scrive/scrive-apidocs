@@ -24,8 +24,7 @@ import Utils.Monoid
 import Utils.Read
 
 data FlashType
-    = SigningRelated
-    | OperationDone
+    = OperationDone
     | OperationFailed
       deriving (Eq, Ord, Read, Show)
 

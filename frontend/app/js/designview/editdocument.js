@@ -62,7 +62,7 @@ define(['Backbone', 'legacy_code'], function() {
             if (document.signatoriesWhoSign().length > 0) {
               return true;
             } else {
-              new FlashMessage({color: 'red', content: localization.designview.dndDisabled});
+              new FlashMessage({type: 'error', content: localization.designview.dndDisabled});
               return false;
             }
           };

@@ -1,7 +1,7 @@
 /* Basic buttons
  * Usage
  *  var button =  new Button({
- *                   color: "red | green | blue | black",
+ *                   type: "action | optional | cancel | inactive | main",
  *                   size: "tiny | small | big",
  *                   text: "Text that will be put inside of button"
  *                   onClick* : "Function to be called when button is clicked" })
@@ -16,7 +16,6 @@ define(['tinycolor','Backbone', 'legacy_code'], function(tinycolor) {
 
 var ButtonModel = Backbone.Model.extend({
   defaults : {
-      color : "green",
       customcolor : undefined,
       textcolor : undefined,
       size  : "small",
@@ -31,8 +30,8 @@ var ButtonModel = Backbone.Model.extend({
   },
   initialize : function() {
   },
-  color : function(){
-       return this.get("color");
+  type : function(){
+       return this.get("type");
   },
   size : function(){
        return this.get("size");
@@ -108,7 +107,7 @@ var ButtonView = Backbone.View.extend({
     render: function () {
         $(this.el).attr("style",this.model.style());
         $(this.el).addClass(this.model.cssClass());
-        $(this.el).addClass(this.model.color());
+        $(this.el).addClass(this.model.type());
 
         $(this.el).addClass("button");
         $(this.el).addClass("button-singleline");
@@ -125,18 +124,8 @@ var ButtonView = Backbone.View.extend({
             function() { $(this).css("background-color", tinycolor.lighten(backgroundColor, 10).toRgbString()); },
             function() { $(this).css("background-color", backgroundColor); }
           );
-        } else {
-          if (this.model.color() == "red" )
-              $(this.el).addClass("button-red");
-          else if (this.model.color() == "green" )
-              $(this.el).addClass("button-green");
-          else if (this.model.color() == "black")
-              $(this.el).addClass("button-gray");
-          else if (this.model.color() == "light-blue")
-              $(this.el).addClass("button-light-blue");
-          else if (this.model.color() == "signview-blue")
-              $(this.el).addClass("button-signview-blue");
         }
+
 
         if (this.model.textcolor()) {
           $(this.el).attr("style", ($(this.el).attr("style") || '') + "; color: " + this.model.textcolor() + " !important;");

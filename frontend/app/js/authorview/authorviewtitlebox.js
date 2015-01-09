@@ -71,7 +71,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     var model = this.model;
     var document = this.model.document();
     return new Button({
-      color: "red",
+      type: "cancel",
       size: "big",
       text: localization.process.restartbuttontext,
       oneClick : true,
@@ -79,7 +79,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
         mixpanel.track('Click restart button');
         model.restart(function(resp) {
            var newdocdata = JSON.parse(resp);
-           new FlashMessage({color: 'green', content : localization.flashDocumentRestarted, withRedirect : true, redirect : '/d/'+ newdocdata.id});
+           new FlashMessage({type: 'success', content : localization.flashDocumentRestarted, withRedirect : true, redirect : '/d/'+ newdocdata.id});
         });
       }
     }).el();
@@ -90,7 +90,6 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     return new Button({
       size: "big",
       text: localization.authorview.downloadPdf,
-      color: "black",
       onClick: function() {
         window.location = document.mainfile().downloadLinkForMainFile(document.title());
       }
@@ -100,7 +99,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     var model = this.model;
     var document = this.model.document();
     return new Button({
-      color: "green",
+      type: "action",
       size: "big",
       text: localization.process.prolongbuttontext,
       onClick: function() {
@@ -114,7 +113,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     var document = this.model.document();
     return new Button({
       size: "big",
-      color: "red",
+      type: "cancel",
       text: localization.process.cancelbuttontext,
       cssClass: "s-withdraw-button",
       onClick: function() {
@@ -127,11 +126,10 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
         new Confirmation({
           title: localization.process.cancelmodaltitle,
           content: $('<p class="center">' + modalcontent + '</p>'),
-          icon: '/img/modal-icons/withdraw.png',
           width: 533,
           acceptText: localization.process.cancelbuttontext,
           rejectText: localization.cancel,
-          acceptColor: "green",
+          acceptType: "action",
           extraClass : "s-withdraw-confirmation",
           onAccept: function() {
               trackTimeout('Accept',
@@ -149,7 +147,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     var model = this.model;
     var document = this.model.document();
     return new Button({
-      color: "green",
+      type: "action",
       size: "big",
       text: localization.authorview.goToSignView,
       onClick: function() {
@@ -165,7 +163,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     var sig = document.signatoriesThatCanSignNowOnPad()[0];
     if (sig == undefined) return; // Should never happend
     return new Button({
-      color: "green",
+      type: "action",
       size: "big",
       text: localization.authorview.goToSignView,
       onClick: function() {
@@ -240,7 +238,6 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
       buttonbox.append(this.giveToNextSignatoryPadButton());
 
     buttonbox.append(this.downloadPDFButton());
-
     container.append(buttonbox);
 
     return this;

@@ -18,7 +18,7 @@ ensureHexRGB c =
 
 -- Checks if color definition is valid color for CSS
 isValidColor :: String -> Bool
-isValidColor c = (c' /= (""::String)) && (not $ '\n' `elem` c) && (length c' < 50) && (
+isValidColor c = (c' /= (""::String)) && (not $ '\n' `elem` c) && (length c' < 50) && (length c' > 2) && (
        c' =~ ("[A-z]+"::String) == c'
     || c' =~ ("#[0-9|A-z][0-9|A-z][0-9|A-z]"::String) == c'
     || c' =~ ("#[0-9|A-z][0-9|A-z][0-9|A-z][0-9|A-z][0-9|A-z][0-9|A-z]"::String) == c'

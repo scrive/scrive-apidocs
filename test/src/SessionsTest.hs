@@ -7,6 +7,7 @@ import Happstack.Server
 import Test.Framework
 import Test.QuickCheck
 
+import BrandedDomain.Model
 import Company.Model
 import Context
 import Control.Logic
@@ -144,7 +145,8 @@ addCgiGrpTransaction = do
 
 testUser :: TestEnv UserID
 testUser = do
+  bd <- dbQuery $ GetMainBrandedDomain
   pwd <- createPassword "admin"
   company <- dbUpdate $ CreateCompany
-  Just user <- dbUpdate $ AddUser ("Andrzej", "Rybczak") "andrzej@scrive.com" (Just pwd) (companyid company,True) defaultValue Nothing
+  Just user <- dbUpdate $ AddUser ("Andrzej", "Rybczak") "andrzej@scrive.com" (Just pwd) (companyid company,True) defaultValue (bdid bd)
   return $ userid user

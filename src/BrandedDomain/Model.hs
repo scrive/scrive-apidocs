@@ -1,5 +1,8 @@
 module BrandedDomain.Model
-  (   GetBrandedDomains(..)
+  (   BrandedDomainID
+    , BrandedDomain(..)
+    , GetBrandedDomains(..)
+    , GetMainBrandedDomain(..)
     , GetBrandedDomainByURL(..)
     , GetBrandedDomainByUserID(..)
     , GetBrandedDomainByID(..)
@@ -12,70 +15,74 @@ import Data.Monoid
 import qualified Data.ByteString.Char8 as BS
 
 import BrandedDomain.BrandedDomain
-import BrandedDomain.BrandedDomainID
 import DB
+import Theme.Model
 import User.UserID
 import qualified Log
 
-fetchBrandedDomain :: (BrandedDomainID, String, Maybe (Binary BS.ByteString), String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String) -> BrandedDomain
-fetchBrandedDomain (xid, url, logo, barscolour, barstextcolour, barssecondarycolour, backgroundcolour, backgroundcolorexternal, mailsbackgroundcolor, mailsbuttoncolor, mailstextcolor, mailsbordercolor, signviewprimarycolour, signviewprimarytextcolour, signviewsecondarycolour, signviewsecondarytextcolour, buttonclass, servicelinkcolour, externaltextcolour, headercolour, textcolour, pricecolour, smsoriginator, emailoriginator, contactemail, noreplyemail)
+fetchBrandedDomain :: (BrandedDomainID,Bool, String, String, String, String, String, ThemeID,ThemeID,ThemeID,ThemeID, String, Binary BS.ByteString,String, String, String, String, String, String, String, String, String, String, String, String, String, String) -> BrandedDomain
+fetchBrandedDomain (xid, maindomain, url, smsoriginator, emailoriginator, contactemail, noreplyemail, mail_theme, signview_theme,service_theme,login_theme, browser_title, 
+                    favicon, participant_color_1, participant_color_2, participant_color_3, participant_color_4, participant_color_5, participant_color_6, draft_color, cancelled_color,
+                    initiated_color, sent_color, delivered_color, opened_color, reviewed_color, signed_color)
        = BrandedDomain
          { bdid                          = xid
-         , bdurl                         = url
-         , bdlogo                        = logo
-         , bdbarscolour                  = barscolour
-         , bdbarstextcolour              = barstextcolour
-         , bdbarssecondarycolour         = barssecondarycolour
-         , bdbackgroundcolour            = backgroundcolour
-         , bdbackgroundcolorexternal     = backgroundcolorexternal
-         , bdmailsbackgroundcolor        = mailsbackgroundcolor
-         , bdmailsbuttoncolor            = mailsbuttoncolor
-         , bdmailstextcolor              = mailstextcolor
-         , bdmailsbordercolor            = mailsbordercolor
-         , bdsignviewprimarycolour       = signviewprimarycolour
-         , bdsignviewprimarytextcolour   = signviewprimarytextcolour
-         , bdsignviewsecondarycolour     = signviewsecondarycolour
-         , bdsignviewsecondarytextcolour = signviewsecondarytextcolour
-         , bdbuttonclass                 = buttonclass
-         , bdservicelinkcolour           = servicelinkcolour
-         , bdexternaltextcolour          = externaltextcolour
-         , bdheadercolour                = headercolour
-         , bdtextcolour                  = textcolour
-         , bdpricecolour                 = pricecolour
-         , bdsmsoriginator               = smsoriginator
-         , bdemailoriginator             = emailoriginator
-         , bdcontactemail                = contactemail
-         , bdnoreplyemail                = noreplyemail
-         }
+         , bdMainDomain                  = maindomain
+         , bdUrl                         = url
+         , bdSmsOriginator               = smsoriginator
+         , bdEmailOriginator             = emailoriginator
+         , bdContactEmail                = contactemail
+         , bdNoreplyEmail                = noreplyemail
+         , bdMailTheme                   = mail_theme
+         , bdSignviewTheme               = signview_theme
+         , bdServiceTheme                = service_theme
+         , bdLoginTheme                  = login_theme
+         , bdBrowserTitle                = browser_title
+         , bdFavicon                     = favicon
+         , bdParticipantColor1           = participant_color_1
+         , bdParticipantColor2           = participant_color_2
+         , bdParticipantColor3           = participant_color_3
+         , bdParticipantColor4           = participant_color_4
+         , bdParticipantColor5           = participant_color_5
+         , bdParticipantColor6           = participant_color_6
+         , bdDraftColor                  = draft_color
+         , bdCancelledColor              = cancelled_color
+         , bdInitatedColor               = initiated_color
+         , bdSentColor                   = sent_color
+         , bdDeliveredColor              = delivered_color
+         , bdOpenedColor                 = opened_color
+         , bdReviewedColor               = reviewed_color
+         , bdSignedColor                 = signed_color
+       }
 
 brandedDomainSelector :: [SQL]
 brandedDomainSelector = [
     "id"
+  , "main_domain"
   , "url"
-  , "logo"
-  , "bars_color"
-  , "bars_text_color"
-  , "bars_secondary_color"
-  , "background_color"
-  , "background_color_external"
-  , "mails_background_color"
-  , "mails_button_color"
-  , "mails_text_color"
-  , "mails_border_color"
-  , "signview_primary_color"
-  , "signview_primary_text_color"
-  , "signview_secondary_color"
-  , "signview_secondary_text_color"
-  , "button_class"
-  , "service_link_color"
-  , "external_text_color"
-  , "header_color"
-  , "text_color"
-  , "price_color"
   , "sms_originator"
   , "email_originator"
   , "contact_email"
   , "noreply_email"
+  , "mail_theme"
+  , "signview_theme"
+  , "service_theme"
+  , "login_theme"
+  , "browser_title"
+  , "favicon"
+  , "participant_color_1"
+  , "participant_color_2"
+  , "participant_color_3"
+  , "participant_color_4"
+  , "participant_color_5"
+  , "participant_color_6"
+  , "draft_color"
+  , "cancelled_color"
+  , "initiated_color"
+  , "sent_color"
+  , "delivered_color"
+  , "opened_color"
+  , "reviewed_color"
+  , "signed_color"
   ]
 
 
@@ -87,8 +94,18 @@ instance (MonadDB m, Log.MonadLog m) => DBQuery m GetBrandedDomains [BrandedDoma
       sqlOrderBy "id"
     fetchMany fetchBrandedDomain
 
+data GetMainBrandedDomain =  GetMainBrandedDomain
+instance (MonadDB m,  MonadThrow m, Log.MonadLog m) => DBQuery m GetMainBrandedDomain BrandedDomain where
+  query (GetMainBrandedDomain ) = do
+    runQuery_ . sqlSelect "branded_domains" $ do
+      mapM_ sqlResult $ brandedDomainSelector
+      sqlWhere "branded_domains.main_domain"
+      sqlLimit 1
+    fetchOne fetchBrandedDomain
+
+
 data GetBrandedDomainByURL = GetBrandedDomainByURL String
-instance (MonadDB m, MonadThrow m, Log.MonadLog m) => DBQuery m GetBrandedDomainByURL (Maybe BrandedDomain) where
+instance (MonadDB m, MonadThrow m, Log.MonadLog m) => DBQuery m GetBrandedDomainByURL BrandedDomain where
   query (GetBrandedDomainByURL url) = do
     runQuery_ . sqlSelect "branded_domains" $ do
       mapM_ sqlResult $ brandedDomainSelector
@@ -96,85 +113,100 @@ instance (MonadDB m, MonadThrow m, Log.MonadLog m) => DBQuery m GetBrandedDomain
       sqlWhere "branded_domains.url <> ''"
       sqlOrderBy "branded_domains.id"
       sqlLimit 1
-    fetchMaybe fetchBrandedDomain
+    mdomain <- fetchMaybe fetchBrandedDomain
+    case mdomain of
+         Just d -> return d
+         Nothing -> query $ GetMainBrandedDomain
 
 data GetBrandedDomainByUserID = GetBrandedDomainByUserID UserID
-instance (MonadDB m, MonadThrow m, Log.MonadLog m) => DBQuery m GetBrandedDomainByUserID (Maybe BrandedDomain) where
+instance (MonadDB m,  MonadThrow m, Log.MonadLog m) => DBQuery m GetBrandedDomainByUserID BrandedDomain where
   query (GetBrandedDomainByUserID uid) = do
     runQuery_ . sqlSelect "branded_domains" $ do
       mapM_ sqlResult $ brandedDomainSelector
       sqlWhereExists $ sqlSelect "users" $ do
         sqlWhereEq "users.id" uid
         sqlWhere "users.associated_domain_id = branded_domains.id"
-    fetchMaybe fetchBrandedDomain
+    fetchOne fetchBrandedDomain
+
 
 data GetBrandedDomainByID = GetBrandedDomainByID BrandedDomainID
-instance (MonadDB m, MonadThrow m, Log.MonadLog m) => DBQuery m GetBrandedDomainByID (Maybe BrandedDomain) where
+instance (MonadDB m, MonadThrow m, Log.MonadLog m) => DBQuery m GetBrandedDomainByID BrandedDomain where
   query (GetBrandedDomainByID uid) = do
     runQuery_ . sqlSelect "branded_domains" $ do
       mapM_ sqlResult $ brandedDomainSelector
       sqlWhereEq "id" uid
-    fetchMaybe fetchBrandedDomain
+    fetchOne fetchBrandedDomain
 
 data UpdateBrandedDomain = UpdateBrandedDomain BrandedDomain
-instance (MonadDB m, Log.MonadLog m) => DBUpdate m UpdateBrandedDomain () where
+instance (MonadDB m) => DBUpdate m UpdateBrandedDomain () where
   update (UpdateBrandedDomain bd) = do
     runQuery_ . sqlUpdate "branded_domains" $ do
-      sqlSet "url" $ bdurl bd
-      sqlSet "logo" $ bdlogo bd
-      sqlSet "bars_color" $ bdbarscolour bd
-      sqlSet "bars_text_color" $ bdbarstextcolour bd
-      sqlSet "bars_secondary_color" $ bdbarssecondarycolour bd
-      sqlSet "background_color" $ bdbackgroundcolour bd
-      sqlSet "background_color_external" $ bdbackgroundcolorexternal bd
-      sqlSet "mails_background_color" $ bdmailsbackgroundcolor bd
-      sqlSet "mails_button_color" $ bdmailsbuttoncolor bd
-      sqlSet "mails_text_color" $ bdmailstextcolor bd
-      sqlSet "mails_border_color" $ bdmailsbordercolor bd
-      sqlSet "signview_primary_color" $ bdsignviewprimarycolour bd
-      sqlSet "signview_primary_text_color" $ bdsignviewprimarytextcolour bd
-      sqlSet "signview_secondary_color" $ bdsignviewsecondarycolour bd
-      sqlSet "signview_secondary_text_color" $ bdsignviewsecondarytextcolour bd
-      sqlSet "button_class" $ bdbuttonclass bd
-      sqlSet "service_link_color" $ bdservicelinkcolour bd
-      sqlSet "external_text_color" $ bdexternaltextcolour bd
-      sqlSet "header_color" $ bdheadercolour bd
-      sqlSet "text_color" $ bdtextcolour bd
-      sqlSet "price_color" $ bdpricecolour bd
-      sqlSet "sms_originator" $ bdsmsoriginator bd
-      sqlSet "email_originator" $ bdemailoriginator bd
-      sqlSet "contact_email" $ bdcontactemail bd
-      sqlSet "noreply_email" $ bdnoreplyemail bd
+      sqlSet "url" $ bdUrl bd
+      sqlSet "sms_originator" $ bdSmsOriginator bd
+      sqlSet "email_originator" $ bdEmailOriginator bd
+      sqlSet "contact_email" $ bdContactEmail bd
+      sqlSet "noreply_email" $ bdNoreplyEmail bd
+      sqlSet "mail_theme" $ bdMailTheme bd
+      sqlSet "signview_theme" $ bdSignviewTheme bd
+      sqlSet "service_theme" $ bdServiceTheme bd
+      sqlSet "login_theme" $ bdLoginTheme bd
+      sqlSet "browser_title" $ bdBrowserTitle bd
+      sqlSet "favicon" $  bdFavicon bd
+      sqlSet "participant_color_1" $ bdParticipantColor1 bd
+      sqlSet "participant_color_2" $ bdParticipantColor2 bd
+      sqlSet "participant_color_3" $ bdParticipantColor3 bd
+      sqlSet "participant_color_4" $ bdParticipantColor4 bd
+      sqlSet "participant_color_5" $ bdParticipantColor5 bd
+      sqlSet "participant_color_6" $ bdParticipantColor6 bd
+      sqlSet "draft_color" $ bdDraftColor bd
+      sqlSet "cancelled_color" $ bdCancelledColor bd
+      sqlSet "initiated_color" $ bdInitatedColor bd
+      sqlSet "sent_color" $ bdSentColor bd
+      sqlSet "delivered_color" $ bdDeliveredColor bd
+      sqlSet "opened_color" $ bdOpenedColor bd
+      sqlSet "reviewed_color" $ bdReviewedColor bd
+      sqlSet "signed_color" $ bdSignedColor bd
       sqlWhereEq "id" (bdid bd)
 
 data NewBrandedDomain = NewBrandedDomain
 instance (MonadDB m, MonadThrow m, Log.MonadLog m) => DBUpdate m NewBrandedDomain BrandedDomainID where
   update (NewBrandedDomain) = do
+    mbd <- dbQuery $ GetMainBrandedDomain
+    newmailtheme <- (dbUpdate . UnsafeInsertNewThemeWithoutOwner) =<< (dbQuery $ GetTheme $ bdMailTheme mbd)
+    newsignviewtheme <- (dbUpdate . UnsafeInsertNewThemeWithoutOwner) =<< (dbQuery $ GetTheme $ bdSignviewTheme mbd)
+    newservicetheme <-  (dbUpdate . UnsafeInsertNewThemeWithoutOwner) =<< (dbQuery $ GetTheme $ bdServiceTheme mbd)
+    newlogintheme <-  (dbUpdate . UnsafeInsertNewThemeWithoutOwner) =<< (dbQuery $ GetTheme $ bdLoginTheme mbd)
     runQuery_ . sqlInsert "branded_domains" $ do
       sqlSet "url" ("" :: String)
-      sqlSet "logo" (Nothing :: Maybe (Binary BS.ByteString))
-      sqlSet "bars_color"  ("" :: String)
-      sqlSet "bars_text_color"  ("" :: String)
-      sqlSet "bars_secondary_color"  ("" :: String)
-      sqlSet "background_color" ("" :: String)
-      sqlSet "background_color_external"  ("" :: String)
-      sqlSet "mails_background_color"  ("" :: String)
-      sqlSet "mails_button_color" ("" :: String)
-      sqlSet "mails_text_color" ("" :: String)
-      sqlSet "mails_border_color" ("" :: String)
-      sqlSet "signview_primary_color" ("" :: String)
-      sqlSet "signview_primary_text_color" ("" :: String)
-      sqlSet "signview_secondary_color" ("" :: String)
-      sqlSet "signview_secondary_text_color" ("" :: String)
-      sqlSet "button_class" ("" :: String)
-      sqlSet "service_link_color" ("" :: String)
-      sqlSet "external_text_color" ("" :: String)
-      sqlSet "header_color" ("" :: String)
-      sqlSet "text_color" ("" :: String)
-      sqlSet "price_color" ("" :: String)
+      sqlSet "main_domain" False -- One can not create new main domain
       sqlSet "sms_originator" ("" :: String)
       sqlSet "email_originator" ("" :: String)
       sqlSet "contact_email" ("" :: String)
       sqlSet "noreply_email" ("" :: String)
+      sqlSet "mail_theme" $ themeID newmailtheme
+      sqlSet "signview_theme" $ themeID newsignviewtheme
+      sqlSet "service_theme" $ themeID newservicetheme
+      sqlSet "login_theme" $ themeID newlogintheme
+      sqlSet "browser_title" ("Scrive":: String)
+      sqlSet "favicon" $ bdFavicon mbd
+      sqlSet "participant_color_1" ("#123456":: String)
+      sqlSet "participant_color_2" ("#123456":: String)
+      sqlSet "participant_color_3" ("#123456":: String)
+      sqlSet "participant_color_4" ("#123456":: String)
+      sqlSet "participant_color_5" ("#123456":: String)
+      sqlSet "participant_color_6" ("#123456":: String)
+      sqlSet "draft_color" ("#123456":: String)
+      sqlSet "cancelled_color" ("#123456":: String)
+      sqlSet "initiated_color" ("#123456":: String)
+      sqlSet "sent_color" ("#123456":: String)
+      sqlSet "delivered_color" ("#123456":: String)
+      sqlSet "opened_color" ("#123456":: String)
+      sqlSet "reviewed_color" ("#123456":: String)
+      sqlSet "signed_color" ("#123456":: String)
       sqlResult "id"
-    fetchOne unSingle
+    newdomainID <- fetchOne unSingle
+    dbUpdate $  MakeThemeOwnedByDomain newdomainID (themeID newmailtheme)
+    dbUpdate $  MakeThemeOwnedByDomain newdomainID (themeID newsignviewtheme)
+    dbUpdate $  MakeThemeOwnedByDomain newdomainID (themeID newservicetheme)
+    dbUpdate $  MakeThemeOwnedByDomain newdomainID (themeID newlogintheme)
+    return newdomainID

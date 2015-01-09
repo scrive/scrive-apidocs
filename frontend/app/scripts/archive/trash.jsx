@@ -11,7 +11,6 @@ return React.createClass({
         acceptText: localization.archive.trash.restore.head,
         rejectText: localization.cancel,
         title: localization.archive.trash.restore.head,
-        icon: '/img/modal-icons/restore.png',
         content: jQuery("<p class='center'/>").text(localization.archive.trash.restore.body),
         oneClick: true,
         onAccept : function() {
@@ -45,7 +44,6 @@ return React.createClass({
         acceptText: localization.archive.trash.remove.action,
         rejectText: localization.cancel,
         title: localization.archive.trash.remove.action,
-        icon: '/img/modal-icons/delete.png',
         content: confirmationText,
         onAccept : function() {
           mixpanel.track('Really delete document');
@@ -54,7 +52,7 @@ return React.createClass({
             method: "POST",
             documentids: "[" + _.map(selected, function(doc){return doc.field("fields").id;}) + "]",
             ajaxsuccess : function() {
-              new FlashMessage({color : "green", content : localization.archive.trash.remove.successMessage});
+              new FlashMessage({type: "success", content : localization.archive.trash.remove.successMessage});
               self.reload();
               confirmationPopup.clear();
             }
@@ -78,7 +76,7 @@ return React.createClass({
             name={localization.archive.trash.restore.action}
             onSelect={function(selected,model) {
               if (selected.length ==0 ) {
-                new FlashMessage({color: "red", content: localization.archive.trash.restore.emptyMessage});
+                new FlashMessage({type: "error", content: localization.archive.trash.restore.emptyMessage});
                 return false;
               }
               self.openRestoreModal(selected);
@@ -89,7 +87,7 @@ return React.createClass({
             name={localization.archive.trash.remove.action}
             onSelect={function(selected,model) {
               if (selected.length ==0 ) {
-                new FlashMessage({color: "red", content: localization.archive.trash.remove.emptyMessage});
+                new FlashMessage({type: "error", content: localization.archive.trash.remove.emptyMessage});
                 return false;
               }
               self.openRemoveModal(selected);

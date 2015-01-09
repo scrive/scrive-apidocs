@@ -1,0 +1,98 @@
+body {
+  background: @brandcolor;
+}
+
+.login-box {
+
+  label {
+    color: @brandtextcolor;
+  }
+}
+
+.forgot-password-box {
+
+  label {
+    color: @brandtextcolor;
+  }
+}
+
+.signup-box{
+
+  label {
+    color: @brandtextcolor;
+  }
+}
+
+.create-account-box {
+
+  label {
+    color: @brandtextcolor;
+  }
+
+  .checkbox {
+    @url : %('/branded_image?file=checkboxes-blue.png&color=%D',@brandtextcolor);
+    background-image: url(@url) ;
+  }
+
+  .validation-failed-msg {
+    color: @brandtextcolor;
+  }
+}
+
+.terms-of-service {
+
+  label, h1, h2, div, span, p, div.content h1 {
+    color: @brandtextcolor;
+  }
+}
+
+.error-page {
+
+  label, h1, h2, h3, h4, div, span, p, div.content h1 {
+    color: @brandtextcolor;
+  }
+}
+
+
+.select.change-language-for-login {
+   border: 1px solid @brandtextcolor;
+
+  .select-button {
+    background: @brandcolor;
+
+    .select-button-label {
+      color: @brandtextcolor;
+    }
+    .select-button-right {
+      @url : %('/branded_image?file=select-arrow.png&color=%D',@brandtextcolor);
+      background-image: url(@url) ;
+    }
+  }
+  &.select-exp .select-opts {
+    background: @brandcolor;
+    border: 1px solid @brandtextcolor;
+    color: @brandtextcolor;
+
+    li:hover {
+        background: lighten(@brandcolor,10%);
+
+    }
+
+  }
+}
+
+
+.label-with-link a {
+  color: @brandtextcolor;
+  text-decoration: underline;
+
+
+  &:hover {
+    color: lighten(@brandtextcolor,10%);
+    text-decoration: none;
+  }
+
+  &:active {
+    text-decoration: underline;
+  }
+}

@@ -132,7 +132,7 @@ var ConfirmationWithEmailModel = Backbone.Model.extend({
       acceptText: localization.ok,
       rejectText: localization.cancel,
       editText : "Edit",
-      acceptColor : "green",
+      acceptType : "action",
       onEdit: function() {}
   },
   initialize : function() {
@@ -146,8 +146,8 @@ var ConfirmationWithEmailModel = Backbone.Model.extend({
   acceptText: function() {
        return this.get("acceptText");
   },
-  acceptColor: function() {
-       return this.get("acceptColor");
+  acceptType: function() {
+       return this.get("acceptType");
   },
   rejectText: function() {
        return this.get("rejectText");
@@ -217,7 +217,7 @@ var ConfirmationWithEmailView = Backbone.View.extend({
        var footer = $("<div class='modal-footer'>");
        var cancelOption = $("<label class='clickable cancel close float-left' s/>");
        cancelOption.text(this.model.rejectText());
-       this.editOption = new Button({color: 'black',
+       this.editOption = new Button({
                                     style: 'margin-left: 15px',
                                     cssClass: 'float-left',
                                     text: this.model.editText(),
@@ -236,7 +236,7 @@ var ConfirmationWithEmailView = Backbone.View.extend({
        }
 
 
-       var accept = new Button({color:model.acceptColor(),
+       var accept = new Button({ type: model.acceptType(),
                                  style : BrowserInfo.isSmallScreen() ? "margin-top:-10px" : "",
                                  cssClass: "float-right",
                                  text: this.model.acceptText(),

@@ -480,7 +480,6 @@ var DocumentViewSignatoryView = React.createClass({
 
              {/*if*/ model.hasRemindOption() &&
               <Button
-                   color="black"
                    text={signatory.hasSigned() ? localization.process.remindagainbuttontext : localization.reminder.send}
                    onClick={this.handleSendReminder}
               />
@@ -489,7 +488,6 @@ var DocumentViewSignatoryView = React.createClass({
 
              {/*if*/ model.hasGoToSignviewOption() &&
                <Button
-                 color="black"
                  text={localization.authorview.goToSignView}
                  onClick={this.goToSignView}
                />
@@ -499,7 +497,7 @@ var DocumentViewSignatoryView = React.createClass({
 
              {/*if*/ model.hasChangeEmailOption() &&
                <Button
-                 color="black"
+                 type="optional"
                  text={localization.changeEmail}
                  onClick={this.handleStartChangingEmail}
                />
@@ -509,7 +507,7 @@ var DocumentViewSignatoryView = React.createClass({
 
              {/*if*/ model.hasChangePhoneOption() &&
                <Button
-                 color="black"
+                 type="optional"
                  text={localization.changePhone}
                  onClick={this.handleStartChangingMobile}
                />

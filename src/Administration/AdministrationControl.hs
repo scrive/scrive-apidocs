@@ -13,11 +13,13 @@ module Administration.AdministrationControl(
           , daveRoutes
           ) where
 
+import Control.Applicative
 import Control.Monad.State
 import Data.Char
-import Data.Functor
+import Data.Functor.Invariant
 import Data.List
 import Data.Maybe
+import Data.Unjson
 import Happstack.Server hiding (simpleHTTP,dir,path,https)
 import Happstack.StaticRouting(Route, choice, dir)
 import Text.JSON
@@ -25,16 +27,17 @@ import Text.JSON.Gen
 import Text.StringTemplates.Templates
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
+import qualified Data.ByteString.Char8 as BSC8
 import qualified Data.ByteString.UTF8 as BS
+import qualified Data.Unjson as Unjson
+import qualified Data.Yaml as Yaml
 import qualified Text.StringTemplates.Fields as F
 
 import Administration.AddPaymentPlan
 import Administration.AdministrationView
 import AppView (respondWithPDF)
 import BrandedDomain.BrandedDomain
-import BrandedDomain.BrandedDomainID
 import BrandedDomain.Model
-import Company.CompanyUI
 import Company.Model
 import CompanyAccounts.Model
 import Control.Logic
@@ -53,6 +56,7 @@ import Happstack.Fields
 import InputValidation
 import InspectXML
 import InspectXMLInstances ()
+import InspectXMLInstances ()
 import IPAddress ()
 import Kontra
 import KontraLink
@@ -63,6 +67,7 @@ import Payments.Action
 import Payments.Config
 import Payments.Model
 import Routing
+import Theme.Control
 import User.Email
 import User.History.Model
 import User.UserControl
@@ -125,10 +130,13 @@ adminonlyRoutes =
         , dir "companies" $ hGet $ toK0 $ jsonCompanies
 
         , dir "brandeddomainslist" $ hGet $ toK0 $ jsonBrandedDomainsList
-        , dir "brandeddomain" $ hGet $ toK1 $ showAdminBrandedDomain
         , dir "brandeddomain" $ dir "create" $ hPost $ toK0 $ createBrandedDomain
         , dir "brandeddomain" $ dir "details" $ hGet $ toK1 $ jsonBrandedDomain
         , dir "brandeddomain" $ dir "details" $ dir "change" $ hPost $ toK1 $ updateBrandedDomain
+        , dir "brandeddomain" $ dir "themes" $ hGet $ toK1 $ handleGetThemesForDomain
+        , dir "brandeddomain" $ dir "newtheme" $ hPost $ toK2 $ handleNewThemeForDomain
+        , dir "brandeddomain" $ dir "updatetheme" $ hPost $ toK2 $ handleUpdateThemeForDomain
+        , dir "brandeddomain" $ dir "deletetheme" $ hPost $ toK2$ handleDeleteThemeForDomain
   ]
 
 daveRoutes :: Route (KontraPlus Response)
@@ -155,25 +163,18 @@ showAdminUsers uid = onlySalesOrAdmin $ adminUserPage uid
 
 handleUserGetProfile:: Kontrakcja m => UserID -> m JSValue
 handleUserGetProfile uid = onlySalesOrAdmin $ do
-  ctx <- getContext
   user <- guardJustM $ dbQuery $ GetUserByID uid
   company <- getCompanyForUser user
-  companyui <- dbQuery $ GetCompanyUI (usercompany user)
-  userJSON ctx user (company,companyui)
+  userJSON user company
 
 
 handleCompanyGetProfile:: Kontrakcja m => CompanyID -> m JSValue
 handleCompanyGetProfile cid = onlySalesOrAdmin $ do
-  ctx <- getContext
   company <- guardJustM $ dbQuery $ GetCompany cid
-  companyui <- dbQuery $ GetCompanyUI cid
-  companyJSON ctx company companyui
+  companyJSON  company
 
 showAdminCompany :: Kontrakcja m => CompanyID -> m String
 showAdminCompany companyid = onlySalesOrAdmin $ adminCompanyPage companyid
-
-showAdminBrandedDomain :: Kontrakcja m => BrandedDomainID -> m String
-showAdminBrandedDomain bdid = onlySalesOrAdmin $ adminDomainBrandingPage bdid
 
 companyPaymentsJSON :: Kontrakcja m => CompanyID -> m JSValue
 companyPaymentsJSON cid = onlySalesOrAdmin $ do
@@ -233,7 +234,6 @@ jsonCompanies = onlySalesOrAdmin $ do
                     value "companyzip"     $ companyzip . companyinfo $ company
                     value "companycity"    $ companycity . companyinfo $ company
                     value "companycountry" $ companycountry . companyinfo $ company
-                    value "companysmsoriginator" $ companysmsoriginator . companyinfo $ company
                 value "link" $ show $ LinkCompanyAdmin $ companyid $ company
             value "paging" $ pagingParamsJSON companies
 
@@ -462,7 +462,6 @@ getCompanyInfoChange = do
   mcompanycity    <- getField "companycity"
   mcompanycountry <- getField "companycountry"
   mcompanyipaddressmasklist <- getOptionalField asValidIPAddressWithMaskList "companyipaddressmasklist"
-  mcompanysmsoriginator <- getField "companysmsoriginator"
   mcompanycgidisplayname <- fmap nothingIfEmpty <$> getField "companycgidisplayname"
   mcompanyallowsavesafetycopy <- getField "companyallowsavesafetycopy"
   mcompanyidledoctimeout <- (>>= \s -> if null s
@@ -479,7 +478,6 @@ getCompanyInfoChange = do
       , companycity        = fromMaybe companycity mcompanycity
       , companycountry     = fromMaybe companycountry mcompanycountry
       , companyipaddressmasklist = fromMaybe companyipaddressmasklist mcompanyipaddressmasklist
-      , companysmsoriginator = fromMaybe companysmsoriginator mcompanysmsoriginator
       , companyallowsavesafetycopy = maybe companyallowsavesafetycopy (=="true") mcompanyallowsavesafetycopy
       , companyidledoctimeout = fromMaybe companyidledoctimeout mcompanyidledoctimeout
       , companycgidisplayname = fromMaybe companycgidisplayname mcompanycgidisplayname
@@ -713,129 +711,127 @@ handleAdminCompanyUsageStatsMonths :: Kontrakcja m => CompanyID -> m JSValue
 handleAdminCompanyUsageStatsMonths cid = onlySalesOrAdmin $ do
   getMonthsStats (Right $ cid)
 
-jsonBrandedDomainsList ::Kontrakcja m => m JSValue
+jsonBrandedDomainsList ::Kontrakcja m => m Response
 jsonBrandedDomainsList = onlySalesOrAdmin $ do
-    params <- getListParams
-    let _filters = userSearchingFromParams params
-        _sorting = userSortingFromParams params
-        _pagination = ((listParamsOffset params),(pageSize * 4))
-        pageSize = 100
-
     allBrandedDomains <- dbQuery $ GetBrandedDomains
-    let allBrandedDomainsPagedList =
-                PagedList { list       = allBrandedDomains
-                          , params     = params
-                          , pageSize   = pageSize
-                          , listLength = length allBrandedDomains
-                          }
+    let  res = unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) unjsonBrandedDomainsList allBrandedDomains
+    return $ toResponseBS "text/json" $ res
 
-    runJSONGenT $ do
-      valueM "list" $ forM (take pageSize $ allBrandedDomains) $ \bd -> runJSONGenT $ do
-        object "fields" $ do
-          jsonBrandedDomainHelper bd
-      value "paging" $ pagingParamsJSON allBrandedDomainsPagedList
-
-jsonBrandedDomain :: Kontrakcja m => BrandedDomainID -> m JSValue
+jsonBrandedDomain :: Kontrakcja m => BrandedDomainID -> m Response
 jsonBrandedDomain bdid = onlySalesOrAdmin $ do
-
-  bd <- guardJustM $ dbQuery $ GetBrandedDomainByID bdid
-
-  runJSONGenT $ do
-    jsonBrandedDomainHelper bd
-
-jsonBrandedDomainHelper :: forall (m :: * -> *).
-                                 Monad m =>
-                                 BrandedDomain -> JSONGenT m ()
-jsonBrandedDomainHelper bd = do
-  -- keep this 1to1 consistent with fields in the database
-  value "id"                            $ show (bdid bd)
-  value "url"                           $ bdurl bd
-  value "logo"                          $ fromMaybe ""  $ BS.toString . BS.append (BS.fromString "data:image/png;base64,") .  B64.encode . unBinary <$> (bdlogo $ bd)
-  value "bars_color"                    $ bdbarscolour bd
-  value "bars_text_color"               $ bdbarstextcolour bd
-  value "bars_secondary_color"          $ bdbarssecondarycolour bd
-  value "background_color"              $ bdbackgroundcolour bd
-  value "background_color_external"     $ bdbackgroundcolorexternal bd
-  value "mails_background_color"        $ bdmailsbackgroundcolor bd
-  value "mails_button_color"            $ bdmailsbuttoncolor bd
-  value "mails_text_color"              $ bdmailstextcolor bd
-  value "mails_border_color"            $ bdmailsbordercolor bd
-  value "signview_primary_color"        $ bdsignviewprimarycolour bd
-  value "signview_primary_text_color"   $ bdsignviewprimarytextcolour bd
-  value "signview_secondary_color"      $ bdsignviewsecondarycolour bd
-  value "signview_secondary_text_color" $ bdsignviewsecondarytextcolour bd
-  value "button_class"                  $ bdbuttonclass bd
-  value "service_link_color"            $ bdservicelinkcolour bd
-  value "external_text_color"           $ bdexternaltextcolour bd
-  value "header_color"                  $ bdheadercolour bd
-  value "text_color"                    $ bdtextcolour bd
-  value "price_color"                   $ bdpricecolour bd
-  value "sms_originator"                $ bdsmsoriginator bd
-  value "email_originator"              $ bdemailoriginator bd
-  value "contact_email"                 $ bdcontactemail bd
-  value "noreply_email"                 $ bdnoreplyemail bd
+  bd <- dbQuery $ GetBrandedDomainByID bdid
+  let  res = unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) unjsonBrandedDomain bd
+  return $ toResponseBS "text/json" $ res
 
 updateBrandedDomain :: Kontrakcja m => BrandedDomainID -> m ()
 updateBrandedDomain xbdid = onlySalesOrAdmin $ do
-
+    obd <- dbQuery $ GetBrandedDomainByID xbdid
     -- keep this 1to1 consistent with fields in the database
-    post_url <- look "bdurl"
-    post_logo <- getField "logo"
-    post_bars_color <- look "bars_color"
-    post_bars_text_color <- look "bars_text_color"
-    post_bars_secondary_color <- look "bars_secondary_color"
-    post_background_color <- look "background_color"
-    post_background_color_external <- look "background_color_external"
-    post_mails_background_color <- look "mails_background_color"
-    post_mails_button_color <- look "mails_button_color"
-    post_mails_text_color <- look "mails_text_color"
-    post_mails_border_color <- look "mails_border_color"
-    post_signview_primary_color <- look "signview_primary_color"
-    post_signview_primary_text_color <- look "signview_primary_text_color"
-    post_signview_secondary_color <- look "signview_secondary_color"
-    post_signview_secondary_text_color <- look "signview_secondary_text_color"
-    post_button_class <- look "button_class"
-    post_service_link_color <- look "service_link_color"
-    post_external_text_color <- look "external_text_color"
-    post_header_color <- look "header_color"
-    post_text_color <- look "text_color"
-    post_price_color <- look "price_color"
-    post_sms_originator <- look "sms_originator"
-    post_email_originator <- look "email_originator"
-    post_contact_email <- look "contact_email"
-    post_noreply_email <- look "noreply_email"
+    domainJSON <- guardJustM $ getField "domain"
+    case Yaml.decode (BSC8.pack domainJSON) of
+     Nothing -> internalError
+     Just js -> case (Unjson.parse unjsonBrandedDomain js) of
+        (Result newDomain []) -> do
+          _ <- dbUpdate $ UpdateBrandedDomain newDomain {bdid = bdid obd, bdMainDomain = bdMainDomain obd}
+          return ()
+        _ -> internalError
 
-    let bd = BrandedDomain {
-        bdid = xbdid,
-        bdurl = post_url,
-        bdlogo = (Binary . B64.decodeLenient) <$> BS.fromString <$>  drop 1 <$> dropWhile ((/=) ',') <$> post_logo,
-        bdbarscolour = post_bars_color,
-        bdbarstextcolour = post_bars_text_color,
-        bdbarssecondarycolour = post_bars_secondary_color,
-        bdbackgroundcolour = post_background_color,
-        bdbackgroundcolorexternal = post_background_color_external,
-        bdmailsbackgroundcolor = post_mails_background_color,
-        bdmailsbuttoncolor = post_mails_button_color,
-        bdmailstextcolor = post_mails_text_color,
-        bdmailsbordercolor = post_mails_border_color,
-        bdsignviewprimarycolour = post_signview_primary_color,
-        bdsignviewprimarytextcolour = post_signview_primary_text_color,
-        bdsignviewsecondarycolour = post_signview_secondary_color,
-        bdsignviewsecondarytextcolour = post_signview_secondary_text_color,
-        bdbuttonclass = post_button_class,
-        bdservicelinkcolour = post_service_link_color,
-        bdexternaltextcolour = post_external_text_color,
-        bdheadercolour = post_header_color,
-        bdtextcolour = post_text_color,
-        bdpricecolour = post_price_color,
-        bdsmsoriginator = post_sms_originator,
-        bdemailoriginator = post_email_originator,
-        bdcontactemail = post_contact_email,
-        bdnoreplyemail = post_noreply_email
-             }
+unjsonBrandedDomain :: UnjsonDef BrandedDomain
+unjsonBrandedDomain = objectOf $ pure BrandedDomain
+  <*> field "id"
+      bdid
+      "Id of a branded domain (unique)"
+  <*> field "mainDomain"
+      bdMainDomain
+      "Is this a main domain"
+  <*> field "url"
+      bdUrl
+      "URL that will match this domain"
+  <*> field "smsOriginator"
+      bdSmsOriginator
+      "Originator for text messages"
+  <*> field "emailOriginator"
+      bdEmailOriginator
+      "Originator for email messages"
+  <*> field "contactEmail"
+      bdContactEmail
+      "Email address to contact owner of domain"
+  <*> field "noreplyEmail"
+      bdNoreplyEmail
+      "Email address that none should reply to"
+  <*> field "mailTheme"
+      bdMailTheme
+      "Email theme"
+  <*> field "signviewTheme"
+      bdSignviewTheme
+      "Signview theme"
+  <*> field "serviceTheme"
+      bdServiceTheme
+      "Service theme"
+  <*> field "loginTheme"
+      bdLoginTheme
+      "Login theme"
+  <*> field "browserTitle"
+      bdBrowserTitle
+      "Browser title"
+  <*> fieldBy "favicon"
+      bdFavicon
+      "Favicon"
+       (invmap
+          (\l -> Binary $ B64.decodeLenient $ BS.fromString $  drop 1 $ dropWhile ((/=) ',') l)
+          (\l -> BS.toString $ BS.append (BS.fromString "data:image/png;base64,") $ B64.encode $ unBinary l)
+          unjsonDef
+       )
+   <*> field "participantColor1"
+      bdParticipantColor1
+      "Participant 1 color"
+   <*> field "participantColor2"
+      bdParticipantColor2
+      "Participant 2 color"
+   <*> field "participantColor3"
+      bdParticipantColor3
+      "Participant 3 color"
+   <*> field "participantColor4"
+      bdParticipantColor4
+      "Participant 4 color"
+   <*> field "participantColor5"
+      bdParticipantColor5
+      "Participant 5 color"
+   <*> field "participantColor6"
+      bdParticipantColor6
+      "Participant 6 color"
+   <*> field "draftColor"
+      bdDraftColor
+      "Draft color"
+   <*> field "cancelledColor"
+      bdCancelledColor
+      "Cancelled color"
+   <*> field "initatedColor"
+      bdInitatedColor
+      "Initated color"
+   <*> field "sentColor"
+      bdSentColor
+      "Sent color"
+   <*> field "deliveredColor"
+      bdDeliveredColor
+      "Delivered color"
+   <*> field "openedColor"
+      bdOpenedColor
+      "Opened color"
+   <*> field "reviewedColor"
+      bdReviewedColor
+      "Reviewed color"
+   <*> field "signedColor"
+      bdSignedColor
+      "Signed color"
 
-    _ <- dbUpdate $ UpdateBrandedDomain bd
-    return ()
+unjsonBrandedDomainsList :: UnjsonDef [BrandedDomain]
+unjsonBrandedDomainsList = objectOf $
+  fieldBy "list"
+  id
+  "Propper list"
+  (arrayOf unjsonBrandedDomain)
+
 
 createBrandedDomain :: Kontrakcja m => m JSValue
 createBrandedDomain = do

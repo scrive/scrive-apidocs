@@ -18,7 +18,7 @@ enableCookies=
 <![endif]-->
 <link href='/css/fonts/SourceSansPro.css' rel='stylesheet' type='text/css'/>
 <link href='/css/fonts/HelveticaNeue.css' rel='stylesheet' type='text/css'/>
-<link rel=" icon" href="/favicon.png" />
+<link rel=" icon" href="/favicon/$brandinghash$" />
 <script src="/$ctxlang$/localization/$versioncode$.js"  type="text/javascript"></script>
 <script type="text/javascript"> window.versioncode = "$versioncode$" </script>
 

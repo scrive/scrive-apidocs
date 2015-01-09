@@ -1,5 +1,5 @@
 module BrandedDomain.BrandedDomain
-  (   BrandedDomains
+  (   BrandedDomainID
     , BrandedDomain(..)
   ) where
 
@@ -7,34 +7,35 @@ import qualified Data.ByteString.Char8 as BS
 
 import BrandedDomain.BrandedDomainID
 import DB
-
-type BrandedDomains = [BrandedDomain]
+import Theme.ThemeID
 
 data BrandedDomain = BrandedDomain {
                           bdid :: BrandedDomainID
-                        , bdurl :: String
-                        , bdlogo :: Maybe (Binary BS.ByteString)
-                        , bdbarscolour :: String
-                        , bdbarstextcolour :: String
-                        , bdbarssecondarycolour :: String
-                        , bdbackgroundcolour :: String
-                        , bdbackgroundcolorexternal :: String
-                        , bdmailsbackgroundcolor :: String
-                        , bdmailsbuttoncolor :: String
-                        , bdmailstextcolor :: String
-                        , bdmailsbordercolor :: String
-                        , bdsignviewprimarycolour :: String
-                        , bdsignviewprimarytextcolour :: String
-                        , bdsignviewsecondarycolour :: String
-                        , bdsignviewsecondarytextcolour :: String
-                        , bdbuttonclass    :: String
-                        , bdservicelinkcolour :: String
-                        , bdexternaltextcolour :: String
-                        , bdheadercolour :: String
-                        , bdtextcolour :: String
-                        , bdpricecolour :: String
-                        , bdsmsoriginator :: String
-                        , bdemailoriginator :: String
-                        , bdcontactemail :: String
-                        , bdnoreplyemail  :: String
-                      } deriving (Eq, Ord, Show)
+                        , bdMainDomain :: Bool
+                        , bdUrl :: String
+                        , bdSmsOriginator :: String
+                        , bdEmailOriginator :: String
+                        , bdContactEmail :: String
+                        , bdNoreplyEmail  :: String
+                        , bdMailTheme     :: ThemeID
+                        , bdSignviewTheme :: ThemeID
+                        , bdServiceTheme  :: ThemeID
+                        , bdLoginTheme    :: ThemeID
+                        , bdBrowserTitle  :: String
+                        , bdFavicon       :: Binary BS.ByteString
+                        , bdParticipantColor1 :: String
+                        , bdParticipantColor2 :: String
+                        , bdParticipantColor3 :: String
+                        , bdParticipantColor4 :: String
+                        , bdParticipantColor5 :: String
+                        , bdParticipantColor6 :: String
+                        , bdDraftColor        :: String
+                        , bdCancelledColor    :: String
+                        , bdInitatedColor     :: String
+                        , bdSentColor         :: String
+                        , bdDeliveredColor    :: String
+                        , bdOpenedColor       :: String
+                        , bdReviewedColor     :: String
+                        , bdSignedColor       :: String
+} deriving (Eq, Ord, Show)
+

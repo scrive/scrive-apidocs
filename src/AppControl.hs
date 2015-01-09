@@ -297,7 +297,7 @@ appHandler handleRoutes appConf appGlobals = catchEverything . enhanceYourCalm $
           userAgent  = BS.toString <$> getHeader "user-agent" rq
       muser <- getUserFromSession session
       mpaduser <- getPadUserFromSession session
-      mbrandeddomain <- dbQuery $ GetBrandedDomainByURL currhostpart
+      brandeddomain <- dbQuery $ GetBrandedDomainByURL currhostpart
 
       flashmessages <- withDataFn F.flashDataFromCookie $ maybe (return []) $ \fval -> do
         flashes <- liftIO $ (E.try (E.evaluate $ F.fromCookieValue fval) :: IO (Either  E.SomeException (Maybe [FlashMessage])))
@@ -344,7 +344,7 @@ appHandler handleRoutes appConf appGlobals = catchEverything . enhanceYourCalm $
         , ctxhubspotconf = hubspotConf appConf
         , ctxgoogleanalyticstoken = googleanalyticsToken appConf
         , ctxhomebase = homebase appConf
-        , ctxbrandeddomain = mbrandeddomain
+        , ctxbrandeddomain = brandeddomain
         , ctxsalesforceconf = getSalesforceConf appConf
         , ctxthreadjoins = []
         }

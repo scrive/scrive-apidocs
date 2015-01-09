@@ -38,9 +38,6 @@ data KontraLink
     | LinkArchive
     | LinkAccount
     | LinkAccountCompany (Maybe CompanyID)
-    | LinkCompanySignViewLogo CompanyID
-    | LinkCompanyCustomLogo CompanyID
-    | LinkCompanyEmailLogo CompanyID
     | LinkChangeUserEmail UserID MagicHash
     | LinkUserMailAPI
     | LinkSignDoc Document SignatoryLink
@@ -66,9 +63,6 @@ data KontraLink
     | LinkOAuthAuthorization APIToken
     | LinkOAuthCallback URI APIToken (Maybe MagicHash)
     | LinkExternal String
-    | LinkMainLogo
-    | LinkBrandedDomainLogo
-    | LinkBrandedDomainLogoWithMD5 String
     | LinkDesignView
     | LinkPadList
     deriving (Eq)
@@ -90,9 +84,6 @@ instance Show KontraLink where
     showsPrec _ (LinkAccount) = (++) "/account"
     showsPrec _ (LinkAccountCompany Nothing) = (++) "/account#company"
     showsPrec _ (LinkAccountCompany (Just cid)) = (++) $ "/adminonly/companyadmin/" ++ show cid
-    showsPrec _ (LinkCompanySignViewLogo cid) = (++) $ "/account/company/signview/" ++ show cid
-    showsPrec _ (LinkCompanyCustomLogo cid) = (++) $ "/account/company/custom/" ++ show cid
-    showsPrec _ (LinkCompanyEmailLogo cid) = (++) $ "/account/company/email/" ++ show cid
     showsPrec _ (LinkChangeUserEmail actionid magichash) =
         (++) $ "/account/" ++ show actionid ++  "/" ++ show magichash
     showsPrec _ (LinkCompanyAccounts) = (++) $ "/account#users"
@@ -133,9 +124,6 @@ instance Show KontraLink where
       (++) (show $ setParams url [("oauth_token", show token), ("denied", "true")])
     showsPrec _ (LinkAttachmentView attid) = (++) ("/a/" ++ show attid)
     showsPrec _ (LinkDesignView) = (++) "/newdocument"
-    showsPrec _ (LinkMainLogo) =(++) "/img/logo_email.png"
-    showsPrec _ (LinkBrandedDomainLogo) =(++) "/branding/logo"
-    showsPrec _ (LinkBrandedDomainLogoWithMD5 md5) = (++) ("/branding/logo/" ++ md5)
     showsPrec _ (LinkPadList) = (++) "/to-sign"
     showsPrec _ (LinkExternal s) = (++) s
 

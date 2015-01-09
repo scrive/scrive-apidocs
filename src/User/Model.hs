@@ -117,7 +117,7 @@ data User = User {
   , userinfo                      :: UserInfo
   , usersettings                  :: UserSettings
   , usercompany                   :: CompanyID
-  , userassociateddomainid        :: Maybe BrandedDomainID
+  , userassociateddomainid        :: BrandedDomainID
   } deriving (Eq, Ord, Show)
 
 data UserInfo = UserInfo {
@@ -262,9 +262,9 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m RemoveInactiveUser Bool where
        runQuery_ $ "UPDATE signatory_links SET user_id = NULL WHERE user_id = " <?> uid <+> "AND EXISTS (SELECT TRUE FROM users WHERE users.id = " <?> uid <+> " AND users.has_accepted_terms_of_service IS NULL)"
        runQuery01 $ "DELETE FROM users WHERE id = " <?> uid <+> "AND has_accepted_terms_of_service IS NULL"
 
-data AddUser = AddUser (String, String) String (Maybe Password) (CompanyID,Bool) Lang (Maybe BrandedDomainID)
+data AddUser = AddUser (String, String) String (Maybe Password) (CompanyID,Bool) Lang BrandedDomainID
 instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where
-  update (AddUser (fname, lname) email mpwd (cid, admin) l mad) = do
+  update (AddUser (fname, lname) email mpwd (cid, admin) l ad) = do
     mu <- query $ GetUserByEmail $ Email email
     case mu of
       Just _ -> return Nothing -- user with the same email address exists
@@ -285,7 +285,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where
             sqlSet "email" $ map toLower email
             sqlSet "lang" l
             sqlSet "deleted" (Nothing :: Maybe UTCTime)
-            sqlSet "associated_domain_id" mad
+            sqlSet "associated_domain_id" ad
             mapM_ sqlResult selectUsersSelectorsList
         fetchMaybe fetchUser
 
@@ -460,7 +460,7 @@ selectUsersSelectorsList =
 selectUsersSelectors :: SQL
 selectUsersSelectors = sqlConcatComma selectUsersSelectorsList
 
-fetchUser :: (UserID, Maybe (Binary ByteString), Maybe (Binary ByteString), Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, Maybe BrandedDomainID) -> User
+fetchUser :: (UserID, Maybe (Binary ByteString), Maybe (Binary ByteString), Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, BrandedDomainID) -> User
 fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id) = User {
   userid = uid
 , userpassword = maybePassword (password, salt)
@@ -509,7 +509,6 @@ selectUsersWithCompaniesSQL = "SELECT"
   <> ", c.city"
   <> ", c.country"
   <> ", c.ip_address_mask_list"
-  <> ", c.sms_originator"
   <> ", c.allow_save_safety_copy"
   <> ", c.idle_doc_timeout"
   <> ", c.cgi_display_name"
@@ -517,8 +516,8 @@ selectUsersWithCompaniesSQL = "SELECT"
   <> "  LEFT JOIN companies c ON users.company_id = c.id"
   <> "  WHERE users.deleted IS NULL"
 
-fetchUserWithCompany :: (UserID, Maybe (Binary ByteString), Maybe (Binary ByteString), Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, Maybe BrandedDomainID, Maybe CompanyID, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Bool, Maybe Int16, Maybe String) -> (User, Company)
-fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, cid, name, number, address, zip', city, country, ip_address_mask, sms_originator, allow_save_safety_copy, idle_doc_timeout, cgi_display_name) = (user, company)
+fetchUserWithCompany :: (UserID, Maybe (Binary ByteString), Maybe (Binary ByteString), Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, BrandedDomainID, Maybe CompanyID, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Bool, Maybe Int16, Maybe String) -> (User, Company)
+fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, cid, name, number, address, zip', city, country, ip_address_mask, allow_save_safety_copy, idle_doc_timeout, cgi_display_name) = (user, company)
   where
     user = User {
       userid = uid
@@ -549,7 +548,6 @@ fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, 
       , companycity = fromJust city
       , companycountry = fromJust country
       , companyipaddressmasklist = maybe [] read ip_address_mask
-      , companysmsoriginator = fromJust sms_originator
       , companyallowsavesafetycopy = allow_save_safety_copy
       , companyidledoctimeout = idle_doc_timeout
       , companycgidisplayname = cgi_display_name

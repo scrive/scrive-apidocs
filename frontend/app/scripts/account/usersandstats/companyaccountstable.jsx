@@ -59,12 +59,12 @@ var openCreateAccountPopup = function(callback) {
                         ajaxsuccess : function(resp) {
                           callback();
                           if (JSON.parse(resp).added)
-                             new FlashMessage({color: "green", content : localization.account.companyAccounts.companyInviteSent});
+                             new FlashMessage({type : "success", content : localization.account.companyAccounts.companyInviteSent});
                           else {
                              if (JSON.parse(resp).samecompany)
-                                new FlashMessage({color: "blue", content : localization.account.companyAccounts.companyInviteNotSentSameCompany});
+                                new FlashMessage({type : "success", content : localization.account.companyAccounts.companyInviteNotSentSameCompany});
                              else
-                                new FlashMessage({color: "red", content : localization.account.companyAccounts.companyInviteNotSent});
+                                new FlashMessage({type : "error", content : localization.account.companyAccounts.companyInviteNotSent});
                           }
                           popup.close();
                         },
@@ -81,11 +81,9 @@ var openCreateAccountPopup = function(callback) {
                  }
               },
               title : localization.account.companyAccounts.createNewModalTitle,
-              subtitle: localization.account.companyAccounts.createNewModalBody,
               width: 533,
-              icon: '/img/modal-icons/newaccount.png',
               acceptButtonText : localization.account.companyAccounts.createNewModalAcceptButton,
-              content  : body
+              content: $("<div>").append($("<div class='modal-subtitle'>").html(localization.account.companyAccounts.createNewModalBody)).append(body)
             });
 };
 
@@ -98,7 +96,6 @@ var openRemoveUserPopup = function(d,callback) {
     acceptText: localization.ok,
     rejectText: localization.cancel,
     title: localization.account.companyAccounts.deleteModalTitle,
-    icon: '/img/modal-icons/removeaccount.png',
     content: content,
     onAccept: function() {
       mixpanel.track('Click delete user');
@@ -109,9 +106,9 @@ var openRemoveUserPopup = function(d,callback) {
         ajaxsuccess : function(resp) {
           popup.close();
           if (JSON.parse(resp).removed)
-            new FlashMessage({color: "green", content : localization.account.companyAccounts.companyAccountDeleted});
+            new FlashMessage({type : "success", content : localization.account.companyAccounts.companyAccountDeleted});
           else
-            new FlashMessage({color: "red", content : localization.account.companyAccounts.deleteFailedHasDocuments});
+            new FlashMessage({type : "error", content : localization.account.companyAccounts.deleteFailedHasDocuments});
           callback();
         },
       removeid: d.field("fields").id,
@@ -132,7 +129,7 @@ var openResendInvitationPopup = function(d,callback) {
                                         ajaxsuccess : function(resp) {
                                           popup.close();
                                           if (JSON.parse(resp).resent)
-                                              new FlashMessage({color: "green", content : localization.account.companyAccounts.companyInviteResent});
+                                              new FlashMessage({type : "success", content : localization.account.companyAccounts.companyInviteResent});
                                           callback();
                                         },
                                         method: "POST",
@@ -144,7 +141,6 @@ var openResendInvitationPopup = function(d,callback) {
                                   acceptText: localization.account.companyAccounts.resendModalAccept,
                                   rejectText: localization.cancel,
                                   title: localization.account.companyAccounts.resendModalTitle,
-                                  icon: '/img/modal-icons/remind.png',
                                   content: $("<p/>").text(localization.account.companyAccounts.resendModalBody + userFullName(d) + ".")
                                 });
 };
@@ -186,7 +182,7 @@ return React.createClass({
 
             <List.ListAction
               name={localization.account.companyAccounts.createNewButtonText}
-              color="green"
+              type="action"
               onSelect={function() {
                 openCreateAccountPopup(function() {self.reload();});
               }}

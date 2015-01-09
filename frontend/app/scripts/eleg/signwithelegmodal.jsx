@@ -23,7 +23,6 @@ return function(args) {
       });
 
       var signAnotherDeviceButton = new Button({
-        color: "black",
         cssClass : "other-sign-button",
         text:localization.docsignview.eleg.bankid.modalAnotherDevice,
         onClick:function() {
@@ -39,7 +38,7 @@ return function(args) {
       });
 
       var signThisDeviceButton = new Button({
-        color: "green",
+        type: "action",
         text:localization.docsignview.eleg.bankid.modalThisDevice,
         onClick:function() {
 	  mixpanel.track('Clicked BankID on this device');
@@ -74,7 +73,7 @@ return function(args) {
 
       // Remove the modal footer but keep the button (regular or mobile bankid)
       var signButton = new Button({
-        color: "green",
+        color: "action",
         size: "big",
         style:"margin-top:-10px;margin-bottom:10px",
         cssClass: "signbutton",

@@ -1,108 +1,4 @@
 ###
-notFound=
-<div class='mainContainer big'>
-<img width="1920" height="800" src="/img/bg-home.jpg" class="bg"/>
-<div class='short-input-section'>
-  <div class="shadowed">
-    $_notFound()$
-  </div>
-  <div class='short-input-container'>
-    <div class='short-input-container-body-wrapper'>
-      <div class='short-input-container-body'>
-        <p class='position first'>
-         $_afterErrorGoToInstruction()$
-        </p>
-        <p class="position" style='height:44px;'>
-          <a class='button float-left' style='width:100px;' href='/'>
-            $_afterErrorGoHomepage()$
-          </a>
-          <a href='#' class='button float-right' style='width:100px;' onClick='history.go(-1);return false;'>
-            $_afterErrorGoBack()$
-          </a>
-        </p>
-      </div>
-    </div>
-  </div>
-</div>
-</div>
-<script>
- mixpanel.track('Error', {
-   Message : '404',
-   URL : window.location.href
- });
-</script>
-###
-internalServerError=
-<div class='mainContainer big'>
-<img width="1920" height="800" src="/img/bg-home.jpg" class="bg"/>
-<div class='short-input-section'>
-  <div class="shadowed">
-   $_internalServerError()$
-  </div>
-  <div class='short-input-container'>
-    <div class='short-input-container-body-wrapper'>
-      <div class='short-input-container-body'>
-        <p class='position first'>
-         $_afterErrorGoToInstruction()$
-        </p>
-        <p class="position" style='height:44px;'>
-          <a class='button float-left' style='width:100px;' href='/'>
-            $_afterErrorGoHomepage()$
-          </a>
-          <a href='#' class='button float-right' style='width:100px;' onClick='history.go(-1);return false;'>
-            $_afterErrorGoBack()$
-          </a>
-        </p>
-      </div>
-    </div>
-  </div>
-</div>
-</div>
-<script>
- mixpanel.track('Error', {
-   Message : '500',
-   URL : window.location.href
- });
-</script>
-###
-signSessionTimeOut=
-<div class='mainContainer big'>
-  <img width="1920" height="800" src="/img/bg-home.jpg" class="bg"/>
-  <div class='short-input-section'>
-    <div class="shadowed">
-     $_signSessionTimedOut()$
-    </div>
-  </div>
-</div>
-<script>
- mixpanel.track('Sign Session Timeout', {URL : window.location.href});
-</script>
-###
-sessionTimeOut=
-<div class='mainContainer big'>
-  <img width="1920" height="800" src="/img/bg-home.jpg" class="bg"/>
-  <div class='short-input-section'>
-    <div class="shadowed">
-      <h1>$_sessionTimeOutHeader()$</h1>
-      <h4>$_sessionTimeOutContent1()$</h4>
-      <h4>$_sessionTimeOutContent2()$</h4>
-    </div>
-  </div>
-</div>
-<script>
-  require(['jquery', 'legacy_code'], function(jQuery) {
-    jQuery(document).ready(function() {
-      var cookies = Cookies.buildCookieMap();
-      var cookieNames = [];
-      for(var key in cookies) {
-        cookieNames.push(key);
-      }
-      mixpanel.track('Cookies enabled but timeouted', {'cookie': cookieNames.toString(),
-                                                       'user-agent': navigator.userAgent});
-    });
-  });
-</script>
-###
 wholePage=
     $doctype()$
     $htmlopentag()$
@@ -121,7 +17,7 @@ wholePage=
       </body>
     $htmlclosingtag()$
 ####
-pagetitle=$title$$if(production)$$else$ (devel) $endif$
+pagetitle=$title$
 ####
 doctype=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 ####
@@ -149,7 +45,8 @@ standardHeaderContents=
         <![endif]-->
         <link href='/css/fonts/SourceSansPro.css' rel='stylesheet' type='text/css'/>
         <link href='/css/fonts/HelveticaNeue.css' rel='stylesheet' type='text/css'/>
-        <link rel=" icon" href="/favicon.png" />
+        <link rel=" icon" href="/favicon/$brandinghash$" />
+
         <script src="/$ctxlang$/localization/$versioncode$.js"  type="text/javascript"></script>
         <script type="text/javascript"> window.versioncode = "$versioncode$" </script>
         <script type="text/javascript"> window.hubspotConf = $analytics.hubspotConf:noescape()$;</script>
@@ -162,6 +59,20 @@ standardHeaderContents=
         <script src="/compiled_jsx/requirejs_config.js"></script>
         <script src="/bower_components/requirejs/require.js"></script>
         $endif$
+
+        <link href='/domain_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+
+        $if(nobranding)$
+        $else$
+          $if(logged)$
+          <link href='/service_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+            $else$
+          <link href='/login_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+          $endif$
+        $endif$
+        <script>
+          window.brandinghash = "$brandinghash$";
+        </script>
 
         $analyticsLoaderKontrakcja()$
 ####
@@ -291,7 +202,6 @@ langprefix=/$langcode$/
 #### Style part below is just to stop pushing content down on login page (before rendering). You can remove it when whole this is in react.
 ####
 header=
-$headerStyles()$
 $headerAddons()$
 <div class='place-for-header' $if(!logged)$ style="height:81px;background-color: #495259" $endif$>
   $postPageCode()$
@@ -303,7 +213,6 @@ require(['jquery', 'React' , 'pages/header','legacy_code'], function(jQuery,Reac
     React.renderComponent(
       Header({
         logged: $if(logged)$ true $else$ false $endif$,
-        customlogourl : "$customlogolink$",
         httplink : "$httplink$",
         langprefix : "$langprefix()$",
         archive : $if(archive)$true$else$false$endif$,
@@ -314,52 +223,6 @@ require(['jquery', 'React' , 'pages/header','legacy_code'], function(jQuery,Reac
 
 });
 </script>
-####
-headerStyles=
-<style>
-$if(custombarshighlightcolour)$
-header.site nav ul.ct li a.page:hover {
-    border-top-color: $custombarshighlightcolour$;
-    color: $custombarshighlightcolour$;
-}
-header.site nav {
-    border-top-color: $custombarshighlightcolour$;
-    border-bottom-color:$custombarshighlightcolour$;
-}
-
-header.site nav ul.ct li {
-    border-color: $custombarshighlightcolour$;
-}
-$endif$
-
-$if(custombarstextcolour)$
-  header.site nav ul.ct li a.page  {
-    color: $custombarstextcolour$;
-    text-shadow: none;
-  }
-
-  header.site nav ul.ct li a.page.active  {
-    color: $custombarstextcolour$;
-  }
-
-  header.site nav ul.ct li a.page:hover  {
-    color: $custombarstextcolour$;
-  }
-$endif$
-
-
-$if(custombarscolour)$
-  header.site {
-    background: none repeat scroll 0 0 $custombarscolour$;
-    border-top-color:$custombarscolour$;
-  }
-
-  div.design-view-button-bar {
-    background: $custombarscolour$;
-  }
-$endif$
-
-</style>
 ####
 headerAddons=
 $if(logged)$

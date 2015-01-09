@@ -1,5 +1,6 @@
 module Cron.Migrations (cronMigrations) where
 
+import Control.Monad
 import Data.ByteString (ByteString)
 
 import Cron.Tables
@@ -50,27 +51,33 @@ createCronTasksTable = Migration {
         fkOnDelete = ForeignKeySetNull
       }
     ]
-  , tblInitialData = Just $ Rows ["type", "frequency"] ([
-      ("amazon_deletion", ihours 3)
-    , ("amazon_upload", iminutes 1)
-    , ("async_events_processing", iseconds 10)
-    , ("clock_error_collection", ihours 1)
-    , ("document_api_callback_evaluation", iseconds 10)
-    , ("document_automatic_reminders_evaluation", iminutes 1)
-    , ("documents_purge", iminutes 10)
-    , ("email_change_requests_evaluation", ihours 1)
-    , ("find_and_do_post_document_closed_actions", ihours 6)
-    , ("find_and_do_post_document_closed_actions_new", iminutes 10)
-    , ("find_and_extend_digital_signatures", ihours 3)
-    , ("find_and_timeout_documents", iminutes 10)
-    , ("mail_events_processing", iseconds 5)
-    , ("old_drafts_removal", ihours 1)
-    , ("password_reminders_evaluation", ihours 1)
-    , ("recurly_synchronization", iminutes 55)
-    , ("sessions_evaluation", ihours 1)
-    , ("sms_events_processing", iseconds 5)
-    , ("user_account_request_evaluation", ihours 1)
-    ] :: [(ByteString, Interval)])
+  , tblInitialSetup = Just $ TableInitialSetup {
+      checkInitialSetup = return True,
+      initialSetup = do
+        let tasks = ([
+                ("amazon_deletion", ihours 3)
+              , ("amazon_upload", iminutes 1)
+              , ("async_events_processing", iseconds 10)
+              , ("clock_error_collection", ihours 1)
+              , ("document_api_callback_evaluation", iseconds 10)
+              , ("document_automatic_reminders_evaluation", iminutes 1)
+              , ("documents_purge", iminutes 10)
+              , ("email_change_requests_evaluation", ihours 1)
+              , ("find_and_do_post_document_closed_actions", ihours 6)
+              , ("find_and_do_post_document_closed_actions_new", iminutes 10)
+              , ("find_and_extend_digital_signatures", ihours 3)
+              , ("find_and_timeout_documents", iminutes 10)
+              , ("mail_events_processing", iseconds 5)
+              , ("old_drafts_removal", ihours 1)
+              , ("password_reminders_evaluation", ihours 1)
+              , ("recurly_synchronization", iminutes 55)
+              , ("sessions_evaluation", ihours 1)
+              , ("sms_events_processing", iseconds 5)
+              , ("user_account_request_evaluation", ihours 1)
+              ] :: [(ByteString, Interval)])
+        forM_ tasks $ \(task,frq) -> runQuery_ $ do
+          rawSQL "INSERT INTO cron_tasks (type,frequency) VALUES ($1,$2)" (task,frq)
+    }
   }
 }
 

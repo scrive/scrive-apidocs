@@ -18,7 +18,9 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Text.JSON
 
 import Archive.Control
-import Company.CompanyUI
+import BrandedDomain.BrandedDomain
+import Branding.Control
+import Branding.CSS
 import Company.Model
 import Context
 import DB
@@ -28,7 +30,6 @@ import Doc.DocControl
 import Doc.DocStateData
 import Doc.DocumentMonad (withDocumentM, withDocumentID, theDocument, updateDocumentWithID)
 import Doc.DocUtils
-import Doc.DocView (documentSignviewBrandingCSS)
 import Doc.Model
 import Doc.Screenshot (Screenshot(..))
 import Doc.SignatoryFieldID
@@ -40,6 +41,7 @@ import Mails.Model
 import MinutesTime
 import TestingUtil
 import TestKontra as T
+import Theme.Model
 import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo
@@ -519,28 +521,25 @@ testGetEvidenceAttachmentsNotLoggedIn = do
 
 testSignviewBrandingBlocksNastyInput:: TestEnv ()
 testSignviewBrandingBlocksNastyInput = do
-  emptyBrandingCSS <- documentSignviewBrandingCSS Nothing Nothing
+  bd <- ctxbrandeddomain <$> mkContext defaultValue -- We need to get default branded domain. And it can be fetched from default ctx
+  theme <- dbQuery $ GetTheme $ (bdSignviewTheme $ bd)
+  emptyBrandingCSS <- signviewBrandingCSS theme
   assertBool "CSS generated for empty branding is not empty" (not $ BSL.null $ emptyBrandingCSS)
-  company<- addNewCompany
-  companyui <- dbQuery $ GetCompanyUI (companyid company)
-  companyCSS <- documentSignviewBrandingCSS Nothing (Just companyui)
-  assertBool "CSS generated for random company branding is not empty" (not $ BSL.null $ companyCSS)
-
   let
     nasty1 = "nastyColor \n \n";
     nasty2 =  "alert('Nasty color')"
     nasty3 = "& very nasty font {}"
-    nastyCompanyUI = companyui {
-        companysignviewsecondarycolour  = Just nasty1
-      , companysignviewbackgroundcolour = Just nasty2
-      , companysignviewtextfont = Just nasty3
-    }
-  nastyCSS <- documentSignviewBrandingCSS Nothing (Just nastyCompanyUI)
+    nastyTheme = theme  {
+        themeBrandColor  = nasty1
+      , themeBrandTextColor = nasty2
+      , themeFont = nasty3
+      }
+  nastyCSS <-  signviewBrandingCSS nastyTheme
   assertBool "CSS generated for nasty company branding is not empty" (not $ BSL.null $ nastyCSS)
   assertBool "CSS generated for nasty company branding does not contain nasty strings" $
        (not $ nasty1 `isInfixOf ` (BSL.toString $ nastyCSS))
     && (not $ nasty2 `isInfixOf ` (BSL.toString $ nastyCSS))
-    && (not $ nasty2 `isInfixOf ` (BSL.toString $ nastyCSS))
+    && (not $ nasty3 `isInfixOf ` (BSL.toString $ nastyCSS))
 
 testDownloadSignviewBrandingAccess :: TestEnv ()
 testDownloadSignviewBrandingAccess = do
@@ -585,7 +584,7 @@ testDownloadSignviewBrandingAccess = do
   -- 1) Check access to main signview branding
   emptyContext <- mkContext defaultValue
   svbr1 <- mkRequest GET [ ]
-  resp1 <- E.try $  runTestKontra svbr1 emptyContext $ handleSignviewCSS (documentid doc) (signatorylinkid siglink) "some_name.css"
+  resp1 <- E.try $  runTestKontra svbr1 emptyContext $ handleSignviewBranding (documentid doc) (signatorylinkid siglink) "-ignored-md5-" "some_name.css"
   case resp1 of
     Right _ ->   assertFailure "CSS for signing is available for anyone, and thats bad"
     Left (_ :: E.SomeException) -> return ()
@@ -595,23 +594,23 @@ testDownloadSignviewBrandingAccess = do
   (_,ctxWithSignatory) <- runTestKontra preq emptyContext $ handleSignShowSaveMagicHash (documentid doc) (signatorylinkid siglink) (signatorymagichash siglink)
 
   svbr2 <- mkRequest GET [ ]
-  (cssResp2, _) <- runTestKontra svbr2 ctxWithSignatory $ handleSignviewCSS (documentid doc) (signatorylinkid siglink) "some_name.css"
+  (cssResp2, _) <- runTestKontra svbr2 ctxWithSignatory $ handleSignviewBranding (documentid doc) (signatorylinkid siglink) "-ignored-md5-" "some_name.css"
   assertBool "CSS for signing is available for signatories" (rsCode cssResp2 == 200)
 
   -- 2) Check access to main signview branding for author. Used when logged in a to-sign view.
 
   svbr3 <- mkRequest GET [ ]
-  resp3 <- E.try $ runTestKontra svbr3 emptyContext $ handleSignviewCSSWithoutDocument  "some_name.css"
+  resp3 <- E.try $ runTestKontra svbr3 emptyContext $ handleSignviewBrandingWithoutDocument  "-ignored-md5-" "some_name.css"
   case resp3 of
     Right _ ->   assertFailure "CSS for signing without document is available for anyone, and thats bad"
     Left (_ :: E.SomeException) -> return ()
 
   let ctxWithAuthor = emptyContext {ctxmaybeuser = Just user}
   svbr4 <- mkRequest GET [ ]
-  (cssResp4, _) <- runTestKontra svbr4 ctxWithAuthor $ handleSignviewCSSWithoutDocument  "some_name.css"
+  (cssResp4, _) <- runTestKontra svbr4 ctxWithAuthor $ handleSignviewBrandingWithoutDocument  "-ignored-md5-" "some_name.css"
   assertBool "CSS for signing is available for author" (rsCode cssResp4 == 200)
 
   -- 3) Check access to main signview branding for branded domain (no user or document). Used for logging in to to-sign view.
   svbr5 <- mkRequest GET [ ]
-  (cssResp5, _) <- runTestKontra svbr5 emptyContext $ handleSignviewCSSWithoutDocumentAndWithoutUser  "some_name.css"
+  (cssResp5, _) <- runTestKontra svbr5 emptyContext $ handleSignviewBrandingInternal  "-ignored-md5-" "some_name.css"
   assertBool "CSS for signing for branded domain is available for anyone" (rsCode cssResp5 == 200)

@@ -50,7 +50,7 @@ var ChangePasswordPopupModel = Backbone.Model.extend({
             callback();
          }
          else
-           new FlashMessage({color: 'red', content : localization.validation.passwordOldPasswordNotValid});
+           new FlashMessage({type: 'error', content : localization.validation.passwordOldPasswordNotValid});
       }
     }).send();
   }
@@ -94,7 +94,7 @@ var ChangePasswordPopupView = Backbone.View.extend({
     },
     passwordsAreValid : function() {
         var model = this.model;
-        var res = model.password1().validate(new PasswordValidation({callback: function(text,elem,v) {new FlashMessage({color: 'red', content : v.message() })},
+        var res = model.password1().validate(new PasswordValidation({callback: function(text,elem,v) {new FlashMessage({type: 'error', content : v.message() })},
                                 message: localization.validation.passwordLessThanMinLength,
                                 message_max: localization.validation.passwordExceedsMaxLength,
                                 message_digits: localization.validation.passwordNeedsLetterAndDigit
@@ -102,7 +102,7 @@ var ChangePasswordPopupView = Backbone.View.extend({
         if (!res) return false;
         if (model.password1() != model.password2())
         {
-          new FlashMessage({color: 'red', content : localization.validation.passwordsDontMatch});
+          new FlashMessage({type: 'error', content : localization.validation.passwordsDontMatch});
           return false;
         }
         return true;
@@ -114,7 +114,6 @@ var ChangePasswordPopupView = Backbone.View.extend({
        var model = this.model;
        var popup = new Confirmation({
           title: localization.account.accountSecurity.passwordSection,
-          icon: '/img/modal-icons/password.png',
           content: $("<div>").append(this.passwordSettings()),
           onAccept:  function() {
             if (self.passwordsAreValid())

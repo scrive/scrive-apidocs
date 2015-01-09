@@ -4,8 +4,8 @@ $doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
-    $standardHeaderContents()$
-    <link href='/padlist_signview_branding/branding.css' rel='stylesheet' type='text/css'/>
+    $standardHeaderContents(nobranding='true')$
+    <link href='/padlist_signview_branding/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
   </head>
   <body>
     <div class="signview">

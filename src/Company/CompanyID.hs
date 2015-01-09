@@ -6,8 +6,10 @@ module Company.CompanyID (
 
 import Control.Applicative
 import Data.Binary
+import Data.Functor.Invariant
 import Data.Int
 import Data.Typeable
+import Data.Unjson
 import Database.PostgreSQL.PQTypes hiding (Binary, put)
 import Happstack.Server
 
@@ -38,3 +40,11 @@ unsafeCompanyID = CompanyID
 
 fromCompanyID :: CompanyID -> Int64
 fromCompanyID (CompanyID cid) = cid
+
+
+-- TODO Fix to stop using read. Gracjan is working on that in unjson library
+unjsonThemeID :: UnjsonDef CompanyID
+unjsonThemeID = invmap (CompanyID . read :: String -> CompanyID) (show . fromCompanyID :: CompanyID -> String) unjsonDef
+
+instance Unjson CompanyID where
+  unjsonDef = unjsonThemeID

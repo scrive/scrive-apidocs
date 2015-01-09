@@ -1,0 +1,126 @@
+/* Button branding mixim */
+
+.colored-button(@color,@textcolor) {
+  background-color: @color;
+  color:@textcolor;
+  &:hover {
+    background-color: lighten(@color,10%);
+  }
+
+  &:active {
+    background-color: lighten(@color,10%);
+  }
+}
+
+.button {
+  background-color: @grey;
+  color: @primary-font-color ;
+  cursor: pointer;
+  display: inline-block;
+  *display: inline; // IE 7 Hack
+  font-family: @font-family-source;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 16px;
+  margin: 0;
+  min-width: 50px;
+  padding: 13px 20px;
+  position: relative;
+  text-align: center;
+  text-decoration: none;
+  -webkit-transform: translateZ(0);
+  -webkit-user-select: none;
+  user-select: none;
+  zoom: 1; // IE 7 Hack
+
+  .border-radius(1px, 1px, 1px, 1px);
+  .transition(.15s, ease-in-out);
+
+  &:hover {
+    background-color: darken(@grey, 5%);
+    .transition(0, ease-in-out);
+  }
+
+  &:active,
+  &.active {
+    background-color: darken(@grey, 5%);
+  }
+
+  &.upload-button {
+    height:16px;
+  }
+  
+  &.button-small {
+    font-size: 13px;
+    line-height: 14px;
+    max-height: 14px;
+    min-width: 35px;
+    padding: 8px 12px;
+  }
+
+  &.button-large {
+    font-size: 18px;
+    line-height: 18px;
+    max-height: 18px;
+    padding: 17px 25px 17px; // to fix Firefox bug, have to use padding instead of line height
+
+    .small-screen & {
+      font-size: 42px;
+      line-height: 60px;
+      max-height: 80px;
+      padding-bottom: 25px;
+    }
+  }
+
+  &.button-singleline {
+    max-height: 16px;
+  }
+
+  &.main {
+    border: 1px solid @brandtextcolor;
+    .colored-button(@brandcolor, @brandtextcolor);
+  }
+
+  &.action {
+    .colored-button(@actioncolor, @actiontextcolor);
+  }
+
+  &.optional {
+    .colored-button(@actionsecondarycolor, @actionsecondarytextcolor);
+  }
+
+  &.cancel {
+    .colored-button(@negativecolor, @negativetextcolor);
+  }
+
+  &.inactive {
+    .colored-button(#eaeaea, #999999);
+  }
+
+  // Used only when button is used for pages that should look like EE
+  &.scrive-main-button {
+    background-color: #323b45;
+    color:#fff;
+
+    &:hover {
+      background-color: #1f2c36;
+    }
+
+    &:active {
+      background-color: #1f2c36;
+    }
+  }
+}
+
+
+// Special fixes for special browsers
+input[type=submit].button.button-large,
+button.button.button-large {
+  // ie8 and below input height fix
+  line-height: 24px\9;
+  padding: 12px 30px 13px\9;
+}
+
+input[type="submit"]::-moz-focus-inner {
+  border: 0;
+}

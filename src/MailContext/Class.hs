@@ -13,7 +13,7 @@ data MailContext = MailContext {
   mctxhostpart :: String
 , mctxmailsconfig :: MailsConfig
 , mctxlang :: Lang
-, mctxcurrentBrandedDomain :: Maybe BrandedDomain
+, mctxcurrentBrandedDomain :: BrandedDomain
 , mctxipnumber :: IPAddress
 , mctxtime :: UTCTime
 , mctxmaybeuser :: Maybe User

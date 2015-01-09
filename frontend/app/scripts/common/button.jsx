@@ -6,8 +6,7 @@
  *
  * Properties:
       text        : string , text on button,  default ""
-      color       : string, red | green | black | light-blue | signview-blue, one of predefined colors
-      customcolor : string, custom color for button, overwrites color
+      type:       : string, "action | optional | cancel | inactive | main",
       size        : string, tiny | small | big
       textcolor   : string, color for text on button, else default value for predefined color will be used.
       width       : integer, final width of button, if not set, button will adjust to text
@@ -34,8 +33,7 @@ define(['React'], function(React) {
           console.error('Button.text should be a string or an array of strings');
         }
       },
-      color       : React.PropTypes.string,
-      customcolor : React.PropTypes.string,
+      type        : React.PropTypes.string,
       size        : React.PropTypes.string,
       textcolor   : React.PropTypes.string,
       width       : React.PropTypes.number,
@@ -48,7 +46,6 @@ define(['React'], function(React) {
     getDefaultProps : function() {
         return {
           "text"      : "",
-          "color"     : "green",
           "size"      : "small",
           "multiline" : false,
           "style"     : {}
@@ -90,24 +87,11 @@ define(['React'], function(React) {
          return "button-large";
      return "";
     },
-    colorClass : function() {
-     if (this.props.color  == "red" )
-        return "button-red";
-     else if (this.props.color  == "green" )
-        return "button-green";
-     else if (this.props.color  == "black")
-        return "button-gray";
-     else if (this.props.color == "light-blue")
-        return "button-light-blue";
-     else if (this.props.color == "signview-blue")
-        return "button-signview-blue";
-     return "";
-    },
     multilineClass : function() {
       return this.props.multiline ? "button-signleline": "";
     },
     className : function() {
-      return (this.props.className || "") + " button " + this.sizeClass() + " " + this.colorClass() + " " + this.multilineClass();
+      return (this.props.className || "") + " button " + this.sizeClass() + " " + (this.props.type || "") + " " + this.multilineClass();
     },
     style : function() {
       return  _.extend({width: this.width()},this.props.style);
@@ -115,7 +99,7 @@ define(['React'], function(React) {
     render: function() {
       return (
         <a className={this.className()} onClick={this.handleClick} style={this.style()}>
-          <div className="label">
+          <div className="label" style={{'color': this.props.textcolor}}>
             {/*if*/ this.props.multiline &&
               this.props.text.map(function(text) {
                 return (

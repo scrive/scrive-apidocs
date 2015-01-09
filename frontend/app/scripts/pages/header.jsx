@@ -6,7 +6,6 @@ define(['React', 'Backbone', 'common/button'], function(React, Backbone, NewButt
 
   var LoggedInHeader = React.createClass({
     propTypes: {
-      customlogourl : React.PropTypes.string,
       archive : React.PropTypes.bool,
       account : React.PropTypes.bool
     },
@@ -35,11 +34,8 @@ define(['React', 'Backbone', 'common/button'], function(React, Backbone, NewButt
           <ul className="ct">
             <li id="branding">
               <a id="logo" className="page" href="/">
-                {/*if*/ this.props.customlogourl &&
-                  <img src={this.props.customlogourl}  style={{"margin":"0px"}} />
-                }
-                {/*else*/ !this.props.customlogourl &&
-                  <img src="/img/logo.png" width="120" height="23" />
+                {
+                  <img src={"/service_logo/" + window.brandinghash}   style={{"margin":"0px"}} />
                 }
               </a>
             </li>
@@ -56,7 +52,7 @@ define(['React', 'Backbone', 'common/button'], function(React, Backbone, NewButt
               <li className="session-create float-right fromtemplate">
                 <NewButton
                   cssClass="fromtemplate"
-                  color="blue"
+                  type="main"
                   onClick={this.handleNewFromTemplate}
                   text={localization.header.template}
                 />
@@ -64,7 +60,7 @@ define(['React', 'Backbone', 'common/button'], function(React, Backbone, NewButt
               <li className="session-create float-right">
                 <NewButton
                   cssClass="js-create-document"
-                  color="blue"
+                  type="main"
                   onClick={this.handleNewDocument}
                   text={localization.header.send}
                 />
@@ -79,7 +75,6 @@ define(['React', 'Backbone', 'common/button'], function(React, Backbone, NewButt
 
   var NotLoggedInHeader = React.createClass({
     propTypes: {
-      customlogourl : React.PropTypes.string,
       httplink :  React.PropTypes.string,
       langprefix : React.PropTypes.string
     },
@@ -96,17 +91,12 @@ define(['React', 'Backbone', 'common/button'], function(React, Backbone, NewButt
           <ul className="ct thin">
             <li id="branding">
               <a id="logo" className="page" href={this.props.httplink + this.props.langprefix}>
-                {/*if*/ this.props.customlogourl &&
-                  <img src={this.props.customlogourl} style={{"margin":"0px"}} />
-                }
-                {/*else*/ !this.props.customlogourl &&
-                  <img src="/img/logo.png" width="120" height="23" />
-                }
+                <img src={"/login_logo/" + window.brandinghash}  style={{"margin":"0px"}} />
               </a>
             </li>
             <li className="session-login float-right">
-              <a className="button" id="page-signin" href={this.props.langprefix + "login"}>{localization.header.login}</a>
-              <a className="button" id="page-signup" href={this.props.langprefix + "signup"}>{localization.header.startFreeTrial}</a>
+              <a className="button scrive-main-button" id="page-signin" href={this.props.langprefix + "login"}>{localization.header.login}</a>
+              <a className="button scrive-main-button" id="page-signup" href={this.props.langprefix + "signup"}>{localization.header.startFreeTrial}</a>
             </li>
             <li className="float-right"  >
                 <a className="page"   href={this.props.httplink + this.langprefixForStaticPages() + "contact"}>{localization.header.contact}</a>
@@ -138,8 +128,6 @@ define(['React', 'Backbone', 'common/button'], function(React, Backbone, NewButt
 
   return React.createClass({
     propTypes: {
-      //logged: React.PropTypes.bool,
-      customlogourl : React.PropTypes.string,
       httplink :  React.PropTypes.string,
       langprefix : React.PropTypes.string,
       archive : React.PropTypes.bool,
@@ -149,13 +137,11 @@ define(['React', 'Backbone', 'common/button'], function(React, Backbone, NewButt
 
       if (this.props.logged) {
         return (<LoggedInHeader
-                  customlogourl={this.props.customlogourl}
                   archive={this.props.archive}
                   account={this.props.account}
                 />);
       } else {
         return (<NotLoggedInHeader
-                  customlogourl={this.props.customlogourl}
                   httplink={this.props.httplink}
                   langprefix={this.props.langprefix}
                 />);

@@ -30,7 +30,7 @@ pagePrivilegesConfirm ctx privileges companyname token = do
          F.value "isDocumentCheck" $ APIDocCheck `elem` privileges
          F.value "companyname" companyname
          F.value "token" $ show token
-         standardPageFields ctx "Scrive" ad
+         standardPageFields ctx Nothing ad
      simpleHtmlResonseClrFlash rsp
 
 privilegeDescription :: TemplatesMonad m => APIPrivilege -> m String

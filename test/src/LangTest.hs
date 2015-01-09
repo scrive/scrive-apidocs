@@ -5,6 +5,7 @@ import Happstack.Server
 import Test.Framework
 
 import AppControl
+import BrandedDomain.Model
 import Company.Model
 import Context
 import DB
@@ -107,7 +108,8 @@ createTestElegDoc user _ctxtime = do
 
 createTestUser :: Lang -> TestEnv User
 createTestUser lang = do
+    bd <- dbQuery $ GetMainBrandedDomain
     pwd <- createPassword "admin"
     company <- dbUpdate $ CreateCompany
-    Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) lang Nothing
+    Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) lang (bdid bd)
     return user

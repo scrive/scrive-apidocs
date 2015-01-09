@@ -126,14 +126,14 @@ define(['React','common/button','common/infotextinput', 'common/backbone_mixin',
 
       var acceptButton =  new Button({
         size:  "small",
-        color: "green",
-        cssClass: 'greybg accept-sms-pin',
+        type: "action",
+        cssClass: 'accept-sms-pin',
         text: localization.docsignview.pinSigning.next,
         onClick: function() {
           if (self.model.hasValidPhone())
             self.onNext();
           else
-            new FlashMessage({color: "red",content : localization.docsignview.pinSigning.invalidPhone});
+            new FlashMessage({type : "error",content : localization.docsignview.pinSigning.invalidPhone});
           }
         });
 
@@ -142,7 +142,7 @@ define(['React','common/button','common/infotextinput', 'common/backbone_mixin',
                   title: localization.docsignview.pinSigning.signWithSMSPin,
                   content: content,
                   width: BrowserInfo.isSmallScreen() ? 825 : 424,
-                  cssClass: 'grey sms-pin-modal',
+                  cssClass: 'sms-pin-modal',
                   signview : self.model.margin() != undefined ? false : true,
                   fast : self.model.fast(),
                   margin : self.model.margin(),

@@ -7,6 +7,7 @@ import Text.JSON
 import Text.JSON.Gen
 
 import ActionQueue.UserAccountRequest
+import BrandedDomain.Model
 import Company.Model
 import Context
 import DB
@@ -240,6 +241,7 @@ compareEventDataFromList d l = (uheventdata . uhevent . head $ l) == (Just $ JSA
 
 createTestUser :: TestEnv User
 createTestUser = do
+    bd <- dbQuery $ GetMainBrandedDomain
     pwd <- createPassword "test_password"
     company <- dbUpdate $ CreateCompany
     muser <- dbUpdate $ AddUser ("", "")
@@ -247,7 +249,7 @@ createTestUser = do
                                 (Just pwd)
                                 (companyid company,True)
                                 defaultValue
-                                Nothing
+                                (bdid bd)
     case muser of
         Nothing     -> error "Can't create user"
         (Just user) -> return user

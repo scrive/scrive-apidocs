@@ -38,19 +38,6 @@ admincompany=
 </div>
 </div>
 ####
-domainbranding=
-<div class="mainContainer" >
-<div class="body-container">
-<div class='blocking-box'></div>
-<div class='admin'></div>
-<script>
- require(['jquery', 'legacy_code'], function(jQuery) {
-    jQuery(".admin").append(new AdminBrandedDomain({id: "$id$"}).el());
- });
-</script>
-</div>
-</div>
-###
 daveDocument=
 <div class="mainContainer" >
   <div class="body-container">

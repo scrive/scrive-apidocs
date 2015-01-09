@@ -12,7 +12,6 @@ module Administration.AdministrationView(
               adminMainPage
             , adminUserPage
             , adminCompanyPage
-            , adminDomainBrandingPage
             , statisticsCompanyFields
             , statisticsFields
           ) where
@@ -21,7 +20,6 @@ import Data.List
 import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 
-import BrandedDomain.BrandedDomainID
 import Company.Model
 import Kontra
 import MinutesTime
@@ -32,9 +30,6 @@ adminMainPage ctx = renderTemplate "adminsmain" $ F.value "admin" $ isAdmin ctx
 
 adminCompanyPage :: TemplatesMonad m => CompanyID ->  m String
 adminCompanyPage cid = renderTemplate "admincompany" $ (F.value "companyid" $ show cid)
-
-adminDomainBrandingPage :: TemplatesMonad m => BrandedDomainID ->  m String
-adminDomainBrandingPage bdid = renderTemplate "domainbranding" $ (F.value "id" $ show bdid)
 
 adminUserPage :: TemplatesMonad m => UserID -> m String
 adminUserPage uid = renderTemplate "adminuser" $ (F.value "userid" $ show uid)

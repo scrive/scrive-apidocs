@@ -16,7 +16,7 @@ define(['React', 'Backbone'], function(React, Backbone) {
       return (
           <div className={ containerClasses }>
             <div></div>
-            <a onClick={this.props.registerUser} className="green button button-large button-green">
+            <a onClick={this.props.registerUser} className="green button button-large action">
               <div className="label">{ localization.docsignview.promoBannerButton }</div>
             </a>
           </div>
@@ -65,7 +65,7 @@ define(['React', 'Backbone'], function(React, Backbone) {
               <div className="clearfix"></div>
               <div className="acceptbutton">
                 <label className="label" dangerouslySetInnerHTML={{__html: this.makeTOSCopyWithLink()}} />
-                <a onClick={this.props.registerUser} className="green button button-large button-green">
+                <a onClick={this.props.registerUser} className="green button button-large action">
                   <div className="label">{ localization.docsignview.signupButtonText }</div>
                 </a>
               </div>

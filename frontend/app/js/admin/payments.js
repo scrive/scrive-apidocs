@@ -153,13 +153,13 @@ var AdminPaymentsView = Backbone.View.extend({
         onAccept : function() {
           model.migrateRecurlyPricePlan().sendAjax(
             function() {
-                new FlashMessage({color: "green", content : "Migrated"});
+                new FlashMessage({type: 'success', content : "Migrated"});
                 model.refresh();
                 popup.close();
                 return false;
             },
             function() {
-              new FlashMessage({color: "red", content : "Migration failed"});
+              new FlashMessage({type: 'error', content : "Migration failed"});
               return false;
             }
          );
@@ -181,12 +181,12 @@ var AdminPaymentsView = Backbone.View.extend({
 
           var deleteButton = new Button({
                 text: "Delete (remove recurly account first!!!!)"
-              , color: "red"
+              , type: "cancel"
               , size: "tiny"
               , cssClass: "float-right"
               , onClick : function() {
                   model.deleteRecurlyPricePlan().sendAjax(function() {
-                      new FlashMessage({color: "green", content : "Deleted"});
+                      new FlashMessage({type: 'success', content : "Deleted"});
                       model.refresh();
                   });
                 }
@@ -195,7 +195,7 @@ var AdminPaymentsView = Backbone.View.extend({
 
           var migrateButton = new Button({
                 text: "Migrate to different user or company"
-              , color: "blue"
+              , type: "optional"
               , size: "tiny"
               , cssClass: "float-left"
               , onClick : function() {
@@ -254,11 +254,11 @@ var AdminPaymentsView = Backbone.View.extend({
 
           var buttonrow = $("<div>").append(new Button({
                 text: "Change"
-              , color: "green"
+              , type: "action"
               , size: "tiny"
               , onClick : function() {
                   model.changePricePlan().sendAjax(function() {
-                      new FlashMessage({color: "green", content : "Changed"});
+                      new FlashMessage({type: 'success', content : "Changed"});
                       model.refresh();
                   });
                 }

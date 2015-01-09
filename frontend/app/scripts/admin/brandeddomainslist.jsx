@@ -3,17 +3,15 @@
 define(['React', 'lists/list','legacy_code'], function(React, List) {
 
 return React.createClass({
-    reload : function() {
-      if (this.refs.list)
-        this.refs.list.reload();
-    },
+    mixins : [List.ReloadableContainer],
     createNewDomain: function() {
+      var self = this;
       new Submit({
         method: "POST",
         url: "/adminonly/brandeddomain/create",
         ajax: true,
         ajaxsuccess: function(js) {
-          window.location = "/adminonly/brandeddomain/" + js.id;
+          self.props.onSelect(js.id);
         },
         expectedType: "json"
       }).send();
@@ -24,7 +22,7 @@ return React.createClass({
         <List.List
           url='/adminonly/brandeddomainslist'
           dataFetcher={function(d) {return d.list;}}
-          idFetcher={function(d) {return d.field("fields").id;}}
+          idFetcher={function(d) {return d.field("id");}}
           loadLater={self.props.loadLater}
           ref='list'
         >
@@ -35,52 +33,39 @@ return React.createClass({
             }}
           />
           <List.Column
-            name="URL"
-            width="20px"
+            width="30px"
             rendering={function(d) {
-              return (<a href={"/adminonly/brandeddomain/"+d.field("fields").id}>{d.field("fields").id}</a>);
+              return (<a onClick={function() {self.props.onSelect(d.field("id"));}}>{d.field("id")}</a>);
             }}
           />
           <List.Column
             name="URL"
-            width="80px"
             rendering={function(d) {
-              return (<a href={"/adminonly/brandeddomain/"+d.field("fields").id}>{d.field("fields").url}</a>);
+              return (<a onClick={function() {self.props.onSelect(d.field("id"));}}>{d.field("url")}</a>);
             }}
           />
           <List.Column
             name="Contact email"
-            width="80px"
             rendering={function(d) {
-              return (<a href={"/adminonly/brandeddomain/"+d.field("fields").id}>{d.field("fields").contact_email}</a>);
+              return (<a onClick={function() {self.props.onSelect(d.field("id"));}}>{d.field("contact_email")}</a>);
             }}
           />
           <List.Column
             name="Email originator"
-            width="80px"
             rendering={function(d) {
-              return (<a href={"/adminonly/brandeddomain/"+d.field("fields").id}>{d.field("fields").email_originator}</a>);
+              return (<a onClick={function() {self.props.onSelect(d.field("id"));}}>{d.field("email_originator")}</a>);
             }}
           />
           <List.Column
-            name="SMS originator"
-            width="80px"
+            width="40px"
             rendering={function(d) {
-              return (<a href={"/adminonly/brandeddomain/"+d.field("fields").id}>{d.field("fields").sms_originator}</a>);
-            }}
-          />
-          <List.Column
-            name="Logo"
-            width="80px"
-            rendering={function(d) {
-              var logo = d.field("fields").logo;
+              var logo = d.field("favicon");
               if (logo)
                 return (<img style={{maxHeight: "25px", maxWidth: "50px"}} src={logo}/>);
               else
                 return (<div/>);
             }}
           />
-          <List.Pagination/>
         </List.List>
       );
     }

@@ -61,7 +61,7 @@ window.PadGiveToNextSignatoryView = Backbone.View.extend({
            var giveForSigningSelector = this.sigSelector(function() {return model.selectedSignatory()}, function(a) {model.setSignatory(a)});
            var giveForSigningButton = new Button({
                                 size: "tiny",
-                                color : "green",
+                                type : "action",
                                 style: "display:inline-block;margin-left: 10px" ,
                                 text : localization.process.changesignatorybuttontext,
                                 onClick : function() {

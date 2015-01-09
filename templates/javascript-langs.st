@@ -1241,5 +1241,59 @@ javascriptLocalisation =
             , template : "$_headerTemplate()$"
             , send     : "$_headerSend()$"
       }
+      , branding: {
+            defaultTheme : "$_brandingDefaultTheme()$"
+          , newTheme : "$_brandingNewTheme()$"
+          , newThemeWithDots : "$_brandingNewThemeWithDots()$"
+          , enterNameOfThemeBellow : "$_brandingEnterNameOfThemeBellow()$"
+          , save : "$_brandingSave()$"
+          , createCustomThemeTitle : "$_brandingCreateCustomThemeTitle()$"
+          , createCustomThemeDescription : "$_brandingCreateCustomThemeDescription()$"
+          , doYouWantToDeleteTheme : "$_brandingDoYouWantToDeleteTheme()$"
+          , deleteTheme : "$_brandingDeleteTheme()$"
+          , themeDeleted : "$_brandingThemeDeleted()$"
+          , saved : "$_brandingSaved()$"
+          , unsavedChangesTitle: "$_brandingUnsavedChangesTitle()$"
+          , unsavedChangesDescription : "$_brandingUnsavedChangesDescription()$"
+          , saveNow : "$_brandingSaveNow()$"
+          , discard : "$_brandingDiscard()$"
+          , themesTitle : "$_brandingThemesTitle()$"
+          , settingsTitle : "$_brandingSettingsTitle()$"
+          , emailThemeTitle : "$_brandingEmailThemeTitle()$"
+          , signviewThemeTitle : "$_brandingSignviewThemeTitle()$"
+          , serviceThemeTitle : "$_brandingServiceThemeTitle()$"
+          , loginThemeTitle : "$_brandingLoginThemeTitle()$"
+          , useExistingOrCreateNewTheme : "$_brandingUseExistingOrCreateNewTheme()$"
+          , createNewTheme : "$_brandingCreateNewTheme()$"
+          , themes: {
+              name : "$_brandingThemesName()$"
+            , logo : "$_brandingThemesLogo()$"
+            , uploadNewLogo : "$_brandingThemesUploadNewLogo()$"
+            , brandColor : "$_brandingThemesBrandColor()$"
+            , brandColorSample : "$_brandingThemesBrandColorSample()$"
+            , actionColor : "$_brandingThemesActionColor()$"
+            , actionColorSample : "$_brandingThemesActionColorSample()$"
+            , actionSecondaryColor : "$_brandingThemesActionSecondaryColor()$"
+            , actionSecondaryColorSample : "$_brandingThemesActionSecondaryColorSample()$"
+            , positiveColor : "$_brandingThemesPositiveColor()$"
+            , positiveColorSample : '$_brandingThemesPositiveColorSample()$'
+            , negativeColor : "$_brandingThemesNegativeColor()$"
+            , negativeColorSample : '$_brandingThemesNegativeColorSample()$'
+            , font: "$_brandingThemesFont()$"
+            , fontSample : "$_brandingThemesFontSample()$"
+            , customFont : "$_brandingThemesCustomFont()$"
+            , deleteTitle : "$_brandingThemesDeleteTitle()$"
+            , delete : "$_brandingThemesDelete()$"
+          }
+          , companySettings : {
+              browserTitle : "$_brandingCompanySettingsBrowserTitle()$"
+            , browserTitleDescription : "$_brandingCompanySettingsBrowserTitleDescription()$"
+            , smsOriginator : "$_brandingCompanySettingsSmsOriginator()$"
+            , smsOriginatorDescription : "$_brandingCompanySettingsSmsOriginatorDescription()$"
+            , favicon : "$_brandingCompanySettingsFavicon()$"
+            , faviconDescription : "$_brandingCompanySettingsFaviconDescription()$"
+            , uploadFavicon : "$_brandingCompanySettingsUploadFavicon()$"
+          }
+      }
     };
 ###

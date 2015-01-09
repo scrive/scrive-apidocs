@@ -42,6 +42,7 @@ import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.Map as M
 import qualified Text.StringTemplates.TemplatesLoader as TL
 
+import BrandedDomain.Model
 import Control.Monad.Trans.Control.Util
 import Crypto.RNG
 import DB
@@ -262,6 +263,7 @@ mkContext :: Lang -> TestEnv Context
 mkContext lang = do
   globaltemplates <- teGlobalTemplates <$> ask
   time <- currentTime
+  bd <- dbQuery $ GetMainBrandedDomain
   liftIO $ do
     docs <- MemCache.new RenderedPages.pagesCount 500
     memcache <- MemCache.new BS.length 52428800
@@ -306,7 +308,7 @@ mkContext lang = do
         , ctxhubspotconf = HubSpotConf "" M.empty
         , ctxgoogleanalyticstoken = "5b04329b972851feac0e9b853738e741"
         , ctxhomebase = "https://staging.scrive.com"
-        , ctxbrandeddomain = Nothing
+        , ctxbrandeddomain = bd
         , ctxsalesforceconf = SalesforceConf "" "" "" "" "" "" ""
         , ctxthreadjoins = []
     }

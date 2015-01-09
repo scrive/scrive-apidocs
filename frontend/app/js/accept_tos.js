@@ -69,7 +69,7 @@ define(['Backbone', 'legacy_code'], function() {
 
       var acceptButton = new Button({
           size: 'small',
-          color: 'green',
+          type: 'action',
           text: localization.accept,
           onClick: function() {
             if (!model.accept())

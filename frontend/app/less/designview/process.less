@@ -28,6 +28,16 @@
     }
 
     .preview {
+      cursor: pointer;
+      text-decoration: underline;
+
+      &:hover {
+        text-decoration: none;
+      }
+
+      &:active {
+        text-decoration: underline;
+      }
 
     }
 
@@ -193,13 +203,13 @@
   }
 }
 
-.design-view-action-process-left-column-attachments-author-button {
+.design-view-action-process-left-column-attachments-author-button.button {
   min-width: 116px;
   margin-right: 5px;
   margin-bottom: 5px; // We split the margin between here and .designview-attachemnts-list as we need to gracefully handle when each of the three buttons are on their own line.
 }
 
-.design-view-action-process-left-column-attachments-signatory-button {
+.design-view-action-process-left-column-attachments-signatory-button.button {
   min-width: 116px;
 }
 

@@ -24,6 +24,7 @@ import User.API
 import qualified Administration.AdministrationControl as Administration
 import qualified Archive.Control as ArchiveControl
 import qualified Attachment.Control as AttachmentControl
+import qualified Branding.Control as Branding
 import qualified Company.CompanyControl as Company
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
 import qualified Doc.DocControl as DocControl
@@ -172,9 +173,6 @@ staticRoutes production = choice
      , allLangDirs $ dir "unsupported_browser" $ hGet $ toK0 $ unsupportedBrowserPage
      , allLangDirs $ dir "enable-cookies" $ dir "enable-cookies.html" $ hGetAllowHttp $ toK0 $ enableCookiesPage
      , allLangDirs $ dir "terms" $ hGet $ toK0 $ handleTermsOfService
-     , dir "branding" $ dir "logo" $  hGet $ toK0 $ brandedLogo -- Redirect to MD5 version. No cache is set on that
-     , dir "branding" $ dir "logo" $  hGet $ toK1 $ brandedLogoWithMD5
-
      , documentAPI
      , userAPI
      , padApplicationAPI
@@ -186,10 +184,22 @@ staticRoutes production = choice
      , dir "serialize_image" $ hPost $ toK0 $ ServerUtils.handleSerializeImage
      , dir "scale_image" $ hPost $ toK0 $ ServerUtils.handleScaleImage
      , dir "text_to_image" $ hGet $ toK0 $ ServerUtils.handleTextToImage
-     , dir "branded_signview_image" $ hGet $ toK0 $ ServerUtils.brandedSignviewImage
-     , dir "document_signview_branding" $ hGet $ toK3 $ DocControl.handleSignviewCSS
-     , dir "padlist_signview_branding" $ hGet $ toK1 $ DocControl.handleSignviewCSSWithoutDocument
-     , dir "internal_signview_branding" $ hGet $ toK1 $ DocControl.handleSignviewCSSWithoutDocumentAndWithoutUser
+     , dir "branded_image" $ hGet $ toK0 $ ServerUtils.brandedImage
+
+
+     , dir "document_signview_branding" $ hGet $ toK4 $ Branding.handleSignviewBranding
+     , dir "padlist_signview_branding" $ hGet $ toK2 $ Branding.handleSignviewBrandingWithoutDocument
+     , dir "internal_signview_branding" $ hGet $ toK2 $ Branding.handleSignviewBrandingInternal
+     , dir "service_branding" $ hGet $ toK2 $ Branding.handleServiceBranding
+     , dir "login_branding" $ hGet $ toK2 $ Branding.handleLoginBranding
+     , dir "domain_branding" $ hGet $ toK2 $ Branding.handleDomainBranding
+     , dir "login_logo" $  hGet $ toK1 $ Branding.loginLogo
+     , dir "service_logo" $  hGet $ toK1 $ Branding.serviceLogo
+     , dir "signview_logo" $  hGet $ toK3 $ Branding.signviewLogo
+     , dir "signview_logo_without_document" $  hGet $ toK1 $ Branding.signviewLogoWithoutDocument
+     , dir "email_logo" $  hGet $ toK1 $ Branding.emailLogo
+     , dir "email_logo" $  hGet $ toK3 $ Branding.emailLogoForSignatory
+     , dir "favicon" $  hGet $ toK1 $ Branding.faviconIcon
    ]
   where
     staticDir = if (production)

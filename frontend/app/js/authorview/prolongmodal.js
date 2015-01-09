@@ -89,7 +89,6 @@ window.ProlongModal = function(args){
                 title: localization.prolongmodal.title,
                 content: $(view.el),
                 width: 382,
-                icon : '/img/modal-icons/extend-duedate.png',
                 acceptText: localization.prolongmodal.button,
                 onAccept : function() {
                   model.prolong();

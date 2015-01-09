@@ -53,7 +53,6 @@ import MagicHash (MagicHash)
 import Mails.SendMail
 import MinutesTime
 import Redirect
-import Routing
 import User.Action
 import User.Email
 import User.History.Model
@@ -71,9 +70,9 @@ handleAccountGet = checkUserTOSGet $ do
     case (ctxmaybeuser ctx) of
          Nothing -> sendRedirect $ LinkLogin (ctxlang ctx) NotLogged
          Just user -> do
-           pb <- showAccount user
-           renderFromBodyWithFields kontrakcja pb (F.value "account" True)
-
+           pb <- renderTemplate "showAccount" $ do
+                   F.value "companyAdmin" $ useriscompanyadmin user
+           renderFromBodyWithFields pb (F.value "account" True)
 
 -- please treat this function like a public query form, it's not secure
 handleRequestPhoneCall :: Kontrakcja m => m KontraLink
@@ -172,7 +171,6 @@ getCompanyInfoUpdate = do
   mcompanyzip <- getField "companyzip"
   mcompanycity <- getField "companycity"
   mcompanycountry <- getField "companycountry"
-  mcompanysmsoriginator <- getField "companysmsoriginator"
   return $ \ci ->
       ci {
          companyname = fromMaybe (companyname ci) mcompanyname
@@ -181,7 +179,6 @@ getCompanyInfoUpdate = do
       ,  companyzip = fromMaybe (companyzip ci) mcompanyzip
       ,  companycity = fromMaybe (companycity ci) mcompanycity
       ,  companycountry = fromMaybe (companycountry ci) mcompanycountry
-      ,  companysmsoriginator = fromMaybe (companysmsoriginator ci) mcompanysmsoriginator
       }
   where
     getValidField = getDefaultedField ""
@@ -290,19 +287,16 @@ handleAccountSetupGet uid token sm = do
     (Just user, Nothing,_) -> do
       company <-  getCompanyForUser user
       companyui <- dbQuery $ GetCompanyUI (usercompany user)
-      mbd <- return $ ctxbrandeddomain ctx
-      let background =
-              companycustombackgroundcolour companyui `mplus` (bdbackgroundcolorexternal <$>  mbd) `mplus` (bdbackgroundcolour <$> mbd)
-      Right <$> (simpleHtmlResponse =<< (renderTemplateAsPage ctx "accountSetupPage" False $ do
-                                            F.value "fstname" $ getFirstName user
-                                            F.value "sndname" $ getLastName user
-                                            F.value "userid"  $ show uid
-                                            F.value "company" $ companyname $ companyinfo $ company
-                                            F.value "companyAdmin" $ useriscompanyadmin user
-                                            F.value "signupmethod" $ show sm
-                                            brandingFields mbd (Just companyui)
-                                            F.value "backgroundcolour" background
-                                            ))
+      ad <- getAnalyticsData
+      content <- renderTemplate "accountSetupPage" $ do
+        standardPageFields ctx (Just companyui) ad
+        F.value "fstname" $ getFirstName user
+        F.value "sndname" $ getLastName user
+        F.value "userid"  $ show uid
+        F.value "company" $ companyname $ companyinfo $ company
+        F.value "companyAdmin" $ useriscompanyadmin user
+        F.value "signupmethod" $ show sm
+      Right <$> simpleHtmlResponse content
     (Just _user, Just _, Just _)  -> return $ Left $ LinkDesignView
     (Just _user, Just _, Nothing) -> return $ Left $ LinkLogin (ctxlang ctx) NotLogged
     _ -> return $ Left $ LinkSignup $ ctxlang ctx
@@ -338,7 +332,7 @@ handleAccountSetupPost uid token sm = do
     This is where we get to when the user clicks the link in their new-account
     email.  This will show them a page where they need to set their password.
 -}
-handleAccessNewAccountGet :: Kontrakcja m => UserID -> MagicHash -> m (Either KontraLink (Either Response ThinPage))
+handleAccessNewAccountGet :: Kontrakcja m => UserID -> MagicHash -> m (Either KontraLink Response)
 handleAccessNewAccountGet uid token = do
   museraccount <- getAccessNewAccountUser uid token
   case museraccount of
@@ -346,20 +340,12 @@ handleAccessNewAccountGet uid token = do
       switchLang (getLang user)
       let changePassLink = show $ LinkAccessNewAccount uid token
       ctx <- getContext
-      case (ctxbrandeddomain ctx) of
-        Just bd -> do
-          ad <- getAnalyticsData
-          content <- renderTemplate "accessNewAccountPageWithBranding" $ do
+      --let bd = ctxbrandeddomain ctx
+      ad <- getAnalyticsData
+      content <- renderTemplate "accessNewAccountPageWithBranding" $ do
                         F.value "linkchangepassword" $ changePassLink
-                        F.value "background" $ bdbackgroundcolorexternal $ bd
-                        F.value "buttoncolorclass" $ bdbuttonclass $ bd
-                        F.value "textscolour" $ bdexternaltextcolour bd
-                        standardPageFields ctx kontrakcja ad
-          Right . Left <$> simpleHtmlResonseClrFlash content
-        Nothing -> do
-          content <- renderTemplate "accessNewAccountPage" $ do
-                        F.value "linkchangepassword" $ changePassLink
-          return $ Right $ Right $ ThinPage content
+                        standardPageFields ctx Nothing ad
+      Right  <$> simpleHtmlResonseClrFlash content
     Nothing -> do
       muser <- dbQuery $ GetUserByID uid
       Left <$> case muser of
@@ -401,7 +387,7 @@ handleAccessNewAccountPost uid token = do
     This is where we get to when the user clicks the link in their password reminder
     email.  This'll show them the usual landing page, but with option to changing their password.
 -}
-handlePasswordReminderGet :: Kontrakcja m => UserID -> MagicHash -> m (Either KontraLink (Either Response ThinPage))
+handlePasswordReminderGet :: Kontrakcja m => UserID -> MagicHash -> m (Either KontraLink Response)
 handlePasswordReminderGet uid token = do
   muser <- getPasswordReminderUser uid token
   case muser of
@@ -409,21 +395,15 @@ handlePasswordReminderGet uid token = do
       switchLang (getLang user)
       let changePassLink = show $ LinkPasswordReminder uid token
       ctx <- getContext
-      case (ctxbrandeddomain ctx) of
-        Just bd -> do
-          ad <- getAnalyticsData
-          content <- renderTemplate "changePasswordPageWithBranding" $ do
-                        F.value "linkchangepassword" $ changePassLink
-                        F.value "background" $ bdbackgroundcolorexternal $ bd
-                        F.value "textscolour" $ bdexternaltextcolour bd
-                        F.value "buttoncolorclass" $ bdbuttonclass $ bd
-
-                        standardPageFields ctx kontrakcja ad
-          Right . Left <$> simpleHtmlResonseClrFlash content
-        Nothing -> do
-          content <- renderTemplate "changePasswordPage" $ do
-                        F.value "linkchangepassword" $ changePassLink
-          return $ Right $ Right $ ThinPage content
+      --let bd = ctxbrandeddomain ctx
+      ad <- getAnalyticsData
+      content <- renderTemplate "changePasswordPageWithBranding" $ do
+        F.value "linkchangepassword" $ changePassLink
+        --F.value "background" $ bdbackgroundcolorexternal $ bd
+        --F.value "textscolour" $ bdexternaltextcolour bd
+        --F.value "buttoncolorclass" $ bdbuttonclass $ bd
+        standardPageFields ctx Nothing ad
+      Right <$> simpleHtmlResonseClrFlash content
     Nothing -> do
       addFlashM flashMessagePasswordChangeLinkNotValid
       return $ Left LinkLoginDirect
@@ -460,10 +440,8 @@ handleContactUs = do
   plan    <- getField' "plan"
 
   let uid = maybe "user not logged in" ((++) "user with id " . show . userid) ctxmaybeuser
-      mbd = ctxbrandeddomain
-      domainInfo = case mbd of
-                     Nothing -> ""
-                     Just bd -> " (from domain " ++ bdurl bd ++ " )"
+      bd = ctxbrandeddomain
+      domainInfo = " (from domain " ++ bdUrl bd ++ " )"
       content = "<p>Hi there!</p>" ++
                 "<p>Someone requested information from the payments form" ++
                 domainInfo ++
@@ -475,7 +453,7 @@ handleContactUs = do
                 "<p>" ++ uid ++ "</p>" ++
                 "<p>Have a good one!</p>"
       contactEmail = "info@scrive.com"
-      mpartnerEmail = bdcontactemail <$> mbd
+      partnerEmail = bdContactEmail $ bd
       sendEmailTo emailAddress = scheduleEmailSendout ctxmailsconfig $ emptyMail {
                                    to = [MailAddress { fullname = emailAddress, email = emailAddress }]
                                  , title = "Contact request (" ++ plan ++ ")"
@@ -483,8 +461,6 @@ handleContactUs = do
                                  }
 
   sendEmailTo contactEmail
-  case mpartnerEmail of
-    Nothing -> return ()
-    Just partnerEmail -> sendEmailTo partnerEmail
+  when (partnerEmail /= contactEmail) $ sendEmailTo partnerEmail
 
   return $ LoopBack

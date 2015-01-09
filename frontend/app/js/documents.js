@@ -81,6 +81,7 @@ window.Document = Backbone.Model.extend({
         this.checkLastViewerChange();
         document.trigger('change:signatories');
         document.trigger('change:signorder');
+        document.trigger('change');
     },
     authorSignsFirstMode : function() {
       return _.all(this.signatories(), function(sig) {

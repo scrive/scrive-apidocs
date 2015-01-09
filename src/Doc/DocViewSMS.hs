@@ -18,7 +18,7 @@ import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 
 import BrandedDomain.BrandedDomain
-import Company.Model
+import Company.CompanyUI
 import Control.Logic
 import DB
 import Doc.DocStateData
@@ -28,6 +28,7 @@ import MailContext (MailContextMonad(..), MailContext(..))
 import Mails.SendMail
 import SMS.SMS
 import Templates
+import User.Model
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Utils.Monoid
@@ -36,9 +37,13 @@ mkSMS :: (MonadDB m, MonadThrow m, MailContextMonad m) => Document -> SignatoryL
 mkSMS doc sl msgData msgBody = do
   mctx <- getMailContext
   moriginator <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
-       Just uid -> fmap Just $ companysmsoriginator <$> companyinfo <$> (dbQuery $ GetCompanyByUserID uid)
+       Just uid -> do
+         muser <- dbQuery $ GetUserByID uid
+         case muser of
+              Just user -> companySmsOriginator <$> (dbQuery $ GetCompanyUI $ usercompany user)
+              Nothing -> return Nothing
        Nothing -> return Nothing
-  let originator = fromMaybe (fromMaybe "Scrive" (bdsmsoriginator <$> mctxcurrentBrandedDomain mctx)) (joinEmpty  moriginator)
+  let originator = fromMaybe (bdSmsOriginator $ mctxcurrentBrandedDomain mctx) (joinEmpty moriginator)
   return $ SMS (getMobile sl) msgData msgBody originator
 
 smsDocumentErrorAuthor :: (MailContextMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => Document -> SignatoryLink -> m SMS

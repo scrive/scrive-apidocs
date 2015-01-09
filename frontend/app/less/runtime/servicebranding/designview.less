@@ -1,0 +1,76 @@
+
+.design-view-button-bar-inner {
+
+  a.button.sendButton {
+    float: right;
+
+    &:not(.disabled) {
+      .colored-button(@actioncolor, @actiontextcolor);
+    }
+  }
+}
+
+.design-view-action-participant-inner {
+
+&.is-has-problems {
+    border: 2px solid @actioncolor;
+  }
+}
+
+.design-view-action-participant-new-field-name-input {
+
+  &.redborder {
+    border: 1px solid @actioncolor;
+    &.conflict {
+      border: 1px solid @actioncolor;
+    }
+  }
+}
+
+.redborder {
+  border:1px solid @actioncolor;
+}
+
+.redborder input {
+  border-color: @actioncolor;
+}
+
+.design-view-action-participant-new-field-select {
+
+  &.redborder,
+  &.select .select-opts {
+    border:1px solid @actioncolor;
+  }
+}
+
+.design-view-action-participant-details-information-field {
+
+  &.redborder {
+    border:1px solid @actioncolor;
+  }
+}
+
+.select.design-view-action-participant-new-field-select {
+  border: 1px solid @actioncolor;
+}
+
+.select.text-field-placement-setter-field-selector {
+  border: 2px solid @actioncolor;
+
+  &.select-exp .select-opts {
+    border: 2px solid @actioncolor;
+  }
+}
+
+.placedfieldvalue.value {
+  border: 2px solid @actioncolor;
+}
+
+.design-view-action-document-draggable-inner-wrapper {
+  background-color: @actioncolor;
+
+}
+
+.modal-content .body .designview-cant-sign-modal .highlight {
+  color: @actioncolor;
+}

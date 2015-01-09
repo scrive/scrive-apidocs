@@ -22,7 +22,6 @@ import ActionQueue.EmailChangeRequest
 import ActionQueue.PasswordReminder
 import ActionQueue.UserAccountRequest
 import API.Monad
-import Company.CompanyUI
 import Company.Model
 import Control.Logic
 import DB
@@ -100,20 +99,16 @@ apiCallGetUserPersonalToken = api $ do
 
 apiCallGetUserProfile :: Kontrakcja m => m Response
 apiCallGetUserProfile =  api $ do
-  ctx <- getContext
   (user, _ , _) <- getAPIUserWithAnyPrivileges
   company <- getCompanyForUser user
-  companyui <- dbQuery $ GetCompanyUI (companyid company)
-  Ok <$> userJSON ctx user (company,companyui)
+  Ok <$> userJSON user company
 
 
 apiCallUserSignviewBranding :: Kontrakcja m => m Response
 apiCallUserSignviewBranding =  api $ do
-  ctx <- getContext
   (user, _ , _) <- getAPIUserWithPad APIPersonal
   company <- getCompanyForUser user
-  companyui <- dbQuery $ GetCompanyUI (companyid company)
-  Ok <$> (runJSONGenT $ signviewBrandingJSON ctx user company companyui)
+  Ok <$> (runJSONGenT $ signviewBrandingJSON user company)
 
 apiCallChangeUserPassword :: Kontrakcja m => m Response
 apiCallChangeUserPassword = api $ do
@@ -271,12 +266,11 @@ apiCallSendPasswordReminder = api $ do
 
 apiCallAddFlash :: Kontrakcja m => m Response
 apiCallAddFlash = api $  do
-  color <- getField' "color"
+  color <- getField' "type"
   content <- getField' "content"
   case color of
-       "red"   -> addFlashMsg (FlashMessage OperationFailed content)
-       "green" -> addFlashMsg (FlashMessage OperationDone content)
-       "blue"  -> addFlashMsg (FlashMessage SigningRelated content)
+       "error"   -> addFlashMsg (FlashMessage OperationFailed content)
+       "success" -> addFlashMsg (FlashMessage OperationDone content)
        _ -> return ()
   Ok <$> (runJSONGenT $ return ())
 

@@ -22,12 +22,10 @@ import Control.Monad.Trans (lift)
 import Data.Functor
 import Data.Maybe
 import Text.StringTemplates.Templates
-import qualified Crypto.Hash.MD5 as MD5
-import qualified Data.ByteString.Base16 as B16
-import qualified Data.ByteString.Char8 as BS
 import qualified Text.StringTemplates.Fields as F
 
 import BrandedDomain.BrandedDomain
+import Branding.MD5
 import Company.CompanyUI
 import Company.Model
 import Control.Logic
@@ -44,6 +42,7 @@ import MailContext (MailContextMonad(..), getMailContext, MailContext(..))
 import Mails.SendMail
 import MinutesTime
 import Templates
+import Theme.Model
 import User.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
@@ -148,6 +147,8 @@ mailDocumentRejected forMail customMessage forAuthor rejector document = do
    documentMailWithDocLang document template $ do
         F.value "rejectorName" $ getSmartName rejector
         F.value "ispreview" $ not $ forMail
+        F.value "documentid" $ show $ documentid document
+        F.value "signatorylinkid" $ show $ signatorylinkid rejector
         F.value "customMessage" $ customMessage
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
         F.value "loginlink" $ show $ LinkIssueDoc $ documentid document
@@ -299,46 +300,45 @@ protectLink forMail mctx link
 documentMailWithDocLang :: (MonadDB m, MonadThrow m, TemplatesMonad m, MailContextMonad m) =>  Document -> String -> Fields m () -> m Mail
 documentMailWithDocLang doc mailname otherfields = documentMail doc doc mailname otherfields
 
-documentMailFields :: (MonadDB m, MonadThrow m, Monad m') => Document -> MailContext -> Maybe CompanyUI -> m (Fields m' ())
-documentMailFields doc mctx mcompanyui = return $ do
+documentMailFields :: (MonadDB m, MonadThrow m, Monad m') => Document -> MailContext -> m (Fields m' ())
+documentMailFields doc mctx = do
+    mcompany <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
+                   Just suid ->  fmap Just $ dbQuery $ GetCompanyByUserID $ suid
+                   Nothing -> return Nothing
+    mcompanyui <- case mcompany of
+                    Just comp -> (dbQuery $ GetCompanyUI (companyid comp)) >>= return . Just
+                    Nothing -> return Nothing
+    let themeid = fromMaybe (bdMailTheme $ mctxcurrentBrandedDomain mctx) (join $ companyMailTheme <$> mcompanyui)
+    theme <- dbQuery $ GetTheme themeid
+    return $ do
       F.value "ctxhostpart" (mctxhostpart mctx)
       F.value "ctxlang" (codeFromLang $ mctxlang mctx)
       F.value "documenttitle" $ documenttitle doc
       F.value "creatorname" $ getSmartName $ fromJust $ getAuthorSigLink doc
-      brandingMailFields (mctxcurrentBrandedDomain mctx) mcompanyui
+      brandingMailFields theme
 
 documentMail :: (HasLang a, MailContextMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => a -> Document -> String -> Fields m () -> m Mail
 documentMail haslang doc mailname otherfields = do
   mctx <- getMailContext
-  mcompanyui <- case getAuthorSigLink doc >>= maybesignatory of
-                 Nothing -> return Nothing
-                 Just suid -> do
-                   company <- dbQuery $ GetCompanyByUserID suid
-                   fmap Just $ dbQuery $ GetCompanyUI $ companyid company
-  let companylogo = do
-        companyui <- mcompanyui
-        logoContent <- companyemaillogo companyui
-        let logomd5 = BS.unpack $ B16.encode $ MD5.hash $ unBinary logoContent
-        return ("logo-" ++ logomd5 ++ ".png", Left $ unBinary logoContent)
-      mailAttachments = catMaybes [companylogo]
-      hasEmbeddedLogo = F.value "embeddedlogo" $ fst <$> companylogo
-  allfields <- documentMailFields doc mctx mcompanyui
-  mail <- kontramaillocal (mctxmailsconfig mctx) (mctxcurrentBrandedDomain mctx) haslang mailname $ allfields >> otherfields >> hasEmbeddedLogo
-  return mail { attachments = attachments mail ++ mailAttachments}
+  mcompany <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
+                   Just suid ->  fmap Just $ dbQuery $ GetCompanyByUserID $ suid
+                   Nothing -> return Nothing
+  mcompanyui <- case mcompany of
+                    Just comp -> (dbQuery $ GetCompanyUI (companyid comp)) >>= return . Just
+                    Nothing -> return Nothing
+  let themeid = fromMaybe (bdMailTheme $ mctxcurrentBrandedDomain mctx) (join $ companyMailTheme <$> mcompanyui)
+  theme <- dbQuery $ GetTheme themeid
+  allfields <- documentMailFields doc mctx
+  kontramaillocal (mctxcurrentBrandedDomain mctx) theme haslang mailname $ allfields >> otherfields
 
-brandingMailFields :: Monad m => Maybe BrandedDomain -> Maybe CompanyUI -> Fields m ()
-brandingMailFields mbd companyui = do
-    F.value "background"  $ companyemailbackgroundcolour <$> companyui
-    F.value "textcolor" $ (join $ companyemailtextcolour <$> companyui) `mplus`(bdmailstextcolor <$> mbd)
-    F.value "font"  $ companyemailfont <$> companyui
-    F.value "bordercolour"  $ nothingIfEmpty $ fromMaybe "" $ (join (companyemailbordercolour <$> companyui)) `mplus` (bdmailsbordercolor <$> mbd)
-    F.value "buttoncolour"  $ ensureHexRGB' <$> (join $ companyemailbuttoncolour <$> companyui) `mplus` (bdmailsbuttoncolor <$> mbd)
-    F.value "emailbackgroundcolour"  $ (join $ companyemailemailbackgroundcolour <$> companyui) `mplus` (bdmailsbackgroundcolor <$> mbd)
-    when (isJust companyui || isJust mbd) $ do
-      F.value "logo" $ (isJust $ join $ companyemaillogo <$> companyui) || (isJust $ mbd)
-      F.value "logoLink" $ if (isJust $ join $ companyemaillogo <$> companyui)
-                              then (show <$> LinkCompanyEmailLogo <$> companyuicompanyid <$> companyui)
-                              else if (isJust $ join $ bdlogo <$> mbd)
-                                      then return $ show $ LinkBrandedDomainLogo
-                                      else Nothing
+brandingMailFields :: Monad m => Theme -> Fields m ()
+brandingMailFields theme = do
+    -- MD5 is needed since some email client cache images based on cid
+    F.value "logoMD5" $ imageMD5 $ themeLogo theme
+    F.value "brandcolor" $ ensureHexRGB' $ themeBrandColor theme
+    F.value "brandtextcolor" $ ensureHexRGB' $ themeBrandTextColor theme
+    F.value "actioncolor" $ ensureHexRGB' $ themeActionColor theme
+    F.value "actiontextcolor" $ ensureHexRGB' $ themeActionTextColor theme
+    F.value "font"  $ themeFont theme
   where ensureHexRGB' s = fromMaybe s $ ensureHexRGB s
+

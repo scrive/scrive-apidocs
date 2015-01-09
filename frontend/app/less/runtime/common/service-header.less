@@ -1,0 +1,22 @@
+
+header.site {
+  background: none repeat scroll 0 0 @brandcolor;
+  border-top-color: @brandcolor;
+
+  nav ul.ct li {
+
+    a.page {
+      color: @brandtextcolor;
+      text-shadow: none;
+
+      &:hover {
+        color: lighten(@brandtextcolor,20%);
+      }
+
+      &.active {
+        color: @brandtextcolor;
+      }
+    }
+  }
+}
+

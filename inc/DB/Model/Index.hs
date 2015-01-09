@@ -4,6 +4,7 @@ module DB.Model.Index (
   , indexOnColumn
   , indexOnColumns
   , uniqueIndexOnColumn
+  , uniqueIndexOnColumnWithCondition
   , uniqueIndexOnColumns
   , indexName
   , sqlCreateIndex
@@ -49,6 +50,13 @@ uniqueIndexOnColumns columns = TableIndex {
   idxColumns = columns
 , idxUnique = True
 , idxWhere = Nothing
+}
+
+uniqueIndexOnColumnWithCondition :: RawSQL () -> RawSQL () -> TableIndex
+uniqueIndexOnColumnWithCondition column whereC = TableIndex {
+  idxColumns = [column]
+, idxUnique = True
+, idxWhere = Just whereC
 }
 
 indexName :: RawSQL () -> TableIndex -> RawSQL ()

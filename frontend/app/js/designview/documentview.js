@@ -155,13 +155,13 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                         ajaxerror: function(d, a){
                             console.log(d);
                             if(a === 'parsererror') { // file too large
-                                new FlashMessage({content: localization.fileTooLarge, color: "red"});
+                                new FlashMessage({content: localization.fileTooLarge, type: 'error'});
                                 document.markAsNotReady();
                                 mixpanel.track('Error',
                                                {Message: 'main file too large'});
 
                             } else {
-                                new FlashMessage({content: localization.couldNotUpload, color: "red"});
+                                new FlashMessage({content: localization.couldNotUpload, type: 'error'});
                                 document.markAsNotReady();
                                 mixpanel.track('Error',
                                                {Message: 'could not upload main file'});
@@ -169,7 +169,8 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                             document.recall();
                         }
             });
-            return new UploadButton({    color: 'green',
+            return new UploadButton({
+                                     type: 'action',
                                      size: 'big',
                                      text: localization.uploadButton,
                                      width: 250,

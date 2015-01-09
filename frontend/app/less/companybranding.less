@@ -1,297 +1,138 @@
 @import 'branding/elements';
-@import 'branding/variables';
+@import 'branding/variables.less';
 
 .companybranding {
+   margin: auto;
+   width: 1020px;
 
-  .tab-viewer {
-    width: 100%;
-  }
+  .companybranding-top-bar {
+    margin-bottom: 10px;
 
-  table {
-    width: 100%;
-  }
-
-  .branding-container {
-    background-color: @white;
-    border: 2px solid #eee;
-    display: inline-block;
-    margin-top: 8px;
-    padding: 25px;
-    width: 723px;
-  }
-
-  div.option label {
-    font-size: 17px;
-    font-weight: 300;
-    line-height: 20px;
-  }
-
-  .checkboxtoggle {
-    width: 30px;
-  }
-
-  .checkbox-box {
-    vertical-align: top;
-
-    .checkbox {
-      margin-top: 5px;
-      vertical-align: top;
-    }
-
-    label {
-      width: 180px;
-    }
-  }
-
-  input.colour {
-    width: 80px;
-    margin-left: 23px;
-  }
-
-  .colourdisplay {
-    background: url(~"@{img-base-url}/colorpicker/select2.png") repeat scroll center center transparent;
-    border: solid 1px #eeeeee;
-    display: inline-block;
-    margin-left: 20px;
-    margin-top: 1px;
-    padding: 14px 14px;
-    vertical-align: top;
-    width: 0;
-  }
-
-  .logocustomise {
-    padding-bottom: 10px;
-    padding-left: 23px;
-    padding-right: 30px;
-  }
-
-  .sample {
-    background-color: @white;
-    border:1px solid #dddddd;
-    padding: 10px;
-    margin: 10px 30px;
-    width: 650px;
-
-    .header {
-      padding: 10px;
-    }
-
-    hr {
-      background: @white;
-      border: none;
-      height: 1px;
-      width: 330px;
-    }
-
-    .logo {
-      min-height: 33px;
-      padding: 20px;
-      text-align: center;
-    }
-
-    .header {
-
-      .subject {
-        font-size: 24px;
-        font-weight: 100;
-        letter-spacing: 0.04em;
-        margin: 0;
-        padding: 0;
-        text-align: center;
-        width: 100%;
-      }
-
-      .strapline {
-        display: block;
-        font-size: 11px;
-        font-weight: 100;
-        margin: 0 0 20px 0;
-        text-align: center;
-        width: 100%;
-      }
-    }
-  }
-
-  .save {
-    margin: 4px 2px 0 0;
-  }
-
-  .hue-display {
-    color: @white;
-    cursor: pointer;
-    display: inline-block;
-    font: 16px/16px Helvetica Neue, Arial, sans-serif;
-    margin: 0 0 0 20px;
-    max-height: 16px;
-    padding: 6px 10px;
-    text-align: center;
-    text-decoration: none;
-    text-shadow: hsla(0, 0, 0, 0.5) 0 1px 0;
-    -moz-transform: translatez(0);
-    -ms-transform: translatez(0);
-    -o-transform: translatez(0);
-    -webkit-transform: translatez(0);
-    transform: translatez(0);
-    -moz-transition: 0.15s ease-in-out;
-    -ms-transition: 0.15s ease-in-out;
-    -o-transition: 0.15s ease-in-out;
-    -webkit-transition: 0.15s ease-in-out;
-    transition: 0.15s, ease-in-out;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    -o-user-select: none;
-    -webkit-user-select: none;
-    user-select: none;
-    zoom: 1;
-  }
-
-  .mail-sample {
-    margin: auto;
-    width: 608px;
-
-    td {
-      padding: 4px 0;
-    }
-
-    .emailpreviewlogo {
-      border: none;
-      margin-left: 7px;
-      margin-top: 20px;
-      max-width: 600px;
-    }
-
-    .maintable {
-      width: 608px;
-    }
-
-    .emailpreviewcontenttable {
-      border: 4px solid #dee4ed;
-      border-top: auto;
-      background-color: @white;
-    }
-
-    .emailpreviewsubject {
-      color: #364963;
-      display: block;
-      font-family: @font-family-sans;
-      font-size: 28px;
-      line-height: 120%;
-      margin-bottom: 8px;
-      text-align: left;
-    }
-
-    .emailpreviewpoweredbyscrive {
-      color: #7a94b8;
-      display: block;
-      font-family: @font-family-sans;
-      font-size: 16px;
-      font-weight: normal;
-      line-height: 150%;
-      text-align: left;
-    }
-
-    .emailpreviewheadersubtablecell {
-      background-color: @white;
-    }
-
-    .emailpreviewheadertable {
-      border-bottom-color: #dee4ed;
-      border-bottom-width: 1px;
-      border-bottom-style: solid;
-    }
-
-    .emailpreviewbutton {
-      background: hsl(215, 30%, 35%); // TODO: change to variable or hex
-      color: @white;
-      cursor: pointer;
+    .select-theme-for-view {
       display: inline-block;
-      font: 16px/16px Helvetica Neue, Arial, sans-serif;
-      margin: 0 0 0 3px;
-      max-height: 16px;
-      padding: 12px 20px;
-      text-align: center;
-      text-decoration: none;
-      -moz-transform: translatez(0);
-      -ms-transform: translatez(0);
-      -o-transform: translatez(0);
-      -webkit-transform: translatez(0);
-      transform: translatez(0);
-      -moz-transition: 0.15s ease-in-out;
-      -ms-transition: 0.15s ease-in-out;
-      -o-transition: 0.15s ease-in-out;
-      -webkit-transition: 0.15s ease-in-out;
-      transition: 0.15s, ease-in-out;
-      -moz-user-select: none;
-      -ms-user-select: none;
-      -o-user-select: none;
-      -webkit-user-select: none;
-      user-select: none;
-      zoom: 1;
+      margin-right:10px;
+      width:158px;
+
+      h5.select-theme-header {
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 300;
+        margin-bottom: 8px;
+        margin-left: 2px;
+
+        &.active {
+          font-weight: normal;
+        }
+      }
     }
 
-    .divcontent {
-      float: right;
-      margin-right: 26px;
-      width: 348px;
-    }
+    .select-theme-save {
+      line-height: 70px;
 
-    .documentpreview {
-      border: none;
-      max-width: 150px;
-    }
-
-    .documentpreviewdiv {
-      border: 1px solid #dee4ed;
-      float: left;
-      margin: 2px 26px 42px 46px;
-    }
-
-    .documentcontent {
-      color: #333;
-      font-family: @font-family-sans;
-      font-size: 16px;
-      margin-top: 24px;
-      line-height: 150%;
-      text-align: left;
-    }
-
-    .contenttable {
-      border-bottom-color: #dee4ed;
-      border-bottom-style: solid;
-      border-bottom-width: 1px;
-    }
-
-    .emailpreviewfooter {
-      color: #999;
-      font-family: @font-family-sans;
-      font-size: 13px;
-      font-style: italic;
-      line-height: 125%;
-      text-align: justify;
-      padding: 4px 40px 8px;
-    }
-
-    .emailpreviewfootertable {
-      background-color: @white;
-      border-top: 0;
-    }
-
-    .maincontenttable {
-      background-color: @white;
-      border: 4px solid #dee4ed;
-      border-top: auto;
+      .save {
+        vertical-align: bottom;
+      }
     }
   }
-}
 
-.tab-viewer .companybranding .col {
-  float: none;
-  width: 860px;
-}
+  .companybranding-settings-edit {
+    .companybranding-settings-edit-panel {
+      width: 1008px;
+      padding:5px;
+      border: 1px solid #DDDDDD;
+      background-color:#FFFFFF;
 
-.tab-viewer .tab-container .companybranding .sample .content {
-  color: #212121;
-  font-size: 12px;
-  margin-bottom: 20px;
-  margin-top: 30px;
+      .companybranding-settings-edit-panel-title {
+        border-bottom: 1px solid #DDDDDD;
+        margin:5px;
+        padding:5px;
+        font-size: 16px;
+      }
+      .companybranding-settings-edit-panel-column{
+        width:480px;
+        margin:5px;
+        padding:5px;
+        display:inline-block;
+        vertical-align: top;
+        &.left {
+          border-right:1px solid #DDDDDD;
+        }
+
+        .companybranding-property-editor {
+          margin-top:10px;
+          width:460px;
+
+          .favicon-image {
+            margin-right:20px;
+            vertical-align: top;
+          }
+
+          .companybranding-color-property-editor{
+            width:100%;
+            display:inline-block;
+
+            .companybranding-color-property-editor-color-picker {
+              display : inline-block;
+              float: right;
+
+              .icon-preview {
+                display: inline-block;
+                width: 26px;
+                height: 26px;
+                margin-right: 10px;
+
+                &.opened {
+                  background-position: -26px 0px;
+                }
+
+                &.prolonged {
+                  background-position: -52px 0px
+                }
+                &.reviewed {
+                  background-position: -78px 0px
+                }
+                &.signed {
+                  background-position: -104px 0px
+                }
+                &.sealed {
+                  background-position: -130px 0px
+                }
+              }
+
+              .info-text-input  {
+                width:60px;
+              }
+
+              .color-display {
+                background: url(~"@{img-base-url}/colorpicker/select2.png") repeat scroll center center transparent;
+                border: solid 1px #eeeeee;
+                cursor: pointer;
+                display: inline-block;
+                margin-left: 20px;
+                margin-top: 1px;
+                padding: 14px 14px;
+                vertical-align: top;
+                width: 0;
+              }
+
+              .color-picker {
+                position: absolute;
+                z-index: 1;
+
+                &.hidden {
+                  display:none;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .save-button-area {
+    width: 1020px;
+    padding-top: 20px;
+    text-align: right;
+  }
 }

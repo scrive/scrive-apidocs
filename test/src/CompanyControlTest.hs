@@ -1,34 +1,38 @@
 module CompanyControlTest (companyControlTests) where
 
-import Control.Applicative
-import Control.Monad.Trans (liftIO)
-import Data.Maybe
-import Happstack.Server hiding (simpleHTTP)
+--import Control.Applicative
+--import Control.Monad.Trans (liftIO)
+--import Data.Maybe
+--import Happstack.Server hiding (simpleHTTP)
 import Test.Framework
-import Text.JSON.FromJSValue
-import qualified Data.ByteString.Base64 as B64
-import qualified Data.ByteString.Char8 as BS
 
-import Company.CompanyControl
-import Company.CompanyUI
-import Company.Model
-import CompanyAccounts.Model
-import Context
-import DB
-import Redirect
+
+--import Text.JSON.FromJSValue
+--import qualified Data.ByteString.Base64 as B64
+--import qualified Data.ByteString.Char8 as BS
+
+--import Company.CompanyControl
+--import Company.CompanyUI
+--import Company.Model
+--import CompanyAccounts.Model
+--import Context
+--import DB
+--import Redirect
 import TestingUtil
 import TestKontra as T
-import Utils.Default
+--import Utils.Default
 
 companyControlTests :: TestEnvSt -> Test
 companyControlTests env = testGroup "CompanyControl" [
     testThat "handleGetCompanyJSON works" env test_handleGetCompanyJSON
   , testThat "handlePostCompany can be used to set the company ui" env test_settingUIWithHandlePostCompany
-  , testThat "handleCompanyLogo responds when noone is logged in" env test_handleCompanyLogo
   ]
 
 test_handleGetCompanyJSON :: TestEnv ()
 test_handleGetCompanyJSON = do
+  assertEqual "This test is disable. Please add a new one" True False
+
+  {-
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
   companyui <- dbQuery $ GetCompanyUI (companyid company)
@@ -39,9 +43,11 @@ test_handleGetCompanyJSON = do
   (jsv, _ctx') <- runTestKontra req ctx $ handleGetCompanyJSON Nothing
   (ejsonemailemailbackgroundcolour :: Maybe String) <- withJSValue jsv $ fromJSValueField "companyemailemailbackgroundcolour"
   assertEqual "JSON companyemailemailbackgroundcolour matches company id"  (fromMaybe "" $ companyemailemailbackgroundcolour $ companyui) (fromMaybe "" ejsonemailemailbackgroundcolour)
-
+    -}
 test_settingUIWithHandlePostCompany :: TestEnv ()
 test_settingUIWithHandlePostCompany = do
+   assertEqual "This test is disable. Please add a new one" True False
+  {-
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
@@ -106,24 +112,14 @@ test_settingUIWithHandlePostCompany = do
   assertEqual "Signview logo file reset" Nothing $ companysignviewlogo $ companyui3
 
 
-test_handleCompanyLogo :: TestEnv ()
-test_handleCompanyLogo = do
-  (_user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-
-  ctx <- mkContext defaultValue
-
-  req <- mkRequest GET []
-  (res, _ctx') <- runTestKontra req ctx $ handleCompanyEmailLogo (companyid company)
-
-  assertEqual "Response code is 200" 200 (rsCode res)
-
 addNewAdminUserAndCompany :: String -> String -> String -> TestEnv (User, Company)
 addNewAdminUserAndCompany fstname sndname email = do
   company <- addNewCompany
   companyui <- dbQuery $ GetCompanyUI (companyid company)
-  _ <- dbUpdate $ SetCompanyUI (companyid company) companyui {companyemailbackgroundcolour = Just "#abcdef"}
+  _ <- dbUpdate $ SetCompanyUI (companyid company) companyui --{companyemailbackgroundcolour = Just "#abcdef"}
   Just user <- addNewCompanyUser fstname sndname email (companyid company)
   _ <- dbUpdate $ SetUserCompanyAdmin (userid user) True
   Just updateduser <- dbQuery $ GetUserByID (userid user)
   Just updatedcompany <- dbQuery $ GetCompany (companyid company)
   return (updateduser, updatedcompany)
+  -}

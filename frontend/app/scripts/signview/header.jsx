@@ -14,6 +14,13 @@ define(['React', 'Backbone', 'common/backbone_mixin', 'tinycolor'], function(Rea
     getBackboneModels : function() {
       return [this.props.signviewbranding];
     },
+    logoLink : function() {
+      if (this.props.documentid && this.props.signatorylinkid) {
+        return "/signview_logo/" + this.props.documentid + "/" + this.props.signatorylinkid + "/" + window.brandinghash;
+      } else {
+        return "/signview_logo_without_document/" + window.brandinghash;;
+      }
+    },
     render: function() {
       var signviewbranding = this.props.signviewbranding;
       var hasLink = this.props.link != undefined;
@@ -32,7 +39,7 @@ define(['React', 'Backbone', 'common/backbone_mixin', 'tinycolor'], function(Rea
             <div className="content">
               <div className="logowrapper">
                 <img className="logo"
-                     src={(signviewbranding.signviewlogo() != undefined && signviewbranding.signviewlogo() != "") ? signviewbranding.signviewlogo() : '/img/logo.png'}>
+                     src={this.logoLink()}>
                 </img>
               </div>
               {/*if*/ hasLink &&

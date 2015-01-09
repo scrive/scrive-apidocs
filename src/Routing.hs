@@ -100,13 +100,13 @@ hPutWrap = kpath PUT
 page :: Kontra String -> Kontra Response
 page pageBody = do
     pb <- pageBody
-    renderFromBody kontrakcja pb
+    renderFromBody pb
 
 {- To change thin page type to full response -}
 pageThin :: Kontra ThinPage -> Kontra Response
 pageThin pageBody = do
     ThinPage pb  <- pageBody
-    renderFromBodyThin kontrakcja pb
+    renderFromBodyThin pb
 
 
 hPost :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)

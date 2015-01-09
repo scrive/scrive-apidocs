@@ -17,22 +17,17 @@ return React.createClass({
       var self = this;
       var model = this.props.model;
       return (
-        <div style={{"width":"275px","margin" : "20px auto"}}>
-          <div style={{marginBottom: "50px", marginTop: "50px", textAlign: "center"}} >
-            <img alt='logo' src="/branding/logo" />
+        <div className="forgot-password-box" style={{"width":"275px","margin" : "20px auto"}}>
+          <div style={{marginBottom: "20px", marginTop: "50px", textAlign: "center"}} >
+            <img alt='logo' src={"/login_logo/" + window.brandinghash} />
             <div className='divider-line'/>
-            <label style={{"textAlign":"center", "width":"275px", color : model.textscolour()}}>
+            <label style={{"textAlign":"center", "width":"275px"}}>
               {localization.esigningpoweredbyscrive}
             </label>
           </div>
           <div>
             <div>
-              <div className='position first' style={{textAlign: "left", height: "30px"}} >
-                <label style={{paddingLeft: "10px", color : model.textscolour()}}>
-                  {localization.resetYourPassword  + ":"}
-                </label>
-              </div>
-              <div className='position' style={{marginBottom:"6px"}}>
+              <div className='position first' style={{marginBottom:"6px"}}>
                 <InfoTextInput
                   infotext={localization.loginModal.email}
                   value={model.email()}
@@ -44,14 +39,21 @@ return React.createClass({
                   style={{"width" : "245px", "padding" : "7px 14px","fontSize" : "16px"}}
                 />
               </div>
-              <div className="position" style={{textAlign:"center", marginTop:"10px"}}>
+              <div className="position" style={{textAlign:"center", marginTop:"20px"}}>
                 <Button
                   cssClass="recovery-password-submit"
-                  color={model.buttoncolorclass()}
+                  type="main"
                   text={localization.loginModal.sendNewPassword}
                   style={{"width":"235px;"}}
                   onClick={this.trySendPasswordReminder}
                 />
+              </div>
+              <div className='position' style={{textAlign:"center",marginTop:"20px"}}>
+                <label className='label-with-link'>
+                  <a onClick={function(){ model.toogleView();}}>
+                    {localization.loginModal.login}
+                  </a>
+                </label>
               </div>
             </div>
           </div>

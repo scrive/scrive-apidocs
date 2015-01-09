@@ -32,7 +32,7 @@ window.ReloadDueToErrorModal = function(xhr) {
   var text = $("<div>").append($("<span/>").text(localization.signingErrorMessage1))
     .append("<BR/>")
     .append($("<span/>").text(localization.signingErrorMessage2));
-  var button = new Button({color: 'green',
+  var button = new Button({color: 'action',
     style: "margin:20px",
     text: localization.signingErrorReload,
     onClick: function() {
@@ -124,7 +124,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
     var signatory = document.currentSignatory();
     var self = this;
     if (signatory.smsPinAuthentication() && (self.pin == undefined || self.pin == "")) {
-          new FlashMessage({content: localization.docsignview.pinSigning.noPinProvided,  color: 'red'});
+          new FlashMessage({content: localization.docsignview.pinSigning.noPinProvided,  color: 'error'});
           if (args.onFail) {
             args.onFail();
           }
@@ -143,7 +143,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
                 if (args.onFail) {
                   args.onFail();
                 }
-                new FlashMessage({content: localization.docsignview.pinSigning.invalidPin,  color: 'red'});
+                new FlashMessage({content: localization.docsignview.pinSigning.invalidPin,  color: 'error'});
             } else {
               if (self.confirmation != undefined)         self.confirmation.clear();
               if (self.signinprogressmodal != undefined) self.signinprogressmodal.close();
@@ -189,7 +189,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
     var self = this;
     var button =  new Button({
       size: BrowserInfo.isSmallScreen() ? "big": "small",
-      color: "green",
+      type: "action",
       cssClass: 'greybg signbutton',
       text: this.signaturesPlaced ? localization.process.signbuttontextfromsignaturedrawing: localization.process.signbuttontext,
       oneClick: true,
@@ -322,7 +322,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
       });
     } else {
       self.confirmation = new Confirmation({
-        cssClass: 'grey sign-confirmation-modal' + (isSmallScreen ? ' small-device': ''),
+        cssClass: 'sign-confirmation-modal' + (isSmallScreen ? ' small-device': ''),
         title: title,
         signview: this.margin ? false: self.signview, // margin overrides signview
         acceptButton: this.createSignButtonElems(),
@@ -351,6 +351,8 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
 
         // Remove the modal footer but keep the button (regular or mobile bankid)
         var signButton = modalFooter.find('.button.signbutton').detach();
+        signButton.addClass("action signbutton");
+
         modalFooter.remove();
 
         // Styling
@@ -406,19 +408,17 @@ window.DocumentSignSignSection = Backbone.View.extend({
            ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
          } else {
            new FlashMessage({content: localization.signviewSigningFailed,
-                             color: 'red',
+                             type: 'error',
                              withReload: true});
          }
        };
        this.rejectButton = new Button({
-                                        color: "black",
                                         text: localization.process.rejectbuttontext,
                                         onClick: function() {
                                             mixpanel.track('Click Reject');
 
                                             var arrow = model.arrow();
                                             if (arrow) { arrow.disable(); }
-
                                             var content = $("<div />");
                                             var textarea = $("<textarea class='modal-textarea' />");
                                             textarea.attr('placeholder', localization.process.signatorycancelmodalplaceholder);
@@ -435,7 +435,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                               content: content,
                                               extraClass: "grey reject-modal",
                                               acceptText: localization.reject.send,
-                                              acceptColor: "red",
+                                              acceptColor: "cancel",
                                               onAccept: function() {
                                                 var customtext = "<p>" + textarea.val() + "</p>";
                                                 trackTimeout('Accept', {'Accept': 'reject document'}, function() {
@@ -462,7 +462,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
        }
 
        this.signButton = new Button({
-                            color: "green",
+                            type: "action",
                             cssClass: "sign-button",
                             text: signButtonText,
                             onClick: function() {

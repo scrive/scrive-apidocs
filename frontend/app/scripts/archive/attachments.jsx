@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React','lists/list', 'moment', 'legacy_code'], function(React, List, moment) {
+define(['React','lists/list', 'moment', 'legacy_code','common/uploadbutton'], function(React, List,moment,_legacy,UploadButton) {
 
 
 return React.createClass({
@@ -11,7 +11,6 @@ return React.createClass({
         acceptText: localization.ok,
         rejectText: localization.cancel,
         title: localization.archive.attachments.share.head,
-        icon: '/img/modal-icons/multisend.png',
         content: jQuery("<p/>").text(localization.archive.attachments.share.body),
         onAccept : function() {
            new Submit({
@@ -19,7 +18,7 @@ return React.createClass({
              method: "POST",
              attachmentids: "["+ _.map(selected, function(doc){return doc.field("fields").id;}) + "]",
              ajaxsuccess : function() {
-               new FlashMessage({color : "green", content : localization.archive.attachments.share.successMessage});
+               new FlashMessage({type: 'success', content : localization.archive.attachments.share.successMessage});
                self.reload();
              }
           }).sendAjax();
@@ -40,7 +39,6 @@ return React.createClass({
         acceptText: localization.ok,
         rejectText: localization.cancel,
         title: localization.archive.attachments.remove.action,
-        icon: '/img/modal-icons/delete.png',
         content: confirmationText,
         onAccept : function() {
           new Submit({
@@ -48,7 +46,7 @@ return React.createClass({
             method: "POST",
             attachmentids: "["+ _.map(selected, function(doc){return doc.field("fields").id;}) + "]",
             ajaxsuccess : function() {
-              new FlashMessage({color : "green", content : localization.archive.attachments.remove.successMessage});
+              new FlashMessage({type: 'success', content : localization.archive.attachments.remove.successMessage});
               self.reload();
             }
           }).sendAjax();
@@ -69,32 +67,33 @@ return React.createClass({
          <List.TextFiltering text={localization.archive.attachments.search} />
 
          <List.ListAction
-            elFunction={function(model) {
-              return new UploadButton({
-                 text: localization.archive.attachments.createnew.action,
-                 name : "doc",
-                 color: "black",
-                 width: 150,
-                 onAppend : function(input) {
+            component={function(model) {
+              return (<UploadButton
+                name="doc"
+                text={localization.archive.attachments.createnew.action}
+                className="float-left actionButton"
+                width={118}
+                onUpload={function(input) {
                    setTimeout(function() {
                                 new Submit({
                                 method : "POST",
                                 url : "/a",
                                 ajaxsuccess : function() {self.reload();},
                                 ajaxerror : function() {
-                                  new FlashMessage({color: "red", content: localization.couldNotUpload});
+                                  new FlashMessage({type: 'error', content: localization.couldNotUpload});
                                 }
                                 }).addInputs($(input)).sendAjax(); },100);
 
-                }
-              }).el()}}
+                }}
+              />);
+            }}
           />
 
           <List.ListAction
             name={localization.archive.attachments.share.action}
             onSelect={function(selected,model) {
               if (selected.length ==0 ) {
-                new FlashMessage({color: "red", content: localization.archive.attachments.share.emptyMessage});
+                new FlashMessage({type: 'error', content: localization.archive.attachments.share.emptyMessage});
                 return false;
               }
               self.openShareModal(selected);
@@ -105,7 +104,7 @@ return React.createClass({
             name={localization.archive.attachments.remove.action}
             onSelect={function(selected,model) {
               if (selected.length ==0 ) {
-                new FlashMessage({color: "red", content: localization.archive.attachments.remove.emptyMessage});
+                new FlashMessage({type: 'error', content: localization.archive.attachments.remove.emptyMessage});
                 return false;
               }
               self.openRemoveModal(selected);

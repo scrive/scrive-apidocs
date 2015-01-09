@@ -12,7 +12,6 @@ import Data.Int
 import Data.Maybe
 import Data.Monoid
 import Data.Monoid.Space
-import Data.Monoid.Utils
 import Database.PostgreSQL.PQTypes
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BSU
@@ -69,12 +68,27 @@ checkDatabase :: (MonadDB m, MonadThrow m)
 checkDatabase logger domains tables = do
   versions <- mapM checkTableVersion tables
   let tablesWithVersions = zip tables (map (fromMaybe 0) versions)
+  let tableValidationResults = flip map tablesWithVersions $ \(t,v) ->
+                if tblVersion t == v
+                   then ValidationResult []
+                   else if v==0
+                        then ValidationResult ["Table '" ++ tblNameString t ++ "' must be created"]
+                        else ValidationResult ["Table '" ++ tblNameString t ++ "' must be migrated " ++ show v ++ "->" ++ show (tblVersion t)]
 
-  resultCheck logger . mconcat . flip map tablesWithVersions
-    $ \(t, v) -> ValidationResult $ if
-      | v == tblVersion t -> []
-      | v == 0 -> ["Table '" ++ tblNameString t ++ "' must be created"]
-      | otherwise -> ["Table '" ++ tblNameString t ++ "' must be migrated " ++ show v ++ " -> " ++ show (tblVersion t)]
+  initialSetupValidationResults  <- forM tables $ \t ->
+    case tblInitialSetup t of
+      Nothing -> return $ ValidationResult []
+      Just tis -> do
+        res <- checkInitialSetup tis
+        if (res)
+           then return $ ValidationResult []
+           else return $ ValidationResult ["Initial setup for table '" ++ tblNameString t ++ "' is not valid"]
+
+  case mconcat (tableValidationResults ++ initialSetupValidationResults) of
+    ValidationResult [] -> return ()
+    ValidationResult errmsgs -> do
+      mapM_ logger errmsgs
+      error "Failed"
 
   resultCheck logger =<< checkDomainsStructure domains
   resultCheck logger =<< checkDBStructure (tableVersions : tables)
@@ -138,18 +152,6 @@ checkUnknownTables logger tables = do
 createTable :: MonadDB m => Table -> m ()
 createTable table@Table{..} = do
   forM_ createTableSQLs runQuery_
-
-  case tblInitialData of
-    Nothing -> return ()
-    Just (Rows cols rows) -> forM_ rows $ \row -> runQuery_ $ rawSQL (smconcat [
-        "INSERT INTO" <+> unRawSQL tblName
-      , "(" <> mintercalate ", " cols <> ")"
-      , "VALUES"
-      , "(" <> mintercalate ", " colnums <> ")"
-      ]) row
-      where
-        colnums = take (length cols) $ map (BS.pack . ('$':) . show) [(1::Int)..]
-
   runQuery_ . sqlInsert "table_versions" $ do
     sqlSet "name" (tblNameString table)
     sqlSet "version" tblVersion
@@ -349,6 +351,13 @@ checkDBConsistency logger domains tables migrations = do
       mapM_ createDomain domains
       logger "Creating tables..."
       mapM_ createTable tables
+      logger "Done."
+      logger "Running initial setup for tables..."
+      forM_ tables $ \t -> case tblInitialSetup t of
+                          Nothing -> return ()
+                          Just tis -> do
+                            logger $ "For table " ++ (tblNameString t) ++ "..."
+                            initialSetup tis
       logger "Done."
 
     else do -- migration mode

@@ -1,7 +1,7 @@
 /* Main admin only site definition. Its a tab based set of different lists.
  * This is the entry point for /adminonly/. */
 
-define(['React','admin/companyusersadminlist','admin/documentslist','Backbone', 'legacy_code'], function(React,CompanieUsersAdminList,DocumentsList) {
+define(['React','admin/companyusersadminlist','admin/documentslist','account/branding/companybrandingpanel','Backbone', 'legacy_code'], function(React,CompanieUsersAdminList,DocumentsList,CompanyBrandingPanel) {
 
 var CompanyAdminModel = Backbone.Model.extend({
   companyid : function() {
@@ -11,11 +11,6 @@ var CompanyAdminModel = Backbone.Model.extend({
         if (this.get("companydetails") != undefined) return this.get("companydetails");
         this.set({ "companydetails" :new AdminCompanyDetails({ companyid: this.companyid() })});
         return this.companydetails();
-  },
-  companybranding: function() {
-        if (this.get("companybranding") != undefined) return this.get("companybranding");
-        this.set({ "companybranding" : new CompanyBranding({ companyid: this.companyid() })});
-        return this.companybranding();
   },
   companypayments: function() {
         if (this.get("companypayments") != undefined) return this.get("companypayments");
@@ -62,12 +57,16 @@ var CompanyAdminModel = Backbone.Model.extend({
   },
   companybrandingTab : function() {
                     var self = this;
+                    var div = $('<div/>');
+                    var brandingPanel = React.renderComponent(new CompanyBrandingPanel({
+                      companyid : self.companyid()
+                    }),div[0]);
                     return new Tab({
                         name: "Branding",
-                        elems: [function() { return $(self.companybranding().el()); }],
-                        pagehash : ["branding-email","branding-signview", "branding-service"],
+                        elems: [function() { return div; }],
+                        pagehash : ["branding-themes-mail","branding-themes-signview", "branding-themes-service", "branding-settings"],
                         onActivate : function() {
-                            self.companybranding().refresh();
+                          brandingPanel.reload();
                         }
                     });
   },

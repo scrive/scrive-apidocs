@@ -5,7 +5,6 @@ module User.UserView (
     companyJSON,
     documentSignviewBrandingJSON,
     signviewBrandingJSON,
-    showAccount,
     pageAcceptTOS,
     pageDoYouWantToChangeEmail,
 
@@ -36,20 +35,16 @@ module User.UserView (
     ) where
 
 import Control.Applicative ((<$>))
-import Control.Monad
+import Control.Monad.Catch
 import Data.List
-import Data.Maybe
 import Text.JSON
 import Text.JSON.Gen
 import Text.StringTemplate.GenericStandard()
+import Text.StringTemplate.GenericStandard()
 import Text.StringTemplates.Templates
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Base64 as B64
-import qualified Data.ByteString.UTF8 as BS
 import qualified Text.StringTemplates.Fields as F
 
 import BrandedDomain.BrandedDomain
-import Company.CompanyUI
 import Company.Model
 import DB
 import Doc.DocStateData
@@ -59,17 +54,14 @@ import Kontra
 import KontraLink
 import Mails.SendMail(Mail, kontramail, kontramaillocal)
 import MinutesTime
+import Theme.Model
 import User.Email
 import User.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 
-showAccount :: TemplatesMonad m => User -> m String
-showAccount user = renderTemplate "showAccount" $ do
-    F.value "companyAdmin" $ useriscompanyadmin user
-
-userJSON :: Monad m => Context -> User -> (Company,CompanyUI) ->  m JSValue
-userJSON ctx user (company,companyui) = runJSONGenT $ do
+userJSON :: Monad m => User -> Company ->  m JSValue
+userJSON user company = runJSONGenT $ do
     value "id" $ show $ userid user
     value "fstname" $ getFirstName user
     value "sndname" $ getLastName user
@@ -79,50 +71,10 @@ userJSON ctx user (company,companyui) = runJSONGenT $ do
     value "companyadmin" $ useriscompanyadmin user
     value "companyposition" $ usercompanyposition $ userinfo user
     value "lang"   $ codeFromLang $ getLang user
-    valueM "company" $ companyJSON ctx company companyui
+    valueM "company" $ companyJSON company
 
-companyUIJson :: Monad m => Context -> CompanyUI -> m JSValue
-companyUIJson ctx companyui = runJSONGenT $ do
-    value "companyemaillogo" $ fromMaybe "" $ BS.toString . BS.append (BS.fromString "data:image/png;base64,") . B64.encode . unBinary <$> (companyemaillogo $ companyui)
-    value "companysignviewlogo" $ fromMaybe ""  $ BS.toString . BS.append (BS.fromString "data:image/png;base64,") .  B64.encode . unBinary <$> (companysignviewlogo $ companyui)
-    value "companyemailfont" $ fromMaybe "" $ companyemailfont $ companyui
-    value "companyemailbordercolour" $ fromMaybe "" $ companyemailbordercolour $ companyui
-    value "companyemailbuttoncolour" $ fromMaybe "" $ companyemailbuttoncolour $ companyui
-    value "companyemailemailbackgroundcolour" $ fromMaybe "" $ companyemailemailbackgroundcolour $ companyui
-    value "companyemailbackgroundcolour" $ fromMaybe "" $ companyemailbackgroundcolour $ companyui
-    value "companyemailtextcolour" $ fromMaybe "" $ companyemailtextcolour $ companyui
-    value "companysignviewtextcolour" $ fromMaybe "" $ companysignviewtextcolour $ companyui
-    value "companysignviewtextfont" $ fromMaybe "" $ companysignviewtextfont $ companyui
-    value "companysignviewprimarycolour" $ fromMaybe "" $ companysignviewprimarycolour $ companyui
-    value "companysignviewprimarytextcolour" $ fromMaybe "" $ companysignviewprimarytextcolour $ companyui
-    value "companysignviewsecondarycolour" $ fromMaybe "" $ companysignviewsecondarycolour $ companyui
-    value "companysignviewsecondarytextcolour" $ fromMaybe "" $ companysignviewsecondarytextcolour $ companyui
-    value "companysignviewbarscolour" $ fromMaybe "" $ companysignviewbarscolour $ companyui
-    value "companysignviewbarstextcolour" $ fromMaybe "" $ companysignviewbarstextcolour $ companyui
-    value "companysignviewbackgroundcolour" $ fromMaybe "" $ companysignviewbackgroundcolour $ companyui
-    value "companycustomlogo" $ fromMaybe ""  $ BS.toString . BS.append (BS.fromString "data:image/png;base64,") .  B64.encode . unBinary <$> (companycustomlogo $ companyui)
-    value "companycustombarscolour" $ fromMaybe "" $ companycustombarscolour $ companyui
-    value "companycustombarstextcolour" $ fromMaybe "" $ companycustombarstextcolour $ companyui
-    value "companycustombarssecondarycolour" $ fromMaybe "" $ companycustombarssecondarycolour $ companyui
-    value "companycustombackgroundcolour" $ fromMaybe "" $ companycustombackgroundcolour $ companyui
-    value "domaincustomlogo" $  fromMaybe ""  $ BS.toString . BS.append (BS.fromString "data:image/png;base64,") . B64.encode . unBinary <$> join (bdlogo <$> ctxbrandeddomain ctx)
-    value "domainbarscolour" $ fromMaybe "" $ bdbarscolour <$> ctxbrandeddomain ctx
-    value "domainbarstextcolour" $ fromMaybe "" $ bdbarstextcolour <$> ctxbrandeddomain ctx
-    value "domainbarssecondarycolour" $ fromMaybe "" $ bdbarssecondarycolour <$> ctxbrandeddomain ctx
-    value "domainbackgroundcolour" $ fromMaybe "" $ bdbackgroundcolour <$> ctxbrandeddomain ctx
-    value "domainmailsbackgroundcolor" $ fromMaybe "" $ bdmailsbackgroundcolor <$> ctxbrandeddomain ctx
-    value "domainmailsbuttoncolor" $ fromMaybe "" $ bdmailsbuttoncolor <$> ctxbrandeddomain ctx
-    value "domainmailstextcolor" $ fromMaybe "" $ bdmailstextcolor <$> ctxbrandeddomain ctx
-    value "domainmailsbordercolor" $ fromMaybe "" $ bdmailsbordercolor <$> ctxbrandeddomain ctx
-    value "domainsignviewprimarycolour" $ fromMaybe "" $ bdsignviewprimarycolour <$> ctxbrandeddomain ctx
-    value "domainsignviewprimarytextcolour" $ fromMaybe "" $ bdsignviewprimarytextcolour <$> ctxbrandeddomain ctx
-    value "domainsignviewsecondarycolour" $ fromMaybe "" $ bdsignviewsecondarycolour <$> ctxbrandeddomain ctx
-    value "domainsignviewsecondarytextcolour" $ fromMaybe "" $ bdsignviewsecondarytextcolour <$> ctxbrandeddomain ctx
-    value "servicelinkcolour" $ fromMaybe "" $ bdservicelinkcolour <$> ctxbrandeddomain ctx
-
-
-companyJSON :: Monad m => Context -> Company -> CompanyUI -> m JSValue
-companyJSON ctx company companyui = runJSONGenT $ do
+companyJSON :: Monad m => Company -> m JSValue
+companyJSON company = runJSONGenT $ do
     value "companyid" $ show $ companyid company
     value "address" $ companyaddress $ companyinfo company
     value "city" $ companycity $ companyinfo company
@@ -130,43 +82,26 @@ companyJSON ctx company companyui = runJSONGenT $ do
     value "zip" $ companyzip $ companyinfo company
     value "companyname" $ getCompanyName company
     value "companynumber" $ getCompanyNumber company
-    value "smsoriginator" $ companysmsoriginator $ companyinfo company
     value "cgidisplayname" $ companycgidisplayname $ companyinfo company
     value "ipaddressmasklist" $ intercalate "," $ fmap show $ companyipaddressmasklist $ companyinfo company
     value "allowsavesafetycopy" $ companyallowsavesafetycopy (companyinfo company)
     value "idledoctimeout" $ companyidledoctimeout $ companyinfo company
-    valueM "companyui" $ companyUIJson ctx companyui
 
-documentSignviewBrandingJSON :: Monad m => Context -> User -> Company -> CompanyUI -> Document -> JSONGenT m ()
-documentSignviewBrandingJSON ctx user company companyui document = do
-    signviewBrandingJSON ctx user company companyui
+documentSignviewBrandingJSON :: Monad m => User -> Company -> Document -> JSONGenT m ()
+documentSignviewBrandingJSON user company document = do
+    signviewBrandingJSON user company
     value "showheader" $ documentshowheader $ document
     value "showpdfdownload" $ documentshowpdfdownload $ document
     value "showrejectoption" $ documentshowrejectoption $ document
     value "showfooter" $ documentshowfooter $ document
 
-signviewBrandingJSON :: Monad m => Context -> User -> Company -> CompanyUI -> JSONGenT m ()
-signviewBrandingJSON ctx user company companyui = do
-    let mbd = ctxbrandeddomain ctx
+signviewBrandingJSON :: Monad m => User -> Company -> JSONGenT m ()
+signviewBrandingJSON user company = do
     value "fullname" $ getFullName user
     value "email" $ getEmail user
     value "company" $ getCompanyName company
     value "phone" $ userphone $ userinfo user
     value "position" $ usercompanyposition$ userinfo $ user
-    value "signviewlogo" $ if ((isJust $ companysignviewlogo companyui))
-                                    then Just (show (LinkCompanySignViewLogo $ companyid $ company))
-                                    else if (isJust $ join $ bdlogo <$> mbd)
-                                      then return $ show $ LinkBrandedDomainLogo
-                                      else Nothing
-    value "signviewtextcolour" $ companysignviewtextcolour $ companyui
-    value "signviewtextfont" $ companysignviewtextfont   $ companyui
-    value "signviewprimarycolour" $ (companysignviewprimarycolour $ companyui) `mplus` (bdsignviewprimarycolour <$> mbd)
-    value "signviewprimarytextcolour" $ (companysignviewprimarytextcolour   $ companyui) `mplus` (bdsignviewprimarytextcolour <$> mbd)
-    value "signviewsecondarycolour" $ (companysignviewsecondarycolour   $ companyui) `mplus` (bdsignviewsecondarycolour <$> mbd)
-    value "signviewsecondarytextcolour" $ (companysignviewsecondarytextcolour   $ companyui) `mplus` (bdsignviewsecondarytextcolour <$> mbd)
-    value "signviewbarscolour" $ (companysignviewbarscolour  $ companyui) `mplus` (bdbarscolour <$> mbd)
-    value "signviewbarstextcolour" $ (companysignviewbarstextcolour $ companyui) `mplus` (bdbarstextcolour <$> mbd)
-    value "signviewbackgroundcolour" $ (companysignviewbackgroundcolour $ companyui) `mplus` (bdbackgroundcolour <$> mbd)
     value "allowsavesafetycopy" $ companyallowsavesafetycopy (companyinfo company)
 
 userStatsToJSON :: (UTCTime -> String) -> [UserUsageStats] -> [JSValue]
@@ -216,53 +151,58 @@ companyStatsToJSON formatTime totalText uuss = map f summarized
 pageAcceptTOS :: TemplatesMonad m => m String
 pageAcceptTOS = renderTemplate_ "pageAcceptTOS"
 
-accessNewAccountMail :: TemplatesMonad m => Context -> User -> KontraLink -> m Mail
+accessNewAccountMail :: (TemplatesMonad m,MonadDB m,MonadThrow m) => Context -> User -> KontraLink -> m Mail
 accessNewAccountMail ctx user setpasslink = do
-  kontramail (ctxmailsconfig ctx) (ctxbrandeddomain ctx)  "accessNewAccountMail" $ do
+  theme <- dbQuery $ GetTheme $ bdMailTheme (ctxbrandeddomain ctx)
+  kontramail (ctxbrandeddomain ctx) theme "accessNewAccountMail" $ do
     F.value "personname"   $ getFullName user
     F.value "personemail"  $ getEmail user
     F.value "passwordlink" $ show setpasslink
     F.value "ctxhostpart"  $ ctxhostpart ctx
-    brandingMailFields (ctxbrandeddomain ctx) Nothing
+    brandingMailFields theme
 
-resetPasswordMail :: TemplatesMonad m => Context -> User -> KontraLink -> m Mail
+resetPasswordMail :: (TemplatesMonad m,MonadDB m,MonadThrow m) => Context -> User -> KontraLink -> m Mail
 resetPasswordMail ctx user setpasslink = do
-  kontramail (ctxmailsconfig ctx) (ctxbrandeddomain ctx)   "passwordChangeLinkMail" $ do
+  theme <- dbQuery $ GetTheme $ bdMailTheme (ctxbrandeddomain ctx)
+  kontramail (ctxbrandeddomain ctx) theme  "passwordChangeLinkMail" $ do
     F.value "personname"   $ getFullName user
     F.value "personemail"  $ getEmail user
     F.value "passwordlink" $ show setpasslink
     F.value "ctxhostpart"  $ ctxhostpart ctx
-    brandingMailFields (ctxbrandeddomain ctx) Nothing
+    brandingMailFields theme
 
-newUserMail :: TemplatesMonad m => Context -> String -> String -> KontraLink -> m Mail
+newUserMail :: (TemplatesMonad m,MonadDB m,MonadThrow m) => Context -> String -> String -> KontraLink -> m Mail
 newUserMail ctx emailaddress personname activatelink = do
-  kontramail (ctxmailsconfig ctx) (ctxbrandeddomain ctx)  "newUserMail" $ do
+  theme <- dbQuery $ GetTheme $ bdMailTheme (ctxbrandeddomain ctx)
+  kontramail (ctxbrandeddomain ctx) theme  "newUserMail" $ do
     F.value "personname"   $ personname
     F.value "email"        $ emailaddress
     F.value "activatelink" $ show activatelink
     F.value "ctxhostpart"  $ ctxhostpart ctx
-    brandingMailFields (ctxbrandeddomain ctx) Nothing
+    brandingMailFields theme
 
 
-mailNewAccountCreatedByAdmin :: (HasLang a, TemplatesMonad m) => Context -> a -> String -> String -> KontraLink -> m Mail
+mailNewAccountCreatedByAdmin :: (HasLang a,MonadDB m,MonadThrow m, TemplatesMonad m) => Context -> a -> String -> String -> KontraLink -> m Mail
 mailNewAccountCreatedByAdmin ctx lang personname email setpasslink = do
-  kontramaillocal (ctxmailsconfig ctx) (ctxbrandeddomain ctx)  lang "mailNewAccountCreatedByAdmin" $ do
+  theme <- dbQuery $ GetTheme $ bdMailTheme (ctxbrandeddomain ctx)
+  kontramaillocal (ctxbrandeddomain ctx) theme lang "mailNewAccountCreatedByAdmin" $ do
     F.value "personname"    $ personname
     F.value "email"         $ email
     F.value "passwordlink"  $ show setpasslink
     F.value "creatorname"   $ maybe "" getSmartName (ctxmaybeuser ctx)
     F.value "ctxhostpart"   $ ctxhostpart ctx
-    brandingMailFields (ctxbrandeddomain ctx) Nothing
+    brandingMailFields theme 
 
 
-mailEmailChangeRequest :: (TemplatesMonad m, HasSomeUserInfo a) => Context -> a -> Email -> KontraLink -> m Mail
+mailEmailChangeRequest :: (TemplatesMonad m, HasSomeUserInfo a,MonadDB m,MonadThrow m) => Context -> a -> Email -> KontraLink -> m Mail
 mailEmailChangeRequest ctx user newemail link = do
-  kontramail (ctxmailsconfig ctx) (ctxbrandeddomain ctx)  "mailRequestChangeEmail" $ do
+  theme <- dbQuery $ GetTheme $ bdMailTheme (ctxbrandeddomain ctx)
+  kontramail (ctxbrandeddomain ctx) theme "mailRequestChangeEmail" $ do
     F.value "fullname" $ getFullName user
     F.value "newemail" $ unEmail newemail
     F.value "ctxhostpart" $ ctxhostpart ctx
     F.value "link" $ show link
-    brandingMailFields (ctxbrandeddomain ctx) Nothing
+    brandingMailFields theme
 
 -------------------------------------------------------------------------------
 
@@ -288,7 +228,7 @@ flashMessageUserDetailsSaved =
 
 flashMessageMustAcceptTOS :: TemplatesMonad m => m FlashMessage
 flashMessageMustAcceptTOS =
-  toFlashMsg SigningRelated <$> renderTemplate_ "flashMessageMustAcceptTOS"
+  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageMustAcceptTOS"
 
 flashMessagePasswordsDontMatch :: TemplatesMonad m => m FlashMessage
 flashMessagePasswordsDontMatch =
@@ -315,7 +255,7 @@ flashMessageUserWithSameEmailExists =
 
 flashMessageUserActivated :: TemplatesMonad m => m FlashMessage
 flashMessageUserActivated =
-  toFlashMsg SigningRelated <$> renderTemplate_ "flashMessageUserActivated"
+  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageUserActivated"
 
 
 flashMessageNewActivationLinkSend :: TemplatesMonad m => m FlashMessage

@@ -83,7 +83,6 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
         var attachments = this.model;
         return new Button({
             size: 'big',
-            color: 'black',
             text: localization.signatoryAttachments.addAttachment,
             onClick: function() {
                 mixpanel.track('Click add sig attachment (popup)');
@@ -187,15 +186,13 @@ window.DesignSignatoryAttachmentsPopup = function(args) {
          var model = new DesignSignatoryAttachments({ document : document  });
          var view = new DesignSignatoryAttachmentsView({model : model, el : $("<div/>")});
          var popup = new Confirmation({
-              content  : $(view.el),
               title  : localization.signatoryAttachments.requestAttachments,
-              subtitle  : localization.signatoryAttachments.defineRequests,
-              icon : '/img/modal-icons/attachments.png',
+              content: $("<div>").append($("<div class='modal-subtitle centered'>").html(localization.signatoryAttachments.defineRequests)).append($(view.el)),
               acceptText: localization.save,
               width: 800,
               onAccept : function() {
                   if (_.any(model.attachments(), function(a) {return  !a.ready() })) {
-                      new FlashMessage({ color: 'red'
+                      new FlashMessage({ type: 'error'
                                        , content: localization.signatoryAttachments.errorFlashMessage});
                       return false;
                   }
@@ -203,7 +200,7 @@ window.DesignSignatoryAttachmentsPopup = function(args) {
                     return a.signatory().signatoryid() + a.name();
                   });
                   if (model.attachments().length > uniquelyNamedAttachments.length) {
-                    new FlashMessage({color : 'red',
+                    new FlashMessage({type: 'error',
                                       content: localization.signatoryAttachments.uniqueAttachmentNamesError});
                     return false;
                   }

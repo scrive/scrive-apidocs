@@ -1,0 +1,199 @@
+@import 'branding/elements';
+@import 'branding/variables.less';
+
+.theme-edit {
+  background-color:#FFFFFF;
+  border: 1px solid #DDDDDD;
+  padding: 5px;
+  position: relative;
+
+  .separator {
+    position: absolute;
+    height:100%;
+    top: 0px;
+    width:1px;
+    background-color: #DDDDDD;
+    left: 390px;
+
+    .separator-top-padding {
+      position: absolute;
+      background-color: #FFFFFF;
+      height: 10px;
+      width:1px;
+
+      top: 0px;
+    }
+    .separator-bottom-padding {
+      position: absolute;
+      bottom: 0px;
+      background-color: #FFFFFF;
+      height: 10px;
+      width:1px;
+    }
+  }
+
+  .theme-edit-panel {
+    display: inline-block;
+    width: 375px;
+
+    .theme-title-section {
+      border-bottom: 1px solid #DDDDDD;
+      margin:5px;
+      padding:5px;
+      font-size: 16px;
+    }
+
+    .theme-choose-theme-section {
+      margin: 15px 10px;
+
+      .title {
+        font-weight : bold;
+      }
+      .text-with-bottom-spacing {
+        margin-bottom: 15px;
+      }
+
+      .select {
+        width: 300px;
+      }
+    }
+
+    .theme-edit-section {
+      margin: 15px 10px;
+
+      .title {
+        font-weight: bold;
+        margin-bottom:2px;
+      }
+
+      .theme-logo-editor {
+        width: 480px;
+
+        .logo-sample{
+          border: 1px solid #eeeeee;
+          width:200px;
+          min-height:100px;
+          margin-right:20px;
+          display:inline-block;
+          vertical-align: top;
+          line-height: 100px;
+          text-align:center;
+
+          img {
+            display:inline-block;
+          }
+        }
+
+        .theme-edit-logo-upload {
+          display: inline-block;
+          width:220px;
+        }
+      }
+
+      .theme-font-editor {
+        width: 360px;
+
+        .font-sample{
+          border: 1px solid #eeeeee;
+          width:180px;
+          padding: 10px;
+          min-height:68px;
+          margin-right:20px;
+          display:inline-block;
+          vertical-align: top;
+        }
+
+        .theme-edit-font-select {
+          display: inline-block;
+          width:120px;
+
+          .select  {
+            display: inline-block;
+            width:136px;
+          }
+        }
+      }
+
+      .theme-color-editor {
+        width: 480px;
+
+        .color-sample {
+          border: 1px solid #eeeeee;
+          width:180px;
+          padding: 10px;
+          min-height:68px;
+          margin-right:20px;
+          display:inline-block;
+          vertical-align: top;
+        }
+        .theme-edit-editor-edit-colors {
+          display: inline-block;
+          width:150px;
+
+          .theme-edit-editor-edit-color,
+          .theme-edit-editor-edit-textcolor {
+            width:140px;
+            display:inline-block;
+            margin-bottom: 4px;
+
+            .info-text-input  {
+              width:60px;
+            }
+
+            .color-display {
+              background: url(~"@{img-base-url}/colorpicker/select2.png") repeat scroll center center transparent;
+              border: solid 1px #eeeeee;
+              display: inline-block;
+              cursor: pointer;
+              margin-left: 20px;
+              margin-top: 1px;
+              padding: 14px 14px;
+              vertical-align: top;
+              width: 0;
+            }
+
+            .color-picker {
+              position: absolute;
+              z-index: 1;
+
+              &.hidden {
+                display:none;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .theme-delete-wrapper {
+    height:97px;
+
+    .theme-delete {
+      border-top: 1px solid #DDDDDD;
+      margin: 0px 10px 15px 10px;
+      padding: 15px 0px 0px 0px;
+      position: absolute;
+      bottom: 0px;
+      width: 365px;
+
+      .title {
+         font-weight: bold;
+        margin-bottom:2px;
+      }
+    }
+  }
+
+  .previews {
+    margin-left: 20px;
+    display: inline-block;
+    vertical-align: top;
+    width: 610px;
+
+    > * {
+      padding-bottom: 20px;
+      margin-bottom: 20px;
+    }
+  }
+
+}

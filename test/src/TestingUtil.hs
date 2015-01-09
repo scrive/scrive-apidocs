@@ -26,6 +26,8 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Text as T
 import qualified Test.HUnit as T
 
+import BrandedDomain.BrandedDomainID
+import BrandedDomain.Model
 import Company.Model
 import Crypto.RNG
 import DB
@@ -119,7 +121,6 @@ instance Arbitrary CompanyInfo where
     d <- arbitrary
     e <- arbitrary
     f <- arbitrary
-    g <- arbitrary
     h <- arbitrary
     i <- arbitrary
     return $ CompanyInfo { companyname       = a
@@ -129,7 +130,6 @@ instance Arbitrary CompanyInfo where
                          , companycity       = e
                          , companycountry    = f
                          , companyipaddressmasklist = []
-                         , companysmsoriginator = g
                          , companyallowsavesafetycopy = True
                          , companyidledoctimeout = h
                          , companycgidisplayname = i
@@ -365,7 +365,7 @@ instance Arbitrary User where
                    <*> arbitrary
                    <*> arbitrary
                    <*> arbitrary
-                   <*> (pure Nothing)
+                   <*> pure (unsafeBrandedDomainID 0)
 
 instance Arbitrary CgiGrpTransaction where
   arbitrary = CgiGrpTransaction
@@ -447,7 +447,6 @@ addNewCompany = do
     companyzip <- rand 10 $ arbString 3 30
     companycity <- rand 10 $ arbString 3 30
     companycountry <- rand 10 $ arbString 3 30
-    companysmsoriginator <- rand 10 $ arbString 0 10
     _ <- dbUpdate $ SetCompanyInfo cid $ CompanyInfo
          { companyname = companyname
          , companynumber = companynumber
@@ -456,7 +455,6 @@ addNewCompany = do
          , companycity = companycity
          , companycountry = companycountry
          , companyipaddressmasklist = []
-         , companysmsoriginator = companysmsoriginator
          , companyallowsavesafetycopy = True
          , companyidledoctimeout = Nothing
          , companycgidisplayname = Nothing
@@ -473,14 +471,16 @@ addNewRandomFile = do
   cnt <- rand 10 $ arbString 3 30
   addNewFile fn (BS.fromString cnt)
 
-addNewUser :: (MonadDB m, MonadThrow m) => String -> String -> String -> m (Maybe User)
+addNewUser :: (MonadDB m, MonadThrow m, Log.MonadLog m) => String -> String -> String -> m (Maybe User)
 addNewUser firstname secondname email = do
+  bd <- dbQuery $ GetMainBrandedDomain
   company <- dbUpdate $ CreateCompany
-  dbUpdate $ AddUser (firstname, secondname) email Nothing (companyid company,True) defaultValue Nothing
+  dbUpdate $ AddUser (firstname, secondname) email Nothing (companyid company,True) defaultValue (bdid bd)
 
 addNewCompanyUser :: String -> String -> String -> CompanyID -> TestEnv (Maybe User)
-addNewCompanyUser firstname secondname email cid =
-  dbUpdate $ AddUser (firstname, secondname) email Nothing (cid,True) defaultValue Nothing
+addNewCompanyUser firstname secondname email cid = do
+  bd <- dbQuery $ GetMainBrandedDomain
+  dbUpdate $ AddUser (firstname, secondname) email Nothing (cid,True) defaultValue (bdid bd)
 
 addNewRandomUser :: (CryptoRNG m, MonadDB m, MonadThrow m, Log.MonadLog m) => m User
 addNewRandomUser = do

@@ -110,7 +110,6 @@ return React.createClass({
         acceptText: localization.archive.documents.remove.action,
         rejectText: localization.cancel,
         title: localization.archive.documents.remove.action,
-        icon: '/img/modal-icons/delete.png',
         content: confirmtext,
         onAccept : function() {
           mixpanel.track('Delete document');
@@ -119,7 +118,7 @@ return React.createClass({
             method: "POST",
             documentids: "[" + _.map(docs, function(doc){return doc.field("fields").id;}) + "]",
             ajaxsuccess : function() {
-              new FlashMessage({color : "green", content : localization.archive.documents.remove.successMessage});
+              new FlashMessage({type : "success", content : localization.archive.documents.remove.successMessage});
               self.reload();
               confirmationPopup.clear();
             }
@@ -146,7 +145,7 @@ return React.createClass({
             className="float-left"
             onSelect={function(selected,model) {
               if (selected.length ==0 ) {
-                new FlashMessage({color: "red", content: localization.archive.documents.cancel.emptyMessage});
+                new FlashMessage({type : "error", content: localization.archive.documents.cancel.emptyMessage});
                 return false;
               }
               self.openDeleteModal(selected);

@@ -5,7 +5,7 @@
 */
 
 
-define(['Backbone', 'legacy_code'], function() {
+define(['React','account/branding/companybrandingpanel','Backbone', 'legacy_code'], function(React,CompanyBrandingPanel) {
 
 var AccountModel = Backbone.Model.extend({
   companyAdmin : function() {
@@ -18,11 +18,6 @@ var AccountModel = Backbone.Model.extend({
         if (this.get("accountDetails") != undefined) return this.get("accountDetails");
         this.set({ "accountDetails" : new AccountSettings({ companyAdmin : this.companyAdmin() }) });
         return this.accountDetails();
-  },
-  companySettings : function() {
-        if (this.get("companySettings") != undefined) return this.get("companySettings");
-        this.set({ "companySettings" : new CompanyBranding() });
-        return this.companySettings();
   },
   companyAccountsAndStats : function() {
         if (this.get("companyAccountsAndStats") != undefined) return this.get("companyAccountsAndStats");
@@ -65,14 +60,18 @@ var AccountModel = Backbone.Model.extend({
 
   companySettingsTab : function() {
                     var account = this;
+                    var div = $('<div/>');
+                    var brandingPanel = React.renderComponent(new CompanyBrandingPanel({
+                    }),div[0]);
+
                     return new Tab({
                         name: localization.account.companySettings,
-                        elems: [function() {return $(account.companySettings().el());}],
-                        pagehash : ["branding-email","branding-signview", "branding-service"],
+                        elems: [function() { return div; }],
+                        pagehash : ["branding-themes-mail","branding-themes-signview", "branding-themes-service","branding-settings"],
                         onActivate : function() {
-                            account.companySettings().refresh();
-                            mixpanel.register({Subcontext : 'Company settings tab'});
-                            mixpanel.track('View Company Settings Tab');
+                           brandingPanel.reload();
+                           mixpanel.register({Subcontext : 'Company settings tab'});
+                           mixpanel.track('View Company Settings Tab');
                         }
                     });
   },

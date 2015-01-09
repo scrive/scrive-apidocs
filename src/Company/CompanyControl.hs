@@ -1,27 +1,24 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Company.CompanyControl (
-    handlePostCompany
-  , handleGetCompanyJSON
-  , handleCompanySignViewLogo
-  , handleCompanyEmailLogo
+    handleChangeCompanyBranding
+  , handleGetCompanyBranding
   , routes
   , adminRoutes
   , withCompanyAdmin
   ) where
 
-import Control.Monad.State
-import Data.Functor
-import Data.Maybe
+import Control.Applicative
+import Data.Functor.Invariant
+import Data.Unjson
 import Happstack.Server hiding (dir, simpleHTTP)
 import Happstack.StaticRouting (Route, dir, choice)
-import Text.JSON
-import Text.JSON.FromJSValue
-import Text.JSON.Gen
-import Text.JSON.String
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
-import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.UTF8 as BS
-import qualified Data.Map as Map
+import qualified Data.Unjson as Unjson
+import qualified Data.Yaml as Yaml
 
 import BrandedDomain.BrandedDomain
 import Company.CompanyUI
@@ -30,145 +27,113 @@ import DB
 import Happstack.Fields
 import Kontra
 import KontraLink
-import Routing (hGet, hPost, toK0, toK1)
+import Routing (hGet, hPost, toK0, toK1, toK2)
+import Theme.Control
+import Theme.ThemeID
 import User.Utils
 import Util.MonadUtils
-import Utils.String
 
 routes :: Route (KontraPlus Response)
 routes = choice
-  [ hPost $ toK0 $ handlePostCompany Nothing
-  , dir "json" $ hGet $ toK0 $ handleGetCompanyJSON Nothing
-  , dir "signview" $ hGet $ toK1 $ handleCompanySignViewLogo
-  , dir "custom" $ hGet $ toK1 $ handleCompanyCustomLogo
-  , dir "email" $ hGet $ toK1 $ handleCompanyEmailLogo
+  [
+    dir "companybranding" $ hGet $ toK0 $ handleGetCompanyBranding  Nothing
+  , dir "companybranding" $ dir "themes" $ hGet $ toK0 $ handleGetThemes Nothing
+  , dir "companybranding" $ dir "domainthemes" $ hGet $ toK0 $ handleGetDomainThemes
+  , dir "companybranding" $ dir "change" $ hPost $ toK0 $ handleChangeCompanyBranding Nothing
+  , dir "companybranding" $ dir "newtheme" $ hPost $ toK1 $ (\themeType -> handleNewTheme themeType Nothing)
+  , dir "companybranding" $ dir "updatetheme" $ hPost $ toK1 $ handleUpdateTheme Nothing
+  , dir "companybranding" $ dir "deletetheme" $ hPost $ toK1 $ handleDeleteTheme Nothing
   ]
 
 adminRoutes :: Route (KontraPlus Response)
 adminRoutes = choice
-  [ hPost $ toK1 $ handlePostCompany . Just
-  , dir "json" $ hGet $ toK1 $ handleGetCompanyJSON . Just
+  [
+    dir "companybranding" $ hGet $ toK1 $ handleGetCompanyBranding . Just
+  , dir "companybranding" $ dir "themes" $ hGet $ toK1 $ handleGetThemes . Just
+  , dir "companybranding" $ dir "domainthemes" $ hGet $ toK0 $ handleGetDomainThemes
+  , dir "companybranding" $ dir "change"$ hPost $ toK1 $ handleChangeCompanyBranding . Just
+  , dir "companybranding" $ dir "newtheme" $ hPost $ toK2 $ (\cid themeType -> handleNewTheme themeType (Just cid))
+  , dir "companybranding" $ dir "updatetheme" $ hPost $ toK2 $ (\cid tid -> handleUpdateTheme (Just cid) tid)
+  , dir "companybranding" $ dir "deletetheme" $  hPost $ toK2 $ (\cid tid -> handleDeleteTheme (Just cid) tid)
   ]
 
-handlePostCompany :: Kontrakcja m => Maybe CompanyID -> m KontraLink
-handlePostCompany mcid = withCompanyAdminOrAdminOnly mcid $ \company -> do
-  iscompanyjson <- isFieldSet "company"
-  when iscompanyjson $ do
-    rawcompanyjson <- guardJustM $ getField "company"
-    companyjson <- guardRight $ runGetJSON readJSValue rawcompanyjson
-    jsoncui <- companyUiFromJSON companyjson
-    _ <- dbUpdate $ SetCompanyUI (companyid company) jsoncui
-    return ()
+handleGetCompanyBranding :: Kontrakcja m => Maybe CompanyID -> m Response
+handleGetCompanyBranding mcid = do
+  _ctx <- getContext
+  withCompanyAdminOrAdminOnly mcid $ \company -> do
+    companyui <- dbQuery $ GetCompanyUI (companyid company)
+    let  res = unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) unjsonCompanyUI companyui
+    return $ toResponseBS "text/json" $ res
+
+handleChangeCompanyBranding :: Kontrakcja m => Maybe CompanyID -> m KontraLink
+handleChangeCompanyBranding mcid = withCompanyAdminOrAdminOnly mcid $ \company -> do
+  companyUIJSON <- guardJustM $ getField "companyui"
+  case Yaml.decode (BS8.pack companyUIJSON) of
+     Nothing -> internalError
+     Just js -> case (Unjson.parse unjsonCompanyUI js) of
+        (Result cui []) -> do
+           _ <- dbUpdate $ SetCompanyUI (companyid company) cui
+           return ()
+        _ -> internalError
   return $ LinkAccountCompany mcid
 
-companyUiFromJSON :: Kontrakcja m => JSValue ->  m CompanyUI
-companyUiFromJSON jsv = withJSValue jsv $ do
-  jsoncompanyemailfont <- fromJSValueField "companyemailfont"
-  jsoncompanyemailbordercolour <- fromJSValueField "companyemailbordercolour"
-  jsoncompanyemailbuttoncolour <- fromJSValueField "companyemailbuttoncolour"
-  jsoncompanyemailemailbackgroundcolour <- fromJSValueField "companyemailemailbackgroundcolour"
-  jsoncompanyemailbackgroundcolour <- fromJSValueField "companyemailbackgroundcolour"
-  jsoncompanyemailtextcolour <- fromJSValueField "companyemailtextcolour"
-  jsoncompanyemaillogo <- fromJSValueField "companyemaillogo"
-  jsoncompanysignviewlogo <- fromJSValueField "companysignviewlogo"
-  jsoncompanysignviewtextcolour <- fromJSValueField "companysignviewtextcolour"
-  jsoncompanysignviewtextfont <- fromJSValueField "companysignviewtextfont"
-  jsoncompanysignviewprimarycolour <- fromJSValueField "companysignviewprimarycolour"
-  jsoncompanysignviewprimarytextcolour <- fromJSValueField "companysignviewprimarytextcolour"
-  jsoncompanysignviewsecondarycolour <- fromJSValueField "companysignviewsecondarycolour"
-  jsoncompanysignviewsecondarytextcolour <- fromJSValueField "companysignviewsecondarytextcolour"
-  jsoncompanysignviewbarscolour <- fromJSValueField "companysignviewbarscolour"
-  jsoncompanysignviewbarstextcolour <- fromJSValueField "companysignviewbarstextcolour"
-  jsoncompanysignviewbackgroundcolour <- fromJSValueField "companysignviewbackgroundcolour"
-  jsoncompanycustomlogo <- fromJSValueField "companycustomlogo"
-  jsoncompanycustombarscolour <- fromJSValueField "companycustombarscolour"
-  jsoncompanycustombarstextcolour <- fromJSValueField "companycustombarstextcolour"
-  jsoncompanycustombarssecondarycolour <- fromJSValueField "companycustombarssecondarycolour"
-  jsoncompanycustombackgroundcolour <- fromJSValueField "companycustombackgroundcolour"
+
+handleGetThemes :: Kontrakcja m =>  Maybe CompanyID -> m Response
+handleGetThemes mcid = withCompanyAdminOrAdminOnly mcid $ \company -> do
+  handleGetThemesForCompany (companyid company)
+
+handleGetDomainThemes :: Kontrakcja m =>  m Response
+handleGetDomainThemes = do
+  bd <- ctxbrandeddomain <$> getContext
+  handleGetThemesUsedByDomain bd
 
 
-  return $ CompanyUI {
-    companyuicompanyid = unsafeCompanyID 0
-  , companyemailfont = maybeS jsoncompanyemailfont
-  , companyemailbordercolour = maybeS jsoncompanyemailbordercolour
-  , companyemailbuttoncolour = maybeS jsoncompanyemailbuttoncolour
-  , companyemailemailbackgroundcolour = maybeS jsoncompanyemailemailbackgroundcolour
-  , companyemailbackgroundcolour = maybeS jsoncompanyemailbackgroundcolour
-  , companyemailtextcolour = maybeS jsoncompanyemailtextcolour
-  , companyemaillogo = (Binary . B64.decodeLenient) <$> BS.fromString <$>  drop 1 <$> dropWhile ((/=) ',') <$> maybeS jsoncompanyemaillogo
-  , companysignviewlogo = (Binary . B64.decodeLenient) <$> BS.fromString <$>  drop 1 <$> dropWhile ((/=) ',')  <$> maybeS jsoncompanysignviewlogo
-  , companysignviewtextcolour = maybeS jsoncompanysignviewtextcolour
-  , companysignviewtextfont = maybeS jsoncompanysignviewtextfont
-  , companysignviewprimarycolour = maybeS jsoncompanysignviewprimarycolour
-  , companysignviewprimarytextcolour = maybeS jsoncompanysignviewprimarytextcolour
-  , companysignviewsecondarycolour = maybeS jsoncompanysignviewsecondarycolour
-  , companysignviewsecondarytextcolour = maybeS jsoncompanysignviewsecondarytextcolour
-  , companysignviewbarscolour = maybeS jsoncompanysignviewbarscolour
-  , companysignviewbarstextcolour = maybeS jsoncompanysignviewbarstextcolour
-  , companysignviewbackgroundcolour = maybeS jsoncompanysignviewbackgroundcolour
-  , companycustomlogo = (Binary . B64.decodeLenient) <$> BS.fromString <$>  drop 1 <$> dropWhile ((/=) ',') <$> maybeS jsoncompanycustomlogo
-  , companycustombarscolour = maybeS jsoncompanycustombarscolour
-  , companycustombarstextcolour = maybeS jsoncompanycustombarstextcolour
-  , companycustombarssecondarycolour = maybeS jsoncompanycustombarssecondarycolour
-  , companycustombackgroundcolour = maybeS jsoncompanycustombackgroundcolour
-  }
+handleNewTheme :: Kontrakcja m =>  String -> Maybe CompanyID -> m Response
+handleNewTheme s mcid = withCompanyAdminOrAdminOnly mcid $ \company -> do
+  bd <- ctxbrandeddomain <$> getContext
+  tid <- case s of
+           "signview" -> return $ bdSignviewTheme bd
+           "service"  -> return $ bdServiceTheme bd
+           "mail" -> return $ bdMailTheme bd
+           _ -> internalError
+  handleNewThemeForCompany (companyid company) tid
 
-handleCompanyLogo :: Kontrakcja m => (CompanyUI -> Maybe (Binary BS.ByteString)) -> CompanyID -> m Response
-handleCompanyLogo field cid = do
-  mimg <- field <$> (dbQuery $ GetCompanyUI cid)
-  return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") $
-    Response 200 Map.empty nullRsFlags (BSL.fromChunks $ map unBinary $ maybeToList mimg) Nothing
+handleDeleteTheme :: Kontrakcja m =>  Maybe CompanyID -> ThemeID -> m ()
+handleDeleteTheme mcid tid =  withCompanyAdminOrAdminOnly mcid $ \company -> do
+  handleDeleteThemeForCompany (companyid company) tid
 
-handleCompanySignViewLogo :: Kontrakcja m => CompanyID -> m Response
-handleCompanySignViewLogo = handleCompanyLogo companysignviewlogo
+handleUpdateTheme :: Kontrakcja m =>  Maybe CompanyID -> ThemeID -> m ()
+handleUpdateTheme mcid tid = withCompanyAdminOrAdminOnly mcid $ \company -> do
+  handleUpdateThemeForCompany (companyid company) tid
 
-handleCompanyCustomLogo :: Kontrakcja m => CompanyID -> m Response
-handleCompanyCustomLogo = handleCompanyLogo companycustomlogo
+unjsonCompanyUI :: UnjsonDef CompanyUI
+unjsonCompanyUI = objectOf $ pure CompanyUI
+  <*>  field "companyid"
+      companyuicompanyid
+      "Id of a company"
+  <*> fieldOpt "mailTheme"
+      companyMailTheme
+      "Id of a mail theme"
+  <*> fieldOpt "signviewTheme"
+      companySignviewTheme
+      "Id of a signview theme"
+  <*> fieldOpt "serviceTheme"
+      companyServiceTheme
+      "Id of a service theme"
+  <*> fieldOpt "browserTitle"
+      companyBrowserTitle
+      "Browser title"
+  <*> fieldOpt "smsOriginator"
+      companySmsOriginator
+      "SMS Originator"
+  <*> fieldOptBy "favicon"
+      companyFavicon
+      "Favicon"
+       (invmap
+          (\l -> Binary $ B64.decodeLenient $ BS.fromString $ drop 1 $ dropWhile ((/=) ',') $ l)
+          (\l -> BS.toString $ BS.append (BS.fromString "data:image/png;base64,") $ B64.encode $ unBinary $ l)
+          unjsonDef
+       )
 
-handleCompanyEmailLogo :: Kontrakcja m => CompanyID -> m Response
-handleCompanyEmailLogo = handleCompanyLogo companyemaillogo
-
-handleGetCompanyJSON :: Kontrakcja m => Maybe CompanyID -> m JSValue
-handleGetCompanyJSON mcid = do
-  ctx <- getContext
-  withCompanyUserOrAdminOnly mcid $ \(editable, company) -> do
-    companyui <- dbQuery $ GetCompanyUI (companyid company)
-    runJSONGenT $ do
-      value "companyemailfont" $ fromMaybe "" $ companyemailfont $ companyui
-      value "companyemailbordercolour" $ fromMaybe "" $ companyemailbordercolour $ companyui
-      value "companyemailbuttoncolour" $ fromMaybe "" $ companyemailbuttoncolour $ companyui
-      value "companyemailemailbackgroundcolour" $ fromMaybe "" $ companyemailemailbackgroundcolour $ companyui
-      value "companyemailbackgroundcolour" $ fromMaybe "" $ companyemailbackgroundcolour $ companyui
-      value "companyemailtextcolour" $ fromMaybe "" $ companyemailtextcolour $ companyui
-      value "companyemaillogo" $ fromMaybe "" $ BS.toString . BS.append (BS.fromString "data:image/png;base64,") . B64.encode . unBinary <$> (companyemaillogo $ companyui)
-      value "companysignviewlogo" $ fromMaybe ""  $ BS.toString . BS.append (BS.fromString "data:image/png;base64,") .  B64.encode . unBinary <$> (companysignviewlogo $ companyui)
-      value "companysignviewtextcolour" $ fromMaybe "" $ companysignviewtextcolour $ companyui
-      value "companysignviewtextfont" $ fromMaybe "" $ companysignviewtextfont $ companyui
-      value "companysignviewprimarycolour" $ fromMaybe "" $ companysignviewprimarycolour $ companyui
-      value "companysignviewprimarytextcolour" $ fromMaybe "" $ companysignviewprimarytextcolour $ companyui
-      value "companysignviewsecondarycolour" $ fromMaybe "" $ companysignviewsecondarycolour $ companyui
-      value "companysignviewsecondarytextcolour" $ fromMaybe "" $ companysignviewsecondarytextcolour $ companyui
-      value "companysignviewbarscolour" $ fromMaybe "" $ companysignviewbarscolour $ companyui
-      value "companysignviewbarstextcolour" $ fromMaybe "" $ companysignviewbarstextcolour $ companyui
-      value "companysignviewbackgroundcolour" $ fromMaybe "" $ companysignviewbackgroundcolour $ companyui
-      value "companycustomlogo" $ fromMaybe ""  $ BS.toString . BS.append (BS.fromString "data:image/png;base64,") .  B64.encode . unBinary <$> (companycustomlogo $ companyui)
-      value "companycustombarscolour" $ fromMaybe "" $ companycustombarscolour $ companyui
-      value "companycustombarstextcolour" $ fromMaybe "" $ companycustombarstextcolour $ companyui
-      value "companycustombarssecondarycolour" $ fromMaybe "" $ companycustombarssecondarycolour $ companyui
-      value "companycustombackgroundcolour" $ fromMaybe "" $ companycustombackgroundcolour $ companyui
-      value "domaincustomlogo" $ fromMaybe ""  $ BS.toString . BS.append (BS.fromString "data:image/png;base64,") .  B64.encode . unBinary <$> join (bdlogo <$> ctxbrandeddomain ctx)
-      value "domainbarscolour" $ fromMaybe "" $ bdbarscolour <$> ctxbrandeddomain ctx
-      value "domainbarstextcolour" $ fromMaybe "" $ bdbarstextcolour <$> ctxbrandeddomain ctx
-      value "domainbarssecondarycolour" $ fromMaybe "" $ bdbarssecondarycolour <$> ctxbrandeddomain ctx
-      value "domainbackgroundcolour" $ fromMaybe "" $ bdbackgroundcolour <$> ctxbrandeddomain ctx
-      value "domainsignviewprimarycolour" $ fromMaybe "" $ bdsignviewprimarycolour <$> ctxbrandeddomain ctx
-      value "domainsignviewprimarytextcolour" $ fromMaybe "" $ bdsignviewprimarytextcolour <$> ctxbrandeddomain ctx
-      value "domainsignviewsecondarycolour" $ fromMaybe "" $ bdsignviewsecondarycolour <$> ctxbrandeddomain ctx
-      value "domainsignviewsecondarytextcolour" $ fromMaybe "" $ bdsignviewsecondarytextcolour <$> ctxbrandeddomain ctx
-      value "domainmailsbackgroundcolor" $ fromMaybe "" $ bdmailsbackgroundcolor <$> ctxbrandeddomain ctx
-      value "domainmailsbuttoncolor" $ fromMaybe "" $ bdmailsbuttoncolor <$> ctxbrandeddomain ctx
-      value "domainmailstextcolor" $ fromMaybe "" $ bdmailstextcolor <$> ctxbrandeddomain ctx
-      value "domainmailsbordercolor" $ fromMaybe "" $ bdmailsbordercolor <$> ctxbrandeddomain ctx
-
-      value "editable" editable
-      value "ipmasklist" $ show <$> (companyipaddressmasklist $ companyinfo company)
+instance Unjson CompanyUI where
+  unjsonDef = unjsonCompanyUI

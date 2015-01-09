@@ -6,8 +6,10 @@ module BrandedDomain.BrandedDomainID (
 
 import Control.Applicative
 import Data.Binary
+import Data.Functor.Invariant
 import Data.Int
 import Data.Typeable
+import Data.Unjson
 import Database.PostgreSQL.PQTypes hiding (Binary, put)
 import Happstack.Server
 
@@ -38,3 +40,10 @@ unsafeBrandedDomainID = BrandedDomainID
 
 unBrandedDomainID :: BrandedDomainID -> Int64
 unBrandedDomainID (BrandedDomainID i) = i
+
+-- TODO Fix to stop using read. Gracjan is working on that in unjson library
+unjsonBrandedDomainID :: UnjsonDef BrandedDomainID
+unjsonBrandedDomainID = invmap (BrandedDomainID . read :: String -> BrandedDomainID) (show . unBrandedDomainID :: BrandedDomainID -> String) unjsonDef
+
+instance Unjson BrandedDomainID where
+  unjsonDef = unjsonBrandedDomainID

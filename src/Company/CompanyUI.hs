@@ -13,31 +13,16 @@ import qualified Data.ByteString.Char8 as BS
 import Company.CompanyID
 import DB
 import OurPrelude
+import Theme.Model
 
 data CompanyUI = CompanyUI
   { companyuicompanyid                :: CompanyID
-  , companyemailbordercolour          :: Maybe String
-  , companyemailfont                  :: Maybe String
-  , companyemailbuttoncolour          :: Maybe String
-  , companyemailemailbackgroundcolour :: Maybe String
-  , companyemailbackgroundcolour      :: Maybe String
-  , companyemailtextcolour            :: Maybe String
-  , companyemaillogo                  :: Maybe (Binary BS.ByteString)
-  , companysignviewlogo               :: Maybe (Binary BS.ByteString)
-  , companysignviewtextcolour         :: Maybe String
-  , companysignviewtextfont           :: Maybe String
-  , companysignviewprimarycolour      :: Maybe String
-  , companysignviewprimarytextcolour  :: Maybe String
-  , companysignviewsecondarycolour    :: Maybe String
-  , companysignviewsecondarytextcolour:: Maybe String
-  , companysignviewbarscolour         :: Maybe String
-  , companysignviewbarstextcolour     :: Maybe String
-  , companysignviewbackgroundcolour   :: Maybe String
-  , companycustomlogo                 :: Maybe (Binary BS.ByteString)
-  , companycustombarscolour           :: Maybe String
-  , companycustombarstextcolour       :: Maybe String
-  , companycustombarssecondarycolour  :: Maybe String
-  , companycustombackgroundcolour     :: Maybe String
+  , companyMailTheme                  :: Maybe ThemeID
+  , companySignviewTheme              :: Maybe ThemeID
+  , companyServiceTheme               :: Maybe ThemeID
+  , companyBrowserTitle                :: Maybe String
+  , companySmsOriginator              :: Maybe String
+  , companyFavicon                    :: Maybe (Binary BS.ByteString)
 } deriving (Eq, Ord, Show, Typeable)
 
 data GetCompanyUI = GetCompanyUI CompanyID
@@ -52,84 +37,36 @@ data SetCompanyUI = SetCompanyUI CompanyID CompanyUI
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetCompanyUI Bool where
   update (SetCompanyUI cid cui) = do
     runQuery01 . sqlUpdate "company_uis" $ do
-      sqlSet "email_bordercolour" $ companyemailbordercolour cui
-      sqlSet "email_font" $ companyemailfont cui
-      sqlSet "email_buttoncolour" $ companyemailbuttoncolour cui
-      sqlSet "email_emailbackgroundcolour" $ companyemailemailbackgroundcolour cui
-      sqlSet "email_backgroundcolour" $ companyemailbackgroundcolour cui
-      sqlSet "email_textcolour" $ companyemailtextcolour cui
-      sqlSet "email_logo" $ companyemaillogo cui
-      sqlSet "signview_logo" $ companysignviewlogo cui
-      sqlSet "signview_textcolour" $ companysignviewtextcolour cui
-      sqlSet "signview_textfont" $ companysignviewtextfont cui
-      sqlSet "signview_primarycolour" $ companysignviewprimarycolour cui
-      sqlSet "signview_primarytextcolour" $ companysignviewprimarytextcolour cui
-      sqlSet "signview_secondarycolour" $ companysignviewsecondarycolour cui
-      sqlSet "signview_secondarytextcolour" $ companysignviewsecondarytextcolour cui
-      sqlSet "signview_barscolour" $ companysignviewbarscolour cui
-      sqlSet "signview_barstextcolour" $ companysignviewbarstextcolour cui
-      sqlSet "signview_backgroundcolour" $ companysignviewbackgroundcolour cui
-      sqlSet "custom_logo" $ companycustomlogo cui
-      sqlSet "custom_barscolour" $ companycustombarscolour cui
-      sqlSet "custom_barstextcolour" $ companycustombarstextcolour cui
-      sqlSet "custom_barssecondarycolour" $ companycustombarssecondarycolour cui
-      sqlSet "custom_backgroundcolour" $ companycustombackgroundcolour cui
+      sqlSet "mail_theme" $ companyMailTheme cui
+      sqlSet "signview_theme" $ companySignviewTheme cui
+      sqlSet "service_theme" $ companyServiceTheme cui
+      sqlSet "browser_title" $ companyBrowserTitle cui
+      sqlSet "sms_originator" $ companySmsOriginator cui
+      sqlSet "favicon" $ companyFavicon cui
       sqlWhereEq "company_id" cid
 
 
 selectCompanyUIsSelectors :: (SqlResult command) => State command ()
 selectCompanyUIsSelectors = do
   sqlResult "company_uis.company_id"
-  sqlResult "company_uis.email_font"
-  sqlResult "company_uis.email_bordercolour"
-  sqlResult "company_uis.email_buttoncolour"
-  sqlResult "company_uis.email_emailbackgroundcolour"
-  sqlResult "company_uis.email_backgroundcolour"
-  sqlResult "company_uis.email_textcolour"
-  sqlResult "company_uis.email_logo"
-  sqlResult "company_uis.signview_logo"
-  sqlResult "company_uis.signview_textcolour"
-  sqlResult "company_uis.signview_textfont"
-  sqlResult "company_uis.signview_primarycolour"
-  sqlResult "company_uis.signview_primarytextcolour"
-  sqlResult "company_uis.signview_secondarycolour"
-  sqlResult "company_uis.signview_secondarytextcolour"
-  sqlResult "company_uis.signview_barscolour"
-  sqlResult "company_uis.signview_barstextcolour"
-  sqlResult "company_uis.signview_backgroundcolour"
-  sqlResult "company_uis.custom_logo"
-  sqlResult "company_uis.custom_barscolour"
-  sqlResult "company_uis.custom_barstextcolour"
-  sqlResult "company_uis.custom_barssecondarycolour"
-  sqlResult "company_uis.custom_backgroundcolour"
+  sqlResult "company_uis.mail_theme"
+  sqlResult "company_uis.signview_theme"
+  sqlResult "company_uis.service_theme"
+  sqlResult "browser_title"
+  sqlResult "sms_originator"
+  sqlResult "favicon"
 
-fetchCompanyUI :: (CompanyID, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe (Binary BS.ByteString), Maybe (Binary BS.ByteString), Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe (Binary BS.ByteString), Maybe String, Maybe String, Maybe String, Maybe String) -> CompanyUI
-fetchCompanyUI (company_id, email_font, email_bordercolour, email_buttoncolour, email_emailbackgroundcolour, email_backgroundcolour, email_textcolour, email_logo, signview_logo, signview_textcolour, signview_textfont, signview_primarycolour, signview_primarytextcolour, signview_secondarycolour, signview_secondarytextcolour, signview_barscolour, signview_barstextcolour, signview_backgroundcolour, custom_logo, custom_barscolour, custom_barstextcolour, custom_barssecondarycolour, custom_backgroundcolour) = CompanyUI {
+fetchCompanyUI :: (CompanyID, Maybe ThemeID, Maybe ThemeID, Maybe ThemeID, Maybe String, Maybe String, Maybe (Binary BS.ByteString)) -> CompanyUI
+fetchCompanyUI (company_id,mail_theme,signview_theme,service_theme,browser_title,sms_originator,favicon) = CompanyUI {
   companyuicompanyid = company_id
-, companyemailfont = email_font
-, companyemailbordercolour = email_bordercolour
-, companyemailbuttoncolour = email_buttoncolour
-, companyemailemailbackgroundcolour = email_emailbackgroundcolour
-, companyemailbackgroundcolour = email_backgroundcolour
-, companyemailtextcolour =  email_textcolour
-, companyemaillogo = logoFromBinary email_logo
-, companysignviewlogo = logoFromBinary signview_logo
-, companysignviewtextcolour = signview_textcolour
-, companysignviewtextfont = signview_textfont
-, companysignviewprimarycolour = signview_primarycolour
-, companysignviewprimarytextcolour = signview_primarytextcolour
-, companysignviewsecondarycolour = signview_secondarycolour
-, companysignviewsecondarytextcolour = signview_secondarytextcolour
-, companysignviewbarscolour = signview_barscolour
-, companysignviewbarstextcolour = signview_barstextcolour
-, companysignviewbackgroundcolour = signview_backgroundcolour
-, companycustomlogo  = logoFromBinary custom_logo
-, companycustombarscolour = custom_barscolour
-, companycustombarstextcolour = custom_barstextcolour
-, companycustombarssecondarycolour = custom_barssecondarycolour
-, companycustombackgroundcolour = custom_backgroundcolour
+, companyMailTheme = mail_theme
+, companySignviewTheme = signview_theme
+, companyServiceTheme = service_theme
+, companyBrowserTitle = browser_title
+, companySmsOriginator = sms_originator
+, companyFavicon = faviconFromBinary favicon
 }
   where
     -- We should interpret empty logos as no logos.
-    logoFromBinary (Just l) = if (BS.null $ unBinary l) then Nothing else Just l
-    logoFromBinary Nothing = Nothing
+    faviconFromBinary (Just f) = if (BS.null $ unBinary f) then Nothing else Just f
+    faviconFromBinary Nothing = Nothing

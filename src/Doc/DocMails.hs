@@ -25,8 +25,7 @@ import Text.StringTemplates.Templates (TemplatesMonad, TemplatesT)
 import qualified Data.ByteString as BS
 
 import ActionQueue.Scheduler (SchedulerData, sdAppConf, getGlobalTemplates)
-import AppConf (hostpart, mailsConfig)
-import BrandedDomain.BrandedDomain
+import AppConf (mailsConfig)
 import BrandedDomain.Model
 import Control.Logic
 import Crypto.RNG
@@ -363,11 +362,11 @@ runMailTInScheduler doc m = do
   appConf <- asks sdAppConf
   now <- currentTime
   mauthor <- maybe (return Nothing) (dbQuery . GetUserByID) $ join $ maybesignatory <$> getAuthorSigLink doc
-  mbd <- maybe (return Nothing) (dbQuery . GetBrandedDomainByUserID) (userid <$> mauthor)
-  let mctx = MailContext { mctxhostpart = fromMaybe (hostpart appConf) (bdurl <$> mbd)
+  bd <- maybe (dbQuery GetMainBrandedDomain) (dbQuery . GetBrandedDomainByUserID) (userid <$> mauthor)
+  let mctx = MailContext { mctxhostpart = bdUrl $ bd
                          , mctxmailsconfig = mailsConfig appConf
                          , mctxlang = documentlang doc
-                         , mctxcurrentBrandedDomain = mbd
+                         , mctxcurrentBrandedDomain = bd
                          , mctxipnumber = noIP
                          , mctxtime = now
                          , mctxmaybeuser = Nothing

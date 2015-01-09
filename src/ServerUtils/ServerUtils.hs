@@ -3,7 +3,7 @@ module ServerUtils.ServerUtils (
    , handleSerializeImage
    , handleTextToImage
    , handleScaleImage
-   , brandedSignviewImage
+   , brandedImage
   ) where
 
 --import Happstack.Server hiding (dir, simpleHTTP)
@@ -128,14 +128,14 @@ handleTextToImage = do
                              else ok $ setHeaderBS "Cache-Control" "max-age=60" $ toResponseBS (BSUTF8.fromString "image/png") $ fcontent
          Nothing -> internalError
 
--- Take a signview image and brand it by replacing the non-white and non-transparent colors
+-- Take any image and brand it by replacing the non-white and non-transparent colors
 -- with the specified colour.
--- Expecting colour and filename to be passed as parameters. 
--- Colour format should be #deadbe.
--- Filename is the basename of the file, brandedSignviewImage will find it in frontend/app/img/
-brandedSignviewImage :: Kontrakcja m =>  m Response
-brandedSignviewImage = do
-    colour <- fmap (take 12) $ guardJustM $ getField "colour"
+-- Expecting color and filename to be passed as parameters.
+-- Color format should be #deadbe.
+-- Filename is the basename of the file, brandedImage will find it in frontend/app/img/
+brandedImage :: Kontrakcja m =>  m Response
+brandedImage = do
+    color <- fmap (take 12) $ guardJustM $ getField "color"
     file <- fmap (take 50) $ guardJustM $ getField "file"
 
     cwd <- liftIO getCurrentDirectory
@@ -144,7 +144,7 @@ brandedSignviewImage = do
 
     (procResult, out, _) <- readProcessWithExitCode' "convert" [fpath
                                                   , "-colorspace", "Gray"
-                                                  , "+level-colors", colour ++ ",white"
+                                                  , "+level-colors", color ++ ",white"
                                                   , "-gamma", ".4235" -- make dark colors look nice
                                                   , "-"] ""
     case procResult of

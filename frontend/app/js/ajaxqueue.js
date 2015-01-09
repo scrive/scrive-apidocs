@@ -150,7 +150,7 @@ window.AjaxQueue = Backbone.Model.extend({
                     ajaxQueue.run();
                   }
                 } else {
-                  var button =  new Button({color: 'green',
+                  var button =  new Button({ type: 'action',
                                              size: 'small',
                                              text: localization.reloadPage,
                                              onClick: function() {

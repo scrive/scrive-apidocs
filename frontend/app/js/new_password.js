@@ -6,8 +6,7 @@ define(['Backbone', 'legacy_code'], function() {
     defaults: {
       password: '',
       password2: '',
-      linkchangepassword: '',
-      textscolour : ''
+      linkchangepassword: ''
     },
     linkchangepassword: function() {
       return this.get('linkchangepassword');
@@ -23,12 +22,6 @@ define(['Backbone', 'legacy_code'], function() {
     },
     setPassword2: function(password) {
       this.set('password2', password);
-    },
-    buttoncolorclass: function() {
-     return this.get("buttoncolorclass");
-    },
-    textscolour : function() {
-     return this.get("textscolour");
     },
     validatePassword: function() {
       var password = this.password();
@@ -54,7 +47,7 @@ define(['Backbone', 'legacy_code'], function() {
       var model = this;
       var validationError = model.validatePassword();
       if (validationError !== null) {
-        new FlashMessage({content: validationError, color: 'red'});
+        new FlashMessage({content: validationError, type: 'error'});
         return;
       }
 
@@ -71,7 +64,7 @@ define(['Backbone', 'legacy_code'], function() {
             window.location = resp.location;
           } else {
             new FlashMessage({content: localization.newPasswordModal.flashMessagePasswordChangeLinkNotValid,
-                               color: 'red'});
+                              type: 'error'});
           }
         }
       }).send();
@@ -86,84 +79,20 @@ define(['Backbone', 'legacy_code'], function() {
 
     render: function () {
       var model = this.model;
-       var header = $("<div/>").addClass('shadowed').append($("<h1 class='big'/>").text(this.options.header));
-       $(this.el).append(header);
-       if (this.options.body)
-         $(this.el).append($("<div style='padding: 0 0 3em;'/>").append($("<h4 style='color: #FFFFFF; text-shadow: 0 2px 3px rgba(0, 0, 0, 0.45);'/>").text(this.options.body)));
-
-
-      var content = $("<div class='short-input-container recovery-container'/>");
-      var wrapper = $("<div class='short-input-container-body-wrapper'/>");
-      var body = $("<div class='short-input-container-body'/>");
-      content.append(wrapper.append(body));
-
-      var passwordInput = new InfoTextInput({
-        infotext: localization.newPasswordModal.modalNewPasswordViewNewPassword,
-        value: model.password(),
-        onChange: function(v) {model.setPassword(v);},
-        inputtype: 'password',
-        name: 'password',
-        cssClass : "big-input",
-        onEnter : function() {model.resetPassword();}
-      });
-      body.append($("<div class='position first'/>").append(passwordInput.el()));
-
-      var password2Input = new InfoTextInput({
-        infotext: localization.newPasswordModal.modalNewPasswordViewRepeatPassword,
-        value: model.password2(),
-        onChange: function(v) {model.setPassword2(v);},
-        inputtype: 'password',
-        name: 'password2',
-        cssClass : "big-input",
-        onEnter : function() {model.resetPassword();}
-      });
-      body.append($("<div class='position'/>").append(password2Input.el()));
-
-      var changePasswordButton = new Button({
-          size  : 'small',
-          color : 'blue',
-          text  : this.options.button,
-          onClick : function() {
-            model.resetPassword();
-          }
-        });
-
-     body.append($("<div class='position'/>").append(changePasswordButton.el()));
-     $(this.el).append(content);
-    }
-  });
-
-  var NewPasswordBrandedView = Backbone.View.extend({
-    initialize: function(options) {
-      this.options = options;
-      this.render();
-    },
-
-    render: function () {
-      var model = this.model;
-
-
-
-
-      var content = $("<div style='width:'/>");
+      var content = $("<div/>");
       var wrapper = $("<div/>");
       var body = $("<div/>");
-      var header = $("<div style='margin-bottom: 103px'/>");
-      header.append($("<img alt='logo' src='/branding/logo'/>"));
+      var header = $("<div style='margin-bottom:20px;margin-top:50px;text-align:center;'/>");
+      header.append($("<img alt='logo' src='/login_logo/"+ window.brandinghash +"'/>"));
       header.append($("<div class='divider-line'/>"));
 
       var poweredLabel = $("<label style='text-align:center;width:275px;'/>").text(localization.esigningpoweredbyscrive);
-      if (model.textscolour() != undefined) poweredLabel.css("color",model.textscolour());
       header.append(poweredLabel);
 
       $(this.el).append(header);
 
       content.append(wrapper.append(body));
 
-      var headerLabel = $("<label style='padding-left:10px;'/>").text(this.options.header);
-      if (model.textscolour() != undefined) headerLabel.css("color",model.textscolour());
-
-      body.append($("<div class='position first' style='text-align: left;height: 30px;'/>").append(headerLabel));
       if (this.options.body)
          body.append($("<label style='padding-bottom: 1em;'/>").text(this.options.body));
 
@@ -177,7 +106,7 @@ define(['Backbone', 'legacy_code'], function() {
         onEnter : function() {model.resetPassword();},
         style : "width : 245px; padding : 7px 14px; font-size: 16px"
       });
-      body.append($("<div class='position'/>").append(passwordInput.el()));
+      body.append($("<div class='position first'/>").append(passwordInput.el()));
 
       var password2Input = new InfoTextInput({
         infotext: localization.newPasswordModal.modalNewPasswordViewRepeatPassword,
@@ -193,16 +122,15 @@ define(['Backbone', 'legacy_code'], function() {
       body.append($("<div class='position' style='margin-top:6px;'/>").append(password2Input.el()));
 
       var changePasswordButton = new Button({
-          size  : 'tiny',
-          color : model.buttoncolorclass(),
+          type  : "main",
           text  : this.options.button,
-            style : "width:245px;",
+          style : "width:235px",
           onClick : function() {
             model.resetPassword();
           }
         });
 
-     body.append($("<div class='position' style='text-align:center;margin-top:10px'/>").append(changePasswordButton.el()));
+     body.append($("<div class='position' style='text-align:center;margin-top:20px'/>").append(changePasswordButton.el()));
      $(this.el).append(content);
     }
   });
@@ -212,27 +140,17 @@ define(['Backbone', 'legacy_code'], function() {
     var model = new NewPasswordModel(args);
     var view;
     var options = { model: model,
-                    header: localization.newPasswordModal.modalNewPasswordViewHeader,
                     body: null,
                     button: localization.newPasswordModal.modalNewPasswordViewFooterSave
                   };
 
     if (args.accessnewaccount) {
-      options.header = localization.accessNewAccountModal.header;
       options.body = localization.accessNewAccountModal.body;
       options.button = localization.accessNewAccountModal.button;
     }
 
-    if (args.branded) {
-      if (!args.accessnewaccount)
-        options.header = options.header + ':';
-      options.el = $("<div style='width:275px;margin:20px auto'/>");
-      view = new NewPasswordBrandedView(options);
-    } else {
-      options.el = $("<div class='short-input-section'/>");
-      view = new NewPasswordView(options);
-    }
-
+    options.el = $("<div style='width:275px;margin:20px auto'/>");
+    view = new NewPasswordView(options);
     this.el = function() {return $(view.el);};
   };
 

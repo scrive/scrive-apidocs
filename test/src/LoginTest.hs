@@ -7,6 +7,7 @@ import Text.JSON
 import Text.JSON.Gen as J
 
 import ActionQueue.PasswordReminder
+import BrandedDomain.Model
 import Company.Model
 import Context
 import DB
@@ -87,9 +88,10 @@ assertResettingPasswordRecordsALoginEvent = do
 
 createUserAndResetPassword :: TestEnv (User, Context)
 createUserAndResetPassword = do
+  bd <- dbQuery $ GetMainBrandedDomain
   pwd <- createPassword "admin"
   company <- dbUpdate $ CreateCompany
-  Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) defaultValue Nothing
+  Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) defaultValue (bdid bd)
   PasswordReminder{..} <- newPasswordReminder $ userid user
   ctx <- mkContext defaultValue
   req <- mkRequest POST [("password", inText "password123")]
@@ -107,7 +109,8 @@ loginFailureChecks res ctx = do
 
 createTestUser :: TestEnv UserID
 createTestUser = do
+    bd <- dbQuery $ GetMainBrandedDomain
     pwd <- createPassword "admin"
     company <- dbUpdate $ CreateCompany
-    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) defaultValue Nothing
+    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) defaultValue (bdid bd)
     return userid

@@ -804,13 +804,6 @@ window.Signatory = Backbone.Model.extend({
     needsMobile: function() {
         return this.mobileDelivery() || this.emailMobileDelivery() || this.mobileConfirmationDelivery() || this.emailMobileConfirmationDelivery() || this.smsPinAuthentication();
     },
-    color: function() {
-        return this.get('color');
-    },
-    setColor: function(c) {
-        this.set({color:c});
-        return this;
-    },
     needsEmail: function() {
         return this.emailDelivery() || this.emailMobileDelivery() || this.emailConfirmationDelivery() || this.emailMobileConfirmationDelivery();
     },

@@ -42,7 +42,6 @@ data CompanyInfo = CompanyInfo {
   , companycity    :: String
   , companycountry :: String
   , companyipaddressmasklist :: [IPAddressWithMask]
-  , companysmsoriginator :: String
   , companyallowsavesafetycopy :: Bool
   , companyidledoctimeout :: Maybe Int16
   , companycgidisplayname :: Maybe String
@@ -169,7 +168,6 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetCompanyInfo Bool where
       sqlSet "ip_address_mask_list" $ case companyipaddressmasklist of
                                         [] -> Nothing
                                         x -> Just (show x)
-      sqlSet "sms_originator" companysmsoriginator
       sqlSet "allow_save_safety_copy" companyallowsavesafetycopy
       sqlSet "idle_doc_timeout" companyidledoctimeout
       sqlSet "cgi_display_name" companycgidisplayname
@@ -187,13 +185,12 @@ selectCompaniesSelectors = do
   sqlResult "companies.city"
   sqlResult "companies.country"
   sqlResult "companies.ip_address_mask_list"
-  sqlResult "companies.sms_originator"
   sqlResult "companies.allow_save_safety_copy"
   sqlResult "companies.idle_doc_timeout"
   sqlResult "companies.cgi_display_name"
 
-fetchCompany :: (CompanyID, String, String, String, String, String, String, Maybe String, String, Bool, Maybe Int16, Maybe String) -> Company
-fetchCompany (cid, name, number, address, zip', city, country, ip_address_mask_list, sms_originator, allow_save_safety_copy, idle_doc_timeout, cgi_display_name) = Company {
+fetchCompany :: (CompanyID, String, String, String, String, String, String, Maybe String, Bool, Maybe Int16, Maybe String) -> Company
+fetchCompany (cid, name, number, address, zip', city, country, ip_address_mask_list, allow_save_safety_copy, idle_doc_timeout,cgi_display_name) = Company {
   companyid = cid
 , companyinfo = CompanyInfo {
     companyname = name
@@ -203,7 +200,6 @@ fetchCompany (cid, name, number, address, zip', city, country, ip_address_mask_l
   , companycity = city
   , companycountry = country
   , companyipaddressmasklist = maybe [] $(read) ip_address_mask_list
-  , companysmsoriginator = sms_originator
   , companyallowsavesafetycopy = allow_save_safety_copy
   , companyidledoctimeout = idle_doc_timeout
   , companycgidisplayname = cgi_display_name

@@ -58,7 +58,7 @@ data Context = Context
     , ctxhubspotconf         :: HubSpotConf
     , ctxgoogleanalyticstoken :: String
     , ctxhomebase            :: String
-    , ctxbrandeddomain       :: Maybe BrandedDomain
+    , ctxbrandeddomain       :: BrandedDomain
     , ctxsalesforceconf      :: SalesforceConf
     -- | Contains actions that join threads spawned with forkAction
     , ctxthreadjoins       :: [IO (T.Result ())]

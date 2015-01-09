@@ -123,10 +123,8 @@ var AuthorViewAutomaticRemindersView = Backbone.View.extend({
       var self = this;
       self.modal = new Confirmation({
                 title: localization.autoreminders.setAutoReminderTitle,
-                subtitle : $("<div/>").html(localization.autoreminders.changeAutoreminderDescription),
-                content: $(self.changeReminderDateBody()),
+                content: $("<div>").append($("<div class='modal-subtitle centered'>").html(localization.autoreminders.changeAutoreminderDescription)).append($(self.changeReminderDateBody())),
                 width: 640,
-                icon : '/img/modal-icons/extend-duedate.png',
                 onReject : function() {
                   if (self.calendar != undefined)
                     self.calendar.close();
@@ -139,7 +137,7 @@ var AuthorViewAutomaticRemindersView = Backbone.View.extend({
   buttonChangeForModal : function() {
     var self = this;
     return new Button({
-      color: "green",
+      type: "action",
       style : (BrowserInfo.isSmallScreen() ? "margin-top:-10px" : ""),
       size: "small",
       text : (self.model.document().autoremindtime() != undefined ? localization.autoreminders.changeAutoreminderButton : localization.autoreminders.setAutoreminderButton),
@@ -156,7 +154,6 @@ var AuthorViewAutomaticRemindersView = Backbone.View.extend({
   buttonClearForModal : function() {
     var self = this;
     return new Button({
-      color: "black",
       style : "margin-right:10px;" + (BrowserInfo.isSmallScreen() ? "margin-top:-10px" : ""),
       size: "small",
       text : localization.autoreminders.removeAutoreminderButton,
@@ -171,10 +168,8 @@ var AuthorViewAutomaticRemindersView = Backbone.View.extend({
       var self = this;
       self.modal = new Confirmation({
                 title: localization.autoreminders.changeAutoReminderTitle,
-                subtitle : $("<div/>").html(localization.autoreminders.changeAutoreminderDescription),
-                content: $(self.changeReminderDateBody()),
+                content: $("<div>").append($("<div class='modal-subtitle centered'>").html(localization.autoreminders.changeAutoreminderDescription)).append($(self.changeReminderDateBody())),
                 width: 640,
-                icon : '/img/modal-icons/extend-duedate.png',
                 onReject : function() {
                   if (self.calendar != undefined)
                     self.calendar.close();
@@ -235,7 +230,6 @@ var AuthorViewAutomaticReminders = React.createClass({
                     {this.props.document.autoremindtime() ? localization.autoreminders.willBeSentOn + ": " + this.props.document.autoremindtime().toYMDString() : ""}
                   </div>
                   <NewButton
-                    color="black"
                     style= {{"margin-top": "10px"}}
                     text = {this.props.document.autoremindtime() ? localization.autoreminders.changeDate : localization.autoreminders.setDate}
                     size = "small"

@@ -6,11 +6,7 @@ define(['Backbone', 'legacy_code'], function() {
 var DocumentAuthorAttachmentsModel = Backbone.Model.extend({
   defaults : {
      title  : localization.authorAttachmentBoxHeader,
-     textcolour : undefined,
-     textfont : undefined,
-     forSigning : false,
-     secondarycolour: undefined,
-     secondarytextcolour: undefined
+     forSigning : false
   },
   initialize: function (args) {
   },
@@ -48,7 +44,7 @@ var DocumentAuthorAttachmentsView = Backbone.View.extend({
     var container = $("<div class='item' />");
     var buttonSize = 'small';
     var button = new Button({
-      color: model.forSigning() ? "signview-blue" : "black",
+      type: model.forSigning() ? "optional" : undefined,
       text: localization.reviewPDF,
       cssClass: "float-right attachment-download-button " +  (model.forSigning() ? "for-signing" : ""),
       size: buttonSize,

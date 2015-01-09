@@ -1,0 +1,365 @@
+@import 'runtime/common/flash';
+@import 'runtime/common/buttons';
+@import 'runtime/common/utils';
+@import 'runtime/common/service-header';
+@import 'runtime/signviewbranding/to-startbranding';
+
+.background_with_ie_support(@bcolor) {
+        @filter :  %("progid:DXImageTransform.Microsoft.gradient(startColorstr=%s,endColorstr=%s)",argb(@bcolor),argb(@bcolor));
+        background:transparent; /* Fallback IE */
+        filter: e(@filter);
+
+        background-color: @bcolor;
+}
+
+/* Signview in general */
+.signview {
+
+  .section.highlight {
+    border-color: @actioncolor;
+  }
+}
+/* Header */
+.signview .pageheader {
+  background-color: @brandcolor;
+  color: @brandtextcolor;
+  font-family : @font;
+
+  .content .sender {
+    color: @brandtextcolor;
+    font-family : @font;
+
+    .inner.clickable {
+      color: @brandtextcolor;
+      font-family : @font;
+
+      &:hover {
+        color: @text-very-light;
+      }
+    }
+  }
+}
+/* Instructions */
+.signview .instructions.section {
+
+  .headline,.subheadline {
+    font-family: @font;
+   }
+
+  .download {
+    color: #4A4A49;
+    font-family: @font;
+    text-decoration: underline;
+
+    &:hover {
+      text-decoration: none;
+    }
+    &:active {
+      text-decoration: underline;
+    }
+  }
+
+  .arrowtext {
+    color : @actioncolor;
+
+    &:hover {
+      color: lighten(@actioncolor,10%);
+    }
+  }
+
+  .arrow-legend {
+
+    .mandatory {
+      @url : %('/branded_image?file=icon-legend-mandatory.png&color=%D',@actioncolor);
+      background : url(@url) ;
+    }
+
+    .optional {
+      @url : %('/branded_image?file=icon-legend-mandatory.png&color=%D',@actionsecondarycolor);
+      background : url(@url) ;
+    }
+  }
+}
+/* Signatories section */
+.signview .signatories.section {
+  font-family: @font;
+
+  h2, .name, .statustext, .titleinfo, .field, .statusbox {
+    font-family: @font;
+  }
+}
+/* Arrows */
+.signview .arrows {
+
+  .action-arrow.left {
+
+    .front {
+      @url : %('/branded_image?file=sign-arrow-action-left-front.png&color=%D',@actioncolor);
+      background : url(@url);
+    }
+
+    .back {
+      @url : %('/branded_image?file=sign-arrow-action-left-back.png&color=%D',@actioncolor);
+      background : url(@url);
+    }
+
+    .label {
+      @url : %('/branded_image?file=sign-arrow-action-label.png&color=%D',@actioncolor);
+      background : url(@url);
+      color : @actiontextcolor;
+      font-family: @font;
+    }
+  }
+
+  .action-arrow.right {
+
+    .front {
+      @url : %('/branded_image?file=sign-arrow-action-right-front.png&color=%D',@actioncolor);
+      background : url(@url);
+    }
+
+    .back {
+      @url : %('/branded_image?file=sign-arrow-action-right-back.png&color=%D',@actioncolor);
+      background : url(@url);
+    }
+
+    .label {
+      @url : %('/branded_image?file=sign-arrow-action-label.png&color=%D',@actioncolor);
+      background : url(@url);
+      color : @actiontextcolor;
+      font-family: @font;
+    }
+  }
+
+  .arrow.up {
+    @url : %('/branded_image?file=sign-arrow-up.png&color=%D',@actioncolor);
+    background : url(@url);
+  }
+
+  .arrow.down {
+    @url : %('/branded_image?file=sign-arrow-down.png&color=%D',@actioncolor);
+    background : url(@url);
+  }
+}
+/* Extra details section */
+.signview .extradetails.section {
+
+  h2, .descriptionbox {
+    font-family: @font;
+  }
+
+  .obligatory-input{
+    border-color: @actioncolor; /* Fallback IE */
+    border-color: fade(@actioncolor,60%);
+
+    &:hover, &.active {
+      border-color: @actioncolor;
+    }
+
+    &.valid {
+      border-color: #ddd;
+    }
+  }
+}
+/* Modal for extra details */
+.extradetails-modal {
+
+  .standard-input-table {
+
+    .obligatory-input{
+      border-color: @actioncolor; /* Fallback IE */
+      border-color: fade(@actioncolor,60%);
+
+      &:hover, &.active {
+        border-color: @actioncolor;
+      }
+
+      &.valid {
+        border-color: #ddd;
+      }
+    }
+  }
+
+}
+
+
+/* Signing in progress modal */
+.post-sign-modal-content.grey .modal-container {
+
+  .modal-title,.modal-content {
+    font-family: @font;
+  }
+}
+/* Reject modal */
+.reject-modal.grey {
+
+  .modal-container {
+
+    .modal-title,.modal-content {
+      font-family: @font;
+    }
+
+    .modal-textarea {
+      width: 100%;
+      height: 100px;
+      -webkit-box-sizing: border-box;
+      -moz-box-sizing: border-box;
+      box-sizing: border-box;
+    }
+  }
+
+  .modal-footer {
+    font-family: @font;
+
+    .button {
+      font-family: @font;
+    }
+  }
+}
+/* Sign modal */
+.sign-confirmation-modal.grey {
+
+  .modal-container {
+
+    .modal-title,.modal-content {
+      font-family: @font;
+    }
+    /* We sometimes ask for pin in this modal */
+    .pin-input {
+      border-color: @actioncolor; /* Fallback IE */
+      border-color: fade(@actioncolor,60%);
+
+      &:hover, &.active {
+        border-color: @actioncolor;
+      }
+    }
+  }
+
+  .modal-footer {
+    font-family: @font;
+  }
+}
+/* Signatory attachments section */
+.signview .section .signatoryattachments {
+
+  h2, .subtitle, .filename .label, .name, .description {
+    font-family: @font;
+  }
+}
+/* Author attachments section */
+.signview .section .authorattachments {
+
+  h2, .name {
+    font-family: @font;
+  }
+
+}
+/* SMS pin modal */
+.sms-pin-modal.grey {
+
+  .modal-container {
+
+    .modal-title, .modal-content {
+      font-family: @font;
+    }
+
+    .phone-input {
+      border-color: @actioncolor; /* Fallback IE */
+      border-color: fade(@actioncolor,60%);
+
+      &:hover,&.active {
+        border-color: @actioncolor;
+      }
+
+      &.valid {
+        border-color: #ddd;
+      }
+    }
+  }
+
+  .modal-footer {
+    font-family: @font;
+  }
+}
+/* Placements */
+.signview .document-pages {
+  /* Texts and checkboxes */
+  .placedfield.to-fill-now {
+    border-color: @actionsecondarycolor; /* Fallback IE */
+    border-color: fade(@actionsecondarycolor,60%);
+
+    .text-inline-editing {
+      .background_with_ie_support(fade(@actionsecondarycolor,20%));
+    }
+
+    &:hover, &.active {
+      border-color: @actionsecondarycolor;
+
+      &.active {
+        background-color:#FFFFFF;
+      }
+    }
+
+    &.obligatory {
+      border-color: @actioncolor; /* Fallback IE */
+      border-color: fade(@actioncolor,60%);
+
+      .text-inline-editing {
+        .background_with_ie_support(fade(@actioncolor,20%));
+      }
+
+      &:hover, &.active {
+        border-color: @actioncolor;
+
+        &.active {
+          background-color:#FFFFFF;
+        }
+      }
+    }
+
+    &.empty-text-field {
+      .background_with_ie_support(fade(@actionsecondarycolor,20%));
+
+      &.obligatory {
+        .background_with_ie_support(fade(@actioncolor,20%));
+      }
+
+      &.active {
+        background-color: #FFFFFF;
+      }
+    }
+  }
+
+  .signatureBox.forDrawing {
+    border-color: @actionsecondarycolor;
+    border-color: fade(@actionsecondarycolor,60%);
+
+    &:hover {
+      border-color: @actionsecondarycolor;
+    }
+
+    &.signaturePlaceholder {
+      .background_with_ie_support(fade(@actionsecondarycolor,20%));
+    }
+
+    &.obligatory {
+      border-color: @actioncolor;
+      border-color: fade(@actioncolor,60%);
+
+      &:hover {
+        border-color: @actioncolor;
+      }
+
+      &.signaturePlaceholder {
+        .background_with_ie_support(fade(@actioncolor,20%));
+      }
+    }
+  }
+}
+
+.post-sign-modal-content .spinner-checkbox-list .checkmark {
+  @url : %('/branded_image?file=shared.png&color=%D',@positivecolor);
+  background : url(@url) no-repeat 0 7px;
+;
+}
+

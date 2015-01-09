@@ -310,7 +310,7 @@ var AdminUserDetailsView = Backbone.View.extend({
 
       var deleteButton = new Button({
                 text: "Delete user"
-              , color: "red"
+              , type: "cancel"
               , size: "tiny"
               , style: "margin-left:20px"
               , onClick : function() {
@@ -320,12 +320,12 @@ var AdminUserDetailsView = Backbone.View.extend({
 
       var invitationButton = new Button({
                 text: "Resend invitation"
-              , color: "blue"
+              , type: "optional"
               , size: "tiny"
               , style: "margin-left:20px"
               , onClick : function() {
                   model.resendInvitation().sendAjax(function() {
-                      new FlashMessage({color: "green", content : "Invitation send"});
+                      new FlashMessage({type: 'success', content : "Invitation send"});
                       model.refresh();
                   });
                 }
@@ -333,7 +333,7 @@ var AdminUserDetailsView = Backbone.View.extend({
 
       var moveButton = new Button({
                 text: "Move to different company"
-              , color: "blue"
+              , type: "optional"
               , size: "tiny"
               , style: "margin-left:20px"
               , onClick : function() {
@@ -343,12 +343,12 @@ var AdminUserDetailsView = Backbone.View.extend({
 
       var saveButton = new Button({
                 text: "Change details"
-              , color: "green"
+              , type: "action"
               , size: "tiny"
               , style: "margin-left:20px"
               , onClick : function() {
                   model.saveDetails().sendAjax(function() {
-                      new FlashMessage({color: "green", content : "Saved"});
+                      new FlashMessage({type: 'success', content : "Saved"});
                       model.refresh();
                   });
                 }
@@ -389,13 +389,13 @@ var AdminUserDetailsView = Backbone.View.extend({
         onAccept : function() {
           model.moveToDifferentCompany().sendAjax(
             function() {
-                new FlashMessage({color: "green", content : "Moved"});
+                new FlashMessage({type: 'success', content : "Moved"});
                 model.refresh();
                 popup.close();
                 return false;
             },
             function() {
-              new FlashMessage({color: "red", content : "Failed"});
+              new FlashMessage({type: 'error', content : "Failed"});
               return false;
             }
          );
@@ -415,7 +415,7 @@ var AdminUserDetailsView = Backbone.View.extend({
                 return false;
             },
             function() {
-              new FlashMessage({color: "red", content : "Failed"});
+              new FlashMessage({type: 'error', content : "Failed"});
               return false;
             }
          );

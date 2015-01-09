@@ -85,7 +85,7 @@ return React.createClass({
                   width="70px"
                   rendering={function(d) {
                     return (
-                      <label className='delete' onClick={function() {self.deleteGrantedPrivilige(d.field("fields").tokenid,d.field("fields").privilege)}}>
+                      <label className='oauth-delete-token' onClick={function() {self.deleteGrantedPrivilige(d.field("fields").tokenid,d.field("fields").privilege)}}>
                         {localization.apiDashboard.deleteToken}
                       </label>);
                   }}
@@ -113,13 +113,13 @@ return React.createClass({
                   name="Client credentials secret"
                   width="120px"
                   rendering={function(d) {
-                      if (d.field("hiddenSecret"))
+                      if (d.getProperty("hiddenSecret"))
                         return (<div>{d.field("fields").apisecret}</div>);
                       else
                         return (
                           <span
-                            onClick={function() {d.setField("hiddenSecret",true)}}
-                            style={{"cursor": "pointer", "color": "#7A94B8"}}
+                            onClick={function() {d.setProperty("hiddenSecret",true)}}
+                            className="oauth-hidden-token"
                           >
                             {localization.apiDashboard.reveal}
                           </span>
@@ -137,13 +137,13 @@ return React.createClass({
                   name="Token credentials secret"
                   width="120px"
                   rendering={function(d) {
-                      if (d.field("hiddenAccess"))
+                      if (d.getProperty("hiddenAccess"))
                         return (<div>{d.field("fields").accesssecret}</div>);
                       else
                         return (
                           <span
-                            onClick={function() {d.setField("hiddenAccess",true)}}
-                            style={{"cursor": "pointer", "color": "#7A94B8"}}
+                            onClick={function() {d.setProperty("hiddenAccess",true)}}
+                            className="oauth-hidden-token"
                           >
                             {localization.apiDashboard.reveal}
                           </span>
@@ -155,7 +155,7 @@ return React.createClass({
                   width="70px"
                   rendering={function(d) {
                     return (
-                      <label className='delete' onClick={function() {self.deletePersonalToken()}}>
+                      <label className='oauth-delete-token' onClick={function() {self.deletePersonalToken()}}>
                         {localization.apiDashboard.deleteToken}
                       </label>);
                   }}
@@ -166,7 +166,7 @@ return React.createClass({
                   <div style={{"marginLeft":"1px","marginTop":"12px", "marginBottom":"5px"}}>
                     <Button
                       size="tiny"
-                      color="green"
+                      type="action"
                       text={localization.apiDashboard.personalTokenCreate}
                       onClick={function() {self.createPersonalToken();}}
                     />
@@ -197,13 +197,13 @@ return React.createClass({
                 name="Client credentials secret"
                 width="240px"
                 rendering={function(d) {
-                  if (d.field("hidden"))
+                  if (d.getProperty("hidden"))
                     return (<div>{d.field("fields").apisecret}</div>);
                   else
                     return (
                       <span
-                        onClick={function() {d.setField("hidden",true)}}
-                        style={{"cursor": "pointer", "color": "#7A94B8"}}
+                        onClick={function() {d.setProperty("hidden",true)}}
+                        className="oauth-hidden-token"
                       >
                         {localization.apiDashboard.reveal}
                       </span>
@@ -215,7 +215,7 @@ return React.createClass({
                 width="70px"
                 rendering={function(d) {
                   return (
-                    <label className='delete' onClick={function() {self.deleteApiToken(d.field("fields").apitoken)}}>
+                    <label className='oauth-delete-token' onClick={function() {self.deleteApiToken(d.field("fields").apitoken)}}>
                       {localization.apiDashboard.deleteToken}
                     </label>);
                 }}
@@ -224,7 +224,7 @@ return React.createClass({
                 <div style={{"marginLeft":"1px","marginTop":"12px", "marginBottom":"5px"}}>
                   <Button
                     size="tiny"
-                    color="green"
+                    type="action"
                     text={localization.apiDashboard.apiTokenCreate}
                     onClick={function() {self.createApiToken();}}
                   />

@@ -150,7 +150,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
 
     var confirmation = new Confirmation({
       title: localization.signinginprogressmodal.title,
-      cssClass: 'grey post-sign-modal-content',
+      cssClass: 'post-sign-modal-content',
       fast : true,
       cancelVisible: false,
       closeVisible : false,

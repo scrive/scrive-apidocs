@@ -6,11 +6,9 @@
  * Properties:
       text        : string , text on button,  default ""
       color       : string, red | green | black | light-blue | signview-blue, one of predefined colors
-      customcolor : string, custom color for button, overwrites color
       size        : string, tiny | small | big
       shape       : string, rounded | square, where square is default
       textcolor   : string, color for text on button, else default value for predefined color will be used.
-      width       : integer, final width of button, if not set, button will adjust to text
       className   : additional css classes
       style       : style object (react format)
       onClick     : func, functiona to be called on click
@@ -33,9 +31,10 @@ define(['React'], function(React) {
       inputtype     : React.PropTypes.string,
       name          : React.PropTypes.string,
 
-      className      : React.PropTypes.string,
+      className     : React.PropTypes.string,
       style         : React.PropTypes.object,
       inputStyle    : React.PropTypes.object,
+      maxLength     : React.PropTypes.number,
 
       // Behaviour
       suppressSpace : React.PropTypes.bool,
@@ -49,7 +48,11 @@ define(['React'], function(React) {
       onTab         : React.PropTypes.func,
       onBlur        : React.PropTypes.func,
       onRemove      : React.PropTypes.func,
-      onOk          : React.PropTypes.func
+      onOk          : React.PropTypes.func,
+      onClick       : React.PropTypes.func,
+
+      // More
+      buttonTitle    : React.PropTypes.string
     },
     getDefaultProps : function() {
         return {
@@ -72,6 +75,10 @@ define(['React'], function(React) {
     componentDidMount : function() {
       if (this.props.focus)
         this.focus();
+    },
+    componentWillReceiveProps: function(props) {
+      if (props.value != this.props.value)
+        this.setState({value : props.value});
     },
     // External functions. If we will create interface to this element on they, we should move it there
     setValue : function(v) {
@@ -131,6 +138,7 @@ define(['React'], function(React) {
             disabled={this.props.readonly}
             className={fakePlaceholder ? "grayed" : ""}
             placeholder={this.props.infotext}
+            maxLength={this.props.maxLength}
             value={fakePlaceholder ? this.props.infotext : this.state.value}
             onFocus={this.onFocus}
             onBlur={this.onBlur}
@@ -144,7 +152,9 @@ define(['React'], function(React) {
            {/*if*/ this.props.onOk != undefined &&
               <div className="ok-button" onClick={this.onOk}>OK</div>
            }
-
+           {/*if*/ (this.props.buttonTitle != undefined && this.props.onClick != undefined) &&
+              <div className="internal-button-wrapper"><div className="internal-button" onClick={this.props.onClick}>{this.props.buttonTitle}</div></div>
+           }
         </div>
       );
     }

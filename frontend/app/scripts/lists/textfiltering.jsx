@@ -11,7 +11,6 @@ return React.createClass({
       return (
         <div>
           <NewButton
-            color ="black"
             text={localization.searchBoxButtonText}
             className= "float-right search-button"
             onClick = {function() {

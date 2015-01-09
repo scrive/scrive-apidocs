@@ -1,0 +1,72 @@
+@import 'branding/variables';
+
+.service-preview {
+  background: @gray-5-percent;
+  border: 1px solid #eeeeee;
+  margin: auto;
+  width: 600px;
+
+  .service-preview-header {
+    border-bottom: 1px solid @blue-border;
+    display: table;
+    width: 100%;
+
+    .service-preview-innerheader {
+      display: table-cell;
+      text-align: right;
+      vertical-align: bottom;
+    }
+
+    .service-preview-logo {
+      float: left;
+      margin-left: 20px;
+
+      a {
+        padding: 8px 0;
+
+        img {
+          max-height: 72px;
+          max-width: 165px;
+        }
+      }
+    }
+
+    .service-preview-header-button {
+      display: inline-block;
+      margin: 7px 2px;
+
+      .label {
+        font-size: 9px;
+      }
+
+      a {
+        padding: 4px 8px;
+        font-size: 9px;
+      }
+    }
+
+    .service-preview-header-text {
+      display: inline-block;
+      font-size: 10px;
+      line-height: 15px;
+    }
+
+    .hoverable {
+      display: block;
+      padding: 12px 4px;
+    }
+  }
+
+  .service-preview-content {
+    padding: 20px;
+    text-align: right;
+  }
+
+  .service-preview-footer {
+    font-size: 10px;
+    height: 20px;
+    padding: 10px;
+    text-align: center;
+    background-color: white;
+  }
+}

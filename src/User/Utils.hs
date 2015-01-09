@@ -4,11 +4,9 @@ module User.Utils (
     , withUserGet
     , checkUserTOSGet
     , withCompanyAdmin
-    , withCompanyUserOrAdminOnly
     , withCompanyAdminOrAdminOnly
 )where
 
-import Control.Arrow (first)
 import Control.Monad.Catch
 import Data.Functor
 
@@ -78,12 +76,6 @@ withCompanyUser action = do
 withCompanyAdmin :: Kontrakcja m => ((User, Company) -> m a) -> m a
 withCompanyAdmin action = withCompanyUser $ \(user, company) ->
   if useriscompanyadmin user then action (user, company) else internalError
-
-
-withCompanyUserOrAdminOnly :: Kontrakcja m => Maybe CompanyID -> ((Bool, Company) -> m a) -> m a
-withCompanyUserOrAdminOnly Nothing action = withCompanyUser (action . first useriscompanyadmin)
-withCompanyUserOrAdminOnly (Just cid) action = onlySalesOrAdmin $
-  guardJustM (dbQuery (GetCompany cid)) >>= curry action True
 
 withCompanyAdminOrAdminOnly :: Kontrakcja m => Maybe CompanyID -> (Company -> m a) -> m a
 withCompanyAdminOrAdminOnly Nothing action = withCompanyAdmin (action . snd)

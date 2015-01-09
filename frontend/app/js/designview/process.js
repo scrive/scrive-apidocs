@@ -281,7 +281,6 @@ define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_the
             var div = $("<div class='design-view-action-process-signview-settings'/>");
 
             var editSignviewSettingsButton = new Button({
-                color: 'black',
                 text: localization.designview.signviewsettings.button,
                 cssClass: 'design-view-action-process-signview-settings-button',
                 oneClick: true,
@@ -307,7 +306,6 @@ define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_the
             var label = $("<div class='design-view-action-process-left-column-attachments-label'/>").text(localization.attachments + ':');
 
             var authorAttachmentButton = new Button({
-                color: 'black',
                 text: localization.designview.addRemove,
                 cssClass: 'design-view-action-process-left-column-attachments-author-button',
                 onClick: function() {
@@ -318,13 +316,12 @@ define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_the
             });
 
             var sigAttachmentButton = new Button({
-                color: 'black',
                 text: localization.designview.request,
                 cssClass: 'design-view-action-process-left-column-attachments-signatory-button',
                 onClick: function() {
                   if(document.signatoriesWhoSign().length == 0 || document.authorIsOnlySignatory()) {
                     mixpanel.track('Open signatory attachments but not enough participants');
-                    new FlashMessage({ color: 'red'
+                    new FlashMessage({ type: 'error'
                                      , content: localization.designview.validation.requestAttachmentFlashMessage});
                   } else {
                     mixpanel.track('Open signatory attachments');

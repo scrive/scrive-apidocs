@@ -46,28 +46,12 @@ testBrandedDocumentMails = do
   author <- addNewRandomCompanyUser (companyid company') False
   let cui = CompanyUI {
         companyuicompanyid = companyid company'
-      , companyemailfont = Just "Helvetica Neue, Arial, sans-serif"
-      , companyemailbordercolour = Just "#dee4ed"
-      , companyemailbuttoncolour = Just "215"
-      , companyemailemailbackgroundcolour = Just "#0f0"
-      , companyemailbackgroundcolour = Just "orange"
-      , companyemailtextcolour = Just "green"
-      , companyemaillogo = Nothing
-      , companysignviewlogo = Nothing
-      , companysignviewtextcolour = Nothing
-      , companysignviewtextfont = Nothing
-      , companysignviewprimarycolour = Nothing
-      , companysignviewprimarytextcolour = Nothing
-      , companysignviewsecondarycolour = Nothing
-      , companysignviewsecondarytextcolour = Nothing
-      , companysignviewbarscolour = Nothing
-      , companysignviewbarstextcolour = Nothing
-      , companysignviewbackgroundcolour = Nothing
-      , companycustomlogo  = Nothing
-      , companycustombarscolour = Nothing
-      , companycustombarstextcolour = Nothing
-      , companycustombarssecondarycolour = Nothing
-      , companycustombackgroundcolour = Nothing
+      , companyMailTheme = Nothing
+      , companySignviewTheme = Nothing
+      , companyServiceTheme = Nothing
+      , companyBrowserTitle = Nothing
+      , companySmsOriginator = Nothing
+      , companyFavicon = Nothing
       }
   _ <- dbUpdate $ SetCompanyUI (companyid company') cui
   sendDocumentMails author
@@ -111,9 +95,9 @@ sendDocumentMails author = do
                               validMail s m
         checkMail "Invitation" $ mailInvitation True Sign (Just sl) =<< theDocument
         -- DELIVERY MAILS
-        checkMail "Deferred invitation"    $  mailDeferredInvitation (ctxmailsconfig ctx) Nothing (ctxhostpart ctx) sl =<< theDocument
-        checkMail "Undelivered invitation" $  mailUndeliveredInvitation (ctxmailsconfig ctx)  Nothing (ctxhostpart ctx) sl =<< theDocument
-        checkMail "Delivered invitation"   $  mailDeliveredInvitation (ctxmailsconfig ctx)  Nothing (ctxhostpart ctx) sl =<< theDocument
+        checkMail "Deferred invitation"    $  mailDeferredInvitation (ctxbrandeddomain ctx) (ctxhostpart ctx) sl =<< theDocument
+        checkMail "Undelivered invitation" $  mailUndeliveredInvitation (ctxbrandeddomain ctx) (ctxhostpart ctx) sl =<< theDocument
+        checkMail "Delivered invitation"   $  mailDeliveredInvitation (ctxbrandeddomain ctx) (ctxhostpart ctx) sl =<< theDocument
         --remind mails
         checkMail "Reminder notsigned" $ mailDocumentRemind Nothing sl True =<< theDocument
         --reject mail

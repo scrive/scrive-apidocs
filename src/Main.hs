@@ -14,6 +14,8 @@ import qualified Data.ByteString.Char8 as BS
 import AppConf
 import AppControl
 import AppDBTables
+import BrandedDomain.BrandedDomain
+import BrandedDomain.Model
 import Company.Model
 import Configuration
 import Crypto.RNG
@@ -91,14 +93,15 @@ startSystem appGlobals appConf = E.bracket startServer stopServer waitForTerm
       liftBase $ waitForTermination
       Log.mixlog_ $ "Termination request received"
 
-initDatabaseEntries :: (CryptoRNG m, MonadDB m, MonadThrow m) => [(Email, String)] -> m ()
+initDatabaseEntries :: (CryptoRNG m, MonadDB m, MonadThrow m,Log.MonadLog m) => [(Email, String)] -> m ()
 initDatabaseEntries = mapM_ $ \(email, passwordstring) -> do
   -- create initial database entries
   passwd <- createPassword passwordstring
   maybeuser <- dbQuery $ GetUserByEmail email
   case maybeuser of
     Nothing -> do
+      bd <- dbQuery $ GetMainBrandedDomain
       company <- dbUpdate $ CreateCompany
-      _ <- dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) (companyid company,True) defaultValue Nothing
+      _ <- dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) (companyid company,True) defaultValue (bdid bd)
       return ()
     Just _ -> return () -- user exist, do not add it

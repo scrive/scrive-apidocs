@@ -21,7 +21,6 @@ return React.createClass({
         acceptText: localization.ok,
         rejectText: localization.cancel,
         title: localization.archive.documents.sendreminder.action,
-        icon: '/img/modal-icons/remind.png',
         content: content,
         onAccept : function() {
           mixpanel.track('Send reminder');
@@ -30,12 +29,12 @@ return React.createClass({
             method: "POST",
             documentids: "[" + _.map(selected, function(doc){return doc.field("fields").id;}) + "]",
             ajaxsuccess : function() {
-              new FlashMessage({color : "green", content : localization.archive.documents.sendreminder.successMessage});
+              new FlashMessage({type: 'success', content : localization.archive.documents.sendreminder.successMessage});
               self.reload();
               confirmationPopup.clear();
             },
             ajaxerror : function() {
-              new FlashMessage({color : "red", content : localization.archive.documents.sendreminder.errorMessage});
+              new FlashMessage({type: 'error', content : localization.archive.documents.sendreminder.errorMessage});
               self.reload();
               confirmationPopup.clear();
             }
@@ -50,7 +49,6 @@ return React.createClass({
         acceptText: localization.ok,
         rejectText: localization.cancel,
         title: localization.archive.documents.cancel.action,
-        icon: '/img/modal-icons/sign.png',
         content: jQuery("<p/>").text(localization.archive.documents.cancel.body),
         onAccept : function() {
           mixpanel.track('Cancel document');
@@ -59,7 +57,7 @@ return React.createClass({
             method: "POST",
             documentids: "[" + _.map(selected, function(doc){return doc.field("fields").id;}) + "]",
             ajaxsuccess : function() {
-              new FlashMessage({color : "green", content : localization.archive.documents.cancel.successMessage});
+              new FlashMessage({type: 'success', content : localization.archive.documents.cancel.successMessage});
               self.reload();
               confirmationPopup.clear();
             },
@@ -85,7 +83,6 @@ return React.createClass({
         acceptText: localization.archive.documents.remove.action,
         rejectText: localization.cancel,
         title: localization.archive.documents.remove.action,
-        icon: '/img/modal-icons/delete.png',
         content: confirmationText,
         oneClick: true,
         onAccept : function() {
@@ -95,7 +92,7 @@ return React.createClass({
             method: "POST",
             documentids: "[" + _.map(selected, function(doc){return doc.field("fields").id;}) + "]",
             ajaxsuccess : function() {
-              new FlashMessage({color : "green", content : localization.archive.documents.remove.successMessage});
+              new FlashMessage({type: 'success', content : localization.archive.documents.remove.successMessage});
               self.reload();
               confirmationPopup.clear();
             }
@@ -128,7 +125,7 @@ return React.createClass({
             name={localization.archive.documents.sendreminder.action}
             onSelect={function(selected,model) {
               if (selected.length ==0 ) {
-                new FlashMessage({color: "red", content: localization.archive.documents.sendreminder.emptyMessage});
+                new FlashMessage({type: 'error', content: localization.archive.documents.sendreminder.emptyMessage});
                 return false;
               }
               var allSelectedArePending = _.all(selected, function(doc) {
@@ -138,7 +135,7 @@ return React.createClass({
                             doc.field("fields").status == "opened";
               });
               if (!allSelectedArePending) {
-                new FlashMessage({color: "red", content: localization.archive.documents.sendreminder.notAvailableMessage});
+                new FlashMessage({type: 'error', content: localization.archive.documents.sendreminder.notAvailableMessage});
                 return false;
               }
               self.openSendReminderModal(selected);
@@ -149,14 +146,14 @@ return React.createClass({
             name={localization.archive.documents.cancel.action}
             onSelect={function(selected,model) {
               if (selected.length ==0 ) {
-                new FlashMessage({color: "red", content: localization.archive.documents.cancel.emptyMessage});
+                new FlashMessage({type: 'error', content: localization.archive.documents.cancel.emptyMessage});
                 return false;
               }
               var allCanBeCancelled = _.all(selected, function(doc) {
                 return _.contains(['sent', 'delivered', 'read', 'opened'], doc.field('fields').status) && (doc.field('isauthor') || ((doc.field('docauthorcompanysameasuser')  && self.props.forCompanyAdmin)));
               });
               if (!allCanBeCancelled) {
-                new FlashMessage({color: "red", content: localization.archive.documents.cancel.notAvailableMessage});
+                new FlashMessage({type: 'error', content: localization.archive.documents.cancel.notAvailableMessage});
                 return false;
               }
               self.openCancelModal(selected);
@@ -167,7 +164,7 @@ return React.createClass({
             name={localization.archive.documents.remove.action}
             onSelect={function(selected,model) {
               if (selected.length ==0 ) {
-                new FlashMessage({color: "red", content: localization.archive.documents.cancel.emptyMessage});
+                new FlashMessage({type: 'error', content: localization.archive.documents.cancel.emptyMessage});
                 return false;
               }
               self.openRemoveModal(selected);
@@ -196,7 +193,7 @@ return React.createClass({
                   mixpanel.track('Download PDFs');
                   var selected = listmodel.list().getSelected();
                   if (selected.length == 0 ) {
-                    new FlashMessage({color : "red", content : localization.archive.documents.zip.emptyMessage});
+                    new FlashMessage({type: 'error', content : localization.archive.documents.zip.emptyMessage});
                     return true;
                   }
                   else if (selected.length == 1) {

@@ -59,11 +59,11 @@ $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
     $signviewAnalyticsVariables()$
-    $standardHeaderContents()$
+    $standardHeaderContents(nobranding='true')$
     $if(!usestandardheaders)$
-      <link href='/document_signview_branding/$documentid$/$siglinkid$/branding.css' rel='stylesheet' type='text/css'/>
+      <link href='/document_signview_branding/$documentid$/$siglinkid$/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
     $else$
-      <link href='/internal_signview_branding/branding.css' rel='stylesheet' type='text/css'/>
+      <link href='/internal_signview_branding/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
     $endif$
   </head>
   <body  $if(usestandardheaders)$ $if(custombackground)$style="background:$custombackground$;"$endif$    $endif$ >
@@ -99,6 +99,8 @@ $htmlopentag()$
                   var component = React.renderComponent(
                     Header({
                       signviewbranding: svb,
+                      documentid:"$documentid$",
+                      signatorylinkid : "$siglinkid$"
                     }), headerDiv[0]);
 
                   var footerDiv = jQuery('<div/>');
@@ -139,8 +141,8 @@ $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
     $signviewAnalyticsVariables()$
-    $standardHeaderContents()$
-    <link href='/document_signview_branding/$documentid$/$siglinkid$/branding.css' rel='stylesheet' type='text/css'/>
+    $standardHeaderContents(nobranding='true')$
+    <link href='/document_signview_branding/$documentid$/$siglinkid$/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
   </head>
   <body>
     <div class="signview">

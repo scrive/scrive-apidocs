@@ -3,9 +3,12 @@
 define(['lists/paginationmodel','lists/sortingmodel','lists/textfilteringmodel','lists/selectfilteringmodel','legacy_code'], function(PagingModel,SortingModel,TextFilteringModel,SelectFilteringModel) {
 
     var ListObject = Backbone.Model.extend({
-        defaults: {
+        defaults: function() {
+          return {
             selected: false,
-            expanded: false
+            expanded: false,
+            listObjectData : {}
+          };
         },
         initialize: function (args) {
             if (this.collection != undefined && this.collection.namespace() != undefined &&  this.id() != undefined)
@@ -21,12 +24,15 @@ define(['lists/paginationmodel','lists/sortingmodel','lists/textfilteringmodel',
             return this.collection.idFetcher()(this);
         },
         field: function(name) {
-            return this.get(name);
+            return this.get("listObjectData")[name];
         },
-        setField : function(name,value) {
+        setProperty : function(name,value) {
          var obj = {};
          obj[name] = value;
          this.set(obj);
+        },
+        getProperty : function(name) {
+          return this.get(name);
         },
         isSelected: function() {
             return this.get("selected") == true;
@@ -54,7 +60,10 @@ define(['lists/paginationmodel','lists/sortingmodel','lists/textfilteringmodel',
     });
 
     var ListOfObjects = Backbone.Collection.extend({
-        model: ListObject,
+        model: function(attrs,options) {
+            return new ListObject({listObjectData : attrs},options);
+
+        },
         initialize: function(models,args) {
           this._namespace = args.namespace;
           this._idFetcher = args.idFetcher;
@@ -169,14 +178,19 @@ return Backbone.Model.extend({
             errorcallback(); }
         });
     },
-    reload : function() {
+    reload : function(callback) {
       var self = this;
       this.set({ready : false});
       this.fetch({
         data: this.urlParams(),
         processData: true,
         cache: false
-      }).done(function() {self.get("onReload")()});
+      }).done(function() {
+        self.get("onReload")();
+        if (callback) {
+          callback();
+        }
+      });
     },
     parse : function(data) {
       var self = this;

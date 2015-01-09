@@ -52,8 +52,6 @@ import API.Monad
 import AppView (respondWithPDF)
 import Attachment.Model
 import Chargeable.Model
-import Company.CompanyUI
-import Company.Model
 import Control.Logic
 import DB
 import DB.TimeZoneName (mkTimeZoneName, defaultTimeZoneName)
@@ -1079,7 +1077,6 @@ apiCallV1SendSMSPinCode did slid = api $ do
 
 apiCallV1GetBrandingForSignView :: Kontrakcja m => DocumentID -> SignatoryLinkID ->  m Response
 apiCallV1GetBrandingForSignView did slid = api $ do
-  ctx <- getContext
   magichash <- apiGuardL (serverError "No document found")  $ dbQuery $ GetDocumentSessionToken slid
   doc <- dbQuery $ GetDocumentByDocumentID did
   sl <- apiGuardJustM  (serverError "No document found") $ return $ getMaybeSignatoryLink (doc,slid)
@@ -1087,8 +1084,7 @@ apiCallV1GetBrandingForSignView did slid = api $ do
   authorid <- apiGuardL (serverError "Document problem | No author") $ return $ getAuthorSigLink doc >>= maybesignatory
   user <- apiGuardL (serverError "Document problem | No author in DB") $ dbQuery $ GetUserByIDIncludeDeleted authorid
   company <- getCompanyForUser user
-  companyui <- dbQuery $ GetCompanyUI (companyid company)
-  Ok <$> (runJSONGenT $ documentSignviewBrandingJSON ctx user company companyui doc)
+  Ok <$> (runJSONGenT $ documentSignviewBrandingJSON user company doc)
 
 -- Signatory Attachments handling
 apiCallV1SetSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryLinkID -> String -> m Response

@@ -1,0 +1,46 @@
+@import 'runtime/common/flash';
+@import 'runtime/common/buttons';
+@import 'runtime/common/utils';
+@import 'runtime/common/service-header';
+@import 'runtime/servicebranding/payments';
+@import 'runtime/servicebranding/postsignview';
+@import 'runtime/servicebranding/blocking';
+@import 'runtime/servicebranding/designview';
+
+.sharedIcon {
+  @url : %('/branded_image?file=shared.png&color=%D',@positivecolor);
+  background : url(@url) ;
+  display: block;
+  height: 14px;
+  margin-left: 10px;
+  width: 17px;
+}
+
+.icon.delete {
+  @url : %('/branded_image?file=icon-delete.png&color=%D',@negativecolor);
+  background : url(@url) 0 0 no-repeat;
+  display: block;
+  height: 16px;
+  width: 16px;
+}
+
+.apidashboard {
+
+  .oauth-hidden-token {
+     cursor: pointer;
+     color: @actionsecondarycolor;
+
+     &:hover {
+       color: lighten(@actionsecondarycolor,10%);
+     }
+  }
+  .oauth-delete-token {
+
+     cursor: pointer;
+     color: @negativecolor;
+
+     &:hover {
+       color: lighten(@negativecolor,10%);
+     }
+  }
+}

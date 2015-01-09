@@ -15,16 +15,16 @@ import qualified Text.StringTemplates.Fields as F
 
 import BrandedDomain.BrandedDomain
 import Company.Model
-import Mails.MailsConfig
 import Mails.SendMail(Mail, kontramail)
 import MinutesTime
+import Theme.Model
 import User.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 
-mailSignup :: (TemplatesMonad m) => MailsConfig -> Maybe BrandedDomain -> String -> User -> Company -> Recurly.Subscription -> m Mail
-mailSignup mc mbd hp user company subscription = do
-  kontramail mc mbd "paymentsSignupEmail" $ do
+mailSignup :: (TemplatesMonad m) => BrandedDomain -> Theme -> String -> User -> Company -> Recurly.Subscription -> m Mail
+mailSignup bd theme hp user company subscription = do
+  kontramail bd theme "paymentsSignupEmail" $ do
     F.value "ctxhostpart" hp
     F.value "fullname" $ getFullName user
     F.value "startdate" $ showDate $ Recurly.subCurrentBillingStarted subscription
@@ -41,9 +41,9 @@ mailSignup mc mbd hp user company subscription = do
     F.value "email" $ getEmail user
   where amountInCentsWithVat = round $ (fromIntegral $ Recurly.subUnitAmountInCents subscription) * 1.25
 
-mailFailed :: (TemplatesMonad m) => MailsConfig -> Maybe BrandedDomain ->  String -> User -> Company -> Recurly.Invoice -> m Mail
-mailFailed mc mbd hp user company invoice = do
-  kontramail mc mbd "paymentsDeclinedEmail" $ do
+mailFailed :: (TemplatesMonad m) => BrandedDomain -> Theme ->  String -> User -> Company -> Recurly.Invoice -> m Mail
+mailFailed bd theme hp user company invoice = do
+  kontramail bd theme "paymentsDeclinedEmail" $ do
     F.value "ctxhostpart" hp
     F.value "fullname" $ getFullName user
     when (not $ null $ getCompanyName company) $ do
@@ -53,9 +53,9 @@ mailFailed mc mbd hp user company invoice = do
     F.value "total" $ showTotal 1 $ Recurly.inTotalInCents invoice
     F.value "currency" $ Recurly.inCurrency invoice
 
-mailExpired :: TemplatesMonad m => MailsConfig -> Maybe BrandedDomain ->  String -> m Mail
-mailExpired mc mbd hp = do
-  kontramail mc mbd "paymentsExpiredEmail" $ do
+mailExpired :: TemplatesMonad m => BrandedDomain -> Theme ->  String -> m Mail
+mailExpired bd theme hp = do
+  kontramail bd theme "paymentsExpiredEmail" $ do
     F.value "ctxhostpart" hp
 
 showTotal :: Int -> Int -> String

@@ -59,7 +59,7 @@ window.OAuthConfirationModel = Backbone.Model.extend({
             }
             else
             {
-              new FlashMessage({ content: localization.loginModal.loginFailed, color: "red"});
+              new FlashMessage({ content: localization.loginModal.loginFailed, type: 'error'});
             }
           }
         }).send();
@@ -80,11 +80,11 @@ window.OAuthConfirationModel = Backbone.Model.extend({
                   'Signup Method' : 'API'
               });
               var content = localization.payments.outside.confirmAccountCreatedUserHeader;
-              new FlashMessage({content: content, color: 'green'});
+              new FlashMessage({content: content, type: 'success'});
             } else if (resp.sent === false) {
               mixpanel.track('Error',
                             {Message : 'signup failed'});
-              new FlashMessage({content: localization.accountSetupModal.flashMessageUserAlreadyActivated, color: 'red'});
+              new FlashMessage({content: localization.accountSetupModal.flashMessageUserAlreadyActivated, type: 'error'});
             }
          }
         }).sendAjax();
@@ -140,7 +140,7 @@ var OAuthConfirationView = Backbone.View.extend({
         var box = $("<div class='button-box'>");
         var model = this.model;
         var button = new Button({
-          color: "green",
+          type : 'action',
           size: "big",
           cssClass : "float-right",
           text: localization.apiConfiration.accept,
@@ -179,7 +179,7 @@ var OAuthConfirationView = Backbone.View.extend({
 
       var button = new Button({
                   size  : "small",
-                  color : "green",
+                  type : 'action',
                   cssClass : "login-button",
                   text  : localization.apiConfiration.loginAndAccept,
                   onClick : function() {
@@ -203,14 +203,14 @@ var OAuthConfirationView = Backbone.View.extend({
       box.append(emailinput.el());
       var button = new Button({
                   size  : "small",
-                  color : "green",
+                  type : 'action',
                   cssClass : "create-account-button",
                   text  : localization.apiConfiration.createAccount,
                   onClick : function() {
                         if (new EmailValidation().validateData(emailinput.value()))
                           model.createAccount(emailinput.value());
                         else
-                          new FlashMessage({color: "red", content: localization.loginModal.invalidEmail});
+                          new FlashMessage({type: 'error', content: localization.loginModal.invalidEmail});
                     }
                 }).el();
       box.append(button);

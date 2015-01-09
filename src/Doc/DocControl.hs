@@ -31,9 +31,6 @@ module Doc.DocControl(
     , handleAfterSigning
     , handlePadList
     , handlePostSignview
-    , handleSignviewCSS
-    , handleSignviewCSSWithoutDocument
-    , handleSignviewCSSWithoutDocumentAndWithoutUser
     , handleToStart
     , handleToStartShow
 ) where
@@ -64,8 +61,6 @@ import Analytics.Include
 import AppView
 import Attachment.AttachmentID (AttachmentID)
 import Attachment.Model
-import Company.CompanyUI
-import Company.Model
 import Control.Logic ((||^))
 import DB
 import DB.TimeZoneName
@@ -290,7 +285,7 @@ handleCookieFail slid did = do
          then sendRedirect LinkEnableCookies
          else do
            Log.mixlog_ $ "Signview load after session timedout for slid: " ++ show slid ++ ", did: " ++ show did
-           renderTemplate_ "signSessionTimeOut" >>= renderFromBody kontrakcja
+           renderTemplate_ "signSessionTimeOut" >>= renderFromBody
 
 {- |
    Redirect author of document to go to signview
@@ -663,38 +658,3 @@ handleMarkAsSaved docid = do
   getDocByDocID docid `withDocumentM` do
     whenM (isPreparation <$> theDocument) $ dbUpdate $ SetDocumentUnsavedDraft False
     runJSONGenT $ return ()
-
--- Used to brand signview
-handleSignviewCSS :: Kontrakcja m => DocumentID ->  SignatoryLinkID -> String -> m Response
-handleSignviewCSS did slid _ = do
-  ctx <- getContext
-  magichash <- guardJustM  $ dbQuery $ GetDocumentSessionToken slid
-  doc <- dbQuery $ GetDocumentByDocumentID did
-  sl <- guardJustM $ return $ getMaybeSignatoryLink (doc,slid)
-  when (signatorymagichash sl /= magichash) $ internalError
-  authorid <- guardJustM $ return $ getAuthorSigLink doc >>= maybesignatory
-  user <- guardJustM $ dbQuery $ GetUserByIDIncludeDeleted authorid
-  company <- getCompanyForUser user
-  companyui <- dbQuery $ GetCompanyUI (companyid company)
-  brandingCSS <- documentSignviewBrandingCSS (ctxbrandeddomain ctx) (Just companyui)
-  let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
-  return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
-
--- Used to brand some view with signview branding but without any particular document. It requires some user to be logged in.
-handleSignviewCSSWithoutDocument :: Kontrakcja m => String -> m Response
-handleSignviewCSSWithoutDocument _ = do
-  ctx <- getContext
-  user <-  guardJust $ mplus (ctxmaybeuser ctx) (ctxmaybepaduser ctx)
-  company <- getCompanyForUser user
-  companyui <- dbQuery $ GetCompanyUI (companyid company)
-  brandingCSS <- documentSignviewBrandingCSS (ctxbrandeddomain ctx) (Just companyui)
-  let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
-  return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
-
--- Used to brand signview with only settings from domain. Company branding is ignored.
-handleSignviewCSSWithoutDocumentAndWithoutUser :: Kontrakcja m => String -> m Response
-handleSignviewCSSWithoutDocumentAndWithoutUser _ = do
-  ctx <- getContext
-  brandingCSS <- documentSignviewBrandingCSS (ctxbrandeddomain ctx) Nothing
-  let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
-  return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res

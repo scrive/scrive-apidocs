@@ -12,40 +12,47 @@ module CompanyAccounts.CompanyAccountsView (
     ) where
 
 import Control.Applicative ((<$>))
+import Control.Monad.Catch
+import Data.Maybe
 import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 
+import BrandedDomain.BrandedDomain
 import Company.CompanyUI
 import Company.Model
 import Context
+import DB
 import Doc.DocViewMail
 import FlashMessage
 import KontraLink
 import Mails.SendMail(Mail, kontramail, kontramaillocal)
+import Theme.Model
 import User.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 
 ----------------------------------------------------------------------------
 
-mailNewCompanyUserInvite :: (TemplatesMonad m, HasSomeUserInfo a, HasLang a, HasSomeUserInfo b) =>
+mailNewCompanyUserInvite :: (TemplatesMonad m, MonadDB m,MonadThrow m, HasSomeUserInfo a, HasLang a, HasSomeUserInfo b) =>
                                Context -> a -> b -> Company -> CompanyUI -> KontraLink -> m Mail
-mailNewCompanyUserInvite ctx invited inviter company companyui link =
-  kontramail (ctxmailsconfig ctx)  (ctxbrandeddomain ctx)  "mailNewCompanyUserInvite" $ do
+mailNewCompanyUserInvite ctx invited inviter company companyui link = do
+  theme <- dbQuery $ GetTheme $ fromMaybe (bdMailTheme (ctxbrandeddomain ctx)) (companyMailTheme companyui)
+  kontramail (ctxbrandeddomain ctx) theme "mailNewCompanyUserInvite" $ do
     basicCompanyInviteFields invited inviter company
     basicLinkFields (ctxhostpart ctx) link
-    F.object "companybrand" $ brandingMailFields (ctxbrandeddomain ctx) (Just companyui)
+    brandingMailFields theme
     F.value "creatorname" $ getSmartName inviter
 
 
-mailTakeoverSingleUserInvite :: (TemplatesMonad m,  HasSomeUserInfo a, HasLang a, HasSomeUserInfo b) =>
+mailTakeoverSingleUserInvite :: (TemplatesMonad m, MonadDB m,MonadThrow m, HasSomeUserInfo a, HasLang a, HasSomeUserInfo b) =>
                                Context -> a -> b -> Company -> CompanyUI -> KontraLink -> m Mail
-mailTakeoverSingleUserInvite ctx invited inviter company companyui link =
+mailTakeoverSingleUserInvite ctx invited inviter company companyui link = do
+  theme <- dbQuery $ GetTheme $ fromMaybe (bdMailTheme (ctxbrandeddomain ctx)) (companyMailTheme companyui)
   --invite in the language of the existing user rather than in the inviter's language
-  kontramaillocal (ctxmailsconfig ctx)  (ctxbrandeddomain ctx)  invited  "mailTakeoverSingleUserInvite" $ do
+  kontramaillocal (ctxbrandeddomain ctx) theme invited  "mailTakeoverSingleUserInvite" $ do
     basicCompanyInviteFields invited inviter company
     basicLinkFields (ctxhostpart ctx) link
-    F.object "companybrand" $ brandingMailFields (ctxbrandeddomain ctx) (Just companyui)
+    brandingMailFields theme 
 
 basicCompanyInviteFields :: (TemplatesMonad m, HasSomeUserInfo a, HasSomeUserInfo b, HasSomeCompanyInfo c) => a -> b -> c -> Fields m ()
 basicCompanyInviteFields invited inviter company = do

@@ -204,7 +204,7 @@ var CsvSignatoryDesignView = Backbone.View.extend({
                     width: 280,
                     size: "big",
                     text: localization.csv.selectFile,
-                    type: "application/csv",
+                    fileType: "application/csv",
                     style: 'font-size: 15px; font-weight: 300;',
                     onAppend : function(input) {
                         setTimeout(function() {model.upload($(input));},100);
@@ -260,9 +260,7 @@ window.CsvSignatoryDesignPopup =  function(args) {
          var model = new CsvSignatoryDesign({ header: _.first(csv),  rows : _.rest(csv)  });
          var view = new CsvSignatoryDesignView({model : model, el : $("<div/>")});
          var popup = new Confirmation({
-              content  : $(view.el),
-              icon: '/img/modal-icons/multisend.png',
-              subtitle: localization.csv.subtitle,
+              content: $("<div>").append($("<div class='modal-subtitle centered'>").html(localization.csv.subtitle)).append($(view.el)),
               title  : localization.csv.title,
               width: model.ready() && model.hasData() ? 1018 : 530,
               acceptVisible : model.ready(),

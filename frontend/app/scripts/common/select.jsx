@@ -220,7 +220,7 @@ var SelectExpandedView = React.createClass({
                     return false;
                   }}
                 >
-                  <span style={model.style()}>
+                  <span style={o.style()}>
                     {o.name()}
                   </span>
                 </li>

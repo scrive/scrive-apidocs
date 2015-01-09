@@ -13,7 +13,7 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
     var signatory = this.model.document().currentSignatory();
 
     return new Button({
-      color: "green",
+      color: "action",
       cssClass: "accept-button",
       text: localization.next,
       onClick: function() {
@@ -27,7 +27,7 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
 
           self.confirmation.clear();
         }  else {
-          new FlashMessage({content: localization.docsignview.additionalFieldsMissingInModal, color: "red"});
+          new FlashMessage({content: localization.docsignview.additionalFieldsMissingInModal, type: 'error'});
         }
       }
     });
@@ -175,7 +175,7 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
     var self = this;
 
     self.confirmation = new Confirmation({
-      cssClass: 'grey extradetails-modal',
+      cssClass: 'extradetails-modal',
       title: localization.docsignview.filladitionfields,
       acceptButton: this.acceptButton().el(),
       width: BrowserInfo.isSmallScreen() ? 825: 535,

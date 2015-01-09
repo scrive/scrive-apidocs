@@ -1,0 +1,79 @@
+{-# LANGUAGE ExtendedDefaultRules #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
+module Theme.View
+       (
+          unjsonTheme
+        , unjsonThemesList
+       )
+       where
+
+import Control.Applicative
+import Data.Functor.Invariant
+import Data.Unjson
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Base64 as B64
+import qualified Data.ByteString.UTF8 as BS
+
+import DB
+import Theme.Model
+
+unjsonTheme :: UnjsonDef Theme
+unjsonTheme = objectOf $ pure Theme
+  <*> field "id"
+      themeID
+      "Id of a theme (unique)"
+  <*> field "name"
+      themeName
+      "Name of a theme"
+  <*> fieldBy "logo"
+      themeLogo
+      "Logo of a theme"
+       (invmap
+          (\l -> Binary $ B64.decodeLenient $ BS.fromString $  drop 1 $ dropWhile ((/=) ',') l)
+          (\l -> BS.toString $ BS.append (BS.fromString "data:image/png;base64,") $ B64.encode $ unBinary l)
+          unjsonDef
+       )
+  <*> field "brandColor"
+      themeBrandColor
+      "Color of brand"
+  <*> field "brandTextColor"
+      themeBrandTextColor
+      "Color of brand text"
+  <*> field "actionColor"
+      themeActionColor
+      "Color of action"
+  <*> field "actionTextColor"
+      themeActionTextColor
+      "Color of action text"
+  <*> field "actionSecondaryColor"
+      themeActionSecondaryColor
+      "Color of action (secondary)"
+  <*> field "actionSecondaryTextColor"
+      themeActionSecondaryTextColor
+      "Color of action text (secondary)"
+  <*> field "positiveColor"
+      themePositiveColor
+      "Positive color"
+  <*> field "positiveTextColor"
+      themePositiveTextColor
+      "Positive text color"
+  <*> field "negativeColor"
+      themeNegativeColor
+      "Negative color"
+  <*> field "negativeTextColor"
+      themeNegativeTextColor
+      "Negative text color"
+  <*> field "font"
+      themeFont
+      "Font"
+
+unjsonThemesList :: UnjsonDef [Theme]
+unjsonThemesList = objectOf $
+  fieldBy "list"
+  id
+  "Propper list"
+  (arrayOf unjsonTheme)
+
+instance Unjson Theme where
+  unjsonDef = unjsonTheme

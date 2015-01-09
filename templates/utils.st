@@ -26,7 +26,7 @@ flashmessages =
      $flashmessages:{ flash |
         $if(flash)$
             new FlashMessage({
-              "color" : "$flash.type$",
+              "type" : "$flash.type$",
               "content": "$flash.message:noescape()$"
             })
         $endif$

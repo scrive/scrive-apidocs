@@ -74,7 +74,6 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
     uploadButton : function() {
         var attachmentsList = this.model;
         var uploadButton = new UploadButton({
-                color : "black",
                 size: 'big',
                 text: localization.authorattachments.selectFile,
                 width: 'auto',
@@ -97,7 +96,6 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
     selectFromTemplateButton : function () {
         var view = this;
         var selectAttachmentButton = new Button({
-            color : "black",
             size: 'big',
             text: localization.authorattachments.selectAttachment,
             width: 'auto',
@@ -187,10 +185,8 @@ window.DesignAuthorAttachmentsPopup = function(args) {
          var model = new DesignAuthorAttachments({ document : document  });
          var view = new DesignAuthorAttachmentsView({model : model, el : $("<div/>")});
          var popup = new Confirmation({
-              content  : $(view.el),
               title  : localization.authorattachments.selectAttachments,
-              subtitle : localization.selectFiles,
-              icon : '/img/modal-icons/attachments.png',
+              content: $("<div>").append($("<div class='modal-subtitle centered'>").html(localization.selectFiles)).append($(view.el)),
               acceptText: localization.save,
               width: 740,
               onAccept : function() {
@@ -226,7 +222,7 @@ window.DesignAuthorAttachmentsPopup = function(args) {
                           } else {
                             errorMsg = localization.authorattachments.invalidAttachments;
                           }
-                          new FlashMessage({color: 'red', content: errorMsg});
+                          new FlashMessage({type: 'error', content: errorMsg});
                           LoadingDialog.close();
                         }
                       );

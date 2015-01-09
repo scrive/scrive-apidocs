@@ -9,13 +9,15 @@ return Backbone.Model.extend({
         password : "",
         referer : "",
         autofocus: false,
-        servicelinkcolour : '',
-        textscolour : '',
-        nolinks : false
+        nolinks : false,
+        langprefix : "/"+ localization.code +"/"
   },
   initialize : function() {
     if (this.email() == "" && LocalStorage.get('login','last_login_email') != "")
       this.set({email : LocalStorage.get('login','last_login_email')});
+  },
+  langprefix : function() {
+    return this.get("langprefix");
   },
   nolinks : function() {
      return this.get("nolinks");
@@ -37,15 +39,6 @@ return Backbone.Model.extend({
   },
   password : function() {
      return this.get("password");
-  },
-  servicelinkcolour : function() {
-     return this.get("servicelinkcolour");
-  },
-  textscolour : function() {
-     return this.get("textscolour");
-  },
-  buttoncolorclass: function() {
-     return this.get("buttoncolorclass");
   },
   referer : function() {
     return this.get("referer");
@@ -88,12 +81,12 @@ return Backbone.Model.extend({
                     var text = $("<span>" + localization.loginModal.loginFailedBadIP + "</span>");
                     $(".put-ip-here",text).text(resp.ipaddr);
                     $(".put-adminname-here",text).text(resp.adminname);
-                    new FlashMessage({ content: text, color: "red"});
+                    new FlashMessage({ content: text, type : "error"});
                 }
                 else {
                     mixpanel.track('Error',
                                    {Message: 'login failed'});
-                    new FlashMessage({ content: localization.loginModal.loginFailed, color: "red"});
+                    new FlashMessage({ content: localization.loginModal.loginFailed, type : "error"});
                 }
             }
           }
@@ -114,7 +107,7 @@ return Backbone.Model.extend({
             if (resp.send == true)
             {
                 mixpanel.track('Password reminder sent');
-              new FlashMessage({ content: localization.loginModal.passwordReminderSend, color: "green"});
+              new FlashMessage({ content: localization.loginModal.passwordReminderSend, type : "success"});
             }
             else
             {
@@ -127,7 +120,7 @@ return Backbone.Model.extend({
                 text = localization.loginModal.tooMuch;
               mixpanel.track('Error',
                              {Message: 'password reminder failed: ' + text});
-              new FlashMessage({ content: text, color: "red"});
+              new FlashMessage({ content: text, type : "error"});
             }
           }
         }).send();

@@ -47,6 +47,7 @@ var FileVerifierView = Backbone.View.extend({
         var view = this;
         return  new UploadButton({
             name: "file",
+            type: "action",
             width: 380,
             size: "big",
             text: localization.uploadButton,

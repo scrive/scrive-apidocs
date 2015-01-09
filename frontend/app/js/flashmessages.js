@@ -1,6 +1,6 @@
 /* Main and only flash messages module
  * Usage
- *   new FlashMessages({ color : "red | green | blue",
+ *   new FlashMessages({ type : "success" | "error",
  *                       content: "Text to be displayed"
  *                       withReload: true/false})
  *
@@ -16,14 +16,14 @@ define(['Backbone', 'legacy_code'], function() {
   */
 var FlashMessageModel = Backbone.Model.extend({
   initialize: function(attr) {
-       if (!(attr.color == "red" || attr.color == "blue" || attr.color == "green"))
-            console.log("FlashMessage error: Bad color selected ( "  + attr.color +" )");
+       if (!(attr.type == "success" || attr.type == "error"))
+            console.log("FlashMessage error: Bad type selected ( "  + attr.type +" )");
   },
   flashType : function() {
-    if (this.get("color") == "red")
-      return "error";
-    else if (this.get("color") == "blue")
+    if (this.get("type") == "success")
       return "success";
+    else if (this.get("type") == "error")
+      return "error";
     else
       return "success";
   }
@@ -38,13 +38,12 @@ var FlashMessageView = Backbone.View.extend({
     render: function () {
         var self = this;
         $(this.el).addClass(this.model.flashType());
-        var close = $("<div class='flash-close'><img width='24' height='24' src='/img/X-white.png'/></div>");
+        var close = $("<div class='flash-close'>&times;</div>");
         close.click(function() {
           self.clear();
           return false;
         });
         $(this.el).append($("<div class='flash-content-wrapper'> </div>").append($("<div class='flash-content'> </div>")
-                    .append("<div class='flash-icon-wrapper'><div class='flash-icon'></div></div>")
                     .append($("<div class='flash-body'></div>").append(this.model.get("content")))
                     .append(close))
                    );
@@ -68,7 +67,7 @@ window.FlashMessage = function(args) {
             method : "POST",
             url : "/api/frontend/addflash",
             ajax : true,
-            color : args.color,
+            type : args.type,
             content : args.content,
             ajaxsuccess : function() {window.location.reload();},
             ajaxerror   : function() {window.location.reload();}
@@ -80,7 +79,7 @@ window.FlashMessage = function(args) {
             method : "POST",
             url : "/api/frontend/addflash",
             ajax : true,
-            color : args.color,
+            type : args.type,
             content : args.content,
             ajaxsuccess : function() {window.location = args.redirect;},
             ajaxerror   : function() {window.location = args.redirect;}

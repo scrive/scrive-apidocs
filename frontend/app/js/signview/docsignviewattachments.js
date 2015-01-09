@@ -17,7 +17,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
   removeButton: function() {
     var self = this;
     var attachment = this.model;
-    var button = new Button({color: "red", text: localization.deletePDF, size:'small', onClick: function() {
+    var button = new Button({type: "cancel", text: localization.deletePDF, size:'small', onClick: function() {
             attachment.loading();
             new Submit({
                     method: "POST",
@@ -43,6 +43,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
       width : 230,
       size : 'small',
       name: "file",
+      type: "action",
       cssClass: "attachment-upload-button",
       text: localization.signatoryAttachmentUploadButton,
       submitOnUpload: true,
@@ -66,7 +67,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
         },
         ajaxerror: function(d, a) {
             if (d != undefined && d.status == 409) {
-              var button =  new Button({color: 'blue',
+              var button =  new Button({ type: 'optional',
                                          size: 'small',
                                          text: localization.reloadPage,
                                          onClick: function() {
@@ -80,7 +81,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
               ScreenBlockingDialog.open({header: content});
           }
           else
-            new FlashMessage({content: localization.couldNotUpload, color: "red"});
+            new FlashMessage({content: localization.couldNotUpload, type: 'error'});
           attachment.notLoading();
         },
         ajaxsuccess: function(docdata) {
@@ -98,7 +99,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
   },
   reviewButton: function() {
       var model = this.model;
-      var button = new Button({color: "black", text: localization.reviewPDF, size:'small', cssClass : 's-review-sigattachment', onClick: function() {
+      var button = new Button({text: localization.reviewPDF, size:'small', cssClass : 's-review-sigattachment', onClick: function() {
           window.open(model.file().downloadLink(), '_blank');
       }});
       return button;

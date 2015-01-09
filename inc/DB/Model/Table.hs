@@ -10,8 +10,10 @@ module DB.Model.Table (
   , tblTable
   , sqlCreateTable
   , sqlAlterTable
+  , TableInitialSetup(..)
   ) where
 
+import Control.Monad.Catch
 import Data.ByteString (ByteString)
 import Data.Int
 import Data.Monoid.Space
@@ -66,7 +68,12 @@ data Table = Table {
 , tblChecks        :: [Check]
 , tblForeignKeys   :: [ForeignKey]
 , tblIndexes       :: [TableIndex]
-, tblInitialData   :: Maybe Rows
+, tblInitialSetup  :: Maybe TableInitialSetup
+}
+
+data TableInitialSetup = TableInitialSetup {
+  checkInitialSetup :: ((MonadDB m,MonadThrow m) => m Bool)
+, initialSetup      :: ((MonadDB m,MonadThrow m) => m ())
 }
 
 tblTable :: Table
@@ -78,7 +85,7 @@ tblTable = Table {
 , tblChecks = []
 , tblForeignKeys = []
 , tblIndexes = []
-, tblInitialData = Nothing
+, tblInitialSetup = Nothing
 }
 
 sqlCreateTable :: RawSQL () -> RawSQL ()

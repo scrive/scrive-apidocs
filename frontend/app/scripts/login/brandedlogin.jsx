@@ -10,9 +10,8 @@ return React.createClass({
         referer : React.PropTypes.string,
         autofocus: React.PropTypes.bool,
         pad : React.PropTypes.bool,
-        servicelinkcolour : React.PropTypes.string,
-        textscolour : React.PropTypes.string,
-        nolink : React.PropTypes.string
+        nolink : React.PropTypes.string,
+        langprefix : React.PropTypes.string
     },
     getInitialState: function() {
       return this.stateFromProps(this.props);
@@ -28,9 +27,8 @@ return React.createClass({
         referer : props.referer,
         pad : props.pad,
         autofocus: props.autofocus,
-        servicelinkcolour : props.servicelinkcolour,
-        textscolour : props.textscolour,
-        nolinks : props.nolinks
+        nolinks : props.nolinks,
+        langprefix : props.langprefix
       });
       return {model: model};
     },

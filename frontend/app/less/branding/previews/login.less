@@ -1,0 +1,61 @@
+.login-preview {
+  width: 600px;
+  display: inline-block;
+
+  @original-padding: 16px; // How the padding is in the actual login page
+  @actual-padding: 0.8*@original-padding; // How big it will appear in the preview
+
+  .logo-wrapper {
+    max-width: 600px;
+    margin: 20px auto 0;
+    text-align: center;
+    padding: @actual-padding;
+
+    .small {
+      font-size: 13px;
+      padding: 0;
+    }
+  }
+
+  .content-container {
+    padding: @actual-padding;
+
+    .content {
+      text-align: center;
+
+      > * {
+        margin-bottom: @actual-padding;
+      }
+
+      p a { text-decoration: underline; }
+
+      .select-container {
+        padding-bottom: 0;
+        width: 280px;
+        margin: 0 auto;
+
+        .select {
+          width: 180px !important;
+          margin: 0 auto;
+        }
+
+        .select-button {
+          background: transparent;
+        }
+      }
+
+      .info-text-input {
+        display: block;
+        margin: @actual-padding auto;
+      }
+
+      .button {
+        width: 170px;
+      }
+
+      .internal-button {
+        margin-right: 5px;
+      }
+    }
+  }
+}

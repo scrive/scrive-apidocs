@@ -196,7 +196,7 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
         var self = this;
         var signatory = this.model.field().signatory();
         var button = new Button({
-                    color : 'green',
+                    type : 'action',
                     size: 'small',
                     cssClass: 'bottom-button accept-button',
                     text: localization.signature.confirmSignature,
@@ -214,7 +214,7 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
         var signatory = this.model.field().signatory();
         var document = signatory.document();
         var button = new Button({
-                    color : 'green',
+                    type : 'action',
                     size: 'small',
                     cssClass: 'bottom-button accept-button',
                     text: localization.pad.fillInExtraDetails,
@@ -254,7 +254,7 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
         var signatory = this.model.field().signatory();
         var document = signatory.document();
         var button = new Button({
-                    color : 'green',
+                    type : 'action',
                     size: 'small',
                     cssClass: 'bottom-button accept-button',
                     text: localization.next,
@@ -292,7 +292,6 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
         var self = this;
         var signatory = this.model.field().signatory();
         return new Button({
-                    color : 'black',
                     size: 'small',
                     style: "float:left;margin-top:-2px;",
                     text: localization.pad.cleanImage,

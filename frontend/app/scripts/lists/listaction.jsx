@@ -6,7 +6,7 @@ return React.createClass({
     propTypes: {
        onSelect : React.PropTypes.func,
        name : React.PropTypes.string,
-       color :  React.PropTypes.string,
+       type :  React.PropTypes.string,
        size:  React.PropTypes.string,
        className : React.PropTypes.string,
        width : React.PropTypes.number,
@@ -17,32 +17,22 @@ return React.createClass({
       return {
         onSelect: function() {},
         name : "",
-        color: "black",
         size: "normal",
         className: ""
       };
     },
-    componentDidMount : function() {
-      if (this.props.elFunction && this.refs.placeholder)
-        $(this.refs.placeholder.getDOMNode()).append(this.props.elFunction(this.props.model));
-    },
     render: function() {
       var self = this;
       var model = self.props.model;
-      if (this.props.elFunction != undefined) {
-        return (
-          <div
-            className='float-left actionButton'
-            ref='placeholder'
-          />
-        );
+      if (this.props.component != undefined) {
+        return (this.props.component(model));
       } else {
         return (
           <NewButton
             onClick={function() {
               self.props.onSelect(model.list().getSelected(),model);
             }}
-            color={this.props.color}
+            type={this.props.type}
             size={this.props.size}
             text={this.props.name}
             width={this.props.width}

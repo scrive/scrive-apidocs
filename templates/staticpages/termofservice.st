@@ -1,34 +1,48 @@
 ###
 termsOfService=
-<div class="mainContainer" >
-  <div class="body-container">
+$doctype()$
+$htmlopentag()$
+  <head>
+    <title>$pagetitle()$</title>
+    $standardHeaderContents(nobranding='true')$
+    <link href='/service_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+  </head>
+<body>
+  $header()$
+  <div class="mainContainer" >
+    <div class="body-container">
 
-    <div class="js-terms-of-service terms-of-service">$termsOfServiceContent()$</div>
-    <script>
-     require(['jquery', 'legacy_code'], function(jQuery) {
-      jQuery('body').css('background','none repeat scroll 0 0 #FFFFFF');
-      mixpanel.track('View Terms Of Service Page');
-     });
-    </script>
- </div>
-</div>
+      <div class="js-terms-of-service terms-of-service">$termsOfServiceContent()$</div>
+      <script>
+      require(['jquery', 'legacy_code'], function(jQuery) {
+        mixpanel.track('View Terms Of Service Page');
+      });
+      </script>
+    </div>
+  </div>
+  $pageFooter()$
+</body>
+$htmlclosingtag()$
 ###
 termsOfServiceWithBranding=
 $doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
-    $standardHeaderContents()$
+    $standardHeaderContents(nobranding='true')$
+    <link href='/login_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
   </head>
-  <body style="background: $background$">
-    <div style='width:275px;margin:20px auto;'>
-      <div style="margin-bottom: 100px; margin-top: 50px;">
-        <img alt="logo" src="/branding/logo" />
-        <div class="divider-line"></div>
-        <label style="text-align:center;width:275px;">E-signing powered by Scrive</label>
+  <body>
+    <div class="js-terms-of-service terms-of-service">
+      <div style='width:275px;margin:20px auto;'>
+        <div style="margin-top: 50px;text-align:center;">
+          <img alt="logo" src="/login_logo/$brandinghash$" />
+          <div class="divider-line"></div>
+          <label style="text-align:center;width:275px;">E-signing powered by Scrive</label>
+        </div>
       </div>
+    $termsOfServiceContent()$
     </div>
-    <div class="js-terms-of-service terms-of-service">$termsOfServiceContent()$</div>
     <script>
       mixpanel.track('View Terms Of Service Page | Branded');
     </script>

@@ -9,6 +9,7 @@ isValidFont c =
       c' /= (""::String)
    && (not $  '\n' `elem` c)
    && (length c' < 50)
+   && (length c' > 2)
    && c' =~ ("([A-z|0-9| |-]+,)*([A-z|0-9| |-]+)"::String) == c'
   where
     c' = strip c

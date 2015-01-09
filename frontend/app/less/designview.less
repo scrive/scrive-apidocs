@@ -325,7 +325,7 @@ th.editSignatoryAttachmentTDRemove {
 
 .fieldTypeSetter-container {
   color: #666;
-  font: 13px "Helvetica Neue";
+  font: 14px;
   min-width: 250px;
   position: absolute;
   z-index: 1005;
@@ -456,11 +456,16 @@ th.editSignatoryAttachmentTDRemove {
     opacity: 0.95;
   }
 
-  .placedcheckbox {
+  .placedcheckbox,.placedcheckbox.checked {
     background-color: @white;
     -moz-opacity: 0.95;
     filter: ~"alpha(opacity=95)";
     opacity: 0.95;
+    border-width: 2px;
+    border-style: solid;
+    background-position: -1px -1px;
+    width: 10px;
+    height: 10px;
   }
 
 }

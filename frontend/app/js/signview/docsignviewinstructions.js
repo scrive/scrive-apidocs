@@ -118,7 +118,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     var smallerbit = $("<div class='smaller-bits'/>");
 
     if (document.showpdfdownload() && !BrowserInfo.isSmallScreen()) {
-        var link = $("<a target='_blank' class='download clickable' />").attr("href", document.mainfile().downloadLinkForMainFile(document.title())).text(document.title() + ".pdf");
+        var link = $("<a target='_blank' class='download' />").attr("href", document.mainfile().downloadLinkForMainFile(document.title())).text(document.title() + ".pdf");
         smallerbit.append(link);
     }
 

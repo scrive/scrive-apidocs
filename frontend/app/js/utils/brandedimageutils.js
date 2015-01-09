@@ -4,11 +4,11 @@
 
 window.BrandedImageUtil = {
   /* Set the background image to a branded variant of 'image' that will 
-   * be branded in 'colour' colours. */
-  setBrandedImageBackground: function(el, image, colour) {
-    $(el).css('background', 'url(' + BrandedImageUtil.getBrandedImageURL(image, colour) + ')');
+   * be branded in 'color' colors. */
+  setBrandedImageBackground: function(el, image, color) {
+    $(el).css('background', 'url(' + BrandedImageUtil.getBrandedImageURL(image, color) + ')');
   },
-  getBrandedImageURL: function(image, colour) {
+  getBrandedImageURL: function(image, color) {
     var baseUrl;
     if (BrowserInfo.isIE8orLower()) {
       // workaround for IE8 bug, that displays mixed content warning
@@ -19,7 +19,7 @@ window.BrandedImageUtil = {
     } else {
       baseUrl = '';
     }
-    return baseUrl + '/branded_signview_image?file=' + image + '&colour=' + encodeURIComponent(colour);
+    return baseUrl + '/branded_image?file=' + image + '&color=' + encodeURIComponent(color);
   }
 };
 

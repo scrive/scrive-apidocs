@@ -127,7 +127,7 @@ showArchive = checkUserTOSGet $ do
     user    <- guardJustM $ ctxmaybeuser <$> getContext
     mcompany <- dbQuery $ GetCompany (usercompany user)
     pb <-  pageArchive user mcompany tostime
-    renderFromBodyWithFields kontrakcja pb (F.value "archive" True)
+    renderFromBodyWithFields pb (F.value "archive" True)
 
 -- Zip utils
 

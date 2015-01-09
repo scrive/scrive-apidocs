@@ -146,6 +146,7 @@ Executable kontrakcja-server
   Build-depends: xml-types
   Build-depends: zip-archive
   Build-depends: zlib
+  Build-depends: invariant
 
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns,
@@ -255,6 +256,7 @@ Executable cron
   Build-depends: xml-types
   Build-depends: zip-archive
   Build-depends: zlib
+  Build-depends: invariant
 
   Main-is: Cron.hs
   GHC-options: -main-is Cron
@@ -367,6 +369,7 @@ Executable kontrakcja-migrate
   Build-depends: xml-conduit
   Build-depends: zip-archive
   Build-depends: zlib
+  Build-depends: invariant
 
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns,
@@ -692,6 +695,7 @@ Executable kontrakcja-test
   Build-depends: xml-types
   Build-depends: zip-archive
   Build-depends: zlib
+  Build-depends: invariant
 
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns,

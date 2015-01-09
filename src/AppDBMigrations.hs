@@ -25,6 +25,7 @@ import OAuth.Migrations
 import Payments.Migrations
 import Session.Migrations
 import SMS.Migrations
+import Theme.Migrations
 import ThirdPartyStats.Migrations
 import User.CallbackScheme.Migrations
 import User.Migrations
@@ -182,6 +183,12 @@ kontraMigrations = [
   , companiesAddCgiDisplayName
   , addMtimeStatusIndexes
   , evidenceLogAddActor
+  , createThemesTable
+  , createThemeOwnersTable
+  , addThemesToBrandedDomainAndMainDomain
+  , makeAssociatedDomainObligatoryForUsers
+  , addThemesAndOthersToCompanyUIs
+  , removeSMSOriginatorFromCompany
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

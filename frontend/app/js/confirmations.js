@@ -3,11 +3,9 @@ define(['Backbone', 'legacy_code'], function() {
 var ConfirmationModel = Backbone.Model.extend({
   defaults : {
       title  : "",
-      subtitle: "",
-      icon: undefined,
       acceptText: localization.ok,
       rejectText: localization.cancel,
-      acceptColor : "green",
+      acceptType: "action",
       content  : jQuery("<p/>"),
       width: undefined,
       footerVisible : true,
@@ -28,12 +26,6 @@ var ConfirmationModel = Backbone.Model.extend({
   },
   title : function(){
        return this.get("title");
-  },
-  subtitle : function(){
-       return this.get("subtitle");
-  },
-  icon : function(){
-       return this.get("icon");
   },
   content : function(){
        return this.get("content");
@@ -74,8 +66,8 @@ var ConfirmationModel = Backbone.Model.extend({
   acceptText: function() {
        return this.get("acceptText");
   },
-  acceptColor: function() {
-       return this.get("acceptColor");
+  acceptType: function() {
+       return this.get("acceptType");
   },
   rejectText: function() {
        return this.get("rejectText");
@@ -188,23 +180,13 @@ var ConfirmationView = Backbone.View.extend({
        var inner = $("<div class='modal-header-inner'></div>");
        inner.css('width', (model.width()-100) + "px"); // TODO(johan.nilo): this should be solved in the css files
        var title = $("<div class='modal-title'/>");
-       var subtitle = $("<div class='modal-subtitle'/>");
-       var icon = $("<img class='modal-icon'/>");
-       icon.attr('src', model.icon());
-       subtitle.append(this.model.subtitle());
        if (BrowserInfo.isSmallScreen()) {
          title.css('font-size', '42px');
          title.css('font-style', 'bold');
        }
        title.append(this.model.title());
-       if (model.icon() == null) {
-         header.addClass('no-icon');
-       } else {
-         inner.append(icon);
-       }
 
        inner.append(title);
-       inner.append(subtitle);
 
        this.closeButton = $("<a class='modal-close'></a>").click(function() {view.reject(); return false;});
        this.renderCloseButton();
@@ -226,7 +208,7 @@ var ConfirmationView = Backbone.View.extend({
         footer.append(model.extraOption());
 
        this.acceptButton = model.acceptButton() != undefined ?  model.acceptButton().addClass("float-right") :
-            new Button({         color:model.acceptColor(),
+            new Button({         type:model.acceptType(),
                                  style : BrowserInfo.isSmallScreen() ? "margin-top:-10px" : "",
                                  cssClass: "float-right",
                                  text: this.model.acceptText(),
@@ -344,6 +326,7 @@ window.Confirmation = function (args) {
             setTimeout(function() {
               overlay.addClass("active");
               view.container.css("opacity", 1);
+              view.fixHeight();
               setTimeout(function() {
                 // Sometimes when the overlay pushes the document down,
                 // we have to make sure that the overlay covers the whole doc.

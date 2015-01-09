@@ -1,5 +1,4 @@
 /** @jsx React.DOM */
-/* Sample code from: http://eldar.djafarov.com/2013/11/reactjs-mixing-with-backbone */
 
 define(['Backbone', 'legacy_code'], function() {
 
@@ -7,44 +6,56 @@ var expose = {};
 
 var BackboneMixin = {
 
-  updateBackboneModelsBinding: function() {
+  // We want to be able to listenTo events on React component
+  componentWillMount : function() {_.extend(this, Backbone.Events);},
+  // Whenever there may be a change in the Backbone data, trigger a reconcile.
+  componentDidMount: function() {this.updateBackboneModelsBinding();},
+  // The backbone models might depend on state or props, and we need to re-inject if the models have changed.
+  componentDidUpdate: function() {this.updateBackboneModelsBinding();},
+  // When component gets unmounted, we should stop listening to events
+  componentWillUnmount: function() {this.dropBackboneModelsBinding();},
 
-    if(!this.__syncedModels) this.__syncedModels = [];
+
+  // For all backbone models, start listening on new models and stop on old ones
+  updateBackboneModelsBinding: function() {
+    var self = this;
+
+    if(!self.__syncedModels) self.__syncedModels = [];
 
     // Prepare a list of models to be droped, to be injected and to be left
-    var newModels = this.getBackboneModels();
-    var removedSynchedModels = _.difference(this.__syncedModels,newModels);
-    var remainingSynchedModels = _.difference(this.__syncedModels,removedSynchedModels);
+    var newModels = self.getBackboneModels();
+    var removedSynchedModels = _.difference(self.__syncedModels,newModels);
+    var remainingSynchedModels = _.difference(self.__syncedModels,removedSynchedModels);
     // Unbind models that are no longer backbone model
     removedSynchedModels.forEach(function(model) {
-      model.off(null, model.__updater, this);
-    }, this);
+      self.stopListening(model);
+    });
 
     // Internal state should be set to models that are left
-    this.__syncedModels = remainingSynchedModels;
+    self.__syncedModels = remainingSynchedModels;
 
     // New backbone models should be injected
-    _.difference(newModels,remainingSynchedModels).forEach(this.injectModel, this);
-  },
-  // Whenever there may be a change in the Backbone data, trigger a reconcile.
-  componentDidMount: function() { this.updateBackboneModelsBinding() },
-  // The backbone models might depend on state or props, and we need to re-inject if the models have changed.
-  componentDidUpdate: function() { this.updateBackboneModelsBinding() },
-  componentWillUnmount: function() {
-    // Ensure that we clean up any dangling references when the component is
-    // destroyed.
-    this.__syncedModels.forEach(function(model) {
-      model.off(null, model.__updater, this);
-    }, this);
+    _.difference(newModels,remainingSynchedModels).forEach(self.injectModel, self);
   },
   injectModel: function(model){
-    if(!this.__syncedModels) this.__syncedModels = [];
-    if(!~this.__syncedModels.indexOf(model)){
-      var updater = this.forceUpdate.bind(this, null);
-      model.__updater = updater;
-      model.on('add change remove', updater, this);
-      this.__syncedModels.push(model);
+    var self = this;
+    if(!self.__syncedModels) self.__syncedModels = [];
+    if(!~self.__syncedModels.indexOf(model)){
+      self.__syncedModels.push(model);
+      var updater = self.forceUpdate.bind(this, null);
+      self.listenTo(model,'add change remove', function() {
+        if (~self.__syncedModels.indexOf(model)) {
+          updater()
+        }
+      });
     }
+  },
+  dropBackboneModelsBinding: function() {
+    var self = this;
+    self.__syncedModels.forEach(function(model) {
+      self.stopListening(model);
+    });
+    self.__syncedModels = [];
   }
 };
 

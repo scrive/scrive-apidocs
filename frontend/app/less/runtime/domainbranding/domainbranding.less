@@ -1,0 +1,153 @@
+.icon.initiated {
+  background-color: @initiatedcolor;
+}
+
+.icon.sent {
+  background-color: @sentcolor;
+}
+
+.icon.delivered {
+  background-color: @deliveredcolor;
+}
+
+.icon.opened {
+  background-color: @reviewedcolor;
+}
+
+.icon.read {
+  background-color: @openedcolor;
+}
+
+.icon.signed {
+  background-color: @signedcolor;
+}
+
+.icon.rejected {
+  background-color: @cancelledcolor;
+}
+
+.icon.cancelled {
+  background-color: @cancelledcolor;
+}
+
+.icon.timeouted {
+  background-color: @cancelledcolor;
+}
+
+.icon.prolonged {
+  background-color: @openedcolor;
+}
+
+.icon.problem, .icon.deliveryproblem {
+  background-color: @cancelledcolor;
+}
+
+.icon.draft {
+  background-color: @draftcolor
+}
+
+.icon.template {
+  background-color: @draftcolor;
+}
+
+.icon.sealed {
+  background-color: @signedcolor;
+}
+
+.icon.extended {
+  background-color: @signedcolor;
+}
+
+.design-view-action-participant-info-color {
+  &.participant-1 {
+    background-color: @participantcolor1;
+  }
+  &.participant-2 {
+    background-color: @participantcolor2;
+  }
+  &.participant-3 {
+    background-color: @participantcolor3;
+  }
+  &.participant-4 {
+    background-color: @participantcolor4;
+  }
+  &.participant-5 {
+    background-color: @participantcolor5;
+  }
+  &.participant-6 {
+    background-color: @participantcolor6;
+  }
+}
+
+.signatureBox.ui-draggable-dragging {
+  border: 2px solid @participantcolor1;
+}
+
+.signatory_mixin(@color) {
+ &.placedfieldvalue.value {
+    border-color: @color;
+  }
+
+  &.signatureBox {
+    border: 2px solid @color;
+  }
+
+  &.placedcheckbox {
+    border-color: @color;
+  }
+
+  &.text-field-placement-setter-field-editor {
+    border: 2px solid @color;
+    
+    &:hover {
+        border: 2px solid lighten(@color,10%);
+    }
+  }
+
+  &.text-field-placement-setter-field-name .info-text-input{
+    border: 2px solid @color;
+
+    &:hover {
+        border: 2px solid lighten(@color,10%);
+    }
+  }
+
+  &.text-field-placement-setter-field-field-selector {
+    border: 2px solid @color;
+
+    &.select-exp .select-opts {
+      border: 2px solid @color;
+    }
+  }
+}
+
+.signatory-field-1 {
+
+  .signatory_mixin(@participantcolor1);
+}
+
+.signatory-field-2 {
+
+  .signatory_mixin(@participantcolor2);
+}
+
+.signatory-field-3 {
+
+  .signatory_mixin(@participantcolor3);
+}
+
+.signatory-field-4 {
+
+  .signatory_mixin(@participantcolor4);
+}
+
+.signatory-field-5 {
+
+  .signatory_mixin(@participantcolor5);
+}
+
+.signatory-field-6 {
+
+  .signatory_mixin(@participantcolor6);
+}
+

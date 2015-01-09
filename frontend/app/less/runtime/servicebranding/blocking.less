@@ -1,0 +1,58 @@
+.blocking-info {
+  cursor: pointer;
+  display: none;
+  font-weight: 300;
+  margin: 0 auto;
+  padding: 18px 15px 18px 15px;
+  text-align: center;
+
+  .headline {
+    font-size: 21px;
+    margin: 0;
+  }
+
+  .subheadline {
+    margin: 0 120px 0px 120px;
+    
+    a {
+      display: inline;
+    }
+  }
+  &:hover {
+   a {
+     text-decoration: underline;
+  }
+
+  }
+
+  a {
+    display: block;
+    cursor: pointer;
+    font-size: 16px;
+  }
+}
+
+.blocking-info.good {
+  background-color: @positivecolor;//#e7f6d5;
+  color: @positivetextcolor;// NONE
+  display: block;
+
+  a {
+    color: @actiontextcolor;// black
+  }
+  
+}
+
+.blocking-info.warn {
+  background-color: @negativecolor;//#f6d5e7;
+  color: @negativetextcolor;// NONE
+  display: block;
+
+  a {
+    color: @negativetextcolor;// black
+  }
+}
+
+.blocking-info.hide {
+  display: none;
+}

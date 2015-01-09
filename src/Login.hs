@@ -16,7 +16,6 @@ import qualified Text.StringTemplates.Fields as F
 
 import Analytics.Include
 import AppView
-import BrandedDomain.BrandedDomain
 import Company.Model
 import DB
 import Happstack.Fields
@@ -25,7 +24,6 @@ import IPAddress
 import Kontra
 import KontraLink
 import Redirect
-import Routing
 import ThirdPartyStats.Core
 import User.Email
 import User.History.Model
@@ -34,48 +32,28 @@ import Util.HasSomeUserInfo
 import Utils.HTTP
 import qualified Log
 
-handleLoginGet :: Kontrakcja m => m (Either KontraLink (Either Response ThinPage))
+handleLoginGet :: Kontrakcja m => m (Either KontraLink Response)
 handleLoginGet = do
   ctx <- getContext
   case (ctxmaybeuser ctx) of
        Nothing -> do
           referer <- getField "referer"
-          case (ctxbrandeddomain ctx) of
-               Nothing -> do
-                content <- renderTemplate "loginPage" $ do
-                          F.value "referer" $ fromMaybe "/" referer
-                return $ Right $ Right $ ThinPage content
-               Just bd -> do
-                ad <- getAnalyticsData
-                content <- renderTemplate "loginPageWithBranding" $ do
-                         F.value "servicelinkcolour" $ bdservicelinkcolour bd
-                         F.value "textscolour" $ bdexternaltextcolour bd
-                         F.value "background" $ bdbackgroundcolorexternal $ bd
-                         F.value "buttoncolorclass" $ bdbuttonclass $ bd
-                         F.value "referer" $ fromMaybe "/" referer
-                         standardPageFields ctx kontrakcja ad
-                Right . Left <$> simpleHtmlResonseClrFlash content
+          ad <- getAnalyticsData
+          content <- renderTemplate "loginPageWithBranding" $ do
+            F.value "referer" $ fromMaybe "/" referer
+            standardPageFields ctx Nothing ad
+          Right <$> simpleHtmlResonseClrFlash content
        Just _ -> return $ Left LinkDesignView
 
-signupPageGet :: Kontrakcja m => m (Either Response ThinPage)
+signupPageGet :: Kontrakcja m => m (Response)
 signupPageGet = do
   ctx <- getContext
   memail <- getField "email"
-  case (ctxbrandeddomain ctx) of
-      Nothing -> do
-          content <- renderTemplate "signupPage" $ do
-            F.value "email" memail
-          return $ Right $ ThinPage $ content
-      Just bd -> do
-          ad <- getAnalyticsData
-          content <- renderTemplate "signupPageWithBranding" $ do
-            F.value "email" memail
-            F.value "background" $ bdbackgroundcolorexternal $ bd
-            F.value "buttoncolorclass" $ bdbuttonclass $ bd
-            F.value "textscolour" $ bdexternaltextcolour bd
-            F.value "servicelinkcolour" $ bdservicelinkcolour bd
-            standardPageFields ctx kontrakcja ad
-          Left <$> simpleHtmlResonseClrFlash content
+  ad <- getAnalyticsData
+  content <- renderTemplate "signupPageWithBranding" $ do
+    F.value "email" memail
+    standardPageFields ctx Nothing ad
+  simpleHtmlResonseClrFlash content
 
 {- |
    Handles submission of a login form.  On failure will redirect back to referer, if there is one.

@@ -44,7 +44,7 @@ return React.createClass({
           try {
             window.location.href = "/d/"+JSON.parse(d).id;
           } catch(e) {
-            new FlashMessage({content: localization.couldNotUpload, color: "red"});
+            new FlashMessage({content: localization.couldNotUpload, type: 'error'});
             LoadingDialog.close();
           }
         }
@@ -56,7 +56,6 @@ return React.createClass({
           acceptText: localization.ok,
           rejectText: localization.cancel,
           title: localization.archive.templates.share.head,
-          icon: '/img/modal-icons/multisend.png',
           content: jQuery("<p/>").text(localization.archive.templates.share.body),
           onAccept : function() {
             new Submit({
@@ -64,7 +63,7 @@ return React.createClass({
               method: "POST",
               documentids: "[" + _.map(selected, function(doc){return doc.field("fields").id;}) + "]",
               ajaxsuccess : function() {
-                new FlashMessage({color : "green", content : localization.archive.templates.share.successMessage});
+                new FlashMessage({type: "success", content : localization.archive.templates.share.successMessage});
                 self.reload();
                 confirmationPopup.clear();
               }
@@ -86,7 +85,6 @@ return React.createClass({
         acceptText: localization.archive.templates.remove.action,
         rejectText: localization.cancel,
         title: localization.archive.templates.remove.action,
-        icon: '/img/modal-icons/delete.png',
         content: confirmationText,
         oneClick: true,
         onAccept : function() {
@@ -95,7 +93,7 @@ return React.createClass({
             method: "POST",
             documentids: "[" + _.map(selected, function(doc){return doc.field("fields").id;}) + "]",
             ajaxsuccess : function() {
-              new FlashMessage({color : "green", content : localization.archive.templates.remove.successMessage});
+              new FlashMessage({type: "success", content : localization.archive.templates.remove.successMessage});
               self.reload();
               confirmationPopup.clear();
             }
@@ -128,7 +126,7 @@ return React.createClass({
             name={localization.archive.templates.share.action}
             onSelect={function(selected,model) {
               if (selected.length ==0 ) {
-                new FlashMessage({color: "red", content: localization.archive.templates.share.emptyMessage});
+                new FlashMessage({type: "error", content: localization.archive.templates.share.emptyMessage});
                 return false;
               }
               self.openShareModal(selected);
@@ -139,7 +137,7 @@ return React.createClass({
             name={localization.archive.templates.remove.action}
             onSelect={function(selected,model) {
               if (selected.length ==0 ) {
-                new FlashMessage({color: "red", content: localization.archive.templates.remove.emptyMessage});
+                new FlashMessage({type: "error", content: localization.archive.templates.remove.emptyMessage});
                 return false;
               }
               self.openRemoveModal(selected);

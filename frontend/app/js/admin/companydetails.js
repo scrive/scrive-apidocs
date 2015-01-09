@@ -262,12 +262,12 @@ var AdminCompanyDetailsView = Backbone.View.extend({
         onAccept : function() {
           model.mergeToDifferentCompany().sendAjax(
             function() {
-                new FlashMessage({color: "green", content : "Merged"});
+                new FlashMessage({type: 'success', content : "Merged"});
                 window.location = "/adminonly/companyadmin/" + model.newcompanyid();
                 return false;
             },
             function() {
-              new FlashMessage({color: "red", content : "Failed"});
+              new FlashMessage({type: 'error', content : "Failed"});
               return false;
             }
          );
@@ -282,7 +282,7 @@ var AdminCompanyDetailsView = Backbone.View.extend({
 
       var mergeButton = new Button({
                 text: "Merge to different company"
-              , color: "blue"
+              , type: "optional"
               , size: "tiny"
               , style: "margin-left:20px"
               , onClick : function() {
@@ -292,12 +292,12 @@ var AdminCompanyDetailsView = Backbone.View.extend({
 
       var saveButton = new Button({
                 text: "Change details"
-              , color: "green"
+              , type: "action"
               , size: "tiny"
               , style: "margin-left:20px"
               , onClick : function() {
                   model.saveDetails().sendAjax(function() {
-                      new FlashMessage({color: "green", content : "Saved"});
+                      new FlashMessage({type: 'success', content : "Saved"});
                       model.refresh();
                   });
                 }
