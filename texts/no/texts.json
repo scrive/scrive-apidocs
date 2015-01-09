@@ -771,7 +771,7 @@
 "_shared":"Delt",
 "_showAnyStatusClass":"Alle statuser",
 "_sign":"Signer",
-"_signSessionTimedOut":"",
+"_signSessionTimedOut":"<h1>Tidsavbrudd på grunn av inaktivitet</h1><h4>For din egen sikkerhet må du åpne invitasjonen for å signere og følge instruksjonene på nytt.</h4>",
 "_signStepsBodyUploadBoxStepButtonChooseFile":"Velg PDF",
 "_signUp":"Registrer deg",
 "_signViewNotsignedbymeAttachmentBoxHead":"Vedlegg",

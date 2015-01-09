@@ -771,7 +771,7 @@
 "_shared":"Jaettu",
 "_showAnyStatusClass":"Kaikki statukset",
 "_sign":"Allekirjoita",
-"_signSessionTimedOut":"",
+"_signSessionTimedOut":"<h1>Sessio vanhentui inaktiivisuuden takia</h1><h4>Turvallisuutesi vuoksi sinun tulee avata allekirjoituskutsu ja seurata ohjeita uudestaan.</h4>",
 "_signStepsBodyUploadBoxStepButtonChooseFile":"Valitse PDF",
 "_signUp":"Rekisteröidy",
 "_signViewNotsignedbymeAttachmentBoxHead":"Liitteet",

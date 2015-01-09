@@ -771,7 +771,7 @@
 "_shared":"Delt",
 "_showAnyStatusClass":"Alle statusser",
 "_sign":"Signer",
-"_signSessionTimedOut":"",
+"_signSessionTimedOut":"<h1>Du blev logget ud grundet inaktivitet</h1><h4>Du bedes for en sikkerheds skyld åbne invitationen på ny for at signere og følge instruktionerne.</h4>",
 "_signStepsBodyUploadBoxStepButtonChooseFile":"Vælg PDF",
 "_signUp":"Tilmeld dig",
 "_signViewNotsignedbymeAttachmentBoxHead":"Vedhæftede filer",
