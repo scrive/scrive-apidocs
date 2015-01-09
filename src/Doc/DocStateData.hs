@@ -1,6 +1,7 @@
 module Doc.DocStateData (
     module Doc.Data.AuthorAttachment
   , module Doc.Data.Document
+  , module Doc.Data.DocumentStatus
   , module Doc.Data.DocumentTag
   , module Doc.Data.MainFile
   , module Doc.Data.SignatoryAttachment
@@ -10,6 +11,7 @@ module Doc.DocStateData (
 
 import Doc.Data.AuthorAttachment
 import Doc.Data.Document
+import Doc.Data.DocumentStatus
 import Doc.Data.DocumentTag
 import Doc.Data.MainFile
 import Doc.Data.SignatoryAttachment

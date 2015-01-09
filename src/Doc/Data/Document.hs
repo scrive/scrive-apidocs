@@ -27,6 +27,7 @@ import Company.CompanyID
 import DB.RowCache (ID, HasID(..))
 import DB.TimeZoneName
 import Doc.Data.AuthorAttachment
+import Doc.Data.DocumentStatus
 import Doc.Data.DocumentTag
 import Doc.Data.MainFile
 import Doc.Data.SignatoryLink
