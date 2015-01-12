@@ -26,7 +26,6 @@ import Company.Model
 import DB
 import Happstack.Fields
 import Kontra
-import KontraLink
 import Routing (hGet, hPost, toK0, toK1, toK2)
 import Theme.Control
 import Theme.ThemeID
@@ -65,7 +64,7 @@ handleGetCompanyBranding mcid = do
     let  res = unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) unjsonCompanyUI companyui
     return $ toResponseBS "text/json" $ res
 
-handleChangeCompanyBranding :: Kontrakcja m => Maybe CompanyID -> m KontraLink
+handleChangeCompanyBranding :: Kontrakcja m => Maybe CompanyID -> m ()
 handleChangeCompanyBranding mcid = withCompanyAdminOrAdminOnly mcid $ \company -> do
   companyUIJSON <- guardJustM $ getField "companyui"
   case Yaml.decode (BS8.pack companyUIJSON) of
@@ -75,8 +74,6 @@ handleChangeCompanyBranding mcid = withCompanyAdminOrAdminOnly mcid $ \company -
            _ <- dbUpdate $ SetCompanyUI (companyid company) cui
            return ()
         _ -> internalError
-  return $ LinkAccountCompany mcid
-
 
 handleGetThemes :: Kontrakcja m =>  Maybe CompanyID -> m Response
 handleGetThemes mcid = withCompanyAdminOrAdminOnly mcid $ \company -> do

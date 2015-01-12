@@ -37,7 +37,7 @@ tableThemeOwnership = tblTable {
   , tblPrimaryKey = pkOnColumn "theme_id"
   , tblChecks = [TableCheck "check_theme_is_owned_by_company_or_domain" "(company_id IS NULL OR domain_id IS NULL) AND (company_id IS NOT NULL OR domain_id IS NOT NULL)"] -- XOR
   , tblForeignKeys = [
-      (fkOnColumn "company_id" "companies" "id"),
-      (fkOnColumn "domain_id" "branded_domains" "id")
+      (fkOnColumn "company_id" "companies" "id") { fkOnDelete = ForeignKeyCascade },
+      (fkOnColumn "domain_id" "branded_domains" "id") { fkOnDelete = ForeignKeyCascade }
     ]
   }

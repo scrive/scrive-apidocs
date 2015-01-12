@@ -39,8 +39,8 @@ tableCompanyUIs = tblTable {
   , tblPrimaryKey = pkOnColumn "company_id"
   , tblForeignKeys = [
       (fkOnColumn "company_id" "companies" "id") { fkOnDelete = ForeignKeyCascade },
-      (fkOnColumn "mail_theme" "themes" "id") {fkOnDelete = ForeignKeyCascade },
-      (fkOnColumn "signview_theme" "themes" "id") {fkOnDelete = ForeignKeyCascade },
-      (fkOnColumn "service_theme" "themes" "id") {fkOnDelete = ForeignKeyCascade}
+      (fkOnColumn "mail_theme" "themes" "id"),
+      (fkOnColumn "signview_theme" "themes" "id"),
+      (fkOnColumn "service_theme" "themes" "id")
     ]
   }
