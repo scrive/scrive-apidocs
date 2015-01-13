@@ -609,8 +609,3 @@ testDownloadSignviewBrandingAccess = do
   svbr4 <- mkRequest GET [ ]
   (cssResp4, _) <- runTestKontra svbr4 ctxWithAuthor $ handleSignviewBrandingWithoutDocument  "-ignored-md5-" "some_name.css"
   assertBool "CSS for signing is available for author" (rsCode cssResp4 == 200)
-
-  -- 3) Check access to main signview branding for branded domain (no user or document). Used for logging in to to-sign view.
-  svbr5 <- mkRequest GET [ ]
-  (cssResp5, _) <- runTestKontra svbr5 emptyContext $ handleSignviewBrandingInternal  "-ignored-md5-" "some_name.css"
-  assertBool "CSS for signing for branded domain is available for anyone" (rsCode cssResp5 == 200)
