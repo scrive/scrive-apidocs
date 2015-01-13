@@ -4,8 +4,8 @@ module Doc.Data.MainFile (
   ) where
 
 import DB
-import Doc.SealStatus
 import Doc.Data.DocumentStatus
+import Doc.SealStatus
 import File.FileID
 
 -- FIXME: why it has DocumentStatus, if the
