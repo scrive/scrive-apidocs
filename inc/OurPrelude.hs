@@ -69,24 +69,24 @@ fromJust = [| fromMaybe $ $unexpectedError ("fromJust received Nothing"::String)
 
 unexpectedError :: Q Exp
 unexpectedError = [|
-  (\msg -> let (modname, line, position) = $srcLocation
+  \msg -> let (modname, line, position) = $srcLocation
           in throw UnexpectedError {
             ueMessage = msg
           , ueModule = modname
           , ueLine = line
           , uePosition = position
-          }) :: forall t. String -> t
+          }
   |]
 
 unexpectedErrorM :: Q Exp
 unexpectedErrorM = [|
-  (\msg -> let (modname, line, position) = $srcLocation
+  \msg -> let (modname, line, position) = $srcLocation
           in throwM UnexpectedError {
             ueMessage = msg
           , ueModule = modname
           , ueLine = line
           , uePosition = position
-          }) :: forall m t. MonadThrow m => String -> m t
+          }
   |]
 
 ---- internal stuff below ----

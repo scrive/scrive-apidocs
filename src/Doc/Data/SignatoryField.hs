@@ -72,6 +72,7 @@ instance FromSQL FieldType where
       , reValue = n
       }
     where
+      undefinedField :: t
       undefinedField = $unexpectedError "undefined field"
 
 instance ToSQL FieldType where
