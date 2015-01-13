@@ -44,7 +44,7 @@ var ThemeManagementPanelTopBar = React.createClass({
           availableThemesOptions.push({
             name:  model.themeName(t.field("id")),
             onSelect : function() {
-              setTheme(t.field("id"))
+              setTheme(t.field("id"));
               return true;
             }
           });
@@ -199,27 +199,27 @@ return React.createClass({
          if (callback) {
            callback();
          }
-       })
+       });
       };
       var saveServiceThemeAndCompanyBranding = saveCompanyBranding;
       if (model.serviceThemeForEditing() != undefined) {
         saveServiceThemeAndCompanyBranding = function() {
            model.serviceThemeForEditing().save(companybranding.updateThemeUrl(model.serviceThemeForEditing().themeid()), saveCompanyBranding);
-        }
+        };
       }
 
       var saveSignviewAndServiceThemeAndCompanyBranding = saveServiceThemeAndCompanyBranding;
       if (model.signviewThemeForEditing() != undefined) {
         saveSignviewAndServiceThemeAndCompanyBranding = function() {
            model.signviewThemeForEditing().save(companybranding.updateThemeUrl(model.signviewThemeForEditing().themeid()), saveServiceThemeAndCompanyBranding);
-        }
+        };
       }
 
       var saveAllThemesAndCompanyBranding = saveSignviewAndServiceThemeAndCompanyBranding;
       if (model.mailThemeForEditing() != undefined) {
         saveAllThemesAndCompanyBranding = function() {
            model.mailThemeForEditing().save(companybranding.updateThemeUrl(model.mailThemeForEditing().themeid()), saveSignviewAndServiceThemeAndCompanyBranding);
-        }
+        };
       }
 
       saveAllThemesAndCompanyBranding();
@@ -249,7 +249,7 @@ return React.createClass({
           title : localization.branding.unsavedChangesTitle,
           content : $("<div/>").text(localization.branding.unsavedChangesDescription),
           acceptButton : $("<div/>").append(discardButton.el()).append(acceptButton.el())
-        })
+        });
       }
 
     },
@@ -257,7 +257,7 @@ return React.createClass({
       var self = this;
       var model = this.props.model;
       if (!model.ready())
-        return (<div/>)
+        return (<div/>);
       return (
         <div className="tab-container">
           <div className="tab-content">

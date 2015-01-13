@@ -41,7 +41,7 @@ return Backbone.Model.extend({
         "font" : args.listobject.field("font"),
         "listobject" : undefined,
         "dirty" : false
-      })
+      });
   },
   themeid: function() {
     return this.get("id");
@@ -134,7 +134,7 @@ return Backbone.Model.extend({
       method : "POST",
       ajax : true,
       ajaxsuccess : function() {
-        self.set({"dirty" : false})
+        self.set({"dirty" : false});
         callback();
       },
       theme : JSON.stringify(self.attributes)

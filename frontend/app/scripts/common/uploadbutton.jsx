@@ -30,7 +30,7 @@ define(['React','common/button'], function(React,Button) {
       size        : React.PropTypes.string,
       width       : React.PropTypes.number,
       className   : React.PropTypes.string,
-      style       : React.PropTypes.object,
+      style       : React.PropTypes.object
     },
     getDefaultProps : function() {
       return {

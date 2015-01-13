@@ -22,7 +22,7 @@ return Backbone.Model.extend({
         idFetcher:function(d) {return d.field("id");},
         loadLater:false
       })
-    })
+    });
     this.listenTo(this.domain(),'change',function() {self.trigger("change");});
     this.listenTo(this.themeList(),'change',function() {self.trigger("change");});
   },
@@ -102,7 +102,7 @@ return Backbone.Model.extend({
     var editedTheme = _.find(self.editedThemes(), function(et) { return et.themeid() == id; });
     var themeFromList = _.find(self.themeList().list().models, function(et) { return et.field("id") == id; });
     if (editedTheme) {
-      return editedTheme.name()
+      return editedTheme.name();
     }
     else {
       return themeFromList.field("name");

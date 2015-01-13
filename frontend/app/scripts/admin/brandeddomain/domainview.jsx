@@ -43,7 +43,7 @@ var ThemeManagementPanelTopBar = React.createClass({
           availableThemesOptions.push({
             name: model.themeName(t.field("id")),
             onSelect : function() {
-              setTheme(t.field("id"))
+              setTheme(t.field("id"));
               return true;
             }
           });
@@ -149,7 +149,7 @@ return React.createClass({
       } else {
         var alternativeTheme = _.find(model.themeList().list().models,function(t) { return t.field("id")  != theme.themeid();});
 
-        var content = $("<div>Are you sure that you want to delete this theme. Theme <strong class='put-name-of-theme-here'/> will be used instead</div>")
+        var content = $("<div>Are you sure that you want to delete this theme. Theme <strong class='put-name-of-theme-here'/> will be used instead</div>");
         content.find(".put-name-of-theme-here").text(alternativeTheme.field("name"));
 
         var popup = new Confirmation({
@@ -178,10 +178,10 @@ return React.createClass({
                 if (callback) {
                   callback();
                 }
-              })
-            })
-          })
-        })
+              });
+            });
+          });
+        });
       });
     },
     changeMode : function(switchModeFunction) {
@@ -209,7 +209,7 @@ return React.createClass({
           title : localization.branding.unsavedChangesTitle,
           content : $("<div/>").text(localization.branding.unsavedChangesDescription),
           acceptButton : $("<div/>").append(discardButton.el()).append(acceptButton.el())
-        })
+        });
       }
 
     },
@@ -217,7 +217,7 @@ return React.createClass({
       var self = this;
       var model = this.props.model;
       if (!model.ready())
-        return (<div/>)
+        return (<div/>);
       return (
         <div className="tab-container">
           <div className="tab-content">

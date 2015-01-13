@@ -18,7 +18,7 @@ define(['React', 'Backbone', 'common/backbone_mixin', 'tinycolor'], function(Rea
       if (this.props.documentid && this.props.signatorylinkid) {
         return "/signview_logo/" + this.props.documentid + "/" + this.props.signatorylinkid + "/" + window.brandinghash;
       } else {
-        return "/signview_logo_without_document/" + window.brandinghash;;
+        return "/signview_logo_without_document/" + window.brandinghash;
       }
     },
     render: function() {

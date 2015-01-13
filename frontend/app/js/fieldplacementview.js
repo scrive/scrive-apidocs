@@ -8,7 +8,7 @@ var signatoryCSSClass = function(sig) {
     return "signatory-field-" + ((sig.signIndex() -1 ) % 6 + 1);
   else
     return "";
-}
+};
 
 var updateSignatoryCSSClass = function(el,sig) {
   el.removeClass("signatory-field-1")
@@ -16,11 +16,11 @@ var updateSignatoryCSSClass = function(el,sig) {
     .removeClass("signatory-field-3")
     .removeClass("signatory-field-4")
     .removeClass("signatory-field-5")
-    .removeClass("signatory-field-6")
+    .removeClass("signatory-field-6");
   if (sig) {
-    el.addClass(signatoryCSSClass(sig))
+    el.addClass(signatoryCSSClass(sig));
   }
-}
+};
 
 /* Margins for text placements. Such placements have some internal margin and we need to adjust it*/
 var textPlacementHorSpace = 7;
@@ -1094,7 +1094,7 @@ var CheckboxPlacementView = Backbone.View.extend({
         $(this.el).remove();
     },
     updateSignatoryCSSClass : function() {
-      updateSignatoryCSSClass($(this.el),this.model.signatory())
+      updateSignatoryCSSClass($(this.el),this.model.signatory());
     },
     render: function() {
             var field =   this.model;
@@ -1791,7 +1791,7 @@ var SignaturePlacementView = Backbone.View.extend({
         return box;
     },
     updateSignatoryCSSClass : function() {
-      updateSignatoryCSSClass($(this.el),this.model.field().signatory())
+      updateSignatoryCSSClass($(this.el),this.model.field().signatory());
     },
     updateSize: function(width, height) {
       var box = $(this.el);

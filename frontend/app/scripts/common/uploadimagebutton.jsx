@@ -1,8 +1,8 @@
 /** @jsx React.DOM */
 
 /**
- * A upload button component in React. Internallly it uses standard buttons, and can take many UI propperties of buttons - but not all of them.
- * Instead it has
+ * A upload button component in React. Internallly it uses UploadButton, and can take many UI propperties of buttons - but not all of them.
+ * After upload, it sends file to server, and calls onUpload with base64 representation of image
  *
  * Properties:
       text        : string , text on button,  default ""

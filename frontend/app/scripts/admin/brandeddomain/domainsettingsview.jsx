@@ -50,7 +50,7 @@ var DomainTextPropertyEditor = React.createClass({
 var DomainColorPropertyEditor = React.createClass({
   getInitialState: function() {
     return {
-      showColorPicker : false,
+      showColorPicker : false
     };
   },
   hideColorPicker : function() {
@@ -93,7 +93,7 @@ var DomainColorPropertyEditor = React.createClass({
                     return (
                       <div className={"icon status " + i} key={Math.random()}  style={{backgroundColor: self.props.getValue() }}>
                       </div>
-                    )
+                    );
                   })
 
 

@@ -84,10 +84,10 @@ var AdminModel = Backbone.Model.extend({
                         },
                         onActivate : function() {
                             var id = window.location.hash.replace(/[^0-9]/gmi, "");
-                            React.unmountComponentAtNode(div[0])
+                            React.unmountComponentAtNode(div[0]);
                             React.renderComponent(new BrandedDomainAdminPanel({
                               domainid : id
-                            }),div[0])
+                            }),div[0]);
                         }
                     });
   }

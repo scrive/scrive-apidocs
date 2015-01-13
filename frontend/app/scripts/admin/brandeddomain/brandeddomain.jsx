@@ -182,7 +182,7 @@ return Backbone.Model.extend({
   parse : function(data) {
     data['ready'] = true;
     data['dirty'] = false;
-    return data
+    return data;
   },
   deleteTheme : function(tid,callback) {
     var self = this;
@@ -190,7 +190,7 @@ return Backbone.Model.extend({
       url : "/adminonly/brandeddomain/deletetheme/" + self.domainid() + "/" + tid,
       method : "POST",
       ajax : true,
-      ajaxsuccess : callback,
+      ajaxsuccess : callback
     }).send();
   },
   save : function(callback) {

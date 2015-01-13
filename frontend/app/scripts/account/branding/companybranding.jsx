@@ -28,10 +28,10 @@ return Backbone.Model.extend({
     self.fetch();
   },
   newThemeUrl : function(themeType) {
-    return this.newthemeurl + "/" + themeType
+    return this.newthemeurl + "/" + themeType;
   },
   updateThemeUrl : function(themeid) {
-    return this.updatethemeurl + "/" + themeid
+    return this.updatethemeurl + "/" + themeid;
   },
   companyid: function() {
     return this.get("companyid");
@@ -85,7 +85,7 @@ return Backbone.Model.extend({
   parse : function(data) {
     data['ready'] = true;
     data['dirty'] = false;
-    return data
+    return data;
   },
   deleteTheme : function(themeid,callback) {
     var self = this;
@@ -93,7 +93,7 @@ return Backbone.Model.extend({
       url : self.deletethemeurl + "/" + themeid,
       method : "POST",
       ajax : true,
-      ajaxsuccess : callback,
+      ajaxsuccess : callback
     }).send();
   },
   save : function(callback) {
@@ -104,7 +104,7 @@ return Backbone.Model.extend({
       ajax : true,
       ajaxsuccess : function() {
         self.set({dirty: false});
-        callback()
+        callback();
       },
       companyui : JSON.stringify(self.attributes)
     }).send();
