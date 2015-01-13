@@ -182,7 +182,7 @@ return React.createClass({
             width="75px"
             className="archive-table-shared-column-header"
             rendering={function(d) {
-              return (<div className={"archive-table-shared-column " + ((d.field("fields").shared) ? "sharedIcon" : "notSharedIcon")}/>);
+              return (<div className={"archive-table-shared-column " + ((d.field("fields").shared) ? "sharedIcon" : "")}/>);
             }}
           />
 

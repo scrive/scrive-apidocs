@@ -98,7 +98,7 @@ return React.createClass({
             name={localization.archive.templates.columns.shared}
             width="52px"
             rendering={function(d) {
-              return (<div className={(d.field("fields").shared) ? "sharedIcon" : "notSharedIcon"}/>);
+              return (<div className={(d.field("fields").shared) ? "sharedIcon" : ""}/>);
             }}
           />
 
