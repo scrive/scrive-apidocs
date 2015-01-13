@@ -31,6 +31,7 @@ companyControlTests :: TestEnvSt -> Test
 companyControlTests env = testGroup "CompanyControl" [
     testThat "handleGetCompanyJSON works" env test_handleGetCompanyJSON
   , testThat "handleChangeCompanyBranding can be used to set the company ui" env test_settingUIWithHandleChangeCompanyBranding
+  , testThat "handleChangeCompanyBranding can't connect any company ui with different company or domain themes" env test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership
   ]
 
 test_handleGetCompanyJSON :: TestEnv ()
@@ -115,11 +116,38 @@ test_settingUIWithHandleChangeCompanyBranding = do
   assertEqual "SmsOriginator is empty"  (companySmsOriginator companyui) (Nothing)
   assertEqual "Favicon is empty"  (companyFavicon companyui) (Nothing)
 
+
+test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership :: TestEnv ()
+test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership = do
+
+  (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
+    <$> mkContext defaultValue
+
+
+  --Test we can't set mailTheme to domain theme
+  req1 <- mkRequest POST [ ("companyui", inText $ "{\"companyid\":\""++show (companyid company) ++"\",\"mailTheme\":\""++show (bdMailTheme $ ctxbrandeddomain ctx)++"\",\"signviewTheme\":null,\"serviceTheme\":null,\"browserTitle\": null ,\"smsOriginator\": null,\"favicon\":null}")]
+  (_, _) <- runTestKontra req1 ctx $ handleChangeCompanyBranding Nothing
+  companyui1 <- dbQuery $ GetCompanyUI (companyid company)
+  assertEqual "Can't set domain theme as company theme"  (companyMailTheme companyui1) (Nothing)
+
+  -- Create theme for other company
+  (_, othercompany) <- addNewAdminUserAndCompany "Other" "Guy" "other_guy@skrivapa.se"
+  someTheme <- dbQuery $ GetTheme (bdMailTheme $ ctxbrandeddomain ctx)
+  othercompanyTheme <- dbUpdate $ InsertNewThemeForCompany (companyid othercompany) someTheme
+
+  --Test we can't set mailTheme to other company theme
+  req2 <- mkRequest POST [ ("companyui", inText $ "{\"companyid\":\""++show (companyid company) ++"\",\"mailTheme\":\""++show (themeID othercompanyTheme)++"\",\"signviewTheme\":null,\"serviceTheme\":null,\"browserTitle\": null ,\"smsOriginator\": null,\"favicon\":null}")]
+  (_, _) <- runTestKontra req2 ctx $ handleChangeCompanyBranding Nothing
+  companyui2 <- dbQuery $ GetCompanyUI (companyid company)
+  assertEqual "Can't set other company theme as company theme"  (companyMailTheme companyui2) (Nothing)
+
+
 addNewAdminUserAndCompany :: String -> String -> String -> TestEnv (User, Company)
 addNewAdminUserAndCompany fstname sndname email = do
   company <- addNewCompany
   companyui <- dbQuery $ GetCompanyUI (companyid company)
-  _ <- dbUpdate $ SetCompanyUI (companyid company) companyui --{companyemailbackgroundcolour = Just "#abcdef"}
+  _ <- dbUpdate $ SetCompanyUI (companyid company) companyui
   Just user <- addNewCompanyUser fstname sndname email (companyid company)
   _ <- dbUpdate $ SetUserCompanyAdmin (userid user) True
   Just updateduser <- dbQuery $ GetUserByID (userid user)

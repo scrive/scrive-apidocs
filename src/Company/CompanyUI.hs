@@ -45,6 +45,20 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetCompanyUI Bool where
       sqlSet "favicon" $ companyFavicon cui
       sqlWhereEq "company_id" cid
 
+      when (isJust $ companyMailTheme cui) $ do
+        sqlWhereExists $ sqlSelect "theme_owners" $ do
+          sqlWhereEq "company_id" cid
+          sqlWhereEq "theme_id" (companyMailTheme cui)
+
+      when (isJust $ companySignviewTheme cui) $ do
+        sqlWhereExists $ sqlSelect "theme_owners" $ do
+          sqlWhereEq "company_id" cid
+          sqlWhereEq "theme_id" (companySignviewTheme cui)
+
+      when (isJust $ companyServiceTheme cui) $ do
+        sqlWhereExists $ sqlSelect "theme_owners" $ do
+          sqlWhereEq "company_id" cid
+          sqlWhereEq "theme_id" (companyServiceTheme cui)
 
 selectCompanyUIsSelectors :: (SqlResult command) => State command ()
 selectCompanyUIsSelectors = do
