@@ -6,28 +6,36 @@ import Data.List
 import Data.Map ((!))
 import Data.Maybe
 import Data.String.Utils
+import Happstack.Server
+import System.Exit
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
-import Test.HUnit (assertFailure, assertBool, Assertion)
+import Test.HUnit (assertBool, Assertion)
 import Text.JSON
 import Text.StringTemplate
 import Text.StringTemplates.TextTemplates
 import Text.XML.HaXml.Parse (xmlParse')
 import Text.XML.HaXml.Posn
 import Text.XML.HaXml.Types
+import qualified Data.ByteString.Lazy as BS
+import qualified Data.ByteString.Lazy.UTF8 as BS
 
+import AppView (localizationScript)
+import TestingUtil (testThat, assertFailure)
 import TestKontra
 import User.Lang
 import Utils.Enum
+import Utils.IO
 
 localizationTest :: TestEnvSt -> Test
-localizationTest _ = testGroup "Localization Test"
+localizationTest env = testGroup "Localization Test"
     [ testGroup "static checks"
       [
           testCase "tests if translations are valid JSONS and are ordered" testTranslationFilesAreJSONSAndSorted
         , testCase "text templates have same structure" testTranslationsHaveSameStructure
         , testCase "text templates have same html structure" testTranslationsHaveSameHtmlStructure
         , testCase "text templates have same number of excaped \\\" " testTranslationsHaveSameEscapeSequences
+        , testThat "localization file never uses single quotes to wrap translation text" env testLocalizationFileNoSingleQuotes
       ]
     ]
 
@@ -186,3 +194,14 @@ compareEscapeSequeces s t =
     countEscapes2 str = length $ split "\\\\\"" str
     countEscapes3 str = length $ split "\\\\\\\"" str
     countEOLs str = length $ split "\n" str
+
+testLocalizationFileNoSingleQuotes :: TestEnv ()
+testLocalizationFileNoSingleQuotes = forM_ allLangs $ \l -> do
+  ctx <- mkContext l
+  req <- mkRequest GET []
+  (res, _) <- runTestKontra req ctx $ localizationScript ""
+  let src = BS.fromString "window = {};\n" `BS.append` rsBody res
+  (exitCode, _, stderr) <- readProcessWithExitCode' "node" [] src
+  case exitCode of
+    ExitSuccess -> return ()
+    ExitFailure _ -> assertFailure $ "Rendered localization file is unparseable in lang " ++ show l ++ ", becase: " ++ BS.toString stderr
