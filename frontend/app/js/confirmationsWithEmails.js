@@ -61,6 +61,7 @@ window.MailView = Backbone.View.extend({
         var wrapper = $("<div style='margin-bottom:12px;'/>").append(textarea);
         editablePart.replaceWith(wrapper);
         setTimeout( function() {
+           tinyMCE.baseURL = '/libs/tiny_mce';
            tinyMCE.init({
                       selector: '#' + id,
                       content_css : "/css/tinymce.css",
@@ -83,7 +84,7 @@ window.MailView = Backbone.View.extend({
 
 			editor.on('PreInit', function() {
 			  $(editor.getContainer()).find('div[role=toolbar]').hide();
-			  $(editor.getContainer()).find('.mce-path').parents('.mce-panel').first().hide();
+			  $(editor.getContainer()).find('.mce-path').parents('.mce-statusbar').hide();
 			});
 
                         editor.on('change', function() {
