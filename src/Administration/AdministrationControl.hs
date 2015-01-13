@@ -436,8 +436,8 @@ handleCreateUser = onlySalesOrAdmin $ do
 handlePostAdminCompanyUsers :: Kontrakcja m => CompanyID -> m JSValue
 handlePostAdminCompanyUsers companyid = onlySalesOrAdmin $ do
   email <- getCriticalField asValidEmail "email"
-  fstname <- getCriticalField asValidName "fstname"
-  sndname <- getCriticalField asValidName "sndname"
+  fstname <- fromMaybe "" <$> getOptionalField asValidName "fstname"
+  sndname <- fromMaybe "" <$> getOptionalField asValidName "sndname"
   lang <- guardJustM $ join <$> fmap langFromCode <$> getField "lang"
   admin <- isFieldSet "iscompanyadmin"
   muser <- createNewUserByAdmin email (fstname, sndname) (companyid, admin) lang
