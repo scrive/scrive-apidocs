@@ -65,14 +65,6 @@ var openNewUserModal = function(companyid,callback) {
 
       // Validate fields
       var validationResult = true;
-      if(!new NameValidation().validateData(fstname.val())) {
-        tr1ErrorRow.css('display','');
-        validationResult = false;
-      }
-      if(!new NameValidation().validateData(sndname.val())) {
-        tr2ErrorRow.css('display','');
-        validationResult = false;
-      }
       if(!new NotEmptyValidation().validateData(email.val())
         ||
         !new EmailValidation().validateData(email.val())
