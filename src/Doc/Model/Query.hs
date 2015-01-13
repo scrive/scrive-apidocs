@@ -135,27 +135,14 @@ selectDocuments :: [DocumentDomain]
                 -> SqlSelect
 selectDocuments domains filters orders extend = sqlSelect "documents" $ do
   mapM_ (sqlOrderBy . documentOrderByAscDescToSQL) orders
-  -- There is absolutely no reason to make this huge join
-  -- when DocumentsVisibleToUser is not used. It needs to
-  -- be separated into materialized view or something else
-  -- later anyway.
-  if has_visible_by_user domains
-    then sqlWhereExists . sqlSelect "signatory_links" $ do
-      sqlWhere "documents.id = signatory_links.document_id"
-      sqlLeftJoinOn "users" "signatory_links.user_id = users.id"
-      sqlLeftJoinOn "companies" "users.company_id = companies.id"
-      sqlLeftJoinOn "users AS same_company_users" "users.company_id = same_company_users.company_id OR users.id = same_company_users.id"
-      sqlWhereAny $ map documentDomainToSQL domains
-      mapM_ documentFilterToSQL filters
-    else do
-      sqlWhereAny $ map documentDomainToSQL domains
-      mapM_ documentFilterToSQL filters
+  sqlWhereExists . sqlSelect "signatory_links" $ do
+    sqlWhere "documents.id = signatory_links.document_id"
+    sqlLeftJoinOn "users" "signatory_links.user_id = users.id"
+    sqlLeftJoinOn "companies" "users.company_id = companies.id"
+    sqlLeftJoinOn "users AS same_company_users" "users.company_id = same_company_users.company_id OR users.id = same_company_users.id"
+    sqlWhereAny $ map documentDomainToSQL domains
+    mapM_ documentFilterToSQL filters
   extend
-  where
-    has_visible_by_user :: [DocumentDomain] -> Bool
-    has_visible_by_user = or . map (\case
-      DocumentsVisibleToUser{} -> True
-      _ -> False)
 
 data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentByDocumentID Document where
