@@ -687,9 +687,24 @@ function smallImage() {
     return "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 }
 
+function myCloneNode(node) {
+    // If the node is a text node, then re-create it rather than clone it
+    var clone = node.nodeType == 3 ? document.createTextNode(node.nodeValue) : node.cloneNode(false);
+
+    // Recurse
+    var child = node.firstChild;
+    while(child) {
+      if (child.nodeType !== 1 || child.tagName !== 'SCRIPT') {
+        clone.appendChild(myCloneNode(child));
+      }
+      child = child.nextSibling;
+    }
+    return clone;
+}
+
 function createWindowClone(ownerDocument, containerDocument, width, height, options) {
     labelCanvasElements(ownerDocument);
-    var documentElement = ownerDocument.documentElement.cloneNode(true),
+    var documentElement = myCloneNode(ownerDocument.documentElement),
         container = containerDocument.createElement("iframe");
 
     container.style.visibility = "hidden";
