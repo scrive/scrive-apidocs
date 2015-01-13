@@ -72,11 +72,16 @@ SELECT escape_for_csv(companies.name) AS "Company name"
                                  FROM signatory_links
                                 WHERE signatory_links.is_partner
                                   AND signatory_links.document_id = documents.id) = thetime.time)) AS "Sigs closed"
-     , (SELECT sum(chi.quantity)
+     , (SELECT count(*)
           FROM chargeable_items chi
          WHERE chi.company_id = companies.id
            AND chi.type = 1 -- sms
            AND date_trunc('month', chi.time) = thetime.time) as "SMSes sent"
+     , (SELECT sum(chi.quantity)
+          FROM chargeable_items chi
+         WHERE chi.company_id = companies.id
+           AND chi.type = 1 -- sms
+           AND date_trunc('month', chi.time) = thetime.time) as "SMSes sent (physical)"
      , (SELECT sum(chi.quantity)
           FROM chargeable_items chi
          WHERE chi.company_id = companies.id

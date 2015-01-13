@@ -771,7 +771,7 @@
 "_shared":"Gedeeld",
 "_showAnyStatusClass":"Alle statussen",
 "_sign":"Onderteken",
-"_signSessionTimedOut":"",
+"_signSessionTimedOut":"<h1>Deze sessie heeft een time-out opgelopen als gevolg van inactiviteit</h1><h4>Voor uw veiligheid moet u de uitnodiging om te ondertekenen openen en de instructies opnieuw volgen.</h4>",
 "_signStepsBodyUploadBoxStepButtonChooseFile":"Selecteer PDF",
 "_signUp":"Aanmelden",
 "_signViewNotsignedbymeAttachmentBoxHead":"Bijlagen",

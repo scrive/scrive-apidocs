@@ -771,7 +771,7 @@
 "_shared":"Delad",
 "_showAnyStatusClass":"Alla statusar",
 "_sign":"Signera",
-"_signSessionTimedOut":"",
+"_signSessionTimedOut":"<h1>Sessionen har upphört på grund av inaktivitet</h1><h4>Av säkerhetsskäl måste du öppna inbjudan att signera igen och följa instruktionerna.</h4>",
 "_signStepsBodyUploadBoxStepButtonChooseFile":"Välj PDF",
 "_signUp":"Skapa konto",
 "_signViewNotsignedbymeAttachmentBoxHead":"Bilagor",

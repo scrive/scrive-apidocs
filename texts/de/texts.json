@@ -771,7 +771,7 @@
 "_shared":"Geteilt",
 "_showAnyStatusClass":"Alle Status",
 "_sign":"Signieren",
-"_signSessionTimedOut":"",
+"_signSessionTimedOut":"<h1>Die Sitzung ist wegen Inaktivität abgelaufen</h1><h4>Zu Ihrer Sicherheit ist es notwendig, die Einladung zum Signieren wieder zu öffnen und den Anweisungen zu folgen.</h4>",
 "_signStepsBodyUploadBoxStepButtonChooseFile":"PDF auswählen",
 "_signUp":"Anmelden",
 "_signViewNotsignedbymeAttachmentBoxHead":"Anhänge",
