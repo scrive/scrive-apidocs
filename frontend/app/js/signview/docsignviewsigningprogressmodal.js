@@ -117,7 +117,8 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
       var self = this;
       var model = this.model;
       var container = $(this.el);
-      var imgUrl = "/pages/" + model.document().mainfile().fileid() + "/1" + model.document().mainfile().queryPart();
+      // WARNING: change `pixelwidth` if .img-doc's width changes.
+      var imgUrl = "/pages/" + model.document().mainfile().fileid() + "/1" + model.document().mainfile().queryPart({ pixelwidth: 117 });
       var docImage = $('<img class="img-doc" >').attr("alt",model.document().title()).attr("src",imgUrl);
       var title = $('<p class="title">' + localization.signinginprogressmodal.youHaveSignedPleaseWait + '</p>');
       $('.put-doctitle', title).text(model.document().title());
