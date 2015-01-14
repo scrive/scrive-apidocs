@@ -168,7 +168,7 @@
 "_blockingOverdueCreateBody":"There was something wrong with your last payment. Please visit the <a class='put-link-to-payments-here'>subscription page</a> and double-check your billing information. You cannot send more documents until this is resolved.",
 "_blockingOverdueCreateTitle":"Payment failure",
 "_blockingOverdueHeadline":"Payment failure",
-"_blockingOverdueSubtext1":"There was something wrong with your last payment. Please visit the <a class='put-link-to-payments-here'>subscription page</a> and double-check your billing information. You cannot send more documents until this is resolved.",
+"_blockingOverdueSubtext1":"There was something wrong with your last payment. You cannot send more documents until this is resolved.",
 "_blockingOverdueSubtext2":"Please visit the <a class='put-link-to-payments-here'>payments page</a> and double-check your billing information.",
 "_blockingPayingCSVBody":"Your file contains <span class='put-no-of-parties-here'/> recipients and you have only <span class='put-docs-left-here'/> documents left to send. Please <a class='put-link-to-payments-here'>contact support</a> to increase the limit.",
 "_blockingPayingCreateBody":"You have reached the monthly usage limit of 100 sent documents. Please <a class='put-link-to-payments-here'>contact support</a> to increase the limit. Sorry for the inconvenience.",

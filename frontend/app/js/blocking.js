@@ -166,7 +166,6 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             } else if(model.isOverdue()) {
                 var span = $('<span />');
                 span.html(localization.blocking.overdue.subtext1);
-                span.find('.put-link-to-payments-here').attr('href', this.subscriptionPageHref);
                 return span;
             } else if(model.isDunning()) {
                 return localization.blocking.dunning.subtext1;
