@@ -140,17 +140,18 @@ mailForwardSigned sl documentAttached document = do
 mailDocumentRejected :: (MonadDB m, MonadThrow m, TemplatesMonad m, MailContextMonad m)
                      => Bool
                      -> Maybe String
+                     -> Bool
                      -> SignatoryLink
                      -> Document
                      -> m Mail
-mailDocumentRejected forMail customMessage rejector document = do
+mailDocumentRejected forMail customMessage forAuthor rejector document = do
    documentMailWithDocLang document template $ do
         F.value "rejectorName" $ getSmartName rejector
         F.value "ispreview" $ not $ forMail
         F.value "customMessage" $ customMessage
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
         F.value "loginlink" $ show $ LinkIssueDoc $ documentid document
-  where template = if signatoryisauthor rejector then
+  where template = if forAuthor then
                        templateName "mailAuthorRejectContractMail"
                    else
                        templateName "mailRejectContractMail"
@@ -163,7 +164,7 @@ mailDocumentRejectedContent :: (MonadDB m, MonadThrow m, TemplatesMonad m, MailC
                             -> Document
                             -> m String
 mailDocumentRejectedContent customMessage rejector document =
-     content <$> mailDocumentRejected False customMessage rejector document
+     content <$> mailDocumentRejected False customMessage False rejector document
 
 mailDocumentErrorForAuthor :: (HasLang a, MonadDB m, MonadThrow m, TemplatesMonad m, MailContextMonad m) => a -> Document -> m Mail
 mailDocumentErrorForAuthor authorlang document = do

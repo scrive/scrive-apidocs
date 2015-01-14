@@ -97,7 +97,7 @@ mailContractClosedMainP =
 ####
 #### REJECTED MAIL
 ####
-mailRejectContractMail=
+mailAuthorRejectContractMail=
       $_mailRejectMailTitleContract()$
       $nicemail(
         mailheader = _mailRejectMailTitleContract();
@@ -110,7 +110,7 @@ mailRejectContractMail=
         footer = null
       )$
 ####
-mailAuthorRejectContractMail=
+mailRejectContractMail=
       $_mailRejectMailTitleContract()$
       $nicemail(
         mailheader = _mailRejectMailTitleContract();
