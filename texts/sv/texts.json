@@ -168,7 +168,7 @@
 "_blockingOverdueCreateBody":"Något gick fel vid din senaste betalning. Vänligen gå till <a class='put-link-to-payments-here'>abonnemangssidan</a> och kontrollera din betalningsinformation. Du kan inte skicka fler dokument innan detta är löst.",
 "_blockingOverdueCreateTitle":"Misslyckad betalning",
 "_blockingOverdueHeadline":"Misslyckad betalning",
-"_blockingOverdueSubtext1":"Något gick fel vid din senaste betalning. Vänligen gå till <a class='put-link-to-payments-here'>abonnemangssidan</a> och kontrollera din betalningsinformation. Du kan inte skicka fler dokument innan detta är löst.",
+"_blockingOverdueSubtext1":"",
 "_blockingOverdueSubtext2":"Vänligen besök <a class='put-link-to-payments-here'>betalningssidan</a> och kontrollera din betalningsinformation.",
 "_blockingPayingCSVBody":"Denna fil innehåller <span class='put-no-of-parties-here'/> mottagare och du har endast <span class='put-docs-left-here'/> gratisdokument kvar att använda. Vänligen <a class='put-link-to-payments-here'>kontakta supporten</a> för att utöka gränsen.",
 "_blockingPayingCreateBody":"Du har nått gränsen på 100 skickade dokument per månad. Vänligen <a class='put-link-to-payments-here'>kontakta supporten</a> för att utöka gränsen. Vi beklagar besväret.",

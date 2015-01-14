@@ -168,7 +168,7 @@
 "_blockingOverdueCreateBody":"Edellisessä maksussasi oli jotain vialla. Ole hyvä ja vieraile <a class='put-link-to-payments-here'>tilin luomissivulla</a> ja tarkista laskutustietosi. Et voi lähettää enempää dokumentteja ennen asian ratkaisemista.",
 "_blockingOverdueCreateTitle":"Maksuvirhe",
 "_blockingOverdueHeadline":"Maksuvirhe",
-"_blockingOverdueSubtext1":"Edellisessä maksussasi oli jotain vialla. Ole hyvä ja vieraile <a class='put-link-to-payments-here'>tilin luomissivulla</a> ja tarkista laskutustietosi. Et voi lähettää enempää dokumentteja ennen asian ratkaisemista.",
+"_blockingOverdueSubtext1":"",
 "_blockingOverdueSubtext2":"Ole hyvä ja vieraile <a class='put-link-to-payments-here'>tilin luomissivulla</a> ja tarkista laskutustietosi.",
 "_blockingPayingCSVBody":"Tiedostosi sisältää <span class='put-no-of-parties-here'/> vastaanottajaa ja sinulla on vain <span class='put-docs-left-here'/> dokumenttia lähettämättä. Ole hyvä ja <a class='put-link-to-payments-here'>ota yhteyttä tukeen</a>, rajasi nostamiseksi.",
 "_blockingPayingCreateBody":"Olet saavuttanut kuukausittaisen 100 lähetetyn dokumentin rajan. Ole hyvä ja <a class='put-link-to-payments-here'>ota yhteyttä tukeen</a> korottaaksesi rajaa. Pahoittelumme tästä vaivasta.",

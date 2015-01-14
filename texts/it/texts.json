@@ -168,7 +168,7 @@
 "_blockingOverdueCreateBody":"Qualcosa non ha funzionato nell'ultimo pagamento. Si prega di visitare la <a class='put-link-to-payments-here'>pagina dell'abbonamento</a> e ricontrollare i dati di fatturazione. Non è possibile inviare ulteriori documenti fino a quando questo non viene risolto.",
 "_blockingOverdueCreateTitle":"Pagamento non riuscito",
 "_blockingOverdueHeadline":"Pagamento non riuscito",
-"_blockingOverdueSubtext1":"Qualcosa non ha funzionato nell'ultimo pagamento. Si prega di visitare la <a class='put-link-to-payments-here'>pagina dell'abbonamento</a> e ricontrollare i dati di fatturazione. Non è possibile inviare ulteriori documenti fino a quando questo non viene risolto.",
+"_blockingOverdueSubtext1":"",
 "_blockingOverdueSubtext2":"Si prega di visitare la <a class='put-link-to-payments-here'>pagina dei pagamenti</a> e ricontrollare i dati di fatturazione.",
 "_blockingPayingCSVBody":"Il tuo file contiene <span class='put-no-of-parties-here'/> destinatari e ti rimangono solo <span class='put-docs-left-here'/> documenti da inviare. Si prega di <a class='put-link-to-payments-here'>contattare l'assistenza</a> per aumentare il limite. ",
 "_blockingPayingCreateBody":"Hai raggiunto il limite mensile di 100 documenti inviati. Si prega di <a class='put-link-to-payments-here'>contattare l'assistenza</a> per aumentare il limite. Ci scusiamo per l'inconveniente.",

@@ -168,7 +168,7 @@
 "_blockingOverdueCreateBody":"Noe gikk galt med din siste betaling. Vennligst besøk <a class='put-link-to-payments-here'>abonnementssiden</a> for å dobbeltsjekke din betalingsinformasjon. Du kan ikke sende flere dokumenter før dette er løst.",
 "_blockingOverdueCreateTitle":"Betalingsfeil",
 "_blockingOverdueHeadline":"Betalingsfeil",
-"_blockingOverdueSubtext1":"Noe gikk galt med din siste betaling. Vennligst besøk <a class='put-link-to-payments-here'>abonnementssiden</a> for å dobbeltsjekke din betalingsinformasjon. Du kan ikke sende flere dokumenter før dette er løst.",
+"_blockingOverdueSubtext1":"",
 "_blockingOverdueSubtext2":"Vennligst besøk <a class='put-link-to-payments-here'>betalingssiden</a> for å dobbeltsjekke din betalingsinformasjon.",
 "_blockingPayingCSVBody":"Filen inneholder <span class='put-no-of-parties-here'/> mottakere og du har bare <span class='put-docs-left-here'/> dokumenter igjen å sende. Vennligst <a class='put-link-to-payments-here'>kontakt support</a> for å øke grensen.",
 "_blockingPayingCreateBody":"Du har nådd den månedlige bruksgrensen på 100 sendte dokumenter. Vennligst <a class='put-link-to-payments-here'>kontakt support</a> for å øke grensen. Beklager det inntrufne.",

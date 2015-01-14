@@ -168,7 +168,7 @@
 "_blockingOverdueCreateBody":"Hubo algun problema con su último pago. Por favor visite la <a class='put-link-to-payments-here'>página de suscripción</a> y vuelva a revisar su información bancaria. No puede enviar más documentos hasta que este problema sea resuelto.",
 "_blockingOverdueCreateTitle":"Fallo en el pago",
 "_blockingOverdueHeadline":"Fallo en el pago",
-"_blockingOverdueSubtext1":"Hubo algun problema con su último pago. Por favor visite la <a class='put-link-to-payments-here'>página de suscripción</a> y vuelva a revisar su información bancaria. No puede enviar más documentos hasta que este problema sea resuelto.",
+"_blockingOverdueSubtext1":"",
 "_blockingOverdueSubtext2":"Por favor visite la <a class='put-link-to-payments-here'>página de pagos</a> y vuelva a revisar su información bancaria.",
 "_blockingPayingCSVBody":"Su documento contiene  <span class='put-no-of-parties-here'/> destinatarios y sólo le quedan <span class='put-docs-left-here'/> documentos que enviar. Por favor <a class='put-link-to-payments-here'>contacte con el personal</a> para aumentar el límite.",
 "_blockingPayingCreateBody":"Ha alcanzado el límite de uso de 100 documentos enviados. Por favor <a class='put-link-to-payments-here'>contacte con el personal</a> para aumentar el límite. Sentimos los posibles inconvenientes.",
