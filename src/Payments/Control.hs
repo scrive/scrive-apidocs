@@ -248,7 +248,7 @@ postBackCache pr = do
   recurlyapikey <- recurlyAPIKey . ctxrecurlyconfig <$> getContext
   -- we need to ask recurly for the info again for security
   ac             <- pguard' "post back: Could not parse account code (should be int)." $ maybeRead $ pushAccountCode pr
-  plan           <- pguardM' "post back: Could not find plan for account." $ dbQuery $ GetPaymentPlanByAccountCode ac
+  plan           <- pguardM' ("post back: Could not find plan for account. ac: " ++ show ac) $ dbQuery $ GetPaymentPlanByAccountCode ac
   esubscriptions <- pguardM "post back:" $ liftIO $ getSubscriptionsForAccount curl_exe recurlyapikey $ show $ ac
   s              <- pguard' "post back: no subscriptions for account" $ listToMaybe esubscriptions
   ins            <- pguardM "post back:" $ liftIO $ getInvoicesForAccount curl_exe recurlyapikey (show ac)
