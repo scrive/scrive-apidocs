@@ -420,18 +420,21 @@ migratePlan cid = do
           when (not migrated) internalError
         _ -> internalError
 
-handleCreateUser :: Kontrakcja m => m KontraLink
+handleCreateUser :: Kontrakcja m => m JSValue
 handleCreateUser = onlySalesOrAdmin $ do
     email <- map toLower <$> (guardJustM $ getField "email")
     fstname <- guardJustM $ getField "fstname"
     sndname <- guardJustM $ getField "sndname"
     lang <- guardJustM $ join <$> fmap langFromCode <$> getField "lang"
     company <- dbUpdate $ CreateCompany
-    muser <- createNewUserByAdmin email (fstname, sndname) (companyid company, True) lang
-    when (isNothing muser) $
-      addFlashM flashMessageUserWithSameEmailExists
-    -- FIXME: where to redirect?
-    return LoopBack
+    muser <- createNewUserByAdmin email (fstname, sndname) custommessage (companyid company, True) lang
+    runJSONGenT $ case muser of
+      Nothing -> do
+        value "success" False
+        valueM "error_message" $ renderTemplate_ "flashMessageUserWithSameEmailExists"
+      Just _ -> do
+        value "success" True
+        value "error_message" (Nothing :: Maybe String)
 
 handlePostAdminCompanyUsers :: Kontrakcja m => CompanyID -> m JSValue
 handlePostAdminCompanyUsers companyid = onlySalesOrAdmin $ do

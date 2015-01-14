@@ -2,7 +2,7 @@
 
 define(['React', 'lists/list', 'moment', 'legacy_code'], function(React, List, moment) {
 
-var openCreateUserModal = function() {
+var openCreateUserModal = function(callback) {
   var body = jQuery("<div class='standard-input-table'>");
   body.append("<p>Create new user account</p>");
   var table = jQuery("<table/>");
@@ -48,7 +48,7 @@ var openCreateUserModal = function() {
 
   body.append(table);
 
-  new Confirmation({
+  var confirmation = new Confirmation({
     title : "Create user with empty company",
     acceptButtonText : "OK",
     content  : body,
@@ -60,11 +60,11 @@ var openCreateUserModal = function() {
 
       // Validate fields
       var validationResult = true;
-      if(!new NameValidation().validateData(fstname.val())) {
+      if(!new NameValidation().validateData(fstname.val()) && fstname.val() != "") {
         tr1ErrorRow.css('display','');
         validationResult = false;
       }
-      if(!new NameValidation().validateData(sndname.val())) {
+      if(!new NameValidation().validateData(sndname.val()) && sndname.val() != "") {
         tr2ErrorRow.css('display','');
         validationResult = false;
       }
@@ -77,6 +77,16 @@ var openCreateUserModal = function() {
       }
 
       if (validationResult) {
+        var successCallback = function(resp) {
+          resp = JSON.parse(resp);
+          if (resp.success) {
+            confirmation.close();
+            callback();
+          } else {
+            new FlashMessage({color: 'red', content: resp.error_message});
+          }
+        };
+
         new Submit({
           method: "POST",
           add : "true",
@@ -85,7 +95,7 @@ var openCreateUserModal = function() {
           sndname : sndname.val(),
           email : email.val(),
           lang : lang.val(),
-         }).send();
+        }).sendAjax(successCallback, function() {window.location.reload();});
       }
     }
  });
@@ -111,7 +121,7 @@ return React.createClass({
             color="green"
             size="tiny"
             onSelect={function() {
-             openCreateUserModal();
+             openCreateUserModal(function () { self.reload(); });
             }}
           />
          <List.ListAction
