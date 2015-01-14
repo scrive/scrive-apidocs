@@ -1,152 +1,6 @@
 /** @jsx React.DOM */
 
-define(["React","tinycolor","common/backbone_mixin","admin/brandeddomain/domainviewmodel","legacy_code","common/button","common/uploadimagebutton","common/select","common/infotextinput"], function(React, tinycolor, BackboneMixin, DomainViewModel,_Legacy, Button, UploadImageButton,NewSelect,InfoTextInput) {
-
-var DomainImagePropertyEditor = React.createClass({
-  render: function() {
-    var self = this;
-    return (
-      <div className="domain-property-editor domain-image-property">
-        <div className="domain-image-property-title">
-          <strong>{self.props.title}:</strong>
-        </div>
-        <div className="domain-text-property-edit">
-          <img src={this.props.getValue()} className="favicon-image"/>
-          <UploadImageButton
-                text="Upload image"
-                width={160}
-                size="tiny"
-                onUpload={function(image) {
-                  self.props.setValue(image);
-                }}
-          />
-        </div>
-      </div>
-    );
-  }
-});
-
-var DomainTextPropertyEditor = React.createClass({
-  render: function() {
-    var self = this;
-    return (
-      <div className="domain-property-editor domain-text-property">
-        <div className="domain-text-property-title">
-          <strong>{self.props.title}</strong> {self.props.description}
-        </div>
-        <div className="domain-text-property-edit">
-          <InfoTextInput
-            value={self.props.getValue()}
-            infotext=""
-            onChange={function(v) {self.props.setValue(v)}}
-            maxLength={self.props.maxLength}
-          />
-        </div>
-      </div>
-    );
-  }
-});
-
-var DomainColorPropertyEditor = React.createClass({
-  getInitialState: function() {
-    return {
-      showColorPicker : false
-    };
-  },
-  hideColorPicker : function() {
-    this.setState({showColorPicker : false});
-  },
-  componentDidMount : function() {
-    var self = this;
-    var colorPicker = $(this.refs.colorPicker.getDOMNode()).ColorPicker({
-      flat: true,
-      color: this.props.getValue(),
-      onChange: function(hsb, hex, rgb) {
-        if (self.state.showColorPicker) {
-          self.props.setValue("#" + hex);
-        }
-      }
-    });
-    this.setState({colorPicker : colorPicker});
-    colorPicker.hover(undefined,function() {
-      self.setState({showColorPicker : false});
-    });
-  },
-  componentDidUpdate: function() {
-     var self = this;
-     if (this.state.colorPicker && self.state.showColorPicker) {
-       this.state.colorPicker.ColorPickerSetColor(self.props.getValue());
-     }
-  },
-  render: function() {
-    var self = this;
-    return (
-      <div className="domain-property-editor domain-color-property">
-        <div className="domain-color-property-editor">
-          <div>
-            <strong className="domain-color-property-title">
-              {self.props.title}
-            </strong>
-            <div className="domain-color-property-editor-color-picker-with-icons">
-              { /*if*/ this.props.icons &&
-                  _.map(this.props.icons,function(i) {
-                    return (
-                      <div className={"icon status " + i} key={Math.random()}  style={{backgroundColor: self.props.getValue() }}>
-                      </div>
-                    );
-                  })
-
-
-              }
-              <div className="domain-color-property-editor-color-picker">
-                <InfoTextInput
-                  ref="colorInput"
-                  value={this.props.getValue()}
-                  onChange={function(v) {
-                    if (tinycolor(v).ok)
-                      self.props.setValue(v);
-                    }
-                  }
-                  onBlur={
-                    function() {
-                      self.refs.colorInput.setValue(self.props.getValue());
-                    }
-                  }
-                />
-                <div
-                  className="color-display"
-                  style={{backgroundColor: this.props.getValue()}}
-                  onClick={function() {
-                    if (!self.state.showColorPicker) {
-                      self.props.onColorPickerOpen();
-                    }
-                    self.setState({showColorPicker : !self.state.showColorPicker});
-                  }}
-                />
-                <div ref="colorPicker" className={"color-picker " + (self.state.showColorPicker ? "" : "hidden")}/>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-});
-
-var DomainPropertyTitle = React.createClass({
-  render: function() {
-    var self = this;
-    return (
-      <div className="domain-property-editor domain-property-title">
-        <strong>
-          {self.props.title}
-         </strong>
-          {self.props.description}
-      </div>
-    );
-  }
-});
-
+define(["React","common/backbone_mixin","admin/brandeddomain/domainviewmodel","legacy_code","common/button","admin/brandeddomain/domainimageeditor","admin/brandeddomain/domaintexteditor","admin/brandeddomain/domaincoloreditor"], function(React, BackboneMixin, DomainViewModel,_Legacy, Button, DomainImageEditor,DomainTextEditor,DomainColorEditor) {
 
 return React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
@@ -185,38 +39,38 @@ return React.createClass({
               {localization.branding.settingsTitle}
             </div>
             <div className='domain-settings-edit-panel-column left'>
-              <DomainTextPropertyEditor
+              <DomainTextEditor
                 title="Domain URL"
                 description="Url that has to match give domain.Does not apply to main scrive domain"
                 getValue={function() {return model.getUrl()}}
                 setValue={function(v) {return model.setUrl(v)}}
               />
-              <DomainTextPropertyEditor
+              <DomainTextEditor
                 title="Browser title"
                 description="Used in title in browsers"
                 getValue={function() {return model.browserTitle()}}
                 setValue={function(v) {return model.setBrowserTitle(v)}}
               />
-              <DomainTextPropertyEditor
+              <DomainTextEditor
                 title="SMS originator"
                 description="The name that is displayed to the recipient when receiving an SMS. Maximum 11 alpha-numeric characters."
                 getValue={function() {return model.smsOriginator()}}
                 setValue={function(v) {return model.setSmsOriginator(v)}}
                 maxLength={11}
               />
-              <DomainTextPropertyEditor
+              <DomainTextEditor
                 title="Email originator"
                 description="The name that is displayed to the recipient when receiving emails."
                 getValue={function() {return model.emailOriginator()}}
                 setValue={function(v) {return model.setEmailOriginator(v)}}
               />
-              <DomainTextPropertyEditor
+              <DomainTextEditor
                 title="Contact email"
                 description="In places where the user can contact you this is the email address that will be used."
                 getValue={function() {return model.contactEmail()}}
                 setValue={function(v) {return model.setContactEmail(v)}}
               />
-              <DomainTextPropertyEditor
+              <DomainTextEditor
                 title="No replay email"
                 description="This email address will be used as the no-reply address. Setting this address may cause mail delivery issues."
                 getValue={function() {return model.noreplyEmail()}}
@@ -224,16 +78,18 @@ return React.createClass({
               />
             </div>
             <div className='domain-settings-edit-panel-column right'>
-              <DomainImagePropertyEditor
+              <DomainImageEditor
                 title="Favicon"
                 getValue={function() {return model.favicon()}}
                 setValue={function(v) {return model.setFavicon(v)}}
               />
-              <DomainPropertyTitle
-                title="Participant colours"
-                description="These colours will help while designing a document to create a visual connection between the party and the placed fields. The colours should be as different as possible to easily distinguish them from each other. If there are more than 6 parties the colors will be repeated."
-              />
-              <DomainColorPropertyEditor
+              <div className="domain-property-editor domain-property-title">
+                <strong>
+                  Participant colours
+                </strong>
+                  These colours will help while designing a document to create a visual connection between the party and the placed fields. The colours should be as different as possible to easily distinguish them from each other. If there are more than 6 parties the colors will be repeated.
+              </div>
+              <DomainColorEditor
                 ref="participant1"
                 title="Participant 1"
                 getValue={function() {return model.participantColor1()}}
@@ -241,7 +97,7 @@ return React.createClass({
                 onColorPickerOpen={function() { self.hideAllColorPickers(); }}
 
               />
-            <DomainColorPropertyEditor
+              <DomainColorEditor
                 ref="participant2"
                 title="Participant 2"
                 getValue={function() {return model.participantColor2()}}
@@ -249,40 +105,42 @@ return React.createClass({
                 onColorPickerOpen={function() { self.hideAllColorPickers(); }}
 
               />
-              <DomainColorPropertyEditor
+              <DomainColorEditor
                 ref="participant3"
                 title="Participant 3"
                 getValue={function() {return model.participantColor3()}}
                 setValue={function(v) {return model.setParticipantColor3(v)}}
                 onColorPickerOpen={function() { self.hideAllColorPickers(); }}
               />
-              <DomainColorPropertyEditor
+              <DomainColorEditor
                 ref="participant4"
                 title="Participant 4"
                 getValue={function() {return model.participantColor4()}}
                 setValue={function(v) {return model.setParticipantColor4(v)}}
                 onColorPickerOpen={function() { self.hideAllColorPickers(); }}
               />
-              <DomainColorPropertyEditor
+              <DomainColorEditor
                 ref="participant5"
                 title="Participant 5"
                 getValue={function() {return model.participantColor5()}}
                 setValue={function(v) {return model.setParticipantColor5(v)}}
                 onColorPickerOpen={function() { self.hideAllColorPickers(); }}
               />
-              <DomainColorPropertyEditor
+              <DomainColorEditor
                 ref="participant6"
                 title="Participant 6"
                 getValue={function() {return model.participantColor6()}}
                 setValue={function(v) {return model.setParticipantColor6(v)}}
                 onColorPickerOpen={function() { self.hideAllColorPickers(); }}
               />
-              <DomainPropertyTitle
-                title="Status and event colours"
-                description="This is the document status indicated with an icon and a colour. Here you can modify the colors."
-              />
+              <div className="domain-property-editor domain-property-title">
+                <strong>
+                  Status and event colours
+                </strong>
+                  This is the document status indicated with an icon and a colour. Here you can modify the colors.
+              </div>
 
-              <DomainColorPropertyEditor
+              <DomainColorEditor
                 ref="draftColor"
                 title="Draft, template"
                 icons={["draft","template"]}
@@ -290,7 +148,7 @@ return React.createClass({
                 setValue={function(v) {return model.setDraftColor(v)}}
                 onColorPickerOpen={function() { self.hideAllColorPickers(); }}
               />
-              <DomainColorPropertyEditor
+              <DomainColorEditor
                 ref="errorColor"
                 title="Error, withdrawn,cancelled and timed-out"
                 icons={["problem","cancelled","rejected","timeouted"]}
@@ -298,7 +156,7 @@ return React.createClass({
                 setValue={function(v) {return model.setCancelledColor(v)}}
                 onColorPickerOpen={function() { self.hideAllColorPickers(); }}
               />
-              <DomainColorPropertyEditor
+              <DomainColorEditor
                 ref="initiatedColor"
                 title="Initiated"
                 icons={["initiated"]}
@@ -306,7 +164,7 @@ return React.createClass({
                 setValue={function(v) {return model.setInitatedColor(v)}}
                 onColorPickerOpen={function() { self.hideAllColorPickers(); }}
               />
-              <DomainColorPropertyEditor
+              <DomainColorEditor
                 ref="sentColor"
                 title="Sent"
                 icons={["sent"]}
@@ -314,7 +172,7 @@ return React.createClass({
                 setValue={function(v) {return model.setSentColor(v)}}
                 onColorPickerOpen={function() { self.hideAllColorPickers(); }}
               />
-            <DomainColorPropertyEditor
+            <DomainColorEditor
                 ref="deliveredColor"
                 title="Delivered"
                 icons={["delivered"]}
@@ -322,7 +180,7 @@ return React.createClass({
                 setValue={function(v) {return model.setDeliveredColor(v)}}
                 onColorPickerOpen={function() { self.hideAllColorPickers(); }}
               />
-            <DomainColorPropertyEditor
+            <DomainColorEditor
                 ref="openedColor"
                 title="Email opened, prolonged"
                 icons={["opened","prolonged"]}
@@ -330,7 +188,7 @@ return React.createClass({
                 setValue={function(v) {return model.setOpenedColor(v)}}
                 onColorPickerOpen={function() { self.hideAllColorPickers(); }}
               />
-              <DomainColorPropertyEditor
+              <DomainColorEditor
                 ref="reviewedColor"
                 title="Reviewed online"
                 icons={["read"]}
@@ -338,7 +196,7 @@ return React.createClass({
                 setValue={function(v) {return model.setReviewedColor(v)}}
                 onColorPickerOpen={function() { self.hideAllColorPickers(); }}
               />
-              <DomainColorPropertyEditor
+              <DomainColorEditor
                 ref="signedColor"
                 title="Signed, sealed"
                 icons={["signed","sealed"]}
