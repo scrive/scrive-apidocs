@@ -3,6 +3,7 @@ module User.Utils (
     , withUserPost
     , withUserGet
     , checkUserTOSGet
+    , withCompanyUser
     , withCompanyAdmin
     , withCompanyAdminOrAdminOnly
 )where

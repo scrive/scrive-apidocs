@@ -82,7 +82,6 @@ define([
   '../js/designview/designviewtabs',
   '../js/designview/csvsignatorydesign',
   '../js/designview/firsttimeuserexperience',
-  '../js/designview/signviewsettings',
   '../js/validation',
   '../js/signaturemodal/signaturetyper',
   '../js/signaturemodal/signaturedrawer',

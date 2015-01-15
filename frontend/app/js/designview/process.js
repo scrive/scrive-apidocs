@@ -6,7 +6,7 @@
 
 **/
 
-define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_theme', 'tinyMCE_noneeditable', 'tinyMCE_paste', 'legacy_code'], function(Backbone, React, CustomTextEditor, tinyMCE) {
+define(['Backbone', 'React', 'common/customtexteditor', 'designview/signviewsettings',  'tinyMCE', 'tinyMCE_theme', 'tinyMCE_noneeditable', 'tinyMCE_paste', 'legacy_code'], function(Backbone, React, CustomTextEditor, SignviewSettings,  tinyMCE) {
     /**
         model is DocViewModel
     **/
@@ -286,10 +286,12 @@ define(['Backbone', 'React', 'common/customtexteditor',  'tinyMCE', 'tinyMCE_the
                 oneClick: true,
                 onClick: function() {
                   mixpanel.track('Open signview settings');
-                  new SignviewSettingsPopup({document: document,
-                                             onClose: function() {
-                                               editSignviewSettingsButton.setNotClicked();
-                                             }});
+                  new SignviewSettings({
+                    document: document,
+                    onClose: function() {
+                      editSignviewSettingsButton.setNotClicked();
+                    }
+                  });
                 }
             });
 

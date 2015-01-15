@@ -4,7 +4,8 @@
     IMPORTANT: No function from this module does access control. They should not be used on their own.
 -}
 module Theme.Control (
-    handleGetThemesForCompany
+    handleGetTheme
+  , handleGetThemesForCompany
   , handleGetThemesForDomain
   , handleGetThemesUsedByDomain
   , handleNewThemeForDomain
@@ -29,6 +30,13 @@ import Kontra
 import Theme.Model
 import Theme.View
 import Util.MonadUtils
+
+
+handleGetTheme:: Kontrakcja m => ThemeID -> m Response
+handleGetTheme tid =  do
+  theme <- dbQuery $ GetTheme tid
+  let  res = unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) unjsonTheme theme
+  return $ toResponseBS "text/json" $ res
 
 handleGetThemesForCompany:: Kontrakcja m => CompanyID -> m Response
 handleGetThemesForCompany cid =  do

@@ -19,11 +19,12 @@ return Backbone.Model.extend({
    "negativeColor" : undefined,
    "negativeTextColor" : undefined,
    "font" : undefined,
-   "dirty" : false
+   "dirty" : false,
+   "ready" : false
   },
   initialize : function(args) {
     var self = this;
-    if (args.listobject)
+    if (args.listobject) {
       this.set({
         "id" : args.listobject.field("id"),
         "name" : args.listobject.field("name"),
@@ -40,8 +41,12 @@ return Backbone.Model.extend({
         "negativeTextColor" : args.listobject.field("negativeTextColor"),
         "font" : args.listobject.field("font"),
         "listobject" : undefined,
+        "ready" : true,
         "dirty" : false
       });
+    } else if (args.url != undefined) {
+      this.url = args.url;
+    }
   },
   themeid: function() {
     return this.get("id");
@@ -126,6 +131,14 @@ return Backbone.Model.extend({
   },
   dirty: function() {
     return this.get("dirty");
+  },
+  ready : function() {
+    return this.get("ready");
+  },
+  parse : function(data) {
+    data['ready'] = true;
+    data['dirty'] = false;
+    return data;
   },
   save : function(url,callback) {
     var self = this;

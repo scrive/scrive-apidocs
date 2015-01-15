@@ -65,7 +65,7 @@ return React.createClass({
 
           {/*if*/ isCheckbox &&
             <div className={classes}>
-              <Checkbox ref="checkbox" initiallyChecked={isChecked} style={style} label="" onChange={c} />
+              <Checkbox ref="checkbox" checked={isChecked} style={style} label="" onChange={c} />
             </div>
           }
 

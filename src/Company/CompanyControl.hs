@@ -11,6 +11,7 @@ module Company.CompanyControl (
 import Control.Applicative
 import Data.Functor.Invariant
 import Data.Unjson
+import Data.Maybe
 import Happstack.Server hiding (dir, simpleHTTP)
 import Happstack.StaticRouting (Route, dir, choice)
 import qualified Data.ByteString as BS
@@ -42,6 +43,7 @@ routes = choice
   , dir "companybranding" $ dir "newtheme" $ hPost $ toK1 $ (\themeType -> handleNewTheme themeType Nothing)
   , dir "companybranding" $ dir "updatetheme" $ hPost $ toK1 $ handleUpdateTheme Nothing
   , dir "companybranding" $ dir "deletetheme" $ hPost $ toK1 $ handleDeleteTheme Nothing
+  , dir "companybranding" $ dir "signviewtheme" $ hGet $ toK0 $ handleGetSignviewTheme
   ]
 
 adminRoutes :: Route (KontraPlus Response)
@@ -84,6 +86,11 @@ handleGetDomainThemes = do
   bd <- ctxbrandeddomain <$> getContext
   handleGetThemesUsedByDomain bd
 
+handleGetSignviewTheme :: Kontrakcja m => m Response
+handleGetSignviewTheme = withCompanyUser $ \(_,company) -> do
+  cu <- dbQuery $ GetCompanyUI $ companyid company
+  bd <- ctxbrandeddomain <$> getContext
+  handleGetTheme $ fromMaybe (bdSignviewTheme bd) (companySignviewTheme cu)
 
 handleNewTheme :: Kontrakcja m =>  String -> Maybe CompanyID -> m Response
 handleNewTheme s mcid = withCompanyAdminOrAdminOnly mcid $ \company -> do

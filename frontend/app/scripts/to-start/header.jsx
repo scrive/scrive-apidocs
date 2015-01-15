@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['legacy_code', 'React', 'common/backbone_mixin', 'common/infotextinput', 'common/button', 'common/checkbox', 'doctools/docviewsignatory', 'tinycolor'], function(_legacy, React, BackboneMixin) {
+define(['legacy_code', 'React', 'common/backbone_mixin', 'common/infotextinput', function(_legacy, React, BackboneMixin) {
 
 return React.createClass({
   propTypes: {
