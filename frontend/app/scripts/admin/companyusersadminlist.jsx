@@ -51,19 +51,6 @@ var openNewUserModal = function(companyid,callback) {
   tr7.append(jQuery("<td/>").append(isadmin));
   table.append(tr7);
 
-
-  var tr8 = jQuery("<tr/>").append(jQuery("<td/>").text("Header:"));
-  var btnHeader = jQuery('<input type="button" class="editer" value="Default"/>').click(function(){
-    prepareForEdit(jQuery(this).parents("div"), '300');
-    jQuery(this).hide();
-  });
-  var header = jQuery('<span class="editable" name="custommessage" style="display: none">'
-                            + jQuery('#message').html()
-                            + '</span>');
-
-  tr8.append(jQuery("<td/>").append(btnHeader).append(header));
-  table.append(tr8);
-
   body.append(table);
 
   var confirmation = new Confirmation({
@@ -112,7 +99,6 @@ var openNewUserModal = function(companyid,callback) {
           email : email.val(),
           lang : lang.val(),
           iscompanyadmin : isadmin.is(":checked") ? "Yes" : undefined,
-          custommessage : jQuery('textarea',body).val()
         }).sendAjax(successCallback, function() {window.location.reload();});
       }
     }

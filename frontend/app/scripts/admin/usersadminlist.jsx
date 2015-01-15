@@ -46,16 +46,6 @@ var openCreateUserModal = function() {
   tr6.append(jQuery("<td/>").append(lang));
   table.append(tr6);
 
-  var tr7 = jQuery("<tr/>").append(jQuery("<td/>").text("Header:"));
-  var btnHeader = jQuery('<input type="button" class="editer" value="Default"/>').click(function(){
-    prepareForEdit(jQuery(this).parents("div"), '300');
-    jQuery(this).hide();
-  });
-  var header = jQuery('<span class="editable" name="custommessage" style="display: none"></span>');
-
-  tr7.append(jQuery("<td/>").append(btnHeader).append(header));
-  table.append(tr7);
-
   body.append(table);
 
   new Confirmation({
@@ -95,7 +85,6 @@ var openCreateUserModal = function() {
           sndname : sndname.val(),
           email : email.val(),
           lang : lang.val(),
-          custommessage : jQuery('textarea',body).val()
          }).send();
       }
     }
