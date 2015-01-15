@@ -415,33 +415,60 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                             mixpanel.track('Click Reject');
                                             var arrow = model.arrow();
                                             if (arrow) { arrow.disable(); }
-                                            ConfirmationWithEmail.popup({
-                                            title: localization.process.signatorycancelmodaltitle,
-                                            mail: document.currentSignatory().rejectMail(),
-                                            icon: null,
-                                            signview: true,
-                                            cssClass: "grey reject-modal",
-                                            acceptText: localization.reject.send,
-                                            editText: localization.reject.editMessage,
-                                            rejectText: localization.cancel,
-                                            acceptColor: "red",
-                                            oneClick: true,
-                                            onAccept: function(customtext) {
-                                                trackTimeout('Accept',
-                                                             {'Accept': 'reject document'},
-                                                             function() {
-                                                                 document.currentSignatory().reject(customtext).sendAjax(
-                                                                   function() {
-                                                                    if (document.currentSignatory().rejectredirect() != undefined && document.currentSignatory().rejectredirect() != "") {
-                                                                      window.location = document.currentSignatory().rejectredirect();
-                                                                     }
-                                                                     else {
-                                                                      window.location.reload();
-                                                                     }
-                                                                  },
-                                                                   rejectErrorCallback
-                                                                );
-                                                             });
+                                            var popup = new Confirmation({
+                                              title: localization.process.signatorycancelmodaltitle,
+                                              icon: null,
+                                              content: (function () {
+                                                window.tinymce_textarea_count = window.tinymce_textarea_count || 0;
+                                                window.tinymce_textarea_count++;
+
+                                                var id = 'editable-textarea-' + window.tinymce_textarea_count;
+                                                var textarea = $("<textarea id='" + id + "' style='height:0px;border:0px;padding:0px;margin:0px'/>").html("");
+
+                                                var wrapper = $("<div />");
+                                                wrapper.append("<p style='margin-bottom: 10px'>If you reject the document the signing process will be rejected. Please describe why you want to reject the document</p>");
+                                                wrapper.append(textarea);
+
+                                                setTimeout(function() {
+                                                  tinyMCE.baseURL = '/libs/tiny_mce';
+                                                  tinyMCE.init({
+                                                    selector: "#" + id,
+                                                    content_css : "/css/tinymce.css",
+                                                    plugins: "noneditable, paste",
+                                                    menubar: false,
+                                                    valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul",
+                                                    setup: function (editor) {
+                                                      editor.on('init', function() {
+                                                      });
+
+                                                      editor.on('PreInit', function() {
+                                                        $(editor.getContainer()).find('div[role=toolbar]').hide();
+                                                        $(editor.getContainer()).find('.mce-path').parents('.mce-statusbar').hide();
+                                                      });
+
+                                                      editor.on("change", function() {
+                                                        popup.customtext = editor.getBody().innerHTML;
+                                                      });
+                                                    }
+                                                  });
+                                                }, 100);
+
+                                                return wrapper;
+                                              }()),
+                                              extraClass: "grey reject-modal",
+                                              acceptText: localization.reject.send,
+                                              acceptColor: "red",
+                                              onAccept: function() {
+                                                var customtext = popup.customtext;
+                                                trackTimeout('Accept', {'Accept': 'reject document'}, function() {
+                                                  document.currentSignatory().reject(customtext).sendAjax(function() {
+                                                    if (document.currentSignatory().rejectredirect() != undefined && document.currentSignatory().rejectredirect() != "") {
+                                                      window.location = document.currentSignatory().rejectredirect();
+                                                     } else {
+                                                      window.location.reload();
+                                                     }
+                                                  }, rejectErrorCallback);
+                                                });
                                               },
                                               onReject: function() {
                                                 var arrow = model.arrow();
