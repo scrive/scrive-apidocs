@@ -427,7 +427,7 @@ handleCreateUser = onlySalesOrAdmin $ do
     sndname <- guardJustM $ getField "sndname"
     lang <- guardJustM $ join <$> fmap langFromCode <$> getField "lang"
     company <- dbUpdate $ CreateCompany
-    muser <- createNewUserByAdmin email (fstname, sndname) Nothing (companyid company, True) lang
+    muser <- createNewUserByAdmin email (fstname, sndname) (companyid company, True) lang
     when (isNothing muser) $
       addFlashM flashMessageUserWithSameEmailExists
     -- FIXME: where to redirect?
@@ -440,7 +440,7 @@ handlePostAdminCompanyUsers companyid = onlySalesOrAdmin $ do
   sndname <- getCriticalField asValidName "sndname"
   lang <- guardJustM $ join <$> fmap langFromCode <$> getField "lang"
   admin <- isFieldSet "iscompanyadmin"
-  muser <- createNewUserByAdmin email (fstname, sndname) Nothing (companyid, admin) lang
+  muser <- createNewUserByAdmin email (fstname, sndname) (companyid, admin) lang
   runJSONGenT $ case muser of
     Nothing -> do
       value "success" False

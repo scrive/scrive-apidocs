@@ -315,15 +315,11 @@ mailNewCompanyUserInviteMainP=
 ### NEW ACCOUNT BY ADMIN
 ###
 mailNewAccountCreatedByAdminContentHeader=
-$if(custommessage)$
-    $custommessage:noescape()$
-$else$
-    <br/>
-    $_mailNewAccountCreatedByAdminContentHeaderBodyFirst()$
-    <br/>
-    <br/>
-    $_mailNewAccountCreatedByAdminContentHeaderBodySecond()$
-$endif$
+  <br/>
+  $_mailNewAccountCreatedByAdminContentHeaderBodyFirst()$
+  <br/>
+  <br/>
+  $_mailNewAccountCreatedByAdminContentHeaderBodySecond()$
 ###
 mailNewAccountCreatedByAdmin=
    $_mailNewAccountCreatedByAdminTitle()$

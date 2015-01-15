@@ -148,7 +148,7 @@ testUserMails = do
           newUserMail ctx (getEmail user) (getEmail user) al
     checkMail "New account by admin" $ do
           al <- newUserAccountRequestLink (ctxlang ctx) (userid user) ByAdmin
-          mailNewAccountCreatedByAdmin ctx (ctxlang ctx) (getSmartName user) (getEmail user) al Nothing
+          mailNewAccountCreatedByAdmin ctx (ctxlang ctx) (getSmartName user) (getEmail user) al
     checkMail "Reset password mail" $ do
           al <- newUserAccountRequestLink (ctxlang ctx) (userid user) AccountRequest
           resetPasswordMail ctx user al

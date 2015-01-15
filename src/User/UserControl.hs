@@ -254,15 +254,15 @@ sendNewUserMail user = do
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = getSmartName user, email = getEmail user }]}
   return ()
 
-createNewUserByAdmin :: Kontrakcja m => String -> (String, String) -> Maybe String -> (CompanyID, Bool) -> Lang -> m (Maybe User)
-createNewUserByAdmin email names custommessage companyandrole lg = do
+createNewUserByAdmin :: Kontrakcja m => String -> (String, String) -> (CompanyID, Bool) -> Lang -> m (Maybe User)
+createNewUserByAdmin email names companyandrole lg = do
     ctx <- getContext
     muser <- createUser (Email email) names companyandrole lg
     case muser of
          Just user -> do
              let fullname = composeFullName names
              chpwdlink <- newUserAccountRequestLink (lang $ usersettings user) (userid user) ByAdmin
-             mail <- mailNewAccountCreatedByAdmin ctx (getLang user) fullname email chpwdlink custommessage
+             mail <- mailNewAccountCreatedByAdmin ctx (getLang user) fullname email chpwdlink
              scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = fullname, email = email }]}
              return muser
          Nothing -> return muser

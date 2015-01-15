@@ -244,15 +244,14 @@ newUserMail ctx emailaddress personname activatelink = do
     brandingMailFields (ctxbrandeddomain ctx) Nothing
 
 
-mailNewAccountCreatedByAdmin :: (HasLang a, TemplatesMonad m) => Context -> a -> String -> String -> KontraLink -> Maybe String -> m Mail
-mailNewAccountCreatedByAdmin ctx lang personname email setpasslink custommessage = do
+mailNewAccountCreatedByAdmin :: (HasLang a, TemplatesMonad m) => Context -> a -> String -> String -> KontraLink -> m Mail
+mailNewAccountCreatedByAdmin ctx lang personname email setpasslink = do
   kontramaillocal (ctxmailsconfig ctx) (ctxbrandeddomain ctx)  lang "mailNewAccountCreatedByAdmin" $ do
     F.value "personname"    $ personname
     F.value "email"         $ email
     F.value "passwordlink"  $ show setpasslink
     F.value "creatorname"   $ maybe "" getSmartName (ctxmaybeuser ctx)
     F.value "ctxhostpart"   $ ctxhostpart ctx
-    F.value "custommessage"   custommessage
     brandingMailFields (ctxbrandeddomain ctx) Nothing
 
 
