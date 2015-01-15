@@ -169,6 +169,8 @@ javascriptLocalisation =
                signbuttontext: "$_contractsignbuttontext()$",
                signbuttontextfromsignaturedrawing: "$_contractsignbuttontextfromsignaturedrawing()$",
                signatorycancelmodaltitle: "$_contractsignatorycancelmodaltitle()$",
+               signatorycancelmodaltext: "$_contractsignatorycancelmodaltext()$",
+               signatorycancelmodalplaceholder: "$_contractsignatorycancelmodalplaceholder()$",
                remindagainbuttontext: "$_contractremindagainbuttontext()$",
                authorname: "$_contractauthorname()$",
                authorsignatoryname: "$_contractauthorsignatoryname()$",
