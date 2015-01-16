@@ -7,6 +7,14 @@ return React.createClass({
     getBackboneModels : function() {
       return [this.props.model];
     },
+    getDefaultProps: function() {
+      return {
+        showHeader: true,
+        showRejectOption: true,
+        showPDFDownload: true,
+        showFooter: true
+      };
+    },
     getInitialState: function() {
       return this.updatedState();
     },
@@ -46,35 +54,40 @@ return React.createClass({
       console.log("Rendering with url " + this.state.iconLegendMandatoryUrl);
       return (
               <div className="sample-sign-view">
+                {/*if*/ (self.props.showHeader) &&
+
                   <div style={{"background-color": model.brandColor()}} className="sample-sign-view-header">
                       <div className="logo"><img src={model.logo()} />
                       </div>
                       <div style={{"color": model.brandTextColor()}} className="header-text">{localization.sampleSignView.signViewHeader}</div>
                       <div style={{"clear": "both"}}></div>
                   </div>
-                  <div style={{"font-family": model.font()}} className="content">
-                      <div className="innercontent">
-                          <div className="contentheader">
-                              <div className="instructions">
-                                <span>Follow the <span style={{"color": model.actionColor()}} className="arrowtext">ARROW</span>FIXME</span>
-                              </div>
-                              <span><a className="download clickable">Demo document</a></span>
-                              <div className="arrow-legend">
-                                  <p>
-                                    <span className="mandatory arrow-icon" style={
-                                      {"background": this.state.iconLegendMandatoryUrl}
-                                    }/>
-                                    <span className="copy">{localization.sampleSignView.mandatoryAction}</span>
-                                  </p>
-                                  <p className="optionalcontainer">
-                                    <span className="optional arrow-icon" style={
-                                      {"background": this.state.iconLegendOptionalUrl}
-                                    }/>
-                                    <span className="copy">{localization.sampleSignView.optionalAction}</span>
-                                  </p>
-                              </div>
-                          </div>
-                          <div className="document">
+                }
+                <div style={{"font-family": model.font()}} className="content">
+                  <div className="innercontent">
+                     <div className="contentheader">
+                        <div className="instructions">
+                          <span>Follow the <span style={{"color": model.actionColor()}} className="arrowtext">ARROW</span>FIXME</span>
+                        </div>
+                        {/*if*/ (self.props.showPDFDownload) &&
+                          <span><a className="download clickable">Demo document</a></span>
+                        }
+                        <div className="arrow-legend">
+                          <p>
+                            <span className="mandatory arrow-icon" style={
+                              {"background": this.state.iconLegendMandatoryUrl}
+                            }/>
+                            <span className="copy">{localization.sampleSignView.mandatoryAction}</span>
+                          </p>
+                          <p className="optionalcontainer">
+                            <span className="optional arrow-icon" style={
+                              {"background": this.state.iconLegendOptionalUrl}
+                            }/>
+                            <span className="copy">{localization.sampleSignView.optionalAction}</span>
+                          </p>
+                        </div>
+                      </div>
+                      <div className="document">
                               <div className="downarrow" style={{"background": this.state.arrowDownUrl}}/>
                               <div className="field mandatoryfield">
                                   <div className="placedfield mandatoryplacedfield" style={{"border-color": model.actionColor()}}>
@@ -103,31 +116,47 @@ return React.createClass({
                                       </div>
                                   </div>
                               </div>
-                              <div className="section buttons">
-                                  <div className="buttoncontainer reject">
-                                     <Button
-                                      size="small"
-                                      type="cancel"
-                                      text={localization.sampleSignView.rejectButton}
-                                      style={{'background-color': model.negativeColor(), 'color': model.negativeTextColor()}}
-                                    />
-                                  </div>
-                                  <div className="buttoncontainer sign">
-                                    <Button
-                                      size="small"
-                                      type="action"
-                                      text={localization.sampleSignView.signButton}
-                                      style={{'background-color': model.actionColor(), 'color': model.actionTextColor()}}
-                                    />
-                                  </div>
-                              </div>
+                              {/*if*/ (self.props.showRejectOption) &&
+                                <div className="section buttons">
+                                    <div className="buttoncontainer reject">
+                                      <Button
+                                        size="small"
+                                        type="cancel"
+                                        text={localization.sampleSignView.rejectButton}
+                                        style={{'background-color': model.negativeColor(), 'color': model.negativeTextColor()}}
+                                      />
+                                    </div>
+                                    <div className="buttoncontainer sign">
+                                      <Button
+                                        size="small"
+                                        type="action"
+                                        text={localization.sampleSignView.signButton}
+                                        style={{'background-color': model.actionColor(), 'color': model.actionTextColor()}}
+                                      />
+                                    </div>
+                                </div>
+                              }
+                              {/*else*/ (!self.props.showRejectOption) &&
+                                <div className="section buttons">
+                                      <div className="buttoncontainer sign" style={{"float": "none"}}>
+                                      <Button
+                                        size="small"
+                                        type="action"
+                                        text={localization.sampleSignView.signButton}
+                                        style={{'background-color': model.actionColor(), 'color': model.actionTextColor()}}
+                                      />
+                                    </div>
+                                </div>
+                              }
+
                           </div>
                       </div>
                   </div>
-                  <div className="footer">
+                  {/*if*/ (self.props.showFooter) &&
+                    <div className="footer">
                       <div className="text">Powered by Scrive</div>
-
-                  </div>
+                    </div>
+                  }
               </div>
       );
     }

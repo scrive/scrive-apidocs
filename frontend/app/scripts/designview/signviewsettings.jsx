@@ -91,6 +91,10 @@ var SignviewSettingsView = React.createClass({
             </div>
             <div className="container">
               <SignviewPreview
+                showHeader={model.showHeader()}
+                showRejectOption={model.showRejectOption()}
+                showPDFDownload={model.showPDFDownload()}
+                showFooter={model.showFooter()}
                 model={model.theme()}
               />
             </div>
