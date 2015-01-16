@@ -104,9 +104,6 @@ define([
   '../js/account/usersandstats/stats',
   '../js/account/usersandstats/companyaccounts',
   '../js/account/usersandstats/companyaccountsandstats',
-  '../js/account/companybranding/companybrandingutils',
-  '../js/account/companybranding/companybrandingsignview',
-  '../js/account/companybranding/samplesignview',
   '../js/account/account',
   '../js/blocking',
   '../js/oauth'], function() {
