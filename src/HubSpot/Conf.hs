@@ -25,7 +25,7 @@ unjsonHubSpotConf :: UnjsonDef HubSpotConf
 unjsonHubSpotConf = objectOf $ pure HubSpotConf
   <*> fieldDef "hubId"
       ""
-      hubspotPortalId
+      hubspotHubId
       "HubSpot Hub Id"
   <*> fieldDef "formIds"
       Map.empty
