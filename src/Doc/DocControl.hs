@@ -458,7 +458,9 @@ showPage' fileid pageno = do
       let content = contents !! (pageno - 1)
       let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [content]) Nothing
       Log.mixlog_ $ "PNG page found and returned for file " ++ show fileid ++ " and page " ++ show pageno
-      return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") res
+      return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png")
+             -- max-age same as for brandedSignviewImage
+             $ setHeaderBS (BS.fromString "Cache-Control") (BS.fromString "max-age=600") res
 
     RenderedPages False _ -> do
       return ((toResponse "") { rsCode = 420 })
