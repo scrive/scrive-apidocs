@@ -5,6 +5,7 @@ log/
 kontrakcja.conf
 mailing_server.conf
 messenger_server.conf
+messenger_server.conf.json
 _cron_pid
 _mailer_pid
 _server_pid
@@ -30,3 +31,6 @@ tramp
 
 *.DS_Store
 SkrivaPå BP.pdf
+
+test/e-legitimation/Test-certificates/Mariana Källström.p12
+test/e-legitimation/Test-certificates/Åke Jansson.p12
