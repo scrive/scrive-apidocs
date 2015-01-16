@@ -302,7 +302,7 @@ getOAuthUser priv = do
     Nothing       -> return Nothing
     Just (Left l) -> return $ Just $ Left l
     Just (Right auth) -> do
-      uap <- dbQuery $ GetUserIDForAPIWithPrivilege (oaAPIToken auth) (oaAPISecret auth) (oaAccessToken auth) (oaAccessSecret auth) priv
+      uap <- dbQuery $ GetUserIDForAPIWithPrivilege (oaAPIToken auth) (oaAPISecret auth) (oaAccessToken auth) (oaAccessSecret auth) [priv]
       case uap of
         Nothing -> return $ Just $ Left "OAuth credentials are invalid."
         Just (userid, apistring) -> do

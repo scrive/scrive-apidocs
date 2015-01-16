@@ -241,7 +241,7 @@ testOAuthFlow = do
                                                                   , trTempSecret = sec
                                                                   , trVerifier = ver
                                                                   }) time
-  mup <- dbQuery $ GetUserIDForAPIWithPrivilege apitoken apisecret t s APIDocCreate
+  mup <- dbQuery $ GetUserIDForAPIWithPrivilege apitoken apisecret t s [APIDocCreate]
   assertBool "GetUserIDForAPIWithPrivilege: returned Nothing but should have worked" $ isJust mup
   
 testOAuthFlowWithDeny :: TestEnv ()
