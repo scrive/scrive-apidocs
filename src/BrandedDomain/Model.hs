@@ -179,30 +179,30 @@ instance (MonadDB m, MonadThrow m, Log.MonadLog m) => DBUpdate m NewBrandedDomai
     runQuery_ . sqlInsert "branded_domains" $ do
       sqlSet "url" ("" :: String)
       sqlSet "main_domain" False -- One can not create new main domain
-      sqlSet "sms_originator" ("" :: String)
-      sqlSet "email_originator" ("" :: String)
-      sqlSet "contact_email" ("" :: String)
-      sqlSet "noreply_email" ("" :: String)
+      sqlSet "sms_originator" $ bdSmsOriginator mbd
+      sqlSet "email_originator" $ bdEmailOriginator mbd
+      sqlSet "contact_email" $ bdContactEmail mbd
+      sqlSet "noreply_email" $ bdNoreplyEmail mbd
       sqlSet "mail_theme" $ themeID newmailtheme
       sqlSet "signview_theme" $ themeID newsignviewtheme
       sqlSet "service_theme" $ themeID newservicetheme
       sqlSet "login_theme" $ themeID newlogintheme
       sqlSet "browser_title" ("Scrive":: String)
       sqlSet "favicon" $ bdFavicon mbd
-      sqlSet "participant_color_1" ("#123456":: String)
-      sqlSet "participant_color_2" ("#123456":: String)
-      sqlSet "participant_color_3" ("#123456":: String)
-      sqlSet "participant_color_4" ("#123456":: String)
-      sqlSet "participant_color_5" ("#123456":: String)
-      sqlSet "participant_color_6" ("#123456":: String)
-      sqlSet "draft_color" ("#123456":: String)
-      sqlSet "cancelled_color" ("#123456":: String)
-      sqlSet "initiated_color" ("#123456":: String)
-      sqlSet "sent_color" ("#123456":: String)
-      sqlSet "delivered_color" ("#123456":: String)
-      sqlSet "opened_color" ("#123456":: String)
-      sqlSet "reviewed_color" ("#123456":: String)
-      sqlSet "signed_color" ("#123456":: String)
+      sqlSet "participant_color_1" $ bdParticipantColor1 mbd
+      sqlSet "participant_color_2" $ bdParticipantColor2 mbd
+      sqlSet "participant_color_3" $ bdParticipantColor3 mbd
+      sqlSet "participant_color_4" $ bdParticipantColor4 mbd
+      sqlSet "participant_color_5" $ bdParticipantColor5 mbd
+      sqlSet "participant_color_6" $ bdParticipantColor6 mbd
+      sqlSet "draft_color" $ bdDraftColor mbd
+      sqlSet "cancelled_color" $ bdCancelledColor mbd
+      sqlSet "initiated_color" $ bdInitatedColor mbd
+      sqlSet "sent_color" $ bdSentColor mbd
+      sqlSet "delivered_color" $ bdDeliveredColor mbd
+      sqlSet "opened_color" $ bdOpenedColor mbd
+      sqlSet "reviewed_color" $ bdReviewedColor mbd
+      sqlSet "signed_color" $ bdSignedColor mbd
       sqlResult "id"
     newdomainID <- fetchOne unSingle
     dbUpdate $  MakeThemeOwnedByDomain newdomainID (themeID newmailtheme)
