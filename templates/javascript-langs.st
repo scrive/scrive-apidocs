@@ -996,6 +996,7 @@ javascriptLocalisation =
            , footerLogged : "$_apiConfiramtionFooterLogged()$"
            , readPermission : "$_apiConfiramtionReadPermission()$"
            , createPermission : "$_apiConfiramtionCreatePersmission()$"
+           , readUserInfo : "$_apiConfiramtionReadUserInfo()$"
            , sendPermission : "$_apiConfiramtionSendPermission()$"
            , accept : "$_apiConfiramtionAccept()$"
            , loginAndAcceptTitle : "$_apiConfiramtionLoginAndAcceptTitle()$"

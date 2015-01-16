@@ -121,6 +121,7 @@ var OAuthConfirationView = Backbone.View.extend({
       var hrest = $("<span/>").text(" "+ localization.apiConfiration.header);
       box.append($("<p class=''/>").append(hwho).append(hrest));
       var list = $("<ul/>");
+      list.append($("<li>").text(localization.apiConfiration.readUserInfo));
       if (model.createPermission())
         list.append($("<li>").text(localization.apiConfiration.createPermission));
       if (model.readPermission())
@@ -234,7 +235,7 @@ var OAuthConfirationView = Backbone.View.extend({
 });
 
 
-window.OAuthConfiration = function(args){
+window.OAuthConfirmation = function(args){
         var model = new OAuthConfirationModel(args);
         var view = new OAuthConfirationView({
                         model: model,
