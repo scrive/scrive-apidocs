@@ -96,12 +96,15 @@ var AuthorViewAutomaticRemindersView = Backbone.View.extend({
                 value: model.newdaystoremind(),
                 onChange: function(v) {
                     days = parseInt(v);
-                    if (isNaN(days))
+                    if (isNaN(days)) {
                       days = undefined;
+                    } else {
+                      days = Math.min(document.daystosign(), days);
+                      days = Math.max(1, days);
+                    }
                     if (days != model.newdaystoremind()) {
                       model.setNewdaystoremind(days);
-                    }
-                    if (days == undefined && v != "") {
+                    } else if (days == undefined && v != "") {
                       self.daysinput.setValue("");
                     } else if (days + "" != v && v != "") {
                       self.daysinput.setValue(days + "");
