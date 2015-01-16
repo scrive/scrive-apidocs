@@ -79,7 +79,7 @@ define(['common/hubspot_service', 'common/adwords_conversion_service', 'Backbone
         header.append($("<img alt='logo' src='/login_logo/"+ window.brandinghash +"'/>"));
         header.append($("<div class='divider-line'/>"));
 
-        var poweredLabel = $("<label style='text-align:center;width:275px;'/>").text(localization.esigningpoweredbyscrive);
+        var poweredLabel = $("<span class='label' style='text-align:center;width:275px;'/>").text(localization.esigningpoweredbyscrive);
         header.append(poweredLabel);
 
         $(this.el).append(header);
@@ -119,7 +119,7 @@ define(['common/hubspot_service', 'common/adwords_conversion_service', 'Backbone
         body.append($("<div class='position first withEmail'/>").append(emailInput.el().attr("autocomplete","false").css("width","245px").css("padding","7px 14px").css("font-size","16px")));
         body.append($("<div class='position' style='text-align:center;margin-top:20px;'/>").append(signupButton.el()));
 
-        var alreadyHaveAccount = $("<label class='label-with-link'/>").html(localization.signupModal.alreadyHaveAnAccount);
+        var alreadyHaveAccount = $("<span class='label-with-link'/>").html(localization.signupModal.alreadyHaveAnAccount);
         alreadyHaveAccount.find('.put-link-to-login-here').attr('href', "/" + localization.code + '/login');
 
 

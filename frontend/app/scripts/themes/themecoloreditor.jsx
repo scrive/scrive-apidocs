@@ -73,7 +73,7 @@ return React.createClass({
                 ref="colorInput"
                 value={this.props.getColor()}
                 onChange={function(v) {
-                  if (tinycolor(v).ok)
+                  if (tinycolor(v).ok && (tinycolor(v).format != "name" || /^[a-zA-Z]+$/.test(v)))
                     self.props.setColor(v);
                 }}
                 onBlur={
@@ -100,7 +100,7 @@ return React.createClass({
                 ref="textColorInput"
                 value={this.props.getTextColor()}
                 onChange={function(v) {
-                  if (tinycolor(v).ok)
+                  if (tinycolor(v).ok && (tinycolor(v).format != "name" || /^[a-zA-Z]+$/.test(v)))
                     self.props.setTextColor(v);
                 }}
                 onBlur={

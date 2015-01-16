@@ -56,7 +56,7 @@ var AdminModel = Backbone.Model.extend({
                     var admin = this;
                     var div = $('<div/>');
                     var list = React.renderComponent(new BrandedDomainsList({
-                      onSelect : function(id) { window.location.hash = "#branding-themes-mail-" + id;},
+                      onSelect : function(id) { window.location.hash = "#branding-themes-email-" + id;},
                       loadLater : true
                     }),div[0]);
                     return new Tab({
@@ -76,8 +76,8 @@ var AdminModel = Backbone.Model.extend({
                         disabled : true,
                         elems: [function() { return div; }],
                         pagehash : function(s) {
-                          return (s.startsWith("#branding-themes-mail") ||
-                                  s.startsWith("#branding-themes-signview") ||
+                          return (s.startsWith("#branding-themes-email") ||
+                                  s.startsWith("#branding-themes-signing-page") ||
                                   s.startsWith("#branding-themes-service") ||
                                   s.startsWith("#branding-themes-login") ||
                                   s.startsWith("#branding-settings"));

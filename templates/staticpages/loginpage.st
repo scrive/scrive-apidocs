@@ -135,9 +135,9 @@ accountSetupPage=
         <div style="margin-bottom: 20px; margin-top: 50px; text-align: center" >
           <img alt='logo' src="/login_logo/$brandinghash$" />
           <div class='divider-line'></div>
-          <label style="text-align :center; width:275px">
+          <span class='label' style="text-align :center; width:275px">
             $PoweredByScrive()$
-          </label>
+          </span>
         </div>
 
         <script type="text/javascript">

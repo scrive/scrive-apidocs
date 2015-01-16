@@ -86,7 +86,7 @@ define(['Backbone', 'legacy_code'], function() {
       header.append($("<img alt='logo' src='/login_logo/"+ window.brandinghash +"'/>"));
       header.append($("<div class='divider-line'/>"));
 
-      var poweredLabel = $("<label style='text-align:center;width:275px;'/>").text(localization.esigningpoweredbyscrive);
+      var poweredLabel = $("<div class='label' style='text-align:center;width:275px;'/>").text(localization.esigningpoweredbyscrive);
       header.append(poweredLabel);
 
       $(this.el).append(header);
@@ -149,7 +149,7 @@ define(['Backbone', 'legacy_code'], function() {
       options.button = localization.accessNewAccountModal.button;
     }
 
-    options.el = $("<div style='width:275px;margin:20px auto'/>");
+    options.el = $("<div class='new-password-box'style='width:275px;margin:20px auto'/>");
     view = new NewPasswordView(options);
     this.el = function() {return $(view.el);};
   };

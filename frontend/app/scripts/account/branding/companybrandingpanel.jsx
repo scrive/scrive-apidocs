@@ -35,9 +35,9 @@ return React.createClass({
       return [this.state.model];
     },
     adjustToPageHash : function() {
-      if (location.hash == "#branding-themes-mail") {
+      if (location.hash == "#branding-themes-email") {
         this.state.model.switchToMailThemeMode();
-      } else if (location.hash == "#branding-themes-signview") {
+      } else if (location.hash == "#branding-themes-signing-page") {
         this.state.model.switchToSignviewThemeMode();
       } else if (location.hash == "#branding-themes-service") {
         this.state.model.switchToServiceThemeMode();

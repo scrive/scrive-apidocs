@@ -38,7 +38,9 @@ $htmlopentag()$
         <div style="margin-top: 50px;text-align:center;">
           <img alt="logo" src="/login_logo/$brandinghash$" />
           <div class="divider-line"></div>
-          <label style="text-align:center;width:275px;">E-signing powered by Scrive</label>
+          <div class='label' style="text-align:center;width:275px;">
+            E-signing powered by Scrive
+          </div>
         </div>
       </div>
     $termsOfServiceContent()$

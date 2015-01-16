@@ -140,14 +140,14 @@ return Backbone.Model.extend({
      return this.get("mode") == "mail-theme";
   },
   switchToMailThemeMode : function() {
-    location.hash = "#branding-themes-mail";
+    location.hash = "#branding-themes-email";
      return this.set({"mode" : "mail-theme"});
   },
   signviewThemeMode: function() {
      return this.get("mode") == "signview-theme";
   },
   switchToSignviewThemeMode: function() {
-     location.hash = "#branding-themes-signview";
+     location.hash = "#branding-themes-signing-page";
      return this.set({"mode" : "signview-theme"});
   },
   serviceThemeMode: function() {

@@ -54,9 +54,9 @@ $htmlopentag()$
      <div class="error-page-header-logo-wrapper" >
         <img alt='logo' src="/login_logo/$brandinghash$" />
         <div class='divider-line'></div>
-        <label>
+        <div class='label'>
           $PoweredByScrive()$
-        </label>
+        </div>
       </div>
    </div>
    <div class='error-page-info'>
@@ -142,9 +142,9 @@ $htmlopentag()$
      <div class="error-page-header-logo-wrapper" >
         <img alt='logo' src="/login_logo/$brandinghash$" />
         <div class='divider-line'></div>
-        <label>
+        <div class='label'>
           $PoweredByScrive()$
-        </label>
+        </div>
       </div>
    </div>
    <div class='error-page-info'>

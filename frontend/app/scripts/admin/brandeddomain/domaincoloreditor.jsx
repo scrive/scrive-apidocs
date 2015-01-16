@@ -58,7 +58,7 @@ return React.createClass({
                   ref="colorInput"
                   value={this.props.getValue()}
                   onChange={function(v) {
-                    if (tinycolor(v).ok)
+                    if (tinycolor(v).ok && (tinycolor(v).format != "name" || /^[a-zA-Z]+$/.test(v)))
                       self.props.setValue(v);
                     }
                   }

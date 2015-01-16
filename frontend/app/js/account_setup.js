@@ -298,7 +298,7 @@ define(['common/hubspot_service', 'Backbone', 'legacy_code'], function(HubSpot) 
       });
 
       body.append($("<div class='position'/>")
-                    .append($("<label class='big-input-description'></label>").text(localization.accountSetupModal.modalAccountPasswordRequirements))
+                    .append($("<span class='label password-description'></span>").text(localization.accountSetupModal.modalAccountPasswordRequirements))
                     .append(passwordInput.el())
                     .append(password2Input.el()));
 
@@ -325,7 +325,6 @@ define(['common/hubspot_service', 'Backbone', 'legacy_code'], function(HubSpot) 
       var tosA = tosLabel.find('.is-TOS')
                 .attr("target", "_blank")
                 .attr("href", "/terms");
-      tosA.text(" " + tosA.text());
       if (model.servicelinkcolour()) {
         tosA.css("color", model.servicelinkcolour());
       }

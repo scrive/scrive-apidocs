@@ -28,9 +28,9 @@ return React.createClass({
           <div style={{marginBottom: "20px", marginTop: "50px", textAlign: "center"}} >
             <img alt='logo' src={"/login_logo/" + window.brandinghash} />
             <div className='divider-line'/>
-            <label style={{"textAlign":"center", "width":"275px"}}>
+            <div className='label' style={{"textAlign":"center", "width":"275px"}}>
               {localization.esigningpoweredbyscrive}
-            </label>
+            </div>
           </div>
           <div>
             <div>
@@ -73,7 +73,7 @@ return React.createClass({
               </div>
               {/*if*/ (!model.nolinks()) &&
                 <div className='position' style={{textAlign:"center",marginTop:"20px"}}>
-                  <label className='label-with-link'
+                  <span className='label-with-link'
                         dangerouslySetInnerHTML={{__html: this.textWithLink(localization.loginModal.dontHaveAccount,"/" + localization.code + '/signup')}}
                   />
                 </div>

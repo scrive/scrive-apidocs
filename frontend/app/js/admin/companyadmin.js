@@ -64,7 +64,7 @@ var CompanyAdminModel = Backbone.Model.extend({
                     return new Tab({
                         name: "Branding",
                         elems: [function() { return div; }],
-                        pagehash : ["branding-themes-mail","branding-themes-signview", "branding-themes-service", "branding-settings"],
+                        pagehash : ["branding-themes-email","branding-themes-signing-page", "branding-themes-service", "branding-settings"],
                         onActivate : function() {
                           brandingPanel.reload();
                         }
