@@ -101,7 +101,7 @@ apiCallGetUserPersonalToken = api $ do
 apiCallGetUserProfile :: Kontrakcja m => m Response
 apiCallGetUserProfile =  api $ do
   ctx <- getContext
-  (user, _ , _) <- getAPIUser APIPersonal
+  (user, _ , _) <- getAPIUserWithAnyPrivileges
   company <- getCompanyForUser user
   companyui <- dbQuery $ GetCompanyUI (companyid company)
   Ok <$> userJSON ctx user (company,companyui)

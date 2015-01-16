@@ -26,6 +26,8 @@ module API.Monad (
                  Accepted(..),
                  Failed(..),
                  getAPIUser,
+                 getAPIUserWithPrivileges,
+                 getAPIUserWithAnyPrivileges,
                  getAPIUserWithPad,
                  FormEncoded(..)
                  )
@@ -256,8 +258,21 @@ instance (Monad m, JSON b) => APIGuard m (Result b) b where
 --  1. OAuth using Authorization header
 --  2. Session for Ajax client. ! Only if authorization header is empty !
 getAPIUser :: Kontrakcja m => APIPrivilege -> m (User, Actor, Bool)
-getAPIUser priv = do
-  moauthuser <- getOAuthUser priv
+getAPIUser priv = getAPIUserWithPrivileges [priv]
+
+-- Get the user for the API, as long as any privileges are there
+getAPIUserWithAnyPrivileges :: Kontrakcja m => m (User, Actor, Bool)
+getAPIUserWithAnyPrivileges = getAPIUserWithPrivileges [APIPersonal, APIDocCheck, APIDocSend, APIDocCreate]
+
+-- Get the user for the API.
+-- Either through:
+-- 1. OAuth using the Authorization header
+-- 2. Session for AJAX client (only if the Authorization is empty)
+--
+-- Only returns if *any* of the privileges in privs are issued.
+getAPIUserWithPrivileges :: Kontrakcja m => [APIPrivilege] -> m (User, Actor, Bool)
+getAPIUserWithPrivileges privs = do
+  moauthuser <- getOAuthUser privs
   case moauthuser of
     Just (Left err) -> (throwIO . SomeKontraException) $ notLoggedIn err
     Just (Right (user, actor)) -> return (user, actor, True)
@@ -269,7 +284,7 @@ getAPIUser priv = do
 
 getAPIUserWithPad :: Kontrakcja m => APIPrivilege -> m (User, Actor, Bool)
 getAPIUserWithPad priv = do
-  moauthuser <- getOAuthUser priv
+  moauthuser <- getOAuthUser [priv]
   case moauthuser of
     Just (Left err) -> (throwIO . SomeKontraException) $ notLoggedIn err
     Just (Right (user, actor)) -> return (user, actor, True)
@@ -294,15 +309,15 @@ getSessionUserWithPad = do
     Nothing -> return Nothing
     Just user -> return $ Just (user, authorActor ctx user)
 
-getOAuthUser :: Kontrakcja m => APIPrivilege -> m (Maybe (Either String (User, Actor)))
-getOAuthUser priv = do
+getOAuthUser :: Kontrakcja m => [APIPrivilege] -> m (Maybe (Either String (User, Actor)))
+getOAuthUser privs = do
   ctx <- getContext
   eauth <- getAuthorization
   case eauth of
     Nothing       -> return Nothing
     Just (Left l) -> return $ Just $ Left l
     Just (Right auth) -> do
-      uap <- dbQuery $ GetUserIDForAPIWithPrivilege (oaAPIToken auth) (oaAPISecret auth) (oaAccessToken auth) (oaAccessSecret auth) [priv]
+      uap <- dbQuery $ GetUserIDForAPIWithPrivilege (oaAPIToken auth) (oaAPISecret auth) (oaAccessToken auth) (oaAccessSecret auth) privs
       case uap of
         Nothing -> return $ Just $ Left "OAuth credentials are invalid."
         Just (userid, apistring) -> do
