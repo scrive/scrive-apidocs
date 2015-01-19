@@ -1251,6 +1251,7 @@ javascriptLocalisation =
           , createCustomThemeDescription : "$_brandingCreateCustomThemeDescription()$"
           , doYouWantToDeleteTheme : "$_brandingDoYouWantToDeleteTheme()$"
           , deleteTheme : "$_brandingDeleteTheme()$"
+          , delete : "$_delete()$"
           , themeDeleted : "$_brandingThemeDeleted()$"
           , saved : "$_brandingSaved()$"
           , unsavedChangesTitle: "$_brandingUnsavedChangesTitle()$"

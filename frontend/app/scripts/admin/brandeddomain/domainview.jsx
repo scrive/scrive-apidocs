@@ -24,6 +24,7 @@ return React.createClass({
         var popup = new Confirmation({
           title : localization.branding.deleteTheme,
           content : content,
+          acceptText : localization.branding.delete,
           onAccept : function() {
             popup.close();
             LoadingDialog.open();
