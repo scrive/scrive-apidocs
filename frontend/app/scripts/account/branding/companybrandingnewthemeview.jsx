@@ -68,7 +68,10 @@ return React.createClass({
       var model = this.props.model;
       if (!model.ready())
         return (<div/>);
-
+      var createNewThemeFunction = function() {
+        self.opendNewThemeModal();
+        return true;
+      };
       var themeList = model.themeList();
       var availableThemesOptions = [];
       _.each(themeList.list().models, function(t) {
@@ -83,10 +86,7 @@ return React.createClass({
       availableThemesOptions = _.sortBy(availableThemesOptions,function(o) {return o.name.toLowerCase();});
       availableThemesOptions.push({
             name: localization.branding.newThemeWithDots,
-            onSelect : function() {
-              self.opendNewThemeModal();
-              return true;
-            }
+            onSelect : createNewThemeFunction
       });
       var Select = NewSelect.Select;
 
@@ -101,18 +101,23 @@ return React.createClass({
                 <div className='title text-with-bottom-spacing'>{localization.branding.createCustomThemeTitle}</div>
                 <div className='text-with-bottom-spacing'>{localization.branding.createCustomThemeDescription}</div>
                  {/*if*/ (model.themeList().list().models.length > 0 ) &&
-                    <div className='text-with-bottom-spacing'>{localization.branding.useExistingOrCreateNewTheme}</div>
+                   <div>
+                     <div className='text-with-bottom-spacing'>{localization.branding.useExistingOrCreateNewTheme}</div>
+                     <Select
+                       color={"#000000"}
+                       options={availableThemesOptions}
+                       name ={localization.branding.defaultTheme}
+                       textWidth = {273}
+                       optionsWidth = "300px"
+                     />
+                   </div>
                  }
                  {/*else*/ (model.themeList().list().models.length == 0 ) &&
-                    <div className='text-with-bottom-spacing'>{localization.branding.createNewTheme}</div>
+                     <Button
+                      onClick={createNewThemeFunction}
+                      text ={localization.branding.createNewTheme}
+                     />
                  }
-                <Select
-                  color={"#000000"}
-                  options={availableThemesOptions}
-                  name ={localization.branding.defaultTheme}
-                  textWidth = {273}
-                  optionsWidth = "300px"
-                />
               </div>
             </div>
             <div className='separator'/>

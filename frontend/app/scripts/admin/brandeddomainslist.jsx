@@ -47,13 +47,13 @@ return React.createClass({
           <List.Column
             name="Contact email"
             rendering={function(d) {
-              return (<a onClick={function() {self.props.onSelect(d.field("id"));}}>{d.field("contact_email")}</a>);
+              return (<a onClick={function() {self.props.onSelect(d.field("id"));}}>{d.field("contactEmail")}</a>);
             }}
           />
           <List.Column
             name="Email originator"
             rendering={function(d) {
-              return (<a onClick={function() {self.props.onSelect(d.field("id"));}}>{d.field("email_originator")}</a>);
+              return (<a onClick={function() {self.props.onSelect(d.field("id"));}}>{d.field("emailOriginator")}</a>);
             }}
           />
           <List.Column
