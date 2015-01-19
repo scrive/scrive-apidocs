@@ -455,6 +455,20 @@ javascriptLocalisation =
              ,  backToDocument : "$_padBackToDocument()$"
         }
          , changeEmail : "$_changeEmail()$"
+         , changeEmailModal: {
+             title: "$_changeEmailModalTitle()$"
+           , label: "$_changeEmailModalLabel()$"
+           , acceptButton: "$_changeEmailModalAcceptButton()$"
+           , invalidEmailFlash: "$_changeEmailModalAcceptInvalidEmailFlash()$"
+           , placeholder: "$_changeEmailModalPlaceholder()$",
+         }
+         , changeMobileModal: {
+             title: "$_changeMobileModalTitle()$"
+           , label: "$_changeMobileModalLabel()$"
+           , acceptButton: "$_changeMobileModalAcceptButton()$"
+           , invalidMobileFlash: "$_changeMobileModalAcceptInvalidMobileFlash()$"
+           , placeholder: "$_changeMobileModalPlaceholder()$",
+         }
          , changePhone : "$_changePhone()$"
          , accessNewAccountModal: {
              header: "$_accessNewAccountHeader()$"

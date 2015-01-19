@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
 
 
-define(['React','common/button','common/backbone_mixin','Backbone','common/language_service','doctools/changeauthenticationmodal', 'legacy_code'], function(React, Button, BackboneMixin, Backbone, LanguageService, ChangeAuthenticationModal) {
+define(['React','common/button','common/backbone_mixin','Backbone','common/language_service','doctools/changeauthenticationmodal', 'doctools/changesignatorydetailmodal', 'legacy_code'], function(React, Button, BackboneMixin, Backbone, LanguageService, ChangeAuthenticationModal, ChangeSignatoryDetailModal) {
 
 var expose = {};
 
@@ -179,50 +179,48 @@ var DocumentViewSignatoryView = React.createClass({
     propTypes: {
       model: React.PropTypes.object
     },
-    getInitialState: function() {
-      return {
-        changingEmail : false,       // Switch for changing email
-        changingMobile : false  // Switch for chaning phone number
-      };
-    },
-    setNewEmail : function(event) {
-      this.setState({newEmail: event.target.value});
-    },
     handleStartChangingEmail : function() {
       var model= this.props.model;
       var signatory = model.signatory();
       mixpanel.track('Click change email', {'Signatory index':signatory.signIndex()});
-      this.setState({changingEmail: true,newEmail : this.props.model.signatory().email() || ""});
-    },
-    handleChangeEmail : function() {
-      var model= this.props.model;
-      var signatory = model.signatory();
-      trackTimeout('Accept',
-                   {'Signatory index':signatory.signIndex(),
-                    'Accept' : 'change email'});
-      LoadingDialog.open();
-      signatory.changeEmail(this.state.newEmail).sendAjax(function() {
-         model.triggerOnAction();
+      new ChangeSignatoryDetailModal({
+        value: this.props.model.signatory().email(),
+        validator: new EmailValidation(),
+        label: localization.changeEmailModal.label,
+        placeholder: localization.changeEmailModal.placeholder,
+        title: localization.changeEmailModal.title,
+        acceptButton: localization.changeEmailModal.acceptButton,
+        invalidValueFlash: localization.changeEmailModal.invalidEmailFlash,
+        onAction : function(newValue) {
+          trackTimeout('Accept', {'Signatory index': signatory.signIndex(),
+                                  'Accept': 'change email'});
+          LoadingDialog.open();
+          signatory.changeEmail(newValue).sendAjax(function() {
+            model.triggerOnAction();
+          });
+        }
       });
-    },
-    setNewMobile : function(event) {
-      this.setState({newMobile: event.target.value});
     },
     handleStartChangingMobile : function() {
       var model= this.props.model;
       var signatory = model.signatory();
       mixpanel.track('Click change phone', {'Signatory index':signatory.signIndex()});
-      this.setState({changingMobile: true, newMobile : this.props.model.signatory().mobile() || ""});
-    },
-    handleChangeMobile : function() {
-      var model= this.props.model;
-      var signatory = model.signatory();
-      trackTimeout('Accept',
-                   {'Signatory index':signatory.signIndex(),
-                    'Accept' : 'change phone'});
-      LoadingDialog.open();
-      signatory.changePhone(this.state.newMobile).sendAjax(function() {
-        model.triggerOnAction();
+      new ChangeSignatoryDetailModal({
+        value: this.props.model.signatory().mobile(),
+        validator: new PhoneValidation(),
+        label: localization.changeMobileModal.label,
+        placeholder: localization.changeMobileModal.placeholder,
+        title: localization.changeMobileModal.title,
+        acceptButton: localization.changeMobileModal.acceptButton,
+        invalidValueFlash: localization.changeMobileModal.invalidMobileFlash,
+        onAction : function(newValue) {
+          trackTimeout('Accept', {'Signatory index': signatory.signIndex(),
+                                  'Accept': 'change phone'});
+          LoadingDialog.open();
+          signatory.changePhone(newValue).sendAjax(function() {
+            model.triggerOnAction();
+          });
+        }
       });
     },
     handleSendReminder : function() {
@@ -501,53 +499,23 @@ var DocumentViewSignatoryView = React.createClass({
 
             {/* Buttons and input for changing email */}
 
-             {/*if*/ model.hasChangeEmailOption() && !this.state.changingEmail &&
+             {/*if*/ model.hasChangeEmailOption() &&
                <Button
                  color="black"
                  text={localization.changeEmail}
                  onClick={this.handleStartChangingEmail}
                />
              }
-             {/*else*/ model.hasChangeEmailOption() && this.state.changingEmail &&
-               <div>
-                 <input
-                   type='text'
-                   value={this.state.newEmail}
-                   onChange={this.setNewEmail}
-                 />
-                 <Button
-                   size ="tiny"
-                   color="blue"
-                   text={localization.send}
-                   onClick={this.handleChangeEmail}
-                 />
-               </div>
-             }
 
             {/* Buttons and input for changing mobile number */}
 
-             {/*if*/ model.hasChangePhoneOption() && !this.state.changingMobile &&
+             {/*if*/ model.hasChangePhoneOption() &&
                <Button
                  color="black"
                  text={localization.changePhone}
                  onClick={this.handleStartChangingMobile}
                />
              }
-             {/*else*/ model.hasChangePhoneOption() && this.state.changingMobile &&
-               <div>
-                 <input
-                   type='text'
-                   value={this.state.newMobile}
-                   onChange={this.setNewMobile}
-                 />
-                 <Button
-                   size ="tiny"
-                   color="blue"
-                   text={localization.send}
-                   onClick={this.handleChangeMobile}
-                 />
-              </div>
-            }
           </div>
 
         </div>
