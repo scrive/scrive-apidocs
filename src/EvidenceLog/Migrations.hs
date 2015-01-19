@@ -5,6 +5,16 @@ import Data.Monoid
 import DB
 import EvidenceLog.Tables
 
+evidenceLogAddActor :: MonadDB m => Migration m
+evidenceLogAddActor =
+  Migration {
+    mgrTable = tableEvidenceLog
+  , mgrFrom = 4
+  , mgrDo = do
+    -- ip addresses are 32bits long
+    runSQL_ $ "ALTER TABLE evidence_log ADD COLUMN actor TEXT NOT NULL DEFAULT ''"
+  }
+
 evidenceLogFixColumns :: MonadDB m => Migration m
 evidenceLogFixColumns =
   Migration {

@@ -39,7 +39,7 @@ test: all
 # Create evidence texts in evidencetexts
 .PHONY: evidencetexts
 evidencetexts:
-	$(MAKE) test TESTS="--output-dir dist/evidence-texts  --plain"
+	$(MAKE) test TESTS="--output-dir dist/evidence-texts  --plain -t Generating"
 
 # Create coverage pages from test run
 .PHONY : hpc

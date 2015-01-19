@@ -2,12 +2,11 @@ module Doc.SignatoryIdentification
   ( SignatoryIdentifierMap
   , SignatoryIdentifier(..)
   , signatoryIdentifierMap
-  , signatoryIdentifierForEvidenceLog
   , signatoryIdentifier
   ) where
 
 import Data.Char (toLower)
-import Data.List (findIndex, mapAccumL)
+import Data.List (mapAccumL)
 import Data.Map (Map)
 import Data.Set (Set)
 import qualified Data.Map as Map
@@ -25,13 +24,6 @@ data SignatoryIdentifier = SignatoryIdentifier
   , siinitials :: String
   }
   deriving Show
-
--- | Return document-unique signatory identifier to go into evidence log
-signatoryIdentifierForEvidenceLog :: Document -> SignatoryLink -> String
-signatoryIdentifierForEvidenceLog doc sl = getFullName sl ++ no
-  where no = case findIndex (== signatorylinkid sl) (map signatorylinkid (documentsignatorylinks doc)) of
-               Just n  -> " (" ++ show (n + 1) ++ ")" -- FIXME: use ID that is unique across document restarts
-               Nothing -> ""
 
 -- | Return the full name plus unique initials for a signatory
 signatoryIdentifier :: SignatoryIdentifierMap -> SignatoryLinkID -> Maybe String

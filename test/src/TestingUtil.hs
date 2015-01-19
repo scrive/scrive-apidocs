@@ -10,6 +10,7 @@ import Control.Monad.Reader.Class
 import Control.Monad.Trans
 import Data.Char
 import Data.Maybe
+import Data.Text (pack)
 import Data.Time.Clock.POSIX
 import Data.Typeable
 import Data.Word
@@ -54,6 +55,26 @@ import User.Model
 import Util.Actor
 import Utils.Default
 import qualified Log
+
+import qualified Text.XML.Content as C
+import qualified Text.XML.DirtyContent as D
+
+newtype XMLChar = XMLChar { unXMLChar :: Char }
+  deriving (Enum, Eq, Ord)
+
+instance Show XMLChar where
+  show = show . unXMLChar
+
+instance Arbitrary XMLChar where
+  arbitrary = elements (map XMLChar ("\n\r\t" ++ [' '..'~'] ++ ['\160'..'\255']))
+
+instance Arbitrary C.XMLContent where
+  arbitrary = C.cdata . pack . map unXMLChar <$> arbitrary
+
+instance Arbitrary D.XMLContent where
+  arbitrary = oneof [ D.CleanXMLContent <$> arbitrary
+                    , D.DirtyXMLContent . pack <$> arbitrary
+                    ]
 
 newtype NotNullWord8 = NotNullWord8 { fromNNW8 :: Word8 }
   deriving (Enum, Eq, Integral, Num, Ord, Real)
@@ -356,9 +377,9 @@ instance Arbitrary CgiGrpTransaction where
 
 instance Arbitrary BankIDSignature where
   arbitrary = BankIDSignature
-    <$> (T.pack . fromSNN <$> arbitrary)
-    <*> (T.pack . fromSNN <$> arbitrary)
-    <*> (T.pack . fromSNN <$> arbitrary)
+    <$> (C.renderXMLContent <$> arbitrary)
+    <*> (C.renderXMLContent <$> arbitrary)
+    <*> (C.renderXMLContent <$> arbitrary)
     <*> arbitrary
     <*> arbitrary
 

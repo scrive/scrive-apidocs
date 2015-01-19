@@ -99,7 +99,9 @@ Executable kontrakcja-server
   Build-depends: attoparsec
   Build-depends: base16-bytestring
   Build-depends: base64-bytestring
+  Build-depends: data-default
   Build-depends: cond
+  Build-depends: conduit
   Build-depends: crypto-api
   Build-depends: cryptohash
   Build-depends: dataenc
@@ -118,7 +120,9 @@ Executable kontrakcja-server
   Build-depends: monad-control
   Build-depends: mtl
   Build-depends: network
+  Build-depends: pretty
   Build-depends: pretty-show
+  Build-depends: primitive
   Build-depends: random
   Build-depends: recurly
   Build-depends: regex-tdfa
@@ -139,6 +143,7 @@ Executable kontrakcja-server
   Build-depends: utf8-string
   Build-depends: xml-conduit
   Build-depends: xml-conduit-writer
+  Build-depends: xml-types
   Build-depends: zip-archive
   Build-depends: zlib
 
@@ -206,8 +211,10 @@ Executable cron
   Build-depends: base16-bytestring
   Build-depends: base64-bytestring
   Build-depends: cond
+  Build-depends: conduit
   Build-depends: crypto-api
   Build-depends: cryptohash
+  Build-depends: data-default
   Build-depends: dataenc
   Build-depends: exceptions
   Build-depends: explicit-exception
@@ -244,6 +251,7 @@ Executable cron
   Build-depends: utf8-string
   Build-depends: xml-conduit
   Build-depends: xml-conduit-writer
+  Build-depends: xml-types
   Build-depends: zip-archive
   Build-depends: zlib
 
@@ -316,8 +324,10 @@ Executable kontrakcja-migrate
   Build-depends: base16-bytestring
   Build-depends: base64-bytestring
   Build-depends: cond
+  Build-depends: conduit
   Build-depends: crypto-api
   Build-depends: cryptohash
+  Build-depends: data-default
   Build-depends: dataenc
   Build-depends: exceptions
   Build-depends: explicit-exception
@@ -351,6 +361,8 @@ Executable kontrakcja-migrate
   Build-depends: transformers-base
   Build-depends: unjson
   Build-depends: utf8-string
+  Build-depends: xml-types
+  Build-depends: xml-conduit
   Build-depends: zip-archive
   Build-depends: zlib
 
@@ -420,6 +432,7 @@ Executable mailing-server
   Build-depends: base16-bytestring
   Build-depends: base64-bytestring
   Build-depends: cond
+  Build-depends: conduit
   Build-depends: crypto-api
   Build-depends: cryptohash
   Build-depends: dataenc
@@ -524,6 +537,7 @@ Executable messenger-server
   Build-depends: base16-bytestring
   Build-depends: base64-bytestring
   Build-depends: cond
+  Build-depends: conduit
   Build-depends: crypto-api
   Build-depends: cryptohash
   Build-depends: dataenc
@@ -629,8 +643,10 @@ Executable kontrakcja-test
   Build-depends: base16-bytestring
   Build-depends: base64-bytestring
   Build-depends: cond
+  Build-depends: conduit
   Build-depends: crypto-api
   Build-depends: cryptohash
+  Build-depends: data-default
   Build-depends: dataenc
   Build-depends: exceptions
   Build-depends: explicit-exception
@@ -668,6 +684,7 @@ Executable kontrakcja-test
   Build-depends: utf8-string
   Build-depends: xml-conduit
   Build-depends: xml-conduit-writer
+  Build-depends: xml-types
   Build-depends: zip-archive
   Build-depends: zlib
 

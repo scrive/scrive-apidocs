@@ -19,25 +19,30 @@ import Control.Applicative ((<$>), (<*>))
 import Control.Monad.Catch
 import Control.Monad.Identity
 import Data.Int
-import Data.Maybe (fromMaybe)
 import Data.Monoid
 import Data.Monoid.Space
+import Data.List.Utils (replace)
+import Data.Text (pack, unpack)
 import Data.Typeable
 import Text.StringTemplates.Templates
 import qualified Control.Exception.Lifted as E
 import qualified Text.StringTemplates.Fields as F
 
 import DB
+import DB.XML ()
+import Text.XML.Content (parseXMLContent)
+import Text.XML.DirtyContent (XMLContent(..), renderXMLContent)
 import Doc.DocStateData (SignatoryLink(..), AuthenticationMethod(..), DeliveryMethod(..))
 import Doc.DocumentID
 import Doc.DocumentMonad (DocumentMonad, theDocumentID, theDocument)
-import Doc.SignatoryIdentification (signatoryIdentifierForEvidenceLog)
 import Doc.SignatoryLinkID
 import IPAddress
 import MinutesTime
+import OurPrelude (unexpectedErrorM)
 import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo (getEmail)
+import Util.SignatoryLinkUtils (getSigLinkFor)
 import Version
 import qualified HostClock.Model as HC
 
@@ -83,31 +88,41 @@ signatoryLinkTemplateFields sl = do
   F.value "signing"     $ signatoryispartner sl
 
 -- | Create evidence text that goes into evidence log
-evidenceLogText :: (DocumentMonad m, TemplatesMonad m, MonadDB m)
-                => CurrentEvidenceEventType -> F.Fields Identity () -> Maybe SignatoryLink -> Maybe String -> Actor -> m String
-evidenceLogText event textFields masl mmsg actor = do
-   msignatory <-
-     case masl of
-       Nothing -> return Nothing
-       Just sl -> Just . flip signatoryIdentifierForEvidenceLog sl <$> theDocument
+evidenceLogText :: (DocumentMonad m, TemplatesMonad m, MonadDB m, MonadThrow m)
+                => CurrentEvidenceEventType -> F.Fields Identity () -> Maybe SignatoryLink -> Maybe XMLContent -> m XMLContent
+evidenceLogText event textFields masl mmsg = do
    let fields = do
          F.value "full" True
-         F.value "actor" $ actorWho actor
-         maybe (return ()) (F.value "text") mmsg
+       -- Interim substitutions that can be eliminated if we switch from hstringtemplates to XML for representing holes in all event texts.
+         F.value "actor" ("$actor$" :: String)
+         F.value "signatory" ("$signatory$" :: String)
+         maybe (return ()) (F.value "text") (unpack . renderXMLContent <$> mmsg)
          case masl of
            Nothing -> return ()
            Just sl -> do
-             F.value "signatory" $ fromMaybe "(anonymous)" msignatory
              F.value "signatory_email" $ getEmail sl
              signatoryLinkTemplateFields sl
          textFields
    ts <- getTextTemplatesByLanguage $ codeFromLang LANG_EN
-   return $ runIdentity $ renderHelper ts (eventTextTemplateName EventForEvidenceLog event) fields
+   let n = eventTextTemplateName EventForEvidenceLog event
+       -- Interim substitutions that can be eliminated if we switch from hstringtemplates to XML holes for representing holes in all event texts.
+       fixIdentityVariables = replace "$actor$" "<span class='actor'/>"
+                            . replace "$signatory$" "<span class='signatory'/>"
+   parseEventTextTemplate n $ fixIdentityVariables $ runIdentity $ renderHelper ts n fields
+
+parseEventTextTemplate :: MonadThrow m => String -> String -> m XMLContent
+parseEventTextTemplate name s =
+  either ($unexpectedErrorM . (("Cannot parse event template " ++ name ++ " with content " ++ s ++ ": ") ++) . show) (return . CleanXMLContent) $
+    parseXMLContent $ pack s
 
 instance (DocumentMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsg Bool where
   update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields masl mmsg actor) = do
-   text <- evidenceLogText event textFields masl mmsg actor
+   -- FIXME: change to mmsg :: Maybe XMLContent
+   xmsg <- maybe (return Nothing) (either ($unexpectedErrorM . ("Bad evidence message: " ++) . show) (return . Just . CleanXMLContent) . parseXMLContent . pack) mmsg
+   text <- evidenceLogText event textFields masl xmsg
    did <- theDocumentID
+   actorSLID <- theDocument >>= \doc -> return $
+     actorSigLinkID actor `mplus` (signatorylinkid <$> (actorUserID actor >>= flip getSigLinkFor doc))
    runQuery01 . sqlInsert "evidence_log" $ do
       sqlSet "document_id" did
       sqlSet "time" $ actorTime actor
@@ -117,12 +132,13 @@ instance (DocumentMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => DBUpdat
       sqlSet "user_id" $ actorUserID actor
       sqlSet "email" $ actorEmail actor
       sqlSet "request_ip_v4" $ actorIP actor
-      sqlSet "signatory_link_id" $ actorSigLinkID actor
+      sqlSet "signatory_link_id" actorSLID
       sqlSet "api_user" $ actorAPIString actor
       sqlSet "affected_signatory_link_id" $ signatorylinkid <$> masl
-      sqlSet "message_text" $ mmsg
+      sqlSet "message_text" $ xmsg
       sqlSet "client_time" $ actorClientTime actor
       sqlSet "client_name" $ actorClientName actor
+      sqlSet "actor" $ actorWho actor
 
 instance (DocumentMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => DBUpdate m InsertEvidenceEvent Bool where
   update (InsertEvidenceEvent event textFields actor) = update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields Nothing Nothing actor)
@@ -134,7 +150,7 @@ data DocumentEvidenceEvent = DocumentEvidenceEvent {
   , evClientTime :: Maybe UTCTime              -- from actor
   , evClientName :: Maybe String               -- from actor
   , evClockErrorEstimate :: Maybe HC.ClockErrorEstimate
-  , evText       :: String                     -- to go into evidence log
+  , evText       :: XMLContent                 -- to go into evidence log
   , evType       :: EvidenceEventType
   , evVersionID  :: String
   , evEmail      :: Maybe String               -- from actor; use: "signatory_email" attribute if affected signatory not set
@@ -145,7 +161,8 @@ data DocumentEvidenceEvent = DocumentEvidenceEvent {
   , evAffectedSigLink :: Maybe SignatoryLinkID -- Some events affect only one signatory, but actor is our system or author. We express it here, since we can't with evType.
                                                -- use: to fetch object name; viewer; to set signatoryLinkTemplateFields and "signatory" attribute; get bankID signatory name
 
-  , evMessageText :: Maybe String              -- Some events have message connected to them (like reminders). We don't store such events in documents, but they should not get lost.
+  , evActor      :: String                     -- actorWho, used for actor identification if evSigLink is missing
+  , evMessageText :: Maybe XMLContent          -- Some events have message connected to them (like reminders). We don't store such events in documents, but they should not get lost.
                                                -- use: "text" attribute
   }
   deriving (Eq, Ord, Show, Typeable)
@@ -165,6 +182,7 @@ instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
       <> ", signatory_link_id"
       <> ", api_user"
       <> ", affected_signatory_link_id"
+      <> ", actor"
       <> ", message_text"
       <> ", client_time"
       <> ", client_name"
@@ -176,7 +194,7 @@ instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
       <> "  ORDER BY evidence_log.time, id"
     fetchMany fetchEvidenceLog
     where
-      fetchEvidenceLog (did', tm, txt, tp, vid, uid, eml, ip4, slid, api, aslid, emsg, ctime, cname, hctime, offset, frequency) =
+      fetchEvidenceLog (did', tm, txt, tp, vid, uid, eml, ip4, slid, api, aslid, actor, emsg, ctime, cname, hctime, offset, frequency) =
         DocumentEvidenceEvent {
             evDocumentID = did'
           , evTime       = tm
@@ -192,6 +210,7 @@ instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
           , evSigLink    = slid
           , evAPI        = api
           , evAffectedSigLink = aslid
+          , evActor      = actor
           , evMessageText = emsg
           }
 
@@ -213,6 +232,7 @@ copyEvidenceLogToNewDocuments fromdoc todocs = do
     <> ", signatory_link_id"
     <> ", api_user"
     <> ", affected_signatory_link_id"
+    <> ", actor"
     <> ", message_text"
     <> ", client_time"
     <> ", client_name"
@@ -228,6 +248,7 @@ copyEvidenceLogToNewDocuments fromdoc todocs = do
     <> ", signatory_link_id"
     <> ", api_user"
     <> ", affected_signatory_link_id"
+    <> ", actor"
     <> ", message_text"
     <> ", client_time"
     <> ", client_name"

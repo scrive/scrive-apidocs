@@ -8,6 +8,7 @@ import Control.Monad.Trans
 import Data.Functor
 import Data.List
 import Data.Maybe
+import Data.Text (unpack)
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
@@ -41,6 +42,7 @@ import MinutesTime
 import Templates (getTemplatesModTime, readGlobalTemplates)
 import TestingUtil
 import TestKontra
+import Text.XML.DirtyContent (renderXMLContent)
 import User.Model
 import Util.Actor
 import Util.HasSomeCompanyInfo
@@ -239,13 +241,15 @@ testExtendDigitalSignatures = do
   file <- addNewFile filename filecontent
   file1 <- addNewFile filename filecontent
   file2 <- addNewFile filename filecontent
-  addRandomDocumentWithAuthorAndConditionAndFile author (isSignable &&^ isClosed) file `withDocumentM` do
+  did <- documentid <$> addRandomDocumentWithAuthorAndConditionAndFile author (isSignable &&^ isClosed) file
+  withDocumentID did $ do
     now <- currentTime
     let actor = systemActor (2 `monthsBefore` now)
     -- Append a file to tweak the modification time
     dbUpdate $ AppendSealedFile file1 Guardtime{ extended = False, private = False } actor
     dbUpdate $ AppendExtendedSealedFile file2 Guardtime{ extended = False, private = False } actor
     runScheduler findAndExtendDigitalSignatures
+  withDocumentID did $ do
     documentsealstatus <$> theDocument >>= \case
       Just (Guardtime{ extended = True }) -> assertSuccess
       s -> assertFailure $ "Unexpected extension status: " ++ show s
@@ -361,7 +365,7 @@ testMarkInvitationReadEvidenceLog = do
     let expectedFull = "Scrive E-sign’s external email delivery system reported that the invitation to "
                 ++ (if signatoryispartner sl then "sign" else "review")
                 ++ " (sent to " ++ getEmail sl ++ ") was opened."
-    assertEqual "Correct event text full" (expectedFull) (evText e)
+    assertEqual "Correct event text full" (expectedFull) (unpack $ renderXMLContent $ evText e)
     let expectedSimple = "The invitation to "
                 ++ (if signatoryispartner sl then "sign" else "review")
                 ++ " the document (sent to " ++ getEmail sl ++ ") was opened."

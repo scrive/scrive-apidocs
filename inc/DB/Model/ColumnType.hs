@@ -21,6 +21,7 @@ data ColumnType
   | SmallIntT
   | TextT
   | TimestampWithZoneT
+  | XmlT
   | ArrayT !ColumnType
   | CompositeT !(RawSQL ())
     deriving (Eq, Ord, Show)
@@ -42,6 +43,7 @@ instance FromSQL ColumnType where
         "smallint" -> SmallIntT
         "text" -> TextT
         "timestamp with time zone" -> TimestampWithZoneT
+        "xml" -> XmlT
         tname
           | "[]" `isSuffixOf` tname -> ArrayT . parseType . init . init $ tname
           | otherwise -> CompositeT $ unsafeSQL tname
@@ -58,5 +60,6 @@ columnTypeToSQL IntervalT = "INTERVAL"
 columnTypeToSQL SmallIntT = "SMALLINT"
 columnTypeToSQL TextT = "TEXT"
 columnTypeToSQL TimestampWithZoneT = "TIMESTAMPTZ"
+columnTypeToSQL XmlT = "XML"
 columnTypeToSQL (ArrayT t) = columnTypeToSQL t <> "[]"
 columnTypeToSQL (CompositeT tname) = tname

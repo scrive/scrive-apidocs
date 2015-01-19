@@ -48,7 +48,6 @@ conversionEq = do
 evidenceLogTemplateVariables :: Set String
 evidenceLogTemplateVariables = Set.fromList
   [ "actor"           -- Person identifier (possibly prefixed by role)
-  , "author"          -- Person identifier
   , "checked"         -- Field updates :: Bool
   , "description"     -- Attachment request description
   , "email"           -- Bool

@@ -248,13 +248,14 @@ findOutAttachmentDesc sim tmppath document = do
                                x -> reverse (drop 1 x)
 
 
-evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m) => Document -> m Seal.SealAttachment
-evidenceOfIntentAttachment doc = do
+evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m)
+                           => SignatoryIdentifierMap -> Document -> m Seal.SealAttachment
+evidenceOfIntentAttachment sim doc = do
   let title = documenttitle doc
   let sls = documentsignatorylinks doc
   ss <- dbQuery $ GetSignatoryScreenshots (map signatorylinkid sls)
   let sortBySignTime = sortBy (on compare (fmap signtime . maybesigninfo . fst))
-  html <- evidenceOfIntentHTML doc title $ sortBySignTime [ (sl, s) | (i, s) <- ss, sl <- filter ((==i) . signatorylinkid) sls ]
+  html <- evidenceOfIntentHTML sim title $ sortBySignTime [ (sl, s) | (i, s) <- ss, sl <- filter ((==i) . signatorylinkid) sls ]
   return $ Seal.SealAttachment { Seal.fileName = "Evidence_of_Intent.html"
                                , Seal.mimeType = Nothing
                                , Seal.fileContent = BS.fromString html
@@ -373,11 +374,11 @@ sealSpecFromDocument boxImages hostpart document elog ces content tmppath inputp
   staticTexts <- createSealingTextsForDocument document hostpart
 
   -- Creating HTML Evidence Log
-  htmllogs <- htmlDocFromEvidenceLog (documenttitle document) (suppressRepeatedEvents elog) ces
+  htmllogs <- htmlDocFromEvidenceLog (documenttitle document) sim (suppressRepeatedEvents elog) ces
   let evidenceattachment = Seal.SealAttachment { Seal.fileName = "Evidence_Log.html"
                                                , Seal.mimeType = Nothing
                                                , Seal.fileContent = BS.fromString htmllogs }
-  evidenceOfIntent <- evidenceOfIntentAttachment document
+  evidenceOfIntent <- evidenceOfIntentAttachment sim document
 
   -- documentation files
   let docAttachments =

@@ -5,6 +5,7 @@ module EvidenceLog.View (
     , simplyfiedEventText
     , approximateActor
     , htmlDocFromEvidenceLog
+    , finalizeEvidenceText
     , suppressRepeatedEvents
     , htmlSkipedEvidenceType
     , evidenceOfIntentHTML
@@ -25,17 +26,20 @@ import Data.String.Utils
 import Data.Word (Word8)
 import Text.JSON
 import Text.JSON.Gen as J
+import Text.XML.Content (cdata)
+import Text.XML.DirtyContent (XMLContent, renderXMLContent, removeTags, substitute)
 import Text.StringTemplates.Templates
 import qualified Data.Foldable as F
 import qualified Data.Map as Map
 import qualified Data.Set as Set
+import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
 
 import Control.Logic
 import DB
 import Doc.DocStateData
 import Doc.Model (GetDocumentsBySignatoryLinkIDs(..))
-import Doc.SignatoryIdentification (SignatoryIdentifierMap, silink, sifullname, signatoryIdentifierMap, signatoryIdentifier, signatoryIdentifierForEvidenceLog)
+import Doc.SignatoryIdentification (SignatoryIdentifierMap, silink, sifullname, signatoryIdentifierMap, signatoryIdentifier)
 import EID.Signature.Model
 import EvidenceLog.Model
 import MinutesTime
@@ -251,9 +255,9 @@ suppressRepeatedEvents = go Map.empty where
                        else ev : go (Map.insert (evText ev) (evTime ev) levs) evs
                   | otherwise = ev : go levs evs
 
--- | Generating text of Evidence log that is attachmed to PDF. It should be complete
-htmlDocFromEvidenceLog :: TemplatesMonad m => String -> [DocumentEvidenceEvent] -> HC.ClockErrorStatistics -> m String
-htmlDocFromEvidenceLog title elog ces = do
+-- | Generating text of Evidence log that is attached to PDF. It should be complete
+htmlDocFromEvidenceLog :: TemplatesMonad m => String -> SignatoryIdentifierMap -> [DocumentEvidenceEvent] -> HC.ClockErrorStatistics -> m String
+htmlDocFromEvidenceLog title sim elog ces = do
   renderTemplate "htmlevidencelog" $ do
     F.value "documenttitle" title
     F.value "ce_max"       $ showClockError 1 <$> HC.max ces
@@ -268,20 +272,27 @@ htmlDocFromEvidenceLog title elog ces = do
       F.value "ces_time" $ maybe "" ((++" UTC") . formatTimeUTC . HC.time)
                                     (evClockErrorEstimate entry)
       F.value "ip"   $ show <$> evIP4 entry
-      F.value "text" $ evText entry
+      F.value "text" $ T.unpack $ renderXMLContent $ finalizeEvidenceText sim entry
+
+finalizeEvidenceText :: SignatoryIdentifierMap -> DocumentEvidenceEvent -> XMLContent
+finalizeEvidenceText sim event =
+  substitute (Map.fromList [ (("span",n), cdata (T.pack v))
+                           | (n,Just v) <- [ ("actor", (signatoryIdentifier sim =<< evSigLink event) `mplus` Just (evActor event))
+                                           , ("signatory", signatoryIdentifier sim =<< evAffectedSigLink event)
+                                           , ("author", signatoryIdentifier sim =<< authorSigLinkID) ] ]) (evText event)
+  where
+    authorSigLinkID = signatorylinkid <$> getAuthorSigLink (catMaybes (map silink (Map.elems sim)))
 
 htmlSkipedEvidenceType :: EvidenceEventType -> Bool
 htmlSkipedEvidenceType (Obsolete OldDocumentHistory) = True
 htmlSkipedEvidenceType _ = False
 
-filterTagsNL :: String -> String
-filterTagsNL ('<':rest) = ' ' : (filterTagsNL (drop 1 $ dropWhile (\c -> c /= '>') rest))
-filterTagsNL (a:rest) = (if isSpace a then ' ' else a): (filterTagsNL rest)
-filterTagsNL [] = []
+filterTagsNL :: XMLContent -> String
+filterTagsNL = map (\a -> if isSpace a then ' ' else a) . T.unpack . renderXMLContent . removeTags
 
 -- | Generate evidence of intent in self-contained HTML for inclusion as attachment in PDF.
-evidenceOfIntentHTML :: TemplatesMonad m => Document -> String -> [(SignatoryLink, SignatoryScreenshots.SignatoryScreenshots)] -> m String
-evidenceOfIntentHTML doc title l = do
+evidenceOfIntentHTML :: TemplatesMonad m => SignatoryIdentifierMap -> String -> [(SignatoryLink, SignatoryScreenshots.SignatoryScreenshots)] -> m String
+evidenceOfIntentHTML sim title l = do
   renderTemplate "evidenceOfIntent" $ do
     F.value "documenttitle" title
     let values Nothing = return ()
@@ -289,7 +300,7 @@ evidenceOfIntentHTML doc title l = do
           F.value "time" $ formatTimeUTC (Screenshot.time s) ++ " UTC"
           F.value "image" $ imgEncodeRFC2397 $ unBinary $ Screenshot.image s
     F.objects "entries" $ for l $ \(sl, entry) -> do
-      F.value "signatory"  $ signatoryIdentifierForEvidenceLog doc sl
+      F.value "signatory"  $ signatoryIdentifier sim (signatorylinkid sl)
       F.value "ip"         $ show . signipnumber <$> maybesigninfo sl
       F.object "first"     $ values (SignatoryScreenshots.first entry)
       F.object "signing"   $ values (SignatoryScreenshots.signing entry)

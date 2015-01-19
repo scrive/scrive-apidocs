@@ -22,11 +22,12 @@ import Doc.SignatoryFieldID
 import Doc.SignatoryIdentification (signatoryIdentifierMap)
 import Doc.SignatoryLinkID (unsafeSignatoryLinkID)
 import EvidenceLog.Model (EventRenderTarget(..), DocumentEvidenceEvent(..), EvidenceEventType(..), CurrentEvidenceEventType(..), evidenceLogText)
-import EvidenceLog.View (simpleEvents, simplyfiedEventText, eventForVerificationPage)
+import EvidenceLog.View (simpleEvents, simplyfiedEventText, eventForVerificationPage, finalizeEvidenceText)
 import MinutesTime
 import Templates (runTemplatesT)
 import TestingUtil (testThat, addNewRandomUser, addRandomDocumentWithAuthor)
 import TestKontra (TestEnvSt, teOutputDirectory, teGlobalTemplates)
+import Text.XML.DirtyContent (renderXMLContent)
 import User.Model (codeFromLang, Lang, allLangs)
 import Util.Actor (Actor(..), actorEmail, actorUserID, actorAPIString, actorIP)
 import Util.SignatoryLinkUtils (getAuthorSigLink)
@@ -65,7 +66,7 @@ dumpEvidenceTexts now lang doc' = do
                     , actorIP = Nothing
                     , actorUserID = Nothing
                     , actorEmail = Just "author@example.com"
-                    , actorSigLinkID = Nothing
+                    , actorSigLinkID = Just (signatorylinkid author_sl)
                     , actorAPIString = Nothing
                     , actorWho = "the author (" ++ fromJust (actorEmail actor) ++ ")"
                     }
@@ -113,9 +114,10 @@ dumpEvidenceTexts now lang doc' = do
                                 , evEmail = actorEmail actor
                                 , evUserID = actorUserID actor
                                 , evIP4 = actorIP actor
-                                , evSigLink = Nothing
+                                , evSigLink = actorSigLinkID actor
                                 , evAPI = actorAPIString actor
                                 , evAffectedSigLink = Just (signatorylinkid asl)
+                                , evActor = actorWho actor
                                 , evMessageText = msgtext
                                 }
   evs <- (sortBy (compare `on` (\(evt, _, _, _) -> show evt)) <$>) $
@@ -123,7 +125,7 @@ dumpEvidenceTexts now lang doc' = do
        let text = case evt of
                     _ | evt `elem` [SMSPinSendEvidence, SMSPinDeliveredEvidence] -> Just "+481234567890"
                       | otherwise -> messageText
-       elog <- withDocument doc $ evidenceLogText evt (fields evt) (Just asl) text actor
+       elog <- withDocument doc $ evidenceLogText evt (fields evt) (Just asl) text
        let ev = mkev elog text evt
            sim = signatoryIdentifierMap True  [doc] (Set.fromList  [signatorylinkid asl])
        let simpletext target mactor = if simpleEvents (Current evt) && (isNothing mactor || eventForVerificationPage ev)
@@ -131,13 +133,13 @@ dumpEvidenceTexts now lang doc' = do
                                       else return Nothing
        vp <- simpletext EventForVerificationPages (actorEmail actor)
        av <- simpletext EventForArchive Nothing
-       return (evt, vp, av, elog)
+       return (evt, vp, av, finalizeEvidenceText sim ev)
   renderTemplate "dumpAllEvidenceTexts" $ do
      F.value "lang" $ codeFromLang lang
      F.value "versionID" versionID
      F.value "timestamp" $ show now
      F.objects "evidences" $ for evs $ \(evt, vp, av, elog) -> do
        F.value "name" $ show evt
-       F.value "evidencelog" $ elog
+       F.value "evidencelog" $ renderXMLContent elog
        F.value "authorview" $ av
        F.value "verificationpage" $ vp

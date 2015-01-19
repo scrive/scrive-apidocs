@@ -181,6 +181,7 @@ kontraMigrations = [
   , signatoryLinksMoveSignatures
   , companiesAddCgiDisplayName
   , addMtimeStatusIndexes
+  , evidenceLogAddActor
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations
