@@ -58,6 +58,7 @@ define(['Backbone', 'legacy_code'], function() {
       tosAccept.append(tosCBox);
 
       var tosLabel = $("<span/>").append($(localization.accountSetupModal.modalAccountSetupTOS));
+      tosLabel.find('label').click(toggleCheckBox);
       var tosA = tosLabel.find('.is-TOS')
                 .attr("class", "clickable")
                 .attr("target", "_blank")
