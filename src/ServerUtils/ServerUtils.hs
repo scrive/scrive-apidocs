@@ -137,7 +137,9 @@ brandedImage :: Kontrakcja m =>  m Response
 brandedImage = do
     color <- fmap (take 12) $ guardJustM $ getField "color"
     file <- fmap (take 50) $ guardJustM $ getField "file"
-
+    keepColor <-isFieldSet "keep-color"
+    -- We have option to stay as close ot given color as possible. But this only works for black-white images
+    let gamma = if (keepColor) then "1" else ".4235"
     cwd <- liftIO getCurrentDirectory
     let imgDir = cwd </> "frontend/app/img"
     fpath <- guardJust $ secureAbsNormPath imgDir file
@@ -145,7 +147,7 @@ brandedImage = do
     (procResult, out, _) <- readProcessWithExitCode' "convert" [fpath
                                                   , "-colorspace", "Gray"
                                                   , "+level-colors", color ++ ",white"
-                                                  , "-gamma", ".4235" -- make dark colors look nice
+                                                  , "-gamma", gamma
                                                   , "-"] ""
     case procResult of
       ExitFailure msg -> do
