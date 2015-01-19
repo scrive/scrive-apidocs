@@ -125,8 +125,7 @@ handleNewDocument = do
         withDocument doc $ do
             authorsiglink <- guardJust $ find (\sl -> signatoryisauthor sl) (documentsignatorylinks doc)
             othersiglink  <- guardJust $ find (\sl -> sl /= authorsiglink)  (documentsignatorylinks doc)
-            let authorsiglink' = authorsiglink {signatorylinkdeliverymethod = PadDelivery}
-                templateField ft = SignatoryField { sfID = unsafeSignatoryFieldID 0
+            let templateField ft = SignatoryField { sfID = unsafeSignatoryFieldID 0
                                                   , sfType = ft
                                                   , sfValue = ""
                                                   , sfShouldBeFilledBySender = False
@@ -142,7 +141,7 @@ handleNewDocument = do
                                                                  , templateField CompanyNumberFT
                                                                  ]
                                              }
-            _ <- dbUpdate $ ResetSignatoryDetails [authorsiglink', othersiglink'] actor
+            _ <- dbUpdate $ ResetSignatoryDetails [authorsiglink, othersiglink'] actor
             dbUpdate $ SetDocumentUnsavedDraft True
         return $ LinkIssueDoc (documentid doc)
      else return $ LinkLogin (ctxlang ctx) LoginTry
