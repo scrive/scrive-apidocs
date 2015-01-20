@@ -243,7 +243,7 @@ addMainDomain = do
         let favicon = "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAlhJREFUeNpi1HdNYKAlYGKgMRi1YARYwIJLgpeHy0RPQ11ZzkRfHS747MWbm3cfn7l04+bdRxRZkBEbEB3oCrQDXUIPSgPt6J6+nBhrmCWUDdCEmkqSo4Pc2NlY8WiTEhcJ9XF89vItQTtYMN3u52YDYX/+8m3T7iP7j52Hy6oryUUHuQJNh3BLMyLPXLzx7OUbEnzQVJoMCRmg6SmlnZt2HQXqh6PLN+4uXb8baAEwboBqQL5kZDh25goJqQjuOqDbcXm/rmcu3NXAhEBmKoK4EReYsXgj3Cn4ASNaabptcTdcJzCpQIIIGNBk5wN0C4AxDExFmOqAUXLz3iMQefcxkCQ+KzBi1gelmZHRgW4EdQJ9BowMgp7Dkg+AqeLMpZuQzIwlryFldaB3gSrxJ1NGgjUaMLaBZgFzAKjw0FcHxhBy9AJN94otJScVwQEkrKFBsRialPsbciHJDMg20dfAE1Ao+WBOT/mFXfMhCH/oA7MbOcX1mYs3kZMT3nCTRU5gwNADJo3D66YCEZCB04JNu44g0lJGJC47HK2M/FwR5RUwDDNi/R3Z/pwODAAiV2EOYIGGM5LR0igklwFLTVhBIgwMceRIBhbaS9fvAjocaPSfz1+AIpySkpyNrSklndgjGaiBl5sL7nagWXjCCmg0EIH88fUbKw8vxAIWXh4C+QBYPgNTNzBYFWUlcRkNDMzuGcvXbDkAyxPcbomRH69e5ZFX0Covm7Rq14PHz4nKB8AAAXoIXvABgxvoWKyJEuhRPzdrkLfW7d5/7BwJGW20XTTkLQAIMABRBBtjubVMigAAAABJRU5ErkJggg=="
 
         runQuery_ . sqlInsert "themes" $  do
-          sqlSet "name" ("Scrive mail theme" :: String)
+          sqlSet "name" ("Scrive email theme" :: String)
           sqlSet "logo" $ Binary $ B64.decodeLenient $ BS.fromString $ mailLogo
           sqlSet "brand_color" $ ("#ffffff":: String)
           sqlSet "brand_text_color" $ ("#495259":: String)
@@ -259,7 +259,7 @@ addMainDomain = do
           sqlResult "id"
         (mailThemeId::Int64) <- fetchOne unSingle
         runQuery_ . sqlInsert "themes" $  do
-          sqlSet "name" ("Scrive main theme" :: String)
+          sqlSet "name" ("Scrive service theme" :: String)
           sqlSet "logo" $ Binary $ B64.decodeLenient $ BS.fromString $ mainLogo
           sqlSet "brand_color" $ ("#495259":: String)
           sqlSet "brand_text_color" $ ("#ffffff":: String)

@@ -64,7 +64,7 @@ tableBrandedDomains = tblTable {
         let loginLogo = "iVBORw0KGgoAAAANSUhEUgAAAHgAAAAXCAYAAADAxotdAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAABFlJREFUeNrsWr1O3EAQvouuRfIb4Dfg0iNh3uAq2jhPEPIAKE5LY/IEPp7goEwRmTRpKHxRGjqDUNr4kiIFjbN7GaNlbma9s7Z1ys9IqwN7d7ye//nWo9F/+qtpzN2o6zpQP5EaU2bKlRrL8Xi8kj5U8Q6Bt/7dU+NWje/A7+JfELySQQQy2AU5aBncabkqGVwN+mA1FrU7LWCzrrzzFn6VGgkYmNhwYK1+RqGZGfdSuK5Halxv9pPDnKiD7LDcpsScWI2yRQb6fjyEcpPan5IW3qmQXyUwnJAzSkKRa2Uy100BR0LZBZgHscdCKIMCol0vyo0t1pSjIVKyup51MJzYYd8Vt9hTwQ1lAvkdc7LQnmzbo4OhT/tQcEVYT+Qh2NDBc0tYH6LwnUle0GKUEgXHcK/somTCO0PDsynPzU0ZgIfHjMEVPikL50Ys1MAxLFUWy42IzaYtPKeEQApmHqkQJveRCibkUHjuuWYMKCVk6xOV0j5zb94hNNnCXyLIZ4UtVBP3raHMRcEtKSUS1Bex4ZXOfFqcrvbOx4SCS4/KtRlxm1U78p1yXkyE5tY8JVEwo+TcMb09Rj9C8UlHvaR9heiNHNGD0UQePKawt8hcT3jvzIFXLjU2Ii+HxJwZl7PRPitpHiVSYCGV4WSNdqjGWi1eIlCjacRHUKvo5luDGp/hV89fqbVLhveB8ffKp3mneIOQzH0OCY68VcMssl6p8RrNeYH+Pzf+xlFlYdR9PuRfTXcs5TfADh+P8Yw2x47rfDwY97aVsPcdgkQR9RnylufgqVLSITLvVOm5Ew71y8Fw3N8w7Ny4FKB0EFu8dygSKXiCXkjjoYcIKz5gBEuRrqjvFJ8zdD0Y/bl0jhSpQ/IFE57nFj63MLoa3aA4dQAhcgZFFNUzVkwVGvS0h8Sz7cg7VPQbxZZLl9C1QOqDJh4hq7EgbcVNW5ShMKaLgY/I8nWuFLcJ6PnJlrz4nRopSkm7DuH5CuauCyRtGBAlnVtQJEN5QUkhQj3AnBFR4oswVQJAybbowSEBtVZtLRDRQkmfm0tweYmCYmHYrhkcNvHBVJmKPtqWgmH9wudQggjvrth2xlXoWj4Pq1X57fq6/nFz0w6AEMwkR3W2jQTEC7JYLMxPbFjwFhU8syg48gCRQku0oA4cHqt3rdxPR0f1+7299bg5PbWjZAxmaqJZkQG/NehSwpzAJI79dQlQXgNxLph5T7x+WwpmIp0TrGs5Z18gmJeLEqaBT79eXj4qtxncOzVI1q2a8BIVS0/QLAPRstEcF0K6v1brDnWfjNqlEAovG+ke99Dns6CBaE7subXo0TIB2b0h8IM2mPVMrTfRsw1ZTHZ2RChR6YGuVA5fdIQOn+u4fDywTQ8OuyBLEOZLgUxn3Lt8OTlZe+6H/f1ae7QLHo83krVspgKhHUt6XONgnwvHqU1o21QwcYBQePKILcbepMWgpbDNft7fVw9VVdjg2l8CDADzOGI6m6udLgAAAABJRU5ErkJggg=="
         let favicon = "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAlhJREFUeNpi1HdNYKAlYGKgMRi1YARYwIJLgpeHy0RPQ11ZzkRfHS747MWbm3cfn7l04+bdRxRZkBEbEB3oCrQDXUIPSgPt6J6+nBhrmCWUDdCEmkqSo4Pc2NlY8WiTEhcJ9XF89vItQTtYMN3u52YDYX/+8m3T7iP7j52Hy6oryUUHuQJNh3BLMyLPXLzx7OUbEnzQVJoMCRmg6SmlnZt2HQXqh6PLN+4uXb8baAEwboBqQL5kZDh25goJqQjuOqDbcXm/rmcu3NXAhEBmKoK4EReYsXgj3Cn4ASNaabptcTdcJzCpQIIIGNBk5wN0C4AxDExFmOqAUXLz3iMQefcxkCQ+KzBi1gelmZHRgW4EdQJ9BowMgp7Dkg+AqeLMpZuQzIwlryFldaB3gSrxJ1NGgjUaMLaBZgFzAKjw0FcHxhBy9AJN94otJScVwQEkrKFBsRialPsbciHJDMg20dfAE1Ao+WBOT/mFXfMhCH/oA7MbOcX1mYs3kZMT3nCTRU5gwNADJo3D66YCEZCB04JNu44g0lJGJC47HK2M/FwR5RUwDDNi/R3Z/pwODAAiV2EOYIGGM5LR0igklwFLTVhBIgwMceRIBhbaS9fvAjocaPSfz1+AIpySkpyNrSklndgjGaiBl5sL7nagWXjCCmg0EIH88fUbKw8vxAIWXh4C+QBYPgNTNzBYFWUlcRkNDMzuGcvXbDkAyxPcbomRH69e5ZFX0Covm7Rq14PHz4nKB8AAAXoIXvABgxvoWKyJEuhRPzdrkLfW7d5/7BwJGW20XTTkLQAIMABRBBtjubVMigAAAABJRU5ErkJggg=="
         runQuery_ . sqlInsert "themes" $  do
-          sqlSet "name" ("Scrive mail theme" :: String)
+          sqlSet "name" ("Scrive email theme" :: String)
           sqlSet "logo" $ Binary $ B64.decodeLenient $ BS.fromString $ mailLogo
           sqlSet "brand_color" $ ("#ffffff":: String)
           sqlSet "brand_text_color" $ ("#495259":: String)
@@ -80,7 +80,7 @@ tableBrandedDomains = tblTable {
           sqlResult "id"
         (mailThemeId::Int64) <- fetchOne unSingle
         runQuery_ . sqlInsert "themes" $  do
-          sqlSet "name" ("Scrive main theme" :: String)
+          sqlSet "name" ("Scrive service theme" :: String)
           sqlSet "logo" $ Binary $ B64.decodeLenient $ BS.fromString $ mainLogo
           sqlSet "brand_color" $ ("#495259":: String)
           sqlSet "brand_text_color" $ ("#ffffff":: String)
