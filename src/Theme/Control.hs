@@ -19,7 +19,7 @@ module Theme.Control (
 import Data.Unjson
 import Data.Unjson as Unjson
 import Happstack.Server hiding (dir, simpleHTTP)
-import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Yaml as Yaml
 
 import BrandedDomain.BrandedDomain
@@ -63,7 +63,7 @@ handleUpdateThemeForDomain:: Kontrakcja m => BrandedDomainID -> ThemeID -> m ()
 handleUpdateThemeForDomain _did tid =  do
   theme <- dbQuery $ GetTheme tid
   themeJSON <- guardJustM $ getField "theme"
-  case Yaml.decode (BS.pack themeJSON) of
+  case Yaml.decode (BS.fromString themeJSON) of
      Nothing -> internalError
      Just js -> case (Unjson.parse unjsonTheme js) of
         (Result newTheme []) -> do
@@ -75,7 +75,7 @@ handleUpdateThemeForCompany:: Kontrakcja m => CompanyID -> ThemeID -> m ()
 handleUpdateThemeForCompany _cid tid =  do
   theme <- dbQuery $ GetTheme tid
   themeJSON <- guardJustM $ getField "theme"
-  case Yaml.decode (BS.pack themeJSON) of
+  case Yaml.decode (BS.fromString themeJSON) of
      Nothing -> internalError
      Just js -> case (Unjson.parse unjsonTheme js) of
         (Result newTheme []) -> do
