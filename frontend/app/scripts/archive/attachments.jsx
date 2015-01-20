@@ -92,7 +92,6 @@ return React.createClass({
 
           <List.ListAction
             name={localization.archive.attachments.share.action}
-            width={50}
             onSelect={function(selected,model) {
               if (selected.length ==0 ) {
                 new FlashMessage({color: "red", content: localization.archive.attachments.share.emptyMessage});
@@ -104,7 +103,6 @@ return React.createClass({
 
           <List.ListAction
             name={localization.archive.attachments.remove.action}
-            width={50}
             onSelect={function(selected,model) {
               if (selected.length ==0 ) {
                 new FlashMessage({color: "red", content: localization.archive.attachments.remove.emptyMessage});
