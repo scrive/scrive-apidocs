@@ -35,7 +35,7 @@ var ChangeSignatoryDetailModalModel = Backbone.Model.extend({
   },
   isSignatoryDetailValueValid: function() {
     return this.validator().validateData(this.signatoryDetailValue());
-  },
+  }
 });
 
 

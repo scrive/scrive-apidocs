@@ -98,7 +98,7 @@ var openNewUserModal = function(companyid,callback) {
           sndname : sndname.val(),
           email : email.val(),
           lang : lang.val(),
-          iscompanyadmin : isadmin.is(":checked") ? "Yes" : undefined,
+          iscompanyadmin : isadmin.is(":checked") ? "Yes" : undefined
         }).sendAjax(successCallback, function() {window.location.reload();});
       }
     }

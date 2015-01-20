@@ -94,7 +94,7 @@ var openCreateUserModal = function(callback) {
           fstname : fstname.val(),
           sndname : sndname.val(),
           email : email.val(),
-          lang : lang.val(),
+          lang : lang.val()
         }).sendAjax(successCallback, function() {window.location.reload();});
       }
     }
