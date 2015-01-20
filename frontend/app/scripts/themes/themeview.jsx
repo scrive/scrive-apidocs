@@ -28,7 +28,14 @@ return React.createClass({
                 <div className='title'>{localization.branding.themes.name}</div>
                   <InfoTextInput
                     value={model.name()}
-                    onChange={function(v) {model.setName(v);}}
+                    onBlur={function(v) {
+                      if (model.name() == "" && self.props.getDefaultName != undefined) {
+                        model.setName(self.props.getDefaultName());
+                      }
+                    }}
+                    onChange={function(v) {
+                        model.setName(v);
+                    }}
                   />
               </div>
               <div className="theme-edit-section">

@@ -118,8 +118,18 @@ return Backbone.Model.extend({
     }
   },
   newThemeDefaultName : function() {
+    // Search edited and other themes for Untitled X names. Pick first name not on this list
     var i = 1;
-    while (_.any(this.themeList().list().models, function(et) { return et.field("name") == ("Untitled " + i); })) {
+    var self = this;
+    var sameNameTheme = function(name,lt) {
+      var editedTheme = _.find(self.editedThemes(), function(et) { return et.themeid() == lt.field("id"); });
+      if (editedTheme) {
+        return editedTheme.name() == name;
+      } else {
+        return lt.field("name") == name;
+      }
+    };
+    while (_.any(this.themeList().list().models, function(lt) { return sameNameTheme(("Untitled " + i),lt); })) {
       i++;
     }
     return "Untitled " + i;

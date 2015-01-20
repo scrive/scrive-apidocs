@@ -140,6 +140,7 @@ return React.createClass({
                 <ThemeView
                   title={localization.branding.emailThemeTitle}
                   model={model.mailThemeForEditing()}
+                  getDefaultName={function() {return model.newThemeDefaultName()}}
                   onDelete={function() {self.onThemeDelete(model.mailThemeForEditing())}}
                   previews={_.compact([
                       EmailPreview,
@@ -158,6 +159,7 @@ return React.createClass({
                 <ThemeView
                   title={localization.branding.signviewThemeTitle}
                   model={model.signviewThemeForEditing()}
+                  getDefaultName={function() {return model.newThemeDefaultName()}}
                   onDelete={function() {self.onThemeDelete(model.signviewThemeForEditing())}}
                   previews={_.compact([
                       SigningPreview,
@@ -176,6 +178,7 @@ return React.createClass({
                 <ThemeView
                   title={localization.branding.serviceThemeTitle}
                   model={model.serviceThemeForEditing()}
+                  getDefaultName={function() {return model.newThemeDefaultName()}}
                   onDelete={function() {self.onThemeDelete(model.serviceThemeForEditing())}}
                   previews={_.compact([
                       ServicePreview,
