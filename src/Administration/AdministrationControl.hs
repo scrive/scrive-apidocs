@@ -427,7 +427,7 @@ handleCreateUser = onlySalesOrAdmin $ do
     sndname <- guardJustM $ getField "sndname"
     lang <- guardJustM $ join <$> fmap langFromCode <$> getField "lang"
     company <- dbUpdate $ CreateCompany
-    muser <- createNewUserByAdmin email (fstname, sndname) custommessage (companyid company, True) lang
+    muser <- createNewUserByAdmin email (fstname, sndname) (companyid company, True) lang
     runJSONGenT $ case muser of
       Nothing -> do
         value "success" False
