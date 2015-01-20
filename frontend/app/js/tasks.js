@@ -118,8 +118,8 @@ window.PageTasks = Backbone.Model.extend({
     var tasks = args.tasks.sort(function(t1, t2) {
       var offset1 = t1.el().offset();
       var offset2 = t2.el().offset();
-      var height1 = t1.el().height();
-      var height2 = t2.el().height();
+      var height1 = t1.el().outerHeight();
+      var height2 = t2.el().outerHeight();
       var verticalDiff = (offset1.top + height1) - (offset2.top + height2);
       var horizontalDiff = offset1.left - offset2.left;
       return (verticalDiff === 0 ? horizontalDiff : verticalDiff);
