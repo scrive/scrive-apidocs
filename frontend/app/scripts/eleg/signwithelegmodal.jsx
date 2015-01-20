@@ -73,7 +73,7 @@ return function(args) {
 
       // Remove the modal footer but keep the button (regular or mobile bankid)
       var signButton = new Button({
-        color: "action",
+        type: "action",
         size: "big",
         style:"margin-top:-10px;margin-bottom:10px",
         cssClass: "signbutton",

@@ -13,7 +13,7 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
     var signatory = this.model.document().currentSignatory();
 
     return new Button({
-      color: "action",
+      type: "action",
       cssClass: "accept-button",
       text: localization.next,
       onClick: function() {
