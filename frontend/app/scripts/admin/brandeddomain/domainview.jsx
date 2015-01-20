@@ -18,8 +18,9 @@ return React.createClass({
       } else {
         var alternativeTheme = _.find(model.themeList().list().models,function(t) { return t.field("id")  != theme.themeid();});
 
-        var content = $("<div>Are you sure that you want to delete this theme. Theme <strong class='put-name-of-theme-here'/> will be used instead</div>");
-        content.find(".put-name-of-theme-here").text(alternativeTheme.field("name"));
+        var content = $("<div>Are you sure that you want to delete theme <strong class='put-name-of-theme-to-delete-here'/>. Theme <strong class='put-name-of-new-theme-here'/> will be used instead</div>");
+        content.find(".put-name-of-theme-to-delete-here").text(theme.name());
+        content.find(".put-name-of-new-theme-here").text(alternativeTheme.field("name"));
 
         var popup = new Confirmation({
           title : localization.branding.deleteTheme,
@@ -127,7 +128,6 @@ return React.createClass({
               <ThemeManagementTopBar model={model} onSave={function() {self.save();}}/>
               {/*if*/ (model.mailThemeMode() ) &&
                 <ThemeView
-                  title={localization.branding.emailThemeTitle}
                   model={model.mailThemeForEditing()}
                   getDefaultName={function() {return model.newThemeDefaultName()}}
                   onDelete={function() {self.onThemeDelete(model.mailThemeForEditing())}}
@@ -142,7 +142,6 @@ return React.createClass({
               }
               {/*else if*/ (model.signviewThemeMode() ) &&
                 <ThemeView
-                  title={localization.branding.signviewThemeTitle}
                   model={model.signviewThemeForEditing()}
                   getDefaultName={function() {return model.newThemeDefaultName()}}
                   onDelete={function() {self.onThemeDelete(model.signviewThemeForEditing())}}
@@ -158,7 +157,6 @@ return React.createClass({
               }
               {/*else if*/ (model.serviceThemeMode() ) &&
                 <ThemeView
-                  title={localization.branding.serviceThemeTitle}
                   model={model.serviceThemeForEditing()}
                   getDefaultName={function() {return model.newThemeDefaultName()}}
                   onDelete={function() {self.onThemeDelete(model.serviceThemeForEditing())}}
@@ -174,7 +172,6 @@ return React.createClass({
               }
               {/*else if*/ (model.loginThemeMode() ) &&
                 <ThemeView
-                  title={localization.branding.loginThemeTitle}
                   model={model.loginThemeForEditing()}
                   getDefaultName={function() {return model.newThemeDefaultName()}}
                   onDelete={function() {self.onThemeDelete(model.loginThemeForEditing())}}

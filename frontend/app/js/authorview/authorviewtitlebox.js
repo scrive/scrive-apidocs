@@ -125,7 +125,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
           var modalcontent = somebodysigned ? localization.process.cancelmodaltextwithsignatures : localization.process.cancelmodaltext;
         new Confirmation({
           title: localization.process.cancelmodaltitle,
-          content: $('<p class="center">' + modalcontent + '</p>'),
+          content: $('<p>' + modalcontent + '</p>'),
           width: 533,
           acceptText: localization.process.cancelbuttontext,
           rejectText: localization.cancel,

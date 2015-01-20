@@ -138,7 +138,6 @@ return React.createClass({
               <CompanyThemesManagementBar model={model} onSave={function() {self.save();}} />
               {/*if*/ (model.mailThemeMode() && model.mailThemeForEditing() != undefined) &&
                 <ThemeView
-                  title={localization.branding.emailThemeTitle}
                   model={model.mailThemeForEditing()}
                   getDefaultName={function() {return model.newThemeDefaultName()}}
                   onDelete={function() {self.onThemeDelete(model.mailThemeForEditing())}}
@@ -157,7 +156,6 @@ return React.createClass({
               }
               {/*else if*/ (model.signviewThemeMode() && model.signviewThemeForEditing() != undefined) &&
                 <ThemeView
-                  title={localization.branding.signviewThemeTitle}
                   model={model.signviewThemeForEditing()}
                   getDefaultName={function() {return model.newThemeDefaultName()}}
                   onDelete={function() {self.onThemeDelete(model.signviewThemeForEditing())}}
@@ -176,7 +174,6 @@ return React.createClass({
               }
               {/*else if*/ (model.serviceThemeMode() && model.serviceThemeForEditing() != undefined) &&
                 <ThemeView
-                  title={localization.branding.serviceThemeTitle}
                   model={model.serviceThemeForEditing()}
                   getDefaultName={function() {return model.newThemeDefaultName()}}
                   onDelete={function() {self.onThemeDelete(model.serviceThemeForEditing())}}

@@ -21,9 +21,6 @@ return React.createClass({
       return (
         <div className="theme-edit">
           <div className="theme-edit-panel">
-              <div className="theme-title-section">
-                {self.props.title}
-              </div>
               <div className="theme-edit-section">
                 <div className='title'>{localization.branding.themes.name}</div>
                   <InfoTextInput
@@ -131,7 +128,11 @@ return React.createClass({
           </div>
           <div className="previews">
             { this.props.previews.map(function(preview) {
-                return preview({model: model});
+                return (
+                  <div>
+                    {preview({model: model})}
+                  </div>
+                );
               })
             }
           </div>

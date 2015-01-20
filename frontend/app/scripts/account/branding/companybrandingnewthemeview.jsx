@@ -52,17 +52,6 @@ return React.createClass({
          companybranding.setServiceTheme(themeid);
       }
     },
-    title : function() {
-      var model = this.props.model;
-      var companybranding = this.props.model.companybranding();
-      if (model.mailThemeMode()) {
-        return localization.branding.emailThemeTitle;
-      } else if (model.signviewThemeMode()) {
-        return localization.branding.signviewThemeTitle;
-      } else if (model.serviceThemeMode()) {
-        return localization.branding.serviceThemeTitle;
-      }
-    },
     render: function() {
       var self = this;
       var model = this.props.model;
@@ -94,9 +83,6 @@ return React.createClass({
         <div className="companybranding-create-new-theme-panel">
           <div className="theme-edit">
             <div className="theme-edit-panel">
-              <div className="theme-title-section">
-                {self.title()}
-              </div>
               <div className="theme-choose-theme-section">
                 <div className='title text-with-bottom-spacing'>{localization.branding.createCustomThemeTitle}</div>
                 <div className='text-with-bottom-spacing'>{localization.branding.createCustomThemeDescription}</div>
