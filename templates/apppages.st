@@ -369,7 +369,7 @@ contactUsVivocha=
       <a class="" href="tel:+46851977900">
         <div class="icon"><img src="/img/phone.png" width="32" height="32" alt="Call"/></div>
         <div class="hover">
-          <p>Call us now</p>
+          <p>$_vivochaCallUsNow()$</p>
           <small>+46 8 519 779 00</small>
         </div>
       </a>
@@ -378,7 +378,7 @@ contactUsVivocha=
       <a class="" href="mailto:info@scrive.com">
         <div class="icon"><img src="/img/mail-us.png" width="32" height="32" alt="Email"/></div>
         <div class="hover">
-          <p>Send an email</p>
+          <p>$_vivochaSendEmail()$</p>
           <small>info@scrive.com</small>
         </div>
       </a>
@@ -387,8 +387,8 @@ contactUsVivocha=
       <a class="" href="#vivocha-chat-url">
         <div class="icon"><img src="/img/chat.png" width="32" height="32" alt="Chat"/></div>
         <div class="hover">
-          <p>Chat now</p>
-          <small>Live chat</small>
+          <p>$_vivochaChatNow()$</p>
+          <small>$_vivochaLiveChat()$</small>
         </div>
       </a>
     </li>

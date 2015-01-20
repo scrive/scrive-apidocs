@@ -1,4 +1,4 @@
-{
+{ 
 "_Accept":"Accept",
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
@@ -854,6 +854,10 @@
 "_verificationTime":"Time",
 "_verificationTitle":"Verify the document's authenticity",
 "_visitOurPricingPage":"View <a class='put-link-to-pricing-here'>pricing and purchase a subscription</a>.",
+"_vivochaCallUsNow":"Call us now",
+"_vivochaChatNow":"Chat now",
+"_vivochaLiveChat":"Live chat",
+"_vivochaSendEmail":"Send an email",
 "_welcomeback":"Welcome!",
 "_you":"you",
 "_youCantCancelThisDocuments":"Some of the selected documents can't be withdrawn.",
