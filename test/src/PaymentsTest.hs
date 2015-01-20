@@ -217,7 +217,7 @@ testRecurlySavesAccount = do
   let ac = getEmailId t -- generate a random account code to avoid collisions
       email = "eric+" ++ ac ++ "@scrive.com"
 
-  cs <- liftIO $ createSubscription "curl" recurlyToken recurlyPlanName "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" 5
+  cs <- liftIO $ createSubscription "curl" recurlyToken recurlyPlanName "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" "Adress line 1" "Stockholm" "Sweden" "12-345" 5
   assertRight cs
 
   gs <- liftIO $ getSubscriptionsForAccount "curl" recurlyToken ac
@@ -245,7 +245,7 @@ testRecurlyChangeAccount = do
   let ac = getEmailId t -- generate a random account code to avoid collisions
       email = "eric+" ++ ac ++ "@scrive.com"
 
-  cs <- liftIO $ createSubscription "curl" recurlyToken recurlyPlanName "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" 5
+  cs <- liftIO $ createSubscription "curl" recurlyToken recurlyPlanName "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" "Adress line 1" "Stockholm" "Sweden" "12-345" 5
   assertRight cs
 
   gs <- liftIO $ getSubscriptionsForAccount "curl" recurlyToken ac
@@ -280,7 +280,7 @@ testRecurlyChangeAccountDefer = do
   let ac = getEmailId t -- generate a random account code to avoid collisions
       email = "eric+" ++ ac ++ "@scrive.com"
 
-  cs <- liftIO $ createSubscription "curl" recurlyToken recurlyPlanName "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" 5
+  cs <- liftIO $ createSubscription "curl" recurlyToken recurlyPlanName "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" "Adress line 1" "Stockholm" "Sweden" "12-345" 5
 
   assertRight cs
 
@@ -323,7 +323,7 @@ testRecurlyCancelReactivate = do
   let ac = getEmailId t -- generate a random account code to avoid collisions
       email = "eric+" ++ ac ++ "@scrive.com"
 
-  cs <- liftIO $ createSubscription "curl" recurlyToken recurlyPlanName "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" 5
+  cs <- liftIO $ createSubscription "curl" recurlyToken recurlyPlanName "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" "Adress line 1" "Stockholm" "Sweden" "12-345" 5
   assertRight cs
 
   gs <- liftIO $ getSubscriptionsForAccount "curl" recurlyToken ac
