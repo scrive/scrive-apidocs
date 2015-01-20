@@ -40,55 +40,56 @@ return React.createClass({
             </div>
             <div className='domain-settings-edit-panel-column left'>
               <DomainTextEditor
-                title="Domain URL"
-                description="Url that has to match give domain.Does not apply to main scrive domain"
+                title="URL."
+                description="The full web address for the domain."
                 getValue={function() {return model.getUrl()}}
                 setValue={function(v) {return model.setUrl(v)}}
               />
               <DomainTextEditor
-                title="Browser title"
-                description="Used in title in browsers"
+                title="Browser title."
+                description="The text at the top of the browser."
                 getValue={function() {return model.browserTitle()}}
                 setValue={function(v) {return model.setBrowserTitle(v)}}
               />
               <DomainTextEditor
-                title="SMS originator"
-                description="The name that is displayed to the recipient when receiving an SMS. Maximum 11 alpha-numeric characters."
+                title="SMS originator."
+                description="The name displayed to the recipient when receiving an SMS. Maximum 11 alpha-numeric characters."
                 getValue={function() {return model.smsOriginator()}}
                 setValue={function(v) {return model.setSmsOriginator(v)}}
                 maxLength={11}
               />
               <DomainTextEditor
-                title="Email originator"
-                description="The name that is displayed to the recipient when receiving emails."
+                title=" Email originator."
+                description="Email originator. The name displayed to the recipient when receiving emails."
                 getValue={function() {return model.emailOriginator()}}
                 setValue={function(v) {return model.setEmailOriginator(v)}}
               />
               <DomainTextEditor
-                title="Contact email"
+                title="Contact email."
                 description="In places where the user can contact you this is the email address that will be used."
                 getValue={function() {return model.contactEmail()}}
                 setValue={function(v) {return model.setContactEmail(v)}}
               />
               <DomainTextEditor
-                title="No replay email"
-                description="This email address will be used as the no-reply address. Setting this address may cause mail delivery issues."
+                title="No reply email."
+                description="This email address will be used as the no-reply address. Setting this address may cause email delivery issues."
                 getValue={function() {return model.noreplyEmail()}}
                 setValue={function(v) {return model.setNoreplyEmail(v)}}
               />
             </div>
             <div className='domain-settings-edit-panel-column right'>
               <DomainImageEditor
-                title="Favicon"
+                title="Favicon."
+                description="This icon is used in the title of the browser window and when the page is bookmarked. Accepted files are ICO and PNG."
+                uploadText="Select favicon"
                 getValue={function() {return model.favicon()}}
                 setValue={function(v) {return model.setFavicon(v)}}
               />
               <div className="domain-property-editor domain-property-title">
                 <strong>
-                  Participant colours
+                  Participant colours.
                 </strong>
-                  These colours will help while designing a document to create a visual connection between the party and the placed fields. The colours should be as different as possible to easily distinguish them from each other. If there are more than 6 parties the colors will be repeated.
-              </div>
+                  &nbsp;These colours will help while designing a document to create a visual connection between the party and the placed fields. The colours should be as different as possible to easily distinguish them from each other. If there are more than 6 parties the colours will be repeated.              </div>
               <DomainColorEditor
                 ref="participant1"
                 title="Participant 1"
@@ -135,9 +136,9 @@ return React.createClass({
               />
               <div className="domain-property-editor domain-property-title">
                 <strong>
-                  Status and event colours
+                  Status and event colours.
                 </strong>
-                  This is the document status indicated with an icon and a colour. Here you can modify the colors.
+                 &nbsp;This is the document status indicated with an icon and a colour. Here you can modify the colors.
               </div>
 
               <DomainColorEditor
@@ -150,7 +151,7 @@ return React.createClass({
               />
               <DomainColorEditor
                 ref="errorColor"
-                title="Error, withdrawn,cancelled and timed-out"
+                title="Error, withdrawn, cancelled and timed-out"
                 icons={["problem","cancelled","rejected","timeouted"]}
                 getValue={function() {return model.cancelledColor()}}
                 setValue={function(v) {return model.setCancelledColor(v)}}

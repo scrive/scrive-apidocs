@@ -8,12 +8,12 @@ return React.createClass({
     return (
       <div className="domain-property-editor domain-image-property">
         <div className="domain-image-property-title">
-          <strong>{self.props.title}:</strong>
+          <strong>{self.props.title}</strong> {self.props.description}
         </div>
         <div className="domain-text-property-edit">
           <img src={this.props.getValue()} className="favicon-image"/>
           <UploadImageButton
-                text="Upload image"
+                text={self.props.uploadText} 
                 width={160}
                 size="tiny"
                 onUpload={function(image) {
