@@ -5,6 +5,21 @@
 define(['Backbone', 'legacy_code'], function() {
 
 var SignatureDrawerModel = Backbone.Model.extend({
+  defaults: function () {
+    return {
+      preview: false,
+      delayStartPreview: 3000
+    };
+  },
+  initialize: function () {
+    _.bindAll(this, "cancelPreview");
+    var self = this;
+    if (!(self.value() && self.value() != "")) {
+      this.previewTimeout = setTimeout(function () {
+        self.set({ preview: true });
+      }, self.get("delayStartPreview"));
+    }
+  },
   height : function() {
      return this.get("height");
   },
@@ -17,15 +32,21 @@ var SignatureDrawerModel = Backbone.Model.extend({
   value : function() {
     return this.field().value();
   },
+  cancelPreview: function () {
+    clearTimeout(this.previewTimeout);
+    if (this.get("preview")) {
+      this.set("preview", false);
+    }
+  },
   modal: function() {
     return this.get("modal");
   }
 });
 
-
 var SignatureDrawerView = Backbone.View.extend({
     initialize: function (args) {
-        _.bindAll(this, 'render');
+        _.bindAll(this, 'render', "togglePreview");
+        this.model.on("change:preview", this.togglePreview);
         this.empty = true;
         this.render();
     },
@@ -77,6 +98,9 @@ var SignatureDrawerView = Backbone.View.extend({
       if (this.drawing) {
         return;
       }
+
+      this.model.cancelPreview();
+
       this.empty = false;
       this.startDrawing(drawingMethod);
       this.drawnAnyLine = false;
@@ -153,7 +177,7 @@ var SignatureDrawerView = Backbone.View.extend({
     },
     xPos : function(e) {
       if (e.changedTouches != undefined && e.changedTouches[0] != undefined) e = e.changedTouches[0];
-      var canvasLeft = this.canvas.offset().left;
+      var canvasLeft = this.container.offset().left;
       /*
        * There is a problem with modern IE on touch devices and using jQuery's offset:
        * http://connect.microsoft.com/IE/feedback/details/768781/ie10-window-pageyoffset-incorrect-value-when-page-zoomed-breaks-jquery-etc
@@ -168,7 +192,7 @@ var SignatureDrawerView = Backbone.View.extend({
     },
     yPos : function(e) {
       if (e.changedTouches != undefined && e.changedTouches[0] != undefined) e = e.changedTouches[0];
-      var canvasTop = this.canvas.offset().top;
+      var canvasTop = this.container.offset().top;
       // See xPos to why we do this.
       if (BrowserInfo.isIETouch()) {
         // pageXOffset (used in jquery offset()) changes when zoomed on MS Touch devices, whereas scrollLeft is constant.
@@ -179,19 +203,46 @@ var SignatureDrawerView = Backbone.View.extend({
     },
     initDrawing : function() {
            var view = this;
+
+           var drawing = function (fn) {
+             return function (type) {
+               return function (e) {
+                 e.preventDefault();
+                 e.stopPropagation();
+                 e.target.style.cursor = "default";
+                 fn(type, e);
+                 return false;
+               };
+             };
+           };
+
+           var methods = {
+             start: drawing(function (type, e) {
+               view.drawingtoolDown(view.xPos(e), view.yPos(e), type);
+             })
+
+             , move: drawing(function (type, e) {
+               view.drawingtoolMove(view.xPos(e), view.yPos(e), type);
+             })
+
+             , end: drawing(function (type, e) {
+               view.drawingtoolUp(view.xPos(e), view.yPos(e), type);
+             })
+           };
+
            if ('ontouchstart' in document.documentElement) {
-            this.canvas[0].addEventListener('touchstart',function(e) {e.preventDefault(); e.stopPropagation();e.preventDefault(); e.stopPropagation(); view.drawingtoolDown(view.xPos(e), view.yPos(e), 'touch');});
-            this.canvas[0].addEventListener('touchmove',function(e) {e.preventDefault(); e.stopPropagation();view.drawingtoolMove(view.xPos(e), view.yPos(e), 'touch');});
-            this.canvas[0].addEventListener('touchend',function(e) {e.preventDefault(); e.stopPropagation();view.drawingtoolUp(view.xPos(e), view.yPos(e), 'touch');});
+            this.container[0].addEventListener('touchstart', methods.start("touch"));
+            this.container[0].addEventListener('touchmove', methods.move("touch"));
+            this.container[0].addEventListener('touchend', methods.end("touch"));
            } else if (navigator.msPointerEnabled) {
-            this.canvas[0].addEventListener("MSPointerDown",function(e) {e.preventDefault(); e.stopPropagation(); view.drawingtoolDown(view.xPos(e), view.yPos(e), 'ms'); return false;},true);
-            this.canvas[0].addEventListener("MSPointerMove",function(e) {e.preventDefault(); e.stopPropagation(); view.drawingtoolMove(view.xPos(e), view.yPos(e), 'ms'); return false;},
-            true);
-            this.canvas[0].addEventListener("MSPointerUp",function(e) {e.preventDefault(); e.stopPropagation();view.drawingtoolUp(view.xPos(e), view.yPos(e), 'ms'); return false;},true);
+            this.container[0].addEventListener("MSPointerDown", methods.start("ms"), true);
+            this.container[0].addEventListener("MSPointerMove", methods.move("ms"), true);
+            this.container[0].addEventListener("MSPointerUp", methods.end("ms"), true);
            }
-           this.canvas.mousedown(function(e) {e.preventDefault(); e.stopPropagation();e.target.style.cursor = 'default';view.drawingtoolDown(view.xPos(e), view.yPos(e), 'mouse');});
-           this.canvas.mousemove(function(e) {e.preventDefault(); e.stopPropagation();view.drawingtoolMove(view.xPos(e), view.yPos(e), 'mouse');});
-           this.canvas.mouseup(function(e){e.preventDefault(); e.stopPropagation();view.drawingtoolUp(view.xPos(e), view.yPos(e), 'mouse');} );
+
+           this.container.mousedown(methods.start("mouse"));
+           this.container.mousemove(methods.move("mouse"));
+           this.container.mouseup(methods.end("mouse"));
     },
     saveImage : function(callback) {
         if (this.empty) {
@@ -213,6 +264,48 @@ var SignatureDrawerView = Backbone.View.extend({
           this.canvas[0].width = this.canvas[0].width;
           this.empty  = true;
     },
+    togglePreview: function () {
+      if (this.model.get("preview")) {
+        this.canvas.hide();
+        this.preview.show();
+      } else {
+        this.canvas.show();
+        this.preview.hide();
+      }
+    },
+    previewNode: function () {
+        var isTouchDevice = "ontouchstart" in window || "onmsgesturechange" in window;
+
+        // fix for IE 10.
+        if (BrowserInfo.isIE() && $.browser.version >= 10.0) {
+          isTouchDevice = !!window.navigator.msMaxTouchPoints;
+        }
+
+        var nonce = +new Date();
+        var src = isTouchDevice ? "/img/sign-preview-hand.gif" : "/img/sign-preview-mouse.gif";
+        var ratio  = this.model.height() / this.model.width();
+        var height = 820 * ratio;
+
+        src += "?_=" + nonce;
+
+        var $preview = $("<img>");
+        $preview.attr("src", src);
+        $preview.addClass("signaturePreview");
+
+        if (height > 323) {
+          $preview.width(820);
+          $preview.height(323);
+          $preview.css("margin-top", (height - 323) / 2);
+        } else {
+          $preview.width(820 / ratio);
+          $preview.height(height);
+          $preview.css("margin-right", (820 - (820 / ratio)) / 2);
+        }
+
+        $preview.hide();
+
+        return $preview;
+    },
     render: function () {
         var signature = this.model;
         var self = this;
@@ -225,7 +318,8 @@ var SignatureDrawerView = Backbone.View.extend({
         this.canvas.attr("height",820 * this.model.height() / this.model.width());
         this.canvas.height(820 * this.model.height() / this.model.width());
         this.container.height(820 * this.model.height() / this.model.width());
-        this.picture =  this.canvas[0].getContext('2d');
+        this.picture = this.canvas[0].getContext('2d');
+        this.preview = this.previewNode();
         if (this.model.value() && this.model.value() != "") {
           var img = new Image();
           img.type = 'image/png';
@@ -235,6 +329,7 @@ var SignatureDrawerView = Backbone.View.extend({
         }
         this.initDrawing();
         this.container.append(this.canvas);
+        this.container.append(this.preview);
         return this;
     }
 });

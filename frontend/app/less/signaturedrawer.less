@@ -4,7 +4,7 @@
 
 .drawing-modal {
   z-index: 5001;
-  
+
   .modal-close {
     background-image: url(~"@{img-base-url}/sprite-grey-X.png");
   }
@@ -18,13 +18,14 @@
 
   .signatureDrawingBoxWrapper {
     border: 1px solid #CCCCCC;
-    margin: 10px auto 0;    
+    margin: 10px auto 0;
   }
 
   .signatureDrawingBox {
     background-color: @white;
     position: relative; // Important for dealing with drawing events
-    
+    -ms-touch-action: none;
+
     canvas {
       position:absolute;
       -ms-touch-action: none;
