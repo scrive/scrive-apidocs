@@ -336,12 +336,21 @@ var AccountSettingsView = Backbone.View.extend({
                              options: _.filter(languages, function(l) { return l.value !=  model.lang() && !l.hidden;}),
                              textWidth : 213,
                              optionsWidth : "240px",
-                             // This is a hack - since footer has a fixes heigth, and this select box is very big
+                             // This is a hack - since footer has a fixed height, and this select box is very big
                              // it may cause problems. So we expand the footer to match its size.
                              onOpen: function() {
-                                $(".body-container").css("padding-bottom","260px");
-                                $("footer").css("height","145px");
-                                return true;
+                               // right now the expanded select is still not mounted, so this value is pre-select-existience
+                               var documentHeight = $(document).height();
+                               setTimeout(function() {
+                                 // and now the document (maybe) is bigger
+                                 var newDocumentHeight = $(document).height();
+                                 if (newDocumentHeight > documentHeight) {
+                                   var heightDifference = newDocumentHeight - documentHeight;
+                                   $(".body-container").css("padding-bottom", 160 + heightDifference + "px"); // 160 is linked to .body-container[padding-bottom]
+                                   $("footer").css("height", $("footer").height() + heightDifference + "px");
+                                 }
+                               }, 100);
+                               return true;
                              },
                              onClose: function() {
                                 $(".body-container").css("padding-bottom","");
