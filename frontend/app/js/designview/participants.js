@@ -827,25 +827,26 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             var self = this;
             var sig = self.model;
             var viewmodel = self.viewmodel;
+            var input;
 
             var div = $("<div class='design-view-action-participant-details-information-field-wrapper'/>");
 
             var setter = function() {
-                var value = self.input.value();
+                var value = input.value();
                 console.log("Starting setter with value " + value);
                 if(value) {
                     var samenameexists = _.any(sig.customFields(), function(c) { return value == c.name() && c != field;});
                     if (samenameexists) {
-                      $(self.input.el()).addClass("conflict");
+                      $(input.el()).addClass("conflict");
                       new FlashMessage({color: "red", content : localization.designview.fieldWithSameNameExists});
                       return;
                     }
 
                     mixpanel.track('Enter custom field name', {
-                        'Field name': self.input.value()
+                        'Field name': input.value()
                     });
 
-                    field.setName(self.input.value());
+                    field.setName(input.value());
                     sig.trigger('change:fields');
                     field.unbind('change:name', changer);
                 }
@@ -860,14 +861,14 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             };
 
             var changer = function() {
-                self.input.setValue(field.name());
+                input.setValue(field.name());
             };
 
-            self.input = new InfoTextInput({
+            input = new InfoTextInput({
                 cssClass: 'design-view-action-participant-new-field-name-input',
                 infotext: localization.designview.fieldName,
                 value: '',
-                onChange : function() { $(self.input.el()).removeClass("conflict");},
+                onChange : function() { $(input.el()).removeClass("conflict");},
                 onEnter: setter,
                 onRemove : remover
             });
@@ -875,9 +876,9 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             field.bind('change:name', changer);
 
             if(!field.isValid(true))
-                $(self.input.el()).addClass('redborder');
+                $(input.el()).addClass('redborder');
             else
-                $(self.input.el()).removeClass('redborder');
+                $(input.el()).removeClass('redborder');
 
             var button = new Button({
                 color: 'black',
@@ -887,7 +888,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             });
 
 
-            div.append(self.input.el());
+            div.append(input.el());
             div.append(button.el());
 
             return div;
