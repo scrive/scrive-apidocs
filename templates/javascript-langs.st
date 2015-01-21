@@ -1285,6 +1285,10 @@ javascriptLocalisation =
             , customFont : "$_brandingThemesCustomFont()$"
             , deleteTitle : "$_brandingThemesDeleteTitle()$"
             , delete : "$_brandingThemesDelete()$"
+            , emailPreview : "$_brandingThemesEmailPreview()$"
+            , signviewPreview: "$_brandingThemesSignviewPreview()$"
+            , servicePreview: "$_brandingThemesServicePreview()$"
+            , loginPreview: "$_brandingThemesLoginlPreview()$"
           }
           , companySettings : {
               browserTitle : "$_brandingCompanySettingsBrowserTitle()$"

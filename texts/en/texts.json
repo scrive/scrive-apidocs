@@ -922,5 +922,9 @@
 "_you":"you",
 "_youCantCancelThisDocuments":"Some of the selected documents can't be withdrawn.",
 "_youCantSendRemindersToThisDocuments":"Reminders can’t be sent for some of the selected documents.",
-"_zip":"ZIP"
+"_zip":"ZIP",
+"_brandingThemesEmailPreview":"Preview of email",
+"_brandingThemesSignviewPreview":"Preview of signing page",
+"_brandingThemesServicePreview":"Preview of service",
+"_brandingThemesLoginlPreview":"Preview of login"
 }

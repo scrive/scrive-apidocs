@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(["React","common/backbone_mixin","themes/themelogoeditor","themes/themecoloreditor","themes/themefonteditor","legacy_code","common/button","common/infotextinput"], function(React,BackboneMixin,ThemeLogoEditor,ThemeColorEditor,ThemeFontEditor, _Legacy, Button,InfoTextInput) {
+define(["React","common/backbone_mixin","themes/themelogoeditor","themes/themecoloreditor","themes/themefonteditor","legacy_code","common/button","common/infotextinput","themes/previews/email", "themes/previews/signing", "themes/previews/login", "themes/previews/service"], function(React,BackboneMixin,ThemeLogoEditor,ThemeColorEditor,ThemeFontEditor, _Legacy, Button,InfoTextInput, EmailPreview, SigningPreview, LoginPreview, ServicePreview) {
 
 return React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
@@ -14,6 +14,18 @@ return React.createClass({
       self.refs.actionSecondaryColors.hideColorPickers();
       self.refs.positiveColors.hideColorPickers();
       self.refs.negativeColors.hideColorPickers();
+    },
+    previewTitle : function(preview) {
+      if (preview == EmailPreview) {
+        return localization.branding.themes.emailPreview;
+      } else if (preview == SigningPreview) {
+        return localization.branding.themes.signviewPreview;
+      } else if (preview == ServicePreview) {
+        return localization.branding.themes.servicePreview;
+      } else if (preview == LoginPreview) {
+        return localization.branding.themes.loginPreview;
+      }
+      return "";
     },
     render: function() {
       var self = this;
@@ -129,7 +141,8 @@ return React.createClass({
           <div className="previews">
             { this.props.previews.map(function(preview) {
                 return (
-                  <div>
+                  <div key={Math.random()}>
+                    <div className="preview-title">{self.previewTitle(preview)}</div>
                     {preview({model: model})}
                   </div>
                 );
