@@ -1,8 +1,11 @@
 module AccountInfoTest (accountInfoTests) where
 
 import Control.Applicative
+import Data.Maybe
 import Happstack.Server
+import Network.URI
 import Test.Framework
+import Test.QuickCheck
 
 import ActionQueue.Core
 import ActionQueue.EmailChangeRequest
@@ -12,6 +15,7 @@ import FlashMessage
 import MagicHash (unsafeMagicHash)
 import Mails.Model
 import MinutesTime
+import OAuth.Model
 import Redirect
 import TestingUtil
 import TestKontra as T
@@ -33,6 +37,7 @@ accountInfoTests env = testGroup "AccountInfo" [
   , testThat "need the email to still be unique to complete email change" env testEmailChangeFailsIfEmailInUse
   , testThat "need the password to the correct to complete the email change" env testEmailChangeFailsIfPasswordWrong
   , testThat "need the password to be entered to complete the email change" env testEmailChangeFailsIfNoPassword
+  , testThat "getprofile can be called with tokens aquired through OAuth" env testGetUserInfoWithOAuthTokens
   ]
 
 testChangeEmailAddress :: TestEnv ()
@@ -190,6 +195,43 @@ testEmailChangeFailsIfNoPassword = do
   Just _ <- addNewUser "Jim" "Bob" "jim@bob.com"
   (res, _ctx') <- runTestKontra req ctx $ handlePostChangeEmail ecrUserID ecrToken >>= sendRedirect
   assertEqual "Response code is 303" 303 (rsCode res)
+
+testGetUserInfoWithOAuthTokens :: TestEnv ()
+testGetUserInfoWithOAuthTokens = do
+  user <- addNewRandomUser
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
+  -- Create OAuth API tokens
+  let uid = userid user
+  _ <- dbUpdate $ CreateAPIToken uid
+  (apitoken, apisecret) : _ <- dbQuery $ GetAPITokensForUser uid
+  time <- rand 10 arbitrary
+  Just (tok, sec) <- dbUpdate $ RequestTempCredentials
+    (OAuthTempCredRequest
+      { tcCallback   = fromJust $ parseURI "http://www.google.com/"
+      , tcAPIToken   = apitoken
+      , tcAPISecret  = apisecret
+      , tcPrivileges = [APIDocCheck]
+      }
+    ) time
+  Just (_, ver) <- dbUpdate $ VerifyCredentials tok uid time
+  Just (t, s) <- dbUpdate $ RequestAccessToken
+    (OAuthTokenRequest
+      { trAPIToken = apitoken
+      , trAPISecret = apisecret
+      , trTempToken = tok
+      , trTempSecret = sec
+      , trVerifier = ver
+      }
+    ) time
+  let authStr = "oauth_signature_method=\"PLAINTEXT\""
+             ++ ",oauth_consumer_key=\"" ++ show apitoken ++ "\""
+             ++ ",oauth_token=\"" ++ show t ++"\""
+             ++ ",oauth_signature=\"" ++ show apisecret ++ "&" ++ show s ++ "\""
+
+  reqUserInfo <- mkRequestWithHeaders GET []
+                                      [("authorization", [authStr])]
+  (resUserInfo, _) <- runTestKontra reqUserInfo ctx $ apiCallGetUserProfile
+  assertEqual "We should get a 200 response" 200 (rsCode resUserInfo)
 
 getRequestChangeEmailActions :: TestEnv [EmailChangeRequest]
 getRequestChangeEmailActions = do

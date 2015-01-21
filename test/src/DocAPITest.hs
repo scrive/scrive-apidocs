@@ -34,6 +34,7 @@ docAPITests env = testGroup "DocAPI" $
   , testThat "change main file moves placements" env testChangeMainFileMovePlacements
   , testThat "Changing authentication method works" env testChangeAuthenticationMethod
   , testThat "Creating doc with access credentials via API works" env testOAuthCreateDoc
+  , testThat "Creating doc with personal access credentials via API works" env testPersonalAccessCredentialsCreateDoc
   , testThat "Save flag in update call works" env (testUpdateDocToSaved False)
   , testThat "Save flag works when using API (OAuth)" env (testUpdateDocToSaved True)
   ]
@@ -139,6 +140,36 @@ testOAuthCreateDoc = do
   (resReady, _) <- runTestKontra reqDoc ctx $ apiCallV1Ready did
   assertEqual "Ready should fail with 403" 403 (rsCode resReady)
 
+testPersonalAccessCredentialsCreateDoc :: TestEnv ()
+testPersonalAccessCredentialsCreateDoc = do
+  user <- addNewRandomUser
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
+  
+  -- Get the personal access token
+  let uid = userid user
+  _ <- dbUpdate $ DeletePersonalToken uid
+  _ <- dbUpdate $ CreatePersonalToken uid
+  Just (apitoken, apisecret, t, s) <- dbQuery $ GetPersonalToken uid
+
+  let authStr = "oauth_signature_method=\"PLAINTEXT\""
+             ++ ",oauth_consumer_key=\"" ++ show apitoken ++ "\""
+             ++ ",oauth_token=\"" ++ show t ++"\""
+             ++ ",oauth_signature=\"" ++ show apisecret ++ "&" ++ show s ++ "\""
+  reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
+                                      , ("file", inFile "test/pdfs/simple.pdf")
+                                      ]
+                                      [("authorization", [authStr])]
+  (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  assertEqual "We should get a 201 response" 201 (rsCode resDoc)
+  let rds = BS.toString $ rsBody resDoc
+      Ok (JSObject rdsr) = decode rds
+      Just (JSBool newSaved) = lookup "saved" $ fromJSObject rdsr
+      Just (JSString docidStr) = lookup "id" $ fromJSObject rdsr
+  did <- liftIO $ readIO (fromJSString docidStr)
+  doc <- dbQuery $ GetDocumentByDocumentID did
+  assertEqual "The OAuth API created document should be saved (JSON)" True newSaved
+  assertEqual "The OAuth API created document should be saved (DB)" False (documentunsaveddraft doc)
+
 testSetAutoReminder :: TestEnv ()
 testSetAutoReminder = do
   ctx@Context{ctxmaybeuser = Just user} <- testUpdateDoc $ head jsonDocs
@@ -155,6 +186,7 @@ testUpdateDocToSaved useOAuth = do
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
 
   authStr <- if useOAuth then do
+    _ <- dbUpdate $ DeletePersonalToken (userid user)
     _ <- dbUpdate $ CreatePersonalToken (userid user)
     Just (apitoken, apisecret, t, s) <- dbQuery $ GetPersonalToken (userid user)
     return $ Just $ "oauth_signature_method=\"PLAINTEXT\""
