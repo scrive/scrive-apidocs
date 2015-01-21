@@ -526,6 +526,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             this.$el.addClass(this.plan);
             this.recurly = new RecurlyView(args);
             this.recurly.model.fetch();
+            console.log("HAT");
         },
         render: function() {
             var view = this;
@@ -562,6 +563,8 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             div2.append(features);
             div2.append(view.recurly.el);
 
+            console.log("recurly view is", view.recurly.el);
+
             div.append(div2);
 
         }
@@ -569,12 +572,15 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
     var RecurlyView = Backbone.View.extend({
         initialize: function(args) {
+            console.log("args", args);
             _.bindAll(this);
             this.element = $('<div />');
             this.$el.append(this.element);
             args.model.bind('change:currentPlan', this.render);
-            args.model.bind('fetch', this.render);
+            args.model.bind('change', this.render);
             this.hideContacts = args.hideContacts;
+
+            console.log("INITIALISEZDE");
         },
         scrambleForm: function(form) {
             var view = this;
@@ -765,6 +771,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
         },
         render: function() {
+          console.log("RENDERING!!!");
             var view = this;
             var model = view.model;
 
