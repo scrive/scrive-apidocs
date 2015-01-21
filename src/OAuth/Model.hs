@@ -319,14 +319,15 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetUserIDForAPIWithPrivilege (Ma
              <> "JOIN oauth_api_token t      ON a.api_token_id    = t.id "
              <> "JOIN users u                ON t.user_id         = u.id "
              <> "JOIN companies c            ON u.company_id      = c.id "
-             <> "WHERE t.id = $1 AND t.api_token = $2 AND t.api_secret = $3 AND a.id = $4 AND a.access_token = $5 AND a.access_secret = $6 AND p.privilege = ANY($7)")
+             <> "WHERE t.id = $1 AND t.api_token = $2 AND t.api_secret = $3 AND a.id = $4 AND a.access_token = $5 AND a.access_secret = $6 AND (p.privilege = ANY($7) OR p.privilege = $8)")
                   ( atID token
                   , atToken token
                   , secret
                   , atID atoken
                   , atToken atoken
                   , asecret
-                  , Array1 priv)
+                  , Array1 priv
+                  , APIPersonal)
     fetchMaybe f
    where    f (uid, e, "", "", "") = (uid, e)               -- just email
             f (uid, _, fn, ln, "") = (uid, fn ++ " " ++ ln) -- user's first + last
