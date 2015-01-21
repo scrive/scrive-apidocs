@@ -39,7 +39,7 @@ return React.createClass({
             style={{'display': 'inline-block'}} 
             onMouseOver={function(e) { self.showToolTip(d, e); }}
             onMouseOut={function(e) { self.hideToolTip(); }}
-          />) 
+          />);
         })
       }</div>);
     },
