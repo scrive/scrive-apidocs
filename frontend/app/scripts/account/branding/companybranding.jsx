@@ -52,7 +52,7 @@ return Backbone.Model.extend({
     return this.get("serviceTheme");
   },
   setServiceTheme: function(s) {
-    this.set({"serviceTheme":s, "dirty" : true});
+    this.set({"serviceTheme":s, "dirty" : true, "changedServiceTheme" : true});
   },
   browserTitle : function() {
     return this.get("browserTitle");
@@ -71,6 +71,9 @@ return Backbone.Model.extend({
   },
   setFavicon: function(s) {
     this.set({"favicon":s, "dirty" : true});
+  },
+  changedServiceTheme : function() {
+    return this.get("changedServiceTheme") == true;
   },
   dirty: function() {
     return this.get("dirty");

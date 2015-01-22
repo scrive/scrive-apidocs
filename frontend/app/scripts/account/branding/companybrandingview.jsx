@@ -29,16 +29,25 @@ return React.createClass({
         }
       });
     },
-    save : function(callback) {
+    save : function(callback,urlInsteadOfCallback) {
       var self = this;
       var model = this.props.model;
       var companybranding = model.companybranding();
-
+      var shouldReloadOnSave= model.shouldReloadOnSave();
       var saveCompanyBranding = function() {
        model.companybranding().save(function() {
          new FlashMessage({type : "success", content: localization.branding.saved});
-         if (callback) {
-           callback();
+         if (!shouldReloadOnSave) {
+           new FlashMessage({type : "success", content: localization.branding.saved});
+           if (callback) {
+             callback();
+           }
+         } else {
+           if (callback) {
+            callback(function() { new FlashMessage({type : "success", content: localization.branding.saved, withReload: true});});
+           } else {
+            new FlashMessage({type : "success", content: localization.branding.saved, withReload: true});
+           }
          }
        });
       };
@@ -74,9 +83,10 @@ return React.createClass({
       else {
         var popup;
         var onSave = function() {
-          self.save(function() {
+          self.save(function(afterSave) {
             switchModeFunction();
             popup.close();
+            afterSave();
           });
         };
         var onDiscard = function() {
@@ -141,6 +151,7 @@ return React.createClass({
                   model={model.mailThemeForEditing()}
                   getDefaultName={function() {return model.newThemeDefaultName()}}
                   onDelete={function() {self.onThemeDelete(model.mailThemeForEditing())}}
+                  onSave={function() {self.save();}}
                   previews={_.compact([
                       EmailPreview,
                       (model.mailThemeForEditing() == model.signviewThemeForEditing()) ? SigningPreview : undefined,
@@ -159,6 +170,7 @@ return React.createClass({
                   model={model.signviewThemeForEditing()}
                   getDefaultName={function() {return model.newThemeDefaultName()}}
                   onDelete={function() {self.onThemeDelete(model.signviewThemeForEditing())}}
+                  onSave={function() {self.save();}}
                   previews={_.compact([
                       SigningPreview,
                       (model.signviewThemeForEditing() == model.mailThemeForEditing()) ? EmailPreview : undefined,
@@ -177,6 +189,7 @@ return React.createClass({
                   model={model.serviceThemeForEditing()}
                   getDefaultName={function() {return model.newThemeDefaultName()}}
                   onDelete={function() {self.onThemeDelete(model.serviceThemeForEditing())}}
+                  onSave={function() {self.save();}}
                   previews={_.compact([
                       ServicePreview,
                       (model.serviceThemeForEditing() == model.mailThemeForEditing()) ? EmailPreview : undefined,
@@ -190,14 +203,6 @@ return React.createClass({
                   model={model}
                 />
               }
-              <div className='save-button-area'>
-                <ReactButton
-                  size="small"
-                  type="action"
-                  text={localization.branding.save}
-                  onClick={function() {self.save();}}
-                />
-              </div>
             </div>
           }
           {/*else if*/ (model.additionalSettingsMode() ) &&

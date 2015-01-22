@@ -131,6 +131,7 @@ return React.createClass({
                   model={model.mailThemeForEditing()}
                   getDefaultName={function() {return model.newThemeDefaultName()}}
                   onDelete={function() {self.onThemeDelete(model.mailThemeForEditing())}}
+                  onSave={function() {self.save();}}
                   previews={_.compact([
                       EmailPreview,
                       (model.mailThemeForEditing() == model.signviewThemeForEditing()) ? SigningPreview : undefined,
@@ -145,7 +146,7 @@ return React.createClass({
                   model={model.signviewThemeForEditing()}
                   getDefaultName={function() {return model.newThemeDefaultName()}}
                   onDelete={function() {self.onThemeDelete(model.signviewThemeForEditing())}}
-
+                  onSave={function() {self.save();}}
                   previews={_.compact([
                       SigningPreview,
                       (model.signviewThemeForEditing() == model.mailThemeForEditing()) ? EmailPreview : undefined,
@@ -160,7 +161,7 @@ return React.createClass({
                   model={model.serviceThemeForEditing()}
                   getDefaultName={function() {return model.newThemeDefaultName()}}
                   onDelete={function() {self.onThemeDelete(model.serviceThemeForEditing())}}
-
+                  onSave={function() {self.save();}}
                   previews={_.compact([
                       ServicePreview,
                       (model.serviceThemeForEditing() == model.mailThemeForEditing()) ? EmailPreview : undefined,
@@ -175,6 +176,7 @@ return React.createClass({
                   model={model.loginThemeForEditing()}
                   getDefaultName={function() {return model.newThemeDefaultName()}}
                   onDelete={function() {self.onThemeDelete(model.loginThemeForEditing())}}
+                  onSave={function() {self.save();}}
                   previews={_.compact([
                       LoginPreview,
                       (model.loginThemeForEditing() == model.mailThemeForEditing()) ? EmailPreview : undefined,
@@ -184,14 +186,6 @@ return React.createClass({
                   }
                 />
               }
-             <div className='save-button-area'>
-                <ReactButton
-                  size="small"
-                  type="action"
-                  text={localization.branding.save}
-                  onClick={function() {self.save();}}
-                />
-              </div>
             </div>
           }
           {/*else if*/ (model.additionalSettingsMode() ) &&

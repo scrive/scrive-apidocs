@@ -131,6 +131,12 @@ return React.createClass({
                     text={localization.branding.themes.delete}
                     onClick={function() {self.props.onDelete();}}
                   />
+                  <Button
+                    type="action"
+                    className="float-right"
+                    text={localization.branding.save}
+                    onClick={function() {self.props.onSave();}}
+                  />
                 </div>
               </div>
           </div>
@@ -139,9 +145,9 @@ return React.createClass({
             <div className="separator-bottom-padding"/>
           </div>
           <div className="previews">
-            { this.props.previews.map(function(preview) {
+            {this.props.previews.map(function(preview,key) {
                 return (
-                  <div key={Math.random()}>
+                  <div key={"preview-" + key}>
                     <div className="preview-title">{self.previewTitle(preview)}</div>
                     {preview({model: model})}
                   </div>

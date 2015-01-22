@@ -70,7 +70,7 @@ return React.createClass({
                           <span>Follow the <span style={{"color": model.actionColor()}} className="arrowtext">ARROW</span>FIXME</span>
                         </div>
                         {/*if*/ (self.props.showPDFDownload) &&
-                          <span><a className="download clickable">Demo document</a></span>
+                          <span><a className="download" style={{color: "#333333"}}>Demo document</a></span>
                         }
                         <div className="arrow-legend">
                           <p>

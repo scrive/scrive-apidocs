@@ -116,7 +116,7 @@ return function(args) {
     title: localization.designview.signviewsettings.title,
     icon: undefined,
     acceptText: localization.save,
-    width: 900,
+    width: 940,
     onAccept : function() {
       document.setShowheader(model.showHeader());
       document.setShowrejectoption(model.showRejectOption());

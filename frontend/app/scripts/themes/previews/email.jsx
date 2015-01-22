@@ -23,7 +23,7 @@ return React.createClass({
                 <img src="/img/document.png" />
               </div>
               <div className="invitation">
-                <p>{localization.companyBranding.brandingPreview.emailContent}</p>
+                <p  dangerouslySetInnerHTML={{__html: localization.companyBranding.brandingPreview.emailContent}}></p>
                 <p>{localization.companyBranding.brandingPreview.emailInstructions}</p>
 
                 <Button

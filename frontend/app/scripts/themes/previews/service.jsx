@@ -32,7 +32,7 @@ return React.createClass({
             </div>
             <div className="service-preview-content">
               <img src="/img/user_details_preview.png" />
-              <Button size="tiny" type="action" text="Save" />
+              <Button style={{backgroundColor: model.actionColor(),color: model.actionTextColor()}}size="tiny" type="action" text="Save" />
             </div>
             <div className="service-preview-footer">
                 <div>Powered by Scrive</div>

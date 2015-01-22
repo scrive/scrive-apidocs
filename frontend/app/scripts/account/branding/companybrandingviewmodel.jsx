@@ -177,6 +177,9 @@ return Backbone.Model.extend({
   themeMode : function() {
     return this.mailThemeMode() || this.signviewThemeMode() || this.serviceThemeMode();
   },
+  shouldReloadOnSave : function() {
+    return this.companyid() == undefined && (this.companybranding().changedServiceTheme() || (this.serviceThemeForEditing() &&  this.serviceThemeForEditing().dirty()));
+  },
   dirty : function() {
     return _.any(this.editedThemes(), function(t) {return t.dirty(); }) || this.companybranding().dirty();
   }
