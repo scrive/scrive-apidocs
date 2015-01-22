@@ -205,7 +205,7 @@ InvitationUndeliveredByEmailLog=Scrive E-sign’s external email delivery system
 ###
 InvitationUndeliveredByEmailArchive=$_InvitationUndeliveredByEmailTextSimpleArchive()$
 ###
-InvitationUndeliveredByEmailVerificationPages=$_InvitationUndeliveredByEmailTextSimpleArchive()$
+InvitationUndeliveredByEmailVerificationPages=$_InvitationUndeliveredByEmailTextSimpleNotArchive()$
 ###
 ###
 InvitationUndeliveredBySMSLog=Scrive E-sign’s external SMS delivery system reported that the invitation to <span class="signatory"/> could not be delivered by SMS and continued attempts were cancelled.
@@ -247,7 +247,7 @@ ProlongDocumentEvidenceLog=The due date for signing was prolonged by <span class
 ###
 ProlongDocumentEvidenceArchive=$_ProlongDocumentEvidenceTextArchive()$
 ###
-ProlongDocumentEvidenceVerificationPages=$ProlongDocumentEvidenceLog()$
+ProlongDocumentEvidenceVerificationPages=$_ProlongDocumentEvidenceTextNotArchive()$
 ###
 ###
 RejectDocumentEvidenceLog=The invitation to sign was rejected by <span class="actor"/>. The possibility to sign was disabled by Scrive E-sign.$if(text)$ The rejection message from <span class="actor"/> was: <BR/> <i>$text:noescape()$</i>$endif$
