@@ -84,6 +84,7 @@
 "_apiConfiramtionLoginAndAccept":"Log in and grant privileges",
 "_apiConfiramtionLoginAndAcceptTitle":"Log in and grant privileges",
 "_apiConfiramtionReadPermission":"Access documents",
+"_apiConfiramtionReadUserInfo":"Access your account info including name, email, phone number, company info and branding settings",
 "_apiConfiramtionSendPermission":"Send documents",
 "_apiConfiramtionTitle":"To proceed, grant the privileges",
 "_apiDashboardApiToken":"Client credentials",

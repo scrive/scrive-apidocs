@@ -13,7 +13,7 @@ pagePrivilegesConfirm =
          require(['jquery', 'legacy_code'], function(jQuery) {
           jQuery(function() {
             var target = jQuery(".oauth-confirm");
-            var confirmation =  new OAuthConfiration({
+            var confirmation =  new OAuthConfirmation({
                                logged : $if(logged)$ true $else$ false $endif$,
                                sendPermission : $if(isDocumentSend)$ true $else$ false $endif$,
                                createPermission : $if(isDocumentCreate)$ true $else$ false $endif$,
