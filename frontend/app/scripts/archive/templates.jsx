@@ -119,7 +119,6 @@ return React.createClass({
 
           <List.ListAction
             name={localization.archive.templates.createnew}
-            width={110}
             onSelect={function() {
               self.createNewTemplate();
             }}
@@ -127,7 +126,6 @@ return React.createClass({
 
           <List.ListAction
             name={localization.archive.templates.share.action}
-            width={50}
             onSelect={function(selected,model) {
               if (selected.length ==0 ) {
                 new FlashMessage({color: "red", content: localization.archive.templates.share.emptyMessage});
@@ -139,7 +137,6 @@ return React.createClass({
 
           <List.ListAction
             name={localization.archive.templates.remove.action}
-            width={50}
             onSelect={function(selected,model) {
               if (selected.length ==0 ) {
                 new FlashMessage({color: "red", content: localization.archive.templates.remove.emptyMessage});

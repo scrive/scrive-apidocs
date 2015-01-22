@@ -45,9 +45,20 @@ define(['Backbone', 'legacy_code'], function() {
 
 
       var tosAccept = $("<div class='position first'/>");
-      var tosCBox = $("<input type='checkbox' id='tosCBox' name='tos' class='s-accept-tos-cbox' style='margin-right:10px;margin-top: -2px'/>");
+      var tosCBox = $("<div class='checkbox' name='tos' style='margin-left:3px'/>");
+      if (model.accepted()) {
+        tosCBox.addClass('checked');
+      }
+      var toggleCheckBox = function() {
+        tosCBox.toggleClass('checked');
+        model.setAccepted(tosCBox.hasClass('checked'));
+      };
+      tosCBox.click(toggleCheckBox);
+
       tosAccept.append(tosCBox);
+
       var tosLabel = $("<span/>").append($(localization.accountSetupModal.modalAccountSetupTOS));
+      tosLabel.find('label').click(toggleCheckBox);
       var tosA = tosLabel.find('.is-TOS')
                 .attr("class", "clickable")
                 .attr("target", "_blank")
@@ -55,15 +66,7 @@ define(['Backbone', 'legacy_code'], function() {
       tosA.text(" " + tosA.text());
       tosAccept.append(tosLabel);
       body.append(tosAccept);
-      tosCBox.change(function() {
-        if (tosCBox.attr('checked')) {
-          model.setAccepted(true);
-          tosAccept.css("border-width","0px");
-        } else {
-          model.setAccepted(false);
-          tosAccept.css("border-width","0px");
-        }
-      });
+
       var acceptButton = new Button({
           size: 'small',
           color: 'green',
