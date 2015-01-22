@@ -45,7 +45,7 @@ define(['Backbone', 'legacy_code'], function() {
 
 
       var tosAccept = $("<div class='position first'/>");
-      var tosCBox = $("<div class='checkbox' name='tos' style='margin-left:3px'/>");
+      var tosCBox = $("<div class='checkbox' name='tos' style='margin-left:3px'><div class='checkmark' /></div>");
       if (model.accepted()) {
         tosCBox.addClass('checked');
       }
