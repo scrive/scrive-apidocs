@@ -44,7 +44,7 @@ testTranslationFilesAreJSONSAndSorted = do
 
 
 isSorted :: JSValue -> Assertion
-isSorted (JSObject jso) = assertBool "Translations jsons are not sorted. Use './transifex.sh fix' to fix it" $ (map fst $ fromJSObject jso) == (sort (map fst $ fromJSObject jso))
+isSorted (JSObject jso) = assertBool "Translations jsons are not sorted. Use './transifex/transifex.sh fix' to fix it" $ (map fst $ fromJSObject jso) == (sort (map fst $ fromJSObject jso))
 isSorted _ = assertFailure  "Illegal structures in translation file for lang"
 
 

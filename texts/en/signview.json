@@ -1,4 +1,4 @@
-{
+{ 
 "_DeletePDF":"Delete",
 "_RequestedAttachments":"Requested attachments",
 "_ReviewPDF":"Review",
@@ -9,9 +9,9 @@
 "_company":"Company",
 "_companyNumberLabel":"Company reg. no.",
 "_contractrejectbuttontext":"Reject and reply",
-"_contractsignatorycancelmodaltitle":"Reject document",
-"_contractsignatorycancelmodaltext":"If you reject the document it can’t be signed anymore. Please describe why you want to reject the document.",
 "_contractsignatorycancelmodalplaceholder":"Type your message here",
+"_contractsignatorycancelmodaltext":"If you reject the document it can’t be signed anymore. Please describe why you want to reject the document.",
+"_contractsignatorycancelmodaltitle":"Reject document",
 "_contractsignatoryname":"Party",
 "_contractsignatorysignmodalcontent":"<strong class='put-signatory-name-here'/>, by clicking the button you will sign the document and your signature will be registered by the e-signing service Scrive.",
 "_contractsignatorysignmodalcontentauthoronly":"<strong class='put-signatory-name-here'/>, when you've signed the document your signature will be registered by the e-signing service Scrive.",
