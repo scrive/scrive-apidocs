@@ -19,9 +19,9 @@ import Util.HasSomeUserInfo (getFullName)
 type SignatoryIdentifierMap = Map SignatoryLinkID SignatoryIdentifier
 
 data SignatoryIdentifier = SignatoryIdentifier
-  { silink     :: Maybe SignatoryLink
-  , sifullname :: String
-  , siinitials :: String
+  { siLink     :: Maybe SignatoryLink
+  , siFullName :: String
+  , siInitials :: String
   }
   deriving Show
 
@@ -29,7 +29,7 @@ data SignatoryIdentifier = SignatoryIdentifier
 signatoryIdentifier :: SignatoryIdentifierMap -> SignatoryLinkID -> Maybe String
 signatoryIdentifier sim slid = do
   si <- Map.lookup slid sim
-  return $ if null (sifullname si) then siinitials si else sifullname si ++ " (" ++ siinitials si ++ ")"
+  return $ if null (siFullName si) then siInitials si else siFullName si ++ " (" ++ siInitials si ++ ")"
 
 -- | Create a map with unique identifiers (name, initials) over a
 -- sequence of documents, stemming from restarted signing processes.

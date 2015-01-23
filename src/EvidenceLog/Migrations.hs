@@ -11,8 +11,8 @@ evidenceLogAddActor =
     mgrTable = tableEvidenceLog
   , mgrFrom = 4
   , mgrDo = do
-    -- ip addresses are 32bits long
     runSQL_ $ "ALTER TABLE evidence_log ADD COLUMN actor TEXT NOT NULL DEFAULT ''"
+    runSQL_ $ "ALTER TABLE evidence_log ALTER COLUMN actor DROP DEFAULT"
   }
 
 evidenceLogFixColumns :: MonadDB m => Migration m

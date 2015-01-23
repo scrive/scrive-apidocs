@@ -31,6 +31,8 @@ import Text.XML.Stream.Render (renderBytes)
 import qualified Data.Map as Map
 import qualified Data.Text as T
 
+import OurPrelude (unexpectedError)
+
 newtype XMLContent = XMLContent { unXMLContent :: [Node] }
   deriving (Eq, Ord, Show)
 
@@ -81,7 +83,7 @@ removeTags = XMLContent . concatMap remove . unXMLContent
 
 -- | Form XMLContent from string literals
 instance IsString XMLContent where
-  fromString s = either (error $ "fromString " ++ show s ++ " :: XMLContent") id $ parseXMLContent (T.pack s)
+  fromString s = either ($unexpectedError $ "Cannot parse XML content " ++ show s) id $ parseXMLContent (T.pack s)
 
 -- | Form XMLContent from plain text
 cdata :: Text -> XMLContent

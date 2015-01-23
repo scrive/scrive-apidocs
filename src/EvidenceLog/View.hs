@@ -39,10 +39,11 @@ import Control.Logic
 import DB
 import Doc.DocStateData
 import Doc.Model (GetDocumentsBySignatoryLinkIDs(..))
-import Doc.SignatoryIdentification (SignatoryIdentifierMap, silink, sifullname, signatoryIdentifierMap, signatoryIdentifier)
+import Doc.SignatoryIdentification (SignatoryIdentifierMap, siLink, siFullName, signatoryIdentifierMap, signatoryIdentifier)
 import EID.Signature.Model
 import EvidenceLog.Model
 import MinutesTime
+import OurPrelude (unexpectedErrorM)
 import Templates (renderLocalTemplate)
 import User.Model
 import Util.HasSomeUserInfo
@@ -73,7 +74,7 @@ eventsForLog = cleanUnimportantAfterSigning . filter ((simpleEvents . evType) &&
 
 -- TODO: Consider saving actor name in event instead, this is likely to become broken
 approximateActor :: (MonadDB m, MonadThrow m, TemplatesMonad m) => EventRenderTarget -> Document -> SignatoryIdentifierMap -> DocumentEvidenceEvent -> m String
-approximateActor EventForEvidenceLog _ _ _ = error "approximateActor"
+approximateActor EventForEvidenceLog _ _ _ = $unexpectedErrorM "approximateActor should not be called for evidence log entries"
 approximateActor tgt doc sim dee | systemEvents $ evType dee = return "Scrive"
                              | otherwise =
   case evSigLink dee >>= sigid of
@@ -93,7 +94,7 @@ approximateActor tgt doc sim dee | systemEvents $ evType dee = return "Scrive"
   where authorName = case getAuthorSigLink doc >>= sigid . signatorylinkid of
                         Just i -> return i
                         Nothing -> renderTemplate_ "_authorParty"
-        sigid s | tgt == EventForArchive = sifullname <$> Map.lookup s sim
+        sigid s | tgt == EventForArchive = siFullName <$> Map.lookup s sim
                 | otherwise              = signatoryIdentifier sim s
 
 eventJSValue :: (MonadDB m, MonadThrow m, TemplatesMonad m) => Document -> SignatoryIdentifierMap -> DocumentEvidenceEvent -> JSONGenT m ()
@@ -198,7 +199,7 @@ eventForVerificationPage = not . (`elem` map Current [AttachGuardtimeSealedFileE
 -- verification pages).
 simplyfiedEventText :: (HasLang d, MonadDB m, MonadThrow m, TemplatesMonad m)
   => EventRenderTarget -> Maybe String -> d -> SignatoryIdentifierMap -> DocumentEvidenceEvent -> m String
-simplyfiedEventText EventForEvidenceLog _ _ _ _ = error "simplyfiedEventText"
+simplyfiedEventText EventForEvidenceLog _ _ _ _ = $unexpectedErrorM "simplyfiedEventText should not be called for evidence log entries"
 simplyfiedEventText target mactor d sim dee = case evType dee of
   Obsolete CancelDocumenElegEvidence -> renderEvent "CancelDocumenElegEvidenceText"
   Current et -> renderEvent $ eventTextTemplateName target et
@@ -209,7 +210,7 @@ simplyfiedEventText target mactor d sim dee = case evType dee of
     renderEvent eventTemplateName = render eventTemplateName $ do
       let mslinkid = evAffectedSigLink dee
       F.forM_ mslinkid  $ \slinkid -> do
-        case Map.lookup slinkid sim >>= silink of
+        case Map.lookup slinkid sim >>= siLink of
           Just slink -> do
             signatoryLinkTemplateFields slink
             -- FIXME: fetching email from signatory is not guaranteed to get
@@ -281,7 +282,7 @@ finalizeEvidenceText sim event =
                                            , ("signatory", signatoryIdentifier sim =<< evAffectedSigLink event)
                                            , ("author", signatoryIdentifier sim =<< authorSigLinkID) ] ]) (evText event)
   where
-    authorSigLinkID = signatorylinkid <$> getAuthorSigLink (catMaybes (map silink (Map.elems sim)))
+    authorSigLinkID = signatorylinkid <$> getAuthorSigLink (catMaybes (map siLink (Map.elems sim)))
 
 htmlSkipedEvidenceType :: EvidenceEventType -> Bool
 htmlSkipedEvidenceType (Obsolete OldDocumentHistory) = True

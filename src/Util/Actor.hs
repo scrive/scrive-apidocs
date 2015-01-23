@@ -91,12 +91,11 @@ authorActor ctx u = (userActor ctx u) {
 -- | For an action requiring a signatory with siglinkid and token (such as signing)
 signatoryActor :: DocumentMonad m => Context -> SignatoryLink -> m Actor
 signatoryActor ctx s = do
-  sid <- getSignatoryIdentifier s
   return $ (contextActor ctx){
         actorUserID = maybesignatory s
       , actorEmail = Just (getEmail s)
       , actorSigLinkID = Just (signatorylinkid s)
-      , actorWho = "the signatory " ++ sid
+      , actorWho = "the signatory " ++ getFullName s ++ " (" ++ getEmail s ++ ")"
       }
 
 -- | For delivery/reading notifications from the mail system

@@ -4,7 +4,7 @@
 module DB.XML () where
 
 import Control.Applicative ((<$>))
-import Control.Exception (throw)
+import Control.Exception (throwIO)
 import Data.Text (Text)
 import Database.PostgreSQL.PQTypes
 
@@ -16,7 +16,7 @@ instance PQFormat C.XMLContent where
 
 instance FromSQL C.XMLContent where
   type PQBase C.XMLContent = PQBase XML
-  fromSQL mbase = either throw return =<< (C.parseXMLContent . unXML <$> fromSQL mbase)
+  fromSQL mbase = either throwIO return =<< (C.parseXMLContent . unXML <$> fromSQL mbase)
 
 instance ToSQL C.XMLContent where
   type PQDest C.XMLContent = PQDest XML

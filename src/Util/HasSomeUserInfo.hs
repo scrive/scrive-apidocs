@@ -14,18 +14,14 @@ module Util.HasSomeUserInfo (
   getFullName,
   getSmartName,
   getSmartNameOrPlaceholder,
-  getSignatoryIdentifier,
   HasSomeUserInfo(..)
   ) where
 
 
-import Control.Applicative ((<$>))
-import Data.List (findIndex)
 import Data.String.Utils
 import Text.StringTemplates.Templates
 
 import Doc.DocStateData
-import Doc.DocumentMonad (DocumentMonad, theDocument)
 import Mails.MailsData
 import User.Email
 import User.Model
@@ -93,32 +89,6 @@ getSmartNameOrPlaceholder :: (HasSomeUserInfo a, TemplatesMonad m) => a -> m Str
 getSmartNameOrPlaceholder a = do
     notNamed <- renderTemplate_ "_notNamedParty"
     return $ firstNonEmpty [getSmartName a, notNamed]
-
--- | Return the full name plus first non-empty of person number, email
--- or mobile number.  FIXME: Temporary definition until we have implemented
--- getIdentifer properly for event log.
-getIdentifier' :: HasSomeUserInfo a => a -> String
-getIdentifier' a | null fullName   = identifier
-                | null identifier = fullName
-                | otherwise       = fullName ++ " (" ++ identifier ++ ")"
-  where fullName = getFullName a
-        identifier = firstNonEmpty [getPersonalNumber a, getEmail a, getMobile a]
-
-
--- | Return identifier for a signatory or "(Signatory <N>)" if the
--- identifier is empty, where the signatory is the Nth signatory of
--- the document.  FIXME: Temporary
-getSignatoryIdentifier :: DocumentMonad m => SignatoryLink -> m String
-getSignatoryIdentifier sl = do
-  let i = getIdentifier' sl
-  if null i then
-     maybe "(Anonymous)"
-           (("(Signatory " ++) . (++ ")") . show . succ) .
-            findIndex ((==(signatorylinkid sl)) . signatorylinkid) .
-            documentsignatorylinks
-     <$> theDocument
-   else
-     return i
 
 -- | Get a MailAddress
 getMailAddress :: (HasSomeUserInfo a) => a -> MailAddress
