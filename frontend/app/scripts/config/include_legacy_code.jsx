@@ -21,7 +21,6 @@ define([
   '../js/global',
   '../js/storage',
   '../js/dialog',
-  '../js/utils/brandedimageutils',
   '../js/utils/image',
   '../js/utils/language',
   '../js/utils/time',
