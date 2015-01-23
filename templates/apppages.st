@@ -208,7 +208,7 @@ typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var
               invite         : '8f2e7557-7494-43e6-81e5-2c2b9bb628b0',
               tos_submit     : '003b3923-2808-4a24-9506-cb679201541f',
               no_sends_docs  : 'a5b6d724-6702-4662-9574-5c3ec13c1074',
-              yes_sends_docs : 'c4a0cd3a-cb75-483d-aff3-2cb12362409e' }}; // hiir
+              yes_sends_docs : 'c4a0cd3a-cb75-483d-aff3-2cb12362409e' }};
 
 
   // Google analytics tracking
@@ -226,6 +226,15 @@ typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var
     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
   })();
 // end Google analytics
+
+// HubSpot js: Start of Async HubSpot Analytics Code
+  (function(d,s,i,r) {
+    if (d.getElementById(i)){return;}
+    var n=d.createElement(s),e=d.getElementsByTagName(s)[0];
+    n.id=i;n.src='//js.hs-analytics.net/analytics/'+(Math.ceil(new Date()/r)*r)+'/431732.js';
+    e.parentNode.insertBefore(n, e);
+  })(document,"script","hs-analytics",300000);
+// end Hubspot js
 ####
 analyticsLoaderKontrakcja=
 $loadScript(src="http://js.hubspot.com/forms/current.js")$
