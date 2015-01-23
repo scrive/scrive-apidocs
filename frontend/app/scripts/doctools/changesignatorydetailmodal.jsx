@@ -90,7 +90,7 @@ return function(args) {
         return true;
       } else {
         new FlashMessage({content: args.invalidValueFlash,
-                          color: 'red'});
+                          type: 'error'});
         return false; 
       }
     }

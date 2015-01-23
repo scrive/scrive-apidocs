@@ -32,7 +32,7 @@ return React.createClass({
         }
       });
 
-      new FlashMessage({ content: localization.toStart.someFieldsNotFilledInCorrectly, cssClass: "tiny", color: "red"});
+      new FlashMessage({ content: localization.toStart.someFieldsNotFilledInCorrectly, cssClass: "tiny", type: 'error'});
       this.setState(this.getInitialState());
 
       return;

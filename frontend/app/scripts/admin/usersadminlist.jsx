@@ -83,7 +83,7 @@ var openCreateUserModal = function(callback) {
             confirmation.close();
             callback();
           } else {
-            new FlashMessage({color: 'red', content: resp.error_message});
+            new FlashMessage({type: 'error', content: resp.error_message});
           }
         };
 
