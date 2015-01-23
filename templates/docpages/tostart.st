@@ -57,7 +57,7 @@ $htmlopentag()$
               svb.fetch({ processData:  true, cache : false});
 
               jQuery(function(){
-                doc = new Document({id: $documentid$});
+                doc = new Document({id: "$documentid$"});
                 doc.recall(function() {
                   var toStartDiv = jQuery('<div />');
                   React.renderComponent(ToStart({document: doc, signviewbranding: svb}), toStartDiv[0]);
