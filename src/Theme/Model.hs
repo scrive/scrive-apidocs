@@ -6,7 +6,8 @@ module Theme.Model (
     , GetThemesForDomain(..)
     , GetThemesForCompany(..)
     , GetThemesMD5(..)
-    , UpdateTheme(..)
+    , UpdateThemeForDomain(..)
+    , UpdateThemeForCompany(..)
     , InsertNewThemeForCompany(..)
     , InsertNewThemeForDomain(..)
     , MakeThemeOwnedByCompany(..)
@@ -79,10 +80,32 @@ instance (MonadDB m,MonadThrow m) => DBQuery m GetThemesMD5 [String] where
       selectThemesMD5
     fetchMany unSingle
 
-data UpdateTheme = UpdateTheme Theme
-instance (MonadDB m,MonadThrow m) => DBUpdate m UpdateTheme Bool where
-  update (UpdateTheme t) = do
+data UpdateThemeForCompany = UpdateThemeForCompany CompanyID Theme
+instance (MonadDB m,MonadThrow m) => DBUpdate m UpdateThemeForCompany Bool where
+  update (UpdateThemeForCompany cid t) = do
     runQuery01 . sqlUpdate "themes" $ do
+      setThemeData t
+      sqlWhereEq "id" $ themeID t
+      sqlWhereInSql "id" $ do
+        sqlSelect "theme_owners" $ do
+          sqlWhereEq "company_id" $ cid
+          sqlWhereEq "theme_id" $ themeID t
+          sqlResult "theme_id"
+
+data UpdateThemeForDomain = UpdateThemeForDomain BrandedDomainID Theme
+instance (MonadDB m,MonadThrow m) => DBUpdate m UpdateThemeForDomain Bool where
+  update (UpdateThemeForDomain did t) = do
+    runQuery01 . sqlUpdate "themes" $ do
+      setThemeData t
+      sqlWhereEq "id" $ themeID t
+      sqlWhereInSql "id" $ do
+        sqlSelect "theme_owners" $ do
+          sqlWhereEq "domain_id" $ did
+          sqlWhereEq "theme_id" $ themeID t
+          sqlResult "theme_id"
+
+setThemeData :: Theme -> State SqlUpdate ()
+setThemeData t = do
       sqlSet "name" $ themeName t
       sqlSet "logo" $ themeLogo t
       sqlSet "brand_color" $ themeBrandColor t
@@ -96,7 +119,6 @@ instance (MonadDB m,MonadThrow m) => DBUpdate m UpdateTheme Bool where
       sqlSet "negative_color" $ themeNegativeColor t
       sqlSet "negative_text_color" $ themeNegativeTextColor t
       sqlSet "font" $ themeFont t
-      sqlWhereEq "id" $ themeID t
 
 data InsertNewThemeForCompany = InsertNewThemeForCompany CompanyID Theme
 instance (MonadDB m,MonadThrow m) => DBUpdate m InsertNewThemeForCompany Theme where

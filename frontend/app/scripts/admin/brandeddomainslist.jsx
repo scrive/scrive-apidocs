@@ -21,7 +21,11 @@ return React.createClass({
       return (
         <List.List
           url='/adminonly/brandeddomainslist'
-          dataFetcher={function(d) {return d.list;}}
+          dataFetcher={function(d) {
+            // We don't show main domain on this list
+            var domainsWithoutMain = _.filter(d.list,function(d) {return d["mainDomain"] != true});
+            return domainsWithoutMain;
+          }}
           idFetcher={function(d) {return d.field("id");}}
           loadLater={self.props.loadLater}
           ref='list'

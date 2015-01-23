@@ -726,6 +726,9 @@ jsonBrandedDomain bdid = onlySalesOrAdmin $ do
 updateBrandedDomain :: Kontrakcja m => BrandedDomainID -> m ()
 updateBrandedDomain xbdid = onlySalesOrAdmin $ do
     obd <- dbQuery $ GetBrandedDomainByID xbdid
+    when (bdMainDomain obd) $ do
+      Log.mixlog_ $ "Main domain can't be changed"
+      internalError
     -- keep this 1to1 consistent with fields in the database
     domainJSON <- guardJustM $ getField "domain"
     case Yaml.decode (BSC8.pack domainJSON) of

@@ -167,7 +167,6 @@ accountSetupPage=
 pageAcceptTOS =
 <div class='mainContainer big'>
 <div class='inner'>
-<img width="1920" height="544" src="/img/bg-home.jpg" class="bg"/>
 <script type="text/javascript">
  require(['jquery', 'legacy_code'], function(jQuery) {
   jQuery(document).ready(function() {

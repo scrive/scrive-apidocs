@@ -23,6 +23,7 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Yaml as Yaml
 
 import BrandedDomain.BrandedDomain
+import BrandedDomain.Model
 import Company.Model
 import DB
 import Happstack.Fields
@@ -30,7 +31,7 @@ import Kontra
 import Theme.Model
 import Theme.View
 import Util.MonadUtils
-
+import qualified Log as Log
 
 handleGetTheme:: Kontrakcja m => ThemeID -> m Response
 handleGetTheme tid =  do
@@ -60,32 +61,34 @@ handleGetThemesUsedByDomain domain =  do
   return $ toResponseBS "text/json" $ res
 
 handleUpdateThemeForDomain:: Kontrakcja m => BrandedDomainID -> ThemeID -> m ()
-handleUpdateThemeForDomain _did tid =  do
+handleUpdateThemeForDomain did tid =  do
+  guardNotMainDomain did "Main domain themes can't be changed"
   theme <- dbQuery $ GetTheme tid
   themeJSON <- guardJustM $ getField "theme"
   case Yaml.decode (BS.fromString themeJSON) of
      Nothing -> internalError
      Just js -> case (Unjson.parse unjsonTheme js) of
         (Result newTheme []) -> do
-          _ <- dbUpdate $ UpdateTheme newTheme {themeID = themeID theme}
+          _ <- dbUpdate $ UpdateThemeForDomain did newTheme {themeID = themeID theme}
           return ()
         _ -> internalError
 
 handleUpdateThemeForCompany:: Kontrakcja m => CompanyID -> ThemeID -> m ()
-handleUpdateThemeForCompany _cid tid =  do
+handleUpdateThemeForCompany cid tid =  do
   theme <- dbQuery $ GetTheme tid
   themeJSON <- guardJustM $ getField "theme"
   case Yaml.decode (BS.fromString themeJSON) of
      Nothing -> internalError
      Just js -> case (Unjson.parse unjsonTheme js) of
         (Result newTheme []) -> do
-          _ <- dbUpdate $ UpdateTheme newTheme {themeID = themeID theme}
+          _ <- dbUpdate $ UpdateThemeForCompany cid newTheme {themeID = themeID theme}
           return ()
         _ -> internalError
 
 
 handleNewThemeForDomain:: Kontrakcja m => BrandedDomainID -> ThemeID -> m Response
 handleNewThemeForDomain did tid = do
+  guardNotMainDomain did "Can't create new themes for main domain"
   theme <- dbQuery $ GetTheme tid
   name <- guardJustM $ getField "name"
   newTheme <- dbUpdate $ InsertNewThemeForDomain did $ theme {themeName = name}
@@ -102,8 +105,19 @@ handleNewThemeForCompany cid tid = do
 
 handleDeleteThemeForDomain:: Kontrakcja m => BrandedDomainID -> ThemeID -> m ()
 handleDeleteThemeForDomain did tid = do
+  guardNotMainDomain did  "Main domain themes can't be deleted"
   dbUpdate $ DeleteThemeOwnedByDomain did tid
 
 handleDeleteThemeForCompany:: Kontrakcja m => CompanyID -> ThemeID -> m ()
 handleDeleteThemeForCompany cid tid = do
   dbUpdate $ DeleteThemeOwnedByCompany cid tid
+
+
+guardNotMainDomain :: Kontrakcja m => BrandedDomainID -> String -> m ()
+guardNotMainDomain did msg = do
+  bd <- dbQuery $ GetBrandedDomainByID did
+  if (bdMainDomain bd)
+   then do
+    Log.mixlog_ $ msg
+    internalError
+   else return ()
