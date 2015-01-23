@@ -100,17 +100,6 @@ var OAuthConfirationView = Backbone.View.extend({
         this.model.view = this;
         this.render();
     },
-    top: function() {
-      var model = this.model;
-      var box = $("<header class='site'/>");
-      var nav = $("<nav/>");
-      var ul = $("<ul class='ct'/>");
-      var content = $("<div class='content'>");
-      var deny = $("<li class='page-first' style='float:left;width:200px'/>").append($("<a class='deny page' href='#'></a>").text(localization.apiConfiration.deny));
-      deny.click(function() {model.deny();});
-      var logo = $("<li id='branding' style='float:right'><a href='/' class='page' id='logo'><img width='120' height='22' src='/img/logo.png'></a></id>");
-      return box.append(nav.append(ul.append(deny).append(logo)));
-    },
     header : function() {
         return $("<h1/>").text(localization.apiConfiration.title);
     },
@@ -229,7 +218,7 @@ var OAuthConfirationView = Backbone.View.extend({
     },
     render: function () {
         var container = $(this.el);
-        container.append(this.top()).append(this.body());
+        container.append(this.body());
         return this;
     }
 });
@@ -244,6 +233,7 @@ window.OAuthConfirmation = function(args){
         return {
               model    : function()    { return model;}
             , view     : function()    { return view;}
+            , deny     : function()    { model.deny();}
          };
 };
 

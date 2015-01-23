@@ -145,11 +145,7 @@ loginLogo _ = do
 
 serviceLogo :: Kontrakcja m => String  -> m Response
 serviceLogo _ = do
-  ctx <- getContext
-  user <-  guardJust $ mplus (ctxmaybeuser ctx) (ctxmaybepaduser ctx)
-  company <- getCompanyForUser user
-  companyui <- dbQuery $ GetCompanyUI (companyid company)
-  theme <- dbQuery $ GetTheme $ fromMaybe (bdServiceTheme $ ctxbrandeddomain ctx) (companyServiceTheme $ companyui)
+  theme <- getServiceTheme
   return $ setHeaderBS "Cache-Control" "max-age=31536000" $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") $
         Response 200 Map.empty nullRsFlags (BSL.fromChunks $ [unBinary $ themeLogo theme]) Nothing
 

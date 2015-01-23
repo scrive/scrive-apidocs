@@ -4,11 +4,30 @@ pagePrivilegesConfirm =
   $htmlopentag()$
       <head>
         <title>$pagetitle()$</title>
-        $standardHeaderContents()$
-      </head>
+        $standardHeaderContents(nobranding='true')$
+        <link href='/service_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+       </head>
        <body>
+        <header class="site">
+          <nav >
+            <ul class="ct">
+              <li id="branding" >
+                <a id="logo" class="page" href="#" >
+                  <img src="/service_logo/$brandinghash$" style="margin:0px;" />
+                </a>
+              </li>
+              <ul class="right-container" >
+                <li class="float-right" >
+                  <a class="page js-deny" href="#" >
+                    $_apiConfiramtionDeny()$
+                  </a>
+                </li>
+              </ul>
+            </ul>
+          </nav>
+        </header>
         $flashmessages()$
-        <div class='oauth-confirm' ></div>
+        <div class='oauth-confirm'></div>
         <script>
          require(['jquery', 'legacy_code'], function(jQuery) {
           jQuery(function() {
@@ -20,8 +39,14 @@ pagePrivilegesConfirm =
                                readPermission : $if(isDocumentCheck)$ true $else$ false $endif$,
                                who : "$companyname$",
                                token : "$token$"
-                        }).view().el
-            target.append(confirmation);
+                        });
+            target.append(confirmation.view().el);
+
+            jQuery(".js-deny").click(function() {
+               confirmation.deny();
+               return false;
+            })
+
           });
          });
         </script>
