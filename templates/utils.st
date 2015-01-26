@@ -62,9 +62,23 @@ FinnishInFinish=Suomi
 ###
 PoweredByScrive=E-signing powered by Scrive
 ###
-TeamPricePerMonth=200
+### All the prices below are when paying yearly.
 ###
-FormPricePerMonth=3000
+OnePriceSEKPerMonth=200
+###
+OnePriceEURPerMonth=20
+###
+TeamPriceSEKPerMonth=3000
+###
+TeamPriceEURPerMonth=300
+###
+EnterprisePriceSEKPerMonth=30000
+###
+EnterprisePriceEURPerMonth=3000
+###
+CompanyPriceSEKPerMonth=10000
+###
+CompanyPriceEURPerMonth=1000
 ###
 ### This represents the number of users
 ###

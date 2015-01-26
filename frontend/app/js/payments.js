@@ -313,13 +313,9 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             var monthly = $('<div class="top-bar monthly" />');
             var yearly = $('<div class="top-bar yearly" />');
 
-            monthly.append($('<span class="text" />').text("Billed monthly"));
-            yearly.append(
-              $('<span class="text" />').text("Billed yearly")
-            );
-            yearly.append(
-              $('<span class="savings" />').text('(Save up to 33%)')
-            );
+            monthly.append($('<span class="text" />').text(localization.payments.payMonthly));
+            yearly.append($('<span class="text" />').text(localization.payments.payYearly));
+            yearly.append($('<span class="savings" />').text('(' + localization.payments.saveYearly + ')'));
 
             yearly.toggleClass("active", model.yearlyprices());
             monthly.toggleClass("active", !model.yearlyprices());
@@ -350,13 +346,25 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         var title = $('<div class="title" />').append(titleheader);
         features.append(title);
 
-        var plandescription = $('<h4 class="description" />').text(localization.payments.plans[view.plan].description);
-        var fineprint = $('<h4 class="fineprint" />').text(localization.payments.plans[view.plan].fineprint);
+        var signeddocs = $('<h4 class="description" />').text(localization.payments.plans[view.plan].signeddocs);
+        var users = $('<h4 class="fineprint" />').text(localization.payments.plans[view.plan].users);
+        var support = $('<h4 class="fineprint" />').text(localization.payments.plans[view.plan].support);
+        var allFeatures = $('<h4 class="fineprint" />').text(localization.payments.allFeaturesIncluded);
+        var branding = $('<h4 class="fineprint" />').text(localization.payments.plans[view.plan].branding);
+        var sla = $('<h4 class="fineprint" />').text(localization.payments.plans[view.plan].sla);
+        var p2es = $('<h4 class="fineprint" />').text(localization.payments.plans[view.plan].p2es);
+        var whiteLabel = $('<h4 class="fineprint" />').text(localization.payments.plans[view.plan].whiteLabel);
         if (model.headercolour()) {
-          plandescription.css('color', model.headercolour());
-          fineprint.css('color', model.headercolour());
+          signeddocs.css('color', model.headercolour());
+          users.css('color', model.headercolour());
+          support.css('color', model.headercolour());
+          allFeatures.css('color', model.headercolour());
+          sla.css('color', model.headercolour());
+          p2es.css('color', model.headercolour());
+          whiteLabel.css('color', model.headercolour());
+          branding.css('color', model.headercolour());
         }
-        var explanation = $('<div class="explanation" />').append(plandescription).append(fineprint);
+        var explanation = $('<div class="explanation" />').append(signeddocs).append(users).append(allFeatures).append(support).append(branding).append(sla).append(p2es).append(whiteLabel);
         features.append(explanation);
 
         var price = $('<span class="price" />').html(localization.payments.plans[view.plan].price * (model.yearlyprices() ? 1 : 1.5));
@@ -392,12 +400,12 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             var view = this;
             var model = view.model;
 
-            var div = view.$el;
+            var div = view.$el.empty();
             var div2 = $('<div class="plan" />');
 
             var features = this.renderFeatures();
 
-            var button = $('<a class="button action action-sign-up" />')
+            var button = $('<a class="button button-green button-large action-sign-up" />')
                 .append($('<span class="blue" />')
                         .text(localization.payments.contact))
                 .append($('<span class="gray" />')
@@ -526,7 +534,6 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             this.$el.addClass(this.plan);
             this.recurly = new RecurlyView(args);
             this.recurly.model.fetch();
-            console.log("HAT");
         },
         render: function() {
             var view = this;
@@ -537,7 +544,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
             var features = this.renderFeatures();
 
-            var button = $('<a class="button action action-sign-up" />')
+            var button = $('<a class="button button-green button-large action-sign-up" />')
                 .append($('<span class="blue" />')
                         .text(localization.payments.purchase))
                 .append($('<span class="gray" />')
@@ -563,8 +570,6 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             div2.append(features);
             div2.append(view.recurly.el);
 
-            console.log("recurly view is", view.recurly.el);
-
             div.append(div2);
 
         }
@@ -579,8 +584,6 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             args.model.bind('change:currentPlan', this.render);
             args.model.bind('change', this.render);
             this.hideContacts = args.hideContacts;
-
-            console.log("INITIALISEZDE");
         },
         scrambleForm: function(form) {
             var view = this;
@@ -771,7 +774,6 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
         },
         render: function() {
-          console.log("RENDERING!!!");
             var view = this;
             var model = view.model;
 
@@ -884,17 +886,19 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
     var PricePageView = Backbone.View.extend({
         className: "payments",
         initialize: function(args){
+          console.log("initializing price page view");
             var view = this;
             _.bindAll(this);
-            this.freeBox = new FreeBoxView({model: args.model,
-                                            plan:'free',
+            var teamBoxClass = view.model.yearlyprices() ? ContactBoxView : TeamBoxView;
+
+            this.oneBox = new teamBoxClass({model: args.model,
+                                            plan:'one',
                                             onClick: function() {
                                               window.location.href = '/signup';
                                             }});
 
-            var teamBoxClass = view.model.yearlyprices() ? ContactBoxView : TeamBoxView;
 
-            this.teamBox = new teamBoxClass({model: args.model,
+            this.teamBox = new ContactBoxView({model: args.model,
                                             hideContacts: args.hideContacts,
                                             plan:'team',
                                             onClick: function() {
@@ -902,22 +906,20 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                                                 if(view.model.currentPlan() !== 'team')
                                                     view.model.setCurrentPlan('team');
                                             }});
-            this.storeBox = new ContactBoxView({model: args.model,
-                                               plan:'store',
+            this.companyBox = new ContactBoxView({model: args.model,
+                                               plan:'company',
                                                onClick: function() {
-                                                   mixpanel.track('Click online form plan');
+                                                   mixpanel.track('Click store plan');
                                                }});
-            this.formBox = new ContactBoxView({model: args.model,
-                                               plan:'form',
+            this.enterpriseBox = new ContactBoxView({model: args.model,
+                                               plan:'enterprise',
                                                onClick: function() {
-                                                   mixpanel.track('Click online form plan');
+                                                   mixpanel.track('Click enterprise plan');
                                                }});
 
             this.topTabs = new TopTabsView({model: args.model});
 
             this.noheaders = args.noheaders;
-            this.notabs = args.notabs;
-            this.ccoptionsonly = args.ccoptionsonly;
             view.model.bind('fetch', this.render);
             view.model.bind('change:yearlyprices', function() {
               view.updateTeamBox();
@@ -928,15 +930,15 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             var view = this;
             var teamBoxClass = view.model.yearlyprices() ? ContactBoxView : TeamBoxView;
 
-            view.teamBox = new teamBoxClass({model: view.model,
-                                            plan:'team',
+            view.oneBox = new teamBoxClass({model: view.model,
+                                            plan:'one',
                                             onClick: function() {
                                                 mixpanel.track('Click team plan');
                                                 if(view.model.currentPlan() !== 'team')
                                                     view.model.setCurrentPlan('team');
                                             }});
 
-            view.teamBox.render();
+            view.oneBox.render();
         },
         render: function() {
             var view = this;
@@ -953,20 +955,14 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
               div.append(header);
             }
 
-            if (!this.notabs) {
-              div.append(view.topTabs.el);
-            }
+            div.append(view.topTabs.el);
 
-            if (!this.ccoptionsonly) {
-              div.append(view.freeBox.el)
-                  .append(view.teamBox.el)
-                  .append(view.storeBox.el)
-                  .append(view.formBox.el);
-            } else {
-              var teamBox = view.teamBox.el;
-              div.append(teamBox);
-              teamBox.click();
-            }
+            div.append(view.oneBox.el)
+                .append(view.teamBox.el)
+                .append(view.companyBox.el)
+                .append(view.enterpriseBox.el);
+
+            console.log("appended onebox / temabox /companybox");
 
             div.append($('<div class="clearfix" />'));
             div.append($('<div class="vat-box" />').text(localization.payments.vat));
@@ -1350,10 +1346,11 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
     var chooseView = function(model) {
         /* Choose main view to display on the subscribe page */
         if(model.type()      === 'nouser')
-            return new PricePageView({model:model});
+            return new PricePageView({model:model, noheaders: true});
         else if(model.type() === 'user')
             return new PricePageView({model:model,
-                                      hideContacts: true});
+                                      hideContacts: true, 
+                                      noheaders: true});
         else if(model.type() === 'plannone')
             return new PaymentsCurrentSubscriptionView({model:model});
         else if(model.type() === 'planrecurly')

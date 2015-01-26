@@ -277,7 +277,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                 title: opts.title,
                 content: div,
                 acceptVisible: false,
-                width: 980
+                width: 1080
             });
             var o = {
               hideContacts: true,
@@ -289,7 +289,6 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             if(opts.header)
                 o.header = opts.header;
 
-            console.log("o is", o);
             PricePage(o).show(div);
         },
         createPopup: function() {

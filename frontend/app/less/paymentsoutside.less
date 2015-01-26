@@ -65,7 +65,8 @@
   }
 
   .payments {
-    padding-top: 44px;
+    min-height: 740px;
+    padding-top: 65px;
 
     header {
       text-align: center;
@@ -88,7 +89,7 @@ section.pricing-cases header {
 
 .plan-container {
   float: left;
-  height: 460px;
+  height: 680px;
   margin: 0 0 1.5em 0;
   position: relative;
   width: 251px;
@@ -106,18 +107,18 @@ section.pricing-cases header {
   left: -251px;
 }
 
-.plan-container.store .plan.active {
+.plan-container.company .plan.active {
   left: -502px;
 }
 
-.plan-container.form .plan.active {
+.plan-container.enterprise .plan.active {
   left: -753px;
 }
 
 .plan-container > .plan {
   background: @white;
   border: 1px solid #DDD;
-  height: 475px;
+  height: 680px;
   left: 0;
   overflow: hidden;
   position: absolute;
@@ -130,7 +131,7 @@ section.pricing-cases header {
 }
 
 .plan-container > .plan.active {
-  height: 475px;
+  height: 680px;
   width: 1003px;
   z-index: 100;
 }
@@ -150,7 +151,7 @@ section.pricing-cases header {
 }
 
 .plan-container > .plan .features div {
-  padding: 32px 0;
+  padding-top: 60px;
   text-align: center;
 }
 
@@ -162,9 +163,13 @@ section.pricing-cases header {
   min-height: 36px;
 }
 
-.plan-container > .plan .features div.title h4 {
-  font-weight: 600;
-  font-size: 28px;
+.plan-container > .plan .features div.title {
+  padding-top: 60px;
+
+  h4 {
+    font-weight: 600;
+    font-size: 30px;
+  }
 }
 
 .plan-container > .plan .features div.cost {
@@ -179,7 +184,7 @@ section.pricing-cases header {
   .price {
     color: @text-dark;
     display: inline-block;
-    font-size: 26px;
+    font-size: 42px;
     font-weight: 400;
     line-height: 1.5em;
     letter-spacing: 0px;
@@ -194,7 +199,7 @@ section.pricing-cases header {
 .plan-container > .plan .features div.explanation {
   display: block;
   font-family: @font-family-source;
-  min-height: 83px;
+  min-height: 248px;
 
   h4 {
     font-size: 20px;

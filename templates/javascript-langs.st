@@ -683,51 +683,54 @@ javascriptLocalisation =
            , placeholder : "$_paymentPlanPlaceholder()$"
            , sendmsg : "$_paymentPlanSendMessage()$"
 	   , numberOfUsers: "$_paymentNumberOfUsers()$"
-           , priceUnit: "SEK/m"
+           , priceUnit: "$_paymentPriceUnit()$"
+           , allFeaturesIncluded: "$_paymentAllFeaturesIncluded()$"
+           , payMonthly: "$_paymentPayMonthly()$"
+           , payYearly: "$_paymentPayYearly()$"
+           , saveYearly: "$_paymentSaveYearly()$"
            , plans: {
-                      team         : {
+                    team : {
                       name : "$_paymentPlanTeam()$",
-                      tag :"$_paymentPlanTeamTag()$",
-                      price : "$_paymentsTeamPrice()$",
-                      price3 : "$_paymentPlanPerUserPerMonth()$",
-                      description: "For teams",
-                      fineprint: "Pay per user"
-                    }
-                    , form : {
-                      name : "$_paymentPlanForm()$",
-                      tag : "$_paymentPlanFormTag()$",
-                      price : "$_paymentPlanFormPrice()$",
-                      price3 : "$_paymentPlanPerMonthPerDoc()$",
-                      description: "For enterprise wide usage",
-                      fineprint: "Unlimited users. First 500 docs/m free."
+                      price : "$_paymentPlanTeamPrice()$",
+                      signeddocs: "250 dokument / m",
+                      branding: "$_paymentPlanTeamBranding()$",
+                      users: "$_paymentPlanTeamUsers()$",
+                      support: "$_paymentPlanTeamSupport()$"
                     }
                     , enterprise : {
                       name : "$_paymentPlanEnterprise()$",
-                      tag : "$_paymentPlanEnterpriseTag()$",
-                      price : "$_paymentsQuote()$",
-                      price3 : "$_paymentsGetInTouch()$"
+                      price : "$_paymentPlanEnterprisePrice()$",
+                      signeddocs: "7 500 dokument / m",
+                      branding: "$_paymentPlanEnterpriseBranding()$",
+                      users: "$_paymentPlanEnterpriseUsers()$",
+                      support: "$_paymentPlanEnterpriseSupport()$",
+                      sla: "$_paymentPlanEnterpriseSLA()$",
+                      p2es: "$_paymentPlanEnterpriseP2ES()$",
+                      whiteLabel: "$_paymentPlanEnterpriseWhiteLabel()$"
                     }
                     , trial : {
                       name : "$_paymentPlanTrial()$",
                       tag : "$_paymentPlanTrialTag()$",
                       price : "$_paymentsQuote()$",
-                      price3 : "$_paymentsGetInTouch()$"
+                      price3 : "$_paymentsGetInTouch()$",
+                      transactions: "TRIAL TSj",
+                      users: "TRIAL US"
                     }
-                    , store : {
-                      name : "Store",
-                      tag : "Sign documents on tablets instead of paper.",
-                      price : "400",
-                      price3 : "per store signing documents",
-                      description: "For in-store use",
-                      fineprint: "Pay per store"
+                    , company : {
+                      name : "$_paymentPlanCompany()$",
+                      price : "$_paymentPlanCompanyPrice()$",
+                      signeddocs: "1 000 dokument / m",
+                      branding: "$_paymentPlanCompanyBranding()$",
+                      users: "$_paymentPlanCompanyUsers()$",
+                      support: "$_paymentPlanCompanySupport()$",
+                      sla: "$_paymentPlanCompanySLA()$"
                     }
-                    , free : {
-                      name : "Free",
-                      tag : "Try Scrive e-Sign for free",
-                      price : "0",
-                      price3 : "3 free documents",
-                      description: "For low volumes",
-                      fineprint: "3 documents/mo"
+                    , one : {
+                      name : "$_paymentPlanOne()$",
+                      price : "$_paymentPlanOnePrice()$",
+                      signeddocs: "15 dokument / m",
+                      users: "$_paymentPlanOneUsers()$",
+                      support: "$_paymentPlanOneSupport()$"
                     }
             }
            , table: { currentplan : "$_paymentPlanCurrentPlan()$"
