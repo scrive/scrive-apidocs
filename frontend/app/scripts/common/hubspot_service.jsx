@@ -64,18 +64,34 @@ var expose = {
        $('body').append('<div id="hubspot-redirect"><iframe name="hubspot-redirect-iframe" id="hubspot-redirect-iframe"></iframe></div>');
     }
 
-    // begin fetching the HubSpot form. Wait for this below as well...
+    // try fetching the HubSpot form. Wait for this below.
     loadForm(formId);
+
+    // hack counter to stop injection of non-existing form.
+    // No form can be injected if e.g. the correct form ids are not defined.
+    var hubspotCallCounter = 0;
+    var hubspotCallMax     = 100; // change
 
     // wait for the mount of the iframe to complete and the form to be
     // loaded, and only then submit the data.
     var intervalId = setInterval(function () {
       hbsptIframe = $('#hubspot-redirect-iframe');
       hbsptForm = $(hubspotFormId);
+      
       if ((hbsptIframe.length != 0) && (hbsptForm.length != 0) ){
          submitData(formData);
          clearInterval(intervalId);
-      } 
+      }
+
+      if (hubspotCallCounter > hubspotCallMax) {
+        // stop trying  -- either the frame can't be injected,
+        // or the form id is not recognised by HubSpot.
+        clearInterval(intervalId);
+      }
+      else {
+        hubspotCallCounter++;
+      }
+
     }, 150);
 
     return false;
