@@ -159,7 +159,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentBySignatoryLinkID Doc
     -- FIXME: Use domains/filters.
     kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
-      sqlWhereEqSql "documents.id" . sqlSelect "signatory_links" $ do
+      sqlWhereEqSql "documents.id" . parenthesize . toSQLCommand . sqlSelect "signatory_links" $ do
         sqlResult "signatory_links.document_id"
         sqlWhereEq "signatory_links.id" slid
       sqlWhereDocumentWasNotPurged
