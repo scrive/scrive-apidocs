@@ -143,7 +143,7 @@ define(['common/hubspot_service', 'Backbone', 'legacy_code'], function(HubSpot) 
               mixpanel.people.set(ps);
               _gaq.push(['_trackEvent', 'ToS', 'Signed']);
 
-              HubSpot.track(hubspotConf.forms.tos_submit,
+              HubSpot.track(HubSpot.FORM_TOS_SUBMIT,
                             { "signup_method" : model.signupMethod(),
                               "fullname" : model.sndname() ? model.fstname() + ' ' + model.sndname() : model.fstname(),
                               "firstname" : model.fstname(),

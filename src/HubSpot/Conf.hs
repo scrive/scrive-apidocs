@@ -1,21 +1,11 @@
-module HubSpot.Conf ( HubSpotConf(..) ) where
+module HubSpot.Conf ( HubSpotConf(..), unjsonHubSpotConf ) where
 
 import Control.Applicative
 import Data.Unjson
 import qualified Data.Map as Map
+import qualified Text.JSON.Gen as J
 
---
--- @tmpnote(fredrik): CHECK THIS!
---
---   * should **only** `Data.Map.Strict.empty` and the data type be imported?
---
---   * since the map is small relatively speaking, I wanted to use
---   `Data.Map.Strict`. However, the Unjson instance is for the lazy
---   counterpart, so this is why the lazy map is used.
---
---   * I used all `String`:s below since that is used in e.g. SalesforceConf.
---
-
+-- ^ A datatype for HubSpot configuration data.
 data HubSpotConf = HubSpotConf {
       hubspotHubId :: String
     , hubspotFormIds  :: Map.Map String String
@@ -23,15 +13,19 @@ data HubSpotConf = HubSpotConf {
 
 unjsonHubSpotConf :: UnjsonDef HubSpotConf
 unjsonHubSpotConf = objectOf $ pure HubSpotConf
-  <*> fieldDef "hubId"
+  <*> fieldDef "hub_id"
       ""
       hubspotHubId
       "HubSpot Hub Id"
-  <*> fieldDef "formIds"
+  <*> fieldDef "forms"
       Map.empty
       hubspotFormIds
       "HubSpot form ID:s by name"
 
 instance Unjson HubSpotConf where
   unjsonDef = unjsonHubSpotConf
-
+              
+instance J.ToJSValue HubSpotConf where
+  toJSValue HubSpotConf{..} = J.runJSONGen $ do
+    J.value "hub_id" $ hubspotHubId 
+    J.value "forms" $ J.toJSValue hubspotFormIds

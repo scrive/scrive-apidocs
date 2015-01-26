@@ -43,8 +43,8 @@ define(['React', 'StateMachine', 'postsignview/questionnaire_question_views','co
 
             var document = self.props.document;
             
-            // @note(fredrik) The data is the same for both HubSpot paths, it's just
-            // that different forms are used.
+            // @note(fredrik) The data is the same for both HubSpot
+            // registrations below, it's just that different forms are used.
             var hubspotData = { "fullname" : document.currentSignatory().name(),
                                 "firstname" : document.currentSignatory().fstname(),
                                 "lastname" : document.currentSignatory().sndname(),
@@ -55,12 +55,12 @@ define(['React', 'StateMachine', 'postsignview/questionnaire_question_views','co
 
             if (to === 'Done' && event === 'yes' && from === 'OthersInYourOrg') {
               extraMixpanelProperties['Others in your organisation information wanted'] = true;
-              HubSpot.track(hubspotConf.forms.no_sends_docs, hubspotData);
+              HubSpot.track(HubSpot.FORM_NO_SENDS_DOCS, hubspotData);
             }
 
             if (to === 'Done' && event === 'yes' && from === 'DemoCta') {
               // hs call yes_sends_docs sdf
-              HubSpot.track(hubspotConf.forms.yes_sends_docs, hubspotData);
+              HubSpot.track(HubSpot.FORM_YES_SENDS_DOCS, hubspotData);
             }
 
             if (to === 'Done') {

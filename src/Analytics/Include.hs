@@ -24,10 +24,13 @@ import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Utils.String
 
+import HubSpot.Conf    
+
 data AnalyticsData = AnalyticsData { aUser           :: Maybe User
                                    , aCompany        :: Maybe Company
                                    , aToken          :: String
                                    , aTokenGa          :: String
+                                   , aHubSpotConf    :: HubSpotConf
                                    , aPaymentPlan    :: Maybe PaymentPlan
                                    , aLanguage       :: Lang
                                    }
@@ -40,15 +43,18 @@ getAnalyticsData = do
     _ -> return Nothing
   token <- ctxmixpaneltoken <$> getContext
   tokenGa <- ctxgoogleanalyticstoken <$> getContext
+  hubspotConf <- ctxhubspotconf <$> getContext
   mplan <- case muser of
     Just user -> dbQuery $ GetPaymentPlan (usercompany user)
     Nothing -> return Nothing
   lang <- ctxlang <$> getContext
+
  
   return $ AnalyticsData { aUser         = muser
                          , aCompany      = mcompany
                          , aToken        = token
                          , aTokenGa       = tokenGa
+                         , aHubSpotConf  = hubspotConf
                          , aPaymentPlan  = mplan
                          , aLanguage     = lang
                          }
@@ -61,6 +67,7 @@ analyticsTemplates ad = do
   mnop (F.value "userid" . show . userid) $ aUser ad
   F.value "token" $ aToken ad
   F.value "tokenGa" $ aTokenGa ad
+  F.value "hubspotConf" $ encode $ toJSValue $ aHubSpotConf ad
   F.value "properties" $ encode $ toJSValue ad
 
 instance ToJSValue AnalyticsData where

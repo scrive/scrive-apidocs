@@ -117,7 +117,7 @@ define(['common/hubspot_service', 'common/adwords_conversion_service', 'Backbone
               self.clearValidationMessages();
               if (emailInput.value().validate(new EmailValidation({callback: self.validationCallback, message: localization.validation.wrongEmail})))
                 model.signup();
-                HubSpot.track(hubspotConf.forms.signup,
+                HubSpot.track(HubSpot.FORM_SIGNUP,
                               {
                                   email : emailInput.value(),
                                   language : Language.current(),

@@ -71,7 +71,7 @@ var openCreateAccountPopup = function(callback) {
                         mixpanel : {name : 'Accept',  props : {'Accept' : 'new account'}}
                     }).sendAjax();
 
-                    HubSpot.track(hubspotConf.forms.invite,
+                    HubSpot.track(HubSpot.FORM_INVITE,
                                   { "email" : email.val(),
                                     "language" : Language.current(),
                                     "scrive_domain" : location.hostname,
