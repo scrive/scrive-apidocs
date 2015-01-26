@@ -19,9 +19,9 @@ import Control.Applicative ((<$>), (<*>))
 import Control.Monad.Catch
 import Control.Monad.Identity
 import Data.Int
+import Data.List.Utils (replace)
 import Data.Monoid
 import Data.Monoid.Space
-import Data.List.Utils (replace)
 import Data.Text (pack, unpack)
 import Data.Typeable
 import Text.StringTemplates.Templates
@@ -30,8 +30,6 @@ import qualified Text.StringTemplates.Fields as F
 
 import DB
 import DB.XML ()
-import Text.XML.Content (parseXMLContent)
-import Text.XML.DirtyContent (XMLContent(..), renderXMLContent)
 import Doc.DocStateData (SignatoryLink(..), AuthenticationMethod(..), DeliveryMethod(..))
 import Doc.DocumentID
 import Doc.DocumentMonad (DocumentMonad, theDocumentID, theDocument)
@@ -39,6 +37,8 @@ import Doc.SignatoryLinkID
 import IPAddress
 import MinutesTime
 import OurPrelude (unexpectedErrorM)
+import Text.XML.Content (parseXMLContent)
+import Text.XML.DirtyContent (XMLContent(..), renderXMLContent)
 import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo (getEmail)

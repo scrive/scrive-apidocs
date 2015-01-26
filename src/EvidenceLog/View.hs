@@ -26,8 +26,6 @@ import Data.String.Utils
 import Data.Word (Word8)
 import Text.JSON
 import Text.JSON.Gen as J
-import Text.XML.Content (cdata)
-import Text.XML.DirtyContent (XMLContent, renderXMLContent, removeTags, substitute)
 import Text.StringTemplates.Templates
 import qualified Data.Foldable as F
 import qualified Data.Map as Map
@@ -45,6 +43,8 @@ import EvidenceLog.Model
 import MinutesTime
 import OurPrelude (unexpectedErrorM)
 import Templates (renderLocalTemplate)
+import Text.XML.Content (cdata)
+import Text.XML.DirtyContent (XMLContent, renderXMLContent, removeTags, substitute)
 import User.Model
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
