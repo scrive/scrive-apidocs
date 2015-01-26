@@ -17,7 +17,6 @@ import Happstack.StaticRouting (Route, dir, choice)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS8
-import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Unjson as Unjson
 import qualified Data.Yaml as Yaml
 
@@ -134,8 +133,8 @@ unjsonCompanyUI = objectOf $ pure CompanyUI
       companyFavicon
       "Favicon"
        (invmap
-          (\l -> Binary $ B64.decodeLenient $ BS.fromString $ drop 1 $ dropWhile ((/=) ',') $ l)
-          (\l -> BS.toString $ BS.append (BS.fromString "data:image/png;base64,") $ B64.encode $ unBinary $ l)
+          (\l -> Binary $ B64.decodeLenient $ BS8.pack $ drop 1 $ dropWhile ((/=) ',') $ l)
+          (\l -> BS8.unpack $ BS.append (BS8.pack "data:image/png;base64,") $ B64.encode $ unBinary $ l)
           unjsonDef
        )
 

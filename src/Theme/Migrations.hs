@@ -44,7 +44,7 @@ createThemeOwnersTable =
             tblName = "theme_owners"
           , tblVersion = 1
           , tblColumns = [
-              tblColumn { colName = "theme_id", colType = BigSerialT, colNullable = False }
+              tblColumn { colName = "theme_id", colType = BigIntT, colNullable = False }
             , tblColumn { colName = "company_id", colType = BigIntT, colNullable = True  }
             , tblColumn { colName = "domain_id", colType = BigIntT, colNullable = True  }
             ]

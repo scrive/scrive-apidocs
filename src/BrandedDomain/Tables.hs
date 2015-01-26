@@ -17,10 +17,10 @@ tableBrandedDomains = tblTable {
     , tblColumn { colName = "email_originator",              colType = TextT, colNullable = False }
     , tblColumn { colName = "contact_email",                 colType = TextT, colNullable = False }
     , tblColumn { colName = "noreply_email",                 colType = TextT, colNullable = False, colDefault = Just "''::text"}
-    , tblColumn { colName = "mail_theme",                    colType = BigSerialT, colNullable = False }
-    , tblColumn { colName = "signview_theme",                colType = BigSerialT, colNullable = False }
-    , tblColumn { colName = "service_theme",                 colType = BigSerialT, colNullable = False }
-    , tblColumn { colName = "login_theme",                   colType = BigSerialT, colNullable = False }
+    , tblColumn { colName = "mail_theme",                    colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "signview_theme",                colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "service_theme",                 colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "login_theme",                   colType = BigIntT, colNullable = False }
     , tblColumn { colName = "main_domain",                   colType = BoolT, colNullable = False, colDefault = Just "false" }
     , tblColumn { colName = "browser_title",                 colType = TextT, colNullable = False }
     , tblColumn { colName = "favicon",                       colType = BinaryT, colNullable = False  }

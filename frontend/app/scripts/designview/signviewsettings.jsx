@@ -14,7 +14,7 @@ var SignviewSettingsModel = Backbone.Model.extend({
       showHeader: args.document.showheader() == undefined ? true : args.document.showheader(),
       showRejectOption: args.document.showrejectoption() == undefined ? true : args.document.showrejectoption(),
       showPDFDownload: args.document.showpdfdownload() == undefined ? true : args.document.showpdfdownload(),
-      showFooter: args.document.showfooter() == undefined ? true : args.document.showfooter(),
+      showFooter: args.document.showfooter() == undefined ? true : args.document.showfooter()
     });
     theme.fetch({cache: false });
   },
@@ -63,7 +63,7 @@ var SignviewSettingsView = React.createClass({
       var self = this;
       var model = self.props.model;
       if (!model.ready()) {
-        return (<div/>)
+        return (<div/>);
       } else {
         return (
           <div className="signviewsettings">

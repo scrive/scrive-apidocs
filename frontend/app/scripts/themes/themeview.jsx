@@ -128,7 +128,7 @@ return React.createClass({
                 <div className="theme-delete">
                   <div className="theme-delete-title title"> {localization.branding.themes.deleteTitle} </div>
                   <Button
-                    text={localization.branding.themes.delete}
+                    text={localization.branding.themes.deleteNow}
                     onClick={function() {self.props.onDelete();}}
                   />
                   <Button

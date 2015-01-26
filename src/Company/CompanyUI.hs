@@ -16,13 +16,13 @@ import OurPrelude
 import Theme.Model
 
 data CompanyUI = CompanyUI
-  { companyuicompanyid                :: CompanyID
-  , companyMailTheme                  :: Maybe ThemeID
-  , companySignviewTheme              :: Maybe ThemeID
-  , companyServiceTheme               :: Maybe ThemeID
-  , companyBrowserTitle                :: Maybe String
-  , companySmsOriginator              :: Maybe String
-  , companyFavicon                    :: Maybe (Binary BS.ByteString)
+  { companyuicompanyid                :: !CompanyID
+  , companyMailTheme                  :: !(Maybe ThemeID)
+  , companySignviewTheme              :: !(Maybe ThemeID)
+  , companyServiceTheme               :: !(Maybe ThemeID)
+  , companyBrowserTitle               :: !(Maybe String)
+  , companySmsOriginator              :: !(Maybe String)
+  , companyFavicon                    :: !(Maybe (Binary BS.ByteString))
 } deriving (Eq, Ord, Show, Typeable)
 
 data GetCompanyUI = GetCompanyUI CompanyID

@@ -28,7 +28,6 @@ import Text.StringTemplates.Templates
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BSC8
-import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Unjson as Unjson
 import qualified Data.Yaml as Yaml
 import qualified Text.StringTemplates.Fields as F
@@ -781,8 +780,8 @@ unjsonBrandedDomain = objectOf $ pure BrandedDomain
       bdFavicon
       "Favicon"
        (invmap
-          (\l -> Binary $ B64.decodeLenient $ BS.fromString $  drop 1 $ dropWhile ((/=) ',') l)
-          (\l -> BS.toString $ BS.append (BS.fromString "data:image/png;base64,") $ B64.encode $ unBinary l)
+          (\l -> Binary $ B64.decodeLenient $ BSC8.pack $  drop 1 $ dropWhile ((/=) ',') l)
+          (\l -> BSC8.unpack $ BS.append (BSC8.pack "data:image/png;base64,") $ B64.encode $ unBinary l)
           unjsonDef
        )
    <*> field "participantColor1"

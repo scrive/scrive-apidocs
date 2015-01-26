@@ -29,20 +29,20 @@ import OurPrelude
 import Theme.ThemeID
 
 data Theme = Theme {
-    themeID                       :: ThemeID
-  , themeName                     :: String
-  , themeLogo                     :: (Binary BS.ByteString)
-  , themeBrandColor               :: String
-  , themeBrandTextColor           :: String
-  , themeActionColor              :: String
-  , themeActionTextColor          :: String
-  , themeActionSecondaryColor     :: String
-  , themeActionSecondaryTextColor :: String
-  , themePositiveColor            :: String
-  , themePositiveTextColor        :: String
-  , themeNegativeColor            :: String
-  , themeNegativeTextColor        :: String
-  , themeFont                     :: String
+    themeID                       :: !ThemeID
+  , themeName                     :: !String
+  , themeLogo                     :: !(Binary BS.ByteString)
+  , themeBrandColor               :: !String
+  , themeBrandTextColor           :: !String
+  , themeActionColor              :: !String
+  , themeActionTextColor          :: !String
+  , themeActionSecondaryColor     :: !String
+  , themeActionSecondaryTextColor :: !String
+  , themePositiveColor            :: !String
+  , themePositiveTextColor        :: !String
+  , themeNegativeColor            :: !String
+  , themeNegativeTextColor        :: !String
+  , themeFont                     :: !String
 }
 
 data GetTheme = GetTheme ThemeID

@@ -13,7 +13,7 @@ import Data.Functor.Invariant
 import Data.Unjson
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
-import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString.Char8 as BSC8
 
 import DB
 import Theme.Model
@@ -30,8 +30,8 @@ unjsonTheme = objectOf $ pure Theme
       themeLogo
       "Logo of a theme"
        (invmap
-          (\l -> Binary $ B64.decodeLenient $ BS.fromString $  drop 1 $ dropWhile ((/=) ',') l)
-          (\l -> BS.toString $ BS.append (BS.fromString "data:image/png;base64,") $ B64.encode $ unBinary l)
+          (\l -> Binary $ B64.decodeLenient $ BSC8.pack $  drop 1 $ dropWhile ((/=) ',') l)
+          (\l -> BSC8.unpack $ BS.append (BSC8.pack "data:image/png;base64,") $ B64.encode $ unBinary l)
           unjsonDef
        )
   <*> field "brandColor"
