@@ -53,13 +53,12 @@ define(['React', 'StateMachine', 'postsignview/questionnaire_question_views','co
                                 "signup_method": "BySigning",
                                 "scrive_domain" : location.hostname };
 
+            // call HubSpot depending on answers.
             if (to === 'Done' && event === 'yes' && from === 'OthersInYourOrg') {
               extraMixpanelProperties['Others in your organisation information wanted'] = true;
               HubSpot.track(HubSpot.FORM_NO_SENDS_DOCS, hubspotData);
-            }
-
-            if (to === 'Done' && event === 'yes' && from === 'DemoCta') {
-              // hs call yes_sends_docs sdf
+            } else if (to === 'Done' && event === 'yes' && from === 'DemoCta') {
+              // hs call yes_sends_docs 
               HubSpot.track(HubSpot.FORM_YES_SENDS_DOCS, hubspotData);
             }
 

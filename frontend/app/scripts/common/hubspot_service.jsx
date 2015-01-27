@@ -1,8 +1,29 @@
 define(['jquery'], function($) {
 
+  /**
+   *  @description
+   *  API for form submissions to HubSpot:
+   *    * Inject a form into the page by means of JSONP. We have no
+   *      control over the injection procedure.
+   *    * Use ugly check that the form has been mounted in the DOM,
+   *      along with an iframe used for the hack that is required to
+   *      circumvent page redirection upon form submission.
+   *    * Fill in the form with supplied data. Hope that required fields
+   *      are specified.
+   *    * Submit.
+   *
+   *  Caveats:
+   *    * Should HubSpot decide to the change class name of the div
+   *      that holds this form, which is specified in
+   *      `hubspotFormDomElm` below, this code will definitely
+   *      *break*.
+   *    * Kludgy, with extra everything.
+   */
+
+
   // @note(fredrik): The id of the injected form is rather random.
-  // Therefore, we are very specific here.
-  var hubspotFormId = "div.hbspt-form form.hs-form";
+  // Therefore, we use class selectors instead, and are very specific here.
+  var hubspotFormDomElm = "div.hbspt-form form.hs-form";
 
   //
   // @description:
@@ -11,7 +32,7 @@ define(['jquery'], function($) {
   //
   var submitData = function (data) {
 
-    var $form = $(hubspotFormId), k;
+    var $form = $(hubspotFormDomElm), k;
 
     for (k in data) {
       $form.find("input[name='" + k + "']").val(data[k]);
@@ -35,7 +56,7 @@ define(['jquery'], function($) {
 
     var hbsptForm = hbspt.forms.create({
       portalId: hubspotConf.hub_id,
-      formId: fid,
+      formId: checkForEmpty(fid),
       onFormReady: function($form) {
         $form.attr('target', 'hubspot-redirect-iframe');
       }
@@ -45,10 +66,18 @@ define(['jquery'], function($) {
 
   };
 
+  // to get vastly better errors from HubSpot, empty values are reset
+  // as `undefined`.
+  var checkForEmpty = function (prop) {
+    var ret = ( prop === "" ) ? undefined :  prop;
+    return ret;
+  }
+
 var expose = {
 
   // shorthand for the form ids defined in the hubspotConf object
-  FORM_SIGNUP         : hubspotConf.forms.signup,
+//  FORM_SIGNUP         : hubspotConf.forms.signup,
+  FORM_SIGNUP         : "",
   FORM_INVITE         : hubspotConf.forms.invite,
   FORM_TOS_SUBMIT     : hubspotConf.forms.tos_submit,
   FORM_NO_SENDS_DOCS  : hubspotConf.forms.no_sends_docs,
@@ -76,7 +105,7 @@ var expose = {
     // loaded, and only then submit the data.
     var intervalId = setInterval(function () {
       hbsptIframe = $('#hubspot-redirect-iframe');
-      hbsptForm = $(hubspotFormId);
+      hbsptForm = $(hubspotFormDomElm);
       
       if ((hbsptIframe.length != 0) && (hbsptForm.length != 0) ){
          submitData(formData);
