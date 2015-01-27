@@ -200,6 +200,9 @@ typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var
         $endif$
    // end Mixpanel
 
+   // Hubspot configuration
+   window.hubspotConf = $analytics.hubspotConf:noescape()$;
+
   // Google analytics tracking
   var _gaq = _gaq || [];
   _gaq.push(['_setAccount', '$analytics.tokenGa$']);
@@ -215,8 +218,18 @@ typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var
     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
   })();
 // end Google analytics
+
+// HubSpot js: Start of Async HubSpot Analytics Code
+  (function(d,s,i,r) {
+    if (d.getElementById(i)){return;}
+    var n=d.createElement(s),e=d.getElementsByTagName(s)[0];
+    n.id=i;n.src='//js.hs-analytics.net/analytics/'+(Math.ceil(new Date()/r)*r)+'/431732.js';
+    e.parentNode.insertBefore(n, e);
+  })(document,"script","hs-analytics",300000);
+// end Hubspot js
 ####
 analyticsLoaderKontrakcja=
+$loadScript(src="http://js.hubspot.com/forms/current.js")$
 <script>
   $analyticsLoaderBase()$
   mixpanel.track_links('#logo', 'Click Logo');

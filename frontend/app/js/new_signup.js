@@ -1,4 +1,4 @@
-define(['common/adwords_conversion_service', 'Backbone', 'legacy_code'], function(AdwordsConversionService) {
+define(['common/hubspot_service', 'common/adwords_conversion_service', 'Backbone', 'legacy_code'], function(HubSpot, AdwordsConversionService) {
 
   var SignupModel = Backbone.Model.extend({
     defaults: {
@@ -117,6 +117,14 @@ define(['common/adwords_conversion_service', 'Backbone', 'legacy_code'], functio
               self.clearValidationMessages();
               if (emailInput.value().validate(new EmailValidation({callback: self.validationCallback, message: localization.validation.wrongEmail})))
                 model.signup();
+                HubSpot.track(HubSpot.FORM_SIGNUP,
+                              {
+                                  email : emailInput.value(),
+                                  language : Language.current(),
+                                  scrive_domain : location.hostname,
+                                  signup_method : "AccountRequest"
+                              });
+
             }
           });
 

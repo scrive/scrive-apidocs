@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React', 'StateMachine', 'postsignview/questionnaire_question_views'], function(React, StateMachine, QuestionViews) {
+define(['React', 'StateMachine', 'postsignview/questionnaire_question_views','common/hubspot_service'], function(React, StateMachine, QuestionViews, HubSpot) {
   /**
    *  @description
    *  A questionnaire, asking user to answer a couple of questions and
@@ -41,8 +41,24 @@ define(['React', 'StateMachine', 'postsignview/questionnaire_question_views'], f
             self.setState({question: to});
             var extraMixpanelProperties = {};
 
+            var document = self.props.document;
+            
+            // @note(fredrik) The data is the same for both HubSpot
+            // registrations below, it's just that different forms are used.
+            var hubspotData = { "fullname" : document.currentSignatory().name(),
+                                "firstname" : document.currentSignatory().fstname(),
+                                "lastname" : document.currentSignatory().sndname(),
+                                "email" : document.currentSignatory().email(),
+                                "company": document.currentSignatory().company(),
+                                "signup_method": "BySigning",
+                                "scrive_domain" : location.hostname };
+
+            // call HubSpot depending on answers.
             if (to === 'Done' && event === 'yes' && from === 'OthersInYourOrg') {
               extraMixpanelProperties['Others in your organisation information wanted'] = true;
+              HubSpot.track(HubSpot.FORM_NO_SENDS_DOCS, hubspotData);
+            } else if (to === 'Done' && event === 'yes' && from === 'DemoCta') {
+              HubSpot.track(HubSpot.FORM_YES_SENDS_DOCS, hubspotData);
             }
 
             if (to === 'Done') {

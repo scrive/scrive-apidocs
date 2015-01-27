@@ -341,6 +341,7 @@ appHandler handleRoutes appConf appGlobals = catchEverything . enhanceYourCalm $
         , ctxrecurlyconfig = recurlyConfig appConf
         , ctxsessionid = sesID session
         , ctxmixpaneltoken = mixpanelToken appConf
+        , ctxhubspotconf = hubspotConf appConf
         , ctxgoogleanalyticstoken = googleanalyticsToken appConf
         , ctxhomebase = homebase appConf
         , ctxbrandeddomain = mbrandeddomain

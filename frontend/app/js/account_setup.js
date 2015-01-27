@@ -1,4 +1,4 @@
-define(['Backbone', 'legacy_code'], function() {
+define(['common/hubspot_service', 'Backbone', 'legacy_code'], function(HubSpot) {
 
   var AccountSetupModel = Backbone.Model.extend({
     defaults: {
@@ -126,6 +126,7 @@ define(['Backbone', 'legacy_code'], function() {
         position : model.position(),
         ajaxsuccess: function(rs) {
           var resp = JSON.parse(rs);
+          var tosDate = new Date();
           if (resp.ok === true) {
               mixpanel.alias(resp.userid);
               mixpanel.identify(resp.userid);
@@ -134,13 +135,23 @@ define(['Backbone', 'legacy_code'], function() {
                         'Position' : model.position(),
                         '$first_name' : model.fstname(),
                         '$last_name' : model.sndname(),
-                        'TOS Date' : new Date(),
+                        'TOS Date' : tosDate,
                         'Signup Method' : model.signupMethod(),
                         'Scrive Domain': window.location.hostname
               };
               mixpanel.register(ps);
               mixpanel.people.set(ps);
               _gaq.push(['_trackEvent', 'ToS', 'Signed']);
+
+              HubSpot.track(HubSpot.FORM_TOS_SUBMIT,
+                            { "signup_method" : model.signupMethod(),
+                              "fullname" : model.sndname() ? model.fstname() + ' ' + model.sndname() : model.fstname(),
+                              "firstname" : model.fstname(),
+                              "lastname" : model.sndname(),
+                              "phone" : model.phone(),
+                              "company" : model.company(),
+                              "jobtitle" : model.position()});
+
               trackTimeout('Sign TOS', {}, function() {
                   window.location = resp.location;
               }, 1000);
@@ -151,6 +162,9 @@ define(['Backbone', 'legacy_code'], function() {
           }
         }
       }).send();
+
+      model.signupMethod();
+
     }
   });
 

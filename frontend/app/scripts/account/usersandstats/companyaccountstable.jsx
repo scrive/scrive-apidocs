@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React', 'common/backbone_mixin','lists/list','legacy_code'], function(React, BackboneMixin, List) {
+define(['React', 'common/backbone_mixin', 'common/hubspot_service', 'lists/list','legacy_code'], function(React, BackboneMixin, HubSpot, List) {
 
 var userFullName = function(d) {
     var fullname = d.field("fields").fullname;
@@ -70,6 +70,14 @@ var openCreateAccountPopup = function(callback) {
                         },
                         mixpanel : {name : 'Accept',  props : {'Accept' : 'new account'}}
                     }).sendAjax();
+
+                    HubSpot.track(HubSpot.FORM_INVITE,
+                                  { "email" : email.val(),
+                                    "language" : Language.current(),
+                                    "scrive_domain" : location.hostname,
+                                    "signup_method" : "CompanyInvitation",
+                                    "firstname" : fstname.val(),
+                                    "lastname" : sndname.val() });
                  }
               },
               title : localization.account.companyAccounts.createNewModalTitle,

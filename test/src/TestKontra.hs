@@ -53,6 +53,7 @@ import Mails.MailsConfig
 import MinutesTime
 import Payments.Config (RecurlyConfig(..))
 import Salesforce.Conf
+import HubSpot.Conf    
 import Session.SessionID
 import Templates
 import User.Lang
@@ -302,6 +303,7 @@ mkContext lang = do
                                            }
         , ctxsessionid = tempSessionID
         , ctxmixpaneltoken = "5b04329b972851feac0e9b853738e742"
+        , ctxhubspotconf = HubSpotConf "" M.empty
         , ctxgoogleanalyticstoken = "5b04329b972851feac0e9b853738e741"
         , ctxhomebase = "https://staging.scrive.com"
         , ctxbrandeddomain = Nothing
