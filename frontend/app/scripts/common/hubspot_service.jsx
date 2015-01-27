@@ -71,7 +71,7 @@ define(['jquery'], function($) {
   var checkForEmpty = function (prop) {
     var ret = ( prop === "" ) ? undefined :  prop;
     return ret;
-  }
+  };
 
 var expose = {
 
