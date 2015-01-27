@@ -76,6 +76,7 @@ define(['jquery'], function($) {
 var expose = {
 
   // shorthand for the form ids defined in the hubspotConf object
+  // REVIEW: Fixa kommenteringen :)
 //  FORM_SIGNUP         : hubspotConf.forms.signup,
   FORM_SIGNUP         : "",
   FORM_INVITE         : hubspotConf.forms.invite,
@@ -99,7 +100,7 @@ var expose = {
     // hack counter to stop injection of non-existing form.
     // No form can be injected if e.g. the correct form ids are not defined.
     var hubspotCallCounter = 0;
-    var hubspotCallMax     = 100; // change
+    var hubspotCallMax     = 100; // change // REVIEW: change nu eller sen? ta bort kommentaren om sen.
 
     // wait for the mount of the iframe to complete and the form to be
     // loaded, and only then submit the data.
@@ -115,6 +116,7 @@ var expose = {
       if (hubspotCallCounter > hubspotCallMax) {
         // stop trying  -- either the frame can't be injected,
         // or the form id is not recognised by HubSpot.
+        // REVIEW: Gör en console.log här
         clearInterval(intervalId);
       }
       else {

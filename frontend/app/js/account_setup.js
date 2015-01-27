@@ -163,6 +163,7 @@ define(['common/hubspot_service', 'Backbone', 'legacy_code'], function(HubSpot) 
         }
       }).send();
 
+      // REVIEW: Remove
       // @debug(fredrik)
       model.signupMethod();
 
