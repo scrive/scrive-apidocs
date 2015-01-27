@@ -24,6 +24,7 @@ window.DocumentSignConfirmation = function(args) {
 
 
 window.ReloadDueToErrorModal = function(xhr) {
+  ReloadManager.stopBlocking();
   mixpanel.track('Error', {
     Message : 'Signing failed: reload modal',
     Status  : xhr.status,
@@ -74,24 +75,27 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
       return localization.sign.eleg.mismatch.mismatchOnNumberAndCanChange;
   },
 
+  blockReload: function () { return localization.signingInProgressDontCloseWindow; },
+
   /**
    *  Block browser from reloading page
    */
   startBlockingReload: function() {
-    window.onbeforeunload = function() {return localization.signingInProgressDontCloseWindow;};
+    ReloadManager.pushBlock(this.blockReload);
   },
 
   /**
    *  Stop blocking browser from reloading page
    */
   stopBlockingReload: function() {
-    window.onbeforeunload = function() {};
+    ReloadManager.popBlock(this.blockReload);
   },
   /**
    *  Show different pages when a document is signed,
    *  based on a few conditions,
    */
   postSigningAction: function(newDocument, oldDocument) {
+    ReloadManager.stopBlocking();
     // Signing through api
     if (oldDocument.currentSignatory().signsuccessredirect() != undefined && oldDocument.currentSignatory().signsuccessredirect() != "") {
       window.location = oldDocument.currentSignatory().signsuccessredirect();
@@ -232,6 +236,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
           value: "",
           onChange: function(v) {
             self.pin = v;
+            self.model.set({ hasChangedPin: true }, { silent: true });
           },
           onFocus: function() {
             iti.el().addClass("active");
@@ -423,6 +428,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                               acceptText: localization.reject.send,
                                               acceptColor: "cancel",
                                               onAccept: function() {
+                                                ReloadManager.stopBlocking();
                                                 var customtext = textarea.val();
                                                 trackTimeout('Accept', {'Accept': 'reject document'}, function() {
                                                   document.currentSignatory().reject(customtext != undefined && customtext != "" ? customtext : undefined).sendAjax(function() {

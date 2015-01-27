@@ -5,9 +5,11 @@
 
 define(['React', 'signview/create_account_section_view', 'doctools/docviewsignatories', 'common/retargeting_service', 'Backbone', 'Underscore', 'legacy_code'], function(React, CreateAccountSection,DocumentViewSignatories, RetargetingService) {
 
+
 var DocumentSignViewModel = Backbone.Model.extend({
   defaults : {
-    ignoredoclang : false
+    ignoredoclang : false,
+    hasChangedPin: false
   },
   initialize : function(args){
       var model = this;
@@ -447,7 +449,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
 });
 var DocumentSignViewView = Backbone.View.extend({
     initialize: function(args) {
-        _.bindAll(this, 'render', 'notAuthorized');
+        _.bindAll(this, 'render', 'notAuthorized', 'blockReload');
         var view = this;
         this.model.bind('change', this.render);
         this.model.bind('recallfailednotauthorized', this.notAuthorized);
@@ -455,6 +457,24 @@ var DocumentSignViewView = Backbone.View.extend({
         view.model.document().setReferenceScreenshot(BrowserInfo.isSmallScreen() ? "mobile" : "standard");
         this.prerender();
         this.render();
+        ReloadManager.pushBlock(this.blockReload);
+    },
+    blockReload: function () {
+      var signatory = this.model.document().currentSignatory();
+
+      var fields = signatory.fields();
+
+      var attachments = signatory.attachments();
+
+      var changedAnyFields = _.any(fields, function (field) { return field.get("hasChanged"); });
+
+      var changedAnyAttachments = _.any(attachments, function (attachment) { return attachment.get("hasChanged"); });
+
+      var changedPin = this.model.get("hasChangedPin");
+
+      if (changedAnyFields || changedAnyAttachments || changedPin) {
+        return localization.signingStartedDontCloseWindow;
+      }
     },
     prerender : function() {
       this.container = $("<div/>");

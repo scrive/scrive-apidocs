@@ -1239,6 +1239,7 @@ javascriptLocalisation =
              , youHaveSignedPleaseWait : "$_signinginprogressmodalYouHaveSignedPleaseWait()$"
       }
       , signingInProgressDontCloseWindow : "$_signingInProgressDontCloseWindow()$"
+      , signingStartedDontCloseWindow : "$_signingStartedDontCloseWindow()$"
       , signingErrorMessage1 : "$_signingErrorMessage1()$"
       , signingErrorMessage2 : "$_signingErrorMessage2()$"
       , signingErrorReload   : "$_signingErrorReload()$"

@@ -11,7 +11,8 @@ window.Field = Backbone.Model.extend({
         obligatory : true,
         shouldbefilledbysender : false,
         fresh : false,
-        ddSignature : false
+        ddSignature : false,
+        hasChanged: false
     },
     initialize : function(args){
         var field = this;
@@ -24,9 +25,6 @@ window.Field = Backbone.Model.extend({
                 return new FieldPlacement(extendedWithField(placement));
         });
         this.set({"placements": placements});
-        this.bind("change:value",function() {
-            field.signatory().document().trigger("change-signatories-field-values");
-        });
         if(args.signatory)
             args.signatory.bind("removed", field.remove);
         field.bindBubble();
@@ -60,6 +58,7 @@ window.Field = Backbone.Model.extend({
         return this;
     },
     setValue : function(value, options) {
+        this.set({ hasChanged: true }, { silent: true });
         this.set({"value" : value}, options);
         this.triggerSignatoryPostChanges();
     },

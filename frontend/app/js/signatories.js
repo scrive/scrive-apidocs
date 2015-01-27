@@ -7,7 +7,8 @@ window.SignatoryAttachment = Backbone.Model.extend({
     defaults: {
         name: "",
         description: "",
-        loading: false
+        loading: false,
+        hasChanged: false
     },
     initialize: function(args) {
         if (args.file != undefined) {
@@ -22,6 +23,7 @@ window.SignatoryAttachment = Backbone.Model.extend({
         return this.get("file");
     },
     setFile: function(file) {
+        this.set({ hasChanged: true }, { silent: true });
         return this.set({'file': file});
     },
     description: function() {

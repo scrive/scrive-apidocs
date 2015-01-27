@@ -47,6 +47,7 @@ define([
   '../js/progressbar',
   '../js/placements',
   '../js/fields',
+  '../js/reloadmanager',
   '../js/signatories',
   '../js/documents',
   '../js/takeScreenshot',
