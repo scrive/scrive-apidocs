@@ -214,8 +214,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
     if (signatory.author()) {
       var content = $("<div />");
       if (document.authorIsOnlySignatory()) {
-        content = $(localization.process.signatorysignmodalcontentauthoronly);
-        content.find('.put-signatory-name-here').text(signatory.name());
+        content.text(localization.process.signModalBody);
       } else {
         var copy = $(localization.process.signatorysignmodalcontent);
         copy.find('.put-signatory-name-here').text(signatory.name());
@@ -225,9 +224,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
     } else {
       var content = $("<div />");
       if (this.signaturesPlaced) {
-        var copy = $(localization.process.signatorysignmodalcontentfromsignaturedrawing);
-        copy.find('.put-signatory-name-here').text(signatory.name());
-        content.append(copy);
+        content.text(localization.process.signModalBody);
       } else {
         var copy = $(localization.process.signatorysignmodalcontent);
         copy.find('.put-signatory-name-here').text(signatory.name());
@@ -292,7 +289,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
 
     var title = localization.signByAuthor.modalTitle;
     if (this.signaturesPlaced)
-      title = localization.process.signatorysignmodaltitlefromsignatorydrawing;
+      title = localization.process.signModalTitle;
 
     if (arrow) {
       arrow.disable();

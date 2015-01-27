@@ -150,6 +150,8 @@ javascriptLocalisation =
               }
 
             , process : {
+               signModalTitle: "$_contractSignatorySignModalTitle()$",
+               signModalBody: "$_contractSignatorySignModalBody()$",
                sendbuttontext: "$_contractsendbuttontext()$",
                changesignatorybuttontext: "$_changeSignatoryButtonText()$",
                startsigningbuttontext: "$_contractstartsigningbuttontext()$",

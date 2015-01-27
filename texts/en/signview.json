@@ -8,6 +8,8 @@
 "_checkYourPhone":"Check your phone",
 "_company":"Company",
 "_companyNumberLabel":"Company reg. no.",
+"_contractSignatorySignModalBody":"You have signed the document. When you click the button your signature will be registered by the e-signing service Scrive.",
+"_contractSignatorySignModalTitle":"Finished?",
 "_contractrejectbuttontext":"Reject and reply",
 "_contractsignatorycancelmodalplaceholder":"Type your message here",
 "_contractsignatorycancelmodaltext":"If you reject the document it can’t be signed anymore. Please describe why you want to reject the document.",
