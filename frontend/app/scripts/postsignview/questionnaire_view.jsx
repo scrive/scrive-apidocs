@@ -58,8 +58,6 @@ define(['React', 'StateMachine', 'postsignview/questionnaire_question_views','co
               extraMixpanelProperties['Others in your organisation information wanted'] = true;
               HubSpot.track(HubSpot.FORM_NO_SENDS_DOCS, hubspotData);
             } else if (to === 'Done' && event === 'yes' && from === 'DemoCta') {
-              // REVIEW: Ta bort den här kommentaren
-              // hs call yes_sends_docs 
               HubSpot.track(HubSpot.FORM_YES_SENDS_DOCS, hubspotData);
             }
 
