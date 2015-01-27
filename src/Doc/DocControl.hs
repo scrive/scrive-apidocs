@@ -38,9 +38,11 @@ module Doc.DocControl(
 import Control.Applicative
 import Control.Concurrent
 import Control.Conditional (unlessM, whenM)
+import Control.Monad.Catch (MonadMask)
 import Control.Monad
 import Control.Monad.Reader
 import Data.List
+import Data.Time (ZonedTime)
 import Data.Maybe
 import Data.String.Utils (replace)
 import Happstack.Server hiding (simpleHTTP)
@@ -116,7 +118,8 @@ handleNewDocument = do
         actor <- guardJustM $ mkAuthorActor <$> getContext
         mtimezonename <- runMPlusT $ lookCookieValue "timezone"
         timezone <- fromMaybe defaultTimeZoneName <$> T.sequence (mkTimeZoneName <$> mtimezonename)
-        doc <- dbUpdate $ NewDocument defaultValue user (replace "  " " " $ title ++ " " ++ formatTimeSimple (ctxtime ctx)) Signable timezone 1 actor
+        timestamp <- formatTimeSimpleWithTZ timezone (ctxtime ctx)
+        doc <- dbUpdate $ NewDocument defaultValue user (replace "  " " " $ title ++ " " ++ timestamp) Signable timezone 1 actor
         -- Default document on the frontend has different requirements,
         -- this sets up the signatories to match those requirements.
         withDocument doc $ do
@@ -148,6 +151,11 @@ handleNewDocument = do
   Here are all actions associated with transitions.
 -}
 
+formatTimeSimpleWithTZ :: (MonadDB m, MonadMask m) => TimeZoneName -> UTCTime -> m String
+formatTimeSimpleWithTZ tz mt = withTimeZone tz $ do
+  runQuery_ $ rawSQL "SELECT $1, to_char($1, 'TZ')" (Single mt)
+  (t::ZonedTime, _::String) <- fetchOne id
+  return $ formatTime' "%Y-%m-%d %H:%M" t
 
 showCreateFromTemplate :: Kontrakcja m => m (Either KontraLink String)
 showCreateFromTemplate = withUserGet $ pageCreateFromTemplate
@@ -247,7 +255,7 @@ handleToStartShow :: Kontrakcja m => DocumentID -> m (Either KontraLink Response
 handleToStartShow documentid = checkUserTOSGet $ do
   ctx <- getContext
   document <- getDocByDocIDForAuthor documentid
-  ad <- getAnalyticsData 
+  ad <- getAnalyticsData
   content <- pageDocumentToStartView ctx document ad
   simpleHtmlResonseClrFlash content
 

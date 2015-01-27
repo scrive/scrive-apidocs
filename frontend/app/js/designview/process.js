@@ -94,6 +94,12 @@ define(['Backbone', 'React', 'common/customtexteditor', 'designview/signviewsett
                 value: doc.title(),
                 onChange: function(v) {
                     doc.setTitle(v);
+                },
+                onBlur: function () {
+                  if (doc.title() === "") {
+                    doc.setTitle(doc.generateDefaultTitle());
+                    field.setValue(doc.title());
+                  }
                 }
             });
 

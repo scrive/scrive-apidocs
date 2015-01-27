@@ -343,6 +343,7 @@ javascriptLocalisation =
              }
              , editParticipants: "$_designViewEditParticipants()$"
              , editDocument: "$_designViewEditDocument()$"
+             , newDocumentTitle: "$_newDocumentTitle()$"
              , optionalField: "$_designViewOptionalField()$"
              , editSigningProcess: "$_designViewEditSigningProcess()$"
              , startSigning: "$_designViewStartSigning()$"

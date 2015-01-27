@@ -14,6 +14,7 @@ module InputValidation
     , asDirtyEmail
     , asValidPassword
     , asDirtyPassword
+    , asValidTitle
     , asValidName
     , asValidCompanyName
     , asValidCompanyNumber
@@ -304,7 +305,6 @@ asValidPassword input =
               | length (filter isAlpha pwd) >= 1 && length (filter isDigit pwd) >=1 = return pwd
               | otherwise = Bad
 
-
 {- |
     Creates a dirty password.  This is useful when validating
     logins for example.  Because it's dirty you should make sure to throw it away,
@@ -312,6 +312,15 @@ asValidPassword input =
 -}
 asDirtyPassword :: String -> Result String
 asDirtyPassword input = checkIfEmpty input
+
+{- |
+    Creates a clean and validated title.
+    Size: At least 1 chars.
+-}
+asValidTitle :: String -> Result String
+asValidTitle input =
+    checkIfEmpty input
+    >>= checkLengthIsMin 1
 
 {- |
     Creates a clean and validated name (works for first or second)
