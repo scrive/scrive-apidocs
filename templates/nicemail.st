@@ -146,15 +146,15 @@ nicemaillogo=*
   $if(ispreview)$
     $if(documentid)$
       $if(signatorylinkid)$
-        $ctxhostpart$/email_logo/$documentid$/$signatorylinkid$/$logoMD5$
+        $ctxhostpart$/email_logo/$documentid$/$signatorylinkid$/$logoAdler32$
       $else$
-        $ctxhostpart$/email_logo/$logoMD5$
+        $ctxhostpart$/email_logo/$logoAdler32$
       $endif$
     $else$
-      $ctxhostpart$/email_logo/$logoMD5$
+      $ctxhostpart$/email_logo/$logoAdler32$
     $endif$
   $else$
-    cid:logo-$logoMD5$.png
+    cid:logo-$logoAdler32$.png
   $endif$
 #####
 nicemailheaderbackground=$brandcolor$

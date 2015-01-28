@@ -1,15 +1,16 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
-module Branding.MD5 (
-     imageMD5
-   , brandingMD5
+module Branding.Adler32 (
+     imageAdler32
+   , brandingAdler32
   ) where
 
 import Control.Monad
 import Control.Monad.Catch
 
-import qualified Crypto.Hash.MD5 as MD5
+import qualified Data.Binary as Binary
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Char8 as BSC8
+import Data.Digest.Adler32
 import Data.Maybe
 
 import BrandedDomain.BrandedDomain
@@ -19,32 +20,33 @@ import Context
 import Company.CompanyUI
 import Theme.Model ()
 import User.Model
+import Utils.String
 import Version
 
-brandingMD5 :: (MonadDB m, MonadThrow m) => Context -> Maybe CompanyUI -> m String
-brandingMD5 ctx mcompanyui = do
-  md1 <- domainMD5 $ ctxbrandeddomain ctx
-  md2 <- case mcompanyui of
-    Just cui1 -> companyUIMD5 cui1
+brandingAdler32 :: (MonadDB m, MonadThrow m) => Context -> Maybe CompanyUI -> m String
+brandingAdler32 ctx mcompanyui = do
+  ad1 <- domainAdler32 $ ctxbrandeddomain ctx
+  ad2 <- case mcompanyui of
+    Just cui1 -> companyUIAdler32 cui1
     Nothing  -> return ""
-  md3 <- do
+  ad3 <- do
     case ((ctxmaybeuser ctx) `mplus` (ctxmaybepaduser ctx)) of
       Nothing -> return ""
       Just user -> do
         cui2 <- dbQuery $ GetCompanyUI $ usercompany user
-        companyUIMD5 cui2
-  return $ BSC8.unpack $ B16.encode $  MD5.hash $ BSC8.pack $ concat $ [md1,md2,md3,show versionID]
+        companyUIAdler32 cui2
+  return $ BSC8.unpack $ adler32BS $ BSC8.pack $ concat $ [ad1,ad2,ad3,show versionID]
 
 
-imageMD5 :: Binary BSC8.ByteString -> String
-imageMD5 image = BSC8.unpack $ B16.encode $ MD5.hash $ unBinary $ image
+imageAdler32 :: Binary BSC8.ByteString -> String
+imageAdler32 image = BSC8.unpack $ adler32BS $ unBinary $ image
 
-domainMD5 :: (MonadDB m, MonadThrow m) => BrandedDomain -> m String
-domainMD5 bd = do
+domainAdler32:: (MonadDB m, MonadThrow m) => BrandedDomain -> m String
+domainAdler32 bd = do
   themesMD5 <- dbQuery $ GetThemesMD5 $ [bdMailTheme bd,bdSignviewTheme bd,bdServiceTheme bd,bdLoginTheme bd]
-  return $ BSC8.unpack $ B16.encode $  MD5.hash $ BSC8.pack $ concat $ [
+  return $ BSC8.unpack $ adler32BS $ BSC8.pack $ concat $ [
       show (bdid bd)
-    , imageMD5 (bdFavicon bd)
+    , imageAdler32 (bdFavicon bd)
     , bdParticipantColor1 bd
     , bdParticipantColor2 bd
     , bdParticipantColor3 bd
@@ -61,10 +63,13 @@ domainMD5 bd = do
     , bdSignedColor       bd
     ] ++ themesMD5
 
-companyUIMD5 :: (MonadDB m, MonadThrow m) => CompanyUI -> m String
-companyUIMD5 cui = do
+companyUIAdler32 :: (MonadDB m, MonadThrow m) => CompanyUI -> m String
+companyUIAdler32 cui = do
   themesMD5 <- dbQuery $ GetThemesMD5 $ catMaybes [companyMailTheme cui,companySignviewTheme cui,companyServiceTheme cui]
-  return $ BSC8.unpack $ B16.encode $  MD5.hash $ BSC8.pack $ concat $ [
+  return $ BSC8.unpack $ adler32BS $ BSC8.pack $ concat $ [
       show $ companyuicompanyid cui
-    , maybe "" imageMD5 (companyFavicon cui)
+    , maybe "" imageAdler32(companyFavicon cui)
     ] ++ themesMD5
+
+adler32BS :: BSC8.ByteString -> BSC8.ByteString
+adler32BS = B16.encode . concatChunks . Binary.encode . adler32

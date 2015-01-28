@@ -87,6 +87,7 @@ Executable kontrakcja-server
   Build-depends: Crypto
   Build-depends: DRBG
   Build-depends: Decimal
+  Build-depends: digest
   Build-depends: hpqtypes
   Build-depends: HStringTemplate
   Build-depends: HTTP
@@ -200,6 +201,7 @@ Executable cron
   Build-depends: Crypto
   Build-depends: DRBG
   Build-depends: Decimal
+  Build-depends: digest
   Build-depends: hpqtypes
   Build-depends: HStringTemplate
   Build-depends: HTTP
@@ -315,6 +317,7 @@ Executable kontrakcja-migrate
   Build-depends: Crypto
   Build-depends: DRBG
   Build-depends: Decimal
+  Build-depends: digest
   Build-depends: hpqtypes
   Build-depends: HStringTemplate
   Build-depends: HTTP
@@ -628,6 +631,7 @@ Executable kontrakcja-test
   Build-depends: template-haskell
   Build-depends: containers
   Build-depends: unix
+  Build-depends: digest
   Build-depends: directory
   Build-depends: binary
   Build-depends: old-locale

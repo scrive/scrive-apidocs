@@ -109,19 +109,28 @@ return React.createClass({
             <div className='separator'/>
             <div className='previews'>
               {/*if*/ (model.mailThemeMode() ) &&
-                <EmailPreview
-                  model={model.domainMailTheme()}
-                />
+                <div className="preview">
+                  <div className="preview-title">{localization.branding.themes.emailPreview}</div>
+                  <EmailPreview
+                    model={model.domainMailTheme()}
+                  />
+                </div>
               }
               {/*else if*/ (model.signviewThemeMode() ) &&
-                <SigningPreview
-                  model={model.domainSignviewTheme()}
-                />
+                <div className="preview">
+                  <div className="preview-title">{localization.branding.themes.signviewPreview}</div>
+                  <SigningPreview
+                    model={model.domainSignviewTheme()}
+                  />
+                </div>
               }
               {/*else if*/ (model.serviceThemeMode() ) &&
-                <ServicePreview
-                  model={model.domainServiceTheme()}
-                />
+                <div className="preview">
+                  <div className="preview-title">{localization.branding.themes.servicePreview}</div>
+                  <ServicePreview
+                    model={model.domainServiceTheme()}
+                  />
+                </div>
               }
             </div>
           </div>

@@ -20,7 +20,7 @@ import qualified Text.StringTemplates.Fields as F
 import qualified Text.StringTemplates.Templates as T
 
 import BrandedDomain.BrandedDomain
-import Branding.MD5
+import Branding.Adler32
 import Control.Logic
 import Crypto.RNG
 import DB
@@ -125,5 +125,5 @@ kontramailHelper bd theme renderFunc tname fields = do
                        , originatorEmail = strip $ bdNoreplyEmail bd
                        , title   = title
                        , content = content
-                       , attachments = [("logo-"++ (imageMD5 $ themeLogo  theme) ++ ".png", Left $ unBinary $ themeLogo theme)]
+                       , attachments = [("logo-"++ (imageAdler32 $ themeLogo  theme) ++ ".png", Left $ unBinary $ themeLogo theme)]
                        }

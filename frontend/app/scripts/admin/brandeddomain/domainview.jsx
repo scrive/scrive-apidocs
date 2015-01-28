@@ -18,7 +18,7 @@ return React.createClass({
       } else {
         var alternativeTheme = _.find(model.themeList().list().models,function(t) { return t.field("id")  != theme.themeid();});
 
-        var content = $("<div>Are you sure that you want to delete theme <strong class='put-name-of-theme-to-delete-here'/>. Theme <strong class='put-name-of-new-theme-here'/> will be used instead</div>");
+        var content = $("<div>If you delete the theme <strong class='put-name-of-theme-to-delete-here'/> the <strong class='put-name-of-new-theme-here'/> theme will be used instead.</div>");
         content.find(".put-name-of-theme-to-delete-here").text(theme.name());
         content.find(".put-name-of-new-theme-here").text(alternativeTheme.field("name"));
 
@@ -165,7 +165,7 @@ return React.createClass({
                   previews={_.compact([
                       ServicePreview,
                       (model.serviceThemeForEditing() == model.mailThemeForEditing()) ? EmailPreview : undefined,
-                      (model.serviceThemeForEditing() == model.signviewThemeForEditing()) ? ServicePreview : undefined,
+                      (model.serviceThemeForEditing() == model.signviewThemeForEditing()) ? SigningPreview : undefined,
                       (model.serviceThemeForEditing() == model.loginThemeForEditing()) ? LoginPreview : undefined
                     ])
                   }

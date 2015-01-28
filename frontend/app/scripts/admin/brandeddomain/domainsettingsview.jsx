@@ -60,7 +60,7 @@ return React.createClass({
               />
               <DomainTextEditor
                 title=" Email originator."
-                description="Email originator. The name displayed to the recipient when receiving emails."
+                description="The name displayed to the recipient when receiving emails."
                 getValue={function() {return model.emailOriginator()}}
                 setValue={function(v) {return model.setEmailOriginator(v)}}
               />
@@ -138,7 +138,7 @@ return React.createClass({
                 <strong>
                   Status and event colours.
                 </strong>
-                 &nbsp;This is the document status indicated with an icon and a colour. Here you can modify the colors.
+                 &nbsp;This is the document status indicated with an icon and a colour. Here you can modify the colours.
               </div>
 
               <DomainColorEditor

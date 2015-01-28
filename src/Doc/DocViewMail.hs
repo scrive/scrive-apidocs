@@ -25,7 +25,7 @@ import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 
 import BrandedDomain.BrandedDomain
-import Branding.MD5
+import Branding.Adler32
 import Company.CompanyUI
 import Company.Model
 import Control.Logic
@@ -334,7 +334,7 @@ documentMail haslang doc mailname otherfields = do
 brandingMailFields :: Monad m => Theme -> Fields m ()
 brandingMailFields theme = do
     -- MD5 is needed since some email client cache images based on cid
-    F.value "logoMD5" $ imageMD5 $ themeLogo theme
+    F.value "logoAdler32" $ imageAdler32 $ themeLogo theme
     F.value "brandcolor" $ ensureHexRGB' $ themeBrandColor theme
     F.value "brandtextcolor" $ ensureHexRGB' $ themeBrandTextColor theme
     F.value "actioncolor" $ ensureHexRGB' $ themeActionColor theme

@@ -55,7 +55,7 @@ import Utils.Monoid
 import Utils.HTTP
 import Version
 import qualified Log
-import Branding.MD5
+import Branding.Adler32
 -- * Main Implementation
 
 {- |
@@ -216,7 +216,7 @@ standardPageFields ctx mcompanyui ad = do
   F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
   F.object "analytics" $ analyticsTemplates ad
   F.value "homebase" $ ctxhomebase ctx
-  F.valueM "brandinghash" $ brandingMD5 ctx mcompanyui
+  F.valueM "brandinghash" $ brandingAdler32 ctx mcompanyui
   F.value "title" $ case (join$ nothingIfEmpty <$> strip <$> (join $ companyBrowserTitle <$> mcompanyui)) of
                       Just ctitle -> ctitle ++ " - " ++ (bdBrowserTitle $ ctxbrandeddomain ctx)
                       Nothing -> (bdBrowserTitle $ ctxbrandeddomain ctx)

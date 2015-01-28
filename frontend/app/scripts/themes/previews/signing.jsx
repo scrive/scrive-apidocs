@@ -67,7 +67,7 @@ return React.createClass({
                   <div className="innercontent">
                      <div className="contentheader">
                         <div className="instructions">
-                          <span>Follow the <span style={{"color": model.actionColor()}} className="arrowtext">ARROW</span>FIXME</span>
+                          <span>Follow the <span style={{"color": model.actionColor()}} className="arrowtext">ARROW</span></span>
                         </div>
                         {/*if*/ (self.props.showPDFDownload) &&
                           <span><a className="download" style={{color: "#333333"}}>Demo document</a></span>
