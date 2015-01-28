@@ -28,8 +28,10 @@ import Text.StringTemplates.Templates
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BSC8
+import qualified Data.ByteString.UTF8 as BSU8
+import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Unjson as Unjson
-import qualified Data.Yaml as Yaml
+import qualified Data.Aeson as Aeson
 import qualified Text.StringTemplates.Fields as F
 
 import Administration.AddPaymentPlan
@@ -730,9 +732,11 @@ updateBrandedDomain xbdid = onlySalesOrAdmin $ do
       internalError
     -- keep this 1to1 consistent with fields in the database
     domainJSON <- guardJustM $ getField "domain"
-    case Yaml.decode (BSC8.pack domainJSON) of
-     Nothing -> internalError
-     Just js -> case (Unjson.parse unjsonBrandedDomain js) of
+    case Aeson.eitherDecode $ BSL.fromStrict (BSU8.fromString domainJSON) of
+     Left err -> do
+       Log.mixlog_ $ "Error while parsing branding for adminonly " ++ err
+       internalError
+     Right js -> case (Unjson.parse unjsonBrandedDomain js) of
         (Result newDomain []) -> do
           _ <- dbUpdate $ UpdateBrandedDomain newDomain {bdid = bdid obd, bdMainDomain = bdMainDomain obd}
           return ()

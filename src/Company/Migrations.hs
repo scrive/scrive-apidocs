@@ -31,15 +31,11 @@ addThemesAndOthersToCompanyUIs = Migration {
     runSQL_ "ALTER TABLE company_uis ADD COLUMN mail_theme BIGINT NULL"
     runSQL_ "ALTER TABLE company_uis ADD COLUMN signview_theme BIGINT NULL"
     runSQL_ "ALTER TABLE company_uis ADD COLUMN service_theme BIGINT NULL"
-    runSQL_ $ "ALTER TABLE company_uis  ADD CONSTRAINT fk__company_uis__mail_theme__themes FOREIGN KEY (mail_theme)  "
-           <> "REFERENCES themes (id) MATCH SIMPLE  "
-           <> "ON UPDATE CASCADE ON DELETE NO ACTION DEFERRABLE INITIALLY IMMEDIATE"
-    runSQL_ $ "ALTER TABLE company_uis  ADD CONSTRAINT fk__company_uis__signview_theme__themes FOREIGN KEY (signview_theme)  "
-           <> "REFERENCES themes (id) MATCH SIMPLE  "
-           <> "ON UPDATE CASCADE ON DELETE NO ACTION DEFERRABLE INITIALLY IMMEDIATE"
-    runSQL_ $ "ALTER TABLE company_uis  ADD CONSTRAINT fk__company_uis__service_theme__themes FOREIGN KEY (service_theme)  "
-           <> "REFERENCES themes (id) MATCH SIMPLE  "
-           <> "ON UPDATE CASCADE ON DELETE NO ACTION DEFERRABLE INITIALLY IMMEDIATE"
+
+    runQuery_ $ sqlAddFK "company_uis" $  (fkOnColumn "mail_theme" "themes" "id")
+    runQuery_ $ sqlAddFK "company_uis" $  (fkOnColumn "signview_theme" "themes" "id")
+    runQuery_ $ sqlAddFK "company_uis" $  (fkOnColumn "service_theme" "themes" "id")
+
     runSQL_ "ALTER TABLE company_uis ADD COLUMN browser_title TEXT NULL"
     runSQL_ "ALTER TABLE company_uis ADD COLUMN sms_originator TEXT NULL"
     runSQL_ "ALTER TABLE company_uis ADD COLUMN favicon BYTEA NULL"

@@ -1,5 +1,6 @@
 module Utils.Read where
 
+import Data.Int
 import Control.Applicative
 import Control.Monad
 import Numeric
@@ -17,6 +18,11 @@ maybeReadIntM c = join <$> fmap maybeReadInt <$> c
 
 maybeReadInt :: String -> Maybe Int
 maybeReadInt s = case readDec s of
+  [(v, "")] -> Just v
+  _         -> Nothing
+
+maybeReadInt64 :: String -> Maybe Int64
+maybeReadInt64 s = case readDec s of
   [(v, "")] -> Just v
   _         -> Nothing
 

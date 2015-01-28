@@ -19,8 +19,9 @@ module Theme.Control (
 import Data.Unjson
 import Data.Unjson as Unjson
 import Happstack.Server hiding (dir, simpleHTTP)
-import qualified Data.ByteString.UTF8 as BS
-import qualified Data.Yaml as Yaml
+import qualified Data.ByteString.UTF8 as BSU8
+import qualified Data.ByteString.Lazy as BSL
+import qualified Data.Aeson as Aeson
 
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
@@ -65,21 +66,25 @@ handleUpdateThemeForDomain did tid =  do
   guardNotMainDomain did "Main domain themes can't be changed"
   theme <- dbQuery $ GetTheme tid
   themeJSON <- guardJustM $ getField "theme"
-  case Yaml.decode (BS.fromString themeJSON) of
-     Nothing -> internalError
-     Just js -> case (Unjson.parse unjsonTheme js) of
-        (Result newTheme []) -> do
-          _ <- dbUpdate $ UpdateThemeForDomain did newTheme {themeID = themeID theme}
-          return ()
-        _ -> internalError
+  case Aeson.eitherDecode $ BSL.fromStrict (BSU8.fromString themeJSON) of
+    Left err -> do
+      Log.mixlog_ $ "Error while parsing theme for domain " ++ err
+      internalError
+    Right js -> case (Unjson.parse unjsonTheme js) of
+      (Result newTheme []) -> do
+        _ <- dbUpdate $ UpdateThemeForDomain did newTheme {themeID = themeID theme}
+        return ()
+      _ -> internalError
 
 handleUpdateThemeForCompany:: Kontrakcja m => CompanyID -> ThemeID -> m ()
 handleUpdateThemeForCompany cid tid =  do
   theme <- dbQuery $ GetTheme tid
   themeJSON <- guardJustM $ getField "theme"
-  case Yaml.decode (BS.fromString themeJSON) of
-     Nothing -> internalError
-     Just js -> case (Unjson.parse unjsonTheme js) of
+  case Aeson.eitherDecode $ BSL.fromStrict (BSU8.fromString themeJSON) of
+   Left err -> do
+     Log.mixlog_ $ "Error while parsing theme for company " ++ err
+     internalError
+   Right js -> case (Unjson.parse unjsonTheme js) of
         (Result newTheme []) -> do
           _ <- dbUpdate $ UpdateThemeForCompany cid newTheme {themeID = themeID theme}
           return ()

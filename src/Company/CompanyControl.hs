@@ -16,9 +16,11 @@ import Happstack.Server hiding (dir, simpleHTTP)
 import Happstack.StaticRouting (Route, dir, choice)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
-import qualified Data.ByteString.Char8 as BS8
+import qualified Data.ByteString.Char8 as BSC8
+import qualified Data.ByteString.UTF8 as BSU8
+import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Unjson as Unjson
-import qualified Data.Yaml as Yaml
+import qualified Data.Aeson as Aeson
 
 import BrandedDomain.BrandedDomain
 import Company.CompanyUI
@@ -31,6 +33,7 @@ import Theme.Control
 import Theme.ThemeID
 import User.Utils
 import Util.MonadUtils
+import qualified Log as Log
 
 routes :: Route (KontraPlus Response)
 routes = choice
@@ -68,9 +71,11 @@ handleGetCompanyBranding mcid = do
 handleChangeCompanyBranding :: Kontrakcja m => Maybe CompanyID -> m ()
 handleChangeCompanyBranding mcid = withCompanyAdminOrAdminOnly mcid $ \company -> do
   companyUIJSON <- guardJustM $ getField "companyui"
-  case Yaml.decode (BS8.pack companyUIJSON) of
-     Nothing -> internalError
-     Just js -> case (Unjson.parse unjsonCompanyUI js) of
+  case Aeson.eitherDecode $ BSL.fromStrict (BSU8.fromString companyUIJSON) of
+     Left err -> do
+       Log.mixlog_ $ "Error while parsing company branding " ++ err
+       internalError
+     Right js -> case (Unjson.parse unjsonCompanyUI js) of
         (Result cui []) -> do
            _ <- dbUpdate $ SetCompanyUI (companyid company) cui
            return ()
@@ -133,8 +138,8 @@ unjsonCompanyUI = objectOf $ pure CompanyUI
       companyFavicon
       "Favicon"
        (invmap
-          (\l -> Binary $ B64.decodeLenient $ BS8.pack $ drop 1 $ dropWhile ((/=) ',') $ l)
-          (\l -> BS8.unpack $ BS.append (BS8.pack "data:image/png;base64,") $ B64.encode $ unBinary $ l)
+          (\l -> Binary $ B64.decodeLenient $ BSC8.pack $ drop 1 $ dropWhile ((/=) ',') $ l)
+          (\l -> BSC8.unpack $ BS.append (BSC8.pack "data:image/png;base64,") $ B64.encode $ unBinary $ l)
           unjsonDef
        )
 

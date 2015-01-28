@@ -6,7 +6,6 @@ module Theme.ThemeID (
 
 import Control.Applicative
 import Data.Binary
-import Data.Functor.Invariant
 import Data.Int
 import Data.Typeable
 import Data.Unjson
@@ -44,7 +43,7 @@ fromThemeID (ThemeID tid) = tid
 
 -- TODO Fix to stop using read. Gracjan is working on that in unjson library
 unjsonThemeID :: UnjsonDef ThemeID
-unjsonThemeID = invmap (ThemeID . read :: String -> ThemeID) (show . fromThemeID :: ThemeID -> String) unjsonDef
+unjsonThemeID = unjsonInvmapR ((maybe (fail "Can't parse ThemeID")  (return . ThemeID) . maybeReadInt64)) (show . fromThemeID :: ThemeID -> String) unjsonDef
 
 instance Unjson ThemeID where
   unjsonDef = unjsonThemeID

@@ -120,6 +120,7 @@ window.Signatory = Backbone.Model.extend({
       return "/s/acceptaccount/" + this.document().id + "/" + this.signatoryid();
     },
     signIndex: function() {
+        console.log(this.document().signatories().length);
         var allSignatories = this.document().signatories();
         var index = 1;
         for (var i = 0; i < allSignatories.length; i++) {
@@ -128,6 +129,9 @@ window.Signatory = Backbone.Model.extend({
             if (allSignatories[i].signs()) index++;
         }
         return 0;
+    },
+    participantIndex : function() {
+        return _.indexOf(this.document().signatories(),this) + 1;
     },
     signatoryid: function() {
         return this.get("id");

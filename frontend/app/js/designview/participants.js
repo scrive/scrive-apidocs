@@ -1381,7 +1381,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             var sig = view.model;
             return $('<div />')
                 .addClass('design-view-action-participant-info-color')
-                .addClass('participant-' +  ((sig.signIndex() -1 ) % 6 + 1));
+                .addClass('participant-' +  ((sig.participantIndex() -1 ) % 6 + 1));
         },
         email: function() {
             var view = this;

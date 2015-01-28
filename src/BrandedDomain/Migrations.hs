@@ -3,7 +3,6 @@ module BrandedDomain.Migrations where
 import Control.Monad
 import Control.Monad.Catch
 import Data.Int
-import Data.Monoid
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS
@@ -179,19 +178,11 @@ addThemesToBrandedDomainAndMainDomain =
         runSQL_ "ALTER TABLE branded_domains ALTER signview_theme SET NOT NULL"
         runSQL_ "ALTER TABLE branded_domains ALTER service_theme SET NOT NULL"
         runSQL_ "ALTER TABLE branded_domains ALTER login_theme SET NOT NULL"
-        runSQL_ $ "ALTER TABLE branded_domains  ADD CONSTRAINT fk__branded_domains__mail_theme__themes FOREIGN KEY (mail_theme)  "
-               <> "REFERENCES themes (id) MATCH SIMPLE  "
-               <> "ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED"
-        runSQL_ $ "ALTER TABLE branded_domains  ADD CONSTRAINT fk__branded_domains__signview_theme__themes FOREIGN KEY (signview_theme)  "
-               <> "REFERENCES themes (id) MATCH SIMPLE  "
-               <> "ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED"
-        runSQL_ $ "ALTER TABLE branded_domains  ADD CONSTRAINT fk__branded_domains__service_theme__themes FOREIGN KEY (service_theme)  "
-               <> "REFERENCES themes (id) MATCH SIMPLE  "
-               <> "ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED"
-        runSQL_ $ "ALTER TABLE branded_domains  ADD CONSTRAINT fk__branded_domains__login_theme__themes FOREIGN KEY (login_theme)  "
-               <> "REFERENCES themes (id) MATCH SIMPLE  "
-               <> "ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED"
-        runQuery_ . sqlCreateIndex "branded_domains" $ uniqueIndexOnColumnWithCondition "main_domain" "main_domain"
+        runQuery_ $ sqlAddFK "branded_domains" $  (fkOnColumn "mail_theme" "themes" "id") {fkOnDelete = ForeignKeyCascade , fkDeferred = True}
+        runQuery_ $ sqlAddFK "branded_domains" $  (fkOnColumn "signview_theme" "themes" "id") {fkOnDelete = ForeignKeyCascade, fkDeferred = True }
+        runQuery_ $ sqlAddFK "branded_domains" $  (fkOnColumn "service_theme" "themes" "id") {fkOnDelete = ForeignKeyCascade, fkDeferred = True }
+        runQuery_ $ sqlAddFK "branded_domains" $  (fkOnColumn "login_theme" "themes" "id") {fkOnDelete = ForeignKeyCascade, fkDeferred = True }
+        runQuery_ $ sqlCreateIndex "branded_domains" $ uniqueIndexOnColumnWithCondition "main_domain" "main_domain"
 
 
         runSQL_ "ALTER TABLE branded_domains ALTER browser_title SET NOT NULL"

@@ -5,7 +5,7 @@ var placementBorder = 2;
 
 var signatoryCSSClass = function(sig) {
   if (sig)
-    return "signatory-field-" + ((sig.signIndex() -1 ) % 6 + 1);
+    return "signatory-field-" + ((sig.participantIndex() -1 ) % 6 + 1);
   else
     return "";
 };
