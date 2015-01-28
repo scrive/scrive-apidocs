@@ -24,6 +24,7 @@ import CompanyControlTest
 import CompanyStateTest
 import ConfigTests
 import Crypto.RNG
+import CSSGenerationTest
 import CSVUtilTest
 import DB
 import DB.Checks
@@ -66,6 +67,7 @@ allTests = [
   , companyControlTests
   , companyStateTests
   , configTests
+  , cssGenerationTests
   , csvUtilTests
   , docAPITests
   , archiveTests
