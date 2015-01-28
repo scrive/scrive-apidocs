@@ -23,7 +23,7 @@ data ColumnType
   | TimestampWithZoneT
   | XmlT
   | ArrayT !ColumnType
-  | CompositeT !(RawSQL ())
+  | CustomT !(RawSQL ())
     deriving (Eq, Ord, Show)
 
 instance PQFormat ColumnType where
@@ -46,7 +46,7 @@ instance FromSQL ColumnType where
         "xml" -> XmlT
         tname
           | "[]" `isSuffixOf` tname -> ArrayT . parseType . init . init $ tname
-          | otherwise -> CompositeT $ unsafeSQL tname
+          | otherwise -> CustomT $ unsafeSQL tname
 
 columnTypeToSQL :: ColumnType -> RawSQL ()
 columnTypeToSQL BigIntT = "BIGINT"
@@ -62,4 +62,4 @@ columnTypeToSQL TextT = "TEXT"
 columnTypeToSQL TimestampWithZoneT = "TIMESTAMPTZ"
 columnTypeToSQL XmlT = "XML"
 columnTypeToSQL (ArrayT t) = columnTypeToSQL t <> "[]"
-columnTypeToSQL (CompositeT tname) = tname
+columnTypeToSQL (CustomT tname) = tname

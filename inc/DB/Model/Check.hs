@@ -1,5 +1,5 @@
 module DB.Model.Check (
-    TableCheck(..)
+    Check(..)
   , sqlAddCheck
   , sqlDropCheck
   ) where
@@ -7,13 +7,13 @@ module DB.Model.Check (
 import Data.Monoid.Space
 import Database.PostgreSQL.PQTypes
 
-data TableCheck = TableCheck {
+data Check = Check {
   chkName :: RawSQL ()
 , chkCondition :: RawSQL ()
 } deriving (Eq, Ord, Show)
 
-sqlAddCheck :: TableCheck -> RawSQL ()
-sqlAddCheck TableCheck{..} = smconcat [
+sqlAddCheck :: Check -> RawSQL ()
+sqlAddCheck Check{..} = smconcat [
     "ADD CONSTRAINT"
   , chkName
   , "CHECK ("
@@ -21,5 +21,5 @@ sqlAddCheck TableCheck{..} = smconcat [
   , ")"
   ]
 
-sqlDropCheck :: TableCheck -> RawSQL ()
-sqlDropCheck TableCheck{..} = "DROP CONSTRAINT" <+> chkName
+sqlDropCheck :: Check -> RawSQL ()
+sqlDropCheck Check{..} = "DROP CONSTRAINT" <+> chkName

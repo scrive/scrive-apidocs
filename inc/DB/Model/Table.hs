@@ -63,7 +63,7 @@ data Table = Table {
 , tblVersion       :: Int32
 , tblColumns       :: [TableColumn]
 , tblPrimaryKey    :: Maybe PrimaryKey
-, tblChecks        :: [TableCheck]
+, tblChecks        :: [Check]
 , tblForeignKeys   :: [ForeignKey]
 , tblIndexes       :: [TableIndex]
 , tblInitialData   :: Maybe Rows

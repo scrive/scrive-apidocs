@@ -1235,9 +1235,9 @@ signatoryLinkFieldsAddBinaryValue = Migration {
     sqlWhereIsNULL "value_binary"
 
   runQuery_ $ alter_table [
-      sqlAddCheck $ TableCheck "check_signatory_link_fields_signature_well_defined"
+      sqlAddCheck $ Check "check_signatory_link_fields_signature_well_defined"
         "type = 8 AND value_binary IS NOT NULL AND value_text IS NULL OR type <> 8"
-    , sqlAddCheck $ TableCheck "check_signatory_link_fields_text_fields_well_defined"
+    , sqlAddCheck $ Check "check_signatory_link_fields_text_fields_well_defined"
         "type = 8 OR type <> 8 AND value_binary IS NULL AND value_text IS NOT NULL"
     ]
 }

@@ -26,7 +26,7 @@ tableUsers = tblTable {
     , tblColumn { colName = "associated_domain_id", colType = BigIntT }
     ]
   , tblPrimaryKey = pkOnColumn "id"
-  , tblChecks = [TableCheck "check_users_lowercase_email" "email = lower(email)"]
+  , tblChecks = [Check "check_users_lowercase_email" "email = lower(email)"]
   , tblForeignKeys = [fkOnColumn "company_id" "companies" "id"
                      ,fkOnColumn "associated_domain_id" "branded_domains" "id"]
   , tblIndexes = [

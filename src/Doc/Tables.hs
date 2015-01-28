@@ -50,8 +50,8 @@ ctDocument = CompositeType {
 , ctColumns = [
     CompositeColumn { ccName = "id", ccType = BigIntT }
   , CompositeColumn { ccName = "title", ccType = TextT }
-  , CompositeColumn { ccName = "signatory_links", ccType = ArrayT $ CompositeT "signatory_link" }
-  , CompositeColumn { ccName = "main_files", ccType = ArrayT $ CompositeT "main_file" }
+  , CompositeColumn { ccName = "signatory_links", ccType = ArrayT $ CustomT "signatory_link" }
+  , CompositeColumn { ccName = "main_files", ccType = ArrayT $ CustomT "main_file" }
   , CompositeColumn { ccName = "status", ccType = SmallIntT }
   , CompositeColumn { ccName = "error_text", ccType = TextT }
   , CompositeColumn { ccName = "type", ccType = SmallIntT }
@@ -71,8 +71,8 @@ ctDocument = CompositeType {
   , CompositeColumn { ccName = "show_footer", ccType = BoolT }
   , CompositeColumn { ccName = "lang", ccType = SmallIntT }
   , CompositeColumn { ccName = "sharing", ccType = SmallIntT }
-  , CompositeColumn { ccName = "tags", ccType = ArrayT $ CompositeT "document_tag" }
-  , CompositeColumn { ccName = "author_attachments", ccType = ArrayT $ CompositeT "author_attachment" }
+  , CompositeColumn { ccName = "tags", ccType = ArrayT $ CustomT "document_tag" }
+  , CompositeColumn { ccName = "author_attachments", ccType = ArrayT $ CustomT "author_attachment" }
   , CompositeColumn { ccName = "api_callback_url", ccType = TextT }
   , CompositeColumn { ccName = "unsaved_draft", ccType = BoolT }
   , CompositeColumn { ccName = "object_version", ccType = BigIntT }
@@ -229,7 +229,7 @@ ctSignatoryLink = CompositeType {
   ctName = "signatory_link"
 , ctColumns = [
     CompositeColumn { ccName = "id", ccType = BigIntT }
-  , CompositeColumn { ccName = "signatory_fields", ccType = ArrayT $ CompositeT "signatory_field" }
+  , CompositeColumn { ccName = "signatory_fields", ccType = ArrayT $ CustomT "signatory_field" }
   , CompositeColumn { ccName = "is_author", ccType = BoolT }
   , CompositeColumn { ccName = "is_partner", ccType = BoolT }
   , CompositeColumn { ccName = "sign_order", ccType = IntegerT }
@@ -246,7 +246,7 @@ ctSignatoryLink = CompositeType {
   , CompositeColumn { ccName = "really_deleted", ccType = TimestampWithZoneT }
   , CompositeColumn { ccName = "csv_title", ccType = TextT }
   , CompositeColumn { ccName = "csv_contents", ccType = TextT }
-  , CompositeColumn { ccName = "attachments", ccType = ArrayT $ CompositeT "signatory_attachment" }
+  , CompositeColumn { ccName = "attachments", ccType = ArrayT $ CustomT "signatory_attachment" }
   , CompositeColumn { ccName = "sign_redirect_url", ccType = TextT }
   , CompositeColumn { ccName = "reject_redirect_url", ccType = TextT }
   , CompositeColumn { ccName = "rejection_time", ccType = TimestampWithZoneT }
@@ -303,9 +303,9 @@ tableSignatoryLinkFields = tblTable {
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblChecks = [
-      TableCheck "check_signatory_link_fields_signature_well_defined"
+      Check "check_signatory_link_fields_signature_well_defined"
         "type = 8 AND value_binary IS NOT NULL AND value_text IS NULL OR type <> 8"
-     , TableCheck "check_signatory_link_fields_text_fields_well_defined"
+     , Check "check_signatory_link_fields_text_fields_well_defined"
         "type = 8 OR type <> 8 AND value_binary IS NULL AND value_text IS NOT NULL"
     ]
   , tblForeignKeys = [

@@ -260,7 +260,7 @@ checkDBStructure logger tables = do
             def = maybeToList mdef
             pk = maybeToList mpk
 
-        checkChecks :: [TableCheck] -> [TableCheck] -> ValidationResult
+        checkChecks :: [Check] -> [Check] -> ValidationResult
         checkChecks defs checks = case checkEquality "CHECKs" defs checks of
           ValidationResult [] -> ValidationResult []
           ValidationResult errmsgs -> ValidationResult $ errmsgs ++ [" (HINT: If checks are equal modulo number of parentheses/whitespaces used in conditions, just copy and paste expected output into source code)"]
@@ -418,8 +418,8 @@ sqlGetChecks table = toSQLCommand . sqlSelect "pg_catalog.pg_constraint c" $ do
   sqlWhereEq "c.contype" 'c'
   sqlWhereEqSql "c.conrelid" $ sqlGetTableID table
 
-fetchTableCheck :: (String, String) -> TableCheck
-fetchTableCheck (name, condition) = TableCheck {
+fetchTableCheck :: (String, String) -> Check
+fetchTableCheck (name, condition) = Check {
   chkName = unsafeSQL name
 , chkCondition = unsafeSQL condition
 }
