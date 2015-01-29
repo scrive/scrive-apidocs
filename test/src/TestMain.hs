@@ -113,7 +113,7 @@ testMany (allargs, ts) = do
   let connSettings = pgConnSettings pgconf
       dts = defaultTransactionSettings
   runDBT (defaultSource $ connSettings []) dts $ do
-    migrateDatabase Log.mixlog_ kontraTables kontraMigrations
+    migrateDatabase Log.mixlog_ kontraDomains kontraTables kontraMigrations
     defineFunctions kontraFunctions
     defineComposites kontraComposites
     commit

@@ -1,5 +1,6 @@
 module AppDBTables (
     kontraComposites
+  , kontraDomains
   , kontraFunctions
   , kontraTables
   ) where
@@ -42,6 +43,11 @@ kontraComposites = [
   , ctMainFile
   , ctSignatoryLink
   , ctDocument
+  ]
+
+kontraDomains :: [Domain]
+kontraDomains = [
+
   ]
 
 kontraFunctions :: [SQLFunction]

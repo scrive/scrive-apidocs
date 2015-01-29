@@ -33,7 +33,7 @@ main = Log.withLogger $ do
 
   let connSource = defaultSource $ defaultSettings { csConnInfo = mscDBConfig conf }
   withPostgreSQL connSource $
-    checkDatabase Log.mixlog_ mailerTables
+    checkDatabase Log.mixlog_ [] mailerTables
 
   fcache <- MemCache.new BS.length 52428800
   let amazonconf = AWS.AmazonConfig (mscAmazonConfig conf) fcache

@@ -47,7 +47,7 @@ main = withCurlDo . Log.withLogger $ do
 
   let connSettings = pgConnSettings $ dbConfig appConf
   withPostgreSQL (defaultSource $ connSettings []) $
-    checkDatabase Log.mixlog_ kontraTables
+    checkDatabase Log.mixlog_ kontraDomains kontraTables
 
   appGlobals <- do
     templates <- liftBase (newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates)

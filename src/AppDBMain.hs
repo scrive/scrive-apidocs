@@ -26,6 +26,6 @@ main = Log.withLogger $ do
   -- composite types are not available in migrations
   let connSource = defaultSource $ pgConnSettings (dbConfig appConf) []
   withPostgreSQL connSource $ do
-    migrateDatabase (liftBase . putStrLn) kontraTables kontraMigrations
+    migrateDatabase (liftBase . putStrLn) kontraDomains kontraTables kontraMigrations
     defineComposites kontraComposites
     defineFunctions kontraFunctions

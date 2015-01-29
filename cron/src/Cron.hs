@@ -95,7 +95,7 @@ main = Log.withLogger $ do
 
   let connSettings = pgConnSettings $ dbConfig appConf
   withPostgreSQL (defaultSource $ connSettings []) $
-    checkDatabase Log.mixlog_ kontraTables
+    checkDatabase Log.mixlog_ kontraDomains kontraTables
 
   connPool <- liftIO . createPoolSource $ connSettings kontraComposites
   templates <- liftIO (newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates)

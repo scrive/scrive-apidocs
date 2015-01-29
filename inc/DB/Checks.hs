@@ -2,6 +2,7 @@ module DB.Checks (
     migrateDatabase
   , checkDatabase
   , createTable
+  , createDomain
   ) where
 
 import Control.Applicative
@@ -15,6 +16,7 @@ import Data.Monoid.Utils
 import Database.PostgreSQL.PQTypes
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BSU
+import qualified Data.Foldable as F
 import qualified Data.List as L
 import qualified Data.Set as S
 
@@ -28,44 +30,54 @@ instance Monoid ValidationResult where
   mempty = ValidationResult []
   mappend (ValidationResult a) (ValidationResult b) = ValidationResult (a ++ b)
 
+topMessage :: String -> String -> ValidationResult -> ValidationResult
+topMessage objtype objname = \case
+  ValidationResult [] -> ValidationResult []
+  ValidationResult es -> ValidationResult ("There are problems with the" <+> objtype <+> "'" <> objname <> "'" : es)
+
+resultCheck :: Monad m => (String -> m ()) -> ValidationResult -> m ()
+resultCheck logger = \case
+  ValidationResult [] -> return ()
+  ValidationResult msgs -> do
+    mapM_ logger msgs
+    error "Validation failed"
+
+----------------------------------------
+
 -- | Runs all checks on a database
 migrateDatabase :: (MonadDB m, MonadThrow m)
-                => (String -> m ()) -> [Table] -> [Migration m] -> m ()
-migrateDatabase logger tables migrations = do
+                => (String -> m ()) -> [Domain] -> [Table]
+                -> [Migration m] -> m ()
+migrateDatabase logger domains tables migrations = do
   set <- setByteaOutput logger
   when set $ do
     commit
     error $ "Bytea_output was changed to 'hex'. Restart application so the change is visible."
   _ <- checkDBTimeZone logger
   checkNeededExtensions logger
-  checkDBConsistency logger (tableVersions : tables) migrations
-  checkDBStructure logger (tableVersions : tables)
+  checkDBConsistency logger domains (tableVersions : tables) migrations
+  resultCheck logger =<< checkDomainsStructure domains
+  resultCheck logger =<< checkDBStructure (tableVersions : tables)
   checkUnknownTables logger tables
 
   -- everything is OK, commit changes
   commit
 
-checkDatabase :: (MonadDB m, MonadThrow m) => (String -> m ()) -> [Table] -> m ()
-checkDatabase logger tables = do
+checkDatabase :: (MonadDB m, MonadThrow m)
+              => (String -> m ()) -> [Domain] -> [Table]
+              -> m ()
+checkDatabase logger domains tables = do
   versions <- mapM checkTableVersion tables
   let tablesWithVersions = zip tables (map (fromMaybe 0) versions)
 
-  let results = flip map tablesWithVersions $ \(t,v) ->
-                if tblVersion t == v
-                   then ValidationResult []
-                   else if v==0
-                        then ValidationResult ["Table '" ++ tblNameString t ++ "' must be created"]
-                        else ValidationResult ["Table '" ++ tblNameString t ++ "' must be migrated " ++ show v ++ "->" ++ show (tblVersion t)]
+  resultCheck logger . mconcat . flip map tablesWithVersions
+    $ \(t, v) -> ValidationResult $ if
+      | v == tblVersion t -> []
+      | v == 0 -> ["Table '" ++ tblNameString t ++ "' must be created"]
+      | otherwise -> ["Table '" ++ tblNameString t ++ "' must be migrated " ++ show v ++ " -> " ++ show (tblVersion t)]
 
-  case mconcat results of
-    ValidationResult [] -> return ()
-    ValidationResult errmsgs -> do
-      mapM_ logger errmsgs
-      error "Failed"
-
-  checkDBStructure logger (tableVersions : tables)
-  return ()
-
+  resultCheck logger =<< checkDomainsStructure domains
+  resultCheck logger =<< checkDBStructure (tableVersions : tables)
 
 -- | Return SQL fragment of current catalog within quotes
 currentCatalog :: (MonadDB m, MonadThrow m) => m (RawSQL ())
@@ -136,7 +148,7 @@ createTable table@Table{..} = do
       , "(" <> mintercalate ", " colnums <> ")"
       ]) row
       where
-        colnums = take (length cols) $ map (BS.pack . ('$':) . show) [1..]
+        colnums = take (length cols) $ map (BS.pack . ('$':) . show) [(1::Int)..]
 
   runQuery_ . sqlInsert "table_versions" $ do
     sqlSet "name" (tblNameString table)
@@ -152,24 +164,58 @@ createTable table@Table{..} = do
       , [sqlAlterTable tblName $ map (sqlAddFK tblName) tblForeignKeys | not (null tblForeignKeys)]
       ]
 
+checkDomainsStructure :: (MonadDB m, MonadThrow m)
+                      => [Domain] -> m ValidationResult
+checkDomainsStructure defs = fmap mconcat . forM defs $ \def -> do
+  runQuery_ . sqlSelect "pg_catalog.pg_type t1" $ do
+    sqlResult "t1.typname::text" -- name
+    sqlResult "(SELECT pg_catalog.format_type(t2.oid, t2.typtypmod) FROM pg_catalog.pg_type t2 WHERE t2.oid = t1.typbasetype)" -- type
+    sqlResult "NOT t1.typnotnull" -- nullable
+    sqlResult "t1.typdefault" -- default value
+    sqlResult "ARRAY(SELECT c.conname::text FROM pg_catalog.pg_constraint c WHERE c.contypid = t1.oid ORDER by c.oid)" -- constraint names
+    sqlResult "ARRAY(SELECT regexp_replace(pg_get_constraintdef(c.oid, true), 'CHECK \\((.*)\\)', '\\1') FROM pg_catalog.pg_constraint c WHERE c.contypid = t1.oid ORDER by c.oid)" -- constraint definitions
+    sqlWhereEq "t1.typname" $ unRawSQL $ domName def
+  mdom <- fetchMaybe $ \(dname, dtype, nullable, defval, cnames, conds) -> Domain {
+    domName = unsafeSQL dname
+  , domType = dtype
+  , domNullable = nullable
+  , domDefault = unsafeSQL <$> defval
+  , domChecks = mkChecks $ zipWith (\cname cond -> Check {
+      chkName = unsafeSQL cname
+    , chkCondition = unsafeSQL cond
+    }) (unArray1 cnames) (unArray1 conds)
+  }
+  return $ case mdom of
+    Just dom
+      | dom /= def -> topMessage "domain" (sqlToString $ domName dom) $ mconcat [
+          compareAttr dom def "name" domName
+        , compareAttr dom def "type" domType
+        , compareAttr dom def "nullable" domNullable
+        , compareAttr dom def "default" domDefault
+        , compareAttr dom def "checks" domChecks
+        ]
+      | otherwise -> mempty
+    Nothing -> ValidationResult ["Domain '" ++ sqlToString (domName def) ++ "' doesn't exist in the database"]
+  where
+    compareAttr :: (Eq a, Show a) => Domain -> Domain -> String -> (Domain -> a) -> ValidationResult
+    compareAttr dom def attrname attr
+      | attr dom == attr def = ValidationResult []
+      | otherwise = ValidationResult ["Attribute '" ++ attrname ++ "' does not match (database:" <+> show (attr dom) <> ", definition:" <+> show (attr def) <> ")"]
+
+createDomain :: MonadDB m => Domain -> m ()
+createDomain dom@Domain{..} = do
+  -- create the domain
+  runQuery_ $ sqlCreateDomain dom
+  -- add constraint checks to the domain
+  F.forM_ domChecks $ runQuery_ . sqlAlterDomain domName . sqlAddCheck
+
 -- | Checks whether database is consistent (performs migrations if necessary)
 checkDBStructure :: forall m. (MonadDB m, MonadThrow m)
-                   => (String -> m ()) -> [Table]
-                   -> m ()
-checkDBStructure logger tables = do
-  -- final checks for table structure, we do this both when creating stuff and when migrating
-  result <- forM tables $ \table@Table{..} -> do
-      result <- checkTableStructure table
-      case result of
-        ValidationResult [] -> return result
-        ValidationResult errmsgs -> do
-          return $ ValidationResult (("There are problems with table '" ++ tblNameString table ++ "'"):errmsgs)
-
-  case mconcat result of
-    ValidationResult [] -> return ()
-    ValidationResult errmsgs -> do
-      mapM_ logger errmsgs
-      error "Failed"
+                 => [Table] -> m ValidationResult
+checkDBStructure tables = fmap mconcat . forM tables $ \table ->
+  -- final checks for table structure, we do this
+  -- both when creating stuff and when migrating
+  topMessage "table" (tblNameString table) <$> checkTableStructure table
   where
     checkTableStructure :: Table -> m ValidationResult
     checkTableStructure table@Table{..} = do
@@ -279,9 +325,9 @@ checkDBStructure logger tables = do
 
 -- | Checks whether database is consistent (performs migrations if necessary)
 checkDBConsistency :: forall m. (MonadDB m, MonadThrow m)
-                   => (String -> m ()) -> [Table] -> [Migration m]
-                   -> m ()
-checkDBConsistency logger tables migrations = do
+                   => (String -> m ()) -> [Domain] -> [Table]
+                   -> [Migration m] -> m ()
+checkDBConsistency logger domains tables migrations = do
 
   -- check if migrations list has the following properties:
   -- - consecutive mgrFrom numbers
@@ -297,21 +343,22 @@ checkDBConsistency logger tables migrations = do
   versions <- mapM checkTableVersion tables
   let tablesWithVersions = zip tables (map (fromMaybe 0) versions)
 
-
   if all ((==) 0 . snd) tablesWithVersions
     then do -- no tables are present, create everything from scratch
+      logger "Creating domains..."
+      mapM_ createDomain domains
       logger "Creating tables..."
       mapM_ createTable tables
-      logger "Creating tables...done"
+      logger "Done."
 
     else do -- migration mode
 
       forM_ tablesWithVersions $ \(table,ver) -> when (tblVersion table /= ver) $ do
         case L.find (\m -> tblNameString (mgrTable m) == tblNameString table) migrations of
           Nothing -> do
-            error $ "No migrations found for table '" ++ tblNameString table ++ "', cannot migrate " ++ show ver ++ "->" ++ show (tblVersion table)
+            error $ "No migrations found for table '" ++ tblNameString table ++ "', cannot migrate " ++ show ver ++ " -> " ++ show (tblVersion table)
           Just m | mgrFrom m > ver -> do
-            error $ "Earliest migration for table '" ++ tblNameString table ++ "' is from version " ++ show (mgrFrom m) ++ ", cannot migrate " ++ show ver ++ "->" ++ show (tblVersion table)
+            error $ "Earliest migration for table '" ++ tblNameString table ++ "' is from version " ++ show (mgrFrom m) ++ ", cannot migrate " ++ show ver ++ " -> " ++ show (tblVersion table)
           Just _ -> return ()
 
       mapM_ (normalizePropertyNames logger) tables
@@ -322,7 +369,7 @@ checkDBConsistency logger tables migrations = do
       when (not . null $ migrationsToRun) $ do
         logger "Running migrations..."
         forM_ migrationsToRun $ \migration -> do
-          logger $ arrListTable (mgrTable migration) ++ show (mgrFrom migration) ++ "->" ++ show (mgrFrom migration +1)
+          logger $ arrListTable (mgrTable migration) ++ show (mgrFrom migration) ++ " -> " ++ show (mgrFrom migration +1)
           mgrDo migration
           runQuery_ $ sqlUpdate "table_versions" $ do
             sqlSet "version" $ succ (mgrFrom migration)
@@ -414,7 +461,7 @@ fetchPrimaryKey (name, Array1 columns) = (, unsafeSQL name)
 sqlGetChecks :: Table -> SQL
 sqlGetChecks table = toSQLCommand . sqlSelect "pg_catalog.pg_constraint c" $ do
   sqlResult "c.conname::text"
-  sqlResult $  "regexp_replace(pg_get_constraintdef(c.oid, true), 'CHECK \\((.*)\\)', '\\1') as body" -- check body
+  sqlResult "regexp_replace(pg_get_constraintdef(c.oid, true), 'CHECK \\((.*)\\)', '\\1') AS body" -- check body
   sqlWhereEq "c.contype" 'c'
   sqlWhereEqSql "c.conrelid" $ sqlGetTableID table
 

@@ -30,7 +30,7 @@ main = Log.withLogger $ do
 
   let connSource = defaultSource $ defaultSettings { csConnInfo = mscDBConfig conf }
   withPostgreSQL connSource $
-    checkDatabase Log.mixlog_ messengerTables
+    checkDatabase Log.mixlog_ [] messengerTables
 
   rng <- newCryptoRNGState
 
