@@ -178,10 +178,10 @@ addThemesToBrandedDomainAndMainDomain =
         runSQL_ "ALTER TABLE branded_domains ALTER signview_theme SET NOT NULL"
         runSQL_ "ALTER TABLE branded_domains ALTER service_theme SET NOT NULL"
         runSQL_ "ALTER TABLE branded_domains ALTER login_theme SET NOT NULL"
-        runQuery_ $ sqlAddFK "branded_domains" $  (fkOnColumn "mail_theme" "themes" "id") {fkOnDelete = ForeignKeyCascade , fkDeferred = True}
-        runQuery_ $ sqlAddFK "branded_domains" $  (fkOnColumn "signview_theme" "themes" "id") {fkOnDelete = ForeignKeyCascade, fkDeferred = True }
-        runQuery_ $ sqlAddFK "branded_domains" $  (fkOnColumn "service_theme" "themes" "id") {fkOnDelete = ForeignKeyCascade, fkDeferred = True }
-        runQuery_ $ sqlAddFK "branded_domains" $  (fkOnColumn "login_theme" "themes" "id") {fkOnDelete = ForeignKeyCascade, fkDeferred = True }
+        runQuery_ $ sqlAlterTable "branded_domains" [sqlAddFK "branded_domains" $  (fkOnColumn "mail_theme" "themes" "id") {fkOnDelete = ForeignKeyCascade , fkDeferred = True}]
+        runQuery_ $ sqlAlterTable "branded_domains" [sqlAddFK "branded_domains" $  (fkOnColumn "signview_theme" "themes" "id") {fkOnDelete = ForeignKeyCascade, fkDeferred = True }]
+        runQuery_ $ sqlAlterTable "branded_domains" [sqlAddFK "branded_domains" $  (fkOnColumn "service_theme" "themes" "id") {fkOnDelete = ForeignKeyCascade, fkDeferred = True }]
+        runQuery_ $ sqlAlterTable "branded_domains" [sqlAddFK "branded_domains" $  (fkOnColumn "login_theme" "themes" "id") {fkOnDelete = ForeignKeyCascade, fkDeferred = True }]
         runQuery_ $ sqlCreateIndex "branded_domains" $ uniqueIndexOnColumnWithCondition "main_domain" "main_domain"
 
 

@@ -6,11 +6,12 @@ import Data.Int
 import Data.Monoid
 import Data.Monoid.Space
 import qualified Data.ByteString as BS
+import Data.Char
+import Text.Regex.TDFA
+import Data.String.Utils
 
 import Company.Tables
 import DB
-import Utils.Color
-import Utils.Font
 
 addPrimaryAndSecondaryColoursToCompanyUIs :: MonadDB m => Migration m
 addPrimaryAndSecondaryColoursToCompanyUIs = Migration {
@@ -32,9 +33,9 @@ addThemesAndOthersToCompanyUIs = Migration {
     runSQL_ "ALTER TABLE company_uis ADD COLUMN signview_theme BIGINT NULL"
     runSQL_ "ALTER TABLE company_uis ADD COLUMN service_theme BIGINT NULL"
 
-    runQuery_ $ sqlAddFK "company_uis" $  (fkOnColumn "mail_theme" "themes" "id")
-    runQuery_ $ sqlAddFK "company_uis" $  (fkOnColumn "signview_theme" "themes" "id")
-    runQuery_ $ sqlAddFK "company_uis" $  (fkOnColumn "service_theme" "themes" "id")
+    runQuery_ $ sqlAlterTable "company_uis" [sqlAddFK "company_uis" $  (fkOnColumn "mail_theme" "themes" "id")]
+    runQuery_ $ sqlAlterTable "company_uis" [sqlAddFK "company_uis" $  (fkOnColumn "signview_theme" "themes" "id")]
+    runQuery_ $ sqlAlterTable "company_uis" [sqlAddFK "company_uis" $  (fkOnColumn "service_theme" "themes" "id")]
 
     runSQL_ "ALTER TABLE company_uis ADD COLUMN browser_title TEXT NULL"
     runSQL_ "ALTER TABLE company_uis ADD COLUMN sms_originator TEXT NULL"
@@ -271,18 +272,56 @@ fromLogo mclogo tlogo =  case mclogo of
                   else clogo
 
 fromColor :: Maybe String -> String -> String
-fromColor mccolor tcolor =  case (mccolor) of
-  Nothing ->  tcolor
-  Just ccolor -> if (isValidColor ccolor)
-                   then ccolor
-                   else tcolor
+fromColor Nothing template = template
+fromColor (Just color) template
+  | norm ==~ "[a-z]+" = named
+  | norm ==~ "#[0-9a-f]{3}" = three
+  | norm ==~ "#[0-9a-f]{6}" = norm
+  | otherwise = template
+  where (==~) s (p :: String) = (s =~ p) == s
+        norm = map toLower $ strip color
+        three = '#':[norm !! 1, norm !! 1, norm !! 2, norm !! 2, norm !! 3, norm !! 3]
+        named = case norm of -- http://www.w3.org/TR/CSS21/syndata.html#value-def-color
+          "maroon" -> "#800000"
+          "red" -> "#ff0000"
+          "orange" -> "#ffa500"
+          "yellow" -> "#ffff00"
+          "olive" -> "#808000"
+          "purple" -> "#800080"
+          "fuchsia" -> "#ff00ff"
+          "white" -> "#ffffff"
+          "lime" -> "#00ff00"
+          "green" -> "#008000"
+          "navy" -> "#000080"
+          "blue" -> "#0000ff"
+          "aqua" -> "#00ffff"
+          "teal" -> "#008080"
+          "black" -> "#000000"
+          "silver" -> "#c0c0c0"
+          "gray" -> "#808080"
+          _ -> template
 
+-- | WARNING: when adding fonts make sure standard fonts always return themselves.
+-- | i.e fromFont (Just "arial,helvetica,sans-serif") "" == "arial,helvetica,sans-serif".
 fromFont :: Maybe String -> String -> String
-fromFont mcfont tfont =  case (mcfont) of
-  Nothing ->  tfont
-  Just cfont -> if (isValidFont cfont)
-                   then cfont
-                   else tfont
+fromFont Nothing template = template
+fromFont (Just font) template
+  | norm ==~ "arial black" = "arial black,sans-serif"
+  | norm ==~ "narrow" = "arial narrow,sans-serif"
+  | norm ==~ "comic" = "comic sans ms,sans-serif"
+  | norm ==~ "courier" = "courier new,monospace"
+  | norm ==~ "source" = "Source Sans Pro, Helvetica Neue, Arial, sans-serif"
+  | norm ==~ "garamond" = "garamond,serif"
+  | norm ==~ "georgia" = "georgia,serif"
+  | norm ==~ "times" = "times new roman,serif"
+  | norm ==~ "tahoma" = "tahoma,sans-serif"
+  | norm ==~ "trebuchet" = "trebuchet ms,sans-serif"
+  | norm ==~ "verdana" = "verdana,sans-serif"
+  | norm ==~ "arial" = "arial,helvetica,sans-serif"
+  | norm ==~ "helvetica" = "helvetica,sans-serif"
+  | otherwise = template
+  where (==~) s (p :: String) = (s =~ p)
+        norm = map toLower $ strip font
 
 removeDuplicateIndexFromCompanyUIs :: MonadDB m => Migration m
 removeDuplicateIndexFromCompanyUIs = Migration {

@@ -78,7 +78,9 @@ return React.createClass({
                 }}
                 onBlur={
                   function() {
-                    self.refs.colorInput.setValue(self.props.getColor());
+                    var hex = tinycolor(self.props.getColor()).toHexString();
+                    self.props.setColor(hex);
+                    self.refs.colorInput.setValue(hex);
                   }
                 }
               />
@@ -105,7 +107,9 @@ return React.createClass({
                 }}
                 onBlur={
                   function() {
-                    self.refs.textColorInput.setValue(self.props.getTextColor());
+                    var hex = tinycolor(self.props.getTextColor()).toHexString();
+                    self.props.setTextColor(hex);
+                    self.refs.textColorInput.setValue(hex);
                   }
                 }
               />
