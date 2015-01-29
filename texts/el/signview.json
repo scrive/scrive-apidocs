@@ -9,6 +9,8 @@
 "_company":"Εταιρεία ",
 "_companyNumberLabel":"Α.Μ. εταιρείας",
 "_contractrejectbuttontext":"Απόρριψη και απάντηση",
+"_contractsignatorycancelmodalplaceholder":"",
+"_contractsignatorycancelmodaltext":"",
 "_contractsignatorycancelmodaltitle":"Απόρριψη εγγράφου ",
 "_contractsignatoryname":"Μετέχων",
 "_contractsignatorysignmodalcontent":"<strong class='put-signatory-name-here'/>, πιέζοντας το πλήκτρο θα υπογράψετε το έγγραφο και η υπογραφή σας θα καταχωρηθεί μέσω της υπηρεσίας ηλεκτρονικής υπογραφής της Scrive. ",

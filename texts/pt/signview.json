@@ -9,6 +9,8 @@
 "_company":"Empresa",
 "_companyNumberLabel":"Registo comercial nº",
 "_contractrejectbuttontext":"Rejeitar e responder",
+"_contractsignatorycancelmodalplaceholder":"",
+"_contractsignatorycancelmodaltext":"",
 "_contractsignatorycancelmodaltitle":"Rejeitar documento",
 "_contractsignatoryname":"Parte",
 "_contractsignatorysignmodalcontent":"<strong class='put-signatory-name-here'/>, ao clicar no botão irá assinar o documento e a sua assinatura será registada pelo serviço de assinatura electrónica Scrive.",

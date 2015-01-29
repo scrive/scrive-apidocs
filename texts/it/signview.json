@@ -9,6 +9,8 @@
 "_company":"Azienda",
 "_companyNumberLabel":"N° di registrazione aziendale",
 "_contractrejectbuttontext":"Rifiuta e rispondi",
+"_contractsignatorycancelmodalplaceholder":"",
+"_contractsignatorycancelmodaltext":"",
 "_contractsignatorycancelmodaltitle":"Rifiuta documento",
 "_contractsignatoryname":"Parte",
 "_contractsignatorysignmodalcontent":"<strong class='put-signatory-name-here'/>, cliccando sul pulsante firmerai il documento e la tua firma sarà registrata dal servizio di e-signing di Scrive.",

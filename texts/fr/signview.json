@@ -9,6 +9,8 @@
 "_company":"Société",
 "_companyNumberLabel":"Numéro immat. société",
 "_contractrejectbuttontext":"Refuser et répondre",
+"_contractsignatorycancelmodalplaceholder":"",
+"_contractsignatorycancelmodaltext":"",
 "_contractsignatorycancelmodaltitle":"Refuser le document",
 "_contractsignatoryname":"Partie",
 "_contractsignatorysignmodalcontent":"<strong class='put-signatory-name-here'/>, Cliquez sur le bouton afin de signer le document et votre signature sera enregistrée par le service d'e-signature Scrive.",

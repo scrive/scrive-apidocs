@@ -9,6 +9,8 @@
 "_company":"Virksomhed",
 "_companyNumberLabel":"CVR-nr. ",
 "_contractrejectbuttontext":"Afvis og svar",
+"_contractsignatorycancelmodalplaceholder":"",
+"_contractsignatorycancelmodaltext":"",
 "_contractsignatorycancelmodaltitle":"Afvis dokument",
 "_contractsignatoryname":"Part",
 "_contractsignatorysignmodalcontent":"<strong class='put-signatory-name-here'/>, når du klikker på knappen, signerer du dokumentet, og din signatur bliver registreret af e-signeringstjenesten Scrive. ",

@@ -9,6 +9,8 @@
 "_company":"Empresa",
 "_companyNumberLabel":"N° reg. de empresa",
 "_contractrejectbuttontext":"Rechazar y responder",
+"_contractsignatorycancelmodalplaceholder":"",
+"_contractsignatorycancelmodaltext":"",
 "_contractsignatorycancelmodaltitle":"Rechazar el documento",
 "_contractsignatoryname":"Parte",
 "_contractsignatorysignmodalcontent":"<strong class='put-signatory-name-here'/>, clickando el botón usted firmará el documento y su firma quedará registrada en el servicio de firma electrónica Scrive.",
