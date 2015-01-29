@@ -460,6 +460,8 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                              autoScrollOnFocus: false // Else it jumps when filling the fieds
                             },
                   scrollInertia: 0,
+                  scrollbarPosition: "inside",
+                  axis: "y",
                   scrollButtons: {enable: false // we do not want buttons, also we do not want pngs that come with the buttons
                                  }};
         },
@@ -471,12 +473,8 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             }
             view.scrollBox.css("max-height", newHeight + "px");
             setTimeout(function() {
-              // this should work but apparently there is a bug in mCustomScrollbar
-              // view.scrollBox.mCustomScrollbar('update');
-              // for now, just destroy the scrollbar and create a new one
-              // pretty costly, but you don't often resize your browser window
-              view.scrollBox.mCustomScrollbar('destroy');
-              view.scrollBox.mCustomScrollbar(view.customScrollbarOpts());
+              // tell the mcustomscrollbar plugin that its surroundings has changed
+              view.scrollBox.mCustomScrollbar('update');
             }, 500);
             return false;
         },
