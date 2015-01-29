@@ -192,7 +192,7 @@ listAttachmentsFromDocument document =
   concatMap extract (documentsignatorylinks document)
   where extract sl = map (\at -> (at,sl)) (signatoryattachments sl)
 
-findOutAttachmentDesc :: (MonadIO m, MonadDB m, MonadThrow m, Log.MonadLog m, TemplatesMonad m, AWS.AmazonMonad m) => String -> Document -> m [Seal.FileDesc]
+findOutAttachmentDesc :: (MonadIO m, MonadDB m, MonadThrow m, Log.MonadLog m, TemplatesMonad m, AWS.AmazonMonad m, MonadBaseControl IO m) => String -> Document -> m [Seal.FileDesc]
 findOutAttachmentDesc tmppath document = do
   a <- mapM findAttachmentsForAuthorAttachment authorAttsNumbered
   b <- mapM findAttachmentsForSignatoryAttachment attAndSigsNumbered
@@ -217,7 +217,13 @@ findOutAttachmentDesc tmppath document = do
           Just fileid' -> do
             contents <- getFileIDContents fileid'
             file <- dbQuery $ GetFileByFileID fileid'
-            return (contents, getNumberOfPDFPages contents, filename file)
+            eNumberOfPages <- liftIO $ getNumberOfPDFPages contents
+            numberOfPages <- case eNumberOfPages of
+                              Left e -> do
+                                Log.attention_ $ "Calculating number of pages of document #" ++ show (documentid document) ++ " failed, falling back to 1. Reason: " ++ show e
+                                return 1
+                              Right x -> return x
+            return (contents, numberOfPages, filename file)
         numberOfPagesText <-
           if (".png" `isSuffixOf` (map toLower name) || ".jpg" `isSuffixOf` (map toLower name) )
            then return ""
@@ -300,7 +306,7 @@ createSealingTextsForDocument document hostpart = do
 
   return sealingTexts
 
-sealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m, Log.MonadLog m, AWS.AmazonMonad m)
+sealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m, Log.MonadLog m, AWS.AmazonMonad m, MonadBaseControl IO m)
                      => (BS.ByteString,BS.ByteString)
                      -> String
                      -> Document
@@ -321,7 +327,7 @@ sealSpecFromDocument boxImages hostpart document elog ces content tmppath inputp
 
   sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath outputpath additionalAttachments docs
 
-sealSpecFromDocument2 :: (TemplatesMonad m, MonadDB m, MonadMask m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m)
+sealSpecFromDocument2 :: (TemplatesMonad m, MonadDB m, MonadMask m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m, MonadBaseControl IO m)
                      => (BS.ByteString,BS.ByteString)
                      -> String
                      -> Document
@@ -389,7 +395,12 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
                                   }
             | (name, doc) <- docs ]
 
-      let numberOfPages = getNumberOfPDFPages content
+      eNumberOfPages <- liftIO $ getNumberOfPDFPages content
+      numberOfPages <- case eNumberOfPages of
+                        Left e -> do
+                          Log.attention_ $ "Calculating number of pages of document #" ++ show (documentid document) ++ " failed, falling back to 1. Reason: " ++ show e
+                          return 1
+                        Right x -> return x
       numberOfPagesText <-
         if numberOfPages==1
            then renderLocalTemplate document "_numberOfPagesIs1" $ return ()

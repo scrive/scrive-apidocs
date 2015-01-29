@@ -23,8 +23,10 @@ import Control.Monad.Catch hiding (handle)
 import Control.Monad.Error
 import Control.Monad.Trans.Control
 import Data.Char
+import Data.List
 import Data.Maybe
 import Data.Typeable
+import Numeric
 import System.Directory
 import System.Exit
 import System.IO
@@ -245,11 +247,21 @@ findStringAfterKey key content =
                                    else findKeys (BSC.drop 1 r)
     dropAfterKey = BSC.drop keyLength1
 
-getNumberOfPDFPages :: BS.ByteString -> Int
-getNumberOfPDFPages content =
-    maximum (1 : (catMaybes . map readNumber . findStringAfterKey "Count") content)
-  where
-    readNumber = maybeRead . takeWhile isDigit . dropWhile isSpace
+getNumberOfPDFPages :: BS.ByteString -> IO (Either String Int)
+getNumberOfPDFPages content = do
+  systmp <- getTemporaryDirectory
+  (path, handle) <- openTempFile systmp "mutool-input.pdf"
+  BS.hPutStr handle content
+  hClose handle
+  (exitCode, stdout', stderr') <- readProcessWithExitCode' "mutool" ["info", "-m", path] BSL.empty
+  removeFile path
+  return $ case exitCode of
+    ExitSuccess -> case find ("Pages: " `BSL.isPrefixOf`) $ BSL.lines stdout' of
+                    Just line -> case readDec $ BSL.unpack $ BSL.drop (BSL.length "Pages: ") line of
+                                  [(x, "")] -> Right x
+                                  _ -> Left $ "Unparsable mutool info output about number of pages"
+                    Nothing -> Left $ "Couldn't find number of pdf pages in mutool output"
+    ExitFailure code -> Left $ "mutool info failed with return code " ++ show code ++ ", and stderr: " ++ BSL.unpack stderr'
 
 getRotateOfPDFPages :: BS.ByteString -> [Int]
 getRotateOfPDFPages content =
