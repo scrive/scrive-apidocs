@@ -1,6 +1,5 @@
 module Utils.Color (ensureHexRGB,isValidColor) where
 
-import Data.String.Utils
 import Numeric
 import Text.Regex.TDFA
 
@@ -18,14 +17,4 @@ ensureHexRGB c =
 
 -- Checks if color definition is valid color for CSS
 isValidColor :: String -> Bool
-isValidColor c = (c' /= (""::String)) && (not $ '\n' `elem` c) && (length c' < 50) && (length c' > 2) && (
-       c' =~ ("[A-z]+"::String) == c'
-    || c' =~ ("#[0-9|A-z][0-9|A-z][0-9|A-z]"::String) == c'
-    || c' =~ ("#[0-9|A-z][0-9|A-z][0-9|A-z][0-9|A-z][0-9|A-z][0-9|A-z]"::String) == c'
-    || c' =~ ("rgb\\(([0-9]+),([0-9]+),([0-9]+)\\)"::String) == c'
-    || c' =~ ("rgba\\(([0-9]+),([0-9]+),([0-9]+),(0.[0-9]+|1|1.0)\\)"::String) == c'
-    || c' =~ ("hsl\\(([0-9]+),([0-9]+%),([0-9]+%)\\)"::String) == c'
-    || c' =~ ("hsla\\(([0-9]+),([0-9]+%),([0-9]+%),(0.[0-9]+|1|1.0)\\)"::String) == c'
-  )
-  where
-    c' = strip c
+isValidColor color = (color =~ ("#[0-9a-f]{6}"::String)) == color
