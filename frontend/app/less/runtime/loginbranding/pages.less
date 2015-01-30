@@ -37,8 +37,13 @@ body {
   }
 
   .checkbox {
-    @url : %('/branded_image?file=checkboxes-blue.png&color=%D',@brandtextcolor);
-    background-image: url(@url) ;
+
+    border-color: @brandtextcolor; 
+
+    .checkmark {
+       @url : %('/branded_image?file=checkboxes-blue.png&color=%D',@brandtextcolor);
+       background-image: url(@url);
+     }
   }
 
   .validation-failed-msg {
