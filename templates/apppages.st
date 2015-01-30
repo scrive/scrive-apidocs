@@ -229,7 +229,7 @@ typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var
 // end Hubspot js
 ####
 analyticsLoaderKontrakcja=
-$loadScript(src="http://js.hubspot.com/forms/current.js")$
+$loadScript(src="//js.hubspot.com/forms/current.js")$
 <script>
   $analyticsLoaderBase()$
   mixpanel.track_links('#logo', 'Click Logo');
