@@ -77,7 +77,7 @@ var openCreateAccountPopup = function(callback) {
                                     "scrive_domain" : location.hostname,
                                     "signup_method" : "CompanyInvitation",
                                     "firstname" : fstname.val(),
-                                    "lastname" : sndname.val() });
+                                    "lastname" : sndname.val() }, true);
                  }
               },
               title : localization.account.companyAccounts.createNewModalTitle,
