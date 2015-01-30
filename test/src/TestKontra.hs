@@ -47,13 +47,13 @@ import Crypto.RNG
 import DB
 import EID.CGI.GRP.Config
 import GuardTime (GuardTimeConf(..))
+import HubSpot.Conf    
 import IPAddress
 import Kontra
 import Mails.MailsConfig
 import MinutesTime
 import Payments.Config (RecurlyConfig(..))
 import Salesforce.Conf
-import HubSpot.Conf    
 import Session.SessionID
 import Templates
 import User.Lang

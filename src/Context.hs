@@ -13,6 +13,7 @@ import EID.CGI.GRP.Config
 import File.FileID
 import FlashMessage
 import GuardTime (GuardTimeConf(..))
+import HubSpot.Conf
 import IPAddress
 import LiveDocx (LiveDocxConf(..))
 import MagicHash (MagicHash)
@@ -21,7 +22,6 @@ import Mails.MailsConfig
 import MinutesTime
 import Payments.Config (RecurlyConfig)
 import Salesforce.Conf
-import HubSpot.Conf
 import Session.SessionID
 import Templates
 import User.Email

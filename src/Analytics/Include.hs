@@ -16,6 +16,7 @@ import qualified Text.StringTemplates.Fields as F
 
 import Company.Model
 import DB
+import HubSpot.Conf    
 import Kontra
 import MinutesTime
 import Payments.Model
@@ -23,8 +24,6 @@ import User.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Utils.String
-
-import HubSpot.Conf    
 
 data AnalyticsData = AnalyticsData { aUser           :: Maybe User
                                    , aCompany        :: Maybe Company

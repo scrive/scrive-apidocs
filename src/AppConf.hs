@@ -12,8 +12,8 @@ import qualified Data.Map as Map
 
 import EID.CGI.GRP.Config
 import GuardTime (GuardTimeConf(..))
-import HubSpot.Conf (HubSpotConf(..))
 import HostClock.System (defaultNtpServers)
+import HubSpot.Conf (HubSpotConf(..))
 import LiveDocx (LiveDocxConf(..))
 import Mails.MailsConfig
 import Payments.Config (RecurlyConfig(..))
