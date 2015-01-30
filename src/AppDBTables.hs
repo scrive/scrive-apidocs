@@ -48,7 +48,8 @@ kontraComposites = [
 
 kontraDomains :: [Domain]
 kontraDomains = [
-
+    domainColor
+  , domainFont
   ]
 
 kontraFunctions :: [SQLFunction]

@@ -17,20 +17,21 @@ createThemesTable =
               tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
             , tblColumn { colName = "name", colType = TextT, colNullable = False  }
             , tblColumn { colName = "logo", colType = BinaryT, colNullable = False  }
-            , tblColumn { colName = "brand_color", colType = TextT, colNullable = False }
-            , tblColumn { colName = "brand_text_color", colType = TextT, colNullable = False }
-            , tblColumn { colName = "action_color", colType = TextT, colNullable = False }
-            , tblColumn { colName = "action_text_color", colType = TextT, colNullable = False }
-            , tblColumn { colName = "action_secondary_color", colType = TextT, colNullable = False }
-            , tblColumn { colName = "action_secondary_text_color", colType = TextT, colNullable = False }
-            , tblColumn { colName = "positive_color", colType = TextT, colNullable = False }
-            , tblColumn { colName = "positive_text_color", colType = TextT, colNullable = False }
-            , tblColumn { colName = "negative_color", colType = TextT, colNullable = False }
-            , tblColumn { colName = "negative_text_color", colType = TextT, colNullable = False }
-            , tblColumn { colName = "font", colType = TextT, colNullable = False }
+            , tblColumn { colName = "brand_color", colType = CustomT "color", colNullable = False }
+            , tblColumn { colName = "brand_text_color", colType = CustomT "color", colNullable = False }
+            , tblColumn { colName = "action_color", colType = CustomT "color", colNullable = False }
+            , tblColumn { colName = "action_text_color", colType = CustomT "color", colNullable = False }
+            , tblColumn { colName = "action_secondary_color", colType = CustomT "color", colNullable = False }
+            , tblColumn { colName = "action_secondary_text_color", colType = CustomT "color", colNullable = False }
+            , tblColumn { colName = "positive_color", colType = CustomT "color", colNullable = False }
+            , tblColumn { colName = "positive_text_color", colType = CustomT "color", colNullable = False }
+            , tblColumn { colName = "negative_color", colType = CustomT "color", colNullable = False }
+            , tblColumn { colName = "negative_text_color", colType = CustomT "color", colNullable = False }
+            , tblColumn { colName = "font", colType = CustomT "font", colNullable = False }
             ]
           , tblPrimaryKey = pkOnColumn "id"
           }
+
 }
 
 

@@ -74,12 +74,12 @@ testUpdateCompanyTheme = do
   mainbd <- dbQuery $ GetMainBrandedDomain
   mailTheme <- dbQuery $ GetTheme (bdMailTheme mainbd)
   newTheme <- dbUpdate $ InsertNewThemeForCompany (companyid company) mailTheme
-  let newChangedTheme1 =  newTheme {themeBrandColor = "#12399A"}
+  let newChangedTheme1 =  newTheme {themeBrandColor = "#12399a"}
   let newChangedThemeStr1 =  unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) unjsonTheme newChangedTheme1
   req1 <- mkRequest POST [("theme", inTextBS $ newChangedThemeStr1)]
   ((), _) <- runTestKontra req1 ctx $ handleUpdateTheme Nothing (themeID newChangedTheme1)
   newThemeChangedFromDB <- dbQuery $ GetTheme (themeID newTheme)
-  assertEqual "Theme color has been changed" "#12399A" (themeBrandColor newThemeChangedFromDB)
+  assertEqual "Theme color has been changed" "#12399a" (themeBrandColor newThemeChangedFromDB)
 
 
   --Check if invalid color wil raise an exception
@@ -88,6 +88,14 @@ testUpdateCompanyTheme = do
   req2 <- mkRequest POST [("theme", inTextBS $ newChangedThemeStr2)]
   assertRaisesDBException $ do
     ((), _) <- runTestKontra req2 ctx $ handleUpdateTheme Nothing (themeID newChangedTheme2)
+    return ()
+
+  --Check if invalid font wil raise an exception
+  let newChangedTheme3 =  newTheme {themeFont = "bla bla"}
+  let newChangedThemeStr3 =  unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) unjsonTheme newChangedTheme3
+  req3 <- mkRequest POST [("theme", inTextBS $ newChangedThemeStr3)]
+  assertRaisesDBException $ do
+    ((), _) <- runTestKontra req3 ctx $ handleUpdateTheme Nothing (themeID newChangedTheme3)
     return ()
 
 testDeleteCompanyTheme :: TestEnv ()
@@ -120,7 +128,7 @@ testNormalUserCantChangeOrDeleteTheme = do
   mainbd <- dbQuery $ GetMainBrandedDomain
   mailTheme <- dbQuery $ GetTheme (bdMailTheme mainbd)
   newTheme <- dbUpdate $ InsertNewThemeForCompany (companyid company) mailTheme
-  let newChangedTheme1 =  newTheme {themeBrandColor = "#12399A"}
+  let newChangedTheme1 =  newTheme {themeBrandColor = "#12399a"}
   let newChangedThemeStr1 =  unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) unjsonTheme newChangedTheme1
   req1 <- mkRequest POST [("theme", inTextBS $ newChangedThemeStr1)]
   -- We should get exception when updating company theme, when not admin
