@@ -9,6 +9,8 @@
 "_company":"Bedrijf",
 "_companyNumberLabel":"Bedrijfsregistratienr.",
 "_contractrejectbuttontext":"Afwijzen en reageren",
+"_contractsignatorycancelmodalplaceholder":"",
+"_contractsignatorycancelmodaltext":"",
 "_contractsignatorycancelmodaltitle":"Wijs document af",
 "_contractsignatoryname":"Partij",
 "_contractsignatorysignmodalcontent":"<strong class='put-signatory-name-here'/>, door op de knop te klikken ondertekent u het document en wordt uw handtekening geregistreerd door de e-signing service Scrive.",

@@ -9,6 +9,8 @@
 "_company":"Yritys",
 "_companyNumberLabel":"Yrityksen rek. nro.",
 "_contractrejectbuttontext":"Hylkää ja vastaa",
+"_contractsignatorycancelmodalplaceholder":"",
+"_contractsignatorycancelmodaltext":"",
 "_contractsignatorycancelmodaltitle":"Hylkää dokumentti",
 "_contractsignatoryname":"Osapuoli",
 "_contractsignatorysignmodalcontent":"<strong class='put-signatory-name-here'/>, painamalla kuvaketta allekirjoitat dokumentin, ja sinun allekirjoituksesi rekisteröidään Scrive e-allekirjoitus palveluun.",

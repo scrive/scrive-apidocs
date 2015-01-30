@@ -8,9 +8,11 @@ import Control.Applicative
 import Data.ByteString (ByteString)
 import Data.Unjson
 import Data.Word
+import qualified Data.Map as Map
 
 import EID.CGI.GRP.Config
 import GuardTime (GuardTimeConf(..))
+import HubSpot.Conf (HubSpotConf(..))
 import HostClock.System (defaultNtpServers)
 import LiveDocx (LiveDocxConf(..))
 import Mails.MailsConfig
@@ -42,6 +44,7 @@ data AppConf = AppConf {
   , initialUsers       :: [(Email,String)]             -- ^ email and passwords for initial users
   , recurlyConfig      :: RecurlyConfig                -- ^ for payments (api key + private key)
   , mixpanelToken      :: String                       -- ^ for mixpanel integration
+  , hubspotConf        :: HubSpotConf                  -- ^ for hubspot integration
   , googleanalyticsToken      :: String                -- ^ for google-analytics integration
   , homebase           :: String                       -- ^ url fragment where to fetch scripts
   , ntpServers         :: [String]                     -- ^ List of NTP servers to contact to get estimate of host clock error
@@ -114,6 +117,9 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> field "mixpanel"
       mixpanelToken
       "Token for Mixpanel"
+  <*> field "hubspot"
+      hubspotConf
+      "Configuration of HubSpot"
   <*> field "google_analytics"
       googleanalyticsToken
       "Token for Google Analytics"
@@ -161,6 +167,7 @@ instance HasDefaultValue AppConf where
                                          , recurlyPrivateKey = "49c1b30592fa475b8535a0ca04f88e65"
                                          }
     , mixpanelToken      = "5b04329b972851feac0e9b853738e742"
+    , hubspotConf        = HubSpotConf "" Map.empty 
     , googleanalyticsToken = "f25e59c70a8570a12fe57e7835d1d881"
     , homebase           = "https://staging.scrive.com"
     , ntpServers         = defaultNtpServers

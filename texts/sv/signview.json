@@ -9,6 +9,8 @@
 "_company":"Företag",
 "_companyNumberLabel":"Org. nr",
 "_contractrejectbuttontext":"Avvisa och svara",
+"_contractsignatorycancelmodalplaceholder":"",
+"_contractsignatorycancelmodaltext":"",
 "_contractsignatorycancelmodaltitle":"Avvisa dokument",
 "_contractsignatoryname":"Part",
 "_contractsignatorysignmodalcontent":"<strong class='put-signatory-name-here'/>, genom att klicka på knappen kommer du att signera dokumentet och din signatur kommer att registreras av e-signeringstjänsten Scrive.",

@@ -253,6 +253,9 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
           onBlur: function() {
             iti.el().removeClass("active");
           },
+          onEnter: function() {
+            self.tryToSign({});
+          },
           inputtype: 'text',
           cssClass: "pin-input " + (BrowserInfo.isSmallScreen() ? "small-screen": ""),
           name: 'pin'

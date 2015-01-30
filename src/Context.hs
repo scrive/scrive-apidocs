@@ -21,6 +21,7 @@ import Mails.MailsConfig
 import MinutesTime
 import Payments.Config (RecurlyConfig)
 import Salesforce.Conf
+import HubSpot.Conf
 import Session.SessionID
 import Templates
 import User.Email
@@ -54,6 +55,7 @@ data Context = Context
     , ctxrecurlyconfig       :: RecurlyConfig
     , ctxsessionid           :: SessionID
     , ctxmixpaneltoken       :: String
+    , ctxhubspotconf         :: HubSpotConf
     , ctxgoogleanalyticstoken :: String
     , ctxhomebase            :: String
     , ctxbrandeddomain       :: Maybe BrandedDomain

@@ -9,6 +9,8 @@
 "_company":"Unternehmen",
 "_companyNumberLabel":"Unternehmens Reg.-Nr.",
 "_contractrejectbuttontext":"Ablehnen und antworten",
+"_contractsignatorycancelmodalplaceholder":"",
+"_contractsignatorycancelmodaltext":"",
 "_contractsignatorycancelmodaltitle":"Dokument ablehnen",
 "_contractsignatoryname":"Partei",
 "_contractsignatorysignmodalcontent":"<strong class='put-signatory-name-here'/>, mit einem Klick auf die Schaltfläche signieren Sie das Dokument und Ihre Signatur wird durch den E-Signierungsdienst von Scrive registriert.",

@@ -9,6 +9,8 @@
 "_company":"Foretak",
 "_companyNumberLabel":"Organisasjonsnr.",
 "_contractrejectbuttontext":"Avvis og svar",
+"_contractsignatorycancelmodalplaceholder":"",
+"_contractsignatorycancelmodaltext":"",
 "_contractsignatorycancelmodaltitle":"Avvis dokument",
 "_contractsignatoryname":"Part",
 "_contractsignatorysignmodalcontent":"<strong class='put-signatory-name-here'/>, ved å klikke på knappen vil du signere dokumentet og din signatur vil bli registrert av e-signeringstjenesten Scrive.",
