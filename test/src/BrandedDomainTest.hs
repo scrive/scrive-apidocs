@@ -9,12 +9,14 @@ import TestingUtil
 import TestKontra
 import User.Model
 import Utils.Default
+import Theme.Model
 
 brandedDomainTests :: TestEnvSt -> Test
 brandedDomainTests env = testGroup "CompanyState" [
     testThat "test_brandedDomainCreateUpdate" env test_brandedDomainCreateUpdate,
     testThat "test_brandedDomainAssociatedDomain" env test_brandedDomainAssociatedDomain,
-    testThat "test_brandedDomainAmbiguous" env test_brandedDomainAmbiguous
+    testThat "test_brandedDomainAmbiguous" env test_brandedDomainAmbiguous,
+    testThat "test_brandedDomainCanChangeThemeOrSettingsOfMainDomain" env test_brandedDomainCanChangeThemeOrSettingsOfMainDomain
   ]
 
 test_brandedDomainCreateUpdate :: TestEnv ()
@@ -79,3 +81,27 @@ test_brandedDomainAmbiguous = do
   assertEqual "GetBrandedDomainByURL works" nbd1 wbd1
   assertEqual "GetBrandedDomainByURL works" nbd2 wbd2
   assertEqual "GetBrandedDomainByURL works" mainbd wbd3
+
+
+test_brandedDomainCanChangeThemeOrSettingsOfMainDomain :: TestEnv ()
+test_brandedDomainCanChangeThemeOrSettingsOfMainDomain = do
+  mainbd <- dbQuery $ GetMainBrandedDomain
+  assertRaisesInternalError $ do
+    dbUpdate $ UpdateBrandedDomain mainbd
+
+  mailTheme <- dbQuery $ GetTheme (bdMailTheme mainbd)
+  assertRaisesInternalError $ do
+    dbUpdate $ UpdateThemeForDomain (bdid mainbd) mailTheme
+
+  loginTheme <- dbQuery $ GetTheme (bdLoginTheme mainbd)
+  assertRaisesInternalError $ do
+    dbUpdate $ UpdateThemeForDomain (bdid mainbd) loginTheme
+
+  serviceTheme <- dbQuery $ GetTheme (bdServiceTheme mainbd)
+  assertRaisesInternalError $ do
+    dbUpdate $ UpdateThemeForDomain (bdid mainbd) serviceTheme
+
+  signviewTheme <- dbQuery $ GetTheme (bdSignviewTheme mainbd)
+  assertRaisesInternalError $ do
+    dbUpdate $ UpdateThemeForDomain (bdid mainbd) signviewTheme
+

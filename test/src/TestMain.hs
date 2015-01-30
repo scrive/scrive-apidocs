@@ -20,6 +20,7 @@ import ArchiveTest
 import BrandedDomainTest
 import ChargeableTest
 import CompanyAccountsTest
+import CompanyBrandingTest
 import CompanyControlTest
 import CompanyStateTest
 import ConfigTests
@@ -64,6 +65,7 @@ allTests = [
   , brandedDomainTests
   , chargeableTest
   , companyAccountsTests
+  , companyBrandingTests
   , companyControlTests
   , companyStateTests
   , configTests

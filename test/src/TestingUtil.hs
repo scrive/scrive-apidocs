@@ -46,7 +46,7 @@ import File.FileID
 import File.Model
 import FlashMessage
 import IPAddress
-import KontraError (internalError)
+import qualified  KontraError as KontraError
 import KontraMonad
 import MagicHash (MagicHash, unsafeMagicHash)
 import MinutesTime
@@ -802,6 +802,16 @@ assertString = liftIO . T.assertString
 assertionPredicate :: (T.AssertionPredicable t, MonadIO m) => t -> m Bool
 assertionPredicate = liftIO . T.assertionPredicate
 
+-- TODO: For some reason InternalError gets packed into DBException. And I have no way of unpacking it - cast dbeError doesn't work
+assertRaisesInternalError :: (Show v, MonadIO m, MonadMask m) =>  m v -> m ()
+assertRaisesInternalError a = assertRaisesDBException a
+
+assertRaisesDBException :: (Show v, MonadIO m, MonadMask m) =>  m v -> m ()
+assertRaisesDBException a = (a >>= (\v -> assertFailure $ "Expecting db exception but got " ++ show v))  `catches` [
+          Handler $ \_e@DBException{..} -> return ()
+        ]
+
+
 assertRaisesKontra :: forall e v m. (KontraException e, Show v, MonadIO m, MonadMask m)
              => (e -> Bool) -> m v -> m ()
 assertRaisesKontra correctException action =
@@ -829,7 +839,7 @@ assertRaisesKontra correctException action =
 guardMethodM :: Kontrakcja m => Method -> m ()
 guardMethodM m = do
   rq <- askRq
-  unless (rqMethod rq == m) internalError
+  unless (rqMethod rq == m) KontraError.internalError
 
 -- | Checks type of flash message
 isFlashOfType :: FlashMessage -> FlashType -> Bool

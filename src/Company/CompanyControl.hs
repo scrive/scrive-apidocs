@@ -1,11 +1,17 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Company.CompanyControl (
-    handleChangeCompanyBranding
-  , handleGetCompanyBranding
-  , routes
+    routes
   , adminRoutes
   , withCompanyAdmin
+  -- Exported for tests
+  , handleChangeCompanyBranding
+  , handleGetCompanyBranding
+  , handleGetThemes
+  , handleGetDomainThemes
+  , handleUpdateTheme
+  , handleDeleteTheme
+  , unjsonCompanyUI
   ) where
 
 import Control.Applicative

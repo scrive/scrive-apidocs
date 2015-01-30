@@ -6,6 +6,7 @@ module TestKontra (
     , ununTestEnv
     , runTestKontra
     , inText
+    , inTextBS
     , inFile
     , mkHeaders
     , mkCookies
@@ -183,6 +184,18 @@ instance RunnableTestKontra Response where
 inText :: String -> Input
 inText val = Input {
       inputValue = Right $ BSLU.fromString val
+    , inputFilename = Nothing
+    , inputContentType = ContentType {
+          ctType = "text"
+        , ctSubtype = "plain"
+        , ctParameters = []
+        }
+    }
+
+-- | Creates GET/POST input text variable
+inTextBS :: BSLU.ByteString -> Input
+inTextBS val = Input {
+      inputValue = Right $ val
     , inputFilename = Nothing
     , inputContentType = ContentType {
           ctType = "text"
