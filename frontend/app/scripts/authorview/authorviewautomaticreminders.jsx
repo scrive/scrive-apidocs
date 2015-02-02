@@ -92,7 +92,7 @@ var AuthorViewAutomaticRemindersView = Backbone.View.extend({
                         });
 
     self.daysinput = new InfoTextInput({
-                infotext: "-",
+                infotext: "1",
                 value: model.newdaystoremind(),
                 onChange: function(v) {
                     days = parseInt(v);
@@ -144,7 +144,9 @@ var AuthorViewAutomaticRemindersView = Backbone.View.extend({
       size: "small",
       text : (self.model.document().autoremindtime() != undefined ? localization.autoreminders.changeAutoreminderButton : localization.autoreminders.setAutoreminderButton),
       onClick : function() {
-        if (self.model.newdaystoremind() == undefined) return; // This should never happend;
+        if (self.model.newdaystoremind() == undefined) {
+          self.model.setNewdaystoremind(1);
+        }
         self.model.setautoreminder(self.model.newdaystoremind(),function() {
           self.modal.close();
         });
