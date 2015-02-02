@@ -1,5 +1,7 @@
 module Theme.Migrations where
 
+import qualified Data.ByteString as BS
+
 import DB
 import DB.Checks
 import Theme.Tables
@@ -10,6 +12,37 @@ createThemesTable =
       mgrTable = tableThemes
     , mgrFrom = 0
     , mgrDo = do
+        createDomain $ Domain {
+          domName = "color"
+          , domType = TextT
+          , domNullable = False
+          , domDefault = Nothing
+          , domChecks = mkChecks [Check "color_hex" "VALUE ~ '^#[0-9a-f]{6}$'::text"]
+        }
+
+        let fontInSetSql = rawSQL (BS.intercalate " OR " $ map fontInSetValue fonts) ()
+            fontInSetValue font = BS.concat ["VALUE = '", font, "'::text"]
+            fonts :: [BS.ByteString] = ["\"arial black\",sans-serif"
+                  , "\"arial narrow\",sans-serif"
+                  , "\"comic sans ms\",sans-serif"
+                  , "\"courier new\",monospace"
+                  , "\"Source Sans Pro\", \"Helvetica Neue\", Arial, sans-serif"
+                  , "garamond,serif"
+                  , "georgia,serif"
+                  , "\"times new roman\",serif"
+                  , "tahoma,sans-serif"
+                  , "\"trebuchet ms\",sans-serif"
+                  , "verdana,sans-serif"
+                  , "arial,helvetica,sans-serif"
+                  , "helvetica,sans-serif"]
+        createDomain $ Domain {
+          domName = "font"
+          , domType = TextT
+          , domNullable = False
+          , domDefault = Nothing
+          , domChecks = mkChecks [Check "font_in_set" fontInSetSql]
+        }
+
         createTable $ tblTable {
           tblName = "themes"
           , tblVersion = 1
@@ -31,7 +64,6 @@ createThemesTable =
             ]
           , tblPrimaryKey = pkOnColumn "id"
           }
-
 }
 
 
@@ -41,6 +73,7 @@ createThemeOwnersTable =
       mgrTable = tableThemeOwnership
     , mgrFrom = 0
     , mgrDo = do
+
         createTable $ tblTable {
             tblName = "theme_owners"
           , tblVersion = 1

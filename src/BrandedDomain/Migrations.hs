@@ -99,6 +99,7 @@ addThemesToBrandedDomainAndMainDomain =
     , mgrFrom = 5
     , mgrDo = do
         -- Setting up table
+
         runSQL_ "ALTER TABLE branded_domains ADD COLUMN mail_theme BIGINT NULL"
         runSQL_ "ALTER TABLE branded_domains ADD COLUMN signview_theme BIGINT NULL"
         runSQL_ "ALTER TABLE branded_domains ADD COLUMN service_theme BIGINT NULL"
@@ -107,6 +108,10 @@ addThemesToBrandedDomainAndMainDomain =
 
         runSQL_ "ALTER TABLE branded_domains ADD COLUMN browser_title TEXT NULL"
         runSQL_ "ALTER TABLE branded_domains ADD COLUMN favicon BYTEA NULL"
+
+        -- We need to disable NOT NULL check on colors and fonts. We will turn it on at the end
+        runSQL_ "ALTER DOMAIN color DROP NOT NULL"
+        runSQL_ "ALTER DOMAIN font DROP NOT NULL"
 
         runSQL_ "ALTER TABLE branded_domains ADD COLUMN participant_color_1 color NULL"
         runSQL_ "ALTER TABLE branded_domains ADD COLUMN participant_color_2 color NULL"
@@ -135,16 +140,16 @@ addThemesToBrandedDomainAndMainDomain =
               sqlSet "name" (durl ++ "_theme")
               sqlSet "logo" (dlogo)
               sqlSet "brand_color" $ ("#000000":: String)
-              sqlSet "brand_text_color" $ ("#FFFFFF":: String)
+              sqlSet "brand_text_color" $ ("#ffffff":: String)
               sqlSet "action_color" $ ("#000000":: String)
-              sqlSet "action_text_color" $ ("#FFFFFF":: String)
+              sqlSet "action_text_color" $ ("#ffffff":: String)
               sqlSet "action_secondary_color" $ ("#000000":: String)
-              sqlSet "action_secondary_text_color" $ ("#FFFFFF":: String)
+              sqlSet "action_secondary_text_color" $ ("#ffffff":: String)
               sqlSet "positive_color" $ ("#000000":: String)
-              sqlSet "positive_text_color" $ ("#FFFFFF":: String)
+              sqlSet "positive_text_color" $ ("#ffffff":: String)
               sqlSet "negative_color" $ ("#000000":: String)
-              sqlSet "negative_text_color" $ ("#FFFFFF":: String)
-              sqlSet "font" $ ("\"Source Sans Pro\", \"Helvetica Neue\", sans-serif" :: String)
+              sqlSet "negative_text_color" $ ("#ffffff":: String)
+              sqlSet "font" $ ("\"Source Sans Pro\", \"Helvetica Neue\", Arial, sans-serif" :: String)
               sqlResult "id"
             (themeId::Int64) <- fetchOne unSingle
             runQuery_ . sqlInsert "theme_owners" $  do
@@ -163,14 +168,14 @@ addThemesToBrandedDomainAndMainDomain =
               sqlSet "participant_color_4" ("#7908aa":: String)
               sqlSet "participant_color_5" ("#53df00":: String)
               sqlSet "participant_color_6" ("#990000":: String)
-              sqlSet "draft_color" ("#B2B2B2":: String)
-              sqlSet "cancelled_color" ("#D64845":: String)
-              sqlSet "initiated_color" ("#D2793A":: String)
-              sqlSet "sent_color" ("#ECA74D":: String)
-              sqlSet "delivered_color" ("#E7D875":: String)
-              sqlSet "opened_color" ("#54B588":: String)
-              sqlSet "reviewed_color" ("#62C3DE":: String)
-              sqlSet "signed_color" ("#4C4C4C":: String)
+              sqlSet "draft_color" ("#b2b2b2":: String)
+              sqlSet "cancelled_color" ("#d64845":: String)
+              sqlSet "initiated_color" ("#d2793a":: String)
+              sqlSet "sent_color" ("#eca74d":: String)
+              sqlSet "delivered_color" ("#e7d875":: String)
+              sqlSet "opened_color" ("#54b588":: String)
+              sqlSet "reviewed_color" ("#62c3de":: String)
+              sqlSet "signed_color" ("#4c4c4c":: String)
               sqlWhereEq "id" did
 
         -- Adding CONSTRAINTs
@@ -183,7 +188,6 @@ addThemesToBrandedDomainAndMainDomain =
         runQuery_ $ sqlAlterTable "branded_domains" [sqlAddFK "branded_domains" $  (fkOnColumn "service_theme" "themes" "id") {fkOnDelete = ForeignKeyCascade, fkDeferred = True }]
         runQuery_ $ sqlAlterTable "branded_domains" [sqlAddFK "branded_domains" $  (fkOnColumn "login_theme" "themes" "id") {fkOnDelete = ForeignKeyCascade, fkDeferred = True }]
         runQuery_ $ sqlCreateIndex "branded_domains" $ uniqueIndexOnColumnWithCondition "main_domain" "main_domain"
-
 
         runSQL_ "ALTER TABLE branded_domains ALTER browser_title SET NOT NULL"
         runSQL_ "ALTER TABLE branded_domains ALTER favicon SET NOT NULL"
@@ -201,6 +205,10 @@ addThemesToBrandedDomainAndMainDomain =
         runSQL_ "ALTER TABLE branded_domains ALTER opened_color  SET NOT NULL"
         runSQL_ "ALTER TABLE branded_domains ALTER reviewed_color  SET NOT NULL"
         runSQL_ "ALTER TABLE branded_domains ALTER signed_color  SET NOT NULL"
+
+        -- Enable NOT NULL check on colors and fonts
+        runSQL_ "ALTER DOMAIN color SET NOT NULL"
+        runSQL_ "ALTER DOMAIN font SET NOT NULL"
 
         runSQL_ "ALTER TABLE branded_domains DROP COLUMN bars_color"
         runSQL_ "ALTER TABLE branded_domains DROP COLUMN bars_text_color"
