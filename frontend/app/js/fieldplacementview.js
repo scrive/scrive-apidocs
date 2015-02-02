@@ -79,7 +79,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
     else if (field.isText())
             verticaloffset = -1;
     else if (field.isSignature())
-            verticaloffset = 1;
+            verticaloffset = 0;
 
     if (onDragStart !== undefined) {
       dragHandler.mousedown(function() {
