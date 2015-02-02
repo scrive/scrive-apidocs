@@ -114,105 +114,104 @@ return React.createClass({
             <div className="tab-viewer inner">
               <div className="tab-viewer-header">
                 <ul className="tabs">
-                <li
-                  className={"float-left " + (model.themeMode() ? "active" : "")}
-                   onClick={function() {
-                    self.changeMode(
-                      function() {
-                        model.switchToMailThemeMode();
-                      });
-                   }}
-                >
-                  <h4>{localization.branding.themesTitle}</h4>
-                </li>
-                <li
-                  className={"float-left last-tab " + (model.additionalSettingsMode() ? "active" : "")}
-                  onClick={function() {
-                    self.changeMode(
-                      function() {
-                        model.switchToAdditionalSettingsMode();
-                      },
-                      model.additonalSettingsUrl()
-                    );
-                  }}
-                >
-                  <h4>{localization.branding.settingsTitle}</h4>
-                </li>
+                  <li
+                    className={"float-left " + (model.themeMode() ? "active" : "")}
+                    onClick={function() {
+                      self.changeMode(
+                        function() {
+                          model.switchToMailThemeMode();
+                        });
+                    }}
+                  >
+                    <h4>{localization.branding.themesTitle}</h4>
+                  </li>
+                  <li
+                    className={"float-left last-tab " + (model.additionalSettingsMode() ? "active" : "")}
+                    onClick={function() {
+                      self.changeMode(
+                        function() {
+                          model.switchToAdditionalSettingsMode();
+                        },
+                        model.additonalSettingsUrl()
+                      );
+                    }}
+                  >
+                    <h4>{localization.branding.settingsTitle}</h4>
+                  </li>
                 </ul>
               </div>
 
-        <div className="companybranding">
-          { /*if*/ (model.themeMode() ) &&
-            <div>
-              <CompanyThemesManagementBar model={model} onSave={function() {self.save();}} />
-              {/*if*/ (model.mailThemeMode() && model.mailThemeForEditing() != undefined) &&
-                <ThemeView
-                  model={model.mailThemeForEditing()}
-                  getDefaultName={function() {return model.newThemeDefaultName()}}
-                  onDelete={function() {self.onThemeDelete(model.mailThemeForEditing())}}
-                  onSave={function() {self.save();}}
-                  previews={_.compact([
-                      EmailPreview,
-                      (model.mailThemeForEditing() == model.signviewThemeForEditing()) ? SigningPreview : undefined,
-                      (model.mailThemeForEditing() == model.serviceThemeForEditing()) ? ServicePreview : undefined
-                    ])
-                  }
-                />
-              }
-              {/*else*/ (model.mailThemeMode() && model.mailThemeForEditing() == undefined) &&
-                <CompanyBrandingNewThemeView
-                  model={model}
-                />
-              }
-              {/*else if*/ (model.signviewThemeMode() && model.signviewThemeForEditing() != undefined) &&
-                <ThemeView
-                  model={model.signviewThemeForEditing()}
-                  getDefaultName={function() {return model.newThemeDefaultName()}}
-                  onDelete={function() {self.onThemeDelete(model.signviewThemeForEditing())}}
-                  onSave={function() {self.save();}}
-                  previews={_.compact([
-                      SigningPreview,
-                      (model.signviewThemeForEditing() == model.mailThemeForEditing()) ? EmailPreview : undefined,
-                      (model.signviewThemeForEditing() == model.serviceThemeForEditing()) ? ServicePreview : undefined
-                    ])
-                  }
-                />
-              }
-              {/*else*/ (model.signviewThemeMode() && model.signviewThemeForEditing() == undefined) &&
-                <CompanyBrandingNewThemeView
-                  model={model}
-                />
-              }
-              {/*else if*/ (model.serviceThemeMode() && model.serviceThemeForEditing() != undefined) &&
-                <ThemeView
-                  model={model.serviceThemeForEditing()}
-                  getDefaultName={function() {return model.newThemeDefaultName()}}
-                  onDelete={function() {self.onThemeDelete(model.serviceThemeForEditing())}}
-                  onSave={function() {self.save();}}
-                  previews={_.compact([
-                      ServicePreview,
-                      (model.serviceThemeForEditing() == model.mailThemeForEditing()) ? EmailPreview : undefined,
-                      (model.serviceThemeForEditing() == model.signviewThemeForEditing()) ? SigningPreview : undefined
-                    ])
-                  }
-                />
-              }
-              {/*else*/ (model.serviceThemeMode() && model.serviceThemeForEditing() == undefined) &&
-                <CompanyBrandingNewThemeView
-                  model={model}
-                />
-              }
+              <div className="companybranding">
+                { /*if*/ (model.themeMode() ) &&
+                  <div>
+                    <CompanyThemesManagementBar model={model} onSave={function() {self.save();}} />
+                    {/*if*/ (model.mailThemeMode() && model.mailThemeForEditing() != undefined) &&
+                      <ThemeView
+                        model={model.mailThemeForEditing()}
+                        getDefaultName={function() {return model.newThemeDefaultName()}}
+                        onDelete={function() {self.onThemeDelete(model.mailThemeForEditing())}}
+                        onSave={function() {self.save();}}
+                        previews={_.compact([
+                            EmailPreview,
+                            (model.mailThemeForEditing() == model.signviewThemeForEditing()) ? SigningPreview : undefined,
+                            (model.mailThemeForEditing() == model.serviceThemeForEditing()) ? ServicePreview : undefined
+                          ])
+                        }
+                      />
+                    }
+                    {/*else*/ (model.mailThemeMode() && model.mailThemeForEditing() == undefined) &&
+                      <CompanyBrandingNewThemeView
+                        model={model}
+                      />
+                    }
+                    {/*else if*/ (model.signviewThemeMode() && model.signviewThemeForEditing() != undefined) &&
+                      <ThemeView
+                        model={model.signviewThemeForEditing()}
+                        getDefaultName={function() {return model.newThemeDefaultName()}}
+                        onDelete={function() {self.onThemeDelete(model.signviewThemeForEditing())}}
+                        onSave={function() {self.save();}}
+                        previews={_.compact([
+                            SigningPreview,
+                            (model.signviewThemeForEditing() == model.mailThemeForEditing()) ? EmailPreview : undefined,
+                            (model.signviewThemeForEditing() == model.serviceThemeForEditing()) ? ServicePreview : undefined
+                          ])
+                        }
+                      />
+                    }
+                    {/*else*/ (model.signviewThemeMode() && model.signviewThemeForEditing() == undefined) &&
+                      <CompanyBrandingNewThemeView
+                        model={model}
+                      />
+                    }
+                    {/*else if*/ (model.serviceThemeMode() && model.serviceThemeForEditing() != undefined) &&
+                      <ThemeView
+                        model={model.serviceThemeForEditing()}
+                        getDefaultName={function() {return model.newThemeDefaultName()}}
+                        onDelete={function() {self.onThemeDelete(model.serviceThemeForEditing())}}
+                        onSave={function() {self.save();}}
+                        previews={_.compact([
+                            ServicePreview,
+                            (model.serviceThemeForEditing() == model.mailThemeForEditing()) ? EmailPreview : undefined,
+                            (model.serviceThemeForEditing() == model.signviewThemeForEditing()) ? SigningPreview : undefined
+                          ])
+                        }
+                      />
+                    }
+                    {/*else*/ (model.serviceThemeMode() && model.serviceThemeForEditing() == undefined) &&
+                      <CompanyBrandingNewThemeView
+                        model={model}
+                      />
+                    }
+                  </div>
+                }
+                {/*else if*/ (model.additionalSettingsMode() ) &&
+                  <CompanySettingsView
+                    model={model.companybranding()}
+                  />
+                }
+              </div>
             </div>
-          }
-          {/*else if*/ (model.additionalSettingsMode() ) &&
-            <CompanySettingsView
-              model={model.companybranding()}
-            />
-           }
-        </div>
-
-        </div>
-        </div>
+          </div>
         </div>
       );
     }

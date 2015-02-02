@@ -73,7 +73,7 @@ return React.createClass({
                 text={localization.archive.attachments.createnew.action}
                 className="float-left actionButton"
                 width={118}
-                onUpload={function(input) {
+                onUploadComplete={function(input) {
                    setTimeout(function() {
                                 new Submit({
                                 method : "POST",

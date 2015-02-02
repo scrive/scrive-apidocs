@@ -10,8 +10,6 @@ return React.createClass({
        size:  React.PropTypes.string,
        className : React.PropTypes.string,
        width : React.PropTypes.number,
-       // elFunction - Function that can generate jQuery DOM element. Used only in speciall cases, when React component is not available
-       elFunction : React.PropTypes.func
     },
     getDefaultProps: function() {
       return {

@@ -58,9 +58,7 @@ return Backbone.Model.extend({
       self.companybranding().setServiceTheme(null);
     }
     self.companybranding().save(function() {
-      self.companybranding().deleteTheme(theme.themeid(),function() {
-        callback();
-      });
+      self.companybranding().deleteTheme(theme.themeid(), callback);
     });
   },
   companyid : function() {

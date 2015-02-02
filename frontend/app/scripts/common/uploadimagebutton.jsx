@@ -2,7 +2,7 @@
 
 /**
  * A upload button component in React. Internallly it uses UploadButton, and can take many UI propperties of buttons - but not all of them.
- * After upload, it sends file to server, and calls onUpload with base64 representation of image
+ * After upload, it sends file to server, and calls onUploadComplete with base64 representation of image
  *
  * Properties:
       text        : string , text on button,  default ""
@@ -31,7 +31,7 @@ define(['React','common/uploadbutton'], function(React,UploadButton) {
       width       : React.PropTypes.number,
       className   : React.PropTypes.string,
       style       : React.PropTypes.object,
-      onUpload    : React.PropTypes.func
+      onUploadComplete : React.PropTypes.func
     },
     getDefaultProps : function() {
       return {
@@ -42,7 +42,7 @@ define(['React','common/uploadbutton'], function(React,UploadButton) {
         "style"     : {}
       };
     },
-    onUpload: function(input) {
+    onUploadComplete: function(input) {
       var self = this;
       var submit = new Submit({
         method: 'POST',
@@ -51,7 +51,7 @@ define(['React','common/uploadbutton'], function(React,UploadButton) {
         ajaxsuccess: function (rs) {
           var response = JSON.parse(rs);
           var logo_base64 = response.logo_base64;
-          self.props.onUpload('data:image/png;base64,' + logo_base64);
+          self.props.onUploadComplete('data:image/png;base64,' + logo_base64);
         }
       });
       submit.addInputs($(input).attr("name", "logo"));
@@ -70,8 +70,8 @@ define(['React','common/uploadbutton'], function(React,UploadButton) {
             width={this.props.width}
             className={this.props.className + " upload-button" }
             style={{position:"relative",overflow:"hidden"}}
-            onUpload={function(i) {
-              self.onUpload(i);
+            onUploadComplete={function(i) {
+              self.onUploadComplete(i);
             }}
           />
       );

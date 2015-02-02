@@ -73,8 +73,8 @@ define(['React','common/button'], function(React,Button) {
             self.props.onError(a,b,c,d);
         },
         afterFileAppend : function(input,title,fileinput) {
-          if (self.props.onUpload != undefined) {
-            self.props.onUpload(input,title,fileinput);
+          if (self.props.onUploadComplete != undefined) {
+            self.props.onUploadComplete(input,title,fileinput);
             fileinput.n--;
             _.each(fileinput.slaves, function(slave) {
                $(slave).remove();

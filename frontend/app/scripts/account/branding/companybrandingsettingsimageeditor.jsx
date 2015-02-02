@@ -24,7 +24,7 @@ return React.createClass({
                 text={self.props.uploadText}
                 width={160}
                 size="tiny"
-                onUpload={function(image) {
+                onUploadComplete={function(image) {
                   self.props.setValue(image);
                 }}
           />

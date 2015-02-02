@@ -29,7 +29,7 @@ return React.createClass({
                 text={localization.branding.themes.uploadNewLogo}
                 width={140}
                 size="tiny"
-                onUpload={function(logo) {
+                onUploadComplete={function(logo) {
                   self.props.setLogo(logo);
                 }}
               />
