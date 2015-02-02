@@ -2,13 +2,13 @@ module Company.Migrations where
 
 import Control.Monad
 import Control.Monad.Catch
+import Data.Char
 import Data.Int
 import Data.Monoid
 import Data.Monoid.Space
-import qualified Data.ByteString as BS
-import Data.Char
-import Text.Regex.TDFA
 import Data.String.Utils
+import Text.Regex.TDFA
+import qualified Data.ByteString as BS
 
 import Company.Tables
 import DB

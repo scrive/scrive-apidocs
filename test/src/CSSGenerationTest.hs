@@ -15,7 +15,6 @@ import TestKontra as T
 import Theme.Model
 import Utils.Default
 
-
 cssGenerationTests :: TestEnvSt -> Test
 cssGenerationTests env = testGroup "CSSGeneration" [
     testThat "Signview branding generation" env testSignviewBrandingGeneration

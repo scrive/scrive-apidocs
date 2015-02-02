@@ -1,16 +1,15 @@
 module CompanyControlTest (companyControlTests) where
 
 import Control.Applicative
-import qualified Data.Aeson as A
 import Happstack.Server hiding (simpleHTTP)
 import Test.Framework
-
 import Text.JSON
 import Text.JSON.FromJSValue
+import qualified Data.Aeson as A
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL
+import qualified Data.ByteString.UTF8 as BS
 
 import BrandedDomain.BrandedDomain
 import Company.CompanyControl

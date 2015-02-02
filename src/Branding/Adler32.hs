@@ -6,18 +6,17 @@ module Branding.Adler32 (
 
 import Control.Monad
 import Control.Monad.Catch
-
+import Data.Digest.Adler32
+import Data.Maybe
 import qualified Data.Binary as Binary
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Char8 as BSC8
-import Data.Digest.Adler32
-import Data.Maybe
 
 import BrandedDomain.BrandedDomain
+import Company.CompanyUI
+import Context
 import DB
 import Theme.Model
-import Context
-import Company.CompanyUI
 import Theme.Model ()
 import User.Model
 import Utils.String

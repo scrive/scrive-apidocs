@@ -7,9 +7,9 @@ import Company.Model
 import DB
 import TestingUtil
 import TestKontra
+import Theme.Model
 import User.Model
 import Utils.Default
-import Theme.Model
 
 brandedDomainTests :: TestEnvSt -> Test
 brandedDomainTests env = testGroup "BrandedDomainsTest" [

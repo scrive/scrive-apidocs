@@ -5,7 +5,7 @@ define(["React","legacy_code","common/select"], function(React, _Legacy, NewSele
 return React.createClass({
   propTypes: {
     getFont: React.PropTypes.func,
-    setFont: React.PropTypes.func,
+    setFont: React.PropTypes.func
   },
    availableFonts: function() {
      return [

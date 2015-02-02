@@ -16,15 +16,15 @@ module Company.CompanyControl (
 
 import Control.Applicative
 import Data.Functor.Invariant
-import Data.Unjson
 import Data.Maybe
+import Data.Unjson
 import Happstack.Server hiding (dir, simpleHTTP)
 import Happstack.StaticRouting (Route, dir, choice)
+import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BSC8
 import qualified Data.Unjson as Unjson
-import qualified Data.Aeson as Aeson
 
 import BrandedDomain.BrandedDomain
 import Company.CompanyUI

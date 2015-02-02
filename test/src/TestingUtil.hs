@@ -20,6 +20,7 @@ import Test.Framework.Providers.HUnit (testCase)
 import Test.QuickCheck
 import Test.QuickCheck.Gen
 import Text.JSON
+import qualified  KontraError as KontraError
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
@@ -46,7 +47,6 @@ import File.FileID
 import File.Model
 import FlashMessage
 import IPAddress
-import qualified  KontraError as KontraError
 import KontraMonad
 import MagicHash (MagicHash, unsafeMagicHash)
 import MinutesTime

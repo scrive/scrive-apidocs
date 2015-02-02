@@ -43,6 +43,7 @@ import qualified Text.StringTemplates.Fields as F
 
 import Analytics.Include
 import BrandedDomain.BrandedDomain
+import Branding.Adler32
 import Company.CompanyUI
 import Company.Model
 import DB
@@ -51,11 +52,11 @@ import Kontra
 import ThirdPartyStats.Core
 import User.Lang
 import User.Model
-import Utils.Monoid
 import Utils.HTTP
+import Utils.Monoid
 import Version
 import qualified Log
-import Branding.Adler32
+
 -- * Main Implementation
 
 {- |

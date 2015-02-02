@@ -43,7 +43,6 @@ import User.Utils
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
 
-
 handleServiceBranding :: Kontrakcja m => String -> String -> m Response
 handleServiceBranding _ _ = do
   theme <- getServiceTheme

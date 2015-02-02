@@ -9,7 +9,7 @@ return React.createClass({
        type :  React.PropTypes.string,
        size:  React.PropTypes.string,
        className : React.PropTypes.string,
-       width : React.PropTypes.number,
+       width : React.PropTypes.number
     },
     getDefaultProps: function() {
       return {

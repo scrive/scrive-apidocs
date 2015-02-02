@@ -35,7 +35,6 @@ import Doc.DocViewMail
 import Kontra
 import User.Model
 
-
 pageCreateFromTemplate :: TemplatesMonad m => m String
 pageCreateFromTemplate = renderTemplate_ "createFromTemplatePage"
 

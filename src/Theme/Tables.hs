@@ -1,7 +1,8 @@
 module Theme.Tables where
 
-import DB
 import qualified Data.ByteString as BS
+
+import DB
 
 tableThemes:: Table
 tableThemes = tblTable {

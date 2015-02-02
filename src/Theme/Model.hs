@@ -19,8 +19,8 @@ module Theme.Model (
 
 import Control.Monad.Catch
 import Control.Monad.State
-import qualified Data.ByteString.Char8 as BS
 import Data.Monoid
+import qualified Data.ByteString.Char8 as BS
 
 import BrandedDomain.BrandedDomainID
 import Company.CompanyID

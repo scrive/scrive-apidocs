@@ -3,27 +3,26 @@ module CompanyBrandingTest(
 ) where
 
 import Control.Applicative
+import Data.Unjson
+import Happstack.Server hiding (simpleHTTP)
 import Test.Framework
+import Text.JSON
+import qualified Data.Aeson as A
+import qualified Data.ByteString.Lazy.UTF8 as BSL
 
 import BrandedDomain.BrandedDomain
-import Context
-import Theme.Model
-import Utils.Default
-import qualified Data.Aeson as A
 import BrandedDomain.Model
+import Company.CompanyControl
+import Company.CompanyUI
 import Company.Model
+import Context
 import DB
 import TestingUtil
 import TestKontra
-import Happstack.Server hiding (simpleHTTP)
-import Company.CompanyControl
-import Text.JSON
-import qualified Data.ByteString.Lazy.UTF8 as BSL
-
-import Data.Unjson
+import Theme.Model
 import Theme.View
 import User.Model
-import Company.CompanyUI
+import Utils.Default
 
 companyBrandingTests :: TestEnvSt -> Test
 companyBrandingTests env = testGroup "CompanyBranding" [
