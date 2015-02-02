@@ -558,8 +558,10 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
         Just authMethodField ->
           case getFieldOfType authMethodField (signatoryfields siglink) of
                Just _  -> kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
+                 case mValue of
+                      Just a  -> sqlSet "value_text" a
+                      Nothing -> return ()
                  sqlSet "obligatory" True
-                 sqlSet "value_text" $ fromMaybe "" mValue
                  sqlWhereEq "signatory_link_id" slid
                  sqlWhereEq "type" $ authMethodField
                -- Note: default in table for `obligatory` is true

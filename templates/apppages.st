@@ -152,7 +152,7 @@ standardHeaderContents=
         <link rel=" icon" href="/favicon.png" />
         <script src="/$ctxlang$/localization/$versioncode$.js"  type="text/javascript"></script>
         <script type="text/javascript"> window.versioncode = "$versioncode$" </script>
-
+        <script type="text/javascript"> window.hubspotConf = $analytics.hubspotConf:noescape()$;</script>
         $if(production)$
         <link href='/$versioncode$.all-styling-minified.css' rel='stylesheet' type='text/css'/>
         <script src="/$versioncode$.optimized-system.js"></script>
@@ -200,9 +200,6 @@ typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var
         $endif$
    // end Mixpanel
 
-   // Hubspot configuration
-   window.hubspotConf = $analytics.hubspotConf:noescape()$;
-
   // Google analytics tracking
   var _gaq = _gaq || [];
   _gaq.push(['_setAccount', '$analytics.tokenGa$']);
@@ -229,7 +226,7 @@ typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var
 // end Hubspot js
 ####
 analyticsLoaderKontrakcja=
-$loadScript(src="http://js.hubspot.com/forms/current.js")$
+$loadScript(src="//js.hubspot.com/forms/current.js")$
 <script>
   $analyticsLoaderBase()$
   mixpanel.track_links('#logo', 'Click Logo');

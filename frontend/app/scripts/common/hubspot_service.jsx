@@ -30,7 +30,7 @@ define(['jquery'], function($) {
   //   Fill out form fetched by JSONP ('.hbspt-form form') with
   //   supplied JSON data and send form data to HubSpot.
   //
-  var submitData = function (data) {
+  var submitData = function (data, noCookie) {
 
     var $form = $(hubspotFormDomElm), k;
 
@@ -40,7 +40,7 @@ define(['jquery'], function($) {
 
     // Create the HubSpot context object from cookie data.
     var hutk = Cookies.get('hubspotutk');
-    var hs_context = { "hutk": hutk };
+    var hs_context = noCookie ? {} : { "hutk": hutk } ;
 
     // fill in an extra input field with HubSpot context object
     $form
@@ -82,7 +82,9 @@ var expose = {
   FORM_NO_SENDS_DOCS  : hubspotConf.forms.no_sends_docs,
   FORM_YES_SENDS_DOCS : hubspotConf.forms.yes_sends_docs,
  
-  track : function(formId, formData) {
+  track : function(formId, formData, noCookie) {
+
+    noCookie = (noCookie) ? true : false;
 
     var hbsptIframe; // used when waiting for node mount below
     var hbsptForm; // fetched remotely by JSONP.
@@ -107,7 +109,7 @@ var expose = {
       hbsptForm = $(hubspotFormDomElm);
       
       if ((hbsptIframe.length != 0) && (hbsptForm.length != 0) ){
-         submitData(formData);
+         submitData(formData, noCookie);
          clearInterval(intervalId);
       }
 

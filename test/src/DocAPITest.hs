@@ -19,6 +19,7 @@ import Doc.API.V1.Calls
 import Doc.API.V1.DocumentToJSON
 import Doc.DocStateData
 import Doc.Model
+import Util.HasSomeUserInfo
 import OAuth.Model
 import TestingUtil
 import TestKontra as T
@@ -33,6 +34,7 @@ docAPITests env = testGroup "DocAPI" $
   , testThat "change main file works" env testChangeMainFile
   , testThat "change main file moves placements" env testChangeMainFileMovePlacements
   , testThat "Changing authentication method works" env testChangeAuthenticationMethod
+  , testThat "Changing authentication method without changing existing info works" env testChangeAuthenticationMethodWithEmptyAuthenticationValue
   , testThat "Creating doc with access credentials via API works" env testOAuthCreateDoc
   , testThat "Creating doc with personal access credentials via API works" env testPersonalAccessCredentialsCreateDoc
   , testThat "Save flag in update call works" env (testUpdateDocToSaved False)
@@ -144,7 +146,7 @@ testPersonalAccessCredentialsCreateDoc :: TestEnv ()
 testPersonalAccessCredentialsCreateDoc = do
   user <- addNewRandomUser
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
-  
+
   -- Get the personal access token
   let uid = userid user
   _ <- dbUpdate $ DeletePersonalToken uid
@@ -254,20 +256,49 @@ testChangeAuthenticationMethod = do
 
   reqNoAuthMethod <- mkRequest POST [("authentication_value", inText "+46701234567")]
   (resNoAuthMethod, _) <- runTestKontra reqNoAuthMethod ctx $ apiCallV1ChangeAuthentication (documentid doc) validsiglinkid
-  assertEqual "Response code is not 400" 400 (rsCode resNoAuthMethod)
+  assertEqual "Response code should be 400" 400 (rsCode resNoAuthMethod)
 
   reqInvalidMethod <- mkRequest POST [("authentication_type", inText "god_is_witness")]
   (resInvalidMethod, _) <- runTestKontra reqInvalidMethod ctx $ apiCallV1ChangeAuthentication (documentid doc) validsiglinkid
-  assertEqual "Response code is not 400" 400 (rsCode resInvalidMethod)
+  assertEqual "Response code should be 400" 400 (rsCode resInvalidMethod)
 
   req <- mkRequest POST [("authentication_type", inText "sms_pin"),("authentication_value", inText "+46701234567")]
   (res, _) <- runTestKontra req ctx $ apiCallV1ChangeAuthentication (documentid doc) validsiglinkid
-  assertEqual "Response code is not 202" 202 (rsCode res)
+  assertEqual "Response code should be 202" 202 (rsCode res)
 
   user2 <- addNewRandomUser
   ctx2 <- (\c -> c { ctxmaybeuser = Just user2 }) <$> mkContext defaultValue
   (resBadUser, _) <- runTestKontra req ctx2 $ apiCallV1ChangeAuthentication (documentid doc) validsiglinkid
-  assertEqual "Response code is not 403" 403 (rsCode resBadUser)
+  assertEqual "Response code should be 403" 403 (rsCode resBadUser)
+
+testChangeAuthenticationMethodWithEmptyAuthenticationValue :: TestEnv ()
+testChangeAuthenticationMethodWithEmptyAuthenticationValue = do
+  ctx@Context{ctxmaybeuser = Just user} <- testUpdateDoc $ last jsonDocs
+  [doc] <- randomQuery $ GetDocumentsByAuthor (userid user)
+  let siglinks = documentsignatorylinks doc
+      validsiglinkid = signatorylinkid $ head $ filter signatoryispartner siglinks
+
+  req <- mkRequest POST [("authentication_type", inText "sms_pin"),("authentication_value", inText "+46701234567")]
+  (res, _) <- runTestKontra req ctx $ apiCallV1ChangeAuthentication (documentid doc) validsiglinkid
+  assertEqual "Response code is supposed to be 202" 202 (rsCode res)
+
+  updatedDoc <- dbQuery $ GetDocumentBySignatoryLinkID validsiglinkid
+  let updatedsiglinks = documentsignatorylinks updatedDoc
+      siglink = head $ filter signatoryispartner updatedsiglinks
+  assertEqual "The phone number +46701234567 should be set there" "+46701234567" (getMobile siglink)
+
+  req2 <- mkRequest POST [("authentication_type", inText "standard")]
+  (res2, _) <- runTestKontra req2 ctx $ apiCallV1ChangeAuthentication (documentid doc) validsiglinkid
+  assertEqual "Response code is supposed to be 202" 202 (rsCode res2)
+
+  req3 <- mkRequest POST [("authentication_type", inText "sms_pin")]
+  (res3, _) <- runTestKontra req3 ctx $ apiCallV1ChangeAuthentication (documentid doc) validsiglinkid
+  assertEqual "Response code is not 202" 202 (rsCode res3)
+
+  updatedDoc' <- dbQuery $ GetDocumentBySignatoryLinkID validsiglinkid
+  let updatedsiglinks' = documentsignatorylinks updatedDoc'
+      siglink' = head $ filter signatoryispartner updatedsiglinks'
+  assertEqual "The phone number +46701234567 should be STILL there" "+46701234567" (getMobile siglink')
 
 testChangeMainFile :: TestEnv ()
 testChangeMainFile = do
