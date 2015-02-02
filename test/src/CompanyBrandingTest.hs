@@ -98,6 +98,32 @@ testUpdateCompanyTheme = do
     ((), _) <- runTestKontra req3 ctx $ handleUpdateTheme Nothing (themeID newChangedTheme3)
     return ()
 
+  --Check if all valid fonts can be used
+  let changeFontTest = changeFontTest' newTheme ctx
+  mapM_ changeFontTest fonts
+
+  where
+    changeFontTest' newTheme ctx font = do
+      let newChangedTheme1 = newTheme {themeFont = font}
+      let newChangedThemeStr1 = unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) unjsonTheme newChangedTheme1
+      req1 <- mkRequest POST [("theme", inTextBS $ newChangedThemeStr1)]
+      ((), _) <- runTestKontra req1 ctx $ handleUpdateTheme Nothing (themeID newChangedTheme1)
+      newThemeChangedFromDB <- dbQuery $ GetTheme (themeID newTheme)
+      assertEqual "Theme color has been changed" font (themeFont newThemeChangedFromDB)
+    fonts = ["\"arial black\",sans-serif"
+      , "\"arial narrow\",sans-serif"
+      , "\"comic sans ms\",sans-serif"
+      , "\"courier new\",monospace"
+      , "\"Source Sans Pro\", \"Helvetica Neue\", Arial, sans-serif"
+      , "garamond,serif"
+      , "georgia,serif"
+      , "\"times new roman\",serif"
+      , "tahoma,sans-serif"
+      , "\"trebuchet ms\",sans-serif"
+      , "verdana,sans-serif"
+      , "arial,helvetica,sans-serif"
+      , "helvetica,sans-serif"]
+
 testDeleteCompanyTheme :: TestEnv ()
 testDeleteCompanyTheme = do
   company <- addNewCompany

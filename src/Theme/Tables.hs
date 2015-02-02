@@ -61,16 +61,16 @@ domainFont = Domain {
     , domChecks = mkChecks [Check "font_in_set" sql]
   } where sql = rawSQL (BS.intercalate " OR " $ map value fonts) ()
           value font = BS.concat ["VALUE = '", font, "'::text"]
-          fonts :: [BS.ByteString] = ["arial black,sans-serif"
-            , "arial narrow,sans-serif"
-            , "comic sans ms,sans-serif"
-            , "courier new,monospace"
-            , "Source Sans Pro, Helvetica Neue, Arial, sans-serif"
+          fonts :: [BS.ByteString] = ["\"arial black\",sans-serif"
+            , "\"arial narrow\",sans-serif"
+            , "\"comic sans ms\",sans-serif"
+            , "\"courier new\",monospace"
+            , "\"Source Sans Pro\", \"Helvetica Neue\", Arial, sans-serif"
             , "garamond,serif"
             , "georgia,serif"
-            , "times new roman,serif"
+            , "\"times new roman\",serif"
             , "tahoma,sans-serif"
-            , "trebuchet ms,sans-serif"
+            , "\"trebuchet ms\",sans-serif"
             , "verdana,sans-serif"
             , "arial,helvetica,sans-serif"
             , "helvetica,sans-serif"]

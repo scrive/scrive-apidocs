@@ -306,16 +306,16 @@ fromColor (Just color) template
 fromFont :: Maybe String -> String -> String
 fromFont Nothing template = template
 fromFont (Just font) template
-  | norm ==~ "arial black" = "arial black,sans-serif"
-  | norm ==~ "narrow" = "arial narrow,sans-serif"
-  | norm ==~ "comic" = "comic sans ms,sans-serif"
-  | norm ==~ "courier" = "courier new,monospace"
-  | norm ==~ "source" = "Source Sans Pro, Helvetica Neue, Arial, sans-serif"
+  | norm ==~ "arial black" = "\"arial black\",sans-serif"
+  | norm ==~ "narrow" = "\"arial narrow\",sans-serif"
+  | norm ==~ "comic" = "\"comic sans ms\",sans-serif"
+  | norm ==~ "courier" = "\"courier new\",monospace"
+  | norm ==~ "source" = "\"Source Sans Pro\", \"Helvetica Neue\", Arial, sans-serif"
   | norm ==~ "garamond" = "garamond,serif"
   | norm ==~ "georgia" = "georgia,serif"
-  | norm ==~ "times" = "times new roman,serif"
+  | norm ==~ "times" = "\"times new roman\",serif"
   | norm ==~ "tahoma" = "tahoma,sans-serif"
-  | norm ==~ "trebuchet" = "trebuchet ms,sans-serif"
+  | norm ==~ "trebuchet" = "\"trebuchet ms\",sans-serif"
   | norm ==~ "verdana" = "verdana,sans-serif"
   | norm ==~ "arial" = "arial,helvetica,sans-serif"
   | norm ==~ "helvetica" = "helvetica,sans-serif"

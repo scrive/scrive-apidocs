@@ -7,23 +7,23 @@ return React.createClass({
     getFont: React.PropTypes.func,
     setFont: React.PropTypes.func,
   },
-  availableFonts: function() {
-    return [
-        {name :'Comic Sans MS', value: 'comic sans ms,sans-serif'}
-      , {name :'Courier New', value: 'courier new,monospace'}
-      , {name :'Helvetica', value: 'helvetica,sans-serif'}
-      , {name :'Garamond', value:  'garamond,serif'}
-      , {name :'Georgia', value:  'georgia,serif'}
-      , {name :'Narrow', value:  'arial narrow,sans-serif'}
-      , {name :'Sans Serif', value:  'arial,helvetica,sans-serif'}
-      , {name :'Serif', value:  'times new roman,serif'}
-      , {name :'Source Sans Pro', value: 'Source Sans Pro, Helvetica Neue, Arial, sans-serif'}
-      , {name :'Tahoma', value: 'tahoma,sans-serif'}
-      , {name :'Trebuchet MS', value:  'trebuchet ms,sans-serif'}
-      , {name :'Verdana', value:  'verdana,sans-serif'}
-      , {name :'Wide', value: 'arial black,sans-serif'}
-    ];
-  } ,
+   availableFonts: function() {
+     return [
+         {name :'Comic Sans MS', value: '\"comic sans ms\",sans-serif'}
+       , {name :'Courier New', value: '\"courier new\",monospace'}
+       , {name :'Helvetica', value: 'helvetica,sans-serif'}
+       , {name :'Garamond', value:  'garamond,serif'}
+       , {name :'Georgia', value:  'georgia,serif'}
+       , {name :'Narrow', value:  '\"arial narrow\",sans-serif'}
+       , {name :'Sans Serif', value:  'arial,helvetica,sans-serif'}
+       , {name :'Serif', value:  '\"times new roman\",serif'}
+       , {name :'Source Sans Pro', value: '\"Source Sans Pro\", \"Helvetica Neue\", Arial, sans-serif'}
+       , {name :'Tahoma', value: 'tahoma,sans-serif'}
+       , {name :'Trebuchet MS', value:  '\"trebuchet ms\",sans-serif'}
+       , {name :'Verdana', value:  'verdana,sans-serif'}
+       , {name :'Wide', value: '\"arial black\",sans-serif'}
+     ];
+   } ,
   render: function() {
     var self = this;
     var Select  = NewSelect.Select;

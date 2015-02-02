@@ -76,7 +76,7 @@ tableBrandedDomains = tblTable {
           sqlSet "positive_text_color" $ ("#ffffff":: String)
           sqlSet "negative_color" $ ("#b9322f":: String)
           sqlSet "negative_text_color" $ ("#ffffff":: String)
-          sqlSet "font" $ ("Source Sans Pro, Helvetica Neue, Arial, sans-serif" :: String)
+          sqlSet "font" $ ("\"Source Sans Pro\", \"Helvetica Neue\", Arial, sans-serif" :: String)
           sqlResult "id"
         (mailThemeId::Int64) <- fetchOne unSingle
         runQuery_ . sqlInsert "themes" $  do
@@ -92,7 +92,7 @@ tableBrandedDomains = tblTable {
           sqlSet "positive_text_color" $ ("#ffffff":: String)
           sqlSet "negative_color" $ ("#b9322f":: String)
           sqlSet "negative_text_color" $ ("#ffffff":: String)
-          sqlSet "font" $ ("Source Sans Pro, Helvetica Neue, Arial, sans-serif" :: String)
+          sqlSet "font" $ ("\"Source Sans Pro\", \"Helvetica Neue\", Arial, sans-serif" :: String)
           sqlResult "id"
         (mainThemeId::Int64) <- fetchOne unSingle
         runQuery_ . sqlInsert "themes" $  do
@@ -108,7 +108,7 @@ tableBrandedDomains = tblTable {
           sqlSet "positive_text_color" $ ("#ffffff":: String)
           sqlSet "negative_color" $ ("#b9322f":: String)
           sqlSet "negative_text_color" $ ("#ffffff":: String)
-          sqlSet "font" $ ("Source Sans Pro, Helvetica Neue, Arial, sans-serif" :: String)
+          sqlSet "font" $ ("\"Source Sans Pro\", \"Helvetica Neue\", Arial, sans-serif" :: String)
           sqlResult "id"
         (loginThemeId::Int64) <- fetchOne unSingle
         runQuery_ . sqlInsert "branded_domains" $  do
