@@ -572,6 +572,7 @@ javascriptLocalisation =
              , notEntered: "$_notEntered()$"
              , checkbox: "$_signViewCheckbox()$"
              , signature: "$_signViewSignature()$"
+             , signArrowLabel: "$_signViewSignArrowLabel()$"
              , textfield: "$_signViewTextField()$"
              , filladitionfields : "$_filladitionfields()$"
              , filladitionfieldsdescription : "$_filladitionfieldsdescription()$"

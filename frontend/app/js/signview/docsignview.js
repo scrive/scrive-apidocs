@@ -268,6 +268,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
             this.set({'signtask' :
                             new PageTask({
                                 type: 'sign',
+                                label: localization.docsignview.signArrowLabel,
                                 isComplete: function() {
                                     return !model.document().currentSignatoryCanSign();
                                 },
