@@ -19,11 +19,11 @@ import Doc.API.V1.Calls
 import Doc.API.V1.DocumentToJSON
 import Doc.DocStateData
 import Doc.Model
-import Util.HasSomeUserInfo
 import OAuth.Model
 import TestingUtil
 import TestKontra as T
 import User.Model
+import Util.HasSomeUserInfo
 import Utils.Default
 
 docAPITests :: TestEnvSt -> Test
