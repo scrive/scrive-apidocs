@@ -20,7 +20,6 @@ module Branding.Control(
 
 import Control.Applicative
 import Control.Monad
-import Control.Monad.Trans
 import Data.Maybe
 import Happstack.Server.SimpleHTTP
 import qualified Data.ByteString.Lazy as BSL
@@ -48,7 +47,7 @@ import Util.SignatoryLinkUtils
 handleServiceBranding :: Kontrakcja m => String -> String -> m Response
 handleServiceBranding _ _ = do
   theme <- getServiceTheme
-  brandingCSS <- liftIO $ serviceBrandingCSS theme
+  brandingCSS <- serviceBrandingCSS theme
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
   return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
 
@@ -66,7 +65,7 @@ getServiceTheme = do
 handleLoginBranding :: Kontrakcja m => String -> String -> m Response
 handleLoginBranding _ _ = do
   theme <- getLoginTheme
-  brandingCSS <- liftIO $ loginBrandingCSS theme
+  brandingCSS <- loginBrandingCSS theme
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
   return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
 
@@ -80,7 +79,7 @@ getLoginTheme = do
 handleDomainBranding :: Kontrakcja m => String -> String-> m Response
 handleDomainBranding _ _ = do
   ctx <- getContext
-  brandingCSS <- liftIO $ domainBrandingCSS $ ctxbrandeddomain ctx
+  brandingCSS <- domainBrandingCSS $ ctxbrandeddomain ctx
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
   return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
 
@@ -88,7 +87,7 @@ handleDomainBranding _ _ = do
 handleSignviewBranding :: Kontrakcja m => DocumentID ->  SignatoryLinkID -> String -> String -> m Response
 handleSignviewBranding did slid _ _ = do
   theme <- getSignviewTheme did slid
-  brandingCSS <- liftIO $ signviewBrandingCSS theme
+  brandingCSS <- signviewBrandingCSS theme
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
   return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
 
@@ -110,7 +109,7 @@ getSignviewTheme did slid = do
 handleSignviewBrandingWithoutDocument :: Kontrakcja m => String -> String -> m Response
 handleSignviewBrandingWithoutDocument _ _ = do
   theme <- getSignviewThemeWithoutDocument
-  brandingCSS <- liftIO $ signviewBrandingCSS theme
+  brandingCSS <- signviewBrandingCSS theme
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
   return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
 
@@ -131,7 +130,7 @@ handleSignviewBrandingInternal _ _ = do
   company <- getCompanyForUser user
   companyui <- dbQuery $ GetCompanyUI (companyid company)
   theme <- dbQuery $ GetTheme $ fromMaybe (bdServiceTheme $ ctxbrandeddomain ctx) (companyServiceTheme $ companyui)
-  brandingCSS <- liftIO $ signviewBrandingCSS theme
+  brandingCSS <- signviewBrandingCSS theme
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
   return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
 

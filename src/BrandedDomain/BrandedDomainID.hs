@@ -42,7 +42,7 @@ unBrandedDomainID (BrandedDomainID i) = i
 
 -- TODO Fix to stop using read. Gracjan is working on that in unjson library
 unjsonBrandedDomainID :: UnjsonDef BrandedDomainID
-unjsonBrandedDomainID = unjsonInvmapR ((maybe (fail "Can't parse DomainID")  (return . BrandedDomainID) . maybeReadInt64)) (show . unBrandedDomainID :: BrandedDomainID -> String) unjsonDef
+unjsonBrandedDomainID = unjsonInvmapR ((maybe (fail "Can't parse DomainID")  return) . maybeRead) (show . unBrandedDomainID :: BrandedDomainID -> String) unjsonDef
 
 instance Unjson BrandedDomainID where
   unjsonDef = unjsonBrandedDomainID

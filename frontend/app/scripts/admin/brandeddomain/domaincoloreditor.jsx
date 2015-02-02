@@ -3,6 +3,13 @@
 define(["React","tinycolor","legacy_code","common/infotextinput"], function(React, tinycolor, _Legacy, InfoTextInput) {
 
 return React.createClass({
+  propTypes: {
+    title: React.PropTypes.string,
+    icons: React.PropTypes.string,
+    getValue: React.PropTypes.func,
+    setValue: React.PropTypes.func,
+    onColorPickerOpen: React.PropTypes.func
+  },
   getInitialState: function() {
     return {
       showColorPicker : false
@@ -50,8 +57,6 @@ return React.createClass({
                       </div>
                     );
                   })
-
-
               }
               <div className="domain-color-property-editor-color-picker">
                 <InfoTextInput

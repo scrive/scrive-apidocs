@@ -4,13 +4,18 @@ define(["React","legacy_code","common/uploadimagebutton"], function(React, _Lega
 
 
 return React.createClass({
+  propTypes: {
+    getLogo: React.PropTypes.func,
+    setLogo: React.PropTypes.func,
+    getBackgroundColor: React.PropTypes.func
+  },
   render: function() {
     var self = this;
     var model = this.props.model;
     return (
       <div className="theme-logo-editor">
         <div className="title theme-logo-editor-title">
-          {this.props.title}
+          {localization.branding.themes.logo}
         </div>
         <div className="theme-logo-editor-edit">
           <div

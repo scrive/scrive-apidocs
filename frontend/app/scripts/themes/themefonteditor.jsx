@@ -3,6 +3,10 @@
 define(["React","legacy_code","common/select"], function(React, _Legacy, NewSelect) {
 
 return React.createClass({
+  propTypes: {
+    getFont: React.PropTypes.func,
+    setFont: React.PropTypes.func,
+  },
   availableFonts: function() {
     return [
         {name :'Comic Sans MS', value: 'comic sans ms,sans-serif'}
@@ -22,7 +26,6 @@ return React.createClass({
   } ,
   render: function() {
     var self = this;
-    var model = this.props.model;
     var Select  = NewSelect.Select;
     var availableFonts = self.availableFonts();
     var availableFontOptions = [];

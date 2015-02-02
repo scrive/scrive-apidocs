@@ -28,8 +28,6 @@ import Text.StringTemplates.Templates
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BSC8
-import qualified Data.ByteString.UTF8 as BSU8
-import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Unjson as Unjson
 import qualified Data.Aeson as Aeson
 import qualified Text.StringTemplates.Fields as F
@@ -712,17 +710,15 @@ handleAdminCompanyUsageStatsMonths :: Kontrakcja m => CompanyID -> m JSValue
 handleAdminCompanyUsageStatsMonths cid = onlySalesOrAdmin $ do
   getMonthsStats (Right $ cid)
 
-jsonBrandedDomainsList ::Kontrakcja m => m Response
+jsonBrandedDomainsList ::Kontrakcja m => m Aeson.Value
 jsonBrandedDomainsList = onlySalesOrAdmin $ do
     allBrandedDomains <- dbQuery $ GetBrandedDomains
-    let  res = unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) unjsonBrandedDomainsList allBrandedDomains
-    return $ toResponseBS "text/json" $ res
+    return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True }) unjsonBrandedDomainsList allBrandedDomains
 
-jsonBrandedDomain :: Kontrakcja m => BrandedDomainID -> m Response
+jsonBrandedDomain :: Kontrakcja m => BrandedDomainID -> m Aeson.Value
 jsonBrandedDomain bdid = onlySalesOrAdmin $ do
   bd <- dbQuery $ GetBrandedDomainByID bdid
-  let  res = unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) unjsonBrandedDomain bd
-  return $ toResponseBS "text/json" $ res
+  return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True }) unjsonBrandedDomain bd
 
 updateBrandedDomain :: Kontrakcja m => BrandedDomainID -> m ()
 updateBrandedDomain xbdid = onlySalesOrAdmin $ do
@@ -731,8 +727,8 @@ updateBrandedDomain xbdid = onlySalesOrAdmin $ do
       Log.mixlog_ $ "Main domain can't be changed"
       internalError
     -- keep this 1to1 consistent with fields in the database
-    domainJSON <- guardJustM $ getField "domain"
-    case Aeson.eitherDecode $ BSL.fromStrict (BSU8.fromString domainJSON) of
+    domainJSON <- guardJustM $ getFieldBS "domain"
+    case Aeson.eitherDecode $ domainJSON of
      Left err -> do
        Log.mixlog_ $ "Error while parsing branding for adminonly " ++ err
        internalError

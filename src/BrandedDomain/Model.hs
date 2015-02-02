@@ -167,6 +167,7 @@ instance (MonadDB m) => DBUpdate m UpdateBrandedDomain () where
       sqlSet "reviewed_color" $ bdReviewedColor bd
       sqlSet "signed_color" $ bdSignedColor bd
       sqlWhereEq "id" (bdid bd)
+      sqlWhereNotEq "main_domain" True
 
 data NewBrandedDomain = NewBrandedDomain
 instance (MonadDB m, MonadThrow m, Log.MonadLog m) => DBUpdate m NewBrandedDomain BrandedDomainID where

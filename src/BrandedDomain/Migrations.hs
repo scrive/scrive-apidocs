@@ -108,20 +108,20 @@ addThemesToBrandedDomainAndMainDomain =
         runSQL_ "ALTER TABLE branded_domains ADD COLUMN browser_title TEXT NULL"
         runSQL_ "ALTER TABLE branded_domains ADD COLUMN favicon BYTEA NULL"
 
-        runSQL_ "ALTER TABLE branded_domains ADD COLUMN participant_color_1 TEXT NULL"
-        runSQL_ "ALTER TABLE branded_domains ADD COLUMN participant_color_2 TEXT NULL"
-        runSQL_ "ALTER TABLE branded_domains ADD COLUMN participant_color_3 TEXT NULL"
-        runSQL_ "ALTER TABLE branded_domains ADD COLUMN participant_color_4 TEXT NULL"
-        runSQL_ "ALTER TABLE branded_domains ADD COLUMN participant_color_5 TEXT NULL"
-        runSQL_ "ALTER TABLE branded_domains ADD COLUMN participant_color_6 TEXT NULL"
-        runSQL_ "ALTER TABLE branded_domains ADD COLUMN draft_color TEXT NULL"
-        runSQL_ "ALTER TABLE branded_domains ADD COLUMN cancelled_color TEXT NULL"
-        runSQL_ "ALTER TABLE branded_domains ADD COLUMN initiated_color TEXT NULL"
-        runSQL_ "ALTER TABLE branded_domains ADD COLUMN sent_color TEXT NULL"
-        runSQL_ "ALTER TABLE branded_domains ADD COLUMN delivered_color TEXT NULL"
-        runSQL_ "ALTER TABLE branded_domains ADD COLUMN opened_color TEXT NULL"
-        runSQL_ "ALTER TABLE branded_domains ADD COLUMN reviewed_color TEXT NULL"
-        runSQL_ "ALTER TABLE branded_domains ADD COLUMN signed_color TEXT NULL"
+        runSQL_ "ALTER TABLE branded_domains ADD COLUMN participant_color_1 color NULL"
+        runSQL_ "ALTER TABLE branded_domains ADD COLUMN participant_color_2 color NULL"
+        runSQL_ "ALTER TABLE branded_domains ADD COLUMN participant_color_3 color NULL"
+        runSQL_ "ALTER TABLE branded_domains ADD COLUMN participant_color_4 color NULL"
+        runSQL_ "ALTER TABLE branded_domains ADD COLUMN participant_color_5 color NULL"
+        runSQL_ "ALTER TABLE branded_domains ADD COLUMN participant_color_6 color NULL"
+        runSQL_ "ALTER TABLE branded_domains ADD COLUMN draft_color color NULL"
+        runSQL_ "ALTER TABLE branded_domains ADD COLUMN cancelled_color color NULL"
+        runSQL_ "ALTER TABLE branded_domains ADD COLUMN initiated_color color NULL"
+        runSQL_ "ALTER TABLE branded_domains ADD COLUMN sent_color color NULL"
+        runSQL_ "ALTER TABLE branded_domains ADD COLUMN delivered_color color NULL"
+        runSQL_ "ALTER TABLE branded_domains ADD COLUMN opened_color color NULL"
+        runSQL_ "ALTER TABLE branded_domains ADD COLUMN reviewed_color color NULL"
+        runSQL_ "ALTER TABLE branded_domains ADD COLUMN signed_color color NULL"
 
 
         -- Creating themes and connecting them
@@ -300,14 +300,14 @@ addMainDomain = do
                     sqlSet "participant_color_4" ("#7908aa":: String)
                     sqlSet "participant_color_5" ("#53df00":: String)
                     sqlSet "participant_color_6" ("#990000":: String)
-                    sqlSet "draft_color" ("#B2B2B2":: String)
-                    sqlSet "cancelled_color" ("#D64845":: String)
-                    sqlSet "initiated_color" ("#D2793A":: String)
-                    sqlSet "sent_color" ("#ECA74D":: String)
-                    sqlSet "delivered_color" ("#E7D875":: String)
-                    sqlSet "opened_color" ("#54B588":: String)
-                    sqlSet "reviewed_color" ("#62C3DE":: String)
-                    sqlSet "signed_color" ("#4C4C4C":: String)
+                    sqlSet "draft_color" ("#b2b2b2":: String)
+                    sqlSet "cancelled_color" ("#d64845":: String)
+                    sqlSet "initiated_color" ("#d2793a":: String)
+                    sqlSet "sent_color" ("#eca74d":: String)
+                    sqlSet "delivered_color" ("#e7d875":: String)
+                    sqlSet "opened_color" ("#54b588":: String)
+                    sqlSet "reviewed_color" ("#62c3de":: String)
+                    sqlSet "signed_color" ("#4c4c4c":: String)
                     sqlResult "id"
         (domainId::Int64) <- fetchOne unSingle
         runQuery_ . sqlInsert "theme_owners" $  do

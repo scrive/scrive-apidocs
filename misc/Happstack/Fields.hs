@@ -48,6 +48,11 @@ readField :: (HasRqData m, MonadIO m, Read a, ServerMonad m)
           => String -> m (Maybe a)
 readField name = (join . liftM maybeRead) `liftM` getField name
 
+getFieldBS :: (HasRqData m, MonadIO m, ServerMonad m)
+          => String -> m (Maybe BSLU.ByteString)
+getFieldBS name = (listToMaybe . reverse) `liftM` fromMaybe [] `liftM` getDataFn' (lookInputList name)
+
+
 getFileField :: (HasRqData m, MonadIO m, ServerMonad m)
              => String -> m (Maybe BS.ByteString)
 getFileField name = do

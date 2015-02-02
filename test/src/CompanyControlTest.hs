@@ -1,8 +1,7 @@
 module CompanyControlTest (companyControlTests) where
 
 import Control.Applicative
---import Control.Monad.Trans (liftIO)
---import Data.Maybe
+import qualified Data.Aeson as A
 import Happstack.Server hiding (simpleHTTP)
 import Test.Framework
 
@@ -11,6 +10,7 @@ import Text.JSON.FromJSValue
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString.Lazy.UTF8 as BSL
 
 import BrandedDomain.BrandedDomain
 import Company.CompanyControl
@@ -19,13 +19,11 @@ import Company.Model
 import CompanyAccounts.Model
 import Context
 import DB
---import Redirect
 import TestingUtil
 import TestKontra as T
 import Theme.Model
 import Util.MonadUtils
 import Utils.Default
-import Utils.String
 
 companyControlTests :: TestEnvSt -> Test
 companyControlTests env = testGroup "CompanyControl" [
@@ -43,8 +41,8 @@ test_handleGetCompanyJSON = do
     <$> mkContext defaultValue
 
   req <- mkRequest GET []
-  (rsp, _ctx') <- runTestKontra req ctx $ handleGetCompanyBranding Nothing
-  (jsv :: JSValue) <- case decode (BS.toString $ concatChunks $ rsBody rsp) of
+  (avalue, _ctx') <- runTestKontra req ctx $ handleGetCompanyBranding Nothing
+  (jsv :: JSValue) <- case decode (BSL.toString $ A.encode avalue) of
                Ok js -> return $ js
                _ -> assertFailure "Response from handleGetCompanyBranding is not a valid JSON" >> error ""
   (jsonCompanyid :: String) <- guardJustM $ withJSValue jsv $ fromJSValueField "companyid"
@@ -87,8 +85,8 @@ test_settingUIWithHandleChangeCompanyBranding = do
   req1 <- mkRequest POST [ ("companyui", inText $ "{\"companyid\":\""++show (companyid company) ++"\",\"mailTheme\":\""++show (themeID mailTheme) ++"\",\"signviewTheme\":\""++show (themeID signviewTheme)++"\",\"serviceTheme\":\""++show (themeID serviceTheme)++"\",\"browserTitle\":\""++browserTitle++"\",\"smsOriginator\":\""++smsOriginator++"\",\"favicon\":\""++faviconBase64++"\"}")]
   (_, _) <- runTestKontra req1 ctx $ handleChangeCompanyBranding Nothing
   req2 <- mkRequest GET []
-  (rsp, _) <- runTestKontra req2 ctx $ handleGetCompanyBranding Nothing
-  (jsv :: JSValue) <- case decode (BS.toString $ concatChunks $ rsBody rsp) of
+  (avalue, _) <- runTestKontra req2 ctx $ handleGetCompanyBranding Nothing
+  (jsv :: JSValue) <- case decode (BSL.toString $ A.encode avalue) of
                Ok js -> return $ js
                _ -> assertFailure "Response from handleGetCompanyBranding is not a valid JSON" >> error ""
   (jsonMailTheme :: Maybe String) <- withJSValue jsv $ fromJSValueField "mailTheme"

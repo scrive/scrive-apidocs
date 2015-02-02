@@ -81,7 +81,17 @@ window.FlashMessage = function(args) {
             ajax : true,
             type : args.type,
             content : args.content,
-            ajaxsuccess : function() {window.location = args.redirect;},
+            ajaxsuccess : function() {
+              // If we only change hash - it will not reload page. hashchange may also trigger some default action (like change content of tab).
+              // To avoid this, we block unbind hashchange, change location with hash and force reload.
+              if (args.hashChangeOnly) {
+                $(window).unbind('hashchange');
+                window.location = args.redirect;
+                location.reload(true);
+              } else {
+                window.location = args.redirect;
+              }
+            },
             ajaxerror   : function() {window.location = args.redirect;}
           }).send();
           return;

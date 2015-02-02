@@ -9,7 +9,7 @@ import BrandedDomain.BrandedDomain
 import Context
 import Theme.Model
 import Utils.Default
-
+import qualified Data.Aeson as A
 import BrandedDomain.Model
 import Company.Model
 import DB
@@ -18,8 +18,8 @@ import TestKontra
 import Happstack.Server hiding (simpleHTTP)
 import Company.CompanyControl
 import Text.JSON
-import qualified Data.ByteString.UTF8 as BSU8
-import Utils.String
+import qualified Data.ByteString.Lazy.UTF8 as BSL
+
 import Data.Unjson
 import Theme.View
 import User.Model
@@ -44,14 +44,14 @@ testFetchCompanyBranding = do
   ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext defaultValue
   req1 <- mkRequest GET []
-  (rsp1, _) <- runTestKontra req1 ctx $ handleGetCompanyBranding Nothing
-  case decode (BSU8.toString $ concatChunks $ rsBody rsp1) of
+  (avalue1, _) <- runTestKontra req1 ctx $ handleGetCompanyBranding Nothing
+  case decode (BSL.toString $ A.encode avalue1) of
                Ok (_ :: JSValue) -> return ()
                _ -> assertFailure "Response from handleGetCompanyBranding is not a valid JSON"
 
   req2 <- mkRequest GET []
-  (rsp2, _) <- runTestKontra req2 ctx $ handleGetThemes Nothing
-  case decode (BSU8.toString $ concatChunks $ rsBody rsp2) of
+  (avalue2, _) <- runTestKontra req2 ctx $ handleGetThemes Nothing
+  case decode (BSL.toString $ A.encode avalue2) of
                Ok (_ :: JSValue) -> return ()
                _ -> assertFailure "Response from handleGetThemes is not a valid JSON"
 
@@ -59,8 +59,8 @@ testFetchDomainThemes:: TestEnv ()
 testFetchDomainThemes = do
   ctx <-  mkContext defaultValue
   req1 <- mkRequest GET []
-  (rsp1, _) <- runTestKontra req1 ctx $ handleGetDomainThemes
-  case decode (BSU8.toString $ concatChunks $ rsBody rsp1) of
+  (avalue, _) <- runTestKontra req1 ctx $ handleGetDomainThemes
+  case decode (BSL.toString $  A.encode avalue) of
                Ok (_ :: JSValue) -> return ()
                _ -> assertFailure "Response from handleGetDomainThemes is not a valid JSON"
 

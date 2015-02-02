@@ -3,6 +3,15 @@
 define(["React","tinycolor","legacy_code","common/infotextinput"], function(React, tinycolor,_Legacy, InfoTextInput) {
 
 return React.createClass({
+  propTypes: {
+    title: React.PropTypes.string,
+    sampleText: React.PropTypes.string,
+    getColor: React.PropTypes.func,
+    getTextColor: React.PropTypes.func,
+    setColor: React.PropTypes.func,
+    setTextColor: React.PropTypes.func,
+    onColorPickerOpen: React.PropTypes.func
+  },
   getInitialState: function() {
     return {
       showColorColorPicker : false,
@@ -53,7 +62,6 @@ return React.createClass({
   },
   render: function() {
     var self = this;
-    var model = this.props.model;
     return (
       <div className="theme-color-editor">
         <div className="title theme-color-editor-title">

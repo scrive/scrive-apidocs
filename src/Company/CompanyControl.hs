@@ -23,8 +23,6 @@ import Happstack.StaticRouting (Route, dir, choice)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BSC8
-import qualified Data.ByteString.UTF8 as BSU8
-import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Unjson as Unjson
 import qualified Data.Aeson as Aeson
 
@@ -66,18 +64,17 @@ adminRoutes = choice
   , dir "companybranding" $ dir "deletetheme" $  hPost $ toK2 $ (\cid tid -> handleDeleteTheme (Just cid) tid)
   ]
 
-handleGetCompanyBranding :: Kontrakcja m => Maybe CompanyID -> m Response
+handleGetCompanyBranding :: Kontrakcja m => Maybe CompanyID -> m Aeson.Value
 handleGetCompanyBranding mcid = do
   _ctx <- getContext
   withCompanyAdminOrAdminOnly mcid $ \company -> do
     companyui <- dbQuery $ GetCompanyUI (companyid company)
-    let  res = unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) unjsonCompanyUI companyui
-    return $ toResponseBS "text/json" $ res
+    return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True }) unjsonCompanyUI companyui
 
 handleChangeCompanyBranding :: Kontrakcja m => Maybe CompanyID -> m ()
 handleChangeCompanyBranding mcid = withCompanyAdminOrAdminOnly mcid $ \company -> do
-  companyUIJSON <- guardJustM $ getField "companyui"
-  case Aeson.eitherDecode $ BSL.fromStrict (BSU8.fromString companyUIJSON) of
+  companyUIJSON <- guardJustM $ getFieldBS "companyui"
+  case Aeson.eitherDecode $ companyUIJSON of
      Left err -> do
        Log.mixlog_ $ "Error while parsing company branding " ++ err
        internalError
@@ -87,22 +84,22 @@ handleChangeCompanyBranding mcid = withCompanyAdminOrAdminOnly mcid $ \company -
            return ()
         _ -> internalError
 
-handleGetThemes :: Kontrakcja m =>  Maybe CompanyID -> m Response
+handleGetThemes :: Kontrakcja m =>  Maybe CompanyID -> m Aeson.Value
 handleGetThemes mcid = withCompanyAdminOrAdminOnly mcid $ \company -> do
   handleGetThemesForCompany (companyid company)
 
-handleGetDomainThemes :: Kontrakcja m =>  m Response
+handleGetDomainThemes :: Kontrakcja m =>  m Aeson.Value
 handleGetDomainThemes = do
   bd <- ctxbrandeddomain <$> getContext
   handleGetThemesUsedByDomain bd
 
-handleGetSignviewTheme :: Kontrakcja m => m Response
+handleGetSignviewTheme :: Kontrakcja m => m Aeson.Value
 handleGetSignviewTheme = withCompanyUser $ \(_,company) -> do
   cu <- dbQuery $ GetCompanyUI $ companyid company
   bd <- ctxbrandeddomain <$> getContext
   handleGetTheme $ fromMaybe (bdSignviewTheme bd) (companySignviewTheme cu)
 
-handleNewTheme :: Kontrakcja m =>  String -> Maybe CompanyID -> m Response
+handleNewTheme :: Kontrakcja m =>  String -> Maybe CompanyID -> m Aeson.Value
 handleNewTheme s mcid = withCompanyAdminOrAdminOnly mcid $ \company -> do
   bd <- ctxbrandeddomain <$> getContext
   tid <- case s of

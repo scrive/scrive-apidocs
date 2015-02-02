@@ -18,9 +18,6 @@ module Theme.Control (
 
 import Data.Unjson
 import Data.Unjson as Unjson
-import Happstack.Server hiding (dir, simpleHTTP)
-import qualified Data.ByteString.UTF8 as BSU8
-import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Aeson as Aeson
 
 import BrandedDomain.BrandedDomain
@@ -34,39 +31,35 @@ import Theme.View
 import Util.MonadUtils
 import qualified Log as Log
 
-handleGetTheme:: Kontrakcja m => ThemeID -> m Response
+handleGetTheme:: Kontrakcja m => ThemeID -> m Aeson.Value
 handleGetTheme tid =  do
   theme <- dbQuery $ GetTheme tid
-  let  res = unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) unjsonTheme theme
-  return $ toResponseBS "text/json" $ res
+  return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True }) unjsonTheme theme
 
-handleGetThemesForCompany:: Kontrakcja m => CompanyID -> m Response
+handleGetThemesForCompany:: Kontrakcja m => CompanyID -> m Aeson.Value
 handleGetThemesForCompany cid =  do
   themes <- dbQuery $ GetThemesForCompany cid
-  let  res = unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) unjsonThemesList themes
-  return $ toResponseBS "text/json" $ res
+  return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True }) unjsonThemesList themes
 
-handleGetThemesForDomain:: Kontrakcja m => BrandedDomainID -> m Response
+handleGetThemesForDomain:: Kontrakcja m => BrandedDomainID -> m Aeson.Value
 handleGetThemesForDomain did =  do
   themes <- dbQuery $ GetThemesForDomain did
-  let  res = unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) unjsonThemesList themes
-  return $ toResponseBS "text/json" $ res
+  return $ Unjson.unjsonToJSON'(Options { pretty = True, indent = 2, nulls = True }) unjsonThemesList themes
 
 -- Generate list of themes used by given domain. Note that order is important here - but we don't need to introduce any middle structure.
-handleGetThemesUsedByDomain:: Kontrakcja m => BrandedDomain -> m Response
+handleGetThemesUsedByDomain:: Kontrakcja m => BrandedDomain -> m Aeson.Value
 handleGetThemesUsedByDomain domain =  do
   mailTheme <- dbQuery $ GetTheme $ bdMailTheme domain
   signviewTheme <- dbQuery $ GetTheme $ bdSignviewTheme domain
   serviceTheme <- dbQuery $ GetTheme $ bdServiceTheme domain
-  let  res = unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) unjsonThemesList [mailTheme,signviewTheme,serviceTheme]
-  return $ toResponseBS "text/json" $ res
+  return $ Unjson.unjsonToJSON'  (Options { pretty = True, indent = 2, nulls = True }) unjsonThemesList [mailTheme,signviewTheme,serviceTheme]
 
 handleUpdateThemeForDomain:: Kontrakcja m => BrandedDomainID -> ThemeID -> m ()
 handleUpdateThemeForDomain did tid =  do
   guardNotMainDomain did "Main domain themes can't be changed"
   theme <- dbQuery $ GetTheme tid
-  themeJSON <- guardJustM $ getField "theme"
-  case Aeson.eitherDecode $ BSL.fromStrict (BSU8.fromString themeJSON) of
+  themeJSON <- guardJustM $ getFieldBS "theme"
+  case Aeson.eitherDecode themeJSON of
     Left err -> do
       Log.mixlog_ $ "Error while parsing theme for domain " ++ err
       internalError
@@ -79,8 +72,8 @@ handleUpdateThemeForDomain did tid =  do
 handleUpdateThemeForCompany:: Kontrakcja m => CompanyID -> ThemeID -> m ()
 handleUpdateThemeForCompany cid tid =  do
   theme <- dbQuery $ GetTheme tid
-  themeJSON <- guardJustM $ getField "theme"
-  case Aeson.eitherDecode $ BSL.fromStrict (BSU8.fromString themeJSON) of
+  themeJSON <- guardJustM $ getFieldBS "theme"
+  case Aeson.eitherDecode themeJSON of
    Left err -> do
      Log.mixlog_ $ "Error while parsing theme for company " ++ err
      internalError
@@ -91,22 +84,20 @@ handleUpdateThemeForCompany cid tid =  do
         _ -> internalError
 
 
-handleNewThemeForDomain:: Kontrakcja m => BrandedDomainID -> ThemeID -> m Response
+handleNewThemeForDomain:: Kontrakcja m => BrandedDomainID -> ThemeID -> m Aeson.Value
 handleNewThemeForDomain did tid = do
   guardNotMainDomain did "Can't create new themes for main domain"
   theme <- dbQuery $ GetTheme tid
   name <- guardJustM $ getField "name"
   newTheme <- dbUpdate $ InsertNewThemeForDomain did $ theme {themeName = name}
-  let  res = unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) unjsonTheme newTheme
-  return $ toResponseBS "text/json" $ res
+  return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True }) unjsonTheme newTheme
 
-handleNewThemeForCompany :: Kontrakcja m => CompanyID -> ThemeID -> m Response
+handleNewThemeForCompany :: Kontrakcja m => CompanyID -> ThemeID -> m Aeson.Value
 handleNewThemeForCompany cid tid = do
   theme <- dbQuery $ GetTheme tid
   name <- guardJustM $ getField "name"
   newTheme <- dbUpdate $ InsertNewThemeForCompany cid $ theme {themeName = name}
-  let  res = unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) unjsonTheme newTheme
-  return $ toResponseBS "text/json" $ res
+  return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True }) unjsonTheme newTheme
 
 handleDeleteThemeForDomain:: Kontrakcja m => BrandedDomainID -> ThemeID -> m ()
 handleDeleteThemeForDomain did tid = do

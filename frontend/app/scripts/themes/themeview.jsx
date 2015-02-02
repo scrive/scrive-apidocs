@@ -49,7 +49,6 @@ return React.createClass({
               </div>
               <div className="theme-edit-section">
                 <ThemeLogoEditor
-                  title={localization.branding.themes.logo}
                   getBackgroundColor={function() {return model.brandColor();}}
                   getLogo={function() {return model.logo();}}
                   setLogo={function(l) {return model.setLogo(l);}}

@@ -36,15 +36,14 @@ return React.createClass({
       var shouldReloadOnSave= model.shouldReloadOnSave();
       var saveCompanyBranding = function() {
        model.companybranding().save(function() {
-         new FlashMessage({type : "success", content: localization.branding.saved});
          if (!shouldReloadOnSave) {
            new FlashMessage({type : "success", content: localization.branding.saved});
            if (callback) {
              callback();
            }
          } else {
-           if (callback) {
-            callback(function() { new FlashMessage({type : "success", content: localization.branding.saved, withReload: true});});
+           if (urlInsteadOfCallback) {
+            new FlashMessage({type : "success", content: localization.branding.saved, withRedirect: true, redirect: urlInsteadOfCallback, hashChangeOnly : true});
            } else {
             new FlashMessage({type : "success", content: localization.branding.saved, withReload: true});
            }
@@ -74,7 +73,7 @@ return React.createClass({
 
       saveAllThemesAndCompanyBranding();
     },
-    changeMode : function(switchModeFunction) {
+    changeMode : function(switchModeFunction, newModeUrl) {
       var self = this;
       var model = self.props.model;
       if (!model.dirty()) {
@@ -87,7 +86,7 @@ return React.createClass({
             switchModeFunction();
             popup.close();
             afterSave();
-          });
+          }, newModeUrl);
         };
         var onDiscard = function() {
             model.reload();
@@ -122,8 +121,7 @@ return React.createClass({
                       function() {
                         model.switchToMailThemeMode();
                       });
-                    }
-                  }
+                   }}
                 >
                   <h4>{localization.branding.themesTitle}</h4>
                 </li>
@@ -133,9 +131,10 @@ return React.createClass({
                     self.changeMode(
                       function() {
                         model.switchToAdditionalSettingsMode();
-                      });
-                    }
-                  }
+                      },
+                      model.additonalSettingsUrl()
+                    );
+                  }}
                 >
                   <h4>{localization.branding.settingsTitle}</h4>
                 </li>

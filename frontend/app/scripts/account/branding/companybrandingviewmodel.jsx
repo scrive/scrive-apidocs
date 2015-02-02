@@ -174,6 +174,9 @@ return Backbone.Model.extend({
      location.hash = "#branding-settings";
      return this.set({"mode" : "additional-settings"});
   },
+  additonalSettingsUrl : function() {
+     return location.origin + location.pathname + "#branding-settings";
+  },
   themeMode : function() {
     return this.mailThemeMode() || this.signviewThemeMode() || this.serviceThemeMode();
   },

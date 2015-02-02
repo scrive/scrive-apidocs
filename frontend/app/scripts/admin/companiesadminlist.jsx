@@ -4,7 +4,7 @@ define(['React', 'lists/list','legacy_code'], function(React, List) {
 
 
 return React.createClass({
-     mixins : [List.ReloadableContainer],
+    mixins : [List.ReloadableContainer],
     render: function() {
       var self = this;
       return (

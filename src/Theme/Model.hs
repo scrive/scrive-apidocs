@@ -43,7 +43,7 @@ data Theme = Theme {
   , themeNegativeColor            :: !String
   , themeNegativeTextColor        :: !String
   , themeFont                     :: !String
-}
+} deriving (Eq, Ord, Show) 
 
 data GetTheme = GetTheme ThemeID
 instance (MonadDB m,MonadThrow m) => DBQuery m GetTheme Theme where
@@ -103,6 +103,10 @@ instance (MonadDB m,MonadThrow m) => DBUpdate m UpdateThemeForDomain Bool where
           sqlWhereEq "domain_id" $ did
           sqlWhereEq "theme_id" $ themeID t
           sqlResult "theme_id"
+      sqlWhereNotExists $ do -- Never try to change themes of main domain
+        sqlSelect "branded_domains" $ do
+          sqlWhereEq "id" $ did
+          sqlWhereEq "main_domain" $ True
 
 setThemeData :: Theme -> State SqlUpdate ()
 setThemeData t = do
@@ -157,6 +161,10 @@ instance (MonadDB m,MonadThrow m) => DBUpdate m DeleteThemeOwnedByDomain () wher
           sqlWhereEq "domain_id" $ did
           sqlWhereEq "theme_id" $ tid
           sqlResult "theme_id"
+      sqlWhereNotExists $ do -- Never try to delete themes of main domain
+        sqlSelect "branded_domains" $ do
+          sqlWhereEq "id" $ did
+          sqlWhereEq "main_domain" $ True
 
 data DeleteThemeOwnedByCompany = DeleteThemeOwnedByCompany CompanyID ThemeID
 instance (MonadDB m,MonadThrow m) => DBUpdate m DeleteThemeOwnedByCompany () where

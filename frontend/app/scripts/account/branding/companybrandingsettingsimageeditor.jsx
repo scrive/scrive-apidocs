@@ -3,6 +3,14 @@
 define(["React","legacy_code","common/uploadimagebutton"], function(React,_Legacy, UploadImageButton) {
 
 return React.createClass({
+  propTypes: {
+    title: React.PropTypes.string,
+    description: React.PropTypes.string,
+    uploadText: React.PropTypes.string,
+    alternativeImage: React.PropTypes.string,
+    getValue: React.PropTypes.func,
+    setValue: React.PropTypes.func
+  },
   render: function() {
     var self = this;
     return (

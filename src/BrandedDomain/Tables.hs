@@ -24,20 +24,20 @@ tableBrandedDomains = tblTable {
     , tblColumn { colName = "main_domain",                   colType = BoolT, colNullable = False, colDefault = Just "false" }
     , tblColumn { colName = "browser_title",                 colType = TextT, colNullable = False }
     , tblColumn { colName = "favicon",                       colType = BinaryT, colNullable = False  }
-    , tblColumn { colName = "participant_color_1",           colType = TextT, colNullable = False }
-    , tblColumn { colName = "participant_color_2",           colType = TextT, colNullable = False }
-    , tblColumn { colName = "participant_color_3",           colType = TextT, colNullable = False }
-    , tblColumn { colName = "participant_color_4",           colType = TextT, colNullable = False }
-    , tblColumn { colName = "participant_color_5",           colType = TextT, colNullable = False }
-    , tblColumn { colName = "participant_color_6",           colType = TextT, colNullable = False }
-    , tblColumn { colName = "draft_color",                   colType = TextT, colNullable = False }
-    , tblColumn { colName = "cancelled_color",               colType = TextT, colNullable = False }
-    , tblColumn { colName = "initiated_color",               colType = TextT, colNullable = False }
-    , tblColumn { colName = "sent_color",                    colType = TextT, colNullable = False }
-    , tblColumn { colName = "delivered_color",               colType = TextT, colNullable = False }
-    , tblColumn { colName = "opened_color",                  colType = TextT, colNullable = False }
-    , tblColumn { colName = "reviewed_color",                colType = TextT, colNullable = False }
-    , tblColumn { colName = "signed_color",                  colType = TextT, colNullable = False }
+    , tblColumn { colName = "participant_color_1",           colType = CustomT "color", colNullable = False }
+    , tblColumn { colName = "participant_color_2",           colType = CustomT "color", colNullable = False }
+    , tblColumn { colName = "participant_color_3",           colType = CustomT "color", colNullable = False }
+    , tblColumn { colName = "participant_color_4",           colType = CustomT "color", colNullable = False }
+    , tblColumn { colName = "participant_color_5",           colType = CustomT "color", colNullable = False }
+    , tblColumn { colName = "participant_color_6",           colType = CustomT "color", colNullable = False }
+    , tblColumn { colName = "draft_color",                   colType = CustomT "color", colNullable = False }
+    , tblColumn { colName = "cancelled_color",               colType = CustomT "color", colNullable = False }
+    , tblColumn { colName = "initiated_color",               colType = CustomT "color", colNullable = False }
+    , tblColumn { colName = "sent_color",                    colType = CustomT "color", colNullable = False }
+    , tblColumn { colName = "delivered_color",               colType = CustomT "color", colNullable = False }
+    , tblColumn { colName = "opened_color",                  colType = CustomT "color", colNullable = False }
+    , tblColumn { colName = "reviewed_color",                colType = CustomT "color", colNullable = False }
+    , tblColumn { colName = "signed_color",                  colType = CustomT "color", colNullable = False }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblIndexes = [
@@ -130,14 +130,14 @@ tableBrandedDomains = tblTable {
                     sqlSet "participant_color_4" ("#7908aa":: String)
                     sqlSet "participant_color_5" ("#53df00":: String)
                     sqlSet "participant_color_6" ("#990000":: String)
-                    sqlSet "draft_color" ("#B2B2B2":: String)
-                    sqlSet "cancelled_color" ("#D64845":: String)
-                    sqlSet "initiated_color" ("#D2793A":: String)
-                    sqlSet "sent_color" ("#ECA74D":: String)
-                    sqlSet "delivered_color" ("#E7D875":: String)
-                    sqlSet "opened_color" ("#54B588":: String)
-                    sqlSet "reviewed_color" ("#62C3DE":: String)
-                    sqlSet "signed_color" ("#4C4C4C":: String)
+                    sqlSet "draft_color" ("#b2b2b2":: String)
+                    sqlSet "cancelled_color" ("#d64845":: String)
+                    sqlSet "initiated_color" ("#d2793a":: String)
+                    sqlSet "sent_color" ("#eca74d":: String)
+                    sqlSet "delivered_color" ("#e7d875":: String)
+                    sqlSet "opened_color" ("#54b588":: String)
+                    sqlSet "reviewed_color" ("#62c3de":: String)
+                    sqlSet "signed_color" ("#4c4c4c":: String)
                     sqlResult "id"
         (domainId::Int64) <- fetchOne unSingle
         runQuery_ . sqlInsert "theme_owners" $  do

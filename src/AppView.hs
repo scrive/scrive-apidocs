@@ -231,6 +231,7 @@ standardPageFields ctx mcompanyui ad = do
 -- If future we should return 'application/json' for all browsers
 -- except for IE8. We do not have access to 'Agent' string at this
 -- point though, so we go this hackish route for everybody.
+
 jsonContentType :: BS.ByteString
 jsonContentType = "text/html; charset=utf-8"
 
