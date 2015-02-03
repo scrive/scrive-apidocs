@@ -27,6 +27,7 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
 
 import BrandedDomain.BrandedDomain
+import Branding.Cache
 import Branding.CSS
 import Company.CompanyUI
 import Company.Model
@@ -42,11 +43,12 @@ import User.Model
 import User.Utils
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
+import qualified MemCache as MemCache
 
 handleServiceBranding :: Kontrakcja m => String -> String -> m Response
-handleServiceBranding _ _ = do
+handleServiceBranding brandinghash _ = do
   theme <- getServiceTheme
-  brandingCSS <- serviceBrandingCSS theme
+  brandingCSS <- withLessCache (ServiceBranding (themeID theme) brandinghash) $ serviceBrandingCSS theme
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
   return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
 
@@ -62,9 +64,9 @@ getServiceTheme = do
 
 
 handleLoginBranding :: Kontrakcja m => String -> String -> m Response
-handleLoginBranding _ _ = do
+handleLoginBranding brandinghash _ = do
   theme <- getLoginTheme
-  brandingCSS <- loginBrandingCSS theme
+  brandingCSS <- withLessCache (LoginBranding (themeID theme) brandinghash) $ loginBrandingCSS theme
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
   return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
 
@@ -76,17 +78,17 @@ getLoginTheme = do
 
 -- Generates domain branding - enything that is onlu branded at domain level - i.e colors of status icons
 handleDomainBranding :: Kontrakcja m => String -> String-> m Response
-handleDomainBranding _ _ = do
+handleDomainBranding brandinghash _ = do
   ctx <- getContext
-  brandingCSS <- domainBrandingCSS $ ctxbrandeddomain ctx
+  brandingCSS <- withLessCache (DomainBranding (bdid $ ctxbrandeddomain ctx) brandinghash) $ domainBrandingCSS $ ctxbrandeddomain ctx
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
   return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
 
 -- Used to brand signview
 handleSignviewBranding :: Kontrakcja m => DocumentID ->  SignatoryLinkID -> String -> String -> m Response
-handleSignviewBranding did slid _ _ = do
+handleSignviewBranding did slid brandinghash _ = do
   theme <- getSignviewTheme did slid
-  brandingCSS <- signviewBrandingCSS theme
+  brandingCSS <-  withLessCache (SignviewBranding (themeID theme) brandinghash) $ signviewBrandingCSS theme
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
   return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
 
@@ -106,9 +108,9 @@ getSignviewTheme did slid = do
 
 -- Used to brand some view with signview branding but without any particular document. It requires some user to be logged in.
 handleSignviewBrandingWithoutDocument :: Kontrakcja m => String -> String -> m Response
-handleSignviewBrandingWithoutDocument _ _ = do
+handleSignviewBrandingWithoutDocument brandinghash _ = do
   theme <- getSignviewThemeWithoutDocument
-  brandingCSS <- signviewBrandingCSS theme
+  brandingCSS <- withLessCache (SignviewBranding (themeID theme) brandinghash) $ signviewBrandingCSS theme
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
   return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
 
@@ -123,13 +125,13 @@ getSignviewThemeWithoutDocument = do
 
 -- Used to brand signview with current logged in user service branding - if user entered document from archive, he should not be supprised by branding
 handleSignviewBrandingInternal :: Kontrakcja m => String -> String -> m Response
-handleSignviewBrandingInternal _ _ = do
+handleSignviewBrandingInternal brandinghash _ = do
   ctx <- getContext
   user <-  guardJust $ mplus (ctxmaybeuser ctx) (ctxmaybepaduser ctx)
   company <- getCompanyForUser user
   companyui <- dbQuery $ GetCompanyUI (companyid company)
   theme <- dbQuery $ GetTheme $ fromMaybe (bdServiceTheme $ ctxbrandeddomain ctx) (companyServiceTheme $ companyui)
-  brandingCSS <- signviewBrandingCSS theme
+  brandingCSS <- withLessCache (SignviewBranding (themeID theme) brandinghash) $ signviewBrandingCSS theme
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
   return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
 
@@ -199,3 +201,16 @@ faviconIcon _ = do
   let favicon = fromMaybe (bdFavicon $ ctxbrandeddomain ctx) companyFavicon
   return $ setHeaderBS "Cache-Control" "max-age=31536000" $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") $
         Response 200 Map.empty nullRsFlags (BSL.fromChunks $ [unBinary $ favicon]) Nothing
+
+
+-- Utils
+withLessCache :: (Kontrakcja m ) => LessCacheKey -> m BSL.ByteString -> m BSL.ByteString
+withLessCache key generator = do
+  cache <- ctxlesscache <$> getContext
+  mv <- MemCache.get key cache
+  case mv of
+    Just v -> return v
+    Nothing -> do
+      css <- generator
+      MemCache.put key css cache
+      return css

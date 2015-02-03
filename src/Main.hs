@@ -10,6 +10,7 @@ import Network.Curl
 import System.IO
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.Lazy.UTF8 as BSL8
 
 import AppConf
 import AppControl
@@ -54,12 +55,14 @@ main = withCurlDo . Log.withLogger $ do
   appGlobals <- do
     templates <- liftBase (newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates)
     filecache <- MemCache.new BS.length 50000000
+    lesscache <- MemCache.new BSL8.length 50000000
     docs <- MemCache.new RenderedPages.pagesCount 1000
     rng <- newCryptoRNGState
     connpool <- liftBase . createPoolSource $ connSettings kontraComposites
     return AppGlobals {
         templates = templates
       , filecache = filecache
+      , lesscache = lesscache
       , docscache = docs
       , cryptorng = rng
       , connsource = connpool

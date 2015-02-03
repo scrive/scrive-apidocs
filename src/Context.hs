@@ -8,6 +8,7 @@ import qualified Control.Concurrent.Thread as T
 import qualified Data.ByteString as BS
 
 import BrandedDomain.BrandedDomain
+import Branding.Cache
 import Doc.RenderedPages
 import EID.CGI.GRP.Config
 import File.FileID
@@ -47,6 +48,7 @@ data Context = Context
     , ctxcgigrpconfig        :: CgiGrpConfig
     , ctxgtconf              :: GuardTimeConf -- ^ GuardTime configuration
     , ctxfilecache           :: MemCache.MemCache FileID BS.ByteString -- ^
+    , ctxlesscache           :: LessCache -- ^
     , ctxxtoken              :: MagicHash -- ^ The XToken for combatting CSRF
     , ctxadminaccounts       :: [Email] -- ^
     , ctxsalesaccounts       :: [Email] -- ^

@@ -33,6 +33,7 @@ import qualified Data.Map as Map
 import AppConf
 import AppView as V
 import BrandedDomain.Model
+import Branding.Cache
 import Control.Concurrent.MVar.Util (tryReadMVar)
 import Crypto.RNG
 import DB hiding (ErrorCode(..))
@@ -62,6 +63,7 @@ import qualified MemCache
 data AppGlobals
     = AppGlobals { templates       :: MVar (UTCTime, KontrakcjaGlobalTemplates)
                  , filecache       :: MemCache.MemCache FileID BS.ByteString
+                 , lesscache       :: LessCache
                  , docscache       :: RenderedPagesCache
                  , cryptorng       :: CryptoRNGState
                  , connsource      :: ConnectionSource
@@ -333,6 +335,7 @@ appHandler handleRoutes appConf appGlobals = catchEverything . enhanceYourCalm $
         , ctxlivedocxconf = liveDocxConfig appConf
         , ctxcgigrpconfig = cgiGrpConfig appConf
         , ctxfilecache = filecache appGlobals
+        , ctxlesscache = lesscache appGlobals
         , ctxxtoken = sesCSRFToken session
         , ctxadminaccounts = admins appConf
         , ctxsalesaccounts = sales appConf

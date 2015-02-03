@@ -584,7 +584,7 @@ testDownloadSignviewBrandingAccess = do
   -- 1) Check access to main signview branding
   emptyContext <- mkContext defaultValue
   svbr1 <- mkRequest GET [ ]
-  resp1 <- E.try $  runTestKontra svbr1 emptyContext $ handleSignviewBranding (documentid doc) (signatorylinkid siglink) "-ignored-md5-" "some_name.css"
+  resp1 <- E.try $  runTestKontra svbr1 emptyContext $ handleSignviewBranding (documentid doc) (signatorylinkid siglink) "-branding-hash-12xdaad32" "some_name.css"
   case resp1 of
     Right _ ->   assertFailure "CSS for signing is available for anyone, and thats bad"
     Left (_ :: E.SomeException) -> return ()
@@ -594,18 +594,18 @@ testDownloadSignviewBrandingAccess = do
   (_,ctxWithSignatory) <- runTestKontra preq emptyContext $ handleSignShowSaveMagicHash (documentid doc) (signatorylinkid siglink) (signatorymagichash siglink)
 
   svbr2 <- mkRequest GET [ ]
-  (cssResp2, _) <- runTestKontra svbr2 ctxWithSignatory $ handleSignviewBranding (documentid doc) (signatorylinkid siglink) "-ignored-md5-" "some_name.css"
+  (cssResp2, _) <- runTestKontra svbr2 ctxWithSignatory $ handleSignviewBranding (documentid doc) (signatorylinkid siglink) "-branding-hash-Aox8433" "some_name.css"
   assertBool "CSS for signing is available for signatories" (rsCode cssResp2 == 200)
 
   -- 2) Check access to main signview branding for author. Used when logged in a to-sign view.
 
   svbr3 <- mkRequest GET [ ]
-  resp3 <- E.try $ runTestKontra svbr3 emptyContext $ handleSignviewBrandingWithoutDocument  "-ignored-md5-" "some_name.css"
+  resp3 <- E.try $ runTestKontra svbr3 emptyContext $ handleSignviewBrandingWithoutDocument "-branding-hash-7cdsgSAq1" "some_name.css"
   case resp3 of
     Right _ ->   assertFailure "CSS for signing without document is available for anyone, and thats bad"
     Left (_ :: E.SomeException) -> return ()
 
   let ctxWithAuthor = emptyContext {ctxmaybeuser = Just user}
   svbr4 <- mkRequest GET [ ]
-  (cssResp4, _) <- runTestKontra svbr4 ctxWithAuthor $ handleSignviewBrandingWithoutDocument  "-ignored-md5-" "some_name.css"
+  (cssResp4, _) <- runTestKontra svbr4 ctxWithAuthor $ handleSignviewBrandingWithoutDocument "-branding-hash-6dfypqbbc""some_name.css"
   assertBool "CSS for signing is available for author" (rsCode cssResp4 == 200)
