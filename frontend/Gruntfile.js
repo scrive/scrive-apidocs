@@ -233,13 +233,13 @@ module.exports = function(grunt) {
       // TODO(jens): Move this compilation to a grunt plugin
       // The existing grunt-react plugin doesnt support -w parameter as far as I can see
       compileJsxWatch: {
-        command: 'jsx -x jsx -w <%= yeoman.app %>/scripts/ <%= yeoman.app %>/compiled_jsx/',
+        command: './node_modules/react-tools/bin/jsx -x jsx -w <%= yeoman.app %>/scripts/ <%= yeoman.app %>/compiled_jsx/',
         options: {
           async: true
         }
       },
       compileJsx: {
-        command: 'jsx -x jsx <%= yeoman.app %>/scripts/ <%= yeoman.app %>/compiled_jsx/'
+        command: './node_modules/react-tools/bin/jsx -x jsx <%= yeoman.app %>/scripts/ <%= yeoman.app %>/compiled_jsx/'
       }
     },
     copy: {

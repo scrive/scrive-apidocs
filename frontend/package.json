@@ -28,8 +28,8 @@
     "karma-phantomjs-launcher": "~0.1.1",
     "karma-jasmine": "~0.1.4",
     "karma": "~0.10.9",
-    "react": "~0.11.1",
-    "react-tools": "~0.11.1",
+    "react": "~0.12.2",
+    "react-tools": "~0.12.2",
     "grunt-contrib-requirejs": "~0.4.1",
     "grunt-shell": "~0.6.3",
     "underscore": "~1.5.2",
@@ -40,7 +40,7 @@
     "grunt": "~0.4.1",
     "grunt-cli": "~0.1.9",
     "karma": "~0.10.2",
-    "react-tools": "~0.11.1",
+    "react-tools": "~0.12.x",
     "less": "~1.7.5"
   },
   "engines": {
