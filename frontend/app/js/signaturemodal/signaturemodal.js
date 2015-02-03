@@ -77,9 +77,7 @@ var SignatureDrawOrTypeModel= Backbone.Model.extend({
       numberOfIncompleteFieldTasks = 0;
     }
 
-    var fieldsLeftToFillIn = (   numberOfIncompleteFieldTasks > 0 // Are there more things to do on the document?
-                              || incompleteExtraDetailsTasks.length > 1 // Are there more than 2 extra details fields?
-                              || (incompleteExtraDetailsTasks.length == 1 && signatureDrawn)); // Is the only extra details field left NOT a signature field?
+    var fieldsLeftToFillIn = numberOfIncompleteFieldTasks > 0; // Are there more things to do on the document?
 
     var attachmentsLeft = incompleteSignatoryAttachmentsTasks.length > 0;
 
