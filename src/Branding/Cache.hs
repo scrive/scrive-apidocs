@@ -7,8 +7,8 @@ module Branding.Cache (
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 
 import BrandedDomain.BrandedDomainID
-import Theme.ThemeID
 import MemCache
+import Theme.ThemeID
 
 type LessCache = MemCache LessCacheKey BSL.ByteString
 

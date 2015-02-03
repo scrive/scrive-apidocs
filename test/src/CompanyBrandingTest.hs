@@ -3,17 +3,17 @@ module CompanyBrandingTest(
 ) where
 
 import Control.Applicative
-import Data.Unjson
 import Data.List
+import Data.Unjson
 import Happstack.Server hiding (simpleHTTP)
 import Test.Framework
 import Text.JSON
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 
-import Branding.Control
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
+import Branding.Control
 import Company.CompanyControl
 import Company.CompanyUI
 import Company.Model
