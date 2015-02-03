@@ -32,7 +32,7 @@ new sizefun sizelimit =
 
 -- | Put a key value pair into cache. Cache will take care of its own
 -- size and never cross total size limit of values.
-put :: (MonadIO m, Ord k, Show k, Show v) => k -> v -> MemCache k v -> m ()
+put :: (MonadIO m, Ord k) => k -> v -> MemCache k v -> m ()
 put k v (MemCache mc) = do
   liftIO $ modifyMVar_ mc $ \(MemCache' sizefun sizelimit csize mmap) ->
       do
@@ -74,7 +74,7 @@ size (MemCache mc) = liftIO $ do
   withMVar mc $ \(MemCache' _ _ csize _) -> return csize
 
 
-alter :: (MonadIO m, Ord k, Show k) => (Maybe v -> Maybe v) -> k -> MemCache k v -> m ()
+alter :: (MonadIO m, Ord k) => (Maybe v -> Maybe v) -> k -> MemCache k v -> m ()
 alter f k (MemCache mc) = do
   liftIO $ modifyMVar_ mc $ \(MemCache' sizefun sizelimit _csize mmap) ->
       do

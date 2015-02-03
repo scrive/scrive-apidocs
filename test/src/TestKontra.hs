@@ -279,7 +279,8 @@ mkContext lang = do
   bd <- dbQuery $ GetMainBrandedDomain
   liftIO $ do
     docs <- MemCache.new RenderedPages.pagesCount 500
-    memcache <- MemCache.new BS.length 52428800
+    filecache <- MemCache.new BS.length 52428800
+    lesscache <- MemCache.new BSLU.length 52428800
     return Context {
           ctxmaybeuser = Nothing
         , ctxhostpart = defaultUri
@@ -302,7 +303,8 @@ mkContext lang = do
           , cgServiceID = "logtest004"
           , cgDisplayName = "Funktionstjänster Test"
           }
-        , ctxfilecache = memcache
+        , ctxfilecache = filecache
+        , ctxlesscache = lesscache
         , ctxxtoken = error "xtoken is not defined"
         , ctxadminaccounts = []
         , ctxsalesaccounts = []

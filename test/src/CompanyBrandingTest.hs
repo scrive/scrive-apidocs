@@ -4,12 +4,14 @@ module CompanyBrandingTest(
 
 import Control.Applicative
 import Data.Unjson
+import Data.List
 import Happstack.Server hiding (simpleHTTP)
 import Test.Framework
 import Text.JSON
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 
+import Branding.Control
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Company.CompanyControl
@@ -33,6 +35,7 @@ companyBrandingTests env = testGroup "CompanyBranding" [
   , testThat "Test that normal user cant delete or change company themes" env testNormalUserCantChangeOrDeleteTheme
   , testThat "Test that admin can change company branding additional details " env testChangeCompanyUI
   , testThat "Test that normal user can't deleted or change company UI" env testNormalUseCantChangeCompanyUI
+  , testThat "Test that signview cache works" env testSignviewBrandingCacheWorks
   ]
 
 
@@ -229,3 +232,36 @@ testNormalUseCantChangeCompanyUI = do
   companyUIAfter <- dbQuery $ GetCompanyUI (companyid company)
   assertEqual "Company UI has been not been changed" companyUIAfter companyui
 
+
+testSignviewBrandingCacheWorks:: TestEnv ()
+testSignviewBrandingCacheWorks = do
+  company <- addNewCompany
+  Just user <- addNewCompanyUser "Mariusz" "Rak" "mariusz+ut@scrive.com" (companyid company)
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
+    <$> mkContext defaultValue
+
+  mainbd <- dbQuery $ GetMainBrandedDomain
+  bdSignviewTheme <- dbQuery $ GetTheme (bdSignviewTheme mainbd)
+  newServiceTheme <- dbUpdate $ InsertNewThemeForCompany (companyid company) bdSignviewTheme {themeBrandColor = "#669713"}
+  companyui <- dbQuery $ GetCompanyUI (companyid company)
+  -- We are doing handleSignviewBrandingInternal call, and this one uses actually service branding to brand sign view
+  _ <- dbUpdate $ SetCompanyUI (companyid company) $ companyui { companyServiceTheme = Just $ themeID newServiceTheme }
+
+
+  req1 <- mkRequest GET []
+  (resp1, _) <- runTestKontra req1 ctx $ handleSignviewBrandingInternal "branding-hash-1" "style.css"
+  let css1 = rsBody resp1
+  assertBool "First signview css should contain first new color " ("#669713" `isInfixOf` (BSL.toString css1))
+
+  _ <- dbUpdate $ UpdateThemeForCompany (companyid company) (newServiceTheme {themeBrandColor = "#136697"})
+
+  req2 <- mkRequest GET []
+  (resp2, _) <- runTestKontra req2 ctx $ handleSignviewBrandingInternal "branding-hash-1" "style.css"
+  let css2 = rsBody resp2
+  assertBool "Requesting signview css should stay the same - even if we changed theme - but we still use same branding hash" (css1==css2)
+
+  req3 <- mkRequest GET []
+  (resp3, _) <- runTestKontra req3 ctx $ handleSignviewBrandingInternal "branding-hash-2" "style.css"
+  let css3 = rsBody resp3
+  assertBool "Requesting signview css should change if changed theme and use different branding hash" (css2/=css3)
+  assertBool "Third signview css should contain second new color" ("#136697" `isInfixOf` (BSL.toString css3))
