@@ -709,6 +709,7 @@
 "_paymentPlanTeamUsers":"25 anv. eller 3 butiker",
 "_paymentPlanTotalPerMonth":"Totalt per månad",
 "_paymentPlanTrial":"Trial",
+"_paymentDocumentsUnit": "dokument / månad",
 "_paymentPlanTrialTag":"3 fria månader",
 "_paymentPriceUnit":"kr/m",
 "_paymentSaveYearly":"spara upp till 33%",

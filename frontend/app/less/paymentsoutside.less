@@ -93,6 +93,7 @@ section.pricing-cases header {
   margin: 0 0 1.5em 0;
   position: relative;
   width: 251px;
+  cursor: pointer;
   
   &.on-top {
     z-index: 1000;
@@ -138,6 +139,7 @@ section.pricing-cases header {
 
 .plan-container > .plan.active form {
   display: block;
+  cursor: pointer;
 }
 
 .plan-container > .plan .features {
@@ -370,8 +372,8 @@ div.plan-container form div.field input:-ms-input-placeholder {
   line-height: 1.5em;
 }
 
-.plan-container form ul.fields li.field .input input:focus,
-.plan-container form ul.fields li.field .input input:hover {
+.plan-container form ul.fields li.field .input input:not(.button):focus,
+.plan-container form ul.fields li.field .input input:not(.button):hover {
   border-color: @blue-medium;
   outline: none;
 }

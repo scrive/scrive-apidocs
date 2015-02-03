@@ -338,6 +338,8 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         var view = this;
         var model = view.model;
 
+        var currency = localization.code == "sv" ? "SEK" : "EUR";
+
         function pad(n) { 
           if (n < 100) {
             return n + '00';
@@ -346,8 +348,8 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
           }
         }
 
-        // Yearly has a rebate, monthly pays 150%
-        var price = localization.payments.plans[view.plan].price * (model.yearlyprices() ? 1 : 1.5);
+        // Yearly has a rebate, monthly pays 150% of yearly price
+        var price = localization.payments.plans[view.plan].price[currency] * (model.yearlyprices() ? 1 : 1.5);
         var thousands = Math.floor(price / 1000);
 
         if (thousands) {
@@ -366,7 +368,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         var title = $('<div class="title" />').append(titleheader);
         features.append(title);
 
-        var signeddocs = $('<h4 class="description" />').text(localization.payments.plans[view.plan].signeddocs);
+        var signeddocs = $('<h4 class="description" />').text(localization.payments.plans[view.plan].signeddocs + ' ' + localization.payments.documentUnit);
         var users = $('<h4 class="fineprint" />').text(localization.payments.plans[view.plan].users);
         var support = $('<h4 class="fineprint" />').text(localization.payments.plans[view.plan].support);
         var allFeatures = $('<h4 class="fineprint" />').text(localization.payments.allFeaturesIncluded);
@@ -458,10 +460,11 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
             var email = $('<li class="field" />');
             email.append($('<label for="input-email" />').text(localization.email));
-            email.append($('<div class="input" />')
-                         .append($('<input type="text" id="input-email" name="email" />')
+            var emailinput = $('<input type="text" id="input-email" name="email" />')
                                  .attr('placeholder', localization.email)
-                                 .val(model.email() || '')));
+                                 .val(model.email() || '');
+            email.append($('<div class="input" />')
+                         .append(emailinput));
             ul.append(email);
 
             var message = $('<li class="field" />');
@@ -479,6 +482,15 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
             form.append(ul);
             form.append($('<input type="hidden" name="plan" />').val(view.plan));
+
+            form.on('submit', function() {
+              if (! new EmailValidation().validateData(emailinput.val())) {
+                new FlashMessage({type: 'error', content : localization.account.accountDetails.invalidEmail });
+                return false;
+              }
+
+              return true;
+            });
             div2.append(form);
 
             div.append(div2);
@@ -791,7 +803,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                 target: view.element
                 , enableAddons: false
                 , enableCoupons: true
-                , planCode: 'team'
+                , planCode: 'team' // We hardcode the team plan, as that's the only one we have in recurly. This means 'one' is only set through adminonly.
                 , distinguishContactFromBillingInfo: false
                 , collectCompany: false
                 , acceptedCards : ['mastercard', 'visa']

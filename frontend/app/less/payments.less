@@ -17,17 +17,18 @@
   background-color: @grey-background;
 
   .big-title {
+    background-color: @ee-big-title-blue;
     min-height: 192px;
     text-align: center;
-    background-color: #293742;
     width: 100%;
+
     h1 {
       color: #fff;
       font-size: 52px;
       font-weight: 400;
-      width: 1014px;
       margin: 0 auto;
       padding: 65px 0;
+      width: 1014px;
     }
   }
 }
@@ -118,7 +119,7 @@
   }
 
   .top-tabs {
-    padding-bottom: 20px;
+    margin-bottom: 20px;
     width: 1004px;
 
     cursor: pointer;
@@ -135,9 +136,11 @@
       padding-bottom: 35px;
       padding-top: 35px;
 
+      border-left: 1px solid transparent;
+      border-right: 1px solid transparent;
+
       &:hover {
-        //border-top: 4px solid #323b45;
-        //color: #333;
+        border-top: 2px solid;
       }
 
       .savings {

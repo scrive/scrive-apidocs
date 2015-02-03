@@ -87,6 +87,16 @@ EnterpriseDocumentsPerMonth=7 500
 TeamDocumentsPerMonth=250
 ###
 OneDocumentsPerMonth=15
+####
+OnePlanName=One
+####
+TeamPlanName=Team
+####
+CompanyPlanName=Company
+####
+EnterprisePlanName=Enterprise
+###
+###
 ### Texts for integration settings - they are not translated, since this only affect very specyfic users
 ###
 salesforce=Salesforce

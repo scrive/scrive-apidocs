@@ -279,16 +279,16 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                 acceptVisible: false,
                 width: 1080
             });
-            var o = {
+            var pricePageOptions = {
               hideContacts: true,
               notabs: true,
               noheaders: true,
               yearlyprices: false
             };
             if(opts.header)
-                o.header = opts.header;
+              var pricePageOptions.header = opts.header;
 
-            PricePage(o).show(div);
+            PricePage(pricePageOptions).show(div);
         },
         createPopup: function() {
             var view = this;

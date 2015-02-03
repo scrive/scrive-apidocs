@@ -684,6 +684,7 @@ javascriptLocalisation =
            , sendmsg : "$_paymentPlanSendMessage()$"
 	   , numberOfUsers: "$_paymentNumberOfUsers()$"
            , priceUnit: "$_paymentPriceUnit()$"
+           , documentUnit: "$_paymentDocumentsUnit()$"
            , allFeaturesIncluded: "$_paymentAllFeaturesIncluded()$"
            , payMonthly: "$_paymentPayMonthly()$"
            , payYearly: "$_paymentPayYearly()$"
@@ -691,46 +692,57 @@ javascriptLocalisation =
            , plans: {
                     // Legacy plans only need the name
                     form : {
-                      name: "$_paymentPlanOne()$"
+                          name: "$TeamPlanName()$"
                     }
                     , trial : {
-                      name : "$_paymentPlanTrial()$",
+                          name : "$_paymentPlanTrial()$",
                     }
                     , team : {
-                      name : "$_paymentPlanTeam()$",
-                      price : "$_paymentPlanTeamPrice()$",
-                      signeddocs: "250 dokument / m",
-                      signeddocs: "$TeamDocumentsPerMonth()$ $_paymentDocumentsUnit()$",
-                      branding: "$_paymentPlanTeamBranding()$",
-                      users: "$_paymentPlanTeamUsers()$",
-                      support: "$_paymentPlanTeamSupport()$"
+                          name : "$TeamPlanName()$"
+                        , price : {
+                              EUR: "$TeamPriceEURPerMonth()$"
+                            , SEK: "$TeamPriceSEKPerMonth()$"
+                        }
+                        , signeddocs: "$TeamDocumentsPerMonth()$"
+                        , branding: "$_paymentPlanTeamBranding()$"
+                        , users: "$_paymentPlanTeamUsers()$"
+                        , support: "$_paymentPlanTeamSupport()$"
                     }
                     , enterprise : {
-                      name : "$_paymentPlanEnterprise()$",
-                      price : "$_paymentPlanEnterprisePrice()$",
-                      signeddocs: "$EnterpriseDocumentsPerMonth()$ $_paymentDocumentsUnit()$",
-                      branding: "$_paymentPlanEnterpriseBranding()$",
-                      users: "$_paymentPlanEnterpriseUsers()$",
-                      support: "$_paymentPlanEnterpriseSupport()$",
-                      sla: "$_paymentPlanEnterpriseSLA()$",
-                      p2es: "$_paymentPlanEnterpriseP2ES()$",
-                      whiteLabel: "$_paymentPlanEnterpriseWhiteLabel()$"
+                          name : "$EnterprisePlanName()$"
+                        , price : {
+                              EUR: "$EnterprisePriceEURPerMonth()$"
+                            , SEK: "$EnterprisePriceSEKPerMonth()$"
+                        }
+                        , signeddocs: "$EnterpriseDocumentsPerMonth()$"
+                        , branding: "$_paymentPlanEnterpriseBranding()$"
+                        , users: "$_paymentPlanEnterpriseUsers()$"
+                        , support: "$_paymentPlanEnterpriseSupport()$"
+                        , sla: "$_paymentPlanEnterpriseSLA()$"
+                        , p2es: "$_paymentPlanEnterpriseP2ES()$"
+                        , whiteLabel: "$_paymentPlanEnterpriseWhiteLabel()$"
                     }
                     , company : {
-                      name : "$_paymentPlanCompany()$",
-                      price : "$_paymentPlanCompanyPrice()$",
-                      signeddocs: "$CompanyDocumentsPerMonth()$ $_paymentDocumentsUnit()$",
-                      branding: "$_paymentPlanCompanyBranding()$",
-                      users: "$_paymentPlanCompanyUsers()$",
-                      support: "$_paymentPlanCompanySupport()$",
-                      sla: "$_paymentPlanCompanySLA()$"
+                          name : "$CompanyPlanName()$"
+                        , price : {
+                              EUR: "$CompanyPriceEURPerMonth()$"
+                            , SEK: "$CompanyPriceSEKPerMonth()$"
+                        }
+                        , signeddocs: "$CompanyDocumentsPerMonth()$"
+                        , branding: "$_paymentPlanCompanyBranding()$"
+                        , users: "$_paymentPlanCompanyUsers()$"
+                        , support: "$_paymentPlanCompanySupport()$"
+                        , sla: "$_paymentPlanCompanySLA()$"
                     }
                     , one : {
-                      name : "$_paymentPlanOne()$",
-                      price : "$_paymentPlanOnePrice()$",
-                      signeddocs: "$OneDocumentsPerMonth()$ $_paymentDocumentsUnit()$",
-                      users: "$_paymentPlanOneUsers()$",
-                      support: "$_paymentPlanOneSupport()$"
+                          name : "$OnePlanName()$"
+                        , price : {
+                              EUR: "$OnePriceEURPerMonth()$"
+                            , SEK: "$OnePriceSEKPerMonth()$"
+                        }
+                        , signeddocs: "$OneDocumentsPerMonth()$"
+                        , users: "$_paymentPlanOneUsers()$"
+                        , support: "$_paymentPlanOneSupport()$"
                     }
             }
            , table: { currentplan : "$_paymentPlanCurrentPlan()$"
