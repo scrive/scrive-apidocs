@@ -211,27 +211,16 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
     var document = this.document();
     var signatory = document.currentSignatory();
 
-    if (signatory.author()) {
-      var content = $("<div />");
-      if (document.authorIsOnlySignatory()) {
-        content.text(localization.process.signModalBody);
-      } else {
-        var copy = $(localization.process.signatorysignmodalcontent);
-        copy.find('.put-signatory-name-here').text(signatory.name());
-        content.append(copy);
-      }
-      return content;
+    var content = $("<div />");
+    if (this.signaturesPlaced) {
+      content.text(localization.process.signModalBody);
     } else {
-      var content = $("<div />");
-      if (this.signaturesPlaced) {
-        content.text(localization.process.signModalBody);
-      } else {
-        var copy = $(localization.process.signatorysignmodalcontent);
-        copy.find('.put-signatory-name-here').text(signatory.name());
-        content.append(copy);
-      }
-      return content;
+      var copy = $(localization.process.signatorysignmodalcontent);
+      copy.find('.put-signatory-name-here').text(signatory.name());
+      content.append(copy);
     }
+    return content;
+
   },
 
   pinCodeInput: function() {
