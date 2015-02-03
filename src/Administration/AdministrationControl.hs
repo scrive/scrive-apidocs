@@ -199,9 +199,11 @@ paymentPlanJSON mpaymentplan mci recurlysubdomain =  runJSONGenT $ do
         value "accountcode" $ show $ ppAccountCode paymentplan
         value "priceplan" $ case ppPricePlan paymentplan of
           FreePricePlan       -> ("free"       :: String)
-          TeamPricePlan       -> ("team"       :: String)
+          OnePricePlan        -> ("one"        :: String)
           FormPricePlan       -> ("form"       :: String)
+          TeamPricePlan       -> ("team"       :: String)
           EnterprisePricePlan -> ("enterprise" :: String)
+          CompanyPricePlan    -> ("company"    :: String)
           TrialPricePlan      -> ("trial"      :: String)
         value "status" $ case ppStatus paymentplan of
           ActiveStatus        -> ("active"     :: String)

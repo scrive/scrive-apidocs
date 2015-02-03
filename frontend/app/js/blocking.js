@@ -272,7 +272,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                 window.location = this.subscriptionPageHref;
         },
         paymentsPopup: function(opts) {
-            var div = $('<div />').addClass('price-plan').addClass('blocking-modal').addClass("cc-only");
+            var div = $('<div />').addClass('price-plan').addClass('blocking-modal');
             new Confirmation({
                 title: opts.title,
                 content: div,
@@ -283,8 +283,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
               hideContacts: true,
               notabs: true,
               noheaders: true,
-              yearlyprices: false,
-              ccoptionsonly: true
+              yearlyprices: false
             };
             if(opts.header)
                 o.header = opts.header;

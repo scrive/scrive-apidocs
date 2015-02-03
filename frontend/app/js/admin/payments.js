@@ -119,6 +119,10 @@ var AdminPaymentsView = Backbone.View.extend({
              return "Enterprise";
           else if (ppname == "trial")
              return "Trial";
+          else if (ppname == "company")
+             return "Company";
+          else if (ppname == "one")
+             return "One";
     },
     priceplanStatusToText : function(ppstatus) {
           if (ppstatus == "active")
@@ -225,8 +229,10 @@ var AdminPaymentsView = Backbone.View.extend({
 
                                       options: [
                                         { name : this.priceplanNameToText("free"), value : "free"},
-                                        { name : this.priceplanNameToText("team"), value : "team"},
+                                        { name : this.priceplanNameToText("one"), value : "one"},
                                         { name : this.priceplanNameToText("form"), value : "form"},
+                                        { name : this.priceplanNameToText("team"), value : "team"},
+                                        { name : this.priceplanNameToText("company"), value : "company"},
                                         { name : this.priceplanNameToText("enterprise"), value : "enterprise"},
                                         { name : this.priceplanNameToText("trial"), value : "trial"}
                                       ]

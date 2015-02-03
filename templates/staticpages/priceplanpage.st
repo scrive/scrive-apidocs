@@ -15,6 +15,7 @@ $htmlopentag()$
       <div class="big-title"><h1>$_paymentsSubscribeHeader()$</h1></div>
 
       <div class="js-price-plan price-plan price-plan-outside"></div>
+
       <script>
       require(['jquery', 'legacy_code'], function(jQuery) {
         jQuery('.price-plan-page-link').addClass('active');

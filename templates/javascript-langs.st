@@ -689,10 +689,18 @@ javascriptLocalisation =
            , payYearly: "$_paymentPayYearly()$"
            , saveYearly: "$_paymentSaveYearly()$"
            , plans: {
-                    team : {
+                    // Legacy plans only need the name
+                    form : {
+                      name: "$_paymentPlanOne()$"
+                    }
+                    , trial : {
+                      name : "$_paymentPlanTrial()$",
+                    }
+                    , team : {
                       name : "$_paymentPlanTeam()$",
                       price : "$_paymentPlanTeamPrice()$",
                       signeddocs: "250 dokument / m",
+                      signeddocs: "$TeamDocumentsPerMonth()$ $_paymentDocumentsUnit()$",
                       branding: "$_paymentPlanTeamBranding()$",
                       users: "$_paymentPlanTeamUsers()$",
                       support: "$_paymentPlanTeamSupport()$"
@@ -700,7 +708,7 @@ javascriptLocalisation =
                     , enterprise : {
                       name : "$_paymentPlanEnterprise()$",
                       price : "$_paymentPlanEnterprisePrice()$",
-                      signeddocs: "7 500 dokument / m",
+                      signeddocs: "$EnterpriseDocumentsPerMonth()$ $_paymentDocumentsUnit()$",
                       branding: "$_paymentPlanEnterpriseBranding()$",
                       users: "$_paymentPlanEnterpriseUsers()$",
                       support: "$_paymentPlanEnterpriseSupport()$",
@@ -708,18 +716,10 @@ javascriptLocalisation =
                       p2es: "$_paymentPlanEnterpriseP2ES()$",
                       whiteLabel: "$_paymentPlanEnterpriseWhiteLabel()$"
                     }
-                    , trial : {
-                      name : "$_paymentPlanTrial()$",
-                      tag : "$_paymentPlanTrialTag()$",
-                      price : "$_paymentsQuote()$",
-                      price3 : "$_paymentsGetInTouch()$",
-                      transactions: "TRIAL TSj",
-                      users: "TRIAL US"
-                    }
                     , company : {
                       name : "$_paymentPlanCompany()$",
                       price : "$_paymentPlanCompanyPrice()$",
-                      signeddocs: "1 000 dokument / m",
+                      signeddocs: "$CompanyDocumentsPerMonth()$ $_paymentDocumentsUnit()$",
                       branding: "$_paymentPlanCompanyBranding()$",
                       users: "$_paymentPlanCompanyUsers()$",
                       support: "$_paymentPlanCompanySupport()$",
@@ -728,7 +728,7 @@ javascriptLocalisation =
                     , one : {
                       name : "$_paymentPlanOne()$",
                       price : "$_paymentPlanOnePrice()$",
-                      signeddocs: "15 dokument / m",
+                      signeddocs: "$OneDocumentsPerMonth()$ $_paymentDocumentsUnit()$",
                       users: "$_paymentPlanOneUsers()$",
                       support: "$_paymentPlanOneSupport()$"
                     }

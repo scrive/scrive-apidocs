@@ -80,10 +80,13 @@ CompanyPriceSEKPerMonth=10000
 ###
 CompanyPriceEURPerMonth=1000
 ###
-### This represents the number of users
+CompanyDocumentsPerMonth=1 000
 ###
-FormPrice50=50
+EnterpriseDocumentsPerMonth=7 500
 ###
+TeamDocumentsPerMonth=250
+###
+OneDocumentsPerMonth=15
 ### Texts for integration settings - they are not translated, since this only affect very specyfic users
 ###
 salesforce=Salesforce

@@ -225,28 +225,28 @@ section.pricing-cases header {
 
 .plan-container > .plan .features div.action {
   border: none;
-}
 
-.plan-container > .plan .features div.action a span {
-  font-family: @font-family-source;
-}
+  a {
+    span.cancel-text {
+      display: none;
+    }
 
-.plan-container > .plan .features div.action a span.gray {
-  display: none;
-}
+    &.cancel-label {
+      span.cancel-text {
+        display: block;
+      }
+      span.action-text {
+        display: none;
+      }
+    }
+  }
 
-.plan-container > .plan .features div.action a.button-gray span.blue {
-  display: none;
-}
-
-.plan-container > .plan .features div.action a.button-gray span.gray {
-  display: block;
 }
 
 .plan-container form {
   border-left: 1px solid @blue-border;
   margin: 1em 0;
-  min-height: 395.5px;
+  min-height: 634px;
   padding: 1em 1em 0;
   position: absolute;
   right: 0;

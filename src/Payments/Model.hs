@@ -15,23 +15,29 @@ import MinutesTime
 -- new data types
 
 data PricePlan = FreePricePlan
+               | OnePricePlan
+               | FormPricePlan -- paying with CC, otherwise same as one
                | TeamPricePlan
-               | FormPricePlan
+               | CompanyPricePlan     
                | EnterprisePricePlan  -- nothing gets blocked
-               | TrialPricePlan        -- a trial plan 
+               | TrialPricePlan       -- a trial plan 
                deriving (Eq, Ord)
 
 instance Show PricePlan where
   showsPrec _ FreePricePlan         = (++) "free"
-  showsPrec _ TeamPricePlan         = (++) "team"
+  showsPrec _ OnePricePlan          = (++) "one"
   showsPrec _ FormPricePlan         = (++) "form"
+  showsPrec _ TeamPricePlan         = (++) "team"
+  showsPrec _ CompanyPricePlan      = (++) "company"
   showsPrec _ EnterprisePricePlan   = (++) "enterprise"
   showsPrec _ TrialPricePlan        = (++) "trial"
 
 instance Read PricePlan where
   readsPrec _ "free"         = [(FreePricePlan,         "")]
-  readsPrec _ "team"         = [(TeamPricePlan,         "")]
+  readsPrec _ "one"          = [(OnePricePlan,         "")]
   readsPrec _ "form"         = [(FormPricePlan,         "")]
+  readsPrec _ "team"         = [(TeamPricePlan,         "")]
+  readsPrec _ "company"      = [(CompanyPricePlan,      "")]
   readsPrec _ "enterprise"   = [(EnterprisePricePlan,   "")]
   readsPrec _ "trial"        = [(TrialPricePlan,        "")]
   readsPrec _ _              = []
@@ -49,8 +55,10 @@ instance FromSQL PricePlan where
       2 -> return FormPricePlan
       3 -> return EnterprisePricePlan
       4 -> return TrialPricePlan
+      5 -> return CompanyPricePlan
+      6 -> return OnePricePlan
       _ -> throwM RangeError {
-        reRange = [(0, 4)]
+        reRange = [(0, 6)]
       , reValue = n
       }
 
@@ -61,6 +69,8 @@ instance ToSQL PricePlan where
   toSQL FormPricePlan       = toSQL (2::Int16)
   toSQL EnterprisePricePlan = toSQL (3::Int16)
   toSQL TrialPricePlan      = toSQL (4::Int16)
+  toSQL CompanyPricePlan    = toSQL (5::Int16)
+  toSQL OnePricePlan        = toSQL (6::Int16)
 
 newtype AccountCode = AccountCode Int64
   deriving (Eq, Ord, Typeable, PQFormat)
