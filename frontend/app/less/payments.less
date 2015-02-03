@@ -135,6 +135,11 @@
       padding-bottom: 35px;
       padding-top: 35px;
 
+      &:hover {
+        //border-top: 4px solid #323b45;
+        //color: #333;
+      }
+
       .savings {
         margin-left: 5px;
         font-style: italic;
@@ -142,22 +147,22 @@
       }
 
       &.yearly {
-        border-left: 1px solid #ddd;
+        border-left: 1px solid @gray-border;
       }
 
       &.active {
-        border-top: 2px solid #53b688;;
+        border-top: 2px solid;
 
         &.yearly {
-          border-right: 1px solid #ddd;
+          border-right: 1px solid @gray-border;
         }
         &.monthly {
-          border-left: 1px solid #ddd;
+          border-left: 1px solid @gray-border;
         }
       }
 
       &:not(.active) {
-        border-bottom: 1px solid #ddd;
+        border-bottom: 1px solid @gray-border;
       }
     }
   }
