@@ -285,8 +285,9 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
               noheaders: true,
               yearlyprices: false
             };
+
             if(opts.header)
-              var pricePageOptions.header = opts.header;
+              pricePageOptions.header = opts.header;
 
             PricePage(pricePageOptions).show(div);
         },
