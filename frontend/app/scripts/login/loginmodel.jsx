@@ -1,10 +1,17 @@
 /** @jsx React.DOM */
 
-define(['React', 'Backbone', 'legacy_code'], function() {
+define(['React', 'Backbone', 'common/hubspot_service', 'common/adwords_conversion_service', 'legacy_code'], function(React, Backbone, HubSpot, AdwordsConversionService) {
+
+var stripHash = function (hash) {
+  if (typeof hash !== "string") return "";
+  return hash.replace("#", "");
+};
 
 return Backbone.Model.extend({
   defaults: {
-        reminderView: false,
+        view: stripHash(window.location.hash),
+        views: ["login", "reminder", "signup"],
+        defaultView: "login",
         email : "",
         password : "",
         referer : "",
@@ -15,6 +22,10 @@ return Backbone.Model.extend({
   initialize : function() {
     if (this.email() == "" && LocalStorage.get('login','last_login_email') != "")
       this.set({email : LocalStorage.get('login','last_login_email')});
+
+    if (this.get("views").indexOf(this.get("view")) == -1) {
+      this.setView(this.get("defaultView"));
+    }
   },
   langprefix : function() {
     return this.get("langprefix");
@@ -23,13 +34,25 @@ return Backbone.Model.extend({
      return this.get("nolinks");
   },
   reminderView : function() {
-     return this.get("reminderView") == true;
+     return this.get("view") == "reminder";
   },
   loginView : function() {
-    return !this.reminderView();
+    return this.get("view") == "login";
   },
-  toogleView : function() {
-    this.set({reminderView : ! this.reminderView()});
+  signupView : function() {
+    return this.get("view") == "signup";
+  },
+  setView : function(view, silent) {
+    if (this.get("views").indexOf(view) !== -1) {
+      if (view == this.get("defaultView")) {
+        window.location.hash = "";
+      } else {
+        window.location.hash = "#" + view;
+      }
+      return this.set({view: view});
+    }
+
+    console.warn("no view with name " + view + " exists");
   },
   pad : function() {
     return this.get("pad") == true;
@@ -124,6 +147,40 @@ return Backbone.Model.extend({
             }
           }
         }).send();
+  },
+  signup : function() {
+    var model = this;
+    mixpanel.track('Submit signup');
+    new Submit({
+      method: 'POST',
+      url: "/api/frontend/signup",
+      ajax: true,
+      lang : Language.current(),
+      email: model.email(),
+      ajaxsuccess: function(rs) {
+        try {
+          resp = JSON.parse(rs);
+        } catch (e) {
+          resp = JSON.parse($(rs).text());
+        }
+        if (resp.sent === true) {
+          _gaq.push(['_trackEvent', 'Signup', 'Clicked']);
+          AdwordsConversionService.markAsSignupConversion();
+          mixpanel.track('Create new account', {
+              'Email' : model.email()
+          });
+          mixpanel.people.set({
+              '$email'        : model.email()
+          });
+          var content = localization.payments.outside.confirmAccountCreatedUserHeader;
+          new FlashMessage({content: content, type: 'success'});
+        } else if (resp.sent === false) {
+          mixpanel.track('Error',
+                         {Message : 'signup failed'});
+          new FlashMessage({content: localization.accountSetupModal.flashMessageUserAlreadyActivated, type: 'error'});
+        }
+      }
+    }).send();
   }
 });
 

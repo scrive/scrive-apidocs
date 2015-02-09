@@ -1,10 +1,11 @@
 /** @jsx React.DOM */
 
-define(['React', 'common/backbone_mixin', 'login/loginmodel','login/brandedloginview', 'login/brandedforgotpasswordview','legacy_code'], function(React, BackboneMixin, LoginModel, BrandedLoginView, BrandedForgotPasswordView) {
+define(['React', 'common/backbone_mixin', 'login/loginmodel','login/brandedloginview', 'login/brandedforgotpasswordview','login/brandedsignupview', 'legacy_code'], function(React, BackboneMixin, LoginModel, BrandedLoginView, BrandedForgotPasswordView, BrandedSignupView) {
 
 return React.createClass({
     propTypes: {
-        reminderView: React.PropTypes.bool,
+        view: React.PropTypes.string,
+        defaultView: React.PropTypes.string,
         email : React.PropTypes.string,
         password : React.PropTypes.string,
         referer : React.PropTypes.string,
@@ -21,7 +22,8 @@ return React.createClass({
     },
     stateFromProps : function(props) {
       var model = new LoginModel({
-        reminderView: props.reminderView,
+        view: props.view,
+        defaultView: props.defaultView,
         email : props.email,
         password : props.password,
         referer : props.referer,
@@ -37,16 +39,23 @@ return React.createClass({
       return [this.state.model];
     },
     render: function() {
-      return (
-        <div>
-         {/*if*/ (this.state.model.loginView() ) &&
-            <BrandedLoginView model={this.state.model}/>
-         }
-         {/*else*/ (this.state.model.reminderView() ) &&
-            <BrandedForgotPasswordView model={this.state.model}/>
-         }
-        </div>
-      );
+      var view = function () {
+        if (this.state.model.loginView()) {
+          return <BrandedLoginView model={this.state.model}/>;
+        }
+
+        if (this.state.model.reminderView()) {
+          return <BrandedForgotPasswordView model={this.state.model}/>;
+        }
+
+        if (this.state.model.signupView()) {
+          return <BrandedSignupView model={this.state.model}/>;
+        }
+
+        console.warn("no or incorrect view selected in branded login");
+      }.call(this);
+
+      return <div>{view}</div>;
     }
   });
 });

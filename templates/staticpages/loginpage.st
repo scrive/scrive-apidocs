@@ -102,17 +102,27 @@ $htmlopentag()$
     <link href='/login_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
   </head>
   <body>
+  $flashmessages()$
   <div class='mainContainer big' style='height:auto;position: static;overflow-y:hidden;'>
       <div class="inner" style='height:auto;position:static;margin:auto;width:auto;'>
       </div>
   </div>
   <script type="text/javascript">
-   require(['jquery', 'legacy_code'], function(jQuery) {
+   require(['jquery', 'React', 'login/brandedlogin', 'legacy_code'], function(jQuery,React,BrandedLogin) {
     jQuery(document).ready(function() {
+      var referer =  "$referer$";
+      if (window.location.hash != "" && referer.indexOf("#") == -1) referer = referer + window.location.hash;
+      var div = jQuery('.inner');
+      React.renderComponent(BrandedLogin({
+        defaultView: "signup",
+        referer:   referer,
+        buttoncolorclass : "$buttoncolorclass$",
+        servicelinkcolour: $if(servicelinkcolour)$"$servicelinkcolour$"$else$null$endif$,
+        textscolour: $if(textscolour)$"$textscolour$"$else$null$endif$,
+        autofocus: true,
+        langprefix : $langprefix()$
+      }),div[0]);
       mixpanel.track('Visit signup page');
-      jQuery('.inner').append(new Signup({
-                                         autofocus: true
-                            }).el());
     });
    });
   </script>

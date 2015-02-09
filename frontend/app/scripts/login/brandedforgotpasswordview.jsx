@@ -50,7 +50,7 @@ return React.createClass({
               </div>
               <div className='position' style={{textAlign:"center",marginTop:"20px"}}>
                 <div className='label-with-link'>
-                  <a onClick={function(){ model.toogleView();}}>
+                  <a onClick={function(){ model.setView("login");}}>
                     {localization.loginModal.login}
                   </a>
                 </div>

@@ -11,10 +11,14 @@ return React.createClass({
     propTypes: {
       model: React.PropTypes.object
     },
-    textWithLink : function(text,link) {
-      var res = $("<div>" + text + "</div>");
-      $("a",res).attr('href',link);
-      return res.html();
+    componentDidMount: function () {
+      var res = $("<div>" + localization.loginModal.dontHaveAccount + "</div>");
+      if (this.refs.signupLink) {
+        $("a",res).click(function () {
+          this.props.model.setView("signup");
+        }.bind(this));
+        this.refs.signupLink.getDOMNode().appendChild(res[0]);
+      }
     },
     tryLogin : function() {
       this.props.model.login();
@@ -59,7 +63,7 @@ return React.createClass({
                   style={{width : "245px", padding : "7px 14px", fontSize : "16px" }}
                   focus={!(model.email() == undefined || model.email() == "") && model.autofocus()}
                   buttonTitle={localization.loginModal.forgot}
-                  onClick={function(){ model.toogleView();}}
+                  onClick={function(){ model.setView("reminder");}}
                 />
               </div>
 
@@ -73,9 +77,7 @@ return React.createClass({
               </div>
               {/*if*/ (!model.nolinks()) &&
                 <div className='position' style={{textAlign:"center",marginTop:"20px"}}>
-                  <span className='label-with-link'
-                        dangerouslySetInnerHTML={{__html: this.textWithLink(localization.loginModal.dontHaveAccount,"/" + localization.code + '/signup')}}
-                  />
+                  <span ref="signupLink" className='label-with-link' />
                 </div>
               }
             </div>
