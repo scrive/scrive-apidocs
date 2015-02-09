@@ -85,7 +85,6 @@ javascriptLocalisation =
                }
              , reject : {
                          send : "$_pageDocumentForSignContentRejectFooterReject()$"
-                       , editMessage : "$_pageDocumentForSignContentRejectFooterOwnMessage()$"
                }
 
 
@@ -259,7 +258,6 @@ javascriptLocalisation =
                sendForSigning: "$_sendForSigning()$"
                , backFromSigningPage: "$_afterErrorGoBack()$"
                , someFieldsNotFilledInCorrectly: "$_flashMessageSomeFieldsAreIncorrectlyFilledIn()$"
-               , couldNotRefreshDocument: "$_flashMessageCouldNotRefreshDocumentStatus()$"
           }
           , questionnaire : {
                heyImViktorFromScrive: "$_questionnaireHeyImViktorFromScrive()$"
@@ -721,7 +719,6 @@ javascriptLocalisation =
             , subscribeheader : "$_paymentsSubscribeHeader()$"
             , savechanges : "$_SaveChanges()$"
             , savingsubscription : "$_paymentPlanSavingSubscription()$"
-            , loading : "$_paymentPlanLoading()$"
             , askviktor : "$_paymentPlanAskViktor()$"
             , cancelsubscription: "$_paymentPlanCancelSubscription()$"
             , errors: { emptyField: "$_paymentsErrorsEmptyField()$"
