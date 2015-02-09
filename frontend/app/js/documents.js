@@ -73,18 +73,19 @@ window.Document = Backbone.Model.extend({
         var sigs = _.filter(this.signatories(),function(sig) {return sig.ableToSign() && sig.padDelivery()});
         return _.sortBy(sigs,function(sig) {return sig.author()? 2 : 1});
     },
-    generateDefaultTitle: function () {
-      var date = new Date()
-         , pad = function (n) { return ("0" + n).slice(-2); };
-
-      return localization.designview.newDocumentTitle + " " +
+    setDefaultTitle: function () {
+      var date = new Date();
+      var pad = function (n) { return ("0" + n).slice(-2); };
+      var title = localization.designview.newDocumentTitle + " " +
           date.getFullYear() + "-" +
           pad(date.getMonth() + 1) + "-" +
           pad(date.getDate()) + " " +
           pad(date.getHours()) + ":" +
           pad(date.getMinutes());
+
+      this.setTitle(title);
     },
-    isDefaultTitle: function () {
+    hasDefaultTitle: function () {
       var title = this.title();
       if (title === "") return true;
       var untitled = localization.designview.newDocumentTitle;

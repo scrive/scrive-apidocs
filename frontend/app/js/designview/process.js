@@ -97,7 +97,7 @@ define(['Backbone', 'React', 'common/customtexteditor', 'designview/signviewsett
                 },
                 onBlur: function () {
                   if (doc.title() === "") {
-                    doc.setTitle(doc.generateDefaultTitle());
+                    doc.setDefaultTitle();
                     field.setValue(doc.title());
                   }
                 }

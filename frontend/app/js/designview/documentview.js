@@ -180,7 +180,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                                      onAppend: function(input, title, multifile) {
                                        document.markAsNotReady();
                                        submit.addInputs(input);
-                                       if (!document.isDefaultTitle()) {
+                                       if (!document.hasDefaultTitle()) {
                                          submit.set({ "title": document.title() });
                                        }
                                        viewmodel.saveAndFlashMessageIfAlreadySaved();
