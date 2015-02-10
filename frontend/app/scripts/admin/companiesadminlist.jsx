@@ -22,7 +22,7 @@ return React.createClass({
             name="users"
             textWidth={173}
             options={[
-              {name: "With more then one user", value: ""},
+              {name: "With more than one user", value: ""},
               {name: "All", value: "all"}
             ]}
           />
