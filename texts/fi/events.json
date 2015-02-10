@@ -36,6 +36,7 @@
 "_PreparationToPendingEvidenceTextSimpleArchive":"Allekirjoitusprosessi aloitettiin.",
 "_PreparationToPendingEvidenceTextSimpleNotArchive":"$actor$ valmisteli allekirjoitusprosessin asetukset. Allekirjoitusprosessi aloitettiin.",
 "_ProlongDocumentEvidenceTextArchive":"Allekirjoituksen eräpäivää jatkettiin.",
+"_ProlongDocumentEvidenceTextNotArchive":"",
 "_RejectDocumentEvidenceTextSimpleArchive":"Allekirjoittamisen kutsu hylättiin.$if(text)$ Hylkäysviesti oli: <BR/> <i>$text:noescape()$</i>$endif$",
 "_RejectDocumentEvidenceTextSimpleNotArchive":"$actor$ hylkäsi allekirjoittamisen kutsun.$if(text)$ Hylkäysviesti  osapuolelta, $actor$, oli: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToReviewArchiveEmail":"Muistutus dokumentin esikatselusta lähetettiin $signatory$:lle sähköpostitse.$if(text)$ Muistutusviesti oli: <BR/> <i>$text:noescape()$</i>$endif$",

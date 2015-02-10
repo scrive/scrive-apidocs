@@ -36,6 +36,7 @@
 "_PreparationToPendingEvidenceTextSimpleArchive":"Il processo di firma ha avuto inizio. ",
 "_PreparationToPendingEvidenceTextSimpleNotArchive":"$actor$ ha ultimato la preparazione delle impostazioni per il processo di firma. Il processo ha avuto inizio. ",
 "_ProlongDocumentEvidenceTextArchive":"La data ultima per la firma è stata prorogata.",
+"_ProlongDocumentEvidenceTextNotArchive":"",
 "_RejectDocumentEvidenceTextSimpleArchive":"L'invito a firmare il documento è stato respinto.$if(text)$ Il messaggio di rifiuto era: <BR/> <i>$text:noescape()$</i>$endif$",
 "_RejectDocumentEvidenceTextSimpleNotArchive":"L'invito a firmare il documento è stato respinto da $actor$.$if(text)$ Il messaggio di rifiuto da $actor$ era: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToReviewArchiveEmail":"È stato inviato un promemoria per revisionare il documento a $signatory$ via email.$if(text)$ Il messaggio del promemoria era: <BR/> <i>$text:noescape()$</i>$endif$",

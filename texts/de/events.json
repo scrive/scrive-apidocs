@@ -36,6 +36,7 @@
 "_PreparationToPendingEvidenceTextSimpleArchive":"Der Signierungsprozess wurde eingeleitet.",
 "_PreparationToPendingEvidenceTextSimpleNotArchive":"Die Vorbereitung für den Signierungsprozess wurde von $actor$ beendet. Der Signierungssprozess wurde eingeleitet.",
 "_ProlongDocumentEvidenceTextArchive":"Die Frist für die Signierung wurde verlängert.",
+"_ProlongDocumentEvidenceTextNotArchive":"",
 "_RejectDocumentEvidenceTextSimpleArchive":"Die Einladung, das Dokument zu unterzeichnen, wurde abgelehnt. $if(text)$ Der Ablehnungsbescheid lautet: <BR/> <i>$text:noescape()$</i>$endif$",
 "_RejectDocumentEvidenceTextSimpleNotArchive":"Die Einladung, das Dokument zu unterzeichnen, wurde von  $actor$ abgelehnt.$if(text)$ Der Ablehnungsbescheid von $actor$ lautet: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToReviewArchiveEmail":"Eine Erinnerung, das Dokument zu überprüfen, wurde an $signatory$ mit E-Mail gesendet.$if(text)$ Der Erinnerungsbescheid lautet: <BR/> <i>$text:noescape()$</i>$endif$",

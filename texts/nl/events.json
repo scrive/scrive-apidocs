@@ -36,6 +36,7 @@
 "_PreparationToPendingEvidenceTextSimpleArchive":"Het ondertekeningsproces werd gestart. ",
 "_PreparationToPendingEvidenceTextSimpleNotArchive":"De voorbereiding van de ondertekeningsproces-instellingen werd beëindigd door $actor$. Het ondertekeningsproces is begonnen. ",
 "_ProlongDocumentEvidenceTextArchive":"De deadline voor ondertekening werd verlengd. ",
+"_ProlongDocumentEvidenceTextNotArchive":"",
 "_RejectDocumentEvidenceTextSimpleArchive":"De uitnodiging om het document te ondertekenen is afgekeurd. $if(text)$ Het afkeuringsbericht is: <BR/> <i>$text:noescape()$</i>$endif$",
 "_RejectDocumentEvidenceTextSimpleNotArchive":"De uitnodiging om het document te ondertekenen is afgekeurd door $actor$.$if(text)$ Het afkeuringsbericht van $actor$ is: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToReviewArchiveEmail":"Een herinnering om het document te bekijken is gestuurd naar $signatory$ via E-mail.$if(text)$ Het herinneringsbericht is: <BR/> <i>$text:noescape()$</i>$endif$",

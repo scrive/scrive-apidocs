@@ -36,6 +36,7 @@
 "_PreparationToPendingEvidenceTextSimpleArchive":"Η διαδικασία υπογραφής ξεκίνησε. ",
 "_PreparationToPendingEvidenceTextSimpleNotArchive":"Η προετοιμασία των ρυθμίσεων της διαδικασίας υπογραφής ολοκληρώθηκε από τον $actor$ . Η διαδικασία υπογραφής ξεκίνησε.  ",
 "_ProlongDocumentEvidenceTextArchive":"Η προθεσμία υπογραφής παρατάθηκε.  ",
+"_ProlongDocumentEvidenceTextNotArchive":"",
 "_RejectDocumentEvidenceTextSimpleArchive":"Η πρόσκληση υπογραφής του εγγράφου απορρίφθηκε.$if(text)$ Το μήνυμα απόρριψης ήταν: <BR/> <i>$text:noescape()$</i>$endif$ ",
 "_RejectDocumentEvidenceTextSimpleNotArchive":"Η πρόσκληση υπογραφής του εγγράφου απορρίφθηκε από τον/την $actor$.$if(text)$ Το μήνυμα απόρριψης από τον/την $actor$ ήταν: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToReviewArchiveEmail":"Μια υπενθύμιση ελέγχου του εγγράφου απεστάλη στον/στην $signatory$ μέσω email.$if(text)$ Το μήνυμα υπενθύμισης ήταν: <BR/> <i>$text:noescape()$</i>$endif$",
