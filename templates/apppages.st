@@ -85,6 +85,8 @@ typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var
 
         mixpanel.init("$analytics.token$");
 
+        mixpanel.set_config({cross_subdomain_cookie: false});
+
         $if(analytics.userid)$
           mixpanel.identify("$analytics.userid$");
         $endif$
