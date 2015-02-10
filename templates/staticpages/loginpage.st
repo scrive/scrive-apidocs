@@ -146,6 +146,7 @@ accountSetupPage=
               jQuery('.create-account-box').append( new AccountSetup({
                                                     fstname: "$fstname$",
                                                     sndname: "$sndname$",
+                                                    email: "$email$",
                                                     company : _.unescape("$company$"), // company name can contain some funky chars like &
                                                     userid : "$userid$",
                                                     signupmethod : "$signupmethod$",

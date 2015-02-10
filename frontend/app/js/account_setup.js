@@ -20,6 +20,9 @@ define(['common/hubspot_service', 'Backbone', 'legacy_code'], function(HubSpot) 
     setSndname: function(sndname) {
       this.set('sndname', sndname);
     },
+    email: function() {
+      return this.get('email');
+    },
     password: function() {
       return this.get('password');
     },
@@ -148,6 +151,7 @@ define(['common/hubspot_service', 'Backbone', 'legacy_code'], function(HubSpot) 
                               "fullname" : model.sndname() ? model.fstname() + ' ' + model.sndname() : model.fstname(),
                               "firstname" : model.fstname(),
                               "lastname" : model.sndname(),
+                              "email"    : model.email(),
                               "phone" : model.phone(),
                               "company" : model.company(),
                               "jobtitle" : model.position()});

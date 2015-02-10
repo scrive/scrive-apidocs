@@ -292,6 +292,7 @@ handleAccountSetupGet uid token sm = do
         standardPageFields ctx (Just companyui) ad
         F.value "fstname" $ getFirstName user
         F.value "sndname" $ getLastName user
+        F.value "email"   $ getEmail user
         F.value "userid"  $ show uid
         F.value "company" $ companyname $ companyinfo $ company
         F.value "companyAdmin" $ useriscompanyadmin user
