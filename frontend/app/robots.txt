@@ -1,2 +1,4 @@
 User-agent: *
 Disallow:
+Sitemap: http://app.wistia.com/sitemaps/55937.xml
+
