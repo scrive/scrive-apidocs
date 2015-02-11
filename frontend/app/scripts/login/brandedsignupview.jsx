@@ -1,4 +1,4 @@
-define(['React','common/backbone_mixin','common/button','common/infotextinput', 'login/signupmodel','pages/languageselect','legacy_code'], function(React, BackboneMixin, Button, InfoTextInput, LoginModel, LanguageSelect) {
+define(['React','common/backbone_mixin','common/button','common/infotextinput', 'pages/languageselect','legacy_code'], function(React, BackboneMixin, Button, InfoTextInput) {
 
 
 return React.createClass({
