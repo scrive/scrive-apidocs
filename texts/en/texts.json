@@ -798,7 +798,6 @@
 "_paymentsRenewingSubscription":"Renewing subscription",
 "_paymentsSubscribeHeader":"No lock-in. All features included.",
 "_paymentsSubscriptionRenewed":"Your subscription has been renewed.",
-"_paymentsTeamPrice":"$TeamPricePerMonth()$",
 "_paymentsUser":"user",
 "_paymentsUsers":"users",
 "_paymentsVat":"All prices are exclusive of VAT.",
