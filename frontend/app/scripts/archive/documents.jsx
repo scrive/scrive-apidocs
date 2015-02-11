@@ -211,12 +211,12 @@ return React.createClass({
             ]}
          />
 
-          <DocumentFilters list={self}/>
+          {DocumentFilters({list:self})}
           {self.props.idledoctimeout == null ? "" :
             <List.ListSubHeader>
               {idleRemark}
             </List.ListSubHeader>}
-          <DocumentColumns list={self}/>
+          {DocumentColumns({list:self})}
            <List.ListFooter>
              <div className='table-statuses'>
                <div className='icon status float-left draft first'/>

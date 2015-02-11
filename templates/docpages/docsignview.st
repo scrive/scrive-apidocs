@@ -33,7 +33,7 @@ $htmlopentag()$
    require(['jquery', 'React', 'login/brandedlogin', 'legacy_code'], function(jQuery,React,BrandedLogin) {
     jQuery(document).ready(function() {
       var div = jQuery('.inner');
-      React.render(BrandedLogin({
+      React.render(React.createElement(BrandedLogin,{
         referer:   "/to-sign",
         logolink:   "$if(logolink)$$logolink$$else$/img/logo_email.png$endif$",
         servicelinkcolour: $if(servicelinkcolour)$"$servicelinkcolour$"$else$null$endif$,
@@ -96,16 +96,14 @@ $htmlopentag()$
                 $if(!usestandardheaders)$
 
                   var headerDiv = jQuery('<div/>');
-                  var component = React.render(
-                    Header({
+                  var component = React.render(React.createElement(Header,{
                       signviewbranding: svb,
                       documentid:"$documentid$",
                       signatorylinkid : "$siglinkid$"
                     }), headerDiv[0]);
 
                   var footerDiv = jQuery('<div/>');
-                  var component = React.render(
-                    Footer({
+                  var component = React.render(React.createElement(Footer,{
                       signviewbranding: svb
                     }), footerDiv[0]);
                   jQuery('.signview').prepend(headerDiv);
@@ -177,15 +175,13 @@ $htmlopentag()$
                 link.onClick = function() {window.location = "/d/$documentid$"};
               }
 
-              var component = React.render(
-                Header({
+              var component = React.render(React.createElement(Header,{
                    signviewbranding: svb,
                    link : link
                 }), headerDiv[0]);
 
               var footerDiv = jQuery('<div/>');
-              var component = React.render(
-                Footer({
+              var component = React.render(React.createElement(Footer,{
                    signviewbranding: svb
                 }), footerDiv[0]);
               jQuery('.signview').prepend(headerDiv);

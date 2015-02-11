@@ -30,8 +30,7 @@ var AuthorViewModel = Backbone.Model.extend({
     var self = this;
     if (this.get("signatories") == undefined) {
        var div = $('<div/>');
-       var component = React.render(
-                         DocumentViewSignatories.DocumentViewSignatories({
+       var component = React.render(React.createElement(DocumentViewSignatories.DocumentViewSignatories,{
                            forSigning: false,
                            document : this.document(),
                            onAction: function() {self.reload(true);}

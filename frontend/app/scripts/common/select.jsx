@@ -259,8 +259,9 @@ var SelectView = React.createClass({
                   .mouseenter(function() {self.handleMouseEnter();})
                   .mouseout(function() {self.handleMouseOut();});
       var component = React.render(
-            SelectExpandedView({model : props.model})
-            , div[0]);
+          React.createElement(SelectExpandedView, {model : props.model})
+        , div[0]
+      );
       return {
         expandedDiv : div,
         expandedComponent : component

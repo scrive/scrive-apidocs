@@ -20,7 +20,7 @@ var StatsModel = Backbone.Model.extend({
        return  "/account/usagestats/days/json" ;
   },
   dayTableDef : function() {
-    return DaysStatsTable({
+    return React.createElement(DaysStatsTable,{
       withCompany: this.withCompany(),
       url : this.dayTableUrl() + (this.withCompany() ? "?withCompany=true" : "")
    });
@@ -34,7 +34,7 @@ var StatsModel = Backbone.Model.extend({
        return  "/account/usagestats/months/json" ;
   },
   monthTableDef : function() {
-    return DaysStatsTable({
+    return React.createElement(DaysStatsTable,{
       withCompany: this.withCompany(),
       url : this.monthTableUrl() + (this.withCompany() ? "?withCompany=true" : "")
     });

@@ -108,7 +108,7 @@ return function(args) {
   var document = args.document;
   var model = new SignviewSettingsModel({document : document});
   var settingsView = $("<div/>");
-  React.render(SignviewSettingsView({
+  React.render(React.createElement(SignviewSettingsView,{
     model: model
   }), settingsView[0]);
   var popup = new Confirmation({

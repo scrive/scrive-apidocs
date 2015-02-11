@@ -42,7 +42,7 @@ var CompanyAdminModel = Backbone.Model.extend({
   companyusersTab : function() {
                     var self = this;
                     var div = $('<div/>');
-                    var list = React.render(CompanieUsersAdminList({
+                    var list = React.render(React.createElement(CompanieUsersAdminList,{
                       companyid : this.companyid(),
                       loadLater : true
                     }),div[0]);
@@ -58,7 +58,7 @@ var CompanyAdminModel = Backbone.Model.extend({
   companybrandingTab : function() {
                     var self = this;
                     var div = $('<div/>');
-                    var brandingPanel = React.render(CompanyBrandingPanel({
+                    var brandingPanel = React.render(React.createElement(CompanyBrandingPanel,{
                       companyid : self.companyid()
                     }),div[0]);
                     return new Tab({
@@ -95,7 +95,7 @@ var CompanyAdminModel = Backbone.Model.extend({
   companydocumentsTab : function() {
                     var self = this;
                     var div = $('<div/>');
-                    var list = React.render(DocumentsList({
+                    var list = React.render(React.createElement(DocumentsList,{
                       forAdmin : true, // For some reason we always show dave here
                       companyid : this.companyid(),
                       loadLater : true

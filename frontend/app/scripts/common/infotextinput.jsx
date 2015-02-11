@@ -17,7 +17,7 @@
 
  *
  * Example usage:
- * var button = React.render(InfoTextInput({
+ * var button = React.render(React.createElement(InfoTextInput(,
  *    text: "ABC"
  * }), div);
  *

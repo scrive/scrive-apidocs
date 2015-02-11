@@ -129,8 +129,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
 
             var select = $("<div/>");
 
-            React.render(
-              NewSelect.Select({
+            React.render(React.createElement(NewSelect.Select,{
                 options: options,
                 name: ordinal,
                 textWidth : 151,
@@ -163,8 +162,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             var deliveryTypes = lastViewer ? ['none'] : ['email', 'pad', 'mobile', 'email_mobile'];
 
             var select = $("<div/>");
-            React.render(
-              NewSelect.Select({
+            React.render(React.createElement(NewSelect.Select,{
                 options: _.map(deliveryTypes, function(t) {
                   return {name: deliveryTexts[t], value:t};
                 }),
@@ -228,8 +226,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
 
             var roleTypes = ['signatory', 'viewer'];
             var select = $("<div/>");
-            React.render(
-              NewSelect.Select({
+            React.render(React.createElement(NewSelect.Select,{
                 options: _.map(roleTypes, function(t) {
                   return {name: roleTexts[t], value:t};
                 }),
@@ -263,8 +260,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
 
             var authTypes = ['standard', 'eleg', 'sms_pin'];
             var select = $("<div/>");
-            React.render(
-              NewSelect.Select({
+            React.render(React.createElement(NewSelect.Select,{
                 options: _.map(authTypes, function(t) {
                   return {name: authTexts[t], value:t};
                 }),
@@ -932,8 +928,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             else
                 name = view.placeholder(view.selected.name);
             var select = $("<div/>");
-            React.render(
-              NewSelect.Select({
+            React.render(React.createElement(NewSelect.Select,{
                 options: options,
                 name: name,
                 cssClass : 'design-view-action-participant-new-field-select',

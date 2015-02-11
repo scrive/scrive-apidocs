@@ -12,13 +12,13 @@ return React.createClass({
       var model = this.props.model;
 
       var buttonStyles = {
-        'background-color': model.brandColor(),
-        'border-color': model.brandTextColor()
+        'backgroundColor': model.brandColor(),
+        'borderColor': model.brandTextColor()
       };
 
       return (
         <div className="service-preview">
-            <div className="service-preview-header" style={{"background-color": model.brandColor()}}>
+            <div className="service-preview-header" style={{"backgroundColor": model.brandColor()}}>
                 <div className="service-preview-logo">
                     <a className="hoverable logo"><img src={model.logo() || "/img/logo_email.png"} /></a>
                 </div>

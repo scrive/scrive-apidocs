@@ -51,19 +51,18 @@ return React.createClass({
     render: function() {
       var self = this;
       var model = this.props.model;
-      console.log("Rendering with url " + this.state.iconLegendMandatoryUrl);
       return (
               <div className="sample-sign-view">
                 {/*if*/ (self.props.showHeader) &&
 
-                  <div style={{"background-color": model.brandColor()}} className="sample-sign-view-header">
+                  <div style={{"backgroundColor": model.brandColor()}} className="sample-sign-view-header">
                       <div className="logo"><img src={model.logo()} />
                       </div>
                       <div style={{"color": model.brandTextColor()}} className="header-text">{localization.sampleSignView.signViewHeader}</div>
                       <div style={{"clear": "both"}}></div>
                   </div>
                 }
-                <div style={{"font-family": model.font()}} className="content">
+                <div style={{"fontFamily": model.font()}} className="content">
                   <div className="innercontent">
                      <div className="contentheader">
                         <div className="instructions">
@@ -90,7 +89,7 @@ return React.createClass({
                       <div className="document">
                               <div className="downarrow" style={{"background": this.state.arrowDownUrl}}/>
                               <div className="field mandatoryfield">
-                                  <div className="placedfield mandatoryplacedfield" style={{"border-color": model.actionColor()}}>
+                                  <div className="placedfield mandatoryplacedfield" style={{"borderColor": model.actionColor()}}>
                                       <div className="placedfieldvalue">{localization.sampleSignView.email}</div>
                                   </div>
                                   <div className="front" style={{"background": this.state.arrowFrontUrl}}/>
@@ -98,7 +97,7 @@ return React.createClass({
                                   <div className="back"  style={{"background": this.state.arrowBackUrl}}/>
                               </div>
                               <div className="field optionalfield">
-                                  <div className="placedfield optionalplacedfield" style={{"border-color": model.actionSecondaryColor()}}>
+                                  <div className="placedfield optionalplacedfield" style={{"borderColor": model.actionSecondaryColor()}}>
                                       <div className="placedfieldvalue">{localization.sampleSignView.phone}</div>
                                   </div>
                               </div><img className="exampledocument" src="/img/document_example.png" />
@@ -110,7 +109,7 @@ return React.createClass({
                                       size="small"
                                       type="optional"
                                       text={localization.sampleSignView.reviewPDF}
-                                      style={{'background-color': model.actionSecondaryColor(), 'color': model.actionSecondaryTextColor()}}
+                                      style={{'backgroundColor': model.actionSecondaryColor(), 'color': model.actionSecondaryTextColor()}}
 
                                     />
                                       </div>
@@ -123,7 +122,7 @@ return React.createClass({
                                         size="small"
                                         type="cancel"
                                         text={localization.sampleSignView.rejectButton}
-                                        style={{'background-color': model.negativeColor(), 'color': model.negativeTextColor()}}
+                                        style={{'backgroundColor': model.negativeColor(), 'color': model.negativeTextColor()}}
                                       />
                                     </div>
                                     <div className="buttoncontainer sign">
@@ -131,7 +130,7 @@ return React.createClass({
                                         size="small"
                                         type="action"
                                         text={localization.sampleSignView.signButton}
-                                        style={{'background-color': model.actionColor(), 'color': model.actionTextColor()}}
+                                        style={{'backgroundColor': model.actionColor(), 'color': model.actionTextColor()}}
                                       />
                                     </div>
                                 </div>
@@ -143,7 +142,7 @@ return React.createClass({
                                         size="small"
                                         type="action"
                                         text={localization.sampleSignView.signButton}
-                                        style={{'background-color': model.actionColor(), 'color': model.actionTextColor()}}
+                                        style={{'backgroundColor': model.actionColor(), 'color': model.actionTextColor()}}
                                       />
                                     </div>
                                 </div>

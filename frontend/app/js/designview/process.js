@@ -369,7 +369,7 @@ define(['Backbone', 'React', 'common/customtexteditor', 'designview/signviewsett
 
             var emailInvitationMessageEditable = _.any(doc.signatories(), function(s) { return s.emailDelivery() || s.emailMobileDelivery();});
 
-            React.render(CustomTextEditor({
+            React.render(React.createElement(CustomTextEditor,{
               id : 'design-view-action-process-right-column-invitation-editor',
               customtext : doc.invitationmessage(),
               editable : emailInvitationMessageEditable,
@@ -402,7 +402,7 @@ define(['Backbone', 'React', 'common/customtexteditor', 'designview/signviewsett
 
             var emailConfirmationMessageEditable = _.any(doc.signatories(), function(s) { return s.emailConfirmationDelivery() || s.emailMobileConfirmationDelivery();});
 
-            React.render(CustomTextEditor({
+            React.render(React.createElement(CustomTextEditor,{
               id : 'design-view-action-process-right-column-confirmation-editor',
               customtext : doc.confirmationmessage(),
               editable : emailConfirmationMessageEditable,

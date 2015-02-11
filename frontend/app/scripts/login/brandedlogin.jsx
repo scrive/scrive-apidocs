@@ -39,23 +39,19 @@ return React.createClass({
       return [this.state.model];
     },
     render: function() {
-      var view = function () {
-        if (this.state.model.loginView()) {
-          return <BrandedLoginView model={this.state.model}/>;
-        }
-
-        if (this.state.model.reminderView()) {
-          return <BrandedForgotPasswordView model={this.state.model}/>;
-        }
-
-        if (this.state.model.signupView()) {
-          return <BrandedSignupView model={this.state.model}/>;
-        }
-
-        console.warn("no or incorrect view selected in branded login");
-      }.call(this);
-
-      return <div>{view}</div>;
+      return (
+        <div>
+          {/* if */   (this.state.model.loginView()) &&
+            (<BrandedLoginView model={this.state.model}/>)
+          }
+          {/* else */ (this.state.model.reminderView()) &&
+            (<BrandedForgotPasswordView model={this.state.model}/>)
+          }
+          {/* else */ (this.state.model.signupView()) &&
+            (<BrandedSignupView model={this.state.model}/>)
+          }
+        </div>
+      );
     }
   });
 });

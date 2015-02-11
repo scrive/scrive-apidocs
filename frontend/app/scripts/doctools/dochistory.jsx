@@ -111,7 +111,7 @@ var DocumentHistoryView =  React.createClass({
 
 return function(args){
         var el = $("<div/>");
-        var view = React.render(DocumentHistoryView({documentid : args.document.documentid()}), el[0]);
+        var view = React.render(React.createElement(DocumentHistoryView,{documentid : args.document.documentid()}), el[0]);
         this.el     = function() {return el;};
         this.recall = function() { view().reload();};
         this.expanded = function() { return view.expanded();};

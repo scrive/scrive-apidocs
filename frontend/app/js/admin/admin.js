@@ -9,7 +9,7 @@ var AdminModel = Backbone.Model.extend({
   salesUserAdminTab : function() {
                     var admin = this;
                     var div = $('<div/>');
-                    var list = React.render(UsersAdminList({
+                    var list = React.render(React.createElement(UsersAdminList,{
                       loadLater : true
                     }),div[0]);
                     return new Tab({
@@ -24,7 +24,7 @@ var AdminModel = Backbone.Model.extend({
   companyAdminTab : function() {
                     var admin = this;
                     var div = $('<div/>');
-                    var list = React.render(CompaniesAdminList({
+                    var list = React.render(React.createElement(CompaniesAdminList,{
                       loadLater : true
                     }),div[0]);
                     return new Tab({
@@ -39,7 +39,7 @@ var AdminModel = Backbone.Model.extend({
   documentsTab : function() {
                     var admin = this;
                     var div = $('<div/>');
-                    var list = React.render(DocumentsList({
+                    var list = React.render(React.createElement(DocumentsList,{
                       forAdmin : this.isAdmin(),
                       loadLater : true
                     }),div[0]);
@@ -55,7 +55,7 @@ var AdminModel = Backbone.Model.extend({
   brandedDomainsTab : function() {
                     var admin = this;
                     var div = $('<div/>');
-                    var list = React.render(BrandedDomainsList({
+                    var list = React.render(React.createElement(BrandedDomainsList,{
                       onSelect : function(id) { window.location.hash = "#branding-themes-email-" + id;},
                       loadLater : true
                     }),div[0]);
@@ -85,7 +85,7 @@ var AdminModel = Backbone.Model.extend({
                         onActivate : function() {
                             var id = window.location.hash.replace(/[^0-9]/gmi, "");
                             React.unmountComponentAtNode(div[0]);
-                            React.render(BrandedDomainAdminPanel({
+                            React.render(React.createElement(BrandedDomainAdminPanel,{
                               domainid : id
                             }),div[0]);
                         }

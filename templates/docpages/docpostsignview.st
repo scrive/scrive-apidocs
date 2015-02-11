@@ -15,7 +15,7 @@ $htmlopentag()$
       var psvDocument = new PsvDocumentModel();
       psvDocument.fetch({
         success: function(document, response) {
-          React.render(ArchiveView({document:document}), jQuery('body')[0]);
+          React.render(React.createElement(ArchiveView,{document:document}), jQuery('body')[0]);
         }
       });
      });

@@ -49,52 +49,52 @@ var List = React.createClass({
     },
     selectfilters : function() {
       return _.filter(this.elements(), function(c) {
-        return c instanceof SelectFilter || c instanceof SelectAjaxFilter || c instanceof SelectFromToFilter;
+        return c.type === SelectFilter.type || c.type === SelectAjaxFilter.type || c.type === SelectFromToFilter.type;
       });
     },
     columns : function() {
       return _.filter(this.elements(), function(c) {
-        return c instanceof Column;
+        return c.type === Column.type;
       });
     },
     sublist : function() {
       return _.find(this.elements(), function(c) {
-        return c instanceof Sublist;
+        return c.type === Sublist.type;
       });
     },
     textfiltering : function() {
       return _.find(this.elements(), function(c) {
-        return c instanceof TextFiltering;
+        return  c.type === TextFiltering.type;
       });
     },
     pagination : function() {
       return _.find(this.elements(), function(c) {
-        return c instanceof Pagination;
+        return c.type === Pagination.type;
       });
     },
     actions : function() {
       return _.filter(this.elements(), function(c) {
-        return c instanceof ListAction;
+        return c.type === ListAction.type;
       });
     },
     selectactions : function() {
       return _.find(this.elements(), function(c) {
-        return c instanceof ListSelectActions;
+        return c.type === ListSelectActions.type;
       });
     },
     listheader : function() {
       return _.find(this.elements(), function(c) {
-        return c instanceof ListHeader;
+        return c.type === ListHeader.type;
       });
     },
     listfooter : function() {
       return _.find(this.elements(), function(c) {
-        return c instanceof ListFooter;
+        return c.type === ListFooter.type;
       });
     },
     listsubheader : function() {
       return _.find(this.elements(), function(c) {
-        return c instanceof ListSubHeader;
+        return c.type === ListSubHeader.type;
       });
     },
     render: function() {

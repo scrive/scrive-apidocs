@@ -130,8 +130,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
   createAccountSection: function() {
     if (this.createAccountSectionEle == undefined) {
       this.createAccountSectionEle = $('<div />');
-        var component = React.render(
-        CreateAccountSection({
+        var component = React.render(React.createElement(CreateAccountSection,{
           document : this.document()
         }), this.createAccountSectionEle[0]);
     }
@@ -160,8 +159,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
 
     // TODO(jens): Remove this when we drop support for IE7
     if(!BrowserInfo.isIE7orLower()) {
-      var component = React.render(
-        DocumentViewSignatories.DocumentViewSignatories({
+      var component = React.render(React.createElement(DocumentViewSignatories.DocumentViewSignatories,{
           forSigning: true,
           document : this.document()
         }), div[0]);

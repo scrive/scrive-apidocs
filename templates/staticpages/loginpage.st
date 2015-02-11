@@ -19,13 +19,13 @@ $htmlopentag()$
       var referer =  "$referer$";
       if (window.location.hash != "" && referer.indexOf("#") == -1) referer = referer + window.location.hash;
       var div = jQuery('.inner');
-      React.render(BrandedLogin({
+      React.render(React.createElement(BrandedLogin,{
         referer:   referer,
         buttoncolorclass : "$buttoncolorclass$",
         servicelinkcolour: $if(servicelinkcolour)$"$servicelinkcolour$"$else$null$endif$,
         textscolour: $if(textscolour)$"$textscolour$"$else$null$endif$,
         autofocus: true,
-        langprefix : $langprefix()$
+        langprefix : "$langprefix()$"
       }),div[0]);
 
       mixpanel.register({
@@ -113,14 +113,14 @@ $htmlopentag()$
       var referer =  "$referer$";
       if (window.location.hash != "" && referer.indexOf("#") == -1) referer = referer + window.location.hash;
       var div = jQuery('.inner');
-      React.render(BrandedLogin({
+      React.render(React.createElement(BrandedLogin,{
         defaultView: "signup",
         referer:   referer,
         buttoncolorclass : "$buttoncolorclass$",
         servicelinkcolour: $if(servicelinkcolour)$"$servicelinkcolour$"$else$null$endif$,
         textscolour: $if(textscolour)$"$textscolour$"$else$null$endif$,
         autofocus: true,
-        langprefix : $langprefix()$
+        langprefix : "$langprefix()$"
       }),div[0]);
       mixpanel.track('Visit signup page');
     });

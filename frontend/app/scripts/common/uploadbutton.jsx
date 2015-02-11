@@ -15,7 +15,7 @@
 
  *
  * Example usage:
- * var button = React.render(UploadButton({
+ * var button = React.render(React.createElement(UploadButton,{
  *    text: "ABC"
  * }), div);
  *

@@ -100,7 +100,7 @@ return React.createClass({
               text={localization.toStart.sendForSigning}
               color="green" 
               size="large" 
-              customcolor={{'background-color': signviewbranding.signviewprimarycolour(), 'color': signviewbranding.signviewprimarytextcolour()}}
+              customcolor={{'backgroundColor': signviewbranding.signviewprimarycolour(), 'color': signviewbranding.signviewprimarytextcolour()}}
               type="action"
               className={buttonClass}
               onClick={this.finalClick}

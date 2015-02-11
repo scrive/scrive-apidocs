@@ -94,11 +94,11 @@ return React.createClass({
             }}
           />
 
-          <DocumentFilters list={self}/>
+          {DocumentFilters({list:self})}
           <List.ListSubHeader>
             {localization.archive.trash.subheadline}
           </List.ListSubHeader>
-          <DocumentColumns list={self}/>
+          {DocumentColumns({list:self})}
           <List.Pagination/>
         </List.List>
       );

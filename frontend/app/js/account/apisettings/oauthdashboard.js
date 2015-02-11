@@ -7,7 +7,7 @@ define(['React','account/apisettings/oauthdashboardview', 'legacy_code'], functi
 
 window.OauthDashboard = function(args) {
     var el =  $("<div/>");
-    var table = React.render(OauthDashboardView({}), el[0]);
+    var table = React.render(React.createElement(OauthDashboardView,{}), el[0]);
     return {
       refresh : function() {table.reload();},
       el  : function() {return el;}
