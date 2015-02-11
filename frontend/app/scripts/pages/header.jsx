@@ -96,7 +96,7 @@ define(['React', 'Backbone', 'common/button'], function(React, Backbone, NewButt
             </li>
             <li className="session-login float-right">
               <a className="button scrive-main-button" id="page-signin" href={this.props.langprefix + "login"}>{localization.header.login}</a>
-              <a className="button scrive-main-button" id="page-signup" href={this.props.langprefix + "signup"}>{localization.header.startFreeTrial}</a>
+              <a className="button scrive-main-button" id="page-signup" href={this.props.langprefix + "login#signup"}>{localization.header.startFreeTrial}</a>
             </li>
             <li className="float-right"  >
                 <a className="page"   href={this.props.httplink + this.langprefixForStaticPages() + "contact"}>{localization.header.contact}</a>

@@ -78,7 +78,7 @@ instance Show KontraLink where
     showsPrec _ (LinkLogin lang _) = (++) $ langFolder lang ++ "/login"
     showsPrec _ LinkLoginDirect = (++) $ "/login"
     showsPrec _ LinkLogout = (++) "/logout"
-    showsPrec _ (LinkSignup lang) = (++) $ langFolder lang ++ "/signup"
+    showsPrec _ (LinkSignup lang) = (++) $ langFolder lang ++ "/login#signup"
     showsPrec _ (LinkArchive) = (++) $ "/d"
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"
     showsPrec _ (LinkAccount) = (++) "/account"

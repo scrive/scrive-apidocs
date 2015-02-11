@@ -75,15 +75,6 @@ define(['common/hubspot_service', 'Backbone', 'legacy_code'], function(HubSpot) 
     setTosValidator: function(validator) {
       this.set('tosValidator', validator);
     },
-    buttoncolorclass : function() {
-      return this.get("buttoncolorclass");
-    },
-    branded : function() {
-      return this.get("branded");
-    },
-    servicelinkcolour : function() {
-      return this.get("servicelinkcolour");
-    },
     callme: function() {
       return this.get('callme');
     },
@@ -329,9 +320,6 @@ define(['common/hubspot_service', 'Backbone', 'legacy_code'], function(HubSpot) 
       var tosA = tosLabel.find('.is-TOS')
                 .attr("target", "_blank")
                 .attr("href", "/terms");
-      if (model.servicelinkcolour()) {
-        tosA.css("color", model.servicelinkcolour());
-      }
 
       tosAccept.append(tosLabel);
       body.append(tosAccept);

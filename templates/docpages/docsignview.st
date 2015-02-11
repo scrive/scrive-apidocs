@@ -30,14 +30,11 @@ $htmlopentag()$
       </div>
   </div>
   <script type="text/javascript">
-   require(['jquery', 'React', 'login/brandedlogin', 'legacy_code'], function(jQuery,React,BrandedLogin) {
+   require(['jquery', 'React', 'login/login', 'legacy_code'], function(jQuery,React,Login) {
     jQuery(document).ready(function() {
       var div = jQuery('.inner');
-      React.render(React.createElement(BrandedLogin,{
+      React.render(React.createElement(Login,{
         referer:   "/to-sign",
-        logolink:   "$if(logolink)$$logolink$$else$/img/logo_email.png$endif$",
-        servicelinkcolour: $if(servicelinkcolour)$"$servicelinkcolour$"$else$null$endif$,
-        textscolour: $if(textscolour)$"$textscolour$"$else$null$endif$,
         autofocus: true,
         pad : true,
         nolinks : true

@@ -396,13 +396,9 @@ handlePasswordReminderGet uid token = do
       switchLang (getLang user)
       let changePassLink = show $ LinkPasswordReminder uid token
       ctx <- getContext
-      --let bd = ctxbrandeddomain ctx
       ad <- getAnalyticsData
       content <- renderTemplate "changePasswordPageWithBranding" $ do
         F.value "linkchangepassword" $ changePassLink
-        --F.value "background" $ bdbackgroundcolorexternal $ bd
-        --F.value "textscolour" $ bdexternaltextcolour bd
-        --F.value "buttoncolorclass" $ bdbuttonclass $ bd
         standardPageFields ctx Nothing ad
       Right <$> simpleHtmlResonseClrFlash content
     Nothing -> do

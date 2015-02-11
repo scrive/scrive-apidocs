@@ -5,6 +5,7 @@ module RoutingTable (
     staticRoutes
   ) where
 
+import Control.Applicative
 import Happstack.Server hiding (simpleHTTP, host, https, dir, path)
 import Happstack.StaticRouting(Route, choice, dir, remainingPath)
 
@@ -153,7 +154,7 @@ staticRoutes production = choice
      , dir "logout_ajax" $ hGet  $ toK0 $ handleLogoutAJAX
      , allLangDirs $ dir "login" $ hGet $ toK0 $ handleLoginGet
      , dir "login" $ hPostNoXToken $ toK0 $ handleLoginPost
-     , allLangDirs $ dir "signup"      $ hGetAllowHttp $ toK0 $ signupPageGet
+     , allLangDirs $ dir "signup"      $ hGetAllowHttp $ toK0 $ LinkSignup <$> ctxlang <$> getContext -- Drop this after EE is migrated
      , allLangDirs $ dir "signup"      $ hPostNoXTokenHttp $ toK0 $ apiCallSignup -- Drop handler after this comment gets to prod, and EE routs gets fixed to use API
      , allLangDirs $ dir "amnesia"     $ hGet $ toK2 $ UserControl.handlePasswordReminderGet
      , allLangDirs $ dir "amnesia"     $ hPostNoXToken $ toK2 UserControl.handlePasswordReminderPost

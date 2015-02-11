@@ -14,16 +14,13 @@ $htmlopentag()$
       </div>
   </div>
   <script type="text/javascript">
-   require(['jquery', 'React', 'login/brandedlogin', 'legacy_code'], function(jQuery,React,BrandedLogin) {
+   require(['jquery', 'React', 'login/login', 'legacy_code'], function(jQuery,React,Login) {
     jQuery(document).ready(function() {
       var referer =  "$referer$";
       if (window.location.hash != "" && referer.indexOf("#") == -1) referer = referer + window.location.hash;
       var div = jQuery('.inner');
-      React.render(React.createElement(BrandedLogin,{
+      React.render(React.createElement(Login,{
         referer:   referer,
-        buttoncolorclass : "$buttoncolorclass$",
-        servicelinkcolour: $if(servicelinkcolour)$"$servicelinkcolour$"$else$null$endif$,
-        textscolour: $if(textscolour)$"$textscolour$"$else$null$endif$,
         autofocus: true,
         langprefix : "$langprefix()$"
       }),div[0]);
@@ -93,43 +90,6 @@ $htmlopentag()$
   </body>
 $htmlclosingtag()$
 ###
-signupPageWithBranding=
-$doctype()$
-$htmlopentag()$
-  <head>
-    <title>$pagetitle()$</title>
-    $standardHeaderContents(nobranding='true')$
-    <link href='/login_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
-  </head>
-  <body>
-  $flashmessages()$
-  <div class='mainContainer big' style='height:auto;position: static;overflow-y:hidden;'>
-      <div class="inner" style='height:auto;position:static;margin:auto;width:auto;'>
-      </div>
-  </div>
-  <script type="text/javascript">
-   require(['jquery', 'React', 'login/brandedlogin', 'legacy_code'], function(jQuery,React,BrandedLogin) {
-    jQuery(document).ready(function() {
-      var referer =  "$referer$";
-      if (window.location.hash != "" && referer.indexOf("#") == -1) referer = referer + window.location.hash;
-      var div = jQuery('.inner');
-      React.render(React.createElement(BrandedLogin,{
-        defaultView: "signup",
-        referer:   referer,
-        buttoncolorclass : "$buttoncolorclass$",
-        servicelinkcolour: $if(servicelinkcolour)$"$servicelinkcolour$"$else$null$endif$,
-        textscolour: $if(textscolour)$"$textscolour$"$else$null$endif$,
-        autofocus: true,
-        langprefix : "$langprefix()$"
-      }),div[0]);
-      mixpanel.track('Visit signup page');
-    });
-   });
-  </script>
-
-  </body>
-$htmlclosingtag()$
-###
 accountSetupPage=
   $doctype()$
   $htmlopentag()$
@@ -160,10 +120,7 @@ accountSetupPage=
                                                     company : _.unescape("$company$"), // company name can contain some funky chars like &
                                                     userid : "$userid$",
                                                     signupmethod : "$signupmethod$",
-                                                    companyAdmin : $if(companyAdmin)$true$else$false$endif$,
-                                                    buttoncolorclass : "$if(customdomainbdbuttonclass)$$customdomainbdbuttonclass$$else$green$endif$",
-                                                    branded : $if(hasbrandeddomain)$true$else$false$endif$,
-                                                    servicelinkcolour: $if(customservicelinkcolour)$"$customservicelinkcolour$"$else$null$endif$
+                                                    companyAdmin : $if(companyAdmin)$true$else$false$endif$
                                                     })
                                                 .el());
               jQuery('.short-input-section input:first').focus();

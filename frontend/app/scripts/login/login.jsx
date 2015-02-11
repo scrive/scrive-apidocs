@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React', 'common/backbone_mixin', 'login/loginmodel','login/brandedloginview', 'login/brandedforgotpasswordview','login/brandedsignupview', 'legacy_code'], function(React, BackboneMixin, LoginModel, BrandedLoginView, BrandedForgotPasswordView, BrandedSignupView) {
+define(['React', 'common/backbone_mixin', 'login/loginmodel','login/loginview', 'login/forgotpasswordview','login/signupview', 'legacy_code'], function(React, BackboneMixin, LoginModel, LoginView, ForgotPasswordView, SignupView) {
 
 return React.createClass({
     propTypes: {
@@ -42,13 +42,13 @@ return React.createClass({
       return (
         <div>
           {/* if */   (this.state.model.loginView()) &&
-            (<BrandedLoginView model={this.state.model}/>)
+            (<LoginView model={this.state.model}/>)
           }
           {/* else */ (this.state.model.reminderView()) &&
-            (<BrandedForgotPasswordView model={this.state.model}/>)
+            (<ForgotPasswordView model={this.state.model}/>)
           }
           {/* else */ (this.state.model.signupView()) &&
-            (<BrandedSignupView model={this.state.model}/>)
+            (<SignupView model={this.state.model}/>)
           }
         </div>
       );

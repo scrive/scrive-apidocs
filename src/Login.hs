@@ -1,6 +1,5 @@
 module Login (
-    signupPageGet
-  , handleLoginGet
+    handleLoginGet
   , handleLoginPost
   , handleLogout
   , handleLogoutAJAX
@@ -44,16 +43,6 @@ handleLoginGet = do
             standardPageFields ctx Nothing ad
           Right <$> simpleHtmlResonseClrFlash content
        Just _ -> return $ Left LinkDesignView
-
-signupPageGet :: Kontrakcja m => m (Response)
-signupPageGet = do
-  ctx <- getContext
-  memail <- getField "email"
-  ad <- getAnalyticsData
-  content <- renderTemplate "signupPageWithBranding" $ do
-    F.value "email" memail
-    standardPageFields ctx Nothing ad
-  simpleHtmlResonseClrFlash content
 
 {- |
    Handles submission of a login form.  On failure will redirect back to referer, if there is one.
