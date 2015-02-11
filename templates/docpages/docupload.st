@@ -13,7 +13,7 @@ jQuery(function() {
 });
 
 
- React.renderComponent(
+ React.render(
       CreateFromTemplate({
       })
     , jQuery(".place-for-list")[0]

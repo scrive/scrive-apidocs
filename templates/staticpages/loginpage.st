@@ -19,7 +19,7 @@ $htmlopentag()$
       var referer =  "$referer$";
       if (window.location.hash != "" && referer.indexOf("#") == -1) referer = referer + window.location.hash;
       var div = jQuery('.inner');
-      React.renderComponent(BrandedLogin({
+      React.render(BrandedLogin({
         referer:   referer,
         buttoncolorclass : "$buttoncolorclass$",
         servicelinkcolour: $if(servicelinkcolour)$"$servicelinkcolour$"$else$null$endif$,
@@ -113,7 +113,7 @@ $htmlopentag()$
       var referer =  "$referer$";
       if (window.location.hash != "" && referer.indexOf("#") == -1) referer = referer + window.location.hash;
       var div = jQuery('.inner');
-      React.renderComponent(BrandedLogin({
+      React.render(BrandedLogin({
         defaultView: "signup",
         referer:   referer,
         buttoncolorclass : "$buttoncolorclass$",

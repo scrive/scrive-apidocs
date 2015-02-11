@@ -316,7 +316,7 @@ var AccountSettingsView = Backbone.View.extend({
       self.langselect = $("<div/>");
 
 
-      React.renderComponent(
+      React.render(
               NewSelect.Select({
                              name : lname,
                              onSelect : function(v) {

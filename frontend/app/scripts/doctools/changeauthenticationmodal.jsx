@@ -196,7 +196,7 @@ var ChangeAuthenticationModalView = React.createClass({
 return function(args) {
   var model = new ChangeAuthenticationModalModel({signatory: args.signatory});
   var content = $('<div class="docview-changeauthentication-modal">');
-  React.renderComponent(ChangeAuthenticationModalView({
+  React.render(ChangeAuthenticationModalView({
       model : model
   }), content[0]);
   new Confirmation({

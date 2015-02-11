@@ -17,7 +17,7 @@
 
  *
  * Example usage:
- * var button = React.renderComponent(Button({
+ * var button = React.render(InfoTextInput({
  *    text: "ABC"
  * }), div);
  *

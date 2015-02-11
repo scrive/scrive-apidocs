@@ -120,7 +120,7 @@ define(['React','common/button','common/infotextinput', 'common/backbone_mixin',
     startModal : function() {
       var self = this;
       var content =$("<div>");
-        React.renderComponent(SendSMSPinModalViewContent({
+        React.render(SendSMSPinModalViewContent({
           model: self.model
       }), content[0]);
 

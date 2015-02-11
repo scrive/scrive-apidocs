@@ -153,7 +153,7 @@ pageFooter=
 require(['jquery', 'React' , 'pages/footer','legacy_code'], function(jQuery,React,Footer) {
 
   jQuery(function(){
-    React.renderComponent(
+    React.render(
       Footer({
         logged: $if(logged)$ true $else$ false $endif$,
         thin : $if(thin)$ true $else$ false $endif$,
@@ -212,7 +212,7 @@ $headerAddons()$
 require(['jquery', 'React' , 'pages/header','legacy_code'], function(jQuery,React,Header) {
 
   jQuery(function(){
-    React.renderComponent(
+    React.render(
       Header({
         logged: $if(logged)$ true $else$ false $endif$,
         httplink : "$httplink$",

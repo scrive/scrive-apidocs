@@ -20,7 +20,7 @@ $htmlopentag()$
 
              jQuery(function(){
               var padlistDiv = jQuery('<div/>')
-              var padlist = React.renderComponent( new PadList({}),padlistDiv[0]);
+              var padlist = React.render(PadList({}),padlistDiv[0]);
               var refresherPadListStep = function() {
                 setTimeout(function() {
                   padlist.refreshStep();
@@ -29,7 +29,7 @@ $htmlopentag()$
               };
               refresherPadListStep();
               var headerDiv = jQuery('<div/>');
-              React.renderComponent(
+              React.render(
                 Header({
                    signviewbranding: svb,
                    fullWidth: true,
@@ -47,7 +47,7 @@ $htmlopentag()$
                 }), headerDiv[0]);
 
               var footerDiv = jQuery('<div/>');
-              React.renderComponent(
+              React.render(
                 Footer({
                    signviewbranding: svb
                 }), footerDiv[0]);

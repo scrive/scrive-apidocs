@@ -62,12 +62,12 @@ var StatsView = Backbone.View.extend({
        subbox.append($("<h2/>").text(localization.account.stats.last30days));
        var daytable = $("<div class='jsdaytable'></div>");
        subbox.append($(daytable));
-       this.daytable = React.renderComponent(model.dayTableDef(),daytable[0]);
+       this.daytable = React.render(model.dayTableDef(),daytable[0]);
 
        subbox.append($("<h2/>").text(localization.account.stats.last6months));
        var monthstable = $("<div class='jsmonthtable'></div>");
        subbox.append($(monthstable));
-       this.monthtable = React.renderComponent(model.monthTableDef(),monthstable[0]);
+       this.monthtable = React.render(model.monthTableDef(),monthstable[0]);
 
        container.append(subbox);
        return this;

@@ -7,7 +7,7 @@ define(['React','account/usersandstats/companyaccountstable', 'legacy_code'], fu
 
 window.CompanyAccounts = function(args) {
     var el =  $("<div/>");
-    var table = React.renderComponent(CompanyAccountsTable({}), el[0]);
+    var table = React.render(CompanyAccountsTable({}), el[0]);
     return {
       refresh : function() {table.reload();},
       el  : function() {return el;}

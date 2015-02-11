@@ -75,7 +75,7 @@ return function(args) {
                                                   onAction: args.onAction});
   var content = $('<div class="docview-changeauthentication-modal">');
 
-  React.renderComponent(ChangeSignatoryDetailModalView({model: model,
+  React.render(ChangeSignatoryDetailModalView({model: model,
                                                         label: args.label,
                                                         placeholder: args.placeholder}),
                         content[0]);

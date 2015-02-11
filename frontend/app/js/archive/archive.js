@@ -21,8 +21,8 @@ var ArchiveModel = Backbone.Model.extend({
   documentsTab : function() {
                     var archive = this;
                     var div = $('<div/>');
-                    var list = React.renderComponent(
-                      new DocumentsList({
+                    var list = React.render(
+                      DocumentsList({
                           forCompanyAdmin : this.forCompanyAdmin(),
                           year : this.year(),
                           month : this.month(),
@@ -43,7 +43,7 @@ var ArchiveModel = Backbone.Model.extend({
   templatesTab : function() {
                     var archive = this;
                     var div = $('<div/>');
-                    var list = React.renderComponent(new TemplatesList({
+                    var list = React.render(TemplatesList({
                       loadLater : true
                     }),div[0]);
                     return  new Tab({
@@ -60,7 +60,7 @@ var ArchiveModel = Backbone.Model.extend({
   attachmentsTab : function() {
                     var archive = this;
                     var div = $('<div/>');
-                    var list = React.renderComponent(new AttachmentsList({
+                    var list = React.render(AttachmentsList({
                       loadLater : true
                     }),div[0]);
                     return  new Tab({
@@ -77,7 +77,7 @@ var ArchiveModel = Backbone.Model.extend({
   trashTab : function() {
                     var archive = this;
                     var div = $('<div/>');
-                    var list = React.renderComponent(new TrashList({
+                    var list = React.render(TrashList({
                          forCompanyAdmin : this.forCompanyAdmin(),
                          year : this.year(),
                          month : this.month(),

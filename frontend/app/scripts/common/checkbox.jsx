@@ -9,7 +9,7 @@
  * onChange, a callback function being called every time the checkbox is clicked.
  *
  * Example usage: 
- * var checkbox = React.renderComponent(Checkbox.Checkbox({
+ * var checkbox = React.render(Checkbox.Checkbox({
  *    checked: args.checked,
  *    label: args.label,
  *    onChange : args.function, Bool -> ()

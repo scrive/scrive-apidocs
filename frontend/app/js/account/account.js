@@ -61,7 +61,7 @@ var AccountModel = Backbone.Model.extend({
   companySettingsTab : function() {
                     var account = this;
                     var div = $('<div/>');
-                    var brandingPanel = React.renderComponent(new CompanyBrandingPanel({
+                    var brandingPanel = React.render(CompanyBrandingPanel({
                     }),div[0]);
 
                     return new Tab({

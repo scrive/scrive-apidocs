@@ -33,7 +33,7 @@ $htmlopentag()$
    require(['jquery', 'React', 'login/brandedlogin', 'legacy_code'], function(jQuery,React,BrandedLogin) {
     jQuery(document).ready(function() {
       var div = jQuery('.inner');
-      React.renderComponent(BrandedLogin({
+      React.render(BrandedLogin({
         referer:   "/to-sign",
         logolink:   "$if(logolink)$$logolink$$else$/img/logo_email.png$endif$",
         servicelinkcolour: $if(servicelinkcolour)$"$servicelinkcolour$"$else$null$endif$,
@@ -96,7 +96,7 @@ $htmlopentag()$
                 $if(!usestandardheaders)$
 
                   var headerDiv = jQuery('<div/>');
-                  var component = React.renderComponent(
+                  var component = React.render(
                     Header({
                       signviewbranding: svb,
                       documentid:"$documentid$",
@@ -104,7 +104,7 @@ $htmlopentag()$
                     }), headerDiv[0]);
 
                   var footerDiv = jQuery('<div/>');
-                  var component = React.renderComponent(
+                  var component = React.render(
                     Footer({
                       signviewbranding: svb
                     }), footerDiv[0]);
@@ -177,14 +177,14 @@ $htmlopentag()$
                 link.onClick = function() {window.location = "/d/$documentid$"};
               }
 
-              var component = React.renderComponent(
+              var component = React.render(
                 Header({
                    signviewbranding: svb,
                    link : link
                 }), headerDiv[0]);
 
               var footerDiv = jQuery('<div/>');
-              var component = React.renderComponent(
+              var component = React.render(
                 Footer({
                    signviewbranding: svb
                 }), footerDiv[0]);

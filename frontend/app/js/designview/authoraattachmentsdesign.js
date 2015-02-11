@@ -137,7 +137,7 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
         });
         box.append(arrowBack);
         var attachmentTable = $('<div/>');
-        React.renderComponent(AttachmentsList({model : attachmentsList}), attachmentTable[0]);
+        React.render(AttachmentsList({model : attachmentsList}), attachmentTable[0]);
         box.append(attachmentTable);
         return box;
     },

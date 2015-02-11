@@ -48,7 +48,7 @@ var UserAdminModel = Backbone.Model.extend({
   userdocumentsTab : function() {
                     var self = this;
                     var div = $("<div/>");
-                    var list = React.renderComponent(new DocumentsList({
+                    var list = React.render(DocumentsList({
                       forAdmin : true, // For some reason we always show dave here
                       userid : this.userid(),
                       loadLater : true

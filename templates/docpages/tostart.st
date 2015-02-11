@@ -17,7 +17,7 @@ $htmlopentag()$
    require(['jquery', 'React', 'login/brandedlogin', 'legacy_code'], function(jQuery,React,BrandedLogin) {
     jQuery(document).ready(function() {
       var div = jQuery('.inner');
-      React.renderComponent(BrandedLogin({
+      React.render(BrandedLogin({
         referer:   "/to-start",
         logolink:   "$if(logolink)$$logolink$$else$/img/logo_email.png$endif$",
         servicelinkcolour: $if(servicelinkcolour)$"$servicelinkcolour$"$else$null$endif$,
@@ -60,14 +60,14 @@ $htmlopentag()$
                 doc = new Document({id: "$documentid$"});
                 doc.recall(function() {
                   var toStartDiv = jQuery('<div />');
-                  React.renderComponent(ToStart({document: doc, signviewbranding: svb}), toStartDiv[0]);
+                  React.rendert(ToStart({document: doc, signviewbranding: svb}), toStartDiv[0]);
                   jQuery(".form-container").append(toStartDiv);
                   jQuery(".to-start").append(footerDiv);
                 });
               });
 
               var headerDiv = jQuery('<div/>');
-              var component = React.renderComponent(
+              var component = React.render(
                 Header({
                    signviewbranding: svb,
                    fullWidth: true,
@@ -81,7 +81,7 @@ $htmlopentag()$
                 }), headerDiv[0]);
 
               var footerDiv = jQuery('<div/>');
-              var component = React.renderComponent(
+              var component = React.render(
                 Footer({
                    signviewbranding: svb,
                    forceShowing: true
@@ -124,13 +124,13 @@ $htmlopentag()$
               jQuery(function(){
 
               var listDiv = jQuery('.list-container');
-              var component = React.renderComponent(
+              var component = React.render(
                 ToStartList({
                    signviewbranding: svb
                 }), listDiv[0]);
 
               var headerDiv = jQuery('<div/>');
-              var component = React.renderComponent(
+              var component = React.render(
                 Header({
                    signviewbranding: svb,
                    fullWidth: true,
@@ -149,7 +149,7 @@ $htmlopentag()$
                 }), headerDiv[0]);
 
               var footerDiv = jQuery('<div/>');
-              var component = React.renderComponent(
+              var component = React.render(
                 Footer({
                    signviewbranding: svb,
                    forceShowing: true
