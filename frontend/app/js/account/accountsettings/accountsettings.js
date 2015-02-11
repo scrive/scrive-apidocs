@@ -338,7 +338,7 @@ var AccountSettingsView = Backbone.View.extend({
                                  var newDocumentHeight = $(document).height();
                                  if (newDocumentHeight > documentHeight) {
                                    var heightDifference = newDocumentHeight - documentHeight;
-                                   $(".body-container").css("padding-bottom", 160 + heightDifference + "px"); // 160 is linked to .body-container[padding-bottom]
+                                   $(".body-container").css("padding-bottom", 207 + heightDifference + "px"); // 160 is linked to .body-container[padding-bottom]
                                    $("footer").css("height", $("footer").height() + heightDifference + "px");
                                  }
                                }, 100);
