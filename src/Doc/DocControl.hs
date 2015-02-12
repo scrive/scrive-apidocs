@@ -498,7 +498,7 @@ handleChangeSignatoryEmail :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m
 handleChangeSignatoryEmail docid slid = withUserPost $ do
   memail <- getOptionalField asValidEmail "email"
   case memail of
-    Just email -> getDocByDocIDForAuthor docid `withDocumentM` do
+    Just email -> getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid `withDocumentM` do
       muser <- dbQuery $ GetUserByEmail (Email email)
       actor <- guardJustM $ mkAuthorActor <$> getContext
       dbUpdate $ ChangeSignatoryEmailWhenUndelivered slid muser email actor
