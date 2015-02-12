@@ -38,8 +38,12 @@ return React.createClass({
     getBackboneModels : function() {
       return [this.state.model];
     },
+    componentWillMount : function() {
+      this.synchHashWithModel();
+      this.synchModelWithHash();
+    },
     componentDidMount : function() {
-      var self = this;;
+      var self = this;
       $(window).hashchange(function() {
         self.synchHashWithModel();
       });

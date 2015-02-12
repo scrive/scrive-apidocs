@@ -96,7 +96,7 @@ return Backbone.Model.extend({
           }
         }).send();
   },
-  signup : function() {
+  signup : function(callback) {
     var model = this;
     mixpanel.track('Submit signup');
     new Submit({
@@ -111,22 +111,7 @@ return Backbone.Model.extend({
         } catch (e) {
           resp = JSON.parse($(rs).text());
         }
-        if (resp.sent === true) {
-          _gaq.push(['_trackEvent', 'Signup', 'Clicked']);
-          AdwordsConversionService.markAsSignupConversion();
-          mixpanel.track('Create new account', {
-              'Email' : model.email()
-          });
-          mixpanel.people.set({
-              '$email'        : model.email()
-          });
-          var content = localization.payments.outside.confirmAccountCreatedUserHeader;
-          new FlashMessage({content: content, type: 'success'});
-        } else if (resp.sent === false) {
-          mixpanel.track('Error',
-                         {Message : 'signup failed'});
-          new FlashMessage({content: localization.accountSetupModal.flashMessageUserAlreadyActivated, type: 'error'});
-        }
+        callback(resp);
       }
     }).send();
   }
