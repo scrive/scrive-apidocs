@@ -10,7 +10,9 @@ module.exports = function(grunt) {
   require('load-grunt-tasks')(grunt);
   require('time-grunt')(grunt);
   grunt.loadNpmTasks('grunt-shell-spawn');
+  grunt.loadNpmTasks('grunt-karma');
   require('./custom_grunt_tasks/deploybuild')(grunt);
+  require('./custom_grunt_tasks/fetchlocalization')(grunt);
 
   // configurable paths
   var yeomanConfig = {
@@ -120,12 +122,12 @@ module.exports = function(grunt) {
     karma: {
       unitSingleRun: {
         singleRun: true,
-        configFile: 'test/karma-unit.conf.js',
+        configFile: 'karma.conf.js',
         autoWatch: false // If true: run tests automatically when a file changes. Should be false on CI server.
       },
       unitWatch: {
         singleRun: false,
-        configFile: 'test/karma-unit.conf.js',
+        configFile: 'karma.conf.js',
         autoWatch: true
       }
     },
@@ -393,22 +395,7 @@ module.exports = function(grunt) {
    *
    *  All tests expects 'grunt build' to have been run
    */
-  grunt.registerTask('test', function(target) {
-    if (target === 'unit') {
-      return grunt.task.run([
-        'unittests:singleRun'
-      ]);
-    } else {
-      return grunt.task.run([
-        'configureProxies:proxyserver',
-        'connect:proxyserver',
-        'connect:dist',
-        'connect:test',
-        'karma:unitSingleRun'
-      ]);
-    }
-  });
-
+  grunt.registerTask('test', ['karma:unitSingleRun']);
 
   /**
    *  Unit tests (with karma + jasmine)
