@@ -97,7 +97,7 @@ window.SignviewSettingsPopup = function(args) {
 
 var SignviewSettingsBoolean = function(args) {
   var div = $('<div />');
-  var checkbox = React.renderComponent(Checkbox.Checkbox({
+  var checkbox = React.renderComponent(Checkbox({
     initiallyChecked: args.checked,
     label: args.label
   }), div[0]);
