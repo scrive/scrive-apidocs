@@ -68,30 +68,23 @@ checkDatabase :: (MonadDB m, MonadThrow m)
 checkDatabase logger domains tables = do
   versions <- mapM checkTableVersion tables
   let tablesWithVersions = zip tables (map (fromMaybe 0) versions)
-  let tableValidationResults = flip map tablesWithVersions $ \(t,v) ->
-                if tblVersion t == v
-                   then ValidationResult []
-                   else if v==0
-                        then ValidationResult ["Table '" ++ tblNameString t ++ "' must be created"]
-                        else ValidationResult ["Table '" ++ tblNameString t ++ "' must be migrated " ++ show v ++ "->" ++ show (tblVersion t)]
-
-  initialSetupValidationResults  <- forM tables $ \t ->
-    case tblInitialSetup t of
-      Nothing -> return $ ValidationResult []
-      Just tis -> do
-        res <- checkInitialSetup tis
-        if (res)
-           then return $ ValidationResult []
-           else return $ ValidationResult ["Initial setup for table '" ++ tblNameString t ++ "' is not valid"]
-
-  case mconcat (tableValidationResults ++ initialSetupValidationResults) of
-    ValidationResult [] -> return ()
-    ValidationResult errmsgs -> do
-      mapM_ logger errmsgs
-      error "Failed"
-
+  resultCheck logger . mconcat $ checkVersions tablesWithVersions
   resultCheck logger =<< checkDomainsStructure domains
   resultCheck logger =<< checkDBStructure (tableVersions : tables)
+  -- check initial setups only after database structure is considered
+  -- consistent as before that some of the checks may fail internally.
+  resultCheck logger . mconcat =<< checkInitialSetups tables
+  where
+    checkVersions = map $ \(t@Table{..}, v) -> ValidationResult $ if
+      | tblVersion == v -> []
+      | v == 0 -> ["Table '" ++ tblNameString t ++ "' must be created"]
+      | otherwise -> ["Table '" ++ tblNameString t ++ "' must be migrated " ++ show v ++ " -> " ++ show tblVersion]
+
+    checkInitialSetups = mapM $ \t -> case tblInitialSetup t of
+      Nothing -> return $ ValidationResult []
+      Just is -> checkInitialSetup is >>= \case
+        True  -> return $ ValidationResult []
+        False -> return $ ValidationResult ["Initial setup for table '" ++ tblNameString t ++ "' is not valid"]
 
 -- | Return SQL fragment of current catalog within quotes
 currentCatalog :: (MonadDB m, MonadThrow m) => m (RawSQL ())
