@@ -38,9 +38,46 @@ return React.createClass({
     getBackboneModels : function() {
       return [this.state.model];
     },
+    componentDidMount : function() {
+      var self = this;;
+      $(window).hashchange(function() {
+        self.synchHashWithModel();
+      });
+    },
+    componentWillUnmount : function() {
+      $(window).unbind("hashchange");
+    },
+    componentWillUpdate : function() {
+      this.synchModelWithHash();
+    },
+    synchModelWithHash : function() {
+      if (window.location.hash != "#login" && this.state.model.loginView()) {
+        window.location.hash = "#login";
+      } else if (window.location.hash != "#signup" && this.state.model.signupView()) {
+        window.location.hash = "#signup";
+      } else if (window.location.hash != "#reminder" && this.state.model.reminderView()) {
+        window.location.hash = "#reminder";
+      }
+    },
+    synchHashWithModel : function() {
+      if (window.location.hash == "#login" && !this.state.model.loginView()) {
+        this.state.model.goToLoginView();
+      } else if (window.location.hash == "#signup" && !this.state.model.signupView()) {
+        this.state.model.goToSignupView();
+      } else if (window.location.hash == "#reminder" && !this.state.model.reminderView()) {
+        this.state.model.goToReminderView();
+      }
+    },
     render: function() {
       return (
-        <div>
+        <div className="login-box" style={{"width":"275px","margin" : "20px auto"}}>
+          <div style={{marginBottom: "20px", marginTop: "50px", textAlign: "center"}} >
+            <img alt='logo' src={"/login_logo/" + window.brandinghash} />
+            <div className='divider-line'/>
+            <div className='label' style={{"textAlign":"center", "width":"275px"}}>
+              {localization.esigningpoweredbyscrive}
+            </div>
+          </div>
           {/* if */   (this.state.model.loginView()) &&
             (<LoginView model={this.state.model}/>)
           }

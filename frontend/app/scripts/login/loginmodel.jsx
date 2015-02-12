@@ -2,16 +2,9 @@
 
 define(['React', 'Backbone', 'common/hubspot_service', 'common/adwords_conversion_service', 'legacy_code'], function(React, Backbone, HubSpot, AdwordsConversionService) {
 
-var stripHash = function (hash) {
-  if (typeof hash !== "string") return "";
-  return hash.replace("#", "");
-};
-
 return Backbone.Model.extend({
   defaults: {
-        view: stripHash(window.location.hash),
-        views: ["login", "reminder", "signup"],
-        defaultView: "login",
+        view: "login",
         email : "",
         password : "",
         referer : "",
@@ -20,11 +13,8 @@ return Backbone.Model.extend({
         langprefix : "/"+ localization.code +"/"
   },
   initialize : function() {
-    if (this.email() == "" && LocalStorage.get('login','last_login_email') != "")
+    if (this.email() == "" && LocalStorage.get('login','last_login_email') != "") {
       this.set({email : LocalStorage.get('login','last_login_email')});
-
-    if (this.get("views").indexOf(this.get("view")) == -1) {
-      this.setView(this.get("defaultView"));
     }
   },
   langprefix : function() {
@@ -42,17 +32,14 @@ return Backbone.Model.extend({
   signupView : function() {
     return this.get("view") == "signup";
   },
-  setView : function(view, silent) {
-    if (this.get("views").indexOf(view) !== -1) {
-      if (view == this.get("defaultView")) {
-        window.location.hash = "";
-      } else {
-        window.location.hash = "#" + view;
-      }
-      return this.set({view: view});
-    }
-
-    console.warn("no view with name " + view + " exists");
+  goToReminderView : function() {
+    this.set({view: "reminder"});
+  },
+  goToSignupView : function() {
+    this.set({view: "signup"});
+  },
+  goToLoginView : function() {
+    this.set({view: "login"});
   },
   pad : function() {
     return this.get("pad") == true;
@@ -75,7 +62,7 @@ return Backbone.Model.extend({
   setPassword: function(v) {
     this.set({password : v}, {silent: true});
   },
-  login : function() {
+  login : function(callback) {
     var model = this;
     var email = model.email();
     if (email !== '' && email !== undefined && email !== null) {
@@ -89,36 +76,14 @@ return Backbone.Model.extend({
           password : model.password(),
           ajaxsuccess: function(rs) {
             var resp = JSON.parse(rs);
-            if (resp.logged == true)
-            {
-                trackTimeout('Login successful', {}, function() {
-                    window.location = model.referer() != undefined && model.referer() != "" && model.referer() != "/" ? model.referer() : "/newdocument";
-                });
-            }
-            else {
-                if( resp.ipaddr ) {
-                    mixpanel.track('Error',
-                                   {Message: 'login failed due to IP restriction',
-                                   IP: resp.ipaddr,
-                                   Admin: resp.adminname});
-                    var text = $("<span>" + localization.loginModal.loginFailedBadIP + "</span>");
-                    $(".put-ip-here",text).text(resp.ipaddr);
-                    $(".put-adminname-here",text).text(resp.adminname);
-                    new FlashMessage({ content: text, type : "error"});
-                }
-                else {
-                    mixpanel.track('Error',
-                                   {Message: 'login failed'});
-                    new FlashMessage({ content: localization.loginModal.loginFailed, type : "error"});
-                }
-            }
+            callback(resp);
           }
         });
     if (model.pad())
       submit.add("pad","true");
     submit.send();
   },
-  sendPasswordReminder : function() {
+  sendPasswordReminder : function(callback) {
     var model = this;
     new Submit({
           method: "POST",
@@ -127,24 +92,7 @@ return Backbone.Model.extend({
           email : model.email(),
           ajaxsuccess: function(rs) {
             var resp = JSON.parse(rs);
-            if (resp.send == true)
-            {
-                mixpanel.track('Password reminder sent');
-              new FlashMessage({ content: localization.loginModal.passwordReminderSend, type : "success"});
-            }
-            else
-            {
-              var text = "";
-              if (resp.badformat)
-                text = localization.loginModal.invalidEmail;
-              else if (resp.nouser)
-                text = localization.loginModal.noUser;
-              else if (resp.toomuch)
-                text = localization.loginModal.tooMuch;
-              mixpanel.track('Error',
-                             {Message: 'password reminder failed: ' + text});
-              new FlashMessage({ content: text, type : "error"});
-            }
+            callback(resp);
           }
         }).send();
   },
