@@ -19,7 +19,8 @@ return React.createClass({
            url: self.newThemeUrl(),
            name : input.value() || self.props.model.newThemeDefaultName(),
            ajax: true,
-           ajaxsuccess: function(resp) {
+           ajaxsuccess: function(rs) {
+             var resp = JSON.parse(rs);
              self.props.model.reloadThemesList(function() {
                popup.clear();
                self.setTheme(resp.id);
