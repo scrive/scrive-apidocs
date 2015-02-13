@@ -185,7 +185,9 @@ compareEscapeSequeces s t =
       countEscapes1 s /= countEscapes1 t ||
       countEscapes2 s /= countEscapes2 t ||
       countEscapes3 s /= countEscapes3 t ||
-      countEOLs s /= countEOLs t)
+      countEOLs s /= countEOLs t         ||
+      countGTs s /=  countGTs t          ||
+      countLTs s /=  countLTs t)
     then Just "Escaped sequences don't match"
     else Nothing
   where
@@ -194,6 +196,8 @@ compareEscapeSequeces s t =
     countEscapes2 str = length $ split "\\\\\"" str
     countEscapes3 str = length $ split "\\\\\\\"" str
     countEOLs str = length $ split "\n" str
+    countGTs str = length $ split ">" str
+    countLTs str = length $ split "<" str
 
 testLocalizationFileNoSingleQuotes :: TestEnv ()
 testLocalizationFileNoSingleQuotes = forM_ allLangs $ \l -> do

@@ -523,8 +523,9 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         render: function() {
             var view = this;
             var model = view.model;
-
             var div = view.$el;
+            div.children().detach();
+
             var div2 = $('<div class="plan" />');
 
             var features = this.renderFeatures();
@@ -872,14 +873,19 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         initialize: function(args){
             var view = this;
             _.bindAll(this);
-            var teamBoxClass = view.model.yearlyprices() ? ContactBoxView : TeamBoxView;
 
-            this.oneBox = new teamBoxClass({model: args.model,
+            this.oneBoxMonthly = new TeamBoxView({model: args.model,
                                             plan:'one',
                                             onClick: function() {
                                               mixpanel.track('Click one plan');
                                             }});
 
+
+            this.oneBoxYearly = new ContactBoxView({model: args.model,
+                                            plan:'one',
+                                            onClick: function() {
+                                              mixpanel.track('Click one plan');
+                                            }});
 
             this.teamBox = new ContactBoxView({model: args.model,
                                             hideContacts: args.hideContacts,
@@ -903,21 +909,8 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             this.noheaders = args.noheaders;
             view.model.bind('fetch', this.render);
             view.model.bind('change:yearlyprices', function() {
-              view.updateTeamBox();
               view.render();
             });
-        },
-        updateTeamBox: function() {
-            var view = this;
-            var teamBoxClass = view.model.yearlyprices() ? ContactBoxView : TeamBoxView;
-
-            view.oneBox = new teamBoxClass({model: view.model,
-                                            plan:'one',
-                                            onClick: function() {
-                                                mixpanel.track('Click one plan');
-                                            }});
-
-            view.oneBox.render();
         },
         render: function() {
             var view = this;
@@ -926,7 +919,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
             div.append(view.topTabs.el);
 
-            div.append(view.oneBox.el)
+            div.append(view.model.yearlyprices() ? view.oneBoxYearly.el : view.oneBoxMonthly.el)
                 .append(view.teamBox.el)
                 .append(view.companyBox.el)
                 .append(view.enterpriseBox.el);
@@ -934,7 +927,8 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             div.append($('<div class="clearfix" />'));
             div.append($('<div class="vat-box" />').text(localization.payments.vat));
 
-            view.$el.html(div.contents());
+            view.$el.children().detach();
+            view.$el.append(div.contents());
         }
     });
 
