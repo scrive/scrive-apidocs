@@ -1,0 +1,85 @@
+
+.login-box {
+  margin: 20px auto;
+  width: 275px;
+
+  .logo-wrapper {
+    margin-bottom: 20px;
+    margin-top: 50px;
+    text-align: center;
+
+    .label {
+      text-align: center;
+      width: 275px;
+    }
+  }
+
+  label, .label , .label-with-link  {
+    color: @brandtextcolor;
+  }
+
+
+  .info-text-input {
+    font-size : 16px;
+    padding : 0px;
+    width : 273px;
+
+    input {
+      padding : 7px 14px;
+      width : 245px;
+    }
+
+    // Since we have padding in input, not input wrapper, we also need to fix button position
+    .internal-button {
+      margin-top: 7px;
+      margin-right: 14px;
+    }
+  }
+
+  .position {
+    text-align: center;
+    margin-top: 6px;
+
+    &.separated {
+       margin-top: 20px;
+    }
+  }
+
+  .button.main {
+    width: 235px;
+  }
+
+  .langSwitcher {
+    margin: auto;
+    width: 200px;
+  }
+}
+
+// Selectbox is can be placed directly in 'body'
+.select.change-language-for-login {
+  border: 1px solid @brandtextcolor;
+
+  .select-button {
+    background: @brandcolor;
+
+    .select-button-label {
+      color: @brandtextcolor;
+    }
+    .select-button-right {
+      @url : %('/branded_image?file=select-arrow-for-branding.png&keep-color&color=%D',@brandtextcolor);
+      background-image: url(@url) ;
+    }
+  }
+  &.select-exp .select-opts {
+    background: @brandcolor;
+    border: 1px solid @brandtextcolor;
+    color: @brandtextcolor;
+
+    li:hover {
+        background: lighten(@brandcolor,10%);
+
+    }
+  }
+}
+
+

@@ -36,7 +36,7 @@ return React.createClass({
       return (
         <div>
           <div>
-            <div className='position first' style={{marginBottom:"6px"}}>
+            <div className="position">
               <InfoTextInput
                 infotext={localization.loginModal.email}
                 value={model.email()}
@@ -45,19 +45,17 @@ return React.createClass({
                 name="email"
                 onEnter={this.trySendPasswordReminder}
                 autocomplete={true}
-                style={{"width" : "245px", "padding" : "7px 14px","fontSize" : "16px"}}
               />
             </div>
-            <div className="position" style={{textAlign:"center", marginTop:"20px"}}>
+            <div className="position separated" >
               <Button
                 cssClass="recovery-password-submit"
                 type="main"
                 text={localization.loginModal.sendNewPassword}
-                style={{"width":"235px;"}}
                 onClick={this.trySendPasswordReminder}
               />
             </div>
-            <div className='position' style={{textAlign:"center",marginTop:"20px"}}>
+            <div className="position separated">
               <div className='label-with-link'>
                 <a onClick={function(){ model.goToLoginView();}}>
                   {localization.loginModal.login}

@@ -2,13 +2,6 @@ body {
   background: @brandcolor;
 }
 
-.login-box {
-
-   label, .label , .label-with-link  {
-    color: @brandtextcolor;
-  }
-}
-
 .new-password-box {
 
    label, .label , .label-with-link  {
@@ -48,34 +41,6 @@ body {
 
   label, h1, h2, h3, h4, div, span, p, div.content h1 {
     color: @brandtextcolor;
-  }
-}
-
-
-.select.change-language-for-login {
-   border: 1px solid @brandtextcolor;
-
-  .select-button {
-    background: @brandcolor;
-
-    .select-button-label {
-      color: @brandtextcolor;
-    }
-    .select-button-right {
-      @url : %('/branded_image?file=select-arrow-for-branding.png&keep-color&color=%D',@brandtextcolor);
-      background-image: url(@url) ;
-    }
-  }
-  &.select-exp .select-opts {
-    background: @brandcolor;
-    border: 1px solid @brandtextcolor;
-    color: @brandtextcolor;
-
-    li:hover {
-        background: lighten(@brandcolor,10%);
-
-    }
-
   }
 }
 

@@ -74,11 +74,11 @@ return React.createClass({
     },
     render: function() {
       return (
-        <div className="login-box" style={{"width":"275px","margin" : "20px auto"}}>
-          <div style={{marginBottom: "20px", marginTop: "50px", textAlign: "center"}} >
+        <div className="login-box">
+          <div className="logo-wrapper">
             <img alt='logo' src={"/login_logo/" + window.brandinghash} />
             <div className='divider-line'/>
-            <div className='label' style={{"textAlign":"center", "width":"275px"}}>
+            <div className='label'>
               {localization.esigningpoweredbyscrive}
             </div>
           </div>

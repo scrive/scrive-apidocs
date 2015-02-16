@@ -55,7 +55,7 @@ return React.createClass({
       return (
         <div>
           <div>
-            <div className='position first' style={{marginBottom:"6px"}}>
+            <div className='position'>
               <InfoTextInput
                 infotext={localization.loginModal.email}
                 value={model.email()}
@@ -64,8 +64,6 @@ return React.createClass({
                 name="email"
                 onEnter={this.tryLogin}
                 autocomplete={true}
-                inputStyle={{width : "245px", padding: "7px 14px"}}
-                style={{width : "273px", padding: "0px", fontSize : "16px"}}
                 focus={(model.email() == undefined || model.email() == "") && model.autofocus()}
               />
             </div>
@@ -77,22 +75,20 @@ return React.createClass({
                 inputtype="password"
                 name="password"
                 onEnter={this.tryLogin}
-                style={{width : "245px", padding : "7px 14px", fontSize : "16px" }}
                 focus={!(model.email() == undefined || model.email() == "") && model.autofocus()}
                 buttonTitle="Forgot?"
                 onClick={function(){ model.goToReminderView();}}
               />
             </div>
-            <div className="position" style={{textAlign:"center",marginTop:"20px"}}>
+            <div className="position separated">
               <Button
                 type="main"
                 text={localization.loginModal.login}
-                style={{"width":"235px;"}}
                 onClick={this.tryLogin}
               />
             </div>
             {/*if*/ (!model.nolinks()) &&
-              <div className='position' style={{textAlign:"center",marginTop:"20px"}}>
+              <div className="position separated">
                 <span
                   ref="signupLink"
                   className='label-with-link'
@@ -102,7 +98,7 @@ return React.createClass({
               </div>
             }
           </div>
-          <div className="position" style={{textAlign:"center",marginTop:"20px",width: "200px", marginRight: "auto", marginLeft: "auto"}}>
+          <div className="position separated">
             <LanguageSelect
               langprefix={model.langprefix()}
               border=""

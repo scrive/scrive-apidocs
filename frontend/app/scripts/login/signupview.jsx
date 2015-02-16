@@ -53,7 +53,7 @@ return React.createClass({
         <div>
           <div>
             <div>
-              <div className="position first withEmail">
+              <div className="position">
                 <InfoTextInput
                   infotext={localization.email}
                   value={model.email()}
@@ -62,23 +62,20 @@ return React.createClass({
                   name="email"
                   onEnter={this.trySignup}
                   autocomplete={true}
-                  inputStyle={{width : "245px", padding: "7px 14px"}}
-                  style={{width : "273px", padding: "0px", fontSize : "16px"}}
                   focus={(model.email() == undefined || model.email() == "") && model.autofocus()}
                 />
               </div>
 
-              <div className="position" style={{textAlign: "center", marginTop:"20px"}}>
+              <div className="position separated">
                 <Button
                   type="main"
                   text={localization.signup}
-                  style={{"width":"235px;"}}
                   onClick={this.trySignup}
                 />
               </div>
 
               {/*if*/ (!model.nolinks()) &&
-                <div className='position' style={{textAlign:"center",marginTop:"20px"}}>
+                <div className='position separated'>
                   <span
                     ref="loginLink"
                     className="label-with-link"
