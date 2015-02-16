@@ -13,6 +13,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
+import Branding.Adler32
 import Branding.Control
 import Company.CompanyControl
 import Company.CompanyUI
@@ -36,6 +37,7 @@ companyBrandingTests env = testGroup "CompanyBranding" [
   , testThat "Test that admin can change company branding additional details " env testChangeCompanyUI
   , testThat "Test that normal user can't deleted or change company UI" env testNormalUseCantChangeCompanyUI
   , testThat "Test that signview cache works" env testSignviewBrandingCacheWorks
+  , testThat "Test that branding cache change if one of themes is set to default but still used" env testBrandingCacheChangesIfOneOfThemesIsSetToDefault
   ]
 
 
@@ -265,3 +267,29 @@ testSignviewBrandingCacheWorks = do
   let css3 = rsBody resp3
   assertBool "Requesting signview css should change if changed theme and use different branding hash" (css2/=css3)
   assertBool "Third signview css should contain second new color" ("#136697" `isInfixOf` (BSL.toString css3))
+
+
+testBrandingCacheChangesIfOneOfThemesIsSetToDefault:: TestEnv ()
+testBrandingCacheChangesIfOneOfThemesIsSetToDefault = do
+  company <- addNewCompany
+  ctx <- mkContext defaultValue
+
+  mainbd <- dbQuery $ GetMainBrandedDomain
+  bdSignviewTheme <- dbQuery $ GetTheme (bdSignviewTheme mainbd)
+  newTheme <- dbUpdate $ InsertNewThemeForCompany (companyid company) bdSignviewTheme {themeBrandColor = "#669713"}
+  initialCompanyUI <- dbQuery $ GetCompanyUI (companyid company)
+  -- We are doing handleSignviewBrandingInternal call, and this one uses actually service branding to brand sign view
+  _ <- dbUpdate $ SetCompanyUI (companyid company) $ initialCompanyUI {
+          companyMailTheme = Just $ themeID newTheme
+        , companySignviewTheme = Just $ themeID newTheme
+        , companyServiceTheme = Just $ themeID newTheme
+       }
+  companyui1 <- dbQuery $ GetCompanyUI (companyid company)
+  adlerSum1 <- brandingAdler32 ctx (Just companyui1)
+  _ <- dbUpdate $ SetCompanyUI (companyid company) $ companyui1 {
+        companyServiceTheme = Nothing
+       }
+  companyui2 <- dbQuery $ GetCompanyUI (companyid company)
+  adlerSum2 <- brandingAdler32 ctx (Just companyui2)
+
+  assertBool "Branding Adler32 should change after we stoped using theme for service" (adlerSum1 /= adlerSum2)

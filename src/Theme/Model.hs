@@ -77,6 +77,7 @@ instance (MonadDB m,MonadThrow m) => DBQuery m GetThemesMD5 [String] where
   query (GetThemesMD5 tids) = do
     runQuery_ . sqlSelect "themes, theme_owners as o" $ do
       sqlWhereIn "id" tids
+      sqlOrderBy "id"
       selectThemesMD5
     fetchMany unSingle
 

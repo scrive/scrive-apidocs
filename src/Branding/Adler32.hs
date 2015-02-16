@@ -60,6 +60,10 @@ domainAdler32 bd = do
     , bdOpenedColor       bd
     , bdReviewedColor     bd
     , bdSignedColor       bd
+    , show $ bdMailTheme bd
+    , show $ bdSignviewTheme bd
+    , show $ bdServiceTheme bd
+    , show $ bdLoginTheme bd
     ] ++ themesMD5
 
 companyUIAdler32 :: (MonadDB m, MonadThrow m) => CompanyUI -> m String
@@ -68,6 +72,9 @@ companyUIAdler32 cui = do
   return $ BSC8.unpack $ adler32BS $ BSC8.pack $ concat $ [
       show $ companyuicompanyid cui
     , maybe "" imageAdler32(companyFavicon cui)
+    , show $ companyMailTheme cui
+    , show $ companySignviewTheme cui
+    , show $ companyServiceTheme cui
     ] ++ themesMD5
 
 adler32BS :: BSC8.ByteString -> BSC8.ByteString
