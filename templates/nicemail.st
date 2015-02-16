@@ -8,9 +8,9 @@ nicemail=
           <tr>
             <td class="headerContent" style="background-color: $nicemailheaderbackground()$; font-family: Helvetica Neue, Arial, sans-serif; font-size: 40px; font-weight: bold; line-height: 100%; padding: 0; text-align: left; vertical-align: middle" >
               <!-- // Begin Module: Standard Header Image \\ -->
-              <table>
+              <table cellpadding="0" cellspacing="0">
                 <tr>
-                  <td style="padding-left: 32px; padding-top: 32px; padding-bottom: 32px;">
+                  <td style="padding-top: 32px; padding-bottom: 32px;">
                     <img src="$nicemaillogo()$" style="border: none; font-size: 14px; font-weight: bold; height: auto; line-height: 100%; outline: none; text-decoration: none; text-transform: capitalize; max-width:600px;" id="headerImage campaign-icon" />
                   </td>
                 </tr>
@@ -24,7 +24,7 @@ nicemail=
 
     <tr>
       <td align="center" valign="top" style="padding-bottom: 30px;">
-        <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateContainer" style="background-color: $nicemailbgcolour()$;">
+        <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateContainer" style="background-color: $nicemailbgcolour()$; border: 1px solid $nicemailbordercolor()$;">
           <tr>
             <td></td>
           </tr>
@@ -48,7 +48,7 @@ nicemail=
                                   <td valign="top" style="vertical-align: top;">
                                     <table>
                                       <tr>
-                                        <td style="height: 106px; color: #333; font-family: Helvetica Neue, Arial, sans-serif; font-size: 16px; line-height: 0; text-align: left; border:1px solid #dee4ed; width: 150px;">
+                                        <td style="height: 106px; color: $nicemailfgcolour()$; font-family: Helvetica Neue, Arial, sans-serif; font-size: 16px; line-height: 0; text-align: left; border:1px solid #dee4ed; width: 150px;">
                                           <img src="$ctxhostpart$$previewLink$" style="border: none; font-size: 14px; font-weight: bold; height: auto; line-height: 100%; outline: none; text-decoration: none; text-transform: capitalize; display: inline; max-width:150px;"/>
                                         </td>
                                       </tr>
@@ -94,7 +94,7 @@ nicemail=
             <td>
               <!-- // Begin Template Footer \\ -->
 
-              <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateFooter" style="background-color: $nicemailbgcolour()$; border-top: 0;">
+              <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateFooter" style="border-top: 1px solid $nicemailbordercolor()$;">
                 <tr>
                   <td valign="top" class="footerContent">
                     <!-- // Begin Module: Standard Footer \\ -->
@@ -104,7 +104,7 @@ nicemail=
 
                         <td colspan="2" valign="top">
                           <br />
-                          <div style="color: #999999; font-family: $nicemailfont()$; font-style: italic; font-size: 13px; line-height: 16px; text-align: justify; margin: 0px 32px;padding:32px 0px; border-top: 1px solid $nicemailbordercolor()$;">
+                          <div style="color: $nicemailfgcolour()$; font-family: $nicemailfont()$; font-style: italic; font-size: 13px; line-height: 16px; text-align: justify; margin: 0px 32px;padding:32px 0px;">
                             $footer:noescape()$
                           </div>
 
@@ -121,9 +121,9 @@ nicemail=
           $else$
           <tr>
             <td>
-              <div style="margin: 0px 32px;padding:32px 0px; border-top: 1px solid $nicemailbordercolor()$;">
+              <div style="padding:32px; border-top: 1px solid $nicemailbordercolor()$;">
                 <a style="text-decoration: none;" href="$ctxhostpart$">
-                  <span class="h3" style="color: #7a94b8; display: block; font-family: $nicemailfont()$; font-size: 16px; font-weight: normal; line-height: 150%; text-align: left; margin-left: 10px;">
+                  <span class="h3" style="color: $nicemailfgcolour()$; display: block; font-family: $nicemailfont()$; font-size: 16px; font-weight: normal; line-height: 150%; text-align: left;">
                     $PoweredByScrive()$
                   </span>
                 </a>
@@ -140,7 +140,7 @@ nicemail=
 ######
 nicemailbgcolour=#FFFFFF
 #####
-nicemailfgcolour=#333333
+nicemailfgcolour=#505050
 #####
 nicemaillogo=*
   $if(ispreview)$
@@ -159,7 +159,7 @@ nicemaillogo=*
 #####
 nicemailheaderbackground=$brandcolor$
 #####
-nicemailbordercolor=#dee4ed;
+nicemailbordercolor=#cccccc;
 #####
 nicemailfont=$font$
 #####
