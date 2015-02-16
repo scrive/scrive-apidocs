@@ -41,7 +41,6 @@ define([
   '../js/new_password',
   '../js/account_setup',
   '../js/accept_tos',
-  '../js/new_signup',
   '../js/tabs',
   '../js/files',
   '../js/doclang',

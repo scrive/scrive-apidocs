@@ -239,7 +239,7 @@ testSignviewBrandingCacheWorks:: TestEnv ()
 testSignviewBrandingCacheWorks = do
   company <- addNewCompany
   Just user <- addNewCompanyUser "Mariusz" "Rak" "mariusz+ut@scrive.com" (companyid company)
-  ctx <- (\c -> c { ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxmaybeuser = Just user , ctxproduction = True}) -- ctxproduction is important, since we disable cache for dev
     <$> mkContext defaultValue
 
   mainbd <- dbQuery $ GetMainBrandedDomain
