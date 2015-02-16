@@ -124,7 +124,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
     var signatory = document.currentSignatory();
     var self = this;
     if (signatory.smsPinAuthentication() && (self.pin == undefined || self.pin == "")) {
-          new FlashMessage({content: localization.docsignview.pinSigning.noPinProvided,  color: 'error'});
+          new FlashMessage({content: localization.docsignview.pinSigning.noPinProvided,  type: 'error'});
           if (args.onFail) {
             args.onFail();
           }
@@ -143,7 +143,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
                 if (args.onFail) {
                   args.onFail();
                 }
-                new FlashMessage({content: localization.docsignview.pinSigning.invalidPin,  color: 'error'});
+                new FlashMessage({content: localization.docsignview.pinSigning.invalidPin,  type: 'error'});
             } else {
               if (self.confirmation != undefined)         self.confirmation.clear();
               if (self.signinprogressmodal != undefined) self.signinprogressmodal.close();
