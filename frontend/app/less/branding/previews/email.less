@@ -6,41 +6,45 @@
   @actual-padding: @original-padding; // How big it will appear in the preview
 
   .logo-wrapper {
-    max-width: 600px;
-    padding: @actual-padding;
     background-color: #495259; // TODO use variables.less
+    max-width: 600px;
+    padding-bottom: @actual-padding;
+    padding-top: @actual-padding;
   }
 
   .content-container {
-    padding: @actual-padding;
+    border: 1px solid #ccc;
 
-    .document-preview {
-      max-width: 150px;
-      border: 1px solid #ddd;
-    }
+    .content {
+      padding: @actual-padding;
 
-    .invitation {
-      margin-left: @actual-padding;
-      max-width: 350px;
-
-      p {
-        margin-bottom: 20px;
+      .document-preview {
+        max-width: 150px;
+        border: 1px solid #ddd;
       }
-    }
+
+      .invitation {
+        margin-left: @actual-padding;
+        max-width: 350px;
+
+        p {
+          margin-bottom: 20px;
+        }
+      }
 
 
-    .document-preview, .invitation {
-      display: inline-block;
-      vertical-align: top;
+      .document-preview, .invitation {
+        display: inline-block;
+        vertical-align: top;
+      }
     }
   }
 
   .footer {
-    margin-top: @actual-padding;
-    border-top: 1px solid #ddd;
+    border-top: 1px solid #ccc;
+    padding: @actual-padding;
 
     p {
-      margin-top: @actual-padding;
       font-size: 13px;
       font-style: italic;
       line-height: 125%;
