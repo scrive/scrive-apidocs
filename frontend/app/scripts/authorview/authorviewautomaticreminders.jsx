@@ -123,8 +123,8 @@ var AuthorViewAutomaticRemindersView = Backbone.View.extend({
       var self = this;
       self.modal = new Confirmation({
                 title: localization.autoreminders.setAutoReminderTitle,
-                content: $("<div>").append($("<div class='modal-subtitle centered'>").html(localization.autoreminders.changeAutoreminderDescription)).append($(self.changeReminderDateBody())),
-                width: 640,
+                content: $("<div>").append($("<div class='modal-subtitle'>").html(localization.autoreminders.changeAutoreminderDescription)).append($(self.changeReminderDateBody())),
+                width : 420,
                 onReject : function() {
                   if (self.calendar != undefined)
                     self.calendar.close();
@@ -168,8 +168,8 @@ var AuthorViewAutomaticRemindersView = Backbone.View.extend({
       var self = this;
       self.modal = new Confirmation({
                 title: localization.autoreminders.changeAutoReminderTitle,
-                content: $("<div>").append($("<div class='modal-subtitle centered'>").html(localization.autoreminders.changeAutoreminderDescription)).append($(self.changeReminderDateBody())),
-                width: 640,
+                content: $("<div>").append($("<div class='modal-subtitle'>").html(localization.autoreminders.changeAutoreminderDescription)).append($(self.changeReminderDateBody())),
+                width : 420,
                 onReject : function() {
                   if (self.calendar != undefined)
                     self.calendar.close();
