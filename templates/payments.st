@@ -87,5 +87,7 @@ $nicemail(
 paymentsExpiredEmail1=
 $_paymentsEmailExpiredQuestions()$
 ###
-PaymentCurrency=€
+PaymentCurrencyEUR=€
+###
+PaymentCurrencySEK=kr
 ###

@@ -289,4 +289,7 @@ localizationScript :: Kontrakcja m => String -> m Response
 localizationScript _ = do
    Context{ctxlang} <- getContext
    script <- renderTemplate "javascriptLocalisation" $ F.value "code" $ codeFromLang ctxlang
-   ok $ toResponseBS (BS.fromString "text/javascript;charset=utf-8") $ BSL.fromString script
+   ok $
+     setHeaderBS "Cache-Control" "max-age=31536000"  $
+     toResponseBS (BS.fromString "text/javascript;charset=utf-8") $
+       BSL.fromString script

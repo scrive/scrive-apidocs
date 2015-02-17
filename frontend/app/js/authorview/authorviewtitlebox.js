@@ -27,7 +27,7 @@ var AuthorViewTitleBoxModel = Backbone.Model.extend({
     var self = this;
     LoadingDialog.open();
     var errorcallback = function() {
-      new FlashMessage({content: localization.cannotWithdrawAlreadySignedDocument, color: 'red'});
+      new FlashMessage({content: localization.cannotWithdrawAlreadySignedDocument, type: 'error'});
       self.authorview().reload(true);
     };
     this.document().cancel().sendAjax(function() {

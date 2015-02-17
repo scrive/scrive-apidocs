@@ -125,7 +125,7 @@ handleTextToImage = do
     case mfcontent of
          Just fcontent -> if base64
                              then ok $ toResponseBS (BSUTF8.fromString "text/plain") $ BSL.fromChunks [BSUTF8.fromString "data:image/png;base64,", B64.encode $ concatChunks fcontent]
-                             else ok $ setHeaderBS "Cache-Control" "max-age=60" $ toResponseBS (BSUTF8.fromString "image/png") $ fcontent
+                             else ok $ setHeaderBS "Cache-Control" "max-age=600" $ toResponseBS (BSUTF8.fromString "image/png") $ fcontent
          Nothing -> internalError
 
 -- Take any image and brand it by replacing the non-white and non-transparent colors
@@ -154,7 +154,7 @@ brandedImage = do
         Log.mixlog_ $ "Problem branding signview image: " ++ show msg
         internalError
       ExitSuccess -> do
-         ok $ setHeaderBS "Cache-Control" "max-age=600" $ toResponseBS (BSUTF8.fromString "image/png") $ out
+         ok $ setHeaderBS "Cache-Control" "max-age=604800" $ toResponseBS (BSUTF8.fromString "image/png") $ out
 
 -- Point scale - some heuristic for pointsize, based on size of image, type of font and lenght of text.
 -- Result should be point size that will result in best fit. It is also expected that this value does not change much on text lenght change.

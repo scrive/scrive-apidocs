@@ -36,7 +36,7 @@
 "_PreparationToPendingEvidenceTextSimpleArchive":"Signeringsprocessen blev påbegyndt.",
 "_PreparationToPendingEvidenceTextSimpleNotArchive":"Udarbejdelsen af ​​signeringsprocessen blev færdiggjort af $actor$. Signeringsprocessen blev påbegyndt.",
 "_ProlongDocumentEvidenceTextArchive":"Forfaldsdatoen for signeringen blev forlænget.",
-"_ProlongDocumentEvidenceTextNotArchive":"",
+"_ProlongDocumentEvidenceTextNotArchive":"Fristen for at signere blev forlænget af $actor$.",
 "_RejectDocumentEvidenceTextSimpleArchive":"Invitationen til at signere dokumentet blev afvist.$if(text)$ Beskeden for afvisningen lød: <BR/> <i>$text:noescape()$</i>$endif$",
 "_RejectDocumentEvidenceTextSimpleNotArchive":"Invitationen til at signere dokumentet blev afvist af $actor$.$if(text)$ Beskeden for afvisningen fra $actor$ lød: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendTextToReviewArchiveEmail":"En påmindelse om at gennemse dokumentet blev sendt til $signatory$ via e-mail.$if(text)$ Påmindelsen lød: <BR/> <i>$text:noescape()$</i>$endif$",

@@ -340,16 +340,25 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
         var currency = localization.code == "sv" ? "SEK" : "EUR";
 
+        // Pad thousands
         function pad(n) { 
+          if (n == 0) {
+            return '000';
+          }
+
           if (n < 100) {
-            return n + '00';
+            if (n > 10) {
+              return '0' + n;
+            } else {
+              return n + '0';
+            }
           } else {
             return n;
           }
         }
 
-        // Yearly has a rebate, monthly pays 150% of yearly price
-        var price = localization.payments.plans[view.plan].price[currency] * (model.yearlyprices() ? 1 : 1.5);
+        // Yearly has a rebate, monthly pays 111% of yearly price
+        var price = Math.round(localization.payments.plans[view.plan].price[currency] * (model.yearlyprices() ? 1 : 1.11111));
         var thousands = Math.floor(price / 1000);
 
         if (thousands) {
@@ -381,7 +390,8 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         features.append(explanation);
 
         var price = $('<span class="price" />').html(view.renderPrice());
-        var priceUnit = $('<span class="unit" />').html(localization.payments.priceUnit);
+        var currency = localization.code == "sv" ? "SEK" : "EUR";
+        var priceUnit = $('<span class="unit" />').html(localization.payments.priceUnit[currency]);
 
         var cost = $('<div class="cost" />')
             .append(price).append(priceUnit);

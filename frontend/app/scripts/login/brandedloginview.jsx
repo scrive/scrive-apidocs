@@ -58,7 +58,7 @@ return React.createClass({
                   onEnter={this.tryLogin}
                   style={{width : "245px", padding : "7px 14px", fontSize : "16px" }}
                   focus={!(model.email() == undefined || model.email() == "") && model.autofocus()}
-                  buttonTitle="Forgot?"
+                  buttonTitle={localization.loginModal.forgot}
                   onClick={function(){ model.toogleView();}}
                 />
               </div>

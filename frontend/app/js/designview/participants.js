@@ -590,7 +590,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                     Where: 'icon'
                 });
                 if(view.model.isLastViewer()) {
-                  new FlashMessage({color: "red", content : localization.designview.lastViewerOnlyGetsConfirmation});
+                  new FlashMessage({type: "error", content : localization.designview.lastViewerOnlyGetsConfirmation});
                   } else {
                   if(view.model.delivery() === 'email')
                     view.model.setDelivery('pad');

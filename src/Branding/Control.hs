@@ -50,7 +50,8 @@ handleServiceBranding brandinghash _ = do
   theme <- getServiceTheme
   brandingCSS <- withLessCache (ServiceBranding (themeID theme) brandinghash) $ serviceBrandingCSS theme
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
-  return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
+  return $ setHeaderBS "Cache-Control" "max-age=31536000" $
+           setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
 
 getServiceTheme ::  Kontrakcja m =>  m Theme
 getServiceTheme = do
@@ -68,7 +69,8 @@ handleLoginBranding brandinghash _ = do
   theme <- getLoginTheme
   brandingCSS <- withLessCache (LoginBranding (themeID theme) brandinghash) $ loginBrandingCSS theme
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
-  return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
+  return $ setHeaderBS "Cache-Control" "max-age=31536000" $
+           setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
 
 
 getLoginTheme ::  Kontrakcja m =>  m Theme
@@ -82,7 +84,8 @@ handleDomainBranding brandinghash _ = do
   ctx <- getContext
   brandingCSS <- withLessCache (DomainBranding (bdid $ ctxbrandeddomain ctx) brandinghash) $ domainBrandingCSS $ ctxbrandeddomain ctx
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
-  return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
+  return $ setHeaderBS "Cache-Control" "max-age=31536000" $
+           setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
 
 -- Used to brand signview
 handleSignviewBranding :: Kontrakcja m => DocumentID ->  SignatoryLinkID -> String -> String -> m Response
@@ -90,7 +93,8 @@ handleSignviewBranding did slid brandinghash _ = do
   theme <- getSignviewTheme did slid
   brandingCSS <-  withLessCache (SignviewBranding (themeID theme) brandinghash) $ signviewBrandingCSS theme
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
-  return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
+  return $ setHeaderBS "Cache-Control" "max-age=31536000" $
+           setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
 
 getSignviewTheme ::  Kontrakcja m => DocumentID ->  SignatoryLinkID -> m Theme
 getSignviewTheme did slid = do
@@ -112,7 +116,8 @@ handleSignviewBrandingWithoutDocument brandinghash _ = do
   theme <- getSignviewThemeWithoutDocument
   brandingCSS <- withLessCache (SignviewBranding (themeID theme) brandinghash) $ signviewBrandingCSS theme
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
-  return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
+  return $ setHeaderBS "Cache-Control" "max-age=31536000" $
+           setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
 
 getSignviewThemeWithoutDocument ::  Kontrakcja m =>  m Theme
 getSignviewThemeWithoutDocument = do
@@ -133,7 +138,8 @@ handleSignviewBrandingInternal brandinghash _ = do
   theme <- dbQuery $ GetTheme $ fromMaybe (bdServiceTheme $ ctxbrandeddomain ctx) (companyServiceTheme $ companyui)
   brandingCSS <- withLessCache (SignviewBranding (themeID theme) brandinghash) $ signviewBrandingCSS theme
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
-  return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
+  return $ setHeaderBS "Cache-Control" "max-age=31536000" $
+           setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
 
 loginLogo :: Kontrakcja m => String  -> m Response
 loginLogo _ = do

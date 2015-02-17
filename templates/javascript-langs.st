@@ -681,7 +681,10 @@ javascriptLocalisation =
            , placeholder : "$_paymentPlanPlaceholder()$"
            , sendmsg : "$_paymentPlanSendMessage()$"
 	   , numberOfUsers: "$_paymentNumberOfUsers()$"
-           , priceUnit: "$_paymentPriceUnit()$"
+           , priceUnit: {
+                  EUR: "$_paymentPriceUnitEUR()$"
+                , SEK: "$_paymentPriceUnitSEK()$"
+            }
            , documentUnit: "$_paymentDocumentsUnit()$"
            , allFeaturesIncluded: "$_paymentAllFeaturesIncluded()$"
            , payMonthly: "$_paymentPayMonthly()$"
@@ -931,6 +934,7 @@ javascriptLocalisation =
            , email : "$_email()$"
            , password : "$_password()$"
            , forgotpassword : "$_forgotpassword()$"
+           , forgot : "$_forgot()$"
            , sendNewPassword : "$_loginModalForgotPasswordSendNewPassword()$"
            , loginFailed : "$_flashMessageLoginPageRedirectReasonWrongMailOrPassword()$"
            , loginFailedBadIP : "$_flashMessageLoginPageRedirectReasonWrongIPAddress()$"
