@@ -467,7 +467,7 @@ showPage' fileid pageno = do
       Log.mixlog_ $ "PNG page found and returned for file " ++ show fileid ++ " and page " ++ show pageno
       return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png")
              -- max-age same as for brandedSignviewImage
-             $ setHeaderBS (BS.fromString "Cache-Control") (BS.fromString "max-age=600") res
+             $ setHeaderBS (BS.fromString "Cache-Control") (BS.fromString "max-age=604800") res
 
     RenderedPages False _ -> do
       return ((toResponse "") { rsCode = 420 })
