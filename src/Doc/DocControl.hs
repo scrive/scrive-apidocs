@@ -38,13 +38,13 @@ module Doc.DocControl(
 import Control.Applicative
 import Control.Concurrent
 import Control.Conditional (unlessM, whenM)
-import Control.Monad.Catch (MonadMask)
 import Control.Monad
+import Control.Monad.Catch (MonadMask)
 import Control.Monad.Reader
 import Data.List
-import Data.Time (ZonedTime)
 import Data.Maybe
 import Data.String.Utils (replace)
+import Data.Time (ZonedTime)
 import Happstack.Server hiding (simpleHTTP)
 import System.Directory
 import System.IO.Temp
