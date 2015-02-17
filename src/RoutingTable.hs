@@ -150,9 +150,10 @@ staticRoutes production = choice
      , dir "payments" $ dir "newsubscriptionoutside" $ hPostAllowHttp $ toK0 $ Payments.handleSyncNewSubscriptionWithRecurlyOutside
 
      -- account stuff
+     , allLangDirs $ dir "enter" $ hGet $ toK0 $ handleLoginGet
      , dir "logout"      $ hGet  $ toK0 $ handleLogout
      , dir "logout_ajax" $ hGet  $ toK0 $ handleLogoutAJAX
-     , allLangDirs $ dir "login" $ hGet $ toK0 $ handleLoginGet
+     , allLangDirs $ dir "login" $ hGet $ toK0 $ LinkLoginDirect <$> ctxlang <$> getContext -- Drop this after EE is migrated
      , dir "login" $ hPostNoXToken $ toK0 $ handleLoginPost
      , allLangDirs $ dir "signup"      $ hGetAllowHttp $ toK0 $ LinkSignup <$> ctxlang <$> getContext -- Drop this after EE is migrated
      , allLangDirs $ dir "signup"      $ hPostNoXTokenHttp $ toK0 $ apiCallSignup -- Drop handler after this comment gets to prod, and EE routs gets fixed to use API

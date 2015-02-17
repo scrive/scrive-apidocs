@@ -16,11 +16,11 @@ return React.createClass({
         new FlashMessage({ content: localization.loginModal.passwordReminderSend, type : "success"});
       } else {
         var text = "";
-        if (resp.badformat)
+        if (resp.badformat == true)
           text = localization.loginModal.invalidEmail;
-        else if (resp.nouser)
+        else if (resp.nouser == true)
           text = localization.loginModal.noUser;
-        else if (resp.toomuch)
+        else if (resp.toomuch == true)
           text = localization.loginModal.tooMuch;
         mixpanel.track('Error',{Message: 'password reminder failed: ' + text});
         new FlashMessage({ content: text, type : "error"});

@@ -39,7 +39,9 @@ return React.createClass({
       return [this.state.model];
     },
     componentWillMount : function() {
+      // We first choose a view that matches a hash.
       this.synchHashWithModel();
+      // And then make sure that hash actually matches the view
       this.synchModelWithHash();
     },
     componentDidMount : function() {
@@ -55,20 +57,20 @@ return React.createClass({
       this.synchModelWithHash();
     },
     synchModelWithHash : function() {
-      if (window.location.hash != "#login" && this.state.model.loginView()) {
-        window.location.hash = "#login";
-      } else if (window.location.hash != "#signup" && this.state.model.signupView()) {
-        window.location.hash = "#signup";
-      } else if (window.location.hash != "#reminder" && this.state.model.reminderView()) {
-        window.location.hash = "#reminder";
+      if (window.location.hash != "#log-in" && this.state.model.loginView()) {
+        window.location.hash = "#log-in";
+      } else if (window.location.hash != "#sign-up" && this.state.model.signupView()) {
+        window.location.hash = "#sign-up";
+      } else if (window.location.hash != "#forgot" && this.state.model.reminderView()) {
+        window.location.hash = "#forgot";
       }
     },
     synchHashWithModel : function() {
-      if (window.location.hash == "#login" && !this.state.model.loginView()) {
+      if (window.location.hash == "#log-in" && !this.state.model.loginView()) {
         this.state.model.goToLoginView();
-      } else if (window.location.hash == "#signup" && !this.state.model.signupView()) {
+      } else if (window.location.hash == "#sign-up" && !this.state.model.signupView()) {
         this.state.model.goToSignupView();
-      } else if (window.location.hash == "#reminder" && !this.state.model.reminderView()) {
+      } else if (window.location.hash == "#forgot" && !this.state.model.reminderView()) {
         this.state.model.goToReminderView();
       }
     },

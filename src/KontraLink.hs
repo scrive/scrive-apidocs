@@ -32,7 +32,7 @@ data LoginRedirectReason = LoginTry
 data KontraLink
     = LinkHome Lang
     | LinkLogin Lang LoginRedirectReason
-    | LinkLoginDirect
+    | LinkLoginDirect Lang
     | LinkLogout
     | LinkSignup Lang
     | LinkArchive
@@ -75,10 +75,10 @@ langFolder lang = "/" ++ (codeFromLang lang)
 -}
 instance Show KontraLink where
     showsPrec _ (LinkHome lang) = (++) $ langFolder lang ++ "/"
-    showsPrec _ (LinkLogin lang _) = (++) $ langFolder lang ++ "/login"
-    showsPrec _ LinkLoginDirect = (++) $ "/login"
+    showsPrec _ (LinkLogin lang _) = (++) $ langFolder lang ++ "/enter#log-in" -- THIS ONE IS NOT USED. CHECK sendRedirect
+    showsPrec _ (LinkLoginDirect lang) = (++) $ langFolder lang ++ "/enter#log-in"
     showsPrec _ LinkLogout = (++) "/logout"
-    showsPrec _ (LinkSignup lang) = (++) $ langFolder lang ++ "/login#signup"
+    showsPrec _ (LinkSignup lang) = (++) $ langFolder lang ++ "/enter#sign-up"
     showsPrec _ (LinkArchive) = (++) $ "/d"
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"
     showsPrec _ (LinkAccount) = (++) "/account"

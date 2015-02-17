@@ -16,6 +16,7 @@ import qualified Data.ByteString.UTF8 as BS
 import Happstack.Fields
 import Kontra
 import KontraLink
+import User.Lang
 import User.UserView
 import Util.FinishWith
 import Util.FlashUtil
@@ -34,12 +35,14 @@ sendRedirect LoopBack = do
   let link = fromMaybe (show mainlink) referer
   seeOther link =<< setRsCode 303 (seeOtherXML link)
 
-sendRedirect link@(LinkLogin _lang reason) = do
+sendRedirect (LinkLogin lang reason) = do
   curr <- rqUri <$> askRq
   qr <- rqQuery <$> askRq
   referer <- getField "referer"
   addFlashM $ flashMessageLoginRedirectReason reason
-  let link' = show link ++ "?referer=" ++ (URL.encode . UTF.encode $ fromMaybe (curr++qr) referer)
+  let link' = "/" ++ (codeFromLang lang) ++  "/enter?referer=" ++ (URL.encode . UTF.encode $ fromMaybe (curr++qr) referer)
+  -- NOTE We could add  "#log-in" at the end. But it would overwrite hash that can be there, and hash is not send to server.
+  -- So we let frontend take care of that on it's own. And frontend will fetch hash for referer 
   seeOther link' =<< setRsCode 303 (seeOtherXML link')
 
 sendRedirect link = do

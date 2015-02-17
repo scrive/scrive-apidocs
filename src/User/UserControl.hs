@@ -360,8 +360,9 @@ handleAccessNewAccountGet uid token = do
               return LinkArchive
             Nothing -> return $ LinkLogin (ctxlang ctx) NotLogged
         _ -> do
+          ctx <- getContext
           addFlashM flashMessageAccessNewAccountLinkNotValid
-          return LinkLoginDirect
+          return $ LinkLoginDirect (ctxlang ctx)
 
 -- TODO: Too much code duplication around new account access and password reminders
 handleAccessNewAccountPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
@@ -402,8 +403,9 @@ handlePasswordReminderGet uid token = do
         standardPageFields ctx Nothing ad
       Right <$> simpleHtmlResonseClrFlash content
     Nothing -> do
+      ctx <- getContext
       addFlashM flashMessagePasswordChangeLinkNotValid
-      return $ Left LinkLoginDirect
+      return $ Left $ LinkLoginDirect (ctxlang ctx)
 
 
 handlePasswordReminderPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue

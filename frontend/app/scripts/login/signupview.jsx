@@ -13,7 +13,7 @@ return React.createClass({
       // Link is hidden inside a text - so we need to bind to it dynamically
       if (this.refs.loginLink != undefined) {
         var model = this.props.model;
-        $("a",this.refs.loginLink.getDOMNode()).click(function () {
+        $(".put-link-to-login-here",this.refs.loginLink.getDOMNode()).click(function () {
           model.goToLoginView();
         });
       }

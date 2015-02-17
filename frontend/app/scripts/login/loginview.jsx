@@ -15,7 +15,7 @@ return React.createClass({
       // Link is hidden inside a text - so we need to bind to it dynamically
       if (this.refs.signupLink != undefined) {
         var model = this.props.model;
-        $("a",this.refs.signupLink.getDOMNode()).click(function () {
+        $(".put-link-to-signup-here",this.refs.signupLink.getDOMNode()).click(function () {
           model.goToSignupView();
         });
       }
@@ -51,7 +51,7 @@ return React.createClass({
     render: function() {
       var self = this;
       var model = this.props.model;
-
+      var emailProvided = model.email() != undefined && model.email() != "";
       return (
         <div>
           <div>
@@ -64,7 +64,7 @@ return React.createClass({
                 name="email"
                 onEnter={this.tryLogin}
                 autocomplete={true}
-                focus={(model.email() == undefined || model.email() == "") && model.autofocus()}
+                focus={!emailProvided && model.autofocus()}
               />
             </div>
             <div className='position'>
@@ -75,7 +75,7 @@ return React.createClass({
                 inputtype="password"
                 name="password"
                 onEnter={this.tryLogin}
-                focus={!(model.email() == undefined || model.email() == "") && model.autofocus()}
+                focus={emailProvided && model.autofocus()}
                 buttonTitle={localization.loginModal.forgot}
                 onClick={function(){ model.goToReminderView();}}
               />

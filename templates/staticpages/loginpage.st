@@ -17,7 +17,12 @@ $htmlopentag()$
    require(['jquery', 'React', 'login/login', 'legacy_code'], function(jQuery,React,Login) {
     jQuery(document).ready(function() {
       var referer =  "$referer$";
-      if (window.location.hash != "" && referer.indexOf("#") == -1) referer = referer + window.location.hash;
+      if (window.location.hash != "" && referer.indexOf("#") == -1 &&
+          window.location.hash != "#log-in" &&
+          window.location.hash != "#sign-up" &&
+          window.location.hash != "#forgot") {
+        referer = referer + window.location.hash;
+      }
       var div = jQuery('.inner');
       React.render(React.createElement(Login,{
         referer:   referer,
