@@ -76,7 +76,7 @@ return React.createClass({
                 name="password"
                 onEnter={this.tryLogin}
                 focus={!(model.email() == undefined || model.email() == "") && model.autofocus()}
-                buttonTitle="Forgot?"
+                buttonTitle={localization.loginModal.forgot}
                 onClick={function(){ model.goToReminderView();}}
               />
             </div>
