@@ -931,6 +931,7 @@ javascriptLocalisation =
            , email : "$_email()$"
            , password : "$_password()$"
            , forgotpassword : "$_forgotpassword()$"
+           , forgot : "$_forgot()$"
            , sendNewPassword : "$_loginModalForgotPasswordSendNewPassword()$"
            , loginFailed : "$_flashMessageLoginPageRedirectReasonWrongMailOrPassword()$"
            , loginFailedBadIP : "$_flashMessageLoginPageRedirectReasonWrongIPAddress()$"
