@@ -381,7 +381,8 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         features.append(explanation);
 
         var price = $('<span class="price" />').html(view.renderPrice());
-        var priceUnit = $('<span class="unit" />').html(localization.payments.priceUnit);
+        var currency = localization.code == "sv" ? "SEK" : "EUR";
+        var priceUnit = $('<span class="unit" />').html(localization.payments.priceUnit[currency]);
 
         var cost = $('<div class="cost" />')
             .append(price).append(priceUnit);
