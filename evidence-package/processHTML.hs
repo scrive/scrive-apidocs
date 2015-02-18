@@ -35,7 +35,6 @@ main = do
     embedded <- embedImagesAsBase64 filep processedtags
     -- Embed provided style file
     styled   <- embedStyleSheet cssp embedded
-    -- TODO Update last updated timestamp? or let Bash do this well?
     -- We're done!
     putStr $ renderTagsOptions customRenderOptions styled
 
@@ -67,7 +66,12 @@ processor = foldr (.) id $ reverse
     -- Google adds annoying `cellspacing` and `cellpadding`, bye bye!
     , map (removeAttribute "cellspacing")
     , map (removeAttribute "cellpadding")
-    -- TODO fix Google URLs: prefix, params & slash and colon
+    -- Add proper class names to ToC <a>'s so we can indent them
+    , addToCClassNames
+    -- Makes first row of all tables into table header
+    , makeFirstTableRowIntoHeader
+    -- Do some magic stuff with <td> which only contain "N/A" text
+    , addNATableClass
     -- Remove <div>s containing comments
     , removeCommentDivs
     -- Remove <sup> references to comments
@@ -82,6 +86,7 @@ processor = foldr (.) id $ reverse
     -- except a few tags which we want to keep otherwise it messes things up!
     , removeEmptyTagsWhere (not . tagOpen (\s -> s == "meta"
                                               || s == "td"
+                                              || s == "th"
                                               || s == "tr"
                                           -- Empty <a> used as internal anchors
                                               || s == "a"
@@ -95,6 +100,57 @@ removeCommentDivs (div : p : a : ts) |
     = removeCommentDivs $ drop 1 $ dropWhile (not . tagCloseLit "div") ts
 removeCommentDivs (t:ts) = t : removeCommentDivs ts
 removeCommentDivs [] = []
+
+-- | Add class to table rows with "N/A" in text, remove the text.
+-- Converts things of the form:
+--     <td><p>N/A</p></td>
+-- to:
+--     <td class="cell-na"><p></p></td>
+addNATableClass :: [Tag String] -> [Tag String]
+addNATableClass [] = []
+addNATableClass (td : p : na : p' : xs)
+    |  tagOpenNameLit "td" td
+    && tagOpenNameLit "p"  p
+    && tagText ((==) "N/A") na
+    && tagClose ((==) "p") p'
+    = (addClass "cell-na" td : na : addNATableClass xs)
+addNATableClass (x:xs) = x : addNATableClass xs
+
+-- | Change all <td> within the first <tr> after a <tbody> to <th>
+makeFirstTableRowIntoHeader :: [Tag String] -> [Tag String]
+makeFirstTableRowIntoHeader [] = []
+makeFirstTableRowIntoHeader (tbody : tr : ts)
+    |  tagOpenNameLit "tbody" tbody
+    && tagOpenNameLit "tr" tr
+    = tbody : tr : (map changeTDtoTH notTRclose) ++ (makeFirstTableRowIntoHeader rest)
+  where
+    (notTRclose, rest) = span (\t -> not $ tagCloseNameLit "tr" t) ts
+makeFirstTableRowIntoHeader (x:xs) = x : makeFirstTableRowIntoHeader xs
+
+changeTDtoTH :: Tag String -> Tag String
+changeTDtoTH (TagOpen "td" attrs) = TagOpen "th" attrs
+changeTDtoTH (TagClose "td") = TagClose "th"
+changeTDtoTH t = t
+
+-- | Add a 'toc-x' class to the <p> in something of the form:
+--     <p><a href="#h.foo>2.1 FooBar</a></p>
+-- where `x` is based on the numbering to best guess the level.
+addToCClassNames :: [Tag String] -> [Tag String]
+addToCClassNames (p : a : txt : xs) =
+  if tagOpenLit "p" (const True) p
+  && tagOpenLit "a" (anyAttr (\(a,v) -> a == "href" && isPrefixOf "#h." v)) a
+  && isTagText txt
+  then let num = head $ words $ fromTagText txt
+           dots = length . filter ((==) '.')
+           tocLevel s = if dots s == 1
+                           then if length (dropWhile ((/=) '.') s) == 1
+                                   then "1"
+                                   else "2"
+                           else show $ dots s + 1
+           tocClass = "toc-" ++ tocLevel num
+       in (addClass tocClass p : a : txt : addToCClassNames xs)
+  else p : addToCClassNames (a : txt : xs)
+addToCClassNames x = x
 
 -- | Given a `FilePath` of where the root for any sources in the tag list lies,
 -- we make a reasonable guess at getting the source files for any <img> tags.
@@ -130,6 +186,18 @@ embedStyleSheet fp tags = do
 -------------------------------------------------------------------------------
 -- Some useful utilities
 -------------------------------------------------------------------------------
+
+-- | Add the given string to the value of a "class" attribute on any `TagOpen`,
+-- return any other tags unchanged.
+-- Adds a "class" attribute if it doesn't already exist.
+addClass :: String -> Tag String -> Tag String
+addClass c (TagOpen t attrs) | any isClass attrs = TagOpen t attrs'
+  where isClass = (==) "class" . fst
+        Just (cA,cV) = find isClass attrs
+        classAttr = (cA, cV ++ " " ++ c)
+        attrs' = classAttr : filter (not . isClass) attrs
+addClass c (TagOpen t attrs) | otherwise = TagOpen t (insert ("class",c) attrs)
+addClass _ t = t
 
 -- | Remove all "empty" tags that match the predicate; an empty tag is a
 -- `TagOpen` followed by a `TagClose` having identical name values.

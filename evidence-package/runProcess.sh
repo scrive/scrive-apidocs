@@ -28,12 +28,18 @@ for file in $tmp_dir/*.html; do
 	htmlspaces=$(sed -e "s/_/ /g" <<< $html)
 	# Run main HTML processor
 	./processHTML "${file}" "${cssfile}" |
+	# Add a class to checkmarks to center them
+	sed -e 's/<p>✓<\/p>/<p class="center">✓<\/p>/g' |
+	# Add a class to the "last updated" paragraph
+	sed -e 's/<p>Last updated/<p class="update-time">Last updated/g' |
 	# Remove Google URL redirect from links.
 	sed -e 's/http[s]*:\/\/www.google.com\/url?q=//g' |
 	# Remove params appended to URLs.
 	sed -e 's/&amp;[a-z]*=[A-z0-9]*//g' |
 	# Fix forward slash (%3A) and colons (%2A) on actual URLs
 	sed -e 's/%3A/:/g' -e 's/%2F/\//g' |
+	# Make first ToC item to <h2>Index</h2>
+	sed -e 's/<p class="toc-1"><a[ ="#\.A-z0-9>]*<\/a><\/p>/<h2>Index<\/h2>/' |
 	# Add timestamp
 	sed -e "s/%LAST_UPDATED_TIMESTAMP%/${timestamp}/g" > "${dest}/${htmlspaces}"
 done
