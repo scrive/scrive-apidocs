@@ -24,26 +24,26 @@ class LoginHelper
     sleep 1
     @driver.navigate().to(@ctx.createKontrakcjaURL ("/" + @h.lang + "/login"))
     self.add_cookie
-    (@h.wait_until { @driver.find_element :css => ".short-input-container" })
+    (@h.wait_until { @driver.find_element :css => ".login-box" })
     if screenshot_name then
       @h.screenshot screenshot_name
     end
     sleep 1
-    (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='email']" }).click
+    (@h.wait_until { @driver.find_element :css => ".login-box input[name='email']" }).click
     puts "just clicked email input"
     sleep 1
     # sometimes there are leftovers from stored form data from before
-    (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='email']" }).send_keys [:control, 'a']
-    (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='email']" }).send_keys email
-    (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='password']" }).click
-    (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='password']" }).send_keys password
+    (@h.wait_until { @driver.find_element :css => ".login-box input[name='email']" }).send_keys [:control, 'a']
+    (@h.wait_until { @driver.find_element :css => ".login-box input[name='email']" }).send_keys email
+    (@h.wait_until { @driver.find_element :css => ".login-box input[name='password']" }).click
+    (@h.wait_until { @driver.find_element :css => ".login-box input[name='password']" }).send_keys password
     # trying to get this click thing to work
-    (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='email']" }).click
+    (@h.wait_until { @driver.find_element :css => ".login-box input[name='email']" }).click
     puts "just clicked email input"
     sleep 1
-    (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='email']" }).send_keys [:control, 'a']
-    (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='email']" }).send_keys email
-    (@h.wait_until { @driver.find_element :css => ".short-input-container a.button-green" }).click
+    (@h.wait_until { @driver.find_element :css => ".login-box input[name='email']" }).send_keys [:control, 'a']
+    (@h.wait_until { @driver.find_element :css => ".login-box input[name='email']" }).send_keys email
+    (@h.wait_until { @driver.find_element :css => ".login-box a.button" }).click
     (@h.wait_until { @driver.find_element :css => "a.js-logout" })
 
     if (@driver.find_elements :css => ".s-accept-tos").length>0 then

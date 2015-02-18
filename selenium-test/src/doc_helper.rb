@@ -79,7 +79,7 @@ class DocHelper
     @driver.execute_script("$('ul.select-opts li').last().click()")
     puts "YYY selecetd last item"
     (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class,'design-view-action-participant-new-field-name-input')]//input"}).send_keys fieldname
-    (@h.wait_until { @driver.find_element :xpath => p + "//a[contains(@class,'button-gray')][../div[contains(@class,'design-view-action-participant-new-field-name-input')]//input]"}).click
+    (@h.wait_until { @driver.find_element :xpath => p + "//a[contains(@class,'button')][../div[contains(@class,'design-view-action-participant-new-field-name-input')]//input]"}).click
 
     (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'design-view-action-participant-details-information-field-wrapper')]//input[contains(@placeholder,'" + fieldname + "')]"}).send_keys fieldvalue
 
@@ -95,7 +95,7 @@ class DocHelper
     @h.screenshot options[:screenshot_name2] if options[:screenshot_name2]
     (@driver.find_element :xpath => "//ul[contains(@class,'select-opts')]//li/span[text()='" + fieldname + "']").click
     @h.screenshot options[:screenshot_name3] if options[:screenshot_name3]
-    (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'fieldTypeSetter-container')]//a[contains(@class,'button-gray')]"}).click
+    (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'fieldTypeSetter-container')]//a[contains(@class,'button')]"}).click
 
 # this doesn't work, possibly due to a bug in the Firefox driver:
 # http://code.google.com/p/selenium/issues/detail?id=3729
@@ -133,7 +133,7 @@ class DocHelper
     sleep 1
     puts "Closing attachment modal"
     @h.screenshot options[:screenshot_name] if options[:screenshot_name]
-    @driver.execute_script("$('.modal.active .modal-footer .button.button-green').click()")
+    @driver.execute_script("$('.modal.active .modal-footer a.action.button').click()")
     puts "Modal closed"
     sleep 1
     # @h.wait_until { @driver.execute_script("return $('.authorattachmentssetuptext span.countspan').first().text()") == "("+no.to_s()+")" }
@@ -164,7 +164,7 @@ class DocHelper
       sleep 1 if screenshot_name
       @h.screenshot screenshot_name if screenshot_name
     end
-     @driver.execute_script("$('.modal.active .modal-footer .button.button-green').click()")
+     @driver.execute_script("$('.modal.active .modal-footer a.action.button').click()")
      sleep 2
   end
 
@@ -180,7 +180,7 @@ class DocHelper
     (@driver.find_elements :css => ".multiFileInput")[0].send_keys pdf_path
     puts "review attachment"
     @h.wait_until { (@driver.find_elements :css => ".s-review-sigattachment").length == uploaded + 1 }
-    puts "Checking lenght"
+    puts "Checking length"
     #(@h.wait_until { @driver.find_elements :css => ".s-review-sigattachment" })[uploaded].click
     puts "reviewed attachment"
   end
