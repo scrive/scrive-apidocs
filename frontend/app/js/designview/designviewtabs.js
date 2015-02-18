@@ -28,6 +28,9 @@ window.DesignViewTabsView = function(args) {
                         Tab: '1'
                     });
           },
+          onShow: function() {
+               participantsView.initCustomScrollBox();
+          },
           onHide : function() {
                participantsView.closeAllParticipants();
           }

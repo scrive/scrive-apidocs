@@ -472,6 +472,9 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             }, 500);
             return false;
         },
+        initCustomScrollBox: function() {
+          this.scrollBox.mCustomScrollbar(this.customScrollbarOpts());
+        },
         render: function() {
             var view = this;
             var model = view.model;
@@ -489,8 +492,10 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             view.$el.append(box).append(view.addNew.el);
 
 
-            box.mCustomScrollbar(view.customScrollbarOpts());
             view.scrollBox = box;
+            if ($.contains(document, box[0])) {
+              this.initCustomScrollBox();
+            }
             return view;
         }
     });
