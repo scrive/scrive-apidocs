@@ -56,6 +56,7 @@ main = withCurlDo . Log.withLogger $ do
     templates <- liftBase (newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates)
     filecache <- MemCache.new BS.length 50000000
     lesscache <- MemCache.new BSL8.length 50000000
+    brandedimagescache <- MemCache.new BSL8.length 50000000
     docs <- MemCache.new RenderedPages.pagesCount 1000
     rng <- newCryptoRNGState
     connpool <- liftBase . createPoolSource $ connSettings kontraComposites
@@ -63,6 +64,7 @@ main = withCurlDo . Log.withLogger $ do
         templates = templates
       , filecache = filecache
       , lesscache = lesscache
+      , brandedimagescache = brandedimagescache
       , docscache = docs
       , cryptorng = rng
       , connsource = connpool

@@ -27,6 +27,7 @@ import Session.SessionID
 import Templates
 import User.Email
 import User.Model
+import ServerUtils.BrandedImagesCache
 import qualified MemCache
 
 data Context = Context
@@ -49,6 +50,7 @@ data Context = Context
     , ctxgtconf              :: GuardTimeConf -- ^ GuardTime configuration
     , ctxfilecache           :: MemCache.MemCache FileID BS.ByteString -- ^
     , ctxlesscache           :: LessCache -- ^
+    , ctxbrandedimagescache  :: BrandedImagesCache -- ^
     , ctxxtoken              :: MagicHash -- ^ The XToken for combatting CSRF
     , ctxadminaccounts       :: [Email] -- ^
     , ctxsalesaccounts       :: [Email] -- ^

@@ -52,6 +52,7 @@ import User.Model
 import Util.FinishWith
 import Util.FlashUtil
 import Utils.HTTP
+import ServerUtils.BrandedImagesCache
 import qualified Amazon as AWS
 import qualified FlashMessage as F
 import qualified Log
@@ -61,12 +62,13 @@ import qualified MemCache
   Global application data
 -}
 data AppGlobals
-    = AppGlobals { templates       :: MVar (UTCTime, KontrakcjaGlobalTemplates)
-                 , filecache       :: MemCache.MemCache FileID BS.ByteString
-                 , lesscache       :: LessCache
-                 , docscache       :: RenderedPagesCache
-                 , cryptorng       :: CryptoRNGState
-                 , connsource      :: ConnectionSource
+    = AppGlobals { templates          :: MVar (UTCTime, KontrakcjaGlobalTemplates)
+                 , filecache          :: MemCache.MemCache FileID BS.ByteString
+                 , lesscache          :: LessCache
+                 , brandedimagescache :: BrandedImagesCache
+                 , docscache          :: RenderedPagesCache
+                 , cryptorng          :: CryptoRNGState
+                 , connsource         :: ConnectionSource
                  }
 
 
@@ -336,6 +338,7 @@ appHandler handleRoutes appConf appGlobals = catchEverything . enhanceYourCalm $
         , ctxcgigrpconfig = cgiGrpConfig appConf
         , ctxfilecache = filecache appGlobals
         , ctxlesscache = lesscache appGlobals
+        , ctxbrandedimagescache = brandedimagescache appGlobals
         , ctxxtoken = sesCSRFToken session
         , ctxadminaccounts = admins appConf
         , ctxsalesaccounts = sales appConf
