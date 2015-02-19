@@ -37,6 +37,7 @@ import Utils.Directory
 import Utils.IO
 import Utils.String
 import ServerUtils.BrandedImagesCache
+import qualified MemCache as MemCache
 
 -- Read a csv file from POST, and returns a JSON with content
 handleParseCSV :: Kontrakcja m => m JSValue
@@ -129,33 +130,46 @@ handleTextToImage = do
                              else ok $ setHeaderBS "Cache-Control" "max-age=600" $ toResponseBS (BSUTF8.fromString "image/png") $ fcontent
          Nothing -> internalError
 
--- Take any image and brand it by replacing the non-white and non-transparent colors
--- with the specified colour.
+-- Take any image and brand it by replacing black, non-transparent colors with the specified colour.
 -- Expecting color and filename to be passed as parameters.
 -- Color format should be #deadbe.
 -- Filename is the basename of the file, brandedImage will find it in frontend/app/img/
 brandedImage :: Kontrakcja m =>  m Response
 brandedImage = do
+    ctx <- getContext
     color <- fmap (take 12) $ guardJustM $ getField "color"
     file <- fmap (take 50) $ guardJustM $ getField "file"
-    keepColor <-isFieldSet "keep-color"
-    -- We have option to stay as close ot given color as possible. But this only works for black-white images
-    let gamma = if (keepColor) then "1" else ".4235"
+    let key = BrandedImagesCacheKey { filename = file , color = color }
+    let cache = ctxbrandedimagescache ctx
+    mv <- MemCache.get key cache
+    img <- if (ctxproduction ctx)
+             then case mv of
+               Just v -> return v
+               Nothing -> do
+                 bi <- brandImage file color
+                 MemCache.put key bi cache
+                 return bi
+            else
+              brandImage file color
+    ok $ setHeaderBS "Cache-Control" "max-age=604800" $ toResponseBS (BSUTF8.fromString "image/png") $ img
+
+brandImage :: Kontrakcja m => String -> String -> m BSL.ByteString
+brandImage file color = do
     cwd <- liftIO getCurrentDirectory
     let imgDir = cwd </> "frontend/app/img"
     fpath <- guardJust $ secureAbsNormPath imgDir file
-
     (procResult, out, _) <- readProcessWithExitCode' "convert" [fpath
                                                   , "-colorspace", "Gray"
                                                   , "+level-colors", color ++ ",white"
-                                                  , "-gamma", gamma
                                                   , "-"] ""
     case procResult of
       ExitFailure msg -> do
         Log.mixlog_ $ "Problem branding signview image: " ++ show msg
         internalError
-      ExitSuccess -> do
-         ok $ setHeaderBS "Cache-Control" "max-age=604800" $ toResponseBS (BSUTF8.fromString "image/png") $ out
+      ExitSuccess -> return out
+
+
+
 
 -- Point scale - some heuristic for pointsize, based on size of image, type of font and lenght of text.
 -- Result should be point size that will result in best fit. It is also expected that this value does not change much on text lenght change.

@@ -280,6 +280,7 @@ mkContext lang = do
     docs <- MemCache.new RenderedPages.pagesCount 500
     filecache <- MemCache.new BS.length 52428800
     lesscache <- MemCache.new BSLU.length 52428800
+    brandedimagescache <- MemCache.new BSLU.length 52428800
     return Context {
           ctxmaybeuser = Nothing
         , ctxhostpart = defaultUri
@@ -304,6 +305,7 @@ mkContext lang = do
           }
         , ctxfilecache = filecache
         , ctxlesscache = lesscache
+        , ctxbrandedimagescache = brandedimagescache
         , ctxxtoken = error "xtoken is not defined"
         , ctxadminaccounts = []
         , ctxsalesaccounts = []
