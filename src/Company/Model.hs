@@ -20,7 +20,7 @@ import Control.Monad.Catch
 import Control.Monad.State
 import Data.Int (Int16)
 import Data.Monoid
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import Data.Typeable
 
 import Company.CompanyID
@@ -138,7 +138,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m CreateCompany Company where
     runQuery_ $ sqlInsert "companies" $ do
       sqlSetCmd "id" "DEFAULT"
       sqlResult "id"
-    companyidx :: CompanyID <- fetchOne unSingle
+    companyidx :: CompanyID <- fetchOne runIdentity
     runQuery_ $ sqlInsert "company_uis" $ do
       sqlSet "company_id" companyidx
 

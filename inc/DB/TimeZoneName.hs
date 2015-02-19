@@ -10,7 +10,7 @@ module DB.TimeZoneName
 
 import Control.Monad.Catch
 import Data.Char
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import Data.Typeable
 import Database.PostgreSQL.PQTypes
 import qualified Control.Exception.Lifted as E
@@ -47,7 +47,7 @@ withTimeZone (TimeZoneName tz) = bracket setNewTz setTz . const
   where
     setNewTz = do
       runSQL_ "SHOW timezone"
-      oldtz <- fetchOne unSingle
+      oldtz <- fetchOne runIdentity
       setTz tz
       return oldtz
 

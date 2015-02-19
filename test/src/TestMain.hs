@@ -115,8 +115,7 @@ testMany (allargs, ts) = do
   templates <- liftBase $ readGlobalTemplates
 
   let connSettings = pgConnSettings pgconf
-      dts = defaultTransactionSettings
-  runDBT (defaultSource $ connSettings []) dts $ do
+  runDBT (simpleSource $ connSettings []) def $ do
     migrateDatabase Log.mixlog_ kontraDomains kontraTables kontraMigrations
     defineFunctions kontraFunctions
     defineComposites kontraComposites
@@ -128,9 +127,9 @@ testMany (allargs, ts) = do
   active_tests <- liftBase . atomically $ newTVar (True, 0)
   rejected_documents <- liftBase . atomically $ newTVar 0
   let env = envf $ TestEnvSt {
-        teConnSource = defaultSource $ connSettings kontraComposites
+        teConnSource = simpleSource $ connSettings kontraComposites
       , teStaticConnSource = staticSource
-      , teTransSettings = dts
+      , teTransSettings = def
       , teRNGState = rng
       , teGlobalTemplates = templates
       , teActiveTests = active_tests
@@ -147,7 +146,7 @@ testMany (allargs, ts) = do
     atomically $ do
       n <- snd <$> readTVar active_tests
       when (n /= 0) retry
-    runDBT staticSource dts { tsAutoTransaction = False } $ do
+    runDBT staticSource def { tsAutoTransaction = False } $ do
       stats <- getConnectionStats
       liftBase . putStrLn $ "SQL: " ++ show stats
     rejs <- atomically (readTVar rejected_documents)

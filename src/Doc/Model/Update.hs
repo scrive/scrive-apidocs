@@ -70,13 +70,12 @@ import Control.Applicative
 import Control.Arrow (second)
 import Control.Monad
 import Control.Monad.Catch
-import Control.Monad.Identity (Identity)
 import Data.Decimal (realFracToDecimal)
 import Data.Int
 import Data.List hiding (tail, head)
 import Data.Maybe hiding (fromJust)
 import Data.Monoid
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import Text.StringTemplates.Templates
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.Set as S
@@ -154,7 +153,7 @@ insertSignatoryLinks did links = do
 
   -- update ids
   links' <- zipWith (\sl slid -> sl { signatorylinkid = slid }) links
-    <$> fetchMany unSingle
+    <$> fetchMany runIdentity
 
   insertSignatoryAttachments
     [(signatorylinkid sl, att) | sl <- links', att <- signatoryattachments sl]
@@ -271,7 +270,7 @@ insertDocument document@(Document{..}) = do
     sqlSet "time_zone_name" documenttimezonename
     sqlSet "api_version" documentapiversion
     sqlResult "documents.id"
-  did <- fetchOne unSingle
+  did <- fetchOne runIdentity
   insertSignatoryLinks did documentsignatorylinks
   insertAuthorAttachments did documentauthorattachments
   insertMainFiles did documentmainfiles
@@ -468,7 +467,7 @@ data ChangeSignatoryEmailWhenUndelivered = ChangeSignatoryEmailWhenUndelivered S
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeSignatoryEmailWhenUndelivered () where
   update (ChangeSignatoryEmailWhenUndelivered slid muser email actor) = do
     oldemail <- updateDocumentWithID $ const $ do
-      oldemail :: String <- kRunAndFetch1OrThrowWhyNot unSingle $ sqlUpdate "signatory_link_fields" $ do
+      oldemail :: String <- kRunAndFetch1OrThrowWhyNot runIdentity $ sqlUpdate "signatory_link_fields" $ do
              sqlFrom "signatory_link_fields AS signatory_link_fields_old"
              sqlWhere "signatory_link_fields.id = signatory_link_fields_old.id"
              sqlSet "value_text" email
@@ -493,7 +492,7 @@ data ChangeSignatoryPhoneWhenUndelivered = ChangeSignatoryPhoneWhenUndelivered S
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeSignatoryPhoneWhenUndelivered () where
   update (ChangeSignatoryPhoneWhenUndelivered slid phone actor) = do
     oldphone <- updateDocumentWithID $ const $ do
-      oldphone :: String <- kRunAndFetch1OrThrowWhyNot unSingle $ sqlUpdate "signatory_link_fields" $ do
+      oldphone :: String <- kRunAndFetch1OrThrowWhyNot runIdentity $ sqlUpdate "signatory_link_fields" $ do
              sqlFrom "signatory_link_fields AS signatory_link_fields_old"
              sqlWhere "signatory_link_fields.id = signatory_link_fields_old.id"
              sqlSet "value_text" phone
@@ -523,7 +522,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
     (oldAuth, sig) <- updateDocumentWithID $ const $ do
       -- Set the new authentication method in signatory_links
       -- Return the old authentication method
-      (oldAuth' :: AuthenticationMethod) <- kRunAndFetch1OrThrowWhyNot unSingle $ sqlUpdate "signatory_links" $ do
+      (oldAuth' :: AuthenticationMethod) <- kRunAndFetch1OrThrowWhyNot runIdentity $ sqlUpdate "signatory_links" $ do
         sqlFrom "signatory_links AS signatory_links_old"
         sqlSet "authentication_method" newAuth
         sqlResult "signatory_links_old.authentication_method"
@@ -625,7 +624,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadMask m) => DBUpdate m Preparat
             -- (i.e., so that we stay on midnight)
             -- http://www.postgresql.org/docs/9.2/static/functions-datetime.html
             withTimeZone defaultTimeZoneName $ do
-              lang :: Lang <- kRunAndFetch1OrThrowWhyNot unSingle $ sqlUpdate "documents" $ do
+              lang :: Lang <- kRunAndFetch1OrThrowWhyNot runIdentity $ sqlUpdate "documents" $ do
                 sqlSet "status" Pending
                 sqlSetCmd "timeout_time" $ "cast (" <?> timestamp <+> "as timestamp with time zone)"
                             <+> "+ ((interval '1 day') * documents.days_to_sign) + (interval '23 hours 59 minutes 59 seconds')" -- This interval add almoust one they from description above.
@@ -640,7 +639,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadMask m) => DBUpdate m Preparat
                 sqlWhereEq "document_id" docid
 
               runQuery_ $ "SELECT timeout_time FROM documents WHERE id =" <?> docid
-              tot <- fetchOne unSingle
+              tot <- fetchOne runIdentity
               updateMTimeAndObjectVersion (actorTime actor)
               return (lang, tot)
     void $ update $ InsertEvidenceEvent
@@ -670,7 +669,7 @@ data DeleteSigAttachment = DeleteSigAttachment SignatoryLinkID SignatoryAttachme
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m DeleteSigAttachment () where
   update (DeleteSigAttachment slid sa actor) = do
     (saname::String) <- updateDocumentWithID $ const $ do
-      kRunAndFetch1OrThrowWhyNot unSingle $ sqlUpdate "signatory_attachments" $ do
+      kRunAndFetch1OrThrowWhyNot runIdentity $ sqlUpdate "signatory_attachments" $ do
         sqlFrom "signatory_links"
         sqlWhere "signatory_links.id = signatory_attachments.signatory_link_id"
         sqlSet "file_id" (Nothing :: Maybe FileID)

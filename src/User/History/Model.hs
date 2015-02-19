@@ -18,7 +18,7 @@ module User.History.Model (
 import Control.Monad.Catch
 import Data.Int
 import Data.Monoid
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import Text.JSON
 import Text.JSON.Gen
 

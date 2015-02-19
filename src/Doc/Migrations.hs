@@ -7,7 +7,7 @@ import Control.Monad.Catch
 import Data.Int
 import Data.Maybe
 import Data.Monoid
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import Text.JSON
 import Text.JSON.FromJSValue
 import qualified Data.ByteString as BS
@@ -445,7 +445,7 @@ removeServiceIDFromDocuments = Migration {
   , mgrDo = do
     -- check if service_id field is empty for all documents
     runSQL_ "SELECT DISTINCT service_id IS NULL FROM documents"
-    check <- fetchMany unSingle
+    check <- fetchMany runIdentity
     case check of
       []     -> return () -- no records, ok
       [True] -> return () -- only nulls, ok
@@ -718,7 +718,7 @@ addIdSerialOnSignatoryLinks =
       runSQL_ "CREATE SEQUENCE signatory_links_id_seq"
       -- set start value to be one more than maximum already in the table or 1000 if table is empty
       runSQL_ "SELECT setval('signatory_links_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM signatory_links))"
-      n <- fetchOne unSingle
+      n <- fetchOne runIdentity
       Log.mixlog_ $ "Table signatory_links has yet " ++ show (maxBound - n :: Int64) ++ " values to go"
       -- and finally attach serial default value to files.id
       runSQL_ "ALTER TABLE signatory_links ALTER id SET DEFAULT nextval('signatory_links_id_seq')"
@@ -734,7 +734,7 @@ addIdSerialOnDocuments =
       runSQL_ "CREATE SEQUENCE documents_id_seq"
       -- set start value to be one more than maximum already in the table or 1000 if table is empty
       runSQL_ "SELECT setval('documents_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM documents))"
-      n <- fetchOne unSingle
+      n <- fetchOne runIdentity
       Log.mixlog_ $ "Table documents has yet " ++ show (maxBound - n :: Int64) ++ " values to go"
       -- and finally attach serial default value to files.id
       runSQL_ $ "ALTER TABLE documents ALTER id SET DEFAULT nextval('documents_id_seq')"
@@ -1042,7 +1042,7 @@ migrateDocumentsMoveFilesToMainFilesTable =
           sqlWhereExists $ sqlSelect "documents" $ do
             sqlWhere "documents.id = main_files.document_id"
             sqlWhere "documents.file_id = main_files.file_id"
-        migratedFiles <- (fromIntegral :: Int64 -> Int) <$> fetchOne unSingle
+        migratedFiles <- (fromIntegral :: Int64 -> Int) <$> fetchOne runIdentity
         runQuery_ . sqlSelect "main_files" $ do
           sqlResult "count(*)"
           sqlWhereEq "document_status" Closed
@@ -1050,7 +1050,7 @@ migrateDocumentsMoveFilesToMainFilesTable =
             sqlWhere "documents.id = main_files.document_id"
             sqlWhere "documents.sealed_file_id = main_files.file_id"
             sqlWhere "documents.seal_status IS NOT DISTINCT FROM main_files.seal_status"
-        migratedSealedFiles <- (fromIntegral :: Int64 -> Int) <$> fetchOne unSingle
+        migratedSealedFiles <- (fromIntegral :: Int64 -> Int) <$> fetchOne runIdentity
         when (migratedFiles /= docsWithFile) $ do
           fail $ "Doc.Migrations.migrateDocumentsRemoveFiles: #migratedFiles is not #docsWithFile: " ++ show (migratedFiles, docsWithFile)
         when (migratedSealedFiles /= docsWithSealedFile) $ do

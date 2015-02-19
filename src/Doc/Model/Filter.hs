@@ -5,7 +5,7 @@ module Doc.Model.Filter
 
 import Control.Monad
 import Data.Monoid
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import qualified Control.Monad.State.Lazy as State
 
 import Company.Model

@@ -55,7 +55,7 @@ tableBrandedDomains = tblTable {
         runQuery_ . sqlSelect "branded_domains" $  do
           sqlWhere "main_domain"
           sqlResult "id"
-        (mainDomains::[Int64]) <- fetchMany unSingle
+        (mainDomains::[Int64]) <- fetchMany runIdentity
         return $ length mainDomains == 1
       ,
       initialSetup = do
@@ -78,7 +78,7 @@ tableBrandedDomains = tblTable {
           sqlSet "negative_text_color" $ ("#ffffff":: String)
           sqlSet "font" $ ("\"Source Sans Pro\", \"Helvetica Neue\", Arial, sans-serif" :: String)
           sqlResult "id"
-        (mailThemeId::Int64) <- fetchOne unSingle
+        (mailThemeId::Int64) <- fetchOne runIdentity
         runQuery_ . sqlInsert "themes" $  do
           sqlSet "name" ("Scrive service theme" :: String)
           sqlSet "logo" $ Binary $ B64.decodeLenient $ BS.fromString $ mainLogo
@@ -94,7 +94,7 @@ tableBrandedDomains = tblTable {
           sqlSet "negative_text_color" $ ("#ffffff":: String)
           sqlSet "font" $ ("\"Source Sans Pro\", \"Helvetica Neue\", Arial, sans-serif" :: String)
           sqlResult "id"
-        (mainThemeId::Int64) <- fetchOne unSingle
+        (mainThemeId::Int64) <- fetchOne runIdentity
         runQuery_ . sqlInsert "themes" $  do
           sqlSet "name" ("Scrive login theme" :: String)
           sqlSet "logo" $ Binary $ B64.decodeLenient $ BS.fromString $ loginLogo
@@ -110,7 +110,7 @@ tableBrandedDomains = tblTable {
           sqlSet "negative_text_color" $ ("#ffffff":: String)
           sqlSet "font" $ ("\"Source Sans Pro\", \"Helvetica Neue\", Arial, sans-serif" :: String)
           sqlResult "id"
-        (loginThemeId::Int64) <- fetchOne unSingle
+        (loginThemeId::Int64) <- fetchOne runIdentity
         runQuery_ . sqlInsert "branded_domains" $  do
                     sqlSet "url" ("https://scrive.com" :: String)
                     sqlSet "mail_theme" mailThemeId
@@ -139,7 +139,7 @@ tableBrandedDomains = tblTable {
                     sqlSet "reviewed_color" ("#62c3de":: String)
                     sqlSet "signed_color" ("#4c4c4c":: String)
                     sqlResult "id"
-        (domainId::Int64) <- fetchOne unSingle
+        (domainId::Int64) <- fetchOne runIdentity
         runQuery_ . sqlInsert "theme_owners" $  do
           sqlSet "theme_id" mailThemeId
           sqlSet "domain_id" $ domainId

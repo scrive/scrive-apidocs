@@ -65,7 +65,7 @@ instance (MonadBase IO m, MonadDB m) => DBQuery m GetPaymentsStats [[String]] wh
                      "FROM payment_plans " <>
                      "LEFT OUTER JOIN companies ON payment_plans.company_id = companies.id " <>
                      "ORDER BY payment_plans.account_code DESC"
-    foldlM f []
+    foldlDB f []
       where f :: [[String]] -> (UTCTime, AccountCode, CompanyID, Int32, PricePlan, PaymentPlanProvider, UTCTime, PaymentPlanStatus, Maybe String) -> m [[String]]
             f acc (t, ac, cid, q, pp, pr, be, st, cn) =
               let smartname = fromMaybe "" cn

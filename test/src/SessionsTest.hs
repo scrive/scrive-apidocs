@@ -44,7 +44,7 @@ testNewSessionInsertion = do
     (msess, _) <- insertNewSession uid
     assertBool "session successfully taken from the database" (isJust msess)
   runSQL_ $ "SELECT COUNT(*) FROM sessions WHERE user_id =" <?> uid
-  user_sessions :: Int64 <- fetchOne unSingle
+  user_sessions :: Int64 <- fetchOne runIdentity
   assertEqual "there are only 5 sessions for one user" 5 user_sessions
 
 testSessionUpdate :: TestEnv ()
@@ -68,7 +68,7 @@ testDocumentTicketInsertion :: TestEnv ()
 testDocumentTicketInsertion = doTimes 10 $ do
   (_, _, ctx) <- addDocumentAndInsertToken
   runSQL_ $ "SELECT COUNT(*) FROM document_session_tokens WHERE session_id =" <?> ctxsessionid ctx
-  tokens :: Int64 <- fetchOne unSingle
+  tokens :: Int64 <- fetchOne runIdentity
   assertEqual "token successfully inserted into the database" 1 tokens
 
 testDocumentTicketReinsertion :: TestEnv ()
@@ -112,7 +112,7 @@ insertNewSession uid = do
   -- session and modifying normal code to get access to it seems like
   -- a bad idea
   runSQL_ "SELECT id FROM sessions ORDER BY id DESC LIMIT 1"
-  sid <- fetchOne unSingle
+  sid <- fetchOne runIdentity
   msess <- getSession sid (sesToken sess) (domainFromString $ defaultUri)
   return (msess, ctx)
 

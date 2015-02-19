@@ -2,7 +2,7 @@ module User.Migrations where
 
 import Control.Monad
 import Control.Monad.Catch
-import Data.Monoid.Space
+import Data.Monoid.Utils
 
 import Company.Model (CompanyID)
 import DB
@@ -95,7 +95,7 @@ removeServiceIDFromUsers = Migration {
   , mgrDo = do
     -- check if service_id field is empty for all users
     runSQL_ "SELECT DISTINCT service_id IS NULL FROM users"
-    check <- fetchMany unSingle
+    check <- fetchMany runIdentity
     case check of
       []     -> return () -- no records, ok
       [True] -> return () -- only nulls, ok
@@ -157,7 +157,7 @@ allUsersMustHaveCompany =
                             sqlSet "name" companyname
                             sqlSet "number" companynumber
                             sqlResult "id"
-            companyidx :: CompanyID <- fetchOne unSingle
+            companyidx :: CompanyID <- fetchOne runIdentity
 
             runQuery_ . sqlInsert "company_uis" $ do
                 sqlSet "company_id" companyidx

@@ -24,7 +24,7 @@ main = Log.withLogger $ do
     readConfig (liftBase . putStrLn) "kontrakcja.conf"
 
   -- composite types are not available in migrations
-  let connSource = defaultSource $ pgConnSettings (dbConfig appConf) []
+  let connSource = simpleSource $ pgConnSettings (dbConfig appConf) []
   withPostgreSQL connSource $ do
     migrateDatabase (liftBase . putStrLn) kontraDomains kontraTables kontraMigrations
     defineComposites kontraComposites

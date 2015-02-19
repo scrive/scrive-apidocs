@@ -11,7 +11,7 @@ import Control.Applicative (Applicative)
 import Control.Monad.Base (MonadBase)
 import Control.Monad.Reader (MonadIO, MonadTrans)
 import Control.Monad.Trans.Control (MonadBaseControl(..), MonadTransControl(..), ComposeSt, defaultLiftBaseWith, defaultRestoreM, defaultLiftWith, defaultRestoreT)
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import Text.JSON
 import Text.JSON.Gen
 

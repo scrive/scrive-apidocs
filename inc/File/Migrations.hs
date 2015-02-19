@@ -50,7 +50,7 @@ addFileIdSequence = Migration {
       runSQL_ $ "CREATE SEQUENCE files_id_seq"
       -- set start value to be one more than maximum already in the table or 1000 if table is empty
       runSQL_ "SELECT setval('files_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM files))"
-      n :: Int64 <- fetchOne unSingle
+      n :: Int64 <- fetchOne runIdentity
       Log.mixlog_ $ "Table files has yet " ++ show (maxBound - n) ++ " values to go"
       -- and finally attach serial default value to files.id
       runSQL_ $ "ALTER TABLE files ALTER id SET DEFAULT nextval('files_id_seq')"

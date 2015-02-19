@@ -10,7 +10,7 @@ import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Data.Int
 import Data.List (sort)
-import Data.Monoid.Space
+import Data.Monoid.Utils
 
 import Amazon
 import DB

@@ -32,13 +32,13 @@ test_smsCounting = do
 
   scheduleSMS doc sms { smsBody = "Test sms" }
   runSQL_ selectQuantity
-  fetchOne unSingle >>= assertEqual "One SMS was counted" (1::Int32)
+  fetchOne runIdentity >>= assertEqual "One SMS was counted" (1::Int32)
 
   runSQL_ clearChargeable
 
   scheduleSMS doc sms { smsBody = intercalate ", " $ replicate 25 "Test sms" }
   runSQL_ selectQuantity
-  fetchOne unSingle >>= assertEqual "Two SMSes were counted" (2::Int32)
+  fetchOne runIdentity >>= assertEqual "Two SMSes were counted" (2::Int32)
   where
     clearChargeable = "DELETE FROM chargeable_items"
     selectQuantity  = "SELECT quantity FROM chargeable_items"

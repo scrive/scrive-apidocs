@@ -5,7 +5,7 @@ module Doc.Model.OrderBy
   ) where
 
 import Data.Monoid
-import Data.Monoid.Space
+import Data.Monoid.Utils
 
 import DB
 import Doc.DocStateData

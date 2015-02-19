@@ -12,7 +12,7 @@ import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Maybe
 import Data.Maybe
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import Happstack.Server hiding (Session)
 
 import ActionQueue.Core

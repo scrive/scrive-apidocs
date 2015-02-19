@@ -5,7 +5,7 @@ import Control.Monad.Catch
 import Data.Char
 import Data.Int
 import Data.Monoid
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import Data.String.Utils
 import Text.Regex.TDFA
 import qualified Data.ByteString as BS
@@ -126,7 +126,7 @@ migrateCompanyUIEmailSettingsToTheme = do
         sqlSet "negative_text_color" $ tnegativetextcolor
         sqlSet "font" $ fromFont  mcfont tfont
         sqlResult "id"
-      (themeid :: Int64) <- fetchOne unSingle
+      (themeid :: Int64) <- fetchOne runIdentity
       runQuery_ $ sqlInsert "theme_owners" $ do
         sqlSet "company_id" $ cid
         sqlSet "theme_id" $ themeid
@@ -195,7 +195,7 @@ migrateCompanyUISignviewSettingsToTheme = do
         sqlSet "negative_text_color" $ tnegativetextcolor
         sqlSet "font" $ fromFont  mcfont tfont
         sqlResult "id"
-      (themeid :: Int64) <- fetchOne unSingle
+      (themeid :: Int64) <- fetchOne runIdentity
       runQuery_ $ sqlInsert "theme_owners" $ do
         sqlSet "company_id" $ cid
         sqlSet "theme_id" $ themeid
@@ -255,7 +255,7 @@ migrateCompanyUIServiceSettingsToTheme = do
         sqlSet "negative_text_color" $ tnegativetextcolor
         sqlSet "font" $ tfont
         sqlResult "id"
-      (themeid :: Int64) <- fetchOne unSingle
+      (themeid :: Int64) <- fetchOne runIdentity
       runQuery_ $ sqlInsert "theme_owners" $ do
         sqlSet "company_id" $ cid
         sqlSet "theme_id" $ themeid
@@ -348,7 +348,7 @@ removeServiceIDFromCompanies = Migration {
   , mgrDo = do
     -- check if service_id field is empty for all companies
     runSQL_ "SELECT DISTINCT service_id IS NULL FROM companies"
-    check <- fetchMany unSingle
+    check <- fetchMany runIdentity
     case check of
       []     -> return () -- no records, ok
       [True] -> return () -- only nulls, ok

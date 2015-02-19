@@ -15,7 +15,7 @@ import Control.Monad
 import Control.Monad.Catch
 import Data.Int
 import Data.Maybe hiding (fromJust)
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import Data.Typeable
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
@@ -113,7 +113,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m ReserveTask (Maybe TaskType) wh
       sqlWhereIsNULL "worker_id"
       sqlWhere "finished IS NULL OR finished + frequency <= now()"
       sqlLimit 1
-    tt <- fetchMaybe unSingle
+    tt <- fetchMaybe runIdentity
     when (isJust tt) . runQuery_ . sqlUpdate "cron_tasks" $ do
       sqlSetCmd "started" "now()"
       sqlSet "worker_id" wid
@@ -143,7 +143,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m RegisterWorker WorkerID where
     runQuery_ . sqlInsert "cron_workers" $ do
       sqlSetCmd "last_activity" "now()"
       sqlResult "id"
-    fetchOne unSingle
+    fetchOne runIdentity
 
 data UnregisterWorker = UnregisterWorker WorkerID
 instance MonadDB m => DBUpdate m UnregisterWorker () where

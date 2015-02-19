@@ -11,8 +11,8 @@ import Control.Monad.Reader
 import Data.Int
 import Data.Maybe
 import Data.Monoid
-import Data.Monoid.Space
-import Database.PostgreSQL.PQTypes
+import Data.Monoid.Utils
+import Database.PostgreSQL.PQTypes hiding (def)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.Foldable as F
@@ -90,7 +90,7 @@ checkDatabase logger domains tables = do
 currentCatalog :: (MonadDB m, MonadThrow m) => m (RawSQL ())
 currentCatalog = do
   runSQL_ "SELECT current_catalog::text"
-  dbname <- fetchOne unSingle
+  dbname <- fetchOne runIdentity
   return $ unsafeSQL $ "\"" ++ dbname ++ "\""
 
 -- | Checking for needed extentions. We need to read from 'pg_extension' table, since Amazon RDS limits usage of 'CREATE EXTENSION IF NOT EXISTS'
@@ -109,7 +109,7 @@ checkNeededExtensions logger = do
 checkDBTimeZone :: (MonadDB m, MonadThrow m) => (String -> m ()) -> m Bool
 checkDBTimeZone logger = do
   runSQL_ "SHOW timezone"
-  timezone :: String <- fetchOne unSingle
+  timezone :: String <- fetchOne runIdentity
   if timezone /= "UTC"
     then do
       dbname <- currentCatalog
@@ -121,7 +121,7 @@ checkDBTimeZone logger = do
 setByteaOutput :: (MonadDB m, MonadThrow m) => (String -> m ()) -> m Bool
 setByteaOutput logger = do
   runSQL_ "SHOW bytea_output"
-  bytea_output :: String <- fetchOne unSingle
+  bytea_output :: String <- fetchOne runIdentity
   if bytea_output /= "hex"
     then do
       logger $ "Setting bytea_output to 'hex'..."
@@ -137,7 +137,7 @@ checkUnknownTables logger tables = do
     sqlWhere "table_name <> 'table_versions'"
     sqlWhere "table_type = 'BASE TABLE'"
     sqlWhere "table_schema NOT IN ('information_schema','pg_catalog')"
-  desc <- fetchMany unSingle
+  desc <- fetchMany runIdentity
   let absent = desc L.\\ map (BS.unpack . unRawSQL . tblName) tables
   when (not (null absent)) $
     mapM_ (\t -> logger $ "Unknown table '" ++ t) absent
@@ -428,7 +428,7 @@ checkTableVersion table = do
   if doesExist
     then do
       runQuery_ $ "SELECT version FROM table_versions WHERE name =" <?> tblNameString table
-      mver <- fetchMaybe unSingle
+      mver <- fetchMaybe runIdentity
       case mver of
         Just ver -> return $ Just ver
         Nothing  -> error $ "Table '" ++ tblNameString table ++ "' is present in the database, but there is no corresponding version info in 'table_versions'."

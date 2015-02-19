@@ -49,7 +49,7 @@ main = withCurlDo . Log.withLogger $ do
   checkExecutables
 
   let connSettings = pgConnSettings $ dbConfig appConf
-  withPostgreSQL (defaultSource $ connSettings []) $
+  withPostgreSQL (simpleSource $ connSettings []) $
     checkDatabase Log.mixlog_ kontraDomains kontraTables
 
   appGlobals <- do

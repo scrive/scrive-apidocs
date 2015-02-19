@@ -45,7 +45,7 @@ import Data.Char
 import Data.Int
 import Data.Maybe
 import Data.Monoid
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import Happstack.Server (FromReqURI(..))
 import qualified Control.Exception.Lifted as E
 
@@ -255,7 +255,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m RemoveInactiveUser Bool where
     -- accounts, but we are not close to that point yet. Here is a
     -- kludge to get around our own bug.
     runQuery_ $ "SELECT TRUE FROM companyinvites where user_id = " <?> uid
-    x :: Maybe Bool <- fetchMaybe unSingle
+    x :: Maybe Bool <- fetchMaybe runIdentity
     if isJust x then
         return False
      else do
@@ -351,7 +351,7 @@ data SetUserCompanyAdmin = SetUserCompanyAdmin UserID Bool
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserCompanyAdmin Bool where
   update (SetUserCompanyAdmin uid iscompanyadmin) = do
     runQuery_ $ "SELECT company_id FROM users WHERE id =" <?> uid <+> "AND deleted IS NULL FOR UPDATE"
-    mcid <- fetchMaybe unSingle
+    mcid <- fetchMaybe runIdentity
     case mcid :: Maybe CompanyID of
       Nothing -> return False
       Just _ -> runQuery01 . sqlUpdate "users" $ do

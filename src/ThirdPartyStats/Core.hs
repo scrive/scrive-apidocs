@@ -282,7 +282,7 @@ asyncProcessEvents process numEvts = do
                 case numEvts of
                   NoMoreThan n -> sqlLimit n
                   _            -> return ()
-            foldlM decoder ([], 0 :: Int64)
+            foldlDB decoder ([], 0 :: Int64)
 
 
 -- | Send a message off to the async queue for later processing.

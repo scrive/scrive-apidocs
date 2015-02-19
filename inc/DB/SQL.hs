@@ -218,11 +218,10 @@ import Control.Monad.Trans.Control
 import Data.List (transpose, findIndex, inits)
 import Data.Maybe
 import Data.Monoid
-import Data.Monoid.Space
 import Data.Monoid.Utils
+import Data.String
 import Data.Typeable
-import Database.PostgreSQL.PQTypes hiding (Single)
-import qualified Database.PostgreSQL.PQTypes as PQ
+import Database.PostgreSQL.PQTypes
 import qualified Text.JSON.Gen as JSON
 
 class Sqlable a where
@@ -231,7 +230,7 @@ class Sqlable a where
 instance Sqlable SQL where
   toSQLCommand = id
 
-smintercalate :: SpaceMonoid m => m -> [m] -> m
+smintercalate :: (IsString m, Monoid m) => m -> [m] -> m
 smintercalate m = mintercalate $ mconcat [mspace, m, mspace]
 
 sqlOR :: SQL -> SQL -> SQL
@@ -380,23 +379,18 @@ emitClausesSepComma _name [] = mempty
 emitClausesSepComma name sqls = name <+> sqlConcatComma (filter (not . isSqlEmpty) sqls)
 
 instance IsSQL SqlSelect where
-  someSQL = someSQL . toSQLCommand
   withSQL = withSQL . toSQLCommand
 
 instance IsSQL SqlInsert where
-  someSQL = someSQL . toSQLCommand
   withSQL = withSQL . toSQLCommand
 
 instance IsSQL SqlInsertSelect where
-  someSQL = someSQL . toSQLCommand
   withSQL = withSQL . toSQLCommand
 
 instance IsSQL SqlUpdate where
-  someSQL = someSQL . toSQLCommand
   withSQL = withSQL . toSQLCommand
 
 instance IsSQL SqlDelete where
-  someSQL = someSQL . toSQLCommand
   withSQL = withSQL . toSQLCommand
 
 instance Sqlable SqlSelect where
@@ -589,7 +583,7 @@ sqlWhereE exc sql = modify (\cmd -> sqlWhere1 cmd (SqlPlainCondition sql (SqlWhy
 sqlWhereEV :: (MonadState v m, SqlWhere v, KontraException e, Show a, FromSQL a) => (a -> e, SQL) -> SQL -> m ()
 sqlWhereEV (exc, vsql) sql = modify (\cmd -> sqlWhere1 cmd (SqlPlainCondition sql (SqlWhyNot True exc2 [vsql])))
   where
-    exc2 (PQ.Single v1) = exc v1
+    exc2 (Identity v1) = exc v1
 
 sqlWhereEVV :: (MonadState v m, SqlWhere v, KontraException e, FromSQL a, FromSQL b) => (a -> b -> e, SQL, SQL) -> SQL -> m ()
 sqlWhereEVV (exc, vsql1, vsql2) sql = modify (\cmd -> sqlWhere1 cmd (SqlPlainCondition sql (SqlWhyNot True exc2 [vsql1, vsql2])))
@@ -1115,8 +1109,8 @@ kWhyNot1Ex :: forall m s. (SqlTurnIntoSelect s, MonadDB m, MonadThrow m)
 kWhyNot1Ex cmd = do
   let newSelect = sqlTurnIntoSelect cmd
       newWhyNotSelect = sqlTurnIntoWhyNotSelect newSelect
-  let findFirstFalse :: PQ.Single (Array1 Bool) -> Int
-      findFirstFalse (PQ.Single (Array1 row)) = fromMaybe 0 (findIndex (== False) row)
+  let findFirstFalse :: Identity (Array1 Bool) -> Int
+      findFirstFalse (Identity (Array1 row)) = fromMaybe 0 (findIndex (== False) row)
   runQuery_ (newWhyNotSelect { sqlSelectLimit = 1 })
   indexOfFirstFailedCondition <- fetchOne findFirstFalse
 
@@ -1169,7 +1163,7 @@ kRunManyOrThrowWhyNot sqlable = do
   success <- runQuery $ toSQLCommand sqlable
   when (success == 0) $ do
     exception <- kWhyNot1 sqlable
-    throwM exception
+    throwDB exception
 
 
 kRun1OrThrowWhyNot :: (SqlTurnIntoSelect s, MonadDB m, MonadThrow m)
@@ -1178,7 +1172,7 @@ kRun1OrThrowWhyNot sqlable = do
   success <- runQuery01 $ toSQLCommand sqlable
   when (not success) $ do
     exception <- kWhyNot1 sqlable
-    throwM exception
+    throwDB exception
 
 
 kRun1OrThrowWhyNotAllowIgnore :: (SqlTurnIntoSelect s, MonadDB m, MonadThrow m)
@@ -1188,7 +1182,7 @@ kRun1OrThrowWhyNotAllowIgnore sqlable = do
   when (not success) $ do
     (important, exception) <- kWhyNot1Ex sqlable
     when (important) $
-      throwM exception
+      throwDB exception
 
 kRunAndFetch1OrThrowWhyNot :: (IsSQL s, FromRow row, MonadDB m, MonadThrow m, SqlTurnIntoSelect s)
                            => (row -> a) -> s -> m a
@@ -1198,9 +1192,9 @@ kRunAndFetch1OrThrowWhyNot decoder sqlcommand = do
   case results of
     [] -> do
       exception <- kWhyNot1 sqlcommand
-      throwM exception
+      throwDB exception
     [r] -> return r
-    _ -> throwM AffectedRowsMismatch {
+    _ -> throwDB AffectedRowsMismatch {
       rowsExpected = [(1, 1)]
     , rowsDelivered = length results
     }

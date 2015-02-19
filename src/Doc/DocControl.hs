@@ -153,7 +153,7 @@ handleNewDocument = do
 
 formatTimeSimpleWithTZ :: (MonadDB m, MonadMask m) => TimeZoneName -> UTCTime -> m String
 formatTimeSimpleWithTZ tz mt = withTimeZone tz $ do
-  runQuery_ $ rawSQL "SELECT $1, to_char($1, 'TZ')" (Single mt)
+  runQuery_ $ rawSQL "SELECT $1, to_char($1, 'TZ')" (Identity mt)
   (t::ZonedTime, _::String) <- fetchOne id
   return $ formatTime' "%Y-%m-%d %H:%M" t
 

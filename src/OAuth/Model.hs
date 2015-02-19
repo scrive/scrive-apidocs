@@ -6,7 +6,7 @@ import Control.Monad.Catch
 import Data.Int
 import Data.Maybe
 import Data.Monoid
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import Network.URI
 import qualified Control.Exception.Lifted as E
 
@@ -178,7 +178,7 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m) => DBUpdate m RequestTempCredent
                            , atToken tcAPIToken
                            , tcAPISecret
                            )
-    mid :: Maybe Int64 <- fetchMaybe unSingle
+    mid :: Maybe Int64 <- fetchMaybe runIdentity
     case mid of
       Nothing          -> return Nothing
       Just temptokenid -> do
@@ -209,7 +209,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m DenyCredentials (Maybe URI) whe
   update (DenyCredentials token _time) = do
     runQuery_ $ rawSQL "DELETE FROM oauth_temp_credential WHERE (id = $1 AND temp_token = $2) RETURNING callback"
                     (atID token, atToken token)
-    join <$> (fetchMaybe $ parseURI . unSingle)
+    join <$> (fetchMaybe $ parseURI . runIdentity)
 
 {- |
    For a given temp token, return the company name and list of requested privileges.
@@ -225,7 +225,7 @@ instance MonadDB m => DBQuery m GetRequestedPrivileges (Maybe (String, [APIPrivi
               <> "JOIN companies com            ON u.company_id    = com.id "
               <> "WHERE c.temp_token = $1 AND c.id = $2 AND expires > $3 AND c.user_id IS NULL")
               (atToken token, atID token, time)
-    foldlM f Nothing
+    foldlDB f Nothing
     -- get name of company from companies table, or if that does not exist, the users.company_name
     where
       f :: Maybe (String, [APIPrivilege]) -> (String, String, String, String, APIPrivilege) -> m (Maybe (String, [APIPrivilege]))
@@ -356,7 +356,7 @@ instance MonadDB m => DBQuery m GetGrantedPrivileges [(Int64, String, [APIPrivil
              <> "                   WHERE oauth_privilege.privilege = $2) "
              <> "ORDER BY a.id ")
             (userid, APIPersonal)
-    foldlM f []
+    foldlDB f []
     where
       f ((tid, n, ps):as) (tid', _, _, _, _, p) | tid == tid' = return $ (tid, n, p:ps) : as -- already have the id
       f acc (tid, e, "", "", "", p) = return $ (tid, e, [p]) : acc                     -- just email
@@ -430,7 +430,7 @@ instance (MonadDB m, MonadThrow m, CryptoRNG m) => DBUpdate m CreatePersonalToke
                        secret,
                        userid,
                        userid)
-        apiid :: Int64 <- fetchOne unSingle
+        apiid :: Int64 <- fetchOne runIdentity
         -- now create the access token
         atoken  :: MagicHash <- random
         asecret :: MagicHash <- random
@@ -444,7 +444,7 @@ instance (MonadDB m, MonadThrow m, CryptoRNG m) => DBUpdate m CreatePersonalToke
                        apiid,
                        userid,
                        now)
-        accessid :: Int64 <- fetchOne unSingle
+        accessid :: Int64 <- fetchOne runIdentity
         -- need to add all privileges here
         r <- runQuery $ rawSQL (  "INSERT INTO oauth_privilege "
                  <> "(access_token_id, privilege) "

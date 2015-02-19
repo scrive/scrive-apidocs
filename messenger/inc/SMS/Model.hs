@@ -3,7 +3,7 @@ module SMS.Model where
 import Control.Monad.Catch
 import Control.Monad.State
 import Data.Int
-import Data.Monoid.Space
+import Data.Monoid.Utils
 
 import DB
 import MinutesTime
@@ -53,7 +53,7 @@ insertSMS originator msisdn body sdata to_be_sent attempt = do
     sqlSet "data" sdata
     sqlSet "attempt" attempt
     sqlResult "id"
-  fetchOne unSingle
+  fetchOne runIdentity
 
 data GetIncomingSMSes = GetIncomingSMSes
 instance MonadDB m => DBQuery m GetIncomingSMSes [ShortMessage] where

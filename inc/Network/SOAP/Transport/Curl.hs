@@ -11,7 +11,7 @@ import Control.Applicative
 import Control.Monad.Catch
 import Control.Monad.Trans.Control
 import Data.ByteString.Lazy (ByteString)
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import Network.Curl
 import Network.SOAP.Transport
 import Network.SOAP.Transport.HTTP

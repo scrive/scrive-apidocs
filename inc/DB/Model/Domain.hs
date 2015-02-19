@@ -6,7 +6,7 @@ module DB.Model.Domain (
   , sqlDropDomain
   ) where
 
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import Data.Set (Set, fromList)
 import Database.PostgreSQL.PQTypes
 

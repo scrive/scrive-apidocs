@@ -17,7 +17,6 @@ import Data.Int
 import Data.List
 import Data.Maybe
 import Data.Monoid
-import Data.Monoid.Space
 import Data.Monoid.Utils
 import Database.PostgreSQL.PQTypes
 import qualified Data.Set as S

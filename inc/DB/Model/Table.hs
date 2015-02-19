@@ -16,7 +16,6 @@ module DB.Model.Table (
 import Control.Monad.Catch
 import Data.ByteString (ByteString)
 import Data.Int
-import Data.Monoid.Space
 import Data.Monoid.Utils
 import Database.PostgreSQL.PQTypes
 

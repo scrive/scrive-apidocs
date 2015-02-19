@@ -2,7 +2,7 @@ module EvidenceLogTest (evidenceLogTests) where
 
 import Control.Monad
 import Data.Int
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import Data.Set (Set)
 import Test.Framework
 import Text.StringTemplate (getStringTemplate, checkTemplateDeep)
@@ -40,9 +40,9 @@ conversionEq = do
 
     -- test that id . toSQL . fromSQL == id (fromSQL|{1..eventsNum} is a bijection)
     runSQL_ $ "SELECT" <+> unsafeSQL (show n) <+> "::int2"
-    tt :: EvidenceEventType <- fetchOne unSingle
+    tt :: EvidenceEventType <- fetchOne runIdentity
     runSQL_ $ "SELECT" <?> tt
-    n' <- fetchOne unSingle
+    n' <- fetchOne runIdentity
     assertBool ("toSQL . fromSQL /= id on " ++ show n) $ n' == n
 
 evidenceLogTemplateVariables :: Set String

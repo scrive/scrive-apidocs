@@ -15,7 +15,7 @@ instance (MonadDB m, MonadThrow m, CryptoRNG m) => DBQuery m GetSignatoryPin Str
       sqlResult "pin"
       sqlWhereEq "signatory_link_id" slid
       sqlWhereEq "phone_number" phone
-    mpin <- fetchMaybe unSingle
+    mpin <- fetchMaybe runIdentity
     case mpin of
          Just pin -> return pin
          Nothing -> do

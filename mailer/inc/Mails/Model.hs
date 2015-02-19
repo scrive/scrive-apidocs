@@ -25,7 +25,7 @@ import Control.Monad.Catch
 import Control.Monad.State
 import Data.Int
 import Data.Maybe hiding (fromJust)
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import qualified Data.Map as Map
 
 import DB
@@ -203,7 +203,7 @@ insertEmail service_test token sender to to_be_sent attempt = do
     sqlSet "service_test" service_test
     sqlSet "attempt" attempt
     sqlResult "id"
-  fetchMaybe unSingle
+  fetchMaybe runIdentity
 
 getUnreadEvents :: MonadDB m => Bool -> m [(EventID, MailID, XSMTPAttrs, Event)]
 getUnreadEvents service_test = do
@@ -235,7 +235,7 @@ fetchMail (mid, token, sender, receivers, title, content, x_smtp_attrs, service_
 }
 
 fetchMailAttachments :: MonadDB m => m (Map.Map MailID [Attachment])
-fetchMailAttachments = foldrM decoder Map.empty
+fetchMailAttachments = foldrDB decoder Map.empty
   where
     decoder (mid, name, content, file_id) acc = return $ Map.insertWith' (++) mid [Attachment {
       attName = name

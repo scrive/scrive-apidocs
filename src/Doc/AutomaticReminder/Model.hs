@@ -9,7 +9,7 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Data.Int
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import Data.Typeable
 
 import ActionQueue.Core

@@ -20,7 +20,6 @@ import Test.Framework.Providers.HUnit (testCase)
 import Test.QuickCheck
 import Test.QuickCheck.Gen
 import Text.JSON
-import qualified  KontraError as KontraError
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
@@ -56,6 +55,7 @@ import User.Email
 import User.Model
 import Util.Actor
 import Utils.Default
+import qualified KontraError as KE
 import qualified Log
 import qualified Text.XML.Content as C
 import qualified Text.XML.DirtyContent as D
@@ -802,9 +802,12 @@ assertString = liftIO . T.assertString
 assertionPredicate :: (T.AssertionPredicable t, MonadIO m) => t -> m Bool
 assertionPredicate = liftIO . T.assertionPredicate
 
--- TODO: For some reason InternalError gets packed into DBException. And I have no way of unpacking it - cast dbeError doesn't work
 assertRaisesInternalError :: (Show v, MonadIO m, MonadMask m) =>  m v -> m ()
-assertRaisesInternalError a = assertRaisesDBException a
+assertRaisesInternalError a = catchJust (\case
+  KE.Respond404      -> Nothing
+  KE.InternalError _ -> Just ())
+  (a >>= assertFailure . ("Expecting InternalError but got " ++) . show)
+  return
 
 assertRaisesDBException :: (Show v, MonadIO m, MonadMask m) =>  m v -> m ()
 assertRaisesDBException a = (a >>= (\v -> assertFailure $ "Expecting db exception but got " ++ show v))  `catches` [
@@ -839,7 +842,7 @@ assertRaisesKontra correctException action =
 guardMethodM :: Kontrakcja m => Method -> m ()
 guardMethodM m = do
   rq <- askRq
-  unless (rqMethod rq == m) KontraError.internalError
+  unless (rqMethod rq == m) KE.internalError
 
 -- | Checks type of flash message
 isFlashOfType :: FlashMessage -> FlashType -> Bool

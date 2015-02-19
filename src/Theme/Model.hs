@@ -79,7 +79,7 @@ instance (MonadDB m,MonadThrow m) => DBQuery m GetThemesMD5 [String] where
       sqlWhereIn "id" tids
       sqlOrderBy "id"
       selectThemesMD5
-    fetchMany unSingle
+    fetchMany runIdentity
 
 data UpdateThemeForCompany = UpdateThemeForCompany CompanyID Theme
 instance (MonadDB m,MonadThrow m) => DBUpdate m UpdateThemeForCompany Bool where

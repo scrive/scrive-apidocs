@@ -13,7 +13,7 @@ import Control.Monad.Catch
 import Control.Monad.State
 import Data.ByteString (ByteString)
 import Data.Int
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import Data.Text (Text)
 import Data.Time
 
@@ -86,7 +86,7 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeBankIDSignature () where
   update (MergeBankIDSignature slid BankIDSignature{..}) = do
     loopOnUniqueViolation . withSavepoint "merge_bank_id_signature" $ do
       runQuery01_ selectSignatorySignTime
-      msign_time :: Maybe UTCTime <- fetchOne unSingle
+      msign_time :: Maybe UTCTime <- fetchOne runIdentity
       when (isJust msign_time) $ do
         $unexpectedErrorM "signatory already signed, can't merge signature"
       success <- runQuery01 . sqlUpdate "eid_signatures" $ do

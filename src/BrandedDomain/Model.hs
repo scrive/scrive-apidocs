@@ -205,7 +205,7 @@ instance (MonadDB m, MonadThrow m, Log.MonadLog m) => DBUpdate m NewBrandedDomai
       sqlSet "reviewed_color" $ bdReviewedColor mbd
       sqlSet "signed_color" $ bdSignedColor mbd
       sqlResult "id"
-    newdomainID <- fetchOne unSingle
+    newdomainID <- fetchOne runIdentity
     dbUpdate $  MakeThemeOwnedByDomain newdomainID (themeID newmailtheme)
     dbUpdate $  MakeThemeOwnedByDomain newdomainID (themeID newsignviewtheme)
     dbUpdate $  MakeThemeOwnedByDomain newdomainID (themeID newservicetheme)

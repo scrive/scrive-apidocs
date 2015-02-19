@@ -6,7 +6,7 @@ import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Catch
 import Data.List
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import Data.Unjson
 import Happstack.Server hiding (dir)
 import Happstack.StaticRouting

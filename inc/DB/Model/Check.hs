@@ -4,7 +4,7 @@ module DB.Model.Check (
   , sqlDropCheck
   ) where
 
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import Database.PostgreSQL.PQTypes
 
 data Check = Check {

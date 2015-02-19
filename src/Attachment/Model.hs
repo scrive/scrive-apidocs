@@ -15,7 +15,7 @@ where
 import Control.Monad.Catch
 import Control.Monad.State.Class
 import Data.ByteString (ByteString)
-import Data.Monoid.Space
+import Data.Monoid.Utils
 
 import Attachment.AttachmentID
 import Crypto.RNG

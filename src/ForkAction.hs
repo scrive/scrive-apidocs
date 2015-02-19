@@ -3,7 +3,7 @@ module ForkAction (forkAction) where
 import Control.Exception.Lifted
 import Control.Monad.Base
 import Control.Monad.Trans.Control
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import Data.Time
 import Database.PostgreSQL.PQTypes
 import qualified Control.Concurrent.Thread as T

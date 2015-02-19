@@ -23,7 +23,7 @@ instance (KontraMonad m, MonadDB m, MonadThrow m) => DBQuery m GetDocumentSessio
       sqlResult "token"
       sqlWhereEq "session_id" sid
       sqlWhereEq "signatory_link_id" slid
-    fetchMaybe unSingle
+    fetchMaybe runIdentity
 
 data AddDocumentSessionToken = AddDocumentSessionToken SignatoryLinkID MagicHash
 instance (ServerMonad m,CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m) => DBUpdate m AddDocumentSessionToken () where

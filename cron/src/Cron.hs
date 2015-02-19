@@ -47,7 +47,7 @@ import Control.Monad
 import Control.Monad.Trans
 import Data.Maybe
 import Data.Monoid ((<>))
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import Data.Time
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
@@ -94,7 +94,7 @@ main = Log.withLogger $ do
   checkExecutables
 
   let connSettings = pgConnSettings $ dbConfig appConf
-  withPostgreSQL (defaultSource $ connSettings []) $
+  withPostgreSQL (simpleSource $ connSettings []) $
     checkDatabase Log.mixlog_ kontraDomains kontraTables
 
   connPool <- liftIO . createPoolSource $ connSettings kontraComposites
@@ -160,7 +160,7 @@ main = Log.withLogger $ do
         SMSEventsProcessing -> runScheduler SMS.Events.processEvents
         UserAccountRequestEvaluation -> runScheduler $ actionQueue userAccountRequest
 
-      serializable = defaultTransactionSettings {
+      serializable = def {
         tsIsolationLevel = Serializable
       , tsRestartPredicate = Just . RestartPredicate $ const . ((SerializationFailure ==) . qeErrorCode)
       }

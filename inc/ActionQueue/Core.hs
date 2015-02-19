@@ -11,7 +11,7 @@ module ActionQueue.Core (
 import Control.Monad.Catch
 import Control.Monad.State
 import Data.Monoid
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import Data.Typeable
 
 import DB

@@ -16,7 +16,7 @@ module EID.CGI.GRP.Data (
 import Control.Applicative
 import Data.ByteString (ByteString)
 import Data.Maybe
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import Data.Text (Text)
 import Data.Unjson
 import Network.SOAP.Parsing.Cursor

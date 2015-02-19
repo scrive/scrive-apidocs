@@ -34,7 +34,6 @@ import Data.Int
 import Data.List hiding (tail, head)
 import Data.Maybe hiding (fromJust)
 import Data.Monoid
-import Data.Monoid.Space
 import Data.Monoid.Utils
 import Prelude hiding (head, tail)
 import qualified Data.ByteString as BS
@@ -109,7 +108,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m FileInDocument Bool where
     runQuery_ $ "SELECT EXISTS (" <> toSQLCommand s1 <> ") OR " <>
                        "EXISTS (" <> toSQLCommand s2 <> ") OR " <>
                        "EXISTS (" <> toSQLCommand s3 <> ")"
-    fetchOne unSingle
+    fetchOne runIdentity
 
 data GetDocumentTags = GetDocumentTags DocumentID
 instance MonadDB m => DBQuery m GetDocumentTags (S.Set DocumentTag) where
@@ -249,7 +248,7 @@ instance MonadDB m => DBQuery m GetDocumentsIDs [DocumentID] where
   query (GetDocumentsIDs domains filters orders) = do
     runQuery_ . selectDocuments domains filters orders $ do
       sqlResult "documents.id"
-    fetchMany unSingle
+    fetchMany runIdentity
 
 -- | All documents authored by the user that have never been deleted.
 data GetDocumentsByAuthor = GetDocumentsByAuthor UserID
@@ -299,7 +298,7 @@ instance MonadDB m => DBQuery m GetDocsSentBetween Int64 where
                "AND documents.invite_time <" <?> end <>
                "AND documents.type =" <?> Signable <>
                "AND documents.status <>" <?> Preparation
-    foldlM (\acc (Single n) -> return $ acc + n) 0
+    foldlDB (\acc (Identity n) -> return $ acc + n) 0
 
 data GetDocsSent = GetDocsSent UserID
 instance MonadDB m => DBQuery m GetDocsSent Int64 where
@@ -311,7 +310,7 @@ instance MonadDB m => DBQuery m GetDocsSent Int64 where
                "AND is_author " <>
                "AND documents.type =" <?> Signable <>
                "AND documents.status <>" <?> Preparation
-    foldlM (\acc (Single n) -> return $ acc + n) 0
+    foldlDB (\acc (Identity n) -> return $ acc + n) 0
 
 -- | Get the signatories that belong to this email that were viewed or signed
 --   since time
@@ -331,7 +330,7 @@ instance MonadDB m => DBQuery m GetSignatoriesByEmail [(DocumentID, SignatoryLin
 data CheckDocumentObjectVersionIs = CheckDocumentObjectVersionIs DocumentID Int64
 instance (MonadDB m, MonadThrow m) => DBQuery m CheckDocumentObjectVersionIs () where
   query (CheckDocumentObjectVersionIs did ov) = do
-    _ :: Bool <- kRunAndFetch1OrThrowWhyNot unSingle $ sqlSelect "documents" $ do
+    _ :: Bool <- kRunAndFetch1OrThrowWhyNot runIdentity $ sqlSelect "documents" $ do
        sqlResult "TRUE"
        sqlWhereDocumentIDIs did
        sqlWhereDocumentObjectVersionIs ov

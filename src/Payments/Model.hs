@@ -5,7 +5,7 @@ import Control.Monad.Catch
 import Control.Monad.State
 import Data.Int
 import Data.Monoid
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import Data.Typeable
 
 import Company.Model
@@ -173,7 +173,7 @@ data GetAccountCode = GetAccountCode -- tested
 instance (MonadDB m, MonadThrow m) => DBUpdate m GetAccountCode AccountCode where
   update GetAccountCode = do
     runSQL_ "SELECT nextval('payment_plans_account_code_seq')"
-    fetchOne unSingle
+    fetchOne runIdentity
 
 {- | Get the quantity of users that should be charged in a company. -}
 data GetCompanyQuantity = GetCompanyQuantity CompanyID --tested
@@ -185,7 +185,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetCompanyQuantity Int where
                 "       WHERE users.company_id = " <?> cid <+>
                 "         AND users.deleted IS NULL)" <+>
                 ") AS emails"
-    (fromIntegral :: Int64 -> Int) <$> fetchOne unSingle
+    (fromIntegral :: Int64 -> Int) <$> fetchOne runIdentity
 
 data DeletePaymentPlan = DeletePaymentPlan CompanyID
 instance (MonadDB m) => DBUpdate m DeletePaymentPlan () where

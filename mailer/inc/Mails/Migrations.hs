@@ -4,7 +4,7 @@ module Mails.Migrations (
 
 import Control.Monad.Catch
 import Data.Int
-import Data.Monoid.Space
+import Data.Monoid.Utils
 
 import DB
 import Mails.Tables
@@ -42,7 +42,7 @@ moveAtachmentsToSeparateTable =
         sqlResult "count(*)"
         sqlWhere "attachments IS NOT NULL"
         sqlWhere "attachments <> '[]'"
-      count :: Int64 <- fetchOne unSingle
+      count :: Int64 <- fetchOne runIdentity
 
       Log.mixlog_ $ "There are " ++ show count ++ " mails with attachments to move to mail_attachments, it will take around " ++ show ((count+999) `div` 1000) ++ " minutes"
 

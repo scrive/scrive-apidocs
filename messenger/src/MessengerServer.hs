@@ -28,7 +28,7 @@ main = Log.withLogger $ do
   conf <- readConfig Log.mixlog_ "messenger_server.conf"
   checkExecutables
 
-  let connSource = defaultSource $ defaultSettings { csConnInfo = mscDBConfig conf }
+  let connSource = simpleSource $ def { csConnInfo = mscDBConfig conf }
   withPostgreSQL connSource $
     checkDatabase Log.mixlog_ [] messengerTables
 

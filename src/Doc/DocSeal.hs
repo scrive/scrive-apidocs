@@ -20,7 +20,7 @@ import Data.Char
 import Data.Function (on)
 import Data.List
 import Data.Maybe
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import Data.Time
 import System.Directory
 import System.Exit
@@ -274,7 +274,7 @@ evidenceOfIntentAttachment sim doc = do
 -}
 formatUTCTimeForVerificationPage :: (MonadDB m, MonadMask m) => TimeZoneName -> UTCTime -> m String
 formatUTCTimeForVerificationPage tz mt = withTimeZone tz $ do
-  runQuery_ $ rawSQL "SELECT $1, to_char($1, 'TZ')" (Single mt)
+  runQuery_ $ rawSQL "SELECT $1, to_char($1, 'TZ')" (Identity mt)
   (t::ZonedTime, tmz) <- fetchOne id
   return $ formatTime' ("%Y-%m-%d %H:%M:%S" <+> tmz <+> "(%z)") t
 

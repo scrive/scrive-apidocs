@@ -40,7 +40,7 @@ instance B.Binary UTCTime where
 currentTime :: (MonadDB m, MonadThrow m) => m UTCTime
 currentTime = do
   runSQL_ "SELECT now()"
-  fetchOne unSingle
+  fetchOne runIdentity
 
 unixEpoch :: UTCTime
 unixEpoch = posixSecondsToUTCTime 0

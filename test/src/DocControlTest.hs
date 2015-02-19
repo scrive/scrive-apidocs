@@ -7,7 +7,7 @@ import Control.Monad
 import Control.Monad.Trans
 import Data.List
 import Data.Maybe
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import Happstack.Server
 import Test.Framework
 import Text.JSON.Gen (toJSValue)

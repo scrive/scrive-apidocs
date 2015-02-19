@@ -17,12 +17,12 @@ authorAttachmentsSelectors = [
     "author_attachments.file_id"
   ]
 
-type instance CompositeRow AuthorAttachment = Single FileID
+type instance CompositeRow AuthorAttachment = Identity FileID
 
 instance PQFormat AuthorAttachment where
   pqFormat _ = "%author_attachment"
 
 instance CompositeFromSQL AuthorAttachment where
-  toComposite (Single fid) = AuthorAttachment {
+  toComposite (Identity fid) = AuthorAttachment {
     authorattachmentfile = fid
   }

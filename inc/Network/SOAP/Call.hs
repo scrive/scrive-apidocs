@@ -12,7 +12,7 @@ import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Catch
 import Data.Maybe
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import Network.SOAP
 import Network.SOAP.Parsing.Cursor
 import Text.XML

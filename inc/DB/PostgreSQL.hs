@@ -8,7 +8,7 @@ import qualified Data.ByteString as BS
 import DB.Model.CompositeType
 
 pgConnSettings :: BS.ByteString -> [CompositeType] -> ConnectionSettings
-pgConnSettings dbconf ctypes = defaultSettings {
+pgConnSettings dbconf ctypes = def {
   csConnInfo = dbconf
 , csComposites = map (unRawSQL . ctName) ctypes
 }
@@ -25,4 +25,4 @@ createPoolSource cs = poolSource cs
 
 withPostgreSQL :: (MonadBase IO m, MonadMask m)
                => ConnectionSource -> DBT m a -> m a
-withPostgreSQL cs = runDBT cs defaultTransactionSettings
+withPostgreSQL cs = runDBT cs def

@@ -4,7 +4,6 @@ module DB.Model.CompositeType (
   , defineComposites
   ) where
 
-import Data.Monoid.Space
 import Data.Monoid.Utils
 import Database.PostgreSQL.PQTypes
 

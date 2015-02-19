@@ -44,7 +44,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetUserCallbackSchemeByUserID (M
     runQuery_ . sqlSelect "user_callback_scheme" $ do
       sqlResult "callback_scheme"
       sqlWhereEq "user_id" uid
-    fetchMaybe unSingle
+    fetchMaybe runIdentity
 
 data DeleteUserCallbackScheme = DeleteUserCallbackScheme UserID
 instance (MonadDB m, MonadThrow m) => DBUpdate m DeleteUserCallbackScheme () where

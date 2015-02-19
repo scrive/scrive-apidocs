@@ -23,9 +23,9 @@ import Data.Int
 import Data.List
 import Data.Maybe
 import Data.Monoid
-import Data.Monoid.Space
+import Data.Monoid.Utils
 import Data.String
-import Database.PostgreSQL.PQTypes
+import Database.PostgreSQL.PQTypes hiding (def)
 import Text.JSON
 import Text.JSON.FromJSValue
 import qualified Data.ByteString.Char8 as BS

@@ -107,8 +107,6 @@ instance MonadDB TestEnv where
   clearQueryResult = TestEnv clearQueryResult
   getTransactionSettings = TestEnv getTransactionSettings
   setTransactionSettings = TestEnv . setTransactionSettings
-  foldlM = foldLeftM
-  foldrM = foldRightM
   withNewConnection (TestEnv m) = do
     -- we run TestEnv with static connection source that uses
     -- the same connection over and over again. however, when
@@ -120,6 +118,7 @@ instance MonadDB TestEnv where
     TestEnv . ReaderT $ \r -> DBT . StateT $ \st -> do
       res <- runDBT cs (dbTransactionSettings st) (runReaderT m r)
       return (res, st)
+  getNotification = TestEnv . getNotification
 
 instance TemplatesMonad TestEnv where
   getTemplates = getTextTemplatesByLanguage $ codeFromLang defaultValue

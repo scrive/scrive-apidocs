@@ -9,7 +9,6 @@ module DB.Model.ForeignKey (
   ) where
 
 import Data.Monoid
-import Data.Monoid.Space
 import Data.Monoid.Utils
 import Database.PostgreSQL.PQTypes
 import qualified Data.Set as S

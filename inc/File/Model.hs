@@ -36,7 +36,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m NewFile FileID where
         sqlSet "checksum" $ SHA1.hash <$> content
         sqlSet "size" (fromIntegral . BS.length $ unBinary content :: Int32)
         sqlResult "id"
-    fetchOne unSingle
+    fetchOne runIdentity
 
 data FileMovedToAWS = FileMovedToAWS FileID String String AESConf
 instance MonadDB m => DBUpdate m FileMovedToAWS () where
