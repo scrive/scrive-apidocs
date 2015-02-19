@@ -762,7 +762,7 @@
 "_paymentPlanTrialTag":"3 free months",
 "_paymentPriceUnitEUR":"$PaymentCurrencyEUR()$/m",
 "_paymentPriceUnitSEK":"$PaymentCurrencySEK()$/m",
-"_paymentSaveYearly":"save up to 10%",
+"_paymentSaveYearly":"save up to $PaymentYearlyDiscountAmount()$",
 "_paymentsBillingInfoSaved":"Your billing information has been saved.",
 "_paymentsCancelDialog":"Are you sure you would like to cancel your subscription? Your subscription will remain active until the end of your billing period. You can continue to use your account with 3 free documents per month even after your subscription expires.",
 "_paymentsCanceledDate":"You have chosen to discontinue your subscription on <span class='put-date-here'></span>.",

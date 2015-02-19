@@ -91,3 +91,5 @@ PaymentCurrencyEUR=€
 ###
 PaymentCurrencySEK=kr
 ###
+PaymentYearlyDiscountAmount=10%
+###
