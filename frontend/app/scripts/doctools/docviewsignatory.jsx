@@ -497,7 +497,6 @@ var DocumentViewSignatoryView = React.createClass({
 
              {/*if*/ model.hasChangeEmailOption() &&
                <Button
-                 type="optional"
                  text={localization.changeEmail}
                  onClick={this.handleStartChangingEmail}
                />
@@ -507,7 +506,6 @@ var DocumentViewSignatoryView = React.createClass({
 
              {/*if*/ model.hasChangePhoneOption() &&
                <Button
-                 type="optional"
                  text={localization.changePhone}
                  onClick={this.handleStartChangingMobile}
                />
