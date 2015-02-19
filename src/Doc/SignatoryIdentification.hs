@@ -12,7 +12,7 @@ import Data.Set (Set)
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 
-import Doc.DocStateData (Document, documentsignatorylinks, SignatoryLink, signatorylinkid, signatoryispartner)
+import Doc.DocStateData (Document, documentsignatorylinks, SignatoryLink, signatorylinkid, signatoryispartner, signatoryisauthor)
 import Doc.SignatoryLinkID (SignatoryLinkID)
 import Util.HasSomeUserInfo (getFullName)
 
@@ -37,6 +37,10 @@ signatoryIdentifier sim slid = do
 -- number.  IDs for all signing parties that will be looked up must be
 -- provided to guarantee unique identifiers for signatories that may
 -- be missing due to deleted documents.
+--
+-- The author is always included even if not signing (but only the
+-- author link associated with the last document in the list).  This
+-- is to support the "Initiator" box on the verification page.
 signatoryIdentifierMap :: Bool -> [Document] -> Set SignatoryLinkID -> SignatoryIdentifierMap
 signatoryIdentifierMap includeviewers docs slids =
   Map.fromList $
@@ -48,7 +52,12 @@ signatoryIdentifierMap includeviewers docs slids =
   slmap = Map.fromList [(signatorylinkid s, s) | d <- docs, s <- documentsignatorylinks d]
   names = map getFullName sls ++ map (const "") missing
   initials = uniqueStrings $ enumerateEmpty $ map (map head . words) names
-  sls = filter (\s -> includeviewers || signatoryispartner s) $ concatMap documentsignatorylinks docs
+  isLastAuthor | null docs = const False
+               | otherwise = \s -> signatoryisauthor s && signatorylinkid s `Set.member` lastdocsigs
+    where
+      lastdocsigs = Set.fromList (map signatorylinkid (documentsignatorylinks (last docs)))
+  sls = filter (\s -> includeviewers || signatoryispartner s
+                                     || isLastAuthor s) $ concatMap documentsignatorylinks docs
   missing = Set.toList $
             slids Set.\\ Set.fromList (map signatorylinkid sls)
 
