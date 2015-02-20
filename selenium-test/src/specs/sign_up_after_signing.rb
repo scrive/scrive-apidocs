@@ -46,7 +46,7 @@ describe "sign up after signing a document" do
     @h.emailhelper.follow_link_in_latest_mail_for random_email
 
     puts "make sure we get invalid elements if we try to activate without filling in the password details"
-    @h.driver.execute_script("$('a.blue.button').click()")
+    @h.driver.execute_script("$('a.main.button').click()")
     sleep 1
     @h.wait_until { (@h.driver.find_element :css => ".flash.error.active").displayed? }
     @h.screenshot 'sign_up_after_signing_3'
@@ -69,7 +69,7 @@ describe "sign up after signing a document" do
 
     (@h.wait_until { @h.driver.find_element :name => "password2" }).send_keys "password-12"
     sleep 1
-    @h.driver.execute_script("$('a.blue.button').click()")
+    @h.driver.execute_script("$('a.main.button').click()")
 
     puts "should be logged in"
     @h.wait_until { @h.driver.find_element :css => "a.js-logout" }

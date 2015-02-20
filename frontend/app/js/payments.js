@@ -528,6 +528,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             var recurlyModel = this.recurly.model;
             recurlyModel.fetch({success: function() {
               recurlyModel.trigger('ready');
+              recurlyModel.trigger('fetch');
             }});
         },
         render: function() {
@@ -1353,10 +1354,6 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
     window.PricePage = function(opts) {
         var model = new PricePageModel(opts);
         var view  = new PricePageView($.extend({model:model}, opts));
-
-        model.fetch({success: function() {
-            model.trigger('fetch');
-        }});
 
         return { show : function(selector) {
             $(selector).html(view.el);
