@@ -12,22 +12,23 @@ To add a new cron task, the following steps are necessary:
 module Cron.Tables (
     cronTables
   , tableCronWorkers
-  , tableCronTasks
+  , tableCronJobs
   ) where
 
 import Control.Monad
 import Data.ByteString (ByteString)
+import Data.Monoid
 
 import DB
 
 cronTables :: [Table]
 cronTables = [
     tableCronWorkers
-  , tableCronTasks
+  , tableCronJobs
   ]
 
 -- | Contains the list of currently running
--- (modulo ~2 minutes) cron workers (instances).
+-- (modulo ~1 minute) cron workers (instances).
 tableCronWorkers :: Table
 tableCronWorkers = tblTable {
     tblName = "cron_workers"
@@ -43,54 +44,53 @@ tableCronWorkers = tblTable {
 
 -- | The place for cron configuration, i.e. list of
 -- tasks to be run along with their frequencies etc.
-tableCronTasks :: Table
-tableCronTasks = tblTable {
-    tblName = "cron_tasks"
-  , tblVersion = 4
+tableCronJobs :: Table
+tableCronJobs = tblTable {
+    tblName = "cron_jobs"
+  , tblVersion = 1
   , tblColumns = [
     -- Type of the task.
-      tblColumn { colName = "type",      colType = TextT, colNullable = False }
-    -- Interval frequency, NULL if task is a one time run.
-    , tblColumn { colName = "frequency", colType = IntervalT, colNullable = False }
-    -- The time task was started. if NULL, task was never started before.
-    , tblColumn { colName = "started",   colType = TimestampWithZoneT }
-    -- The time task was finished. if NULL, task was never finished before.
-    , tblColumn { colName = "finished",  colType = TimestampWithZoneT }
-    -- Id of the worker that currently runs the task, NULL if the task isn't running.
-    , tblColumn { colName = "worker_id", colType = BigIntT }
+      tblColumn { colName = "id", colType = TextT, colNullable = False }
+    -- Time to run a task.
+    , tblColumn { colName = "run_at", colType = TimestampWithZoneT, colNullable = False }
+    -- Time of the last finish (NULL if last run failed).
+    , tblColumn { colName = "finished_at", colType = TimestampWithZoneT }
+    , tblColumn { colName = "reserved_by", colType = BigIntT }
+    , tblColumn { colName = "attempts", colType = IntegerT, colNullable = False, colDefault = Just "0" }
     ]
-  , tblPrimaryKey = pkOnColumn "type"
+  , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
-      (fkOnColumn "worker_id" "cron_workers" "id") {
+      (fkOnColumn "reserved_by" "cron_workers" "id") {
         fkOnDelete = ForeignKeySetNull
       }
     ]
   , tblInitialSetup = Just $ TableInitialSetup {
-      checkInitialSetup = return True,
-      initialSetup = do
-        let tasks = ([
-                ("amazon_deletion", ihours 3)
-              , ("amazon_upload", iminutes 1)
-              , ("async_events_processing", iseconds 10)
-              , ("clock_error_collection", ihours 1)
-              , ("document_api_callback_evaluation", iseconds 2)
-              , ("document_automatic_reminders_evaluation", iminutes 1)
-              , ("documents_purge", iminutes 10)
-              , ("documents_archive_idle", ihours 24)
-              , ("email_change_requests_evaluation", ihours 1)
-              , ("find_and_do_post_document_closed_actions", ihours 6)
-              , ("find_and_do_post_document_closed_actions_new", iminutes 10)
-              , ("find_and_extend_digital_signatures", iminutes 30)
-              , ("find_and_timeout_documents", iminutes 10)
-              , ("mail_events_processing", iseconds 5)
-              , ("old_drafts_removal", ihours 1)
-              , ("password_reminders_evaluation", ihours 1)
-              , ("recurly_synchronization", iminutes 55)
-              , ("sessions_evaluation", ihours 1)
-              , ("sms_events_processing", iseconds 5)
-              , ("user_account_request_evaluation", ihours 1)
-              ] :: [(ByteString, Interval)])
-        forM_ tasks $ \(task,frq) -> runQuery_ $ do
-          rawSQL "INSERT INTO cron_tasks (type,frequency) VALUES ($1,$2)" (task,frq)
+      checkInitialSetup = return True
+    , initialSetup = forM_ tasks $ \task -> do
+      runSQL_ $ "INSERT INTO cron_jobs (id, run_at) VALUES (" <?> task <> ", now())"
     }
   }
+  where
+    tasks :: [ByteString]
+    tasks = [
+        "amazon_deletion"
+      , "amazon_upload"
+      , "async_events_processing"
+      , "clock_error_collection"
+      , "document_api_callback_evaluation"
+      , "document_automatic_reminders_evaluation"
+      , "documents_purge"
+      , "documents_archive_idle"
+      , "email_change_requests_evaluation"
+      , "find_and_do_post_document_closed_actions"
+      , "find_and_do_post_document_closed_actions_new"
+      , "find_and_extend_digital_signatures"
+      , "find_and_timeout_documents"
+      , "mail_events_processing"
+      , "old_drafts_removal"
+      , "password_reminders_evaluation"
+      , "recurly_synchronization"
+      , "sessions_evaluation"
+      , "sms_events_processing"
+      , "user_account_request_evaluation"
+      ]

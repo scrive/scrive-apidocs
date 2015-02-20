@@ -1,47 +1,6 @@
-{-
-
-* How it works *
-
-When cron starts, it:
-
-0. Checks database, parses configuration etc.
-
-1. Inserts now() into cron_workers table and gets its unique id.
-
-2. Spawns a thread (activity monitor), that will every minute update
-last_activity column of the row with its id, then check for the workers
-registered in cron_workers table whose last activity was more than 2
-minutes ago. If it finds such records, the corresponding workers are
-presumed to be dead and all tasks in cron_tasks that are supposedly
-running with these workers are reset, i.e. worker_id is set to NULL.
-
-3. Spawns a thread (task dispatcher), that will once per 5 seconds try
-to select from cron_tasks table one task that should be run. If such
-task is present, it reserves it by setting 'worker_id' to its id,
-'started' to now() and then spawns a new thread that will execute the
-task and either update its 'finished' column if the task was successful.
-In either case worker_id is reset to NULL.
-
-4. If termination signal is received, it waits for all currently running
-tasks to finish, then deletes its corresponding row from cron_workers
-table and exits.
-
-* Additional assumptions *
-
-1. Cron instances use SERIALIZABLE isolation level for
-activity monitoring and task reservation to ensure validity.
-2. If a cron instance exits without the chance to clean up (e.g. by
-receiving SIGKILL), other instances will clean up its mess (release
-tasks it possibly reserved and didn't finish) after at most 2 minutes.
-
-* Guarantees *
-
-1. A task will be executed at least once until it succeeds.
-2. A task will never be started more than once in parallel.
-
--}
 module Cron where
 
+import Control.Applicative
 import Control.Concurrent.Lifted
 import Control.Monad
 import Control.Monad.Trans
@@ -49,7 +8,6 @@ import Data.Maybe
 import Data.Monoid ((<>))
 import Data.Monoid.Utils
 import Data.Time
-import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
 
 import ActionQueue.EmailChangeRequest
@@ -81,10 +39,12 @@ import ThirdPartyStats.Core
 import ThirdPartyStats.Mixpanel
 import Utils.IO
 import qualified Amazon as AWS
-import qualified Control.Concurrent.Thread.Group.Lifted as TG
 import qualified CronEnv
 import qualified Log
 import qualified MemCache
+
+import JobQueue.Config
+import JobQueue.Components
 
 main :: IO ()
 main = Log.withLogger $ do
@@ -112,103 +72,109 @@ main = Log.withLogger $ do
     ""    -> Log.mixlog_ "WARNING: no Mixpanel token present!" >> return Nothing
     token -> return $ Just $ processMixpanelEvent token
 
-  let dispatcher :: TaskType -> Log.LogT IO ()
-      dispatcher tt = case tt of
-        AmazonDeletion -> if AWS.isAWSConfigOk $ amazonConfig appConf
-           then runScheduler purgeSomeFiles
-           else Log.mixlog_ "AmazonDeletion: no valid AWS config, skipping."
-        AmazonUpload -> if AWS.isAWSConfigOk $ amazonConfig appConf
-          then runScheduler AWS.uploadFilesToAmazon
-          else Log.mixlog_ "AmazonUpload: no valid AWS config, skipping."
-        AsyncEventsProcessing -> inDB $ do
-          asyncProcessEvents (catEventProcs $ catMaybes [mmixpanel]) All
-        ClockErrorCollection -> withPostgreSQL connPool $
-          collectClockError (ntpServers appConf)
-        DocumentAPICallbackEvaluation -> runScheduler $
-          actionQueue documentAPICallback
-        DocumentAutomaticRemindersEvaluation -> runScheduler $
-          actionQueue documentAutomaticReminder
-        DocumentsPurge -> runScheduler $ do
-          purgedCount <- dbUpdate $ PurgeDocuments 30 unsavedDocumentLingerDays
-          Log.mixlog_ $ "DocumentsPurge: purged" <+> show purgedCount <+> "documents."
-        DocumentsArchiveIdle -> runScheduler $ do
-          now <- currentTime
-          archived <- dbUpdate $ ArchiveIdleDocuments now
-          Log.mixlog_ $ "DocumentsArchiveIdle: archived documents for" <+> show archived <+> "signatories."
-        EmailChangeRequestsEvaluation -> runScheduler $
-          actionQueue emailChangeRequest
-        FindAndDoPostDocumentClosedActions -> runScheduler $
-          findAndDoPostDocumentClosedActions Nothing
-        FindAndDoPostDocumentClosedActionsNew -> runScheduler $
-          findAndDoPostDocumentClosedActions (Just 6) -- hours
-        FindAndExtendDigitalSignatures -> runScheduler findAndExtendDigitalSignatures
-        FindAndTimeoutDocuments -> runScheduler findAndTimeoutDocuments
-        MailEventsProcessing -> runScheduler Mails.Events.processEvents
-        OldDraftsRemoval -> runScheduler $ do
-          delCount <- dbUpdate $ RemoveOldDrafts 100
-          Log.mixlog_ $ "OldDraftsRemoval: removed" <+> show delCount <+> "old, unsaved draft documents."
-        PasswordRemindersEvaluation -> runScheduler $ actionQueue passwordReminder
-        RecurlySynchronization -> inDB $ do
-          time <- currentTime
-          ltime <- liftIO $ utcToLocalZonedTime time
-          temps <- snd `liftM` liftIO (readMVar templates)
-          when ((todHour . localTimeOfDay . zonedTimeToLocalTime) ltime == 0) $ do -- midnight
-            handleSyncWithRecurly appConf (mailsConfig appConf)
-              temps (recurlyAPIKey $ recurlyConfig appConf) time
-            handleSyncNoProvider time
-        SessionsEvaluation -> runScheduler $ actionQueue session
-        SMSEventsProcessing -> runScheduler SMS.Events.processEvents
-        UserAccountRequestEvaluation -> runScheduler $ actionQueue userAccountRequest
-
-      serializable = def {
-        tsIsolationLevel = Serializable
-      , tsRestartPredicate = Just . RestartPredicate $ const . ((SerializationFailure ==) . qeErrorCode)
+  let cronQueue :: ConsumerConfig (Log.LogT IO) JobType CronJob
+      cronQueue = ConsumerConfig {
+        ccJobsTable = "cron_jobs"
+      , ccConsumersTable = "cron_workers"
+      , ccJobSelectors = cronJobSelectors
+      , ccJobFetcher = cronJobFetcher
+      , ccJobIndex = cjType
+      , ccNotificationChannel = Nothing
+      , ccNotificationTimeout = 1500000
+      , ccMaxRunningJobs = 10
+      , ccProcessJob = \CronJob{..} -> do
+        Log.mixlog_ $ "Processing" <+> show cjType <> "..."
+        action <- case cjType of
+          AmazonDeletion -> do
+            if AWS.isAWSConfigOk $ amazonConfig appConf
+              then runScheduler purgeSomeFiles
+              else Log.mixlog_ "AmazonDeletion: no valid AWS config, skipping."
+            return . RetryAfter $ ihours 3
+          AmazonUpload -> do
+            if AWS.isAWSConfigOk $ amazonConfig appConf
+              then runScheduler AWS.uploadFilesToAmazon
+              else Log.mixlog_ "AmazonUpload: no valid AWS config, skipping."
+            return . RetryAfter $ iminutes 1
+          AsyncEventsProcessing -> do
+            inDB $ asyncProcessEvents (catEventProcs $ catMaybes [mmixpanel]) All
+            return . RetryAfter $ iseconds 10
+          ClockErrorCollection -> do
+            withPostgreSQL connPool $ collectClockError (ntpServers appConf)
+            return . RetryAfter $ ihours 1
+          DocumentAPICallbackEvaluation -> do
+            runScheduler $ actionQueue documentAPICallback
+            return . RetryAfter $ iseconds 2
+          DocumentAutomaticRemindersEvaluation -> do
+            runScheduler $ actionQueue documentAutomaticReminder
+            return . RetryAfter $ iminutes 1
+          DocumentsPurge -> do
+            runScheduler $ do
+              purgedCount <- dbUpdate $ PurgeDocuments 30 unsavedDocumentLingerDays
+              Log.mixlog_ $ "DocumentsPurge: purged" <+> show purgedCount <+> "documents."
+            return . RetryAfter $ iminutes 10
+          DocumentsArchiveIdle -> do
+            runScheduler $ do
+              now <- currentTime
+              archived <- dbUpdate $ ArchiveIdleDocuments now
+              Log.mixlog_ $ "DocumentsArchiveIdle: archived documents for" <+> show archived <+> "signatories."
+            return . RetryAfter $ ihours 24
+          EmailChangeRequestsEvaluation -> do
+            runScheduler $ actionQueue emailChangeRequest
+            return . RetryAfter $ ihours 1
+          FindAndDoPostDocumentClosedActions -> do
+            runScheduler $ findAndDoPostDocumentClosedActions Nothing
+            return . RetryAfter $ ihours 6
+          FindAndDoPostDocumentClosedActionsNew -> do
+            runScheduler $ findAndDoPostDocumentClosedActions (Just 6) -- hours
+            return . RetryAfter $ iminutes 10
+          FindAndExtendDigitalSignatures -> do
+            runScheduler findAndExtendDigitalSignatures
+            return . RetryAfter $ iminutes 30
+          FindAndTimeoutDocuments -> do
+            runScheduler findAndTimeoutDocuments
+            return . RetryAfter $ iminutes 10
+          MailEventsProcessing -> do
+            runScheduler Mails.Events.processEvents
+            return . RetryAfter $ iseconds 5
+          OldDraftsRemoval -> do
+            runScheduler $ do
+              delCount <- dbUpdate $ RemoveOldDrafts 100
+              Log.mixlog_ $ "OldDraftsRemoval: removed" <+> show delCount <+> "old, unsaved draft documents."
+            return . RetryAfter $ ihours 1
+          PasswordRemindersEvaluation -> do
+            runScheduler $ actionQueue passwordReminder
+            return . RetryAfter $ ihours 1
+          RecurlySynchronization -> do
+            inDB $ do
+              time <- currentTime
+              ltime <- liftIO $ utcToLocalZonedTime time
+              temps <- snd <$> readMVar templates
+              when ((todHour . localTimeOfDay . zonedTimeToLocalTime) ltime == 0) $ do -- midnight
+                handleSyncWithRecurly appConf (mailsConfig appConf)
+                  temps (recurlyAPIKey $ recurlyConfig appConf) time
+                handleSyncNoProvider time
+            return . RetryAfter $ iminutes 55
+          SessionsEvaluation -> do
+            runScheduler $ actionQueue session
+            return . RetryAfter $ ihours 1
+          SMSEventsProcessing -> do
+            runScheduler SMS.Events.processEvents
+            return . RetryAfter $ iseconds 5
+          UserAccountRequestEvaluation -> do
+            runScheduler $ actionQueue userAccountRequest
+            return . RetryAfter $ ihours 1
+        Log.mixlog_ $ show cjType <+> "finished successfully."
+        return $ Ok action
+      , ccOnException = \CronJob{..} -> case cjAttempts of
+        1 -> RetryAfter $ iminutes 1
+        2 -> RetryAfter $ iminutes 5
+        3 -> RetryAfter $ iminutes 10
+        4 -> RetryAfter $ iminutes 15
+        5 -> RetryAfter $ iminutes 30
+        _ -> RetryAfter $ ihours 1
       }
 
-  tg <- liftIO TG.new
-  mtid <- liftIO myThreadId
-  wid <- withPostgreSQL connPool . dbUpdate $ RegisterWorker
+      logger domain msg = Log.mixlog_ $ domain <> ":" <+> msg
 
-  let cleanup = do
-        Log.mixlog_ "Waiting for jobs to finish..."
-        TG.wait tg
-        withPostgreSQL connPool . dbUpdate $ UnregisterWorker wid
-
-      -- helper threads are essential, therefore if one
-      -- of them fails, let's kill the main thread.
-      forkForever = void . fork . flip E.onException (liftIO $ killThread mtid) . forever
-
-  flip E.finally cleanup $ do
-    -- spawn task dispatcher
-    forkForever $ do
-      mtt <- runDBT connPool serializable $ do
-        -- add a small delay between consecutive attempts to reserve
-        -- a task. the purpose is to drastically reduce number of
-        -- transaction restarts when more than one worker is running.
-        threadDelay 25000
-        dbUpdate $ ReserveTask wid
-      case mtt of
-        Nothing -> threadDelay 2000000 -- pause for 2 seconds if there are no tasks
-        Just tt -> void . TG.fork tg $ do
-          Log.mixlog_ $ "Starting" <+> show tt <> "..."
-          eres <- E.try $ dispatcher tt
-          case eres of
-            Right () -> do
-              Log.mixlog_ $ show tt <+> "finished successfully."
-              runDBT connPool serializable . dbUpdate $ UpdateTaskFinishedTime tt
-            Left (ex::E.SomeException) -> do
-              Log.attention_ $ show tt <+> "failed with" <+> show ex <> "."
-              -- wait a second so that the task won't be immediately picked up
-              threadDelay 1000000
-              runDBT connPool serializable . dbUpdate $ ReleaseTask tt
-
-    -- spawn activity monitor
-    forkForever $ do
-      threadDelay $ 60 * 1000000 -- wait 60 seconds
-      n <- runDBT connPool serializable $ do
-        dbUpdate $ UpdateWorkerActivity wid
-        dbUpdate $ UnregisterWorkersInactiveFor (iminutes 2)
-      when (n > 0) $
-        Log.mixlog_ $ "Unregistered" <+> show n <+> "inactive workers."
-
+  withConsumer cronQueue connPool logger $ do
     liftIO waitForTermination
