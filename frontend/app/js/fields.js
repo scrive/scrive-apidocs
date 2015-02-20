@@ -108,13 +108,15 @@ window.Field = Backbone.Model.extend({
       return _.any(this.placements(), function(p) {if (p.step() != 'field' && p.step != 'edit') return (p.step() != 'field' && p.step() != 'edit');});
     },
     readyForSign : function(){
-        if (this.isEmail())
+        if (this.isEmail() && this.isOptional() && this.value() != "")
+          return new EmailValidation().validateData(this.value());
+        else if (this.isOptional())
+            return true;
+        else if (this.isEmail())
             return new EmailValidation().validateData(this.value());
         if (this.isSSN() && this.signatory().elegAuthentication())
             return new SSNForElegValidation().validateData(this.value());
         else if (this.isText() && (this.value() != ""))
-            return true;
-        else if (this.isOptional())
             return true;
         else if (this.canBeIgnored())
             return true;
