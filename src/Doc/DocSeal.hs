@@ -384,11 +384,13 @@ sealSpecFromDocument boxImages hostpart document elog ces content tmppath inputp
   staticTexts <- createSealingTextsForDocument document hostpart
 
   -- Creating HTML Evidence Log
-  htmllogs <- htmlDocFromEvidenceLog (documenttitle document) sim (suppressRepeatedEvents elog) ces
+  let htmlevents = suppressRepeatedEvents elog
+  elogsim <- getSignatoryIdentifierMap True htmlevents
+  htmllogs <- htmlDocFromEvidenceLog (documenttitle document) elogsim htmlevents ces
   let evidenceattachment = Seal.SealAttachment { Seal.fileName = "Evidence_Log.html"
                                                , Seal.mimeType = Nothing
                                                , Seal.fileContent = BS.fromString htmllogs }
-  evidenceOfIntent <- evidenceOfIntentAttachment sim document
+  evidenceOfIntent <- evidenceOfIntentAttachment elogsim document
 
   -- documentation files
   let docAttachments =
