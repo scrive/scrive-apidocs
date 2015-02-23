@@ -4,12 +4,11 @@ module Configuration (
 
 import Control.Monad.Base
 import Control.Monad.Trans.Control
-import Data.Char
 import Data.Unjson
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.Lazy.UTF8 as BSL (toString, fromString)
+import qualified Data.ByteString.Lazy.UTF8 as BSL (toString)
 import qualified Data.Text as Text
 import qualified Data.Yaml as Yaml
 
@@ -22,9 +21,8 @@ import Utils.Default
 -- 3. When does not look like json and does not readIO: full docs
 -- 4. When unjson has issue, then just info about specific problems
 
-readConfig :: forall a m . (Unjson a, Read a, HasDefaultValue a, Monad m, MonadBaseControl IO m) => (String -> m ()) -> FilePath -> m a
+readConfig :: forall a m . (Unjson a, HasDefaultValue a, Monad m, MonadBaseControl IO m) => (String -> m ()) -> FilePath -> m a
 readConfig logger path = do
-  let pathWithJsonExt = path ++ ".json"
   logger $ "Reading configuration " ++ path ++ "..."
   bsl' <- either logExceptionAndPrintFullDocs return =<<
           E.try (liftBase (BSL.readFile path))
@@ -32,23 +30,12 @@ readConfig logger path = do
   let bsl = BSL.dropWhile (`elem` [10,13,32]) bsl'
 
 
-  res <- if "{" `BSL.isPrefixOf` bsl
-    then do
+  res <- do
       js <- either logYamlParseExceptionAndBlameJsonParser return $
             Yaml.decodeEither' (BS.concat (BSL.toChunks bsl))
       case parse ud js of
         Result value [] -> return value
         Result _ problems -> logProblems problems
-    else do
-      case reads (BSL.toString bsl) of
-        [(a, g)] | all isSpace g -> do
-          logger $ "It is better to use json/yaml format for configuration."
-          logger $ "For your convenience your configuration has been written to '" ++ pathWithJsonExt ++ "'"
-          liftBase $ BSL.writeFile pathWithJsonExt (BSL.fromString (configAsJsonString a))
-          return a
-        ((_, g):_) -> do
-          logStringAndFail ("Garbage at the end of " ++ path ++ " file: " ++ g)
-        _ -> logStringAndPrintFullDocs $ "Unable to parse configuration file (it is better to use json) " ++ path
 
   logger $ "Configuration file " ++ path ++ " read and parsed."
   return res
