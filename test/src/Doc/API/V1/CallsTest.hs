@@ -11,17 +11,25 @@ import Text.JSON.Gen
 import qualified Data.ByteString.Lazy.UTF8 as BS
 
 import Context
+import Control.Logic
 import DB
 import Doc.API.V1.Calls
 import Doc.API.V1.DocumentToJSON
+import Doc.Action
+import Doc.DocInfo
 import Doc.DocStateData
+import Doc.DocUtils
+import Doc.DocumentMonad
 import Doc.Model
+import Doc.SignatoryScreenshots
 import KontraPrelude
 import OAuth.Model
-import TestingUtil
 import TestKontra as T
+import TestingUtil
 import User.Model
+import Util.Actor
 import Util.HasSomeUserInfo
+import Util.SignatoryLinkUtils
 import Utils.Default
 
 apiV1CallsTests :: TestEnvSt -> Test
@@ -37,6 +45,7 @@ apiV1CallsTests env = testGroup "CallsAPIV1" $
   , testThat "Creating doc with personal access credentials via API works" env testPersonalAccessCredentialsCreateDoc
   , testThat "Save flag in update call works" env (testUpdateDocToSaved False)
   , testThat "Save flag works when using API (OAuth)" env (testUpdateDocToSaved True)
+  , testThat "Closing a document has the right Evidence Attachments" env testCloseEvidenceAttachments
   ]
 
 jsonDocs :: [String]
@@ -454,3 +463,42 @@ testChangeMainFileMovePlacements = do
     assertEqual "positions after change to anchors-Signature" [(1,0.5,0.5)] poss
 
   return ()
+
+testCloseEvidenceAttachments :: TestEnv ()
+testCloseEvidenceAttachments = do
+  author <- addNewRandomUser
+  ctx <- (\c -> c { ctxmaybeuser = Just author }) <$> mkContext defaultValue
+  doc <- addRandomDocumentWithAuthorAndCondition author
+    (isSignable &&^ isPending
+     &&^ (all ((==) StandardAuthentication . signatorylinkauthenticationmethod) . documentsignatorylinks)
+     &&^ ((==) 1 . (length . documentsignatorylinks))
+    )
+
+  req <- mkRequest GET []
+  withDocument doc $ forM_ (documentsignatorylinks doc)
+    (\sl -> when (isSignatory sl) $ do
+      randomUpdate $ \t-> MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
+      randomUpdate $ \t-> SignDocument     (signatorylinkid sl) (signatorymagichash sl) Nothing Nothing emptySignatoryScreenshots (systemActor t)
+    )
+
+  _ <- runTestKontra req ctx $ withDocument doc $ do
+      randomUpdate $ \t -> CloseDocument (systemActor t)
+      postDocumentClosedActions True False
+
+  (rsp, _) <- runTestKontra req ctx $ apiCallV1GetEvidenceAttachments (documentid doc)
+  let rspString = BS.toString $ rsBody rsp
+      Ok (JSObject response) = decode rspString
+      Just (JSArray attachments) = lookup "evidenceattachments" $ fromJSObject response
+      attachmentNames = map (\(JSObject obj) -> let Just (JSString name) = lookup "name" $ fromJSObject obj
+                                                in fromJSString name
+                            ) attachments
+  assertEqual "Evidence Attachments file names do not match"
+      [ "Appendix 1 Evidence Quality Framework.html"
+      , "Appendix 2 Service Description.html"
+      , "Appendix 3 Evidence Log.html"
+      -- TODO Add Evidence of Time when it is included.
+      , "Appendix 5 Evidence of Intent.html"
+      , "Appendix 6 Digital Signature Documentation.html"
+      , "Evidence Quality of Scrive Esigned Documents.html"
+      ]
+      (sort attachmentNames)
