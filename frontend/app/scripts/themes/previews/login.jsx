@@ -15,6 +15,7 @@ return React.createClass({
       var model = this.props.model;
       return {
         iconBrandTextColor : model.brandTextColor(),
+        dividerLineBackgroundUrl : this.generateBackgroundImageURL("divider-line.png", model.brandTextColor()),
         iconSelectArrowUrl : this.generateBackgroundImageURL("select-arrow-for-branding.png", model.brandTextColor()),
         updateTime : new Date().getTime()
       };
@@ -44,7 +45,7 @@ return React.createClass({
         <div className="login-preview" style={{"background-color": model.brandColor()}}>
           <div className="logo-wrapper">
             <img src={ model.logo() || "/img/logo_email.png"}/>
-            <div className="divider-line" />
+            <div className="divider-line" style={{"backgroundImage": this.state.dividerLineBackgroundUrl}} />
 
             <p className="small" style={{"color": model.brandTextColor()}}>E-signing powered by Scrive</p>
           </div>

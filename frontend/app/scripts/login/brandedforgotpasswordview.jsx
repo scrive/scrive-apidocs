@@ -18,7 +18,7 @@ return React.createClass({
       var model = this.props.model;
       return (
         <div className="forgot-password-box" style={{"width":"275px","margin" : "20px auto"}}>
-          <div style={{marginBottom: "20px", marginTop: "50px", textAlign: "center"}} >
+          <div style={{marginBottom: "30px", textAlign: "center"}} >
             <img alt='logo' src={"/login_logo/" + window.brandinghash} />
             <div className='divider-line'/>
             <div className='label' style={{"textAlign":"center", "width":"275px"}}>
@@ -39,7 +39,7 @@ return React.createClass({
                   style={{"width" : "245px", "padding" : "7px 14px","fontSize" : "16px"}}
                 />
               </div>
-              <div className="position" style={{textAlign:"center", marginTop:"20px"}}>
+              <div className="position" style={{textAlign:"center", marginTop:"30px"}}>
                 <Button
                   cssClass="recovery-password-submit"
                   type="main"
@@ -48,7 +48,7 @@ return React.createClass({
                   onClick={this.trySendPasswordReminder}
                 />
               </div>
-              <div className='position' style={{textAlign:"center",marginTop:"20px"}}>
+              <div className='position' style={{textAlign:"center",marginTop:"30px"}}>
                 <div className='label-with-link'>
                   <a onClick={function(){ model.toogleView();}}>
                     {localization.loginModal.login}

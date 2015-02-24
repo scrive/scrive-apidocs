@@ -74,7 +74,7 @@ define(['common/hubspot_service', 'common/adwords_conversion_service', 'Backbone
         var content = $("<div style='width:'/>");
         var wrapper = $("<div/>");
         var body = $("<div/>");
-        var header = $("<div style='margin-bottom:20px;margin-top:50px;text-align: center;'/>");
+        var header = $("<div style='margin-bottom:30px;text-align: center;'/>");
 
         header.append($("<img alt='logo' src='/login_logo/"+ window.brandinghash +"'/>"));
         header.append($("<div class='divider-line'/>"));
@@ -126,13 +126,13 @@ define(['common/hubspot_service', 'common/adwords_conversion_service', 'Backbone
           });
 
         body.append($("<div class='position first withEmail'/>").append(emailInput.el().attr("autocomplete","false").css("width","245px").css("padding","7px 14px").css("font-size","16px")));
-        body.append($("<div class='position' style='text-align:center;margin-top:20px;'/>").append(signupButton.el()));
+        body.append($("<div class='position' style='text-align:center;margin-top:30px;'/>").append(signupButton.el()));
 
         var alreadyHaveAccount = $("<span class='label-with-link'/>").html(localization.signupModal.alreadyHaveAnAccount);
         alreadyHaveAccount.find('.put-link-to-login-here').attr('href', "/" + localization.code + '/login');
 
 
-        body.append($("<div class='position' style='text-align:center;margin-top:20px;'/>").append(alreadyHaveAccount));
+        body.append($("<div class='position' style='text-align:center;margin-top:30px;'/>").append(alreadyHaveAccount));
 
         $(this.el).append(content);
       }

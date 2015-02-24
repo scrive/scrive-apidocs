@@ -25,7 +25,7 @@ return React.createClass({
 
       return (
         <div className="login-box" style={{"width":"275px","margin" : "20px auto"}}>
-          <div style={{marginBottom: "20px", marginTop: "50px", textAlign: "center"}} >
+          <div style={{marginBottom: "30px",textAlign: "center"}} >
             <img alt='logo' src={"/login_logo/" + window.brandinghash} />
             <div className='divider-line'/>
             <div className='label' style={{"textAlign":"center", "width":"275px"}}>
@@ -34,7 +34,7 @@ return React.createClass({
           </div>
           <div>
             <div>
-              <div className='position first' style={{marginBottom:"6px"}}>
+              <div className='position first' style={{marginBottom:"15px"}}>
                 <InfoTextInput
                   infotext={localization.loginModal.email}
                   value={model.email()}
@@ -63,7 +63,7 @@ return React.createClass({
                 />
               </div>
 
-              <div className="position" style={{textAlign:"center",marginTop:"20px"}}>
+              <div className="position" style={{textAlign:"center",marginTop:"30px"}}>
                 <Button
                   type="main"
                   text={localization.loginModal.login}
@@ -72,14 +72,14 @@ return React.createClass({
                 />
               </div>
               {/*if*/ (!model.nolinks()) &&
-                <div className='position' style={{textAlign:"center",marginTop:"20px"}}>
+                <div className='position' style={{textAlign:"center",marginTop:"30px"}}>
                   <span className='label-with-link'
                         dangerouslySetInnerHTML={{__html: this.textWithLink(localization.loginModal.dontHaveAccount,"/" + localization.code + '/signup')}}
                   />
                 </div>
               }
             </div>
-            <div className="position" style={{textAlign:"center",marginTop:"20px",width: "200px", marginRight: "auto", marginLeft: "auto"}}>
+            <div className="position" style={{textAlign:"center",marginTop:"15px",width: "200px", marginRight: "auto", marginLeft: "auto"}}>
               <LanguageSelect
                 langprefix={model.langprefix()}
                 border=""
