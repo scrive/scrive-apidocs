@@ -403,7 +403,8 @@ arbEmail :: Gen String
 arbEmail = do
   n <- arbString 1 34
   d <- arbString 3 7
-  return $ n ++ "@" ++ d ++ ".com"
+  t <- arbString 2 4
+  return $ n ++ "@" ++ d ++ "." ++ t
 
 signatoryLinkExample1 :: SignatoryLink
 signatoryLinkExample1 = defaultValue { signatorylinkid = unsafeSignatoryLinkID 0
