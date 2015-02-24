@@ -1,20 +1,22 @@
 .email-preview {
   margin: auto;
-  width: 600px;
+  width: 570px;
+  padding-bottom: 15px;
+  padding-left: 15px;
+  padding-right: 15px;
 
   @original-padding: 32px; // How big it actually is in the email
   @actual-padding: @original-padding; // How big it will appear in the preview
 
   .logo-wrapper {
-    background-color: #495259; // TODO use variables.less
-    max-width: 600px;
+    max-width: 570px;
     padding-bottom: @actual-padding;
     padding-top: @actual-padding;
   }
 
   .content-container {
     border: 1px solid #ccc;
-
+    background-color: @white;
     .content {
       padding: @actual-padding;
 
@@ -25,7 +27,7 @@
 
       .invitation {
         margin-left: @actual-padding;
-        max-width: 350px;
+        max-width: 320px;
 
         p {
           margin-bottom: 20px;
