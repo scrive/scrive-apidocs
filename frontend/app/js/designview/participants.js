@@ -412,7 +412,9 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                 if( participantDetail === lastSignatory ) {
                     setTimeout(function() {
                         view.scrollBox.mCustomScrollbar("update");
-                        view.scrollBox.mCustomScrollbar("scrollTo","bottom");
+                        if (allSignatories.length > 2) {
+                          view.scrollBox.mCustomScrollbar("scrollTo","bottom");
+                        }
                     }, 300);
                 }
             }

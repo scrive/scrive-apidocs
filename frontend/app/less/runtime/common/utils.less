@@ -6,9 +6,10 @@
 }
 
 .divider-line {
-  background-color: @brandtextcolor;
+  @url : %('/branded_image?file=divider-line.png&keep-color&color=%D',@brandtextcolor);
+  background-image: url(@url) ;
   display: block;
-  height: 1px;
+  height: 2px;
   margin: 15px auto;
   width: 166px;
 }

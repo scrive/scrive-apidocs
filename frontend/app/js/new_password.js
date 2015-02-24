@@ -82,7 +82,7 @@ define(['Backbone', 'legacy_code'], function() {
       var content = $("<div/>");
       var wrapper = $("<div/>");
       var body = $("<div/>");
-      var header = $("<div style='margin-bottom:20px;margin-top:50px;text-align:center;'/>");
+      var header = $("<div style='margin-bottom:30px;text-align:center;'/>");
       header.append($("<img alt='logo' src='/login_logo/"+ window.brandinghash +"'/>"));
       header.append($("<div class='divider-line'/>"));
 
@@ -119,7 +119,7 @@ define(['Backbone', 'legacy_code'], function() {
         style : "width : 245px; padding : 7px 14px; font-size: 16px"
 
       });
-      body.append($("<div class='position' style='margin-top:6px;'/>").append(password2Input.el()));
+      body.append($("<div class='position' style='margin-top:15px;'/>").append(password2Input.el()));
 
       var changePasswordButton = new Button({
           type  : "main",
@@ -130,7 +130,7 @@ define(['Backbone', 'legacy_code'], function() {
           }
         });
 
-     body.append($("<div class='position' style='text-align:center;margin-top:20px'/>").append(changePasswordButton.el()));
+     body.append($("<div class='position' style='text-align:center;margin-top:30px'/>").append(changePasswordButton.el()));
      $(this.el).append(content);
     }
   });
@@ -149,7 +149,7 @@ define(['Backbone', 'legacy_code'], function() {
       options.button = localization.accessNewAccountModal.button;
     }
 
-    options.el = $("<div class='new-password-box'style='width:275px;margin:20px auto'/>");
+    options.el = $("<div class='new-password-box'style='width:275px;margin:30px auto'/>");
     view = new NewPasswordView(options);
     this.el = function() {return $(view.el);};
   };

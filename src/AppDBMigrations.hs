@@ -189,6 +189,7 @@ kontraMigrations = [
   , makeAssociatedDomainObligatoryForUsers
   , addThemesAndOthersToCompanyUIs
   , removeSMSOriginatorFromCompany
+  , changeScriveLoginLogo
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

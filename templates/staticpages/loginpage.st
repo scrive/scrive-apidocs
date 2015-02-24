@@ -9,8 +9,8 @@ $htmlopentag()$
   </head>
   <body >
   $flashmessages()$
-  <div class='mainContainer big' style='height:auto;position: static;overflow-y:hidden;'>
-      <div class="inner" style='height:auto;position:static;margin:auto;width:auto;'>
+  <div class='global-table'>
+      <div class="global-table-cell">
       </div>
   </div>
   <script type="text/javascript">
@@ -23,7 +23,7 @@ $htmlopentag()$
           window.location.hash != "#forgot") {
         referer = referer + window.location.hash;
       }
-      var div = jQuery('.inner');
+      var div = jQuery('.global-table-cell');
       React.render(React.createElement(Login,{
         referer:   referer,
         autofocus: true,
@@ -50,14 +50,14 @@ $htmlopentag()$
     <link href='/login_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
   </head>
   <body>
-  <div class='mainContainer big' style='height:auto;position: static;overflow-y:hidden;'>
-      <div class="inner" style='height:auto;position:static;margin:auto;width:auto;'>
+  <div class='global-table'>
+      <div class="global-table-cell">
       </div>
   </div>
 <script type="text/javascript">
  require(['jquery', 'legacy_code'], function(jQuery) {
   jQuery(document).ready(function() {
-    jQuery('.inner').append(new NewPassword({
+    jQuery('.global-table-cell').append(new NewPassword({
                         linkchangepassword: "$linkchangepassword$",
                        }).el());
   });
@@ -75,8 +75,8 @@ $htmlopentag()$
     <link href='/login_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
   </head>
   <body>
-  <div class='mainContainer big' style='height:auto;position: static;overflow-y:hidden;'>
-      <div class="inner" style='height:auto;position:static;margin:auto;width:auto;'>
+  <div class='global-table'>
+      <div class="global-table-cell">
       </div>
   </div>
 <script type="text/javascript">
@@ -85,7 +85,7 @@ $htmlopentag()$
     mixpanel.track('View access new account page', {
         branded: true
     });
-    jQuery('.inner').append(new NewPassword({
+    jQuery('.global-table-cell').append(new NewPassword({
                         linkchangepassword: "$linkchangepassword$",
                         accessnewaccount: true,
                        }).el());
@@ -107,7 +107,7 @@ accountSetupPage=
       $flashmessages()$
 
       <div class='mainContainer create-account-box'>
-        <div style="margin-bottom: 20px; margin-top: 50px; text-align: center" >
+        <div style="margin-bottom: 20px; margin-top: 64px; text-align: center" >
           <img alt='logo' src="/login_logo/$brandinghash$" />
           <div class='divider-line'></div>
           <span class='label' style="text-align :center; width:275px">

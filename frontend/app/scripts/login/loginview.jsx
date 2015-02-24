@@ -98,7 +98,7 @@ return React.createClass({
               </div>
             }
           </div>
-          <div className="position separated">
+          <div className="position">
             <LanguageSelect
               langprefix={model.langprefix()}
               border=""

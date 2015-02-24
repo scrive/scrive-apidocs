@@ -34,8 +34,8 @@ $htmlopentag()$
   </head>
   <body>
     <div class="js-terms-of-service terms-of-service">
-      <div style='width:275px;margin:20px auto;'>
-        <div style="margin-top: 50px;text-align:center;">
+      <div style='width:275px;margin:0px auto;'>
+        <div style="margin-top: 64px;text-align:center;">
           <img alt="logo" src="/login_logo/$brandinghash$" />
           <div class="divider-line"></div>
           <div class='label' style="text-align:center;width:275px;">
