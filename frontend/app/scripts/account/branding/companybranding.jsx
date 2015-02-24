@@ -83,7 +83,7 @@ return Backbone.Model.extend({
   },
   reload : function() {
     this.set({ready : false});
-    this.fetch();
+    this.fetch({cache:false});
   },
   parse : function(data) {
     data['ready'] = true;
