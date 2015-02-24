@@ -45,6 +45,15 @@ sendRedirect (LinkLogin lang reason) = do
   -- So we let frontend take care of that on it's own. And frontend will fetch hash for referer 
   seeOther link' =<< setRsCode 303 (seeOtherXML link')
 
+
+-- Backward compatibility. Someone could bookmark /login?referer=/d. We will redirect him to /en/enter. We need to make sure to keep original referer.
+sendRedirect (LinkLoginDirect lang) = do
+  referer <- getField "referer"
+  let link' = case referer of
+       Just r -> "/" ++ (codeFromLang lang) ++  "/enter?referer=" ++ (URL.encode . UTF.encode $ r)
+       Nothing ->  "/" ++ (codeFromLang lang) ++  "/enter"
+  seeOther link' =<< setRsCode 303 (seeOtherXML link')
+
 sendRedirect link = do
  seeOther (show link) =<< setRsCode 303 (seeOtherXML $ show link)
 

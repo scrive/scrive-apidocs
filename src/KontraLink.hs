@@ -76,7 +76,7 @@ langFolder lang = "/" ++ (codeFromLang lang)
 instance Show KontraLink where
     showsPrec _ (LinkHome lang) = (++) $ langFolder lang ++ "/"
     showsPrec _ (LinkLogin lang _) = (++) $ langFolder lang ++ "/enter#log-in" -- THIS ONE IS NOT USED. CHECK sendRedirect
-    showsPrec _ (LinkLoginDirect lang) = (++) $ langFolder lang ++ "/enter#log-in"
+    showsPrec _ (LinkLoginDirect lang) = (++) $ langFolder lang ++ "/enter#log-in"  -- THIS ONE IS NOT USED. CHECK sendRedirect
     showsPrec _ LinkLogout = (++) "/logout"
     showsPrec _ (LinkSignup lang) = (++) $ langFolder lang ++ "/enter#sign-up"
     showsPrec _ (LinkArchive) = (++) $ "/d"
