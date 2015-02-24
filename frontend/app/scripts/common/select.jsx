@@ -197,7 +197,7 @@ var SelectExpandedView = React.createClass({
       var optionStyle = {border:model.border(), minWidth:model.optionsWidth()};
       // .select-button-left and .select-button-right widths from select.less
       // this must be kept in sync!
-      var buttonStyle = {width: model.textWidth + 6 + 21 + 'px'};
+      var buttonStyle = {width: model.textWidth() + 6 + 21 + 'px'};
       return (
         <div className={'select select-exp ' + model.cssClass()}  style={mainStyle} onClick={this.handleExpand}>
           <div className='select-button' style={buttonStyle}>
@@ -312,18 +312,19 @@ var SelectView = React.createClass({
       else
         this.state.expandedDiv.detach();
 
-      var mainStyle = _.extend({color: model.color(),border : model.border()},model.style());
+      var mainStyle = _.extend({maxWidth: model.optionsWidth(), color: model.color(),border : model.border()},model.style());
       var labelStyle = _.extend({width: model.textWidth() + 'px'},model.style());
       if (model.expanded() && model.adjustHeightOnExpand()) {
         mainStyle = _.extend(mainStyle,{height:  this.state.expandedComponent.totalHeight()});
       }
+      var buttonStyle = {width: model.textWidth() + 6 + 21 + 'px'};
       return (
         <div className={'select ' + model.cssClass()}  style={mainStyle}
              onClick={this.handleExpand}
              onMouseEnter={this.handleMouseEnter}
              onMouseOut={this.handleMouseOut}
              >
-          <div className='select-button'>
+          <div className='select-button' style={buttonStyle}>
             <div className='select-button-left'/>
             <div className='select-button-label' style={labelStyle}>
               {model.name()}
