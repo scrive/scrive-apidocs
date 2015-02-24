@@ -1,6 +1,7 @@
 module SessionsTest (sessionsTests) where
 
 import Control.Applicative
+import Control.Monad (replicateM_)
 import Data.Int
 import Data.Maybe
 import Happstack.Server
@@ -40,7 +41,7 @@ sessionsTests env = testGroup "Sessions" [
 testNewSessionInsertion :: TestEnv ()
 testNewSessionInsertion = do
   uid <- testUser
-  doTimes 12 $ do
+  replicateM_ 12 $ do
     (msess, _) <- insertNewSession uid
     assertBool "session successfully taken from the database" (isJust msess)
   runSQL_ $ "SELECT COUNT(*) FROM sessions WHERE user_id =" <?> uid
@@ -65,14 +66,14 @@ testSessionUpdate = do
 
 
 testDocumentTicketInsertion :: TestEnv ()
-testDocumentTicketInsertion = doTimes 10 $ do
+testDocumentTicketInsertion = replicateM_ 10 $ do
   (_, _, ctx) <- addDocumentAndInsertToken
   runSQL_ $ "SELECT COUNT(*) FROM document_session_tokens WHERE session_id =" <?> ctxsessionid ctx
   tokens :: Int64 <- fetchOne runIdentity
   assertEqual "token successfully inserted into the database" 1 tokens
 
 testDocumentTicketReinsertion :: TestEnv ()
-testDocumentTicketReinsertion = doTimes 10 $ do
+testDocumentTicketReinsertion = replicateM_ 10 $ do
   (_, doc, ctx) <- addDocumentAndInsertToken
   _ <- do
     let Just asl = getAuthorSigLink doc
@@ -82,12 +83,12 @@ testDocumentTicketReinsertion = doTimes 10 $ do
   return ()
 
 testElegTransactionInsertion :: TestEnv ()
-testElegTransactionInsertion = doTimes 10 $ do
+testElegTransactionInsertion = replicateM_ 10 $ do
   (mtrans, _) <- addCgiGrpTransaction
   assertBool "cgi grp transaction successfully inserted into the database" $ isJust mtrans
 
 testElegTransactionUpdate :: TestEnv ()
-testElegTransactionUpdate = doTimes 10 $ do
+testElegTransactionUpdate = replicateM_ 10 $ do
   (Just trans, ctx) <- addCgiGrpTransaction
   let newtrans = trans { cgtOrderRef = "new order ref" }
   (mtrans', _) <- do

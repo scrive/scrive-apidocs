@@ -1,6 +1,7 @@
 module FileTest (fileTests) where
 
 import Happstack.Server.SimpleHTTP
+import Control.Monad (replicateM_)
 import Test.Framework
 import Test.QuickCheck
 import qualified Data.ByteString.UTF8 as BS
@@ -32,17 +33,17 @@ fileTests env = testGroup "Files" [
   ]
 
 testFileIDReadShow :: TestEnv ()
-testFileIDReadShow = doTimes 100 $  do
+testFileIDReadShow = replicateM_ 100 $  do
    (fid :: FileID) <- rand 10 arbitrary
    assertEqual "read . show == id" fid  ((read . show) fid)
 
 testFileIDUriShow :: TestEnv ()
-testFileIDUriShow = doTimes 100 $  do
+testFileIDUriShow = replicateM_ 100 $  do
    (fid :: FileID) <- rand 10 arbitrary
    assertEqual "fromReqURI . show == id" (Just fid) ((fromReqURI . show) fid)
 
 testFileNewFile :: TestEnv ()
-testFileNewFile  = doTimes 100 $ do
+testFileNewFile  = replicateM_ 100 $ do
   (name, content) <- fileData
   fileid' <- dbUpdate $ NewFile name $ Binary content
   File { fileid = fileid, filename = fname1, filestorage = FileStorageMemory fcontent1 } <- dbQuery $ GetFileByFileID fileid'
@@ -55,12 +56,12 @@ testFileNewFile  = doTimes 100 $ do
   assertEqual "File content doesn't change after storing" content fcontent2
 
 testFileDoesNotExist :: TestEnv ()
-testFileDoesNotExist = doTimes 5 $ do
+testFileDoesNotExist = replicateM_ 5 $ do
   assertRaisesKontra (\FileDoesNotExist {} -> True) $ do
     randomQuery $ GetFileByFileID
 
 testFileMovedToAWS :: TestEnv ()
-testFileMovedToAWS  = doTimes 100 $ do
+testFileMovedToAWS  = replicateM_ 100 $ do
   (name,content) <- fileData
   bucket <- viewableS
   url <- viewableS
@@ -74,7 +75,7 @@ testFileMovedToAWS  = doTimes 100 $ do
   assertEqual "AES key is persistent" aes aes2
 
 testPurgeFiles :: TestEnv ()
-testPurgeFiles  = doTimes 100 $ do
+testPurgeFiles  = replicateM_ 100 $ do
   (name,content) <- fileData
   _fileid' <- dbUpdate $ NewFile name $ Binary content
 

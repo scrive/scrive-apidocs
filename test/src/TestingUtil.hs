@@ -652,13 +652,6 @@ untilCondition cond gen = do
 addRandomDocumentWithAuthor' :: User -> TestEnv Document
 addRandomDocumentWithAuthor' user = addRandomDocumentWithAuthorAndCondition user (\_ -> True)
 
-doTimes :: (Monad m) => Int -> m () -> m ()
-doTimes 0 _ = return ()
-doTimes n a = do
-  _ <- a
-  doTimes (n - 1) a
-
-
 -- Random gen
 
 --Random query
