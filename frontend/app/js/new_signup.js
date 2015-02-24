@@ -60,10 +60,7 @@ define(['common/hubspot_service', 'common/adwords_conversion_service', 'Backbone
       this.render();
     },
     validationCallback: function(t, e, v) {
-      $("<div class='validation-failed-msg' />").append(v.message()).appendTo($('.position.withEmail',this.el));
-    },
-    clearValidationMessages : function() {
-      $(".validation-failed-msg",this.el).remove();
+      new FlashMessage({content: v.message(), type: 'error'});
     },
     render: function () {
         $(this.el).html('');
@@ -89,7 +86,7 @@ define(['common/hubspot_service', 'common/adwords_conversion_service', 'Backbone
         var emailInput = new InfoTextInput({
           infotext: localization.email,
           value: model.email(),
-          onChange: function(v) {self.clearValidationMessages(); model.setEmail(v);},
+          onChange: function(v) {model.setEmail(v);},
           onEnter: function() {
               signupButton.el().click();
           },
@@ -110,7 +107,6 @@ define(['common/hubspot_service', 'common/adwords_conversion_service', 'Backbone
             text: localization.signup,
             style : "width:235px;",
             onClick: function() {
-              self.clearValidationMessages();
               if (emailInput.value().validate(new EmailValidation({callback: self.validationCallback, message: localization.validation.wrongEmail})))
                 {
                   model.signup();
