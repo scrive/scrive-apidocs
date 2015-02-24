@@ -12,8 +12,8 @@ return React.createClass({
       var model = this.props.model;
 
       return (
-        <div className="email-preview">
-          <div className="logo-wrapper" style={{"background-color": model.brandColor()}}>
+        <div className="email-preview" style={{"background-color": model.brandColor()}}>
+          <div className="logo-wrapper">
             <img src={ model.logo() || "/img/logo_email.png"} />
           </div>
 
