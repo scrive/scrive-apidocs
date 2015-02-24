@@ -19,7 +19,7 @@ data SalesforceConf = SalesforceConf {
     -- plugin, but due to their policy it can't.
   , salesforceIntegrationAPIToken  :: String
   , salesforceIntegrationAPISecret :: String
-} deriving (Show, Read, Eq, Ord)
+} deriving (Show, Eq, Ord)
 
 unjsonSalesforceConf :: UnjsonDef SalesforceConf
 unjsonSalesforceConf = objectOf $ pure SalesforceConf

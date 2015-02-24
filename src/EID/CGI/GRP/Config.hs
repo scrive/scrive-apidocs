@@ -13,7 +13,7 @@ data CgiGrpConfig = CgiGrpConfig {
 , cgServiceID   :: Text
 -- | Display name registered with CGI
 , cgDisplayName :: Text
-} deriving (Eq, Ord, Read, Show)
+} deriving (Eq, Ord, Show)
 
 instance Unjson CgiGrpConfig where
   unjsonDef = objectOf $ CgiGrpConfig

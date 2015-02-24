@@ -12,7 +12,7 @@ data LiveDocxConf = LiveDocxConf {
   , serviceURL :: String
   , username :: String
   , password :: String
-} deriving (Eq, Ord, Read, Show)
+} deriving (Eq, Ord, Show)
 
 unjsonLiveDocxConf :: UnjsonDef LiveDocxConf
 unjsonLiveDocxConf = objectOf $ pure LiveDocxConf

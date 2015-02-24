@@ -23,7 +23,7 @@ data MailsConfig = MailsConfig {
     isBackdoorOpen       :: Bool
   , ourInfoEmail         :: String
   , ourInfoEmailNiceName :: String
-  } deriving (Read, Eq, Ord, Show)
+  } deriving (Eq, Ord, Show)
 
 unjsonMailsConfig :: UnjsonDef MailsConfig
 unjsonMailsConfig = objectOf $ pure MailsConfig

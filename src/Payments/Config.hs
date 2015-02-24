@@ -7,7 +7,7 @@ data RecurlyConfig = RecurlyConfig { recurlySubdomain  :: String
                                    , recurlyAPIKey     :: String
                                    , recurlyPrivateKey :: String
                                    }
-                   deriving (Show, Read, Eq, Ord)
+                   deriving (Show, Eq, Ord)
 
 unjsonRecurlyConfig :: UnjsonDef RecurlyConfig
 unjsonRecurlyConfig = objectOf $ pure RecurlyConfig

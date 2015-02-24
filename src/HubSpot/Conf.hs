@@ -9,7 +9,7 @@ import qualified Text.JSON.Gen as J
 data HubSpotConf = HubSpotConf {
       hubspotHubId :: String
     , hubspotFormIds  :: Map.Map String String
-} deriving (Show, Read, Eq, Ord)
+} deriving (Show, Eq, Ord)
 
 unjsonHubSpotConf :: UnjsonDef HubSpotConf
 unjsonHubSpotConf = objectOf $ pure HubSpotConf

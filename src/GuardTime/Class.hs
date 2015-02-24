@@ -9,7 +9,7 @@ data GuardTimeConf = GuardTimeConf {
   guardTimeURL ::  String
 , guardTimeExtendingServiceURL :: String
 , guardTimeControlPublicationsURL :: String
-} deriving (Eq, Ord, Show, Read)
+} deriving (Eq, Ord, Show)
 
 instance Unjson GuardTimeConf where
   unjsonDef = objectOf $ pure GuardTimeConf

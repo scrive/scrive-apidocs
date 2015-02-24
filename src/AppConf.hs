@@ -49,7 +49,7 @@ data AppConf = AppConf {
   , homebase           :: String                       -- ^ url fragment where to fetch scripts
   , ntpServers         :: [String]                     -- ^ List of NTP servers to contact to get estimate of host clock error
   , salesforceConf     :: SalesforceConf             -- ^ Configuration of salesforce
-  } deriving (Eq, Ord, Read, Show)
+  } deriving (Eq, Ord, Show)
 
 unjsonAppConf :: UnjsonDef AppConf
 unjsonAppConf = objectOf $ pure AppConf
