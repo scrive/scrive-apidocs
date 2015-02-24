@@ -42,7 +42,7 @@ return React.createClass({
       var model = this.props.model;
 
       return (
-        <div className="login-preview" style={{"background-color": model.brandColor()}}>
+        <div className="login-preview" style={{"backgroundColor": model.brandColor()}}>
           <div className="logo-wrapper">
             <img src={ model.logo() || "/img/logo_email.png"}/>
             <div className="divider-line" style={{"backgroundImage": this.state.dividerLineBackgroundUrl}} />
@@ -54,7 +54,7 @@ return React.createClass({
             <div className="content">
               <InfoTextInput infotext="Email address" style={{"width":"200px"}} readonly={true}/>
               <InfoTextInput infotext="Password" style={{"width": "200px"}} readonly={true} buttonTitle="Forgot?" onClick={function() {}} />
-              <Button type="main" text="Log in" style={{"background-color": model.brandColor(), "border-color": model.brandTextColor(), "color": model.brandTextColor()}}/>
+              <Button type="main" text="Log in" style={{"backgroundColor": model.brandColor(), "border-color": model.brandTextColor(), "color": model.brandTextColor()}}/>
 
               <p style={{"color": model.brandTextColor()}}>Don't have an account? <a style={{"color": model.brandTextColor()}}>Sign up for free</a></p>
 

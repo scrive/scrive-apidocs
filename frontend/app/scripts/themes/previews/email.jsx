@@ -12,7 +12,7 @@ return React.createClass({
       var model = this.props.model;
 
       return (
-        <div className="email-preview" style={{"background-color": model.brandColor()}}>
+        <div className="email-preview" style={{"backgroundColor": model.brandColor()}}>
           <div className="logo-wrapper">
             <img src={ model.logo() || "/img/logo_email.png"} />
           </div>
@@ -30,7 +30,7 @@ return React.createClass({
                   size="small"
                   type="action"
                   text={localization.companyBranding.brandingPreview.emailButtonLabel}
-                  style={{'background-color': model.actionColor(), 'color': model.actionTextColor()}}
+                  style={{'backgroundColor': model.actionColor(), 'color': model.actionTextColor()}}
                 />
               </div>
             </div>
