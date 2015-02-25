@@ -13,6 +13,7 @@ import qualified Data.ByteString as BS
 import ActionQueue.EmailChangeRequest
 import ActionQueue.Monad
 import ActionQueue.PasswordReminder
+import ActionQueue.Scheduler
 import ActionQueue.UserAccountRequest
 import AppConf
 import AppDBTables
@@ -62,8 +63,6 @@ main = Log.withLogger $ do
   rng <- newCryptoRNGState
   filecache <- MemCache.new BS.length 52428800
 
-  let runScheduler = inDB . CronEnv.runScheduler appConf filecache templates
-      inDB = withPostgreSQL connPool . runCryptoRNGT rng
   -- Asynchronous event dispatcher; if you want to add a consumer to the event
   -- dispatcher, please combine the two into one dispatcher function rather
   -- than creating a new thread or something like that, since
@@ -72,7 +71,13 @@ main = Log.withLogger $ do
     ""    -> Log.mixlog_ "WARNING: no Mixpanel token present!" >> return Nothing
     token -> return $ Just $ processMixpanelEvent token
 
-  let cronQueue :: ConsumerConfig (Log.LogT IO) JobType CronJob
+  let inDB :: CryptoRNGT (DBT (Log.LogT IO)) r -> Log.LogT IO r
+      inDB = withPostgreSQL connPool . runCryptoRNGT rng
+
+      runScheduler :: Scheduler r -> Log.LogT IO r
+      runScheduler = inDB . CronEnv.runScheduler appConf filecache templates
+
+      cronQueue :: ConsumerConfig (Log.LogT IO) JobType CronJob
       cronQueue = ConsumerConfig {
         ccJobsTable = "cron_jobs"
       , ccConsumersTable = "cron_workers"
@@ -80,7 +85,7 @@ main = Log.withLogger $ do
       , ccJobFetcher = cronJobFetcher
       , ccJobIndex = cjType
       , ccNotificationChannel = Nothing
-      , ccNotificationTimeout = 1500000
+      , ccNotificationTimeout = 3 * 1000000
       , ccMaxRunningJobs = 10
       , ccProcessJob = \CronJob{..} -> do
         Log.mixlog_ $ "Processing" <+> show cjType <> "..."
@@ -101,9 +106,6 @@ main = Log.withLogger $ do
           ClockErrorCollection -> do
             withPostgreSQL connPool $ collectClockError (ntpServers appConf)
             return . RetryAfter $ ihours 1
-          DocumentAPICallbackEvaluation -> do
-            runScheduler $ actionQueue documentAPICallback
-            return . RetryAfter $ iseconds 2
           DocumentAutomaticRemindersEvaluation -> do
             runScheduler $ actionQueue documentAutomaticReminder
             return . RetryAfter $ iminutes 1
@@ -165,7 +167,7 @@ main = Log.withLogger $ do
             return . RetryAfter $ ihours 1
         Log.mixlog_ $ show cjType <+> "finished successfully."
         return $ Ok action
-      , ccOnException = \CronJob{..} -> case cjAttempts of
+      , ccOnException = \CronJob{..} -> return $ case cjAttempts of
         1 -> RetryAfter $ iminutes 1
         2 -> RetryAfter $ iminutes 5
         3 -> RetryAfter $ iminutes 10
@@ -174,7 +176,9 @@ main = Log.withLogger $ do
         _ -> RetryAfter $ ihours 1
       }
 
-      logger domain msg = Log.mixlog_ $ domain <> ":" <+> msg
+      cronLogger domain msg = Log.mixlog_ $ "Cron:" <+> domain <> ":" <+> msg
+      apiCallbackLogger domain msg = Log.mixlog_ $ "API Callbacks:" <+> domain <> ":" <+> msg
 
-  withConsumer cronQueue connPool logger $ do
-    liftIO waitForTermination
+  withConsumer (documentAPICallback runScheduler) connPool apiCallbackLogger $ do
+    withConsumer cronQueue connPool cronLogger $ do
+      liftIO waitForTermination

@@ -201,7 +201,7 @@ spawnDispatcher ConsumerConfig{..} cs logger cid semaphore batches runningJobs =
     joinJob (job, joinFork) = joinFork >>= \case
       Right result -> return (ccJobIndex job, result)
       Left ex -> do
-        let action = ccOnException job
+        action <- ccOnException job
         logger $ "unexpected exception" <+> show ex <+> "caught while processing job" <+> show (ccJobIndex job) <> ", action:" <+> show action
         return (ccJobIndex job, Failed action)
 

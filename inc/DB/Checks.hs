@@ -363,7 +363,7 @@ checkDBConsistency logger domains tables migrations = do
             error $ "Earliest migration for table '" ++ tblNameString table ++ "' is from version " ++ show (mgrFrom m) ++ ", cannot migrate " ++ show ver ++ " -> " ++ show (tblVersion table)
           Just _ -> return ()
 
-      mapM_ (normalizePropertyNames logger) tables
+      --mapM_ (normalizePropertyNames logger) tables
 
       let migrationsToRun = filter (\m -> any (\(t, from) -> tblName (mgrTable m) == tblName t && mgrFrom m >= from) tablesWithVersions) migrations
 
@@ -377,7 +377,7 @@ checkDBConsistency logger domains tables migrations = do
             sqlSet "version" $ succ (mgrFrom migration)
             sqlWhereEq "name" $ tblNameString (mgrTable migration)
         logger "Running migrations... done."
-
+{-
 normalizePropertyNames :: (MonadDB m, MonadThrow m) => (String -> m ()) -> Table -> m ()
 normalizePropertyNames logger table@Table{..} = do
   runQuery_ $ sqlGetPrimaryKey table
@@ -417,7 +417,7 @@ normalizePropertyNames logger table@Table{..} = do
           , sqlAddFK tblName fk
           ]
         ]
-
+        -}
 checkTableVersion :: (MonadDB m, MonadThrow m) => Table -> m (Maybe Int32)
 checkTableVersion table = do
   doesExist <- runQuery01 . sqlSelect "pg_catalog.pg_class c" $ do

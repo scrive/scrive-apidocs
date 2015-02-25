@@ -18,7 +18,6 @@ data JobType
   | AmazonUpload
   | AsyncEventsProcessing
   | ClockErrorCollection
-  | DocumentAPICallbackEvaluation
   | DocumentAutomaticRemindersEvaluation
   | DocumentsPurge
   | DocumentsArchiveIdle
@@ -42,7 +41,6 @@ jobTypeMapper = [
   , (AmazonUpload, "amazon_upload")
   , (AsyncEventsProcessing, "async_events_processing")
   , (ClockErrorCollection, "clock_error_collection")
-  , (DocumentAPICallbackEvaluation, "document_api_callback_evaluation")
   , (DocumentAutomaticRemindersEvaluation, "document_automatic_reminders_evaluation")
   , (DocumentsPurge, "documents_purge")
   , (DocumentsArchiveIdle, "documents_archive_idle")

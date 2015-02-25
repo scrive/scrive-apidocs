@@ -1,10 +1,10 @@
-module Doc.API.Callback.Execute ( execute ) where
+module Doc.API.Callback.Execute (execute) where
 
-import Control.Applicative
 import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.Reader
 import Data.Maybe
+import Data.Monoid.Utils
 import Network.HTTP as HTTP
 import System.Exit
 import Text.JSON
@@ -14,11 +14,12 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL (toString, fromString)
 
 import Amazon
 import DB
-import Doc.API.Callback.DocumentAPICallback
+import Doc.API.Callback.Data
 import Doc.API.V1.DocumentToJSON
 import Doc.DocInfo
 import Doc.DocStateData
 import Doc.Model
+import OurPrelude
 import Salesforce.AuthorizationWorkflow
 import Salesforce.Conf
 import User.CallbackScheme.Model
@@ -28,17 +29,16 @@ import qualified Log
 
 execute :: (AmazonMonad m, MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, MonadReader c m, HasSalesforceConf c) => DocumentAPICallback -> m Bool
 execute DocumentAPICallback{..} = do
-  doc <- dbQuery $ GetDocumentByDocumentID dacDocumentID
-  do
-        case (join $ maybesignatory <$> getAuthorSigLink doc) of
-          Nothing -> return False
-          Just userid -> do
-             mcallbackschema <- dbQuery $ GetUserCallbackSchemeByUserID userid
-             case mcallbackschema of
-                  Just (SalesforceScheme rtoken) -> executeSalesforceCallback doc rtoken dacURL
-                  _ -> executeStandardCallback doc dacURL
+  doc <- dbQuery $ GetDocumentByDocumentID dacID
+  case (maybesignatory =<< getAuthorSigLink doc) of
+    Nothing -> $unexpectedErrorM $ "Document" <+> show dacID <+> "has no author"
+    Just userid -> do
+      mcallbackschema <- dbQuery $ GetUserCallbackSchemeByUserID userid
+      case mcallbackschema of
+        Just (SalesforceScheme rtoken) -> executeSalesforceCallback doc rtoken dacURL
+        _ -> executeStandardCallback doc dacURL
 
-executeStandardCallback :: (AmazonMonad m, MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, MonadReader c m, HasSalesforceConf c) => Document -> String -> m Bool
+executeStandardCallback :: (AmazonMonad m, MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m) => Document -> String -> m Bool
 executeStandardCallback doc url = do
   dJSON <- documentJSONV1 Nothing False True Nothing doc
   (exitcode, _ , stderr) <- readCurl

@@ -142,7 +142,7 @@ handleDeferredInvitation bd hostpart mc signlinkid email = do
         }
     Nothing -> return ()
 
-handleUndeliveredInvitation :: (CryptoRNG m,  MonadThrow m, Log.MonadLog m, DocumentMonad m, TemplatesMonad m) => BrandedDomain -> String -> MailsConfig -> SignatoryLinkID -> m ()
+handleUndeliveredInvitation :: (CryptoRNG m, MonadCatch m, Log.MonadLog m, DocumentMonad m, TemplatesMonad m) => BrandedDomain -> String -> MailsConfig -> SignatoryLinkID -> m ()
 handleUndeliveredInvitation bd hostpart mc signlinkid = do
   getSigLinkFor signlinkid <$> theDocument >>= \case
     Just signlink -> do
@@ -156,7 +156,7 @@ handleUndeliveredInvitation bd hostpart mc signlinkid = do
       triggerAPICallbackIfThereIsOne =<< theDocument
     Nothing -> return ()
 
-mailDeliveredInvitation :: (TemplatesMonad m,MonadDB m,MonadThrow m) => BrandedDomain -> String -> SignatoryLink -> Document -> m Mail
+mailDeliveredInvitation :: (TemplatesMonad m, MonadDB m, MonadThrow m) => BrandedDomain -> String -> SignatoryLink -> Document -> m Mail
 mailDeliveredInvitation bd hostpart signlink doc =do
   theme <- dbQuery $ GetTheme $ bdMailTheme bd
   kontramail bd theme "invitationMailDeliveredAfterDeferred" $ do
@@ -167,7 +167,7 @@ mailDeliveredInvitation bd hostpart signlink doc =do
     brandingMailFields theme
 
 
-mailDeferredInvitation ::(TemplatesMonad m,MonadDB m,MonadThrow m) => BrandedDomain -> String -> SignatoryLink -> Document -> m Mail
+mailDeferredInvitation ::(TemplatesMonad m, MonadDB m, MonadThrow m) => BrandedDomain -> String -> SignatoryLink -> Document -> m Mail
 mailDeferredInvitation bd hostpart sl doc = do
   theme <- dbQuery $ GetTheme $ bdMailTheme bd
   kontramail bd theme"invitationMailDeferred" $ do
@@ -179,7 +179,7 @@ mailDeferredInvitation bd hostpart sl doc = do
     brandingMailFields theme
 
 
-mailUndeliveredInvitation :: (TemplatesMonad m,MonadDB m,MonadThrow m) => BrandedDomain -> String -> SignatoryLink -> Document -> m Mail
+mailUndeliveredInvitation :: (TemplatesMonad m, MonadDB m, MonadThrow m) => BrandedDomain -> String -> SignatoryLink -> Document -> m Mail
 mailUndeliveredInvitation bd hostpart signlink doc =do
   theme <- dbQuery $ GetTheme $ bdMailTheme bd
   kontramail bd theme "invitationMailUndelivered" $ do

@@ -77,7 +77,6 @@ tableCronJobs = tblTable {
       , "amazon_upload"
       , "async_events_processing"
       , "clock_error_collection"
-      , "document_api_callback_evaluation"
       , "document_automatic_reminders_evaluation"
       , "documents_purge"
       , "documents_archive_idle"

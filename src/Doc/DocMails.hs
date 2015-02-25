@@ -157,7 +157,7 @@ sendInvitationEmail1 authorsiglink = do
 {- |
     Send a reminder email (and update the modification time on the document)
 -}
-sendReminderEmail :: (Log.MonadLog m, MonadThrow m, TemplatesMonad m, CryptoRNG m, DocumentMonad m, MailContextMonad m) =>
+sendReminderEmail :: (Log.MonadLog m, MonadCatch m, TemplatesMonad m, CryptoRNG m, DocumentMonad m, MailContextMonad m) =>
                           Maybe String -> Actor -> Bool -> SignatoryLink  -> m SignatoryLink
 sendReminderEmail custommessage  actor automatic siglink = do
   mctx <- getMailContext
@@ -278,7 +278,7 @@ sendRejectEmails customMessage signalink document = do
    Send reminder to all parties in document that can sign
  -}
 
-sendAllReminderEmails :: (Log.MonadLog m, TemplatesMonad m, MonadThrow m, CryptoRNG m, DocumentMonad m, MailContextMonad m) =>
+sendAllReminderEmails :: (Log.MonadLog m, TemplatesMonad m, MonadCatch m, CryptoRNG m, DocumentMonad m, MailContextMonad m) =>
                           Actor -> Bool -> m [SignatoryLink]
 sendAllReminderEmails = sendAllReminderEmailsWithFilter (const True)
 
@@ -287,14 +287,14 @@ sendAllReminderEmails = sendAllReminderEmailsWithFilter (const True)
    Send reminder to all parties in document that can sign, except author
  -}
 
-sendAllReminderEmailsExceptAuthor :: (Log.MonadLog m, TemplatesMonad m, MonadThrow m, CryptoRNG m, DocumentMonad m, MailContextMonad m) =>
+sendAllReminderEmailsExceptAuthor :: (Log.MonadLog m, TemplatesMonad m, MonadCatch m, CryptoRNG m, DocumentMonad m, MailContextMonad m) =>
                                         Actor -> Bool -> m [SignatoryLink]
 sendAllReminderEmailsExceptAuthor  = sendAllReminderEmailsWithFilter (not . isAuthor)
 
 {- |
    Send reminder to all parties in document - excluding ones that do not pass given filter
  -}
-sendAllReminderEmailsWithFilter :: (Log.MonadLog m, TemplatesMonad m, MonadThrow m, CryptoRNG m, DocumentMonad m, MailContextMonad m) =>
+sendAllReminderEmailsWithFilter :: (Log.MonadLog m, TemplatesMonad m, MonadCatch m, CryptoRNG m, DocumentMonad m, MailContextMonad m) =>
                                         (SignatoryLink -> Bool) -> Actor -> Bool -> m [SignatoryLink]
 sendAllReminderEmailsWithFilter f actor automatic = do
     ifM (isPending <$> theDocument)

@@ -11,6 +11,7 @@ module DB.Model.ForeignKey (
 import Data.Monoid
 import Data.Monoid.Utils
 import Database.PostgreSQL.PQTypes
+import qualified Data.ByteString as BS
 import qualified Data.Set as S
 
 data ForeignKey = ForeignKey {
@@ -47,7 +48,7 @@ fkOnColumns columns reftable refcolumns = ForeignKey {
 }
 
 fkName :: RawSQL () -> ForeignKey -> RawSQL ()
-fkName tname ForeignKey{..} = mconcat [
+fkName tname ForeignKey{..} = shorten $ mconcat [
     "fk__"
   , tname
   , "__"
@@ -55,6 +56,9 @@ fkName tname ForeignKey{..} = mconcat [
   , "__"
   , fkRefTable
   ]
+  where
+    -- PostgreSQL's limit for identifier is 63 characters
+    shorten = flip rawSQL () . BS.take 63 . unRawSQL
 
 sqlAddFK :: RawSQL () -> ForeignKey -> RawSQL ()
 sqlAddFK tname fk@ForeignKey{..} = mconcat [

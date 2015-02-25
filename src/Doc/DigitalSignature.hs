@@ -72,7 +72,7 @@ addDigitalSignature = theDocumentID >>= \did ->
     dbUpdate $ AppendSealedFile sealedfileid status $ systemActor now
 
 -- | Extend a document: replace the digital signature with a keyless one.  Trigger callbacks.
-extendDigitalSignature :: (MonadBaseControl IO m, MonadIO m, MonadThrow m, Log.MonadLog m, MonadReader SchedulerData m, CryptoRNG m, DocumentMonad m, AmazonMonad m) => m ()
+extendDigitalSignature :: (MonadBaseControl IO m, MonadIO m, MonadCatch m, Log.MonadLog m, MonadReader SchedulerData m, CryptoRNG m, DocumentMonad m, AmazonMonad m) => m ()
 extendDigitalSignature = do
   Just file <- documentsealedfileM =<< theDocument
   did <- theDocumentID

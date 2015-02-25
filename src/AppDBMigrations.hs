@@ -190,6 +190,8 @@ kontraMigrations = [
   , addThemesAndOthersToCompanyUIs
   , removeSMSOriginatorFromCompany
   , changeScriveLoginLogo
+  , createTableDocumentApiCallbackConsumers
+  , updateApiCallbacksForNewConsumer
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

@@ -6,95 +6,97 @@ module Doc.API.Callback.Model (
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Base
 import Control.Monad.Catch
+import Control.Monad.IO.Class
+import Control.Monad.State
 import Data.Int
+import Data.Monoid.Utils
 
-import ActionQueue.Core
 import ActionQueue.Scheduler
 import DB
-import Doc.API.Callback.DocumentAPICallback
+import Doc.API.Callback.Data
 import Doc.API.Callback.Execute
-import Doc.API.Callback.Tables
 import Doc.DocStateData
 import Doc.DocumentID
-import MinutesTime
+import JobQueue.Config
+import OurPrelude
 import User.CallbackScheme.Model
 import Util.SignatoryLinkUtils
 import qualified Log
 
-documentAPICallback :: Action DocumentID DocumentAPICallback (DocumentID, String) Scheduler
-documentAPICallback = Action {
-    qaTable = tableDocumentApiCallbacks
-  , qaSetFields = \(did, url) -> do
-      sqlSet "document_id" did
-      sqlSet "url" url
-      sqlSet "attempt" (1::Int32)
-  , qaSelectFields = ["document_id", "expires", "url", "attempt"]
-  , qaIndexField = "document_id"
-  , qaExpirationDelay = "5 minutes" -- not really needed
-  , qaDecode = \(document_id, expires, url, attempt) -> DocumentAPICallback {
-      dacDocumentID = document_id
-    , dacExpires = expires
-    , dacURL = url
-    , dacAttempt = attempt
-    }
-  , qaUpdateSQL = \DocumentAPICallback{..} -> toSQLCommand $ sqlUpdate "document_api_callbacks" $ do
-      sqlSet "expires" dacExpires
-      sqlSet "url" dacURL
-      sqlSet "attempt" dacAttempt
-      sqlWhereEq (qaIndexField documentAPICallback) dacDocumentID
-  , qaEvaluateExpired = evaluateDocumentCallback
+documentAPICallback :: (MonadIO m, MonadBase IO m, Log.MonadLog m, MonadMask m)
+  => (forall r. Scheduler r -> m r)
+  -> ConsumerConfig m DocumentID DocumentAPICallback
+documentAPICallback runExecute = ConsumerConfig {
+  ccJobsTable = "document_api_callbacks"
+, ccConsumersTable = "document_api_callback_consumers"
+, ccJobSelectors = ["id", "url", "attempts"]
+, ccJobFetcher = \(did, url, attempts) -> DocumentAPICallback {
+    dacID = did
+  , dacURL = url
+  , dacAttempts = attempts
   }
+, ccJobIndex = dacID
+, ccNotificationChannel = Just apiCallbackNotificationChannel
+, ccNotificationTimeout = 60 * 1000000
+, ccMaxRunningJobs = 32
+, ccProcessJob = \dac -> runExecute (execute dac) >>= \case
+  True -> return $ Ok Remove
+  False -> Failed <$> onFailure (dacAttempts dac)
+, ccOnException = onFailure . dacAttempts
+}
   where
-    evaluateDocumentCallback dac@DocumentAPICallback{..} = do
-      res <- execute dac
-      case res of
-        True -> deleteAction
-        False -> do
-          case dacAttempt of
-            1 -> evaluateAgainAfter 5
-            2 -> evaluateAgainAfter 10
-            3 -> evaluateAgainAfter 30
-            4 -> evaluateAgainAfter 60
-            5 -> evaluateAgainAfter 120
-            6 -> evaluateAgainAfter 240
-            7 -> evaluateAgainAfter 240
-            8 -> evaluateAgainAfter 240
-            9 -> evaluateAgainAfter 480
-            _ -> do
-              Log.mixlog_ "10th call attempt failed, discarding."
-              deleteAction
-      where
-        deleteAction = do
-          _ <- dbUpdate $ DeleteAction documentAPICallback dacDocumentID
-          return ()
-        evaluateAgainAfter n = do
-          Log.mixlog_ $ "Deferring call for " ++ show n ++ " minutes"
-          expires <- minutesAfter n <$> currentTime
-          _ <- dbUpdate . UpdateAction documentAPICallback $ dac {
-              dacExpires = expires
-            , dacAttempt = dacAttempt + 1
-          }
-          return ()
+    onFailure attempts = case attempts of
+      1 -> return . RetryAfter $ iminutes 5
+      2 -> return . RetryAfter $ iminutes 10
+      3 -> return . RetryAfter $ iminutes 30
+      4 -> return . RetryAfter $ ihours 1
+      5 -> return . RetryAfter $ ihours 2
+      6 -> return . RetryAfter $ ihours 4
+      7 -> return . RetryAfter $ ihours 4
+      8 -> return . RetryAfter $ ihours 4
+      9 -> return . RetryAfter $ ihours 8
+      _ -> do
+        Log.mixlog_ "10th call attempt failed, discarding."
+        return Remove
 
+triggerAPICallbackIfThereIsOne :: (MonadDB m, MonadCatch m, Log.MonadLog m)
+  => Document -> m ()
+triggerAPICallbackIfThereIsOne doc@Document{..} = case documentapicallbackurl of
+  Just url -> addAPICallback url
+  Nothing -> case (maybesignatory =<< getAuthorSigLink doc) of
+    -- FIXME: this should be modified so it's not Maybe
+    Just userid -> do
+      mcallbackschema <- dbQuery $ GetUserCallbackSchemeByUserID userid
+      case mcallbackschema of
+        Just (ConstantUrlScheme url) -> addAPICallback url
+        _ -> return () -- No callback defined for document nor user.
+    Nothing -> $unexpectedErrorM $ "Document" <+> show documentid <+> "has no author"
 
-triggerAPICallbackIfThereIsOne :: (MonadDB m, MonadThrow m, Log.MonadLog m) => Document -> m ()
-triggerAPICallbackIfThereIsOne doc = do
-      case (documentapicallbackurl doc) of
-        Nothing -> do
-          case (join $ maybesignatory <$> getAuthorSigLink doc) of
-            Nothing -> return () --This should never happend
-            Just userid -> do
-             mcallbackschema <- dbQuery $ GetUserCallbackSchemeByUserID userid
-             case mcallbackschema of
-                 Just (ConstantUrlScheme url) -> addAPICallback url
-                 _ -> return () -- No callback defined for document and for user
-        Just url -> addAPICallback url
   where
     addAPICallback url = do
-          -- Race condition. Andrzej said that he can fix it later.
-          Log.mixlog_ $ "Triggering API callback for document " ++ show (documentid doc)
-          now <- currentTime
-          _ <- dbUpdate $ DeleteAction documentAPICallback (documentid doc)
-          _ <- dbUpdate $ NewAction documentAPICallback now (documentid doc, url)
-          return ()
+      Log.mixlog_ $ "Triggering API callback for document " ++ show documentid
+      dbUpdate $ MergeAPICallback documentid url
+
+----------------------------------------
+
+apiCallbackNotificationChannel :: Channel
+apiCallbackNotificationChannel = "api_callback"
+
+data MergeAPICallback = MergeAPICallback DocumentID String
+instance (MonadDB m, MonadCatch m) => DBUpdate m MergeAPICallback () where
+  update (MergeAPICallback did url) = loopOnUniqueViolation $ do
+    updated <- runQuery01 . sqlUpdate "document_api_callbacks" $ do
+      setFields
+      sqlWhereEq "id" did
+    when (not updated) $ do
+      runQuery_ $ sqlInsert "document_api_callbacks" setFields
+    notify apiCallbackNotificationChannel ""
+    where
+      setFields :: (MonadState v n, SqlSet v) => n ()
+      setFields = do
+        sqlSet "id"  did
+        sqlSetCmd "run_at" "now()"
+        sqlSet "url" url
+        sqlSet "attempts" (0::Int32)

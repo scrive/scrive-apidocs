@@ -7,8 +7,11 @@ module JobQueue.Config (
 
 import Database.PostgreSQL.PQTypes
 
-data Action = MarkProcessed | RetryAfter Interval | Remove
-  deriving (Eq, Ord, Show)
+data Action
+  = MarkProcessed
+  | RetryAfter Interval
+  | Remove
+    deriving (Eq, Ord, Show)
 
 data Result = Ok Action | Failed Action
   deriving (Eq, Ord, Show)
@@ -23,5 +26,5 @@ data ConsumerConfig m idx job = forall row. FromRow row => ConsumerConfig {
 , ccNotificationTimeout   :: !Int
 , ccMaxRunningJobs        :: !Int
 , ccProcessJob            :: !(job -> m Result)
-, ccOnException           :: !(job -> Action)
+, ccOnException           :: !(job -> m Action)
 }

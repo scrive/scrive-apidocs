@@ -87,6 +87,7 @@ kontraTables =
   , tablePaymentPlans
   , tableAttachments
   , tablePaymentStats
+  , tableDocumentApiCallbackConsumers
   , tableDocumentApiCallbacks
   , tableSessions
   , tableDocumentSessionTokens

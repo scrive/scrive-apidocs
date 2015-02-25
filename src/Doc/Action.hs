@@ -333,7 +333,7 @@ saveDocumentForSignatories =
 
 -- | Time out documents once per day after midnight.  Do it in chunks
 -- so that we don't choke the server in case there are many documents to time out
-findAndTimeoutDocuments :: (MonadBaseControl IO m, MonadReader SchedulerData m, MonadIO m, MonadDB m, MonadThrow m, Log.MonadLog m) => m ()
+findAndTimeoutDocuments :: (MonadBaseControl IO m, MonadReader SchedulerData m, MonadIO m, MonadDB m, MonadCatch m, Log.MonadLog m) => m ()
 findAndTimeoutDocuments = do
   now <- currentTime
   docs <- dbQuery $ GetTimeoutedButPendingDocumentsChunk now 100
