@@ -2,10 +2,10 @@
 
 To add a new cron task, the following steps are necessary:
 
-1. Add a row corresponding to the task to Cron.Tables.tableCronTasks.tblInitialData.
+1. Add a row corresponding to the task to Cron.Tables.tableCronTasks.tblInitialSetup.
 2. Write a migration that adds the same row to the existing table.
-3. Add a type constructor corresponding to the task to Cron.Model.TaskType
-4. Update Cron.Model.taskTypeBSRelation.
+3. Add a type constructor corresponding to the task to Cron.Model.JobType.
+4. Update Cron.Model.jobTypeMapper.
 5. Update dispatcher function in the main cron module.
 
 -}
@@ -42,8 +42,7 @@ tableCronWorkers = tblTable {
   , tblPrimaryKey = pkOnColumn "id"
   }
 
--- | The place for cron configuration, i.e. list of
--- tasks to be run along with their frequencies etc.
+-- | The place for cron jobs.
 tableCronJobs :: Table
 tableCronJobs = tblTable {
     tblName = "cron_jobs"

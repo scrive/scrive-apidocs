@@ -13,6 +13,7 @@ import Database.PostgreSQL.PQTypes
 
 import JobQueue.Config
 
+-- | ID of a consumer.
 newtype ConsumerID = ConsumerID Int64
   deriving (Eq, Ord, PQFormat)
 instance FromSQL ConsumerID where
@@ -25,6 +26,8 @@ instance ToSQL ConsumerID where
 instance Show ConsumerID where
   showsPrec p (ConsumerID n) = ("#" ++) . showsPrec p n
 
+-- | Register consumer in the consumers table,
+-- so that it can reserve jobs using acquired ID.
 registerConsumer
   :: (MonadBase IO m, MonadMask m)
   => ConsumerConfig m idx job
@@ -38,6 +41,7 @@ registerConsumer cc cs = runDBT cs ts $ do
     ]
   fetchOne runIdentity
 
+-- | Unregister consumer with a given ID.
 unregisterConsumer
   :: (MonadBase IO m, MonadMask m)
   => ConsumerConfig m idx job

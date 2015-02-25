@@ -16,7 +16,8 @@ updateApiCallbacksForNewConsumer = Migration {
   runQuery_ $ alterTable ["RENAME COLUMN expires TO run_at"]
   runQuery_ $ alterTable ["RENAME COLUMN attempt TO attempts"]
   runQuery_ $ alterTable [
-      sqlAddColumn tblColumn { colName = "reserved_by", colType = BigIntT }
+      sqlAddColumn tblColumn { colName = "finished_at", colType = TimestampWithZoneT }
+    , sqlAddColumn tblColumn { colName = "reserved_by", colType = BigIntT }
     , sqlAddFK tblName $ (fkOnColumn "reserved_by" "document_api_callback_consumers" "id") {
         fkOnDelete = ForeignKeySetNull
       }
