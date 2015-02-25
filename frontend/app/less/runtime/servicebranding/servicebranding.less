@@ -8,7 +8,7 @@
 @import 'runtime/servicebranding/designview';
 
 .sharedIcon {
-  @url : %('/branded_image?file=shared.png&color=%D',@positivecolor);
+  @url : %('/colored_image?file=shared.png&color=%D',@positivecolor);
   background : url(@url) ;
   display: block;
   height: 14px;
@@ -17,7 +17,7 @@
 }
 
 .icon.delete {
-  @url : %('/branded_image?file=icon-delete.png&color=%D',@negativecolor);
+  @url : %('/colored_image?file=icon-delete.png&color=%D',@negativecolor);
   background : url(@url) 0 0 no-repeat;
   display: block;
   height: 16px;

@@ -45,8 +45,10 @@
     }
 
     .select-button-right {
-      background: url(~"@{img-base-url}/select-arrow.png") no-repeat;
+      @url : %('/colored_image?file=select-arrow.png&color=%D',@gray-border);
+      background-image: url(@url);
       background-position: 0 11px;
+      background-repeat: no-repeat;
       float: right;
       height: 34px;
       position: relative;

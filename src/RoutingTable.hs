@@ -186,7 +186,7 @@ staticRoutes production = choice
      , dir "serialize_image" $ hPost $ toK0 $ ServerUtils.handleSerializeImage
      , dir "scale_image" $ hPost $ toK0 $ ServerUtils.handleScaleImage
      , dir "text_to_image" $ hGet $ toK0 $ ServerUtils.handleTextToImage
-     , dir "branded_image" $ hGet $ toK0 $ ServerUtils.brandedImage
+     , dir "colored_image" $ hGet $ toK0 $ ServerUtils.brandedImage
 
 
      , dir "document_signview_branding" $ hGet $ toK4 $ Branding.handleSignviewBranding
