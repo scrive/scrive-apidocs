@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React', 'common/backbone_mixin','lists/list','legacy_code'], function(React, BackboneMixin, List) {
+define(['React','lists/list','legacy_code'], function(React, List) {
 
 return React.createClass({
     addAttachment : function(title,file) {

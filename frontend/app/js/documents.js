@@ -257,7 +257,7 @@ window.Document = Backbone.Model.extend({
     },
     setInvitationMessage: function(customtext)
     {
-        this.set({invitationmessage: $(customtext).text() != "" ? customtext : ""},{silent: true});
+        this.set({invitationmessage: customtext });
     },
     invitationmessage : function() {
         return this.get("invitationmessage");
@@ -271,7 +271,7 @@ window.Document = Backbone.Model.extend({
     },
     setConfirmationMessage: function(customtext)
     {
-        this.set({confirmationmessage: $(customtext).text() != "" ? customtext : ""},{silent: true});
+        this.set({confirmationmessage: customtext });
     },
     confirmationmessage : function() {
         return this.get("confirmationmessage");

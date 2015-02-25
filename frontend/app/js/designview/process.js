@@ -6,7 +6,7 @@
 
 **/
 
-define(['Backbone', 'React', 'common/customtexteditor', 'designview/signviewsettings',  'tinyMCE', 'tinyMCE_theme', 'tinyMCE_noneeditable', 'tinyMCE_paste', 'legacy_code'], function(Backbone, React, CustomTextEditor, SignviewSettings,  tinyMCE) {
+define(['Backbone', 'React', 'designview/messagesettings', 'designview/signviewsettings', 'legacy_code'], function(Backbone, React, MessageSettings, SignviewSettings ) {
     /**
         model is DocViewModel
     **/
@@ -16,7 +16,7 @@ define(['Backbone', 'React', 'common/customtexteditor', 'designview/signviewsett
             var view = this;
             _.bindAll(this, 'render', 'updateDaysToSign', 'updateDaysToRemind');
             view.render();
-            view.model.document().bind('change', view.render);
+           // view.model.document().bind('change', view.render);
             view.model.document().bind('change:daystosign', view.updateDaysToSign);
             view.model.document().bind('change:daystoremind', view.updateDaysToRemind);
         },
@@ -58,10 +58,6 @@ define(['Backbone', 'React', 'common/customtexteditor', 'designview/signviewsett
             div.append(view.invitationAndConfirmationBox());
 
             return div;
-        },
-        rerenderMiddleColumn: function() {
-          var view = this;
-          view.middleColumnDiv.html('').append(view.invitationAndConfirmationBox());
         },
         rightColumn: function() {
             var view = this;
@@ -354,86 +350,14 @@ define(['Backbone', 'React', 'common/customtexteditor', 'designview/signviewsett
             return div;
         },
         invitationAndConfirmationBox: function() {
-           var view = this;
-            var viewmodel = view.model;
-            var doc = viewmodel.document();
-
-            var div = $('<div />');
-
-            // If the document is not ready, don't initialize tinyMCE for invitation or confirmation boxes.
-            // If we do, it leads to race conditions within tinyMCE as we remove/init 3 times in a normal pageload to design view.
-            if (!doc.ready()) { return div; }
-
-            if (view.invitationmessagewrapper != undefined) React.unmountComponentAtNode(view.invitationmessagewrapper[0]);
-            view.invitationmessagewrapper = $('<div />');
-
-            var emailInvitationMessageEditable = _.any(doc.signatories(), function(s) { return s.emailDelivery() || s.emailMobileDelivery();});
-
-            React.render(React.createElement(CustomTextEditor,{
-              id : 'design-view-action-process-right-column-invitation-editor',
-              customtext : doc.invitationmessage(),
-              editable : emailInvitationMessageEditable,
-              width: view.middleColumnDiv.width(),
-              label: localization.designview.customMessage.invitation,
-              previewLabel : localization.designview.customMessage.preview,
-              onChange: function(c) {doc.setInvitationMessage(c);},
-              placeholder :  localization.designview.editInvitation,
-              disabledPlaceholder : localization.designview.editMessagePlaceholder,
-              onPreview : function() {
-                mixpanel.track('Open invitation preview');
-                doc.save();
-                doc.afterSave(function() {
-                var popup = ConfirmationWithEmail.popup({
-                              editText: '',
-                              title: localization.designview.customMessage.invitation,
-                              mail: doc.inviteMail(),
-                              onAccept: function() {
-                                popup.close();
-                              }
-                            });
-                });
-              }
-            }), view.invitationmessagewrapper[0]);
-
-
-
-            if (view.confirmationmessagewrapper != undefined) React.unmountComponentAtNode(view.confirmationmessagewrapper[0]);
-            view.confirmationmessagewrapper = $("<div style='margin-top:15px'/>");
-
-            var emailConfirmationMessageEditable = _.any(doc.signatories(), function(s) { return s.emailConfirmationDelivery() || s.emailMobileConfirmationDelivery();});
-
-            React.render(React.createElement(CustomTextEditor,{
-              id : 'design-view-action-process-right-column-confirmation-editor',
-              customtext : doc.confirmationmessage(),
-              editable : emailConfirmationMessageEditable,
-              width: view.middleColumnDiv.width(),
-              label: localization.designview.customMessage.confirmation,
-              previewLabel : localization.designview.customMessage.preview,
-              placeholder :  localization.designview.editConfirmation,
-              disabledPlaceholder : localization.designview.editMessagePlaceholder,
-              onChange: function(c) {doc.setConfirmationMessage(c);},
-              onPreview : function() {
-                mixpanel.track('Open confirmation preview');
-                doc.save();
-                doc.afterSave(function() {
-                var popup = ConfirmationWithEmail.popup({
-                              editText: '',
-                              title: localization.designview.customMessage.confirmation,
-                              mail: doc.confirmMail(),
-                              onAccept: function() {
-                                popup.close();
-                              }
-                            });
-                });
-              }
-            }), view.confirmationmessagewrapper[0]);
-
-
-
-            div.append(view.invitationmessagewrapper);
-            div.append(view.confirmationmessagewrapper);
-
-            return div.children();
+            var view = this;
+            if (this.messagebox == undefined) {
+              this.messagebox = $('<div />');
+              React.render(React.createElement(MessageSettings,{
+                document:  this.model.document()
+              }), this.messagebox[0]);
+            }
+            return this.messagebox;
         }
     });
 

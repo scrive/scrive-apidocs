@@ -3,14 +3,17 @@
  *
  */
 
-define(['Backbone', 'legacy_code'], function() {
+define(['Backbone',  'React', 'designview/processsettings' , 'legacy_code'], function(Backbone, React, ProcessSettings) {
 
 window.DesignViewTabsView = function(args) {
   var model = args.model;
   var document = model.document();
   var participantsView = new DesignViewParticipantsView({ model : model});
   var draggablesView   = new DesignViewDraggablesView({ model : model});
-  var processView      = new DesignViewProcessView({ model : model });
+  var processSettingsEl      = $("<div/>");
+  var processSettings = React.render(React.createElement(ProcessSettings,{
+    model: model
+  }), processSettingsEl[0]);
   var tab1Name = $("<div class='design-view-tab-text'/>")
                       .text(localization.designview.editParticipants);
   var tab2Name = $("<div class='design-view-tab-text'/>")
@@ -50,10 +53,7 @@ window.DesignViewTabsView = function(args) {
   var tab3 = new Tab({
           name: tab3Name,
           pagehash : "process",
-          elems: [ $("<div class='design-view-tab-center' />").append($(processView.el))],
-          onShow : function() {
-              processView.rerenderMiddleColumn();
-            },
+          elems: [ $("<div class='design-view-tab-center' />").append(processSettingsEl)],
           onActivate : function() {
                mixpanel.track('Click tab', {
                         Action: 'Open',
@@ -69,7 +69,7 @@ window.DesignViewTabsView = function(args) {
       canHaveNoActiveTab : true,
       slideEffect : true,
       beforeEachChange : function() {
-        processView.hideAllCalendars();
+        processSettings.hideAllCalendars();
       }
   });
   document.bind('change:ready change:file', function() {

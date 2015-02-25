@@ -36,7 +36,6 @@ module InputValidation
 
 import Control.Applicative
 import Data.Char
-import Data.Maybe
 import Data.Monoid
 import Data.String.Utils
 import Numeric
@@ -541,26 +540,19 @@ asValidInviteText input =
           parseAndFixAsXml :: String -> Result String
           parseAndFixAsXml xs =
             case xmlParse' "asValidInviteText" $ "<p>" ++ xs ++ "</p>" of
-              (Right (Document _ _ (Elem _ _ cs) _)) -> Good $ concatMap (render . content) $ catMaybes $ map fixContent cs
+              (Right (Document _ _ (Elem _ _ cs) _)) -> Good $ (concatMap fixContent cs)
               _ -> let xsWithFixedBRs = replace "<BR>" "<BR/>" $ replace "<br>" "<br/>" xs
                    in if xsWithFixedBRs /= xs
                          then parseAndFixAsXml xsWithFixedBRs
                          else Good $ justText xs
-          fixContent :: Content Posn -> Maybe (Content Posn)
-          fixContent (CElem (Elem (N name) atts cs) i) = Just (CElem (Elem (N $ validName name) (catMaybes $ map validAttribute atts) (catMaybes $ map fixContent cs) ) i)
-          fixContent x@(CString _ _ _) = Just x
-          fixContent x@(CRef _ _) = Just x
-          fixContent _ = Nothing
-          validName :: Name -> Name
-          validName n = if ((map toLower n) `elem` ["br", "em", "li", "ol", "p", "span", "strong", "ul", "div"])
-                           then n
-                           else "span"
-          validAttribute :: Attribute -> Maybe Attribute
-          validAttribute a@(N "style", AttValue (Left v:[])) = if (map toLower v) `elem` ["text-decoration: underline;",
-                                                                                 "text-decoration: line-through;"]
-                                                                then Just a
-                                                                else Nothing
-          validAttribute _ = Nothing
+          fixContent :: Content Posn -> String
+          fixContent (CElem (Elem (N "div") _ cs) _) = (concatMap fixContent cs) ++ " \n"
+          fixContent (CElem (Elem (N "p") _ cs) _)   = (concatMap fixContent cs) ++ " \n"
+          fixContent (CElem (Elem (N "br") _ cs) _)  = (concatMap fixContent cs) ++ " \n"
+          fixContent (CElem (Elem (N _) _ cs) _)     = (concatMap fixContent cs)
+          fixContent x@(CString _ _ _)               = render $ content x
+          fixContent x@(CRef _ _)                    = render $ content x
+          fixContent _ = ""
           justText ('<':cs) = justText $ drop 1 $ dropWhile (/= '>') cs
           justText (c:cs) = c : justText cs
           justText [] = []
