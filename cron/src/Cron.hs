@@ -147,15 +147,18 @@ main = Log.withLogger $ do
             runScheduler $ actionQueue passwordReminder
             return . RetryAfter $ ihours 1
           RecurlySynchronization -> do
-            inDB $ do
+            time <- inDB $ do
               time <- currentTime
-              ltime <- liftIO $ utcToLocalZonedTime time
               temps <- snd <$> readMVar templates
-              when ((todHour . localTimeOfDay . zonedTimeToLocalTime) ltime == 0) $ do -- midnight
-                handleSyncWithRecurly appConf (mailsConfig appConf)
-                  temps (recurlyAPIKey $ recurlyConfig appConf) time
-                handleSyncNoProvider time
-            return . RetryAfter $ iminutes 55
+              handleSyncWithRecurly appConf (mailsConfig appConf)
+                temps (recurlyAPIKey $ recurlyConfig appConf) time
+              handleSyncNoProvider time
+              return time
+            -- retry the next day at midnight
+            return $ RetryAt UTCTime {
+              utctDay = 1 `addDays` utctDay time
+            , utctDayTime = 0
+            }
           SessionsEvaluation -> do
             runScheduler $ actionQueue session
             return . RetryAfter $ ihours 1
