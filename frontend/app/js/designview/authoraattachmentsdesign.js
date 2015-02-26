@@ -1,6 +1,6 @@
 /* This is component for uploding author attachments (with upload and for server attachments).
  */
-define(['React','designview/attachmentslist','Backbone', 'legacy_code'], function(React,AttachmentsList) {
+define(['React','designview/processsettings/attachmentslistformodal','Backbone', 'legacy_code'], function(React,AttachmentsListForModal) {
 
 window.DesignAuthorAttachment = Backbone.Model.extend({
   defaults : {
@@ -137,7 +137,7 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
         });
         box.append(arrowBack);
         var attachmentTable = $('<div/>');
-        React.render(React.createElement(AttachmentsList,{model : attachmentsList}), attachmentTable[0]);
+        React.render(React.createElement(AttachmentsListForModal,{model : attachmentsList}), attachmentTable[0]);
         box.append(attachmentTable);
         return box;
     },
@@ -205,7 +205,7 @@ window.DesignAuthorAttachmentsPopup = function(args) {
                       submit.sendAjax(
                         function() {
                             document.recall(function() {
-                                document.trigger("change:attachments");
+                                document.trigger("change");
                                 LoadingDialog.close();
                                 viewmodel.saveAndFlashMessageIfAlreadySaved();
                                 popup.close();

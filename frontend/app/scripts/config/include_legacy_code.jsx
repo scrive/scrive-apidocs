@@ -75,8 +75,6 @@ define([
   '../js/designview/docdesignview',
   '../js/designview/authoraattachmentsdesign',
   '../js/designview/signatoryattachmentsdesignview',
-  '../js/designview/attachmentslist',
-  '../js/designview/process',
   '../js/designview/designviewtabs',
   '../js/designview/csvsignatorydesign',
   '../js/designview/firsttimeuserexperience',

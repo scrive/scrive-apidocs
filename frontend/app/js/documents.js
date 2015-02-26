@@ -154,16 +154,13 @@ window.Document = Backbone.Model.extend({
         return this.get("title");
     },
     setTitle: function(title) {
-        this.set({title: title}, {silent: true});
+        this.set({title: title});
     },
     daystosign: function() {
           return this.get("daystosign");
     },
     setDaystosign: function(daystosign) {
-         var old = this.get("daystosign");
-         this.set({"daystosign": daystosign}, {silent: true});
-         if (old != this.get("daystosign"))
-           this.trigger('change:daystosign');
+         this.set({"daystosign": daystosign});
          if (this.daystoremind() != undefined && this.daystoremind() > daystosign)
            this.setDaystoremind(undefined);
     },
@@ -172,10 +169,7 @@ window.Document = Backbone.Model.extend({
     },
     setDaystoremind: function(daystoremind) {
          var old = this.get("daystoremind");
-         this.set({"daystoremind": daystoremind == undefined || isNaN(daystoremind) ? undefined : Math.min(this.daystosign(),daystoremind)}, {silent: true});
-         if (old != this.get("daystoremind") || daystoremind != this.get("daystoremind"))
-           this.trigger('change:daystoremind');
-
+         this.set({"daystoremind": daystoremind == undefined ? undefined : Math.min(this.daystosign(),daystoremind)});
     },
     showheader: function() {
       return this.get("showheader");
@@ -710,7 +704,7 @@ window.Document = Backbone.Model.extend({
        lang: (function() {
            var lang = new DocLang({lang : args.lang});
            lang.on('change', function() {
-               self.trigger('change:lang');
+               self.trigger('change');
            });
            return lang;
        }()),

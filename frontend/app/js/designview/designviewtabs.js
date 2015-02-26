@@ -3,7 +3,7 @@
  *
  */
 
-define(['Backbone',  'React', 'designview/processsettings' , 'legacy_code'], function(Backbone, React, ProcessSettings) {
+define(['Backbone',  'React', 'designview/processsettings/processsettings' , 'legacy_code'], function(Backbone, React, ProcessSettings) {
 
 window.DesignViewTabsView = function(args) {
   var model = args.model;

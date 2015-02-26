@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React', 'common/backbone_mixin','common/customtexteditor','legacy_code'], function(React, BackboneMixin, CustomTextEditor) {
+define(['React', 'common/backbone_mixin','designview/processsettings/customtexteditor','legacy_code'], function(React, BackboneMixin, CustomTextEditor) {
 
 return React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
