@@ -440,8 +440,8 @@ window.Document = Backbone.Model.extend({
     draftData: function() {
       return {
           title: this.title(),
-          invitationmessage: this.get("invitationmessage"),
-          confirmationmessage: this.get("confirmationmessage"),
+          invitationmessage: _.escape(this.get("invitationmessage")),
+          confirmationmessage: _.escape(this.get("confirmationmessage")),
           daystosign: this.get("daystosign"),
           daystoremind: this.get("daystoremind") != undefined ? this.get("daystoremind") : null,
           apicallbackurl : this.get("apicallbackurl"),
@@ -678,6 +678,12 @@ window.Document = Backbone.Model.extend({
          return s.signs ? s.signorder : 0;
        }).signorder;
 
+     var dropHTMLWrapperFromMessage = function(msg) {
+       // Backward compatibility for V1. We are still returning HTML strucure from API for invitation and confirmation.
+       return _.unescape(msg.replace("<p>","").replace("</p>",""));
+
+     };
+
      return {
        id: args.id,
        title: args.title,
@@ -726,8 +732,8 @@ window.Document = Backbone.Model.extend({
        showpdfdownload: args.showpdfdownload,
        showrejectoption: args.showrejectoption,
        showfooter: args.showfooter,
-       invitationmessage: args.invitationmessage,
-       confirmationmessage: args.confirmationmessage,
+       invitationmessage: dropHTMLWrapperFromMessage(args.invitationmessage),
+       confirmationmessage: dropHTMLWrapperFromMessage(args.confirmationmessage),
        timezone: args.timezone,
        saved: args.saved,
        ready: true

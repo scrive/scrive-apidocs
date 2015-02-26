@@ -20,6 +20,14 @@ return React.createClass({
     ];
     return _.sortBy(languages, function(l) {return l.name.toLowerCase();});
   },
+  hideAllCalendars :  function() {
+    if (this.refs.deadlineEditor) {
+      this.refs.deadlineEditor.hideCalendar();
+    }
+    if (this.refs.reminderEditor) {
+      this.refs.reminderEditor.hideCalendar();
+    }
+  },
   render: function() {
     var self = this;
     var doc = self.props.document;
@@ -67,6 +75,7 @@ return React.createClass({
             {localization.designview.signingDeadline}
           </div>
           <DaysInputWithCalendar
+            ref="deadlineEditor"
             infotext="1"
             label={localization.designview.days}
             className="design-view-action-process-left-column-deadline-days-input-with-calendar"
@@ -87,6 +96,7 @@ return React.createClass({
             {localization.autoreminders.sendReminderIn}
           </div>
           <DaysInputWithCalendar
+            ref="reminderEditor"
             infotext="-"
             label={localization.autoreminders.days}
             className="design-view-action-process-left-column-remindline-days-input-with-calendar"

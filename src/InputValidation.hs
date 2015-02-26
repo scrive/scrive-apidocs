@@ -539,7 +539,7 @@ asValidInviteText input =
     where
           parseAndFixAsXml :: String -> Result String
           parseAndFixAsXml xs =
-            case xmlParse' "asValidInviteText" $ "<p>" ++ xs ++ "</p>" of
+            case xmlParse' "asValidInviteText" $ "<span>" ++ xs ++ "</span>" of
               (Right (Document _ _ (Elem _ _ cs) _)) -> Good $ (concatMap fixContent cs)
               _ -> let xsWithFixedBRs = replace "<BR>" "<BR/>" $ replace "<br>" "<br/>" xs
                    in if xsWithFixedBRs /= xs

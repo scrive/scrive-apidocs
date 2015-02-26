@@ -8,7 +8,9 @@ return React.createClass({
     return [this.props.model,this.props.model.document()];
   },
   hideAllCalendars :  function() {
-
+    if (this.refs.basicSettings) {
+      this.refs.basicSettings.hideAllCalendars();
+    }
   },
   render: function() {
     var self = this;
@@ -20,6 +22,7 @@ return React.createClass({
         <div className="design-view-action-process">
           <div className="design-view-action-process-left-column">
             <BasicSettings
+              ref="basicSettings"
               document = {doc}
             />
           </div>
