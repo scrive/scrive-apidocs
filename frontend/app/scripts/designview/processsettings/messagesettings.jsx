@@ -51,7 +51,7 @@ return React.createClass({
               label = {localization.designview.customMessage.confirmation}
               previewLabel = {localization.designview.customMessage.preview}
               placeholder  = {localization.designview.editConfirmation}
-              disabledPlaceholder = {localization.designview.editMessagePlaceholde}
+              disabledPlaceholder = {localization.designview.editMessagePlaceholder}
               onChange = {function(c) {doc.setConfirmationMessage(c);}}
               onPreview = {function() {
                 mixpanel.track('Open confirmation preview');

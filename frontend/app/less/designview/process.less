@@ -44,12 +44,20 @@
     .custommessageeditboxwrapper
 
       .editor {
+        border: 1px solid @border-grey;
+        padding: 10px;
         resize: none;
         height: 70px;
-        width: 270px;
+        width: 254px;
+        font-size: 11px;
       }
 
       &.disabled {
+        .editor {
+          font-style: italic;
+          color: @grey;
+          background-color: @gray-5-percent;
+        }
       }
   }
 }

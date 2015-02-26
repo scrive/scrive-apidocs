@@ -54,6 +54,9 @@ window.DesignViewTabsView = function(args) {
           name: tab3Name,
           pagehash : "process",
           elems: [ $("<div class='design-view-tab-center' />").append(processSettingsEl)],
+          onShow: function() {
+               processSettings.forceUpdate();
+          },
           onActivate : function() {
                mixpanel.track('Click tab', {
                         Action: 'Open',
