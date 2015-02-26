@@ -94,7 +94,13 @@ approximateActor tgt doc sim dee | systemEvents $ evType dee = return "Scrive"
   where authorName = case getAuthorSigLink doc >>= sigid . signatorylinkid of
                         Just i -> return i
                         Nothing -> renderTemplate_ "_authorParty"
-        sigid s | tgt == EventForArchive = siFullName <$> Map.lookup s sim
+        sigid s | tgt == EventForArchive = do
+                                             si <- Map.lookup s sim
+                                             let name = siFullName si
+                                             if null name then
+                                                 signatoryIdentifier sim s
+                                              else
+                                                 return name
                 | otherwise              = signatoryIdentifier sim s
 
 eventJSValue :: (MonadDB m, MonadThrow m, TemplatesMonad m) => Document -> SignatoryIdentifierMap -> DocumentEvidenceEvent -> JSONGenT m ()
