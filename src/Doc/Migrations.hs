@@ -7,12 +7,20 @@ import Control.Monad.Catch
 import Data.Int
 import Data.Maybe
 import Data.Monoid
+import Data.Monoid.Space
 import Data.Monoid.Utils
+import Data.String.Utils
 import Text.JSON
 import Text.JSON.FromJSValue
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
+import Text.XML.HaXml(render)
+import Text.XML.HaXml.Parse (xmlParse')
+import Text.XML.HaXml.Posn
+import Text.XML.HaXml.Pretty(content)
+import qualified Text.XML.HaXml.Types as XML
+
 
 import DB
 import DB.Checks
@@ -25,6 +33,7 @@ import EvidenceLog.Model
 import MinutesTime
 import Utils.Default
 import Utils.Prelude
+import Utils.String
 import Version
 import qualified Log
 
@@ -36,6 +45,49 @@ instance FromSQL [SignatoryField] where
 instance ToSQL [SignatoryField] where
   type PQDest [SignatoryField] = PQDest String
   toSQL = jsonToSQL
+
+
+dropHTMLFromInvitationAndConfirmationMessages :: MonadDB m => Migration m
+dropHTMLFromInvitationAndConfirmationMessages = Migration {
+  mgrTable = tableDocuments
+, mgrFrom = 36
+, mgrDo = do
+    -- Fix invitation custom message
+    runSQL_ "SELECT id, invite_text FROM documents WHERE invite_text IS NOT NULL AND invite_text <> ''"
+    (invite_messages :: [(Int64,String)]) <- fetchMany id
+    forM_ invite_messages $ \(did, invite_message) -> do
+      runQuery_ . sqlUpdate "documents" $ do
+           sqlSet "invite_text" $ fixMessage $ invite_message
+           sqlWhereEq "id" did
+
+    -- Fix confirmation custom message
+    runSQL_ "SELECT id, confirm_text FROM documents WHERE confirm_text IS NOT NULL AND confirm_text <> ''"
+    (confirm_messages:: [(Int64,String)]) <- fetchMany id
+    forM_ confirm_messages $ \(did, confirm_message) -> do
+      runQuery_ . sqlUpdate "documents" $ do
+           sqlSet "confirm_text" $ fixMessage $ confirm_message
+           sqlWhereEq "id" did
+}
+  where
+    fixMessage :: String -> String
+    fixMessage xs = unescapeString $ case xmlParse' "asValidInviteText" $ "<span>" ++ xs ++ "</span>" of
+       (Right (XML.Document _ _ (XML.Elem _ _ cs) _)) -> (concatMap fixContent cs)
+       _ -> let xsWithFixedBRs = replace "<BR>" "<BR/>" $ replace "<br>" "<br/>" xs
+            in if xsWithFixedBRs /= xs
+               then fixMessage xsWithFixedBRs
+               else justText xs
+    fixContent :: XML.Content Posn -> String
+    fixContent (XML.CElem (XML.Elem (XML.N "div") _ cs) _) = (concatMap fixContent cs) ++ " \n"
+    fixContent (XML.CElem (XML.Elem (XML.N "p") _ cs) _)   = (concatMap fixContent cs) ++ " \n"
+    fixContent (XML.CElem (XML.Elem (XML.N "br") _ cs) _)  = (concatMap fixContent cs) ++ " \n"
+    fixContent (XML.CElem (XML.Elem (XML.N _) _ cs) _)     = (concatMap fixContent cs)
+    fixContent x@(XML.CString _ _ _)               = render $ content x
+    fixContent x@(XML.CRef _ _)                    = render $ content x
+    fixContent _ = ""
+    justText ('<':cs) = justText $ drop 1 $ dropWhile (/= '>') cs
+    justText (c:cs) = c : justText cs
+    justText [] = []
+
 
 addMtimeStatusIndexes :: MonadDB m => Migration m
 addMtimeStatusIndexes = Migration {

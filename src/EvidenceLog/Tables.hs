@@ -14,7 +14,7 @@ Also, it is insert only. No updates, no deletes.
 tableEvidenceLog :: Table
 tableEvidenceLog = tblTable {
   tblName = "evidence_log"
-  , tblVersion = 5
+  , tblVersion = 6
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "document_id", colType = BigIntT }

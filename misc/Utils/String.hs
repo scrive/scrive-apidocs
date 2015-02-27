@@ -1,4 +1,4 @@
-module Utils.String(concatChunks, pureString, maxLev, maybeS, escapeString, firstNonEmpty) where
+module Utils.String(concatChunks, pureString, maxLev, maybeS, escapeString, unescapeString, firstNonEmpty) where
 
 import Data.Char
 import Data.List
@@ -38,6 +38,14 @@ escapeString =  concatMap escape
               escape '"' = "\\\""
               escape '\\' = "\\\\"
               escape c   = [c]
+
+unescapeString :: String -> String
+unescapeString = replace "&lt;" "<"  .
+                 replace "&gt;" ">"  .
+                 replace "&amp;" "&" .
+                 replace "\\\"" "\"" .
+                 replace "\\\\" "\\"
+
 
 -- | Pick first non-empty element or return empty list
 firstNonEmpty :: [String] -> String

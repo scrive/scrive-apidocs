@@ -3,6 +3,8 @@
 strong=
     <strong>$it$</strong>
 ###
+br=$it$<BR/>
+###
 morethenonelist=
     $list:strong(); separator=", "$ $_listand()$ $last:strong()$
 ###
@@ -13,9 +15,6 @@ morethenonelistnormal=$list; separator=", "$ $_listand()$ $last$
 nomorethanonelistnormal=
     $list$
 ###
-makeEditable=
-    <div class="editable" name="$name$">$this:noescape()$</div>
-####
 #### Puts an invisible box with flash messages. jScripts do all show magic.
 #### Bellow is a hack for (if(flash)) for String templates syntax
 ####

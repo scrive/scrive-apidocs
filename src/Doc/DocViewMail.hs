@@ -79,7 +79,7 @@ remindMailNotSigned forMail customMessage document signlink = do
         authorname = getAuthorName document
     authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
     documentMailWithDocLang document (templateName "remindMailNotSignedContract") $ do
-        F.value  "custommessage" customMessage
+        F.value  "custommessage" $ asCustomMessage <$> customMessage
         F.value  "authorname" authorname
         F.value "partners" $ map getSmartName $ filter isSignatory (documentsignatorylinks document)
         F.value "partnerswhosigned" $ map getSmartName $  filter (isSignatory &&^ hasSigned) (documentsignatorylinks document)
@@ -125,7 +125,7 @@ remindMailSigned :: (MonadDB m, MonadThrow m, MonadTime m, TemplatesMonad m, Mai
                  -> m Mail
 remindMailSigned forMail customMessage document signlink documentAttached = do
     documentMailWithDocLang document (templateName "remindMailSigned") $ do
-            F.value "custommessage" customMessage
+            F.value "custommessage" $ asCustomMessage <$> customMessage
             documentAttachedFields forMail signlink documentAttached document
 
 mailForwardSigned :: (MonadDB m, MonadThrow m, MonadTime m, TemplatesMonad m, MailContextMonad m)
@@ -204,7 +204,7 @@ mailInvitation forMail
         F.value "javascriptmagic" $ not forMail
         F.value "personname" $ Just personname <| personname /= "" |> Nothing
         F.value "hascustommessage" $ not $ null $ documentinvitetext document
-        F.valueM "custommessage" $ makeEditable "customtext" $ documentinvitetext document
+        F.value "custommessage" $ asCustomMessage $ documentinvitetext document
         F.value "link" $ case msiglink of
           Just siglink -> Just $ makeFullLink mctx $ show (LinkSignDoc document siglink)
           Nothing -> Nothing
@@ -259,7 +259,7 @@ mailDocumentClosed ispreview sl sealFixed documentAttached document = do
         F.value "sealFixed" $ sealFixed
         documentAttachedFields (not ispreview) sl documentAttached document
         F.value "closingtime" $ formatTime' "%Y-%m-%d %H:%M %Z" $ getLastSignedTime document
-        F.value "custommessage" $ if (isAuthor sl && not ispreview)
+        F.value "custommessage" $ asCustomMessage <$> if (isAuthor sl && not ispreview)
                                     then Nothing
                                     else case (documentconfirmtext document) of
                                       "" -> Nothing
@@ -283,12 +283,6 @@ mailDocumentAwaitingForAuthor authorlang document = do
         F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (getAuthorSigLink document) mainfile
 
 -- helpers
-
-makeEditable :: TemplatesMonad m => String -> String -> m String
-makeEditable name this = renderTemplate "makeEditable" $ do
-  F.value "name" name
-  F.value "this" this
-
 makeFullLink :: MailContext -> String -> String
 makeFullLink mctx link = mctxhostpart mctx ++ link
 
@@ -342,3 +336,5 @@ brandingMailFields theme = do
     F.value "font"  $ themeFont theme
   where ensureHexRGB' s = fromMaybe s $ ensureHexRGB s
 
+asCustomMessage :: String -> [String]
+asCustomMessage = lines

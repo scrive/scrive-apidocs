@@ -53,6 +53,7 @@ import IPAddress
 import Kontra
 import User.Email
 import User.Model
+import Utils.String
 import qualified Log
 
 {- |
@@ -536,6 +537,7 @@ asValidInviteText :: String -> Result String
 asValidInviteText input =
     checkIfEmpty input
     >>= parseAndFixAsXml
+    >>= return . unescapeString
     where
           parseAndFixAsXml :: String -> Result String
           parseAndFixAsXml xs =

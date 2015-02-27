@@ -30,7 +30,7 @@ mailClosedCustomeMessage=
 $if(custommessage)$
  $_mailClosedCustomTextHeader()$:
   <br/>
-  <i>$custommessage:noescape()$</i>
+  <i><p>$custommessage:br()$</p></i>
 <br/>
 $endif$
 #####
@@ -199,7 +199,7 @@ $if(hascustommessage)$
   <br/>
   $_mailInvitationCustomInvitationHeader()$:
   <br/>
-  <i style="color: $nicemailfgcolour()$">$custommessage:noescape()$</i>
+  <i style="color: $nicemailfgcolour()$"><p>$custommessage:br()$</p></i>
 $endif$
 ### Reminding mails - SIGNED
 ###
@@ -216,7 +216,7 @@ remindMailSignedP2=
 $if(custommessage)$
   $_mailInvitationCustomInvitationHeader()$:
   <br/>
-  <i>$custommessage:noescape()$</i>
+  <i><p>$custommessage:br()$</p></i>
   <br/>
 
 $else$
@@ -263,7 +263,7 @@ remindMailNotSignedContractP2=
 $if(custommessage)$
   $_mailInvitationCustomInvitationHeader()$:
   <br/>
-  <i>$custommessage:noescape()$</i>
+  <i><p>$custommessage:br()$</p></i>
   <br/>
 $else$
       <div class="editable" name="custommessage"></div>

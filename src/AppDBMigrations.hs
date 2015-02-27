@@ -192,6 +192,8 @@ kontraMigrations = [
   , changeScriveLoginLogo
   , createTableDocumentApiCallbackConsumers
   , updateApiCallbacksForNewConsumer
+  , dropHTMLFromInvitationAndConfirmationMessages
+  , dropHTMLFromMessagesInEvidenceLog
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations
