@@ -363,8 +363,6 @@ checkDBConsistency logger domains tables migrations = do
             error $ "Earliest migration for table '" ++ tblNameString table ++ "' is from version " ++ show (mgrFrom m) ++ ", cannot migrate " ++ show ver ++ " -> " ++ show (tblVersion table)
           Just _ -> return ()
 
-      --mapM_ (normalizePropertyNames logger) tables
-
       let migrationsToRun = filter (\m -> any (\(t, from) -> tblName (mgrTable m) == tblName t && mgrFrom m >= from) tablesWithVersions) migrations
 
       -- run migrations, if necessary
@@ -377,47 +375,7 @@ checkDBConsistency logger domains tables migrations = do
             sqlSet "version" $ succ (mgrFrom migration)
             sqlWhereEq "name" $ tblNameString (mgrTable migration)
         logger "Running migrations... done."
-{-
-normalizePropertyNames :: (MonadDB m, MonadThrow m) => (String -> m ()) -> Table -> m ()
-normalizePropertyNames logger table@Table{..} = do
-  runQuery_ $ sqlGetPrimaryKey table
-  pk <- join <$> fetchMaybe fetchPrimaryKey
-  runQuery_ $ sqlGetIndexes table
-  indexes <- fetchMany fetchTableIndex
-  runQuery_ $ sqlGetForeignKeys table
-  fkeys <- fetchMany fetchForeignKey
-  let renames = concat [
-          normalizePK pk
-        , concatMap normalizeIndex indexes
-        , concatMap normalizeFK fkeys
-        ]
-  when (not . null $ renames) $ do
-    logger $ arrListTable table ++ "normalizing property names..."
-    forM_ renames runQuery_
-  where
-    normalizePK :: Maybe (PrimaryKey, RawSQL ()) -> [RawSQL ()]
-    normalizePK Nothing = []
-    normalizePK (Just (_, name)) = case pkName tblName of
-      pkname
-        | pkname == name -> []
-        | otherwise -> ["ALTER INDEX" <+> name <+> "RENAME TO" <+> pkname]
 
-    normalizeIndex :: (TableIndex, RawSQL ()) -> [RawSQL ()]
-    normalizeIndex (idx, name) = case indexName tblName idx of
-      idxname
-        | idxname == name -> []
-        | otherwise -> ["ALTER INDEX" <+> name <+> "RENAME TO" <+> idxname]
-
-    normalizeFK :: (ForeignKey, RawSQL ()) -> [RawSQL ()]
-    normalizeFK (fk, name) = case fkName tblName fk of
-      fkname
-        | fkname == name -> []
-        | otherwise -> [sqlAlterTable tblName [
-            "DROP CONSTRAINT" <+> name
-          , sqlAddFK tblName fk
-          ]
-        ]
-        -}
 checkTableVersion :: (MonadDB m, MonadThrow m) => Table -> m (Maybe Int32)
 checkTableVersion table = do
   doesExist <- runQuery01 . sqlSelect "pg_catalog.pg_class c" $ do
