@@ -9,7 +9,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
         className: 'design-view-action-participant-new-field-selector',
         initialize: function() {
             var view = this;
-            _.bindAll(view);
+            _.bindAll(this, 'render', 'createNewButton', 'addOne');
             view.render();
         },
         render: function() {
@@ -63,7 +63,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
         className: 'design-view-action-participant-details-participation',
         initialize: function() {
             var view = this;
-            _.bindAll(view);
+            _.bindAll(this, 'destroy', 'render', 'detailsPartcipationFieldsWithLabels', 'detailsParticipationFieldsSignOrder', 'detailsParticipationFieldsDelivery', 'detailsParticipationFieldsConfirmationDelivery', 'detailsParticipationFieldsRole', 'detailsParticipationFieldsAuth');
             view.model.bind('change', view.render);
             // if the document's signorder changes, we rerender in order
             // to get reset the sign order select box
@@ -284,7 +284,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
         className: 'design-view-action-participant-new-box',
         initialize: function(args) {
             var view = this;
-            _.bindAll(view);
+            _.bindAll(this, 'render', 'newButtons', 'single', 'multi', 'doneButton');
             view.model.bind('change:participantDetail', view.render);
             view.render();
         },
@@ -393,7 +393,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
         className: 'design-view-action-participant-container',
         initialize: function(args) {
             var view = this;
-            _.bindAll(view);
+            _.bindAll(this, 'rescroll', 'reset', 'closeAllParticipants', 'setup', 'customScrollbarOpts', 'resizeOnWindowResize', 'initCustomScrollBox', 'render');
             view.addNew = new DesignViewParticipantsNewView(args);
             view.reset();
             // any changes to the signatories of a document and we rerender
@@ -503,7 +503,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
         className: 'design-view-action-participant-icon-order',
         initialize: function(args) {
             var view = this;
-            _.bindAll(view);
+            _.bindAll(this, 'destroy', 'render');
             view.model.bind('change:signorder', view.render);
             view.render();
             view.$el.click(function() {
@@ -543,7 +543,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
         className: 'design-view-action-participant-icon-role',
         initialize: function(args) {
             var view = this;
-            _.bindAll(view);
+            _.bindAll(this, 'render');
             view.model.bind('change:role', view.render);
             view.render();
             view.$el.click(function() {
@@ -585,7 +585,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
         className: 'design-view-action-participant-icon-device',
         initialize: function(args) {
             var view = this;
-            _.bindAll(view);
+            _.bindAll(this, 'render');
             view.model.bind('change:delivery', view.render);
             view.render();
             view.$el.click(function() {
@@ -638,7 +638,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
         className: 'design-view-action-participant-confirmation',
         initialize: function(args) {
             var view = this;
-            _.bindAll(view);
+            _.bindAll(this, 'render');
             view.model.bind('change:confirmationdelivery', view.render);
             view.render();
             view.$el.click(function() {
@@ -688,7 +688,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
         className: 'design-view-action-participant-icon-auth',
         initialize: function(args) {
             var view = this;
-            _.bindAll(view);
+            _.bindAll(this, 'render');
             view.model.bind('change:authentication', view.render);
             view.render();
             view.$el.click(function() {
@@ -736,7 +736,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
         className: 'design-view-action-participant-details',
         initialize: function(args) {
             var view = this;
-            _.bindAll(view);
+            _.bindAll(this, 'destroy', 'render', 'detailsInformation', 'detailsInformationFields', 'detailsInformationCustomFieldName', 'detailsInformationNewField', 'detailsFullNameField', 'detailsInformationField', 'placeholder');
             view.viewmodel = args.viewmodel;
             view.participation = new DesignViewParticipation({model:view.model});
             view.newFieldSelector = new DesignViewNewFieldSelector({model:view.model});
@@ -1166,7 +1166,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             var view = this;
             var viewmodel = args.viewmodel;
             view.viewmodel = args.viewmodel;
-            _.bindAll(view);
+            _.bindAll(this, 'destroy', 'render', 'open', 'close', 'updateOpened', 'inner', 'checkInnerProblems', 'closeBox', 'infoBox', 'name', 'color', 'email', 'company');
 
             view.orderIcon  = new DesignViewOrderIconView ({model:view.model,
                                                             viewmodel: view.viewmodel});

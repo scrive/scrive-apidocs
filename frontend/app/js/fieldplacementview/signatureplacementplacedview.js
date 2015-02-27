@@ -2,7 +2,7 @@ define(['Backbone', 'legacy_code'], function(Backbone) {
 
 window.SignaturePlacementPlacedView = Backbone.View.extend({
     initialize: function (args) {
-        _.bindAll(this);
+        _.bindAll(this, 'updatePosition', 'clear', 'hasTypeSetter', 'addTypeSetter', 'closeTypeSetter', 'render');
         this.model.bind('removed', this.clear);
         this.model.bind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
         this.model.bind('change:withTypeSetter', this.closeTypeSetter);

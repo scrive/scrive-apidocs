@@ -6,7 +6,7 @@ window.TextTypeSetterOptionsView = Backbone.View.extend({
         view.options = args.options;
         view.extraClass = args.extraClass;
         var field = view.model;
-        _.bindAll(view);
+        _.bindAll(this, 'render');
         view.render();
         if(field) {
             this.listenTo(field,'change:obligatory change:shouldbefilledbysender', view.render);

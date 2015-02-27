@@ -10,7 +10,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
         initialize: function (args) {
             var self = this;
             var model = this;
-            _.bindAll(model);
+            _.bindAll(this, 'document', 'ready', 'participantDetail', 'setParticipantDetail', 'saveDocument', 'saveAndFlashMessageIfAlreadySaved', 'saveFlashMessage');
         },
         document : function() {
             return this.get("document");
@@ -69,7 +69,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
         className: 'design-view-button-bar',
         initialize: function(args) {
             var view = this;
-            _.bindAll(view);
+            _.bindAll(this, 'render', 'inner', 'makeSaveDraftButton', 'saveDraftButtonText', 'makeSaveTemplateButton', 'saveTemplateButtonText', 'updateSaveButtons', 'send', 'updateSendButton', 'removeDocumentButton', 'cantSignModal', 'finalClick', 'spinnerSmall', 'signConfirmation', 'sendConfirmation', 'signWithCSV', 'sendWithCSV');
             view.render();
             view.model.document().bind('change:template change:file', view.render);
             view.model.document().bind('bubble',view.updateSendButton);
@@ -498,7 +498,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
         className: 'design-view-frame',
         initialize: function (args) {
             var view = this;
-            _.bindAll(view);
+            _.bindAll(this, 'fix', 'unfix', 'affix', 'frame', 'render', 'afterInsert');
             view.tabsView    = new DesignViewTabsView({model : view.model});
             view.buttonBar   = new DesignViewButtonBarView({model : view.model});
             view.documentView = new DesignViewDocumentView({model : view.model.document(),

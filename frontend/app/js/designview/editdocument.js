@@ -9,7 +9,7 @@ define(['Backbone', 'legacy_code'], function() {
         className: 'design-view-action-document-draggables',
         initialize: function(args) {
             var view = this;
-            _.bindAll(view);
+            _.bindAll(this, 'render', 'help1', 'help2', 'createDraggable', 'checkbox', 'signature', 'text');
             view.render();
             view.model.document().bind('change:signatories', view.render);
         },

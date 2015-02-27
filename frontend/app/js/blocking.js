@@ -92,7 +92,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
     window.BlockingInfoView = Backbone.View.extend({
         className: 'blocking-info',
         initialize: function(args) {
-            _.bindAll(this);
+            _.bindAll(this, 'setStyle', 'headline', 'subtext1', 'subtext2', 'makeBox', 'render', 'clickAction', 'paymentsPopup', 'createPopup', 'csvMessage', 'freeCreatePopup', 'freeCSVMessage', 'overdueCreatePopup', 'overdueCSVMessage', 'canceledCreatePopup', 'canceledCSVMessage', 'deactivatedCreatePopup', 'deactivatedCSVMessage', 'payingCreatePopup', 'payingCSVMessage');
             this.model.bind('change reset fetch', this.render);
             this.subscriptionPageHref = '/account#subscription';
             this.supportEmailHref = 'mailto:support@scrive.com';

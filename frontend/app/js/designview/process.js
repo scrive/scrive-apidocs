@@ -14,7 +14,7 @@ define(['Backbone', 'React', 'common/customtexteditor', 'designview/signviewsett
         className: 'design-view-action-process',
         initialize: function(args) {
             var view = this;
-            _.bindAll(view);
+            _.bindAll(this, 'render', 'hideAllCalendars', 'leftColumn', 'middleColumn', 'rerenderMiddleColumn', 'rightColumn', 'documentName', 'language', 'updateDaysToSign', 'deadline', 'updateDaysToRemind', 'autoreminder', 'signviewsettings', 'attachments', 'invitationAndConfirmationBox');
             view.render();
             view.model.document().bind('change', view.render);
             view.model.document().bind('change:daystosign', view.updateDaysToSign);

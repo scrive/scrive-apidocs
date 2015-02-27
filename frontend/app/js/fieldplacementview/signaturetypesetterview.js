@@ -2,7 +2,7 @@ define(['Backbone', 'legacy_code'], function(Backbone) {
 
 window.SignatureTypeSetterView = Backbone.View.extend({
     initialize: function (args) {
-        _.bindAll(this);
+        _.bindAll(this, 'clear', 'obligatoryOption', 'changeObligatoryOption', 'doneOption', 'title', 'selector', 'place', 'render');
         var self = this;
         self.model.bind('removed', self.clear);
         self.model.field().bind('change:signatory', self.render);

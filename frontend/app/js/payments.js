@@ -103,7 +103,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                 this.set({hasEmail:true});
         },
         initialize: function(args) {
-            _.bindAll(this);
+            _.bindAll(this, 'reset', 'firstName', 'setFirstName', 'hasFirstName', 'lastName', 'setLastName', 'hasLastName', 'email', 'setEmail', 'hasEmail', 'companyName', 'setCompanyName', 'setYearlyPrices', 'yearlyprices', 'accountCode', 'setAccountCode', 'plans', 'subdomain', 'currentPlan', 'setCurrentPlan', 'setDone', 'done', 'creditCard', 'setCreditCard', 'cvv', 'setCvv', 'month', 'setMonth', 'year', 'setYear', 'createdUser', 'setCreatedUser', 'accountCreated', 'setAccountCreated', 'paidPlan', 'status', 'subscription', 'invoices', 'billingSig', 'header', 'type', 'quantity', 'isAdmin', 'canPurchase', 'url', 'createaccount', 'checkuserexists', 'submitSubscription');
             this.bind('fetch', this.reset);
             this.reset();
         },
@@ -299,7 +299,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
     var TopTabsView = Backbone.View.extend({
         className: "top-tabs",
         initialize: function(args) {
-            _.bindAll(this);
+            _.bindAll(this, 'render');
             args.model.bind('change:yearlyprices', this.render);
             var view = this;
             this.render();
@@ -341,7 +341,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         var currency = localization.code == "sv" ? "SEK" : "EUR";
 
         // Pad thousands
-        function pad(n) { 
+        function pad(n) {
           if (n == 0) {
             return '000';
           }
@@ -406,7 +406,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
     var ContactBoxView = FeaturesView.extend({
         className: "plan-container",
         initialize: function(args) {
-            _.bindAll(this);
+            _.bindAll(this, 'render');
             args.model.bind('change:currentPlan', this.render);
             args.model.bind('change:yearlyprices', this.render);
             args.model.bind('fetch', this.render);
@@ -510,7 +510,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
     var TeamBoxView = FeaturesView.extend({
         className: "plan-container",
         initialize: function(args) {
-            _.bindAll(this);
+            _.bindAll(this, 'render');
             args.model.bind('change:currentPlan', this.render);
             args.model.bind('change:yearlyprices', this.render);
             args.model.bind('fetch', this.render);
@@ -574,7 +574,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
     var RecurlyView = Backbone.View.extend({
         initialize: function(args) {
-            _.bindAll(this);
+            _.bindAll(this, 'scrambleForm', 'render');
             this.element = $('<div />');
             this.$el.append(this.element);
             args.model.bind('change:currentPlan', this.render);
@@ -883,7 +883,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         className: "payments",
         initialize: function(args){
             var view = this;
-            _.bindAll(this);
+            _.bindAll(this, 'render');
 
             this.oneBoxMonthly = new TeamBoxView({model: args.model,
                                             plan:'one',
@@ -949,7 +949,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         initialize: function(args) {
             var view = this;
             view.model = args.model;
-            _.bindAll(this);
+            _.bindAll(this, 'render');
             view.model.bind('fetch', this.render);
         },
         render: function() {
@@ -982,7 +982,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         initialize: function(args) {
             var view = this;
             view.model = args.model;
-            _.bindAll(this);
+            _.bindAll(this, 'render', 'dateString', 'addMark', 'nextPayment', 'previousPayments');
             view.model.bind('fetch', this.render);
         },
         render: function() {
@@ -1069,7 +1069,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         initialize: function(args) {
             var view = this;
             view.model = args.model;
-            _.bindAll(this);
+            _.bindAll(this, 'subscriptionCancelled', 'render', 'cancelButton');
             view.model.bind('fetch', this.render);
 	    view.model.bind('subscriptionCancelled', this.subscriptionCancelled);
         },
@@ -1212,7 +1212,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         initialize: function(args) {
             var view = this;
             view.model = args.model;
-            _.bindAll(this);
+            _.bindAll(this, 'render', 'renewButton');
             view.model.bind('fetch', this.render);
         },
         render: function() {
@@ -1291,7 +1291,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         initialize: function(args) {
             var view = this;
             view.model = args.model;
-            _.bindAll(this);
+            _.bindAll(this, 'render');
             view.model.bind('fetch', this.render);
 	    view.paymentsSubscription = new PaymentsCurrentSubscriptionView({model:view.model});
             view.paymentsTable = new InvoicePaymentsView({model:view.model});
@@ -1321,7 +1321,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             return new PricePageView({model:model, noheaders: true});
         else if(model.type() === 'user')
             return new PricePageView({model:model,
-                                      hideContacts: true, 
+                                      hideContacts: true,
                                       noheaders: true});
         else if(model.type() === 'plannone')
             return new PaymentsCurrentSubscriptionView({model:model});

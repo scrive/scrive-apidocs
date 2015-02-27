@@ -14,7 +14,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
         className: 'design-view-document-container',
         initialize: function(args) {
             var view = this;
-            _.bindAll(view);
+            _.bindAll(this, 'render', 'loading', 'renderDocument', 'refreshMargins', 'uploadButtons', 'buttons', 'uploadFile', 'afterInsert');
             view.viewmodel = args.viewmodel;
 
             view.render();

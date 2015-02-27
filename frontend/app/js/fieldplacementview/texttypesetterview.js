@@ -3,7 +3,7 @@ define(['tinycolor', 'Backbone', 'legacy_code'], function(tinycolor, Backbone) {
 window.TextTypeSetterView = Backbone.View.extend({
     initialize: function (args) {
         var self = this;
-        _.bindAll(this);
+        _.bindAll(this, 'updatePosition', 'clear', 'obligatoryOption', 'placementOptions', 'title', 'doneOption', 'place', 'render');
         self.listenTo(self.model,'removed',self.clear);
         self.listenTo(self.model,'change:field change:signatory change:step change:fsrel',self.render);
 

@@ -15,7 +15,7 @@ window.FieldPlacement = Backbone.Model.extend({
     },
     initialize : function(args){
         var placement = this;
-        _.bindAll(placement);
+        _.bindAll(this, 'placed', 'addToPage', 'xrel', 'yrel', 'wrel', 'hrel', 'fsrel', 'page', 'field', 'setField', 'file', 'tip', 'withTypeSetter', 'cleanTypeSetter', 'remove', 'fixWHRel', 'draftData', 'setFSRel', 'signatory', 'setSignatory', 'die', 'alive', 'bindBubble', 'bubbleSelf', 'triggerBubble', 'step', 'goToStepField', 'goToStepEdit');
         placement.addToPage();
         if (this.tip() === undefined)
           this.set({"tip" : args.field.defaultTip()});
