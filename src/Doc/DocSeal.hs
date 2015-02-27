@@ -74,6 +74,7 @@ import qualified Log
 personFromSignatory :: (MonadDB m, MonadMask m, TemplatesMonad m)
                     => TimeZoneName -> SignatoryIdentifierMap -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> m Seal.Person
 personFromSignatory tz sim boxImages signatory = do
+    emptyNamePlaceholder <- renderTemplate_ "_notNamedParty"
     stime <- case  maybesigninfo signatory of
                   Nothing -> return ""
                   Just si -> formatUTCTimeForVerificationPage tz $ signtime si
@@ -89,7 +90,7 @@ personFromSignatory tz sim boxImages signatory = do
                             then renderTemplate "_contractsealingtextspersonalNumberText" $ F.value "idnumber" personalnumber
                          else return ""
 
-    return $ Seal.Person { Seal.fullname           = fromMaybe "" $ signatoryIdentifier sim (signatorylinkid signatory)
+    return $ Seal.Person { Seal.fullname           = fromMaybe "" $ signatoryIdentifier sim (signatorylinkid signatory) emptyNamePlaceholder
                          , Seal.company            = getCompanyName signatory
                          , Seal.email              = getEmail signatory
                          , Seal.phone              = getMobile signatory
@@ -235,8 +236,10 @@ findOutAttachmentDesc sim tmppath document = do
                   else renderLocalTemplate document "_numberOfPages" $ do
                     F.value "pages" numberOfPages
 
-        attachedByText <- renderLocalTemplate document "_documentAttachedBy" $ do
-                                     F.value "identifier" $ signatoryIdentifier sim (signatorylinkid sl)
+        attachedByText <- do
+          emptyNamePlaceholder <- renderTemplate_ "_notNamedParty"
+          renderLocalTemplate document "_documentAttachedBy" $ do
+            F.value "identifier" $ signatoryIdentifier sim (signatorylinkid sl) emptyNamePlaceholder
 
         attachmentNumText <- renderLocalTemplate document "_attachedDocument" $ do
                                      F.value "number" num
@@ -413,8 +416,10 @@ sealSpecFromDocument boxImages hostpart document elog ces content tmppath inputp
        else renderLocalTemplate document "_numberOfPages" $ do
          F.value "pages" numberOfPages
 
-  attachedByText <- renderLocalTemplate document "_documentSentBy" $ do
-    F.value "identifier" $ signatoryIdentifier sim (signatorylinkid authorsiglink)
+  attachedByText <- do
+    emptyNamePlaceholder <- renderTemplate_ "_notNamedParty"
+    renderLocalTemplate document "_documentSentBy" $ do
+      F.value "identifier" $ signatoryIdentifier sim (signatorylinkid authorsiglink) emptyNamePlaceholder
 
   mainDocumentText <- renderLocalTemplate document "_mainDocument"
                       $ (return ())

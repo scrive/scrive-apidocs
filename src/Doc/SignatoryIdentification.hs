@@ -27,10 +27,10 @@ data SignatoryIdentifier = SignatoryIdentifier
   deriving Show
 
 -- | Return the full name plus unique initials for a signatory
-signatoryIdentifier :: SignatoryIdentifierMap -> SignatoryLinkID -> Maybe String
-signatoryIdentifier sim slid = do
+signatoryIdentifier :: SignatoryIdentifierMap -> SignatoryLinkID -> String -> Maybe String
+signatoryIdentifier sim slid emptyNamePlaceholder = do
   si <- Map.lookup slid sim
-  return $ (if null (siFullName si) then "Not named party" else siFullName si) ++ " (" ++ siInitials si ++ ")"
+  return $ (if null (siFullName si) then emptyNamePlaceholder else siFullName si) ++ " (" ++ siInitials si ++ ")"
 
 -- | Create a map with unique identifiers (name, initials) over a
 -- sequence of documents, stemming from restarted signing processes.
