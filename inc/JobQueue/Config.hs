@@ -5,8 +5,8 @@ module JobQueue.Config (
   , ConsumerConfig(..)
   ) where
 
-import Database.PostgreSQL.PQTypes
 import Data.Time
+import Database.PostgreSQL.PQTypes
 
 -- | Action to take after a job was processed.
 data Action

@@ -28,6 +28,8 @@ import Doc.API.Callback.Model
 import Doc.AutomaticReminder.Model
 import Doc.Model
 import HostClock.Collector (collectClockError)
+import JobQueue.Components
+import JobQueue.Config
 import Mails.Events
 import MinutesTime
 import Payments.Config
@@ -43,9 +45,6 @@ import qualified Amazon as AWS
 import qualified CronEnv
 import qualified Log
 import qualified MemCache
-
-import JobQueue.Config
-import JobQueue.Components
 
 main :: IO ()
 main = Log.withLogger $ do
