@@ -5,7 +5,7 @@ if (typeof String.prototype.startsWith != 'function') {
   };
 }
 
-require(['Backbone', 'tinyMCE', 'tinyMCE_theme', 'tinyMCE_noneeditable', 'tinyMCE_paste', 'legacy_code'], function(Backbone, tinyMCE) {
+require(['Backbone', 'legacy_code'], function(Backbone) {
 
 // globally track errors
 window.onerror = function(msg, url, line) {
@@ -80,43 +80,6 @@ function safeReady(f) {
       f();
     } catch (e) {
       console.log(e);
-    }
-  });
-}
-
-//used by the administration pages
-function prepareForEdit(form, width) {
-  var width = width == undefined ? 540 : width;
-
-  $(".editable", form).each(function(i) {
-    window.tinymce_textarea_count = window.tinymce_textarea_count || 0;
-    window.tinymce_textarea_count++;
-    var id = 'editable-textarea-' + window.tinymce_textarea_count;
-    var textarea = $("<textarea id='" + id + "' style='width:" + width + "px;height:0px;border:0px;padding:0px;margin:0px'  name='" + $(this).attr('name') + "'> " + $(this).html() + "</textarea>");
-    var wrapper = $("<div></div>").css("min-height", ($(this).height()) + 15 + "px");
-    wrapper.append(textarea);
-    $(this).replaceWith(wrapper);
-    prepareEditor(textarea);
-  });
-}
-
-function prepareEditor(textarea) {
-  tinyMCE.baseURL = '/libs/tiny_mce';
-  tinyMCE.init({
-    selector: '#' + textarea.attr('id'),
-    content_css : "/css/tinymce.css",
-    plugins: "noneditable,paste",
-    menubar: false,
-    valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul",
-    setup: function(editor) {
-      editor.on('init', function() {
-        $(editor.getContainer()).find('.mce-btn button').css('padding', '4px 5px');
-      });
-
-      editor.on('PreInit', function() {
-	$(editor.getContainer()).find('div[role=toolbar]').hide();
-	$(editor.getContainer()).find('.mce-path').parents('.mce-panel').first().hide();
-      });
     }
   });
 }

@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
 
 
-define(['React', 'Backbone', 'tinyMCE', 'tinyMCE_theme', 'tinyMCE_noneeditable', 'tinyMCE_paste', 'legacy_code'], function(React, Backbone, tinyMCE) {
+define(['React', 'legacy_code'], function(React) {
 
 
 return React.createClass({

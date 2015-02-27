@@ -522,15 +522,7 @@ asValidFieldValue input =
     >>= checkOnly [isAlphaNum, isPunctuation, isSymbol, (==' ')]
 
 {- |
-    Cleans and validates the invite text html.
-    Oh goodness!  This one's going to be hard, because the text is actually meant to be html, and will deliberately be displayed as html.  It would be unusual for an email client to execute JavaScript, but there's still ample opportunity for placing any old html in there.  Maybe this would be a good way to do some phishing, for example.  Malicious users could use this to spam people, potentially with quite official looking links designed to trick them into handing over their passwords.
-    Rules:
-    Must parse as XML
-    The only XML tags allowed are: br, p, strong, em, ul, li, ol, and span.
-    The only attribute allowed is the style attribute on a span tag.
-    This style attribute is only allowed to have the value “text-decoration: underline;” or “text-decoration: line-through;”.
-    XML comments are allowed, because you tend to get from tinymce when people paste from Word.  I can get tinymce to
-    filter all the tags nicely, but have failed here.  When I have time I'll either figure it out, or filter here.
+    Cleans all HTML from message, and unescapes it. Api V1 accepting HTML, but internally DB holds only pure text.
     Size:  up to 800 chars
 -}
 asValidInviteText :: String -> Result String

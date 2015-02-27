@@ -380,12 +380,12 @@ apiCallV1Reject did slid = api $ do
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
     ctx <- getContext
     Just sll <- getSigLinkFor slid <$> theDocument
-    customtext <- getOptionalField  asValidInviteText "customtext"
+    customtext <- getField "customtext"
     switchLang . getLang =<< theDocument
     (dbUpdate . RejectDocument slid customtext =<< signatoryActor ctx sll)
         `catchKontra` (\(DocumentStatusShouldBe _ _ i) -> throwIO . SomeKontraException $ conflictError $ "Document not pending but " ++ show i)
         `catchKontra` (\(SignatoryHasAlreadySigned {}) -> throwIO . SomeKontraException $ conflictError $ "Signatory has already signed")
-    postDocumentRejectedChange slid =<< theDocument
+    postDocumentRejectedChange slid customtext =<< theDocument
     Accepted <$> (documentJSONV1 mu True True Nothing =<< theDocument)
 
 

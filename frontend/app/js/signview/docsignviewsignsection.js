@@ -423,9 +423,9 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                               acceptText: localization.reject.send,
                                               acceptColor: "cancel",
                                               onAccept: function() {
-                                                var customtext = "<p>" + textarea.val() + "</p>";
+                                                var customtext = textarea.val();
                                                 trackTimeout('Accept', {'Accept': 'reject document'}, function() {
-                                                  document.currentSignatory().reject(customtext).sendAjax(function() {
+                                                  document.currentSignatory().reject(customtext != undefined && customtext != "" ? customtext : undefined).sendAjax(function() {
                                                     if (document.currentSignatory().rejectredirect() != undefined && document.currentSignatory().rejectredirect() != "") {
                                                       window.location = document.currentSignatory().rejectredirect();
                                                      } else {

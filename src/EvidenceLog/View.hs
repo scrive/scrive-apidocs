@@ -17,12 +17,10 @@ module EvidenceLog.View (
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Catch
-import Data.Char (isSpace)
 import Data.Decimal (realFracToDecimal)
 import Data.Function (on)
 import Data.List (sortBy)
 import Data.Maybe
-import Data.String.Utils
 import Data.Word (Word8)
 import Text.JSON
 import Text.JSON.Gen as J
@@ -44,7 +42,7 @@ import MinutesTime
 import OurPrelude (unexpectedErrorM)
 import Templates (renderLocalTemplate)
 import Text.XML.Content (cdata)
-import Text.XML.DirtyContent (XMLContent, renderXMLContent, removeTags, substitute)
+import Text.XML.DirtyContent (XMLContent, renderXMLContent, substitute)
 import User.Model
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
@@ -245,7 +243,7 @@ simplyfiedEventText target mactor d sim dee = do
                 LegacyNordeaSignature_{} -> Nothing
                 LegacyMobileBankIDSignature_{} -> Nothing
                 BankIDSignature_ BankIDSignature{..} -> Just bidsSignatoryName
-        F.value "text" $ strip . filterTagsNL <$> evMessageText dee
+        F.value "text" $ evMessageText dee
         F.value "signatory" $ (\slid -> signatoryIdentifier sim slid emptyNamePlaceholder) <$> mslinkid
         F.forM_ mactor $ F.value "actor"
 
@@ -297,9 +295,6 @@ finalizeEvidenceText sim event emptyNamePlaceholder =
 htmlSkipedEvidenceType :: EvidenceEventType -> Bool
 htmlSkipedEvidenceType (Obsolete OldDocumentHistory) = True
 htmlSkipedEvidenceType _ = False
-
-filterTagsNL :: XMLContent -> String
-filterTagsNL = map (\a -> if isSpace a then ' ' else a) . T.unpack . renderXMLContent . removeTags
 
 -- | Generate evidence of intent in self-contained HTML for inclusion as attachment in PDF.
 evidenceOfIntentHTML :: TemplatesMonad m => SignatoryIdentifierMap -> String -> [(SignatoryLink, SignatoryScreenshots.SignatoryScreenshots)] -> m String

@@ -496,7 +496,7 @@ handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 handleResend docid signlinkid  = withUserPost $
   getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid `withDocumentM` do
   signlink <- guardJust . getSigLinkFor signlinkid =<< theDocument
-  customMessage <- getOptionalField  asValidInviteText "customtext"
+  customMessage <- getField "customtext"
   actor <- guardJustM $ fmap mkAuthorActor getContext
   _ <- sendReminderEmail customMessage actor False signlink
   return (LinkIssueDoc docid)

@@ -21,8 +21,9 @@ import Control.Monad.Identity
 import Data.Int
 import Data.List.Utils (replace)
 import Data.Monoid
+import Data.Monoid.Space
 import Data.Monoid.Utils
-import Data.Text (pack, unpack)
+import Data.Text (pack)
 import Data.Typeable
 import Text.StringTemplates.Templates
 import qualified Control.Exception.Lifted as E
@@ -38,7 +39,7 @@ import IPAddress
 import MinutesTime
 import OurPrelude (unexpectedErrorM)
 import Text.XML.Content (parseXMLContent)
-import Text.XML.DirtyContent (XMLContent(..), renderXMLContent)
+import Text.XML.DirtyContent (XMLContent(..))
 import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo (getEmail)
@@ -89,14 +90,14 @@ signatoryLinkTemplateFields sl = do
 
 -- | Create evidence text that goes into evidence log
 evidenceLogText :: (DocumentMonad m, TemplatesMonad m, MonadDB m, MonadThrow m)
-                => CurrentEvidenceEventType -> F.Fields Identity () -> Maybe SignatoryLink -> Maybe XMLContent -> m XMLContent
+                => CurrentEvidenceEventType -> F.Fields Identity () -> Maybe SignatoryLink -> Maybe String -> m XMLContent
 evidenceLogText event textFields masl mmsg = do
    let fields = do
          F.value "full" True
        -- Interim substitutions that can be eliminated if we switch from hstringtemplates to XML for representing holes in all event texts.
          F.value "actor" ("$actor$" :: String)
          F.value "signatory" ("$signatory$" :: String)
-         maybe (return ()) (F.value "text") (unpack . renderXMLContent <$> mmsg)
+         maybe (return ()) (F.value "text") (mmsg)
          case masl of
            Nothing -> return ()
            Just sl -> do
@@ -118,8 +119,7 @@ parseEventTextTemplate name s =
 instance (DocumentMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsg Bool where
   update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields masl mmsg actor) = do
    -- FIXME: change to mmsg :: Maybe XMLContent
-   xmsg <- maybe (return Nothing) (either ($unexpectedErrorM . ("Bad evidence message: " ++) . show) (return . Just . CleanXMLContent) . parseXMLContent . pack) mmsg
-   text <- evidenceLogText event textFields masl xmsg
+   text <- evidenceLogText event textFields masl mmsg
    did <- theDocumentID
    actorSLID <- theDocument >>= \doc -> return $
      actorSigLinkID actor `mplus` (signatorylinkid <$> (actorUserID actor >>= flip getSigLinkFor doc))
@@ -135,7 +135,7 @@ instance (DocumentMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => DBUpdat
       sqlSet "signatory_link_id" actorSLID
       sqlSet "api_user" $ actorAPIString actor
       sqlSet "affected_signatory_link_id" $ signatorylinkid <$> masl
-      sqlSet "message_text" $ xmsg
+      sqlSet "message_text" $ mmsg
       sqlSet "client_time" $ actorClientTime actor
       sqlSet "client_name" $ actorClientName actor
       sqlSet "actor" $ actorWho actor
@@ -162,7 +162,7 @@ data DocumentEvidenceEvent = DocumentEvidenceEvent {
                                                -- use: to fetch object name; viewer; to set signatoryLinkTemplateFields and "signatory" attribute; get bankID signatory name
 
   , evActor      :: String                     -- actorWho, used for actor identification if evSigLink is missing
-  , evMessageText :: Maybe XMLContent          -- Some events have message connected to them (like reminders). We don't store such events in documents, but they should not get lost.
+  , evMessageText :: Maybe String              -- Some events have message connected to them (like reminders). We don't store such events in documents, but they should not get lost.
                                                -- use: "text" attribute
   }
   deriving (Eq, Ord, Show, Typeable)

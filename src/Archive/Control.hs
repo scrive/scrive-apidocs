@@ -86,7 +86,7 @@ handleDelete = do
              ctx <- getContext
              sl_actor <- signatoryActor ctx sl
              dbUpdate $ RejectDocument signatorylinkid  Nothing sl_actor
-             theDocument >>= postDocumentRejectedChange signatorylinkid
+             theDocument >>= postDocumentRejectedChange signatorylinkid Nothing
         dbUpdate $ ArchiveDocument (userid user) actor
 
 handleReallyDelete :: Kontrakcja m => m JSValue

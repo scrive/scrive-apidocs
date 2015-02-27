@@ -3,7 +3,7 @@
  *
 */
 
-define(['Backbone', 'tinyMCE', 'tinyMCE_theme', 'tinyMCE_noneeditable', 'tinyMCE_paste', 'legacy_code'], function(Backbone, tinyMCE) {
+define(['Backbone','legacy_code'], function(Backbone) {
 
 window.Mail = Backbone.Model.extend({
 	defaults : {
@@ -50,49 +50,13 @@ window.MailView = Backbone.View.extend({
         this.render();
     },
     editableMailContent : function() {
-        var view = this;
+        var self = this;
         var content = this.model.content().clone();
         var editablePart = $(".editable", content);
-        window.tinymce_textarea_count = window.tinymce_textarea_count || 0;
-      window.tinymce_textarea_count++;
-        var id = 'editable-textarea-' + window.tinymce_textarea_count;
-        var textarea = $("<textarea id='" + id + "' style='height:0px;border:0px;padding:0px;margin:0px'/>").html(editablePart.html());
-        textarea.css("width", this.model.editWidth() + "px");
-        var wrapper = $("<div style='margin-bottom:12px;'/>").append(textarea);
+        self.textarea = $("<textarea/>");
+        self.textarea.css("width", this.model.editWidth() + "px");
+        var wrapper = $("<div style='margin-bottom:12px;'/>").append(self.textarea);
         editablePart.replaceWith(wrapper);
-        setTimeout( function() {
-           tinyMCE.baseURL = '/libs/tiny_mce';
-           tinyMCE.init({
-                      selector: '#' + id,
-                      content_css : "/css/tinymce.css",
-                      plugins: "noneditable,paste",
-                      menubar: false,
-                      valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul",
-                      setup: function(editor) {
-                        view.editor = editor;
-                        editor.on('init', function() {
-                          $(editor.getContainer()).find('.mce-btn button').css('padding', '4px 5px');
-                          var body = $('body',$('iframe',content).contentDocument);
-                          $(editor.getWin()).scroll(function() {
-                            body.css('background', '#fffffe');
-                            setTimeout(function() {
-                              body.css('background', '#ffffff');
-                            }, 1);
-                            return true;
-                          });
-                        });
-
-			editor.on('PreInit', function() {
-			  $(editor.getContainer()).find('div[role=toolbar]').hide();
-			  $(editor.getContainer()).find('.mce-path').parents('.mce-statusbar').hide();
-			});
-
-                        editor.on('change', function() {
-                          view.customtextvalue = editor.getBody().innerHTML;
-                        });
-                      }
-          });
-        },100);
         return content;
 	},
     render : function() {
@@ -115,10 +79,8 @@ window.MailView = Backbone.View.extend({
         return this;
     },
     customtext : function() {
-        if (this.editor != undefined)
-            return this.editor.getContent();
-        if (this.customtextvalue != undefined)
-            return this.customtextvalue;
+        if (this.textarea != undefined)
+            return this.textarea.val();
         return "";
     }
 });
@@ -236,16 +198,16 @@ var ConfirmationWithEmailView = Backbone.View.extend({
        }
 
 
-       var accept = new Button({ type: model.acceptType(),
-                                 style : BrowserInfo.isSmallScreen() ? "margin-top:-10px" : "",
-                                 cssClass: "float-right",
-                                 text: this.model.acceptText(),
-                                 onClick : function() {
-									 var customtext = mailview.customtext();
-									 var res = model.accept(customtext);
-                                     if (res == true) view.reject(); //We don't actually reject. Just clean the modal.
-
-								}
+       var accept = new Button({
+         type: model.acceptType(),
+         style : BrowserInfo.isSmallScreen() ? "margin-top:-10px" : "",
+         cssClass: "float-right",
+         text: this.model.acceptText(),
+         onClick : function() {
+           var customtext = mailview.customtext();
+           var res = model.accept(customtext != undefined && customtext != "" ? customtext : undefined);
+           if (res == true) view.reject(); //We don't actually reject. Just clean the modal.
+         }
        });
        var acceptButton = accept.el();
 

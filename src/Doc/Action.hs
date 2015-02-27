@@ -42,7 +42,6 @@ import Doc.SealStatus (SealStatus(..), hasGuardtimeSignature)
 import Doc.SignatoryLinkID
 import ForkAction (forkAction)
 import GuardTime (GuardTimeConfMonad, runGuardTimeConfT)
-import InputValidation
 import Kontra
 import MailContext (MailContextMonad(..), MailContext(..))
 import MinutesTime
@@ -114,8 +113,8 @@ postDocumentPreparationChange authorsignsimmediately tzn = do
   scheduleAutoreminderIfThereIsOne tzn =<< theDocument
   return ()
 
-postDocumentRejectedChange :: Kontrakcja m => SignatoryLinkID -> Document -> m ()
-postDocumentRejectedChange siglinkid doc@Document{..} = do
+postDocumentRejectedChange :: Kontrakcja m => SignatoryLinkID -> Maybe String -> Document -> m ()
+postDocumentRejectedChange siglinkid customMessage doc@Document{..} = do
   triggerAPICallbackIfThereIsOne doc
   unless (isRejected doc) $
     stateMismatchError "postDocumentRejectedChange" Rejected doc
@@ -126,7 +125,6 @@ postDocumentRejectedChange siglinkid doc@Document{..} = do
   maybe (return ())
         (\user -> logDocEvent "Doc Rejected" user [] doc)
         (ctxmaybeuser ctx)
-  customMessage <- getOptionalField  asValidInviteText "customtext"
   sendRejectEmails customMessage ($(fromJust) $ getSigLinkFor siglinkid doc) doc
   return ()
 

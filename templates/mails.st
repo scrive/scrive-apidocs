@@ -133,7 +133,7 @@ $if(customMessage)$
   <br/>
   $_mailRejectionCustomInvitationHeader()$:
   <br/>
-  <i>$customMessage:noescape()$</i>
+  <i>$customMessage:br()$</i>
 $else$
   <div class="editable" name="custommessage"></div>
 $endif$
