@@ -466,11 +466,15 @@ addNewCompany = do
 addNewFile :: (CryptoRNG m, MonadDB m, MonadThrow m) => String -> BS.ByteString -> m FileID
 addNewFile filename content = dbUpdate $ NewFile filename $ Binary content
 
-addNewRandomFile :: (CryptoRNG m, MonadDB m, MonadThrow m) => m FileID
+addNewRandomFile :: (MonadIO m, CryptoRNG m, MonadDB m, MonadThrow m) => m FileID
 addNewRandomFile = do
-  fn <- rand 10 $ arbString 3 30
-  cnt <- rand 10 $ arbString 3 30
-  addNewFile fn (BS.fromString cnt)
+  fn <- rand 1 $ elements [ "test/pdfs/simple.pdf"
+                          , "test/pdfs/telia.pdf"
+                          , "test/pdfs/hp-designjet.pdf"
+                          , "test/pdfs/visa-application.pdf"
+                          ]
+  cnt <- liftIO $ BS.readFile fn
+  addNewFile fn cnt
 
 addNewUser :: (MonadDB m, MonadThrow m, Log.MonadLog m) => String -> String -> String -> m (Maybe User)
 addNewUser firstname secondname email = do
