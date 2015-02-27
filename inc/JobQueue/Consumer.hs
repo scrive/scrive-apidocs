@@ -24,7 +24,7 @@ instance ToSQL ConsumerID where
   toSQL (ConsumerID n) = toSQL n
 
 instance Show ConsumerID where
-  showsPrec p (ConsumerID n) = ("#" ++) . showsPrec p n
+  showsPrec p (ConsumerID n) = showsPrec p n
 
 -- | Register consumer in the consumers table,
 -- so that it can reserve jobs using acquired ID.
