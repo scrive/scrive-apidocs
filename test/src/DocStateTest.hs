@@ -267,14 +267,17 @@ testNewDocumentForACompanyUser = doTimes 10 $ do
   assertGoodNewDocument (Just company) (Signable) "doc title" result
 
 testRejectDocumentEvidenceLog :: TestEnv ()
-testRejectDocumentEvidenceLog = do
+testRejectDocumentEvidenceLog = doTimes 10 $ do
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending &&^ ((<=) 2 . length . documentsignatorylinks)) `withDocumentM` do
-    Just sl <- getSigLinkFor (not . (isAuthor::SignatoryLink->Bool)) <$> theDocument
-    randomUpdate $ \m t->RejectDocument (signatorylinkid sl) m (systemActor t)
+  addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending
+    &&^ ((<=) 2 . length . documentsignatorylinks)
+    &&^ (all ((==) Nothing . maybesigninfo) . filter (not . isAuthor) . documentsignatorylinks)
+    ) `withDocumentM` do
+      Just sl <- getSigLinkFor (not . (isAuthor::SignatoryLink->Bool)) <$> theDocument
+      randomUpdate $ \t -> RejectDocument (signatorylinkid sl) Nothing (systemActor t)
 
-    lg <- dbQuery . GetEvidenceLog  =<< theDocumentID
-    assertJust $ find (\e -> evType e == Current RejectDocumentEvidence) lg
+      lg <- dbQuery . GetEvidenceLog  =<< theDocumentID
+      assertJust $ find (\e -> evType e == Current RejectDocumentEvidence) lg
 
 testRestartDocumentEvidenceLog :: TestEnv ()
 testRestartDocumentEvidenceLog = do
