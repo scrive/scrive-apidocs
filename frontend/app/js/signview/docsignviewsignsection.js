@@ -89,13 +89,14 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
    */
   stopBlockingReload: function() {
     ReloadManager.popBlock(this.blockReload);
+    ReloadManager.stopBlocking();
   },
   /**
    *  Show different pages when a document is signed,
    *  based on a few conditions,
    */
   postSigningAction: function(newDocument, oldDocument) {
-    ReloadManager.stopBlocking();
+    this.stopBlockingReload();
     // Signing through api
     if (oldDocument.currentSignatory().signsuccessredirect() != undefined && oldDocument.currentSignatory().signsuccessredirect() != "") {
       window.location = oldDocument.currentSignatory().signsuccessredirect();
@@ -111,7 +112,6 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
    */
   onSignedDocument: function(newDocument, oldDocument) {
     var self = this;
-    this.stopBlockingReload();
 
     var postSign = function() {
       if (self.signinprogressmodal != undefined && !self.signinprogressmodal.done()) {
