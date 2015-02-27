@@ -91,7 +91,7 @@ define(['React', 'Backbone', 'common/button'], function(React, Backbone, NewButt
           <ul className="ct thin">
             <li id="branding">
               <a id="logo" className="page" href={this.props.httplink + this.props.langprefix}>
-                <img src={"/login_logo/" + window.brandinghash}  style={{"margin":"0px"}} />
+                <img src={"/service_logo/" + window.brandinghash}  style={{"margin":"0px"}} />
               </a>
             </li>
             <li className="session-login float-right">
