@@ -62,13 +62,13 @@ getPasswordReminderUser uid token = runMaybeT $ do
   Just user <- dbQuery $ GetUserByID $ prUserID pr
   return user
 
-newPasswordReminder :: (MonadDB m, MonadThrow m, CryptoRNG m) => UserID -> m PasswordReminder
+newPasswordReminder :: (MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => UserID -> m PasswordReminder
 newPasswordReminder uid = do
   token <- random
   expires <- minutesAfter (12*60) `liftM` currentTime
   dbUpdate $ NewAction passwordReminder expires (uid, 9, token)
 
-newPasswordReminderLink :: (MonadDB m, MonadThrow m, CryptoRNG m) => UserID -> m KontraLink
+newPasswordReminderLink :: (MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => UserID -> m KontraLink
 newPasswordReminderLink uid = do
   pr <- newPasswordReminder uid
   return $ LinkPasswordReminder (prUserID pr) (prToken pr)

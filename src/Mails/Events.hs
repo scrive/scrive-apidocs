@@ -121,7 +121,7 @@ handleDeliveredInvitation bd hostpart mc signlinkid = do
       return ()
     Nothing -> return ()
 
-handleOpenedInvitation :: (DocumentMonad m, TemplatesMonad m, MonadThrow m) => SignatoryLinkID -> String -> Maybe UserID -> m ()
+handleOpenedInvitation :: (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => SignatoryLinkID -> String -> Maybe UserID -> m ()
 handleOpenedInvitation signlinkid email muid = do
   now  <- currentTime
   _ <- dbUpdate $ MarkInvitationRead signlinkid

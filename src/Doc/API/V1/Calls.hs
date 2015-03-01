@@ -255,7 +255,8 @@ apiCallV1Update did = api $ do
     json <- apiGuard (badInput "The MIME part 'json' must be a valid JSON.") $ case decode jsons of
                                                                                  J.Ok js -> Just js
                                                                                  _ -> Nothing
-    Log.mixlogjs "Document updated with:" json
+    now <- currentTime
+    Log.mixlogjs now "Document updated with:" json
     draftData   <- apiGuardJustM (badInput "Given JSON does not represent valid draft data.") $ flip fromJSValueWithUpdate json . Just <$> theDocument
     whenM (draftIsChangingDocument draftData <$> theDocument) $ do
       checkObjectVersionIfProvided did -- If we will change document, then we want to be sure that object version is ok.

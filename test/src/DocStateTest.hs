@@ -3,7 +3,6 @@ module DocStateTest{- (docStateTests)-} where
 import Control.Arrow (first)
 import Control.Concurrent (newMVar)
 import Control.Monad
-import Control.Monad.Catch
 import Control.Monad.Trans
 import Data.Functor
 import Data.List
@@ -293,7 +292,7 @@ testRestartDocumentEvidenceLog = do
   lg2 <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == Current CancelDocumentEvidence) lg2
 
-getScreenshots :: (MonadIO m, MonadDB m, MonadThrow m) => m SignatoryScreenshots.SignatoryScreenshots
+getScreenshots :: TestEnv SignatoryScreenshots.SignatoryScreenshots
 getScreenshots = do
   now <- currentTime
   first_ <- liftIO $ BS.readFile "test/screenshots/s1.jpg"
@@ -1654,7 +1653,7 @@ testSetDocumentDaysToSignRight = doTimes 10 $ do
     assert success1
     assertEqual "Days to sign is set properly" daystosign . documentdaystosign =<< theDocument
 
-assertInvariants :: (MonadIO m, MonadDB m, MonadThrow m) => Document -> m ()
+assertInvariants :: (MonadIO m, MonadTime m) => Document -> m ()
 assertInvariants document = do
   now <- currentTime
   case invariantProblems now document of

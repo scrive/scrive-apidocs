@@ -48,6 +48,7 @@ import qualified Happstack.Server.Response as Web
 import DB
 import Doc.Rendering
 import Kontra
+import MinutesTime.Class
 import OAuth.Model
 import OAuth.Util
 import User.Model
@@ -207,7 +208,8 @@ jsonError rest = runJSONGen $ do
 api :: (Kontrakcja m, ToAPIResponse v) => m v -> m Response
 api acc = (toAPIResponse <$> acc)
           `catches` [ Handler $ \ex@(SomeKontraException e) -> do
-                        Log.mixlogjs "API error catched " (toJSValue e)
+                        now <- currentTime
+                        Log.mixlogjs now "API error catched " (toJSValue e)
                         return $ ((toAPIResponse $ toJSValue e) { rsCode = httpCodeFromSomeKontraException ex })
                     ]
 

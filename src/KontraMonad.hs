@@ -17,6 +17,7 @@ import Crypto.RNG
 import DB
 import GuardTime (GuardTimeConfMonad)
 import MailContext (MailContextMonad)
+import MinutesTime.Class
 import qualified Amazon as AWS
 import qualified Log
 
@@ -35,6 +36,7 @@ type Kontrakcja m = (
   , MonadBase IO m
   , MonadBaseControl IO m
   , MonadIO m
+  , MonadTime m
   , ServerMonad m
   , TemplatesMonad m
   , AWS.AmazonMonad m

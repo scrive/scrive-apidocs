@@ -45,7 +45,7 @@ import GuardTime (GuardTimeConfMonad, runGuardTimeConfT)
 import InputValidation
 import Kontra
 import MailContext (MailContextMonad(..), MailContext(..))
-import MinutesTime (currentTime, minutesBefore)
+import MinutesTime
 import OurPrelude
 import Templates (runTemplatesT)
 import ThirdPartyStats.Core
@@ -61,7 +61,7 @@ import Utils.Default (defaultValue)
 import qualified Log
 
 -- | Log a document event, adding some standard properties.
-logDocEvent :: (MailContextMonad m, MonadDB m, MonadThrow m) => EventName -> User -> [EventProperty] -> Document -> m ()
+logDocEvent :: (MailContextMonad m, MonadDB m, MonadThrow m, MonadTime m) => EventName -> User -> [EventProperty] -> Document -> m ()
 logDocEvent name user extraProps doc = do
   comp <- getCompanyForUser user
   now <- currentTime
@@ -276,7 +276,7 @@ findAndExtendDigitalSignatures = do
 
 -- | Estimate when the latest Guardtime publication code was published
 -- (sometime after the 15th of the month).
-latest_publication_time :: (MonadDB m, MonadThrow m) => m UTCTime
+latest_publication_time :: (MonadDB m, MonadThrow m, MonadTime m) => m UTCTime
 latest_publication_time = localTimeToUTC utc . f . utcToLocalTime utc <$> currentTime
   where
     f LocalTime{..} = LocalTime {

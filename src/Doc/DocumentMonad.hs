@@ -47,12 +47,12 @@ instance (GetRow Document m, MonadDB m) => DocumentMonad (DocumentT m) where
   updateDocumentWithID m = DocumentT $ updateRowWithID $ unDocumentT . m
 
 instance MonadLog m => MonadLog (DocumentT m) where
-  mixlogjs title js = do
+  mixlogjs time title js = do
     case toJSValue js of
       JSObject jso -> DocumentT $ do
         did <- rowCacheID
-        mixlogjs title (JSObject (toJSObject (("documentid",toJSValue (show did)) : fromJSObject jso)))
-      jsx -> DocumentT $ mixlogjs title jsx
+        mixlogjs time title (JSObject (toJSObject (("documentid",toJSValue (show did)) : fromJSObject jso)))
+      jsx -> DocumentT $ mixlogjs time title jsx
 
 -- | Lock a document and perform an operation that modifies the
 -- document in the database, given the document

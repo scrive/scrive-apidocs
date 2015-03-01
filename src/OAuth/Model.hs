@@ -413,7 +413,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetPersonalToken (Maybe (APIToke
    if we already have one
  -}
 data CreatePersonalToken = CreatePersonalToken UserID
-instance (MonadDB m, MonadThrow m, CryptoRNG m) => DBUpdate m CreatePersonalToken Bool where
+instance (MonadDB m, MonadTime m, MonadThrow m, CryptoRNG m) => DBUpdate m CreatePersonalToken Bool where
   update (CreatePersonalToken userid) = do
     m <- DB.query $ GetPersonalToken userid
     if isJust m

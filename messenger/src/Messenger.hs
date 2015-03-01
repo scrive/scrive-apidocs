@@ -16,12 +16,13 @@ import Control.Monad.Trans.Instances ()
 import Crypto.RNG
 import DB
 import Happstack.Server.Instances ()
+import MinutesTime.Class
 import qualified Log
 
 type InnerMessenger = CryptoRNGT (DBT (ServerPartT (Log.LogT IO)))
 
 newtype Messenger a = Messenger { unMessenger :: InnerMessenger a }
-  deriving (Alternative, Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadCatch, MonadDB, MonadIO, MonadMask, MonadPlus, MonadThrow, ServerMonad, Log.MonadLog)
+  deriving (Alternative, Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadCatch, MonadDB, MonadIO, MonadMask, MonadPlus, MonadThrow, MonadTime, ServerMonad, Log.MonadLog)
 
 instance MonadBaseControl IO Messenger where
   newtype StM Messenger a = StMessenger { unStMessenger :: StM InnerMessenger a }

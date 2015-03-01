@@ -2,7 +2,10 @@
 module Log.Class where
 
 import Control.Monad.Trans
+import Data.Time
 import Text.JSON.Gen
+
+import MinutesTime.Class
 
 -- | MonadLog is for situations when you want to have access to
 -- logging, but to not expose whole IO functionality. It is a safe
@@ -10,11 +13,11 @@ import Text.JSON.Gen
 --
 -- Should be used together with other IO based monads that do not
 -- expose MonadIO or MonadBase IO.
-class Monad m => MonadLog m where
+class MonadTime m => MonadLog m where
   -- | This is a variation on 'mixlog' that takes a premade version of
   -- properties object. Useful for logging data directly from API calls
   -- for example.
-  mixlogjs :: ToJSValue js => String -> js -> m ()
+  mixlogjs :: ToJSValue js => UTCTime -> String -> js -> m ()
 
 -- | Generic, overlapping instance.
 instance (
@@ -22,4 +25,4 @@ instance (
   , Monad (t m)
   , MonadTrans t
   ) => MonadLog (t m) where
-    mixlogjs title js = lift (mixlogjs title js)
+    mixlogjs time title js = lift (mixlogjs time title js)

@@ -16,6 +16,7 @@ import Crypto.RNG
 import DB
 import Doc.SignatoryLinkID
 import KontraMonad
+import MinutesTime.Class
 import Session.Model
 import Session.SessionID
 
@@ -30,7 +31,7 @@ data CgiGrpTransaction = CgiGrpTransaction {
 
 -- | Insert new transaction or replace the existing one.
 data MergeCgiGrpTransaction = MergeCgiGrpTransaction CgiGrpTransaction
-instance (CryptoRNG m, KontraMonad m, MonadDB m, MonadMask m, ServerMonad m)
+instance (CryptoRNG m, KontraMonad m, MonadDB m, MonadMask m, MonadTime m, ServerMonad m)
   => DBUpdate m MergeCgiGrpTransaction () where
     update (MergeCgiGrpTransaction CgiGrpTransaction{..}) = do
       sid <- getNonTempSessionID

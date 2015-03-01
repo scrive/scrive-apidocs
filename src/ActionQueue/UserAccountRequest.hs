@@ -65,7 +65,7 @@ getUserAccountRequestUser uid token = runMaybeT $ do
   Just user <- dbQuery $ GetUserByID uarUserID
   return user
 
-newUserAccountRequest :: (MonadDB m, MonadThrow m, CryptoRNG m) => UserID -> m UserAccountRequest
+newUserAccountRequest :: (MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => UserID -> m UserAccountRequest
 newUserAccountRequest uid = do
   token <- random
   expires <- (14 `daysAfter`) `liftM` currentTime
@@ -80,7 +80,7 @@ newUserAccountRequest uid = do
           _ <- dbUpdate $ DeleteAction userAccountRequest uid
           dbUpdate $ NewAction userAccountRequest expires (uid, token)
 
-newUserAccountRequestLink :: (MonadDB m, MonadThrow m, CryptoRNG m) => Lang -> UserID -> SignupMethod -> m KontraLink
+newUserAccountRequestLink :: (MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => Lang -> UserID -> SignupMethod -> m KontraLink
 newUserAccountRequestLink lang uid sm = do
   uar <- newUserAccountRequest uid
   return $ LinkAccountCreated lang (uarUserID uar) (uarToken uar) sm

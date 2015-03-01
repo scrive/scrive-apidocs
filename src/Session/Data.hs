@@ -31,7 +31,7 @@ data Session = Session {
   , sesDomain    :: String
   } deriving (Eq, Show, Typeable)
 
-emptySession :: (CryptoRNG m, MonadDB m, MonadThrow m, ServerMonad m) => m Session
+emptySession :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m, ServerMonad m) => m Session
 emptySession = do
   now <- currentTime
   token <- random

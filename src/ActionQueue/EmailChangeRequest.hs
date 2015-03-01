@@ -69,7 +69,7 @@ getEmailChangeRequestNewEmail uid token = runMaybeT $ do
   Nothing <- dbQuery $ GetUserByEmail ecrNewEmail
   return ecrNewEmail
 
-newEmailChangeRequest :: (MonadDB m, MonadThrow m, CryptoRNG m) => UserID -> Email -> m EmailChangeRequest
+newEmailChangeRequest :: (MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => UserID -> Email -> m EmailChangeRequest
 newEmailChangeRequest uid new_email = do
   token <- random
   expires <- (1 `daysAfter`) `liftM` currentTime
@@ -82,7 +82,7 @@ newEmailChangeRequest uid new_email = do
   _ <- dbUpdate $ DeleteAction emailChangeRequest uid
   dbUpdate $ NewAction emailChangeRequest expires (uid, new_email, token)
 
-newEmailChangeRequestLink :: (MonadDB m, MonadThrow m, CryptoRNG m) => UserID -> Email -> m KontraLink
+newEmailChangeRequestLink :: (MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => UserID -> Email -> m KontraLink
 newEmailChangeRequestLink uid new_email = do
   ecr <- newEmailChangeRequest uid new_email
   return $ LinkChangeUserEmail (ecrUserID ecr) (ecrToken ecr)

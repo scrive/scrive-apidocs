@@ -57,13 +57,13 @@ getAccessNewAccountUser uid token = runMaybeT $ do
   Just user <- dbQuery $ GetUserByID $ aUserID a
   return user
 
-newAccessNewAccount :: (MonadDB m, MonadThrow m, CryptoRNG m) => UserID -> m AccessNewAccount
+newAccessNewAccount :: (MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => UserID -> m AccessNewAccount
 newAccessNewAccount uid = do
   token <- random
   expires <- (14 `daysAfter`) `liftM` currentTime
   dbUpdate $ NewAction accessNewAccount expires (uid, token)
 
-newAccessNewAccountLink :: (MonadDB m, MonadThrow m, CryptoRNG m) => UserID -> m KontraLink
+newAccessNewAccountLink :: (MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => UserID -> m KontraLink
 newAccessNewAccountLink uid = do
   a <- newAccessNewAccount uid
   return $ LinkAccessNewAccount (aUserID a) (aToken a)

@@ -34,6 +34,7 @@ import Data.Time
 import Numeric
 import Prelude hiding (error)
 import System.IO.Unsafe
+import System.Locale
 import Text.JSON
 import Text.JSON.Gen
 import qualified Control.Concurrent as C
@@ -42,6 +43,7 @@ import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BSU
 
 import Log.Class
+import MinutesTime.Class
 
 -- Here we use 'ByteString.putStrLn' because 'Prelude.putStrLn' prints
 -- character by character and in case there are many thread it will
@@ -68,9 +70,10 @@ outputChannel :: C.Chan String
 outputChannel = unsafePerformIO $ do
   chan <- C.newChan
   let loop = do
+        now <- currentTime
         msg <- C.readChan chan
         BSC.putStrLn (BSU.fromString msg) `E.catch` \(e :: E.SomeException) -> do
-          mixlogjsIO "Exception caught while logging exception (ATTENTION!):" $
+          mixlogjsIO now "Exception caught while logging exception (ATTENTION!):" $
             runJSONGen (value "exception" (show e))
         loop
   _ <- C.forkIO loop
@@ -101,28 +104,20 @@ instance MonadBaseControl IO m => MonadBaseControl IO (LogT m) where
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
-instance (MonadBase IO m) => MonadLog (LogT m) where
-  mixlogjs a b = liftBase (mixlogjsIO a b)
+instance (MonadBase IO m, MonadTime m) => MonadLog (LogT m) where
+  mixlogjs now title js = liftBase $ mixlogjsIO now title js
 
-mixlogjsIO :: (ToJSValue js) => String -> js -> IO ()
-mixlogjsIO title js = do
-      -- FIXME: asking got time on every log line is actually a heavy task
-      -- Find in the internet how to get around this limitation
-      currentTime <-getCurrentTime
-      -- show instance for UTCTime looks like this:
-      -- "2014-01-23 22:08:14.682469 UTC"
-      -- this is exactly what we want here
-      let datedTitle = takeWhile (/='.') (show currentTime) ++ " " ++ title
-      C.writeChan outputChannel (text datedTitle)
-    where
-      jsx = toJSValue js
-      text datedTitle = case jsx of
-               JSObject vals | null (fromJSObject vals) -> datedTitle
-               JSObject _vals ->
-                     intercalate "\n" (datedTitle : map ("    " ++) (jsonShowYamlLn jsx))
-               JSArray vals | not (null vals) ->
-                     intercalate "\n" (datedTitle : map ("    " ++) (jsonShowYamlLn jsx))
-               _ -> intercalate " " (datedTitle : jsonShowYamlLn jsx)
+mixlogjsIO :: (ToJSValue js) => UTCTime -> String -> js -> IO ()
+mixlogjsIO now title js = C.writeChan outputChannel msg
+  where
+    datedTitle = formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S" now ++ " " ++ title
+
+    jsx = toJSValue js
+    msg = case jsx of
+      JSObject vals | null (fromJSObject vals) -> datedTitle
+      JSObject _vals -> intercalate "\n" (datedTitle : map ("    " ++) (jsonShowYamlLn jsx))
+      JSArray vals | not (null vals) -> intercalate "\n" (datedTitle : map ("    " ++) (jsonShowYamlLn jsx))
+      _ -> intercalate " " (datedTitle : jsonShowYamlLn jsx)
 
 -- | Bracket an IO action which denotes the whole scope where the loggers of
 -- the application are needed to installed. Sets them up before running the action
@@ -146,8 +141,10 @@ withLogger = runIdentityT . unLogT
 --
 -- Properties data is restricted to JSON object model and can easily
 -- be stored in some external logging database.w
-mixlog :: (MonadLog m) => String -> JSONGen () -> m ()
-mixlog title jsgen = mixlogjs title (runJSONGen jsgen)
+mixlog :: MonadLog m => String -> JSONGen () -> m ()
+mixlog title jsgen = do
+  now <- currentTime
+  mixlogjs now title (runJSONGen jsgen)
 
 -- | A transformer version of 'mixlog'. Can be used to fetch data from
 -- the underlying monad should it be needed sometimes. Example:
@@ -157,18 +154,23 @@ mixlog title jsgen = mixlogjs title (runJSONGen jsgen)
 -- >     value "x" x
 --
 mixlogt :: (MonadLog m) => String -> JSONGenT m () -> m ()
-mixlogt title jsgent = runJSONGenT jsgent >>= mixlogjs title
-
+mixlogt title jsgent = do
+  now <- currentTime
+  runJSONGenT jsgent >>= mixlogjs now title
 
 -- | Log a line without any additional properties.
 mixlog_ :: (MonadLog m) => String -> m ()
 mixlog_ title = mixlog title (return ())
 
 mixlogIO :: String -> JSONGen () -> IO ()
-mixlogIO title jsgen = mixlogjsIO title (runJSONGen jsgen)
+mixlogIO title jsgen = do
+  now <- currentTime
+  mixlogjsIO now title (runJSONGen jsgen)
 
 attentionIO :: String -> JSONGen () -> IO ()
-attentionIO title jsgen = mixlogjsIO (title ++ " (ATTENTION!)") (runJSONGen jsgen)
+attentionIO title jsgen = do
+  now <- currentTime
+  mixlogjsIO now (title ++ " (ATTENTION!)") (runJSONGen jsgen)
 
 attention :: (MonadLog m) => String -> JSONGen () -> m ()
 attention title = mixlog (title ++ " (ATTENTION!)")

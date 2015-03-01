@@ -13,6 +13,7 @@ import DB
 import Doc.SignatoryLinkID
 import KontraMonad
 import MagicHash
+import MinutesTime.Class
 import Session.Model
 
 data GetDocumentSessionToken = GetDocumentSessionToken SignatoryLinkID
@@ -26,7 +27,7 @@ instance (KontraMonad m, MonadDB m, MonadThrow m) => DBQuery m GetDocumentSessio
     fetchMaybe runIdentity
 
 data AddDocumentSessionToken = AddDocumentSessionToken SignatoryLinkID MagicHash
-instance (ServerMonad m,CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m) => DBUpdate m AddDocumentSessionToken () where
+instance (ServerMonad m, CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m AddDocumentSessionToken () where
   update (AddDocumentSessionToken slid token) = do
     sid <- getNonTempSessionID
     runQuery_ $ rawSQL "SELECT insert_document_session_token($1, $2, $3)" (sid, slid, token)

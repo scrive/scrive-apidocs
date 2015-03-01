@@ -29,6 +29,7 @@ import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Trans.Control
 import Data.Maybe
+import Data.Time
 import Database.PostgreSQL.PQTypes.Internal.Monad
 import Database.PostgreSQL.PQTypes.Internal.State
 import Happstack.Server hiding (mkHeaders, dir, getHeader, method, path)
@@ -83,7 +84,7 @@ newtype TestEnv a = TestEnv { unTestEnv :: InnerTestEnv a }
   deriving (Applicative, Functor, Monad, MonadCatch, MonadThrow, MonadMask, MonadIO, MonadReader TestEnvSt, MonadBase IO)
 
 instance Log.MonadLog TestEnv where
-  mixlogjs title js = liftBase (Log.mixlogjsIO title js)
+  mixlogjs time title js = liftBase $ Log.mixlogjsIO time title js
 
 runTestEnv :: TestEnvSt -> TestEnv () -> IO ()
 runTestEnv st m = do
@@ -119,6 +120,9 @@ instance MonadDB TestEnv where
       res <- runDBT cs (dbTransactionSettings st) (runReaderT m r)
       return (res, st)
   getNotification = TestEnv . getNotification
+
+instance MonadTime TestEnv where
+  currentTime = liftBase getCurrentTime
 
 instance TemplatesMonad TestEnv where
   getTemplates = getTextTemplatesByLanguage $ codeFromLang defaultValue

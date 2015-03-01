@@ -61,10 +61,10 @@ documentAutomaticReminder = Action {
 
 
 
-scheduleAutoreminderIfThereIsOne :: (MonadDB m, MonadMask m) => TimeZoneName -> Document -> m ()
+scheduleAutoreminderIfThereIsOne :: (MonadDB m, MonadTime m, MonadMask m) => TimeZoneName -> Document -> m ()
 scheduleAutoreminderIfThereIsOne tzn doc = setAutoreminder (documentid doc) (documentdaystoremind doc) tzn
 
-setAutoreminder :: (MonadDB m, MonadMask m) => DocumentID -> Maybe Int32 -> TimeZoneName -> m ()
+setAutoreminder :: (MonadDB m, MonadTime m, MonadMask m) => DocumentID -> Maybe Int32 -> TimeZoneName -> m ()
 setAutoreminder did mdays tzn = do
       void $  dbUpdate $ DeleteAction documentAutomaticReminder did
       case mdays of

@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module MinutesTime (
     UTCTime
-  , currentTime
+  , module MinutesTime.Class
   , unixEpoch
   , formatTime'
   , parseTime'
@@ -22,13 +22,13 @@ module MinutesTime (
   ) where
 
 import Control.Monad
-import Control.Monad.Catch
 import Data.Int
 import Data.Time
 import Data.Time.Clock.POSIX
-import Database.PostgreSQL.PQTypes
 import System.Locale
 import qualified Data.Binary as B
+
+import MinutesTime.Class
 
 -- | FIXME: this really needs to go.
 instance B.Binary UTCTime where
@@ -36,11 +36,6 @@ instance B.Binary UTCTime where
   get = do
     n :: Int64 <- B.get
     return . posixSecondsToUTCTime . fromIntegral $ n
-
-currentTime :: (MonadDB m, MonadThrow m) => m UTCTime
-currentTime = do
-  runSQL_ "SELECT now()"
-  fetchOne runIdentity
 
 unixEpoch :: UTCTime
 unixEpoch = posixSecondsToUTCTime 0

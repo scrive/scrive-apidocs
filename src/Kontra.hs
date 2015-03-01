@@ -41,6 +41,7 @@ import KontraError
 import KontraMonad
 import MailContext (MailContextMonad(..))
 import Mails.MailsConfig
+import MinutesTime.Class
 import Templates
 import User.Model
 import Utils.List
@@ -54,7 +55,7 @@ newtype KontraPlus a = KontraPlus { unKontraPlus :: InnerKontraPlus a }
   deriving (Alternative, Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadCatch, MonadDB, MonadIO, MonadMask, MonadThrow, ServerMonad, WebMonad Response, AWS.AmazonMonad)
 
 instance Log.MonadLog KontraPlus where
-  mixlogjs title js = liftBase (Log.mixlogjsIO title js)
+  mixlogjs now title js = liftBase $ Log.mixlogjsIO now title js
 
 runKontraPlus :: Context -> KontraPlus a -> AWS.AmazonMonadT (CryptoRNGT (DBT (ServerPartT (Log.LogT IO)))) a
 runKontraPlus ctx f = evalStateT (unKontraPlus f) ctx
@@ -65,6 +66,9 @@ instance MonadBaseControl IO KontraPlus where
   restoreM     = newtypeRestoreM KontraPlus unStKontraPlus
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
+
+instance MonadTime KontraPlus where
+  currentTime = ctxtime <$> getContext
 
 instance KontraMonad KontraPlus where
   getContext    = KontraPlus get
@@ -89,7 +93,7 @@ instance MailContextMonad KontraPlus where
 -- is not an instance of MonadPlus.  Errors are signaled explicitly
 -- through 'KontraError'.
 newtype Kontra a = Kontra { unKontra :: KontraPlus a }
-  deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadCatch, MonadIO, MonadDB, MonadMask, MonadThrow, ServerMonad, KontraMonad, TemplatesMonad, Log.MonadLog, AWS.AmazonMonad, MailContextMonad, GuardTimeConfMonad)
+  deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadCatch, MonadIO, MonadDB, MonadMask, MonadThrow, MonadTime, ServerMonad, KontraMonad, TemplatesMonad, Log.MonadLog, AWS.AmazonMonad, MailContextMonad, GuardTimeConfMonad)
 
 instance MonadBaseControl IO Kontra where
   newtype StM Kontra a = StKontra { unStKontra :: StM KontraPlus a }

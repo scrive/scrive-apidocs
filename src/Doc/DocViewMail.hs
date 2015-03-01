@@ -51,7 +51,7 @@ import Utils.Color
 import Utils.Monoid
 import Utils.Prelude
 
-mailDocumentRemind :: (MonadDB m, MonadThrow m, TemplatesMonad m, MailContextMonad m)
+mailDocumentRemind :: (MonadDB m, MonadThrow m, MonadTime m, TemplatesMonad m, MailContextMonad m)
                    => Maybe String
                    -> SignatoryLink
                    -> Bool
@@ -61,7 +61,7 @@ mailDocumentRemind cm s documentAttached d = case s of
   SignatoryLink {maybesigninfo = Nothing} -> remindMailNotSigned True cm d s
   _                                       -> remindMailSigned    True cm d s documentAttached
 
-mailDocumentRemindContent :: (MonadDB m, MonadThrow m, TemplatesMonad m, MailContextMonad m)
+mailDocumentRemindContent :: (MonadDB m, MonadThrow m, MonadTime m, TemplatesMonad m, MailContextMonad m)
                           => Maybe String -> Document -> SignatoryLink -> Bool -> m String
 mailDocumentRemindContent cm d s documentAttached = content <$> case s of
   SignatoryLink {maybesigninfo = Nothing} -> remindMailNotSigned False cm d s
@@ -99,7 +99,7 @@ remindMailNotSigned forMail customMessage document signlink = do
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
 
 
-documentAttachedFields :: (MailContextMonad m, MonadDB m, MonadThrow m) => Bool -> SignatoryLink -> Bool -> Document -> Fields m ()
+documentAttachedFields :: (MailContextMonad m, MonadDB m, MonadThrow m, MonadTime m) => Bool -> SignatoryLink -> Bool -> Document -> Fields m ()
 documentAttachedFields forMail signlink documentAttached document = do
   mctx <- getMailContext
   F.value "documentAttached" documentAttached
@@ -110,13 +110,13 @@ documentAttachedFields forMail signlink documentAttached document = do
     Nothing -> return Nothing
   if ((companyallowsavesafetycopy . companyinfo) <$> mcompany) == Just True
      then do
-       now <- lift $ currentTime
+       now <- currentTime
        F.value "availabledate" $ formatTimeYMD $ (unsavedDocumentLingerDays-1) `daysAfter` now
     else do
-       now <- lift $ currentTime
+       now <- currentTime
        F.value "availabledate" $ formatTimeSimple $ (60 `minutesAfter` now)
 
-remindMailSigned :: (MonadDB m, MonadThrow m, TemplatesMonad m, MailContextMonad m)
+remindMailSigned :: (MonadDB m, MonadThrow m, MonadTime m, TemplatesMonad m, MailContextMonad m)
                  => Bool
                  -> Maybe String
                  -> Document
@@ -128,7 +128,7 @@ remindMailSigned forMail customMessage document signlink documentAttached = do
             F.value "custommessage" customMessage
             documentAttachedFields forMail signlink documentAttached document
 
-mailForwardSigned :: (MonadDB m, MonadThrow m, TemplatesMonad m, MailContextMonad m)
+mailForwardSigned :: (MonadDB m, MonadThrow m, MonadTime m, TemplatesMonad m, MailContextMonad m)
                  => SignatoryLink -> Bool -> Document
                  -> m Mail
 mailForwardSigned sl documentAttached document = do
@@ -233,14 +233,14 @@ mailInvitationContent  forMail invitationto msiglink document = do
      content <$> mailInvitation forMail invitationto msiglink document
 
 
-mailClosedContent :: (MonadDB m, MonadThrow m, TemplatesMonad m, MailContextMonad m)
+mailClosedContent :: (MonadDB m, MonadThrow m, MonadTime m, TemplatesMonad m, MailContextMonad m)
                       => Bool
                       -> Document
                       -> m String
 mailClosedContent ispreview document = do
      content <$> mailDocumentClosed ispreview (fromJust $ getAuthorSigLink document) False True document
 
-mailDocumentClosed :: (MonadDB m, MonadThrow m, TemplatesMonad m, MailContextMonad m) => Bool -> SignatoryLink -> Bool -> Bool -> Document -> m Mail
+mailDocumentClosed :: (MonadDB m, MonadThrow m, MonadTime m, TemplatesMonad m, MailContextMonad m) => Bool -> SignatoryLink -> Bool -> Bool -> Document -> m Mail
 mailDocumentClosed ispreview sl sealFixed documentAttached document = do
    mctx <- getMailContext
    partylist <- renderLocalListTemplate document $ map getSmartName $ filter isSignatory (documentsignatorylinks document)

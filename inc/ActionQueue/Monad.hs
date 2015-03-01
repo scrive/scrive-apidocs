@@ -27,7 +27,7 @@ type ActionQueue = ActionQueueT (AmazonMonadT (CryptoRNGT (DBT (Log.LogT IO))))
 type InnerAQ m qd = ReaderT qd m
 
 newtype ActionQueueT m qd a = AQ { unAQ :: InnerAQ m qd a }
-  deriving (Applicative, CryptoRNG, Functor, Monad, MonadCatch, MonadDB, MonadIO, MonadMask, MonadReader qd, MonadThrow, AmazonMonad, MonadBase b, Log.MonadLog)
+  deriving (Applicative, CryptoRNG, Functor, Monad, MonadCatch, MonadDB, MonadIO, MonadMask, MonadReader qd, MonadThrow, MonadTime, AmazonMonad, MonadBase b, Log.MonadLog)
 
 instance (MonadBaseControl IO m, MonadBase IO (ActionQueueT m qd)) => MonadBaseControl IO (ActionQueueT m qd) where
   newtype StM (ActionQueueT m qd) a = StAQ { unStAQ :: StM (InnerAQ m qd) a }

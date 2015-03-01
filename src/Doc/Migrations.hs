@@ -115,7 +115,7 @@ addSealStatusToDocument = Migration {
   , mgrDo = runSQL_ "ALTER TABLE documents ADD COLUMN seal_status SMALLINT NULL"
 }
 
-setMandatoryExpirationTimeInDocument :: (MonadDB m, MonadThrow m) => Migration m
+setMandatoryExpirationTimeInDocument :: (MonadDB m, MonadThrow m, MonadTime m) => Migration m
 setMandatoryExpirationTimeInDocument = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 12
@@ -862,7 +862,7 @@ moveAttachmentsFromDocumentsToAttachments =
          Log.mixlog_  $ "Migration from documents to attachments done. Migrated: " ++ show inserted ++ ". Lost attachments due to missing files: " ++ show (deleted - inserted)
   }
 
-removeOldDocumentLog :: (MonadDB m, MonadThrow m) => Migration m
+removeOldDocumentLog :: (MonadDB m, MonadThrow m, MonadTime m) => Migration m
 removeOldDocumentLog =
   Migration
   { mgrTable = tableDocuments
