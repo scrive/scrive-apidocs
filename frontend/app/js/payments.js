@@ -103,7 +103,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                 this.set({hasEmail:true});
         },
         initialize: function(args) {
-            _.bindAll(this, 'reset', 'firstName', 'setFirstName', 'hasFirstName', 'lastName', 'setLastName', 'hasLastName', 'email', 'setEmail', 'hasEmail', 'companyName', 'setCompanyName', 'setYearlyPrices', 'yearlyprices', 'accountCode', 'setAccountCode', 'plans', 'subdomain', 'currentPlan', 'setCurrentPlan', 'setDone', 'done', 'creditCard', 'setCreditCard', 'cvv', 'setCvv', 'month', 'setMonth', 'year', 'setYear', 'createdUser', 'setCreatedUser', 'accountCreated', 'setAccountCreated', 'paidPlan', 'status', 'subscription', 'invoices', 'billingSig', 'header', 'type', 'quantity', 'isAdmin', 'canPurchase', 'url', 'createaccount', 'checkuserexists', 'submitSubscription');
+            _.bindAll(this, 'reset');
             this.bind('fetch', this.reset);
             this.reset();
         },
@@ -574,7 +574,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
     var RecurlyView = Backbone.View.extend({
         initialize: function(args) {
-            _.bindAll(this, 'scrambleForm', 'render');
+            _.bindAll(this, 'render');
             this.element = $('<div />');
             this.$el.append(this.element);
             args.model.bind('change:currentPlan', this.render);
@@ -982,7 +982,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         initialize: function(args) {
             var view = this;
             view.model = args.model;
-            _.bindAll(this, 'render', 'dateString', 'addMark', 'nextPayment', 'previousPayments');
+            _.bindAll(this, 'render');
             view.model.bind('fetch', this.render);
         },
         render: function() {
@@ -1069,7 +1069,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         initialize: function(args) {
             var view = this;
             view.model = args.model;
-            _.bindAll(this, 'subscriptionCancelled', 'render', 'cancelButton');
+            _.bindAll(this, 'subscriptionCancelled', 'render');
             view.model.bind('fetch', this.render);
 	    view.model.bind('subscriptionCancelled', this.subscriptionCancelled);
         },
@@ -1212,7 +1212,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         initialize: function(args) {
             var view = this;
             view.model = args.model;
-            _.bindAll(this, 'render', 'renewButton');
+            _.bindAll(this, 'render');
             view.model.bind('fetch', this.render);
         },
         render: function() {

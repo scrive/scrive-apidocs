@@ -8,9 +8,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
     var DesignViewNewFieldSelector = Backbone.View.extend({
         className: 'design-view-action-participant-new-field-selector',
         initialize: function() {
-            var view = this;
-            _.bindAll(this, 'render', 'createNewButton', 'addOne');
-            view.render();
+            this.render();
         },
         render: function() {
             var view = this;
@@ -63,7 +61,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
         className: 'design-view-action-participant-details-participation',
         initialize: function() {
             var view = this;
-            _.bindAll(this, 'destroy', 'render', 'detailsPartcipationFieldsWithLabels', 'detailsParticipationFieldsSignOrder', 'detailsParticipationFieldsDelivery', 'detailsParticipationFieldsConfirmationDelivery', 'detailsParticipationFieldsRole', 'detailsParticipationFieldsAuth');
+            _.bindAll(this, 'render');
             view.model.bind('change', view.render);
             // if the document's signorder changes, we rerender in order
             // to get reset the sign order select box
@@ -284,7 +282,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
         className: 'design-view-action-participant-new-box',
         initialize: function(args) {
             var view = this;
-            _.bindAll(this, 'render', 'newButtons', 'single', 'multi', 'doneButton');
+            _.bindAll(this, 'render');
             view.model.bind('change:participantDetail', view.render);
             view.render();
         },
@@ -393,7 +391,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
         className: 'design-view-action-participant-container',
         initialize: function(args) {
             var view = this;
-            _.bindAll(this, 'rescroll', 'reset', 'closeAllParticipants', 'setup', 'customScrollbarOpts', 'resizeOnWindowResize', 'initCustomScrollBox', 'render');
+            _.bindAll(this, 'render', 'rescroll', 'reset', 'resizeOnWindowResize');
             view.addNew = new DesignViewParticipantsNewView(args);
             view.reset();
             // any changes to the signatories of a document and we rerender
@@ -503,7 +501,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
         className: 'design-view-action-participant-icon-order',
         initialize: function(args) {
             var view = this;
-            _.bindAll(this, 'destroy', 'render');
+            _.bindAll(this, 'render');
             view.model.bind('change:signorder', view.render);
             view.render();
             view.$el.click(function() {
@@ -736,7 +734,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
         className: 'design-view-action-participant-details',
         initialize: function(args) {
             var view = this;
-            _.bindAll(this, 'destroy', 'render', 'detailsInformation', 'detailsInformationFields', 'detailsInformationCustomFieldName', 'detailsInformationNewField', 'detailsFullNameField', 'detailsInformationField', 'placeholder');
+            _.bindAll(this, 'render');
             view.viewmodel = args.viewmodel;
             view.participation = new DesignViewParticipation({model:view.model});
             view.newFieldSelector = new DesignViewNewFieldSelector({model:view.model});
@@ -1166,7 +1164,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
             var view = this;
             var viewmodel = args.viewmodel;
             view.viewmodel = args.viewmodel;
-            _.bindAll(this, 'destroy', 'render', 'open', 'close', 'updateOpened', 'inner', 'checkInnerProblems', 'closeBox', 'infoBox', 'name', 'color', 'email', 'company');
+            _.bindAll(this, 'render', 'updateOpened', 'checkInnerProblems');
 
             view.orderIcon  = new DesignViewOrderIconView ({model:view.model,
                                                             viewmodel: view.viewmodel});

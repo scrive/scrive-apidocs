@@ -15,7 +15,7 @@ window.Field = Backbone.Model.extend({
     },
     initialize : function(args){
         var field = this;
-        _.bindAll(this, 'type', 'setType', 'name', 'value', 'valueTMP', 'nameTMP', 'obligatory', 'shouldbefilledbysender', 'setShouldBeFilledBySender', 'setValue', 'triggerSignatoryPostChanges', 'setValueTMP', 'setName', 'setNameTMP', 'isClosed', 'isFake', 'placements', 'isPlaced', 'signatory', 'setSignatory', 'canBeIgnored', 'hasNotReadyPlacements', 'readyForSign', 'nicename', 'nicetext', 'validation', 'validateSSN', 'validateCheckbox', 'validateMobile', 'validateEmail', 'isEmail', 'isMobile', 'isFstName', 'isSndName', 'isSSN', 'isBlank', 'noName', 'isStandard', 'isCustom', 'isText', 'isSignature', 'isCheckbox', 'isOptional', 'isObligatory', 'isCsvField', 'isAuthorUnchangeableField', 'csvFieldValues', 'defaultTip', 'makeOptional', 'makeObligatory', 'canBeOptional', 'canBeSetByRecipent', 'isReady', 'isDDSignature', 'makeReady', 'remove', 'draftData', 'hasPlacements', 'addPlacement', 'removePlacement', 'removeAllPlacements', 'needsSenderAction', 'isValid', 'requiredForParticipation', 'canBeRemoved', 'bindBubble', 'bubbleSelf', 'triggerBubble');
+        _.bindAll(this, 'remove', 'bindBubble', 'bubbleSelf');
         var extendedWithField =   function(hash){
             hash.field = field;
             return hash;
