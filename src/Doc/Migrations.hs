@@ -7,7 +7,6 @@ import Control.Monad.Catch
 import Data.Int
 import Data.Maybe
 import Data.Monoid
-import Data.Monoid.Space
 import Data.Monoid.Utils
 import Data.String.Utils
 import Text.JSON

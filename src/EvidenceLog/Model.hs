@@ -21,7 +21,6 @@ import Control.Monad.Identity
 import Data.Int
 import Data.List.Utils (replace)
 import Data.Monoid
-import Data.Monoid.Space
 import Data.Monoid.Utils
 import Data.Text (pack)
 import Data.Typeable
