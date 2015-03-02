@@ -6,7 +6,7 @@ define(["legacy_code", "React", "common/button"], function(undefined, React, But
 
   describe("common/button", function () {
     it("should test the onClick prop", function (done) {
-      var button = TestUtils.renderIntoDocument(Button({
+      var button = TestUtils.renderIntoDocument(React.createElement(Button, {
         text: "Test"
         , onClick: done
         , width: 100
@@ -21,7 +21,7 @@ define(["legacy_code", "React", "common/button"], function(undefined, React, But
 
     it("should test the oneClick prop", function () {
       var clickCount = 0;
-      var button = TestUtils.renderIntoDocument(Button({
+      var button = TestUtils.renderIntoDocument(React.createElement(Button, {
         text: ["Test", "Button"]
         , oneClick: true
         , onClick: function () { clickCount++; assert.equal(clickCount, 1); }

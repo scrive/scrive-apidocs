@@ -1,4 +1,4 @@
-define(['Backbone', 'legacy_code'], function(Backbone) {
+define(['Backbone', 'React', 'designview/typesetters/checkboxtypesetterview', 'legacy_code'], function(Backbone, React, CheckboxTypeSetterView) {
 
 window.CheckboxPlacementPlacedView = Backbone.View.extend({
     initialize: function (args) {
@@ -48,8 +48,13 @@ window.CheckboxPlacementPlacedView = Backbone.View.extend({
     addTypeSetter : function() {
          var placement = this.model;
          if (!this.hasTypeSetter() && $.contains(document.body, this.el)) {
-             placement.typeSetter = new CheckboxTypeSetterView({model : placement});
-             $('body').append(placement.typeSetter.el);
+             var typeSetterDiv = $("<div />");
+             placement.typeSetter = React.render(React.createElement(CheckboxTypeSetterView, {
+               model: placement
+               , element: this.el
+             }), typeSetterDiv[0]);
+             $('body').append(typeSetterDiv);
+
             setTimeout(function() {
                 placement.typeSetter.place();
             }, 0);

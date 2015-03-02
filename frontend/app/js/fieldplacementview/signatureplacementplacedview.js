@@ -1,4 +1,4 @@
-define(['Backbone', 'legacy_code'], function(Backbone) {
+define(['Backbone', 'React', 'designview/typesetters/signaturetypesetterview', 'legacy_code'], function(Backbone, React, SignatureTypeSetterView) {
 
 window.SignaturePlacementPlacedView = Backbone.View.extend({
     initialize: function (args) {
@@ -41,8 +41,13 @@ window.SignaturePlacementPlacedView = Backbone.View.extend({
     addTypeSetter : function() {
          var placement = this.model;
          if (!this.hasTypeSetter() && $.contains(document.body, this.el)) {
-             placement.typeSetter = new SignatureTypeSetterView({model : placement});
-             $('body').append(placement.typeSetter.el);
+             var typeSetterDiv = $("<div />");
+             placement.typeSetter = React.render(React.createElement(SignatureTypeSetterView, {
+               model: placement
+               , element: this.el
+             }), typeSetterDiv[0]);
+             $('body').append(typeSetterDiv);
+
             setTimeout(function() {
                 placement.typeSetter.place();
             }, 0);

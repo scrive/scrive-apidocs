@@ -125,7 +125,6 @@ window.Signatory = Backbone.Model.extend({
       return "/s/acceptaccount/" + this.document().id + "/" + this.signatoryid();
     },
     signIndex: function() {
-        console.log(this.document().signatories().length);
         var allSignatories = this.document().signatories();
         var index = 1;
         for (var i = 0; i < allSignatories.length; i++) {

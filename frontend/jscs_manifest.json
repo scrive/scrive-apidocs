@@ -1,2 +1,3 @@
 [
+  "./app/scripts/designview/typesetters/*.jsx"
 ]

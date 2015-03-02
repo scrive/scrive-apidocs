@@ -48,7 +48,7 @@ var expose = {};
 // Model for individual options
 var SelectOptionModel = Backbone.Model.extend({
   defaults : {
-      onSelect : function(){return false;},
+      onSelect : function(){ },
       style : {},
       disabled : false
   },
@@ -175,16 +175,14 @@ var SelectModel = Backbone.Model.extend({
 
 /* View for expanded box*/
 var SelectExpandedView = React.createClass({
-    handleRemove : function() {
+    handleRemove : function(e) {
       var model = this.props.model;
       model.unexpand();
       model.onRemove();
-      return false;
     },
-    handleExpand : function() {
+    handleExpand : function(e) {
       var model = this.props.model;
       model.unexpand();
-      return false;
     },
     totalHeight : function() {
       if (this.refs.options != undefined && this.refs.options.getDOMNode()!= undefined && this.getDOMNode() != undefined)
@@ -215,9 +213,8 @@ var SelectExpandedView = React.createClass({
             {_.map(model.activeOptions(),function(o,i) {
               return (
                 <li key={i}
-                  onClick={function() {
+                  onClick={function(e) {
                     o.selected();
-                    return false;
                   }}
                 >
                   <span style={o.style()}>
@@ -291,16 +288,14 @@ var SelectView = React.createClass({
       var self = this;
       setTimeout(function() {self.closeIfNeeded();}, 100);
     },
-    handleRemove : function() {
+    handleRemove : function(e) {
       var model = this.props.model;
       model.unexpand();
       model.onRemove();
-      return false;
     },
-    handleExpand : function() {
+    handleExpand : function(e) {
       var model = this.props.model;
       model.expand();
-      return false;
     },
     render: function() {
       var model = this.props.model;

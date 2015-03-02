@@ -56,11 +56,12 @@ define(['React'], function(React) {
     },
     handleClick: function() {
       var eventName = 'Clicked button' + this.props.text;
+      var fireClick = !this.state.clicked ||  !this.props.oneClick;
       mixpanel.track(eventName);
-      if (!this.state.clicked ||  !this.props.oneClick) {
+      this.setState({'clicked': true});
+      if (fireClick) {
         this.props.onClick();
       }
-      this.setState({'clicked': true});
     },
     borderWidth : function(){
         if (this.props.size == "tiny" || this.props.size == "small")
@@ -101,9 +102,9 @@ define(['React'], function(React) {
         <a className={this.className()} onClick={this.handleClick} style={this.style()}>
           <div className="label" style={{'color': this.props.textcolor}}>
             {/*if*/ this.props.multiline &&
-              this.props.text.map(function(text) {
+              this.props.text.map(function(text, i) {
                 return (
-                  <div>{text}</div>
+                  <div key={i}>{text}</div>
                 );
               })
             }

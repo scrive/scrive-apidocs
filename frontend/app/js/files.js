@@ -38,7 +38,6 @@ window.File = Backbone.Model.extend({
       }
     },
     initialize: function (args) {
-        console.log("Creating file");
         this.url = "/filepages/" + args.id + this.queryPart();
     },
     downloadLink : function() {

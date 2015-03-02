@@ -1,4 +1,4 @@
-define(['tinycolor', 'Backbone', 'legacy_code'], function(tinycolor, Backbone) {
+define(['tinycolor', 'Backbone', 'React', 'designview/typesetters/texttypesetterview', 'legacy_code'], function(tinycolor, Backbone, React, TextTypeSetterView) {
 
 window.TextPlacementPlacedView = Backbone.View.extend({
     initialize: function (args) {
@@ -66,12 +66,19 @@ window.TextPlacementPlacedView = Backbone.View.extend({
     },
     addTypeSetter : function() {
          var placement = this.model;
-         if (!this.hasTypeSetter() && $.contains(document.body, this.el)) {
-             placement.typeSetter = new TextTypeSetterView({model : placement});
-             $('body').append(placement.typeSetter.el);
+         var field = placement.field();
+         if (!this.hasTypeSetter() && $.contains(document.body, this.el) && placement.step() === "edit" && field.name()) {
+             var typeSetterDiv = $("<div />");
+             placement.typeSetter = React.render(React.createElement(TextTypeSetterView, {
+               model: placement
+               , element: this.el
+             }), typeSetterDiv[0]);
+             $('body').append(typeSetterDiv);
+
              setTimeout(function() {
                  placement.typeSetter.place();
              }, 0);
+
          }
     },
     closeTypeSetter : function() {
