@@ -762,7 +762,7 @@
 "_paymentPlanTrialTag":"3 freie Monate",
 "_paymentPriceUnitEUR":"$PaymentCurrencyEUR()$/M.",
 "_paymentPriceUnitSEK":"$PaymentCurrencySEK()$/M.",
-"_paymentSaveYearly":"bis zu 10% sparen",
+"_paymentSaveYearly":"",
 "_paymentsBillingInfoSaved":"Ihre Zahlungsinformationen wurden gespeichert.",
 "_paymentsCancelDialog":"Sind Sie sicher, dass Sie Ihr Abonnement kündigen wollen? Ihr Abonnement wird bis zum Ende der Zahlungsperiode aktiv bleiben. Sie können Ihr Konto weiter mit 3 freien Dokumenten pro Monat verwenden, sogar nach Ablauf Ihres Abonnements.",
 "_paymentsCanceledDate":"Sie haben sich entschieden, Ihr Abonnement am <span class='put-date-here'></span> zu beenden.",

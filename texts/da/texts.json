@@ -762,7 +762,7 @@
 "_paymentPlanTrialTag":"3 gratis måneder",
 "_paymentPriceUnitEUR":"$PaymentCurrencyEUR()$/måned",
 "_paymentPriceUnitSEK":"$PaymentCurrencySEK()$/måned",
-"_paymentSaveYearly":"spar op til 10%",
+"_paymentSaveYearly":"",
 "_paymentsBillingInfoSaved":"Dine faktureringsoplysninger er blevet gemt.",
 "_paymentsCancelDialog":"Er du sikker på, at du vil opsige dit abonnement? Dit abonnement vil forblive aktivt indtil slutningen af ​​din faktureringsperiode. Du kan fortsætte med at bruge din konto med 3 gratis dokumenter pr. måned, selv efter at dit abonnement er udløbet. ",
 "_paymentsCanceledDate":"Du har valgt at opsige dit abonnement d. <span class='put-date-here'></span>.",

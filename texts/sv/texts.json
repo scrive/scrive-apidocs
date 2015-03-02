@@ -762,7 +762,7 @@
 "_paymentPlanTrialTag":"3 fria månader",
 "_paymentPriceUnitEUR":"$PaymentCurrencyEUR()$/mån",
 "_paymentPriceUnitSEK":"$PaymentCurrencySEK()$/mån",
-"_paymentSaveYearly":"spara upp till 10%",
+"_paymentSaveYearly":"",
 "_paymentsBillingInfoSaved":"Din betalningsinformation är nu sparad.",
 "_paymentsCancelDialog":"Är du säker på att du vill avsluta ditt abonnemang? Ditt abonnemang kommer fortsätta vara aktivt till slutet av faktureringsperioden. Du kommer kunna fortsätta använda ditt konto med 3 fria dokument i månaden även efter att ditt abonnemang är uppsagt.",
 "_paymentsCanceledDate":"Du har valt att avbryta ditt abonnemang den <span class='put-date-here'></span>.",

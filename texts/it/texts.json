@@ -762,7 +762,7 @@
 "_paymentPlanTrialTag":"3 mesi gratuiti",
 "_paymentPriceUnitEUR":"$PaymentCurrencyEUR()$/mese",
 "_paymentPriceUnitSEK":"$PaymentCurrencySEK()$/mese",
-"_paymentSaveYearly":"risparmia fino al 10%",
+"_paymentSaveYearly":"",
 "_paymentsBillingInfoSaved":"Le tue informazioni di fatturazione sono state salvate.",
 "_paymentsCancelDialog":"Sei sicuro di voler annullare il tuo sottoscrizione? Il tuo sottoscrizione rimarrà attivo fino al termine del periodo di fatturazione. Anche dopo la scadenza del tuo sottoscrizione, potrai continuare a usare il tuo account per 3 documenti gratuiti al mese.",
 "_paymentsCanceledDate":"Hai scelto di non rinnovare la tua sottoscrizione il <span class='put-date-here'></span>.",
