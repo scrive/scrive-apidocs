@@ -55,7 +55,6 @@ return React.createClass({
               <InfoTextInput infotext="Email address" style={{"width":"200px"}} readonly={true}/>
               <InfoTextInput infotext="Password" style={{"width": "200px"}} readonly={true} buttonTitle="Forgot?" onClick={function() {}} />
               <Button type="main" text="Log in" style={{"backgroundColor": model.brandColor(), "borderColor": model.brandTextColor(), "color": model.brandTextColor()}}/>
-
               <p style={{"color": model.brandTextColor()}}>Don't have an account? <a style={{"color": model.brandTextColor()}}>Sign up for free</a></p>
 
               <div className="select-container">

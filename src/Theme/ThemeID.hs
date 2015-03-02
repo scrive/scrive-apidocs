@@ -41,7 +41,6 @@ fromThemeID:: ThemeID -> Int64
 fromThemeID (ThemeID tid) = tid
 
 
--- TODO Fix to stop using read. Gracjan is working on that in unjson library
 unjsonThemeID :: UnjsonDef ThemeID
 unjsonThemeID = unjsonInvmapR ((maybe (fail "Can't parse ThemeID")  return) . maybeRead) (show . fromThemeID :: ThemeID -> String) unjsonDef
 

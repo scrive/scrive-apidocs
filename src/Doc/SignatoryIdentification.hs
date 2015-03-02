@@ -6,7 +6,8 @@ module Doc.SignatoryIdentification
   ) where
 
 import Data.Char (toLower)
-import Data.List (mapAccumL)
+import Data.Function (on)
+import Data.List (mapAccumL, sortBy)
 import Data.Map (Map)
 import Data.Set (Set)
 import qualified Data.Map as Map
@@ -26,10 +27,10 @@ data SignatoryIdentifier = SignatoryIdentifier
   deriving Show
 
 -- | Return the full name plus unique initials for a signatory
-signatoryIdentifier :: SignatoryIdentifierMap -> SignatoryLinkID -> Maybe String
-signatoryIdentifier sim slid = do
+signatoryIdentifier :: SignatoryIdentifierMap -> SignatoryLinkID -> String -> Maybe String
+signatoryIdentifier sim slid emptyNamePlaceholder = do
   si <- Map.lookup slid sim
-  return $ if null (siFullName si) then siInitials si else siFullName si ++ " (" ++ siInitials si ++ ")"
+  return $ (if null (siFullName si) then emptyNamePlaceholder else siFullName si) ++ " (" ++ siInitials si ++ ")"
 
 -- | Create a map with unique identifiers (name, initials) over a
 -- sequence of documents, stemming from restarted signing processes.
@@ -44,20 +45,18 @@ signatoryIdentifier sim slid = do
 signatoryIdentifierMap :: Bool -> [Document] -> Set SignatoryLinkID -> SignatoryIdentifierMap
 signatoryIdentifierMap includeviewers docs slids =
   Map.fromList $
-    zipWith3 (\slid  name is -> (slid, SignatoryIdentifier (Map.lookup slid slmap) name is))
-      (map signatorylinkid sls ++ missing)
+    zipWith3 (\esl name is -> (esignatorylinkid esl, SignatoryIdentifier (Map.lookup (esignatorylinkid esl) slmap) name is))
+      slsAndMissing
       names
       initials
   where
+  esignatorylinkid = either signatorylinkid id
   slmap = Map.fromList [(signatorylinkid s, s) | d <- docs, s <- documentsignatorylinks d]
-  names = map getFullName sls ++ map (const "") missing
+  names = map (either getFullName (const "")) slsAndMissing
   initials = uniqueStrings $ enumerateEmpty $ map (map head . words) names
-  isLastAuthor | null docs = const False
-               | otherwise = \s -> signatoryisauthor s && signatorylinkid s `Set.member` lastdocsigs
-    where
-      lastdocsigs = Set.fromList (map signatorylinkid (documentsignatorylinks (last docs)))
   sls = filter (\s -> includeviewers || signatoryispartner s
-                                     || isLastAuthor s) $ concatMap documentsignatorylinks docs
+                                     || signatoryisauthor s) $ concatMap documentsignatorylinks docs
+  slsAndMissing = sortBy (compare `on` esignatorylinkid) $ (map Left sls) ++ (map Right missing)
   missing = Set.toList $
             slids Set.\\ Set.fromList (map signatorylinkid sls)
 

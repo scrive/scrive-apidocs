@@ -133,7 +133,7 @@ dumpEvidenceTexts now lang doc' = do
                                       else return Nothing
        vp <- simpletext EventForVerificationPages (actorEmail actor)
        av <- simpletext EventForArchive Nothing
-       return (evt, vp, av, finalizeEvidenceText sim ev)
+       return (evt, vp, av, finalizeEvidenceText sim ev "Not named party")
   renderTemplate "dumpAllEvidenceTexts" $ do
      F.value "lang" $ codeFromLang lang
      F.value "versionID" versionID

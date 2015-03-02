@@ -75,7 +75,7 @@ instance (MonadDB m,MonadThrow m) => DBQuery m GetThemesForCompany [Theme] where
 data GetThemesMD5 = GetThemesMD5 [ThemeID]
 instance (MonadDB m,MonadThrow m) => DBQuery m GetThemesMD5 [String] where
   query (GetThemesMD5 tids) = do
-    runQuery_ . sqlSelect "themes, theme_owners as o" $ do
+    runQuery_ . sqlSelect "themes" $ do
       sqlWhereIn "id" tids
       sqlOrderBy "id"
       selectThemesMD5

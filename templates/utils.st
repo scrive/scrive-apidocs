@@ -84,7 +84,7 @@ CompanyDocumentsPerMonth=2 000
 ###
 EnterpriseDocumentsPerMonth=10 000
 ###
-TeamDocumentsPerMonth=250
+TeamDocumentsPerMonth=350
 ###
 OneDocumentsPerMonth=20
 ####

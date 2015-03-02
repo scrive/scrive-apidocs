@@ -6,7 +6,6 @@ module Company.CompanyID (
 
 import Control.Applicative
 import Data.Binary
-import Data.Functor.Invariant
 import Data.Int
 import Data.Typeable
 import Data.Unjson
@@ -42,9 +41,8 @@ fromCompanyID :: CompanyID -> Int64
 fromCompanyID (CompanyID cid) = cid
 
 
--- TODO Fix to stop using read. Gracjan is working on that in unjson library
-unjsonThemeID :: UnjsonDef CompanyID
-unjsonThemeID = invmap (CompanyID . read :: String -> CompanyID) (show . fromCompanyID :: CompanyID -> String) unjsonDef
+unjsonCompanyID :: UnjsonDef CompanyID
+unjsonCompanyID = unjsonInvmapR ((maybe (fail "Can't parse CompanyID")  return) . maybeRead) (show . fromCompanyID :: CompanyID -> String) unjsonDef
 
 instance Unjson CompanyID where
-  unjsonDef = unjsonThemeID
+  unjsonDef = unjsonCompanyID
