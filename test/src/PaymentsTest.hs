@@ -1,9 +1,10 @@
-module PaymentsTest (paymentsTests
-                    ) where
+module PaymentsTest (paymentsTests) where
 
+import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
 import Data.Maybe
+import Data.Time
 import Recurly
 import Test.Framework
 
@@ -213,9 +214,8 @@ testPaymentPlansExpiredDunning = do
 
 testRecurlySavesAccount :: TestEnv ()
 testRecurlySavesAccount = do
-  t <- currentTime
-  let ac = getEmailId t -- generate a random account code to avoid collisions
-      email = "eric+" ++ ac ++ "@scrive.com"
+  ac <- getEmailId
+  let email = "eric+" ++ ac ++ "@scrive.com"
 
   cs <- liftIO $ createSubscription "curl" recurlyToken recurlyPlanName "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" "Adress line 1" "Stockholm" "Sweden" "12-345" 5
   assertRight cs
@@ -241,9 +241,8 @@ testRecurlySavesAccount = do
 
 testRecurlyChangeAccount :: TestEnv ()
 testRecurlyChangeAccount = do
-  t <- currentTime
-  let ac = getEmailId t -- generate a random account code to avoid collisions
-      email = "eric+" ++ ac ++ "@scrive.com"
+  ac <- getEmailId
+  let email = "eric+" ++ ac ++ "@scrive.com"
 
   cs <- liftIO $ createSubscription "curl" recurlyToken recurlyPlanName "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" "Adress line 1" "Stockholm" "Sweden" "12-345" 5
   assertRight cs
@@ -276,9 +275,8 @@ testRecurlyChangeAccount = do
 
 testRecurlyChangeAccountDefer :: TestEnv ()
 testRecurlyChangeAccountDefer = do
-  t <- currentTime
-  let ac = getEmailId t -- generate a random account code to avoid collisions
-      email = "eric+" ++ ac ++ "@scrive.com"
+  ac <- getEmailId
+  let email = "eric+" ++ ac ++ "@scrive.com"
 
   cs <- liftIO $ createSubscription "curl" recurlyToken recurlyPlanName "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" "Adress line 1" "Stockholm" "Sweden" "12-345" 5
 
@@ -319,9 +317,8 @@ testRecurlyChangeAccountDefer = do
 
 testRecurlyCancelReactivate :: TestEnv ()
 testRecurlyCancelReactivate = do
-  t <- currentTime
-  let ac = getEmailId t -- generate a random account code to avoid collisions
-      email = "eric+" ++ ac ++ "@scrive.com"
+  ac <- getEmailId
+  let email = "eric+" ++ ac ++ "@scrive.com"
 
   cs <- liftIO $ createSubscription "curl" recurlyToken recurlyPlanName "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" "Adress line 1" "Stockholm" "Sweden" "12-345" 5
   assertRight cs
@@ -351,5 +348,6 @@ testRecurlyCancelReactivate = do
 
   assertBool ("Should be 'active', was '" ++ subState sub3 ++ "'") $ subState sub3 == "active"
 
-getEmailId :: UTCTime -> String
-getEmailId = formatTime' "%H%M%S%q"
+-- generate a random account code to avoid collisions
+getEmailId :: TestEnv String
+getEmailId = formatTime' "%H%M%S%q" <$> liftIO getCurrentTime

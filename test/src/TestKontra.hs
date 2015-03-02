@@ -122,7 +122,13 @@ instance MonadDB TestEnv where
   getNotification = TestEnv . getNotification
 
 instance MonadTime TestEnv where
-  currentTime = liftBase getCurrentTime
+  currentTime = return UTCTime {
+    -- Use distant future because using past collides with
+    -- ActionQueue (GetAction tests validity of an action
+    -- by comparison to now() from the database).
+    utctDay = fromGregorian 3000 1 1
+  , utctDayTime = 0
+  }
 
 instance TemplatesMonad TestEnv where
   getTemplates = getTextTemplatesByLanguage $ codeFromLang defaultValue
