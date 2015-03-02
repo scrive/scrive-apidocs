@@ -299,10 +299,11 @@ newFromDocument f doc = do
   Just `liftM` insertNewDocument (f doc)
 
 data ArchiveDocument = ArchiveDocument UserID Actor
-instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ArchiveDocument () where
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m ArchiveDocument () where
   update (ArchiveDocument uid _actor) = updateDocumentWithID $ \did -> do
+    now <- currentTime
     kRunManyOrThrowWhyNot $ sqlUpdate "signatory_links" $ do
-        sqlSetCmd "deleted" "now()"
+        sqlSet "deleted" now
 
         sqlWhereExists $ sqlSelect "users" $ do
           sqlJoinOn "users AS same_company_users" "(users.company_id = same_company_users.company_id OR users.id = same_company_users.id)"
@@ -319,10 +320,11 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m Archive
           sqlWhereDocumentStatusIsOneOf [Preparation, Closed, Canceled, Timedout, Rejected, DocumentError ""]
 
 data ReallyDeleteDocument = ReallyDeleteDocument UserID Actor
-instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ReallyDeleteDocument () where
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m ReallyDeleteDocument () where
   update (ReallyDeleteDocument uid _actor) = updateDocumentWithID $ \did -> do
+    now <- currentTime
     kRunManyOrThrowWhyNot $ sqlUpdate "signatory_links" $ do
-        sqlSetCmd "really_deleted" "now()"
+        sqlSet "really_deleted" now
 
         sqlWhereExists $ sqlSelect "users" $ do
           sqlJoinOn "users AS same_company_users" "(users.company_id = same_company_users.company_id OR users.id = same_company_users.id)"
@@ -1344,18 +1346,20 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m RemoveD
 -- Remove unsaved drafts (older than 1 week) from db.
 -- Uses chunking to not overload db when there's a lot of old drafts
 data RemoveOldDrafts = RemoveOldDrafts Int32
-instance MonadDB m => DBUpdate m RemoveOldDrafts Int where
-    update (RemoveOldDrafts limit) = runQuery $
-      "DELETE FROM documents" <+>
-      "WHERE id = any (array(SELECT id" <+>
-                            "FROM documents" <+>
-                            "WHERE unsaved_draft IS TRUE" <+>
-                              "AND type = " <?> Signable <+>
-                              "AND status = " <?> Preparation <+>
-                              "AND mtime < (now() - '7 days'::interval)" <+>
-                            "LIMIT " <?> limit <+>
-                           ")" <+>
-                     ")"
+instance (MonadDB m, MonadTime m) => DBUpdate m RemoveOldDrafts Int where
+    update (RemoveOldDrafts limit) = do
+      weekAgo <- (7 `daysBefore`) <$> currentTime
+      runQuery $ smconcat [
+          "DELETE FROM documents"
+        , "WHERE id IN ("
+        , "  SELECT id FROM documents"
+        , "  WHERE unsaved_draft"
+        , "    AND type = " <?> Signable
+        , "    AND status = " <?> Preparation
+        , "    AND mtime <" <?> weekAgo
+        , "  LIMIT " <?> limit
+        , ")"
+        ]
 
 data SetSigAttachments = SetSigAttachments SignatoryLinkID [SignatoryAttachment] Actor
 instance (DocumentMonad m) => DBUpdate m SetSigAttachments () where
@@ -1394,14 +1398,14 @@ unsavedDocumentLingerDays :: Int
 unsavedDocumentLingerDays = 30
 
 data PurgeDocuments = PurgeDocuments Int Int
-instance MonadDB m => DBUpdate m PurgeDocuments Int where
+instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
   update (PurgeDocuments savedDocumentLingerDays unsavedDocumentLingerDays') = do
-
+    now <- currentTime
     runQuery_ $ "UPDATE signatory_links"
-            <+> "  SET really_deleted = now()"
+            <+> "  SET really_deleted =" <?> now
             <+> "WHERE signatory_links.user_id IS NOT NULL" -- document belongs to somebody
             <+> "  AND signatory_links.deleted IS NOT NULL" -- somebody deleted that document long time ago
-            <+> "  AND signatory_links.deleted + (" <?> (show savedDocumentLingerDays ++ "days") <> "::INTERVAL) <= now()"
+            <+> "  AND signatory_links.deleted +" <?> idays (fromIntegral savedDocumentLingerDays) <+> "<=" <?> now
             <+> "  AND signatory_links.really_deleted IS NULL" -- we did not notice this until now
 
     runQuery_ $ "CREATE TEMP TABLE documents_to_purge(id, title) AS"
@@ -1434,14 +1438,14 @@ instance MonadDB m => DBUpdate m PurgeDocuments Int where
                                    -- linger time is allowed by author's company settings
         <+> "                     AND companies.allow_save_safety_copy"
                                    -- linger time hasn't elapsed yet
-        <+> "                     AND documents.mtime + (" <?> (show unsavedDocumentLingerDays' ++ "days") <+> " :: INTERVAL) > now()"
+        <+> "                     AND documents.mtime +" <?> idays (fromIntegral unsavedDocumentLingerDays') <+> ">" <?> now
         <+> "                     AND signatory_links.is_author"
         <+> "                     AND users.id = signatory_links.user_id"
         <+> "                     AND users.company_id = companies.id)"
 
     -- set purged time on documents
     rows <- runSQL $ "UPDATE documents"
-        <+> "   SET purged_time = now()"
+        <+> "   SET purged_time =" <?> now
         <+> " WHERE documents.id IN (SELECT id"
         <+> "                          FROM documents_to_purge)"
 
@@ -1481,7 +1485,7 @@ data ArchiveIdleDocuments = ArchiveIdleDocuments UTCTime
 instance MonadDB m => DBUpdate m ArchiveIdleDocuments Int where
   update (ArchiveIdleDocuments now) = do
     runSQL $ "UPDATE signatory_links"
-         <+> "   SET deleted = now()"
+         <+> "   SET deleted =" <?> now
          <+> " WHERE deleted IS NULL"
          <+> "  AND EXISTS(SELECT TRUE"
          <+> "               FROM documents"

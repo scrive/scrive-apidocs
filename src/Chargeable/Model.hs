@@ -10,6 +10,7 @@ import Data.Typeable
 import Company.CompanyID
 import DB
 import Doc.DocumentID
+import MinutesTime.Class
 import User.UserID
 
 data ChargeableItem = SMS | ELegSignature
@@ -44,11 +45,12 @@ instance ToSQL ChargeableItem where
 
 -- | Charge company of the author of the document for SMSes.
 data ChargeCompanyForSMS = ChargeCompanyForSMS DocumentID Int32
-instance (MonadDB m, MonadThrow m) => DBUpdate m ChargeCompanyForSMS () where
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForSMS () where
   update (ChargeCompanyForSMS document_id sms_count) = do
+    now <- currentTime
     (user_id,company_id) <- getAuthorAndAuthorsCompanyIDs document_id
     runQuery_ . sqlInsert "chargeable_items" $ do
-      sqlSetCmd "time" "now()"
+      sqlSet "time" now
       sqlSet "type" SMS
       sqlSet "company_id" $ company_id
       sqlSet "user_id" user_id
@@ -57,11 +59,12 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m ChargeCompanyForSMS () where
 
 -- | Charge company of the author of the document for e-leg signature.
 data ChargeCompanyForElegSignature = ChargeCompanyForElegSignature DocumentID
-instance (MonadDB m, MonadThrow m) => DBUpdate m ChargeCompanyForElegSignature () where
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForElegSignature () where
   update (ChargeCompanyForElegSignature document_id) = do
+    now <- currentTime
     (user_id,company_id) <- getAuthorAndAuthorsCompanyIDs document_id
     runQuery_ . sqlInsert "chargeable_items" $ do
-      sqlSetCmd "time" "now()"
+      sqlSet "time" now
       sqlSet "type" ELegSignature
       sqlSet "company_id" $ company_id
       sqlSet "user_id" user_id

@@ -14,12 +14,14 @@ import Data.Maybe (isJust)
 import Data.Time
 
 import DB
+import MinutesTime.Class
 
 data InsertClockOffsetFrequency = InsertClockOffsetFrequency (Maybe Double) Double
-instance MonadDB m => DBUpdate m InsertClockOffsetFrequency Int where
-  update (InsertClockOffsetFrequency moffset frequency) =
+instance (MonadDB m, MonadTime m) => DBUpdate m InsertClockOffsetFrequency Int where
+  update (InsertClockOffsetFrequency moffset frequency) = do
+    now <- currentTime
     runQuery . sqlInsert "host_clock" $ do
-      sqlSetCmd "time" "now()"
+      sqlSet "time" now
       sqlSet "clock_offset" moffset
       sqlSet "clock_frequency" frequency
 

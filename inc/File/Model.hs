@@ -18,6 +18,7 @@ import DB
 import File.Conditions
 import File.File
 import File.FileID
+import MinutesTime.Class
 
 data GetFileByFileID = GetFileByFileID FileID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetFileByFileID File where
@@ -60,10 +61,11 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetFileThatShouldBeMovedToAmazon
     fetchMaybe fetchFile
 
 data PurgeFile = PurgeFile FileID
-instance (MonadDB m, MonadThrow m) => DBUpdate m PurgeFile () where
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m PurgeFile () where
   update (PurgeFile fid) = do
+    now <- currentTime
     kRun1OrThrowWhyNot $ sqlUpdate "files" $ do
-      sqlSetCmd "purged_time" "now()"
+      sqlSet "purged_time" now
       sqlSetCmd "content" "NULL"
       sqlWhereFileIDIs fid
 

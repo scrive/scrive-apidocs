@@ -239,10 +239,11 @@ instance MonadDB m => DBQuery m IsUserDeletable Bool where
 
 -- | Marks a user as deleted so that queries won't return them any more.
 data DeleteUser = DeleteUser UserID
-instance (MonadDB m, MonadThrow m) => DBUpdate m DeleteUser Bool where
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteUser Bool where
   update (DeleteUser uid) = do
+    now <- currentTime
     runQuery01 $ sqlUpdate "users" $ do
-      sqlSetCmd "deleted" "now()"
+      sqlSet "deleted" now
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
 
