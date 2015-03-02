@@ -24,8 +24,7 @@ serviceAvailabilityChecker conf rng cs (master, slave) msender interruptible = d
     Log.mixlog_ $ "Running service checker"
     mid <- inDB $ do
       token <- random
-      now <- currentTime
-      mid <- dbUpdate $ CreateServiceTest token testSender (testReceivers conf) now
+      mid <- dbUpdate $ CreateServiceTest token testSender (testReceivers conf)
       success <- dbUpdate $ AddContentToEmail mid "test" (Just testSender) "test" [] mempty
       Log.mixlog_ $ "Creating service testing email #" ++ show mid ++ "..."
       when (not success) $

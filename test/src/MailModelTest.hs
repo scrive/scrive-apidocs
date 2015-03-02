@@ -1,6 +1,5 @@
 module MailModelTest (mailModelTests) where
 
-import Data.Time.Clock.POSIX
 import Test.Framework
 
 import DB
@@ -21,7 +20,6 @@ testMailAttachments = do
       sender = Address "Jarek" "xx@asd.com"
       to = [Address "Genowefa""a1@ss.com", Address "Brunhilda" "b3@dd.com"]
       reply_to = Just (Address "Luluka" "k2@ba.uk")
-      to_be_sent = posixSecondsToUTCTime 213123
       attachments = [ Attachment "name1" (Left "content 123")
                     , Attachment "name2" (Left "contenty 314124")
                     , Attachment "name3" (Left "contenty 314124 sffadsfa")
@@ -30,7 +28,7 @@ testMailAttachments = do
       title = "The thing"
       content = "important"
 
-  mid <- dbUpdate $ CreateEmail token sender to to_be_sent
+  mid <- dbUpdate $ CreateEmail token sender to
   _ <- dbUpdate $ AddContentToEmail mid title reply_to content attachments xsmtpapi
   mmail <- dbQuery $ GetEmail mid token
   assertJust mmail
@@ -53,7 +51,6 @@ testMailOrder = do
       to1 = [Address "Genowefa" "aa@ss.com", Address "Brunhilda" "b3@dd.com"]
       to2 = [Address "Genowefa2" "a@ss.com", Address "Brunhilda" "b3@dd.com"]
       reply_to = Just (Address "Luluka" "k2@ba.uk")
-      to_be_sent = posixSecondsToUTCTime 213123
       attachments = [ Attachment "name1" (Left "content 123")
                     , Attachment "name2" (Left "contenty 314124")
                     , Attachment "name3" (Left "contenty 314124 sffadsfa")
@@ -62,13 +59,13 @@ testMailOrder = do
       title = "The thing"
       content = "important"
 
-  mid1 <- dbUpdate $ CreateEmail token sender to1 to_be_sent
+  mid1 <- dbUpdate $ CreateEmail token sender to1
   _ <- dbUpdate $ AddContentToEmail mid1 title reply_to content attachments xsmtpapi
-  mid2 <- dbUpdate $ CreateEmail token sender to1 to_be_sent
+  mid2 <- dbUpdate $ CreateEmail token sender to1
   _ <- dbUpdate $ AddContentToEmail mid2 title reply_to content attachments xsmtpapi
-  mid3 <- dbUpdate $ CreateEmail token sender to1 to_be_sent
+  mid3 <- dbUpdate $ CreateEmail token sender to1
   _ <- dbUpdate $ AddContentToEmail mid3 title reply_to content attachments xsmtpapi
-  mid4 <- dbUpdate $ CreateEmail token sender to2 to_be_sent
+  mid4 <- dbUpdate $ CreateEmail token sender to2
   _ <- dbUpdate $ AddContentToEmail mid4 title reply_to content attachments xsmtpapi
   mails <- dbQuery $ GetEmailsByRecipient "aa@ss.com"
   mails2 <- dbQuery $ GetEmailsByRecipient "a@ss.com"

@@ -31,7 +31,6 @@ import Mails.MailsConfig
 import Mails.MailsData
 import Mails.Model hiding (Mail)
 import MessageData
-import MinutesTime
 import Templates
 import Theme.Model
 import User.Lang
@@ -74,8 +73,7 @@ scheduleEmailSendout' authorname  MailsConfig{..} mail@Mail{..} = do
     else do
       fromAddr <- return Address {addrName = authorname, addrEmail = originatorEmail }
       token <- random
-      now <- currentTime
-      mid <- dbUpdate $ CreateEmail token fromAddr (map toAddress to) now
+      mid <- dbUpdate $ CreateEmail token fromAddr (map toAddress to)
       let xsmtpapi = XSMTPAttrs [("mailinfo", show mailInfo)]
       _ <- dbUpdate $ AddContentToEmail mid title (fmap toAddress replyTo) (wrapHTML content) (map toAttachment attachments) xsmtpapi
       return ()

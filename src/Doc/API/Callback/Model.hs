@@ -20,6 +20,7 @@ import Doc.API.Callback.Execute
 import Doc.DocStateData
 import Doc.DocumentID
 import JobQueue.Config
+import MinutesTime
 import OurPrelude
 import User.CallbackScheme.Model
 import Util.SignatoryLinkUtils
@@ -97,6 +98,6 @@ instance (MonadDB m, MonadCatch m) => DBUpdate m MergeAPICallback () where
       setFields :: (MonadState v n, SqlSet v) => n ()
       setFields = do
         sqlSet "id"  did
-        sqlSetCmd "run_at" "now()"
+        sqlSet "run_at" unixEpoch
         sqlSet "url" url
         sqlSet "attempts" (0::Int32)

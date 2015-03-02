@@ -34,10 +34,10 @@ import Mails.Data
 import MinutesTime
 import OurPrelude
 
-data CreateEmail = CreateEmail MagicHash Address [Address] UTCTime
+data CreateEmail = CreateEmail MagicHash Address [Address]
 instance (MonadDB m, MonadThrow m) => DBUpdate m CreateEmail MailID where
-  update (CreateEmail token sender to to_be_sent) =
-    $(fromJust) `liftM` insertEmail False token sender to to_be_sent 0
+  update (CreateEmail token sender to) =
+    $(fromJust) `liftM` insertEmail False token sender to 0
 
 data AddContentToEmail = AddContentToEmail MailID String (Maybe Address) String [Attachment] XSMTPAttrs
 instance (MonadDB m, MonadThrow m) => DBUpdate m AddContentToEmail Bool where
@@ -130,10 +130,10 @@ instance MonadDB m => DBQuery m GetEmailsByRecipient [Mail] where
 -- since mailer is not separated into another package yet so it has to be
 -- here for now. do not use it though.
 
-data CreateServiceTest = CreateServiceTest MagicHash Address [Address] UTCTime
+data CreateServiceTest = CreateServiceTest MagicHash Address [Address]
 instance (MonadDB m, MonadThrow m) => DBUpdate m CreateServiceTest MailID where
-  update (CreateServiceTest token sender to to_be_sent) =
-    $(fromJust) `liftM` insertEmail True token sender to to_be_sent 0
+  update (CreateServiceTest token sender to) =
+    $(fromJust) `liftM` insertEmail True token sender to 0
 
 data GetServiceTestEvents = GetServiceTestEvents
 instance MonadDB m => DBQuery m GetServiceTestEvents [(EventID, MailID, XSMTPAttrs, Event)] where
@@ -193,13 +193,13 @@ sqlSelectMails refine = sqlSelect "mails" $ do
   sqlOrderBy "id"
   refine
 
-insertEmail :: (MonadDB m, MonadThrow m) => Bool -> MagicHash -> Address -> [Address] -> UTCTime -> Int32 -> m (Maybe MailID)
-insertEmail service_test token sender to to_be_sent attempt = do
+insertEmail :: (MonadDB m, MonadThrow m) => Bool -> MagicHash -> Address -> [Address] -> Int32 -> m (Maybe MailID)
+insertEmail service_test token sender to attempt = do
   runQuery_ . sqlInsert "mails" $ do
     sqlSet "token" token
     sqlSet "sender" sender
     sqlSet "receivers" to
-    sqlSet "to_be_sent" to_be_sent
+    sqlSet "to_be_sent" unixEpoch
     sqlSet "service_test" service_test
     sqlSet "attempt" attempt
     sqlResult "id"

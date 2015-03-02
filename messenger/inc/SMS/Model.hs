@@ -38,18 +38,18 @@ fetchSMS (smsid, originator, msisdn, body, sdata, attempt) = ShortMessage {
 , smAttempt    = attempt
 }
 
-data CreateSMS = CreateSMS String String String String UTCTime
+data CreateSMS = CreateSMS String String String String
 instance (MonadDB m, MonadThrow m) => DBUpdate m CreateSMS ShortMessageID where
-  update (CreateSMS originator msisdn body sdata to_be_sent) =
-    $fromJust `fmap` insertSMS originator msisdn body sdata to_be_sent 0
+  update (CreateSMS originator msisdn body sdata) =
+    $fromJust `fmap` insertSMS originator msisdn body sdata 0
 
-insertSMS :: (MonadDB m, MonadThrow m) => String -> String -> String -> String -> UTCTime -> Int32 -> m (Maybe ShortMessageID)
-insertSMS originator msisdn body sdata to_be_sent attempt = do
+insertSMS :: (MonadDB m, MonadThrow m) => String -> String -> String -> String -> Int32 -> m (Maybe ShortMessageID)
+insertSMS originator msisdn body sdata attempt = do
   runQuery_ . sqlInsert "smses" $ do
     sqlSet "originator" originator
     sqlSet "msisdn" msisdn
     sqlSet "body" body
-    sqlSet "to_be_sent" to_be_sent
+    sqlSet "to_be_sent" unixEpoch
     sqlSet "data" sdata
     sqlSet "attempt" attempt
     sqlResult "id"

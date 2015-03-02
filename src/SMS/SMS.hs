@@ -12,7 +12,6 @@ import Chargeable.Model
 import DB
 import Doc.DocStateData
 import MessageData
-import MinutesTime
 import SMS.Model
 import qualified Log
 
@@ -31,8 +30,7 @@ data SMS = SMS {
 scheduleSMS :: (Log.MonadLog m, MonadDB m, MonadThrow m) => Document -> SMS -> m ()
 scheduleSMS doc msg@SMS{..} = do
   when (null smsMSISDN) $ error "scheduleSMS: no mobile phone number defined"
-  now <- currentTime
-  sid <- dbUpdate $ CreateSMS (fixOriginator smsOriginator) (fixPhoneNumber smsMSISDN) smsBody (show smsData) now
+  sid <- dbUpdate $ CreateSMS (fixOriginator smsOriginator) (fixPhoneNumber smsMSISDN) smsBody (show smsData)
   -- charge company of the author of the document for the smses
   dbUpdate $ ChargeCompanyForSMS (documentid doc) sms_count
   Log.mixlog_ $ "SMS " ++ show msg ++ " with id #" ++ show sid ++ " scheduled for sendout"
