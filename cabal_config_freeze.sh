@@ -34,6 +34,7 @@ sed  -e '/ array /d' \
      -e '/ pretty /d' \
      -e '/ rts /d' \
      -e '/ template-haskell /d' \
+     -e '/ kontrakcja /d' \
      < cabal.config > cabal.config.fixed
 
 if [ "${1-}" == "update" ]; then
