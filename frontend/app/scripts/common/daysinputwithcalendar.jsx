@@ -66,7 +66,7 @@ define(['React', 'common/infotextinput', 'legacy_code'], function(React,InfoText
             onChange={function(value) {self.onInputChange(value);}}
             onBlur={function() {
               // There can be trash empty in input. We should put back current value
-              self.refs.input.setValue("" +  (this.props.days || ""));
+              self.refs.input.setValue("" +  (self.props.days || ""));
             }}
           />
          <div className={this.props.labelClassName}>

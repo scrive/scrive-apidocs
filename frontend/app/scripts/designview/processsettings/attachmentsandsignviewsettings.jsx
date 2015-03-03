@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['legacy_code', 'React', 'designview/processsettings/signviewsettings', 'designview/processsettings/attachmentslist', 'common/button',], function(_Legacy, React, SignviewSettings,AttachmentsList, Button) {
+define(['legacy_code', 'React', 'designview/processsettings/signviewsettings', 'designview/processsettings/attachmentslist', 'common/button'], function(_Legacy, React, SignviewSettings,AttachmentsList, Button) {
 
 return React.createClass({
   getInitialState: function() {

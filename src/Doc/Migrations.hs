@@ -69,7 +69,7 @@ dropHTMLFromInvitationAndConfirmationMessages = Migration {
 }
   where
     fixMessage :: String -> String
-    fixMessage xs = unescapeString $ case xmlParse' "Migration-documents-drop html" $ "<span>" ++ xs ++ "</span>" of
+    fixMessage xs = strip $ unescapeString $ case xmlParse' "Migration-documents-drop html" $ "<span>" ++ xs ++ "</span>" of
        (Right (XML.Document _ _ (XML.Elem _ _ cs) _)) -> (concatMap fixContent cs)
        _ -> let xsWithFixedBRs = replace "<BR>" "<BR/>" $ replace "<br>" "<br/>" xs
             in if xsWithFixedBRs /= xs

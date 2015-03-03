@@ -9,7 +9,7 @@ return React.createClass({
     var authorattachments = document.authorattachments();
     var sattachments = _.flatten(_.map(document.signatories(),function(s) {return s.attachments()}));
     if (authorattachments.length == 0 && sattachments.length == 0 ) {
-      return (<div/>)
+      return (<div/>);
     } else {
       return (
         <div className="designview-attachemnts-list">
@@ -74,7 +74,7 @@ return React.createClass({
                         </td>
                       </tr>
                     );
-                  })
+                  });
                 })
               }
             </tbody>

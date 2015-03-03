@@ -529,7 +529,7 @@ asValidInviteText :: String -> Result String
 asValidInviteText input =
     checkIfEmpty input
     >>= parseAndFixAsXml
-    >>= return . unescapeString
+    >>= return . strip . unescapeString
     where
           parseAndFixAsXml :: String -> Result String
           parseAndFixAsXml xs =

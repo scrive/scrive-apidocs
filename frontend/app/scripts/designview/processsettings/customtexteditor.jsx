@@ -34,10 +34,10 @@ return React.createClass({
               className="editor"
               placeholder={this.props.placeholder}
               value={value}
-              disabled={this.props.editable? undefined : "YES"}
+              disabled={this.props.editable? undefined : "disabled"}
               onChange={function(e) {
                 if (self.props.editable) {
-                  self.props.onChange($(e.target).val());
+                  self.props.onChange(e.target.value);
                 }
               }}
             >
