@@ -20,9 +20,7 @@
 set -o nounset
 set -o errexit
 
-# continue even if we're not in git repository
-git checkout cabal.config || true
-
+git checkout cabal.config
 cp cabal.config cabal.config.original
 cabal freeze
 sed  -e '/ array /d' \
