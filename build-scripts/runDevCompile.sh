@@ -8,6 +8,7 @@ fi
 cabal sandbox init --sandbox="$1"
 
 rm -f kontrakcja-test.tix
+./cabal_config_freeze.sh
 cabal update
 cabal clean
 cabal install --only-dependencies --force-reinstalls
@@ -20,4 +21,4 @@ else
   exit "${PIPESTATUS[0]}"
 fi
 
-cabal haddock --all
+
