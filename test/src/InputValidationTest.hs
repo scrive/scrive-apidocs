@@ -402,9 +402,9 @@ testValidInviteTextNullIsEmpty = testNullIsEmpty asValidInviteText
 testValidInviteTextBadExamplesAreFixed :: Assertion
 testValidInviteTextBadExamplesAreFixed = do
     let e1 = asValidInviteText "<p><a href='aaaa'>blah</a></p>"
-    assert $ isGood e1 && (filter (\c -> not $ isSpace c || isControl c)   $ fromGood e1) == "<p><span>blah</span></p>"
+    assert $ isGood e1 && (filter (\c -> not $ isSpace c || isControl c)   $ fromGood e1) == "blah"
     let e2 = asValidInviteText "<p><BR></p>"
-    assert $ isGood e2 && (filter (\c -> not $ isSpace c || isControl c)  $ fromGood e2) == "<p><BR/></p>"
+    assert $ isGood e2 && (filter (\c -> not $ isSpace c || isControl c)  $ fromGood e2) == ""
     let e3 = asValidInviteText "<p --A >aaaa<>"
     assert $ isGood e3 && fromGood e3 == "aaaa"
 
