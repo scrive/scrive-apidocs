@@ -31,12 +31,12 @@ import qualified Data.ByteString.UTF8 as BSUTF8
 import Happstack.Fields
 import Kontra
 import Log as Log
+import ServerUtils.BrandedImagesCache
 import Util.CSVUtil
 import Util.MonadUtils
 import Utils.Directory
 import Utils.IO
 import Utils.String
-import ServerUtils.BrandedImagesCache
 import qualified MemCache as MemCache
 
 -- Read a csv file from POST, and returns a JSON with content

@@ -23,11 +23,11 @@ import Mails.MailsConfig
 import MinutesTime
 import Payments.Config (RecurlyConfig)
 import Salesforce.Conf
+import ServerUtils.BrandedImagesCache
 import Session.SessionID
 import Templates
 import User.Email
 import User.Model
-import ServerUtils.BrandedImagesCache
 import qualified MemCache
 
 data Context = Context

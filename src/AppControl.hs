@@ -45,6 +45,7 @@ import IPAddress
 import Kontra
 import MinutesTime
 import Salesforce.Conf
+import ServerUtils.BrandedImagesCache
 import Session.Data hiding (session)
 import Session.Model
 import Templates
@@ -52,7 +53,6 @@ import User.Model
 import Util.FinishWith
 import Util.FlashUtil
 import Utils.HTTP
-import ServerUtils.BrandedImagesCache
 import qualified Amazon as AWS
 import qualified FlashMessage as F
 import qualified Log

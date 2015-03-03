@@ -5,6 +5,7 @@ module ServerUtils.BrandedImagesCache (
   ) where
 
 import qualified Data.ByteString.Lazy as BSL
+
 import MemCache
 
 type BrandedImagesCache = MemCache BrandedImagesCacheKey BSL.ByteString
