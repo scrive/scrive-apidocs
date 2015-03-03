@@ -11,7 +11,7 @@
 # This script assumes AMZN which is a boolean whether to upload to Amazon
 
 if [ -z "$1" ]; then
-  echo "Usage: $0 <cabal-dev sandbox directory path>"
+  echo "Usage: $0 <cabal sandbox directory path>"
   exit 1
 fi
 
