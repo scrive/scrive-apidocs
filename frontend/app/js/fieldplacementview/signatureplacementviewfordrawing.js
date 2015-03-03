@@ -26,6 +26,16 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
       box.height(height);
       box.css("line-height",Math.floor(height) + "px");
     },
+    activateSignatureModal: function() {
+      var self = this;
+      return new SignatureDrawOrTypeModal({
+          field: self.model,
+          width: self.width,
+          height: self.height,
+          arrow: self.arrow,
+          signview: self.signview
+      });
+    },
     render: function() {
             var self = this;
             var field = this.model;
@@ -73,13 +83,7 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
             }
 
             box.click(function() {
-              new SignatureDrawOrTypeModal({
-                field: field,
-                width: self.width,
-                height: self.height,
-                arrow: arrow,
-                signview: signview
-              });
+                self.activateSignatureModal();
             });
             return this;
     }

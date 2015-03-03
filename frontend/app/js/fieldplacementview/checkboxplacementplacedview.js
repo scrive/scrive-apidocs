@@ -67,12 +67,25 @@ window.CheckboxPlacementPlacedView = Backbone.View.extend({
              placement.typeSetter.clear();
          }
     },
+    toggleCheck: function () {
+
+        var field =  this.model.field();
+
+        if (field.value() == "")
+            field.setValue("CHECKED");
+        else
+            field.setValue("");
+
+        return false;
+
+
+    },
     render: function() {
         var self = this;
-        var placement = this.model;
+        var placement = self.model;
         var field =  placement.field();
         var document = field.signatory().document();
-        var place = $(this.el);
+        var place = $(self.el);
 
         place.addClass('placedfield');
         if ((field.signatory() == document.currentSignatory() && document.currentSignatoryCanSign()) || document.preparation()) {
@@ -81,11 +94,13 @@ window.CheckboxPlacementPlacedView = Backbone.View.extend({
               if (field.obligatory())
                 place.addClass("obligatory");
         }
-        this.updatePosition();
+        self.updatePosition();
 
         place.empty();
-        var innerPlace = $(new CheckboxPlacementView({model: placement.field(), el: $("<div/>")}).el);
+        var checkboxPlacementView = new CheckboxPlacementView({model: placement.field(), el: $("<div/>")});
+        var innerPlace = $(checkboxPlacementView.el);
         place.append(innerPlace);
+        self.checkboxPlacementView = checkboxPlacementView;
 
         if (document.allowsDD()) {
 
@@ -102,17 +117,15 @@ window.CheckboxPlacementPlacedView = Backbone.View.extend({
             field.signatory().current() && self.inlineediting != true &&
             !document.readOnlyView()) {
             innerPlace.click(function() {
-                if (field.value() == "")
-                    field.setValue("CHECKED");
-                else
-                    field.setValue("");
-                return false;
+
+              self.toggleCheck();
+
             });
         }
         if (placement.withTypeSetter()) {
-          this.addTypeSetter();
+          self.addTypeSetter();
         }
-        return this;
+        return self;
     }
 
 });

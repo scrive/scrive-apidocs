@@ -9,6 +9,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
     this.model.bind('change', this.render);
     this.model.view = this;
     this.signview = args.signview;
+    this.uploadButton = this.newUploadButton();
     this.render();
   },
   setattachmentURL: function() {
@@ -19,6 +20,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
     var attachment = this.model;
     var button = new Button({type: "cancel", text: localization.deletePDF, size:'small', onClick: function() {
             attachment.loading();
+            self.uploadButton = self.newUploadButton();
             new Submit({
                     method: "POST",
                     expectedType : "json",
@@ -36,7 +38,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
             }});
     return button;
   },
-  uploadButton: function() {
+  newUploadButton: function() {
     var self = this;
     var attachment = this.model;
     return new UploadButton({
@@ -48,9 +50,6 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
       text: localization.signatoryAttachmentUploadButton,
       submitOnUpload: true,
       showLoadingDialog: false,
-      onClick: function() {
-        return true;
-      },
       onError: function() {
         attachment.notLoading();
         attachment.trigger('change');
@@ -97,6 +96,10 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
       })
     });
   },
+  getButton: function () {
+    if (this.uploadButton != undefined)
+        return this.uploadButton;
+  },
   reviewButton: function() {
       var model = this.model;
       var button = new Button({text: localization.reviewPDF, size:'small', cssClass : 's-review-sigattachment', onClick: function() {
@@ -105,7 +108,8 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
       return button;
   },
   render: function() {
-      var attachment = this.model;
+      var self = this;
+      var attachment = self.model;
       var container = $("<div class='item' />");
       if (attachment.get('loading')) {
           container.append($("<img class='loading'>").attr('src', "/img/wait30trans.gif"));
@@ -115,7 +119,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
             container.append(this.removeButton().el());
 
       } else if (attachment.signatory().document().pending() || attachment.signatory().document().currentSignatoryCanSign()){
-        container.append(this.uploadButton().el().addClass('float-right').css("overflow","hidden"));
+        container.append(self.newUploadButton().el().addClass('float-right').css("overflow","hidden"));
       }
       container.append($("<div class='clearfix' />"));
 
@@ -131,7 +135,7 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
     _.bindAll(this, 'render');
     this.title = args.title;
     this.subtitle = args.subtitle;
-    this.uploadElems = [];
+    this.uploadViews = [];
     this.render();
   },
   signatoryAttachmentDescription: function(attachment) {
@@ -152,10 +156,8 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
       el: $("<div/>"),
       signview: this.model
     });
-    this.uploadElems.push($(upl.el));
+    this.uploadViews.push(upl);
     return upl.el;
-
-
   },
   render: function() {
     $(this.el).empty();

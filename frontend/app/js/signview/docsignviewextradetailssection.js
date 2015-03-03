@@ -228,7 +228,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
   },
   emailInput: function() {
     var self = this;
-    if(self.emailInfoTextInputEl == undefined) {
+    if(self.emailInfoTextInput == undefined) {
       var signview = self.signview;
       var signatory = self.model.document().currentSignatory();
       var focused = false;
@@ -256,13 +256,17 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
         iti.el().toggleClass("valid",!signview.askForEmail());
       });
 
-      self.emailInfoTextInputEl = iti.el();
+      self.emailInfoTextInput = iti;
     }
-    return self.emailInfoTextInputEl;
+    return self.emailInfoTextInput;
+  },
+  focusOnEmailInput: function() {
+    if (this.emailInfoTextInput != undefined)
+      this.emailInfoTextInput.focus();
   },
   nameInput: function() {
     var self = this;
-    if(self.nameInfoTextInputEl == undefined) {
+    if(self.nameInfoTextInput == undefined) {
       var signview = self.signview;
       var signatory = self.model.document().currentSignatory();
       var focused = false;
@@ -323,13 +327,17 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
 
       iti.el().toggleClass("valid", !signview.askForName());
 
-      self.nameInfoTextInputEl = iti.el();
+      self.nameInfoTextInput = iti;
     }
-    return self.nameInfoTextInputEl;
+    return self.nameInfoTextInput;
+  },
+  focusOnNameInput: function() {
+    if (this.nameInfoTextInput != undefined)
+      this.nameInfoTextInput.focus();
   },
   ssnInput: function() {
     var self = this;
-    if(self.ssnInfoTextInputEl == undefined) {
+    if(self.ssnInfoTextInput == undefined) {
       var signview = self.signview;
       var signatory = self.model.document().currentSignatory();
       var field = signatory.personalnumberField();
@@ -357,13 +365,17 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
         iti.el().toggleClass("valid", !signview.askForSSN());
       });
 
-      self.ssnInfoTextInputEl = iti.el();
+      self.ssnInfoTextInput = iti;
     }
-    return self.ssnInfoTextInputEl;
+    return self.ssnInfoTextInput;
+  },
+  focusOnSsnInput: function() {
+    if (this.ssnInfoTextInput != undefined)
+      this.ssnInfoTextInput.focus();
   },
   phoneInput: function() {
     var self = this;
-    if(self.phoneInfoTextInputEl == undefined) {
+    if(self.phoneInfoTextInput == undefined) {
       var signview = self.signview;
       var signatory = self.model.document().currentSignatory();
       var field = signatory.mobileField();
@@ -391,13 +403,18 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
         iti.el().toggleClass("valid", !signview.askForPhone());
       });
 
-      self.phoneInfoTextInputEl = iti.el();
+      self.phoneInfoTextInput = iti;
     }
-    return self.phoneInfoTextInputEl;
+    return self.phoneInfoTextInput;
+  },
+  focusOnPhoneInput: function() {
+    if (this.phoneInfoTextInput != undefined)
+      this.phoneInfoTextInput.focus();
   },
   render: function() {
       var signatory = this.model;
       var signview = this.signview;
+
 
       var box = $(this.el).addClass('section').addClass('spacing').addClass('extradetails');
       var header = $("<h2 class='title'/>").text(localization.docsignview.filladitionfields);
@@ -405,19 +422,19 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
       this.fillBox = $("<div class='column spacing fillbox'/>");
 
       if (signview.askForName()) {
-       this.fillBox.append(this.nameInput());
+       this.fillBox.append(this.nameInput().el());
       }
 
       if (signview.askForEmail()) {
-       this.fillBox.append(this.emailInput());
+       this.fillBox.append(this.emailInput().el());
       }
 
       if (signview.askForSSN()) {
-       this.fillBox.append(this.ssnInput());
+       this.fillBox.append(this.ssnInput().el());
       }
 
       if (signview.askForPhone()) {
-       this.fillBox.append(this.phoneInput());
+       this.fillBox.append(this.phoneInput().el());
       }
 
       box.append(header).append(description).append(this.fillBox).append("<div class='clearfix' />");

@@ -240,7 +240,11 @@ var DocumentSignViewModel = Backbone.Model.extend({
   signatoryattachmentasks: function() {
       if (this.get("signatoryattachmentasks") == undefined) {
         var model = this;
-        var els = model.signatoryattachmentsection().uploadElems;
+        var els = [];
+        _.each(model.signatoryattachmentsection().uploadViews, function (uplView) {
+          els.push($(uplView.el));
+        });
+
         var attachments = model.document().currentSignatory().attachments();
         var tasks = [];
         _.each(attachments, function(attachment,i) {
@@ -250,6 +254,9 @@ var DocumentSignViewModel = Backbone.Model.extend({
                                 return attachment.hasFile();
                             },
                             el: els[i],
+                            onArrowClick : function () {
+                              model.signatoryattachmentsection().uploadViews[i].uploadButton.openFileDialogue();
+                            },
                             onActivate   : function() {
                                 mixpanel.track('Begin attachment task');
                             },
@@ -274,6 +281,9 @@ var DocumentSignViewModel = Backbone.Model.extend({
                             new PageTask({
                                 type: 'sign',
                                 label: localization.docsignview.signArrowLabel,
+                                onArrowClick: function () {
+                                    model.signsection().activateSignConfirmation();
+                                },
                                 isComplete: function() {
                                     return !model.document().currentSignatoryCanSign();
                                 },
@@ -316,6 +326,16 @@ var DocumentSignViewModel = Backbone.Model.extend({
                     },
                     el: elem,
                     pointSelector : (placement.field().isSignature() ? ".button" : undefined),
+                    onArrowClick : function () {
+                        var field = placement.field();
+                        if (field.isStandard())
+                          placement.view.startInlineEditing();
+                        else if (field.isSignature()) {
+                          placement.view.signaturePlacement.activateSignatureModal();
+                        }
+                        else if (field.isCheckbox())
+                          placement.view.toggleCheck();
+                    },
                     onActivate: function() {
                         // It the window does not have focus (for some old browsers we can't really tell), we should not start inline editing.
                         var windowIsFocused = window.document.hasFocus == undefined || window.document.hasFocus();
@@ -354,6 +374,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
   },
   extraDetailsTasks : function() {
         var self = this;
+        var xdetails = self.extradetailssection();
         var document = self.document();
         var label = localization.docsignview.textfield;
 
@@ -361,46 +382,62 @@ var DocumentSignViewModel = Backbone.Model.extend({
           var tasks = [];
 
           if(this.askForName()) {
+            var nameInput = xdetails.nameInput();
             tasks.push(new PageTask({
               type: 'extra-details',
               label: label,
+              onArrowClick: function () {
+                xdetails.focusOnNameInput();
+              },
               isComplete: function() {
                 return !self.askForName();
               },
-              el: self.extradetailssection().nameInput()
+              el: nameInput.el()
             }));
           }
 
           if(this.askForEmail()) {
+            var emailInput = xdetails.emailInput();
             tasks.push(new PageTask({
               type: 'extra-details',
               label: label,
+              onArrowClick: function () {
+                xdetails.focusOnEmailInput();
+              },
               isComplete: function() {
                 return !self.askForEmail();
               },
-              el: self.extradetailssection().emailInput()
+              el: emailInput.el()
             }));
           }
 
           if(this.askForSSN()) {
+            var ssnInput = xdetails.ssnInput();
             tasks.push(new PageTask({
               type: 'extra-details',
               label: label,
+              onArrowClick: function () {
+                xdetails.focusOnSsnInput();
+              },
               isComplete: function() {
                 return !self.askForSSN();
               },
-              el: self.extradetailssection().ssnInput()
+              el: ssnInput.el()
             }));
           }
 
           if(this.askForPhone()) {
+            var phoneInput = xdetails.phoneInput();
             tasks.push(new PageTask({
               type: 'extra-details',
               label: label,
+              onArrowClick: function () {
+                xdetails.focusOnPhoneInput();
+              },
               isComplete: function() {
                 return !self.askForPhone();
               },
-              el: self.extradetailssection().phoneInput()
+              el: phoneInput.el()
             }));
           }
 

@@ -9,6 +9,7 @@ var ArrowModel = Backbone.Model.extend({
       type : undefined,
       text  : undefined,
       point : undefined,
+      onClick : function() { return false; },
       blinks : 0 // Persistent blinking. If > 0 then arrow is in middle of blinking.
   },
   type : function(){
@@ -41,6 +42,9 @@ var ArrowModel = Backbone.Model.extend({
   scrollDone : function() {
       if (this.get("scrollDone") != undefined)
         this.get("scrollDone")();
+  },
+  onClick : function() {
+      return this.get("onClick")();
   }
 });
 
@@ -94,8 +98,10 @@ var PointLeftArrowView = Backbone.View.extend({
     },
     render: function () {
        var container = $(this.el);
+       var self = this;
        container.addClass('action-arrow').addClass('left');
 
+       container.click(function () { self.model.onClick(); });
        var front = $('<div class="front" />');
        var label = $('<div class="label" />');
        var back = $('<div class="back" />');
@@ -149,7 +155,9 @@ var PointRightArrowView = Backbone.View.extend({
     },
     render: function () {
        var container = $(this.el);
+       var self = this;
        container.addClass('action-arrow').addClass('right');
+       container.click(function () { self.model.onClick(); });
        var front = $('<div class="front" />');
        var label = $('<div class="label" />');
        var back = $('<div class="back" />');
@@ -283,7 +291,8 @@ window.Arrow = function (args) {
     type  : args.type,
       text  : args.text,
       point : args.point,
-      scrollDone : args.scrollDone
+      scrollDone : args.scrollDone,
+      onClick : args.onClick
   });
   var view = new ArrowView({model : model, el : $("<div/>")});
   var blinkTimeout = undefined;

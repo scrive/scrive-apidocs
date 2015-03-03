@@ -47,6 +47,7 @@ window.PageTask = Backbone.Model.extend({
     isComplete : function() {return false;},
     onActivate : function() {return false;},
     onScrollWhenActive : function() {return false;},
+    onArrowClick : function() { return false; },
     onDeactivate : function() {return false;},
     tipSide : "right",
     label:"",
@@ -105,6 +106,9 @@ window.PageTask = Backbone.Model.extend({
   },
   triggerUIChange : function() {
     this.trigger("change:ui");
+  },
+  onArrowClick : function() {
+    return this.get("onArrowClick")();
   }
 });
 
@@ -201,6 +205,7 @@ var PageTasksArrowView = Backbone.View.extend({
             return new Arrow({      type: task.tipSide() != "right" ? 'point-left' : 'point-right'
                                    , point : $(task.el())
                                    , text : task.label()
+                                   , onClick : function () { task.onArrowClick(); }
                               });
         }
         else if ((elbottom + bottommargin) > scrollbottom)

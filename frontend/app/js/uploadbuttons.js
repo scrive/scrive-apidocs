@@ -113,12 +113,21 @@ var UploadButtonModel = Backbone.Model.extend({
 
 var UploadButtonView = Backbone.View.extend({
     initialize: function (args) {
-        _.bindAll(this, 'render');
+        _.bindAll(this, 'render', 'openFileDialogue');
         this.model.view = this;
         this.render();
     },
+    openFileDialogue: function() {
+      var self = this;
+      targetElm = $(self.fileinput.data("MultiFile").current);
+      if ((targetElm.length == 1) && (targetElm.click != undefined)) {
+          targetElm.click();
+          return true;
+      }
+      return false;
+    },
     render: function () {
-
+        var self = this;
         var model = this.model;
         var button = model.button();
         if (!button) {
@@ -182,6 +191,7 @@ var UploadButtonView = Backbone.View.extend({
         button.append($("<span/>").append(fileinput)); // This span is is needed to fix some browser bug
         button.click(function() {return model.click()} );
         $(this.el).append(button);
+        self.fileinput = fileinput;
         if (model.cssClass() != undefined)
           $(this.el).addClass(model.cssClass());
         return this;
@@ -194,6 +204,9 @@ window.UploadButton = function (args) {
           var view = new UploadButtonView({model : model, el : $("<div style='position:relative;overflow:hidden;'/>")});
           this.el = function() {return $(view.el);};
 
+          this.openFileDialogue = function () {
+              view.openFileDialogue();
+          };
 };
 
 });

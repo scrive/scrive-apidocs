@@ -347,7 +347,29 @@ window.DocumentSignSignSection = Backbone.View.extend({
    initialize: function(args){
       this.render();
    },
+
+  activateSignConfirmation: function () {
+      var model = this.model;
+      var signatoryHasPlacedSignatures = model.document().currentSignatory().hasPlacedSignatures();
+
+      var valid =  model.tasks().notCompletedTasks().length == 1 &&
+                   model.tasks().notCompletedTasks()[0] == model.signtask();
+      if (!valid) {
+              model.arrow().blink();
+              return false;
+      }
+
+      mixpanel.track('Click sign');
+
+      return new DocumentSignConfirmation({
+          model: model,
+          signview: true,
+          signaturesPlaced: signatoryHasPlacedSignatures
+      });
+  },
+
    render: function() {
+       var self = this;
        var model = this.model;
        var document = this.model.document();
        var box = $(this.el).addClass('section').addClass('spacing').addClass('signbuttons');
@@ -437,23 +459,8 @@ window.DocumentSignSignSection = Backbone.View.extend({
                             type: "action",
                             cssClass: "sign-button",
                             text: signButtonText,
-                            onClick: function() {
-
-                                var valid =  model.tasks().notCompletedTasks().length == 1 && model.tasks().notCompletedTasks()[0] == model.signtask();
-                                if (!valid) {
-                                        model.arrow().blink();
-                                        return false;
-                                    }
-                                mixpanel.track('Click sign');
-
-
-                                new DocumentSignConfirmation({
-                                    model: model,
-                                    signview: true,
-                                    signaturesPlaced: signatoryHasPlacedSignatures
-                                });
-                               }
-                            });
+                            onClick: function() { self.activateSignConfirmation(); }
+                         });
 
       var signButton = this.signButton.el();
 
