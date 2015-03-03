@@ -14,8 +14,15 @@ CREATE TEMP TABLE thetime(time) AS
 
 CREATE TEMP TABLE results AS
 SELECT escape_for_csv(companies.name) AS "Company name"
-     , escape_for_csv(companies.id :: TEXT) AS "Company ID"
+     , (escape_for_csv('x ' || companies.id :: TEXT)) AS "Company ID"
      , escape_for_csv(companies.number :: TEXT) AS "Company number"
+     , escape_for_csv((
+       SELECT email
+         FROM users
+        WHERE users.is_company_admin
+          AND users.company_id = companies.id
+        LIMIT 1
+       ) :: TEXT) AS "Company admin"
      , (CASE payment_plans.plan
           WHEN 1 THEN 'free'
           WHEN 2 THEN 'team'
