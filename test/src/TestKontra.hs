@@ -123,10 +123,7 @@ instance MonadDB TestEnv where
 
 instance MonadTime TestEnv where
   currentTime = return UTCTime {
-    -- Use distant future because using past collides with
-    -- ActionQueue (GetAction tests validity of an action
-    -- by comparison to now() from the database).
-    utctDay = fromGregorian 3000 1 1
+    utctDay = fromGregorian 2000 1 1
   , utctDayTime = 0
   }
 

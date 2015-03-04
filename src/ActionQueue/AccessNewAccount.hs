@@ -50,7 +50,7 @@ accessNewAccount = Action {
     return ()
   }
 
-getAccessNewAccountUser :: (MonadDB m, MonadThrow m) => UserID -> MagicHash -> m (Maybe User)
+getAccessNewAccountUser :: (MonadDB m, MonadThrow m, MonadTime m) => UserID -> MagicHash -> m (Maybe User)
 getAccessNewAccountUser uid token = runMaybeT $ do
   Just a <- dbQuery $ GetAction accessNewAccount uid
   guard $ aToken a == token

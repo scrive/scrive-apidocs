@@ -29,21 +29,22 @@ data Action idx t con n = forall row. FromRow row => Action {
   }
 
 data GetAction idx t con n = GetAction (Action idx t con n) idx
-instance (Show idx, ToSQL idx, MonadDB m, MonadThrow m) => DBQuery m (GetAction idx t con n) (Maybe t) where
+instance (Show idx, ToSQL idx, MonadDB m, MonadThrow m, MonadTime m) => DBQuery m (GetAction idx t con n) (Maybe t) where
   query (GetAction Action{..} aid) = do
     -- Updating 'expires' on every access is costly and results in
     -- quite a lot of database races for a single row in database, at
     -- least for user sessions.
 
+    now <- currentTime
     -- We update 'expires' only when less than 90% of
     -- qaExpirationDelay of time left till expire.
     runQuery_ $ "SELECT" <+> sqlConcatComma qaSelectFields
         <+> "FROM" <+> raw (tblName qaTable)
-        <+> "WHERE" <+> qaIndexField <+> "=" <?> aid <+> "AND expires > now()"
+        <+> "WHERE" <+> qaIndexField <+> "=" <?> aid <+> "AND expires >" <?> now
     result <- fetchMaybe qaDecode
-    runQuery_ $ "UPDATE" <+> raw (tblName qaTable) <+> ("SET expires = GREATEST(expires, now() + interval '" <> qaExpirationDelay <> "')")
-        <+> "WHERE" <+> qaIndexField <+> "=" <?> aid <+> "AND expires > now()"
-        <+> "AND (expires - now()) < 0.9 * interval '" <> qaExpirationDelay <> "'"
+    runQuery_ $ "UPDATE" <+> raw (tblName qaTable) <+> ("SET expires = GREATEST(expires," <?> now <+> "+ interval '" <> qaExpirationDelay <> "')")
+        <+> "WHERE" <+> qaIndexField <+> "=" <?> aid <+> "AND expires >" <?> now
+        <+> "AND (expires -" <?> now <> ") < 0.9 * interval '" <> qaExpirationDelay <> "'"
     return result
 
 data GetExpiredActions idx t con n = GetExpiredActions (Action idx t con n) UTCTime

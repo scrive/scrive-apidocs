@@ -72,12 +72,12 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m DeleteEmail Bool where
     runQuery01 $ sqlDelete "mails" $ do
       sqlWhereEq "id" mid
 
-data DeleteMailsOlderThenDays = DeleteMailsOlderThenDays Integer
-instance MonadDB m => DBUpdate m DeleteMailsOlderThenDays Int where
+data DeleteMailsOlderThenDays = DeleteMailsOlderThenDays Int
+instance (MonadDB m, MonadTime m) => DBUpdate m DeleteMailsOlderThenDays Int where
   update (DeleteMailsOlderThenDays days) = do
+    past <- (days `daysBefore`) <$> currentTime
     runQuery . sqlDelete "mails" $ do
-      -- can't inject interval as a parameter, unfortunately.
-      sqlWhere $ "now() > to_be_sent + interval '" <+> unsafeSQL (show days) <+> "days'"
+      sqlWhere $ "to_be_sent <=" <?> past
 
 data GetUnreadEvents = GetUnreadEvents
 instance MonadDB m => DBQuery m GetUnreadEvents [(EventID, MailID, XSMTPAttrs, Event)] where
@@ -106,10 +106,14 @@ selectMails query' = do
 
 
 data GetIncomingEmails = GetIncomingEmails
-instance MonadDB m => DBQuery m GetIncomingEmails [Mail] where
+instance (MonadDB m, MonadTime m) => DBQuery m GetIncomingEmails [Mail] where
   query GetIncomingEmails = do
+    now <- currentTime
     selectMails $ sqlSelectMails $ do
-                              sqlWhere "title IS NOT NULL AND content IS NOT NULL AND to_be_sent <= now() AND sent IS NULL"
+      sqlWhere "title IS NOT NULL"
+      sqlWhere "content IS NOT NULL"
+      sqlWhere "sent IS NULL"
+      sqlWhere $ "to_be_sent <=" <?> now
 
 data GetEmails = GetEmails
 instance MonadDB m => DBQuery m GetEmails [Mail] where

@@ -922,21 +922,22 @@ moveBinaryDataForSignatoryScreenshotsToFilesTable =
       Log.mixlog_ $ "Moved " ++ show screenshotsUpdated ++ " into " ++ show filesInserted ++ " files (removing duplicates)"
   }
 
-migrateSignatoryLinksDeletedTime :: MonadDB m => Migration m
-migrateSignatoryLinksDeletedTime =
-  Migration {
-      mgrTable = tableSignatoryLinks
-    , mgrFrom = 20
-    , mgrDo = do
-       _ <- runSQL_ $ "ALTER TABLE signatory_links"
-                  <+> "ALTER deleted DROP NOT NULL,"
-                  <+> "ALTER deleted DROP DEFAULT,"
-                  <+> "ALTER deleted TYPE TIMESTAMPTZ USING (CASE WHEN deleted THEN now() ELSE NULL END),"
-                  <+> "ALTER really_deleted DROP NOT NULL,"
-                  <+> "ALTER really_deleted DROP DEFAULT,"
-                  <+> "ALTER really_deleted TYPE TIMESTAMPTZ USING (CASE WHEN really_deleted THEN now() ELSE NULL END)"
-       return ()
-    }
+migrateSignatoryLinksDeletedTime :: (MonadDB m, MonadTime m) => Migration m
+migrateSignatoryLinksDeletedTime = Migration {
+  mgrTable = tableSignatoryLinks
+, mgrFrom = 20
+, mgrDo = do
+  now <- currentTime
+  runSQL_ $ smconcat [
+      "ALTER TABLE signatory_links"
+    , "ALTER deleted DROP NOT NULL,"
+    , "ALTER deleted DROP DEFAULT,"
+    , "ALTER deleted TYPE TIMESTAMPTZ USING (CASE WHEN deleted THEN" <?> now <+> "ELSE NULL END),"
+    , "ALTER really_deleted DROP NOT NULL,"
+    , "ALTER really_deleted DROP DEFAULT,"
+    , "ALTER really_deleted TYPE TIMESTAMPTZ USING (CASE WHEN really_deleted THEN" <?> now <+> "ELSE NULL END)"
+    ]
+}
 
 createMainFilesTable :: MonadDB m => Migration m
 createMainFilesTable =

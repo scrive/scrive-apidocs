@@ -109,7 +109,7 @@ sessionNowModifier = (120 `minutesAfter`)
 isSessionEmpty :: Session -> Bool
 isSessionEmpty Session{..} = isNothing sesUserID && isNothing sesPadUserID
 
-getSession :: (MonadDB m, MonadThrow m) => SessionID -> MagicHash -> String -> m (Maybe Session)
+getSession :: (MonadDB m, MonadThrow m, MonadTime m) => SessionID -> MagicHash -> String -> m (Maybe Session)
 getSession sid token domain = runMaybeT $ do
   Just ses@Session{sesToken,sesDomain} <- dbQuery $ GetAction session sid
   guard $ sesToken == token

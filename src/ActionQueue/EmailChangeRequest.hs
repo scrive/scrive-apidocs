@@ -58,7 +58,7 @@ emailChangeRequest = Action {
     return ()
   }
 
-getEmailChangeRequestNewEmail :: (MonadDB m, MonadThrow m, KontraMonad m) => UserID -> MagicHash -> m (Maybe Email)
+getEmailChangeRequestNewEmail :: (MonadDB m, MonadThrow m, MonadTime m, KontraMonad m) => UserID -> MagicHash -> m (Maybe Email)
 getEmailChangeRequestNewEmail uid token = runMaybeT $ do
   Just EmailChangeRequest{..} <- dbQuery $ GetAction emailChangeRequest uid
   guard $ ecrToken == token

@@ -1,9 +1,9 @@
 module SMS.Model where
 
+import Control.Applicative
 import Control.Monad.Catch
 import Control.Monad.State
 import Data.Int
-import Data.Monoid.Utils
 
 import DB
 import MinutesTime
@@ -56,9 +56,13 @@ insertSMS originator msisdn body sdata attempt = do
   fetchOne runIdentity
 
 data GetIncomingSMSes = GetIncomingSMSes
-instance MonadDB m => DBQuery m GetIncomingSMSes [ShortMessage] where
-  query GetIncomingSMSes = selectSMSes . sqlSelectSMSes $ do
-    sqlWhere "body IS NOT NULL AND to_be_sent <= now() AND sent IS NULL"
+instance (MonadDB m, MonadTime m) => DBQuery m GetIncomingSMSes [ShortMessage] where
+  query GetIncomingSMSes = do
+    now <- currentTime
+    selectSMSes . sqlSelectSMSes $ do
+      sqlWhere "body IS NOT NULL"
+      sqlWhere "sent IS NULL"
+      sqlWhere $ "to_be_sent <=" <?> now
 
 data MarkSMSAsSent = MarkSMSAsSent ShortMessageID UTCTime
 instance (MonadDB m, MonadThrow m) => DBUpdate m MarkSMSAsSent Bool where
@@ -75,12 +79,12 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m DeferSMS Bool where
       sqlSetCmd "attempt" "attempt + 1"
       sqlWhereEq "id" mid
 
-data DeleteSMSesOlderThenDays = DeleteSMSesOlderThenDays Integer
-instance MonadDB m => DBUpdate m DeleteSMSesOlderThenDays Int where
+data DeleteSMSesOlderThenDays = DeleteSMSesOlderThenDays Int
+instance (MonadDB m, MonadTime m) => DBUpdate m DeleteSMSesOlderThenDays Int where
   update (DeleteSMSesOlderThenDays days) = do
+    past <- (days `daysBefore`) <$> currentTime
     runQuery . sqlDelete "smses" $ do
-      -- can't inject interval as a parameter, unfortunately.
-      sqlWhere $ "now() > to_be_sent + interval '" <+> unsafeSQL (show days) <+> "days'"
+      sqlWhere $ "to_be_sent <=" <?> past
 
 data UpdateWithSMSEvent = UpdateWithSMSEvent ShortMessageID SMSEvent
 instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateWithSMSEvent Bool where
@@ -111,8 +115,9 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m DeleteSMS Bool where
       sqlWhereEq "id" smsid
 
 data MarkSMSEventAsRead = MarkSMSEventAsRead SMSEventID
-instance (MonadDB m, MonadThrow m) => DBUpdate m MarkSMSEventAsRead Bool where
-  update (MarkSMSEventAsRead eid) =
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkSMSEventAsRead Bool where
+  update (MarkSMSEventAsRead eid) = do
+    now <- currentTime
     runQuery01 . sqlUpdate "sms_events" $ do
-      sqlSetCmd "event_read" "now()"
+      sqlSet "event_read" now
       sqlWhereEq "id" eid

@@ -52,7 +52,7 @@ createCronJobsTable = Migration {
     ]
   }
   forM_ tasks $ \task -> do
-    runSQL_ $ "INSERT INTO cron_jobs (id, run_at) VALUES (" <?> task <> ", now())"
+    runSQL_ $ "INSERT INTO cron_jobs (id, run_at) VALUES (" <?> task <> ", to_timestamp(0))"
 }
   where
     tasks :: [ByteString]

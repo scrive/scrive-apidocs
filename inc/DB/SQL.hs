@@ -56,7 +56,7 @@ Joins are done by 'sqlJoinOn', 'sqlLeftJoinOn', 'sqlRightJoinOn',
 some kind of abstract syntax data type is lacking.
 
 > kRun_ $ sqlDelete "mails" $ do
->   sqlWhere "time + 14 > now()"
+>   sqlWhere "id > 67"
 
 > kRun_ $ sqlUpdate "document_tags" $ do
 >   sqlSet "value" (123 :: Int)

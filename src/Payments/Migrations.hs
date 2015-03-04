@@ -1,16 +1,20 @@
 module Payments.Migrations where
 
+import Control.Applicative
+
 import DB
+import MinutesTime
 import Payments.Tables
 
-addBillingEndDateCache :: MonadDB m => Migration m
+addBillingEndDateCache :: (MonadDB m, MonadTime m) => Migration m
 addBillingEndDateCache =
   Migration {
     mgrTable = tablePaymentPlans
   , mgrFrom = 1
   , mgrDo = do
+      monthAfterNow <- (30 `daysAfter`) <$> currentTime
       runSQL_ "ALTER TABLE payment_plans ADD COLUMN billing_ends TIMESTAMPTZ NULL"
-      runSQL_ "UPDATE payment_plans SET billing_ends = now() + interval '30 days'"
+      runSQL_ $ "UPDATE payment_plans SET billing_ends =" <?> monthAfterNow
       runSQL_ "ALTER TABLE payment_plans ALTER COLUMN billing_ends SET NOT NULL"
   }
 

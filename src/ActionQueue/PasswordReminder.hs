@@ -55,7 +55,7 @@ passwordReminder = Action {
     return ()
   }
 
-getPasswordReminderUser :: (MonadDB m, MonadThrow m) => UserID -> MagicHash -> m (Maybe User)
+getPasswordReminderUser :: (MonadDB m, MonadThrow m, MonadTime m) => UserID -> MagicHash -> m (Maybe User)
 getPasswordReminderUser uid token = runMaybeT $ do
   Just pr <- dbQuery $ GetAction passwordReminder uid
   guard $ prToken pr == token

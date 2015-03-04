@@ -58,7 +58,7 @@ userAccountRequest = Action {
         _ -> return ()
   }
 
-getUserAccountRequestUser :: (MonadDB m, MonadThrow m) => UserID -> MagicHash -> m (Maybe User)
+getUserAccountRequestUser :: (MonadDB m, MonadThrow m, MonadTime m) => UserID -> MagicHash -> m (Maybe User)
 getUserAccountRequestUser uid token = runMaybeT $ do
   Just UserAccountRequest{..} <- dbQuery $ GetAction userAccountRequest uid
   guard $ uarToken == token

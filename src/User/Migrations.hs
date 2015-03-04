@@ -6,6 +6,7 @@ import Data.Monoid.Utils
 
 import Company.Model (CompanyID)
 import DB
+import MinutesTime
 import User.Model (UserID)
 import User.Tables
 
@@ -170,17 +171,19 @@ allUsersMustHaveCompany =
        runSQL_ "ALTER TABLE users DROP COLUMN company_number"
     }
 
-migrateUsersDeletedTime :: MonadDB m => Migration m
-migrateUsersDeletedTime =
-  Migration {
-      mgrTable = tableUsers
-    , mgrFrom = 16
-    , mgrDo = do
-       runSQL_ $ "ALTER TABLE users"
-                  <+> "ALTER deleted DROP NOT NULL,"
-                  <+> "ALTER deleted DROP DEFAULT,"
-                  <+> "ALTER deleted TYPE TIMESTAMPTZ USING (CASE WHEN deleted THEN now() ELSE NULL END)"
-    }
+migrateUsersDeletedTime :: (MonadDB m, MonadTime m) => Migration m
+migrateUsersDeletedTime = Migration {
+  mgrTable = tableUsers
+, mgrFrom = 16
+, mgrDo = do
+  now <- currentTime
+  runSQL_ $ smconcat [
+      "ALTER TABLE users"
+    , "ALTER deleted DROP NOT NULL,"
+    , "ALTER deleted DROP DEFAULT,"
+    , "ALTER deleted TYPE TIMESTAMPTZ USING (CASE WHEN deleted THEN" <?> now <+> "ELSE NULL END)"
+    ]
+}
 
 migrateUsersUniqueIndexOnEmail :: MonadDB m => Migration m
 migrateUsersUniqueIndexOnEmail =
