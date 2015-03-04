@@ -28,7 +28,7 @@ dropHTMLFromMessagesInEvidenceLog = Migration {
     (evidences_with_message :: [(Int64,String)]) <- fetchMany id
     forM_ evidences_with_message $ \(eid, message) -> do
       runQuery_ . sqlUpdate "evidence_log" $ do
-           sqlSet "evidence_log" $ fixMessage $ message
+           sqlSet "message_text" $ fixMessage $ message
            sqlWhereEq "id" eid
   }
   where

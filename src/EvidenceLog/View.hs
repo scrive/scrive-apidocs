@@ -22,6 +22,7 @@ import Data.Function (on)
 import Data.List (sortBy)
 import Data.Maybe
 import Data.Word (Word8)
+import Data.String.Utils as String
 import Text.JSON
 import Text.JSON.Gen as J
 import Text.StringTemplates.Templates
@@ -51,7 +52,6 @@ import Utils.Prelude
 import qualified Doc.Screenshot as Screenshot
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 import qualified HostClock.Model as HC
-
 -- | Evidence log for web page - short and simplified texts
 eventsJSListFromEvidenceLog ::  (MonadDB m, MonadThrow m, TemplatesMonad m) => Document -> [DocumentEvidenceEvent] -> m [JSValue]
 eventsJSListFromEvidenceLog doc dees = do
@@ -243,7 +243,7 @@ simplyfiedEventText target mactor d sim dee = do
                 LegacyNordeaSignature_{} -> Nothing
                 LegacyMobileBankIDSignature_{} -> Nothing
                 BankIDSignature_ BankIDSignature{..} -> Just bidsSignatoryName
-        F.value "text" $ evMessageText dee
+        F.value "text" $ String.replace "\n" " " <$> evMessageText dee -- Escape EOL. They are ignored by html and we don't want them on verification page
         F.value "signatory" $ (\slid -> signatoryIdentifier sim slid emptyNamePlaceholder) <$> mslinkid
         F.forM_ mactor $ F.value "actor"
 
