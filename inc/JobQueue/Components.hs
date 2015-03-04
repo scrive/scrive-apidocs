@@ -40,8 +40,8 @@ withConsumer
   => ConsumerConfig m idx job
   -> ConnectionSource
   -> Logger m
-  -> m ()
-  -> m ()
+  -> m a
+  -> m a
 withConsumer cc cs logger action = do
   finisher <- newEmptyMVar
   flip finally (tryTakeMVar finisher >>= maybe (return ()) id) $ do
@@ -52,11 +52,11 @@ withConsumer cc cs logger action = do
 -- is to wait for currently processed jobs and clean up. Use
 -- 'withConsumer' instead unless you know what you're doing.
 runConsumer
-  :: (MonadBaseControl IO m, MonadMask m, Show idx, ToSQL idx)
+  :: (MonadBaseControl IO m, MonadMask m, MonadBase IO n, MonadMask n, Show idx, ToSQL idx)
   => ConsumerConfig m idx job
   -> ConnectionSource
   -> Logger m
-  -> m (m ())
+  -> m (n ())
 runConsumer cc cs logger = do
   semaphore <- newMVar ()
   batches <- TG.new

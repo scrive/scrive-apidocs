@@ -30,7 +30,7 @@ instance Show ConsumerID where
 -- so that it can reserve jobs using acquired ID.
 registerConsumer
   :: (MonadBase IO m, MonadMask m)
-  => ConsumerConfig m idx job
+  => ConsumerConfig n idx job
   -> ConnectionSource
   -> m ConsumerID
 registerConsumer cc cs = runDBT cs ts $ do
@@ -44,7 +44,7 @@ registerConsumer cc cs = runDBT cs ts $ do
 -- | Unregister consumer with a given ID.
 unregisterConsumer
   :: (MonadBase IO m, MonadMask m)
-  => ConsumerConfig m idx job
+  => ConsumerConfig n idx job
   -> ConnectionSource
   -> ConsumerID
   -> m ()
