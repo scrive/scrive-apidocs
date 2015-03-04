@@ -36,6 +36,7 @@ module InputValidation
 
 import Control.Applicative
 import Data.Char
+import Data.Maybe
 import Data.Monoid
 import Data.String.Utils
 import Numeric
@@ -45,7 +46,7 @@ import Text.XML.HaXml.Parse (xmlParse')
 import Text.XML.HaXml.Posn
 import Text.XML.HaXml.Pretty(content)
 import Text.XML.HaXml.Types
-
+import Text.HTML.TagSoup.Entity
 import Attachment.AttachmentID
 import Doc.DocumentID
 import Happstack.Fields hiding (getFields)
@@ -529,7 +530,7 @@ asValidInviteText :: String -> Result String
 asValidInviteText input =
     checkIfEmpty input
     >>= parseAndFixAsXml
-    >>= return . strip . unescapeString
+    >>= return . strip
     where
           parseAndFixAsXml :: String -> Result String
           parseAndFixAsXml xs =
@@ -538,14 +539,15 @@ asValidInviteText input =
               _ -> let xsWithFixedBRs = replace "<BR>" "<BR/>" $ replace "<br>" "<br/>" xs
                    in if xsWithFixedBRs /= xs
                          then parseAndFixAsXml xsWithFixedBRs
-                         else Good $ justText xs
+                         else Good $ unescapeHTML $ justText xs
           fixContent :: Content Posn -> String
           fixContent (CElem (Elem (N "div") _ cs) _) = (concatMap fixContent cs) ++ " \n"
           fixContent (CElem (Elem (N "p") _ cs) _)   = (concatMap fixContent cs) ++ " \n"
           fixContent (CElem (Elem (N "br") _ cs) _)  = (concatMap fixContent cs) ++ " \n"
           fixContent (CElem (Elem (N _) _ cs) _)     = (concatMap fixContent cs)
           fixContent x@(CString _ _ _)               = render $ content x
-          fixContent x@(CRef _ _)                    = render $ content x
+          fixContent (CRef (RefEntity ent) _)        = fromMaybe "" $ lookupEntity ent
+          fixContent (CRef (RefChar i) _)            = [chr i]
           fixContent _ = ""
           justText ('<':cs) = justText $ drop 1 $ dropWhile (/= '>') cs
           justText (c:cs) = c : justText cs

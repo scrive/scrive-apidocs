@@ -91,8 +91,8 @@ documentJSONV1 muser forapi forauthor msl doc = do
       J.value "showpdfdownload" $ documentshowpdfdownload doc
       J.value "showrejectoption" $ documentshowrejectoption doc
       J.value "showfooter" $ documentshowfooter doc
-      J.value "invitationmessage" $ "<p>" ++ escapeString (documentinvitetext doc) ++ "</p>" --V1 requires HTML for custom message
-      J.value "confirmationmessage" $  "<p>" ++ escapeString (documentconfirmtext doc) ++ "</p>"  --V1 requires HTML for custom message
+      J.value "invitationmessage" $ "<p>" ++ escapeHTML (documentinvitetext doc) ++ "</p>" --V1 requires HTML for custom message
+      J.value "confirmationmessage" $  "<p>" ++ escapeHTML (documentconfirmtext doc) ++ "</p>"  --V1 requires HTML for custom message
       J.value "lang" $  case (getLang doc) of -- We keep some old lang codes for old integrations. We should drop it on new API release
                              LANG_EN -> "gb"
                              LANG_SV -> "sv"

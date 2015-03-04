@@ -1,4 +1,4 @@
-module Utils.String(concatChunks, pureString, maxLev, maybeS, escapeString, unescapeString, firstNonEmpty) where
+module Utils.String(concatChunks, pureString, maxLev, maybeS, escapeString, escapeHTML, unescapeHTML, firstNonEmpty) where
 
 import Data.Char
 import Data.List
@@ -39,12 +39,18 @@ escapeString =  concatMap escape
               escape '\\' = "\\\\"
               escape c   = [c]
 
-unescapeString :: String -> String
-unescapeString = replace "&lt;" "<"  .
-                 replace "&gt;" ">"  .
-                 replace "&amp;" "&" .
-                 replace "\\\"" "\"" .
-                 replace "\\\\" "\\"
+
+escapeHTML :: String -> String
+escapeHTML =  concatMap escape
+        where escape '<' = "&lt;"
+              escape '>' = "&gt;"
+              escape '&' = "&amp;"
+              escape c   = [c]
+
+unescapeHTML :: String -> String
+unescapeHTML = replace "&lt;" "<"  .
+               replace "&gt;" ">"  .
+               replace "&amp;" "&" 
 
 
 -- | Pick first non-empty element or return empty list

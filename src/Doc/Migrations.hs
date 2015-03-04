@@ -19,7 +19,8 @@ import Text.XML.HaXml.Parse (xmlParse')
 import Text.XML.HaXml.Posn
 import Text.XML.HaXml.Pretty(content)
 import qualified Text.XML.HaXml.Types as XML
-
+import Text.HTML.TagSoup.Entity
+import Data.Char
 
 import DB
 import DB.Checks
@@ -69,19 +70,20 @@ dropHTMLFromInvitationAndConfirmationMessages = Migration {
 }
   where
     fixMessage :: String -> String
-    fixMessage xs = strip $ unescapeString $ case xmlParse' "Migration-documents-drop html" $ "<span>" ++ xs ++ "</span>" of
+    fixMessage xs = strip $ case xmlParse' "Migration-documents-drop html" $ "<span>" ++ xs ++ "</span>" of
        (Right (XML.Document _ _ (XML.Elem _ _ cs) _)) -> (concatMap fixContent cs)
        _ -> let xsWithFixedBRs = replace "<BR>" "<BR/>" $ replace "<br>" "<br/>" xs
             in if xsWithFixedBRs /= xs
                then fixMessage xsWithFixedBRs
-               else justText xs
+               else unescapeHTML $ justText xs
     fixContent :: XML.Content Posn -> String
     fixContent (XML.CElem (XML.Elem (XML.N "div") _ cs) _) = (concatMap fixContent cs) ++ " \n"
     fixContent (XML.CElem (XML.Elem (XML.N "p") _ cs) _)   = (concatMap fixContent cs) ++ " \n"
     fixContent (XML.CElem (XML.Elem (XML.N "br") _ cs) _)  = (concatMap fixContent cs) ++ " \n"
     fixContent (XML.CElem (XML.Elem (XML.N _) _ cs) _)     = (concatMap fixContent cs)
-    fixContent x@(XML.CString _ _ _)               = render $ content x
-    fixContent x@(XML.CRef _ _)                    = render $ content x
+    fixContent x@(XML.CString _ _ _)                       = render $ content x
+    fixContent (XML.CRef (XML.RefEntity ent) _)            = fromMaybe "" $ lookupEntity ent
+    fixContent (XML.CRef (XML.RefChar i) _)                = [chr i]
     fixContent _ = ""
     justText ('<':cs) = justText $ drop 1 $ dropWhile (/= '>') cs
     justText (c:cs) = c : justText cs
