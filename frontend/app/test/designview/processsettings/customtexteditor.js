@@ -53,11 +53,8 @@ define(["legacy_code", "React", "designview/processsettings/customtexteditor"], 
         previewLabel : "Preview"
       }));
 
-      var textareaWrapper = TestUtils.findRenderedDOMComponentWithClass(textEditor, "custommessageeditboxwrapper");
-      assert.ok($(textareaWrapper.getDOMNode()).hasClass("disabled"));
-
-
       var textarea = TestUtils.findRenderedDOMComponentWithTag(textEditor, "textarea");
+      assert.ok($(textarea.getDOMNode()).hasClass("disabled"));
       assert.equal($(textarea.getDOMNode()).val(),"Placeholder if disabled");
       assert.equal($(textarea.getDOMNode()).attr("disabled"),"disabled");
 

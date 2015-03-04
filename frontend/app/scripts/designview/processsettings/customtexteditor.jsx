@@ -28,10 +28,10 @@ return React.createClass({
           <div className='label'>{this.props.label}</div>
           <a   className='preview float-right' onClick={this.handlePreview}>{this.props.previewLabel}</a>
           <div className='clearfix'/>
-          <div className={"custommessageeditboxwrapper "+ (!this.props.editable ? "disabled" : "")}>
+          <div className="custommessageeditboxwrapper">
             <textarea
               id={self.props.id}
-              className="editor"
+              className={"editor " + (!this.props.editable ? "disabled" : "")}
               placeholder={this.props.placeholder}
               value={value}
               disabled={this.props.editable? undefined : "disabled"}

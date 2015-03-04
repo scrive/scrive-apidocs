@@ -33,10 +33,18 @@ define(["legacy_code", "React", "common/daysinputwithcalendar"], function(undefi
       assert.equal($(input.getDOMNode()).attr("placeholder"),"-");
       // Calendar should also be rendered on page
       var calendarbutton = TestUtils.findRenderedDOMComponentWithClass(daysInputWithCalendar, "calendarbutton");
+      // When clicking on calendarbutton calendar will be visibl
       $(calendarbutton.getDOMNode()).click(); // Can't use TestUtils, since calendar is build with jQuery, and will not respond to TestUtils.Simulate
       assert.equal($('#calroot').css("display"),"block"); //Calendar should be visible
       $('body').click() //After clicking on something else, calendar should be gone
       assert.equal($('#calroot').css("display"),"none");
+
+      // Also we want to test option to hide calendar with 'hideCalendar' method
+      $(calendarbutton.getDOMNode()).click();
+      assert.equal($('#calroot').css("display"),"block");
+      daysInputWithCalendar.hideCalendar();
+      assert.equal($('#calroot').css("display"),"none");
+
     });
 
     it("should test the DaysInputWithCalendar respects max and mix days", function () {
@@ -69,6 +77,9 @@ define(["legacy_code", "React", "common/daysinputwithcalendar"], function(undefi
       assert.equal(currentDaysValue,2);
       TestUtils.Simulate.change(input.getDOMNode(),{target: {value: "12"}});
       assert.equal(currentDaysValue,12);
+      TestUtils.Simulate.change(input.getDOMNode(),{target: {value: ""}});
+      daysInputWithCalendar.forceUpdate(); // We also want to check if forceUpdateWillchange will not cause refresh of text input
+      assert.equal($(input.getDOMNode()).val(),"");
     });
 
   });
