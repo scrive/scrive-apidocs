@@ -24,6 +24,7 @@ module Doc.Model.Query
   , GetDocumentTags(..)
   , GetSignatoriesByEmail(..)
   , CheckDocumentObjectVersionIs(..)
+  , DocumentExistsAndIsNotPurged(..)
   ) where
 
 import Control.Applicative
@@ -335,6 +336,16 @@ instance (MonadDB m, MonadThrow m) => DBQuery m CheckDocumentObjectVersionIs () 
        sqlWhereDocumentIDIs did
        sqlWhereDocumentObjectVersionIs ov
     return ()
+
+data DocumentExistsAndIsNotPurged = DocumentExistsAndIsNotPurged DocumentID
+instance (MonadDB m, MonadThrow m) => DBQuery m DocumentExistsAndIsNotPurged Bool where
+  query (DocumentExistsAndIsNotPurged did) = do
+    runQuery_ . sqlSelect "documents" $ do
+       sqlResult "TRUE"
+       sqlWhereDocumentIDIs did
+       sqlWhereDocumentWasNotPurged
+    (notpurged :: Maybe Bool) <- fetchMaybe unSingle
+    return (notpurged == Just True)
 
 instance (MonadDB m, MonadThrow m) => GetRow Document m where
   getRow did = dbQuery $ GetDocumentByDocumentID did
