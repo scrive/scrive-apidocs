@@ -32,6 +32,7 @@ import DB.Checks
 import DB.PostgreSQL
 import DB.SQLFunction
 import DocAPITest
+import DocJSONTest
 import DocControlTest
 import DocStateTest
 import DumpEvidenceTexts
@@ -73,6 +74,7 @@ allTests = [
   , cssGenerationTests
   , csvUtilTests
   , docAPITests
+  , docJSONTests
   , archiveTests
   , docControlTests
   , docStateTests
