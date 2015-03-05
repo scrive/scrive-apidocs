@@ -28,7 +28,8 @@ import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 
 import Analytics.Include
-import AppView (standardPageFields, companyUIForPage, renderFromBody)
+import AppView (standardPageFields, companyUIForPage, simpleHtmlResonseClrFlash)
+import BrandedDomain.BrandedDomain
 import Doc.DocStateData
 import Doc.DocUtils
 import Doc.DocViewMail
@@ -180,4 +181,13 @@ documentStatusFields document = do
 
 -- Page for GT verification
 gtVerificationPage :: Kontrakcja m => m Response
-gtVerificationPage = renderFromBody =<< renderTemplate_ "gtVerificationPage"
+gtVerificationPage =  do
+  ctx <- getContext
+  ad <- getAnalyticsData
+  if( bdMainDomain $ ctxbrandeddomain ctx)
+  then do
+    content <- renderTemplate "gtVerificationPage" $ do
+      standardPageFields ctx Nothing ad
+    simpleHtmlResonseClrFlash content
+  else respond404
+
