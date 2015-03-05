@@ -43,7 +43,7 @@ import Control.Monad.Catch (MonadMask)
 import Control.Monad.Reader
 import Data.List
 import Data.Maybe
-import Data.String.Utils (replace)
+import Data.String.Utils (replace,strip)
 import Data.Time (ZonedTime)
 import Happstack.Server hiding (simpleHTTP)
 import System.Directory
@@ -496,7 +496,7 @@ handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 handleResend docid signlinkid  = withUserPost $
   getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid `withDocumentM` do
   signlink <- guardJust . getSigLinkFor signlinkid =<< theDocument
-  customMessage <- getField "customtext"
+  customMessage <- fmap strip <$> getField "customtext"
   actor <- guardJustM $ fmap mkAuthorActor getContext
   _ <- sendReminderEmail customMessage actor False signlink
   return (LinkIssueDoc docid)

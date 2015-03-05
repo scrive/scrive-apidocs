@@ -21,8 +21,8 @@ import Data.Decimal (realFracToDecimal)
 import Data.Function (on)
 import Data.List (sortBy)
 import Data.Maybe
-import Data.Word (Word8)
 import Data.String.Utils as String
+import Data.Word (Word8)
 import Text.JSON
 import Text.JSON.Gen as J
 import Text.StringTemplates.Templates
@@ -52,6 +52,7 @@ import Utils.Prelude
 import qualified Doc.Screenshot as Screenshot
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 import qualified HostClock.Model as HC
+
 -- | Evidence log for web page - short and simplified texts
 eventsJSListFromEvidenceLog ::  (MonadDB m, MonadThrow m, TemplatesMonad m) => Document -> [DocumentEvidenceEvent] -> m [JSValue]
 eventsJSListFromEvidenceLog doc dees = do

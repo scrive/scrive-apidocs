@@ -4,23 +4,23 @@ module Doc.Migrations where
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Catch
+import Data.Char
 import Data.Int
 import Data.Maybe
 import Data.Monoid
 import Data.Monoid.Utils
 import Data.String.Utils
+import Text.HTML.TagSoup.Entity
 import Text.JSON
 import Text.JSON.FromJSValue
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Char8 as BSC
-import qualified Data.ByteString.UTF8 as BS
 import Text.XML.HaXml(render)
 import Text.XML.HaXml.Parse (xmlParse')
 import Text.XML.HaXml.Posn
 import Text.XML.HaXml.Pretty(content)
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BSC
+import qualified Data.ByteString.UTF8 as BS
 import qualified Text.XML.HaXml.Types as XML
-import Text.HTML.TagSoup.Entity
-import Data.Char
 
 import DB
 import DB.Checks

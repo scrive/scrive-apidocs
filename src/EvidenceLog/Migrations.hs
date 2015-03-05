@@ -1,23 +1,21 @@
 module EvidenceLog.Migrations where
 
-import Data.Monoid
-import Data.Maybe
+import Control.Monad
 import Data.Char
 import Data.Int
+import Data.Maybe
+import Data.Monoid
 import Data.String.Utils
-import Control.Monad
-
-import DB
-import EvidenceLog.Tables
+import Text.HTML.TagSoup.Entity
 import Text.XML.HaXml(render)
 import Text.XML.HaXml.Parse (xmlParse')
 import Text.XML.HaXml.Posn
 import Text.XML.HaXml.Pretty(content)
 import qualified Text.XML.HaXml.Types as XML
-import Text.HTML.TagSoup.Entity
 
+import DB
+import EvidenceLog.Tables
 import Utils.String
-
 
 dropHTMLFromMessagesInEvidenceLog :: MonadDB m => Migration m
 dropHTMLFromMessagesInEvidenceLog = Migration {
