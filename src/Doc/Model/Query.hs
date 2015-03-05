@@ -344,7 +344,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m DocumentExistsAndIsNotPurged Boo
        sqlResult "TRUE"
        sqlWhereDocumentIDIs did
        sqlWhereDocumentWasNotPurged
-    (notpurged :: Maybe Bool) <- fetchMaybe unSingle
+    (notpurged :: Maybe Bool) <- fetchMaybe runIdentity
     return (notpurged == Just True)
 
 instance (MonadDB m, MonadThrow m) => GetRow Document m where

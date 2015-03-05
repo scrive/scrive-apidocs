@@ -29,7 +29,7 @@ import qualified Log
 
 execute :: (AmazonMonad m, MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, MonadReader c m, HasSalesforceConf c) => DocumentAPICallback -> m Bool
 execute DocumentAPICallback{..} = do
-  exists <- dbQuery $ DocumentExistsAndIsNotPurged dacDocumentID
+  exists <- dbQuery $ DocumentExistsAndIsNotPurged dacID
   if exists
     then do
       doc <- dbQuery $ GetDocumentByDocumentID dacID
@@ -42,7 +42,7 @@ execute DocumentAPICallback{..} = do
             _ -> executeStandardCallback doc dacURL
     else do
       Log.mixlog "API callback dropped since document does not exists or is purged" $ do
-        value "document_id" (show dacDocumentID)
+        value "document_id" (show dacID)
       return True
 
 executeStandardCallback :: (AmazonMonad m, MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m) => Document -> String -> m Bool
