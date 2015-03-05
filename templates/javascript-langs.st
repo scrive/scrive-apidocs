@@ -150,7 +150,7 @@ javascriptLocalisation =
 
             , process : {
                signModalTitle: "$_contractSignatorySignModalTitle()$",
-               signModalBody: "$_contractSignatorySignModalBody()$",
+               signModalBody: "<p> $_contractSignatorySignModalBody()$ </p>",
                sendbuttontext: "$_contractsendbuttontext()$",
                changesignatorybuttontext: "$_changeSignatoryButtonText()$",
                startsigningbuttontext: "$_contractstartsigningbuttontext()$",
