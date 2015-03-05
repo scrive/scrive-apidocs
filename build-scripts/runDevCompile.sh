@@ -25,5 +25,3 @@ else
   cabal build --ghc-options="-O0 -optl -O0" 2>&1 | runghc build-scripts/Teamcity.hs ghc
   exit "${PIPESTATUS[0]}"
 fi
-
-
