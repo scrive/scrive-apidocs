@@ -530,7 +530,7 @@ asValidInviteText :: String -> Result String
 asValidInviteText input =
     checkIfEmpty input
     >>= parseAndFixAsXml
-    >>= return . strip
+    >>= return . strip . replace "\160" " "
     where
           parseAndFixAsXml :: String -> Result String
           parseAndFixAsXml xs =
