@@ -82,7 +82,7 @@ docUnjsonDef = objectOf $ pure Doc
   <*> fieldOptBy "autoremindtime" docautoremindtime    "" unjsonISOTime
   -- TODO , docstatus            :: !DocumentStatus
   -- TODO state = docstatus
-  <*> fieldBy "signatories" docsignatorylinks "signatories" (arrayOf siglinkUnjsonDef)
+  <*> field "signatories" docsignatorylinks "signatories"
   -- TODO signorder
   -- TODO authentication
   -- TODO delivery
@@ -142,38 +142,38 @@ data SigLink = SigLink
   , siglinkAuthentication :: Authentication
   , siglinkSignlink :: Maybe String
   }
+instance Unjson SigLink where
+  unjsonDef = objectOf $ pure SigLink
+    <*> field "id"                        siglinkId                             "signatories id"
+    <*> field "current"                   siglinkCurrent                        "signatories current"
+    <*> field "signorder"                 siglinkSignorder                      "signatories signorder"
+    <*> field "undeliveredInvitation"     siglinkUndeliveredInvitation          "signatories undeliveredInvitation"
+    <*> field "undeliveredMailInvitation" siglinkUndeliveredMailInvitation      ""
+    <*> field "undeliveredSMSInvitation"  siglinkUndeliveredSMSInvitation       ""
+    <*> field "deliveredInvitation"       siglinkDeliveredInvitation            ""
+    <*> field "delivery"                  siglinkDelivery                       ""
+    <*> field "confirmationdelivery"      siglinkConfirmationdelivery           ""
+    <*> field "signs"                     siglinkSigns                          ""
+    <*> field "author"                    siglinkAuthor                         ""
+    <*> field "saved"                     siglinkSaved                          ""
+    <*> fieldOpt "datamismatch"           siglinkDatamismatch                   ""
+    <*> fieldOptBy "signdate"             siglinkSigndate                       "" unjsonISOTime
+    <*> fieldOptBy "seendate"             siglinkSeendate                       "" unjsonISOTime
+    <*> fieldOptBy "readdate"             siglinkReaddate                       "" unjsonISOTime
+    <*> fieldOptBy "rejecteddate"         siglinkRejecteddate                   "" unjsonISOTime
+    <*> fieldOpt "rejectionreason"        siglinkRejectionreason                ""
+    <*> field "fields"                    siglinkFields                         ""
+    -- TODO , siglinkStatus ::  "draft"
+    -- TODO , siglinkAttachments ::  []
+    -- TODO , siglinkCsv ::  null
+    <*> field "inpadqueue"                siglinkInpadqueue                     ""
+    <*> fieldOpt "userid"                 siglinkUserid                         ""
+    <*> fieldOpt "signsuccessredirect"    siglinkSignsuccessredirect            ""
+    <*> fieldOpt "rejectredirect"         siglinkRejectredirect                 ""
+    <*> field "authentication"            siglinkAuthentication                 ""
+    <*> fieldOpt "signlink"               siglinkSignlink                       ""
 
-siglinkUnjsonDef :: UnjsonDef SigLink
-siglinkUnjsonDef = objectOf $ pure SigLink
-  <*> field "id"                        siglinkId                             "signatories id"
-  <*> field "current"                   siglinkCurrent                        "signatories current"
-  <*> field "signorder"                 siglinkSignorder                      "signatories signorder"
-  <*> field "undeliveredInvitation"     siglinkUndeliveredInvitation          "signatories undeliveredInvitation"
-  <*> field "undeliveredMailInvitation" siglinkUndeliveredMailInvitation      ""
-  <*> field "undeliveredSMSInvitation"  siglinkUndeliveredSMSInvitation       ""
-  <*> field "deliveredInvitation"       siglinkDeliveredInvitation            ""
-  <*> field "delivery"                  siglinkDelivery                       ""
-  <*> field "confirmationdelivery"      siglinkConfirmationdelivery           ""
-  <*> field "signs"                     siglinkSigns                          ""
-  <*> field "author"                    siglinkAuthor                         ""
-  <*> field "saved"                     siglinkSaved                          ""
-  <*> fieldOpt "datamismatch"           siglinkDatamismatch                   ""
-  <*> fieldOptBy "signdate"             siglinkSigndate                       "" unjsonISOTime
-  <*> fieldOptBy "seendate"             siglinkSeendate                       "" unjsonISOTime
-  <*> fieldOptBy "readdate"             siglinkReaddate                       "" unjsonISOTime
-  <*> fieldOptBy "rejecteddate"         siglinkRejecteddate                   "" unjsonISOTime
-  <*> fieldOpt "rejectionreason"        siglinkRejectionreason                ""
-  <*> fieldBy "fields"                  siglinkFields                         "" (arrayOf unjsonField)
-  -- TODO , siglinkStatus ::  "draft"
-  -- TODO , siglinkAttachments ::  []
-  -- TODO , siglinkCsv ::  null
-  <*> field "inpadqueue"                siglinkInpadqueue                     ""
-  <*> fieldOpt "userid"                 siglinkUserid                         ""
-  <*> fieldOpt "signsuccessredirect"    siglinkSignsuccessredirect            ""
-  <*> fieldOpt "rejectredirect"         siglinkRejectredirect                 ""
-  <*> field "authentication"            siglinkAuthentication                 ""
-  <*> fieldOpt "signlink"               siglinkSignlink                       ""
-
+-- FIXME make this stronger with a newtype?
 readISOTime :: String -> Maybe UTCTime
 readISOTime = parseTime defaultTimeLocale "%0Y-%0m-%0dT%0H:%0M:%0SZ"
 unjsonISOTime :: UnjsonDef UTCTime
@@ -185,12 +185,11 @@ unjsonISOTime = unjsonInvmapR
 data Delivery = DeliveryEmail | DeliveryPad | DeliveryAPI | DeliveryMobile
               | DeliveryEmailMobile
   deriving (Show)
-
-unjsonDelivery :: UnjsonDef Delivery
-unjsonDelivery = unjsonInvmapR
-                   ((maybe (fail "Can't parse Delivery") return) . readDelivery)
-                   show
-                   unjsonDef
+instance Unjson Delivery where
+  unjsonDef = unjsonInvmapR
+                ((maybe (fail "Can't parse Delivery") return) . readDelivery)
+                show
+                unjsonDef
     where readDelivery :: String -> Maybe Delivery
           readDelivery "email"        = Just DeliveryEmail
           readDelivery "pad"          = Just DeliveryPad
@@ -199,18 +198,14 @@ unjsonDelivery = unjsonInvmapR
           readDelivery "email_mobile" = Just DeliveryEmailMobile
           readDelivery _ = Nothing
 
-instance Unjson Delivery where
-  unjsonDef = unjsonDelivery
-
 data Confirmation = ConfirmationEmail | ConfirmationMobile
                   | ConfirmationEmailMobile | ConfirmationNone
   deriving (Show)
-
-unjsonConfirmation :: UnjsonDef Confirmation
-unjsonConfirmation = unjsonInvmapR
-                     ((maybe (fail "Can't parse Confirmation") return) . readConfirmation)
-                     show
-                     unjsonDef
+instance Unjson Confirmation where
+  unjsonDef = unjsonInvmapR
+                ((maybe (fail "Can't parse Confirmation") return) . readConfirmation)
+                show
+                unjsonDef
     where readConfirmation :: String -> Maybe Confirmation
           readConfirmation "email"        = Just ConfirmationEmail
           readConfirmation "mobile"       = Just ConfirmationMobile
@@ -218,46 +213,18 @@ unjsonConfirmation = unjsonInvmapR
           readConfirmation "none"         = Just ConfirmationNone
           readConfirmation _ = Nothing
 
-instance Unjson Confirmation where
-  unjsonDef = unjsonConfirmation
-
 data Authentication = AuthenticationStandard | AuthenticationELeg | AuthenticationSMS
   deriving (Show)
-
-unjsonAuthentication :: UnjsonDef Authentication
-unjsonAuthentication = unjsonInvmapR
-                       ((maybe (fail "Can't parse Authentication") return) . readAuthentication)
-                       show
-                       unjsonDef
+instance Unjson Authentication where
+  unjsonDef = unjsonInvmapR
+                ((maybe (fail "Can't parse Authentication") return) . readAuthentication)
+                show
+                unjsonDef
     where readAuthentication :: String -> Maybe Authentication
           readAuthentication "standard" = Just AuthenticationStandard
           readAuthentication "eleg"     = Just AuthenticationELeg
           readAuthentication "sms_pin"  = Just AuthenticationSMS
           readAuthentication _ = Nothing
-
-instance Unjson Authentication where
-  unjsonDef = unjsonAuthentication
-
-data FieldType = FieldTypeStandard | FieldTypeSignature | FieldTypeCheckbox
-               | FieldTypeCustom
-  deriving (Show)
-
-unjsonFieldType :: UnjsonDef FieldType
-unjsonFieldType = unjsonInvmapR
-                  ((maybe (fail "Can't parse FieldType") return) . readFieldType)
-                  show
-                  unjsonDef
-    where readFieldType :: String -> Maybe FieldType
-          readFieldType "standard"  = Just FieldTypeStandard
-          readFieldType "signature" = Just FieldTypeSignature
-          readFieldType "checkbox"  = Just FieldTypeCheckbox
-          readFieldType "custom"    = Just FieldTypeCustom
-          readFieldType _ = Nothing
-
-instance Unjson FieldType where
-  unjsonDef = unjsonFieldType
-
-data FieldName = FieldName String -- FIXME
 
 data Field = Field
   { fieldType                   :: FieldType
@@ -268,14 +235,30 @@ data Field = Field
   , fieldShouldbefilledbysender :: Bool
   , fieldPlacements             :: [Placement]
   }
+instance Unjson Field where
+  unjsonDef = objectOf $ pure Field
+    <*> field "type"                   fieldType                   ""
+    <*> field "closed"                 fieldClosed                 ""
+    <*> field "obligatory"             fieldObligatory             ""
+    <*> field "shouldbefilledbysender" fieldShouldbefilledbysender ""
+    <*> field "placements"             fieldPlacements             ""
 
-unjsonField :: UnjsonDef Field
-unjsonField = objectOf $ pure Field
-  <*> field "type"                   fieldType                   ""
-  <*> field "closed"                 fieldClosed                 ""
-  <*> field "obligatory"             fieldObligatory             ""
-  <*> field "shouldbefilledbysender" fieldShouldbefilledbysender ""
-  <*> fieldBy "placements"           fieldPlacements             "" (arrayOf unjsonPlacement)
+data FieldType = FieldTypeStandard | FieldTypeSignature | FieldTypeCheckbox
+               | FieldTypeCustom
+  deriving (Show)
+instance Unjson FieldType where
+  unjsonDef = unjsonInvmapR
+                ((maybe (fail "Can't parse FieldType") return) . readFieldType)
+                show
+                unjsonDef
+    where readFieldType :: String -> Maybe FieldType
+          readFieldType "standard"  = Just FieldTypeStandard
+          readFieldType "signature" = Just FieldTypeSignature
+          readFieldType "checkbox"  = Just FieldTypeCheckbox
+          readFieldType "custom"    = Just FieldTypeCustom
+          readFieldType _ = Nothing
+
+data FieldName = FieldName String -- FIXME
 
 data Placement = Placement
   { placementXrel     :: Double
@@ -287,17 +270,16 @@ data Placement = Placement
   , placementAnchors  :: Maybe [PlacementAnchor]
   , placementTip      :: Maybe PlacementTip
   }
-
-unjsonPlacement :: UnjsonDef Placement
-unjsonPlacement = objectOf $ pure Placement
-  <*> field "xrel"       placementXrel         ""
-  <*> field "yrel"       placementYrel         ""
-  <*> field "wrel"       placementWrel         ""
-  <*> field "hrel"       placementHrel         ""
-  <*> field "fsrel"      placementFSrel        ""
-  <*> field "page"       placementPage         ""
-  <*> fieldOpt "anchors" placementAnchors      ""
-  <*> fieldOpt "tip"     placementTip          ""
+instance Unjson Placement where
+  unjsonDef = objectOf $ pure Placement
+    <*> field "xrel"       placementXrel         ""
+    <*> field "yrel"       placementYrel         ""
+    <*> field "wrel"       placementWrel         ""
+    <*> field "hrel"       placementHrel         ""
+    <*> field "fsrel"      placementFSrel        ""
+    <*> field "page"       placementPage         ""
+    <*> fieldOpt "anchors" placementAnchors      ""
+    <*> fieldOpt "tip"     placementTip          ""
 
 data PlacementTip = PlacementTipLeft | PlacementTipRight
   deriving (Show)
