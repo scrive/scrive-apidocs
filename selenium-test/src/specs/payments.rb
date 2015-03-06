@@ -93,8 +93,8 @@ describe "subscribe with a credit card" do
     @h.driver.get(@h.ctx.createKontrakcjaURL ("/" + @h.lang + "/signup"))
 
     puts "request an account and make sure you get a flash back"
-    (@h.wait_until { @h.driver.find_element :css => ".signup-box input" }).send_keys random_email
-    (@h.wait_until { @h.driver.find_element :css => ".signup-box a.button" }).click
+    (@h.wait_until { @h.driver.find_element :css => "input[name=email]" }).send_keys random_email
+    (@h.wait_until { @h.driver.find_element :css => "a.button.main" }).click
     (@h.wait_until { @h.driver.find_element :css => ".flash-body" })
 
     puts "we should get an email to a page where we can accept the tos"
@@ -153,8 +153,8 @@ describe "subscribe with a credit card" do
     @h.driver.get(@h.ctx.createKontrakcjaURL ("/" + @h.lang + "/signup"))
 
     puts "request an account and make sure you get a flash back"
-    (@h.wait_until { @h.driver.find_element :css => ".signup-box input" }).send_keys random_email
-    (@h.wait_until { @h.driver.find_element :css => ".signup-box a.button" }).click
+    (@h.wait_until { @h.driver.find_element :css => "input[name=email]" }).send_keys random_email
+    (@h.wait_until { @h.driver.find_element :css => "a.button.main" }).click
     (@h.wait_until { @h.driver.find_element :css => ".flash-body" })
 
     puts "we should get an email to a page where we can accept the tos"
