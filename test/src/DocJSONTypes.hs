@@ -131,7 +131,7 @@ data SigLink = SigLink
   , siglinkReaddate ::         Maybe UTCTime
   , siglinkRejecteddate ::     Maybe UTCTime
   , siglinkRejectionreason ::  Maybe String
-  -- TODO , siglinkFields :: TODO
+  , siglinkFields :: [Field]
   -- TODO , siglinkStatus ::  "draft"
   -- TODO , siglinkAttachments ::  []
   -- TODO , siglinkCsv ::  null
@@ -140,7 +140,7 @@ data SigLink = SigLink
   , siglinkSignsuccessredirect :: Maybe String
   , siglinkRejectredirect ::  Maybe String
   , siglinkAuthentication :: Authentication
-  -- TODO signlink
+  , siglinkSignlink :: Maybe String
   }
 
 siglinkUnjsonDef :: UnjsonDef SigLink
@@ -163,7 +163,7 @@ siglinkUnjsonDef = objectOf $ pure SigLink
   <*> fieldOptBy "readdate"             siglinkReaddate                       "" unjsonISOTime
   <*> fieldOptBy "rejecteddate"         siglinkRejecteddate                   "" unjsonISOTime
   <*> fieldOpt "rejectionreason"        siglinkRejectionreason                ""
-  -- TODO , siglinkFields :: TODO
+  <*> fieldBy "fields"                  siglinkFields                         "" (arrayOf unjsonField)
   -- TODO , siglinkStatus ::  "draft"
   -- TODO , siglinkAttachments ::  []
   -- TODO , siglinkCsv ::  null
@@ -172,7 +172,7 @@ siglinkUnjsonDef = objectOf $ pure SigLink
   <*> fieldOpt "signsuccessredirect"    siglinkSignsuccessredirect            ""
   <*> fieldOpt "rejectredirect"         siglinkRejectredirect                 ""
   <*> field "authentication"            siglinkAuthentication                 ""
-  -- TODO signlink
+  <*> fieldOpt "signlink"               siglinkSignlink                       ""
 
 readISOTime :: String -> Maybe UTCTime
 readISOTime = parseTime defaultTimeLocale "%0Y-%0m-%0dT%0H:%0M:%0SZ"
@@ -237,3 +237,87 @@ unjsonAuthentication = unjsonInvmapR
 
 instance Unjson Authentication where
   unjsonDef = unjsonAuthentication
+
+data FieldType = FieldTypeStandard | FieldTypeSignature | FieldTypeCheckbox
+               | FieldTypeCustom
+  deriving (Show)
+
+unjsonFieldType :: UnjsonDef FieldType
+unjsonFieldType = unjsonInvmapR
+                  ((maybe (fail "Can't parse FieldType") return) . readFieldType)
+                  show
+                  unjsonDef
+    where readFieldType :: String -> Maybe FieldType
+          readFieldType "standard"  = Just FieldTypeStandard
+          readFieldType "signature" = Just FieldTypeSignature
+          readFieldType "checkbox"  = Just FieldTypeCheckbox
+          readFieldType "custom"    = Just FieldTypeCustom
+          readFieldType _ = Nothing
+
+instance Unjson FieldType where
+  unjsonDef = unjsonFieldType
+
+data FieldName = FieldName String -- FIXME
+
+data Field = Field
+  { fieldType                   :: FieldType
+  -- TODO , fieldName                   :: FieldName
+  -- TODO , fieldValue :: String, but look at `sfvEncode`
+  , fieldClosed                 :: Bool
+  , fieldObligatory             :: Bool
+  , fieldShouldbefilledbysender :: Bool
+  , fieldPlacements             :: [Placement]
+  }
+
+unjsonField :: UnjsonDef Field
+unjsonField = objectOf $ pure Field
+  <*> field "type"                   fieldType                   ""
+  <*> field "closed"                 fieldClosed                 ""
+  <*> field "obligatory"             fieldObligatory             ""
+  <*> field "shouldbefilledbysender" fieldShouldbefilledbysender ""
+  <*> fieldBy "placements"           fieldPlacements             "" (arrayOf unjsonPlacement)
+
+data Placement = Placement
+  { placementXrel     :: Double
+  , placementYrel     :: Double
+  , placementWrel     :: Double
+  , placementHrel     :: Double
+  , placementFSrel    :: Double
+  , placementPage     :: Int
+  , placementAnchors  :: Maybe [PlacementAnchor]
+  , placementTip      :: Maybe PlacementTip
+  }
+
+unjsonPlacement :: UnjsonDef Placement
+unjsonPlacement = objectOf $ pure Placement
+  <*> field "xrel"       placementXrel         ""
+  <*> field "yrel"       placementYrel         ""
+  <*> field "wrel"       placementWrel         ""
+  <*> field "hrel"       placementHrel         ""
+  <*> field "fsrel"      placementFSrel        ""
+  <*> field "page"       placementPage         ""
+  <*> fieldOpt "anchors" placementAnchors      ""
+  <*> fieldOpt "tip"     placementTip          ""
+
+data PlacementTip = PlacementTipLeft | PlacementTipRight
+  deriving (Show)
+instance Unjson PlacementTip where
+  unjsonDef = unjsonInvmapR
+                  ((maybe (fail "Can't parse PlacementTip") return) . readPlacementTip)
+                  show
+                  unjsonDef
+    where readPlacementTip :: String -> Maybe PlacementTip
+          readPlacementTip "left"  = Just PlacementTipLeft
+          readPlacementTip "right" = Just PlacementTipRight
+          readPlacementTip _ = Nothing
+
+data PlacementAnchor = PlacementAnchor
+  { placementanchorText  :: String
+  , placementanchorIndex :: Maybe Int
+  , placementanchorPage  :: [Int]
+  }
+instance Unjson PlacementAnchor where
+  unjsonDef = objectOf $ pure PlacementAnchor
+    <*> field "text"     placementanchorText  ""
+    <*> fieldOpt "index" placementanchorIndex ""
+    <*> field "pages"    placementanchorPage  ""
