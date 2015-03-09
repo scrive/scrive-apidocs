@@ -9,6 +9,8 @@ import System.Locale
 import DB.Derive
 import Utils.Read
 
+import MagicHash
+
 newtype Int64AsString = Int64AsString Int64
   deriving (Eq, Ord)
 $(newtypeDeriveUnderlyingReadShow ''Int64AsString)
@@ -23,6 +25,12 @@ unjsonInt64AsString = unjsonInvmapR
                         unjsonDef
 instance Unjson Int64AsString where
   unjsonDef = unjsonInt64AsString
+
+unjsonMagicHash :: UnjsonDef MagicHash
+unjsonMagicHash = unjsonInvmapR
+                    ((maybe (fail "Can't parse MagicHash") return) . maybeRead)
+                    (show . unMagicHash)
+                    unjsonDef
 
 data Doc = Doc
   { docid                  :: Int64AsString
@@ -50,8 +58,8 @@ data Doc = Doc
   , docshowfooter        :: Bool
   , docinvitetext        :: String
   , docconfirmtext       :: String
-  -- TODO , doclang              :: !Lang
-  -- TODO , doctags              :: !(S.Set DocumentTag)
+  , doclang              :: DocLang
+  , doctags              :: [DocTag]
   , docapicallbackurl    :: (Maybe String)
   , docunsaveddraft      :: Bool
   , docdeleted           :: Bool
@@ -59,14 +67,10 @@ data Doc = Doc
   , doccanperformsigning :: Bool
   , docobjectversion     :: Int64
   , docprocess           :: DocProcess
-  -- TODO process
-  -- TODO isviewedbyauthor
-  -- TODO canberestarted
-  -- TODO canbeprolonged
-  -- TODO canbecanceled
-  -- TODO canseeallattachments
-  -- TODO accesstoken (AKA MagicHash)
-  -- TODO , doctimezonename      :: !TimeZoneName
+  , docisviewedbyauthor  :: Bool
+  , docaccesstoken       :: MagicHash
+  -- FIXME check for this? we depend on SQL stuff to generate this anyway...
+  , doctimezonename      :: String
   }
 
 docUnjsonDef :: UnjsonDef Doc
@@ -96,22 +100,18 @@ docUnjsonDef = objectOf $ pure Doc
   <*> field "showfooter"       docshowfooter       "showfooter"
   <*> field "invitationmessage"   docinvitetext  "docinvitetext"    -- FIXME check for <p></p>?
   <*> field "confirmationmessage" docconfirmtext "docconfirmtext"   -- FIXMe check for <p></p>?
-  -- TODO , doclang              :: !Lang
-  -- TODO , doctags              :: !(S.Set DocumentTag)
+  <*> field "lang"                  doclang                ""
+  <*> field "tags"                  doctags                ""
   <*> fieldOpt "apicallbackurl" docapicallbackurl "apicallbackurl"
-  <*> field "saved"                docunsaveddraft "saved"
-  <*> field "deleted"              docdeleted             ""
-  <*> field "reallydeleted"        docreallydeleted       ""
-  <*> field "canperformsigning"    doccanperformsigning   ""
-  <*> field "objectversion"        docobjectversion       "objectversion"
-  <*> field "process"              docprocess             ""
-  -- TODO isviewedbyauthor
-  -- TODO canberestarted
-  -- TODO canbeprolonged
-  -- TODO canbecanceled
-  -- TODO canseeallattachments
-  -- TODO accesstoken (AKA MagicHash)
-  -- TODO , doctimezonename      :: !TimeZoneName
+  <*> field "saved"                 docunsaveddraft "saved"
+  <*> field "deleted"               docdeleted             ""
+  <*> field "reallydeleted"         docreallydeleted       ""
+  <*> field "canperformsigning"     doccanperformsigning   ""
+  <*> field "objectversion"         docobjectversion       "objectversion"
+  <*> field "process"               docprocess             ""
+  <*> field "isviewedbyauthor"      docisviewedbyauthor    ""
+  <*> fieldBy "accesstoken"         docaccesstoken         "" unjsonMagicHash
+  <*> field "timezone"              doctimezonename        ""
 
 data DocStatus = DocStatusPreparation | DocStatusPending |DocStatusClosed
                | DocStatusCanceled | DocStatusTimedout | DocStatusRejected
@@ -171,6 +171,41 @@ instance Unjson DocProcess where
                          "Contract" -> Just DocProcess
                          _ -> Nothing
                 )) show unjsonDef
+
+-- FIXME Make all these data types with only one constructor?
+-- i.e. make it 'data DocLang = ValidDocLang' and then in the instance this is
+-- the only one that is generated, I can then also use 'elems' instead of all
+-- this pattern matching taking up so much space!
+data DocLang = DocLang_SV | DocLang_EN | DocLang_DE | DocLang_FR | DocLang_IT
+             | DocLang_ES | DocLang_PT | DocLang_NL | DocLang_DA | DocLang_NO
+             | DocLang_GR | DocLang_FI
+  deriving (Show)
+instance Unjson DocLang where
+  unjsonDef = unjsonInvmapR
+                ((maybe (fail "Can't parse DocLang") return) . readDocLang)
+                show
+                unjsonDef
+    where readDocLang :: String -> Maybe DocLang
+          readDocLang "sv" = Just DocLang_SV
+          readDocLang "gb" = Just DocLang_EN
+          --readDocLang "en" = Just DocLang_EN
+          readDocLang "de" = Just DocLang_DE
+          readDocLang "fr" = Just DocLang_FR
+          readDocLang "it" = Just DocLang_IT
+          readDocLang "es" = Just DocLang_ES
+          readDocLang "pt" = Just DocLang_PT
+          readDocLang "nl" = Just DocLang_NL
+          readDocLang "da" = Just DocLang_DA
+          readDocLang "no" = Just DocLang_NO
+          readDocLang "el" = Just DocLang_GR
+          readDocLang "fi" = Just DocLang_FI
+          readDocLang _ = Nothing
+
+data DocTag = DocTag { docTagName :: String, docTagValue :: String }
+instance Unjson DocTag where
+  unjsonDef = objectOf $ pure DocTag
+    <*> field "name"  docTagName ""
+    <*> field "value" docTagValue ""
 
 data SigLink = SigLink
   { siglinkId                         :: Int64AsString
