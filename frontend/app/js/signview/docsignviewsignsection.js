@@ -213,7 +213,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
 
     var content = $("<div />");
     if (this.signaturesPlaced) {
-      content.text(localization.process.signModalBody);
+      content.append($(localization.process.signModalBody));
     } else {
       var copy = $(localization.process.signatorysignmodalcontent);
       copy.find('.put-signatory-name-here').text(signatory.name());

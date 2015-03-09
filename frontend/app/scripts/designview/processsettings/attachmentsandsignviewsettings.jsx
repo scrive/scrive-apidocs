@@ -4,7 +4,7 @@ define(['legacy_code', 'React', 'designview/processsettings/signviewsettings', '
 
 return React.createClass({
   getInitialState: function() {
-      return {settingsModalOpened: this.props.false};
+      return {settingsModalOpened: this.props['false']};
     },
   render: function() {
     var self = this;

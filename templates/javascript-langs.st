@@ -150,7 +150,7 @@ javascriptLocalisation =
 
             , process : {
                signModalTitle: "$_contractSignatorySignModalTitle()$",
-               signModalBody: "$_contractSignatorySignModalBody()$",
+               signModalBody: "<p> $_contractSignatorySignModalBody()$ </p>",
                sendbuttontext: "$_contractsendbuttontext()$",
                changesignatorybuttontext: "$_changeSignatoryButtonText()$",
                startsigningbuttontext: "$_contractstartsigningbuttontext()$",
@@ -467,14 +467,14 @@ javascriptLocalisation =
            , label: "$_changeEmailModalLabel()$"
            , acceptButton: "$_changeEmailModalAcceptButton()$"
            , invalidEmailFlash: "$_changeEmailModalAcceptInvalidEmailFlash()$"
-           , placeholder: "$_changeEmailModalPlaceholder()$",
+           , placeholder: "$_changeEmailModalPlaceholder()$"
          }
          , changeMobileModal: {
              title: "$_changeMobileModalTitle()$"
            , label: "$_changeMobileModalLabel()$"
            , acceptButton: "$_changeMobileModalAcceptButton()$"
            , invalidMobileFlash: "$_changeMobileModalAcceptInvalidMobileFlash()$"
-           , placeholder: "$_changeMobileModalPlaceholder()$",
+           , placeholder: "$_changeMobileModalPlaceholder()$"
          }
          , changePhone : "$_changePhone()$"
          , accessNewAccountModal: {
@@ -697,7 +697,7 @@ javascriptLocalisation =
                           name: "$TeamPlanName()$"
                     }
                     , trial : {
-                          name : "$_paymentPlanTrial()$",
+                          name : "$_paymentPlanTrial()$"
                     }
                     , team : {
                           name : "$TeamPlanName()$"
