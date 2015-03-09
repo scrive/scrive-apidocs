@@ -156,6 +156,7 @@
 "_signingErrorMessage2":"Por favor cargar la página de nuevo.",
 "_signingErrorReload":"Recargar la página",
 "_signingInProgressDontCloseWindow":"Estamos todavía guardando su firma. Si usted abandona esta página puede que el proceso no finalice.",
+"_signingStartedDontCloseWindow":"",
 "_signinginprogressmodalAction1":"Guarda la evidencia recogida",
 "_signinginprogressmodalAction2":"Registra su firma",
 "_signinginprogressmodalTitle":"Usted ha firmado",

@@ -156,6 +156,7 @@
 "_signingErrorMessage2":"Veuillez recharger la page.",
 "_signingErrorReload":"Recharger la page",
 "_signingInProgressDontCloseWindow":"Nous enregistrons encore votre signature. Si vous quittez cette page, il est possible que nous ne terminions pas le processus.",
+"_signingStartedDontCloseWindow":"",
 "_signinginprogressmodalAction1":"Enregistrement des preuves recueillies ",
 "_signinginprogressmodalAction2":"Enregistrement de votre signature",
 "_signinginprogressmodalTitle":"Vous avez signé",

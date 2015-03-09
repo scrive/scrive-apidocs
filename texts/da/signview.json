@@ -156,6 +156,7 @@
 "_signingErrorMessage2":"Opdater venligst siden.",
 "_signingErrorReload":"Opdater side",
 "_signingInProgressDontCloseWindow":"Vi gemmer stadig din signatur. Hvis du forlader denne side, kan vi muligvis ikke afslutte processen.",
+"_signingStartedDontCloseWindow":"",
 "_signinginprogressmodalAction1":"Gemmer indsamlede beviser",
 "_signinginprogressmodalAction2":"Registrerer din signatur",
 "_signinginprogressmodalTitle":"Du har signeret",

@@ -156,6 +156,7 @@
 "_signingErrorMessage2":"Vänligen ladda om sidan.",
 "_signingErrorReload":"Ladda om sidan",
 "_signingInProgressDontCloseWindow":"Vi håller fortfarande på att spara din signatur. Om du lämnar den här sidan kanske inte processen kan avslutas.",
+"_signingStartedDontCloseWindow":"",
 "_signinginprogressmodalAction1":"Sparar inhämtade bevis",
 "_signinginprogressmodalAction2":"Registrerar din signatur",
 "_signinginprogressmodalTitle":"Du har signerat",

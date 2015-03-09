@@ -156,6 +156,7 @@
 "_signingErrorMessage2":"Παρακαλώ επαναφορτώστε τη σελίδα. ",
 "_signingErrorReload":"Επαναφόρτωση σελίδας",
 "_signingInProgressDontCloseWindow":"Ακόμα αποθηκεύουμε την υπογραφή σας. Αν εγκαταλείψετε αυτή τη σελίδα υπάρχει περίπτωση να μην μπορούμε να ολοκληρώσουμε τη διαδικασία. ",
+"_signingStartedDontCloseWindow":"",
 "_signinginprogressmodalAction1":"Αποθηκεύει τα επιλεγμένα στοιχεία ",
 "_signinginprogressmodalAction2":"Εγγράφει την υπογραφή σας",
 "_signinginprogressmodalTitle":"Έχετε υπογράψει",

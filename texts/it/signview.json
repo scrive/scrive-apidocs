@@ -156,6 +156,7 @@
 "_signingErrorMessage2":"Ti preghiamo di ricaricare la pagina.",
 "_signingErrorReload":"Ricarica pagina",
 "_signingInProgressDontCloseWindow":"Stiamo salvando la tua firma. Se abbandoni questa pagina potremmo non essere in grado di terminare il processo.",
+"_signingStartedDontCloseWindow":"",
 "_signinginprogressmodalAction1":"Salva le prove raccolte",
 "_signinginprogressmodalAction2":"Registra la tua firma",
 "_signinginprogressmodalTitle":"Hai firmato",

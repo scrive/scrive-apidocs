@@ -156,6 +156,7 @@
 "_signingErrorMessage2":"Vennligst last inn siden på nytt.",
 "_signingErrorReload":"Last inn siden på nytt",
 "_signingInProgressDontCloseWindow":"Vi sparer fremdeles din signatur. Dersom du forlater denne siden kan vi muligens ikke være i stand til å fullføre prosessen.",
+"_signingStartedDontCloseWindow":"",
 "_signinginprogressmodalAction1":"Sparer innsamlede bevis",
 "_signinginprogressmodalAction2":"Registrerer din signatur",
 "_signinginprogressmodalTitle":"Du har signert",

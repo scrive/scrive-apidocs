@@ -156,6 +156,7 @@
 "_signingErrorMessage2":"Recarregue a página.",
 "_signingErrorReload":"Recarregar página",
 "_signingInProgressDontCloseWindow":"Ainda estamosa guardar a sua assinatura. Se sair desta página é possível que este processo não seja concluído.",
+"_signingStartedDontCloseWindow":"",
 "_signinginprogressmodalAction1":"Guarda as provas recolhidas",
 "_signinginprogressmodalAction2":"Regista a sua assinatura",
 "_signinginprogressmodalTitle":"Assinou",
