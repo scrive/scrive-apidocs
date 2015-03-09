@@ -8,6 +8,7 @@ import Control.Applicative
 import Control.Monad.Base
 import Control.Monad.Catch
 import Data.Int
+import Data.Monoid
 import Data.Monoid.Utils
 import Database.PostgreSQL.PQTypes
 
@@ -33,10 +34,10 @@ registerConsumer
   => ConsumerConfig n idx job
   -> ConnectionSource
   -> m ConsumerID
-registerConsumer cc cs = runDBT cs ts $ do
+registerConsumer ConsumerConfig{..} cs = runDBT cs ts $ do
   runSQL_ $ smconcat [
-      "INSERT INTO" <+> raw (ccConsumersTable cc)
-    , "(last_activity) VALUES (now())"
+      "INSERT INTO" <+> raw ccConsumersTable
+    , "(name, last_activity) VALUES (" <?> unRawSQL ccJobsTable <> ", now())"
     , "RETURNING id"
     ]
   fetchOne runIdentity
@@ -48,10 +49,11 @@ unregisterConsumer
   -> ConnectionSource
   -> ConsumerID
   -> m ()
-unregisterConsumer cc cs wid = runDBT cs ts $ do
+unregisterConsumer ConsumerConfig{..} cs wid = runDBT cs ts $ do
   runSQL_ $ smconcat [
-      "DELETE FROM " <+> raw (ccConsumersTable cc)
+      "DELETE FROM " <+> raw ccConsumersTable
     , "WHERE id =" <?> wid
+    , "  AND name =" <?> unRawSQL ccJobsTable
     ]
 
 ----------------------------------------

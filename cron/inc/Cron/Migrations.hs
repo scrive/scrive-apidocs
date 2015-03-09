@@ -12,7 +12,15 @@ cronMigrations :: MonadDB m => [Migration m]
 cronMigrations = [
     createCronWorkersTable
   , createCronJobsTable
+  , addNameToCronWorkers
   ]
+
+addNameToCronWorkers :: MonadDB m => Migration m
+addNameToCronWorkers = Migration {
+  mgrTable = tableCronWorkers
+, mgrFrom = 1
+, mgrDo = runSQL_ "ALTER TABLE cron_workers ADD COLUMN name TEXT NOT NULL"
+}
 
 createCronWorkersTable :: MonadDB m => Migration m
 createCronWorkersTable = Migration {

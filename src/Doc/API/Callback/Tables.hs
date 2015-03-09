@@ -5,10 +5,11 @@ import DB
 tableDocumentApiCallbackConsumers :: Table
 tableDocumentApiCallbackConsumers = tblTable {
   tblName = "document_api_callback_consumers"
-, tblVersion = 1
+, tblVersion = 2
 , tblColumns = [
     tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
   , tblColumn { colName = "last_activity", colType = TimestampWithZoneT, colNullable = False }
+  , tblColumn { colName = "name", colType = TextT, colNullable = False }
   ]
   , tblPrimaryKey = pkOnColumn "id"
 }

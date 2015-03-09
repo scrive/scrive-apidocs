@@ -32,12 +32,13 @@ cronTables = [
 tableCronWorkers :: Table
 tableCronWorkers = tblTable {
     tblName = "cron_workers"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblColumns = [
     -- Id of the worker.
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     -- Last activity of the worker.
     , tblColumn { colName = "last_activity", colType = TimestampWithZoneT, colNullable = False }
+    , tblColumn { colName = "name", colType = TextT, colNullable = False }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   }

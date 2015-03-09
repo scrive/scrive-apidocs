@@ -54,6 +54,10 @@ data ConsumerConfig m idx job = forall row. FromRow row => ConsumerConfig {
 -- * id - represents ID of a consumer. Needs to be a primary key of the type
 -- SERIAL or BIGSERIAL (recommended).
 --
+-- * name - represents jobs table of the consumer. Needs to be not nullable,
+-- of type TEXT. Allows for tracking consumers of multiple queues with one
+-- table. Set to 'ccJobsTable'.
+--
 -- * last_activity - represents the last registered activity of the consumer.
 -- It's updated periodically by all currently running consumers every 30
 -- seconds to prove that they are indeed running. They also check for the

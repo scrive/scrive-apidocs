@@ -4,6 +4,13 @@ import DB
 import DB.Checks
 import Doc.API.Callback.Tables
 
+addNameToCallbackConsumers :: MonadDB m => Migration m
+addNameToCallbackConsumers = Migration {
+  mgrTable = tableDocumentApiCallbackConsumers
+, mgrFrom = 1
+, mgrDo = runSQL_ "ALTER TABLE document_api_callback_consumers ADD COLUMN name TEXT NOT NULL"
+}
+
 updateApiCallbacksForNewConsumer :: MonadDB m => Migration m
 updateApiCallbacksForNewConsumer = Migration {
   mgrTable = tableDocumentApiCallbacks

@@ -111,20 +111,22 @@ spawnMonitor
   -> m ThreadId
 spawnMonitor ConsumerConfig{..} cs logger cid = forkP "monitor" . forever $ do
   n <- runDBT cs ts $ do
-    -- Update last_activity of the worker.
+    -- Update last_activity of the consumer.
     ok <- runSQL01 $ smconcat [
         "UPDATE" <+> raw ccConsumersTable
       , "SET last_activity = now()"
       , "WHERE id =" <?> cid
+      , "  AND name =" <?> unRawSQL ccJobsTable
       ]
     when (not ok) $ do
       lift . logger $ "consumer" <+> show cid <+> "is not registered"
       throwM ThreadKilled
-    -- Remove all inactive (presumably dead) workers.
+    -- Remove all inactive (presumably dead) consumers.
     runSQL $ smconcat [
         "WITH inactive AS ("
       , "  DELETE FROM" <+> raw ccConsumersTable
       , "  WHERE last_activity +" <?> iminutes 1 <+> "<= now()"
+      , "    AND name =" <?> unRawSQL ccJobsTable
       , "  RETURNING id"
       , ")"
       -- Reset reserved jobs manually, do not rely
@@ -134,7 +136,7 @@ spawnMonitor ConsumerConfig{..} cs logger cid = forkP "monitor" . forever $ do
       , "WHERE reserved_by IN (SELECT id FROM inactive)"
       ]
   when (n > 0) $ do
-    logger $ "unregistered" <+> show n <+> "inactive workers"
+    logger $ "unregistered" <+> show n <+> "inactive consumers"
   liftBase . threadDelay $ 30 * 1000000 -- wait 30 seconds
   where
     ts = def {
@@ -219,7 +221,7 @@ spawnDispatcher ConsumerConfig{..} cs logger cid semaphore batches runningJobs =
             -- http://michael.otacoo.com/postgresql-2/postgres-9-5-feature-highlight-skip-locked-row-level/
             -- for more details). Also, note that even if IDs of two
             -- pending jobs produce the same hash, it just means that
-            -- in the worst case they will be processed by the same worker.
+            -- in the worst case they will be processed by the same consumer.
           , "WHERE pg_try_advisory_xact_lock(" <?> unRawSQL ccJobsTable <> "::regclass::integer, hashtext(id::text))"
           , "  AND reserved_by IS NULL"
           , "  AND run_at IS NOT NULL"
