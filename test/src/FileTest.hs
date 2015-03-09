@@ -1,7 +1,7 @@
 module FileTest (fileTests) where
 
-import Happstack.Server.SimpleHTTP
 import Control.Monad (replicateM_)
+import Happstack.Server.SimpleHTTP
 import Test.Framework
 import Test.QuickCheck
 import qualified Data.ByteString.UTF8 as BS
