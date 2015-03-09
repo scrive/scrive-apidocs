@@ -42,23 +42,31 @@ import Utils.Default
 --import qualified Log
 --import Utils.Read
 --import DB.Derive
+import Doc.DocumentID (unsafeDocumentID)
 
 docJSONTests :: TestEnvSt -> Test
 docJSONTests env = testGroup "DocJSON"
-  [ testThat "TODO" env firstTest
+  [ testThat "Test JSON structure for API V1 'createfromfile' and 'ready'" env testFromFileAndReadySimple
   ]
 
-firstTest :: TestEnv ()
-firstTest = do
+testFromFileAndReadySimple :: TestEnv ()
+testFromFileAndReadySimple = do
   user <- addNewRandomUser
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
 
   reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
+                                        -- FIXME make this random-ish file
                                       , ("file", inFile "test/pdfs/simple.pdf")
                                       ] []
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
-  testJSONWith "test/json/test1.json" (rsBody resDoc) docUnjsonDef
+  doc <- testJSONWith "test/json/test1.json" (rsBody resDoc) docUnjsonDef
+
+  reqReady <- mkRequest POST []
+  (resReady, _) <- runTestKontra reqReady ctx $ apiCallV1Ready (unsafeDocumentID $ fromInt64AsString $ docid doc)
+  assertEqual "We should get a 202 response" 202 (rsCode resReady)
+  _ <- testJSONWith "test/json/test2.json" (rsBody resReady) docUnjsonDef
+  return ()
 
 
 -- | Takes a 'FilePath' to a JSON file with the desired structure (with 'null'
@@ -67,13 +75,13 @@ firstTest = do
 --
 -- Checks that the ByteString parses, and also that it matches the JSON given
 -- in 'FilePath' (using (==) and 'removeValues').
-testJSONWith :: FilePath -> BS.ByteString -> UnjsonDef a -> TestEnv ()
+testJSONWith :: FilePath -> BS.ByteString -> UnjsonDef Doc -> TestEnv Doc
 testJSONWith fp jsonBS useUnjsonDef = do
   jsonFileBS <- liftIO $ B.readFile fp
   let Just value    = decode jsonBS
       Just jsonFile = decode jsonFileBS
       -- FIXME Can we use the 'a' in U.Result to test stuff?
-      U.Result _ problems = parse useUnjsonDef value
+      U.Result doc problems = parse useUnjsonDef value
   -- Using Unjson we check several things about the JSON in 'jsonBS':
   -- 1) That the correct fields exist
   -- 2) That these are of the correct type
@@ -87,6 +95,7 @@ testJSONWith fp jsonBS useUnjsonDef = do
   -- 2) Check that Null fields match, regardless of what their type "should" be
   assertEqual ("JSON structure and types (including 'null') should match that in " ++ fp)
               (removeValues jsonFile) (removeValues value)
+  return doc
 
 removeValues :: Value -> Value
 removeValues (Object m) = Object (H.map removeValues m)
