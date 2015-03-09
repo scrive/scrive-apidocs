@@ -35,13 +35,13 @@ data Doc = Doc
   , docctime               :: UTCTime
   , doctimeouttime         :: Maybe UTCTime
   , docautoremindtime      :: Maybe UTCTime
-  -- TODO , docstatus            :: !DocumentStatus
-  -- TODO state = docstatus
-  , docsignatorylinks    :: [SigLink]
-  -- TODO signorder
-  -- TODO authentication
-  -- TODO delivery
-  -- TODO , doctype              :: !DocumentType
+  , docstatus              :: DocStatus
+  , docstate               :: DocStatus
+  , docsignatorylinks      :: [SigLink]
+  , docsignorder           :: Int32
+  , docauthentication      :: DocAuth
+  , docdelivery            :: DocDelivery
+  , doctemplate            :: Bool
   , docdaystosign        :: Int32
   , docdaystoremind      :: Maybe Int32
   , docshowheader        :: Bool
@@ -54,10 +54,11 @@ data Doc = Doc
   -- TODO , doctags              :: !(S.Set DocumentTag)
   , docapicallbackurl    :: (Maybe String)
   , docunsaveddraft      :: Bool
-  -- TODO deleted
-  -- TODO reallydeleted
-  -- TODO canperformsigning
+  , docdeleted           :: Bool
+  , docreallydeleted     :: Bool
+  , doccanperformsigning :: Bool
   , docobjectversion     :: Int64
+  , docprocess           :: DocProcess
   -- TODO process
   -- TODO isviewedbyauthor
   -- TODO canberestarted
@@ -80,13 +81,13 @@ docUnjsonDef = objectOf $ pure Doc
   <*> fieldBy "ctime"             docctime                "" unjsonISOTime
   <*> fieldOptBy "timeouttime"    doctimeouttime          "" unjsonISOTime
   <*> fieldOptBy "autoremindtime" docautoremindtime       "" unjsonISOTime
-  -- TODO , docstatus            :: !DocumentStatus
-  -- TODO state = docstatus
-  <*> field "signatories" docsignatorylinks "signatories"
-  -- TODO signorder
-  -- TODO authentication
-  -- TODO delivery
-  -- TODO , doctype              :: !DocumentType
+  <*> field "status"              docstatus               ""
+  <*> field "state"               docstate                ""
+  <*> field "signatories"         docsignatorylinks "signatories"
+  <*> field "signorder"           docsignorder            ""
+  <*> field "authentication"      docauthentication       ""
+  <*> field "delivery"            docdelivery             ""
+  <*> field "template"            doctemplate             ""
   <*> field "daystosign"   docdaystosign   "daystosign"
   <*> fieldOpt "daystoremind" docdaystoremind "daystoremind"
   <*> field "showheader"       docshowheader       "showheader"
@@ -98,12 +99,12 @@ docUnjsonDef = objectOf $ pure Doc
   -- TODO , doclang              :: !Lang
   -- TODO , doctags              :: !(S.Set DocumentTag)
   <*> fieldOpt "apicallbackurl" docapicallbackurl "apicallbackurl"
-  <*> field "saved" docunsaveddraft "saved"
-  -- TODO deleted
-  -- TODO reallydeleted
-  -- TODO canperformsigning
-  <*> field "objectversion" docobjectversion "objectversion"
-  -- TODO process
+  <*> field "saved"                docunsaveddraft "saved"
+  <*> field "deleted"              docdeleted             ""
+  <*> field "reallydeleted"        docreallydeleted       ""
+  <*> field "canperformsigning"    doccanperformsigning   ""
+  <*> field "objectversion"        docobjectversion       "objectversion"
+  <*> field "process"              docprocess             ""
   -- TODO isviewedbyauthor
   -- TODO canberestarted
   -- TODO canbeprolonged
@@ -111,6 +112,65 @@ docUnjsonDef = objectOf $ pure Doc
   -- TODO canseeallattachments
   -- TODO accesstoken (AKA MagicHash)
   -- TODO , doctimezonename      :: !TimeZoneName
+
+data DocStatus = DocStatusPreparation | DocStatusPending |DocStatusClosed
+               | DocStatusCanceled | DocStatusTimedout | DocStatusRejected
+               | DocStatusDocumentError
+  deriving (Show)
+instance Unjson DocStatus where
+  unjsonDef = unjsonInvmapR
+                ((maybe (fail "Can't parse DocStatus") return) . readDocStatus)
+                show
+                unjsonDef
+    where readDocStatus :: String -> Maybe DocStatus
+          readDocStatus "Preparation"   = Just DocStatusPreparation
+          readDocStatus "Pending"       = Just DocStatusPending
+          readDocStatus "Closed"        = Just DocStatusClosed
+          readDocStatus "Canceled"      = Just DocStatusCanceled
+          readDocStatus "Timedout"      = Just DocStatusTimedout
+          readDocStatus "Rejected"      = Just DocStatusRejected
+          readDocStatus "DocumentError" = Just DocStatusDocumentError
+          readDocStatus _ = Nothing
+
+data DocAuth = DocAuthStandard | DocAuthELeg | DocAuthSMS | DocAuthMixed
+  deriving (Show)
+instance Unjson DocAuth where
+  unjsonDef = unjsonInvmapR
+                ((maybe (fail "Can't parse DocAuth") return) . readDocAuth)
+                show
+                unjsonDef
+    where readDocAuth :: String -> Maybe DocAuth
+          readDocAuth "standard"  = Just DocAuthStandard
+          readDocAuth "eleg"      = Just DocAuthELeg
+          readDocAuth "sms_pin"   = Just DocAuthSMS
+          readDocAuth "mixed"     = Just DocAuthMixed
+          readDocAuth _ = Nothing
+
+data DocDelivery = DocDeliveryEmail | DocDeliveryPad | DocDeliveryAPI
+                 | DocDeliveryMobile | DocDeliveryEmailMobile | DocDeliveryMixed
+  deriving (Show)
+instance Unjson DocDelivery where
+  unjsonDef = unjsonInvmapR
+                ((maybe (fail "Can't parse DocDelivery") return) . readDocDelivery)
+                show
+                unjsonDef
+    where readDocDelivery :: String -> Maybe DocDelivery
+          readDocDelivery "email"         = Just DocDeliveryEmail
+          readDocDelivery "pad"           = Just DocDeliveryPad
+          readDocDelivery "api"           = Just DocDeliveryAPI
+          readDocDelivery "mobile"        = Just DocDeliveryMobile
+          readDocDelivery "email_mobile"  = Just DocDeliveryEmailMobile
+          readDocDelivery "mixed"         = Just DocDeliveryMixed
+          readDocDelivery _ = Nothing
+
+data DocProcess = DocProcess deriving (Show)
+instance Unjson DocProcess where
+  unjsonDef = unjsonInvmapR
+                ((maybe (fail "Can't parse DocProcess") return) . (\s ->
+                    case s of
+                         "Contract" -> Just DocProcess
+                         _ -> Nothing
+                )) show unjsonDef
 
 data SigLink = SigLink
   { siglinkId                         :: Int64AsString
