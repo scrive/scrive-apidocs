@@ -25,16 +25,16 @@ instance Unjson Int64AsString where
   unjsonDef = unjsonInt64AsString
 
 data Doc = Doc
-  { docid                :: Int64AsString
-  , doctitle             :: String
-  -- TODO , docmainfiles         :: ![MainFile]
-  -- TODO sealed file?
-  -- TODO , docauthorattachments :: ![AuthorAttachment]
-  -- TODO evidence attachments?
-  , docmtime             :: UTCTime
-  , docctime             :: UTCTime
-  , doctimeouttime       :: Maybe UTCTime
-  , docautoremindtime    :: Maybe UTCTime
+  { docid                  :: Int64AsString
+  , doctitle               :: String
+  , docfile                :: Maybe File
+  , docsealedfile          :: Maybe File
+  , docauthorattachments   :: [File]
+  , docevidenceattachments :: [File]
+  , docmtime               :: UTCTime
+  , docctime               :: UTCTime
+  , doctimeouttime         :: Maybe UTCTime
+  , docautoremindtime      :: Maybe UTCTime
   -- TODO , docstatus            :: !DocumentStatus
   -- TODO state = docstatus
   , docsignatorylinks    :: [SigLink]
@@ -70,16 +70,16 @@ data Doc = Doc
 
 docUnjsonDef :: UnjsonDef Doc
 docUnjsonDef = objectOf $ pure Doc
-  <*> field "id"         docid         "Doc id"
-  <*> field "title"      doctitle      "Doc title"
-  -- TODO , docmainfiles         :: ![MainFile]
-  -- TODO sealed file?
-  -- TODO , docauthorattachments :: ![AuthorAttachment]
-  -- TODO evidence attachments?
-  <*> fieldBy "time"              docmtime             "" unjsonISOTime
-  <*> fieldBy "ctime"             docctime             "" unjsonISOTime
-  <*> fieldOptBy "timeouttime"    doctimeouttime       "" unjsonISOTime
-  <*> fieldOptBy "autoremindtime" docautoremindtime    "" unjsonISOTime
+  <*> field "id"                  docid                   "Doc id"
+  <*> field "title"               doctitle                "Doc title"
+  <*> fieldOpt "file"             docfile                 ""
+  <*> fieldOpt "sealedfile"       docsealedfile           ""
+  <*> field "authorattachments"   docauthorattachments    ""
+  <*> field "evidenceattachments" docevidenceattachments  ""
+  <*> fieldBy "time"              docmtime                "" unjsonISOTime
+  <*> fieldBy "ctime"             docctime                "" unjsonISOTime
+  <*> fieldOptBy "timeouttime"    doctimeouttime          "" unjsonISOTime
+  <*> fieldOptBy "autoremindtime" docautoremindtime       "" unjsonISOTime
   -- TODO , docstatus            :: !DocumentStatus
   -- TODO state = docstatus
   <*> field "signatories" docsignatorylinks "signatories"
@@ -113,34 +113,34 @@ docUnjsonDef = objectOf $ pure Doc
   -- TODO , doctimezonename      :: !TimeZoneName
 
 data SigLink = SigLink
-  { siglinkId :: Int64AsString
-  , siglinkCurrent :: Bool
-  , siglinkSignorder :: Int
-  , siglinkUndeliveredInvitation :: Bool
-  , siglinkUndeliveredMailInvitation :: Bool
-  , siglinkUndeliveredSMSInvitation :: Bool
-  , siglinkDeliveredInvitation :: Bool
-  , siglinkDelivery :: Delivery
-  , siglinkConfirmationdelivery :: Confirmation
-  , siglinkSigns :: Bool
-  , siglinkAuthor :: Bool
-  , siglinkSaved :: Bool
-  , siglinkDatamismatch ::     Maybe String
-  , siglinkSigndate ::         Maybe UTCTime
-  , siglinkSeendate ::         Maybe UTCTime
-  , siglinkReaddate ::         Maybe UTCTime
-  , siglinkRejecteddate ::     Maybe UTCTime
-  , siglinkRejectionreason ::  Maybe String
-  , siglinkFields :: [Field]
-  -- TODO , siglinkStatus ::  "draft"
-  -- TODO , siglinkAttachments ::  []
-  -- TODO , siglinkCsv ::  null
-  , siglinkInpadqueue :: Bool
-  , siglinkUserid ::  Maybe Int64AsString
-  , siglinkSignsuccessredirect :: Maybe String
-  , siglinkRejectredirect ::  Maybe String
-  , siglinkAuthentication :: Authentication
-  , siglinkSignlink :: Maybe String
+  { siglinkId                         :: Int64AsString
+  , siglinkCurrent                    :: Bool
+  , siglinkSignorder                  :: Int
+  , siglinkUndeliveredInvitation      :: Bool
+  , siglinkUndeliveredMailInvitation  :: Bool
+  , siglinkUndeliveredSMSInvitation   :: Bool
+  , siglinkDeliveredInvitation        :: Bool
+  , siglinkDelivery                   :: Delivery
+  , siglinkConfirmationdelivery       :: Confirmation
+  , siglinkSigns                      :: Bool
+  , siglinkAuthor                     :: Bool
+  , siglinkSaved                      :: Bool
+  , siglinkDatamismatch               :: Maybe String
+  , siglinkSigndate                   :: Maybe UTCTime
+  , siglinkSeendate                   :: Maybe UTCTime
+  , siglinkReaddate                   :: Maybe UTCTime
+  , siglinkRejecteddate               :: Maybe UTCTime
+  , siglinkRejectionreason            :: Maybe String
+  , siglinkFields                     :: [Field]
+  , siglinkStatus                     :: SigLinkStatus
+  , siglinkAttachments                :: [Attachment]
+  , siglinkCsv                        :: Maybe [[String]]
+  , siglinkInpadqueue                 :: Bool
+  , siglinkUserid                     :: Maybe Int64AsString
+  , siglinkSignsuccessredirect        :: Maybe String
+  , siglinkRejectredirect             :: Maybe String
+  , siglinkAuthentication             :: Authentication
+  , siglinkSignlink                   :: Maybe String
   }
 instance Unjson SigLink where
   unjsonDef = objectOf $ pure SigLink
@@ -163,9 +163,9 @@ instance Unjson SigLink where
     <*> fieldOptBy "rejecteddate"         siglinkRejecteddate                   "" unjsonISOTime
     <*> fieldOpt "rejectionreason"        siglinkRejectionreason                ""
     <*> field "fields"                    siglinkFields                         ""
-    -- TODO , siglinkStatus ::  "draft"
-    -- TODO , siglinkAttachments ::  []
-    -- TODO , siglinkCsv ::  null
+    <*> field "status"                    siglinkStatus                         ""
+    <*> field "attachments"               siglinkAttachments                    ""
+    <*> fieldOpt "csv"                    siglinkCsv                            ""
     <*> field "inpadqueue"                siglinkInpadqueue                     ""
     <*> fieldOpt "userid"                 siglinkUserid                         ""
     <*> fieldOpt "signsuccessredirect"    siglinkSignsuccessredirect            ""
@@ -228,8 +228,9 @@ instance Unjson Authentication where
 
 data Field = Field
   { fieldType                   :: FieldType
-  -- TODO , fieldName                   :: FieldName
-  -- TODO , fieldValue :: String, but look at `sfvEncode`
+  -- FIXME this doesn't capture field name well...
+  , fieldName                   :: String
+  , fieldValue                  :: String
   , fieldClosed                 :: Bool
   , fieldObligatory             :: Bool
   , fieldShouldbefilledbysender :: Bool
@@ -238,6 +239,9 @@ data Field = Field
 instance Unjson Field where
   unjsonDef = objectOf $ pure Field
     <*> field "type"                   fieldType                   ""
+    -- FIXME this doesn't capture field name well...
+    <*> field "name"                   fieldName                   ""
+    <*> field "value"                  fieldValue                  ""
     <*> field "closed"                 fieldClosed                 ""
     <*> field "obligatory"             fieldObligatory             ""
     <*> field "shouldbefilledbysender" fieldShouldbefilledbysender ""
@@ -303,3 +307,49 @@ instance Unjson PlacementAnchor where
     <*> field "text"     placementanchorText  ""
     <*> fieldOpt "index" placementanchorIndex ""
     <*> field "pages"    placementanchorPage  ""
+
+data SigLinkStatus = SigLinkStatusCancelled | SigLinkStatusDelivered
+                   | SigLinkStatusDeliveryProblem | SigLinkStatusDraft
+                   | SigLinkStatusError | SigLinkStatusOpened
+                   | SigLinkStatusRead | SigLinkStatusRejected
+                   | SigLinkStatusSent | SigLinkStatusSigned
+                   | SigLinkStatusTimedout
+  deriving (Show)
+instance Unjson SigLinkStatus where
+  unjsonDef = unjsonInvmapR
+                ((maybe (fail "Can't parse SigLinkStatus") return) . readSigLinkStatus)
+                show
+                unjsonDef
+    where readSigLinkStatus :: String -> Maybe SigLinkStatus
+          readSigLinkStatus "cancelled"       = Just SigLinkStatusCancelled
+          readSigLinkStatus "delivered"       = Just SigLinkStatusDelivered
+          readSigLinkStatus "deliveryproblem" = Just SigLinkStatusDeliveryProblem
+          readSigLinkStatus "draft"           = Just SigLinkStatusDraft
+          readSigLinkStatus "problem"         = Just SigLinkStatusError
+          readSigLinkStatus "opened"          = Just SigLinkStatusOpened
+          readSigLinkStatus "read"            = Just SigLinkStatusRead
+          readSigLinkStatus "rejected"        = Just SigLinkStatusRejected
+          readSigLinkStatus "sent"            = Just SigLinkStatusSent
+          readSigLinkStatus "signed"          = Just SigLinkStatusSigned
+          readSigLinkStatus "timeouted"       = Just SigLinkStatusTimedout
+          readSigLinkStatus _ = Nothing
+
+data Attachment = Attachment
+  { attachmentName        :: String
+  , attachmentDescription :: String
+  , attachmentFile        :: File
+  }
+instance Unjson Attachment where
+  unjsonDef = objectOf $ pure Attachment
+    <*> field "name"        attachmentName        ""
+    <*> field "description" attachmentDescription ""
+    <*> field "file"        attachmentFile        ""
+
+data File = File
+  { fileId    :: Int64AsString
+  , fileName  :: String
+  }
+instance Unjson File where
+  unjsonDef = objectOf $ pure File
+    <*> field "id"    fileId    ""
+    <*> field "name"  fileName  ""
