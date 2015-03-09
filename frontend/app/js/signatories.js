@@ -26,6 +26,9 @@ window.SignatoryAttachment = Backbone.Model.extend({
         this.set({ hasChanged: true }, { silent: true });
         return this.set({'file': file});
     },
+    hasChanged: function() {
+      return this.get("hasChanged");
+    },
     description: function() {
         return this.get("description");
     },

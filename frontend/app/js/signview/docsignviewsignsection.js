@@ -75,20 +75,18 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
       return localization.sign.eleg.mismatch.mismatchOnNumberAndCanChange;
   },
 
-  blockReload: function () { return localization.signingInProgressDontCloseWindow; },
-
   /**
    *  Block browser from reloading page
    */
   startBlockingReload: function() {
-    ReloadManager.pushBlock(this.blockReload);
+    ReloadManager.pushBlock(function () { return localization.signingInProgressDontCloseWindow; });
   },
 
   /**
    *  Stop blocking browser from reloading page
    */
   stopBlockingReload: function() {
-    ReloadManager.popBlock(this.blockReload);
+    ReloadManager.popBlock(function () { return localization.signingInProgressDontCloseWindow; });
     ReloadManager.stopBlocking();
   },
   /**

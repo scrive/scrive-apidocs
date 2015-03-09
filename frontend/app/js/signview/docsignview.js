@@ -49,6 +49,9 @@ var DocumentSignViewModel = Backbone.Model.extend({
   noMainFile : function() {
       return this.document().ready() && this.document().mainfile() == undefined;
   },
+  hasChangedPin : function() {
+      return this.get("hasChangedPin");
+  },
   hasRejectOption : function() {
       return this.signviewbranding().showrejectoption();
   },
@@ -462,15 +465,11 @@ var DocumentSignViewView = Backbone.View.extend({
     blockReload: function () {
       var signatory = this.model.document().currentSignatory();
 
-      var fields = signatory.fields();
+      var changedAnyFields = _.any(signatory.fields(), function (field) { return field.hasChanged(); });
 
-      var attachments = signatory.attachments();
+      var changedAnyAttachments = _.any(signatory.attachments(), function (attachment) { return attachment.hasChanged(); });
 
-      var changedAnyFields = _.any(fields, function (field) { return field.get("hasChanged"); });
-
-      var changedAnyAttachments = _.any(attachments, function (attachment) { return attachment.get("hasChanged"); });
-
-      var changedPin = this.model.get("hasChangedPin");
+      var changedPin = this.model.hasChangedPin();
 
       if (changedAnyFields || changedAnyAttachments || changedPin) {
         return localization.signingStartedDontCloseWindow;
