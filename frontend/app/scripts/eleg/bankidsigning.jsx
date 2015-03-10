@@ -110,7 +110,7 @@ return Backbone.Model.extend({
           || str == 'start_failed';
     },
     canChangeSSN: function() {
-      return this.signatory().personalnumberField().isClosed();
+      return !this.signatory().personalnumberField().isClosed();
     },
     statusMessage: function() {
       var self = this;
