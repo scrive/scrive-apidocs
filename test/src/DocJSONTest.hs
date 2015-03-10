@@ -47,6 +47,7 @@ import Doc.DocumentID (unsafeDocumentID)
 docJSONTests :: TestEnvSt -> Test
 docJSONTests env = testGroup "DocJSON"
   [ testThat "Test JSON structure for API V1 'createfromfile' and 'ready'" env testFromFileAndReadySimple
+  , testThat "Test JSON structure for API V1 'createfromtemplate' and 'ready'" env testFromTemplateAndReadySimple
   ]
 
 testFromFileAndReadySimple :: TestEnv ()
@@ -66,6 +67,44 @@ testFromFileAndReadySimple = do
   (resReady, _) <- runTestKontra reqReady ctx $ apiCallV1Ready (unsafeDocumentID $ fromInt64AsString $ docid doc)
   assertEqual "We should get a 202 response" 202 (rsCode resReady)
   _ <- testJSONWith "test/json/test2.json" (rsBody resReady) docUnjsonDef
+  return ()
+
+testFromTemplateAndReadySimple :: TestEnv ()
+testFromTemplateAndReadySimple = do
+  user <- addNewRandomUser
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
+
+  reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
+                                        -- FIXME make this random-ish file
+                                      , ("file", inFile "test/pdfs/simple.pdf")
+                                      ] []
+  (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  assertEqual "We should get a 201 response" 201 (rsCode resDoc)
+  doc <- testJSONWith "test/json/test1.json" (rsBody resDoc) docUnjsonDef
+  let did = unsafeDocumentID $ fromInt64AsString $ docid doc
+
+  -- TODO Use Aeson Lenses to set values, this is clunky and prone to errors
+  -- because the Unjson uses derived Show for datatypes which is just wrong and
+  -- this just works because our server ignores the bad values in the JSON, but
+  -- we will want to set values for these and then it won't work because it
+  -- will be ignored :(
+  -- We want to behave like a client and check things:
+  -- check things = stuff in DocJSONTypes.hs
+  -- behave like a client = only mess around with JSON (i.e. Aeson Value w/ lenses)
+  let Just docJSON = decode (rsBody resDoc) :: Maybe Value
+      Result docUnjson _ = (parse docUnjsonDef docJSON)
+      docUnjson' = docUnjson { doctemplate = True }
+      value = unjsonToJSON docUnjsonDef docUnjson'
+      strDoc = encode value
+
+  reqUpdate <- mkRequestWithHeaders POST [("json", inTextBS strDoc)] []
+  (resUpdate, _) <- runTestKontra reqUpdate ctx $ apiCallV1Update did
+  assertEqual "We should get a 200 response" 200 (rsCode resUpdate)
+
+  reqFromTemplate <- mkRequestWithHeaders POST [] []
+  (resFromTemplate, _) <- runTestKontra reqFromTemplate ctx $ apiCallV1CreateFromTemplate did
+  assertEqual "We should get a 201 response" 201 (rsCode resFromTemplate)
+
   return ()
 
 
