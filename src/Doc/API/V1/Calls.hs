@@ -551,9 +551,9 @@ apiCallV1Prolong did =  api $ do
     checkObjectVersionIfProvided did
     (user, actor, _) <- getAPIUser APIDocSend
     withDocumentID did $ do
-      auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
-      when (not $ (auid == userid user)) $ do
-            throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
+      hasPermission <- isAuthorOrAuthorsAdmin user <$> theDocument
+      when (not hasPermission) $
+        throwIO . SomeKontraException $ serverError "Permission problem. Not an author[s admin]."
       unlessM (isTimedout <$> theDocument) $ do
             throwIO . SomeKontraException $ (conflictError "Document is not timedout")
       mdays <- getDefaultedField 1 asValidNumber "days"
@@ -627,9 +627,9 @@ apiCallV1Remind did =  api $ do
   withDocumentID did $ do
     unlessM (isPending <$> theDocument) $ do
           throwIO . SomeKontraException $ serverError "Can't send reminder for documents that are not pending"
-    auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
-    when (not $ (auid == userid user)) $ do
-          throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
+    hasPermission <- isAuthorOrAuthorsAdmin user <$> theDocument
+    when (not hasPermission) $
+      throwIO . SomeKontraException $ serverError "Permission problem. Not an author[s admin]."
     _ <- sendAllReminderEmailsExceptAuthor actor False
     Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
 
