@@ -99,12 +99,6 @@ var AdminUserDetailsModel = Backbone.Model.extend({
   setCompanycountry : function(v) {
      this.set({"companycountry" : v});
   },
-  companysmsoriginator: function() {
-     return this.get("companysmsoriginator");
-  },
-  setCompanysmsoriginator : function(v) {
-     this.set({"companysmsoriginator" : v});
-  },
   accountType : function() {
     return this.get("accountType") || this.currentAccountType();
   },
