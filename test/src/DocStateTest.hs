@@ -3,6 +3,7 @@ module DocStateTest{- (docStateTests)-} where
 import Control.Arrow (first)
 import Control.Concurrent (newMVar)
 import Control.Monad
+import Control.Monad.Base
 import Control.Monad.Trans
 import Data.Functor
 import Data.List
@@ -1772,9 +1773,9 @@ testStatusClassSignedWhenAllSigned = replicateM_ 10 $ do
 
   assertEqual "Statusclass for signed documents is signed" SCSigned (documentstatusclass doc')
 
-runScheduler :: MonadIO m => ActionQueueT (AWS.AmazonMonadT m) SchedulerData a -> m a
+runScheduler :: MonadBase IO m => ActionQueueT (AWS.AmazonMonadT m) SchedulerData a -> m a
 runScheduler m = do
   let appConf = defaultValue { dbConfig = "" }
-  templates <- liftIO $ newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates
+  templates <- liftBase $ newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates
   filecache <- MemCache.new BS.length 52428800
   CronEnv.runScheduler appConf filecache templates m

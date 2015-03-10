@@ -55,7 +55,7 @@ main = Log.withLogger $ do
         Left e -> do
           Log.mixlog_ e
           $unexpectedErrorM "static routing"
-        Right r -> return (r >>= maybe (notFound (toResponse ("Not found."::String))) return)
+        Right r -> return $ r >>= maybe (notFound $ toResponse ("Not found."::String)) return
       socket <- liftBase (listenOn (htonl iface) $ fromIntegral port)
       fork . liftBase . simpleHTTPWithSocket socket handlerConf . mapServerPartT Log.withLogger $ router rng pool routes
 

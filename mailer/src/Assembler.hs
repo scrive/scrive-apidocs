@@ -6,8 +6,8 @@ module Assembler (
 
 import Control.Arrow
 import Control.Monad
+import Control.Monad.Base
 import Control.Monad.Catch
-import Control.Monad.IO.Class
 import Data.Char
 import Data.List
 import Data.Maybe
@@ -31,7 +31,7 @@ import Mails.Model
 import qualified Amazon as AWS
 import qualified Log
 
-assembleContent :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadIO m, Log.MonadLog m, AWS.AmazonMonad m) => Mail -> m BSL.ByteString
+assembleContent :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadBase IO m, Log.MonadLog m, AWS.AmazonMonad m) => Mail -> m BSL.ByteString
 assembleContent Mail{..} = do
   (boundaryMixed, boundaryAlternative,boundaryRelated) <- createBoundaries
   let datafields = do

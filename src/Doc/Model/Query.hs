@@ -30,6 +30,7 @@ module Doc.Model.Query
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.State
 import Data.Int
@@ -65,7 +66,7 @@ import qualified Amazon
 import qualified Log
 
 data GetSignatoryScreenshots = GetSignatoryScreenshots [SignatoryLinkID]
-instance (MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, Amazon.AmazonMonad m) => DBQuery m GetSignatoryScreenshots [(SignatoryLinkID, SignatoryScreenshots)] where
+instance (MonadDB m, MonadThrow m, Log.MonadLog m, MonadBase IO m, Amazon.AmazonMonad m) => DBQuery m GetSignatoryScreenshots [(SignatoryLinkID, SignatoryScreenshots)] where
   query (GetSignatoryScreenshots l) = do
     runQuery_ . sqlSelect "signatory_screenshots" $ do
                 sqlWhereIn "signatory_link_id" l

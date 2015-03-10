@@ -281,7 +281,7 @@ testSendReminderEmailUpdatesLastModifiedDate = do
 
   updateddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "Modified date is updated" (ctxtime ctx) (documentmtime updateddoc)
-  emails <- dbQuery GetEmails
+  emails <- dbQuery GetEmailsForTest
   assertEqual "Email was sent" 1 (length emails)
 
 testSendReminderEmailByCompanyAdmin :: TestEnv ()
@@ -324,7 +324,7 @@ testSendReminderEmailByCompanyAdmin = do
 
   updateddoc1 <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "Modified date is not updated" (documentmtime doc) (documentmtime updateddoc1)
-  emails1 <- dbQuery GetEmails
+  emails1 <- dbQuery GetEmailsForTest
   assertEqual "No emails were sent" 0 (length emails1)
 
   -- succeed to send a reminder as company admin
@@ -333,7 +333,7 @@ testSendReminderEmailByCompanyAdmin = do
 
   updateddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "Modified date is updated" (ctxtime ctxadmin) (documentmtime updateddoc)
-  emails <- dbQuery GetEmails
+  emails <- dbQuery GetEmailsForTest
   assertEqual "Email was sent" 1 (length emails)
 
 testDownloadFile :: TestEnv ()

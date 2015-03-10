@@ -44,7 +44,7 @@ kontraComposites = [
   , ctMainFile
   , ctSignatoryLink
   , ctDocument
-  ]
+  ] ++ mailerComposites
 
 kontraDomains :: [Domain]
 kontraDomains = [

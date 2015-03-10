@@ -10,6 +10,7 @@ module Doc.API.V1.DocumentToJSON (
   ) where
 
 import Control.Applicative ((<$>))
+import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Data.List (intercalate)
@@ -43,7 +44,7 @@ import qualified Amazon as AWS
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
 import qualified Log
 
-evidenceAttachmentsJSONV1 :: (MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m) => Document -> m JSValue
+evidenceAttachmentsJSONV1 :: (MonadDB m, MonadThrow m, Log.MonadLog m, MonadBase IO m, AWS.AmazonMonad m) => Document -> m JSValue
 evidenceAttachmentsJSONV1 doc = do
     evidenceattachments <- EvidenceAttachments.fetch doc
     runJSONGenT $ do

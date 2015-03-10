@@ -46,7 +46,7 @@ testSignupAndActivate = do
   assertAccountActivatedFor uarUserID "Andrzej" "Rybczak" ctx3
   Just uuser <- dbQuery $ GetUserByID  uarUserID
   assertEqual "Phone number was saved" "123" (userphone $ userinfo uuser)
-  emails <- dbQuery GetEmails
+  emails <- dbQuery GetEmailsForTest
   assertEqual "An email was sent" 2 (length emails) -- Two mail - one for user and one to info adress.
 
 testLoginEventRecordedWhenLoggedInAfterActivation :: TestEnv ()

@@ -12,6 +12,7 @@ module Mails.SendMail
     ) where
 
 import Control.Applicative
+import Control.Monad
 import Control.Monad.Catch
 import Data.Char
 import Data.Maybe
@@ -42,7 +43,7 @@ import qualified Log
 import qualified Mails.Model as M
 
 scheduleEmailSendout :: (CryptoRNG m, MonadDB m, MonadThrow m, Log.MonadLog m) => MailsConfig -> Mail -> m ()
-scheduleEmailSendout c m =  scheduleEmailSendout' (originator m) c m
+scheduleEmailSendout c m = scheduleEmailSendoutHelper (originator m) c m
 
 -- Sending mail with from address like 'Mariusz throught Scrive'
 scheduleEmailSendoutWithAuthorSenderThroughService :: (CryptoRNG m, MonadDB m, Log.MonadLog m, T.TemplatesMonad m, MonadThrow m) => DocumentID  -> MailsConfig -> Mail -> m ()
@@ -53,7 +54,7 @@ scheduleEmailSendoutWithAuthorSenderThroughService did c m = do
       (an) -> renderLocalTemplate doc "_mailInvitationFromPart" $ do
                 F.value "authorname" an
                 F.value "originator" (originator m)
-  scheduleEmailSendout' name c m
+  scheduleEmailSendoutHelper name c m
 
 -- Sending mail with from address like 'Mariusz'
 scheduleEmailSendoutWithAuthorSender :: (CryptoRNG m, MonadDB m, MonadThrow m, Log.MonadLog m, T.TemplatesMonad m) => DocumentID  -> MailsConfig -> Mail -> m ()
@@ -63,20 +64,18 @@ scheduleEmailSendoutWithAuthorSender did c m = do
   name <- case firstNonEmpty (fromMaybe "" <$> names) of
       ("") -> return $ (originator m)
       (an) -> return an
-  scheduleEmailSendout' name c m
+  scheduleEmailSendoutHelper name c m
 
-scheduleEmailSendout' :: (CryptoRNG m, MonadDB m, MonadThrow m, Log.MonadLog m) => String -> MailsConfig -> Mail ->  m ()
-scheduleEmailSendout' authorname  MailsConfig{..} mail@Mail{..} = do
+scheduleEmailSendoutHelper :: (CryptoRNG m, MonadDB m, MonadThrow m, Log.MonadLog m) => String -> MailsConfig -> Mail ->  m ()
+scheduleEmailSendoutHelper authorname  MailsConfig{..} mail@Mail{..} = do
   Log.mixlog_ $ "Sending mail with originator " ++ show originator
   if unsendable to
     then Log.attention_ $ "Email " ++ show mail ++ " is unsendable, discarding."
     else do
       fromAddr <- return Address {addrName = authorname, addrEmail = originatorEmail }
       token <- random
-      mid <- dbUpdate $ CreateEmail token fromAddr (map toAddress to)
       let xsmtpapi = XSMTPAttrs [("mailinfo", show mailInfo)]
-      _ <- dbUpdate $ AddContentToEmail mid title (fmap toAddress replyTo) (wrapHTML content) (map toAttachment attachments) xsmtpapi
-      return ()
+      void . dbUpdate $ CreateEmail (token, fromAddr, map toAddress to, fmap toAddress replyTo, title, wrapHTML content, map toAttachment attachments, xsmtpapi)
   where
     toAddress MailAddress{..} = Address {
         addrName  = fullname

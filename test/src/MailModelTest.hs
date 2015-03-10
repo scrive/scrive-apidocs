@@ -28,8 +28,7 @@ testMailAttachments = do
       title = "The thing"
       content = "important"
 
-  mid <- dbUpdate $ CreateEmail token sender to
-  _ <- dbUpdate $ AddContentToEmail mid title reply_to content attachments xsmtpapi
+  mid <- dbUpdate $ CreateEmail (token, sender, to, reply_to, title, content, attachments, xsmtpapi)
   mmail <- dbQuery $ GetEmail mid token
   assertJust mmail
   case mmail of
@@ -59,14 +58,10 @@ testMailOrder = do
       title = "The thing"
       content = "important"
 
-  mid1 <- dbUpdate $ CreateEmail token sender to1
-  _ <- dbUpdate $ AddContentToEmail mid1 title reply_to content attachments xsmtpapi
-  mid2 <- dbUpdate $ CreateEmail token sender to1
-  _ <- dbUpdate $ AddContentToEmail mid2 title reply_to content attachments xsmtpapi
-  mid3 <- dbUpdate $ CreateEmail token sender to1
-  _ <- dbUpdate $ AddContentToEmail mid3 title reply_to content attachments xsmtpapi
-  mid4 <- dbUpdate $ CreateEmail token sender to2
-  _ <- dbUpdate $ AddContentToEmail mid4 title reply_to content attachments xsmtpapi
+  mid1 <- dbUpdate $ CreateEmail (token, sender, to1, reply_to, title, content, attachments, xsmtpapi)
+  mid2 <- dbUpdate $ CreateEmail (token, sender, to1, reply_to, title, content, attachments, xsmtpapi)
+  mid3 <- dbUpdate $ CreateEmail (token, sender, to1, reply_to, title, content, attachments, xsmtpapi)
+  mid4 <- dbUpdate $ CreateEmail (token, sender, to2, reply_to, title, content, attachments, xsmtpapi)
   mails <- dbQuery $ GetEmailsByRecipient "aa@ss.com"
   mails2 <- dbQuery $ GetEmailsByRecipient "a@ss.com"
 

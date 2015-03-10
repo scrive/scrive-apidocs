@@ -97,7 +97,7 @@ test_addingANewCompanyAccount = do
   actions <- getAccountCreatedActions
   assertEqual "An AccountCreated action was made" 1 (length $ actions)
 
-  emails <- dbQuery GetEmails
+  emails <- dbQuery GetEmailsForTest
   assertEqual "An email was sent" 1 (length emails)
 
 test_addingExistingCompanyUserAsCompanyAccount :: TestEnv ()
@@ -123,7 +123,7 @@ test_addingExistingCompanyUserAsCompanyAccount = do
 
   assertCompanyInvitesAre company [mkInvite company existinguser]
 
-  emails <- dbQuery GetEmails
+  emails <- dbQuery GetEmailsForTest
   assertEqual "An email was sent" 1 (length emails)
 
 test_resendingInviteToNewCompanyAccount :: TestEnv ()
@@ -148,7 +148,7 @@ test_resendingInviteToNewCompanyAccount = do
   actions <- getAccountCreatedActions
   assertEqual "An AccountCreated action was made" 1 (length $ actions)
 
-  emails <- dbQuery GetEmails
+  emails <- dbQuery GetEmailsForTest
   assertEqual "An email was sent" 1 (length emails)
 
 test_switchingStandardToAdminUser :: TestEnv ()

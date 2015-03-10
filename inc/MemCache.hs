@@ -16,7 +16,7 @@ module MemCache (MemCache, new, put, get, size, alter)
 where
 
 import Control.Concurrent.MVar
-import Control.Monad.Trans
+import Control.Monad.Base
 import Data.Time
 import qualified Data.Map as Map
 
@@ -26,15 +26,15 @@ newtype MemCache k v = MemCache (MVar (MemCache' k v))
 
 -- | Create new memory cache. Supply a memory limit (in bytes) and a
 -- sizing function. Key type should have 'Ord' and 'Eq' instances.
-new :: MonadIO m =>  (v -> Int) -> Int -> m (MemCache k v)
+new :: MonadBase IO m =>  (v -> Int) -> Int -> m (MemCache k v)
 new sizefun sizelimit =
-    liftIO $ do fmap MemCache $ newMVar (MemCache' sizefun sizelimit 0 Map.empty)
+    liftBase $ do fmap MemCache $ newMVar (MemCache' sizefun sizelimit 0 Map.empty)
 
 -- | Put a key value pair into cache. Cache will take care of its own
 -- size and never cross total size limit of values.
-put :: (MonadIO m, Ord k) => k -> v -> MemCache k v -> m ()
+put :: (MonadBase IO m, Ord k) => k -> v -> MemCache k v -> m ()
 put k v (MemCache mc) = do
-  liftIO $ modifyMVar_ mc $ \(MemCache' sizefun sizelimit csize mmap) ->
+  liftBase $ modifyMVar_ mc $ \(MemCache' sizefun sizelimit csize mmap) ->
       do
         now <- getCurrentTime
         let (mmap', csize') = if (csize + sizefun v > sizelimit && sizefun v > 0)
@@ -58,8 +58,8 @@ put k v (MemCache mc) = do
 
 -- | Get a value under a key in cache. This may return 'Nothing' if
 -- not found.
-get :: (MonadIO m, Ord k) => k -> MemCache k v -> m (Maybe v)
-get k (MemCache mc) = liftIO $ do
+get :: (MonadBase IO m, Ord k) => k -> MemCache k v -> m (Maybe v)
+get k (MemCache mc) = liftBase $ do
   modifyMVar mc $ \(MemCache' sf sl cs mmap) -> do
       case Map.lookup k mmap of
            Nothing -> return (MemCache' sf sl cs mmap, Nothing)
@@ -69,14 +69,14 @@ get k (MemCache mc) = liftIO $ do
 
 -- | Get current cache size. This is the sum of all objects inside
 -- cache.
-size :: MonadIO m => MemCache k v -> m Int
-size (MemCache mc) = liftIO $ do
+size :: MonadBase IO m => MemCache k v -> m Int
+size (MemCache mc) = liftBase $ do
   withMVar mc $ \(MemCache' _ _ csize _) -> return csize
 
 
-alter :: (MonadIO m, Ord k) => (Maybe v -> Maybe v) -> k -> MemCache k v -> m ()
+alter :: (MonadBase IO m, Ord k) => (Maybe v -> Maybe v) -> k -> MemCache k v -> m ()
 alter f k (MemCache mc) = do
-  liftIO $ modifyMVar_ mc $ \(MemCache' sizefun sizelimit _csize mmap) ->
+  liftBase $ modifyMVar_ mc $ \(MemCache' sizefun sizelimit _csize mmap) ->
       do
         now <- getCurrentTime
         let f2 Nothing = case f Nothing of

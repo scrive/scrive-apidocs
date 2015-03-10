@@ -63,7 +63,7 @@ testChangeEmailAddress = do
   assertEqual "Inviter id is correct" (userid user) ecrUserID
   assertEqual "Action email is correct" (Email "jim@bob.com") ecrNewEmail
 
-  emails <- dbQuery GetEmails
+  emails <- dbQuery GetEmailsForTest
   assertEqual "An email was sent" 1 (length emails)
 
   req2 <- mkRequest POST [("password", inText "abc123")]

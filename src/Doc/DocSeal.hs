@@ -13,6 +13,7 @@ module Doc.DocSeal
   ) where
 
 import Control.Applicative
+import Control.Monad.Base
 import Control.Monad.Catch hiding (handle)
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
@@ -259,7 +260,7 @@ findOutAttachmentDesc sim tmppath document = do
                                x -> reverse (drop 1 x)
 
 
-evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m)
+evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m, MonadThrow m, Log.MonadLog m, MonadBase IO m, AWS.AmazonMonad m)
                            => SignatoryIdentifierMap -> Document -> m Seal.SealAttachment
 evidenceOfIntentAttachment sim doc = do
   let title = documenttitle doc

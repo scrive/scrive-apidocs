@@ -6,10 +6,12 @@ module Sender (
 
 import Control.Monad.Base
 import Control.Monad.Catch
-import Control.Monad.IO.Class
 import Data.List hiding (head)
+import Data.Monoid
+import Data.Monoid.Utils
 import System.Exit
 import System.Process
+import qualified  Data.Foldable as F
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
 
@@ -24,10 +26,9 @@ import qualified Amazon as AWS
 import qualified Log
 
 data Sender = Sender {
-    senderName :: String
-  , sendMail   :: (CryptoRNG m, MonadIO m, MonadDB m, MonadThrow m, MonadBase IO m, Log.MonadLog m, AWS.AmazonMonad m)
-               => Mail -> m Bool
-  }
+  senderName :: String
+, sendMail   :: (CryptoRNG m, MonadMask m, MonadBase IO m, Log.MonadLog m, AWS.AmazonMonad m) => Mail -> m Bool
+}
 
 instance Show Sender where
   show Sender{senderName} = senderName
@@ -35,46 +36,50 @@ instance Show Sender where
 instance Eq Sender where
   Sender name _ == Sender name' _ = name == name'
 
-createSender :: SenderConfig -> Sender
-createSender mc = case mc of
-  SMTPSender{}   -> createSMTPSender mc
-  LocalSender{}  -> createLocalSender mc
-  NullSender     -> createNullSender mc
+createSender :: ConnectionSource -> SenderConfig -> Sender
+createSender cs mc = case mc of
+  SMTPSender{}  -> createSMTPSender cs mc
+  LocalSender{} -> createLocalSender cs mc
+  NullSender    -> createNullSender
 
-createExternalSender :: String -> String -> (Mail -> [String]) -> Sender
-createExternalSender name program createargs = Sender { senderName = name, sendMail = send }
-  where
-    send :: (CryptoRNG m, MonadIO m, MonadDB m, MonadThrow m, MonadBase IO m, Log.MonadLog m, AWS.AmazonMonad m) => Mail -> m Bool
-    send mail@Mail{..} = do
-      content <- assembleContent mail
-      (code, _, bsstderr) <- liftBase $ readProcessWithExitCode' program (createargs mail) content
-      let receivers = intercalate ", " (map addrEmail mailTo)
-      case code of
-        ExitFailure retcode -> do
-          Log.mixlog_ $ "Error while sending email #" ++ show mailID ++ ", cannot execute " ++ program ++ " to send email (code " ++ show retcode ++ ") stderr: \n" ++ BSLU.toString bsstderr
-          return False
-        ExitSuccess -> do
-          let subject = filter (not . (`elem` "\r\n")) mailTitle
-          Log.mixlog_ $ "Email #" ++ show mailID ++ " with subject '" ++ subject ++ "' sent correctly to: " ++ receivers
-          Log.mixlog_ $ unlines [
-              "Subject: " ++ subject
-            , "To: " ++ intercalate ", " (map addrEmail mailTo)
-            , case mailReplyTo of
-                   Just addr -> "Reply-To: " ++ addrEmail addr
-                   Nothing   -> ""
-            , "Attachments: " ++ show (length mailAttachments)
-            , htmlToTxt mailContent
-            ]
-          return True
+----------------------------------------
 
-createSMTPSender :: SenderConfig -> Sender
-createSMTPSender config = createExternalSender (serviceName config) "curl" createargs
+createExternalSender :: ConnectionSource -> String -> String -> (Mail -> [String]) -> Sender
+createExternalSender cs name program createArgs = Sender {
+  senderName = name
+, sendMail = \mail@Mail{..} -> do
+  content <- runDBT cs ts $ assembleContent mail
+  (code, _, bsstderr) <- liftBase $ readProcessWithExitCode' program (createArgs mail) content
+  let receivers = intercalate ", " (map addrEmail mailTo)
+  case code of
+    ExitFailure retcode -> do
+      Log.mixlog_ $ "Error while sending email" <+> show mailID <> ", cannot execute" <+> program <+> "to send email (code" <+> show retcode <> ") stderr:\n" <> BSLU.toString bsstderr
+      return False
+    ExitSuccess -> do
+      let subject = filter (not . (`elem` "\r\n")) mailTitle
+      Log.mixlog_ $ "Email" <+> show mailID <+> "with subject '" <> subject <> "' sent correctly to:" <+> receivers
+      Log.mixlog_ $ unlines [
+          "Subject:" <+> subject
+        , "To:" <+> intercalate ", " (map addrEmail mailTo)
+        , case mailReplyTo of
+            Just addr -> "Reply-To:" <+> addrEmail addr
+            Nothing   -> ""
+        , "Attachments:" <+> show (length mailAttachments)
+        , htmlToTxt mailContent
+        ]
+      return True
+}
+
+createSMTPSender :: ConnectionSource -> SenderConfig -> Sender
+createSMTPSender cs config =
+  createExternalSender cs (serviceName config) "curl" createArgs
   where
     mailRcpt addr = [
         "--mail-rcpt"
       , "<" ++ addrEmail addr ++ ">"
       ]
-    createargs Mail{mailFrom, mailTo} =
+
+    createArgs Mail{mailFrom, mailTo} =
       let smtpUserForThisMail = fromMaybe (smtpUser config) $
                                   fmap smtpDedicatedUser $
                                     find (\du -> smtpFromDedicatedAddress du == addrEmail mailFrom) (smtpDedicatedUsers config)
@@ -91,25 +96,29 @@ createSMTPSender config = createExternalSender (serviceName config) "curl" creat
       , "--mail-from", "<" ++ addrEmail mailFrom ++ ">"
       ] ++ concatMap mailRcpt mailTo
 
-createLocalSender :: SenderConfig -> Sender
-createLocalSender config = Sender { senderName = "localSender", sendMail = send }
-  where
-    send :: (CryptoRNG m, MonadIO m, MonadDB m, MonadThrow m, MonadBase IO m, Log.MonadLog m, AWS.AmazonMonad m) => Mail -> m Bool
-    send mail@Mail{..} = do
-      content <- assembleContent mail
-      let filename = localDirectory config ++ "/Email-" ++ addrEmail ($(head) mailTo) ++ "-" ++ show mailID ++ ".eml"
-      liftBase $ BSL.writeFile filename content
-      Log.mixlog_ $ "Email #" ++ show mailID ++ " saved to file " ++ filename
-      case localOpenCommand config of
-        Nothing  -> return ()
-        Just cmd -> do
-          _ <- liftBase $ createProcess (proc cmd [filename]) {
-              std_in  = Inherit
-            , std_out = Inherit
-            , std_err = Inherit
-          }
-          return ()
-      return True
+createLocalSender :: ConnectionSource -> SenderConfig -> Sender
+createLocalSender cs config = Sender {
+  senderName = "localSender"
+, sendMail = \mail@Mail{..} -> do
+  content <- runDBT cs ts $ assembleContent mail
+  let filename = localDirectory config ++ "/Email-" ++ addrEmail ($head mailTo) ++ "-" ++ show mailID ++ ".eml"
+  liftBase $ BSL.writeFile filename content
+  Log.mixlog_ $ "Email" <+> show mailID <+> "saved to file" <+> filename
+  liftBase $ F.forM_ (localOpenCommand config) $ \cmd -> createProcess (proc cmd [filename]) {
+    std_in  = Inherit
+  , std_out = Inherit
+  , std_err = Inherit
+  }
+  return True
+}
 
-createNullSender :: SenderConfig -> Sender
-createNullSender _ = Sender { senderName = "nullSender", sendMail = const (return True) }
+createNullSender :: Sender
+createNullSender = Sender { senderName = "nullSender", sendMail = const (return True) }
+
+----------------------------------------
+
+ts :: TransactionSettings
+ts = def {
+  tsIsolationLevel = ReadCommitted
+, tsPermissions = ReadOnly
+}
