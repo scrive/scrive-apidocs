@@ -50,27 +50,27 @@ data Doc = Doc
   , docauthentication      :: DocAuth
   , docdelivery            :: DocDelivery
   , doctemplate            :: Bool
-  , docdaystosign        :: Int32
-  , docdaystoremind      :: Maybe Int32
-  , docshowheader        :: Bool
-  , docshowpdfdownload   :: Bool
-  , docshowrejectoption  :: Bool
-  , docshowfooter        :: Bool
-  , docinvitetext        :: String
-  , docconfirmtext       :: String
-  , doclang              :: DocLang
-  , doctags              :: [DocTag]
-  , docapicallbackurl    :: (Maybe String)
-  , docunsaveddraft      :: Bool
-  , docdeleted           :: Bool
-  , docreallydeleted     :: Bool
-  , doccanperformsigning :: Bool
-  , docobjectversion     :: Int64
-  , docprocess           :: DocProcess
-  , docisviewedbyauthor  :: Bool
-  , docaccesstoken       :: MagicHash
+  , docdaystosign          :: Int32
+  , docdaystoremind        :: Maybe Int32
+  , docshowheader          :: Bool
+  , docshowpdfdownload     :: Bool
+  , docshowrejectoption    :: Bool
+  , docshowfooter          :: Bool
+  , docinvitetext          :: String
+  , docconfirmtext         :: String
+  , doclang                :: DocLang
+  , doctags                :: [DocTag]
+  , docapicallbackurl      :: (Maybe String)
+  , docunsaveddraft        :: Bool
+  , docdeleted             :: Bool
+  , docreallydeleted       :: Bool
+  , doccanperformsigning   :: Bool
+  , docobjectversion       :: Int64
+  , docprocess             :: DocProcess
+  , docisviewedbyauthor    :: Bool
+  , docaccesstoken         :: MagicHash
   -- FIXME check for this? we depend on SQL stuff to generate this anyway...
-  , doctimezonename      :: String
+  , doctimezonename        :: String
   }
 
 docUnjsonDef :: UnjsonDef Doc
@@ -87,31 +87,31 @@ docUnjsonDef = objectOf $ pure Doc
   <*> fieldOptBy "autoremindtime" docautoremindtime       "" unjsonISOTime
   <*> field "status"              docstatus               ""
   <*> field "state"               docstate                ""
-  <*> field "signatories"         docsignatorylinks "signatories"
+  <*> field "signatories"         docsignatorylinks       "signatories"
   <*> field "signorder"           docsignorder            ""
   <*> field "authentication"      docauthentication       ""
   <*> field "delivery"            docdelivery             ""
   <*> field "template"            doctemplate             ""
-  <*> field "daystosign"   docdaystosign   "daystosign"
-  <*> fieldOpt "daystoremind" docdaystoremind "daystoremind"
-  <*> field "showheader"       docshowheader       "showheader"
-  <*> field "showpdfdownload"  docshowpdfdownload  "showpdfdownload"
-  <*> field "showrejectoption" docshowrejectoption "showrejectoption"
-  <*> field "showfooter"       docshowfooter       "showfooter"
-  <*> field "invitationmessage"   docinvitetext  "docinvitetext"    -- FIXME check for <p></p>?
-  <*> field "confirmationmessage" docconfirmtext "docconfirmtext"   -- FIXMe check for <p></p>?
-  <*> field "lang"                  doclang                ""
-  <*> field "tags"                  doctags                ""
-  <*> fieldOpt "apicallbackurl" docapicallbackurl "apicallbackurl"
-  <*> field "saved"                 docunsaveddraft "saved"
-  <*> field "deleted"               docdeleted             ""
-  <*> field "reallydeleted"         docreallydeleted       ""
-  <*> field "canperformsigning"     doccanperformsigning   ""
-  <*> field "objectversion"         docobjectversion       "objectversion"
-  <*> field "process"               docprocess             ""
-  <*> field "isviewedbyauthor"      docisviewedbyauthor    ""
-  <*> fieldBy "accesstoken"         docaccesstoken         "" unjsonMagicHash
-  <*> field "timezone"              doctimezonename        ""
+  <*> field "daystosign"          docdaystosign           "daystosign"
+  <*> fieldOpt "daystoremind"     docdaystoremind         "daystoremind"
+  <*> field "showheader"          docshowheader           "showheader"
+  <*> field "showpdfdownload"     docshowpdfdownload      "showpdfdownload"
+  <*> field "showrejectoption"    docshowrejectoption     "showrejectoption"
+  <*> field "showfooter"          docshowfooter           "showfooter"
+  <*> field "invitationmessage"   docinvitetext           "docinvitetext"    -- FIXME check for <p></p>?
+  <*> field "confirmationmessage" docconfirmtext          "docconfirmtext"   -- FIXMe check for <p></p>?
+  <*> field "lang"                doclang                 ""
+  <*> field "tags"                doctags                 ""
+  <*> fieldOpt "apicallbackurl"   docapicallbackurl       "apicallbackurl"
+  <*> field "saved"               docunsaveddraft         "saved"
+  <*> field "deleted"             docdeleted              ""
+  <*> field "reallydeleted"       docreallydeleted        ""
+  <*> field "canperformsigning"   doccanperformsigning    ""
+  <*> field "objectversion"       docobjectversion        "objectversion"
+  <*> field "process"             docprocess              ""
+  <*> field "isviewedbyauthor"    docisviewedbyauthor     ""
+  <*> fieldBy "accesstoken"       docaccesstoken          "" unjsonMagicHash
+  <*> field "timezone"            doctimezonename         ""
 
 data DocStatus = DocStatusPreparation | DocStatusPending |DocStatusClosed
                | DocStatusCanceled | DocStatusTimedout | DocStatusRejected
