@@ -129,7 +129,7 @@ var List = React.createClass({
                     }
 
                     { selectfilters.map(function(c) {
-                          return React.addons.cloneWithProps(c,{model: model, key : c.props.key || Math.random()});
+                          return React.addons.cloneWithProps(c,{model: model, key : c.key || Math.random()});
 
                         })
                     }
@@ -149,7 +149,7 @@ var List = React.createClass({
 
                     <div>
                       { actions.map(function(c) {
-                          return React.addons.cloneWithProps(c,{model: model, key : c.props.key || Math.random()});
+                          return React.addons.cloneWithProps(c,{model: model, key : c.key || Math.random()});
                         })
                       }
                     </div>
@@ -174,7 +174,7 @@ var List = React.createClass({
               <thead>
                 <tr>
                 { columns.map(function(c) {
-                    return React.addons.cloneWithProps(c,{model: model, key : c.props.key || Math.random()});
+                    return React.addons.cloneWithProps(c,{model: model, key : c.key || Math.random()});
                   })
                 }
                 </tr>
@@ -198,7 +198,7 @@ var List = React.createClass({
                     return [(
                       <tr key={"tr-" + (d.id() || Math.random())}>
                         { columns.map(function(c) {
-                            return React.addons.cloneWithProps(c,{data: d, key : c.props.key || Math.random()});
+                            return React.addons.cloneWithProps(c,{data: d, key : c.key || Math.random()});
                           })
                         }
                       </tr>),sl];
@@ -212,7 +212,7 @@ var List = React.createClass({
                         array.push(
                           <tr key={"dummy-tr-" + i}>
                            { columns.map(function(c) {
-                              return (<td key={"dummy-td-" + (c.props.key || Math.random())}/>);
+                              return (<td key={"dummy-td-" + (c.key || Math.random())}/>);
                             })
                            }
                           </tr>
