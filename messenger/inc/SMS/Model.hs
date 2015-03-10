@@ -1,90 +1,82 @@
-module SMS.Model where
+module SMS.Model (
+    messengerJobSelectors
+  , messengerJobFetcher
+  , smsNotificationChannel
+  , smsSelectors
+  , smsFetcher
+  , CreateSMS(..)
+  , CleanSMSesOlderThanDays(..)
+  , UpdateWithSMSEvent(..)
+  , GetUnreadSMSEvents(..)
+  , MarkSMSEventAsRead(..)
+  ) where
 
 import Control.Applicative
 import Control.Monad.Catch
-import Control.Monad.State
 import Data.Int
 
 import DB
 import MinutesTime
-import OurPrelude
 import SMS.Data
 
-sqlSelectSMSes :: State SqlSelect () -> SqlSelect
-sqlSelectSMSes refine = sqlSelect "smses" $ do
-  sqlResult "smses.id"
-  sqlResult "smses.originator"
-  sqlResult "smses.msisdn"
-  sqlResult "smses.body"
-  sqlResult "smses.data"
-  sqlResult "smses.attempt"
-  --sqlResult "smses.to_be_sent"
-  --sqlResult "smses.sent"
-  sqlOrderBy "id"
-  refine
+messengerJobSelectors :: [SQL]
+messengerJobSelectors = ["id", "attempts"]
 
-selectSMSes :: MonadDB m => SqlSelect -> m [ShortMessage]
-selectSMSes query' = do
-  runQuery_ query'
-  fetchMany fetchSMS
+messengerJobFetcher :: (JobType, Int32) -> MessengerJob
+messengerJobFetcher (jtype, attempts) = MessengerJob {
+  mjType = jtype
+, mjAttempts = attempts
+}
 
-fetchSMS :: (ShortMessageID, String, String, String, String, Int32) -> ShortMessage
-fetchSMS (smsid, originator, msisdn, body, sdata, attempt) = ShortMessage {
+----------------------------------------
+
+smsNotificationChannel :: Channel
+smsNotificationChannel = "sms"
+
+smsSelectors :: [SQL]
+smsSelectors = [
+    "id"
+  , "originator"
+  , "msisdn"
+  , "body"
+  , "data"
+  , "attempts"
+  ]
+
+smsFetcher :: (ShortMessageID, String, String, String, String, Int32) -> ShortMessage
+smsFetcher (smsid, originator, msisdn, body, sdata, attempts) = ShortMessage {
   smID         = smsid
 , smOriginator = originator
 , smMSISDN     = msisdn
 , smBody       = body
 , smData       = sdata
-, smAttempt    = attempt
+, smAttempts   = attempts
 }
+
+----------------------------------------
 
 data CreateSMS = CreateSMS String String String String
 instance (MonadDB m, MonadThrow m) => DBUpdate m CreateSMS ShortMessageID where
-  update (CreateSMS originator msisdn body sdata) =
-    $fromJust `fmap` insertSMS originator msisdn body sdata 0
+  update (CreateSMS originator msisdn body sdata) = do
+    runQuery_ . sqlInsert "smses" $ do
+      sqlSet "originator" originator
+      sqlSet "msisdn" msisdn
+      sqlSet "body" body
+      sqlSet "run_at" unixEpoch
+      sqlSet "data" sdata
+      sqlResult "id"
+    mid <- fetchOne runIdentity
+    notify smsNotificationChannel ""
+    return mid
 
-insertSMS :: (MonadDB m, MonadThrow m) => String -> String -> String -> String -> Int32 -> m (Maybe ShortMessageID)
-insertSMS originator msisdn body sdata attempt = do
-  runQuery_ . sqlInsert "smses" $ do
-    sqlSet "originator" originator
-    sqlSet "msisdn" msisdn
-    sqlSet "body" body
-    sqlSet "to_be_sent" unixEpoch
-    sqlSet "data" sdata
-    sqlSet "attempt" attempt
-    sqlResult "id"
-  fetchOne runIdentity
-
-data GetIncomingSMSes = GetIncomingSMSes
-instance (MonadDB m, MonadTime m) => DBQuery m GetIncomingSMSes [ShortMessage] where
-  query GetIncomingSMSes = do
-    now <- currentTime
-    selectSMSes . sqlSelectSMSes $ do
-      sqlWhere "body IS NOT NULL"
-      sqlWhere "sent IS NULL"
-      sqlWhere $ "to_be_sent <=" <?> now
-
-data MarkSMSAsSent = MarkSMSAsSent ShortMessageID UTCTime
-instance (MonadDB m, MonadThrow m) => DBUpdate m MarkSMSAsSent Bool where
-  update (MarkSMSAsSent mid time) = do
-    runQuery01 . sqlUpdate "smses" $ do
-      sqlSet "sent" time
-      sqlWhereEq "id" mid
-
-data DeferSMS = DeferSMS ShortMessageID UTCTime
-instance (MonadDB m, MonadThrow m) => DBUpdate m DeferSMS Bool where
-  update (DeferSMS mid time) =
-    runQuery01 $ sqlUpdate "smses" $ do
-      sqlSet "to_be_sent" time
-      sqlSetCmd "attempt" "attempt + 1"
-      sqlWhereEq "id" mid
-
-data DeleteSMSesOlderThenDays = DeleteSMSesOlderThenDays Int
-instance (MonadDB m, MonadTime m) => DBUpdate m DeleteSMSesOlderThenDays Int where
-  update (DeleteSMSesOlderThenDays days) = do
+data CleanSMSesOlderThanDays = CleanSMSesOlderThanDays Int
+instance (MonadDB m, MonadTime m) => DBUpdate m CleanSMSesOlderThanDays Int where
+  update (CleanSMSesOlderThanDays days) = do
     past <- (days `daysBefore`) <$> currentTime
     runQuery . sqlDelete "smses" $ do
-      sqlWhere $ "to_be_sent <=" <?> past
+      sqlWhere $ "finished_at <=" <?> past
+
+----------------------------------------
 
 data UpdateWithSMSEvent = UpdateWithSMSEvent ShortMessageID SMSEvent
 instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateWithSMSEvent Bool where
@@ -107,12 +99,6 @@ instance MonadDB m => DBQuery m GetUnreadSMSEvents [(SMSEventID, ShortMessageID,
       sqlWhere "sms_events.event_read IS NULL"
       sqlOrderBy "sms_events.id"
     fetchMany id
-
-data DeleteSMS = DeleteSMS ShortMessageID
-instance (MonadDB m, MonadThrow m) => DBUpdate m DeleteSMS Bool where
-  update (DeleteSMS smsid) = do
-    runQuery01 . sqlDelete "smses" $ do
-      sqlWhereEq "id" smsid
 
 data MarkSMSEventAsRead = MarkSMSEventAsRead SMSEventID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkSMSEventAsRead Bool where

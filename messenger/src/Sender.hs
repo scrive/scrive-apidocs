@@ -46,21 +46,21 @@ createSender mc = case mc of
   LocalSender{}  -> createLocalSender mc
 
 createGlobalMouthSender :: String -> String -> String -> Sender
-createGlobalMouthSender user password url = Sender { senderName = "GlobalMouth", sendSMS = send }
-  where
-    send :: (CryptoRNG m, MonadIO m, MonadBase IO m, Log.MonadLog m) => ShortMessage -> m Bool
-    send sms@ShortMessage{..} = do
-      Log.mixlog_ $ show sms
-      sendSMS2 (user,password,url) smOriginator smMSISDN smBody (show smID)
+createGlobalMouthSender user password url = Sender {
+  senderName = "GlobalMouth"
+, sendSMS = \sms@ShortMessage{..} -> do
+  Log.mixlog_ $ show sms
+  sendSMSHelper (user, password, url) smOriginator smMSISDN smBody (show smID)
+}
 
-sendSMS2 :: (CryptoRNG m, MonadBase IO m, MonadIO m, Log.MonadLog m) => (String, String, String) -> String -> String -> String -> String -> m Bool
-sendSMS2 (user, password, baseurl) originator msisdn body ref = do
+sendSMSHelper :: (CryptoRNG m, MonadBase IO m, MonadIO m, Log.MonadLog m) => (String, String, String) -> String -> String -> String -> String -> m Bool
+sendSMSHelper (user, password, baseurl) originator msisdn body ref = do
   (code, stdout, stderr) <- readCurl [url] BS.empty
   case (code, maybeRead (takeWhile (not . isSpace) $ BSC.unpack stdout)) of
     (ExitSuccess, Just (httpcode :: Int)) | httpcode >= 200 && httpcode<300 ->
       return True
     _ -> do
-      Log.mixlog "sendSMS2 failed" $ do
+      Log.mixlog "sendSMSHelper failed" $ do
         value "code" $ show code
         value "message" $ BSLU.toString stdout
         value "stderr" $ BSLU.toString stderr

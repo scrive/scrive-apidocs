@@ -1,8 +1,14 @@
 module SMS.Tables (
     messengerTables
+  , tableMessengerJobs
+  , tableMessengerWorkers
   , tableSMSes
   , tableSMSEvents
   ) where
+
+import Control.Monad
+import Data.ByteString (ByteString)
+import Data.Monoid
 
 import DB
 
@@ -10,24 +16,79 @@ messengerTables :: [Table]
 messengerTables = [
     tableSMSes
   , tableSMSEvents
+  , tableMessengerJobs
+  , tableMessengerWorkers
   ]
+
+----------------------------------------
+
+tableMessengerWorkers :: Table
+tableMessengerWorkers = tblTable {
+  tblName = "messenger_workers"
+, tblVersion = 1
+, tblColumns = [
+    tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
+  , tblColumn { colName = "last_activity", colType = TimestampWithZoneT, colNullable = False }
+  , tblColumn { colName = "name", colType = TextT, colNullable = False }
+  ]
+, tblPrimaryKey = pkOnColumn "id"
+}
+
+tableMessengerJobs :: Table
+tableMessengerJobs = tblTable {
+  tblName = "messenger_jobs"
+, tblVersion = 1
+, tblColumns = [
+    tblColumn { colName = "id", colType = TextT, colNullable = False }
+  , tblColumn { colName = "run_at", colType = TimestampWithZoneT, colNullable = False }
+  , tblColumn { colName = "finished_at", colType = TimestampWithZoneT }
+  , tblColumn { colName = "reserved_by", colType = BigIntT }
+  , tblColumn { colName = "attempts", colType = IntegerT, colNullable = False, colDefault = Just "0" }
+  ]
+, tblPrimaryKey = pkOnColumn "id"
+, tblForeignKeys = [
+    (fkOnColumn "reserved_by" "messenger_workers" "id") {
+      fkOnDelete = ForeignKeySetNull
+    }
+  ]
+, tblInitialSetup = Just $ TableInitialSetup {
+    checkInitialSetup = return True
+  , initialSetup = forM_ jobs $ \job -> do
+    runSQL_ $ "INSERT INTO messenger_jobs (id, run_at) VALUES (" <?> job <> ", to_timestamp(0))"
+  }
+}
+  where
+    jobs :: [ByteString]
+    jobs = [
+        "clean_old_smses"
+      ]
 
 tableSMSes :: Table
 tableSMSes = tblTable {
     tblName = "smses"
-  , tblVersion = 2
+  , tblVersion = 3
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "originator", colType = TextT, colNullable = False }
     , tblColumn { colName = "msisdn", colType = TextT, colNullable = False }
     , tblColumn { colName = "body", colType = TextT, colNullable = False }
-    , tblColumn { colName = "to_be_sent", colType = TimestampWithZoneT, colNullable = False }
-    , tblColumn { colName = "sent", colType = TimestampWithZoneT }
+    , tblColumn { colName = "run_at", colType = TimestampWithZoneT }
+    , tblColumn { colName = "finished_at", colType = TimestampWithZoneT }
     , tblColumn { colName = "data", colType = TextT, colNullable = False }
-    , tblColumn { colName = "attempt", colType = IntegerT, colNullable = False, colDefault = Just "0"}
-
+    , tblColumn { colName = "attempts", colType = IntegerT, colNullable = False, colDefault = Just "0"}
+    , tblColumn { colName = "reserved_by", colType = BigIntT }
     ]
   , tblPrimaryKey = pkOnColumn "id"
+  , tblForeignKeys = [
+      (fkOnColumn "reserved_by" "messenger_workers" "id") {
+        fkOnDelete = ForeignKeySetNull
+      }
+    ]
+  , tblIndexes = [
+      (indexOnColumns ["reserved_by", "run_at"]) {
+        idxWhere = Just "reserved_by IS NULL AND run_at IS NOT NULL"
+      }
+    ]
   }
 
 tableSMSEvents :: Table

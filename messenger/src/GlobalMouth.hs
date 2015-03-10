@@ -4,6 +4,7 @@ module GlobalMouth (
   ) where
 
 import Control.Exception.Lifted as E
+import Data.Monoid.Utils
 import Happstack.Server
 
 import DB
@@ -37,9 +38,9 @@ handleGlobalMouthEvents = flip E.catch (\(e :: SomeException) -> Log.mixlog_ (sh
   case xref of
     Just xref' -> do
               let ev = SMSEvent xmsisdn event
-              Log.mixlog_ $ "UpdateWithSMSEvent " ++ show xref' ++ " " ++ show ev
+              Log.mixlog_ $ "UpdateWithSMSEvent" <+> show xref' <+> show ev
               res <- dbUpdate (UpdateWithSMSEvent xref' ev)
-              Log.mixlog_ $ "UpdateWithSMSEvent " ++ show xref' ++ " " ++ show ev ++ " => " ++ show res
+              Log.mixlog_ $ "UpdateWithSMSEvent" <+> show xref' <+> show ev <+> "=>" <+> show res
               ok $ toResponse "Thanks"
     Nothing -> do
               Log.mixlog_ $ "UpdateWithSMSEvent not run due to xref=" ++ show xref
