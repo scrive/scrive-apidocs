@@ -569,10 +569,15 @@ window.Document = Backbone.Model.extend({
               console.error("Failed to fetch document #" + self.documentid() + ", giving up.");
             }
         };
-
-        if( successCallback!=undefined ) {
-            fetchOptions.success = successCallback;
+        fetchOptions.success = function() {
+          _.each(self.signatories(), function(sig) {
+            sig.ensureAllFields();
+          });
+          if (successCallback !== undefined) {
+            successCallback();
+          }
         }
+
         fetchFunction();
 
     },
