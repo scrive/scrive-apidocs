@@ -567,7 +567,7 @@
 "_invitationMailUndeliveredContentInstructionStep2":"Bekreft e-postadressen og send igjen",
 "_invitationMailUndeliveredContentInstructionSteps":"Få tilgang til dokumentet fra ditt e-arkiv eller ved å klikke på knappen nedenfor",
 "_invitationMailUndeliveredTitle":"Leveringsfeil",
-"_invitationSMSUndeliveredContentBody":"Vi har ikke kunnet levere invitasjonen til å e-signere dokumentet <strong>$documenttitle$</strong> til <strong>$name$ ($mobile$)</strong>. Dette kommer antakeligvis av at telefonnummeret er feilaktig skrevet inn.",
+"_invitationSMSUndeliveredContentBody":"",
 "_invitationSMSUndeliveredContentBodyFirst":"For å rette telefonnummeret og sende invitasjonen på nytt:",
 "_invitationSMSUndeliveredContentInstructionStep1":"Klikk på \"Endre telefonnummer\"",
 "_invitationSMSUndeliveredContentInstructionStep2":"Bekreft telefonnummeret og send igjen",

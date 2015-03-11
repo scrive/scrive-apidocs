@@ -567,7 +567,7 @@
 "_invitationMailUndeliveredContentInstructionStep2":"E-Mailadresse bestätigen und neu senden",
 "_invitationMailUndeliveredContentInstructionSteps":"Rufen Sie das Dokument aus dem E-Archiv auf oder indem Sie auf die Schaltfläche unten klicken",
 "_invitationMailUndeliveredTitle":"Zustellungsfehler",
-"_invitationSMSUndeliveredContentBody":"Wir waren nicht in der Lage, die Einladung zum E-Signieren des Dokuments <strong>$documenttitle$</strong> an <strong>$name$ ($mobile$)</strong> zu schicken. Es könnte daran liegen, dass die Telefonnummer, die Sie angegeben haben, falsch ist.",
+"_invitationSMSUndeliveredContentBody":"",
 "_invitationSMSUndeliveredContentBodyFirst":"Um die Telefonnummer zu korrigieren und die Einladung erneut zu senden:",
 "_invitationSMSUndeliveredContentInstructionStep1":"Klicken Sie auf \"Telefonnummer ändern\"",
 "_invitationSMSUndeliveredContentInstructionStep2":"Bestätigen Sie die Telefonnummer und senden Sie erneut",

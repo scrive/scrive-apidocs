@@ -567,7 +567,7 @@
 "_invitationMailUndeliveredContentInstructionStep2":"Vahvista sähköpostiosoite ja lähetä uudestaan",
 "_invitationMailUndeliveredContentInstructionSteps":"Mene dokumenttiin e-arkistostasi tai painamalla alla olevaa kuvaketta",
 "_invitationMailUndeliveredTitle":"Toimitusvirhe",
-"_invitationSMSUndeliveredContentBody":"Emme pystyneet toimittamaan kutsua dokumentin <strong>$documenttitle$</strong> allekirjoittamiseen vastaanottajalle, <strong>$name$ ($mobile$)</strong>. Tämä voi johtua antamasi puhelinnumeron virheellisyydestä.",
+"_invitationSMSUndeliveredContentBody":"",
 "_invitationSMSUndeliveredContentBodyFirst":"Korjataksesi puhelinnumeron ja lähettääksesi kutsun uudestaan:",
 "_invitationSMSUndeliveredContentInstructionStep1":"Klikkaa \"Muuta puhelinnumero\"",
 "_invitationSMSUndeliveredContentInstructionStep2":"Vahvista puhelinnumero ja lähetä uudestaan",

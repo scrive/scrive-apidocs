@@ -567,7 +567,7 @@
 "_invitationMailUndeliveredContentInstructionStep2":"Confirme o endereço de email e envie novamente",
 "_invitationMailUndeliveredContentInstructionSteps":"Aceda ao documento a partir do seu arquivo electrónico ou clique no botão abaixo",
 "_invitationMailUndeliveredTitle":"Falha ao entregar",
-"_invitationSMSUndeliveredContentBody":"Não foi possível entregar o convite para assinar electronicamente o documento <strong>$documenttitle$</strong> a <strong>$name$ ($mobile$)</strong>. Isto pode dever-se ao facto do número de telefone fornecido ser incorrecto.",
+"_invitationSMSUndeliveredContentBody":"",
 "_invitationSMSUndeliveredContentBodyFirst":"Para corrigir o número de telefone e reenviar o convite:",
 "_invitationSMSUndeliveredContentInstructionStep1":"Clique em \"Alterar número de telefone\"",
 "_invitationSMSUndeliveredContentInstructionStep2":"Confirme o número de telefone e envie novamente",

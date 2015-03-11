@@ -567,7 +567,7 @@
 "_invitationMailUndeliveredContentInstructionStep2":"Conferma l'indirizzo email e rispedisci",
 "_invitationMailUndeliveredContentInstructionSteps":"Accedi al documento dal tuo archivio elettronico o cliccando il pulsante qui sotto",
 "_invitationMailUndeliveredTitle":"Invio non riuscito",
-"_invitationSMSUndeliveredContentBody":"Non ci è stato possibile consegnare l'invito a firmare elettronicamente il documento <strong>$documenttitle$</strong> a <strong>$name$ ($mobile$)</strong>.  Il numero di telefono da te inserito potrebbe essere errato.",
+"_invitationSMSUndeliveredContentBody":"",
 "_invitationSMSUndeliveredContentBodyFirst":"Per correggere il numero di telefono e rispedire l'invito:",
 "_invitationSMSUndeliveredContentInstructionStep1":"Clicca \"Cambia numero di telefono\"",
 "_invitationSMSUndeliveredContentInstructionStep2":"Conferma il numero di telefono e rispedisci",

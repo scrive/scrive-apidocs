@@ -60,12 +60,6 @@ var AdminCompanyDetailsModel = Backbone.Model.extend({
   setCompanycountry : function(v) {
      this.set({"companycountry" : v});
   },
-  companysmsoriginator: function() {
-     return this.get("companysmsoriginator");
-  },
-  setCompanysmsoriginator : function(v) {
-     this.set({"companysmsoriginator" : v});
-  },
   companycgidisplayname: function() {
      return this.get("companycgidisplayname");
   },
@@ -106,7 +100,6 @@ var AdminCompanyDetailsModel = Backbone.Model.extend({
       , companycity :     this.company().city()
       , companycountry :  this.company().country()
       , companyipaddressmasklist : this.company().ipaddressmasklist()
-      , companysmsoriginator : this.company().smsoriginator()
       , companycgidisplayname : this.company().cgidisplayname()
       , companyidledoctimeout : this.company().idledoctimeout()
       , companyallowsavesafetycopy : this.company().allowsavesafetycopy()
@@ -124,7 +117,6 @@ var AdminCompanyDetailsModel = Backbone.Model.extend({
         companycity : this.companycity(),
         companycountry : this.companycountry(),
         companyipaddressmasklist : this.companyipaddressmasklist(),
-        companysmsoriginator : this.companysmsoriginator(),
         companycgidisplayname : this.companycgidisplayname(),
         companyidledoctimeout : this.companyidledoctimeout(),
         companyallowsavesafetycopy : this.companyallowsavesafetycopy()
@@ -202,12 +194,6 @@ var AdminCompanyDetailsView = Backbone.View.extend({
               model.setCompanyipaddressmasklist(companyipaddressmasklistinput.val());
       });
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text("IP address mask"))).append($("<td/>").append(companyipaddressmasklistinput)));
-
-      var companysmsoriginatorinput = $("<input type='text' maxlength=11/>").val(model.companysmsoriginator());
-      companysmsoriginatorinput.change(function() {
-              model.setCompanysmsoriginator(companysmsoriginatorinput.val());
-      });
-      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("SMS originator"))).append($("<td/>").append(companysmsoriginatorinput)));
 
       var companycgidisplaynameinput = $("<input type='text' maxlength=30/>").val(model.companycgidisplayname());
       companycgidisplaynameinput.change(function() {

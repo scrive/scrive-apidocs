@@ -567,7 +567,7 @@
 "_invitationMailUndeliveredContentInstructionStep2":"Confirm the email address and send again",
 "_invitationMailUndeliveredContentInstructionSteps":"Access the document from your e-archive or by clicking the button below",
 "_invitationMailUndeliveredTitle":"Delivery failure",
-"_invitationSMSUndeliveredContentBody":"We have not been able to deliver the invitation to e-sign the document <strong>$documenttitle$</strong> to <strong>$name$ ($mobile$)</strong>. This may be because the phone number you have provided is incorrect.",
+"_invitationSMSUndeliveredContentBody":"We have not been able to deliver the invitation to e-sign the document <strong>$documenttitle$</strong> to <strong>$name$ (<span>$mobile$</span>)</strong>. This may be because the phone number you have provided is incorrect.",
 "_invitationSMSUndeliveredContentBodyFirst":"To correct the phone number and resend the invitation:",
 "_invitationSMSUndeliveredContentInstructionStep1":"Click \"Change phone number\"",
 "_invitationSMSUndeliveredContentInstructionStep2":"Confirm the phone number and send again",

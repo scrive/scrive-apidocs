@@ -567,7 +567,7 @@
 "_invitationMailUndeliveredContentInstructionStep2":"Bevestig het e-mailadres en stuur opnieuw",
 "_invitationMailUndeliveredContentInstructionSteps":"Open het document in uw e-archief, of door op de knop hieronder te klikken",
 "_invitationMailUndeliveredTitle":"Mislukte levering",
-"_invitationSMSUndeliveredContentBody":"Het is ons niet gelukt de uitnodiging om het document te e-ondertekenen<strong>$documenttitle$</strong> aan<strong>$name$ ($mobile$)</strong> te bezorgen. Dit kan zijn omdat het telefoonnummer wat u ingevuld heeft niet correct is. ",
+"_invitationSMSUndeliveredContentBody":"",
 "_invitationSMSUndeliveredContentBodyFirst":"Om het telefoonnummer te corrigeren en de uitnodiging opnieuw te versturen: ",
 "_invitationSMSUndeliveredContentInstructionStep1":"Klik \"Wijzig telefoonnummer\"",
 "_invitationSMSUndeliveredContentInstructionStep2":"Bevestig het telefoonnummer en stuur opnieuw",
