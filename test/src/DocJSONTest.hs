@@ -5,49 +5,29 @@ import DocJSONTypes
 
 import Control.Applicative
 import Control.Monad.IO.Class
---import Control.Monad
---import Control.Monad.Trans
---import Data.Maybe
 import Happstack.Server
---import Network.URI
---import Data.Typeable
 import Test.Framework
---import Data.Int
---import Test.QuickCheck
---import Data.Text
 import qualified Data.HashMap.Strict as H
 import qualified Data.Vector as V
---import Text.JSON
 import qualified Data.Unjson as U
+import Data.Text (Text)
 import Data.Unjson
 import Data.Aeson
---import Data.Typeable
---import Text.JSON.FromJSValue
---import Text.JSON.Gen
 import qualified Data.ByteString.Lazy as B
 import qualified Data.ByteString.Lazy.UTF8 as BS
 
 import Context
---import DB
 import Doc.API.V1.Calls
---import Doc.API.V1.DocumentToJSON
---import Doc.DocStateData
---import Doc.Model
---import OAuth.Model
 import TestingUtil
 import TestKontra as T
---import User.Model
---import Util.HasSomeUserInfo
 import Utils.Default
---import qualified Log
---import Utils.Read
---import DB.Derive
 import Doc.DocumentID (unsafeDocumentID)
 
 docJSONTests :: TestEnvSt -> Test
 docJSONTests env = testGroup "DocJSON"
   [ testThat "Test JSON structure for API V1 'createfromfile' and 'ready'" env testFromFileAndReadySimple
   , testThat "Test JSON structure for API V1 'createfromtemplate' and 'ready'" env testFromTemplateAndReadySimple
+  , testThat "Test JSON structure for API V1 is consistent after 'update'" env testUpdateFields
   ]
 
 testFromFileAndReadySimple :: TestEnv ()
@@ -61,12 +41,12 @@ testFromFileAndReadySimple = do
                                       ] []
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
-  doc <- testJSONWith "test/json/test1.json" (rsBody resDoc) docUnjsonDef
+  doc <- testJSONWith "test/json/test_createFromFile.json" (rsBody resDoc) docUnjsonDef
 
   reqReady <- mkRequest POST []
   (resReady, _) <- runTestKontra reqReady ctx $ apiCallV1Ready (unsafeDocumentID $ fromInt64AsString $ docid doc)
   assertEqual "We should get a 202 response" 202 (rsCode resReady)
-  _ <- testJSONWith "test/json/test2.json" (rsBody resReady) docUnjsonDef
+  _ <- testJSONWith "test/json/test_ready.json" (rsBody resReady) docUnjsonDef
   return ()
 
 testFromTemplateAndReadySimple :: TestEnv ()
@@ -80,33 +60,64 @@ testFromTemplateAndReadySimple = do
                                       ] []
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
-  doc <- testJSONWith "test/json/test1.json" (rsBody resDoc) docUnjsonDef
+  doc <- testJSONWith "test/json/test_createFromFile.json" (rsBody resDoc) docUnjsonDef
   let did = unsafeDocumentID $ fromInt64AsString $ docid doc
 
-  -- TODO Use Aeson Lenses to set values, this is clunky and prone to errors
-  -- because the Unjson uses derived Show for datatypes which is just wrong and
-  -- this just works because our server ignores the bad values in the JSON, but
-  -- we will want to set values for these and then it won't work because it
-  -- will be ignored :(
-  -- We want to behave like a client and check things:
-  -- check things = stuff in DocJSONTypes.hs
-  -- behave like a client = only mess around with JSON (i.e. Aeson Value w/ lenses)
   let Just docJSON = decode (rsBody resDoc) :: Maybe Value
-      Result docUnjson _ = (parse docUnjsonDef docJSON)
-      docUnjson' = docUnjson { doctemplate = True }
-      value = unjsonToJSON docUnjsonDef docUnjson'
+      value = setDocKey "template" (Bool True) docJSON
       strDoc = encode value
 
   reqUpdate <- mkRequestWithHeaders POST [("json", inTextBS strDoc)] []
   (resUpdate, _) <- runTestKontra reqUpdate ctx $ apiCallV1Update did
   assertEqual "We should get a 200 response" 200 (rsCode resUpdate)
+  _ <- testJSONWith "test/json/test_createFromFile.json" (rsBody resUpdate) docUnjsonDef
 
   reqFromTemplate <- mkRequestWithHeaders POST [] []
   (resFromTemplate, _) <- runTestKontra reqFromTemplate ctx $ apiCallV1CreateFromTemplate did
   assertEqual "We should get a 201 response" 201 (rsCode resFromTemplate)
+  docFromTemplate <- testJSONWith "test/json/test_createFromFile.json" (rsBody resFromTemplate) docUnjsonDef
+  let newdid = unsafeDocumentID $ fromInt64AsString $ docid docFromTemplate
 
+  reqReady <- mkRequestWithHeaders POST [] []
+  (resReady, _) <- runTestKontra reqReady ctx $ apiCallV1Ready newdid
+  assertEqual "We should get a 202 response" 202 (rsCode resReady)
+  _ <- testJSONWith "test/json/test_ready.json" (rsBody resReady) docUnjsonDef
   return ()
 
+testUpdateFields :: TestEnv ()
+testUpdateFields = do
+  user <- addNewRandomUser
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
+
+  reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
+                                        -- FIXME make this random-ish file
+                                      , ("file", inFile "test/pdfs/simple.pdf")
+                                      ] []
+  (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  assertEqual "We should get a 201 response" 201 (rsCode resDoc)
+  doc <- testJSONWith "test/json/test_createFromFile.json" (rsBody resDoc) docUnjsonDef
+  let did = unsafeDocumentID $ fromInt64AsString $ docid doc
+
+  let Just docJSON = decode (rsBody resDoc) :: Maybe Value
+      value  = setDocKey "invitationmessage"   (String "424242") docJSON
+      value' = setDocKey "confirmationmessage" (String "363636") value
+      value'' = setDocKey "apicallbackurl" (String "242424") value'
+      strDoc = encode value''
+
+  reqUpdate <- mkRequestWithHeaders POST [("json", inTextBS strDoc)] []
+  (resUpdate, _) <- runTestKontra reqUpdate ctx $ apiCallV1Update did
+  assertEqual "We should get a 200 response" 200 (rsCode resUpdate)
+  doc' <- testJSONWith "test/json/test_updateFields.json" (rsBody resUpdate) docUnjsonDef
+
+  assertEqual "Invitation message should be the same" "<p>424242</p>" (docinvitetext doc')
+  assertEqual "Confirmation message should be the same" "<p>363636</p>" (docconfirmtext doc')
+  assertEqual "API Callback should be the same" (Just "242424") (docapicallbackurl doc')
+
+  reqReady <- mkRequestWithHeaders POST [] []
+  (resReady, _) <- runTestKontra reqReady ctx $ apiCallV1Ready did
+  assertEqual "We should get a 202 response" 202 (rsCode resReady)
+  _ <- testJSONWith "test/json/test_updateFieldsReady.json" (rsBody resReady) docUnjsonDef
+  return ()
 
 -- | Takes a 'FilePath' to a JSON file with the desired structure (with 'null'
 -- considered as a type), a 'ByteString' with the JSON to test, and a
@@ -143,3 +154,14 @@ removeValues (String _) = String ""
 removeValues (Number _) = Number 0
 removeValues (Bool _)   = Bool False
 removeValues Null       = Null
+
+getDocKey :: Text -> Value -> Maybe Value
+getDocKey k (Object doc) = H.lookup k doc
+getDocKey _ _ = Nothing
+
+setDocKey :: Text -> Value -> Value -> Value
+setDocKey k n v = overDocKey k (const n) v
+
+overDocKey :: Text -> (Value -> Value) -> Value -> Value
+overDocKey k f (Object doc) = Object $ H.adjust f k doc
+overDocKey _ _ v = v
