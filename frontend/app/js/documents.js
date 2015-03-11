@@ -576,7 +576,7 @@ window.Document = Backbone.Model.extend({
           if (successCallback !== undefined) {
             successCallback();
           }
-        }
+        };
 
         fetchFunction();
 
