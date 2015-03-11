@@ -50,6 +50,7 @@ import MailModelTest
 import MailsTest
 import OAuth
 import PaymentsTest
+import ReferenceScreenshotsTest
 import SessionsTest
 import SignupTest
 import Templates (readGlobalTemplates)
@@ -98,8 +99,15 @@ allTests = [
   , userStateTests
   ]
 
+stagingTests :: [TestEnvSt -> Test]
+stagingTests = [
+    screenshotTests
+  ]
+
 modifyTestEnv :: [String] -> ([String], TestEnvSt -> TestEnvSt)
 modifyTestEnv [] = ([], id)
+modifyTestEnv ("--staging-tests":r) = second (. (\te -> te{ teStagingTests = True})) $
+                                   modifyTestEnv r
 modifyTestEnv ("--output-dir":d:r) = second (. (\te -> te{ teOutputDirectory = Just d})) $
                                    modifyTestEnv r
 modifyTestEnv (d:r) = first (d:) $ modifyTestEnv r
@@ -135,11 +143,16 @@ testMany (allargs, ts) = do
       , teActiveTests = active_tests
       , teRejectedDocuments = rejected_documents
       , teOutputDirectory = Nothing
+      , teStagingTests = False
       }
+      ts' = if teStagingTests env then
+                stagingTests ++ ts
+            else
+                ts
   case teOutputDirectory env of
     Nothing -> return ()
     Just d  -> liftBase $ createDirectoryIfMissing True d
-  liftBase . E.finally (defaultMainWithArgs (map ($ env) ts) args) $ do
+  liftBase . E.finally (defaultMainWithArgs (map ($ env) ts') args) $ do
     -- upon interruption (eg. Ctrl+C), prevent next tests in line
     -- from running and wait until all that are running are finished.
     atomically . modifyTVar' active_tests $ first (const False)
