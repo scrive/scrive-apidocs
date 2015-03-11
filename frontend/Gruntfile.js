@@ -11,6 +11,7 @@ module.exports = function(grunt) {
   require('time-grunt')(grunt);
   grunt.loadNpmTasks('grunt-shell-spawn');
   grunt.loadNpmTasks('grunt-karma');
+  grunt.loadNpmTasks('grunt-jscs');
   require('./custom_grunt_tasks/deploybuild')(grunt);
   require('./custom_grunt_tasks/fetchlocalization')(grunt);
 
@@ -43,6 +44,15 @@ module.exports = function(grunt) {
           '<%= yeoman.app %>/js/**/*.js',
           '<%= yeoman.app %>/images/{,*/}*.{png,jpg,jpeg,gif,webp,svg}'
         ]
+      }
+    },
+    jscs: {
+      src: require("./jscs_manifest.json"),
+      options: {
+        preset: "yandex",
+        validateQuoteMarks: "\"", // scrive uses double quotes
+        disallowQuotedKeysInObjects: null, // allow quoting in object keys
+        esprima: "esprima-fb"
       }
     },
     connect: {

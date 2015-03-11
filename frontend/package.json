@@ -37,7 +37,9 @@
     "grunt-shell": "~0.6.3",
     "underscore": "~1.8.2",
     "closure-linter-wrapper": "~0.2.9",
-    "grunt-gjslint": "~0.1.4"
+    "grunt-gjslint": "~0.1.4",
+    "grunt-jscs": "~1.5.0",
+    "esprima-fb": "~12001.1.0-dev-harmony-fb"
   },
   "dependencies": {
     "grunt": "~0.4.1",
