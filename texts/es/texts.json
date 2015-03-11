@@ -567,7 +567,7 @@
 "_invitationMailUndeliveredContentInstructionStep2":"Confirme la dirección de email y envíe otra vez",
 "_invitationMailUndeliveredContentInstructionSteps":"Acceda al documento desde su archivo electrónico o haciendo clic en el botón inferior",
 "_invitationMailUndeliveredTitle":"Fallo en la entrega",
-"_invitationSMSUndeliveredContentBody":"No hemos podido enviar la invitación para firmar electrónicamente el documento<strong>$documenttitle$</strong> a <strong>$name$ ($mobile$)</strong>. Esto ser debido a que el número de teléfono que nos ha proporcionado no es correcto. ",
+"_invitationSMSUndeliveredContentBody":"",
 "_invitationSMSUndeliveredContentBodyFirst":"Corregir el número de teléfono y reenviar la invitación:",
 "_invitationSMSUndeliveredContentInstructionStep1":"Haga clic en \"Cambiar el número de teléfono\"",
 "_invitationSMSUndeliveredContentInstructionStep2":"Confirmar el número de teléfono y enviar otra vez",

@@ -567,7 +567,7 @@
 "_invitationMailUndeliveredContentInstructionStep2":"Bekräfta e-postadressen och skicka igen",
 "_invitationMailUndeliveredContentInstructionSteps":"Se dokumentet i ditt e-arkiv eller genom att klicka på knappen nedan",
 "_invitationMailUndeliveredTitle":"Misslyckad leverans",
-"_invitationSMSUndeliveredContentBody":"Vi har inte kunnat leverera inbjudan att signera dokumentet <strong>$documenttitle$</strong> till <strong>$name$ ($mobile$)</strong>. Det beror troligen på att telefonnumret är felaktigt.",
+"_invitationSMSUndeliveredContentBody":"",
 "_invitationSMSUndeliveredContentBodyFirst":"För att ändra telefonnumret och skicka inbjudan igen:",
 "_invitationSMSUndeliveredContentInstructionStep1":"Klicka \"Ändra telefonnummer\"",
 "_invitationSMSUndeliveredContentInstructionStep2":"Bekräfta telefonnumret och skicka igen",

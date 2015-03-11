@@ -567,7 +567,7 @@
 "_invitationMailUndeliveredContentInstructionStep2":"Επιβεβαιώστε τη διεύθυνση email και αποστείλετε ξανά ",
 "_invitationMailUndeliveredContentInstructionSteps":"Αποκτήστε πρόσβαση στο έγγραφο από το ηλεκτρονικό σας αρχείο ή πιέζοντας την παρακάτω ένδειξη ",
 "_invitationMailUndeliveredTitle":"Αποτυχία παράδοσης ",
-"_invitationSMSUndeliveredContentBody":"Δεν έχουμε καταφέρει να παραδώσουμε την πρόσκληση ηλεκτρονικής υπογραφής του εγγράφου<strong>$documenttitle$</strong> στον <strong>$name$ ($mobile$)</strong>. Αυτό μπορεί να συμβαίνει επειδή ο αριθμός τηλεφώνου που παρείχατε είναι λανθασμένος. ",
+"_invitationSMSUndeliveredContentBody":"",
 "_invitationSMSUndeliveredContentBodyFirst":"Για να διορθώσετε τον αριθμό τηλεφώνου και να στείλετε ξανά την πρόσκληση:",
 "_invitationSMSUndeliveredContentInstructionStep1":"Πιέστε \"Αλλαγή αριθμού τηλεφώνου\" ",
 "_invitationSMSUndeliveredContentInstructionStep2":"Επιβεβαιώστε τον αριθμό τηλεφώνου και αποστείλετε ξανά ",
