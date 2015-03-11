@@ -938,6 +938,7 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                 name: name,
                 cssClass : 'design-view-action-participant-new-field-select',
                 border : "",
+                textWidth: 270,
                 optionsWidth: "297px",
                 onRemove : function() {
                   mixpanel.track('Click remove field', {
