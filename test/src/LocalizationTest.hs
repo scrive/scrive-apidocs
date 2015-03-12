@@ -1,7 +1,9 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module LocalizationTest (localizationTest) where
 
 import Control.Applicative
 import Control.Monad
+import Data.Function
 import Data.List
 import Data.Map ((!))
 import Data.Maybe
@@ -131,13 +133,21 @@ parseStringAsXML rawtxt =
     Left _ -> Nothing
     Right r -> Just r
 
+instance Ord Posn where
+    compare = compare `on` show
+deriving instance Ord Reference
+deriving instance Ord Misc
+deriving instance Ord AttValue
+deriving instance Ord (Element Posn)
+deriving instance Ord (Content Posn)
+
 matchElement :: Element Posn -> Element Posn -> Maybe String
 matchElement (Elem n1 a1 c1) (Elem n2 a2 c2) =
   if (n1 /= n2)
      then Just $ "Can't match " ++ show n1 ++ " with " ++ show n2
      else if (not $ matchAttributes a1 a2)
       then Just $ "Can't match attributes for " ++ show (n1,a1) ++ " with " ++ show (n2,a2)
-      else matchContent c1 c2
+      else matchContent (sort c1) (sort c2)
 
 matchAttributes :: [(QName, AttValue)] -> [(QName, AttValue)] -> Bool
 matchAttributes ((n1,v1):a1s) ((n2,v2):a2s) = (n1 == n2) && (v1 == v2) && matchAttributes a1s a2s
