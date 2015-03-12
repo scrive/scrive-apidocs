@@ -430,7 +430,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                 view.createPopup();
             },
             csvMessage: function(no_of_parties) {
-              var msg = $("<span>" + view.csvMessage() + "</span>");
+              var msg = $('<span />').append(view.csvMessage());
               $(".put-no-of-parties-here",msg).text(no_of_parties);
               $(".put-docs-left-here",msg).text(model.docsLeft());
               return msg;
