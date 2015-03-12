@@ -896,7 +896,7 @@
 "_tablestatusesSent":"Sent",
 "_tablestatusesSigned":"Signed",
 "_tablestatusesViewedOnline":"Reviewed online",
-"_tbsYouSignWithEleg":"I sign the document \"$document_title$\" with transaction number \"$document_id$\" initiated by \"$author_name$\".",
+"_tbsYouSignWithEleg":"I sign the document \"$document_title$\" with transaction number $document_id$.",
 "_textFieldDone":"Close",
 "_textFieldFor":"Party",
 "_textFieldObligatory":"Mandatory to sign here",
