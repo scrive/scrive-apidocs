@@ -156,7 +156,7 @@
 "_signingErrorMessage2":"Ververs a.u.b. de pagina.",
 "_signingErrorReload":"Ververs pagina",
 "_signingInProgressDontCloseWindow":"We zijn nog steeds bezig met het opslaan van uw handtekening. Indien u deze pagina verlaat kan het zo zijn dat we het proces niet kunnen voltooien.",
-"_signingStartedDontCloseWindow":"",
+"_signingStartedDontCloseWindow":"U heeft het document nog niet ondertekend. Wilt u de pagina verlaten zonder te ondertekenen?",
 "_signinginprogressmodalAction1":"Het verzamelde bewijs opslaat",
 "_signinginprogressmodalAction2":"Uw handtekening registreert",
 "_signinginprogressmodalTitle":"U heeft ondertekend",
