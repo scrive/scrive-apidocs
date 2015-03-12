@@ -242,7 +242,7 @@
 "_changeEmailModalTitle":"Change email",
 "_changeEmailRequestAcceptText":"Change",
 "_changeEmailRequestButtonText":"Change",
-"_changeEmailRequestExplanation":"Your email and user name are the same in Scrive. By changing the email you will also change the username for logging in. To verify your new address we will send you a confirmation email. Please follow the instructions in the email to complete the change.",
+"_changeEmailRequestExplanation":"Your email and username are the same in Scrive. By changing the email you will also change the username for logging in. To verify your new address we will send you a confirmation email. Please follow the instructions in the email to complete the change.",
 "_changeEmailRequestTitle":"Change username and email",
 "_changeMobileModalAcceptButton":"Save and send",
 "_changeMobileModalAcceptInvalidMobileFlash":"The phone number is incorrectly formatted. Correct format is +46123456789",
