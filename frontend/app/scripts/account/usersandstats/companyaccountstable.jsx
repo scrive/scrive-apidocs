@@ -67,17 +67,17 @@ var openCreateAccountPopup = function(callback) {
                                 new FlashMessage({type : "error", content : localization.account.companyAccounts.companyInviteNotSent});
                           }
                           popup.close();
+                          HubSpot.track(HubSpot.FORM_INVITE,
+                                        { "email" : email.val(),
+                                          "language" : Language.current(),
+                                          "scrive_domain" : location.hostname,
+                                          "signup_method" : "CompanyInvitation",
+                                          "firstname" : fstname.val(),
+                                          "lastname" : sndname.val() }, true);
                         },
                         mixpanel : {name : 'Accept',  props : {'Accept' : 'new account'}}
                     }).sendAjax();
 
-                    HubSpot.track(HubSpot.FORM_INVITE,
-                                  { "email" : email.val(),
-                                    "language" : Language.current(),
-                                    "scrive_domain" : location.hostname,
-                                    "signup_method" : "CompanyInvitation",
-                                    "firstname" : fstname.val(),
-                                    "lastname" : sndname.val() }, true);
                  }
               },
               title : localization.account.companyAccounts.createNewModalTitle,
