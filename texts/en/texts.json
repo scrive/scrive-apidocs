@@ -232,7 +232,7 @@
 "_brandingUseExistingOrCreateNewTheme":"Select a theme or create a new",
 "_button":"Try sending a sample document",
 "_cannotWithdrawAlreadySignedDocument":"The document can't be withdrawn since it is already signed.",
-"_cantSendReminderNoUser":"We could not send password reminder, because we don't have user with such email.",
+"_cantSendReminderNoUser":"A password reminder could not be sent since there is no user with this email address.",
 "_cantSendReminderTooMuch":"We have now sent too many password reminders to this email. Please wait 24h to try again.",
 "_changeEmail":"Change email",
 "_changeEmailModalAcceptButton":"Save and send",
