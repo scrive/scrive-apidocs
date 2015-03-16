@@ -8,7 +8,6 @@ define(['React', 'signview/create_account_section_view', 'doctools/docviewsignat
 
 var DocumentSignViewModel = Backbone.Model.extend({
   defaults : {
-    ignoredoclang : false,
     hasChangedPin: false
   },
   initialize : function(args){
@@ -39,9 +38,6 @@ var DocumentSignViewModel = Backbone.Model.extend({
   },
   signviewbranding : function() {
        return this.get("signviewbranding");
-  },
-  ignoredoclang : function() {
-       return this.get("ignoredoclang") == true;
   },
   isReady : function() {
       return this.document().ready() && this.document().mainfile() != undefined && this.signviewbranding().ready();
@@ -506,13 +502,6 @@ var DocumentSignViewView = Backbone.View.extend({
          return this;
      }
 
-     if (!this.model.ignoredoclang() && Language.current() != view.model.document().lang().simpleCode()) {
-         Language.changeOnCurrentPage(view.model.document().lang().simpleCode() ,function() {
-           view.render();
-        });
-        return this;
-     }
-
      if (this.subcontainer != undefined) this.subcontainer.detach();
 
      var subcontainerWrapper = $("<div class='subcontainerWrapper'/>").appendTo(this.container);
@@ -571,8 +560,7 @@ window.DocumentSignView = function(args){
         this.signviewbranding =  args.signviewbranding;
         this.model = new DocumentSignViewModel( {
                         document : new Document({ id: args.id, viewer: args.viewer }),
-                        signviewbranding : this.signviewbranding,
-                        ignoredoclang : args.ignoredoclang
+                        signviewbranding : this.signviewbranding
                     });
         this.view = new DocumentSignViewView({
                         model: this.model,

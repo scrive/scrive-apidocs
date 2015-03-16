@@ -231,20 +231,22 @@ handleSignShowSaveMagicHash did sid mh = do
 {-# NOINLINE handleSignShow #-}
 handleSignShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 handleSignShow documentid signatorylinkid = do
-  ctx <- getContext
-
   mmagichash <- dbQuery $ GetDocumentSessionToken signatorylinkid
 
   case mmagichash of
     Just magichash ->
       dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash documentid signatorylinkid magichash) `withDocumentM` do
         invitedlink <- guardJust . getSigLinkFor signatorylinkid =<< theDocument
-        switchLangWhenNeeded  (Just invitedlink) =<< theDocument
+        -- We will switch to document langauge if no one is logged in or logged in user doesn't match signatory
+        ctx <- getContext
+        when (isNothing (ctxmaybeuser ctx) || not (isSigLinkFor (ctxmaybeuser ctx) invitedlink)) $  do
+          switchLang . getLang =<< theDocument
+        ctx' <- getContext -- NOTE We need to refresh ctx since it could change with switchLang
         unlessM ((isTemplate ||^ isPreparation ||^ isClosed) <$> theDocument) $ do
-          dbUpdate . MarkDocumentSeen signatorylinkid magichash =<< signatoryActor ctx invitedlink
+          dbUpdate . MarkDocumentSeen signatorylinkid magichash =<< signatoryActor ctx' invitedlink
           triggerAPICallbackIfThereIsOne =<< theDocument
         ad <- getAnalyticsData
-        content <- theDocument >>= \d -> pageDocumentSignView ctx d invitedlink ad
+        content <- theDocument >>= \d -> pageDocumentSignView ctx' d invitedlink ad
         simpleHtmlResonseClrFlash content
     Nothing -> handleCookieFail signatorylinkid documentid
 
@@ -264,13 +266,14 @@ handleToStartShow documentid = checkUserTOSGet $ do
 {-# NOINLINE handleSignPadShow #-}
 handleSignPadShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 handleSignPadShow documentid signatorylinkid = do
-  ctx <- getContext
   mmagichash <- dbQuery $ GetDocumentSessionToken signatorylinkid
   case mmagichash of
     Just magichash ->
       dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash documentid signatorylinkid magichash) `withDocumentM` do
+        -- We always switch to document langauge in case of pad signing
+        switchLang . getLang =<< theDocument
+        ctx <- getContext -- | Order is important since ctx after switchLang changes
         invitedlink <- guardJust . getSigLinkFor signatorylinkid =<< theDocument
-        switchLangWhenNeeded  (Just invitedlink) =<< theDocument
         unlessM ((isTemplate ||^ isPreparation ||^ isClosed) <$> theDocument) $ do
           dbUpdate . MarkDocumentSeen signatorylinkid magichash =<< signatoryActor ctx invitedlink
           triggerAPICallbackIfThereIsOne =<< theDocument
@@ -634,13 +637,7 @@ prepareEmailPreview docid slid = do
          _ -> fail "prepareEmailPreview"
     runJSONGenT $ J.value "content" content
 
--- | Switch to document language. Checks first if there is not logged in user. If so it will switch only if this is a different signatory.
-switchLangWhenNeeded :: (Kontrakcja m) => Maybe SignatoryLink -> Document -> m ()
-switchLangWhenNeeded mslid doc = do
-  cu <- ctxmaybeuser <$> getContext
-  when (isNothing cu || ((isJust mslid) && not (isSigLinkFor cu mslid))) $ switchLang (getLang doc)
 -- GuardTime verification page. This can't be external since its a page in our system.
-
 -- withAnonymousContext so the verify page looks like the user is not logged in
 -- (e.g. for default footer & header)
 handleShowVerificationPage :: Kontrakcja m =>  m Response

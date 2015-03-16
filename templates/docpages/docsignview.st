@@ -80,11 +80,8 @@ $htmlopentag()$
               jQuery(function(){
                   var docview = new DocumentSignView({
                       id:"$documentid$",
-                      signviewbranding : svb
-                      $if(usestandardheaders)$
-                      ,  ignoredoclang : true
-                      $endif$
-                      , viewer : new DocumentViewer({
+                      signviewbranding : svb,
+                      viewer : new DocumentViewer({
                           signatoryid : "$siglinkid$"
                          })
                   });
