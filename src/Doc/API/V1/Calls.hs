@@ -24,8 +24,7 @@ import Data.Char
 import Data.Int
 import Data.List
 import Data.Maybe
-import Data.String.Utils (replace)
-import Data.String.Utils (splitWs)
+import Data.String.Utils (replace,splitWs, strip)
 import Data.Time
 import Happstack.Server.RqData
 import Happstack.Server.Types
@@ -380,7 +379,7 @@ apiCallV1Reject did slid = api $ do
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
     ctx <- getContext
     Just sll <- getSigLinkFor slid <$> theDocument
-    customtext <- getField "customtext"
+    customtext <- fmap strip <$> getField "customtext"
     switchLang . getLang =<< theDocument
     (dbUpdate . RejectDocument slid customtext =<< signatoryActor ctx sll)
         `catchKontra` (\(DocumentStatusShouldBe _ _ i) -> throwIO . SomeKontraException $ conflictError $ "Document not pending but " ++ show i)
