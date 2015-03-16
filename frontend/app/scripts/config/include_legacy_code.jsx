@@ -15,7 +15,6 @@ define([
   '../libs/livequery',
   '../libs/recurly',
   '../libs/iso8601.min',
-  '../libs/html2canvas',
   '../js/utils/browserinfo',
   '../js/utils/cookie',
   '../js/global',

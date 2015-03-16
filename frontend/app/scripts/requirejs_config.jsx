@@ -28,6 +28,7 @@ var require = {
     moment: '../bower_components/moment/min/moment-with-langs.min',
     StateMachine: '../bower_components/javascript-state-machine/state-machine',
     tinycolor : '../libs/tinycolor-min',
+    html2canvas: '../libs/html2canvas',
     /**
      *  Legacy code imports
      */

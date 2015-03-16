@@ -155,4 +155,3 @@ textToBeSigned :: TemplatesMonad m => Document -> m String
 textToBeSigned doc@Document{..} = renderLocalTemplate doc "tbs" $ do
   F.value "document_title" $ documenttitle
   F.value "document_id"   $ show documentid
-  F.value "author_name"   $ getAuthorName doc

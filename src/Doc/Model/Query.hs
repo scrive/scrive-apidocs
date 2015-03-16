@@ -10,6 +10,7 @@ module Doc.Model.Query
   , GetDocumentsWithSoftLimit(..)
   , GetDocumentsIDs(..)
   , GetDocumentByDocumentID(..)
+  , GetDocumentForDave(..)
   , GetDocumentBySignatoryLinkID(..)
   , GetDocumentsBySignatoryLinkIDs(..)
   , GetDocumentByDocumentIDSignatoryLinkIDMagicHash(..)
@@ -152,6 +153,16 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentByDocumentID Document
       mapM_ sqlResult documentsSelectors
       sqlWhereDocumentIDIs did
       sqlWhereDocumentWasNotPurged
+
+-- Like GetDocumentByDocumentID, but also retrieves purged docs,
+-- only to be used for Dave
+data GetDocumentForDave = GetDocumentForDave DocumentID
+instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentForDave Document where
+  query (GetDocumentForDave did) = do
+    -- FIXME: Use domains/filters.
+    kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
+      mapM_ sqlResult documentsSelectors
+      sqlWhereDocumentIDIs did
 
 data GetDocumentBySignatoryLinkID = GetDocumentBySignatoryLinkID SignatoryLinkID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentBySignatoryLinkID Document where

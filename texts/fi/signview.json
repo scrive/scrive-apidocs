@@ -156,7 +156,7 @@
 "_signingErrorMessage2":"Lataa sivu uudelleen.",
 "_signingErrorReload":"Lataa sivu uudelleen",
 "_signingInProgressDontCloseWindow":"Me säilytämme edelleen allekirjoitustasi. jos haluat lähtä tältä sivulta, me emme pysty viimeistelemään prosessia.",
-"_signingStartedDontCloseWindow":"",
+"_signingStartedDontCloseWindow":"Et ole allekirjoittanut dokumenttia vielä. Haluatko poistua allekirjoittamatta?",
 "_signinginprogressmodalAction1":"Tallentaa kerätyt todisteet",
 "_signinginprogressmodalAction2":"Rekisteröi allekirjoituksesi",
 "_signinginprogressmodalTitle":"Olet allekirjoittanut",

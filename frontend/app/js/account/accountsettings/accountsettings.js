@@ -206,11 +206,16 @@ var AccountSettingsModel = Backbone.Model.extend({
     }
     var languageHasChanged = self.user().lang() != self.lang();
     this.updateProfile(function() {
-      if (languageHasChanged)
-        Language.changeOnCurrentPage(self.lang() , function() {
-                new FlashMessage({content : localization.account.accountDetails.detailSaved , type: 'success', withReload: true});
+      if (languageHasChanged) {
+         //Flash message after language change should be displayed in new language. This is why we are loading localization object in new language before reload.
+         $.ajax('/' + self.lang() + '/localization/'+window.versioncode +'.js', {
+           cache: false,
+           success: function(localization_script) {
+             eval(localization_script);
+             new FlashMessage({content : localization.account.accountDetails.detailSaved , type: 'success', withReload: true}); //
+           }
         });
-      else {
+      } else {
         new FlashMessage({content : localization.account.accountDetails.detailSaved , type: 'success', withReload: false});
         self.user().fetch({cache: false, processData: true});
       }

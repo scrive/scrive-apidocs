@@ -1,4 +1,4 @@
-define(['Backbone', 'legacy_code'], function() {
+define(['Backbone', 'html2canvas', 'legacy_code'], function(Backbone, html2canvas) {
 
 /* takeScreenshot(success, error, timeout, timeoutval):
     Render a canvas with current viewport and calls exactly one of three callbacks:
@@ -39,6 +39,9 @@ define(['Backbone', 'legacy_code'], function() {
         if(timeout)
             window.setTimeout(timedout, timeoutval);
 
+        if (window.html2canvas === undefined) {
+          window.html2canvas = html2canvas;
+        }
         html2canvas($('body'), {logging: true, type: 'view'}).then(function(canvas) {
           var newCanvas = scaleCanvas(canvas, 0.6); // smallest scale that still makes text readable
           canvas = null;

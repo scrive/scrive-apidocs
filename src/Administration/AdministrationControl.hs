@@ -619,7 +619,7 @@ daveDocument documentid = onlyAdmin $ do
     Log.mixlog_ $ "location: " ++ location
     if "/" `isSuffixOf` location
      then do
-      document <- dbQuery $ GetDocumentByDocumentID documentid
+      document <- dbQuery $ GetDocumentForDave documentid
       r <- renderTemplate "daveDocument" $ do
         F.value "daveBody" $  inspectXML document
         F.value "id" $ show documentid
