@@ -237,12 +237,13 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsWithSoftLimit (Int, 
           sqlLimit limit
         -- restrict them with the soft limit
         sqlWith "relevant_ids" . sqlSelect "selected_ids" $ do
+          sqlResult "ROW_NUMBER() OVER() AS position"
           sqlResult "id"
           sqlLimit soft_limit
         -- fetch total count of documents
         sqlResult $ "(SELECT COUNT(*) FROM selected_ids) AS total_count"
         -- and a list of them, restricted by the soft limit
-        sqlResult $ "ARRAY(SELECT (" <> mintercalate ", " documentsSelectors <> ")::document FROM relevant_ids JOIN documents USING (id)) AS documents"
+        sqlResult $ "ARRAY(SELECT (" <> mintercalate ", " documentsSelectors <> ")::document FROM relevant_ids ids JOIN documents USING (id) ORDER BY ids.position) AS documents"
 
 data GetDocumentsIDs = GetDocumentsIDs [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy]
 instance MonadDB m => DBQuery m GetDocumentsIDs [DocumentID] where
