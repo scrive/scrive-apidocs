@@ -30,6 +30,11 @@ return React.createClass({
       this.refs.checkbox.handleClick();
     }
   },
+  focus : function() {
+    if (this.isMounted() && this.refs.input != undefined) {
+      this.refs.input.focus();
+    }
+  },
   render: function() {
     var field = this.props.field;
     var readonly = field.isAuthorUnchangeableField();
@@ -60,7 +65,13 @@ return React.createClass({
           <div className="field-name">{(field.isMobile() && localization.phonePlaceholder) || field.nicename()}</div>
 
           {/*if*/ isTextField && 
-            <InfoTextInput value={field.value()} style={style} onChange={c} className={classes} readonly={readonly}/>
+            <InfoTextInput
+              ref="input"
+              value={field.value()}
+              style={style} onChange={c}
+              className={classes}
+              readonly={readonly}
+            />
           }
 
           {/*if*/ isCheckbox &&

@@ -57,9 +57,9 @@ $htmlopentag()$
                 doc = new Document({id: "$documentid$"});
                 doc.recall(function() {
                   var toStartDiv = jQuery('<div />');
-                  React.render(ToStart({document: doc, signviewbranding: svb}), toStartDiv[0]);
                   jQuery(".form-container").append(toStartDiv);
                   jQuery(".to-start").append(footerDiv);
+                  React.render(ToStart({document: doc, signviewbranding: svb}), toStartDiv[0]);
                 });
               });
 

@@ -16,6 +16,12 @@ return React.createClass({
       'sending': false
     };
   },
+  orderedSignatories : function() {
+    // Sort signatories so that the author ends up at the bottom of the form.
+    return _.sortBy(this.props.document.signatories(), function(sig) {
+      return sig.author() ? 1 : -1;
+    });
+  },
   finalClick: function() {
     var document = this.props.document;
     var signatories = document.signatories();
@@ -55,6 +61,19 @@ return React.createClass({
       });
     });
   },
+  componentDidMount: function() {
+    this.focusOfFirstField();
+  },
+  focusOfFirstField: function() {
+    var signatory =_.find(this.orderedSignatories(), function(s) {
+       return _.any(s.fields(), function(f) {
+         return !f.isSignature() && !f.isCheckbox() && !f.isAuthorUnchangeableField();
+       })
+    });
+    if (signatory && this.refs["signatory-" + signatory.id] != undefined) {
+      this.refs["signatory-" + signatory.id].focusOfFirstField();
+    }
+  },
   render: function() {
     var document = this.props.document;
     var signatories = document.signatories();
@@ -81,16 +100,11 @@ return React.createClass({
       return (<div className="authorview" ref="authorview"></div>);
     }
 
-    // Sort signatories so that the author ends up at the bottom of the form.
-    var authorLastInSignatories = _.sortBy(signatories, function(sig) {
-      return sig.author() ? 1 : -1;
-    });
-
     return (
       <div>
         <ToStartHeader document={document} />
 
-          {authorLastInSignatories.map(function(sig) {
+          {this.orderedSignatories().map(function(sig) {
             return (<ToStartSignatory key={"signatory-" + sig.id} ref={"signatory-" + sig.id} signatory={sig} signviewbranding={signviewbranding} />);
           })}
 

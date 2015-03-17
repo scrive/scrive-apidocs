@@ -46,21 +46,13 @@ return React.createClass({
 
     return "";
   },  
-
-  renderHeader: function() {
-    var signatory = this.props.signatory;
-    var imageSource = this.state.minified ? '/img/to-send/arrow-up.png' : '/img/to-send/arrow-down.png';
-
-    return (
-      <div className="header-container">
-        <h2 className="headline">{signatory.nameOrEmail() || signatory.nameForLists()}</h2>
-        <div onClick={this.toggleVisibility} className="arrow-container">
-          <div className="background">
-            <img className="arrow" src={imageSource} />
-          </div>
-        </div>
-      </div>
-    );
+  focusOfFirstField: function() {
+    var field =_.find(this.props.signatory.fields(), function(f) {
+      return !f.isSignature() && !f.isCheckbox() && !f.isAuthorUnchangeableField();
+    });
+     if (field && this.refs["field-" + field.cid] != undefined) {
+      this.refs["field-" + field.cid].focus();
+    }
   },
   render: function() {
     var signatory = this.props.signatory;
@@ -69,14 +61,31 @@ return React.createClass({
     var minified = this.state.minified;
     var containerClasses = "party-container " + (minified ? "minified" : "");
     var svb = this.props.signviewbranding;
+    var imageSource = this.state.minified ? '/img/to-send/arrow-up.png' : '/img/to-send/arrow-down.png';
 
     return (
       <div onClick={minified && this.toggleVisibility} className={containerClasses}>
 
-        {this.renderHeader()}
+        <div className="header-container">
+          <h2 className="headline">{signatory.nameOrEmail() || signatory.nameForLists()}</h2>
+          <div onClick={this.toggleVisibility} className="arrow-container">
+            <div className="background">
+              <img className="arrow" src={imageSource} />
+            </div>
+          </div>
+        </div>
 
         {fields.map(function(field) {
-          return (!field.isSignature() && <ToStartField key={signatory.id + field.name()} field={field} signviewbranding={svb} />);
+          if (!field.isSignature()) {
+            return (
+              <ToStartField
+                key={"field-" + field.cid}
+                ref={"field-" + field.cid}
+                field={field}
+                signviewbranding={svb}
+              />
+            );
+          }
         })}
 
         {/* if */ signatory.signs() && 
