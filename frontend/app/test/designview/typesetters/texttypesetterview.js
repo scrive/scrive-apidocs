@@ -66,6 +66,9 @@ define(["legacy_code", "backend", "util", "React", "common/select", "designview/
       util.clickSelectOption(fontSelect, 3);
       assert.equal(placement.fsrel(), FieldPlacementGlobal.fontSizeHuge / page.width(), "font should be huge");
 
+      // custom font
+      placement.setFSRel((FieldPlacementGlobal.fontSizeHuge + 10) / page.width());
+
       var done = TestUtils.findRenderedDOMComponentWithClass(typesetter, "button-small");
 
       // click done button.

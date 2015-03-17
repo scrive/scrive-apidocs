@@ -24,18 +24,20 @@ define(["legacy_code", "backend", "util", "React", "designview/typesetters/oblig
 
         var checkbox = TestUtils.findRenderedDOMComponentWithClass(obligatory, "checkbox");
 
+        var label = TestUtils.findRenderedDOMComponentWithTag(obligatory, "label");
+
         // make the checkbox unchecked.
         if (/checked/.test(checkbox.props.className)) {
-          TestUtils.Simulate.click(checkbox);
+          TestUtils.Simulate.click(label);
         }
 
         assert.ok(field.isOptional(), "field should now be optional.");
 
-        TestUtils.Simulate.click(checkbox);
+        TestUtils.Simulate.click(label);
 
         assert.ok(field.isObligatory(), "field should now be obligatory.");
 
-        TestUtils.Simulate.click(checkbox);
+        TestUtils.Simulate.click(label);
 
         assert.ok(field.isOptional(), "field should now be optional again.");
       });

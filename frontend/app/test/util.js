@@ -22,11 +22,12 @@ define(["legacy_code", "React"], function(legacy_code, React) {
     var options = {
       signatory: sig
       , type: "custom"
-      , name: id
+      , name: "field-" + id
       , obligatory: true
       , shouldbefilledbysender: sig.author()
     };
     var field = new Field(_.extend(options, fieldOptions));
+    field.addedByMe = true;
     sig.addField(field);
     var placement = new FieldPlacement({
       field: field

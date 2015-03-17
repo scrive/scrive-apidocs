@@ -7,6 +7,7 @@ window.TextPlacementPlacedView = Backbone.View.extend({
         var placement = this.model;
         var field =  placement.field();
         var signatory = field?field.signatory():placement.signatory();
+        var doc = signatory.document();
         this.arrow = args.arrow;
 
         this.model.bind('removed', this.clear, this);
@@ -14,6 +15,8 @@ window.TextPlacementPlacedView = Backbone.View.extend({
         this.model.bind('change:xrel change:yrel change:wrel change:hrel', this.updatePosition, this);
         this.model.bind('clean', this.closeTypeSetter);
         placement.bind('change', this.updateErrorBackground);
+
+        this.listenTo(doc, 'change:signatories', this.render);
 
         this.model.view = this;
         this.render();

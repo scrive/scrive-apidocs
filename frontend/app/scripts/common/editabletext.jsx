@@ -1,0 +1,83 @@
+/** @jsx React.DOM */
+
+/**
+ * An editable text component. Click on a text and a input box appears.
+ *
+ * Properties:
+      text        : string, the text that can be edited.
+      onSave      : function, callback with text as argument when save button is clicked,
+                    return true if it is valid input.
+ *
+ */
+
+define(["React", "common/button", "common/infotextinput", "legacy_code"], function (React, Button, InfoTextInput) {
+  var EditableText = React.createClass({
+    mixins: [React.addons.LinkedStateMixin],
+
+    propTypes: {
+      text: React.PropTypes.string.isRequired,
+      onSave: React.PropTypes.func.isRequired
+    },
+
+    getInitialState: function () {
+      return {
+        editing: false
+      };
+    },
+
+    edit: function () {
+      if (this.state.edit) {
+        return ;
+      }
+
+      this.setState({
+        edit: true,
+        text: this.props.text
+      }, function () {
+        this.refs.input.focus();
+      });
+    },
+
+    save: function () {
+      var text = this.refs.input.value().trim();
+      var valid = this.props.onSave(text);
+
+      if (valid) {
+        return this.setState({edit: false});
+      }
+    },
+
+    render: function () {
+      return (
+        <div className="editable-text" onClick={this.edit}>
+          {/* if */ this.state.edit &&
+            <span>
+              <span className="editable-text-input-container">
+                <InfoTextInput
+                  className="editable-text-input"
+                  value={this.props.text}
+                  ref="input"
+                />
+              </span>
+              <Button
+                size="tiny"
+                className="editable-text-save"
+                text={localization.save}
+                type="action"
+                onClick={this.save}
+              />
+            </span>
+          }
+          {/* else */ !this.state.edit &&
+            <span className="editable-text-text">
+              {this.props.text}
+              <img className="editable-text-icon" src="/img/edit-icon.png" />
+            </span>
+          }
+        </div>
+      );
+    }
+  });
+
+  return EditableText;
+});

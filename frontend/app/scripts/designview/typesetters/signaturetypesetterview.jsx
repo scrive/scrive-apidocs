@@ -3,9 +3,9 @@
 var imports = ["React", "designview/typesetters/typesettermixin",
                "designview/typesetters/signatoryselector",
                "designview/typesetters/obligatory", "designview/typesetters/done",
-               "legacy_code"];
+               "designview/typesetters/remove", "legacy_code"];
 
-define(imports, function (React, TypeSetterMixin, SignatorySelector, Obligatory, Done) {
+define(imports, function (React, TypeSetterMixin, SignatorySelector, Obligatory, Done, Remove) {
 
   return React.createClass({
     mixins: [TypeSetterMixin],
@@ -14,13 +14,8 @@ define(imports, function (React, TypeSetterMixin, SignatorySelector, Obligatory,
 
     horizontalOffset: FieldPlacementGlobal.signatureTypeSetterHorizontalOffset,
 
-    renderTitle: function () {
-      return localization.designview.signatureBoxSettings;
-    },
-
     renderBody: function () {
-      var self = this;
-      var field = self.props.model.field();
+      var field = this.props.model.field();
 
       return (
         <span>
@@ -32,6 +27,7 @@ define(imports, function (React, TypeSetterMixin, SignatorySelector, Obligatory,
           />
           <Obligatory field={field} />
           <Done field={field} onDone={this.done} />
+          <Remove model={this.props.model} onRemove={this.clear} />
         </span>
       );
     }

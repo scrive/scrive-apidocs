@@ -1,10 +1,9 @@
-/** @jsx React.DOM */
-
 var imports = ["jquery", "Underscore", "Backbone", "React",
                "common/backbone_mixin", "common/selfunmountmixin",
-               "legacy_code"];
+               "common/editabletext", "legacy_code"];
 
-define(imports, function ($, _, Backbone, React, BackboneMixin, SelfUnmountMixin) {
+define(imports, function ($, _, Backbone, React, BackboneMixin, SelfUnmountMixin, EditableText) {
+
   var Mixin = {
     mixins: [SelfUnmountMixin, BackboneMixin.BackboneMixin],
 
@@ -15,7 +14,22 @@ define(imports, function ($, _, Backbone, React, BackboneMixin, SelfUnmountMixin
 
     getBackboneModels: function () {
       var model = this.props.model;
-      return [model, model.field(), model.field().signatory().document()];
+      return [model, model.field(), model.field().signatory(), model.field().signatory().document()];
+    },
+
+    componentDidUpdate: function () {
+      var model = this.props.model;
+      var field = model.field();
+      var sig = field.signatory();
+      var fields = sig.fields();
+
+      if (sig.isRemoved) {
+        this.clear();
+      }
+
+      if (fields.indexOf(field) === -1) {
+        this.clear();
+      }
     },
 
     componentWillMount: function () {
@@ -60,13 +74,36 @@ define(imports, function ($, _, Backbone, React, BackboneMixin, SelfUnmountMixin
       this.clear();
     },
 
+    rename: function (name) {
+      var field = this.props.model.field();
+      var doc = field.signatory().document();
+
+      var allnames = [];
+      _.each(doc.signatories(), function (s) {
+        _.each(s.fields(), function (f) {
+          if (f !== field) {
+            allnames.push(f.name());
+          }
+        });
+      });
+
+      if (name === "") {
+        return true;
+      }
+
+      if (allnames.indexOf(name) < 0) {
+        field.setName(name);
+        return true;
+      }
+
+      new FlashMessage({type: "error", content: localization.designview.fieldWithSameNameExists});
+    },
+
     render: function () {
+      var field = this.props.model.field();
+
       var renderTitle = this.renderTitle;
       var renderBody = this.renderBody;
-
-      if (typeof renderTitle !== "function") {
-        throw new Error("TypeSetterMixin requires a renderTitle method");
-      }
 
       if (typeof renderBody !== "function") {
         throw new Error("TypeSetterMixin requires a renderBody method");
@@ -84,8 +121,10 @@ define(imports, function ($, _, Backbone, React, BackboneMixin, SelfUnmountMixin
         <div className="fieldTypeSetter-container" style={containerStyle}>
           <div className="fieldTypeSetter-arrow" />
           <div className="fieldTypeSetter-body">
-            <div className="title">{this.renderTitle()}</div>
-            {this.renderBody()}
+            <div className="title">
+              {renderTitle ? renderTitle() : <EditableText onSave={this.rename} text={field.name()} />}
+            </div>
+            {renderBody()}
           </div>
         </div>
       );

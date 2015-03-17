@@ -1,7 +1,5 @@
 /** @jsx React.DOM */
 
-/* Components and Mixins for creating typesetters */
-
 define(["Underscore", "Backbone", "React", "common/button", "legacy_code"], function (_, Backbone, React, Button) {
   var Done = React.createClass({
     propTypes: {
@@ -26,6 +24,7 @@ define(["Underscore", "Backbone", "React", "common/button", "legacy_code"], func
         <Button
           size="tiny"
           text={localization.designview.textFields.done}
+          type="action"
           className="fieldTypeSetter-button"
           onClick={this.handleClick}
         />

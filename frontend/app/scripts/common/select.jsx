@@ -86,7 +86,8 @@ var SelectModel = Backbone.Model.extend({
       optionsWidth : "200px",
       style : {},
       cssClass : "",
-      adjustHeightOnExpand : false
+      adjustHeightOnExpand : false,
+      inactive: false
 
   },
   initialize: function(args){
@@ -170,6 +171,9 @@ var SelectModel = Backbone.Model.extend({
   },
   adjustHeightOnExpand : function() {
      return this.get("adjustHeightOnExpand");
+  },
+  inactive : function () {
+    return this.get("inactive");
   }
 });
 
@@ -295,7 +299,9 @@ var SelectView = React.createClass({
     },
     handleExpand : function(e) {
       var model = this.props.model;
-      model.expand();
+      if (!model.inactive()) {
+        model.expand();
+      }
     },
     render: function() {
       var model = this.props.model;
@@ -313,8 +319,13 @@ var SelectView = React.createClass({
         mainStyle = _.extend(mainStyle,{height:  this.state.expandedComponent.totalHeight()});
       }
       var buttonStyle = {width: model.textWidth() + 6 + 21 + 'px'};
+      var inactiveClass = model.inactive() ? "inactive" : "";
+      var selectClass = React.addons.classSet({
+        "select": true,
+        "inactive": model.inactive()
+      });
       return (
-        <div className={'select ' + model.cssClass()}  style={mainStyle}
+        <div className={selectClass + ' ' + model.cssClass()}  style={mainStyle}
              onClick={this.handleExpand}
              onMouseEnter={this.handleMouseEnter}
              onMouseOut={this.handleMouseOut}
@@ -350,7 +361,8 @@ var Select = React.createClass({
       onSelect : React.PropTypes.func,
       onRemove : React.PropTypes.func,
       options: React.PropTypes.array.isRequired,
-      adjustHeightOnExpand : React.PropTypes.bool
+      adjustHeightOnExpand : React.PropTypes.bool,
+      inactive: React.PropTypes.bool
     },
     getInitialState: function() {
       return this.stateFromProps(this.props);
@@ -380,7 +392,8 @@ var Select = React.createClass({
         onSelect : props.onSelect,
         onRemove : props.onRemove,
         options: props.options,
-        adjustHeightOnExpand : props.adjustHeightOnExpand
+        adjustHeightOnExpand : props.adjustHeightOnExpand,
+        inactive: props.inactive
       });
       return {model: model};
     },

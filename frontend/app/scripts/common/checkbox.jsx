@@ -8,7 +8,7 @@
  * checked, a boolean representing if checked checked(=true)/unchecked(=false) state.
  * onChange, a callback function being called every time the checkbox is clicked.
  *
- * Example usage: 
+ * Example usage:
  * var checkbox = React.render(React.createElement(Checkbox.Checkbox,{
  *    checked: args.checked,
  *    label: args.label,
@@ -40,12 +40,12 @@ define(['React'], function(React) {
       });
 
       return (
-        <div className="checkbox-box" onClick={this.handleClick}>
-          <div className={classes} style={this.props.style} tabIndex="0" onKeyDown={this.handleKeyDn}>
+        <div className="checkbox-box">
+          <div onClick={this.handleClick} className={classes} style={this.props.style} tabIndex="0" onKeyDown={this.handleKeyDn}>
             <div className="checkmark" />
           </div>
           { this.props.label &&
-            <label>{this.props.label}</label>
+            <label onClick={this.handleClick}>{this.props.label}</label>
           }
         </div>
       );

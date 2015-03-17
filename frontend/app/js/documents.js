@@ -765,31 +765,30 @@ window.Document = Backbone.Model.extend({
             return sig.hasProblems();
         });
     },
-    newCheckboxName: function() {
-        var document = this;
-        var allnames = [];
-        _.each(document.signatories(), function(s) {
+    newNameWithIndex: function (prefix) {
+        var allnumbers = [];
+        _.each(this.signatories(), function(s) {
             _.each(s.fields(), function(f) {
-                allnames.push(f.name());
+                var name = f.name();
+                var match = /(\d+)$/.exec(name);
+                if (name.indexOf(prefix) > -1 && match && match[1]) {
+                  allnumbers.push(parseInt(match[1], 10));
+                }
             });
         });
+
         var i = 1;
-        while(_.contains(allnames, 'checkbox-' + i))
-            i++;
-        return 'checkbox-' + i;
+        while (_.contains(allnumbers, i)) {
+          i++;
+        }
+
+        return prefix + ' ' + i;
+    },
+    newCheckboxName: function() {
+        return this.newNameWithIndex(localization.designview.checkbox);
     },
     newSignatureName: function() {
-        var document = this;
-        var allnames = [];
-        _.each(document.signatories(), function(s) {
-            _.each(s.fields(), function(f) {
-                allnames.push(f.name());
-            });
-        });
-        var i = 1;
-        while(_.contains(allnames, 'signature-' + i))
-            i++;
-        return 'signature-' + i;
+        return this.newNameWithIndex(localization.designview.signature);
     },
     removeTypeSetters: function() {
         var document = this;

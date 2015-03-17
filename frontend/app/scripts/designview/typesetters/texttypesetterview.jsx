@@ -126,12 +126,11 @@ define(imports, function (_, React, Select, TypeSetterMixin, Done) {
       var model = this.props.model;
       var field = model.field();
 
-      if (field.isAuthorUnchangeableField()) {
-        if (field.isEmail()) {
-          return localization.designview.emailCanBeChangedInAccountSection;
-        }
-        return localization.designview.nameCanBeChangedInAccountSection;
+      if (field.isEmail()) {
+        return localization.designview.emailCanBeChangedInAccountSection;
       }
+
+      return localization.designview.nameCanBeChangedInAccountSection;
     },
 
     handleDone: function () {
@@ -162,6 +161,8 @@ define(imports, function (_, React, Select, TypeSetterMixin, Done) {
       var sig = field.signatory();
       var page = sig.document().mainfile().page(model.get("page"));
 
+      var options = this.obligatoryOptions();
+
       return (
         <span>
           {field.isAuthorUnchangeableField() &&
@@ -171,11 +172,12 @@ define(imports, function (_, React, Select, TypeSetterMixin, Done) {
             <div style={{display:"block", marginBottom: "5px"}}>
               <Select.Select
                 name={this.obligatorySelected()}
-                options={this.obligatoryOptions()}
+                options={options}
                 optionsWidth={"218px"}
                 textWidth={191}
                 cssClass={"typesetter-obligatory-option"}
                 style={{fontSize: "16px"}}
+                inactive={options.length === 0}
               />
             </div>
           }

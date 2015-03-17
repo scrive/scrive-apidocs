@@ -1,3 +1,4 @@
 [
-  "./app/scripts/designview/typesetters/*.jsx"
+  "./app/scripts/designview/typesetters/*.jsx",
+  "./app/scripts/common/editabletext.jsx"
 ]

@@ -324,6 +324,7 @@ javascriptLocalisation =
                       obligatory: "$_textFieldObligatory()$"
                     , forThis : "$_textFieldFor()$"
                     , done : "$_textFieldDone()$"
+                    , remove : "$_textFieldRemove()$"
              }
              , checkboxes : {
                       checkbox : "$_checkboxCheckbox()$"
@@ -392,6 +393,7 @@ javascriptLocalisation =
              , signatureBoxSettings: "$_designViewSignatureBoxSettings()$"
              , freeTextBox: "$_designViewFreeTextBox()$"
              , checkbox: "$_checkBoxFieldName()$"
+             , signature: "$_signatureFieldName()$"
              , removeThisDocument: "$_designViewRemoveThisDocument()$"
              , attached : "$_designViewAttached()$"
              , attachmentRequestedFrom : "$_designViewAttachmentRequestedFrom()$"

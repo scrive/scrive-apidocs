@@ -3,9 +3,9 @@
 var imports = ["React", "common/checkbox", "designview/typesetters/typesettermixin",
                "designview/typesetters/signatoryselector",
                "designview/typesetters/obligatory", "designview/typesetters/done",
-               "legacy_code"];
+               "designview/typesetters/remove", "legacy_code"];
 
-define(imports, function (React, Checkbox, TypeSetterMixin, SignatorySelector, Obligatory, Done) {
+define(imports, function (React, Checkbox, TypeSetterMixin, SignatorySelector, Obligatory, Done, Remove) {
 
   return React.createClass({
     mixins: [TypeSetterMixin],
@@ -26,10 +26,6 @@ define(imports, function (React, Checkbox, TypeSetterMixin, SignatorySelector, O
       } else {
         field.setValue("");
       }
-    },
-
-    renderTitle: function () {
-      return localization.designview.checkboxes.checkbox;
     },
 
     renderBody: function () {
@@ -53,6 +49,7 @@ define(imports, function (React, Checkbox, TypeSetterMixin, SignatorySelector, O
           </div>
           <Obligatory field={field} />
           <Done field={field} onDone={this.done} />
+          <Remove model={this.props.model} onRemove={this.clear} />
         </span>
       );
     }

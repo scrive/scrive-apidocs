@@ -14,9 +14,8 @@ define(["Backbone", "React", "common/select", "legacy_code"], function (Backbone
       var field = this.props.field;
 
       mixpanel.track("Choose signature signatory");
-      field.signatory().deleteField(field);
-      field.setSignatory(s);
-      s.addField(field);
+
+      field.moveToSignatory(s);
 
       if (this.props.onSelect) {
         this.props.onSelect(s);

@@ -103,6 +103,11 @@ window.Field = Backbone.Model.extend({
         sig.bind('removed', this.remove);
         return this;
     },
+    moveToSignatory: function (sig) {
+      this.signatory().deleteField(this);
+      this.setSignatory(sig);
+      sig.addField(this);
+    },
     canBeIgnored: function(){
         return this.value() == "" && this.placements().length == 0 && (this.isStandard() || this.isSignature());
     },

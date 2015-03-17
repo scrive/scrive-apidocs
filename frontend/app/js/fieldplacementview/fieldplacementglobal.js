@@ -50,7 +50,7 @@ FieldPlacementGlobal.signaturePlacementLeftMargin = FieldPlacementGlobal.placeme
 /* Offsets for type setter placements */
 FieldPlacementGlobal.textTypeSetterVerticalOffset = -19;
 FieldPlacementGlobal.textTypeSetterArrowOffset = 18;
-FieldPlacementGlobal.checkboxTypeSetterHorizontalOffset = 32;
+FieldPlacementGlobal.checkboxTypeSetterHorizontalOffset = 22;
 FieldPlacementGlobal.checkboxTypeSetterVerticalOffset = -22;
 FieldPlacementGlobal.signatureTypeSetterHorizontalOffset = 18;
 FieldPlacementGlobal.signatureTypeSetterVerticalOffset = -19;

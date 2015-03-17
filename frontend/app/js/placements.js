@@ -111,6 +111,16 @@ window.FieldPlacement = Backbone.Model.extend({
        this.off();
        this.die();
     },
+    removeField: function () {
+      var placement = this;
+      var field = placement.field();
+      var sig = field.signatory();
+
+      if (field && field.addedByMe && field.value() === "" && field.placements().length <= 1) {
+        sig.deleteField(field);
+        placement.setField(undefined);
+      }
+    },
     fixWHRel : function(w,h) {
       var page =  this.field().signatory().document().mainfile().page(this.get("page"));
       if (page != undefined && page.width() != undefined && page.height() != undefined) {

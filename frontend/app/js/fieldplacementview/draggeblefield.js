@@ -104,18 +104,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
             $('html').css('overflow-x', 'auto');
             if( placement!=undefined && !droppedInside ) {
                 placement.remove();
-                var f = placement.field();
-                var s = f.signatory();
-                if(f &&
-                   f.addedByMe &&
-                   f.value() === '' &&
-                   f.placements().length <= 1) {
-                    s.deleteField(field);
-                    placement.setField(undefined);
-                    f.removePlacement(placement);
-
-                }
-
+                placement.removeField();
             }
             else if( dragHandler.hasClass("placedfield")) {
                 dragHandler.show();
