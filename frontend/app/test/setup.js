@@ -48,6 +48,7 @@ var requirejsConfig = {
     tinyMCE_noneeditable: '../libs/tiny_mce/plugins/noneditable/plugin.min',
     tinyMCE_paste: '../libs/tiny_mce/plugins/paste/plugin.min',
     tinycolor : '../libs/tinycolor-min',
+    html2canvas: '../libs/html2canvas',
     /**
      *  Legacy code imports
      */
