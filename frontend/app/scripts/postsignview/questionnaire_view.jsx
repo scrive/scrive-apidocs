@@ -58,6 +58,8 @@ define(['React', 'StateMachine', 'postsignview/questionnaire_question_views','co
               extraMixpanelProperties['Others in your organisation information wanted'] = true;
               HubSpot.track(HubSpot.FORM_NO_SENDS_DOCS, hubspotData);
             } else if (to === 'Done' && event === 'yes' && from === 'DemoCta') {
+              // @devnote just add the phone number 
+              hubspotData = _.extend(hubspotData, { "phone":  self.phoneNumber });
               HubSpot.track(HubSpot.FORM_YES_SENDS_DOCS, hubspotData);
             }
 
