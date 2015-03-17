@@ -272,7 +272,7 @@ handleSignPadShow documentid signatorylinkid = do
       dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash documentid signatorylinkid magichash) `withDocumentM` do
         -- We always switch to document langauge in case of pad signing
         switchLang . getLang =<< theDocument
-        ctx <- getContext -- | Order is important since ctx after switchLang changes
+        ctx <- getContext -- Order is important since ctx after switchLang changes
         invitedlink <- guardJust . getSigLinkFor signatorylinkid =<< theDocument
         unlessM ((isTemplate ||^ isPreparation ||^ isClosed) <$> theDocument) $ do
           dbUpdate . MarkDocumentSeen signatorylinkid magichash =<< signatoryActor ctx invitedlink
