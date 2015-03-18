@@ -14,10 +14,10 @@ import DB
 
 messengerTables :: [Table]
 messengerTables = [
-    tableSMSes
-  , tableSMSEvents
+    tableMessengerWorkers
   , tableMessengerJobs
-  , tableMessengerWorkers
+  , tableSMSes
+  , tableSMSEvents
   ]
 
 ----------------------------------------
