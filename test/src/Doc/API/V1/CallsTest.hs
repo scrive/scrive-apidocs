@@ -1,4 +1,4 @@
-module DocAPITest (docAPITests) where
+module Doc.API.V1.CallsTest (apiV1CallsTests) where
 
 import Control.Applicative
 import Control.Monad
@@ -26,8 +26,8 @@ import User.Model
 import Util.HasSomeUserInfo
 import Utils.Default
 
-docAPITests :: TestEnvSt -> Test
-docAPITests env = testGroup "DocAPI" $
+apiV1CallsTests :: TestEnvSt -> Test
+apiV1CallsTests env = testGroup "CallsAPIV1" $
   map (\d -> testThat (d ++ " updates correctly") env (void $ testUpdateDoc d)) jsonDocs
   ++ [
     testThat "settings auto reminder works" env testSetAutoReminder
