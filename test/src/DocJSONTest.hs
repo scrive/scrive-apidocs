@@ -155,9 +155,9 @@ removeValues (Number _) = Number 0
 removeValues (Bool _)   = Bool False
 removeValues Null       = Null
 
-getDocKey :: Text -> Value -> Maybe Value
-getDocKey k (Object doc) = H.lookup k doc
-getDocKey _ _ = Nothing
+_getDocKey :: Text -> Value -> Maybe Value
+_getDocKey k (Object doc) = H.lookup k doc
+_getDocKey _ _ = Nothing
 
 setDocKey :: Text -> Value -> Value -> Value
 setDocKey k n v = overDocKey k (const n) v
