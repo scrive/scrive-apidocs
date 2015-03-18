@@ -93,7 +93,7 @@ testFromTemplateAndReadySimple = do
   reqUpdate <- mkRequestWithHeaders POST [("json", inTextBS strDoc)] []
   (resUpdate, _) <- runTestKontra reqUpdate ctx $ apiCallV1Update did
   assertEqual "We should get a 200 response" 200 (rsCode resUpdate)
-  _ <- testJSONWith "test/json/test_createFromFile.json" (rsBody resUpdate) docUnjsonDef
+  _ <- testJSONWith "test/json/test_createFromFileAndSavedAsTemplate.json" (rsBody resUpdate) docUnjsonDef
 
   reqFromTemplate <- mkRequestWithHeaders POST [] []
   (resFromTemplate, _) <- runTestKontra reqFromTemplate ctx $ apiCallV1CreateFromTemplate did
@@ -185,7 +185,7 @@ removeDynamicValues :: Value -> Value
 removeDynamicValues (Object m) = Object $ H.map removeDynamicValues $ filterOutDynamicKeys m
   where
     filterOutDynamicKeys hm = H.filterWithKey (\k _ -> not $ k `elem` dynamicKeys) hm
-    dynamicKeys = ["id", "accesstoken", "time", "ctime", "ntime", "userid"]
+    dynamicKeys = ["id", "accesstoken", "time", "ctime", "ntime", "userid", "timeouttime", "objectversion"]
 removeDynamicValues (Array v)  = Array  (V.map removeDynamicValues v)
 removeDynamicValues v = v
 

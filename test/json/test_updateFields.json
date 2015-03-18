@@ -1,9 +1,9 @@
 {
  "id": "9179748218119247499",
- "title": "C&C - An Explanation of Type Inference for ML_Haskell",
+ "title": "simple",
  "file": {
   "id": "9215148251416960524",
-  "name": "C&C - An Explanation of Type Inference for ML_Haskell.pdf"
+  "name": "simple.pdf"
  },
  "sealedfile": null,
  "authorattachments": [],
@@ -38,7 +38,7 @@
     {
      "type": "standard",
      "name": "fstname",
-     "value": "",
+     "value": "Jonathan",
      "closed": false,
      "obligatory": true,
      "shouldbefilledbysender": true,
@@ -47,7 +47,7 @@
     {
      "type": "standard",
      "name": "sndname",
-     "value": "",
+     "value": "Jounty",
      "closed": false,
      "obligatory": true,
      "shouldbefilledbysender": true,
@@ -56,7 +56,7 @@
     {
      "type": "standard",
      "name": "email",
-     "value": "jonathan+dev@scrive.com",
+     "value": "jonathan@scrive.com",
      "closed": false,
      "obligatory": true,
      "shouldbefilledbysender": true,
@@ -93,11 +93,11 @@
  "showrejectoption": true,
  "showfooter": true,
  "invitationmessage": "<p>424242</p>",
- "confirmationmessage": "<p>242424</p>",
- "lang": "gb",
+ "confirmationmessage": "<p>363636</p>",
+ "lang": "sv",
  "tags": [],
- "apicallbackurl": "363636",
- "saved": true,
+ "apicallbackurl": "242424",
+ "saved": false,
  "deleted": false,
  "reallydeleted": false,
  "canperformsigning": false,
