@@ -1,9 +1,9 @@
 {
  "id": "42331",
- "title": "chord_sigcomm",
+ "title": "simple",
  "file": {
   "id": "52481",
-  "name": "chord_sigcomm.pdf"
+  "name": "simple.pdf"
  },
  "sealedfile": null,
  "authorattachments": [],
@@ -38,7 +38,7 @@
     {
      "type": "standard",
      "name": "fstname",
-     "value": "",
+     "value": "Jonathan",
      "closed": false,
      "obligatory": true,
      "shouldbefilledbysender": true,
@@ -47,7 +47,7 @@
     {
      "type": "standard",
      "name": "sndname",
-     "value": "",
+     "value": "Jounty",
      "closed": false,
      "obligatory": true,
      "shouldbefilledbysender": true,
@@ -97,7 +97,7 @@
  "lang": "sv",
  "tags": [],
  "apicallbackurl": null,
- "saved": true,
+ "saved": false,
  "deleted": false,
  "reallydeleted": false,
  "canperformsigning": false,

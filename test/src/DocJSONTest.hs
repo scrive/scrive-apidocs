@@ -26,13 +26,14 @@ import Doc.DocumentID (unsafeDocumentID)
 docJSONTests :: TestEnvSt -> Test
 docJSONTests env = testGroup "DocJSON"
   [ testThat "Test JSON structure for API V1 'createfromfile' and 'ready'" env testFromFileAndReadySimple
+  , testThat "Test JSON structure for API V1 'createfromfile' and 'update' with result is the same just createfromfile" env testFromFileAndUpdate
   , testThat "Test JSON structure for API V1 'createfromtemplate' and 'ready'" env testFromTemplateAndReadySimple
   , testThat "Test JSON structure for API V1 is consistent after 'update'" env testUpdateFields
   ]
 
 testFromFileAndReadySimple :: TestEnv ()
 testFromFileAndReadySimple = do
-  user <- addNewRandomUser
+  (Just user)  <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
 
   reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
@@ -49,9 +50,31 @@ testFromFileAndReadySimple = do
   _ <- testJSONWith "test/json/test_ready.json" (rsBody resReady) docUnjsonDef
   return ()
 
+testFromFileAndUpdate :: TestEnv ()
+testFromFileAndUpdate = do
+  (Just user)  <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
+
+  reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
+                                        -- FIXME make this random-ish file
+                                      , ("file", inFile "test/pdfs/simple.pdf")
+                                      ] []
+  (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  assertEqual "We should get a 201 response" 201 (rsCode resDoc)
+  doc <- testJSONWith "test/json/test_createFromFile.json" (rsBody resDoc) docUnjsonDef
+  let did = unsafeDocumentID $ fromInt64AsString $ docid doc
+
+  reqUpdate <- mkRequestWithHeaders POST [("json", inTextBS $ rsBody resDoc)] []
+  (resUpdate, _) <- runTestKontra reqUpdate ctx $ apiCallV1Update did
+  assertEqual "We should get a 200 response" 200 (rsCode resUpdate)
+  _ <- testJSONWith "test/json/test_createFromFile.json" (rsBody resUpdate) docUnjsonDef
+
+  return ()
+
+
 testFromTemplateAndReadySimple :: TestEnv ()
 testFromTemplateAndReadySimple = do
-  user <- addNewRandomUser
+  (Just user)  <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
 
   reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
@@ -86,7 +109,7 @@ testFromTemplateAndReadySimple = do
 
 testUpdateFields :: TestEnv ()
 testUpdateFields = do
-  user <- addNewRandomUser
+  (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
 
   reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
@@ -145,6 +168,8 @@ testJSONWith fp jsonBS useUnjsonDef = do
   -- 2) Check that Null fields match, regardless of what their type "should" be
   assertEqual ("JSON structure and types (including 'null') should match that in " ++ fp)
               (removeValues jsonFile) (removeValues value)
+  assertEqual ("JSON structure and values should match if we will remove dynamic values (like documentid or mtime) " ++ fp)
+              (removeDynamicValues jsonFile) (removeDynamicValues value)
   return doc
 
 removeValues :: Value -> Value
@@ -154,6 +179,16 @@ removeValues (String _) = String ""
 removeValues (Number _) = Number 0
 removeValues (Bool _)   = Bool False
 removeValues Null       = Null
+
+
+removeDynamicValues :: Value -> Value
+removeDynamicValues (Object m) = Object $ H.map removeDynamicValues $ filterOutDynamicKeys m
+  where
+    filterOutDynamicKeys hm = H.filterWithKey (\k _ -> not $ k `elem` dynamicKeys) hm
+    dynamicKeys = ["id", "accesstoken", "time", "ctime", "ntime", "userid"]
+removeDynamicValues (Array v)  = Array  (V.map removeDynamicValues v)
+removeDynamicValues v = v
+
 
 _getDocKey :: Text -> Value -> Maybe Value
 _getDocKey k (Object doc) = H.lookup k doc
