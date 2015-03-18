@@ -180,7 +180,12 @@ return React.createClass({
                 name: localization.archive.documents.csv.action,
                 onSelect : function(listmodel) {
                   mixpanel.track('Download CSV');
-                  var url =  listmodel.url + "?";
+                  var url;
+                  if (listmodel.url.indexOf('?') === -1) {
+                    url = listmodel.url + "?";
+                  } else {
+                    url = listmodel.url + "&";
+                  }
                   var params =  listmodel.urlParams();
                   _.each(params,function(a,b){url+=(b+"="+a+"&")});
                     window.open(url + "format=csv");
