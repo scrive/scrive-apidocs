@@ -30,9 +30,13 @@ handleGlobalMouthEvents = flip E.catch (\(e :: SomeException) -> Log.mixlog_ (sh
   Log.mixlog_ $ "   xdelivered=" ++ xdelivered
   Log.mixlog_ $ "   xreason=" ++ xreason
 
-  let event = case xdelivered of
-                "true" -> SMSDelivered
-                "false" -> SMSUndelivered xreason
+  let event = case (xdelivered, xreason) of
+                ("true", _) -> SMSDelivered
+                -- If GM throttles our smses because we send too many for our quotas,
+                -- they return this event, but we can safely ignore it, because GM
+                -- will continue attempts to deliver it once our quotas allow it.
+                ("false", "Throttling error (ESME has exceeded allowed message limits)") -> SMSDelivered
+                ("false", _) -> SMSUndelivered xreason
                 _ -> error "Unknown report"
 
   case xref of
