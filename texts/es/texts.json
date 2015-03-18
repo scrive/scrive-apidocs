@@ -232,7 +232,7 @@
 "_brandingUseExistingOrCreateNewTheme":"Seleccionar un tema o crear uno nuevo",
 "_button":"Intente enviar un documento de prueba",
 "_cannotWithdrawAlreadySignedDocument":"El documento no puede ser retirado debido a que ya ha sido firmado.",
-"_cantSendReminderNoUser":"No pudimos enviar el recordatorio de contraseña, porque no tenemos un usuario con dicho email. ",
+"_cantSendReminderNoUser":"",
 "_cantSendReminderTooMuch":"Hemos enviado ahora muchos recordatorios de contraseñas a este email. Por favor espere 24h para intentarlo de nuevo. ",
 "_changeEmail":"Cambiar email",
 "_changeEmailModalAcceptButton":"Guardar y enviar",
