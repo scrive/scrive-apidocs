@@ -88,9 +88,9 @@ define(['React'], function(React) {
       return this.state.value;
     },
     focus : function() {
-      $("input",this.getDOMNode()).focus();
+      $(this.refs.input.getDOMNode()).focus();
       //After calling focus - custor is sometimes at begining of text. If we will set the value to what is there - custor will be placed at the end
-      $("input",this.getDOMNode()).val($("input",this.getDOMNode()).val());
+      $(this.refs.input.getDOMNode()).val($(this.refs.input.getDOMNode()).val());
     },
     onFocus : function() {
       this.setState({focus : true});
@@ -146,6 +146,7 @@ define(['React'], function(React) {
             onBlur={this.onBlur}
             onChange={this.onChange}
             onKeyDown={this.onKeyDown}
+            ref="input"
           />
 
            {/*if*/ this.props.onRemove != undefined &&

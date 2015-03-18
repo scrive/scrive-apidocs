@@ -68,7 +68,7 @@ return React.createClass({
     var signatory =_.find(this.orderedSignatories(), function(s) {
        return _.any(s.fields(), function(f) {
          return !f.isSignature() && !f.isCheckbox() && !f.isAuthorUnchangeableField();
-       })
+       });
     });
     if (signatory && this.refs["signatory-" + signatory.id] != undefined) {
       this.refs["signatory-" + signatory.id].focusOfFirstField();

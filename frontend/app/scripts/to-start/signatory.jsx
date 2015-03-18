@@ -50,7 +50,7 @@ return React.createClass({
     var field =_.find(this.props.signatory.fields(), function(f) {
       return !f.isSignature() && !f.isCheckbox() && !f.isAuthorUnchangeableField();
     });
-     if (field && this.refs["field-" + field.cid] != undefined) {
+    if (field && this.refs["field-" + field.cid] != undefined) {
       this.refs["field-" + field.cid].focus();
     }
   },
