@@ -357,8 +357,8 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
           }
         }
 
-        // Yearly has a rebate, monthly pays 111% of yearly price
-        var price = Math.round(localization.payments.plans[view.plan].price[currency] * (model.yearlyprices() ? 1 : 1.11111));
+        // Yearly has a rebate, monthly pays 125% of yearly price
+        var price = Math.round(localization.payments.plans[view.plan].price[currency] * (model.yearlyprices() ? 1 : 1.25));
         var thousands = Math.floor(price / 1000);
 
         if (thousands) {
