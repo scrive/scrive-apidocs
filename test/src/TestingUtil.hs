@@ -21,7 +21,6 @@ import Test.QuickCheck
 import Test.QuickCheck.Gen
 import Text.JSON
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Text as T
 import qualified Test.HUnit as T
@@ -267,9 +266,9 @@ nonemptybs = do
   return $ BS.fromString s
 
 -- | Remove fields from duplicate types
-filterSingleFieldType :: [SignatoryField] -> [SignatoryField]
-filterSingleFieldType [] = []
-filterSingleFieldType (f:fs) = f : filterSingleFieldType (filter (\h-> sfType f /= sfType h) fs)
+filterSingleFieldIdentity :: [SignatoryField] -> [SignatoryField]
+filterSingleFieldIdentity [] = []
+filterSingleFieldIdentity (f:fs) = f : filterSingleFieldIdentity (filter (\h-> fieldIdentity f /= fieldIdentity h) fs)
 
 instance Arbitrary [SignatoryField] where
   arbitrary = do
@@ -277,10 +276,13 @@ instance Arbitrary [SignatoryField] where
     ln <- arbString 1 20
     em <- arbEmail
     (f1,f2,f3,f4,f5) <-  arbitrary
-    return $ filter (\f->notElem (sfType f) [FirstNameFT, LastNameFT, EmailFT]) (filterSingleFieldType [f1,f2,f3,f4,f5])
-                                                  ++ [ SignatoryField (unsafeSignatoryFieldID 0) FirstNameFT (TextField fn) True False []
-                                                     , SignatoryField (unsafeSignatoryFieldID 0) LastNameFT  (TextField ln) True False []
-                                                     , SignatoryField (unsafeSignatoryFieldID 0) EmailFT     (TextField em) True False []]
+    return $ filter (\f->notElem (fieldIdentity f) [(NameFI (NameOrder 1)), (NameFI (NameOrder 2)), EmailFI]) (filterSingleFieldIdentity [f1,f2,f3,f4,f5])
+               ++[
+                  fieldForTests (NameFI $ NameOrder 1) fn
+                , fieldForTests (NameFI $ NameOrder 2) ln
+                , fieldForTests EmailFI em
+                ]
+
 
 instance Arbitrary FieldPlacement where
   arbitrary = do  -- We loose precision with conversion, so please watch out for this
@@ -303,24 +305,97 @@ instance Arbitrary FieldPlacement where
 
 instance Arbitrary FieldType where
   arbitrary = do
-    fieldlabel <- arbString 1 20
-    filled <- arbitrary
-    elements [FirstNameFT, LastNameFT, EmailFT, CompanyFT, CompanyNumberFT, PersonalNumberFT, CustomFT fieldlabel filled]
+    elements [NameFT, EmailFT, CompanyFT, CompanyNumberFT, PersonalNumberFT, TextFT]
 
 instance Arbitrary SignatoryField where
   arbitrary = do
     t <- arbitrary
+    case t of
+       NameFT  ->  SignatoryNameField <$> arbitrary
+       EmailFT ->  SignatoryEmailField <$> arbitrary
+       CompanyFT ->  SignatoryCompanyField <$> arbitrary
+       PersonalNumberFT ->  SignatoryPersonalNumberField <$> arbitrary
+       CompanyNumberFT ->  SignatoryCompanyNumberField <$> arbitrary
+       _ -> SignatoryTextField <$> arbitrary
+
+
+instance Arbitrary SignatoryNameField where
+  arbitrary = do
+    no <- elements [NameOrder 1, NameOrder 2]
     v <- arbString 1 100
     p <- arbitrary
-    return $ SignatoryField { sfID = unsafeSignatoryFieldID 0
-                            , sfType = t
-                            , sfValue = case t of
-                              SignatureFT{} -> BinaryField $ BSC.pack v
-                              _             -> TextField v
-                            , sfPlacements = p
-                            , sfObligatory = True
-                            , sfShouldBeFilledBySender = False
-                            }
+    return $ NameField {
+         snfID = unsafeSignatoryFieldID 0
+       , snfNameOrder = no
+       , snfValue = v
+       , snfObligatory = True
+       , snfShouldBeFilledBySender = False
+       , snfPlacements = p
+    }
+
+instance Arbitrary SignatoryEmailField where
+  arbitrary = do
+    v <- arbString 1 100
+    p <- arbitrary
+    return $ EmailField {
+         sefID = unsafeSignatoryFieldID 0
+       , sefValue = v
+       , sefObligatory = True
+       , sefShouldBeFilledBySender = False
+       , sefPlacements = p
+    }
+instance Arbitrary SignatoryCompanyField where
+  arbitrary = do
+    v <- arbString 1 100
+    p <- arbitrary
+    return $ CompanyField {
+         scfID = unsafeSignatoryFieldID 0
+       , scfValue = v
+       , scfObligatory = True
+       , scfShouldBeFilledBySender = False
+       , scfPlacements = p
+    }
+
+
+instance Arbitrary SignatoryPersonalNumberField where
+  arbitrary = do
+    v <- arbString 1 100
+    p <- arbitrary
+    return $ PersonalNumberField {
+         spnfID = unsafeSignatoryFieldID 0
+       , spnfValue = v
+       , spnfObligatory = True
+       , spnfShouldBeFilledBySender = False
+       , spnfPlacements = p
+    }
+
+instance Arbitrary SignatoryCompanyNumberField where
+  arbitrary = do
+    v <- arbString 1 100
+    p <- arbitrary
+    return $ CompanyNumberField {
+         scnfID = unsafeSignatoryFieldID 0
+       , scnfValue = v
+       , scnfObligatory = True
+       , scnfShouldBeFilledBySender = False
+       , scnfPlacements = p
+    }
+
+instance Arbitrary SignatoryTextField where
+  arbitrary = do
+    l <- arbString 1 20
+    v <- arbString 1 100
+    filled <- arbitrary
+    p <- arbitrary
+    return $ TextField {
+         stfID = unsafeSignatoryFieldID 0
+       , stfName = l
+       , stfFilledByAuthor = filled
+       , stfValue = v
+       , stfObligatory = True
+       , stfShouldBeFilledBySender = False
+       , stfPlacements = p
+    }
 
 instance Arbitrary AuthenticationMethod where
   arbitrary = elements [StandardAuthentication, ELegAuthentication]
@@ -420,14 +495,15 @@ signatoryLinkExample1 = defaultValue { signatorylinkid = unsafeSignatoryLinkID 0
                                       , signatoryisauthor = False
                                       , signatoryispartner = True
                                       , signatorysignorder = SignOrder 1
-                                      , signatoryfields = [ SignatoryField (unsafeSignatoryFieldID 0) FirstNameFT "Eric" True False []
-                                                          , SignatoryField (unsafeSignatoryFieldID 0) LastNameFT "Normand" True False []
-                                                          , SignatoryField (unsafeSignatoryFieldID 0) EmailFT "eric@scrive.com" True False []
-                                                          , SignatoryField (unsafeSignatoryFieldID 0) CompanyFT "Scrive" True False []
-                                                          , SignatoryField (unsafeSignatoryFieldID 0) CompanyNumberFT "1234" True False []
-                                                          , SignatoryField (unsafeSignatoryFieldID 0) PersonalNumberFT "9101112" True False []
-                                                          , SignatoryField (unsafeSignatoryFieldID 0) (CustomFT "phone" True) "504-302-3742" True False []
-                                                          ]
+                                      , signatoryfields = [
+                                            fieldForTests (NameFI $ NameOrder 1) "Eric"
+                                          , fieldForTests (NameFI $ NameOrder 2) "Normand"
+                                          , fieldForTests EmailFI "eric@scrive.com"
+                                          , fieldForTests CompanyFI "Scrive"
+                                          , fieldForTests CompanyNumberFI "1234"
+                                          , fieldForTests PersonalNumberFI "9101112"
+                                          , fieldForTests (TextFI "phone") "504-302-3742"
+                                          ]
                                       , signatorylinkcsvupload = Nothing
                                       , signatoryattachments   = []
                                       , signatorylinksignredirecturl = Nothing
@@ -851,3 +927,63 @@ getFlashType (FlashMessage ft _) = ft
 
 instance Arbitrary Lang where
   arbitrary = elements [LANG_SV, LANG_EN]
+
+-- Simple way of creating signatory fields. Since datatype is big - we want to skip many details in many tests.
+fieldForTests :: FieldIdentity -> String -> SignatoryField
+fieldForTests (NameFI no) v = SignatoryNameField $ NameField {
+      snfID                     = (unsafeSignatoryFieldID 0)
+    , snfNameOrder              = no
+    , snfValue                  = v
+    , snfObligatory             = True
+    , snfShouldBeFilledBySender = False
+    , snfPlacements             = []
+  }
+fieldForTests CompanyFI v = SignatoryCompanyField $ CompanyField {
+      scfID                     = (unsafeSignatoryFieldID 0)
+    , scfValue                  = v
+    , scfObligatory             = True
+    , scfShouldBeFilledBySender = False
+    , scfPlacements             = []
+  }
+fieldForTests PersonalNumberFI v =  SignatoryPersonalNumberField $ PersonalNumberField {
+      spnfID                     = (unsafeSignatoryFieldID 0)
+    , spnfValue                  = v
+    , spnfObligatory             = True
+    , spnfShouldBeFilledBySender = False
+    , spnfPlacements             = []
+  }
+fieldForTests CompanyNumberFI v  = SignatoryCompanyNumberField $ CompanyNumberField {
+      scnfID                     = (unsafeSignatoryFieldID 0)
+    , scnfValue                  = v
+    , scnfObligatory             = True
+    , scnfShouldBeFilledBySender = False
+    , scnfPlacements             = []
+  }
+fieldForTests EmailFI v =  SignatoryEmailField $ EmailField {
+      sefID                     = (unsafeSignatoryFieldID 0)
+    , sefValue                  = v
+    , sefObligatory             = True
+    , sefShouldBeFilledBySender = False
+    , sefPlacements             = []
+  }
+fieldForTests MobileFI v =  SignatoryMobileField $ MobileField {
+      smfID                     = (unsafeSignatoryFieldID 0)
+    , smfValue                  = v
+    , smfObligatory             = True
+    , smfShouldBeFilledBySender = False
+    , smfPlacements             = []
+  }
+fieldForTests (TextFI l) v = SignatoryTextField $ TextField {
+      stfID                     = (unsafeSignatoryFieldID 0)
+    , stfName                   = l
+    , stfFilledByAuthor         = True
+    , stfValue                  = v
+    , stfObligatory             = True
+    , stfShouldBeFilledBySender = False
+    , stfPlacements             = []
+  }
+fieldForTests _ _  = error "Cant use signature or checkbox fields with this function"
+
+
+
+

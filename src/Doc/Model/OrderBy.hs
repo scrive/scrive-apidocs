@@ -46,7 +46,11 @@ selectSignatoryLinksSmartNames is_author is_partner =
     selectFieldAs xtype name = "(SELECT signatory_link_fields.value_text AS value" <+>
                                     "FROM signatory_link_fields" <+>
                                     "WHERE signatory_link_fields.signatory_link_id = signatory_links.id" <+>
-                                    "AND type =" <?> xtype <+>
+                                    "AND type =" <?> fieldTypeFromFieldIdentity xtype <+>
+                                    (case xtype of
+                                      NameFI nameorder -> "AND name_order =" <?> nameorder
+                                      _ -> "AND name_order IS NULL"
+                                    ) <+>
                                     "LIMIT 1) " <+>
                                     "AS" <+> name
     {-
@@ -64,12 +68,12 @@ selectSignatoryLinksSmartNames is_author is_partner =
                            "                                || ' ' || " <>
                            "                                COALESCE(last_name.value,''))), ''),email.value) " <>
                            "FROM (" <>
-                      selectFieldAs FirstNameFT "first_name" <>
+                      selectFieldAs (NameFI (NameOrder 1)) "first_name" <>
                       " FULL JOIN " <>
-                      selectFieldAs LastNameFT "last_name" <>
+                      selectFieldAs (NameFI (NameOrder 2)) "last_name" <>
                       " ON TRUE " <>
                       " FULL JOIN " <>
-                      selectFieldAs EmailFT "email" <>
+                      selectFieldAs EmailFI "email" <>
                       " ON TRUE " <>
                       ") WHERE signatory_links.document_id = documents.id"
 

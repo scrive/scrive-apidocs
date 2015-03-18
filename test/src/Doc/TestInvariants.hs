@@ -160,11 +160,11 @@ maxLengthOnFields _ document =
   let maxlength = 512 :: Int
       lengths :: [Int]
       -- signature field can be longer than max
-      lengths = [length . fromMaybe "" . getTextField $ sfValue f | s <- documentsignatorylinks document
+      lengths = [length (fromMaybe "" $ fieldTextValue f) | s <- documentsignatorylinks document
                                     , f <- signatoryfields $ s
-                                    , isJust . getTextField $ sfValue f
-                                    , case sfType f of
-                                        SignatureFT {} -> False -- filter our signatures, they might be long
+                                    , isJust $ fieldTextValue f
+                                    , case fieldType f of
+                                        SignatureFT -> False -- filter our signatures, they might be long
                                         _ -> True ]
       m = maximum (0 : lengths) in
   assertInvariant ("some fields were too long: " ++ show m ++ ". max is " ++ show maxlength) $ m <= maxlength
@@ -176,7 +176,7 @@ maxNumberOfPlacements :: UTCTime -> Document -> Maybe String
 maxNumberOfPlacements _ document =
   let maxlength = 25 :: Int
       lengths :: [Int]
-      lengths = concatMap (map (length . sfPlacements) . signatoryfields) (documentsignatorylinks document)
+      lengths = concatMap (map (length . fieldPlacements) . signatoryfields) (documentsignatorylinks document)
       m = maximum (0 : lengths) in
   assertInvariant ("document had too many placements: " ++ show m ++ ". max is " ++ show maxlength ++ " (25 * number of fields)") $ m <= maxlength
 
@@ -204,7 +204,7 @@ notSignatoryNotSigned _ document =
 maxCustomFields :: UTCTime -> Document -> Maybe String
 maxCustomFields _ document =
   let maxfields = 250 :: Int
-      fields = map (length . filter isFieldCustom . signatoryfields) (documentsignatorylinks document)
+      fields = map (length . filter (\f -> fieldType f == TextFT) . signatoryfields) (documentsignatorylinks document)
       m = maximum (0 : fields) in
   assertInvariant ("there are signatories with too many custom fields: " ++ show m ++ ". maximum is " ++ show maxfields) $
     m <= maxfields
@@ -239,9 +239,9 @@ hasValidEmail _ document =
 hasAtMostOneOfEachTypeOfField :: UTCTime -> Document -> Maybe String
 hasAtMostOneOfEachTypeOfField _ document =
  nothingIfEmpty $ intercalate ";" $ catMaybes $
-   for [FirstNameFT, LastNameFT, CompanyFT, PersonalNumberFT, CompanyNumberFT, EmailFT] $ \t ->
+   for [(NameFI (NameOrder 1)),(NameFI (NameOrder 2)), CompanyFI, PersonalNumberFI, CompanyNumberFI, EmailFI] $ \t ->
     assertInvariant ("signatory with more than one " ++ show t) $
-      all (\sl -> 1 >= length (filter (fieldIsOfType t) (signatoryfields sl)))
+      all (\sl -> 1 >= length (filter (\f -> fieldIdentity f == t) (signatoryfields sl)))
         (documentsignatorylinks document)
 
 -- some helpers
@@ -250,5 +250,3 @@ assertInvariant :: String -> Bool -> Maybe String
 assertInvariant _ True = Nothing
 assertInvariant s False  = Just s
 
-fieldIsOfType :: FieldType -> SignatoryField -> Bool
-fieldIsOfType t f = t == sfType f

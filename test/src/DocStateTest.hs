@@ -10,9 +10,6 @@ import Data.List
 import Data.Maybe
 import Data.Text (unpack)
 import Test.Framework
-import Test.Framework.Providers.HUnit (testCase)
-import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.HUnit.Base (Assertion)
 import Test.QuickCheck
 import qualified Data.ByteString as BS
 import qualified Data.Set as S
@@ -33,7 +30,6 @@ import Doc.DocumentMonad (DocumentT, theDocument, theDocumentID, withDocumentM, 
 import Doc.DocUtils
 import Doc.Model
 import Doc.SealStatus (SealStatus(..), hasGuardtimeSignature)
-import Doc.SignatoryFieldID
 import Doc.TestInvariants
 import EvidenceLog.Model
 import EvidenceLog.View (getSignatoryIdentifierMap, simplyfiedEventText)
@@ -57,7 +53,6 @@ import qualified MemCache
 
 docStateTests :: TestEnvSt -> Test
 docStateTests env = testGroup "DocState" [
-  dataStructureProperties,
   testThat "Document with seal status Missing gets sealed" env testSealMissingSignatures,
   testThat "Document with extensible digital signature can be extended" env testExtendDigitalSignatures,
   testThat "RejectDocument adds to the log" env testRejectDocumentEvidenceLog,
@@ -212,13 +207,6 @@ docStateTests env = testGroup "DocState" [
   testThat "When document is pending and some invitation is undelivered it's status is undelivered" env testStatusClassSignedWhenAllSigned,
 
   testThat "ChangeAuthenticationMethod works and evidence is as expected" env testChangeAuthenticationMethod
-  ]
-
-dataStructureProperties :: Test
-dataStructureProperties = testGroup "data structure properties" [
-  testCase "given example" testSignatories1,
-  testProperty "signatories are different with different fields" propSignatoryDetailsNEq,
-  testProperty "signatories are equal with same fields" propSignatoryDetailsEq
   ]
 
 testSealMissingSignatures :: TestEnv ()
@@ -529,9 +517,8 @@ testCancelDocumentCancelsDocument = replicateM_ 10 $ do
     canceleddoc <- theDocument
     assertEqual "In canceled state" Canceled (documentstatus canceleddoc)
     assertEqual "Updated modification time" (ctxtime ctx) (documentmtime canceleddoc)
-    assertEqual "Siglinks are unchanged"
-                    (documentsignatorylinks doc)
-                    (documentsignatorylinks canceleddoc)
+    assertBool "Siglinks are unchanged"
+      (signatoryLinksListsAreAlmoustEqualForTests (documentsignatorylinks doc) (documentsignatorylinks canceleddoc))
     assertEqual "Doc title is unchanged" (documenttitle doc) (documenttitle canceleddoc)
 
 testCancelDocumentReturnsLeftIfDocInWrongState :: TestEnv ()
@@ -541,27 +528,6 @@ testCancelDocumentReturnsLeftIfDocInWrongState = replicateM_ 10 $ do
   ctx <- mkContext defaultValue
   assertRaisesKontra (\DocumentStatusShouldBe {} -> True) $
                withDocument doc $ randomUpdate $ CancelDocument (authorActor ctx user)
-
-testSignatories1 :: Assertion
-testSignatories1 =
-  let s1 = defaultValue { signatoryfields =
-              [ SignatoryField (unsafeSignatoryFieldID 0) FirstNameFT "Eric" True False []
-              , SignatoryField (unsafeSignatoryFieldID 0) LastNameFT "Normand" True False []
-              ]}
-      s2 = defaultValue { signatoryfields =
-              [ SignatoryField (unsafeSignatoryFieldID 0) LastNameFT "Normand" True False []
-              , SignatoryField (unsafeSignatoryFieldID 0) FirstNameFT "Eric" True False []
-              ]}
-  in assertBool "Signatories fields should be equal" (s1 == s2)
-
-propSignatoryDetailsEq :: SignOrder -> SignatoryLink -> Property
-propSignatoryDetailsEq o1 sd =
-   (o1 == o1) ==> sd{signatorysignorder = o1} == sd{signatorysignorder = o1}
-
-propSignatoryDetailsNEq :: SignOrder -> SignOrder -> SignatoryLink -> Property
-propSignatoryDetailsNEq o1 o2 sd =
-  (o1 /= o2) ==> sd{signatorysignorder = o1} /= sd{signatorysignorder = o2}
-
 
 --------------------------------------------------------------------------------
 assertOneArchivedSigLink :: MonadIO m => Document -> m ()
@@ -1143,10 +1109,8 @@ testCreateFromSharedTemplate = do
   ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   let [author1] = filter isAuthor $ documentsignatorylinks doc
   let [author2] = filter isAuthor $ documentsignatorylinks ndoc
-  let isCustom (SignatoryField { sfType = CustomFT _ _ }) = True
-      isCustom _ = False
-  if (fmap sfValue $ filter isCustom $ signatoryfields $ author1)
-     == (fmap sfValue $ filter isCustom $ signatoryfields $ author2)
+  if (fmap fieldTextValue $ filter (\f -> fieldType f == TextFT) $ signatoryfields $ author1)
+     == (fmap fieldTextValue $ filter (\f -> fieldType f == TextFT) $ signatoryfields $ author2)
     then assertSuccess
     else assertFailure "Replacing signatory details based on user is loosing fields | SKRIVAPADEV-294"
 
@@ -1689,7 +1653,7 @@ testGetDocumentsByCompanyWithFilteringFilters = replicateM_ 10 $ do
   docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [DocumentFilterByTags [DocumentTag name value]] [] (0,maxBound)
   docs' <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [] [] (0,maxBound)
 
-  assertEqual "Should have no documents returned" docs []
+  assertBool "Should have no documents returned" (null docs)
   assertEqual "Should have 1 document returned" [did] (map documentid docs')
 
 testSetDocumentUnsavedDraft :: TestEnv ()
@@ -1779,3 +1743,38 @@ runScheduler m = do
   templates <- liftBase $ newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates
   filecache <- MemCache.new BS.length 52428800
   CronEnv.runScheduler appConf filecache templates m
+
+-- Moved from Eq instance of SignatoryLink. Instance got dropped as it is not usefull in main server - but it's good to have way to compare SignatoryLinks in tests.
+signatoryLinksAreAlmoustEqualForTests :: SignatoryLink -> SignatoryLink -> Bool
+signatoryLinksAreAlmoustEqualForTests a b = and [
+      signatorylinkid a == signatorylinkid b
+    , fieldsListsAreAlmoustEqual (sortFields (signatoryfields a)) (sortFields (signatoryfields b))
+    , signatoryisauthor a == signatoryisauthor b
+    , signatoryispartner a == signatoryispartner b
+    , signatorysignorder a == signatorysignorder b
+    , signatorymagichash a == signatorymagichash b
+    , maybesignatory a == maybesignatory b
+    , maybesigninfo a == maybesigninfo b
+    , maybeseeninfo a == maybeseeninfo b
+    , maybereadinvite a == maybereadinvite b
+    , mailinvitationdeliverystatus a == mailinvitationdeliverystatus b
+    , smsinvitationdeliverystatus a == smsinvitationdeliverystatus b
+    , signatorylinkdeleted a == signatorylinkdeleted b
+    , signatorylinkreallydeleted a == signatorylinkreallydeleted b
+    , signatorylinkcsvupload a == signatorylinkcsvupload b
+    , signatoryattachments a == signatoryattachments b
+    , signatorylinksignredirecturl a == signatorylinksignredirecturl b
+    , signatorylinkrejectredirecturl a == signatorylinkrejectredirecturl b
+    , signatorylinkrejectiontime a == signatorylinkrejectiontime b
+    , signatorylinkrejectionreason a == signatorylinkrejectionreason b
+    , signatorylinkauthenticationmethod a == signatorylinkauthenticationmethod b
+    , signatorylinkdeliverymethod a == signatorylinkdeliverymethod b
+    , signatorylinkconfirmationdeliverymethod a == signatorylinkconfirmationdeliverymethod b
+    ]
+    where
+      sortFields = sortBy (\f1 f2  -> compare (fieldIdentity f1) (fieldIdentity f2))
+
+signatoryLinksListsAreAlmoustEqualForTests :: [SignatoryLink] -> [SignatoryLink] -> Bool
+signatoryLinksListsAreAlmoustEqualForTests (s:ss) (s':ss') = signatoryLinksAreAlmoustEqualForTests s s' && signatoryLinksListsAreAlmoustEqualForTests ss ss'
+signatoryLinksListsAreAlmoustEqualForTests [] [] = True
+signatoryLinksListsAreAlmoustEqualForTests _ _  = False

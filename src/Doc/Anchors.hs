@@ -93,7 +93,7 @@ recalcuateAnchoredFieldPlacements oldfileid newfileid = do
 
   let anchors = [ anc | sig <- documentsignatorylinks doc,
                         fld <- signatoryfields sig,
-                        plc <- sfPlacements fld,
+                        plc <- fieldPlacements fld,
                         anc <- placementanchors plc ]
 
   when (not (null anchors)) $ do
@@ -120,10 +120,10 @@ recalcuateAnchoredFieldPlacements oldfileid newfileid = do
     forM_ [fld | sig <- documentsignatorylinks doc,
                  fld <- signatoryfields sig ] $ \fld -> do
       let plcpairs :: [(FieldPlacement, Maybe FieldPlacement)]
-          plcpairs = map (\p -> (p,maybeMoveFieldPlacement p)) (sfPlacements fld)
+          plcpairs = map (\p -> (p,maybeMoveFieldPlacement p)) (fieldPlacements fld)
       when (any (isJust . snd) plcpairs) $ do
         let newplc = map (\(k,v) -> fromMaybe k v) plcpairs
-        dbUpdate $ SetFieldPlacements (sfID fld) newplc
+        dbUpdate $ SetFieldPlacements (fieldID fld) newplc
         return ()
 
   return ()

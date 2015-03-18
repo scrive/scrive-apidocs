@@ -275,9 +275,9 @@ test_privateUserTakoverWorks = do
   assertEqual "Docid matches" docid (documentid $ head companydocs)
   docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid user)] [DocumentFilterUnsavedDraft False, DocumentFilterSignable] [] (0,maxBound)
   templates <- dbQuery $ GetTemplatesByAuthor $ userid user
-  let userdocs = nub (docs ++ templates)
-  assertEqual "User is still linked to their docs" 1 (length userdocs)
-  assertEqual "Docid matches" docid (documentid $ head userdocs)
+  let userdocids = nub (documentid <$> docs ++ templates)
+  assertEqual "User is still linked to their docs" 1 (length userdocids)
+  assertEqual "Docid matches" docid (head userdocids)
 
 test_mustBeInvitedForTakeoverToWork :: TestEnv ()
 test_mustBeInvitedForTakeoverToWork = do

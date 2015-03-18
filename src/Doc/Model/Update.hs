@@ -78,6 +78,7 @@ import Data.Monoid
 import Data.Monoid.Utils
 import Text.StringTemplates.Templates
 import qualified Data.ByteString.Base64 as B64
+import qualified Data.ByteString.Char8 as BS
 import qualified Data.Set as S
 import qualified Text.StringTemplates.Fields as F
 
@@ -112,6 +113,7 @@ import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Utils.Default
+import Utils.Image
 import Utils.Monad
 import Utils.Prelude (for)
 import qualified DB.TimeZoneName as TimeZoneName
@@ -173,23 +175,29 @@ insertSignatoryLinkFields :: MonadDB m => [(SignatoryLinkID, SignatoryField)] ->
 insertSignatoryLinkFields [] = return ()
 insertSignatoryLinkFields fields = runQuery_ . sqlInsert "signatory_link_fields" $ do
   sqlSetList "signatory_link_id" $ map fst fields
-  sqlSetList "type" $ map (sfType . snd) fields
+  sqlSetList "type" $ map (fieldType . snd) fields
+  sqlSetList "name_order" $ map (name_order . snd) fields
   sqlSetList "custom_name" $ map (custom_name . snd) fields
   sqlSetList "is_author_filled" $ map (author_filled . snd) fields
-  sqlSetList "value_text" $ map (getTextField . sfValue . snd) fields
-  sqlSetList "value_binary" $ map (fmap Binary . getBinaryField . sfValue . snd) fields
-  sqlSetList "placements" $ map (sfPlacements . snd) fields
-  sqlSetList "obligatory" $ map (sfObligatory . snd) fields
-  sqlSetList "should_be_filled_by_author" $ map (sfShouldBeFilledBySender . snd) fields
+  sqlSetList "value_text" $ map (fieldTextValueWithBoolCasting . snd) fields
+  sqlSetList "value_binary" $ map (fmap Binary . fieldBinaryValue . snd) fields
+  sqlSetList "placements" $ map (fieldPlacements . snd) fields
+  sqlSetList "obligatory" $ map (fieldIsObligatory . snd) fields
+  sqlSetList "should_be_filled_by_author" $ map (fieldShouldBeFilledBySender . snd) fields
   where
-    custom_name field = case sfType field of
-      CustomFT name _ -> name
-      CheckboxFT name -> name
-      SignatureFT name -> name
+    fieldTextValueWithBoolCasting field = case  field of
+      SignatoryCheckboxField (CheckboxField{schfValue})-> if (schfValue) then (Just "CHECKED") else (Just "")
+      _ -> fieldTextValue field
+    name_order field = case field of
+      SignatoryNameField (NameField{snfNameOrder})-> Just snfNameOrder
+      _ -> Nothing
+    custom_name field = case field of
+      SignatoryTextField (TextField{stfName})-> stfName
+      SignatorySignatureField (SignatureField{ssfName})-> ssfName
+      SignatoryCheckboxField (CheckboxField{schfName})-> schfName
       _ -> ""
-    author_filled field = case sfType field of
-      CustomFT _ authorfilled -> authorfilled
-      CheckboxFT _  -> False
+    author_filled field = case field of
+      SignatoryTextField (TextField{stfFilledByAuthor})-> stfFilledByAuthor
       _ -> False
 
 insertDocumentTags :: MonadDB m => Bool -> DocumentID -> S.Set DocumentTag -> m (S.Set DocumentTag)
@@ -519,8 +527,8 @@ data ChangeAuthenticationMethod = ChangeAuthenticationMethod SignatoryLinkID Aut
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeAuthenticationMethod () where
   update (ChangeAuthenticationMethod slid newAuth mValue actor) = do
     let extraInfoField StandardAuthentication = Nothing
-        extraInfoField ELegAuthentication     = Just PersonalNumberFT
-        extraInfoField SMSPinAuthentication   = Just MobileFT
+        extraInfoField ELegAuthentication     = Just PersonalNumberFI
+        extraInfoField SMSPinAuthentication   = Just MobileFI
     (oldAuth, sig) <- updateDocumentWithID $ const $ do
       -- Set the new authentication method in signatory_links
       -- Return the old authentication method
@@ -538,38 +546,37 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
       -- When the old authentication method needed extra info and the new one
       -- isin't the same type, then we need to make the field for the old
       -- authentication method non obligatory
-      let signatoryLinkHasPlacementOfType :: SignatoryLink -> FieldType -> Bool
-          signatoryLinkHasPlacementOfType sl ft = fieldPlacements == []
-            where fieldPlacements = maybe [] sfPlacements $ find ((==) ft . sfType) $ signatoryfields sl
+      let signatoryLinkHasPlacementLike :: SignatoryLink -> FieldIdentity -> Bool
+          signatoryLinkHasPlacementLike sl fi = isJust $ getFieldByIdentity fi $ signatoryfields sl
       case extraInfoField oldAuth' of
         Nothing -> return ()
         Just prvAuthField ->
           when ( oldAuth' /= newAuth
-                 && signatoryLinkHasPlacementOfType siglink prvAuthField
+                 && signatoryLinkHasPlacementLike siglink prvAuthField
                )
                ( kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
                    sqlSet "obligatory" False
                    sqlWhereEq "signatory_link_id" slid
-                   sqlWhereEq "type" $ prvAuthField
+                   sqlWhereEq "type" $ fieldTypeFromFieldIdentity prvAuthField
                )
       -- When the new authentication method needs extra info then we need to
       -- either add it (if provided) or make obligatory for the signatory
       case extraInfoField newAuth of
         Nothing -> return ()
         Just authMethodField ->
-          case getFieldOfType authMethodField (signatoryfields siglink) of
+          case getFieldByIdentity authMethodField (signatoryfields siglink) of
                Just _  -> kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
                  case mValue of
                       Just a  -> sqlSet "value_text" a
                       Nothing -> return ()
                  sqlSet "obligatory" True
                  sqlWhereEq "signatory_link_id" slid
-                 sqlWhereEq "type" $ authMethodField
+                 sqlWhereEq "type" $ fieldTypeFromFieldIdentity authMethodField
                -- Note: default in table for `obligatory` is true
                Nothing -> runQuery_ . sqlInsert "signatory_link_fields" $ do
                  sqlSet "signatory_link_id" slid
                  sqlSet "value_text" $ fromMaybe "" mValue
-                 sqlSet "type" $ authMethodField
+                 sqlSet "type" $ fieldTypeFromFieldIdentity authMethodField
                  sqlSet "placements" ("[]"::String)
       updateMTimeAndObjectVersion (actorTime actor)
       return (oldAuth', siglink)
@@ -578,11 +585,11 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
     case extraInfoField newAuth of
          Nothing -> return ()
          Just authMethodField -> do
-           let previousValue = fromMaybe "" $ getTextField =<< (sfValue <$> getFieldOfType authMethodField (signatoryfields sig))
+           let previousValue = fromMaybe "" $ fieldTextValue =<< getFieldByIdentity authMethodField (signatoryfields sig)
                value         = fromMaybe "" mValue
            when (value /= previousValue)
                 (void $ update $ InsertEvidenceEvent
-                  (getEvidenceTextForUpdateField authMethodField)
+                  (getEvidenceTextForUpdateField sig authMethodField)
                   (do F.value "value" value
                       F.value "previousvalue" previousValue
                       when (value == "") $
@@ -1263,32 +1270,35 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m PostRem
           mmsg
           actor
 
-data UpdateFieldsForSigning = UpdateFieldsForSigning SignatoryLink [(FieldType, SignatoryFieldValue)] Actor
+data UpdateFieldsForSigning = UpdateFieldsForSigning SignatoryLink [(FieldIdentity, Either String BS.ByteString)] Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateFieldsForSigning () where
   update (UpdateFieldsForSigning sl fields actor) = updateDocumentWithID $ const $ do
     -- Document has to be in Pending state
     -- signatory could not have signed already
     let slid = signatorylinkid sl
-    let updateValue :: (FieldType, SignatoryFieldValue) -> m ()
-        updateValue (SignatureFT _, fvalue) | sfvNull fvalue = return ()
-        updateValue (fieldtype, fvalue) = do
-          let custom_name = case fieldtype of
-                              CustomFT xname _ -> xname
-                              CheckboxFT xname -> xname
-                              SignatureFT xname -> xname
+    let updateValue :: (FieldIdentity, Either String BS.ByteString) -> m ()
+        updateValue (SignatureFI _, Right v) | BS.null v = return ()
+        updateValue (fieldIdent, newValue) = do
+          let custom_name = case fieldIdent of
+                              TextFI xname   -> xname
+                              CheckboxFI xname -> xname
+                              SignatureFI xname -> xname
                               _ -> ""
-              oldValue = getValueOfType fieldtype (signatoryfields sl)
+              oldField = getFieldByIdentity fieldIdent (signatoryfields sl)
           updated <- runQuery . sqlUpdate "signatory_link_fields" $ do
-                   sqlSet "value_text" $ getTextField fvalue
-                   sqlSet "value_binary" $ Binary <$> getBinaryField fvalue
+                   sqlSet "value_text" $ either (Just) (const Nothing)  newValue
+                   sqlSet "value_binary" $ Binary <$> either (const Nothing) (Just) newValue
                    sqlWhereEq "signatory_link_id" slid
                    sqlWhereEq "custom_name" custom_name
-                   sqlWhereEq "type" fieldtype
+                   case fieldIdent of
+                     NameFI no -> sqlWhereEq "name_order" no
+                     _ ->         sqlWhereIsNULL "name_order"
+                   sqlWhereEq "type" $ fieldTypeFromFieldIdentity fieldIdent
                    sqlWhereAny
                        [ do
-                         sqlWhereEq "value_text" (""::String) -- Note: if we allow values to be overwritten, the evidence events need to be adjusted to reflect the old value.
-                         sqlWhereIn "type" [CustomFT "" False, FirstNameFT,LastNameFT,EmailFT,CompanyFT,PersonalNumberFT,PersonalNumberFT,CompanyNumberFT, MobileFT]
-                       , sqlWhereIn "type" [CheckboxFT "", SignatureFT ""]
+                           sqlWhereEq "value_text" (""::String) -- Note: if we allow values to be overwritten, the evidence events need to be adjusted to reflect the old value.
+                           sqlWhereIn "type" [TextFT, NameFT ,EmailFT,CompanyFT,PersonalNumberFT,PersonalNumberFT,CompanyNumberFT, MobileFT]
+                       , sqlWhereIn "type" [CheckboxFT, SignatureFT]
                        ]
                    sqlWhereExists $ sqlSelect "documents" $ do
                      sqlWhere "signatory_links.id = signatory_link_id"
@@ -1296,33 +1306,51 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateF
                      sqlWhereEq "documents.status" Pending
                      sqlWhere "signatory_links.sign_time IS NULL"
 
-          let mfield = getFieldOfType fieldtype (signatoryfields sl)
-              changed = case mfield of
-                          Just f | sfValue f == fvalue -> False
-                          _                            -> True
+          let oldValue = case oldField of
+                Just (SignatoryCheckboxField (chf@CheckboxField{})) -> if (schfValue chf) then Left "checked" else Left ""
+                Just (SignatorySignatureField (sf@SignatureField{}))  -> Right $ ssfValue sf
+                Just f -> Left $ fromMaybe "" $ fieldTextValue f
+                _ -> Left ""
+              changed = case oldField of
+                Just (SignatoryCheckboxField (chf@CheckboxField{})) -> (Just $ schfValue chf) /= either (Just . not . null) (const Nothing)  newValue
+                Just (SignatorySignatureField (sf@SignatureField{}))  -> (Just $ ssfValue sf) /= either (const Nothing) (Just)  newValue
+                Just f -> fieldTextValue f /=  either (Just ) (const Nothing)  newValue
+                _ -> True
+              emptyValue (Left s) = null s
+              emptyValue (Right s) = BS.null s
+
+
           when (updated/=0 && changed) $ do
-            let eventEvidenceText = getEvidenceTextForUpdateField fieldtype
+            let eventEvidenceText = getEvidenceTextForUpdateField sl fieldIdent
             void $ update $ InsertEvidenceEvent eventEvidenceText
-               (do F.value "value" $ sfvEncode fieldtype fvalue
-                   F.value "previousvalue" $ sfvEncode fieldtype fvalue
-                   when (sfvNull fvalue) $
+               (do F.value "value" $ case newValue of
+                     Left s -> s
+                     Right s -> BS.unpack $ imgEncodeRFC2397 $ s
+                   F.value "previousvalue"$ case oldValue of
+                     Left s -> s
+                     Right s -> BS.unpack $ imgEncodeRFC2397 $ s
+                   when (emptyValue newValue) $
                        F.value "newblank" True
-                   when (sfvNull oldValue) $
+                   when (emptyValue oldValue) $
                        F.value "prvblank" True
-                   when (eventEvidenceText == UpdateFieldCustomEvidence) $ do
-                       let CustomFT s _ = fieldtype
-                       F.value "customfieldname" s
-                   when (eventEvidenceText == UpdateFieldCheckboxEvidence && not (sfvNull fvalue)) $
-                       F.value "checked" True
-                   when (custom_name /= "") $
-                       F.value "fieldname" custom_name
-                   case mfield of
+                   case (oldField) of
+                        Just (SignatoryTextField f) -> do
+                          F.value "customfieldname" $ stfName f
+                          F.value "fieldname" $ stfName f
+                        Just (SignatoryCheckboxField f) -> do
+                          F.value "fieldname" $ schfName f
+                          when (not $ emptyValue newValue) $ do
+                            F.value "checked" $ schfName f
+                        Just (SignatorySignatureField f) -> do
+                          F.value "fieldname" $ ssfName f
+                        _ -> return ()
+                   case oldField of
                      Just f | not (null ps) -> do
                        F.objects "placements" $ for ps $ \p -> do
                          F.value "page" $ placementpage p
                          F.value "x" $ show $ realFracToDecimal 3 $ placementxrel p
                          F.value "y" $ show $ realFracToDecimal 3 $ placementyrel p
-                       where ps = sfPlacements f
+                       where ps = fieldPlacements f
                      _ -> return ())
                actor
 
@@ -1506,17 +1534,23 @@ instance MonadDB m => DBUpdate m ArchiveIdleDocuments Int where
          <+> "                AND documents.mtime + (interval '1 day') * author_company.idle_doc_timeout <" <?> now <+> ")"
 
 -- Update utilities
-getEvidenceTextForUpdateField :: FieldType -> CurrentEvidenceEventType
-getEvidenceTextForUpdateField FirstNameFT      = UpdateFieldFirstNameEvidence
-getEvidenceTextForUpdateField LastNameFT       = UpdateFieldLastNameEvidence
-getEvidenceTextForUpdateField CompanyFT        = UpdateFieldCompanyEvidence
-getEvidenceTextForUpdateField PersonalNumberFT = UpdateFieldPersonalNumberEvidence
-getEvidenceTextForUpdateField CompanyNumberFT  = UpdateFieldCompanyNumberEvidence
-getEvidenceTextForUpdateField EmailFT          = UpdateFieldEmailEvidence
-getEvidenceTextForUpdateField (CustomFT _ _)   = UpdateFieldCustomEvidence
-getEvidenceTextForUpdateField MobileFT         = UpdateFieldMobileEvidence
-getEvidenceTextForUpdateField (SignatureFT _)  = UpdateFieldSignatureEvidence
-getEvidenceTextForUpdateField (CheckboxFT _)   = UpdateFieldCheckboxEvidence
+getEvidenceTextForUpdateField :: SignatoryLink -> FieldIdentity -> CurrentEvidenceEventType
+getEvidenceTextForUpdateField sig (NameFI (NameOrder 1))
+                            | hasOneNameField sig      = UpdateFieldNameEvidence
+                            | otherwise                = UpdateFieldFirstNameEvidence
+getEvidenceTextForUpdateField _ (NameFI (NameOrder 2)) = UpdateFieldLastNameEvidence
+getEvidenceTextForUpdateField _ (NameFI (NameOrder _)) = $unexpectedError "NameFT with nameorder different than 1 and 2"
+getEvidenceTextForUpdateField _ CompanyFI        = UpdateFieldCompanyEvidence
+getEvidenceTextForUpdateField _ PersonalNumberFI = UpdateFieldPersonalNumberEvidence
+getEvidenceTextForUpdateField _ CompanyNumberFI  = UpdateFieldCompanyNumberEvidence
+getEvidenceTextForUpdateField _ EmailFI          = UpdateFieldEmailEvidence
+getEvidenceTextForUpdateField _ (TextFI _)      = UpdateFieldCustomEvidence
+getEvidenceTextForUpdateField _ MobileFI         = UpdateFieldMobileEvidence
+getEvidenceTextForUpdateField _ (SignatureFI _)  = UpdateFieldSignatureEvidence
+getEvidenceTextForUpdateField _ (CheckboxFI _)   = UpdateFieldCheckboxEvidence
+
+hasOneNameField :: SignatoryLink -> Bool
+hasOneNameField sig = 1 == (length $ filter (\f -> NameFT == fieldType f) $ signatoryfields sig)
 
 updateWithoutEvidence :: (DocumentMonad m, MonadThrow m, Show a, ToSQL a) => SQL -> a -> m Bool
 updateWithoutEvidence col newValue = updateDocumentWithID $ \did -> do
@@ -1533,6 +1567,14 @@ checkEqualBy :: (Eq b, Show b) => String -> (a -> b) -> a -> a -> Maybe (String,
 checkEqualBy name func obj1 obj2
   | func obj1 /= func obj2 = Just (name, show (func obj1), show (func obj2))
   | otherwise              = Nothing
+
+checkEqualSignatoryFields  :: String ->[SignatoryField] -> [SignatoryField] -> Maybe (String, String, String)
+checkEqualSignatoryFields name (f:fs) (f':fs') = if fieldsAreAlmoustEqual f f'
+                                                   then checkEqualSignatoryFields name fs fs'
+                                                   else Just (name, show f, show f')
+checkEqualSignatoryFields name (f:_) [] = Just (name, show f, "No field")
+checkEqualSignatoryFields name [] (f:_) = Just (name,  "No field", show f)
+checkEqualSignatoryFields _ [] [] = Nothing
 
 checkEqualByAllowSecondNothing :: (Eq b, Show b) => String -> (a -> Maybe b) -> a -> a -> Maybe (String, String, String)
 checkEqualByAllowSecondNothing name func obj1 obj2
@@ -1560,7 +1602,7 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                          , checkEqualBy "signatorylinkdeleted" signatorylinkdeleted
                          , checkEqualBy "signatorylinkreallydeleted" signatorylinkreallydeleted
                          , checkEqualBy "signatorylinkcsvupload" signatorylinkcsvupload
-                         , checkEqualBy "signatoryfields" (signatoryfields)
+                         , \s1' s2' -> checkEqualSignatoryFields "signatoryfields" (signatoryfields s1') (signatoryfields s2')
                          , checkEqualBy "signatoryisauthor" (signatoryisauthor)
                          , checkEqualBy "signatoryispartner" (signatoryispartner)
                          , checkEqualBy "signatorysignorder" (signatorysignorder)

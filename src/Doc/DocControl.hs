@@ -124,22 +124,55 @@ handleNewDocument = do
         -- this sets up the signatories to match those requirements.
         withDocument doc $ do
             authorsiglink <- guardJust $ find (\sl -> signatoryisauthor sl) (documentsignatorylinks doc)
-            othersiglink  <- guardJust $ find (\sl -> sl /= authorsiglink)  (documentsignatorylinks doc)
-            let templateField ft = SignatoryField { sfID = unsafeSignatoryFieldID 0
-                                                  , sfType = ft
-                                                  , sfValue = ""
-                                                  , sfShouldBeFilledBySender = False
-                                                  , sfObligatory = False
-                                                  , sfPlacements = []
-                                                  }
+            othersiglink  <- guardJust $ find (\sl -> not $ signatoryisauthor sl)  (documentsignatorylinks doc)
+            let fields  = [
+                    SignatoryNameField $ NameField {
+                        snfID                     = (unsafeSignatoryFieldID 0)
+                      , snfNameOrder              = NameOrder 1
+                      , snfValue                  = ""
+                      , snfObligatory             = False
+                      , snfShouldBeFilledBySender = False
+                      , snfPlacements             = []
+                    }
+                  , SignatoryNameField $ NameField {
+                        snfID                     = (unsafeSignatoryFieldID 0)
+                      , snfNameOrder              = NameOrder 2
+                      , snfValue                  = ""
+                      , snfObligatory             = False
+                      , snfShouldBeFilledBySender = False
+                      , snfPlacements             = []
+                    }
+                  , SignatoryEmailField $ EmailField {
+                        sefID                     = (unsafeSignatoryFieldID 0)
+                      , sefValue                  = ""
+                      , sefObligatory             = True
+                      , sefShouldBeFilledBySender = False
+                      , sefPlacements             = []
+                    }
+                  , SignatoryMobileField $ MobileField {
+                        smfID                     = (unsafeSignatoryFieldID 0)
+                      , smfValue                  = ""
+                      , smfObligatory             = False
+                      , smfShouldBeFilledBySender = False
+                      , smfPlacements             = []
+                    }
+                  , SignatoryCompanyField $ CompanyField {
+                        scfID                     = (unsafeSignatoryFieldID 0)
+                      , scfValue                  = ""
+                      , scfObligatory             = False
+                      , scfShouldBeFilledBySender = False
+                      , scfPlacements             = []
+                    }
+                  , SignatoryCompanyNumberField $ CompanyNumberField {
+                        scnfID                     = (unsafeSignatoryFieldID 0)
+                      , scnfValue                  = ""
+                      , scnfObligatory             = False
+                      , scnfShouldBeFilledBySender = False
+                      , scnfPlacements             = []
+                    }
+                  ]
                 othersiglink' = othersiglink { signatorysignorder = SignOrder 1
-                                             , signatoryfields = [ templateField FirstNameFT
-                                                                 , templateField LastNameFT
-                                                                 , (templateField EmailFT) { sfObligatory = True }
-                                                                 , templateField MobileFT
-                                                                 , templateField CompanyFT
-                                                                 , templateField CompanyNumberFT
-                                                                 ]
+                                             , signatoryfields = fields
                                              }
             _ <- dbUpdate $ ResetSignatoryDetails [authorsiglink, othersiglink'] actor
             dbUpdate $ SetDocumentUnsavedDraft True

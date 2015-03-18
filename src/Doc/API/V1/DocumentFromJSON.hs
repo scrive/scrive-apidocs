@@ -110,7 +110,7 @@ instance FromJSValueWithUpdate SignatoryLink where
                   , signatorysignorder     = updateWithDefaultAndField (SignOrder 1) signatorysignorder (SignOrder <$> signorder)
                   -- nubBy comment: We accepted at some point documents with not uniqueue fields for signatory.
                   -- To keep current workflow for some clients, we have to manually clean fields, else DB will reject update with contraints error
-                  , signatoryfields        = nubBy (\f1 f2 -> sfType f1 == sfType f2) fields
+                  , signatoryfields        = nubBy (\f1 f2 -> fieldIdentity f1 == fieldIdentity f2) fields
                   , signatoryisauthor      = updateWithDefaultAndField False signatoryisauthor author
                   , signatoryispartner     = updateWithDefaultAndField False signatoryispartner signs
                   , signatorylinkcsvupload       = updateWithDefaultAndField Nothing signatorylinkcsvupload csv
@@ -132,29 +132,222 @@ instance FromJSValue SignatoryField where
 
 instance FromJSValueWithUpdate SignatoryField where
     fromJSValueWithUpdate msf =  do
-        ftype <- fromJSValue
+        fidentity<- fromJSValue
+        case (fieldTypeFromFieldIdentity <$> fidentity, msf) of
+          (Just NameFT,           Just (SignatoryNameField snf))            -> fmap SignatoryNameField <$> fromJSValueWithUpdate (Just snf)
+          (Just NameFT,           _)                                        -> fmap SignatoryNameField <$> fromJSValueWithUpdate Nothing
+          (Just CompanyFT,        Just (SignatoryCompanyField scf))         -> fmap SignatoryCompanyField <$> fromJSValueWithUpdate (Just scf)
+          (Just CompanyFT,        _)                                        -> fmap SignatoryCompanyField <$> fromJSValueWithUpdate Nothing
+          (Just PersonalNumberFT, Just (SignatoryPersonalNumberField spnf)) -> fmap SignatoryPersonalNumberField <$> fromJSValueWithUpdate (Just spnf)
+          (Just PersonalNumberFT,_)                                         -> fmap SignatoryPersonalNumberField <$> fromJSValueWithUpdate Nothing
+          (Just CompanyNumberFT,  Just (SignatoryCompanyNumberField scnf))  -> fmap SignatoryCompanyNumberField <$> fromJSValueWithUpdate (Just scnf)
+          (Just CompanyNumberFT,  _)                                        -> fmap SignatoryCompanyNumberField <$> fromJSValueWithUpdate Nothing
+          (Just EmailFT,          Just (SignatoryEmailField sef))           -> fmap SignatoryEmailField <$> fromJSValueWithUpdate (Just sef)
+          (Just EmailFT,          _)                                        -> fmap SignatoryEmailField <$> fromJSValueWithUpdate Nothing
+          (Just MobileFT,         Just (SignatoryMobileField smf))          -> fmap SignatoryMobileField <$> fromJSValueWithUpdate (Just smf)
+          (Just MobileFT,         _)                                        -> fmap SignatoryMobileField <$> fromJSValueWithUpdate Nothing
+          (Just TextFT,           Just (SignatoryTextField stf))            -> fmap SignatoryTextField <$> fromJSValueWithUpdate (Just stf)
+          (Just TextFT,           _)                                        -> fmap SignatoryTextField <$> fromJSValueWithUpdate Nothing
+          (Just SignatureFT,      Just (SignatorySignatureField ssf))       -> fmap SignatorySignatureField <$> fromJSValueWithUpdate (Just ssf)
+          (Just SignatureFT,      _)                                        -> fmap SignatorySignatureField <$> fromJSValueWithUpdate Nothing
+          (Just CheckboxFT,       Just (SignatoryCheckboxField schf))       -> fmap SignatoryCheckboxField <$> fromJSValueWithUpdate (Just schf)
+          (Just CheckboxFT,       _)                                        -> fmap SignatoryCheckboxField <$> fromJSValueWithUpdate Nothing
+          _ -> return Nothing
+
+instance FromJSValueWithUpdate SignatoryNameField where
+    fromJSValueWithUpdate msf =  do
+        fidentity<- fromJSValue
         value  <- fromJSValueField "value"
-        obligatory <- updateWithDefaultAndField True sfObligatory <$> fromJSValueField "obligatory"
-        filledbysender <- updateWithDefaultAndField False sfObligatory <$> fromJSValueField "shouldbefilledbysender"
-        placements <- updateWithDefaultAndField [] sfPlacements <$> fromJSValueField "placements"
-        case (ftype,value) of
-          (Just ft, Just v) -> do
-              let v' = case ft of
-                        EmailFT -> TextField $ strip v
-                        -- FIXME: why is signature ignored HERE?
-                        SignatureFT _ -> BinaryField BS.empty
-                        _ -> TextField v
-              return $ Just $ SignatoryField (maybe (unsafeSignatoryFieldID 0) sfID msf) ft v' obligatory filledbysender placements
+        obligatory <- updateWithDefaultAndField True snfObligatory <$> fromJSValueField "obligatory"
+        filledbysender <- updateWithDefaultAndField False snfShouldBeFilledBySender <$> fromJSValueField "shouldbefilledbysender"
+        placements <- updateWithDefaultAndField [] snfPlacements <$> fromJSValueField "placements"
+        case (fidentity,value) of
+          (Just (NameFI no), Just v) -> do
+              return $ Just $ NameField {
+                  snfID = (maybe (unsafeSignatoryFieldID 0) snfID msf)
+                , snfNameOrder = no
+                , snfValue = v
+                , snfObligatory = obligatory
+                , snfShouldBeFilledBySender = filledbysender
+                , snfPlacements = placements
+              }
           _ -> return Nothing
       where
-       updateWithDefaultAndField :: a -> (SignatoryField -> a) -> Maybe a -> a
+       updateWithDefaultAndField :: a -> (SignatoryNameField -> a) -> Maybe a -> a
        updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` (fmap uf msf))
 
+
+instance FromJSValueWithUpdate SignatoryCompanyField where
+    fromJSValueWithUpdate msf =  do
+        value  <- fromJSValueField "value"
+        obligatory <- updateWithDefaultAndField True scfObligatory <$> fromJSValueField "obligatory"
+        filledbysender <- updateWithDefaultAndField False scfShouldBeFilledBySender <$> fromJSValueField "shouldbefilledbysender"
+        placements <- updateWithDefaultAndField [] scfPlacements <$> fromJSValueField "placements"
+        case (value) of
+          (Just v) -> do
+              return $ Just $ CompanyField {
+                  scfID = (maybe (unsafeSignatoryFieldID 0) scfID msf)
+                , scfValue = v
+                , scfObligatory = obligatory
+                , scfShouldBeFilledBySender = filledbysender
+                , scfPlacements = placements
+              }
+          _ -> return Nothing
+      where
+       updateWithDefaultAndField :: a -> (SignatoryCompanyField -> a) -> Maybe a -> a
+       updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` (fmap uf msf))
+
+instance FromJSValueWithUpdate SignatoryPersonalNumberField where
+    fromJSValueWithUpdate msf =  do
+        value  <- fromJSValueField "value"
+        obligatory <- updateWithDefaultAndField True spnfObligatory <$> fromJSValueField "obligatory"
+        filledbysender <- updateWithDefaultAndField False spnfShouldBeFilledBySender <$> fromJSValueField "shouldbefilledbysender"
+        placements <- updateWithDefaultAndField [] spnfPlacements <$> fromJSValueField "placements"
+        case (value) of
+          (Just v) -> do
+              return $ Just $ PersonalNumberField {
+                  spnfID = (maybe (unsafeSignatoryFieldID 0) spnfID msf)
+                , spnfValue = v
+                , spnfObligatory = obligatory
+                , spnfShouldBeFilledBySender = filledbysender
+                , spnfPlacements = placements
+              }
+          _ -> return Nothing
+      where
+       updateWithDefaultAndField :: a -> (SignatoryPersonalNumberField -> a) -> Maybe a -> a
+       updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` (fmap uf msf))
+
+instance FromJSValueWithUpdate SignatoryCompanyNumberField where
+    fromJSValueWithUpdate msf =  do
+        value  <- fromJSValueField "value"
+        obligatory <- updateWithDefaultAndField True scnfObligatory <$> fromJSValueField "obligatory"
+        filledbysender <- updateWithDefaultAndField False scnfShouldBeFilledBySender <$> fromJSValueField "shouldbefilledbysender"
+        placements <- updateWithDefaultAndField [] scnfPlacements <$> fromJSValueField "placements"
+        case (value) of
+          (Just v) -> do
+              return $ Just $ CompanyNumberField {
+                  scnfID = (maybe (unsafeSignatoryFieldID 0) scnfID msf)
+                , scnfValue = v
+                , scnfObligatory = obligatory
+                , scnfShouldBeFilledBySender = filledbysender
+                , scnfPlacements = placements
+              }
+          _ -> return Nothing
+      where
+       updateWithDefaultAndField :: a -> (SignatoryCompanyNumberField -> a) -> Maybe a -> a
+       updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` (fmap uf msf))
+
+instance FromJSValueWithUpdate SignatoryEmailField where
+    fromJSValueWithUpdate msf =  do
+        value  <- fromJSValueField "value"
+        obligatory <- updateWithDefaultAndField True sefObligatory <$> fromJSValueField "obligatory"
+        filledbysender <- updateWithDefaultAndField False sefShouldBeFilledBySender <$> fromJSValueField "shouldbefilledbysender"
+        placements <- updateWithDefaultAndField [] sefPlacements <$> fromJSValueField "placements"
+        case (value) of
+          (Just v) -> do
+              return $ Just $ EmailField {
+                  sefID = (maybe (unsafeSignatoryFieldID 0) sefID msf)
+                , sefValue = strip v
+                , sefObligatory = obligatory
+                , sefShouldBeFilledBySender = filledbysender
+                , sefPlacements = placements
+              }
+          _ -> return Nothing
+      where
+       updateWithDefaultAndField :: a -> (SignatoryEmailField -> a) -> Maybe a -> a
+       updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` (fmap uf msf))
+
+instance FromJSValueWithUpdate SignatoryMobileField where
+    fromJSValueWithUpdate msf =  do
+        value  <- fromJSValueField "value"
+        obligatory <- updateWithDefaultAndField True smfObligatory <$> fromJSValueField "obligatory"
+        filledbysender <- updateWithDefaultAndField False smfShouldBeFilledBySender <$> fromJSValueField "shouldbefilledbysender"
+        placements <- updateWithDefaultAndField [] smfPlacements <$> fromJSValueField "placements"
+        case (value) of
+          (Just v) -> do
+              return $ Just $ MobileField {
+                  smfID = (maybe (unsafeSignatoryFieldID 0) smfID msf)
+                , smfValue = v
+                , smfObligatory = obligatory
+                , smfShouldBeFilledBySender = filledbysender
+                , smfPlacements = placements
+              }
+          _ -> return Nothing
+      where
+       updateWithDefaultAndField :: a -> (SignatoryMobileField -> a) -> Maybe a -> a
+       updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` (fmap uf msf))
+
+instance FromJSValueWithUpdate SignatoryTextField where
+    fromJSValueWithUpdate msf =  do
+        fidentity<- fromJSValue
+        value  <- fromJSValueField "value"
+        obligatory <- updateWithDefaultAndField True stfObligatory <$> fromJSValueField "obligatory"
+        filledbysender <- updateWithDefaultAndField False stfShouldBeFilledBySender <$> fromJSValueField "shouldbefilledbysender"
+        placements <- updateWithDefaultAndField [] stfPlacements <$> fromJSValueField "placements"
+        case (fidentity,value) of
+          (Just (TextFI n), Just v) -> do
+              return $ Just $ TextField {
+                  stfID = (maybe (unsafeSignatoryFieldID 0) stfID msf)
+                , stfName = n
+                , stfFilledByAuthor = not $ null $ v
+                , stfValue = v
+                , stfObligatory = obligatory
+                , stfShouldBeFilledBySender = filledbysender
+                , stfPlacements = placements
+              }
+          _ -> return Nothing
+      where
+       updateWithDefaultAndField :: a -> (SignatoryTextField -> a) -> Maybe a -> a
+       updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` (fmap uf msf))
+
+instance FromJSValueWithUpdate SignatoryCheckboxField where
+    fromJSValueWithUpdate msf =  do
+        fidentity<- fromJSValue
+        (value :: Maybe String)  <- fromJSValueField "value"
+        obligatory <- updateWithDefaultAndField True schfObligatory <$> fromJSValueField "obligatory"
+        filledbysender <- updateWithDefaultAndField False schfShouldBeFilledBySender <$> fromJSValueField "shouldbefilledbysender"
+        placements <- updateWithDefaultAndField [] schfPlacements <$> fromJSValueField "placements"
+        case (fidentity,value) of
+          (Just (CheckboxFI n), Just v) -> do
+              return $ Just $ CheckboxField {
+                  schfID = (maybe (unsafeSignatoryFieldID 0) schfID msf)
+                , schfName = n
+                , schfValue = not $ null $ v
+                , schfObligatory = obligatory
+                , schfShouldBeFilledBySender = filledbysender
+                , schfPlacements = placements
+              }
+          _ -> return Nothing
+      where
+       updateWithDefaultAndField :: a -> (SignatoryCheckboxField -> a) -> Maybe a -> a
+       updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` (fmap uf msf))
+
+instance FromJSValueWithUpdate SignatorySignatureField where
+    fromJSValueWithUpdate msf =  do
+        fidentity<- fromJSValue
+        (value :: Maybe String)  <- fromJSValueField "value"
+        obligatory <- updateWithDefaultAndField True ssfObligatory <$> fromJSValueField "obligatory"
+        filledbysender <- updateWithDefaultAndField False ssfShouldBeFilledBySender <$> fromJSValueField "shouldbefilledbysender"
+        placements <- updateWithDefaultAndField [] ssfPlacements <$> fromJSValueField "placements"
+        case (fidentity,value) of
+          (Just (SignatureFI n), Just _) -> do
+              return $ Just $ SignatureField {
+                  ssfID = (maybe (unsafeSignatoryFieldID 0) ssfID msf)
+                , ssfName = n
+                , ssfValue = BS.empty -- We ignore value. Signature can't be provided in design view
+                , ssfObligatory = obligatory
+                , ssfShouldBeFilledBySender = filledbysender
+                , ssfPlacements = placements
+              }
+          _ -> return Nothing
+      where
+       updateWithDefaultAndField :: a -> (SignatorySignatureField -> a) -> Maybe a -> a
+       updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` (fmap uf msf))
 
 instance MatchWithJSValue SignatoryField where
     matchesWithJSValue sf = do
       ftype <- fromJSValue
-      return (ftype ==  Just(sfType sf))
+      return (ftype ==  Just(fieldIdentity sf))
 
 instance FromJSValue SignatoryAttachment where
     fromJSValue = do
@@ -166,22 +359,21 @@ instance FromJSValue SignatoryAttachment where
                                                                       signatoryattachmentfile = Nothing}
              _ -> return Nothing
 
-instance FromJSValue FieldType where
+instance FromJSValue FieldIdentity where
    fromJSValue = do
     s <- fromJSValueField "name"
     t <- fromJSValueField "type"
-    filled <- (not . null) <$> fromMaybe ("" :: String) <$> fromJSValueField "value"
     return $ case (fromMaybe "standard" t,s) of
-         ("standard",  Just "fstname")    -> Just $ FirstNameFT
-         ("standard",  Just "sndname")    -> Just $ LastNameFT
-         ("standard",  Just "email")      -> Just $ EmailFT
-         ("standard",  Just "mobile")     -> Just $ MobileFT
-         ("standard",  Just "sigpersnr")  -> Just $ PersonalNumberFT
-         ("standard",  Just "sigco")      -> Just $ CompanyFT
-         ("standard",  Just "sigcompnr")  -> Just $ CompanyNumberFT
-         ("signature", Just name       )  -> Just $ SignatureFT name
-         ("custom",    Just name       )  -> Just $ CustomFT name filled
-         ("checkbox",  Just name       )  -> Just $ CheckboxFT name
+         ("standard",  Just "fstname")    -> Just $ NameFI (NameOrder 1)
+         ("standard",  Just "sndname")    -> Just $ NameFI (NameOrder 2)
+         ("standard",  Just "email")      -> Just $ EmailFI
+         ("standard",  Just "mobile")     -> Just $ MobileFI
+         ("standard",  Just "sigpersnr")  -> Just $ PersonalNumberFI
+         ("standard",  Just "sigco")      -> Just $ CompanyFI
+         ("standard",  Just "sigcompnr")  -> Just $ CompanyNumberFI
+         ("signature", Just name       )  -> Just $ SignatureFI name
+         ("custom",    Just name       )  -> Just $ TextFI name
+         ("checkbox",  Just name       )  -> Just $ CheckboxFI name
          _ -> Nothing
 
 

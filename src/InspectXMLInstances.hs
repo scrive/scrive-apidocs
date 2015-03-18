@@ -31,9 +31,11 @@ import IPAddress
 import KontraLink
 import MagicHash (MagicHash)
 import MinutesTime
+import OurPrelude
 import User.Email
 import User.History.Model
 import User.Model
+import Utils.Image
 import Utils.String
 
 instance (InspectXML a, Show a) => InspectXML [a] where
@@ -59,18 +61,20 @@ $(deriveInspectXML ''SignatoryLink)
 $(deriveInspectXML ''PlacementAnchor)
 
 instance InspectXML SignatoryField where
-  inspectXML SignatoryField{..} =
-    show sfType ++ " " ++ value ++ ", " ++
-    (if sfObligatory then "obligatory, " else "optional, ") ++
-    (if sfShouldBeFilledBySender then "filled by sender, " else "") ++
-    "<br/>placements: " ++ inspectXML sfPlacements
+  inspectXML field =
+    show (fieldIdentity field) ++ " " ++ value ++ ", " ++
+    (if fieldIsObligatory field then "obligatory, " else "optional, ") ++
+    (if fieldShouldBeFilledBySender field then "filled by sender, " else "") ++
+    "<br/>placements: " ++ inspectXML (fieldPlacements field)
     where
-      value
-        | SignatureFT{} <- sfType =
-          "<img style=\"height:100px; width=auto\" src=\"" ++ escapeString v ++ "\">"
-        | otherwise = inspectXML v
-        where
-          v = sfvEncode sfType sfValue
+      value = case (fieldType field) of
+        SignatureFT -> if (B.null $ $fromJust (fieldBinaryValue field))
+                         then ""
+                         else "<img style=\"height:100px; width=auto\" src=\"" ++ escapeString (B.unpack $ imgEncodeRFC2397 $ $fromJust (fieldBinaryValue field)) ++ "\">"
+        CheckboxFT -> if ($fromJust (fieldBoolValue field))
+                         then "checked"
+                         else "not checked"
+        _ -> inspectXML ($fromJust (fieldTextValue field))
 
 --Link creating types
 instance InspectXML DocumentID where

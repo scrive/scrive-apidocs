@@ -52,7 +52,7 @@ import qualified Control.Exception.Lifted as E
 import BrandedDomain.BrandedDomainID
 import Company.Model
 import DB
-import Doc.DocStateData (DocumentStatus(..),FieldType(..))
+import Doc.DocStateData (DocumentStatus(..),FieldType(..), NameOrder(..))
 import MinutesTime
 import User.Email
 import User.Lang
@@ -580,12 +580,14 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateDraftsAndTemplatesWithUse
        -- Update first name
        runQuery_ $ sqlUpdate "signatory_link_fields" $ do
          sqlSet "value_text" (userfstname $ userinfo user)
-         sqlWhereEq "type" FirstNameFT
+         sqlWhereEq "type" NameFT
+         sqlWhereEq "name_order" (NameOrder 1)
          whereSignatoryLinkCanBeChanged
 
        runQuery_ $ sqlUpdate "signatory_link_fields" $ do
          sqlSet "value_text" (usersndname $ userinfo user)
-         sqlWhereEq "type" LastNameFT
+         sqlWhereEq "type" NameFT
+         sqlWhereEq "name_order" (NameOrder 2)
          whereSignatoryLinkCanBeChanged
 
        runQuery_ $ sqlUpdate "signatory_link_fields" $ do

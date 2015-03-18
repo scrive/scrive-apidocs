@@ -212,7 +212,7 @@ data Document = Document {
 , documentauthorcompanyid        :: !(Maybe CompanyID)
 , documenttimezonename           :: !TimeZoneName
 , documentapiversion             :: !APIVersion
-} deriving (Eq, Ord, Show)
+} deriving (Show)
 
 type instance ID Document = DocumentID
 

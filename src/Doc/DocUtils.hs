@@ -13,7 +13,6 @@ module Doc.DocUtils(
     renderListTemplateNormal
   , renderListTemplate
   , renderLocalListTemplate
-  , replaceFieldValue
   , documentcurrentsignorder
   , documentprevioussignorder
   , isLastViewer
@@ -22,8 +21,6 @@ module Doc.DocUtils(
   , canAuthorSignNow
   , canSignatorySignNow
   , isActivatedSignatory
-  , isFieldCustom
-  , findCustomField
   , getSignatoryAttachment
   , documentfileM
   , documentsealedfileM
@@ -123,38 +120,15 @@ instance MaybeTemplate Document where
    isTemplate = isTemplate . documenttype
    isSignable = isSignable . documenttype
 
-class HasFieldType a where
-    fieldType :: a -> FieldType
-
-instance HasFieldType FieldType where
-    fieldType = id
-
-instance HasFieldType SignatoryField where
-    fieldType = sfType
-
-matchingFieldType:: (HasFieldType a, HasFieldType b) => a -> b -> Bool
-matchingFieldType a b = case (fieldType a, fieldType b) of
-                        (CustomFT a' _, CustomFT b' _) -> a' == b'
-                        (a',b') -> a' == b'
 
 class HasFields a where
-    replaceField :: SignatoryField -> a -> a
     getAllFields:: a ->  [SignatoryField]
 
 instance HasFields  [SignatoryField] where
     getAllFields = id
-    replaceField f fs = if (any (matchingFieldType f) fs)
-                                then map (\f' ->  f <| (matchingFieldType f f') |> f' )  fs
-                                else fs  ++ [f]
 
 instance HasFields SignatoryLink where
     getAllFields =  signatoryfields
-    replaceField f s = s {signatoryfields = replaceField f (signatoryfields s) }
-
-replaceFieldValue :: HasFields a =>  FieldType -> SignatoryFieldValue -> a -> a
-replaceFieldValue ft v a = case (find (matchingFieldType ft) $ getAllFields a) of
-                            Just f  -> replaceField (f { sfType = ft, sfValue = v}) a
-                            Nothing -> replaceField (SignatoryField { sfID = unsafeSignatoryFieldID 0, sfType = ft, sfValue = v, sfPlacements =[], sfObligatory = True, sfShouldBeFilledBySender = False}) a
 
 -- OTHER UTILS
 
@@ -194,16 +168,74 @@ signatoryFieldsFromUser :: (MonadDB m, MonadThrow m) => User -> m [SignatoryFiel
 signatoryFieldsFromUser user = do
   company <- dbQuery $ GetCompanyByUserID (userid user)
   return $
-        [ SignatoryField (unsafeSignatoryFieldID 0) FirstNameFT (TextField $ getFirstName user) True True []
-        , SignatoryField (unsafeSignatoryFieldID 0) LastNameFT (TextField $ getLastName user) True True []
-        , SignatoryField (unsafeSignatoryFieldID 0) EmailFT (TextField $ getEmail user) True True []
-        , SignatoryField (unsafeSignatoryFieldID 0) CompanyFT (TextField $ getCompanyName company) False False []
+        [ SignatoryNameField $ NameField {
+              snfID                     = (unsafeSignatoryFieldID 0)
+            , snfNameOrder              = NameOrder 1
+            , snfValue                  = getFirstName user
+            , snfObligatory             = True
+            , snfShouldBeFilledBySender = True
+            , snfPlacements             = []
+          }
+        , SignatoryNameField $ NameField {
+              snfID                     = (unsafeSignatoryFieldID 0)
+            , snfNameOrder              = NameOrder 2
+            , snfValue                  = getLastName user
+            , snfObligatory             = True
+            , snfShouldBeFilledBySender = True
+            , snfPlacements             = []
+          }
+        , SignatoryEmailField $ EmailField {
+              sefID                     = (unsafeSignatoryFieldID 0)
+            , sefValue                  = getEmail user
+            , sefObligatory             = True
+            , sefShouldBeFilledBySender = True
+            , sefPlacements             = []
+          }
+         , SignatoryCompanyField $ CompanyField {
+              scfID                     = (unsafeSignatoryFieldID 0)
+            , scfValue                  = getCompanyName company
+            , scfObligatory             = False
+            , scfShouldBeFilledBySender = False
+            , scfPlacements             = []
+          }
         ] ++
-        (if (not $ null $ getPersonalNumber user) then [SignatoryField (unsafeSignatoryFieldID 0) PersonalNumberFT (TextField $ getPersonalNumber user) False False []] else [])
+        (if (not $ null $ getPersonalNumber user)
+            then [
+              SignatoryPersonalNumberField $ PersonalNumberField {
+                  spnfID                     = (unsafeSignatoryFieldID 0)
+                , spnfValue                  = getPersonalNumber user
+                , spnfObligatory             = False
+                , spnfShouldBeFilledBySender = False
+                , spnfPlacements             = []
+              }
+             ]
+            else [])
           ++
-        (if (not $ null $ getMobile user) then [SignatoryField (unsafeSignatoryFieldID 0) MobileFT (TextField $ getMobile user) False False []] else [])
+        (if (not $ null $ getMobile user)
+            then [
+              SignatoryMobileField $ MobileField {
+                  smfID                     = (unsafeSignatoryFieldID 0)
+                , smfValue                  = getMobile user
+                , smfObligatory             = False
+                , smfShouldBeFilledBySender = False
+                , smfPlacements             = []
+              }
+             ]
+            else []
+        )
           ++
-        (if (not $ null $ getCompanyNumber company) then [SignatoryField (unsafeSignatoryFieldID 0) CompanyNumberFT (TextField $ getCompanyNumber company) False False []] else [])
+        (if (not $ null $ getCompanyNumber company)
+           then [
+              SignatoryCompanyNumberField $ CompanyNumberField {
+                  scnfID                     = (unsafeSignatoryFieldID 0)
+                , scnfValue                  = getCompanyNumber company
+                , scnfObligatory             = False
+                , scnfShouldBeFilledBySender = False
+                , scnfPlacements             = []
+              }
+             ]
+           else []
+        )
 
 {- |
     Checks whether a signatory link is eligible for sending a reminder.
@@ -257,13 +289,6 @@ canSignatorySignNow doc sl =
 isActivatedSignatory :: SignOrder -> SignatoryLink -> Bool
 isActivatedSignatory signorder siglink =
   signorder >= signatorysignorder siglink
-
-isFieldCustom :: SignatoryField -> Bool
-isFieldCustom SignatoryField{sfType = CustomFT{}} = True
-isFieldCustom _ = False
-
-findCustomField :: HasFields a => String -> a -> Maybe SignatoryField
-findCustomField name = find (matchingFieldType (CustomFT name False)) . getAllFields
 
 getSignatoryAttachment :: SignatoryLinkID -> String -> Document -> Maybe SignatoryAttachment
 getSignatoryAttachment slid name doc = join $ find (\a -> name == signatoryattachmentname a)

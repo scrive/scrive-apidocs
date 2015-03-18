@@ -32,7 +32,6 @@ import Doc.DocumentMonad (withDocumentM, withDocumentID, theDocument, updateDocu
 import Doc.DocUtils
 import Doc.Model
 import Doc.Screenshot (Screenshot(..))
-import Doc.SignatoryFieldID
 import Doc.SignatoryScreenshots(emptySignatoryScreenshots, SignatoryScreenshots(signing))
 import Doc.SMSPin.Model
 import File.FileID
@@ -134,9 +133,9 @@ testLastPersonSigningADocumentClosesIt = do
                                       , signatoryisauthor = False
                                       , signatoryispartner = True
                                       , signatoryfields = [
-                                          SignatoryField (unsafeSignatoryFieldID 0) FirstNameFT "Fred" True False []
-                                        , SignatoryField (unsafeSignatoryFieldID 0) LastNameFT "Frog"  True False []
-                                        , SignatoryField (unsafeSignatoryFieldID 0) EmailFT "fred@frog.com" True False []
+                                          fieldForTests (NameFI (NameOrder 1)) "Fred"
+                                        , fieldForTests (NameFI (NameOrder 2)) "Frog"
+                                        , fieldForTests EmailFI "fred@frog.com"
                                         ]})
                  ]) (systemActor $ documentctime d)
 
@@ -205,10 +204,10 @@ testSigningWithPin = do
             , signatorylinkauthenticationmethod = SMSPinAuthentication
             , signatorylinkdeliverymethod = MobileDelivery
             , signatoryfields = [
-                SignatoryField (unsafeSignatoryFieldID 0) FirstNameFT "Fred" True False []
-              , SignatoryField (unsafeSignatoryFieldID 0) LastNameFT "Frog"  True False []
-              , SignatoryField (unsafeSignatoryFieldID 0) EmailFT "fred@frog.com" True False []
-              , SignatoryField (unsafeSignatoryFieldID 0) MobileFT "+47 666 111 777" True False []
+                fieldForTests (NameFI (NameOrder 1)) "Fred"
+              , fieldForTests (NameFI (NameOrder 2)) "Frog"
+              , fieldForTests EmailFI "fred@frog.com"
+              , fieldForTests MobileFI "+47 666 111 777"
             ]
           })
       ]) (systemActor $ documentctime d)
@@ -568,9 +567,9 @@ testDownloadSignviewBrandingAccess = do
                                       , signatoryisauthor = False
                                       , signatoryispartner = True
                                       , signatoryfields = [
-                                          SignatoryField (unsafeSignatoryFieldID 0) FirstNameFT "Fred" True False []
-                                        , SignatoryField (unsafeSignatoryFieldID 0) LastNameFT "Frog"  True False []
-                                        , SignatoryField (unsafeSignatoryFieldID 0) EmailFT "fred@frog.com" True False []
+                                          fieldForTests (NameFI (NameOrder 1)) "Fred"
+                                        , fieldForTests (NameFI (NameOrder 2)) "Frog"
+                                        , fieldForTests EmailFI "fred@frog.com"
                                         ]})
                  ]) (systemActor $ documentctime d)
     t <- documentctime <$> theDocument

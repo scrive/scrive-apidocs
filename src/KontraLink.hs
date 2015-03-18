@@ -65,7 +65,6 @@ data KontraLink
     | LinkExternal String
     | LinkDesignView
     | LinkPadList
-    deriving (Eq)
 
 langFolder :: Lang -> String
 langFolder lang = "/" ++ (codeFromLang lang)

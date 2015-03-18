@@ -6,6 +6,7 @@ module Doc.DocStateData (
   , module Doc.Data.MainFile
   , module Doc.Data.SignatoryAttachment
   , module Doc.Data.SignatoryField
+  , module Doc.Data.SignatoryFieldUtils
   , module Doc.Data.SignatoryLink
   ) where
 
@@ -16,5 +17,6 @@ import Doc.Data.DocumentTag
 import Doc.Data.MainFile
 import Doc.Data.SignatoryAttachment
 import Doc.Data.SignatoryField
+import Doc.Data.SignatoryFieldUtils
 import Doc.Data.SignatoryLink
 

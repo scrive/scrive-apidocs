@@ -36,36 +36,7 @@ import qualified Log
 -- disjoint with kontrakcja, so it can be done that way).
 kontraMigrations :: (MonadDB m, MonadThrow m, Log.MonadLog m) => [Migration m]
 kontraMigrations = [
-    addRegionToUserSettings
-  , removeSystemServer
-  , addUserCustomFooter
-  , addNameColumnInSignatoryAttachments
-  , addCSVUploadDataFromDocumentToSignatoryLink
-  , addColumnToRecordInternalInsertionOrder
-  , addEmailBrandingToCompany
-  , removeOldSignatoryLinkIDFromCancelationReason
-  , addDocumentIdIndexOnSignatoryLinks
-  , addSignatoryLinkIdToSignatoryAttachment
-  , addTextColourToEmailBranding
-  , addFileIdSequence
-  , addIdSerialOnSignatoryLinks
-  , addIdSerialOnDocuments
-  , addIdSerialOnCompanies
-  , addIdSerialOnUsers
-  , addEmailDomainOnCompanies
-  , addCompanyNameNumberOnUsers
-  , updateDocumentStatusAfterRemovingAwaitingAuthor
-  , moveDocumentTagsFromDocumentsTableToDocumentTagsTable
-  , fixSignatoryLinksSwedishChars
-  , setCascadeOnSignatoryAttachments
-  , renumerateSignatoryLinkIDS
-  , dropSLForeignKeyOnSignatoryAttachments
-  , setSignatoryLinksPrimaryKeyToIDOnly
-  , setSignatoryAttachmentsForeignKeyToSLIDOnly
-  , dropDocumentIDColumntFromSignatoryAttachments
-  , addCheckLowercaseEmailsUsers
-  , moveSignatoryLinkFieldsToSeparateTable
-  , migrateTempCredentialRemoveEmail -- for oauth
+    migrateTempCredentialRemoveEmail -- for oauth
   , deprecateDocFunctionalityCol
   , removePreferedDesignMode
   , addDefaultEmptyStringsToSomeColumnsInCompaniesTable
@@ -195,6 +166,7 @@ kontraMigrations = [
   , dropHTMLFromInvitationAndConfirmationMessages
   , dropHTMLFromMessagesInEvidenceLog
   , addNameToCallbackConsumers
+  , addNameOrderToFieldsAndMigrateNames
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

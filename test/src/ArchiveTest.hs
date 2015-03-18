@@ -60,6 +60,7 @@ testListDocs = do
   let rspString = BS.unpack $ rsBody rsp
 
   let Right json = runGetJSON readJSObject rspString
+  
   withJSValue json $ do
     Just (list :: [JSValue])  <- fromJSValueField  "list"
     assertBool "Test apiCallV1List number of docs" $ length list == 2

@@ -1,18 +1,21 @@
 module Doc.Data.SignatoryField (
     FieldType(..)
-  , SignatoryFieldValue(..)
-  , sfvEncode
-  , sfvNull
-  , getBinaryField
-  , getTextField
+  , NameOrder(..)
   , PlacementAnchor(..)
   , TipSide(..)
   , FieldPlacement(..)
   , SignatoryField(..)
-  , getFieldOfType
-  , getValueOfType
-  , getTextValueOfType
   , signatoryFieldsSelectors
+
+  , SignatoryNameField(..)
+  , SignatoryCompanyField(..)
+  , SignatoryPersonalNumberField(..)
+  , SignatoryCompanyNumberField(..)
+  , SignatoryEmailField(..)
+  , SignatoryMobileField(..)
+  , SignatoryTextField(..)
+  , SignatoryCheckboxField(..)
+  , SignatorySignatureField(..)
   ) where
 
 import Control.Applicative
@@ -20,11 +23,7 @@ import Control.Monad
 import Control.Monad.Catch
 import Data.Data
 import Data.Int
-import Data.List
 import Data.Maybe
-import Data.Monoid
-import Data.Monoid.Utils
-import Data.String
 import Database.PostgreSQL.PQTypes hiding (def)
 import Text.JSON
 import Text.JSON.FromJSValue
@@ -34,20 +33,42 @@ import qualified Text.JSON.Gen as J
 import DB.Derive
 import Doc.SignatoryFieldID
 import OurPrelude
-import Utils.Image
+
+newtype NameOrder = NameOrder Int16
+  deriving (Eq, Ord, Show, Data, Typeable)
+
+instance FromSQL NameOrder where
+  type PQBase NameOrder = PQBase Int16
+  fromSQL mbase = do
+    n <- fromSQL mbase
+    case n :: Int16 of
+      1  -> return $ NameOrder 1
+      2  -> return $ NameOrder 2
+      _  -> throwM RangeError {
+        reRange = [(1,2)]
+      , reValue = n
+      }
+
+instance ToSQL NameOrder where
+  type PQDest NameOrder = PQDest Int16
+  toSQL (NameOrder 1) = toSQL (1 :: Int16)
+  toSQL (NameOrder 2) = toSQL (2 :: Int16)
+  toSQL (NameOrder v) = $unexpectedError $ "Name order " ++ show v ++ " is not supported"
+
+instance PQFormat NameOrder where
+  pqFormat _ = pqFormat (undefined::Int16)
 
 data FieldType
-  = FirstNameFT
-  | LastNameFT
+  = NameFT
   | CompanyFT
   | PersonalNumberFT
   | CompanyNumberFT
   | EmailFT
-  | CustomFT String Bool -- label filledbyauthor
-  | SignatureFT String
-  | CheckboxFT String
+  | TextFT
+  | SignatureFT
+  | CheckboxFT
   | MobileFT
-    deriving (Eq, Ord, Show, Data, Typeable)
+    deriving (Eq, Show, Data, Typeable)
 
 instance PQFormat FieldType where
   pqFormat _ = pqFormat (undefined::Int16)
@@ -57,71 +78,32 @@ instance FromSQL FieldType where
   fromSQL mbase = do
     n <- fromSQL mbase
     case n :: Int16 of
-      1  -> return FirstNameFT
-      2  -> return LastNameFT
+      1  -> return $ NameFT
+      -- Don't reuse value '2' for FieldType. It was used for LastNameFT
       3  -> return CompanyFT
       4  -> return PersonalNumberFT
       5  -> return CompanyNumberFT
       6  -> return EmailFT
-      7  -> return $ CustomFT undefinedField undefinedField
-      8  -> return $ SignatureFT undefinedField
-      9  -> return $ CheckboxFT undefinedField
+      7  -> return TextFT
+      8  -> return SignatureFT
+      9  -> return CheckboxFT
       10 -> return MobileFT
       _  -> throwM RangeError {
-        reRange = [(1, 10)]
+        reRange = [(1,1),(3,10)]
       , reValue = n
       }
-    where
-      undefinedField :: t
-      undefinedField = $unexpectedError "undefined field"
 
 instance ToSQL FieldType where
   type PQDest FieldType = PQDest Int16
-  toSQL FirstNameFT      = toSQL (1::Int16)
-  toSQL LastNameFT       = toSQL (2::Int16)
+  toSQL NameFT           = toSQL (1::Int16)
   toSQL CompanyFT        = toSQL (3::Int16)
   toSQL PersonalNumberFT = toSQL (4::Int16)
   toSQL CompanyNumberFT  = toSQL (5::Int16)
   toSQL EmailFT          = toSQL (6::Int16)
-  toSQL CustomFT{}       = toSQL (7::Int16)
-  toSQL SignatureFT{}    = toSQL (8::Int16)
-  toSQL CheckboxFT{}     = toSQL (9::Int16)
+  toSQL TextFT           = toSQL (7::Int16)
+  toSQL SignatureFT      = toSQL (8::Int16)
+  toSQL CheckboxFT       = toSQL (9::Int16)
   toSQL MobileFT         = toSQL (10::Int16)
-
----------------------------------
-
--- FIXME: this is bad. we need to integrate this into SignatoryField
--- itself (it's needed anyway as e.g. checkboxes really are of value
--- Bool, signature field should have at most one placement etc.).
-data SignatoryFieldValue = BinaryField !BS.ByteString | TextField !String
-  deriving (Ord, Eq, Show, Data, Typeable)
-
-instance IsString SignatoryFieldValue where
-  fromString = TextField
-
--- | Encode 'SignatoryFieldValue' to be used in a template
-sfvEncode :: FieldType -> SignatoryFieldValue -> String
-sfvEncode ft v = case (ft, v) of
-  (SignatureFT{}, BinaryField "") -> "" -- FIXME: this case shouldn't be needed
-  (SignatureFT{}, BinaryField bs) -> BS.unpack $ imgEncodeRFC2397 bs
-  (SignatureFT{}, TextField{})    -> failure
-  (_, TextField s)                -> s
-  (_, BinaryField{})              -> failure
-  where
-    failure = error $ "sfvEncode: field of type" <+> show ft <+> "has the following value:" <+> show v <> ", this is not supposed to happen"
-
--- | Check whether 'FieldValue' is null.
-sfvNull :: SignatoryFieldValue -> Bool
-sfvNull (TextField s) = null s
-sfvNull (BinaryField bs) = BS.null bs
-
-getBinaryField :: SignatoryFieldValue -> Maybe BS.ByteString
-getBinaryField (BinaryField bs) = Just bs
-getBinaryField _ = Nothing
-
-getTextField :: SignatoryFieldValue -> Maybe String
-getTextField (TextField s) = Just s
-getTextField _ = Nothing
 
 ---------------------------------
 
@@ -129,10 +111,10 @@ data PlacementAnchor = PlacementAnchor {
   placementanchortext  :: !String
 , placementanchorindex :: !Int
 , placementanchorpages :: ![Int]
-} deriving (Eq, Ord, Show, Data, Typeable)
+} deriving (Eq,Ord, Show, Data, Typeable)
 
 data TipSide = LeftTip | RightTip
-  deriving (Eq, Ord, Show, Data, Typeable)
+  deriving (Eq, Show, Data, Typeable)
 
 data FieldPlacement = FieldPlacement {
   placementxrel    :: !Double
@@ -143,7 +125,7 @@ data FieldPlacement = FieldPlacement {
 , placementpage    :: !Int
 , placementtipside :: !(Maybe TipSide)
 , placementanchors :: ![PlacementAnchor]
-} deriving (Ord, Show, Data, Typeable)
+} deriving (Show, Data, Typeable)
 
 instance Eq FieldPlacement where
   a == b = and [
@@ -213,37 +195,94 @@ instance ToSQL [FieldPlacement] where
 
 ---------------------------------
 
-data SignatoryField = SignatoryField {
-  sfID                     :: !SignatoryFieldID
-, sfType                   :: !FieldType
-, sfValue                  :: !SignatoryFieldValue
-, sfObligatory             :: !Bool
-, sfShouldBeFilledBySender :: !Bool
-, sfPlacements             :: ![FieldPlacement]
-} deriving (Ord, Show, Data, Typeable)
+data SignatoryField = SignatoryNameField SignatoryNameField
+                    | SignatoryCompanyField SignatoryCompanyField
+                    | SignatoryPersonalNumberField SignatoryPersonalNumberField
+                    | SignatoryCompanyNumberField SignatoryCompanyNumberField
+                    | SignatoryEmailField SignatoryEmailField
+                    | SignatoryMobileField SignatoryMobileField
+                    | SignatoryTextField SignatoryTextField
+                    | SignatoryCheckboxField SignatoryCheckboxField
+                    | SignatorySignatureField SignatorySignatureField
+  deriving (Show, Data, Typeable)
 
--- | Do not compare IDs.
-instance Eq SignatoryField where
-  a == b = and [
-      sfType a == sfType b
-    , sfValue a == sfValue b
-    , sfObligatory a == sfObligatory b
-    , sfShouldBeFilledBySender a == sfShouldBeFilledBySender b
-    , sfPlacements a == sfPlacements b
-    ]
+data SignatoryNameField = NameField {
+    snfID                     :: !SignatoryFieldID
+  , snfNameOrder              :: !NameOrder
+  , snfValue                  :: !String
+  , snfObligatory             :: !Bool
+  , snfShouldBeFilledBySender :: !Bool
+  , snfPlacements             :: ![FieldPlacement]
+} deriving (Show, Data, Typeable)
 
-getFieldOfType :: FieldType -> [SignatoryField] -> Maybe SignatoryField
-getFieldOfType t = find ((t ==) . sfType)
+data SignatoryCompanyField = CompanyField {
+    scfID                     :: !SignatoryFieldID
+  , scfValue                  :: !String
+  , scfObligatory             :: !Bool
+  , scfShouldBeFilledBySender :: !Bool
+  , scfPlacements             :: ![FieldPlacement]
+} deriving (Show, Data, Typeable)
 
-getValueOfType :: FieldType -> [SignatoryField] -> SignatoryFieldValue
-getValueOfType t = fromMaybe def . fmap sfValue . getFieldOfType t
-  where
-    def = case t of
-      SignatureFT{} -> BinaryField BS.empty
-      _             -> TextField ""
+data SignatoryPersonalNumberField = PersonalNumberField {
+    spnfID                     :: !SignatoryFieldID
+  , spnfValue                  :: !String
+  , spnfObligatory             :: !Bool
+  , spnfShouldBeFilledBySender :: !Bool
+  , spnfPlacements             :: ![FieldPlacement]
+} deriving (Show, Data, Typeable)
 
-getTextValueOfType :: FieldType -> [SignatoryField] -> String
-getTextValueOfType t = fromMaybe "" . getTextField . getValueOfType t
+data SignatoryCompanyNumberField = CompanyNumberField {
+    scnfID                     :: !SignatoryFieldID
+  , scnfValue                  :: !String
+  , scnfObligatory             :: !Bool
+  , scnfShouldBeFilledBySender :: !Bool
+  , scnfPlacements             :: ![FieldPlacement]
+} deriving (Show, Data, Typeable)
+
+data SignatoryEmailField = EmailField {
+    sefID                     :: !SignatoryFieldID
+  , sefValue                  :: !String
+  , sefObligatory             :: !Bool
+  , sefShouldBeFilledBySender :: !Bool
+  , sefPlacements             :: ![FieldPlacement]
+} deriving (Show, Data, Typeable)
+
+data SignatoryMobileField = MobileField {
+    smfID                     :: !SignatoryFieldID
+  , smfValue                  :: !String
+  , smfObligatory             :: !Bool
+  , smfShouldBeFilledBySender :: !Bool
+  , smfPlacements             :: ![FieldPlacement]
+} deriving (Show, Data, Typeable)
+
+data SignatoryTextField = TextField {
+    stfID                     :: !SignatoryFieldID
+  , stfName                   :: !String
+  , stfFilledByAuthor        :: !Bool
+  , stfValue                  :: !String
+  , stfObligatory             :: !Bool
+  , stfShouldBeFilledBySender :: !Bool
+  , stfPlacements             :: ![FieldPlacement]
+} deriving (Show, Data, Typeable)
+
+data SignatoryCheckboxField = CheckboxField {
+    schfID                     :: !SignatoryFieldID
+  , schfName                   :: !String
+  , schfValue                  :: !Bool
+  , schfObligatory             :: !Bool
+  , schfShouldBeFilledBySender :: !Bool
+  , schfPlacements             :: ![FieldPlacement]
+} deriving (Show, Data, Typeable)
+
+
+data SignatorySignatureField = SignatureField {
+    ssfID                     :: !SignatoryFieldID
+  , ssfName                   :: !String
+  , ssfValue                  :: !BS.ByteString
+  , ssfObligatory             :: !Bool
+  , ssfShouldBeFilledBySender :: !Bool
+  , ssfPlacements             :: ![FieldPlacement]
+} deriving (Show, Data, Typeable)
 
 ---------------------------------
 
@@ -251,6 +290,7 @@ signatoryFieldsSelectors :: [SQL]
 signatoryFieldsSelectors = [
     "signatory_link_fields.id"
   , "signatory_link_fields.type"
+  , "signatory_link_fields.name_order"
   , "signatory_link_fields.custom_name"
   , "signatory_link_fields.is_author_filled"
   , "signatory_link_fields.value_text"
@@ -260,24 +300,79 @@ signatoryFieldsSelectors = [
   , "signatory_link_fields.placements"
   ]
 
-type instance CompositeRow SignatoryField = (SignatoryFieldID, FieldType, String, Bool, Maybe String, Maybe (Binary BS.ByteString), Bool, Bool, [FieldPlacement])
+type instance CompositeRow SignatoryField = (SignatoryFieldID, FieldType, Maybe NameOrder, String, Bool, Maybe String, Maybe (Binary BS.ByteString), Bool, Bool, [FieldPlacement])
 
 instance PQFormat SignatoryField where
   pqFormat _ = "%signatory_field"
 
 instance CompositeFromSQL SignatoryField where
-  toComposite (sfid, ftype, custom_name, is_author_filled, mvalue_text, mvalue_binary, obligatory, should_be_filled_by_sender, placements) = SignatoryField {
-    sfID = sfid
-  , sfType = case ftype of
-    CustomFT{} -> CustomFT custom_name is_author_filled
-    CheckboxFT{} -> CheckboxFT custom_name
-    SignatureFT{} -> SignatureFT $ if null custom_name then "signature" else custom_name
-    _   -> ftype
-  , sfValue = case (mvalue_text, mvalue_binary) of
-    (Just value_text, Nothing)   -> TextField value_text
-    (Nothing, Just value_binary) -> BinaryField $ unBinary value_binary
-    _ -> $unexpectedError "can't happen due to the checks in the database"
-  , sfObligatory = obligatory
-  , sfShouldBeFilledBySender = should_be_filled_by_sender
-  , sfPlacements = placements
-  }
+  toComposite (sfid, ftype, mname_order, custom_name, is_author_filled, mvalue_text, mvalue_binary, obligatory, should_be_filled_by_sender, placements) =
+    case ftype of
+      NameFT -> SignatoryNameField $ NameField {
+          snfID                     = sfid
+        , snfNameOrder              = fromMaybe ($unexpectedError "Name field has NULL as name_order") mname_order
+        , snfValue                  = fromMaybe ($unexpectedError "Name field has NULL as value_text") mvalue_text
+        , snfObligatory             = obligatory
+        , snfShouldBeFilledBySender = should_be_filled_by_sender
+        , snfPlacements             = placements
+      }
+      CompanyFT -> SignatoryCompanyField $ CompanyField {
+          scfID                     = sfid
+        , scfValue                  = fromMaybe ($unexpectedError "Company field has NULL as value_text") mvalue_text
+        , scfObligatory             = obligatory
+        , scfShouldBeFilledBySender = should_be_filled_by_sender
+        , scfPlacements             = placements
+      }
+      PersonalNumberFT -> SignatoryPersonalNumberField $ PersonalNumberField {
+          spnfID                     = sfid
+        , spnfValue                  = fromMaybe ($unexpectedError "Personal number field has NULL as value_text") mvalue_text
+        , spnfObligatory             = obligatory
+        , spnfShouldBeFilledBySender = should_be_filled_by_sender
+        , spnfPlacements             = placements
+      }
+      CompanyNumberFT -> SignatoryCompanyNumberField $ CompanyNumberField {
+          scnfID                     = sfid
+        , scnfValue                  = fromMaybe ($unexpectedError "Company number field has NULL as value_text") mvalue_text
+        , scnfObligatory             = obligatory
+        , scnfShouldBeFilledBySender = should_be_filled_by_sender
+        , scnfPlacements             = placements
+      }
+      EmailFT -> SignatoryEmailField $ EmailField {
+          sefID                     = sfid
+        , sefValue                  = fromMaybe ($unexpectedError "Email field has NULL as value_text") mvalue_text
+        , sefObligatory             = obligatory
+        , sefShouldBeFilledBySender = should_be_filled_by_sender
+        , sefPlacements             = placements
+      }
+      MobileFT -> SignatoryMobileField $ MobileField {
+          smfID                     = sfid
+        , smfValue                  = fromMaybe ($unexpectedError "Mobile field has NULL as value_text") mvalue_text
+        , smfObligatory             = obligatory
+        , smfShouldBeFilledBySender = should_be_filled_by_sender
+        , smfPlacements             = placements
+      }
+      TextFT -> SignatoryTextField $ TextField {
+          stfID                     = sfid
+        , stfName                   = custom_name
+        , stfFilledByAuthor          = is_author_filled
+        , stfValue                  = fromMaybe ($unexpectedError "Text field has NULL as value_text") mvalue_text
+        , stfObligatory             = obligatory
+        , stfShouldBeFilledBySender = should_be_filled_by_sender
+        , stfPlacements             = placements
+      }
+      CheckboxFT -> SignatoryCheckboxField $ CheckboxField {
+          schfID                     = sfid
+        , schfName                   = custom_name
+        , schfValue                  = not $ null $ fromMaybe ($unexpectedError "Checkbox field has NULL as value_text") mvalue_text
+        , schfObligatory             = obligatory
+        , schfShouldBeFilledBySender = should_be_filled_by_sender
+        , schfPlacements             = placements
+      }
+      SignatureFT -> SignatorySignatureField $ SignatureField {
+          ssfID                     = sfid
+        , ssfName                   = custom_name
+        , ssfValue                  = unBinary $ fromMaybe ($unexpectedError "Signature field has NULL as value_binary") mvalue_binary
+        , ssfObligatory             = obligatory
+        , ssfShouldBeFilledBySender = should_be_filled_by_sender
+        , ssfPlacements             = placements
+      }

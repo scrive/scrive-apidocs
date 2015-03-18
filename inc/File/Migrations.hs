@@ -1,11 +1,7 @@
 module File.Migrations where
 
-import Control.Monad.Catch
-import Data.Int
-
 import DB
 import File.Tables
-import qualified Log
 
 setProperOwnerOnFilesIDSequence :: MonadDB m => Migration m
 setProperOwnerOnFilesIDSequence = Migration {
@@ -39,21 +35,6 @@ addCryptoColumnsToFilesTable = Migration {
     runSQL_ "ALTER TABLE files ADD COLUMN checksum BYTEA NULL"
     runSQL_ "ALTER TABLE files ADD COLUMN aes_key BYTEA NULL"
     runSQL_ "ALTER TABLE files ADD COLUMN aes_iv BYTEA NULL"
-  }
-
-addFileIdSequence :: (MonadDB m, MonadThrow m, Log.MonadLog m) => Migration m
-addFileIdSequence = Migration {
-    mgrTable = tableFiles
-  , mgrFrom = 1
-  , mgrDo = do
-      -- create the sequence
-      runSQL_ $ "CREATE SEQUENCE files_id_seq"
-      -- set start value to be one more than maximum already in the table or 1000 if table is empty
-      runSQL_ "SELECT setval('files_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM files))"
-      n :: Int64 <- fetchOne runIdentity
-      Log.mixlog_ $ "Table files has yet " ++ show (maxBound - n) ++ " values to go"
-      -- and finally attach serial default value to files.id
-      runSQL_ $ "ALTER TABLE files ALTER id SET DEFAULT nextval('files_id_seq')"
   }
 
 addPurgedTimeToFiles :: MonadDB m => Migration m

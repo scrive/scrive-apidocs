@@ -79,7 +79,6 @@ import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import Utils.Monoid
-import Utils.Prelude
 import Utils.Read (maybeRead)
 import qualified Company.CompanyControl as Company
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
@@ -637,24 +636,6 @@ daveSignatoryLink documentid siglinkid = onlyAdmin $ do
     siglink <- guardJust $ getSigLinkFor siglinkid document
     renderTemplate  "daveSignatoryLink" $ do
         F.value "daveBody" $ inspectXML siglink
-        F.value "docid" $ show documentid
-        F.value "slid" $ show siglinkid
-        F.objects "fields" $ for (signatoryfields $ siglink) $ \sf -> do
-            F.value "fieldname" $ fieldTypeToString (sfType sf)
-            F.value "fieldvalue" $ sfValue sf
-            F.value "obligatory" $ sfObligatory sf
-            F.value "label" $ show $ sfType sf
-      where fieldTypeToString sf = case sf of
-              FirstNameFT      -> "sigfstname"
-              LastNameFT       -> "sigsndname"
-              EmailFT          -> "sigemail"
-              MobileFT         -> "sigmobile"
-              CompanyFT        -> "sigco"
-              PersonalNumberFT -> "sigpersnr"
-              CompanyNumberFT  -> "sigcompnr"
-              SignatureFT label-> "signature: " ++ label
-              CustomFT label _ -> "Custom: " ++ label
-              CheckboxFT label -> "Checkbox: " ++ label
 
 {- |
    Used by super users to inspect a particular user.

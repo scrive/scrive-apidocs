@@ -16,16 +16,15 @@ import qualified Data.Set as Set
 import qualified Text.StringTemplates.Fields as F
 
 import DB (MonadDB)
-import Doc.DocStateData (Document(..), SignatoryField(..), SignatoryLink(..), FieldType(..), DeliveryMethod(..), documentlang)
+import Doc.DocStateData
 import Doc.DocumentMonad (withDocumentID, withDocument, theDocument)
-import Doc.SignatoryFieldID
 import Doc.SignatoryIdentification (signatoryIdentifierMap)
 import Doc.SignatoryLinkID (unsafeSignatoryLinkID)
 import EvidenceLog.Model (EventRenderTarget(..), DocumentEvidenceEvent(..), EvidenceEventType(..), CurrentEvidenceEventType(..), evidenceLogText)
 import EvidenceLog.View (simpleEvents, simplyfiedEventText, eventForVerificationPage, finalizeEvidenceText)
 import MinutesTime
 import Templates (runTemplatesT)
-import TestingUtil (testThat, addNewRandomUser, addRandomDocumentWithAuthor)
+import TestingUtil (testThat, addNewRandomUser, addRandomDocumentWithAuthor, fieldForTests)
 import TestKontra (TestEnvSt, teOutputDirectory, teGlobalTemplates)
 import Text.XML.DirtyContent (renderXMLContent)
 import User.Model (codeFromLang, Lang, allLangs)
@@ -51,11 +50,11 @@ dumpEvidenceTexts :: (MonadDB m, MonadThrow m, TemplatesMonad m) => UTCTime -> L
 dumpEvidenceTexts now lang doc' = do
   let Just author_sl' = getAuthorSigLink doc'
       author_sl = author_sl'
-            { signatoryfields =
-                  [ SignatoryField (unsafeSignatoryFieldID 0) FirstNameFT "Adam" True False []
-                  , SignatoryField (unsafeSignatoryFieldID 0) LastNameFT "Author" True False []
-                  , SignatoryField (unsafeSignatoryFieldID 0) EmailFT "author@example.com" True False []
-                  ]
+            { signatoryfields = [
+                  fieldForTests (NameFI $ NameOrder 1) "Adam"
+                , fieldForTests (NameFI $ NameOrder 2) "Author"
+                , fieldForTests EmailFI "author@example.com"
+               ]
             , signatoryispartner = True
             , signatorylinkid = unsafeSignatoryLinkID 1
             }
@@ -72,11 +71,11 @@ dumpEvidenceTexts now lang doc' = do
                     }
   let evidencetypes = [minBound .. maxBound]
   let asl = defaultValue
-            { signatoryfields =
-                  [ SignatoryField (unsafeSignatoryFieldID 0) FirstNameFT "Sven" True False []
-                  , SignatoryField (unsafeSignatoryFieldID 0) LastNameFT "Signatory" True False []
-                  , SignatoryField (unsafeSignatoryFieldID 0) EmailFT "signatory@example.com" True False []
-                  ]
+            {   signatoryfields = [
+                      fieldForTests (NameFI $ NameOrder 1) "Sven"
+                    , fieldForTests (NameFI $ NameOrder 2) "Signatory"
+                    , fieldForTests EmailFI "signatory@example.com"
+                ]
             , signatoryispartner = True
             , signatorylinkdeliverymethod = EmailAndMobileDelivery
             , signatorylinkid = unsafeSignatoryLinkID 2

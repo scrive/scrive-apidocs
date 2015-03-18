@@ -288,7 +288,7 @@ ctDocumentTag = CompositeType {
 tableSignatoryLinkFields :: Table
 tableSignatoryLinkFields = tblTable {
     tblName = "signatory_link_fields"
-  , tblVersion = 8
+  , tblVersion = 9
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
@@ -300,6 +300,8 @@ tableSignatoryLinkFields = tblTable {
     , tblColumn { colName = "obligatory", colType = BoolT, colNullable = False, colDefault = Just "true" }
     , tblColumn { colName = "should_be_filled_by_author", colType = BoolT, colNullable = False, colDefault = Just "false" }
     , tblColumn { colName = "value_binary", colType = BinaryT }
+    , tblColumn { colName = "name_order", colType = SmallIntT }
+
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblChecks = [
@@ -307,12 +309,14 @@ tableSignatoryLinkFields = tblTable {
         "type = 8 AND value_binary IS NOT NULL AND value_text IS NULL OR type <> 8"
      , Check "check_signatory_link_fields_text_fields_well_defined"
         "type = 8 OR type <> 8 AND value_binary IS NULL AND value_text IS NOT NULL"
+     , Check "check_signatory_link_fields_text_fields_name_order_well_defined"
+        "type = 1 AND name_order IS NOT NULL OR type <> 1 AND name_order IS NULL"
     ]
   , tblForeignKeys = [
       (fkOnColumn "signatory_link_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }
     ]
   , tblIndexes = [
-      uniqueIndexOnColumns ["signatory_link_id", "type", "custom_name"]
+      uniqueIndexOnColumns ["signatory_link_id", "type", "name_order", "custom_name"]
     ]
   }
 
@@ -322,6 +326,7 @@ ctSignatoryField = CompositeType {
 , ctColumns = [
     CompositeColumn { ccName = "id", ccType = BigIntT }
   , CompositeColumn { ccName = "type", ccType = SmallIntT }
+  , CompositeColumn { ccName = "name_order", ccType = SmallIntT }
   , CompositeColumn { ccName = "custom_name", ccType = TextT }
   , CompositeColumn { ccName = "is_author_filled", ccType = BoolT }
   , CompositeColumn { ccName = "value_text", ccType = TextT }

@@ -10,67 +10,6 @@ import MinutesTime
 import User.Model (UserID)
 import User.Tables
 
-addUserCustomFooter :: MonadDB m => Migration m
-addUserCustomFooter =
-  Migration {
-    mgrTable = tableUsers
-  , mgrFrom = 3
-  , mgrDo = do
-      runSQL_ "ALTER TABLE users ADD COLUMN customfooter TEXT"
-      runSQL_ "UPDATE users SET customfooter = NULL"
-  }
-
-removeSystemServer :: MonadDB m => Migration m
-removeSystemServer =
-  Migration {
-    mgrTable = tableUsers
-  , mgrFrom = 2
-  , mgrDo = do
-      runSQL_ "ALTER TABLE users DROP COLUMN system_server CASCADE"
-  }
-
-addRegionToUserSettings :: MonadDB m => Migration m
-addRegionToUserSettings =
-  Migration {
-    mgrTable = tableUsers
-  , mgrFrom = 1
-  , mgrDo = do
-      runSQL_ "ALTER TABLE users ADD COLUMN region SMALLINT"
-      runSQL_ "UPDATE users SET region = 1" -- default region
-      runSQL_ "ALTER TABLE users ALTER COLUMN region SET NOT NULL"
-  }
-
-addIdSerialOnUsers :: MonadDB m => Migration m
-addIdSerialOnUsers =
-  Migration {
-    mgrTable = tableUsers
-  , mgrFrom = 4
-  , mgrDo = do
-      runSQL_ "CREATE SEQUENCE users_id_seq"
-      runSQL_ "SELECT setval('users_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM users))"
-      runSQL_ "ALTER TABLE users ALTER id SET DEFAULT nextval('users_id_seq')"
-  }
-
-addCompanyNameNumberOnUsers :: MonadDB m => Migration m
-addCompanyNameNumberOnUsers =
-  Migration {
-    mgrTable = tableUsers
-  , mgrFrom = 5
-  , mgrDo = do
-      runSQL_ "ALTER TABLE users ADD COLUMN company_name   TEXT NOT NULL DEFAULT ''"
-      runSQL_ "ALTER TABLE users ADD COLUMN company_number TEXT NOT NULL DEFAULT ''"
-  }
-
-addCheckLowercaseEmailsUsers :: MonadDB m => Migration m
-addCheckLowercaseEmailsUsers =
-  Migration {
-    mgrTable = tableUsers
-  , mgrFrom = 6
-  , mgrDo = do
-      runSQL_ "UPDATE users SET email = lower(email)"
-      runSQL_ "ALTER TABLE users ADD CONSTRAINT users_email_lowercase_chk CHECK (email = lower(email))"
-  }
-
 removePreferedDesignMode :: MonadDB m => Migration m
 removePreferedDesignMode =
   Migration {

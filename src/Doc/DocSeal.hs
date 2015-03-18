@@ -134,15 +134,15 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryLink{signatoryf
     silenceJPEGFieldsFromFirstSignature (x:xs) = x : silenceJPEGFieldsFromFirstSignature xs
 
     makeSealField :: SignatoryField -> [Seal.Field]
-    makeSealField sf = case sfType sf of
-       SignatureFT _ -> case (sfPlacements sf, fromMaybe BS.empty . getBinaryField $ sfValue sf) of
+    makeSealField sf = case sf of
+       SignatorySignatureField ssf -> case (fieldPlacements  sf, ssfValue ssf) of
                            (_, "") -> []  -- We skip signature that don't have a drawing
                            ([], v) -> maybeToList $ fieldJPEGFromSignatureField v
-                           (plsms, v) -> concatMap (maybeToList . (fieldJPEGFromPlacement v)) plsms
-       CheckboxFT _ -> map (uncheckedImageFromPlacement <| sfvNull (sfValue sf) |>  checkedImageFromPlacement) (sfPlacements sf)
-       _ -> for (sfPlacements sf) $ fieldFromPlacement False (sfValue sf)
+                           (_, v) -> concatMap (maybeToList . (fieldJPEGFromPlacement v)) (fieldPlacements  sf)
+       SignatoryCheckboxField schf -> map (uncheckedImageFromPlacement <| not (schfValue schf) |>  checkedImageFromPlacement) (fieldPlacements  sf)
+       _ -> for (fieldPlacements sf) $ fieldFromPlacement False sf
     fieldFromPlacement greyed sf placement =
-      Seal.Field { Seal.value            = fromMaybe "" $ getTextField sf
+      Seal.Field { Seal.value            = fromMaybe "" $ fieldTextValue sf
                  , Seal.x                = placementxrel placement
                  , Seal.y                = placementyrel placement
                  , Seal.page             = placementpage placement

@@ -367,44 +367,6 @@ removeExternalIDFromCompanies = Migration {
     runSQL_ "ALTER TABLE companies DROP COLUMN external_id"
 }
 
-addEmailBrandingToCompany :: MonadDB m => Migration m
-addEmailBrandingToCompany =
-  Migration {
-    mgrTable = tableCompanies
-  , mgrFrom = 1
-  , mgrDo = do
-      runSQL_ "ALTER TABLE companies ADD COLUMN bars_background TEXT NULL"
-      runSQL_ "ALTER TABLE companies ADD COLUMN logo BYTEA NULL"
-      return ()
-  }
-
-addTextColourToEmailBranding :: MonadDB m => Migration m
-addTextColourToEmailBranding =
-  Migration {
-    mgrTable = tableCompanies
-  , mgrFrom = 2
-  , mgrDo = runSQL_ "ALTER TABLE companies ADD COLUMN bars_textcolour TEXT NULL"
-  }
-
-addIdSerialOnCompanies :: MonadDB m => Migration m
-addIdSerialOnCompanies =
-  Migration {
-    mgrTable = tableCompanies
-  , mgrFrom = 3
-  , mgrDo = do
-      runSQL_ $ "CREATE SEQUENCE companies_id_seq"
-      runSQL_ $ "SELECT setval('companies_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM companies))"
-      runSQL_ $ "ALTER TABLE companies ALTER id SET DEFAULT nextval('companies_id_seq')"
-  }
-
-addEmailDomainOnCompanies :: MonadDB m => Migration m
-addEmailDomainOnCompanies =
-  Migration {
-    mgrTable = tableCompanies
-  , mgrFrom = 4
-  , mgrDo = runSQL_ $ "ALTER TABLE companies ADD COLUMN email_domain TEXT NULL"
-  }
-
 addDefaultEmptyStringsToSomeColumnsInCompaniesTable :: MonadDB m => Migration m
 addDefaultEmptyStringsToSomeColumnsInCompaniesTable =
   Migration {

@@ -18,16 +18,12 @@ import Text.XML.HaXml.Parse (xmlParse')
 import Text.XML.HaXml.Posn
 import Text.XML.HaXml.Pretty(content)
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Char8 as BSC
-import qualified Data.ByteString.UTF8 as BS
 import qualified Text.XML.HaXml.Types as XML
 
 import DB
 import DB.Checks
 import Doc.DocStateData
-import Doc.DocumentID
 import Doc.SealStatus (SealStatus(..))
-import Doc.SignatoryLinkID
 import Doc.Tables
 import EvidenceLog.Model
 import MinutesTime
@@ -45,6 +41,23 @@ instance FromSQL [SignatoryField] where
 instance ToSQL [SignatoryField] where
   type PQDest [SignatoryField] = PQDest String
   toSQL = jsonToSQL
+
+addNameOrderToFieldsAndMigrateNames :: MonadDB m => Migration m
+addNameOrderToFieldsAndMigrateNames = Migration {
+    mgrTable = tableSignatoryLinkFields
+  , mgrFrom = 8
+  , mgrDo = do
+    runQuery_ $ sqlDropIndex "signatory_link_fields" (uniqueIndexOnColumns ["signatory_link_id","type","custom_name"])
+    runSQL_ "ALTER TABLE signatory_link_fields ADD COLUMN name_order SMALLINT NULL"
+    runSQL_ "UPDATE signatory_link_fields SET type=1, name_order=1 WHERE type=1"
+    runSQL_ "UPDATE signatory_link_fields SET type=1, name_order=2 WHERE type=2"
+    runQuery_ $ sqlAlterTable "signatory_link_fields" [
+      sqlAddCheck $ Check "check_signatory_link_fields_text_fields_name_order_well_defined"
+        "type = 1 AND name_order IS NOT NULL OR type <> 1 AND name_order IS NULL"
+      ]
+    runQuery_ $ sqlCreateIndex "signatory_link_fields" (uniqueIndexOnColumns ["signatory_link_id","type","name_order","custom_name"])
+
+}
 
 
 dropHTMLFromInvitationAndConfirmationMessages :: MonadDB m => Migration m
@@ -88,7 +101,6 @@ dropHTMLFromInvitationAndConfirmationMessages = Migration {
     justText ('<':cs) = justText $ drop 1 $ dropWhile (/= '>') cs
     justText (c:cs) = c : justText cs
     justText [] = []
-
 
 addMtimeStatusIndexes :: MonadDB m => Migration m
 addMtimeStatusIndexes = Migration {
@@ -550,339 +562,6 @@ deprecateDocFunctionalityCol = Migration {
     runSQL_ "ALTER TABLE documents DROP COLUMN functionality"
 }
 
-setCascadeOnSignatoryAttachments :: MonadDB m => Migration m
-setCascadeOnSignatoryAttachments = Migration {
-    mgrTable = tableSignatoryAttachments
-  , mgrFrom = 3
-  , mgrDo = do
-    -- this is supposed to aid in the signatory_links renumeration step that follows
-    runSQL_ $ "ALTER TABLE signatory_attachments"
-              <> " DROP CONSTRAINT fk_signatory_attachments_signatory_links,"
-              <> " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(document_id,signatory_link_id)"
-              <> " REFERENCES signatory_links(document_id,id) ON DELETE RESTRICT ON UPDATE CASCADE"
-              <> " DEFERRABLE INITIALLY IMMEDIATE"
-  }
-
-renumerateSignatoryLinkIDS :: MonadDB m => Migration m
-renumerateSignatoryLinkIDS = Migration {
-    mgrTable = tableSignatoryLinks
-  , mgrFrom = 6
-  , mgrDo = do
-    runSQL_ $ "UPDATE signatory_links"
-              <> " SET id = DEFAULT"
-              <> " FROM signatory_links AS sl2"
-              <> " WHERE signatory_links.id = sl2.id"
-              <> " AND signatory_links.document_id <>"
-              <> " sl2.document_id"
-  }
-
-dropSLForeignKeyOnSignatoryAttachments :: MonadDB m => Migration m
-dropSLForeignKeyOnSignatoryAttachments = Migration {
-    mgrTable = tableSignatoryAttachments
-  , mgrFrom = 4
-  , mgrDo = do
-    runSQL_ $ "ALTER TABLE signatory_attachments"
-           <> " DROP CONSTRAINT fk_signatory_attachments_signatory_links"
-  }
-
-setSignatoryLinksPrimaryKeyToIDOnly :: MonadDB m => Migration m
-setSignatoryLinksPrimaryKeyToIDOnly = Migration {
-    mgrTable = tableSignatoryLinks
-  , mgrFrom = 7
-  , mgrDo = do
-    runSQL_ $ "ALTER TABLE signatory_links"
-              <> " DROP CONSTRAINT pk_signatory_links,"
-              <> " ADD CONSTRAINT pk_signatory_links PRIMARY KEY (id)"
-  }
-
-setSignatoryAttachmentsForeignKeyToSLIDOnly :: MonadDB m => Migration m
-setSignatoryAttachmentsForeignKeyToSLIDOnly = Migration {
-    mgrTable = tableSignatoryAttachments
-  , mgrFrom = 5
-  , mgrDo = do
-    runSQL_ $ "ALTER TABLE signatory_attachments"
-      <> " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(signatory_link_id)"
-      <> " REFERENCES signatory_links(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
-  }
-
-dropDocumentIDColumntFromSignatoryAttachments :: MonadDB m => Migration m
-dropDocumentIDColumntFromSignatoryAttachments = Migration {
-    mgrTable = tableSignatoryAttachments
-  , mgrFrom = 6
-  , mgrDo = do
-    runSQL_ $ "ALTER TABLE signatory_attachments"
-      <> " DROP COLUMN document_id"
-  }
-
-
-{-
-- migrate padqueue - set fk referencing signatory_links to ON UPDATE CASCADE
-- migrate signatory_attachments - set fk referencing signatory_links to ON UPDATE CASCADE
-- migrate signatory_links - renumerate ids (references in padqueue/signatory_attachments are properly updated if necessary)
-- migrate padqueue - drop fk referencing signatory_links
-- migrate signatory_attachments - drop fk referencing signatory_links
-- migrate signatory_links - change primary key
-- migrate padqueue - add new fk referencing signatory_links
-- migrate signatory_attachments - add new fk referencing signatory_links
--}
-
-moveSignatoryLinkFieldsToSeparateTable :: MonadDB m => Migration m
-moveSignatoryLinkFieldsToSeparateTable = Migration {
-    mgrTable = tableSignatoryLinks
-  , mgrFrom = 8
-  , mgrDo = do
-    runSQL_ "SELECT id, fields FROM signatory_links WHERE fields <> '' AND fields <> '[]'"
-    values <- fetchMany fetch
-    forM_ values $ \(slid, fields) -> do
-      forM_ fields $ \field -> do
-        let (xtypestr :: String, custom_name :: String, is_author_filled :: Bool) =
-              case lookup "sfType" field of
-                Just (JSString x_sfType) -> (fromJSString x_sfType,"",False)
-                Just obj@(JSObject xcustom) ->
-                  case lookup "CustomFT" (fromJSObject xcustom) of
-                    Just (JSArray [JSString custname, JSBool authorfilled]) ->
-                      ("CustomFT", fromJSString custname, authorfilled)
-                    _ -> error $ "Custom field has unrecognized format: " ++ encode obj
-                Just x -> error $ "Field type must be either string or object, found: " ++ encode x
-                Nothing -> error $ "Field definition does not have sfType, whole def: " ++ encode field
-
-            Just (JSString x_sfValue) = lookup "sfValue" field
-            Just placement = lookup "sfPlacements" field
-            (xtype :: Int16) = case xtypestr of
-                      "FirstNameFT"      -> 1
-                      "LastNameFT"       -> 2
-                      "CompanyFT"        -> 3
-                      "PersonalNumberFT" -> 4
-                      "CompanyNumberFT"  -> 5
-                      "EmailFT"          -> 6
-                      "CustomFT"         -> 7
-                      "SignatureFT"      -> 8
-                      _                  -> error $ "Unknown field type: " ++ xtypestr
-
-        runQuery_ . sqlInsert "signatory_link_fields" $ do
-                sqlSet "type" xtype
-                sqlSet "value" $ fromJSString x_sfValue
-                sqlSet "signatory_link_id" slid
-                sqlSet "is_author_filled" is_author_filled
-                sqlSet "custom_name" custom_name
-                sqlSet "placements" $ encode placement
-
-        return ()
-      return ()
-    runSQL_ $ "ALTER TABLE signatory_links DROP COLUMN fields"
-  }
-  where
-    fetch (slid, fieldsstr) = (slid :: Int64, fields)
-      where
-        Ok (JSArray arr) = decode fieldsstr
-        fromJSVal (JSObject obj) = fromJSObject obj
-        fromJSVal x =
-          error $ "moveSignatoryLinkFieldsToSeparateTable: expected valid object, got: " ++ encode x
-        fields = map fromJSVal arr
-
-moveDocumentTagsFromDocumentsTableToDocumentTagsTable :: MonadDB m => Migration m
-moveDocumentTagsFromDocumentsTableToDocumentTagsTable = Migration {
-    mgrTable = tableDocuments
-  , mgrFrom = 4
-  , mgrDo = do
-    runSQL_ "SELECT id, tags FROM documents WHERE tags <> '' AND tags <> '[]'"
-    values <- fetchMany fetch
-    forM_ values $ \(docid, tags) -> do
-      forM_ tags $ \tag -> do
-        let Just (JSString tagname) = lookup "tagname" tag
-            Just (JSString tagvalue) = lookup "tagvalue" tag
-        runQuery . sqlInsert "document_tags" $ do
-                   sqlSet "name" $ fromJSString tagname
-                   sqlSet "value" $ fromJSString tagvalue
-                   sqlSet "document_id" docid
-      return ()
-    runSQL_ $ "ALTER TABLE documents DROP COLUMN tags"
-  }
-  where
-    fetch (docid, tagsstr) = (docid :: Int64, tags)
-      where
-        Ok (JSArray arr) = decode tagsstr
-        fromJSVal (JSObject obj) = fromJSObject obj
-        fromJSVal x =
-          error $ "moveDocumentTagsFromDocumentsTableToDocumentTagsTable: expected {tagname:'',tagvalue:''}, got: " ++ encode x
-        tags = map fromJSVal arr
-
-updateDocumentStatusAfterRemovingAwaitingAuthor :: MonadDB m => Migration m
-updateDocumentStatusAfterRemovingAwaitingAuthor = Migration {
-    mgrTable = tableDocuments
-  , mgrFrom = 3
-  , mgrDo = do
-    -- change AwaitingAuthor to Pending
-    runSQL_ "UPDATE documents SET status = 2 WHERE status = 7"
-    -- update DocumentError so it has proper value
-    runSQL_ "UPDATE documents SET status = 7 WHERE status = 8"
-  }
-
-removeOldSignatoryLinkIDFromCancelationReason :: MonadDB m => Migration m
-removeOldSignatoryLinkIDFromCancelationReason = Migration {
-    mgrTable = tableDocuments
-  , mgrFrom = 1
-  , mgrDo = do
-    runSQL_ $ "SELECT id, cancelation_reason FROM documents WHERE cancelation_reason LIKE" <?> ("{\"ELegDataMismatch%"::String)
-    values <- fetchMany fetch
-    forM_ values $ \(slid, params) -> do
-      let (x : JSObject link : xs) = params
-          [("unSignatoryLinkID", newlink)] = fromJSObject link
-          newparams = toJSObject [("ELegDataMismatch", x : newlink : xs)]
-      1 <- runQuery $ "UPDATE documents SET cancelation_reason = " <?> encode newparams <> " WHERE id = " <?> slid
-      return ()
-  }
-  where
-    fetch (slid, reason) = (slid :: Int64, params)
-      where
-        Ok (JSObject o) = decode reason
-        [("ELegDataMismatch", JSArray params)] = fromJSObject o
-
-addColumnToRecordInternalInsertionOrder :: MonadDB m => Migration m
-addColumnToRecordInternalInsertionOrder =
-  Migration {
-    mgrTable = tableSignatoryLinks
-  , mgrFrom = 2
-  , mgrDo = do
-      runSQL_ "CREATE SEQUENCE signatory_links_internal_insert_order_seq"
-      runSQL_ $ "ALTER TABLE signatory_links"
-        <> " ADD COLUMN internal_insert_order BIGINT NOT NULL DEFAULT nextval('signatory_links_internal_insert_order_seq')"
-      return ()
-  }
-
-addDocumentIdIndexOnSignatoryLinks :: MonadDB m => Migration m
-addDocumentIdIndexOnSignatoryLinks =
-  Migration {
-    mgrTable = tableSignatoryLinks
-  , mgrFrom = 3
-  , mgrDo = do
-      runSQL_ $ "CREATE INDEX idx_signatory_links_document_id ON signatory_links(document_id)"
-      return ()
-  }
-
-addIdSerialOnSignatoryLinks :: (MonadDB m, MonadThrow m, Log.MonadLog m) => Migration m
-addIdSerialOnSignatoryLinks =
-  Migration {
-    mgrTable = tableSignatoryLinks
-  , mgrFrom = 4
-  , mgrDo = do
-      -- create the sequence
-      runSQL_ "CREATE SEQUENCE signatory_links_id_seq"
-      -- set start value to be one more than maximum already in the table or 1000 if table is empty
-      runSQL_ "SELECT setval('signatory_links_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM signatory_links))"
-      n <- fetchOne runIdentity
-      Log.mixlog_ $ "Table signatory_links has yet " ++ show (maxBound - n :: Int64) ++ " values to go"
-      -- and finally attach serial default value to files.id
-      runSQL_ "ALTER TABLE signatory_links ALTER id SET DEFAULT nextval('signatory_links_id_seq')"
-  }
-
-addIdSerialOnDocuments :: (MonadDB m, MonadThrow m, Log.MonadLog m) => Migration m
-addIdSerialOnDocuments =
-  Migration {
-    mgrTable = tableDocuments
-  , mgrFrom = 2
-  , mgrDo = do
-      -- create the sequence
-      runSQL_ "CREATE SEQUENCE documents_id_seq"
-      -- set start value to be one more than maximum already in the table or 1000 if table is empty
-      runSQL_ "SELECT setval('documents_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM documents))"
-      n <- fetchOne runIdentity
-      Log.mixlog_ $ "Table documents has yet " ++ show (maxBound - n :: Int64) ++ " values to go"
-      -- and finally attach serial default value to files.id
-      runSQL_ $ "ALTER TABLE documents ALTER id SET DEFAULT nextval('documents_id_seq')"
-  }
-
-addNameColumnInSignatoryAttachments :: MonadDB m => Migration m
-addNameColumnInSignatoryAttachments =
-  Migration {
-    mgrTable = tableSignatoryAttachments
-  , mgrFrom = 1
-  , mgrDo = do
-      runSQL_ "ALTER TABLE signatory_attachments ADD COLUMN name TEXT NOT NULL DEFAULT ''"
-  }
-
-addCSVUploadDataFromDocumentToSignatoryLink :: MonadDB m => Migration m
-addCSVUploadDataFromDocumentToSignatoryLink =
-  Migration {
-    mgrTable = tableSignatoryLinks
-  , mgrFrom = 1
-  , mgrDo = do
-      runSQL_ $ "ALTER TABLE signatory_links"
-        <> " ADD COLUMN csv_title TEXT NULL,"
-        <> " ADD COLUMN csv_contents TEXT NULL,"
-        <> " ADD COLUMN csv_signatory_index INTEGER NULL"
-  }
-
-addSignatoryLinkIdToSignatoryAttachment :: (MonadDB m, Log.MonadLog m) => Migration m
-addSignatoryLinkIdToSignatoryAttachment =
-  Migration {
-    mgrTable = tableSignatoryAttachments
-  , mgrFrom = 2
-  , mgrDo = do
-    runSQL_ $ "ALTER TABLE signatory_attachments"
-      <> " ADD COLUMN signatory_link_id BIGINT NOT NULL DEFAULT 0"
-    -- set the new column signatory_link_id from signatory_links that have the same email and document_id
-    runSQL_ $ "UPDATE signatory_attachments "
-      <> "SET signatory_link_id = sl.id "
-      <> "FROM signatory_links sl "
-      <> "WHERE sl.document_id = signatory_attachments.document_id "
-      <> "AND regexp_replace(sl.fields, '^.*EmailFT\",\"sfValue\":\"([a-zA-Z0-9@-_.]+)\".*$', E'\\\\1') = signatory_attachments.email"
-    runSQL_ $ "ALTER TABLE signatory_attachments DROP CONSTRAINT pk_signatory_attachments"
-    -- delete attachments which have emails and document_id that don't exist in signatory_links
-    logAndDeleteBadAttachments
-    runSQL_ $ "ALTER TABLE signatory_attachments DROP COLUMN email"
-    runSQL_ $ "ALTER TABLE signatory_attachments ADD CONSTRAINT pk_signatory_attachments PRIMARY KEY (document_id, signatory_link_id, name)"
-    runSQL_ $ "ALTER TABLE signatory_attachments"
-      <> " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(signatory_link_id, document_id)"
-      <> " REFERENCES signatory_links(id, document_id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
-    runSQL_ $ "CREATE INDEX idx_signatory_attachments_signatory_link_id ON signatory_attachments(signatory_link_id)"
-  }
-  where
-    logAndDeleteBadAttachments = do
-      runSQL_ $ "SELECT document_id, name, email, description FROM signatory_attachments WHERE signatory_link_id = 0"
-      atts :: [(Int64, BS.ByteString, BS.ByteString, BS.ByteString)] <- fetchMany id
-      runSQL_ $ "DELETE FROM signatory_attachments WHERE signatory_link_id = 0"
-      mapM_ (\(d, n, e, s) ->
-        Log.mixlog_ $ "Deleted bad attachment: document_id = " ++ show d
-                 ++ ", name = " ++ show n
-                 ++ ", email = " ++ show e
-                 ++ ", description = " ++ show s) atts
-      return ()
-
-fixSignatoryLinksSwedishChars :: MonadDB m => Migration m
-fixSignatoryLinksSwedishChars =
-  Migration {
-    mgrTable = tableSignatoryLinks
-  , mgrFrom = 5
-  , mgrDo = do
-     runSQL_ "SELECT id, document_id, fields FROM signatory_links"
-     sls :: [(SignatoryLinkID, DocumentID, [SignatoryField])] <- fetchMany id
-     forM_ sls $ \(sid,did,fields) -> do
-       let fixedfields = fixSwedishChars fields
-       when (fields /= fixedfields) $ do
-         runQuery_ . sqlUpdate "signatory_links" $ do
-           sqlSet "fields" fixedfields
-           sqlWhereEq "id" sid
-           sqlWhereEq "document_id" did
-  }
-    where
-        fixSwedishChars :: [SignatoryField] ->  [SignatoryField]
-        fixSwedishChars = map fixSwedishCharsForAField
-        fixSwedishCharsForAField :: SignatoryField -> SignatoryField
-        fixSwedishCharsForAField f = f { sfType = fixSwedishCharsForAFieldType (sfType f)
-                                       , sfValue = fromMaybe (sfValue f) (TextField . fixSwedishCharsForAString <$> (getTextField $ sfValue f))
-                                       }
-        fixSwedishCharsForAFieldType (CustomFT s b) = CustomFT (fixSwedishCharsForAString s) b
-        fixSwedishCharsForAFieldType a = a
-        fixSwedishCharsForAString :: String -> String
-        fixSwedishCharsForAString s =
-          let value = BS.toString $ BSC.pack s
-          in if value /= s && BS.replacement_char `notElem` value
-             then value
-             else s
-
 addOCSPResponse :: MonadDB m => Migration m
 addOCSPResponse =
   Migration {
@@ -1217,7 +896,7 @@ fixSignatureFieldsWithAnySize =
     runQuery_ $ sqlSelect "signatory_link_fields" $ do
                  sqlResult "id, placements"
                  sqlWhere "placements ILIKE '%\"wrel\":0,%'"
-                 sqlWhereEq "type" (SignatureFT undefined)
+                 sqlWhereEq "type" (8 :: Int16)
     values :: [(Int64, [FieldPlacement])] <- fetchMany id
     forM_ values $ \(fid,  placements) -> do
       let placements' = for placements (\p -> if (placementwrel p == 0 || placementhrel p == 0)
@@ -1352,7 +1031,7 @@ addUniqueContraintsTypeOnFields=
            -- Append as many '_' as there are fields before this one
            sqlSetCmd "custom_name" ("custom_name || rpad('', (" <> calc <> ") :: INT, '_')")
            -- We fix only custom fields this way
-           sqlWhereIn "type" [SignatureFT undefined, CustomFT undefined undefined, CheckboxFT undefined]
+           sqlWhereIn "type" ([7, 8, 9]::[Int16]) -- Text,Signature and Checkbox
            -- Make sure that we alter only the problemtic
            -- fields. Otherwise Postgresql will happily reqwrite whole
            -- table.

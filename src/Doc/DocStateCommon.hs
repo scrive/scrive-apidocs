@@ -5,10 +5,10 @@ import qualified Data.ByteString as BS
 
 import Company.Model
 import Doc.DocStateData
-import Doc.DocUtils
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import MagicHash (MagicHash)
+import OurPrelude
 import User.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
@@ -51,16 +51,36 @@ signLinkFromDetails' fields author partner sorder attachments magichash =
                 }
 
 signatoryLinkClearField :: SignatoryField -> SignatoryField
-signatoryLinkClearField field =  case sfType field of
-  SignatureFT _ -> field { sfValue = BinaryField BS.empty }
+signatoryLinkClearField field =  case field of
+  SignatorySignatureField (sf@(SignatureField{})) -> SignatorySignatureField $ sf { ssfValue = BS.empty }
   _ -> field
 
 emptySignatoryFields :: [SignatoryField]
 emptySignatoryFields = [
-          SignatoryField (unsafeSignatoryFieldID 0) FirstNameFT "" True  True  []
-        , SignatoryField (unsafeSignatoryFieldID 0) LastNameFT  "" True  True  []
-        , SignatoryField (unsafeSignatoryFieldID 0) EmailFT     "" True  True  []
-        ]
+    SignatoryNameField $ NameField {
+        snfID                     = (unsafeSignatoryFieldID 0)
+      , snfNameOrder              = NameOrder 1
+      , snfValue                  = ""
+      , snfObligatory             = True
+      , snfShouldBeFilledBySender = True
+      , snfPlacements             = []
+    }
+  , SignatoryNameField $ NameField {
+        snfID                     = (unsafeSignatoryFieldID 0)
+      , snfNameOrder              = NameOrder 2
+      , snfValue                  = ""
+      , snfObligatory             = True
+      , snfShouldBeFilledBySender = True
+      , snfPlacements             = []
+    }
+  , SignatoryEmailField $ EmailField {
+        sefID                     = (unsafeSignatoryFieldID 0)
+      , sefValue                  = ""
+      , sefObligatory             = True
+      , sefShouldBeFilledBySender = True
+      , sefPlacements             = []
+    }
+  ]
 
 checkResetSignatoryData :: Document -> [SignatoryLink] -> [String]
 checkResetSignatoryData doc sigs =
@@ -81,31 +101,20 @@ replaceSignatoryData :: SignatoryLink
                         -> String
                         -> String
                         -> String
-                        -> [String]
                         -> SignatoryLink
-replaceSignatoryData siglink fstname sndname email mobile company personalnumber companynumber fieldvalues =
-  siglink { signatoryfields = pumpData (signatoryfields siglink) fieldvalues }
+replaceSignatoryData siglink fstname sndname email mobile company personalnumber companynumber =
+  siglink { signatoryfields = map fillData (signatoryfields siglink) }
   where
-    pumpData [] _ = []
-    pumpData (sf:rest) vs = (case sfType sf of
-      FirstNameFT      -> sf { sfValue = TextField fstname }
-      LastNameFT       -> sf { sfValue = TextField sndname }
-      CompanyFT        -> sf { sfValue = TextField company }
-      PersonalNumberFT -> sf { sfValue = TextField personalnumber }
-      CompanyNumberFT  -> sf { sfValue = TextField companynumber }
-      EmailFT          -> sf { sfValue = TextField email }
-      MobileFT         -> sf { sfValue = TextField mobile }
-      CustomFT label _ -> sf { sfType = CustomFT label (not $ null v), sfValue = TextField v }
-      CheckboxFT _     -> sf
-      SignatureFT _    -> sf)
-        : pumpData rest vs'
-      where
-        (v, vs') = case sfType sf of
-          CustomFT{} -> if null vs
-                           then ("", [])
-                           else (head vs, tail vs)
-          _          -> (error "you can't use it", vs)
-
+    fillData sf = case sf of
+      SignatoryNameField nf@(NameField {snfNameOrder = NameOrder 1}) -> SignatoryNameField $ nf { snfValue = fstname }
+      SignatoryNameField nf@(NameField {snfNameOrder = NameOrder 2}) -> SignatoryNameField $ nf { snfValue = sndname }
+      SignatoryNameField _ -> $unexpectedError "Name field with order different than 1 or 2"
+      SignatoryCompanyField cf@(CompanyField{}) -> SignatoryCompanyField $ cf { scfValue = company }
+      SignatoryPersonalNumberField pnf@(PersonalNumberField{}) -> SignatoryPersonalNumberField $ pnf { spnfValue = personalnumber }
+      SignatoryCompanyNumberField cnf@(CompanyNumberField{}) -> SignatoryCompanyNumberField $ cnf { scnfValue = companynumber }
+      SignatoryEmailField cef@(EmailField {}) -> SignatoryEmailField $ cef { sefValue = email }
+      SignatoryMobileField cmf@(MobileField{}) -> SignatoryMobileField $ cmf { smfValue = mobile }
+      _  -> sf
 
 {- |
     Replaces signatory data with given user's data.
@@ -115,17 +124,14 @@ replaceSignatoryUser :: SignatoryLink
                      -> Company
                      -> SignatoryLink
 replaceSignatoryUser siglink user company=
-  let newsl = replaceSignatoryData
-                       siglink
-                       (getFirstName      user)
-                       (getLastName       user)
-                       (getEmail          user)
-                       (getMobile         user)
-                       (getCompanyName    company)
-                       (getPersonalNumber user)
-                       (getCompanyNumber  company)
-                       (map (toText . sfValue) $ filter isFieldCustom $ signatoryfields $ siglink) in
-  newsl { maybesignatory = Just $ userid user }
-  where
-    toText (TextField s) = s
-    toText BinaryField{} = error "replaceSignatoryUser: can't happen, binary fields were filtered"
+  (replaceSignatoryData
+     siglink
+     (getFirstName      user)
+     (getLastName       user)
+     (getEmail          user)
+     (getMobile         user)
+     (getCompanyName    company)
+     (getPersonalNumber user)
+     (getCompanyNumber  company)
+  ) { maybesignatory = Just $ userid user }
+

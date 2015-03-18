@@ -14,7 +14,6 @@ module Doc.Data.SignatoryLink (
 import Control.Applicative
 import Control.Monad.Catch
 import Data.Int
-import Data.List
 import Data.Monoid
 import Data.Monoid.Utils
 import Database.PostgreSQL.PQTypes
@@ -232,35 +231,7 @@ data SignatoryLink = SignatoryLink {
 , signatorylinkauthenticationmethod       :: !AuthenticationMethod
 , signatorylinkdeliverymethod             :: !DeliveryMethod
 , signatorylinkconfirmationdeliverymethod :: !ConfirmationDeliveryMethod
-} deriving (Ord, Show)
-
--- | Drop this instance when we introduce Set SignatoryFields intead of list
-instance Eq SignatoryLink where
-  a == b = and [
-      signatorylinkid a == signatorylinkid b
-    , sort (signatoryfields a) == sort (signatoryfields b)
-    , signatoryisauthor a == signatoryisauthor b
-    , signatoryispartner a == signatoryispartner b
-    , signatorysignorder a == signatorysignorder b
-    , signatorymagichash a == signatorymagichash b
-    , maybesignatory a == maybesignatory b
-    , maybesigninfo a == maybesigninfo b
-    , maybeseeninfo a == maybeseeninfo b
-    , maybereadinvite a == maybereadinvite b
-    , mailinvitationdeliverystatus a == mailinvitationdeliverystatus b
-    , smsinvitationdeliverystatus a == smsinvitationdeliverystatus b
-    , signatorylinkdeleted a == signatorylinkdeleted b
-    , signatorylinkreallydeleted a == signatorylinkreallydeleted b
-    , signatorylinkcsvupload a == signatorylinkcsvupload b
-    , signatoryattachments a == signatoryattachments b
-    , signatorylinksignredirecturl a == signatorylinksignredirecturl b
-    , signatorylinkrejectredirecturl a == signatorylinkrejectredirecturl b
-    , signatorylinkrejectiontime a == signatorylinkrejectiontime b
-    , signatorylinkrejectionreason a == signatorylinkrejectionreason b
-    , signatorylinkauthenticationmethod a == signatorylinkauthenticationmethod b
-    , signatorylinkdeliverymethod a == signatorylinkdeliverymethod b
-    , signatorylinkconfirmationdeliverymethod a == signatorylinkconfirmationdeliverymethod b
-    ]
+} deriving (Show)
 
 instance HasDefaultValue SignatoryLink where
   defaultValue = SignatoryLink {

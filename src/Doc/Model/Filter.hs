@@ -116,7 +116,7 @@ documentFilterToSQL (DocumentFilterByString string) = do
                                                                  "  ON sl5.document_id = signatory_links.document_id" <>
                                                                  " AND sl5.id = signatory_link_fields.signatory_link_id" <>
                                    -- " FROM signatory_link_fields " <>
-                                   " WHERE (signatory_link_fields.type != " <?> SignatureFT "signature" <> ") " <>
+                                   " WHERE (signatory_link_fields.type != " <?> SignatureFT <> ") " <>
                                            " AND (signatory_link_fields.value_text ILIKE" <?> sqlpat word <> "))"
                                    --" WHERE TRUE)") []
 

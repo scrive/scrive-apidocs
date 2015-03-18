@@ -418,6 +418,8 @@ UpdateFieldCustomEvidenceLog=<span class="actor"/> changed the text in the text 
 ###
 UpdateFieldMobileEvidenceLog=<span class="actor"/> changed the text in the text field “Mobile number” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
+UpdateFieldNameEvidenceLog=<span class="actor"/> changed the text in the text field “Name” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
+###
 updateFieldPreviousValue=$if(prvblank)$blank$else$“$previousvalue$”$endif$
 ###
 updateFieldNewValue=$if(newblank)$blank$else$“$value$”$endif$

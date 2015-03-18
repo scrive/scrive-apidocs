@@ -502,12 +502,13 @@ checkAuthenticationMethodAndValue slid = do
        (Nothing, Nothing) -> return ()
        _ -> throwIO . SomeKontraException $ badInput "Only one of `authentication_type` and `authentication_value` provided"
 
-getValidPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [(FieldType, SignatoryFieldValue)] -> m (Maybe String)
+getValidPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [(FieldIdentity, Either String BS.ByteString)] -> m (Maybe String)
 getValidPin slid fields = do
   pin <- apiGuardJustM (badInput "Pin not provided or invalid.") $ getField "pin"
-  phone <- getMobile <$> fromJust . getSigLinkFor slid <$> theDocument
-  let phoneFromFields = getTextField =<< lookup MobileFT fields
-  pin' <- dbQuery $ GetSignatoryPin slid (fromMaybe phone phoneFromFields)
+  phone <- case (lookup MobileFI fields) of
+    Just (Left v) -> return v
+    _ ->  getMobile <$> fromJust . getSigLinkFor slid <$> theDocument
+  pin' <- dbQuery $ GetSignatoryPin slid phone
   if (pin == pin')
     then return $ Just pin
     else return $ Nothing
@@ -515,7 +516,7 @@ getValidPin slid fields = do
 signDocument :: (Kontrakcja m, DocumentMonad m)
              => SignatoryLinkID
              -> MagicHash
-             -> [(FieldType, SignatoryFieldValue)]
+             -> [(FieldIdentity, Either String BS.ByteString)]
              -> Maybe ESignature
              -> Maybe String
              -> SignatoryScreenshots
@@ -1164,21 +1165,22 @@ getMagicHashAndUserForSignatoryAction did sid = do
            Just mh''' -> return (mh''',Just $ user)
 
 
-getFieldForSigning ::(Kontrakcja m) => m [(FieldType, SignatoryFieldValue)]
+getFieldForSigning ::(Kontrakcja m) => m [(FieldIdentity, Either String BS.ByteString)]
 getFieldForSigning = do
   eFieldsJSON <- getFieldJSON "fields"
   case eFieldsJSON of
     Nothing -> throwIO . SomeKontraException $ serverError "No fields description provided or fields description is not a valid JSON array"
     Just fieldsJSON -> do
       let mvalues = flip ($) fieldsJSON $ fromJSValueCustomMany $ do
-            mft <- fromJSValue
+            mfi <- fromJSValue
             mval <- fromJSValueField "value"
-            return $ case (mft, mval) of
+            return $ case (mfi, mval) of
               -- omg, this special case for empty value is such bullshit.
-              (Just ft@SignatureFT{}, Just "")  -> Just (ft, BinaryField "")
-              (Just ft@SignatureFT{}, Just val) ->
-                (ft, ) . BinaryField . snd <$> RFC2397.decode (BS.pack val)
-              (Just ft, Just val) -> Just (ft, TextField val)
+              (Just fi@(SignatureFI _), Just "")  -> Just (fi, Right "")
+              (Just fi@(SignatureFI _), Just val) -> case (snd <$> RFC2397.decode (BS.pack val)) of
+                Just bv -> Just (fi, Right bv)
+                _ -> Nothing
+              (Just fi, Just val) -> Just (fi, Left val)
               _ -> Nothing
       case mvalues of
         Nothing -> throwIO . SomeKontraException $ serverError "Fields description json has invalid format"

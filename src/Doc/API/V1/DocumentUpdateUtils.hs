@@ -20,6 +20,7 @@ import Doc.DocStateData
 import Doc.DocumentMonad (DocumentMonad, theDocument)
 import Doc.DocUtils
 import Doc.Model
+import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import Kontra
 import Util.Actor
@@ -91,11 +92,44 @@ mergeAuthorDetails sigs nsigs =
           let
             (nasig', nsigs') = partition isAuthor nsigs
             (asig, _) = partition isAuthor sigs
-            setConstantDetails a =  replaceFieldValue FirstNameFT (TextField $ getFirstName a) .
-                                    replaceFieldValue LastNameFT (TextField $ getLastName a) .
-                                    replaceFieldValue EmailFT   (TextField $ getEmail a) .
+            setConstantDetails a =  (\s -> s {signatoryfields = replaceName1 (getFirstName a) $ signatoryfields s}) .
+                                    (\s -> s {signatoryfields = replaceName2 (getLastName a) $ signatoryfields s}) .
+                                    (\s -> s {signatoryfields = replaceEmail (getEmail a) $ signatoryfields s}) .
                                     (\s -> s {maybesignatory = maybesignatory a}) .  -- We need to be sure that we will not disconnect author
                                     (\s -> s {signatorylinkid = signatorylinkid a})  -- And we try to keep original id of author signatory
+
+            replaceName1 a [] = [SignatoryNameField $ NameField {
+              snfID = unsafeSignatoryFieldID 0,
+              snfValue = a,
+              snfNameOrder = NameOrder 1,
+              snfPlacements =[],
+              snfObligatory = True,
+              snfShouldBeFilledBySender = False
+            }]
+            replaceName1 a ((SignatoryNameField nf@(NameField {snfNameOrder = NameOrder 1})):fs) = ((SignatoryNameField $ nf {snfValue = a}):fs)
+            replaceName1 a (f:fs) = f:(replaceName1 a fs)
+
+            replaceName2 a [] = [SignatoryNameField $ NameField {
+              snfID = unsafeSignatoryFieldID 0,
+              snfValue = a,
+              snfNameOrder = NameOrder 2,
+              snfPlacements =[],
+              snfObligatory = True,
+              snfShouldBeFilledBySender = False
+            }]
+            replaceName2 a ((SignatoryNameField nf@(NameField {snfNameOrder = NameOrder 2})):fs) = ((SignatoryNameField $ nf {snfValue = a}):fs)
+            replaceName2 a (f:fs) = f:(replaceName2 a fs)
+
+            replaceEmail a [] = [SignatoryEmailField $ EmailField {
+              sefID = unsafeSignatoryFieldID 0,
+              sefValue = a,
+              sefPlacements =[],
+              sefObligatory = True,
+              sefShouldBeFilledBySender = False
+            }]
+            replaceEmail a ((SignatoryEmailField ef):fs) = ((SignatoryEmailField $ ef {sefValue = a}):fs)
+            replaceEmail a (f:fs) = f:(replaceEmail a fs)
+
           in case (asig, nasig') of
                ([asig'], [nasig'']) -> Just $ (setConstantDetails asig' nasig'') : nsigs'
                _ -> Nothing
@@ -129,7 +163,7 @@ draftIsChangingDocumentSignatories _ _ = True
 newSignatorySignatoryLinkIsChangingSignatoryLink :: SignatoryLink -> SignatoryLink -> Bool
 newSignatorySignatoryLinkIsChangingSignatoryLink newsl sl =
         (signatorylinkid newsl /= signatorylinkid sl)
-     || (signatoryfields newsl /= signatoryfields sl)
+     || (not $ fieldsListsAreAlmoustEqual (signatoryfields newsl) (signatoryfields sl))
      || (signatoryisauthor newsl /= signatoryisauthor sl)
      || (signatoryispartner newsl /= signatoryispartner sl)
      || (signatorysignorder newsl /= signatorysignorder sl)

@@ -308,7 +308,8 @@ data CurrentEvidenceEventType =
   UpdateFieldCompanyNumberEvidence             |
   UpdateFieldEmailEvidence                     |
   UpdateFieldCustomEvidence                    |
-  UpdateFieldMobileEvidence
+  UpdateFieldMobileEvidence                    |
+  UpdateFieldNameEvidence
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 -- Evidence types that are not generated anymore by the system.  Not
@@ -480,6 +481,7 @@ instance ToSQL EvidenceEventType where
   toSQL (Current UpdateFieldEmailEvidence                    ) = toSQL (99::Int16)
   toSQL (Current UpdateFieldCustomEvidence                   ) = toSQL (100::Int16)
   toSQL (Current UpdateFieldMobileEvidence                   ) = toSQL (101::Int16)
+  toSQL (Current UpdateFieldNameEvidence                     ) = toSQL (102::Int16)
 
 instance FromSQL EvidenceEventType where
   type PQBase EvidenceEventType = PQBase Int16
@@ -587,7 +589,8 @@ instance FromSQL EvidenceEventType where
       99 -> return (Current UpdateFieldEmailEvidence                    )
       100 -> return (Current UpdateFieldCustomEvidence                  )
       101 -> return (Current UpdateFieldMobileEvidence                  )
+      102 -> return (Current UpdateFieldNameEvidence                  )
       _ -> E.throwIO $ RangeError {
-        reRange = [(1, 82)]
+        reRange = [(1, 102)]
       , reValue = n
       }
