@@ -709,6 +709,7 @@ javascriptLocalisation =
                         , branding: "$_paymentPlanTeamBranding()$"
                         , users: "$_paymentPlanTeamUsers()$"
                         , support: "$_paymentPlanTeamSupport()$"
+                        , apiAccess: "$_paymentPlanAPIAccess()$"
                     }
                     , enterprise : {
                           name : "$EnterprisePlanName()$"
@@ -723,6 +724,7 @@ javascriptLocalisation =
                         , sla: "$_paymentPlanEnterpriseSLA()$"
                         , p2es: "$_paymentPlanEnterpriseP2ES()$"
                         , whiteLabel: "$_paymentPlanEnterpriseWhiteLabel()$"
+                        , apiAccess: "$_paymentPlanAPIAccess()$"
                     }
                     , company : {
                           name : "$CompanyPlanName()$"
@@ -735,6 +737,7 @@ javascriptLocalisation =
                         , users: "$_paymentPlanCompanyUsers()$"
                         , support: "$_paymentPlanCompanySupport()$"
                         , sla: "$_paymentPlanCompanySLA()$"
+                        , apiAccess: "$_paymentPlanAPIAccess()$"
                     }
                     , one : {
                           name : "$OnePlanName()$"
@@ -745,6 +748,7 @@ javascriptLocalisation =
                         , signeddocs: "$OneDocumentsPerMonth()$"
                         , users: "$_paymentPlanOneUsers()$"
                         , support: "$_paymentPlanOneSupport()$"
+                        , apiAccess: ""
                     }
             }
            , table: { currentplan : "$_paymentPlanCurrentPlan()$"

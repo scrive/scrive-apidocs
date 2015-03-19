@@ -385,8 +385,9 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         var sla = $('<h4 class="fineprint" />').text(localization.payments.plans[view.plan].sla);
         var p2es = $('<h4 class="fineprint" />').text(localization.payments.plans[view.plan].p2es);
         var whiteLabel = $('<h4 class="fineprint" />').text(localization.payments.plans[view.plan].whiteLabel);
+        var api = $('<h4 class="fineprint" />').text(localization.payments.plans[view.plan].apiAccess);
 
-        var explanation = $('<div class="explanation" />').append(signeddocs).append(users).append(allFeatures).append(support).append(branding).append(sla).append(p2es).append(whiteLabel);
+        var explanation = $('<div class="explanation" />').append(signeddocs).append(users).append(allFeatures).append(support).append(api).append(branding).append(sla).append(p2es).append(whiteLabel);
         features.append(explanation);
 
         var price = $('<span class="price" />').html(view.renderPrice());
