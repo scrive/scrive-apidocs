@@ -73,6 +73,14 @@
 .design-view-action-document-draggable-inner-wrapper {
   background-color: @actioncolor;
 
+  .design-view-action-document-draggable-text span {
+    color: @actiontextcolor;
+  }
+
+  .design-view-action-document-draggable-icon {
+    @url : %('/colored_image?file=place-fields-sprite.png&color=%D',@actiontextcolor);
+    background-image: url(@url) ;
+  }
 }
 
 .modal-content .body .designview-cant-sign-modal .highlight {
