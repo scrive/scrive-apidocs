@@ -377,6 +377,15 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         var title = $('<div class="title" />').append(titleheader);
         features.append(title);
 
+        var price = $('<span class="price" />').html(view.renderPrice());
+        var currency = localization.code == "sv" ? "SEK" : "EUR";
+        var priceUnit = $('<span class="unit" />').html(localization.payments.priceUnit[currency]);
+
+        var cost = $('<div class="cost" />')
+            .append(price).append(priceUnit);
+
+        features.append(cost);
+
         var signeddocs = $('<h4 class="description" />').text(localization.payments.plans[view.plan].signeddocs + ' ' + localization.payments.documentUnit);
         var users = $('<h4 class="fineprint" />').text(localization.payments.plans[view.plan].users);
         var support = $('<h4 class="fineprint" />').text(localization.payments.plans[view.plan].support);
@@ -388,15 +397,6 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
         var explanation = $('<div class="explanation" />').append(signeddocs).append(users).append(allFeatures).append(support).append(branding).append(sla).append(p2es).append(whiteLabel);
         features.append(explanation);
-
-        var price = $('<span class="price" />').html(view.renderPrice());
-        var currency = localization.code == "sv" ? "SEK" : "EUR";
-        var priceUnit = $('<span class="unit" />').html(localization.payments.priceUnit[currency]);
-
-        var cost = $('<div class="cost" />')
-            .append(price).append(priceUnit);
-
-        features.append(cost);
 
         return features;
       }
