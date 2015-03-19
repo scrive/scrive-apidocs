@@ -748,7 +748,6 @@ javascriptLocalisation =
                         , signeddocs: "$OneDocumentsPerMonth()$"
                         , users: "$_paymentPlanOneUsers()$"
                         , support: "$_paymentPlanOneSupport()$"
-                        , apiAccess: ""
                     }
             }
            , table: { currentplan : "$_paymentPlanCurrentPlan()$"
