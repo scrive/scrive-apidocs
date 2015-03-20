@@ -1,0 +1,71 @@
+{
+ "title": "New title",
+ "signatories": [
+  {
+   "signorder": 1,
+   "signs": true,
+   "author": true,
+   "fields": [
+    {
+     "type": "standard",
+     "name": "fstname",
+     "value": "Jonathan"
+    },
+    {
+     "type": "standard",
+     "name": "sndname",
+     "value": "Jounty"
+    },
+    {
+     "type": "standard",
+     "name": "email",
+     "value": "jonathan@scrive.com"
+    },
+    {
+     "type": "standard",
+     "name": "sigco",
+     "value": ""
+    }
+   ]
+  },
+  {
+   "signs": true,
+   "author": false,
+   "fields": [
+    {
+     "type": "standard",
+     "name": "fstname",
+     "value": "Mariusz",
+     "closed": false
+    },
+    {
+     "type": "standard",
+     "name": "sndname",
+     "value": "Rak"
+    },
+    {
+     "type": "standard",
+     "name": "email",
+     "value": "mariusz@scrive.com"
+    },
+    {
+     "type": "standard",
+     "name": "sigco",
+     "value": "Scrive"
+    },
+    {
+     "type": "standard",
+     "name": "mobile",
+     "value": "+48694528309"
+    },
+    {
+     "type": "custom",
+     "name": "price",
+     "value": " MIL<&>LION "
+    }
+   ]
+   }
+ ],
+ "timezone": "Europe/Stockholm"
+}
+

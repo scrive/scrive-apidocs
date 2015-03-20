@@ -25,13 +25,16 @@ import Doc.DocumentID (unsafeDocumentID)
 
 apiV1JSONTests :: TestEnvSt -> Test
 apiV1JSONTests env = testGroup "JSONAPIV1"
-  [ testThat "Test JSON structure for API V1 'createfromfile' and 'ready'" env testFromFileAndReadySimple
-  , testThat "Test JSON structure for API V1 'createfromfile' and 'update' with result is the same just createfromfile" env testFromFileAndUpdate
-  , testThat "Test JSON structure for API V1 'createfromtemplate' and 'ready'" env testFromTemplateAndReadySimple
-  , testThat "Test JSON structure for API V1 is consistent after 'update'" env testUpdateFields
-  , testThat "Test JSON structure for API V1 is consistent after 'update' based on #EMAIL, #FSTNAME, etc fields" env testUpdateWithReplacementFields
+  [ testThat "Test 1: JSON structure for API V1 'createfromfile' and 'ready'" env testFromFileAndReadySimple
+  , testThat "Test 2: JSON structure for API V1 'createfromfile' and 'update' with result is the same just createfromfile" env testFromFileAndUpdate
+  , testThat "Test 3: JSON structure for API V1 'createfromtemplate' and 'ready'" env testFromTemplateAndReadySimple
+  , testThat "Test 4: JSON structure for API V1 is consistent after 'update'" env testUpdateFields
+  , testThat "Test 5: JSON structure for API V1 is consistent after 'update' based on #EMAIL, #FSTNAME, etc fields" env testUpdateWithReplacementFields
+  , testThat "Test 6: JSON structure for API V1 'update' with small subset of Documen JSON still works " env testUpdateWithSubset
   ]
 
+
+{- Test 1 -}
 testFromFileAndReadySimple :: TestEnv ()
 testFromFileAndReadySimple = do
   (Just user)  <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
@@ -43,14 +46,16 @@ testFromFileAndReadySimple = do
                                       ] []
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
-  doc <- testJSONWith "test/json/test_createFromFile.json" (rsBody resDoc) v1_docUnjsonDef
+  doc <- testJSONWith "test/json/test_1_create.json" (rsBody resDoc) v1_docUnjsonDef
 
   reqReady <- mkRequest POST []
   (resReady, _) <- runTestKontra reqReady ctx $ apiCallV1Ready (unsafeDocumentID $ fromInt64AsString $ v1_docid doc)
   assertEqual "We should get a 202 response" 202 (rsCode resReady)
-  _ <- testJSONWith "test/json/test_ready.json" (rsBody resReady) v1_docUnjsonDef
+  _ <- testJSONWith "test/json/test_1_ready.json" (rsBody resReady) v1_docUnjsonDef
   return ()
 
+
+{- Test 2 -}
 testFromFileAndUpdate :: TestEnv ()
 testFromFileAndUpdate = do
   (Just user)  <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
@@ -62,17 +67,16 @@ testFromFileAndUpdate = do
                                       ] []
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
-  doc <- testJSONWith "test/json/test_createFromFile.json" (rsBody resDoc) v1_docUnjsonDef
-  let did = unsafeDocumentID $ fromInt64AsString $ v1_docid doc
+  doc <- testJSONWith "test/json/test_2_create.json" (rsBody resDoc) v1_docUnjsonDef
 
   reqUpdate <- mkRequestWithHeaders POST [("json", inTextBS $ rsBody resDoc)] []
-  (resUpdate, _) <- runTestKontra reqUpdate ctx $ apiCallV1Update did
+  (resUpdate, _) <- runTestKontra reqUpdate ctx $ apiCallV1Update  (unsafeDocumentID $ fromInt64AsString $ v1_docid doc)
   assertEqual "We should get a 200 response" 200 (rsCode resUpdate)
-  _ <- testJSONWith "test/json/test_createFromFile.json" (rsBody resUpdate) v1_docUnjsonDef
+  _ <- testJSONWith "test/json/test_2_create.json" (rsBody resUpdate) v1_docUnjsonDef
 
   return ()
 
-
+{- Test 3 -}
 testFromTemplateAndReadySimple :: TestEnv ()
 testFromTemplateAndReadySimple = do
   (Just user)  <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
@@ -84,7 +88,7 @@ testFromTemplateAndReadySimple = do
                                       ] []
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
-  doc <- testJSONWith "test/json/test_createFromFile.json" (rsBody resDoc) v1_docUnjsonDef
+  doc <- testJSONWith "test/json/test_3_create.json" (rsBody resDoc) v1_docUnjsonDef
   let did = unsafeDocumentID $ fromInt64AsString $ v1_docid doc
 
   let Just docJSON = decode (rsBody resDoc) :: Maybe Value
@@ -94,20 +98,22 @@ testFromTemplateAndReadySimple = do
   reqUpdate <- mkRequestWithHeaders POST [("json", inTextBS strDoc)] []
   (resUpdate, _) <- runTestKontra reqUpdate ctx $ apiCallV1Update did
   assertEqual "We should get a 200 response" 200 (rsCode resUpdate)
-  _ <- testJSONWith "test/json/test_createFromFileAndSavedAsTemplate.json" (rsBody resUpdate) v1_docUnjsonDef
+  _ <- testJSONWith "test/json/test_3_savedAsTemplate.json" (rsBody resUpdate) v1_docUnjsonDef
 
   reqFromTemplate <- mkRequestWithHeaders POST [] []
   (resFromTemplate, _) <- runTestKontra reqFromTemplate ctx $ apiCallV1CreateFromTemplate did
   assertEqual "We should get a 201 response" 201 (rsCode resFromTemplate)
-  docFromTemplate <- testJSONWith "test/json/test_createFromFile.json" (rsBody resFromTemplate) v1_docUnjsonDef
+  --When creating from template - result should be same as a template - before it was saved as template
+  docFromTemplate <- testJSONWith "test/json/test_3_create.json" (rsBody resFromTemplate) v1_docUnjsonDef
   let newdid = unsafeDocumentID $ fromInt64AsString $ v1_docid docFromTemplate
 
   reqReady <- mkRequestWithHeaders POST [] []
   (resReady, _) <- runTestKontra reqReady ctx $ apiCallV1Ready newdid
   assertEqual "We should get a 202 response" 202 (rsCode resReady)
-  _ <- testJSONWith "test/json/test_ready.json" (rsBody resReady) v1_docUnjsonDef
+  _ <- testJSONWith "test/json/test_3_ready.json" (rsBody resReady) v1_docUnjsonDef
   return ()
 
+{- Test 4 -}
 testUpdateFields :: TestEnv ()
 testUpdateFields = do
   (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
@@ -119,7 +125,7 @@ testUpdateFields = do
                                       ] []
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
-  doc <- testJSONWith "test/json/test_createFromFile.json" (rsBody resDoc) v1_docUnjsonDef
+  doc <- testJSONWith "test/json/test_4_create.json" (rsBody resDoc) v1_docUnjsonDef
   let did = unsafeDocumentID $ fromInt64AsString $ v1_docid doc
 
   let Just docJSON = decode (rsBody resDoc) :: Maybe Value
@@ -131,7 +137,7 @@ testUpdateFields = do
   reqUpdate <- mkRequestWithHeaders POST [("json", inTextBS strDoc)] []
   (resUpdate, _) <- runTestKontra reqUpdate ctx $ apiCallV1Update did
   assertEqual "We should get a 200 response" 200 (rsCode resUpdate)
-  doc' <- testJSONWith "test/json/test_updateFields.json" (rsBody resUpdate) v1_docUnjsonDef
+  doc' <- testJSONWith "test/json/test_4_update.json" (rsBody resUpdate) v1_docUnjsonDef
 
   assertEqual "Invitation message should be the same" "<p>424242</p>" (v1_docinvitetext doc')
   assertEqual "Confirmation message should be the same" "<p>363636</p>" (v1_docconfirmtext doc')
@@ -140,10 +146,10 @@ testUpdateFields = do
   reqReady <- mkRequestWithHeaders POST [] []
   (resReady, _) <- runTestKontra reqReady ctx $ apiCallV1Ready did
   assertEqual "We should get a 202 response" 202 (rsCode resReady)
-  _ <- testJSONWith "test/json/test_updateFieldsReady.json" (rsBody resReady) v1_docUnjsonDef
+  _ <- testJSONWith "test/json/test_4_ready.json" (rsBody resReady) v1_docUnjsonDef
   return ()
 
-
+{- Test 5 -}
 testUpdateWithReplacementFields :: TestEnv ()
 testUpdateWithReplacementFields = do
   (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
@@ -155,14 +161,14 @@ testUpdateWithReplacementFields = do
                                       ] []
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
-  doc <- testJSONWith "test/json/test_createFromFile.json" (rsBody resDoc) v1_docUnjsonDef
+  doc <- testJSONWith "test/json/test_5_create.json" (rsBody resDoc) v1_docUnjsonDef
   let did = unsafeDocumentID $ fromInt64AsString $ v1_docid doc
-  jsonFileBS <- liftIO $ B.readFile "test/json/test_updateWithReplacement.json"
+  jsonFileBS <- liftIO $ B.readFile "test/json/test_5_update.json"
 
   reqUpdate1 <- mkRequestWithHeaders POST [("json", inTextBS jsonFileBS)] []
   (resUpdate1, _) <- runTestKontra reqUpdate1 ctx $ apiCallV1Update did
   assertEqual "We should get a 200 response" 200 (rsCode resUpdate1)
-  _ <- testJSONWith "test/json/test_updateWithReplacement.json" (rsBody resUpdate1) v1_docUnjsonDef
+  _ <- testJSONWith "test/json/test_5_update.json" (rsBody resUpdate1) v1_docUnjsonDef
 
   let Just docJSON = decode (rsBody resUpdate1) :: Maybe Value
       replaceValues  = setDocValuesBySimpleReplacement "#TITLE" "New title" .
@@ -177,8 +183,28 @@ testUpdateWithReplacementFields = do
   reqUpdate2 <- mkRequestWithHeaders POST [("json", inTextBS strDoc)] []
   (resUpdate2, _) <- runTestKontra reqUpdate2 ctx $ apiCallV1Update did
   assertEqual "We should get a 200 response" 200 (rsCode resUpdate2)
-  _ <- testJSONWith "test/json/test_updateWithReplacementAfterReplacement.json" (rsBody resUpdate2) v1_docUnjsonDef
+  _ <- testJSONWith "test/json/test_5_update_result.json" (rsBody resUpdate2) v1_docUnjsonDef
   return ()
+
+{- Test 6 -}
+testUpdateWithSubset :: TestEnv ()
+testUpdateWithSubset = do
+  (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
+
+  reqDoc <- mkRequestWithHeaders POST [] []
+  (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  assertEqual "We should get a 201 response" 201 (rsCode resDoc)
+  doc <- testJSONWith "test/json/test_6_create.json" (rsBody resDoc) v1_docUnjsonDef
+  let did = unsafeDocumentID $ fromInt64AsString $ v1_docid doc
+  jsonFileBS <- liftIO $ B.readFile "test/json/test_6_update.json"
+
+  reqUpdate <- mkRequestWithHeaders POST [("json", inTextBS jsonFileBS)] []
+  (resUpdate, _) <- runTestKontra reqUpdate ctx $ apiCallV1Update did
+  assertEqual "We should get a 200 response" 200 (rsCode resUpdate)
+  _ <- testJSONWith "test/json/test_6_update_result.json" (rsBody resUpdate) v1_docUnjsonDef
+  return ()
+
 
 -- | Takes a 'FilePath' to a JSON file with the desired structure (with 'null'
 -- considered as a type), a 'ByteString' with the JSON to test, and a
@@ -223,7 +249,7 @@ removeDynamicValues :: Value -> Value
 removeDynamicValues (Object m) = Object $ H.map removeDynamicValues $ filterOutDynamicKeys m
   where
     filterOutDynamicKeys hm = H.filterWithKey (\k _ -> not $ k `elem` dynamicKeys) hm
-    dynamicKeys = ["id", "accesstoken", "time", "ctime", "ntime", "userid", "timeouttime", "objectversion"]
+    dynamicKeys = ["id", "accesstoken", "time", "ctime", "mtime", "userid", "timeouttime", "objectversion", "title"]
 removeDynamicValues (Array v)  = Array  (V.map removeDynamicValues v)
 removeDynamicValues v = v
 
