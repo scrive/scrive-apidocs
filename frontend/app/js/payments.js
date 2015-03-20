@@ -753,6 +753,10 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             y.change(function(e) {
                 model.setYear($(e.target).val());
             });
+            var zc = form.find('.zip input');
+            zc.val('12-345');
+            zc.attr('placeholder', zc.parent().find('.placeholder').text());
+            zc.change();
             if(view.hideContacts) {
                 if(model.hasFirstName() && model.hasLastName() && model.hasEmail()) {
                     fn.hide();
