@@ -708,8 +708,9 @@ javascriptLocalisation =
                         , signeddocs: "$TeamDocumentsPerMonth()$"
                         , branding: "$_paymentPlanTeamBranding()$"
                         , users: "$_paymentPlanTeamUsers()$"
+                        , stores: "$_paymentPlanTeamStores()$"
+                        , api: "$_paymentPlanTeamAPI()$"
                         , support: "$_paymentPlanTeamSupport()$"
-                        , apiAccess: "$_paymentPlanAPIAccess()$"
                     }
                     , enterprise : {
                           name : "$EnterprisePlanName()$"
@@ -720,11 +721,12 @@ javascriptLocalisation =
                         , signeddocs: "$EnterpriseDocumentsPerMonth()$"
                         , branding: "$_paymentPlanEnterpriseBranding()$"
                         , users: "$_paymentPlanEnterpriseUsers()$"
+                        , stores: "$_paymentPlanEnterpriseStores()$"
+                        , api: "$_paymentPlanEnterpriseAPI()$"
                         , support: "$_paymentPlanEnterpriseSupport()$"
                         , sla: "$_paymentPlanEnterpriseSLA()$"
                         , p2es: "$_paymentPlanEnterpriseP2ES()$"
                         , whiteLabel: "$_paymentPlanEnterpriseWhiteLabel()$"
-                        , apiAccess: "$_paymentPlanAPIAccess()$"
                     }
                     , company : {
                           name : "$CompanyPlanName()$"
@@ -735,9 +737,10 @@ javascriptLocalisation =
                         , signeddocs: "$CompanyDocumentsPerMonth()$"
                         , branding: "$_paymentPlanCompanyBranding()$"
                         , users: "$_paymentPlanCompanyUsers()$"
+                        , stores: "$_paymentPlanCompanyStores()$"
+                        , api: "$_paymentPlanCompanyAPI()$"
                         , support: "$_paymentPlanCompanySupport()$"
                         , sla: "$_paymentPlanCompanySLA()$"
-                        , apiAccess: "$_paymentPlanAPIAccess()$"
                     }
                     , one : {
                           name : "$OnePlanName()$"

@@ -386,17 +386,18 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
         features.append(cost);
 
-        var signeddocs = $('<h4 class="description" />').text(localization.payments.plans[view.plan].signeddocs + ' ' + localization.payments.documentUnit);
-        var users = $('<h4 class="fineprint" />').text(localization.payments.plans[view.plan].users);
+
+        var users = $('<h4 class="description" />').text(localization.payments.plans[view.plan].users);
+        var stores = $('<h4 class="description" />').append(localization.payments.plans[view.plan].stores);
+        var apiTransactions = $('<h4 class="description apitrans" />').append(localization.payments.plans[view.plan].api);
         var support = $('<h4 class="fineprint" />').text(localization.payments.plans[view.plan].support);
         var allFeatures = $('<h4 class="fineprint" />').text(localization.payments.allFeaturesIncluded);
         var branding = $('<h4 class="fineprint" />').text(localization.payments.plans[view.plan].branding);
         var sla = $('<h4 class="fineprint" />').text(localization.payments.plans[view.plan].sla);
         var p2es = $('<h4 class="fineprint" />').text(localization.payments.plans[view.plan].p2es);
         var whiteLabel = $('<h4 class="fineprint" />').text(localization.payments.plans[view.plan].whiteLabel);
-        var api = $('<h4 class="fineprint" />').text(localization.payments.plans[view.plan].apiAccess);
 
-        var explanation = $('<div class="explanation" />').append(signeddocs).append(users).append(allFeatures).append(support).append(api).append(branding).append(sla).append(p2es).append(whiteLabel);
+        var explanation = $('<div class="explanation" />').append(users).append(stores).append(apiTransactions).append(allFeatures).append(support).append(branding).append(sla).append(p2es).append(whiteLabel);
         features.append(explanation);
 
         return features;
