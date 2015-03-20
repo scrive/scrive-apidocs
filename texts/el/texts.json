@@ -769,7 +769,7 @@
 "_paymentPlanTrialTag":"3 μήνες δωρεάν ",
 "_paymentPriceUnitEUR":"$PaymentCurrencyEUR()$/μήνα ",
 "_paymentPriceUnitSEK":"$PaymentCurrencySEK()$/μήνα ",
-"_paymentSaveYearly":"εξοικονομήστε έως $PaymentYearlyDiscountAmount()$",
+"_paymentSaveYearly":"",
 "_paymentsBillingInfoSaved":"Οι πληροφορίες χρέωσής σας έχουν αποθηκευτεί. ",
 "_paymentsCancelDialog":"Είστε σίγουρος ότι θέλετε να ακυρώσετε τη συνδρομή σας; Η συνδρομή σας θα παραμείνει ενεργή μέχρι το τέλος της περιόδου χρέωσής σας. Μπορείτε να συνεχίσετε να χρησιμοποιείτε τον λογαριασμό σας με 3 δωρεάν έγγραφα ανά μήνα αφότου λήξει η συνδρομή σας. ",
 "_paymentsCanceledDate":"Έχετε επιλέξει να διακόψετε τη συνδρομή σας σε <span class='put-date-here'></span>.",

@@ -769,7 +769,7 @@
 "_paymentPlanTrialTag":"3 maanden gratis",
 "_paymentPriceUnitEUR":"$PaymentCurrencyEUR()$/m",
 "_paymentPriceUnitSEK":"$PaymentCurrencySEK()$/m",
-"_paymentSaveYearly":"spaart tot wel $PaymentYearlyDiscountAmount()$",
+"_paymentSaveYearly":"",
 "_paymentsBillingInfoSaved":"Uw betalingsinformatie is opgeslagen.",
 "_paymentsCancelDialog":"Weet u zeker dat u uw abonnement wilt opzeggen? Uw abonnement is actief tot aan het einde van uw factureringsperiode. U kunt uw account blijven gebruiken met 3 gratis documenten per maand, zelfs nadat uw abonnement verlopen is. ",
 "_paymentsCanceledDate":"U heeft ervoor gekozen uw abonnement op te zeggen op <span class='put-date-here'></span>.",

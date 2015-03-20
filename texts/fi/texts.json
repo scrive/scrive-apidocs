@@ -769,7 +769,7 @@
 "_paymentPlanTrialTag":"3 ilmaista kuukautta",
 "_paymentPriceUnitEUR":"$PaymentCurrencyEUR()$/kk",
 "_paymentPriceUnitSEK":"$PaymentCurrencySEK()$/kk",
-"_paymentSaveYearly":"säästä jopa $PaymentYearlyDiscountAmount()$",
+"_paymentSaveYearly":"",
 "_paymentsBillingInfoSaved":"Laskutustietosi on tallennettu.",
 "_paymentsCancelDialog":"Haluatko varmasit peruuttaa tilisi? Tilisi pysyy aktiivisena laskutuskautesi loppuun asti. Voit jatkaa tilisi käyttöä 3:lla ilmaisella dokumenttilla kuukaudessa, vaikka tilisi raukeaa.",
 "_paymentsCanceledDate":"Olet päättänyt lopettaa tilisi <span class='put-date-here'></span>.",
