@@ -421,13 +421,13 @@ instance Unjson V1_SigLinkStatus where
 data V1_Attachment = V1_Attachment
   { v1_attachmentName        :: String
   , v1_attachmentDescription :: String
-  , v1_attachmentFile        :: V1_File
+  , v1_attachmentFile        :: Maybe V1_File
   }
 instance Unjson V1_Attachment where
   unjsonDef = objectOf $ pure V1_Attachment
     <*> field "name"        v1_attachmentName        ""
     <*> field "description" v1_attachmentDescription ""
-    <*> field "file"        v1_attachmentFile        ""
+    <*> fieldOpt "file"        v1_attachmentFile        ""
 
 data V1_File = V1_File
   { v1_fileId    :: Int64AsString

@@ -13,6 +13,7 @@ module Doc.API.V1.Calls (
   , apiCallV1DownloadFile        -- Exported for tests
   , apiCallV1ChangeMainFile
   , apiCallV1ChangeAuthentication    -- Exported for tests
+  , apiCallV1SetAuthorAttachemnts -- Exported for tests
   ) where
 
 import Control.Applicative

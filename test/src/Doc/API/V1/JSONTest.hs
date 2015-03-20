@@ -31,6 +31,7 @@ apiV1JSONTests env = testGroup "JSONAPIV1"
   , testThat "Test 4: JSON structure for API V1 is consistent after 'update'" env testUpdateFields
   , testThat "Test 5: JSON structure for API V1 is consistent after 'update' based on #EMAIL, #FSTNAME, etc fields" env testUpdateWithReplacementFields
   , testThat "Test 6: JSON structure for API V1 'update' with small subset of Documen JSON still works " env testUpdateWithSubset
+  , testThat "Test 7: JSON structure for API V1 'update' with all features I know off " env testUpdateWithAllFeatures
   ]
 
 
@@ -204,6 +205,42 @@ testUpdateWithSubset = do
   assertEqual "We should get a 200 response" 200 (rsCode resUpdate)
   _ <- testJSONWith "test/json/test_6_update_result.json" (rsBody resUpdate) v1_docUnjsonDef
   return ()
+
+{- Test 7 -}
+testUpdateWithAllFeatures :: TestEnv ()
+testUpdateWithAllFeatures = do
+  (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
+
+  reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
+                                        -- FIXME make this random-ish file
+                                      , ("file", inFile "test/pdfs/simple.pdf")
+                                      ] []
+
+  (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  assertEqual "We should get a 201 response" 201 (rsCode resDoc)
+  doc <- testJSONWith "test/json/test_7_create.json" (rsBody resDoc) v1_docUnjsonDef
+  let did = unsafeDocumentID $ fromInt64AsString $ v1_docid doc
+
+  jsonFileBS <- liftIO $ B.readFile "test/json/test_7_update.json"
+
+  reqUpdate <- mkRequestWithHeaders POST [("json", inTextBS jsonFileBS)] []
+  (_, _) <- runTestKontra reqUpdate ctx $ apiCallV1Update did
+
+  reqUploadAttachments <- mkRequestWithHeaders POST [
+                                        ("attachment_0", inFile "test/pdfs/telia.pdf")
+                                      , ("attachment_1", inFile "test/pdfs/visa-application.pdf")
+                          ] []
+  (resUploadAttachments, _) <- runTestKontra reqUploadAttachments ctx $ apiCallV1SetAuthorAttachemnts did
+  assertEqual "We should get a 200 response" 200 (rsCode resUploadAttachments)
+
+  reqGet <- mkRequestWithHeaders GET [] []
+  (resFinalDoc, _) <- runTestKontra reqGet ctx $ apiCallV1Get did
+
+  assertEqual "We should get a 200 response" 200 (rsCode resFinalDoc)
+  _ <- testJSONWith "test/json/test_7_update_result_with_attachments.json" (rsBody resFinalDoc) v1_docUnjsonDef
+  return ()
+
 
 
 -- | Takes a 'FilePath' to a JSON file with the desired structure (with 'null'
