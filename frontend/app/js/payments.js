@@ -357,8 +357,8 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
           }
         }
 
-        // Yearly has a rebate, monthly pays 111% of yearly price
-        var price = Math.round(localization.payments.plans[view.plan].price[currency] * (model.yearlyprices() ? 1 : 1.11111));
+        // Yearly has a rebate, monthly pays 125% of yearly price
+        var price = Math.round(localization.payments.plans[view.plan].price[currency] * (model.yearlyprices() ? 1 : 1.25));
         var thousands = Math.floor(price / 1000);
 
         if (thousands) {
@@ -394,8 +394,9 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         var sla = $('<h4 class="fineprint" />').text(localization.payments.plans[view.plan].sla);
         var p2es = $('<h4 class="fineprint" />').text(localization.payments.plans[view.plan].p2es);
         var whiteLabel = $('<h4 class="fineprint" />').text(localization.payments.plans[view.plan].whiteLabel);
+        var api = $('<h4 class="fineprint" />').text(localization.payments.plans[view.plan].apiAccess);
 
-        var explanation = $('<div class="explanation" />').append(signeddocs).append(users).append(allFeatures).append(support).append(branding).append(sla).append(p2es).append(whiteLabel);
+        var explanation = $('<div class="explanation" />').append(signeddocs).append(users).append(allFeatures).append(support).append(api).append(branding).append(sla).append(p2es).append(whiteLabel);
         features.append(explanation);
 
         return features;
