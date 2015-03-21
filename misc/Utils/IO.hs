@@ -6,7 +6,6 @@ import Control.Monad.IO.Class
 import Data.List (sort)
 import System.Exit
 import System.IO
-import System.IO.Temp
 import System.Posix.IO (stdInput)
 import System.Posix.Signals
 import System.Posix.Terminal (queryTerminal)
@@ -41,47 +40,46 @@ readProcessWithExitCode'
     -> [String]                                      -- ^ any arguments
     -> BSL.ByteString                                -- ^ standard input
     -> m (ExitCode, BSL.ByteString, BSL.ByteString) -- ^ exitcode, stdout, stderr
-readProcessWithExitCode' cmd args input = liftIO $
-  withSystemTempFile "process" $ \_inputname inputhandle -> do
-    BSL.hPutStr inputhandle input
-    hFlush inputhandle
-    hSeek inputhandle AbsoluteSeek 0
+readProcessWithExitCode' cmd args input = liftIO $ do
 
-    (_, Just outh, Just errh, pid) <- createProcess (proc cmd args) {
-        std_in  = UseHandle inputhandle
+    (Just inh, Just outh, Just errh, pid) <- createProcess (proc cmd args) {
+        std_in  = CreatePipe
       , std_out = CreatePipe
       , std_err = CreatePipe
     }
-    outMVar <- newEmptyMVar
 
     outM <- newEmptyMVar
     errM <- newEmptyMVar
+
+    -- fork so that if process decides to not read everything we are
+    -- not stuck
+    _ <- forkIO $ do
+      BSL.hPutStr inh input
+      hClose inh
 
     -- fork off a thread to start consuming stdout
     _ <- forkIO $ do
       out <- BSL.hGetContents outh
       _ <- C.evaluate (BSL.length out)
       putMVar outM out
-      putMVar outMVar ()
+      -- here handle should get garbage collected but to close it
+      -- faster we close explicitly
+      hClose outh
 
     -- fork off a thread to start consuming stderr
     _ <- forkIO $ do
       err  <- BSL.hGetContents errh
       _ <- C.evaluate (BSL.length err)
       putMVar errM err
-      putMVar outMVar ()
+      hClose errh
+
 
     -- wait on the output
-    takeMVar outMVar
-    takeMVar outMVar
-    C.handle ((\_e -> return ()) :: (C.IOException -> IO ())) $ hClose outh
-    C.handle ((\_e -> return ()) :: (C.IOException -> IO ())) $ hClose errh
+    out <- readMVar outM
+    err <- readMVar errM
 
     -- wait on the process
     ex <- waitForProcess pid
-
-    out <- readMVar outM
-    err <- readMVar errM
 
     return (ex, out, err)
 
