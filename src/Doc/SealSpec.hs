@@ -3,6 +3,10 @@ module Doc.SealSpec where
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
 import qualified Text.JSON.Gen as J
+import qualified Data.Unjson as Unjson
+import Control.Applicative
+import Data.Functor.Invariant
+import qualified Data.Text as Text
 
 data Person =
     Person { fullname            :: String
@@ -23,6 +27,58 @@ data Person =
            , companyNumberText   :: String
            }
     deriving (Eq,Ord,Show,Read)
+
+unjsonPerson :: Unjson.UnjsonDef Person
+unjsonPerson = Unjson.objectOf $ pure Person
+    <*> Unjson.field "fullname"
+        fullname
+        ""
+    <*> Unjson.field "company"
+        company
+        ""
+    <*> Unjson.field "personalnumber"
+        personalnumber
+        ""
+    <*> Unjson.field "companynumber"
+        companynumber
+        ""
+    <*> Unjson.field "email"
+        email
+        ""
+    <*> Unjson.field "phone"
+        phone
+        ""
+    <*> Unjson.field "fullnameverified"
+        fullnameverified
+        ""
+    <*> Unjson.field "companyverified"
+        companyverified
+        ""
+    <*> Unjson.field "numberverified"
+        numberverified
+        ""
+    <*> Unjson.field "emailverified"
+        emailverified
+        ""
+    <*> Unjson.field "phoneverified"
+        phoneverified
+        ""
+    <*> Unjson.fieldBy "fields"
+        fields
+        ""
+        (Unjson.arrayOf unjsonField)
+    <*> Unjson.field "signtime"
+        signtime
+        ""
+    <*> Unjson.field "signedAtText"
+        signedAtText
+        ""
+    <*> Unjson.field "personalNumberText"
+        personalNumberText
+        ""
+    <*> Unjson.field "companyNumberText"
+        companyNumberText
+        ""
 
 instance J.ToJSValue Person where
   toJSValue person = J.runJSONGen $ do
@@ -76,6 +132,40 @@ data Field
     }
     deriving (Eq, Ord, Show, Read)
 
+isField :: Field -> Bool
+isField (Field {}) = True
+isField _ = False
+
+isFieldJPG :: Field -> Bool
+isFieldJPG (FieldJPG {}) = True
+isFieldJPG _ = False
+
+
+unjsonField :: Unjson.UnjsonDef Field
+unjsonField = Unjson.unionOf
+              [ (isField,
+                 pure Field
+                 <*> Unjson.field "value" value ""
+                 <*> Unjson.field "x" x ""
+                 <*> Unjson.field "y" y ""
+                 <*> Unjson.field "page" page ""
+                 <*> Unjson.field "fontSize" fontSize ""
+                 <*> Unjson.field "greyed" greyed ""
+                 <*> Unjson.field "includeInSummary" includeInSummary "")
+              , (isFieldJPG,
+                 pure FieldJPG
+                 <*> Unjson.fieldBy "valueBase64" valueBinary ""
+                     (invmap (B64.decodeLenient . BS.pack . Text.unpack) (Text.pack . BS.unpack . B64.encode) Unjson.unjsonDef)
+                 <*> Unjson.field "x" x ""
+                 <*> Unjson.field "y" y ""
+                 <*> Unjson.field "page" page ""
+                 <*> Unjson.field "image_w" image_w ""
+                 <*> Unjson.field "image_h" image_h ""
+                 <*> Unjson.field "includeInSummary" includeInSummary ""
+                 <*> Unjson.field "onlyForSummary" onlyForSummary ""
+                 <*> Unjson.fieldOpt "keyColor" keyColor ""
+              )]
+
 instance J.ToJSValue Field where
   toJSValue Field{..} = J.runJSONGen $ do
     J.value "value" value
@@ -112,6 +202,13 @@ data SealAttachment = SealAttachment
   }
     deriving (Eq,Ord,Show,Read)
 
+unjsonSealAttachment :: Unjson.UnjsonDef SealAttachment
+unjsonSealAttachment = Unjson.objectOf $ pure SealAttachment
+   <*> Unjson.field "fileName" fileName ""
+   <*> Unjson.fieldOpt "mimeType" mimeType ""
+   <*> Unjson.fieldBy "fileBase64Content" fileContent ""
+         (invmap (B64.decodeLenient . BS.pack . Text.unpack) (Text.pack . BS.unpack . B64.encode) Unjson.unjsonDef)
+
 instance J.ToJSValue SealAttachment where
   toJSValue SealAttachment{..} = J.runJSONGen $ do
    J.value "fileName" fileName
@@ -133,6 +230,21 @@ data SealSpec = SealSpec
     , filesList      :: [FileDesc]
     }
     deriving (Eq,Ord,Show,Read)
+
+unjsonSealSpec :: Unjson.UnjsonDef SealSpec
+unjsonSealSpec = Unjson.objectOf $ pure SealSpec
+    <*> Unjson.field "input" input ""
+    <*> Unjson.field "output" output ""
+    <*> Unjson.field "documentNumberText" documentNumberText ""
+    <*> Unjson.fieldBy "persons" persons "" (Unjson.arrayOf unjsonPerson)
+    <*> Unjson.fieldBy "secretaries" secretaries "" (Unjson.arrayOf unjsonPerson)
+    <*> Unjson.fieldOptBy "initiator" initiator "" unjsonPerson
+    <*> Unjson.fieldBy "history" history "" (Unjson.arrayOf unjsonHistEntry)
+    <*> Unjson.field "initialsText" initialsText ""
+    <*> Unjson.field "hostpart" hostpart ""
+    <*> Unjson.fieldBy "staticTexts" staticTexts "" unjsonSealingTexts
+    <*> Unjson.fieldBy "attachments" attachments "" (Unjson.arrayOf unjsonSealAttachment)
+    <*> Unjson.fieldBy "filesList" filesList "" (Unjson.arrayOf unjsonFileDesc)
 
 instance J.ToJSValue SealSpec where
   toJSValue SealSpec{..} = J.runJSONGen $ do
@@ -159,6 +271,14 @@ data FileDesc = FileDesc
     }
     deriving (Eq,Ord,Show,Read)
 
+unjsonFileDesc :: Unjson.UnjsonDef FileDesc
+unjsonFileDesc = Unjson.objectOf $ pure FileDesc
+    <*> Unjson.field "title" fileTitle ""
+    <*> Unjson.field "role" fileRole ""
+    <*> Unjson.field "pagesText" filePagesText ""
+    <*> Unjson.field "attachedBy" fileAttachedBy ""
+    <*> Unjson.fieldOpt "input" fileInput ""
+
 instance J.ToJSValue FileDesc where
   toJSValue FileDesc{..} = J.runJSONGen $ do
     J.value "title" fileTitle
@@ -181,12 +301,25 @@ instance J.ToJSValue PreSealSpec where
     J.value "fields" $ map J.toJSValue $ pssFields
     J.value "preseal" True
 
+unjsonPreSealSpec :: Unjson.UnjsonDef PreSealSpec
+unjsonPreSealSpec = Unjson.objectOf $ pure PreSealSpec
+    <*> Unjson.field "input" pssInput ""
+    <*> Unjson.field "output" pssOutput ""
+    <*> Unjson.fieldBy "fields" pssFields "" (Unjson.arrayOf unjsonField)
+    <*  Unjson.field "preseal" (const True) ""
+
 data HistEntry = HistEntry
     { histdate    :: String
     , histcomment :: String
     , histaddress :: String
     }
     deriving (Eq,Ord,Show,Read)
+
+unjsonHistEntry :: Unjson.UnjsonDef HistEntry
+unjsonHistEntry = Unjson.objectOf $ pure HistEntry
+    <*> Unjson.field "date" histdate ""
+    <*> Unjson.field "comment" histcomment ""
+    <*> Unjson.field "address" histaddress ""
 
 instance J.ToJSValue HistEntry where
   toJSValue HistEntry{..} = J.runJSONGen $ do
@@ -212,6 +345,19 @@ data SealingTexts = SealingTexts
   , onePageText        :: String -- "1 page"
   }
   deriving (Eq,Ord,Show,Read)
+
+unjsonSealingTexts :: Unjson.UnjsonDef SealingTexts
+unjsonSealingTexts = Unjson.objectOf $ pure SealingTexts
+   <*> Unjson.field "verificationTitle" verificationTitle ""
+   <*> Unjson.field "partnerText" partnerText ""
+   <*> Unjson.field "initiatorText" initiatorText ""
+   <*> Unjson.field "documentText" documentText ""
+   <*> Unjson.field "eventsText" eventsText ""
+   <*> Unjson.field "dateText" dateText ""
+   <*> Unjson.field "historyText" historyText ""
+   <*> Unjson.field "verificationFooter" verificationFooter ""
+   <*> Unjson.field "hiddenAttachmentText" hiddenAttachmentText ""
+   <*> Unjson.field "onePageText" onePageText ""
 
 instance J.ToJSValue SealingTexts where
   toJSValue SealingTexts{..} = J.runJSONGen $ do
