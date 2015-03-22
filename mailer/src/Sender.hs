@@ -49,7 +49,7 @@ createExternalSender cs name program createArgs = Sender {
   senderName = name
 , sendMail = \mail@Mail{..} -> do
   content <- runDBT cs ts $ assembleContent mail
-  (code, _, bsstderr) <- liftBase $ readProcessWithExitCode' program (createArgs mail) content
+  (code, _, bsstderr) <- liftBase $ readProcessWithExitCodeOldWay' program (createArgs mail) content
   let receivers = intercalate ", " (map addrEmail mailTo)
   case code of
     ExitFailure retcode -> do
