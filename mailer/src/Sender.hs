@@ -81,7 +81,7 @@ createSMTPSender config = createExternalSender (serviceName config) "curl" creat
       in
       [ "-s", "-S"                   -- show no progress information but show error messages
       , "-k", "--ssl"                -- use SSL but do not fret over self-signed or outdated certifcate
-      , "-T", "."                    -- input from stdin. Else curl goes into interactive mode, tries to do VRFY, etc.
+      , "-T", "-"                    -- input from stdin. Else curl goes into interactive mode, tries to do VRFY, etc.
       ] ++ (if null (smtpAccount smtpUserForThisMail) && null (smtpPassword smtpUserForThisMail)
            then [] else
            [ "--user"
