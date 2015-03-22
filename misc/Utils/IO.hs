@@ -6,7 +6,6 @@ import Control.Monad.IO.Class
 import Data.List (sort)
 import System.Exit
 import System.IO
-import System.IO.Temp
 import System.Posix.IO (stdInput)
 import System.Posix.Signals
 import System.Posix.Terminal (queryTerminal)
@@ -84,62 +83,6 @@ readProcessWithExitCode' cmd args input = liftIO $ do
 
     return (ex, out, err)
 
--- | Create an external process with arguments. Feed it input, collect
--- exit code, stdout and stderr.
---
--- Standard input is first written to a temporary file. GHC 6.12.1
--- seemed to have trouble doing multitasking when writing to a slow
--- process like curl upload.
-readProcessWithExitCodeOldWay'
-    :: MonadIO m
-    => FilePath                                      -- ^ command to run
-    -> [String]                                      -- ^ any arguments
-    -> BSL.ByteString                                -- ^ standard input
-    -> m (ExitCode, BSL.ByteString, BSL.ByteString) -- ^ exitcode, stdout, stderr
-readProcessWithExitCodeOldWay' cmd args input = liftIO $
-  withSystemTempFile "process" $ \_inputname inputhandle -> do
-    BSL.hPutStr inputhandle input
-    hFlush inputhandle
-    hSeek inputhandle AbsoluteSeek 0
-
-    (_, Just outh, Just errh, pid) <- createProcess (proc cmd args) {
-        std_in  = UseHandle inputhandle
-      , std_out = CreatePipe
-      , std_err = CreatePipe
-    }
-    outMVar <- newEmptyMVar
-
-    outM <- newEmptyMVar
-    errM <- newEmptyMVar
-
-    -- fork off a thread to start consuming stdout
-    _ <- forkIO $ do
-      out <- BSL.hGetContents outh
-      _ <- C.evaluate (BSL.length out)
-      putMVar outM out
-      putMVar outMVar ()
-
-    -- fork off a thread to start consuming stderr
-    _ <- forkIO $ do
-      err  <- BSL.hGetContents errh
-      _ <- C.evaluate (BSL.length err)
-      putMVar errM err
-      putMVar outMVar ()
-
-    -- wait on the output
-    takeMVar outMVar
-    takeMVar outMVar
-    C.handle ((\_e -> return ()) :: (C.IOException -> IO ())) $ hClose outh
-    C.handle ((\_e -> return ()) :: (C.IOException -> IO ())) $ hClose errh
-
-    -- wait on the process
-    ex <- waitForProcess pid
-
-    out <- readMVar outM
-    err <- readMVar errM
-
-    return (ex, out, err)
-
 curl_exe :: String
 curl_exe = "curl"
 
@@ -148,7 +91,7 @@ readCurl :: MonadIO m
          => [String]                 -- ^ any arguments
          -> BSL.ByteString           -- ^ standard input
          -> m (ExitCode, BSL.ByteString, BSL.ByteString) -- ^ exitcode, stdout, stderr
-readCurl args input = readProcessWithExitCodeOldWay' curl_exe (["--max-time", "10", "-s", "-S"] ++ args) input
+readCurl args input = readProcessWithExitCode' curl_exe (["--max-time", "10", "-s", "-S"] ++ args) input
 
 checkPathToExecutable :: FilePath -> IO FilePath
 checkPathToExecutable filepath = do

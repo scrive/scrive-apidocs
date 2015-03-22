@@ -47,7 +47,7 @@ createExternalSender name program createargs = Sender { senderName = name, sendM
     send :: (CryptoRNG m, MonadIO m, MonadDB m, MonadThrow m, MonadBase IO m, Log.MonadLog m, AWS.AmazonMonad m) => Mail -> m Bool
     send mail@Mail{..} = do
       content <- assembleContent mail
-      (code, _, bsstderr) <- liftBase $ readProcessWithExitCodeOldWay' program (createargs mail) content
+      (code, _, bsstderr) <- liftBase $ readProcessWithExitCode' program (createargs mail) content
       let receivers = intercalate ", " (map addrEmail mailTo)
       case code of
         ExitFailure retcode -> do
