@@ -98,17 +98,17 @@ window.Submit = Backbone.Model.extend({
 
         if (this.get('ajax'))
             form.ajaxForm({success: function(p1,p2,p3,p4) {
-                              if (self.hasFile() && BrowserInfo.isIE9orLower()) {
+                              if (self.hasFile() && BrowserInfo.isIE9orLower() && typeof p1 === 'string') {
                                 // file uploads are handled through iframe in <=IE9
                                 // which means, that even 400 error on the backend is handled with success callback
                                 // let's try checking if we got a crappy html 400 response.
                                 // Additionally, this callback (if really successful) is called
                                 // with JSON response wrapped in <pre></pre>
                                 p1 = p1.trim();
-                                if (p1.substring(0, 5) == '<pre>') {
+                                if (p1.substring(0, 5).toLowerCase() === '<pre>') {
                                   p1 = p1.substring(5, p1.length);
                                 }
-                                if (p1.substring(p1.length - 6, p1.length) == '</pre>') {
+                                if (p1.substring(p1.length - 6, p1.length).toLowerCase() === '</pre>') {
                                   p1 = p1.substring(0, p1.length - 6);
                                 }
                                 try {
