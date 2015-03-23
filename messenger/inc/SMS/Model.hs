@@ -84,7 +84,7 @@ instance (MonadDB m, MonadTime m) => DBUpdate m DeleteSMSesOlderThenDays Int whe
   update (DeleteSMSesOlderThenDays days) = do
     past <- (days `daysBefore`) <$> currentTime
     runQuery . sqlDelete "smses" $ do
-      sqlWhere $ "to_be_sent <=" <?> past
+      sqlWhere $ "sent <=" <?> past
 
 data UpdateWithSMSEvent = UpdateWithSMSEvent ShortMessageID SMSEvent
 instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateWithSMSEvent Bool where

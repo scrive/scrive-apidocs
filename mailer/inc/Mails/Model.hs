@@ -77,7 +77,7 @@ instance (MonadDB m, MonadTime m) => DBUpdate m DeleteMailsOlderThenDays Int whe
   update (DeleteMailsOlderThenDays days) = do
     past <- (days `daysBefore`) <$> currentTime
     runQuery . sqlDelete "mails" $ do
-      sqlWhere $ "to_be_sent <=" <?> past
+      sqlWhere $ "sent <=" <?> past
 
 data GetUnreadEvents = GetUnreadEvents
 instance MonadDB m => DBQuery m GetUnreadEvents [(EventID, MailID, XSMTPAttrs, Event)] where
