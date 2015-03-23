@@ -1,11 +1,11 @@
 module Doc.SealSpec where
 
-import qualified Data.ByteString.Base64 as B64
-import qualified Data.ByteString.Char8 as BS
-import qualified Data.Unjson as Unjson
 import Control.Applicative
 import Data.Functor.Invariant
+import qualified Data.ByteString.Base64 as B64
+import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text as Text
+import qualified Data.Unjson as Unjson
 
 data Person =
     Person { fullname            :: String

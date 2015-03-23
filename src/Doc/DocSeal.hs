@@ -12,7 +12,6 @@ module Doc.DocSeal
   , presealDocumentFile
   ) where
 
-import qualified Data.Unjson as Unjson
 import Control.Applicative
 import Control.Monad.Base
 import Control.Monad.Catch hiding (handle)
@@ -35,6 +34,7 @@ import qualified Data.ByteString.Lazy as BSL (empty, writeFile)
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
+import qualified Data.Unjson as Unjson
 import qualified Text.StringTemplates.Fields as F
 
 import Control.Logic

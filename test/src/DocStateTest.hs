@@ -5,10 +5,8 @@ import Control.Concurrent (newMVar)
 import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Trans
-import Amazon
 import Data.Functor
 import Data.List
-import Doc.DocSeal
 import Data.Maybe
 import Data.Text (unpack)
 import Test.Framework
@@ -18,6 +16,7 @@ import qualified Data.Set as S
 
 import ActionQueue.Monad (ActionQueueT)
 import ActionQueue.Scheduler (SchedulerData(..))
+import Amazon
 import AppConf (AppConf(dbConfig))
 import Company.Model
 import Context (ctxtime)
@@ -27,6 +26,7 @@ import DB.TimeZoneName (defaultTimeZoneName, mkTimeZoneName)
 import Doc.Action (findAndDoPostDocumentClosedActions, findAndExtendDigitalSignatures)
 import Doc.Conditions
 import Doc.DocInfo
+import Doc.DocSeal
 import Doc.DocStateData
 import Doc.DocumentMonad (DocumentT, theDocument, theDocumentID, withDocumentM, withDocument, withDocumentID)
 import Doc.DocUtils
