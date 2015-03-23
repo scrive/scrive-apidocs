@@ -177,7 +177,7 @@ postDocumentClosedActions :: (TemplatesMonad m, MailContextMonad m, CryptoRNG m,
   -> Bool -- ^ Prepare final PDF even if it has already been prepared
   -> m ()
 postDocumentClosedActions commitAfterSealing forceSealDocument = do
-
+  mcxt <- getMailContext
   doc0 <- theDocument
 
   unlessM ((isClosed ||^ isDocumentError) <$> theDocument) internalError
@@ -187,7 +187,7 @@ postDocumentClosedActions commitAfterSealing forceSealDocument = do
     whenM (isDocumentError <$> theDocument) $ do
       currentTime >>= dbUpdate . FixClosedErroredDocument . systemActor
 
-    sealDocument
+    sealDocument (mctxhostpart mcxt)
 
     -- Here there is a race condition: when we commit, other callers
     -- of postDocumentClosedActions may see a document that lacks a

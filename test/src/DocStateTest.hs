@@ -6,7 +6,6 @@ import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Trans
 import Amazon
-import MailContext
 import Data.Functor
 import Data.List
 import Doc.DocSeal
@@ -300,33 +299,31 @@ getScreenshots = do
 testSignDocumentEvidenceLog :: TestEnv ()
 testSignDocumentEvidenceLog = do
   author <- addNewRandomUser
-  time <- rand 10 arbitrary
 
   screenshots <- getScreenshots
-  addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending &&^ ((<=) 2 . length . documentsignatorylinks) &&^ (all ((==) StandardAuthentication . signatorylinkauthenticationmethod) . documentsignatorylinks)) `withDocumentM` do
-    Just sl <- getSigLinkFor (not . (isAuthor::SignatoryLink->Bool)) <$> theDocument
-    randomUpdate $ \t->MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
-    randomUpdate $ \t->SignDocument  (signatorylinkid sl) (signatorymagichash sl) Nothing Nothing screenshots (systemActor t)
+  addRandomDocumentWithAuthorAndCondition author (
+      isSignable &&^
+      isPending &&^
+      ((==) 2 . length . documentsignatorylinks) &&^
+      (all signatoryispartner . documentsignatorylinks) &&^
+      (all ((==) StandardAuthentication . signatorylinkauthenticationmethod) . documentsignatorylinks)
+    ) `withDocumentM` do
+      Just asl <- getSigLinkFor (isAuthor::SignatoryLink->Bool) <$> theDocument
+      randomUpdate $ \t -> MarkDocumentSeen (signatorylinkid asl) (signatorymagichash asl) (systemActor t)
+      randomUpdate $ \t -> SignDocument  (signatorylinkid asl) (signatorymagichash asl) Nothing Nothing screenshots (systemActor t)
 
-    lg <- dbQuery . GetEvidenceLog =<< theDocumentID
-    assertJust $ find (\e -> evType e == Current SignDocumentEvidence) lg
-    mc <- MemCache.new (const 1) 1000
+      Just sl <- getSigLinkFor (not . (isAuthor::SignatoryLink->Bool)) <$> theDocument
+      randomUpdate $ \t -> MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
+      randomUpdate $ \t -> SignDocument  (signatorylinkid sl) (signatorymagichash sl) Nothing Nothing screenshots (systemActor t)
 
-    let mctx = MailContext {
-          mctxhostpart = "https://hostpart.net/"
-          , mctxmailsconfig = error "mctxmailsconfig"
-          , mctxlang = error "mctxlang"
-          , mctxcurrentBrandedDomain = error "mctxcurrentBrandedDomain"
-          , mctxipnumber = error "mctxipnumber"
-          , mctxtime = time
-          , mctxmaybeuser = error "mctxmaybeuser"
-          }
-        amz = AmazonConfig {
-          amazonConfig = Nothing
-          , fileCache  = mc
-          }
-    runAmazonMonadT amz $ runMailContextT mctx $ do
-      sealDocument
+      randomUpdate $ \t -> CloseDocument (systemActor t)
+
+      lg <- dbQuery . GetEvidenceLog =<< theDocumentID
+      assertJust $ find (\e -> evType e == Current SignDocumentEvidence) lg
+
+      mc <- MemCache.new (const 1) 1000
+      runAmazonMonadT (AmazonConfig Nothing mc) $ do
+        sealDocument "https://scrive.com"
 
 testTimeoutDocumentEvidenceLog :: TestEnv ()
 testTimeoutDocumentEvidenceLog = do
@@ -922,22 +919,8 @@ testSealDocument = replicateM_ 1 $ do
     randomUpdate $ \t-> CloseDocument (systemActor t)
 
     mc <- MemCache.new (const 1) 1000
-
-    let mctx = MailContext {
-          mctxhostpart = "https://hostpart.net/"
-          , mctxmailsconfig = error "mctxmailsconfig"
-          , mctxlang = error "mctxlang"
-          , mctxcurrentBrandedDomain = error "mctxcurrentBrandedDomain"
-          , mctxipnumber = error "mctxipnumber"
-          , mctxtime = time
-          , mctxmaybeuser = error "mctxmaybeuser"
-          }
-        amz = AmazonConfig {
-          amazonConfig = Nothing
-          , fileCache  = mc
-          }
-    runAmazonMonadT amz $ runMailContextT mctx $ do
-      sealDocument
+    runAmazonMonadT (AmazonConfig Nothing mc) $ do
+      sealDocument "https://scrive.com"
 
 
 testDocumentAppendSealedPendingRight :: TestEnv ()

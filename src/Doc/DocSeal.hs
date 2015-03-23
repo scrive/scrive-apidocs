@@ -55,7 +55,6 @@ import File.File
 import File.Model
 import File.Storage
 import Kontra
-import MailContext (MailContext(..), MailContextMonad, getMailContext)
 import MinutesTime
 import Templates
 import Util.Actor
@@ -460,13 +459,13 @@ presealSpecFromDocument boxImages document inputpath outputpath =
             }
 
 
-sealDocument :: (CryptoRNG m, MonadBaseControl IO m, MailContextMonad m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadMask m, Log.MonadLog m, AWS.AmazonMonad m) => m ()
-sealDocument = theDocumentID >>= \did -> do
+sealDocument :: (CryptoRNG m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadMask m, Log.MonadLog m, AWS.AmazonMonad m) => String -> m ()
+sealDocument hostpart = theDocumentID >>= \did -> do
   mfile <- theDocument >>= documentfileM
   case mfile of
     Just file -> do
       Log.mixlog_ $ "Sealing document #" ++ show did
-      sealDocumentFile file
+      sealDocumentFile hostpart file
       Log.mixlog_ $ "Sealing of document #" ++ show did ++ " should be done now"
     Nothing -> do
       Log.mixlog_ $ "Sealing of document #" ++ show did ++ " failed because it has no main file attached"
@@ -479,18 +478,19 @@ collectClockErrorStatistics elog = do
       starttime = minimum (map evTime elog) `min` (1 `daysBefore` endtime)
   dbQuery $ HC.GetClockErrorStatistics (Just starttime) (Just endtime)
 
-sealDocumentFile :: (CryptoRNG m, MonadMask m, MonadBaseControl IO m, MailContextMonad m, DocumentMonad m, TemplatesMonad m, MonadIO m, Log.MonadLog m, AWS.AmazonMonad m)
-                 => File
+sealDocumentFile :: (CryptoRNG m, MonadMask m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, Log.MonadLog m, AWS.AmazonMonad m)
+                 => String
+                 -> File
                  -> m ()
-sealDocumentFile file@File{fileid, filename} = theDocumentID >>= \documentid ->
+sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \documentid ->
   withSystemTempDirectory' ("seal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
-    MailContext{mctxhostpart, mctxtime} <- getMailContext
+    now <- currentTime
     -- We generate this event before we attempt the sealing process so
     -- that the event gets included in the evidence package
     _ <- update $ InsertEvidenceEvent
         AttachSealedFileEvidence
         (return ())
-        (systemActor mctxtime)
+        (systemActor now)
     let tmpin = tmppath ++ "/input.pdf"
     let tmpout = tmppath ++ "/output.pdf"
     content <- getFileContents file
@@ -499,7 +499,7 @@ sealDocumentFile file@File{fileid, filename} = theDocumentID >>= \documentid ->
     uncheckedBoxImage <- liftIO $  BS.readFile "frontend/app/img/checkbox_unchecked.jpg"
     elog <- dbQuery $ GetEvidenceLog documentid
     ces <- collectClockErrorStatistics elog
-    config <- theDocument >>= \d -> sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) mctxhostpart d elog ces content tmppath tmpin tmpout
+    config <- theDocument >>= \d -> sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart d elog ces content tmppath tmpin tmpout
 
     let json_config = Unjson.unjsonToByteStringLazy Seal.unjsonSealSpec config
     (code,_stdout,stderr) <- liftIO $ do
@@ -511,7 +511,7 @@ sealDocumentFile file@File{fileid, filename} = theDocumentID >>= \documentid ->
     case code of
       ExitSuccess -> do
         sealedfileid <- dbUpdate . NewFile filename . Binary =<< liftIO (BS.readFile tmpout)
-        dbUpdate $ AppendSealedFile sealedfileid Missing (systemActor mctxtime)
+        dbUpdate $ AppendSealedFile sealedfileid Missing (systemActor now)
       ExitFailure _ -> do
         systmp <- liftIO $ getTemporaryDirectory
         (path, handle) <- liftIO $ openTempFile systmp ("seal-failed-" ++ show documentid ++ "-" ++ show fileid ++ "-.pdf")
@@ -524,7 +524,7 @@ sealDocumentFile file@File{fileid, filename} = theDocumentID >>= \documentid ->
         void $ dbUpdate $ ErrorDocument ("Could not seal document because of file #" ++ show fileid)
                             ErrorSealingDocumentEvidence
                             (return ())
-                            (systemActor mctxtime)
+                            (systemActor now)
 
 -- | Generate file that has all placements printed on it. It will look same as final version except for footers and verification page.
 presealDocumentFile :: (MonadBaseControl IO m, MonadDB m, Log.MonadLog m, KontraMonad m, TemplatesMonad m, MonadIO m, AWS.AmazonMonad m)
