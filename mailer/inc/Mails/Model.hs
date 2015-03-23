@@ -193,7 +193,7 @@ instance (MonadDB m, MonadTime m) => DBUpdate m CleanEmailsOlderThanDays Int whe
   update (CleanEmailsOlderThanDays days) = do
     past <- (days `daysBefore`) <$> currentTime
     runQuery . sqlDelete "mails" $ do
-      sqlWhere $ "run_at <=" <?> past
+      sqlWhere $ "finished_at <=" <?> past
 
 ----------------------------------------
 
