@@ -424,21 +424,21 @@ testChangeMainFileMovePlacements = do
     (rsp,_) <- runTestKontra req' ctx $ apiCallV1ChangeMainFile $ docid
     assertEqual "suceeded" 202 (rsCode rsp)
     poss <- getPositionsFromResponse rsp
-    assertEqual "positions after change to anchors-Namnteckning" [(2,0.5,0.800784)] poss
+    assertEqual "positions after change to anchors-Namnteckning" [(2,0.5,0.80078405)] poss
 
   do
     req' <- mkRequest POST [ ("file", inFile noanchorpdf)]
     (rsp,_) <- runTestKontra req' ctx $ apiCallV1ChangeMainFile $ docid
     assertEqual "suceeded" 202 (rsCode rsp)
     poss <- getPositionsFromResponse rsp
-    assertEqual "positions after change to no anchors document" [(2,0.5,0.800784)] poss
+    assertEqual "positions after change to no anchors document" [(2,0.5,0.80078405)] poss
 
   do
     req' <- mkRequest POST [ ("file", inFile anchorpdf2)]
     (rsp,_) <- runTestKontra req' ctx $ apiCallV1ChangeMainFile $ docid
     assertEqual "suceeded" 202 (rsCode rsp)
     poss <- getPositionsFromResponse rsp
-    assertEqual "positions after change back to anchors-Namnteckning" [(2,0.5,0.800784)] poss
+    assertEqual "positions after change back to anchors-Namnteckning" [(2,0.5,0.80078405)] poss
 
   do
     req' <- mkRequest POST [ ("file", inFile anchorpdf3)]
@@ -454,6 +454,6 @@ testChangeMainFileMovePlacements = do
     assertEqual "suceeded" 202 (rsCode rsp)
     poss <- getPositionsFromResponse rsp
     -- we are almost exactly in the place we started
-    assertEqual "positions after change to anchors-Signature" [(1,0.5,0.50000006)] poss
+    assertEqual "positions after change to anchors-Signature" [(1,0.5,0.5)] poss
 
   return ()
