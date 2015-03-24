@@ -8,6 +8,8 @@ module Doc.API.V1.Calls (
   , apiCallV1Update              -- Exported for tests
   , apiCallV1Ready               -- Exported for tests
   , apiCallV1Sign                -- Exported for tests
+  , apiCallV1Cancel              -- Exported for tests
+  , apiCallV1Reject              -- Exported for tests
   , apiCallV1SetAutoReminder     -- Exported for tests
   , apiCallV1DownloadMainFile    -- Exported for tests
   , apiCallV1DownloadFile        -- Exported for tests

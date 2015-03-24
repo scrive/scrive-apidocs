@@ -1,7 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Doc.API.V1.JSONTest (apiV1JSONTests) where
 
-import Doc.API.V1.JSONTypes
 
 import Control.Applicative
 import Control.Monad.IO.Class
@@ -15,13 +14,14 @@ import Data.Unjson
 import Data.Aeson
 import qualified Data.ByteString.Lazy as B
 import qualified Data.ByteString.Lazy.UTF8 as BS
-
+import qualified Data.ByteString.Lazy.Char8 as BSC
 import Context
 import Doc.API.V1.Calls
 import TestingUtil
 import TestKontra as T
 import Utils.Default
-import Doc.DocumentID (unsafeDocumentID)
+import Doc.DocumentID (DocumentID, unsafeDocumentID)
+import Doc.SignatoryLinkID (SignatoryLinkID, unsafeSignatoryLinkID)
 
 apiV1JSONTests :: TestEnvSt -> Test
 apiV1JSONTests env = testGroup "JSONAPIV1"
@@ -31,7 +31,8 @@ apiV1JSONTests env = testGroup "JSONAPIV1"
   , testThat "Test 4: JSON structure for API V1 is consistent after 'update'" env testUpdateFields
   , testThat "Test 5: JSON structure for API V1 is consistent after 'update' based on #EMAIL, #FSTNAME, etc fields" env testUpdateWithReplacementFields
   , testThat "Test 6: JSON structure for API V1 'update' with small subset of Documen JSON still works " env testUpdateWithSubset
-  , testThat "Test 7: JSON structure for API V1 'update' with all features I know off " env testUpdateWithAllFeatures
+  , testThat "Test 7: JSON structure for API V1 'update' with all features I know " env testUpdateWithAllFeatures
+  , testThat "Test 8: JSON structure for API V1 'list' with 3 documents " env testList
   ]
 
 
@@ -47,14 +48,13 @@ testFromFileAndReadySimple = do
                                       ] []
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
-  doc <- testJSONWith "test/json/test_1_create.json" (rsBody resDoc) v1_docUnjsonDef
+  doc <- testJSONWith "test/json/test_1_create.json" (rsBody resDoc)
+  did <- getDocumentID (rsBody resDoc)
 
   reqReady <- mkRequest POST []
-  (resReady, _) <- runTestKontra reqReady ctx $ apiCallV1Ready (unsafeDocumentID $ fromInt64AsString $ v1_docid doc)
+  (resReady, _) <- runTestKontra reqReady ctx $ apiCallV1Ready did
   assertEqual "We should get a 202 response" 202 (rsCode resReady)
-  _ <- testJSONWith "test/json/test_1_ready.json" (rsBody resReady) v1_docUnjsonDef
-  return ()
-
+  testJSONWith "test/json/test_1_ready.json" (rsBody resReady)
 
 {- Test 2 -}
 testFromFileAndUpdate :: TestEnv ()
@@ -68,14 +68,14 @@ testFromFileAndUpdate = do
                                       ] []
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
-  doc <- testJSONWith "test/json/test_2_create.json" (rsBody resDoc) v1_docUnjsonDef
+  testJSONWith "test/json/test_2_create.json" (rsBody resDoc)
+  did <- getDocumentID (rsBody resDoc)
+
 
   reqUpdate <- mkRequestWithHeaders POST [("json", inTextBS $ rsBody resDoc)] []
-  (resUpdate, _) <- runTestKontra reqUpdate ctx $ apiCallV1Update  (unsafeDocumentID $ fromInt64AsString $ v1_docid doc)
+  (resUpdate, _) <- runTestKontra reqUpdate ctx $ apiCallV1Update did
   assertEqual "We should get a 200 response" 200 (rsCode resUpdate)
-  _ <- testJSONWith "test/json/test_2_create.json" (rsBody resUpdate) v1_docUnjsonDef
-
-  return ()
+  testJSONWith "test/json/test_2_create.json" (rsBody resUpdate)
 
 {- Test 3 -}
 testFromTemplateAndReadySimple :: TestEnv ()
@@ -89,8 +89,8 @@ testFromTemplateAndReadySimple = do
                                       ] []
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
-  doc <- testJSONWith "test/json/test_3_create.json" (rsBody resDoc) v1_docUnjsonDef
-  let did = unsafeDocumentID $ fromInt64AsString $ v1_docid doc
+  testJSONWith "test/json/test_3_create.json" (rsBody resDoc)
+  did <- getDocumentID (rsBody resDoc)
 
   let Just docJSON = decode (rsBody resDoc) :: Maybe Value
       value = setDocKey "template" (Bool True) docJSON
@@ -99,20 +99,19 @@ testFromTemplateAndReadySimple = do
   reqUpdate <- mkRequestWithHeaders POST [("json", inTextBS strDoc)] []
   (resUpdate, _) <- runTestKontra reqUpdate ctx $ apiCallV1Update did
   assertEqual "We should get a 200 response" 200 (rsCode resUpdate)
-  _ <- testJSONWith "test/json/test_3_savedAsTemplate.json" (rsBody resUpdate) v1_docUnjsonDef
+  testJSONWith "test/json/test_3_savedAsTemplate.json" (rsBody resUpdate)
 
   reqFromTemplate <- mkRequestWithHeaders POST [] []
   (resFromTemplate, _) <- runTestKontra reqFromTemplate ctx $ apiCallV1CreateFromTemplate did
   assertEqual "We should get a 201 response" 201 (rsCode resFromTemplate)
   --When creating from template - result should be same as a template - before it was saved as template
-  docFromTemplate <- testJSONWith "test/json/test_3_create.json" (rsBody resFromTemplate) v1_docUnjsonDef
-  let newdid = unsafeDocumentID $ fromInt64AsString $ v1_docid docFromTemplate
+  testJSONWith "test/json/test_3_create.json" (rsBody resFromTemplate)
+  newdid <- getDocumentID (rsBody resFromTemplate)
 
   reqReady <- mkRequestWithHeaders POST [] []
   (resReady, _) <- runTestKontra reqReady ctx $ apiCallV1Ready newdid
   assertEqual "We should get a 202 response" 202 (rsCode resReady)
-  _ <- testJSONWith "test/json/test_3_ready.json" (rsBody resReady) v1_docUnjsonDef
-  return ()
+  testJSONWith "test/json/test_3_ready.json" (rsBody resReady)
 
 {- Test 4 -}
 testUpdateFields :: TestEnv ()
@@ -126,8 +125,8 @@ testUpdateFields = do
                                       ] []
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
-  doc <- testJSONWith "test/json/test_4_create.json" (rsBody resDoc) v1_docUnjsonDef
-  let did = unsafeDocumentID $ fromInt64AsString $ v1_docid doc
+  testJSONWith "test/json/test_4_create.json" (rsBody resDoc)
+  did <- getDocumentID (rsBody resDoc)
 
   let Just docJSON = decode (rsBody resDoc) :: Maybe Value
       newSetup  = setDocKey "invitationmessage"   (String "424242") .
@@ -138,17 +137,19 @@ testUpdateFields = do
   reqUpdate <- mkRequestWithHeaders POST [("json", inTextBS strDoc)] []
   (resUpdate, _) <- runTestKontra reqUpdate ctx $ apiCallV1Update did
   assertEqual "We should get a 200 response" 200 (rsCode resUpdate)
-  doc' <- testJSONWith "test/json/test_4_update.json" (rsBody resUpdate) v1_docUnjsonDef
+  testJSONWith "test/json/test_4_update.json" (rsBody resUpdate)
 
-  assertEqual "Invitation message should be the same" "<p>424242</p>" (v1_docinvitetext doc')
-  assertEqual "Confirmation message should be the same" "<p>363636</p>" (v1_docconfirmtext doc')
-  assertEqual "API Callback should be the same" (Just "242424") (v1_docapicallbackurl doc')
+  invMsg <- getField "invitationmessage"
+  cnfMsg <- getField "confirmationmessage"
+  apiClbkUrl <- getField "apicallbackurl"
+  assertEqual "Invitation message should be the same" "<p>424242</p>" invMsg
+  assertEqual "Confirmation message should be the same" "<p>363636</p>" cnfMsg
+  assertEqual "API Callback should be the same" "242424" apiClbkUrl
 
   reqReady <- mkRequestWithHeaders POST [] []
   (resReady, _) <- runTestKontra reqReady ctx $ apiCallV1Ready did
   assertEqual "We should get a 202 response" 202 (rsCode resReady)
-  _ <- testJSONWith "test/json/test_4_ready.json" (rsBody resReady) v1_docUnjsonDef
-  return ()
+  testJSONWith"test/json/test_4_ready.json" (rsBody resReady)
 
 {- Test 5 -}
 testUpdateWithReplacementFields :: TestEnv ()
@@ -162,14 +163,14 @@ testUpdateWithReplacementFields = do
                                       ] []
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
-  doc <- testJSONWith "test/json/test_5_create.json" (rsBody resDoc) v1_docUnjsonDef
-  let did = unsafeDocumentID $ fromInt64AsString $ v1_docid doc
+  testJSONWith "test/json/test_5_create.json" (rsBody resDoc)
+  did <- getDocumentID (rsBody resDoc)
   jsonFileBS <- liftIO $ B.readFile "test/json/test_5_update.json"
 
   reqUpdate1 <- mkRequestWithHeaders POST [("json", inTextBS jsonFileBS)] []
   (resUpdate1, _) <- runTestKontra reqUpdate1 ctx $ apiCallV1Update did
   assertEqual "We should get a 200 response" 200 (rsCode resUpdate1)
-  _ <- testJSONWith "test/json/test_5_update.json" (rsBody resUpdate1) v1_docUnjsonDef
+  testJSONWith "test/json/test_5_update.json" (rsBody resUpdate1)
 
   let Just docJSON = decode (rsBody resUpdate1) :: Maybe Value
       replaceValues  = setDocValuesBySimpleReplacement "#TITLE" "New title" .
@@ -184,7 +185,7 @@ testUpdateWithReplacementFields = do
   reqUpdate2 <- mkRequestWithHeaders POST [("json", inTextBS strDoc)] []
   (resUpdate2, _) <- runTestKontra reqUpdate2 ctx $ apiCallV1Update did
   assertEqual "We should get a 200 response" 200 (rsCode resUpdate2)
-  _ <- testJSONWith "test/json/test_5_update_result.json" (rsBody resUpdate2) v1_docUnjsonDef
+  testJSONWith "test/json/test_5_update_result.json" (rsBody resUpdate2)
   return ()
 
 {- Test 6 -}
@@ -196,14 +197,14 @@ testUpdateWithSubset = do
   reqDoc <- mkRequestWithHeaders POST [] []
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
-  doc <- testJSONWith "test/json/test_6_create.json" (rsBody resDoc) v1_docUnjsonDef
-  let did = unsafeDocumentID $ fromInt64AsString $ v1_docid doc
+  testJSONWith "test/json/test_6_create.json" (rsBody resDoc)
+  did <- getDocumentID (rsBody resDoc)
   jsonFileBS <- liftIO $ B.readFile "test/json/test_6_update.json"
 
   reqUpdate <- mkRequestWithHeaders POST [("json", inTextBS jsonFileBS)] []
   (resUpdate, _) <- runTestKontra reqUpdate ctx $ apiCallV1Update did
   assertEqual "We should get a 200 response" 200 (rsCode resUpdate)
-  _ <- testJSONWith "test/json/test_6_update_result.json" (rsBody resUpdate) v1_docUnjsonDef
+  testJSONWith "test/json/test_6_update_result.json" (rsBody resUpdate)
   return ()
 
 {- Test 7 -}
@@ -219,8 +220,8 @@ testUpdateWithAllFeatures = do
 
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
-  doc <- testJSONWith "test/json/test_7_create.json" (rsBody resDoc) v1_docUnjsonDef
-  let did = unsafeDocumentID $ fromInt64AsString $ v1_docid doc
+  testJSONWith "test/json/test_7_create.json" (rsBody resDoc)
+  did <- getDocumentID (rsBody resDoc)
 
   jsonFileBS <- liftIO $ B.readFile "test/json/test_7_update.json"
 
@@ -238,40 +239,109 @@ testUpdateWithAllFeatures = do
   (resFinalDoc, _) <- runTestKontra reqGet ctx $ apiCallV1Get did
 
   assertEqual "We should get a 200 response" 200 (rsCode resFinalDoc)
-  _ <- testJSONWith "test/json/test_7_update_result_with_attachments.json" (rsBody resFinalDoc) v1_docUnjsonDef
+  testJSONWith "test/json/test_7_update_result_with_attachments.json" (rsBody resFinalDoc)
   return ()
 
+{- Test 8 -}
+testList :: TestEnv ()
+testList = do
+  (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
+
+  reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
+                                        -- FIXME make this random-ish file
+                                      , ("file", inFile "test/pdfs/simple.pdf")
+                                      ] []
+
+  (resDoc1, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  assertEqual "We should get a 201 response" 201 (rsCode resDoc1)
+  did1 <- getDocumentID (rsBody resDoc1)
+
+  (resDoc2, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  assertEqual "We should get a 201 response" 201 (rsCode resDoc2)
+  did2 <- getDocumentID (rsBody resDoc2)
+
+  (resDoc3, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  assertEqual "We should get a 201 response" 201 (rsCode resDoc3)
+  did3 <- getDocumentID (rsBody resDoc3)
+  did3sig <- head <$> getSignatoryLinksID (rsBody resDoc3)
+
+  (resDoc4, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
+  assertEqual "We should get a 201 response" 201 (rsCode resDoc4)
+  did4 <- getDocumentID (rsBody resDoc4)
+  did4sig <- head <$> getSignatoryLinksID (rsBody resDoc4)
+
+  reqList1 <- mkRequestWithHeaders GET [] []
+  (resList1, _) <- runTestKontra reqList1 ctx $ apiCallV1List
+  testJSONWith "test/json/test_7_list_of_documents.json" (rsBody resList1)
 
 
--- | Takes a 'FilePath' to a JSON file with the desired structure (with 'null'
--- considered as a type), a 'ByteString' with the JSON to test, and a
--- 'UnjsonDef' which the ByteString should parse with.
---
--- Checks that the ByteString parses, and also that it matches the JSON given
--- in 'FilePath' (using (==) and 'removeValues').
-testJSONWith :: FilePath -> BS.ByteString -> UnjsonDef V1_Doc -> TestEnv V1_Doc
-testJSONWith fp jsonBS useUnjsonDef = do
+  reqReady1 <- mkRequestWithHeaders POST [] []
+  _ <- runTestKontra reqReady1 ctx $ apiCallV1Ready did1
+
+  reqReady2 <- mkRequestWithHeaders POST [] []
+  _ <- runTestKontra reqReady2 ctx $ apiCallV1Ready did2
+
+  reqReady3 <- mkRequestWithHeaders POST [] []
+  _ <- runTestKontra reqReady3 ctx $ apiCallV1Ready did3
+
+  reqReady4 <- mkRequestWithHeaders POST [] []
+  _ <- runTestKontra reqReady4 ctx $ apiCallV1Ready did4
+
+  reqCancel <- mkRequestWithHeaders POST [] []
+  _ <- runTestKontra reqCancel ctx $ apiCallV1Cancel did2
+
+  reqSign <- mkRequestWithHeaders POST [] []
+  _ <- runTestKontra reqSign ctx $ apiCallV1Sign did3 did3sig
+
+  reqReject <- mkRequestWithHeaders POST [] []
+  _ <- runTestKontra reqReject ctx $ apiCallV1Reject did4 did4sig
+
+  reqList2 <- mkRequestWithHeaders GET [] []
+  (resList2, _) <- runTestKontra reqList2 ctx $ apiCallV1List
+  testJSONWith "test/json/test_7_list_of_documents.json" (rsBody resList2)
+
+
+-- Compare JSON sesults from API calls
+testJSONWith :: FilePath -> BS.ByteString -> TestEnv ()
+testJSONWith fp jsonBS = do
+  liftIO $ BSC.putStrLn $ jsonBS
   jsonFileBS <- liftIO $ B.readFile fp
   let Just value    = decode jsonBS
       Just jsonFile = decode jsonFileBS
-      -- FIXME Can we use the 'a' in U.Result to test stuff?
-      U.Result doc problems = parse useUnjsonDef value
-  -- Using Unjson we check several things about the JSON in 'jsonBS':
-  -- 1) That the correct fields exist
-  -- 2) That these are of the correct type
-  -- 3) That some JSON String types have the correct "underlying" type or set
-  --    of values (e.g. An Int64 inside JSON String, or a datatype inside a
-  --    JSON String)
-  assertEqual "There should be no problems in Result" [] problems
-  -- The second check is similar, but not as powerful or helpful as Unjson, but
-  -- what it does that Unjson cannot do is:
-  -- 1) Check that no extra fields exist
-  -- 2) Check that Null fields match, regardless of what their type "should" be
   assertEqual ("JSON structure and types (including 'null') should match that in " ++ fp)
               (removeValues jsonFile) (removeValues value)
   assertEqual ("JSON structure and values should match if we will remove dynamic values (like documentid or mtime) " ++ fp)
               (removeDynamicValues jsonFile) (removeDynamicValues value)
-  return doc
+  return ()
+
+-- So utils fro getting common properties from Document JSON
+getDocumentID :: BS.ByteString -> TestEnv DocumentID
+getDocumentID jsonBS = do
+  jsonFileBS <- liftIO $ B.readFile fp
+  let (Just v) = decode jsonBS
+  return $ unsafeDocumentID <$> getID  v
+
+getSignatoryLinksID :: BS.ByteString -> TestEnv [SignatoryLinkID]
+getSignatoryLinksID jsonBS = do
+  let (Just (Object m)) = decode jsonBS
+  let (Just (Array s)) = H.lookup "signatories" m
+  mapM getID s
+
+getID :: Value -> TestEnv Int64
+getID (Object m) = case (maybeRead =<< H.lookup "id" m) of
+    Just i -> return i
+    _ -> assertFailure "Error while parsing id (not a number)"
+getID _ = assertFailure "Error while parsing id (not found)"
+
+getField :: String -> BS.ByteString -> TestEnv Int64
+getField key jsonBS = do
+    let (Just (Object m)) = decode jsonBS
+    case (H.lookup key m) of
+      Just (String s) -> return s
+      _ -> assertFailure "Error while looking for a field " ++ key ++ " (not a string)"
+getField key _ = assertFailure "Error while looking for a field " ++ key
+
 
 removeValues :: Value -> Value
 removeValues (Object m) = Object (H.map removeValues m)
