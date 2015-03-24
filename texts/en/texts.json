@@ -384,7 +384,7 @@
 "_designViewMandatoryForSender":"Mandatory for sender",
 "_designViewOptionalField":"Optional",
 "_designViewRecipientsLanguage":"Recipient's language",
-"_designViewRemoveThisDocument":"Remove document",
+"_designViewRemoveThisDocument":"Remove PDF",
 "_designViewRequest":"Request attachments",
 "_designViewRequestFieldFrom":"<span class='put-field-name'></span> requested from <br/><span class='put-person-name'></span>",
 "_designViewSaveAsDraftButton":"Save as draft",
