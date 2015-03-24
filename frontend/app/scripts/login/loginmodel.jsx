@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React', 'Backbone', 'common/hubspot_service', 'common/adwords_conversion_service', 'legacy_code'], function(React, Backbone, HubSpot, AdwordsConversionService) {
+define(['React', 'Backbone', 'legacy_code'], function(React, Backbone) {
 
 return Backbone.Model.extend({
   defaults: {
