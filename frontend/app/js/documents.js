@@ -790,6 +790,9 @@ window.Document = Backbone.Model.extend({
     newSignatureName: function() {
         return this.newNameWithIndex(localization.designview.signature);
     },
+    newCustomName: function() {
+        return this.newNameWithIndex(localization.designview.customField);
+    },
     removeTypeSetters: function() {
         var document = this;
         _.each(document.signatories(), function(sig) {

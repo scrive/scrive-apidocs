@@ -5,6 +5,8 @@
  *
  * Properties:
       text        : string, the text that can be edited.
+      edit        : mount the component in the editing state.
+      disabled    : disable editing.
       onSave      : function, callback with text as argument when save button is clicked,
                     return true if it is valid input.
  *
@@ -12,29 +14,55 @@
 
 define(["React", "common/button", "common/infotextinput", "legacy_code"], function (React, Button, InfoTextInput) {
   var EditableText = React.createClass({
-    mixins: [React.addons.LinkedStateMixin],
+    mixins: [React.addons.PureRenderMixin],
 
     propTypes: {
       text: React.PropTypes.string.isRequired,
-      onSave: React.PropTypes.func.isRequired
+      onSave: React.PropTypes.func.isRequired,
+      edit: React.PropTypes.bool,
+      disabled: React.PropTypes.bool
     },
 
     getInitialState: function () {
-      return {
-        editing: false
-      };
+      return {edit: false};
+    },
+
+    componentWillMount: function () {
+      if (this.props.edit) {
+        this.setState({edit: true});
+      }
+    },
+
+    componentDidMount: function () {
+      if (this.state.edit) {
+        this.refs.input.focus();
+      }
+    },
+
+    componentWillReceiveProps: function (nextProps) {
+      if (this.state.edit && nextProps.disabled) {
+        this.text();
+      }
+    },
+
+    componentDidUpdate: function (prevProps, prevState) {
+      if (this.state.edit && !prevState.edit) {
+        this.refs.input.focus();
+      }
     },
 
     edit: function () {
-      if (this.state.edit) {
-        return ;
-      }
-
       this.setState({
         edit: true,
         text: this.props.text
-      }, function () {
-        this.refs.input.focus();
+      });
+    },
+
+    text: function () {
+      return this.setState({
+        edit: false,
+        invalid: false,
+        text: ""
       });
     },
 
@@ -43,13 +71,35 @@ define(["React", "common/button", "common/infotextinput", "legacy_code"], functi
       var valid = this.props.onSave(text);
 
       if (valid) {
-        return this.setState({edit: false});
+        return this.text();
       }
+
+      this.refs.input.focus();
+    },
+
+    handleClick: function () {
+      if (this.state.edit || this.props.disabled) {
+        return ;
+      }
+
+      this.edit();
     },
 
     render: function () {
+      var cursorStyle = {
+        "cursor": "pointer"
+      };
+
+      if (this.props.disabled) {
+        cursorStyle.cursor = "";
+      }
+
+      if (this.state.edit) {
+        cursorStyle.cursor = "text";
+      }
+
       return (
-        <div className="editable-text" onClick={this.edit}>
+        <div style={cursorStyle} className="editable-text" onClick={this.handleClick}>
           {/* if */ this.state.edit &&
             <span>
               <span className="editable-text-input-container">
@@ -71,7 +121,9 @@ define(["React", "common/button", "common/infotextinput", "legacy_code"], functi
           {/* else */ !this.state.edit &&
             <span className="editable-text-text">
               {this.props.text}
-              <img className="editable-text-icon" src="/img/edit-icon.png" />
+              {/* if */ !this.props.disabled &&
+                <img className="editable-text-icon" src="/img/edit-icon.png" />
+              }
             </span>
           }
         </div>

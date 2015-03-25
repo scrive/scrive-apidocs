@@ -4,18 +4,24 @@ define(["Backbone", "React", "common/select", "legacy_code"], function (Backbone
   var SignatorySelector = React.createClass({
     propTypes: {
       field: React.PropTypes.instanceOf(Backbone.Model).isRequired,
-      className: React.PropTypes.string.isRequired,
-      optionsWidth: React.PropTypes.string.isRequired,
-      textWidth: React.PropTypes.number.isRequired,
-      onSelect: React.PropTypes.func
+      onSelect: React.PropTypes.func,
+      useDefaultBehavior: React.PropTypes.bool
+    },
+
+    getDefaultProps: function () {
+      return {
+        useDefaultBehavior: true
+      };
     },
 
     handleSelect: function (s) {
-      var field = this.props.field;
+      if (this.props.useDefaultBehavior) {
+        var field = this.props.field;
 
-      mixpanel.track("Choose signature signatory");
+        mixpanel.track("Choose signature signatory");
 
-      field.moveToSignatory(s);
+        field.moveToSignatory(s);
+      }
 
       if (this.props.onSelect) {
         this.props.onSelect(s);
@@ -42,9 +48,9 @@ define(["Backbone", "React", "common/select", "legacy_code"], function (Backbone
             <Select.Select
               name={signame}
               options={options}
-              optionsWidth={this.props.optionsWidth}
-              textWidth={this.props.textWidth}
-              cssClass={this.props.className}
+              optionsWidth="218px"
+              textWidth={191}
+              cssClass="signature-field-placement-setter-field-selector"
               onSelect={this.handleSelect}
             />
           </div>

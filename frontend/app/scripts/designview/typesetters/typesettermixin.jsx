@@ -77,10 +77,13 @@ define(["jquery", "Underscore", "Backbone", "React",
 
     rename: function (name) {
       var field = this.props.model.field();
-      var doc = field.signatory().document();
+      var sig = field.signatory();
+      var doc = sig.document();
+      var global = field.type() !== "custom";
 
+      var sigs = global ? doc.signatories() : [sig];
       var allnames = [];
-      _.each(doc.signatories(), function (s) {
+      _.each(sigs, function (s) {
         _.each(s.fields(), function (f) {
           if (f !== field) {
             allnames.push(f.name());
@@ -94,6 +97,7 @@ define(["jquery", "Underscore", "Backbone", "React",
 
       if (allnames.indexOf(name) < 0) {
         field.setName(name);
+        sig.trigger("change:fields");
         return true;
       }
 

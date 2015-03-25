@@ -2,7 +2,7 @@ define(['tinycolor', 'Backbone', 'React', 'designview/typesetters/texttypesetter
 
 window.TextPlacementPlacedView = Backbone.View.extend({
     initialize: function (args) {
-        _.bindAll(this, 'render' , 'clear', 'closeTypeSetter', 'updateErrorBackground', 'fixWHRel');
+        _.bindAll(this, 'render' , 'clear', 'closeTypeSetter', 'updateErrorBackground', 'fixWHRel', 'listenToField');
         var view = this;
         var placement = this.model;
         var field =  placement.field();
@@ -14,6 +14,7 @@ window.TextPlacementPlacedView = Backbone.View.extend({
         this.model.bind('change:field change:signatory change:step change:withTypeSetter change:fsrel', this.render);
         this.model.bind('change:xrel change:yrel change:wrel change:hrel', this.updatePosition, this);
         this.model.bind('clean', this.closeTypeSetter);
+        this.listenTo(placement, 'change:field', this.listenToField);
         placement.bind('change', this.updateErrorBackground);
 
         this.listenTo(doc, 'change:signatories', this.render);
@@ -25,6 +26,12 @@ window.TextPlacementPlacedView = Backbone.View.extend({
         var parent = $(this.el).parent();
         if( parent.length>0 ) return Math.floor(this.model.fsrel() * parent.width());
         return 16;
+    },
+    listenToField: function (model, oldField) {
+      var field = model.field();
+      this.stopListening(oldField);
+      this.listenTo(field, 'change:name', this.render);
+      this.listenTo(field, 'change', this.updateErrorBackground);
     },
     updatePosition: function() {
         /*
@@ -64,13 +71,19 @@ window.TextPlacementPlacedView = Backbone.View.extend({
         this.model.unbind('clean', this.closeTypeSetter);
         this.stopListening();
     },
+    shouldFocusEditor: function () {
+      return this._focusEditor;
+    },
+    setShouldFocusEditor: function (bool) {
+      this._focusEditor = bool;
+    },
     hasTypeSetter : function(){
         return this.model.typeSetter != undefined;
     },
     addTypeSetter : function() {
          var placement = this.model;
          var field = placement.field();
-         if (!this.hasTypeSetter() && $.contains(document.body, this.el) && placement.step() === "edit" && field.name()) {
+         if (!this.hasTypeSetter() && $.contains(document.body, this.el)) {
              var typeSetterDiv = $("<div />");
              placement.typeSetter = React.render(React.createElement(TextTypeSetterView, {
                model: placement
@@ -81,7 +94,6 @@ window.TextPlacementPlacedView = Backbone.View.extend({
              setTimeout(function() {
                  placement.typeSetter.place();
              }, 0);
-
          }
     },
     closeTypeSetter : function() {
@@ -168,216 +180,7 @@ window.TextPlacementPlacedView = Backbone.View.extend({
         var placement = this.model;
         var field = placement.field();
         var document = field.signatory().document();
-        if(field) {
-            field.unbind('change', this.updateErrorBackground);
-            field.bind('change', this.updateErrorBackground);
-        }
         $(this.el).toggleClass("invalid",field && !field.isValid(true));
-    },
-    possibleFields: [
-        {name: "fstname",
-         type: 'standard'},
-        {name: "sndname",
-         type: 'standard'},
-        {name: "email",
-         type: 'standard'},
-        {name: "sigco",
-         type: 'standard'},
-        {name: "sigpersnr",
-         type: 'standard'},
-        {name: "sigcompnr",
-         type: 'standard'},
-        {name: "mobile",
-         type: 'standard'}
-    ],
-    fieldNames: {
-        fstname: localization.fstname,
-        sndname: localization.sndname,
-        email: localization.email,
-        sigcompnr: localization.companyNumber,
-        sigpersnr: localization.personalNumber,
-        sigco: localization.company,
-        mobile: localization.phone
-    },
-    selector : function() {
-        var view = this;
-        var placement = view.model;
-        var field = placement.field();
-        var sig = field.signatory();
-        var doc = sig.document();
-
-        var box = $("<div class='subtitle'/>");
-
-        var name = localization.designview.chooseParticipant;
-
-        var options = _.map(doc.signatories(), function(s) {
-            return {name: s.nameOrEmail() || s.nameInDocument(),
-                    value: s};
-        });
-
-        var selector = new Select({
-            name: name,
-            options: options,
-            cssClass: 'text-field-placement-setter-field-selector',
-            border : "",
-            textWidth: undefined,
-            onSelect: function(s) {
-                mixpanel.track('Select placement signatory');
-                placement.setSignatory(s);
-                placement.goToStepField();
-                return true;
-            }
-        });
-
-        box.append(selector.el());
-
-        return box;
-    },
-    fieldSelector: function() {
-        var view = this;
-        var placement = view.model;
-        var field = placement.field();
-
-        var signatory = placement.signatory();
-
-        var name = localization.designview.selectField;
-
-        // we need to build a list of all of the different field name/type pairs
-        // plus the ability to add a custom field
-
-        // clone the array
-        var allFieldOptions = view.possibleFields.concat([]);
-
-        _.each(signatory.fields(), function(f) {
-                if(f.isCustom() && f.name() !== '')
-                    allFieldOptions.push({name: f.name(),
-                                          type: f.type()});
-        });
-
-        var options = [];
-
-        if(!field || field.name() !== '')
-            options.push({name: localization.designview.customField,
-                          value: {name: '--custom',
-                                  type: '--custom'}});
-
-        _.each(allFieldOptions, function(o) {
-            options.push({name: view.fieldNames[o.name] || o.name,
-                          value: o});
-        });
-
-        var selector = new Select({
-            name: name,
-            options: options,
-            cssClass: ('text-field-placement-setter-field-field-selector ' + FieldPlacementGlobal.signatoryCSSClass(this.model.signatory())),
-            border : "",
-            textWidth : undefined,
-            onSelect: function(o) {
-                var f = signatory.field(o.name, o.type);
-
-                if(o.name === '--custom') {
-                    mixpanel.track('Choose placement type', {
-                        Type: 'custom'
-                    });
-
-                    f = new Field({signatory: signatory,
-                                   type: 'custom',
-                                   name: '',
-                                   obligatory: true,
-                                   shouldbefilledbysender: signatory.author()});
-                    placement.setField(f);
-                    f.addPlacement(placement);
-
-                    signatory.addField(f);
-                    f.addedByMe = true;
-                } else if(f) {
-                    mixpanel.track('Choose placement type', {
-                        Type: o.type,
-                        Name: o.name
-                    });
-                    placement.setField(f);
-                    f.addPlacement(placement);
-                } else {
-                    mixpanel.track('Choose placement type', {
-                        Type: o.type,
-                        Name: o.name
-                    });
-                    f = new Field({signatory: signatory,
-                                   type: o.type,
-                                   name: o.name,
-                                   obligatory: true,
-                                   shouldbefilledbysender: signatory.author()});
-                    placement.setField(f);
-                    f.addPlacement(placement);
-
-                    signatory.addField(f);
-                    f.addedByMe = true;
-                }
-
-                placement.goToStepEdit();
-                view.addTypeSetter();
-                return true;
-            }
-        });
-
-        view.myFieldSelector = selector;
-
-        return selector.el();
-    },
-    fieldNamer: function() {
-        var view = this;
-        var placement = view.model;
-        var field = placement.field();
-
-        var signatory = placement.signatory();
-
-        var div = $('<div />');
-        div.addClass('text-field-placement-setter-field-name');
-        div.addClass(FieldPlacementGlobal.signatoryCSSClass(signatory));
-
-        function setName() {
-            var value = input.value();
-            if(value) {
-
-                var samenameexists = _.any(signatory.customFields(), function(c) { return value == c.name();});
-                if (samenameexists) {
-                  new FlashMessage({type: 'error', content : localization.designview.fieldWithSameNameExists});
-                  return;
-                }
-                field.setName(value);
-                if (view.place != undefined)
-                  view.place();
-
-                mixpanel.track('Set placement field name');
-                placement.trigger('change:field');
-                signatory.trigger('change:fields');
-                view.addTypeSetter();
-            }
-        }
-
-        var input = new InfoTextInput({
-            infotext: localization.designview.fieldName,
-            value: field.name() || field.nameTMP(),
-            cssClass: "name",
-            onChange : function(value) {
-                field.setNameTMP(value);
-                if (view.place != undefined)
-                  view.place();
-            },
-            onEnter: setName,
-            suppressSpace: (field.name()=="fstname")
-        });
-
-        var button = new Button({
-            size: 'tiny',
-            text: localization.ok,
-            width: 64,
-            onClick: setName
-        });
-
-        div.append(input.el());
-        div.append(button.el());
-        return div;
     },
     editor: function() {
         var view = this;
@@ -433,17 +236,13 @@ window.TextPlacementPlacedView = Backbone.View.extend({
 
         place.empty();
 
-        if(placement.step() === 'signatory') {
-            place.append(this.selector());
-        } else if(placement.step() === 'field') {
-            place.append(this.fieldSelector());
-        } else if(field.noName()) {
-            place.append(this.fieldNamer());
-            place.find('input').focus();
-        } else if(self.hasTypeSetter() && !field.isCsvField() && !field.isAuthorUnchangeableField()) {
+        if (self.hasTypeSetter() && !field.isCsvField() && !field.isAuthorUnchangeableField()) {
             var editor = this.editor();
             place.append(editor.el());
-            editor.focus(); // We need to focus when element is appended;
+            if (self.shouldFocusEditor()) {
+              editor.focus();
+              self.setShouldFocusEditor(false);
+            }
         } else {
             place.append(placewrapper.append(new TextPlacementView({model: field, fontSize: this.fontSize()}).el));
         }
@@ -454,10 +253,9 @@ window.TextPlacementPlacedView = Backbone.View.extend({
             place.click(function(){
                 if (!self.hasTypeSetter()) {
                     self.addTypeSetter();
+                    self.setShouldFocusEditor(!field.isCsvField() && !field.isAuthorUnchangeableField());
                     placement.trigger('change:step');
                 }
-                //else
-                //    self.closeTypeSetter();
                 return false;
             });
         }

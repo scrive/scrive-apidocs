@@ -32,13 +32,7 @@ define(["React", "common/checkbox", "designview/typesetters/typesettermixin",
 
       return (
         <span>
-          <SignatorySelector
-            className="signature-field-placement-setter-field-selector"
-            textWidth={191}
-            optionsWidth="218px"
-            field={field}
-            onSelect={this.handleSelect}
-          />
+          <SignatorySelector field={field} onSelect={this.handleSelect} />
           <div className="fieldTypeSetter-option checkbox-box">
             <Checkbox
               label={localization.designview.checkboxes.prechecked}

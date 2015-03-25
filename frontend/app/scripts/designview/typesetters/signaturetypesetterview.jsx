@@ -18,12 +18,7 @@ define(["React", "designview/typesetters/typesettermixin",
 
       return (
         <span>
-          <SignatorySelector
-            className="signature-field-placement-setter-field-selector"
-            textWidth={191}
-            optionsWidth="218px"
-            field={field}
-          />
+          <SignatorySelector field={field} />
           <Obligatory field={field} />
           <Done field={field} onDone={this.done} />
           <Remove model={this.props.model} onRemove={this.clear} />

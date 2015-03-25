@@ -69,6 +69,20 @@ window.FieldPlacement = Backbone.Model.extend({
     field : function(){
         return this.get("field");
     },
+    changeField: function (newField) {
+      var field = this.field();
+      var sig = newField.signatory();
+      var name = newField.name();
+
+      field.removePlacement(this);
+      this.setSignatory(sig);
+      newField.addPlacement(this);
+      this.setField(newField);
+
+      if (!sig.hasTextFieldWithName(name)) {
+        sig.addField(newField);
+      }
+    },
     setField: function(f) {
         var oldfield = this.field();
         if(oldfield !== f) {

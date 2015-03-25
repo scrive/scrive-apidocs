@@ -1,4 +1,8 @@
-define(["legacy_code", "backend", "util", "React", "common/select", "designview/typesetters/texttypesetterview"], function(legacy_code, backend, util, React, Select, TextTypeSetterView) {
+var imports = ["legacy_code", "backend", "util", "React", "common/select",
+               "common/button", "designview/typesetters/more",
+               "designview/typesetters/done", "designview/typesetters/texttypesetterview"];
+
+define(imports, function(legacy_code, backend, util, React, Select, Button, More, Done, TextTypeSetterView) {
 
   var TestUtils = React.addons.TestUtils;
 
@@ -24,13 +28,23 @@ define(["legacy_code", "backend", "util", "React", "common/select", "designview/
         , element: $("body")[0]
       }));
 
+      var more = TestUtils.findAllInRenderedTree(typesetter, function (comp) {
+        return TestUtils.isCompositeComponentWithType(comp, More);
+      })[0];
+
+      more.open();
+
       // first select is the obligatory and second is the font size.
       var selects = TestUtils.findAllInRenderedTree(typesetter, function (comp) {
         return TestUtils.isCompositeComponentWithType(comp, Select.Select);
       });
 
-      var obligatorySelect = selects[0];
-      var fontSelect = selects[1];
+      assert.equal(selects.length, 4, "four selects field, signatory, obligatory and font.");
+
+      var signatorySelect = selects[0];
+      var fieldSelect = selects[1];
+      var obligatorySelect = selects[2];
+      var fontSelect = selects[3];
 
       assert.equal(obligatorySelect.props.options.length, 2, "we have two options.");
 
@@ -56,23 +70,12 @@ define(["legacy_code", "backend", "util", "React", "common/select", "designview/
 
       assert.ok(field.shouldbefilledbysender(), "field should be filled by sender again.");
 
-      // there are four font sizes and we should click them all.
-      util.clickSelectOption(fontSelect, 0);
-      assert.equal(placement.fsrel(), FieldPlacementGlobal.fontSizeSmall / page.width(), "font should be small");
-      util.clickSelectOption(fontSelect, 1);
-      assert.equal(placement.fsrel(), FieldPlacementGlobal.fontSizeNormal / page.width(), "font should be normal");
-      util.clickSelectOption(fontSelect, 2);
-      assert.equal(placement.fsrel(), FieldPlacementGlobal.fontSizeLarge / page.width(), "font should be large");
-      util.clickSelectOption(fontSelect, 3);
-      assert.equal(placement.fsrel(), FieldPlacementGlobal.fontSizeHuge / page.width(), "font should be huge");
+      var buttons = TestUtils.scryRenderedDOMComponentsWithClass(typesetter, "button-small");
 
-      // custom font
-      placement.setFSRel((FieldPlacementGlobal.fontSizeHuge + 10) / page.width());
-
-      var done = TestUtils.findRenderedDOMComponentWithClass(typesetter, "button-small");
+      var done = buttons[0];
 
       // click done button.
-      TestUtils.Simulate.click(done);
+      TestUtils.Simulate.click(done.getDOMNode());
     });
 
     it("should test component with not author", function () {
@@ -88,19 +91,23 @@ define(["legacy_code", "backend", "util", "React", "common/select", "designview/
         return TestUtils.isCompositeComponentWithType(comp, Select.Select);
       });
 
-      assert.equal(selects.length, 2, "first select is the obligatory and second is the font size.");
+      var signatorySelect = selects[0];
+      var fieldSelect = selects[1];
+      var obligatorySelect = selects[2];
 
-      assert.equal(selects[0].props.options.length, 2, "we have all the options.");
+      assert.equal(selects.length, 3, "three selects field, signatory and obligatory.");
+
+      assert.equal(obligatorySelect.props.options.length, 2, "we have all the options.");
 
       assert.ok(!field.shouldbefilledbysender(), "field should not be filled by sender.");
 
       // click sender.
-      util.clickSelectOption(selects[0], 1);
+      util.clickSelectOption(obligatorySelect, 1);
 
       assert.ok(!field.shouldbefilledbysender(), "field should be filled by sender.");
 
       // click signatory.
-      util.clickSelectOption(selects[0], 1);
+      util.clickSelectOption(obligatorySelect, 1);
 
       assert.ok(!field.shouldbefilledbysender(), "field should not be filled by sender.");
     });
@@ -120,7 +127,11 @@ define(["legacy_code", "backend", "util", "React", "common/select", "designview/
         return TestUtils.isCompositeComponentWithType(comp, Select.Select);
       });
 
-      assert.equal(selects.length, 1, "there should only be one select now as obligatory select is gone.");
+      var signatorySelect = selects[0];
+      var fieldSelect = selects[1];
+      var obligatorySelect = selects[2];
+
+      assert.equal(obligatorySelect.props.inactive, true, "obligatory select should now be inactive.");
 
       var placement2 = util.addPlacement(doc, undefined, 0, {
         type: "standard"
@@ -144,26 +155,85 @@ define(["legacy_code", "backend", "util", "React", "common/select", "designview/
 
       var select3 = TestUtils.findAllInRenderedTree(placement3.typeSetter, function (comp) {
         return TestUtils.isCompositeComponentWithType(comp, Select.Select);
-      })[0];
+      })[2];
 
       assert.equal(select3.props.options.length, 1, "there should be only 1 option.");
     });
 
-    it("should test component without placement page", function () {
+    it("should test done", function () {
       var placement = util.addPlacement(doc);
-
-      placement.set({ page: null });
 
       placement.typeSetter = TestUtils.renderIntoDocument(React.createElement(TextTypeSetterView, {
         model: placement
         , element: $("body")[0]
       }));
 
-      var selects = TestUtils.findAllInRenderedTree(placement.typeSetter, function (comp) {
+      var done = TestUtils.findAllInRenderedTree(placement.typeSetter, function (comp) {
+        return TestUtils.isCompositeComponentWithType(comp, Done);
+      })[0];
+
+      TestUtils.Simulate.click(done.getDOMNode());
+    });
+
+    it("should test select sig", function () {
+      var placement = util.addPlacement(doc);
+
+      var typesetter = TestUtils.renderIntoDocument(React.createElement(TextTypeSetterView, {
+        model: placement
+        , element: $("body")[0]
+      }));
+
+      var selects = TestUtils.findAllInRenderedTree(typesetter, function (comp) {
         return TestUtils.isCompositeComponentWithType(comp, Select.Select);
       });
 
-      assert.equal(selects.length, 1, "there should only be one select now as font select is gone.");
+      var signatorySelect = selects[0];
+
+      var sig1 = placement.field().signatory();
+
+      util.clickSelectOption(signatorySelect, 0);
+
+      var sig2 = placement.field().signatory();
+
+      assert.notEqual(sig1, sig2, "signatory should not be the same");
+
+      util.clickSelectOption(signatorySelect, 0);
+
+      var sig3 = placement.field().signatory();
+
+      assert.equal(sig1, sig3, "signatory should be the same");
+    });
+
+    it("should test renaming a field", function () {
+      var placement = util.addPlacement(doc);
+
+      var typesetter = TestUtils.renderIntoDocument(React.createElement(TextTypeSetterView, {
+        model: placement
+        , element: $("body")[0]
+      }));
+
+      var buttons1 = TestUtils.findAllInRenderedTree(typesetter, function (comp) {
+        return TestUtils.isCompositeComponentWithType(comp, Button);
+      });
+
+      var editButton = buttons1[0];
+
+      assert.equal(editButton.props.text, "Edit", "button should have text Edit");
+
+      TestUtils.Simulate.click(editButton.getDOMNode());
+
+      var buttons2 = TestUtils.findAllInRenderedTree(typesetter, function (comp) {
+        return TestUtils.isCompositeComponentWithType(comp, Button);
+      });
+
+      var saveButton = buttons2[0];
+
+      assert.equal(saveButton.props.text, "Save", "button should have text Save");
+
+      TestUtils.Simulate.click(saveButton.getDOMNode());
+
+      // test with conflicting name
+      typesetter.handleSave("fstname");
     });
 
     after(function () {

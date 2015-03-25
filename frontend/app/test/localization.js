@@ -145,7 +145,7 @@
 
             , process : {
                signModalTitle: "Finished?",
-               signModalBody: "You have signed the document. When you click the button your signature will be registered by the e-signing service Scrive.",
+               signModalBody: "<p> You have signed the document. When you click the button your signature will be registered by the e-signing service Scrive. </p>",
                sendbuttontext: "Send",
                changesignatorybuttontext: "Change",
                startsigningbuttontext: "Start signing",
@@ -319,6 +319,7 @@
                       obligatory: "Mandatory to sign here"
                     , forThis : "Party"
                     , done : "Close"
+                    , remove : "Remove"
              }
              , checkboxes : {
                       checkbox : "Checkbox settings"
@@ -343,11 +344,15 @@
              , editSigningProcess: "Other settings"
              , startSigning: "Start signing"
              , addField: "Add field"
+             , editField: "Edit"
              , whatField: "What field is it?"
              , customField: "New field"
              , fieldName: "Field name"
              , byAPI: "by API"
              , addParty: "Add party"
+             , moreSettings: "More settings"
+             , selectField: "Field"
+             , optionalMandatory: "Optional/Mandatory"
              , addParties : {
                  close : "Close"
                , invitationOrder : "Invitation order"
@@ -387,6 +392,7 @@
              , signatureBoxSettings: "Signature settings"
              , freeTextBox: "Text field"
              , checkbox: "Checkbox"
+             , signature: "Signature"
              , removeThisDocument: "Remove document"
              , attached : "Added attachment"
              , attachmentRequestedFrom : "Requested attachment <span class='put-attachment-name'></span> from <span class='put-person-name'></span>"
@@ -462,14 +468,14 @@
            , label: "Change the email address and send the invitation again."
            , acceptButton: "Save and send"
            , invalidEmailFlash: "The email address is incorrectly formatted. Correct format is example@email.com"
-           , placeholder: "Email",
+           , placeholder: "Email"
          }
          , changeMobileModal: {
              title: "Change phone number"
            , label: "Change the phone number and send the invitation again."
            , acceptButton: "Save and send"
            , invalidMobileFlash: "The phone number is incorrectly formatted. Correct format is +46123456789"
-           , placeholder: "Phone number",
+           , placeholder: "Phone number"
          }
          , changePhone : "Change phone number"
          , accessNewAccountModal: {
@@ -685,36 +691,40 @@
            , allFeaturesIncluded: "All features included"
            , payMonthly: "Billed monthly"
            , payYearly: "Billed yearly"
-           , saveYearly: "save up to 10%"
+           , saveYearly: "save 20%"
            , plans: {
                     // Legacy plans only need the name
                     form : {
                           name: "Team"
                     }
                     , trial : {
-                          name : "Trial",
+                          name : "Trial"
                     }
                     , team : {
                           name : "Team"
                         , price : {
-                              EUR: "405"
-                            , SEK: "4050"
+                              EUR: "360"
+                            , SEK: "3600"
                         }
-                        , signeddocs: "250"
+                        , signeddocs: "500"
                         , branding: "Custom branding"
-                        , users: "25 users or 3 stores"
+                        , users: "20 users"
+                        , stores: "<span class='desc-em'>or</span> 5 stores"
+                        , api: "<span class='desc-em'>or</span> 500 API docs/m"
                         , support: "Support 9-17 weekdays"
                     }
                     , enterprise : {
                           name : "Enterprise"
                         , price : {
-                              EUR: "4050"
-                            , SEK: "40500"
+                              EUR: "3600"
+                            , SEK: "36000"
                         }
                         , signeddocs: "10 000"
                         , branding: "Custom branding"
-                        , users: "500 users or 100 stores"
-                        , support: "Support 6-24 all days"
+                        , users: "250 users"
+                        , stores: "<span class='desc-em'>or</span> 75 stores"
+                        , api: "<span class='desc-em'>or</span> 10 000 API docs/m"
+                        , support: "Extended support hours"
                         , sla: "Extended SLA"
                         , p2es: "Print to eSign"
                         , whiteLabel: "White-label"
@@ -722,22 +732,24 @@
                     , company : {
                           name : "Company"
                         , price : {
-                              EUR: "1350"
-                            , SEK: "13500"
+                              EUR: "1200"
+                            , SEK: "12000"
                         }
-                        , signeddocs: "2 000"
+                        , signeddocs: "2 500"
                         , branding: "Custom branding"
-                        , users: "100 users or 15 stores"
-                        , support: "Support 8-20 all days"
+                        , users: "75 users"
+                        , stores: "<span class='desc-em'>or</span> 20 stores"
+                        , api: "<span class='desc-em'>or</span> 2 500 API docs/m"
+                        , support: "Extended support hours"
                         , sla: "Extended SLA"
                     }
                     , one : {
                           name : "One"
                         , price : {
-                              EUR: "27"
-                            , SEK: "270"
+                              EUR: "24"
+                            , SEK: "240"
                         }
-                        , signeddocs: "20"
+                        , signeddocs: "25"
                         , users: "1 user"
                         , support: "Self service"
                     }
@@ -935,7 +947,7 @@
            , loginFailed : "Incorrect email or password."
            , loginFailedBadIP : "You cannot access Scrive E-sign from IP <span class='put-ip-here'></span>. Please contact <span class='put-adminname-here'></span> who is your company administrator in Scrive."
            , invalidEmail : "The email address is incorrectly formatted."
-           , noUser : "We could not send password reminder, because we don't have user with such email."
+           , noUser : "A password reminder could not be sent since there is no user with this email address."
            , tooMuch : "We have now sent too many password reminders to this email. Please wait 24h to try again."
            , passwordReminderSend : "A new password has been sent to your email address."
            , dontHaveAccount : "Don't have an account? <a class='put-link-to-signup-here'>Sign up for free</a>"
@@ -1072,7 +1084,7 @@
               , newEmail       : "New email address"
               , newEmailAgain  : "Confirm new email address"
               , changeEmailButton : "Change"
-              , changeEmailExplaination : "Your email and user name are the same in Scrive. By changing the email you will also change the username for logging in. To verify your new address we will send you a confirmation email. Please follow the instructions in the email to complete the change."
+              , changeEmailExplaination : "Your email and username are the same in Scrive. By changing the email you will also change the username for logging in. To verify your new address we will send you a confirmation email. Please follow the instructions in the email to complete the change."
               , changeEmailTitle : "Change username and email"
               , changeEmailAccept : "Change"
               , save : "Save"
@@ -1187,11 +1199,11 @@
       }
       , fontSize: {
                name : "Font size"
-             , small :  "small"
-             , normal :  "normal"
-             , big :  "large"
-             , large :  "huge"
-             , custom :  "custom"
+             , small :  "Small"
+             , normal :  "Normal"
+             , big :  "Large"
+             , large :  "Huge"
+             , custom :  "Custom"
       }
       , dates : {
                jan       : "Jan"
@@ -1234,6 +1246,7 @@
              , youHaveSignedPleaseWait : "You have signed the document <strong class='put-doctitle'></strong>. Please wait while Scrive E-sign:"
       }
       , signingInProgressDontCloseWindow : "We are still saving your signature. If you leave this page we may not be able to finish the process."
+      , signingStartedDontCloseWindow : "You have not signed the document yet. Do you want to leave without signing?"
       , signingErrorMessage1 : "We're experiencing difficulties handling your document."
       , signingErrorMessage2 : "Please reload the page."
       , signingErrorReload   : "Reload page"

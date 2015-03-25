@@ -104,16 +104,25 @@ define(['Backbone', 'legacy_code'], function() {
 	    return this.createDraggable(fieldOrPlacementFN, localization.designview.signatureBox, 'signature', undefined, function(f) { f.setName(model.document().newSignatureName());});
         },
         text: function() {
-            var model = this.model;
-	    var fieldOrPlacementFN = function() {
-                return new Field({signatory: model.document().author(),
-				  name: 'fake',
-				  type: 'fake',
-				  value: localization.designview.freeTextBox});
-            };
+          var doc = this.model.document();
 
-	    return this.createDraggable(fieldOrPlacementFN, localization.designview.freeTextBox, 'textbox', 16);
-	}
+          // do not render if document is not ready, we need at least one signatory.
+          if (!doc.ready()) {
+            return ;
+          }
+
+          var fieldOrPlacementFN = function() {
+            if (doc.signatoriesWhoSign()[0]) {
+              var signatory = doc.signatoriesWhoSign()[0];
+              var field = signatory.field("fstname", "standard");
+              return field;
+            }
+
+            console.warn("no signatories in document, draggable could not be created");
+          };
+
+          return this.createDraggable(fieldOrPlacementFN, localization.designview.freeTextBox, 'textbox', 16);
+        }
 	});
 
 

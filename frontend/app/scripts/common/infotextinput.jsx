@@ -92,6 +92,14 @@ define(['React'], function(React) {
       //After calling focus - custor is sometimes at begining of text. If we will set the value to what is there - custor will be placed at the end
       $(this.refs.input.getDOMNode()).val($(this.refs.input.getDOMNode()).val());
     },
+    onClick: function (e) {
+      // focus when clicking on the padding of the outer element,
+      // but only when clicking on the outer element as we dont want to
+      // break selecting.
+      if (this.getDOMNode() === e.target) {
+        this.focus();
+      }
+    },
     onFocus : function() {
       this.setState({focus : true});
       if (this.props.onFocus != undefined)
@@ -130,6 +138,7 @@ define(['React'], function(React) {
         <div
           style={this.props.style}
           className={"info-text-input " + (this.props.className ? this.props.className : "") + " " + (this.props.readonly ? "readonly" : "")}
+          onClick={this.onClick}
         >
           <input
             name={this.props.name}

@@ -40,7 +40,7 @@ define(["legacy_code", "backend", "util", "React", "designview/typesetters/types
         // place typesetter
         typesetter.place();
 
-        // renamse typesetter
+        // rename typesetter
         typesetter.rename("new-field-1");
 
         assert.equal(placement.field().name(), "new-field-1", "should have renamed typesetter");
@@ -121,11 +121,57 @@ define(["legacy_code", "backend", "util", "React", "designview/typesetters/types
         var sig = placement.field().signatory();
         var field = placement.field();
 
+        assert.ok(typesetter.isMounted(), "typesetter should be mounted");
+
         sig.removed();
 
         typesetter.forceUpdate(); // backbone mixin does not capture removed event.
 
         assert.ok(!typesetter.isMounted(), "typesetter should not be mounted");
+      });
+
+      it("should test clearing a typesetter when signatory is removed", function () {
+        var placement = util.addPlacement(doc);
+
+        var TestComponent = React.createClass({
+          mixins: [TypeSetterMixin]
+          , renderBody: function () { }
+        });
+
+        var typesetter = TestUtils.renderIntoDocument(React.createElement(TestComponent, {
+          model: placement
+          , element: $("body")[0]
+        }));
+
+        var sig = placement.field().signatory();
+        var field = placement.field();
+
+        assert.ok(typesetter.isMounted(), "typesetter should be mounted");
+
+        sig.deleteField(field);
+
+        assert.ok(!typesetter.isMounted(), "typesetter should not be mounted");
+      });
+
+      it("should test rename", function () {
+        var placement = util.addPlacement(doc, undefined, undefined, {
+          type: "standard"
+        });
+
+        var TestComponent = React.createClass({
+          mixins: [TypeSetterMixin]
+          , renderBody: function () { }
+        });
+
+        var typesetter = TestUtils.renderIntoDocument(React.createElement(TestComponent, {
+          model: placement
+          , element: $("body")[0]
+        }));
+
+        var sig = placement.field().signatory();
+        var field = placement.field();
+
+        assert.equal(typesetter.rename(""), true, "rename '' should return true");
       });
     });
 

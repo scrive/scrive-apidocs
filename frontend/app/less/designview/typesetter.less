@@ -1,0 +1,135 @@
+@import '../branding/elements';
+@typesetter-border-size: 2px;
+
+.fieldTypeSetter-container {
+  color: #000;
+  font: 14px;
+  min-width: 250px;
+  position: absolute;
+  z-index: 1005;
+
+  .name {
+    margin-top: 10px;
+    width: 160px;
+  }
+
+  .title {
+    padding: 11px 0 5px 0;
+    color: #222222;
+    font-size: 15px;
+    font-weight: 500;
+  }
+
+  .subtitle {
+    color: #000;
+    font-size: 14px;
+    font-weight: 500;
+
+    .fieldTypeSetter-subtitle-select {
+      margin: 5px 0 10px 0;
+    }
+
+    .signature-field-placement-setter-field-selector {
+      font-size: 15px;
+    }
+  }
+
+  .fieldTypeSetter-field-select {
+    display: table;
+    width: 220px;
+
+    .editable-text {
+      min-height: 40px;
+      line-height: 40px;
+
+
+      .editable-text-input {
+        padding: 8px 8px 7px 10px;
+
+        input {
+          margin-left: 1px;
+          margin-bottom: 2px;
+        }
+      }
+    }
+
+    .fieldTypeSetter-field-select-container {
+      display: table-cell;
+
+      .select {
+        margin-right: -1px;
+      }
+    }
+
+    .fieldTypeSetter-field-button-container {
+      display: table-cell;
+      vertical-align: middle;
+
+      .button {
+        padding: 13px 12px;
+        display: block;
+      }
+
+      .button .label {
+        margin-top: 1px;
+      }
+    }
+  }
+
+  .fieldTypeSetter-body {
+    background: #f2f2f2;
+    margin: @typesetter-border-size;
+    padding: 0 10px 0 10px;
+    position: relative;
+    z-index: 107;
+  }
+
+  .fieldTypeSetter-button {
+    margin-top: 8px;
+    margin-bottom : 10px;
+    position: relative;
+    z-index: 107;
+    margin-right: 5px;
+  }
+
+  &:before {
+    content: " ";
+    border: @typesetter-border-size solid #ffffff;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    position: absolute;
+    z-index: 105;
+    .drop-shadow(0px, 0px, 5px, 0.25);
+  }
+
+  .fieldTypeSetter-arrow {
+    background: url(~"@{img-base-url}/tooltip-arrow-left.png");
+    height: 33px;
+    left: -15px;
+    position: absolute;
+    top: 12px;
+    width: 17px;
+    z-index: 105;
+  }
+
+  .checkmark {
+    background-color: #fff;
+  }
+
+  .fieldTypeSetter-option {
+    font-size: small;
+    height: 32px;
+    line-height: 32px;
+    text-align: left;
+    z-index: 200;
+
+    label {
+      cursor: pointer;
+      font-size: small;
+      margin-left: 6px;
+      color: #000;
+    }
+  }
+}

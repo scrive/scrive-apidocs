@@ -1,10 +1,12 @@
 /** @jsx React.DOM */
 
-define(["Underscore", "React", "common/select",
+define(["Underscore", "React", "common/button", "common/select",
         "designview/typesetters/typesettermixin", "designview/typesetters/done",
-        "legacy_code"],
-  function (_, React, Select, TypeSetterMixin, Done) {
-
+        "designview/typesetters/remove", "designview/typesetters/signatoryselector",
+        "designview/typesetters/more", "designview/typesetters/fieldselector",
+        "designview/typesetters/fontselector", "legacy_code"],
+  function (_, React, Button, Select, TypeSetterMixin, Done, Remove, SignatorySelector,
+            More, FieldSelector, FontSelector) {
   return React.createClass({
     mixins: [TypeSetterMixin],
 
@@ -15,6 +17,10 @@ define(["Underscore", "React", "common/select",
     obligatorySelected: function () {
       var model = this.props.model;
       var field = model.field();
+
+      if (field.isAuthorUnchangeableField()) {
+        return localization.designview.mandatoryForSender;
+      }
 
       if (field.isOptional()) {
         return localization.designview.optionalField;
@@ -32,6 +38,10 @@ define(["Underscore", "React", "common/select",
       var field = model.field();
 
       var options = [];
+
+      if (field.isAuthorUnchangeableField()) {
+        return options;
+      }
 
       if (!field.shouldbefilledbysender()) {
         options.push({
@@ -72,66 +82,6 @@ define(["Underscore", "React", "common/select",
       return options;
     },
 
-    fontSelected: function () {
-      var model = this.props.model;
-      var field = model.field();
-      var sig = field.signatory();
-      var page = sig.document().mainfile().page(model.get("page"));
-
-      var currSize = model.fsrel() * page.width();
-
-      if (Math.abs(currSize - FieldPlacementGlobal.fontSizeSmall) < 1) {
-        return localization.fontSize.small;
-      }
-
-      if (Math.abs(currSize - FieldPlacementGlobal.fontSizeNormal) < 1) {
-        return localization.fontSize.normal;
-      }
-
-      if (Math.abs(currSize - FieldPlacementGlobal.fontSizeLarge) < 1) {
-        return localization.fontSize.big;
-      }
-
-      if (Math.abs(currSize - FieldPlacementGlobal.fontSizeHuge) < 1) {
-        return localization.fontSize.large;
-      }
-
-      return localization.fontSize.custom;
-    },
-
-    fontOptions: function () {
-      var model = this.props.model;
-      var field = model.field();
-      var sig = field.signatory();
-      var page = sig.document().mainfile().page(model.get("page"));
-
-      return [
-        {name: localization.fontSize.small,
-         style: {fontSize: FieldPlacementGlobal.fontSizeSmall + "px"},
-         onSelect: function () { model.setFSRel(FieldPlacementGlobal.fontSizeSmall / page.width()); }},
-        {name: localization.fontSize.normal,
-         style: {fontSize: FieldPlacementGlobal.fontSizeNormal + "px"},
-         onSelect: function () { model.setFSRel(FieldPlacementGlobal.fontSizeNormal / page.width()); }},
-        {name: localization.fontSize.big,
-         style: {fontSize: FieldPlacementGlobal.fontSizeLarge + "px"},
-         onSelect: function () { model.setFSRel(FieldPlacementGlobal.fontSizeLarge / page.width()); }},
-        {name: localization.fontSize.large,
-         style: {fontSize: FieldPlacementGlobal.fontSizeHuge + "px"},
-         onSelect: function () { model.setFSRel(FieldPlacementGlobal.fontSizeHuge / page.width()); }}
-      ];
-    },
-
-    microcopy: function () {
-      var model = this.props.model;
-      var field = model.field();
-
-      if (field.isEmail()) {
-        return localization.designview.emailCanBeChangedInAccountSection;
-      }
-
-      return localization.designview.nameCanBeChangedInAccountSection;
-    },
-
     handleDone: function () {
       var model = this.props.model;
       var field = model.field();
@@ -141,34 +91,43 @@ define(["Underscore", "React", "common/select",
       model.trigger("change:step");
     },
 
-    renderTitle: function () {
-      var placement = this.props.model;
-      var field = placement.field();
-      var fname = field.nicename();
-      var signatory = placement.signatory();
-      var sname = signatory.nameOrEmail() || signatory.nameInDocument();
+    handleSelectSig: function (sig) {
+      var model = this.props.model;
+      var field = model.field();
+      var existingField = sig.field(field.name(), field.type());
 
-      var copy = $("<div class='title'>" + localization.designview.requestFieldFrom + "</div>");
-      $(".put-field-name", copy).text(fname);
-      $(".put-person-name", copy).text(sname);
-      return <span dangerouslySetInnerHTML={{__html: copy.html()}} />;
+      this.refs.fieldSelector.selector();
+
+      if (existingField) {
+        return model.changeField(existingField);
+      }
+
+      model.changeField(sig.field("fstname", "standard"));
+    },
+
+    handleSave: function (text) {
+      if (this.rename(text)) {
+        this.refs.fieldSelector.selector();
+      }
+    },
+
+    renderTitle: function () {
+      return null; // no title in text type setter.
     },
 
     renderBody: function () {
       var model = this.props.model;
       var field = model.field();
-      var sig = field.signatory();
-      var page = sig.document().mainfile().page(model.get("page"));
 
       var options = this.obligatoryOptions();
 
       return (
         <span>
-          {field.isAuthorUnchangeableField() &&
-            <div className="microcopy"> {this.microcopy()} </div>
-          }
-          {!field.isAuthorUnchangeableField() &&
-            <div style={{display:"block", marginBottom: "5px"}}>
+          <SignatorySelector field={field} useDefaultBehavior={false} onSelect={this.handleSelectSig} />
+          <FieldSelector ref="fieldSelector" model={model} onSave={this.handleSave} />
+          <div className="subtitle">
+            {localization.designview.optionalMandatory}
+            <div className="fieldTypeSetter-subtitle-select">
               <Select.Select
                 name={this.obligatorySelected()}
                 options={options}
@@ -179,18 +138,12 @@ define(["Underscore", "React", "common/select",
                 inactive={options.length === 0}
               />
             </div>
-          }
-          {!(page == undefined || page.width() == undefined) &&
-            <Select.Select
-              name={localization.fontSize.name + ": " + this.fontSelected()}
-              options={this.fontOptions()}
-              optionsWidth="218px"
-              textWidth={191}
-              cssClass="typesetter-obligatory-option"
-              style={{fontSize: "16px"}}
-            />
-          }
+          </div>
+          <More>
+            <FontSelector model={model} />
+          </More>
           <Done field={field} onDone={this.handleDone} />
+          <Remove model={model} onRemove={this.clear} />
         </span>
       );
     }
