@@ -8,9 +8,8 @@ import Happstack.Server
 import Test.Framework
 import qualified Data.HashMap.Strict as H
 import qualified Data.Vector as V
-import qualified Data.Unjson as U
-import Data.Text (Text)
-import Data.Unjson
+import Data.Text (Text, unpack)
+import Data.Int
 import Data.Aeson
 import qualified Data.ByteString.Lazy as B
 import qualified Data.ByteString.Lazy.UTF8 as BS
@@ -22,6 +21,10 @@ import TestKontra as T
 import Utils.Default
 import Doc.DocumentID (DocumentID, unsafeDocumentID)
 import Doc.SignatoryLinkID (SignatoryLinkID, unsafeSignatoryLinkID)
+import Doc.DocumentMonad
+import Doc.Model
+import DB
+import Utils.Read
 
 apiV1JSONTests :: TestEnvSt -> Test
 apiV1JSONTests env = testGroup "JSONAPIV1"
@@ -48,7 +51,7 @@ testFromFileAndReadySimple = do
                                       ] []
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
-  doc <- testJSONWith "test/json/test_1_create.json" (rsBody resDoc)
+  testJSONWith "test/json/test_1_create.json" (rsBody resDoc)
   did <- getDocumentID (rsBody resDoc)
 
   reqReady <- mkRequest POST []
@@ -139,9 +142,9 @@ testUpdateFields = do
   assertEqual "We should get a 200 response" 200 (rsCode resUpdate)
   testJSONWith "test/json/test_4_update.json" (rsBody resUpdate)
 
-  invMsg <- getField "invitationmessage"
-  cnfMsg <- getField "confirmationmessage"
-  apiClbkUrl <- getField "apicallbackurl"
+  invMsg <- getField "invitationmessage" (rsBody resUpdate)
+  cnfMsg <- getField "confirmationmessage" (rsBody resUpdate)
+  apiClbkUrl <- getField "apicallbackurl" (rsBody resUpdate)
   assertEqual "Invitation message should be the same" "<p>424242</p>" invMsg
   assertEqual "Confirmation message should be the same" "<p>363636</p>" cnfMsg
   assertEqual "API Callback should be the same" "242424" apiClbkUrl
@@ -273,8 +276,14 @@ testList = do
 
   reqList1 <- mkRequestWithHeaders GET [] []
   (resList1, _) <- runTestKontra reqList1 ctx $ apiCallV1List
-  testJSONWith "test/json/test_7_list_of_documents.json" (rsBody resList1)
+  testJSONWith "test/json/test_8_list_of_documents_before_saving.json" (rsBody resList1)
 
+  withDocumentID did1 $ do
+    dbUpdate $ SetDocumentUnsavedDraft False
+
+  reqList2 <- mkRequestWithHeaders GET [] []
+  (resList2, _) <- runTestKontra reqList2 ctx $ apiCallV1List
+  testJSONWith "test/json/test_8_list_of_documents_after_saving.json" (rsBody resList2)
 
   reqReady1 <- mkRequestWithHeaders POST [] []
   _ <- runTestKontra reqReady1 ctx $ apiCallV1Ready did1
@@ -291,15 +300,15 @@ testList = do
   reqCancel <- mkRequestWithHeaders POST [] []
   _ <- runTestKontra reqCancel ctx $ apiCallV1Cancel did2
 
-  reqSign <- mkRequestWithHeaders POST [] []
+  reqSign <- mkRequestWithHeaders POST [("fields", inText "[]")] []
   _ <- runTestKontra reqSign ctx $ apiCallV1Sign did3 did3sig
 
   reqReject <- mkRequestWithHeaders POST [] []
   _ <- runTestKontra reqReject ctx $ apiCallV1Reject did4 did4sig
 
-  reqList2 <- mkRequestWithHeaders GET [] []
-  (resList2, _) <- runTestKontra reqList2 ctx $ apiCallV1List
-  testJSONWith "test/json/test_7_list_of_documents.json" (rsBody resList2)
+  reqList3 <- mkRequestWithHeaders GET [("sort", inText "status")] []
+  (resList3, _) <- runTestKontra reqList3 ctx $ apiCallV1List
+  testJSONWith "test/json/test_8_list_of_documents_after_operations.json" (rsBody resList3)
 
 
 -- Compare JSON sesults from API calls
@@ -318,29 +327,29 @@ testJSONWith fp jsonBS = do
 -- So utils fro getting common properties from Document JSON
 getDocumentID :: BS.ByteString -> TestEnv DocumentID
 getDocumentID jsonBS = do
-  jsonFileBS <- liftIO $ B.readFile fp
   let (Just v) = decode jsonBS
-  return $ unsafeDocumentID <$> getID  v
+  unsafeDocumentID <$> getID  v
 
 getSignatoryLinksID :: BS.ByteString -> TestEnv [SignatoryLinkID]
 getSignatoryLinksID jsonBS = do
   let (Just (Object m)) = decode jsonBS
   let (Just (Array s)) = H.lookup "signatories" m
-  mapM getID s
+  fmap unsafeSignatoryLinkID <$> mapM getID (V.toList s)
 
 getID :: Value -> TestEnv Int64
-getID (Object m) = case (maybeRead =<< H.lookup "id" m) of
-    Just i -> return i
-    _ -> assertFailure "Error while parsing id (not a number)"
-getID _ = assertFailure "Error while parsing id (not found)"
+getID (Object m) = case (H.lookup "id" m) of
+    Just (String s) -> case (maybeRead $ unpack s) of
+                         Just i -> return i
+                         _ -> error "Error while parsing id (not a string representing number)"
+    _ -> error "Error while parsing id (not a string)"
+getID _ = error "Error while parsing id (not found)"
 
-getField :: String -> BS.ByteString -> TestEnv Int64
+getField :: Text -> BS.ByteString -> TestEnv Text
 getField key jsonBS = do
     let (Just (Object m)) = decode jsonBS
     case (H.lookup key m) of
       Just (String s) -> return s
-      _ -> assertFailure "Error while looking for a field " ++ key ++ " (not a string)"
-getField key _ = assertFailure "Error while looking for a field " ++ key
+      _ -> error $ "Error while looking for a field " ++ unpack key ++ " (not a string)"
 
 
 removeValues :: Value -> Value
@@ -356,7 +365,7 @@ removeDynamicValues :: Value -> Value
 removeDynamicValues (Object m) = Object $ H.map removeDynamicValues $ filterOutDynamicKeys m
   where
     filterOutDynamicKeys hm = H.filterWithKey (\k _ -> not $ k `elem` dynamicKeys) hm
-    dynamicKeys = ["id", "accesstoken", "time", "ctime", "mtime", "userid", "timeouttime", "objectversion", "title"]
+    dynamicKeys = ["id", "accesstoken", "time", "ctime", "mtime", "userid", "timeouttime", "objectversion", "title", "link", "file"]
 removeDynamicValues (Array v)  = Array  (V.map removeDynamicValues v)
 removeDynamicValues v = v
 

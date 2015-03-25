@@ -1,0 +1,12 @@
+{
+   "list":[
+
+   ],
+   "paging":{
+      "pageCurrent":0,
+      "itemMin":0,
+      "itemMax":-1,
+      "maxNextPages":10,
+      "pageSize":100
+   }
+}
