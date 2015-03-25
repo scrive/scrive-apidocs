@@ -50,8 +50,10 @@ define(['React', 'StateMachine', 'postsignview/questionnaire_question_views','co
                                 "lastname" : document.currentSignatory().sndname(),
                                 "email" : document.currentSignatory().email(),
                                 "company": document.currentSignatory().company(),
+                                "referring_company": document.author().company(),
                                 "signup_method": "BySigning",
-                                "scrive_domain" : location.hostname };
+                                "scrive_domain" : location.hostname,
+                                "language" : document.lang().simpleCode()};
 
             // call HubSpot depending on answers.
             if (to === 'Done' && event === 'yes' && from === 'OthersInYourOrg') {
