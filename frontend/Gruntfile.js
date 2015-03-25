@@ -214,19 +214,6 @@ module.exports = function(grunt) {
         }
       }
     },
-    // Disabled until we get a better image structure (all images under one directory)
-    imagemin: {
-      dist: {
-        files: [
-          {
-            expand: true,
-            cwd: '<%= yeoman.app %>/img',
-            src: '{,*/}*.{png,jpg,jpeg}',
-            dest: '<%= yeoman.dist %>/img'
-          }
-        ]
-      }
-    },
     shell: {
       options: {
         stdout: true,
