@@ -4,26 +4,27 @@ module Doc.API.V1.JSONTest (apiV1JSONTests) where
 
 import Control.Applicative
 import Control.Monad.IO.Class
+import Data.Aeson
+import Data.Int
+import Data.Text (Text, unpack)
 import Happstack.Server
 import Test.Framework
+import qualified Data.ByteString.Lazy as B
+import qualified Data.ByteString.Lazy.Char8 as BSC
+import qualified Data.ByteString.Lazy.UTF8 as BS
 import qualified Data.HashMap.Strict as H
 import qualified Data.Vector as V
-import Data.Text (Text, unpack)
-import Data.Int
-import Data.Aeson
-import qualified Data.ByteString.Lazy as B
-import qualified Data.ByteString.Lazy.UTF8 as BS
-import qualified Data.ByteString.Lazy.Char8 as BSC
+
 import Context
+import DB
 import Doc.API.V1.Calls
+import Doc.DocumentID (DocumentID, unsafeDocumentID)
+import Doc.DocumentMonad
+import Doc.Model
+import Doc.SignatoryLinkID (SignatoryLinkID, unsafeSignatoryLinkID)
 import TestingUtil
 import TestKontra as T
 import Utils.Default
-import Doc.DocumentID (DocumentID, unsafeDocumentID)
-import Doc.SignatoryLinkID (SignatoryLinkID, unsafeSignatoryLinkID)
-import Doc.DocumentMonad
-import Doc.Model
-import DB
 import Utils.Read
 
 apiV1JSONTests :: TestEnvSt -> Test
@@ -46,7 +47,6 @@ testFromFileAndReadySimple = do
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
 
   reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
-                                        -- FIXME make this random-ish file
                                       , ("file", inFile "test/pdfs/simple.pdf")
                                       ] []
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
@@ -66,7 +66,6 @@ testFromFileAndUpdate = do
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
 
   reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
-                                        -- FIXME make this random-ish file
                                       , ("file", inFile "test/pdfs/simple.pdf")
                                       ] []
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
@@ -87,7 +86,6 @@ testFromTemplateAndReadySimple = do
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
 
   reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
-                                        -- FIXME make this random-ish file
                                       , ("file", inFile "test/pdfs/simple.pdf")
                                       ] []
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
@@ -123,7 +121,6 @@ testUpdateFields = do
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
 
   reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
-                                        -- FIXME make this random-ish file
                                       , ("file", inFile "test/pdfs/simple.pdf")
                                       ] []
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
@@ -161,7 +158,6 @@ testUpdateWithReplacementFields = do
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
 
   reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
-                                        -- FIXME make this random-ish file
                                       , ("file", inFile "test/pdfs/simple.pdf")
                                       ] []
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
@@ -217,7 +213,6 @@ testUpdateWithAllFeatures = do
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
 
   reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
-                                        -- FIXME make this random-ish file
                                       , ("file", inFile "test/pdfs/simple.pdf")
                                       ] []
 
@@ -252,7 +247,6 @@ testList = do
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
 
   reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
-                                        -- FIXME make this random-ish file
                                       , ("file", inFile "test/pdfs/simple.pdf")
                                       ] []
 
