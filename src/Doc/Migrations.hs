@@ -42,6 +42,57 @@ instance ToSQL [SignatoryField] where
   type PQDest [SignatoryField] = PQDest String
   toSQL = jsonToSQL
 
+
+moveSignaturesToFilesAndAddBoolValueForFields :: MonadDB m => Migration m
+moveSignaturesToFilesAndAddBoolValueForFields = Migration {
+    mgrTable = tableSignatoryLinkFields
+  , mgrFrom = 9
+  , mgrDo = do
+    runQuery_ $ sqlAlterTable "signatory_link_fields" [
+        sqlDropCheck $ Check "check_signatory_link_fields_text_fields_well_defined" ""
+      , sqlDropCheck $ Check "check_signatory_link_fields_signature_well_defined" ""
+      ]
+    runSQL_ "ALTER TABLE signatory_link_fields ADD COLUMN value_bool BOOL NULL"
+    runSQL_ "UPDATE signatory_link_fields SET value_bool = value_text <> '', value_text = NULL WHERE type = 9"
+
+    runSQL_ "ALTER TABLE signatory_link_fields ADD COLUMN value_file BIGINT NULL"
+    runSQL_ "ALTER TABLE files ADD COLUMN tmp_signatory_link_fields_id BIGINT NULL"
+
+    runQuery_ $ sqlInsertSelect "files" "signatureFields" $ do
+      sqlWith "signatureFields" . sqlSelect "signatory_link_fields" $ do
+        sqlWhereEq "signatory_link_fields.type" (8 :: Int16)
+        sqlWhere "signatory_link_fields.value_binary IS NOT NULL AND signatory_link_fields.value_binary <> ''"
+        sqlResult "signatory_link_fields.id AS signature_field_id"
+        sqlResult "signatory_link_fields.value_binary AS value_binary"
+
+      sqlSetCmd "name" "'signature.png'"
+      sqlSetCmd "content" "value_binary"
+      sqlSetCmd "size" "octet_length(value_binary)"
+      sqlSetCmd "checksum" "digest(value_binary,'sha1')"
+      sqlSetCmd "tmp_signatory_link_fields_id" "signature_field_id"
+
+    runQuery_ $ sqlUpdate "signatory_link_fields" $ do
+      sqlWhereExists $ sqlSelect "files" $ do
+          sqlWhere "tmp_signatory_link_fields_id = signatory_link_fields.id"
+      sqlSetCmd "value_file" "(SELECT id FROM files WHERE tmp_signatory_link_fields_id = signatory_link_fields.id)"
+
+    runSQL_ "ALTER TABLE files DROP COLUMN tmp_signatory_link_fields_id"
+    runSQL_ "ALTER TABLE signatory_link_fields DROP COLUMN value_binary"
+
+    runQuery_ $ sqlAlterTable "signatory_link_fields" [
+        sqlAddCheck $ Check "check_signatory_link_fields_only_checkboxes_have_bool_values"
+          "type = 9 AND value_bool IS NOT NULL OR value_bool IS NULL"
+      , sqlAddCheck $ Check "check_signatory_link_fields_only_signatures_have_file_values"
+          "type = 8 OR value_file IS NULL"
+      , sqlAddCheck $ Check "check_signatory_link_fields_only_text_fields_have_text_values"
+          "(type = ANY (ARRAY[1, 3, 4, 5, 6, 7, 10])) AND value_text IS NOT NULL OR value_text IS NULL"
+      , sqlAddFK "signatory_link_fields" $ fkOnColumn "value_file" "files" "id"
+      ]
+
+
+}
+
+
 addNameOrderToFieldsAndMigrateNames :: MonadDB m => Migration m
 addNameOrderToFieldsAndMigrateNames = Migration {
     mgrTable = tableSignatoryLinkFields

@@ -168,6 +168,7 @@ kontraMigrations = [
   , apiCallbacksAddIDColumn
   , addNameToCallbackConsumers
   , addNameOrderToFieldsAndMigrateNames
+  , moveSignaturesToFilesAndAddBoolValueForFields
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations
