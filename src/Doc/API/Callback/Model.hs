@@ -64,16 +64,18 @@ documentAPICallback runExecute = ConsumerConfig {
 
 triggerAPICallbackIfThereIsOne :: (MonadDB m, MonadCatch m, Log.MonadLog m)
   => Document -> m ()
-triggerAPICallbackIfThereIsOne doc@Document{..} = case documentapicallbackurl of
-  Just url -> addAPICallback url
-  Nothing -> case (maybesignatory =<< getAuthorSigLink doc) of
-    -- FIXME: this should be modified so it's not Maybe
-    Just userid -> do
-      mcallbackschema <- dbQuery $ GetUserCallbackSchemeByUserID userid
-      case mcallbackschema of
-        Just (ConstantUrlScheme url) -> addAPICallback url
-        _ -> return () -- No callback defined for document nor user.
-    Nothing -> $unexpectedErrorM $ "Document" <+> show documentid <+> "has no author"
+triggerAPICallbackIfThereIsOne doc@Document{..} = case documentstatus of
+  Preparation -> return () -- We don't trigger callbacks for Drafts
+  _ -> case documentapicallbackurl of
+    Just url -> addAPICallback url
+    Nothing -> case (maybesignatory =<< getAuthorSigLink doc) of
+      -- FIXME: this should be modified so it's not Maybe
+      Just userid -> do
+        mcallbackschema <- dbQuery $ GetUserCallbackSchemeByUserID userid
+        case mcallbackschema of
+          Just (ConstantUrlScheme url) -> addAPICallback url
+          _ -> return () -- No callback defined for document nor user.
+      Nothing -> $unexpectedErrorM $ "Document" <+> show documentid <+> "has no author"
 
   where
     addAPICallback url = do
