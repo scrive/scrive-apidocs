@@ -1166,7 +1166,7 @@ getMagicHashAndUserForSignatoryAction did sid = do
            Just mh''' -> return (mh''',Just $ user)
 
 
-getFieldForSigning ::(Kontrakcja m) => m [(FieldIdentity, Either String BS.ByteString)]
+getFieldForSigning ::(Kontrakcja m) => m ([(FieldIdentity, Either String (Either Bool FileID))],[FileID, BS.ByteString])
 getFieldForSigning = do
   eFieldsJSON <- getFieldJSON "fields"
   case eFieldsJSON of
@@ -1179,10 +1179,14 @@ getFieldForSigning = do
               -- omg, this special case for empty value is such bullshit.
               (Just fi@(SignatureFI _), Just "")  -> Just (fi, Right "")
               (Just fi@(SignatureFI _), Just val) -> case (snd <$> RFC2397.decode (BS.pack val)) of
-                Just bv -> Just (fi, Right bv)
+                Just bv -> Just (fi, Right (Right bv))
                 _ -> Nothing
+              (Just fi@(CheckBoxFI _), Just "")  -> Just (fi, Right (Left False))
+              (Just fi@(CheckBoxFI _), Just _)   -> Just (fi, Right (Left True))
               (Just fi, Just val) -> Just (fi, Left val)
               _ -> Nothing
       case mvalues of
         Nothing -> throwIO . SomeKontraException $ serverError "Fields description json has invalid format"
-        Just values -> return values
+        Just values -> do
+          mapM
+          return values

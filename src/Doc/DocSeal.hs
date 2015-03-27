@@ -70,7 +70,7 @@ import qualified Doc.SealSpec as Seal
 import qualified HostClock.Model as HC
 import qualified Log
 
-personFromSignatory :: (MonadDB m, MonadMask m, TemplatesMonad m)
+personFromSignatory :: (MonadDB m, MonadMask m, TemplatesMonad m, AWS.AmazonMonad m, Log.MonadLog m, MonadBase IO m)
                     => TimeZoneName -> SignatoryIdentifierMap -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> m Seal.Person
 personFromSignatory tz sim boxImages signatory = do
     emptyNamePlaceholder <- renderTemplate_ "_notNamedParty"
@@ -88,7 +88,7 @@ personFromSignatory tz sim boxImages signatory = do
     personalNumberText <- if (not (null personalnumber))
                             then renderTemplate "_contractsealingtextspersonalNumberText" $ F.value "idnumber" personalnumber
                          else return ""
-
+    fields <- fieldsFromSignatory boxImages signatory
     return $ Seal.Person { Seal.fullname           = fromMaybe "" $ signatoryIdentifier sim (signatorylinkid signatory) emptyNamePlaceholder
                          , Seal.company            = getCompanyName signatory
                          , Seal.email              = getEmail signatory
@@ -100,14 +100,14 @@ personFromSignatory tz sim boxImages signatory = do
                          , Seal.numberverified     = False
                          , Seal.emailverified      = True
                          , Seal.phoneverified      = False
-                         , Seal.fields             = fieldsFromSignatory boxImages signatory
+                         , Seal.fields             = fields
                          , Seal.signtime           = stime
                          , Seal.signedAtText       = signedAtText
                          , Seal.personalNumberText = personalNumberText
                          , Seal.companyNumberText  = companyNumberText
                          }
 
-personExFromSignatoryLink :: (MonadDB m, MonadMask m, TemplatesMonad m)
+personExFromSignatoryLink :: (MonadDB m, MonadMask m, TemplatesMonad m, AWS.AmazonMonad m, Log.MonadLog m, MonadBase IO m)
                           =>  TimeZoneName -> SignatoryIdentifierMap -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> m Seal.Person
 personExFromSignatoryLink tz sim boxImages sl@SignatoryLink{..} = do
   person <- personFromSignatory tz sim boxImages sl
@@ -119,9 +119,9 @@ personExFromSignatoryLink tz sim boxImages sl@SignatoryLink{..} = do
      , Seal.phoneverified    = (signatorylinkdeliverymethod == MobileDelivery) || (signatorylinkauthenticationmethod == SMSPinAuthentication)
      }
 
-fieldsFromSignatory :: (BS.ByteString,BS.ByteString) -> SignatoryLink -> [Seal.Field]
+fieldsFromSignatory :: (MonadDB m, MonadThrow m, Log.MonadLog m, MonadBase IO m, AWS.AmazonMonad m) => (BS.ByteString,BS.ByteString) -> SignatoryLink -> m [Seal.Field]
 fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryLink{signatoryfields} =
-  silenceJPEGFieldsFromFirstSignature $ concatMap makeSealField  signatoryfields
+  silenceJPEGFieldsFromFirstSignature <$> concat <$> mapM makeSealField signatoryfields
   where
     silenceJPEGFieldsToTheEnd [] = []
     silenceJPEGFieldsToTheEnd (field@(Seal.FieldJPG{}):xs) = (field { Seal.includeInSummary = False }) : silenceJPEGFieldsToTheEnd xs
@@ -131,14 +131,14 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryLink{signatoryf
       field : silenceJPEGFieldsToTheEnd xs
     silenceJPEGFieldsFromFirstSignature (x:xs) = x : silenceJPEGFieldsFromFirstSignature xs
 
-    makeSealField :: SignatoryField -> [Seal.Field]
+    makeSealField :: (MonadDB m, MonadThrow m, Log.MonadLog m, MonadBase IO m, AWS.AmazonMonad m) => SignatoryField -> m [Seal.Field]
     makeSealField sf = case sf of
        SignatorySignatureField ssf -> case (fieldPlacements  sf, ssfValue ssf) of
-                           (_, "") -> []  -- We skip signature that don't have a drawing
-                           ([], v) -> maybeToList $ fieldJPEGFromSignatureField v
-                           (_, v) -> concatMap (maybeToList . (fieldJPEGFromPlacement v)) (fieldPlacements  sf)
-       SignatoryCheckboxField schf -> map (uncheckedImageFromPlacement <| not (schfValue schf) |>  checkedImageFromPlacement) (fieldPlacements  sf)
-       _ -> for (fieldPlacements sf) $ fieldFromPlacement False sf
+                           (_, Nothing) -> return []  -- We skip signature that don't have a drawing
+                           ([],Just f) -> (\x -> [x]) <$> fieldJPEGFromSignatureField f
+                           (_, Just f) -> mapM (fieldJPEGFromPlacement f) (fieldPlacements  sf)
+       SignatoryCheckboxField schf -> return $ map (uncheckedImageFromPlacement <| not (schfValue schf) |>  checkedImageFromPlacement) (fieldPlacements  sf)
+       _ -> return $ for (fieldPlacements sf) $ fieldFromPlacement False sf
     fieldFromPlacement greyed sf placement =
       Seal.Field { Seal.value            = fromMaybe "" $ fieldTextValue sf
                  , Seal.x                = placementxrel placement
@@ -162,9 +162,10 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryLink{signatoryf
                  , Seal.onlyForSummary   = False
                  , Seal.keyColor         = Nothing
                  }
-    fieldJPEGFromPlacement v placement =
-          Just $ Seal.FieldJPG
-                 { valueBinary           = v
+    fieldJPEGFromPlacement f placement = do
+          content  <- getFileIDContents f
+          return $ Seal.FieldJPG
+                 { valueBinary           = content
                  , Seal.x                = placementxrel placement
                  , Seal.y                = placementyrel placement
                  , Seal.page             = placementpage placement
@@ -174,9 +175,10 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryLink{signatoryf
                  , Seal.onlyForSummary   = False
                  , Seal.keyColor         = Just (255,255,255) -- white is transparent
                  }
-    fieldJPEGFromSignatureField v =
-          Just $ Seal.FieldJPG
-                 { valueBinary           = v
+    fieldJPEGFromSignatureField f = do
+          content  <- getFileIDContents f
+          return $ Seal.FieldJPG
+                 { valueBinary           = content
                  , Seal.x                = 0
                  , Seal.y                = 0
                  , Seal.page             = 0
@@ -450,14 +452,19 @@ sealSpecFromDocument boxImages hostpart document elog ces content tmppath inputp
                           } ] ++ additionalAttachments
         }
 
-presealSpecFromDocument :: (BS.ByteString,BS.ByteString) -> Document -> String -> String -> Seal.PreSealSpec
-presealSpecFromDocument boxImages document inputpath outputpath =
-       Seal.PreSealSpec
+presealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m, Log.MonadLog m, AWS.AmazonMonad m, MonadBaseControl IO m)
+                           => (BS.ByteString,BS.ByteString)
+                           -> Document
+                           -> String
+                           -> String
+                           -> m Seal.PreSealSpec
+presealSpecFromDocument boxImages document inputpath outputpath = do
+       fields <- concat <$> mapM (fieldsFromSignatory boxImages) (documentsignatorylinks document)
+       return $ Seal.PreSealSpec
             { Seal.pssInput          = inputpath
             , Seal.pssOutput         = outputpath
-            , Seal.pssFields         = concatMap (fieldsFromSignatory boxImages) (documentsignatorylinks document)
+            , Seal.pssFields         = fields
             }
-
 
 sealDocument :: (CryptoRNG m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadMask m, Log.MonadLog m, AWS.AmazonMonad m) => String -> m ()
 sealDocument hostpart = theDocumentID >>= \did -> do
@@ -527,7 +534,7 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
                             (systemActor now)
 
 -- | Generate file that has all placements printed on it. It will look same as final version except for footers and verification page.
-presealDocumentFile :: (MonadBaseControl IO m, MonadDB m, Log.MonadLog m, KontraMonad m, TemplatesMonad m, MonadIO m, AWS.AmazonMonad m)
+presealDocumentFile :: (MonadBaseControl IO m, MonadDB m, Log.MonadLog m, KontraMonad m, TemplatesMonad m, MonadIO m, MonadMask m, AWS.AmazonMonad m)
                  => Document
                  -> File
                  -> m (Either String BS.ByteString)
@@ -540,7 +547,7 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
     liftIO $ BS.writeFile tmpin content
     checkedBoxImage <- liftIO $ BS.readFile "frontend/app/img/checkbox_checked.jpg"
     uncheckedBoxImage <- liftIO $  BS.readFile "frontend/app/img/checkbox_unchecked.jpg"
-    let config = presealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) document tmpin tmpout
+    config <- presealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) document tmpin tmpout
 
     let json_config = Unjson.unjsonToByteStringLazy Seal.unjsonPreSealSpec config
     (code,_stdout,stderr) <- liftIO $ do

@@ -32,6 +32,7 @@ import Doc.DocStateData
 import Doc.DocUtils
 import File.File
 import File.Model
+import File.Storage
 import KontraLink
 import MinutesTime
 import OurPrelude (unexpectedError)
@@ -55,7 +56,7 @@ evidenceAttachmentsJSONV1 doc = do
         J.value "mimetype" $ BSC.unpack <$> EvidenceAttachments.mimetype a
         J.value "downloadLink" $ show $ LinkEvidenceAttachment (documentid doc) (EvidenceAttachments.name a)
 
-documentJSONV1 :: (MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m) => (Maybe User) -> Bool -> Bool ->  Maybe SignatoryLink -> Document -> m JSValue
+documentJSONV1 :: (MonadDB m, MonadThrow m, Log.MonadLog m, MonadBase IO m, AWS.AmazonMonad m) => (Maybe User) -> Bool -> Bool ->  Maybe SignatoryLink -> Document -> m JSValue
 documentJSONV1 muser forapi forauthor msl doc = do
     file <- documentfileM doc
     sealedfile <- documentsealedfileM doc
@@ -130,7 +131,7 @@ authenticationJSON ELegAuthentication     = toJSValue "eleg"
 authenticationJSON SMSPinAuthentication   = toJSValue "sms_pin"
 
 
-signatoryJSON :: (MonadDB m, MonadThrow m) => Bool -> Bool -> Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
+signatoryJSON :: (MonadDB m, MonadThrow m, AWS.AmazonMonad m, Log.MonadLog m, MonadBase IO m) => Bool -> Bool -> Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
 signatoryJSON forapi forauthor doc viewer siglink = do
     J.value "id" $ show $ signatorylinkid siglink
     J.value "current" $ isCurrent
@@ -150,7 +151,7 @@ signatoryJSON forapi forauthor doc viewer siglink = do
     J.value "readdate" $ jsonDate $ maybereadinvite siglink
     J.value "rejecteddate" $ jsonDate rejectedDate
     J.value "rejectionreason" $ signatorylinkrejectionreason siglink
-    J.value "fields" $ signatoryFieldsJSON doc siglink
+    J.valueM "fields" $ signatoryFieldsJSON doc siglink
     J.value "status" $ show $ signatoryStatusClass doc siglink
     J.objects "attachments" $ map signatoryAttachmentJSON (signatoryattachments siglink)
     J.value "csv" $ csvcontents <$> signatorylinkcsvupload siglink
@@ -175,53 +176,55 @@ signatoryAttachmentJSON sa = do
   J.value "description" $ signatoryattachmentdescription sa
   J.value "file" $ fileJSON <$> mfile
 
-signatoryFieldsJSON :: Document -> SignatoryLink -> JSValue
-signatoryFieldsJSON doc sl = JSArray $
-  catMaybes $ for orderedFields $ \sf -> do
+signatoryFieldsJSON :: (MonadDB m, MonadThrow m, AWS.AmazonMonad m, Log.MonadLog m, MonadBase IO m) => Document -> SignatoryLink -> m JSValue
+signatoryFieldsJSON doc sl = fmap JSArray $ forM orderedFields $ \sf -> do
     case sf of
       SignatoryNameField nf@(NameField {snfNameOrder = NameOrder 1}) ->
-        Just $ fieldJSON "standard" "fstname" (Left (snfValue nf))
+        return $ fieldJSON "standard" "fstname" (Left (snfValue nf))
           ((not $ null $ snfValue nf)  && (not $ isPreparation doc))
           (fieldIsObligatory sf) (fieldShouldBeFilledBySender sf) (fieldPlacements sf)
       SignatoryNameField nf@(NameField {snfNameOrder = NameOrder 2}) ->
-        Just $ fieldJSON "standard" "sndname" (Left (snfValue nf))
+        return $ fieldJSON "standard" "sndname" (Left (snfValue nf))
           ((not $ null $ snfValue nf)  && (not $ isPreparation doc))
           (fieldIsObligatory sf) (fieldShouldBeFilledBySender sf) (fieldPlacements sf)
       SignatoryNameField _ -> $unexpectedError "Name field with order different then 1 or 2"
       SignatoryCompanyField cf ->
-        Just $ fieldJSON "standard" "sigco"  (Left (scfValue cf))
+        return $ fieldJSON "standard" "sigco"  (Left (scfValue cf))
           ((not $ null $ scfValue $ cf)  && (not $ isPreparation doc))
           (fieldIsObligatory sf) (fieldShouldBeFilledBySender sf) (fieldPlacements sf)
       SignatoryPersonalNumberField pnf ->
-        Just $ fieldJSON "standard" "sigpersnr"  (Left (spnfValue pnf))
+        return $ fieldJSON "standard" "sigpersnr"  (Left (spnfValue pnf))
           ((not $ null $ spnfValue $ pnf)  && (not $ isPreparation doc))
           (fieldIsObligatory sf) (fieldShouldBeFilledBySender sf) (fieldPlacements sf)
       SignatoryCompanyNumberField cnf ->
-        Just $ fieldJSON "standard" "sigcompnr"  (Left (scnfValue cnf))
+        return $ fieldJSON "standard" "sigcompnr"  (Left (scnfValue cnf))
           ((not $ null $ scnfValue $ cnf)  && (not $ isPreparation doc))
           (fieldIsObligatory sf) (fieldShouldBeFilledBySender sf) (fieldPlacements sf)
       SignatoryEmailField ef ->
-        Just $ fieldJSON "standard" "email"  (Left (sefValue ef))
+        return $ fieldJSON "standard" "email"  (Left (sefValue ef))
           ((not $ null $ sefValue $ ef)  && (not $ isPreparation doc))
           (fieldIsObligatory sf) (fieldShouldBeFilledBySender sf) (fieldPlacements sf)
       SignatoryMobileField mf ->
-        Just $ fieldJSON "standard" "mobile"  (Left (smfValue mf))
+        return $ fieldJSON "standard" "mobile"  (Left (smfValue mf))
           ((not $ null $ smfValue $ mf)  && (not $ isPreparation doc))
           (fieldIsObligatory sf) (fieldShouldBeFilledBySender sf) (fieldPlacements sf)
       SignatoryTextField tf ->
-        Just $ fieldJSON "custom" (stfName tf)  (Left (stfValue tf))
+        return $ fieldJSON "custom" (stfName tf)  (Left (stfValue tf))
           ((stfFilledByAuthor tf  && (not $ isPreparation doc)))
           (fieldIsObligatory sf) (fieldShouldBeFilledBySender sf) (fieldPlacements sf)
       SignatoryCheckboxField chf ->
-        Just $ fieldJSON "checkbox" (schfName chf)  (Left (if (schfValue chf) then "checked" else ""))
+        return $ fieldJSON "checkbox" (schfName chf)  (Left (if (schfValue chf) then "checked" else ""))
           False
           (fieldIsObligatory sf) (fieldShouldBeFilledBySender sf) (fieldPlacements sf)
-      SignatorySignatureField ssf ->
-        Just $ fieldJSON "signature" (ssfName ssf)  (Right $ ssfValue ssf)
+      SignatorySignatureField ssf -> do
+        bs <- case (ssfValue ssf) of
+                Nothing -> return BSC.empty
+                Just fi -> getFileIDContents fi
+        return $ fieldJSON "signature" (ssfName ssf)  (Right $ bs)
           (closedSignatureF ssf && (not $ isPreparation doc))
           (fieldIsObligatory sf) (fieldShouldBeFilledBySender sf) (fieldPlacements sf)
   where
-    closedSignatureF ssf = ((not $ BSC.null $ ssfValue ssf) && (null $ ssfPlacements ssf) && ((PadDelivery /= signatorylinkdeliverymethod sl)))
+    closedSignatureF ssf = ((not $ isNothing $ ssfValue ssf) && (null $ ssfPlacements ssf) && ((PadDelivery /= signatorylinkdeliverymethod sl)))
     orderedFields = sortBy (\f1 f2 -> ftOrder (fieldIdentity f1) (fieldIdentity f2)) (signatoryfields sl)
     ftOrder (NameFI (NameOrder o1)) (NameFI (NameOrder o2)) = compare o1 o2
     ftOrder (NameFI (NameOrder _)) _ = LT

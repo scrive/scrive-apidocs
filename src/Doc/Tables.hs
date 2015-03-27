@@ -333,7 +333,8 @@ ctSignatoryField = CompositeType {
   , CompositeColumn { ccName = "custom_name", ccType = TextT }
   , CompositeColumn { ccName = "is_author_filled", ccType = BoolT }
   , CompositeColumn { ccName = "value_text", ccType = TextT }
-  , CompositeColumn { ccName = "value_binary", ccType = BinaryT }
+  , CompositeColumn { ccName = "value_bool", ccType = BinaryT }
+  , CompositeColumn { ccName = "value_file", ccType = BigIntT }
   , CompositeColumn { ccName = "obligatory", ccType = BoolT }
   , CompositeColumn { ccName = "should_be_filled_by_author", ccType = BoolT }
   , CompositeColumn { ccName = "placements", ccType = TextT }

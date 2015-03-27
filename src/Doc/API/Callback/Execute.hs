@@ -1,5 +1,6 @@
 module Doc.API.Callback.Execute (execute) where
 
+import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.Reader
@@ -27,7 +28,7 @@ import Util.SignatoryLinkUtils
 import Utils.IO
 import qualified Log
 
-execute :: (AmazonMonad m, MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, MonadReader c m, HasSalesforceConf c) => DocumentAPICallback -> m Bool
+execute :: (AmazonMonad m, MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, MonadBase IO m,  MonadReader c m, HasSalesforceConf c) => DocumentAPICallback -> m Bool
 execute DocumentAPICallback{..} = do
   exists <- dbQuery $ DocumentExistsAndIsNotPurged dacDocumentID
   if exists
@@ -45,7 +46,7 @@ execute DocumentAPICallback{..} = do
         value "document_id" (show dacDocumentID)
       return True
 
-executeStandardCallback :: (AmazonMonad m, MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m) => Document -> String -> m Bool
+executeStandardCallback :: (AmazonMonad m, MonadDB m, MonadThrow m, Log.MonadLog m, MonadBase IO m, MonadIO m) => Document -> String -> m Bool
 executeStandardCallback doc url = do
   dJSON <- documentJSONV1 Nothing False True Nothing doc
   (exitcode, _ , stderr) <- readCurl
@@ -74,7 +75,7 @@ executeStandardCallback doc url = do
         value "stderr" (BSL.toString stderr)
       return False
 
-executeSalesforceCallback :: (MonadDB m, Log.MonadLog m, MonadIO m, MonadReader c m, HasSalesforceConf c) => Document -> String ->  String -> m Bool
+executeSalesforceCallback :: (MonadDB m, Log.MonadLog m, MonadIO m, MonadBase IO m, MonadReader c m, HasSalesforceConf c) => Document -> String ->  String -> m Bool
 executeSalesforceCallback doc rtoken url = do
   mtoken <- getAccessTokenFromRefreshToken rtoken
   case mtoken of

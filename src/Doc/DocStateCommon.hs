@@ -1,7 +1,6 @@
 module Doc.DocStateCommon where
 
 import Data.Maybe
-import qualified Data.ByteString as BS
 
 import Company.Model
 import Doc.DocStateData
@@ -52,7 +51,7 @@ signLinkFromDetails' fields author partner sorder attachments magichash =
 
 signatoryLinkClearField :: SignatoryField -> SignatoryField
 signatoryLinkClearField field =  case field of
-  SignatorySignatureField (sf@(SignatureField{})) -> SignatorySignatureField $ sf { ssfValue = BS.empty }
+  SignatorySignatureField (sf@(SignatureField{})) -> SignatorySignatureField $ sf { ssfValue = Nothing }
   _ -> field
 
 emptySignatoryFields :: [SignatoryField]

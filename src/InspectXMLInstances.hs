@@ -35,7 +35,6 @@ import OurPrelude
 import User.Email
 import User.History.Model
 import User.Model
-import Utils.Image
 import Utils.String
 
 instance (InspectXML a, Show a) => InspectXML [a] where
@@ -68,9 +67,7 @@ instance InspectXML SignatoryField where
     "<br/>placements: " ++ inspectXML (fieldPlacements field)
     where
       value = case (fieldType field) of
-        SignatureFT -> if (B.null $ $fromJust (fieldBinaryValue field))
-                         then ""
-                         else "<img style=\"height:100px; width=auto\" src=\"" ++ escapeString (B.unpack $ imgEncodeRFC2397 $ $fromJust (fieldBinaryValue field)) ++ "\">"
+        SignatureFT -> inspectXML (fieldFileValue field)
         CheckboxFT -> if ($fromJust (fieldBoolValue field))
                          then "checked"
                          else "not checked"

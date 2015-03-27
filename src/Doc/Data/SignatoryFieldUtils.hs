@@ -6,7 +6,7 @@ module Doc.Data.SignatoryFieldUtils (
     , fieldIdentity
     , fieldTypeFromFieldIdentity
     , fieldTextValue
-    , fieldBinaryValue
+    , fieldFileValue
     , fieldBoolValue
     , fieldIsObligatory
     , fieldShouldBeFilledBySender
@@ -18,10 +18,10 @@ module Doc.Data.SignatoryFieldUtils (
 
 import Data.List
 import Data.Maybe
-import qualified Data.ByteString.Char8 as BS
 
 import Doc.Data.SignatoryField
 import Doc.SignatoryFieldID
+import File.FileID
 
 data FieldIdentity
   = NameFI NameOrder
@@ -82,16 +82,16 @@ fieldTextValue (SignatoryTextField f)           = Just $ stfValue f
 fieldTextValue (SignatoryCheckboxField _)       = Nothing
 fieldTextValue (SignatorySignatureField _)      = Nothing
 
-fieldBinaryValue :: SignatoryField -> Maybe BS.ByteString
-fieldBinaryValue (SignatoryNameField _)           = Nothing
-fieldBinaryValue (SignatoryCompanyField _)        = Nothing
-fieldBinaryValue (SignatoryPersonalNumberField _) = Nothing
-fieldBinaryValue (SignatoryCompanyNumberField _)  = Nothing
-fieldBinaryValue (SignatoryEmailField _)          = Nothing
-fieldBinaryValue (SignatoryMobileField _)         = Nothing
-fieldBinaryValue (SignatoryTextField _)           = Nothing
-fieldBinaryValue (SignatoryCheckboxField _)       = Nothing
-fieldBinaryValue (SignatorySignatureField f)      = Just $ ssfValue f
+fieldFileValue :: SignatoryField -> Maybe FileID
+fieldFileValue (SignatoryNameField _)           = Nothing
+fieldFileValue (SignatoryCompanyField _)        = Nothing
+fieldFileValue (SignatoryPersonalNumberField _) = Nothing
+fieldFileValue (SignatoryCompanyNumberField _)  = Nothing
+fieldFileValue (SignatoryEmailField _)          = Nothing
+fieldFileValue (SignatoryMobileField _)         = Nothing
+fieldFileValue (SignatoryTextField _)           = Nothing
+fieldFileValue (SignatoryCheckboxField _)       = Nothing
+fieldFileValue (SignatorySignatureField f)      = ssfValue f
 
 fieldBoolValue :: SignatoryField -> Maybe Bool
 fieldBoolValue (SignatoryNameField _)           = Nothing
@@ -155,7 +155,7 @@ fieldsAreAlmoustEqual :: SignatoryField -> SignatoryField -> Bool
 fieldsAreAlmoustEqual a b = and [
       fieldIdentity a == fieldIdentity b
     , fieldTextValue a == fieldTextValue b
-    , fieldBinaryValue a == fieldBinaryValue b
+    , fieldFileValue a == fieldFileValue b
     , fieldBoolValue a == fieldBoolValue b
     , fieldIsObligatory a == fieldIsObligatory b
     , fieldShouldBeFilledBySender a == fieldShouldBeFilledBySender b

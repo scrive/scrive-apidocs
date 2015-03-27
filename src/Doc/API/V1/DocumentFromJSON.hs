@@ -8,7 +8,6 @@ import Data.List
 import Data.Maybe
 import Data.String.Utils (strip)
 import Text.JSON.FromJSValue
-import qualified Data.ByteString as BS
 import qualified Data.Set as Set
 
 import DB.TimeZoneName
@@ -334,7 +333,7 @@ instance FromJSValueWithUpdate SignatorySignatureField where
               return $ Just $ SignatureField {
                   ssfID = (maybe (unsafeSignatoryFieldID 0) ssfID msf)
                 , ssfName = n
-                , ssfValue = BS.empty -- We ignore value. Signature can't be provided in design view
+                , ssfValue = Nothing -- We ignore value. Signature can't be provided in design view
                 , ssfObligatory = obligatory
                 , ssfShouldBeFilledBySender = filledbysender
                 , ssfPlacements = placements
