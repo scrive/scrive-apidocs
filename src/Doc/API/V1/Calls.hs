@@ -260,7 +260,6 @@ apiCallV1Update did = api $ do
     whenM (draftIsChangingDocument draftData <$> theDocument) $ do
       checkObjectVersionIfProvided did -- If we will change document, then we want to be sure that object version is ok.
     applyDraftDataToDocument draftData actor
-    triggerAPICallbackIfThereIsOne =<< theDocument
     Ok <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
 
 apiCallV1SetAuthorAttachemnts  :: Kontrakcja m => DocumentID -> m Response
@@ -275,7 +274,6 @@ apiCallV1SetAuthorAttachemnts did = api $ do
     attachments <- getAttachments 0 =<< theDocument
     (documentauthorattachments <$> theDocument >>=) $ mapM_ $ \att -> dbUpdate $ RemoveDocumentAttachment (authorattachmentfile att) actor
     forM_ attachments $ \att -> dbUpdate $ AddDocumentAttachment att actor
-    triggerAPICallbackIfThereIsOne =<< theDocument
     Ok <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
      where
           getAttachments :: Kontrakcja m => Int -> Document -> m [FileID]
