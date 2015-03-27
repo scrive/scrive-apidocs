@@ -33,15 +33,6 @@ import Utils.String
 import Version
 import qualified Log
 
-instance PQFormat [SignatoryField] where
-  pqFormat _ = pqFormat (undefined::String)
-instance FromSQL [SignatoryField] where
-  type PQBase [SignatoryField] = PQBase String
-  fromSQL = jsonFromSQL
-instance ToSQL [SignatoryField] where
-  type PQDest [SignatoryField] = PQDest String
-  toSQL = jsonToSQL
-
 
 moveSignaturesToFilesAndAddBoolValueForFields :: MonadDB m => Migration m
 moveSignaturesToFilesAndAddBoolValueForFields = Migration {

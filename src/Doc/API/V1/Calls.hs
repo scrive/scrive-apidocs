@@ -503,7 +503,7 @@ checkAuthenticationMethodAndValue slid = do
        (Nothing, Nothing) -> return ()
        _ -> throwIO . SomeKontraException $ badInput "Only one of `authentication_type` and `authentication_value` provided"
 
-getValidPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [(FieldIdentity, Either String BS.ByteString)] -> m (Maybe String)
+getValidPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [(FieldIdentity, Either String (Either Bool BS.ByteString))] -> m (Maybe String)
 getValidPin slid fields = do
   pin <- apiGuardJustM (badInput "Pin not provided or invalid.") $ getField "pin"
   phone <- case (lookup MobileFI fields) of
@@ -517,7 +517,7 @@ getValidPin slid fields = do
 signDocument :: (Kontrakcja m, DocumentMonad m)
              => SignatoryLinkID
              -> MagicHash
-             -> [(FieldIdentity, Either String BS.ByteString)]
+             -> [(FieldIdentity, Either String (Either Bool BS.ByteString))]
              -> Maybe ESignature
              -> Maybe String
              -> SignatoryScreenshots
@@ -529,7 +529,8 @@ signDocument slid mh fields mesig mpin screenshots = do
   -- different result than the first one due to the field update, so
   -- don't attempt to replace the calls with a single call, or the
   -- actor identities may get wrong in the evidence log.
-  getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . UpdateFieldsForSigning sl fields =<< signatoryActor ctx sl
+  fieldsWithFilles <- fieldsToFieldsWithFiles fields
+  getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . UpdateFieldsForSigning sl (fst fieldsWithFilles) (snd fieldsWithFilles) =<< signatoryActor ctx sl
   getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . SignDocument slid mh mesig mpin screenshots =<< signatoryActor ctx sl
 
 {- End of utils-}
@@ -1166,7 +1167,7 @@ getMagicHashAndUserForSignatoryAction did sid = do
            Just mh''' -> return (mh''',Just $ user)
 
 
-getFieldForSigning ::(Kontrakcja m) => m ([(FieldIdentity, Either String (Either Bool FileID))],[FileID, BS.ByteString])
+getFieldForSigning ::(Kontrakcja m) => m [(FieldIdentity, Either String (Either Bool BS.ByteString))]
 getFieldForSigning = do
   eFieldsJSON <- getFieldJSON "fields"
   case eFieldsJSON of
@@ -1177,16 +1178,28 @@ getFieldForSigning = do
             mval <- fromJSValueField "value"
             return $ case (mfi, mval) of
               -- omg, this special case for empty value is such bullshit.
-              (Just fi@(SignatureFI _), Just "")  -> Just (fi, Right "")
+              (Just fi@(CheckboxFI _), Just "")  -> Just (fi, Right $ Left False)
+              (Just fi@(CheckboxFI _), Just _ )  -> Just (fi, Right $ Left True)
+              (Just fi@(SignatureFI _), Just "")  -> Just (fi, Right $ Right "")
               (Just fi@(SignatureFI _), Just val) -> case (snd <$> RFC2397.decode (BS.pack val)) of
-                Just bv -> Just (fi, Right (Right bv))
+                Just bv -> Just (fi, Right $ Right bv)
                 _ -> Nothing
-              (Just fi@(CheckBoxFI _), Just "")  -> Just (fi, Right (Left False))
-              (Just fi@(CheckBoxFI _), Just _)   -> Just (fi, Right (Left True))
               (Just fi, Just val) -> Just (fi, Left val)
               _ -> Nothing
       case mvalues of
         Nothing -> throwIO . SomeKontraException $ serverError "Fields description json has invalid format"
-        Just values -> do
-          mapM
-          return values
+        Just values -> return values
+
+
+fieldsToFieldsWithFiles :: (Kontrakcja m)
+                           => [(FieldIdentity, Either String (Either Bool BS.ByteString))]
+                           -> m ([(FieldIdentity, Either String (Either Bool (Maybe FileID)))],[(FileID,BS.ByteString)])
+fieldsToFieldsWithFiles [] = return ([],[])
+fieldsToFieldsWithFiles (field:fields) = do
+  (changeFields,files') <- fieldsToFieldsWithFiles fields
+  case field of
+    (fi, Left s) -> return ((fi,Left s) : changeFields, files')
+    (fi, Right (Left b)) -> return ((fi, Right (Left b)) : changeFields, files')
+    (fi, Right (Right bs)) -> do
+      fileid <- dbUpdate $ NewFile "signature.png" (Binary bs)
+      return $ ((fi, Right (Right (Just fileid))) : changeFields,(fileid,bs): files')
