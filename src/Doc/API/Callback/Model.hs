@@ -28,13 +28,14 @@ import qualified Log
 
 documentAPICallback :: (MonadIO m, MonadBase IO m, Log.MonadLog m, MonadMask m)
   => (forall r. Scheduler r -> m r)
-  -> ConsumerConfig m DocumentID DocumentAPICallback
+  -> ConsumerConfig m CallbackID DocumentAPICallback
 documentAPICallback runExecute = ConsumerConfig {
   ccJobsTable = "document_api_callbacks"
 , ccConsumersTable = "document_api_callback_consumers"
-, ccJobSelectors = ["id", "url", "attempts"]
-, ccJobFetcher = \(did, url, attempts) -> DocumentAPICallback {
-    dacID = did
+, ccJobSelectors = ["id", "document_id", "url", "attempts"]
+, ccJobFetcher = \(cid, did, url, attempts) -> DocumentAPICallback {
+    dacID = cid
+  , dacDocumentID = did
   , dacURL = url
   , dacAttempts = attempts
   }
@@ -42,9 +43,13 @@ documentAPICallback runExecute = ConsumerConfig {
 , ccNotificationChannel = Just apiCallbackNotificationChannel
 , ccNotificationTimeout = 60 * 1000000
 , ccMaxRunningJobs = 32
-, ccProcessJob = \dac -> runExecute (execute dac) >>= \case
-  True -> return $ Ok Remove
-  False -> Failed <$> onFailure (dacAttempts dac)
+, ccProcessJob = \dac@DocumentAPICallback{..} -> runExecute $ execute dac >>= \case
+  True  -> return $ Ok Remove
+  False -> dbQuery (CheckQueuedCallbacksFor dacDocumentID) >>= \case
+    True -> do
+      Log.mixlog_ $ "Callback for document" <+> show dacDocumentID <+> "failed and there are more queued, discarding."
+      return $ Failed Remove
+    False -> Failed <$> onFailure dacAttempts
 , ccOnException = onFailure . dacAttempts
 }
   where
@@ -87,19 +92,50 @@ triggerAPICallbackIfThereIsOne doc@Document{..} = case documentstatus of
 apiCallbackNotificationChannel :: Channel
 apiCallbackNotificationChannel = "api_callback"
 
+data CheckQueuedCallbacksFor = CheckQueuedCallbacksFor DocumentID
+instance (MonadDB m, MonadCatch m) => DBQuery m CheckQueuedCallbacksFor Bool where
+  query (CheckQueuedCallbacksFor did) = do
+    runSQL01_ $ "SELECT EXISTS (SELECT TRUE FROM document_api_callbacks WHERE document_id =" <?> did <+> "AND reserved_by IS NULL)"
+    fetchOne runIdentity
+
 data MergeAPICallback = MergeAPICallback DocumentID String
-instance (MonadDB m, MonadCatch m) => DBUpdate m MergeAPICallback () where
-  update (MergeAPICallback did url) = loopOnUniqueViolation $ do
-    updated <- runQuery01 . sqlUpdate "document_api_callbacks" $ do
+instance (MonadDB m, MonadCatch m, Log.MonadLog m) => DBUpdate m MergeAPICallback () where
+  update (MergeAPICallback did url) = do
+    -- If callbacks are queued, but not being processed, replace them.
+    -- There will be only 1 queued callback majority of times, but it
+    -- doesn't have to be the case. Consider the following:
+    -- * Callback #1 is scheduled and run.
+    -- * Callback #2 is scheduled and no callback is queued (#1 runs),
+    --   so it's also scheduled and run.
+    -- * Both #1 and #2 fail to execute and each of them checks for
+    --   other queued callbacks before the other one is released, so
+    --   they don't see each other and both end up being postponed.
+    -- * Callback #3 is scheduled and below query updates both #1 and #2.
+    --
+    -- Replacing one callback using SELECT ... LIMIT 1 FOR UPDATE doesn't
+    -- work reliably here either. Consider the following:
+    -- * Callbacks #1 and #2 are queued, we attempt to schedule callback #3.
+    -- * We try to select id of #1 for update, but it was just selected for
+    --   update by the job queue, so our select waits.
+    -- * Job queue sets the flag reserved_by and releases the lock on the row.
+    -- * The select proceeeds, but the row now doesn't satisfy WHERE clause,
+    --   so the select returns no rows.
+    -- * We end up inserting #3 as a separate callback, even though we could
+    --   replace #2 instead.
+    updated <- runQuery . sqlUpdate "document_api_callbacks" $ do
       setFields
-      sqlWhereEq "id" did
-    when (not updated) $ do
+      sqlWhereEq "document_id" did
+      sqlWhere "reserved_by IS NULL"
+    when (updated == 0) $ do
+      -- Otherwise insert a new one.
+      Log.mixlog_ $ "Inserting callback for document" <+> show did
       runQuery_ $ sqlInsert "document_api_callbacks" setFields
     notify apiCallbackNotificationChannel ""
+    Log.mixlog_ $ "Callback for document" <+> show did <+> "merged"
     where
       setFields :: (MonadState v n, SqlSet v) => n ()
       setFields = do
-        sqlSet "id"  did
+        sqlSet "document_id" did
         sqlSet "run_at" unixEpoch
         sqlSet "url" url
         sqlSet "attempts" (0::Int32)

@@ -4,6 +4,26 @@ import DB
 import DB.Checks
 import Doc.API.Callback.Tables
 
+apiCallbacksAddIDColumn :: MonadDB m => Migration m
+apiCallbacksAddIDColumn = Migration {
+  mgrTable = tableDocumentApiCallbacks
+, mgrFrom = 3
+, mgrDo = do
+  let tname = tblName tableDocumentApiCallbacks
+      alterTable = sqlAlterTable tname
+  runQuery_ $ alterTable ["RENAME COLUMN id TO document_id"]
+  runQuery_ $ alterTable [
+      "DROP CONSTRAINT pk__document_api_callbacks"
+    , "DROP CONSTRAINT fk__document_api_callbacks__id__documents"
+    , sqlAddColumn tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
+    , "ADD CONSTRAINT pk__document_api_callbacks PRIMARY KEY (id)"
+    , sqlAddFK tname $ (fkOnColumn "document_id" "documents" "id") {
+        fkOnDelete = ForeignKeyCascade
+      }
+    ]
+  runQuery_ . sqlCreateIndex tname $ indexOnColumn "document_id"
+}
+
 addNameToCallbackConsumers :: MonadDB m => Migration m
 addNameToCallbackConsumers = Migration {
   mgrTable = tableDocumentApiCallbackConsumers

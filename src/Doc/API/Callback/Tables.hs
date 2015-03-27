@@ -17,20 +17,22 @@ tableDocumentApiCallbackConsumers = tblTable {
 tableDocumentApiCallbacks :: Table
 tableDocumentApiCallbacks = tblTable {
     tblName = "document_api_callbacks"
-  , tblVersion = 3
+  , tblVersion = 4
   , tblColumns = [
-      tblColumn { colName = "id", colType = BigIntT, colNullable = False }
+      tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "run_at", colType = TimestampWithZoneT, colNullable = False }
     , tblColumn { colName = "url", colType = TextT, colNullable = False }
     , tblColumn { colName = "attempts", colType = IntegerT, colNullable = False }
     , tblColumn { colName = "finished_at", colType = TimestampWithZoneT }
     , tblColumn { colName = "reserved_by", colType = BigIntT }
+    , tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
-      (fkOnColumn "id" "documents" "id") { fkOnDelete = ForeignKeyCascade }
+      (fkOnColumn "document_id" "documents" "id") { fkOnDelete = ForeignKeyCascade }
     , (fkOnColumn "reserved_by" "document_api_callback_consumers" "id") {
         fkOnDelete = ForeignKeySetNull
       }
     ]
+  , tblIndexes = [indexOnColumn "document_id"]
   }

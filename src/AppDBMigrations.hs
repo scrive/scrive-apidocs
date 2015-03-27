@@ -167,6 +167,7 @@ kontraMigrations = [
   , dropHTMLFromMessagesInEvidenceLog
   , addNameToCallbackConsumers
   , addNameOrderToFieldsAndMigrateNames
+  , apiCallbacksAddIDColumn
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations
