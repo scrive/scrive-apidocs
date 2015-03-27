@@ -14,10 +14,10 @@
   }
 
   .title {
-    padding: 11px 0 5px 0;
     color: #222222;
     font-size: 15px;
     font-weight: 500;
+    padding: 11px 0 5px 0;
   }
 
   .subtitle {
@@ -27,6 +27,17 @@
 
     .fieldTypeSetter-subtitle-select {
       margin: 5px 0 10px 0;
+    }
+
+    .fieldTypeSetter-subtitle-anchor {
+      display: inline-block;
+      font-weight: 300;
+      max-width: 155px;
+      margin-right: 5px;
+      overflow-x: hidden;
+      text-overflow: ellipsis;
+      vertical-align: middle;
+      white-space: nowrap;
     }
 
     .signature-field-placement-setter-field-selector {
@@ -39,8 +50,8 @@
     width: 220px;
 
     .editable-text {
-      min-height: 40px;
       line-height: 40px;
+      min-height: 40px;
 
 
       .editable-text-input {
@@ -66,8 +77,8 @@
       vertical-align: middle;
 
       .button {
-        padding: 13px 12px;
         display: block;
+        padding: 13px 12px;
       }
 
       .button .label {
@@ -85,23 +96,23 @@
   }
 
   .fieldTypeSetter-button {
-    margin-top: 8px;
     margin-bottom : 10px;
+    margin-right: 5px;
+    margin-top: 8px;
     position: relative;
     z-index: 107;
-    margin-right: 5px;
   }
 
   &:before {
-    content: " ";
     border: @typesetter-border-size solid #ffffff;
-    top: 0;
     bottom: 0;
-    left: 0;
-    right: 0;
-    position: absolute;
-    z-index: 105;
+    content: " ";
     .drop-shadow(0px, 0px, 5px, 0.25);
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    z-index: 105;
   }
 
   .fieldTypeSetter-arrow {
@@ -112,6 +123,18 @@
     top: 12px;
     width: 17px;
     z-index: 105;
+  }
+
+  .fieldTypeSetter-more {
+    text-decoration: underline;
+  }
+
+  .fieldTypeSetter-more:hover {
+    text-decoration: none;
+  }
+
+  .fieldTypeSetter-more:active {
+    text-decoration: underline;
   }
 
   .checkmark {
@@ -127,9 +150,77 @@
 
     label {
       cursor: pointer;
+      color: #000;
       font-size: small;
       margin-left: 6px;
-      color: #000;
+    }
+  }
+}
+
+.fieldTypeSetter-anchor-table {
+  border-collapse: separate;
+  margin-bottom: 25px;
+  width: 100%;
+
+  // border-spacing without outer spacing.
+  td, th {
+    border-left: 10px solid transparent;
+    border-top: 10px solid transparent;
+  }
+
+  th:first-child, td:first-child {
+    border-left: 0;
+  }
+
+  tr:first-child th {
+    border-top: 0;
+  }
+
+  th {
+    font-weight: 300;
+    font-size: 17px;
+    text-align: left;
+    vertical-align: bottom;
+  }
+
+  .fieldTypeSetter-anchor-text {
+    width: 70%;
+
+    .info-text-input {
+      width: 90%;
+    }
+
+    h3 {
+      font-weight: 300;
+    }
+  }
+
+  .fieldTypeSetter-anchor-index {
+    width: 25%;
+
+    .info-text-input {
+      width: 50px;
+
+      input {
+        text-align: center;
+      }
+    }
+  }
+
+  .fieldTypeSetter-anchor-delete {
+    vertical-align: middle;
+    width: 5%;
+
+    a {
+      background: url(/img/sprite-grey-X.png) no-repeat scroll 0 0 transparent;
+      cursor: pointer;
+      display: block;
+      height: 12px;
+      width: 12px;
+    }
+
+    a:hover {
+      background-position: -12px 0;
     }
   }
 }

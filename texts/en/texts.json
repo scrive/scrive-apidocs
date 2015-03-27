@@ -1,4 +1,4 @@
-{ 
+{
 "_Accept":"Accept",
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
@@ -337,6 +337,7 @@
 "_delete":"Delete",
 "_deliveryAPI":"API",
 "_deliveryPad":"in-person meeting",
+"_designViewAddAnchor":"Add",
 "_designViewAddField":"Add field",
 "_designViewAddMultisend":"Add multi send",
 "_designViewAddPartiesAuthentication":"Authentication",
@@ -360,7 +361,11 @@
 "_designViewAddPartiesRoleSignatory":"Signing party",
 "_designViewAddPartiesRoleViewer":"Viewer",
 "_designViewAddParty":"Add party",
+"_designViewAddPhrase":"Add phrase",
 "_designViewAddRemove":"Add attachments",
+"_designViewAnchor":"Anchor",
+"_designViewAnchorIndex":"Occurrence index",
+"_designViewAnchorSearchPhrase":"Phrase to search for",
 "_designViewAttached":"Added attachment",
 "_designViewAttachmentRequestedFlashMessage":"You need to add at least one more signatory before requesting attachments.",
 "_designViewAttachmentRequestedFrom":"Requested attachment <span class='put-attachment-name'></span> from <span class='put-person-name'></span>",

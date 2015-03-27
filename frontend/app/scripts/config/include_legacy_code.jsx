@@ -45,6 +45,7 @@ define([
   '../js/doclang',
   '../js/progressbar',
   '../js/placements',
+  '../js/anchors',
   '../js/fields',
   '../js/reloadmanager',
   '../js/signatories',

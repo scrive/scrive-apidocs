@@ -4,9 +4,11 @@ define(["Underscore", "React", "common/button", "common/select",
         "designview/typesetters/typesettermixin", "designview/typesetters/done",
         "designview/typesetters/remove", "designview/typesetters/signatoryselector",
         "designview/typesetters/more", "designview/typesetters/fieldselector",
-        "designview/typesetters/fontselector", "legacy_code"],
-  function (_, React, Button, Select, TypeSetterMixin, Done, Remove, SignatorySelector,
-            More, FieldSelector, FontSelector) {
+        "designview/typesetters/fontselector", "designview/typesetters/anchor",
+        "legacy_code"],
+  function (_, React, Button, Select, TypeSetterMixin,
+            Done, Remove, SignatorySelector, More, FieldSelector,
+            FontSelector, Anchor) {
   return React.createClass({
     mixins: [TypeSetterMixin],
 
@@ -141,6 +143,7 @@ define(["Underscore", "React", "common/button", "common/select",
           </div>
           <More>
             <FontSelector model={model} />
+            <Anchor model={model} />
           </More>
           <Done field={field} onDone={this.handleDone} />
           <Remove model={model} onRemove={this.clear} />

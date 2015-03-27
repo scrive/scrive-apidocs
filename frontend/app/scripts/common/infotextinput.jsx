@@ -14,6 +14,7 @@
       onClick     : func, functiona to be called on click
       multiline   : bool, if button should support multiline labels (if true, text must be an array of strings)
       oneClick    : bool, if the button can be clicked only once
+      restrictInput : func, restrict input, if false do not update state.
 
  *
  * Example usage:
@@ -41,6 +42,7 @@ define(['React'], function(React) {
       autocompleate : React.PropTypes.bool,
       readonly      : React.PropTypes.bool,
       focus         : React.PropTypes.bool,
+      restrictInput : React.PropTypes.func,
 
       // Events
       onChange      : React.PropTypes.func,
@@ -66,7 +68,8 @@ define(['React'], function(React) {
           "style" : {},
           "inputStyle" : {},
           "autocomplete" : false,
-          "readonly" : false
+          "readonly" : false,
+          "restrictInput": function () { return true; }
         };
       },
     getInitialState: function() {
@@ -114,9 +117,12 @@ define(['React'], function(React) {
         var newvalue = event.target.value;
         if (this.props.suppressSpace)
           newvalue.replace(/\s/g,'');
-        this.setState({value :newvalue});
-        if (this.props.onChange)
-          this.props.onChange(newvalue);
+        var valid = this.props.restrictInput(newvalue);
+        if (valid) {
+          this.setState({value :newvalue});
+          if (this.props.onChange)
+            this.props.onChange(newvalue);
+        }
     },
     onOk : function() {
       if (this.props.onOk != undefined)

@@ -11,6 +11,7 @@ window.FieldPlacement = Backbone.Model.extend({
       fsrel: 0.0168,
       withTypeSetter : false,
       alive: true,
+      anchors: [],
       step: 'edit'
     },
     initialize : function(args){
@@ -21,6 +22,10 @@ window.FieldPlacement = Backbone.Model.extend({
           this.set({"tip" : args.field.defaultTip()});
         this.setSignatory(args.field.signatory());
         this.setField(args.field);
+        var anchors =  _.map(args.anchors, function(anchorargs){
+          return new PlacementAnchor(anchorargs);
+        });
+        this.setAnchors(anchors);
         this.bindBubble();
     },
     placed : function() {
@@ -69,6 +74,12 @@ window.FieldPlacement = Backbone.Model.extend({
     },
     field : function(){
         return this.get("field");
+    },
+    anchors: function () {
+      return this.get("anchors");
+    },
+    setAnchors: function (anchors) {
+      this.set({ anchors: anchors });
     },
     changeField: function (newField) {
       var field = this.field();
@@ -145,6 +156,7 @@ window.FieldPlacement = Backbone.Model.extend({
     draftData : function() {
       var document = this.field().signatory().document();
       var page = document.mainfile() != undefined ? document.mainfile().page(this.get("page")) : undefined;
+      var anchors = _.map(this.get("anchors"), function (anchor) { return anchor.draftData(); });
       var draft = {
         xrel : this.xrel(),
         yrel : this.yrel(),
@@ -153,7 +165,7 @@ window.FieldPlacement = Backbone.Model.extend({
         fsrel : this.fsrel(),
         page : page != undefined ? page.number() : this.get("page"),
         tip : this.get("tip"),
-        anchors : this.get("anchors")
+        anchors : anchors
       };
       return draft;
     },
