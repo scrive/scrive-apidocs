@@ -194,6 +194,7 @@ kontraMigrations = [
   , updateApiCallbacksForNewConsumer
   , dropHTMLFromInvitationAndConfirmationMessages
   , dropHTMLFromMessagesInEvidenceLog
+  , apiCallbacksAddIDColumn
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

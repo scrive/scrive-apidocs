@@ -29,12 +29,12 @@ import qualified Log
 
 execute :: (AmazonMonad m, MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, MonadReader c m, HasSalesforceConf c) => DocumentAPICallback -> m Bool
 execute DocumentAPICallback{..} = do
-  exists <- dbQuery $ DocumentExistsAndIsNotPurged dacID
+  exists <- dbQuery $ DocumentExistsAndIsNotPurged dacDocumentID
   if exists
     then do
-      doc <- dbQuery $ GetDocumentByDocumentID dacID
+      doc <- dbQuery $ GetDocumentByDocumentID dacDocumentID
       case (maybesignatory =<< getAuthorSigLink doc) of
-        Nothing -> $unexpectedErrorM $ "Document" <+> show dacID <+> "has no author"
+        Nothing -> $unexpectedErrorM $ "Document" <+> show dacDocumentID <+> "has no author"
         Just userid -> do
           mcallbackschema <- dbQuery $ GetUserCallbackSchemeByUserID userid
           case mcallbackschema of
@@ -42,7 +42,7 @@ execute DocumentAPICallback{..} = do
             _ -> executeStandardCallback doc dacURL
     else do
       Log.mixlog "API callback dropped since document does not exists or is purged" $ do
-        value "document_id" (show dacID)
+        value "document_id" (show dacDocumentID)
       return True
 
 executeStandardCallback :: (AmazonMonad m, MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m) => Document -> String -> m Bool
