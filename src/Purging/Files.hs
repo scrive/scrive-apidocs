@@ -4,7 +4,6 @@ module Purging.Files
     , purgeSomeFiles
     ) where
 
-import Control.Concurrent
 import Control.Monad
 import Control.Monad.Catch
 import Control.Monad.IO.Class
@@ -16,6 +15,7 @@ import Amazon
 import DB
 import File.FileID
 import File.Model
+import OurPrelude
 import qualified Log
 
 data FindFilesForPurging = FindFilesForPurging Int
@@ -107,16 +107,16 @@ purgeSomeFiles = do
   someFiles <- dbQuery $ FindFilesForPurging 10
   mapM_ purge someFiles
   where
-    purge (_id',_amazon_bucket,_amazon_url,  isonamazon) | not isonamazon = return ()
-    purge (id', Just amazon_bucket, Just amazon_url, _isonamazon) = do
-      conf <- getAmazonConfig
-      success <- deleteFile (mkAWSAction $ amazonConfig conf) amazon_bucket amazon_url
-      if success
-        then do
-          dbUpdate $ PurgeFile id'
-          commit
-        else do
-          rollback
-          Log.mixlog_ "Purging from Amazon failed, sleeping for 5 minutes."
-          liftIO $ threadDelay $ 5 * 60 * 1000000
-    purge (_id', _amazon_bucket, _amazon_url, _isonamazon) = return ()
+    purge (id', mamazon_bucket, mamazon_url, isonamazon) = do
+      purgedFromOtherSystems <- case (mamazon_bucket,mamazon_url, isonamazon) of
+        (Just amazon_bucket,Just amazon_url, True) -> do
+          conf <- getAmazonConfig
+          deleteFile (mkAWSAction $ amazonConfig conf) amazon_bucket amazon_url
+        _ -> return True
+      if purgedFromOtherSystems
+      then do
+        dbUpdate $ PurgeFile id'
+        commit
+      else do
+        rollback
+        $unexpectedErrorM $ "Purging file " ++ show id' ++ "failed. Couldn't be removed from external system (Amazon)"

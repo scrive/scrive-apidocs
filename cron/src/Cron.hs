@@ -89,16 +89,19 @@ main = Log.withLogger $ do
       , ccProcessJob = \CronJob{..} -> do
         Log.mixlog_ $ "Processing" <+> show cjType <> "..."
         action <- case cjType of
-          AmazonDeletion -> do
-            if AWS.isAWSConfigOk $ amazonConfig appConf
-              then runScheduler purgeSomeFiles
-              else Log.mixlog_ "AmazonDeletion: no valid AWS config, skipping."
-            return . RetryAfter $ ihours 3
+          AmazonDeletion -> do -- This one should be renamed to FilesPurge
+            runScheduler purgeSomeFiles
+            return . RetryAfter $ iminutes 1
           AmazonUpload -> do
             if AWS.isAWSConfigOk $ amazonConfig appConf
-              then runScheduler AWS.uploadFilesToAmazon
-              else Log.mixlog_ "AmazonUpload: no valid AWS config, skipping."
-            return . RetryAfter $ iminutes 1
+              then do
+                moved <- runScheduler AWS.uploadSomeFileToAmazon
+                if moved
+                  then return . RetryAfter $ iseconds 1
+                  else return . RetryAfter $ iminutes 1
+              else do
+                Log.mixlog_ "AmazonUpload: no valid AWS config, skipping."
+                return . RetryAfter $ iminutes 1
           AsyncEventsProcessing -> do
             inDB $ asyncProcessEvents (catEventProcs $ catMaybes [mmixpanel]) All
             return . RetryAfter $ iseconds 10

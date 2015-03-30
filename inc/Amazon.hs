@@ -3,7 +3,7 @@ module Amazon (
     module Amazon.Class
   , isAWSConfigOk
   , mkAWSAction
-  , uploadFilesToAmazon
+  , uploadSomeFileToAmazon
   , getFileContents
   , AmazonMonadT
   , runAmazonMonadT
@@ -12,7 +12,6 @@ module Amazon (
   ) where
 
 import Control.Applicative
-import Control.Concurrent
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
@@ -35,6 +34,7 @@ import Crypto.RNG
 import DB
 import File.File
 import File.Model
+import OurPrelude
 import Utils.String
 import qualified Log
 
@@ -78,21 +78,22 @@ instance MonadBaseControl IO m => MonadBaseControl IO (AmazonMonadT m) where
 instance Monad m => AmazonMonad (AmazonMonadT m) where
   getAmazonConfig = AmazonMonadT ask
 
-uploadFilesToAmazon :: (AmazonMonad m, MonadIO m, Log.MonadLog m, MonadDB m, MonadThrow m, CryptoRNG m) => m ()
-uploadFilesToAmazon = do
+uploadSomeFileToAmazon :: (AmazonMonad m, MonadIO m, Log.MonadLog m, MonadDB m, MonadThrow m, CryptoRNG m) => m Bool
+uploadSomeFileToAmazon = do
   mfile <- dbQuery GetFileThatShouldBeMovedToAmazon
   case mfile of
-    Nothing -> return ()
+    Nothing -> return False
     Just file -> do
       conf <- getAmazonConfig
       success <- exportFile (mkAWSAction $ amazonConfig conf) file
       if success
-        then commit
+        then do
+          commit
+          return True
         else do
           rollback
-          Log.attention_ "Uploading to Amazon failed, sleeping for 5 minutes."
-          liftIO $ threadDelay $ 5 * 60 * 1000000
-      uploadFilesToAmazon
+          $unexpectedErrorM $ "Moving file " ++ show (fileid file) ++ " to Amazon failed."
+
 
 -- | Convert a file to Amazon URL. We use the following format:
 --
