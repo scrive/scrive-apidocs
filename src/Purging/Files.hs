@@ -37,6 +37,7 @@ instance MonadDB m => DBQuery m FindFilesForPurging [(FileID,Maybe String,Maybe 
            , ("mail_attachments",      "file_id")
            , ("signatory_attachments", "file_id")
            , ("signatory_screenshots", "file_id")
+           , ("signatory_link_fields", "value_file")
            ]
 
     when (sort expected_refs /= sort refs) $
@@ -98,6 +99,13 @@ instance MonadDB m => DBQuery m FindFilesForPurging [(FileID,Maybe String,Maybe 
         <+> "         FROM attachments"
         <+> "        WHERE attachments.file_id = files.id"
         <+> "          AND NOT attachments.deleted"
+        <+> "       )"
+                -- Case 8:
+                -- There is an signature (signatory_link_field) with this file referenced. On document purge reference is dropped
+        <+> "   AND NOT EXISTS ("
+        <+> "       SELECT TRUE"
+        <+> "         FROM signatory_link_fields"
+        <+> "        WHERE signatory_link_fields.value_file = files.id"
         <+> "       )"
         <+> "   LIMIT" <?> (fromIntegral limit :: Int32)
     fetchMany id

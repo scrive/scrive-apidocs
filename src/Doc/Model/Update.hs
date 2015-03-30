@@ -1492,7 +1492,8 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
     -- blank out sensitive data in fields
     runSQL_ $ "UPDATE signatory_link_fields"
         <+> "   SET value_text   = CASE WHEN value_text   IS NULL THEN NULL ELSE '' END"
-        <+> "   ,   value_binary = CASE WHEN value_binary IS NULL THEN NULL ELSE ''::bytea END"
+        <+> "   ,   value_bool = CASE WHEN value_bool IS NULL THEN NULL ELSE FALSE END"
+        <+> "   ,   value_file = NULL"
         <+> " WHERE signatory_link_fields.signatory_link_id IN"
         <+> "       (SELECT id"
         <+> "          FROM signatory_links"

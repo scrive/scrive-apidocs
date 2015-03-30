@@ -295,7 +295,7 @@ signatoryFieldsSelectors = [
   , "signatory_link_fields.is_author_filled"
   , "signatory_link_fields.value_text"
   , "signatory_link_fields.value_bool"
-  , "signatory_link_fields.value_binary"
+  , "signatory_link_fields.value_file"
   , "signatory_link_fields.obligatory"
   , "signatory_link_fields.should_be_filled_by_author"
   , "signatory_link_fields.placements"

@@ -27,14 +27,15 @@ import Text.JSON.Gen
 import Text.StringTemplates.Templates
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BSC8
+import qualified Data.Map as Map
 import qualified Data.Unjson as Unjson
 import qualified Text.StringTemplates.Fields as F
 
 import Administration.AddPaymentPlan
 import Administration.AdministrationView
-import AppView (respondWithPDF)
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Company.Model
@@ -666,7 +667,7 @@ daveFile fileid' _title = onlyAdmin $ do
    contents <- getFileIDContents fileid'
    if BS.null contents
       then internalError
-      else return $ respondWithPDF False contents
+      else return $ Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
 
 handleAdminUserUsageStatsDays :: Kontrakcja m => UserID -> m JSValue
 handleAdminUserUsageStatsDays uid = onlySalesOrAdmin $ do
