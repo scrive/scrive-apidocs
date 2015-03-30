@@ -119,4 +119,4 @@ purgeSomeFiles = do
         commit
       else do
         rollback
-        $unexpectedErrorM $ "Purging file " ++ show id' ++ "failed. Couldn't be removed from external system (Amazon)"
+        $unexpectedErrorM $ "Purging file " <+> show id' <+> "failed. Couldn't be removed from external system (Amazon)"

@@ -17,6 +17,7 @@ import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Data.Maybe
+import Data.Monoid.Utils
 import Network.AWS.Authentication
 import System.FilePath ((</>))
 import Text.JSON.Gen
@@ -87,12 +88,8 @@ uploadSomeFileToAmazon = do
       conf <- getAmazonConfig
       success <- exportFile (mkAWSAction $ amazonConfig conf) file
       if success
-        then do
-          commit
-          return True
-        else do
-          rollback
-          $unexpectedErrorM $ "Moving file " ++ show (fileid file) ++ " to Amazon failed."
+        then return True
+        else $unexpectedErrorM $ "Moving file " <+> show (fileid file) <+> " to Amazon failed."
 
 
 -- | Convert a file to Amazon URL. We use the following format:

@@ -91,7 +91,7 @@ main = Log.withLogger $ do
         action <- case cjType of
           AmazonDeletion -> do -- This one should be renamed to FilesPurge
             runScheduler purgeSomeFiles
-            return . RetryAfter $ iminutes 1
+            return . RetryAfter $ ihours 1
           AmazonUpload -> do
             if AWS.isAWSConfigOk $ amazonConfig appConf
               then do
