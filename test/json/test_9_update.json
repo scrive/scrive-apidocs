@@ -1,0 +1,137 @@
+{
+ "id": "9179748218119247860",
+ "title": "simple",
+ "file": {
+  "id": "9215148251416961023",
+  "name": "simple.pdf"
+ },
+ "sealedfile": null,
+ "authorattachments": [],
+ "evidenceattachments": [],
+ "time": "2015-03-30T16:13:12Z",
+ "ctime": "2015-03-30T16:12:42Z",
+ "timeouttime": null,
+ "autoremindtime": null,
+ "status": "Preparation",
+ "state": "Preparation",
+ "signatories": [
+  {
+   "id": "9220293573270337225",
+   "current": true,
+   "signorder": 1,
+   "undeliveredInvitation": false,
+   "undeliveredMailInvitation": false,
+   "undeliveredSMSInvitation": false,
+   "deliveredInvitation": false,
+   "delivery": "email",
+   "confirmationdelivery": "email",
+   "signs": true,
+   "author": true,
+   "saved": true,
+   "datamismatch": null,
+   "signdate": null,
+   "seendate": null,
+   "readdate": null,
+   "rejecteddate": null,
+   "rejectionreason": null,
+   "fields": [
+    {
+     "type": "standard",
+     "name": "fstname",
+     "value": "Jonathan",
+     "closed": false,
+     "obligatory": true,
+     "shouldbefilledbysender": false,
+     "placements": []
+    },
+    {
+     "type": "standard",
+     "name": "sndname",
+     "value": "Jonty",
+     "closed": false,
+     "obligatory": true,
+     "shouldbefilledbysender": false,
+     "placements": []
+    },
+    {
+     "type": "standard",
+     "name": "email",
+     "value": "jonathan@scrive.com",
+     "closed": false,
+     "obligatory": true,
+     "shouldbefilledbysender": true,
+     "placements": []
+    },
+    {
+     "type": "standard",
+     "name": "sigco",
+     "value": "",
+     "closed": false,
+     "obligatory": false,
+     "shouldbefilledbysender": false,
+     "placements": []
+    },
+    {
+     "type": "standard",
+     "name": "sigpersnr",
+     "value": "",
+     "closed": false,
+     "obligatory": false,
+     "shouldbefilledbysender": false,
+     "placements": []
+    },
+    {
+     "type": "signature",
+     "name": "Signature 1",
+     "value": "",
+     "closed": false,
+     "obligatory": true,
+     "shouldbefilledbysender": false,
+     "placements": [
+      {
+       "xrel": 0.47614,
+       "yrel": 0.21198502,
+       "wrel": 0.2757158,
+       "hrel": 0.0764045,
+       "fsrel": 0.01590668,
+       "page": 1,
+       "tip": "right"
+      }
+     ]
+    }
+   ],
+   "status": "draft",
+   "attachments": [],
+   "csv": null,
+   "inpadqueue": false,
+   "userid": "2058327658948184031",
+   "signsuccessredirect": null,
+   "rejectredirect": null,
+   "authentication": "standard"
+  }
+ ],
+ "signorder": 1,
+ "authentication": "standard",
+ "delivery": "email",
+ "template": false,
+ "daystosign": 14,
+ "daystoremind": null,
+ "showheader": true,
+ "showpdfdownload": true,
+ "showrejectoption": true,
+ "showfooter": true,
+ "invitationmessage": "",
+ "confirmationmessage": "",
+ "lang": "gb",
+ "tags": [],
+ "apicallbackurl": null,
+ "saved": true,
+ "deleted": false,
+ "reallydeleted": false,
+ "canperformsigning": false,
+ "objectversion": 4,
+ "process": "Contract",
+ "isviewedbyauthor": true,
+ "accesstoken": "47fda047323ca1d7",
+ "timezone": "Europe/Berlin"
+}
