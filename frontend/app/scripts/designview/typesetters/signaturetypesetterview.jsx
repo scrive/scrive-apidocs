@@ -1,11 +1,10 @@
 /** @jsx React.DOM */
 
-var imports = ["React", "designview/typesetters/typesettermixin",
-               "designview/typesetters/signatoryselector",
-               "designview/typesetters/obligatory", "designview/typesetters/done",
-               "designview/typesetters/remove", "legacy_code"];
-
-define(imports, function (React, TypeSetterMixin, SignatorySelector, Obligatory, Done, Remove) {
+define(["React", "designview/typesetters/typesettermixin",
+        "designview/typesetters/signatoryselector",
+        "designview/typesetters/obligatory", "designview/typesetters/done",
+        "designview/typesetters/remove", "legacy_code"],
+  function (React, TypeSetterMixin, SignatorySelector, Obligatory, Done, Remove) {
 
   return React.createClass({
     mixins: [TypeSetterMixin],

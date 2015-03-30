@@ -1,10 +1,9 @@
 /** @jsx React.DOM */
 
-var imports = ["Underscore", "React", "common/select",
-               "designview/typesetters/typesettermixin", "designview/typesetters/done",
-               "legacy_code"];
-
-define(imports, function (_, React, Select, TypeSetterMixin, Done) {
+define(["Underscore", "React", "common/select",
+        "designview/typesetters/typesettermixin", "designview/typesetters/done",
+        "legacy_code"],
+  function (_, React, Select, TypeSetterMixin, Done) {
 
   return React.createClass({
     mixins: [TypeSetterMixin],

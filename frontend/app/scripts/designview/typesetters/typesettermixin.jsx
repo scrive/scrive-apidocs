@@ -1,8 +1,9 @@
-var imports = ["jquery", "Underscore", "Backbone", "React",
-               "common/backbone_mixin", "common/selfunmountmixin",
-               "common/editabletext", "legacy_code"];
+/** @jsx React.DOM */
 
-define(imports, function ($, _, Backbone, React, BackboneMixin, SelfUnmountMixin, EditableText) {
+define(["jquery", "Underscore", "Backbone", "React",
+        "common/backbone_mixin", "common/selfunmountmixin",
+        "common/editabletext", "legacy_code"],
+  function ($, _, Backbone, React, BackboneMixin, SelfUnmountMixin, EditableText) {
 
   var Mixin = {
     mixins: [SelfUnmountMixin, BackboneMixin.BackboneMixin],
