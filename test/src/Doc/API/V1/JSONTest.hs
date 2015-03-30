@@ -10,7 +10,6 @@ import Data.Text (Text, unpack)
 import Happstack.Server
 import Test.Framework
 import qualified Data.ByteString.Lazy as B
-import qualified Data.ByteString.Lazy.Char8 as BSC
 import qualified Data.ByteString.Lazy.UTF8 as BS
 import qualified Data.HashMap.Strict as H
 import qualified Data.Vector as V
@@ -343,7 +342,6 @@ testSignWithSignature = do
 -- Compare JSON sesults from API calls
 testJSONWith :: FilePath -> BS.ByteString -> TestEnv ()
 testJSONWith fp jsonBS = do
-  liftIO $ BSC.putStrLn $ jsonBS
   jsonFileBS <- liftIO $ B.readFile fp
   let Just value    = decode jsonBS
       Just jsonFile = decode jsonFileBS
