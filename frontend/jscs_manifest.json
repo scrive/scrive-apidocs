@@ -3,4 +3,5 @@
   "./app/scripts/common/editabletext.jsx",
   "./app/js/anchors.js",
   "./app/js/takeScreenshot.js"
+  "./app/scripts/common/hubspot_service.jsx"
 ]
