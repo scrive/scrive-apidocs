@@ -27,9 +27,9 @@ import Text.JSON.Gen
 import Text.StringTemplates.Templates
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BSC8
+import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Map as Map
 import qualified Data.Unjson as Unjson
 import qualified Text.StringTemplates.Fields as F

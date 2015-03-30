@@ -33,7 +33,6 @@ import Utils.String
 import Version
 import qualified Log
 
-
 moveSignaturesToFilesAndAddBoolValueForFields :: MonadDB m => Migration m
 moveSignaturesToFilesAndAddBoolValueForFields = Migration {
     mgrTable = tableSignatoryLinkFields
