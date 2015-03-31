@@ -820,7 +820,7 @@
 "_prolongModalText":"Repousser la date d'échéance de:",
 "_prolongModalTitle":"Repousser la date d'échéance",
 "_promoBannerButton":"Oui, je souhaite effectuer un essai gratuit",
-"_reminderByEmailMobileQuestion":"",
+"_reminderByEmailMobileQuestion":"Souhaitez-vous envoyer un rappel par mail et par SMS?",
 "_reminderByMobileQuestion":"Souhaitez-vous envoyer un rappel par SMS?",
 "_reminderByMobileQuestionAlreadySigned":"Souhaitez-vous envoyer un lien vers le document par SMS?",
 "_reminderFormFooterOwnMessage":"Rédiger votre propre message",
