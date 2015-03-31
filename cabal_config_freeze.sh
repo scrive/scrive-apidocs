@@ -42,6 +42,7 @@ sed                             \
      -e '/ rts /d'              \
      -e '/ template-haskell /d' \
      -e '/ temporary /d'        \
+     -e '/ time /d'             \
      -e '/ unix /d'             \
      < cabal.config > cabal.config.fixed
 
