@@ -41,11 +41,12 @@ moveSignaturesToFilesAndAddBoolValueForFields = Migration {
     runQuery_ $ sqlAlterTable "signatory_link_fields" [
         sqlDropCheck $ Check "check_signatory_link_fields_text_fields_well_defined" ""
       , sqlDropCheck $ Check "check_signatory_link_fields_signature_well_defined" ""
+      , sqlDropCheck $ Check "check_signatory_link_fields_text_fields_name_order_well_defined" ""
       ]
     runSQL_ "ALTER TABLE signatory_link_fields ADD COLUMN value_bool BOOL NULL"
     runSQL_ "UPDATE signatory_link_fields SET value_bool = value_text <> '', value_text = NULL WHERE type = 9"
 
-    runSQL_ "ALTER TABLE signatory_link_fields ADD COLUMN value_file BIGINT NULL"
+    runSQL_ "ALTER TABLE signatory_link_fields ADD COLUMN value_file_id BIGINT NULL"
     runSQL_ "ALTER TABLE files ADD COLUMN tmp_signatory_link_fields_id BIGINT NULL"
 
     runQuery_ $ sqlInsertSelect "files" "signatureFields" $ do
@@ -61,22 +62,24 @@ moveSignaturesToFilesAndAddBoolValueForFields = Migration {
       sqlSetCmd "checksum" "digest(value_binary,'sha1')"
       sqlSetCmd "tmp_signatory_link_fields_id" "signature_field_id"
 
-    runQuery_ $ sqlUpdate "signatory_link_fields" $ do
-      sqlWhereExists $ sqlSelect "files" $ do
-          sqlWhere "tmp_signatory_link_fields_id = signatory_link_fields.id"
-      sqlSetCmd "value_file" "(SELECT id FROM files WHERE tmp_signatory_link_fields_id = signatory_link_fields.id)"
+    runSQL_ $ "UPDATE signatory_link_fields"
+      <+> "SET value_file_id = f.id"
+      <+> "FROM (SELECT id, tmp_signatory_link_fields_id FROM files WHERE tmp_signatory_link_fields_id IS NOT NULL) AS f"
+      <+> "WHERE signatory_link_fields.id = f.tmp_signatory_link_fields_id"
 
     runSQL_ "ALTER TABLE files DROP COLUMN tmp_signatory_link_fields_id"
     runSQL_ "ALTER TABLE signatory_link_fields DROP COLUMN value_binary"
 
     runQuery_ $ sqlAlterTable "signatory_link_fields" [
-        sqlAddCheck $ Check "check_signatory_link_fields_only_checkboxes_have_bool_values"
-          "type = 9 AND value_bool IS NOT NULL OR value_bool IS NULL"
-      , sqlAddCheck $ Check "check_signatory_link_fields_only_signatures_have_file_values"
-          "type = 8 OR value_file IS NULL"
-      , sqlAddCheck $ Check "check_signatory_link_fields_only_text_fields_have_text_values"
-          "(type = ANY (ARRAY[1, 3, 4, 5, 6, 7, 10])) AND value_text IS NOT NULL OR value_text IS NULL"
-      , sqlAddFK "signatory_link_fields" $ fkOnColumn "value_file" "files" "id"
+        sqlAddCheck $ Check "check_signatory_link_fields_name_fields_are_well_defined"
+          "type = 1 AND name_order IS NOT NULL AND value_bool IS NULL AND value_file_id IS NULL AND value_text IS NOT NULL OR type <> 1"
+      , sqlAddCheck $ Check "check_signatory_link_fields_checkboxes_are_well_defined"
+          "type = 9 AND name_order IS NULL AND value_bool IS NOT NULL AND value_file_id IS NULL AND value_text IS NULL OR type <> 9"
+      , sqlAddCheck $ Check "check_signatory_link_fields_signatures_are_well_defined"
+          "type = 8 AND name_order IS NULL AND value_bool IS NULL AND value_text IS NULL OR type <> 8"
+      , sqlAddCheck $  Check "check_signatory_link_fields_other_text_fields_are_well_defined"
+          "(type = ANY (ARRAY[3, 4, 5, 6, 7, 10])) AND name_order IS NULL AND value_bool IS NULL AND value_file_id IS NULL AND value_text IS NOT NULL OR NOT (type = ANY (ARRAY[3, 4, 5, 6, 7, 10]))"
+      , sqlAddFK "signatory_link_fields" $ fkOnColumn "value_file_id" "files" "id"
       ]
 
 

@@ -180,7 +180,7 @@ insertSignatoryLinkFields fields = runQuery_ . sqlInsert "signatory_link_fields"
   sqlSetList "custom_name" $ map (custom_name . snd) fields
   sqlSetList "is_author_filled" $ map (author_filled . snd) fields
   sqlSetList "value_text" $ map (fieldTextValue . snd) fields
-  sqlSetList "value_file" $ map (fieldFileValue . snd) fields
+  sqlSetList "value_file_id" $ map (fieldFileValue . snd) fields
   sqlSetList "value_bool" $ map (fieldBoolValue . snd) fields
   sqlSetList "placements" $ map (fieldPlacements . snd) fields
   sqlSetList "obligatory" $ map (fieldIsObligatory . snd) fields
@@ -1268,13 +1268,13 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m PostRem
           mmsg
           actor
 
-data UpdateFieldsForSigning = UpdateFieldsForSigning SignatoryLink [(FieldIdentity, Either String (Either Bool (Maybe FileID)))] [(FileID, BS.ByteString)] Actor
+data UpdateFieldsForSigning = UpdateFieldsForSigning SignatoryLink [(FieldIdentity, FieldValue)] [(FileID, BS.ByteString)] Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateFieldsForSigning () where
   update (UpdateFieldsForSigning sl fields signaturesContent actor) = updateDocumentWithID $ const $ do
     -- Document has to be in Pending state
     -- signatory could not have signed already
     let slid = signatorylinkid sl
-    let updateValue :: (FieldIdentity, Either String (Either Bool (Maybe FileID))) -> m ()
+    let updateValue :: (FieldIdentity, FieldValue) -> m ()
         updateValue (fieldIdent, newValue) = do
           let custom_name = case fieldIdent of
                               TextFI xname   -> xname
@@ -1283,9 +1283,15 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateF
                               _ -> ""
               oldField = getFieldByIdentity fieldIdent (signatoryfields sl)
           updated <- runQuery . sqlUpdate "signatory_link_fields" $ do
-                   sqlSet "value_text" $ either (Just) (const Nothing)  newValue
-                   sqlSet "value_bool" $ either (const Nothing) (either Just (const Nothing)) newValue
-                   sqlSet "value_file" $ either (const Nothing) (either (const Nothing) Just) newValue
+                   sqlSet "value_text" $ case newValue of
+                                              StringFV s -> Just s
+                                              _ -> Nothing
+                   sqlSet "value_bool" $  case newValue of
+                                              BoolFV b -> Just b
+                                              _ -> Nothing
+                   sqlSet "value_file_id" $ case newValue of
+                                              FileFV f -> f
+                                              _ -> Nothing
                    sqlWhereEq "signatory_link_id" slid
                    sqlWhereEq "custom_name" custom_name
                    case fieldIdent of
@@ -1305,34 +1311,34 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateF
                      sqlWhere "signatory_links.sign_time IS NULL"
 
           let oldValue = case oldField of
-                Just (SignatoryCheckboxField (chf@CheckboxField{})) -> Right $ Left (schfValue chf)
-                Just (SignatorySignatureField (sf@SignatureField{}))  -> Right $ Right (ssfValue sf)
-                Just f -> Left $ fromMaybe "" $ fieldTextValue f
-                _ -> Left ""
+                Just (SignatoryCheckboxField (chf@CheckboxField{})) -> BoolFV (schfValue chf)
+                Just (SignatorySignatureField (sf@SignatureField{}))  -> FileFV (ssfValue sf)
+                Just f -> StringFV $ fromMaybe "" $ fieldTextValue f
+                _ -> StringFV ""
               changed = oldValue /= newValue
-              emptyValue (Left s) = null s
-              emptyValue (Right (Left False)) = True
-              emptyValue (Right (Left True)) = False
-              emptyValue (Right (Right Nothing)) = True
-              emptyValue (Right (Right (Just _))) = False
+              emptyValue (StringFV s) = null s
+              emptyValue (BoolFV False) = True
+              emptyValue (BoolFV True) = False
+              emptyValue (FileFV Nothing) = True
+              emptyValue (FileFV _) = False
 
           when (updated/=0 && changed) $ do
             let eventEvidenceText = getEvidenceTextForUpdateField sl fieldIdent
             void $ update $ InsertEvidenceEvent eventEvidenceText
                (do F.value "value" $ case newValue of
-                     Left s -> s
-                     Right (Left False) -> ""
-                     Right (Left True) -> "checked"
-                     Right (Right Nothing) -> ""
-                     Right (Right (Just fi)) -> case (lookup fi signaturesContent) of
+                     StringFV s -> s
+                     BoolFV False -> ""
+                     BoolFV True -> "checked"
+                     FileFV Nothing -> ""
+                     FileFV (Just fi) -> case (lookup fi signaturesContent) of
                                                    Nothing -> ""
                                                    Just s -> BS.unpack $ imgEncodeRFC2397 $ s
                    F.value "previousvalue"$ case oldValue of
-                     Left s -> s
-                     Right (Left False) -> ""
-                     Right (Left True) -> "checked"
-                     Right (Right Nothing) -> ""
-                     Right (Right (Just fi)) -> case (lookup fi signaturesContent) of
+                     StringFV s -> s
+                     BoolFV False  -> ""
+                     BoolFV True -> "checked"
+                     FileFV Nothing -> ""
+                     FileFV (Just fi) -> case (lookup fi signaturesContent) of
                                                    Nothing -> ""
                                                    Just s -> BS.unpack $ imgEncodeRFC2397 $ s
                    when (emptyValue newValue) $
@@ -1493,7 +1499,7 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
     runSQL_ $ "UPDATE signatory_link_fields"
         <+> "   SET value_text   = CASE WHEN value_text   IS NULL THEN NULL ELSE '' END"
         <+> "   ,   value_bool = CASE WHEN value_bool IS NULL THEN NULL ELSE FALSE END"
-        <+> "   ,   value_file = NULL"
+        <+> "   ,   value_file_id = NULL"
         <+> " WHERE signatory_link_fields.signatory_link_id IN"
         <+> "       (SELECT id"
         <+> "          FROM signatory_links"
