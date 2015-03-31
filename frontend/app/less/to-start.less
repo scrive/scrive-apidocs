@@ -4,14 +4,36 @@
   min-width: 0;
 
   .pageheader {
-    min-width: 0;
-  }
 
-  .pagefooter {
-    min-width: 0;
+    @media (max-width: 750px) {
+      border-bottom-width: 0px;
+    }
 
     .content {
-      width: 320px;
+      min-width: 0;
+
+      @media (max-width: 750px) {
+      height: 45px;
+
+        .logo {
+          margin-top: 10px;
+          margin-bottom: 10px;
+          max-height: 25px;
+        }
+
+        .sender .inner {
+          padding-top: 12px;
+          padding-bottom: 11px;
+        }
+      }
+    }
+
+    .pagefooter {
+      min-width: 0;
+
+      .content {
+        width: 320px;
+      }
     }
   }
 }
@@ -33,24 +55,11 @@
         background: @gray-5-percent;
       }
     }
-
-    .headline {
-      padding: 15px;
-      background: white;
-      max-width: 986px;
-      min-width: 320px;
-      text-align: center;
-      font-size: 25px;
-      line-height: 47px;
-      border: 1px solid @gray-10-percent;
-      border-bottom-width: 0;
-    }
   }
 
   .form-container {
 
     @party-container-padding: 15px;
-
     margin: auto;
     min-width: 320px;
     max-width: 1018px;
@@ -58,6 +67,11 @@
 
     padding-left: @party-container-padding;
     padding-right: @party-container-padding;
+
+    @media (max-width: 750px) {
+      padding-left: 25px/2;
+      padding-right: 25px/2;
+    }
 
     .header-container {
 
@@ -94,6 +108,10 @@
       background-color: white;
       margin-top: 25px;
       position: relative;
+
+      @media (max-width: 750px) {
+          margin-top: 25px/2;
+      }
 
       .box-shadow(0 0 8px rgba(80, 80, 80, 0.31));
 
@@ -159,6 +177,12 @@
       &.instructions {
         margin-top: 25px !important; // Has to be !important as it is in signview.less
         padding: 30px;
+
+        @media (max-width: 750px) {
+          margin-top: 25px/2 !important; // Has to be !important as it is in signview.less
+          padding-top: 12px;
+          padding-bottom: 11px;
+        }
 
         .headline {
           margin-bottom: 0;
@@ -229,6 +253,10 @@
 
   .list-container {
     margin: 25px 0;
+
+    @media (max-width: 750px) {
+      margin: 25px/2 0;
+    }
   }
 }
 

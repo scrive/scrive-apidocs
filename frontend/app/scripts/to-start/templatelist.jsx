@@ -54,9 +54,6 @@ return React.createClass({
       var self = this;
       return (
         <div className="create-from-template">
-          <div className="headline">
-            {localization.createFromTemplateDescription}
-          </div>
 
           <List.List
             url="/api/frontend/list?documentType=Template"
