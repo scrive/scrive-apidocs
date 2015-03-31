@@ -98,7 +98,7 @@ instance Show KontraLink where
         (++) $ "/sp/" ++ show did ++ "/" ++ show slid
     showsPrec _ (LinkMainFile document signatorylink) =
         (++) $ "/download/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++
-                 "/"++ show (signatorymagichash signatorylink) ++ "/"++ documenttitle document ++ ".pdf"
+                 "/"++ show (signatorymagichash signatorylink) ++ "/"++ urlEncode (documenttitle document) ++ ".pdf"
     showsPrec _ (LinkSignDocNoMagicHash documentid signatorylinkid) =
         (++) $ "/s/" ++ show documentid ++ "/" ++ show signatorylinkid
     showsPrec _ (LinkUserAdmin userId) = (++) $ "/adminonly/useradmin/"++show userId
