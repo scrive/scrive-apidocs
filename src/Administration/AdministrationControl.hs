@@ -147,7 +147,7 @@ daveRoutes =
      , dir "company"       $ hGet $ toK1 $ daveCompany
      , dir "reseal" $ hPost $ toK1 $ resealFile
      , dir "file"   $ hGet  $ toK2 $ daveFile
-     , dir "backdoor" $ hGet $ toK1 $ handleBackdoorQuery
+     , dir "backdoor" $ hGet $ toK2 $ handleBackdoorQuery
     ]
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m String
@@ -577,9 +577,9 @@ docSearchingFromParams params =
     x -> [DocumentFilterByString x]
 
 
-handleBackdoorQuery :: Kontrakcja m => String -> m String
-handleBackdoorQuery email = onlySalesOrAdmin $ onlyBackdoorOpen $ do
-  minfo <- listToMaybe . reverse <$> dbQuery (GetEmailsByRecipient email)
+handleBackdoorQuery :: Kontrakcja m => String -> Int -> m String
+handleBackdoorQuery email skip = onlySalesOrAdmin $ onlyBackdoorOpen $ do
+  minfo <- listToMaybe . drop skip . reverse <$> dbQuery (GetEmailsByRecipient email)
   return $ maybe "No email found" mailContent minfo
 
 sendInviteAgain :: Kontrakcja m => m KontraLink
