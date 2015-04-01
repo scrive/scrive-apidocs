@@ -2,17 +2,12 @@
 {-# OPTIONS_GHC -funbox-strict-fields #-}
 
 module PdfModel where
-import Control.Applicative ((<|>), (<$>), many)
 import Control.Exception
 import Control.Monad.State.Strict
 import Control.Monad.Writer.Class
 import Data.Bits
-import Data.List (findIndex)
-import Data.Maybe
-import Data.Monoid
 import Data.Word
 import Numeric
-import Prelude hiding (String)
 import System.IO
 import System.IO.MMap
 import qualified Control.Monad.State.Strict as Strict
@@ -26,9 +21,10 @@ import qualified Data.ByteString.Lazy as  BSL
 import qualified Data.ByteString.Lazy.Char8 as BSLC
 import qualified Data.Char as Char
 import qualified Data.IntMap as IntMap
-import qualified Prelude as P
 
+import KontraPrelude hiding (group)
 import Matrix
+import qualified KontraPrelude as P
 
 trace :: P.String -> a -> a
 trace _ x = x
@@ -675,7 +671,7 @@ nextFreeIdF :: Document -> RefID
 nextFreeIdF doc = refid x 0
     where
         bodies = documentBodies doc
-        x = 1 + maximum (0 : map lastofbody bodies)
+        x = 1 + $maximum (0 : map lastofbody bodies)
         lastofbody (Body _ m) = maybe 0 (\((key,_),_) -> key) (IntMap.maxViewWithKey m)
 
 addIndir :: Indir -> State Document RefID
@@ -714,7 +710,7 @@ addObject text = addIndir (Indir text Nothing)
 
 addStream :: Value -> BSL.ByteString -> State Document RefID
 addStream value'@(Dict dt) strm
-    | Just _ <- Prelude.lookup (BSC.pack "Length") dt =
+    | Just _ <- P.lookup (BSC.pack "Length") dt =
         addIndir (Indir value' (Just strm))
     | otherwise =
         do rec s <- addIndir (Indir (Dict (entry "Length" cl:dt)) (Just strm))
@@ -734,10 +730,10 @@ lookup refid' (Document _ bodies) = msum (map check bodies)
 
 -- Lookup a key in a dictionary (possibly following a reference to find the dictionary)
 lookupRef :: Document -> BS.ByteString -> Value -> Maybe Value
-lookupRef _ k (Dict l) = Prelude.lookup k l
+lookupRef _ k (Dict l) = P.lookup k l
 lookupRef d k (Ref n)  = do
   Indir (Dict l) _ <- PdfModel.lookup n d
-  Prelude.lookup k l
+  P.lookup k l
 lookupRef _ _ _ = Nothing
 
 --writeObject :: (BS.ByteString -> IO ())     -- write action
@@ -772,7 +768,7 @@ writeObject write tell' (lastlength,objnooffsetmap) ((objno1,UsedEntry gener' (I
             write $ BSC.pack "\nendstream"
             let l = (e-b)
             let Dict dictdata = text
-            case Prelude.lookup (BSC.pack "Length") dictdata of
+            case P.lookup (BSC.pack "Length") dictdata of
               Just (Ref r) -> return (IntMap.insert (objno r) l lastlength)
               _ -> return lastlength
         _ -> return lastlength
@@ -881,7 +877,7 @@ importObjects doc refids = do
                 r = concatMap snd l
                 v = if null r then v1 else Array (map fst l)
                 in (v,r)
-        both (Ref ref) = (Ref (RefID $ fromJust $ IntMap.lookup (unRefID ref) remap),[unRefID ref])
+        both (Ref ref) = (Ref (RefID $ $fromJust $ IntMap.lookup (unRefID ref) remap),[unRefID ref])
         {-
         both (Ref ref) = let
             -- this doesn't work, because it does not substitute references for value
@@ -901,7 +897,7 @@ importObjects doc refids = do
         unRefID (RefID x) = x
 
       remap <- solve IntMap.empty (map unRefID refids)
-    return (map (\k -> RefID $ fromJust $ IntMap.lookup k remap) (map unRefID refids))
+    return (map (\k -> RefID $ $fromJust $ IntMap.lookup k remap) (map unRefID refids))
 
 
 
@@ -1044,7 +1040,7 @@ parseBodyList bin start = do
     traceM ("Parse body at offset " ++ show start)
     body <- parseBody bin start
     let Body trailer' _ = body
-    rest <- case Prelude.lookup (BSC.pack "Prev") trailer' of
+    rest <- case P.lookup (BSC.pack "Prev") trailer' of
                 Just (Number offset') -> parseBodyList bin (round offset')
                 _ -> return []
     return (body : rest)
@@ -1107,7 +1103,7 @@ xparse body bin = do
 
         findLength :: Body -> Value -> Int
         findLength (Body _ objects) (Dict d) = {-# SCC "xparse.findLength" #-}
-            case Prelude.lookup (BSC.pack "Length") d of
+            case P.lookup (BSC.pack "Length") d of
                 Just (Number v) -> (round v)
                 Just (Ref v) -> case IntMap.lookup (fromIntegral $ objno v) objects of
                                     Just entry' -> case entry' of
@@ -1459,21 +1455,21 @@ manyRev p = reverse <$> many p
 concatPdfFiles :: [P.String] -> P.String -> IO ()
 concatPdfFiles filenames outputname = do
   documents <- mapM parseFile filenames
-  let document' = concatenatePdfDocuments (map fromJust documents)
+  let document' = concatenatePdfDocuments (map $fromJust documents)
   writeFileX outputname document'
 
 findRefIdOfRootPages :: Document -> RefID
 findRefIdOfRootPages document' = pagesrefid
    where
-        firstBody = head (documentBodies document')
+        firstBody = $head (documentBodies document')
         trailer' = bodyTrailer firstBody
-        root = case Prelude.lookup (BSC.pack "Root") trailer' of
+        root = case P.lookup (BSC.pack "Root") trailer' of
                  Just (Ref root') -> root'
                  x -> error ("/Root is wrong: " ++ show x)
         catalog = case PdfModel.lookup root document' of
                     Just (Indir (Dict catalog') _) -> catalog'
                     x -> error ("lookup of " ++ show root ++ " returned " ++ show x)
-        pagesrefid = case Prelude.lookup (BSC.pack "Pages") catalog of
+        pagesrefid = case P.lookup (BSC.pack "Pages") catalog of
                        Just (Ref pagesrefid') -> pagesrefid'
                        x -> error ("lookup of /Pages in catalog returned " ++ show x)
 
@@ -1484,7 +1480,7 @@ getCountFromRefID ref = do
   let dt = case PdfModel.lookup ref document' of
              Just (Indir (Dict dt') _) -> dt'
              x -> error ("lookup of " ++ show ref ++ " in document returned " ++ show x)
-      vl = case Prelude.lookup (BSC.pack "Count") dt of
+      vl = case P.lookup (BSC.pack "Count") dt of
              Just (Number ct') -> ct'
              x -> error ("lookup of /Count at " ++ show ref ++ " returned " ++ show x ++ " dict is " ++ show dt)
   return vl

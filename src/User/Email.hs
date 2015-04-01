@@ -2,12 +2,12 @@ module User.Email (
     Email(..)
   ) where
 
-import Control.Applicative
 import Data.Aeson
 import Data.Typeable
 import Data.Unjson
 
 import DB
+import KontraPrelude
 
 -- newtypes
 newtype Email = Email { unEmail :: String }

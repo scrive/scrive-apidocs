@@ -6,12 +6,12 @@ module DB.Model.Domain (
   , sqlDropDomain
   ) where
 
-import Data.Monoid.Utils
 import Data.Set (Set, fromList)
 import Database.PostgreSQL.PQTypes
 
 import DB.Model.Check
 import DB.Model.ColumnType
+import KontraPrelude
 
 -- Domains are global, i.e. not bound to any particular table.
 -- The first table that uses a new domain needs to create it

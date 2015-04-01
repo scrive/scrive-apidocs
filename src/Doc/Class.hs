@@ -8,6 +8,7 @@ import Control.Monad.Trans.Control.Util
 import DB
 import Doc.DocStateData
 import Doc.DocumentID
+import KontraPrelude
 
 -- This monad is currently implemented as a thin layer over
 -- DB.RowCache.  More (document-specific) operations may be coming.

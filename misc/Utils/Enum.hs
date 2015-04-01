@@ -1,6 +1,8 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Utils.Enum where
 
+import KontraPrelude
+
 -- | Extra classes for one way enums
 class SafeEnum a where
   fromSafeEnum :: Integral b =>  a -> b

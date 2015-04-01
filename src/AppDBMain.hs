@@ -13,6 +13,7 @@ import DB
 import DB.Checks
 import DB.PostgreSQL
 import DB.SQLFunction
+import KontraPrelude
 import qualified Log
 
 main :: IO ()

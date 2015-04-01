@@ -17,13 +17,12 @@ module User.History.Model (
 
 import Control.Monad.Catch
 import Data.Int
-import Data.Monoid
-import Data.Monoid.Utils
 import Text.JSON
 import Text.JSON.Gen
 
 import DB
 import IPAddress
+import KontraPrelude
 import MinutesTime
 import User.Email
 import User.Model

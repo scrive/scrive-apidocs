@@ -1,7 +1,5 @@
 module MailsTest (mailsTests) where
 
-import Control.Applicative
-import Control.Monad
 import Control.Monad.Trans
 import Data.Char
 import Happstack.Server
@@ -19,6 +17,7 @@ import Doc.DocStateData
 import Doc.DocumentMonad (withDocumentM, theDocument)
 import Doc.DocViewMail
 import Doc.Model
+import KontraPrelude
 import Mails.Events
 import Mails.SendMail
 import MinutesTime
@@ -72,7 +71,7 @@ sendDocumentMails author = do
       runTestKontra req ctx $ (randomUpdate (NewDocument defaultValue author "Document title" Signable defaultTimeZoneName 0 aa)) `withDocumentM` do
         True <- dbUpdate $ SetDocumentLang l (systemActor $ ctxtime ctx)
 
-        asl <- head . documentsignatorylinks <$> theDocument
+        asl <- $head . documentsignatorylinks <$> theDocument
         file <- addNewRandomFile
         randomUpdate $ AttachFile file (systemActor $ ctxtime ctx)
 
@@ -83,7 +82,7 @@ sendDocumentMails author = do
         True <- randomUpdate $ ResetSignatoryDetails sigs (systemActor now)
         tz <- mkTimeZoneName "Europe/Stockholm"
         randomUpdate $ PreparationToPending (systemActor now) tz
-        asl2 <- head . documentsignatorylinks <$> theDocument
+        asl2 <- $head . documentsignatorylinks <$> theDocument
         randomUpdate . MarkDocumentSeen (signatorylinkid asl2) (signatorymagichash asl2)
              =<< signatoryActor ctx asl2
         randomUpdate $ SignDocument (signatorylinkid asl2) (signatorymagichash asl2) Nothing Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor now)
@@ -112,7 +111,7 @@ sendDocumentMails author = do
         -- Sending closed email
         checkMail "Closed" $ mailDocumentClosed False sl False False =<< theDocument
         -- Reminder after send
-        checkMail "Reminder signed" $ theDocument >>= \d -> mailDocumentRemind Nothing (head $ documentsignatorylinks d) True d
+        checkMail "Reminder signed" $ theDocument >>= \d -> mailDocumentRemind Nothing ($head $ documentsignatorylinks d) True d
   commit
 
 

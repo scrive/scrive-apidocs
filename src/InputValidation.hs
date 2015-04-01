@@ -34,10 +34,7 @@ module InputValidation
     , asValidIPAddressWithMaskList
 ) where
 
-import Control.Applicative
 import Data.Char
-import Data.Maybe
-import Data.Monoid
 import Data.String.Utils
 import Numeric
 import Text.HTML.TagSoup.Entity
@@ -53,6 +50,7 @@ import Doc.DocumentID
 import Happstack.Fields hiding (getFields)
 import IPAddress
 import Kontra
+import KontraPrelude
 import User.Email
 import User.Model
 import Utils.String

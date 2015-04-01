@@ -7,6 +7,7 @@ import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assertEqual, Assertion)
 
 import AppConf
+import KontraPrelude
 import MailingServerConf
 import MessengerServerConf
 import TestKontra

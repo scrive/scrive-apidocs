@@ -15,11 +15,10 @@ module Cron.Tables (
   , tableCronJobs
   ) where
 
-import Control.Monad
 import Data.ByteString (ByteString)
-import Data.Monoid
 
 import DB
+import KontraPrelude
 
 cronTables :: [Table]
 cronTables = [

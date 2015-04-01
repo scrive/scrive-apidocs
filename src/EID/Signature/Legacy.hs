@@ -9,6 +9,8 @@ import Data.ByteString (ByteString)
 import Data.Text (Text)
 import Database.PostgreSQL.PQTypes
 
+import KontraPrelude
+
 data LegacyBankIDSignature = LegacyBankIDSignature {
   lbidsSignedText  :: !Text
 , lbidsSignature   :: !(Binary ByteString)

@@ -33,7 +33,6 @@ module API.Monad (
                  )
   where
 
-import Control.Applicative
 import Control.Exception.Lifted
 import Control.Monad.Base
 import Control.Monad.Error
@@ -48,6 +47,7 @@ import qualified Happstack.Server.Response as Web
 import DB
 import Doc.Rendering
 import Kontra
+import KontraPrelude
 import MinutesTime.Class
 import OAuth.Model
 import OAuth.Util

@@ -6,6 +6,8 @@ import Recurly
 import Text.JSON.Gen hiding (value)
 import qualified Text.JSON.Gen as J
 
+import KontraPrelude
+
 instance ToJSValue Subscription where
   toJSValue (Subscription{..}) = runJSONGen $ do
     case subState of

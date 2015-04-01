@@ -5,13 +5,9 @@ module DB.Checks (
   , createDomain
   ) where
 
-import Control.Applicative
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Data.Int
-import Data.Maybe
-import Data.Monoid
-import Data.Monoid.Utils
 import Database.PostgreSQL.PQTypes hiding (def)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BSU
@@ -22,6 +18,7 @@ import qualified Data.Set as S
 import DB.Model
 import DB.SQL
 import DB.Versions
+import KontraPrelude
 
 newtype ValidationResult = ValidationResult [String] -- ^ list of error messages
 

@@ -1,4 +1,3 @@
-{-# LANGUAGE NoImplicitPrelude #-}
 module Doc.DocMails (
     sendInvitationEmails
   , sendInvitationEmail1
@@ -15,12 +14,9 @@ module Doc.DocMails (
   , MailT
   ) where
 
-import Control.Applicative ((<$>), (<*>))
 import Control.Conditional (ifM)
 import Control.Monad.Catch
 import Control.Monad.Reader
-import Data.List (find)
-import Data.Maybe hiding (fromJust)
 import Text.StringTemplates.Templates (TemplatesMonad, TemplatesT)
 import qualified Data.ByteString as BS
 
@@ -45,10 +41,10 @@ import File.Model
 import InputValidation
 import IPAddress (noIP)
 import Kontra
+import KontraPrelude
 import MailContext (getMailContext, MailContext(..), MailContextMonad, MailContextT, runMailContextT)
 import Mails.SendMail
 import MinutesTime
-import OurPrelude
 import SMS.SMS (scheduleSMS)
 import Templates (runTemplatesT)
 import User.Model

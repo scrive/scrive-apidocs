@@ -1,7 +1,8 @@
 module Payments.Config (RecurlyConfig(..)) where
 
-import Control.Applicative
 import Data.Unjson
+
+import KontraPrelude
 
 data RecurlyConfig = RecurlyConfig { recurlySubdomain  :: String
                                    , recurlyAPIKey     :: String

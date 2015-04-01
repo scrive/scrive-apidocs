@@ -24,6 +24,7 @@ import EID.Signature.Tables
 import EvidenceLog.Tables
 import File.Tables
 import HostClock.Tables
+import KontraPrelude
 import Mails.Tables
 import OAuth.Tables
 import Payments.Tables

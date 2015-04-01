@@ -3,6 +3,7 @@
 module ThirdPartyStats.Tables where
 
 import DB
+import KontraPrelude
 
 -- | The table used to queue up async events.
 --   Expected usage is basically write record, batch read records, batch

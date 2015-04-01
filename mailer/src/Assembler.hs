@@ -5,12 +5,9 @@ module Assembler (
   ) where
 
 import Control.Arrow
-import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Catch
 import Data.Char
-import Data.List
-import Data.Maybe
 import Text.HTML.TagSoup
 import Text.HTML.TagSoup.Entity
 import Text.JSON.Gen as J
@@ -27,6 +24,7 @@ import Crypto.RNG.Utils
 import Data.ByteString.Utils (splitEvery)
 import DB
 import File.Storage
+import KontraPrelude
 import Mails.Model
 import qualified Amazon as AWS
 import qualified Log
@@ -168,7 +166,7 @@ unescapeHTML [] = []
 unescapeHTML ('&':xs) =
   let (b, a) = break (== ';') xs in
   case lookupEntity b of
-    Just c | listToMaybe a == Just ';' ->  c ++ unescapeHTML (tail a)
+    Just c | listToMaybe a == Just ';' ->  c ++ unescapeHTML ($tail a)
     _                                  -> '&' : unescapeHTML xs
 unescapeHTML (x:xs) = x : unescapeHTML xs
 

@@ -1,15 +1,13 @@
 module Payments.Model where
 
-import Control.Applicative
 import Control.Monad.Catch
 import Control.Monad.State
 import Data.Int
-import Data.Monoid
-import Data.Monoid.Utils
 import Data.Typeable
 
 import Company.Model
 import DB
+import KontraPrelude
 import MinutesTime
 
 -- new data types

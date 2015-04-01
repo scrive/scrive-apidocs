@@ -20,6 +20,7 @@ import EID.CGI.GRP.Transaction.Migrations
 import EID.Signature.Migrations
 import EvidenceLog.Migrations
 import File.Migrations
+import KontraPrelude
 import Mails.Migrations
 import OAuth.Migrations
 import Payments.Migrations

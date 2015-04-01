@@ -3,6 +3,7 @@ import Data.Binary
 import Test.Framework
 import Test.Framework.Providers.QuickCheck2
 
+import KontraPrelude
 import TestKontra
 import ThirdPartyStats.Core
 

@@ -4,8 +4,6 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.Reader
-import Data.Maybe
-import Data.Monoid.Utils
 import Network.HTTP as HTTP
 import System.Exit
 import Text.JSON
@@ -20,7 +18,7 @@ import Doc.API.V1.DocumentToJSON
 import Doc.DocInfo
 import Doc.DocStateData
 import Doc.Model
-import OurPrelude
+import KontraPrelude
 import Salesforce.AuthorizationWorkflow
 import Salesforce.Conf
 import User.CallbackScheme.Model

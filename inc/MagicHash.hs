@@ -8,9 +8,7 @@ module MagicHash
   ) where
 
 
-import Control.Applicative
 import Control.Arrow
-import Control.Monad
 import Data.Int
 import Data.Word
 import Database.PostgreSQL.PQTypes
@@ -18,6 +16,7 @@ import Happstack.Server
 import Numeric
 
 import Crypto.RNG
+import KontraPrelude
 import Utils.Read
 
 -- | Hash value that is produced by cryptographically secure random

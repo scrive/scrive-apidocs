@@ -1,9 +1,6 @@
 module PaymentsTest (paymentsTests) where
 
-import Control.Applicative
-import Control.Monad
 import Control.Monad.Trans
-import Data.Maybe
 import Data.Time
 import Recurly
 import Test.Framework
@@ -11,6 +8,7 @@ import Test.Framework
 import Company.Model
 import CompanyAccounts.Model
 import DB
+import KontraPrelude
 import MinutesTime
 import Payments.Control
 import Payments.Model
@@ -267,7 +265,7 @@ testRecurlyChangeAccount = do
       case is of
         Right invoices@(_:_) -> do
           let total = sum [inTotalInCents x | x <- invoices]
-          assertBool "currency should be equal" $ inCurrency (head invoices) == "SEK"
+          assertBool "currency should be equal" $ inCurrency ($head invoices) == "SEK"
           assertBool "total should be right" $ total == 100 * 29900
         _ -> assertBool "Should have some invoices" False
 
@@ -308,7 +306,7 @@ testRecurlyChangeAccountDefer = do
       case is of
         Right invoices@(_:_) -> do
           let total = sum [inTotalInCents x | x <- invoices]
-          assertBool "currency should be equal" $ inCurrency (head invoices) == "SEK"
+          assertBool "currency should be equal" $ inCurrency ($head invoices) == "SEK"
           assertBool "total should be right" $ total == 5 * 29900
 
         _ -> assertBool "Should have some invoices" False

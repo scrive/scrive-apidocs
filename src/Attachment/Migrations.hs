@@ -2,6 +2,7 @@ module Attachment.Migrations where
 
 import Attachment.Tables
 import DB
+import KontraPrelude
 
 addProbablyMissingIndexesOnAttachments :: MonadDB m => Migration m
 addProbablyMissingIndexesOnAttachments =

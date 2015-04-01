@@ -1,14 +1,13 @@
 module Happstack.Fields where
 
-import Control.Monad
 import Control.Monad.IO.Class
-import Data.Maybe
 import Happstack.Server
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
 import qualified Text.JSON as J
 
+import KontraPrelude
 import Utils.Monoid
 import Utils.Read
 import Utils.String

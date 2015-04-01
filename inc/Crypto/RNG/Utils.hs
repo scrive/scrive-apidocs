@@ -1,8 +1,7 @@
 module Crypto.RNG.Utils where
 
-import Control.Monad
-
 import Crypto.RNG
+import KontraPrelude
 
 -- | Generate random string of specified length that contains allowed
 -- chars.

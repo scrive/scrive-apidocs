@@ -19,6 +19,7 @@ import Data.Text (Text)
 import Text.XML (Name)
 import qualified Data.Text as T
 
+import KontraPrelude
 import qualified Text.XML.Content as C
 
 data XMLContent =

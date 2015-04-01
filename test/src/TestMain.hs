@@ -1,9 +1,7 @@
 module TestMain where
 
-import Control.Applicative
 import Control.Arrow
 import Control.Concurrent.STM
-import Control.Monad
 import Control.Monad.Base
 import Database.PostgreSQL.PQTypes.Internal.Connection
 import System.Directory (createDirectoryIfMissing)
@@ -44,6 +42,7 @@ import FlashMessages
 import HtmlTest
 import InputValidationTest
 import JSONUtilTest
+import KontraPrelude
 import LangTest
 import LocalizationTest
 import LoginTest

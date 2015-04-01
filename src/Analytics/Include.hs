@@ -6,8 +6,6 @@ module Analytics.Include(
 
 where
 
-import Control.Applicative
-import Control.Monad
 import Text.JSON
 import Text.JSON.Gen
 import Text.StringTemplates.Templates
@@ -18,6 +16,7 @@ import Company.Model
 import DB
 import HubSpot.Conf    
 import Kontra
+import KontraPrelude
 import MinutesTime
 import Payments.Model
 import User.Model

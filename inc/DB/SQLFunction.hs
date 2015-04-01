@@ -2,6 +2,8 @@ module DB.SQLFunction where
 
 import Database.PostgreSQL.PQTypes
 
+import KontraPrelude
+
 -- | Basic SQL functions handling
 
 newtype SQLFunction = SQLFunction { sqlFunDef :: RawSQL () }

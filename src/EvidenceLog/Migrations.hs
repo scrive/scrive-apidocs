@@ -1,10 +1,7 @@
 module EvidenceLog.Migrations where
 
-import Control.Monad
 import Data.Char
 import Data.Int
-import Data.Maybe
-import Data.Monoid
 import Data.String.Utils
 import Text.HTML.TagSoup.Entity
 import Text.XML.HaXml(render)
@@ -15,6 +12,7 @@ import qualified Text.XML.HaXml.Types as XML
 
 import DB
 import EvidenceLog.Tables
+import KontraPrelude
 import Utils.String
 
 dropHTMLFromMessagesInEvidenceLog :: MonadDB m => Migration m

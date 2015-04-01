@@ -2,14 +2,13 @@ module Mails.Migrations (
     mailerMigrations
   ) where
 
-import Control.Monad
 import Control.Monad.Catch
 import Data.ByteString (ByteString)
 import Data.Int
-import Data.Monoid.Utils
 
 import DB
 import DB.Checks
+import KontraPrelude
 import Mails.Tables
 import MinutesTime
 import qualified Log

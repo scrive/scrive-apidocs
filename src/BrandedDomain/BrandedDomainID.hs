@@ -4,7 +4,6 @@ module BrandedDomain.BrandedDomainID (
   , unBrandedDomainID
   ) where
 
-import Control.Applicative
 import Data.Binary
 import Data.Int
 import Data.Typeable
@@ -13,6 +12,7 @@ import Database.PostgreSQL.PQTypes hiding (Binary, put)
 import Happstack.Server
 
 import DB.Derive
+import KontraPrelude
 import Utils.Read
 
 newtype BrandedDomainID = BrandedDomainID Int64

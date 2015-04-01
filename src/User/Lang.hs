@@ -7,14 +7,12 @@ module User.Lang (
   , allLangs
   ) where
 
-import Control.Monad
 import Data.Int
-import Data.List
-import Data.Maybe
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 import qualified Control.Exception.Lifted as E
 
+import KontraPrelude
 import Utils.Default
 import Utils.Enum
 import Utils.List

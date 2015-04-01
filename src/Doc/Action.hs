@@ -1,4 +1,3 @@
-{-# LANGUAGE NoImplicitPrelude #-}
 module Doc.Action (
     postDocumentPreparationChange
   , postDocumentRejectedChange
@@ -10,14 +9,11 @@ module Doc.Action (
   , findAndTimeoutDocuments
   ) where
 
-import Control.Applicative
 import Control.Conditional (whenM, unlessM, ifM)
 import Control.Monad.Base (MonadBase)
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Data.List hiding (head, tail)
-import Data.Maybe hiding (fromJust)
 import Data.Time
 import Text.StringTemplates.Templates (TemplatesMonad)
 
@@ -43,9 +39,9 @@ import Doc.SignatoryLinkID
 import ForkAction (forkAction)
 import GuardTime (GuardTimeConfMonad, runGuardTimeConfT)
 import Kontra
+import KontraPrelude
 import MailContext (MailContextMonad(..), MailContext(..))
 import MinutesTime
-import OurPrelude
 import Templates (runTemplatesT)
 import ThirdPartyStats.Core
 import User.Email

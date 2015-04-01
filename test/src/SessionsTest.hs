@@ -1,9 +1,6 @@
 module SessionsTest (sessionsTests) where
 
-import Control.Applicative
-import Control.Monad (replicateM_)
 import Data.Int
-import Data.Maybe
 import Happstack.Server
 import Test.Framework
 import Test.QuickCheck
@@ -19,6 +16,7 @@ import Doc.DocUtils
 import Doc.Tokens.Model
 import EID.CGI.GRP.Transaction.Model
 import KontraMonad
+import KontraPrelude
 import Session.Data
 import Session.Model
 import TestingUtil
@@ -58,7 +56,7 @@ testSessionUpdate = do
   msess' <- getSession (sesID sess) (sesToken sess) (domainFromString $ defaultUri)
   assertBool "modified session successfully taken from the database" (isJust msess')
 
-  let sess' = fromJust msess'
+  let sess' = $fromJust msess'
   assertEqual "session successfully modified" (sesPadUserID sess') (Just uid)
 
   msess'' <- getSession (sesID sess) (sesToken sess) "other.domain.com"

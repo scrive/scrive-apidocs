@@ -10,9 +10,9 @@
 
 module Payments.Rules where
 
-import Data.Maybe
 import Recurly
 
+import KontraPrelude
 import Payments.Model
 import Utils.Either
 import Utils.Read

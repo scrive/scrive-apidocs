@@ -1,11 +1,10 @@
 module User.Migrations where
 
-import Control.Monad
 import Control.Monad.Catch
-import Data.Monoid.Utils
 
 import Company.Model (CompanyID)
 import DB
+import KontraPrelude
 import MinutesTime
 import User.Model (UserID)
 import User.Tables

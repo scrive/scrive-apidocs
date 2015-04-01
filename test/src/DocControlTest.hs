@@ -1,13 +1,6 @@
-module DocControlTest(
-    docControlTests
-) where
+module DocControlTest (docControlTests) where
 
-import Control.Applicative
-import Control.Monad
 import Control.Monad.Trans
-import Data.List
-import Data.Maybe
-import Data.Monoid.Utils
 import Happstack.Server
 import Test.Framework
 import Text.JSON.Gen (toJSValue)
@@ -35,6 +28,7 @@ import Doc.Screenshot (Screenshot(..))
 import Doc.SignatoryScreenshots(emptySignatoryScreenshots, SignatoryScreenshots(signing))
 import Doc.SMSPin.Model
 import File.FileID
+import KontraPrelude
 import MagicHash
 import Mails.Model
 import MinutesTime
@@ -75,7 +69,7 @@ testUploadingFile = do
   (user, rsp) <- uploadDocAsNewUser
   docs <- randomQuery $ GetDocumentsByAuthor (userid user)
   assertEqual "New doc" 1 (length docs)
-  let newdoc = head docs
+  let newdoc = $head docs
   assertBool "Document id in result json" ((show $ documentid newdoc) `isInfixOf` (show rsp))
 
 testNewDocumentUnsavedDraft :: TestEnv ()
@@ -125,7 +119,7 @@ testLastPersonSigningADocumentClosesIt = do
 
     True <- do d <- theDocument
                randomUpdate $ ResetSignatoryDetails ([
-                      (defaultValue {   signatoryfields = (signatoryfields $ fromJust $ getAuthorSigLink d)
+                      (defaultValue {   signatoryfields = (signatoryfields $ $fromJust $ getAuthorSigLink d)
                                       , signatoryisauthor = True
                                       , signatoryispartner = False
                                       , maybesignatory = Just $ userid user })
@@ -144,7 +138,7 @@ testLastPersonSigningADocumentClosesIt = do
        tz <- mkTimeZoneName "Europe/Stockholm"
        randomUpdate $ PreparationToPending (systemActor t) tz
     let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
-    siglink <- head . filter isUnsigned .documentsignatorylinks <$> theDocument
+    siglink <- $head . filter isUnsigned .documentsignatorylinks <$> theDocument
 
     do t <- documentctime <$> theDocument
        randomUpdate . MarkDocumentSeen (signatorylinkid siglink) (signatorymagichash siglink)
@@ -193,7 +187,7 @@ testSigningWithPin = do
     d <- theDocument
     True <- randomUpdate $ ResetSignatoryDetails ([
         (defaultValue {
-            signatoryfields = signatoryfields $ fromJust $ getAuthorSigLink d
+            signatoryfields = signatoryfields $ $fromJust $ getAuthorSigLink d
           , signatoryisauthor = True
           , signatoryispartner = False
           , maybesignatory = Just $ userid user1 })
@@ -219,7 +213,7 @@ testSigningWithPin = do
       runSQL ("SELECT * FROM chargeable_items WHERE type = 1 AND user_id =" <?> userid user1 <+> "AND company_id =" <?> companyid company1 <+> "AND document_id =" <?> documentid d)
         >>= assertBool "Author and the company get charged for the delivery" . (> 0)
     let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
-    siglink <- head . filter isUnsigned .documentsignatorylinks <$> theDocument
+    siglink <- $head . filter isUnsigned .documentsignatorylinks <$> theDocument
 
     --do t <- documentctime <$> theDocument
     --   randomUpdate . MarkDocumentSeen (signatorylinkid siglink) (signatorymagichash siglink)
@@ -274,7 +268,7 @@ testSendReminderEmailUpdatesLastModifiedDate = do
   assertBool "Precondition" $ (ctxtime ctx) /= documentmtime doc
 
   -- who cares which one, just pick the last one
-  let sl = head . reverse $ documentsignatorylinks doc
+  let sl = $head . reverse $ documentsignatorylinks doc
   req <- mkRequest POST []
   (_link, _ctx') <- runTestKontra req ctx $ handleResend (documentid doc) (signatorylinkid sl)
 
@@ -310,7 +304,7 @@ testSendReminderEmailByCompanyAdmin = do
   assertBool "Precondition" $ (ctxtime ctx) /= documentmtime doc
 
   -- who cares which one, just pick the last one
-  let sl = head . reverse $ documentsignatorylinks doc
+  let sl = $head . reverse $ documentsignatorylinks doc
 
   -- fail if have no right to send reminder
   req1 <- mkRequest POST []
@@ -362,7 +356,7 @@ testDownloadFile = do
   assertBool "Document access token should not be zero" (documentmagichash doc /= unsafeMagicHash 0)
 
   -- who cares which one, just pick the last one
-  --let sl = head . reverse $ documentsignatorylinks doc
+  --let sl = $head . reverse $ documentsignatorylinks doc
   let Just (fid :: FileID) = (documentfile doc)
 
   let cases =
@@ -408,7 +402,7 @@ testSendingReminderClearsDeliveryInformation = do
                      && case documenttype d of
                          Signable -> True
                          _ -> False) `withDocumentM` do
-    sl <- head . reverse . documentsignatorylinks <$> theDocument
+    sl <- $head . reverse . documentsignatorylinks <$> theDocument
     let actor  =  systemActor $ ctxtime ctx
     _ <- dbUpdate $ MarkInvitationRead (signatorylinkid sl) actor
     -- who cares which one, just pick the last one
@@ -559,7 +553,7 @@ testDownloadSignviewBrandingAccess = do
   siglink <- withDocumentID (documentid doc) $ do
     d <- theDocument
     _ <- randomUpdate $ ResetSignatoryDetails ([
-                      (defaultValue {   signatoryfields = (signatoryfields $ fromJust $ getAuthorSigLink d)
+                      (defaultValue {   signatoryfields = (signatoryfields $ $fromJust $ getAuthorSigLink d)
                                       , signatoryisauthor = True
                                       , signatoryispartner = False
                                       , maybesignatory = Just $ userid user })
@@ -576,7 +570,7 @@ testDownloadSignviewBrandingAccess = do
     tz <- mkTimeZoneName "Europe/Stockholm"
     randomUpdate $ PreparationToPending (systemActor t) tz
     let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
-    head . filter isUnsigned .documentsignatorylinks <$> theDocument
+    $head . filter isUnsigned .documentsignatorylinks <$> theDocument
 
   -- We have a document, now proper tests will take place
 

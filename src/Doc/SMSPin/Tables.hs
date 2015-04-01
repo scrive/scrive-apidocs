@@ -3,6 +3,7 @@ module Doc.SMSPin.Tables where
 
 import DB
 import DB.Checks
+import KontraPrelude
 
 createSignatorySMSPinsTable :: MonadDB m => Migration m
 createSignatorySMSPinsTable =

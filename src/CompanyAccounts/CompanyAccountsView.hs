@@ -11,9 +11,7 @@ module CompanyAccounts.CompanyAccountsView (
     flashMessageBecomeCompanyLogInDifferentUser
     ) where
 
-import Control.Applicative ((<$>))
 import Control.Monad.Catch
-import Data.Maybe
 import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 
@@ -25,6 +23,7 @@ import DB
 import Doc.DocViewMail
 import FlashMessage
 import KontraLink
+import KontraPrelude
 import Mails.SendMail(Mail, kontramail, kontramaillocal)
 import Theme.Model
 import User.Model

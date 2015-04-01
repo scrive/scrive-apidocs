@@ -1,7 +1,5 @@
 module SignupTest (signupTests, getAccountCreatedActions) where
 
-import Control.Applicative
-import Data.Maybe
 import Happstack.Server
 import Test.Framework
 
@@ -11,6 +9,7 @@ import Context
 import Control.Logic
 import DB hiding (query, update)
 import FlashMessage
+import KontraPrelude
 import MagicHash (MagicHash)
 import Mails.Model
 import MinutesTime
@@ -83,7 +82,7 @@ assertSignupSuccessful ctx = do
   assertEqual "User is not logged in" Nothing (ctxmaybeuser ctx)
   actions <- getAccountCreatedActions
   assertEqual "An AccountCreated action was made" 1 (length $ actions)
-  return $ head actions
+  return $ $head actions
 
 followActivationLink :: Context -> UserID -> MagicHash -> TestEnv Context
 followActivationLink ctx uid token = do
@@ -105,7 +104,7 @@ activateAccount ctx uid token tos fstname sndname password password2 phone = do
                           , ("password", inText password)
                           , ("password2", inText password2)
                           ] ++
-                          ([("callme", inText "YES"), ("phone", inText $ fromJust phone)] <| isJust phone |> [])
+                          ([("callme", inText "YES"), ("phone", inText $ $fromJust phone)] <| isJust phone |> [])
   (_, ctx') <- runTestKontra req ctx $ handleAccountSetupPost uid token AccountRequest
   return ctx'
 

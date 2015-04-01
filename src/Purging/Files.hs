@@ -1,21 +1,17 @@
+module Purging.Files (
+    FindFilesForPurging(..)
+  , purgeSomeFiles
+  ) where
 
-module Purging.Files
-    ( FindFilesForPurging(..)
-    , purgeSomeFiles
-    ) where
-
-import Control.Monad
 import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Data.Int
-import Data.List (sort)
-import Data.Monoid.Utils
 
 import Amazon
 import DB
 import File.FileID
 import File.Model
-import OurPrelude
+import KontraPrelude
 import qualified Log
 
 data FindFilesForPurging = FindFilesForPurging Int

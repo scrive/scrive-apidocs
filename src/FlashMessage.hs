@@ -19,6 +19,7 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
 
 import Cookies
+import KontraPrelude hiding (optional)
 import Utils.HTTP
 import Utils.Monoid
 import Utils.Read

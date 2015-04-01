@@ -6,6 +6,8 @@ import Network.BSD
 import Network.Socket
 import qualified Control.Exception.Lifted as E
 
+import KontraPrelude
+
 foreign import ccall unsafe "htonl" htonl :: Word32 -> Word32
 
 -- | Network.listenOn bind randomly to IPv4 or IPv6 or both,

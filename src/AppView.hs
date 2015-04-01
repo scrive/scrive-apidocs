@@ -24,11 +24,8 @@ module AppView(
               , enableCookiesPage
               ) where
 
-import Control.Applicative
-import Control.Monad
 import Control.Monad.Catch
 import Data.Char
-import Data.Maybe
 import Data.String.Utils hiding (join)
 import Happstack.Server.SimpleHTTP
 import Text.JSON
@@ -49,6 +46,7 @@ import Company.Model
 import DB
 import FlashMessage
 import Kontra
+import KontraPrelude
 import ThirdPartyStats.Core
 import User.Lang
 import User.Model

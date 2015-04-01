@@ -1,9 +1,10 @@
 module HubSpot.Conf ( HubSpotConf(..), unjsonHubSpotConf ) where
 
-import Control.Applicative
 import Data.Unjson
 import qualified Data.Map as Map
 import qualified Text.JSON.Gen as J
+
+import KontraPrelude
 
 -- ^ A datatype for HubSpot configuration data.
 data HubSpotConf = HubSpotConf {

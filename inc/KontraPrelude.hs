@@ -1,7 +1,12 @@
-{-# OPTIONS_GHC -Wall #-}
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell #-}
-module OurPrelude (
-    head
+module KontraPrelude (
+    module Control.Applicative
+  , module Control.Monad
+  , module Data.List
+  , module Data.Maybe
+  , module Data.Monoid
+  , module Data.Monoid.Utils
+  , module Prelude
+  , head
   , last
   , maximum
   , minimum
@@ -11,13 +16,16 @@ module OurPrelude (
   , UnexpectedError(..)
   , unexpectedError
   , unexpectedErrorM
-  , module Data.Maybe
-  , module Prelude
   ) where
 
+import Control.Applicative
 import Control.Exception (throw)
+import Control.Monad
 import Control.Monad.Catch
+import Data.List hiding (head, last, maximum, minimum, tail)
 import Data.Maybe hiding (fromJust)
+import Data.Monoid
+import Data.Monoid.Utils
 import Data.Typeable
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
@@ -25,10 +33,10 @@ import Prelude hiding (head, last, maximum, minimum, read, tail)
 import qualified Prelude as P
 
 data UnexpectedError = UnexpectedError {
-  ueMessage  :: String
-, ueModule   :: String
-, ueLine     :: Int
-, uePosition :: Int
+  ueMessage  :: !String
+, ueModule   :: !String
+, ueLine     :: !Int
+, uePosition :: !Int
 } deriving (Eq, Ord, Typeable)
 
 instance Show UnexpectedError where

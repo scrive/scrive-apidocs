@@ -8,14 +8,14 @@ module IPAddress (
   , ipAddressIsInNetwork
   ) where
 
-import Control.Monad
 import Data.Binary
 import Data.Bits
 import Data.Char
 import Data.Int
-import Data.List
 import Database.PostgreSQL.PQTypes hiding (Binary, put)
 import Numeric
+
+import KontraPrelude
 
 newtype IPAddress = IPAddress Word32
   deriving (Eq, Ord)

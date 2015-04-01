@@ -4,6 +4,7 @@ import qualified Data.ByteString as BS
 
 import DB
 import DB.Checks
+import KontraPrelude
 import Theme.Tables
 
 createThemesTable :: MonadDB m => Migration m

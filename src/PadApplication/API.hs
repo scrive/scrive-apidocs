@@ -3,8 +3,6 @@ module PadApplication.API (
   ) where
 
 import Control.Exception.Lifted
-import Control.Monad
-import Data.Maybe
 import Happstack.Server.Types
 import Happstack.StaticRouting
 import Text.JSON.Gen
@@ -14,6 +12,7 @@ import API.Monad
 import DB.SQL
 import Happstack.Fields
 import Kontra
+import KontraPrelude
 import Routing
 
 padApplicationAPI :: Route (KontraPlus Response)

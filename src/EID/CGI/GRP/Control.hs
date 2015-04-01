@@ -1,12 +1,7 @@
-{-# LANGUAGE NoImplicitPrelude #-}
 module EID.CGI.GRP.Control (grpRoutes) where
 
-import Control.Applicative
-import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Catch
-import Data.List
-import Data.Monoid.Utils
 import Data.Unjson
 import Happstack.Server hiding (dir)
 import Happstack.StaticRouting
@@ -31,9 +26,9 @@ import EID.CGI.GRP.Transaction.Model
 import EID.Signature.Model
 import Happstack.Fields
 import Kontra hiding (InternalError)
+import KontraPrelude
 import Network.SOAP.Call
 import Network.SOAP.Transport.Curl
-import OurPrelude
 import Routing
 import Templates
 import Util.MonadUtils

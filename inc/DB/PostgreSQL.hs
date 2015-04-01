@@ -6,6 +6,7 @@ import Database.PostgreSQL.PQTypes
 import qualified Data.ByteString as BS
 
 import DB.Model.CompositeType
+import KontraPrelude
 
 pgConnSettings :: BS.ByteString -> [CompositeType] -> ConnectionSettings
 pgConnSettings dbconf ctypes = def {

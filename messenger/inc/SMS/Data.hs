@@ -8,7 +8,6 @@ module SMS.Data (
   , SMSEvent(..)
   ) where
 
-import Control.Applicative
 import Control.Monad.Catch
 import Data.ByteString (ByteString)
 import Data.Data
@@ -16,7 +15,7 @@ import Data.Int
 import Database.PostgreSQL.PQTypes
 
 import DB.Derive
-import OurPrelude
+import KontraPrelude
 import Utils.List
 
 data JobType

@@ -1,7 +1,5 @@
 module AccountInfoTest (accountInfoTests) where
 
-import Control.Applicative
-import Data.Maybe
 import Happstack.Server
 import Network.URI
 import Test.Framework
@@ -12,6 +10,7 @@ import ActionQueue.EmailChangeRequest
 import Context
 import DB hiding (query, update)
 import FlashMessage
+import KontraPrelude
 import MagicHash (unsafeMagicHash)
 import Mails.Model
 import MinutesTime
@@ -59,7 +58,7 @@ testChangeEmailAddress = do
 
   actions <- getRequestChangeEmailActions
   assertEqual "A request change email action was made" 1 (length $ actions)
-  let EmailChangeRequest{..} = head actions
+  let EmailChangeRequest{..} = $head actions
   assertEqual "Inviter id is correct" (userid user) ecrUserID
   assertEqual "Action email is correct" (Email "jim@bob.com") ecrNewEmail
 
@@ -71,7 +70,7 @@ testChangeEmailAddress = do
   assertEqual "Response code is 303" 303 (rsCode res2)
   assertEqual "Location is /account" (Just "/account") (T.getHeader "location" (rsHeaders res2))
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx2)
-  assertBool "Flash message has type indicating success" $ head (ctxflashmessages ctx2) `isFlashOfType` OperationDone
+  assertBool "Flash message has type indicating success" $ $head (ctxflashmessages ctx2) `isFlashOfType` OperationDone
   Just uuuser <- dbQuery $ GetUserByID (userid user)
   assertEqual "Email has changed" "jim@bob.com" (getEmail uuuser)
 
@@ -106,7 +105,7 @@ testEmailChangeFailsIfActionIDIsWrong = do
   (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (unsafeUserID 0) ecrToken >>= sendRedirect
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
-  assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
+  assertBool "Flash message has type indicating failure" $ $head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
 
 testEmailChangeFailsIfMagicHashIsWrong :: TestEnv ()
 testEmailChangeFailsIfMagicHashIsWrong = do
@@ -125,7 +124,7 @@ testEmailChangeFailsIfMagicHashIsWrong = do
   (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail ecrUserID wrongtoken >>= sendRedirect
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
-  assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
+  assertBool "Flash message has type indicating failure" $ $head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
 
 testEmailChangeIfForAnotherUser :: TestEnv ()
 testEmailChangeIfForAnotherUser = do
@@ -142,7 +141,7 @@ testEmailChangeIfForAnotherUser = do
   (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail ecrUserID ecrToken >>= sendRedirect
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
-  assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
+  assertBool "Flash message has type indicating failure" $ $head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
 
 testEmailChangeFailsIfEmailInUse:: TestEnv ()
 testEmailChangeFailsIfEmailInUse = do
@@ -160,7 +159,7 @@ testEmailChangeFailsIfEmailInUse = do
   (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail ecrUserID ecrToken >>= sendRedirect
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
-  assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
+  assertBool "Flash message has type indicating failure" $ $head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
 
 testEmailChangeFailsIfPasswordWrong :: TestEnv ()
 testEmailChangeFailsIfPasswordWrong = do
@@ -178,7 +177,7 @@ testEmailChangeFailsIfPasswordWrong = do
   (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail ecrUserID ecrToken >>= sendRedirect
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
-  assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
+  assertBool "Flash message has type indicating failure" $ $head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
 
 testEmailChangeFailsIfNoPassword :: TestEnv ()
 testEmailChangeFailsIfNoPassword = do
@@ -207,7 +206,7 @@ testGetUserInfoWithOAuthTokens = do
   time <- rand 10 arbitrary
   Just (tok, sec) <- dbUpdate $ RequestTempCredentials
     (OAuthTempCredRequest
-      { tcCallback   = fromJust $ parseURI "http://www.google.com/"
+      { tcCallback   = $fromJust $ parseURI "http://www.google.com/"
       , tcAPIToken   = apitoken
       , tcAPISecret  = apisecret
       , tcPrivileges = [APIDocCheck]

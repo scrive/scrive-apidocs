@@ -7,12 +7,11 @@ module Payments.Stats (
 import Control.Monad.Base
 import Control.Monad.Catch
 import Data.Int
-import Data.Maybe
-import Data.Monoid
 
 import Company.Model
 import DB
 import Kontra
+import KontraPrelude
 import MinutesTime
 import Payments.Model
 import Util.CSVUtil

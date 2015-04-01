@@ -13,6 +13,7 @@ import Crypto.RNG
 import DB
 import DB.PostgreSQL
 import GlobalMouth
+import KontraPrelude
 import Messenger
 import qualified Log
 

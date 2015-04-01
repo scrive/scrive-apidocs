@@ -1,6 +1,6 @@
 module Utils.Monad where
 
-import Control.Monad
+import KontraPrelude
 
 -- | like when but always returns ()
 when_ :: Monad m => Bool -> m a -> m ()

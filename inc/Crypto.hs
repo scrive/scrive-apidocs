@@ -12,6 +12,7 @@ import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 
 import DB
+import KontraPrelude
 
 data AESConf = AESConf ByteString ByteString -- key, iv
   deriving (Eq, Ord, Show)

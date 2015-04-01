@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 module Mails.Data (
     SenderType(..)
   , JobType(..)
@@ -15,19 +14,17 @@ module Mails.Data (
   , unjsonAddress
   ) where
 
-import Control.Applicative
 import Control.Monad.Catch
 import Data.ByteString (ByteString)
 import Data.Data
 import Data.Int
-import Data.Monoid
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
 
 import DB.Derive
 import File.FileID
+import KontraPrelude
 import MagicHash (MagicHash)
-import OurPrelude
 import Utils.List
 
 data SenderType = MasterSender | SlaveSender

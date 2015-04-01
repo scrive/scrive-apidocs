@@ -11,9 +11,7 @@ module Attachment.Control
   )
 where
 
-import Control.Applicative
 import Control.Monad.IO.Class
-import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
 import System.FilePath
 import Text.JSON
@@ -33,6 +31,7 @@ import Happstack.Fields
 import InputValidation
 import Kontra
 import KontraLink
+import KontraPrelude
 import ListUtil
 import MinutesTime
 import Redirect
@@ -109,7 +108,7 @@ jsonAttachment :: Kontrakcja m => AttachmentID -> m JSValue
 jsonAttachment attid = do
     ctx <- getContext
     let Just user = ctxmaybeuser ctx
-    atts <- dbQuery $ GetAttachments [AttachmentsSharedInUsersCompany (userid $ fromJust $ ctxmaybeuser ctx),  AttachmentsOfAuthorDeleteValue  (userid user) False]
+    atts <- dbQuery $ GetAttachments [AttachmentsSharedInUsersCompany (userid $ $fromJust $ ctxmaybeuser ctx),  AttachmentsOfAuthorDeleteValue  (userid user) False]
             [AttachmentFilterByID [attid]] [] (0,10)
     case atts of
       [att] -> attachmentJSON att
@@ -193,7 +192,7 @@ makeAttachmentFromFile (Input contentspec (Just filename) _contentType) = do
         let title = takeBaseName filename
         actor <- guardJustM $ mkAuthorActor <$> getContext
         ctx <- getContext
-        att <- dbUpdate $ NewAttachment (userid $ fromJust $ ctxmaybeuser ctx) title filename content' actor
+        att <- dbUpdate $ NewAttachment (userid $ $fromJust $ ctxmaybeuser ctx) title filename content' actor
         return $ Just att
 makeAttachmentFromFile _ = internalError -- to complete the patterns
 

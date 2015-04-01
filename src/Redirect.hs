@@ -4,9 +4,6 @@ module Redirect
   , guardLoggedIn
   ) where
 
-
-import Control.Applicative ((<$>))
-import Data.Maybe
 import Happstack.Server hiding (finishWith)
 import qualified Codec.Binary.Url as URL
 import qualified Codec.Binary.UTF8.String as UTF
@@ -16,6 +13,7 @@ import qualified Data.ByteString.UTF8 as BS
 import Happstack.Fields
 import Kontra
 import KontraLink
+import KontraPrelude
 import User.Lang
 import User.UserView
 import Util.FinishWith

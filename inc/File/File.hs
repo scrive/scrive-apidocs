@@ -9,6 +9,7 @@ import qualified Data.ByteString as BS
 
 import Crypto
 import File.FileID
+import KontraPrelude
 
 data FileStorage =
     FileStorageMemory BS.ByteString

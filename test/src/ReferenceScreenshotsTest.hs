@@ -1,11 +1,11 @@
 module ReferenceScreenshotsTest (screenshotTests) where
 
-import Data.List
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (Assertion)
 import Text.JSON
 
+import KontraPrelude
 import MinutesTime
 import TestingUtil
 import TestKontra

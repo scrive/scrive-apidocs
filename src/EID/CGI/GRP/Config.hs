@@ -1,8 +1,9 @@
 module EID.CGI.GRP.Config where
 
-import Control.Applicative
 import Data.Text (Text)
 import Data.Unjson
+
+import KontraPrelude
 
 data CgiGrpConfig = CgiGrpConfig {
 -- | CGI url to GRP API

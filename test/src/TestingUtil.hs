@@ -2,14 +2,11 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module TestingUtil where
 
-import Control.Applicative
 import Control.Concurrent.STM
-import Control.Monad (unless)
 import Control.Monad.Catch
 import Control.Monad.Reader.Class
 import Control.Monad.Trans
 import Data.Char
-import Data.Maybe
 import Data.Text (pack)
 import Data.Time.Clock.POSIX
 import Data.Typeable
@@ -46,6 +43,7 @@ import File.Model
 import FlashMessage
 import IPAddress
 import KontraMonad
+import KontraPrelude
 import MagicHash (MagicHash, unsafeMagicHash)
 import MinutesTime
 import System.Random.CryptoRNG ()

@@ -29,9 +29,9 @@ import FlashMessage
 import InspectXML
 import IPAddress
 import KontraLink
+import KontraPrelude
 import MagicHash (MagicHash)
 import MinutesTime
-import OurPrelude
 import User.Email
 import User.History.Model
 import User.Model

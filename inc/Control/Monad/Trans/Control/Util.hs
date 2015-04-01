@@ -1,8 +1,9 @@
 {-# LANGUAGE UnicodeSyntax #-}
 module Control.Monad.Trans.Control.Util where
 
-import Control.Monad
 import Control.Monad.Trans.Control
+
+import KontraPrelude
 
 controlT :: (MonadTransControl t, Monad (t m), Monad m)
          => (Run t -> m (StT t a)) -> t m a

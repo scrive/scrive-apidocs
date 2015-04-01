@@ -16,7 +16,6 @@ module DB.Model.Table (
 import Control.Monad.Catch
 import Data.ByteString (ByteString)
 import Data.Int
-import Data.Monoid.Utils
 import Database.PostgreSQL.PQTypes
 
 import DB.Model.Check
@@ -24,6 +23,7 @@ import DB.Model.ColumnType
 import DB.Model.ForeignKey
 import DB.Model.Index
 import DB.Model.PrimaryKey
+import KontraPrelude
 
 data TableColumn = TableColumn {
   colName     :: RawSQL ()

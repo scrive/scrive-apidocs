@@ -1,6 +1,5 @@
 module CompanyControlTest (companyControlTests) where
 
-import Control.Applicative
 import Happstack.Server hiding (simpleHTTP)
 import Test.Framework
 import Text.JSON
@@ -18,6 +17,7 @@ import Company.Model
 import CompanyAccounts.Model
 import Context
 import DB
+import KontraPrelude
 import TestingUtil
 import TestKontra as T
 import Theme.Model

@@ -11,13 +11,10 @@ module Amazon (
   , deleteFile
   ) where
 
-import Control.Applicative
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
-import Data.Maybe
-import Data.Monoid.Utils
 import Network.AWS.Authentication
 import System.FilePath ((</>))
 import Text.JSON.Gen
@@ -35,7 +32,7 @@ import Crypto.RNG
 import DB
 import File.File
 import File.Model
-import OurPrelude
+import KontraPrelude
 import Utils.String
 import qualified Log
 

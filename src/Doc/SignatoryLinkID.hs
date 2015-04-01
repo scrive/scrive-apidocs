@@ -7,13 +7,13 @@ module Doc.SignatoryLinkID (
   , unsafeSignatoryLinkID
   ) where
 
-import Control.Applicative
 import Data.Data
 import Data.Int
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 
 import DB.Derive
+import KontraPrelude
 import Utils.Read
 
 -- | 'SignatoryLinkID' is and integer that identifies

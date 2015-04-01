@@ -11,4 +11,3 @@ documentLatestSignTimeExpression = "(SELECT max(signatory_links.sign_time) FROM 
 documentSignOrderExpression :: SQL
 documentSignOrderExpression =
   "(COALESCE((SELECT min(signatory_links.sign_order) FROM signatory_links WHERE signatory_links.document_id = documents.id AND signatory_links.is_partner AND signatory_links.sign_time IS NULL), 1))"
-

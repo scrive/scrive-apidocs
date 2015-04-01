@@ -1,4 +1,3 @@
-{-# LANGUAGE NoImplicitPrelude #-}
 module Doc.Model.Update
   ( AddDocumentAttachment(..)
   , ArchiveDocument(..)
@@ -66,16 +65,12 @@ module Doc.Model.Update
   , updateMTimeAndObjectVersion
   ) where
 
-import Control.Applicative
 import Control.Arrow (second)
-import Control.Monad
 import Control.Monad.Catch
 import Data.Decimal (realFracToDecimal)
 import Data.Int
 import Data.List hiding (tail, head)
 import Data.Maybe hiding (fromJust)
-import Data.Monoid
-import Data.Monoid.Utils
 import Text.StringTemplates.Templates
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
@@ -105,9 +100,9 @@ import EvidenceLog.Model
 import File.FileID
 import File.Model
 import IPAddress
+import KontraPrelude
 import MagicHash
 import MinutesTime
-import OurPrelude
 import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo

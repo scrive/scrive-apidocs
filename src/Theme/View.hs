@@ -8,7 +8,6 @@ module Theme.View
        )
        where
 
-import Control.Applicative
 import Data.Functor.Invariant
 import Data.Unjson
 import qualified Data.ByteString as BS
@@ -16,6 +15,7 @@ import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BSC8
 
 import DB
+import KontraPrelude
 import Theme.Model
 
 unjsonTheme :: UnjsonDef Theme

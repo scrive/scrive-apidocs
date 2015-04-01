@@ -19,6 +19,8 @@ import Control.Monad.Base
 import Control.Monad.Trans.Control
 import qualified Control.Concurrent.Thread as T
 
+import KontraPrelude
+
 -- | Generalized version of 'T.forkIO'.
 fork :: MonadBaseControl IO m
      => m a

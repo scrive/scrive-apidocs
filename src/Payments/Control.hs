@@ -15,7 +15,6 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.State
 import Data.Functor
-import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
 import Recurly
 import Recurly.JS
@@ -33,6 +32,7 @@ import Crypto.RNG
 import DB hiding (update, query)
 import Happstack.Fields
 import Kontra
+import KontraPrelude
 import Mails.MailsConfig
 import Mails.SendMail
 import MinutesTime
@@ -413,7 +413,7 @@ handlePricePageJSON = do
      Nothing -> handlePricePageNoUserJSON
      Just user -> do
        mplan <- dbQuery $ GetPaymentPlan $ usercompany $ user
-       case (mplan, ppPaymentPlanProvider $ fromJust mplan) of
+       case (mplan, ppPaymentPlanProvider $ $fromJust mplan) of
           (Nothing  , _)               -> handlePricePageUserJSON user
           (Just plan, NoProvider)      -> handlePricePageUserPlanNoneJSON user plan
           (Just plan, RecurlyProvider) -> handlePricePageUserPlanRecurlyJSON user plan

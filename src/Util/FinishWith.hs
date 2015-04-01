@@ -7,6 +7,7 @@ import qualified Control.Exception.Lifted as E
 
 import Context
 import KontraMonad
+import KontraPrelude
 
 -- | We don't want to use finishWith from Happstack, because
 -- it returns directly to Happstack, omiting our main router

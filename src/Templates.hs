@@ -11,7 +11,6 @@ module Templates ( getAllTemplates
                  ) where
 
 import Control.Monad.Reader
-import Data.List (isSuffixOf)
 import Data.Time.Clock
 import Text.StringTemplates.Utils (directoryFilesRecursive)
 import qualified Text.StringTemplates.Fields as F
@@ -19,6 +18,7 @@ import qualified Text.StringTemplates.Files as TF
 import qualified Text.StringTemplates.Templates as T
 import qualified Text.StringTemplates.TemplatesLoader as TL
 
+import KontraPrelude
 import User.Lang
 
 templateFilesDir :: FilePath

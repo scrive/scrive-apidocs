@@ -1,7 +1,6 @@
 module ArchiveTest (archiveTests) where
 
 -- import Control.Monad
-import Control.Applicative
 import Control.Monad.Trans
 import Data.String.Utils (replace)
 import Happstack.Server
@@ -15,6 +14,7 @@ import Context
 import Doc.API.V1.Calls
 import Doc.DocStateData
 import Doc.Model
+import KontraPrelude
 import TestingUtil
 import TestKontra as T
 import User.Model
@@ -69,7 +69,7 @@ testListDocs = do
                                   fromJSValueCustomMany $
                                      fromJSValueFieldCustom "fields" $
                                        fromJSValueField "author"
-    let (doc1Index, doc2Index) = case head authors of
+    let (doc1Index, doc2Index) = case $head authors of
                                    "Bob Blue" -> (0, 1)
                                    _          -> (1, 0)
 

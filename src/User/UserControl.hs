@@ -26,7 +26,6 @@ module User.UserControl(
 
 import Control.Monad.State
 import Data.Functor
-import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
 import Text.JSON (JSValue(..))
 import Text.JSON.Gen
@@ -48,6 +47,7 @@ import Happstack.Fields
 import InputValidation
 import Kontra
 import KontraLink
+import KontraPrelude
 import ListUtil
 import MagicHash (MagicHash)
 import Mails.SendMail
@@ -133,7 +133,7 @@ handlePostChangeEmail uid hash = withUserPost $ do
       if changed
         then do
             _ <- dbUpdate $ LogHistoryDetailsChanged (userid user) ctxipnumber ctxtime
-                                                     [("email", unEmail $ useremail $ userinfo user, unEmail $ fromJust mnewemail)]
+                                                     [("email", unEmail $ useremail $ userinfo user, unEmail $ $fromJust mnewemail)]
                                                      (Just $ userid user)
             addFlashM $ flashMessageYourEmailHasChanged
         else addFlashM $ flashMessageProblemWithEmailChange

@@ -9,12 +9,12 @@ module Happstack.MonadPlus
   , runMPlusT
   )  where
 
-import Control.Applicative
-import Control.Monad (MonadPlus(..), liftM)
 import Control.Monad.IO.Class (MonadIO(..), liftIO)
 import Control.Monad.Trans.Class (MonadTrans (..))
 import Control.Monad.Trans.Maybe (MaybeT(..))
 import Happstack.Server (FilterMonad(..), WebMonad(..), ServerMonad(..), HasRqData(..))
+
+import KontraPrelude
 
 -- | Capture 'MonadPlus' contexts using 'MaybeT'.  Useful as a wrapper
 -- around backtracking Happstack functions.

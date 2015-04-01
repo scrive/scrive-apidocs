@@ -1,12 +1,8 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module LocalizationTest (localizationTest) where
 
-import Control.Applicative
-import Control.Monad
 import Data.Function
-import Data.List
 import Data.Map ((!))
-import Data.Maybe
 import Data.String.Utils
 import Happstack.Server
 import System.Exit
@@ -23,6 +19,7 @@ import qualified Data.ByteString.Lazy as BS
 import qualified Data.ByteString.Lazy.UTF8 as BS
 
 import AppView (localizationScript)
+import KontraPrelude
 import TestingUtil (testThat, assertFailure)
 import TestKontra
 import User.Lang

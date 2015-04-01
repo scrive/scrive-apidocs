@@ -5,9 +5,6 @@ where
 
 import Control.Monad.State.Class
 import Data.Int
-import Data.List
-import Data.Monoid
-import Data.Monoid.Utils
 import Data.Typeable
 import Text.JSON.Gen
 
@@ -16,6 +13,7 @@ import DB
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.SignatoryLinkID
+import KontraPrelude
 import MagicHash
 import MinutesTime
 import User.UserID

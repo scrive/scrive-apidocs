@@ -16,11 +16,9 @@ module Doc.DocViewMail
     , brandingMailFields
     ) where
 
-import Control.Monad
 import Control.Monad.Catch
 import Control.Monad.Trans (lift)
 import Data.Functor
-import Data.Maybe
 import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 
@@ -38,6 +36,7 @@ import File.File
 import File.FileID
 import File.Model
 import KontraLink
+import KontraPrelude
 import MailContext (MailContextMonad(..), getMailContext, MailContext(..))
 import Mails.SendMail
 import MinutesTime
@@ -238,7 +237,7 @@ mailClosedContent :: (MonadDB m, MonadThrow m, MonadTime m, TemplatesMonad m, Ma
                       -> Document
                       -> m String
 mailClosedContent ispreview document = do
-     content <$> mailDocumentClosed ispreview (fromJust $ getAuthorSigLink document) False True document
+     content <$> mailDocumentClosed ispreview ($fromJust $ getAuthorSigLink document) False True document
 
 mailDocumentClosed :: (MonadDB m, MonadThrow m, MonadTime m, TemplatesMonad m, MailContextMonad m) => Bool -> SignatoryLink -> Bool -> Bool -> Document -> m Mail
 mailDocumentClosed ispreview sl sealFixed documentAttached document = do
@@ -274,8 +273,8 @@ mailDocumentAwaitingForAuthor authorlang document = do
     signatoriesThatSigned <- renderLocalListTemplate authorlang $ map getSmartName $ filter (isSignatory &&^ hasSigned) (documentsignatorylinks document)
     let mainfile =  fromMaybe (unsafeFileID 0) (documentfile document) -- There always should be main file but tests fail without it
     documentMail authorlang document (templateName "mailDocumentAwaitingForAuthor") $ do
-        F.value "authorname" $ getSmartName $ fromJust $ getAuthorSigLink document
-        F.value "documentlink" $ (mctxhostpart mctx) ++ show (LinkSignDoc document $ fromJust $ getAuthorSigLink document)
+        F.value "authorname" $ getSmartName $ $fromJust $ getAuthorSigLink document
+        F.value "documentlink" $ (mctxhostpart mctx) ++ show (LinkSignDoc document $ $fromJust $ getAuthorSigLink document)
         F.value "partylist" signatories
         F.value "partylistSigned" signatoriesThatSigned
         F.value "someonesigned" $ not $ null $ filter (isSignatory &&^ hasSigned) (documentsignatorylinks document)
@@ -308,7 +307,7 @@ documentMailFields doc mctx = do
       F.value "ctxhostpart" (mctxhostpart mctx)
       F.value "ctxlang" (codeFromLang $ mctxlang mctx)
       F.value "documenttitle" $ documenttitle doc
-      F.value "creatorname" $ getSmartName $ fromJust $ getAuthorSigLink doc
+      F.value "creatorname" $ getSmartName $ $fromJust $ getAuthorSigLink doc
       brandingMailFields theme
 
 documentMail :: (HasLang a, MailContextMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => a -> Document -> String -> Fields m () -> m Mail

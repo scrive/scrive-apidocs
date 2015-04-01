@@ -8,11 +8,11 @@ module DB.Model.ForeignKey (
   , sqlDropFK
   ) where
 
-import Data.Monoid
-import Data.Monoid.Utils
 import Database.PostgreSQL.PQTypes
 import qualified Data.ByteString as BS
 import qualified Data.Set as S
+
+import KontraPrelude
 
 data ForeignKey = ForeignKey {
   fkColumns    :: S.Set (RawSQL ())

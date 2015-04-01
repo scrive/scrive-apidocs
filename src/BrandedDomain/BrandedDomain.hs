@@ -7,6 +7,7 @@ import qualified Data.ByteString.Char8 as BS
 
 import BrandedDomain.BrandedDomainID
 import DB
+import KontraPrelude
 import Theme.ThemeID
 
 data BrandedDomain = BrandedDomain {

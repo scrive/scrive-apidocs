@@ -1,8 +1,7 @@
 module OAuth.Migrations where
 
-import Data.Monoid
-
 import DB
+import KontraPrelude
 import OAuth.Tables
 
 tempCredentialChangeVarcharColumnsToText :: MonadDB m => Migration m

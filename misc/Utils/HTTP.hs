@@ -1,12 +1,11 @@
 module Utils.HTTP where
 
-import Control.Monad
 import Data.Char
-import Data.List
-import Data.Maybe
 import Happstack.Server
 import Network.URI hiding (scheme)
 import qualified Data.ByteString.UTF8 as BS
+
+import KontraPrelude
 
 class URLAble a where
    encodeForURL :: a -> String

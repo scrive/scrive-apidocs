@@ -5,7 +5,6 @@ module RoutingTable (
     staticRoutes
   ) where
 
-import Control.Applicative
 import Happstack.Server hiding (simpleHTTP, host, https, dir, path)
 import Happstack.StaticRouting(Route, choice, dir, remainingPath)
 
@@ -14,6 +13,7 @@ import Doc.API
 import Happstack.MonadPlus (runMPlusT)
 import Kontra
 import KontraLink
+import KontraPrelude
 import LangRouting
 import Login
 import OAuth.Control

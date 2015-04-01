@@ -4,10 +4,10 @@ module DB.Model.CompositeType (
   , defineComposites
   ) where
 
-import Data.Monoid.Utils
 import Database.PostgreSQL.PQTypes
 
 import DB.Model.ColumnType
+import KontraPrelude
 
 data CompositeType = CompositeType {
   ctName    :: !(RawSQL ())

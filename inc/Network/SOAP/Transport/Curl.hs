@@ -1,4 +1,3 @@
-{-# LANGUAGE NoImplicitPrelude #-}
 module Network.SOAP.Transport.Curl (
     SSL(..)
   , CurlErrorHandler
@@ -7,18 +6,16 @@ module Network.SOAP.Transport.Curl (
   , curlTransport
   ) where
 
-import Control.Applicative
 import Control.Monad.Catch
 import Control.Monad.Trans.Control
 import Data.ByteString.Lazy (ByteString)
-import Data.Monoid.Utils
 import Network.Curl
 import Network.SOAP.Transport
 import Network.SOAP.Transport.HTTP
 import Text.XML
 import qualified Data.Text.Lazy as TL
 
-import OurPrelude
+import KontraPrelude
 import Utils.Prelude
 import qualified Log
 

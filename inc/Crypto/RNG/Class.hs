@@ -5,6 +5,8 @@ import Control.Monad.Trans
 import Crypto.Random.DRBG
 import Data.ByteString (ByteString)
 
+import KontraPrelude
+
 -- | Monads carrying around the RNG state.
 class Monad m => CryptoRNG m where
   -- | Generate given number of cryptographically secure random bytes.

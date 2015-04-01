@@ -6,8 +6,6 @@ module ActionQueue.UserAccountRequest (
   , newUserAccountRequestLink
   ) where
 
-import Control.Applicative
-import Control.Monad
 import Control.Monad.Catch
 import Control.Monad.Trans.Maybe
 import Data.Typeable
@@ -18,6 +16,7 @@ import ActionQueue.Tables
 import Crypto.RNG
 import DB
 import KontraLink
+import KontraPrelude
 import MagicHash
 import MinutesTime
 import User.Model

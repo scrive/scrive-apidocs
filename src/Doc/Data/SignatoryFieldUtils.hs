@@ -17,14 +17,13 @@ module Doc.Data.SignatoryFieldUtils (
     , fieldsListsAreAlmoustEqual
   ) where
 
-import Data.List
-import Data.Maybe
-
 import Doc.Data.SignatoryField
 import Doc.SignatoryFieldID
 import File.FileID
+import KontraPrelude
 
-data FieldValue = StringFV String
+data FieldValue
+  = StringFV String
   | BoolFV Bool
   | FileFV (Maybe FileID)
     deriving (Eq, Ord, Show)

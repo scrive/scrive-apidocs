@@ -21,8 +21,6 @@ module Doc.DocView (
   , gtVerificationPage
   ) where
 
-import Control.Applicative ((<$>))
-import Data.Maybe
 import Happstack.Server.SimpleHTTP
 import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
@@ -34,6 +32,7 @@ import Doc.DocStateData
 import Doc.DocUtils
 import Doc.DocViewMail
 import Kontra
+import KontraPrelude
 import User.Model
 
 pageCreateFromTemplate :: TemplatesMonad m => m String

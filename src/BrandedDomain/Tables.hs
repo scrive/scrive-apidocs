@@ -5,6 +5,7 @@ import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.UTF8 as BS
 
 import DB
+import KontraPrelude
 
 tableBrandedDomains :: Table
 tableBrandedDomains = tblTable {

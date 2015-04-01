@@ -7,12 +7,8 @@ module Network.SOAP.Call (
   , ppCursor
   ) where
 
-import Control.Applicative
-import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Catch
-import Data.Maybe
-import Data.Monoid.Utils
 import Network.SOAP
 import Network.SOAP.Parsing.Cursor
 import Text.XML
@@ -21,6 +17,7 @@ import Text.XML.Writer hiding (empty, node)
 import qualified Data.Text.Lazy as T
 import qualified Text.XML.Writer as W
 
+import KontraPrelude
 import qualified Log
 
 -- | Lightweight wrapper over cursor parsers to allow for

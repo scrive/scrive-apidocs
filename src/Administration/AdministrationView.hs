@@ -16,12 +16,12 @@ module Administration.AdministrationView(
             , statisticsFields
           ) where
 
-import Data.List
 import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 
 import Company.Model
 import Kontra
+import KontraPrelude
 import MinutesTime
 import User.Model
 

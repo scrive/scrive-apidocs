@@ -1,7 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module FlashMessages (flashMessagesTests) where
 
-import Control.Applicative ((<$>), (<*>))
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.QuickCheck (elements, oneof, Arbitrary(..), Property, mapSize)
@@ -9,6 +8,7 @@ import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
 
 import FlashMessage(FlashMessage(..), FlashType(..), fromCookieValue, toCookieValue)
+import KontraPrelude
 import TestKontra
 
 flashMessagesTests :: TestEnvSt -> Test

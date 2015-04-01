@@ -1,4 +1,3 @@
-{-# LANGUAGE NoImplicitPrelude #-}
 module CompanyAccounts.Model (
     module User.Model
   , module Company.Model
@@ -11,13 +10,12 @@ module CompanyAccounts.Model (
   , GetCompanyInvitesWithUsersData(..)
   ) where
 
-import Control.Monad
 import Control.Monad.Catch
 import Control.Monad.State
 
 import Company.Model
 import DB
-import OurPrelude
+import KontraPrelude
 import User.Model
 
 {- |

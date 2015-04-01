@@ -10,6 +10,7 @@ import Data.Time (UTCTime)
 
 import ActionQueue.Monad
 import AppConf
+import KontraPrelude
 import Salesforce.Conf
 import Templates
 

@@ -38,14 +38,10 @@ module User.Model (
   , userOrderByAscDescToSQL
   ) where
 
-import Control.Applicative
 import Control.Monad.Catch
 import Data.ByteString (ByteString)
 import Data.Char
 import Data.Int
-import Data.Maybe
-import Data.Monoid
-import Data.Monoid.Utils
 import Happstack.Server (FromReqURI(..))
 import qualified Control.Exception.Lifted as E
 
@@ -53,6 +49,7 @@ import BrandedDomain.BrandedDomainID
 import Company.Model
 import DB
 import Doc.DocStateData (DocumentStatus(..),FieldType(..), NameOrder(..))
+import KontraPrelude
 import MinutesTime
 import User.Email
 import User.Lang
@@ -540,15 +537,15 @@ fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, 
     , userassociateddomainid = associated_domain_id
     }
     company = Company {
-      companyid = fromJust cid
+      companyid = $fromJust cid
     , companyinfo = CompanyInfo {
-        companyname = fromJust name
-      , companynumber = fromJust number
-      , companyaddress = fromJust address
-      , companyzip = fromJust zip'
-      , companycity = fromJust city
-      , companycountry = fromJust country
-      , companyipaddressmasklist = maybe [] read ip_address_mask
+        companyname = $fromJust name
+      , companynumber = $fromJust number
+      , companyaddress = $fromJust address
+      , companyzip = $fromJust zip'
+      , companycity = $fromJust city
+      , companycountry = $fromJust country
+      , companyipaddressmasklist = maybe [] $read ip_address_mask
       , companyallowsavesafetycopy = allow_save_safety_copy
       , companyidledoctimeout = idle_doc_timeout
       , companycgidisplayname = cgi_display_name

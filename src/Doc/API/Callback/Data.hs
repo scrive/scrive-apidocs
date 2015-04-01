@@ -3,11 +3,11 @@ module Doc.API.Callback.Data (
   , DocumentAPICallback(..)
   ) where
 
-import Control.Applicative
 import Data.Int
 
 import DB
 import Doc.DocumentID
+import KontraPrelude
 
 newtype CallbackID = CallbackID Int64
   deriving (Eq, Ord, PQFormat)

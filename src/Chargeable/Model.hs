@@ -10,6 +10,7 @@ import Data.Typeable
 import Company.CompanyID
 import DB
 import Doc.DocumentID
+import KontraPrelude
 import MinutesTime.Class
 import User.UserID
 

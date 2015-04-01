@@ -3,7 +3,6 @@ module SMS.SMS (
   , scheduleSMS
   ) where
 
-import Control.Monad
 import Control.Monad.Catch
 import Data.Char
 import Data.String.Utils
@@ -11,6 +10,7 @@ import Data.String.Utils
 import Chargeable.Model
 import DB
 import Doc.DocStateData
+import KontraPrelude
 import MessageData
 import SMS.Model
 import qualified Log

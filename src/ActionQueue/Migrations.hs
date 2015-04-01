@@ -2,6 +2,7 @@ module ActionQueue.Migrations where
 
 import ActionQueue.Tables
 import DB
+import KontraPrelude
 
 removeDuplicateIndexFromAccessNewAccounts :: MonadDB m => Migration m
 removeDuplicateIndexFromAccessNewAccounts = Migration {

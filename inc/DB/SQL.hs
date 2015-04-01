@@ -215,14 +215,12 @@ import Control.Exception.Lifted as E
 import Control.Monad.Catch
 import Control.Monad.State
 import Control.Monad.Trans.Control
-import Data.List (transpose, findIndex, inits)
-import Data.Maybe
-import Data.Monoid
-import Data.Monoid.Utils
 import Data.String
 import Data.Typeable
 import Database.PostgreSQL.PQTypes
 import qualified Text.JSON.Gen as JSON
+
+import KontraPrelude
 
 class Sqlable a where
   toSQLCommand :: a -> SQL
@@ -419,7 +417,7 @@ instance Sqlable SqlInsert where
     emitClausesSepComma "RETURNING" (sqlInsertResult cmd)
    where
       -- this is the longest list of values
-      longest = maximum (1 : (map (lengthOfEither . snd) (sqlInsertSet cmd)))
+      longest = $maximum (1 : (map (lengthOfEither . snd) (sqlInsertSet cmd)))
       lengthOfEither (Single _) = 1
       lengthOfEither (Many x) = length x
       makeLongEnough (Single x) = take longest (repeat x)

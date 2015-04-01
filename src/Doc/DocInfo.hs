@@ -20,6 +20,7 @@ module Doc.DocInfo(
 ) where
 
 import Doc.DocStateData
+import KontraPrelude
 import MinutesTime
 
 -- Predicates on documentstatus
@@ -79,7 +80,4 @@ isDocumentShared doc = Shared == documentsharing doc
 -}
 getLastSignedTime :: Document -> UTCTime
 getLastSignedTime doc =
-  maximum $ unixEpoch : [signtime si | SignatoryLink {maybesigninfo = Just si} <- documentsignatorylinks doc]
-
-
-
+  $maximum $ unixEpoch : [signtime si | SignatoryLink {maybesigninfo = Just si} <- documentsignatorylinks doc]

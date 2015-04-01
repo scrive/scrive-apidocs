@@ -6,10 +6,8 @@ module User.Action (
   , checkPasswordsMatch
   ) where
 
-import Control.Monad
 import Control.Monad.Catch
 import Data.Functor
-import Data.Maybe
 import Text.StringTemplates.Templates
 
 import ActionQueue.AccessNewAccount (newAccessNewAccountLink)
@@ -25,6 +23,7 @@ import Doc.Model
 import Happstack.Fields
 import InputValidation
 import Kontra
+import KontraPrelude
 import MailContext (MailContextMonad(..), MailContext(..))
 import Mails.SendMail
 import MinutesTime
@@ -177,7 +176,7 @@ phoneMeRequest muser phone = do
           , content = content
       }
   when (isJust muser) $ do
-    let user = fromJust muser
+    let user = $fromJust muser
         name = getFirstName user ++ " " ++ getLastName user
     now <- ctxtime <$> getContext
 

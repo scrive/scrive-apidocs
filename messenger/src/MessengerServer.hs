@@ -1,10 +1,7 @@
 module MessengerServer where
 
-import Control.Applicative
 import Control.Concurrent.Lifted
 import Control.Monad.Base
-import Data.Monoid
-import Data.Monoid.Utils
 import Data.Time
 import Happstack.Server hiding (waitForTermination)
 import qualified Control.Exception.Lifted as E
@@ -18,9 +15,9 @@ import DB.PostgreSQL
 import Handlers
 import JobQueue.Components
 import JobQueue.Config
+import KontraPrelude
 import MessengerServerConf
 import MinutesTime
-import OurPrelude
 import Sender
 import SMS.Data
 import SMS.Model

@@ -10,6 +10,7 @@ import Data.Typeable
 import qualified Data.ByteString as BS
 
 import File.FileID
+import KontraPrelude
 import qualified MemCache
 
 data RenderedPages

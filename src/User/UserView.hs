@@ -34,9 +34,7 @@ module User.UserView (
     companyStatsToJSON,
     ) where
 
-import Control.Applicative ((<$>))
 import Control.Monad.Catch
-import Data.List
 import Text.JSON
 import Text.JSON.Gen
 import Text.StringTemplate.GenericStandard()
@@ -52,6 +50,7 @@ import Doc.DocViewMail
 import FlashMessage
 import Kontra
 import KontraLink
+import KontraPrelude
 import Mails.SendMail(Mail, kontramail, kontramaillocal)
 import MinutesTime
 import Theme.Model

@@ -18,7 +18,6 @@ module TestKontra (
     , mkContext
     ) where
 
-import Control.Applicative
 import Control.Arrow
 import Control.Concurrent
 import Control.Concurrent.STM
@@ -28,7 +27,6 @@ import Control.Monad.Error
 import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Trans.Control
-import Data.Maybe
 import Data.Time
 import Database.PostgreSQL.PQTypes.Internal.Monad
 import Database.PostgreSQL.PQTypes.Internal.State
@@ -53,6 +51,7 @@ import GuardTime (GuardTimeConf(..))
 import HubSpot.Conf    
 import IPAddress
 import Kontra
+import KontraPrelude
 import Mails.MailsConfig
 import MinutesTime
 import Payments.Config (RecurlyConfig(..))

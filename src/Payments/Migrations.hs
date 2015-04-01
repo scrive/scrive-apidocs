@@ -1,8 +1,7 @@
 module Payments.Migrations where
 
-import Control.Applicative
-
 import DB
+import KontraPrelude
 import MinutesTime
 import Payments.Tables
 

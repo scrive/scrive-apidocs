@@ -1,6 +1,7 @@
 module Chargeable.Tables where
 
 import DB
+import KontraPrelude
 
 tableChargeableItems :: Table
 tableChargeableItems = tblTable {

@@ -32,16 +32,13 @@ module Doc.DocStateQuery
     , getMagicHashForDocumentSignatoryWithUser
     ) where
 
-import Control.Applicative
-import Control.Monad
-import Data.Maybe
-
 import DB
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.Model
 import Doc.SignatoryLinkID
 import Kontra
+import KontraPrelude
 import MagicHash
 import User.Model
 import Util.SignatoryLinkUtils

@@ -1,11 +1,9 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 module OAuth.Control(oauth) where
 
-import Control.Applicative
 import Control.Exception.Lifted
 import Control.Monad.Error
 import Data.Map (singleton)
-import Data.Maybe
 import Happstack.Server.RqData
 import Happstack.Server.Types
 import Happstack.StaticRouting(Route, choice, dir)
@@ -18,6 +16,7 @@ import DB
 import Happstack.Fields
 import Kontra
 import KontraLink
+import KontraPrelude
 import ListUtil
 import OAuth.Model
 import OAuth.Util

@@ -1,4 +1,3 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell #-}
 module Mails.Model (
     module Mails.Data
   , mailerJobNotificationChannel
@@ -24,20 +23,16 @@ module Mails.Model (
   , MarkEventAsRead(..)
   ) where
 
-import Control.Applicative
-import Control.Monad
 import Control.Monad.Catch
 import Data.Int
 import Data.Maybe hiding (fromJust)
-import Data.Monoid
-import Data.Monoid.Utils
 import Data.Time
 
 import DB
+import KontraPrelude
 import MagicHash
 import Mails.Data
 import MinutesTime
-import OurPrelude
 
 mailerJobNotificationChannel :: Channel
 mailerJobNotificationChannel = "mailer_job"

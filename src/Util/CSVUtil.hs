@@ -7,13 +7,13 @@ import Codec.Text.IConv
 import Control.Monad.Exception.Asynchronous (Exceptional(..))
 import Data.Char
 import Data.Either
-import Data.List
 import Data.Ord
 import Data.Spreadsheet as SS
 import Happstack.Server (ToMessage(..), setHeaderBS, setHeader)
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 
+import KontraPrelude
 import Utils.String
 
 {- |
@@ -30,7 +30,7 @@ parseCSV csvcontents =
     dropTrailingEmptyCells = reverse . dropWhile isEmptyCell . reverse
     isEmptyRow = all isEmptyCell
     isEmptyCell = null . dropWhile isSpace . reverse . dropWhile isSpace
-    fixSize s = fixSize' (maximum $ map length s) s
+    fixSize s = fixSize' ($maximum $ map length s) s
     fixSize' l (s:ss) = (s ++ (replicate (l - length s) "")) : fixSize' l ss
     fixSize' _ _ = []
 {- |

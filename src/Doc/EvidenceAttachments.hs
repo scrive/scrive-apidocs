@@ -4,17 +4,15 @@ module Doc.EvidenceAttachments
   , extract
   ) where
 
-import Control.Applicative((<$>))
-import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Catch
-import Data.Maybe (listToMaybe, fromMaybe)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
 
 import DB (MonadDB)
 import Doc.DocStateData (Document(..), documentsealedfile)
 import File.Storage (getFileIDContents)
+import KontraPrelude
 import qualified Amazon as AWS
 import qualified Log
 import qualified PdfModel as P

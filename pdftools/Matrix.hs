@@ -1,8 +1,9 @@
 
 
 module Matrix where
-import Data.List
 import Numeric
+
+import KontraPrelude
 
 data Matrix = Matrix !Double !Double !Double !Double !Double !Double
      deriving (Eq,Ord)

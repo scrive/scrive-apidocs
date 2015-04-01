@@ -3,9 +3,9 @@ module Util.Zlib ( safeDecompress
                  ) where
 
 import Codec.Compression.Zlib.Internal
-import Data.Maybe (fromMaybe)
 import qualified Data.ByteString.Lazy.Char8 as LB
 
+import KontraPrelude
 import Utils.Either (toMaybe)
 
 -- | Convert & unfold the custom DecompressStream

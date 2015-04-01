@@ -7,11 +7,9 @@ module Doc.DocumentMonad
   , withDocumentM
   ) where
 
-import Control.Applicative (Applicative)
 import Control.Monad.Base (MonadBase)
 import Control.Monad.Reader (MonadIO, MonadTrans)
 import Control.Monad.Trans.Control (MonadBaseControl(..), MonadTransControl(..), ComposeSt, defaultLiftBaseWith, defaultRestoreM, defaultLiftWith, defaultRestoreT)
-import Data.Monoid.Utils
 import Text.JSON
 import Text.JSON.Gen
 
@@ -20,6 +18,7 @@ import DB.RowCache (RowCacheT, GetRow, runRowCacheT, runRowCacheTID, runRowCache
 import Doc.Class
 import Doc.DocStateData (Document)
 import Doc.DocumentID (DocumentID)
+import KontraPrelude
 import Log (MonadLog(..))
 
 -- | A monad transformer that has a 'DocumentMonad' instance

@@ -7,7 +7,6 @@ module Doc.SignatoryIdentification
 
 import Data.Char (toLower)
 import Data.Function (on)
-import Data.List (mapAccumL, sortBy)
 import Data.Map (Map)
 import Data.Set (Set)
 import qualified Data.Map as Map
@@ -15,6 +14,7 @@ import qualified Data.Set as Set
 
 import Doc.DocStateData (Document, documentsignatorylinks, SignatoryLink, signatorylinkid, signatoryispartner, signatoryisauthor)
 import Doc.SignatoryLinkID (SignatoryLinkID)
+import KontraPrelude
 import Util.HasSomeUserInfo (getFullName)
 
 type SignatoryIdentifierMap = Map SignatoryLinkID SignatoryIdentifier
@@ -53,7 +53,7 @@ signatoryIdentifierMap includeviewers docs slids =
   esignatorylinkid = either signatorylinkid id
   slmap = Map.fromList [(signatorylinkid s, s) | d <- docs, s <- documentsignatorylinks d]
   names = map (either getFullName (const "")) slsAndMissing
-  initials = uniqueStrings $ enumerateEmpty $ map (map head . words) names
+  initials = uniqueStrings $ enumerateEmpty $ map (map $head . words) names
   sls = filter (\s -> includeviewers || signatoryispartner s
                                      || signatoryisauthor s) $ concatMap documentsignatorylinks docs
   slsAndMissing = sortBy (compare `on` esignatorylinkid) $ (map Left sls) ++ (map Right missing)

@@ -2,7 +2,6 @@ module CSSGenerationTest(
     cssGenerationTests
 ) where
 
-import Control.Applicative
 import Test.Framework
 import qualified Data.ByteString.Lazy as BSL
 
@@ -10,6 +9,7 @@ import BrandedDomain.BrandedDomain
 import Branding.CSS
 import Context
 import DB
+import KontraPrelude
 import TestingUtil
 import TestKontra as T
 import Theme.Model

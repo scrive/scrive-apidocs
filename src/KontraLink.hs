@@ -12,6 +12,7 @@ import Doc.DocumentID
 import Doc.SignatoryLinkID
 import File.FileID
 import KontraMonad
+import KontraPrelude
 import MagicHash
 import OAuth.Model
 import User.Model

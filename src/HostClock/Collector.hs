@@ -1,7 +1,6 @@
 {-# OPTIONS_GHC -Wwarn #-}
 module HostClock.Collector(collectClockError) where
 
-import Control.Applicative ((<$>))
 import Control.Monad.Base
 import Control.Monad.Trans.Control
 import qualified Control.Exception.Lifted as E
@@ -9,6 +8,7 @@ import qualified Control.Exception.Lifted as E
 import DB (dbUpdate, MonadDB)
 import HostClock.Model (InsertClockOffsetFrequency(..))
 import HostClock.System (getOffset, getFrequency)
+import KontraPrelude
 import qualified Log
 
 -- | Update the statistics for the host's clock error versus reference NTP servers.

@@ -15,6 +15,7 @@ import Company.Model
 import DB
 import Kontra
 import KontraLink
+import KontraPrelude
 import User.Model
 import Util.MonadUtils
 

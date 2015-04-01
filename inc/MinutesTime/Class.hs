@@ -4,6 +4,8 @@ module MinutesTime.Class where
 import Control.Monad.Trans
 import Data.Time
 
+import KontraPrelude
+
 -- | Class of monads which carry the notion of the current time.
 class Monad m => MonadTime m where
   currentTime :: m UTCTime

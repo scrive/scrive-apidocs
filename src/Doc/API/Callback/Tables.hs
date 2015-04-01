@@ -1,6 +1,7 @@
 module Doc.API.Callback.Tables where
 
 import DB
+import KontraPrelude
 
 tableDocumentApiCallbackConsumers :: Table
 tableDocumentApiCallbackConsumers = tblTable {

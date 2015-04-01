@@ -1,4 +1,3 @@
-{-# LANGUAGE RecordWildCards, NoImplicitPrelude, TemplateHaskell #-}
 module Sender (
     Sender(..)
   , createSender
@@ -22,8 +21,8 @@ import qualified Data.ByteString.Lazy.UTF8 as BSLU
 import qualified Data.ByteString.Lazy.UTF8 as BSU
 
 import Crypto.RNG (CryptoRNG)
+import KontraPrelude
 import MessengerServerConf
-import OurPrelude
 import SMS.Data
 import Utils.IO
 import Utils.Read

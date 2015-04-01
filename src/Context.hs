@@ -16,6 +16,7 @@ import FlashMessage
 import GuardTime (GuardTimeConf(..))
 import HubSpot.Conf
 import IPAddress
+import KontraPrelude
 import LiveDocx (LiveDocxConf(..))
 import MagicHash (MagicHash)
 import MailContext (MailContext(..))

@@ -7,6 +7,7 @@ module Branding.Cache (
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 
 import BrandedDomain.BrandedDomainID
+import KontraPrelude
 import MemCache
 import Theme.ThemeID
 

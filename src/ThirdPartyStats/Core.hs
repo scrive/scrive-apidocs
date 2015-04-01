@@ -15,11 +15,9 @@ module ThirdPartyStats.Core (
     (@@),
     catEventProcs
   ) where
-import Control.Applicative
 import Control.Monad.IO.Class
 import Data.Binary
 import Data.Int
-import Data.Monoid
 import Data.String
 import Data.Time.Clock.POSIX
 import Test.QuickCheck (Arbitrary (..), frequency, oneof, suchThat, Gen)
@@ -31,6 +29,7 @@ import Company.CompanyID (CompanyID, unsafeCompanyID)
 import DB hiding (Binary, put)
 import Doc.DocumentID (DocumentID, unsafeDocumentID)
 import IPAddress
+import KontraPrelude
 import MinutesTime
 import User.Email
 import User.UserID (UserID, unsafeUserID)

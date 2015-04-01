@@ -1,11 +1,11 @@
 module OAuth (oauthTest) where
 
-import Data.Maybe
 import Network.URI
 import Test.Framework
 import Test.QuickCheck
 
 import DB
+import KontraPrelude
 import MagicHash
 import OAuth.Model
 import TestingUtil
@@ -73,7 +73,7 @@ testRTCSecurity = do
   let noapitoken = APIToken 0 $ unsafeMagicHash 0
       noapisecret = unsafeMagicHash 0
   time <- rand 10 arbitrary
-  mcr <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback = fromJust $ parseURI "http://www.google.com/"
+  mcr <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback = $fromJust $ parseURI "http://www.google.com/"
                                                                  , tcAPIToken = noapitoken
                                                                  , tcAPISecret = noapisecret
                                                                  , tcPrivileges = [APIDocCreate]
@@ -86,7 +86,7 @@ testRTCSecurity = do
   ls <- dbQuery $ GetAPITokensForUser (userid user)
   assertBool "GetAPITokensForUser did not return the token just created." $ length ls == 1
   let (apitoken, apisecret):_ = ls
-  mcr' <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback = fromJust $ parseURI "http://www.google.com/"
+  mcr' <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback = $fromJust $ parseURI "http://www.google.com/"
                                                                   , tcAPIToken = apitoken
                                                                   , tcAPISecret = noapisecret
                                                                   , tcPrivileges = [APIDocCreate]
@@ -94,7 +94,7 @@ testRTCSecurity = do
   assertBool "RequestTempCredentials: API Secret does not match API Token should return Nothing." $ isNothing mcr'
   
   -- privileges must not be empty
-  mcr'' <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback = fromJust $ parseURI "http://www.google.com/"
+  mcr'' <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback = $fromJust $ parseURI "http://www.google.com/"
                                                                    , tcAPIToken = apitoken
                                                                    , tcAPISecret = apisecret
                                                                    , tcPrivileges = []
@@ -102,7 +102,7 @@ testRTCSecurity = do
   assertBool "RequestTempCredentials: empty privileges should return nothing." $ isNothing mcr''
   
   -- privileges must not contain APIPersonal
-  mcr''' <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback = fromJust $ parseURI "http://www.google.com/"
+  mcr''' <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback = $fromJust $ parseURI "http://www.google.com/"
                                                                     , tcAPIToken = apitoken
                                                                     , tcAPISecret = apisecret
                                                                     , tcPrivileges = [APIDocCreate, APIPersonal]
@@ -128,7 +128,7 @@ testVerifyCredentials = do
   -- userid must exist
   _ <- dbUpdate $ CreateAPIToken (userid apiuser)
   (apitoken,apisecret):_ <- dbQuery $ GetAPITokensForUser (userid apiuser)
-  mcr <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback = fromJust $ parseURI "http://www.google.com/"
+  mcr <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback = $fromJust $ parseURI "http://www.google.com/"
                                                                  , tcAPIToken = apitoken
                                                                  , tcAPISecret = apisecret
                                                                  , tcPrivileges = [APIDocCreate]
@@ -141,7 +141,7 @@ testVerifyCredentials = do
       
   -- cannot verify twice on same token
   (apitoken', apisecret'):_ <- dbQuery $ GetAPITokensForUser (userid apiuser)
-  mcr' <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback = fromJust $ parseURI "http://www.google.com/"
+  mcr' <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback = $fromJust $ parseURI "http://www.google.com/"
                                                                   , tcAPIToken = apitoken'
                                                                   , tcAPISecret = apisecret'
                                                                   , tcPrivileges = [APIDocCreate]
@@ -163,7 +163,7 @@ testRequestAccessToken = do
   time      <- rand 10 arbitrary  
   _ <- dbUpdate $ CreateAPIToken (userid apiclient)
   (apitoken,apisecret):_ <- dbQuery $ GetAPITokensForUser (userid apiclient)  
-  Just (tok, sec) <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback   = fromJust $ parseURI "http://www.google.com/"
+  Just (tok, sec) <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback   = $fromJust $ parseURI "http://www.google.com/"
                                                                              , tcAPIToken   = apitoken
                                                                              , tcAPISecret  = apisecret
                                                                              , tcPrivileges = [APIDocCreate]
@@ -228,7 +228,7 @@ testOAuthFlow = do
   time      <- rand 10 arbitrary  
   _ <- dbUpdate $ CreateAPIToken (userid apiclient)
   (apitoken,apisecret):_ <- dbQuery $ GetAPITokensForUser (userid apiclient)  
-  Just (tok, sec) <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback   = fromJust $ parseURI "http://www.google.com/"
+  Just (tok, sec) <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback   = $fromJust $ parseURI "http://www.google.com/"
                                                                              , tcAPIToken   = apitoken
                                                                              , tcAPISecret  = apisecret
                                                                              , tcPrivileges = [APIDocCreate]
@@ -250,7 +250,7 @@ testOAuthFlowWithDeny = do
   time      <- rand 10 arbitrary  
   _ <- dbUpdate $ CreateAPIToken (userid apiclient)
   (apitoken,apisecret):_ <- dbQuery $ GetAPITokensForUser (userid apiclient)  
-  Just (tok, sec) <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback   = fromJust $ parseURI "http://www.google.com/"
+  Just (tok, sec) <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback   = $fromJust $ parseURI "http://www.google.com/"
                                                                              , tcAPIToken   = apitoken
                                                                              , tcAPISecret  = apisecret
                                                                              , tcPrivileges = [APIDocCreate]
@@ -272,7 +272,7 @@ testGetGrantedPrivileges = do
   time      <- rand 10 arbitrary  
   _ <- dbUpdate $ CreateAPIToken (userid apiclient)
   (apitoken,apisecret):_ <- dbQuery $ GetAPITokensForUser (userid apiclient)  
-  Just (tok, sec) <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback   = fromJust $ parseURI "http://www.google.com/"
+  Just (tok, sec) <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback   = $fromJust $ parseURI "http://www.google.com/"
                                                                              , tcAPIToken   = apitoken
                                                                              , tcAPISecret  = apisecret
                                                                              , tcPrivileges = [APIDocCreate]
@@ -296,7 +296,7 @@ testDeletePrivileges = do
   time      <- rand 10 arbitrary  
   _ <- dbUpdate $ CreateAPIToken (userid apiclient)
   (apitoken,apisecret):_ <- dbQuery $ GetAPITokensForUser (userid apiclient)  
-  Just (tok, sec) <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback   = fromJust $ parseURI "http://www.google.com/"
+  Just (tok, sec) <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback   = $fromJust $ parseURI "http://www.google.com/"
                                                                              , tcAPIToken   = apitoken
                                                                              , tcAPISecret  = apisecret
                                                                              , tcPrivileges = [APIDocCreate]
@@ -321,7 +321,7 @@ testDeletePrivilege = do
   time      <- rand 10 arbitrary  
   _ <- dbUpdate $ CreateAPIToken (userid apiclient)
   (apitoken,apisecret):_ <- dbQuery $ GetAPITokensForUser (userid apiclient)  
-  Just (tok, sec) <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback   = fromJust $ parseURI "http://www.google.com/"
+  Just (tok, sec) <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback   = $fromJust $ parseURI "http://www.google.com/"
                                                                              , tcAPIToken   = apitoken
                                                                              , tcAPISecret  = apisecret
                                                                              , tcPrivileges = [APIDocCreate]

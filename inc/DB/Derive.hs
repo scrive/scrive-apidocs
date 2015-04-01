@@ -15,6 +15,8 @@ import Language.Haskell.TH
 import Text.JSON.Generic
 import Text.JSON.String
 
+import KontraPrelude
+
 -- | Derives Read/Show instances for a given newtype
 -- that behave like the ones of underlying type.
 -- Given newtype T, it expands to the following code:

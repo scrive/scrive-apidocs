@@ -2,9 +2,9 @@ module LiveDocxConf (
     LiveDocxConf(..)
   ) where
 
-import Control.Applicative
 import Data.Unjson
 
+import KontraPrelude
 import Utils.Default
 
 data LiveDocxConf = LiveDocxConf {

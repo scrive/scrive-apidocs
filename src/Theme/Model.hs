@@ -1,4 +1,3 @@
-{-# LANGUAGE NoImplicitPrelude, OverloadedStrings #-}
 module Theme.Model (
       ThemeID
     , Theme(..)
@@ -19,13 +18,12 @@ module Theme.Model (
 
 import Control.Monad.Catch
 import Control.Monad.State
-import Data.Monoid
 import qualified Data.ByteString.Char8 as BS
 
 import BrandedDomain.BrandedDomainID
 import Company.CompanyID
 import DB
-import OurPrelude
+import KontraPrelude
 import Theme.ThemeID
 
 data Theme = Theme {

@@ -6,6 +6,7 @@ module MessageData (MessageData(..)) where
 
 import Doc.DocumentID
 import Doc.SignatoryLinkID
+import KontraPrelude
 
 data MessageData =
     Invitation DocumentID SignatoryLinkID

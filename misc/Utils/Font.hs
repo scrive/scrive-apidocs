@@ -1,5 +1,7 @@
 module Utils.Font (isValidFont) where
 
+import KontraPrelude
+
 isValidFont :: String -> Bool
 isValidFont font = case font of
   "\"arial black\",sans-serif" -> True

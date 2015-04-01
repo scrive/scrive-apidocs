@@ -13,10 +13,7 @@ module EID.CGI.GRP.Data (
   , xpCollectResponse
   ) where
 
-import Control.Applicative
 import Data.ByteString (ByteString)
-import Data.Maybe
-import Data.Monoid.Utils
 import Data.Text (Text)
 import Data.Unjson
 import Network.SOAP.Parsing.Cursor
@@ -25,8 +22,8 @@ import Text.XML.Writer hiding (content, many, node)
 import qualified Data.Text as T
 
 import DB hiding (InternalError)
+import KontraPrelude
 import Network.SOAP.Call
-import OurPrelude
 
 -- | Final BankID signature.
 data BankIDSignature = BankIDSignature {

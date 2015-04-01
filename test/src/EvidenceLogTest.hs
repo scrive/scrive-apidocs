@@ -1,8 +1,6 @@
 module EvidenceLogTest (evidenceLogTests) where
 
-import Control.Monad
 import Data.Int
-import Data.Monoid.Utils
 import Data.Set (Set)
 import Test.Framework
 import Text.StringTemplate (getStringTemplate, checkTemplateDeep)
@@ -12,6 +10,7 @@ import qualified Data.Set as Set
 import DB
 import EvidenceLog.Model
 import EvidenceLog.View (simpleEvents)
+import KontraPrelude
 import TestingUtil
 import TestKontra
 import User.Lang (allLangs, codeFromLang)

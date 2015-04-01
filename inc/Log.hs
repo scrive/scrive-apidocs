@@ -20,19 +20,15 @@ module Log
   )
 where
 
-import Control.Applicative
-import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Trans
 import Control.Monad.Trans.Control
 import Control.Monad.Trans.Identity
 import Data.Char
-import Data.List
 import Data.Ratio
 import Data.Time
 import Numeric
-import Prelude hiding (error)
 import System.IO.Unsafe
 import System.Locale
 import Text.JSON
@@ -42,6 +38,7 @@ import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BSU
 
+import KontraPrelude
 import Log.Class
 import MinutesTime.Class
 

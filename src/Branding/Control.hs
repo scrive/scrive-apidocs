@@ -18,9 +18,6 @@ module Branding.Control(
               , faviconIcon
               ) where
 
-import Control.Applicative
-import Control.Monad
-import Data.Maybe
 import Happstack.Server.SimpleHTTP
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
@@ -38,6 +35,7 @@ import Doc.Model.Query
 import Doc.SignatoryLinkID
 import Doc.Tokens.Model
 import Kontra
+import KontraPrelude
 import Theme.Model
 import User.Model
 import User.Utils

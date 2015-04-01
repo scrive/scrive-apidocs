@@ -9,11 +9,8 @@ module Doc.DocViewSMS (
     , smsPinCodeSendout
     ) where
 
-import Control.Applicative
-import Control.Monad
 import Control.Monad.Catch
 import Control.Monad.Trans
-import Data.Maybe
 import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 
@@ -24,6 +21,7 @@ import DB
 import Doc.DocStateData
 import Doc.DocUtils
 import KontraLink
+import KontraPrelude
 import MailContext (MailContextMonad(..), MailContext(..))
 import Mails.SendMail
 import SMS.SMS

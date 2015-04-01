@@ -11,11 +11,8 @@ module Doc.Data.SignatoryLink (
   , signatoryLinksSelectors
   ) where
 
-import Control.Applicative
 import Control.Monad.Catch
 import Data.Int
-import Data.Monoid
-import Data.Monoid.Utils
 import Database.PostgreSQL.PQTypes
 
 import DB.Derive
@@ -23,6 +20,7 @@ import Doc.Data.SignatoryAttachment
 import Doc.Data.SignatoryField
 import Doc.SignatoryLinkID
 import IPAddress
+import KontraPrelude
 import MagicHash
 import MinutesTime
 import User.UserID

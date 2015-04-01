@@ -4,8 +4,6 @@ module EID.CGI.GRP.Transaction.Model (
   , GetCgiGrpTransaction(..)
   ) where
 
-import Control.Applicative
-import Control.Monad
 import Control.Monad.Catch
 import Control.Monad.State
 import Data.Text (Text)
@@ -16,6 +14,7 @@ import Crypto.RNG
 import DB
 import Doc.SignatoryLinkID
 import KontraMonad
+import KontraPrelude
 import MinutesTime.Class
 import Session.Model
 import Session.SessionID

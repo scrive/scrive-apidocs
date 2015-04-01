@@ -22,6 +22,7 @@ import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
 
+import KontraPrelude
 import LiveDocxConf
 import LiveDocxTypes
 import SOAP.SOAP

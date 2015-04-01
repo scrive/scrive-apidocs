@@ -34,11 +34,10 @@ module Util.SignatoryLinkUtils (
        ) where
 
 import Data.Functor
-import Data.List
-import Data.Maybe
 
 import Doc.DocStateData
 import Doc.SignatoryLinkID
+import KontraPrelude
 import MagicHash (MagicHash)
 import User.Email
 import User.Model

@@ -18,12 +18,9 @@ module Doc.Data.SignatoryField (
   , SignatorySignatureField(..)
   ) where
 
-import Control.Applicative
-import Control.Monad
 import Control.Monad.Catch
 import Data.Data
 import Data.Int
-import Data.Maybe
 import Database.PostgreSQL.PQTypes hiding (def)
 import Text.JSON
 import Text.JSON.FromJSValue
@@ -32,7 +29,7 @@ import qualified Text.JSON.Gen as J
 import DB.Derive
 import Doc.SignatoryFieldID
 import File.FileID
-import OurPrelude
+import KontraPrelude
 
 newtype NameOrder = NameOrder Int16
   deriving (Eq, Ord, Show, Data, Typeable)

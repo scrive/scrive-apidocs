@@ -2,10 +2,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.API.V1.DocumentFromJSON () where
 
-import Control.Applicative
-import Control.Monad
-import Data.List
-import Data.Maybe
 import Data.String.Utils (strip)
 import Text.JSON.FromJSValue
 import qualified Data.Set as Set
@@ -15,6 +11,7 @@ import Doc.DocStateData
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import InputValidation
+import KontraPrelude
 import User.Lang
 import Utils.Default
 import Utils.Read

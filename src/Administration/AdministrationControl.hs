@@ -13,12 +13,9 @@ module Administration.AdministrationControl(
           , daveRoutes
           ) where
 
-import Control.Applicative
 import Control.Monad.State
 import Data.Char
 import Data.Functor.Invariant
-import Data.List
-import Data.Maybe
 import Data.Unjson
 import Happstack.Server hiding (simpleHTTP,dir,path,https)
 import Happstack.StaticRouting(Route, choice, dir)
@@ -61,6 +58,7 @@ import InspectXMLInstances ()
 import IPAddress ()
 import Kontra
 import KontraLink
+import KontraPrelude
 import ListUtil
 import Mails.Model
 import MinutesTime

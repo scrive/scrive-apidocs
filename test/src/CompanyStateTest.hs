@@ -1,11 +1,11 @@
 module CompanyStateTest (companyStateTests) where
 
-import Control.Monad
 import Test.Framework
 
 import Company.CompanyUI
 import Company.Model
 import DB
+import KontraPrelude
 import TestingUtil
 import TestKontra
 

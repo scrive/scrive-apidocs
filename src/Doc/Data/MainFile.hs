@@ -7,6 +7,7 @@ import DB
 import Doc.Data.DocumentStatus
 import Doc.SealStatus
 import File.FileID
+import KontraPrelude
 
 -- FIXME: why it has DocumentStatus, if the
 -- only values used are Preparation and Closed?

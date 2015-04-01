@@ -1,14 +1,9 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.Migrations where
 
-import Control.Applicative
-import Control.Monad
 import Control.Monad.Catch
 import Data.Char
 import Data.Int
-import Data.Maybe
-import Data.Monoid
-import Data.Monoid.Utils
 import Data.String.Utils
 import Text.HTML.TagSoup.Entity
 import Text.JSON
@@ -26,6 +21,7 @@ import Doc.DocStateData
 import Doc.SealStatus (SealStatus(..))
 import Doc.Tables
 import EvidenceLog.Model
+import KontraPrelude
 import MinutesTime
 import Utils.Default
 import Utils.Prelude
@@ -460,7 +456,7 @@ moveCancelationReasonFromDocumentsToSignatoryLinks = Migration {
                                 -- this should be array of 5 elements:
                                 -- [message, slid, first_name, last_name, personal_number]
                                 return ( docid
-                                       , fromJust (fromJSValue slid), fromJSString message
+                                       , $fromJust (fromJSValue slid), fromJSString message
                                        , fromJSString first_name, fromJSString last_name
                                        , fromJSString personal_number)
                    _ -> error $ "Could not parse what is in ELegDataMismatch: " ++ fieldsstr ++ ", value is " ++ show g

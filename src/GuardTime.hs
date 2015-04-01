@@ -12,8 +12,6 @@ module GuardTime (
   , privateGateway
   ) where
 
-import Control.Applicative
-import Control.Monad
 import Control.Monad.Base (MonadBase)
 import Control.Monad.IO.Class
 import Control.Monad.Reader (ReaderT(..), runReaderT, ask)
@@ -28,6 +26,7 @@ import qualified Data.ByteString.Lazy as BSL hiding (length)
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 
 import GuardTime.Class
+import KontraPrelude
 import Utils.IO
 import qualified Log
 

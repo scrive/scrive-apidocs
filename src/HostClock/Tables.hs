@@ -1,6 +1,7 @@
 module HostClock.Tables where
 
 import DB
+import KontraPrelude
 
 tableHostClock :: Table
 tableHostClock = tblTable {

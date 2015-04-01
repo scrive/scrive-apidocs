@@ -1,4 +1,3 @@
-{-# LANGUAGE NoImplicitPrelude #-}
 module EID.Signature.Model (
     ESignature(..)
   , module EID.Signature.Legacy
@@ -8,12 +7,10 @@ module EID.Signature.Model (
   , GetESignature(..)
   ) where
 
-import Control.Monad
 import Control.Monad.Catch
 import Control.Monad.State
 import Data.ByteString (ByteString)
 import Data.Int
-import Data.Monoid.Utils
 import Data.Text (Text)
 import Data.Time
 
@@ -21,7 +18,7 @@ import DB
 import Doc.SignatoryLinkID
 import EID.CGI.GRP.Data
 import EID.Signature.Legacy
-import OurPrelude
+import KontraPrelude
 
 -- If one more type of a signature is to be added, follow the
 -- convention, i.e. make constructor name the same as signature

@@ -3,7 +3,6 @@ module Doc.Tokens.Model (
   , AddDocumentSessionToken(..)
   ) where
 
-import Control.Monad
 import Control.Monad.Catch
 import Happstack.Server (ServerMonad)
 
@@ -12,6 +11,7 @@ import Crypto.RNG
 import DB
 import Doc.SignatoryLinkID
 import KontraMonad
+import KontraPrelude
 import MagicHash
 import MinutesTime.Class
 import Session.Model

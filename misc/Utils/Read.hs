@@ -1,5 +1,6 @@
 module Utils.Read where
 
+import KontraPrelude
 
 maybeRead::(Read a) => String -> Maybe a
 maybeRead s = case reads s of

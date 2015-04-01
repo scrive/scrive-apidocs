@@ -18,7 +18,6 @@ module Kontra
     )
     where
 
-import Control.Applicative
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
@@ -39,6 +38,7 @@ import GuardTime (GuardTimeConfMonad(..))
 import Happstack.Server.Instances ()
 import KontraError
 import KontraMonad
+import KontraPrelude
 import MailContext (MailContextMonad(..))
 import Mails.MailsConfig
 import MinutesTime.Class

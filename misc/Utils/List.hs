@@ -1,9 +1,9 @@
 module Utils.List where
 
 import Control.Arrow
-import Control.Monad
 import Data.List
-import Data.Maybe
+
+import KontraPrelude
 
 propagateFst :: (a, [b]) -> [(a, b)]
 propagateFst (a, bs) = map (a, ) bs
@@ -29,7 +29,7 @@ sortWith :: Ord b => (a -> b) -> [a] -> [a]
 sortWith k ls = sortBy (\a b-> compare (k a) (k b)) ls
 
 groupWith :: Eq b => (a -> b) -> [a] -> [[a]]
-groupWith k ls = Data.List.groupBy (\a b -> k a == k b) ls
+groupWith k ls = groupBy (\a b -> k a == k b) ls
 
 mapJust :: (a -> Maybe b) -> [a] -> [b]
 mapJust f l = catMaybes $ map f l

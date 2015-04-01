@@ -15,8 +15,9 @@ module Mails.MailsConfig
     , defaultMailsConfig
     ) where
 
-import Control.Applicative
 import Data.Unjson
+
+import KontraPrelude
 
 -- | Configuration of mails
 data MailsConfig = MailsConfig {

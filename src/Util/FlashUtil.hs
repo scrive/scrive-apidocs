@@ -8,6 +8,7 @@ module Util.FlashUtil (
 import Context
 import FlashMessage
 import KontraMonad
+import KontraPrelude
 
 class Flashable a m where
     addFlash :: a -> m ()

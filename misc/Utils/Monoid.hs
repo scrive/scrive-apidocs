@@ -1,7 +1,6 @@
 module Utils.Monoid where
 
-import Control.Monad
-import Data.Monoid
+import KontraPrelude
 
 -- | Pack value to just unless we have 'mzero'.  Since we can not check
 -- emptyness of string in templates we want to pack it in maybe.

@@ -1,9 +1,7 @@
 module BrandedDomain.Migrations where
 
-import Control.Monad
 import Control.Monad.Catch
 import Data.Int
-import Data.Maybe
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS
@@ -11,6 +9,7 @@ import qualified Data.ByteString.UTF8 as BS
 import BrandedDomain.Tables
 import DB
 import DB.Checks
+import KontraPrelude
 
 createBrandedDomainsTable :: MonadDB m => Migration m
 createBrandedDomainsTable =

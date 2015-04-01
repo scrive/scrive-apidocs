@@ -6,12 +6,12 @@ module MailingServerConf (
   , unjsonMailingServerConf
   ) where
 
-import Control.Applicative
 import Data.Data
 import Data.Unjson
 import Data.Word
 import qualified Data.ByteString as BS
 
+import KontraPrelude
 import Mails.Data
 import Utils.Default
 

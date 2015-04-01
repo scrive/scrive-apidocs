@@ -2,12 +2,12 @@
 {-# LANGUAGE OverlappingInstances #-}
 module Happstack.Server.Instances where
 
-import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Trans.Control
 import Happstack.Server
 
 import Control.Monad.Trans.Control.Util
+import KontraPrelude
 
 instance (
     Monad (t m)

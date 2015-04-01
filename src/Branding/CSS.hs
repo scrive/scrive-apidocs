@@ -12,6 +12,7 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 
 import BrandedDomain.BrandedDomain
+import KontraPrelude
 import Theme.Model
 import Utils.Color
 import Utils.Font

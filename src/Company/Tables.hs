@@ -1,6 +1,7 @@
 module Company.Tables where
 
 import DB
+import KontraPrelude
 
 tableCompanies :: Table
 tableCompanies = tblTable {

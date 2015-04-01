@@ -4,6 +4,8 @@ import Codec.Archive.Zip
 import Happstack.Server (ToMessage(..), setHeader)
 import qualified Data.ByteString.UTF8 as BS
 
+import KontraPrelude
+
 data ZipArchive = ZipArchive String Archive
     
 instance ToMessage ZipArchive where

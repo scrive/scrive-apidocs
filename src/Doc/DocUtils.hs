@@ -32,11 +32,7 @@ module Doc.DocUtils(
   , MaybeUser(..)
 ) where
 
-import Control.Applicative
-import Control.Monad
 import Control.Monad.Catch
-import Data.List hiding (insert)
-import Data.Maybe
 import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 
@@ -49,6 +45,7 @@ import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import File.File
 import File.Model
+import KontraPrelude
 import Templates
 import User.Model
 import Util.HasSomeCompanyInfo
@@ -66,7 +63,7 @@ renderListTemplateNormalHelper renderFunc list =
   if length list > 1
      then renderFunc "morethenonelistnormal" $ do
          F.value "list" $ init list
-         F.value "last" $ last list
+         F.value "last" $ $last list
      else renderFunc "nomorethanonelistnormal" $ F.value "list" list
 
 
@@ -85,7 +82,7 @@ renderListTemplateHelper renderFunc list =
   if length list > 1
      then renderFunc "morethenonelist" $ do
          F.value "list" $ init list
-         F.value "last" $ last list
+         F.value "last" $ $last list
      else renderFunc "nomorethanonelist" $ F.value "list" list
 
 -- CHECKERS
@@ -138,8 +135,8 @@ instance HasFields SignatoryLink where
 documentcurrentsignorder :: Document -> SignOrder
 documentcurrentsignorder doc =
     case filter notSignedPartner sigs of
-         [] -> maximum $ map signatorysignorder sigs
-         xs -> minimum $ map signatorysignorder xs
+         [] -> $maximum $ map signatorysignorder sigs
+         xs -> $minimum $ map signatorysignorder xs
     where
         sigs = documentsignatorylinks doc
         notSignedPartner siglnk = isNothing (maybesigninfo siglnk)
@@ -152,7 +149,7 @@ documentprevioussignorder :: Document -> SignOrder
 documentprevioussignorder doc =
     case filter (isJust . maybesigninfo) (documentsignatorylinks doc) of
          [] -> SignOrder (-1) -- Allow for signorder 0 (default value of an integer when JSON serializing and not setting a value)
-         xs -> maximum $ map signatorysignorder xs
+         xs -> $maximum $ map signatorysignorder xs
 
 -- | True if signatory is a viewer and all other document partners' signorder are smaller
 isLastViewer :: Document -> SignatoryLink -> Bool
@@ -314,4 +311,4 @@ userCanPerformSigningAction uid doc =
    || (isJust msl && isAuthor sl && any (canSignatorySignNow doc &&^ ((== PadDelivery) . signatorylinkdeliverymethod)) (documentsignatorylinks doc))
   where
     msl = getSigLinkFor uid doc
-    sl  = fromJust msl
+    sl  = $fromJust msl

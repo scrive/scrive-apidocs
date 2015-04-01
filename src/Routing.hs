@@ -24,9 +24,7 @@ module Routing ( hGet
                , ThinPage(..)
                ) where
 
-import Control.Monad
 import Data.Functor
-import Data.Maybe
 import Happstack.Server(Response, Method(GET, POST, DELETE, PUT), ToMessage(..))
 import Happstack.StaticRouting
 import Text.JSON
@@ -36,6 +34,7 @@ import AppView as V
 import Happstack.Fields
 import Kontra
 import KontraLink
+import KontraPrelude
 import Redirect
 import Util.CSVUtil
 import Util.ZipUtil
@@ -170,12 +169,11 @@ toK5 m a b c d e = m a b c d e >>= toResp
 toK6 :: ToResp r => (a -> b -> c -> d -> e -> f -> Kontra r) -> (a -> b -> c -> d -> e -> f -> Kontra Response)
 toK6 m a b c d e f = m a b c d e f >>= toResp
 
-
 guardXToken :: Kontra Response -> Kontra Response
 guardXToken action = do
   ctx <- getContext
   xtoken <- join <$> (fmap maybeRead) <$> readField "xtoken"
-  if (isJust xtoken && (fromJust xtoken == ctxxtoken ctx))
+  if isJust xtoken && ($fromJust xtoken == ctxxtoken ctx)
     then action
     else do -- Requests authorized by something else then xtoken, can't access session data or change context stuff.
       modifyContext anonymousContext

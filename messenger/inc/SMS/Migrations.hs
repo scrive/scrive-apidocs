@@ -2,12 +2,11 @@ module SMS.Migrations (
     messengerMigrations
   ) where
 
-import Control.Monad
 import Data.ByteString (ByteString)
-import Data.Monoid
 
 import DB
 import DB.Checks
+import KontraPrelude
 import SMS.Tables
 
 -- Note: ALWAYS append new migrations TO THE END of this list.

@@ -3,14 +3,10 @@ module SendGrid (
     , handleSendGridEventsV3
   ) where
 
-import Control.Applicative
 import Control.Arrow (second)
 import Control.Concurrent.MVar
-import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Trans.Reader
-import Data.Maybe
-import Data.Monoid.Utils
 import Happstack.Server
 import Text.JSON
 import Text.JSON.FromJSValue
@@ -18,6 +14,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BS
 
 import DB
 import Happstack.Fields
+import KontraPrelude
 import Mailer
 import Mails.Model
 import Utils.Read

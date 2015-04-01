@@ -5,6 +5,7 @@ import Control.Monad.Trans
 import Data.ByteString (ByteString)
 
 import File.FileID
+import KontraPrelude
 import MemCache
 
 data AmazonConfig = AmazonConfig {

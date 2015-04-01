@@ -16,15 +16,11 @@ module Doc.Rendering
     , getPageSizeOfPDFInPoints
     ) where
 
-import Control.Applicative
-import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Catch hiding (handle)
 import Control.Monad.Error
 import Control.Monad.Trans.Control
 import Data.Char
-import Data.List
-import Data.Maybe
 import Data.Typeable
 import Numeric
 import System.Directory
@@ -42,6 +38,7 @@ import File.Model
 import File.Storage
 import ForkAction
 import Kontra
+import KontraPrelude
 import Utils.IO
 import Utils.Read
 import qualified Amazon as AWS
@@ -280,7 +277,7 @@ getBoxSizesOfPDFPages box content =
 
 getPageSizeOfPDFInPoints :: BS.ByteString -> (Double,Double)
 getPageSizeOfPDFInPoints content =
-  head (getPageSizeOfPDFInPointsList content ++ [(595, 842)])
+  $head (getPageSizeOfPDFInPointsList content ++ [(595, 842)])
      -- Defaults to A4
 
 getPageSizeOfPDFInPointsList :: BS.ByteString -> [(Double,Double)]

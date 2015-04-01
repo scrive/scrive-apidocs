@@ -4,11 +4,10 @@ module OAuth.Parse (
                    ,readPrivileges
                    ) where
 
-import Data.List
-import Data.Maybe
 import Data.String.Utils hiding (maybeRead)
 import Network.HTTP (urlDecode)
 
+import KontraPrelude
 import MagicHash
 import OAuth.Model
 import Utils.List

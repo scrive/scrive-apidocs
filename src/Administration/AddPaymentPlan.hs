@@ -7,6 +7,7 @@ import Company.Model
 import DB
 import IPAddress ()
 import Kontra
+import KontraPrelude
 import Payments.Model
 import qualified Payments.Stats
 

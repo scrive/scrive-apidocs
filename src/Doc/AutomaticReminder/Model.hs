@@ -4,12 +4,10 @@ module Doc.AutomaticReminder.Model (
   , setAutoreminder
   ) where
 
-import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Data.Int
-import Data.Monoid.Utils
 import Data.Typeable
 import Text.JSON.Gen
 
@@ -24,6 +22,7 @@ import Doc.DocStateData
 import Doc.DocumentID
 import Doc.DocumentMonad (withDocument)
 import Doc.Model
+import KontraPrelude
 import MinutesTime
 import Util.Actor
 import qualified DB.TimeZoneName as TimeZoneName

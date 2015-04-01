@@ -13,14 +13,9 @@ module EvidenceLog.View (
     , eventForVerificationPage
   ) where
 
-
-import Control.Applicative
-import Control.Monad
 import Control.Monad.Catch
 import Data.Decimal (realFracToDecimal)
 import Data.Function (on)
-import Data.List (sortBy)
-import Data.Maybe
 import Data.String.Utils as String
 import Data.Word (Word8)
 import Text.JSON
@@ -39,8 +34,8 @@ import Doc.Model (GetDocumentsBySignatoryLinkIDs(..))
 import Doc.SignatoryIdentification (SignatoryIdentifierMap, siLink, siFullName, signatoryIdentifierMap, signatoryIdentifier)
 import EID.Signature.Model
 import EvidenceLog.Model
+import KontraPrelude
 import MinutesTime
-import OurPrelude (unexpectedErrorM)
 import Templates (renderLocalTemplate)
 import Text.XML.Content (cdata)
 import Text.XML.DirtyContent (XMLContent, renderXMLContent, substitute)

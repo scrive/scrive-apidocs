@@ -1,4 +1,3 @@
-{-# LANGUAGE RecordWildCards, NoImplicitPrelude, TemplateHaskell #-}
 module Sender (
     Sender(..)
   , createSender
@@ -7,8 +6,6 @@ module Sender (
 import Control.Monad.Base
 import Control.Monad.Catch
 import Data.List hiding (head)
-import Data.Monoid
-import Data.Monoid.Utils
 import System.Exit
 import System.Process
 import qualified  Data.Foldable as F
@@ -18,9 +15,9 @@ import qualified Data.ByteString.Lazy.UTF8 as BSLU
 import Assembler
 import Crypto.RNG (CryptoRNG)
 import DB
+import KontraPrelude
 import MailingServerConf
 import Mails.Model
-import OurPrelude
 import Utils.IO
 import qualified Amazon as AWS
 import qualified Log

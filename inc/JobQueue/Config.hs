@@ -8,6 +8,8 @@ module JobQueue.Config (
 import Data.Time
 import Database.PostgreSQL.PQTypes
 
+import KontraPrelude
+
 -- | Action to take after a job was processed.
 data Action
   = MarkProcessed

@@ -1,5 +1,7 @@
 module Utils.Prelude where
 
+import KontraPrelude
+
 -- | Just @flip map@.
 for :: [a] -> (a -> b) -> [b]
 for = flip map

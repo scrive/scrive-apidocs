@@ -3,11 +3,11 @@
 -- | Instance mappings between hpqtypes XML and 'Text.XML.Content' and 'Text.XML.DirtyContent'
 module DB.XML () where
 
-import Control.Applicative ((<$>))
 import Control.Exception (throwIO)
 import Data.Text (Text)
 import Database.PostgreSQL.PQTypes
 
+import KontraPrelude
 import qualified Text.XML.Content as C
 import qualified Text.XML.DirtyContent as D
 

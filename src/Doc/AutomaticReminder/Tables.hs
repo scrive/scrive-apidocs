@@ -2,6 +2,7 @@ module Doc.AutomaticReminder.Tables where
 
 import DB
 import DB.Checks
+import KontraPrelude
 
 createDocumentAutomaticRemindersTable :: MonadDB m => Migration m
 createDocumentAutomaticRemindersTable =

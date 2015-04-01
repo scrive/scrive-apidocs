@@ -1,13 +1,11 @@
 module Doc.DocStateCommon where
 
-import Data.Maybe
-
 import Company.Model
 import Doc.DocStateData
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
+import KontraPrelude
 import MagicHash (MagicHash)
-import OurPrelude
 import User.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo

@@ -3,6 +3,7 @@ module Doc.API.Callback.Migrations where
 import DB
 import DB.Checks
 import Doc.API.Callback.Tables
+import KontraPrelude
 
 apiCallbacksAddIDColumn :: MonadDB m => Migration m
 apiCallbacksAddIDColumn = Migration {

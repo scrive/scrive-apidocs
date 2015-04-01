@@ -3,6 +3,7 @@ module Chargeable.Migrations where
 import Chargeable.Tables
 import DB
 import DB.Checks
+import KontraPrelude
 
 createChargeableItemsTable :: MonadDB m => Migration m
 createChargeableItemsTable = Migration {

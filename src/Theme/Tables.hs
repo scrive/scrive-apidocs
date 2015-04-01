@@ -3,6 +3,7 @@ module Theme.Tables where
 import qualified Data.ByteString as BS
 
 import DB
+import KontraPrelude
 
 tableThemes:: Table
 tableThemes = tblTable {

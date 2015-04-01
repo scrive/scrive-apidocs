@@ -3,13 +3,13 @@ module File.FileID (
   , unsafeFileID
   ) where
 
-import Control.Applicative
 import Data.Int
 import Data.Typeable
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 
 import DB.Derive
+import KontraPrelude
 import Utils.Read
 
 newtype FileID = FileID Int64

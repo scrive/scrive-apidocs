@@ -4,10 +4,8 @@ module Branding.Adler32 (
    , brandingAdler32
   ) where
 
-import Control.Monad
 import Control.Monad.Catch
 import Data.Digest.Adler32
-import Data.Maybe
 import qualified Data.Binary as Binary
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Char8 as BSC8
@@ -16,6 +14,7 @@ import BrandedDomain.BrandedDomain
 import Company.CompanyUI
 import Context
 import DB
+import KontraPrelude
 import Theme.Model
 import Theme.Model ()
 import User.Model

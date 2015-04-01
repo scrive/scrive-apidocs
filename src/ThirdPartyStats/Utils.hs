@@ -1,11 +1,12 @@
 module ThirdPartyStats.Utils (
-    extractUID, extractDocID, extractCompanyID
+    extractUID
+  , extractDocID
+  , extractCompanyID
   ) where
-import Data.List (partition)
-import Data.Maybe (isJust)
 
 import Company.CompanyID (CompanyID)
 import Doc.DocumentID (DocumentID)
+import KontraPrelude
 import ThirdPartyStats.Core
 import User.UserID (UserID)
 

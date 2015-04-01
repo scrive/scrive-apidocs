@@ -4,7 +4,6 @@ module AppConf (
       , unjsonAppConf
   ) where
 
-import Control.Applicative
 import Data.ByteString (ByteString)
 import Data.Unjson
 import Data.Word
@@ -14,6 +13,7 @@ import EID.CGI.GRP.Config
 import GuardTime (GuardTimeConf(..))
 import HostClock.System (defaultNtpServers)
 import HubSpot.Conf (HubSpotConf(..))
+import KontraPrelude
 import LiveDocx (LiveDocxConf(..))
 import Mails.MailsConfig
 import Payments.Config (RecurlyConfig(..))

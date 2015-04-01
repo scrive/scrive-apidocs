@@ -5,6 +5,7 @@ import Data.Functor
 import Company.Model
 import DB hiding (update, query)
 import Kontra
+import KontraPrelude
 import Payments.Model
 import qualified Payments.Stats as Stats
 

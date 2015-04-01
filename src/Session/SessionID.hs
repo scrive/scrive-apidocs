@@ -3,10 +3,10 @@ module Session.SessionID (
   , tempSessionID
   ) where
 
-import Control.Applicative
 import Data.Int
 
 import DB
+import KontraPrelude
 
 newtype SessionID = SessionID Int64
   deriving (Eq, Ord, PQFormat)

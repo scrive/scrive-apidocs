@@ -7,6 +7,7 @@ import Test.HUnit (assertFailure, Assertion)
 import qualified Data.ByteString as BS
 
 import Configuration
+import KontraPrelude
 import LiveDocx
 
 liveDocxTests :: Test

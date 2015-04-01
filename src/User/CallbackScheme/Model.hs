@@ -23,6 +23,7 @@ import Control.Monad.Catch
 import Data.Data
 
 import DB
+import KontraPrelude
 import User.Model
 
 data UserCallbackScheme = ConstantUrlScheme String

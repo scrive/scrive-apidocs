@@ -3,16 +3,13 @@ module MailGun (
     handleMailGunEvents
   ) where
 
-import Control.Applicative
 import Control.Arrow (second)
-import Control.Monad
-import Data.Maybe
-import Data.Monoid.Utils
 import Happstack.Server
 import qualified Control.Exception.Lifted as E
 
 import DB
 import Happstack.Fields
+import KontraPrelude
 import Mailer
 import Mails.Model
 import qualified Log

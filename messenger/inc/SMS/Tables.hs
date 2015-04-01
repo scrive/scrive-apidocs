@@ -6,11 +6,10 @@ module SMS.Tables (
   , tableSMSEvents
   ) where
 
-import Control.Monad
 import Data.ByteString (ByteString)
-import Data.Monoid
 
 import DB
+import KontraPrelude
 
 messengerTables :: [Table]
 messengerTables = [

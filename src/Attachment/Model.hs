@@ -15,13 +15,13 @@ where
 import Control.Monad.Catch
 import Control.Monad.State.Class
 import Data.ByteString (ByteString)
-import Data.Monoid.Utils
 
 import Attachment.AttachmentID
 import Crypto.RNG
 import DB
 import File.FileID
 import File.Model
+import KontraPrelude
 import MinutesTime
 import User.UserID
 import Util.Actor

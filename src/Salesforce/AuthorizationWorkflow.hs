@@ -15,6 +15,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL (toString)
 import qualified Text.JSON as J
 
 import DB
+import KontraPrelude
 import Salesforce.Conf
 import Utils.IO
 import qualified Log

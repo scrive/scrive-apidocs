@@ -9,6 +9,7 @@ import ActionQueue.Monad (ActionQueueT, runQueue)
 import ActionQueue.Scheduler (SchedulerData(..))
 import AppConf (AppConf, amazonConfig)
 import File.FileID (FileID)
+import KontraPrelude
 import Templates (KontrakcjaGlobalTemplates)
 import qualified Amazon as AWS
 import qualified MemCache

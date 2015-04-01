@@ -12,6 +12,7 @@ import qualified Text.StringTemplates.Fields as F
 import Analytics.Include
 import AppView
 import Kontra
+import KontraPrelude
 import MagicHash
 import OAuth.Model
 import Utils.Prelude

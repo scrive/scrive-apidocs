@@ -12,6 +12,7 @@ import Control.Monad.Trans.Control
 import Data.Typeable
 import qualified Control.Exception.Lifted as E
 
+import KontraPrelude
 import qualified Control.Concurrent.Thread.Group.Lifted as TG
 import qualified Control.Concurrent.Thread.Lifted as T
 

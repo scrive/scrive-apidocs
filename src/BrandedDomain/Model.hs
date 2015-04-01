@@ -11,11 +11,11 @@ module BrandedDomain.Model
   ) where
 
 import Control.Monad.Catch
-import Data.Monoid
 import qualified Data.ByteString.Char8 as BS
 
 import BrandedDomain.BrandedDomain
 import DB
+import KontraPrelude
 import Theme.Model
 import User.UserID
 import qualified Log

@@ -1,4 +1,3 @@
-{-# LANGUAGE NoImplicitPrelude, OverloadedStrings #-}
 module Company.Model (
     module Company.CompanyID
   , Company(..)
@@ -19,14 +18,12 @@ module Company.Model (
 import Control.Monad.Catch
 import Control.Monad.State
 import Data.Int (Int16)
-import Data.Monoid
-import Data.Monoid.Utils
 import Data.Typeable
 
 import Company.CompanyID
 import DB
 import IPAddress
-import OurPrelude
+import KontraPrelude
 import User.UserID
 
 data Company = Company {

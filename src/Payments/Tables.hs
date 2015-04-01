@@ -1,6 +1,7 @@
 module Payments.Tables where
 
 import DB
+import KontraPrelude
 
 {-
   A payment plan relates a User or Company to a Recurly Account_Code

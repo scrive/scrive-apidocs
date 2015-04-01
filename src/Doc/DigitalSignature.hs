@@ -3,9 +3,7 @@ module Doc.DigitalSignature
   , extendDigitalSignature
   ) where
 
-import Control.Applicative ((<$>))
 import Control.Arrow (first)
-import Control.Monad (when)
 import Control.Monad.Catch
 import Control.Monad.Reader (MonadReader, asks)
 import Control.Monad.Trans (MonadIO, liftIO)
@@ -29,6 +27,7 @@ import File.File (filename)
 import File.Model (NewFile(..))
 import File.Storage (getFileContents)
 import GuardTime (GuardTimeConf, GuardTimeConfMonad, getGuardTimeConf)
+import KontraPrelude
 import MinutesTime
 import Templates (runTemplatesT)
 import Util.Actor (systemActor)

@@ -1,6 +1,7 @@
 module User.CallbackScheme.Migrations where
 
 import DB
+import KontraPrelude
 import User.CallbackScheme.Tables
 
 removeDuplicateIndexFromUsersCallbackScheme :: MonadDB m => Migration m

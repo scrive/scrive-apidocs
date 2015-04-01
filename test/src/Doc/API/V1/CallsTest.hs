@@ -1,9 +1,6 @@
 module Doc.API.V1.CallsTest (apiV1CallsTests) where
 
-import Control.Applicative
-import Control.Monad
 import Control.Monad.Trans
-import Data.Maybe
 import Happstack.Server
 import Network.URI
 import Test.Framework
@@ -19,6 +16,7 @@ import Doc.API.V1.Calls
 import Doc.API.V1.DocumentToJSON
 import Doc.DocStateData
 import Doc.Model
+import KontraPrelude
 import OAuth.Model
 import TestingUtil
 import TestKontra as T
@@ -62,7 +60,7 @@ testUpdateDoc updateJsonPath = do
 
   docs <- randomQuery $ GetDocumentsByAuthor (userid user)
   assertEqual "Just one doc" 1 (length docs)
-  let doc = head docs
+  let doc = $head docs
 
   do
      req <- mkRequest POST [("json_is_missing", inText cont)]
@@ -104,7 +102,7 @@ testOAuthCreateDoc = do
   time <- rand 10 arbitrary
   Just (tok, sec) <- dbUpdate $ RequestTempCredentials
     (OAuthTempCredRequest
-      { tcCallback   = fromJust $ parseURI "http://www.google.com/"
+      { tcCallback   = $fromJust $ parseURI "http://www.google.com/"
       , tcAPIToken   = apitoken
       , tcAPISecret  = apisecret
       , tcPrivileges = [APIDocCreate]
@@ -174,7 +172,7 @@ testPersonalAccessCredentialsCreateDoc = do
 
 testSetAutoReminder :: TestEnv ()
 testSetAutoReminder = do
-  ctx@Context{ctxmaybeuser = Just user} <- testUpdateDoc $ head jsonDocs
+  ctx@Context{ctxmaybeuser = Just user} <- testUpdateDoc $ $head jsonDocs
   [doc] <- randomQuery $ GetDocumentsByAuthor (userid user)
 
   req <- mkRequest POST [("days", inText "3")]
@@ -204,7 +202,7 @@ testUpdateDocToSaved useOAuth = do
     then mkRequestWithHeaders POST [ ("expectedType", inText "text")
                                    , ("file", inFile "test/pdfs/simple.pdf")
                                    ]
-                                   [("authorization", [fromJust authStr])]
+                                   [("authorization", [$fromJust authStr])]
     else mkRequest POST [ ("expectedType", inText "text")
                         , ("file", inFile "test/pdfs/simple.pdf")]
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
@@ -249,10 +247,10 @@ testUpdateDocToSaved useOAuth = do
 
 testChangeAuthenticationMethod :: TestEnv ()
 testChangeAuthenticationMethod = do
-  ctx@Context{ctxmaybeuser = Just user} <- testUpdateDoc $ head jsonDocs
+  ctx@Context{ctxmaybeuser = Just user} <- testUpdateDoc $ $head jsonDocs
   [doc] <- randomQuery $ GetDocumentsByAuthor (userid user)
   let siglinks = documentsignatorylinks doc
-      validsiglinkid = signatorylinkid $ head $ filter signatoryispartner siglinks
+      validsiglinkid = signatorylinkid $ $head $ filter signatoryispartner siglinks
 
   reqNoAuthMethod <- mkRequest POST [("authentication_value", inText "+46701234567")]
   (resNoAuthMethod, _) <- runTestKontra reqNoAuthMethod ctx $ apiCallV1ChangeAuthentication (documentid doc) validsiglinkid
@@ -273,10 +271,10 @@ testChangeAuthenticationMethod = do
 
 testChangeAuthenticationMethodWithEmptyAuthenticationValue :: TestEnv ()
 testChangeAuthenticationMethodWithEmptyAuthenticationValue = do
-  ctx@Context{ctxmaybeuser = Just user} <- testUpdateDoc $ last jsonDocs
+  ctx@Context{ctxmaybeuser = Just user} <- testUpdateDoc $ $last jsonDocs
   [doc] <- randomQuery $ GetDocumentsByAuthor (userid user)
   let siglinks = documentsignatorylinks doc
-      validsiglinkid = signatorylinkid $ head $ filter signatoryispartner siglinks
+      validsiglinkid = signatorylinkid $ $head $ filter signatoryispartner siglinks
 
   req <- mkRequest POST [("authentication_type", inText "sms_pin"),("authentication_value", inText "+46701234567")]
   (res, _) <- runTestKontra req ctx $ apiCallV1ChangeAuthentication (documentid doc) validsiglinkid
@@ -284,7 +282,7 @@ testChangeAuthenticationMethodWithEmptyAuthenticationValue = do
 
   updatedDoc <- dbQuery $ GetDocumentBySignatoryLinkID validsiglinkid
   let updatedsiglinks = documentsignatorylinks updatedDoc
-      siglink = head $ filter signatoryispartner updatedsiglinks
+      siglink = $head $ filter signatoryispartner updatedsiglinks
   assertEqual "The phone number +46701234567 should be set there" "+46701234567" (getMobile siglink)
 
   req2 <- mkRequest POST [("authentication_type", inText "standard")]
@@ -297,7 +295,7 @@ testChangeAuthenticationMethodWithEmptyAuthenticationValue = do
 
   updatedDoc' <- dbQuery $ GetDocumentBySignatoryLinkID validsiglinkid
   let updatedsiglinks' = documentsignatorylinks updatedDoc'
-      siglink' = head $ filter signatoryispartner updatedsiglinks'
+      siglink' = $head $ filter signatoryispartner updatedsiglinks'
   assertEqual "The phone number +46701234567 should be STILL there" "+46701234567" (getMobile siglink')
 
 testChangeMainFile :: TestEnv ()

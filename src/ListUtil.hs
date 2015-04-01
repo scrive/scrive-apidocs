@@ -43,14 +43,11 @@ module ListUtil(
             , listParamsLimit
             , listParamsFilters
           ) where
-import Control.Applicative ((<$>))
-import Control.Monad
+
 import Control.Monad.Identity
 import Control.Monad.Trans
 import Data.Char (toUpper)
 import Data.Foldable (foldMap)
-import Data.List
-import Data.Maybe
 import Data.Ord
 import Happstack.Server hiding (simpleHTTP)
 import Network.HTTP.Base (urlEncode)
@@ -62,6 +59,7 @@ import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.UTF8 as BS
 
 import Happstack.Fields
+import KontraPrelude
 import Utils.Prelude
 
 -- This part is responsible for sorting,searching and paging documents lists

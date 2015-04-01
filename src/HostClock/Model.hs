@@ -7,13 +7,12 @@ module HostClock.Model
   , maxClockError
   ) where
 
-import Control.Monad (when)
 import Control.Monad.Catch
 import Data.Int
-import Data.Maybe (isJust)
 import Data.Time
 
 import DB
+import KontraPrelude
 import MinutesTime.Class
 
 data InsertClockOffsetFrequency = InsertClockOffsetFrequency (Maybe Double) Double

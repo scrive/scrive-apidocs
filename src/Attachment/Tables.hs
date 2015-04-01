@@ -1,6 +1,7 @@
 module Attachment.Tables where
 
 import DB
+import KontraPrelude
 
 tableAttachments :: Table
 tableAttachments = tblTable {

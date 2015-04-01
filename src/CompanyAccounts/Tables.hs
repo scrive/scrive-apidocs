@@ -3,6 +3,7 @@ module CompanyAccounts.Tables (
   ) where
 
 import DB
+import KontraPrelude
 
 tableCompanyInvites :: Table
 tableCompanyInvites = tblTable {

@@ -6,17 +6,13 @@ module JobQueue.Components (
   , spawnDispatcher
   ) where
 
-import Control.Applicative
 import Control.Concurrent.Lifted
 import Control.Concurrent.STM hiding (atomically)
 import Control.Exception (AsyncException(ThreadKilled))
-import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Trans
 import Control.Monad.Trans.Control
-import Data.Monoid
-import Data.Monoid.Utils
 import Database.PostgreSQL.PQTypes
 import qualified Control.Concurrent.STM as STM
 import qualified Data.Foldable as F
@@ -25,6 +21,7 @@ import qualified Data.Map.Strict as M
 import JobQueue.Config
 import JobQueue.Consumer
 import JobQueue.Utils
+import KontraPrelude
 import qualified Control.Concurrent.Thread.Group.Lifted as TG
 import qualified Control.Concurrent.Thread.Lifted as T
 

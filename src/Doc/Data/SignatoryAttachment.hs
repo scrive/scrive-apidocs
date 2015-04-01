@@ -5,6 +5,7 @@ module Doc.Data.SignatoryAttachment (
 
 import DB
 import File.FileID
+import KontraPrelude
 
 data SignatoryAttachment = SignatoryAttachment {
   signatoryattachmentfile :: !(Maybe FileID)

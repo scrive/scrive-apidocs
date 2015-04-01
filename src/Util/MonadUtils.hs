@@ -13,6 +13,7 @@ import Control.Monad.Base
 import Control.Monad.Trans
 
 import KontraError
+import KontraPrelude
 import qualified Log
 
 -- TODO: remove these functions.

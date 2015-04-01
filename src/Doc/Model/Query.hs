@@ -28,17 +28,12 @@ module Doc.Model.Query
   , DocumentExistsAndIsNotPurged(..)
   ) where
 
-import Control.Applicative
-import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.State
 import Data.Int
 import Data.List hiding (tail, head)
 import Data.Maybe hiding (fromJust)
-import Data.Monoid
-import Data.Monoid.Utils
-import Prelude hiding (head, tail)
 import qualified Data.ByteString as BS
 import qualified Data.Foldable as F
 import qualified Data.Set as S
@@ -58,6 +53,7 @@ import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots
 import File.FileID
 import File.Storage
+import KontraPrelude
 import MagicHash
 import MinutesTime
 import User.Email

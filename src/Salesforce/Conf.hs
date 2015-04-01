@@ -4,9 +4,10 @@ module Salesforce.Conf (
     , withSalesforceConf
   ) where
 
-import Control.Applicative
 import Control.Monad.Reader
 import Data.Unjson
+
+import KontraPrelude
 
 data SalesforceConf = SalesforceConf {
     salesforceAuthenticationUrl :: String

@@ -3,6 +3,7 @@ module EID.CGI.GRP.Transaction.Migrations where
 import DB
 import DB.Checks
 import EID.CGI.GRP.Transaction.Tables
+import KontraPrelude
 
 createCgiGrpTransactionsTable :: MonadDB m => Migration m
 createCgiGrpTransactionsTable = Migration {

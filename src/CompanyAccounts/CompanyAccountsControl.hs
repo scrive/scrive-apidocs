@@ -15,8 +15,6 @@ module CompanyAccounts.CompanyAccountsControl (
 import Control.Monad.State
 import Data.Char
 import Data.Functor
-import Data.List
-import Data.Maybe
 import Text.JSON (JSValue(..))
 import Text.JSON.Gen
 
@@ -30,6 +28,7 @@ import Happstack.Fields
 import InputValidation
 import Kontra
 import KontraLink
+import KontraPrelude
 import ListUtil
 import Mails.SendMail
 import MinutesTime

@@ -4,11 +4,9 @@ module Doc.Model.OrderBy
   , documentOrderByAscDescToSQL
   ) where
 
-import Data.Monoid
-import Data.Monoid.Utils
-
 import DB
 import Doc.DocStateData
+import KontraPrelude
 
 -- | These are possible order by clauses that make documents sorted by.
 data DocumentOrderBy

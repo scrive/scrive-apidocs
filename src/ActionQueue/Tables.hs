@@ -1,6 +1,7 @@
 module ActionQueue.Tables where
 
 import DB
+import KontraPrelude
 
 tableAccessNewAccounts :: Table
 tableAccessNewAccounts = tblTable {

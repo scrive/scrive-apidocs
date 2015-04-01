@@ -30,7 +30,6 @@ module Crypto.RNG (
   , withCryptoRNGState
   ) where
 
-import Control.Applicative
 import Control.Concurrent
 import Control.Monad.Base
 import Control.Monad.Catch
@@ -42,9 +41,9 @@ import Crypto.Random.DRBG
 import Data.Bits
 import Data.ByteString (ByteString, unpack)
 import Data.Int
-import Data.List
 
 import Crypto.RNG.Class
+import KontraPrelude
 
 -- | The random number generator state.  It sits inside an MVar to
 -- support concurrent thread access.

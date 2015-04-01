@@ -1,6 +1,5 @@
 module UserHistoryTest (userHistoryTests) where
 
-import Control.Applicative
 import Happstack.Server
 import Test.Framework
 import Text.JSON
@@ -12,6 +11,7 @@ import Company.Model
 import Context
 import DB
 import IPAddress
+import KontraPrelude
 import Login
 import MinutesTime
 import SignupTest (getAccountCreatedActions)
@@ -189,7 +189,7 @@ testHandlerForTOSAccept = do
     ctx <- mkContext defaultValue
     req1 <- mkRequest POST [("email", inText "karol@skrivapa.se")]
     (_, ctx1) <- runTestKontra req1 ctx $ apiCallSignup
-    UserAccountRequest{..} <- head <$> getAccountCreatedActions
+    UserAccountRequest{..} <- $head <$> getAccountCreatedActions
     req2 <- mkRequest POST [ ("tos", inText "on")
                            , ("fstname", inText "Karol")
                            , ("sndname", inText "Samborski")
@@ -232,7 +232,7 @@ compareEventTypeFromList :: UserHistoryEventType -> [UserHistory] -> Bool
 compareEventTypeFromList t l = not . null . filter (\h -> (uheventtype . uhevent $ h) == t) $ l
 
 compareEventDataFromList :: [(String, String, String)] -> [UserHistory] -> Bool
-compareEventDataFromList d l = (uheventdata . uhevent . head $ l) == (Just $ JSArray $
+compareEventDataFromList d l = (uheventdata . uhevent . $head $ l) == (Just $ JSArray $
        for d $ \(field, oldv, newv) -> runJSONGen $ do
           value "field" field
           value "oldval" oldv

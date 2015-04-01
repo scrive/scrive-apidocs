@@ -5,6 +5,7 @@ module Doc.Data.AuthorAttachment (
 
 import DB
 import File.FileID
+import KontraPrelude
 
 newtype AuthorAttachment = AuthorAttachment {
   authorattachmentfile :: FileID

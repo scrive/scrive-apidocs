@@ -4,13 +4,13 @@ module Doc.DocumentID (
   , fromDocumentID
   ) where
 
-import Control.Applicative
 import Data.Binary
 import Data.Int
 import Database.PostgreSQL.PQTypes hiding (Binary, put)
 import Happstack.Server
 
 import DB.Derive
+import KontraPrelude
 import Utils.Read
 
 newtype DocumentID = DocumentID Int64

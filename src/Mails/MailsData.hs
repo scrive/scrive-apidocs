@@ -3,6 +3,7 @@ module Mails.MailsData where
 import qualified Data.ByteString as BS
 
 import File.FileID
+import KontraPrelude
 import MessageData
 
 data MailAddress = MailAddress {

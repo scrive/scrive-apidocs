@@ -7,11 +7,9 @@ module ServerUtils.ServerUtils (
   ) where
 
 --import Happstack.Server hiding (dir, simpleHTTP)
-import Control.Monad
 import Control.Monad.Trans
 import Data.Char (ord)
 import Data.Functor
-import Data.Maybe
 import Happstack.Server hiding (dir, simpleHTTP)
 import Numeric
 import System.Directory (getCurrentDirectory)
@@ -30,6 +28,7 @@ import qualified Data.ByteString.UTF8 as BSUTF8
 
 import Happstack.Fields
 import Kontra
+import KontraPrelude
 import Log as Log
 import ServerUtils.BrandedImagesCache
 import Util.CSVUtil
@@ -77,7 +76,7 @@ handleScaleImage = do
           else do
             cwd <- liftIO getCurrentDirectory
             let publicDir = cwd </> "frontend/app"
-            logoPath <- guardJust $ secureAbsNormPath publicDir $ tail (BSUTF8.toString logo) -- strip leading slash from logo path
+            logoPath <- guardJust $ secureAbsNormPath publicDir $ $tail (BSUTF8.toString logo) -- strip leading slash from logo path
             liftIO $ BS.readFile logoPath
   (procResult, out, _) <- readProcessWithExitCode' "convert" ["-", "-resize", "60%", "-"] $ strictBStoLazyBS logo'
   case procResult of

@@ -4,8 +4,9 @@ module DB.Model.Check (
   , sqlDropCheck
   ) where
 
-import Data.Monoid.Utils
 import Database.PostgreSQL.PQTypes
+
+import KontraPrelude
 
 data Check = Check {
   chkName :: RawSQL ()

@@ -22,6 +22,7 @@ import Data.String.Utils
 import Text.StringTemplates.Templates
 
 import Doc.DocStateData
+import KontraPrelude
 import Mails.MailsData
 import User.Email
 import User.Model

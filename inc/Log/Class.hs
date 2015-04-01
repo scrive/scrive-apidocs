@@ -5,6 +5,7 @@ import Control.Monad.Trans
 import Data.Time
 import Text.JSON.Gen
 
+import KontraPrelude
 import MinutesTime.Class
 
 -- | MonadLog is for situations when you want to have access to

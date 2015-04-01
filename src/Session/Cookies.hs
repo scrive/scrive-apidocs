@@ -4,14 +4,13 @@ module Session.Cookies (
   , currentSessionInfoCookies
   ) where
 
-import Control.Applicative
 import Control.Arrow
 import Control.Monad.IO.Class
 import Data.Char
-import Data.Maybe
 import Happstack.Server hiding (Session, addCookie)
 
 import Cookies
+import KontraPrelude
 import MagicHash
 import Session.Data
 import Utils.HTTP
@@ -64,5 +63,5 @@ readCookiesValues :: (Monad m, HasRqData m,Read a) => String -> m [a]
 readCookiesValues name = do
   (_,_, cookiesWithNames) <- askRqEnv
   let cookies = take 10 $ map snd $ filter (\c -> (fst c) == (map toLower name)) cookiesWithNames
-  return  $ map fromJust $ filter isJust $ maybeRead <$> cookieValue <$> cookies
+  return $ map $fromJust $ filter isJust $ maybeRead <$> cookieValue <$> cookies
 

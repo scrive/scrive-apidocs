@@ -4,12 +4,12 @@ module MessengerServerConf (
   , unjsonMessengerServerConf
   ) where
 
-import Control.Applicative
 import Data.Data
 import Data.Unjson
 import Data.Word
 import qualified Data.ByteString as BS
 
+import KontraPrelude
 import Utils.Default
 
 data MessengerServerConf = MessengerServerConf

@@ -7,6 +7,7 @@ import Text.JSON.Gen
 
 import DB.SQL
 import File.FileID
+import KontraPrelude
 import MinutesTime
 
 -- This is the part where we define all possible wrongs about a file.

@@ -7,9 +7,7 @@ module Doc.API.V1.DocumentUpdateUtils (
 
 import Control.Conditional (whenM, unlessM)
 import Control.Exception.Lifted (throwIO)
-import Control.Monad
 import Data.Functor
-import Data.List
 import qualified Control.Exception.Lifted as E
 
 import API.Monad (serverError,badInput)
@@ -23,6 +21,7 @@ import Doc.Model
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import Kontra
+import KontraPrelude
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils

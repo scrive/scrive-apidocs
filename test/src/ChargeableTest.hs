@@ -1,12 +1,12 @@
 module ChargeableTest where
 
 import Data.Int
-import Data.List
 import Test.Framework
 
 import Company.Model
 import CompanyAccounts.Model
 import DB hiding (query, update)
+import KontraPrelude
 import MessageData
 import SMS.SMS
 import TestingUtil

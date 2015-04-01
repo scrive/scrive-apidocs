@@ -3,13 +3,12 @@ module DB.Utils (
   , loopOnUniqueViolation
   ) where
 
-import Control.Applicative
 import Control.Monad.Catch
-import Data.Monoid
-import Data.Monoid.Utils
 import Data.String
 import Data.Typeable
 import Database.PostgreSQL.PQTypes
+
+import KontraPrelude
 
 explainAnalyze :: (IsSQL sql, IsString sql, Monoid sql, MonadDB m)
                => sql -> m String

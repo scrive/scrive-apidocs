@@ -1,17 +1,13 @@
 module OAuth.Model where
 
-import Control.Applicative
-import Control.Monad
 import Control.Monad.Catch
 import Data.Int
-import Data.Maybe
-import Data.Monoid
-import Data.Monoid.Utils
 import Network.URI
 import qualified Control.Exception.Lifted as E
 
 import Crypto.RNG
 import DB
+import KontraPrelude
 import MagicHash
 import MinutesTime
 import User.Model
@@ -26,7 +22,7 @@ instance Show APIToken where
 
 instance Read APIToken where
     readsPrec p s = case break (== '_') s of
-      (ts, '_':is) -> [(APIToken { atID = i, atToken = read ts }, v)
+      (ts, '_':is) -> [(APIToken { atID = i, atToken = $read ts }, v)
                       | (i, v) <- readsPrec p is]
       _ -> []
 

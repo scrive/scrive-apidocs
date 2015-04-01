@@ -9,6 +9,7 @@ import Text.JSON.FromJSValue
 import Text.JSON.String
 import qualified Data.ByteString.UTF8 as BS
 
+import KontraPrelude
 import TestingUtil
 import TestKontra
 

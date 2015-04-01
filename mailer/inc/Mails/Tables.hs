@@ -8,10 +8,10 @@ module Mails.Tables (
   , tableMailAttachments
   ) where
 
-import Control.Monad
 import Data.ByteString (ByteString)
 
 import DB
+import KontraPrelude
 import MinutesTime
 
 mailerComposites :: [CompositeType]

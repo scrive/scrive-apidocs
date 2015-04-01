@@ -20,6 +20,8 @@ import Control.Monad.Base
 import Data.Time
 import qualified Data.Map as Map
 
+import KontraPrelude
+
 data MemCache' k v = MemCache' (v -> Int) Int Int (Map.Map k (UTCTime, v))
 
 newtype MemCache k v = MemCache (MVar (MemCache' k v))

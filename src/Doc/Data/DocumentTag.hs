@@ -6,6 +6,7 @@ module Doc.Data.DocumentTag (
 import Data.Function
 
 import DB
+import KontraPrelude
 
 data DocumentTag = DocumentTag {
   tagname  :: !String

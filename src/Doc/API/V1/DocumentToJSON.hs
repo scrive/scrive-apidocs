@@ -9,13 +9,9 @@ module Doc.API.V1.DocumentToJSON (
     , docForListCSVHeaderV1
   ) where
 
-import Control.Applicative ((<$>))
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
-import Data.List (intercalate)
-import Data.List (sortBy, nub)
-import Data.Maybe
 import Data.String.Utils (strip)
 import Text.JSON
 import Text.JSON.Gen hiding (value)
@@ -34,8 +30,8 @@ import File.File
 import File.Model
 import File.Storage
 import KontraLink
+import KontraPrelude
 import MinutesTime
-import OurPrelude (unexpectedError)
 import User.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
@@ -113,7 +109,7 @@ documentJSONV1 muser forapi forauthor msl doc = do
       J.value "deleted" $ fromMaybe False $ documentDeletedForUser doc <$> userid <$> muser
       J.value "reallydeleted" $ fromMaybe False $ documentReallyDeletedForUser doc <$> userid <$>  muser
       when (isJust muser) $
-        J.value "canperformsigning" $ userCanPerformSigningAction (userid $ fromJust muser) doc
+        J.value "canperformsigning" $ userCanPerformSigningAction (userid $ $fromJust muser) doc
       J.value "objectversion" $ documentobjectversion doc
       J.value "process" $ "Contract"
       J.value "isviewedbyauthor" $ isSigLinkFor muser (getAuthorSigLink doc)

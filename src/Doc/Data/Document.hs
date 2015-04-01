@@ -11,13 +11,8 @@ module Doc.Data.Document (
   , documentsealstatus
   ) where
 
-import Control.Applicative
 import Control.Monad.Catch
 import Data.Int
-import Data.List
-import Data.Maybe
-import Data.Monoid
-import Data.Monoid.Utils
 import Database.PostgreSQL.PQTypes
 import qualified Data.Set as S
 
@@ -34,6 +29,7 @@ import Doc.DocumentID
 import Doc.SealStatus (SealStatus, HasGuardtimeSignature(..))
 import File.FileID
 import IPAddress
+import KontraPrelude
 import MagicHash
 import MinutesTime
 import User.Lang

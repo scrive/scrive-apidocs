@@ -1,11 +1,11 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 module Archive.View (pageArchive) where
 
-import Control.Applicative ((<$>))
 import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 
 import Company.Model (Company, companyinfo, companyidledoctimeout)
+import KontraPrelude
 import MinutesTime
 import User.Model
 

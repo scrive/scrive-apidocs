@@ -1,5 +1,7 @@
 module Control.Logic where
 
+import KontraPrelude
+
 (||^):: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
 (||^) f g a = f a || g a
 infixl 2 ||^

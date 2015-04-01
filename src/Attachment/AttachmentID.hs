@@ -3,12 +3,12 @@ module Attachment.AttachmentID (
   , unsafeAttachmentID
   ) where
 
-import Control.Applicative
 import Data.Int
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 
 import DB.Derive
+import KontraPrelude
 import Utils.Read
 
 newtype AttachmentID = AttachmentID Int64

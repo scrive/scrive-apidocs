@@ -12,12 +12,13 @@ module DB.RowCache
   , runRowCacheTM
   )  where
 
-import Control.Applicative (Applicative)
 import Control.Monad.Base (MonadBase)
 import Control.Monad.Reader (runReaderT, ask, ReaderT)
-import Control.Monad.State (MonadTrans, liftM, get, put, lift, evalStateT, StateT, MonadIO)
+import Control.Monad.State (MonadTrans, get, put, lift, evalStateT, StateT, MonadIO)
 import Control.Monad.Trans.Control (MonadBaseControl(..), MonadTransControl(..), ComposeSt, defaultLiftBaseWith, defaultRestoreM)
 import Database.PostgreSQL.PQTypes (MonadDB)
+
+import KontraPrelude
 
 -- | Return an identifier type for a row 'r' that can be used to retrieve rows from storage
 type family ID r

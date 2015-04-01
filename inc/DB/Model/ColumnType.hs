@@ -3,11 +3,10 @@ module DB.Model.ColumnType (
   , columnTypeToSQL
   ) where
 
-import Control.Applicative
 import Data.Char
-import Data.List
-import Data.Monoid
 import Database.PostgreSQL.PQTypes
+
+import KontraPrelude
 
 data ColumnType
   = BigIntT

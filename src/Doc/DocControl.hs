@@ -35,14 +35,10 @@ module Doc.DocControl(
     , handleToStartShow
 ) where
 
-import Control.Applicative
 import Control.Concurrent
 import Control.Conditional (unlessM, whenM)
-import Control.Monad
 import Control.Monad.Catch (MonadMask)
 import Control.Monad.Reader
-import Data.List
-import Data.Maybe
 import Data.String.Utils (replace,strip)
 import Data.Time (ZonedTime)
 import Happstack.Server hiding (simpleHTTP)
@@ -91,6 +87,7 @@ import Happstack.MonadPlus (runMPlusT)
 import InputValidation
 import Kontra
 import KontraLink
+import KontraPrelude
 import MagicHash
 import MinutesTime
 import Redirect
@@ -344,7 +341,7 @@ handleIssueAuthorGoToSignview docid = do
   user <-  guardJust (ctxmaybeuser ctx)
   case (isAuthor <$> getMaybeSignatoryLink (doc,user)) of
     Just True -> do
-      let asl = fromJust $ getMaybeSignatoryLink (doc,user) -- Checked isJust in case
+      let asl = $fromJust $ getMaybeSignatoryLink (doc,user) -- Checked isJust in case
       dbUpdate $ AddDocumentSessionToken (signatorylinkid asl) (signatorymagichash asl)
       return $ LinkSignDocNoMagicHash docid (signatorylinkid asl)
     _ -> return LoopBack

@@ -10,11 +10,10 @@ module ActionQueue.Core (
 
 import Control.Monad.Catch
 import Control.Monad.State
-import Data.Monoid
-import Data.Monoid.Utils
 import Data.Typeable
 
 import DB
+import KontraPrelude
 import MinutesTime
 
 data Action idx t con n = forall row. FromRow row => Action {

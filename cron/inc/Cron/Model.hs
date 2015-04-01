@@ -10,7 +10,7 @@ import Data.ByteString (ByteString)
 import Data.Int
 import Database.PostgreSQL.PQTypes
 
-import OurPrelude
+import KontraPrelude
 import Utils.List
 
 data JobType

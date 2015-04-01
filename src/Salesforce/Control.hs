@@ -4,7 +4,6 @@ module Salesforce.Control (
   ) where
 
 import Data.Functor
-import Data.Maybe
 import Text.JSON
 import Text.JSON.Gen
 
@@ -12,6 +11,7 @@ import DB
 import Happstack.Fields
 import Kontra
 import KontraLink
+import KontraPrelude
 import Salesforce.AuthorizationWorkflow
 import Salesforce.Conf
 import User.CallbackScheme.Model
@@ -31,7 +31,7 @@ handleSalesforceIntegration  = withUserGet $ do
          case mtoken of
               Left _ -> internalError
               Right token -> do
-                dbUpdate $ UpdateUserCallbackScheme (userid $ fromJust $ ctxmaybeuser ctx) (SalesforceScheme token)
+                dbUpdate $ UpdateUserCallbackScheme (userid $ $fromJust $ ctxmaybeuser ctx) (SalesforceScheme token)
                 return $ fromMaybe LinkDesignView (LinkExternal <$> mstate)
        _ ->  LinkExternal <$> (withSalesforceConf ctx (initAuthorizationWorkflowUrl mstate))
 

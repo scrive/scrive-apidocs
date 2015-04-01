@@ -1,7 +1,6 @@
 module Main where
 
 import Control.Concurrent.Lifted
-import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Catch
 import Happstack.Server hiding (waitForTermination)
@@ -23,6 +22,7 @@ import Crypto.RNG
 import DB
 import DB.Checks
 import DB.PostgreSQL
+import KontraPrelude
 import RoutingTable
 import Templates
 import User.Email

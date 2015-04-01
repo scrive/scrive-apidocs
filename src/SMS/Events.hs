@@ -16,7 +16,6 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Data.Functor
-import Data.Maybe
 import Text.StringTemplates.Templates hiding (runTemplatesT)
 import qualified Text.StringTemplates.Fields as F
 
@@ -33,6 +32,7 @@ import Doc.Model
 import Doc.SignatoryLinkID
 import EvidenceLog.Model
 import KontraLink
+import KontraPrelude
 import Mails.MailsConfig
 import Mails.SendMail
 import MinutesTime
@@ -120,7 +120,7 @@ handleUndeliveredSMSInvitation bd hostpart mc signlinkid = do
       _ <- dbUpdate $ SetSMSInvitationDeliveryStatus signlinkid Undelivered actor
       mail <- theDocument >>= \d -> smsUndeliveredInvitation bd hostpart d signlink
       theDocument >>= \d -> scheduleEmailSendout mc $ mail {
-        to = [getMailAddress $ fromJust $ getAuthorSigLink d]
+        to = [getMailAddress $ $fromJust $ getAuthorSigLink d]
       }
     Nothing -> return ()
 
@@ -128,7 +128,7 @@ smsUndeliveredInvitation :: (TemplatesMonad m,MonadDB m,MonadThrow m) => Branded
 smsUndeliveredInvitation bd hostpart doc signlink = do
   theme <- dbQuery $ GetTheme $ bdMailTheme bd
   kontramail bd theme "invitationSMSUndelivered" $ do
-    F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
+    F.value "authorname" $ getFullName $ $fromJust $ getAuthorSigLink doc
     F.value "documenttitle" $ documenttitle doc
     F.value "email" $ getEmail signlink
     F.value "name" $ getFullName signlink

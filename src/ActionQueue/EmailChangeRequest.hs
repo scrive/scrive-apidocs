@@ -6,7 +6,6 @@ module ActionQueue.EmailChangeRequest (
   , newEmailChangeRequestLink
   ) where
 
-import Control.Monad
 import Control.Monad.Catch
 import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
@@ -20,6 +19,7 @@ import Crypto.RNG
 import DB
 import KontraLink
 import KontraMonad
+import KontraPrelude
 import MagicHash
 import MinutesTime
 import User.Email

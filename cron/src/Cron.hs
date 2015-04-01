@@ -1,12 +1,7 @@
 module Cron where
 
-import Control.Applicative
 import Control.Concurrent.Lifted
-import Control.Monad
 import Control.Monad.Trans
-import Data.Maybe
-import Data.Monoid ((<>))
-import Data.Monoid.Utils
 import Data.Time
 import qualified Data.ByteString as BS
 
@@ -30,6 +25,7 @@ import Doc.Model
 import HostClock.Collector (collectClockError)
 import JobQueue.Components
 import JobQueue.Config
+import KontraPrelude hiding (All)
 import Mails.Events
 import MinutesTime
 import Payments.Config

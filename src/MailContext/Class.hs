@@ -6,6 +6,7 @@ import Data.Time
 
 import BrandedDomain.BrandedDomain
 import IPAddress
+import KontraPrelude
 import Mails.MailsConfig
 import User.Model
 

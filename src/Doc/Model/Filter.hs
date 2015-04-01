@@ -3,9 +3,6 @@ module Doc.Model.Filter
   , documentFilterToSQL
   ) where
 
-import Control.Monad
-import Data.Monoid
-import Data.Monoid.Utils
 import qualified Control.Monad.State.Lazy as State
 
 import Company.Model
@@ -15,6 +12,7 @@ import Doc.DocStateData
 import Doc.DocumentID
 import Doc.Model.Expressions
 import Doc.SealStatus (SealStatus(..))
+import KontraPrelude
 import MinutesTime
 import User.UserID
 

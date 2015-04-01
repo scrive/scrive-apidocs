@@ -12,16 +12,12 @@ module Doc.DocSeal
   , presealDocumentFile
   ) where
 
-import Control.Applicative
 import Control.Monad.Base
 import Control.Monad.Catch hiding (handle)
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Data.Char
 import Data.Function (on)
-import Data.List
-import Data.Maybe
-import Data.Monoid.Utils
 import Data.Time
 import System.Directory
 import System.Exit
@@ -55,6 +51,7 @@ import File.File
 import File.Model
 import File.Storage
 import Kontra
+import KontraPrelude
 import MinutesTime
 import Templates
 import Util.Actor
@@ -481,8 +478,8 @@ sealDocument hostpart = theDocumentID >>= \did -> do
 collectClockErrorStatistics :: (MonadDB m, MonadThrow m) => [DocumentEvidenceEvent] -> m HC.ClockErrorStatistics
 collectClockErrorStatistics [] = return $ HC.ClockErrorStatistics Nothing Nothing Nothing 0 0
 collectClockErrorStatistics elog = do
-  let endtime   = maximum (map evTime elog)
-      starttime = minimum (map evTime elog) `min` (1 `daysBefore` endtime)
+  let endtime   = $maximum (map evTime elog)
+      starttime = $minimum (map evTime elog) `min` (1 `daysBefore` endtime)
   dbQuery $ HC.GetClockErrorStatistics (Just starttime) (Just endtime)
 
 sealDocumentFile :: (CryptoRNG m, MonadMask m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, Log.MonadLog m, AWS.AmazonMonad m)

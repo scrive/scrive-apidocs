@@ -1,12 +1,11 @@
 module Cron.Migrations (cronMigrations) where
 
-import Control.Monad
 import Data.ByteString (ByteString)
-import Data.Monoid
 
 import Cron.Tables
 import DB
 import DB.Checks
+import KontraPrelude
 
 cronMigrations :: MonadDB m => [Migration m]
 cronMigrations = [

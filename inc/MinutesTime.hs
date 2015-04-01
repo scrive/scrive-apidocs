@@ -21,13 +21,13 @@ module MinutesTime (
   , beginingOfMonth
   ) where
 
-import Control.Monad
 import Data.Int
 import Data.Time
 import Data.Time.Clock.POSIX
 import System.Locale
 import qualified Data.Binary as B
 
+import KontraPrelude
 import MinutesTime.Class
 
 -- | FIXME: this really needs to go.

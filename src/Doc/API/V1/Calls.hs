@@ -18,15 +18,12 @@ module Doc.API.V1.Calls (
   , apiCallV1SetAuthorAttachemnts -- Exported for tests
   ) where
 
-import Control.Applicative
 import Control.Conditional (whenM, unlessM, ifM)
 import Control.Exception.Lifted
 import Control.Monad.Error
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Char
 import Data.Int
-import Data.List
-import Data.Maybe
 import Data.String.Utils (replace,splitWs, strip)
 import Data.Time
 import Happstack.Server.RqData
@@ -89,6 +86,7 @@ import File.Storage
 import Happstack.Fields
 import InputValidation
 import Kontra
+import KontraPrelude
 import ListUtil
 import LiveDocx
 import MagicHash (MagicHash)
@@ -236,7 +234,7 @@ apiCallV1Clone did =  api $ do
          mndid <- dbUpdate $ CloneDocumentWithUpdatedAuthor V1 user doc actor
          when (isNothing mndid) $
              throwIO . SomeKontraException $ serverError "Can't clone given document"
-         newdoc <- dbQuery $ GetDocumentByDocumentID $ (fromJust mndid)
+         newdoc <- dbQuery $ GetDocumentByDocumentID $ $fromJust mndid
          Created <$> documentJSONV1 (Just $ user) True  True Nothing newdoc
      else throwIO . SomeKontraException $ serverError "Id did not matched template or you do not have right to access document"
 
@@ -314,7 +312,7 @@ apiCallV1SetAuthorAttachemnts did = api $ do
 
           hasAccess ::  Kontrakcja m => Document -> FileID -> m Bool
           hasAccess doc fid = do
-            user <- fromJust <$> ctxmaybeuser <$> getContext
+            user <- $fromJust <$> ctxmaybeuser <$> getContext
             if (fid `elem` (authorattachmentfile <$> documentauthorattachments doc))
              then return True
              else do
@@ -325,7 +323,7 @@ apiCallV1SetAuthorAttachemnts did = api $ do
                                               [ AttachmentFilterByFileID [fid]]
                                               []
                                               (0,1)
-              return $ not $ Prelude.null atts
+              return $ not $ null atts
 
 apiCallV1Ready :: (MonadBaseControl IO m, Kontrakcja m) => DocumentID -> m Response
 apiCallV1Ready did =  api $ do
@@ -401,10 +399,10 @@ apiCallV1CheckSign did slid = api $ do
   (dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
     whenM (not <$> isPending <$> theDocument ) $ do
       (throwIO . SomeKontraException $ conflictError $ "Document not pending")
-    whenM (hasSigned <$> fromJust . getSigLinkFor slid <$> theDocument) $ do -- We can use fromJust since else we would not get access to document
+    whenM (hasSigned <$> $fromJust . getSigLinkFor slid <$> theDocument) $ do -- We can use fromJust since else we would not get access to document
       (throwIO . SomeKontraException $ conflictError $ "Document already signed")
     checkAuthenticationMethodAndValue slid
-    authorization <- signatorylinkauthenticationmethod <$> fromJust . getSigLinkFor slid <$> theDocument
+    authorization <- signatorylinkauthenticationmethod <$> $fromJust . getSigLinkFor slid <$> theDocument
     fields <- getFieldForSigning
     case authorization of
        StandardAuthentication -> return $ Right $ Ok () -- If we have a document with standard auth, it can be always signed if its not closed and signed
@@ -435,10 +433,10 @@ apiCallV1Sign  did slid = api $ do
   olddoc `withDocument` ( do
     whenM (not <$> isPending <$> theDocument ) $ do
       (throwIO . SomeKontraException $ conflictError $ "Document not pending")
-    whenM (hasSigned <$> fromJust . getSigLinkFor slid <$> theDocument) $ do -- We can use fromJust since else we would not get access to document
+    whenM (hasSigned <$> $fromJust . getSigLinkFor slid <$> theDocument) $ do -- We can use fromJust since else we would not get access to document
       (throwIO . SomeKontraException $ conflictError $ "Document already signed")
     checkAuthenticationMethodAndValue slid
-    authorization <- signatorylinkauthenticationmethod <$> fromJust . getSigLinkFor slid <$> theDocument
+    authorization <- signatorylinkauthenticationmethod <$> $fromJust . getSigLinkFor slid <$> theDocument
 
     case authorization of
       StandardAuthentication -> do
@@ -482,7 +480,7 @@ checkAuthenticationMethodAndValue slid = do
            let mAuthMethod = fromJSValue $ toJSValue authType
            case mAuthMethod of
                 Just authMethod -> do
-                    siglink <- fromJust . getSigLinkFor slid <$> theDocument
+                    siglink <- $fromJust . getSigLinkFor slid <$> theDocument
                     let authOK = authMethod == signatorylinkauthenticationmethod siglink
                     case (authOK, authMethod) of
                          (False, _) -> throwIO . SomeKontraException $
@@ -574,7 +572,7 @@ apiCallV1SetAutoReminder did =  api $ do
       days <- case mdays of
            Nothing -> return Nothing
            Just n -> do tot <- documenttimeouttime <$> theDocument
-                        if n < 1 || (isJust tot && n `daysAfter` (ctxtime ctx) > fromJust tot)
+                        if n < 1 || (isJust tot && n `daysAfter` (ctxtime ctx) > $fromJust tot)
                           then throwIO . SomeKontraException $ (badInput "Number of days to send autoreminder must be a valid number, between 1 and number of days left till document deadline")
                           else return $ Just (fromIntegral n :: Int32)
       timezone <- documenttimezonename <$> theDocument
@@ -648,7 +646,7 @@ apiCallV1Delete did =  api $ do
                          _ -> return Nothing
     msl <- getSigLinkFor user <$> theDocument
     let haspermission = (isJust msl)
-                     || (isJust mauser && usercompany (fromJust mauser) == usercompany user && (useriscompanyadmin user))
+                     || (isJust mauser && usercompany ($fromJust mauser) == usercompany user && (useriscompanyadmin user))
     when (not haspermission) $ do
            throwIO . SomeKontraException $ serverError "Permission problem. Not connected to document."
     dbUpdate $ ArchiveDocument (userid user) actor
@@ -665,7 +663,7 @@ apiCallV1ReallyDelete did =  api $ do
                          _ -> return Nothing
     msl <- getSigLinkFor user <$> theDocument
     let haspermission = (isJust msl)
-                     || (isJust mauser && usercompany (fromJust mauser) == usercompany user && (useriscompanyadmin user))
+                     || (isJust mauser && usercompany ($fromJust mauser) == usercompany user && (useriscompanyadmin user))
     when (not haspermission) $ do
            throwIO . SomeKontraException $ serverError "Permission problem. Not connected to document."
     dbUpdate $ ReallyDeleteDocument (userid user) actor
@@ -694,7 +692,7 @@ apiCallV1Get did = api $ do
       (user, _actor, external) <- getAPIUser APIDocCheck
       msiglink <- getSigLinkFor user <$> theDocument
       unlessM (((const (isNothing msiglink)) ||^ isPreparation ||^ isClosed  ||^ isTemplate) <$> theDocument) $ do
-          let sl = fromJust msiglink
+          let sl = $fromJust msiglink
           dbUpdate . MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl)
                =<< signatoryActor ctx sl
 
@@ -704,7 +702,7 @@ apiCallV1Get did = api $ do
 
       haspermission <- theDocument >>= \d -> return $
                           isJust msiglink
-                       || (isJust mauser && usercompany (fromJust mauser) == usercompany user && (useriscompanyadmin user || isDocumentShared d))
+                       || (isJust mauser && usercompany ($fromJust mauser) == usercompany user && (useriscompanyadmin user || isDocumentShared d))
       if (haspermission)
         then do
           Ok <$> (documentJSONV1 (Just user) external ((userid <$> mauser) == (Just $ userid user)) msiglink =<< theDocument)
@@ -820,7 +818,7 @@ apiCallV1CheckAvailable = api $ do
   (mids :: Maybe [DocumentID]) <- readField "ids"
   when (isNothing mids) $ do
     throwIO . SomeKontraException $ serverError "No ids parameter was provided or it had wrong format"
-  let ids = fromJust mids
+  let ids = $fromJust mids
   when (length ids > 10000) $ do
     throwIO . SomeKontraException $ serverError "This request can't check more then 10000 documents"
   docids <- dbQuery $ GetDocumentsIDs [DocumentsVisibleToUser $ userid user] [DocumentFilterDeleted False,DocumentFilterByDocumentIDs ids] []
@@ -901,7 +899,7 @@ apiCallV1DownloadFile did fileid nameForBrowser = api $ do
                     else getDocByDocID did
   let allfiles = maybeToList (documentfile doc) ++ maybeToList (documentsealedfile doc) ++
                       (authorattachmentfile <$> documentauthorattachments doc) ++
-                      (catMaybes $ Prelude.map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
+                      (catMaybes $ map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
   if (all (/= fileid) allfiles)
      then throwIO . SomeKontraException $ forbidden "Access to file is forbiden."
      else do
@@ -1166,7 +1164,7 @@ getValidPin slid fields = do
   pin <- apiGuardJustM (badInput "Pin not provided or invalid.") $ getField "pin"
   phone <- case (lookup MobileFI fields) of
     Just (StringFTV v) -> return v
-    _ ->  getMobile <$> fromJust . getSigLinkFor slid <$> theDocument
+    _ ->  getMobile <$> $fromJust . getSigLinkFor slid <$> theDocument
   pin' <- dbQuery $ GetSignatoryPin slid phone
   if (pin == pin')
     then return $ Just pin

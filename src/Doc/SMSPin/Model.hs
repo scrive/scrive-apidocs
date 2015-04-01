@@ -7,6 +7,7 @@ import Control.Monad.Catch
 import Crypto.RNG
 import DB
 import Doc.SignatoryLinkID
+import KontraPrelude
 
 data GetSignatoryPin = GetSignatoryPin SignatoryLinkID String
 instance (MonadDB m, MonadThrow m, CryptoRNG m) => DBQuery m GetSignatoryPin String where

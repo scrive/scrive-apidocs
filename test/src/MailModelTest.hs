@@ -3,6 +3,7 @@ module MailModelTest (mailModelTests) where
 import Test.Framework
 
 import DB
+import KontraPrelude
 import MagicHash
 import Mails.Model
 import TestingUtil

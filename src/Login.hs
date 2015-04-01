@@ -5,8 +5,6 @@ module Login (
   , handleLogoutAJAX
   ) where
 
-import Control.Applicative
-import Data.Maybe
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
 import Text.JSON
 import Text.JSON.Gen as J
@@ -22,6 +20,7 @@ import InputValidation hiding (Result)
 import IPAddress
 import Kontra
 import KontraLink
+import KontraPrelude
 import Redirect
 import ThirdPartyStats.Core
 import User.Email

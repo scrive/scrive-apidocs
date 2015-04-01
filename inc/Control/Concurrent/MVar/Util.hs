@@ -3,6 +3,8 @@ module Control.Concurrent.MVar.Util where
 import Control.Concurrent.MVar (MVar, tryTakeMVar, putMVar)
 import Control.Exception.Lifted (mask_)
 
+import KontraPrelude
+
 -- | A non-blocking version of 'readMVar'.
 tryReadMVar :: MVar a -> IO (Maybe a)
 tryReadMVar v = mask_ $ do

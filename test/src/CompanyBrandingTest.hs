@@ -2,8 +2,6 @@ module CompanyBrandingTest(
     companyBrandingTests
 ) where
 
-import Control.Applicative
-import Data.List
 import Data.Unjson
 import Happstack.Server hiding (simpleHTTP)
 import Test.Framework
@@ -20,6 +18,7 @@ import Company.CompanyUI
 import Company.Model
 import Context
 import DB
+import KontraPrelude
 import TestingUtil
 import TestKontra
 import Theme.Model

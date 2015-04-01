@@ -1,6 +1,5 @@
 module LoginTest (loginTests) where
 
-import Control.Applicative
 import Happstack.Server
 import Test.Framework
 import Text.JSON
@@ -11,6 +10,7 @@ import BrandedDomain.Model
 import Company.Model
 import Context
 import DB
+import KontraPrelude
 import Login
 import TestingUtil
 import TestKontra as T

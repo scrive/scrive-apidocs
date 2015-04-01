@@ -4,14 +4,11 @@ module Doc.API.Callback.Model (
   , triggerAPICallbackIfThereIsOne
   ) where
 
-import Control.Applicative
-import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.State
 import Data.Int
-import Data.Monoid.Utils
 
 import ActionQueue.Scheduler
 import DB
@@ -20,8 +17,8 @@ import Doc.API.Callback.Execute
 import Doc.DocStateData
 import Doc.DocumentID
 import JobQueue.Config
+import KontraPrelude
 import MinutesTime
-import OurPrelude
 import User.CallbackScheme.Model
 import Util.SignatoryLinkUtils
 import qualified Log

@@ -12,12 +12,8 @@ module Archive.Control
        where
 
 import Codec.Archive.Zip
-import Control.Applicative
 import Control.Conditional (unlessM)
-import Control.Monad
 import Data.Char
-import Data.List
-import Data.Maybe
 import Happstack.Server(Response)
 import Text.JSON
 import Text.JSON.Gen as J
@@ -39,6 +35,7 @@ import File.Storage as F
 import InputValidation
 import Kontra
 import KontraLink
+import KontraPrelude
 import User.Model
 import User.Utils
 import Util.Actor

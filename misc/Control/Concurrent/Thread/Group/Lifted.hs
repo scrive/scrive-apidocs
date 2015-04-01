@@ -22,6 +22,8 @@ import Control.Monad.Base
 import Control.Monad.Trans.Control
 import qualified Control.Concurrent.Thread.Group as TG
 
+import KontraPrelude
+
 -- | Generalized version of 'TG.new'.
 new :: MonadBase IO m => m TG.ThreadGroup
 new = liftBase TG.new

@@ -2,14 +2,13 @@ module Doc.Screenshot
   ( Screenshot(..),
   ) where
 
-import Control.Applicative ((<$>), (<*>))
-import Data.Maybe (isJust)
 import Database.PostgreSQL.PQTypes (Binary(..))
 import Text.JSON.FromJSValue (FromJSValue(..), fromJSValueField)
 import Text.JSON.Gen (value, runJSONGen)
 import Text.JSON.ToJSValue (ToJSValue(..))
 import qualified Data.ByteString.UTF8 as BS
 
+import KontraPrelude
 import MinutesTime
 import qualified Data.ByteString.RFC2397 as RFC2397
 

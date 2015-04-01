@@ -12,6 +12,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL (toString)
 import qualified Data.Text as Text
 import qualified Data.Yaml as Yaml
 
+import KontraPrelude
 import Utils.Default
 
 --

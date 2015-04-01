@@ -1,6 +1,7 @@
 module DB.Versions where
 
 import DB.Model
+import KontraPrelude
 
 tableVersions :: Table
 tableVersions = tblTable {

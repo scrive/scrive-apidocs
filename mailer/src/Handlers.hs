@@ -7,8 +7,6 @@ module Handlers (
 import Control.Monad.Reader
 import Data.ByteString.UTF8  as BS
 import Data.Functor
-import Data.List
-import Data.Maybe
 import Happstack.Server hiding (dir, path)
 import Happstack.StaticRouting
 import System.Directory
@@ -16,6 +14,7 @@ import System.Directory
 import Crypto.RNG
 import DB
 import DB.PostgreSQL
+import KontraPrelude
 import Mailer
 import MailGun
 import SendGrid

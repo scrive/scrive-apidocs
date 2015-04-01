@@ -9,6 +9,7 @@ import Control.Monad.Trans.Control
 import Text.StringTemplates.Templates
 
 import Control.Monad.Trans.Control.Util
+import KontraPrelude
 
 instance (
     Monad (t m)

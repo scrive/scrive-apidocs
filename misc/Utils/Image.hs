@@ -3,9 +3,9 @@ module Utils.Image (
   , imgMimeType
   ) where
 
-import Data.Maybe
 import qualified Data.ByteString as B
 
+import KontraPrelude
 import qualified Data.ByteString.RFC2397 as RFC2397
 
 -- | Encode image data according to RFC2397. We try to detect content type

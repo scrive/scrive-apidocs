@@ -7,7 +7,6 @@ module File.Model (
     , PurgeFile(..)
     ) where
 
-import Control.Applicative
 import Control.Monad.Catch
 import Data.Int
 import qualified Crypto.Hash.SHA1 as SHA1
@@ -18,6 +17,7 @@ import DB
 import File.Conditions
 import File.File
 import File.FileID
+import KontraPrelude
 import MinutesTime.Class
 
 data GetFileByFileID = GetFileByFileID FileID

@@ -1,6 +1,5 @@
 module FileTest (fileTests) where
 
-import Control.Monad (replicateM_)
 import Happstack.Server.SimpleHTTP
 import Test.Framework
 import Test.QuickCheck
@@ -11,6 +10,7 @@ import DB
 import File.Conditions
 import File.File
 import File.Model
+import KontraPrelude
 import Purging.Files
 import TestingUtil
 import TestKontra
@@ -35,7 +35,7 @@ fileTests env = testGroup "Files" [
 testFileIDReadShow :: TestEnv ()
 testFileIDReadShow = replicateM_ 100 $  do
    (fid :: FileID) <- rand 10 arbitrary
-   assertEqual "read . show == id" fid  ((read . show) fid)
+   assertEqual "read . show == id" fid  (($read . show) fid)
 
 testFileIDUriShow :: TestEnv ()
 testFileIDUriShow = replicateM_ 100 $  do

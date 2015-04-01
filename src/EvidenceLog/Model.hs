@@ -15,13 +15,10 @@ module EvidenceLog.Model (
   , signatoryLinkTemplateFields
   ) where
 
-import Control.Applicative ((<$>), (<*>))
 import Control.Monad.Catch
 import Control.Monad.Identity
 import Data.Int
 import Data.List.Utils (replace)
-import Data.Monoid
-import Data.Monoid.Utils
 import Data.Text (pack)
 import Data.Typeable
 import Text.StringTemplates.Templates
@@ -35,8 +32,8 @@ import Doc.DocumentID
 import Doc.DocumentMonad (DocumentMonad, theDocumentID, theDocument)
 import Doc.SignatoryLinkID
 import IPAddress
+import KontraPrelude
 import MinutesTime
-import OurPrelude (unexpectedErrorM)
 import Text.XML.Content (parseXMLContent)
 import Text.XML.DirtyContent (XMLContent(..))
 import User.Model

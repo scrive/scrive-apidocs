@@ -1,6 +1,5 @@
 module Session.Migrations where
 
-
 import DB
 import Session.Tables
 

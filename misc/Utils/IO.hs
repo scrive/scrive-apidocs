@@ -1,9 +1,7 @@
 module Utils.IO where
 
 import Control.Concurrent
-import Control.Monad
 import Control.Monad.IO.Class
-import Data.List (sort)
 import System.Exit
 import System.IO
 import System.Posix.IO (stdInput)
@@ -15,6 +13,7 @@ import qualified Control.Exception.Lifted as C
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL (toString)
 
+import KontraPrelude
 import qualified Log
 
 -- | Wait for a signal (sigINT or sigTERM).

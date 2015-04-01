@@ -1,9 +1,10 @@
 {-# LANGUAGE OverlappingInstances #-}
 module GuardTime.Class where
 
-import Control.Applicative
 import Control.Monad.Trans
 import Data.Unjson
+
+import KontraPrelude
 
 data GuardTimeConf = GuardTimeConf {
   guardTimeURL ::  String

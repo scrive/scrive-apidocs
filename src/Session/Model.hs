@@ -7,12 +7,9 @@ module Session.Model (
   , getSession
   ) where
 
-import Control.Monad
 import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Maybe
-import Data.Maybe
-import Data.Monoid.Utils
 import Happstack.Server hiding (Session)
 
 import ActionQueue.Core
@@ -20,6 +17,7 @@ import Context
 import Crypto.RNG
 import DB
 import KontraMonad
+import KontraPrelude
 import MagicHash
 import MinutesTime
 import Session.Cookies
@@ -74,7 +72,7 @@ updateSession old_ses ses = do
     -- if session id is temporary, but its data is not empty, insert it into db
     True | not (isSessionEmpty ses) -> do
       when (isNothing (sesUserID old_ses) && isJust (sesUserID ses)) $ do
-        let uid = fromJust $ sesUserID ses
+        let uid = $fromJust $ sesUserID ses
         n <- deleteSuperfluousUserSessions uid
         Log.mixlog_ $ show n ++ " superfluous sessions of user with id = " ++ show uid ++ " removed from the database"
       expires <- sessionNowModifier `liftM` currentTime

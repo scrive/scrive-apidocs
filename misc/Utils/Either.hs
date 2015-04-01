@@ -1,5 +1,7 @@
 module Utils.Either where
 
+import KontraPrelude
+
 isLeft :: Either a b -> Bool
 isLeft (Left _) = True
 isLeft _ = False

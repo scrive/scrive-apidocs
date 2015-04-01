@@ -1,13 +1,13 @@
 module User.Password where
 
-import Control.Monad (liftM)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.Digest.SHA256 as D
 
-import Crypto.RNG(CryptoRNG, randomBytes)
+import Crypto.RNG (CryptoRNG, randomBytes)
 import Crypto.RNG.Utils
 import DB
+import KontraPrelude
 
 data Password = Password {
     pwdHash :: Binary BS.ByteString

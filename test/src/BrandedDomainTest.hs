@@ -5,6 +5,7 @@ import Test.Framework
 import BrandedDomain.Model
 import Company.Model
 import DB
+import KontraPrelude
 import TestingUtil
 import TestKontra
 import Theme.Model

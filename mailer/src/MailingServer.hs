@@ -1,11 +1,7 @@
 module MailingServer where
 
-import Control.Applicative
 import Control.Concurrent.Lifted
-import Control.Monad
 import Control.Monad.Base
-import Data.Monoid
-import Data.Monoid.Utils
 import Data.Time
 import Happstack.Server hiding (result, waitForTermination)
 import qualified Control.Exception.Lifted as E
@@ -20,11 +16,11 @@ import DB.PostgreSQL
 import Handlers
 import JobQueue.Components
 import JobQueue.Config
+import KontraPrelude
 import MailingServerConf
 import Mails.Model
 import Mails.Tables
 import MinutesTime
-import OurPrelude
 import Sender
 import Utils.IO
 import Utils.Network

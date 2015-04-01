@@ -7,7 +7,6 @@ module Doc.SignatoryScreenshots
   , validReferenceName
   ) where
 
-import Control.Applicative ((<$>))
 import Control.Monad.Base (MonadBase)
 import Control.Monad.Trans (MonadIO, liftIO)
 import Control.Monad.Trans.Control (MonadBaseControl)
@@ -20,6 +19,7 @@ import qualified Control.Exception.Lifted as E
 import API.Monad (badInput)
 import DB.SQL (SomeKontraException(..))
 import Doc.Screenshot
+import KontraPrelude
 
 data SignatoryScreenshots = SignatoryScreenshots
   { first         :: Maybe Screenshot

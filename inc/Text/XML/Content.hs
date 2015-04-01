@@ -13,7 +13,6 @@ module Text.XML.Content
   )
   where
 
-import Control.Applicative (Applicative, (<$>))
 import Control.Exception (SomeException)
 import Control.Monad.ST (runST)
 import Control.Monad.State.Strict
@@ -31,7 +30,7 @@ import Text.XML.Stream.Render (renderBytes)
 import qualified Data.Map as Map
 import qualified Data.Text as T
 
-import OurPrelude (unexpectedError)
+import KontraPrelude
 
 newtype XMLContent = XMLContent { unXMLContent :: [Node] }
   deriving (Eq, Ord, Show)
