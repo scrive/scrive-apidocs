@@ -38,7 +38,6 @@ sed                             \
      -e '/ old-locale /d'       \
      -e '/ old-time /d'         \
      -e '/ pretty /d'           \
-     -e '/ process /d'          \
      -e '/ rts /d'              \
      -e '/ template-haskell /d' \
      -e '/ temporary /d'        \
