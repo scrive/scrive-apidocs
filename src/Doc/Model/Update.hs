@@ -1589,11 +1589,11 @@ checkEqualByAllowSecondNothing name func obj1 obj2
   | func obj1 /= func obj2 && (not (isNothing (func obj2))) = Just (name, show (func obj1), show (func obj2))
   | otherwise              = Nothing
 
-assertEqualDocuments :: (Monad m, Log.MonadLog m) => Document -> Document -> m ()
+assertEqualDocuments :: (MonadThrow m, Log.MonadLog m) => Document -> Document -> m ()
 assertEqualDocuments d1 d2 | null inequalities = return ()
                            | otherwise = do
                                 Log.mixlog_ message
-                                error message
+                                $unexpectedErrorM message
   where
     message = "Documents aren't equal in " ++ concat (map showInequality inequalities)
     showInequality (name,obj1,obj2) = name ++ ": \n" ++ obj1 ++ "\n" ++ obj2 ++ "\n"

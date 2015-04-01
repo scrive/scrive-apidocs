@@ -314,7 +314,7 @@ array x = Array . map value $ x
 
 unpsname :: Value -> BS.ByteString
 unpsname (Name x ) = x
-unpsname _ = error "Value is not a Name in unpsname"
+unpsname _ = $unexpectedError "value is not a Name in unpsname"
 
 class IsString a where
     string :: a -> Value
@@ -662,7 +662,7 @@ upgrade = modify upgradeF
 
 trailerF :: DictData -> Document -> Document
 trailerF v (Document ver ((Body _ objs):bodies)) = Document ver ((Body v objs):bodies)
-trailerF _ (Document _ []) = error "Document needs to have at least one body"
+trailerF _ (Document _ []) = $unexpectedError "document needs to have at least one body"
 
 trailer :: DictData -> State Document ()
 trailer x = modify (trailerF x)
@@ -688,7 +688,7 @@ addIndirF object doc@(Document ver ((Body trailer' objs):bodies)) = (ndoc,refid'
         value' = UsedEntry (gener refid') object
         newbody = Body trailer' (IntMap.insert (objno refid') value' objs)
         ndoc = (Document ver (newbody:bodies))
-addIndirF _ _ = error "Document needs to have at least one body"
+addIndirF _ _ = $unexpectedError "document needs to have at least one body"
 
 setIndir :: RefID -> Indir -> State Document ()
 setIndir refid' indir = modify (setIndirF refid' indir)
@@ -700,7 +700,7 @@ setIndirF refid' object (Document ver ((Body trailer' objs):bodies)) = ndoc
         value' = UsedEntry (gener refid') object
         newbody = Body trailer' (IntMap.insert key value' objs)
         ndoc = (Document ver (newbody:bodies))
-setIndirF _ _ _ = error "Document needs to have at least one body"
+setIndirF _ _ _ = $unexpectedError "document needs to have at least one body"
 
 setObject :: RefID -> Value -> State Document ()
 setObject refid' value' = setIndir refid' (Indir value' Nothing)
@@ -717,7 +717,7 @@ addStream value'@(Dict dt) strm
                cl <- addIndir (Indir (Number 0) Nothing)
            return s
 
-addStream _ _ = error "Stream must begin with a dict"
+addStream _ _ = $unexpectedError "stream must begin with a dict"
 
 lookup :: RefID -> Document -> Maybe Indir
 lookup refid' (Document _ bodies) = msum (map check bodies)
@@ -903,7 +903,7 @@ importObjects doc refids = do
 
 ext :: Value -> [(BS.ByteString, Value)] -> Value
 ext (Dict d) r = Dict (r ++ d)
-ext _ _ = error "ext can be used only for Dict"
+ext _ _ = $unexpectedError "ext can be used only for Dict"
 
 trailer_dict :: IsValue b => b -> [(BS.ByteString, Value)]
 trailer_dict catalog = [ entry "Root" catalog ]
@@ -1110,11 +1110,11 @@ xparse body bin = do
                                         UsedEntry _ indir -> case indir of
                                             Indir value' _ -> case value' of
                                                 Number v' -> round v'
-                                                x -> error ("/Length not found case 5: " ++ show x)
-                                        x -> error ("/Length not found case 4: " ++ show x)
-                                    x -> error ("/Length not found case 1: " ++ show x)
-                _ ->  error "/Length not found case 2"
-        findLength _ _ =  error "/Length not found case 3"
+                                                x -> $unexpectedError ("/Length not found case 5: " ++ show x)
+                                        x -> $unexpectedError ("/Length not found case 4: " ++ show x)
+                                    x -> $unexpectedError ("/Length not found case 1: " ++ show x)
+                _ ->  $unexpectedError "/Length not found case 2"
+        findLength _ _ =  $unexpectedError "/Length not found case 3"
 
 
         parseIndir :: BS.ByteString -> Int -> (Int,Int,Indir)
@@ -1142,7 +1142,7 @@ xparse body bin = do
                         dt = BS.take (fromIntegral len) rest
                         indir = (obj,gen,Indir e (Just (BSL.fromChunks [dt])))
                     in indir
-                e -> error $ "Cannot parse Indir at offset " ++ show off ++ ", beginning: " ++ take 300 (BSC.unpack bin'') ++ ", error: " ++ es
+                e -> $unexpectedError $ "Cannot parse Indir at offset " ++ show off ++ ", beginning: " ++ take 300 (BSC.unpack bin'') ++ ", error: " ++ es
                       where Left es = A.eitherResult e
 
         parseIndir1 :: Parser (Int,Int,Indir)
@@ -1327,7 +1327,7 @@ parseHexString = do
         hexvalue x | x>=c '0' && x<=c '9' = fromIntegral (x - c '0')
         hexvalue x | x>=c 'A' && x<=c 'F' = fromIntegral (10 + x - c 'A')
         hexvalue x | x>=c 'a' && x<=c 'f' = fromIntegral (10 + x - c 'a')
-        hexvalue x = error ("hexvalue cannot know value of " ++ show x)
+        hexvalue x = $unexpectedError ("hexvalue cannot know value of " ++ show x)
         c = BSB.c2w
 
 -- | Parse array [ ]
@@ -1465,13 +1465,13 @@ findRefIdOfRootPages document' = pagesrefid
         trailer' = bodyTrailer firstBody
         root = case P.lookup (BSC.pack "Root") trailer' of
                  Just (Ref root') -> root'
-                 x -> error ("/Root is wrong: " ++ show x)
+                 x -> $unexpectedError ("/Root is wrong: " ++ show x)
         catalog = case PdfModel.lookup root document' of
                     Just (Indir (Dict catalog') _) -> catalog'
-                    x -> error ("lookup of " ++ show root ++ " returned " ++ show x)
+                    x -> $unexpectedError ("lookup of " ++ show root ++ " returned " ++ show x)
         pagesrefid = case P.lookup (BSC.pack "Pages") catalog of
                        Just (Ref pagesrefid') -> pagesrefid'
-                       x -> error ("lookup of /Pages in catalog returned " ++ show x)
+                       x -> $unexpectedError ("lookup of /Pages in catalog returned " ++ show x)
 
 
 getCountFromRefID :: RefID -> State Document Double
@@ -1479,10 +1479,10 @@ getCountFromRefID ref = do
   document' <- get
   let dt = case PdfModel.lookup ref document' of
              Just (Indir (Dict dt') _) -> dt'
-             x -> error ("lookup of " ++ show ref ++ " in document returned " ++ show x)
+             x -> $unexpectedError ("lookup of " ++ show ref ++ " in document returned " ++ show x)
       vl = case P.lookup (BSC.pack "Count") dt of
              Just (Number ct') -> ct'
-             x -> error ("lookup of /Count at " ++ show ref ++ " returned " ++ show x ++ " dict is " ++ show dt)
+             x -> $unexpectedError ("lookup of /Count at " ++ show ref ++ " returned " ++ show x ++ " dict is " ++ show dt)
   return vl
 
 setParent :: RefID -> RefID -> State Document ()
@@ -1490,7 +1490,7 @@ setParent parent ref = do
   document' <- get
   let dt = case PdfModel.lookup ref document' of
              Just (Indir (Dict dt') _) -> dt'
-             x -> error ("lookup of " ++ show ref ++ " in document returned " ++ show x)
+             x -> $unexpectedError ("lookup of " ++ show ref ++ " in document returned " ++ show x)
   setObject ref (Dict (dt ++ [ entry "Parent" parent ]))
 
 concatenatePdfDocuments :: [Document] -> Document

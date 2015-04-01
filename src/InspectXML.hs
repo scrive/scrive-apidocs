@@ -47,5 +47,4 @@ deriveInspectXML name = do
   case info of
     TH.TyConI (TH.DataD _ _ _ cons _fields) -> d name cons
     TH.TyConI (TH.NewtypeD _ _ _ con _fields) -> d name [con]
-    _ -> error ("deriveInspectXML cannot handle: " ++ show info)
-
+    _ -> $unexpectedError $ "deriveInspectXML cannot handle: " ++ show info

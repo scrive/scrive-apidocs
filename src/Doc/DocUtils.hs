@@ -265,9 +265,10 @@ canAuthorSignNow doc =
   && documentcurrentsignorder doc >= signatorysignorder author
   && (not . hasSigned $ author)
   && isSignatory author
-  where author = case getAuthorSigLink doc of
-                   Just a -> a
-                   _ -> error $ "Document " ++ show (documentid doc) ++ " does not have author"
+  where
+    author = case getAuthorSigLink doc of
+      Just a -> a
+      _ -> $unexpectedError $ "document " ++ show (documentid doc) ++ " does not have author"
 
 
 -- Checks if signatory can sign now

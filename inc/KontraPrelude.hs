@@ -29,7 +29,7 @@ import Data.Monoid.Utils
 import Data.Typeable
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
-import Prelude hiding (head, last, maximum, minimum, read, tail)
+import Prelude hiding (error, head, last, maximum, minimum, read, tail)
 import qualified Prelude as P
 
 data UnexpectedError = UnexpectedError {

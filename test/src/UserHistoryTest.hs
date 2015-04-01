@@ -251,5 +251,5 @@ createTestUser = do
                                 defaultValue
                                 (bdid bd)
     case muser of
-        Nothing     -> error "Can't create user"
+        Nothing     -> $unexpectedErrorM "can't create user"
         (Just user) -> return user

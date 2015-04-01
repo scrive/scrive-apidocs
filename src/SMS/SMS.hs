@@ -29,11 +29,12 @@ data SMS = SMS {
 -- successfully.
 scheduleSMS :: (Log.MonadLog m, MonadDB m, MonadThrow m) => Document -> SMS -> m ()
 scheduleSMS doc msg@SMS{..} = do
-  when (null smsMSISDN) $ error "scheduleSMS: no mobile phone number defined"
+  when (null smsMSISDN) $ do
+    $unexpectedErrorM "no mobile phone number defined"
   sid <- dbUpdate $ CreateSMS (fixOriginator smsOriginator) (fixPhoneNumber smsMSISDN) smsBody (show smsData)
   -- charge company of the author of the document for the smses
   dbUpdate $ ChargeCompanyForSMS (documentid doc) sms_count
-  Log.mixlog_ $ "SMS " ++ show msg ++ " with id #" ++ show sid ++ " scheduled for sendout"
+  Log.mixlog_ $ "SMS" <+> show msg <+> "with id" <+> show sid <+> "scheduled for sendout"
   where
     -- Count the real smses; if the message length is less than
     -- 160 characters, it's 1 sms. Otherwise it's split into

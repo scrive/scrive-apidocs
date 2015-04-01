@@ -7,8 +7,7 @@ module JobQueue.Config (
 
 import Data.Time
 import Database.PostgreSQL.PQTypes
-
-import KontraPrelude
+import Prelude
 
 -- | Action to take after a job was processed.
 data Action

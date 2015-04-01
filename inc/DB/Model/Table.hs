@@ -34,8 +34,8 @@ data TableColumn = TableColumn {
 
 tblColumn :: TableColumn
 tblColumn = TableColumn {
-  colName = error "Column name must be specified"
-, colType = error "Column type must be specified"
+  colName = $unexpectedError "column name must be specified"
+, colType = $unexpectedError "column type must be specified"
 , colNullable = True
 , colDefault = Nothing
 }
@@ -77,9 +77,9 @@ data TableInitialSetup = TableInitialSetup {
 
 tblTable :: Table
 tblTable = Table {
-  tblName = error "Table name must be specified"
-, tblVersion = error "Table version must be specified"
-, tblColumns = error "Table columns must be specified"
+  tblName = $unexpectedError "table name must be specified"
+, tblVersion = $unexpectedError "table version must be specified"
+, tblColumns = $unexpectedError "table columns must be specified"
 , tblPrimaryKey = Nothing
 , tblChecks = []
 , tblForeignKeys = []

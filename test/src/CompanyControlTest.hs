@@ -43,7 +43,7 @@ test_handleGetCompanyJSON = do
   (avalue, _ctx') <- runTestKontra req ctx $ handleGetCompanyBranding Nothing
   (jsv :: JSValue) <- case decode (BSL.toString $ A.encode avalue) of
                Ok js -> return $ js
-               _ -> assertFailure "Response from handleGetCompanyBranding is not a valid JSON" >> error ""
+               _ -> $unexpectedErrorM "Response from handleGetCompanyBranding is not a valid JSON"
   (jsonCompanyid :: String) <- guardJustM $ withJSValue jsv $ fromJSValueField "companyid"
   (jsonMailTheme :: Maybe String) <- withJSValue jsv $ fromJSValueField "mailTheme"
   (jsonSignviewTheme :: Maybe String) <- withJSValue jsv $ fromJSValueField "signviewTheme"
@@ -87,7 +87,7 @@ test_settingUIWithHandleChangeCompanyBranding = do
   (avalue, _) <- runTestKontra req2 ctx $ handleGetCompanyBranding Nothing
   (jsv :: JSValue) <- case decode (BSL.toString $ A.encode avalue) of
                Ok js -> return $ js
-               _ -> assertFailure "Response from handleGetCompanyBranding is not a valid JSON" >> error ""
+               _ -> $unexpectedErrorM "Response from handleGetCompanyBranding is not a valid JSON"
   (jsonMailTheme :: Maybe String) <- withJSValue jsv $ fromJSValueField "mailTheme"
   (jsonSignviewTheme :: Maybe String) <- withJSValue jsv $ fromJSValueField "signviewTheme"
   (jsonServiceTheme :: Maybe String) <- withJSValue jsv $ fromJSValueField "serviceTheme"

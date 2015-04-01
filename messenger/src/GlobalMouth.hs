@@ -37,7 +37,7 @@ handleGlobalMouthEvents = flip E.catch (\(e :: SomeException) -> Log.mixlog_ (sh
                 -- will continue attempts to deliver it once our quotas allow it.
                 ("false", "Throttling error (ESME has exceeded allowed message limits)") -> SMSDelivered
                 ("false", _) -> SMSUndelivered xreason
-                _ -> error "Unknown report"
+                _ -> $unexpectedError "unknown report"
 
   case xref of
     Just xref' -> do

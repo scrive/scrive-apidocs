@@ -174,7 +174,7 @@ instance RunnableTestKontra a where
   runTestKontra rq ctx tk = do
     cs <- asks teConnSource
     (res, ctx', _) <- runTestKontraHelper cs rq ctx tk
-      `E.catch` (\(FinishWith _ _) -> error "FinishWith thrown in function that doesn't return Response")
+      `E.catch` (\(FinishWith _ _) -> $unexpectedErrorM "FinishWith thrown in function that doesn't return Response")
     return (res, ctx')
 
 instance RunnableTestKontra Response where
@@ -313,7 +313,7 @@ mkContext lang = do
         , ctxfilecache = filecache
         , ctxlesscache = lesscache
         , ctxbrandedimagescache = brandedimagescache
-        , ctxxtoken = error "xtoken is not defined"
+        , ctxxtoken = $unexpectedError "xtoken is not defined"
         , ctxadminaccounts = []
         , ctxsalesaccounts = []
         , ctxmaybepaduser = Nothing

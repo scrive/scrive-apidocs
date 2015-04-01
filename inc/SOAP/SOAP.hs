@@ -46,7 +46,7 @@ instance (XmlContent a) => XmlContent (SOAP a) where
     [CElem (Elem (N "Envelope") [mkAttr "xmlns" "http://schemas.xmlsoap.org/soap/envelope/"]
       [CElem (Elem (N "Body") []
       (toContents a)) ()]) ()]
-  toContents _ = error "Please do not serialize SOAPFault"
+  toContents _ = $unexpectedError "please do not serialize SOAPFault"
   parseContents = do
     { inElementNS "Envelope" $ do
       { _ <- optional $ elementNS "Header"

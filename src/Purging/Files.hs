@@ -15,7 +15,7 @@ import KontraPrelude
 import qualified Log
 
 data FindFilesForPurging = FindFilesForPurging Int
-instance MonadDB m => DBQuery m FindFilesForPurging [(FileID,Maybe String,Maybe String,Bool)] where
+instance (MonadDB m, MonadThrow m) => DBQuery m FindFilesForPurging [(FileID, Maybe String, Maybe String, Bool)] where
   query (FindFilesForPurging limit) = do
     -- lets check if the database still looks similar to what the code
     -- below was written for
@@ -37,7 +37,7 @@ instance MonadDB m => DBQuery m FindFilesForPurging [(FileID,Maybe String,Maybe 
            ]
 
     when (sort expected_refs /= sort refs) $
-      error $ "PurgeFile: database layout has changed, update PurgeFile.expected_refs and check the code: " ++ show refs
+      $unexpectedErrorM $ "PurgeFile: database layout has changed, update PurgeFile.expected_refs and check the code: " ++ show refs
 
     runSQL_ $ "SELECT id, amazon_bucket, amazon_url, content IS NULL"
         <+> "  FROM files"

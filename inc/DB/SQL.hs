@@ -1117,7 +1117,7 @@ kWhyNot1Ex cmd = do
   let condition = logics !! (indexOfFirstFailedCondition)
 
   case condition of
-    (important, ExceptionMaker exception, _from, []) -> return (important, exception $ error "kWhyNot1Ex: this argument should've been ignored")
+    (important, ExceptionMaker exception, _from, []) -> return (important, exception $ $unexpectedError "this argument should've been ignored")
     (important, ExceptionMaker exception, (from, conds), sqls) -> do
        let statement' = sqlSelect2 from $ do
              mapM_ sqlResult sqls

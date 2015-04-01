@@ -4,13 +4,16 @@ module JobQueue.Consumer (
   , unregisterConsumer
   ) where
 
+import Control.Applicative
 import Control.Monad.Base
 import Control.Monad.Catch
 import Data.Int
+import Data.Monoid
+import Data.Monoid.Utils
 import Database.PostgreSQL.PQTypes
+import Prelude
 
 import JobQueue.Config
-import KontraPrelude
 
 -- | ID of a consumer.
 newtype ConsumerID = ConsumerID Int64

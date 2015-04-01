@@ -27,7 +27,7 @@ addIsFree =
       runSQL_ "ALTER TABLE users ADD COLUMN is_free BOOL NOT NULL DEFAULT FALSE"
     }
 
-removeServiceIDFromUsers :: MonadDB m => Migration m
+removeServiceIDFromUsers :: (MonadDB m, MonadThrow m) => Migration m
 removeServiceIDFromUsers = Migration {
     mgrTable = tableUsers
   , mgrFrom = 9
@@ -38,7 +38,7 @@ removeServiceIDFromUsers = Migration {
     case check of
       []     -> return () -- no records, ok
       [True] -> return () -- only nulls, ok
-      _      -> error "Users have rows with non-null service_id"
+      _      -> $unexpectedErrorM "users have rows with non-null service_id"
     runSQL_ "ALTER TABLE users DROP CONSTRAINT fk_users_services"
     runSQL_ "DROP INDEX idx_users_service_id"
     runSQL_ "ALTER TABLE users DROP COLUMN service_id"

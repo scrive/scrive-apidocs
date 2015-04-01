@@ -82,7 +82,7 @@ startSystem appGlobals appConf = E.bracket startServer stopServer waitForTerm
       routes <- case compile $ staticRoutes (production appConf) of
                   Left e -> do
                     Log.mixlog_ e
-                    error "static routing"
+                    $unexpectedErrorM "static routing"
                   Right r -> return r
       let conf = nullConf {
             port = fromIntegral port

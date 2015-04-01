@@ -112,8 +112,7 @@ jsonAttachment attid = do
             [AttachmentFilterByID [attid]] [] (0,10)
     case atts of
       [att] -> attachmentJSON att
-      _ -> error "not found"
-
+      _ -> $unexpectedErrorM "not found"
 
 jsonAttachmentsList ::  Kontrakcja m => m (Either KontraLink JSValue)
 jsonAttachmentsList = withUserGet $ do

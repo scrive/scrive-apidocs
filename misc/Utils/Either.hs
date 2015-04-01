@@ -12,11 +12,11 @@ isRight _ = False
 
 fromLeft :: Either a b -> a
 fromLeft (Left a) = a
-fromLeft _ = error "Reading Left for Right"
+fromLeft _ = $unexpectedError "reading Left for Right"
 
 fromRight :: Either a b -> b
 fromRight (Right b) = b
-fromRight _ = error "Reading Right for Left"
+fromRight _ = $unexpectedError "reading Right for Left"
 
 toMaybe :: Either a b -> Maybe b
 toMaybe (Right a) = Just a

@@ -459,7 +459,7 @@ moveCancelationReasonFromDocumentsToSignatoryLinks = Migration {
                                        , $fromJust (fromJSValue slid), fromJSString message
                                        , fromJSString first_name, fromJSString last_name
                                        , fromJSString personal_number)
-                   _ -> error $ "Could not parse what is in ELegDataMismatch: " ++ fieldsstr ++ ", value is " ++ show g
+                   _ -> $unexpectedError $ "could not parse what is in ELegDataMismatch: " ++ fieldsstr ++ ", value is " ++ show g
 
       values <- fetchMany fetch
       forM_ values $ \v@( did :: Int64, slid :: Int64, message :: String
@@ -543,7 +543,7 @@ removeCompanyIdFromSignatoryLinks = Migration {
       runSQL_ "ALTER TABLE signatory_links DROP COLUMN company_id"
 }
 
-removeServiceIDFromDocuments :: MonadDB m => Migration m
+removeServiceIDFromDocuments :: (MonadDB m, MonadThrow m) => Migration m
 removeServiceIDFromDocuments = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 9
@@ -554,7 +554,7 @@ removeServiceIDFromDocuments = Migration {
     case check of
       []     -> return () -- no records, ok
       [True] -> return () -- only nulls, ok
-      _      -> error "Documents have rows with non-null service_id"
+      _      -> $unexpectedErrorM "documents have rows with non-null service_id"
     runSQL_ "ALTER TABLE documents DROP CONSTRAINT fk_documents_services"
     runSQL_ "DROP INDEX idx_documents_service_id"
     runSQL_ "ALTER TABLE documents DROP COLUMN service_id"

@@ -159,7 +159,7 @@ instance XmlContent LogIn where
       [ mkElemC "username" (toText username)
       , mkElemC "password" (toText password)
       ]) ()]
-  parseContents = error "Please do not parse a LogIn"
+  parseContents = $unexpectedError "please do not parse a LogIn"
 instance HasXmlNamespace LogIn where
   xmlNamespace = const "LogIn"
 
@@ -169,7 +169,7 @@ data LogInResponse = LogInResponse
 instance HTypeable LogInResponse where
     toHType _ = Defined "LogInResponse" [] []
 instance XmlContent LogInResponse where
-  toContents LogInResponse = error "Please do not serialize LogInResponse"
+  toContents LogInResponse = $unexpectedError "please do not serialize LogInResponse"
   parseContents = do
     { _e <- elementNS "LogInResponse"
     ; return LogInResponse
@@ -183,7 +183,7 @@ instance HTypeable LogOut where
 instance XmlContent LogOut where
   toContents (LogOut namespace) =
     [CElem (Elem (N "LogOut") [mkAttr "xmlns" namespace] []) ()]
-  parseContents = error "Please do not parse a LogOut"
+  parseContents = $unexpectedError "please do not parse a LogOut"
 instance HasXmlNamespace LogOut where
   xmlNamespace = const "LogOut"
 
@@ -193,7 +193,7 @@ data LogOutResponse = LogOutResponse
 instance HTypeable LogOutResponse where
     toHType _ = Defined "LogOutResponse" [] []
 instance XmlContent LogOutResponse where
-  toContents LogOutResponse = error "Please do not serialize LogOutResponse"
+  toContents LogOutResponse = $unexpectedError "please do not serialize LogOutResponse"
   parseContents = do
     { _e <- elementNS "LogOutResponse"
     ; return LogOutResponse
@@ -211,7 +211,7 @@ instance XmlContent SetLocalTemplate where
       [ mkElemC "template" (toText base64data)
       , mkElemC "format" (toText $ show format)
       ]) ()]
-  parseContents = error "Please do not parse an SetLocalTemplate"
+  parseContents = $unexpectedError "please do not parse an SetLocalTemplate"
 instance HasXmlNamespace SetLocalTemplate where
   xmlNamespace = const "SetLocalTemplate"
 
@@ -221,7 +221,7 @@ data SetLocalTemplateResponse = SetLocalTemplateResponse
 instance HTypeable SetLocalTemplateResponse where
     toHType _ = Defined "SetLocalTemplateResponse" [] []
 instance XmlContent SetLocalTemplateResponse where
-  toContents SetLocalTemplateResponse = error "Please do not serialize SetLocalTemplateResponse"
+  toContents SetLocalTemplateResponse = $unexpectedError "please do not serialize SetLocalTemplateResponse"
   parseContents = do
     { _e <- elementNS "SetLocalTemplateResponse"
     ; return SetLocalTemplateResponse
@@ -235,7 +235,7 @@ instance HTypeable CreateDocument where
 instance XmlContent CreateDocument where
   toContents (CreateDocument namespace) =
     [CElem (Elem (N "CreateDocument") [mkAttr "xmlns" namespace] []) ()]
-  parseContents = error "Please do not parse a CreateDocument"
+  parseContents = $unexpectedError "please do not parse a CreateDocument"
 instance HasXmlNamespace CreateDocument where
   xmlNamespace = const "CreateDocument"
 
@@ -245,7 +245,7 @@ data CreateDocumentResponse = CreateDocumentResponse
 instance HTypeable CreateDocumentResponse where
     toHType _ = Defined "CreateDocumentResponse" [] []
 instance XmlContent CreateDocumentResponse where
-  toContents CreateDocumentResponse = error "Please do not serialize CreateDocumentResponse"
+  toContents CreateDocumentResponse = $unexpectedError "please do not serialize CreateDocumentResponse"
   parseContents = do
     { _e <- elementNS "CreateDocumentResponse"
     ; return CreateDocumentResponse
@@ -261,7 +261,7 @@ instance XmlContent RetrieveDocument where
     [CElem (Elem (N "RetrieveDocument") [mkAttr "xmlns" namespace]
       [ mkElemC "format" (toText format)
       ]) ()]
-  parseContents = error "Please do not parse a RetrieveDocument"
+  parseContents = $unexpectedError "please do not parse a RetrieveDocument"
 instance HasXmlNamespace RetrieveDocument where
   xmlNamespace = const "RetrieveDocument"
 
@@ -271,7 +271,7 @@ data RetrieveDocumentResponse = RetrieveDocumentResponse BS.ByteString
 instance HTypeable RetrieveDocumentResponse where
     toHType _ = Defined "RetrieveDocumentResponse" [] []
 instance XmlContent (RetrieveDocumentResponse) where
-  toContents (RetrieveDocumentResponse _result) = error "Please do not serialize RetrieveDocumentResponse"
+  toContents (RetrieveDocumentResponse _result) = $unexpectedError "please do not serialize RetrieveDocumentResponse"
   parseContents =  do
       { e <- elementNS "RetrieveDocumentResponse"
       ; base64 <- interior e $ do

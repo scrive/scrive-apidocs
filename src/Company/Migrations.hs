@@ -339,7 +339,7 @@ addIPAddressMaskListToCompanies = Migration {
     runSQL_ "ALTER SEQUENCE companies_id_seq OWNED BY companies.id"
 }
 
-removeServiceIDFromCompanies :: MonadDB m => Migration m
+removeServiceIDFromCompanies :: (MonadDB m, MonadThrow m) => Migration m
 removeServiceIDFromCompanies = Migration {
     mgrTable = tableCompanies
   , mgrFrom = 6
@@ -350,7 +350,7 @@ removeServiceIDFromCompanies = Migration {
     case check of
       []     -> return () -- no records, ok
       [True] -> return () -- only nulls, ok
-      _      -> error "Companies have rows with non-null service_id"
+      _      -> $unexpectedErrorM "companies have rows with non-null service_id"
     runSQL_ "ALTER TABLE companies DROP CONSTRAINT fk_companies_services"
     runSQL_ "DROP INDEX idx_companies_service_id"
     runSQL_ "ALTER TABLE companies DROP COLUMN service_id"

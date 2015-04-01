@@ -34,7 +34,7 @@ newtypeDeriveUnderlyingReadShow t = do
       let con = case tcon of
             RecC c _    -> c
             NormalC c _ -> c
-            _ -> error $ "Wrong constructor: " ++ show tcon
+            _ -> $unexpectedError $ "wrong constructor: " ++ show tcon
       p' <- newName "p"
       s' <- newName "s"
       v' <- newName "v"
@@ -52,7 +52,7 @@ newtypeDeriveUnderlyingReadShow t = do
               ]
             ]
         ]
-    _ -> error $ "Not a newtype declaration: " ++ show info
+    _ -> $unexpectedError $ "not a newtype declaration: " ++ show info
 
 jsonFromSQL :: (Data a, Typeable a) => Maybe (PQBase String) -> IO a
 jsonFromSQL = jsonFromSQL' fromJSON

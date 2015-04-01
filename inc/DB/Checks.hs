@@ -31,12 +31,12 @@ topMessage objtype objname = \case
   ValidationResult [] -> ValidationResult []
   ValidationResult es -> ValidationResult ("There are problems with the" <+> objtype <+> "'" <> objname <> "'" : es)
 
-resultCheck :: Monad m => (String -> m ()) -> ValidationResult -> m ()
+resultCheck :: MonadThrow m => (String -> m ()) -> ValidationResult -> m ()
 resultCheck logger = \case
   ValidationResult [] -> return ()
   ValidationResult msgs -> do
     mapM_ logger msgs
-    error "Validation failed"
+    $unexpectedErrorM "validation failed"
 
 ----------------------------------------
 
@@ -48,7 +48,7 @@ migrateDatabase logger domains tables migrations = do
   set <- setByteaOutput logger
   when set $ do
     commit
-    error $ "Bytea_output was changed to 'hex'. Restart application so the change is visible."
+    $unexpectedErrorM $ "bytea_output was changed to 'hex'. Restart application so the change is visible."
   _ <- checkDBTimeZone logger
   checkNeededExtensions logger
   checkDBConsistency logger domains (tableVersions : tables) migrations
@@ -330,7 +330,7 @@ checkDBConsistency logger domains tables migrations = do
                   filter (\m -> tblNameString (mgrTable m) == tblNameString table) migrations
         expectedMigrationVersions = reverse (take (length presentMigrationVersions) (reverse  [0 .. tblVersion table - 1]))
     when (presentMigrationVersions /= expectedMigrationVersions) $ do
-      error $ "Migrations for table '" ++ tblNameString table ++ "'are wrong " ++ show presentMigrationVersions ++ " expected " ++ show expectedMigrationVersions
+      $unexpectedErrorM $ "migrations for table '" ++ tblNameString table ++ "'are wrong " ++ show presentMigrationVersions ++ " expected " ++ show expectedMigrationVersions
 
   versions <- mapM checkTableVersion tables
   let tablesWithVersions = zip tables (map (fromMaybe 0) versions)
@@ -355,9 +355,9 @@ checkDBConsistency logger domains tables migrations = do
       forM_ tablesWithVersions $ \(table,ver) -> when (tblVersion table /= ver) $ do
         case L.find (\m -> tblNameString (mgrTable m) == tblNameString table) migrations of
           Nothing -> do
-            error $ "No migrations found for table '" ++ tblNameString table ++ "', cannot migrate " ++ show ver ++ " -> " ++ show (tblVersion table)
+            $unexpectedErrorM $ "no migrations found for table '" ++ tblNameString table ++ "', cannot migrate " ++ show ver ++ " -> " ++ show (tblVersion table)
           Just m | mgrFrom m > ver -> do
-            error $ "Earliest migration for table '" ++ tblNameString table ++ "' is from version " ++ show (mgrFrom m) ++ ", cannot migrate " ++ show ver ++ " -> " ++ show (tblVersion table)
+            $unexpectedErrorM $ "earliest migration for table '" ++ tblNameString table ++ "' is from version " ++ show (mgrFrom m) ++ ", cannot migrate " ++ show ver ++ " -> " ++ show (tblVersion table)
           Just _ -> return ()
 
       let migrationsToRun = filter (\m -> any (\(t, from) -> tblName (mgrTable m) == tblName t && mgrFrom m >= from) tablesWithVersions) migrations
@@ -386,7 +386,7 @@ checkTableVersion table = do
       mver <- fetchMaybe runIdentity
       case mver of
         Just ver -> return $ Just ver
-        Nothing  -> error $ "Table '" ++ tblNameString table ++ "' is present in the database, but there is no corresponding version info in 'table_versions'."
+        Nothing  -> $unexpectedError $ "table '" ++ tblNameString table ++ "' is present in the database, but there is no corresponding version info in 'table_versions'."
     else do
       return Nothing
 
@@ -481,7 +481,7 @@ fetchForeignKey (name, Array1 columns, reftable, Array1 refcolumns, on_update, o
       'c' -> ForeignKeyCascade
       'n' -> ForeignKeySetNull
       'd' -> ForeignKeySetDefault
-      _   -> error $ "Invalid foreign key action code: " ++ show c
+      _   -> $unexpectedError $ "invalid foreign key action code: " ++ show c
 
 -- *** UTILS ***
 
