@@ -24,12 +24,13 @@ class EmailHelper
 
   def follow_link_in_latest_mail_for(email, options = {})
     skip_login = options[:skip_login] || false
+    skip_emails = options[:skip_emails] || 0
     link = ""
     if not skip_login then
       @loginhelper.login_as(@ctx.props.tester_email, @ctx.props.tester_password)
     end
     begin
-      @driver.navigate().to(@ctx.createKontrakcjaURL("/dave/backdoor/" + email))
+      @driver.navigate().to(@ctx.createKontrakcjaURL("/dave/backdoor/" + email + "/" + skip_emails.to_s))
       @h.wait_until { @driver.find_element :css => ".bodyContent a" }
       link = (@driver.find_elements :css => ".bodyContent a").first.attribute("href")
       puts "Link from latest email to " + email + " has link " + link

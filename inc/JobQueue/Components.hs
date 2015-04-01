@@ -227,6 +227,7 @@ spawnDispatcher ConsumerConfig{..} cs logger cid semaphore batches runningJobs =
           , "  AND run_at IS NOT NULL"
           , "  AND run_at <= now()"
           , "LIMIT" <?> limit
+          , "FOR UPDATE"
           ]
 
     -- | Spawn each job in a separate thread.
