@@ -59,7 +59,7 @@ jobTypeMapper = [
   ]
 
 instance PQFormat JobType where
-  pqFormat _ = pqFormat (undefined::ByteString)
+  pqFormat = const $ pqFormat ($undefined::ByteString)
 
 instance FromSQL JobType where
   type PQBase JobType = PQBase ByteString

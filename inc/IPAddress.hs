@@ -26,7 +26,7 @@ instance Binary IPAddress where
 
 -- IP addresses are currently cast to signed Int32 in DB
 instance PQFormat IPAddress where
-  pqFormat _ = pqFormat (undefined::Int32)
+  pqFormat = const $ pqFormat ($undefined::Int32)
 instance FromSQL IPAddress where
   type PQBase IPAddress = PQBase Int32
   fromSQL mbase = do

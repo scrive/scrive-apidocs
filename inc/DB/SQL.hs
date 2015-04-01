@@ -280,7 +280,7 @@ instance Eq SqlCondition where
   -}
 
 instance Show SqlWhyNot where
-  show (SqlWhyNot _important exc expr) = "SqlWhyNot " ++ show (typeOf (exc undefined)) ++ " " ++ show expr
+  show (SqlWhyNot _important exc expr) = "SqlWhyNot " ++ show (typeOf (exc $undefined)) ++ " " ++ show expr
 
 instance Sqlable SqlCondition where
   toSQLCommand (SqlPlainCondition a _) = a

@@ -373,7 +373,7 @@ data ObsoleteEvidenceEventType =
 
 
 instance PQFormat EvidenceEventType where
-  pqFormat _ = pqFormat (undefined::Int16)
+  pqFormat = const $ pqFormat ($undefined::Int16)
 
 instance ToSQL EvidenceEventType where
   type PQDest EvidenceEventType = PQDest Int16

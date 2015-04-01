@@ -28,7 +28,7 @@ jobTypeMapper = [
   ]
 
 instance PQFormat JobType where
-  pqFormat _ = pqFormat (undefined::ByteString)
+  pqFormat = const $ pqFormat ($undefined::ByteString)
 
 instance FromSQL JobType where
   type PQBase JobType = PQBase ByteString
@@ -96,7 +96,7 @@ data SMSEvent = SMSEvent !String !SMSEventType -- ^ phone number, event
   deriving (Eq, Ord, Show, Data, Typeable)
 
 instance PQFormat SMSEvent where
-  pqFormat _ = pqFormat (undefined::String)
+  pqFormat = const $ pqFormat ($undefined::String)
 
 instance FromSQL SMSEvent where
   type PQBase SMSEvent = PQBase String

@@ -84,7 +84,7 @@ data PaymentsAction = SignupAction
                     deriving (Show, Eq)
 
 instance PQFormat PaymentsAction where
-  pqFormat _ = pqFormat (undefined::Int16)
+  pqFormat = const $ pqFormat ($undefined::Int16)
 
 instance FromSQL PaymentsAction where
   type PQBase PaymentsAction = PQBase Int16

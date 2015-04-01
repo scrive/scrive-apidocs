@@ -73,7 +73,7 @@ jsonFromSQL' f mbase = do
     Left msg -> err msg
   where
     err msg = hpqTypesError $ "jsonFromSQL (" ++ typerep ++ "): " ++ msg
-    typerep = show $ typeOf (undefined::a)
+    typerep = show $ typeOf ($undefined::a)
 
 jsonToSQL' :: Data a => (a -> JSValue) -> a -> ParamAllocator -> (Ptr (PQDest String) -> IO r) -> IO r
 jsonToSQL' f v = toSQL (showJSValue (f v) "")

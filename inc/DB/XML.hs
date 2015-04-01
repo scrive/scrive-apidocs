@@ -12,7 +12,7 @@ import qualified Text.XML.Content as C
 import qualified Text.XML.DirtyContent as D
 
 instance PQFormat C.XMLContent where
-  pqFormat _ = pqFormat (undefined :: XML)
+  pqFormat = const $ pqFormat ($undefined :: XML)
 
 instance FromSQL C.XMLContent where
   type PQBase C.XMLContent = PQBase XML
@@ -23,7 +23,7 @@ instance ToSQL C.XMLContent where
   toSQL = toSQL . XML . C.renderXMLContent
 
 instance PQFormat D.XMLContent where
-  pqFormat _ = pqFormat (undefined :: Text)
+  pqFormat = const $ pqFormat ($undefined :: Text)
 
 instance FromSQL D.XMLContent where
   type PQBase D.XMLContent = PQBase Text

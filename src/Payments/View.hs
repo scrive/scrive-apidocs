@@ -60,7 +60,7 @@ mailExpired bd theme hp = do
 
 showTotal :: Int -> Int -> String
 showTotal q tc = insertDecimal $ show (q * tc)
-  where insertDecimal [] = undefined
+  where insertDecimal [] = $undefined
         insertDecimal [x,y] = [',', x, y]
         insertDecimal (x:xs) = x : insertDecimal xs
 

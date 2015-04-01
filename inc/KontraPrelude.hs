@@ -12,6 +12,7 @@ module KontraPrelude (
   , minimum
   , read
   , tail
+  , undefined
   , fromJust
   , UnexpectedError(..)
   , unexpectedError
@@ -29,7 +30,7 @@ import Data.Monoid.Utils
 import Data.Typeable
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
-import Prelude hiding (error, head, last, maximum, minimum, read, tail)
+import Prelude hiding (error, head, last, maximum, minimum, read, tail, undefined)
 import qualified Prelude as P
 
 data UnexpectedError = UnexpectedError {
@@ -61,9 +62,6 @@ maximum = [| emptyList P.maximum $(emptyListError "maximum") |]
 minimum :: Q Exp
 minimum = [| emptyList P.minimum $(emptyListError "minimum") |]
 
-tail :: Q Exp
-tail = [| emptyList P.tail $(emptyListError "tail") |]
-
 read :: Q Exp
 read = [|
   \s -> let parsedS = reads s in
@@ -71,6 +69,12 @@ read = [|
       [(v, "")] <- return parsedS
       return v
   |]
+
+tail :: Q Exp
+tail = [| emptyList P.tail $(emptyListError "tail") |]
+
+undefined :: Q Exp
+undefined = [| $unexpectedError ("undefined value"::String) |]
 
 fromJust :: Q Exp
 fromJust = [| fromMaybe $ $unexpectedError ("fromJust received Nothing"::String) |]

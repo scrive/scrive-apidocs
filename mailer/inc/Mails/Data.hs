@@ -46,7 +46,7 @@ jobTypeMapper = [
   ]
 
 instance PQFormat JobType where
-  pqFormat _ = pqFormat (undefined::ByteString)
+  pqFormat = const $ pqFormat ($undefined::ByteString)
 
 instance FromSQL JobType where
   type PQBase JobType = PQBase ByteString
@@ -99,7 +99,7 @@ instance Unjson Address where
   unjsonDef = unjsonAddress
 
 instance PQFormat Address where
-  pqFormat = const $ pqFormat (undefined::String)
+  pqFormat = const $ pqFormat ($undefined::String)
 instance FromSQL Address where
   type PQBase Address = PQBase String
   fromSQL = jsonFromSQL
@@ -108,7 +108,7 @@ instance ToSQL Address where
   toSQL = jsonToSQL
 
 instance PQFormat [Address] where
-  pqFormat = const $ pqFormat (undefined::String)
+  pqFormat = const $ pqFormat ($undefined::String)
 instance FromSQL [Address] where
   type PQBase [Address] = PQBase String
   fromSQL = jsonFromSQL
@@ -139,7 +139,7 @@ newtype XSMTPAttrs = XSMTPAttrs { fromXSMTPAttrs :: [(String, String)] }
   deriving (Eq, Ord, Show, Data, Typeable)
 
 instance PQFormat XSMTPAttrs where
-  pqFormat = const $ pqFormat (undefined::String)
+  pqFormat = const $ pqFormat ($undefined::String)
 instance FromSQL XSMTPAttrs where
   type PQBase XSMTPAttrs = PQBase String
   fromSQL = jsonFromSQL
@@ -205,7 +205,7 @@ data Event
   deriving (Eq, Ord, Show, Data, Typeable)
 
 instance PQFormat Event where
-  pqFormat = const $ pqFormat (undefined::String)
+  pqFormat = const $ pqFormat ($undefined::String)
 instance FromSQL Event where
   type PQBase Event = PQBase String
   fromSQL = jsonFromSQL

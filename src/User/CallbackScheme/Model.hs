@@ -31,7 +31,7 @@ data UserCallbackScheme = ConstantUrlScheme String
   deriving (Eq, Show, Data, Typeable)
 
 instance PQFormat UserCallbackScheme where
-  pqFormat _ = pqFormat (undefined::String)
+  pqFormat = const $ pqFormat ($undefined::String)
 instance FromSQL UserCallbackScheme where
   type PQBase UserCallbackScheme = PQBase String
   fromSQL = jsonFromSQL

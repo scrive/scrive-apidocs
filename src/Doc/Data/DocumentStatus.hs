@@ -58,7 +58,7 @@ data DocumentStatus
     deriving (Eq, Ord)
 
 instance PQFormat DocumentStatus where
-  pqFormat _ = pqFormat (undefined::Int16)
+  pqFormat = const $ pqFormat ($undefined::Int16)
 
 instance FromSQL DocumentStatus where
   type PQBase DocumentStatus = PQBase Int16

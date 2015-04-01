@@ -77,10 +77,7 @@ moveSignaturesToFilesAndAddBoolValueForFields = Migration {
           "(type = ANY (ARRAY[3, 4, 5, 6, 7, 10])) AND name_order IS NULL AND value_bool IS NULL AND value_file_id IS NULL AND value_text IS NOT NULL OR NOT (type = ANY (ARRAY[3, 4, 5, 6, 7, 10]))"
       , sqlAddFK "signatory_link_fields" $ fkOnColumn "value_file_id" "files" "id"
       ]
-
-
 }
-
 
 addNameOrderToFieldsAndMigrateNames :: MonadDB m => Migration m
 addNameOrderToFieldsAndMigrateNames = Migration {

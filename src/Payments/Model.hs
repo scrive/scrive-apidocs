@@ -41,7 +41,7 @@ instance Read PricePlan where
   readsPrec _ _              = []
 
 instance PQFormat PricePlan where
-  pqFormat _ = pqFormat (undefined::Int16)
+  pqFormat = const $ pqFormat ($undefined::Int16)
 
 instance FromSQL PricePlan where
   type PQBase PricePlan = PQBase Int16
@@ -117,7 +117,7 @@ instance Read PaymentPlanStatus where
   readsPrec _ _              = []
 
 instance PQFormat PaymentPlanStatus where
-  pqFormat _ = pqFormat (undefined::Int16)
+  pqFormat = const $ pqFormat ($undefined::Int16)
 
 instance FromSQL PaymentPlanStatus where
   type PQBase PaymentPlanStatus = PQBase Int16
@@ -145,7 +145,7 @@ data PaymentPlanProvider = NoProvider
                          deriving (Eq, Show, Read)
 
 instance PQFormat PaymentPlanProvider where
-  pqFormat _ = pqFormat (undefined::Int16)
+  pqFormat = const $ pqFormat ($undefined::Int16)
 
 instance FromSQL PaymentPlanProvider where
   type PQBase PaymentPlanProvider = PQBase Int16

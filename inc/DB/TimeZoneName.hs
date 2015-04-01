@@ -62,7 +62,7 @@ toString (TimeZoneName s) = s
 ----------------------------------------
 
 instance PQFormat TimeZoneName where
-  pqFormat _ = pqFormat (undefined::String)
+  pqFormat = const $ pqFormat ($undefined::String)
 
 instance FromSQL TimeZoneName where
   type PQBase TimeZoneName = PQBase String

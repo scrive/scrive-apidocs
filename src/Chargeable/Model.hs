@@ -18,7 +18,7 @@ data ChargeableItem = SMS | ELegSignature
   deriving (Eq, Ord, Show, Typeable)
 
 instance PQFormat ChargeableItem where
-  pqFormat _ = pqFormat (undefined::Int16)
+  pqFormat = const $ pqFormat ($undefined::Int16)
 
 instance FromSQL ChargeableItem where
   type PQBase ChargeableItem = PQBase Int16

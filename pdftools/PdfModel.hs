@@ -1160,7 +1160,7 @@ xparse body bin = do
                 <|> (A.word8 0x0d >> return ())
                 <|> (A.word8 0x0a >> return ())
                 <|> (return ())
-            return (Indir e (Just undefined))
+            return (Indir e (Just $undefined))
 
 
 

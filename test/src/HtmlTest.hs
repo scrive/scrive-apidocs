@@ -65,7 +65,7 @@ assertNoNestedP tnames templates = do
     let t = renderTemplateMain templates n ([]::[(String, String)]) id
     case parseStringAsXML (n, removeScripts t) of
       Left msg -> assertFailure msg
-      Right (Document _ _ root _) -> checkXMLForNestedP n $ CElem root undefined
+      Right (Document _ _ root _) -> checkXMLForNestedP n $ CElem root $undefined
   assertSuccess
 
 checkXMLForNestedP :: String -> Content Posn -> Assertion
@@ -93,7 +93,7 @@ assertNoUnecessaryDoubleDivs :: (String, String) -> Assertion
 assertNoUnecessaryDoubleDivs t@(name,_) =
   case parseTemplateAsXML t of
     Left msg -> assertFailure msg
-    Right (Document _ _ root _) -> checkXMLForUnecessaryDoubleDivs name $ CElem root undefined
+    Right (Document _ _ root _) -> checkXMLForUnecessaryDoubleDivs name $ CElem root $undefined
 
 checkXMLForUnecessaryDoubleDivs :: String -> Content Posn -> Assertion
 checkXMLForUnecessaryDoubleDivs templatename e@(CElem (Elem _ _ children) _) =

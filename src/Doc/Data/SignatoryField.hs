@@ -53,7 +53,7 @@ instance ToSQL NameOrder where
   toSQL (NameOrder v) = $unexpectedError $ "Name order " ++ show v ++ " is not supported"
 
 instance PQFormat NameOrder where
-  pqFormat _ = pqFormat (undefined::Int16)
+  pqFormat = const $ pqFormat ($undefined::Int16)
 
 data FieldType
   = NameFT
@@ -68,7 +68,7 @@ data FieldType
     deriving (Eq, Show, Data, Typeable)
 
 instance PQFormat FieldType where
-  pqFormat _ = pqFormat (undefined::Int16)
+  pqFormat = const $ pqFormat ($undefined::Int16)
 
 instance FromSQL FieldType where
   type PQBase FieldType = PQBase Int16
@@ -139,7 +139,7 @@ instance Eq FieldPlacement where
       eqByEpsilon f = abs (f a - f b) < 0.00001
 
 instance PQFormat [FieldPlacement] where
-  pqFormat _ = pqFormat (undefined::String)
+  pqFormat = const $ pqFormat ($undefined::String)
 
 instance FromSQL [FieldPlacement] where
   type PQBase [FieldPlacement] = PQBase String

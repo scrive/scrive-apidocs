@@ -26,7 +26,7 @@ data ColumnType
     deriving (Eq, Ord, Show)
 
 instance PQFormat ColumnType where
-  pqFormat _ = pqFormat (undefined::String)
+  pqFormat = const $ pqFormat ($undefined::String)
 instance FromSQL ColumnType where
   type PQBase ColumnType = PQBase String
   fromSQL mbase = parseType . map toLower <$> fromSQL mbase

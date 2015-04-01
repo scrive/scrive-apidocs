@@ -432,7 +432,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m FixClos
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
         sqlSet "status" Closed
         sqlWhereEq "id" did
-        sqlWhereEq "status" $ DocumentError undefined
+        sqlWhereEq "status" $ DocumentError $undefined
 
 data LogSignWithELegFailureForDocument = LogSignWithELegFailureForDocument SignatoryLinkID (Maybe String) (Maybe String) String String String Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m LogSignWithELegFailureForDocument () where
@@ -713,7 +713,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m MarkDoc
               sqlWhereDocumentTypeIs (Signable)
               sqlIgnore $ sqlWhere "signatory_links.seen_time IS NULL"
               sqlIgnore $ sqlWhere "signatory_links.sign_time IS NULL"
-              sqlWhereDocumentStatusIsOneOf [Pending, Timedout, Canceled, DocumentError undefined, Rejected]
+              sqlWhereDocumentStatusIsOneOf [Pending, Timedout, Canceled, DocumentError $undefined, Rejected]
 
 data MarkInvitationRead = MarkInvitationRead SignatoryLinkID Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m MarkInvitationRead Bool where

@@ -39,7 +39,7 @@ data DocumentType = Signable | Template
   deriving (Eq, Ord, Show, Read)
 
 instance PQFormat DocumentType where
-  pqFormat _ = pqFormat (undefined::Int16)
+  pqFormat = const $ pqFormat ($undefined::Int16)
 
 instance FromSQL DocumentType where
   type PQBase DocumentType = PQBase Int16
@@ -67,7 +67,7 @@ data DocumentSharing
     deriving (Eq, Ord, Show)
 
 instance PQFormat DocumentSharing where
-  pqFormat _ = pqFormat (undefined::Int16)
+  pqFormat = const $ pqFormat ($undefined::Int16)
 
 instance FromSQL DocumentSharing where
   type PQBase DocumentSharing = PQBase Int16
@@ -107,7 +107,7 @@ data StatusClass
     deriving (Eq, Ord, Enum, Bounded)
 
 instance PQFormat StatusClass where
-  pqFormat _ = pqFormat (undefined::Int16)
+  pqFormat = const $ pqFormat ($undefined::Int16)
 
 instance FromSQL StatusClass where
   type PQBase StatusClass = PQBase Int16

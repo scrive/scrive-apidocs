@@ -18,7 +18,7 @@ instance HasDefaultValue APIVersion where
   defaultValue = V1
 
 instance PQFormat APIVersion where
-  pqFormat _ = pqFormat (undefined::Int16)
+  pqFormat = const $ pqFormat ($undefined::Int16)
 
 instance FromSQL APIVersion where
   type PQBase APIVersion = PQBase Int16
