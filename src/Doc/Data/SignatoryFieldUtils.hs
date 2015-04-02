@@ -24,8 +24,6 @@ import Doc.Data.SignatoryField
 import Doc.SignatoryFieldID
 import File.FileID
 
-
-
 data FieldValue = StringFV String
   | BoolFV Bool
   | FileFV (Maybe FileID)
