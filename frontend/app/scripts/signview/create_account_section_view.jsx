@@ -59,11 +59,15 @@ define(['React', 'common/language_service', 'postsignview/questionnaire_view', '
            language={LanguageService.currentLanguage()}
            registerUser={function() {
              UserService.registerUser(document).then(function() {
-               mixpanel.people.set({
-                 'Accepted Promotion': true,
-                 'Promotion': 'NJ'
-               });
-               window.location.pathname = '/newdocument';
+               mixpanelPeopleSetTimeout(
+                  {
+                   'Accepted Promotion': true,
+                   'Promotion': 'NJ'
+                  },
+                 function() {
+                   window.location.pathname = '/newdocument';
+                 },
+                 300);
              });
            }}
          />

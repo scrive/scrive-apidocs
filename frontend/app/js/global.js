@@ -49,6 +49,26 @@ window.trackTimeout = function(name, props, trackTimeoutCallBack, ms) {
     }, ms);
 };
 
+window.mixpanelPeopleSetTimeout = function(props, callback, ms) {
+    var called = false;
+    ms = ms || 300;
+    mixpanel.people.set(props, function(e){
+        if(called)
+            return;
+        called = true;
+        if( callback ) {
+            return callback(e);
+        }
+    });
+    setTimeout(function(e) {
+        if(called)
+            return;
+        called = true;
+        if( callback ) {
+            return callback(e);
+        }
+    }, ms);
+};
 });
 
 //make sure we've got console logging/warning
