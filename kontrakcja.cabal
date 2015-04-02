@@ -139,6 +139,7 @@ Executable kontrakcja-server
   Build-depends: text
   Build-depends: text-icu
   Build-depends: threads
+  Build-depends: lifted-threads
   Build-depends: transformers
   Build-depends: transformers-base
   Build-depends: unjson
@@ -252,6 +253,7 @@ Executable cron
   Build-depends: test-framework-quickcheck2
   Build-depends: text
   Build-depends: threads
+  Build-depends: lifted-threads
   Build-depends: transformers
   Build-depends: transformers-base
   Build-depends: unjson
@@ -369,6 +371,7 @@ Executable kontrakcja-migrate
   Build-depends: test-framework-quickcheck2
   Build-depends: text
   Build-depends: threads
+  Build-depends: lifted-threads
   Build-depends: transformers
   Build-depends: transformers-base
   Build-depends: unjson
@@ -480,6 +483,7 @@ Executable mailing-server
   Build-depends: test-framework-quickcheck2
   Build-depends: text
   Build-depends: threads
+  Build-depends: lifted-threads
   Build-depends: transformers
   Build-depends: transformers-base
   Build-depends: unjson
@@ -588,6 +592,7 @@ Executable messenger-server
   Build-depends: test-framework-quickcheck2
   Build-depends: text
   Build-depends: threads
+  Build-depends: lifted-threads
   Build-depends: transformers
   Build-depends: transformers-base
   Build-depends: unjson
@@ -703,6 +708,7 @@ Executable kontrakcja-test
   Build-depends: text
   Build-depends: text-icu
   Build-depends: threads
+  Build-depends: lifted-threads
   Build-depends: transformers
   Build-depends: transformers-base
   Build-depends: unjson
