@@ -503,17 +503,6 @@ checkAuthenticationMethodAndValue slid = do
        (Nothing, Nothing) -> return ()
        _ -> throwIO . SomeKontraException $ badInput "Only one of `authentication_type` and `authentication_value` provided"
 
-getValidPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [(FieldIdentity, FieldTmpValue)] -> m (Maybe String)
-getValidPin slid fields = do
-  pin <- apiGuardJustM (badInput "Pin not provided or invalid.") $ getField "pin"
-  phone <- case (lookup MobileFI fields) of
-    Just (StringFTV v) -> return v
-    _ ->  getMobile <$> fromJust . getSigLinkFor slid <$> theDocument
-  pin' <- dbQuery $ GetSignatoryPin slid phone
-  if (pin == pin')
-    then return $ Just pin
-    else return $ Nothing
-
 signDocument :: (Kontrakcja m, DocumentMonad m)
              => SignatoryLinkID
              -> MagicHash
@@ -1166,11 +1155,22 @@ getMagicHashAndUserForSignatoryAction did sid = do
            Nothing -> throwIO . SomeKontraException $ serverError "Can't perform this action. Not authorized."
            Just mh''' -> return (mh''',Just $ user)
 
--- Helper type that represents ~field value, but without file reference - and only with file content
+-- Helper type that represents ~field value, but without file reference - and only with file content. Used only locally.
 data FieldTmpValue = StringFTV String
   | BoolFTV Bool
   | FileFTV BS.ByteString
     deriving (Eq, Ord, Show)
+
+getValidPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [(FieldIdentity, FieldTmpValue)] -> m (Maybe String)
+getValidPin slid fields = do
+  pin <- apiGuardJustM (badInput "Pin not provided or invalid.") $ getField "pin"
+  phone <- case (lookup MobileFI fields) of
+    Just (StringFTV v) -> return v
+    _ ->  getMobile <$> fromJust . getSigLinkFor slid <$> theDocument
+  pin' <- dbQuery $ GetSignatoryPin slid phone
+  if (pin == pin')
+    then return $ Just pin
+    else return $ Nothing
 
 getFieldForSigning ::(Kontrakcja m) => m [(FieldIdentity, FieldTmpValue)]
 getFieldForSigning = do
@@ -1203,10 +1203,10 @@ fieldsToFieldsWithFiles [] = return ([],[])
 fieldsToFieldsWithFiles (field:fields) = do
   (changeFields,files') <- fieldsToFieldsWithFiles fields
   case field of
-    (fi, StringFTV s) -> return ((fi,StringFV s) : changeFields, files')
-    (fi, BoolFTV b ) -> return ((fi, BoolFV b) : changeFields, files')
-    (fi, FileFTV bs) -> if (BS.null bs)
-                          then return $ ((fi, FileFV Nothing) : changeFields, files')
+    (fi,StringFTV s) -> return ((fi,StringFV s):changeFields,files')
+    (fi,BoolFTV b)   -> return ((fi,BoolFV b):changeFields,files')
+    (fi,FileFTV bs)  -> if (BS.null bs)
+                          then return $ ((fi,FileFV Nothing):changeFields,files')
                           else do
                             fileid <- dbUpdate $ NewFile "signature.png" (Binary bs)
-                            return $ ((fi, FileFV (Just fileid)) : changeFields,(fileid,bs): files')
+                            return $ ((fi,FileFV (Just fileid)):changeFields,(fileid,bs):files')

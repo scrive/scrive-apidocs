@@ -307,10 +307,10 @@ tableSignatoryLinkFields = tblTable {
   , tblChecks = [
         Check "check_signatory_link_fields_name_fields_are_well_defined"
           "type = 1 AND name_order IS NOT NULL AND value_bool IS NULL AND value_file_id IS NULL AND value_text IS NOT NULL OR type <> 1"
-      , Check "check_signatory_link_fields_checkboxes_are_well_defined"
-          "type = 9 AND name_order IS NULL AND value_bool IS NOT NULL AND value_file_id IS NULL AND value_text IS NULL OR type <> 9"
       , Check "check_signatory_link_fields_signatures_are_well_defined"
           "type = 8 AND name_order IS NULL AND value_bool IS NULL AND value_text IS NULL OR type <> 8"
+      , Check "check_signatory_link_fields_checkboxes_are_well_defined"
+          "type = 9 AND name_order IS NULL AND value_bool IS NOT NULL AND value_file_id IS NULL AND value_text IS NULL OR type <> 9"
       , Check "check_signatory_link_fields_other_text_fields_are_well_defined"
           "(type = ANY (ARRAY[3, 4, 5, 6, 7, 10])) AND name_order IS NULL AND value_bool IS NULL AND value_file_id IS NULL AND value_text IS NOT NULL OR NOT (type = ANY (ARRAY[3, 4, 5, 6, 7, 10]))"
     ]
