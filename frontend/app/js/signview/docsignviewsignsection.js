@@ -56,25 +56,6 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
     return this.model.document();
   },
 
-  elegMishmatchErrorMessage: function(onName,onNumber) {
-    var document = this.document();
-    var signatory = document.currentSignatory();
-    var numberCanBeChanged = (signatory.personalnumberField() != undefined && !signatory.personalnumberField().isClosed());
-    var nameCanBeChanged = (signatory.fstnameField() != undefined && !signatory.fstnameField().isClosed()) || (signatory.sndnameField() != undefined && !signatory.sndnameField().isClosed());
-    if (onName && onNumber && (!numberCanBeChanged || !nameCanBeChanged))
-      return localization.sign.eleg.mismatch.mismatchOnNameAndNumberCantChange;
-    if (onName && onNumber && numberCanBeChanged && nameCanBeChanged)
-      return localization.sign.eleg.mismatch.mismatchOnNameAndNumberCanChange;
-    if (onName && !nameCanBeChanged)
-      return localization.sign.eleg.mismatch.mismatchOnNameAndCantChange;
-    if (onNumber && !numberCanBeChanged)
-      return localization.sign.eleg.mismatch.mismatchOnNumberAndCantChange;
-    if (onName && nameCanBeChanged)
-      return localization.sign.eleg.mismatch.mismatchOnNameAndCanChange;
-    if (onNumber && numberCanBeChanged)
-      return localization.sign.eleg.mismatch.mismatchOnNumberAndCanChange;
-  },
-
   /**
    *  Block browser from reloading page
    */
