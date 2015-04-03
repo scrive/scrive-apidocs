@@ -27,22 +27,19 @@ fi
 cp cabal.config cabal.config.original
 cabal freeze "$@"
 sed                             \
+     -e '/ Cabal /d'            \
      -e '/ array /d'            \
      -e '/ base /d'             \
+     -e '/ bin-package-db /d'   \
      -e '/ containers /d'       \
      -e '/ deepseq /d'          \
-     -e '/ directory /d'        \
+     -e '/ ghc /d'              \
      -e '/ ghc-prim /d'         \
+     -e '/ haskell98 /d'        \
      -e '/ integer-gmp /d'      \
-     -e '/ kontrakcja /d'       \
-     -e '/ old-locale /d'       \
-     -e '/ old-time /d'         \
      -e '/ pretty /d'           \
      -e '/ rts /d'              \
      -e '/ template-haskell /d' \
-     -e '/ temporary /d'        \
-     -e '/ time /d'             \
-     -e '/ unix /d'             \
      < cabal.config > cabal.config.fixed
 
 if [ "${1-}" == "update" ]; then
