@@ -49,7 +49,7 @@ describe "sign up after signing a document" do
     @h.emailhelper.follow_link_in_latest_mail_for(random_email, "A document was saved in your e-archive", mail_time)
 
     puts "make sure we get invalid elements if we try to activate without filling in the password details"
-    @h.driver.execute_script("$('a.main.button').click()")
+    @h.wait_until { @h.driver.find_element :css => "a.main.button" }.click
     sleep 1
     @h.wait_until { (@h.driver.find_element :css => ".flash.error.active").displayed? }
     @h.screenshot 'sign_up_after_signing_3'
