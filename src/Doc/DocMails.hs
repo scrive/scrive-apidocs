@@ -72,7 +72,7 @@ sendDocumentErrorEmail author document = do
     sendDocumentErrorEmailToAuthor = do
       mctx <- getMailContext
       let authorlink = $(fromJust) $ getAuthorSigLink document
-      sendNotifications authorlink
+      sendNotifications authorlink True
         (do
           mail <- mailDocumentErrorForAuthor (getLang author) document
           scheduleEmailSendout (mctxmailsconfig mctx) $ mail {
@@ -84,7 +84,7 @@ sendDocumentErrorEmail author document = do
     -- ??: Should this be in DocControl or in an email-specific file?
     sendDocumentErrorEmailToSignatory signatorylink = do
       mctx <- getMailContext
-      sendNotifications signatorylink
+      sendNotifications signatorylink False
         (do
           mail <- mailDocumentErrorForSignatory document
           scheduleEmailSendoutWithAuthorSenderThroughService (documentid document) (mctxmailsconfig mctx) $ mail {
@@ -122,7 +122,7 @@ sendInvitationEmail1 signatorylink | not (isAuthor signatorylink) = do
   did <- theDocumentID
   mctx <- getMailContext
   -- send invitation to sign to invited person
-  sent <- sendNotifications signatorylink
+  sent <- sendNotifications signatorylink False
 
     (do
       mail <- theDocument >>= mailInvitation True (Sign <| isSignatory signatorylink |> View) (Just signatorylink)
@@ -146,7 +146,7 @@ sendInvitationEmail1 signatorylink | not (isAuthor signatorylink) = do
 sendInvitationEmail1 authorsiglink = do
   mctx <- getMailContext
   when (isSignatory authorsiglink) $ do
-       void $ sendNotifications authorsiglink
+       void $ sendNotifications authorsiglink False
           (do
             -- send invitation to sign to author when it is his turn to sign
             mail <- theDocument >>= \d -> mailDocumentAwaitingForAuthor (getLang d) d
@@ -193,7 +193,7 @@ sendReminderEmail custommessage  actor automatic siglink = do
                (True, False) -> domail >> return True
                (False, True) -> dosms >> return True
                (False, False) -> return False
-           Nothing -> sendNotifications siglink domail dosms
+           Nothing -> sendNotifications siglink False domail dosms
 
   when sent $ do
     when (isPending doc &&  not (hasSigned siglink)) $ do
@@ -262,10 +262,10 @@ sendRejectEmails :: Kontrakcja m => Maybe String -> SignatoryLink -> Document ->
 sendRejectEmails customMessage signalink document = do
   let activatedSignatories = [sl | sl <- documentsignatorylinks document
                                  , isActivatedSignatory (documentcurrentsignorder document) sl || isAuthor sl
-                                 , signatorylinkdeliverymethod sl == EmailDelivery || isAuthor sl
+                                 , signatorylinkdeliverymethod sl `elem` [EmailDelivery, EmailAndMobileDelivery, MobileDelivery] || isAuthor sl
                                  ]
   forM_ activatedSignatories $ \sl -> do
-    void $ sendNotifications sl
+    void $ sendNotifications sl True
       (do
          mctx <- getMailContext
          mail <- mailDocumentRejected True customMessage (signatoryisauthor sl) signalink document
@@ -343,15 +343,18 @@ sendPinCode sl phone pin = do
 
 -- Notification sendout
 
--- | Send out mail and/or SMS or not, depending on delivery method.  Return 'False' iff nothing was sent.
-sendNotifications :: (Monad m, Log.MonadLog m) => SignatoryLink -> m () -> m () -> m Bool
-sendNotifications sl domail dosms = do
+-- | Send out mail and/or SMS or not, depending on delivery method.  Return 'False' iff nothing was sent. Email is always sent to authors if alwaysEmailAuthor is True.
+sendNotifications :: (Monad m, Log.MonadLog m) => SignatoryLink -> Bool -> m () -> m () -> m Bool
+sendNotifications sl alwaysEmailAuthor domail dosms = do
   Log.mixlog_ $ "Chosen delivery method: " ++ show (signatorylinkdeliverymethod sl) ++ " for phone=" ++ getMobile sl ++ ", email=" ++ getEmail sl
-  case signatorylinkdeliverymethod sl of
-    EmailDelivery   -> domail >> return True
-    MobileDelivery  -> dosms >> return True
-    EmailAndMobileDelivery -> domail >> dosms >> return True
-    _               -> return False
+  case (forceAuthorEmail, signatorylinkdeliverymethod sl) of
+    (_, EmailDelivery) -> domail >> return True
+    (_, EmailAndMobileDelivery) -> domail >> dosms >> return True
+    (True, MobileDelivery) -> domail >> dosms >> return True
+    (False, MobileDelivery) -> dosms >> return True
+    (True, _) -> domail >> return True
+    _ -> return False
+  where forceAuthorEmail = alwaysEmailAuthor && isAuthor sl
 
 type MailT m = MailContextT (TemplatesT m)
 
