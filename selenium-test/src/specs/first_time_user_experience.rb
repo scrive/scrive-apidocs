@@ -1,6 +1,7 @@
 require "rubygems"
 gem "rspec"
 require_relative "../helpers.rb"
+require "time"
 
 describe "sign up from post sign view and take the first time user experience tour in design view" do
 
@@ -21,12 +22,13 @@ describe "sign up from post sign view and take the first time user experience to
       @h.dochelper.uploadContract
       @h.dochelper.addPart
       @h.dochelper.enterCounterpart("Random", "Person", random_email)
+      mail_time = Time.now.utc.iso8601
       @h.dochelper.signAndSend
     ensure
       @h.loginhelper.logout
     end
 
-    @h.emailhelper.follow_link_in_latest_mail_for random_email
+    @h.emailhelper.follow_link_in_latest_mail_for(random_email, "Document to e-sign: contract", mail_time)
 
     puts "sign the doc"
     @h.dochelper.partSign

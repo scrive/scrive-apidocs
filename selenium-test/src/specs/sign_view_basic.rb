@@ -1,6 +1,7 @@
 require "rubygems"
 gem "rspec"
 require_relative "../helpers.rb"
+require "time"
 
 describe "basic signing" do
 
@@ -25,7 +26,9 @@ describe "basic signing" do
       @h.dochelper.processtab
       @h.screenshot 'sign_view_basic_4'      
       @h.dochelper.addPart
-      @h.dochelper.enterCounterpart(@h.ctx.props.first_counterpart_fstname, @h.ctx.props.first_counterpart_sndname, @h.ctx.props.first_counterpart_email, screenshot_name: 'sign_view_basic_5')
+      random_email = @h.emailhelper.random_email()
+      @h.dochelper.enterCounterpart(@h.ctx.props.first_counterpart_fstname, @h.ctx.props.first_counterpart_sndname, random_email, screenshot_name: 'sign_view_basic_5')
+      mail_time = Time.now.utc.iso8601
       puts "About to sign and send"
       @h.dochelper.signAndSend screenshot_name: 'sign_view_basic_6'
     ensure
@@ -34,7 +37,7 @@ describe "basic signing" do
     end
     puts "Getting the mail"
 
-    @h.emailhelper.follow_link_in_latest_mail_for @h.ctx.props.first_counterpart_email
+    @h.emailhelper.follow_link_in_latest_mail_for(random_email, "Document to e-sign: contract", mail_time)
 
     @h.dochelper.checkOpened
     @h.screenshot 'sign_view_basic_8'

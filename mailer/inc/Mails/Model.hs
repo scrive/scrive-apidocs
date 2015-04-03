@@ -14,7 +14,7 @@ module Mails.Model (
   , CreateEmail(..)
   , CreateServiceTest(..)
   , GetEmail(..)
-  , GetEmailsByRecipient(..)
+  , GetEmailForRecipient(..)
   , GetEmailsForTest(..)
   , ResendEmailsSentAfterServiceTest(..)
   , CleanEmailsOlderThanDays(..)
@@ -158,17 +158,17 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetEmail (Maybe Mail) where
       sqlWhereEq "token" token
     fetchMaybe mailFetcher
 
-data GetEmailsByRecipient = GetEmailsByRecipient String
-instance MonadDB m => DBQuery m GetEmailsByRecipient [Mail] where
-  query (GetEmailsByRecipient recipient) = do
-    runQuery_ . sqlSelect "mails" $ do
+data GetEmailForRecipient = GetEmailForRecipient String String UTCTime
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetEmailForRecipient (Maybe Mail) where
+  query (GetEmailForRecipient recipient title startDate) = do
+    runQuery01_ . sqlSelect "mails" $ do
       mapM_ sqlResult mailSelectors
-      sqlWhere "title IS NOT NULL"
-      sqlWhere "content IS NOT NULL"
+      sqlWhereILike "title" ("%" ++ title ++ "%")
+      sqlWhere $ "finished_at >=" <?> startDate
       -- receivers is yet another crappy json field in database
       -- change it into proper SQL column some later time
       sqlWhereILike "receivers" ("%\"" ++ recipient ++ "\"%")
-    fetchMany mailFetcher
+    fetchMaybe mailFetcher
 
 data GetEmailsForTest = GetEmailsForTest
 instance MonadDB m => DBQuery m GetEmailsForTest [Mail] where

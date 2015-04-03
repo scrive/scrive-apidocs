@@ -1,6 +1,7 @@
 require "rubygems"
 gem "rspec"
 require_relative "../helpers.rb"
+require "time"
 
 describe "subscribe with a credit card" do
 
@@ -95,10 +96,12 @@ describe "subscribe with a credit card" do
     puts "request an account and make sure you get a flash back"
     (@h.wait_until { @h.driver.find_element :css => "input[name=email]" }).send_keys random_email
     (@h.wait_until { @h.driver.find_element :css => "a.button.main" }).click
+    mail_time = Time.now.utc.iso8601
     (@h.wait_until { @h.driver.find_element :css => ".flash-body" })
 
     puts "we should get an email to a page where we can accept the tos"
-    @h.emailhelper.follow_link_in_latest_mail_for random_email
+    @h.emailhelper.follow_link_in_latest_mail_for(random_email, "Please activate your account", mail_time)
+
     puts "accept the tos"
     @h.wait_until { @h.driver.find_element :css => ".checkbox[name=tos]" }.click
 
@@ -154,11 +157,12 @@ describe "subscribe with a credit card" do
 
     puts "request an account and make sure you get a flash back"
     (@h.wait_until { @h.driver.find_element :css => "input[name=email]" }).send_keys random_email
+    mail_time = Time.now.utc.iso8601
     (@h.wait_until { @h.driver.find_element :css => "a.button.main" }).click
     (@h.wait_until { @h.driver.find_element :css => ".flash-body" })
 
     puts "we should get an email to a page where we can accept the tos"
-    @h.emailhelper.follow_link_in_latest_mail_for random_email
+    @h.emailhelper.follow_link_in_latest_mail_for(random_email, "Please activate your account", mail_time)
     puts "accept the tos"
     @h.wait_until { @h.driver.find_element :css => ".checkbox[name=tos]" }.click
 
