@@ -16,7 +16,7 @@ rm -f kontrakcja-test.tix
 cabal update
 cabal clean
 cabal install --only-dependencies --force-reinstalls
-./cabal_config_freeze.sh
+# ./cabal_config_freeze.sh  Disabled since it was not working on build server. Ask GP for details
 cabal configure -ftest-coverage
 
 if [ "$TEAMCITY_VERSION" = "" ]; then
