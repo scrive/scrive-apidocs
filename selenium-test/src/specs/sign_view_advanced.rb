@@ -1,6 +1,7 @@
 require "rubygems"
 gem "rspec"
 require_relative "../helpers.rb"
+require "time"
 
 describe "sign view all functionalities" do
 
@@ -15,6 +16,9 @@ describe "sign view all functionalities" do
   it "allows users to sign advanced contracts if they've filled in fields, uploaded attachments & checked the sign guard" do
 
     @h.loginhelper.login_as(@h.ctx.props.tester_email, @h.ctx.props.tester_password)
+    random_email1 = @h.emailhelper.random_email()
+    random_email2 = @h.emailhelper.random_email()
+    random_email3 = @h.emailhelper.random_email()
     begin
       @h.loginhelper.set_name(@h.ctx.props.tester_fstname, @h.ctx.props.tester_sndname, screenshot_name: 'sign_view_advanced_1')
 
@@ -26,16 +30,16 @@ describe "sign view all functionalities" do
 
       puts "set the first counterpart to have one filled field, and one empty one"
       @h.dochelper.addPart
-      @h.dochelper.enterCounterpart(@h.ctx.props.first_counterpart_fstname, @h.ctx.props.first_counterpart_sndname, @h.ctx.props.first_counterpart_email)
+      @h.dochelper.enterCounterpart(@h.ctx.props.first_counterpart_fstname, @h.ctx.props.first_counterpart_sndname, random_email1)
       @h.dochelper.addCustomField(2,"part1FN1","part1FV1")
 
       puts "set the second counterpart to have no fields"
       @h.dochelper.addPart
-      @h.dochelper.enterCounterpart(@h.ctx.props.second_counterpart_fstname, @h.ctx.props.second_counterpart_sndname, @h.ctx.props.second_counterpart_email, part: 3)
+      @h.dochelper.enterCounterpart(@h.ctx.props.second_counterpart_fstname, @h.ctx.props.second_counterpart_sndname, random_email2, part: 3)
 
       puts "set the third counterpart to have one filled field"
       @h.dochelper.addPart
-      @h.dochelper.enterCounterpart(@h.ctx.props.third_counterpart_fstname, @h.ctx.props.third_counterpart_sndname, @h.ctx.props.third_counterpart_email, part: 4)
+      @h.dochelper.enterCounterpart(@h.ctx.props.third_counterpart_fstname, @h.ctx.props.third_counterpart_sndname, random_email3, part: 4)
       @h.dochelper.addCustomField(4,"part3FN1","part3FV1")
 
       puts "Loading first author attachment"
@@ -54,6 +58,7 @@ describe "sign view all functionalities" do
 
       @h.screenshot 'sign_view_advanced_8'
 
+      mail_time = Time.now.utc.iso8601
       @h.dochelper.signAndSend screenshot_name: 'sign_view_advanced_9'
       puts "signed and sent"
 
@@ -64,7 +69,7 @@ describe "sign view all functionalities" do
 
     puts "first sign as the first person"
 
-    @h.emailhelper.follow_link_in_latest_mail_for @h.ctx.props.first_counterpart_email
+    @h.emailhelper.follow_link_in_latest_mail_for(random_email1, "Document to e-sign: contract", mail_time)
 
     puts "make sure it's got the sign button"
     @h.wait_until { @h.driver.find_element :css => "div.sign" }
@@ -96,7 +101,8 @@ describe "sign view all functionalities" do
     @h.screenshot 'sign_view_advanced_12'
 
     puts "now sign as the second person"
-    @h.emailhelper.follow_link_in_latest_mail_for @h.ctx.props.second_counterpart_email
+
+    @h.emailhelper.follow_link_in_latest_mail_for(random_email2, "Document to e-sign: contract", mail_time)
 
     @h.dochelper.checkOpened
 
@@ -116,7 +122,7 @@ describe "sign view all functionalities" do
     @h.screenshot 'sign_view_advanced_14'
 
     puts "now sign as the third person"
-    @h.emailhelper.follow_link_in_latest_mail_for @h.ctx.props.third_counterpart_email
+    @h.emailhelper.follow_link_in_latest_mail_for(random_email3, "Document to e-sign: contract", mail_time)
 
     @h.dochelper.checkOpened
 

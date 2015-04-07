@@ -36,6 +36,7 @@ import qualified Text.StringTemplates.Fields as F
 
 import Administration.AddPaymentPlan
 import Administration.AdministrationView
+import AppView (renderFromBody)
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Company.Model
@@ -148,7 +149,7 @@ daveRoutes =
      , dir "company"       $ hGet $ toK1 $ daveCompany
      , dir "reseal" $ hPost $ toK1 $ resealFile
      , dir "file"   $ hGet  $ toK2 $ daveFile
-     , dir "backdoor" $ hGet $ toK2 $ handleBackdoorQuery
+     , dir "backdoor" $ hGet $ handleBackdoorQuery
     ]
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m String
@@ -578,10 +579,15 @@ docSearchingFromParams params =
     x -> [DocumentFilterByString x]
 
 
-handleBackdoorQuery :: Kontrakcja m => String -> Int -> m String
-handleBackdoorQuery email skip = onlySalesOrAdmin $ onlyBackdoorOpen $ do
-  minfo <- listToMaybe . drop skip . reverse <$> dbQuery (GetEmailsByRecipient email)
-  return $ maybe "No email found" mailContent minfo
+handleBackdoorQuery :: Kontrakcja m => m Response
+handleBackdoorQuery = onlySalesOrAdmin $ onlyBackdoorOpen $ do
+  emailAddress <- guardJustM $ getField "email_address"
+  emailTitle <- guardJustM $ getField "email_title"
+  Just startDate <- MinutesTime.parseTimeISO <$> (guardJustM $ getField "start_date")
+  memail <- dbQuery $ GetEmailForRecipient emailAddress emailTitle startDate
+  case memail of
+    Nothing -> respond404
+    Just email -> renderFromBody $ mailContent email
 
 sendInviteAgain :: Kontrakcja m => m KontraLink
 sendInviteAgain = onlySalesOrAdmin $ do

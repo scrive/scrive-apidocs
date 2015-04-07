@@ -1,6 +1,7 @@
 require "rubygems"
 gem "rspec"
 require_relative "../helpers.rb"
+require "time"
 
 describe "sign up on front page and modify account settings" do
 
@@ -19,9 +20,10 @@ describe "sign up on front page and modify account settings" do
     (@h.wait_until { @h.driver.find_element :css => "input[name=email]" }).click
     (@h.wait_until { @h.driver.find_element :css => "input[name=email]" }).clear
     (@h.wait_until { @h.driver.find_element :css => "input[name=email]" }).send_keys email
+    mail_time = Time.now.utc.iso8601
     (@h.wait_until { @h.driver.find_element :css => "a.main.button" }).click
     @h.screenshot 'sign_up_front_page_9'
-    @h.emailhelper.follow_link_in_latest_mail_for email
+    @h.emailhelper.follow_link_in_latest_mail_for(email, "New password", mail_time)
     puts "We have real change password form"
     @h.wait_until { @h.driver.find_element :name => "password" }
     @h.screenshot 'sign_up_front_page_10'
@@ -40,13 +42,15 @@ describe "sign up on front page and modify account settings" do
     @h.screenshot 'sign_up_front_page_1'
     puts "request an account and make sure you get a green flash back"
     (@h.wait_until { @h.driver.find_element :css => "input[name=email]" }).send_keys random_email
+    mail_time = Time.now.utc.iso8601
     (@h.wait_until { @h.driver.find_element :css => "a.main.button" }).click
     @h.wait_until { @h.driver.find_element :css => ".flash-body" }
     @h.screenshot 'sign_up_front_page_2'
 
     puts "we should get an email to a page where we can accept the tos"
     @h.loginhelper.login_as @h.ctx.props.tester_email, @h.ctx.props.tester_password, screenshot_name: 'sign_up_front_page_3'
-    @h.emailhelper.follow_link_in_latest_mail_for random_email, skip_login: true
+
+    @h.emailhelper.follow_link_in_latest_mail_for(random_email, "Please activate your account", mail_time, skip_login: true)
     @h.wait_until { @h.driver.find_element :css => ".checkbox" }
 
     puts "make sure we get a red flash if we try to activate without signing the tos"
@@ -124,6 +128,7 @@ describe "sign up on front page and modify account settings" do
     new_email = "new-"+random_email
     (@h.wait_until { @h.driver.find_element :name => "newemail" }).send_keys new_email
     (@h.wait_until { @h.driver.find_element :name => "newemailagain" }).send_keys new_email
+    mail_time = Time.now.utc.iso8601
     (@h.wait_until { @h.driver.find_element :css => "a.float-right" }).click
     sleep 1
     @h.screenshot 'sign_up_front_page_11'
@@ -131,7 +136,8 @@ describe "sign up on front page and modify account settings" do
     sleep 4
     @h.loginhelper.logout
 
-    @h.emailhelper.follow_link_in_latest_mail_for new_email
+    puts new_email
+    @h.emailhelper.follow_link_in_latest_mail_for(new_email, "Change of username", mail_time)
     puts "just followed link"
     sleep 1
     @h.screenshot 'sign_up_front_page_12'

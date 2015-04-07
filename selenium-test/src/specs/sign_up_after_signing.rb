@@ -1,6 +1,7 @@
 require "rubygems"
 gem "rspec"
 require_relative "../helpers.rb"
+require "time"
 
 describe "sign up after signing a document" do
 
@@ -21,14 +22,16 @@ describe "sign up after signing a document" do
       @h.dochelper.uploadContract
       @h.dochelper.addPart
       @h.dochelper.enterCounterpart("Random", "Person", random_email)
+      mail_time = Time.now.utc.iso8601
       @h.dochelper.signAndSend
     ensure
       @h.loginhelper.logout
     end
 
-    @h.emailhelper.follow_link_in_latest_mail_for random_email
+    @h.emailhelper.follow_link_in_latest_mail_for(random_email, "Document to e-sign: contract", mail_time)
 
     puts "sign the doc"
+    mail_time = Time.now.utc.iso8601
     @h.dochelper.partSign
 
     puts "we should be given the option to save the doc in the archive and create an account"
@@ -43,10 +46,10 @@ describe "sign up after signing a document" do
     @h.wait_until { @h.driver.find_element :css => ".archive" }
 
     @h.loginhelper.logout
-    @h.emailhelper.follow_link_in_latest_mail_for random_email
+    @h.emailhelper.follow_link_in_latest_mail_for(random_email, "A document was saved in your e-archive", mail_time)
 
     puts "make sure we get invalid elements if we try to activate without filling in the password details"
-    @h.driver.execute_script("$('a.main.button').click()")
+    @h.wait_until { @h.driver.find_element :css => "a.main.button" }.click
     sleep 1
     @h.wait_until { (@h.driver.find_element :css => ".flash.error.active").displayed? }
     @h.screenshot 'sign_up_after_signing_3'

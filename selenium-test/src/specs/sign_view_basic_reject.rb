@@ -1,6 +1,7 @@
 require "rubygems"
 gem "rspec"
 require_relative "../helpers.rb"
+require "time"
 
 describe "rejecting document" do
 
@@ -18,13 +19,15 @@ describe "rejecting document" do
     begin
       @h.dochelper.uploadContract
       @h.dochelper.addPart
-      @h.dochelper.enterCounterpart(@h.ctx.props.first_counterpart_fstname, @h.ctx.props.first_counterpart_sndname, @h.ctx.props.first_counterpart_email)
+      random_email = @h.emailhelper.random_email()
+      @h.dochelper.enterCounterpart(@h.ctx.props.first_counterpart_fstname, @h.ctx.props.first_counterpart_sndname, random_email)
+      mail_time = Time.now.utc.iso8601
       @h.dochelper.signAndSend
     ensure
       @h.loginhelper.logout
     end
 
-    @h.emailhelper.follow_link_in_latest_mail_for @h.ctx.props.first_counterpart_email
+    @h.emailhelper.follow_link_in_latest_mail_for(random_email, "Document to e-sign: contract", mail_time)
 
     puts "make sure it's a signatory is in an opened state"
     @h.dochelper.checkOpened

@@ -1,6 +1,7 @@
 require "rubygems"
 gem "rspec"
 require_relative "../helpers.rb"
+require "time"
 
 describe "Sign a document and then cancel it" do
 
@@ -13,14 +14,16 @@ describe "Sign a document and then cancel it" do
   end
 
   it "Make sure we can cancel a document that we have signed, and that the counterpart cannot subsequently sign it" do
+    random_email = @h.emailhelper.random_email()
 
     @h.loginhelper.login_as(@h.ctx.props.tester_email, @h.ctx.props.tester_password)
     puts "Logged in"
     @h.dochelper.uploadContract
     puts "Fill in counterpart"
     @h.dochelper.addPart
-    @h.dochelper.enterCounterpart(@h.ctx.props.first_counterpart_fstname, @h.ctx.props.first_counterpart_sndname, @h.ctx.props.first_counterpart_email)
+    @h.dochelper.enterCounterpart(@h.ctx.props.first_counterpart_fstname, @h.ctx.props.first_counterpart_sndname, random_email)
     puts "About to sign and send"
+    mail_time = Time.now.utc.iso8601
     @h.dochelper.signAndSend
     puts "After sign and send"
     (@h.wait_until { @h.driver.find_element :css => "a.s-withdraw-button" }).click
@@ -35,7 +38,7 @@ describe "Sign a document and then cancel it" do
 
     puts "Checking that the document is cancelled for the counterpart"
 
-    @h.emailhelper.follow_link_in_latest_mail_for @h.ctx.props.first_counterpart_email
+    @h.emailhelper.follow_link_in_latest_mail_for(random_email, "Document to e-sign: contract", mail_time)
     @h.wait_until { @h.driver.find_element :css => "span.icon.status.cancelled" }
     @h.screenshot 'sign_and_cancel_2'
   end
