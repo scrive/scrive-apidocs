@@ -38,7 +38,7 @@ describe "Sign a document and then cancel it" do
 
     puts "Checking that the document is cancelled for the counterpart"
 
-    @h.emailhelper.follow_link_in_latest_mail_for(random_email, "Document to e-sign: contract", mail_time)
+    @h.emailhelper.follow_link_in_latest_mail_for(random_email, @h.emailhelper.email_title("invitation to sign"), mail_time)
     @h.wait_until { @h.driver.find_element :css => "span.icon.status.cancelled" }
     @h.screenshot 'sign_and_cancel_2'
   end

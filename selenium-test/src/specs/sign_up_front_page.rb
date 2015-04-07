@@ -23,7 +23,7 @@ describe "sign up on front page and modify account settings" do
     mail_time = Time.now.utc.iso8601
     (@h.wait_until { @h.driver.find_element :css => "a.main.button" }).click
     @h.screenshot 'sign_up_front_page_9'
-    @h.emailhelper.follow_link_in_latest_mail_for(email, "New password", mail_time)
+    @h.emailhelper.follow_link_in_latest_mail_for(email, @h.emailhelper.email_title("new password"), mail_time)
     puts "We have real change password form"
     @h.wait_until { @h.driver.find_element :name => "password" }
     @h.screenshot 'sign_up_front_page_10'
@@ -50,7 +50,8 @@ describe "sign up on front page and modify account settings" do
     puts "we should get an email to a page where we can accept the tos"
     @h.loginhelper.login_as @h.ctx.props.tester_email, @h.ctx.props.tester_password, screenshot_name: 'sign_up_front_page_3'
 
-    @h.emailhelper.follow_link_in_latest_mail_for(random_email, "Please activate your account", mail_time, skip_login: true)
+    @h.loginhelper.logout
+    @h.emailhelper.follow_link_in_latest_mail_for(random_email, @h.emailhelper.email_title("activate account"), mail_time)
     @h.wait_until { @h.driver.find_element :css => ".checkbox" }
 
     puts "make sure we get a red flash if we try to activate without signing the tos"
@@ -107,6 +108,7 @@ describe "sign up on front page and modify account settings" do
     @h.loginhelper.login_as(random_email, password)
     @h.screenshot 'sign_up_front_page_8'
     @h.loginhelper.logout
+    sleep 5
 
     puts "reset password for new user"
     new_password = "reset-password-123"
@@ -137,7 +139,7 @@ describe "sign up on front page and modify account settings" do
     @h.loginhelper.logout
 
     puts new_email
-    @h.emailhelper.follow_link_in_latest_mail_for(new_email, "Change of username", mail_time)
+    @h.emailhelper.follow_link_in_latest_mail_for(new_email, @h.emailhelper.email_title("change username"), mail_time)
     puts "just followed link"
     sleep 1
     @h.screenshot 'sign_up_front_page_12'

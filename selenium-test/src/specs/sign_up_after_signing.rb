@@ -28,7 +28,8 @@ describe "sign up after signing a document" do
       @h.loginhelper.logout
     end
 
-    @h.emailhelper.follow_link_in_latest_mail_for(random_email, "Document to e-sign: contract", mail_time)
+    @h.emailhelper.follow_link_in_latest_mail_for(random_email, @h.emailhelper.email_title("invitation to sign"), mail_time)
+
 
     puts "sign the doc"
     mail_time = Time.now.utc.iso8601
@@ -46,7 +47,7 @@ describe "sign up after signing a document" do
     @h.wait_until { @h.driver.find_element :css => ".archive" }
 
     @h.loginhelper.logout
-    @h.emailhelper.follow_link_in_latest_mail_for(random_email, "A document was saved in your e-archive", mail_time)
+    @h.emailhelper.follow_link_in_latest_mail_for(random_email, @h.emailhelper.email_title("document was saved"), mail_time)
 
     puts "make sure we get invalid elements if we try to activate without filling in the password details"
     @h.wait_until { @h.driver.find_element :css => "a.main.button" }.click

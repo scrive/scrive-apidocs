@@ -37,7 +37,7 @@ describe "basic signing" do
     end
     puts "Getting the mail"
 
-    @h.emailhelper.follow_link_in_latest_mail_for(random_email, "Document to e-sign: contract", mail_time)
+    @h.emailhelper.follow_link_in_latest_mail_for(random_email, @h.emailhelper.email_title("invitation to sign"), mail_time)
 
     @h.dochelper.checkOpened
     @h.screenshot 'sign_view_basic_8'

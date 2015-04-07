@@ -69,7 +69,7 @@ describe "sign view all functionalities" do
 
     puts "first sign as the first person"
 
-    @h.emailhelper.follow_link_in_latest_mail_for(random_email1, "Document to e-sign: contract", mail_time)
+    @h.emailhelper.follow_link_in_latest_mail_for(random_email1, @h.emailhelper.email_title("invitation to sign"), mail_time)
 
     puts "make sure it's got the sign button"
     @h.wait_until { @h.driver.find_element :css => "div.sign" }
@@ -102,7 +102,7 @@ describe "sign view all functionalities" do
 
     puts "now sign as the second person"
 
-    @h.emailhelper.follow_link_in_latest_mail_for(random_email2, "Document to e-sign: contract", mail_time)
+    @h.emailhelper.follow_link_in_latest_mail_for(random_email2, @h.emailhelper.email_title("invitation to sign"), mail_time)
 
     @h.dochelper.checkOpened
 
@@ -122,7 +122,7 @@ describe "sign view all functionalities" do
     @h.screenshot 'sign_view_advanced_14'
 
     puts "now sign as the third person"
-    @h.emailhelper.follow_link_in_latest_mail_for(random_email3, "Document to e-sign: contract", mail_time)
+    @h.emailhelper.follow_link_in_latest_mail_for(random_email3, @h.emailhelper.email_title("invitation to sign"), mail_time)
 
     @h.dochelper.checkOpened
 

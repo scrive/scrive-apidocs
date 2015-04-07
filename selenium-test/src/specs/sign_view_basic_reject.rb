@@ -27,7 +27,7 @@ describe "rejecting document" do
       @h.loginhelper.logout
     end
 
-    @h.emailhelper.follow_link_in_latest_mail_for(random_email, "Document to e-sign: contract", mail_time)
+    @h.emailhelper.follow_link_in_latest_mail_for(random_email, @h.emailhelper.email_title("invitation to sign"), mail_time)
 
     puts "make sure it's a signatory is in an opened state"
     @h.dochelper.checkOpened
