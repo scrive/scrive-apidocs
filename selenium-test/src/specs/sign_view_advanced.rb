@@ -25,8 +25,8 @@ describe "sign view all functionalities" do
       @h.dochelper.uploadContract
 
       puts "set the author to have some custom fields"
-      @h.dochelper.addCustomField(1,"authorFN1","authorFV1", screenshot_name1: 'sign_view_advanced_2', screenshot_name2: 'sign_view_advanced_3', screenshot_name3: 'sign_view_advanced_4')
-      @h.dochelper.addCustomField(1,"authorFN2","authorFV2")
+      @h.dochelper.addCustomField(1,"authorFN1","authorFV1", screenshot_name1: 'sign_view_advanced_2', screenshot_name2: 'sign_view_advanced_3', screenshot_name3: 'sign_view_advanced_4', skip_party_choice: true)
+      @h.dochelper.addCustomField(1,"authorFN2","authorFV2", skip_party_choice: true)
 
       puts "set the first counterpart to have one filled field, and one empty one"
       @h.dochelper.addPart

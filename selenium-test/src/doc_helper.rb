@@ -67,6 +67,9 @@ class DocHelper
   end
 
   def addCustomField(part,fieldname, fieldvalue, options = {})
+    if options[:skip_party_choice].nil? then
+      options[:skip_party_choice] = false
+    end
     p = partno(part)
     partytab
     (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class,'design-view-action-participant-info-box')]"}).click
@@ -87,15 +90,23 @@ class DocHelper
     @driver.execute_script("window.scroll(0, 0)")
     @driver.action.drag_and_drop((@driver.find_element :css => ".design-view-action-document-draggable.design-view-action-document-draggable-textbox .design-view-action-document-draggable-icon"), (@driver.find_element :css => "img.pagejpg")).perform
     # set target party
-    (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'text-field-placement-setter-field-selector')]//div[contains(@class,'select-button')]"}).click
-    (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'text-field-placement-setter-field-selector')]//ul[contains(@class,'select-opts')]//li[" + part.to_s() + "]"}).click
 
-    (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'text-field-placement-setter-field-field-selector')]//div[contains(@class,'select-button')]"}).click
+    if not options[:skip_party_choice] then
+      # do it twice, the first one will force browser to scroll to that elem (and immediately close it, second one will work
+      (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'signature-field-placement-setter-field-selector')]//div[contains(@class,'select-button')]"}).click
+      (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'signature-field-placement-setter-field-selector')]//div[contains(@class,'select-button')]"}).click
+      (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'signature-field-placement-setter-field-selector')]//ul[contains(@class,'select-opts')]//li[" + (part-1).to_s() + "]"}).click
+    end
+
+    # do it twice, the first one will force browser to scroll to that elem (and immediately close it, second one will work
+    (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'fieldTypeSetter-field-select-container')]//div[contains(@class,'select-button')]"}).click
+    (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'fieldTypeSetter-field-select-container')]//div[contains(@class,'select-button')]"}).click
+
     @h.wait_until { @driver.find_element :xpath => "//ul[contains(@class,'select-opts')]//li/span[text()='" + fieldname + "']"}
     @h.screenshot options[:screenshot_name2] if options[:screenshot_name2]
     (@driver.find_element :xpath => "//ul[contains(@class,'select-opts')]//li/span[text()='" + fieldname + "']").click
     @h.screenshot options[:screenshot_name3] if options[:screenshot_name3]
-    (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'fieldTypeSetter-container')]//a[contains(@class,'button')]"}).click
+    (@h.wait_until { @driver.find_element :xpath => "//a[contains(@class,'fieldTypeSetter-button')]"}).click
 
 # this doesn't work, possibly due to a bug in the Firefox driver:
 # http://code.google.com/p/selenium/issues/detail?id=3729
