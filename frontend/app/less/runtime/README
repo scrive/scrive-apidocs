@@ -1,0 +1,20 @@
+* ./common
+- Any file here should be used by at least two runtime components.
+  Short descriptions:
+  -- buttons.less: styling and mixins for buttons.
+  -- flash.less: styling for the colour codes and structure of the flash messages.
+  -- service-header.less: header styling used in scrive-, service- and
+     signview branding.
+  -- utils.less: utilities.
+* ./domainbranding
+- Included everywhere regardless of whether the user is logged in or
+  not. Contains styling for status icons and participants.
+* ./loginbranding
+- Styles for branding login and account creation pages.
+* ./servicebranding
+- Styles for branding the Scrive service for logged in users.
+* ./scrivebranding
+- Exclusively used for externally reachable content, i.e. not
+  requiring login. Static, i.e. no database involved, and only used
+  for scrive.com. For now, mostly used to mimic 'the EE look' in the
+  header and footer.

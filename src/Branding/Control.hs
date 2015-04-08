@@ -5,6 +5,7 @@
 module Branding.Control(
                 handleServiceBranding
               , handleLoginBranding
+              , handleScriveBranding
               , handleDomainBranding
               , handleSignviewBranding
               , handleSignviewBrandingWithoutDocument
@@ -77,6 +78,14 @@ getLoginTheme ::  Kontrakcja m =>  m Theme
 getLoginTheme = do
   ctx <- getContext
   dbQuery $ GetTheme $ (bdLoginTheme $ ctxbrandeddomain ctx)
+
+-- used to deliver CSS for those pages that mimic the look of the company web ('Expression Engine').
+handleScriveBranding :: Kontrakcja m => String -> String -> m Response
+handleScriveBranding brandinghash _ = do
+  brandingCSS <- withLessCache (ScriveBranding brandinghash) scriveBrandingCSS
+  let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
+  return $ setHeaderBS "Cache-Control" "max-age=31536000" $
+           setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
 
 -- Generates domain branding - enything that is onlu branded at domain level - i.e colors of status icons
 handleDomainBranding :: Kontrakcja m => String -> String-> m Response

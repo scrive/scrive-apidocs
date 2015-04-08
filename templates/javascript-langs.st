@@ -1282,6 +1282,7 @@ javascriptLocalisation =
       , header : {
               login : "$_login()$"
             , startFreeTrial : "$_startFreeTrial()$"
+            , partners : "$_headerPartners()$"
             , contact : "$_headerContakt()$"
             , about : "$_headerAbout()$"
             , cases : "$_headerCases()$"

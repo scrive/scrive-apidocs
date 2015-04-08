@@ -1,180 +1,20 @@
-// Here be dragons, lots of overriding.
-// TODO(johan.nilo): remove dragons
-.change-language {
 
-  .select-opts,
-  .select-button,
-  .select-button-label {
-  	background: #29313c !important;
-  	color: @white !important;
-  	font-weight: 600;
-  }
-
-  li {
-  	padding-bottom: 8px !important;
-    padding-left: 2px !important;
-  	
-    &:hover {
-	    background: #39414c !important;
-    }
-  }
-
-  ul {
-    left: 0 !important;
-  }
-}
-
-footer.site {
-  background: @brand-primary;
-  font-size: 16px;
+footer.site.logged-in {
+  background: @white;
+  border-top: 1px solid #dee4ed;
+  bottom: 0;
+  font-size : 15px;
+  height: 45px; // Height of the footer
   margin-top: -207px; // This has to be synched with body-container. Note that logged-in is absolute and this one is not
   min-width: 1020px;
-  padding-bottom: 36px;
-  padding-top: 67px;
+  padding-bottom: 35px;
+  padding-top: 40px;
+  position: absolute;
   width: 100%;
   z-index: 90;
-
   .clearfix;
 
-  &.thin {
-    min-width: 960px;
-  }
-
-  &.logged-in {
-    background: @white;
-    border-top: 1px solid #dee4ed;
-    bottom: 0;
-    height: 45px; // Height of the footer
-    padding-bottom: 35px;
-    padding-top: 40px;
-    position: absolute;
-  }
-  
-  .ct {
-    margin: 0 auto;
-    width: 1020px;
-    
-    &.thin {
-      width: 960px;
-    }
-  }
-
-  .visions p {
-    color: white;
-    font-family: @font-family-source;
-    font-size: 24px;
-    margin: 0 0 28px;
-    padding: 0 16px;
-  }
-
-  nav {
-    -moz-box-sizing: border-box;
-    box-sizing: border-box;
-    float: left;
-    padding: 0 1em;
-    width: 192px;
-
-    &.last {
-      padding-right: 0;
-      
-      .content {
-        float: right;
-      }
-    }
-
-    header h4 {
-      color: @text-very-light;
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 8px;
-      text-align: left;
-    }
-
-    .content {
-
-      ul.icons {
-        float: right;
-        margin: 0 4px 16px;
-
-        .clearfix;
-
-        li {
-          float: left;
-          margin: 0 8px 8px 0;
-
-          &.last {
-            margin-right: 0;
-          }
-
-          a {
-            background: #29313c;
-            display: block;
-            transition: .15s ease-in-out;
-            
-            img {
-              display: block;
-              opacity: .83333;
-              transition: .15s ease-in-out;
-            }
-
-            &:hover {
-              background: #39414c;
-              
-              img {
-                opacity: 1;
-              }
-            }
-          }
-        }
-      }
-
-      ul.tree {
-        
-        li.branch {
-          color: @text-light;
-          font-size: 14px;
-          line-height: 32px;
-
-          p {
-            margin: 0 0 1.33333em;
-          }
-
-          ul.select {
-            margin: 0 0 1em;
-          }
-
-          > a {
-            color: @text-lighter;
-            
-            &:hover {
-              color: @text-very-light;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  .langSwitcher .select {
-    float: right;
-    font-size: 15px;
-    height: 38px;
-    margin-bottom: 1em;
-
-    .select-button {
-      background-color: #29313c;
-      border: none;
-
-      .select-button-label {
-        color: @white;
-        font-weight: 600;
-      }
-    }
-  }
-
   .poweredbyscrive {
-    width: 80px;
-    font-size : 15px;
     color: #333;
     margin: 0 auto;
     position:relative;
@@ -183,9 +23,9 @@ footer.site {
 
     .logo {
       background-image: url(~"@{img-base-url}/logo-small-grey.png");
-      width: 80px;
       height: 17px;
       margin: 0 auto;
+      width: 80px;
     }
   }
 }

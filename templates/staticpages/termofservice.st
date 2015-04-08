@@ -1,11 +1,14 @@
 ###
+###  This template does not check if user is logged in, since this page
+###  always behaves as if the user is *not* logged in.
+###
 termsOfService=
 $doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
     $standardHeaderContents(nobranding='true')$
-    <link href='/service_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+    <link href='/scrive_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
   </head>
 <body>
   $header()$

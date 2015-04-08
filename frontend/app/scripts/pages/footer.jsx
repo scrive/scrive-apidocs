@@ -59,7 +59,7 @@ define(['React', 'Backbone', 'common/select', 'pages/languageselect'], function(
      var labelStyle = this.props.color ? {textShadow : "none", color : this.props.textcolor} : {};
      return (
        <footer
-          className="site thin"
+          className="site thin not-logged-in"
           style={mainStyle}
           >
 

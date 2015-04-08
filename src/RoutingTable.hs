@@ -193,6 +193,7 @@ staticRoutes production = choice
      , dir "padlist_signview_branding" $ hGet $ toK2 $ Branding.handleSignviewBrandingWithoutDocument
      , dir "internal_signview_branding" $ hGet $ toK2 $ Branding.handleSignviewBrandingInternal
      , dir "service_branding" $ hGet $ toK2 $ Branding.handleServiceBranding
+     , dir "scrive_branding" $ hGet $ toK2 $ Branding.handleScriveBranding
      , dir "login_branding" $ hGet $ toK2 $ Branding.handleLoginBranding
      , dir "domain_branding" $ hGet $ toK2 $ Branding.handleDomainBranding
      , dir "login_logo" $  hGet $ toK1 $ Branding.loginLogo

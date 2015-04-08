@@ -1,0 +1,168 @@
+
+footer.site.not-logged-in {
+  background: none repeat scroll 0 0 @brandcolor;
+  box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.3);
+  font-size: 16px;
+  margin-top: -207px;
+  min-width: 1020px;
+  padding-bottom: 35px;
+  padding-top: 67px;
+  width: 100%;
+  z-index: 90;
+
+  // like 'clearfix'
+  &:before,
+  &:after {
+    content: "";
+    display: table;
+  }
+
+  &:after {
+    clear: both;
+  }
+
+  .visions p {
+    color: @brandtextcolor;
+    font-family: @font-family-source;
+    font-size: 24px;
+    margin: 0 0 28px;
+    padding: 0 16px;
+  }
+
+  .ct {
+    margin: 0 auto;
+    width: 1020px;
+
+    &.thin {
+      width: 960px;
+    }
+  }
+
+  nav {
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    float: left;
+    padding: 0 1em;
+    width: 192px;
+
+    &.last {
+      padding-right: 0;
+      
+      .content {
+        float: right;
+      }
+    }
+
+    header h4 {
+      color: @brandtextcolor;
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      text-align: left;
+    }
+
+    .content {
+
+      ul.icons {
+        float: right;
+        margin: 0 4px 16px;
+
+        li {
+          float: left;
+          margin: 0 8px 8px 0;
+
+          &.last {
+            margin-right: 0;
+          }
+
+          a {
+            background: #29313c;
+            display: block;
+            transition: .15s ease-in-out;
+            
+            img {
+              display: block;
+              opacity: .83333;
+              transition: .15s ease-in-out;
+            }
+
+            &:hover {
+              background: #39414c;
+              
+              img {
+                opacity: 1;
+              }
+            }
+          }
+        }
+      }
+
+      ul.tree {
+        
+        li.branch {
+          color: @text-medium;
+          font-size: 14px;
+          line-height: 32px;
+
+          > a {
+            color: @brandtextcolor;
+
+            &:hover {
+              color: lighten(@brandtextcolor,20%);
+            }
+
+            &.active {
+              color: @brandtextcolor;
+            }
+          }
+
+          p {
+            margin: 0 0 1.33333em;
+          }
+
+          ul.select {
+            margin: 0 0 1em;
+          }
+
+        }
+      }
+    }
+  }
+
+
+  .langSwitcher .select {
+    float: right;
+    font-size: 15px;
+    height: 38px;
+    margin-bottom: 1em;
+  }
+}
+
+// ...because we are fighting a specificity battle. And no, two are not enough.
+.change-language.change-language.change-language {
+
+  .select-opts,
+  .select-button,
+  .select-button-label {
+    background: #29313c;
+    color: @white;
+    font-weight: 600;
+  }
+
+  .select-button {
+    border: none;
+  }
+
+  li {
+    padding-bottom: 8px;
+    padding-left: 2px;
+  	
+    &:hover {
+      background: #39414c;
+    }
+  }
+
+  ul {
+    left: 0;
+  }
+}
