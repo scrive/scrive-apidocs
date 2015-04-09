@@ -370,11 +370,6 @@ $endif$
 ###
 SignWithELegFailureEvidenceLog=Scrive E-sign rejected the attempt by <span class="signatory"/> to sign the document. The reason was that the identity information of <span class="signatory"/> did not match the identity information received from the external eID system. Information given by the external eID system: $msg$.
 ###
-SignWithELegFailureEvidenceArchive=$_SignWithELegFailureEvidenceTextSimple()$
-###
-SignWithELegFailureEvidenceVerificationPages=$_SignWithELegFailureEvidenceTextSimple()$
-###
-###
 SignatorySignLinkVisitedLog=The document was opened by <span class="actor"/> in Scrive E-sign’s online interface to sign documents.
 ###
 SignatoryReviewLinkVisitedLog=The document was opened by <span class="actor"/>  in Scrive E-sign’s online interface to sign documents.
@@ -444,6 +439,4 @@ $if(text)$$if(!mobile)$ $_invitationCustomMessageTextToSign()$ $endif$$endif$
 ###
 invitationCustomMessageTextToReviewIfThereIsOne=
 $if(text)$$if(!mobile)$ $_invitationCustomMessageTextToReview()$ $endif$$endif$
-###
-CancelDocumenElegEvidenceLog=$_CancelDocumenElegEvidenceText()$
 ###

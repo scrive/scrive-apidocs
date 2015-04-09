@@ -67,18 +67,6 @@ javascriptLocalisation =
                        , mobileQuestionAlreadySigned : "$_reminderByMobileQuestionAlreadySigned()$"
                        , emailMobileQuestion : "$_reminderByEmailMobileQuestion()$"
 					}
-             , sign :  {
-                          eleg : {
-                                     mismatch : {
-                                         mismatchOnNameAndNumberCantChange : "$_mismatchOnNameAndNumberCantChange()$"
-                                       , mismatchOnNameAndNumberCanChange : "$_mismatchOnNameAndNumberCanChange()$"
-                                       , mismatchOnNameAndCantChange : "$_mismatchOnNameAndCantChange()$"
-                                       , mismatchOnNumberAndCantChange : "$_mismatchOnNumberAndCantChange()$"
-                                       , mismatchOnNameAndCanChange : "$_mismatchOnNameAndCanChange()$"
-                                       , mismatchOnNumberAndCanChange : "$_mismatchOnNumberAndCanChange()$"
-                                   }
-                          }
-                    }
              , signByAuthor : {
                           modalTitle : "$_dialogConfirmSignByAuthorHead()$"
 
