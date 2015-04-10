@@ -660,7 +660,7 @@
 "_nameInvalidChars":"<span class='put-field-name'></span> may contain only alphabetic characters, apostrophe, hyphen or space.",
 "_nameRequired":"<span class='put-field-name'></span> required.",
 "_nameTooLong":"<span class='put-field-name'></span> may contain up to 100 characters.",
-"_newCompanyAccountButtonText":"New account",
+"_newCompanyAccountButtonText":"New user",
 "_newDocumentTitle":"Untitled",
 "_newTemplateTitle":"Untitled",
 "_newUserMailContentBodyFirst":"You have created an account with Scrive E-sign. Click the button below to activate your account.",
