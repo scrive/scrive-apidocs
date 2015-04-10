@@ -30,6 +30,7 @@ import Data.Int
 import Data.Maybe hiding (fromJust)
 import Data.Monoid
 import Data.Monoid.Utils
+import Data.String.Utils (strip)
 import Data.Time
 
 import DB
@@ -224,7 +225,7 @@ insertEmail service_test (token, sender, to, reply_to, title, content, attachmen
     sqlSet "sender" sender
     sqlSet "receivers" to
     sqlSet "reply_to" reply_to
-    sqlSet "title" title
+    sqlSet "title" $ strip title
     sqlSet "content" content
     sqlSet "x_smtp_attrs" xsmtpapi
     sqlSet "run_at" unixEpoch
