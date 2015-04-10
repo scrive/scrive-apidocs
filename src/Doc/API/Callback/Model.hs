@@ -40,8 +40,8 @@ documentAPICallback runExecute = ConsumerConfig {
   , dacAttempts = attempts
   }
 , ccJobIndex = dacID
-, ccNotificationChannel = Just apiCallbackNotificationChannel
-, ccNotificationTimeout = 60 * 1000000
+, ccNotificationChannel = Nothing --Just apiCallbackNotificationChannel
+, ccNotificationTimeout = 2 * 1000000 -- 2 seconds
 , ccMaxRunningJobs = 32
 , ccProcessJob = \dac@DocumentAPICallback{..} -> runExecute $ execute dac >>= \case
   True  -> return $ Ok Remove
@@ -89,8 +89,8 @@ triggerAPICallbackIfThereIsOne doc@Document{..} = case documentstatus of
 
 ----------------------------------------
 
-apiCallbackNotificationChannel :: Channel
-apiCallbackNotificationChannel = "api_callback"
+--apiCallbackNotificationChannel :: Channel
+--apiCallbackNotificationChannel = "api_callback"
 
 data CheckQueuedCallbacksFor = CheckQueuedCallbacksFor DocumentID
 instance (MonadDB m, MonadCatch m) => DBQuery m CheckQueuedCallbacksFor Bool where
@@ -130,7 +130,7 @@ instance (MonadDB m, MonadCatch m, Log.MonadLog m) => DBUpdate m MergeAPICallbac
       -- Otherwise insert a new one.
       Log.mixlog_ $ "Inserting callback for document" <+> show did
       runQuery_ $ sqlInsert "document_api_callbacks" setFields
-    notify apiCallbackNotificationChannel ""
+    --notify apiCallbackNotificationChannel ""
     Log.mixlog_ $ "Callback for document" <+> show did <+> "merged"
     where
       setFields :: (MonadState v n, SqlSet v) => n ()

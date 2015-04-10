@@ -65,8 +65,8 @@ main = Log.withLogger $ do
     , ccJobSelectors = smsSelectors
     , ccJobFetcher = smsFetcher
     , ccJobIndex = smID
-    , ccNotificationChannel = Just smsNotificationChannel
-    , ccNotificationTimeout = 60 * 1000000 -- 1 minute
+    , ccNotificationChannel = Nothing --Just smsNotificationChannel
+    , ccNotificationTimeout = 2 * 1000000 -- 2 seconds
     , ccMaxRunningJobs = 10
     , ccProcessJob = \sms@ShortMessage{..} -> runCryptoRNGT rng $ do
       Log.mixlog_ $ "Sending sms" <+> show smID

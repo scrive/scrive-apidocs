@@ -1,7 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell #-}
 module Mails.Model (
     module Mails.Data
-  , mailerJobNotificationChannel
   , mailerJobSelectors
   , mailerJobFetcher
   , GetCurrentSenderType(..)
@@ -10,7 +9,7 @@ module Mails.Model (
   , ScheduleServiceTest(..)
   , mailSelectors
   , mailFetcher
-  , mailNotificationChannel
+  --, mailNotificationChannel
   , CreateEmail(..)
   , CreateServiceTest(..)
   , GetEmail(..)
@@ -38,9 +37,6 @@ import MagicHash
 import Mails.Data
 import MinutesTime
 import OurPrelude
-
-mailerJobNotificationChannel :: Channel
-mailerJobNotificationChannel = "mailer_job"
 
 mailerJobSelectors :: [SQL]
 mailerJobSelectors = ["id", "attempts"]
@@ -101,8 +97,8 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m ScheduleServiceTest () where
 
 ----------------------------------------
 
-mailNotificationChannel :: Channel
-mailNotificationChannel = "mailer_mail"
+--mailNotificationChannel :: Channel
+--mailNotificationChannel = "mailer_mail"
 
 mailSelectors :: [SQL]
 mailSelectors = [
@@ -184,8 +180,8 @@ instance MonadDB m => DBUpdate m ResendEmailsSentAfterServiceTest Int where
       sqlSet "run_at" unixEpoch
       sqlWhereEq "service_test" False
       sqlWhere $ "finished_at >= (SELECT j.finished_at FROM mailer_jobs j WHERE j.id =" <?> PerformServiceTest <> ")"
-    when (n > 0) $ do
-      notify mailNotificationChannel ""
+    --when (n > 0) $ do
+    --  notify mailNotificationChannel ""
     return n
 
 data CleanEmailsOlderThanDays = CleanEmailsOlderThanDays Int
@@ -241,7 +237,7 @@ insertEmail service_test (token, sender, to, reply_to, title, content, attachmen
       sqlSetList "name" names
       sqlSetList "content" $ either (Just . Binary) (const Nothing) `map` contents
       sqlSetList "file_id" $ either (const Nothing) Just `map` contents
-  notify mailNotificationChannel ""
+  --notify mailNotificationChannel ""
   return mid
   where
     names = map attName attachments
