@@ -367,6 +367,9 @@ $else$
       $_SignDocumentEvidenceTextSimpleNotArchiveStandard()$
 $endif$
 ###
+SignWithELegFailureEvidenceArchive=$_SignWithELegFailureEvidenceTextSimple()$
+###
+SignWithELegFailureEvidenceVerificationPages=$_SignWithELegFailureEvidenceTextSimple()$
 ###
 SignWithELegFailureEvidenceLog=Scrive E-sign rejected the attempt by <span class="signatory"/> to sign the document. The reason was that the identity information of <span class="signatory"/> did not match the identity information received from the external eID system. Information given by the external eID system: $msg$.
 ###
