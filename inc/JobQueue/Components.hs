@@ -63,7 +63,7 @@ runConsumer cc cs logger = do
   runningJobs <- atomically $ newTVar 0
 
   cid <- registerConsumer cc cs
-  listener <- spawnListener cc cs semaphore
+  listener <- spawnListener cc cs (logger $ "Listener" <+> show cid) semaphore
   monitor <- spawnMonitor cc cs (logger $ "Monitor" <+> show cid) cid
   dispatcher <- spawnDispatcher cc cs (logger $ "Dispatcher" <+> show cid) cid semaphore batches runningJobs
 
@@ -80,20 +80,25 @@ spawnListener
   :: (MonadBaseControl IO m, MonadMask m)
   => ConsumerConfig m idx job
   -> ConnectionSource
+  -> DomainLogger m
   -> MVar ()
   -> m ThreadId
-spawnListener cc cs semaphore = forkP "listener" $ case ccNotificationChannel cc of
+spawnListener cc cs logger semaphore = forkP "listener" $ case ccNotificationChannel cc of
   Just chan -> runDBT cs ts . bracket_ (listen chan) (unlisten chan) . forever $ do
     -- If there are many notifications, we need to collect them
     -- as soon as possible, because they are stored in memory by
     -- libpq. They are also not squashed, so we perform the
     -- squashing ourselves with the help of MVar ().
     void . getNotification $ ccNotificationTimeout cc
-    tryPutMVar semaphore ()
-  Nothing -> forever . liftBase $ do
-    threadDelay $ ccNotificationTimeout cc
-    tryPutMVar semaphore ()
+    lift signalDispatcher
+  Nothing -> forever $ do
+    liftBase . threadDelay $ ccNotificationTimeout cc
+    signalDispatcher
   where
+    signalDispatcher = do
+      logger $ "signaling dispatcher"
+      liftBase $ tryPutMVar semaphore ()
+
     ts = def {
       tsAutoTransaction = False
     , tsIsolationLevel = ReadCommitted
@@ -118,9 +123,11 @@ spawnMonitor ConsumerConfig{..} cs logger cid = forkP "monitor" . forever $ do
       , "WHERE id =" <?> cid
       , "  AND name =" <?> unRawSQL ccJobsTable
       ]
-    when (not ok) $ do
-      lift . logger $ "consumer" <+> show cid <+> "is not registered"
-      throwM ThreadKilled
+    if ok
+      then lift . logger $ "activity of the consumer updated"
+      else do
+        lift . logger $ "consumer" <+> show cid <+> "is not registered"
+        throwM ThreadKilled
     -- Remove all inactive (presumably dead) consumers.
     runSQL $ smconcat [
         "WITH inactive AS ("
