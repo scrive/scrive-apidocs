@@ -18,11 +18,12 @@ define(["Backbone", "React", "common/checkbox", "legacy_code"], function (Backbo
 
     render: function () {
       var field = this.props.field;
+      var label = field.isCheckbox() ? localization.designview.checkboxes.obligatory : localization.designview.textFields.obligatory;
 
       return (
         <div className="fieldTypeSetter-option">
           <Checkbox
-            label={localization.designview.textFields.obligatory}
+            label={label}
             checked={field.isObligatory()}
             onChange={this.handleChange}
           />
