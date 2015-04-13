@@ -181,9 +181,10 @@ spawnDispatcher ConsumerConfig{..} cs logger cid semaphore batches runningJobs =
 
     loop :: Int -> m ()
     loop limit = do
+      logger "reserving jobs..."
       (batch, batchSize) <- reserveJobs limit
+      logger $ "reserved batch of size" <+> show batchSize
       when (batchSize > 0) $ do
-        logger $ "processing batch of size" <+> show batchSize
         -- Update runningJobs before forking so that we can
         -- adjust maxBatchSize appropriately later. Also, any
         -- exception thrown within fork is propagated down to
