@@ -63,7 +63,7 @@ runConsumer cc cs logger = do
   runningJobs <- atomically $ newTVar 0
 
   cid <- registerConsumer cc cs
-  listener <- spawnListener cc cs (logger $ "Listener" <+> show cid) semaphore
+  listener <- spawnListener cc cs semaphore
   monitor <- spawnMonitor cc cs (logger $ "Monitor" <+> show cid) cid
   dispatcher <- spawnDispatcher cc cs (logger $ "Dispatcher" <+> show cid) cid semaphore batches runningJobs
 
@@ -80,10 +80,9 @@ spawnListener
   :: (MonadBaseControl IO m, MonadMask m)
   => ConsumerConfig m idx job
   -> ConnectionSource
-  -> DomainLogger m
   -> MVar ()
   -> m ThreadId
-spawnListener cc cs logger semaphore = forkP "listener" $ case ccNotificationChannel cc of
+spawnListener cc cs semaphore = forkP "listener" $ case ccNotificationChannel cc of
   Just chan -> runDBT cs ts . bracket_ (listen chan) (unlisten chan) . forever $ do
     -- If there are many notifications, we need to collect them
     -- as soon as possible, because they are stored in memory by
@@ -96,7 +95,6 @@ spawnListener cc cs logger semaphore = forkP "listener" $ case ccNotificationCha
     signalDispatcher
   where
     signalDispatcher = do
-      logger $ "signaling dispatcher"
       liftBase $ tryPutMVar semaphore ()
 
     ts = def {
