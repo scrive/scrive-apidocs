@@ -835,10 +835,14 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, Log.MonadLog m, TemplatesMonad m
     clearSignInfofromDoc = do
       newSignLinks <- forM (documentsignatorylinks doc) $ \sl -> do
                            magichash <- random
+                           let newFields = for (signatoryfields sl) $ \f ->
+                                             case f of
+                                               SignatorySignatureField sf -> SignatorySignatureField $ sf{ssfValue = Nothing}
+                                               _ -> f
                            return $ defaultValue {
                                 signatorylinkid            = (unsafeSignatoryLinkID 0)
                               , signatorymagichash = magichash
-                              , signatoryfields            = signatoryfields sl
+                              , signatoryfields            = newFields
                               , signatoryisauthor          = signatoryisauthor sl
                               , signatoryispartner         = signatoryispartner sl
                               , signatorysignorder         = signatorysignorder sl
