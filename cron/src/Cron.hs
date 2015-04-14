@@ -3,7 +3,7 @@ module Cron where
 import Control.Applicative
 import Control.Concurrent.Lifted
 import Control.Monad
-import Control.Monad.Trans
+import Control.Monad.Base
 import Data.Maybe
 import Data.Monoid ((<>))
 import Data.Monoid.Utils
@@ -57,8 +57,8 @@ main = Log.withLogger $ do
   withPostgreSQL (simpleSource $ connSettings []) $
     checkDatabase Log.mixlog_ kontraDomains kontraTables
 
-  connPool <- liftIO . createPoolSource $ connSettings kontraComposites
-  templates <- liftIO (newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates)
+  connPool <- liftBase . createPoolSource (liftBase . Log.withLogger . Log.mixlog_) $ connSettings kontraComposites
+  templates <- liftBase (newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates)
   rng <- newCryptoRNGState
   filecache <- MemCache.new BS.length 52428800
 
@@ -183,4 +183,4 @@ main = Log.withLogger $ do
 
   withConsumer (documentAPICallback runScheduler) connPool apiCallbackLogger $ do
     withConsumer cronQueue connPool cronLogger $ do
-      liftIO waitForTermination
+      liftBase waitForTermination
