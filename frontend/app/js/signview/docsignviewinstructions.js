@@ -22,8 +22,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     var signatory = document.currentSignatory();
     var welcomeUser = signatory != undefined &&
                       signatory.name() !="" &&
-                      signatory.canSign() &&
-                      !signatory.author();
+                      signatory.canSign();
 
     if (document.isSigning() && welcomeUser) {
       var result = $('<span>' + localization.docsignview.followTheArrowWithUserName + '</span>');
