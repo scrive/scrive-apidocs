@@ -1,7 +1,7 @@
 module SMS.Model (
     messengerJobSelectors
   , messengerJobFetcher
-  --, smsNotificationChannel
+  , smsNotificationChannel
   , smsSelectors
   , smsFetcher
   , CreateSMS(..)
@@ -30,8 +30,8 @@ messengerJobFetcher (jtype, attempts) = MessengerJob {
 
 ----------------------------------------
 
---smsNotificationChannel :: Channel
---smsNotificationChannel = "sms"
+smsNotificationChannel :: Channel
+smsNotificationChannel = "sms"
 
 smsSelectors :: [SQL]
 smsSelectors = [
@@ -66,7 +66,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m CreateSMS ShortMessageID where
       sqlSet "data" sdata
       sqlResult "id"
     mid <- fetchOne runIdentity
-    --notify smsNotificationChannel ""
+    notify smsNotificationChannel ""
     return mid
 
 data CleanSMSesOlderThanDays = CleanSMSesOlderThanDays Int

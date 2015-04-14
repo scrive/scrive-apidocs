@@ -78,8 +78,8 @@ main = Log.withLogger $ do
     , ccJobSelectors = mailSelectors
     , ccJobFetcher = mailFetcher
     , ccJobIndex = mailID
-    , ccNotificationChannel = Nothing --Just mailNotificationChannel
-    , ccNotificationTimeout = 5 * 1000000 -- 5 seconds
+    , ccNotificationChannel = Just mailNotificationChannel
+    , ccNotificationTimeout = 60 * 1000000 -- 1 minute
     , ccMaxRunningJobs = 10
     , ccProcessJob = \mail@Mail{..} -> if isNotSendable mail
       then do
