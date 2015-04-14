@@ -58,8 +58,8 @@ return React.createClass({
       return (
         <div className="tab-container apidashboard">
           <div className="oauth-section">
-            <label className="oauth-section-header">{localization.apiDashboard.grandedTokens}</label>
-            <label className="oauth-section-label">{localization.apiDashboard.grantedPriviligesDescription}</label>
+            <div className="oauth-section-header">{localization.apiDashboard.grandedTokens}</div>
+            <div className="oauth-section-label">{localization.apiDashboard.grantedPriviligesDescription}</div>
             <div>
               <List.List
                 ref='grantedprivilegeslist'
@@ -94,8 +94,8 @@ return React.createClass({
             </div>
           </div>
           <div className="oauth-section">
-            <label className="oauth-section-header">{localization.apiDashboard.personalTokens}</label>
-            <label className="oauth-section-label">{localization.apiDashboard.personalTokenDescription}</label>
+            <div className="oauth-section-header">{localization.apiDashboard.personalTokens}</div>
+            <div className="oauth-section-label">{localization.apiDashboard.personalTokenDescription}</div>
             <div>
               <List.List
                 ref='personaltokenlist'
@@ -176,8 +176,8 @@ return React.createClass({
             </div>
           </div>
           <div className="oauth-section">
-            <label className="oauth-section-header">{localization.apiDashboard.apiTokens}</label>
-            <label className="oauth-section-label">{localization.apiDashboard.apiTokenDescription}</label>
+            <div className="oauth-section-header">{localization.apiDashboard.apiTokens}</div>
+            <div className="oauth-section-label">{localization.apiDashboard.apiTokenDescription}</div>
             <div>
 
              <List.List
