@@ -18,5 +18,6 @@ data LessCacheKey =
   | SignviewBranding ThemeID String
   | ServiceBranding ThemeID String
   | LoginBranding ThemeID String
+  | ScriveBranding String
   deriving (Eq,Ord)
 

@@ -200,11 +200,9 @@ postPageCode=
 ###
 langprefix=/$langcode$/
 ####
-#### Style part below is just to stop pushing content down on login page (before rendering). You can remove it when whole this is in react.
-####
 header=
 $headerAddons()$
-<div class='place-for-header' $if(!logged)$ style="height:81px;background-color: #495259" $endif$>
+<div class='place-for-header'>
   $postPageCode()$
 </div>
 <script>

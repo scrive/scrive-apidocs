@@ -90,11 +90,14 @@ spawnListener cc cs semaphore = forkP "listener" $ case ccNotificationChannel cc
     -- libpq. They are also not squashed, so we perform the
     -- squashing ourselves with the help of MVar ().
     void . getNotification $ ccNotificationTimeout cc
-    tryPutMVar semaphore ()
-  Nothing -> forever . liftBase $ do
-    threadDelay $ ccNotificationTimeout cc
-    tryPutMVar semaphore ()
+    lift signalDispatcher
+  Nothing -> forever $ do
+    liftBase . threadDelay $ ccNotificationTimeout cc
+    signalDispatcher
   where
+    signalDispatcher = do
+      liftBase $ tryPutMVar semaphore ()
+
     ts = def {
       tsAutoTransaction = False
     , tsIsolationLevel = ReadCommitted
@@ -119,9 +122,11 @@ spawnMonitor ConsumerConfig{..} cs logger cid = forkP "monitor" . forever $ do
       , "WHERE id =" <?> cid
       , "  AND name =" <?> unRawSQL ccJobsTable
       ]
-    when (not ok) $ do
-      lift . logger $ "consumer" <+> show cid <+> "is not registered"
-      throwM ThreadKilled
+    if ok
+      then lift . logger $ "activity of the consumer updated"
+      else do
+        lift . logger $ "consumer" <+> show cid <+> "is not registered"
+        throwM ThreadKilled
     -- Remove all inactive (presumably dead) consumers.
     runSQL $ smconcat [
         "WITH inactive AS ("
@@ -175,9 +180,10 @@ spawnDispatcher ConsumerConfig{..} cs logger cid semaphore batches runningJobs =
 
     loop :: Int -> m ()
     loop limit = do
+      logger "reserving jobs..."
       (batch, batchSize) <- reserveJobs limit
+      logger $ "reserved batch of size" <+> show batchSize
       when (batchSize > 0) $ do
-        logger $ "processing batch of size" <+> show batchSize
         -- Update runningJobs before forking so that we can
         -- adjust maxBatchSize appropriately later. Also, any
         -- exception thrown within fork is propagated down to

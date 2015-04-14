@@ -21,6 +21,7 @@ window.FieldPlacement = Backbone.Model.extend({
           this.set({"tip" : args.field.defaultTip()});
         this.setSignatory(args.field.signatory());
         this.setField(args.field);
+        this.bindBubble();
     },
     placed : function() {
         return this.get("placed");

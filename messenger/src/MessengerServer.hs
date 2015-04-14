@@ -34,7 +34,7 @@ main = Log.withLogger $ do
   let cs = def { csConnInfo = mscDBConfig conf }
   withPostgreSQL (simpleSource cs) $
     checkDatabase Log.mixlog_ [] messengerTables
-  pool <- liftBase $ createPoolSource cs
+  pool <- liftBase $ createPoolSource (liftBase . Log.withLogger . Log.mixlog_) cs
   rng <- newCryptoRNGState
 
   E.bracket (startServer pool rng conf) (liftBase killThread) . const $ do

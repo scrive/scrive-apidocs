@@ -127,6 +127,7 @@ Executable kontrakcja-server
   Build-depends: random
   Build-depends: recurly
   Build-depends: regex-tdfa
+  Build-depends: resource-pool
   Build-depends: soap
   Build-depends: spreadsheet
   Build-depends: stm
@@ -240,6 +241,7 @@ Executable cron
   Build-depends: random
   Build-depends: recurly
   Build-depends: regex-tdfa
+  Build-depends: resource-pool
   Build-depends: soap
   Build-depends: spreadsheet
   Build-depends: stm
@@ -357,6 +359,7 @@ Executable kontrakcja-migrate
   Build-depends: random
   Build-depends: recurly
   Build-depends: regex-tdfa
+  Build-depends: resource-pool
   Build-depends: spreadsheet
   Build-depends: stm
   Build-depends: tagsoup
@@ -467,6 +470,7 @@ Executable mailing-server
   Build-depends: random
   Build-depends: recurly
   Build-depends: regex-tdfa
+  Build-depends: resource-pool
   Build-depends: spreadsheet
   Build-depends: stm
   Build-depends: tagsoup
@@ -574,6 +578,7 @@ Executable messenger-server
   Build-depends: random
   Build-depends: recurly
   Build-depends: regex-tdfa
+  Build-depends: resource-pool
   Build-depends: spreadsheet
   Build-depends: stm
   Build-depends: tagsoup
@@ -686,6 +691,7 @@ Executable kontrakcja-test
   Build-depends: random
   Build-depends: recurly
   Build-depends: regex-tdfa
+  Build-depends: resource-pool
   Build-depends: soap
   Build-depends: spreadsheet
   Build-depends: stm

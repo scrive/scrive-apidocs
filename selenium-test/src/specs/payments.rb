@@ -100,7 +100,7 @@ describe "subscribe with a credit card" do
     (@h.wait_until { @h.driver.find_element :css => ".flash-body" })
 
     puts "we should get an email to a page where we can accept the tos"
-    @h.emailhelper.follow_link_in_latest_mail_for(random_email, "Please activate your account", mail_time)
+    @h.emailhelper.follow_link_in_latest_mail_for(random_email, @h.emailhelper.email_title("activate account"), mail_time)
 
     puts "accept the tos"
     @h.wait_until { @h.driver.find_element :css => ".checkbox[name=tos]" }.click
@@ -162,7 +162,7 @@ describe "subscribe with a credit card" do
     (@h.wait_until { @h.driver.find_element :css => ".flash-body" })
 
     puts "we should get an email to a page where we can accept the tos"
-    @h.emailhelper.follow_link_in_latest_mail_for(random_email, "Please activate your account", mail_time)
+    @h.emailhelper.follow_link_in_latest_mail_for(random_email, @h.emailhelper.email_title("activate account"), mail_time)
     puts "accept the tos"
     @h.wait_until { @h.driver.find_element :css => ".checkbox[name=tos]" }.click
 

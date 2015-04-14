@@ -5,7 +5,11 @@ $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
     $standardHeaderContents(nobranding='true')$
-    <link href='/service_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+    $if(logged)$
+      <link href='/service_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+    $else$
+      <link href='/scrive_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+    $endif$
   </head>
 <body>
 <div class="wrapper-position-footer">

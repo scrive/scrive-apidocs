@@ -25,8 +25,8 @@ describe "sign view all functionalities" do
       @h.dochelper.uploadContract
 
       puts "set the author to have some custom fields"
-      @h.dochelper.addCustomField(1,"authorFN1","authorFV1", screenshot_name1: 'sign_view_advanced_2', screenshot_name2: 'sign_view_advanced_3', screenshot_name3: 'sign_view_advanced_4')
-      @h.dochelper.addCustomField(1,"authorFN2","authorFV2")
+      @h.dochelper.addCustomField(1,"authorFN1","authorFV1", screenshot_name1: 'sign_view_advanced_2', screenshot_name2: 'sign_view_advanced_3', screenshot_name3: 'sign_view_advanced_4', skip_party_choice: true)
+      @h.dochelper.addCustomField(1,"authorFN2","authorFV2", skip_party_choice: true)
 
       puts "set the first counterpart to have one filled field, and one empty one"
       @h.dochelper.addPart
@@ -69,7 +69,7 @@ describe "sign view all functionalities" do
 
     puts "first sign as the first person"
 
-    @h.emailhelper.follow_link_in_latest_mail_for(random_email1, "Document to e-sign: contract", mail_time)
+    @h.emailhelper.follow_link_in_latest_mail_for(random_email1, @h.emailhelper.email_title("invitation to sign"), mail_time)
 
     puts "make sure it's got the sign button"
     @h.wait_until { @h.driver.find_element :css => "div.sign" }
@@ -102,7 +102,7 @@ describe "sign view all functionalities" do
 
     puts "now sign as the second person"
 
-    @h.emailhelper.follow_link_in_latest_mail_for(random_email2, "Document to e-sign: contract", mail_time)
+    @h.emailhelper.follow_link_in_latest_mail_for(random_email2, @h.emailhelper.email_title("invitation to sign"), mail_time)
 
     @h.dochelper.checkOpened
 
@@ -122,7 +122,7 @@ describe "sign view all functionalities" do
     @h.screenshot 'sign_view_advanced_14'
 
     puts "now sign as the third person"
-    @h.emailhelper.follow_link_in_latest_mail_for(random_email3, "Document to e-sign: contract", mail_time)
+    @h.emailhelper.follow_link_in_latest_mail_for(random_email3, @h.emailhelper.email_title("invitation to sign"), mail_time)
 
     @h.dochelper.checkOpened
 

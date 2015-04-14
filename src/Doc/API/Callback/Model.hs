@@ -38,7 +38,7 @@ documentAPICallback runExecute = ConsumerConfig {
   }
 , ccJobIndex = dacID
 , ccNotificationChannel = Just apiCallbackNotificationChannel
-, ccNotificationTimeout = 60 * 1000000
+, ccNotificationTimeout = 60 * 1000000 -- 1 minute
 , ccMaxRunningJobs = 32
 , ccProcessJob = \dac@DocumentAPICallback{..} -> runExecute $ execute dac >>= \case
   True  -> return $ Ok Remove

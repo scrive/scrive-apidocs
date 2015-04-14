@@ -32,6 +32,7 @@ $htmlopentag()$
               React.render(React.createElement(Header,{
                    signviewbranding: svb,
                    fullWidth: true,
+                   forceShowing: true,
                    link : {
                       text : "$_headerLogOut()$",
                       onClick : function() {

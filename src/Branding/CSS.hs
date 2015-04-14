@@ -3,6 +3,7 @@ module Branding.CSS (
      signviewBrandingCSS
    , serviceBrandingCSS
    , loginBrandingCSS
+   , scriveBrandingCSS
    , domainBrandingCSS
   ) where
 
@@ -105,6 +106,29 @@ loginBrandingLess theme = unlines $
      ++
    [ -- Only last part will generate some css. Previews ones are just definitions
     "@import 'runtime/loginbranding/loginbranding';"
+   ]
+
+-- Scrive branding CSS. Generated using less. No DB involved, hence takes no `Theme`.
+-- Should be used only for those pages that mimic the look of the company web ('Expression Engine').
+scriveBrandingCSS :: (Log.MonadLog m,MonadIO m) => m BSL.ByteString
+scriveBrandingCSS = do
+    (code,stdout,stderr) <- liftIO $ do
+      readProcessWithExitCode' "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
+        (BSL.fromString scriveBrandingLess)
+    case code of
+      ExitSuccess -> do
+          return $ stdout
+      ExitFailure _ -> do
+          Log.attention_ $ "Creating Scrive branding failed : " ++ BSL.toString stderr
+          return BSL.empty
+
+scriveBrandingLess :: String
+scriveBrandingLess = unlines $
+   [
+    "@import 'branding/variables';", -- This is imported so we can use color variables from there
+    "@import 'branding/elements';", -- This is imported so we can use some transform functions
+    "@import 'runtime/scrivebranding/scrivebrandingdefaultvariables';",
+    "@import 'runtime/scrivebranding/scrivebranding';"
    ]
 
 lessVariablesFromTheme :: Theme -> [String]
