@@ -16,6 +16,7 @@ import ActionQueue.Core
 import Context
 import Crypto.RNG
 import DB
+import Happstack.Server.ReqHandler
 import KontraMonad
 import KontraPrelude
 import MagicHash
@@ -53,9 +54,8 @@ getNonTempSessionID = do
 
 -- | Get current session based on cookies set.
 -- If no session is available, return new, empty session.
-getCurrentSession :: (CryptoRNG m, HasRqData m, MonadDB m, MonadThrow m, MonadPlus m, ServerMonad m, Log.MonadLog m)
-                  => m Session
-getCurrentSession = withDataFn currentSessionInfoCookies $ getSessionFromCookies
+getCurrentSession :: (CryptoRNG m, HasRqData m, MonadDB m, MonadThrow m, ServerMonad m, Log.MonadLog m) => m Session
+getCurrentSession = withRqData currentSessionInfoCookies $ getSessionFromCookies
   where
     getSessionFromCookies (cs:css) = do
       domain <- currentDomain
@@ -65,8 +65,7 @@ getCurrentSession = withDataFn currentSessionInfoCookies $ getSessionFromCookies
         Nothing  -> getSessionFromCookies css
     getSessionFromCookies [] = emptySession
 
-updateSession :: (FilterMonad Response m, Log.MonadLog m, MonadDB m, MonadThrow m, ServerMonad m, MonadIO m)
-              => Session -> Session -> m ()
+updateSession :: (FilterMonad Response m, Log.MonadLog m, MonadDB m, MonadThrow m, ServerMonad m, MonadIO m) => Session -> Session -> m ()
 updateSession old_ses ses = do
   case sesID ses == tempSessionID of
     -- if session id is temporary, but its data is not empty, insert it into db

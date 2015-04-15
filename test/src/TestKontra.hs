@@ -31,7 +31,6 @@ import Data.Time
 import Database.PostgreSQL.PQTypes.Internal.Monad
 import Database.PostgreSQL.PQTypes.Internal.State
 import Happstack.Server hiding (mkHeaders, dir, getHeader, method, path)
-import Happstack.Server.Internal.Monads
 import System.FilePath
 import Text.StringTemplates.Templates
 import qualified Control.Concurrent.Thread as T
@@ -48,7 +47,8 @@ import Crypto.RNG
 import DB
 import EID.CGI.GRP.Config
 import GuardTime (GuardTimeConf(..))
-import HubSpot.Conf    
+import Happstack.Server.ReqHandler
+import HubSpot.Conf
 import IPAddress
 import Kontra
 import KontraPrelude
@@ -140,7 +140,7 @@ instance MonadBaseControl IO TestEnv where
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
-runTestKontraHelper :: ConnectionSource -> Request -> Context -> Kontra a -> TestEnv (a, Context, FilterFun Response)
+runTestKontraHelper :: ConnectionSource -> Request -> Context -> Kontra a -> TestEnv (a, Context, Response -> Response)
 runTestKontraHelper cs rq ctx tk = do
   filecache <- MemCache.new BS.length 52428800
   let noflashctx = ctx { ctxflashmessages = [] }
@@ -151,20 +151,15 @@ runTestKontraHelper cs rq ctx tk = do
   -- does it and we don't want these pesky warnings about transaction
   -- being already in progress
   commit' ts { tsAutoTransaction = False }
-  mres <- E.finally (liftIO . ununWebT $ runServerPartT
-    (mapServerPartT Log.withLogger . runDBT cs ts . runCryptoRNGT rng $
-      AWS.runAmazonMonadT amazoncfg $ runStateT (unKontraPlus $ unKontra tk) noflashctx) rq)
-      -- runDBT commits and doesn't run another transaction, so begin new one
-      begin
-  case mres of
-    Nothing -> fail "runTestKontraHelper mzero"
-    Just (Left _, _) -> fail "This should never happen since we don't use Happstack's finishWith"
-    Just (Right (res, ctx'), fs) -> do
-      -- join all of the spawned threads. since exceptions
-      -- thrown in them propagate, the testcase will fail
-      -- if any of them does.
-      liftBase $ sequence (ctxthreadjoins ctx') >>= mapM_ T.result
-      return (res, ctx', fs)
+  ((res, ctx'), st) <- E.finally
+    (liftBase . Log.withLogger $ runStateT (unReqHandlerT . runDBT cs ts . runCryptoRNGT rng . AWS.runAmazonMonadT amazoncfg $ runStateT (unKontraPlus $ unKontra tk) noflashctx) $ ReqHandlerSt rq id)
+    -- runDBT commits and doesn't run another transaction, so begin new one
+    begin
+  -- join all of the spawned threads. since exceptions
+  -- thrown in them propagate, the testcase will fail
+  -- if any of them does.
+  liftBase $ sequence (ctxthreadjoins ctx') >>= mapM_ T.result
+  return (res, ctx', hsFilter st)
 
 -- | Typeclass for running handlers within TestKontra monad
 class RunnableTestKontra a where
@@ -181,8 +176,8 @@ instance RunnableTestKontra Response where
   runTestKontra rq ctx tk = do
     cs <- asks teConnSource
     (res, ctx', f) <- runTestKontraHelper cs rq ctx tk
-      `E.catch` (\(FinishWith res ctx') -> return (res, ctx', filterFun id))
-    return (unFilterFun f res, ctx')
+      `E.catch` (\(FinishWith res ctx') -> return (res, ctx', id))
+    return (f res, ctx')
 
 -- Various helpers for constructing appropriate Context/Request
 

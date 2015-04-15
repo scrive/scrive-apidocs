@@ -13,6 +13,7 @@ import DB
 import DB.Checks
 import DB.PostgreSQL
 import Handlers
+import Happstack.Server.ReqHandler
 import JobQueue.Components
 import JobQueue.Config
 import KontraPrelude
@@ -54,7 +55,7 @@ main = Log.withLogger $ do
           $unexpectedErrorM "static routing"
         Right r -> return $ r >>= maybe (notFound $ toResponse ("Not found."::String)) return
       socket <- liftBase (listenOn (htonl iface) $ fromIntegral port)
-      fork . liftBase . simpleHTTPWithSocket socket handlerConf . mapServerPartT Log.withLogger $ router rng pool routes
+      fork . liftBase . runReqHandlerT socket handlerConf . mapReqHandlerT Log.withLogger $ router rng pool routes
 
     smsConsumer rng sender = ConsumerConfig {
       ccJobsTable = "smses"

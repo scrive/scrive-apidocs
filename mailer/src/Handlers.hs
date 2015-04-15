@@ -14,14 +14,14 @@ import System.Directory
 import Crypto.RNG
 import DB
 import DB.PostgreSQL
-import Happstack.DecodeBody
+import Happstack.Server.ReqHandler
 import KontraPrelude
 import Mailer
 import MailGun
 import SendGrid
 import qualified Log
 
-router :: CryptoRNGState -> ConnectionSource -> Mailer Response -> ServerPartT (Log.LogT IO) Response
+router :: CryptoRNGState -> ConnectionSource -> Mailer Response -> ReqHandlerT (Log.LogT IO) Response
 router rng cs routes = withPostgreSQL cs $
   runMailer rng routes
 

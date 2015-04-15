@@ -37,7 +37,7 @@ module Doc.DocControl(
 
 import Control.Concurrent
 import Control.Conditional (unlessM, whenM)
-import Control.Monad.Catch (MonadMask)
+import Control.Monad.Catch (MonadMask, catch)
 import Control.Monad.Reader
 import Data.String.Utils (replace,strip)
 import Data.Time (ZonedTime)
@@ -83,7 +83,7 @@ import File.File (fileid)
 import File.Model
 import File.Storage (getFileIDContents)
 import Happstack.Fields
-import Happstack.MonadPlus (runMPlusT)
+import Happstack.Server.ReqHandler
 import InputValidation
 import Kontra
 import KontraLink
@@ -113,7 +113,9 @@ handleNewDocument = do
         user <- guardJustM $ ctxmaybeuser <$> getContext
         title <- renderTemplate_ "newDocumentTitle"
         actor <- guardJustM $ mkAuthorActor <$> getContext
-        mtimezonename <- runMPlusT $ lookCookieValue "timezone"
+        mtimezonename <- runPlusSandboxT (lookCookieValue "timezone") `catch` \(RqDataError errs) -> do
+          mapM_ Log.mixlog_ $ unErrors errs
+          return Nothing
         timezone <- fromMaybe defaultTimeZoneName <$> T.sequence (mkTimeZoneName <$> mtimezonename)
         timestamp <- formatTimeSimpleWithTZ timezone (ctxtime ctx)
         doc <- dbUpdate $ NewDocument defaultValue user (replace "  " " " $ title ++ " " ++ timestamp) Signable timezone 1 actor

@@ -12,6 +12,7 @@ module AppControl
 
 import Control.Concurrent.Lifted (MVar, modifyMVar, threadDelay, readMVar)
 import Control.Monad.Base
+import Control.Monad.Catch
 import Control.Monad.Error
 import Control.Monad.Trans.Control
 import Data.Functor
@@ -39,8 +40,7 @@ import DB hiding (ErrorCode(..))
 import DB.PostgreSQL
 import Doc.RenderedPages
 import File.FileID
-import Happstack.DecodeBody
-import Happstack.MonadPlus (runMPlusT)
+import Happstack.Server.ReqHandler
 import IPAddress
 import Kontra
 import KontraPrelude
@@ -77,11 +77,12 @@ data AppGlobals
     Determines the lang of the current user (whether they are logged in or not), by checking
     their settings, the request, and cookies.
 -}
-getStandardLang :: (HasLang a, HasRqData m, ServerMonad m, FilterMonad Response m, MonadIO m, Functor m) => Maybe a -> m Lang
-
+getStandardLang :: (HasLang a, HasRqData m, ServerMonad m, FilterMonad Response m, MonadIO m, Functor m, Log.MonadLog m, MonadCatch m) => Maybe a -> m Lang
 getStandardLang muser = do
   rq <- askRq
-  langcookie <- runMPlusT $ lookCookie "lang" -- MPLusT captures evil use of rqDataError
+  langcookie <- runPlusSandboxT (lookCookie "lang") `catch` \(RqDataError errs) -> do
+    mapM_ Log.mixlog_ $ unErrors errs
+    return Nothing
   let mcookielang = join $ langFromCode <$> cookieValue <$> langcookie
   let browserlang = langFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
       newlang = fromMaybe browserlang $ msum [(getLang <$> muser), mcookielang]
@@ -153,7 +154,7 @@ enhanceYourCalm action = enhanceYourCalmWorker 100
 {- |
    Creates a context, routes the request, and handles the session.
 -}
-appHandler :: KontraPlus (Maybe Response) -> AppConf -> AppGlobals -> ServerPartT (Log.LogT IO) Response
+appHandler :: KontraPlus (Maybe Response) -> AppConf -> AppGlobals -> ReqHandlerT (Log.LogT IO) Response
 appHandler handleRoutes appConf appGlobals = catchEverything . enhanceYourCalm $
   withPostgreSQL (connsource appGlobals) . runCryptoRNGT (cryptorng appGlobals) $
     AWS.runAmazonMonadT amazoncfg $ do
@@ -304,7 +305,7 @@ appHandler handleRoutes appConf appGlobals = catchEverything . enhanceYourCalm $
       mpaduser <- getPadUserFromSession session
       brandeddomain <- dbQuery $ GetBrandedDomainByURL currhostpart
 
-      flashmessages <- withDataFn F.flashDataFromCookie $ maybe (return []) $ \fval -> do
+      flashmessages <- withRqData F.flashDataFromCookie $ maybe (return []) $ \fval -> do
         flashes <- liftIO $ (E.try (E.evaluate $ F.fromCookieValue fval) :: IO (Either  E.SomeException (Maybe [FlashMessage])))
         case flashes of
           Right (Just fs) -> return fs

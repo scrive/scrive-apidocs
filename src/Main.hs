@@ -22,6 +22,7 @@ import Crypto.RNG
 import DB
 import DB.Checks
 import DB.PostgreSQL
+import Happstack.Server.ReqHandler
 import KontraPrelude
 import RoutingTable
 import Templates
@@ -90,7 +91,7 @@ startSystem appGlobals appConf = E.bracket startServer stopServer waitForTerm
           , logAccess = Nothing
           }
 
-      fork $ liftBase $ simpleHTTPWithSocket listensocket conf (mapServerPartT Log.withLogger (appHandler routes appConf appGlobals))
+      fork $ liftBase $ runReqHandlerT listensocket conf (mapReqHandlerT Log.withLogger (appHandler routes appConf appGlobals))
     stopServer = killThread
     waitForTerm _ = do
       withPostgreSQL (connsource appGlobals) . runCryptoRNGT (cryptorng appGlobals) $ do

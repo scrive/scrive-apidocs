@@ -10,7 +10,7 @@ import Happstack.StaticRouting(Route, choice, dir, remainingPath)
 
 import AppView
 import Doc.API
-import Happstack.MonadPlus (runMPlusT)
+import Happstack.Server.ReqHandler
 import Kontra
 import KontraLink
 import KontraPrelude
@@ -179,7 +179,9 @@ staticRoutes production = choice
      , userAPI
      , padApplicationAPI
      , oauth
-     , remainingPath GET $ (runMPlusT $ serveDirectory DisableBrowsing [] staticDir) >>= maybe respond404 return
+
+     -- static files
+     , remainingPath GET $ runWebSandboxT (runPlusSandboxT $ serveDirectory DisableBrowsing [] staticDir) >>= either return (maybe respond404 return)
 
      -- public services
      , dir "parsecsv"        $ hPost $ toK0 $ ServerUtils.handleParseCSV

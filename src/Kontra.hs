@@ -36,6 +36,7 @@ import Crypto.RNG
 import DB
 import GuardTime (GuardTimeConfMonad(..))
 import Happstack.Server.Instances ()
+import Happstack.Server.ReqHandler
 import KontraError
 import KontraMonad
 import KontraPrelude
@@ -48,16 +49,15 @@ import Utils.List
 import qualified Amazon as AWS
 import qualified Log
 
-type InnerKontraPlus = StateT Context (AWS.AmazonMonadT (CryptoRNGT (DBT (ServerPartT (Log.LogT IO)))))
+type InnerKontraPlus = StateT Context (AWS.AmazonMonadT (CryptoRNGT (DBT (ReqHandlerT (Log.LogT IO)))))
 
--- | KontraPlus is Kontra plus 'WebMonad', used for interfacing with certain Happstack functions.
 newtype KontraPlus a = KontraPlus { unKontraPlus :: InnerKontraPlus a }
-  deriving (Alternative, Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadCatch, MonadDB, MonadIO, MonadMask, MonadThrow, ServerMonad, WebMonad Response, AWS.AmazonMonad)
+  deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadCatch, MonadDB, MonadIO, MonadMask, MonadThrow, ServerMonad, AWS.AmazonMonad)
 
 instance Log.MonadLog KontraPlus where
   mixlogjs now title js = liftBase $ Log.mixlogjsIO now title js
 
-runKontraPlus :: Context -> KontraPlus a -> AWS.AmazonMonadT (CryptoRNGT (DBT (ServerPartT (Log.LogT IO)))) a
+runKontraPlus :: Context -> KontraPlus a -> AWS.AmazonMonadT (CryptoRNGT (DBT (ReqHandlerT (Log.LogT IO)))) a
 runKontraPlus ctx f = evalStateT (unKontraPlus f) ctx
 
 instance MonadBaseControl IO KontraPlus where
