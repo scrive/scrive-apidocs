@@ -12,6 +12,7 @@ import Happstack.StaticRouting
 import System.Directory
 
 import Crypto.RNG
+import Happstack.DecodeBody
 import DB
 import DB.PostgreSQL
 import KontraPrelude
@@ -27,7 +28,7 @@ router rng cs routes = withPostgreSQL cs $
 handlers :: Route (Mailer Response)
 handlers = choice [
     dir "mail" $ dir "sendgrid" $ hPost $ handleSendGridEvents
-  , dir "mail" $ dir "mailgun" $ hPost $ withDecodedBody handleMailGunEvents
+  , dir "mail" $ dir "mailgun" $ hPost $ withDecodedBody_ handleMailGunEvents
   ]
   where
     hPost = path POST id
@@ -36,12 +37,13 @@ handleSendGridEvents :: Mailer Response
 handleSendGridEvents = do
   ct <- getHeader "Content-Type" <$> askRq
   if ("x-www-form-urlencoded" `isInfixOf` (fromMaybe "" $ BS.toString <$> ct))
-     then withDecodedBody handleSendGridEventsV1
+     then withDecodedBody_ handleSendGridEventsV1
      else handleSendGridEventsV3
 
-withDecodedBody :: Mailer Response -> Mailer Response
-withDecodedBody mr = do
-  let quota = 65536
-  temp <- liftIO getTemporaryDirectory
-  decodeBody $ defaultBodyPolicy temp quota quota quota
-  mr
+withDecodedBody_ :: Mailer Response -> Mailer Response
+withDecodedBody_ action = do
+  tempDir <- liftIO getTemporaryDirectory
+  withDecodedBody (bodyPolicy tempDir) action
+  where
+    quota = 65536
+    bodyPolicy tempDir = defaultBodyPolicy tempDir quota quota quota

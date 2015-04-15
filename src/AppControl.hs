@@ -40,6 +40,7 @@ import DB.PostgreSQL
 import Doc.RenderedPages
 import File.FileID
 import Happstack.MonadPlus (runMPlusT)
+import Happstack.DecodeBody
 import IPAddress
 import Kontra
 import KontraPrelude
@@ -159,54 +160,54 @@ appHandler handleRoutes appConf appGlobals = catchEverything . enhanceYourCalm $
     startTime <- liftIO getCurrentTime
     let quota = 10000000
     temp <- liftIO getTemporaryDirectory
-    decodeBody (defaultBodyPolicy temp quota quota quota)
-    session <- getCurrentSession
-    ctx <- createContext session
-    -- commit is needed after getting session from the database
-    -- since session expiration date is updated while getting it,
-    -- which results in pgsql locking the row. then, if request
-    -- handler somehow gets stuck, transaction is left open for
-    -- some time, row remains locked and subsequent attempts to
-    -- refresh the page will fail, because they will try to
-    -- access/update session from a row that was previously locked.
-    commit
-    rq <- askRq
-    Log.mixlog_ $ "Handling routes for : " ++ rqUri rq ++ rqQuery rq
+    withDecodedBody (defaultBodyPolicy temp quota quota quota) $ do
+      session <- getCurrentSession
+      ctx <- createContext session
+      -- commit is needed after getting session from the database
+      -- since session expiration date is updated while getting it,
+      -- which results in pgsql locking the row. then, if request
+      -- handler somehow gets stuck, transaction is left open for
+      -- some time, row remains locked and subsequent attempts to
+      -- refresh the page will fail, because they will try to
+      -- access/update session from a row that was previously locked.
+      commit
+      rq <- askRq
+      Log.mixlog_ $ "Handling routes for : " ++ rqUri rq ++ rqQuery rq
 
-    (res, ctx') <- routeHandlers ctx
+      (res, ctx') <- routeHandlers ctx
 
-    let newsession = session {
-          sesID        = ctxsessionid ctx'
-        , sesUserID    = userid <$> ctxmaybeuser ctx'
-        , sesPadUserID = userid <$> ctxmaybepaduser ctx'
-        }
-        newflashmessages = ctxflashmessages ctx'
-    F.updateFlashCookie (ctxflashmessages ctx) newflashmessages
-    issecure <- isSecure
-    let usehttps = useHttps appConf
-    when (issecure || not usehttps) $
-      updateSession session newsession
+      let newsession = session {
+            sesID        = ctxsessionid ctx'
+          , sesUserID    = userid <$> ctxmaybeuser ctx'
+          , sesPadUserID = userid <$> ctxmaybepaduser ctx'
+          }
+          newflashmessages = ctxflashmessages ctx'
+      F.updateFlashCookie (ctxflashmessages ctx) newflashmessages
+      issecure <- isSecure
+      let usehttps = useHttps appConf
+      when (issecure || not usehttps) $
+        updateSession session newsession
 
-    -- Here we show in debug log some statistics that should help
-    -- optimize code and instantly see if there is something
-    -- wrong. Measurements are not perfect, for example time is not
-    -- full response time, it is just the part that is under
-    -- application control. That is good because we want to stress
-    -- places that can be fixed.
+      -- Here we show in debug log some statistics that should help
+      -- optimize code and instantly see if there is something
+      -- wrong. Measurements are not perfect, for example time is not
+      -- full response time, it is just the part that is under
+      -- application control. That is good because we want to stress
+      -- places that can be fixed.
 
-    stats <- getConnectionStats
-    finishTime <- liftIO getCurrentTime
-    Log.mixlog_ $ concat [
-        "Statistics for " ++ rqUri rq ++ rqQuery rq ++ ":\n"
-      , "* " ++ show stats ++ "\n"
-      , "* Time: " ++ show (diffUTCTime finishTime startTime)
-      ]
+      stats <- getConnectionStats
+      finishTime <- liftIO getCurrentTime
+      Log.mixlog_ $ concat [
+          "Statistics for " ++ rqUri rq ++ rqQuery rq ++ ":\n"
+        , "* " ++ show stats ++ "\n"
+        , "* Time: " ++ show (diffUTCTime finishTime startTime)
+        ]
 
-    case res of
-      Right response -> return response
-      Left response -> do
-        rollback -- if exception was thrown, rollback everything
-        return response
+      case res of
+        Right response -> return response
+        Left response -> do
+          rollback -- if exception was thrown, rollback everything
+          return response
   where
     amazoncfg = AWS.AmazonConfig (amazonConfig appConf) (filecache appGlobals)
     catchEverything :: (FilterMonad Response m, Log.MonadLog m, MonadBaseControl IO m, ServerMonad m) => m Response -> m Response
