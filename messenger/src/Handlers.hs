@@ -12,17 +12,19 @@ import System.Directory
 import Crypto.RNG
 import DB
 import DB.PostgreSQL
+import Happstack.DecodeBody
 import GlobalMouth
 import Messenger
 import qualified Log
 
 router :: CryptoRNGState -> ConnectionSource -> Messenger Response -> ServerPartT (Log.LogT IO) Response
 router rng cs routes = withPostgreSQL cs $ do
-  let quota = 65536
-  temp <- liftIO getTemporaryDirectory
-  decodeBody $ defaultBodyPolicy temp quota quota quota
-  res <- runMessenger rng routes
-  return res
+  tempDir <- liftIO getTemporaryDirectory
+  withDecodedBody (bodyPolicy tempDir) $ do
+    runMessenger rng routes
+  where
+    quota = 65536
+    bodyPolicy tempDir = defaultBodyPolicy tempDir quota quota quota
 
 handlers :: Route (Messenger Response)
 handlers = choice [
