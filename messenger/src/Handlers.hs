@@ -12,8 +12,8 @@ import System.Directory
 import Crypto.RNG
 import DB
 import DB.PostgreSQL
-import Happstack.DecodeBody
 import GlobalMouth
+import Happstack.DecodeBody
 import KontraPrelude
 import Messenger
 import qualified Log

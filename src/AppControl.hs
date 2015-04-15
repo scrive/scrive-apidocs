@@ -39,8 +39,8 @@ import DB hiding (ErrorCode(..))
 import DB.PostgreSQL
 import Doc.RenderedPages
 import File.FileID
-import Happstack.MonadPlus (runMPlusT)
 import Happstack.DecodeBody
+import Happstack.MonadPlus (runMPlusT)
 import IPAddress
 import Kontra
 import KontraPrelude

@@ -12,9 +12,9 @@ import Happstack.StaticRouting
 import System.Directory
 
 import Crypto.RNG
-import Happstack.DecodeBody
 import DB
 import DB.PostgreSQL
+import Happstack.DecodeBody
 import KontraPrelude
 import Mailer
 import MailGun

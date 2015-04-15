@@ -11,10 +11,9 @@ import Control.Monad.Catch
 import Control.Monad.Trans.Control
 import Data.Typeable
 import Prelude
-import qualified Control.Exception.Lifted as E
-
 import qualified Control.Concurrent.Thread.Group.Lifted as TG
 import qualified Control.Concurrent.Thread.Lifted as T
+import qualified Control.Exception.Lifted as E
 
 -- | Exception thrown to a thread to stop its execution.
 -- All exceptions other than 'StopExecution' thrown to
