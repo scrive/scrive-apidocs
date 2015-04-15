@@ -31,6 +31,9 @@ window.SignaturePlacementViewWithoutPlacement = Backbone.View.extend({
         box.append(text);
         return box;
     },
+    updateSignatoryCSSClass : function() {
+        FieldPlacementGlobal.updateSignatoryCSSClass($(this.el), this.model.signatory());
+    },
     render: function() {
             var box = $(this.el);
             box.empty();
@@ -41,6 +44,9 @@ window.SignaturePlacementViewWithoutPlacement = Backbone.View.extend({
             box.append(this.header());
             box.width(width);
             box.height(height);
+
+            this.updateSignatoryCSSClass();
+
             return this;
     }
 });
