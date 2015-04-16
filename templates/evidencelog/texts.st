@@ -428,7 +428,7 @@ pinWasSent=The PIN was sent to $phone$.
 ###
 elegVerification=
 <p>The text signed in the eID client was:</p>
-<pre>$signed_text$</pre>
+<pre style='white-space:normal'>$signed_text$</pre>
 <p>eID provider: $provider$</p>
 <p>Data returned from the eID:
   <br/>Name: $signatory_name$
