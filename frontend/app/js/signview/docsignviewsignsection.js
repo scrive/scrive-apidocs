@@ -145,6 +145,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
 
           if (self.confirmation != undefined)  self.confirmation.clear();
           new FlashMessagesCleaner(); // We clean all flash message, so they don't land on screenshot
+          LoadingDialog.close(); // We close the loading dialog (if any) from BankID here, as we'll show an old modal flickering if we do it earlier
           self.signinprogressmodal = new SigningInProgressModal({
                                           document: document,
                                           margin: modalTop + "px auto 0"

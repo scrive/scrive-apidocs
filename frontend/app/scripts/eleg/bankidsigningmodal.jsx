@@ -33,7 +33,6 @@ return function(args) {
       addBankIDIframeIfItsNeeded(bankID);
     },
     onSuccess  : function() {
-      LoadingDialog.close();
       clearBankIDIframes();
       args.onSuccess();
     },
