@@ -405,7 +405,7 @@ var AdminUserDetailsView = Backbone.View.extend({
         onAccept : function() {
           model.deleteUser().sendAjax(
             function() {
-                window.location = "/adminonly";
+                window.location = "/adminonly/companyadmin/" + model.user().company().companyid() + "/#users";
                 return false;
             },
             function() {
