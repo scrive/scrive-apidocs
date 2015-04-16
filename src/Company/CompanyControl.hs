@@ -38,7 +38,7 @@ import User.Utils
 import Util.MonadUtils
 import qualified Log as Log
 
-routes :: Route (KontraPlus Response)
+routes :: Route (Kontra Response)
 routes = choice
   [
     dir "companybranding" $ hGet $ toK0 $ handleGetCompanyBranding  Nothing
@@ -51,7 +51,7 @@ routes = choice
   , dir "companybranding" $ dir "signviewtheme" $ hGet $ toK0 $ handleGetSignviewTheme
   ]
 
-adminRoutes :: Route (KontraPlus Response)
+adminRoutes :: Route (Kontra Response)
 adminRoutes = choice
   [
     dir "companybranding" $ hGet $ toK1 $ handleGetCompanyBranding . Just

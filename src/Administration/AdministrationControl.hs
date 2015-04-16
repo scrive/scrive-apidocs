@@ -85,7 +85,7 @@ import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
 import qualified Log
 import qualified Payments.Stats
 
-adminonlyRoutes :: Route (KontraPlus Response)
+adminonlyRoutes :: Route (Kontra Response)
 adminonlyRoutes =
   fmap onlySalesOrAdmin $ choice $ [
           hGet $ toK0 $ showAdminMainPage
@@ -137,7 +137,7 @@ adminonlyRoutes =
         , dir "brandeddomain" $ dir "deletetheme" $ hPost $ toK2$ handleDeleteThemeForDomain
   ]
 
-daveRoutes :: Route (KontraPlus Response)
+daveRoutes :: Route (Kontra Response)
 daveRoutes =
   fmap onlyAdmin $ choice $ [
        dir "document"      $ hGet $ toK1 $ daveDocument

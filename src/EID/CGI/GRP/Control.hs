@@ -35,7 +35,7 @@ import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import qualified Log
 
-grpRoutes :: Route (KontraPlus Response)
+grpRoutes :: Route (Kontra Response)
 grpRoutes = dir "cgi" . dir "grp" $ choice [
     dir "sign"    . hPost . toK2 $ handleSignRequest
   , dir "collect" . hGet  . toK2 $ handleCollectRequest

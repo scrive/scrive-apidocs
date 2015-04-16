@@ -43,12 +43,8 @@ import Utils.Read
 
 newtype ThinPage = ThinPage String
 
-kpath :: (Path Kontra KontraPlus h a) => Method -> (Kontra a -> Kontra b) -> h
-      -> Route (KontraPlus b)
-kpath m h = path m (unKontra . h)
-
 class ToResp a where
-    toResp:: a -> Kontra Response
+    toResp :: a -> Kontra Response
 
 instance ToResp Response where
     toResp = return
@@ -83,17 +79,17 @@ instance ToResp CSV where
 instance ToResp ZipArchive where
     toResp = return . toResponse
 
-hPostWrap :: Path Kontra KontraPlus a Response => (Kontra Response -> Kontra Response) -> a -> Route (KontraPlus Response)
-hPostWrap = kpath POST
+hPostWrap :: Path Kontra Kontra a Response => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
+hPostWrap = path POST
 
-hGetWrap :: Path Kontra KontraPlus a Response => (Kontra Response -> Kontra Response) -> a -> Route (KontraPlus Response)
-hGetWrap = kpath GET
+hGetWrap :: Path Kontra Kontra a Response => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
+hGetWrap = path GET
 
-hDeleteWrap :: Path Kontra KontraPlus a Response => (Kontra Response -> Kontra Response) -> a -> Route (KontraPlus Response)
-hDeleteWrap = kpath DELETE
+hDeleteWrap :: Path Kontra Kontra a Response => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
+hDeleteWrap = path DELETE
 
-hPutWrap :: Path Kontra KontraPlus a Response => (Kontra Response -> Kontra Response) -> a -> Route (KontraPlus Response)
-hPutWrap = kpath PUT
+hPutWrap :: Path Kontra Kontra a Response => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
+hPutWrap = path PUT
 
 {- To change standard string to page -}
 page :: Kontra String -> Kontra Response
@@ -108,31 +104,31 @@ pageThin pageBody = do
     renderFromBodyThin pb
 
 
-hPost :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
+hPost :: Path Kontra Kontra a Response => a -> Route (Kontra Response)
 hPost = hPostWrap (https . guardXToken)
 
-hGet :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
+hGet :: Path Kontra Kontra a Response => a -> Route (Kontra Response)
 hGet = hGetWrap https
 
-hDelete :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
+hDelete :: Path Kontra Kontra a Response => a -> Route (Kontra Response)
 hDelete = hDeleteWrap https
 
-hDeleteAllowHttp :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
+hDeleteAllowHttp :: Path Kontra Kontra a Response => a -> Route (Kontra Response)
 hDeleteAllowHttp = hDeleteWrap allowHttp
 
-hPut :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
+hPut :: Path Kontra Kontra a Response => a -> Route (Kontra Response)
 hPut = hPutWrap https
 
-hGetAllowHttp :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
+hGetAllowHttp :: Path Kontra Kontra a Response => a -> Route (Kontra Response)
 hGetAllowHttp = hGetWrap allowHttp
 
-hPostAllowHttp :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
+hPostAllowHttp :: Path Kontra Kontra a Response => a -> Route (Kontra Response)
 hPostAllowHttp = hPostWrap allowHttp
 
-hPostNoXToken :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
+hPostNoXToken :: Path Kontra Kontra a Response => a -> Route (Kontra Response)
 hPostNoXToken = hPostWrap https
 
-hPostNoXTokenHttp :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
+hPostNoXTokenHttp :: Path Kontra Kontra a Response => a -> Route (Kontra Response)
 hPostNoXTokenHttp = hPostWrap allowHttp
 
 https:: Kontra Response -> Kontra Response

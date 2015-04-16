@@ -108,7 +108,7 @@ import Utils.String
 import qualified Data.ByteString.RFC2397 as RFC2397
 import qualified Log
 
-documentAPIV1 ::  Route (KontraPlus Response)
+documentAPIV1 ::  Route (Kontra Response)
 documentAPIV1  = choice [
 
   dir "createfromfile"     $ hPost $ toK0 $ apiCallV1CreateFromFile,

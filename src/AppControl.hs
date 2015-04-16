@@ -154,7 +154,7 @@ enhanceYourCalm action = enhanceYourCalmWorker 100
 {- |
    Creates a context, routes the request, and handles the session.
 -}
-appHandler :: KontraPlus (Maybe Response) -> AppConf -> AppGlobals -> ReqHandlerT (Log.LogT IO) Response
+appHandler :: Kontra (Maybe Response) -> AppConf -> AppGlobals -> ReqHandlerT (Log.LogT IO) Response
 appHandler handleRoutes appConf appGlobals = catchEverything . enhanceYourCalm $
   withPostgreSQL (connsource appGlobals) . runCryptoRNGT (cryptorng appGlobals) $
     AWS.runAmazonMonadT amazoncfg $ do
@@ -220,7 +220,7 @@ appHandler handleRoutes appConf appGlobals = catchEverything . enhanceYourCalm $
       internalServerError $ toResponse ""
 
     -- routeHandlers :: (Log.MonadLog m,MonadBase IO m,MonadIO m) => Context -> m (Either Response Response, Context)
-    routeHandlers ctx = runKontraPlus ctx $ do
+    routeHandlers ctx = runKontra ctx $ do
       res <- (Right <$> (handleRoutes >>= maybe (E.throwIO Respond404) return)) `E.catches` [
           E.Handler $ \e -> Left <$> case e of
             InternalError stack -> do

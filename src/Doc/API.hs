@@ -10,7 +10,7 @@ import Doc.API.V2.Calls
 import Kontra
 import KontraPrelude
 
-documentAPI :: Route (KontraPlus Response)
+documentAPI :: Route (Kontra Response)
 documentAPI = dir "api" $ choice
   [ dir "frontend" $ documentAPIV1
   , documentAPIV1 -- Temporary backwards compatibility for clients accessing version-less API

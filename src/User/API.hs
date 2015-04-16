@@ -50,7 +50,7 @@ import Util.FlashUtil
 import Util.HasSomeUserInfo
 import Utils.Monad
 
-userAPI :: Route (KontraPlus Response)
+userAPI :: Route (Kontra Response)
 userAPI = dir "api" $ choice
   [ dir "frontend" $ userAPI'
   , userAPI' -- Temporary backwards compatibility for clients accessing version-less API
@@ -58,7 +58,7 @@ userAPI = dir "api" $ choice
   , dir "v2" $ userAPI' -- V2 does not introduce any changes to user API
   ]
 
-userAPI' :: Route (KontraPlus Response)
+userAPI' :: Route (Kontra Response)
 userAPI' = choice [
   dir "getpersonaltoken"     $ hPost $ toK0 $ apiCallGetUserPersonalToken,
   dir "signup"          $ hPost $ toK0 $ apiCallSignup,

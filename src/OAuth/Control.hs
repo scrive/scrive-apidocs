@@ -28,7 +28,7 @@ import Utils.List
 import Utils.Read
 import qualified Log
 
-oauth :: Route (KontraPlus Response)
+oauth :: Route (Kontra Response)
 oauth = choice [
   dir "oauth" $ dir "temporarycredentials" $ hGet  $ toK0 $ tempCredRequest,
   dir "oauth" $ dir "authorization"        $ hGet  $ toK0 $ authorization,

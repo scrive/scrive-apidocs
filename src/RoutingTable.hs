@@ -49,7 +49,7 @@ import qualified User.UserControl as UserControl
    the function for any given path and method.
 -}
 
-staticRoutes :: Bool -> Route (KontraPlus Response)
+staticRoutes :: Bool -> Route (Kontra Response)
 staticRoutes production = choice
      [  allLangDirs $                          hGet $ toK0 $ sendRedirect $ LinkDesignView
      ,  allLangDirs $  dir "localization"    $ hGet $ toK1 localizationScript

@@ -8,8 +8,8 @@ import Kontra
 import KontraPrelude
 import User.Model
 
-allLangDirs :: Route (KontraPlus a) -> Route (KontraPlus a)
+allLangDirs :: Route (Kontra a) -> Route (Kontra a)
 allLangDirs r = choice $ r : (map (langDir r) allLangs)
 
-langDir :: Route (KontraPlus a) -> Lang -> Route (KontraPlus a)
+langDir :: Route (Kontra a) -> Lang -> Route (Kontra a)
 langDir r l  = dir (codeFromLang l) $ fmap (\r' -> switchLang l >> r') r

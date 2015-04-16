@@ -3,8 +3,7 @@ module Kontra
     , module KontraMonad
     , module Context
     , Kontra(..)
-    , KontraPlus(..)
-    , runKontraPlus
+    , runKontra
     , clearFlashMsgs
     , logUserToContext
     , logPadUserToContext
@@ -49,42 +48,7 @@ import Utils.List
 import qualified Amazon as AWS
 import qualified Log
 
-type InnerKontraPlus = StateT Context (AWS.AmazonMonadT (CryptoRNGT (DBT (ReqHandlerT (Log.LogT IO)))))
-
-newtype KontraPlus a = KontraPlus { unKontraPlus :: InnerKontraPlus a }
-  deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadCatch, MonadDB, MonadIO, MonadMask, MonadThrow, ServerMonad, AWS.AmazonMonad)
-
-instance Log.MonadLog KontraPlus where
-  mixlogjs now title js = liftBase $ Log.mixlogjsIO now title js
-
-runKontraPlus :: Context -> KontraPlus a -> AWS.AmazonMonadT (CryptoRNGT (DBT (ReqHandlerT (Log.LogT IO)))) a
-runKontraPlus ctx f = evalStateT (unKontraPlus f) ctx
-
-instance MonadBaseControl IO KontraPlus where
-  newtype StM KontraPlus a = StKontraPlus { unStKontraPlus :: StM InnerKontraPlus a }
-  liftBaseWith = newtypeLiftBaseWith KontraPlus unKontraPlus StKontraPlus
-  restoreM     = newtypeRestoreM KontraPlus unStKontraPlus
-  {-# INLINE liftBaseWith #-}
-  {-# INLINE restoreM #-}
-
-instance MonadTime KontraPlus where
-  currentTime = ctxtime <$> getContext
-
-instance KontraMonad KontraPlus where
-  getContext    = KontraPlus get
-  modifyContext = KontraPlus . modify
-
-instance TemplatesMonad KontraPlus where
-  getTemplates = ctxtemplates <$> getContext
-  getTextTemplatesByLanguage langStr = do
-     Context{ctxglobaltemplates} <- getContext
-     return $ TL.localizedVersion langStr ctxglobaltemplates
-
-instance GuardTimeConfMonad KontraPlus where
-  getGuardTimeConf = ctxgtconf <$> getContext
-
-instance MailContextMonad KontraPlus where
-  getMailContext = contextToMailContext <$> getContext
+type InnerKontra = StateT Context (AWS.AmazonMonadT (CryptoRNGT (DBT (ReqHandlerT (Log.LogT IO)))))
 
 -- | Kontra is a traditional Happstack handler monad except that it's
 -- not WebMonad.
@@ -92,15 +56,40 @@ instance MailContextMonad KontraPlus where
 -- Note also that in Kontra we don't do backtracking, which is why it
 -- is not an instance of MonadPlus.  Errors are signaled explicitly
 -- through 'KontraError'.
-newtype Kontra a = Kontra { unKontra :: KontraPlus a }
-  deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadCatch, MonadIO, MonadDB, MonadMask, MonadThrow, MonadTime, ServerMonad, KontraMonad, TemplatesMonad, Log.MonadLog, AWS.AmazonMonad, MailContextMonad, GuardTimeConfMonad)
+newtype Kontra a = Kontra { unKontra :: InnerKontra a }
+  deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadCatch, MonadDB, MonadIO, MonadMask, MonadThrow, ServerMonad, AWS.AmazonMonad)
+
+instance Log.MonadLog Kontra where
+  mixlogjs now title js = liftBase $ Log.mixlogjsIO now title js
+
+runKontra :: Context -> Kontra a -> AWS.AmazonMonadT (CryptoRNGT (DBT (ReqHandlerT (Log.LogT IO)))) a
+runKontra ctx f = evalStateT (unKontra f) ctx
 
 instance MonadBaseControl IO Kontra where
-  newtype StM Kontra a = StKontra { unStKontra :: StM KontraPlus a }
+  newtype StM Kontra a = StKontra { unStKontra :: StM InnerKontra a }
   liftBaseWith = newtypeLiftBaseWith Kontra unKontra StKontra
   restoreM     = newtypeRestoreM Kontra unStKontra
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
+
+instance MonadTime Kontra where
+  currentTime = ctxtime <$> getContext
+
+instance KontraMonad Kontra where
+  getContext    = Kontra get
+  modifyContext = Kontra . modify
+
+instance TemplatesMonad Kontra where
+  getTemplates = ctxtemplates <$> getContext
+  getTextTemplatesByLanguage langStr = do
+     Context{ctxglobaltemplates} <- getContext
+     return $ TL.localizedVersion langStr ctxglobaltemplates
+
+instance GuardTimeConfMonad Kontra where
+  getGuardTimeConf = ctxgtconf <$> getContext
+
+instance MailContextMonad Kontra where
+  getMailContext = contextToMailContext <$> getContext
 
 {- Logged in user is admin-}
 isAdmin :: Context -> Bool

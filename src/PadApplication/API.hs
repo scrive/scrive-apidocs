@@ -15,7 +15,7 @@ import Kontra
 import KontraPrelude
 import Routing
 
-padApplicationAPI :: Route (KontraPlus Response)
+padApplicationAPI :: Route (Kontra Response)
 padApplicationAPI = dir "api" $ choice
   [ dir "frontend" $ padApplicationAPI'
   , padApplicationAPI' -- Temporary backwards compatibility for clients accessing version-less API
@@ -23,7 +23,7 @@ padApplicationAPI = dir "api" $ choice
   , dir "v2" $ padApplicationAPI'
   ]
 
-padApplicationAPI' :: Route (KontraPlus Response)
+padApplicationAPI' :: Route (Kontra Response)
 padApplicationAPI' = choice [
   dir "checkclient"     $ hPostNoXTokenHttp $ toK0 $ apiCallCheckClient
   ]

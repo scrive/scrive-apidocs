@@ -8,7 +8,7 @@ import Happstack.StaticRouting
 
 import Kontra
 
-documentAPIV2 ::  Route (KontraPlus Response)
+documentAPIV2 ::  Route (Kontra Response)
 documentAPIV2  = choice [
 
   ]
