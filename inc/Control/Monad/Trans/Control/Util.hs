@@ -24,3 +24,9 @@ newtypeRestoreM ∷ (Monad m, MonadBaseControl b mInner)
                 → (StM m a → StM mInner a) -- ^ State deconstructor
                 → (StM m a → m a)
 newtypeRestoreM con unSt = con . restoreM . unSt
+
+liftMask :: (Monad (t m), Monad m, MonadTransControl t)
+         => (((forall a.   m a ->   m a) -> m (StT t b)) -> m (StT t b))
+         -> (((forall a. t m a -> t m a) -> t m b      ) -> t m b      )
+liftMask fmask m = controlT $ \run -> fmask $ \release ->
+  run $ m $ \f -> restoreT $ release (run f)

@@ -2,11 +2,9 @@
 {-# LANGUAGE OverlappingInstances #-}
 module Control.Monad.Trans.Instances () where
 
-import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Trans.Control
-import Text.StringTemplates.Templates
 
 import Control.Monad.Trans.Control.Util
 import KontraPrelude
@@ -28,28 +26,13 @@ instance (
     get = lift get
     put = lift . put
 
-instance (
-    Functor (t m)
-  , Monad (t m)
-  , MonadTrans t
-  , TemplatesMonad m
-  ) => TemplatesMonad (t m) where
-    getTemplates = lift getTemplates
-    getTextTemplatesByLanguage = lift . getTextTemplatesByLanguage
+{-
 
-instance (
-    Monad (t m)
-  , MonadTrans t
-  , MonadThrow m
-  ) => MonadThrow (t m) where
-    throwM = lift . throwM
-
-instance (
-    Monad (t m)
-  , MonadTransControl t
-  , MonadCatch m
-  ) => MonadCatch (t m) where
-    catch m h = controlT $ \run -> run m `catch` (run . h)
+-- This is wrong: there exists monad transformer t for which
+-- t m doesn't have a valid instance of MonadMask even though
+-- m does (an example is EitherT or MaybeT). Unfortunately it
+-- doesn't prevent you from creating them as MonadBaseControl
+-- does.
 
 instance (
     Monad (t m)
@@ -59,8 +42,4 @@ instance (
     mask = liftMask mask
     uninterruptibleMask = liftMask uninterruptibleMask
 
-liftMask :: (Monad (t m), Monad m, MonadTransControl t)
-         => (((forall a.   m a ->   m a) -> m (StT t b)) -> m (StT t b))
-         -> (((forall a. t m a -> t m a) -> t m b      ) -> t m b      )
-liftMask fmask m = controlT $ \run -> fmask $ \release ->
-  run $ m $ \f -> restoreT $ release (run f)
+-}

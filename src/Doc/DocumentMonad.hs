@@ -8,6 +8,7 @@ module Doc.DocumentMonad
   ) where
 
 import Control.Monad.Base (MonadBase)
+import Control.Monad.Catch
 import Control.Monad.Reader (MonadIO, MonadTrans)
 import Control.Monad.Trans.Control (MonadBaseControl(..), MonadTransControl(..), ComposeSt, defaultLiftBaseWith, defaultRestoreM, defaultLiftWith, defaultRestoreT)
 import Text.JSON
@@ -23,7 +24,7 @@ import Log (MonadLog(..))
 
 -- | A monad transformer that has a 'DocumentMonad' instance
 newtype DocumentT m a = DocumentT { unDocumentT :: RowCacheT Document m a }
-  deriving (Applicative, Monad, MonadDB, Functor, MonadIO, MonadTrans, MonadBase b)
+  deriving (Applicative, Monad, MonadDB, Functor, MonadIO, MonadTrans, MonadBase b, MonadThrow, MonadCatch, MonadMask)
 
 instance MonadBaseControl b m => MonadBaseControl b (DocumentT m) where
   newtype StM (DocumentT m) a = StM { unStM :: ComposeSt DocumentT m a }

@@ -13,11 +13,13 @@ module DB.RowCache
   )  where
 
 import Control.Monad.Base (MonadBase)
+import Control.Monad.Catch
 import Control.Monad.Reader (runReaderT, ask, ReaderT)
 import Control.Monad.State (MonadTrans, get, put, lift, evalStateT, StateT, MonadIO)
 import Control.Monad.Trans.Control (MonadBaseControl(..), MonadTransControl(..), ComposeSt, defaultLiftBaseWith, defaultRestoreM)
 import Database.PostgreSQL.PQTypes (MonadDB)
 
+import Control.Monad.Trans.Control.Util
 import KontraPrelude
 
 -- | Return an identifier type for a row 'r' that can be used to retrieve rows from storage
@@ -35,7 +37,12 @@ class Monad m => GetRow r m  where
 -- | Monad transformer for maintaining a cached row value or an invalid
 -- mark, and remembering the row's identifier
 newtype RowCacheT r m a = RowCacheT { unRowCacheT :: InnerRowCacheT r m a }
-  deriving (Applicative, Functor, Monad, MonadDB, MonadIO, MonadBase b)
+  deriving (Applicative, Functor, Monad, MonadDB, MonadIO, MonadBase b, MonadThrow, MonadCatch)
+
+-- | For some reason GHC cannot derive this by itself.
+instance MonadMask m => MonadMask (RowCacheT r m) where
+  mask = liftMask mask
+  uninterruptibleMask = liftMask uninterruptibleMask
 
 -- | Fetch the row and perform an operation that updates the stored row (and therefore marks the cached row as invalid)
 updateRow :: GetRow r m => (r -> RowCacheT r m a) -> RowCacheT r m a

@@ -8,6 +8,7 @@ module MailContext (
   ) where
 
 import Control.Monad.Base
+import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
 
@@ -15,7 +16,7 @@ import KontraPrelude
 import MailContext.Class
 
 newtype MailContextT m a = MailContextT { unMailContextT :: ReaderT MailContext m a }
-  deriving (Alternative, Applicative, Functor, Monad, MonadPlus, MonadIO, MonadTrans, MonadBase b)
+  deriving (Alternative, Applicative, Functor, Monad, MonadPlus, MonadIO, MonadTrans, MonadBase b, MonadThrow, MonadCatch, MonadMask)
 
 runMailContextT :: MailContext -> MailContextT m a -> m a
 runMailContextT ts m = runReaderT (unMailContextT m) ts

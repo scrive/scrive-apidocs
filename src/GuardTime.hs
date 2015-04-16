@@ -13,9 +13,9 @@ module GuardTime (
   ) where
 
 import Control.Monad.Base (MonadBase)
-import Control.Monad.IO.Class
+import Control.Monad.Catch
 import Control.Monad.Reader (ReaderT(..), runReaderT, ask)
-import Control.Monad.Trans (MonadTrans)
+import Control.Monad.Trans
 import Control.Monad.Trans.Control (MonadBaseControl(..), MonadTransControl(..), ComposeSt, defaultLiftWith, defaultRestoreT, defaultLiftBaseWith, defaultRestoreM)
 import System.Exit
 import Text.JSON
@@ -31,7 +31,7 @@ import Utils.IO
 import qualified Log
 
 newtype GuardTimeConfT m a = GuardTimeConfT { unGuardTimeConfT :: ReaderT GuardTimeConf m a }
-  deriving (Alternative, Applicative, Functor, Monad, MonadPlus, MonadIO, MonadTrans, MonadBase b)
+  deriving (Alternative, Applicative, Functor, Monad, MonadPlus, MonadIO, MonadTrans, MonadBase b, MonadThrow, MonadCatch, MonadMask)
 
 instance MonadBaseControl b m => MonadBaseControl b (GuardTimeConfT m) where
   newtype StM (GuardTimeConfT m) a = StM { unStM :: ComposeSt GuardTimeConfT m a }
