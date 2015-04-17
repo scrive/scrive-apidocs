@@ -49,7 +49,8 @@ import qualified Log
 
 handleArchiveDocumentsAction :: Kontrakcja m => String -> (User -> Document -> Bool) -> ((User, Actor) -> DocumentT m a) -> m [a]
 handleArchiveDocumentsAction actionStr docPermission m = do
-  ctx@Context{ctxmaybeuser = Just user} <- getContext
+  ctx <- getContext
+  user <- guardJust $ ctxmaybeuser ctx `mplus` ctxmaybepaduser ctx
   ids <- getCriticalField asValidDocIDList "documentids"
   docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser $ userid user] [DocumentFilterByDocumentIDs ids] [] (0, 100)
   when (sort (map documentid docs) /= sort ids) $ failWithMsg user ids "Retrieved documents didn't match specified document ids"
