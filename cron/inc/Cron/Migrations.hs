@@ -19,7 +19,9 @@ addNameToCronWorkers :: MonadDB m => Migration m
 addNameToCronWorkers = Migration {
   mgrTable = tableCronWorkers
 , mgrFrom = 1
-, mgrDo = runSQL_ "ALTER TABLE cron_workers ADD COLUMN name TEXT NOT NULL"
+, mgrDo = do
+  runSQL_ "ALTER TABLE cron_workers ADD COLUMN name TEXT NOT NULL DEFAULT 'cron_jobs'"
+  runSQL_ "ALTER TABLE cron_workers ALTER COLUMN name DROP DEFAULT"
 }
 
 createCronWorkersTable :: MonadDB m => Migration m
