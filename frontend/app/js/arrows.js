@@ -171,7 +171,7 @@ var ScrollUpArrowView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'scroll', 'updateRightMargin');
         this.model.view = this;
-        $(window).resize( this.updateRightMargin);
+        $(window).resize(this.updateRightMargin);
         this.render();
         this.alreadyScrolling = false;
     },
@@ -187,17 +187,10 @@ var ScrollUpArrowView = Backbone.View.extend({
         return this;
     },
     updateRightMargin : function() {
-      var space = $(window).width() - 941;
-      var margin = 0;
-      var bigarrowmargin = 0;
-      if (space > 0) {
-        margin = space / 2;
-        bigarrowmargin = (space + 941 - 112) / 2;
-      } else {
-        bigarrowmargin = (941 - 112) / 2;
-      }
-      $(this.el).css("right", bigarrowmargin + "px");
-
+      var ARROW_WIDTH = 102; // this must be synced with arrows.less
+      var space = $(window).width() - ARROW_WIDTH;
+      var arrow_margin = space / 2;
+      $(this.el).css("right", arrow_margin + "px");
     },
     scroll: function(){
        if (this.alreadyScrolling) {
@@ -234,7 +227,7 @@ var ScrollDownArrowView = Backbone.View.extend({
         this.model.view = this;
         $(window).resize(this.checkIfDownArrowInFooter);
         $(window).scroll(this.checkIfDownArrowInFooter);
-        $(window).resize(this.updateRightMarginFunction);
+        $(window).resize(this.updateRightMargin);
         this.render();
         this.alreadyScrolling = false;
     },
@@ -246,17 +239,10 @@ var ScrollDownArrowView = Backbone.View.extend({
         return this;
     },
     updateRightMargin : function() {
-      var space = $(window).width() - 941;
-      var margin = 0;
-      var bigarrowmargin = 0;
-      if (space > 0) {
-        margin = space / 2;
-        bigarrowmargin = (space + 941 - 112) / 2;
-      } else {
-        bigarrowmargin = (941 - 112) / 2;
-      }
-      $(this.el).css("right", bigarrowmargin + "px");
-
+      var ARROW_WIDTH = 102; // this must be synced with arrows.less
+      var space = $(window).width() - ARROW_WIDTH;
+      var arrow_margin = space / 2;
+      $(this.el).css("right", arrow_margin + "px");
     },
     checkIfDownArrowInFooter : function() {
       if ($(".pagefooter").size() == 0 || $(".nofooter .pagefooter").size() > 0) return; //We need to do such ugly check, since footer sometimes is just hidden
