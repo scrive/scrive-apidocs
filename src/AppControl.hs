@@ -11,6 +11,7 @@ module AppControl
     ) where
 
 import Control.Concurrent.Lifted (MVar, modifyMVar, threadDelay, readMVar)
+import Control.DeepSeq
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Error
@@ -204,7 +205,8 @@ appHandler handleRoutes appConf appGlobals = catchEverything . enhanceYourCalm $
         , "* Time: " ++ show (diffUTCTime finishTime startTime)
         ]
 
-      case res of
+      -- Make sure response is well defined before passing it further.
+      res `deepseq` case res of
         Right response -> return response
         Left response -> do
           rollback -- if exception was thrown, rollback everything

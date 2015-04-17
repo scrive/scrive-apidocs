@@ -2,12 +2,38 @@
 {-# LANGUAGE OverlappingInstances #-}
 module Happstack.Server.Instances where
 
+import Control.DeepSeq
 import Control.Monad.Trans
 import Control.Monad.Trans.Control
 import Happstack.Server
 
 import Control.Monad.Trans.Control.Util
 import KontraPrelude
+
+instance NFData HeaderPair where
+  rnf HeaderPair{..} = rnf hName
+    `seq` rnf hValue
+
+instance NFData Length
+
+instance NFData RsFlags where
+  rnf RsFlags{..} = rnf rsfLength
+
+instance NFData Response where
+  rnf Response{..} = rnf rsCode
+    `seq` rnf rsHeaders
+    `seq `rnf rsFlags
+    `seq` rnf rsBody
+    `seq` rnf rsValidator
+  rnf SendFile{..} = rnf rsCode
+    `seq` rnf rsHeaders
+    `seq` rnf rsFlags
+    `seq` rnf rsValidator
+    `seq` rnf sfFilePath
+    `seq` rnf sfOffset
+    `seq` rnf sfCount
+
+----------------------------------------
 
 instance (
     Monad (t m)
