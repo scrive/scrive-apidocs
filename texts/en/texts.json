@@ -669,7 +669,7 @@
 "_newemail":"New email address",
 "_newemailagain":"Confirm new email address",
 "_noDocumentChosen":"No documents chosen.",
-"_notFound":"<h1>The page couldn't be found</h1><h4>You may have landed here because you typed in the wrong adress or because the page has been moved.</h4>",
+"_notFound":"<h1>The page couldn't be found</h1><h4>You may have landed here because you typed in the wrong address or because the page has been moved.</h4>",
 "_november":"November",
 "_numPartOfNum":"<span class='put-current-index'></span> of <span class='put-total-count'></span>",
 "_numberOfPages":"$pages$ pages",
