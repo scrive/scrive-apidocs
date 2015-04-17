@@ -29,7 +29,9 @@ addNameToCallbackConsumers :: MonadDB m => Migration m
 addNameToCallbackConsumers = Migration {
   mgrTable = tableDocumentApiCallbackConsumers
 , mgrFrom = 1
-, mgrDo = runSQL_ "ALTER TABLE document_api_callback_consumers ADD COLUMN name TEXT NOT NULL"
+, mgrDo = do
+  runSQL_ "ALTER TABLE document_api_callback_consumers ADD COLUMN name TEXT NOT NULL DEFAULT 'document_api_callbacks'"
+  runSQL_ "ALTER TABLE document_api_callback_consumers ALTER COLUMN name DROP DEFAULT"
 }
 
 updateApiCallbacksForNewConsumer :: MonadDB m => Migration m
