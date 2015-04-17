@@ -51,7 +51,6 @@ Flag server-coverage
   Manual: True
   Default: False
 
-
 Flag test-coverage
   Description: Collects tests coverage status
   Manual: True
@@ -71,60 +70,58 @@ Executable kontrakcja-server
   Main-Is: Main.hs
   GHC-options: -main-is Main
 
-  Build-depends: base < 6
-  Build-depends: bytestring
-  Build-depends: template-haskell
-  Build-depends: containers
-  Build-depends: unix
-  Build-depends: directory
-  Build-depends: binary
-  Build-depends: curl
-  Build-depends: old-locale
-  Build-depends: time
-  Build-depends: filepath
-  Build-depends: process
   Build-depends: AES
-  Build-depends: Crypto
-  Build-depends: DRBG
-  Build-depends: Decimal
-  Build-depends: digest
-  Build-depends: hpqtypes
-  Build-depends: HStringTemplate
-  Build-depends: HTTP
-  Build-depends: HUnit
-  Build-depends: HaXml
-  Build-depends: MissingH
-  Build-depends: QuickCheck
   Build-depends: aeson
-  Build-depends: yaml
   Build-depends: attoparsec
+  Build-depends: base < 6
   Build-depends: base16-bytestring
   Build-depends: base64-bytestring
-  Build-depends: data-default
+  Build-depends: binary
+  Build-depends: bytestring
   Build-depends: cond
   Build-depends: conduit
+  Build-depends: containers
+  Build-depends: Crypto
   Build-depends: crypto-api
   Build-depends: cryptohash
+  Build-depends: curl
+  Build-depends: data-default
   Build-depends: dataenc
+  Build-depends: Decimal
   Build-depends: deepseq
+  Build-depends: digest
+  Build-depends: directory
+  Build-depends: DRBG
   Build-depends: exceptions
   Build-depends: explicit-exception
   Build-depends: fields-json
-  Build-depends: hS3
+  Build-depends: filepath
   Build-depends: happstack-server
   Build-depends: happstack-static-routing
+  Build-depends: HaXml
+  Build-depends: hpqtypes
+  Build-depends: hS3
+  Build-depends: HStringTemplate
+  Build-depends: HTTP
+  Build-depends: HUnit
   Build-depends: iconv
+  Build-depends: invariant
   Build-depends: json
   Build-depends: kontrakcja-templates
   Build-depends: lifted-base
+  Build-depends: lifted-threads
+  Build-depends: MissingH
   Build-depends: mixpanel
   Build-depends: mmap
   Build-depends: monad-control
   Build-depends: mtl
   Build-depends: network
+  Build-depends: old-locale
   Build-depends: pretty
   Build-depends: pretty-show
   Build-depends: primitive
+  Build-depends: process
+  Build-depends: QuickCheck
   Build-depends: random
   Build-depends: recurly
   Build-depends: regex-tdfa
@@ -133,6 +130,7 @@ Executable kontrakcja-server
   Build-depends: spreadsheet
   Build-depends: stm
   Build-depends: tagsoup
+  Build-depends: template-haskell
   Build-depends: temporary
   Build-depends: test-framework
   Build-depends: test-framework-hunit
@@ -140,44 +138,46 @@ Executable kontrakcja-server
   Build-depends: text
   Build-depends: text-icu
   Build-depends: threads
-  Build-depends: lifted-threads
+  Build-depends: time
   Build-depends: transformers
   Build-depends: transformers-base
+  Build-depends: unix
   Build-depends: unjson
   Build-depends: utf8-string
   Build-depends: xml-conduit
   Build-depends: xml-conduit-writer
   Build-depends: xml-types
+  Build-depends: yaml
   Build-depends: zip-archive
   Build-depends: zlib
-  Build-depends: invariant
 
   Default-Language: Haskell2010
-  Default-Extensions: BangPatterns,
-              ConstraintKinds,
-              DeriveDataTypeable,
-              DeriveFunctor,
-              FlexibleContexts,
-              FlexibleInstances,
-              FunctionalDependencies,
-              GeneralizedNewtypeDeriving,
-              LambdaCase,
-              MultiWayIf,
-              MultiParamTypeClasses,
-              NamedFieldPuns,
-              NoImplicitPrelude,
-              OverloadedStrings,
-              PatternGuards,
-              RankNTypes,
-              RecordWildCards,
-              ScopedTypeVariables,
-              StandaloneDeriving,
-              TemplateHaskell,
-              TupleSections,
-              TypeFamilies,
-              TypeOperators,
-              TypeSynonymInstances,
-              UndecidableInstances
+  Default-Extensions:
+    BangPatterns,
+    ConstraintKinds,
+    DeriveDataTypeable,
+    DeriveFunctor,
+    FlexibleContexts,
+    FlexibleInstances,
+    FunctionalDependencies,
+    GeneralizedNewtypeDeriving,
+    LambdaCase,
+    MultiParamTypeClasses,
+    MultiWayIf,
+    NamedFieldPuns,
+    NoImplicitPrelude,
+    OverloadedStrings,
+    PatternGuards,
+    RankNTypes,
+    RecordWildCards,
+    ScopedTypeVariables,
+    StandaloneDeriving,
+    TemplateHaskell,
+    TupleSections,
+    TypeFamilies,
+    TypeOperators,
+    TypeSynonymInstances,
+    UndecidableInstances
 
 Executable cron
 
@@ -190,57 +190,55 @@ Executable cron
   if flag(server-coverage)
     GHC-Options: -fhpc
 
-  Build-depends: base < 6
-  Build-depends: bytestring
-  Build-depends: template-haskell
-  Build-depends: containers
-  Build-depends: unix
-  Build-depends: directory
-  Build-depends: binary
-  Build-depends: old-locale
-  Build-depends: time
-  Build-depends: filepath
-  Build-depends: process
   Build-depends: AES
-  Build-depends: Crypto
-  Build-depends: DRBG
-  Build-depends: Decimal
-  Build-depends: digest
-  Build-depends: hpqtypes
-  Build-depends: HStringTemplate
-  Build-depends: HTTP
-  Build-depends: HUnit
-  Build-depends: HaXml
-  Build-depends: MissingH
-  Build-depends: QuickCheck
   Build-depends: aeson
-  Build-depends: yaml
   Build-depends: attoparsec
+  Build-depends: base < 6
   Build-depends: base16-bytestring
   Build-depends: base64-bytestring
+  Build-depends: binary
+  Build-depends: bytestring
   Build-depends: cond
   Build-depends: conduit
+  Build-depends: containers
+  Build-depends: Crypto
   Build-depends: crypto-api
   Build-depends: cryptohash
   Build-depends: data-default
   Build-depends: dataenc
+  Build-depends: Decimal
   Build-depends: deepseq
+  Build-depends: digest
+  Build-depends: directory
+  Build-depends: DRBG
   Build-depends: exceptions
   Build-depends: explicit-exception
   Build-depends: fields-json
-  Build-depends: hS3
+  Build-depends: filepath
   Build-depends: happstack-server
   Build-depends: happstack-static-routing
+  Build-depends: HaXml
+  Build-depends: hpqtypes
+  Build-depends: hS3
+  Build-depends: HStringTemplate
+  Build-depends: HTTP
+  Build-depends: HUnit
   Build-depends: iconv
+  Build-depends: invariant
   Build-depends: json
   Build-depends: kontrakcja-templates
   Build-depends: lifted-base
+  Build-depends: lifted-threads
+  Build-depends: MissingH
   Build-depends: mixpanel
   Build-depends: mmap
   Build-depends: monad-control
   Build-depends: mtl
   Build-depends: network
+  Build-depends: old-locale
   Build-depends: pretty-show
+  Build-depends: process
+  Build-depends: QuickCheck
   Build-depends: random
   Build-depends: recurly
   Build-depends: regex-tdfa
@@ -249,53 +247,56 @@ Executable cron
   Build-depends: spreadsheet
   Build-depends: stm
   Build-depends: tagsoup
+  Build-depends: template-haskell
   Build-depends: temporary
   Build-depends: test-framework
   Build-depends: test-framework-hunit
   Build-depends: test-framework-quickcheck2
   Build-depends: text
   Build-depends: threads
-  Build-depends: lifted-threads
+  Build-depends: time
   Build-depends: transformers
   Build-depends: transformers-base
+  Build-depends: unix
   Build-depends: unjson
   Build-depends: utf8-string
   Build-depends: xml-conduit
   Build-depends: xml-conduit-writer
   Build-depends: xml-types
+  Build-depends: yaml
   Build-depends: zip-archive
   Build-depends: zlib
-  Build-depends: invariant
 
   Main-is: Cron.hs
   GHC-options: -main-is Cron
 
   Default-Language: Haskell2010
-  Default-Extensions: BangPatterns,
-              ConstraintKinds
-              DeriveFunctor,
-              DeriveDataTypeable,
-              FlexibleContexts,
-              FlexibleInstances,
-              FunctionalDependencies,
-              GeneralizedNewtypeDeriving,
-              LambdaCase,
-              MultiWayIf,
-              MultiParamTypeClasses,
-              NamedFieldPuns,
-              NoImplicitPrelude,
-              OverloadedStrings,
-              PatternGuards,
-              RankNTypes,
-              RecordWildCards,
-              ScopedTypeVariables,
-              StandaloneDeriving,
-              TemplateHaskell,
-              TupleSections,
-              TypeFamilies,
-              TypeOperators,
-              TypeSynonymInstances,
-              UndecidableInstances
+  Default-Extensions:
+    BangPatterns,
+    ConstraintKinds
+    DeriveDataTypeable,
+    DeriveFunctor,
+    FlexibleContexts,
+    FlexibleInstances,
+    FunctionalDependencies,
+    GeneralizedNewtypeDeriving,
+    LambdaCase,
+    MultiParamTypeClasses,
+    MultiWayIf,
+    NamedFieldPuns,
+    NoImplicitPrelude,
+    OverloadedStrings,
+    PatternGuards,
+    RankNTypes,
+    RecordWildCards,
+    ScopedTypeVariables,
+    StandaloneDeriving,
+    TemplateHaskell,
+    TupleSections,
+    TypeFamilies,
+    TypeOperators,
+    TypeSynonymInstances,
+    UndecidableInstances
 
 Executable kontrakcja-migrate
   Hs-source-dirs: inc misc src cron/inc messenger/inc mailer/inc docconv/src
@@ -310,57 +311,55 @@ Executable kontrakcja-migrate
   Main-is: AppDBMain.hs
   GHC-options: -main-is AppDBMain
 
-  Build-depends: base < 6
-  Build-depends: bytestring
-  Build-depends: template-haskell
-  Build-depends: containers
-  Build-depends: unix
-  Build-depends: directory
-  Build-depends: binary
-  Build-depends: old-locale
-  Build-depends: time
-  Build-depends: filepath
-  Build-depends: process
   Build-depends: AES
-  Build-depends: Crypto
-  Build-depends: DRBG
-  Build-depends: Decimal
-  Build-depends: digest
-  Build-depends: hpqtypes
-  Build-depends: HStringTemplate
-  Build-depends: HTTP
-  Build-depends: HUnit
-  Build-depends: HaXml
-  Build-depends: MissingH
-  Build-depends: QuickCheck
   Build-depends: aeson
-  Build-depends: yaml
   Build-depends: attoparsec
+  Build-depends: base < 6
   Build-depends: base16-bytestring
   Build-depends: base64-bytestring
+  Build-depends: binary
+  Build-depends: bytestring
   Build-depends: cond
   Build-depends: conduit
+  Build-depends: containers
+  Build-depends: Crypto
   Build-depends: crypto-api
   Build-depends: cryptohash
   Build-depends: data-default
   Build-depends: dataenc
+  Build-depends: Decimal
   Build-depends: deepseq
+  Build-depends: digest
+  Build-depends: directory
+  Build-depends: DRBG
   Build-depends: exceptions
   Build-depends: explicit-exception
   Build-depends: fields-json
-  Build-depends: hS3
+  Build-depends: filepath
   Build-depends: happstack-server
   Build-depends: happstack-static-routing
+  Build-depends: HaXml
+  Build-depends: hpqtypes
+  Build-depends: hS3
+  Build-depends: HStringTemplate
+  Build-depends: HTTP
+  Build-depends: HUnit
   Build-depends: iconv
+  Build-depends: invariant
   Build-depends: json
   Build-depends: kontrakcja-templates
   Build-depends: lifted-base
+  Build-depends: lifted-threads
+  Build-depends: MissingH
   Build-depends: mixpanel
   Build-depends: mmap
   Build-depends: monad-control
   Build-depends: mtl
   Build-depends: network
+  Build-depends: old-locale
   Build-depends: pretty-show
+  Build-depends: process
+  Build-depends: QuickCheck
   Build-depends: random
   Build-depends: recurly
   Build-depends: regex-tdfa
@@ -368,48 +367,51 @@ Executable kontrakcja-migrate
   Build-depends: spreadsheet
   Build-depends: stm
   Build-depends: tagsoup
+  Build-depends: template-haskell
   Build-depends: temporary
   Build-depends: test-framework
   Build-depends: test-framework-hunit
   Build-depends: test-framework-quickcheck2
   Build-depends: text
   Build-depends: threads
-  Build-depends: lifted-threads
+  Build-depends: time
   Build-depends: transformers
   Build-depends: transformers-base
+  Build-depends: unix
   Build-depends: unjson
   Build-depends: utf8-string
-  Build-depends: xml-types
   Build-depends: xml-conduit
+  Build-depends: xml-types
+  Build-depends: yaml
   Build-depends: zip-archive
   Build-depends: zlib
-  Build-depends: invariant
 
   Default-Language: Haskell2010
-  Default-Extensions: BangPatterns,
-              DeriveFunctor,
-              DeriveDataTypeable,
-              FlexibleContexts,
-              FlexibleInstances,
-              FunctionalDependencies,
-              GeneralizedNewtypeDeriving,
-              LambdaCase,
-              MultiWayIf,
-              MultiParamTypeClasses,
-              NamedFieldPuns,
-              NoImplicitPrelude,
-              OverloadedStrings,
-              PatternGuards,
-              RankNTypes,
-              RecordWildCards,
-              ScopedTypeVariables,
-              StandaloneDeriving,
-              TemplateHaskell,
-              TupleSections,
-              TypeFamilies,
-              TypeOperators,
-              TypeSynonymInstances,
-              UndecidableInstances
+  Default-Extensions:
+    BangPatterns,
+    DeriveDataTypeable,
+    DeriveFunctor,
+    FlexibleContexts,
+    FlexibleInstances,
+    FunctionalDependencies,
+    GeneralizedNewtypeDeriving,
+    LambdaCase,
+    MultiParamTypeClasses,
+    MultiWayIf,
+    NamedFieldPuns,
+    NoImplicitPrelude,
+    OverloadedStrings,
+    PatternGuards,
+    RankNTypes,
+    RecordWildCards,
+    ScopedTypeVariables,
+    StandaloneDeriving,
+    TemplateHaskell,
+    TupleSections,
+    TypeFamilies,
+    TypeOperators,
+    TypeSynonymInstances,
+    UndecidableInstances
 
 Executable mailing-server
 
@@ -425,55 +427,52 @@ Executable mailing-server
   Main-is: MailingServer.hs
   GHC-options: -main-is MailingServer
 
-  Build-depends: base < 6
-  Build-depends: bytestring
-  Build-depends: template-haskell
-  Build-depends: containers
-  Build-depends: unix
-  Build-depends: directory
-  Build-depends: binary
-  Build-depends: old-locale
-  Build-depends: time
-  Build-depends: filepath
-  Build-depends: process
   Build-depends: AES
-  Build-depends: Crypto
-  Build-depends: DRBG
-  Build-depends: Decimal
-  Build-depends: hpqtypes
-  Build-depends: HStringTemplate
-  Build-depends: HTTP
-  Build-depends: HUnit
-  Build-depends: HaXml
-  Build-depends: MissingH
-  Build-depends: QuickCheck
   Build-depends: aeson
-  Build-depends: yaml
   Build-depends: attoparsec
+  Build-depends: base < 6
   Build-depends: base16-bytestring
   Build-depends: base64-bytestring
+  Build-depends: binary
+  Build-depends: bytestring
   Build-depends: cond
   Build-depends: conduit
+  Build-depends: containers
+  Build-depends: Crypto
   Build-depends: crypto-api
   Build-depends: cryptohash
   Build-depends: dataenc
+  Build-depends: Decimal
   Build-depends: deepseq
+  Build-depends: directory
+  Build-depends: DRBG
   Build-depends: exceptions
   Build-depends: explicit-exception
   Build-depends: fields-json
-  Build-depends: hS3
+  Build-depends: filepath
   Build-depends: happstack-server
   Build-depends: happstack-static-routing
+  Build-depends: HaXml
+  Build-depends: hpqtypes
+  Build-depends: hS3
+  Build-depends: HStringTemplate
+  Build-depends: HTTP
+  Build-depends: HUnit
   Build-depends: iconv
   Build-depends: json
   Build-depends: kontrakcja-templates
   Build-depends: lifted-base
+  Build-depends: lifted-threads
+  Build-depends: MissingH
   Build-depends: mixpanel
   Build-depends: mmap
   Build-depends: monad-control
   Build-depends: mtl
   Build-depends: network
+  Build-depends: old-locale
   Build-depends: pretty-show
+  Build-depends: process
+  Build-depends: QuickCheck
   Build-depends: random
   Build-depends: recurly
   Build-depends: regex-tdfa
@@ -481,45 +480,49 @@ Executable mailing-server
   Build-depends: spreadsheet
   Build-depends: stm
   Build-depends: tagsoup
+  Build-depends: template-haskell
   Build-depends: temporary
   Build-depends: test-framework
   Build-depends: test-framework-hunit
   Build-depends: test-framework-quickcheck2
   Build-depends: text
   Build-depends: threads
-  Build-depends: lifted-threads
+  Build-depends: time
   Build-depends: transformers
   Build-depends: transformers-base
+  Build-depends: unix
   Build-depends: unjson
   Build-depends: utf8-string
+  Build-depends: yaml
   Build-depends: zip-archive
   Build-depends: zlib
 
   Default-Language: Haskell2010
-  Default-Extensions: BangPatterns,
-              DeriveFunctor,
-              DeriveDataTypeable,
-              FlexibleContexts,
-              FlexibleInstances,
-              FunctionalDependencies,
-              GeneralizedNewtypeDeriving,
-              LambdaCase,
-              MultiWayIf,
-              MultiParamTypeClasses,
-              NamedFieldPuns,
-              NoImplicitPrelude,
-              OverloadedStrings,
-              PatternGuards,
-              RankNTypes,
-              RecordWildCards,
-              ScopedTypeVariables,
-              StandaloneDeriving,
-              TemplateHaskell,
-              TupleSections,
-              TypeFamilies,
-              TypeOperators,
-              TypeSynonymInstances,
-              UndecidableInstances
+  Default-Extensions:
+    BangPatterns,
+    DeriveDataTypeable,
+    DeriveFunctor,
+    FlexibleContexts,
+    FlexibleInstances,
+    FunctionalDependencies,
+    GeneralizedNewtypeDeriving,
+    LambdaCase,
+    MultiParamTypeClasses,
+    MultiWayIf,
+    NamedFieldPuns,
+    NoImplicitPrelude,
+    OverloadedStrings,
+    PatternGuards,
+    RankNTypes,
+    RecordWildCards,
+    ScopedTypeVariables,
+    StandaloneDeriving,
+    TemplateHaskell,
+    TupleSections,
+    TypeFamilies,
+    TypeOperators,
+    TypeSynonymInstances,
+    UndecidableInstances
 
 Executable messenger-server
 
@@ -535,55 +538,52 @@ Executable messenger-server
   Main-is: MessengerServer.hs
   GHC-options: -main-is MessengerServer
 
-  Build-depends: base < 6
-  Build-depends: bytestring
-  Build-depends: template-haskell
-  Build-depends: containers
-  Build-depends: unix
-  Build-depends: directory
-  Build-depends: binary
-  Build-depends: old-locale
-  Build-depends: time
-  Build-depends: filepath
-  Build-depends: process
   Build-depends: AES
-  Build-depends: Crypto
-  Build-depends: DRBG
-  Build-depends: Decimal
-  Build-depends: hpqtypes
-  Build-depends: HStringTemplate
-  Build-depends: HTTP
-  Build-depends: HUnit
-  Build-depends: HaXml
-  Build-depends: MissingH
-  Build-depends: QuickCheck
   Build-depends: aeson
-  Build-depends: yaml
   Build-depends: attoparsec
+  Build-depends: base < 6
   Build-depends: base16-bytestring
   Build-depends: base64-bytestring
+  Build-depends: binary
+  Build-depends: bytestring
   Build-depends: cond
   Build-depends: conduit
+  Build-depends: containers
+  Build-depends: Crypto
   Build-depends: crypto-api
   Build-depends: cryptohash
   Build-depends: dataenc
+  Build-depends: Decimal
   Build-depends: deepseq
+  Build-depends: directory
+  Build-depends: DRBG
   Build-depends: exceptions
   Build-depends: explicit-exception
   Build-depends: fields-json
-  Build-depends: hS3
+  Build-depends: filepath
   Build-depends: happstack-server
   Build-depends: happstack-static-routing
+  Build-depends: HaXml
+  Build-depends: hpqtypes
+  Build-depends: hS3
+  Build-depends: HStringTemplate
+  Build-depends: HTTP
+  Build-depends: HUnit
   Build-depends: iconv
   Build-depends: json
   Build-depends: kontrakcja-templates
   Build-depends: lifted-base
+  Build-depends: lifted-threads
+  Build-depends: MissingH
   Build-depends: mixpanel
   Build-depends: mmap
   Build-depends: monad-control
   Build-depends: mtl
   Build-depends: network
+  Build-depends: old-locale
   Build-depends: pretty-show
+  Build-depends: process
+  Build-depends: QuickCheck
   Build-depends: random
   Build-depends: recurly
   Build-depends: regex-tdfa
@@ -591,45 +591,49 @@ Executable messenger-server
   Build-depends: spreadsheet
   Build-depends: stm
   Build-depends: tagsoup
+  Build-depends: template-haskell
   Build-depends: temporary
   Build-depends: test-framework
   Build-depends: test-framework-hunit
   Build-depends: test-framework-quickcheck2
   Build-depends: text
   Build-depends: threads
-  Build-depends: lifted-threads
+  Build-depends: time
   Build-depends: transformers
   Build-depends: transformers-base
+  Build-depends: unix
   Build-depends: unjson
   Build-depends: utf8-string
+  Build-depends: yaml
   Build-depends: zip-archive
   Build-depends: zlib
 
   Default-Language: Haskell2010
-  Default-Extensions: BangPatterns,
-              DeriveFunctor,
-              DeriveDataTypeable,
-              FlexibleContexts,
-              FlexibleInstances,
-              FunctionalDependencies,
-              GeneralizedNewtypeDeriving,
-              LambdaCase,
-              MultiWayIf,
-              MultiParamTypeClasses,
-              NamedFieldPuns,
-              NoImplicitPrelude,
-              OverloadedStrings,
-              PatternGuards,
-              RankNTypes,
-              RecordWildCards,
-              ScopedTypeVariables,
-              StandaloneDeriving,
-              TemplateHaskell,
-              TupleSections,
-              TypeFamilies,
-              TypeOperators,
-              TypeSynonymInstances,
-              UndecidableInstances
+  Default-Extensions:
+    BangPatterns,
+    DeriveDataTypeable,
+    DeriveFunctor,
+    FlexibleContexts,
+    FlexibleInstances,
+    FunctionalDependencies,
+    GeneralizedNewtypeDeriving,
+    LambdaCase,
+    MultiParamTypeClasses,
+    MultiWayIf,
+    NamedFieldPuns,
+    NoImplicitPrelude,
+    OverloadedStrings,
+    PatternGuards,
+    RankNTypes,
+    RecordWildCards,
+    ScopedTypeVariables,
+    StandaloneDeriving,
+    TemplateHaskell,
+    TupleSections,
+    TypeFamilies,
+    TypeOperators,
+    TypeSynonymInstances,
+    UndecidableInstances
 
 
 Executable kontrakcja-test
@@ -646,59 +650,55 @@ Executable kontrakcja-test
   Main-is: TestMain.hs
   GHC-options: -main-is TestMain
 
-  Build-depends: base < 6
-  Build-depends: bytestring
-  Build-depends: template-haskell
-  Build-depends: containers
-  Build-depends: unordered-containers
-  Build-depends: vector
-  Build-depends: unix
-  Build-depends: digest
-  Build-depends: directory
-  Build-depends: binary
-  Build-depends: old-locale
-  Build-depends: time
-  Build-depends: filepath
-  Build-depends: process
   Build-depends: AES
-  Build-depends: Crypto
-  Build-depends: DRBG
-  Build-depends: Decimal
-  Build-depends: hpqtypes
-  Build-depends: HStringTemplate
-  Build-depends: HTTP
-  Build-depends: HUnit
-  Build-depends: HaXml
-  Build-depends: MissingH
-  Build-depends: QuickCheck
   Build-depends: aeson
-  Build-depends: yaml
   Build-depends: attoparsec
+  Build-depends: base < 6
   Build-depends: base16-bytestring
   Build-depends: base64-bytestring
+  Build-depends: binary
+  Build-depends: bytestring
   Build-depends: cond
   Build-depends: conduit
+  Build-depends: containers
+  Build-depends: Crypto
   Build-depends: crypto-api
   Build-depends: cryptohash
   Build-depends: data-default
   Build-depends: dataenc
+  Build-depends: Decimal
   Build-depends: deepseq
+  Build-depends: digest
+  Build-depends: directory
+  Build-depends: DRBG
   Build-depends: exceptions
   Build-depends: explicit-exception
   Build-depends: fields-json
-  Build-depends: hS3
+  Build-depends: filepath
   Build-depends: happstack-server
   Build-depends: happstack-static-routing
+  Build-depends: HaXml
+  Build-depends: hpqtypes
+  Build-depends: hS3
+  Build-depends: HStringTemplate
+  Build-depends: HTTP
+  Build-depends: HUnit
   Build-depends: iconv
+  Build-depends: invariant
   Build-depends: json
   Build-depends: kontrakcja-templates
   Build-depends: lifted-base
+  Build-depends: lifted-threads
+  Build-depends: MissingH
   Build-depends: mixpanel
   Build-depends: mmap
   Build-depends: monad-control
   Build-depends: mtl
   Build-depends: network
+  Build-depends: old-locale
   Build-depends: pretty-show
+  Build-depends: process
+  Build-depends: QuickCheck
   Build-depends: random
   Build-depends: recurly
   Build-depends: regex-tdfa
@@ -707,6 +707,7 @@ Executable kontrakcja-test
   Build-depends: spreadsheet
   Build-depends: stm
   Build-depends: tagsoup
+  Build-depends: template-haskell
   Build-depends: temporary
   Build-depends: test-framework
   Build-depends: test-framework-hunit
@@ -714,41 +715,45 @@ Executable kontrakcja-test
   Build-depends: text
   Build-depends: text-icu
   Build-depends: threads
-  Build-depends: lifted-threads
+  Build-depends: time
   Build-depends: transformers
   Build-depends: transformers-base
+  Build-depends: unix
   Build-depends: unjson
+  Build-depends: unordered-containers
   Build-depends: utf8-string
+  Build-depends: vector
   Build-depends: xml-conduit
   Build-depends: xml-conduit-writer
   Build-depends: xml-types
+  Build-depends: yaml
   Build-depends: zip-archive
   Build-depends: zlib
-  Build-depends: invariant
 
   Default-Language: Haskell2010
-  Default-Extensions: BangPatterns,
-              ConstraintKinds,
-              DeriveFunctor,
-              DeriveDataTypeable,
-              FlexibleContexts,
-              FlexibleInstances,
-              FunctionalDependencies,
-              GeneralizedNewtypeDeriving,
-              LambdaCase,
-              MultiWayIf,
-              MultiParamTypeClasses,
-              NamedFieldPuns,
-              NoImplicitPrelude
-              OverloadedStrings,
-              PatternGuards,
-              RankNTypes,
-              RecordWildCards,
-              ScopedTypeVariables,
-              StandaloneDeriving,
-              TemplateHaskell,
-              TupleSections,
-              TypeFamilies,
-              TypeOperators,
-              TypeSynonymInstances,
-              UndecidableInstances
+  Default-Extensions:
+    BangPatterns,
+    ConstraintKinds,
+    DeriveDataTypeable,
+    DeriveFunctor,
+    FlexibleContexts,
+    FlexibleInstances,
+    FunctionalDependencies,
+    GeneralizedNewtypeDeriving,
+    LambdaCase,
+    MultiParamTypeClasses,
+    MultiWayIf,
+    NamedFieldPuns,
+    NoImplicitPrelude
+    OverloadedStrings,
+    PatternGuards,
+    RankNTypes,
+    RecordWildCards,
+    ScopedTypeVariables,
+    StandaloneDeriving,
+    TemplateHaskell,
+    TupleSections,
+    TypeFamilies,
+    TypeOperators,
+    TypeSynonymInstances,
+    UndecidableInstances
