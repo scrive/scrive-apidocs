@@ -222,7 +222,7 @@ instance HasDefaultValue Document where
   , documenttype = Signable
   , documentctime = unixEpoch
   , documentmtime = unixEpoch
-  , documentdaystosign = 14
+  , documentdaystosign = 90
   , documentdaystoremind = Nothing
   , documenttimeouttime = Nothing
   , documentautoremindtime = Nothing
