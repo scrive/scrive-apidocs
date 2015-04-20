@@ -194,7 +194,7 @@ emptyEvent (DocumentEvidenceEvent {evType = Current ReminderSend,       evAffect
 emptyEvent _ = False
 
 eventForVerificationPage :: DocumentEvidenceEvent -> Bool
-eventForVerificationPage = not . (`elem` map Current [AttachGuardtimeSealedFileEvidence, AttachExtendedSealedFileEvidence]) . evType
+eventForVerificationPage = not . (`elem` map Current [AttachGuardtimeSealedFileEvidence, AttachExtendedSealedFileEvidence, MarkInvitationReadEvidence]) . evType
 
 -- | Produce simplified text for an event (only for archive or
 -- verification pages).
