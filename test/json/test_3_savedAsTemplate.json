@@ -86,7 +86,7 @@
  "authentication": "standard",
  "delivery": "email",
  "template": true,
- "daystosign": 14,
+ "daystosign": 90,
  "daystoremind": null,
  "showheader": true,
  "showpdfdownload": true,
