@@ -24,6 +24,8 @@ import DB.Checks
 import DB.PostgreSQL
 import Happstack.Server.ReqHandler
 import KontraPrelude
+import Log
+import Log.Configuration
 import RoutingTable
 import Templates
 import User.Email
@@ -32,57 +34,53 @@ import Utils.Default
 import Utils.IO
 import Utils.Network
 import qualified Doc.RenderedPages as RenderedPages
-import qualified Log
 import qualified MemCache
 import qualified Version
 
+type MainM = LogT IO
+
 main :: IO ()
-main = withCurlDo . Log.withLogger $ do
-  -- progname effects where state is stored and what the logfile is named
-  liftBase $ hSetEncoding stdout utf8
-  liftBase $ hSetEncoding stderr utf8
+main = withCurlDo $ do
+  appConf <- readConfig putStrLn "kontrakcja.conf"
+  lr@LogRunner{..} <- mkLogRunner "kontrakcja" $ logConfig appConf
+  withLoggerWait $ do
+    logInfo_ $ "Starting kontrakcja-server build " ++ Version.versionID
+    checkExecutables
 
-  Log.mixlog_ $ "Starting kontrakcja-server build " ++ Version.versionID
+    let connSettings = pgConnSettings $ dbConfig appConf
+    withPostgreSQL (simpleSource $ connSettings []) $
+      checkDatabase logInfo_ kontraDomains kontraTables
 
-  appConf <- do
-    readConfig Log.mixlog_ "kontrakcja.conf"
+    appGlobals <- do
+      templates <- liftBase (newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates)
+      filecache <- MemCache.new BS.length 200000000
+      lesscache <- MemCache.new BSL8.length 50000000
+      brandedimagescache <- MemCache.new BSL8.length 50000000
+      docs <- MemCache.new RenderedPages.pagesCount 3000
+      rng <- newCryptoRNGState
+      connpool <- liftBase . createPoolSource (liftBase . withLogger . logTrace_) $ connSettings kontraComposites
+      return AppGlobals {
+          templates = templates
+        , filecache = filecache
+        , lesscache = lesscache
+        , brandedimagescache = brandedimagescache
+        , docscache = docs
+        , cryptorng = rng
+        , connsource = connpool
+        }
 
-  checkExecutables
+    startSystem lr appGlobals appConf
 
-  let connSettings = pgConnSettings $ dbConfig appConf
-  withPostgreSQL (simpleSource $ connSettings []) $
-    checkDatabase Log.mixlog_ kontraDomains kontraTables
-
-  appGlobals <- do
-    templates <- liftBase (newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates)
-    filecache <- MemCache.new BS.length 200000000
-    lesscache <- MemCache.new BSL8.length 50000000
-    brandedimagescache <- MemCache.new BSL8.length 50000000
-    docs <- MemCache.new RenderedPages.pagesCount 3000
-    rng <- newCryptoRNGState
-    connpool <- liftBase . createPoolSource (const $ return ()) $ connSettings kontraComposites
-    return AppGlobals {
-        templates = templates
-      , filecache = filecache
-      , lesscache = lesscache
-      , brandedimagescache = brandedimagescache
-      , docscache = docs
-      , cryptorng = rng
-      , connsource = connpool
-      }
-
-  startSystem appGlobals appConf
-
-startSystem :: AppGlobals -> AppConf -> Log.LogT IO ()
-startSystem appGlobals appConf = E.bracket startServer stopServer waitForTerm
+startSystem :: LogRunner -> AppGlobals -> AppConf -> MainM ()
+startSystem LogRunner{..} appGlobals appConf = E.bracket startServer stopServer waitForTerm
   where
-    startServer :: Log.LogT IO ThreadId
+    startServer :: MainM ThreadId
     startServer = do
       let (iface,port) = httpBindAddress appConf
       listensocket <- liftBase $ listenOn (htonl iface) (fromIntegral port)
       routes <- case compile $ staticRoutes (production appConf) of
                   Left e -> do
-                    Log.mixlog_ e
+                    logInfo_ e
                     $unexpectedErrorM "static routing"
                   Right r -> return r
       let conf = nullConf {
@@ -91,15 +89,17 @@ startSystem appGlobals appConf = E.bracket startServer stopServer waitForTerm
           , logAccess = Nothing
           }
 
-      fork $ liftBase $ runReqHandlerT listensocket conf (mapReqHandlerT Log.withLogger (appHandler routes appConf appGlobals))
+      fork . liftBase . runReqHandlerT listensocket conf $ do
+        mapReqHandlerT withLogger $ appHandler routes appConf appGlobals
     stopServer = killThread
     waitForTerm _ = do
       withPostgreSQL (connsource appGlobals) . runCryptoRNGT (cryptorng appGlobals) $ do
         initDatabaseEntries $ initialUsers appConf
       liftBase $ waitForTermination
-      Log.mixlog_ $ "Termination request received"
+      logInfo_ $ "Termination request received"
 
-initDatabaseEntries :: (CryptoRNG m, MonadDB m, MonadThrow m,Log.MonadLog m) => [(Email, String)] -> m ()
+initDatabaseEntries :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m)
+                    => [(Email, String)] -> m ()
 initDatabaseEntries = mapM_ $ \(email, passwordstring) -> do
   -- create initial database entries
   passwd <- createPassword passwordstring

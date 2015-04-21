@@ -24,6 +24,7 @@ import Happstack.Fields
 import InputValidation
 import Kontra
 import KontraPrelude
+import Log
 import MailContext (MailContextMonad(..), MailContext(..))
 import Mails.SendMail
 import MinutesTime
@@ -37,7 +38,6 @@ import Util.FlashUtil
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.MonadUtils
-import qualified Log
 
 handleAccountSetupFromSign :: (Kontrakcja m, DocumentMonad m) => SignatoryLink -> m (Maybe User)
 handleAccountSetupFromSign signatorylink = do
@@ -70,7 +70,7 @@ handleAccountSetupFromSign signatorylink = do
 
 handleActivate :: Kontrakcja m => Maybe String -> Maybe String -> (User,Company) -> SignupMethod -> m (Maybe User)
 handleActivate mfstname msndname (actvuser,company) signupmethod = do
-  Log.mixlog_ $ "Attempting to activate account for user " ++ (show $ getEmail actvuser)
+  logInfo_ $ "Attempting to activate account for user " ++ (show $ getEmail actvuser)
   when (isJust $ userhasacceptedtermsofservice actvuser) $ do  -- Don't remove - else people will be able to hijack accounts
     internalError
   switchLang (getLang actvuser)
@@ -123,21 +123,21 @@ handleActivate mfstname msndname (actvuser,company) signupmethod = do
                 scheduleNewAccountMail ctx actvuser
               tosuser <- guardJustM $ dbQuery $ GetUserByID (userid actvuser)
 
-              Log.mixlog_ $ "Attempting successfull. User " ++ (show $ getEmail actvuser) ++ "is logged in."
+              logInfo_ $ "Attempting successfull. User " ++ (show $ getEmail actvuser) ++ "is logged in."
               when (not stoplogin) $ do
                 logUserToContext $ Just tosuser
               when (callme) $ phoneMeRequest (Just tosuser) phone
               when (promo) $ addCompanyPlanManual (companyid company) TrialPricePlan ActiveStatus
               return $ Just tosuser
             else do
-              Log.mixlog_ $ "No TOS accepted. We cant activate user."
+              logInfo_ $ "No TOS accepted. We cant activate user."
               addFlashM flashMessageMustAcceptTOS
               return Nothing
     _ -> do
-        Log.mixlog_ $ "Create account attempt failed (params missing)"
+        logInfo_ $ "Create account attempt failed (params missing)"
         return Nothing
 
-scheduleNewAccountMail :: (TemplatesMonad m, CryptoRNG m, MonadDB m, MonadThrow m, Log.MonadLog m) => Context -> User -> m ()
+scheduleNewAccountMail :: (TemplatesMonad m, CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m) => Context -> User -> m ()
 scheduleNewAccountMail ctx user = do
   link <- newAccessNewAccountLink $ userid user
   mail <- accessNewAccountMail ctx user link

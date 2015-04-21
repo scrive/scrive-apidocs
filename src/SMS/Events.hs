@@ -33,9 +33,9 @@ import Doc.SignatoryLinkID
 import EvidenceLog.Model
 import KontraLink
 import KontraPrelude
+import Log
 import Mails.MailsConfig
 import Mails.SendMail
-import MinutesTime
 import SMS.Data
 import SMS.Model
 import Templates
@@ -46,13 +46,12 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Utils.Default (defaultValue)
 import Utils.Read
-import qualified Log
 
 processEvents :: Scheduler ()
 processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent (a,b,c, fromMaybe None $ maybeRead d))
   where
     processEvent (eid, smsid, eventType, Invitation _did slid ) = do
-      Log.mixlog_ $ "Messages.procesEvent: " ++ show (eid, smsid, eventType, slid)
+      logInfo_ $ "Messages.procesEvent: " ++ show (eid, smsid, eventType, slid)
       dbQuery (GetDocumentBySignatoryLinkID slid) >>= \doc' -> withDocument doc' $ do
         _ <- dbUpdate $ MarkSMSEventAsRead eid
         msl <- getSigLinkFor slid <$> theDocument
@@ -69,7 +68,7 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent
             -- success/failure for old signatory address, so we need to compare
             -- addresses here (for dropped/bounce events)
             handleEv (SMSEvent phone ev) = do
-              Log.mixlog_ $ signphone ++ " == " ++ phone
+              logInfo_ $ signphone ++ " == " ++ phone
               theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ case ev of
                 SMSDelivered -> handleDeliveredInvitation slid
                 SMSUndelivered _ -> when (signphone == phone) $ do
@@ -77,14 +76,14 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent
         handleEv eventType
 
     processEvent (eid, smsid, eventType, SMSPinSendout slid) = do
-      Log.mixlog_ $ "Messages.procesEvent: " ++ show (eid, smsid, eventType, slid)
+      logInfo_ $ "Messages.procesEvent: " ++ show (eid, smsid, eventType, slid)
       dbQuery (GetDocumentBySignatoryLinkID slid) >>= \doc' -> withDocument doc' $ do
         _ <- dbUpdate $ MarkSMSEventAsRead eid
         templates <- getGlobalTemplates
         msl <- getSigLinkFor slid <$> theDocument
         case (eventType,msl) of
           (SMSEvent phone SMSDelivered, Just sl) -> runTemplatesT (defaultValue, templates) $ do
-            Log.mixlog_ $ "SMS with PIN delivered to " ++ phone
+            logInfo_ $ "SMS with PIN delivered to " ++ phone
             time <- currentTime
             let actor = mailSystemActor time (maybesignatory sl) (getEmail sl) slid
             void $ dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
@@ -99,9 +98,9 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent
       _ <- dbUpdate $ MarkSMSEventAsRead eid
       return ()
 
-handleDeliveredInvitation :: (CryptoRNG m, MonadThrow m, Log.MonadLog m, DocumentMonad m, TemplatesMonad m) => SignatoryLinkID -> m ()
+handleDeliveredInvitation :: (CryptoRNG m, MonadThrow m, MonadLog m, DocumentMonad m, TemplatesMonad m) => SignatoryLinkID -> m ()
 handleDeliveredInvitation signlinkid = do
-  theDocumentID >>= \did -> Log.mixlog_ $ "handleDeliveredInvitation: docid=" ++ show did ++ ", siglinkid=" ++ show signlinkid
+  theDocumentID >>= \did -> logInfo_ $ "handleDeliveredInvitation: docid=" ++ show did ++ ", siglinkid=" ++ show signlinkid
   getSigLinkFor signlinkid <$> theDocument >>= \case
     Just signlink -> do
       time <- currentTime
@@ -110,9 +109,9 @@ handleDeliveredInvitation signlinkid = do
       return ()
     Nothing -> return ()
 
-handleUndeliveredSMSInvitation :: (CryptoRNG m, MonadThrow m, Log.MonadLog m, DocumentMonad m, TemplatesMonad m, MonadBase IO m) => BrandedDomain -> String -> MailsConfig -> SignatoryLinkID -> m ()
+handleUndeliveredSMSInvitation :: (CryptoRNG m, MonadThrow m, MonadLog m, DocumentMonad m, TemplatesMonad m, MonadBase IO m) => BrandedDomain -> String -> MailsConfig -> SignatoryLinkID -> m ()
 handleUndeliveredSMSInvitation bd hostpart mc signlinkid = do
-  theDocumentID >>= \did -> Log.mixlog_ $ "handleUndeliveredSMSInvitation: docid=" ++ show did ++ ", siglinkid=" ++ show signlinkid
+  theDocumentID >>= \did -> logInfo_ $ "handleUndeliveredSMSInvitation: docid=" ++ show did ++ ", siglinkid=" ++ show signlinkid
   getSigLinkFor signlinkid <$> theDocument >>= \case
     Just signlink -> do
       time <- currentTime
@@ -135,4 +134,4 @@ smsUndeliveredInvitation bd hostpart doc signlink = do
     F.value "mobile" $ getMobile signlink
     F.value "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
     F.value "ctxhostpart" hostpart
-    brandingMailFields theme 
+    brandingMailFields theme

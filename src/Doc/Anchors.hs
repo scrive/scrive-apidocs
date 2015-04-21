@@ -7,7 +7,7 @@ import Control.Monad.Error
 import Control.Monad.Trans.Control (MonadBaseControl)
 import System.Exit
 import Text.JSON.FromJSValue
-import Text.JSON.Gen
+import Text.JSON.Gen hiding (object)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
@@ -24,11 +24,11 @@ import File.Model
 import File.Storage
 import KontraMonad
 import KontraPrelude
+import Log
 import Utils.Directory
 import Utils.IO
-import qualified Log
 
-getAnchorPositions :: (Monad m, MonadBaseControl IO m,Log.MonadLog m,MonadIO m) => BS.ByteString -> [PlacementAnchor] -> m (Map.Map PlacementAnchor (Int,Double,Double))
+getAnchorPositions :: (Monad m, MonadBaseControl IO m,MonadLog m,MonadIO m) => BS.ByteString -> [PlacementAnchor] -> m (Map.Map PlacementAnchor (Int,Double,Double))
 getAnchorPositions _pdfcontent [] = return Map.empty
 getAnchorPositions pdfcontent anchors = do
   withSystemTempDirectory' ("find-text-") $ \tmppath -> do
@@ -52,12 +52,13 @@ getAnchorPositions pdfcontent anchors = do
 
     case code of
       ExitSuccess -> do
-        stdoutjs <- either (\e -> do Log.attention "scrivepdftools/scrivepdftools.jar find-texts did not produce valid json" $ do
-                                       value "message" e
-                                       value "stdout" (BSL.toString stdout)
-                                     fail "scrivepdftools/scrivepdftools.jar find-texts did not produce valid json"
-                                  ) return $
-                    J.runGetJSON J.readJSValue (BSL.toString stdout)
+        stdoutjs <- either (\e -> do
+          logError "scrivepdftools/scrivepdftools.jar find-texts did not produce valid json" $ object [
+              "message" .= e
+            , "stdout" .= BSL.toString stdout
+            ]
+          fail "scrivepdftools/scrivepdftools.jar find-texts did not produce valid json"
+          ) return $ J.runGetJSON J.readJSValue (BSL.toString stdout)
 
         let matches :: Maybe (Maybe [Maybe (PlacementAnchor, (Int,Double,Double))])
             matches = withJSValue stdoutjs $ fromJSValueFieldCustom "matches" $ fromJSValueCustomMany $ ((do
@@ -76,7 +77,7 @@ getAnchorPositions pdfcontent anchors = do
           _ -> do
             return Map.empty
       ExitFailure _ -> do
-        Log.attention_ $ BSL.toString stderr
+        logError_ $ BSL.toString stderr
         return Map.empty
 
 

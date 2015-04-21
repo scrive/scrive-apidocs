@@ -45,6 +45,8 @@ import JSONUtilTest
 import KontraPrelude
 import LangTest
 import LocalizationTest
+import Log
+import Log.Configuration
 import LoginTest
 import MailModelTest
 import MailsTest
@@ -58,7 +60,6 @@ import TestKontra
 import ThirdPartyStats
 import UserHistoryTest
 import UserStateTest
-import qualified Log
 
 allTests :: [TestEnvSt -> Test]
 allTests = [
@@ -114,46 +115,47 @@ modifyTestEnv ("--output-dir":d:r) = second (. (\te -> te{ teOutputDirectory = J
 modifyTestEnv (d:r) = first (d:) $ modifyTestEnv r
 
 
-testMany :: ([String], [(TestEnvSt -> Test)]) -> Log.LogT IO ()
+testMany :: ([String], [(TestEnvSt -> Test)]) -> IO ()
 testMany (allargs, ts) = do
   let (args, envf) = modifyTestEnv allargs
-  liftBase $ hSetEncoding stdout utf8
-  liftBase $ hSetEncoding stderr utf8
-  pgconf <- liftBase $ BS.readFile "kontrakcja_test.conf"
-  rng <- liftBase $ unsafeCryptoRNGState (BS.pack (replicate 128 0))
-  templates <- liftBase $ readGlobalTemplates
+  hSetEncoding stdout utf8
+  hSetEncoding stderr utf8
+  pgconf <- BS.readFile "kontrakcja_test.conf"
+  rng <- unsafeCryptoRNGState (BS.pack (replicate 128 0))
+  templates <- readGlobalTemplates
 
   let connSettings = pgConnSettings pgconf
-  runDBT (simpleSource $ connSettings []) def $ do
-    migrateDatabase Log.mixlog_ kontraDomains kontraTables kontraMigrations
+  lr@LogRunner{..} <- mkLogRunner "test" def
+  withLogger . runDBT (simpleSource $ connSettings []) def $ do
+    migrateDatabase logInfo_ kontraExtensions kontraDomains kontraTables kontraMigrations
     defineFunctions kontraFunctions
     defineComposites kontraComposites
     commit
 
   staticSource <- (\conn -> ConnectionSource { withConnection = ($ conn) })
-    <$> liftBase (connect $ connSettings kontraComposites)
+    <$> (connect $ connSettings kontraComposites)
 
-  active_tests <- liftBase . atomically $ newTVar (True, 0)
-  rejected_documents <- liftBase . atomically $ newTVar 0
+  active_tests <- atomically $ newTVar (True, 0)
+  rejected_documents <- atomically $ newTVar 0
   let env = envf $ TestEnvSt {
         teConnSource = simpleSource $ connSettings kontraComposites
       , teStaticConnSource = staticSource
       , teTransSettings = def
       , teRNGState = rng
+      , teLogRunner = lr
       , teGlobalTemplates = templates
       , teActiveTests = active_tests
       , teRejectedDocuments = rejected_documents
       , teOutputDirectory = Nothing
       , teStagingTests = False
       }
-      ts' = if teStagingTests env then
-                stagingTests ++ ts
-            else
-                ts
+      ts' = if teStagingTests env
+        then stagingTests ++ ts
+        else ts
   case teOutputDirectory env of
     Nothing -> return ()
-    Just d  -> liftBase $ createDirectoryIfMissing True d
-  liftBase . E.finally (defaultMainWithArgs (map ($ env) ts') args) $ do
+    Just d  -> createDirectoryIfMissing True d
+  E.finally (defaultMainWithArgs (map ($ env) ts') args) $ do
     -- upon interruption (eg. Ctrl+C), prevent next tests in line
     -- from running and wait until all that are running are finished.
     atomically . modifyTVar' active_tests $ first (const False)
@@ -169,12 +171,12 @@ testMany (allargs, ts) = do
 -- | Useful for running an individual test in ghci like so:
 --
 -- >  testone flip (testThat "") testPreparationAttachCSVUploadNonExistingSignatoryLink
-testone :: (TestEnvSt -> Test) -> Log.LogT IO ()
+testone :: (TestEnvSt -> Test) -> IO ()
 testone t = do
-  args <- liftBase getArgs
+  args <- getArgs
   testMany (args, [t])
 
 main :: IO ()
-main = Log.withLogger $ do
-  args <- liftBase getArgs
+main = do
+  args <- getArgs
   testMany (args, allTests)

@@ -51,10 +51,10 @@ import Happstack.Fields hiding (getFields)
 import IPAddress
 import Kontra
 import KontraPrelude
+import Log
 import User.Email
 import User.Model
 import Utils.String
-import qualified Log
 
 {- |
     The input data.
@@ -181,7 +181,7 @@ logIfBad x@(input, Bad) = do
                " user " ++ username ++
                " invalid input: " ++
                " raw value info [" ++ show input ++ "]"
-  _ <- Log.mixlog_ logtext
+  _ <- logInfo_ logtext
   return x
 logIfBad x = return x
 

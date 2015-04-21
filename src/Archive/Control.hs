@@ -16,9 +16,9 @@ import Control.Conditional (unlessM)
 import Data.Char
 import Happstack.Server(Response)
 import Text.JSON
-import Text.JSON.Gen as J
 import qualified Data.ByteString as BSS
 import qualified Data.ByteString.Lazy as BSL
+import qualified Text.JSON.Gen as J
 import qualified Text.StringTemplates.Fields as F
 
 import AppView
@@ -36,13 +36,13 @@ import InputValidation
 import Kontra
 import KontraLink
 import KontraPrelude
+import Log
 import User.Model
 import User.Utils
 import Util.Actor
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import Util.ZipUtil
-import qualified Log
 
 handleArchiveDocumentsAction :: Kontrakcja m => String -> (User -> Document -> Bool) -> ((User, Actor) -> DocumentT m a) -> m [a]
 handleArchiveDocumentsAction actionStr docPermission m = do
@@ -59,9 +59,10 @@ handleArchiveDocumentsAction actionStr docPermission m = do
     failWithMsg user ids $ "User didn't have permission to " ++ actionStr
   where
     failWithMsg user ids msg = do
-      Log.mixlog msg $ do
-        J.value "user_id" $ show $ userid user
-        J.value "documentids" $ show ids
+      logInfo msg $ object [
+          "user_id" .= show (userid user)
+        , "document_id" .= map show ids
+        ]
       internalError
 
 handleArchiveDocumentsAction' :: Kontrakcja m => String -> (User -> Document -> Bool) -> ((User, Actor) -> DocumentT m a) -> m JSValue
@@ -113,7 +114,7 @@ handleShare = handleArchiveDocumentsAction' "share documents" isAuthorOrAuthorsA
 
 handleZip :: Kontrakcja m => m ZipArchive
 handleZip = do
-  Log.mixlog_ $ "Downloading zip list"
+  logInfo_ $ "Downloading zip list"
   mentries <- handleArchiveDocumentsAction "download zipped documents" isDocumentVisibleToUser $ const $ do
                docToEntry =<< theDocument
   return $ ZipArchive "selectedfiles.zip" $ foldr addEntryToArchive emptyArchive $ catMaybes $ mentries

@@ -40,6 +40,7 @@ import ForkAction (forkAction)
 import GuardTime (GuardTimeConfMonad, runGuardTimeConfT)
 import Kontra
 import KontraPrelude
+import Log
 import MailContext (MailContextMonad(..), MailContext(..))
 import MinutesTime
 import Templates (runTemplatesT)
@@ -53,7 +54,6 @@ import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import Utils.Default (defaultValue)
-import qualified Log
 
 -- | Log a document event, adding some standard properties.
 logDocEvent :: (MailContextMonad m, MonadDB m, MonadThrow m, MonadTime m) => EventName -> User -> [EventProperty] -> Document -> m ()
@@ -86,13 +86,13 @@ postDocumentPreparationChange authorsignsimmediately tzn = do
   triggerAPICallbackIfThereIsOne =<< theDocument
   unlessM (isPending <$> theDocument) $
     theDocument >>= stateMismatchError "postDocumentPreparationChange" Pending
-  Log.mixlog_ $ "Preparation -> Pending; Sending invitation emails: " ++ show docid
+  logInfo_ $ "Preparation -> Pending; Sending invitation emails: " ++ show docid
   msaved <- saveDocumentForSignatories
   case msaved of
     Just msg -> do
-      Log.attention_ $ "Failed to save document #" ++ (show docid) ++ " for signatories " ++ msg
+      logError_ $ "Failed to save document #" ++ (show docid) ++ " for signatories " ++ msg
     Nothing -> return ()
-  theDocument >>= \d -> Log.mixlog_ $ "Sending invitation emails for document #" ++ show docid ++ ": " ++ documenttitle d
+  theDocument >>= \d -> logInfo_ $ "Sending invitation emails for document #" ++ show docid ++ ": " ++ documenttitle d
 
   -- Stat logging
   now <- currentTime
@@ -114,8 +114,8 @@ postDocumentRejectedChange siglinkid customMessage doc@Document{..} = do
   triggerAPICallbackIfThereIsOne doc
   unless (isRejected doc) $
     stateMismatchError "postDocumentRejectedChange" Rejected doc
-  Log.mixlog_ $ "Pending -> Rejected; send reject emails: " ++ show documentid
-  Log.mixlog_ $ "Sending rejection emails for document #" ++ show documentid ++ ": " ++ documenttitle
+  logInfo_ $ "Pending -> Rejected; send reject emails: " ++ show documentid
+  logInfo_ $ "Sending rejection emails for document #" ++ show documentid ++ ": " ++ documenttitle
   ctx <- getContext
   -- Log the fact that the current user rejected a document.
   maybe (return ())
@@ -129,14 +129,14 @@ postDocumentCanceledChange doc@Document{..} = do
   triggerAPICallbackIfThereIsOne doc
   unless (isCanceled doc) $
     stateMismatchError "postDocumentCanceledChange" Canceled doc
-  Log.mixlog_ $ "Pending -> Canceled" ++ show documentid
+  logInfo_ $ "Pending -> Canceled" ++ show documentid
   author <- getDocAuthor doc
   logDocEvent "Doc Canceled" author [] doc
 
 
 -- | After a party has signed - check if we need to close document and
 -- take further actions.
-postDocumentPendingChange :: (CryptoRNG m, TemplatesMonad m, AmazonMonad m, MonadBaseControl IO m, DocumentMonad m, MonadMask m, Log.MonadLog m, MonadIO m, KontraMonad m, GuardTimeConfMonad m, MailContextMonad m)
+postDocumentPendingChange :: (CryptoRNG m, TemplatesMonad m, AmazonMonad m, MonadBaseControl IO m, DocumentMonad m, MonadMask m, MonadLog m, MonadIO m, KontraMonad m, GuardTimeConfMonad m, MailContextMonad m)
                           => Document -> m ()
 postDocumentPendingChange olddoc = do
   unlessM (isPending <$> theDocument) $
@@ -144,7 +144,7 @@ postDocumentPendingChange olddoc = do
 
   ifM (allSignatoriesSigned <$> theDocument)
   {-then-} (do
-      theDocument >>= \d -> Log.mixlog_ $ "All have signed; " ++ show (documentstatus d) ++ " -> Closed: " ++ show (documentid d)
+      theDocument >>= \d -> logInfo_ $ "All have signed; " ++ show (documentstatus d) ++ " -> Closed: " ++ show (documentid d)
       time <- ctxtime <$> getContext
       dbUpdate $ CloseDocument (systemActor time)
       author <- theDocument >>= getDocAuthor
@@ -160,7 +160,7 @@ postDocumentPendingChange olddoc = do
   {-else-} $ do
       theDocument >>= triggerAPICallbackIfThereIsOne
       whenM ((\d -> documentcurrentsignorder d /= documentcurrentsignorder olddoc) <$> theDocument) $ do
-        theDocument >>= \d -> Log.mixlog_ $ "Resending invitation emails for document #" ++ show (documentid d) ++ ": " ++ (documenttitle d)
+        theDocument >>= \d -> logInfo_ $ "Resending invitation emails for document #" ++ show (documentid d) ++ ": " ++ (documenttitle d)
         sendInvitationEmails False
   where
     allSignatoriesSigned = all (isSignatory =>>^ hasSigned) . documentsignatorylinks
@@ -168,7 +168,7 @@ postDocumentPendingChange olddoc = do
 -- | Prepare final PDF if needed, apply digital signature, and send
 -- out confirmation emails if there has been a change in the seal status.  Precondition: document must be
 -- closed or in error.
-postDocumentClosedActions :: (TemplatesMonad m, MailContextMonad m, CryptoRNG m, MonadIO m, Log.MonadLog m, AmazonMonad m, MonadBaseControl IO m, MonadMask m, DocumentMonad m, GuardTimeConfMonad m)
+postDocumentClosedActions :: (TemplatesMonad m, MailContextMonad m, CryptoRNG m, MonadIO m, MonadLog m, AmazonMonad m, MonadBaseControl IO m, MonadMask m, DocumentMonad m, GuardTimeConfMonad m)
   => Bool -- ^ Commit to DB after we have sealed the document
   -> Bool -- ^ Prepare final PDF even if it has already been prepared
   -> m ()
@@ -196,7 +196,7 @@ postDocumentClosedActions commitAfterSealing forceSealDocument = do
 
   whenM ((\d -> isDocumentError d && not (isDocumentError doc0)) <$> theDocument) $ do
 
-    Log.mixlog_ $ "Sending seal error emails for document #" ++ show (documentid doc0) ++ ": " ++ documenttitle doc0
+    logInfo_ $ "Sending seal error emails for document #" ++ show (documentid doc0) ++ ": " ++ documenttitle doc0
     theDocument >>= \d -> flip sendDocumentErrorEmail d =<< getDocAuthor d
     theDocument >>= triggerAPICallbackIfThereIsOne
 
@@ -222,7 +222,7 @@ postDocumentClosedActions commitAfterSealing forceSealDocument = do
       theDocument >>= triggerAPICallbackIfThereIsOne
 
 -- | Post-process documents that lack final PDF or digital signature
-findAndDoPostDocumentClosedActions :: (MonadReader SchedulerData m, MonadBaseControl IO m, CryptoRNG m, MonadDB m, MonadMask m, MonadIO m, Log.MonadLog m, AmazonMonad m)
+findAndDoPostDocumentClosedActions :: (MonadReader SchedulerData m, MonadBaseControl IO m, CryptoRNG m, MonadDB m, MonadMask m, MonadIO m, MonadLog m, AmazonMonad m)
   => Maybe Int -- ^ Only consider documents signed within the latest number of hours given.
   -> m ()
 findAndDoPostDocumentClosedActions
@@ -240,17 +240,17 @@ findAndDoPostDocumentClosedActions
              ] ++ signtimefilter)
             [] (0,100)
   when (not (null docs)) $ do
-    Log.mixlog_ $ "findAndDoPostDocumentClosedActions: considering " ++ show (length docs) ++ " document(s)"
+    logInfo_ $ "findAndDoPostDocumentClosedActions: considering " ++ show (length docs) ++ " document(s)"
   gtConf <- asks (guardTimeConf . sdAppConf)
   forM_ docs $ \doc -> do
     void $ runMailTInScheduler doc $ runGuardTimeConfT gtConf $ withDocument doc $ postDocumentClosedActions False False
     commit
 
 -- | Extend (replace with keyless) signatures of documents older than latest publication code (if they are not already extended)
-findAndExtendDigitalSignatures :: (MonadBaseControl IO m, MonadReader SchedulerData m, CryptoRNG m, AmazonMonad m, MonadDB m, MonadMask m, MonadIO m, Log.MonadLog m) => m ()
+findAndExtendDigitalSignatures :: (MonadBaseControl IO m, MonadReader SchedulerData m, CryptoRNG m, AmazonMonad m, MonadDB m, MonadMask m, MonadIO m, MonadLog m) => m ()
 findAndExtendDigitalSignatures = do
   lpt <- latest_publication_time
-  Log.mixlog_ $ "extendSignatures: latest publication time is " ++ show lpt
+  logInfo_ $ "extendSignatures: latest publication time is " ++ show lpt
   docs <- dbQuery $ GetDocuments [DocumentsOfWholeUniverse]
             [ DocumentFilterStatuses [Closed]
             , DocumentFilterByLatestSignTimeBefore lpt
@@ -260,7 +260,7 @@ findAndExtendDigitalSignatures = do
               ]
             ] [] (0,50)
   when (not (null docs)) $ do
-    Log.mixlog_ $ "findAndExtendDigitalSignatures: considering " ++ show (length docs) ++ " document(s)"
+    logInfo_ $ "findAndExtendDigitalSignatures: considering " ++ show (length docs) ++ " document(s)"
   forM_ docs $ \d ->
     case documentsealstatus d of
       Just (Guardtime{ extended = False }) -> do
@@ -283,9 +283,9 @@ latest_publication_time = localTimeToUTC utc . f . utcToLocalTime utc <$> curren
         fifteenth = fromGregorian year month 15
         (year, month, _) = toGregorian localDay
 
-stateMismatchError :: (MonadBase IO m, Log.MonadLog m) => String -> DocumentStatus -> Document -> m a
+stateMismatchError :: (MonadBase IO m, MonadLog m) => String -> DocumentStatus -> Document -> m a
 stateMismatchError funame expected Document{documentstatus, documentid} = do
-  Log.mixlog_ $ funame ++ ": document #" ++ show documentid ++ " in " ++ show documentstatus ++ " state, expected " ++ show expected
+  logInfo_ $ funame ++ ": document #" ++ show documentid ++ " in " ++ show documentstatus ++ " state, expected " ++ show expected
   internalError
 
 getDocAuthor :: (MonadDB m, MonadThrow m, MonadBase IO m) => Document -> m User
@@ -327,7 +327,7 @@ saveDocumentForSignatories =
 
 -- | Time out documents once per day after midnight.  Do it in chunks
 -- so that we don't choke the server in case there are many documents to time out
-findAndTimeoutDocuments :: (MonadBaseControl IO m, MonadReader SchedulerData m, MonadIO m, MonadDB m, MonadCatch m, Log.MonadLog m) => m ()
+findAndTimeoutDocuments :: (MonadBaseControl IO m, MonadReader SchedulerData m, MonadIO m, MonadDB m, MonadCatch m, MonadLog m) => m ()
 findAndTimeoutDocuments = do
   now <- currentTime
   docs <- dbQuery $ GetTimeoutedButPendingDocumentsChunk now 100
@@ -335,7 +335,7 @@ findAndTimeoutDocuments = do
     gt <- getGlobalTemplates
     runTemplatesT (defaultValue, gt) $ dbUpdate $ TimeoutDocument (systemActor now)
     triggerAPICallbackIfThereIsOne =<< theDocument
-    theDocumentID >>= \did -> Log.mixlog_ $ "Document timedout " ++ (show did)
+    theDocumentID >>= \did -> logInfo_ $ "Document timedout " ++ (show did)
   when (not (null docs)) $ do
     commit
     findAndTimeoutDocuments

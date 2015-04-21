@@ -52,8 +52,9 @@ import HubSpot.Conf
 import IPAddress
 import Kontra
 import KontraPrelude
+import Log
+import Log.Configuration
 import Mails.MailsConfig
-import MinutesTime
 import Payments.Config (RecurlyConfig(..))
 import Salesforce.Conf
 import Session.SessionID
@@ -63,28 +64,25 @@ import Util.FinishWith
 import Utils.Default
 import qualified Amazon as AWS
 import qualified Doc.RenderedPages as RenderedPages
-import qualified Log
 import qualified MemCache
 
 data TestEnvSt = TestEnvSt {
-    teConnSource        :: ConnectionSource
-  , teStaticConnSource  :: ConnectionSource
-  , teTransSettings     :: TransactionSettings
-  , teRNGState          :: CryptoRNGState
-  , teActiveTests       :: TVar (Bool, Int)
-  , teGlobalTemplates   :: KontrakcjaGlobalTemplates
-  , teRejectedDocuments :: TVar Int
-  , teOutputDirectory   :: Maybe String -- ^ Put test artefact output in this directory if given
-  , teStagingTests      :: Bool
+    teConnSource        :: !ConnectionSource
+  , teStaticConnSource  :: !ConnectionSource
+  , teTransSettings     :: !TransactionSettings
+  , teRNGState          :: !CryptoRNGState
+  , teLogRunner         :: !LogRunner
+  , teActiveTests       :: !(TVar (Bool, Int))
+  , teGlobalTemplates   :: !KontrakcjaGlobalTemplates
+  , teRejectedDocuments :: !(TVar Int)
+  , teOutputDirectory   :: !(Maybe String) -- ^ Put test artefact output in this directory if given
+  , teStagingTests      :: !Bool
   }
 
-type InnerTestEnv = ReaderT TestEnvSt (DBT IO)
+type InnerTestEnv = ReaderT TestEnvSt (LogT (DBT IO))
 
 newtype TestEnv a = TestEnv { unTestEnv :: InnerTestEnv a }
-  deriving (Applicative, Functor, Monad, MonadCatch, MonadThrow, MonadMask, MonadIO, MonadReader TestEnvSt, MonadBase IO)
-
-instance Log.MonadLog TestEnv where
-  mixlogjs time title js = liftBase $ Log.mixlogjsIO time title js
+  deriving (Applicative, Functor, Monad, MonadLog, MonadCatch, MonadThrow, MonadMask, MonadIO, MonadReader TestEnvSt, MonadBase IO)
 
 runTestEnv :: TestEnvSt -> TestEnv () -> IO ()
 runTestEnv st m = do
@@ -95,7 +93,7 @@ runTestEnv st m = do
       atomically . modifyTVar' (teActiveTests st) $ second (pred $!)
 
 ununTestEnv :: TestEnvSt -> TestEnv a -> DBT IO a
-ununTestEnv st m = runReaderT (unTestEnv m) st
+ununTestEnv st m = withLogger (teLogRunner st) $ runReaderT (unTestEnv m) st
 
 instance CryptoRNG TestEnv where
   randomBytes n = asks teRNGState >>= liftIO . randomBytesIO n
@@ -116,8 +114,9 @@ instance MonadDB TestEnv where
     -- connection source, but the one that actually creates
     -- new connection.
     cs <- asks teConnSource
-    TestEnv . ReaderT $ \r -> DBT . StateT $ \st -> do
-      res <- runDBT cs (dbTransactionSettings st) (runReaderT m r)
+    LogRunner{..} <- asks teLogRunner
+    TestEnv . ReaderT $ \te -> LogT . ReaderT $ \_ -> DBT . StateT $ \st -> do
+      res <- runDBT cs (dbTransactionSettings st) . withLogger $ runReaderT m te
       return (res, st)
   getNotification = TestEnv . getNotification
 
@@ -146,13 +145,14 @@ runTestKontraHelper cs rq ctx tk = do
   let noflashctx = ctx { ctxflashmessages = [] }
       amazoncfg = AWS.AmazonConfig Nothing filecache
   rng <- asks teRNGState
+  LogRunner{..} <- asks teLogRunner
   ts <- getTransactionSettings
   -- commit previous changes and do not begin new transaction as runDBT
   -- does it and we don't want these pesky warnings about transaction
   -- being already in progress
   commit' ts { tsAutoTransaction = False }
   ((res, ctx'), st) <- E.finally
-    (liftBase . Log.withLogger $ runStateT (unReqHandlerT . runDBT cs ts . runCryptoRNGT rng . AWS.runAmazonMonadT amazoncfg $ runStateT (unKontra tk) noflashctx) $ ReqHandlerSt rq id)
+    (liftBase $ withLogger . runStateT (unReqHandlerT . runDBT cs ts . runCryptoRNGT rng . AWS.runAmazonMonadT amazoncfg $ runStateT (unKontra tk) noflashctx) $ ReqHandlerSt rq id)
     -- runDBT commits and doesn't run another transaction, so begin new one
     begin
   -- join all of the spawned threads. since exceptions

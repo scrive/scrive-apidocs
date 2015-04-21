@@ -5,6 +5,7 @@ module AppConf (
   ) where
 
 import Data.ByteString (ByteString)
+import Data.Default
 import Data.Unjson
 import Data.Word
 import qualified Data.Map as Map
@@ -15,6 +16,7 @@ import HostClock.System (defaultNtpServers)
 import HubSpot.Conf (HubSpotConf(..))
 import KontraPrelude
 import LiveDocx (LiveDocxConf(..))
+import Log.Configuration
 import Mails.MailsConfig
 import Payments.Config (RecurlyConfig(..))
 import Salesforce.Conf
@@ -34,6 +36,7 @@ data AppConf = AppConf {
   , store              :: FilePath                     -- ^ where to put database files
   , amazonConfig       :: Maybe (String,String,String) -- ^ bucket, access key, secret key
   , dbConfig           :: ByteString                   -- ^ postgresql configuration
+  , logConfig          :: LogConfig                    -- ^ logging configuration
   , production         :: Bool                         -- ^ production flag, enables some production stuff, disables some development
   , guardTimeConf      :: GuardTimeConf
   , mailsConfig        :: MailsConfig                  -- ^ mail sendout configuration
@@ -87,6 +90,9 @@ unjsonAppConf = objectOf $ pure AppConf
       dbConfig
       "Database connection string"
       unjsonAeson
+  <*> field "logging"
+      logConfig
+      "Logging configuration"
   <*> fieldDef "production" False
       production
       "Is this production server"
@@ -146,6 +152,7 @@ instance HasDefaultValue AppConf where
     , store              = "_local/kontrakcja/_state"
     , amazonConfig       = Nothing
     , dbConfig           = "user='kontra' password='kontra' dbname='kontrakcja'"
+    , logConfig          = def
     , production         = True
     , guardTimeConf      = GuardTimeConf { guardTimeURL="http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-signingservice"
                                          , guardTimeExtendingServiceURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-extendingservice"
@@ -167,7 +174,7 @@ instance HasDefaultValue AppConf where
                                          , recurlyPrivateKey = "49c1b30592fa475b8535a0ca04f88e65"
                                          }
     , mixpanelToken      = "5b04329b972851feac0e9b853738e742"
-    , hubspotConf        = HubSpotConf "" Map.empty 
+    , hubspotConf        = HubSpotConf "" Map.empty
     , googleanalyticsToken = "f25e59c70a8570a12fe57e7835d1d881"
     , homebase           = "https://staging.scrive.com"
     , ntpServers         = defaultNtpServers

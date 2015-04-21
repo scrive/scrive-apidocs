@@ -11,11 +11,11 @@ import Happstack.Server
 
 import Context
 import Crypto.RNG
+import Data.Time.Monad
 import DB
 import Doc.SignatoryLinkID
 import KontraMonad
 import KontraPrelude
-import MinutesTime.Class
 import Session.Model
 import Session.SessionID
 

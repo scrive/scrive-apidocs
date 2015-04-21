@@ -26,6 +26,7 @@ import Doc.DocumentID
 import Doc.Model
 import InputValidation
 import KontraPrelude
+import Log
 import Mails.MailsConfig
 import Mails.MailsData
 import Mails.Model hiding (Mail)
@@ -37,14 +38,13 @@ import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Utils.String
-import qualified Log
 import qualified Mails.Model as M
 
-scheduleEmailSendout :: (CryptoRNG m, MonadDB m, MonadThrow m, Log.MonadLog m) => MailsConfig -> Mail -> m ()
+scheduleEmailSendout :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m) => MailsConfig -> Mail -> m ()
 scheduleEmailSendout c m = scheduleEmailSendoutHelper (originator m) c m
 
 -- Sending mail with from address like 'Mariusz throught Scrive'
-scheduleEmailSendoutWithAuthorSenderThroughService :: (CryptoRNG m, MonadDB m, Log.MonadLog m, T.TemplatesMonad m, MonadThrow m) => DocumentID  -> MailsConfig -> Mail -> m ()
+scheduleEmailSendoutWithAuthorSenderThroughService :: (CryptoRNG m, MonadDB m, MonadLog m, T.TemplatesMonad m, MonadThrow m) => DocumentID  -> MailsConfig -> Mail -> m ()
 scheduleEmailSendoutWithAuthorSenderThroughService did c m = do
   doc <- dbQuery $ GetDocumentByDocumentID did
   name <- case (maybe "" getFullName $ getAuthorSigLink doc) of
@@ -55,7 +55,7 @@ scheduleEmailSendoutWithAuthorSenderThroughService did c m = do
   scheduleEmailSendoutHelper name c m
 
 -- Sending mail with from address like 'Mariusz'
-scheduleEmailSendoutWithAuthorSender :: (CryptoRNG m, MonadDB m, MonadThrow m, Log.MonadLog m, T.TemplatesMonad m) => DocumentID  -> MailsConfig -> Mail -> m ()
+scheduleEmailSendoutWithAuthorSender :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, T.TemplatesMonad m) => DocumentID  -> MailsConfig -> Mail -> m ()
 scheduleEmailSendoutWithAuthorSender did c m = do
   doc <- dbQuery $ GetDocumentByDocumentID did
   let names = [getFullName <$> getAuthorSigLink doc, getCompanyName <$> getAuthorSigLink doc]
@@ -64,11 +64,11 @@ scheduleEmailSendoutWithAuthorSender did c m = do
       (an) -> return an
   scheduleEmailSendoutHelper name c m
 
-scheduleEmailSendoutHelper :: (CryptoRNG m, MonadDB m, MonadThrow m, Log.MonadLog m) => String -> MailsConfig -> Mail ->  m ()
+scheduleEmailSendoutHelper :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m) => String -> MailsConfig -> Mail ->  m ()
 scheduleEmailSendoutHelper authorname  MailsConfig{..} mail@Mail{..} = do
-  Log.mixlog_ $ "Sending mail with originator " ++ show originator
+  logInfo_ $ "Sending mail with originator " ++ show originator
   if unsendable to
-    then Log.attention_ $ "Email " ++ show mail ++ " is unsendable, discarding."
+    then logError_ $ "Email " ++ show mail ++ " is unsendable, discarding."
     else do
       fromAddr <- return Address {addrName = authorname, addrEmail = originatorEmail }
       token <- random

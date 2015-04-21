@@ -33,6 +33,7 @@ import Kontra
 import KontraLink
 import KontraPrelude
 import ListUtil
+import Log
 import MinutesTime
 import Redirect
 import User.Model
@@ -40,7 +41,6 @@ import User.Utils
 import Util.Actor
 import Util.MonadUtils
 import Utils.String
-import qualified Log
 
 handleRename :: Kontrakcja m => AttachmentID -> m JSValue
 handleRename attid = do
@@ -176,7 +176,7 @@ attachmentSearchingFromParams params =
 
 makeAttachmentFromFile :: Kontrakcja m => Input -> m (Maybe Attachment)
 makeAttachmentFromFile (Input contentspec (Just filename) _contentType) = do
-    Log.mixlog_ $ "makeAttachmentFromFile: beggining"
+    logInfo_ $ "makeAttachmentFromFile: beggining"
     guardLoggedIn
     content <- case contentspec of
         Left filepath -> liftIO $ BSL.readFile filepath
@@ -184,10 +184,10 @@ makeAttachmentFromFile (Input contentspec (Just filename) _contentType) = do
     cres <- preCheckPDF (concatChunks content)
     case cres of
       Left _ -> do
-         Log.mixlog_ "Attachment file is not a valid PDF"
+         logInfo_ "Attachment file is not a valid PDF"
          internalError
       Right content' -> do
-        Log.mixlog_ "Got the content, creating document"
+        logInfo_ "Got the content, creating document"
         let title = takeBaseName filename
         actor <- guardJustM $ mkAuthorActor <$> getContext
         ctx <- getContext

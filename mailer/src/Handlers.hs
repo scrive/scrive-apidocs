@@ -16,12 +16,12 @@ import DB
 import DB.PostgreSQL
 import Happstack.Server.ReqHandler
 import KontraPrelude
+import Log
 import Mailer
 import MailGun
 import SendGrid
-import qualified Log
 
-router :: CryptoRNGState -> ConnectionSource -> Mailer Response -> ReqHandlerT (Log.LogT IO) Response
+router :: CryptoRNGState -> ConnectionSource -> Mailer Response -> ReqHandlerT (LogT IO) Response
 router rng cs routes = withPostgreSQL cs $
   runMailer rng routes
 

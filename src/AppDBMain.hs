@@ -1,8 +1,5 @@
-module AppDBMain (
-   main
-  ) where
+module AppDBMain where
 
-import Control.Monad.Base
 import System.IO
 
 import AppConf
@@ -14,19 +11,17 @@ import DB.Checks
 import DB.PostgreSQL
 import DB.SQLFunction
 import KontraPrelude
-import qualified Log
+import Log
+import Log.Configuration
 
 main :: IO ()
-main = Log.withLogger $ do
-  liftBase $ hSetEncoding stdout utf8
-  liftBase $ hSetEncoding stderr utf8
-
-  appConf <- do
-    readConfig (liftBase . putStrLn) "kontrakcja.conf"
-
-  -- composite types are not available in migrations
-  let connSource = simpleSource $ pgConnSettings (dbConfig appConf) []
-  withPostgreSQL connSource $ do
-    migrateDatabase (liftBase . putStrLn) kontraDomains kontraTables kontraMigrations
-    defineComposites kontraComposites
-    defineFunctions kontraFunctions
+main = do
+  appConf <- readConfig putStrLn "kontrakcja.conf"
+  LogRunner{..} <- mkLogRunner "kontrakcja-migrate" $ logConfig appConf
+  withLoggerWait $ do
+    -- composite types are not available in migrations
+    let connSource = simpleSource $ pgConnSettings (dbConfig appConf) []
+    withPostgreSQL connSource $ do
+      migrateDatabase logInfo_ kontraExtensions kontraDomains kontraTables kontraMigrations
+      defineComposites kontraComposites
+      defineFunctions kontraFunctions

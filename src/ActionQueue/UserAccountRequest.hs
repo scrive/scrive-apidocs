@@ -17,10 +17,10 @@ import Crypto.RNG
 import DB
 import KontraLink
 import KontraPrelude
+import Log
 import MagicHash
 import MinutesTime
 import User.Model
-import qualified Log
 
 data UserAccountRequest = UserAccountRequest {
     uarUserID :: UserID
@@ -53,7 +53,7 @@ userAccountRequest = Action {
         Just Nothing -> do
           success <- dbUpdate $ RemoveInactiveUser uarUserID
           when success $
-               Log.mixlog_ $ "Inactive user (no plan) with id = " ++ show uarUserID ++ " successfully removed from database"
+               logInfo_ $ "Inactive user (no plan) with id = " ++ show uarUserID ++ " successfully removed from database"
         _ -> return ()
   }
 

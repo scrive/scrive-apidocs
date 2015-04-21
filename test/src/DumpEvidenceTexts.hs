@@ -19,6 +19,7 @@ import Doc.SignatoryLinkID (unsafeSignatoryLinkID)
 import EvidenceLog.Model (EventRenderTarget(..), DocumentEvidenceEvent(..), EvidenceEventType(..), CurrentEvidenceEventType(..), evidenceLogText)
 import EvidenceLog.View (simpleEvents, simplyfiedEventText, eventForVerificationPage, finalizeEvidenceText)
 import KontraPrelude
+import Log
 import MinutesTime
 import Templates (runTemplatesT)
 import TestingUtil (testThat, addNewRandomUser, addRandomDocumentWithAuthor, fieldForTests)
@@ -43,7 +44,7 @@ dumpAllEvidenceTexts env = testThat "Generating all evidence texts" env $ do
       Just d  -> liftIO $ writeFile (d </> "evidence-texts-" ++ codeFromLang lang ++ ".html") t
       Nothing -> t == t `seq` return ()
 
-dumpEvidenceTexts :: (MonadDB m, MonadThrow m, TemplatesMonad m) => UTCTime -> Lang -> Document -> m String
+dumpEvidenceTexts :: (MonadDB m, MonadLog m, MonadThrow m, TemplatesMonad m) => UTCTime -> Lang -> Document -> m String
 dumpEvidenceTexts now lang doc' = do
   let Just author_sl' = getAuthorSigLink doc'
       author_sl = author_sl'

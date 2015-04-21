@@ -18,7 +18,7 @@ import qualified Data.Text.Lazy as T
 import qualified Text.XML.Writer as W
 
 import KontraPrelude
-import qualified Log
+import Log
 
 -- | Lightweight wrapper over cursor parsers to allow for
 -- convenient transformation and combining the results.
@@ -57,7 +57,7 @@ xpSOAPFault = XMLParser $ \c -> listToMaybe $ c
 ----------------------------------------
 
 -- | Make a SOAP call.
-soapCall :: (ToXML header, ToXML body, MonadBase IO m, Log.MonadLog m, MonadThrow m)
+soapCall :: (ToXML header, ToXML body, MonadBase IO m, MonadLog m, MonadThrow m)
          => Transport
          -> String
          -> header
@@ -65,7 +65,7 @@ soapCall :: (ToXML header, ToXML body, MonadBase IO m, Log.MonadLog m, MonadThro
          -> XMLParser response
          -> m response
 soapCall transport soap_action header body parser = do
-  Log.mixlog_ $ "SOAP request body:" <+> ppDocument req
+  logInfo_ $ "SOAP request body:" <+> ppDocument req
   c <- liftBase (transport soap_action req)
     >>= unwrapEnvelope . fromDocument . parseLBS_ def
   case runParser (Right <$> parser <|> Left <$> xpSOAPFault) c of

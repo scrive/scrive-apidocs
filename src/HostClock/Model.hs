@@ -1,4 +1,4 @@
-module HostClock.Model 
+module HostClock.Model
   ( InsertClockOffsetFrequency(..)
   , ClockErrorEstimate(..)
   , GetLatestClockErrorEstimate(..)
@@ -11,9 +11,9 @@ import Control.Monad.Catch
 import Data.Int
 import Data.Time
 
+import Data.Time.Monad
 import DB
 import KontraPrelude
-import MinutesTime.Class
 
 data InsertClockOffsetFrequency = InsertClockOffsetFrequency (Maybe Double) Double
 instance (MonadDB m, MonadTime m) => DBUpdate m InsertClockOffsetFrequency Int where
@@ -71,8 +71,8 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetClockErrorStatistics ClockErr
     fetchOne $ \(max', mean', std_dev', collected', total) ->
       ClockErrorStatistics max' mean' std_dev' collected' (total - collected')
 
-{- 
-TODO: 
+{-
+TODO:
 
 In evidence log, put
 

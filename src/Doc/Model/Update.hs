@@ -100,6 +100,7 @@ import File.FileID
 import File.Model
 import IPAddress
 import KontraPrelude
+import Log
 import MagicHash
 import MinutesTime
 import User.Model
@@ -112,7 +113,6 @@ import Utils.Monad
 import Utils.Prelude (for)
 import qualified DB.TimeZoneName as TimeZoneName
 import qualified Doc.Screenshot as Screenshot
-import qualified Log
 
 -- For this to work well we assume that signatories are ordered: author first, then all with ids set, then all with id == 0
 -- FIXME: this assumption needs to be encoded in the type.
@@ -239,7 +239,7 @@ insertSignatoryScreenshots l = do
            sqlSetList "time"              $ times
            sqlSetList "file_id"           $ fileids
 
-insertDocument :: (Log.MonadLog m, MonadDB m, MonadThrow m)
+insertDocument :: (MonadLog m, MonadDB m, MonadThrow m)
                => Document -> m Document
 insertDocument document@(Document{..}) = do
   runQuery_ . sqlInsert "documents" $ do
@@ -281,7 +281,7 @@ insertDocument document@(Document{..}) = do
 
 ----------------------------------------
 
-insertNewDocument :: (MonadDB m, MonadThrow m, Log.MonadLog m, CryptoRNG m) => Document -> m Document
+insertNewDocument :: (MonadDB m, MonadThrow m, MonadLog m, CryptoRNG m) => Document -> m Document
 insertNewDocument doc = do
   now <- currentTime
   magichash <- random
@@ -289,12 +289,12 @@ insertNewDocument doc = do
   insertDocument docWithTime
 
 -- Create new document based on existing one
-newFromDocumentID :: (MonadDB m, MonadThrow m, Log.MonadLog m, CryptoRNG m) => (Document -> Document) -> DocumentID -> m (Maybe Document)
+newFromDocumentID :: (MonadDB m, MonadThrow m, MonadLog m, CryptoRNG m) => (Document -> Document) -> DocumentID -> m (Maybe Document)
 newFromDocumentID f docid = do
   doc <- query $ GetDocumentByDocumentID docid
   newFromDocument f doc
 
-newFromDocument :: (MonadDB m, MonadThrow m, Log.MonadLog m, CryptoRNG m) => (Document -> Document) -> Document -> m (Maybe Document)
+newFromDocument :: (MonadDB m, MonadThrow m, MonadLog m, CryptoRNG m) => (Document -> Document) -> Document -> m (Maybe Document)
 newFromDocument f doc = do
   Just `liftM` insertNewDocument (f doc)
 
@@ -717,7 +717,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m MarkInv
     return success
 
 data NewDocument = NewDocument APIVersion User String DocumentType TimeZoneName Int Actor
-instance (CryptoRNG m, MonadDB m, MonadThrow m, Log.MonadLog m, TemplatesMonad m) => DBUpdate m NewDocument Document where
+instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) => DBUpdate m NewDocument Document where
   update (NewDocument apiversion user title documenttype timezone nrOfOtherSignatories actor) = do
     let ctime = actorTime actor
     magichash <- random
@@ -781,7 +781,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m RejectD
                   actor
 
 data RestartDocument = RestartDocument Document Actor
-instance (CryptoRNG m, MonadDB m, MonadThrow m, Log.MonadLog m, TemplatesMonad m) => DBUpdate m RestartDocument (Maybe Document) where
+instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) => DBUpdate m RestartDocument (Maybe Document) where
   update (RestartDocument doc actor) = do
     mndoc <- tryToGetRestarted
     case mndoc of
@@ -798,7 +798,7 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, Log.MonadLog m, TemplatesMonad m
 
             return $ Just d
       Left err -> do
-        Log.attention_ err
+        logError_ err
         return Nothing
    where
 
@@ -1103,7 +1103,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpd
 
 -- For this to work well we assume that signatories are ordered: author first, then all with ids set, then all with id == 0
 data ResetSignatoryDetails = ResetSignatoryDetails [SignatoryLink] Actor
-instance (CryptoRNG m, Log.MonadLog m, MonadThrow m, DocumentMonad m, TemplatesMonad m) => DBUpdate m ResetSignatoryDetails Bool where
+instance (CryptoRNG m, MonadLog m, MonadThrow m, DocumentMonad m, TemplatesMonad m) => DBUpdate m ResetSignatoryDetails Bool where
   update (ResetSignatoryDetails signatories _actor) = updateDocumentWithID $ \documentid -> do
     document <- query $ GetDocumentByDocumentID documentid
     case checkResetSignatoryData document signatories of
@@ -1118,11 +1118,11 @@ instance (CryptoRNG m, Log.MonadLog m, MonadThrow m, DocumentMonad m, TemplatesM
             return True
 
           s -> do
-            Log.attention_ $ "cannot reset signatory details on document " ++ show documentid ++ " because " ++ intercalate ";" s
+            logError_ $ "cannot reset signatory details on document " ++ show documentid ++ " because " ++ intercalate ";" s
             return False
 
 data CloneDocumentWithUpdatedAuthor = CloneDocumentWithUpdatedAuthor APIVersion User Document Actor
-instance (MonadDB m, MonadThrow m, Log.MonadLog m, TemplatesMonad m, CryptoRNG m) => DBUpdate m CloneDocumentWithUpdatedAuthor (Maybe DocumentID) where
+instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, CryptoRNG m) => DBUpdate m CloneDocumentWithUpdatedAuthor (Maybe DocumentID) where
   update (CloneDocumentWithUpdatedAuthor apiversion user document actor) = do
           company <- query $ GetCompanyByUserID (userid user)
           siglinks <- forM (documentsignatorylinks document) $ \sl -> do
@@ -1146,7 +1146,7 @@ instance (MonadDB m, MonadThrow m, Log.MonadLog m, TemplatesMonad m, CryptoRNG m
               return $ Just $ documentid d
 
 data StoreDocumentForTesting = StoreDocumentForTesting Document
-instance (MonadDB m, MonadThrow m, Log.MonadLog m, TemplatesMonad m) => DBUpdate m StoreDocumentForTesting DocumentID where
+instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) => DBUpdate m StoreDocumentForTesting DocumentID where
   update (StoreDocumentForTesting document) = documentid <$> insertDocument document
 
 {-
@@ -1575,10 +1575,10 @@ checkEqualByAllowSecondNothing name func obj1 obj2
   | func obj1 /= func obj2 && (not (isNothing (func obj2))) = Just (name, show (func obj1), show (func obj2))
   | otherwise              = Nothing
 
-assertEqualDocuments :: (MonadThrow m, Log.MonadLog m) => Document -> Document -> m ()
+assertEqualDocuments :: (MonadThrow m, MonadLog m) => Document -> Document -> m ()
 assertEqualDocuments d1 d2 | null inequalities = return ()
                            | otherwise = do
-                                Log.mixlog_ message
+                                logInfo_ message
                                 $unexpectedErrorM message
   where
     message = "Documents aren't equal in " ++ concat (map showInequality inequalities)

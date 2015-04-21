@@ -15,10 +15,10 @@ import DB.PostgreSQL
 import GlobalMouth
 import Happstack.Server.ReqHandler
 import KontraPrelude
+import Log
 import Messenger
-import qualified Log
 
-router :: CryptoRNGState -> ConnectionSource -> Messenger Response -> ReqHandlerT (Log.LogT IO) Response
+router :: CryptoRNGState -> ConnectionSource -> Messenger Response -> ReqHandlerT (LogT IO) Response
 router rng cs routes = withPostgreSQL cs $ do
   tempDir <- liftIO getTemporaryDirectory
   withDecodedBody (bodyPolicy tempDir) $ do

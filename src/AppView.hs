@@ -47,13 +47,13 @@ import DB
 import FlashMessage
 import Kontra
 import KontraPrelude
+import Log
 import ThirdPartyStats.Core
 import User.Lang
 import User.Model
 import Utils.HTTP
 import Utils.Monoid
 import Version
-import qualified Log
 
 -- * Main Implementation
 
@@ -178,7 +178,7 @@ enableCookiesPage = do
   cookies <- rqCookies <$> askRq
   let cookieNames = show $ map fst cookies
       mixpanel event = asyncLogEvent (NamedEvent event) [SomeProp "cookies" $ PVString cookieNames]
-  Log.mixlog_ $ show cookies
+  logInfo_ $ show cookies
   ctx <- getContext
   ad <- getAnalyticsData
   case cookies of

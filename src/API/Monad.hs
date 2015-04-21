@@ -41,21 +41,21 @@ import Happstack.Server (toResponse)
 import Happstack.Server.Types
 import Network.HTTP (urlEncodeVars)
 import Text.JSON hiding (Ok)
-import Text.JSON.Gen
+import Text.JSON.Gen hiding (object)
 import qualified Happstack.Server.Response as Web
 
 import DB
 import Doc.Rendering
 import Kontra
 import KontraPrelude
-import MinutesTime.Class
+import Log as Log
 import OAuth.Model
 import OAuth.Util
+import Text.JSON.Convert
 import User.Model
 import Util.Actor
 import Util.CSVUtil
 import Util.ZipUtil
-import qualified Log as Log
 
 -- | Respond with a 200 Created status
 data Ok a = Ok a
@@ -206,12 +206,13 @@ jsonError rest = runJSONGen $ do
 -- | convert the return type to the appropriate response
 -- This defines the possible outputs of the api.
 api :: (Kontrakcja m, ToAPIResponse v) => m v -> m Response
-api acc = (toAPIResponse <$> acc)
-          `catches` [ Handler $ \ex@(SomeKontraException e) -> do
-                        now <- currentTime
-                        Log.mixlogjs now "API error catched " (toJSValue e)
-                        return $ ((toAPIResponse $ toJSValue e) { rsCode = httpCodeFromSomeKontraException ex })
-                    ]
+api acc = (toAPIResponse <$> acc) `catches` [
+    Handler $ \ex@(SomeKontraException e) -> do
+      logError "API error" $ object ["error" .= jsonToAeson (toJSValue e)]
+      return $ (toAPIResponse $ toJSValue e) {
+        rsCode = httpCodeFromSomeKontraException ex
+      }
+  ]
 
 
 apiGuardL' :: (Kontrakcja m, APIGuard m a b) => m a -> m b

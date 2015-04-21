@@ -33,6 +33,7 @@ import DB hiding (update, query)
 import Happstack.Fields
 import Kontra
 import KontraPrelude
+import Log
 import Mails.MailsConfig
 import Mails.SendMail
 import MinutesTime
@@ -54,7 +55,6 @@ import Utils.Either
 import Utils.IO
 import Utils.Monad
 import Utils.Read
-import qualified Log
 import qualified Payments.Stats as Stats
 
 -- to call this, user must not have an account code yet (no payment plan in table)
@@ -128,7 +128,7 @@ handleChangePlan = do
       return ()
     RTerminate -> return ()
 
-cachePlan :: (MonadDB m, MonadThrow m, Log.MonadLog m) => UTCTime -> Stats.PaymentsAction -> AccountCode -> Subscription -> String -> CompanyID -> Maybe Int -> Maybe UTCTime -> m Bool
+cachePlan :: (MonadDB m, MonadThrow m, MonadLog m) => UTCTime -> Stats.PaymentsAction -> AccountCode -> Subscription -> String -> CompanyID -> Maybe Int -> Maybe UTCTime -> m Bool
 cachePlan time pa ac subscription invoicestatus cid mds mdd = do
   let p       = fromRecurlyPricePlan $ subPricePlan subscription
       (s, sp) = if invoicestatus == "failed"
@@ -154,36 +154,36 @@ cachePlan time pa ac subscription invoicestatus cid mds mdd = do
   if r
     then Stats.record time pa RecurlyProvider (subQuantity subscription) (fromRecurlyPricePlan $ subPricePlan subscription) cid ac
     else do
-    Log.mixlog_ "cachePlan: Could not save payment plan."
+    logInfo_ "cachePlan: Could not save payment plan."
     return False
 
 
 {- Should be run once per day, preferably at night -}
-handleSyncWithRecurly :: (MonadBase IO m, MonadIO m, MonadDB m, MonadThrow m, Log.MonadLog m, CryptoRNG m) => AppConf -> MailsConfig -> KontrakcjaGlobalTemplates -> String -> UTCTime -> m ()
+handleSyncWithRecurly :: (MonadBase IO m, MonadIO m, MonadDB m, MonadThrow m, MonadLog m, CryptoRNG m) => AppConf -> MailsConfig -> KontrakcjaGlobalTemplates -> String -> UTCTime -> m ()
 handleSyncWithRecurly appConf mailsconfig templates recurlyapikey time = do
-  Log.mixlog_ "Syncing with Recurly."
+  logInfo_ "Syncing with Recurly."
   plans <- dbQuery $ PaymentPlansRequiringSync RecurlyProvider time
-  Log.mixlog_ $ "Found " ++ show (length plans) ++ " plans requiring sync."
+  logInfo_ $ "Found " ++ show (length plans) ++ " plans requiring sync."
   forM_ plans $ \plan -> do
     esubscriptions <- liftIO $ getSubscriptionsForAccount curl_exe recurlyapikey $ show $ ppAccountCode plan
     case esubscriptions of
       Left s -> do
-        Log.mixlog_ $ "syncing: " ++ s
+        logInfo_ $ "syncing: " ++ s
       Right [] ->
-        Log.mixlog_ $ "syncing: no subscriptions for Recurly account; skipping."
+        logInfo_ $ "syncing: no subscriptions for Recurly account; skipping."
       Right (subscription:_) -> case subInfo subscription of
         Right subinfo@(_,_,_,newplan) -> do
           einvoices <- liftIO $ getInvoicesForAccount curl_exe recurlyapikey $ show $ ppAccountCode plan
           case einvoices of
             Left s -> do
-              Log.mixlog_ $ "syncing: " ++ s
+              logInfo_ $ "syncing: " ++ s
             Right invoices -> do
               let is = maybe "collected" inState $ listToMaybe invoices
                   cid = ppCompanyID plan
                   ac = ppAccountCode plan
               _ <- cachePlan time Stats.SyncAction ac subscription is cid (ppDunningStep plan) (ppDunningDate plan)
               quantity <- dbQuery $ GetCompanyQuantity $ ppCompanyID plan
-              Log.mixlog_ $ "Here is the db quantity: " ++ show quantity
+              logInfo_ $ "Here is the db quantity: " ++ show quantity
               case syncAction (quantity, newplan) subinfo of
                 RUpdateNow -> do
                   ms <- liftIO $ changeAccount curl_exe recurlyapikey (subID subscription) (show newplan) quantity True
@@ -198,9 +198,9 @@ handleSyncWithRecurly appConf mailsconfig templates recurlyapikey time = do
                   when_ (isRight ms) $
                      dbUpdate $ DeletePaymentPlan cid
                 _ -> return ()
-        _ -> Log.mixlog_ $ "Could not parse subscription from Recurly."
+        _ -> logInfo_ $ "Could not parse subscription from Recurly."
   dunnings <- dbQuery $ PaymentPlansExpiredDunning time
-  Log.mixlog_ $ "Found " ++ show (length dunnings) ++ " plans requiring dunning email."
+  logInfo_ $ "Found " ++ show (length dunnings) ++ " plans requiring dunning email."
   forM_ dunnings $ \plan -> do
     case ppDunningStep plan of
       Just n -> do
@@ -215,8 +215,8 @@ handleSyncWithRecurly appConf mailsconfig templates recurlyapikey time = do
           Just (user, company) -> do
             eins <- liftIO $ getInvoicesForAccount curl_exe recurlyapikey (show $ ppAccountCode plan)
             case eins of
-              Left msg -> Log.mixlog_ $ "post back: " ++ msg
-              Right [] -> Log.mixlog_ "post back: no invoices"
+              Left msg -> logInfo_ $ "post back: " ++ msg
+              Right [] -> logInfo_ "post back: no invoices"
               Right (invoice:_) -> do
                 -- next dunning step: 3 days later
                 -- eventually, Recurly will expire the account
@@ -227,21 +227,21 @@ handleSyncWithRecurly appConf mailsconfig templates recurlyapikey time = do
                 return ()
       _ -> return ()
 
-handleSyncNoProvider :: (MonadDB m, MonadThrow m, Log.MonadLog m, CryptoRNG m) => UTCTime -> m ()
+handleSyncNoProvider :: (MonadDB m, MonadThrow m, MonadLog m, CryptoRNG m) => UTCTime -> m ()
 handleSyncNoProvider time = do
-  Log.mixlog_ "Syncing accounts with no provider."
+  logInfo_ "Syncing accounts with no provider."
   plans <- dbQuery $ PaymentPlansRequiringSync NoProvider time
-  Log.mixlog_ $ "Found " ++ show (length plans) ++ " plans requiring sync."
+  logInfo_ $ "Found " ++ show (length plans) ++ " plans requiring sync."
   forM_ plans $ \plan -> do
     quantity <- dbQuery $ GetCompanyQuantity $ ppCompanyID plan
-    Log.mixlog_ $ "Here is the db quantity: " ++ show quantity
+    logInfo_ $ "Here is the db quantity: " ++ show quantity
     r <- dbUpdate $ SavePaymentPlan plan {ppQuantity = quantity, ppPendingQuantity = quantity} time
     if r
       then do
         _ <- Stats.record time SyncAction NoProvider quantity (ppPricePlan plan) (ppCompanyID plan) (ppAccountCode plan)
         return ()
       else do
-        Log.mixlog_ "cachePlan: Could not save payment plan."
+        logInfo_ "cachePlan: Could not save payment plan."
 
 postBackCache :: Kontrakcja m => PushRequest -> m ()
 postBackCache pr = do
@@ -285,7 +285,7 @@ postBackCache pr = do
 
 handleRecurlyPostBack :: Kontrakcja m => m ()
 handleRecurlyPostBack = do
-  Log.mixlog_ "Got a Push notification from Recurly"
+  logInfo_ "Got a Push notification from Recurly"
 
   -- takeRequestBody uses tryTakeMVar which never blocks
   -- so even if the body mvar was already read (e.g. by decodeBody)
@@ -297,7 +297,7 @@ handleRecurlyPostBack = do
 
 handlePricePageUserPlanRecurlyJSON :: Kontrakcja m => User -> PaymentPlan -> m JSValue
 handlePricePageUserPlanRecurlyJSON user plan = do
-  Log.mixlog_ $ "Handling Price Page JSON for existing user with payment plan on recurly"
+  logInfo_ $ "Handling Price Page JSON for existing user with payment plan on recurly"
   RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext
   billingsig  <- liftIO $ genSignature recurlyPrivateKey [("account[account_code]", show $ ppAccountCode plan)]
   esub <- liftIO $ getSubscriptionsForAccount curl_exe recurlyAPIKey $ show $ ppAccountCode plan
@@ -305,15 +305,15 @@ handlePricePageUserPlanRecurlyJSON user plan = do
   quantity <- dbQuery $ GetCompanyQuantity $ usercompany user
   msub <- case esub of
     Left e -> do
-      Log.mixlog_ $ "handleSubscriptionDashboardInfo: When fetching subscriptions for payment plan: " ++ e
+      logInfo_ $ "handleSubscriptionDashboardInfo: When fetching subscriptions for payment plan: " ++ e
       return Nothing
     Right (sub:_) -> return $ Just sub
     Right _ -> do
-      Log.mixlog_ $ "handleSubscriptionDashboardInfo: No subscriptions returned."
+      logInfo_ $ "handleSubscriptionDashboardInfo: No subscriptions returned."
       return Nothing
   minvoices <- case einvoices of
     Left e -> do
-      Log.mixlog_ $ "handleSubscriptionDashboardInfo: When fetching invoices for payment plan: " ++ e
+      logInfo_ $ "handleSubscriptionDashboardInfo: When fetching invoices for payment plan: " ++ e
       return Nothing
     Right i -> return $ Just i
   teamsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "team")]
@@ -340,7 +340,7 @@ handlePricePageUserPlanRecurlyJSON user plan = do
 
 handlePricePageUserPlanNoneJSON :: Kontrakcja m => User -> PaymentPlan -> m JSValue
 handlePricePageUserPlanNoneJSON user plan = do
-  Log.mixlog_ $ "Handling Price Page JSON for existing user with payment plan no provider"
+  logInfo_ $ "Handling Price Page JSON for existing user with payment plan no provider"
   RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext
   company <- dbQuery $ GetCompany $ usercompany user
   quantity <- dbQuery $ GetCompanyQuantity $ usercompany user
@@ -365,7 +365,7 @@ handlePricePageUserPlanNoneJSON user plan = do
 
 handlePricePageUserJSON :: Kontrakcja m => User -> m JSValue
 handlePricePageUserJSON user = do
-  Log.mixlog_ $ "Handling Price Page JSON for existing user"
+  logInfo_ $ "Handling Price Page JSON for existing user"
   RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext
   code <- dbUpdate GetAccountCode
   teamsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "team")]
@@ -390,7 +390,7 @@ handlePricePageUserJSON user = do
 
 handlePricePageNoUserJSON :: Kontrakcja m => m JSValue
 handlePricePageNoUserJSON = do
-  Log.mixlog_ $ "Handling Price Page JSON for non-existing user"
+  logInfo_ $ "Handling Price Page JSON for non-existing user"
   RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext
   code <- dbUpdate GetAccountCode
   teamsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "team")]
@@ -462,7 +462,7 @@ sendInvoiceEmail user company subscription = do
                                      fullname = getFullName user
                                    , email = getEmail user }]})
 
-sendInvoiceFailedEmail :: (MonadDB m, MonadThrow m, Log.MonadLog m, CryptoRNG m) => BrandedDomain -> String -> MailsConfig -> Lang -> KontrakcjaGlobalTemplates -> User -> Company -> Invoice -> m ()
+sendInvoiceFailedEmail :: (MonadDB m, MonadThrow m, MonadLog m, CryptoRNG m) => BrandedDomain -> String -> MailsConfig -> Lang -> KontrakcjaGlobalTemplates -> User -> Company -> Invoice -> m ()
 sendInvoiceFailedEmail bd hostpart mailsconfig lang templates user company invoice = do
   theme <- dbQuery $ GetTheme (bdMailTheme bd)
   mail <- runTemplatesT (lang, templates) $ mailFailed bd theme hostpart user company invoice
@@ -494,20 +494,20 @@ fromRecurlyPricePlan "form"         = FormPricePlan
 fromRecurlyPricePlan _              = TeamPricePlan
 
 -- factor out error logging
-pguard :: (MonadBase IO m, Log.MonadLog m) => String -> Either String a -> m a
+pguard :: (MonadBase IO m, MonadLog m) => String -> Either String a -> m a
 pguard _   (Right v) = return v
 pguard pre (Left msg) = do
-  Log.mixlog_ $ pre ++ ": " ++ msg
+  logInfo_ $ pre ++ ": " ++ msg
   internalError
 
-pguardM :: (MonadBase IO m, Log.MonadLog m) => String -> m (Either String a) -> m a
+pguardM :: (MonadBase IO m, MonadLog m) => String -> m (Either String a) -> m a
 pguardM pre action = pguard pre =<< action
 
-pguard' :: (MonadBase IO m, Log.MonadLog m) => String -> Maybe a -> m a
+pguard' :: (MonadBase IO m, MonadLog m) => String -> Maybe a -> m a
 pguard' _ (Just v) = return v
 pguard' msg Nothing = do
-  Log.mixlog_ msg
+  logInfo_ msg
   internalError
 
-pguardM' :: (MonadBase IO m, Log.MonadLog m) => String -> m (Maybe a) -> m a
+pguardM' :: (MonadBase IO m, MonadLog m) => String -> m (Maybe a) -> m a
 pguardM' msg action = pguard' msg =<< action

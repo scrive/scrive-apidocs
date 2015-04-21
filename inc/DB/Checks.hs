@@ -42,15 +42,12 @@ resultCheck logger = \case
 
 -- | Runs all checks on a database
 migrateDatabase :: (MonadDB m, MonadThrow m)
-                => (String -> m ()) -> [Domain] -> [Table]
-                -> [Migration m] -> m ()
-migrateDatabase logger domains tables migrations = do
-  set <- setByteaOutput logger
-  when set $ do
-    commit
-    $unexpectedErrorM $ "bytea_output was changed to 'hex'. Restart application so the change is visible."
+                => (String -> m ())
+                -> [Extension] -> [Domain] -> [Table] -> [Migration m]
+                -> m ()
+migrateDatabase logger extensions domains tables migrations = do
   _ <- checkDBTimeZone logger
-  checkNeededExtensions logger
+  mapM_ (checkExtension logger) extensions
   checkDBConsistency logger domains (tableVersions : tables) migrations
   resultCheck logger =<< checkDomainsStructure domains
   resultCheck logger =<< checkDBStructure (tableVersions : tables)
@@ -90,17 +87,21 @@ currentCatalog = do
   dbname <- fetchOne runIdentity
   return $ unsafeSQL $ "\"" ++ dbname ++ "\""
 
--- | Checking for needed extentions. We need to read from 'pg_extension' table, since Amazon RDS limits usage of 'CREATE EXTENSION IF NOT EXISTS'
-checkNeededExtensions :: (MonadDB m, MonadThrow m) => (String -> m ()) -> m ()
-checkNeededExtensions logger = do
-  logger $ "Checking for 'pgcrypto' extention"
-  extentionExists <- runSQL01 $ "select TRUE from pg_extension where extname='pgcrypto'"
-  if (not $ extentionExists)
+-- | Check for a given extension. We need to read from 'pg_extension'
+-- table as Amazon RDS limits usage of 'CREATE EXTENSION IF NOT EXISTS'.
+checkExtension :: (MonadDB m, MonadThrow m) => (String -> m ()) -> Extension -> m ()
+checkExtension logger (Extension extension) = do
+  logger $ "Checking for extension '" <> sextension <> "'"
+  extensionExists <- runQuery01 . sqlSelect "pg_extension" $ do
+    sqlResult "TRUE"
+    sqlWhereEq "extname" $ unRawSQL extension
+  if not extensionExists
     then do
-      logger $ "Enabling 'pgcrypto' extension"
-      runSQL_ $ "CREATE EXTENSION IF NOT EXISTS pgcrypto"
-    else logger $ "Extention 'pgcrypto' exists"
-  return ()
+      logger $ "Creating extension '" <> sextension <> "'"
+      runSQL_ $ "CREATE EXTENSION IF NOT EXISTS" <+> raw extension
+    else logger $ "Extension '" <> sextension <> "' exists"
+  where
+    sextension = BSU.toString $ unRawSQL extension
 
 -- |  Checks whether database returns timestamps in UTC
 checkDBTimeZone :: (MonadDB m, MonadThrow m) => (String -> m ()) -> m Bool
@@ -112,18 +113,6 @@ checkDBTimeZone logger = do
       dbname <- currentCatalog
       logger $ "Setting '" ++ sqlToString dbname ++ "' database to return timestamps in UTC"
       runQuery_ $ "ALTER DATABASE" <+> dbname <+> "SET TIMEZONE = 'UTC'"
-      return True
-    else return False
-
-setByteaOutput :: (MonadDB m, MonadThrow m) => (String -> m ()) -> m Bool
-setByteaOutput logger = do
-  runSQL_ "SHOW bytea_output"
-  bytea_output :: String <- fetchOne runIdentity
-  if bytea_output /= "hex"
-    then do
-      logger $ "Setting bytea_output to 'hex'..."
-      dbname <- currentCatalog
-      runQuery_ $ "ALTER DATABASE" <+> dbname <+> "SET bytea_output = 'hex'"
       return True
     else return False
 

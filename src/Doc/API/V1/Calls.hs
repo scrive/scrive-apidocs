@@ -89,10 +89,12 @@ import Kontra
 import KontraPrelude
 import ListUtil
 import LiveDocx
+import Log
 import MagicHash (MagicHash)
 import MinutesTime
 import OAuth.Model
 import Routing
+import Text.JSON.Convert
 import User.Model
 import User.UserView
 import User.Utils
@@ -106,7 +108,6 @@ import Utils.Monad
 import Utils.Read
 import Utils.String
 import qualified Data.ByteString.RFC2397 as RFC2397
-import qualified Log
 
 documentAPIV1 ::  Route (Kontra Response)
 documentAPIV1  = choice [
@@ -255,8 +256,7 @@ apiCallV1Update did = api $ do
     json <- apiGuard (badInput "The MIME part 'json' must be a valid JSON.") $ case decode jsons of
                                                                                  J.Ok js -> Just js
                                                                                  _ -> Nothing
-    now <- currentTime
-    Log.mixlogjs now "Document updated with:" json
+    logInfo "Document updated with:" $ jsonToAeson json
     draftData   <- apiGuardJustM (badInput "Given JSON does not represent valid draft data.") $ flip fromJSValueWithUpdate json . Just <$> theDocument
     whenM (draftIsChangingDocument draftData <$> theDocument) $ do
       checkObjectVersionIfProvided did -- If we will change document, then we want to be sure that object version is ok.
@@ -414,7 +414,7 @@ apiCallV1CheckSign did slid = api $ do
        ELegAuthentication -> dbQuery (GetESignature slid) >>= \case
          Just _ -> return $ Right $ Ok ()
          Nothing -> do
-           Log.mixlog_ "No e-signature found for a signatory"
+           logInfo_ "No e-signature found for a signatory"
            return . Left . Failed $ runJSONGen $ value "noSignature" True
 
 apiCallV1Sign :: Kontrakcja m
@@ -423,7 +423,7 @@ apiCallV1Sign :: Kontrakcja m
              -> m Response
 apiCallV1Sign  did slid = api $ do
   checkObjectVersionIfProvided did
-  Log.mixlog_ $ "Ready to sign a document " ++ show did ++ " for signatory " ++ show slid
+  logInfo_ $ "Ready to sign a document " ++ show did ++ " for signatory " ++ show slid
   (mh,mu) <- getMagicHashAndUserForSignatoryAction did slid
   screenshots' <- fmap (fromMaybe emptySignatoryScreenshots) $
                (fromJSValue =<<) <$> getFieldJSON "screenshots"
@@ -464,7 +464,7 @@ apiCallV1Sign  did slid = api $ do
           handleAfterSigning slid
           (Right . Accepted) <$> (documentJSONV1 mu True True Nothing =<< theDocument)
         Nothing -> do
-          Log.mixlog_ "No e-signature found for a signatory"
+          logInfo_ "No e-signature found for a signatory"
           return . Left . Failed $ runJSONGen $ value "noSignature" True
    )
     `catchKontra` (\(DocumentStatusShouldBe _ _ i) -> throwIO . SomeKontraException $ conflictError $ "Document not pending but " ++ show i)
@@ -869,7 +869,7 @@ apiCallV1DownloadMainFile did _nameForBrowser = api $ do
                     now <- currentTime
                     -- Give Guardtime signing a few seconds to complete before we respond
                     when (diffUTCTime now (documentmtime doc) < 8) $ do
-                      Log.mixlog_ $ "Waiting for Guardtime signing, document was modified " ++ show (diffUTCTime now (documentmtime doc)) ++ " ago"
+                      logInfo_ $ "Waiting for Guardtime signing, document was modified " ++ show (diffUTCTime now (documentmtime doc)) ++ " ago"
                       throwIO $ SomeKontraException $ noAvailableYet "Digitally sealed document not ready"
                   file <- apiGuardJustM (noAvailableYet "Not ready, please try later") $ documentsealedfileM doc
                   getFileIDContents $ fileid file
@@ -990,8 +990,8 @@ runJavaTextExtract json content = do
                    value "rects" rectsresult
           return $ Ok censoredresult
       ExitFailure _ -> do
-          Log.attention_ $ BSL.toString _stderr
-          Log.attention_ $ "Extract texts failed for configuration: " ++ show json
+          logError_ $ BSL.toString _stderr
+          logError_ $ "Extract texts failed for configuration: " ++ show json
           apiGuardL (serverError "Extract texts failed on PDF") (return Nothing)
 
 
@@ -1081,9 +1081,9 @@ apiCallV1GetBrandingForSignView did slid = api $ do
 apiCallV1SetSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryLinkID -> String -> m Response
 apiCallV1SetSignatoryAttachment did sid aname = api $ do
   checkObjectVersionIfProvided did
-  Log.mixlog_ $ "Setting signatory attachments" ++ show did ++ " for signatory " ++ show sid ++ " name " ++ aname
+  logInfo_ $ "Setting signatory attachments" ++ show did ++ " for signatory " ++ show sid ++ " name " ++ aname
   (mh,mu) <- getMagicHashAndUserForSignatoryAction did sid
-  Log.mixlog_ "We are authorized to set signatory attachment"
+  logInfo_ "We are authorized to set signatory attachment"
   -- We check permission here - because we are able to get a valid magichash here
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh) `withDocumentM` do
     unlessM (isPending <$> theDocument) $ do
@@ -1147,7 +1147,7 @@ getMagicHashAndUserForSignatoryAction did sid = do
       Just mh'' ->  return (mh'',Nothing)
       Nothing -> do
          (user, _ , _) <- getAPIUser APIPersonal
-         Log.mixlog_ $ "User is " ++ show user
+         logInfo_ $ "User is " ++ show user
          mh'' <- getMagicHashForDocumentSignatoryWithUser  did sid user
          case mh'' of
            Nothing -> throwIO . SomeKontraException $ serverError "Can't perform this action. Not authorized."

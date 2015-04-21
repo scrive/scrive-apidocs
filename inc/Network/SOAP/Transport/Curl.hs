@@ -16,8 +16,8 @@ import Text.XML
 import qualified Data.Text.Lazy as TL
 
 import KontraPrelude
+import Log
 import Utils.Prelude
-import qualified Log
 
 -- TODO: in the future refactor curl bits, possibly create
 -- MonadCurl class, stop using curl binary for mails, smses etc.
@@ -38,12 +38,12 @@ curlError code = $unexpectedErrorM $ "Curl response code was" <+> show code
 
 -- | In case of certificate error, reconnect with
 -- disabled peer verification and log the issue.
-mkCertErrorHandler :: (MonadBaseControl IO m, Log.MonadLog m) => m CurlErrorHandler
+mkCertErrorHandler :: (MonadBaseControl IO m, MonadLog m) => m CurlErrorHandler
 mkCertErrorHandler = liftBaseWith $ \runInBase ->
   return $ \response_parser curl code ->
     case code of
       CurlSSLCACert -> do
-        _ <- runInBase (Log.attention_ "CERTIFICATE VERIFICATION ERROR, falling back to insecure connection")
+        _ <- runInBase (logError_ "CERTIFICATE VERIFICATION ERROR, falling back to insecure connection")
         (final_body, fetch_body) <- newIncoming
         setopts curl
           [ CurlWriteFunction $ gatherOutput_ fetch_body

@@ -52,6 +52,7 @@ import File.Model
 import File.Storage
 import Kontra
 import KontraPrelude
+import Log
 import MinutesTime
 import Templates
 import Util.Actor
@@ -65,9 +66,8 @@ import Utils.Read
 import qualified Amazon as AWS
 import qualified Doc.SealSpec as Seal
 import qualified HostClock.Model as HC
-import qualified Log
 
-personFromSignatory :: (MonadDB m, MonadMask m, TemplatesMonad m, AWS.AmazonMonad m, Log.MonadLog m, MonadBase IO m)
+personFromSignatory :: (MonadDB m, MonadMask m, TemplatesMonad m, AWS.AmazonMonad m, MonadLog m, MonadBase IO m)
                     => TimeZoneName -> SignatoryIdentifierMap -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> m Seal.Person
 personFromSignatory tz sim boxImages signatory = do
     emptyNamePlaceholder <- renderTemplate_ "_notNamedParty"
@@ -104,7 +104,7 @@ personFromSignatory tz sim boxImages signatory = do
                          , Seal.companyNumberText  = companyNumberText
                          }
 
-personExFromSignatoryLink :: (MonadDB m, MonadMask m, TemplatesMonad m, AWS.AmazonMonad m, Log.MonadLog m, MonadBase IO m)
+personExFromSignatoryLink :: (MonadDB m, MonadMask m, TemplatesMonad m, AWS.AmazonMonad m, MonadLog m, MonadBase IO m)
                           =>  TimeZoneName -> SignatoryIdentifierMap -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> m Seal.Person
 personExFromSignatoryLink tz sim boxImages sl@SignatoryLink{..} = do
   person <- personFromSignatory tz sim boxImages sl
@@ -116,7 +116,7 @@ personExFromSignatoryLink tz sim boxImages sl@SignatoryLink{..} = do
      , Seal.phoneverified    = (signatorylinkdeliverymethod == MobileDelivery) || (signatorylinkauthenticationmethod == SMSPinAuthentication)
      }
 
-fieldsFromSignatory :: (MonadDB m, MonadThrow m, Log.MonadLog m, MonadBase IO m, AWS.AmazonMonad m) => (BS.ByteString,BS.ByteString) -> SignatoryLink -> m [Seal.Field]
+fieldsFromSignatory :: (MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, AWS.AmazonMonad m) => (BS.ByteString,BS.ByteString) -> SignatoryLink -> m [Seal.Field]
 fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryLink{signatoryfields} =
   silenceJPEGFieldsFromFirstSignature <$> concat <$> mapM makeSealField signatoryfields
   where
@@ -128,7 +128,7 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryLink{signatoryf
       field : silenceJPEGFieldsToTheEnd xs
     silenceJPEGFieldsFromFirstSignature (x:xs) = x : silenceJPEGFieldsFromFirstSignature xs
 
-    makeSealField :: (MonadDB m, MonadThrow m, Log.MonadLog m, MonadBase IO m, AWS.AmazonMonad m) => SignatoryField -> m [Seal.Field]
+    makeSealField :: (MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, AWS.AmazonMonad m) => SignatoryField -> m [Seal.Field]
     makeSealField sf = case sf of
        SignatorySignatureField ssf -> case (fieldPlacements  sf, ssfValue ssf) of
                            (_, Nothing) -> return []  -- We skip signature that don't have a drawing
@@ -192,7 +192,7 @@ listAttachmentsFromDocument document =
   where extract sl = map (\at -> (at,sl)) (signatoryattachments sl)
 
 
-findOutAttachmentDesc :: (MonadIO m, MonadDB m, MonadThrow m, Log.MonadLog m, TemplatesMonad m, AWS.AmazonMonad m, MonadBaseControl IO m)
+findOutAttachmentDesc :: (MonadIO m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, AWS.AmazonMonad m, MonadBaseControl IO m)
                       => SignatoryIdentifierMap -> String -> Document -> m [Seal.FileDesc]
 
 findOutAttachmentDesc sim tmppath document = do
@@ -222,7 +222,7 @@ findOutAttachmentDesc sim tmppath document = do
             eNumberOfPages <- liftIO $ getNumberOfPDFPages contents
             numberOfPages <- case eNumberOfPages of
                               Left e -> do
-                                Log.attention_ $ "Calculating number of pages of document #" ++ show (documentid document) ++ " failed, falling back to 1. Reason: " ++ show e
+                                logError_ $ "Calculating number of pages of document #" ++ show (documentid document) ++ " failed, falling back to 1. Reason: " ++ show e
                                 return 1
                               Right x -> return x
             return (contents, numberOfPages, filename file)
@@ -257,7 +257,7 @@ findOutAttachmentDesc sim tmppath document = do
                                x -> reverse (drop 1 x)
 
 
-evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m, MonadThrow m, Log.MonadLog m, MonadBase IO m, AWS.AmazonMonad m)
+evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, AWS.AmazonMonad m)
                            => SignatoryIdentifierMap -> Document -> m Seal.SealAttachment
 evidenceOfIntentAttachment sim doc = do
   let title = documenttitle doc
@@ -313,7 +313,7 @@ createSealingTextsForDocument document hostpart = do
 
   return sealingTexts
 
-sealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m, Log.MonadLog m, AWS.AmazonMonad m, MonadBaseControl IO m)
+sealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m, MonadLog m, AWS.AmazonMonad m, MonadBaseControl IO m)
                      => (BS.ByteString,BS.ByteString)
                      -> String
                      -> Document
@@ -378,7 +378,7 @@ sealSpecFromDocument boxImages hostpart document elog ces content tmppath inputp
                    , signatoryispartner s
                    ]
 
-  -- Log.mixlog_ "Creating seal spec from file."
+  -- logInfo_ "Creating seal spec from file."
 
   history <- mapM mkHistEntry spelog
 
@@ -404,7 +404,7 @@ sealSpecFromDocument boxImages hostpart document elog ces content tmppath inputp
   eNumberOfPages <- liftIO $ getNumberOfPDFPages content
   numberOfPages <- case eNumberOfPages of
                         Left e -> do
-                          Log.attention_ $ "Calculating number of pages of document #" ++ show (documentid document) ++ " failed, falling back to 1. Reason: " ++ show e
+                          logError_ $ "Calculating number of pages of document #" ++ show (documentid document) ++ " failed, falling back to 1. Reason: " ++ show e
                           return 1
                         Right x -> return x
 
@@ -449,7 +449,7 @@ sealSpecFromDocument boxImages hostpart document elog ces content tmppath inputp
                           } ] ++ additionalAttachments
         }
 
-presealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m, Log.MonadLog m, AWS.AmazonMonad m, MonadBaseControl IO m)
+presealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m, MonadLog m, AWS.AmazonMonad m, MonadBaseControl IO m)
                            => (BS.ByteString,BS.ByteString)
                            -> Document
                            -> String
@@ -463,16 +463,16 @@ presealSpecFromDocument boxImages document inputpath outputpath = do
             , Seal.pssFields         = fields
             }
 
-sealDocument :: (CryptoRNG m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadMask m, Log.MonadLog m, AWS.AmazonMonad m) => String -> m ()
+sealDocument :: (CryptoRNG m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadMask m, MonadLog m, AWS.AmazonMonad m) => String -> m ()
 sealDocument hostpart = theDocumentID >>= \did -> do
   mfile <- theDocument >>= documentfileM
   case mfile of
     Just file -> do
-      Log.mixlog_ $ "Sealing document #" ++ show did
+      logInfo_ $ "Sealing document #" ++ show did
       sealDocumentFile hostpart file
-      Log.mixlog_ $ "Sealing of document #" ++ show did ++ " should be done now"
+      logInfo_ $ "Sealing of document #" ++ show did ++ " should be done now"
     Nothing -> do
-      Log.mixlog_ $ "Sealing of document #" ++ show did ++ " failed because it has no main file attached"
+      logInfo_ $ "Sealing of document #" ++ show did ++ " failed because it has no main file attached"
       internalError
 
 collectClockErrorStatistics :: (MonadDB m, MonadThrow m) => [DocumentEvidenceEvent] -> m HC.ClockErrorStatistics
@@ -482,7 +482,7 @@ collectClockErrorStatistics elog = do
       starttime = $minimum (map evTime elog) `min` (1 `daysBefore` endtime)
   dbQuery $ HC.GetClockErrorStatistics (Just starttime) (Just endtime)
 
-sealDocumentFile :: (CryptoRNG m, MonadMask m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, Log.MonadLog m, AWS.AmazonMonad m)
+sealDocumentFile :: (CryptoRNG m, MonadMask m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadLog m, AWS.AmazonMonad m)
                  => String
                  -> File
                  -> m ()
@@ -511,7 +511,7 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
       liftIO $ BSL.writeFile sealspecpath json_config
       readProcessWithExitCode' "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "add-verification-pages", sealspecpath] (BSL.empty)
 
-    Log.mixlog_ $ "Sealing completed with " ++ show code
+    logInfo_ $ "Sealing completed with " ++ show code
     case code of
       ExitSuccess -> do
         sealedfileid <- dbUpdate . NewFile filename . Binary =<< liftIO (BS.readFile tmpout)
@@ -520,8 +520,8 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
         systmp <- liftIO $ getTemporaryDirectory
         (path, handle) <- liftIO $ openTempFile systmp ("seal-failed-" ++ show documentid ++ "-" ++ show fileid ++ "-.pdf")
         let msg = "Cannot seal document #" ++ show documentid ++ " because of file #" ++ show fileid
-        Log.attention_ $ msg ++ ": " ++ path
-        Log.attention_ $ BSL.toString stderr
+        logError_ $ msg ++ ": " ++ path
+        logError_ $ BSL.toString stderr
         -- show JSON'd config as that's what the java app is fed.
         liftIO $ BS.hPutStr handle content
         liftIO $ hClose handle
@@ -531,13 +531,13 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
                             (systemActor now)
 
 -- | Generate file that has all placements printed on it. It will look same as final version except for footers and verification page.
-presealDocumentFile :: (MonadBaseControl IO m, MonadDB m, Log.MonadLog m, KontraMonad m, TemplatesMonad m, MonadIO m, MonadMask m, AWS.AmazonMonad m)
+presealDocumentFile :: (MonadBaseControl IO m, MonadDB m, MonadLog m, KontraMonad m, TemplatesMonad m, MonadIO m, MonadMask m, AWS.AmazonMonad m)
                  => Document
                  -> File
                  -> m (Either String BS.ByteString)
 presealDocumentFile document@Document{documentid} file@File{fileid} =
   withSystemTempDirectory' ("preseal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
-    Log.mixlog_ ("presealing: " ++ show fileid)
+    logInfo_ ("presealing: " ++ show fileid)
     let tmpin = tmppath ++ "/input.pdf"
     let tmpout = tmppath ++ "/output.pdf"
     content <- getFileContents file
@@ -551,13 +551,13 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
       let sealspecpath = tmppath ++ "/sealspec.json"
       liftIO $ BSL.writeFile sealspecpath json_config
       readProcessWithExitCode' "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "add-verification-pages", sealspecpath] (BSL.empty)
-    Log.mixlog_ $ "PreSealing completed with " ++ show code
+    logInfo_ $ "PreSealing completed with " ++ show code
     case code of
       ExitSuccess -> do
           res <- liftIO $ BS.readFile tmpout
-          Log.mixlog_ $ "Returning presealed content"
+          logInfo_ $ "Returning presealed content"
           return $ Right res
       ExitFailure _ -> do
-          Log.attention_ $ BSL.toString stderr
+          logError_ $ BSL.toString stderr
           -- show JSON'd config as that's what the java app is fed.
           return $ Left "Error when preprinting fields on PDF"

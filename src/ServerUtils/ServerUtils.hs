@@ -70,7 +70,7 @@ handleScaleImage = do
   logo' <- if base64ImgPrefix `BS.isPrefixOf` logo then
             case B64.decode $ BS.drop (BS.length base64ImgPrefix) logo of
               Left e -> do
-                Log.mixlog_ $ "Problem scaling image: " ++ show e
+                logInfo_ $ "Problem scaling image: " ++ show e
                 internalError
               Right x -> return x
           else do
@@ -81,7 +81,7 @@ handleScaleImage = do
   (procResult, out, _) <- readProcessWithExitCode' "convert" ["-", "-resize", "60%", "-"] $ strictBStoLazyBS logo'
   case procResult of
     ExitFailure msg -> do
-      Log.mixlog_ $ "Problem scaling image: " ++ show msg
+      logInfo_ $ "Problem scaling image: " ++ show msg
       internalError
     ExitSuccess -> do
       let result64 = base64ImgPrefix `BS.append` B64.encode (lazyBStoStrictBS out)
@@ -120,7 +120,7 @@ handleTextToImage = do
       drawerexitcode <- liftIO $ waitForProcess drawer
       case drawerexitcode of
           ExitFailure msg -> do
-            Log.mixlog_ $ "Problem text_to_image " ++ show msg
+            logInfo_ $ "Problem text_to_image " ++ show msg
             return Nothing
           ExitSuccess -> (liftIO $ BSL.readFile fpath) >>= (return . Just)
     case mfcontent of
@@ -163,7 +163,7 @@ brandImage file color = do
                                                   , "-"] ""
     case procResult of
       ExitFailure msg -> do
-        Log.mixlog_ $ "Problem branding signview image: " ++ show msg
+        logInfo_ $ "Problem branding signview image: " ++ show msg
         internalError
       ExitSuccess -> return out
 

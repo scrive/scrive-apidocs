@@ -39,10 +39,10 @@ import File.Storage
 import ForkAction
 import Kontra
 import KontraPrelude
+import Log
 import Utils.IO
 import Utils.Read
 import qualified Amazon as AWS
-import qualified Log
 import qualified MemCache as MemCache
 
 withSystemTempDirectory :: (MonadBaseControl IO m) => String -> (String -> m a) -> m a
@@ -63,7 +63,7 @@ readNumberedFiles pathFromNumber currentNumber accum = do
 {- |
    Convert PDF to jpeg images of pages
  -}
-runRendering :: (KontraMonad m, Log.MonadLog m, MonadDB m, MonadThrow m, MonadIO m, MonadBaseControl IO m, AWS.AmazonMonad m)
+runRendering :: (KontraMonad m, MonadLog m, MonadDB m, MonadThrow m, MonadIO m, MonadBaseControl IO m, AWS.AmazonMonad m)
                      => RenderedPagesCache
                      -> FileID
                      -> Int
@@ -96,12 +96,12 @@ runRendering _renderedPages fid widthInPixels renderingMode = do
                        ]) BSL.empty
 
     when (exitcode /= ExitSuccess) $
-      Log.attention_ $ "mudraw process for pdf->png render failed, will look for rendered images anyway"
+      logError_ $ "mudraw process for pdf->png render failed, will look for rendered images anyway"
     pages <- readNumberedFiles pathOfPage 1 []
     when (null pages) $ do
       systmp <- liftIO $ getTemporaryDirectory
       (path, handle) <- liftIO $ openTempFile systmp $ "mudraw-failed-" ++ show fid ++ "-.pdf"
-      Log.attention_ $ "Cannot mudraw of file #" ++ show fid ++ ": " ++ path
+      logError_ $ "Cannot mudraw of file #" ++ show fid ++ ": " ++ path
       liftIO $ BS.hPutStr handle content
       liftIO $ hClose handle
     return $ RenderedPages True pages
@@ -221,14 +221,14 @@ preCheckPDFHelper content tmppath =
 -- Return value is either a 'BS.ByteString' with normalized document
 -- content or 'FileError' enumeration stating what is going on.
 --
-preCheckPDF :: (Log.MonadLog m, MonadBaseControl IO m) => BS.ByteString
+preCheckPDF :: (MonadLog m, MonadBaseControl IO m) => BS.ByteString
             -> m (Either FileError (Binary BS.ByteString))
 preCheckPDF content =
   liftBaseOp (withSystemTempDirectory "precheck") $ \tmppath -> do
     res <- liftBase (preCheckPDFHelper content tmppath)
       `E.catch` \(e::IOError) -> return (Left (FileOtherError (show e)))
     case res of
-      Left x -> Log.attention_ $ "preCheckPDF: " ++ show x
+      Left x -> logError_ $ "preCheckPDF: " ++ show x
       Right _ -> return ()
     return $ Binary <$> res
 

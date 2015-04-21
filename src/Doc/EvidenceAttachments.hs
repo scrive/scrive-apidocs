@@ -13,8 +13,8 @@ import DB (MonadDB)
 import Doc.DocStateData (Document(..), documentsealedfile)
 import File.Storage (getFileIDContents)
 import KontraPrelude
+import Log
 import qualified Amazon as AWS
-import qualified Log
 import qualified PdfModel as P
 
 data Attachment = Attachment
@@ -23,7 +23,7 @@ data Attachment = Attachment
   , content  :: BSL.ByteString
   } deriving (Eq, Ord, Show)
 
-fetch :: (Log.MonadLog m, MonadDB m, MonadThrow m, MonadBase IO m, AWS.AmazonMonad m) => Document -> m [Attachment]
+fetch :: (MonadLog m, MonadDB m, MonadThrow m, MonadBase IO m, AWS.AmazonMonad m) => Document -> m [Attachment]
 fetch doc = do
   case documentsealedfile doc of
     Nothing -> return []

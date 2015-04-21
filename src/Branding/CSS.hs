@@ -14,14 +14,14 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 
 import BrandedDomain.BrandedDomain
 import KontraPrelude
+import Log as Log
 import Theme.Model
 import Utils.Color
 import Utils.Font
 import Utils.IO
-import qualified Log as Log
 
 -- Signview branding CSS. Generated using less
-signviewBrandingCSS :: (Log.MonadLog m,MonadIO m) => Theme -> m BSL.ByteString
+signviewBrandingCSS :: (MonadLog m,MonadIO m) => Theme -> m BSL.ByteString
 signviewBrandingCSS theme = do
     (code,stdout,stderr) <- liftIO $ do
       readProcessWithExitCode' "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
@@ -30,7 +30,7 @@ signviewBrandingCSS theme = do
       ExitSuccess -> do
           return $ stdout
       ExitFailure _ -> do
-          Log.attention_ $ "Creating sign view branding failed : " ++ BSL.toString stderr
+          logError_ $ "Creating sign view branding failed : " ++ BSL.toString stderr
           return BSL.empty
 
 
@@ -50,7 +50,7 @@ signviewBrandingLess theme = unlines $
    ]
 
 -- Service branding CSS. Generated using less
-serviceBrandingCSS :: (Log.MonadLog m,MonadIO m) => Theme -> m BSL.ByteString
+serviceBrandingCSS :: (MonadLog m,MonadIO m) => Theme -> m BSL.ByteString
 serviceBrandingCSS theme = do
     (code,stdout,stderr) <- liftIO $ do
       readProcessWithExitCode' "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
@@ -59,7 +59,7 @@ serviceBrandingCSS theme = do
       ExitSuccess -> do
           return $ stdout
       ExitFailure _ -> do
-          Log.attention_ $ "Creating service branding failed : " ++ BSL.toString stderr
+          logError_ $ "Creating service branding failed : " ++ BSL.toString stderr
           return BSL.empty
 
 serviceBrandingLess :: Theme -> String
@@ -80,7 +80,7 @@ serviceBrandingLess theme = unlines $
 
 
 -- Service branding CSS. Generated using less
-loginBrandingCSS :: (Log.MonadLog m,MonadIO m) => Theme -> m BSL.ByteString
+loginBrandingCSS :: (MonadLog m,MonadIO m) => Theme -> m BSL.ByteString
 loginBrandingCSS theme = do
     (code,stdout,stderr) <- liftIO $ do
       readProcessWithExitCode' "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
@@ -89,7 +89,7 @@ loginBrandingCSS theme = do
       ExitSuccess -> do
           return $ stdout
       ExitFailure _ -> do
-          Log.attention_ $ "Creating login branding failed : " ++ BSL.toString stderr
+          logError_ $ "Creating login branding failed : " ++ BSL.toString stderr
           return BSL.empty
 
 loginBrandingLess :: Theme -> String
@@ -110,7 +110,7 @@ loginBrandingLess theme = unlines $
 
 -- Scrive branding CSS. Generated using less. No DB involved, hence takes no `Theme`.
 -- Should be used only for those pages that mimic the look of the company web ('Expression Engine').
-scriveBrandingCSS :: (Log.MonadLog m,MonadIO m) => m BSL.ByteString
+scriveBrandingCSS :: (MonadLog m,MonadIO m) => m BSL.ByteString
 scriveBrandingCSS = do
     (code,stdout,stderr) <- liftIO $ do
       readProcessWithExitCode' "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
@@ -119,7 +119,7 @@ scriveBrandingCSS = do
       ExitSuccess -> do
           return $ stdout
       ExitFailure _ -> do
-          Log.attention_ $ "Creating Scrive branding failed : " ++ BSL.toString stderr
+          logError_ $ "Creating Scrive branding failed : " ++ BSL.toString stderr
           return BSL.empty
 
 scriveBrandingLess :: String
@@ -147,7 +147,7 @@ lessVariablesFromTheme theme = [
   ]
   where
 
-domainBrandingCSS :: (Log.MonadLog m,MonadIO m) => BrandedDomain -> m BSL.ByteString
+domainBrandingCSS :: (MonadLog m,MonadIO m) => BrandedDomain -> m BSL.ByteString
 domainBrandingCSS bd = do
     (code,stdout,stderr) <- liftIO $ do
       readProcessWithExitCode' "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
@@ -156,7 +156,7 @@ domainBrandingCSS bd = do
       ExitSuccess -> do
           return $ stdout
       ExitFailure _ -> do
-          Log.attention_ $ "Creating domain branding failed : " ++ BSL.toString stderr
+          logError_ $ "Creating domain branding failed : " ++ BSL.toString stderr
           return BSL.empty
 
 domainBrandingLess :: BrandedDomain -> String

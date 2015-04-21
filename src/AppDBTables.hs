@@ -1,6 +1,7 @@
 module AppDBTables (
     kontraComposites
   , kontraDomains
+  , kontraExtensions
   , kontraFunctions
   , kontraTables
   ) where
@@ -51,6 +52,11 @@ kontraDomains :: [Domain]
 kontraDomains = [
     domainColor
   , domainFont
+  ]
+
+kontraExtensions :: [Extension]
+kontraExtensions = [
+    "pgcrypto"
   ]
 
 kontraFunctions :: [SQLFunction]

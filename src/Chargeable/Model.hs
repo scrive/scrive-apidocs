@@ -8,10 +8,10 @@ import Data.Int
 import Data.Typeable
 
 import Company.CompanyID
+import Data.Time.Monad
 import DB
 import Doc.DocumentID
 import KontraPrelude
-import MinutesTime.Class
 import User.UserID
 
 data ChargeableItem = SMS | ELegSignature

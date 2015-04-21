@@ -28,15 +28,14 @@ import File.Model (NewFile(..))
 import File.Storage (getFileContents)
 import GuardTime (GuardTimeConf, GuardTimeConfMonad, getGuardTimeConf)
 import KontraPrelude
-import MinutesTime
+import Log
 import Templates (runTemplatesT)
 import Util.Actor (systemActor)
 import Utils.Default (defaultValue)
 import Utils.Directory (withSystemTempDirectory')
 import qualified GuardTime as GT
-import qualified Log
 
-addDigitalSignature :: (CryptoRNG m, MonadIO m, MonadThrow m, Log.MonadLog m, MonadBaseControl IO m, DocumentMonad m, AmazonMonad m, GuardTimeConfMonad m, TemplatesMonad m) => m ()
+addDigitalSignature :: (CryptoRNG m, MonadIO m, MonadThrow m, MonadLog m, MonadBaseControl IO m, DocumentMonad m, AmazonMonad m, GuardTimeConfMonad m, TemplatesMonad m) => m ()
 addDigitalSignature = theDocumentID >>= \did ->
   withSystemTempDirectory' ("DigitalSignature-" ++ show did ++ "-") $ \tmppath -> do
   Just file <- theDocument >>= documentsealedfileM
@@ -53,25 +52,25 @@ addDigitalSignature = theDocumentID >>= \did ->
       case vr of
            GT.Valid gsig -> do
                 res <- liftIO $ BS.readFile mainpath
-                Log.mixlog_ $ "GuardTime verification result: " ++ show vr
-                Log.mixlog_ $ "GuardTime signed successfully #" ++ show did
+                logInfo_ $ "GuardTime verification result: " ++ show vr
+                logInfo_ $ "GuardTime signed successfully #" ++ show did
                 return (res, Guardtime (GT.extended gsig) (GT.privateGateway gsig))
            _ -> do
                 res <- liftIO $ BS.readFile mainpath
-                Log.attention_ $ "GuardTime verification after signing failed for document #" ++ show did ++ ": " ++ show vr
+                logError_ $ "GuardTime verification after signing failed for document #" ++ show did ++ ": " ++ show vr
                 return (res, Missing)
     ExitFailure c -> do
       res <- liftIO $ BS.readFile mainpath
-      Log.attention_ $ "GuardTime failed " ++ show c ++ " of document #" ++ show did
+      logError_ $ "GuardTime failed " ++ show c ++ " of document #" ++ show did
       return (res, Missing)
   when (status /= Missing) $ do
-    Log.mixlog_ $ "Adding new sealed file to DB"
+    logInfo_ $ "Adding new sealed file to DB"
     sealedfileid <- dbUpdate $ NewFile (filename file) newfilepdf
-    Log.mixlog_ $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
+    logInfo_ $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
     dbUpdate $ AppendSealedFile sealedfileid status $ systemActor now
 
 -- | Extend a document: replace the digital signature with a keyless one.  Trigger callbacks.
-extendDigitalSignature :: (MonadBaseControl IO m, MonadIO m, MonadCatch m, Log.MonadLog m, MonadReader SchedulerData m, CryptoRNG m, DocumentMonad m, AmazonMonad m) => m ()
+extendDigitalSignature :: (MonadBaseControl IO m, MonadIO m, MonadCatch m, MonadLog m, MonadReader SchedulerData m, CryptoRNG m, DocumentMonad m, AmazonMonad m) => m ()
 extendDigitalSignature = do
   Just file <- documentsealedfileM =<< theDocument
   did <- theDocumentID
@@ -99,7 +98,7 @@ extendDigitalSignature = do
     -- /verify service can detect and provide an extended version if
     -- the verified document was extensible.
 
-digitallyExtendFile :: (TemplatesMonad m, MonadThrow m, CryptoRNG m, Log.MonadLog m, MonadIO m, DocumentMonad m)
+digitallyExtendFile :: (TemplatesMonad m, MonadThrow m, CryptoRNG m, MonadLog m, MonadIO m, DocumentMonad m)
                     => UTCTime -> GuardTimeConf -> FilePath -> String -> m Bool
 digitallyExtendFile ctxtime ctxgtconf pdfpath pdfname = do
   documentid <- theDocumentID
@@ -110,20 +109,20 @@ digitallyExtendFile ctxtime ctxgtconf pdfpath pdfname = do
       case vr of
            GT.Valid gsig | GT.extended gsig -> do
                 res <- liftIO $ BS.readFile pdfpath
-                Log.mixlog_ $ "GuardTime verification result: " ++ show vr
-                Log.mixlog_ $ "GuardTime extended successfully #" ++ show documentid
+                logInfo_ $ "GuardTime verification result: " ++ show vr
+                logInfo_ $ "GuardTime extended successfully #" ++ show documentid
                 return $ Just (res, Guardtime (GT.extended gsig) (GT.privateGateway gsig))
            _ -> do
-                Log.mixlog_ $ "GuardTime verification after extension failed for document #" ++ show documentid ++ ": " ++ show vr
+                logInfo_ $ "GuardTime verification after extension failed for document #" ++ show documentid ++ ": " ++ show vr
                 return Nothing
     ExitFailure c -> do
-      Log.attention_ $ "GuardTime failed " ++ show c ++ " for document #" ++ show documentid
+      logError_ $ "GuardTime failed " ++ show c ++ " for document #" ++ show documentid
       return Nothing
   case mr of
     Nothing -> return False
     Just (extendedfilepdf, status) -> do
-      Log.mixlog_ $ "Adding new extended file to DB"
+      logInfo_ $ "Adding new extended file to DB"
       sealedfileid <- dbUpdate $ NewFile pdfname (Binary extendedfilepdf)
-      Log.mixlog_ $ "Finished adding extended file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
+      logInfo_ $ "Finished adding extended file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
       dbUpdate $ AppendExtendedSealedFile sealedfileid status $ systemActor ctxtime
       return True

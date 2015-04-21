@@ -29,9 +29,9 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length, drop)
 import qualified Data.ByteString.UTF8 as BS hiding (length, drop, break)
 
 import KontraPrelude
+import Log
 import Utils.Either
 import Utils.IO
-import qualified Log
 
 -- NOTICE: this module is deprecated, use Network.SOAP.Call instead.
 
@@ -88,7 +88,7 @@ tryAndJoinEither action = do
     Left (excpt :: E.SomeException) -> return (Left (show excpt))
 
 -- other makeSoapCallXXX functions use this as their base
-makeSoapCall :: (XmlContent request, XmlContent result, Log.MonadLog m, MonadBaseControl IO m)
+makeSoapCall :: (XmlContent request, XmlContent result, MonadLog m, MonadBaseControl IO m)
                 => String
                 -> String
                 -> [String]
@@ -97,7 +97,7 @@ makeSoapCall :: (XmlContent request, XmlContent result, Log.MonadLog m, MonadBas
 makeSoapCall url action extraargs request = tryAndJoinEither $ do
   let input = showXml False (SOAP request)
   -- BSL.appendFile "soap.xml" input
-  Log.mixlog_ $ input
+  logInfo_ $ input
   let args = [ "-X", "POST",
                "-k", "--show-error" ] ++ extraargs ++
              [ "--data-binary", "@-",
@@ -141,15 +141,15 @@ makeSoapCall url action extraargs request = tryAndJoinEither $ do
     ExitSuccess -> do
       liftBase $ BSL.appendFile "soap.xml" xml
       let s = BSL.toString xml
-      Log.mixlog_ $ "length of xml string from soap call: " ++ show (length s)
+      logInfo_ $ "length of xml string from soap call: " ++ show (length s)
       let rx = readXml s
-      Log.mixlog_ $ "readXml returned left or right: " ++ if isLeft rx then "Left" else "Right"
+      logInfo_ $ "readXml returned left or right: " ++ if isLeft rx then "Left" else "Right"
       case rx of
         Right (SOAP result) -> return (Right result)
         Right (SOAPFault soapcode string actor) -> return (Left (soapcode ++":" ++ string ++":" ++ actor))
         Left errmsg -> return (Left (errmsg ++ ": " ++ BSL.toString stdout))
 
-makeSoapCallWithCert :: (XmlContent request, XmlContent result, Log.MonadLog m, MonadBaseControl IO m)
+makeSoapCallWithCert :: (XmlContent request, XmlContent result, MonadLog m, MonadBaseControl IO m)
                         => String
                         -> String
                         -> String
@@ -163,7 +163,7 @@ makeSoapCallWithCert url action cert certpwd request =
              ] in
   makeSoapCall url action args request
 
-makeSoapCallWithCA :: (XmlContent request, XmlContent response, Log.MonadLog m, MonadBaseControl IO m)
+makeSoapCallWithCA :: (XmlContent request, XmlContent response, MonadLog m, MonadBaseControl IO m)
                       => String
                       -> String
                       -> String
@@ -175,7 +175,7 @@ makeSoapCallWithCA url cert action request =
              ] in
   makeSoapCall url action args request
 
-makeSoapCallWithCookies :: (XmlContent request, XmlContent result, Log.MonadLog m, MonadBaseControl IO m)
+makeSoapCallWithCookies :: (XmlContent request, XmlContent result, MonadLog m, MonadBaseControl IO m)
                            => String
                            -> FilePath
                            -> String

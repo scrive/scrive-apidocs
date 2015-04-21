@@ -27,8 +27,8 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 
 import GuardTime.Class
 import KontraPrelude
+import Log
 import Utils.IO
-import qualified Log
 
 newtype GuardTimeConfT m a = GuardTimeConfT { unGuardTimeConfT :: ReaderT GuardTimeConf m a }
   deriving (Alternative, Applicative, Functor, Monad, MonadPlus, MonadIO, MonadTrans, MonadBase b, MonadThrow, MonadCatch, MonadMask)
@@ -59,7 +59,7 @@ invokeGuardtimeTool tool args = do
              ] ++ args)
   liftIO $ readProcessWithExitCode' "java" a BSL.empty
 
-digitallySign :: (Log.MonadLog m, MonadIO m) => GuardTimeConf -> String -> m ExitCode
+digitallySign :: (MonadLog m, MonadIO m) => GuardTimeConf -> String -> m ExitCode
 digitallySign conf inputFileName = do
   (code,stdout,stderr) <- invokeGuardtimeTool "PdfSigner"
              [ "-i"
@@ -69,18 +69,18 @@ digitallySign conf inputFileName = do
              , inputFileName
              ]
   when (code /= ExitSuccess) $ do
-    Log.mixlog_ $ "GuardTime exit code " ++ show code
+    logInfo_ $ "GuardTime exit code " ++ show code
     when (not (BSL.null stdout)) $ do
-      Log.mixlog_ $ "GuardTime stdout  : " ++ BSL.toString stdout
+      logInfo_ $ "GuardTime stdout  : " ++ BSL.toString stdout
     when (not (BSL.null stderr)) $ do
-      Log.mixlog_ $ "GuardTime errout  : " ++ BSL.toString stderr
+      logInfo_ $ "GuardTime errout  : " ++ BSL.toString stderr
 
   return code
 
 -- Verification
 
 
-digitallyExtend :: (Log.MonadLog m, MonadIO m) => GuardTimeConf -> String -> m ExitCode
+digitallyExtend :: (MonadLog m, MonadIO m) => GuardTimeConf -> String -> m ExitCode
 digitallyExtend conf inputFileName = do
   (code,stdout,stderr) <- invokeGuardtimeTool "PdfExtender"
              [ "-x", guardTimeExtendingServiceURL conf
@@ -88,11 +88,11 @@ digitallyExtend conf inputFileName = do
              , inputFileName
              ]
   when (code /= ExitSuccess) $ do
-    Log.mixlog_ $ "GuardTime exit code " ++ show code
+    logInfo_ $ "GuardTime exit code " ++ show code
     when (not (BSL.null stdout)) $ do
-      Log.mixlog_ $ "GuardTime stdout  : " ++ BSL.toString stdout
+      logInfo_ $ "GuardTime stdout  : " ++ BSL.toString stdout
     when (not (BSL.null stderr)) $ do
-      Log.mixlog_ $ "GuardTime errout  : " ++ BSL.toString stderr
+      logInfo_ $ "GuardTime errout  : " ++ BSL.toString stderr
 
   return code
 
@@ -148,7 +148,7 @@ instance ToJSValue VerifyResult where
                                         value "error"   True
                                         value "message" msg
 
-verify :: (Log.MonadLog m, MonadIO m) => GuardTimeConf -> String -> m VerifyResult
+verify :: (MonadLog m, MonadIO m) => GuardTimeConf -> String -> m VerifyResult
 verify conf inputFileName = do
   (code,stdout,stderr) <- invokeGuardtimeTool "PdfVerifier"
              [ "-j"
@@ -163,7 +163,7 @@ verify conf inputFileName = do
                 Left s -> return $ Problem $ "GuardTime verification result bad format: " ++ s ++", stdout: " ++ BSL.toString stdout ++ ", stderr " ++ BSL.toString stderr
                 Right json -> case fromJSValue json of
                                   Nothing -> do
-                                      Log.mixlog_ $ "GT parsing error " ++ BSL.toString stdout
+                                      logInfo_ $ "GT parsing error " ++ BSL.toString stdout
                                       return $ Problem $ "GuardTime verification result parsing error"
                                   Just res -> return res
        _ -> return $ Problem $ "GuardTime verification failed: " ++ BSL.toString stderr

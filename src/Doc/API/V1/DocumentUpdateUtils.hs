@@ -22,11 +22,11 @@ import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import Kontra
 import KontraPrelude
+import Log
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Utils.Monad
-import qualified Log
 
 checkDraftTimeZoneName ::  (Kontrakcja m) =>  Document -> m ()
 checkDraftTimeZoneName draft = do
@@ -37,7 +37,7 @@ applyDraftDataToDocument :: (Kontrakcja m, DocumentMonad m) =>  Document -> Acto
 applyDraftDataToDocument draft actor = do
     checkDraftTimeZoneName draft
     unlessM (isPreparation <$> theDocument) $ do
-      theDocument >>= \doc -> Log.attention_ $ "Document is not in preparation, is in " ++ show (documentstatus doc)
+      theDocument >>= \doc -> logError_ $ "Document is not in preparation, is in " ++ show (documentstatus doc)
       throwIO $ SomeKontraException $ serverError "applyDraftDataToDocument failed"
     _ <- theDocument >>= \doc -> dbUpdate $ UpdateDraft doc{
                                   documenttitle = documenttitle draft
@@ -69,7 +69,7 @@ applyDraftDataToDocument draft actor = do
            let  (Just oldAuthor) = find isAuthor $ documentsignatorylinks $ draft
            let  (Just newAuthor) = find isAuthor sigs
            when (getFirstName oldAuthor /= getFirstName newAuthor || getLastName oldAuthor /= getLastName newAuthor) $ do
-            Log.mixlog_ $ "Checkup: Update could changed author details from " ++ getFullName oldAuthor ++ " to " ++ getFullName newAuthor
+            logInfo_ $ "Checkup: Update could changed author details from " ++ getFullName oldAuthor ++ " to " ++ getFullName newAuthor
            -- End testing
 
            res <- dbUpdate $ ResetSignatoryDetails (sortBy compareSL $ sigs) actor

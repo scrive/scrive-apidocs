@@ -1,5 +1,6 @@
 module Utils.Default where
 
+-- | TODO: Replace with Data.Default
 class HasDefaultValue a where
   defaultValue :: a
 

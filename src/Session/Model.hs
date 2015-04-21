@@ -19,13 +19,13 @@ import DB
 import Happstack.Server.ReqHandler
 import KontraMonad
 import KontraPrelude
+import Log
 import MagicHash
 import MinutesTime
 import Session.Cookies
 import Session.Data
 import User.Model
 import Utils.HTTP
-import qualified Log
 
 -- | Gets non temporary session id from Context. If current session id
 -- is temporary, it inserts new, empty session into database and returns
@@ -54,7 +54,7 @@ getNonTempSessionID = do
 
 -- | Get current session based on cookies set.
 -- If no session is available, return new, empty session.
-getCurrentSession :: (CryptoRNG m, HasRqData m, MonadDB m, MonadThrow m, ServerMonad m, Log.MonadLog m) => m Session
+getCurrentSession :: (CryptoRNG m, HasRqData m, MonadDB m, MonadThrow m, ServerMonad m, MonadLog m) => m Session
 getCurrentSession = withRqData currentSessionInfoCookies $ getSessionFromCookies
   where
     getSessionFromCookies (cs:css) = do
@@ -65,7 +65,7 @@ getCurrentSession = withRqData currentSessionInfoCookies $ getSessionFromCookies
         Nothing  -> getSessionFromCookies css
     getSessionFromCookies [] = emptySession
 
-updateSession :: (FilterMonad Response m, Log.MonadLog m, MonadDB m, MonadThrow m, ServerMonad m, MonadIO m) => Session -> Session -> m ()
+updateSession :: (FilterMonad Response m, MonadLog m, MonadDB m, MonadThrow m, ServerMonad m, MonadIO m) => Session -> Session -> m ()
 updateSession old_ses ses = do
   case sesID ses == tempSessionID of
     -- if session id is temporary, but its data is not empty, insert it into db
@@ -73,7 +73,7 @@ updateSession old_ses ses = do
       when (isNothing (sesUserID old_ses) && isJust (sesUserID ses)) $ do
         let uid = $fromJust $ sesUserID ses
         n <- deleteSuperfluousUserSessions uid
-        Log.mixlog_ $ show n ++ " superfluous sessions of user with id = " ++ show uid ++ " removed from the database"
+        logInfo_ $ show n ++ " superfluous sessions of user with id = " ++ show uid ++ " removed from the database"
       expires <- sessionNowModifier `liftM` currentTime
       let Session{..} = ses
       dbUpdate (NewAction session expires (sesUserID, sesPadUserID, sesToken, sesCSRFToken, sesDomain))
@@ -87,7 +87,7 @@ updateSession old_ses ses = do
       when (sesID old_ses == tempSessionID && sesID ses /= tempSessionID) $
         startSessionCookie ses
       when (not success) $
-        Log.mixlog_ "UpdateAction didn't update session where it should have to"
+        logInfo_ "UpdateAction didn't update session where it should have to"
     _ -> return ()
 
 getUserFromSession :: (MonadDB m, MonadThrow m) => Session -> m (Maybe User)

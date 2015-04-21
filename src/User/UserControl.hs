@@ -49,6 +49,7 @@ import Kontra
 import KontraLink
 import KontraPrelude
 import ListUtil
+import Log
 import MagicHash (MagicHash)
 import Mails.SendMail
 import MinutesTime
@@ -62,7 +63,6 @@ import User.Utils
 import Util.FlashUtil
 import Util.HasSomeUserInfo
 import Util.MonadUtils
-import qualified Log
 
 handleAccountGet :: Kontrakcja m => m (Either KontraLink Response)
 handleAccountGet = checkUserTOSGet $ do
@@ -105,7 +105,7 @@ sendChangeToExistingEmailInternalWarningMail user newemail = do
         securitymsg
         ++ "Maybe they're trying to attempt to merge accounts and need help, "
         ++ "or maybe they're a hacker trying to figure out who is and isn't a user."
-  Log.mixlog_ securitymsg
+  logInfo_ securitymsg
   scheduleEmailSendout (ctxmailsconfig ctx) $ emptyMail {
       to = [MailAddress { fullname = "info@skrivapa.se", email = "info@skrivapa.se" }]
     , title = "Request to Change Email to Existing Account"
@@ -356,7 +356,7 @@ handleAccessNewAccountGet uid token = do
           case ctxmaybeuser ctx of
             Just currentUser | currentUser == user -> return LinkArchive
             Just currentUser -> do
-              Log.mixlog_ $ "New account email button link for user " ++ show uid ++ " clicked by logged user " ++ show (userid currentUser)
+              logInfo_ $ "New account email button link for user " ++ show uid ++ " clicked by logged user " ++ show (userid currentUser)
               return LinkArchive
             Nothing -> return $ LinkLogin (ctxlang ctx) NotLogged
         _ -> do

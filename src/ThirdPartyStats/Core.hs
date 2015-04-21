@@ -4,6 +4,7 @@ module ThirdPartyStats.Core (
     EventProperty (..),
     PropValue (..),
     ProcRes (..),
+    EventProcessor,
     NumEvents (..),
     EventName (..),
     AsyncEvent,
@@ -30,11 +31,11 @@ import DB hiding (Binary, put)
 import Doc.DocumentID (DocumentID, unsafeDocumentID)
 import IPAddress
 import KontraPrelude
-import MinutesTime
+import Log
+import MinutesTime ()
 import User.Email
 import User.UserID (UserID, unsafeUserID)
 import qualified DB (Binary (..))
-import qualified Log
 
 -- | The various types of values a property can take.
 data PropValue
@@ -242,7 +243,7 @@ instance Monad m => Monoid (EventProcessor m) where
   mconcat = catEventProcs
 
 -- | Remove a number of events from the queue and process them.
-asyncProcessEvents :: (MonadIO m, Log.MonadLog m, MonadDB m)
+asyncProcessEvents :: (MonadIO m, MonadLog m, MonadDB m)
                    => (EventName -> [EventProperty] -> m ProcRes)
                       -- ^ Event processing function.
                    -> NumEvents
@@ -259,7 +260,7 @@ asyncProcessEvents process numEvts = do
           PutBack ->
             asyncLogEvent name props
           Failed msg ->
-            Log.attention_ $ "Event processing failure; event name = " ++ (show name) ++ " reason = " ++ msg
+            logError_ $ "Event processing failure; event name = " ++ (show name) ++ " reason = " ++ msg
           _  | otherwise ->
             return ()
 

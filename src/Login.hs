@@ -21,6 +21,7 @@ import IPAddress
 import Kontra
 import KontraLink
 import KontraPrelude
+import Log
 import Redirect
 import ThirdPartyStats.Core
 import User.Email
@@ -28,7 +29,6 @@ import User.History.Model
 import User.Model
 import Util.HasSomeUserInfo
 import Utils.HTTP
-import qualified Log
 
 handleLoginGet :: Kontrakcja m => m (Either KontraLink Response)
 handleLoginGet = do
@@ -66,7 +66,7 @@ handleLoginPost = do
                 Just user@User{userpassword}
                     | verifyPassword userpassword passwd
                     && ipIsOK -> do
-                        Log.mixlog_ $ "User " ++ show email ++ " logged in"
+                        logInfo_ $ "User " ++ show email ++ " logged in"
                         muuser <- dbQuery $ GetUserByID (userid user)
 
                         case muuser of
@@ -90,14 +90,14 @@ handleLoginPost = do
                             logUserToContext muuser
                         runJSONGenT $ value "logged" True
                 Just u@User{userpassword} | not (verifyPassword userpassword passwd) -> do
-                        Log.mixlog_ $ "User " ++ show email ++ " login failed (invalid password)"
+                        logInfo_ $ "User " ++ show email ++ " login failed (invalid password)"
                         _ <- if padlogin
                           then dbUpdate $ LogHistoryPadLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
                           else dbUpdate $ LogHistoryLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
                         runJSONGenT $ value "logged" False
 
                 Just u -> do
-                        Log.mixlog_ $ "User " ++ show email ++ " login failed (ip " ++ show (ctxipnumber ctx)
+                        logInfo_ $ "User " ++ show email ++ " login failed (ip " ++ show (ctxipnumber ctx)
                                 ++ " not on allowed list)"
                         _ <- if padlogin
                           then dbUpdate $ LogHistoryPadLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
@@ -113,7 +113,7 @@ handleLoginPost = do
                           _ -> runJSONGenT $ do
                                          value "logged" False
                 Nothing -> do
-                    Log.mixlog_ $ "User " ++ show email ++ " login failed (user not found)"
+                    logInfo_ $ "User " ++ show email ++ " login failed (user not found)"
                     runJSONGenT $ value "logged" False
         _ -> runJSONGenT $ value "logged" False
 

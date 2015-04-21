@@ -17,10 +17,9 @@ import Crypto.RNG
 import DB
 import GuardTime (GuardTimeConfMonad)
 import KontraPrelude
+import Log
 import MailContext (MailContextMonad)
-import MinutesTime.Class
 import qualified Amazon as AWS
-import qualified Log
 
 -- | This is for grouping things together so we won't need to
 -- write all that each time we write function type signature
@@ -31,7 +30,7 @@ type Kontrakcja m = (
   , HasRqData m
   , KontraMonad m
   , MailContextMonad m
-  , Log.MonadLog m
+  , MonadLog m
   , MonadDB m
   , MonadMask m
   , MonadBase IO m

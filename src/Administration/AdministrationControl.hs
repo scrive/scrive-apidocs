@@ -20,7 +20,7 @@ import Data.Unjson
 import Happstack.Server hiding (simpleHTTP,dir,path,https)
 import Happstack.StaticRouting(Route, choice, dir)
 import Text.JSON
-import Text.JSON.Gen
+import Text.JSON.Gen hiding (object)
 import Text.StringTemplates.Templates
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as BS
@@ -29,6 +29,7 @@ import qualified Data.ByteString.Char8 as BSC8
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Map as Map
 import qualified Data.Unjson as Unjson
+import qualified Text.JSON.Gen as J
 import qualified Text.StringTemplates.Fields as F
 
 import Administration.AddPaymentPlan
@@ -60,6 +61,7 @@ import Kontra
 import KontraLink
 import KontraPrelude
 import ListUtil
+import Log
 import Mails.Model
 import MinutesTime
 import Payments.Action
@@ -82,7 +84,6 @@ import Utils.Monoid
 import Utils.Read (maybeRead)
 import qualified Company.CompanyControl as Company
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
-import qualified Log
 import qualified Payments.Stats
 
 adminonlyRoutes :: Route (Kontra Response)
@@ -226,7 +227,7 @@ jsonCompanies = onlySalesOrAdmin $ do
                               }
     runJSONGenT $ do
             valueM "list" $ forM (take companiesPageSize $ allCompanies) $ \company -> runJSONGenT $ do
-                object "fields" $ do
+                J.object "fields" $ do
                     value "id"            $ show . companyid $ company
                     value "companyname"   $ getCompanyName $ company
                     value "companynumber" $ getCompanyNumber $ company
@@ -303,7 +304,7 @@ jsonUsersList = onlySalesOrAdmin $ do
 
     runJSONGenT $ do
             valueM "list" $ forM (take usersPageSize $ list users) $ \(user,mcompany) -> runJSONGenT $ do
-                object "fields" $ do
+                J.object "fields" $ do
                     value "id" $ show $ userid user
                     value "username" $ getFullName user
                     value "email"    $ getEmail user
@@ -535,11 +536,11 @@ jsonDocuments = onlySalesOrAdmin $ do
                             }
   runJSONGenT $ do
             valueM "list" $ forM (take docsPageSize $ list documents) $ \doc-> runJSONGenT $ do
-                 object "fields" $ do
+                 J.object "fields" $ do
                    value "id" $ show $ documentid doc
                    value "ctime" $ formatTimeAPI $ documentctime doc
                    value "mtime" $ formatTimeAPI $ documentmtime doc
-                   object "author" $ do
+                   J.object "author" $ do
                           value "name" $ getAuthorName doc
                           value "email" $ maybe "" getEmail $ getAuthorSigLink doc
                           value "company" $ maybe "" getCompanyName $ getAuthorSigLink doc
@@ -598,7 +599,7 @@ sendInviteAgain = onlySalesOrAdmin $ do
 -- This method can be used to reseal a document
 resealFile :: Kontrakcja m => DocumentID -> m KontraLink
 resealFile docid = onlyAdmin $ withDocumentID docid $ do
-  Log.mixlog_ $ "Trying to reseal document "++ show docid ++" | Only superadmin can do that"
+  logInfo_ $ "Trying to reseal document "++ show docid ++" | Only superadmin can do that"
   ctx <- getContext
   actor <- guardJust $ mkAdminActor ctx
   _ <- dbUpdate $ InsertEvidenceEvent
@@ -620,7 +621,7 @@ daveDocument documentid = onlyAdmin $ do
     -- but I could not come up with a better one than this
     --  -Eric
     location <- rqUri <$> askRq
-    Log.mixlog_ $ "location: " ++ location
+    logInfo_ $ "location: " ++ location
     if "/" `isSuffixOf` location
      then do
       document <- dbQuery $ GetDocumentForDave documentid
@@ -712,13 +713,13 @@ updateBrandedDomain :: Kontrakcja m => BrandedDomainID -> m ()
 updateBrandedDomain xbdid = onlySalesOrAdmin $ do
     obd <- dbQuery $ GetBrandedDomainByID xbdid
     when (bdMainDomain obd) $ do
-      Log.mixlog_ $ "Main domain can't be changed"
+      logInfo_ $ "Main domain can't be changed"
       internalError
     -- keep this 1to1 consistent with fields in the database
     domainJSON <- guardJustM $ getFieldBS "domain"
     case Aeson.eitherDecode $ domainJSON of
      Left err -> do
-       Log.mixlog_ $ "Error while parsing branding for adminonly " ++ err
+       logInfo_ $ "Error while parsing branding for adminonly " ++ err
        internalError
      Right js -> case (Unjson.parse unjsonBrandedDomain js) of
         (Result newDomain []) -> do

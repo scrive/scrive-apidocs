@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module MinutesTime (
     UTCTime
-  , module MinutesTime.Class
+  , module Data.Time.Monad
   , unixEpoch
   , formatTime'
   , parseTime'
@@ -27,8 +27,8 @@ import Data.Time.Clock.POSIX
 import System.Locale
 import qualified Data.Binary as B
 
+import Data.Time.Monad
 import KontraPrelude
-import MinutesTime.Class
 
 -- | FIXME: this really needs to go.
 instance B.Binary UTCTime where

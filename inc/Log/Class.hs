@@ -1,29 +1,64 @@
 {-# LANGUAGE OverlappingInstances #-}
-module Log.Class where
+module Log.Class (
+    UTCTime
+  , MonadTime(..)
+  , MonadLog(..)
+  , logError
+  , logInfo
+  , logTrace
+  , logError_
+  , logInfo_
+  , logTrace_
+  ) where
 
 import Control.Monad.Trans
+import Control.Monad.Trans.Control
+import Data.Aeson
+import Data.Aeson.Types
 import Data.Time
-import Text.JSON.Gen
 
+import Control.Monad.Trans.Control.Util
+import Data.Time.Monad
 import KontraPrelude
-import MinutesTime.Class
+import Log.Data
 
--- | MonadLog is for situations when you want to have access to
--- logging, but to not expose whole IO functionality. It is a safe
--- entry to a restricted IO monad.
---
--- Should be used together with other IO based monads that do not
--- expose MonadIO or MonadBase IO.
+-- | Represents the family of monads with logging capabilities.
 class MonadTime m => MonadLog m where
-  -- | This is a variation on 'mixlog' that takes a premade version of
-  -- properties object. Useful for logging data directly from API calls
-  -- for example.
-  mixlogjs :: ToJSValue js => UTCTime -> String -> js -> m ()
+  logMessage :: UTCTime -> LogLevel -> String -> Value -> m ()
+  localData :: [Pair] -> m a -> m a
 
 -- | Generic, overlapping instance.
 instance (
     MonadLog m
   , Monad (t m)
-  , MonadTrans t
+  , MonadTransControl t
   ) => MonadLog (t m) where
-    mixlogjs time title js = lift (mixlogjs time title js)
+    logMessage time level message = lift . logMessage time level message
+    localData data_ m = controlT $ \run -> localData data_ (run m)
+
+----------------------------------------
+
+logError :: MonadLog m => String -> Value -> m ()
+logError = logNow LogError
+
+logInfo :: MonadLog m => String -> Value -> m ()
+logInfo = logNow LogInfo
+
+logTrace :: MonadLog m => String -> Value -> m ()
+logTrace = logNow LogTrace
+
+logError_ :: MonadLog m => String -> m ()
+logError_ = (`logError` emptyObject)
+
+logInfo_ :: MonadLog m => String -> m ()
+logInfo_ = (`logInfo` emptyObject)
+
+logTrace_ :: MonadLog m => String -> m ()
+logTrace_ = (`logTrace` emptyObject)
+
+----------------------------------------
+
+logNow :: MonadLog m => LogLevel -> String -> Value -> m ()
+logNow level message data_ = do
+  time <- currentTime
+  logMessage time level message data_

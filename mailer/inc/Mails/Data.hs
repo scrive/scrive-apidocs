@@ -11,7 +11,7 @@ module Mails.Data (
   , MailGunEvent(..)
   , Event(..)
   , Mail(..)
-  , unjsonAddress
+  --, unjsonAddress
   ) where
 
 import Control.Monad.Catch
@@ -86,17 +86,14 @@ data Address = Address {
 , addrEmail :: !String
 } deriving (Eq, Ord, Read, Show, Data, Typeable)
 
-unjsonAddress :: UnjsonDef Address
-unjsonAddress = objectOf $ pure Address
-  <*> field "name"
-     addrName
-     "Name in email address"
-  <*> field "email"
-     addrEmail
-     "Email address"
-
 instance Unjson Address where
-  unjsonDef = unjsonAddress
+  unjsonDef = objectOf $ pure Address
+    <*> field "name"
+       addrName
+       "Name in email address"
+    <*> field "email"
+       addrEmail
+       "Email address"
 
 instance PQFormat Address where
   pqFormat = const $ pqFormat ($undefined::String)

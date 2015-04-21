@@ -41,6 +41,7 @@ import Crypto.Random.DRBG
 import Data.Bits
 import Data.ByteString (ByteString, unpack)
 import Data.Int
+import Data.Word
 
 import Crypto.RNG.Class
 import KontraPrelude
@@ -92,10 +93,31 @@ boundedIntegralRandom = randomR (minBound :: a, maxBound :: a)
 class Random a where
   random :: CryptoRNG m => m a
 
+instance Random Int16 where
+  random = boundedIntegralRandom
+
+instance Random Int32 where
+  random = boundedIntegralRandom
+
 instance Random Int64 where
   random = boundedIntegralRandom
 
 instance Random Int where
+  random = boundedIntegralRandom
+
+instance Random Word8 where
+  random = boundedIntegralRandom
+
+instance Random Word16 where
+  random = boundedIntegralRandom
+
+instance Random Word32 where
+  random = boundedIntegralRandom
+
+instance Random Word64 where
+  random = boundedIntegralRandom
+
+instance Random Word where
   random = boundedIntegralRandom
 
 type InnerCryptoRNGT = ReaderT CryptoRNGState

@@ -13,12 +13,12 @@ import qualified Crypto.Hash.SHA1 as SHA1
 import qualified Data.ByteString as BS
 
 import Crypto
+import Data.Time.Monad
 import DB
 import File.Conditions
 import File.File
 import File.FileID
 import KontraPrelude
-import MinutesTime.Class
 
 data GetFileByFileID = GetFileByFileID FileID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetFileByFileID File where

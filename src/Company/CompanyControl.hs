@@ -31,12 +31,12 @@ import DB
 import Happstack.Fields
 import Kontra
 import KontraPrelude
+import Log as Log
 import Routing (hGet, hPost, toK0, toK1, toK2)
 import Theme.Control
 import Theme.ThemeID
 import User.Utils
 import Util.MonadUtils
-import qualified Log as Log
 
 routes :: Route (Kontra Response)
 routes = choice
@@ -75,7 +75,7 @@ handleChangeCompanyBranding mcid = withCompanyAdminOrAdminOnly mcid $ \company -
   companyUIJSON <- guardJustM $ getFieldBS "companyui"
   case Aeson.eitherDecode $ companyUIJSON of
      Left err -> do
-       Log.mixlog_ $ "Error while parsing company branding " ++ err
+       logInfo_ $ "Error while parsing company branding " ++ err
        internalError
      Right js -> case (Unjson.parse unjsonCompanyUI js) of
         (Result cui []) -> do

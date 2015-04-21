@@ -25,9 +25,9 @@ import qualified Data.ByteString.UTF8 as BS
 import KontraPrelude
 import LiveDocxConf
 import LiveDocxTypes
+import Log
 import SOAP.SOAP
 import Utils.Read
-import qualified Log
 
 data LiveDocxContext = LiveDocxContext {
     ctxurl :: String
@@ -44,7 +44,7 @@ mkLiveDocxContext conf cookiefile = LiveDocxContext {
   , ctxcookiefile = cookiefile
 }
 
-makeLiveDocxCall :: (XmlContent request, HasXmlNamespace request, XmlContent result, Log.MonadLog m, MonadBaseControl IO m)
+makeLiveDocxCall :: (XmlContent request, HasXmlNamespace request, XmlContent result, MonadLog m, MonadBaseControl IO m)
                       => request
                       -> LiveDocx m result
 makeLiveDocxCall request = do
@@ -62,31 +62,31 @@ ignoreIfRight :: (Monad m) => Either LiveDocxError a -> LiveDocx m ()
 ignoreIfRight (Left x) = return $ Left x
 ignoreIfRight (Right _) = return $ Right ()
 
-logIn :: forall m. (Log.MonadLog m, MonadBaseControl IO m) => String -> String -> LiveDocx m ()
+logIn :: forall m. (MonadLog m, MonadBaseControl IO m) => String -> String -> LiveDocx m ()
 logIn username password = ignoreIfRight =<< do
   LiveDocxContext{ctxserviceurl} <- ask
   (makeLiveDocxCall
     (LogIn username password ctxserviceurl) :: LiveDocx m LogInResponse)
 
-logOut :: forall m. (Log.MonadLog m, MonadBaseControl IO m) => LiveDocx m ()
+logOut :: forall m. (MonadLog m, MonadBaseControl IO m) => LiveDocx m ()
 logOut = ignoreIfRight =<< do
   LiveDocxContext{ctxserviceurl} <- ask
   (makeLiveDocxCall
     (LogOut ctxserviceurl) :: LiveDocx m LogOutResponse)
 
-setLocalTemplate :: forall m. (Log.MonadLog m, MonadBaseControl IO m) => BS.ByteString -> FileFormat ->  LiveDocx m ()
+setLocalTemplate :: forall m. (MonadLog m, MonadBaseControl IO m) => BS.ByteString -> FileFormat ->  LiveDocx m ()
 setLocalTemplate filecontents format = ignoreIfRight =<< do
   LiveDocxContext{ctxserviceurl} <- ask
   (makeLiveDocxCall
     (SetLocalTemplate filecontents format ctxserviceurl) :: LiveDocx m SetLocalTemplateResponse)
 
-createDocument :: forall m. (Log.MonadLog m, MonadBaseControl IO m) => LiveDocx m ()
+createDocument :: forall m. (MonadLog m, MonadBaseControl IO m) => LiveDocx m ()
 createDocument = ignoreIfRight =<< do
   LiveDocxContext{ctxserviceurl} <- ask
   (makeLiveDocxCall
     (CreateDocument ctxserviceurl) :: LiveDocx m CreateDocumentResponse)
 
-retrieveDocument :: forall m. (Log.MonadLog m, MonadBaseControl IO m) => String ->  LiveDocx m BS.ByteString
+retrieveDocument :: forall m. (MonadLog m, MonadBaseControl IO m) => String ->  LiveDocx m BS.ByteString
 retrieveDocument format = do
   LiveDocxContext{ctxserviceurl} <- ask
   result <- makeLiveDocxCall
@@ -105,7 +105,7 @@ withSystemTempFile initname = liftBaseOp (System.IO.Temp.withSystemTempFile init
 {- | Calls the LiveDocx Soap API to convert the given document contents to a pdf.
      Errors are put in the docconverter.log.
  -}
-convertToPDF :: forall m. (Log.MonadLog m, MonadBaseControl IO m)
+convertToPDF :: forall m. (MonadLog m, MonadBaseControl IO m)
              => LiveDocxConf -> BS.ByteString -> FileFormat -> m (Either LiveDocxError BS.ByteString)
 convertToPDF conf filecontents format = do
   start <- liftBase $ getCPUTime
@@ -117,10 +117,10 @@ convertToPDF conf filecontents format = do
   end <- liftBase $ getCPUTime
   case res of
     Left err ->
-      Log.mixlog_ $ "failed conversion from " ++ show format ++ " to PDF: " ++ show err
+      logInfo_ $ "failed conversion from " ++ show format ++ " to PDF: " ++ show err
     Right _ ->
       let diff = ((fromIntegral (end - start) * 0.00000000001) :: Double) in
-      Log.mixlog_ $ "successful conversion from " ++ show format ++ " to PDF (took " ++ show diff ++ "s)"
+      logInfo_ $ "successful conversion from " ++ show format ++ " to PDF (took " ++ show diff ++ "s)"
   return res
   where
     {- | API calls are as follows:

@@ -25,11 +25,11 @@ import Data.ByteString.Utils (splitEvery)
 import DB
 import File.Storage
 import KontraPrelude
+import Log
 import Mails.Model
 import qualified Amazon as AWS
-import qualified Log
 
-assembleContent :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadBase IO m, Log.MonadLog m, AWS.AmazonMonad m) => Mail -> m BSL.ByteString
+assembleContent :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadBase IO m, MonadLog m, AWS.AmazonMonad m) => Mail -> m BSL.ByteString
 assembleContent Mail{..} = do
   (boundaryMixed, boundaryAlternative,boundaryRelated) <- createBoundaries
   let datafields = do

@@ -18,6 +18,7 @@ import Kontra
 import KontraLink
 import KontraPrelude
 import ListUtil
+import Log
 import OAuth.Model
 import OAuth.Util
 import OAuth.View
@@ -26,7 +27,6 @@ import User.Model
 import Util.MonadUtils
 import Utils.List
 import Utils.Read
-import qualified Log
 
 oauth :: Route (Kontra Response)
 oauth = choice [
@@ -55,7 +55,7 @@ tempCredRequest = api $ do
   case etcr of
     Left errors -> (throwIO . SomeKontraException) $ badInput errors
     Right tcr -> do
-      Log.mixlog_ $ "TempCredRequest: " ++ show tcr
+      logInfo_ $ "TempCredRequest: " ++ show tcr
       (temptoken, tempsecret) <- apiGuardL' $ dbUpdate $ RequestTempCredentials tcr time
       return $ FormEncoded [("oauth_token", show temptoken),
                             ("oauth_token_secret", show tempsecret),

@@ -17,7 +17,6 @@ import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Network.AWS.Authentication
 import System.FilePath ((</>))
-import Text.JSON.Gen
 import qualified Crypto.Hash.SHA1 as SHA1
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BSL
@@ -33,8 +32,8 @@ import DB
 import File.File
 import File.Model
 import KontraPrelude
+import Log
 import Utils.String
-import qualified Log
 
 isAWSConfigOk :: Maybe (String, String, String) -> Bool
 isAWSConfigOk (Just ((_:_), (_:_), (_:_))) = True
@@ -54,7 +53,7 @@ mkAWSAction amazonConfig = AWS.S3Action {
     (bucket, accessKey, secretKey) = fromMaybe ("","","") $ amazonConfig
 
 newtype AmazonMonadT m a = AmazonMonadT { unAmazonMonadT :: ReaderT AmazonConfig m a }
-  deriving (Alternative, Applicative, Functor, Monad, MonadDB, MonadIO, Log.MonadLog, CryptoRNG, MonadTrans, MonadPlus, MonadBase b, MonadThrow, MonadCatch, MonadMask)
+  deriving (Alternative, Applicative, Functor, Monad, MonadDB, MonadIO, MonadLog, CryptoRNG, MonadTrans, MonadPlus, MonadBase b, MonadThrow, MonadCatch, MonadMask)
 
 runAmazonMonadT :: Monad m => AmazonConfig -> AmazonMonadT m a -> m a
 runAmazonMonadT ac = flip runReaderT ac . unAmazonMonadT
@@ -76,7 +75,7 @@ instance MonadBaseControl IO m => MonadBaseControl IO (AmazonMonadT m) where
 instance Monad m => AmazonMonad (AmazonMonadT m) where
   getAmazonConfig = AmazonMonadT ask
 
-uploadSomeFileToAmazon :: (AmazonMonad m, MonadIO m, Log.MonadLog m, MonadDB m, MonadThrow m, CryptoRNG m) => m Bool
+uploadSomeFileToAmazon :: (AmazonMonad m, MonadIO m, MonadLog m, MonadDB m, MonadThrow m, CryptoRNG m) => m Bool
 uploadSomeFileToAmazon = do
   mfile <- dbQuery GetFileThatShouldBeMovedToAmazon
   case mfile of
@@ -110,7 +109,7 @@ urlFromFile File{filename, fileid} =
 --
 -- - upload a file to Amazon storage
 -- - do nothing and keep it in memory database
-exportFile :: (MonadIO m, MonadDB m, Log.MonadLog m, CryptoRNG m) => S3Action -> File -> m Bool
+exportFile :: (MonadIO m, MonadDB m, MonadLog m, CryptoRNG m) => S3Action -> File -> m Bool
 exportFile ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)}
            file@File{fileid, filestorage = FileStorageMemory plainContent} = do
   Right aes <- mkAESConf <$> randomBytes 32 <*> randomBytes 16
@@ -126,23 +125,25 @@ exportFile ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)}
   result <- liftIO $ AWS.runAction action
   case result of
     Right _ -> do
-      Log.mixlog "AWS uploaded" $ do
-          value "fileid" (show fileid)
-          value "url" (bucket </> url)
+      logInfo "AWS uploaded" $ object [
+          "fileid" .= show fileid
+        , "url" .= (bucket </> url)
+        ]
       _ <- dbUpdate $ FileMovedToAWS fileid bucket url aes
       return True
     Left err -> do
-      Log.attention "AWS failed to upload" $ do
-          value "fileid" (show fileid)
-          value "url" (bucket </> url)
-          value "error" (show err)
+      logError "AWS failed to upload" $ object [
+          "fileid" .= show fileid
+        , "url" .= (bucket </> url)
+        , "error" .= show err
+        ]
       return False
 
 exportFile _ _ = do
-  Log.mixlog_ "No uploading to Amazon as bucket is ''"
+  logInfo_ "No uploading to Amazon as bucket is ''"
   return False
 
-deleteFile :: (MonadIO m, MonadDB m, Log.MonadLog m) => S3Action -> String -> String -> m Bool
+deleteFile :: (MonadIO m, MonadDB m, MonadLog m) => S3Action -> String -> String -> m Bool
 deleteFile ctxs3action bucket url = do
   let action = ctxs3action {
         AWS.s3object    = url
@@ -153,32 +154,36 @@ deleteFile ctxs3action bucket url = do
   result <- liftIO $ AWS.runAction action
   case result of
     Right res -> do
-      Log.mixlog "AWS file deleted" $ do
-         value "url" $ bucket </> url
-         value "result" (show res)
+      logInfo "AWS file deleted" $ object [
+          "url" .= (bucket </> url)
+        , "result" .= show res
+        ]
       return True
     Left err -> do
-      Log.attention "AWS failed to delete file" $ do
-         value "url" $ bucket </> url
-         value "result" (show err)
+      logError "AWS failed to delete file" $ object [
+           "url" .= (bucket </> url)
+         , "result" .= show err
+         ]
       return False
 
 
-getFileContents :: (MonadIO m, Log.MonadLog m) => S3Action -> File -> m (Maybe BS.ByteString)
+getFileContents :: (MonadBase IO m, MonadLog m) => S3Action -> File -> m (Maybe BS.ByteString)
 getFileContents s3action File{..} = do
   mcontent <- getContent filestorage
   case mcontent of
     Nothing -> do
-      Log.attention "No content for file" $ do
-         value "fileid" (show fileid)
-         value "filename" filename
+      logError "No content for file" $ object [
+          "fileid" .= show fileid
+        , "filename" .= filename
+        ]
       return Nothing
     Just content -> do
       if isJust filechecksum && Just (SHA1.hash content) /= filechecksum
         then do
-          Log.attention "SHA1 checksum of file doesn't match the one in the database" $ do
-             value "fileid" (show fileid)
-             value "filename" filename
+          logError "SHA1 checksum of file doesn't match the one in the database" $ object [
+              "fileid" .= show fileid
+            , "filename" .= filename
+            ]
              -- value "database_sha1" filechecksum
              -- value "calculated_sha1" (SHA1.hash content)
           return Nothing
@@ -186,15 +191,16 @@ getFileContents s3action File{..} = do
   where
     getContent (FileStorageMemory content) = return . Just $ content
     getContent (FileStorageAWS bucket url aes) = do
-      result <- liftIO $ AWS.runAction $ s3action {
+      result <- liftBase $ AWS.runAction $ s3action {
           AWS.s3object = url
         , AWS.s3bucket = bucket
       }
       case result of
         Right rsp -> return . Just . aesDecrypt aes . concatChunks $ HTTP.rspBody rsp
         Left err -> do
-          Log.mixlog "AWS.runAction failed" $ do
-             value "fileid" (show fileid)
-             value "error" (show err)
-             value "filename" filename
+          logError "AWS.runAction failed"  $ object [
+              "fileid" .= show fileid
+            , "error" .= show err
+            , "filename" .= filename
+            ]
           return Nothing

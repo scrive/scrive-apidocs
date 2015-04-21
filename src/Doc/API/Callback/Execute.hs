@@ -7,7 +7,6 @@ import Control.Monad.Reader
 import Network.HTTP as HTTP
 import System.Exit
 import Text.JSON
-import Text.JSON.Gen
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL (toString, fromString)
 
@@ -19,14 +18,14 @@ import Doc.DocInfo
 import Doc.DocStateData
 import Doc.Model
 import KontraPrelude
+import Log
 import Salesforce.AuthorizationWorkflow
 import Salesforce.Conf
 import User.CallbackScheme.Model
 import Util.SignatoryLinkUtils
 import Utils.IO
-import qualified Log
 
-execute :: (AmazonMonad m, MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, MonadBase IO m,  MonadReader c m, HasSalesforceConf c) => DocumentAPICallback -> m Bool
+execute :: (AmazonMonad m, MonadDB m, MonadThrow m, MonadLog m, MonadIO m, MonadBase IO m,  MonadReader c m, HasSalesforceConf c) => DocumentAPICallback -> m Bool
 execute DocumentAPICallback{..} = do
   exists <- dbQuery $ DocumentExistsAndIsNotPurged dacDocumentID
   if exists
@@ -40,11 +39,12 @@ execute DocumentAPICallback{..} = do
             Just (SalesforceScheme rtoken) -> executeSalesforceCallback doc rtoken dacURL
             _ -> executeStandardCallback doc dacURL
     else do
-      Log.mixlog "API callback dropped since document does not exists or is purged" $ do
-        value "document_id" (show dacDocumentID)
+      logInfo "API callback dropped since document does not exists or is purged" $ object [
+          "document_id" .= show dacDocumentID
+        ]
       return True
 
-executeStandardCallback :: (AmazonMonad m, MonadDB m, MonadThrow m, Log.MonadLog m, MonadBase IO m, MonadIO m) => Document -> String -> m Bool
+executeStandardCallback :: (AmazonMonad m, MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, MonadIO m) => Document -> String -> m Bool
 executeStandardCallback doc url = do
   dJSON <- documentJSONV1 Nothing False True Nothing doc
   (exitcode, _ , stderr) <- readCurl
@@ -61,19 +61,21 @@ executeStandardCallback doc url = do
                                       ]))
   case exitcode of
     ExitSuccess -> do
-      Log.mixlog "API callback executeStandardCallback succeeded" $ do
-        value "document_id" (show (documentid doc))
-        value "url" url
+      logInfo "API callback executeStandardCallback succeeded" $ object [
+          "document_id" .= show (documentid doc)
+        , "url" .= url
+        ]
       return True
     ExitFailure ec -> do
-      Log.attention "API callback executeStandardCallback failed" $ do
-        value "document_id" (show (documentid doc))
-        value "url" url
-        value "curl_exitcode" ec
-        value "stderr" (BSL.toString stderr)
+      logError "API callback executeStandardCallback failed" $ object [
+          "document_id" .= show (documentid doc)
+        , "url" .= url
+        , "curl_exitcode" .= show ec
+        , "stderr" .= BSL.toString stderr
+        ]
       return False
 
-executeSalesforceCallback :: (MonadDB m, Log.MonadLog m, MonadIO m, MonadBase IO m, MonadReader c m, HasSalesforceConf c) => Document -> String ->  String -> m Bool
+executeSalesforceCallback :: (MonadDB m, MonadLog m, MonadIO m, MonadBase IO m, MonadReader c m, HasSalesforceConf c) => Document -> String ->  String -> m Bool
 executeSalesforceCallback doc rtoken url = do
   mtoken <- getAccessTokenFromRefreshToken rtoken
   case mtoken of
@@ -93,4 +95,4 @@ executeSalesforceCallback doc rtoken url = do
                     ] BSL.empty
         case exitcode of
                     ExitSuccess -> return True
-                    ExitFailure _ -> (Log.mixlog_ $ "Salesforce API callback for #" ++ show (documentid doc)  ++ " failed: " ++ BSL.toString stderr) >> return False
+                    ExitFailure _ -> (logInfo_ $ "Salesforce API callback for #" ++ show (documentid doc)  ++ " failed: " ++ BSL.toString stderr) >> return False

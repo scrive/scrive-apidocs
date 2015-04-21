@@ -9,12 +9,12 @@ import Data.Int
 import DB
 import DB.Checks
 import KontraPrelude
+import Log
 import Mails.Tables
 import MinutesTime
-import qualified Log
 
 -- Note: ALWAYS append new migrations TO THE END of this list.
-mailerMigrations :: (MonadDB m, MonadThrow m, Log.MonadLog m) => [Migration m]
+mailerMigrations :: (MonadDB m, MonadThrow m, MonadLog m) => [Migration m]
 mailerMigrations = [
     addTestServiceToMails
   , moveAtachmentsToSeparateTable
@@ -117,7 +117,7 @@ addTestServiceToMails =
       runSQL_ "ALTER TABLE mails ALTER COLUMN service_test SET NOT NULL"
   }
 
-moveAtachmentsToSeparateTable :: (MonadDB m, MonadThrow m, Log.MonadLog m) => Migration m
+moveAtachmentsToSeparateTable :: (MonadDB m, MonadThrow m, MonadLog m) => Migration m
 moveAtachmentsToSeparateTable =
   Migration {
     mgrTable = tableMails
@@ -130,7 +130,7 @@ moveAtachmentsToSeparateTable =
         sqlWhere "attachments <> '[]'"
       count :: Int64 <- fetchOne runIdentity
 
-      Log.mixlog_ $ "There are " ++ show count ++ " mails with attachments to move to mail_attachments, it will take around " ++ show ((count+999) `div` 1000) ++ " minutes"
+      logInfo_ $ "There are " ++ show count ++ " mails with attachments to move to mail_attachments, it will take around " ++ show ((count+999) `div` 1000) ++ " minutes"
 
       runSQL_ $ "WITH"
           <+> "toinsert AS (SELECT mails.id AS id"
@@ -141,7 +141,7 @@ moveAtachmentsToSeparateTable =
           <+> "     SELECT id AS MailID, arr[1] AS Name, decode(arr[2],'base64') AS Content"
           <+> "       FROM toinsert"
 
-      Log.mixlog_ "Attachments moved to separate table, now dropping attachments column from mails"
+      logInfo_ "Attachments moved to separate table, now dropping attachments column from mails"
 
       runSQL_ "ALTER TABLE mails DROP COLUMN attachments"
   }

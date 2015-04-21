@@ -22,12 +22,12 @@ import Doc.SealStatus (SealStatus(..))
 import Doc.Tables
 import EvidenceLog.Model
 import KontraPrelude
+import Log
 import MinutesTime
 import Utils.Default
 import Utils.Prelude
 import Utils.String
 import Version
-import qualified Log
 
 moveSignaturesToFilesAndAddBoolValueForFields :: MonadDB m => Migration m
 moveSignaturesToFilesAndAddBoolValueForFields = Migration {
@@ -425,7 +425,7 @@ addObjectVersionToDocuments = Migration {
 }
 
 
-moveCancelationReasonFromDocumentsToSignatoryLinks :: (MonadDB m, Log.MonadLog m) => Migration m
+moveCancelationReasonFromDocumentsToSignatoryLinks :: (MonadDB m, MonadLog m) => Migration m
 moveCancelationReasonFromDocumentsToSignatoryLinks = Migration {
     mgrTable = tableSignatoryLinks
   , mgrFrom = 18
@@ -470,7 +470,7 @@ moveCancelationReasonFromDocumentsToSignatoryLinks = Migration {
           sqlWhereEq "id" slid
           sqlWhereEq "document_id" did
         when (r /= 1) $
-          Log.mixlog_ $ "Migration failed at " ++ show v
+          logInfo_ $ "Migration failed at " ++ show v
       runQuery_ $ sqlUpdate "documents" $ do
         sqlSetCmd "cancelation_reason" "NULL"
         sqlWhere "cancelation_reason = '\"ManualCancel\"'"
@@ -481,7 +481,7 @@ moveCancelationReasonFromDocumentsToSignatoryLinks = Migration {
           sqlWhere "signatory_links.eleg_data_mismatch_message IS NOT NULL"
 }
 
-dropCancelationReasonFromDocuments :: (MonadDB m, Log.MonadLog m) => Migration m
+dropCancelationReasonFromDocuments :: (MonadDB m, MonadLog m) => Migration m
 dropCancelationReasonFromDocuments = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 19
@@ -490,7 +490,7 @@ dropCancelationReasonFromDocuments = Migration {
                  sqlResult "id, title, cancelation_reason"
                  sqlWhere "cancelation_reason IS NOT NULL"
       values :: [(Int64, String, String)] <- fetchMany id
-      mapM_ (\(a,b,c) -> Log.mixlog_ $ "ID: " ++ show a ++ " (" ++ b ++ "): " ++ c) $ values
+      mapM_ (\(a,b,c) -> logInfo_ $ "ID: " ++ show a ++ " (" ++ b ++ "): " ++ c) $ values
 
       --when (not (null values)) $
       --     error "There are some useful cancelation_reason fields in documents still"
@@ -616,7 +616,7 @@ addSignRedirectURL =
       runSQL_ $ "ALTER TABLE signatory_links ADD COLUMN sign_redirect_url VARCHAR NULL DEFAULT NULL"
   }
 
-moveAttachmentsFromDocumentsToAttachments :: (MonadDB m, Log.MonadLog m) => Migration m
+moveAttachmentsFromDocumentsToAttachments :: (MonadDB m, MonadLog m) => Migration m
 moveAttachmentsFromDocumentsToAttachments =
   Migration
   { mgrTable = tableDocuments
@@ -628,7 +628,7 @@ moveAttachmentsFromDocumentsToAttachments =
                               <> " WHERE type = 3"
       deleted <- runSQL "DELETE FROM documents WHERE type = 3"
       when (deleted /= inserted) $
-         Log.mixlog_  $ "Migration from documents to attachments done. Migrated: " ++ show inserted ++ ". Lost attachments due to missing files: " ++ show (deleted - inserted)
+         logInfo_  $ "Migration from documents to attachments done. Migrated: " ++ show inserted ++ ". Lost attachments due to missing files: " ++ show (deleted - inserted)
   }
 
 removeOldDocumentLog :: (MonadDB m, MonadThrow m, MonadTime m) => Migration m
@@ -667,7 +667,7 @@ removeProcessFromDocuments =
   , mgrDo = runSQL_ "ALTER TABLE documents DROP COLUMN process"
   }
 
-moveBinaryDataForSignatoryScreenshotsToFilesTable :: (MonadDB m, Log.MonadLog m) => Migration m
+moveBinaryDataForSignatoryScreenshotsToFilesTable :: (MonadDB m, MonadLog m) => Migration m
 moveBinaryDataForSignatoryScreenshotsToFilesTable =
   Migration
   { mgrTable = tableSignatoryScreenshots
@@ -675,7 +675,7 @@ moveBinaryDataForSignatoryScreenshotsToFilesTable =
   , mgrDo = do
       runSQL_ "ALTER TABLE signatory_screenshots DROP COLUMN mimetype"
       runSQL_ "ALTER TABLE signatory_screenshots ADD COLUMN file_id BIGINT"
-      Log.mixlog_ $ "This is a long running migration with O(n^2) complexity. Please wait!"
+      logInfo_ $ "This is a long running migration with O(n^2) complexity. Please wait!"
       runSQL_ "CREATE INDEX ON signatory_screenshots((digest(image,'sha1')))"
       filesInserted <- runQuery . sqlInsertSelect "files" "signatory_screenshots" $ do
           sqlSetCmd "content" "signatory_screenshots.image"
@@ -688,7 +688,7 @@ moveBinaryDataForSignatoryScreenshotsToFilesTable =
         sqlSetCmd "file_id" "(SELECT id FROM files WHERE content = signatory_screenshots.image AND name=signatory_screenshots.type || '_screenshot.jpeg' LIMIT 1)"
 
       runSQL_ "ALTER TABLE signatory_screenshots DROP COLUMN image"
-      Log.mixlog_ $ "Moved " ++ show screenshotsUpdated ++ " into " ++ show filesInserted ++ " files (removing duplicates)"
+      logInfo_ $ "Moved " ++ show screenshotsUpdated ++ " into " ++ show filesInserted ++ " files (removing duplicates)"
   }
 
 migrateSignatoryLinksDeletedTime :: (MonadDB m, MonadTime m) => Migration m
@@ -1013,14 +1013,14 @@ signatoryLinkFieldsAddBinaryValue = Migration {
 }
 
 -- Personal number used to be obligatory, but we didn't asked about it in extra details section
-addUniqueContraintsTypeOnFields :: (MonadDB m,Log.MonadLog m) => Migration m
+addUniqueContraintsTypeOnFields :: (MonadDB m,MonadLog m) => Migration m
 addUniqueContraintsTypeOnFields=
   Migration {
     mgrTable = tableSignatoryLinkFields
   , mgrFrom = 6
   , mgrDo = do
        -- We have a large number of duplicated signature fields (10K+) - they have same value and same name, but only one of them has placement
-       Log.mixlog_ "Migration of fields started"
+       logInfo_ "Migration of fields started"
        -- We create index first so that rest of the migration runs on somewhat ok speed
 
        let migrateOnce = do
@@ -1038,20 +1038,20 @@ addUniqueContraintsTypeOnFields=
                -- (anywhere in order).
                sqlWhere "(signatory_link_fields.id > s2.id OR s2.placements <> '[]')"
                sqlWhereEq "signatory_link_fields.placements" ("[]" :: String)
-             Log.mixlog_ $ "Migration (unique fields): " ++ show n1 ++" duplicated signature fields removed"
+             logInfo_ $ "Migration (unique fields): " ++ show n1 ++" duplicated signature fields removed"
        migrateOnce
        -- We are expecting to have less then 500 other fields, that
        -- need to be fixed. So it should be ok to do a separate update
        -- for each of them
-       Log.mixlog_ "About to rename unmergeable custom fields"
+       logInfo_ "About to rename unmergeable custom fields"
        renameUnmergeableFields
-       Log.mixlog_ "About to fix other fields"
+       logInfo_ "About to fix other fields"
        fixOtherFields
-       Log.mixlog_ "Fields fixed, creating indexes"
+       logInfo_ "Fields fixed, creating indexes"
        -- When we fixed all fields, we can introduce a contraint
        runQuery_ $ sqlDropIndex "signatory_link_fields" (indexOnColumn "signatory_link_id")
        runQuery_ $ sqlCreateIndex "signatory_link_fields" (uniqueIndexOnColumns ["signatory_link_id","type","custom_name"])
-       Log.mixlog_ "Migration of fields ended"
+       logInfo_ "Migration of fields ended"
   }
   where
        renameUnmergeableFields = do
@@ -1077,7 +1077,7 @@ addUniqueContraintsTypeOnFields=
              sqlWhere "signatory_link_fields.type = s3.type"
              sqlWhere "signatory_link_fields.custom_name = s3.custom_name"
              sqlWhere "s3.id < signatory_link_fields.id"
-         Log.mixlog_ $ "Renamed " ++ show n ++ " unmergeable fields"
+         logInfo_ $ "Renamed " ++ show n ++ " unmergeable fields"
 
        fixOtherFields = do
          runQuery_ $ sqlSelect "signatory_link_fields" $ do
@@ -1098,7 +1098,7 @@ addUniqueContraintsTypeOnFields=
        fixUniqField [] = return ()
 
        fixStandardField (fid1,fv1,fp1,fid2,fv2,fp2) = do
-         Log.mixlog_ $ "Migration (unique fields): Merging standard fields that should be joined: " ++ show fid1 ++ " " ++ show fid2 ++ ".\n" ++
+         logInfo_ $ "Migration (unique fields): Merging standard fields that should be joined: " ++ show fid1 ++ " " ++ show fid2 ++ ".\n" ++
                        "Values that are merged are: '" ++ fv1 ++"' and '" ++ fv2 ++ "'. Value '"++(if (null fv1) then fv2 else fv1)++"' will be used."
          runQuery_ $ sqlUpdate "signatory_link_fields" $ do
            sqlWhereEq "id" fid1

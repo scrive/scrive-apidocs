@@ -16,15 +16,15 @@ import Assembler
 import Crypto.RNG (CryptoRNG)
 import DB
 import KontraPrelude
+import Log
 import MailingServerConf
 import Mails.Model
 import Utils.IO
 import qualified Amazon as AWS
-import qualified Log
 
 data Sender = Sender {
   senderName :: String
-, sendMail   :: (CryptoRNG m, MonadMask m, MonadBase IO m, Log.MonadLog m, AWS.AmazonMonad m) => Mail -> m Bool
+, sendMail   :: (CryptoRNG m, MonadMask m, MonadBase IO m, MonadLog m, AWS.AmazonMonad m) => Mail -> m Bool
 }
 
 instance Show Sender where
@@ -50,12 +50,12 @@ createExternalSender cs name program createArgs = Sender {
   let receivers = intercalate ", " (map addrEmail mailTo)
   case code of
     ExitFailure retcode -> do
-      Log.mixlog_ $ "Error while sending email" <+> show mailID <> ", cannot execute" <+> program <+> "to send email (code" <+> show retcode <> ") stderr:\n" <> BSLU.toString bsstderr
+      logInfo_ $ "Error while sending email" <+> show mailID <> ", cannot execute" <+> program <+> "to send email (code" <+> show retcode <> ") stderr:\n" <> BSLU.toString bsstderr
       return False
     ExitSuccess -> do
       let subject = filter (not . (`elem` "\r\n")) mailTitle
-      Log.mixlog_ $ "Email" <+> show mailID <+> "with subject '" <> subject <> "' sent correctly to:" <+> receivers
-      Log.mixlog_ $ unlines [
+      logInfo_ $ "Email" <+> show mailID <+> "with subject '" <> subject <> "' sent correctly to:" <+> receivers
+      logInfo_ $ unlines [
           "Subject:" <+> subject
         , "To:" <+> intercalate ", " (map addrEmail mailTo)
         , case mailReplyTo of
@@ -100,7 +100,7 @@ createLocalSender cs config = Sender {
   content <- runDBT cs ts $ assembleContent mail
   let filename = localDirectory config ++ "/Email-" ++ addrEmail ($head mailTo) ++ "-" ++ show mailID ++ ".eml"
   liftBase $ BSL.writeFile filename content
-  Log.mixlog_ $ "Email" <+> show mailID <+> "saved to file" <+> filename
+  logInfo_ $ "Email" <+> show mailID <+> "saved to file" <+> filename
   liftBase $ F.forM_ (localOpenCommand config) $ \cmd -> createProcess (proc cmd [filename]) {
     std_in  = Inherit
   , std_out = Inherit

@@ -8,12 +8,12 @@ import Happstack.Server (ServerMonad)
 
 import Context
 import Crypto.RNG
+import Data.Time.Monad
 import DB
 import Doc.SignatoryLinkID
 import KontraMonad
 import KontraPrelude
 import MagicHash
-import MinutesTime.Class
 import Session.Model
 
 data GetDocumentSessionToken = GetDocumentSessionToken SignatoryLinkID

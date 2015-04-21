@@ -42,23 +42,22 @@ import InputValidation
 import IPAddress (noIP)
 import Kontra
 import KontraPrelude
+import Log
 import MailContext (getMailContext, MailContext(..), MailContextMonad, MailContextT, runMailContextT)
 import Mails.SendMail
-import MinutesTime
 import SMS.SMS (scheduleSMS)
 import Templates (runTemplatesT)
 import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
-import qualified Log
 
 {- |
    Send emails to all of the invited parties saying that we fucked up the process.
    Say sorry about this to them.
    ??: Should this be in DocControl or in an email-sepecific file?
  -}
-sendDocumentErrorEmail :: (CryptoRNG m, MailContextMonad m, MonadDB m, MonadThrow m, Log.MonadLog m, TemplatesMonad m) => User -> Document -> m ()
+sendDocumentErrorEmail :: (CryptoRNG m, MailContextMonad m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) => User -> Document -> m ()
 sendDocumentErrorEmail author document = do
   let signlinks = documentsignatorylinks document
   forM_ signlinks (\sl -> if isAuthor sl
@@ -93,7 +92,7 @@ sendDocumentErrorEmail author document = do
    Send emails to all of the invited parties, respecting the sign order.
    ??: Should this be in DocControl or in an email-sepecific file?
  -}
-sendInvitationEmails :: (CryptoRNG m, MonadThrow m, Log.MonadLog m, TemplatesMonad m, DocumentMonad m, MailContextMonad m) => Bool -> m ()
+sendInvitationEmails :: (CryptoRNG m, MonadThrow m, MonadLog m, TemplatesMonad m, DocumentMonad m, MailContextMonad m) => Bool -> m ()
 sendInvitationEmails authorsignsimmediately = do
   signlinks <- theDocument >>= \d -> return
                   [sl | sl <- documentsignatorylinks d
@@ -113,7 +112,7 @@ sendInvitationEmails authorsignsimmediately = do
    Helper function to send emails to invited parties
    ??: Should this be in DocControl or in an email-specific file?
  -}
-sendInvitationEmail1 :: (CryptoRNG m, MonadThrow m, Log.MonadLog m, TemplatesMonad m, DocumentMonad m, MailContextMonad m) => SignatoryLink -> m ()
+sendInvitationEmail1 :: (CryptoRNG m, MonadThrow m, MonadLog m, TemplatesMonad m, DocumentMonad m, MailContextMonad m) => SignatoryLink -> m ()
 sendInvitationEmail1 signatorylink | not (isAuthor signatorylink) = do
   did <- theDocumentID
   mctx <- getMailContext
@@ -153,7 +152,7 @@ sendInvitationEmail1 authorsiglink = do
 {- |
     Send a reminder email (and update the modification time on the document)
 -}
-sendReminderEmail :: (Log.MonadLog m, MonadCatch m, TemplatesMonad m, CryptoRNG m, DocumentMonad m, MailContextMonad m) =>
+sendReminderEmail :: (MonadLog m, MonadCatch m, TemplatesMonad m, CryptoRNG m, DocumentMonad m, MailContextMonad m) =>
                           Maybe String -> Actor -> Bool -> SignatoryLink  -> m SignatoryLink
 sendReminderEmail custommessage  actor automatic siglink = do
   mctx <- getMailContext
@@ -194,7 +193,7 @@ sendReminderEmail custommessage  actor automatic siglink = do
   when sent $ do
     when (isPending doc &&  not (hasSigned siglink)) $ do
       -- Reset delivery status if the signatory has not signed yet
-      Log.mixlog_ $ "Reminder mail send for signatory that has not signed " ++ show (signatorylinkid siglink)
+      logInfo_ $ "Reminder mail send for signatory that has not signed " ++ show (signatorylinkid siglink)
       dbUpdate $ PostReminderSend siglink custommessage automatic actor
     triggerAPICallbackIfThereIsOne =<< theDocument
   return siglink
@@ -204,7 +203,7 @@ sendReminderEmail custommessage  actor automatic siglink = do
 -- document that wasn't digitally sealed, so now we resend the
 -- document with digital seal.  If the main file is deemed too large
 -- to attach, a link to it is used instead of attaching it.
-sendClosedEmails :: (CryptoRNG m, MailContextMonad m, MonadDB m, MonadThrow m, Log.MonadLog m, TemplatesMonad m) => Bool -> Document -> m ()
+sendClosedEmails :: (CryptoRNG m, MailContextMonad m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) => Bool -> Document -> m ()
 sendClosedEmails sealFixed document = do
     mctx <- getMailContext
     mailattachments <- makeMailAttachments document
@@ -274,7 +273,7 @@ sendRejectEmails customMessage signalink document = do
    Send reminder to all parties in document that can sign
  -}
 
-sendAllReminderEmails :: (Log.MonadLog m, TemplatesMonad m, MonadCatch m, CryptoRNG m, DocumentMonad m, MailContextMonad m) =>
+sendAllReminderEmails :: (MonadLog m, TemplatesMonad m, MonadCatch m, CryptoRNG m, DocumentMonad m, MailContextMonad m) =>
                           Actor -> Bool -> m [SignatoryLink]
 sendAllReminderEmails = sendAllReminderEmailsWithFilter (const True)
 
@@ -283,14 +282,14 @@ sendAllReminderEmails = sendAllReminderEmailsWithFilter (const True)
    Send reminder to all parties in document that can sign, except author
  -}
 
-sendAllReminderEmailsExceptAuthor :: (Log.MonadLog m, TemplatesMonad m, MonadCatch m, CryptoRNG m, DocumentMonad m, MailContextMonad m) =>
+sendAllReminderEmailsExceptAuthor :: (MonadLog m, TemplatesMonad m, MonadCatch m, CryptoRNG m, DocumentMonad m, MailContextMonad m) =>
                                         Actor -> Bool -> m [SignatoryLink]
 sendAllReminderEmailsExceptAuthor  = sendAllReminderEmailsWithFilter (not . isAuthor)
 
 {- |
    Send reminder to all parties in document - excluding ones that do not pass given filter
  -}
-sendAllReminderEmailsWithFilter :: (Log.MonadLog m, TemplatesMonad m, MonadCatch m, CryptoRNG m, DocumentMonad m, MailContextMonad m) =>
+sendAllReminderEmailsWithFilter :: (MonadLog m, TemplatesMonad m, MonadCatch m, CryptoRNG m, DocumentMonad m, MailContextMonad m) =>
                                         (SignatoryLink -> Bool) -> Actor -> Bool -> m [SignatoryLink]
 sendAllReminderEmailsWithFilter f actor automatic = do
     ifM (isPending <$> theDocument)
@@ -305,7 +304,7 @@ sendAllReminderEmailsWithFilter f actor automatic = do
 {- |
     Send a forward email
 -}
-sendForwardEmail :: (Log.MonadLog m, TemplatesMonad m, MonadThrow m, CryptoRNG m, DocumentMonad m, MailContextMonad m) =>
+sendForwardEmail :: (MonadLog m, TemplatesMonad m, MonadThrow m, CryptoRNG m, DocumentMonad m, MailContextMonad m) =>
                           String -> Bool -> SignatoryLink -> m ()
 sendForwardEmail email noContent asiglink = do
   mctx <- getMailContext
@@ -323,7 +322,7 @@ sendForwardEmail email noContent asiglink = do
 
 
 
-sendPinCode:: (Log.MonadLog m, TemplatesMonad m, MonadThrow m, DocumentMonad m, CryptoRNG m, MailContextMonad m, KontraMonad m) =>
+sendPinCode:: (MonadLog m, TemplatesMonad m, MonadThrow m, DocumentMonad m, CryptoRNG m, MailContextMonad m, KontraMonad m) =>
                           SignatoryLink -> String -> String -> m ()
 sendPinCode sl phone pin = do
   ctx <- getContext
@@ -340,9 +339,9 @@ sendPinCode sl phone pin = do
 -- Notification sendout
 
 -- | Send out mail and/or SMS or not, depending on delivery method.  Return 'False' iff nothing was sent. Email is always sent to authors if alwaysEmailAuthor is True.
-sendNotifications :: (Monad m, Log.MonadLog m) => SignatoryLink -> Bool -> m () -> m () -> m Bool
+sendNotifications :: (Monad m, MonadLog m) => SignatoryLink -> Bool -> m () -> m () -> m Bool
 sendNotifications sl alwaysEmailAuthor domail dosms = do
-  Log.mixlog_ $ "Chosen delivery method: " ++ show (signatorylinkdeliverymethod sl) ++ " for phone=" ++ getMobile sl ++ ", email=" ++ getEmail sl
+  logInfo_ $ "Chosen delivery method: " ++ show (signatorylinkdeliverymethod sl) ++ " for phone=" ++ getMobile sl ++ ", email=" ++ getEmail sl
   case (forceAuthorEmail, signatorylinkdeliverymethod sl) of
     (_, EmailDelivery) -> domail >> return True
     (_, EmailAndMobileDelivery) -> domail >> dosms >> return True
@@ -356,7 +355,7 @@ type MailT m = MailContextT (TemplatesT m)
 
 -- | Set up mail and template context, with language and branding
 -- based on document data, and the rest from SchedulerData
-runMailTInScheduler :: (MonadReader SchedulerData m, MonadThrow m, MonadDB m, MonadIO m, Log.MonadLog m) => Document -> MailT m a -> m a
+runMailTInScheduler :: (MonadReader SchedulerData m, MonadThrow m, MonadDB m, MonadIO m, MonadLog m) => Document -> MailT m a -> m a
 runMailTInScheduler doc m = do
   appConf <- asks sdAppConf
   now <- currentTime

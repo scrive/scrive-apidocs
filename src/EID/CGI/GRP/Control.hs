@@ -27,13 +27,13 @@ import EID.Signature.Model
 import Happstack.Fields
 import Kontra hiding (InternalError)
 import KontraPrelude
+import Log
 import Network.SOAP.Call
 import Network.SOAP.Transport.Curl
 import Routing
 import Templates
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
-import qualified Log
 
 grpRoutes :: Route (Kontra Response)
 grpRoutes = dir "cgi" . dir "grp" $ choice [
@@ -50,7 +50,7 @@ handleSignRequest did slid = do
   mcompany_display_name <- getCompanyDisplayName doc
   tbs <- textToBeSigned doc
   pn <- getField "personal_number" `onNothing` do
-    Log.mixlog_ "No personal number"
+    logInfo_ "No personal number"
     respond404
   certErrorHandler <- mkCertErrorHandler
   let transport = curlTransport SecureSSL (Just cgCertFile) cgGateway id certErrorHandler
@@ -66,7 +66,7 @@ handleSignRequest did slid = do
   soapCall transport "" () req parser >>= \case
     Left fault -> return $ unjsonToJSON unjsonDef fault
     Right sr@SignResponse{..} -> do
-      Log.mixlog_ $ "SOAP response:" <+> show sr
+      logInfo_ $ "SOAP response:" <+> show sr
       dbUpdate $ MergeCgiGrpTransaction CgiGrpTransaction {
         cgtSignatoryLinkID = slid
       , cgtTransactionID = srsTransactionID
@@ -81,7 +81,7 @@ handleCollectRequest did slid = do
   mcompany_display_name <- getDocument did slid >>= getCompanyDisplayName
 
   CgiGrpTransaction{..} <- dbQuery (GetCgiGrpTransaction slid) `onNothing` do
-    Log.mixlog_ "No active transaction"
+    logInfo_ "No active transaction"
     respond404
 
   certErrorHandler <- mkCertErrorHandler
@@ -97,7 +97,7 @@ handleCollectRequest did slid = do
   soapCall transport "" () req parser >>= \case
     Left fault -> return $ unjsonToJSON unjsonDef fault
     Right cr@CollectResponse{..} -> do
-      Log.mixlog_ $ "SOAP response:" <+> show cr
+      logInfo_ $ "SOAP response:" <+> show cr
       when (crsProgressStatus == Complete) $ do
         -- all the required attributes are supposed to always
         -- be there, so bail out if this is not the case.
@@ -120,23 +120,23 @@ handleCollectRequest did slid = do
 
 -- | Fetch the document for e-signing. Checks that the document
 -- is in the correct state and the signatory hasn't signed yet.
-getDocument :: (MonadDB m, Log.MonadLog m, KontraMonad m, MonadThrow m,MonadBase IO m)
+getDocument :: (MonadDB m, MonadLog m, KontraMonad m, MonadThrow m,MonadBase IO m)
             => DocumentID -> SignatoryLinkID -> m Document
 getDocument did slid = dbQuery (GetDocumentSessionToken slid) >>= \case
   Just mh -> do
-    Log.mixlog_ "Document token found"
+    logInfo_ "Document token found"
     doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
     when (documentstatus doc /= Pending) $ do
-      Log.mixlog_ $ "Document is" <+> show (documentstatus doc) <+> ", should be" <+> show Pending
+      logInfo_ $ "Document is" <+> show (documentstatus doc) <+> ", should be" <+> show Pending
       respond404
     -- this should always succeed as we already got the document
     let slink = $fromJust $ getSigLinkFor slid doc
     when (hasSigned slink) $ do
-      Log.mixlog_ "Signatory already signed the document"
+      logInfo_ "Signatory already signed the document"
       respond404
     return doc
   Nothing -> do
-    Log.mixlog_ "No document token found"
+    logInfo_ "No document token found"
     respond404
 
 getCompanyDisplayName :: (MonadDB m, MonadThrow m) => Document -> m (Maybe T.Text)

@@ -1,10 +1,9 @@
 {-# LANGUAGE OverlappingInstances #-}
-module MinutesTime.Class where
+module Data.Time.Monad where
 
 import Control.Monad.Trans
 import Data.Time
-
-import KontraPrelude
+import Prelude
 
 -- | Class of monads which carry the notion of the current time.
 class Monad m => MonadTime m where

@@ -11,9 +11,9 @@ import Chargeable.Model
 import DB
 import Doc.DocStateData
 import KontraPrelude
+import Log
 import MessageData
 import SMS.Model
-import qualified Log
 
 data SMS = SMS {
     smsMSISDN     :: String -- ^ Number of recipient in international form (+NNXXYYYYYYY)
@@ -27,14 +27,14 @@ data SMS = SMS {
 -- Transliterate is used since eg. polish characters are not supported by
 -- latin1, but we still want messages containing such characters to be sent
 -- successfully.
-scheduleSMS :: (Log.MonadLog m, MonadDB m, MonadThrow m) => Document -> SMS -> m ()
+scheduleSMS :: (MonadLog m, MonadDB m, MonadThrow m) => Document -> SMS -> m ()
 scheduleSMS doc msg@SMS{..} = do
   when (null smsMSISDN) $ do
     $unexpectedErrorM "no mobile phone number defined"
   sid <- dbUpdate $ CreateSMS (fixOriginator smsOriginator) (fixPhoneNumber smsMSISDN) smsBody (show smsData)
   -- charge company of the author of the document for the smses
   dbUpdate $ ChargeCompanyForSMS (documentid doc) sms_count
-  Log.mixlog_ $ "SMS" <+> show msg <+> "with id" <+> show sid <+> "scheduled for sendout"
+  logInfo_ $ "SMS" <+> show msg <+> "with id" <+> show sid <+> "scheduled for sendout"
   where
     -- Count the real smses; if the message length is less than
     -- 160 characters, it's 1 sms. Otherwise it's split into

@@ -18,12 +18,12 @@ import Doc.DocStateData
 import Doc.DocumentID
 import JobQueue.Config
 import KontraPrelude
+import Log
 import MinutesTime
 import User.CallbackScheme.Model
 import Util.SignatoryLinkUtils
-import qualified Log
 
-documentAPICallback :: (MonadIO m, MonadBase IO m, Log.MonadLog m, MonadMask m)
+documentAPICallback :: (MonadIO m, MonadBase IO m, MonadLog m, MonadMask m)
   => (forall r. Scheduler r -> m r)
   -> ConsumerConfig m CallbackID DocumentAPICallback
 documentAPICallback runExecute = ConsumerConfig {
@@ -44,7 +44,7 @@ documentAPICallback runExecute = ConsumerConfig {
   True  -> return $ Ok Remove
   False -> dbQuery (CheckQueuedCallbacksFor dacDocumentID) >>= \case
     True -> do
-      Log.mixlog_ $ "Callback for document" <+> show dacDocumentID <+> "failed and there are more queued, discarding."
+      logInfo_ $ "Callback for document" <+> show dacDocumentID <+> "failed and there are more queued, discarding."
       return $ Failed Remove
     False -> Failed <$> onFailure dacAttempts
 , ccOnException = onFailure . dacAttempts
@@ -61,10 +61,10 @@ documentAPICallback runExecute = ConsumerConfig {
       8 -> return . RetryAfter $ ihours 4
       9 -> return . RetryAfter $ ihours 8
       _ -> do
-        Log.mixlog_ "10th call attempt failed, discarding."
+        logInfo_ "10th call attempt failed, discarding."
         return Remove
 
-triggerAPICallbackIfThereIsOne :: (MonadDB m, MonadCatch m, Log.MonadLog m)
+triggerAPICallbackIfThereIsOne :: (MonadDB m, MonadCatch m, MonadLog m)
   => Document -> m ()
 triggerAPICallbackIfThereIsOne doc@Document{..} = case documentstatus of
   Preparation -> return () -- We don't trigger callbacks for Drafts
@@ -81,7 +81,7 @@ triggerAPICallbackIfThereIsOne doc@Document{..} = case documentstatus of
 
   where
     addAPICallback url = do
-      Log.mixlog_ $ "Triggering API callback for document " ++ show documentid
+      logInfo_ $ "Triggering API callback for document " ++ show documentid
       dbUpdate $ MergeAPICallback documentid url
 
 ----------------------------------------
@@ -96,7 +96,7 @@ instance (MonadDB m, MonadCatch m) => DBQuery m CheckQueuedCallbacksFor Bool whe
     fetchOne runIdentity
 
 data MergeAPICallback = MergeAPICallback DocumentID String
-instance (MonadDB m, MonadCatch m, Log.MonadLog m) => DBUpdate m MergeAPICallback () where
+instance (MonadDB m, MonadCatch m, MonadLog m) => DBUpdate m MergeAPICallback () where
   update (MergeAPICallback did url) = do
     -- If callbacks are queued, but not being processed, replace them.
     -- There will be only 1 queued callback majority of times, but it
@@ -125,10 +125,10 @@ instance (MonadDB m, MonadCatch m, Log.MonadLog m) => DBUpdate m MergeAPICallbac
       sqlWhere "reserved_by IS NULL"
     when (updated == 0) $ do
       -- Otherwise insert a new one.
-      Log.mixlog_ $ "Inserting callback for document" <+> show did
+      logInfo_ $ "Inserting callback for document" <+> show did
       runQuery_ $ sqlInsert "document_api_callbacks" setFields
     notify apiCallbackNotificationChannel ""
-    Log.mixlog_ $ "Callback for document" <+> show did <+> "merged"
+    logInfo_ $ "Callback for document" <+> show did <+> "merged"
     where
       setFields :: (MonadState v n, SqlSet v) => n ()
       setFields = do

@@ -9,9 +9,8 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
-import Text.JSON.Gen
 import qualified Control.Exception.Lifted as E
-import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BS
 
 import ActionQueue.Core
 import Amazon
@@ -19,15 +18,14 @@ import Control.Monad.Trans.Control.Util
 import Crypto.RNG
 import DB
 import KontraPrelude
-import MinutesTime
-import qualified Log
+import Log
 
-type ActionQueue = ActionQueueT (AmazonMonadT (CryptoRNGT (DBT (Log.LogT IO))))
+type ActionQueue = ActionQueueT (AmazonMonadT (CryptoRNGT (DBT (LogT IO))))
 
 type InnerAQ m qd = ReaderT qd m
 
 newtype ActionQueueT m qd a = AQ { unAQ :: InnerAQ m qd a }
-  deriving (Applicative, CryptoRNG, Functor, Monad, MonadCatch, MonadDB, MonadIO, MonadMask, MonadReader qd, MonadThrow, MonadTime, AmazonMonad, MonadBase b, Log.MonadLog)
+  deriving (Applicative, CryptoRNG, Functor, Monad, MonadCatch, MonadDB, MonadIO, MonadMask, MonadReader qd, MonadThrow, MonadTime, AmazonMonad, MonadBase b, MonadLog)
 
 instance (MonadBaseControl IO m, MonadBase IO (ActionQueueT m qd)) => MonadBaseControl IO (ActionQueueT m qd) where
   newtype StM (ActionQueueT m qd) a = StAQ { unStAQ :: StM (InnerAQ m qd) a }
@@ -41,7 +39,7 @@ runQueue qd queue =
   runReaderT (unAQ queue) qd
 
 -- | Gets 'expired' actions and evaluates them
-actionQueue :: (MonadDB m, MonadBase IO m, MonadCatch m, Log.MonadLog m, Show t)
+actionQueue :: (MonadDB m, MonadBase IO m, MonadCatch m, MonadLog m, Show t)
             => Action idx t con (ActionQueueT m qd) -> ActionQueueT m qd ()
 actionQueue qa = currentTime
   >>= dbQuery . GetExpiredActions qa
@@ -56,10 +54,14 @@ actionQueue qa = currentTime
         commit
     )
   where
-    printSuccess a = Log.mixlog "Action evaluated successfully" $ do
-        value "action" (show a)
-        value "table" (BS.unpack $ unRawSQL (tblName (qaTable qa)))
-    printError a e = Log.attention "Actional evaluation failed" $ do
-        value "action" (show a)
-        value "table" (BS.unpack $ unRawSQL (tblName (qaTable qa)))
-        value "exception" (show e)
+    tableName = BS.unpack . unRawSQL . tblName $ qaTable qa
+
+    printSuccess a = logInfo "Action evaluated successfully" $ object [
+        "action" .= show a
+      , "table" .= tableName
+      ]
+    printError a e = logError "Actional evaluation failed" $ object [
+        "action" .= show a
+      , "table" .= tableName
+      , "exception" .= show e
+      ]

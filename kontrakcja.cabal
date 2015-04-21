@@ -72,6 +72,7 @@ Executable kontrakcja-server
 
   Build-depends: AES
   Build-depends: aeson
+  Build-depends: aeson-pretty
   Build-depends: attoparsec
   Build-depends: base < 6
   Build-depends: base16-bytestring
@@ -127,6 +128,7 @@ Executable kontrakcja-server
   Build-depends: regex-tdfa
   Build-depends: resource-pool
   Build-depends: soap
+  Build-depends: split
   Build-depends: spreadsheet
   Build-depends: stm
   Build-depends: tagsoup
@@ -143,7 +145,9 @@ Executable kontrakcja-server
   Build-depends: transformers-base
   Build-depends: unix
   Build-depends: unjson
+  Build-depends: unordered-containers
   Build-depends: utf8-string
+  Build-depends: vector
   Build-depends: xml-conduit
   Build-depends: xml-conduit-writer
   Build-depends: xml-types
@@ -192,6 +196,7 @@ Executable cron
 
   Build-depends: AES
   Build-depends: aeson
+  Build-depends: aeson-pretty
   Build-depends: attoparsec
   Build-depends: base < 6
   Build-depends: base16-bytestring
@@ -244,6 +249,7 @@ Executable cron
   Build-depends: regex-tdfa
   Build-depends: resource-pool
   Build-depends: soap
+  Build-depends: split
   Build-depends: spreadsheet
   Build-depends: stm
   Build-depends: tagsoup
@@ -259,7 +265,9 @@ Executable cron
   Build-depends: transformers-base
   Build-depends: unix
   Build-depends: unjson
+  Build-depends: unordered-containers
   Build-depends: utf8-string
+  Build-depends: vector
   Build-depends: xml-conduit
   Build-depends: xml-conduit-writer
   Build-depends: xml-types
@@ -313,6 +321,7 @@ Executable kontrakcja-migrate
 
   Build-depends: AES
   Build-depends: aeson
+  Build-depends: aeson-pretty
   Build-depends: attoparsec
   Build-depends: base < 6
   Build-depends: base16-bytestring
@@ -364,6 +373,7 @@ Executable kontrakcja-migrate
   Build-depends: recurly
   Build-depends: regex-tdfa
   Build-depends: resource-pool
+  Build-depends: split
   Build-depends: spreadsheet
   Build-depends: stm
   Build-depends: tagsoup
@@ -379,7 +389,9 @@ Executable kontrakcja-migrate
   Build-depends: transformers-base
   Build-depends: unix
   Build-depends: unjson
+  Build-depends: unordered-containers
   Build-depends: utf8-string
+  Build-depends: vector
   Build-depends: xml-conduit
   Build-depends: xml-types
   Build-depends: yaml
@@ -429,6 +441,7 @@ Executable mailing-server
 
   Build-depends: AES
   Build-depends: aeson
+  Build-depends: aeson-pretty
   Build-depends: attoparsec
   Build-depends: base < 6
   Build-depends: base16-bytestring
@@ -441,6 +454,7 @@ Executable mailing-server
   Build-depends: Crypto
   Build-depends: crypto-api
   Build-depends: cryptohash
+  Build-depends: data-default
   Build-depends: dataenc
   Build-depends: Decimal
   Build-depends: deepseq
@@ -477,6 +491,7 @@ Executable mailing-server
   Build-depends: recurly
   Build-depends: regex-tdfa
   Build-depends: resource-pool
+  Build-depends: split
   Build-depends: spreadsheet
   Build-depends: stm
   Build-depends: tagsoup
@@ -492,7 +507,9 @@ Executable mailing-server
   Build-depends: transformers-base
   Build-depends: unix
   Build-depends: unjson
+  Build-depends: unordered-containers
   Build-depends: utf8-string
+  Build-depends: vector
   Build-depends: yaml
   Build-depends: zip-archive
   Build-depends: zlib
@@ -540,6 +557,7 @@ Executable messenger-server
 
   Build-depends: AES
   Build-depends: aeson
+  Build-depends: aeson-pretty
   Build-depends: attoparsec
   Build-depends: base < 6
   Build-depends: base16-bytestring
@@ -552,6 +570,7 @@ Executable messenger-server
   Build-depends: Crypto
   Build-depends: crypto-api
   Build-depends: cryptohash
+  Build-depends: data-default
   Build-depends: dataenc
   Build-depends: Decimal
   Build-depends: deepseq
@@ -588,6 +607,7 @@ Executable messenger-server
   Build-depends: recurly
   Build-depends: regex-tdfa
   Build-depends: resource-pool
+  Build-depends: split
   Build-depends: spreadsheet
   Build-depends: stm
   Build-depends: tagsoup
@@ -603,7 +623,9 @@ Executable messenger-server
   Build-depends: transformers-base
   Build-depends: unix
   Build-depends: unjson
+  Build-depends: unordered-containers
   Build-depends: utf8-string
+  Build-depends: vector
   Build-depends: yaml
   Build-depends: zip-archive
   Build-depends: zlib
@@ -652,6 +674,7 @@ Executable kontrakcja-test
 
   Build-depends: AES
   Build-depends: aeson
+  Build-depends: aeson-pretty
   Build-depends: attoparsec
   Build-depends: base < 6
   Build-depends: base16-bytestring
@@ -703,6 +726,7 @@ Executable kontrakcja-test
   Build-depends: recurly
   Build-depends: regex-tdfa
   Build-depends: resource-pool
+  Build-depends: split
   Build-depends: soap
   Build-depends: spreadsheet
   Build-depends: stm

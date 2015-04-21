@@ -12,7 +12,7 @@ import DB
 import File.FileID
 import File.Model
 import KontraPrelude
-import qualified Log
+import Log
 
 data FindFilesForPurging = FindFilesForPurging Int
 instance (MonadDB m, MonadThrow m) => DBQuery m FindFilesForPurging [(FileID, Maybe String, Maybe String, Bool)] where
@@ -106,7 +106,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m FindFilesForPurging [(FileID, Ma
         <+> "   LIMIT" <?> (fromIntegral limit :: Int32)
     fetchMany id
 
-purgeSomeFiles :: (MonadDB m, MonadThrow m, Log.MonadLog m, MonadIO m, AmazonMonad m) => m ()
+purgeSomeFiles :: (MonadDB m, MonadThrow m, MonadLog m, MonadIO m, AmazonMonad m) => m ()
 purgeSomeFiles = do
   someFiles <- dbQuery $ FindFilesForPurging 10
   mapM_ purge someFiles

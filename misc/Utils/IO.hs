@@ -8,13 +8,13 @@ import System.Posix.IO (stdInput)
 import System.Posix.Signals
 import System.Posix.Terminal (queryTerminal)
 import System.Process
-import Text.JSON.Gen
 import qualified Control.Exception.Lifted as C
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL (toString)
+import qualified Data.Text as T
 
 import KontraPrelude
-import qualified Log
+import Log
 
 -- | Wait for a signal (sigINT or sigTERM).
 waitForTermination :: IO ()
@@ -103,7 +103,7 @@ checkExecutableVersion path options = do
     return $ BSL.toString stdout' ++ BSL.toString stderr'
 
 
-importantExecutables :: [(FilePath,[String])]
+importantExecutables :: [(T.Text, [String])]
 importantExecutables =
   [ ("java", ["-version"])
   , ("curl", ["-V"])
@@ -113,18 +113,16 @@ importantExecutables =
   , ("lessc", ["-v"])
   ]
 
-checkExecutables :: (Log.MonadLog m, MonadIO m, Functor m) => m ()
-checkExecutables = do
-  Log.mixlogt "Checking paths to executables:" $ do
-    mapM_ check (sort importantExecutables)
+checkExecutables :: (MonadLog m, MonadIO m, Functor m) => m ()
+checkExecutables = logInfo "Checking paths to executables:" . object
+  =<< mapM check (sort importantExecutables)
   where
-    check (filepath,options) = do
-      realpathlines <- lines `fmap` (liftIO $ checkPathToExecutable filepath)
+    check (filepath, options) = do
+      realpathlines <- lines `fmap` (liftIO $ checkPathToExecutable $ T.unpack filepath)
       case realpathlines of
-        [] -> value filepath ("*** not found ***" :: String)
-        (realpath:_) -> do
-            if null options
-               then value filepath realpath
-               else do
-                  ver <- liftIO $ checkExecutableVersion realpath options
-                  value filepath (realpath : lines ver)
+        [] -> return $ filepath .= ("*** not found ***"::T.Text)
+        (realpath:_) -> if null options
+          then return $ filepath .= realpath
+          else do
+            ver <- liftIO $ checkExecutableVersion realpath options
+            return $ filepath .= (realpath : lines ver)

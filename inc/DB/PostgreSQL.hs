@@ -6,12 +6,10 @@ import Control.Concurrent.STM
 import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Catch
-import Data.Int
 import Data.Monoid.Utils
 import Data.Pool
 import Database.PostgreSQL.PQTypes
 import Database.PostgreSQL.PQTypes.Internal.Connection
-import System.Random
 import qualified Data.ByteString as BS
 
 import DB.Model.CompositeType
@@ -42,24 +40,13 @@ createPoolSource logger cs = do
     withResource' :: (MonadBase IO m, MonadMask m)
                   => Pool Connection -> (Connection -> m a) -> m a
     withResource' pool m = mask $ \restore -> do
-      uid <- show <$> liftBase (randomRIO (100000, 999999::Int32))
-      logInfo uid "acquiring connection from the pool..."
       (resource, local) <- liftBase $ takeResource pool
       (allocatedNow, availableNow) <- internalPoolState local
-      logInfo uid $ "connection acquired (" ++ show allocatedNow <+> "allocated," <+> show availableNow <+> "available)"
+      logger $ "withResource: connection acquired (" ++ show allocatedNow <+> "allocated," <+> show availableNow <+> "available)"
       ret <- restore (m resource) `onException` do
-        logInfo uid "exception thrown while executing action, destroying connection"
         liftBase (destroyResource pool local resource)
-        (allocatedAfter, availableAfter) <- internalPoolState local
-        logInfo uid $ "connection destroyed (" ++ show allocatedAfter <+> "allocated," <+> show availableAfter <+> "available)"
-      logInfo uid "returning connection to the pool..."
       liftBase $ putResource local resource
-      (allocatedAfter, availableAfter) <- internalPoolState local
-      logInfo uid $ "connection returned (" ++ show allocatedAfter <+> "allocated," <+> show availableAfter <+> "available)"
       return ret
-
-    logInfo :: MonadBase IO m => String -> String -> m ()
-    logInfo uid = logger . (("withResource (" ++ uid ++ "): ") <+>)
 
     internalPoolState local = liftBase . atomically $ (,)
       <$> readTVar (inUse local)

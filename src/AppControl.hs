@@ -16,6 +16,7 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Error
 import Control.Monad.Trans.Control
+import Data.Aeson.Types
 import Data.Functor
 import Data.Time.Clock
 import Data.Typeable
@@ -24,7 +25,7 @@ import Happstack.Server hiding (simpleHTTP, host, dir, path)
 import Happstack.Server.Internal.Cookie
 import Network.Socket
 import System.Directory
-import Text.JSON.Gen
+import Text.JSON.ToJSValue
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL
@@ -45,44 +46,44 @@ import Happstack.Server.ReqHandler
 import IPAddress
 import Kontra
 import KontraPrelude
+import Log
 import MinutesTime
 import Salesforce.Conf
 import ServerUtils.BrandedImagesCache
 import Session.Data hiding (session)
 import Session.Model
 import Templates
+import Text.JSON.Convert
 import User.Model
 import Util.FinishWith
 import Util.FlashUtil
 import Utils.HTTP
 import qualified Amazon as AWS
 import qualified FlashMessage as F
-import qualified Log
 import qualified MemCache
 
 {- |
   Global application data
 -}
 data AppGlobals
-    = AppGlobals { templates          :: MVar (UTCTime, KontrakcjaGlobalTemplates)
-                 , filecache          :: MemCache.MemCache FileID BS.ByteString
-                 , lesscache          :: LessCache
-                 , brandedimagescache :: BrandedImagesCache
-                 , docscache          :: RenderedPagesCache
-                 , cryptorng          :: CryptoRNGState
-                 , connsource         :: ConnectionSource
+    = AppGlobals { templates          :: !(MVar (UTCTime, KontrakcjaGlobalTemplates))
+                 , filecache          :: !(MemCache.MemCache FileID BS.ByteString)
+                 , lesscache          :: !LessCache
+                 , brandedimagescache :: !BrandedImagesCache
+                 , docscache          :: !RenderedPagesCache
+                 , cryptorng          :: !CryptoRNGState
+                 , connsource         :: !ConnectionSource
                  }
-
 
 {- |
     Determines the lang of the current user (whether they are logged in or not), by checking
     their settings, the request, and cookies.
 -}
-getStandardLang :: (HasLang a, HasRqData m, ServerMonad m, FilterMonad Response m, MonadIO m, Functor m, Log.MonadLog m, MonadCatch m) => Maybe a -> m Lang
+getStandardLang :: (HasLang a, HasRqData m, ServerMonad m, FilterMonad Response m, MonadIO m, Functor m, MonadLog m, MonadCatch m) => Maybe a -> m Lang
 getStandardLang muser = do
   rq <- askRq
   langcookie <- runPlusSandboxT (lookCookie "lang") `catch` \(RqDataError errs) -> do
-    mapM_ Log.mixlog_ $ unErrors errs
+    mapM_ logInfo_ $ unErrors errs
     return Nothing
   let mcookielang = join $ langFromCode <$> cookieValue <$> langcookie
   let browserlang = langFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
@@ -91,7 +92,7 @@ getStandardLang muser = do
   addCookie (MaxAge (60*60*24*366)) newlangcookie
   return newlang
 
-maybeReadTemplates :: (MonadBaseControl IO m, Log.MonadLog m)
+maybeReadTemplates :: (MonadBaseControl IO m, MonadLog m)
                    => Bool
                    -> MVar (UTCTime, KontrakcjaGlobalTemplates) -> m KontrakcjaGlobalTemplates
 maybeReadTemplates production mvar | production = snd <$> readMVar mvar
@@ -99,7 +100,7 @@ maybeReadTemplates _ mvar = modifyMVar mvar $ \(modtime, templates) -> do
   modtime' <- liftBase getTemplatesModTime
   if modtime /= modtime'
     then do
-      Log.mixlog_ $ "Reloading templates"
+      logInfo_ $ "Reloading templates"
       templates' <- liftBase readGlobalTemplates
       return ((modtime', templates'), templates')
     else return ((modtime, templates), templates)
@@ -124,12 +125,13 @@ showNamedInput (name,input) = name ++ ": " ++
              Left _tmpfilename -> "<<content in /tmp>>"
              Right value' -> show (BSL.toString value')
 
-logRequest :: (Monad m) => Request -> Maybe [(String, Input)] -> JSONGenT m ()
-logRequest rq maybeInputsBody = do
-    value "request" (show (rqMethod rq) ++ " " ++ rqUri rq ++ rqQuery rq)
-    value "post variables" $ map showNamedInput (fromMaybe [] maybeInputsBody)
-    value "http headers" $ concatMap showNamedHeader (Map.toList $ rqHeaders rq)
-    value "http cookies" $ map showNamedCookie (rqCookies rq)
+logRequest :: Request -> Maybe [(String, Input)] -> [Pair]
+logRequest rq maybeInputsBody = [
+    "request" .= (show (rqMethod rq) ++ " " ++ rqUri rq ++ rqQuery rq)
+  , "post variables" .= (map showNamedInput $ fromMaybe [] maybeInputsBody)
+  , "http headers" .= (concatMap showNamedHeader . Map.toList $ rqHeaders rq)
+  , "http cookies" .= (map showNamedCookie $ rqCookies rq)
+  ]
 
 -- | Long polling implementation.
 --
@@ -141,7 +143,7 @@ logRequest rq maybeInputsBody = do
 -- connection needs to be dropped between retries to allow for commits
 -- to take place.
 enhanceYourCalm :: (MonadIO m) => m Response -> m Response
-enhanceYourCalm action = enhanceYourCalmWorker 100
+enhanceYourCalm action = enhanceYourCalmWorker (100::Int)
   where
     enhanceYourCalmWorker 0 = action
     enhanceYourCalmWorker n = do
@@ -152,29 +154,37 @@ enhanceYourCalm action = enhanceYourCalmWorker 100
           enhanceYourCalmWorker (n-1)
         _ -> return result'
 
-{- |
-   Creates a context, routes the request, and handles the session.
+-- | Outer handler monad
+type HandlerM = ReqHandlerT (LogT IO)
+-- | Inner handler monad.
+type InnerHandlerM = AWS.AmazonMonadT (CryptoRNGT (DBT HandlerM))
+{-}
+randomID :: (MonadLog m, CryptoRNG m) => Text -> m a -> m a
+randomID name action = do
+  did :: Word64 <- random
+  withProperties [property name $ showHex did ""] action
 -}
-appHandler :: Kontra (Maybe Response) -> AppConf -> AppGlobals -> ReqHandlerT (Log.LogT IO) Response
-appHandler handleRoutes appConf appGlobals = catchEverything . enhanceYourCalm $
-  withPostgreSQL (connsource appGlobals) . runCryptoRNGT (cryptorng appGlobals) $
-    AWS.runAmazonMonadT amazoncfg $ do
-    startTime <- liftIO getCurrentTime
-    let quota = 10000000
-    temp <- liftIO getTemporaryDirectory
-    withDecodedBody (defaultBodyPolicy temp quota quota quota) $ do
-      session <- getCurrentSession
-      ctx <- createContext session
-      -- commit is needed after getting session from the database
-      -- since session expiration date is updated while getting it,
-      -- which results in pgsql locking the row. then, if request
-      -- handler somehow gets stuck, transaction is left open for
-      -- some time, row remains locked and subsequent attempts to
-      -- refresh the page will fail, because they will try to
-      -- access/update session from a row that was previously locked.
-      commit
+-- | Creates a context, routes the request, and handles the session.
+appHandler :: Kontra (Maybe Response) -> AppConf -> AppGlobals -> HandlerM Response
+appHandler handleRoutes appConf appGlobals = runHandler $ do
+  startTime <- liftIO getCurrentTime
+  let quota = 10000000
+  temp <- liftIO getTemporaryDirectory
+  withDecodedBody (defaultBodyPolicy temp quota quota quota) $ do
+    session <- getCurrentSession
+    ctx <- createContext session
+    -- commit is needed after getting session from the database
+    -- since session expiration date is updated while getting it,
+    -- which results in pgsql locking the row. then, if request
+    -- handler somehow gets stuck, transaction is left open for
+    -- some time, row remains locked and subsequent attempts to
+    -- refresh the page will fail, because they will try to
+    -- access/update session from a row that was previously locked.
+    commit
+
+    localData ["session_id" .= show (sesID session)] $ do
       rq <- askRq
-      Log.mixlog_ $ "Handling routes for : " ++ rqUri rq ++ rqQuery rq
+      logInfo_ $ "Handling routes for:" <+> rqUri rq ++ rqQuery rq
 
       (res, ctx') <- routeHandlers ctx
 
@@ -199,10 +209,9 @@ appHandler handleRoutes appConf appGlobals = catchEverything . enhanceYourCalm $
 
       stats <- getConnectionStats
       finishTime <- liftIO getCurrentTime
-      Log.mixlog_ $ concat [
-          "Statistics for " ++ rqUri rq ++ rqQuery rq ++ ":\n"
-        , "* " ++ show stats ++ "\n"
-        , "* Time: " ++ show (diffUTCTime finishTime startTime)
+      logInfo "Handler done" $ object [
+          "statistics" .= show stats
+        , "time" .= (show $ diffUTCTime finishTime startTime)
         ]
 
       -- Make sure response is well defined before passing it further.
@@ -212,32 +221,35 @@ appHandler handleRoutes appConf appGlobals = catchEverything . enhanceYourCalm $
           rollback -- if exception was thrown, rollback everything
           return response
   where
-    amazoncfg = AWS.AmazonConfig (amazonConfig appConf) (filecache appGlobals)
-    catchEverything :: (FilterMonad Response m, Log.MonadLog m, MonadBaseControl IO m, ServerMonad m) => m Response -> m Response
+    runHandler :: AWS.AmazonMonadT (CryptoRNGT (DBT HandlerM)) Response
+               -> HandlerM Response
+    runHandler = catchEverything . enhanceYourCalm . withPostgreSQL (connsource appGlobals) . runCryptoRNGT (cryptorng appGlobals) . AWS.runAmazonMonadT (AWS.AmazonConfig (amazonConfig appConf) (filecache appGlobals))
+
+    catchEverything :: HandlerM Response -> HandlerM Response
     catchEverything m = m `E.catch` \(e::E.SomeException) -> do
       uri <- rqUri <$> askRq
-      Log.attention "appHandler: exception caught at top level" $ do
-         value "exception" (show e)
-         value "url" uri
+      logError "appHandler: exception caught at top level" $ object [
+          "exception" .= show e
+        , "url" .= uri
+        ]
       internalServerError $ toResponse ""
 
-    -- routeHandlers :: (Log.MonadLog m,MonadBase IO m,MonadIO m) => Context -> m (Either Response Response, Context)
+    routeHandlers :: Context -> InnerHandlerM (Either Response Response, Context)
     routeHandlers ctx = runKontra ctx $ do
       res <- (Right <$> (handleRoutes >>= maybe (E.throwIO Respond404) return)) `E.catches` [
           E.Handler $ \e -> Left <$> case e of
             InternalError stack -> do
               rq <- askRq
               mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
-              Log.attention "InternalError" $ do
-                value "stacktrace" (reverse stack)
-                logRequest rq mbody
+              logError "InternalError" . object $ [
+                  "stacktrace" .= reverse stack
+                ] ++ logRequest rq mbody
               internalServerErrorPage >>= internalServerError
             Respond404 -> do
               -- there is no way to get stacktrace here as Respond404 is a CAF, fix this later
               rq <- askRq
               mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
-              Log.attention "Respond404" $
-                logRequest rq mbody
+              logError "Respond404" . object $ logRequest rq mbody
               notFoundPage >>= notFound
         , E.Handler $ \(FinishWith res ctx') -> do
             modifyContext $ const ctx'
@@ -246,38 +258,37 @@ appHandler handleRoutes appConf appGlobals = catchEverything . enhanceYourCalm $
             rq <- askRq
             mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
             stack <- liftIO $ whoCreated e
-            Log.attention "DBException" $ do
-              value "dbeQueryContext" $ show dbeQueryContext
-              case cast dbeError of
-                Nothing -> do
-                  value "dbeError" $ show dbeError
-                Just (SomeKontraException ee) -> do
-                  value "exception" $ toJSValue ee
-              value "stacktrace" (reverse stack)
-              logRequest rq mbody
+            logError "DBException" . object $ [
+                "dbeQueryContext" .= show dbeQueryContext
+              , case cast dbeError of
+                  Nothing -> "dbeError" .= show dbeError
+                  Just (SomeKontraException ee) -> "exception" .= jsonToAeson (toJSValue ee)
+              , "stacktrace" .= reverse stack
+              ] ++ logRequest rq mbody
             internalServerErrorPage >>= internalServerError
         , E.Handler $ \e@(SomeKontraException ee) -> Left <$> do
             rq <- askRq
             mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
             stack <- liftIO $ whoCreated e
-            Log.attention "SomeKontraException" $ do
-              value "exception" $ toJSValue ee
-              value "stacktrace" (reverse stack)
-              logRequest rq mbody
+            logError "SomeKontraException" . object $ [
+                "exception" .= jsonToAeson (toJSValue ee)
+              , "stacktrace" .= reverse stack
+              ] ++ logRequest rq mbody
             internalServerErrorPage >>= internalServerError
         , E.Handler $ \(e :: E.SomeException) -> Left <$> do
             rq <- askRq
             mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
             stack <- liftIO $ whoCreated e
-            Log.attention "Exception caught in routeHandlers" $ do
-              value "exception" (show e)
-              value "stacktrace" (reverse stack)
-              logRequest rq mbody
+            logError "Exception caught in routeHandlers" . object $ [
+                "exception" .= show e
+              , "stacktrace" .= reverse stack
+              ] ++ logRequest rq mbody
             internalServerErrorPage >>= internalServerError
         ]
       ctx' <- getContext
       return (res, ctx')
 
+    createContext :: Session -> InnerHandlerM Context
     createContext session = do
       -- rqPeer hostname comes always from showHostAddress
       -- so it is a bunch of numbers, just read them out
@@ -312,7 +323,7 @@ appHandler handleRoutes appConf appGlobals = catchEverything . enhanceYourCalm $
         case flashes of
           Right (Just fs) -> return fs
           _ -> do
-            Log.mixlog_ $ "Couldn't read flash messages from value: " ++ fval
+            logInfo_ $ "Couldn't read flash messages from value: " ++ fval
             F.removeFlashCookie
             return []
 

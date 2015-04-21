@@ -17,46 +17,54 @@ import Happstack.Server.ReqHandler
 import JobQueue.Components
 import JobQueue.Config
 import KontraPrelude
+import Log
+import Log.Configuration
 import MessengerServerConf
-import MinutesTime
 import Sender
 import SMS.Data
 import SMS.Model
 import SMS.Tables
 import Utils.IO
 import Utils.Network
-import qualified Log
+
+type MainM = LogT IO
 
 main :: IO ()
-main = Log.withLogger $ do
-  conf <- readConfig Log.mixlog_ "messenger_server.conf"
-  checkExecutables
+main = do
+  conf <- readConfig putStrLn "messenger_server.conf"
+  lr@LogRunner{..} <- mkLogRunner "messenger" $ mscLogConfig conf
+  withLogger $ do
+    checkExecutables
 
-  let cs = def { csConnInfo = mscDBConfig conf }
-  withPostgreSQL (simpleSource cs) $
-    checkDatabase Log.mixlog_ [] messengerTables
-  pool <- liftBase $ createPoolSource (liftBase . Log.withLogger . Log.mixlog_) cs
-  rng <- newCryptoRNGState
+    let cs = def { csConnInfo = mscDBConfig conf }
+    withPostgreSQL (simpleSource cs) $
+      checkDatabase logInfo_ [] messengerTables
+    pool <- liftBase $ createPoolSource (liftBase . withLogger . logTrace_) cs
+    rng <- newCryptoRNGState
 
-  E.bracket (startServer pool rng conf) (liftBase killThread) . const $ do
-    let sender = createSender $ mscMasterSender conf
-        smsLogger domain msg = Log.mixlog_ $ "SMS:" <+> domain <> ":" <+> msg
-        jobsLogger domain msg = Log.mixlog_ $ "Messenger jobs:" <+> domain <> ":" <+> msg
-    withConsumer (jobsWorker pool) pool jobsLogger $ do
-      withConsumer (smsConsumer rng sender) pool smsLogger $ do
-        liftBase waitForTermination
+    E.bracket (startServer lr pool rng conf) (liftBase killThread) . const $ do
+      let sender = createSender $ mscMasterSender conf
+          smsLogger domain msg = logInfo_ $ "SMS:" <+> domain <> ":" <+> msg
+          jobsLogger domain msg = logInfo_ $ "Messenger jobs:" <+> domain <> ":" <+> msg
+      withConsumer (jobsWorker pool) pool jobsLogger $ do
+        withConsumer (smsConsumer rng sender) pool smsLogger $ do
+          liftBase waitForTermination
   where
-    startServer pool rng conf = do
+    startServer :: LogRunner -> ConnectionSource
+                -> CryptoRNGState -> MessengerServerConf -> MainM ThreadId
+    startServer LogRunner{..} pool rng conf = do
       let (iface, port) = mscHttpBindAddress conf
           handlerConf = nullConf { port = fromIntegral port, logAccess = Nothing }
       routes <- case R.compile handlers of
         Left e -> do
-          Log.mixlog_ e
+          logInfo_ e
           $unexpectedErrorM "static routing"
         Right r -> return $ r >>= maybe (notFound $ toResponse ("Not found."::String)) return
       socket <- liftBase (listenOn (htonl iface) $ fromIntegral port)
-      fork . liftBase . runReqHandlerT socket handlerConf . mapReqHandlerT Log.withLogger $ router rng pool routes
+      fork . liftBase . runReqHandlerT socket handlerConf . mapReqHandlerT withLogger $ router rng pool routes
 
+    smsConsumer :: CryptoRNGState -> Sender
+                -> ConsumerConfig MainM ShortMessageID ShortMessage
     smsConsumer rng sender = ConsumerConfig {
       ccJobsTable = "smses"
     , ccConsumersTable = "messenger_workers"
@@ -67,7 +75,7 @@ main = Log.withLogger $ do
     , ccNotificationTimeout = 60 * 1000000 -- 1 minute
     , ccMaxRunningJobs = 10
     , ccProcessJob = \sms@ShortMessage{..} -> runCryptoRNGT rng $ do
-      Log.mixlog_ $ "Sending sms" <+> show smID
+      logInfo_ $ "Sending sms" <+> show smID
       sendSMS sender sms >>= \case
         True  -> return $ Ok MarkProcessed
         False -> Failed <$> sendoutFailed sms
@@ -75,15 +83,17 @@ main = Log.withLogger $ do
     }
       where
         sendoutFailed ShortMessage{..} = do
-          Log.mixlog_ $ "Failed to send sms" <+> show smID
+          logInfo_ $ "Failed to send sms" <+> show smID
           if smAttempts < 100
             then do
-              Log.mixlog_ $ "Deferring sms" <+> show smID <+> "for 5 minutes"
+              logInfo_ $ "Deferring sms" <+> show smID <+> "for 5 minutes"
               return . RetryAfter $ iminutes 5
             else do
-              Log.mixlog_ $ "Deleting sms" <+> show smID <+> "since there was over 100 tries to send it"
+              logInfo_ $ "Deleting sms" <+> show smID <+> "since there was over 100 tries to send it"
               return Remove
 
+    jobsWorker :: ConnectionSource
+               -> ConsumerConfig MainM JobType MessengerJob
     jobsWorker pool = ConsumerConfig {
       ccJobsTable = "messenger_jobs"
     , ccConsumersTable = "messenger_workers"
@@ -96,9 +106,9 @@ main = Log.withLogger $ do
     , ccProcessJob = \MessengerJob{..} -> case mjType of
       CleanOldSMSes -> do
         let daylimit = 3
-        Log.mixlog_ $ "Removing smses sent" <+> show daylimit <+> "days ago."
+        logInfo_ $ "Removing smses sent" <+> show daylimit <+> "days ago."
         cleaned <- withPostgreSQL pool . dbUpdate $ CleanSMSesOlderThanDays daylimit
-        Log.mixlog_ $ show cleaned <+> "smses were removed."
+        logInfo_ $ show cleaned <+> "smses were removed."
         now <- currentTime
         -- run at midnight
         return . Ok $ RetryAt UTCTime {

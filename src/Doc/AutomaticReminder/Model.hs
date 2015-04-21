@@ -9,7 +9,6 @@ import Control.Monad.Catch
 import Control.Monad.Reader
 import Data.Int
 import Data.Typeable
-import Text.JSON.Gen
 
 import ActionQueue.Core
 import ActionQueue.Scheduler
@@ -23,10 +22,10 @@ import Doc.DocumentID
 import Doc.DocumentMonad (withDocument)
 import Doc.Model
 import KontraPrelude
+import Log
 import MinutesTime
 import Util.Actor
 import qualified DB.TimeZoneName as TimeZoneName
-import qualified Log
 
 data DocumentAutomaticReminder = DocumentAutomaticReminder {
     reminderDocumentID :: DocumentID
@@ -52,7 +51,7 @@ documentAutomaticReminder = Action {
   , qaEvaluateExpired = sentReminder
   }
   where
-    sentReminder :: (Log.MonadLog m, MonadCatch m, CryptoRNG m, MonadDB m, MonadIO m, MonadBase IO m, MonadReader SchedulerData m) => DocumentAutomaticReminder -> m ()
+    sentReminder :: (MonadLog m, MonadCatch m, CryptoRNG m, MonadDB m, MonadIO m, MonadBase IO m, MonadReader SchedulerData m) => DocumentAutomaticReminder -> m ()
     sentReminder dar = do
       now <- currentTime
       exists <- dbQuery $ DocumentExistsAndIsNotPurged $ reminderDocumentID dar
@@ -61,8 +60,9 @@ documentAutomaticReminder = Action {
           void $ dbQuery (GetDocumentByDocumentID (reminderDocumentID dar)) >>= \doc -> runMailTInScheduler doc $
             withDocument doc $ sendAllReminderEmails (systemActor now) True
         else do
-          Log.mixlog "Auto reminder dropped since document does not exists or is purged" $ do
-            value "document_id" (show $ reminderDocumentID dar)
+          logInfo "Auto reminder dropped since document does not exists or is purged" $ object [
+              "document_id" .= (show $ reminderDocumentID dar)
+            ]
       void $ dbUpdate $ DeleteAction documentAutomaticReminder (reminderDocumentID dar)
 
 scheduleAutoreminderIfThereIsOne :: (MonadDB m, MonadTime m, MonadMask m) => TimeZoneName -> Document -> m ()

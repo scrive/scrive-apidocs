@@ -39,16 +39,15 @@ import Happstack.Server.ReqHandler
 import KontraError
 import KontraMonad
 import KontraPrelude
+import Log
 import MailContext (MailContextMonad(..))
 import Mails.MailsConfig
-import MinutesTime.Class
 import Templates
 import User.Model
 import Utils.List
 import qualified Amazon as AWS
-import qualified Log
 
-type InnerKontra = StateT Context (AWS.AmazonMonadT (CryptoRNGT (DBT (ReqHandlerT (Log.LogT IO)))))
+type InnerKontra = StateT Context (AWS.AmazonMonadT (CryptoRNGT (DBT (ReqHandlerT (LogT IO)))))
 
 -- | Kontra is a traditional Happstack handler monad except that it's
 -- not WebMonad.
@@ -57,12 +56,9 @@ type InnerKontra = StateT Context (AWS.AmazonMonadT (CryptoRNGT (DBT (ReqHandler
 -- is not an instance of MonadPlus.  Errors are signaled explicitly
 -- through 'KontraError'.
 newtype Kontra a = Kontra { unKontra :: InnerKontra a }
-  deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadCatch, MonadDB, MonadIO, MonadMask, MonadThrow, ServerMonad, AWS.AmazonMonad)
+  deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadCatch, MonadDB, MonadIO, MonadMask, MonadThrow, ServerMonad, AWS.AmazonMonad, MonadLog)
 
-instance Log.MonadLog Kontra where
-  mixlogjs now title js = liftBase $ Log.mixlogjsIO now title js
-
-runKontra :: Context -> Kontra a -> AWS.AmazonMonadT (CryptoRNGT (DBT (ReqHandlerT (Log.LogT IO)))) a
+runKontra :: Context -> Kontra a -> AWS.AmazonMonadT (CryptoRNGT (DBT (ReqHandlerT (LogT IO)))) a
 runKontra ctx f = evalStateT (unKontra f) ctx
 
 instance MonadBaseControl IO Kontra where

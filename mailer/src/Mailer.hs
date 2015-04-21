@@ -17,13 +17,12 @@ import DB
 import Happstack.Server.Instances ()
 import Happstack.Server.ReqHandler
 import KontraPrelude
-import MinutesTime.Class
-import qualified Log
+import Log
 
-type InnerMailer = CryptoRNGT (DBT (ReqHandlerT (Log.LogT IO)))
+type InnerMailer = CryptoRNGT (DBT (ReqHandlerT (LogT IO)))
 
 newtype Mailer a = Mailer { unMailer :: InnerMailer a }
-  deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadCatch, MonadDB, MonadIO, MonadMask, MonadThrow, MonadTime, ServerMonad, Log.MonadLog)
+  deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadCatch, MonadDB, MonadIO, MonadMask, MonadThrow, MonadTime, ServerMonad, MonadLog)
 
 instance MonadBaseControl IO Mailer where
   newtype StM Mailer a = StMailer { unStMailer :: StM InnerMailer a }
@@ -32,5 +31,5 @@ instance MonadBaseControl IO Mailer where
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
-runMailer :: CryptoRNGState -> Mailer a -> DBT (ReqHandlerT (Log.LogT IO)) a
+runMailer :: CryptoRNGState -> Mailer a -> DBT (ReqHandlerT (LogT IO)) a
 runMailer rng = runCryptoRNGT rng . unMailer

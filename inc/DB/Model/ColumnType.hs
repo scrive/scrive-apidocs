@@ -17,6 +17,8 @@ data ColumnType
   | DoubleT
   | IntegerT
   | IntervalT
+  | JsonT
+  | JsonbT
   | SmallIntT
   | TextT
   | TimestampWithZoneT
@@ -39,6 +41,8 @@ instance FromSQL ColumnType where
         "double precision" -> DoubleT
         "integer" -> IntegerT
         "interval" -> IntervalT
+        "json" -> JsonT
+        "jsonb" -> JsonbT
         "smallint" -> SmallIntT
         "text" -> TextT
         "timestamp with time zone" -> TimestampWithZoneT
@@ -56,6 +60,8 @@ columnTypeToSQL DateT = "DATE"
 columnTypeToSQL DoubleT = "DOUBLE PRECISION"
 columnTypeToSQL IntegerT = "INTEGER"
 columnTypeToSQL IntervalT = "INTERVAL"
+columnTypeToSQL JsonT = "JSON"
+columnTypeToSQL JsonbT = "JSONB"
 columnTypeToSQL SmallIntT = "SMALLINT"
 columnTypeToSQL TextT = "TEXT"
 columnTypeToSQL TimestampWithZoneT = "TIMESTAMPTZ"

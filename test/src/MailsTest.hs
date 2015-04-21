@@ -18,6 +18,7 @@ import Doc.DocumentMonad (withDocumentM, theDocument)
 import Doc.DocViewMail
 import Doc.Model
 import KontraPrelude
+import Log
 import Mails.Events
 import Mails.SendMail
 import MinutesTime
@@ -30,7 +31,6 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Utils.Default
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
-import qualified Log
 
 mailsTests :: TestEnvSt -> Test
 mailsTests env  = testGroup "Mails" [
@@ -89,7 +89,7 @@ sendDocumentMails author = do
         [sl] <- filter (not . isAuthor) . documentsignatorylinks <$> theDocument
         --Invitation Mails
         let checkMail s mg = do
-                              Log.mixlog_ $ "Checking mail " ++ s
+                              logInfo_ $ "Checking mail " ++ s
                               m <- mg
                               validMail s m
         checkMail "Invitation" $ mailInvitation True Sign (Just sl) =<< theDocument
@@ -124,7 +124,7 @@ testUserMails = do
 
     req <- mkRequest POST []
     let checkMail s mg = do
-                           Log.mixlog_ $ "Checking mail " ++ s
+                           logInfo_ $ "Checking mail " ++ s
                            m <- fst <$> (runTestKontra req ctx $ mg)
                            validMail s m
     checkMail "New account" $ do

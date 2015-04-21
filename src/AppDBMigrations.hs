@@ -21,6 +21,7 @@ import EID.Signature.Migrations
 import EvidenceLog.Migrations
 import File.Migrations
 import KontraPrelude
+import Log
 import Mails.Migrations
 import OAuth.Migrations
 import Payments.Migrations
@@ -30,12 +31,11 @@ import Theme.Migrations
 import ThirdPartyStats.Migrations
 import User.CallbackScheme.Migrations
 import User.Migrations
-import qualified Log
 
 -- Note: ALWAYS append new migrations TO THE END of this list.
 -- (mailerMigrations always stay at the end though. They are
 -- disjoint with kontrakcja, so it can be done that way).
-kontraMigrations :: (MonadDB m, MonadThrow m, Log.MonadLog m) => [Migration m]
+kontraMigrations :: (MonadDB m, MonadThrow m, MonadLog m) => [Migration m]
 kontraMigrations = [
     migrateTempCredentialRemoveEmail -- for oauth
   , deprecateDocFunctionalityCol

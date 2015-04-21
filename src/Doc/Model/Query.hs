@@ -54,15 +54,14 @@ import Doc.SignatoryScreenshots
 import File.FileID
 import File.Storage
 import KontraPrelude
+import Log
 import MagicHash
-import MinutesTime
 import User.Email
 import User.Model
 import qualified Amazon
-import qualified Log
 
 data GetSignatoryScreenshots = GetSignatoryScreenshots [SignatoryLinkID]
-instance (MonadDB m, MonadThrow m, Log.MonadLog m, MonadBase IO m, Amazon.AmazonMonad m) => DBQuery m GetSignatoryScreenshots [(SignatoryLinkID, SignatoryScreenshots)] where
+instance (MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, Amazon.AmazonMonad m) => DBQuery m GetSignatoryScreenshots [(SignatoryLinkID, SignatoryScreenshots)] where
   query (GetSignatoryScreenshots l) = do
     runQuery_ . sqlSelect "signatory_screenshots" $ do
                 sqlWhereIn "signatory_link_id" l

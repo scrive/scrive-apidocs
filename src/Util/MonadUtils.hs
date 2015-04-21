@@ -14,7 +14,7 @@ import Control.Monad.Trans
 
 import KontraError
 import KontraPrelude
-import qualified Log
+import Log
 
 -- TODO: remove these functions.
 
@@ -38,14 +38,14 @@ guardJustM action = guardJust =<< action
 {- |
    Get the value from a Right or log an error and fail if it is Left
  -}
-guardRight :: (MonadBase IO m, MonadIO m, Show msg, Log.MonadLog m) => Either msg a -> m a
+guardRight :: (MonadBase IO m, MonadIO m, Show msg, MonadLog m) => Either msg a -> m a
 guardRight (Right val) = return val
 guardRight (Left  msg) = do
-  Log.mixlog_ (show msg)
+  logInfo_ (show msg)
   internalError
 
 {- |
    Get the value from a Right or log an error and fail if it is a left
  -}
-guardRightM :: (MonadBase IO m, MonadIO m, Show msg, Log.MonadLog m) => m (Either msg b) -> m b
+guardRightM :: (MonadBase IO m, MonadIO m, Show msg, MonadLog m) => m (Either msg b) -> m b
 guardRightM action = guardRight =<< action

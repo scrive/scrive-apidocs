@@ -27,10 +27,10 @@ import DB
 import Happstack.Fields
 import Kontra
 import KontraPrelude
+import Log
 import Theme.Model
 import Theme.View
 import Util.MonadUtils
-import qualified Log as Log
 
 handleGetTheme:: Kontrakcja m => ThemeID -> m Aeson.Value
 handleGetTheme tid =  do
@@ -62,7 +62,7 @@ handleUpdateThemeForDomain did tid =  do
   themeJSON <- guardJustM $ getFieldBS "theme"
   case Aeson.eitherDecode themeJSON of
     Left err -> do
-      Log.mixlog_ $ "Error while parsing theme for domain " ++ err
+      logInfo_ $ "Error while parsing theme for domain " ++ err
       internalError
     Right js -> case (Unjson.parse unjsonTheme js) of
       (Result newTheme []) -> do
@@ -76,7 +76,7 @@ handleUpdateThemeForCompany cid tid =  do
   themeJSON <- guardJustM $ getFieldBS "theme"
   case Aeson.eitherDecode themeJSON of
    Left err -> do
-     Log.mixlog_ $ "Error while parsing theme for company " ++ err
+     logInfo_ $ "Error while parsing theme for company " ++ err
      internalError
    Right js -> case (Unjson.parse unjsonTheme js) of
         (Result newTheme []) -> do
@@ -115,6 +115,6 @@ guardNotMainDomain did msg = do
   bd <- dbQuery $ GetBrandedDomainByID did
   if (bdMainDomain bd)
    then do
-    Log.mixlog_ $ msg
+    logInfo_ $ msg
     internalError
    else return ()

@@ -89,6 +89,7 @@ import InputValidation
 import Kontra
 import KontraLink
 import KontraPrelude
+import Log
 import MagicHash
 import MinutesTime
 import Redirect
@@ -103,7 +104,6 @@ import Util.Zlib (decompressIfPossible)
 import Utils.Default
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
 import qualified GuardTime as GuardTime
-import qualified Log
 import qualified User.Action
 
 handleNewDocument :: Kontrakcja m => m KontraLink
@@ -115,7 +115,7 @@ handleNewDocument = do
         title <- renderTemplate_ "newDocumentTitle"
         actor <- guardJustM $ mkAuthorActor <$> getContext
         mtimezonename <- runPlusSandboxT (lookCookieValue "timezone") `catch` \(RqDataError errs) -> do
-          mapM_ Log.mixlog_ $ unErrors errs
+          mapM_ logInfo_ $ unErrors errs
           return Nothing
         timezone <- fromMaybe defaultTimeZoneName <$> T.sequence (mkTimeZoneName <$> mtimezonename)
         timestamp <- formatTimeSimpleWithTZ timezone (ctxtime ctx)
@@ -324,19 +324,19 @@ handleSignPadShow documentid signatorylinkid = do
 -- offender.
 handleCookieFail :: Kontrakcja m => SignatoryLinkID -> DocumentID -> m Response
 handleCookieFail slid did = do
-      cookies <- rqCookies <$> askRq
-      if null cookies
-         then sendRedirect LinkEnableCookies
-         else do
-           Log.mixlog_ $ "Signview load after session timedout for slid: " ++ show slid ++ ", did: " ++ show did
-           ctx <- getContext
-           ad <- getAnalyticsData
-           let fields = standardPageFields ctx Nothing ad
-           content <- flip renderTemplate fields $ if bdMainDomain (ctxbrandeddomain ctx) || isJust (ctxmaybeuser ctx) then
-                                                      "sessionTimeOut"
-                                                  else
-                                                      "sessionTimeOutWithoutHeaders"
-           simpleHtmlResonseClrFlash content
+  cookies <- rqCookies <$> askRq
+  if null cookies
+    then sendRedirect LinkEnableCookies
+    else do
+      logInfo_ $ "Signview load after session timedout for slid: " ++ show slid ++ ", did: " ++ show did
+      ctx <- getContext
+      ad <- getAnalyticsData
+      let fields = standardPageFields ctx Nothing ad
+      content <- flip renderTemplate fields $
+        if bdMainDomain (ctxbrandeddomain ctx) || isJust (ctxmaybeuser ctx)
+          then "sessionTimeOut"
+          else "sessionTimeOutWithoutHeaders"
+      simpleHtmlResonseClrFlash content
 
 {- |
    Redirect author of document to go to signview
@@ -515,7 +515,7 @@ showPage' fileid pageno = do
     RenderedPages _ contents | pageno - 1 < length contents -> do
       let content = contents !! (pageno - 1)
       let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [content]) Nothing
-      Log.mixlog_ $ "PNG page found and returned for file " ++ show fileid ++ " and page " ++ show pageno
+      logInfo_ $ "PNG page found and returned for file " ++ show fileid ++ " and page " ++ show pageno
       return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png")
              -- max-age same as for brandedSignviewImage
              $ setHeaderBS (BS.fromString "Cache-Control") (BS.fromString "max-age=604800") res
@@ -523,7 +523,7 @@ showPage' fileid pageno = do
     RenderedPages False _ -> do
       return ((toResponse "") { rsCode = 420 })
     _ -> do
-      Log.mixlog_ $ "JPEG page not found in cache, responding 404 for file " ++ show fileid ++ " and page " ++ show pageno
+      logInfo_ $ "JPEG page not found in cache, responding 404 for file " ++ show fileid ++ " and page " ++ show pageno
       notFound (toResponse "temporarily unavailable (document has files pending for process)")
 
 handleDownloadClosedFile :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> String -> m Response

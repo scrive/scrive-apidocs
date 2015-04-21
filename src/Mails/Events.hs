@@ -36,11 +36,11 @@ import Doc.Model
 import Doc.SignatoryLinkID
 import KontraLink
 import KontraPrelude
+import Log
 import Mails.MailsConfig
 import Mails.MailsData
 import Mails.Model hiding (Mail)
 import Mails.SendMail
-import MinutesTime
 import Templates
 import Theme.Model
 import User.Model
@@ -48,7 +48,6 @@ import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Utils.Read
-import qualified Log
 
 processEvents :: Scheduler ()
 processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ processEvent -- We limit processing to 50 events not to have issues with large number of documents locked.
@@ -56,7 +55,7 @@ processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ processEvent -- 
     processEvent (eid, _mid, XSMTPAttrs [("mailinfo", mi)], eventType) = do
       case maybeRead mi of
         Just (Invitation docid signlinkid) -> do
-          Log.mixlog_ $ "Processing invitation event: " ++ show (Invitation docid signlinkid)
+          logInfo_ $ "Processing invitation event: " ++ show (Invitation docid signlinkid)
           withDocumentID docid $ do
               markEventAsRead eid
               appConf <- sdAppConf <$> ask
@@ -75,7 +74,7 @@ processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ processEvent -- 
                   -- success/failure for old signatory address, so we need to compare
                   -- addresses here (for dropped/bounce events)
                   handleEv (SendGridEvent email ev _) = do
-                    Log.mixlog_ $ signemail ++ " == " ++ email
+                    logInfo_ $ signemail ++ " == " ++ email
                     case ev of
                       SG_Opened -> handleOpenedInvitation signlinkid email muid
                       SG_Delivered _ -> handleDeliveredInvitation bd host mc signlinkid
@@ -87,7 +86,7 @@ processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ processEvent -- 
                       SG_Bounce _ _ _ -> when (signemail == email) $ handleUndeliveredInvitation bd host mc signlinkid
                       _ -> return ()
                   handleEv (MailGunEvent email ev) = do
-                    Log.mixlog_ $ signemail ++ " == " ++ email
+                    logInfo_ $ signemail ++ " == " ++ email
                     case ev of
                       MG_Opened -> handleOpenedInvitation signlinkid email muid
                       MG_Delivered -> handleDeliveredInvitation bd host mc signlinkid
@@ -102,9 +101,9 @@ processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ processEvent -- 
       now <- currentTime
       success <- dbUpdate $ MarkEventAsRead eid now
       when (not success) $
-        Log.attention_ $ "Couldn't mark event #" ++ show eid ++ " as read"
+        logError_ $ "Couldn't mark event #" ++ show eid ++ " as read"
 
-handleDeliveredInvitation :: (CryptoRNG m, MonadThrow m, Log.MonadLog m, DocumentMonad m, TemplatesMonad m)
+handleDeliveredInvitation :: (CryptoRNG m, MonadThrow m, MonadLog m, DocumentMonad m, TemplatesMonad m)
                           => BrandedDomain -> String -> MailsConfig -> SignatoryLinkID -> m ()
 handleDeliveredInvitation bd hostpart mc signlinkid = do
   getSigLinkFor signlinkid <$> theDocument >>= \case
@@ -128,7 +127,7 @@ handleOpenedInvitation signlinkid email muid = do
           (mailSystemActor now muid email signlinkid)
   return ()
 
-handleDeferredInvitation :: (CryptoRNG m, Log.MonadLog m, MonadThrow m, DocumentMonad m, TemplatesMonad m) => BrandedDomain -> String -> MailsConfig -> SignatoryLinkID -> String -> m ()
+handleDeferredInvitation :: (CryptoRNG m, MonadLog m, MonadThrow m, DocumentMonad m, TemplatesMonad m) => BrandedDomain -> String -> MailsConfig -> SignatoryLinkID -> String -> m ()
 handleDeferredInvitation bd hostpart mc signlinkid email = do
   time <- currentTime
   getSigLinkFor signlinkid <$> theDocument >>= \case
@@ -142,7 +141,7 @@ handleDeferredInvitation bd hostpart mc signlinkid email = do
         }
     Nothing -> return ()
 
-handleUndeliveredInvitation :: (CryptoRNG m, MonadCatch m, Log.MonadLog m, DocumentMonad m, TemplatesMonad m) => BrandedDomain -> String -> MailsConfig -> SignatoryLinkID -> m ()
+handleUndeliveredInvitation :: (CryptoRNG m, MonadCatch m, MonadLog m, DocumentMonad m, TemplatesMonad m) => BrandedDomain -> String -> MailsConfig -> SignatoryLinkID -> m ()
 handleUndeliveredInvitation bd hostpart mc signlinkid = do
   getSigLinkFor signlinkid <$> theDocument >>= \case
     Just signlink -> do
@@ -189,4 +188,4 @@ mailUndeliveredInvitation bd hostpart signlink doc =do
     F.value "name" $ getFullName signlink
     F.value "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
     F.value "ctxhostpart" hostpart
-    brandingMailFields theme 
+    brandingMailFields theme

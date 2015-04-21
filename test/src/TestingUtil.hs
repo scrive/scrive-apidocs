@@ -44,6 +44,7 @@ import FlashMessage
 import IPAddress
 import KontraMonad
 import KontraPrelude
+import Log
 import MagicHash (MagicHash, unsafeMagicHash)
 import MinutesTime
 import System.Random.CryptoRNG ()
@@ -53,7 +54,6 @@ import User.Model
 import Util.Actor
 import Utils.Default
 import qualified KontraError as KE
-import qualified Log
 import qualified Text.XML.Content as C
 import qualified Text.XML.DirtyContent as D
 
@@ -550,7 +550,7 @@ addNewRandomFile = do
   cnt <- liftIO $ BS.readFile fn
   addNewFile fn cnt
 
-addNewUser :: (MonadDB m, MonadThrow m, Log.MonadLog m) => String -> String -> String -> m (Maybe User)
+addNewUser :: (MonadDB m, MonadThrow m, MonadLog m) => String -> String -> String -> m (Maybe User)
 addNewUser firstname secondname email = do
   bd <- dbQuery $ GetMainBrandedDomain
   company <- dbUpdate $ CreateCompany
@@ -561,7 +561,7 @@ addNewCompanyUser firstname secondname email cid = do
   bd <- dbQuery $ GetMainBrandedDomain
   dbUpdate $ AddUser (firstname, secondname) email Nothing (cid,True) defaultValue (bdid bd)
 
-addNewRandomUser :: (CryptoRNG m, MonadDB m, MonadThrow m, Log.MonadLog m) => m User
+addNewRandomUser :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m) => m User
 addNewRandomUser = do
   fn <- rand 10 $ arbString 3 30
   ln <- rand 10 $ arbString 3 30
@@ -584,7 +584,7 @@ addNewRandomUser = do
       _ <- dbUpdate $ SetUserInfo (userid user) userinfo
       return user
     Nothing -> do
-      Log.mixlog_ "Could not create user, trying again."
+      logInfo_ "Could not create user, trying again."
       addNewRandomUser
 
 addNewRandomCompanyUser :: CompanyID -> Bool -> TestEnv User

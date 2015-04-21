@@ -14,10 +14,10 @@ import Crypto.RNG
 import DB
 import DB.PostgreSQL
 import KontraPrelude
+import Log
 import Templates
 import qualified Amazon as AWS
 import qualified Doc.RenderedPages as RenderedPages
-import qualified Log
 import qualified MemCache
 
 run :: AWS.AmazonMonadT (CryptoRNGT (DBT IO)) a -> IO a
@@ -28,7 +28,7 @@ run m = Log.withLogger $ do
   appConf <- do
     appname <- getProgName
     args <- getArgs
-    readConfig Log.mixlog_ appname args "kontrakcja.conf"
+    readConfig logInfo_ appname args "kontrakcja.conf"
 
   let connSettings = pgConnSettings $ dbConfig appConf
   appGlobals <- do

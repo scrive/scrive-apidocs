@@ -31,6 +31,7 @@ import File.Model
 import File.Storage
 import KontraLink
 import KontraPrelude
+import Log
 import MinutesTime
 import User.Model
 import Util.HasSomeCompanyInfo
@@ -41,9 +42,8 @@ import Utils.Prelude
 import Utils.String
 import qualified Amazon as AWS
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
-import qualified Log
 
-evidenceAttachmentsJSONV1 :: (MonadDB m, MonadThrow m, Log.MonadLog m, MonadBase IO m, AWS.AmazonMonad m) => Document -> m JSValue
+evidenceAttachmentsJSONV1 :: (MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, AWS.AmazonMonad m) => Document -> m JSValue
 evidenceAttachmentsJSONV1 doc = do
     evidenceattachments <- EvidenceAttachments.fetch doc
     runJSONGenT $ do
@@ -52,7 +52,7 @@ evidenceAttachmentsJSONV1 doc = do
         J.value "mimetype" $ BSC.unpack <$> EvidenceAttachments.mimetype a
         J.value "downloadLink" $ show $ LinkEvidenceAttachment (documentid doc) (EvidenceAttachments.name a)
 
-documentJSONV1 :: (MonadDB m, MonadThrow m, Log.MonadLog m, MonadBase IO m, AWS.AmazonMonad m) => (Maybe User) -> Bool -> Bool ->  Maybe SignatoryLink -> Document -> m JSValue
+documentJSONV1 :: (MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, AWS.AmazonMonad m) => (Maybe User) -> Bool -> Bool ->  Maybe SignatoryLink -> Document -> m JSValue
 documentJSONV1 muser forapi forauthor msl doc = do
     file <- documentfileM doc
     sealedfile <- documentsealedfileM doc
@@ -93,7 +93,7 @@ documentJSONV1 muser forapi forauthor msl doc = do
       J.value "showfooter" $ documentshowfooter doc
       J.value "invitationmessage" $ if (null $ documentinvitetext doc) --V1 requires HTML for custom message unless message is empty
                                        then ""
-                                       else "<p>" ++ escapeHTML (documentinvitetext doc) ++ "</p>" 
+                                       else "<p>" ++ escapeHTML (documentinvitetext doc) ++ "</p>"
       J.value "confirmationmessage" $ if (null $ documentconfirmtext doc) --V1 requires HTML for custom message unless message is empty
                                        then ""
                                        else  "<p>" ++ escapeHTML (documentconfirmtext doc) ++ "</p>"
@@ -127,7 +127,7 @@ authenticationJSON ELegAuthentication     = toJSValue "eleg"
 authenticationJSON SMSPinAuthentication   = toJSValue "sms_pin"
 
 
-signatoryJSON :: (MonadDB m, MonadThrow m, AWS.AmazonMonad m, Log.MonadLog m, MonadBase IO m) => Bool -> Bool -> Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
+signatoryJSON :: (MonadDB m, MonadThrow m, AWS.AmazonMonad m, MonadLog m, MonadBase IO m) => Bool -> Bool -> Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
 signatoryJSON forapi forauthor doc viewer siglink = do
     J.value "id" $ show $ signatorylinkid siglink
     J.value "current" $ isCurrent
@@ -172,7 +172,7 @@ signatoryAttachmentJSON sa = do
   J.value "description" $ signatoryattachmentdescription sa
   J.value "file" $ fileJSON <$> mfile
 
-signatoryFieldsJSON :: (MonadDB m, MonadThrow m, AWS.AmazonMonad m, Log.MonadLog m, MonadBase IO m) => Document -> SignatoryLink -> m JSValue
+signatoryFieldsJSON :: (MonadDB m, MonadThrow m, AWS.AmazonMonad m, MonadLog m, MonadBase IO m) => Document -> SignatoryLink -> m JSValue
 signatoryFieldsJSON doc sl = fmap JSArray $ forM orderedFields $ \sf -> do
     case sf of
       SignatoryNameField nf@(NameField {snfNameOrder = NameOrder 1}) ->

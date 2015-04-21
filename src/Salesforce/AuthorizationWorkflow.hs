@@ -16,9 +16,9 @@ import qualified Text.JSON as J
 
 import DB
 import KontraPrelude
+import Log
 import Salesforce.Conf
 import Utils.IO
-import qualified Log
 
 {- Returns a link. When following this link, user will be asked in salesforce to give use propper permissions-}
 initAuthorizationWorkflowUrl :: (MonadDB m, MonadIO m,MonadReader c m, HasSalesforceConf c) => (Maybe String) -> m String
@@ -32,7 +32,7 @@ initAuthorizationWorkflowUrl mstate = do
                                                   _ -> "")
 
 {- Returns a refresh token, that we will get back when user agrees in salesforce to give us persmission (after following link from initAuthorizationWorkflowUrl) -}
-getRefreshTokenFromCode :: (MonadDB m, Log.MonadLog m, MonadIO m, MonadReader c m, HasSalesforceConf c) => String -> m (Either String String)
+getRefreshTokenFromCode :: (MonadDB m, MonadLog m, MonadIO m, MonadReader c m, HasSalesforceConf c) => String -> m (Either String String)
 getRefreshTokenFromCode code = do
   sc <- getSalesforceConfM
   (exitcode, stdout , stderr) <- readCurl [
@@ -46,7 +46,7 @@ getRefreshTokenFromCode code = do
               ] BSL.empty
   case exitcode of
       ExitFailure err -> do
-        Log.mixlog_ $ "Failed to recieve token from salesforce: " ++ show stderr
+        logInfo_ $ "Failed to recieve token from salesforce: " ++ show stderr
         return $ Left $ "Connection to Salesforce (refresh) closed with " ++ show err
       ExitSuccess ->  case decode $ BSL.toString stdout of
                          J.Ok js ->  do
@@ -54,14 +54,14 @@ getRefreshTokenFromCode code = do
                            case mrt of
                              Just rt -> return $ Right rt
                              Nothing -> do
-                              Log.mixlog_ $ "Parsing Salesfoce refresh response - no token found"
+                              logInfo_ $ "Parsing Salesfoce refresh response - no token found"
                               return $ Left "Response from Salesforce was a valid JSON, but no refresh token was found"
                          _ -> do
-                           Log.mixlog_ $ "Parsing error with:" ++ show stdout
+                           logInfo_ $ "Parsing error with:" ++ show stdout
                            return $ Left "Response from salesforce was not a valid JSON"
 
 {- Every time we do a salesforce callback, we need to get new access token. We get it using refresh token -}
-getAccessTokenFromRefreshToken :: (MonadDB m, MonadIO m, Log.MonadLog m, MonadReader c m, HasSalesforceConf c) => String -> m (Either String String)
+getAccessTokenFromRefreshToken :: (MonadDB m, MonadIO m, MonadLog m, MonadReader c m, HasSalesforceConf c) => String -> m (Either String String)
 getAccessTokenFromRefreshToken rtoken = do
   sc <- getSalesforceConfM
   (exitcode, stdout , stderr) <- readCurl [
@@ -74,7 +74,7 @@ getAccessTokenFromRefreshToken rtoken = do
               ] BSL.empty
   case exitcode of
       ExitFailure err -> do
-        Log.mixlog_ $ "Failed to recieve token from salesforce: " ++ show stderr
+        logInfo_ $ "Failed to recieve token from salesforce: " ++ show stderr
         return $ Left $ "Connection to Salesforce closed with " ++ show err
       ExitSuccess ->  case (decode $ BSL.toString stdout) of
                         J.Ok js -> do
@@ -82,16 +82,16 @@ getAccessTokenFromRefreshToken rtoken = do
                           case mrt of
                             Just rt -> return $ Right rt
                             Nothing -> do
-                              Log.mixlog_ $ "Parsing Salesfoce access response - no token found"
+                              logInfo_ $ "Parsing Salesfoce access response - no token found"
                               return $ Left "Response from Salesforce was a valid JSON, but no access token was found"
                         _ -> do
-                          Log.mixlog_ $ "Parsing error with:" ++ show stdout
+                          logInfo_ $ "Parsing error with:" ++ show stdout
                           return $ Left "Response from salesforce (access) was not a valid JSON"
 
 
 
 {- Used by API call test salesforce. Let you check if salesfoce integration is set and working for a given url -}
-testSalesforce :: (MonadDB m, MonadIO m, Log.MonadLog m, MonadReader c m, HasSalesforceConf c) => String -> String -> m (Maybe String)
+testSalesforce :: (MonadDB m, MonadIO m, MonadLog m, MonadReader c m, HasSalesforceConf c) => String -> String -> m (Maybe String)
 testSalesforce rtoken url = do
   matoken <- getAccessTokenFromRefreshToken rtoken
   case matoken of
