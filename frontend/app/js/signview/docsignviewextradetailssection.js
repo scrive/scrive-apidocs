@@ -62,11 +62,12 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
     var self = this;
     var signview = this.model;
     var signatory = this.model.document().currentSignatory();
-    var field = signatory.fstnameField();
+    var fstnameField = signatory.fstnameField();
+    var sndnameField = signatory.sndnameField();
     var iti =  new InfoTextInput({
       infotext: localization.personalName,
       cssClass: 'obligatory-input',
-      value: field.value(),
+      value: signatory.name(),
       onFocus: function() {
         iti.el().addClass("active");
       },
@@ -74,9 +75,24 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
         iti.el().removeClass("active");
       },
       onChange: function(value) {
-          field.setValue(value);
-          signatory.trigger("change");
-          iti.el().toggleClass("valid",!signview.askForName());
+        var str = value.trim();
+        var i = str.indexOf(' ');
+        var f, s;
+        if(i >= 0) {
+          f = str.slice(0,i).trim();
+          s = str.slice(i+1).trim();
+        } else {
+          f = str.trim();
+          s = '';
+        }
+        if (sndnameField != undefined) {
+          fstnameField.setValue(f);
+          sndnameField.setValue(s);
+        } else {
+          fstnameField.setValue(str);
+        }
+        signatory.trigger("change");
+        iti.el().toggleClass("valid", !signview.askForName());
       }
     });
     iti.el().toggleClass("valid",!signview.askForName());
@@ -250,10 +266,11 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
       var signview = self.signview;
       var signatory = self.model.document().currentSignatory();
       var focused = false;
-      var field = signatory.fstnameField();
+      var fstnameField = signatory.fstnameField();
+      var sndnameField = signatory.sndnameField();
       var iti = new InfoTextInput({
         infotext: localization.personalName,
-        value: field.value(),
+        value: signatory.name(),
         cssClass: 'obligatory-input',
         onFocus: function() {
           iti.el().addClass("active");
@@ -262,18 +279,49 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
           iti.el().removeClass("active");
         },
         onChange: function(value) {
-            field.setValue(value);
-            signatory.trigger("change");
-            iti.el().toggleClass("valid", !signview.askForName());
+          var str = value.trim();
+          var i = str.indexOf(' ');
+          var f, s;
+          if(i >= 0) {
+            f = str.slice(0,i).trim();
+            s = str.slice(i+1).trim();
+          } else {
+            f = str.trim();
+            s = '';
+          }
+          if (sndnameField != undefined) {
+            fstnameField.setValue(f, {origin: iti}); // arguments for event handler
+            sndnameField.setValue(s, {origin: iti}); // arguments for event handler
+          } else {
+            fstnameField.setValue(str, {origin: iti}); // arguments for event handler
+          }
+          signatory.trigger("change");
+          iti.el().toggleClass("valid", !signview.askForName());
         }
       });
+
+      var onNameFieldChange = function(obj, args) {
+        // check both name fields to see if full name should be highlighted
+        if (!fstnameField.isValid(true) || (sndnameField != undefined && !sndnameField.isValid(true))) {
+          iti.el().removeClass('valid');
+        } else {
+          iti.el().addClass('valid');
+        }
+        if (args === undefined || args.origin !== iti) {
+          // the check above was needed, to know if the change event originated
+          // from directly editing this input (in which case we can skip
+          // setting the value), otherwise when the input contains "John S"
+          // and we backspace the 'S', the space is auto-removed.
+          iti.setValue(signatory.name());
+        }
+      };
+
+      fstnameField.bind('change', onNameFieldChange);
+      if (sndnameField != undefined) {
+        sndnameField.bind('change', onNameFieldChange);
+      }
+
       iti.el().toggleClass("valid", !signview.askForName());
-
-
-      field.bind("change", function() {
-        iti.setValue(field.value());
-        iti.el().toggleClass("valid", !signview.askForName());
-      });
 
       self.nameInfoTextInputEl = iti.el();
     }

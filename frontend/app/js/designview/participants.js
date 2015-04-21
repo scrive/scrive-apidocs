@@ -1009,35 +1009,25 @@ define(['React','common/select','Backbone', 'common/language_service', 'legacy_c
                 }
             });
 
-            fstnameField.bind('change', function(obj, args) {
-                // check both name fields to see if full name should be highlighted
-                if(!fstnameField.isValid(true) || (sndnameField != undefined && !sndnameField.isValid(true)))
-                    input.el().addClass('redborder');
-                else
-                    input.el().removeClass('redborder');
-                if (args === undefined || args.origin !== input) {
-                  // the check above was needed, to know if the change event originated
-                  // from directly editing this input (in which case we can skip
-                  // setting the value), otherwise when the input contains "John S"
-                  // and we backspace the 'S', the space is auto-removed.
-                  input.setValue(sig.name());
-                }
-            });
+            var onNameFieldChange = function(obj, args) {
+              // check both name fields to see if full name should be highlighted
+              if (!fstnameField.isValid(true) || (sndnameField != undefined && !sndnameField.isValid(true))) {
+                input.el().addClass('redborder');
+              } else {
+                input.el().removeClass('redborder');
+              }
+              if (args === undefined || args.origin !== input) {
+                // the check above was needed, to know if the change event originated
+                // from directly editing this input (in which case we can skip
+                // setting the value), otherwise when the input contains "John S"
+                // and we backspace the 'S', the space is auto-removed.
+                input.setValue(sig.name());
+              }
+            };
+
+            fstnameField.bind('change', onNameFieldChange);
             if (sndnameField != undefined) {
-              sndnameField.bind('change', function(obj, args) {
-                // check both name fields to see if full name should be highlighted
-                if(!fstnameField.isValid(true) || !sndnameField.isValid(true))
-                      input.el().addClass('redborder');
-                  else
-                      input.el().removeClass('redborder');
-                if (args === undefined || args.origin !== input) {
-                  // the check above was needed, to know if the change event originated
-                  // from directly editing this input (in which case we can skip
-                  // setting the value), otherwise when the input contains "John S"
-                  // and we backspace the 'S', the space is auto-removed.
-                  input.setValue(sig.name());
-                }
-              });
+              sndnameField.bind('change', onNameFieldChange);
             }
             if(!fstnameField.isValid(true) || (sndnameField != undefined && !sndnameField.isValid(true)))
                     input.el().addClass('redborder');
