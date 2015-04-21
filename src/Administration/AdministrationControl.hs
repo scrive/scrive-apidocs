@@ -298,7 +298,7 @@ jsonUsersList = onlySalesOrAdmin $ do
     let users = PagedList { list       = allUsers
                           , params     = params
                           , pageSize   = usersPageSize
-                          , listLength = length allUsers
+                          , listLength = length allUsers + listParamsOffset params
                           }
 
     runJSONGenT $ do
