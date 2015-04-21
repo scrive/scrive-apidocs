@@ -669,7 +669,7 @@
 "_newemail":"Uusi sähköpostiosoite",
 "_newemailagain":"Vahvista uusi sähköpostiosoite",
 "_noDocumentChosen":"Ei yhtään valittua dokumenttia.",
-"_notFound":"<h1>Sivua ei löytynyt</h1><h4>Saatoit päätyä tänne koska olet kirjoittanut väärän osoitteen tai koska etsimäsi sivu on siirretty.</h4>",
+"_notFound":"",
 "_november":"Marraskuu",
 "_numPartOfNum":"<span class='put-current-index'></span> / <span class='put-total-count'></span>",
 "_numberOfPages":"$pages$ sivua",

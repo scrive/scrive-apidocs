@@ -669,7 +669,7 @@
 "_newemail":"Νέα διεύθυνση email",
 "_newemailagain":"Επιβεβαίωση νέας διεύθυνσης email",
 "_noDocumentChosen":"Μη επιλεγμένα έγγραφα. ",
-"_notFound":"<h1>Η σελίδα δεν μπόρεσε να βρεθεί</h1><h4>Μπορεί να έχετε καταλήξει εδώ επειδή πληκτρολογήσατε λανθασμένη διεύθυνση ή επειδή η σελίδα έχει μετακινηθεί.</h4> ",
+"_notFound":"",
 "_november":"Νοέμβριος ",
 "_numPartOfNum":"<span class='put-current-index'></span> από <span class='put-total-count'></span>",
 "_numberOfPages":"$pages$ σελίδες ",

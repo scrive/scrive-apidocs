@@ -669,7 +669,7 @@
 "_newemail":"Nieuw e-mailadres",
 "_newemailagain":"Bevestig nieuw e-mailadres",
 "_noDocumentChosen":"Geen documenten gekozen.",
-"_notFound":"<h1>De pagina kan niet gevonden worden</h1><h4>Het is mogelijk dat u hier terecht bent gekomen omdat u een verkeerd adres heeft ingevoerd, of omdat de pagina verplaatst is.</h4>",
+"_notFound":"",
 "_november":"November",
 "_numPartOfNum":"<span class='put-current-index'></span> van <span class='put-total-count'></span>",
 "_numberOfPages":"$pages$ pagina's ",

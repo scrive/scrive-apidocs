@@ -669,7 +669,7 @@
 "_newemail":"Ny e-postadress",
 "_newemailagain":"Bekräfta ny e-postadress",
 "_noDocumentChosen":"Inga dokument valda.",
-"_notFound":"<h1>Sidan kunde inte hittas</h1><h4>Du kanske hamnade här därför att du skrivit fel adress eller därför att sidan har flyttats.</h4>",
+"_notFound":"",
 "_november":"november",
 "_numPartOfNum":"<span class='put-current-index'></span> av <span class='put-total-count'></span>",
 "_numberOfPages":"$pages$ sidor",

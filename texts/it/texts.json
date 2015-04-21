@@ -669,7 +669,7 @@
 "_newemail":"Nuovo indirizzo email",
 "_newemailagain":"Conferma il nuovo indirizzo email",
 "_noDocumentChosen":"Nessun documento scelto.",
-"_notFound":"<h1>Impossibile trovare la pagina</h1><h4>Puoi trovarti qui per aver digitato l'indirizzo sbagliato o perché la pagina è stata spostata.</h4>",
+"_notFound":"",
 "_november":"Novembre",
 "_numPartOfNum":"<span class='put-current-index'></span> di <span class='put-total-count'></span>",
 "_numberOfPages":"$pages$ pagine",

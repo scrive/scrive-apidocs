@@ -669,7 +669,7 @@
 "_newemail":"Ny e-postadresse",
 "_newemailagain":"Bekreft ny e-postadresse",
 "_noDocumentChosen":"Ingen dokumenter er valgt.",
-"_notFound":"<h1>Siden ble ikke funnet</h1><h4>Du kan ha havnet her fordi du skrev inn feil adresse eller fordi siden er flyttet.</h4>",
+"_notFound":"",
 "_november":"November",
 "_numPartOfNum":"<span class='put-current-index'></span> av <span class='put-total-count'></span>",
 "_numberOfPages":"$pages$ sider",
