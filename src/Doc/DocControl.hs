@@ -59,6 +59,7 @@ import Analytics.Include
 import AppView
 import Attachment.AttachmentID (AttachmentID)
 import Attachment.Model
+import BrandedDomain.BrandedDomain
 import Control.Logic ((||^))
 import DB
 import DB.TimeZoneName
@@ -328,7 +329,14 @@ handleCookieFail slid did = do
          then sendRedirect LinkEnableCookies
          else do
            Log.mixlog_ $ "Signview load after session timedout for slid: " ++ show slid ++ ", did: " ++ show did
-           renderTemplate_ "signSessionTimeOut" >>= renderFromBody
+           ctx <- getContext
+           ad <- getAnalyticsData
+           let fields = standardPageFields ctx Nothing ad
+           content <- flip renderTemplate fields $ if bdMainDomain (ctxbrandeddomain ctx) || isJust (ctxmaybeuser ctx) then
+                                                      "sessionTimeOut"
+                                                  else
+                                                      "sessionTimeOutWithoutHeaders"
+           simpleHtmlResonseClrFlash content
 
 {- |
    Redirect author of document to go to signview

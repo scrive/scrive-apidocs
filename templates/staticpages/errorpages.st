@@ -184,27 +184,66 @@ $htmlopentag()$
 $htmlclosingtag()$
 ###
 sessionTimeOut=
-<div class='mainContainer big'>
-  <img width="1920" height="800" src="/img/bg-home.jpg" class="bg"/>
-  <div class='short-input-section'>
-    <div class="shadowed">
-      <h1>$_sessionTimeOutHeader()$</h1>
-      <h4>$_sessionTimeOutContent1()$</h4>
-      <h4>$_sessionTimeOutContent2()$</h4>
+$doctype()$
+$htmlopentag()$
+  <head>
+    <title>$pagetitle()$</title>
+    $standardHeaderContents(nobranding='true')$
+    $if(logged)$
+      <link href='/service_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+    $else$
+      <link href='/scrive_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+    $endif$
+  </head>
+  <body>
+    <div class="wrapper-position-footer">
+      $header()$
+      <div class='mainContainer big error-page'>
+        <div class='error-page-info'>
+          <div class='error-page-description'>
+            <h1>$_sessionTimeOutHeader()$</h1>
+          </div>
+          <div class='error-page-instruction'>
+            <h4>$_sessionTimeOutContent1()$</h4>
+            <h4>$_sessionTimeOutContent2()$</h4>
+          </div>
+        </div>
+      </div>
+      $pageFooter()$
     </div>
-  </div>
-</div>
-<script>
-  require(['jquery', 'legacy_code'], function(jQuery) {
-    jQuery(document).ready(function() {
-      var cookies = Cookies.buildCookieMap();
-      var cookieNames = [];
-      for(var key in cookies) {
-        cookieNames.push(key);
-      }
-      mixpanel.track('Cookies enabled but timeouted', {'cookie': cookieNames.toString(),
-                                                       'user-agent': navigator.userAgent});
-    });
-  });
-</script>
+  </body>
+$htmlclosingtag()$
 ###
+sessionTimeOutWithoutHeaders=
+$doctype()$
+$htmlopentag()$
+  <head>
+    <title>$pagetitle()$</title>
+    $standardHeaderContents()$
+  </head>
+  <body>
+    <div class="wrapper-position-footer">
+      <div class='mainContainer big error-page'>
+        <div class="error-page-header">
+          <div class="error-page-header-logo-wrapper" >
+            <img alt='logo' src="/login_logo/$brandinghash$" />
+            <div class='divider-line'></div>
+            <div class='label'>
+              $PoweredByScrive()$
+            </div>
+          </div>
+        </div>
+        <div class='error-page-info'>
+          <div class='error-page-description'>
+            <h1>$_sessionTimeOutHeader()$</h1>
+          </div>
+          <div class='error-page-instruction'>
+            <h4>$_sessionTimeOutContent1()$</h4>
+            <h4>$_sessionTimeOutContent2()$</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+$htmlclosingtag()$
+####

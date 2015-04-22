@@ -179,12 +179,12 @@ enableCookiesPage = do
   let cookieNames = show $ map fst cookies
       mixpanel event = asyncLogEvent (NamedEvent event) [SomeProp "cookies" $ PVString cookieNames]
   Log.mixlog_ $ show cookies
+  ctx <- getContext
+  ad <- getAnalyticsData
   case cookies of
     [] -> do
       -- there are still no cookies, client probably disabled them
       mixpanel "Enable cookies page load"
-      ctx <- getContext
-      ad <- getAnalyticsData
       content <- renderTemplate "enableCookies" $ do
         standardPageFields ctx Nothing ad
       simpleHtmlResponse content
@@ -193,7 +193,12 @@ enableCookiesPage = do
       mixpanel "Enable cookies page load attempt with cookies"
       -- internalServerError is a happstack function, it's not our internalError
       -- this will not rollback the transaction
-      pageWhereLanguageCanBeInUrl $ renderTemplate_ "sessionTimeOut" >>= renderFromBody >>= internalServerError
+      let fields = standardPageFields ctx Nothing ad
+      content <- flip renderTemplate fields $ if bdMainDomain (ctxbrandeddomain ctx) || isJust (ctxmaybeuser ctx) then
+                                                 "sessionTimeOut"
+                                             else
+                                                 "sessionTimeOutWithoutHeaders"
+      pageWhereLanguageCanBeInUrl $ simpleHtmlResonseClrFlash content >>= internalServerError
 
 handleTermsOfService :: Kontrakcja m => m Response
 handleTermsOfService = withAnonymousContext $ do
