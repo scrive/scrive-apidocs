@@ -862,8 +862,9 @@ window.Signatory = Backbone.Model.extend({
     triggerBubble: function() {
         var signatory = this;
         var document = signatory.document();
-        if(document)
+        if(document) {
             document.trigger('bubble');
+        }
     },
     normalizeWithFirstCSVLine : function() {
       if (!this.isCsv()) return;

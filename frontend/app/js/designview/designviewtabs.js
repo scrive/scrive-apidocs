@@ -3,12 +3,17 @@
  *
  */
 
-define(['Backbone',  'React', 'designview/processsettings/processsettings' , 'legacy_code'], function(Backbone, React, ProcessSettings) {
+define(['Backbone',  'React',  'designview/participants/participants' , 'designview/processsettings/processsettings' , 'legacy_code'], function(Backbone, React, Participants, ProcessSettings) {
 
 window.DesignViewTabsView = function(args) {
   var model = args.model;
   var document = model.document();
-  var participantsView = new DesignViewParticipantsView({ model : model});
+  var participantsViewEl = $("<div/>");
+  var participantsView = React.render(React.createElement(Participants,{
+    model: model
+  }), participantsViewEl[0]);
+
+  //var participantsView = new DesignViewParticipantsView({ model : model});
   var draggablesView   = new DesignViewDraggablesView({ model : model});
   var processSettingsEl      = $("<div/>");
   var processSettings = React.render(React.createElement(ProcessSettings,{
@@ -24,7 +29,7 @@ window.DesignViewTabsView = function(args) {
   var tab1 = new Tab({
           name: tab1Name,
           pagehash : "participants",
-          elems: [ $("<div class='design-view-tab-center' />").append($(participantsView.el))],
+          elems: [ $("<div class='design-view-tab-center' />").append(participantsViewEl)],
           onActivate : function() {
                mixpanel.track('Click tab', {
                         Action: 'Open',
@@ -32,10 +37,10 @@ window.DesignViewTabsView = function(args) {
                     });
           },
           onShow: function() {
-               participantsView.initCustomScrollBox();
+               //participantsView.initCustomScrollBox();
           },
           onHide : function() {
-               participantsView.closeAllParticipants();
+               //participantsView.closeAllParticipants();
           }
           });
   var tab2 =  new Tab({
