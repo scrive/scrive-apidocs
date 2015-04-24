@@ -384,15 +384,14 @@ testChangeMainFileMovePlacements = do
                               value "page" (1 :: Int)
                               objects "anchors" [do
                                                     value "text" ("Signature" :: String)
-                                                    value "index" (1::Int)
-                                                    value "pages" [1,2::Int],
+                                                    value "index" (1::Int),
                                                  do
                                                     value "text" ("Namnteckning" :: String)
-                                                    value "index" (1::Int)
-                                                    value "pages" [1,2::Int],
+                                                    value "index" (1::Int),
                                                  do
                                                     value "text" ("Unterschrift" :: String)
                                                     value "index" (2::Int)
+                                                    -- note: "pages" is a backward compatibility mode that should be removed someday
                                                     value "pages" [1,2,3::Int]]]])
       addAnchoredField x = x
 

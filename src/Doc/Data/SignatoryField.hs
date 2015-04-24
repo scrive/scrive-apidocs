@@ -107,7 +107,7 @@ instance ToSQL FieldType where
 data PlacementAnchor = PlacementAnchor {
   placementanchortext  :: !String
 , placementanchorindex :: !Int
-, placementanchorpages :: ![Int]
+, placementanchorpages :: !(Maybe [Int])
 } deriving (Eq,Ord, Show, Data, Typeable)
 
 data TipSide = LeftTip | RightTip
@@ -159,7 +159,7 @@ instance FromSQL [FieldPlacement] where
     anchors <- fmap (fromMaybe []) <$> fromJSValueFieldCustom "anchors" $ fromJSValueCustomMany $ do
       text <- fromJSValueField "text"
       index <- fromMaybe (Just 1) <$> fromJSValueField "index"
-      pages  <- fromJSValueField "pages"
+      pages  <- fmap Just $ fromJSValueField "pages"
       return (PlacementAnchor <$> text
         <*> index
         <*> pages)
@@ -184,7 +184,9 @@ instance ToSQL [FieldPlacement] where
             J.value "text" (placementanchortext anchor)
             when (placementanchorindex anchor /=1 ) $ do
               J.value "index" (placementanchorindex anchor)
-            J.value "pages" (placementanchorpages anchor)
+            case placementanchorpages anchor of
+              Nothing -> return ()
+              Just pages -> J.value "pages" pages
         J.value "tip" $ case (placementtipside placement) of
           Just LeftTip -> Just ("left" :: String)
           Just RightTip -> Just "right"

@@ -61,7 +61,7 @@ instance FromJSValue PlacementAnchor where
   fromJSValue = do
     text        <- fromJSValueField "text"
     index       <- fromMaybe (Just 1) <$> fromJSValueField "index"
-    pages       <- fromJSValueField "pages"
+    pages       <- fmap Just $ fromJSValueField "pages"
     return (PlacementAnchor <$> text
             <*> index
             <*> pages)

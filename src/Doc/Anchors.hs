@@ -39,7 +39,9 @@ getAnchorPositions pdfcontent anchors = do
         anchorToJS anc = do
           value "text" (placementanchortext anc)
           value "index" (placementanchorindex anc)
-          value "pages" (placementanchorpages anc)
+          case placementanchorpages anc of
+            Nothing -> return ()
+            Just pages -> value "pages" pages
         configpath = tmppath ++ "/find-texts.json"
 
     liftIO $ BS.writeFile inputpath pdfcontent
@@ -61,7 +63,7 @@ getAnchorPositions pdfcontent anchors = do
             matches = withJSValue stdoutjs $ fromJSValueFieldCustom "matches" $ fromJSValueCustomMany $ ((do
               text                 <- fromJSValueField "text"
               index                <- fromMaybe (Just 1) <$> fromJSValueField "index"
-              pages                <- fromJSValueField "pages"
+              pages                <- fmap Just $ fromJSValueField "pages"
               page                 <- fromJSValueField "page"
               coords               <- fromJSValueField "coords"
               let coordx = fst <$> coords
