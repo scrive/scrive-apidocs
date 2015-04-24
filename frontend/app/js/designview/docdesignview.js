@@ -315,11 +315,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                   content = $(localization.designview.signModalContentAuthorOnly);
                 }
                 content.find('.put-document-title-here').text(document.title());
-            }
-            else if (signatory.elegAuthentication()) {
-                content = $(localization.designview.signModalContentEleg);
-            }
-            else {
+            } else {
                 var parties = _.filter(document.signatories(), function(signatory) {
                                       return signatory.signs() && !signatory.current();
                                });

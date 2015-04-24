@@ -416,7 +416,6 @@ javascriptLocalisation =
              }
              , signModalContentAuthorOnly : "<p>$_designViewSignModalContentAuthorOnly()$</p>"
              , signModalContentAuthorOnlyWithName : "<p>$_designViewSignModalContentAuthorOnlyWithName()$</p>"
-             , signModalContentEleg : "<p>$_designViewSignModalContentEleg()$</p>"
              , signModalContent : "<p>$_designViewSignModalContent()$</p>"
              , signModalContentWithName : "<p>$_designViewSignModalContentWithName()$</p>"
              , startSigningModalTextWithPad : "$_designViewStartSigningModalTextWithPad()$"

@@ -402,7 +402,6 @@
 "_designViewSignModalContent":"By clicking the button you will sign the document <strong class='put-document-title-here'></strong> and your signature will be registered by the e-signing service Scrive.",
 "_designViewSignModalContentAuthorOnly":"When you've signed the document <strong class='put-document-title-here'></strong> your signature will be registered by the e-signing service Scrive.",
 "_designViewSignModalContentAuthorOnlyWithName":"<strong class='put-signatory-name-here'></strong>, when you've signed the document <strong class='put-document-title-here'></strong> your signature will be registered by the e-signing service Scrive.",
-"_designViewSignModalContentEleg":"Select eID. When you have selected, the software for signing with eID will be opened.",
 "_designViewSignModalContentWithName":"<strong class='put-signatory-name-here'></strong>, by clicking the button you will sign the document <strong class='put-document-title-here'></strong> and your signature will be registered by the e-signing service Scrive.",
 "_designViewSignatureBox":"Signature box",
 "_designViewSignatureBoxSettings":"Signature settings",
