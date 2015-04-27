@@ -7,7 +7,7 @@ window.PlacementAnchor = Backbone.Model.extend({
     return {
       text: "",
       index: 1,
-      pages: []
+      pages: null
     };
   },
 
