@@ -41,22 +41,24 @@ return React.createClass({
         }
         {/* else */ model.participantDetail() == undefined &&
           <div>
-            <div className="design-view-action-participant-new-multi">
+          
+            {/* if */ !_.any(model.document().signatories(), function(x) { return x.isCsv(); }) &&
+              <div className="design-view-action-participant-new-multi">
+                <Button
+                  text={localization.designview.addMultisend}
+                  onClick={function() {self.addMultisendParticipant();}}
+                />
+              </div>
+            }
+
+            <div className="design-view-action-participant-new-single">
               <Button
                 type="action"
                 text={localization.designview.addParty}
                 onClick={function() {self.addSingleParticipant();}}
               />
             </div>
-            {/* if */ !_.any(model.document().signatories(), function(x) { return x.isCsv(); }) &&
-              <div className="design-view-action-participant-new-multi">
-                <Button
-                  type="action"
-                  text={localization.designview.addMultisend}
-                  onClick={function() {self.addMultisendParticipant();}}
-                />
-              </div>
-            }
+
           </div>
         }
       </div>

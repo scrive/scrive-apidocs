@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['legacy_code', 'React', 'designview/participants/ordericon', 'designview/participants/roleicon', 'designview/participants/deliveryicon', 'designview/participants/authicon', 'designview/participants/confirmationdeliveryicon'], function(_Legacy, React,OrderIcon,RoleIcon,DeliveryIcon, AuthIcon, ConfirmationDeliveryIcon) {
+define(['legacy_code', 'React', 'designview/participants/ordericon', 'designview/participants/roleicon', 'designview/participants/deliveryicon', 'designview/participants/authicon', 'designview/participants/confirmationdeliveryicon','designview/participants/participantsettings'], function(_Legacy, React,OrderIcon,RoleIcon,DeliveryIcon, AuthIcon, ConfirmationDeliveryIcon,ParticipantSettings) {
 
 return React.createClass({
   toogleView: function() {
@@ -14,24 +14,33 @@ return React.createClass({
        viewmodel.setParticipantDetail(sig);
     }
   },
-  name: function() {
-    if(this.props.model.isCsv()) {
-      return localization.csv.title;
-    } else {
-      return this.props.model.name();
-    }
+  onRemove: function() {
+     var sig = this.props.model;
+     var viewmodel = this.props.viewmodel;
+     viewmodel.setParticipantDetail(undefined);
+     _.each(sig.fields(), function(field) {
+        field.removeAllPlacements();
+     });
+     sig.document().removeSignatory(sig);
   },
+
   render: function() {
     var self = this;
     var sig = this.props.model;
+    var viewmodel = this.props.viewmodel;
+
     return (
       <div className="design-view-action-participant">
-        <div className="design-view-action-participant-inner">
+        {/* if */ !sig.author() &&
+          <div className="design-view-action-participant-close" onClick={function() {self.onRemove();} }/>
+        }
+
+        <div className="design-view-action-participant-inner" style={{height: viewmodel.participantDetail() === sig ? "200px" : "50px"}}>
           <div className="design-view-action-participant-info-box" onClick={function() {self.toogleView();}}>
             <div className={"design-view-action-participant-info-color " + ("participant-" +  ((sig.participantIndex() -1 ) % 6 + 1))} />
             <div className="design-view-action-participant-info-name">
               <div className="design-view-action-participant-info-name-inner">
-                {self.name()}
+                {sig.isCsv() ? localization.csv.title : sig.name()}
               </div>
             </div>
             <div className="design-view-action-participant-info-email">
@@ -49,6 +58,9 @@ return React.createClass({
             <RoleIcon model={sig}/>
             <AuthIcon model={sig}/>
             <ConfirmationDeliveryIcon model={sig}/>
+          </div>
+          <div className="design-view-action-participant-details">
+            <ParticipantSettings model={sig}/>
           </div>
         </div>
       </div>
