@@ -35,7 +35,7 @@ return React.createClass({
           <div className="design-view-action-participant-close" onClick={function() {self.onRemove();} }/>
         }
 
-        <div className="design-view-action-participant-inner" style={{height: viewmodel.participantDetail() === sig ? "248px" : "50px"}}>
+        <div className={"design-view-action-participant-inner " + (viewmodel.participantDetail() === sig ? "expanded" : "")}>
           <div className="design-view-action-participant-info-box" onClick={function() {self.toogleView();}}>
             <div className={"design-view-action-participant-info-color " + ("participant-" +  ((sig.participantIndex() -1 ) % 6 + 1))} />
             <div className="design-view-action-participant-info-name">

@@ -37,12 +37,15 @@
 .design-view-action-participant-inner {
   border: 2px solid @white;
   border-radius: 4px;
-  height: 58px;
+  height: 46px;
   overflow: hidden;
-  position: relative;
   width: 970px;
 
   .box-sizing(border-box);
+
+  &.expanded {
+    height: auto;
+  }
 }
 
 .design-view-action-participant-close {
@@ -65,8 +68,6 @@
   background: #fafafa;
   cursor: pointer;
   height: 42px;
-  left: 0;
-  position: absolute;
   top: 0;
   width: 100%;
   z-index: 100;
@@ -78,19 +79,16 @@
   background-color: green;
   border: 2px solid @white;
   height: 15px;
-  left: 13px;
-  position: absolute;
-  top: 12px;
+  margin: 12px 13px;
+  float:left;
   width: 15px;
 }
 
 .design-view-action-participant-info-name {
   border-left: 2px solid @white;
   height: 100%;
-  left: 44px;
   overflow: hidden;
-  position: absolute;
-  top: 0;
+  float:left;
   width: 200px;
 
   .box-sizing(border-box);
@@ -108,12 +106,10 @@
 .design-view-action-participant-info-email {
   border-left: 2px solid @white;
   height: 100%;
-  left: 244px;
   margin-left: 3px;
   overflow: hidden;
-  position: absolute;
-  top: 0;
-  width: 320px;
+  float:left;
+  width: 316px;
 
   .box-sizing(border-box);
 }
@@ -129,11 +125,9 @@
 
 .design-view-action-participant-info-company {
   border-left: 2px solid @white;
-  left: 564px;
   height: 100%;
   overflow: hidden;
-  position: absolute;
-  top: 0;
+  float:left;
   width: 182px;
 
   .box-sizing(border-box);
@@ -152,9 +146,7 @@
   border-left: 2px solid @white;
   height: 100%;
   line-height: 1em;
-  position: absolute;
-  right: 176px;
-  top: 0;
+  float:left;
   width: 44px;
 
   .box-sizing(border-box);
@@ -170,9 +162,7 @@
   border-left: 2px solid @white;
   display: inline-block;
   height: 100%;
-  position: absolute;
-  right: 88px;
-  top: 0;
+  float:left;
   width: 44px;
 
   .box-sizing(border-box);
@@ -203,9 +193,7 @@
   display: inline-block;
   border-left: 2px solid @white;
   height: 100%;
-  right: 132px;
-  position: absolute;
-  top: 0;
+  float:left;
   width: 44px;
 
   .box-sizing(border-box);
@@ -264,9 +252,7 @@
   border-left: 2px solid @white;
   display: inline-block;
   height: 100%;
-  position: absolute;
-  right: 44px;
-  top: 0;
+  float:left;
   width: 44px;
 
   .box-sizing(border-box);
@@ -305,9 +291,7 @@
   display: inline-block;
   border-left: 2px solid @white;
   height: 100%;
-  right: 0;
-  position: absolute;
-  top: 0;
+  float:left;
   width: 44px;
   .box-sizing(border-box);
   .user-select(none);
@@ -407,9 +391,6 @@
 
 .design-view-action-participant-details-common {
   background-color: #fafafa;
-  bottom: 0;
-  left: 0;
-  position: absolute;
   width: 970px;
 
   .box-sizing(border-box);
