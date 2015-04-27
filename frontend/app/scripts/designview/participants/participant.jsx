@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['legacy_code', 'React', 'designview/participants/ordericon', 'designview/participants/roleicon', 'designview/participants/deliveryicon', 'designview/participants/authicon', 'designview/participants/confirmationdeliveryicon','designview/participants/participantsettings'], function(_Legacy, React,OrderIcon,RoleIcon,DeliveryIcon, AuthIcon, ConfirmationDeliveryIcon,ParticipantSettings) {
+define(['legacy_code', 'React', 'designview/participants/ordericon', 'designview/participants/roleicon', 'designview/participants/deliveryicon', 'designview/participants/authicon', 'designview/participants/confirmationdeliveryicon','designview/participants/participantsettings','designview/participants/participantfields'], function(_Legacy, React,OrderIcon,RoleIcon,DeliveryIcon, AuthIcon, ConfirmationDeliveryIcon,ParticipantSettings,ParticipantFields) {
 
 return React.createClass({
   toogleView: function() {
@@ -35,7 +35,7 @@ return React.createClass({
           <div className="design-view-action-participant-close" onClick={function() {self.onRemove();} }/>
         }
 
-        <div className="design-view-action-participant-inner" style={{height: viewmodel.participantDetail() === sig ? "200px" : "50px"}}>
+        <div className="design-view-action-participant-inner" style={{height: viewmodel.participantDetail() === sig ? "248px" : "50px"}}>
           <div className="design-view-action-participant-info-box" onClick={function() {self.toogleView();}}>
             <div className={"design-view-action-participant-info-color " + ("participant-" +  ((sig.participantIndex() -1 ) % 6 + 1))} />
             <div className="design-view-action-participant-info-name">
@@ -60,6 +60,7 @@ return React.createClass({
             <ConfirmationDeliveryIcon model={sig}/>
           </div>
           <div className="design-view-action-participant-details">
+            <ParticipantFields model={sig} viewmodel={this.props.viewmodel}/>
             <ParticipantSettings model={sig}/>
           </div>
         </div>
