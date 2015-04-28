@@ -1,5 +1,4 @@
 .authorizeview {
-  padding-top: 20px;
   background-color:#495259;
   color: #FFFFFF;
   display: table;
@@ -9,6 +8,19 @@
 .authorizeview > .main {
   display: table-cell;
   vertical-align: middle;
+  width:100% !important;
+  min-width:100% !important;
+}
+
+.authorizeview .main .main {
+  margin: 0px auto;
+  width: 292px !important;
+  min-width: 292px !important;
+}
+
+.authorizeview .main .container {
+  width: 292px !important;
+  min-width: 292px !important;
 }
 
 .authorizeview  a {

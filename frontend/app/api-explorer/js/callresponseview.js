@@ -47,7 +47,7 @@ window.CallResponseView = Backbone.View.extend({
     if (call.needsAuthorization() && call.responseStatusCode() == 403 && !model.oauth().isSetUp()) {
       var buttonRow = $("<div class='row'>");
       var buttonCol = $("<div class='col-xs-4 col-xs-offset-8'>");
-      var button = $("<button class='btn btn-block btn-success' type='button'>Authorize</button>").click(function () {
+      var button = $("<button class='btn btn-block btn-success' type='button'>Authorise</button>").click(function () {
         model.oauth().clear();
         model.setMode("authorize");
         window.location.hash = "#" + model.oauth().mode();

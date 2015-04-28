@@ -56,7 +56,7 @@ window.ApiDemoAuthorizeView = Backbone.View.extend({
   appendRow: function (rowClass, target, object) {
     target.append($("<div class='row'/>")
           .addClass(rowClass)
-             .append($("<div class='col-md-3 col-md-offset-4'/>")
+             .append($("<div class='col-xs-12'/>")
                   .append(object)
               )
     );
@@ -269,7 +269,7 @@ window.ApiDemoAuthorizeView = Backbone.View.extend({
           })
         );
     }
-    self.appendCenteredRow(container, $("<p/>").append("<BR/>").append($("<a>Skip authorization</a>")
+    self.appendCenteredRow(container, $("<p/>").append("<BR/>").append($("<a>Skip authorisation</a>")
       .click(function () {
         oauth.clear();
         model.setMode("explore");

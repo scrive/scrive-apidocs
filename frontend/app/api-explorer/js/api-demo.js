@@ -124,11 +124,9 @@ var ApiDemoView = Backbone.View.extend({
     if (model.willBeReloaded()) {
       return; // If view will be reloaded we don't render anything;
     } else if (model.authorizeMode()) {
-      console.log("Rendering authorize view");
       $("body").addClass("authorizeview").removeClass("exploreview");
       $(this.el).append(new ApiDemoAuthorizeView({model: model}).el);
     } else {
-      console.log("Rendering explore view");
       $("body").addClass("exploreview").removeClass("authorizeview");
       this.explorerView = new ApiDemoExploreView({model: model});
       $(this.el).append(this.explorerView.el);

@@ -16,12 +16,12 @@ window.ApiDemoExploreView = Backbone.View.extend({
                       .append($("<li><a href='/en/api'>API documentation</a> </li>"));
 
     if (!model.oauth().isSetUp()) {
-      headerRightBarList.append($("<li><a>Authorize</a></li>").click(function () {
+      headerRightBarList.append($("<li><a>Authorise</a></li>").click(function () {
         model.setMode("authorize");
         window.location.hash = "#" + model.oauth().mode();
       }));
     } else {
-      headerRightBarList.append($("<li><a>Clear authorization</a></li>").click(function () {
+      headerRightBarList.append($("<li><a>Clear authorisation</a></li>").click(function () {
         model.oauth().clear();
       }));
     }
@@ -46,7 +46,7 @@ window.ApiDemoExploreView = Backbone.View.extend({
     var container = $("<div class='container'/>");
     this.requestView = new CallRequestView({model: model, el: $("<div class='panel panel-default'/>")});
     this.responseView = new CallResponseView({model: model, el: $("<div class='panel panel-default'/>")});
-    container.append(new CallSelector({model: model, el: $("<div class='row'/>")}).el);
+    container.append(new CallSelector({model: model, el: $("<div class='row calls-row'/>")}).el);
     container.append($("<div class='row'/>")
       .append($("<div class='col-xs-6'/>").append(this.requestView.el))
       .append($("<div class='col-xs-6'/>").append(this.responseView.el))

@@ -5,7 +5,13 @@
   padding-bottom: 20px;
   padding-top: 20px;
   background-color:#495259;
+  margin-bottom: 40px;
 }
+
+.exploreview .calls-row {
+  margin-bottom: 30px;
+}
+
 
 .exploreview img {
   height: 23px;

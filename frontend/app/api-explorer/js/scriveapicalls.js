@@ -148,7 +148,7 @@ window.ApiCallInstance = AbstractAPICall.extend({
               " " + jqXHR.statusText,
             "Request URL": Scrive.serverUrl() + this.getCallUrl(),
             "Request Method": this.method(),
-            "Authorization needed": this.needsAuthorization() ? "Yes" : "No",
+            "Authorisation needed": this.needsAuthorization() ? "Yes" : "No",
             "Date": jqXHR.getResponseHeader("Date")
           } ;
         },
