@@ -340,8 +340,8 @@ define(['common/hubspot_service', 'Backbone', 'legacy_code'], function(HubSpot) 
 
   window.AccountSetup = function(args) {
       mixpanel.track('Visit account setup');
-      // @devnote Kludge for HubSpot integration: have to mount form
-      // now, otherwise the submission might interrupted by the
+      // Kludge for HubSpot integration: have to mount form now,
+      // otherwise the submission might interrupted by the
       // following redirection.
       HubSpot.loadComponents(HubSpot.FORM_TOS_SUBMIT);
 
