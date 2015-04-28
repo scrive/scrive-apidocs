@@ -2,5 +2,8 @@
   "./app/scripts/designview/typesetters/*.jsx",
   "./app/scripts/common/editabletext.jsx",
   "./app/js/anchors.js",
-  "./app/js/takeScreenshot.js"
+  "./app/js/takeScreenshot.js",
+  "./app/api-explorer/js/*.js",
+  "./app/api-explorer/js/calls/v1/*.js",
+  "./app/api-explorer/js/calls/v1/*/*.js"
 ]

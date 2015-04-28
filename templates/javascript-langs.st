@@ -1257,6 +1257,7 @@ javascriptLocalisation =
       , footer : {
               explore              : "$_pageFooterExplore()$"
             , api                  : "$_pageFooterAPI()$"
+            , apiExplorer          : "$_pageFooterAPIExplorer()$"
             , jobs                 : "$_pageFooterWork()$"
             , verify               : "$_footerVerifyDocument()$"
             , getStarted           : "$_headerGetStarted()$"

@@ -1,0 +1,53 @@
+.authorizeview {
+  padding-top: 20px;
+  background-color:#495259;
+  color: #FFFFFF;
+  display: table;
+  height: 100%;
+  width: 100%;
+}
+.authorizeview > .main {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.authorizeview  a {
+  cursor: pointer;
+  color: #FFFFFF;
+}
+
+.authorizeview  a:hover {
+  color: #FFFFFF;
+}
+
+.authorizeview  select {
+  background-color: #495259;
+  border-color: #FFFFFF;
+  color: #FFFFFF;
+
+}
+
+.authorizeview  .btn {
+  background-color: #495259;
+  border-color: #FFFFFF;
+}
+
+.authorizeview  .btn:hover {
+  background-color: #606c75;
+  color: #FFFFFF;
+}
+
+.authorizeview  .btn:focus {
+  background-color: #606c75;
+  color: #FFFFFF;
+}
+
+
+
+.authorizeview .divider-line {
+  background-image: url('../img/divider-line.png');
+  display: block;
+  height: 2px;
+  margin: 15px auto;
+  width: 166px;
+}
