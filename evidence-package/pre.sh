@@ -1,8 +1,7 @@
 #!/bin/bash -e
 
 doc_root="exports"
-doc_dirs=(Appendix_2_Service_Description
-Appendix_4_Evidence_of_time
+doc_dirs=(Appendix_4_Evidence_of_time
 Appendix_6_Digital_Signature_Documentation
 ZZTestDocument)
 

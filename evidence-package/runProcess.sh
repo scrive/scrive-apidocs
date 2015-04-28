@@ -71,7 +71,7 @@ do
 done
 echo "Done."
 
-html_files=("Evidence Quality of Scrive Esigned Documents"
+html_files=("Evidence Quality of Scrive esigned Documents"
 "Appendix 1 Evidence Quality Framework"
 "Appendix 2 Service Description"
 "Appendix 6 Digital Signature Documentation")
