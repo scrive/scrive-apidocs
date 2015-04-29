@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['legacy_code', 'React', 'common/button', 'designview/participants/participantnamefield', 'designview/participants/participantfield'], function(_Legacy, React, Button, ParticipantNameField, ParticipantField) {
+define(['legacy_code', 'React', 'common/button', 'designview/participants/participantnamefield', 'designview/participants/participantfield', 'designview/participants/participantselectfield', 'designview/participants/participantnotnamedfield','designview/participants/participantaddfield'], function(_Legacy, React, Button, ParticipantNameField, ParticipantField, ParticipantSelectField, ParticipantNotNamedField, ParticipantAddField) {
 
 return React.createClass({
 
@@ -17,13 +17,18 @@ return React.createClass({
         }
         {
           _.map(sig.fields(), function(f) {
-            if (f.isEmail() || f.isFstName() || f.isSndName() || f.isBlank() || f.noName() || !f.isText()) {
-              return;
-            } else {
+            if (f.isBlank()) {
+              return (<ParticipantSelectField model={f}/>)
+            } else if (f.noName()) {
+              return (<ParticipantNotNamedField model={f}/>)
+            } else if (!f.isEmail() && !f.isFstName() && !f.isSndName() && f.isText()) {
               return (<ParticipantField model={f}/>)
+            } else {
+              return;
             }
           })
         }
+        <ParticipantAddField model={sig}/>
         {/* if */ sig.isCsv() &&
           <div className="design-view-action-participant-details-information-field-wrapper">
             <Button

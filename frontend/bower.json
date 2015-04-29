@@ -14,7 +14,9 @@
     "imagesloaded": "~3.1.0",
     "react": "~0.12.2",
     "javascript-state-machine": "~2.2.0",
-    "moment": "~2.7.0"
+    "moment": "~2.7.0",
+    "gemini-scrollbar": "1.1.3",
+    "react-gemini-scrollbar":"1.0.8"
   },
   "homepage": "https://github.com/Jenso/Scrive-Frontend",
   "authors": [

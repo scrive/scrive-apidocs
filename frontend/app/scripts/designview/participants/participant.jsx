@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['legacy_code', 'React', 'designview/participants/ordericon', 'designview/participants/roleicon', 'designview/participants/deliveryicon', 'designview/participants/authicon', 'designview/participants/confirmationdeliveryicon','designview/participants/participantsettings','designview/participants/participantfields'], function(_Legacy, React,OrderIcon,RoleIcon,DeliveryIcon, AuthIcon, ConfirmationDeliveryIcon,ParticipantSettings,ParticipantFields) {
+define(['legacy_code', 'React', 'designview/participants/ordericon', 'designview/participants/roleicon', 'designview/participants/deliveryicon', 'designview/participants/authicon', 'designview/participants/confirmationdeliveryicon','designview/participants/participantsettings','designview/participants/participantfields'], function(_Legacy, React, OrderIcon,RoleIcon,DeliveryIcon, AuthIcon, ConfirmationDeliveryIcon,ParticipantSettings,ParticipantFields) {
 
 return React.createClass({
   toogleView: function() {

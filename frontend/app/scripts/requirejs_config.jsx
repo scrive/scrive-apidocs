@@ -27,6 +27,7 @@ var require = {
     imagesLoaded: '../bower_components/imagesloaded/imagesloaded',
     moment: '../bower_components/moment/min/moment-with-langs.min',
     StateMachine: '../bower_components/javascript-state-machine/state-machine',
+    'gemini-scrollbar': '../bower_components/gemini-scrollbar/index',
     tinycolor : '../libs/tinycolor-min',
     html2canvas: '../libs/html2canvas',
     /**
