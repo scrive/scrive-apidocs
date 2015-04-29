@@ -8,6 +8,7 @@ define(['Backbone',  'React',  'designview/participants/participants' , 'designv
 window.DesignViewTabsView = function(args) {
   var model = args.model;
   var document = model.document();
+  console.log("Preparing new tab");
   var participantsViewEl = $("<div/>");
   var participantsView = React.render(React.createElement(Participants,{
     model: model
@@ -37,6 +38,7 @@ window.DesignViewTabsView = function(args) {
                     });
           },
           onShow: function() {
+            participantsView.forceUpdate();
                //participantsView.initCustomScrollBox();
           },
           onHide : function() {

@@ -16,7 +16,7 @@ window.FieldPlacement = Backbone.Model.extend({
     },
     initialize : function(args){
         var placement = this;
-        _.bindAll(this,'remove', 'bubbleSelf', 'triggerBubble');
+        _.bindAll(this,'remove');
         placement.addToPage();
         if (this.tip() === undefined)
           this.set({"tip" : args.field.defaultTip()});
@@ -186,18 +186,11 @@ window.FieldPlacement = Backbone.Model.extend({
     },
     bindBubble: function() {
         var placement = this;
-        placement.bind('change', placement.bubbleSelf);
-        placement.bind('bubble', placement.triggerBubble);
-    },
-    bubbleSelf: function() {
-        var placement = this;
-        placement.trigger('bubble');
-    },
-    triggerBubble: function() {
-        var placement = this;
-        var field = placement.field();
-        if(field)
-            field.trigger('bubble');
+        placement.bind('change', function() {
+          if(placement.field()) {
+            placement.field().trigger('change');
+          }
+        });
     },
     step: function() {
         return this.get('step');

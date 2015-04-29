@@ -47,7 +47,6 @@ window.Document = Backbone.Model.extend({
     }},
     initialize: function(args) {
         this.url = "/api/frontend/get/" + args.id ;
-        this.bindBubble();
     },
     viewer: function() {
         if (this.get("viewer") != undefined)
@@ -815,14 +814,6 @@ window.Document = Backbone.Model.extend({
             });
         });
 
-    },
-    bindBubble: function() {
-        var document = this;
-        document.on('change', document.bubbleSelf);
-    },
-    bubbleSelf: function() {
-        var document = this;
-        document.trigger('bubble');
     },
     hasEleg: function() {
         return _.some(this.signatories(), function(s) {

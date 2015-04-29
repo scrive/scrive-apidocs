@@ -16,7 +16,7 @@ window.Field = Backbone.Model.extend({
     },
     initialize : function(args){
         var field = this;
-        _.bindAll(this, 'remove', 'bindBubble', 'bubbleSelf');
+        _.bindAll(this, 'remove');
         var extendedWithField =   function(hash){
             hash.field = field;
             return hash;
@@ -426,18 +426,11 @@ window.Field = Backbone.Model.extend({
     },
     bindBubble: function() {
         var field = this;
-        field.bind('change', field.bubbleSelf);
-        field.bind('bubble', field.triggerBubble);
-    },
-    bubbleSelf: function() {
-        var field = this;
-        field.trigger('bubble');
-    },
-    triggerBubble: function() {
-        var field = this;
-        var signatory = field.signatory();
-        if(signatory)
-            signatory.trigger('bubble');
+        field.bind('change', function() {
+          if(field.signatory()) {
+            field.signatory().trigger('change');
+          }
+        });
     }
 });
 

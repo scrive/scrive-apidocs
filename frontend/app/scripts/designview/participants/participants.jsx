@@ -12,33 +12,37 @@ return React.createClass({
       this.refs.basicSettings.hideAllCalendars();
     }
   },
-
-  componentDidMount:  function()  {
+  updateScrollbar : function() {
     if (this.refs["scroll-area"] != undefined) {
-      this.scrollbar = new GeminiScrollbar({
-        element: this.refs["scroll-area"].getDOMNode(),
-        autoshow: true,
-        createElements: false
-      }).create();
+       if (this.scrollbar != undefined && this.scrollbar.element == this.refs["scroll-area"].getDOMNode()) {
+         this.scrollbar.update();
+       } else {
+         if (this.scrollbar != undefined) {
+           this.destroyScrollbar();
+         }
+         this.scrollbar = new GeminiScrollbar({
+          element: this.refs["scroll-area"].getDOMNode(),
+          autoshow: false,
+          createElements: false
+         }).create();
+      }
     }
   },
-  componentDidUpdate:  function()  {
-    if (this.scrollbar != undefined) {
-      this.scrollbar.update();
-    } else if (this.refs["scroll-area"] != undefined) {
-      this.scrollbar = new GeminiScrollbar({
-        element: this.refs["scroll-area"].getDOMNode(),
-        autoshow: false,
-        createElements: false
-      }).create();
-
-    }
-  },
-  componentWillUnmount:  function()  {
+  destroyScrollbar : function() {
     if (this.scrollbar != undefined) {
       this.scrollbar.destroy();
       this.scrollbar = null;
     }
+  },
+  componentDidMount:  function()  {
+    this.updateScrollbar();
+  },
+  componentDidUpdate:  function()  {
+    this.updateScrollbar();
+
+  },
+  componentWillUnmount:  function()  {
+    this.destroyScrollbar();
   },
   height: function() {
     var maxHeight = $(window).height() - 350;

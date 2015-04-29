@@ -23,19 +23,23 @@ return React.createClass({
      });
      sig.document().removeSignatory(sig);
   },
-
+  signatoryHasProblems: function() {
+    return _.any( this.props.model.fields(), function(field) {
+      return !field.isValid();
+    });
+  },
   render: function() {
     var self = this;
     var sig = this.props.model;
     var viewmodel = this.props.viewmodel;
 
     return (
-      <div className="design-view-action-participant">
+      <div className={"design-view-action-participant"}>
         {/* if */ !sig.author() &&
           <div className="design-view-action-participant-close" onClick={function() {self.onRemove();} }/>
         }
 
-        <div className={"design-view-action-participant-inner " + (viewmodel.participantDetail() === sig ? "expanded" : "")}>
+        <div className={"design-view-action-participant-inner " + (viewmodel.participantDetail() === sig ? "expanded " : "")  + (self.signatoryHasProblems() ? "is-has-problems" : "")}>
           <div className="design-view-action-participant-info-box" onClick={function() {self.toogleView();}}>
             <div className={"design-view-action-participant-info-color " + ("participant-" +  ((sig.participantIndex() -1 ) % 6 + 1))} />
             <div className="design-view-action-participant-info-name">

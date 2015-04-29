@@ -94,7 +94,6 @@ window.Signatory = Backbone.Model.extend({
     initialize: function(args) {
         var signatory = this;
         signatory.desynchronizeDeliveryAndConfirmationDeliveryIfNeeded();
-        _.bindAll(this, 'bubbleSelf', 'triggerBubble');
         var extendedWithSignatory = function(hash) {
                     hash.signatory = signatory;
                     return hash;
@@ -850,21 +849,19 @@ window.Signatory = Backbone.Model.extend({
     },
     bindBubble: function() {
         var signatory = this;
-        signatory.bind('change', signatory.bubbleSelf);
-        signatory.bind('bubble', signatory.triggerBubble);
-        signatory.listenTo(signatory,'change', function() {signatory.ensureAllFields();});
-
-    },
-    bubbleSelf: function() {
-        var signatory = this;
-        signatory.trigger('bubble');
-    },
-    triggerBubble: function() {
-        var signatory = this;
-        var document = signatory.document();
-        if(document) {
-            document.trigger('bubble');
-        }
+        window.alreadyTriggered = 0;
+        signatory.listenToOnce(signatory,'change', function() {
+          if (window.alreadyTriggered > 0) {
+            return;
+          }
+          window.alreadyTriggered++;
+          signatory.ensureAllFields();
+          if (signatory.document()) {
+            signatory.document().trigger("change");
+          }
+          window.alreadyTriggered--;
+          //signatory.bindBubble();
+        });
     },
     normalizeWithFirstCSVLine : function() {
       if (!this.isCsv()) return;
