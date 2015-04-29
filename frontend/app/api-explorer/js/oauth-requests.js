@@ -62,10 +62,10 @@ window.OAuthResourceOwnerAuthorization =  Backbone.Model.extend({
 /* After user confirmed identity with Scrive, this one is ussed to get key to authorizaed user requests*/
 window.OAuthTokenRequest = OAuthRequest.extend({
   defaults: {
-    oauth_consumer_key:"072e0071b9b69add_1",
+    oauth_consumer_key:"",
     oauth_token: "",
     oauth_verifier: "",
-    oauth_client_shared_secret:"5235c6dc4172264f&1",
+    oauth_client_shared_secret:"",
     oauth_token_secret: "",
   },
   requestUrl: function () {

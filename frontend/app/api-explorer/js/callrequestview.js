@@ -21,7 +21,7 @@ window.CallRequestView = Backbone.View.extend({
     var model = this.model;
     var call = model.selectedApiCall();
     this.scrollpanel = $("<div class='panel panel-default panel-scroll' />");
-    this.scrollpane.css("style", "position:fixed;top:-2px;margin-left:-1px")
+    this.scrollpanel.attr("style", "position:fixed;top:-2px;margin-left:-1px");
     this.scrollpanel.css("width", $(this.el).width() + 2);
     var panelBody = $("<div class='panel-body'>");
     var mainRow = $("<div class='row'>");

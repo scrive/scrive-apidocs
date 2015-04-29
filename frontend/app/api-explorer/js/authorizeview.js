@@ -36,10 +36,7 @@ window.ApiDemoAuthorizeView = Backbone.View.extend({
       $("<option value='DOC_SEND'>DOC_SEND</option>")
         .attr("selected", oauth.priviliges() == "DOC_SEND"));
     select.append(
-      $("<option value='DOC_CHECK'>DOC_CREATE</option>")
-        .attr("selected", oauth.priviliges() == "DOC_CHECK"));
-    select.append(
-      $("<option value='DOC_CHECK'>DOC_CREATE</option>")
+      $("<option value='DOC_CHECK'>DOC_CHECK</option>")
         .attr("selected", oauth.priviliges() == "DOC_CHECK"));
     select.append(
       $("<option value='DOC_CREATE+DOC_SEND'>DOC_CREATE+DOC_SEND</option>")

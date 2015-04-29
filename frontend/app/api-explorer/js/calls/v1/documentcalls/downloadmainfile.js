@@ -4,7 +4,7 @@
 new APICallV1({
   category: "fetch",
   name: "Download main file",
-  description: "Downloads file of document document",
+  description: "Downloads the main file of the document",
   sampleUrl: "/api/v1/downloadmainfile/$docid$/file.pdf",
   method: "GET",
   getCallUrl: function () {

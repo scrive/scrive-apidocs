@@ -26,8 +26,8 @@ new APICallV1({
             argName: "objectversion",
             name: "Object version",
             sendAsParam: true,
-            description: "Optional. Version of document to be updated. If it will not match " +
-                         "current document version and call would change document, whole call will be rejected. ",
+            description: "Optional. Version of document to be updated. If it does not match the current document " +
+                         "version and the call would change the document, the entire call will be rejected. ",
             defaultValue: ""
           })
         ]

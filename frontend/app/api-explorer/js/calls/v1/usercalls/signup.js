@@ -4,7 +4,7 @@
 new APICallV1({
   category: "other",
   name: "Signup",
-  description: "Signup new user, and send invitation email to him",
+  description: "Signup new user, and send invitation email to them",
   sampleUrl: "/api/v1/signup",
   method: "POST",
   getCallUrl: function () {

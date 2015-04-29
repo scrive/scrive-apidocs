@@ -4,7 +4,7 @@
 new APICallV1({
   category: "fetch",
   name: "History",
-  description: "Fetches history of document",
+  description: "Fetches history of a document",
   sampleUrl: "/api/v1/history/$documentid$",
   method: "GET",
   getCallUrl: function () {

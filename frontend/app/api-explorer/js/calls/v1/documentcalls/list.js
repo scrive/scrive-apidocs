@@ -18,7 +18,7 @@ new APICallV1({
             name: "Document type",
             sendAsParam: true,
             description: "Type of documents you want to list. Possible options: All, Document, Template. " +
-                         "If not set will list all not deleted documents",
+                         "If not set: will list all documents that are not deleted",
             defaultValue: ""
           }),
           new APICallParam({

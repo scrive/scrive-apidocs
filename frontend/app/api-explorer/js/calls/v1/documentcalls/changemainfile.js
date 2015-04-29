@@ -18,7 +18,7 @@ new APICallV1({
             name: "Document id",
             sendAsParam: false,
             useLocalStorage: true,
-            description: "Id of document that you want to fetch",
+            description: "Id of the document that you want to change",
             defaultValue: ""
           }),
           new APICallParam({

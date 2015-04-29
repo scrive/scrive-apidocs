@@ -4,7 +4,7 @@
 new APICallV1({
   category: "signing",
   name: "Restart",
-  description: "Restart document. New document will be created",
+  description: "Restart document. A new document will be created",
   sampleUrl: "/api/v1/restart/$documentid$",
   method: "POST",
   getCallUrl: function () {

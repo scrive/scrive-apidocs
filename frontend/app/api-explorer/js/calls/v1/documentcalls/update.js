@@ -4,7 +4,7 @@
 new APICallV1({
   category: ["draft", "main"],
   name: "Update",
-  description: "Update API call",
+  description: "Update API call, updates the document based on the given JSON",
   sampleUrl: "/api/v1/update/$documentid$",
   method: "POST",
   getCallUrl: function () {
@@ -26,8 +26,8 @@ new APICallV1({
             argName: "objectversion",
             name: "Object version",
             sendAsParam: true,
-            description: "Optional. Version of document to be updated. If it will not match current document version " +
-                         "and call would change document, whole call will be rejected. ",
+            description: "Optional. Version of document to be updated. If it will does not match the current " +
+                         "document version and call will change the document, the entire call will be rejected. ",
             defaultValue: ""
           }),
           new APICallParam({
@@ -35,7 +35,7 @@ new APICallV1({
             argName: "json",
             name: "Document JSON",
             sendAsParam: true,
-            description: "Document structure that will be used to update eisting document",
+            description: "Document structure that will be used to update existing document",
             defaultValue: "{}"
           })
         ]

@@ -4,7 +4,7 @@
 new APICallV1({
   category: "signing",
   name: "Prolong",
-  description: "Prolong document that is timeouted",
+  description: "Prolong document that has timed out",
   sampleUrl: "/api/v1/prolong/$documentid$",
   method: "POST",
   getCallUrl: function () {

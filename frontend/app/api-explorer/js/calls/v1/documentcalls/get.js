@@ -4,7 +4,7 @@
 new APICallV1({
   category: ["main", "fetch"],
   name: "Get",
-  description: "Fetches a document based on id",
+  description: "Get a document based on document id",
   sampleUrl: "/api/v1/get/$documentid$",
   method: "GET",
   getCallUrl: function () {
@@ -18,7 +18,7 @@ new APICallV1({
             name: "Document id",
             sendAsParam: false,
             useLocalStorage: true,
-            description: "Id of document that you want to fetch",
+            description: "Id of the document that you want to fetch",
             defaultValue: ""
           })
         ]

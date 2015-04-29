@@ -4,7 +4,7 @@
 new APICallV1({
   category: "signing",
   name: "Send reminder",
-  description: "Send reminder to all signatories that have not signed document yet",
+  description: "Send reminder to all signatories that have not yet signed the document",
   sampleUrl: "/api/v1/remind/$documentid$",
   method: "POST",
   getCallUrl: function () {

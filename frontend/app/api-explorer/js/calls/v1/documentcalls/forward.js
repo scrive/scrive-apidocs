@@ -4,7 +4,7 @@
 new APICallV1({
   category: "signing",
   name: "Forward",
-  description: "Forward confirmation mail for any signed document to given email address",
+  description: "Forward the confirmation email for any signed document to the given email address",
   sampleUrl: "/api/v1/forward/$documentid$",
   method: "POST",
   getCallUrl: function () {
@@ -32,7 +32,7 @@ new APICallV1({
             type: "bool",
             argName: "nocontent",
             name: "No content",
-            description: "If set, email will contain attachments, but rest of content will be empty.",
+            description: "If set, email will contain attachments, but the email content will be blank.",
             defaultValue: ""
           })
         ]
