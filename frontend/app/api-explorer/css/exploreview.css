@@ -1,0 +1,127 @@
+.exploreview {
+}
+
+.exploreview .navbar {
+  padding-bottom: 20px;
+  padding-top: 20px;
+  background-color:#495259;
+  margin-bottom: 40px;
+}
+
+.exploreview .calls-row {
+  margin-bottom: 30px;
+}
+
+
+.exploreview img {
+  height: 23px;
+}
+
+.exploreview .navbar  a {
+  cursor: pointer;
+  color: #FFFFFF;
+}
+
+.exploreview .request-description{
+  word-wrap: break-word;
+}
+
+.exploreview .request-params {
+  border-top: 1px solid #ddd;
+}
+
+.exploreview .list-group-item {
+  border: 0px
+}
+
+
+.exploreview .request-details {
+  min-height: 80px;
+  word-wrap: break-word;
+}
+
+.exploreview .request-details .header{
+  color: #555;
+}
+
+.exploreview .request-details .detail .code{
+  color: #690;
+}
+
+.exploreview .request-details .detail .code.error{
+  color: #905;
+}
+
+.exploreview code {
+  background-color: transparent !important; /* Prism defines lot of backgrounds, and we need to overwrite it */
+}
+.exploreview code span {
+  background-color: transparent !important; /* Prism defines lot of backgrounds, and we need to overwrite it */
+}
+
+.exploreview .response-result {
+  min-height: 80px;
+  word-wrap: break-word;
+}
+
+.exploreview .response-result, .exploreview .request-details{
+  background-color: #f1f1f1;
+  -moz-transition: background-color 300ms ease-out;
+  -webkit-transition: background-color 300ms ease-out;
+  -o-transition: background-color 300ms ease-out;
+  transition: background-color 300ms ease-out;
+}
+.exploreview .response-result.success, .exploreview .request-details.success{
+  background-color: rgba(83, 182, 136, 0.3);
+  -moz-transition: background-color 300ms ease-out;
+  -webkit-transition: background-color 300ms ease-out;
+  -o-transition: background-color 300ms ease-out;
+  transition: background-color 300ms ease-out;
+}
+
+.exploreview .response-result.error, .exploreview .request-details.error{
+  background-color: rgba(229, 29, 37, 0.3);
+  -moz-transition: background-color 300ms ease-out;
+  -webkit-transition: background-color 300ms ease-out;
+  -o-transition: background-color 300ms ease-out;
+  transition: background-color 300ms ease-out;
+}
+
+
+.exploreview textarea {
+    resize: none;
+}
+.exploreview .btn-copy{
+  background: #DDDDDD;
+  position: absolute;
+  right:31px;
+}
+.exploreview .btn-copy.zeroclipboard-is-hover{
+  background: #E9E9E9;
+}
+
+
+.exploreview .credentials-view {
+  position: absolute;
+  width:100%;
+  bottom:20px;
+}
+
+.exploreview .credentials-view-placeholder {
+  height: 80px;
+}
+
+.exploreview .navbar-nav li {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+
+.exploreview .navbar-nav a {
+  font-size: 15px;
+  font-weight: 300;
+}
+
+.exploreview .navbar-nav a.active {
+  font-weight: 800;
+}

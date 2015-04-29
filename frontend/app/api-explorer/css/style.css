@@ -1,0 +1,41 @@
+html{
+  height: 100%;
+}
+
+body {
+  min-height: 100%;
+  position: relative;
+}
+
+/* Removing responsivemens */
+
+.container {
+  min-width: 1170px !important;
+}
+
+.navbar {
+  min-width: 1170px !important;
+}
+
+.navbar-right {
+ float: right !important;
+ height: 20px !important;
+}
+
+.navbar-header {
+ float: left !important;
+ margin-left: 0px !important;
+}
+
+.form-horizontal .control-label {
+  padding-top: 7px !important;
+}
+
+.main {
+  min-width: 1170px !important;
+}
+
+.exploreview .credentials-view .row{
+  width: 1170px !important;
+  margin: 0px auto;
+}

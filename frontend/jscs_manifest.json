@@ -3,5 +3,8 @@
   "./app/scripts/common/editabletext.jsx",
   "./app/js/anchors.js",
   "./app/js/takeScreenshot.js",
-  "./app/scripts/common/hubspot_service.jsx"
+  "./app/scripts/common/hubspot_service.jsx",
+  "./app/api-explorer/js/*.js",
+  "./app/api-explorer/js/calls/v1/*.js",
+  "./app/api-explorer/js/calls/v1/*/*.js"
 ]

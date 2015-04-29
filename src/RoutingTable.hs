@@ -180,6 +180,10 @@ staticRoutes production = choice
      , padApplicationAPI
      , oauth
 
+     -- api explorer
+     , dir "api-demo" $ dir "index.html" $ hGet $ toK0 $ return $ LinkExternal "/api-explorer" -- Compatibility link. Drop this after 31.10.2015 MR
+     , dir "api-explorer" $ remainingPath GET $ runWebSandboxT (runPlusSandboxT $ serveDirectory EnableBrowsing ["index.html"] (staticDir ++ "/api-explorer")) >>= either return (maybe respond404 return)
+
      -- static files
      , remainingPath GET $ runWebSandboxT (runPlusSandboxT $ serveDirectory DisableBrowsing [] staticDir) >>= either return (maybe respond404 return)
 
