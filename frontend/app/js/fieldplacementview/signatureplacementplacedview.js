@@ -102,9 +102,8 @@ window.SignaturePlacementPlacedView = Backbone.View.extend({
         }
 
         if (document.allowsDD()) {
-            var parentWidth = place.parent().width();
-            var parentHeight = place.parent().height();
-            draggebleField(place, placement, function() {return placement.wrel() * parentWidth;}, function() {return placement.hrel() * parentHeight;});
+            var parent = place.parent();
+            draggebleField(place, placement, function() {return placement.wrel() * parent.width();}, function() {return placement.hrel() * parent.height();});
 
             place.click(function(){
                 if (!view.hasTypeSetter())
