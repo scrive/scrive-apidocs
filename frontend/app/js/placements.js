@@ -125,8 +125,8 @@ window.FieldPlacement = Backbone.Model.extend({
     remove : function() {
        this.trigger("removed");
        var document = this.field().signatory().document();
-       var page = document.file().page(this.get("page"));
-       if (page !== undefined) {
+       var page = document.file() && document.file().page(this.get("page"));
+       if (page != undefined) {
          // page can be undefined if the field was placed in template
          // on a second page, but after starting from template, doc
          // was switched to a single page pdf

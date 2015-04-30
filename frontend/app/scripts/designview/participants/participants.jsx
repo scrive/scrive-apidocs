@@ -44,14 +44,34 @@ return React.createClass({
   componentWillUnmount:  function()  {
     this.destroyScrollbar();
   },
-  height: function() {
-    var maxHeight = $(window).height() - 350;
-    if( maxHeight<250 ) {
-       maxHeight = 250;
-    }
-    var height = this.props.model.document().signatories().length * 60;
+  // height of participants vie needs to be computed for scrollbar.
+  // Height of whole secton and each field is hardcoded
+  participantsHeight: function() {
+    var heightOfNavigationTabs = 350; // Height of navigation tabs on page.
+    var maxHeight = Math.max(250,$(window).height() - heightOfNavigationTabs); // Max height of scroll bar
+    var heightOfUnexpandedSignatory = 60;  // Height each signatory description when signatory is not expanded
+    var heightOfField = 48; // Height each field row
+    var heightOfParticipantSettings = 114; // Height of 5 selects at bottom of signatory
+    var height = 0;
+
+    height += this.props.model.document().signatories().length * heightOfUnexpandedSignatory;
+
     if (this.props.model.participantDetail() != undefined) {
-      height += 220;
+      height += heightOfParticipantSettings;
+      var fields = 0;
+      var nameIncluded = false;
+      _.each(this.props.model.participantDetail().fields(), function(f) {
+          if (f.isFstName() || f.isSndName()) {
+            if (!nameIncluded) {
+              nameIncluded = true;
+              fields++;
+            }
+          } else  if (f.isText() || f.isBlank()) {
+            fields++;
+          }
+      });
+
+      height += Math.ceil((fields + 1) / 3) * heightOfField;
     }
 
     return Math.min(height,maxHeight) + "px";
@@ -65,7 +85,7 @@ return React.createClass({
     } else {
       return (
         <div className="design-view-action-participant-container">
-          <div className="design-view-action-participant-container-participants-box gm-scrollbar-container" ref="scroll-area"  style={{"height" : self.height()}}>
+          <div className="design-view-action-participant-container-participants-box gm-scrollbar-container" ref="scroll-area"  style={{"height" : self.participantsHeight()}}>
             <div className='gm-scrollbar -vertical'>
               <div className='thumb'></div>
             </div>

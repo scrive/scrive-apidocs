@@ -718,6 +718,7 @@ window.Signatory = Backbone.Model.extend({
         signatory.fstnameField().authorObligatory = 'optional';
         signatory.fstnameField().set({"obligatory":true, "shouldbefilledbysender" : false});
       }
+
       if (signatory.sndnameField() != undefined && !signatory.sndnameField().hasPlacements())
       {
         signatory.sndnameField().authorObligatory = 'optional';
@@ -727,17 +728,14 @@ window.Signatory = Backbone.Model.extend({
       if (signatory.personalnumberField() != undefined && !signatory.personalnumberField().hasPlacements())
       {
         signatory.personalnumberField().authorObligatory = 'optional';
-        signatory.personalnumberField().set({"obligatory":false},{silent:true});
       }
       if (signatory.emailField() != undefined && !signatory.emailField().hasPlacements())
       {
         signatory.emailField().authorObligatory = 'optional';
-        signatory.emailField().set({"obligatory":false},{silent:true});
       }
       if (signatory.mobileField() != undefined && !signatory.mobileField().hasPlacements())
       {
         signatory.mobileField().authorObligatory = 'optional';
-        signatory.mobileField().set({"obligatory":false},{silent:true});
       }
 
       this.ensureEmail();
@@ -850,17 +848,11 @@ window.Signatory = Backbone.Model.extend({
     bindBubble: function() {
         var signatory = this;
         window.alreadyTriggered = 0;
-        signatory.listenToOnce(signatory,'change', function() {
-          if (window.alreadyTriggered > 0) {
-            return;
-          }
-          window.alreadyTriggered++;
+        signatory.listenTo(signatory,'change', function() {
           signatory.ensureAllFields();
           if (signatory.document()) {
             signatory.document().trigger("change");
           }
-          window.alreadyTriggered--;
-          //signatory.bindBubble();
         });
     },
     normalizeWithFirstCSVLine : function() {

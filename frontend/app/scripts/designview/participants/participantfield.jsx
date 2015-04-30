@@ -17,11 +17,15 @@ return React.createClass({
     var name = field.name();
     var value = field.value();
     var csvfield = field.isCsvField();
+    
     var csvname = self.placeholderText() + " (" + localization.designview.fromCSV + ")";
     return (
       <div className="design-view-action-participant-details-information-field-wrapper">
         <InfoTextInput
-          className={"design-view-action-participant-details-information-field s-input-" + name + " "+ (csvfield || field.isAuthorUnchangeableField() ? " transparent" : "" )}
+          className={"design-view-action-participant-details-information-field s-input-" + name + " "+
+                     (csvfield || field.isAuthorUnchangeableField() ? " transparent " : "" )
+                     + (!field.isValid(true)? "redborder" : "")
+          }
           infotext={csvfield ? csvname : self.placeholderText()}
           readonly={csvfield || field.isAuthorUnchangeableField()}
           value={value}
