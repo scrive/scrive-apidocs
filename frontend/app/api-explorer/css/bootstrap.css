@@ -3014,8 +3014,8 @@ select[multiple].form-group-lg .form-control {
 .btn:active.focus,
 .btn.active.focus {
   outline: thin dotted;
-  outline: 5px auto -webkit-focus-ring-color;
-  outline-offset: -2px;
+  outline: 1px solid -webkit-focus-ring-color;
+  outline-offset: -1px;
 }
 .btn:hover,
 .btn:focus,
