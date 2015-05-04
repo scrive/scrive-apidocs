@@ -62,7 +62,6 @@
 "_SignDocumentEvidenceTextSimpleNotArchiveElegWithName":"ll documento è stato firmato da $actor$ usando un eID come metodo di autenticazione. Il nome restituito dal eID è stato \"$eid_signatory_name$\".",
 "_SignDocumentEvidenceTextSimpleNotArchiveSMSPin":"Il documento è stato firmato da $actor$ usando un codice PIN via SMS come metodo di autenticazione.",
 "_SignDocumentEvidenceTextSimpleNotArchiveStandard":"Il documento è stato firmato da $actor$.",
-"_SignWithELegFailureEvidenceTextSimple":"Scrive ha respinto il tentativo di firma del documento da parte di $signatory$. Il motivo è che le informazioni sull'identità di $signatory$ non corrispondono alle informazioni ricevute dal sistema eID esterno.",
 "_SignatoryLinkVisitedTextArchiveSimple":"Il documento è stato aperto online.",
 "_SignatoryLinkVisitedTextNotArchiveSimple":"$actor$ ha aperto il documento online.",
 "_TimeoutDocumentEvidenceTextSimple":"La data ultima per la firma del documento è scaduta.",

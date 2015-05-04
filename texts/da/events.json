@@ -62,7 +62,6 @@
 "_SignDocumentEvidenceTextSimpleNotArchiveElegWithName":"Dokumentet blev signeret af $actor$, der anvendte eID som godkendelsesmetode. Navnet fra eID'et var \"$eid_signatory_name$\".",
 "_SignDocumentEvidenceTextSimpleNotArchiveSMSPin":"Dokumentet blev signeret af $actor$, som anvendte PIN via SMS som godkendelsesmetode.",
 "_SignDocumentEvidenceTextSimpleNotArchiveStandard":"Dokumentet blev signeret af $actor$.",
-"_SignWithELegFailureEvidenceTextSimple":"Scrive afviste forsøget fra $signatory $ til at signere dokumentet. Årsagen var, at identitetsoplysningerne på $signatory$ ikke svarer til de identitetsoplysninger, vi har modtaget fra det eksterne eID system.",
 "_SignatoryLinkVisitedTextArchiveSimple":"Dokumentet blev åbnet online.",
 "_SignatoryLinkVisitedTextNotArchiveSimple":"Dokumentet blev åbnet online af $actor$.",
 "_TimeoutDocumentEvidenceTextSimple":"Forfaldsdatoen for at signere dokumentet er overskredet.",

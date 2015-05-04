@@ -62,7 +62,6 @@
 "_SignDocumentEvidenceTextSimpleNotArchiveElegWithName":"Het document is ondertekend door $actor$ met gebruik van eID als identificatiemethode.  De naam opgehaald van de eID was \"$eid_signatory_name$\".",
 "_SignDocumentEvidenceTextSimpleNotArchiveSMSPin":"Het document werd ondertekend door $actor$ met gebruik van PIN per SMS als identificatie methode.",
 "_SignDocumentEvidenceTextSimpleNotArchiveStandard":"Het document werd ondertekend door $actor$.",
-"_SignWithELegFailureEvidenceTextSimple":"Scrive heeft de poging van $signatory$ om het document te ondertekenen afgekeurd. De reden hiervoor is dat de identiteitsinformatie van $signatory$ niet overeenskwam met de identiteitsinformatie uit het externe eID-systeem. ",
 "_SignatoryLinkVisitedTextArchiveSimple":"Het document werd online geopend.",
 "_SignatoryLinkVisitedTextNotArchiveSimple":"Het document werd online geopend door $actor$.",
 "_TimeoutDocumentEvidenceTextSimple":"De deadline voor ondertekening van het document is gepasseerd. ",

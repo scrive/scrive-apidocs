@@ -62,7 +62,6 @@
 "_SignDocumentEvidenceTextSimpleNotArchiveElegWithName":"Dokumentin allekirjoitti $actor$ käyttäen eID:tä tunnistautumismuotona. Nimi, jonka eID antoi, oli \"$eid_signatory_name$\".",
 "_SignDocumentEvidenceTextSimpleNotArchiveSMSPin":"$actor$ allekirjoitti dokumentin käyttäen tekstiviesti PINiä tunnistautumismuotona.",
 "_SignDocumentEvidenceTextSimpleNotArchiveStandard":"$actor$ allekirjoitti dokumentin.",
-"_SignWithELegFailureEvidenceTextSimple":"$signatory$ yritti allekirjoittaa dokumentin, mutta Scrive hylkäsi yrityksen. $signatory$:n hylkäämiseen oli syynä henkilötietojen eriävyys verrattuna eID-järjestelmän tarjoamiin henkilötietoihin.",
 "_SignatoryLinkVisitedTextArchiveSimple":"Dokumentti avattiin netissä.",
 "_SignatoryLinkVisitedTextNotArchiveSimple":"$actor$ avasi dokumentin netissä.",
 "_TimeoutDocumentEvidenceTextSimple":"Eräpäivä dokumentin allekirjoittamiselle on mennyt.",

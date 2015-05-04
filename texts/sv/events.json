@@ -62,7 +62,6 @@
 "_SignDocumentEvidenceTextSimpleNotArchiveElegWithName":"Dokumentet signerades av $actor$ med e-legitimation som autentiseringsmetod. Namnet som returnerades från e-legitimatitionen var \"$eid_signatory_name$\".",
 "_SignDocumentEvidenceTextSimpleNotArchiveSMSPin":"Dokumentet signerades av $actor$ med PIN via SMS som autentiseringsmetod.",
 "_SignDocumentEvidenceTextSimpleNotArchiveStandard":"Dokumentet signerades av $actor$.",
-"_SignWithELegFailureEvidenceTextSimple":"Scrive avvisade försöket av $signatory$ att signera dokumentet. Anledningen var att personuppgifterna för $signatory$ inte stämde överens med uppgifterna i den e-legitimation som användes vid signering.",
 "_SignatoryLinkVisitedTextArchiveSimple":"Dokumentet öppnades online.",
 "_SignatoryLinkVisitedTextNotArchiveSimple":"Dokumentet öppnades online av $actor$ i Scrives gränssnitt för att signera dokument.",
 "_TimeoutDocumentEvidenceTextSimple":"Förfallodatumet för signering passerade.",
