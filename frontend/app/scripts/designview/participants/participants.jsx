@@ -7,10 +7,9 @@ return React.createClass({
   getBackboneModels : function() {
     return [this.props.model,this.props.model.document()];
   },
-  hideAllCalendars:  function() {
-    if (this.refs.basicSettings) {
-      this.refs.basicSettings.hideAllCalendars();
-    }
+  // Gemini scrollbar does not support IE8
+  hasNiceScrollBar : function() {
+    return !BrowserInfo.isIE8orLower();
   },
   updateScrollbar : function() {
     if (this.refs["scroll-area"] != undefined) {
@@ -35,23 +34,28 @@ return React.createClass({
     }
   },
   componentDidMount:  function()  {
-    this.updateScrollbar();
+    if (this.hasNiceScrollBar()) {
+      this.updateScrollbar();
+    }
   },
   componentDidUpdate:  function()  {
-    this.updateScrollbar();
-
+    if (this.hasNiceScrollBar()) {
+      this.updateScrollbar();
+    }
   },
   componentWillUnmount:  function()  {
-    this.destroyScrollbar();
+    if (this.hasNiceScrollBar()) {
+      this.destroyScrollbar();
+    }
   },
-  // height of participants vie needs to be computed for scrollbar.
+  // Height of participants needs to be computed for scrollbar.
   // Height of whole secton and each field is hardcoded
   participantsHeight: function() {
     var heightOfNavigationTabs = 350; // Height of navigation tabs on page.
     var maxHeight = Math.max(250,$(window).height() - heightOfNavigationTabs); // Max height of scroll bar
     var heightOfUnexpandedSignatory = 60;  // Height each signatory description when signatory is not expanded
     var heightOfField = 48; // Height each field row
-    var heightOfParticipantSettings = 114; // Height of 5 selects at bottom of signatory
+    var heightOfParticipantSettings = 116; // Height of 5 selects at bottom of signatory
     var height = 0;
 
     height += this.props.model.document().signatories().length * heightOfUnexpandedSignatory;
@@ -85,27 +89,55 @@ return React.createClass({
     } else {
       return (
         <div className="design-view-action-participant-container">
-          <div className="design-view-action-participant-container-participants-box gm-scrollbar-container" ref="scroll-area"  style={{"height" : self.participantsHeight()}}>
-            <div className='gm-scrollbar -vertical'>
-              <div className='thumb'></div>
+          {/* if */ self.hasNiceScrollBar() &&
+            <div className="design-view-action-participant-container-participants-box gm-scrollbar-container" ref="scroll-area"  style={{"height" : self.participantsHeight()}}>
+
+              <div className='gm-scrollbar -vertical'>
+                <div className='thumb'></div>
+                </div>
+
+              <div className='gm-scrollbar -vertical'>
+                <div className='thumb'></div>
+              </div>
+
+              <div className='gm-scrollbar -horizontal'>
+                <div className='thumb'></div>
+              </div>
+
+              <div className='gm-scroll-view'>
+                {
+                  $.map(doc.signatories(), function(s,i) {
+                    return (
+                      <Participant
+                        key={s.cid}
+                        model={s}
+                        number={i}
+                        viewmodel={model}
+                      />
+                    );
+                  })
+                }
+              </div>
             </div>
-            <div className='gm-scrollbar -horizontal'>
-              <div className='thumb'></div>
-            </div>
-            <div className='gm-scroll-view'>
-              {
-                $.map(doc.signatories(), function(s,i) {
-                  return (
-                    <Participant
-                      model={s}
-                      number={i}
-                      viewmodel={model}
-                    />
-                  );
-                })
-              }
-            </div>
-          </div>
+          }
+
+          {/* else */ !self.hasNiceScrollBar() &&
+            <div className="design-view-action-participant-container-participants-box" style={{height : self.participantsHeight(), overflow: "auto"}} >
+             {
+               $.map(doc.signatories(), function(s,i) {
+                 return (
+                   <Participant
+                     key={s.cid}
+                     model={s}
+                     number={i}
+                     viewmodel={model}
+                   />
+                 );
+               })
+             }
+           </div>
+          }
+
           <div className="design-view-action-participant-new-box">
             <AddParticipants model={model}/>
           </div>

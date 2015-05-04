@@ -39,10 +39,9 @@ window.DesignViewTabsView = function(args) {
           },
           onShow: function() {
             participantsView.forceUpdate();
-               //participantsView.initCustomScrollBox();
           },
           onHide : function() {
-               //participantsView.closeAllParticipants();
+            model.setParticipantDetail(undefined);
           }
           });
   var tab2 =  new Tab({
