@@ -53,7 +53,6 @@ evidenceLogTemplateVariables = Set.fromList
   , "fieldname"       -- Field updates
   , "lang"            -- Pending :: Lang
   , "mobile"          -- Flag
-  , "msg"             -- Elegitimation failure message
   , "name"            -- Attachment name
   , "newblank"        -- Field updates :: Bool
   , "newemail"        -- Undelivery updates
@@ -77,7 +76,6 @@ evidenceLogTemplateVariables = Set.fromList
 -- Attachment request description                        , "description"
 -- Bool                                                  , "email"
 -- Document signed, SMS identification                   , "phone"
--- Elegitimation failure message                         , "msg"
 -- Field updates                                         , "fieldname"
 -- Field updates :: [(Int, Double, Double)]              , "placements"
 -- Field updates :: Bool                                 , "checked"

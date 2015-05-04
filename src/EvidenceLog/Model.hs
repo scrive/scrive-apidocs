@@ -287,7 +287,6 @@ data CurrentEvidenceEventType =
   AttachExtendedSealedFileEvidence                 |
   ErrorSealingDocumentEvidence                     |
   AutomaticReminderSent                            |
-  SignWithELegFailureEvidence                      |
   UpdateFieldCheckboxEvidence                      |
   UpdateFieldSignatureEvidence                     |
   SMSPinSendEvidence                               |
@@ -368,7 +367,8 @@ data ObsoleteEvidenceEventType =
   CancelDocumenElegEvidence                       |
   SendToPadDevice                                 |
   RemovedFromPadDevice                            |
-  UpdateFieldTextEvidence
+  UpdateFieldTextEvidence                         |
+  SignWithELegFailureEvidence
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 
@@ -458,7 +458,7 @@ instance ToSQL EvidenceEventType where
   toSQL (Current AttachExtendedSealedFileEvidence)                 = toSQL (79::Int16)
   toSQL (Current ErrorSealingDocumentEvidence)                     = toSQL (80::Int16)
   toSQL (Current AutomaticReminderSent)                            = toSQL (81::Int16)
-  toSQL (Current SignWithELegFailureEvidence)                      = toSQL (82::Int16)
+  toSQL (Obsolete SignWithELegFailureEvidence)                      = toSQL (82::Int16)
   toSQL (Current UpdateFieldCheckboxEvidence)                      = toSQL (83::Int16)
   toSQL (Current UpdateFieldSignatureEvidence)                     = toSQL (84::Int16)
   toSQL (Obsolete UpdateFieldTextEvidence)                         = toSQL (85::Int16)
@@ -566,7 +566,7 @@ instance FromSQL EvidenceEventType where
       79 -> return (Current AttachExtendedSealedFileEvidence)
       80 -> return (Current ErrorSealingDocumentEvidence)
       81 -> return (Current AutomaticReminderSent)
-      82 -> return (Current SignWithELegFailureEvidence)
+      82 -> return (Obsolete SignWithELegFailureEvidence)
       83 -> return (Current UpdateFieldCheckboxEvidence)
       84 -> return (Current UpdateFieldSignatureEvidence)
       85 -> return (Obsolete UpdateFieldTextEvidence)
