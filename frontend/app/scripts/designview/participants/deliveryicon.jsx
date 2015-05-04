@@ -28,8 +28,6 @@ return React.createClass({
       return "design-view-action-participant-icon-device-icon-email";
     } else if (sig.delivery() == "pad") {
       return "design-view-action-participant-icon-device-icon-pad";
-    } else if (sig.delivery() == "none") {
-      return "design-view-action-participant-icon-device-icon-empty";
     } else if (sig.delivery() == "api") {
       return "design-view-action-participant-icon-device-icon-pad";
     } else if (sig.delivery() == "mobile") {

@@ -14,6 +14,15 @@ define(["legacy_code", "React"], function(legacy_code, React) {
     });
   };
 
+  var createDesignView = exports.createDesignView = function (cb) {
+    createDocument(function(doc) {
+      var designView = new DesignViewModel({
+        document : doc
+      });
+      cb(designView);
+    })
+  };
+
   exports.addPlacement = function (doc, id, part, fieldOptions) {
     part = part || 0;
     id = id || +new Date();

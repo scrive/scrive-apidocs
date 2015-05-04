@@ -1,6 +1,9 @@
 /** @jsx React.DOM */
 
-define(["legacy_code", "React", "common/select", "common/language_service"], function (_Legacy, React, Select, LanguageService) {
+define(["legacy_code", "React", "common/select",
+        "common/language_service"],
+function (_Legacy, React, Select,
+          LanguageService) {
 
 return React.createClass({
   signorderOptions: function () {
@@ -33,14 +36,15 @@ return React.createClass({
   deliveryOptions: function () {
     var self = this;
     var sig = this.props.model;
-    var deliveryTypes = sig.isLastViewer() ? ['none'] : ['email', 'pad', 'mobile', 'email_mobile'];
+    var deliveryTypes = sig.isLastViewer() ? ["none"] : ["email", "pad", "mobile", "email_mobile"];
     return _.map(deliveryTypes, function (t) {
       return {name: self.deliveryText(t), value:t};
     });
   },
   roleOptions: function () {
     return [
-      {name: localization.designview.addParties.roleSignatory, value: "signatory"}, {name: localization.designview.addParties.roleViewer, value: "viewer"}
+      {name: localization.designview.addParties.roleSignatory, value: "signatory"},
+      {name: localization.designview.addParties.roleViewer, value: "viewer"}
     ];
   },
   authenticationText: function (t) {
@@ -55,7 +59,7 @@ return React.createClass({
   authenticationOptions: function () {
     var self = this;
     var sig = this.props.model;
-    var authTypes = ['standard', 'eleg', 'sms_pin'];
+    var authTypes = ["standard", "eleg", "sms_pin"];
     return _.map(authTypes, function (t) {
       return {name: self.authenticationText(t), value:t};
     });
@@ -74,7 +78,9 @@ return React.createClass({
   confirmationDeliveryOptions: function () {
     var self = this;
     var sig = this.props.model;
-    var deliveryTypes = sig.isLastViewer() ? ['email', 'mobile', 'email_mobile'] : ['email', 'mobile', 'email_mobile', 'none'];
+    var deliveryTypes = sig.isLastViewer() ?
+      ["email", "mobile", "email_mobile"] :
+      ["email", "mobile", "email_mobile", "none"];
     return _.map(deliveryTypes, function (t) {
       return {name: self.confirmationDeliveryText(t), value:t};
     });
@@ -94,8 +100,8 @@ return React.createClass({
             optionsWidth="178px"
             options={self.signorderOptions()}
             onSelect={function (v) {
-              mixpanel.track('Choose sign order', {
-                Where: 'select'
+              mixpanel.track("Choose sign order", {
+                Where: "select"
               });
               sig.setSignOrder(v);
               return true;
@@ -111,8 +117,8 @@ return React.createClass({
             optionsWidth="178px"
             options={self.deliveryOptions()}
             onSelect={function (v) {
-              mixpanel.track('Choose delivery method', {
-                Where: 'select'
+              mixpanel.track("Choose delivery method", {
+                Where: "select"
               });
               if (!sig.isLastViewer()) {
                 sig.setDelivery(v);
@@ -125,18 +131,23 @@ return React.createClass({
         <span className="design-view-action-participant-details-participation-box">
           <label className="label">{localization.designview.addParties.role}</label>
           <NewSelect
-            name={sig.signs() ?  localization.designview.addParties.roleSignatory : localization.designview.addParties.roleViewer}
+            name={
+              sig.signs() ?
+              localization.designview.addParties.roleSignatory :
+              localization.designview.addParties.roleViewer
+            }
             textWidth={151}
             optionsWidth="178px"
             options={self.roleOptions()}
             onSelect={function (v) {
-              mixpanel.track('Choose participant role', {
-                Where: 'Icon'
+              mixpanel.track("Choose participant role", {
+                Where: "Icon"
               });
-              if (v === 'signatory')
+              if (v === "signatory") {
                 sig.makeSignatory();
-              else if (v === 'viewer')
+              } else if (v === "viewer") {
                 sig.makeViewer();
+              }
               return true;
             }}
           />
@@ -150,8 +161,8 @@ return React.createClass({
             optionsWidth="178px"
             options={self.authenticationOptions()}
             onSelect={function (v) {
-              mixpanel.track('Choose auth', {
-                Where: 'select'
+              mixpanel.track("Choose auth", {
+                Where: "select"
               });
               sig.setAuthentication(v);
               return true;
@@ -167,8 +178,8 @@ return React.createClass({
             optionsWidth="178px"
             options={self.confirmationDeliveryOptions()}
             onSelect={function (v) {
-              mixpanel.track('Choose confirmation delivery method', {
-                Where: 'select'
+              mixpanel.track("Choose confirmation delivery method", {
+                Where: "select"
               });
               sig.setConfirmationDelivery(v);
               return true;

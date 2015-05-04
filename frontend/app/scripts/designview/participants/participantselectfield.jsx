@@ -5,13 +5,13 @@ define(["legacy_code", "React", "common/select"], function (_Legacy, React, Sele
 return React.createClass({
   basicFields: function () {
     return [
-       {name: "fstname", type: 'standard'},
-       {name: "sndname", type: 'standard'},
-       {name: "email",  type: 'standard'},
-       {name: "sigco",  type: 'standard'},
-       {name: "sigpersnr", type: 'standard'},
-       {name: "sigcompnr", type: 'standard'},
-       {name: "mobile",  type: 'standard'}
+       {name: "fstname", type: "standard"},
+       {name: "sndname", type: "standard"},
+       {name: "email",  type: "standard"},
+       {name: "sigco",  type: "standard"},
+       {name: "sigpersnr", type: "standard"},
+       {name: "sigcompnr", type: "standard"},
+       {name: "mobile",  type: "standard"}
     ];
   },
   allPossibleFields: function () {
@@ -62,7 +62,7 @@ return React.createClass({
     });
     options.push({
       name: localization.designview.customField,
-      value: {name: '--custom', type: '--custom'} // type is not used for custom
+      value: {name: "--custom", type: "--custom"} // type is not used for custom
     });
     return options;
   },
@@ -81,22 +81,22 @@ return React.createClass({
            optionsWidth={"297px"}
            options={self.fieldOptions()}
            onSelect={function (v) {
-             if (v.name === '--custom') {
-               mixpanel.track('Select field type', {
-                  Type: 'custom'
+             if (v.name === "--custom") {
+               mixpanel.track("Select field type", {
+                  Type: "custom"
                 });
-               field.setType('custom');
+               field.setType("custom");
              } else {
                field.setType(v.type);
                field.setName(v.name);
-               mixpanel.track('Select field type', {
+               mixpanel.track("Select field type", {
                   Type: v.type,
                   Name: v.name
                 });
              }
            }}
           onRemove={function () {
-            mixpanel.track('Click remove field', {
+            mixpanel.track("Click remove field", {
                 Type: field.type(),
                 Name: field.name()
               });

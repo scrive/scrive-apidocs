@@ -6,7 +6,7 @@
 
 define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
 
-    var DesignViewModel = Backbone.Model.extend({
+    window.DesignViewModel = Backbone.Model.extend({
         initialize: function (args) {
             var self = this;
             var model = this;

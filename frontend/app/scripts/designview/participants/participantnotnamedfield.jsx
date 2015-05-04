@@ -1,6 +1,9 @@
 /** @jsx React.DOM */
 
-define(['legacy_code', 'React', 'common/infotextinput', 'common/button'], function (_Legacy, React, InfoTextInput, Button) {
+define(["legacy_code", "React",
+        "common/infotextinput", "common/button"],
+function (_Legacy, React,
+          InfoTextInput, Button) {
 
 return React.createClass({
   sameNameExists: function () {
@@ -20,7 +23,10 @@ return React.createClass({
       <div className="design-view-action-participant-details-information-field-wrapper">
 
         <InfoTextInput
-          className={"design-view-action-participant-new-field-name-input redborder " + (self.sameNameExists() ? "conflict" : "")}
+          className={
+            "design-view-action-participant-new-field-name-input redborder " +
+            (self.sameNameExists() ? "conflict" : "")
+          }
           infotext={localization.designview.fieldName}
           value={self.state.name}
           onChange={function (val) {
@@ -31,13 +37,13 @@ return React.createClass({
               new FlashMessage({color: "error", content: localization.designview.fieldWithSameNameExists});
               return;
             }
-            mixpanel.track('Enter custom field name', {
-              'Field name': self.state.name
+            mixpanel.track("Enter custom field name", {
+              "Field name": self.state.name
             });
             field.setName(self.state.name);
           }}
           onRemove={function () {
-            mixpanel.track('Click remove field', {
+            mixpanel.track("Click remove field", {
               Type: field.type(),
               Name: field.name()
             });
@@ -54,8 +60,8 @@ return React.createClass({
               new FlashMessage({color: "error", content: localization.designview.fieldWithSameNameExists});
               return;
             }
-            mixpanel.track('Enter custom field name', {
-              'Field name': self.state.name
+            mixpanel.track("Enter custom field name", {
+              "Field name": self.state.name
             });
             field.setName(self.state.name);
           }}

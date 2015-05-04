@@ -97,7 +97,6 @@ window.Document = Backbone.Model.extend({
         var time = new Date().getTime();
         this.checkLastViewerChange();
         document.trigger('change:signatories');
-        document.trigger('change:signorder');
         document.trigger('change');
     },
     authorSignsFirstMode : function() {
@@ -488,7 +487,7 @@ window.Document = Backbone.Model.extend({
        this.fixSignorderAfterRemoving(sig);
        this.checkLastViewerChange();
        this.trigger("change:signatories");
-       this.trigger("change:signorder");
+       this.trigger("change");
     },
     currentViewerIsAuthor: function() {
         var csig = this.currentSignatory();

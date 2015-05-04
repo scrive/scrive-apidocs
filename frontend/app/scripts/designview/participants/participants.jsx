@@ -78,4 +78,3 @@ return React.createClass({
 });
 
 });
-
