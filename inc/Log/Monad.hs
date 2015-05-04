@@ -27,7 +27,6 @@ import Log.Logger
 -- | 'LogT' environment.
 data LoggerEnv = LoggerEnv {
   leLogger    :: !Logger
-, leLevel     :: !LogLevel
 , leComponent :: !Text
 , leData      :: ![Pair]
 }
@@ -38,10 +37,9 @@ type InnerLogT = ReaderT LoggerEnv
 newtype LogT m a = LogT { unLogT :: InnerLogT m a }
   deriving (Applicative, Functor, Monad, MonadBase b, MonadCatch, MonadIO, MonadMask, MonadThrow, MonadTrans)
 
-runLogT :: LogLevel -> Text -> Logger -> LogT m a -> m a
-runLogT level component logger m = runReaderT (unLogT m) LoggerEnv {
+runLogT :: Text -> Logger -> LogT m a -> m a
+runLogT component logger m = runReaderT (unLogT m) LoggerEnv {
   leLogger = logger
-, leLevel = level
 , leComponent = component
 , leData = []
 }
@@ -66,8 +64,8 @@ instance MonadBaseControl IO m => MonadBaseControl IO (LogT m) where
 instance (MonadBase IO m, MonadTime m) => MonadLog (LogT m) where
   logMessage time level message data_ = LogT $ ReaderT logMsg
     where
-      logMsg LoggerEnv{..} = when (leLevel >= level) $ do
-        liftBase $ execLogger leLogger =<< E.evaluate (force lm)
+      logMsg LoggerEnv{..} = liftBase $ do
+        execLogger leLogger =<< E.evaluate (force lm)
         where
           lm = LogMessage {
             lmComponent = leComponent

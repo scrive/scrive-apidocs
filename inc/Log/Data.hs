@@ -14,8 +14,6 @@ import KontraPrelude
 data LogLevel = LogError | LogInfo | LogTrace
   deriving (Bounded, Eq, Ord, Show)
 
-
-
 instance NFData LogLevel
 
 -- | Represents message to be logged.
