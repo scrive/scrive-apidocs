@@ -1,18 +1,18 @@
 /** @jsx React.DOM */
 
-define(['legacy_code', 'React', 'common/infotextinput' ,'common/button'], function(_Legacy, React, InfoTextInput, Button) {
+define(['legacy_code', 'React', 'common/infotextinput', 'common/button'], function (_Legacy, React, InfoTextInput, Button) {
 
 return React.createClass({
-  sameNameExists: function() {
+  sameNameExists: function () {
     var self = this;
     var field =  this.props.model;
     var customFields = this.props.model.signatory().customFields();
-    return _.any(customFields, function(c) { return self.state.name == c.name() && c != field;});
+    return _.any(customFields, function (c) { return self.state.name == c.name() && c != field;});
   },
-  getInitialState: function() {
-      return {name: ""};
+  getInitialState: function () {
+    return {name: ""};
   },
-  render: function() {
+  render: function () {
     var self = this;
     var field = this.props.model;
     var sig = field.signatory();
@@ -23,20 +23,20 @@ return React.createClass({
           className={"design-view-action-participant-new-field-name-input redborder " + (self.sameNameExists() ? "conflict" : "")}
           infotext={localization.designview.fieldName}
           value={self.state.name}
-          onChange={function(val) {
-            self.setState({name : val});
+          onChange={function (val) {
+            self.setState({name: val});
           }}
-          onEnter={function() {
-             if (self.sameNameExists()) {
-               new FlashMessage({color: "error", content : localization.designview.fieldWithSameNameExists});
-               return;
-             }
-             mixpanel.track('Enter custom field name', {
-               'Field name': self.state.name
-              });
-             field.setName(self.state.name);
+          onEnter={function () {
+            if (self.sameNameExists()) {
+              new FlashMessage({color: "error", content: localization.designview.fieldWithSameNameExists});
+              return;
+            }
+            mixpanel.track('Enter custom field name', {
+              'Field name': self.state.name
+            });
+            field.setName(self.state.name);
           }}
-          onRemove={function() {
+          onRemove={function () {
             mixpanel.track('Click remove field', {
               Type: field.type(),
               Name: field.name()
@@ -49,15 +49,15 @@ return React.createClass({
         <Button
           text={localization.ok}
           width={44}
-          onClick={function() {
-             if (self.sameNameExists()) {
-               new FlashMessage({color: "error", content : localization.designview.fieldWithSameNameExists});
-               return;
-             }
-             mixpanel.track('Enter custom field name', {
-               'Field name': self.state.name
-              });
-             field.setName(self.state.name);
+          onClick={function () {
+            if (self.sameNameExists()) {
+              new FlashMessage({color: "error", content: localization.designview.fieldWithSameNameExists});
+              return;
+            }
+            mixpanel.track('Enter custom field name', {
+              'Field name': self.state.name
+            });
+            field.setName(self.state.name);
           }}
         />
 

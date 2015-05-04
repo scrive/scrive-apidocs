@@ -1,29 +1,29 @@
 /** @jsx React.DOM */
 
-define(['legacy_code', 'React', 'common/button'], function(_Legacy, React, Button) {
+define(["legacy_code", "React", "common/button"], function (_Legacy, React, Button) {
 
 return React.createClass({
-  onDone : function() {
-    mixpanel.track('Close participant');
+  onDone: function () {
+    mixpanel.track("Close participant");
     this.props.model.setParticipantDetail(undefined);
   },
-  addSingleParticipant : function() {
+  addSingleParticipant: function () {
     var model = this.props.model;
     var doc = model.document();
     var sig = new Signatory({
-                        document:doc,
-                        signs:true
-                    });
+      document:doc,
+      signs:true
+    });
     doc.addExistingSignatory(sig);
     model.setParticipantDetail(sig);
   },
-  addMultisendParticipant : function() {
-    mixpanel.track('Click add CSV');
+  addMultisendParticipant: function () {
+    mixpanel.track("Click add CSV");
     new CsvSignatoryDesignPopup({
-      designview : this.props.model
+      designview: this.props.model
     });
   },
-  render: function() {
+  render: function () {
     var self = this;
     var model = this.props.model;
     var doc = model.document();
@@ -35,18 +35,17 @@ return React.createClass({
             <Button
                type="action"
                text={localization.designview.addParties.close}
-               onClick={function() {self.onDone();}}
+               onClick={function () {self.onDone();}}
             />
           </div>
         }
         {/* else */ model.participantDetail() == undefined &&
           <div>
-          
-            {/* if */ !_.any(model.document().signatories(), function(x) { return x.isCsv(); }) &&
+            {/* if */ !_.any(model.document().signatories(), function (x) { return x.isCsv(); }) &&
               <div className="design-view-action-participant-new-multi">
                 <Button
                   text={localization.designview.addMultisend}
-                  onClick={function() {self.addMultisendParticipant();}}
+                  onClick={function () {self.addMultisendParticipant();}}
                 />
               </div>
             }
@@ -55,7 +54,7 @@ return React.createClass({
               <Button
                 type="action"
                 text={localization.designview.addParty}
-                onClick={function() {self.addSingleParticipant();}}
+                onClick={function () {self.addSingleParticipant();}}
               />
             </div>
 

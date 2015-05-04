@@ -1,10 +1,15 @@
 /** @jsx React.DOM */
 
-define(['legacy_code', 'React', 'common/button', 'designview/participants/participantnamefield', 'designview/participants/participantfield', 'designview/participants/participantselectfield', 'designview/participants/participantnotnamedfield','designview/participants/participantaddfield'], function(_Legacy, React, Button, ParticipantNameField, ParticipantField, ParticipantSelectField, ParticipantNotNamedField, ParticipantAddField) {
+define(["legacy_code", "React", "common/button", "designview/participants/participantnamefield",
+        "designview/participants/participantfield", "designview/participants/participantselectfield",
+        "designview/participants/participantnotnamedfield", "designview/participants/participantaddfield"],
+function (_Legacy, React, Button, ParticipantNameField,
+          ParticipantField, ParticipantSelectField,
+          ParticipantNotNamedField, ParticipantAddField) {
 
 return React.createClass({
 
-  render: function() {
+  render: function () {
     var self = this;
     var sig = this.props.model;
     var viewmodel = this.props.viewmodel;
@@ -16,13 +21,13 @@ return React.createClass({
           <ParticipantField model={sig.emailField()}/>
         }
         {
-          _.map(sig.fields(), function(f) {
+          _.map(sig.fields(), function (f) {
             if (f.isBlank()) {
-              return (<ParticipantSelectField model={f} key={"select-field" + f.cid}/>)
+              return (<ParticipantSelectField model={f} key={"select-field" + f.cid}/>);
             } else if (f.noName()) {
-              return (<ParticipantNotNamedField model={f} key={"not-named-field-" + f.cid}/>)
+              return (<ParticipantNotNamedField model={f} key={"not-named-field-" + f.cid}/>);
             } else if (!f.isEmail() && !f.isFstName() && !f.isSndName() && f.isText()) {
-              return (<ParticipantField model={f} key={"field-" + f.cid}/>)
+              return (<ParticipantField model={f} key={"field-" + f.cid}/>);
             } else {
               return;
             }
@@ -34,8 +39,8 @@ return React.createClass({
             <Button
               text={localization.designview.viewCSV}
               type="optional"
-              onClick={function() {
-                mixpanel.track('Open CSV Popup');
+              onClick={function () {
+                mixpanel.track("Open CSV Popup");
                 new CsvSignatoryDesignPopup({
                   designview: viewmodel
                 });

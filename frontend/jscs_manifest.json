@@ -1,5 +1,6 @@
 [
   "./app/scripts/designview/typesetters/*.jsx",
+  "./app/scripts/designview/participants/*.jsx",
   "./app/scripts/common/editabletext.jsx",
   "./app/js/anchors.js",
   "./app/js/takeScreenshot.js",
