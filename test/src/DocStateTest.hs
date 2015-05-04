@@ -74,7 +74,6 @@ docStateTests env = testGroup "DocState" [
   testThat "CloseDocument adds to the log" env testCloseDocumentEvidenceLog,
   testThat "ChangeSignatoryEmailWhenUndelivered adds to the log" env testChangeSignatoryEmailWhenUndeliveredEvidenceLog,
   testThat "CancelDocument adds to the log" env testCancelDocumentEvidenceLog,
-  testThat "SignWithELegFailure adds to the log" env testSignWithELegFailureEvidenceDocumentEvidenceLog,
 
   testThat "AppendFirstSealedFile adds to the log" env testAppendFirstSealedFileEvidenceLog,
   testThat "GetDocumentsByCompanyWithFiltering filters" env testGetDocumentsByCompanyWithFilteringFilters,
@@ -460,15 +459,6 @@ testCancelDocumentEvidenceLog = do
     randomUpdate $ \t-> CancelDocument (systemActor t)
     lg <- dbQuery . GetEvidenceLog =<< theDocumentID
     assertJust $ find (\e -> evType e == Current CancelDocumentEvidence) lg
-
-testSignWithELegFailureEvidenceDocumentEvidenceLog :: TestEnv ()
-testSignWithELegFailureEvidenceDocumentEvidenceLog = do
-  author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending) `withDocumentM` do
-    Just sl <- getAuthorSigLink <$> theDocument
-    randomUpdate $ \t-> LogSignWithELegFailureForDocument (signatorylinkid sl) Nothing Nothing "first" "last" "198404011234" (systemActor t)
-    lg <- dbQuery . GetEvidenceLog =<< theDocumentID
-    assertJust $ find (\e -> evType e == Current SignWithELegFailureEvidence) lg
 
 testChangeSignatoryEmailWhenUndeliveredEvidenceLog :: TestEnv ()
 testChangeSignatoryEmailWhenUndeliveredEvidenceLog = do

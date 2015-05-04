@@ -293,6 +293,7 @@ var SelectView = React.createClass({
       setTimeout(function() {self.closeIfNeeded();}, 100);
     },
     handleRemove : function(e) {
+      e.stopPropagation();
       var model = this.props.model;
       model.unexpand();
       model.onRemove();

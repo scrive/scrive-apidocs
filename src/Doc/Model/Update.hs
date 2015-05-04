@@ -6,7 +6,6 @@ module Doc.Model.Update
   , AppendSealedFile(..)
   , AppendExtendedSealedFile(..)
   , CancelDocument(..)
-  , LogSignWithELegFailureForDocument(..)
   , ChangeSignatoryEmailWhenUndelivered(..)
   , ChangeSignatoryPhoneWhenUndelivered(..)
   , ChangeAuthenticationMethod(..)
@@ -433,23 +432,6 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m FixClos
         sqlSet "status" Closed
         sqlWhereEq "id" did
         sqlWhereEq "status" $ DocumentError $undefined
-
-data LogSignWithELegFailureForDocument = LogSignWithELegFailureForDocument SignatoryLinkID (Maybe String) (Maybe String) String String String Actor
-instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m LogSignWithELegFailureForDocument () where
-  update (LogSignWithELegFailureForDocument slid mname mnumber firstName lastName personNumber actor) = do
-    updateDocumentWithID $ const $ do
-      updateMTimeAndObjectVersion (actorTime actor) -- Why this update?
-    sl <- theDocumentID >>= \did -> query $ GetSignatoryLinkByID did slid Nothing
-    let trips = [("Name",    fromMaybe (getFullName sl) mname, firstName ++ " " ++ lastName)
-                ,("Personal number", fromMaybe (getPersonalNumber sl) mnumber, personNumber)]
-        uneql = filter (\(_,a,b)->a/=b) trips
-        msg2 = intercalate "; " $ map (\(f,s,e)->f ++ " from transaction was \"" ++ s ++ "\" but from e-legitimation was \"" ++ e ++ "\"") uneql
-    void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
-                    SignWithELegFailureEvidence
-                    (F.value "msg" msg2)
-                    (Just sl)
-                    Nothing
-                    actor
 
 data CancelDocument = CancelDocument Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m CancelDocument () where
