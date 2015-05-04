@@ -3,10 +3,10 @@ module Log.Class (
     UTCTime
   , MonadTime(..)
   , MonadLog(..)
-  , logError
+  , logAttention
   , logInfo
   , logTrace
-  , logError_
+  , logAttention_
   , logInfo_
   , logTrace_
   ) where
@@ -38,8 +38,8 @@ instance (
 
 ----------------------------------------
 
-logError :: MonadLog m => String -> Value -> m ()
-logError = logNow LogError
+logAttention :: MonadLog m => String -> Value -> m ()
+logAttention = logNow LogAttention
 
 logInfo :: MonadLog m => String -> Value -> m ()
 logInfo = logNow LogInfo
@@ -47,8 +47,8 @@ logInfo = logNow LogInfo
 logTrace :: MonadLog m => String -> Value -> m ()
 logTrace = logNow LogTrace
 
-logError_ :: MonadLog m => String -> m ()
-logError_ = (`logError` emptyObject)
+logAttention_ :: MonadLog m => String -> m ()
+logAttention_ = (`logAttention` emptyObject)
 
 logInfo_ :: MonadLog m => String -> m ()
 logInfo_ = (`logInfo` emptyObject)

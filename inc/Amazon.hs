@@ -132,7 +132,7 @@ exportFile ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)}
       _ <- dbUpdate $ FileMovedToAWS fileid bucket url aes
       return True
     Left err -> do
-      logError "AWS failed to upload" $ object [
+      logAttention "AWS failed to upload" $ object [
           "fileid" .= show fileid
         , "url" .= (bucket </> url)
         , "error" .= show err
@@ -160,7 +160,7 @@ deleteFile ctxs3action bucket url = do
         ]
       return True
     Left err -> do
-      logError "AWS failed to delete file" $ object [
+      logAttention "AWS failed to delete file" $ object [
            "url" .= (bucket </> url)
          , "result" .= show err
          ]
@@ -172,7 +172,7 @@ getFileContents s3action File{..} = do
   mcontent <- getContent filestorage
   case mcontent of
     Nothing -> do
-      logError "No content for file" $ object [
+      logAttention "No content for file" $ object [
           "fileid" .= show fileid
         , "filename" .= filename
         ]
@@ -180,7 +180,7 @@ getFileContents s3action File{..} = do
     Just content -> do
       if isJust filechecksum && Just (SHA1.hash content) /= filechecksum
         then do
-          logError "SHA1 checksum of file doesn't match the one in the database" $ object [
+          logAttention "SHA1 checksum of file doesn't match the one in the database" $ object [
               "fileid" .= show fileid
             , "filename" .= filename
             ]
@@ -198,7 +198,7 @@ getFileContents s3action File{..} = do
       case result of
         Right rsp -> return . Just . aesDecrypt aes . concatChunks $ HTTP.rspBody rsp
         Left err -> do
-          logError "AWS.runAction failed"  $ object [
+          logAttention "AWS.runAction failed"  $ object [
               "fileid" .= show fileid
             , "error" .= show err
             , "filename" .= filename

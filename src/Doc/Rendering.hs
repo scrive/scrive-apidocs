@@ -96,12 +96,12 @@ runRendering _renderedPages fid widthInPixels renderingMode = do
                        ]) BSL.empty
 
     when (exitcode /= ExitSuccess) $
-      logError_ $ "mudraw process for pdf->png render failed, will look for rendered images anyway"
+      logAttention_ $ "mudraw process for pdf->png render failed, will look for rendered images anyway"
     pages <- readNumberedFiles pathOfPage 1 []
     when (null pages) $ do
       systmp <- liftIO $ getTemporaryDirectory
       (path, handle) <- liftIO $ openTempFile systmp $ "mudraw-failed-" ++ show fid ++ "-.pdf"
-      logError_ $ "Cannot mudraw of file #" ++ show fid ++ ": " ++ path
+      logAttention_ $ "Cannot mudraw of file #" ++ show fid ++ ": " ++ path
       liftIO $ BS.hPutStr handle content
       liftIO $ hClose handle
     return $ RenderedPages True pages
@@ -228,7 +228,7 @@ preCheckPDF content =
     res <- liftBase (preCheckPDFHelper content tmppath)
       `E.catch` \(e::IOError) -> return (Left (FileOtherError (show e)))
     case res of
-      Left x -> logError_ $ "preCheckPDF: " ++ show x
+      Left x -> logAttention_ $ "preCheckPDF: " ++ show x
       Right _ -> return ()
     return $ Binary <$> res
 

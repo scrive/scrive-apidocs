@@ -798,7 +798,7 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) =>
 
             return $ Just d
       Left err -> do
-        logError_ err
+        logAttention_ err
         return Nothing
    where
 
@@ -1118,7 +1118,7 @@ instance (CryptoRNG m, MonadLog m, MonadThrow m, DocumentMonad m, TemplatesMonad
             return True
 
           s -> do
-            logError_ $ "cannot reset signatory details on document " ++ show documentid ++ " because " ++ intercalate ";" s
+            logAttention_ $ "cannot reset signatory details on document " ++ show documentid ++ " because " ++ intercalate ";" s
             return False
 
 data CloneDocumentWithUpdatedAuthor = CloneDocumentWithUpdatedAuthor APIVersion User Document Actor

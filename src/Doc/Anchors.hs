@@ -53,7 +53,7 @@ getAnchorPositions pdfcontent anchors = do
     case code of
       ExitSuccess -> do
         stdoutjs <- either (\e -> do
-          logError "scrivepdftools/scrivepdftools.jar find-texts did not produce valid json" $ object [
+          logAttention "scrivepdftools/scrivepdftools.jar find-texts did not produce valid json" $ object [
               "message" .= e
             , "stdout" .= BSL.toString stdout
             ]
@@ -77,7 +77,7 @@ getAnchorPositions pdfcontent anchors = do
           _ -> do
             return Map.empty
       ExitFailure _ -> do
-        logError_ $ BSL.toString stderr
+        logAttention_ $ BSL.toString stderr
         return Map.empty
 
 

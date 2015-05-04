@@ -990,8 +990,8 @@ runJavaTextExtract json content = do
                    value "rects" rectsresult
           return $ Ok censoredresult
       ExitFailure _ -> do
-          logError_ $ BSL.toString _stderr
-          logError_ $ "Extract texts failed for configuration: " ++ show json
+          logAttention_ $ BSL.toString _stderr
+          logAttention_ $ "Extract texts failed for configuration: " ++ show json
           apiGuardL (serverError "Extract texts failed on PDF") (return Nothing)
 
 

@@ -68,7 +68,7 @@ scheduleEmailSendoutHelper :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m)
 scheduleEmailSendoutHelper authorname  MailsConfig{..} mail@Mail{..} = do
   logInfo_ $ "Sending mail with originator " ++ show originator
   if unsendable to
-    then logError_ $ "Email " ++ show mail ++ " is unsendable, discarding."
+    then logAttention_ $ "Email " ++ show mail ++ " is unsendable, discarding."
     else do
       fromAddr <- return Address {addrName = authorname, addrEmail = originatorEmail }
       token <- random

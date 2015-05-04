@@ -31,7 +31,7 @@ handleSendGridEventsV3= do
          mapM_ processSendGridEventV3 a
          ok $ toResponse ("Thanks" :: String)
        _ -> do
-         logError' $ "Parse problem on" <+> show rq
+         logAttention' $ "Parse problem on" <+> show rq
          badRequest $ toResponse ("Invalid response" :: String)
 
 
@@ -44,18 +44,18 @@ processSendGridEventV3 js = do
       (Just mid, Just token) -> do
         mmail <- dbQuery $ GetEmail mid token
         case mmail of
-          Nothing -> logError' $ "Error: Email with id =" <+> show mid ++ ", token =" <+> show token <+> "doesn't exist."
+          Nothing -> logAttention' $ "Error: Email with id =" <+> show mid ++ ", token =" <+> show token <+> "doesn't exist."
           Just Mail{..} -> do
               let attrs = fromXSMTPAttrs mailXSMTPAttrs
               fields <- forM attrs $ \(name,_) -> do
                 fvalue <- fromJSValueField name
                 return (name, fvalue)
               if fields /= map (second Just) attrs
-                then logError' $ "Expected X-SMTP data (" ++ show attrs ++ ") doesn't match delivered one:" <+> show fields ++ ". JSON" <+> encode js
+                then logAttention' $ "Expected X-SMTP data (" ++ show attrs ++ ") doesn't match delivered one:" <+> show fields ++ ". JSON" <+> encode js
                 else do
                   mevent <- sendgridEventFromJSValueM
                   case mevent of
-                    Nothing -> logError' $ "We could not parse event type:"  ++ encode js
+                    Nothing -> logAttention' $ "We could not parse event type:"  ++ encode js
                     Just event -> do
                         logMsg' $ "For email with id =" <+> show mid ++ ", token =" <+> show token <+> "we got event:" <+> show event
                         email <- fromMaybe "" <$> fromJSValueField "email"
@@ -64,9 +64,9 @@ processSendGridEventV3 js = do
                         logMsg' $ "Updating database"
                         res <- dbUpdate (UpdateWithEvent mailID ev)
                         if not res
-                          then logError' $ "UpdateWithEvent didn't update anything for email" <+> show mailID <+> "event" <+> show ev
+                          then logAttention' $ "UpdateWithEvent didn't update anything for email" <+> show mailID <+> "event" <+> show ev
                           else logMsg' $ "Event '" ++ show event ++ "' for email" <+> show mailID <+> "recorded."
-      _ -> logError' $ "Received event - but can't determine email:" <+> encode js
+      _ -> logAttention' $ "Received event - but can't determine email:" <+> encode js
   return ()
 
 
@@ -81,7 +81,7 @@ handleSendGridEventsV1 = do
       mmail <- dbQuery $ GetEmail mid token
       logMsg' $ "Checking it"
       case mmail of
-        Nothing -> logError' $ "Email with id =" <+> show mid ++ ", token =" <+> show token <+> "doesn't exist."
+        Nothing -> logAttention' $ "Email with id =" <+> show mid ++ ", token =" <+> show token <+> "doesn't exist."
         Just Mail{..} -> do
           logMsg' $ "Checking SMTP params"
           let attrs = fromXSMTPAttrs mailXSMTPAttrs
@@ -92,12 +92,12 @@ handleSendGridEventsV1 = do
             return (name, fvalue)
           logMsg' $ "Fields are" <+> show fields
           if fields /= map (second Just) attrs
-            then logError' $ "Expected X-SMTP data (" ++ show attrs ++ ") doesn't match delivered one:" <+> show fields
+            then logAttention' $ "Expected X-SMTP data (" ++ show attrs ++ ") doesn't match delivered one:" <+> show fields
             else do
               logMsg' $ "Reading event type "
               mevent <- readEventType =<< getField "event"
               case mevent of
-                Nothing -> logError' "No event object received"
+                Nothing -> logAttention' "No event object received"
                 Just event -> do
                   logMsg' $ "Reading rest of event"
                   email <- fromMaybe "" <$> getField "email"
@@ -108,14 +108,14 @@ handleSendGridEventsV1 = do
                   logMsg' $ if not res
                     then "UpdateWithEvent didn't update anything"
                     else "Event '" ++ show event ++ "' for email" <+> show mailID <+> "received."
-    (mid, token) -> logError' $ "Invalid id (" ++ show mid ++ ") or token (" ++ show token ++ ") received."
+    (mid, token) -> logAttention' $ "Invalid id (" ++ show mid ++ ") or token (" ++ show token ++ ") received."
   ok $ toResponse ("Thanks" :: String)
 
 logMsg' :: (MonadLog m) => String -> m ()
 logMsg' msg = logInfo_ $ "handleSendgridEvents:" <+> msg
 
-logError' :: (MonadLog m) => String -> m ()
-logError' msg = logInfo_ $ "handleSendgridEvents: Error" <+> msg
+logAttention' :: (MonadLog m) => String -> m ()
+logAttention' msg = logInfo_ $ "handleSendgridEvents: Error" <+> msg
 
 readEventType :: Maybe String -> Mailer (Maybe SendGridEvent)
 readEventType (Just "processed") = return $ Just SG_Processed

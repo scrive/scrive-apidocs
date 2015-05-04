@@ -67,7 +67,7 @@ executeStandardCallback doc url = do
         ]
       return True
     ExitFailure ec -> do
-      logError "API callback executeStandardCallback failed" $ object [
+      logAttention "API callback executeStandardCallback failed" $ object [
           "document_id" .= show (documentid doc)
         , "url" .= url
         , "curl_exitcode" .= show ec

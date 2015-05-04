@@ -11,7 +11,7 @@ import Data.Time
 import KontraPrelude
 
 -- | Available log levels.
-data LogLevel = LogError | LogInfo | LogTrace
+data LogLevel = LogAttention | LogInfo | LogTrace
   deriving (Bounded, Eq, Ord, Show)
 
 instance NFData LogLevel

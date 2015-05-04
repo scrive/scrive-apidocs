@@ -260,7 +260,7 @@ asyncProcessEvents process numEvts = do
           PutBack ->
             asyncLogEvent name props
           Failed msg ->
-            logError_ $ "Event processing failure; event name = " ++ (show name) ++ " reason = " ++ msg
+            logAttention_ $ "Event processing failure; event name = " ++ (show name) ++ " reason = " ++ msg
           _  | otherwise ->
             return ()
 

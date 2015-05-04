@@ -30,7 +30,7 @@ signviewBrandingCSS theme = do
       ExitSuccess -> do
           return $ stdout
       ExitFailure _ -> do
-          logError_ $ "Creating sign view branding failed : " ++ BSL.toString stderr
+          logAttention_ $ "Creating sign view branding failed : " ++ BSL.toString stderr
           return BSL.empty
 
 
@@ -59,7 +59,7 @@ serviceBrandingCSS theme = do
       ExitSuccess -> do
           return $ stdout
       ExitFailure _ -> do
-          logError_ $ "Creating service branding failed : " ++ BSL.toString stderr
+          logAttention_ $ "Creating service branding failed : " ++ BSL.toString stderr
           return BSL.empty
 
 serviceBrandingLess :: Theme -> String
@@ -89,7 +89,7 @@ loginBrandingCSS theme = do
       ExitSuccess -> do
           return $ stdout
       ExitFailure _ -> do
-          logError_ $ "Creating login branding failed : " ++ BSL.toString stderr
+          logAttention_ $ "Creating login branding failed : " ++ BSL.toString stderr
           return BSL.empty
 
 loginBrandingLess :: Theme -> String
@@ -119,7 +119,7 @@ scriveBrandingCSS = do
       ExitSuccess -> do
           return $ stdout
       ExitFailure _ -> do
-          logError_ $ "Creating Scrive branding failed : " ++ BSL.toString stderr
+          logAttention_ $ "Creating Scrive branding failed : " ++ BSL.toString stderr
           return BSL.empty
 
 scriveBrandingLess :: String
@@ -156,7 +156,7 @@ domainBrandingCSS bd = do
       ExitSuccess -> do
           return $ stdout
       ExitFailure _ -> do
-          logError_ $ "Creating domain branding failed : " ++ BSL.toString stderr
+          logAttention_ $ "Creating domain branding failed : " ++ BSL.toString stderr
           return BSL.empty
 
 domainBrandingLess :: BrandedDomain -> String

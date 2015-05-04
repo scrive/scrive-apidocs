@@ -38,6 +38,6 @@ printLogMessage LogMessage{..} = T.putStrLn . T.concat $ [
     }
 
     textifyLevel :: LogLevel -> T.Text
-    textifyLevel LogError = "ERROR"
-    textifyLevel LogInfo  = "INFO"
+    textifyLevel LogAttention = "ATTENTION"
+    textifyLevel LogInfo = "INFO"
     textifyLevel LogTrace = "TRACE"

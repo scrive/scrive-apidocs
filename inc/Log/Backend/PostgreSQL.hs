@@ -36,8 +36,8 @@ pgLogger cs = mkBulkLogger "PostgreSQL" $ mapM_ serialize . chunksOf 1000
       <> ")"
 
     sqlifyLevel :: LogLevel -> ByteString
-    sqlifyLevel LogError = "error"
-    sqlifyLevel LogInfo  = "info"
+    sqlifyLevel LogAttention = "attention"
+    sqlifyLevel LogInfo = "info"
     sqlifyLevel LogTrace = "trace"
 
     ts :: TransactionSettings

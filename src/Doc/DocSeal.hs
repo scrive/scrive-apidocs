@@ -222,7 +222,7 @@ findOutAttachmentDesc sim tmppath document = do
             eNumberOfPages <- liftIO $ getNumberOfPDFPages contents
             numberOfPages <- case eNumberOfPages of
                               Left e -> do
-                                logError_ $ "Calculating number of pages of document #" ++ show (documentid document) ++ " failed, falling back to 1. Reason: " ++ show e
+                                logAttention_ $ "Calculating number of pages of document #" ++ show (documentid document) ++ " failed, falling back to 1. Reason: " ++ show e
                                 return 1
                               Right x -> return x
             return (contents, numberOfPages, filename file)
@@ -404,7 +404,7 @@ sealSpecFromDocument boxImages hostpart document elog ces content tmppath inputp
   eNumberOfPages <- liftIO $ getNumberOfPDFPages content
   numberOfPages <- case eNumberOfPages of
                         Left e -> do
-                          logError_ $ "Calculating number of pages of document #" ++ show (documentid document) ++ " failed, falling back to 1. Reason: " ++ show e
+                          logAttention_ $ "Calculating number of pages of document #" ++ show (documentid document) ++ " failed, falling back to 1. Reason: " ++ show e
                           return 1
                         Right x -> return x
 
@@ -520,8 +520,8 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
         systmp <- liftIO $ getTemporaryDirectory
         (path, handle) <- liftIO $ openTempFile systmp ("seal-failed-" ++ show documentid ++ "-" ++ show fileid ++ "-.pdf")
         let msg = "Cannot seal document #" ++ show documentid ++ " because of file #" ++ show fileid
-        logError_ $ msg ++ ": " ++ path
-        logError_ $ BSL.toString stderr
+        logAttention_ $ msg ++ ": " ++ path
+        logAttention_ $ BSL.toString stderr
         -- show JSON'd config as that's what the java app is fed.
         liftIO $ BS.hPutStr handle content
         liftIO $ hClose handle
@@ -558,6 +558,6 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
           logInfo_ $ "Returning presealed content"
           return $ Right res
       ExitFailure _ -> do
-          logError_ $ BSL.toString stderr
+          logAttention_ $ BSL.toString stderr
           -- show JSON'd config as that's what the java app is fed.
           return $ Left "Error when preprinting fields on PDF"

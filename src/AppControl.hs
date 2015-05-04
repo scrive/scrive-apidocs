@@ -228,7 +228,7 @@ appHandler handleRoutes appConf appGlobals = runHandler $ do
     catchEverything :: HandlerM Response -> HandlerM Response
     catchEverything m = m `E.catch` \(e::E.SomeException) -> do
       uri <- rqUri <$> askRq
-      logError "appHandler: exception caught at top level" $ object [
+      logAttention "appHandler: exception caught at top level" $ object [
           "exception" .= show e
         , "url" .= uri
         ]
@@ -241,7 +241,7 @@ appHandler handleRoutes appConf appGlobals = runHandler $ do
             InternalError stack -> do
               rq <- askRq
               mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
-              logError "InternalError" . object $ [
+              logAttention "InternalError" . object $ [
                   "stacktrace" .= reverse stack
                 ] ++ logRequest rq mbody
               internalServerErrorPage >>= internalServerError
@@ -249,7 +249,7 @@ appHandler handleRoutes appConf appGlobals = runHandler $ do
               -- there is no way to get stacktrace here as Respond404 is a CAF, fix this later
               rq <- askRq
               mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
-              logError "Respond404" . object $ logRequest rq mbody
+              logAttention "Respond404" . object $ logRequest rq mbody
               notFoundPage >>= notFound
         , E.Handler $ \(FinishWith res ctx') -> do
             modifyContext $ const ctx'
@@ -258,7 +258,7 @@ appHandler handleRoutes appConf appGlobals = runHandler $ do
             rq <- askRq
             mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
             stack <- liftIO $ whoCreated e
-            logError "DBException" . object $ [
+            logAttention "DBException" . object $ [
                 "dbeQueryContext" .= show dbeQueryContext
               , case cast dbeError of
                   Nothing -> "dbeError" .= show dbeError
@@ -270,7 +270,7 @@ appHandler handleRoutes appConf appGlobals = runHandler $ do
             rq <- askRq
             mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
             stack <- liftIO $ whoCreated e
-            logError "SomeKontraException" . object $ [
+            logAttention "SomeKontraException" . object $ [
                 "exception" .= jsonToAeson (toJSValue ee)
               , "stacktrace" .= reverse stack
               ] ++ logRequest rq mbody
@@ -279,7 +279,7 @@ appHandler handleRoutes appConf appGlobals = runHandler $ do
             rq <- askRq
             mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
             stack <- liftIO $ whoCreated e
-            logError "Exception caught in routeHandlers" . object $ [
+            logAttention "Exception caught in routeHandlers" . object $ [
                 "exception" .= show e
               , "stacktrace" .= reverse stack
               ] ++ logRequest rq mbody

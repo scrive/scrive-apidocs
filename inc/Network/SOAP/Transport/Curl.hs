@@ -43,7 +43,7 @@ mkCertErrorHandler = liftBaseWith $ \runInBase ->
   return $ \response_parser curl code ->
     case code of
       CurlSSLCACert -> do
-        _ <- runInBase (logError_ "CERTIFICATE VERIFICATION ERROR, falling back to insecure connection")
+        _ <- runInBase (logAttention_ "CERTIFICATE VERIFICATION ERROR, falling back to insecure connection")
         (final_body, fetch_body) <- newIncoming
         setopts curl
           [ CurlWriteFunction $ gatherOutput_ fetch_body

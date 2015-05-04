@@ -16,7 +16,7 @@ collectClockError :: (MonadDB m, MonadBaseControl IO m, MonadLog m) => [String] 
 collectClockError ntpServers = do
   moffset <- (Just <$> liftBase (getOffset ntpServers)) `E.catch`
                 \(E.SomeException e) -> do
-    logError_ $ "HostClock.collectClockError: getOffset failed: " ++ show e
+    logAttention_ $ "HostClock.collectClockError: getOffset failed: " ++ show e
     return Nothing
   freq <- liftBase getFrequency
   _ <- dbUpdate $ InsertClockOffsetFrequency moffset freq

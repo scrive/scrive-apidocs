@@ -60,7 +60,7 @@ actionQueue qa = currentTime
         "action" .= show a
       , "table" .= tableName
       ]
-    printError a e = logError "Actional evaluation failed" $ object [
+    printError a e = logAttention "Actional evaluation failed" $ object [
         "action" .= show a
       , "table" .= tableName
       , "exception" .= show e

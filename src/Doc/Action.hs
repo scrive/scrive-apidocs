@@ -90,7 +90,7 @@ postDocumentPreparationChange authorsignsimmediately tzn = do
   msaved <- saveDocumentForSignatories
   case msaved of
     Just msg -> do
-      logError_ $ "Failed to save document #" ++ (show docid) ++ " for signatories " ++ msg
+      logAttention_ $ "Failed to save document #" ++ (show docid) ++ " for signatories " ++ msg
     Nothing -> return ()
   theDocument >>= \d -> logInfo_ $ "Sending invitation emails for document #" ++ show docid ++ ": " ++ documenttitle d
 

@@ -94,7 +94,7 @@ main = do
           SlaveSender -> case mslave of
             Just slave -> return slave
             Nothing -> do
-              logError_ "No slave sender, falling back to master"
+              logAttention_ "No slave sender, falling back to master"
               return master
         logInfo_ $ "Sending email" <+> show mailID <+> "using" <+> show sender
         sendMail sender mail >>= \case
