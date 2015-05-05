@@ -74,6 +74,7 @@ return React.createClass({
     return (
       <div className="design-view-action-participant-details-information-field-wrapper">
         <NewSelect
+           ref="select"
            name={localization.designview.whatField}
            cssClass={"design-view-action-participant-new-field-select"}
            border={""}

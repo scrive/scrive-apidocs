@@ -338,7 +338,7 @@ var SelectView = React.createClass({
             </div>
             <div className='select-button-right'/>
             {/*if*/ model.hasRemoveOption()&&
-                <div className='closer' onClick={this.handleRemove}/>
+                <div ref="close" className='closer' onClick={this.handleRemove}/>
               }
           </div>
         </div>
@@ -400,7 +400,7 @@ var Select = React.createClass({
     },
     render: function() {
       return (
-        <SelectView model={this.state.model}/>
+        <SelectView ref="view" model={this.state.model}/>
       );
     }
   });

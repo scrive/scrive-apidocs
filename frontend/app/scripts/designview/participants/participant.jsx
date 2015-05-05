@@ -43,7 +43,11 @@ return React.createClass({
     return (
       <div className={"design-view-action-participant"}>
         {/* if */ !sig.author() &&
-          <div className="design-view-action-participant-close" onClick={function () {self.onRemove();} }/>
+          <div
+            className="design-view-action-participant-close"
+            ref="remove-icon"
+            onClick={function () {self.onRemove();} }
+          />
         }
 
         <div
@@ -52,7 +56,11 @@ return React.createClass({
             (viewmodel.participantDetail() === sig ? "expanded " : "")  +
             (self.signatoryHasProblems() ? "is-has-problems" : "")}
         >
-          <div className="design-view-action-participant-info-box" onClick={function () {self.toogleView();}}>
+          <div
+            ref="participant-details"
+            className="design-view-action-participant-info-box"
+            onClick={function () {self.toogleView();}}
+          >
             <div
               className={
                 "design-view-action-participant-info-color " +

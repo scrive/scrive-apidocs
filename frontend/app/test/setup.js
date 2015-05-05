@@ -45,10 +45,6 @@ var realLoad = function () {
       moment: '../bower_components/moment/min/moment-with-langs.min',
       should: '../bower_components/should/should',
       StateMachine: '../bower_components/javascript-state-machine/state-machine',
-      tinyMCE: '../libs/tiny_mce/tinymce.min',
-      tinyMCE_theme: '../libs/tiny_mce/themes/modern/theme.min',
-      tinyMCE_noneeditable: '../libs/tiny_mce/plugins/noneditable/plugin.min',
-      tinyMCE_paste: '../libs/tiny_mce/plugins/paste/plugin.min',
       tinycolor : '../libs/tinycolor-min',
       sinon: '../libs/sinon',
       backend: '../test/backend',
@@ -65,28 +61,7 @@ var realLoad = function () {
       'Backbone': {
         deps: ['jquery', 'Underscore'],
         exports: 'Backbone'
-      },
-      tinyMCE: {
-        exports: 'tinyMCE',
-        init: function () {
-          this.tinyMCE.DOM.events.domLoaded = true;
-
-          // needed to make tinymce load css from correct place
-          this.tinyMCE.baseURL = window.location.origin + '/libs/tiny_mce';
-
-          return this.tinyMCE;
-        }
-      },
-      'tinyMCE_theme': {
-        deps: ['tinyMCE']
-      },
-      'tinyMCE_noneeditable': {
-        deps: ['tinyMCE']
-      },
-      'tinyMCE_paste': {
-        deps: ['tinyMCE']
-
-      },
+      }
     },
     deps: ['es5shim', 'es5sham', 'jquery', 'Underscore', 'Backbone'].concat(allTestFiles),
     callback: window.__karma__.start
@@ -115,10 +90,6 @@ var mustLoadBefore = {
     moment: '../bower_components/moment/min/moment-with-langs.min',
     should: '../bower_components/should/should',
     StateMachine: '../bower_components/javascript-state-machine/state-machine',
-    tinyMCE: '../libs/tiny_mce/tinymce.min',
-    tinyMCE_theme: '../libs/tiny_mce/themes/modern/theme.min',
-    tinyMCE_noneeditable: '../libs/tiny_mce/plugins/noneditable/plugin.min',
-    tinyMCE_paste: '../libs/tiny_mce/plugins/paste/plugin.min',
     tinycolor : '../libs/tinycolor-min',
     html2canvas: '../libs/html2canvas',
     /**

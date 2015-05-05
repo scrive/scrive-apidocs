@@ -33,6 +33,7 @@ return React.createClass({
         {/* if */ model.participantDetail() != undefined &&
           <div className="design-view-action-participant-done">
             <Button
+               ref="close-button"
                type="action"
                text={localization.designview.addParties.close}
                onClick={function () {self.onDone();}}
@@ -44,6 +45,7 @@ return React.createClass({
             {/* if */ !_.any(model.document().signatories(), function (x) { return x.isCsv(); }) &&
               <div className="design-view-action-participant-new-multi">
                 <Button
+                  ref="add-multi-button"
                   text={localization.designview.addMultisend}
                   onClick={function () {self.addMultisendParticipant();}}
                 />
@@ -52,6 +54,7 @@ return React.createClass({
 
             <div className="design-view-action-participant-new-single">
               <Button
+                ref="add-single-button"
                 type="action"
                 text={localization.designview.addParty}
                 onClick={function () {self.addSingleParticipant();}}

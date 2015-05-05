@@ -60,20 +60,8 @@
                        , formOwnMessage : "Write your own message"
                        , mobileQuestion : "Do you want to send a reminder by SMS?"
                        , mobileQuestionAlreadySigned : "Do you want to send a link to the document by SMS?"
-                       , emailMobileQuestion : "Do you want to send a reminder via email and SMS"
+                       , emailMobileQuestion : "Do you want to send a reminder via email and SMS?"
 					}
-             , sign :  {
-                          eleg : {
-                                     mismatch : {
-                                         mismatchOnNameAndNumberCantChange : "The name and the ID number given in the document do not match your eID. Please contact the sender."
-                                       , mismatchOnNameAndNumberCanChange : "The name and the ID number given in the document do not match your eID."
-                                       , mismatchOnNameAndCantChange : "The name given in the document does not match your eID. Please contact the document sender."
-                                       , mismatchOnNumberAndCantChange : "The ID number given in the document does not match your eID. Please contact the document sender."
-                                       , mismatchOnNameAndCanChange : "The name given in the document does not match your eID."
-                                       , mismatchOnNumberAndCanChange : "The ID number given in the document does not match your eID."
-                                   }
-                          }
-                    }
              , signByAuthor : {
                           modalTitle : "Sign"
 
@@ -341,6 +329,11 @@
              , editDocument: "Place fields"
              , newDocumentTitle: "Untitled"
              , optionalField: "Optional"
+             , anchor: "Anchor"
+             , addAnchor: "Add"
+             , anchorAddPhrase: "Add phrase"
+             , anchorIndex: "Occurrence index"
+             , anchorSearchPhrase: "Phrase to search for"
              , editSigningProcess: "Other settings"
              , startSigning: "Start signing"
              , addField: "Add field"
@@ -393,7 +386,7 @@
              , freeTextBox: "Text field"
              , checkbox: "Checkbox"
              , signature: "Signature"
-             , removeThisDocument: "Remove document"
+             , removeThisDocument: "Remove PDF"
              , attached : "Added attachment"
              , attachmentRequestedFrom : "Requested attachment <span class='put-attachment-name'></span> from <span class='put-person-name'></span>"
              , requestFieldFrom : "<span class='put-field-name'></span> requested from <br/><span class='put-person-name'></span>"
@@ -423,7 +416,6 @@
              }
              , signModalContentAuthorOnly : "<p>When you've signed the document <strong class='put-document-title-here'></strong> your signature will be registered by the e-signing service Scrive.</p>"
              , signModalContentAuthorOnlyWithName : "<p><strong class='put-signatory-name-here'></strong>, when you've signed the document <strong class='put-document-title-here'></strong> your signature will be registered by the e-signing service Scrive.</p>"
-             , signModalContentEleg : "<p>Select eID. When you have selected, the software for signing with eID will be opened.</p>"
              , signModalContent : "<p>By clicking the button you will sign the document <strong class='put-document-title-here'></strong> and your signature will be registered by the e-signing service Scrive.</p>"
              , signModalContentWithName : "<p><strong class='put-signatory-name-here'></strong>, by clicking the button you will sign the document <strong class='put-document-title-here'></strong> and your signature will be registered by the e-signing service Scrive.</p>"
              , startSigningModalTextWithPad : "Are you sure you want to start the signing process?"
@@ -947,8 +939,8 @@
            , loginFailed : "Incorrect email or password."
            , loginFailedBadIP : "You cannot access Scrive E-sign from IP <span class='put-ip-here'></span>. Please contact <span class='put-adminname-here'></span> who is your company administrator in Scrive."
            , invalidEmail : "The email address is incorrectly formatted."
-           , noUser : "A password reminder could not be sent since there is no user with this email address."
-           , tooMuch : "We have now sent too many password reminders to this email. Please wait 24h to try again."
+           , noUser : "A new password could not be sent since there is no user with this email address."
+           , tooMuch : "We have now sent too many new passwords to this email address. Please wait 24 hours to try again."
            , passwordReminderSend : "A new password has been sent to your email address."
            , dontHaveAccount : "Don't have an account? <a class='put-link-to-signup-here'>Sign up for free</a>"
       }
@@ -1109,7 +1101,7 @@
           , companySettings : "Branding"
           , companyAccounts : {
                 name : "Users"
-              , createNewButtonText : "New account"
+              , createNewButtonText : "New user"
               , createNewModalBody : "Invite someone new or ask an existing Scrive user to join your company."
               , createNewModalTitle:"New account"
               , createNewModalAcceptButton: "Invite"
@@ -1258,7 +1250,8 @@
       }
       , footer : {
               explore              : "Explore"
-            , api                  : "Scrive API"
+            , api                  : "API documentation"
+            , apiExplorer          : "API explorer"
             , jobs                 : "Work at Scrive"
             , verify               : "Verify document"
             , getStarted           : "Get started"
@@ -1277,6 +1270,7 @@
       , header : {
               login : "Log in"
             , startFreeTrial : "Free trial"
+            , partners : "Partners"
             , contact : "Contact"
             , about : "The team"
             , cases : "Cases"

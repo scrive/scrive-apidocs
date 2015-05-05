@@ -15,6 +15,7 @@ return React.createClass({
     return (
       <div className="design-view-action-participant-details-information-field-wrapper">
         <InfoTextInput
+          ref="input"
           className={
             "design-view-action-participant-details-information-field s-input-fullname" +
             (csvfield || sig.author() ? " transparent" : "")

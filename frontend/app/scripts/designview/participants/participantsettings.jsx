@@ -95,6 +95,7 @@ return React.createClass({
         <span className="design-view-action-participant-details-participation-box">
           <label className="label">{localization.designview.addParties.invitationOrder}</label>
           <NewSelect
+            ref="order-select"
             name={LanguageService.localizedOrdinal(sig.signorder())}
             textWidth={151}
             optionsWidth="178px"
@@ -112,6 +113,7 @@ return React.createClass({
         <span className="design-view-action-participant-details-participation-box">
           <label className="label">{localization.designview.addParties.invitation}</label>
           <NewSelect
+            ref="delivery-select"
             name={self.deliveryText(sig.isLastViewer() ? "none" : sig.delivery())}
             textWidth={151}
             optionsWidth="178px"
@@ -131,6 +133,7 @@ return React.createClass({
         <span className="design-view-action-participant-details-participation-box">
           <label className="label">{localization.designview.addParties.role}</label>
           <NewSelect
+            ref="role-select"
             name={
               sig.signs() ?
               localization.designview.addParties.roleSignatory :
@@ -156,6 +159,7 @@ return React.createClass({
         <span className="design-view-action-participant-details-participation-box">
           <label className="label">{localization.designview.addParties.authentication}</label>
           <NewSelect
+            ref="authentication-select"
             name={self.authenticationText(sig.authentication())}
             textWidth={151}
             optionsWidth="178px"
@@ -173,6 +177,7 @@ return React.createClass({
         <span className="design-view-action-participant-details-participation-box">
           <label className="label">{localization.designview.addParties.confirmation}</label>
           <NewSelect
+            ref="confirmation-delivery-select"
             name={self.confirmationDeliveryText(sig.confirmationdelivery())}
             textWidth={151}
             optionsWidth="178px"

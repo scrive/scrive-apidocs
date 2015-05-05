@@ -60,5 +60,13 @@ define(["legacy_code", "React"], function(legacy_code, React) {
     TestUtils.Simulate.click(options[index]);
   };
 
+  exports.cleanTimeoutsAndBody = function() {
+    var id = window.setTimeout(function() {}, 0);
+    while (id--) {
+      window.clearTimeout(id);
+    }
+    $('body').empty();
+  };
+
   return exports;
 });

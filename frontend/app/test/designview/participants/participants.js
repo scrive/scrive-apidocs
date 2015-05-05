@@ -19,6 +19,19 @@ define(["legacy_code", "backend", "util", "React", "designview/participants/part
         model: designView
         , element: $("body")[0]
       }));
+      designView.setParticipantDetail(designView.document().signatories()[1]);
+      participants.forceUpdate();
+
+    });
+
+    it("should test component - should not show enything if document is not ready", function () {
+      designView.document().set("ready",false);
+      var participants = TestUtils.renderIntoDocument(React.createElement(Participants, {
+        model: designView
+        , element: $("body")[0]
+      }));
+      assert.equal($(participants.getDOMNode()).children().size(),0);
+
     });
 
     after(function () {

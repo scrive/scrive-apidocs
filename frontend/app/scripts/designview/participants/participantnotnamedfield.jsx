@@ -23,6 +23,7 @@ return React.createClass({
       <div className="design-view-action-participant-details-information-field-wrapper">
 
         <InfoTextInput
+          ref="input"
           className={
             "design-view-action-participant-new-field-name-input redborder " +
             (self.sameNameExists() ? "conflict" : "")
@@ -34,7 +35,7 @@ return React.createClass({
           }}
           onEnter={function () {
             if (self.sameNameExists()) {
-              new FlashMessage({color: "error", content: localization.designview.fieldWithSameNameExists});
+              new FlashMessage({type: "error", content: localization.designview.fieldWithSameNameExists});
               return;
             }
             mixpanel.track("Enter custom field name", {
@@ -53,11 +54,12 @@ return React.createClass({
         />
 
         <Button
+          ref="button"
           text={localization.ok}
           width={44}
           onClick={function () {
             if (self.sameNameExists()) {
-              new FlashMessage({color: "error", content: localization.designview.fieldWithSameNameExists});
+              new FlashMessage({type: "error", content: localization.designview.fieldWithSameNameExists});
               return;
             }
             mixpanel.track("Enter custom field name", {

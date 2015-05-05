@@ -21,6 +21,7 @@ return React.createClass({
     return (
       <div className="design-view-action-participant-details-information-field-wrapper">
         <InfoTextInput
+          ref="input"
           className={"design-view-action-participant-details-information-field s-input-" + name + " " +
                      (csvfield || field.isAuthorUnchangeableField() ? " transparent " : "")
                      + (!field.isValid(true) ? "redborder" : "")

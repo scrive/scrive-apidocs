@@ -37,6 +37,7 @@ return React.createClass({
         {/* if */ sig.isCsv() &&
           <div className="design-view-action-participant-details-information-field-wrapper">
             <Button
+              ref="view-csv-button"
               text={localization.designview.viewCSV}
               type="optional"
               onClick={function () {

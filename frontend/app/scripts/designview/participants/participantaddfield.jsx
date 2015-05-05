@@ -9,6 +9,7 @@ return React.createClass({
     return (
       <div className="design-view-action-participant-new-field-selector">
         <Button
+          ref="add-field-button"
           text={localization.designview.addField}
           onClick={function () {
             mixpanel.track("Click add field");

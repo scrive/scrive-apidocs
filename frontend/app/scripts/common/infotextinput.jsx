@@ -165,7 +165,7 @@ define(['React'], function(React) {
           />
 
            {/*if*/ this.props.onRemove != undefined &&
-              <div className="closer" onClick={this.onRemove}/>
+              <div ref="close" className="closer" onClick={this.onRemove}/>
            }
            {/*if*/ this.props.onOk != undefined &&
               <div className="ok-button" onClick={this.onOk}>OK</div>
