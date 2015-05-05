@@ -692,7 +692,7 @@ javascriptLocalisation =
            , plans: {
                     // Legacy plans only need the name
                     form : {
-                          name: "$TeamPlanName()$"
+                          name: "$OnePlanName()$"
                     }
                     , trial : {
                           name : "$_paymentPlanTrial()$"
