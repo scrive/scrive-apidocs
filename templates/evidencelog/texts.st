@@ -408,7 +408,7 @@ UpdateFieldEmailEvidenceLog=<span class="actor"/> changed the text in the text f
 ###
 UpdateFieldCustomEvidenceLog=<span class="actor"/> changed the text in the text field “$fieldname$” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldMobileEvidenceLog=<span class="actor"/> changed the text in the text field “Mobile number” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
+UpdateFieldMobileEvidenceLog=<span class="actor"/> changed the text in the text field “Phone” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
 UpdateFieldNameEvidenceLog=<span class="actor"/> changed the text in the text field “Name” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
