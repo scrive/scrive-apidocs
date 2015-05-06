@@ -21,17 +21,14 @@ printLogMessage LogMessage{..} = T.putStrLn . T.concat $ [
     T.pack $ formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S" lmTime
   , " "
   , textifyLevel lmLevel
-  , ": "
+  , " "
   , lmComponent
   , ": "
   , lmMessage
-  ] ++ if noProperties
+  ] ++ if lmData == emptyObject
     then []
     else [" ", textifyData lmData]
   where
-    noProperties :: Bool
-    noProperties = lmData == emptyObject
-
     textifyData :: Value -> T.Text
     textifyData = T.decodeUtf8 . toStrict . encodePretty' defConfig {
       confIndent = 2
