@@ -14,13 +14,19 @@ var DocumentSignViewModel = Backbone.Model.extend({
       var model = this;
       var document = args.document;
       var signviewbranding = args.signviewbranding;
+      var triggeredChangeOnReady = false;
 
       document.bind("reset", function() {
           model.trigger("change");
       });
+
       document.bind("change", function() {
+        if (document.ready() && !triggeredChangeOnReady) {
+          triggeredChangeOnReady = true;
           model.trigger("change");
+        }
       });
+
       signviewbranding.bind("reset", function() {
           model.trigger("change");
       });

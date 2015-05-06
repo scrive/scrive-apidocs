@@ -21,13 +21,13 @@ var FirstTimeUserExperienceModel = Backbone.Model.extend({
   */
 var FirstTimeUserExperienceView = Backbone.View.extend({
     initialize: function (args) {
+        var self = this;
         this.model = args.model;
-
         _.bindAll(this, "render", "instructToAddParty", "instructToEnterDetails", "instructToSign", "stopTour");
 
         this.model.designview().bind('visibility:designviewtab', this.instructToAddParty);
-        this.model.designview().bind('visibility:participantopen', this.instructToEnterDetails);
-        this.model.designview().bind('visibility:participantclosed', this.instructToSign);
+        this.model.designview().bind('visibility:participantopen', function() { setTimeout(self.instructToEnterDetails,20);} );
+        this.model.designview().bind('visibility:participantclosed',function() { setTimeout(self.instructToSign,20);} );
         this.model.designview().bind('visibility:signconfirmation', this.stopTour);
 
         this.render();

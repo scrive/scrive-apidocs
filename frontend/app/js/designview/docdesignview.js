@@ -21,6 +21,11 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             return this.get('participantDetail');
         },
         setParticipantDetail: function(s) {
+            if (s == undefined) {
+              this.trigger("visibility:participantclosed")
+            } else {
+              this.trigger("visibility:participantopen")
+            }
             this.set({participantDetail : s});
             return this;
         },
@@ -68,11 +73,14 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
         className: 'design-view-button-bar',
         initialize: function(args) {
             var view = this;
-            _.bindAll(this, 'render', 'updateSaveButtons', 'updateSendButton', 'cantSignModal', 'finalClick');
+            _.bindAll(this, 'render', 'updateButtons', 'cantSignModal', 'finalClick');
             view.render();
             view.model.document().bind('change:template change:file', view.render);
-            view.model.document().bind('bubble',view.updateSendButton);
-            view.model.document().bind('change', view.updateSaveButtons);
+            view.model.document().bind('change', view.updateButtons);
+        },
+        updateButtons: function() {
+          this.updateSendButton();
+          this.updateSaveButtons();
         },
         render: function() {
             var view = this;
