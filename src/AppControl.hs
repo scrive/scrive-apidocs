@@ -209,9 +209,9 @@ appHandler handleRoutes appConf appGlobals = runHandler $ do
 
       stats <- getConnectionStats
       finishTime <- liftIO getCurrentTime
-      logInfo "Handler done" $ object [
+      logInfo ("Statistics for " ++ rqUri rq ++ rqQuery rq) $ object [
           "statistics" .= show stats
-        , "time" .= (show $ diffUTCTime finishTime startTime)
+        , "time" .= (realToFrac $ diffUTCTime finishTime startTime :: Double)
         ]
 
       -- Make sure response is well defined before passing it further.
