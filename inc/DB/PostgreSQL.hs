@@ -6,7 +6,6 @@ import Control.Concurrent.STM
 import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Catch
-import Data.Monoid.Utils
 import Data.Pool
 import Database.PostgreSQL.PQTypes
 import Database.PostgreSQL.PQTypes.Internal.Connection
@@ -32,25 +31,29 @@ createPoolSource logger cs = do
   pool <- createPool (connect cs) disconnect
     1  -- number of subpools, we do not need that functionality
     10 -- connection linger time after returned to pool
-    15 -- high water mark
+    maxConnections
   return ConnectionSource {
     withConnection = withResource' pool . (clearStats >=>)
   }
   where
+    maxConnections :: Int
+    maxConnections = 15
+
     withResource' :: (MonadBase IO m, MonadMask m)
                   => Pool Connection -> (Connection -> m a) -> m a
     withResource' pool m = mask $ \restore -> do
       (resource, local) <- liftBase $ takeResource pool
       (allocatedNow, availableNow) <- internalPoolState local
-      logger $ "withResource: connection acquired (" ++ show allocatedNow <+> "allocated," <+> show availableNow <+> "available)"
+      when (allocatedNow == maxConnections && availableNow == 0) $ do
+        logger $ "withResource: limit of available connections reached"
       ret <- restore (m resource) `onException` do
         liftBase (destroyResource pool local resource)
       liftBase $ putResource local resource
       return ret
 
-    internalPoolState local = liftBase . atomically $ (,)
-      <$> readTVar (inUse local)
-      <*> (length <$> readTVar (entries local))
+    internalPoolState local = liftBase $ (,)
+      <$> readTVarIO (inUse local)
+      <*> (length <$> readTVarIO (entries local))
 
     clearStats conn@(Connection mv) = do
       liftBase . modifyMVar_ mv $ \mconn ->

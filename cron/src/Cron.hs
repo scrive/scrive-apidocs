@@ -59,7 +59,7 @@ main = do
     withPostgreSQL (simpleSource $ connSettings []) $
       checkDatabase logInfo_ kontraDomains kontraTables
 
-    pool <- liftBase . createPoolSource (liftBase . withLogger . logTrace_) $ connSettings kontraComposites
+    pool <- liftBase . createPoolSource (liftBase . withLogger . logAttention_) $ connSettings kontraComposites
     templates <- liftBase (newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates)
     rng <- newCryptoRNGState
     filecache <- MemCache.new BS.length 52428800

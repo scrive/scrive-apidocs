@@ -44,7 +44,7 @@ main = do
     withPostgreSQL (simpleSource $ cs []) $ do
       checkDatabase logInfo_ [] mailerTables
     awsconf <- AWS.AmazonConfig (mscAmazonConfig conf) <$> MemCache.new BS.length 52428800
-    pool <- liftBase . createPoolSource (liftBase . withLogger . logTrace_) $ cs mailerComposites
+    pool <- liftBase . createPoolSource (liftBase . withLogger . logAttention_) $ cs mailerComposites
     rng <- newCryptoRNGState
 
     E.bracket (startServer lr conf pool rng) (liftBase . killThread) . const $ do

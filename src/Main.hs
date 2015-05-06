@@ -58,7 +58,7 @@ main = withCurlDo $ do
       brandedimagescache <- MemCache.new BSL8.length 50000000
       docs <- MemCache.new RenderedPages.pagesCount 3000
       rng <- newCryptoRNGState
-      connpool <- liftBase . createPoolSource (liftBase . withLogger . logTrace_) $ connSettings kontraComposites
+      connpool <- liftBase . createPoolSource (liftBase . withLogger . logAttention_) $ connSettings kontraComposites
       return AppGlobals {
           templates = templates
         , filecache = filecache
