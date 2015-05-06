@@ -6,8 +6,8 @@ import Data.ByteString.Lazy (toStrict)
 import Data.Time
 import System.Locale
 import qualified Data.Text as T
-import qualified Data.Text.IO as T
 import qualified Data.Text.Encoding as T
+import qualified Data.Text.IO as T
 
 import KontraPrelude
 import Log.Data

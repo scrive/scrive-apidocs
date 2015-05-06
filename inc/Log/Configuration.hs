@@ -15,18 +15,17 @@ import Data.Text (Text)
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
 
+import DB.Checks
+import DB.PostgreSQL
 import KontraPrelude
 import Log.Backend.PostgreSQL
 import Log.Backend.StandardOutput
 import Log.Data
-import Log.Monad
-import Utils.TH
-
-import Log.Tables
 import Log.Logger
 import Log.Migrations
-import DB.PostgreSQL
-import DB.Checks
+import Log.Monad
+import Log.Tables
+import Utils.TH
 
 data LogConfig = LogConfig {
   lcSuffix  :: !Text
