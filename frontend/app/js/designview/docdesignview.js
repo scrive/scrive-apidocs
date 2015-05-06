@@ -22,9 +22,9 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
         },
         setParticipantDetail: function(s) {
             if (s == undefined) {
-              this.trigger("visibility:participantclosed")
+              this.trigger("visibility:participantclosed");
             } else {
-              this.trigger("visibility:participantopen")
+              this.trigger("visibility:participantopen");
             }
             this.set({participantDetail : s});
             return this;
