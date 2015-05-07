@@ -8,13 +8,11 @@ define(['Backbone',  'React',  'designview/participants/participants' , 'designv
 window.DesignViewTabsView = function(args) {
   var model = args.model;
   var document = model.document();
-  console.log("Preparing new tab");
   var participantsViewEl = $("<div/>");
   var participantsView = React.render(React.createElement(Participants,{
     model: model
   }), participantsViewEl[0]);
 
-  //var participantsView = new DesignViewParticipantsView({ model : model});
   var draggablesView   = new DesignViewDraggablesView({ model : model});
   var processSettingsEl      = $("<div/>");
   var processSettings = React.render(React.createElement(ProcessSettings,{

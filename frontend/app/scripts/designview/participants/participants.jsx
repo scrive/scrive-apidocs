@@ -56,7 +56,7 @@ return React.createClass({
             style={{height: self.participantsHeight(), overflow: "auto"}}
           >
             {
-              $.map(doc.signatories(), function (s, i) {
+              _.map(doc.signatories(), function (s, i) {
                 return (
                   <Participant
                     key={s.cid}

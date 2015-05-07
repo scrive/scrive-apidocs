@@ -400,7 +400,6 @@ window.Field = Backbone.Model.extend({
           return this.validation().validateData(this.value());
         else {
             var csvValues = this.csvFieldValues();
-            console.log("Validating " + self.name() + " res: " + _.all(this.csvFieldValues(),function(v) {return self.validation().validateData(v); }));
             return _.all(this.csvFieldValues(),function(v) {return self.validation().validateData(v); });
         }
     },
