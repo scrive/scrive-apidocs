@@ -115,6 +115,7 @@ Executable kontrakcja-server
   Build-depends: mixpanel
   Build-depends: mmap
   Build-depends: monad-control
+  Build-depends: monad-time
   Build-depends: mtl
   Build-depends: network
   Build-depends: old-locale
@@ -238,6 +239,7 @@ Executable cron
   Build-depends: mixpanel
   Build-depends: mmap
   Build-depends: monad-control
+  Build-depends: monad-time
   Build-depends: mtl
   Build-depends: network
   Build-depends: old-locale
@@ -363,6 +365,7 @@ Executable kontrakcja-migrate
   Build-depends: mixpanel
   Build-depends: mmap
   Build-depends: monad-control
+  Build-depends: monad-time
   Build-depends: mtl
   Build-depends: network
   Build-depends: old-locale
@@ -481,6 +484,7 @@ Executable mailing-server
   Build-depends: mixpanel
   Build-depends: mmap
   Build-depends: monad-control
+  Build-depends: monad-time
   Build-depends: mtl
   Build-depends: network
   Build-depends: old-locale
@@ -597,6 +601,7 @@ Executable messenger-server
   Build-depends: mixpanel
   Build-depends: mmap
   Build-depends: monad-control
+  Build-depends: monad-time
   Build-depends: mtl
   Build-depends: network
   Build-depends: old-locale
@@ -716,6 +721,7 @@ Executable kontrakcja-test
   Build-depends: mixpanel
   Build-depends: mmap
   Build-depends: monad-control
+  Build-depends: monad-time
   Build-depends: mtl
   Build-depends: network
   Build-depends: old-locale

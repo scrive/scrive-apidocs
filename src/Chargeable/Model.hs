@@ -4,11 +4,11 @@ module Chargeable.Model (
   ) where
 
 import Control.Monad.Catch
+import Control.Monad.Time
 import Data.Int
 import Data.Typeable
 
 import Company.CompanyID
-import Data.Time.Monad
 import DB
 import Doc.DocumentID
 import KontraPrelude

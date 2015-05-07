@@ -4,11 +4,11 @@ module Doc.Tokens.Model (
   ) where
 
 import Control.Monad.Catch
+import Control.Monad.Time
 import Happstack.Server (ServerMonad)
 
 import Context
 import Crypto.RNG
-import Data.Time.Monad
 import DB
 import Doc.SignatoryLinkID
 import KontraMonad

@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module MinutesTime (
     UTCTime
-  , module Data.Time.Monad
+  , module Control.Monad.Time
   , unixEpoch
   , formatTime'
   , parseTime'
@@ -21,13 +21,13 @@ module MinutesTime (
   , beginingOfMonth
   ) where
 
+import Control.Monad.Time
 import Data.Int
 import Data.Time
 import Data.Time.Clock.POSIX
 import System.Locale
 import qualified Data.Binary as B
 
-import Data.Time.Monad
 import KontraPrelude
 
 -- | FIXME: this really needs to go.

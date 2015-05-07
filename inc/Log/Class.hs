@@ -11,6 +11,8 @@ module Log.Class (
   , logTrace_
   ) where
 
+import Control.Monad.Time
+import Control.Monad.Time.Instances ()
 import Control.Monad.Trans
 import Control.Monad.Trans.Control
 import Data.Aeson
@@ -18,7 +20,6 @@ import Data.Aeson.Types
 import Data.Time
 
 import Control.Monad.Trans.Control.Util
-import Data.Time.Monad
 import KontraPrelude
 import Log.Data
 
