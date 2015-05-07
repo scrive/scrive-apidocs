@@ -8,6 +8,7 @@ import Control.Monad.Catch
 import Control.Monad.Reader (MonadReader, asks)
 import Control.Monad.Trans (MonadIO, liftIO)
 import Control.Monad.Trans.Control (MonadBaseControl)
+import Log
 import System.Exit (ExitCode(..))
 import System.FilePath ((</>))
 import Text.StringTemplates.Templates (TemplatesMonad)
@@ -28,7 +29,6 @@ import File.Model (NewFile(..))
 import File.Storage (getFileContents)
 import GuardTime (GuardTimeConf, GuardTimeConfMonad, getGuardTimeConf)
 import KontraPrelude
-import Log
 import Templates (runTemplatesT)
 import Util.Actor (systemActor)
 import Utils.Default (defaultValue)

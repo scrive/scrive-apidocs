@@ -39,6 +39,7 @@ import Control.Monad.Error
 import Data.Typeable
 import Happstack.Server (toResponse)
 import Happstack.Server.Types
+import Log as Log
 import Network.HTTP (urlEncodeVars)
 import Text.JSON hiding (Ok)
 import Text.JSON.Gen hiding (object)
@@ -48,7 +49,6 @@ import DB
 import Doc.Rendering
 import Kontra
 import KontraPrelude
-import Log as Log
 import OAuth.Model
 import OAuth.Util
 import Text.JSON.Convert

@@ -9,6 +9,7 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
+import Log
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
 
@@ -18,7 +19,6 @@ import Control.Monad.Trans.Control.Util
 import Crypto.RNG
 import DB
 import KontraPrelude
-import Log
 
 type ActionQueue = ActionQueueT (AmazonMonadT (CryptoRNGT (DBT (LogT IO))))
 

@@ -10,6 +10,7 @@ import Control.Monad.Catch
 import Control.Monad.State
 import Control.Monad.Trans.Control
 import Happstack.Server
+import Log
 import Text.StringTemplates.Templates
 
 import Context
@@ -17,7 +18,6 @@ import Crypto.RNG
 import DB
 import GuardTime (GuardTimeConfMonad)
 import KontraPrelude
-import Log
 import MailContext (MailContextMonad)
 import qualified Amazon as AWS
 

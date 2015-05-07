@@ -111,6 +111,7 @@ Executable kontrakcja-server
   Build-depends: kontrakcja-templates
   Build-depends: lifted-base
   Build-depends: lifted-threads
+  Build-depends: log
   Build-depends: MissingH
   Build-depends: mixpanel
   Build-depends: mmap
@@ -235,6 +236,7 @@ Executable cron
   Build-depends: kontrakcja-templates
   Build-depends: lifted-base
   Build-depends: lifted-threads
+  Build-depends: log
   Build-depends: MissingH
   Build-depends: mixpanel
   Build-depends: mmap
@@ -361,6 +363,7 @@ Executable kontrakcja-migrate
   Build-depends: kontrakcja-templates
   Build-depends: lifted-base
   Build-depends: lifted-threads
+  Build-depends: log
   Build-depends: MissingH
   Build-depends: mixpanel
   Build-depends: mmap
@@ -480,6 +483,7 @@ Executable mailing-server
   Build-depends: kontrakcja-templates
   Build-depends: lifted-base
   Build-depends: lifted-threads
+  Build-depends: log
   Build-depends: MissingH
   Build-depends: mixpanel
   Build-depends: mmap
@@ -597,6 +601,7 @@ Executable messenger-server
   Build-depends: kontrakcja-templates
   Build-depends: lifted-base
   Build-depends: lifted-threads
+  Build-depends: log
   Build-depends: MissingH
   Build-depends: mixpanel
   Build-depends: mmap
@@ -717,6 +722,7 @@ Executable kontrakcja-test
   Build-depends: kontrakcja-templates
   Build-depends: lifted-base
   Build-depends: lifted-threads
+  Build-depends: log
   Build-depends: MissingH
   Build-depends: mixpanel
   Build-depends: mmap

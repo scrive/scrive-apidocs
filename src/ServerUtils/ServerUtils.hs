@@ -11,6 +11,7 @@ import Control.Monad.Trans
 import Data.Char (ord)
 import Data.Functor
 import Happstack.Server hiding (dir, simpleHTTP)
+import Log as Log
 import Numeric
 import System.Directory (getCurrentDirectory)
 import System.Exit
@@ -29,7 +30,6 @@ import qualified Data.ByteString.UTF8 as BSUTF8
 import Happstack.Fields
 import Kontra
 import KontraPrelude
-import Log as Log
 import ServerUtils.BrandedImagesCache
 import Util.CSVUtil
 import Util.MonadUtils

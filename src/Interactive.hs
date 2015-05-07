@@ -3,6 +3,7 @@ module Interactive where
 -- Use this module for interactively trying out server code and for utility scripts
 
 import Control.Concurrent
+import Log
 import System.Environment
 import System.IO
 import qualified Data.ByteString.Char8 as BS
@@ -14,7 +15,6 @@ import Crypto.RNG
 import DB
 import DB.PostgreSQL
 import KontraPrelude
-import Log
 import Templates
 import qualified Amazon as AWS
 import qualified Doc.RenderedPages as RenderedPages

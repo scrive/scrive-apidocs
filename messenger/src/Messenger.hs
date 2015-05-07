@@ -9,6 +9,8 @@ import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Database.PostgreSQL.PQTypes.Class.Instances.Overlapping ()
 import Happstack.Server
+import Log
+import Log.Class.Instances ()
 
 import Control.Monad.Trans.Control.Util
 import Control.Monad.Trans.Instances ()
@@ -17,7 +19,6 @@ import DB
 import Happstack.Server.Instances ()
 import Happstack.Server.ReqHandler
 import KontraPrelude
-import Log
 
 type InnerMessenger = CryptoRNGT (DBT (ReqHandlerT (LogT IO)))
 

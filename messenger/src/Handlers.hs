@@ -7,6 +7,7 @@ module Handlers (
 import Control.Monad.Reader
 import Happstack.Server hiding (dir, path)
 import Happstack.StaticRouting
+import Log
 import System.Directory
 
 import Crypto.RNG
@@ -15,7 +16,6 @@ import DB.PostgreSQL
 import GlobalMouth
 import Happstack.Server.ReqHandler
 import KontraPrelude
-import Log
 import Messenger
 
 router :: CryptoRNGState -> ConnectionSource -> Messenger Response -> ReqHandlerT (LogT IO) Response

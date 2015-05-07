@@ -6,6 +6,7 @@ module Sender (
 import Control.Monad.Base
 import Control.Monad.Catch
 import Data.List hiding (head)
+import Log
 import System.Exit
 import System.Process
 import qualified  Data.Foldable as F
@@ -16,7 +17,6 @@ import Assembler
 import Crypto.RNG (CryptoRNG)
 import DB
 import KontraPrelude
-import Log
 import MailingServerConf
 import Mails.Model
 import Utils.IO

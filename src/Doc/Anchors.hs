@@ -5,6 +5,7 @@ module Doc.Anchors (
 
 import Control.Monad.Error
 import Control.Monad.Trans.Control (MonadBaseControl)
+import Log
 import System.Exit
 import Text.JSON.FromJSValue
 import Text.JSON.Gen hiding (object)
@@ -24,7 +25,6 @@ import File.Model
 import File.Storage
 import KontraMonad
 import KontraPrelude
-import Log
 import Utils.Directory
 import Utils.IO
 

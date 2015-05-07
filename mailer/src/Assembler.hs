@@ -8,6 +8,7 @@ import Control.Arrow
 import Control.Monad.Base
 import Control.Monad.Catch
 import Data.Char
+import Log
 import Text.HTML.TagSoup
 import Text.HTML.TagSoup.Entity
 import Text.JSON.Gen as J
@@ -25,7 +26,6 @@ import Data.ByteString.Utils (splitEvery)
 import DB
 import File.Storage
 import KontraPrelude
-import Log
 import Mails.Model
 import qualified Amazon as AWS
 

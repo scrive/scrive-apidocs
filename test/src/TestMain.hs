@@ -4,6 +4,7 @@ import Control.Arrow
 import Control.Concurrent.STM
 import Control.Monad.Base
 import Database.PostgreSQL.PQTypes.Internal.Connection
+import Log
 import System.Directory (createDirectoryIfMissing)
 import System.Environment.UTF8
 import System.IO
@@ -45,7 +46,6 @@ import JSONUtilTest
 import KontraPrelude
 import LangTest
 import LocalizationTest
-import Log
 import Log.Configuration
 import LoginTest
 import MailModelTest

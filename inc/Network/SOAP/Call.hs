@@ -9,6 +9,7 @@ module Network.SOAP.Call (
 
 import Control.Monad.Base
 import Control.Monad.Catch
+import Log
 import Network.SOAP
 import Network.SOAP.Parsing.Cursor
 import Text.XML
@@ -18,7 +19,6 @@ import qualified Data.Text.Lazy as T
 import qualified Text.XML.Writer as W
 
 import KontraPrelude
-import Log
 
 -- | Lightweight wrapper over cursor parsers to allow for
 -- convenient transformation and combining the results.

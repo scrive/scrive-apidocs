@@ -3,13 +3,13 @@ module HostClock.Collector(collectClockError) where
 
 import Control.Monad.Base
 import Control.Monad.Trans.Control
+import Log
 import qualified Control.Exception.Lifted as E
 
 import DB (dbUpdate, MonadDB)
 import HostClock.Model (InsertClockOffsetFrequency(..))
 import HostClock.System (getOffset, getFrequency)
 import KontraPrelude
-import Log
 
 -- | Update the statistics for the host's clock error versus reference NTP servers.
 collectClockError :: (MonadDB m, MonadBaseControl IO m, MonadLog m) => [String] -> m ()

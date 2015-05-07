@@ -9,6 +9,7 @@ import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.State
 import Data.Int
+import Log
 
 import ActionQueue.Scheduler
 import DB
@@ -18,7 +19,6 @@ import Doc.DocStateData
 import Doc.DocumentID
 import JobQueue.Config
 import KontraPrelude
-import Log
 import MinutesTime
 import User.CallbackScheme.Model
 import Util.SignatoryLinkUtils

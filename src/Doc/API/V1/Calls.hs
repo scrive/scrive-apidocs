@@ -29,6 +29,7 @@ import Data.Time
 import Happstack.Server.RqData
 import Happstack.Server.Types
 import Happstack.StaticRouting
+import Log
 import System.Exit
 import System.FilePath.Posix (takeBaseName)
 import Text.JSON hiding (Ok)
@@ -89,7 +90,6 @@ import Kontra
 import KontraPrelude
 import ListUtil
 import LiveDocx
-import Log
 import MagicHash (MagicHash)
 import MinutesTime
 import OAuth.Model

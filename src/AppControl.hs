@@ -23,6 +23,7 @@ import Data.Typeable
 import GHC.Stack
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
 import Happstack.Server.Internal.Cookie
+import Log
 import Network.Socket
 import System.Directory
 import Text.JSON.ToJSValue
@@ -46,7 +47,6 @@ import Happstack.Server.ReqHandler
 import IPAddress
 import Kontra
 import KontraPrelude
-import Log
 import MinutesTime
 import Salesforce.Conf
 import ServerUtils.BrandedImagesCache

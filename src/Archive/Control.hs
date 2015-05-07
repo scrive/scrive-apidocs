@@ -15,6 +15,7 @@ import Codec.Archive.Zip
 import Control.Conditional (unlessM)
 import Data.Char
 import Happstack.Server(Response)
+import Log
 import Text.JSON
 import qualified Data.ByteString as BSS
 import qualified Data.ByteString.Lazy as BSL
@@ -36,7 +37,6 @@ import InputValidation
 import Kontra
 import KontraLink
 import KontraPrelude
-import Log
 import User.Model
 import User.Utils
 import Util.Actor

@@ -6,13 +6,13 @@ module Purging.Files (
 import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Data.Int
+import Log
 
 import Amazon
 import DB
 import File.FileID
 import File.Model
 import KontraPrelude
-import Log
 
 data FindFilesForPurging = FindFilesForPurging Int
 instance (MonadDB m, MonadThrow m) => DBQuery m FindFilesForPurging [(FileID, Maybe String, Maybe String, Bool)] where

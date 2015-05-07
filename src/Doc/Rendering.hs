@@ -22,6 +22,7 @@ import Control.Monad.Error
 import Control.Monad.Trans.Control
 import Data.Char
 import Data.Typeable
+import Log
 import Numeric
 import System.Directory
 import System.Exit
@@ -39,7 +40,6 @@ import File.Storage
 import ForkAction
 import Kontra
 import KontraPrelude
-import Log
 import Utils.IO
 import Utils.Read
 import qualified Amazon as AWS

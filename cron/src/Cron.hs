@@ -6,6 +6,7 @@ import Control.Monad.Base
 import Data.Maybe
 import Data.Monoid.Utils
 import Data.Time
+import Log
 import qualified Data.ByteString as BS
 
 import ActionQueue.EmailChangeRequest
@@ -29,7 +30,6 @@ import HostClock.Collector (collectClockError)
 import JobQueue.Components
 import JobQueue.Config
 import KontraPrelude hiding (All)
-import Log
 import Log.Configuration
 import Mails.Events
 import Payments.Config

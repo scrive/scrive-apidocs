@@ -18,6 +18,7 @@ module Theme.Control (
 
 import Data.Unjson
 import Data.Unjson as Unjson
+import Log
 import qualified Data.Aeson as Aeson
 
 import BrandedDomain.BrandedDomain
@@ -27,7 +28,6 @@ import DB
 import Happstack.Fields
 import Kontra
 import KontraPrelude
-import Log
 import Theme.Model
 import Theme.View
 import Util.MonadUtils

@@ -42,6 +42,7 @@ import Control.Monad.Reader
 import Data.String.Utils (replace,strip)
 import Data.Time (ZonedTime)
 import Happstack.Server hiding (simpleHTTP)
+import Log
 import System.Directory
 import System.IO.Temp
 import Text.JSON hiding (Result)
@@ -89,7 +90,6 @@ import InputValidation
 import Kontra
 import KontraLink
 import KontraPrelude
-import Log
 import MagicHash
 import MinutesTime
 import Redirect

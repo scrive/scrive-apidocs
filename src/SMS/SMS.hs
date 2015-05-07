@@ -6,12 +6,12 @@ module SMS.SMS (
 import Control.Monad.Catch
 import Data.Char
 import Data.String.Utils
+import Log
 
 import Chargeable.Model
 import DB
 import Doc.DocStateData
 import KontraPrelude
-import Log
 import MessageData
 import SMS.Model
 

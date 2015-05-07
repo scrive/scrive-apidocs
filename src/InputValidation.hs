@@ -36,6 +36,7 @@ module InputValidation
 
 import Data.Char
 import Data.String.Utils
+import Log
 import Numeric
 import Text.HTML.TagSoup.Entity
 import Text.Regex.TDFA ((=~))
@@ -51,7 +52,6 @@ import Happstack.Fields hiding (getFields)
 import IPAddress
 import Kontra
 import KontraPrelude
-import Log
 import User.Email
 import User.Model
 import Utils.String

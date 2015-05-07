@@ -18,6 +18,7 @@ module SOAP.SOAP
 
 import Control.Monad.Base
 import Control.Monad.Trans.Control
+import Log
 import System.Exit
 import Text.XML.HaXml.Posn
 import Text.XML.HaXml.Types (QName(N))
@@ -29,7 +30,6 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length, drop)
 import qualified Data.ByteString.UTF8 as BS hiding (length, drop, break)
 
 import KontraPrelude
-import Log
 import Utils.Either
 import Utils.IO
 

@@ -5,6 +5,7 @@ import Control.Monad.Catch
 import Data.Unjson
 import Happstack.Server hiding (dir)
 import Happstack.StaticRouting
+import Log
 import Text.StringTemplates.Templates
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Base64 as B64
@@ -27,7 +28,6 @@ import EID.Signature.Model
 import Happstack.Fields
 import Kontra hiding (InternalError)
 import KontraPrelude
-import Log
 import Network.SOAP.Call
 import Network.SOAP.Transport.Curl
 import Routing

@@ -24,6 +24,7 @@ import Control.Monad.State
 import Control.Monad.Trans.Control
 import Database.PostgreSQL.PQTypes.Class.Instances.Overlapping ()
 import Happstack.Server
+import Log
 import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.TemplatesLoader as TL
 
@@ -39,7 +40,6 @@ import Happstack.Server.ReqHandler
 import KontraError
 import KontraMonad
 import KontraPrelude
-import Log
 import MailContext (MailContextMonad(..))
 import Mails.MailsConfig
 import Templates

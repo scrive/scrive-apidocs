@@ -3,6 +3,7 @@ module AppDBMigrations (
   ) where
 
 import Control.Monad.Catch
+import Log
 
 import ActionQueue.Migrations
 import Attachment.Migrations
@@ -21,7 +22,6 @@ import EID.Signature.Migrations
 import EvidenceLog.Migrations
 import File.Migrations
 import KontraPrelude
-import Log
 import Mails.Migrations
 import OAuth.Migrations
 import Payments.Migrations

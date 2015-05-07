@@ -6,6 +6,7 @@ module Login (
   ) where
 
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
+import Log
 import Text.JSON
 import Text.JSON.Gen as J
 import Text.StringTemplates.Templates
@@ -21,7 +22,6 @@ import IPAddress
 import Kontra
 import KontraLink
 import KontraPrelude
-import Log
 import Redirect
 import ThirdPartyStats.Core
 import User.Email

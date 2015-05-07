@@ -5,12 +5,12 @@ module MailGun (
 
 import Control.Arrow (second)
 import Happstack.Server
+import Log
 import qualified Control.Exception.Lifted as E
 
 import DB
 import Happstack.Fields
 import KontraPrelude
-import Log
 import Mailer
 import Mails.Model
 

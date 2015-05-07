@@ -4,6 +4,7 @@ import Control.Concurrent.Lifted
 import Control.Monad.Base
 import Data.Time
 import Happstack.Server hiding (waitForTermination)
+import Log
 import qualified Control.Exception.Lifted as E
 import qualified Happstack.StaticRouting as R
 
@@ -17,7 +18,6 @@ import Happstack.Server.ReqHandler
 import JobQueue.Components
 import JobQueue.Config
 import KontraPrelude
-import Log
 import Log.Configuration
 import MessengerServerConf
 import Sender

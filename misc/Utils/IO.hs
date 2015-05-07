@@ -2,6 +2,7 @@ module Utils.IO where
 
 import Control.Concurrent
 import Control.Monad.IO.Class
+import Log
 import System.Exit
 import System.IO
 import System.Posix.IO (stdInput)
@@ -14,7 +15,6 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL (toString)
 import qualified Data.Text as T
 
 import KontraPrelude
-import Log
 
 -- | Wait for a signal (sigINT or sigTERM).
 waitForTermination :: IO ()

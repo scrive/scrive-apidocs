@@ -17,6 +17,7 @@ module Doc.DocMails (
 import Control.Conditional (ifM)
 import Control.Monad.Catch
 import Control.Monad.Reader
+import Log
 import Text.StringTemplates.Templates (TemplatesMonad, TemplatesT)
 import qualified Data.ByteString as BS
 
@@ -42,7 +43,6 @@ import InputValidation
 import IPAddress (noIP)
 import Kontra
 import KontraPrelude
-import Log
 import MailContext (getMailContext, MailContext(..), MailContextMonad, MailContextT, runMailContextT)
 import Mails.SendMail
 import SMS.SMS (scheduleSMS)

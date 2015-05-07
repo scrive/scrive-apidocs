@@ -13,6 +13,7 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Data.String.Utils (strip)
+import Log
 import Text.JSON
 import Text.JSON.Gen hiding (value)
 import Text.StringTemplates.Templates
@@ -31,7 +32,6 @@ import File.Model
 import File.Storage
 import KontraLink
 import KontraPrelude
-import Log
 import MinutesTime
 import User.Model
 import Util.HasSomeCompanyInfo
