@@ -35,6 +35,36 @@ return React.createClass({
       return !field.isValid();
     });
   },
+  // We need to compute height in JS - height auto in css would be enought
+  // but it will not work with hide/show css transitions.
+  height: function () {
+    var sig = this.props.model;
+    var viewmodel = this.props.viewmodel;
+    var heightOfUnexpandedSignatory = 46;  // Height each signatory description when signatory is not expanded
+    var heightOfField = 48; // Height each field row
+    var heightOfParticipantSettings = 116; // Height of 5 selects at bottom of signatory
+    var height = heightOfUnexpandedSignatory;
+
+    if (viewmodel.participantDetail() === sig) {
+      height += heightOfParticipantSettings;
+      var fields = 0;
+      var nameIncluded = false;
+      _.each(sig.fields(), function (f) {
+        if (f.isFstName() || f.isSndName()) {
+          if (!nameIncluded) {
+            nameIncluded = true;
+            fields++;
+          }
+        } else if (f.isText() || f.isBlank()) {
+          fields++;
+        }
+      });
+
+      height += Math.ceil((fields + 1) / 3) * heightOfField;
+    }
+
+    return height;
+  },
   render: function () {
     var self = this;
     var sig = this.props.model;
@@ -55,6 +85,7 @@ return React.createClass({
             "design-view-action-participant-inner " +
             (viewmodel.participantDetail() === sig ? "expanded " : "")  +
             (self.signatoryHasProblems() ? "is-has-problems" : "")}
+            style={{height: this.height()}}
         >
           <div
             ref="participant-details"

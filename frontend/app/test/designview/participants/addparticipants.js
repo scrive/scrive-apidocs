@@ -16,7 +16,8 @@ define(["legacy_code", "backend", "util", "React", "designview/participants/addp
     it("should test component", function () {
       designView.setParticipantDetail(undefined)
       var addParticipants = TestUtils.renderIntoDocument(React.createElement(AddParticipants, {
-        model: designView
+        model: designView,
+        onAddSingle: function() {}
         , element: $("body")[0]
       }));
       var initialSignatoriesLenght = designView.document().signatories().length;

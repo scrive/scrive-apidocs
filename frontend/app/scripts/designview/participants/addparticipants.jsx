@@ -16,6 +16,7 @@ return React.createClass({
     });
     doc.addExistingSignatory(sig);
     model.setParticipantDetail(sig);
+    this.props.onAddSingle();
   },
   addMultisendParticipant: function () {
     mixpanel.track("Click add CSV");

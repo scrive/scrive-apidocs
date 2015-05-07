@@ -12,7 +12,7 @@ return React.createClass({
       sig.setConfirmationDelivery("mobile");
     } else if (sig.confirmationdelivery() == "mobile") {
       sig.setConfirmationDelivery("email_mobile");
-    } else if (sig.confirmationdelivery() == "email_mobile") {
+    } else if (sig.confirmationdelivery() == "email_mobile" && !sig.isLastViewer()) {
       sig.setConfirmationDelivery("none");
     } else {
       sig.setConfirmationDelivery("email");

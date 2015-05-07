@@ -10,11 +10,16 @@ return React.createClass({
   getBackboneModels: function () {
     return [this.props.model, this.props.model.document()];
   },
+  getInitialState: function () {
+    return {needsToScrollToBottom: false};
+  },
+  maxHeight: function () {
+    var heightOfNavigationTabs = 350;  // Height of navigation tabs on page.
+    return Math.max(250, $(window).height() - heightOfNavigationTabs);
+  },
   // Height of participants needs to be computed for scrollbar.
   // Height of whole secton and each field is hardcoded
   participantsHeight: function () {
-    var heightOfNavigationTabs = 350; // Height of navigation tabs on page.
-    var maxHeight = Math.max(250, $(window).height() - heightOfNavigationTabs); // Max height of scroll bar
     var heightOfUnexpandedSignatory = 60;  // Height each signatory description when signatory is not expanded
     var heightOfField = 48; // Height each field row
     var heightOfParticipantSettings = 116; // Height of 5 selects at bottom of signatory
@@ -39,8 +44,23 @@ return React.createClass({
 
       height += Math.ceil((fields + 1) / 3) * heightOfField;
     }
-
-    return Math.min(height, maxHeight) + "px";
+    return height;
+  },
+  currentHeight: function () {
+    return Math.min(this.participantsHeight(), this.maxHeight()) + "px";
+  },
+  hasScrollbar: function () {
+    return this.maxHeight() < this.participantsHeight();
+  },
+  // Whenever we update - we check if we need to scroll to the bottom.
+  // This is used when adding new signatories
+  componentDidUpdate: function () {
+    if (this.state.needsToScrollToBottom && this.hasScrollbar()) {
+      if (this.isMounted() && this.refs["participants-box"] != undefined) {
+        $(this.refs["participants-box"].getDOMNode()).scrollTop(this.participantsHeight() - this.maxHeight());
+      }
+      this.setState({needsToScrollToBottom: false});
+    }
   },
   render: function () {
     var self = this;
@@ -52,8 +72,12 @@ return React.createClass({
       return (
         <div className="design-view-action-participant-container">
           <div
+            ref="participants-box"
             className="design-view-action-participant-container-participants-box"
-            style={{height: self.participantsHeight(), overflow: "auto"}}
+            style={{
+              height: self.currentHeight(),
+              overflow: self.hasScrollbar() ? "auto" : "hidden" // Can't use auto due to transitions
+            }}
           >
             {
               _.map(doc.signatories(), function (s, i) {
@@ -69,7 +93,11 @@ return React.createClass({
             }
           </div>
           <div className="design-view-action-participant-new-box">
-            <AddParticipants model={model}/>
+            <AddParticipants
+              ref="add-participants"
+              model={model}
+              onAddSingle={function () {self.setState({needsToScrollToBottom: true});}}
+              />
           </div>
         </div>
       );
