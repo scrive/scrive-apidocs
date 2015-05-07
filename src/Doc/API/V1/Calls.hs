@@ -1043,8 +1043,7 @@ apiCallV1ChangeMainFile docid = api $ do
     case mft of
       Just (fileid,filename) -> do
         dbUpdate $ AttachFile fileid actor
-        title <- getField "title"
-        apiGuardL' $ dbUpdate $ SetDocumentTitle (fromMaybe filename title) actor
+        apiGuardL' $ dbUpdate $ SetDocumentTitle filename actor
         case moldfileid of
           Just oldfileid -> recalcuateAnchoredFieldPlacements oldfileid fileid
           Nothing -> return ()
