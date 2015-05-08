@@ -18,6 +18,7 @@ module Mails.Events (
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Data.Functor
+import Log
 import Text.StringTemplates.Templates hiding (runTemplatesT)
 import qualified Text.StringTemplates.Fields as F
 
@@ -36,7 +37,6 @@ import Doc.Model
 import Doc.SignatoryLinkID
 import KontraLink
 import KontraPrelude
-import Log
 import Mails.MailsConfig
 import Mails.MailsData
 import Mails.Model hiding (Mail)

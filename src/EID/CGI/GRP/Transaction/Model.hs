@@ -6,12 +6,12 @@ module EID.CGI.GRP.Transaction.Model (
 
 import Control.Monad.Catch
 import Control.Monad.State
+import Control.Monad.Time
 import Data.Text (Text)
 import Happstack.Server
 
 import Context
 import Crypto.RNG
-import Data.Time.Monad
 import DB
 import Doc.SignatoryLinkID
 import KontraMonad

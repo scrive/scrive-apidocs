@@ -15,6 +15,7 @@ import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Time
+import Log
 import Text.StringTemplates.Templates (TemplatesMonad)
 
 import ActionQueue.Scheduler
@@ -40,7 +41,6 @@ import ForkAction (forkAction)
 import GuardTime (GuardTimeConfMonad, runGuardTimeConfT)
 import Kontra
 import KontraPrelude
-import Log
 import MailContext (MailContextMonad(..), MailContext(..))
 import MinutesTime
 import Templates (runTemplatesT)

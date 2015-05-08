@@ -19,6 +19,7 @@ import Control.Monad.Trans.Control
 import Data.Char
 import Data.Function (on)
 import Data.Time
+import Log
 import System.Directory
 import System.Exit
 import System.FilePath (takeFileName, takeExtension, (</>))
@@ -52,7 +53,6 @@ import File.Model
 import File.Storage
 import Kontra
 import KontraPrelude
-import Log
 import MinutesTime
 import Templates
 import Util.Actor

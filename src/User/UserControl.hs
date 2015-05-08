@@ -27,6 +27,7 @@ module User.UserControl(
 import Control.Monad.State
 import Data.Functor
 import Happstack.Server hiding (simpleHTTP)
+import Log
 import Text.JSON (JSValue(..))
 import Text.JSON.Gen
 import Text.StringTemplates.Templates
@@ -49,7 +50,6 @@ import Kontra
 import KontraLink
 import KontraPrelude
 import ListUtil
-import Log
 import MagicHash (MagicHash)
 import Mails.SendMail
 import MinutesTime

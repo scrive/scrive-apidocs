@@ -4,6 +4,7 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.Reader
+import Log
 import Network.HTTP as HTTP
 import System.Exit
 import Text.JSON
@@ -18,7 +19,6 @@ import Doc.DocInfo
 import Doc.DocStateData
 import Doc.Model
 import KontraPrelude
-import Log
 import Salesforce.AuthorizationWorkflow
 import Salesforce.Conf
 import User.CallbackScheme.Model

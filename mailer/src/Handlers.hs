@@ -9,6 +9,7 @@ import Data.ByteString.UTF8  as BS
 import Data.Functor
 import Happstack.Server hiding (dir, path)
 import Happstack.StaticRouting
+import Log
 import System.Directory
 
 import Crypto.RNG
@@ -16,7 +17,6 @@ import DB
 import DB.PostgreSQL
 import Happstack.Server.ReqHandler
 import KontraPrelude
-import Log
 import Mailer
 import MailGun
 import SendGrid

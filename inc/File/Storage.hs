@@ -5,13 +5,13 @@ module File.Storage (
 
 import Control.Monad.Base
 import Control.Monad.Catch
+import Log
 import qualified Data.ByteString as BS
 
 import DB
 import File.File
 import File.Model
 import KontraPrelude
-import Log
 import qualified Amazon as AWS
 import qualified MemCache as MemCache
 

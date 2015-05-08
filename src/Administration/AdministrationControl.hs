@@ -19,6 +19,7 @@ import Data.Functor.Invariant
 import Data.Unjson
 import Happstack.Server hiding (simpleHTTP,dir,path,https)
 import Happstack.StaticRouting(Route, choice, dir)
+import Log
 import Text.JSON
 import Text.JSON.Gen hiding (object)
 import Text.StringTemplates.Templates
@@ -61,7 +62,6 @@ import Kontra
 import KontraLink
 import KontraPrelude
 import ListUtil
-import Log
 import Mails.Model
 import MinutesTime
 import Payments.Action

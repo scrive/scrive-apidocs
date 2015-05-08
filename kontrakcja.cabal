@@ -111,10 +111,12 @@ Executable kontrakcja-server
   Build-depends: kontrakcja-templates
   Build-depends: lifted-base
   Build-depends: lifted-threads
+  Build-depends: log
   Build-depends: MissingH
   Build-depends: mixpanel
   Build-depends: mmap
   Build-depends: monad-control
+  Build-depends: monad-time
   Build-depends: mtl
   Build-depends: network
   Build-depends: old-locale
@@ -234,10 +236,12 @@ Executable cron
   Build-depends: kontrakcja-templates
   Build-depends: lifted-base
   Build-depends: lifted-threads
+  Build-depends: log
   Build-depends: MissingH
   Build-depends: mixpanel
   Build-depends: mmap
   Build-depends: monad-control
+  Build-depends: monad-time
   Build-depends: mtl
   Build-depends: network
   Build-depends: old-locale
@@ -359,10 +363,12 @@ Executable kontrakcja-migrate
   Build-depends: kontrakcja-templates
   Build-depends: lifted-base
   Build-depends: lifted-threads
+  Build-depends: log
   Build-depends: MissingH
   Build-depends: mixpanel
   Build-depends: mmap
   Build-depends: monad-control
+  Build-depends: monad-time
   Build-depends: mtl
   Build-depends: network
   Build-depends: old-locale
@@ -477,10 +483,12 @@ Executable mailing-server
   Build-depends: kontrakcja-templates
   Build-depends: lifted-base
   Build-depends: lifted-threads
+  Build-depends: log
   Build-depends: MissingH
   Build-depends: mixpanel
   Build-depends: mmap
   Build-depends: monad-control
+  Build-depends: monad-time
   Build-depends: mtl
   Build-depends: network
   Build-depends: old-locale
@@ -593,10 +601,12 @@ Executable messenger-server
   Build-depends: kontrakcja-templates
   Build-depends: lifted-base
   Build-depends: lifted-threads
+  Build-depends: log
   Build-depends: MissingH
   Build-depends: mixpanel
   Build-depends: mmap
   Build-depends: monad-control
+  Build-depends: monad-time
   Build-depends: mtl
   Build-depends: network
   Build-depends: old-locale
@@ -712,10 +722,12 @@ Executable kontrakcja-test
   Build-depends: kontrakcja-templates
   Build-depends: lifted-base
   Build-depends: lifted-threads
+  Build-depends: log
   Build-depends: MissingH
   Build-depends: mixpanel
   Build-depends: mmap
   Build-depends: monad-control
+  Build-depends: monad-time
   Build-depends: mtl
   Build-depends: network
   Build-depends: old-locale

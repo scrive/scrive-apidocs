@@ -14,16 +14,16 @@ import Data.Foldable (fold)
 import Data.Text (Text)
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
-
-import DB.Checks
-import DB.PostgreSQL
-import KontraPrelude
 import Log.Backend.PostgreSQL
 import Log.Backend.StandardOutput
 import Log.Data
 import Log.Logger
-import Log.Migrations
 import Log.Monad
+
+import DB.Checks
+import DB.PostgreSQL
+import KontraPrelude
+import Log.Migrations
 import Log.Tables
 import Utils.TH
 

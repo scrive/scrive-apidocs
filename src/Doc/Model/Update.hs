@@ -70,6 +70,7 @@ import Data.Decimal (realFracToDecimal)
 import Data.Int
 import Data.List hiding (tail, head)
 import Data.Maybe hiding (fromJust)
+import Log
 import Text.StringTemplates.Templates
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
@@ -100,7 +101,6 @@ import File.FileID
 import File.Model
 import IPAddress
 import KontraPrelude
-import Log
 import MagicHash
 import MinutesTime
 import User.Model

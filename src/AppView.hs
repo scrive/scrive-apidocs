@@ -28,6 +28,7 @@ import Control.Monad.Catch
 import Data.Char
 import Data.String.Utils hiding (join)
 import Happstack.Server.SimpleHTTP
+import Log
 import Text.JSON
 import Text.StringTemplates.Templates
 import qualified Data.Aeson as A
@@ -47,7 +48,6 @@ import DB
 import FlashMessage
 import Kontra
 import KontraPrelude
-import Log
 import ThirdPartyStats.Core
 import User.Lang
 import User.Model

@@ -34,6 +34,7 @@ import Control.Monad.State
 import Data.Int
 import Data.List hiding (tail, head)
 import Data.Maybe hiding (fromJust)
+import Log
 import qualified Data.ByteString as BS
 import qualified Data.Foldable as F
 import qualified Data.Set as S
@@ -54,7 +55,6 @@ import Doc.SignatoryScreenshots
 import File.FileID
 import File.Storage
 import KontraPrelude
-import Log
 import MagicHash
 import User.Email
 import User.Model

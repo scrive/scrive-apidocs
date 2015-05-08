@@ -5,6 +5,7 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Happstack.Server hiding (waitForTermination)
 import Happstack.StaticRouting
+import Log
 import Network.Curl
 import System.IO
 import qualified Control.Exception.Lifted as E
@@ -24,7 +25,6 @@ import DB.Checks
 import DB.PostgreSQL
 import Happstack.Server.ReqHandler
 import KontraPrelude
-import Log
 import Log.Configuration
 import RoutingTable
 import Templates

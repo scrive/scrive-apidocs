@@ -21,6 +21,7 @@ import Data.Binary
 import Data.Int
 import Data.String
 import Data.Time.Clock.POSIX
+import Log
 import Test.QuickCheck (Arbitrary (..), frequency, oneof, suchThat, Gen)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
@@ -31,7 +32,6 @@ import DB hiding (Binary, put)
 import Doc.DocumentID (DocumentID, unsafeDocumentID)
 import IPAddress
 import KontraPrelude
-import Log
 import MinutesTime ()
 import User.Email
 import User.UserID (UserID, unsafeUserID)

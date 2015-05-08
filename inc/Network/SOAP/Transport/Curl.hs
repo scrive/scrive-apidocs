@@ -9,6 +9,7 @@ module Network.SOAP.Transport.Curl (
 import Control.Monad.Catch
 import Control.Monad.Trans.Control
 import Data.ByteString.Lazy (ByteString)
+import Log
 import Network.Curl
 import Network.SOAP.Transport
 import Network.SOAP.Transport.HTTP
@@ -16,7 +17,6 @@ import Text.XML
 import qualified Data.Text.Lazy as TL
 
 import KontraPrelude
-import Log
 import Utils.Prelude
 
 -- TODO: in the future refactor curl bits, possibly create

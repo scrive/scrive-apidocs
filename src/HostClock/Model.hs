@@ -8,10 +8,10 @@ module HostClock.Model
   ) where
 
 import Control.Monad.Catch
+import Control.Monad.Time
 import Data.Int
 import Data.Time
 
-import Data.Time.Monad
 import DB
 import KontraPrelude
 

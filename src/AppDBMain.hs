@@ -1,5 +1,6 @@
 module AppDBMain where
 
+import Log
 import System.IO
 
 import AppConf
@@ -11,7 +12,6 @@ import DB.Checks
 import DB.PostgreSQL
 import DB.SQLFunction
 import KontraPrelude
-import Log
 import Log.Configuration
 
 main :: IO ()

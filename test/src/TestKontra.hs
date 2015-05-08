@@ -31,6 +31,7 @@ import Data.Time
 import Database.PostgreSQL.PQTypes.Internal.Monad
 import Database.PostgreSQL.PQTypes.Internal.State
 import Happstack.Server hiding (mkHeaders, dir, getHeader, method, path)
+import Log
 import System.FilePath
 import Text.StringTemplates.Templates
 import qualified Control.Concurrent.Thread as T
@@ -52,7 +53,6 @@ import HubSpot.Conf
 import IPAddress
 import Kontra
 import KontraPrelude
-import Log
 import Log.Configuration
 import Mails.MailsConfig
 import Payments.Config (RecurlyConfig(..))

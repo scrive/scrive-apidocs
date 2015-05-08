@@ -12,6 +12,7 @@ import Data.Time.Clock.POSIX
 import Data.Typeable
 import Data.Word
 import Happstack.Server
+import Log
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 import Test.QuickCheck
@@ -44,7 +45,6 @@ import FlashMessage
 import IPAddress
 import KontraMonad
 import KontraPrelude
-import Log
 import MagicHash (MagicHash, unsafeMagicHash)
 import MinutesTime
 import System.Random.CryptoRNG ()

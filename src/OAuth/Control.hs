@@ -7,6 +7,7 @@ import Data.Map (singleton)
 import Happstack.Server.RqData
 import Happstack.Server.Types
 import Happstack.StaticRouting(Route, choice, dir)
+import Log
 import Text.JSON
 import Text.JSON.Gen hiding (value)
 import qualified Text.JSON.Gen as J
@@ -18,7 +19,6 @@ import Kontra
 import KontraLink
 import KontraPrelude
 import ListUtil
-import Log
 import OAuth.Model
 import OAuth.Util
 import OAuth.View

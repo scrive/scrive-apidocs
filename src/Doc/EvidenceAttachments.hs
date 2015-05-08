@@ -6,6 +6,7 @@ module Doc.EvidenceAttachments
 
 import Control.Monad.Base
 import Control.Monad.Catch
+import Log
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
 
@@ -13,7 +14,6 @@ import DB (MonadDB)
 import Doc.DocStateData (Document(..), documentsealedfile)
 import File.Storage (getFileIDContents)
 import KontraPrelude
-import Log
 import qualified Amazon as AWS
 import qualified PdfModel as P
 

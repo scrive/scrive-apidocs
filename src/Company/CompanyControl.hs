@@ -18,6 +18,7 @@ import Data.Functor.Invariant
 import Data.Unjson
 import Happstack.Server hiding (dir, simpleHTTP)
 import Happstack.StaticRouting (Route, dir, choice)
+import Log as Log
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
@@ -31,7 +32,6 @@ import DB
 import Happstack.Fields
 import Kontra
 import KontraPrelude
-import Log as Log
 import Routing (hGet, hPost, toK0, toK1, toK2)
 import Theme.Control
 import Theme.ThemeID

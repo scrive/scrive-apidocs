@@ -11,6 +11,7 @@ import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Maybe
 import Happstack.Server hiding (Session)
+import Log
 
 import ActionQueue.Core
 import Context
@@ -19,7 +20,6 @@ import DB
 import Happstack.Server.ReqHandler
 import KontraMonad
 import KontraPrelude
-import Log
 import MagicHash
 import MinutesTime
 import Session.Cookies

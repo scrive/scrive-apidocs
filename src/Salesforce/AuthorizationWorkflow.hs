@@ -7,6 +7,7 @@ module Salesforce.AuthorizationWorkflow (
 
 import Control.Monad.IO.Class
 import Control.Monad.Reader
+import Log
 import System.Exit
 import Text.JSON hiding (Ok)
 import Text.JSON.FromJSValue
@@ -16,7 +17,6 @@ import qualified Text.JSON as J
 
 import DB
 import KontraPrelude
-import Log
 import Salesforce.Conf
 import Utils.IO
 

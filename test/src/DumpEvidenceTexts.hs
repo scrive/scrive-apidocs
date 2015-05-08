@@ -5,6 +5,7 @@ import Control.Monad.Reader (asks)
 import Control.Monad.Trans (liftIO)
 import Data.Decimal (realFracToDecimal)
 import Data.Function (on)
+import Log
 import System.FilePath ((</>))
 import Test.Framework (Test)
 import Text.StringTemplates.Templates (TemplatesMonad, renderTemplate)
@@ -19,7 +20,6 @@ import Doc.SignatoryLinkID (unsafeSignatoryLinkID)
 import EvidenceLog.Model (EventRenderTarget(..), DocumentEvidenceEvent(..), EvidenceEventType(..), CurrentEvidenceEventType(..), evidenceLogText)
 import EvidenceLog.View (simpleEvents, simplyfiedEventText, eventForVerificationPage, finalizeEvidenceText)
 import KontraPrelude
-import Log
 import MinutesTime
 import Templates (runTemplatesT)
 import TestingUtil (testThat, addNewRandomUser, addRandomDocumentWithAuthor, fieldForTests)

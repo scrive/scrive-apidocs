@@ -5,6 +5,7 @@ import Control.Monad.Catch
 import Data.Char
 import Data.Int
 import Data.String.Utils
+import Log
 import Text.HTML.TagSoup.Entity
 import Text.JSON
 import Text.JSON.FromJSValue
@@ -22,7 +23,6 @@ import Doc.SealStatus (SealStatus(..))
 import Doc.Tables
 import EvidenceLog.Model
 import KontraPrelude
-import Log
 import MinutesTime
 import Utils.Default
 import Utils.Prelude

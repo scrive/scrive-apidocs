@@ -9,6 +9,7 @@ import Control.Monad.Catch
 import Control.Monad.Reader
 import Data.Int
 import Data.Typeable
+import Log
 
 import ActionQueue.Core
 import ActionQueue.Scheduler
@@ -22,7 +23,6 @@ import Doc.DocumentID
 import Doc.DocumentMonad (withDocument)
 import Doc.Model
 import KontraPrelude
-import Log
 import MinutesTime
 import Util.Actor
 import qualified DB.TimeZoneName as TimeZoneName

@@ -5,11 +5,11 @@ module Mails.Migrations (
 import Control.Monad.Catch
 import Data.ByteString (ByteString)
 import Data.Int
+import Log
 
 import DB
 import DB.Checks
 import KontraPrelude
-import Log
 import Mails.Tables
 import MinutesTime
 

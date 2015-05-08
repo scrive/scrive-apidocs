@@ -14,6 +14,7 @@ module Mails.SendMail
 import Control.Monad.Catch
 import Data.Char
 import Data.String.Utils
+import Log
 import qualified Text.StringTemplates.Fields as F
 import qualified Text.StringTemplates.Templates as T
 
@@ -26,7 +27,6 @@ import Doc.DocumentID
 import Doc.Model
 import InputValidation
 import KontraPrelude
-import Log
 import Mails.MailsConfig
 import Mails.MailsData
 import Mails.Model hiding (Mail)

@@ -8,6 +8,7 @@ import Control.Monad.IO.Class
 import Data.Char
 import Data.Hash.MD5
 import Data.List hiding (head)
+import Log
 import System.Exit
 import System.Process
 import Text.Regex.TDFA
@@ -21,7 +22,6 @@ import qualified Data.ByteString.Lazy.UTF8 as BSU
 
 import Crypto.RNG (CryptoRNG)
 import KontraPrelude
-import Log
 import MessengerServerConf
 import SMS.Data
 import Utils.IO

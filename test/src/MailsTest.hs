@@ -3,6 +3,7 @@ module MailsTest (mailsTests) where
 import Control.Monad.Trans
 import Data.Char
 import Happstack.Server
+import Log
 import Test.Framework
 import Test.QuickCheck
 import Text.XML.HaXml.Parse (xmlParse')
@@ -18,7 +19,6 @@ import Doc.DocumentMonad (withDocumentM, theDocument)
 import Doc.DocViewMail
 import Doc.Model
 import KontraPrelude
-import Log
 import Mails.Events
 import Mails.SendMail
 import MinutesTime

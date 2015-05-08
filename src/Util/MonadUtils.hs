@@ -11,10 +11,10 @@ module Util.MonadUtils where
 
 import Control.Monad.Base
 import Control.Monad.Trans
+import Log
 
 import KontraError
 import KontraPrelude
-import Log
 
 -- TODO: remove these functions.
 

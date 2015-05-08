@@ -8,6 +8,7 @@ module User.Action (
 
 import Control.Monad.Catch
 import Data.Functor
+import Log
 import Text.StringTemplates.Templates
 
 import ActionQueue.AccessNewAccount (newAccessNewAccountLink)
@@ -24,7 +25,6 @@ import Happstack.Fields
 import InputValidation
 import Kontra
 import KontraPrelude
-import Log
 import MailContext (MailContextMonad(..), MailContext(..))
 import Mails.SendMail
 import MinutesTime

@@ -13,6 +13,7 @@ where
 
 import Control.Monad.IO.Class
 import Happstack.Server hiding (simpleHTTP)
+import Log
 import System.FilePath
 import Text.JSON
 import Text.JSON.Gen as J
@@ -33,7 +34,6 @@ import Kontra
 import KontraLink
 import KontraPrelude
 import ListUtil
-import Log
 import MinutesTime
 import Redirect
 import User.Model

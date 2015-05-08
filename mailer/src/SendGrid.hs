@@ -8,6 +8,7 @@ import Control.Concurrent.MVar
 import Control.Monad.Trans
 import Control.Monad.Trans.Reader
 import Happstack.Server
+import Log
 import Text.JSON
 import Text.JSON.FromJSValue
 import qualified Data.ByteString.Lazy.UTF8 as BS
@@ -15,7 +16,6 @@ import qualified Data.ByteString.Lazy.UTF8 as BS
 import DB
 import Happstack.Fields
 import KontraPrelude
-import Log
 import Mailer
 import Mails.Model
 import Utils.Read

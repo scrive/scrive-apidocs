@@ -9,6 +9,7 @@ module ActionQueue.UserAccountRequest (
 import Control.Monad.Catch
 import Control.Monad.Trans.Maybe
 import Data.Typeable
+import Log
 
 import ActionQueue.Core
 import ActionQueue.Scheduler
@@ -17,7 +18,6 @@ import Crypto.RNG
 import DB
 import KontraLink
 import KontraPrelude
-import Log
 import MagicHash
 import MinutesTime
 import User.Model

@@ -5,12 +5,12 @@ import Control.Monad.Base
 import Control.Monad.Trans.Control
 import Data.Time
 import Database.PostgreSQL.PQTypes
+import Log
 import qualified Control.Concurrent.Thread as T
 
 import Context
 import KontraMonad
 import KontraPrelude
-import Log
 
 forkAction :: forall m. (MonadDB m, MonadBaseControl IO m, MonadLog m, KontraMonad m)
            => String -> m () -> m ()

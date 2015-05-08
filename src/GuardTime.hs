@@ -17,6 +17,7 @@ import Control.Monad.Catch
 import Control.Monad.Reader (ReaderT(..), runReaderT, ask)
 import Control.Monad.Trans
 import Control.Monad.Trans.Control (MonadBaseControl(..), MonadTransControl(..), ComposeSt, defaultLiftWith, defaultRestoreT, defaultLiftBaseWith, defaultRestoreM)
+import Log
 import System.Exit
 import Text.JSON
 import Text.JSON.FromJSValue
@@ -27,7 +28,6 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 
 import GuardTime.Class
 import KontraPrelude
-import Log
 import Utils.IO
 
 newtype GuardTimeConfT m a = GuardTimeConfT { unGuardTimeConfT :: ReaderT GuardTimeConf m a }

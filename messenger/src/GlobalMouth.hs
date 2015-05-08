@@ -5,11 +5,11 @@ module GlobalMouth (
 
 import Control.Exception.Lifted as E
 import Happstack.Server
+import Log
 
 import DB
 import Happstack.Fields
 import KontraPrelude
-import Log
 import Messenger
 import SMS.Data
 import SMS.Model

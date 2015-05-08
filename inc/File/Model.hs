@@ -8,12 +8,12 @@ module File.Model (
     ) where
 
 import Control.Monad.Catch
+import Control.Monad.Time
 import Data.Int
 import qualified Crypto.Hash.SHA1 as SHA1
 import qualified Data.ByteString as BS
 
 import Crypto
-import Data.Time.Monad
 import DB
 import File.Conditions
 import File.File

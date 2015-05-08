@@ -15,6 +15,8 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
+import Log
+import Log.Class.Instances ()
 import Network.AWS.Authentication
 import System.FilePath ((</>))
 import qualified Crypto.Hash.SHA1 as SHA1
@@ -32,7 +34,6 @@ import DB
 import File.File
 import File.Model
 import KontraPrelude
-import Log
 import Utils.String
 
 isAWSConfigOk :: Maybe (String, String, String) -> Bool

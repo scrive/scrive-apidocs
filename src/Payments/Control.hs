@@ -16,6 +16,7 @@ import Control.Monad.Catch
 import Control.Monad.State
 import Data.Functor
 import Happstack.Server hiding (simpleHTTP)
+import Log
 import Recurly
 import Recurly.JS
 import Recurly.Push
@@ -33,7 +34,6 @@ import DB hiding (update, query)
 import Happstack.Fields
 import Kontra
 import KontraPrelude
-import Log
 import Mails.MailsConfig
 import Mails.SendMail
 import MinutesTime
