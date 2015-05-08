@@ -1,29 +1,29 @@
-AttachExtendedSealedFileEvidenceLog=The document was sealed with a keyless digital signature by Scrive E-sign.
+AttachExtendedSealedFileEvidenceLog=Scrive eSign sealed the Evidence Package (as defined in the Service Description) with a keyless digital signature.
 ###
 AttachExtendedSealedFileEvidenceArchive=$_AttachExtendedSealedFileEvidenceTextSimple()$
 ###
 AttachExtendedSealedFileEvidenceVerificationPages=$_AttachExtendedSealedFileEvidenceTextSimple()$
 ###
 ###
-AttachGuardtimeSealedFileEvidenceLog=The document was sealed with a digital signature by Scrive E-sign.
+AttachGuardtimeSealedFileEvidenceLog=Scrive eSign sealed the final PDF with a digital signature.
 ###
 AttachGuardtimeSealedFileEvidenceArchive=$_AttachGuardtimeSealedFileEvidenceTextSimple()$
 ###
 AttachGuardtimeSealedFileEvidenceVerificationPages=$_AttachGuardtimeSealedFileEvidenceTextSimple()$
 ###
 ###
-AttachSealedFileEvidenceLog=Scrive E-sign prepared the final PDF, including evidence collected by Scrive E-sign, before sealing with a digital signature.
+AttachSealedFileEvidenceLog=Scrive eSign prepared the final PDF, including evidence collected by Scrive eSign, before sealing with a digital signature.
 ###
 AttachSealedFileEvidenceArchive=$_AttachSealedFileEvidenceTextSimpleArchive()$
 ###
 AttachSealedFileEvidenceVerificationPages=$_AttachSealedFileEvidenceTextSimpleNotArchive()$
 ###
 ###
-AutomaticReminderSentLogEmail=An automatic reminder to sign was sent to <span class="signatory"/> using email at the request of <span class="actor"/>.
+AutomaticReminderSentLogEmail=Scrive eSign sent an automatic reminder to sign using email to <span class="signatory"/> at the request of <span class="actor"/>.
 ###
-AutomaticReminderSentLogSMS=An automatic reminder to sign was sent to <span class="signatory"/> using SMS at the request of <span class="actor"/>.
+AutomaticReminderSentLogSMS=Scrive eSign sent an automatic reminder to sign using SMS to <span class="signatory"/> at the request of <span class="actor"/>.
 ###
-AutomaticReminderSentLogEmailSMS=An automatic reminder to sign was sent to <span class="signatory"/> using email and SMS at the request of <span class="actor"/>.
+AutomaticReminderSentLogEmailSMS=Scrive eSign sent an automatic reminder to sign using email and SMS to <span class="signatory"/> at the request of <span class="actor"/>.
 ###
 AutomaticReminderSentLog=*
 $if(email)$
@@ -48,44 +48,44 @@ AutomaticReminderSentArchive=$AutomaticReminderSentSimple()$
 AutomaticReminderSentVerificationPages=$AutomaticReminderSentSimple()$
 ###
 ###
-CancelDocumentEvidenceLog=The invitation to sign was withdrawn by <span class="actor"/>. The possibility to sign was disabled by Scrive E-sign.
+CancelDocumentEvidenceLog=The user <span class="actor"/> withdrew the invitation to sign and Scrive eSign disabled the possibility to sign for all parties.
 ###
 CancelDocumentEvidenceArchive=$_CancelDocumentEvidenceTextSimpleArchive()$
 ###
 CancelDocumentEvidenceVerificationPages=$_CancelDocumentEvidenceTextSimpleNotArchive()$
 ###
 ###
-ChangeSignatoryEmailWhenUndeliveredEvidenceLog=The email address for the signatory was changed from $oldemail$ to $newemail$ by <span class="actor"/>.
+ChangeSignatoryEmailWhenUndeliveredEvidenceLog=The user <span class="actor"/> changed the email address for the party from $oldemail$ to $newemail$.
 ###
-ChangeSignatoryPhoneWhenUndeliveredEvidenceLog=The phone number for the signatory was changed from $oldphone$ to $newphone$ by <span class="actor"/>.
+ChangeSignatoryPhoneWhenUndeliveredEvidenceLog=The user <span class="actor"/> changed the phone number for the party from $oldphone$ to $newphone$.
 ###
-ChangeAuthenticationMethodStandardToELegEvidenceLog=<span class="actor"/> changed authentication for <span class="signatory"/> from “no extra authentication” to “eID”.
+ChangeAuthenticationMethodStandardToELegEvidenceLog=The user <span class="actor"/> changed authentication for <span class="signatory"/> from “no extra authentication” to “eID”.
 ###
-ChangeAuthenticationMethodStandardToSMSEvidenceLog=<span class="actor"/> changed authentication for <span class="signatory"/> from “no extra authentication” to “PIN by SMS”.
+ChangeAuthenticationMethodStandardToSMSEvidenceLog=The user <span class="actor"/> changed authentication for <span class="signatory"/> from “no extra authentication” to “PIN by SMS”.
 ###
-ChangeAuthenticationMethodELegToStandardEvidenceLog=<span class="actor"/> changed authentication for <span class="signatory"/> from “eID” to “no extra authentication”.
+ChangeAuthenticationMethodELegToStandardEvidenceLog=The user <span class="actor"/> changed authentication for <span class="signatory"/> from “eID” to “no extra authentication”.
 ###
-ChangeAuthenticationMethodELegToSMSEvidenceLog=<span class="actor"/> changed authentication for <span class="signatory"/> from “eID” to “PIN by SMS”.
+ChangeAuthenticationMethodELegToSMSEvidenceLog=The user <span class="actor"/> changed authentication for <span class="signatory"/> from “eID” to “PIN by SMS”.
 ###
-ChangeAuthenticationMethodSMSToStandardEvidenceLog=<span class="actor"/> changed authentication for <span class="signatory"/> from “PIN by SMS” to “no extra authentication”.
+ChangeAuthenticationMethodSMSToStandardEvidenceLog=The user <span class="actor"/> changed authentication for <span class="signatory"/> from “PIN by SMS” to “no extra authentication”.
 ###
-ChangeAuthenticationMethodSMSToElegEvidenceLog=<span class="actor"/> changed authentication for <span class="signatory"/> from “PIN by SMS” to “eID”.
+ChangeAuthenticationMethodSMSToElegEvidenceLog=The user <span class="actor"/> changed authentication for <span class="signatory"/> from “PIN by SMS” to “eID”.
 ###
 ###
-CloseDocumentEvidenceLog=Scrive E-sign locked the document from further modifications by the signing parties.
+CloseDocumentEvidenceLog=Scrive eSign locked the document from further modifications by the parties.
 ###
 CloseDocumentEvidenceArchive=$_CloseDocumentEvidenceTextSimple()$
 ###
 CloseDocumentEvidenceVerificationPages=$_CloseDocumentEvidenceTextSimple()$
 
 ###
-DeleteSigAttachmentEvidenceLog=The attachment “$name$” previously uploaded by <span class="actor"/> on the request of <span class="author"/> was deleted by <span class="actor"/>.
+DeleteSigAttachmentEvidenceLog=The party <span class="actor"/> deleted the attachment “$name$” previously uploaded by the party <span class="actor"/>.
 ###
-ErrorSealingDocumentEvidenceLog=Due to a system error Scrive E-sign failed to finalise the document, i.e. failed to include the Verification Page, Evidence Log, Evidence of Intent, Evidence Documentation and Digital Signature Documentation into the document before sealing the Evidence Package (as defined in the Evidence Documentation) with a digital signature.
+ErrorSealingDocumentEvidenceLog=Due to a system error Scrive eSign failed to finalise the Evidence Package (as defined in the Service Description) before sealing with a digital signature.
 ###
-ReviewInvitationDeliveredByEmailLog=Scrive E-sign’s external email delivery system reported that the invitation to review was delivered to <span class="signatory"/> by email.
+ReviewInvitationDeliveredByEmailLog=Scrive eSign’s external email delivery system reported that the invitation to review the document sent via email to <span class="signatory"/> was delivered.
 ###
-SigningInvitationDeliveredByEmailLog=Scrive E-sign’s external email delivery system reported that the invitation to sign was delivered to <span class="signatory"/> by email.
+SigningInvitationDeliveredByEmailLog=Scrive eSign’s external email delivery system reported that the invitation to sign the document sent via email to <span class="signatory"/> was delivered.
 ###
 ###
 InvitationDeliveredByEmailLog=*
@@ -107,9 +107,9 @@ InvitationDeliveredByEmailArchive=$InvitationDeliveredByEmailSimple()$
 InvitationDeliveredByEmailVerificationPages=$InvitationDeliveredByEmailSimple()$
 ###
 ###
-ReviewInvitationDeliveredBySMSLog=Scrive E-sign’s external SMS delivery system reported that the invitation to review was delivered to <span class="signatory"/> by SMS.
+ReviewInvitationDeliveredBySMSLog=Scrive eSign’s external SMS delivery system reported that the invitation to review the document sent via SMS to <span class="signatory"/> was delivered.
 ###
-SigningInvitationDeliveredBySMSLog=Scrive E-sign’s external SMS delivery system reported that the invitation to sign was delivered to <span class="signatory"/> by SMS.
+SigningInvitationDeliveredBySMSLog=Scrive eSign’s external SMS delivery system reported that the invitation to sign the document sent via SMS to <span class="signatory"/> was delivered.
 ###
 ###
 InvitationDeliveredBySMSLog=*
@@ -131,17 +131,17 @@ InvitationDeliveredBySMSArchive=$InvitationDeliveredBySMSSimple()$
 InvitationDeliveredBySMSVerificationPages=$InvitationDeliveredBySMSSimple()$
 ###
 ###
-SigningInvitationEvidenceLogEmail=An invitation to sign was sent to <span class="signatory"/> using email. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $invitationCustomMessageTextToSignIfThereIsOne()$
+SigningInvitationEvidenceLogEmail=Scrive eSign sent an invitation to sign the document via email to <span class="signatory"/>. The invitation included a link that when clicked lead to Scrive eSign’s online interface to sign documents. $invitationCustomMessageTextIfThereIsOne()$
 ###
-SigningInvitationEvidenceLogSMS=An invitation to sign was sent to <span class="signatory"/> using SMS. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $invitationCustomMessageTextToSignIfThereIsOne()$
+SigningInvitationEvidenceLogSMS=Scrive eSign sent an invitation to sign the document via SMS to <span class="signatory"/>. The invitation included a link that when clicked lead to Scrive eSign’s online interface to sign documents. $invitationCustomMessageTextIfThereIsOne()$
 ###
-SigningInvitationEvidenceLogEmailSMS=An invitation to sign was sent to <span class="signatory"/> using email and SMS. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $invitationCustomMessageTextToSignIfThereIsOne()$
+SigningInvitationEvidenceLogEmailSMS=Scrive eSign sent an invitation to sign the document via email and SMS to <span class="signatory"/>. The invitation included a link that when clicked lead to Scrive eSign’s online interface to sign documents. $invitationCustomMessageTextIfThereIsOne()$
 ###
-ReviewInvitationEvidenceLogEmail=An invitation to review was sent to <span class="signatory"/> using email. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $invitationCustomMessageTextToReviewIfThereIsOne()$
+ReviewInvitationEvidenceLogEmail=Scrive eSign sent an invitation to review the document via email to <span class="signatory"/>. The invitation included a link that when clicked lead to Scrive eSign’s online interface to review documents. $invitationCustomMessageTextIfThereIsOne()$
 ###
-ReviewInvitationEvidenceLogSMS=An invitation to review was sent to <span class="signatory"/> using SMS. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $invitationCustomMessageTextToReviewIfThereIsOne()$
+ReviewInvitationEvidenceLogSMS=Scrive eSign sent an invitation to review the document via SMS to <span class="signatory"/>. The invitation included a link that when clicked lead to Scrive eSign’s online interface to review documents. $invitationCustomMessageTextIfThereIsOne()$
 ###
-ReviewInvitationEvidenceLogEmailSMS=An invitation to review was sent to <span class="signatory"/> using email and SMS. The invitation included a link that when clicked lead to Scrive E-sign’s online interface to sign documents. $invitationCustomMessageTextToReviewIfThereIsOne()$
+ReviewInvitationEvidenceLogEmailSMS=Scrive eSign sent an invitation to review the document via email and SMS to <span class="signatory"/>. The invitation included a link that when clicked lead to Scrive eSign’s online interface to review documents. $invitationCustomMessageTextIfThereIsOne()$
 ###
 InvitationEvidenceLog=*
 $if(signing)$
@@ -201,29 +201,20 @@ $elseif(viewing)$
 $endif$
 ###
 ###
-InvitationUndeliveredByEmailLog=Scrive E-sign’s external email delivery system reported that the invitation to <span class="signatory"/> could not be delivered by email and continued attempts were cancelled.
+InvitationUndeliveredByEmailLog=Scrive eSign’s external email delivery system reported that the invitation sent via email to <span class="signatory"/> could not be delivered and continued attempts were cancelled.
 ###
 InvitationUndeliveredByEmailArchive=$_InvitationUndeliveredByEmailTextSimpleArchive()$
 ###
 InvitationUndeliveredByEmailVerificationPages=$_InvitationUndeliveredByEmailTextSimpleNotArchive()$
 ###
 ###
-InvitationUndeliveredBySMSLog=Scrive E-sign’s external SMS delivery system reported that the invitation to <span class="signatory"/> could not be delivered by SMS and continued attempts were cancelled.
+InvitationUndeliveredBySMSLog=Scrive eSign’s external SMS delivery system reported that the invitation sent via SMS to <span class="signatory"/> could not be delivered and continued attempts were cancelled.
 ###
 InvitationUndeliveredBySMSArchive=$_InvitationUndeliveredBySMSTextSimpleArchive()$
 ###
 InvitationUndeliveredBySMSVerificationPages=$_InvitationUndeliveredBySMSTextSimpleNotArchive()$
 ###
-MarkSigningInvitationReadEvidenceLog=Scrive E-sign’s external email delivery system reported that the invitation to sign (sent to $signatory_email$) was opened.
-###
-MarkReviewInvitationReadEvidenceLog=Scrive E-sign’s external email delivery system reported that the invitation to review (sent to $signatory_email$) was opened.
-###
-MarkInvitationReadEvidenceLog=*
-$if(signing)$
-  $MarkSigningInvitationReadEvidenceLog()$
-$elseif(viewing)$
-  $MarkReviewInvitationReadEvidenceLog()$
-$endif$
+MarkInvitationReadEvidenceLog=Scrive eSign’s external email delivery system reported that the invitation sent to $signatory_email$ was opened.
 ###
 MarkInvitationReadEvidenceSimple=*
 $if(signing)$
@@ -237,42 +228,54 @@ MarkInvitationReadEvidenceArchive=$MarkInvitationReadEvidenceSimple()$
 MarkInvitationReadEvidenceVerificationPages=$MarkInvitationReadEvidenceSimple()$
 ###
 ###
-PreparationToPendingEvidenceLog=The preparation of the signing process settings was finished by <span class="actor"/>, and Scrive E-sign locked the document from editing. The signing process language was set to $lang$, and the signing due date was set to $timeouttime$ UTC.$if(timezone)$ The time zone $timezone$ was provided by <span class="actor"/>$endif$. The signing process was initiated.
+PreparationToPendingEvidenceLog=The initiator <span class="actor"/> initiated the signing workflow and Scrive eSign a) locked the signing workflow from further editing, b) set the signing workflow language to $lang$, c) set the signing due date to $timeouttime$ UTC,$if(timezone)$ d) set the time zone to $timezone$$endif$ and e) initiated the signing workflow.
 ###
 PreparationToPendingEvidenceArchive=$_PreparationToPendingEvidenceTextSimpleArchive()$
 ###
 PreparationToPendingEvidenceVerificationPages=$_PreparationToPendingEvidenceTextSimpleNotArchive()$
 ###
-ProlongDocumentEvidenceLog=The due date for signing was prolonged by <span class="actor"/>.
+ProlongDocumentEvidenceLog=The user <span class="actor"/> prolonged the signing due date.
 ###
 ProlongDocumentEvidenceArchive=$_ProlongDocumentEvidenceTextArchive()$
 ###
 ProlongDocumentEvidenceVerificationPages=$_ProlongDocumentEvidenceTextNotArchive()$
 ###
 ###
-RejectDocumentEvidenceLog=The invitation to sign was rejected by <span class="actor"/>. The possibility to sign was disabled by Scrive E-sign.$if(text)$ The rejection message from <span class="actor"/> was: <BR/> <i>$text:noescape()$</i>$endif$
+RejectDocumentEvidenceLog=The signatory <span class="actor"/> rejected the invitation to sign and Scrive eSign disabled the possibility to sign for all parties.$if(text)$ The rejection message from the signatory <span class="actor"/> was: <BR/> <i>$text:noescape()$</i>$endif$
 ###
 RejectDocumentEvidenceArchive=$_RejectDocumentEvidenceTextSimpleArchive()$
 ###
 RejectDocumentEvidenceVerificationPages=$_RejectDocumentEvidenceTextSimpleNotArchive()$
 ###
 ###
+SignReminderSendEmailLog=Scrive eSign sent a reminder to sign via email to $signatory$ at the request of the user $actor$.$if(text)$ The reminder message from the user $actor$ was: <BR/> <i>$text$</i>.$endif$
+###
+SignReminderSendSMSLog=Scrive eSign sent a reminder to sign via SMS to $signatory$ at the request of the user $actor$.$if(text)$ The reminder message from the user $actor$ was: <BR/> <i>$text$</i>.$endif$
+###
+SignReminderSendEmailSMSLog=Scrive eSign sent a reminder to sign via email and SMS to $signatory$ at the request of the user $actor$.$if(text)$ The reminder message from the user $actor$ was: <BR/> <i>$text$</i>.$endif$
+###
+ReviewReminderSendEmailLog=Scrive eSign sent a reminder to review via email to $signatory$ at the request of the user $actor$.$if(text)$ The reminder message from the user $actor$ was: <BR/> <i>$text$</i>.$endif$
+###
+ReviewReminderSendSMSLog=Scrive eSign sent a reminder to review via SMS to $signatory$ at the request of the user $actor$.$if(text)$ The reminder message from the user $actor$ was: <BR/> <i>$text$</i>.$endif$
+###
+ReviewReminderSendEmailSMSLog=Scrive eSign sent a reminder to review via email and SMS to $signatory$ at the request of the user $actor$.$if(text)$ The reminder message from the user $actor$ was: <BR/> <i>$text$</i>.$endif$
+###
 ReminderSendLog=*
 $if(signing)$
   $if(email)$
-      $_ReminderSendTextToSignNotArchiveEmail()$
+    $SignReminderSendEmailLog()$
   $elseif(mobile)$
-      $_ReminderSendTextToSignNotArchiveSMS()$
+    $SignReminderSendSMSLog()$
   $elseif(emailmobile)$
-      $_ReminderSendTextToSignNotArchiveEmailSMS()$
+    $SignReminderSendEmailSMSLog()$
   $endif$
 $elseif(viewing)$
   $if(email)$
-      $_ReminderSendTextToReviewNotArchiveEmail()$
+    $ReviewReminderSendEmailLog()$
   $elseif(mobile)$
-      $_ReminderSendTextToReviewNotArchiveSMS()$
+    $ReviewReminderSendSMSLog()$
   $elseif(emailmobile)$
-      $_ReminderSendTextToReviewNotArchiveEmailSMS()$
+    $ReviewReminderSendEmailSMSLog()$
   $endif$
 $endif$
 ###
@@ -300,9 +303,9 @@ ReminderSendVerificationPages=$ReminderSendLog()$
 ###
 RemovedFromPadDeviceLog=The invitation to signatory <span class="signatory"/> to sign the document by in-person meeting was withdrawn by <span class="actor"/>.
 ###
-ResealedPDFLog=Preparation of the Evidence Package was requested by <span class="actor"/>, a person authorised to administer Scrive E-sign.
+ResealedPDFLog=Scrive eSign’s administrator <span class="actor"/>, a person authorised to administer Scrive eSign, requested preparation of the Evidence Package.
 ###
-RestartDocumentEvidenceLog=The document was opened for editing by <span class="actor"/> in Scrive E-sign’s interface to design signing processes.
+RestartDocumentEvidenceLog=The user <span class="actor"/> edited the signing workflow in Scrive eSign’s interface to design signing workflows.
 ###
 RestartDocumentEvidenceArchive=$_RestartDocumentEvidenceTextSimpleArchive()$
 ###
@@ -323,18 +326,18 @@ SMSPinSendEvidenceArchive=$_SMSPinSendEvidenceText()$
 SMSPinSendEvidenceVerificationPages=$_SMSPinSendEvidenceText()$
 ###
 ###
-SaveSigAttachmentEvidenceLog=<span class="actor"/> uploaded the attachment “$name$” requested by <span class="author"/>.  The request had the following description: $description$
+SaveSigAttachmentEvidenceLog=The signatory <span class="actor"/> uploaded the attachment “$name$” requested by the workflow author. The request had the following description: <BR/> <i>$description$</i>
 ###
 SendToPadDeviceLog=The signing invitation for signatory <span class="signatory"/> was set by <span class="actor"/> to “in-person meeting”. In-person meeting enables <span class="actor"/> to present $if(full)$Scrive E-signs$else$Scrives$endif$ online interface to sign documents for <span class="signatory"/>, on a device controlled by <span class="actor"/>.
 ###
 SetDocumentInviteTimeEvidenceLog=The signing process was started by <span class="actor"/>.
 ###
 ###
-SignDocumentEvidenceLogSMSPin=The document was signed by <span class="actor"/> using PIN by SMS as identification method. $pinWasSent()$
+SignDocumentEvidenceLogSMSPin=The signatory <span class="actor"/> signed the doucment using PIN by SMS as identification method. $pinWasSent()$
 ###
-SignDocumentEvidenceLogEleg=The document was signed by <span class="actor"/> using eID as identification method. $elegVerification()$
+SignDocumentEvidenceLogEleg=The signatory <span class="actor"/> signed the document using eID as identification method. $elegVerification()$
 ###
-SignDocumentEvidenceLogStandard=The document was signed by <span class="actor"/>.
+SignDocumentEvidenceLogStandard=The signatory <span class="actor"/> signed the document.
 ###
 SignDocumentEvidenceLog=*
 $if(sms_pin)$
@@ -367,9 +370,9 @@ $else$
       $_SignDocumentEvidenceTextSimpleNotArchiveStandard()$
 $endif$
 ###
-SignatorySignLinkVisitedLog=The document was opened by <span class="actor"/> in Scrive E-sign’s online interface to sign documents.
+SignatorySignLinkVisitedLog=The party <span class="actor"/> opened the document in Scrive eSign’s online interface to sign documents.
 ###
-SignatoryReviewLinkVisitedLog=The document was opened by <span class="actor"/>  in Scrive E-sign’s online interface to sign documents.
+SignatoryReviewLinkVisitedLog=The party <span class="actor"/> opened the document in Scrive eSign’s online interface to review documents.
 ###
 SignatoryLinkVisitedLog=*
 $if(signing)$
@@ -383,34 +386,34 @@ SignatoryLinkVisitedArchive=$_SignatoryLinkVisitedTextArchiveSimple()$
 SignatoryLinkVisitedVerificationPages=$_SignatoryLinkVisitedTextNotArchiveSimple()$
 ###
 ###
-TimeoutDocumentEvidenceLog=The due date for signing the document passed. The possibility to sign was disabled by Scrive E-sign.
+TimeoutDocumentEvidenceLog=The due date for signing the document passed. Scrive eSign disabled the possibility to sign for all parties.
 ###
 TimeoutDocumentEvidenceArchive=$_TimeoutDocumentEvidenceTextSimple()$
 ###
 TimeoutDocumentEvidenceVerificationPages=$_TimeoutDocumentEvidenceTextSimple()$
 ###
 ###
-UpdateFieldCheckboxEvidenceLog=<span class="actor"/> $if(checked)$checked$else$unchecked$endif$ the checkbox “$fieldname$”.$if(placements)$ The checkbox’s placement in the Main Document:$updateFieldPlacements()$$endif$
+UpdateFieldCheckboxEvidenceLog=The signatory <span class="actor"/> $if(checked)$checked$else$unchecked$endif$ the checkbox “$fieldname$”.$if(placements)$ The checkbox’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldSignatureEvidenceLog=<span class="actor"/> signed in the signature box “$fieldname$”.<br/><img alt="signature" src="$value$" width="100" height="50"></img><br/>$if(placements)$The box’s placement in the Main Document:$updateFieldPlacements()$$endif$
+UpdateFieldSignatureEvidenceLog=The signatory <span class="actor"/> signed in the signature box “$fieldname$”.<br/><img alt="signature" src="$value$" width="100" height="50"></img><br/>$if(placements)$The box’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldFirstNameEvidenceLog=<span class="actor"/> changed the text in the text field “First name” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
+UpdateFieldFirstNameEvidenceLog=The signatory <span class="actor"/> changed the text in the text field “First name” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldLastNameEvidenceLog=<span class="actor"/> changed the text in the text field “Last name” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
+UpdateFieldLastNameEvidenceLog=The signatory <span class="actor"/> changed the text in the text field “Last name” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldCompanyEvidenceLog=<span class="actor"/> changed the text in the text field “Company” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
+UpdateFieldCompanyEvidenceLog=The signatory <span class="actor"/> changed the text in the text field “Company” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldPersonalNumberEvidenceLog=<span class="actor"/> changed the text in the text field “ID number” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
+UpdateFieldPersonalNumberEvidenceLog=The signatory <span class="actor"/> changed the text in the text field “ID number” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldCompanyNumberEvidenceLog=<span class="actor"/> changed the text in the text field “Company number” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
+UpdateFieldCompanyNumberEvidenceLog=The signatory <span class="actor"/> changed the text in the text field “Company number” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldEmailEvidenceLog=<span class="actor"/> changed the text in the text field “Email” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
+UpdateFieldEmailEvidenceLog=The signatory <span class="actor"/> changed the text in the text field “Email” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldCustomEvidenceLog=<span class="actor"/> changed the text in the text field “$fieldname$” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
+UpdateFieldCustomEvidenceLog=The signatory <span class="actor"/> changed the text in the text field “$fieldname$” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldMobileEvidenceLog=<span class="actor"/> changed the text in the text field “Phone” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
+UpdateFieldMobileEvidenceLog=The signatory <span class="actor"/> changed the text in the text field “Phone” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldNameEvidenceLog=<span class="actor"/> changed the text in the text field “Name” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
+UpdateFieldNameEvidenceLog=The signatory <span class="actor"/> changed the text in the text field “Name” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
 updateFieldPreviousValue=$if(prvblank)$blank$else$“$previousvalue$”$endif$
 ###
@@ -430,6 +433,9 @@ elegVerification=
 </p>
 <p>Signature: <div style='white-space:pre'>$signature$</div></p>
 <p>Online Certificate Status Protocol (OCSP) Response: <div style='white-space:pre'>$ocsp_response$</div></p>
+###
+invitationCustomMessageTextIfThereIsOne=
+$if(text)$$if(!mobile)$The invitation contained the following message: <BR/> <i>$text$</i>$endif$$endif$
 ###
 invitationCustomMessageTextToSignIfThereIsOne=
 $if(text)$$if(!mobile)$ $_invitationCustomMessageTextToSign()$ $endif$$endif$

@@ -370,9 +370,7 @@ testMarkInvitationReadEvidenceLog = do
     let me = find (\e -> evType e == Current MarkInvitationReadEvidence) lg
     assertJust me
     let Just e = me
-    let expectedFull = "Scrive E-sign’s external email delivery system reported that the invitation to "
-                ++ (if signatoryispartner sl then "sign" else "review")
-                ++ " (sent to " ++ getEmail sl ++ ") was opened."
+    let expectedFull = "Scrive eSign’s external email delivery system reported that the invitation sent to " ++ getEmail sl ++ " was opened."
     assertEqual "Correct event text full" (expectedFull) (unpack $ renderXMLContent $ evText e)
     let expectedSimple = "The invitation to "
                 ++ (if signatoryispartner sl then "sign" else "review")
