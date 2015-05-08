@@ -22,7 +22,7 @@ return React.createClass({
   participantsHeight: function () {
     var heightOfUnexpandedSignatory = 60;  // Height each signatory description when signatory is not expanded
     var heightOfField = 48; // Height each field row
-    var heightOfParticipantSettings = 116; // Height of 5 selects at bottom of signatory
+    var heightOfParticipantSettings = 112; // Height of 5 selects at bottom of signatory
     var height = 0;
 
     height += this.props.model.document().signatories().length * heightOfUnexpandedSignatory;
