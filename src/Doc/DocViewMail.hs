@@ -32,9 +32,7 @@ import Doc.DocInfo (getLastSignedTime)
 import Doc.DocStateData
 import Doc.DocUtils
 import Doc.Model (unsavedDocumentLingerDays)
-import File.File
 import File.FileID
-import File.Model
 import KontraLink
 import KontraPrelude
 import MailContext (MailContextMonad(..), getMailContext, MailContext(..))
@@ -76,7 +74,6 @@ remindMailNotSigned forMail customMessage document signlink = do
     mctx <- getMailContext
     let mainfile =  fromMaybe (unsafeFileID 0) (mainfileid <$> documentfile document)
         authorname = getAuthorName document
-    authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfileid) (documentauthorattachments document)
     documentMailWithDocLang document (templateName "remindMailNotSignedContract") $ do
         F.value  "custommessage" $ asCustomMessage <$> customMessage
         F.value  "authorname" authorname
@@ -86,7 +83,7 @@ remindMailNotSigned forMail customMessage document signlink = do
         F.value "timetosign" $ show <$> documenttimeouttime document
         F.value "link" $ protectLink forMail mctx $ LinkSignDoc document signlink
         F.value "isattachments" $ length (documentauthorattachments document) > 0
-        F.value "attachments" $ map filename authorattachmentfiles
+        F.value "attachments" $ map authorattachmentfilename $ documentauthorattachments document
         F.value "ispreview" $ not $ forMail
         F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (Just signlink <| forMail |> Nothing) (mainfile)
         F.value "hassigattachments" $ not $ null $ concat $ signatoryattachments <$> documentsignatorylinks document
@@ -194,7 +191,6 @@ mailInvitation forMail
                msiglink
                document = do
     mctx <- getMailContext
-    authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfileid) (documentauthorattachments document)
     let personname = maybe "" getSmartName msiglink
     let mainfile =  fromMaybe (unsafeFileID 0) (mainfileid <$> documentfile document) -- There always should be main file but tests fail without it
     documentMailWithDocLang document (templateName "mailInvitationToSignContract") $ do
@@ -212,7 +208,7 @@ mailInvitation forMail
         F.value "someonesigned" $ not $ null $ filter (isSignatory &&^ hasSigned) (documentsignatorylinks document)
         F.value "timetosign" $ show <$> documenttimeouttime document
         F.value "isattachments" $ length (documentauthorattachments document) > 0
-        F.value "attachments" $ map filename authorattachmentfiles
+        F.value "attachments" $ map authorattachmentfilename $ documentauthorattachments document
         F.value "ispreview" $ not $ forMail
         F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (msiglink <| forMail |> Nothing) (mainfile)
         F.value "hassigattachments" $ length (concatMap signatoryattachments $ documentsignatorylinks document ) > 0

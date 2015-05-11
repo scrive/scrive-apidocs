@@ -54,15 +54,12 @@ evidenceAttachmentsJSONV1 doc = do
 
 documentJSONV1 :: (MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, AWS.AmazonMonad m) => (Maybe User) -> Bool -> Bool ->  Maybe SignatoryLink -> Document -> m JSValue
 documentJSONV1 muser forapi forauthor msl doc = do
-    file <- fileFromMainFile $ documentfile doc
-    sealedfile <-fileFromMainFile $ documentsealedfile doc
-    authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfileid) (documentauthorattachments doc)
     runJSONGenT $ do
       J.value "id" $ show $ documentid doc
       J.value "title" $ documenttitle doc
-      J.value "file" $ fmap fileJSON file
-      J.value "sealedfile" $ fmap fileJSON sealedfile
-      J.value "authorattachments" $ map fileJSON authorattachmentfiles
+      J.value "file" $ fmap mainfileJSON (documentfile doc)
+      J.value "sealedfile" $ fmap mainfileJSON (documentsealedfile doc)
+      J.value "authorattachments" $ map authorAttachmentJSON (documentauthorattachments doc)
       J.objects "evidenceattachments" $ ([] :: [JSONGenT m ()])
       J.value "time" $ jsonDate (Just $ documentmtime doc)
       J.value "ctime" $ jsonDate (Just $ documentctime doc)
@@ -297,6 +294,15 @@ fileJSON file = runJSONGen $ do
     J.value "id" $ show $ fileid file
     J.value "name" $ filename file
 
+mainfileJSON :: MainFile -> JSValue
+mainfileJSON file = runJSONGen $ do
+    J.value "id" $ show $ mainfileid file
+    J.value "name" $ mainfilename file
+
+authorAttachmentJSON :: AuthorAttachment -> JSValue
+authorAttachmentJSON file = runJSONGen $ do
+    J.value "id" $ show $ authorattachmentfileid file
+    J.value "name" $ authorattachmentfilename file
 
 -- Converting document to JSON/CSV for lists
 docForListJSONV1 :: TemplatesMonad m => User ->  Document -> m JSValue
