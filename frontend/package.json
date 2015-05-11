@@ -18,7 +18,7 @@
     "connect-livereload": "~0.2.0",
     "time-grunt": "~0.1.0",
     "grunt-contrib-less": "~0.8.0",
-    "grunt-connect-proxy": "~0.1.6",
+    "grunt-connect-proxy": "~0.2.0",
     "grunt-preprocess": "~3.0.1",
     "grunt-env": "~0.4.0",
     "phantomjs": "~1.9.2-5",
