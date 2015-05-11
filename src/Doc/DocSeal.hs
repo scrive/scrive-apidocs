@@ -208,7 +208,7 @@ findOutAttachmentDesc sim tmppath document = do
       Just asl = getAuthorSigLink document
 
       findAttachmentsForAuthorAttachment (num, authorattach) =
-        findAttachments (Just (authorattachmentfile authorattach)) num asl removeExtIfAny
+        findAttachments (Just (authorattachmentfileid authorattach)) num asl removeExtIfAny
 
       findAttachmentsForSignatoryAttachment (num, sigattach, sl) =
         findAttachments (signatoryattachmentfile sigattach) num sl (const (signatoryattachmentname sigattach))

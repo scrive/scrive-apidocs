@@ -284,7 +284,7 @@ documentsSelectors = [
   , "documents.sharing"
   , "ARRAY(SELECT (" <> mintercalate ", " documentTagsSelectors <> ")::document_tag FROM document_tags WHERE documents.id = document_tags.document_id ORDER BY document_tags.name)"
   -- needs ROW since composite type has only one field for now
-  , "ARRAY(SELECT ROW(" <> mintercalate ", " authorAttachmentsSelectors <> ")::author_attachment FROM author_attachments WHERE documents.id = author_attachments.document_id ORDER BY author_attachments.file_id)"
+  , "ARRAY(SELECT ROW(" <> mintercalate ", " authorAttachmentsSelectors <> ")::author_attachment FROM author_attachments, files WHERE documents.id = author_attachments.document_id AND files.id = author_attachments.file_id ORDER BY author_attachments.file_id)"
   , "documents.api_callback_url"
   , "documents.unsaved_draft"
   , "documents.object_version"

@@ -76,7 +76,7 @@ remindMailNotSigned forMail customMessage document signlink = do
     mctx <- getMailContext
     let mainfile =  fromMaybe (unsafeFileID 0) (mainfileid <$> documentfile document)
         authorname = getAuthorName document
-    authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
+    authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfileid) (documentauthorattachments document)
     documentMailWithDocLang document (templateName "remindMailNotSignedContract") $ do
         F.value  "custommessage" $ asCustomMessage <$> customMessage
         F.value  "authorname" authorname
@@ -194,7 +194,7 @@ mailInvitation forMail
                msiglink
                document = do
     mctx <- getMailContext
-    authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
+    authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfileid) (documentauthorattachments document)
     let personname = maybe "" getSmartName msiglink
     let mainfile =  fromMaybe (unsafeFileID 0) (mainfileid <$> documentfile document) -- There always should be main file but tests fail without it
     documentMailWithDocLang document (templateName "mailInvitationToSignContract") $ do

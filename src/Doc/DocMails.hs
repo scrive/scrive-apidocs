@@ -238,7 +238,7 @@ makeMailAttachments :: (MonadDB m, MonadThrow m) => Document -> m [(String, Eith
 makeMailAttachments document = do
   let mainfile = mainfileid <$> documentsealedfile document `mplus` documentfile document
   let
-      aattachments = map authorattachmentfile $ documentauthorattachments document
+      aattachments = map authorattachmentfileid $ documentauthorattachments document
       sattachments = concatMap (maybeToList . signatoryattachmentfile) $ concatMap signatoryattachments $ documentsignatorylinks document
       allfiles' = maybeToList mainfile ++
                   if isClosed document then [] else aattachments ++ sattachments

@@ -1207,7 +1207,7 @@ testAddDocumentAttachmentOk = replicateM_ 10 $ do
     --assert
     assert success
     assertEqual "Author attachment was really attached" [file]
-                    . map authorattachmentfile . documentauthorattachments =<< theDocument
+                    . map authorattachmentfileid . documentauthorattachments =<< theDocument
 
 testRemoveDocumentAttachmentFailsIfNotPreparation :: TestEnv ()
 testRemoveDocumentAttachmentFailsIfNotPreparation = replicateM_ 10 $ do

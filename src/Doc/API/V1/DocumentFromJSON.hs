@@ -445,7 +445,7 @@ instance FromJSValueWithUpdate Document where
             documentshowrejectoption = updateWithDefaultAndField True documentshowrejectoption showrejectoption,
             documentshowfooter = updateWithDefaultAndField True documentshowfooter showfooter,
             documentsignatorylinks = mapAuth authentication $ mapDL delivery $ updateWithDefaultAndField [] documentsignatorylinks signatories,
-            documentauthorattachments = updateWithDefaultAndField [] documentauthorattachments (fmap AuthorAttachment <$> authorattachments),
+            documentauthorattachments = updateWithDefaultAndField [] documentauthorattachments (fmap (\fid -> AuthorAttachment fid "-") <$> authorattachments), -- Name of author attachment file can't be changed
             documenttags = updateWithDefaultAndField Set.empty documenttags (Set.fromList <$> tags),
             documenttype = updateWithDefaultAndField Signable documenttype doctype,
             documentapicallbackurl = updateWithDefaultAndField Nothing documentapicallbackurl apicallbackurl,

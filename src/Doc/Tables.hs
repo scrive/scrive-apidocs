@@ -146,6 +146,7 @@ ctAuthorAttachment = CompositeType {
   ctName = "author_attachment"
 , ctColumns = [
     CompositeColumn { ccName = "id", ccType = BigIntT }
+  , CompositeColumn { ccName = "file_name", ccType = TextT }
   ]
 }
 

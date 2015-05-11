@@ -56,7 +56,7 @@ documentJSONV1 :: (MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, AWS.Amaz
 documentJSONV1 muser forapi forauthor msl doc = do
     file <- fileFromMainFile $ documentfile doc
     sealedfile <-fileFromMainFile $ documentsealedfile doc
-    authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments doc)
+    authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfileid) (documentauthorattachments doc)
     runJSONGenT $ do
       J.value "id" $ show $ documentid doc
       J.value "title" $ documenttitle doc

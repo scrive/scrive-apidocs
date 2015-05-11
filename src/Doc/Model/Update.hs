@@ -210,7 +210,7 @@ insertAuthorAttachments :: MonadDB m => DocumentID -> [AuthorAttachment] -> m ()
 insertAuthorAttachments _ [] = return ()
 insertAuthorAttachments did atts = runQuery_ . sqlInsert "author_attachments" $ do
   sqlSet "document_id" did
-  sqlSetList "file_id" $ authorattachmentfile <$> atts
+  sqlSetList "file_id" $ authorattachmentfileid <$> atts
 
 insertMainFiles :: MonadDB m => DocumentID -> [MainFile] -> m ()
 insertMainFiles _ [] = return ()

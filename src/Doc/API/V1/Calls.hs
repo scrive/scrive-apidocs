@@ -273,7 +273,7 @@ apiCallV1SetAuthorAttachemnts did = api $ do
     when (not $ (auid == userid user)) $ do
           throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
     attachments <- getAttachments 0 =<< theDocument
-    (documentauthorattachments <$> theDocument >>=) $ mapM_ $ \att -> dbUpdate $ RemoveDocumentAttachment (authorattachmentfile att) actor
+    (documentauthorattachments <$> theDocument >>=) $ mapM_ $ \att -> dbUpdate $ RemoveDocumentAttachment (authorattachmentfileid att) actor
     forM_ attachments $ \att -> dbUpdate $ AddDocumentAttachment att actor
     Ok <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
      where
@@ -313,7 +313,7 @@ apiCallV1SetAuthorAttachemnts did = api $ do
           hasAccess ::  Kontrakcja m => Document -> FileID -> m Bool
           hasAccess doc fid = do
             user <- $fromJust <$> ctxmaybeuser <$> getContext
-            if (fid `elem` (authorattachmentfile <$> documentauthorattachments doc))
+            if (fid `elem` (authorattachmentfileid <$> documentauthorattachments doc))
              then return True
              else do
               atts <-  dbQuery $ GetAttachments [  AttachmentsSharedInUsersCompany (userid user)
@@ -898,7 +898,7 @@ apiCallV1DownloadFile did fileid nameForBrowser = api $ do
                       return res;
                     else getDocByDocID did
   let allfiles = maybeToList (mainfileid <$> documentfile doc) ++ maybeToList (mainfileid <$> documentsealedfile doc) ++
-                      (authorattachmentfile <$> documentauthorattachments doc) ++
+                      (authorattachmentfileid <$> documentauthorattachments doc) ++
                       (catMaybes $ map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
   if (all (/= fileid) allfiles)
      then throwIO . SomeKontraException $ forbidden "Access to file is forbiden."
