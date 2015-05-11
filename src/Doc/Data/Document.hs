@@ -6,7 +6,6 @@ module Doc.Data.Document (
   , documentsSelectors
   , documentStatusClassExpression
   , documentfile
-  , documentsealedfile'
   , documentsealedfile
   , documentsealstatus
   ) where
@@ -27,7 +26,6 @@ import Doc.Data.MainFile
 import Doc.Data.SignatoryLink
 import Doc.DocumentID
 import Doc.SealStatus (SealStatus, HasGuardtimeSignature(..))
-import File.FileID
 import IPAddress
 import KontraPrelude
 import MagicHash
@@ -264,7 +262,7 @@ documentsSelectors = [
     "documents.id"
   , "documents.title"
   , "ARRAY(SELECT (" <> mintercalate ", " signatoryLinksSelectors <> ")::signatory_link FROM signatory_links WHERE documents.id = signatory_links.document_id ORDER BY signatory_links.id)"
-  , "ARRAY(SELECT (" <> mintercalate ", " mainFilesSelectors <> ")::main_file FROM main_files WHERE documents.id = main_files.document_id ORDER BY main_files.id DESC)"
+  , "ARRAY(SELECT (" <> mintercalate ", " mainFilesSelectors <> ")::main_file FROM main_files, files WHERE documents.id = main_files.document_id AND main_files.file_id = files.id ORDER BY main_files.id DESC)"
   , "documents.status"
   , "documents.error_text"
   , "documents.type"
@@ -393,18 +391,12 @@ instance CompositeFromSQL Document where
 
 ---------------------------------
 
-documentfile :: Document -> Maybe FileID
-documentfile = fmap mainfileid
-  . find ((Preparation ==) . mainfiledocumentstatus)
-  . documentmainfiles
+documentfile :: Document -> Maybe MainFile
+documentfile =  find ((Preparation ==) . mainfiledocumentstatus) . documentmainfiles
 
 -- | Here we assume that the most recently sealed file is closest to the head of the list.
-documentsealedfile' :: Document -> Maybe MainFile
-documentsealedfile' = find ((Preparation /=) . mainfiledocumentstatus)
-  . documentmainfiles
-
-documentsealedfile :: Document -> Maybe FileID
-documentsealedfile = fmap mainfileid . documentsealedfile'
+documentsealedfile :: Document -> Maybe MainFile
+documentsealedfile = find ((Preparation /=) . mainfiledocumentstatus) . documentmainfiles
 
 documentsealstatus :: Document -> Maybe SealStatus
-documentsealstatus = fmap mainfilesealstatus . documentsealedfile'
+documentsealstatus = fmap mainfilesealstatus . documentsealedfile

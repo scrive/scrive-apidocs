@@ -54,8 +54,8 @@ evidenceAttachmentsJSONV1 doc = do
 
 documentJSONV1 :: (MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, AWS.AmazonMonad m) => (Maybe User) -> Bool -> Bool ->  Maybe SignatoryLink -> Document -> m JSValue
 documentJSONV1 muser forapi forauthor msl doc = do
-    file <- documentfileM doc
-    sealedfile <- documentsealedfileM doc
+    file <- fileFromMainFile $ documentfile doc
+    sealedfile <-fileFromMainFile $ documentsealedfile doc
     authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments doc)
     runJSONGenT $ do
       J.value "id" $ show $ documentid doc

@@ -74,7 +74,7 @@ remindMailNotSigned :: (MonadDB m, MonadThrow m, TemplatesMonad m, MailContextMo
                     -> m Mail
 remindMailNotSigned forMail customMessage document signlink = do
     mctx <- getMailContext
-    let mainfile =  fromMaybe (unsafeFileID 0) (documentfile document)
+    let mainfile =  fromMaybe (unsafeFileID 0) (mainfileid <$> documentfile document)
         authorname = getAuthorName document
     authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
     documentMailWithDocLang document (templateName "remindMailNotSignedContract") $ do
@@ -196,7 +196,7 @@ mailInvitation forMail
     mctx <- getMailContext
     authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
     let personname = maybe "" getSmartName msiglink
-    let mainfile =  fromMaybe (unsafeFileID 0) (documentfile document) -- There always should be main file but tests fail without it
+    let mainfile =  fromMaybe (unsafeFileID 0) (mainfileid <$> documentfile document) -- There always should be main file but tests fail without it
     documentMailWithDocLang document (templateName "mailInvitationToSignContract") $ do
         fieldsInvitationTo invitationto
         F.value "nojavascriptmagic" $ forMail
@@ -243,7 +243,7 @@ mailDocumentClosed :: (MonadDB m, MonadThrow m, MonadTime m, TemplatesMonad m, M
 mailDocumentClosed ispreview sl sealFixed documentAttached document = do
    mctx <- getMailContext
    partylist <- renderLocalListTemplate document $ map getSmartName $ filter isSignatory (documentsignatorylinks document)
-   let mainfile = fromMaybe (unsafeFileID 0) (documentsealedfile document `mplus` documentfile document) -- For preview we don't have a sealedd file yet
+   let mainfile = fromMaybe (unsafeFileID 0) (mainfileid <$> documentsealedfile document `mplus` documentfile document) -- For preview we don't have a sealedd file yet
    documentMailWithDocLang document (templateName "mailContractClosed") $ do
         F.value "partylist" $ partylist
         F.value "signatoryname" $ getSmartName sl
@@ -271,7 +271,7 @@ mailDocumentAwaitingForAuthor authorlang document = do
     mctx <- getMailContext
     signatories <- renderLocalListTemplate authorlang $ map getSmartName $ filter (isSignatory &&^ (not . isAuthor)) (documentsignatorylinks document)
     signatoriesThatSigned <- renderLocalListTemplate authorlang $ map getSmartName $ filter (isSignatory &&^ hasSigned) (documentsignatorylinks document)
-    let mainfile =  fromMaybe (unsafeFileID 0) (documentfile document) -- There always should be main file but tests fail without it
+    let mainfile =  fromMaybe (unsafeFileID 0) (mainfileid <$> documentfile document) -- There always should be main file but tests fail without it
     documentMail authorlang document (templateName "mailDocumentAwaitingForAuthor") $ do
         F.value "authorname" $ getSmartName $ $fromJust $ getAuthorSigLink document
         F.value "documentlink" $ (mctxhostpart mctx) ++ show (LinkSignDoc document $ $fromJust $ getAuthorSigLink document)

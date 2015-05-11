@@ -22,11 +22,10 @@ module Doc.DocUtils(
   , canSignatorySignNow
   , isActivatedSignatory
   , getSignatoryAttachment
-  , documentfileM
-  , documentsealedfileM
   , documentDeletedForUser
   , documentReallyDeletedForUser
   , userCanPerformSigningAction
+  , fileFromMainFile
   , MaybeTemplate(..)
   , HasFields(..)
   , MaybeUser(..)
@@ -293,12 +292,11 @@ getSignatoryAttachment slid name doc = join $ find (\a -> name == signatoryattac
                                        <$> signatoryattachments
                                        <$> (find (\sl -> slid == signatorylinkid sl) $ documentsignatorylinks doc)
 
-documentfileM :: (MonadDB m, MonadThrow m) => Document -> m (Maybe File)
-documentfileM = maybe (return Nothing) (fmap Just . dbQuery . GetFileByFileID) . documentfile
-
-documentsealedfileM :: (MonadDB m, MonadThrow m) => Document -> m (Maybe File)
-documentsealedfileM = maybe (return Nothing) (fmap Just . dbQuery . GetFileByFileID) . documentsealedfile
-
+-- Changes MainFile into file. Works on maybe since this is main case in our system
+fileFromMainFile :: (MonadDB m, MonadThrow m) => Maybe MainFile -> m (Maybe File)
+fileFromMainFile mmf = case mmf of
+                            Nothing -> return Nothing
+                            Just mf -> Just <$> (dbQuery $ GetFileByFileID $ mainfileid mf)
 
 documentDeletedForUser :: Document -> UserID -> Bool
 documentDeletedForUser doc uid = fromMaybe False (fmap (isJust . signatorylinkdeleted) $ (getSigLinkFor uid doc `mplus` getAuthorSigLink doc))

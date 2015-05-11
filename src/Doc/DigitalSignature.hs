@@ -20,8 +20,9 @@ import AppConf (guardTimeConf)
 import Crypto.RNG (CryptoRNG)
 import DB (Binary(..), dbUpdate)
 import Doc.API.Callback.Model (triggerAPICallbackIfThereIsOne)
+import Doc.Data.Document (documentsealedfile)
 import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
-import Doc.DocUtils (documentsealedfileM)
+import Doc.DocUtils (fileFromMainFile)
 import Doc.Model (AppendSealedFile(..), AppendExtendedSealedFile(..))
 import Doc.SealStatus (SealStatus(..))
 import File.File (filename)
@@ -38,7 +39,7 @@ import qualified GuardTime as GT
 addDigitalSignature :: (CryptoRNG m, MonadIO m, MonadThrow m, MonadLog m, MonadBaseControl IO m, DocumentMonad m, AmazonMonad m, GuardTimeConfMonad m, TemplatesMonad m) => m ()
 addDigitalSignature = theDocumentID >>= \did ->
   withSystemTempDirectory' ("DigitalSignature-" ++ show did ++ "-") $ \tmppath -> do
-  Just file <- theDocument >>= documentsealedfileM
+  Just file <- fileFromMainFile =<< (documentsealedfile <$>theDocument)
   content <- getFileContents file
   let mainpath = tmppath </> "main.pdf"
   liftIO $ BS.writeFile mainpath content
@@ -72,7 +73,7 @@ addDigitalSignature = theDocumentID >>= \did ->
 -- | Extend a document: replace the digital signature with a keyless one.  Trigger callbacks.
 extendDigitalSignature :: (MonadBaseControl IO m, MonadIO m, MonadCatch m, MonadLog m, MonadReader SchedulerData m, CryptoRNG m, DocumentMonad m, AmazonMonad m) => m ()
 extendDigitalSignature = do
-  Just file <- documentsealedfileM =<< theDocument
+  Just file <- fileFromMainFile =<< (documentsealedfile <$>theDocument)
   did <- theDocumentID
   withSystemTempDirectory' ("ExtendSignature-" ++ show did ++ "-") $ \tmppath -> do
     content <- getFileContents file

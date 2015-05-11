@@ -236,7 +236,7 @@ sendClosedEmails sealFixed document = do
 
 makeMailAttachments :: (MonadDB m, MonadThrow m) => Document -> m [(String, Either BS.ByteString FileID)]
 makeMailAttachments document = do
-  let mainfile = documentsealedfile document `mplus` documentfile document
+  let mainfile = mainfileid <$> documentsealedfile document `mplus` documentfile document
   let
       aattachments = map authorattachmentfile $ documentauthorattachments document
       sattachments = concatMap (maybeToList . signatoryattachmentfile) $ concatMap signatoryattachments $ documentsignatorylinks document

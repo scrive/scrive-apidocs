@@ -71,7 +71,7 @@ import Doc.DocStateData
 import Doc.DocStateQuery
 import Doc.DocumentID
 import Doc.DocumentMonad (DocumentMonad, withDocumentM, withDocument, theDocument)
-import Doc.DocUtils (documentsealedfileM)
+import Doc.DocUtils (fileFromMainFile)
 import Doc.DocView
 import Doc.DocViewMail
 import Doc.Model
@@ -530,7 +530,7 @@ handleDownloadClosedFile :: Kontrakcja m => DocumentID -> SignatoryLinkID -> Mag
 handleDownloadClosedFile did sid mh _nameForBrowser = do
   doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
   if isClosed doc then do
-    file <- guardJustM $ documentsealedfileM doc
+    file <- guardJustM $ fileFromMainFile $ documentsealedfile doc
     content <- getFileIDContents $ fileid file
     return $ respondWithPDF True content
    else respond404

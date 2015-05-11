@@ -465,7 +465,7 @@ presealSpecFromDocument boxImages document inputpath outputpath = do
 
 sealDocument :: (CryptoRNG m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadMask m, MonadLog m, AWS.AmazonMonad m) => String -> m ()
 sealDocument hostpart = theDocumentID >>= \did -> do
-  mfile <- theDocument >>= documentfileM
+  mfile <- fileFromMainFile =<< documentfile <$> theDocument
   case mfile of
     Just file -> do
       logInfo_ $ "Sealing document #" ++ show did

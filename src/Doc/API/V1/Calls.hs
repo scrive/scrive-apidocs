@@ -871,10 +871,10 @@ apiCallV1DownloadMainFile did _nameForBrowser = api $ do
                     when (diffUTCTime now (documentmtime doc) < 8) $ do
                       logInfo_ $ "Waiting for Guardtime signing, document was modified " ++ show (diffUTCTime now (documentmtime doc)) ++ " ago"
                       throwIO $ SomeKontraException $ noAvailableYet "Digitally sealed document not ready"
-                  file <- apiGuardJustM (noAvailableYet "Not ready, please try later") $ documentsealedfileM doc
+                  file <- apiGuardJustM (noAvailableYet "Not ready, please try later") $ fileFromMainFile (documentsealedfile doc)
                   getFileIDContents $ fileid file
                 _ -> do
-                  sourceFile <- apiGuardJustM  (serverError "No file") $ documentfileM doc
+                  sourceFile <- apiGuardJustM  (serverError "No file") $ fileFromMainFile $ documentfile doc
                   apiGuardL  (serverError "Can't get file content")  $ DocSeal.presealDocumentFile doc sourceFile
   return $ respondWithPDF False content
 
@@ -897,7 +897,7 @@ apiCallV1DownloadFile did fileid nameForBrowser = api $ do
                       modifyContext (\ctx' -> ctx' {ctxmaybeuser = ctxmaybeuser ctx});
                       return res;
                     else getDocByDocID did
-  let allfiles = maybeToList (documentfile doc) ++ maybeToList (documentsealedfile doc) ++
+  let allfiles = maybeToList (mainfileid <$> documentfile doc) ++ maybeToList (mainfileid <$> documentsealedfile doc) ++
                       (authorattachmentfile <$> documentauthorattachments doc) ++
                       (catMaybes $ map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
   if (all (/= fileid) allfiles)
@@ -931,7 +931,7 @@ apiCallV1ExtractTexts did fileid = api $ do
                                                                                  J.Ok js -> Just js
                                                                                  _ -> Nothing
     doc <- theDocument
-    when (Just fileid /= documentfile doc) $ do
+    when (Just fileid /= (mainfileid <$> documentfile doc)) $ do
       throwIO . SomeKontraException $ serverError "Requested file does not belong to the document"
 
     content <- getFileIDContents fileid
@@ -1009,7 +1009,7 @@ apiCallV1ChangeMainFile docid = api $ do
     when (not $ (auid == userid user)) $ do
           throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
 
-    moldfileid <- documentfile  <$> theDocument
+    moldfileid <- fmap mainfileid <$> documentfile  <$> theDocument
     fileinput <- getDataFn' (lookInput "file")
 
     mft <- case fileinput of

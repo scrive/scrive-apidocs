@@ -11,6 +11,7 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
 
 import DB (MonadDB)
+import Doc.Data.MainFile
 import Doc.DocStateData (Document(..), documentsealedfile)
 import File.Storage (getFileIDContents)
 import KontraPrelude
@@ -25,7 +26,7 @@ data Attachment = Attachment
 
 fetch :: (MonadLog m, MonadDB m, MonadThrow m, MonadBase IO m, AWS.AmazonMonad m) => Document -> m [Attachment]
 fetch doc = do
-  case documentsealedfile doc of
+  case mainfileid <$> documentsealedfile doc of
     Nothing -> return []
     Just fid -> do
       extract <$> getFileIDContents fid

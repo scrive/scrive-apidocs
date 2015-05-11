@@ -357,7 +357,7 @@ testDownloadFile = do
 
   -- who cares which one, just pick the last one
   --let sl = $head . reverse $ documentsignatorylinks doc
-  let Just (fid :: FileID) = (documentfile doc)
+  let Just (fid :: FileID) = (mainfileid <$> documentfile doc)
 
   let cases =
        [ (False, ctxnotloggedin, [], "nobody is not logged in")

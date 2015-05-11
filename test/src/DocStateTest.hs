@@ -926,7 +926,7 @@ testDocumentAppendSealedPendingRight = replicateM_ 10 $ do
 
     --assert
     assert success
-    nfile <- documentsealedfile <$> theDocument
+    nfile <- fmap mainfileid <$> documentsealedfile <$> theDocument
     assertBool "Should have new file attached, but it's not" $ Just file == nfile
 
 

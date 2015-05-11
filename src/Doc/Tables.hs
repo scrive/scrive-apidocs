@@ -116,6 +116,7 @@ ctMainFile = CompositeType {
     CompositeColumn { ccName = "file_id", ccType = BigIntT }
   , CompositeColumn { ccName = "document_status", ccType = SmallIntT }
   , CompositeColumn { ccName = "seal_status", ccType = SmallIntT }
+  , CompositeColumn { ccName = "file_name", ccType = TextT }
   ]
 }
 

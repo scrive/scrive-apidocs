@@ -39,6 +39,7 @@ import Doc.SignatoryLinkID
 import Doc.TestInvariants
 import EID.CGI.GRP.Transaction.Model
 import EID.Signature.Model
+import File.File
 import File.FileID
 import File.Model
 import FlashMessage
@@ -663,17 +664,18 @@ addRandomDocument rda = do
   addRandomDocumentWithFile file rda
 
 addRandomDocumentWithFile :: FileID -> RandomDocumentAllows -> TestEnv Document
-addRandomDocumentWithFile file rda = do
+addRandomDocumentWithFile fileid rda = do
   now <- currentTime
   let user = randomDocumentAuthor rda
       p = randomDocumentCondition rda
   mcompany <-  dbQuery $ GetCompany $ usercompany user
+  file <- dbQuery $ GetFileByFileID fileid
   --liftIO $ print $ "about to generate document"
-  document <- worker now user p mcompany
+  document <- worker now user p mcompany file
   docid <- dbUpdate $ StoreDocumentForTesting document
   dbQuery $ GetDocumentByDocumentID docid
   where
-    worker now user p mcompany = do
+    worker now user p mcompany file = do
       doc' <- rand 10 arbitrary
       xtype <- rand 10 (elements $ randomDocumentAllowedTypes rda)
       status <- rand 10 (elements $ randomDocumentAllowedStatuses rda)
@@ -694,11 +696,11 @@ addRandomDocumentWithFile file rda = do
 
 
       let closedfile = if documentstatus doc == Closed
-                       then [MainFile file Closed Missing]
+                       then [MainFile fileid Closed Missing (filename file)]
                        else []
       let adoc = doc { documentsignatorylinks = alllinks
                      , documentlang = getLang user
-                     , documentmainfiles = closedfile ++ [MainFile file Preparation Missing]
+                     , documentmainfiles = closedfile ++ [MainFile fileid Preparation Missing (filename file)]
                      }
       case (p adoc, invariantProblems now adoc) of
         (True, Nothing) -> return adoc
@@ -706,7 +708,7 @@ addRandomDocumentWithFile file rda = do
           rej <- asks teRejectedDocuments
           liftIO $ (atomically . modifyTVar' rej) (+1)
           --liftIO $ print $ "did not pass condition; doc: " ++ show adoc
-          worker now user p mcompany
+          worker now user p mcompany file
 
         (_, Just _problems) -> do
           rej <- asks teRejectedDocuments
@@ -715,7 +717,7 @@ addRandomDocumentWithFile file rda = do
           --uncomment this to find out why the doc was rejected
           --print adoc
           --liftIO $ print $ "rejecting doc: " ++ _problems
-          worker now user p mcompany
+          worker now user p mcompany file
 
 
 rand :: CryptoRNG m => Int -> Gen a -> m a
