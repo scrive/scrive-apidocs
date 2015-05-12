@@ -4,27 +4,20 @@ module EvidenceLog.View (
     , getSignatoryIdentifierMap
     , simplyfiedEventText
     , approximateActor
-    , htmlDocFromEvidenceLog
-    , finalizeEvidenceText
     , suppressRepeatedEvents
-    , htmlSkipedEvidenceType
-    , evidenceOfIntentHTML
     , simpleEvents
     , eventForVerificationPage
   ) where
 
 import Control.Monad.Catch
-import Data.Decimal (realFracToDecimal)
 import Data.Function (on)
 import Data.String.Utils as String
-import Data.Word (Word8)
 import Text.JSON
 import Text.JSON.Gen as J
 import Text.StringTemplates.Templates
 import qualified Data.Foldable as F
 import qualified Data.Map as Map
 import qualified Data.Set as Set
-import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
 
 import Control.Logic
@@ -37,16 +30,9 @@ import EvidenceLog.Model
 import KontraPrelude
 import MinutesTime
 import Templates (renderLocalTemplate)
-import Text.XML.Content (cdata)
-import Text.XML.DirtyContent (XMLContent, renderXMLContent, substitute)
 import User.Model
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
-import Utils.Image
-import Utils.Prelude
-import qualified Doc.Screenshot as Screenshot
-import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
-import qualified HostClock.Model as HC
 
 -- | Evidence log for web page - short and simplified texts
 eventsJSListFromEvidenceLog ::  (MonadDB m, MonadThrow m, TemplatesMonad m) => Document -> [DocumentEvidenceEvent] -> m [JSValue]
@@ -241,9 +227,6 @@ simplyfiedEventText target mactor d sim dee = do
         F.value "signatory" $ (\slid -> signatoryIdentifier sim slid emptyNamePlaceholder) <$> mslinkid
         F.forM_ mactor $ F.value "actor"
 
-showClockError :: Word8 -> Double -> String
-showClockError decimals e = show (realFracToDecimal decimals (e * 1000)) ++ " ms"
-
 -- | Suppress repeated events stemming from mail delivery systems
 -- reporting that an email was opened.  This is done by ignoring each
 -- such event for five minutes after its last occurrence with the same
@@ -256,53 +239,3 @@ suppressRepeatedEvents = go Map.empty where
                        then go levs evs
                        else ev : go (Map.insert (evText ev) (evTime ev) levs) evs
                   | otherwise = ev : go levs evs
-
--- | Generating text of Evidence log that is attached to PDF. It should be complete
-htmlDocFromEvidenceLog :: TemplatesMonad m => String -> SignatoryIdentifierMap -> [DocumentEvidenceEvent] -> HC.ClockErrorStatistics -> m String
-htmlDocFromEvidenceLog title sim elog ces = do
-  emptyNamePlaceholder <- renderTemplate_ "_notNamedParty"
-  renderTemplate "htmlevidencelog" $ do
-    F.value "documenttitle" title
-    F.value "ce_max"       $ showClockError 1 <$> HC.max ces
-    F.value "ce_mean"      $ showClockError 1 <$> HC.mean ces
-    F.value "ce_std_dev"   $ showClockError 1 <$> HC.std_dev ces
-    F.value "ce_collected" $ HC.collected ces
-    F.value "ce_missed"    $ HC.missed ces
-    F.objects "entries" $ for (filter (not . htmlSkipedEvidenceType . evType) elog) $ \entry -> do
-      F.value "time" $ formatTimeUTC (evTime entry) ++ " UTC"
-                       ++ maybe "" (\e -> " ±" ++ showClockError 0 e)
-                                   (HC.maxClockError (evTime entry) <$> evClockErrorEstimate entry)
-      F.value "ces_time" $ maybe "" ((++" UTC") . formatTimeUTC . HC.time)
-                                    (evClockErrorEstimate entry)
-      F.value "ip"   $ show <$> evIP4 entry
-      F.value "text" $ T.unpack $ renderXMLContent $ finalizeEvidenceText sim entry emptyNamePlaceholder
-
-finalizeEvidenceText :: SignatoryIdentifierMap -> DocumentEvidenceEvent -> String -> XMLContent
-finalizeEvidenceText sim event emptyNamePlaceholder =
-  substitute (Map.fromList [ (("span",n), cdata (T.pack v))
-                           | (n,Just v) <- [ ("actor", ((\slid -> signatoryIdentifier sim slid emptyNamePlaceholder) =<< evSigLink event) `mplus` Just (evActor event))
-                                           , ("signatory", (\slid -> signatoryIdentifier sim slid emptyNamePlaceholder) =<< evAffectedSigLink event)
-                                           , ("author", (\slid -> signatoryIdentifier sim slid emptyNamePlaceholder) =<< authorSigLinkID) ] ]) (evText event)
-  where
-    authorSigLinkID = signatorylinkid <$> getAuthorSigLink (catMaybes (map siLink (Map.elems sim)))
-
-htmlSkipedEvidenceType :: EvidenceEventType -> Bool
-htmlSkipedEvidenceType (Obsolete OldDocumentHistory) = True
-htmlSkipedEvidenceType _ = False
-
--- | Generate evidence of intent in self-contained HTML for inclusion as attachment in PDF.
-evidenceOfIntentHTML :: TemplatesMonad m => SignatoryIdentifierMap -> String -> [(SignatoryLink, SignatoryScreenshots.SignatoryScreenshots)] -> m String
-evidenceOfIntentHTML sim title l = do
-  emptyNamePlaceholder <- renderTemplate_ "_notNamedParty"
-  renderTemplate "evidenceOfIntent" $ do
-    F.value "documenttitle" title
-    let values Nothing = return ()
-        values (Just s) = do
-          F.value "time" $ formatTimeUTC (Screenshot.time s) ++ " UTC"
-          F.value "image" $ imgEncodeRFC2397 $ unBinary $ Screenshot.image s
-    F.objects "entries" $ for l $ \(sl, entry) -> do
-      F.value "signatory"  $ signatoryIdentifier sim (signatorylinkid sl) emptyNamePlaceholder
-      F.value "ip"         $ show . signipnumber <$> maybesigninfo sl
-      F.object "first"     $ values (SignatoryScreenshots.first entry)
-      F.object "signing"   $ values (SignatoryScreenshots.signing entry)
-      F.object "reference" $ values (SignatoryScreenshots.getReferenceScreenshot entry)

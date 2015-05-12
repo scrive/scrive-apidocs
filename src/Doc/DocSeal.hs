@@ -48,6 +48,8 @@ import Doc.SealStatus (SealStatus(..))
 import Doc.SignatoryIdentification (SignatoryIdentifierMap, siInitials, siLink, signatoryIdentifier)
 import EvidenceLog.Model
 import EvidenceLog.View
+import EvidencePackage.EvidenceLog
+import EvidencePackage.EvidenceOfIntent
 import File.File
 import File.Model
 import File.Storage

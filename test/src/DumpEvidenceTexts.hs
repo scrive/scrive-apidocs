@@ -18,7 +18,8 @@ import Doc.DocumentMonad (withDocumentID, withDocument, theDocument)
 import Doc.SignatoryIdentification (signatoryIdentifierMap)
 import Doc.SignatoryLinkID (unsafeSignatoryLinkID)
 import EvidenceLog.Model (EventRenderTarget(..), DocumentEvidenceEvent(..), EvidenceEventType(..), CurrentEvidenceEventType(..), evidenceLogText)
-import EvidenceLog.View (simpleEvents, simplyfiedEventText, eventForVerificationPage, finalizeEvidenceText)
+import EvidenceLog.View (simpleEvents, simplyfiedEventText, eventForVerificationPage)
+import EvidencePackage.EvidenceLog (finalizeEvidenceText)
 import KontraPrelude
 import MinutesTime
 import Templates (runTemplatesT)
