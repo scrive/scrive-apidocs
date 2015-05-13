@@ -130,12 +130,12 @@ define(["Underscore", "React", "common/button", "common/select",
           <div className="subtitle">
             {localization.designview.optionalMandatory}
             <div className="fieldTypeSetter-subtitle-select">
-              <Select.Select
+              <Select
                 name={this.obligatorySelected()}
                 options={options}
                 optionsWidth={"218px"}
                 textWidth={191}
-                cssClass={"typesetter-obligatory-option"}
+                className={"typesetter-obligatory-option"}
                 style={{fontSize: "16px"}}
                 inactive={options.length === 0}
               />

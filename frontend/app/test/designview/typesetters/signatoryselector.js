@@ -2,7 +2,7 @@ define(["legacy_code", "backend", "util", "React", "common/select", "designview/
 
   var TestUtils = React.addons.TestUtils;
 
-  describe("designview/typesetters/typesetter", function () {
+  describe("designview/typesetters/signatoryselector", function () {
     var server, doc;
 
     before(function (done) {
@@ -26,33 +26,18 @@ define(["legacy_code", "backend", "util", "React", "common/select", "designview/
         }));
 
         var select = TestUtils.findAllInRenderedTree(selector, function (comp) {
-          return TestUtils.isCompositeComponentWithType(comp, Select.Select);
+          return TestUtils.isCompositeComponentWithType(comp, Select);
         })[0];
 
         assert.ok(select, "there should be a select component.");
 
         assert.equal(select.props.options.length, 1, "there should be one option.");
 
-        // as SelectView is not exported, assume the component with a model is SelectView.
-        var view = TestUtils.findAllInRenderedTree(select, function (comp) {
-          return comp.props.model;
-        })[0];
+        var part2 = select.props.options[0].value
 
-        // expand the select box.
-        TestUtils.Simulate.click(view.getDOMNode());
+        select.select(0);
 
-        var expand = view.state.expandedComponent
-          , options = TestUtils.scryRenderedDOMComponentsWithTag(expand, "li");
-
-        assert.equal(options.length, select.props.options.length, "there should be as many option nodes as options.");
-
-        // save part 2 for later.
-        var part2 = select.props.options[0];
-
-        // click the first option.
-        TestUtils.Simulate.click(options[0]);
-
-        assert.equal(field.signatory(), part2.value, "field should now be part 2.");
+        assert.equal(field.signatory(), part2, "field should now be part 2.");
       });
     });
 

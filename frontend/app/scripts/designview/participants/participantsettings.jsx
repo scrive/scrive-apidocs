@@ -2,7 +2,7 @@
 
 define(["legacy_code", "React", "common/select",
         "common/language_service"],
-function (_Legacy, React, Select,
+function (_Legacy, React, NewSelect,
           LanguageService) {
 
 return React.createClass({
@@ -88,7 +88,6 @@ return React.createClass({
   render: function () {
     var self = this;
     var sig = this.props.model;
-    var NewSelect = Select.Select;
     return (
       <div className="design-view-action-participant-details-participation">
 

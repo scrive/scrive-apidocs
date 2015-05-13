@@ -1,7 +1,7 @@
 /* This is component for designing signatory attachments
  */
 
-define(['Backbone', 'legacy_code'], function() {
+define(['legacy_code', 'Backbone', 'React', 'common/select'], function(legacy_code, Backbone, React, Select) {
   var DesignSignatoryAttachment = Backbone.Model.extend({
   defaults : {
       name : "",
@@ -37,15 +37,20 @@ define(['Backbone', 'legacy_code'], function() {
       attachments : []
   },
   initialize: function (args) {
+      var self = this;
       this.document = args.document;
       var attachments = new Array();
       _.each(args.document.signatories(), function(signatory) {
           _.each(signatory.attachments(), function(attachment) {
-              attachments.push(new DesignSignatoryAttachment({
+              var attachment = new DesignSignatoryAttachment({
                 name: attachment.name(),
                 description : attachment.description(),
                 signatory:  signatory
-              }));
+              });
+              attachments.push(attachment);
+              self.listenTo(attachment, "change", function () {
+                self.trigger("change:attachments");
+              });
           });
       });
       this.set({"attachments":attachments});
@@ -54,7 +59,12 @@ define(['Backbone', 'legacy_code'], function() {
        return this.get("attachments");
   },
   addNewAttachment : function(){
-        this.attachments().push(new DesignSignatoryAttachment());
+        var self = this;
+        var attachment = new DesignSignatoryAttachment();
+        this.attachments().push(attachment);
+        this.listenTo(attachment, "change", function () {
+          self.trigger("change:attachments");
+        });
         this.trigger("change:attachments");
   },
   removeAttachment: function(attachment) {
@@ -63,6 +73,7 @@ define(['Backbone', 'legacy_code'], function() {
           if (attachment !== this.attachments()[i])
              newattachments.push(this.attachments()[i]);
        this.set({attachments : newattachments});
+       this.stopListening(attachment);
        this.trigger("change:attachments");
   },
   isEmpty: function() {
@@ -130,18 +141,16 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
           }
         });
         var sig = attachment.signatory();
-        var selectSignatory = new Select({
+        React.render(React.createElement(Select, {
           name: sig ? nameFromSignatory(sig) : '',
-          style: 'width: 190px;',
+          style: {width: "190px"},
           options: options,
           onSelect: function(sig) {
             attachment.setSignatory(sig);
             mixpanel.track('Set signatory (in attachment)');
-            selectSignatory.setName(nameFromSignatory(sig));
             return true;
           }
-        });
-        td3.append(selectSignatory.el());
+        }), td3[0]);
 
         var td4 = $("<td class='editSignatoryAttachmentTDRemove'>");
         var removeIcon = $("<div class='removeSignatoryAttachmentIcon'>X</div>");

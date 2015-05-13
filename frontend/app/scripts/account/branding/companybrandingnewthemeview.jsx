@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React','common/backbone_mixin','account/branding/companybrandingviewmodel','themes/themeview','account/branding/companybrandingsettingsview'  ,'legacy_code','common/button','common/select',"themes/previews/email", "themes/previews/signing", "themes/previews/service"], function(React, BackboneMixin, CompanyBrandingViewModel,ThemeView,CompanySettingsView, _Legacy, Button, NewSelect, EmailPreview, SigningPreview, ServicePreview) {
+define(['React','common/backbone_mixin','account/branding/companybrandingviewmodel','themes/themeview','account/branding/companybrandingsettingsview'  ,'legacy_code','common/button','common/select',"themes/previews/email", "themes/previews/signing", "themes/previews/service"], function(React, BackboneMixin, CompanyBrandingViewModel,ThemeView,CompanySettingsView, _Legacy, Button, Select, EmailPreview, SigningPreview, ServicePreview) {
 
 return React.createClass({
     opendNewThemeModal : function() {
@@ -78,8 +78,6 @@ return React.createClass({
             name: localization.branding.newThemeWithDots,
             onSelect : createNewThemeFunction
       });
-      var Select = NewSelect.Select;
-
       return (
         <div className="companybranding-create-new-theme-panel">
           <div className="theme-edit">

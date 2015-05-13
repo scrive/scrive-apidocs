@@ -35,7 +35,6 @@ define([
   '../js/submits',
   '../js/ajaxqueue',
   '../js/confirmations',
-  '../js/selects',
   '../js/new_password',
   '../js/account_setup',
   '../js/accept_tos',

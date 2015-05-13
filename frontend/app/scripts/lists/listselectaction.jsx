@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React','common/select','legacy_code'], function(React,NewSelect) {
+define(['React','common/select','legacy_code'], function(React,Select) {
 
 return React.createClass({
     propTypes: {
@@ -9,7 +9,6 @@ return React.createClass({
     },
     render: function() {
       var model = this.props.model;
-      var Select = NewSelect.Select;
       var options = _.map(this.props.actions,function(a) {
                       return {name : a.name, onSelect : function() {a.onSelect(model); }} ;
       });

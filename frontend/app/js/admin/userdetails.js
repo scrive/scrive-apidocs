@@ -1,7 +1,7 @@
 /* Main admin only site definition. Its a tab based set of different lists.
  * This is the entry point for /adminonly/. */
 
-define(['Backbone', 'legacy_code'], function() {
+define(['legacy_code', 'Backbone', 'React', 'common/select'], function(legacy_code, Backbone, React, Select) {
 
 var AdminUserDetailsModel = Backbone.Model.extend({
   defaults : {
@@ -182,6 +182,8 @@ var AdminUserDetailsView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
         this.model.bind('reset', this.render);
+        this.model.bind('change:lang', this.render);
+        this.model.bind('change:accountType', this.render);
         this.render();
     },
     langSelect : function() {
@@ -205,14 +207,17 @@ var AdminUserDetailsView = Backbone.View.extend({
       languages = _.sortBy(languages, function(l) {return l.name.toLowerCase();});
       var lname = _.findWhere(languages, {value :model.lang()}).name;
 
-      this.langselect = new Select({
-                             name : lname,
-                             onSelect : function(v) {model.setLang(v); self.langselect.el().replaceWith(self.langSelect().el()); return true;},
-                             options: _.filter(languages, function(l) { return l.value !=  model.lang() && !l.hidden;}),
-                             textWidth : 213,
-                             optionsWidth : "240px"
-                           });
-      return this.langselect;
+      var $select = $("<span>");
+
+      React.render(React.createElement(Select, {
+        name : lname,
+        onSelect : function(v) {model.setLang(v); return true;},
+        options: _.filter(languages, function(l) { return l.value !=  model.lang() && !l.hidden;}),
+        textWidth : 213,
+        optionsWidth : "240px"
+      }), $select[0]);
+
+      return $select;
     },
     accountTypeName : function(name) {
       if (name == "companystandardaccount")
@@ -223,11 +228,12 @@ var AdminUserDetailsView = Backbone.View.extend({
     accountTypeSelector : function() {
       var self = this;
       var model = this.model;
-      this.accountTypeSelectorSelect = new Select({
+      var $select = $("<span>");
+
+      React.render(React.createElement(Select, {
         name : this.accountTypeName(model.accountType()),
         onSelect : function(v) {
           model.setAccountType(v);
-          self.accountTypeSelectorSelect.replaceWith(self.accountTypeSelector());
           return true;
         },
         textWidth : 213,
@@ -235,8 +241,9 @@ var AdminUserDetailsView = Backbone.View.extend({
         options : [  {name : this.accountTypeName("companystandardaccount"), value : "companystandardaccount"}
                    , {name : this.accountTypeName("companyadminaccount"), value : "companyadminaccount"}
                   ]
-      }).el();
-      return this.accountTypeSelectorSelect;
+      }), $select[0]);
+
+      return $select;
     },
     accountDetails: function() {
       var self = this;
@@ -286,7 +293,7 @@ var AdminUserDetailsView = Backbone.View.extend({
         });
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Company position"))).append($("<td/>").append(companypositioninput)));
 
-      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Language"))).append($("<td/>").append(this.langSelect().el())));
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Language"))).append($("<td/>").append(this.langSelect())));
 
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Company")))
                                    .append($("<td/>").append($("<a>Link to company </a>").append($("<span>").text(this.model.user().company().companyname()))

@@ -26,7 +26,7 @@ define(imports, function(legacy_code, backend, util, React, Select, Button, Font
       }));
 
       var select = TestUtils.findAllInRenderedTree(fontSelector, function (comp) {
-        return TestUtils.isCompositeComponentWithType(comp, Select.Select);
+        return TestUtils.isCompositeComponentWithType(comp, Select);
       })[0];
 
       assert.ok(select, "there should be a select");
@@ -63,7 +63,7 @@ define(imports, function(legacy_code, backend, util, React, Select, Button, Font
       }));
 
       var select = TestUtils.findAllInRenderedTree(fontSelector, function (comp) {
-        return TestUtils.isCompositeComponentWithType(comp, Select.Select);
+        return TestUtils.isCompositeComponentWithType(comp, Select);
       })[0];
 
       assert.notOk(select, "there should not be a select");

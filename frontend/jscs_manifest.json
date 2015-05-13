@@ -2,6 +2,7 @@
   "./app/scripts/designview/typesetters/*.jsx",
   "./app/scripts/designview/participants/*.jsx",
   "./app/scripts/common/editabletext.jsx",
+  "./app/scripts/common/newselect.jsx",
   "./app/js/anchors.js",
   "./app/js/takeScreenshot.js",
   "./app/api-explorer/js/*.js",

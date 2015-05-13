@@ -1,4 +1,4 @@
-define(['Backbone', 'legacy_code'], function() {
+define(['legacy_code', 'Backbone', 'React', 'common/select'], function(legacy_code, Backbone, React, Select) {
 
 var AuthorViewTitleBoxModel = Backbone.Model.extend({
   defaults : {
@@ -187,12 +187,13 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
                   onSelect : function() {model.setPadNextSignatory(sig); return true;}
                 });
               });
-              var select = new Select({
+              var $select = $("<span>");
+              React.render(React.createElement(Select, {
                 name : (model.padNextSignatory().smartname() != "" ? model.padNextSignatory().smartname() : model.padNextSignatory().nameInDocument()),
-                cssClass : "float-left",
+                className: "float-left",
                 options : options
-              });
-              div.append(select.el());
+              }), $select[0]);
+              div.append($select);
             }
             else {
               label.append($("<strong/>").text(sig.smartname() != "" ? sig.smartname() : localization.pad.notNamedParty.toLowerCase()));

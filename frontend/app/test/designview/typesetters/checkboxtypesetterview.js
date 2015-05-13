@@ -59,7 +59,7 @@ define(["legacy_code", "backend", "util", "React", "common/select", "designview/
       assert.equal(field.value(), "", "field value should be empty.");
 
       var select = TestUtils.findAllInRenderedTree(typesetter, function (comp) {
-        return TestUtils.isCompositeComponentWithType(comp, Select.Select);
+        return TestUtils.isCompositeComponentWithType(comp, Select);
       })[0];
 
       assert.ok(select, "there should be a select.");

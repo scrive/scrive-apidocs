@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React','common/select','legacy_code'], function(React,NewSelect) {
+define(['React','common/select','legacy_code'], function(React,Select) {
 
 return React.createClass({
     propTypes: {
@@ -22,7 +22,6 @@ return React.createClass({
          }
 
       }
-      var Select = NewSelect.Select;
       return (
         <div className='float-left'>
           <Select

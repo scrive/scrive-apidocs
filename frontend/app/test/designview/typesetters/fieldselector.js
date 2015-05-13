@@ -24,7 +24,7 @@ define(imports, function(legacy_code, backend, util, React, Select, Button, Fiel
       }));
 
       var select1 = TestUtils.findAllInRenderedTree(fieldSelector, function (comp) {
-        return TestUtils.isCompositeComponentWithType(comp, Select.Select);
+        return TestUtils.isCompositeComponentWithType(comp, Select);
       })[0];
 
       assert.ok(select1, "there should be a select");
@@ -35,7 +35,7 @@ define(imports, function(legacy_code, backend, util, React, Select, Button, Fiel
 
       // a new select has been mounted.
       var select2 = TestUtils.findAllInRenderedTree(fieldSelector, function (comp) {
-        return TestUtils.isCompositeComponentWithType(comp, Select.Select);
+        return TestUtils.isCompositeComponentWithType(comp, Select);
       })[0];
 
       util.clickSelectOption(select2, 1); // first name.
@@ -52,7 +52,7 @@ define(imports, function(legacy_code, backend, util, React, Select, Button, Fiel
       }));
 
       var select = TestUtils.findAllInRenderedTree(fieldSelector, function (comp) {
-        return TestUtils.isCompositeComponentWithType(comp, Select.Select);
+        return TestUtils.isCompositeComponentWithType(comp, Select);
       })[0];
 
       assert.ok(select, "there should be a select");

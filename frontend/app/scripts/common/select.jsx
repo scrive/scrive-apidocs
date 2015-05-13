@@ -1,413 +1,267 @@
-/** @jsx React.DOM */
-
 /*
-  Standard select boxes used by our system. Rewritten in react.
-  Usage:
+Standard select boxes.
 
-   <Select
-      name : "Option 1"              // Name on main button
-      cssClass* : "select-1"         // Class to be added
-      expandSide* : "right"          // What direction should it expand ("left" or "right")
-      textWidth* : 100               // Unexpanded selectbox will not get much longer then given value. default 160 (px unit is implied)
-      optionsWidth* : "200px"        // How long should be an expanded area
-      onOpen* : function(){}         // Function to be called when box gets opened. Usefull when wanting to get options with AJAX (ask M for example)
-      color* : "red"                 // Color of text
-      border* : "1px solid red"      // Border style
-      style* :  "font-size :16px"     // Extra style applied to main label
-      onSelect* : function(v) {}     // Function to be called when value is selected. If can be overwitten by onSelect from options. If true is returned select will be closed.
-      onRemove* : function(v) {}     // If provided, remove (x) icon will be displayed over select. Functon will be executed when this icon will be clicked
-      odjustHeightOnExpand : false   // If expanded select area should increase the size of stuff bellow it. Usefull for select boxes in footer.
-      options: [
-                      { name : "Option 1" // Name on option label
-                        value* : "1" // Value that will be propagated to onSelect
-                        onSelect* : function(v) {} // Function to be called on selection. It overwrites top level function
-                        style* : {fontSize: 8px"} // Extra styling of label
-                        disabled : false // If set to tru, option will not be visible
-                      },
-                      { name : "Option 2"
-                        value* : "2"
-                        onSelect* : function(v) {}
-                      },
-                  ]
-   />
+Usage:
 
-  Component does not expose any addtional methods. If you feel like you need some extra function like open or setName, you are probably wrong.
-
-  Details:
-    - It does not use <select> tag internally.
-    - On expand, speciall diff is appended to  of current el with expanded options is displayed over current position.
-      This way we can have selects withing scrollable areas, that don't make this areas expand.
-    - onSelect function must be provided either for whole select or for all options
-    - Select box will be closed on selection only if onSelect for selected option will return true.
+  <Select
+    name="Option 1" // name to show on select label.
+    className="select-1" // extra class for select.
+    color="black" // color css property.
+    border="1px solid #ddd" // border css property.
+    inactive={false} // is select box inactive.
+    textWidth={100} // width of select button in pixels.
+    optionsWidth="200px" // width of option box as css property.
+    onSelect={function (v) { return true; }} // fired when an option is selected
+                                             // return false to not close option box.
+    onOpen={function () { return true }} // fired when option box opens
+                                         // return false to not open option box.
+    onRemove={function () { }} // if set adds a remove button to select box.
+    options={[
+      {
+        name: "Option 2", // name to show in option box.
+        value: 2, // value to pass to onSelect.
+        onSelect: function () { }, // if set, fires when this option is selected.
+        disabled: false // if true this option will not show up in option box.
+      }
+    ]}
+  />
 */
 
-define(['React','common/backbone_mixin','Backbone', 'legacy_code'], function(React,BackboneMixin) {
-
-var expose = {};
-
-// Model for individual options
-var SelectOptionModel = Backbone.Model.extend({
-  defaults : {
-      onSelect : function(){ },
-      style : {},
-      disabled : false
-  },
-  name : function(){
-       return this.get("name");
-  },
-  value : function(){
-       return this.get("value");
-  },
-  style: function() {
-       return this.get("style");
-  },
-  selected : function() {
-    var closeAfter = this.get("onSelect")(this.value());
-    if (closeAfter == true)
-      this.trigger("close");
-  },
-  disabled : function() {
-      return this.get("disabled");
-  }
-});
-
-// Model for whole select
-var SelectModel = Backbone.Model.extend({
-  defaults : {
-      name  : "",
-      options : [],
-      expandSide : "left",
-      expanded : false,
-      onOpen  : function() {return true;},
-      onClose : function() {return true;},
-      color: "black",
-      border: "1px solid #ddd",
-      textWidth : 160,
-      optionsWidth : "200px",
-      style : {},
-      cssClass : "",
-      adjustHeightOnExpand : false,
-      inactive: false
-
-  },
-  initialize: function(args){
-      var model = this;
-      //Change static options to SelectOptionModel. Propagate onSelect function if it's not provided for option
-      var options = _.map(args.options,function(e) {
-                        e.onSelect = e.onSelect || args.onSelect;
-                        var option = new SelectOptionModel(e);
-                        model.listenTo(option,"close", function() { model.set({"expanded" : false});});
-                        return option;
-                    });
-      this.set({"options" : options});
-  },
-  options: function(){
-      return this.get("options");
-  },
-  activeOptions : function() {
-      return _.filter(this.options(),function(o) {return !o.disabled();});
-  },
-  name : function(){
-       return this.get("name");
-  },
-  setName: function(name) {
-      this.set({name:name});
-      return this;
-  },
-  style : function(){
-       return this.get("style");
-  },
-  expanded : function(){
-       return this.get("expanded");
-  },
-  expandSide : function() {
-       return this.get("expandSide");
-  },
-  textWidth : function(){
-       return this.get("textWidth");
-  },
-  optionsWidth : function() {
-       return this.get("optionsWidth");
-  },
-  unexpand: function() {
-       this.set({"expanded" : false});
-       this.onClose();
-  },
-  expand : function() {
-     if (!this.expanded() && this.onOpen() && this.options().length > 0) {
-       this.set({"expanded" : true});
-     }
-  },
-  onOpen : function(){
-       if (this.get("onOpen") != undefined) {
-        return this.get("onOpen")();
-       }
-       return true;
-  },
-  onClose : function(){
-       if (this.get("onClose") != undefined) {
-        this.get("onClose")();
-       }
-  },
-  onRemove : function(){
-       if (this.get("onRemove") != undefined)
-        return this.get("onRemove")();
-       return true;
-  },
-  hasRemoveOption : function(){
-       return this.get("onRemove") != undefined;
-  },
-  color : function() {
-     return this.get("color");
-  },
-  border : function() {
-     return this.get("border");
-  },
-  cssClass : function() {
-     return this.get("cssClass");
-  },
-  style : function() {
-     return this.get("style");
-  },
-  adjustHeightOnExpand : function() {
-     return this.get("adjustHeightOnExpand");
-  },
-  inactive : function () {
-    return this.get("inactive");
-  }
-});
-
-/* View for expanded box*/
-var SelectExpandedView = React.createClass({
-    handleRemove : function(e) {
-      var model = this.props.model;
-      model.unexpand();
-      model.onRemove();
-    },
-    handleExpand : function(e) {
-      var model = this.props.model;
-      model.unexpand();
-    },
-    totalHeight : function() {
-      if (this.refs.options != undefined && this.refs.options.getDOMNode()!= undefined && this.getDOMNode() != undefined)
-        return $(this.refs.options.getDOMNode()).height() + $(this.getDOMNode()).height() -1; // There is 1px overlap in CSS
-    },
-    render: function() {
-      var model = this.props.model;
-      var mainStyle = _.extend({color: model.color(),border : model.border()},model.style());
-      var labelStyle = _.extend({width: model.textWidth() + 'px'},model.style());
-      var optionStyle = {border:model.border(), minWidth:model.optionsWidth()};
-      // .select-button-left and .select-button-right widths from select.less
-      // this must be kept in sync!
-      var buttonStyle = {width: model.textWidth() + 6 + 21 + 'px'};
+define(["legacy_code", "React"], function (legacy_code, React) {
+  var Option = React.createClass({
+    render: function () {
       return (
-        <div className={'select select-exp ' + model.cssClass()}  style={mainStyle} onClick={this.handleExpand}>
-          <div className='select-button' style={buttonStyle}>
-            <div className='select-button-left'/>
-            <div className='select-button-label' style={labelStyle}>
-              {model.name()}
-            </div>
-            <div className='select-button-right'/>
-            {/*if*/ model.hasRemoveOption()&&
-                <div className='closer' onClick={this.handleRemove}/>
-              }
-          </div>
-
-          <ul className={'select-opts '+ model.expandSide()} style={optionStyle} ref="options">
-            {_.map(model.activeOptions(),function(o,i) {
-              return (
-                <li key={i}
-                  onClick={function(e) {
-                    o.selected();
-                  }}
-                >
-                  <span style={o.style()}>
-                    {o.name()}
-                  </span>
-                </li>
-              );
-            })
-            }
-          </ul>
-        </div>
-      );
-    }
-});
-
-
-/* View for not expanded box. On expand original box will be placed above it (z-index)*/
-
-var SelectView = React.createClass({
-    mixins: [BackboneMixin.BackboneMixin],
-    componentWillUnmount : function() {
-        this.removeExpandedView();
-    },
-    getBackboneModels : function() {
-      return [this.props.model];
-    },
-    getInitialState: function() {
-      return this.stateFromProps(this.props);
-    },
-    componentWillReceiveProps: function(props) {
-      this.removeExpandedView();
-      this.setState(this.stateFromProps(props));
-    },
-    stateFromProps : function(props) {
-      var self = this;
-      // Temporary div. It will be stored in local state and appended to <body> on expantion
-      // It contains SelectExpandedView inside.
-      var div = $("<div class='select-expanded-wrapper'/>")
-                  .mouseenter(function() {self.handleMouseEnter();})
-                  .mouseout(function() {self.handleMouseOut();});
-      var component = React.render(
-          React.createElement(SelectExpandedView, {model : props.model})
-        , div[0]
-      );
-      return {
-        expandedDiv : div,
-        expandedComponent : component
-      };
-    },
-    //We need to clear subcomponents for garbage collection. On unmounth or when we change props.
-    removeExpandedView : function() {
-      if (this.state.expandedDiv) {
-        React.unmountComponentAtNode(this.state.expandedDiv[0]);
-        this.state.expandedDiv.remove();
-      }
-    },
-    closeIfNeeded : function() {
-        var model = this.props.model;
-        if (
-          model.expanded() &&
-          new Date().getTime() - this.state.enterdate > 50 &&
-          ($(":hover", this.state.expandedDiv).size() == 0) &&
-          (!BrowserInfo.doesNotSupportHoverPseudoclassSelector() && !BrowserInfo.isPadDevice())
-          )
-          model.unexpand();
-    },
-    handleMouseEnter : function() {
-      this.state.enterdate = new Date().getTime();
-    },
-    handleMouseOut : function() {
-      var self = this;
-      setTimeout(function() {self.closeIfNeeded();}, 100);
-    },
-    handleRemove : function(e) {
-      e.stopPropagation();
-      var model = this.props.model;
-      model.unexpand();
-      model.onRemove();
-    },
-    handleExpand : function(e) {
-      var model = this.props.model;
-      if (!model.inactive()) {
-        model.expand();
-      }
-    },
-    render: function() {
-      var model = this.props.model;
-      if (model.expanded()) {
-        this.state.expandedDiv.css('left',$(this.getDOMNode()).offset().left + "px");
-        this.state.expandedDiv.css('top',$(this.getDOMNode()).offset().top + "px");
-        $('body').append(this.state.expandedDiv);
-      }
-      else
-        this.state.expandedDiv.detach();
-
-      var mainStyle = _.extend({maxWidth: model.optionsWidth(), color: model.color(),border : model.border()},model.style());
-      var labelStyle = _.extend({width: model.textWidth() + 'px'},model.style());
-      if (model.expanded() && model.adjustHeightOnExpand()) {
-        mainStyle = _.extend(mainStyle,{height:  this.state.expandedComponent.totalHeight()});
-      }
-      var buttonStyle = {width: model.textWidth() + 6 + 21 + 'px'};
-      var inactiveClass = model.inactive() ? "inactive" : "";
-      var selectClass = React.addons.classSet({
-        "select": true,
-        "inactive": model.inactive()
-      });
-      return (
-        <div className={selectClass + ' ' + model.cssClass()}  style={mainStyle}
-             onClick={this.handleExpand}
-             onMouseEnter={this.handleMouseEnter}
-             onMouseOut={this.handleMouseOut}
-             >
-          <div className='select-button' style={buttonStyle}>
-            <div className='select-button-left'/>
-            <div className='select-button-label' style={labelStyle}>
-              {model.name()}
-            </div>
-            <div className='select-button-right'/>
-            {/*if*/ model.hasRemoveOption()&&
-                <div ref="close" className='closer' onClick={this.handleRemove}/>
-              }
-          </div>
-        </div>
-      );
-    }
-});
-
-
-/*Interface for selectbox*/
-var Select = React.createClass({
-    propTypes: {
-      name : React.PropTypes.string.isRequired,
-      cssClass : React.PropTypes.string,
-      expandSide : React.PropTypes.string,
-      textWidth : React.PropTypes.number,
-      optionsWidth : React.PropTypes.string,
-      color : React.PropTypes.string,
-      border : React.PropTypes.string,
-      style :  React.PropTypes.object,
-      onOpen :React.PropTypes.func,
-      onSelect : React.PropTypes.func,
-      onRemove : React.PropTypes.func,
-      options: React.PropTypes.array.isRequired,
-      adjustHeightOnExpand : React.PropTypes.bool,
-      inactive: React.PropTypes.bool
-    },
-    getInitialState: function() {
-      return this.stateFromProps(this.props);
-    },
-    componentWillReceiveProps: function(props) {
-      this.setState(this.stateFromProps(props));
-    },
-    // When we are removing a selectbox - it's safer to remove it when it is closed;
-    componentWillUnmount : function() {
-      this.state.model.unexpand();
-    },
-    open : function() {
-       this.state.model.expand();
-    },
-    stateFromProps : function(props) {
-        var model = new SelectModel({
-        name : props.name,
-        cssClass : props.cssClass,
-        expandSide : props.expandSide,
-        textWidth : props.textWidth,
-        optionsWidth : props.optionsWidth,
-        color : props.color,
-        border : props.border,
-        style :  props.style,
-        onOpen : props.onOpen,
-        onClose :props.onClose,
-        onSelect : props.onSelect,
-        onRemove : props.onRemove,
-        options: props.options,
-        adjustHeightOnExpand : props.adjustHeightOnExpand,
-        inactive: props.inactive
-      });
-      return {model: model};
-    },
-    render: function() {
-      return (
-        <SelectView ref="view" model={this.state.model}/>
+        <li onClick={this.props.onClick}>
+          <span style={this.props.style}>{this.props.name}</span>
+        </li>
       );
     }
   });
 
+  var View = React.createClass({
+    render: function () {
+      var parent = this.props.parent;
 
-expose.Select = Select;
+      var mainStyle = {border: parent.props.border, color: parent.props.color};
+      if (this.props.expanded) {
+        mainStyle.position = "absolute";
+        mainStyle.top = $(parent.getDOMNode()).offset().top;
+        mainStyle.left = $(parent.getDOMNode()).offset().left;
+      } else {
+        mainStyle.maxWidth = parent.props.optionsWidth;
+      }
 
-return expose;
+      var buttonStyle = {
+        width: parent.props.textWidth + 6 + 21 + "px"
+      };
 
+      var labelStyle = {
+        width: parent.props.textWidth + "px"
+      };
+
+      var optionStyle = {
+        minWidth: parent.props.optionsWidth,
+        border: parent.props.border
+      };
+
+      var selectClass = React.addons.classSet({
+        "select": true,
+        "inactive": parent.props.inactive
+      });
+
+      if (parent.props.className) {
+        selectClass += " " + parent.props.className;
+      }
+
+      if (this.props.expanded) {
+        selectClass += " select-exp";
+      }
+
+      mainStyle = _.extend(mainStyle, parent.props.style);
+      // do not overwrite label width, like old component.
+      labelStyle = _.extend({}, parent.props.style, labelStyle);
+
+      return (
+        <div
+          className={selectClass}
+          style={mainStyle}
+          onClick={parent.handleClick}
+          onMouseEnter={this.props.expanded && parent.handleEnter}
+          onMouseLeave={this.props.expanded && parent.handleLeave}
+        >
+          <div className="select-button" style={buttonStyle}>
+            <div className="select-button-left"/>
+            <div className="select-button-label" style={labelStyle}>
+              {parent.props.name}
+            </div>
+            <div className="select-button-right"/>
+            {parent.props.onRemove &&
+              <div ref="close" className="closer" onClick={parent.handleRemove}/>
+            }
+          </div>
+          {this.props.expanded &&
+            <ul className="select-opts" style={optionStyle}>
+              {_.map(parent.activeOptions(), function (option, index) {
+                return (
+                  <Option
+                    key={index}
+                    onClick={parent.handleSelect.bind(parent, option)}
+                    {...option}
+                  />
+                );
+              })}
+            </ul>
+          }
+        </div>
+      );
+    }
+  });
+
+  var Select = React.createClass({
+    propTypes: {
+      name: React.PropTypes.string.isRequired,
+      className: React.PropTypes.string,
+      textWidth: React.PropTypes.number,
+      optionsWidth: React.PropTypes.string,
+      color: React.PropTypes.string,
+      style:  React.PropTypes.object,
+      onOpen: React.PropTypes.func,
+      onSelect: React.PropTypes.func,
+      onRemove: React.PropTypes.func,
+      options: React.PropTypes.array.isRequired,
+      inactive: React.PropTypes.bool
+    },
+
+    getInitialState: function () {
+      return {expanded: false};
+    },
+
+    getDefaultProps: function () {
+      return {
+        border: "1px solid #ddd",
+        color: "black",
+        style: {},
+        textWidth : 160,
+        optionsWidth : "200px",
+        inactive: false,
+        onOpen: function () { return true; }
+      };
+    },
+
+    componentDidUpdate: function (prevProps, prevState) {
+      if (!prevState.expanded && this.state.expanded) {
+        this.mountExpanded();
+      }
+
+      if (prevState.expanded && !this.state.expanded) {
+        this.unmountExpanded(true);
+      }
+
+      if (this.state.expandComponent && this.state.expandComponent.isMounted()) {
+        this.state.expandComponent.forceUpdate();
+      }
+    },
+
+    componentWillUnmount: function () {
+      this.unmountExpanded(false);
+    },
+
+    mountExpanded: function () {
+      var $expand = $("<div>");
+      var component = React.render(<View expanded={true} parent={this} />, $expand[0]);
+      $("body").append($expand);
+      this.setState({$expand: $expand, expandComponent: component});
+    },
+
+    unmountExpanded: function (reset) {
+      var $expand = this.state.$expand;
+      if ($expand) {
+        React.unmountComponentAtNode($expand[0]);
+        $expand.remove();
+        if (reset) { this.setState({$expand: null, expandComponent: null}); }
+      }
+    },
+
+    open: function () {
+      if (this.props.onOpen() && this.activeOptions().length > 0 && !this.props.inactive) {
+        this.setState({expanded: true});
+      }
+    },
+
+    close: function () {
+      this.setState({expanded: false});
+    },
+
+    toggle: function () {
+      if (!this.state.expanded) {
+        this.open();
+      } else {
+        this.close();
+      }
+    },
+
+    select: function (index) {
+      var option = this.activeOptions()[index];
+      if (option) {
+        var onSelect = option.onSelect || this.props.onSelect;
+        onSelect(option.value);
+      }
+    },
+
+    activeOptions: function () {
+      var options = _.filter(this.props.options, function (option) {
+        return !option.disabled;
+      });
+
+      return options;
+    },
+
+    handleClick: function () {
+      this.toggle();
+    },
+
+    handleRemove: function (e) {
+      e.stopPropagation();
+      this.close();
+      this.props.onRemove();
+    },
+
+    handleEnter: function () {
+      clearTimeout(this.state.closeTimeout);
+    },
+
+    handleLeave: function () {
+      var self = this;
+
+      if (BrowserInfo.doesNotSupportHoverPseudoclassSelector() || BrowserInfo.isPadDevice()) {
+        return ;
+      }
+
+      var timeoutId = setTimeout(function () {
+        self.close();
+      }, 50);
+
+      self.setState({closeTimeout: timeoutId});
+    },
+
+    handleSelect: function (option, e) {
+      e.stopPropagation();
+
+      var onSelect = option.onSelect || this.props.onSelect;
+
+      if (onSelect) {
+        var close = onSelect(option.value);
+
+        if ((close || typeof close !== "boolean") && this.isMounted()) {
+          this.close();
+        }
+      }
+    },
+
+    render: function () {
+      return <View ref="view" parent={this} />;
+    }
+  });
+
+  return Select;
 });

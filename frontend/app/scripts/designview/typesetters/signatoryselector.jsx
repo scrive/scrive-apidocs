@@ -45,12 +45,12 @@ define(["Backbone", "React", "common/select", "legacy_code"], function (Backbone
         <div className="subtitle">
           {localization.designview.textFields.forThis + " "}
           <div className="fieldTypeSetter-subtitle-select">
-            <Select.Select
+            <Select
               name={signame}
               options={options}
               optionsWidth="218px"
               textWidth={191}
-              cssClass="signature-field-placement-setter-field-selector"
+              className="signature-field-placement-setter-field-selector"
               onSelect={this.handleSelect}
               inactive={options.length === 0}
             />

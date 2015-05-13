@@ -157,12 +157,12 @@ define(["Underscore", "React", "common/button", "common/select",
             {!this.state.edit &&
               <span>
                 <div className="fieldTypeSetter-field-select-container">
-                  <Select.Select
+                  <Select
                     name={this.typeSelected()}
                     options={this.typeOptions()}
                     optionsWidth={optionsWidth + "px"}
                     textWidth={textWidth}
-                    cssClass={"typesetter-obligatory-option"}
+                    className={"typesetter-obligatory-option"}
                     style={{fontSize: "16px"}}
                   />
                 </div>

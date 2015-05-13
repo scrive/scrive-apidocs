@@ -48,16 +48,7 @@ define(["legacy_code", "React"], function(legacy_code, React) {
   };
 
   exports.clickSelectOption = function (select, index) {
-    var view = TestUtils.findAllInRenderedTree(select, function (comp) {
-      return comp.props.model;
-    })[0];
-
-    TestUtils.Simulate.click(view.getDOMNode());
-
-    var expand = view.state.expandedComponent
-      , options = TestUtils.scryRenderedDOMComponentsWithTag(expand, "li");
-
-    TestUtils.Simulate.click(options[index]);
+    select.select(index);
   };
 
   exports.cleanTimeoutsAndBody = function() {

@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
 
 
-define(['React', 'Backbone', 'common/select'], function(React, Backbone, NewSelect) {
+define(['React', 'Backbone', 'common/select'], function(React, Backbone, Select) {
 
   return React.createClass({
     propTypes: {
@@ -32,14 +32,13 @@ define(['React', 'Backbone', 'common/select'], function(React, Backbone, NewSele
      var visibleLanguages = _.filter(this.languages(), function(l) { return !l.hidden;});
      var options = _.filter(visibleLanguages, function(l) { return ('/' + l.value + '/') !=  self.props.langprefix });
      var lname = _.find(this.languages(), function(l) {return ('/' + l.value + '/') == self.props.langprefix}).name;
-     var Select = NewSelect.Select;
      return (
       <div className='langSwitcher'>
         <Select
           options={options}
           name={lname}
           border={this.props.border}
-          cssClass={this.props.cssClass}
+          className={this.props.cssClass}
           textWidth={this.props.textWidth}
           optionsWidth={this.props.optionsWidth}
           adjustHeightOnExpand={this.props.adjustHeightOnExpand}

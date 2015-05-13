@@ -56,8 +56,8 @@ return React.createClass({
           <div className="design-view-action-process-left-column-language-label">
             {localization.designview.recipientsLanguage}
           </div>
-          <Select.Select
-            cssClass="design-view-action-process-left-column-language-field"
+          <Select
+            className="design-view-action-process-left-column-language-field"
             name={_.findWhere(self.languages(), {value :lang}).name}
             options={_.filter(self.languages(), function(l) { return !l.hidden;})}
             textWidth={130}

@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React','legacy_code','common/button','common/select'], function(React, _Legacy, Button, NewSelect) {
+define(['React','legacy_code','common/button','common/select'], function(React, _Legacy, Button, Select) {
 
 
 
@@ -60,7 +60,6 @@ return React.createClass({
               return true;
             }
       });
-      var Select = NewSelect.Select;
       return (
         <Select
           color={"#000000"}

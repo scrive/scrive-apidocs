@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React', 'common/select','legacy_code'], function(React, NewSelect) {
+define(['React', 'common/select','legacy_code'], function(React, Select) {
 
 return React.createClass({
     propTypes: {
@@ -43,7 +43,6 @@ return React.createClass({
       if (toValue != "")
         optionsTo.unshift({name : this.props.toText, value: ""});
 
-      var Select = NewSelect.Select;
       return (
         <div className='float-left'>
           <div className='float-left'>

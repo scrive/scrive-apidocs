@@ -14,7 +14,7 @@
  *
  */
 
-define(['Backbone', 'legacy_code'], function() {
+define(['legacy_code', 'Backbone', 'React', 'common/select'], function(legacy_code, Backbone, React, Select) {
 
 var SignatureDrawOrTypeModel= Backbone.Model.extend({
   defaults: {
@@ -145,41 +145,45 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
                                  self.model.typerOrDrawer().setText(val);
                                }
                           });
-          var fontBackground = function(fontName) {
-                            var text = "";
-                            if (fontName == "JenniferLynne")
-                              text = localization.pad.font1;
-                            else if (fontName == "TalkingToTheMoon")
-                              text = localization.pad.font2;
-                            else
-                              text = localization.pad.font3;
-                            return "background-image: url(/text_to_image?width=200&height=50&transparent=true&left=true&font="+fontName+"&text="+  encodeURIComponent(text)+ ")";
-                          };
-          var fontSelect = new Select({
-                                name : "",
-                                cssClass : "float-left",
-                                style : "background-position: 10px -3px;width:200px;height:40px;" + fontBackground(self.model.typerOrDrawer().font()),
-                                options: [
-                                  {  name : ""
-                                   , disabled : (self.model.typerOrDrawer().font() == "JenniferLynne")
-                                   , style: "display:inline-block;height:20px;width:120px;background-position: 0px -15px;"  + fontBackground("JenniferLynne")
-                                   , onSelect: function() {self.model.typerOrDrawer().setFont('JenniferLynne');self.render();return true;}
-                                  },
-                                  {  name : ""
-                                   , disabled : (self.model.typerOrDrawer().font() == "TalkingToTheMoon")
-                                   , style:"display:inline-block;height:20px;width:120px;background-position: 0px -15px;"  +  fontBackground("TalkingToTheMoon")
-                                   , onSelect: function() {self.model.typerOrDrawer().setFont('TalkingToTheMoon');self.render();return true;}
-                                  },
-                                  {  name : ""
-                                   , disabled : (self.model.typerOrDrawer().font() == "TheOnlyException")
-                                   , style: "display:inline-block;height:20px;width:120px;background-position: 0px -15px;"  +  fontBackground("TheOnlyException")
-                                   , onSelect: function() {self.model.typerOrDrawer().setFont('TheOnlyException');self.render();return true;} }
-                                ]
-                            });
+          var fontStyle = function (fontName, width, height, bgPos) {
+            var style = {display: "inline-block", height:height, width: width, backgroundPosition: bgPos};
+            var text = "";
+            if (fontName == "JenniferLynne") {
+              text = localization.pad.font1;
+            } else if (fontName == "TalkingToTheMoon") {
+              text = localization.pad.font2;
+            } else {
+              text = localization.pad.font3;
+            }
+            style.backgroundImage = "url(/text_to_image?width=200&height=50&transparent=true&left=true&font="+fontName+"&text="+encodeURIComponent(text)+")";
+            return style;
+          };
+          var fontSelect = $("<div style='width:200px;float:left;'/>");
+          React.render(React.createElement(Select, {
+            name: "",
+            className: "float-left",
+            style: fontStyle(self.model.typerOrDrawer().font(), "200px", "40px", "10px -3px"),
+            options: [
+              {  name : ""
+               , disabled : (self.model.typerOrDrawer().font() == "JenniferLynne")
+               , style: fontStyle("JenniferLynne", "120px", "20px", "0px -15px")
+               , onSelect: function() {self.model.typerOrDrawer().setFont('JenniferLynne');self.render();return true;}
+              },
+              {  name : ""
+               , disabled : (self.model.typerOrDrawer().font() == "TalkingToTheMoon")
+               , style: fontStyle("TalkingToTheMoon", "120px", "20px", "0px -15px")
+               , onSelect: function() {self.model.typerOrDrawer().setFont('TalkingToTheMoon');self.render();return true;}
+              },
+              {  name : ""
+               , disabled : (self.model.typerOrDrawer().font() == "TheOnlyException")
+               , style: fontStyle("TheOnlyException", "120px", "20px", "0px -15px")
+               , onSelect: function() {self.model.typerOrDrawer().setFont('TheOnlyException');self.render();return true;} }
+            ]
+          }), fontSelect[0]);
           var row2 = $("<div style='margin:13px 0px;height:42px'>");
           header.append(row2);
           row2.append(this.textInput.el())
-              .append($("<div style='width:200px;float:left;'/>").append(fontSelect.el()));
+              .append(fontSelect);
           header.css("margin-bottom","0px");
         }
         return header;

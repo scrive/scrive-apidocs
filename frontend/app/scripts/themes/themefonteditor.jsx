@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(["React","legacy_code","common/select"], function(React, _Legacy, NewSelect) {
+define(["React","legacy_code","common/select"], function(React, _Legacy, Select) {
 
 return React.createClass({
   propTypes: {
@@ -26,7 +26,6 @@ return React.createClass({
    } ,
   render: function() {
     var self = this;
-    var Select  = NewSelect.Select;
     var availableFonts = self.availableFonts();
     var availableFontOptions = [];
     var selectedFontName = localization.branding.themes.customFont;

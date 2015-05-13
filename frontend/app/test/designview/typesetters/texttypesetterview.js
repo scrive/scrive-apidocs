@@ -36,7 +36,7 @@ define(imports, function(legacy_code, backend, util, React, Select, Button, More
 
       // first select is the obligatory and second is the font size.
       var selects = TestUtils.findAllInRenderedTree(typesetter, function (comp) {
-        return TestUtils.isCompositeComponentWithType(comp, Select.Select);
+        return TestUtils.isCompositeComponentWithType(comp, Select);
       });
 
       assert.equal(selects.length, 4, "four selects field, signatory, obligatory and font.");
@@ -88,7 +88,7 @@ define(imports, function(legacy_code, backend, util, React, Select, Button, More
       }));
 
       var selects = TestUtils.findAllInRenderedTree(typesetter, function (comp) {
-        return TestUtils.isCompositeComponentWithType(comp, Select.Select);
+        return TestUtils.isCompositeComponentWithType(comp, Select);
       });
 
       var signatorySelect = selects[0];
@@ -124,7 +124,7 @@ define(imports, function(legacy_code, backend, util, React, Select, Button, More
       }));
 
       var selects = TestUtils.findAllInRenderedTree(placement1.typeSetter, function (comp) {
-        return TestUtils.isCompositeComponentWithType(comp, Select.Select);
+        return TestUtils.isCompositeComponentWithType(comp, Select);
       });
 
       var signatorySelect = selects[0];
@@ -154,7 +154,7 @@ define(imports, function(legacy_code, backend, util, React, Select, Button, More
       }));
 
       var select3 = TestUtils.findAllInRenderedTree(placement3.typeSetter, function (comp) {
-        return TestUtils.isCompositeComponentWithType(comp, Select.Select);
+        return TestUtils.isCompositeComponentWithType(comp, Select);
       })[2];
 
       assert.equal(select3.props.options.length, 1, "there should be only 1 option.");
@@ -184,7 +184,7 @@ define(imports, function(legacy_code, backend, util, React, Select, Button, More
       }));
 
       var selects = TestUtils.findAllInRenderedTree(typesetter, function (comp) {
-        return TestUtils.isCompositeComponentWithType(comp, Select.Select);
+        return TestUtils.isCompositeComponentWithType(comp, Select);
       });
 
       var signatorySelect = selects[0];

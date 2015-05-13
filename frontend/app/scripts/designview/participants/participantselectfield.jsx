@@ -70,13 +70,12 @@ return React.createClass({
     var self = this;
     var field = this.props.model;
     var sig = field.signatory();
-    var NewSelect = Select.Select;
     return (
       <div className="design-view-action-participant-details-information-field-wrapper">
-        <NewSelect
+        <Select
            ref="select"
            name={localization.designview.whatField}
-           cssClass={"design-view-action-participant-new-field-select"}
+           className={"design-view-action-participant-new-field-select"}
            border={""}
            textWidth={270}
            optionsWidth={"297px"}

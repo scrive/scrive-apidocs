@@ -1,7 +1,7 @@
 /* Main admin only site definition. Its a tab based set of different lists.
  * This is the entry point for /adminonly/. */
 
-define(['Backbone', 'legacy_code'], function() {
+define(['legacy_code', 'Backbone', 'React', 'common/select'], function(legacy_code, Backbone, React, Select) {
 
 var AdminPaymentsModel = Backbone.Model.extend({
  defaults : {
@@ -221,40 +221,43 @@ var AdminPaymentsView = Backbone.View.extend({
 
           var ppRow = $("<div style='width:500px'/>");
           ppRow.append("<label style='width:200px;float:left;'> Price plan: </label>");
-          ppRow.append(new Select({
-                                      name : this.priceplanNameToText(this.model.priceplan()),
-                                      textWidth : 109,
-                                      style : "display:inline-block",
-                                      onSelect: function(v) {model.setPriceplan(v); self.render(); return true;},
-
-                                      options: [
-                                        { name : this.priceplanNameToText("free"), value : "free"},
-                                        { name : this.priceplanNameToText("one"), value : "one"},
-                                        { name : this.priceplanNameToText("form"), value : "form"},
-                                        { name : this.priceplanNameToText("team"), value : "team"},
-                                        { name : this.priceplanNameToText("company"), value : "company"},
-                                        { name : this.priceplanNameToText("enterprise"), value : "enterprise"},
-                                        { name : this.priceplanNameToText("trial"), value : "trial"}
-                                      ]
-                            }).el());
+          var $select1 = $("<span>");
+          React.render(React.createElement(Select, {
+            name : this.priceplanNameToText(this.model.priceplan()),
+            textWidth : 109,
+            style : { display: "inline-block" },
+            onSelect: function(v) {model.setPriceplan(v); self.render(); return true;},
+            options: [
+              { name : this.priceplanNameToText("free"), value : "free"},
+              { name : this.priceplanNameToText("one"), value : "one"},
+              { name : this.priceplanNameToText("form"), value : "form"},
+              { name : this.priceplanNameToText("team"), value : "team"},
+              { name : this.priceplanNameToText("company"), value : "company"},
+              { name : this.priceplanNameToText("enterprise"), value : "enterprise"},
+              { name : this.priceplanNameToText("trial"), value : "trial"}
+            ]
+          }), $select1[0]);
+          ppRow.append($select1);
 
           container.append(ppRow);
 
           var statusRow = $("<div style='width:500px'/>");
           statusRow.append("<label style='width:200px;float:left;'> Price plan: </label>");
-          statusRow.append(new Select({
-                                      name : this.priceplanStatusToText(this.model.status()),
-                                      textWidth : 109,
-                                      style : "display:inline-block",
-                                      onSelect: function(v) {model.setStatus(v); self.render(); return true;},
+          var $select2 = $("<span>");
+          React.render(React.createElement(Select, {
+            name : this.priceplanStatusToText(this.model.status()),
+            textWidth : 109,
+            style : { display: "inline-block" },
+            onSelect: function(v) {model.setStatus(v); self.render(); return true;},
 
-                                      options: [
-                                        { name : this.priceplanStatusToText("active"), value : "active"},
-                                        { name : this.priceplanStatusToText("overdue"), value : "overdue"},
-                                        { name : this.priceplanStatusToText("canceled"), value : "canceled"},
-                                        { name : this.priceplanStatusToText("deactivated"), value : "deactivated"}
-                                      ]
-                            }).el());
+            options: [
+              { name : this.priceplanStatusToText("active"), value : "active"},
+              { name : this.priceplanStatusToText("overdue"), value : "overdue"},
+              { name : this.priceplanStatusToText("canceled"), value : "canceled"},
+              { name : this.priceplanStatusToText("deactivated"), value : "deactivated"}
+            ]
+          }), $select2[0]);
+          statusRow.append($select2);
 
           container.append(statusRow);
 

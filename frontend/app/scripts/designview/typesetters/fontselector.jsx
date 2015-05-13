@@ -68,12 +68,12 @@ define(["Underscore", "React", "common/select", "legacy_code"],
         <div className="subtitle">
           {localization.fontSize.name}
           <div className="fieldTypeSetter-subtitle-select">
-            <Select.Select
+            <Select
               name={this.fontSelected()}
               options={this.fontOptions()}
               optionsWidth="218px"
               textWidth={191}
-              cssClass="typesetter-obligatory-option"
+              className="typesetter-obligatory-option"
               style={{fontSize: "16px"}}
             />
           </div>

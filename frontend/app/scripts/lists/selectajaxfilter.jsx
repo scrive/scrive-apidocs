@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React','common/select'], function(React,NewSelect) {
+define(['React','common/select'], function(React,Select) {
 
 
 return React.createClass({
@@ -54,7 +54,6 @@ return React.createClass({
          }
 
       }
-      var Select = NewSelect.Select;
       return (
         <div className='float-left'>
           <Select
