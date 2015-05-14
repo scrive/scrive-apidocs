@@ -157,10 +157,12 @@ $htmlopentag()$
 
               var headerDiv = jQuery('<div/>');
               var link = {};
+              var headerOpts = {signviewbranding: svb, link: link};
               var target = LocalStorage.get("backlink", "target");
               if (target == "to-sign") {
                 link.text= localization.pad.backToList;
                 link.onClick = function() {window.location = "/to-sign"};
+                headerOpts.forceShowing = true;
               } else if (target == "to-start") {
                 link.text = localization.toStart.backFromSigningPage;
                 link.onClick = function() {window.location = "/ts/$documentid$"};
@@ -169,10 +171,7 @@ $htmlopentag()$
                 link.onClick = function() {window.location = "/d/$documentid$"};
               }
 
-              var component = React.render(React.createElement(Header,{
-                   signviewbranding: svb,
-                   link : link
-                }), headerDiv[0]);
+              var component = React.render(React.createElement(Header, headerOpts), headerDiv[0]);
 
               var footerDiv = jQuery('<div/>');
               var component = React.render(React.createElement(Footer,{
