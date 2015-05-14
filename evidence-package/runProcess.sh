@@ -62,6 +62,7 @@ cd ..
 echo "Done."
 
 st_files=("Appendix3EvidenceLog"
+"Appendix4EvidenceofTime"
 "Appendix5EvidenceofIntent")
 st_filesdir="../templates/evidencelog/files"
 

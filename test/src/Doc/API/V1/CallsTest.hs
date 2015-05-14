@@ -496,7 +496,7 @@ testCloseEvidenceAttachments = do
       [ "Appendix 1 Evidence Quality Framework.html"
       , "Appendix 2 Service Description.html"
       , "Appendix 3 Evidence Log.html"
-      -- TODO Add Evidence of Time when it is included.
+      , "Appendix 4 Evidence of Time.html"
       , "Appendix 5 Evidence of Intent.html"
       , "Appendix 6 Digital Signature Documentation.html"
       , "Evidence Quality of Scrive Esigned Documents.html"

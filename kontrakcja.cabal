@@ -133,6 +133,7 @@ Executable kontrakcja-server
   Build-depends: soap
   Build-depends: split
   Build-depends: spreadsheet
+  Build-depends: statistics
   Build-depends: stm
   Build-depends: tagsoup
   Build-depends: template-haskell
@@ -257,6 +258,7 @@ Executable cron
   Build-depends: soap
   Build-depends: split
   Build-depends: spreadsheet
+  Build-depends: statistics
   Build-depends: stm
   Build-depends: tagsoup
   Build-depends: template-haskell
@@ -747,6 +749,7 @@ Executable kontrakcja-test
   Build-depends: split
   Build-depends: soap
   Build-depends: spreadsheet
+  Build-depends: statistics
   Build-depends: stm
   Build-depends: tagsoup
   Build-depends: template-haskell

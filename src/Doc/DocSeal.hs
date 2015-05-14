@@ -50,6 +50,7 @@ import EvidenceLog.Model
 import EvidenceLog.View
 import EvidencePackage.EvidenceLog
 import EvidencePackage.EvidenceOfIntent
+import EvidencePackage.EvidenceOfTime
 import File.File
 import File.Model
 import File.Storage
@@ -320,13 +321,14 @@ sealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m, Mo
                      -> String
                      -> Document
                      -> [DocumentEvidenceEvent]
-                     -> HC.ClockErrorStatistics
+                     -> [HC.ClockErrorEstimate]
+                     -> BS.ByteString
                      -> BS.ByteString
                      -> String
                      -> String
                      -> String
                      -> m Seal.SealSpec
-sealSpecFromDocument boxImages hostpart document elog ces content tmppath inputpath outputpath = do
+sealSpecFromDocument boxImages hostpart document elog offsets graphEvidenceOfTime content tmppath inputpath outputpath = do
   -- Keep only simple events and remove events induced by resealing
   let velog = filter eventForVerificationPage $ eventsForLog elog
   -- Form initials from signing parties
@@ -390,10 +392,14 @@ sealSpecFromDocument boxImages hostpart document elog ces content tmppath inputp
   -- Creating HTML Evidence Log
   let htmlevents = suppressRepeatedEvents elog
   elogsim <- getSignatoryIdentifierMap True htmlevents
-  htmllogs <- htmlDocFromEvidenceLog (documenttitle document) elogsim htmlevents ces
+  htmllogs <- htmlDocFromEvidenceLog (documenttitle document) elogsim htmlevents
   let evidenceattachment = Seal.SealAttachment { Seal.fileName = "Appendix 3 Evidence Log.html"
                                                , Seal.mimeType = Nothing
                                                , Seal.fileContent = BS.fromString htmllogs }
+  htmlEvidenceOfTime <- evidenceOfTimeHTML (documenttitle document) offsets graphEvidenceOfTime
+  let evidenceOfTime = Seal.SealAttachment { Seal.fileName = "Appendix 4 Evidence of Time.html"
+                                           , Seal.mimeType = Nothing
+                                           , Seal.fileContent = BS.fromString htmlEvidenceOfTime }
   evidenceOfIntent <- evidenceOfIntentAttachment elogsim document
 
   -- documentation files
@@ -442,7 +448,7 @@ sealSpecFromDocument boxImages hostpart document elog ces content tmppath inputp
         , Seal.initialsText       = initialsText
         , Seal.hostpart       = hostpart
         , Seal.staticTexts    = staticTexts
-        , Seal.attachments    = docAttachments ++ [evidenceattachment, evidenceOfIntent]
+        , Seal.attachments    = docAttachments ++ [evidenceattachment, evidenceOfTime, evidenceOfIntent]
         , Seal.filesList      =
           [ Seal.FileDesc { fileTitle = documenttitle document
                           , fileRole = mainDocumentText
@@ -478,13 +484,6 @@ sealDocument hostpart = theDocumentID >>= \did -> do
       logInfo_ $ "Sealing of document #" ++ show did ++ " failed because it has no main file attached"
       internalError
 
-collectClockErrorStatistics :: (MonadDB m, MonadThrow m) => [DocumentEvidenceEvent] -> m HC.ClockErrorStatistics
-collectClockErrorStatistics [] = return $ HC.ClockErrorStatistics Nothing Nothing Nothing 0 0
-collectClockErrorStatistics elog = do
-  let endtime   = $maximum (map evTime elog)
-      starttime = $minimum (map evTime elog) `min` (1 `daysBefore` endtime)
-  dbQuery $ HC.GetClockErrorStatistics (Just starttime) (Just endtime)
-
 sealDocumentFile :: (CryptoRNG m, MonadMask m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadLog m, AWS.AmazonMonad m)
                  => String
                  -> File
@@ -505,8 +504,10 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
     checkedBoxImage <- liftIO $ BS.readFile "frontend/app/img/checkbox_checked.jpg"
     uncheckedBoxImage <- liftIO $  BS.readFile "frontend/app/img/checkbox_unchecked.jpg"
     elog <- dbQuery $ GetEvidenceLog documentid
-    ces <- collectClockErrorStatistics elog
-    config <- theDocument >>= \d -> sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart d elog ces content tmppath tmpin tmpout
+    -- Evidence of Time documentation says we collect last 1000 samples
+    offsets <- dbQuery $ HC.GetNClockErrorEstimates 1000
+    graphEvidenceOfTime <- generateEvidenceOfTimeGraph 100 (tmppath ++ "/eot_samples.txt") (tmppath ++ "/eot_graph.svg") (map HC.offset offsets)
+    config <- theDocument >>= \d -> sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart d elog offsets graphEvidenceOfTime content tmppath tmpin tmpout
 
     let json_config = Unjson.unjsonToByteStringLazy Seal.unjsonSealSpec config
     (code,_stdout,stderr) <- liftIO $ do

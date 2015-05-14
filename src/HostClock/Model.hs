@@ -2,15 +2,17 @@ module HostClock.Model
   ( InsertClockOffsetFrequency(..)
   , ClockErrorEstimate(..)
   , GetLatestClockErrorEstimate(..)
-  , ClockErrorStatistics(..)
-  , GetClockErrorStatistics(..)
+  , GetNClockErrorEstimates(..)
   , maxClockError
+  , showClockError
   ) where
 
 import Control.Monad.Catch
 import Control.Monad.Time
+import Data.Decimal (realFracToDecimal)
 import Data.Int
 import Data.Time
+import Data.Word (Word8)
 
 import DB
 import KontraPrelude
@@ -48,40 +50,19 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetLatestClockErrorEstimate (May
 maxClockError :: UTCTime -> ClockErrorEstimate -> Double
 maxClockError t e = realToFrac (diffUTCTime t $ time e) * abs (frequency e) + abs (offset e)
 
-data ClockErrorStatistics = ClockErrorStatistics
-  { max       :: Maybe Double -- ^ clock error maximum (ignoring frequency)
-  , mean      :: Maybe Double -- ^ clock error sample mean
-  , std_dev   :: Maybe Double -- ^ clock error sample standard deviation
-  , collected :: Int64          -- ^ number of samples
-  , missed    :: Int64          -- ^ missed number of samples
-  }
-  deriving Show
-
-data GetClockErrorStatistics = GetClockErrorStatistics (Maybe UTCTime) (Maybe UTCTime)
-instance (MonadDB m, MonadThrow m) => DBQuery m GetClockErrorStatistics ClockErrorStatistics where
-  query (GetClockErrorStatistics from to) = do
+-- | Get the last 'limit' clock error estimates wher clock_offset is not NULL,
+-- used in Evidence of Time
+data GetNClockErrorEstimates = GetNClockErrorEstimates Integer
+instance (MonadDB m, MonadThrow m) => DBQuery m GetNClockErrorEstimates [ClockErrorEstimate] where
+  query (GetNClockErrorEstimates limit) = do
     runQuery_ $ sqlSelect "host_clock" $ do
-      when (isJust from) $ sqlWhere $ "time >=" <?> from
-      when (isJust to)   $ sqlWhere $ "time <=" <?> to
-      sqlResult "max(abs(clock_offset))"
-      sqlResult "avg(clock_offset)"
-      sqlResult "stddev_samp(clock_offset)"
-      sqlResult "count(clock_offset)"
-      sqlResult "count(*)"
-    fetchOne $ \(max', mean', std_dev', collected', total) ->
-      ClockErrorStatistics max' mean' std_dev' collected' (total - collected')
+        sqlResult "time"
+        sqlResult "clock_offset"
+        sqlResult "clock_frequency"
+        sqlWhere "clock_offset IS NOT NULL"
+        sqlOrderBy "time"
+        sqlLimit limit
+    fetchMany $ \(time', offset', frequency') -> ClockErrorEstimate time' offset' frequency'
 
-{-
-TODO:
-
-In evidence log, put
-
-  * max clock error
-  * mean clock error
-  * clock error std deviation
-  * number of collected error estimates
-  * number of missed error estimates
-
-over all hosts recorded in the event log and with time interval covering event log
-
--}
+showClockError :: Word8 -> Double -> String
+showClockError decimals e = show (realFracToDecimal decimals (e * 1000)) ++ " ms"

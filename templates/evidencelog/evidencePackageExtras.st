@@ -20,6 +20,21 @@ EvidenceLogEvidenceTable=<table id="event-table">
   }$
 </table><br/>
 ###
+EvidenceOfTimeGraph=$graph_image:noescape()$
+###
+EvidenceOfTimeSamplesTable=<table>
+<tr>
+  <th>Time collected</th>
+  <th>Clock offset</th>
+</tr>
+$entries:{entry|
+  <tr>
+    <td>$entry.offset_time$</td>
+    <td>$entry.offset$</td>
+  </tr>
+}$
+</table>
+###
 EvidenceLogClockErrorHistory=<table>
   <tr>
     <td class="time-stats-column">Maximum offset</td>
