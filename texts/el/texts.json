@@ -606,7 +606,7 @@
 "_mailDocumentAwaitingForAuthorContentSignedBy":"Έχετε ορίσει τον εαυτό σας να υπογράψει ηλεκτρονικά το έγγραφο <strong>$documenttitle$</strong> μετά από τον $partylistSigned:noescape()$ που υπέγραψε. Τώρα είναι η σειρά σας. ",
 "_mailDocumentAwaitingForAuthorFurtherInstructions":"Πιέστε το πλήκτρο για περαιτέρω οδηγίες. ",
 "_mailDocumentAwaitingForAuthorTitle":"Έγγραφο προς ηλεκτρονική υπογραφή: $documenttitle$ ",
-"_mailDocumentErrorContentBodyFirst":"Δυστυχώς η υπηρεσία Scrive  δεν μπόρεσε να διαχειριστεί το αρχείο εγγράφων <strong>$documenttitle$</strong>. Επομένως η διαδικασία υπογραφής έχει ακυρωθεί. Οι τεχνικοί μας έχουν ειδοποιηθεί για το θέμα. ",
+"_mailDocumentErrorContentBodyFirst":"",
 "_mailDocumentErrorContentBodyFourth":"Λυπούμαστε για την αναστάτωση ",
 "_mailDocumentErrorContentBodySecond":"Αν έχετε σχόλια ή ερωτήσεις σχετικά με το θέμα, παρακαλώ επικοινωνήστε με την ομάδα υποστήριξης της Scrive στο $supportmaillink()$.",
 "_mailDocumentErrorTitle":"Πρόβλημα μορφοποίησης αρχείου",
