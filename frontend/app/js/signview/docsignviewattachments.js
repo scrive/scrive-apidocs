@@ -97,8 +97,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
     });
   },
   getButton: function () {
-    if (this.uploadButton != undefined)
-        return this.uploadButton;
+    return this.uploadButton;
   },
   reviewButton: function() {
       var model = this.model;
@@ -119,7 +118,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
             container.append(this.removeButton().el());
 
       } else if (attachment.signatory().document().pending() || attachment.signatory().document().currentSignatoryCanSign()){
-        container.append(self.newUploadButton().el().addClass('float-right').css("overflow","hidden"));
+        container.append(self.uploadButton.el().addClass('float-right').css("overflow","hidden"));
       }
       container.append($("<div class='clearfix' />"));
 
