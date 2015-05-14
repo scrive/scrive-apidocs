@@ -4,7 +4,7 @@
 new APICallV1({
   category: "fetch",
   name: "Download file",
-  description: "Downloads file that is connected to document",
+  description: "Downloads file that is connected to document.",
   sampleUrl: "/api/v1/downloadfile/$docid$/$fileid$/file.pdf",
   method: "GET",
   getCallUrl: function () {

@@ -606,7 +606,7 @@
 "_mailDocumentAwaitingForAuthorContentSignedBy":"Determinou-se a si próprio a assinar electronicamente o documento <strong>$documenttitle$</strong> depois de $partylistSigned:noescape()$ o ter assinado. Agora é a sua vez.",
 "_mailDocumentAwaitingForAuthorFurtherInstructions":"Clique no botão para obter instruções adicionais.",
 "_mailDocumentAwaitingForAuthorTitle":"Documento para assinar electronicamente: $documenttitle$",
-"_mailDocumentErrorContentBodyFirst":"Lamentamos, mas o Scrive E-sign não conseguiu processar o ficheiro do documento <strong>$documenttitle$</strong>. O processo de assinatura foi assim cancelado. Os nossos técnicos foram informados desta questão.",
+"_mailDocumentErrorContentBodyFirst":"",
 "_mailDocumentErrorContentBodyFourth":"Lamentamos qualquer inconveniente",
 "_mailDocumentErrorContentBodySecond":"Se tiver quaisquer comentários ou dúvidas sobre esta questão, contacte o apoio do Scrive através de $supportmaillink()$.",
 "_mailDocumentErrorTitle":"Problema com o formato do ficheiro",

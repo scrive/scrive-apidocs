@@ -4,7 +4,7 @@
 new APICallV1({
   category: ["draft", "main"],
   name: "Update",
-  description: "Update API call, updates the document based on the given JSON",
+  description: "Update API call, updates the document based on the given JSON.",
   sampleUrl: "/api/v1/update/$documentid$",
   method: "POST",
   getCallUrl: function () {
@@ -35,7 +35,7 @@ new APICallV1({
             argName: "json",
             name: "Document JSON",
             sendAsParam: true,
-            description: "Document structure that will be used to update existing document",
+            description: "Document structure that will be used to update existing document.",
             defaultValue: "{}"
           })
         ]

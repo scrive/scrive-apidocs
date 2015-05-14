@@ -4,7 +4,7 @@
 new APICallV1({
   category: "signing",
   name: "Forward",
-  description: "Forward the confirmation email for any signed document to the given email address",
+  description: "Forward the confirmation email for any signed document to the given email address.",
   sampleUrl: "/api/v1/forward/$documentid$",
   method: "POST",
   getCallUrl: function () {

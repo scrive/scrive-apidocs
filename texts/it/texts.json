@@ -606,7 +606,7 @@
 "_mailDocumentAwaitingForAuthorContentSignedBy":"Ti sei impostato per firmare elettronicamente il documento <strong>$documenttitle$</strong> dopo che $partylistSigned:noescape()$ ha firmato. Ora è il tuo turno.",
 "_mailDocumentAwaitingForAuthorFurtherInstructions":"Clicca il pulsante per ulteriori istruzioni.",
 "_mailDocumentAwaitingForAuthorTitle":"Documento da firmare elettronicamente: $documenttitle$",
-"_mailDocumentErrorContentBodyFirst":"Purtroppo Scrive E-sign non ha potuto gestire il documento <strong>$documenttitle$</strong>. Pertanto il processo di firma è stato annullato. Abbiamo informato il nostro staff tecnico del problema.",
+"_mailDocumentErrorContentBodyFirst":"",
 "_mailDocumentErrorContentBodyFourth":"Ci scusiamo per l'inconveniente",
 "_mailDocumentErrorContentBodySecond":"Se avete commenti o domande relative a questo problema, contattare l'assistenza di Scrive a $supportmaillink()$. ",
 "_mailDocumentErrorTitle":"Problema con il formato del file",
