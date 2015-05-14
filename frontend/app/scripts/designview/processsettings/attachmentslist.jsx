@@ -51,8 +51,8 @@ return React.createClass({
                     if (sigName == "")
                       sigName = sig.nameInDocument();
                     var nameDiv = $("<div>" + localization.designview.attachmentRequestedFrom + "</div>");
-                    $('.put-attachment-name',name).text(a.name());
-                    $('.put-person-name',name).text(sigName.trim());
+                    $('.put-attachment-name',nameDiv).text(a.name());
+                    $('.put-person-name',nameDiv).text(sigName.trim());
                     return (
                       <tr>
                         <td className='icon-td'>
