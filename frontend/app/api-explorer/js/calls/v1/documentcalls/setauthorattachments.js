@@ -4,7 +4,7 @@
 new APICallV1({
   category: "draft",
   name: "Set author attachments",
-  description: "Sets author attachment for given document",
+  description: "Sets author attachment for given document.",
   sampleUrl: "/api/v1/setattachments/$documentid$",
   method: "POST",
   getCallUrl: function () {
@@ -26,7 +26,7 @@ new APICallV1({
             argName: function (i) { return "attachment_" + i;},
             name: "Attachments",
             sendAsParam: true,
-            description: "Attachment files",
+            description: "Attachment files.",
             limit: 100,
             defaultValue: function (self) {
               var input = $("<input type='file' class='form-control multiFileInput'/>");

@@ -4,7 +4,7 @@
 new APICallV1({
   category: ["draft", "main"],
   name: "Ready",
-  description: "Make document ready for signing",
+  description: "Make document ready for signing.",
   sampleUrl: "/api/v1/ready/$documentid$",
   method: "POST",
   getCallUrl: function () {

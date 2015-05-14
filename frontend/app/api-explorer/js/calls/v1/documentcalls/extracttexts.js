@@ -4,7 +4,7 @@
 new APICallV1({
   category: "draft",
   name: "Extract texts",
-  description: "Extract texts API call",
+  description: "Extract texts API call.",
   sampleUrl: "/api/v1/extracttexts/$docid$/$fileid$",
   method: "GET",
   getCallUrl: function () {

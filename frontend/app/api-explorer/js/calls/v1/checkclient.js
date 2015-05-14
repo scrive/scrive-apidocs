@@ -3,7 +3,7 @@
 
 new APICallV1({
   name: "Check client",
-  description: "Check if your current api client is still supported",
+  description: "Check if your current api client is still supported.",
   sampleUrl: "/api/v1/checkclient",
   method: "POST",
   getCallUrl: function () {
@@ -14,7 +14,7 @@ new APICallV1({
             type: "json",
             argName: "client",
             name: "Client",
-            description: "Description of API client that is supposed to be checked",
+            description: "Description of API client that is supposed to be checked.",
             defaultValue: JSON.stringify({
               platform: "iOS",
               platform_version:"5.0",

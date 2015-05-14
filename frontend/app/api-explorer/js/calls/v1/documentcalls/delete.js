@@ -4,7 +4,7 @@
 new APICallV1({
   category: "signing",
   name: "Delete",
-  description: "Move selected document to trash",
+  description: "Move selected document to trash.",
   sampleUrl: "/api/v1/delete/$documentid$",
   method: "DELETE",
   getCallUrl: function () {
