@@ -154,8 +154,8 @@ class ExtendWithRandomnes a where
     moreRandom :: a -> Gen a
     extendRandomness :: a -> TestEnv a
     extendRandomness a = do
-          stdgen <- random
-          return $ unGen (moreRandom a) stdgen 10
+      gen <- random
+      return $ unGen (moreRandom a) gen 10
 
 arbitraryAuthorActor :: TestEnv Actor
 arbitraryAuthorActor = do

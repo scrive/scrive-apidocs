@@ -12,7 +12,6 @@ import Happstack.Server
 import Log
 import Log.Class.Instances ()
 
-import Control.Monad.Trans.Control.Util
 import Control.Monad.Trans.Instances ()
 import Crypto.RNG
 import DB
@@ -26,9 +25,9 @@ newtype Mailer a = Mailer { unMailer :: InnerMailer a }
   deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadCatch, MonadDB, MonadIO, MonadMask, MonadThrow, MonadTime, ServerMonad, MonadLog)
 
 instance MonadBaseControl IO Mailer where
-  newtype StM Mailer a = StMailer { unStMailer :: StM InnerMailer a }
-  liftBaseWith = newtypeLiftBaseWith Mailer unMailer StMailer
-  restoreM     = newtypeRestoreM Mailer unStMailer
+  type StM Mailer a = StM InnerMailer a
+  liftBaseWith f = Mailer $ liftBaseWith $ \run -> f $ run . unMailer
+  restoreM       = Mailer . restoreM
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 

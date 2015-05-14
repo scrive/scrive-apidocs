@@ -136,16 +136,16 @@ withCryptoRNGState :: (CryptoRNGState -> m a) -> CryptoRNGT m a
 withCryptoRNGState = CryptoRNGT . ReaderT
 
 instance MonadTransControl CryptoRNGT where
-  newtype StT CryptoRNGT a = StCryptoRNGT { unStCryptoRNGT :: StT InnerCryptoRNGT a }
-  liftWith = defaultLiftWith CryptoRNGT unCryptoRNGT StCryptoRNGT
-  restoreT = defaultRestoreT CryptoRNGT unStCryptoRNGT
+  type StT CryptoRNGT a = StT InnerCryptoRNGT a
+  liftWith = defaultLiftWith CryptoRNGT unCryptoRNGT
+  restoreT = defaultRestoreT CryptoRNGT
   {-# INLINE liftWith #-}
   {-# INLINE restoreT #-}
 
 instance MonadBaseControl b m => MonadBaseControl b (CryptoRNGT m) where
-  newtype StM (CryptoRNGT m) a = StMCryptoRNGT { unStMCryptoRNGT :: ComposeSt CryptoRNGT m a }
-  liftBaseWith = defaultLiftBaseWith StMCryptoRNGT
-  restoreM     = defaultRestoreM unStMCryptoRNGT
+  type StM (CryptoRNGT m) a = ComposeSt CryptoRNGT m a
+  liftBaseWith = defaultLiftBaseWith
+  restoreM     = defaultRestoreM
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 

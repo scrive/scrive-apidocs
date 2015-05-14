@@ -1,6 +1,5 @@
 ####
-toStartLogin=
-$doctype()$
+toStartLogin=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
@@ -33,8 +32,7 @@ $htmlopentag()$
   </body>
 $htmlclosingtag()$
 ###
-pageToStartDocumentView=
-$doctype()$
+pageToStartDocumentView=$doctype()$
 $htmlopentag()$
   <head>
     <title>$documenttitle$ - $pagetitle()$</title>
@@ -94,10 +92,9 @@ $htmlopentag()$
       </div>
     </div>
   </body>
-$htmlclosingtag$
+$htmlclosingtag()$
 ####
-pageToStartListView=
-$doctype()$
+pageToStartListView=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
@@ -162,5 +159,5 @@ $htmlopentag()$
       </div>
     </div>
   </body>
-$htmlclosingtag$
+$htmlclosingtag()$
 ###

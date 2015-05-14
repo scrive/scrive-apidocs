@@ -1,6 +1,5 @@
 ###
-loginPageWithBranding=
-$doctype()$
+loginPageWithBranding=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
@@ -41,8 +40,7 @@ $htmlopentag()$
   </body>
 $htmlclosingtag()$
 ###
-changePasswordPageWithBranding=
-$doctype()$
+changePasswordPageWithBranding=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
@@ -66,8 +64,7 @@ $htmlopentag()$
   </body>
 $htmlclosingtag()$
 ###
-accessNewAccountPageWithBranding=
-$doctype()$
+accessNewAccountPageWithBranding=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
@@ -95,8 +92,7 @@ $htmlopentag()$
   </body>
 $htmlclosingtag()$
 ###
-accountSetupPage=
-  $doctype()$
+accountSetupPage=$doctype()$
   $htmlopentag()$
     <head>
       <title>$pagetitle()$</title>

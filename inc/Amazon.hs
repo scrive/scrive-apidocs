@@ -60,16 +60,16 @@ runAmazonMonadT :: Monad m => AmazonConfig -> AmazonMonadT m a -> m a
 runAmazonMonadT ac = flip runReaderT ac . unAmazonMonadT
 
 instance MonadTransControl AmazonMonadT where
-  newtype StT AmazonMonadT m = StAmazonMonadT { unStAmazonMonadT :: StT (ReaderT AmazonConfig) m }
-  liftWith = defaultLiftWith AmazonMonadT unAmazonMonadT StAmazonMonadT
-  restoreT = defaultRestoreT AmazonMonadT unStAmazonMonadT
+  type StT AmazonMonadT m = StT (ReaderT AmazonConfig) m
+  liftWith = defaultLiftWith AmazonMonadT unAmazonMonadT
+  restoreT = defaultRestoreT AmazonMonadT
   {-# INLINE liftWith #-}
   {-# INLINE restoreT #-}
 
 instance MonadBaseControl IO m => MonadBaseControl IO (AmazonMonadT m) where
-  newtype StM (AmazonMonadT m) a = StMAmazonMonadT { unStMAmazonMonadT :: ComposeSt AmazonMonadT m a }
-  liftBaseWith = defaultLiftBaseWith StMAmazonMonadT
-  restoreM     = defaultRestoreM unStMAmazonMonadT
+  type StM (AmazonMonadT m) a = ComposeSt AmazonMonadT m a
+  liftBaseWith = defaultLiftBaseWith
+  restoreM     = defaultRestoreM
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 

@@ -18,7 +18,7 @@ module Doc.Rendering
 
 import Control.Monad.Base
 import Control.Monad.Catch hiding (handle)
-import Control.Monad.Error
+import Control.Monad.Except
 import Control.Monad.Trans.Control
 import Data.Char
 import Data.Typeable
@@ -147,14 +147,11 @@ data FileError = FileSizeError Int Int
                | FileOtherError String
                deriving (Eq, Ord, Show, Read, Typeable)
 
-instance Error FileError where
-    strMsg = FileOtherError
-
 preCheckPDFHelper :: BS.ByteString
                   -> String
                   -> IO (Either FileError BS.ByteString)
 preCheckPDFHelper content tmppath =
-    runErrorT $ do
+    runExceptT $ do
       checkSize
       checkHeader
       checkNormalize

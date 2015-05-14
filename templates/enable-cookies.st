@@ -1,10 +1,9 @@
 ###
-enableCookies=
-<!DOCTYPE html>
+enableCookies=<!DOCTYPE html>
 <html>
 
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 
 <title>How to enable cookies on the iPhone</title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
@@ -53,14 +52,14 @@ $analyticsLoaderKontrakcja()$
   <p>To enable cookies in Mobile Safari:</p>
   <ol>
     <li>Go to the Home screen by pressing the Home button or by unlocking your phone.</li>
-    <li>Select the <strong>Settings</strong> icon.<br>
-    <img src="/img/enable-cookies/pict0044.jpg" alt="iPhone Home"></li>
-    <li>Select <strong>Safari</strong> from the <strong>Settings</strong> menu.<br>
-    <img src="/img/enable-cookies/iphone_settings_s.jpg" alt="iPhone Settings"></li>
-    <li>Select <strong>Accept Cookies</strong> from the <strong>Safari</strong> menu.<br>
-    <img src="/img/enable-cookies/iphone_settings_safari.jpg" alt="iPhone Safari Settings"></li>
-    <li>Select <strong>From visited</strong> from the <strong>Accept Cookies</strong><strong> menu.<br>
-    <img src="/img/enable-cookies/iphone_accept_cookies.jpg" alt="iPhone Safari Accept Cookies"></strong></li>
+    <li>Select the <strong>Settings</strong> icon.<br />
+    <img src="/img/enable-cookies/pict0044.jpg" alt="iPhone Home" /></li>
+    <li>Select <strong>Safari</strong> from the <strong>Settings</strong> menu.<br />
+    <img src="/img/enable-cookies/iphone_settings_s.jpg" alt="iPhone Settings" /></li>
+    <li>Select <strong>Accept Cookies</strong> from the <strong>Safari</strong> menu.<br />
+    <img src="/img/enable-cookies/iphone_settings_safari.jpg" alt="iPhone Safari Settings" /></li>
+    <li>Select <strong>From visited</strong> from the <strong>Accept Cookies</strong><strong> menu.<br />
+    <img src="/img/enable-cookies/iphone_accept_cookies.jpg" alt="iPhone Safari Accept Cookies" /></strong></li>
     <li>Press the <strong>Home</strong> button to return the the iPhone home screen.</li>
     <li>Select the <strong>Safari</strong> icon to return to Safari.</li>
     <li>Before the cookie settings change will take effect, Safari must restart.  To restart Safari <strong>press and hold the Home button (for around five seconds)</strong> until the iPhone display goes blank and the home screen appears.</li>

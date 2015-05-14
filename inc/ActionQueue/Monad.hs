@@ -15,7 +15,6 @@ import qualified Data.ByteString.Char8 as BS
 
 import ActionQueue.Core
 import Amazon
-import Control.Monad.Trans.Control.Util
 import Crypto.RNG
 import DB
 import KontraPrelude
@@ -28,9 +27,9 @@ newtype ActionQueueT m qd a = AQ { unAQ :: InnerAQ m qd a }
   deriving (Applicative, CryptoRNG, Functor, Monad, MonadCatch, MonadDB, MonadIO, MonadMask, MonadReader qd, MonadThrow, MonadTime, AmazonMonad, MonadBase b, MonadLog)
 
 instance (MonadBaseControl IO m, MonadBase IO (ActionQueueT m qd)) => MonadBaseControl IO (ActionQueueT m qd) where
-  newtype StM (ActionQueueT m qd) a = StAQ { unStAQ :: StM (InnerAQ m qd) a }
-  liftBaseWith = newtypeLiftBaseWith AQ unAQ StAQ
-  restoreM = newtypeRestoreM AQ unStAQ
+  type StM (ActionQueueT m qd) a = StM (InnerAQ m qd) a
+  liftBaseWith f = AQ $ liftBaseWith $ \run -> f $ run . unAQ
+  restoreM       = AQ . restoreM
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 

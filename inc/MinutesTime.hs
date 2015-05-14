@@ -25,7 +25,6 @@ import Control.Monad.Time
 import Data.Int
 import Data.Time
 import Data.Time.Clock.POSIX
-import System.Locale
 import qualified Data.Binary as B
 
 import KontraPrelude
@@ -46,7 +45,7 @@ formatTime' :: FormatTime t => String -> t -> String
 formatTime' = formatTime defaultTimeLocale
 
 parseTime' :: ParseTime t => String -> String -> Maybe t
-parseTime' = parseTime defaultTimeLocale
+parseTime' = parseTimeM True defaultTimeLocale
 
 -- | Show time as %Y-%m-%d %H:%M:%S %Z.
 -- This change was requested by Upsales. Should not affect much.

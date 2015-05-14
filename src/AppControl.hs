@@ -14,7 +14,7 @@ import Control.Concurrent.Lifted (MVar, modifyMVar, threadDelay, readMVar)
 import Control.DeepSeq
 import Control.Monad.Base
 import Control.Monad.Catch
-import Control.Monad.Error
+import Control.Monad.IO.Class
 import Control.Monad.Trans.Control
 import Data.Aeson.Types
 import Data.Functor

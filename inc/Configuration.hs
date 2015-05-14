@@ -88,3 +88,4 @@ showNiceYamlParseException filepath parseException =
     Yaml.AesonException ex -> filepath ++ ": " ++ ex
     Yaml.OtherParseException ex -> filepath ++ ": " ++ show ex
     Yaml.NonStringKeyAlias anchorName value -> filepath ++ ": unknown non-string key alias " ++ show anchorName ++ ", " ++ show value
+    Yaml.CyclicIncludes -> filepath ++ ": cyclic includes"

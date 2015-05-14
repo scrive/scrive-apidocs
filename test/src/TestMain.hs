@@ -6,7 +6,7 @@ import Control.Monad.Base
 import Database.PostgreSQL.PQTypes.Internal.Connection
 import Log
 import System.Directory (createDirectoryIfMissing)
-import System.Environment.UTF8
+import System.Environment
 import System.IO
 import Test.Framework
 import qualified Control.Exception.Lifted as E

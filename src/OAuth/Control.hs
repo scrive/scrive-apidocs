@@ -2,7 +2,6 @@
 module OAuth.Control(oauth) where
 
 import Control.Exception.Lifted
-import Control.Monad.Error
 import Data.Map (singleton)
 import Happstack.Server.RqData
 import Happstack.Server.Types

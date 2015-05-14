@@ -1,6 +1,5 @@
 #####
-pageDocumentDesign=
-$doctype()$
+pageDocumentDesign=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
@@ -43,5 +42,5 @@ $htmlopentag()$
     </div>
   $postPageCode()$
   </body>
-$htmlclosingtag$
+$htmlclosingtag()$
 ###

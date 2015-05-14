@@ -63,7 +63,7 @@ assertNoNestedP :: [String] -> KontrakcjaTemplates -> Assertion
 assertNoNestedP tnames templates = do
   _ <- forM (filter (not . (flip elem) excludedTemplates) tnames) $ \n -> do
     let t = renderTemplateMain templates n ([]::[(String, String)]) id
-    case parseStringAsXML (n, removeScripts t) of
+    case parseStringAsXML (n, removeScripts $ removeDocTypeDeclaration t) of
       Left msg -> assertFailure msg
       Right (Document _ _ root _) -> checkXMLForNestedP n $ CElem root $undefined
   assertSuccess

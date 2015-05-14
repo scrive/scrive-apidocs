@@ -23,7 +23,6 @@ import Control.Concurrent
 import Control.Concurrent.STM
 import Control.Monad.Base
 import Control.Monad.Catch
-import Control.Monad.Error
 import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Trans.Control
@@ -43,7 +42,6 @@ import qualified Data.Map as M
 import qualified Text.StringTemplates.TemplatesLoader as TL
 
 import BrandedDomain.Model
-import Control.Monad.Trans.Control.Util
 import Crypto.RNG
 import DB
 import EID.CGI.GRP.Config
@@ -133,9 +131,9 @@ instance TemplatesMonad TestEnv where
     return $ TL.localizedVersion langStr globaltemplates
 
 instance MonadBaseControl IO TestEnv where
-  newtype StM TestEnv a = StTestEnv { unStTestEnv :: StM InnerTestEnv a }
-  liftBaseWith = newtypeLiftBaseWith TestEnv unTestEnv StTestEnv
-  restoreM     = newtypeRestoreM TestEnv unStTestEnv
+  type StM TestEnv a = StM InnerTestEnv a
+  liftBaseWith f = TestEnv $ liftBaseWith $ \run -> f $ run . unTestEnv
+  restoreM       = TestEnv . restoreM
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 

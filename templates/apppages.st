@@ -1,6 +1,5 @@
 ###
-wholePage=
-    $doctype()$
+wholePage=$doctype()$
     $htmlopentag()$
       <head>
         <title>$pagetitle()$</title>

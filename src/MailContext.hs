@@ -25,15 +25,15 @@ instance Monad m => MailContextMonad (MailContextT m) where
   getMailContext = MailContextT ask
 
 instance MonadBaseControl IO m => MonadBaseControl IO (MailContextT m) where
-  newtype StM (MailContextT m) a = StM { unStM :: ComposeSt MailContextT m a }
-  liftBaseWith = defaultLiftBaseWith StM
-  restoreM     = defaultRestoreM unStM
+  type StM (MailContextT m) a = ComposeSt MailContextT m a
+  liftBaseWith = defaultLiftBaseWith
+  restoreM     = defaultRestoreM
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
 instance MonadTransControl MailContextT where
-  newtype StT MailContextT m = StT { unStT :: StT (ReaderT MailContext) m }
-  liftWith = defaultLiftWith MailContextT unMailContextT StT
-  restoreT = defaultRestoreT MailContextT unStT
+  type StT MailContextT m = StT (ReaderT MailContext) m
+  liftWith = defaultLiftWith MailContextT unMailContextT
+  restoreT = defaultRestoreT MailContextT
   {-# INLINE liftWith #-}
   {-# INLINE restoreT #-}

@@ -1,6 +1,5 @@
 ###
-notFound=
-$doctype()$
+notFound=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
@@ -44,8 +43,7 @@ $htmlopentag()$
 </body>
 $htmlclosingtag()$
 ###
-notFoundWithoutHeaders=
-$doctype()$
+notFoundWithoutHeaders=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
@@ -91,8 +89,7 @@ $htmlopentag()$
 </body>
 $htmlclosingtag()$
 ####
-internalServerError=
-$doctype()$
+internalServerError=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
@@ -136,8 +133,7 @@ $htmlopentag()$
 </body>
 $htmlclosingtag()$
 ###
-internalServerErrorWithoutHeaders=
-$doctype()$
+internalServerErrorWithoutHeaders=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
@@ -183,8 +179,7 @@ $htmlopentag()$
 </body>
 $htmlclosingtag()$
 ###
-sessionTimeOut=
-$doctype()$
+sessionTimeOut=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
@@ -214,8 +209,7 @@ $htmlopentag()$
   </body>
 $htmlclosingtag()$
 ###
-sessionTimeOutWithoutHeaders=
-$doctype()$
+sessionTimeOutWithoutHeaders=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>

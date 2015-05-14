@@ -2,8 +2,7 @@
 ###  This template does not check if user is logged in, since this page
 ###  always behaves as if the user is *not* logged in.
 ###
-termsOfService=
-$doctype()$
+termsOfService=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
@@ -27,8 +26,7 @@ $htmlopentag()$
 </body>
 $htmlclosingtag()$
 ###
-termsOfServiceWithBranding=
-$doctype()$
+termsOfServiceWithBranding=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>

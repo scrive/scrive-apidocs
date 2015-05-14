@@ -20,6 +20,7 @@ import Log.Data
 import Log.Logger
 import Log.Monad
 
+import Data.Aeson.Instances ()
 import DB.Checks
 import DB.PostgreSQL
 import KontraPrelude

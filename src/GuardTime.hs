@@ -34,16 +34,16 @@ newtype GuardTimeConfT m a = GuardTimeConfT { unGuardTimeConfT :: ReaderT GuardT
   deriving (Alternative, Applicative, Functor, Monad, MonadPlus, MonadIO, MonadTrans, MonadBase b, MonadThrow, MonadCatch, MonadMask)
 
 instance MonadBaseControl b m => MonadBaseControl b (GuardTimeConfT m) where
-  newtype StM (GuardTimeConfT m) a = StM { unStM :: ComposeSt GuardTimeConfT m a }
-  liftBaseWith = defaultLiftBaseWith StM
-  restoreM     = defaultRestoreM unStM
+  type StM (GuardTimeConfT m) a = ComposeSt GuardTimeConfT m a
+  liftBaseWith = defaultLiftBaseWith
+  restoreM     = defaultRestoreM
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
 instance MonadTransControl GuardTimeConfT where
-  newtype StT GuardTimeConfT m = StT { unStT :: StT (ReaderT GuardTimeConf) m }
-  liftWith = defaultLiftWith GuardTimeConfT unGuardTimeConfT StT
-  restoreT = defaultRestoreT GuardTimeConfT unStT
+  type StT GuardTimeConfT m = StT (ReaderT GuardTimeConf) m
+  liftWith = defaultLiftWith GuardTimeConfT unGuardTimeConfT
+  restoreT = defaultRestoreT GuardTimeConfT
   {-# INLINE liftWith #-}
   {-# INLINE restoreT #-}
 

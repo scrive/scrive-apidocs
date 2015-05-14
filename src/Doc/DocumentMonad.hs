@@ -26,16 +26,16 @@ newtype DocumentT m a = DocumentT { unDocumentT :: RowCacheT Document m a }
   deriving (Applicative, Monad, MonadDB, Functor, MonadIO, MonadTrans, MonadBase b, MonadThrow, MonadCatch, MonadMask)
 
 instance MonadBaseControl b m => MonadBaseControl b (DocumentT m) where
-  newtype StM (DocumentT m) a = StM { unStM :: ComposeSt DocumentT m a }
-  liftBaseWith = defaultLiftBaseWith StM
-  restoreM     = defaultRestoreM unStM
+  type StM (DocumentT m) a = ComposeSt DocumentT m a
+  liftBaseWith = defaultLiftBaseWith
+  restoreM     = defaultRestoreM
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
 instance MonadTransControl DocumentT where
-  newtype StT DocumentT a = StT { unStT :: StT (RowCacheT Document) a }
-  liftWith = defaultLiftWith DocumentT unDocumentT StT
-  restoreT = defaultRestoreT DocumentT unStT
+  type StT DocumentT a = StT (RowCacheT Document) a
+  liftWith = defaultLiftWith DocumentT unDocumentT
+  restoreT = defaultRestoreT DocumentT
   {-# INLINE liftWith #-}
   {-# INLINE restoreT #-}
 

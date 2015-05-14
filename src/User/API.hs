@@ -9,7 +9,6 @@ module User.API (
   ) where
 
 import Control.Exception.Lifted
-import Control.Monad.Error
 import Happstack.Server.Types
 import Happstack.StaticRouting
 import Text.JSON.Gen

@@ -30,7 +30,6 @@ import qualified Text.StringTemplates.TemplatesLoader as TL
 
 import Context
 import Control.Logic
-import Control.Monad.Trans.Control.Util
 import Control.Monad.Trans.Instances ()
 import Crypto.RNG
 import DB
@@ -62,9 +61,9 @@ runKontra :: Context -> Kontra a -> AWS.AmazonMonadT (CryptoRNGT (DBT (ReqHandle
 runKontra ctx f = evalStateT (unKontra f) ctx
 
 instance MonadBaseControl IO Kontra where
-  newtype StM Kontra a = StKontra { unStKontra :: StM InnerKontra a }
-  liftBaseWith = newtypeLiftBaseWith Kontra unKontra StKontra
-  restoreM     = newtypeRestoreM Kontra unStKontra
+  type StM Kontra a = StM InnerKontra a
+  liftBaseWith f = Kontra $ liftBaseWith $ \run -> f $ run . unKontra
+  restoreM       = Kontra . restoreM
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 

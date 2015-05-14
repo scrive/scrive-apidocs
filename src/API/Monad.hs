@@ -35,7 +35,6 @@ module API.Monad (
 
 import Control.Exception.Lifted
 import Control.Monad.Base
-import Control.Monad.Error
 import Data.Typeable
 import Happstack.Server (toResponse)
 import Happstack.Server.Types

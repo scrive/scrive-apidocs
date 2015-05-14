@@ -12,7 +12,6 @@ import Happstack.Server
 import Log
 import Log.Class.Instances ()
 
-import Control.Monad.Trans.Control.Util
 import Control.Monad.Trans.Instances ()
 import Crypto.RNG
 import DB
@@ -26,9 +25,9 @@ newtype Messenger a = Messenger { unMessenger :: InnerMessenger a }
   deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadCatch, MonadDB, MonadIO, MonadMask, MonadThrow, MonadTime, ServerMonad, MonadLog)
 
 instance MonadBaseControl IO Messenger where
-  newtype StM Messenger a = StMessenger { unStMessenger :: StM InnerMessenger a }
-  liftBaseWith = newtypeLiftBaseWith Messenger unMessenger StMessenger
-  restoreM     = newtypeRestoreM Messenger unStMessenger
+  type StM Messenger a = StM InnerMessenger a
+  liftBaseWith f = Messenger $ liftBaseWith $ \run -> f $ run . unMessenger
+  restoreM       = Messenger . restoreM
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 

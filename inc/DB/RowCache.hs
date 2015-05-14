@@ -101,16 +101,17 @@ instance MonadTrans (RowCacheT r) where
   lift = RowCacheT . lift . lift
 
 instance MonadBaseControl b m => MonadBaseControl b (RowCacheT r m) where
-  newtype StM (RowCacheT r m) a = StM { unStM :: ComposeSt (RowCacheT r) m a }
-  liftBaseWith = defaultLiftBaseWith StM
-  restoreM     = defaultRestoreM unStM
+  type StM (RowCacheT r m) a = ComposeSt (RowCacheT r) m a
+  liftBaseWith = defaultLiftBaseWith
+  restoreM     = defaultRestoreM
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
 instance MonadTransControl (RowCacheT r) where
-  newtype StT (RowCacheT r) a = StT { unStT :: StT (ReaderT (ID r)) (StT (StateT (RowState r)) a) }
+  type StT (RowCacheT r) a = StT (ReaderT (ID r)) (StT (StateT (RowState r)) a)
   liftWith = \f -> RowCacheT $ liftWith $ \run ->
-                               liftWith $ \run' -> f $ liftM StT . run' . run . unRowCacheT
-  restoreT = RowCacheT . restoreT . restoreT . liftM unStT
+    liftWith $ \innerRun -> f $ innerRun . run . unRowCacheT
+  restoreT = RowCacheT . restoreT . restoreT
   {-# INLINE liftWith #-}
   {-# INLINE restoreT #-}
+

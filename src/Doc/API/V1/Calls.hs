@@ -20,7 +20,7 @@ module Doc.API.V1.Calls (
 
 import Control.Conditional (whenM, unlessM, ifM)
 import Control.Exception.Lifted
-import Control.Monad.Error
+import Control.Monad.IO.Class
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Char
 import Data.Int

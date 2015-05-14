@@ -16,8 +16,7 @@ signviewAnalyticsVariables=
   ]);
 </script>
 ####
-padLogin=
-$doctype()$
+padLogin=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
@@ -50,8 +49,7 @@ $htmlopentag()$
   </body>
 $htmlclosingtag()$
 ########
-pageDocumentSignView=
-$doctype()$
+pageDocumentSignView=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
@@ -125,10 +123,9 @@ $htmlopentag()$
     $wrapperclosingtag()$
     $endif$
   </body>
-$htmlclosingtag$
+$htmlclosingtag()$
 ####
-pageDocumentSignPadView=
-$doctype()$
+pageDocumentSignPadView=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
@@ -198,5 +195,5 @@ $htmlopentag()$
       </div>
     </div>
   </body>
-$htmlclosingtag$
+$htmlclosingtag()$
 ####

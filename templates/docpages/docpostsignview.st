@@ -1,6 +1,5 @@
 #####
-pagePostSignview=
-$doctype()$
+pagePostSignview=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
@@ -23,5 +22,5 @@ $htmlopentag()$
     </div>
     </div>
   </body>
-$htmlclosingtag$
+$htmlclosingtag()$
 ###

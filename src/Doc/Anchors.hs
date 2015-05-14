@@ -3,7 +3,7 @@ module Doc.Anchors (
   , getAnchorPositions
   ) where
 
-import Control.Monad.Error
+import Control.Monad.IO.Class
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Log
 import System.Exit
@@ -28,7 +28,7 @@ import KontraPrelude
 import Utils.Directory
 import Utils.IO
 
-getAnchorPositions :: (Monad m, MonadBaseControl IO m,MonadLog m,MonadIO m) => BS.ByteString -> [PlacementAnchor] -> m (Map.Map PlacementAnchor (Int,Double,Double))
+getAnchorPositions :: (Monad m, MonadBaseControl IO m, MonadLog m, MonadIO m) => BS.ByteString -> [PlacementAnchor] -> m (Map.Map PlacementAnchor (Int,Double,Double))
 getAnchorPositions _pdfcontent [] = return Map.empty
 getAnchorPositions pdfcontent anchors = do
   withSystemTempDirectory' ("find-text-") $ \tmppath -> do

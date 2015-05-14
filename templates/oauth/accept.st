@@ -1,6 +1,5 @@
 ####
-pagePrivilegesConfirm =
-  $doctype()$
+pagePrivilegesConfirm =$doctype()$
   $htmlopentag()$
       <head>
         <title>$pagetitle()$</title>

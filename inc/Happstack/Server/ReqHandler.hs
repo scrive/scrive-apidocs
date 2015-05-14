@@ -18,9 +18,8 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Catch
-import Control.Monad.Trans
+import Control.Monad.Except
 import Control.Monad.Trans.Control
-import Control.Monad.Trans.Error
 import Control.Monad.Trans.Maybe
 import Control.Monad.Trans.State
 import Data.Typeable
@@ -81,16 +80,16 @@ mapReqHandlerT :: (m (a, ReqHandlerSt) -> n (b, ReqHandlerSt)) -> ReqHandlerT m 
 mapReqHandlerT f = ReqHandlerT . mapStateT f . unReqHandlerT
 
 instance MonadTransControl ReqHandlerT where
-  newtype StT ReqHandlerT a = StReqHandlerT { unStReqHandlerT :: StT InnerReqHandlerT a }
-  liftWith = defaultLiftWith ReqHandlerT unReqHandlerT StReqHandlerT
-  restoreT = defaultRestoreT ReqHandlerT unStReqHandlerT
+  type StT ReqHandlerT a = StT InnerReqHandlerT a
+  liftWith = defaultLiftWith ReqHandlerT unReqHandlerT
+  restoreT = defaultRestoreT ReqHandlerT
   {-# INLINE liftWith #-}
   {-# INLINE restoreT #-}
 
 instance MonadBaseControl b m => MonadBaseControl b (ReqHandlerT m) where
-  newtype StM (ReqHandlerT m) a = StMReqHandlerT { unStMReqHandlerT :: ComposeSt ReqHandlerT m a }
-  liftBaseWith = defaultLiftBaseWith StMReqHandlerT
-  restoreM     = defaultRestoreM unStMReqHandlerT
+  type StM (ReqHandlerT m) a = ComposeSt ReqHandlerT m a
+  liftBaseWith = defaultLiftBaseWith
+  restoreM     = defaultRestoreM
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
@@ -141,14 +140,14 @@ instance Monad m => MonadPlus (PlusSandboxT m) where
 --
 -- In addition, 'MonadPlus' is not derived because
 -- its instance for ErrorT throws away information.
-newtype WebSandboxT m a = WebSandboxT { unWebSandboxT :: ErrorT Response m a }
+newtype WebSandboxT m a = WebSandboxT { unWebSandboxT :: ExceptT Response m a }
   deriving (Applicative, FilterMonad r, Functor, HasRqData, Monad, MonadBase b, MonadCatch, MonadIO, MonadThrow, MonadTrans, ServerMonad)
 
 runWebSandboxT :: WebSandboxT m a -> m (Either Response a)
-runWebSandboxT = runErrorT . unWebSandboxT
+runWebSandboxT = runExceptT . unWebSandboxT
 
 mapWebSandboxT :: (m (Either Response a) -> n (Either Response b)) -> WebSandboxT m a -> WebSandboxT n b
-mapWebSandboxT f = WebSandboxT . mapErrorT f . unWebSandboxT
+mapWebSandboxT f = WebSandboxT . mapExceptT f . unWebSandboxT
 
 instance Monad m => WebMonad Response (WebSandboxT m) where
   finishWith = WebSandboxT . throwError

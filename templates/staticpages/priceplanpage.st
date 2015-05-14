@@ -1,6 +1,5 @@
 ###
-priceplanPage=
-$doctype()$
+priceplanPage=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
