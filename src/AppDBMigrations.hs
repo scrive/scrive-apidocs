@@ -170,6 +170,8 @@ kontraMigrations = [
   , addNameToCallbackConsumers
   , addNameOrderToFieldsAndMigrateNames
   , moveSignaturesToFilesAndAddBoolValueForFields
+  , addFileNameToMainFiles
+  , addFileNameToAuthorAttachments
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

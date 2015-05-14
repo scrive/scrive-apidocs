@@ -1125,3 +1125,19 @@ makeSealStatusNonNullInMainFiles =
        _ <- runSQL_ $ "ALTER TABLE main_files ALTER seal_status SET NOT NULL"
        return ()
     }
+
+
+addFileNameToMainFiles :: MonadDB m  => Migration m
+addFileNameToMainFiles = Migration {
+      mgrTable = tableMainFiles
+    , mgrFrom = 2
+    , mgrDo = return () -- Empty migration to mark change in ctMainFile :: CompositeType
+    }
+
+addFileNameToAuthorAttachments :: MonadDB m  => Migration m
+addFileNameToAuthorAttachments = Migration {
+      mgrTable = tableAuthorAttachments
+    , mgrFrom = 1
+    , mgrDo = return () -- Empty migration to mark change in ctAuthorAttachment :: CompositeType
+
+    }
