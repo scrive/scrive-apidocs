@@ -319,7 +319,7 @@ handlePricePageUserPlanRecurlyJSON user plan = do
   teamsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "team")]
   formsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "form")]
   runJSONGenT $ do
-    J.value "type"         $ "planrecurly"
+    J.value "type"         $ ("planrecurly"::String)
     J.value "subscription" $ msub
     J.value "invoices"     $ minvoices
     J.value "subdomain" recurlySubdomain
@@ -331,7 +331,7 @@ handlePricePageUserPlanRecurlyJSON user plan = do
     J.value "email"        $ getEmail user
     J.value "billingSig" billingsig
     J.value "quantity" quantity
-    J.value "provider" "recurly"
+    J.value "provider" ("recurly"::String)
     J.object "plans" $ do
       J.object "team" $ do
         J.value "signature" teamsig
@@ -347,7 +347,7 @@ handlePricePageUserPlanNoneJSON user plan = do
   teamsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "team")]
   formsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "form")]
   runJSONGenT $ do
-    J.value "type"        $ "plannone"
+    J.value "type"        $ ("plannone"::String)
     J.value "accountCode" $ show $ ppAccountCode plan
     J.value "firstName"   $ getFirstName user
     J.value "lastName"    $ getLastName user
@@ -355,7 +355,7 @@ handlePricePageUserPlanNoneJSON user plan = do
     J.value "companyName" $ getCompanyName company
     J.value "paidPlan"    $ show $ ppPricePlan plan
     J.value "status"      $ show $ ppStatus plan
-    J.value "provider"    $ "none"
+    J.value "provider"    $ ("none"::String)
     J.value "quantity"    $ quantity
     J.object "plans" $ do
       J.object "team" $ do
@@ -373,7 +373,7 @@ handlePricePageUserJSON user = do
   company <- dbQuery $  GetCompany $ usercompany user
   quantity <- dbQuery $ GetCompanyQuantity $ usercompany user
   runJSONGenT $ do
-    J.value "type"      "user"
+    J.value "type"      ("user"::String)
     J.value "subdomain" recurlySubdomain
     J.value "accountCode" $ show code
     J.value "firstName" $ getFirstName user
@@ -396,7 +396,7 @@ handlePricePageNoUserJSON = do
   teamsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "team")]
   formsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "form")]
   runJSONGenT $ do
-    J.value "type"      "nouser"
+    J.value "type"      ("nouser"::String)
     J.value "subdomain" recurlySubdomain
     J.value "accountCode" $ show code
     J.value "quantity" (1::Int)

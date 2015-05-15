@@ -47,7 +47,6 @@ module ListUtil(
 import Control.Monad.Identity
 import Control.Monad.Trans
 import Data.Char (toUpper)
-import Data.Foldable (foldMap)
 import Data.Ord
 import Happstack.Server hiding (simpleHTTP)
 import Network.HTTP.Base (urlEncode)

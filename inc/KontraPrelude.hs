@@ -1,6 +1,7 @@
 module KontraPrelude (
     module Control.Applicative
   , module Control.Monad
+  , module Data.Foldable
   , module Data.List
   , module Data.Maybe
   , module Data.Monoid
@@ -23,6 +24,7 @@ import Control.Applicative
 import Control.Exception (throw)
 import Control.Monad
 import Control.Monad.Catch
+import Data.Foldable (foldMap)
 import Data.List hiding (head, last, maximum, minimum, tail)
 import Data.Maybe hiding (fromJust)
 import Data.Monoid

@@ -14,7 +14,8 @@ instance NFData HeaderPair where
   rnf HeaderPair{..} = rnf hName
     `seq` rnf hValue
 
-instance NFData Length
+instance NFData Length where
+  rnf = (`seq` ())
 
 instance NFData RsFlags where
   rnf RsFlags{..} = rnf rsfLength

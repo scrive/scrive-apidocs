@@ -24,7 +24,7 @@ import qualified Amazon as AWS
 
 data Sender = Sender {
   senderName :: String
-, sendMail   :: (CryptoRNG m, MonadMask m, MonadBase IO m, MonadLog m, AWS.AmazonMonad m) => Mail -> m Bool
+, sendMail   :: forall m. (CryptoRNG m, MonadMask m, MonadBase IO m, MonadLog m, AWS.AmazonMonad m) => Mail -> m Bool
 }
 
 instance Show Sender where
@@ -53,7 +53,7 @@ createExternalSender cs name program createArgs = Sender {
       logInfo_ $ "Error while sending email" <+> show mailID <> ", cannot execute" <+> program <+> "to send email (code" <+> show retcode <> ") stderr:\n" <> BSLU.toString bsstderr
       return False
     ExitSuccess -> do
-      let subject = filter (not . (`elem` "\r\n")) mailTitle
+      let subject = filter (not . (`elem` ("\r\n"::String))) mailTitle
       logInfo_ $ "Email" <+> show mailID <+> "with subject '" <> subject <> "' sent correctly to:" <+> receivers
       logInfo_ $ unlines [
           "Subject:" <+> subject

@@ -18,7 +18,7 @@ import MinutesTime
 
 data Action idx t con n = forall row. FromRow row => Action {
     qaTable           :: Table
-  , qaSetFields       :: (MonadState v m, SqlSet v) => con -> m ()
+  , qaSetFields       :: forall m v. (MonadState v m, SqlSet v) => con -> m ()
   , qaSelectFields    :: [SQL]
   , qaIndexField      :: SQL
   , qaExpirationDelay :: SQL

@@ -14,9 +14,9 @@ module DB.RowCache
 
 import Control.Monad.Base (MonadBase)
 import Control.Monad.Catch
-import Control.Monad.Reader (runReaderT, ask, ReaderT)
-import Control.Monad.State (MonadTrans, get, put, lift, evalStateT, StateT, MonadIO)
-import Control.Monad.Trans.Control (MonadBaseControl(..), MonadTransControl(..), ComposeSt, defaultLiftBaseWith, defaultRestoreM)
+import Control.Monad.Reader
+import Control.Monad.State
+import Control.Monad.Trans.Control
 import Database.PostgreSQL.PQTypes (MonadDB)
 
 import Control.Monad.Trans.Control.Util
@@ -82,7 +82,7 @@ rowCache = RowCacheT get >>= \case
 
 -- | Return the row's ID
 rowCacheID :: Monad m => RowCacheT r m (ID r)
-rowCacheID = RowCacheT ask
+rowCacheID = RowCacheT $ StateT $ \s -> ReaderT $ return . (, s)
 
 -- | Mark the cache as invalid
 setRowInvalid :: Monad m => RowCacheT r m ()

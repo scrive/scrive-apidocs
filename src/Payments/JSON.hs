@@ -12,8 +12,8 @@ instance ToJSValue Subscription where
   toJSValue (Subscription{..}) = runJSONGen $ do
     case subState of
       "expired" -> do
-        J.value "planName" "Free"
-        J.value "planCode" "free"
+        J.value "planName" ("Free"::String)
+        J.value "planCode" ("free"::String)
         J.value "unitAmountInCents" (0 :: Int)
       _ -> do
         J.value "planName" subName
@@ -26,13 +26,13 @@ instance ToJSValue Subscription where
     J.value "billingStarted" subCurrentBillingStarted
     J.value "billingEnds" subCurrentBillingEnds
     case subState of
-      "canceled" -> J.value "pending" $ 
+      "canceled" -> J.value "pending" $
                     PendingSubscription { penName              = "Free"
                                         , penPricePlan         = "free"
                                         , penUnitAmountInCents = 0
                                         , penQuantity          = subQuantity }
       _ -> J.value "pending" $ subPending
-    
+
 instance ToJSValue PendingSubscription where
   toJSValue (PendingSubscription{..}) = runJSONGen $ do
     J.value "planName" penName
@@ -48,4 +48,4 @@ instance ToJSValue Invoice where
     J.value "state"         inState
     J.value "accountCode"   inAccount
     J.value "date"          inDate
-    
+

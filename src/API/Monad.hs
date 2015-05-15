@@ -87,7 +87,7 @@ instance ToJSValue APIError where
   toJSValue (Forbidden msg) = jsonError $ value "message" msg
   toJSValue (NotLoggedIn msg) = jsonError $ do
                                   value "message" msg
-                                  value "url" "https://scrive.com/login"
+                                  value "url" ("https://scrive.com/login"::String)
   toJSValue (ServerError msg) = jsonError $ value "message" msg
   toJSValue (ActionNotAvailable msg) = jsonError $ value "message" msg
   toJSValue (NoAvailableYet msg) = jsonError $ value "message" msg
@@ -197,7 +197,7 @@ instance ToAPIResponse FormEncoded where
 
 jsonError :: JSONGen () -> JSValue
 jsonError rest = runJSONGen $ do
-  value "status" "error"
+  value "status" ("error"::String)
   rest
 
 

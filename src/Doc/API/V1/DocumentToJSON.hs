@@ -70,17 +70,17 @@ documentJSONV1 muser forapi forauthor msl doc = do
       J.objects "signatories" $ map (signatoryJSON forapi forauthor doc msl) (documentsignatorylinks doc)
       J.value "signorder" $ unSignOrder $ documentcurrentsignorder doc
       J.value "authentication" $ case nub (map signatorylinkauthenticationmethod (documentsignatorylinks doc)) of
-                                   [StandardAuthentication] -> "standard"
-                                   [ELegAuthentication]     -> "eleg"
-                                   [SMSPinAuthentication]   -> "sms_pin"
-                                   _                        -> "mixed"
+          [StandardAuthentication] -> ("standard"::String)
+          [ELegAuthentication]     -> "eleg"
+          [SMSPinAuthentication]   -> "sms_pin"
+          _                        -> "mixed"
       J.value "delivery" $ case nub (map signatorylinkdeliverymethod (documentsignatorylinks doc)) of
-                                   [EmailDelivery]   -> "email"
-                                   [PadDelivery]     -> "pad"
-                                   [APIDelivery]     -> "api"
-                                   [MobileDelivery]  -> "mobile"
-                                   [EmailAndMobileDelivery]-> "email_mobile"
-                                   _                 -> "mixed"
+          [EmailDelivery]   -> ("email"::String)
+          [PadDelivery]     -> "pad"
+          [APIDelivery]     -> "api"
+          [MobileDelivery]  -> "mobile"
+          [EmailAndMobileDelivery] -> "email_mobile"
+          _                 -> "mixed"
       J.value "template" $ isTemplate doc
       J.value "daystosign" $ documentdaystosign doc
       J.value "daystoremind" $ documentdaystoremind doc
@@ -108,7 +108,7 @@ documentJSONV1 muser forapi forauthor msl doc = do
       when (isJust muser) $
         J.value "canperformsigning" $ userCanPerformSigningAction (userid $ $fromJust muser) doc
       J.value "objectversion" $ documentobjectversion doc
-      J.value "process" $ "Contract"
+      J.value "process" $ ("Contract"::String)
       J.value "isviewedbyauthor" $ isSigLinkFor muser (getAuthorSigLink doc)
       when (not $ forapi) $ do
         J.value "canberestarted" $ isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])
@@ -119,9 +119,9 @@ documentJSONV1 muser forapi forauthor msl doc = do
       J.value "timezone" $ toString $ documenttimezonename doc
 
 authenticationJSON :: AuthenticationMethod -> JSValue
-authenticationJSON StandardAuthentication = toJSValue "standard"
-authenticationJSON ELegAuthentication     = toJSValue "eleg"
-authenticationJSON SMSPinAuthentication   = toJSValue "sms_pin"
+authenticationJSON StandardAuthentication = toJSValue ("standard"::String)
+authenticationJSON ELegAuthentication     = toJSValue ("eleg"::String)
+authenticationJSON SMSPinAuthentication   = toJSValue ("sms_pin"::String)
 
 
 signatoryJSON :: (MonadDB m, MonadThrow m, AWS.AmazonMonad m, MonadLog m, MonadBase IO m) => Bool -> Bool -> Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
@@ -260,7 +260,7 @@ placementJSON placement = runJSONGen $ do
     when (not (null (placementanchors placement))) $ do
       J.value "anchors" $ placementanchors placement
     J.value "tip" $ case (placementtipside placement) of
-                         Just LeftTip -> Just "left"
+                         Just LeftTip -> Just ("left"::String)
                          Just RightTip -> Just "right"
                          _ -> Nothing
 
@@ -274,17 +274,17 @@ instance ToJSValue PlacementAnchor where
       Just pages -> J.value "pages" pages
 
 instance ToJSValue ConfirmationDeliveryMethod where
-  toJSValue EmailConfirmationDelivery  = toJSValue "email"
-  toJSValue MobileConfirmationDelivery = toJSValue "mobile"
-  toJSValue EmailAndMobileConfirmationDelivery = toJSValue "email_mobile"
-  toJSValue NoConfirmationDelivery = toJSValue "none"
+  toJSValue EmailConfirmationDelivery  = toJSValue ("email"::String)
+  toJSValue MobileConfirmationDelivery = toJSValue ("mobile"::String)
+  toJSValue EmailAndMobileConfirmationDelivery = toJSValue ("email_mobile"::String)
+  toJSValue NoConfirmationDelivery = toJSValue ("none"::String)
 
 instance ToJSValue DeliveryMethod where
-  toJSValue EmailDelivery  = toJSValue "email"
-  toJSValue PadDelivery    = toJSValue "pad"
-  toJSValue APIDelivery    = toJSValue "api"
-  toJSValue MobileDelivery = toJSValue "mobile"
-  toJSValue EmailAndMobileDelivery = toJSValue "email_mobile"
+  toJSValue EmailDelivery  = toJSValue ("email"::String)
+  toJSValue PadDelivery    = toJSValue ("pad"::String)
+  toJSValue APIDelivery    = toJSValue ("api"::String)
+  toJSValue MobileDelivery = toJSValue ("mobile"::String)
+  toJSValue EmailAndMobileDelivery = toJSValue ("email_mobile"::String)
 
 jsonDate :: Maybe UTCTime -> JSValue
 jsonDate mdate = toJSValue $ formatTimeISO <$> mdate
@@ -335,16 +335,16 @@ docFieldsListForJSON userid doc = do
     J.value "template" $ isTemplate doc
     J.value "partiescount" $ length $ (documentsignatorylinks doc)
     J.value "type" $ case documenttype doc of
-                        Template -> "template"
+                        Template -> ("template"::String)
                         Signable -> "signable"
-    J.value "process" $ "contract" -- Constant. Need to leave it till we will change API version
+    J.value "process" ("contract"::String) -- Constant. Need to leave it till we will change API version
     J.value "authentication" $ case nub (map signatorylinkauthenticationmethod (documentsignatorylinks doc)) of
-      [StandardAuthentication] -> "standard"
+      [StandardAuthentication] -> ("standard"::String)
       [ELegAuthentication]     -> "eleg"
       [SMSPinAuthentication]   -> "sms_pin"
       _                        -> "mixed"
     J.value "delivery" $ case nub (map signatorylinkdeliverymethod (documentsignatorylinks doc)) of
-      [EmailDelivery] -> "email"
+      [EmailDelivery] -> ("email"::String)
       [PadDelivery]   -> "pad"
       [APIDelivery]   -> "api"
       [MobileDelivery]-> "mobile"
@@ -378,7 +378,7 @@ signatoryFieldsListForJSON doc sl = do
     J.value "isauthor" $ isAuthor sl
     J.value "cansignnow" $ canSignatorySignNow doc sl
     J.value "authentication" $ case signatorylinkauthenticationmethod sl of
-      StandardAuthentication -> "standard"
+      StandardAuthentication -> ("standard"::String)
       ELegAuthentication     -> "eleg"
       SMSPinAuthentication   -> "sms_pin"
 

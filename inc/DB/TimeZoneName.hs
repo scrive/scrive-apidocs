@@ -39,8 +39,11 @@ mkTimeZoneName s
 
 sanityCheck :: String -> Bool
 sanityCheck s = case break (=='/') s of
-  (as@(_:_),'/':bs) -> all isAlpha as && all (\b -> isAlphaNum b || b `elem` "/+-_") bs
-  _                 -> all (\b -> isAlphaNum b || b `elem` "/+-_") s
+  (as@(_:_),'/':bs) -> all isAlpha as && all (\b -> isAlphaNum b || isAllowedChar b) bs
+  _                 -> all (\b -> isAlphaNum b || isAllowedChar b) s
+  where
+    isAllowedChar :: Char -> Bool
+    isAllowedChar = (`elem` ("/+-_"::String))
 
 withTimeZone :: forall m a. (MonadDB m, MonadMask m)
              => TimeZoneName -> m a -> m a

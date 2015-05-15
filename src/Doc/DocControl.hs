@@ -434,7 +434,7 @@ handleFilePages fid = do
       -- Here we steal Twitter's Enhance Your Calm status code.  Out
       -- mechanism upwards the stack will know to retry to ask us
       -- again before giving up.
-      rsp <- simpleJsonResponse $ runJSONGen $ J.value "wait" "Rendering in progress"
+      rsp <- simpleJsonResponse $ runJSONGen $ J.value "wait" ("Rendering in progress"::String)
       return (rsp { rsCode = 420 })
     RenderedPages True pngpages  -> do
       -- This communicates to JavaScript how many pages there

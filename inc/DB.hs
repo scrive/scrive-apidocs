@@ -8,6 +8,7 @@ module DB (
   ) where
 
 import Database.PostgreSQL.PQTypes
+import Database.PostgreSQL.PQTypes.Class.Instances.Overlapping ()
 
 import DB.Derive
 import DB.Model

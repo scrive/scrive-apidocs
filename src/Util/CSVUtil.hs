@@ -72,7 +72,7 @@ decodeByteString bs =
     guessBest = maximumBy nordicCharCountOrdering
     nordicCharCountOrdering :: String -> String -> Ordering
     nordicCharCountOrdering a b = compare (nordicCharCount a) (nordicCharCount b)
-    nordicCharCount = length . filter (\c -> c `elem` "äÄöÖåÅ")
+    nordicCharCount = length . filter (\c -> c `elem` ("äÄöÖåÅ"::String))
 
 
 -- | Render a BSL.ByteString representation of CSV. Uses \';\' as

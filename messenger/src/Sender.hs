@@ -29,8 +29,7 @@ import Utils.Read
 
 data Sender = Sender {
     senderName :: String
-  , sendSMS    :: (CryptoRNG m, MonadIO m, MonadBase IO m, MonadLog m)
-              => ShortMessage -> m Bool
+  , sendSMS    :: forall m. (CryptoRNG m, MonadIO m, MonadBase IO m, MonadLog m) => ShortMessage -> m Bool
   }
 
 instance Show Sender where

@@ -71,8 +71,8 @@ data Table = Table {
 }
 
 data TableInitialSetup = TableInitialSetup {
-  checkInitialSetup :: ((MonadDB m,MonadThrow m) => m Bool)
-, initialSetup      :: ((MonadDB m,MonadThrow m) => m ())
+  checkInitialSetup :: forall m. (MonadDB m, MonadThrow m) => m Bool
+, initialSetup      :: forall m. (MonadDB m, MonadThrow m) => m ()
 }
 
 tblTable :: Table
