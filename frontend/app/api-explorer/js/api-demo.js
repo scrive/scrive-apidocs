@@ -7,7 +7,6 @@
 var ApiDemoModel = Backbone.Model.extend({
   defaults: {
     mode: "explore",
-    apiVersion: "v1",
     willBeReloaded: false
   },
   willBeReloaded: function () {
@@ -23,7 +22,6 @@ var ApiDemoModel = Backbone.Model.extend({
     this.set({"mode": v});
   },
   changeAPIVersion: function (v) {
-    this.set({"apiVersion": v})
     if (this.selectedApiCall().callPrototype().apiVersion() != v) {
       if (v == "v1") {
         this.setSelectedApiCall(APICalls.apiV1Calls()[0])
@@ -33,7 +31,7 @@ var ApiDemoModel = Backbone.Model.extend({
     }
   },
   apiVersion: function () {
-    return this.get("apiVersion");
+    return this.selectedApiCall().callPrototype().apiVersion();
   },
   initialize: function (args) {
     var self = this;

@@ -46,7 +46,7 @@ window.AbstractAPICall = Backbone.Model.extend({
           return this.get("expectBinaryResponse");
         },
   urlHash: function () {
-          return this.name().replace(/\s+/g, "-").toLowerCase();
+          return this.apiVersion() + "-" + this.name().replace(/\s+/g, "-").toLowerCase();
         },
   params: function () {
           return this.get("params");

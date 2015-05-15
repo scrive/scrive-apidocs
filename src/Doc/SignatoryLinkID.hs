@@ -5,6 +5,7 @@
 module Doc.SignatoryLinkID (
     SignatoryLinkID
   , unsafeSignatoryLinkID
+  , fromSignatoryLinkID
   ) where
 
 import Data.Int
@@ -37,3 +38,7 @@ instance ToSQL SignatoryLinkID where
 
 unsafeSignatoryLinkID :: Int64 -> SignatoryLinkID
 unsafeSignatoryLinkID = SignatoryLinkID
+
+
+fromSignatoryLinkID :: SignatoryLinkID -> Int64
+fromSignatoryLinkID (SignatoryLinkID did) = did

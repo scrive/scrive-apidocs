@@ -21,8 +21,13 @@ window.FileParamView  = Backbone.View.extend({
     var multifile =  call.getParamValue(param);
     slavesWithFiles = _.filter(multifile.slaves, function (s) { return s != undefined && s != multifile.current;});
     if (slavesWithFiles.length < param.limit()) {
+
+      var description = $("<p>");
+      if(param.optional()) description.append($("<em>Optional.</em>"));
+      description.append($("<p>").text(param.description()));
+
       mainRow.append($("<div class='col-xs-6'>").append($("<div class='form-group'/>").append(multifile.current)))
-             .append($("<div class='col-xs-6'>").append($("<p/>").text(param.description())));
+             .append($("<div class='col-xs-6'>").append($("<p/>").append(description)));
     }
 
     if (slavesWithFiles.length  > 0) {

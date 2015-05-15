@@ -100,6 +100,7 @@ Executable kontrakcja-server
   Build-depends: explicit-exception
   Build-depends: fields-json
   Build-depends: filepath
+  Build-depends: free
   Build-depends: happstack-server
   Build-depends: happstack-static-routing
   Build-depends: HaXml

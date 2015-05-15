@@ -27,8 +27,13 @@ window.TextParamView  = Backbone.View.extend({
           setTimeout(function () {call.send();}, 10);
         }
       });
+
+    var description = $("<p>");
+    if(param.optional()) description.append($("<em>Optional.</em>"));
+    description.append($("<p>").text(param.description()));
+
     mainRow.append($("<div class='col-xs-6'>").append(input))
-           .append($("<div class='col-xs-6'>").append($("<p/>").text(param.description())));
+           .append($("<div class='col-xs-6'>").append($("<p/>").append(description)));
 
     return this;
   }

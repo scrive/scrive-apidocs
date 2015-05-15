@@ -10,6 +10,7 @@ module AppView(
               , internalServerErrorPage
               , simpleJsonResponse
               , simpleAesonResponse
+              , simpleUnjsonResponse
               , simpleHtmlResponse
               , simpleHtmlResonseClrFlash
               , respondWithPDF
@@ -28,6 +29,7 @@ import Control.Arrow (second)
 import Control.Monad.Catch
 import Data.Char
 import Data.String.Utils hiding (join)
+import Data.Unjson
 import Happstack.Server.SimpleHTTP
 import Log
 import Text.StringTemplates.Templates
@@ -265,6 +267,10 @@ simpleJsonResponse = ok . toResponseBS jsonContentType . BSL.fromString . JSON.e
 
 simpleAesonResponse :: (A.ToJSON a, FilterMonad Response m) => a -> m Response
 simpleAesonResponse = ok . toResponseBS jsonContentType . A.encode . A.toJSON
+
+simpleUnjsonResponse :: (FilterMonad Response m) => UnjsonDef a -> a -> m Response
+simpleUnjsonResponse unjson a = ok $ toResponseBS jsonContentType $ unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) unjson a
+
 
 {- |
    Changing our pages into reponses

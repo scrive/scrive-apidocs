@@ -14,11 +14,16 @@ window.JSONParamView  = Backbone.View.extend({
     var call = this.call;
     var id = call.urlHash() + "-" + param.argName();
     var mainRow = $("<div class='row'>");
+
+    var description = $("<p>");
+    if(param.optional()) description.append($("<em>Optional.</em>"));
+    description.append($("<p>").text(param.description()));
+
     mainRow.append(
              $("<div class='col-xs-6'>").append($("<p/>").append($("<label for='" + id + "' />").text(param.name())))
             )
            .append(
-             $("<div class='col-xs-6'>").append($("<p/>").text(param.description()))
+             $("<div class='col-xs-6'>").append($("<p/>").append(description))
            );
     $(this.el).append(mainRow);
 

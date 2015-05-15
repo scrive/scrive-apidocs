@@ -93,7 +93,7 @@ window.CallSelector = Backbone.View.extend({
     var selectCallCol = $("<p/>");
     var selectVersionCol = $("<p/>");
     this.renderSelectWithLabel(selectCallCol, "API call", "call-selector", this.callSelector());
-    // this.renderSelectWithLabel(selectVersionCol,"API version","version-selector",this.versionSelector());
+    this.renderSelectWithLabel(selectVersionCol,"API version","version-selector",this.versionSelector());
 
     $(this.el).append(selectCallCol).append(selectVersionCol);
     return this;

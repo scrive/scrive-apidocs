@@ -4,6 +4,7 @@
 window.APICallParam = Backbone.Model.extend({
   defaults: {
     type: "text",
+    optional: false,
     sendAsParam: true,
     useLocalStorage: false
   },
@@ -20,6 +21,9 @@ window.APICallParam = Backbone.Model.extend({
   name: function () {
           return this.get("name");
         },
+  optional: function() {
+          return this.get("optional");
+  },
   description: function () {
           return this.get("description");
         },

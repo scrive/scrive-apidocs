@@ -1,6 +1,7 @@
 module File.FileID (
     FileID
   , unsafeFileID
+  , fromFileID
   ) where
 
 import Data.Int
@@ -32,3 +33,6 @@ instance ToSQL FileID where
 
 unsafeFileID :: Int64 -> FileID
 unsafeFileID = FileID
+
+fromFileID :: FileID -> Int64
+fromFileID (FileID fid) = fid

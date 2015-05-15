@@ -25,6 +25,11 @@ window.BoolParamView  = Backbone.View.extend({
           call.setParamValue(param, undefined);
         }
       });
+
+    var description = $("<p>");
+    if(param.optional()) description.append($("<em>Optional.</em>"));
+    description.append($("<p>").text(param.description()));
+
     mainRow.append(
              $("<div class='col-xs-6'>")
                .append($("<p class='checkbox'/>")
@@ -32,7 +37,7 @@ window.BoolParamView  = Backbone.View.extend({
                )
              )
            .append(
-             $("<div class='col-xs-6'>").append($("<p/>").text(param.description())));
+             $("<div class='col-xs-6'>").append($("<p/>").append(description)));
 
     return this;
   }
