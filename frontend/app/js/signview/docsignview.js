@@ -21,7 +21,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
       });
 
       document.bind("change", function() {
-        if (document.ready() && !triggeredChangeOnReady) {
+        if (model.isReady() && !triggeredChangeOnReady) {
           triggeredChangeOnReady = true;
           model.trigger("change");
         }
