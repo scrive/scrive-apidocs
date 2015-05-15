@@ -21,7 +21,9 @@ var DocumentSignViewModel = Backbone.Model.extend({
       });
 
       document.bind("change", function() {
-        if (model.isReady() && !triggeredChangeOnReady) {
+        if (!model.isReady()) {
+          model.trigger("change");
+        } else if (!triggeredChangeOnReady) { // Once model is ready - we want to trigger change only once
           triggeredChangeOnReady = true;
           model.trigger("change");
         }
