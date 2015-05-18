@@ -2,8 +2,8 @@ module Text.JSON.Convert (jsonToAeson) where
 
 import Control.Arrow ((***))
 import Data.Aeson
-import Data.Scientific
 import Data.Ratio
+import Data.Scientific
 import Text.JSON
 import qualified Data.HashMap.Strict as H
 import qualified Data.Text as T

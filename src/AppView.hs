@@ -29,7 +29,6 @@ import Data.Char
 import Data.String.Utils hiding (join)
 import Happstack.Server.SimpleHTTP
 import Log
-import qualified Text.JSON as JSON
 import Text.StringTemplates.Templates
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Base16 as B16
@@ -37,6 +36,7 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
+import qualified Text.JSON as JSON
 import qualified Text.StringTemplates.Fields as F
 
 import Analytics.Include
