@@ -1116,6 +1116,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                  },
                  beforeInject: function(el) {
                      el = $(el);
+                     el.find('.zip input').val('12-345').hide();
                      var work = true;
                      var button = new Button({ type : 'action',
                                                size:'small',
@@ -1138,7 +1139,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
                              f.find('input').attr('placeholder', p);
                      });
                  },
-                 addressRequirement: 'none',
+                 addressRequirement: 'zip',
                  successHandler: function(stuff) {
                      mixpanel.track('Change billing information');
                      model.fetch({success: function() {

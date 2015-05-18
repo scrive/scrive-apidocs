@@ -1,5 +1,6 @@
 module Doc.SealSpec where
 
+import Data.Char
 import Data.Functor.Invariant
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
@@ -209,7 +210,7 @@ data FileDesc = FileDesc
 
 unjsonFileDesc :: Unjson.UnjsonDef FileDesc
 unjsonFileDesc = Unjson.objectOf $ pure FileDesc
-    <*> Unjson.field "title" fileTitle ""
+    <*> Unjson.field "title" (filter isPrint . fileTitle) ""
     <*> Unjson.field "role" fileRole ""
     <*> Unjson.field "pagesText" filePagesText ""
     <*> Unjson.field "attachedBy" fileAttachedBy ""
