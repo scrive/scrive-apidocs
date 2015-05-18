@@ -85,7 +85,7 @@ instance ToSQL DocumentStatus where
   toSQL Canceled        = toSQL (4::Int16)
   toSQL Timedout        = toSQL (5::Int16)
   toSQL Rejected        = toSQL (6::Int16)
-  toSQL DocumentError = toSQL (7::Int16)
+  toSQL DocumentError   = toSQL (7::Int16)
 
 -- | Used by API (FIXME: it shouldn't be).
 instance Show DocumentStatus where
