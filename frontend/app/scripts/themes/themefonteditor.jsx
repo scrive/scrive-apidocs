@@ -65,8 +65,8 @@ return React.createClass({
                 color={"#000000"}
                 options={availableFontOptions}
                 name ={selectedFontName}
-                textWidth = {109}
-                optionsWidth = "136px"
+                width = {136}
+                optionsWidth = {136}
                 style={{fontFamily : selectedFontValue}}
               />
           </div>

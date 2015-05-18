@@ -103,8 +103,8 @@ return React.createClass({
               langprefix={model.langprefix()}
               border=""
               cssClass="change-language-for-login"
-              optionsWidth="198px"
-              textWidth={171}
+              optionsWidth={198}
+              width={198}
             />
           </div>
         </div>

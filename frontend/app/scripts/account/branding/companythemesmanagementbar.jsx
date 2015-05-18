@@ -46,7 +46,6 @@ return React.createClass({
             name:  model.themeName(t.field("id")),
             onSelect : function() {
               setTheme(t.field("id"));
-              return true;
             }
           });
         } else {
@@ -60,7 +59,6 @@ return React.createClass({
             name: localization.branding.defaultTheme,
             onSelect : function() {
               setTheme(undefined);
-              return true;
             }
           });
       }
@@ -69,7 +67,6 @@ return React.createClass({
             name: localization.branding.newThemeWithDots,
             onSelect : function() {
               self.opendNewThemeModal(getTheme,setTheme,newThemeUrl);
-              return true;
             }
       });
       return (
@@ -77,8 +74,8 @@ return React.createClass({
           color={"#000000"}
           options={availableThemesOptions}
           name ={selectedThemeName}
-          textWidth = {129}
-          optionsWidth = "156px"
+          width = {156}
+          optionsWidth = {156}
        />
       );
     },

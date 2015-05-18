@@ -1,7 +1,7 @@
 /*
  * Defines the account settings page.
  */
-define(['React','common/select','Backbone', 'legacy_code'], function(React,NewSelect) {
+define(['React','common/select','Backbone', 'legacy_code'], function(React,Select) {
 
 var AccountSettingsModel = Backbone.Model.extend({
   initialize : function() {
@@ -321,7 +321,7 @@ var AccountSettingsView = Backbone.View.extend({
       self.langselect = $("<div/>");
 
 
-      React.render(React.createElement(NewSelect,{
+      React.render(React.createElement(Select,{
                              name : lname,
                              onSelect : function(v) {
                                model.setLang(v);
@@ -330,8 +330,7 @@ var AccountSettingsView = Backbone.View.extend({
                                return true;
                              },
                              options: _.filter(languages, function(l) { return l.value !=  model.lang() && !l.hidden;}),
-                             textWidth : 213,
-                             optionsWidth : "240px",
+                             width: 240,
                              // This is a hack - since footer has a fixed height, and this select box is very big
                              // it may cause problems. So we expand the footer to match its size.
                              onOpen: function() {

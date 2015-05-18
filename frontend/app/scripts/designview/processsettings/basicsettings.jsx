@@ -60,11 +60,10 @@ return React.createClass({
             className="design-view-action-process-left-column-language-field"
             name={_.findWhere(self.languages(), {value :lang}).name}
             options={_.filter(self.languages(), function(l) { return !l.hidden;})}
-            textWidth={130}
+            width={158}
             onSelect= {function(v) {
               mixpanel.track('Select language', {'New Language': v});
               doc.lang().setLanguage(v);
-              return true;
             }}
           />
         </div>

@@ -77,8 +77,8 @@ return React.createClass({
            name={localization.designview.whatField}
            className={"design-view-action-participant-new-field-select"}
            border={""}
-           textWidth={270}
-           optionsWidth={"297px"}
+           width={297}
+           optionsWidth={297}
            options={self.fieldOptions()}
            onSelect={function (v) {
              if (v.name === "--custom") {

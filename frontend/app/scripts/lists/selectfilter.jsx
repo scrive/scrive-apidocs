@@ -28,13 +28,12 @@ return React.createClass({
             color={"#000000"}
             options={availableOptions}
             name ={selectedOptionName}
-            textWidth={this.props.textWidth}
+            width={this.props.width}
             onSelect={function(value) {
                       var selectedOption = _.find(options,function(o) {return o.value == value;});
                       mixpanel.track('Filter ' + self.props.name,
                                     {Value : selectedOption.name});
                       model.selectfiltering().setFilter(self.props.name, value);
-                      return true;
             }}
          />
        </div>

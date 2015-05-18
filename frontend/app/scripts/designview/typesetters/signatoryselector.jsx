@@ -48,8 +48,8 @@ define(["Backbone", "React", "common/select", "legacy_code"], function (Backbone
             <Select
               name={signame}
               options={options}
-              optionsWidth="218px"
-              textWidth={191}
+              optionsWidth={218}
+              width={218}
               className="signature-field-placement-setter-field-selector"
               onSelect={this.handleSelect}
               inactive={options.length === 0}

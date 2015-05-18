@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
 
 
-define(['React', 'Backbone', 'common/select', 'pages/languageselect'], function(React, Backbone, NewSelect,LanguageSelect) {
+define(['React', 'Backbone', 'common/select', 'pages/languageselect'], function(React, Backbone, Select,LanguageSelect) {
   var LoggedInFooter = React.createClass({
     propTypes: {
       thin : React.PropTypes.bool,
@@ -146,7 +146,7 @@ define(['React', 'Backbone', 'common/select', 'pages/languageselect'], function(
                       langprefix={this.props.langprefix}
                       border="none"
                       cssClass="change-language"
-                      textWidth={80}
+                      width={107}
                       adjustHeightOnExpand={true}
                      />
                    </li>

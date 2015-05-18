@@ -48,7 +48,7 @@ define(['legacy_code', 'Backbone', 'React', 'common/select'], function(legacy_co
                 signatory:  signatory
               });
               attachments.push(attachment);
-              self.listenTo(attachment, "change", function () {
+              self.listenTo(attachment, "change:signatory", function () {
                 self.trigger("change:attachments");
               });
           });
@@ -62,7 +62,7 @@ define(['legacy_code', 'Backbone', 'React', 'common/select'], function(legacy_co
         var self = this;
         var attachment = new DesignSignatoryAttachment();
         this.attachments().push(attachment);
-        this.listenTo(attachment, "change", function () {
+        this.listenTo(attachment, "change:signatory", function () {
           self.trigger("change:attachments");
         });
         this.trigger("change:attachments");
@@ -143,7 +143,7 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
         var sig = attachment.signatory();
         React.render(React.createElement(Select, {
           name: sig ? nameFromSignatory(sig) : '',
-          style: {width: "190px"},
+          width: 190,
           options: options,
           onSelect: function(sig) {
             attachment.setSignatory(sig);

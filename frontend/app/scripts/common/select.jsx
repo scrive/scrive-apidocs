@@ -1,33 +1,47 @@
 /*
 Standard select boxes.
 
+Example:
+  <Select
+    name="Option 1"
+    options={{name: "Option 2, value: 2}}
+    onSelect={function (v) { console.log(v); }}
+  />
+
 Usage:
 
   <Select
     name="Option 1" // name to show on select label.
     className="select-1" // extra class for select.
     color="black" // color css property.
+    style={{ backgroundColor: "white" }} // style for select box.
     border="1px solid #ddd" // border css property.
     inactive={false} // is select box inactive.
-    textWidth={100} // width of select button in pixels.
-    optionsWidth="200px" // width of option box as css property.
-    onSelect={function (v) { return true; }} // fired when an option is selected
+    width={100} // width of select button in pixels.
+    optionsWidth={200} // width of option box as css property.
+    onSelect={function (v) { return true; }} // fired when an option is selected,
+                                             // can be overwittern by options onSelect,
                                              // return false to not close option box.
     onOpen={function () { return true }} // fired when option box opens
                                          // return false to not open option box.
     onRemove={function () { }} // if set adds a remove button to select box.
+    adjustHeightOnExpand={false} // make the height of the non expanded select
+                                 // the same as the expanded
     options={[
       {
         name: "Option 2", // name to show in option box.
         value: 2, // value to pass to onSelect.
         onSelect: function () { }, // if set, fires when this option is selected.
         disabled: false // if true this option will not show up in option box.
+        style: { backgroundColor: "red" } // option style.
       }
     ]}
   />
 */
 
 define(["legacy_code", "React"], function (legacy_code, React) {
+  var EXTRA_BUTTON_WIDTH = 27;
+
   var Option = React.createClass({
     render: function () {
       return (
@@ -38,29 +52,50 @@ define(["legacy_code", "React"], function (legacy_code, React) {
     }
   });
 
+  // Both extended and closed.
   var View = React.createClass({
+    expandedHeight: function () {
+      var parent = this.props.parent;
+      if (parent.state.$expand) {
+        var $top = $(parent.state.expandComponent.getDOMNode());
+        var $button = $top.find(".select-button");
+        var $opts = $top.find(".select-opts");
+        return $button.height() + $opts.height();
+      } else {
+        return 0;
+      }
+    },
+
     render: function () {
       var parent = this.props.parent;
 
+      var width = parent.props.width;
+      var optionsWidth = parent.props.optionsWidth || parent.props.width;
+
       var mainStyle = {border: parent.props.border, color: parent.props.color};
+
       if (this.props.expanded) {
         mainStyle.position = "absolute";
         mainStyle.top = $(parent.getDOMNode()).offset().top;
         mainStyle.left = $(parent.getDOMNode()).offset().left;
       } else {
-        mainStyle.maxWidth = parent.props.optionsWidth;
+        mainStyle.maxWidth = optionsWidth + "px";
+      }
+
+      if (this.props.adjust) {
+        mainStyle.height = this.expandedHeight();
       }
 
       var buttonStyle = {
-        width: parent.props.textWidth + 6 + 21 + "px"
+        width: width + "px"
       };
 
       var labelStyle = {
-        width: parent.props.textWidth + "px"
+        width: width - EXTRA_BUTTON_WIDTH + "px"
       };
 
       var optionStyle = {
-        minWidth: parent.props.optionsWidth,
+        minWidth: optionsWidth + "px",
         border: parent.props.border
       };
 
@@ -105,7 +140,7 @@ define(["legacy_code", "React"], function (legacy_code, React) {
                 return (
                   <Option
                     key={index}
-                    onClick={parent.handleSelect.bind(parent, option)}
+                    onClick={function (e) { parent.handleSelect(option, e) }}
                     {...option}
                   />
                 );
@@ -121,15 +156,16 @@ define(["legacy_code", "React"], function (legacy_code, React) {
     propTypes: {
       name: React.PropTypes.string.isRequired,
       className: React.PropTypes.string,
-      textWidth: React.PropTypes.number,
-      optionsWidth: React.PropTypes.string,
+      width: React.PropTypes.number,
+      optionsWidth: React.PropTypes.number,
       color: React.PropTypes.string,
       style:  React.PropTypes.object,
       onOpen: React.PropTypes.func,
       onSelect: React.PropTypes.func,
       onRemove: React.PropTypes.func,
       options: React.PropTypes.array.isRequired,
-      inactive: React.PropTypes.bool
+      inactive: React.PropTypes.bool,
+      adjustHeightOnExpand: React.PropTypes.bool
     },
 
     getInitialState: function () {
@@ -141,8 +177,7 @@ define(["legacy_code", "React"], function (legacy_code, React) {
         border: "1px solid #ddd",
         color: "black",
         style: {},
-        textWidth : 160,
-        optionsWidth : "200px",
+        width: 160,
         inactive: false,
         onOpen: function () { return true; }
       };
@@ -259,7 +294,13 @@ define(["legacy_code", "React"], function (legacy_code, React) {
     },
 
     render: function () {
-      return <View ref="view" parent={this} />;
+      return (
+        <View
+          ref="view"
+          parent={this}
+          adjust={this.props.adjustHeightOnExpand}
+        />
+      );
     }
   });
 

@@ -163,21 +163,23 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
             name: "",
             className: "float-left",
             style: fontStyle(self.model.typerOrDrawer().font(), "200px", "40px", "10px -3px"),
+            width: 200,
             options: [
               {  name : ""
                , disabled : (self.model.typerOrDrawer().font() == "JenniferLynne")
-               , style: fontStyle("JenniferLynne", "120px", "20px", "0px -15px")
-               , onSelect: function() {self.model.typerOrDrawer().setFont('JenniferLynne');self.render();return true;}
+               , style: fontStyle("JenniferLynne", "120px", "40px", "0px -15px")
+               , onSelect: function() {self.model.typerOrDrawer().setFont('JenniferLynne');self.render();}
               },
               {  name : ""
                , disabled : (self.model.typerOrDrawer().font() == "TalkingToTheMoon")
-               , style: fontStyle("TalkingToTheMoon", "120px", "20px", "0px -15px")
-               , onSelect: function() {self.model.typerOrDrawer().setFont('TalkingToTheMoon');self.render();return true;}
+               , style: fontStyle("TalkingToTheMoon", "120px", "40px", "0px -15px")
+               , onSelect: function() {self.model.typerOrDrawer().setFont('TalkingToTheMoon');self.render();}
               },
               {  name : ""
                , disabled : (self.model.typerOrDrawer().font() == "TheOnlyException")
-               , style: fontStyle("TheOnlyException", "120px", "20px", "0px -15px")
-               , onSelect: function() {self.model.typerOrDrawer().setFont('TheOnlyException');self.render();return true;} }
+               , style: fontStyle("TheOnlyException", "120px", "40px", "0px -15px")
+               , onSelect: function() {self.model.typerOrDrawer().setFont('TheOnlyException');self.render();}
+              }
             ]
           }), fontSelect[0]);
           var row2 = $("<div style='margin:13px 0px;height:42px'>");

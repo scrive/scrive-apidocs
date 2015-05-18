@@ -71,8 +71,8 @@ define(["Underscore", "React", "common/select", "legacy_code"],
             <Select
               name={this.fontSelected()}
               options={this.fontOptions()}
-              optionsWidth="218px"
-              textWidth={191}
+              optionsWidth={218}
+              width={218}
               className="typesetter-obligatory-option"
               style={{fontSize: "16px"}}
             />

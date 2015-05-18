@@ -213,8 +213,7 @@ var AdminUserDetailsView = Backbone.View.extend({
         name : lname,
         onSelect : function(v) {model.setLang(v); return true;},
         options: _.filter(languages, function(l) { return l.value !=  model.lang() && !l.hidden;}),
-        textWidth : 213,
-        optionsWidth : "240px"
+        textWidth : 240
       }), $select[0]);
 
       return $select;
@@ -234,10 +233,8 @@ var AdminUserDetailsView = Backbone.View.extend({
         name : this.accountTypeName(model.accountType()),
         onSelect : function(v) {
           model.setAccountType(v);
-          return true;
         },
-        textWidth : 213,
-        optionsWidth : "240px",
+        textWidth : 240,
         options : [  {name : this.accountTypeName("companystandardaccount"), value : "companystandardaccount"}
                    , {name : this.accountTypeName("companyadminaccount"), value : "companyadminaccount"}
                   ]

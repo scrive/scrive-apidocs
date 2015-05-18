@@ -120,7 +120,6 @@ var ChangeAuthenticationModalView = React.createClass({
   setAuthenticationMethod : function(v) {
     var model = this.props.model;
     model.setNewAuthenticationMethod(v);
-    return true;
   },
   setAuthenticationValue : function(event) {
     var model = this.props.model;
@@ -160,8 +159,8 @@ var ChangeAuthenticationModalView = React.createClass({
            <Select
                     name={this.getAuthenticationMethodNameText()}
                     onSelect={this.setAuthenticationMethod}
-                    textWidth={321}
-                    optionsWidth="348px"
+                    width={348}
+                    optionsWidth={348}
                     options={ [ { name : localization.docview.signatory.authenticationStandard,
                                   value : "standard"
                                 }

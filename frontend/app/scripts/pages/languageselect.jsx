@@ -39,7 +39,7 @@ define(['React', 'Backbone', 'common/select'], function(React, Backbone, Select)
           name={lname}
           border={this.props.border}
           className={this.props.cssClass}
-          textWidth={this.props.textWidth}
+          width={this.props.width}
           optionsWidth={this.props.optionsWidth}
           adjustHeightOnExpand={this.props.adjustHeightOnExpand}
           onSelect={function(v) {self.changeLang(v);}}

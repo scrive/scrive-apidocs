@@ -224,7 +224,7 @@ var AdminPaymentsView = Backbone.View.extend({
           var $select1 = $("<span>");
           React.render(React.createElement(Select, {
             name : this.priceplanNameToText(this.model.priceplan()),
-            textWidth : 109,
+            width: 136,
             style : { display: "inline-block" },
             onSelect: function(v) {model.setPriceplan(v); self.render(); return true;},
             options: [
@@ -246,7 +246,7 @@ var AdminPaymentsView = Backbone.View.extend({
           var $select2 = $("<span>");
           React.render(React.createElement(Select, {
             name : this.priceplanStatusToText(this.model.status()),
-            textWidth : 109,
+            width: 136,
             style : { display: "inline-block" },
             onSelect: function(v) {model.setStatus(v); self.render(); return true;},
 

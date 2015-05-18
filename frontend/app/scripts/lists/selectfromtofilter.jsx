@@ -50,10 +50,9 @@ return React.createClass({
               color={"#000000"}
               options={optionsFrom}
               name ={currentFromName}
-              textWidth={this.props.textWidth}
+              width={this.props.width}
               onSelect={function(value) {
                         model.selectfiltering().setFilter("from_" + self.props.name, value);
-                        return true;
               }}
           />
          </div>
@@ -62,10 +61,9 @@ return React.createClass({
               color={"#000000"}
               options={optionsTo}
               name ={currentToName}
-              textWidth={this.props.textWidth}
+              width={this.props.width}
               onSelect={function(value) {
                         model.selectfiltering().setFilter("to_" + self.props.name, value);
-                        return true;
               }}
           />
         </div>

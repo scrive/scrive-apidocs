@@ -17,6 +17,7 @@ define(["legacy_code", "React", "common/select"], function(undefined, React, Sel
       var select = TestUtils.renderIntoDocument(React.createElement(Select, {
         name: "one",
         options: options,
+        adjustHeightOnExpand: true,
         onSelect: function (v) {
           assert.equal(v, index, "should be the index we choose");
           done();
@@ -25,7 +26,11 @@ define(["legacy_code", "React", "common/select"], function(undefined, React, Sel
 
       TestUtils.Simulate.click(select.getDOMNode()); // open
 
+      assert.ok($(".select-exp").hasClass("select"), "there should be an expanded component in body")
+
       TestUtils.Simulate.click(select.getDOMNode()); // close
+
+      assert.ok(!$(".select-exp").hasClass("select"), "there should not be an expanded component in body")
 
       TestUtils.Simulate.click(select.getDOMNode()); // open
 

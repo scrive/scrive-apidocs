@@ -5,7 +5,7 @@ define(["Underscore", "React", "common/button", "common/select",
   function (_, React, Button, Select, EditableText) {
 
   var SELECT_OPTIONS_WIDTH = 218;
-  var SELECT_TEXT_WIDTH = 191;
+  var SELECT_TEXT_WIDTH = 218;
 
   return React.createClass({
     propTypes: {
@@ -160,8 +160,8 @@ define(["Underscore", "React", "common/button", "common/select",
                   <Select
                     name={this.typeSelected()}
                     options={this.typeOptions()}
-                    optionsWidth={optionsWidth + "px"}
-                    textWidth={textWidth}
+                    optionsWidth={optionsWidth}
+                    width={textWidth}
                     className={"typesetter-obligatory-option"}
                     style={{fontSize: "16px"}}
                   />

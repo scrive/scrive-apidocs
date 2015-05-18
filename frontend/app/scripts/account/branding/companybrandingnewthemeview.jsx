@@ -69,7 +69,6 @@ return React.createClass({
             name:  model.themeName(t.field("id")),
             onSelect : function() {
               self.setTheme(t.field("id"));
-              return true;
             }
           });
       });
@@ -92,8 +91,8 @@ return React.createClass({
                        color={"#000000"}
                        options={availableThemesOptions}
                        name ={localization.branding.defaultTheme}
-                       textWidth = {273}
-                       optionsWidth = "300px"
+                       width = {300}
+                       optionsWidth = {300}
                      />
                    </div>
                  }

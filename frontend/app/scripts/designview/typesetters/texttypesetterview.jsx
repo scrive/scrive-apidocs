@@ -133,8 +133,8 @@ define(["Underscore", "React", "common/button", "common/select",
               <Select
                 name={this.obligatorySelected()}
                 options={options}
-                optionsWidth={"218px"}
-                textWidth={191}
+                optionsWidth={218}
+                width={218}
                 className={"typesetter-obligatory-option"}
                 style={{fontSize: "16px"}}
                 inactive={options.length === 0}

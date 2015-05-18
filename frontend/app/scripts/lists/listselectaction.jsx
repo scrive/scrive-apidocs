@@ -19,7 +19,7 @@ return React.createClass({
             options={options}
             name ={this.props.name}
             optionsWidth={this.props.optionsWidth}
-            textWidth={this.props.textWidth}
+            width={this.props.width}
          />
        </div>
       );
