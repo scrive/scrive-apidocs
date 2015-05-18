@@ -66,7 +66,7 @@ documentFilterToSQL (DocumentFilterBySealStatus statuses) = do
 documentFilterToSQL (DocumentFilterByStatusClass [SCDraft]) = do
   documentFilterToSQL (DocumentFilterStatuses [Preparation])
 documentFilterToSQL (DocumentFilterByStatusClass [SCCancelled,SCRejected,SCTimedout, SCError]) = do
-  documentFilterToSQL (DocumentFilterStatuses [Canceled, Rejected, Timedout, DocumentError ""])
+  documentFilterToSQL (DocumentFilterStatuses [Canceled, Rejected, Timedout, DocumentError])
 documentFilterToSQL (DocumentFilterByStatusClass [SCSent,SCDelivered,SCRead,SCOpened, SCDeliveryProblem]) = do
   documentFilterToSQL (DocumentFilterStatuses [Pending])
 documentFilterToSQL (DocumentFilterByStatusClass [SCSigned]) = do

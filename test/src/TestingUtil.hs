@@ -253,7 +253,7 @@ documentAllStatuses = [ Preparation
                       , Canceled
                       , Timedout
                       , Rejected
-                      , DocumentError "Bad document."
+                      , DocumentError
                       ]
 
 instance Arbitrary DocumentStatus where
@@ -612,7 +612,7 @@ randomDocumentAllowsDefault user = RandomDocumentAllows
                                                                 , Canceled
                                                                 , Timedout
                                                                 , Rejected
-                                                                , DocumentError "Bad document."
+                                                                , DocumentError 
                                                                 ]
                               , randomDocumentAuthor = user
                               , randomDocumentCondition = const True

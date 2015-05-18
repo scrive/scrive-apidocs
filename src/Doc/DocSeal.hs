@@ -525,7 +525,7 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
         -- show JSON'd config as that's what the java app is fed.
         liftIO $ BS.hPutStr handle content
         liftIO $ hClose handle
-        void $ dbUpdate $ ErrorDocument ("Could not seal document because of file #" ++ show fileid)
+        void $ dbUpdate $ ErrorDocument
                             ErrorSealingDocumentEvidence
                             (return ())
                             (systemActor now)

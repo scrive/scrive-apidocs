@@ -264,7 +264,6 @@ documentsSelectors = [
   , "ARRAY(SELECT (" <> mintercalate ", " signatoryLinksSelectors <> ")::signatory_link FROM signatory_links WHERE documents.id = signatory_links.document_id ORDER BY signatory_links.id)"
   , "ARRAY(SELECT (" <> mintercalate ", " mainFilesSelectors <> ")::main_file FROM main_files, files WHERE documents.id = main_files.document_id AND main_files.file_id = files.id ORDER BY main_files.id DESC)"
   , "documents.status"
-  , "documents.error_text"
   , "documents.type"
   , "documents.ctime"
   , "documents.mtime"
@@ -305,7 +304,7 @@ documentStatusClassExpression = mconcat [
     -- FIXME: Add to DB.SQL functionality that encodes CASE expression.
     statusClassCaseExpression = smconcat [
         "(CASE"
-      , "WHEN documents.status = " <?> (DocumentError "")
+      , "WHEN documents.status = " <?> DocumentError
       , "THEN" <?> SCError
       , "WHEN documents.status = " <?> Preparation
       , "THEN" <?> SCDraft
@@ -334,7 +333,7 @@ documentStatusClassExpression = mconcat [
       ]
     statusClassCaseExpressionForDocument = smconcat [
         "(CASE"
-      , "WHEN documents.status = " <?> (DocumentError "") <+> "THEN" <?> SCError
+      , "WHEN documents.status = " <?> DocumentError      <+> "THEN" <?> SCError
       , "WHEN documents.status = " <?> Preparation        <+> "THEN" <?> SCDraft
       , "WHEN documents.status = " <?> Canceled           <+> "THEN" <?> SCCancelled
       , "WHEN documents.status = " <?> Timedout           <+> "THEN" <?> SCTimedout
@@ -342,21 +341,18 @@ documentStatusClassExpression = mconcat [
       , "END :: INTEGER)"
       ]
 
-type instance CompositeRow Document = (DocumentID, String, CompositeArray1 SignatoryLink, CompositeArray1 MainFile, DocumentStatus, Maybe String, DocumentType, UTCTime, UTCTime, Int32, Maybe Int32, Maybe UTCTime, Maybe UTCTime, Maybe UTCTime, Maybe IPAddress, String, String, Bool, Bool, Bool, Bool, Lang, DocumentSharing, CompositeArray1 DocumentTag, CompositeArray1 AuthorAttachment, Maybe String, Bool, Int64, MagicHash, TimeZoneName, APIVersion, Maybe CompanyID, StatusClass)
+type instance CompositeRow Document = (DocumentID, String, CompositeArray1 SignatoryLink, CompositeArray1 MainFile, DocumentStatus, DocumentType, UTCTime, UTCTime, Int32, Maybe Int32, Maybe UTCTime, Maybe UTCTime, Maybe UTCTime, Maybe IPAddress, String, String, Bool, Bool, Bool, Bool, Lang, DocumentSharing, CompositeArray1 DocumentTag, CompositeArray1 AuthorAttachment, Maybe String, Bool, Int64, MagicHash, TimeZoneName, APIVersion, Maybe CompanyID, StatusClass)
 
 instance PQFormat Document where
   pqFormat _ = "%document"
 
 instance CompositeFromSQL Document where
-  toComposite (did, title, CompositeArray1 signatory_links, CompositeArray1 main_files, status, error_text, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text,  show_header, show_pdf_download, show_reject_option, show_footer, lang, sharing, CompositeArray1 tags, CompositeArray1 author_attachments, apicallback, unsaved_draft, objectversion, token, time_zone_name, api_version, author_company_id, status_class) = Document {
+  toComposite (did, title, CompositeArray1 signatory_links, CompositeArray1 main_files, status, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text,  show_header, show_pdf_download, show_reject_option, show_footer, lang, sharing, CompositeArray1 tags, CompositeArray1 author_attachments, apicallback, unsaved_draft, objectversion, token, time_zone_name, api_version, author_company_id, status_class) = Document {
     documentid = did
   , documenttitle = title
   , documentsignatorylinks = signatory_links
   , documentmainfiles = main_files
-  , documentstatus = case (status, error_text) of
-    (DocumentError{}, Just text) -> DocumentError text
-    (DocumentError{}, Nothing) -> DocumentError "document error"
-    _ -> status
+  , documentstatus = status
   , documenttype = doc_type
   , documentctime = ctime
   , documentmtime = mtime

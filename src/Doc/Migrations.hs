@@ -1141,3 +1141,12 @@ addFileNameToAuthorAttachments = Migration {
     , mgrDo = return () -- Empty migration to mark change in ctAuthorAttachment :: CompositeType
 
     }
+
+
+dropErrorTextFromDocuments :: MonadDB m  => Migration m
+dropErrorTextFromDocuments = Migration {
+      mgrTable = tableDocuments
+    , mgrFrom = 37
+    , mgrDo = runSQL_ "ALTER TABLE documents DROP COLUMN error_text"
+              -- Also this migration will update composite type
+    }

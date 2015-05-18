@@ -54,7 +54,7 @@ data DocumentStatus
   | Canceled
   | Timedout
   | Rejected
-  | DocumentError String
+  | DocumentError
     deriving (Eq, Ord)
 
 instance PQFormat DocumentStatus where
@@ -71,7 +71,7 @@ instance FromSQL DocumentStatus where
       4 -> return Canceled
       5 -> return Timedout
       6 -> return Rejected
-      7 -> return . DocumentError $ $unexpectedError "undefined field"
+      7 -> return DocumentError
       _ -> throwM RangeError {
         reRange = [(1, 7)]
       , reValue = n
@@ -85,7 +85,7 @@ instance ToSQL DocumentStatus where
   toSQL Canceled        = toSQL (4::Int16)
   toSQL Timedout        = toSQL (5::Int16)
   toSQL Rejected        = toSQL (6::Int16)
-  toSQL DocumentError{} = toSQL (7::Int16)
+  toSQL DocumentError = toSQL (7::Int16)
 
 -- | Used by API (FIXME: it shouldn't be).
 instance Show DocumentStatus where
@@ -95,4 +95,4 @@ instance Show DocumentStatus where
   show Canceled  = "Canceled"
   show Timedout  = "Timedout"
   show Rejected = "Rejected"
-  show (DocumentError _) = "DocumentError"
+  show DocumentError = "DocumentError"

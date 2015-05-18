@@ -394,7 +394,7 @@ signatoryFieldsListForJSON doc sl = do
 signatoryStatusClass :: Document -> SignatoryLink -> StatusClass
 signatoryStatusClass doc sl =
   case (documentstatus doc,maybesigninfo sl,maybeseeninfo sl,maybereadinvite sl,  mailinvitationdeliverystatus sl, smsinvitationdeliverystatus sl) of
-    (DocumentError _,_,_,_,_,_) -> SCError
+    (DocumentError,_,_,_,_,_) -> SCError
     (Preparation,_,_,_,_,_) -> SCDraft
     (_,Just _,_,_,_,_) -> SCSigned
     (Canceled,_,_,_,_,_) -> SCCancelled

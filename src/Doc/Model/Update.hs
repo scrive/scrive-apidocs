@@ -245,9 +245,6 @@ insertDocument document@(Document{..}) = do
   runQuery_ . sqlInsert "documents" $ do
     sqlSet "title" documenttitle
     sqlSet "status" documentstatus
-    sqlSet "error_text" $ case documentstatus of
-      DocumentError msg -> Just msg
-      _ -> Nothing
     sqlSet "type" documenttype
     sqlSet "ctime" documentctime
     sqlSet "mtime" documentmtime
@@ -317,7 +314,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
           sqlWhere "documents.id = signatory_links.document_id"
 
           sqlWhereDocumentIsNotDeleted
-          sqlWhereDocumentStatusIsOneOf [Preparation, Closed, Canceled, Timedout, Rejected, DocumentError ""]
+          sqlWhereDocumentStatusIsOneOf [Preparation, Closed, Canceled, Timedout, Rejected, DocumentError]
 
 data ReallyDeleteDocument = ReallyDeleteDocument UserID Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m ReallyDeleteDocument () where
@@ -339,7 +336,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
 
           sqlWhereDocumentIsDeleted
           sqlWhereDocumentIsNotReallyDeleted
-          sqlWhereDocumentStatusIsOneOf [Preparation, Closed, Canceled, Timedout, Rejected, DocumentError ""]
+          sqlWhereDocumentStatusIsOneOf [Preparation, Closed, Canceled, Timedout, Rejected, DocumentError]
 
 
 -- | Attach a main file to a document associating it with preparation
@@ -431,7 +428,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m FixClos
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
         sqlSet "status" Closed
         sqlWhereEq "id" did
-        sqlWhereEq "status" $ DocumentError $undefined
+        sqlWhereEq "status" $ DocumentError
 
 data CancelDocument = CancelDocument Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m CancelDocument () where
@@ -668,13 +665,12 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m DeleteS
                     actor
 
 
-data ErrorDocument = ErrorDocument String CurrentEvidenceEventType (F.Fields Identity ()) Actor
+data ErrorDocument = ErrorDocument CurrentEvidenceEventType (F.Fields Identity ()) Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ErrorDocument () where
-  update (ErrorDocument errmsg event textFields actor) = do
+  update (ErrorDocument event textFields actor) = do
     updateDocumentWithID $ \docid -> do
       kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
-        sqlSet "status" $ DocumentError errmsg
-        sqlSet "error_text" errmsg
+        sqlSet "status" $ DocumentError
         sqlWhereDocumentIDIs docid
     void $ update $ InsertEvidenceEvent event textFields actor
 
@@ -695,7 +691,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m MarkDoc
               sqlWhereDocumentTypeIs (Signable)
               sqlIgnore $ sqlWhere "signatory_links.seen_time IS NULL"
               sqlIgnore $ sqlWhere "signatory_links.sign_time IS NULL"
-              sqlWhereDocumentStatusIsOneOf [Pending, Timedout, Canceled, DocumentError $undefined, Rejected]
+              sqlWhereDocumentStatusIsOneOf [Pending, Timedout, Canceled, DocumentError, Rejected]
 
 data MarkInvitationRead = MarkInvitationRead SignatoryLinkID Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m MarkInvitationRead Bool where

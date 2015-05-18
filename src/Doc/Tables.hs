@@ -6,12 +6,11 @@ import KontraPrelude
 tableDocuments :: Table
 tableDocuments = tblTable {
     tblName = "documents"
-  , tblVersion = 37
+  , tblVersion = 38
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "title", colType = TextT, colNullable = False }
     , tblColumn { colName = "status", colType = SmallIntT, colNullable = False }
-    , tblColumn { colName = "error_text", colType = TextT }
     , tblColumn { colName = "type", colType = SmallIntT, colNullable = False }
     , tblColumn { colName = "ctime", colType = TimestampWithZoneT, colNullable = False }
     , tblColumn { colName = "mtime", colType = TimestampWithZoneT, colNullable = False }
@@ -54,7 +53,6 @@ ctDocument = CompositeType {
   , CompositeColumn { ccName = "signatory_links", ccType = ArrayT $ CustomT "signatory_link" }
   , CompositeColumn { ccName = "main_files", ccType = ArrayT $ CustomT "main_file" }
   , CompositeColumn { ccName = "status", ccType = SmallIntT }
-  , CompositeColumn { ccName = "error_text", ccType = TextT }
   , CompositeColumn { ccName = "type", ccType = SmallIntT }
   , CompositeColumn { ccName = "ctime", ccType = TimestampWithZoneT }
   , CompositeColumn { ccName = "mtime", ccType = TimestampWithZoneT }

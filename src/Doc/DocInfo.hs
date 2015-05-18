@@ -65,9 +65,7 @@ isRejected doc = Rejected == documentstatus doc
    Is document error?
  -}
 isDocumentError :: Document -> Bool
-isDocumentError doc = case documentstatus doc of
-  DocumentError _ -> True
-  _               -> False
+isDocumentError doc =  DocumentError == documentstatus doc
 
 {- |
    Is document shared?
