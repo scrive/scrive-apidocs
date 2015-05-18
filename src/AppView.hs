@@ -29,7 +29,7 @@ import Data.Char
 import Data.String.Utils hiding (join)
 import Happstack.Server.SimpleHTTP
 import Log
-import Text.JSON
+import qualified Text.JSON as JSON
 import Text.StringTemplates.Templates
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Base16 as B16
@@ -239,8 +239,8 @@ standardPageFields ctx mcompanyui ad = do
 jsonContentType :: BS.ByteString
 jsonContentType = "text/html; charset=utf-8"
 
-simpleJsonResponse :: (JSON a, FilterMonad Response m) => a -> m Response
-simpleJsonResponse = ok . toResponseBS jsonContentType . BSL.fromString . encode
+simpleJsonResponse :: (JSON.JSON a, FilterMonad Response m) => a -> m Response
+simpleJsonResponse = ok . toResponseBS jsonContentType . BSL.fromString . JSON.encode
 
 simpleAesonResponse :: (A.ToJSON a, FilterMonad Response m) => a -> m Response
 simpleAesonResponse = ok . toResponseBS jsonContentType . A.encode . A.toJSON
