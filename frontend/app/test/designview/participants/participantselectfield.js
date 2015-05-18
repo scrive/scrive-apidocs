@@ -27,7 +27,7 @@ define(["legacy_code", "backend", "util", "React", "designview/participants/part
           model: field,
           element: $("body")[0]
         }));
-      util.clickSelectOption(fieldView.refs["select"],0);
+      fieldView.refs["select"].select(0);
       //This depends a lot on document structure
       assert.equal(field.type(),"standard");
       assert.equal(field.name(),"sigpersnr");
@@ -47,7 +47,7 @@ define(["legacy_code", "backend", "util", "React", "designview/participants/part
           element: $("body")[0]
         }));
       //This depends a lot on document structure
-      util.clickSelectOption(fieldView.refs["select"],0);
+      fieldView.refs["select"].select(0);
       assert.equal(field.type(),"custom");
       assert.equal(field.name(),"");
     });

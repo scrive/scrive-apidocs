@@ -29,7 +29,7 @@ define(imports, function(legacy_code, backend, util, React, Select, Button, Fiel
 
       assert.ok(select1, "there should be a select");
 
-      util.clickSelectOption(select1, 0); // click "New field" option
+      select1.select(0)// click "New field" option
 
       fieldSelector.selector(); // return to selector state.
 
@@ -38,9 +38,9 @@ define(imports, function(legacy_code, backend, util, React, Select, Button, Fiel
         return TestUtils.isCompositeComponentWithType(comp, Select);
       })[0];
 
-      util.clickSelectOption(select2, 1); // first name.
+      select2.select(1); // first name.
 
-      util.clickSelectOption(select2, 8); // new field 1.
+      select2.select(8); // new field 1.
     });
 
     it("should test field selector standard fields", function () {
@@ -57,9 +57,9 @@ define(imports, function(legacy_code, backend, util, React, Select, Button, Fiel
 
       assert.ok(select, "there should be a select");
 
-      util.clickSelectOption(select, 1); // last name
+      select.select(1);// last name
 
-      util.clickSelectOption(select, 5); // company nr
+      select.select(5); // company nr
     });
 
     after(function () {

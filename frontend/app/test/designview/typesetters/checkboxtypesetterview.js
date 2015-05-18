@@ -70,11 +70,11 @@ define(["legacy_code", "backend", "util", "React", "common/select", "designview/
 
       assert.equal(field.value(), "checked", "field value should be checked.");
 
-      util.clickSelectOption(select, 0, "click option.");
+      select.select(0);
 
       assert.equal(field.value(), "", "field value should be empty.");
 
-      util.clickSelectOption(select, 0, "click option.");
+      select.select(0);
 
       assert.equal(field.value(), "checked", "field value should be checked.");
     });

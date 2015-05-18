@@ -47,10 +47,6 @@ define(["legacy_code", "React"], function(legacy_code, React) {
     return placement;
   };
 
-  exports.clickSelectOption = function (select, index) {
-    select.select(index);
-  };
-
   exports.cleanTimeoutsAndBody = function() {
     var id = window.setTimeout(function() {}, 0);
     while (id--) {

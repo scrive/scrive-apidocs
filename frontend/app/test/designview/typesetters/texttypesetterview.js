@@ -52,19 +52,19 @@ define(imports, function(legacy_code, backend, util, React, Select, Button, More
 
       assert.ok(field.shouldbefilledbysender(), "field should be filled by sender.");
 
-      util.clickSelectOption(obligatorySelect, 0);
+      obligatorySelect.select(0);
 
       assert.ok(field.isObligatory(), "field should still be obligatory");
 
       assert.ok(!field.shouldbefilledbysender(), "field should not be filled by sender.");
 
-      util.clickSelectOption(obligatorySelect, 1);
+      obligatorySelect.select(1);
 
       assert.ok(field.isOptional(), "field should be optional");
 
       assert.ok(!field.shouldbefilledbysender(), "field should not be filled by sender.");
 
-      util.clickSelectOption(obligatorySelect, 0);
+      obligatorySelect.select(0);
 
       assert.ok(field.isObligatory(), "field should be obligatory again");
 
@@ -102,12 +102,12 @@ define(imports, function(legacy_code, backend, util, React, Select, Button, More
       assert.ok(!field.shouldbefilledbysender(), "field should not be filled by sender.");
 
       // click sender.
-      util.clickSelectOption(obligatorySelect, 1);
+      obligatorySelect.select(1);
 
       assert.ok(!field.shouldbefilledbysender(), "field should be filled by sender.");
 
       // click signatory.
-      util.clickSelectOption(obligatorySelect, 1);
+      obligatorySelect.select(1);
 
       assert.ok(!field.shouldbefilledbysender(), "field should not be filled by sender.");
     });
@@ -191,13 +191,13 @@ define(imports, function(legacy_code, backend, util, React, Select, Button, More
 
       var sig1 = placement.field().signatory();
 
-      util.clickSelectOption(signatorySelect, 0);
+      signatorySelect.select(0);
 
       var sig2 = placement.field().signatory();
 
       assert.notEqual(sig1, sig2, "signatory should not be the same");
 
-      util.clickSelectOption(signatorySelect, 0);
+      signatorySelect.select(0);
 
       var sig3 = placement.field().signatory();
 

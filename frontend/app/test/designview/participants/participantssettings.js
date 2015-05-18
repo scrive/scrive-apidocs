@@ -20,17 +20,17 @@ define(["legacy_code", "backend", "util", "React", "designview/participants/part
         model: signatory
         , element: $("body")[0]
       }));
-      util.clickSelectOption(participantSettings.refs["order-select"],1);
+      participantSettings.refs["order-select"].select(1);
       participantSettings.forceUpdate();
-      util.clickSelectOption(participantSettings.refs["delivery-select"],1);
+      participantSettings.refs["delivery-select"].select(1);
       participantSettings.forceUpdate();
-      util.clickSelectOption(participantSettings.refs["role-select"],1);
+      participantSettings.refs["role-select"].select(1);
       participantSettings.forceUpdate();
-      util.clickSelectOption(participantSettings.refs["role-select"],0);
+      participantSettings.refs["role-select"].select(0);
       participantSettings.forceUpdate();
-      util.clickSelectOption(participantSettings.refs["authentication-select"],1);
+      participantSettings.refs["authentication-select"].select(1);
       participantSettings.forceUpdate();
-      util.clickSelectOption(participantSettings.refs["confirmation-delivery-select"],1);
+      participantSettings.refs["confirmation-delivery-select"].select(1);
       participantSettings.forceUpdate();
       signatory.set("delivery","api");
       participantSettings.forceUpdate();

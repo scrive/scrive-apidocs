@@ -32,19 +32,19 @@ define(imports, function(legacy_code, backend, util, React, Select, Button, Font
       assert.ok(select, "there should be a select");
 
       // there are four font sizes and we should click them all.
-      util.clickSelectOption(select, 0);
+      select.select(0);
       assert.equal(placement.fsrel(), FieldPlacementGlobal.fontSizeSmall / page.width(), "font should be small");
       fontSelector.forceUpdate();
 
-      util.clickSelectOption(select, 1);
+      select.select(1);
       assert.equal(placement.fsrel(), FieldPlacementGlobal.fontSizeNormal / page.width(), "font should be normal");
       fontSelector.forceUpdate();
 
-      util.clickSelectOption(select, 2);
+      select.select(2);
       assert.equal(placement.fsrel(), FieldPlacementGlobal.fontSizeLarge / page.width(), "font should be large");
       fontSelector.forceUpdate();
 
-      util.clickSelectOption(select, 3);
+      select.select(3);
       assert.equal(placement.fsrel(), FieldPlacementGlobal.fontSizeHuge / page.width(), "font should be huge");
       fontSelector.forceUpdate();
 
