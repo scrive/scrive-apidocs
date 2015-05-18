@@ -606,7 +606,7 @@
 "_mailDocumentAwaitingForAuthorContentSignedBy":"Du valgte, at du skulle e-signere dokumentet <strong>$documenttitle$</strong>, når  $partylistSigned:noescape()$ havde signeret. Det er nu din tur.",
 "_mailDocumentAwaitingForAuthorFurtherInstructions":"Klik på knappen for at få yderligere instruktioner.",
 "_mailDocumentAwaitingForAuthorTitle":"Dokument at e-signere: $documenttitle$",
-"_mailDocumentErrorContentBodyFirst":"",
+"_mailDocumentErrorContentBodyFirst":"Scrive E-sign kunne desværre ikke håndtere filen <strong>$documenttitle$</strong>. Signeringsprocessen er derfor blevet annulleret. ",
 "_mailDocumentErrorContentBodyFourth":"Vi beklager ulejligheden",
 "_mailDocumentErrorContentBodySecond":"Hvis du har kommentarer eller spørgsmål til dette emne, bedes du kontakte Scrive support på $supportmaillink()$. ",
 "_mailDocumentErrorTitle":"Problem med filformatet",
