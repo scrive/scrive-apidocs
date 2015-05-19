@@ -17,12 +17,12 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Trans
 import Control.Monad.Trans.Control
+import Data.Function
 import Data.Monoid
 import Data.Monoid.Utils
 import Database.PostgreSQL.PQTypes
 import Prelude
 import qualified Control.Concurrent.STM as STM
-import qualified Control.Concurrent.Thread.Group.Lifted as TG
 import qualified Control.Concurrent.Thread.Lifted as T
 import qualified Data.Foldable as F
 import qualified Data.Map.Strict as M
@@ -35,7 +35,7 @@ import JobQueue.Utils
 -- up takes place no matter whether supplied monadic action
 -- exits normally or throws an exception.
 withConsumer
-  :: (MonadBaseControl IO m, MonadMask m, Show idx, ToSQL idx)
+  :: (MonadBaseControl IO m, MonadMask m, Eq idx, Show idx, ToSQL idx)
   => ConsumerConfig m idx job
   -> ConnectionSource
   -> (String -> String -> m ())
@@ -51,27 +51,48 @@ withConsumer cc cs logger action = do
 -- is to wait for currently processed jobs and clean up. Use
 -- 'withConsumer' instead unless you know what you're doing.
 runConsumer
-  :: (MonadBaseControl IO m, MonadMask m, MonadBase IO n, MonadMask n, Show idx, ToSQL idx)
+  :: (MonadBaseControl IO m, MonadMask m, Eq idx, Show idx, ToSQL idx)
   => ConsumerConfig m idx job
   -> ConnectionSource
   -> (String -> String -> m ())
-  -> m (n ())
+  -> m (m ())
 runConsumer cc cs logger = do
   semaphore <- newMVar ()
-  batches <- TG.new
-  runningJobs <- atomically $ newTVar 0
+  runningJobsInfo <- liftBase $ newTVarIO M.empty
+  runningJobs <- liftBase $ newTVarIO 0
 
   cid <- registerConsumer cc cs
   listener <- spawnListener cc cs semaphore
   monitor <- spawnMonitor cc cs (logger $ "Monitor" <+> show cid) cid
-  dispatcher <- spawnDispatcher cc cs (logger $ "Dispatcher" <+> show cid) cid semaphore batches runningJobs
+  dispatcher <- spawnDispatcher cc cs (logger $ "Dispatcher" <+> show cid) cid semaphore runningJobsInfo runningJobs
 
   return $ do
     stopExecution listener
     stopExecution dispatcher
-    TG.wait batches
+    waitForRunningJobs runningJobsInfo runningJobs
     stopExecution monitor
     unregisterConsumer cc cs cid
+  where
+    waitForRunningJobs runningJobsInfo runningJobs = do
+      initialJobs <- liftBase $ readTVarIO runningJobsInfo
+      (`fix` initialJobs) $ \loop jobsInfo -> do
+        -- If jobs are still running, display info about them.
+        when (not $ M.null jobsInfo) $ do
+          logger "Finalizer" $ "Waiting for jobs with ID" <+> showJobsInfo jobsInfo
+        join . atomically $ do
+          jobs <- readTVar runningJobs
+          if jobs == 0
+            then return $ return ()
+            else do
+              newJobsInfo <- readTVar runningJobsInfo
+              -- If jobs info didn't change, wait for it to change.
+              -- Otherwise loop so it either displays the new info
+              -- or exits if there are no jobs running anymore.
+              if (newJobsInfo == jobsInfo)
+                then retry
+                else return $ loop newJobsInfo
+      where
+        showJobsInfo = mintercalate ", " . M.foldr (\idx acc -> show idx : acc) []
 
 -- | Spawn a thread that generates signals for the
 -- dispatcher to probe the database for incoming jobs.
@@ -156,10 +177,10 @@ spawnDispatcher
   -> (String -> m ())
   -> ConsumerID
   -> MVar ()
-  -> TG.ThreadGroup
+  -> TVar (M.Map ThreadId idx)
   -> TVar Int
   -> m ThreadId
-spawnDispatcher ConsumerConfig{..} cs logger cid semaphore batches runningJobs =
+spawnDispatcher ConsumerConfig{..} cs logger cid semaphore runningJobsInfo runningJobs =
   forkP "dispatcher" . forever $ do
     void $ takeMVar semaphore
     loop 1
@@ -182,14 +203,17 @@ spawnDispatcher ConsumerConfig{..} cs logger cid semaphore batches runningJobs =
       when (batchSize > 0) $ do
         logger $ "processing batch of size" <+> show batchSize
         -- Update runningJobs before forking so that we can
-        -- adjust maxBatchSize appropriately later. Also, any
-        -- exception thrown within fork is propagated down to
-        -- parent thread, so we don't need to worry about
-        -- locking jobs indefinitely if that happens.
-        atomically $ modifyTVar' runningJobs (+batchSize)
-        void . gforkP batches "batch processor" $ do
-          mapM startJob batch >>= mapM joinJob >>= updateJobs
-          atomically $ modifyTVar' runningJobs (subtract batchSize)
+        -- adjust maxBatchSize appropriately later. We also
+        -- need to mask asynchronous exceptions here as we
+        -- rely on correct value of runningJobs to perform
+        -- graceful termination.
+        mask $ \restore -> do
+          atomically $ modifyTVar' runningJobs (+batchSize)
+          let subtractJobs = atomically $ do
+                modifyTVar' runningJobs (subtract batchSize)
+          void . forkP "batch processor" . (`finally` subtractJobs) . restore $ do
+            mapM startJob batch >>= mapM joinJob >>= updateJobs
+
         when (batchSize == limit) $ do
           maxBatchSize <- atomically $ do
             jobs <- readTVar runningJobs
@@ -237,8 +261,16 @@ spawnDispatcher ConsumerConfig{..} cs logger cid semaphore batches runningJobs =
     -- | Spawn each job in a separate thread.
     startJob :: job -> m (job, m (T.Result Result))
     startJob job = do
-      (_, joinFork) <- T.fork $ ccProcessJob job
+      (_, joinFork) <- mask $ \restore -> T.fork $ do
+        tid <- myThreadId
+        bracket_ (registerJob tid) (unregisterJob tid) . restore $ do
+          ccProcessJob job
       return (job, joinFork)
+      where
+        registerJob tid = atomically $ do
+          modifyTVar' runningJobsInfo . M.insert tid $ ccJobIndex job
+        unregisterJob tid = atomically $ do
+           modifyTVar' runningJobsInfo $ M.delete tid
 
     -- | Wait for all the jobs and collect their results.
     joinJob :: (job, m (T.Result Result)) -> m (idx, Result)
