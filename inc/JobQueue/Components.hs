@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts, OverloadedStrings, RankNTypes
+  , RecordWildCards, ScopedTypeVariables, TupleSections #-}
 module JobQueue.Components (
     withConsumer
   , runConsumer
@@ -29,10 +31,6 @@ import JobQueue.Config
 import JobQueue.Consumer
 import JobQueue.Utils
 
--- local logger types
-type Logger m = String -> String -> m ()
-type DomainLogger m = String -> m ()
-
 -- | Run the consumer and perform other action. Cleaning
 -- up takes place no matter whether supplied monadic action
 -- exits normally or throws an exception.
@@ -40,7 +38,7 @@ withConsumer
   :: (MonadBaseControl IO m, MonadMask m, Show idx, ToSQL idx)
   => ConsumerConfig m idx job
   -> ConnectionSource
-  -> Logger m
+  -> (String -> String -> m ())
   -> m a
   -> m a
 withConsumer cc cs logger action = do
@@ -56,7 +54,7 @@ runConsumer
   :: (MonadBaseControl IO m, MonadMask m, MonadBase IO n, MonadMask n, Show idx, ToSQL idx)
   => ConsumerConfig m idx job
   -> ConnectionSource
-  -> Logger m
+  -> (String -> String -> m ())
   -> m (n ())
 runConsumer cc cs logger = do
   semaphore <- newMVar ()
@@ -110,7 +108,7 @@ spawnMonitor
   :: (MonadBaseControl IO m, MonadMask m)
   => ConsumerConfig m idx job
   -> ConnectionSource
-  -> DomainLogger m
+  -> (String -> m ())
   -> ConsumerID
   -> m ThreadId
 spawnMonitor ConsumerConfig{..} cs logger cid = forkP "monitor" . forever $ do
@@ -155,7 +153,7 @@ spawnDispatcher
   :: forall m idx job. (MonadBaseControl IO m, MonadMask m, Show idx, ToSQL idx)
   => ConsumerConfig m idx job
   -> ConnectionSource
-  -> DomainLogger m
+  -> (String -> m ())
   -> ConsumerID
   -> MVar ()
   -> TG.ThreadGroup
@@ -180,15 +178,14 @@ spawnDispatcher ConsumerConfig{..} cs logger cid semaphore batches runningJobs =
 
     loop :: Int -> m ()
     loop limit = do
-      logger "reserving jobs..."
       (batch, batchSize) <- reserveJobs limit
-      logger $ "reserved batch of size" <+> show batchSize
       when (batchSize > 0) $ do
+        logger $ "processing batch of size" <+> show batchSize
         -- Update runningJobs before forking so that we can
         -- adjust maxBatchSize appropriately later. Also, any
         -- exception thrown within fork is propagated down to
         -- parent thread, so we don't need to worry about
-        -- locking jobs infinitely if that happens.
+        -- locking jobs indefinitely if that happens.
         atomically $ modifyTVar' runningJobs (+batchSize)
         void . gforkP batches "batch processor" $ do
           mapM startJob batch >>= mapM joinJob >>= updateJobs
@@ -245,10 +242,10 @@ spawnDispatcher ConsumerConfig{..} cs logger cid semaphore batches runningJobs =
 
     -- | Wait for all the jobs and collect their results.
     joinJob :: (job, m (T.Result Result)) -> m (idx, Result)
-    joinJob (job, joinFork) = joinFork >>= \case
+    joinJob (job, joinFork) = joinFork >>= \eres -> case eres of
       Right result -> return (ccJobIndex job, result)
       Left ex -> do
-        action <- ccOnException job
+        action <- ccOnException ex job
         logger $ "unexpected exception" <+> show ex <+> "caught while processing job" <+> show (ccJobIndex job) <> ", action:" <+> show action
         return (ccJobIndex job, Failed action)
 
@@ -287,8 +284,8 @@ spawnDispatcher ConsumerConfig{..} cs logger cid semaphore batches runningJobs =
 
             step (idx, action) iretries = case action of
               MarkProcessed  -> iretries
-              RetryAfter int -> M.insertWith (++) (Left int) [idx] iretries
-              RetryAt time   -> M.insertWith (++) (Right time) [idx] iretries
+              RerunAfter int -> M.insertWith (++) (Left int) [idx] iretries
+              RerunAt time   -> M.insertWith (++) (Right time) [idx] iretries
               Remove         -> error "updateJobs: Remove should've been filtered out"
 
         successes = foldr step [] updates

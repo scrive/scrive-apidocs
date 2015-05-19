@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts, GeneralizedNewtypeDeriving, OverloadedStrings
+  , RecordWildCards, TypeFamilies, UndecidableInstances #-}
 module JobQueue.Consumer (
     ConsumerID
   , registerConsumer
@@ -42,6 +44,12 @@ registerConsumer ConsumerConfig{..} cs = runDBT cs ts $ do
     , "RETURNING id"
     ]
   fetchOne runIdentity
+  where
+    ts = def {
+      tsAutoTransaction = False
+    , tsIsolationLevel = ReadCommitted
+    , tsPermissions = ReadWrite
+    }
 
 -- | Unregister consumer with a given ID.
 unregisterConsumer
@@ -51,17 +59,22 @@ unregisterConsumer
   -> ConsumerID
   -> m ()
 unregisterConsumer ConsumerConfig{..} cs wid = runDBT cs ts $ do
+  -- Free taska manually in case there is no
+  -- foreign key constraint on reserved_by,
+  runSQL_ $ smconcat [
+      "UPDATE" <+> raw ccJobsTable
+    , "   SET reserved_by = NULL"
+    , " WHERE reserved_by =" <?> wid
+    ]
   runSQL_ $ smconcat [
       "DELETE FROM " <+> raw ccConsumersTable
     , "WHERE id =" <?> wid
     , "  AND name =" <?> unRawSQL ccJobsTable
     ]
-
-----------------------------------------
-
-ts :: TransactionSettings
-ts = def {
-  tsAutoTransaction = False
-, tsIsolationLevel = ReadCommitted
-, tsPermissions = ReadWrite
-}
+  where
+    ts = def {
+      tsIsolationLevel = ReadCommitted
+    , tsRestartPredicate = Just . RestartPredicate
+      $ \e _ -> qeErrorCode e == DeadlockDetected
+    , tsPermissions = ReadWrite
+    }

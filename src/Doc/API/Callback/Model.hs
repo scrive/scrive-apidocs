@@ -47,19 +47,19 @@ documentAPICallback runExecute = ConsumerConfig {
       logInfo_ $ "Callback for document" <+> show dacDocumentID <+> "failed and there are more queued, discarding."
       return $ Failed Remove
     False -> Failed <$> onFailure dacAttempts
-, ccOnException = onFailure . dacAttempts
+, ccOnException = const $ onFailure . dacAttempts
 }
   where
     onFailure attempts = case attempts of
-      1 -> return . RetryAfter $ iminutes 5
-      2 -> return . RetryAfter $ iminutes 10
-      3 -> return . RetryAfter $ iminutes 30
-      4 -> return . RetryAfter $ ihours 1
-      5 -> return . RetryAfter $ ihours 2
-      6 -> return . RetryAfter $ ihours 4
-      7 -> return . RetryAfter $ ihours 4
-      8 -> return . RetryAfter $ ihours 4
-      9 -> return . RetryAfter $ ihours 8
+      1 -> return . RerunAfter $ iminutes 5
+      2 -> return . RerunAfter $ iminutes 10
+      3 -> return . RerunAfter $ iminutes 30
+      4 -> return . RerunAfter $ ihours 1
+      5 -> return . RerunAfter $ ihours 2
+      6 -> return . RerunAfter $ ihours 4
+      7 -> return . RerunAfter $ ihours 4
+      8 -> return . RerunAfter $ ihours 4
+      9 -> return . RerunAfter $ ihours 8
       _ -> do
         logInfo_ "10th call attempt failed, discarding."
         return Remove

@@ -79,7 +79,7 @@ main = do
       sendSMS sender sms >>= \case
         True  -> return $ Ok MarkProcessed
         False -> Failed <$> sendoutFailed sms
-    , ccOnException = sendoutFailed
+    , ccOnException = const sendoutFailed
     }
       where
         sendoutFailed ShortMessage{..} = do
@@ -87,7 +87,7 @@ main = do
           if smAttempts < 100
             then do
               logInfo_ $ "Deferring sms" <+> show smID <+> "for 5 minutes"
-              return . RetryAfter $ iminutes 5
+              return . RerunAfter $ iminutes 5
             else do
               logInfo_ $ "Deleting sms" <+> show smID <+> "since there was over 100 tries to send it"
               return Remove
@@ -111,9 +111,9 @@ main = do
         logInfo_ $ show cleaned <+> "smses were removed."
         now <- currentTime
         -- run at midnight
-        return . Ok $ RetryAt UTCTime {
+        return . Ok $ RerunAt UTCTime {
           utctDay = 1 `addDays` utctDay now
         , utctDayTime = 0
         }
-    , ccOnException = const . return . RetryAfter $ ihours 1
+    , ccOnException = \_ _ -> return . RerunAfter $ ihours 1
     }

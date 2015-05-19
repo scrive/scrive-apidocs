@@ -5,6 +5,7 @@ module JobQueue.Config (
   , ConsumerConfig(..)
   ) where
 
+import Control.Exception (SomeException)
 import Data.Time
 import Database.PostgreSQL.PQTypes
 import Prelude
@@ -12,8 +13,8 @@ import Prelude
 -- | Action to take after a job was processed.
 data Action
   = MarkProcessed
-  | RetryAfter Interval
-  | RetryAt UTCTime
+  | RerunAfter Interval
+  | RerunAt UTCTime
   | Remove
     deriving (Eq, Ord, Show)
 
@@ -96,5 +97,5 @@ data ConsumerConfig m idx job = forall row. FromRow row => ConsumerConfig {
 -- | Action taken if job processing function throws an exception.
 -- Note that if it throws an exception, the consumer goes down, so
 -- it's a good idea to ensure that it doesn't.
-, ccOnException           :: !(job -> m Action)
+, ccOnException           :: !(SomeException -> job -> m Action)
 }

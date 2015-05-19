@@ -100,7 +100,7 @@ main = do
         sendMail sender mail >>= \case
           True  -> return $ Ok MarkProcessed
           False -> Failed <$> sendoutFailed mail
-    , ccOnException = sendoutFailed
+    , ccOnException = const sendoutFailed
     }
       where
         isNotSendable Mail{..} =
@@ -111,7 +111,7 @@ main = do
           if mailAttempts < 100
             then do
               logInfo_ $ "Deferring email" <+> show mailID <+> "for 5 minutes"
-              return . RetryAfter $ iminutes 5
+              return . RerunAfter $ iminutes 5
             else do
               logInfo_ $ "Deleting email" <+> show mailID <+> "since there were 100 unsuccessful attempts to send it"
               return Remove
@@ -135,7 +135,7 @@ main = do
         logInfo_ $ show cleaned <+> "emails were removed."
         now <- currentTime
         -- run at midnight
-        return . Ok $ RetryAt UTCTime {
+        return . Ok $ RerunAt UTCTime {
           utctDay = 1 `addDays` utctDay now
         , utctDayTime = 0
         }
@@ -175,7 +175,7 @@ main = do
               return Failed
           dbUpdate ScheduleServiceTest
           return $ result MarkProcessed
-    , ccOnException = const . return . RetryAfter $ ihours 1
+    , ccOnException = \_ _ -> return . RerunAfter $ ihours 1
     }
       where
         isDelivered (_, _, _, SendGridEvent _ SG_Delivered{} _) = True

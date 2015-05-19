@@ -105,63 +105,63 @@ main = do
       action <- case cjType of
         AmazonDeletion -> do -- This one should be renamed to FilesPurge
           runScheduler purgeSomeFiles
-          return . RetryAfter $ ihours 1
+          return . RerunAfter $ ihours 1
         AmazonUpload -> do
           if AWS.isAWSConfigOk $ amazonConfig appConf
             then do
               moved <- runScheduler AWS.uploadSomeFileToAmazon
               if moved
-                then return . RetryAfter $ iseconds 1
-                else return . RetryAfter $ iminutes 1
+                then return . RerunAfter $ iseconds 1
+                else return . RerunAfter $ iminutes 1
             else do
               logInfo_ "AmazonUpload: no valid AWS config, skipping."
-              return . RetryAfter $ iminutes 1
+              return . RerunAfter $ iminutes 1
         AsyncEventsProcessing -> do
           runDB $ asyncProcessEvents (catEventProcs $ catMaybes [mmixpanel]) All
-          return . RetryAfter $ iseconds 10
+          return . RerunAfter $ iseconds 10
         ClockErrorCollection -> do
           runDB $ collectClockError (ntpServers appConf)
-          return . RetryAfter $ ihours 1
+          return . RerunAfter $ ihours 1
         DocumentAutomaticRemindersEvaluation -> do
           runScheduler $ actionQueue documentAutomaticReminder
-          return . RetryAfter $ iminutes 1
+          return . RerunAfter $ iminutes 1
         DocumentsPurge -> do
           runScheduler $ do
             purgedCount <- dbUpdate $ PurgeDocuments 30 unsavedDocumentLingerDays
             logInfo_ $ "DocumentsPurge: purged" <+> show purgedCount <+> "documents."
-          return . RetryAfter $ iminutes 10
+          return . RerunAfter $ iminutes 10
         DocumentsArchiveIdle -> do
           runScheduler $ do
             now <- currentTime
             archived <- dbUpdate $ ArchiveIdleDocuments now
             logInfo_ $ "DocumentsArchiveIdle: archived documents for" <+> show archived <+> "signatories."
-          return . RetryAfter $ ihours 24
+          return . RerunAfter $ ihours 24
         EmailChangeRequestsEvaluation -> do
           runScheduler $ actionQueue emailChangeRequest
-          return . RetryAfter $ ihours 1
+          return . RerunAfter $ ihours 1
         FindAndDoPostDocumentClosedActions -> do
           runScheduler $ findAndDoPostDocumentClosedActions Nothing
-          return . RetryAfter $ ihours 6
+          return . RerunAfter $ ihours 6
         FindAndDoPostDocumentClosedActionsNew -> do
           runScheduler $ findAndDoPostDocumentClosedActions (Just 6) -- hours
-          return . RetryAfter $ iminutes 10
+          return . RerunAfter $ iminutes 10
         FindAndExtendDigitalSignatures -> do
           runScheduler findAndExtendDigitalSignatures
-          return . RetryAfter $ iminutes 30
+          return . RerunAfter $ iminutes 30
         FindAndTimeoutDocuments -> do
           runScheduler findAndTimeoutDocuments
-          return . RetryAfter $ iminutes 10
+          return . RerunAfter $ iminutes 10
         MailEventsProcessing -> do
           runScheduler Mails.Events.processEvents
-          return . RetryAfter $ iseconds 5
+          return . RerunAfter $ iseconds 5
         OldDraftsRemoval -> do
           runScheduler $ do
             delCount <- dbUpdate $ RemoveOldDrafts 100
             logInfo_ $ "OldDraftsRemoval: removed" <+> show delCount <+> "old, unsaved draft documents."
-          return . RetryAfter $ ihours 1
+          return . RerunAfter $ ihours 1
         PasswordRemindersEvaluation -> do
           runScheduler $ actionQueue passwordReminder
-          return . RetryAfter $ ihours 1
+          return . RerunAfter $ ihours 1
         RecurlySynchronization -> do
           time <- runDB $ do
             time <- currentTime
@@ -171,26 +171,26 @@ main = do
             handleSyncNoProvider time
             return time
           -- retry the next day at midnight
-          return $ RetryAt UTCTime {
+          return $ RerunAt UTCTime {
             utctDay = 1 `addDays` utctDay time
           , utctDayTime = 0
           }
         SessionsEvaluation -> do
           runScheduler $ actionQueue session
-          return . RetryAfter $ ihours 1
+          return . RerunAfter $ ihours 1
         SMSEventsProcessing -> do
           runScheduler SMS.Events.processEvents
-          return . RetryAfter $ iseconds 5
+          return . RerunAfter $ iseconds 5
         UserAccountRequestEvaluation -> do
           runScheduler $ actionQueue userAccountRequest
-          return . RetryAfter $ ihours 1
+          return . RerunAfter $ ihours 1
       logInfo_ $ show cjType <+> "finished successfully."
       return $ Ok action
-    , ccOnException = \CronJob{..} -> return $ case cjAttempts of
-      1 -> RetryAfter $ iminutes 1
-      2 -> RetryAfter $ iminutes 5
-      3 -> RetryAfter $ iminutes 10
-      4 -> RetryAfter $ iminutes 15
-      5 -> RetryAfter $ iminutes 30
-      _ -> RetryAfter $ ihours 1
+    , ccOnException = \_ CronJob{..} -> return $ case cjAttempts of
+      1 -> RerunAfter $ iminutes 1
+      2 -> RerunAfter $ iminutes 5
+      3 -> RerunAfter $ iminutes 10
+      4 -> RerunAfter $ iminutes 15
+      5 -> RerunAfter $ iminutes 30
+      _ -> RerunAfter $ ihours 1
     }
