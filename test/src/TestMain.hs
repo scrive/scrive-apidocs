@@ -60,6 +60,7 @@ import TestKontra
 import ThirdPartyStats
 import UserHistoryTest
 import UserStateTest
+import qualified HostClock.Model as HC
 
 allTests :: [TestEnvSt -> Test]
 allTests = [
@@ -130,6 +131,8 @@ testMany (allargs, ts) = do
     migrateDatabase logInfo_ kontraExtensions kontraDomains kontraTables kontraMigrations
     defineFunctions kontraFunctions
     defineComposites kontraComposites
+    _ <- dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.001) 0.5
+    _ <- dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.0015) 0.5
     commit
 
   staticSource <- (\conn -> ConnectionSource { withConnection = ($ conn) })

@@ -55,7 +55,7 @@ cd "$dest"
 for file in *.html; do
 	ST_NAME="$(sed -e 's/\.html//g' -e 's/ //g' <<< $file)"
 	ST_FILE="templates/${ST_NAME}.st"
-	echo -e "###\n${ST_NAME}=" | cat - "$file" > /tmp/makeStringTemplate && mv /tmp/makeStringTemplate "${ST_FILE}"
+	echo -en "###\n${ST_NAME}=" | cat - "$file" > /tmp/makeStringTemplate && mv /tmp/makeStringTemplate "${ST_FILE}"
 	echo "###" >> "${ST_FILE}"
 done
 cd ..

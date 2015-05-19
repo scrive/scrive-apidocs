@@ -34,6 +34,7 @@ import Utils.Default
 import Utils.IO
 import Utils.Network
 import qualified Doc.RenderedPages as RenderedPages
+import qualified HostClock.Model as HC
 import qualified MemCache
 import qualified Version
 
@@ -94,20 +95,27 @@ startSystem LogRunner{..} appGlobals appConf = E.bracket startServer stopServer 
     stopServer = killThread
     waitForTerm _ = do
       withPostgreSQL (connsource appGlobals) . runCryptoRNGT (cryptorng appGlobals) $ do
-        initDatabaseEntries $ initialUsers appConf
+        initDatabaseEntries appConf
       liftBase $ waitForTermination
       logInfo_ $ "Termination request received"
 
-initDatabaseEntries :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m)
-                    => [(Email, String)] -> m ()
-initDatabaseEntries = mapM_ $ \(email, passwordstring) -> do
-  -- create initial database entries
-  passwd <- createPassword passwordstring
-  maybeuser <- dbQuery $ GetUserByEmail email
-  case maybeuser of
-    Nothing -> do
-      bd <- dbQuery $ GetMainBrandedDomain
-      company <- dbUpdate $ CreateCompany
-      _ <- dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) (companyid company,True) defaultValue (bdid bd)
+initDatabaseEntries :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m) => AppConf -> m ()
+initDatabaseEntries appConf = do
+  when (not $ production appConf) $ do
+    -- Add some host_clock entries in "dev" mode if there are no valid samples
+    clockErrors <- dbQuery $ HC.GetNClockErrorEstimates 10
+    when ((<2) . length . group $ map HC.offset clockErrors) $ do
+      _ <- dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.001) 0.5
+      _ <- dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.0015) 0.5
       return ()
-    Just _ -> return () -- user exist, do not add it
+  flip mapM_ (initialUsers appConf) $ \(email, passwordstring) -> do
+    -- create initial database entries
+    passwd <- createPassword passwordstring
+    maybeuser <- dbQuery $ GetUserByEmail email
+    case maybeuser of
+      Nothing -> do
+        bd <- dbQuery $ GetMainBrandedDomain
+        company <- dbUpdate $ CreateCompany
+        _ <- dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) (companyid company,True) defaultValue (bdid bd)
+        return ()
+      Just _ -> return () -- user exist, do not add it

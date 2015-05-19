@@ -4,6 +4,7 @@ module EvidencePackage.EvidenceOfTime (
 ) where
 
 import Control.Monad.Reader
+import Data.Decimal (realFracToDecimal)
 import Data.Vector.Unboxed (Vector)
 import Statistics.Distribution
 import Statistics.Distribution.Normal
@@ -29,16 +30,18 @@ evidenceOfTimeHTML title clockErrors graph = do
       norm      = normalFromSample offsets
       startTime = $minimum (map HC.time clockErrors)
       endTime   = $maximum (map HC.time clockErrors)
+      absoluteCDF dist v = cumulative dist v - cumulative dist (-v)
+      showCDFInPercent dist v = (++ "%") (show $ realFracToDecimal 3 $ 100 * absoluteCDF dist v)
   renderTemplate "evidenceOfTime" $ do
     F.value "documenttitle" title
     F.value "graph_image" graph
     F.value "EvidenceOfTimeMean"   $ HC.showClockError 2 (mean norm)
     F.value "EvidenceOfTimeStddev" $ HC.showClockError 2 (stdDev norm)
-    F.value "EvidenceOfTimeLT025"  $ HC.showClockError 2 $ (cumulative norm 0.0025) - (cumulative norm (-0.0025))
-    F.value "EvidenceOfTimeLT10"   $ HC.showClockError 2 $ (cumulative norm 0.01)   - (cumulative norm (-0.01))
-    F.value "EvidenceOfTimeLT25"   $ HC.showClockError 2 $ (cumulative norm 0.025)  - (cumulative norm (-0.025))
+    F.value "EvidenceOfTimeLT025"  $ showCDFInPercent norm 0.0025
+    F.value "EvidenceOfTimeLT10"   $ showCDFInPercent norm 0.01
+    F.value "EvidenceOfTimeLT25"   $ showCDFInPercent norm 0.025
     F.value "EvidenceOfTimeStartDate" $ formatTimeUTC startTime ++ " UTC"
-    F.value "EvidenceOfTimeEndDate" $ formatTimeUTC endTime     ++ " UTC"
+    F.value "EvidenceOfTimeEndDate"   $ formatTimeUTC endTime   ++ " UTC"
     F.objects "entries" $ for clockErrors $ \entry -> do
       F.value "offset" $ HC.showClockError 1 $ HC.offset entry
       F.value "offset_time" $ formatTimeUTC $ HC.time entry

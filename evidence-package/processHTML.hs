@@ -25,7 +25,6 @@ customRenderOptions = renderOptions { optRawTag = (\a -> toString a == "style")
 main :: IO ()
 main = do
     args <- getArgs
-    -- FIXME Proper args parsing and usage
     let filep = head args
         cssp  = head $ drop 1 args
     file <- readFile filep
@@ -43,10 +42,9 @@ processor = foldr (.) id $ reverse
     -- Add a `!DOCTYPE` tag at the start if it is missing for W3C happiness
     -- `canonicalizeTags`, amongst other things, makes DOCTYPE ALL CAPS, so we
     -- can match it :)
-    -- FIXME use prefix matching instead of this
     [ (\ts -> if tagOpenNameLit "!DOCTYPE" (head $ canonicalizeTags ts)
               then ts
-              else (TagOpen "!DOCTYPE html" []) : ts)
+              else (TagOpen "!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\"" []) : ts)
     -- Make sure all <img> tags have an "alt" attribute for W3C happy!
     , map (\t -> if tagOpenNameLit "img" t
                  then let (TagOpen s attrs) = t
@@ -82,9 +80,13 @@ processor = foldr (.) id $ reverse
                     (anyAttr (\(a,v) -> a == "href" && isPrefixOf "#cmnt" v))
                   )
                   (tagCloseLit "a")
+    -- Close "meta" and "img" tags for xml parser to be happy in kontrakcja-tests
+    , closeTagImmediately "meta"
+    , closeTagImmediately "img"
     -- Remove all empty tags, our actions create a few...
     -- except a few tags which we want to keep otherwise it messes things up!
     , removeEmptyTagsWhere (not . tagOpen (\s -> s == "meta"
+                                              || s == "img"
                                               || s == "td"
                                               || s == "th"
                                               || s == "tr"
@@ -212,14 +214,14 @@ removeEmptyTagsWhere f ts = if length ts == length removed
                                       else a : removeWhere f (b:ts)
           removeWhere _ ts = ts
 
---closeTagImmediately :: String -> [Tag String] -> [Tag String]
---closeTagImmediately _ [] = []
---closeTagImmediately s (t:t1:ts) | tagOpenNameLit s t =
---    if tagCloseNameLit s t1
---    then t : t1 : closeTagImmediately s ts
---    else t : (TagClose s) : t1 : closeTagImmediately s ts
---closeTagImmediately s (t:[]) | tagOpenNameLit s t = t : (TagClose s) : []
---closeTagImmediately s (t:ts) | otherwise = t : closeTagImmediately s ts
+closeTagImmediately :: String -> [Tag String] -> [Tag String]
+closeTagImmediately _ [] = []
+closeTagImmediately s (t:t1:ts) | tagOpenNameLit s t =
+    if tagCloseNameLit s t1
+    then t : t1 : closeTagImmediately s ts
+    else t : (TagClose s) : t1 : closeTagImmediately s ts
+closeTagImmediately s (t:[]) | tagOpenNameLit s t = t : (TagClose s) : []
+closeTagImmediately s (t:ts) | otherwise = t : closeTagImmediately s ts
 
 removeAttribute :: String -> Tag String -> Tag String
 removeAttribute s (TagOpen t attrs) = TagOpen t (filter ((/=) s . fst) attrs)

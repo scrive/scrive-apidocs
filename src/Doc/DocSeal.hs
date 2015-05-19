@@ -506,6 +506,12 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
     elog <- dbQuery $ GetEvidenceLog documentid
     -- Evidence of Time documentation says we collect last 1000 samples
     offsets <- dbQuery $ HC.GetNClockErrorEstimates 1000
+    when ((<2) . length . group $ map HC.offset offsets) $ do
+        let msg = "Cannot seal document #" ++ show documentid ++ " because there are no valid host_clock samples"
+        logAttention_ msg
+        void $ dbUpdate $ ErrorDocument ErrorSealingDocumentEvidence
+                                        (return ())
+                                        (systemActor now)
     graphEvidenceOfTime <- generateEvidenceOfTimeGraph 100 (tmppath ++ "/eot_samples.txt") (tmppath ++ "/eot_graph.svg") (map HC.offset offsets)
     config <- theDocument >>= \d -> sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart d elog offsets graphEvidenceOfTime content tmppath tmpin tmpout
 

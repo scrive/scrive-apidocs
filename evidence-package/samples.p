@@ -11,8 +11,7 @@ set key left top
 set ytics 0,10,100
 set mxtics 5
 set mytics 5
-#set xr [-0.0075:0.0125]
-#set xr [-0.005:0.01]
+set format y "%.0f"
 set style line 1 lc rgb '#004586' lt 1 lw 2 pt -1
 set style line 2 lc rgb '#ff420e' lt 1 lw 2 pt -1
 set style line 3 lc rgb '#ccff00' lt 1 lw 2 pt -1
