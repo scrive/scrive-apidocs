@@ -24,6 +24,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
     var field;
     var placement;
     var verticaloffset = 0;
+    var fieldOrPlacement;
     var initFP = function() {
       if(typeof fieldOrPlacementFN === 'function') {
               fieldOrPlacement = fieldOrPlacementFN();
@@ -31,7 +32,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
               fieldOrPlacement = fieldOrPlacementFN;
       }
 
-      if( fieldOrPlacement.field !=undefined ) {
+      if (fieldOrPlacement !== undefined && fieldOrPlacement.field !== undefined) {
               placement = fieldOrPlacement;
               field = placement.field();
       }
@@ -41,6 +42,9 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
       }
     };
     initFP();
+    if (fieldOrPlacement === undefined) {
+      return;
+    }
     if(field.isFake())
             verticaloffset = -1;
     else if (field.isText())
