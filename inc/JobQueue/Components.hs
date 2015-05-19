@@ -17,6 +17,7 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Trans
 import Control.Monad.Trans.Control
+import Data.Int
 import Data.Function
 import Data.Monoid
 import Data.Monoid.Utils
@@ -103,7 +104,7 @@ spawnListener
   -> MVar ()
   -> m ThreadId
 spawnListener cc cs semaphore = forkP "listener" $ case ccNotificationChannel cc of
-  Just chan -> runDBT cs ts . bracket_ (listen chan) (unlisten chan) . forever $ do
+  Just chan -> runDBT cs noTs . bracket_ (listen chan) (unlisten chan) . forever $ do
     -- If there are many notifications, we need to collect them
     -- as soon as possible, because they are stored in memory by
     -- libpq. They are also not squashed, so we perform the
@@ -117,10 +118,8 @@ spawnListener cc cs semaphore = forkP "listener" $ case ccNotificationChannel cc
     signalDispatcher = do
       liftBase $ tryPutMVar semaphore ()
 
-    ts = def {
+    noTs = def {
       tsAutoTransaction = False
-    , tsIsolationLevel = ReadCommitted
-    , tsPermissions = ReadOnly
     }
 
 -- | Spawn a thread that monitors working consumers
@@ -133,7 +132,7 @@ spawnMonitor
   -> ConsumerID
   -> m ThreadId
 spawnMonitor ConsumerConfig{..} cs logger cid = forkP "monitor" . forever $ do
-  n <- runDBT cs ts $ do
+  runDBT cs ts $ do
     -- Update last_activity of the consumer.
     ok <- runSQL01 $ smconcat [
         "UPDATE" <+> raw ccConsumersTable
@@ -146,27 +145,33 @@ spawnMonitor ConsumerConfig{..} cs logger cid = forkP "monitor" . forever $ do
       else do
         lift . logger $ "consumer" <+> show cid <+> "is not registered"
         throwM ThreadKilled
-    -- Remove all inactive (presumably dead) consumers.
-    runSQL $ smconcat [
-        "WITH inactive AS ("
-      , "  DELETE FROM" <+> raw ccConsumersTable
+  -- Freeing jobs locked by inactive consumers needs to happen
+  -- exactly once, otherwise it's possible to free it twice, after
+  -- it was already marked as reserved by other consumer, so let's
+  -- run it in serializable transaction.
+  (inactiveConsumers, freedJobs) <- runDBT cs tsSerializable $ do
+    -- Delete all inactive (assumed dead) consumers and get their ids.
+    runSQL_ $ smconcat [
+        "DELETE FROM" <+> raw ccConsumersTable
       , "  WHERE last_activity +" <?> iminutes 1 <+> "<= now()"
       , "    AND name =" <?> unRawSQL ccJobsTable
-      , "  RETURNING id"
-      , ")"
-      -- Reset reserved jobs manually, do not rely
-      -- on the foreign key constraint to do its job.
-      , "UPDATE" <+> raw ccJobsTable
-      , "SET reserved_by = NULL"
-      , "WHERE reserved_by IN (SELECT id FROM inactive)"
+      , "  RETURNING id::bigint"
       ]
-  when (n > 0) $ do
-    logger $ "unregistered" <+> show n <+> "inactive consumers"
+    inactive :: [Int64] <- fetchMany runIdentity
+    -- Reset reserved jobs manually, do not rely
+    -- on the foreign key constraint to do its job.
+    freed <- runSQL $ smconcat [
+        "UPDATE" <+> raw ccJobsTable
+      , "SET reserved_by = NULL"
+      , "WHERE reserved_by = ANY(" <?> Array1 inactive <+> ")"
+      ]
+    return (length inactive, freed)
+  when (inactiveConsumers > 0) $ do
+    logger $ "unregistered" <+> show inactiveConsumers <+> "inactive consumers, freed" <+> show freedJobs <+> "locked jobs"
   liftBase . threadDelay $ 30 * 1000000 -- wait 30 seconds
   where
-    ts = def {
-      tsIsolationLevel = ReadCommitted
-    , tsPermissions = ReadWrite
+    tsSerializable = ts {
+      tsIsolationLevel = Serializable
     }
 
 -- | Spawn a thread that reserves and processes jobs.
@@ -185,18 +190,6 @@ spawnDispatcher ConsumerConfig{..} cs logger cid semaphore runningJobsInfo runni
     void $ takeMVar semaphore
     loop 1
   where
-    ts = def {
-      tsIsolationLevel = ReadCommitted
-    , tsRestartPredicate = Just . RestartPredicate
-      -- PostgreSQL doesn't seem to handle very high amount of
-      -- concurrent transactions that modify multiple rows in
-      -- the same table well (see updateJobs) and sometimes (very
-      -- rarely though) ends up in a deadlock. It doesn't matter
-      -- much though, we just restart the transaction in such case.
-      $ \e _ -> qeErrorCode e == DeadlockDetected
-    , tsPermissions = ReadWrite
-    }
-
     loop :: Int -> m ()
     loop limit = do
       (batch, batchSize) <- reserveJobs limit
@@ -333,6 +326,20 @@ spawnDispatcher ConsumerConfig{..} cs logger cid semaphore runningJobsInfo runni
               _             -> (ideletes, job : iupdates)
 
 ----------------------------------------
+
+ts :: TransactionSettings
+ts = def {
+  tsIsolationLevel = ReadCommitted
+, tsPermissions = ReadWrite
+  -- PostgreSQL doesn't seem to handle very high amount of
+  -- concurrent transactions that modify multiple rows in
+  -- the same table well (see updateJobs) and sometimes (very
+  -- rarely though) ends up in a deadlock. It doesn't matter
+  -- much though, we just restart the transaction in such case.
+, tsRestartPredicate = Just . RestartPredicate
+  $ \e _ -> qeErrorCode e == DeadlockDetected
+         || qeErrorCode e == SerializationFailure
+}
 
 atomically :: MonadBase IO m => STM a -> m a
 atomically = liftBase . STM.atomically
