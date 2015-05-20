@@ -1,6 +1,5 @@
 module JobQueue.Components (
-    withConsumer
-  , runConsumer
+    runConsumer
   , spawnListener
   , spawnMonitor
   , spawnDispatcher
@@ -31,24 +30,8 @@ import JobQueue.Config
 import JobQueue.Consumer
 import JobQueue.Utils
 
--- | Run the consumer and perform other action. Cleaning
--- up takes place no matter whether supplied monadic action
--- exits normally or throws an exception.
-withConsumer
-  :: (MonadBaseControl IO m, MonadLog m, MonadMask m, Eq idx, Show idx, ToSQL idx)
-  => ConsumerConfig m idx job
-  -> ConnectionSource
-  -> m a
-  -> m a
-withConsumer cc cs action = do
-  finisher <- newEmptyMVar
-  flip finally (tryTakeMVar finisher >>= maybe (return ()) id) $ do
-    putMVar finisher =<< runConsumer cc cs
-    action
-
--- | Run the consumer. The purpose of the returned monadic action
--- is to wait for currently processed jobs and clean up. Use
--- 'withConsumer' instead unless you know what you're doing.
+-- | Run the consumer. The purpose of the returned monadic
+-- action is to wait for currently processed jobs and clean up.
 runConsumer
   :: (MonadBaseControl IO m, MonadLog m, MonadMask m, Eq idx, Show idx, ToSQL idx)
   => ConsumerConfig m idx job
@@ -62,9 +45,9 @@ runConsumer cc cs = do
   cid <- registerConsumer cc cs
   localData ["consumer_id" .= show cid] $ do
     listener <- spawnListener cc cs semaphore
-    monitor <- spawnMonitor cc cs cid
-    dispatcher <- spawnDispatcher cc cs cid semaphore runningJobsInfo runningJobs
-    return $ do
+    monitor <- localDomain "monitor" $ spawnMonitor cc cs cid
+    dispatcher <- localDomain "dispatcher" $ spawnDispatcher cc cs cid semaphore runningJobsInfo runningJobs
+    return . localDomain "finalizer" $ do
       stopExecution listener
       stopExecution dispatcher
       waitForRunningJobs runningJobsInfo runningJobs
@@ -139,9 +122,9 @@ spawnMonitor ConsumerConfig{..} cs cid = forkP "monitor" . forever $ do
       , "  AND name =" <?> unRawSQL ccJobsTable
       ]
     if ok
-      then logInfo_ "activity of the consumer updated"
+      then logInfo_ "Activity of the consumer updated"
       else do
-        logInfo_ $ "consumer is not registered"
+        logInfo_ $ "Consumer is not registered"
         throwM ThreadKilled
   -- Freeing jobs locked by inactive consumers needs to happen
   -- exactly once, otherwise it's possible to free it twice, after
@@ -165,11 +148,11 @@ spawnMonitor ConsumerConfig{..} cs cid = forkP "monitor" . forever $ do
       ]
     return (length inactive, freed)
   when (inactiveConsumers > 0) $ do
-    logInfo "unregistered inactive consumers" $ object [
+    logInfo "Unregistered inactive consumers" $ object [
         "inactive_consumers" .= inactiveConsumers
       ]
   when (freedJobs > 0) $ do
-    logInfo "freed locked jobs" $ object [
+    logInfo "Freed locked jobs" $ object [
         "freed_jobs" .= freedJobs
       ]
   liftBase . threadDelay $ 30 * 1000000 -- wait 30 seconds
@@ -197,7 +180,7 @@ spawnDispatcher ConsumerConfig{..} cs cid semaphore runningJobsInfo runningJobs 
     loop limit = do
       (batch, batchSize) <- reserveJobs limit
       when (batchSize > 0) $ do
-        logInfo "processing batch" $ object [
+        logInfo "Processing batch" $ object [
             "batch_size" .= batchSize
           ]
         -- Update runningJobs before forking so that we can
@@ -276,7 +259,7 @@ spawnDispatcher ConsumerConfig{..} cs cid semaphore runningJobsInfo runningJobs 
       Right result -> return (ccJobIndex job, result)
       Left ex -> do
         action <- ccOnException ex job
-        logAttention "unexpected exception caught while processing job" $ object [
+        logAttention "Unexpected exception caught while processing job" $ object [
             "job_id" .= show (ccJobIndex job)
           , "exception" .= show ex
           , "action" .= show action

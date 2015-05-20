@@ -17,6 +17,7 @@ import Handlers
 import Happstack.Server.ReqHandler
 import JobQueue.Components
 import JobQueue.Config
+import JobQueue.Utils
 import KontraPrelude
 import Log.Configuration
 import MessengerServerConf
@@ -43,9 +44,10 @@ main = do
     rng <- newCryptoRNGState
 
     E.bracket (startServer lr pool rng conf) (liftBase killThread) . const $ do
-      let sender = createSender $ mscMasterSender conf
-      withConsumer (jobsWorker pool) pool $ do
-        withConsumer (smsConsumer rng sender) pool $ do
+      let cron = jobsWorker pool
+          sender = smsConsumer rng $ createSender $ mscMasterSender conf
+      finalize (localDomain "cron" $ runConsumer cron pool) $ do
+        finalize (localDomain "sender" $ runConsumer sender pool) $ do
           liftBase waitForTermination
   where
     startServer :: LogRunner -> ConnectionSource

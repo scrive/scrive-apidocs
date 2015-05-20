@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable, FlexibleContexts #-}
 module JobQueue.Utils (
-    ThrownFrom(..)
+    finalize
+  , ThrownFrom(..)
   , stopExecution
   , forkP
   , gforkP
@@ -15,6 +16,16 @@ import Prelude
 import qualified Control.Concurrent.Thread.Group.Lifted as TG
 import qualified Control.Concurrent.Thread.Lifted as T
 import qualified Control.Exception.Lifted as E
+
+-- | Runs an action that returns a finalizer and performs it at the end.
+finalize :: (MonadMask m, MonadBase IO m) => m (m ()) -> m a -> m a
+finalize m action = do
+  finalizer <- newEmptyMVar
+  flip finally (tryTakeMVar finalizer >>= maybe (return ()) id) $ do
+    putMVar finalizer =<< m
+    action
+
+----------------------------------------
 
 -- | Exception thrown to a thread to stop its execution.
 -- All exceptions other than 'StopExecution' thrown to

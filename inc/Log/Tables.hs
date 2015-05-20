@@ -11,7 +11,7 @@ logsTables = [
 tableLogs :: Table
 tableLogs = tblTable {
   tblName = "logs"
-, tblVersion = 1
+, tblVersion = 2
 , tblColumns = [
     tblColumn { colName = "insertion_order", colType = BigIntT,  colNullable = False }
   , tblColumn { colName = "insertion_time", colType = TimestampWithZoneT,  colNullable = False }
@@ -20,8 +20,10 @@ tableLogs = tblTable {
   , tblColumn { colName = "component", colType = TextT, colNullable = False }
   , tblColumn { colName = "message", colType = TextT, colNullable = False }
   , tblColumn { colName = "data", colType = JsonbT, colNullable = False }
+  , tblColumn { colName = "domain", colType = ArrayT TextT, colNullable = False }
   ]
 , tblIndexes = [
       indexOnColumn "time"
+    , indexOnColumn "component"
     ]
 }

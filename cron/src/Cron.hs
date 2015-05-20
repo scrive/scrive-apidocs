@@ -29,8 +29,10 @@ import Doc.Model
 import HostClock.Collector (collectClockError)
 import JobQueue.Components
 import JobQueue.Config
+import JobQueue.Utils
 import KontraPrelude hiding (All)
 import Log.Configuration
+import Log.Utils
 import Mails.Events
 import Payments.Config
 import Payments.Control
@@ -45,8 +47,8 @@ import qualified Amazon as AWS
 import qualified CronEnv
 import qualified MemCache
 
-type CronM = LogT IO
-type DBCronM = CryptoRNGT (DBT CronM)
+type CronM = CryptoRNGT (LogT IO)
+type DBCronM = DBT CronM
 
 main :: IO ()
 main = do
@@ -73,14 +75,18 @@ main = do
       token -> return $ Just $ processMixpanelEvent token
 
     let runDB :: DBCronM r -> CronM r
-        runDB = withPostgreSQL pool . runCryptoRNGT rng
+        runDB = withPostgreSQL pool
 
         runScheduler :: Scheduler r -> CronM r
         runScheduler = runDB . CronEnv.runScheduler appConf filecache templates
 
-    withConsumer (documentAPICallback runScheduler) pool $ do
-      withConsumer (cronQueue appConf mmixpanel templates runScheduler runDB) pool $ do
-        liftBase waitForTermination
+        apiCallbacks = documentAPICallback runScheduler
+        cron = cronQueue appConf mmixpanel templates runScheduler runDB
+
+    runCryptoRNGT rng $ do
+      finalize (localDomain "api callbacks" $ runConsumer apiCallbacks pool) $ do
+        finalize (localDomain "cron" $ runConsumer cron pool) $ do
+          liftBase waitForTermination
   where
     cronQueue :: AppConf
               -> Maybe (EventProcessor (DBCronM))
@@ -97,8 +103,10 @@ main = do
     , ccNotificationChannel = Nothing
     , ccNotificationTimeout = 3 * 1000000
     , ccMaxRunningJobs = 10
-    , ccProcessJob = \CronJob{..} -> do
-      logInfo_ $ "Processing" <+> show cjType <> "..."
+    , ccProcessJob = \CronJob{..} -> localRandomID "job_handler_id" $ do
+      logInfo "Processing job" $ object [
+          "job_id" .= show cjType
+        ]
       action <- case cjType of
         AmazonDeletion -> do -- This one should be renamed to FilesPurge
           runScheduler purgeSomeFiles
@@ -181,7 +189,7 @@ main = do
         UserAccountRequestEvaluation -> do
           runScheduler $ actionQueue userAccountRequest
           return . RerunAfter $ ihours 1
-      logInfo_ $ show cjType <+> "finished successfully."
+      logInfo_ "Job processed successfully"
       return $ Ok action
     , ccOnException = \_ CronJob{..} -> return $ case cjAttempts of
       1 -> RerunAfter $ iminutes 1

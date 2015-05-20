@@ -158,12 +158,7 @@ enhanceYourCalm action = enhanceYourCalmWorker (100::Int)
 type HandlerM = ReqHandlerT (LogT IO)
 -- | Inner handler monad.
 type InnerHandlerM = AWS.AmazonMonadT (CryptoRNGT (DBT HandlerM))
-{-}
-randomID :: (MonadLog m, CryptoRNG m) => Text -> m a -> m a
-randomID name action = do
-  did :: Word64 <- random
-  withProperties [property name $ showHex did ""] action
--}
+
 -- | Creates a context, routes the request, and handles the session.
 appHandler :: Kontra (Maybe Response) -> AppConf -> AppGlobals -> HandlerM Response
 appHandler handleRoutes appConf appGlobals = runHandler $ do

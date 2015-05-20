@@ -19,7 +19,7 @@ import Crypto.RNG
 import DB
 import KontraPrelude
 
-type ActionQueue = ActionQueueT (AmazonMonadT (CryptoRNGT (DBT (LogT IO))))
+type ActionQueue = ActionQueueT (AmazonMonadT (DBT (CryptoRNGT (LogT IO))))
 
 type InnerAQ m qd = ReaderT qd m
 

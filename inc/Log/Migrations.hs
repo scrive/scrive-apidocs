@@ -8,7 +8,24 @@ import Log.Tables
 logsMigrations :: MonadDB m => [Migration m]
 logsMigrations = [
     createLogsTable
+  , addColumnDomain
   ]
+
+addColumnDomain :: MonadDB m => Migration m
+addColumnDomain = Migration {
+  mgrTable = tableLogs
+, mgrFrom = 1
+, mgrDo = do
+  let tname = tblName tableLogs
+  runQuery_ $ sqlCreateIndex tname $ indexOnColumn "component"
+  runQuery_ $ sqlAlterTable tname [sqlAddColumn tblColumn {
+    colName = "domain"
+  , colType = ArrayT TextT
+  , colNullable = False
+  , colDefault = Just "ARRAY[]::text[]"
+  }]
+  runQuery_ $ sqlAlterTable tname [sqlAlterColumn "domain" "DROP DEFAULT"]
+}
 
 createLogsTable :: MonadDB m => Migration m
 createLogsTable = Migration {

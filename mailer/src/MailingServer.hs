@@ -19,6 +19,7 @@ import Handlers
 import Happstack.Server.ReqHandler
 import JobQueue.Components
 import JobQueue.Config
+import JobQueue.Utils
 import KontraPrelude
 import Log.Configuration
 import MailingServerConf
@@ -50,9 +51,11 @@ main = do
     E.bracket (startServer lr conf pool rng) (liftBase . killThread) . const $ do
       let master = createSender pool $ mscMasterSender conf
           mslave = createSender pool <$> mscSlaveSender conf
+          cron   = jobsWorker conf pool rng
+          sender = mailsConsumer awsconf master mslave pool rng
 
-      withConsumer (jobsWorker conf pool rng) pool $ do
-        withConsumer (mailsConsumer awsconf master mslave pool rng) pool $ do
+      finalize (localDomain "cron" $ runConsumer cron pool) $ do
+        finalize (localDomain "sender" $ runConsumer sender pool) $ do
           liftBase waitForTermination
   where
     startServer :: LogRunner -> MailingServerConf
