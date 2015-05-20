@@ -266,7 +266,7 @@ data SignatoryMobileField = MobileField {
 data SignatoryTextField = TextField {
     stfID                     :: !SignatoryFieldID
   , stfName                   :: !String
-  , stfFilledByAuthor        :: !Bool
+  , stfFilledByAuthor         :: !Bool
   , stfValue                  :: !String
   , stfObligatory             :: !Bool
   , stfShouldBeFilledBySender :: !Bool
