@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleContexts, OverloadedStrings, RankNTypes
-  , RecordWildCards, ScopedTypeVariables, TupleSections #-}
 module JobQueue.Components (
     withConsumer
   , runConsumer
@@ -22,6 +20,7 @@ import Data.Function
 import Data.Monoid
 import Data.Monoid.Utils
 import Database.PostgreSQL.PQTypes
+import Log
 import Prelude
 import qualified Control.Concurrent.STM as STM
 import qualified Control.Concurrent.Thread.Lifted as T
@@ -36,50 +35,50 @@ import JobQueue.Utils
 -- up takes place no matter whether supplied monadic action
 -- exits normally or throws an exception.
 withConsumer
-  :: (MonadBaseControl IO m, MonadMask m, Eq idx, Show idx, ToSQL idx)
+  :: (MonadBaseControl IO m, MonadLog m, MonadMask m, Eq idx, Show idx, ToSQL idx)
   => ConsumerConfig m idx job
   -> ConnectionSource
-  -> (String -> String -> m ())
   -> m a
   -> m a
-withConsumer cc cs logger action = do
+withConsumer cc cs action = do
   finisher <- newEmptyMVar
   flip finally (tryTakeMVar finisher >>= maybe (return ()) id) $ do
-    putMVar finisher =<< runConsumer cc cs logger
+    putMVar finisher =<< runConsumer cc cs
     action
 
 -- | Run the consumer. The purpose of the returned monadic action
 -- is to wait for currently processed jobs and clean up. Use
 -- 'withConsumer' instead unless you know what you're doing.
 runConsumer
-  :: (MonadBaseControl IO m, MonadMask m, Eq idx, Show idx, ToSQL idx)
+  :: (MonadBaseControl IO m, MonadLog m, MonadMask m, Eq idx, Show idx, ToSQL idx)
   => ConsumerConfig m idx job
   -> ConnectionSource
-  -> (String -> String -> m ())
   -> m (m ())
-runConsumer cc cs logger = do
+runConsumer cc cs = do
   semaphore <- newMVar ()
   runningJobsInfo <- liftBase $ newTVarIO M.empty
   runningJobs <- liftBase $ newTVarIO 0
 
   cid <- registerConsumer cc cs
-  listener <- spawnListener cc cs semaphore
-  monitor <- spawnMonitor cc cs (logger $ "Monitor" <+> show cid) cid
-  dispatcher <- spawnDispatcher cc cs (logger $ "Dispatcher" <+> show cid) cid semaphore runningJobsInfo runningJobs
-
-  return $ do
-    stopExecution listener
-    stopExecution dispatcher
-    waitForRunningJobs runningJobsInfo runningJobs
-    stopExecution monitor
-    unregisterConsumer cc cs cid
+  localData ["consumer_id" .= show cid] $ do
+    listener <- spawnListener cc cs semaphore
+    monitor <- spawnMonitor cc cs cid
+    dispatcher <- spawnDispatcher cc cs cid semaphore runningJobsInfo runningJobs
+    return $ do
+      stopExecution listener
+      stopExecution dispatcher
+      waitForRunningJobs runningJobsInfo runningJobs
+      stopExecution monitor
+      unregisterConsumer cc cs cid
   where
     waitForRunningJobs runningJobsInfo runningJobs = do
       initialJobs <- liftBase $ readTVarIO runningJobsInfo
       (`fix` initialJobs) $ \loop jobsInfo -> do
         -- If jobs are still running, display info about them.
         when (not $ M.null jobsInfo) $ do
-          logger "Finalizer" $ "Waiting for jobs with ID" <+> showJobsInfo jobsInfo
+          logInfo "Waiting for running jobs" $ object [
+              "job_id" .= showJobsInfo jobsInfo
+            ]
         join . atomically $ do
           jobs <- readTVar runningJobs
           if jobs == 0
@@ -93,7 +92,7 @@ runConsumer cc cs logger = do
                 then retry
                 else return $ loop newJobsInfo
       where
-        showJobsInfo = mintercalate ", " . M.foldr (\idx acc -> show idx : acc) []
+        showJobsInfo = M.foldr (\idx acc -> show idx : acc) []
 
 -- | Spawn a thread that generates signals for the
 -- dispatcher to probe the database for incoming jobs.
@@ -125,13 +124,12 @@ spawnListener cc cs semaphore = forkP "listener" $ case ccNotificationChannel cc
 -- | Spawn a thread that monitors working consumers
 -- for activity and periodically updates its own.
 spawnMonitor
-  :: (MonadBaseControl IO m, MonadMask m)
+  :: (MonadBaseControl IO m, MonadLog m, MonadMask m)
   => ConsumerConfig m idx job
   -> ConnectionSource
-  -> (String -> m ())
   -> ConsumerID
   -> m ThreadId
-spawnMonitor ConsumerConfig{..} cs logger cid = forkP "monitor" . forever $ do
+spawnMonitor ConsumerConfig{..} cs cid = forkP "monitor" . forever $ do
   runDBT cs ts $ do
     -- Update last_activity of the consumer.
     ok <- runSQL01 $ smconcat [
@@ -141,9 +139,9 @@ spawnMonitor ConsumerConfig{..} cs logger cid = forkP "monitor" . forever $ do
       , "  AND name =" <?> unRawSQL ccJobsTable
       ]
     if ok
-      then lift . logger $ "activity of the consumer updated"
+      then logInfo_ "activity of the consumer updated"
       else do
-        lift . logger $ "consumer" <+> show cid <+> "is not registered"
+        logInfo_ $ "consumer is not registered"
         throwM ThreadKilled
   -- Freeing jobs locked by inactive consumers needs to happen
   -- exactly once, otherwise it's possible to free it twice, after
@@ -167,7 +165,13 @@ spawnMonitor ConsumerConfig{..} cs logger cid = forkP "monitor" . forever $ do
       ]
     return (length inactive, freed)
   when (inactiveConsumers > 0) $ do
-    logger $ "unregistered" <+> show inactiveConsumers <+> "inactive consumers, freed" <+> show freedJobs <+> "locked jobs"
+    logInfo "unregistered inactive consumers" $ object [
+        "inactive_consumers" .= inactiveConsumers
+      ]
+  when (freedJobs > 0) $ do
+    logInfo "freed locked jobs" $ object [
+        "freed_jobs" .= freedJobs
+      ]
   liftBase . threadDelay $ 30 * 1000000 -- wait 30 seconds
   where
     tsSerializable = ts {
@@ -176,16 +180,15 @@ spawnMonitor ConsumerConfig{..} cs logger cid = forkP "monitor" . forever $ do
 
 -- | Spawn a thread that reserves and processes jobs.
 spawnDispatcher
-  :: forall m idx job. (MonadBaseControl IO m, MonadMask m, Show idx, ToSQL idx)
+  :: forall m idx job. (MonadBaseControl IO m, MonadLog m, MonadMask m, Show idx, ToSQL idx)
   => ConsumerConfig m idx job
   -> ConnectionSource
-  -> (String -> m ())
   -> ConsumerID
   -> MVar ()
   -> TVar (M.Map ThreadId idx)
   -> TVar Int
   -> m ThreadId
-spawnDispatcher ConsumerConfig{..} cs logger cid semaphore runningJobsInfo runningJobs =
+spawnDispatcher ConsumerConfig{..} cs cid semaphore runningJobsInfo runningJobs =
   forkP "dispatcher" . forever $ do
     void $ takeMVar semaphore
     loop 1
@@ -194,7 +197,9 @@ spawnDispatcher ConsumerConfig{..} cs logger cid semaphore runningJobsInfo runni
     loop limit = do
       (batch, batchSize) <- reserveJobs limit
       when (batchSize > 0) $ do
-        logger $ "processing batch of size" <+> show batchSize
+        logInfo "processing batch" $ object [
+            "batch_size" .= batchSize
+          ]
         -- Update runningJobs before forking so that we can
         -- adjust maxBatchSize appropriately later. We also
         -- need to mask asynchronous exceptions here as we
@@ -271,7 +276,11 @@ spawnDispatcher ConsumerConfig{..} cs logger cid semaphore runningJobsInfo runni
       Right result -> return (ccJobIndex job, result)
       Left ex -> do
         action <- ccOnException ex job
-        logger $ "unexpected exception" <+> show ex <+> "caught while processing job" <+> show (ccJobIndex job) <> ", action:" <+> show action
+        logAttention "unexpected exception caught while processing job" $ object [
+            "job_id" .= show (ccJobIndex job)
+          , "exception" .= show ex
+          , "action" .= show action
+          ]
         return (ccJobIndex job, Failed action)
 
     -- | Update status of the jobs.

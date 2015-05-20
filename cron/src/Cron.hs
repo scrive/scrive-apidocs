@@ -78,11 +78,8 @@ main = do
         runScheduler :: Scheduler r -> CronM r
         runScheduler = runDB . CronEnv.runScheduler appConf filecache templates
 
-        cronLogger domain msg = logInfo_ $ "Cron:" <+> domain <> ":" <+> msg
-        apiCallbackLogger domain msg = logInfo_ $ "API Callbacks:" <+> domain <> ":" <+> msg
-
-    withConsumer (documentAPICallback runScheduler) pool apiCallbackLogger $ do
-      withConsumer (cronQueue appConf mmixpanel templates runScheduler runDB) pool cronLogger $ do
+    withConsumer (documentAPICallback runScheduler) pool $ do
+      withConsumer (cronQueue appConf mmixpanel templates runScheduler runDB) pool $ do
         liftBase waitForTermination
   where
     cronQueue :: AppConf

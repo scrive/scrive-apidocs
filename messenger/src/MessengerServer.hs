@@ -44,10 +44,8 @@ main = do
 
     E.bracket (startServer lr pool rng conf) (liftBase killThread) . const $ do
       let sender = createSender $ mscMasterSender conf
-          smsLogger domain msg = logInfo_ $ "SMS:" <+> domain <> ":" <+> msg
-          jobsLogger domain msg = logInfo_ $ "Messenger jobs:" <+> domain <> ":" <+> msg
-      withConsumer (jobsWorker pool) pool jobsLogger $ do
-        withConsumer (smsConsumer rng sender) pool smsLogger $ do
+      withConsumer (jobsWorker pool) pool $ do
+        withConsumer (smsConsumer rng sender) pool $ do
           liftBase waitForTermination
   where
     startServer :: LogRunner -> ConnectionSource

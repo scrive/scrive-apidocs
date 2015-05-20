@@ -48,13 +48,11 @@ main = do
     rng <- newCryptoRNGState
 
     E.bracket (startServer lr conf pool rng) (liftBase . killThread) . const $ do
-      let mailsLogger domain msg = logInfo_ $ "Mails:" <+> domain <> ":" <+> msg
-          jobsLogger domain msg = logInfo_ $ "Mailer jobs:" <+> domain <> ":" <+> msg
-          master = createSender pool $ mscMasterSender conf
+      let master = createSender pool $ mscMasterSender conf
           mslave = createSender pool <$> mscSlaveSender conf
 
-      withConsumer (jobsWorker conf pool rng) pool jobsLogger $ do
-        withConsumer (mailsConsumer awsconf master mslave pool rng) pool mailsLogger $ do
+      withConsumer (jobsWorker conf pool rng) pool $ do
+        withConsumer (mailsConsumer awsconf master mslave pool rng) pool $ do
           liftBase waitForTermination
   where
     startServer :: LogRunner -> MailingServerConf
