@@ -134,7 +134,6 @@ insertSignatoryLinks did links = do
     sqlSetList "read_invitation" $ maybereadinvite <$> links
     sqlSetList "mail_invitation_delivery_status" $ mailinvitationdeliverystatus <$> links
     sqlSetList "sms_invitation_delivery_status" $ smsinvitationdeliverystatus <$> links
-    sqlSetList "csv_title" $ fmap csvtitle <$> signatorylinkcsvupload <$> links
     sqlSetList "csv_contents" $ fmap csvcontents <$> signatorylinkcsvupload <$> links
     sqlSetList "deleted" $ signatorylinkdeleted <$> links
     sqlSetList "really_deleted" $ signatorylinkreallydeleted <$> links
@@ -615,7 +614,6 @@ instance (DocumentMonad m, TemplatesMonad m, MonadMask m) => DBUpdate m Preparat
                 sqlWhereDocumentStatusIs Preparation
 
               runQuery_ . sqlUpdate "signatory_links" $ do
-                sqlSet "csv_title" (Nothing :: Maybe String)
                 sqlSet "csv_contents" (Nothing :: Maybe String)
                 sqlWhereEq "document_id" docid
 

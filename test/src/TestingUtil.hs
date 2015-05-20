@@ -199,13 +199,10 @@ instance Arbitrary SignatoryLink where
 
 instance Arbitrary CSVUpload where
   arbitrary = do
-    a <- arbitrary
     cols <- arbitrary
     rows <- arbitrary
     b <- vectorOf rows (vectorOf cols arbitrary)
-    return $ CSVUpload { csvtitle = a
-                       , csvcontents = b
-                       }
+    return $ CSVUpload b
 
 instance Arbitrary DocumentID where
   arbitrary = unsafeDocumentID . abs <$> arbitrary

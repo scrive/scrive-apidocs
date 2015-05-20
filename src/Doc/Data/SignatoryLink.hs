@@ -80,8 +80,7 @@ instance ToSQL DeliveryStatus where
 ---------------------------------
 
 data CSVUpload = CSVUpload {
-  csvtitle     :: !String
-, csvcontents  :: ![[String]]
+  csvcontents  :: ![[String]]
 } deriving (Eq, Ord, Show)
 
 instance PQFormat [[String]] where
@@ -278,7 +277,6 @@ signatoryLinksSelectors = [
   , "signatory_links.sms_invitation_delivery_status"
   , "signatory_links.deleted"
   , "signatory_links.really_deleted"
-  , "signatory_links.csv_title"
   , "signatory_links.csv_contents"
   , "ARRAY(SELECT (" <> mintercalate ", " signatoryAttachmentsSelectors <> ")::signatory_attachment FROM signatory_attachments WHERE signatory_links.id = signatory_attachments.signatory_link_id ORDER BY signatory_attachments.file_id)"
   , "signatory_links.sign_redirect_url"
@@ -290,13 +288,13 @@ signatoryLinksSelectors = [
   , "signatory_links.confirmation_delivery_method"
   ]
 
-type instance CompositeRow SignatoryLink = (SignatoryLinkID, CompositeArray1 SignatoryField, Bool, Bool, SignOrder, MagicHash, Maybe UserID, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, DeliveryStatus, DeliveryStatus, Maybe UTCTime, Maybe UTCTime, Maybe String, Maybe [[String]], CompositeArray1 SignatoryAttachment, Maybe String, Maybe String, Maybe UTCTime, Maybe String, AuthenticationMethod, DeliveryMethod, ConfirmationDeliveryMethod)
+type instance CompositeRow SignatoryLink = (SignatoryLinkID, CompositeArray1 SignatoryField, Bool, Bool, SignOrder, MagicHash, Maybe UserID, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, DeliveryStatus, DeliveryStatus, Maybe UTCTime, Maybe UTCTime, Maybe [[String]], CompositeArray1 SignatoryAttachment, Maybe String, Maybe String, Maybe UTCTime, Maybe String, AuthenticationMethod, DeliveryMethod, ConfirmationDeliveryMethod)
 
 instance PQFormat SignatoryLink where
   pqFormat _ = "%signatory_link"
 
 instance CompositeFromSQL SignatoryLink where
-  toComposite (slid, CompositeArray1 fields, is_author, is_partner, sign_order, magic_hash, muser_id, msign_time, msign_ip, mseen_time, mseen_ip, mread_invite, mail_invitation_delivery_status, sms_invitation_delivery_status, mdeleted, mreally_deleted, mcsv_title, mcsv_contents, CompositeArray1 attachments, msign_redirect_url, mreject_redirect_url, mrejection_time, mrejection_reason, authentication_method, delivery_method, confirmation_delivery_method) = SignatoryLink {
+  toComposite (slid, CompositeArray1 fields, is_author, is_partner, sign_order, magic_hash, muser_id, msign_time, msign_ip, mseen_time, mseen_ip, mread_invite, mail_invitation_delivery_status, sms_invitation_delivery_status, mdeleted, mreally_deleted, mcsv_contents, CompositeArray1 attachments, msign_redirect_url, mreject_redirect_url, mrejection_time, mrejection_reason, authentication_method, delivery_method, confirmation_delivery_method) = SignatoryLink {
     signatorylinkid = slid
   , signatoryfields = fields
   , signatoryisauthor = is_author
@@ -311,7 +309,7 @@ instance CompositeFromSQL SignatoryLink where
   , smsinvitationdeliverystatus = sms_invitation_delivery_status
   , signatorylinkdeleted = mdeleted
   , signatorylinkreallydeleted = mreally_deleted
-  , signatorylinkcsvupload = CSVUpload <$> mcsv_title <*> mcsv_contents
+  , signatorylinkcsvupload = CSVUpload <$> mcsv_contents
   , signatoryattachments = attachments
   , signatorylinksignredirecturl = msign_redirect_url
   , signatorylinkrejectredirecturl = mreject_redirect_url

@@ -1150,3 +1150,12 @@ dropErrorTextFromDocuments = Migration {
     , mgrDo = runSQL_ "ALTER TABLE documents DROP COLUMN error_text"
               -- Also this migration will update composite type
     }
+
+dropCSVTitleFromSignatories :: MonadDB m  => Migration m
+dropCSVTitleFromSignatories = Migration {
+      mgrTable = tableSignatoryLinks
+    , mgrFrom = 26
+    , mgrDo = runSQL_ "ALTER TABLE signatory_links DROP COLUMN csv_title"
+              -- Also this migration will update composite type
+    }
+

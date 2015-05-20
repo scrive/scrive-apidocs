@@ -377,10 +377,7 @@ instance FromJSValue CSVUpload  where
     fromJSValue = do
         rows <- fromJSValue
         case rows of
-             Just rs -> return $ Just $ CSVUpload
-                        { csvtitle = ""
-                        , csvcontents = rs
-                        }
+             Just rs -> return $ Just $ CSVUpload rs
              _ -> return Nothing
 
 instance FromJSValue DocumentTag where

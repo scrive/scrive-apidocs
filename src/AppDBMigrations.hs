@@ -173,6 +173,7 @@ kontraMigrations = [
   , addFileNameToMainFiles
   , addFileNameToAuthorAttachments
   , dropErrorTextFromDocuments
+  , dropCSVTitleFromSignatories
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

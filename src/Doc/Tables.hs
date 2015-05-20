@@ -186,7 +186,7 @@ ctSignatoryAttachment = CompositeType {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = tblTable {
     tblName = "signatory_links"
-  , tblVersion = 26
+  , tblVersion = 27
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
@@ -200,7 +200,6 @@ tableSignatoryLinks = tblTable {
     , tblColumn { colName = "read_invitation", colType = TimestampWithZoneT }
     , tblColumn { colName = "deleted", colType = TimestampWithZoneT }
     , tblColumn { colName = "really_deleted", colType = TimestampWithZoneT }
-    , tblColumn { colName = "csv_title", colType = TextT }
     , tblColumn { colName = "csv_contents", colType = TextT }
     , tblColumn { colName = "sign_redirect_url", colType = TextT }
     , tblColumn { colName = "is_author", colType = BoolT, colNullable = False }
@@ -245,7 +244,6 @@ ctSignatoryLink = CompositeType {
   , CompositeColumn { ccName = "sms_invitation_delivery_status", ccType = SmallIntT }
   , CompositeColumn { ccName = "deleted", ccType = TimestampWithZoneT }
   , CompositeColumn { ccName = "really_deleted", ccType = TimestampWithZoneT }
-  , CompositeColumn { ccName = "csv_title", ccType = TextT }
   , CompositeColumn { ccName = "csv_contents", ccType = TextT }
   , CompositeColumn { ccName = "attachments", ccType = ArrayT $ CustomT "signatory_attachment" }
   , CompositeColumn { ccName = "sign_redirect_url", ccType = TextT }
