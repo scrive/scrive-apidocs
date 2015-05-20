@@ -5,6 +5,7 @@
   "properties": {
     "id": {
       "type": "string"
+    , "read_only": true
     },
     "title": {
       "type": "string"
@@ -14,12 +15,14 @@
         { "type": "null" }
       , { "$ref": "#/definitions/file_def" }
       ]
+    , "read_only": true
     },
     "sealed_file": {
       "anyOf": [
         { "type": "null" }
       , { "$ref": "#/definitions/file_def" }
       ]
+    , "read_only": true
     },
     "author_attachments": {
       "type": "array",
@@ -29,44 +32,41 @@
         , { "$ref": "#/definitions/file_def" }
         ]
       }
+    , "read_only": true
     },
     "mtime": {
       "type": "string",
       "format": "date-time"
+    , "read_only": true
     },
     "ctime": {
       "type": "string",
       "format": "date-time"
+    , "read_only": true
     },
     "timeout_time": {
       "anyOf": [
         { "type": "null"}
       , { "type": "string", "format": "date-time" }
       ]
+    , "read_only": true
     },
     "auto_remind_time": {
       "anyOf": [
         { "type": "null"}
       , { "type": "string", "format": "date-time" }
       ]
+    , "read_only": true
     },
     "status": {
-      "type": "string",
-      "enum": [
-        "Preparation"
-      , "Pending"
-      , "Closed"
-      , "Canceled"
-      , "Timedout"
-      , "Rejected"
-      , "DocumentError"
-      ]
+      "$ref": "#/definitions/document_status"
+    , "read_only": true
     },
     "viewer": {
       "type": "object",
       "properties": {
         "role": {
-          { "type": "string", "enum": ["company_admin", "signatory"] }
+          "type": "string", "enum": ["company_admin", "signatory"]
         },
         "signatory_id": {
           "oneOf": [
@@ -75,6 +75,7 @@
           ]
         }
       }
+    , "read_only": true
     },
     "signatories": {
       "type": "array",
@@ -82,183 +83,155 @@
         "type": "object",
         "properties": {
           "id": {
-             "type": "string"
-           },
-           "user_id": {
-             "anyOf": [
-                { "type": "null" }
-              , { "type": "string" }
-              ]
-           },
-           "sign_order": {
-             "type": "integer"
-           },
-           "sign_time": {
-             "anyOf": [
-               { "type": "null"}
-             , { "type": "string", "format": "date-time" }
-             ]
-           },
-           "seen_time": {
-             "anyOf": [
-               { "type": "null"}
-             , { "type": "string", "format": "date-time" }
-             ]
-           },
-           "read_invitation_time": {
-             "anyOf": [
-               { "type": "null"}
-             , { "type": "string", "format": "date-time" }
-             ]
-           },
-           "rejected_time": {
-             "anyOf": [
-               { "type": "null"}
-             , { "type": "string", "format": "date-time" }
-             ]
-           },
-           "csv": {
-             "anyOf": [
-                { "type": "null" }
-              , { "type": "array"
-                , "items": { "type": "array"
-                           , "items": { "type": "string" }
-                           }
-                }
-              ]
-           },
-           "is_author": {
-             "type": "boolean"
-           },
-           "is_signatory": {
-             "type": "boolean"
-           },
-           "delivery_method": {
-             "type": "string",
-             "enum": [
-               "email"
-             , "pad"
-             , "api"
-             , "mobile"
-             , "email_mobile"
-             ]
-           },
-           "email_delivery_status" : {
-             "$ref": "#/definitions/delivery_status"
-           },
-           "mobile_delivery_status" : {
-             "$ref": "#/definitions/delivery_status"
-           },
-           "authentication_method": {
-             "type": "string",
-             "enum": [
-               "standard"
-             , "sms_pin"
-             , "sv_bankid"
-             ]
-           },
-           "confirmation_delivery_method": {
-             "type": "string",
-             "enum": [
-               "email"
-             , "mobile"
-             , "email_mobile"
-             , "none"
-             ]
-           },
-           "sign_success_redirect_url": {
-             "anyOf": [
+            "type": "string"
+          , "read_only": true
+          },
+          "user_id": {
+            "anyOf": [
                { "type": "null" }
-             , { "type": "string", "format": "uri" }
+             , { "type": "string" }
              ]
-           },
-           "reject_redirect_url": {
-             "anyOf": [
+          , "read_only": true
+          },
+          "sign_order": {
+            "type": "integer"
+          },
+          "sign_time": {
+            "anyOf": [
+              { "type": "null"}
+            , { "type": "string", "format": "date-time" }
+            ]
+          , "read_only": true
+          },
+          "seen_time": {
+            "anyOf": [
+              { "type": "null"}
+            , { "type": "string", "format": "date-time" }
+            ]
+          , "read_only": true
+          },
+          "read_invitation_time": {
+            "anyOf": [
+              { "type": "null"}
+            , { "type": "string", "format": "date-time" }
+            ]
+          , "read_only": true
+          },
+          "rejected_time": {
+            "anyOf": [
+              { "type": "null"}
+            , { "type": "string", "format": "date-time" }
+            ]
+          , "read_only": true
+          },
+          "csv": {
+            "anyOf": [
                { "type": "null" }
-             , { "type": "string", "format": "uri" }
+             , { "type": "array"
+               , "items": { "type": "array"
+                          , "items": { "type": "string" }
+                          }
+               }
              ]
-           },
-           "attachments": {
-             "type": "array",
-             "items": {
-               "type": "object",
-               "properties": {
-                 "name": { "type": "string" }
-               , "description": { "type": "string" }
-               , "file": { "anyOf": [
-                             { "type": "null"}
-                           , { "$ref": "#/definitions/file_def" }
-                           ]
-                         }
-               }
-             }
-           },
-           "fields": {
-             "type": "array",
-             "items": {
-               "type": "object",
-               "properties": {
-                 "type": {
-                   "type": "string",
-                   "enum": [
-                     "standard"
-                   , "custom"
-                   , "checkbox"
-                   , "signature"
-                   ]
-                 },
-                 "name": {
-                   "type": "string"
-                 },
-                 "value": {
-                   "type": "string"
-                 },
-                 "closed": {
-                   "type": "boolean"
-                 },
-                 "obligatory": {
-                   "type": "boolean"
-                 },
-                 "should_be_filled_by_sender": {
-                   "type": "boolean"
-                 },
-                 "placements": {
-                   "type": "array",
-                   "items": {
-                     "type": "object",
-                     "properties": {
-                       "xrel": {
-                         "type": "number"
-                       },
-                       "yrel": {
-                         "type": "number"
-                       },
-                       "wrel": {
-                         "type": "number"
-                       },
-                       "hrel": {
-                         "type": "number"
-                       },
-                       "fsrel": {
-                         "type": "number"
-                       },
-                       "page": {
-                         "type": "integer"
-                       },
-                       "tip": {
-                         "type": "string"
-                       }
-                     }
-                   }
-                 }
-               }
-             }
-           }
+          , "read_only": true
+          },
+          "is_author": {
+            "type": "boolean"
+          , "read_only": true
+          },
+          "is_signatory": {
+            "type": "boolean"
+          },
+          "delivery_method": {
+            "type": "string",
+            "enum": [
+              "email"
+            , "pad"
+            , "api"
+            , "mobile"
+            , "email_mobile"
+            ],
+            "default": "email"
+          },
+          "api_delivery_url": {
+            "anyOf": [
+              { "type": "null" }
+            , { "type": "string", "format": "uri" }
+            ]
+          },
+          "email_delivery_status" : {
+            "$ref": "#/definitions/delivery_status"
+          , "read_only": true
+          },
+          "mobile_delivery_status" : {
+            "$ref": "#/definitions/delivery_status"
+          , "read_only": true
+          },
+          "authentication_method": {
+            "type": "string",
+            "enum": [
+              "standard"
+            , "sms_pin"
+            , "sv_bankid"
+            ],
+            "default": "standard"
+          },
+          "confirmation_delivery_method": {
+            "type": "string",
+            "enum": [
+              "email"
+            , "mobile"
+            , "email_mobile"
+            , "none"
+            ],
+            "default": "email"
+          },
+          "sign_success_redirect_url": {
+            "anyOf": [
+              { "type": "null" }
+            , { "type": "string", "format": "uri" }
+            ]
+          },
+          "reject_redirect_url": {
+            "anyOf": [
+              { "type": "null" }
+            , { "type": "string", "format": "uri" }
+            ]
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" }
+              , "description": { "type": "string" }
+              , "file": { "anyOf": [
+                            { "type": "null"}
+                          , { "$ref": "#/definitions/file_id" }
+                          ]
+                        }
+              }
+            }
+          , "read_only": true
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "oneOf" : [
+                 { "$ref": "#/definitions/field_name" }
+               , { "$ref": "#/definitions/field_standard" }
+               , { "$ref": "#/definitions/field_text" }
+               , { "$ref": "#/definitions/field_signature" }
+               , { "$ref": "#/definitions/field_checkbox" }
+               ]
+            }
+          }
         }
       }
     },
     "is_template": {
-      "type": "boolean"
+      "type": "boolean",
+      "default": false
     },
     "days_to_sign": {
       "type": "integer"
@@ -273,16 +246,20 @@
       "type": "object",
       "properties": {
         "show_header": {
-          "type": "boolean"
+          "type": "boolean",
+          "default": true
         },
         "show_pdf_download": {
-          "type": "boolean"
+          "type": "boolean",
+          "default": true
         },
         "show_reject_option": {
-          "type": "boolean"
+          "type": "boolean",
+          "default": true
         },
         "show_footer": {
-          "type": "boolean"
+          "type": "boolean",
+          "default": true
         }
       }
     },
@@ -330,15 +307,19 @@
     },
     "is_trashed": {
       "type": "boolean"
+    , "read_only": true
     },
     "is_deleted": {
       "type": "boolean"
+    , "read_only": true
     },
     "object_version": {
       "type": "integer"
+    , "read_only": true
     },
     "access_token": {
       "type": "string"
+    , "read_only": true
     },
     "timezone": {
       "type": "string"
@@ -354,16 +335,180 @@
       , "deferred"
       ]
     },
+    "file_id": {
+      "type": "string"
+    },
     "file_def": {
       "type": "object",
       "properties": {
-        "id": {
-          "type": "string"
-        },
+        "id": { "$ref": "#/definitions/file_id" },
         "name": {
           "type": "string"
         }
       }
+    },
+    "field_common": {
+      "type": "object",
+      "properties": {
+        "is_obligatory": {
+          "type": "boolean"
+        },
+        "should_be_filled_by_sender": {
+          "type": "boolean"
+        },
+        "placements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "xrel": {
+                "type": "number"
+              },
+              "yrel": {
+                "type": "number"
+              },
+              "wrel": {
+                "type": "number"
+              },
+              "hrel": {
+                "type": "number"
+              },
+              "fsrel": {
+                "type": "number"
+              },
+              "page": {
+                "type": "integer"
+              },
+              "tip": {
+                "type": "string",
+                "enum": ["left", "right"]
+              },
+              "anchors": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "text": {
+                      "type": "string"
+                    },
+                    "index": {
+                      "type": "integer"
+                    },
+                    "pages": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "field_name": {
+      "allOf": [
+        { "properties": {
+            "type": {
+              "type": "string",
+              "enum": [ "name" ]
+            },
+            "order": {
+              "type": "integer"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        }
+        , { "$ref": "#/definitions/field_common" }
+      ]
+    },
+    "field_standard": {
+      "allOf": [
+        { "properties": {
+            "type": {
+              "type": "string",
+              "enum": [ "company"
+                      , "company_number"
+                      , "email"
+                      , "mobile"
+                      , "personal_number"
+                      ]
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        }
+        , { "$ref": "#/definitions/field_common" }
+      ]
+    },
+    "field_text": {
+      "allOf": [
+        { "properties": {
+            "type": {
+              "type": "string",
+              "enum": [ "text" ]
+            },
+            "name": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        }
+        , { "$ref": "#/definitions/field_common" }
+      ]
+    },
+    "field_signature": {
+      "allOf": [
+        { "properties": {
+            "type": {
+              "type": "string",
+              "enum": [ "signature" ]
+            },
+            "signature": {
+              "oneOf" : [
+                { "type": "null" }
+              , { "$ref": "#/definitions/file_id" }
+              ]
+              , "read_only": true
+            }
+          }
+        }
+        , { "$ref": "#/definitions/field_common" }
+      ]
+    },
+    "field_checkbox": {
+      "allOf": [
+        { "properties": {
+            "type": {
+              "type": "string",
+              "enum": [ "checkbox" ]
+            },
+            "is_checked": {
+              "type": "boolean"
+            }
+          }
+        }
+        , { "$ref": "#/definitions/field_common" }
+      ]
+    },
+    "document_status": {
+      "type": "string",
+      "enum": [
+        "preparation"
+      , "pending"
+      , "closed"
+      , "canceled"
+      , "timedout"
+      , "rejected"
+      , "document_error"
+      ]
     }
   }
 }

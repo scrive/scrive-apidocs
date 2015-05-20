@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "list_sorting",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "sort_by": {
+        "type": "string",
+        "enum": [
+          "title"
+        , "status"
+        , "mtime"
+        , "author"
+        ]
+      },
+      "order": {
+        "type": "string",
+        "enum": [
+          "ascending"
+        , "descending"
+        ],
+        "default": "ascending"
+      }
+    },
+    "required": [ "sort_by" ]
+  },
+  "default": [ {"sort_by": "mtime", "order": "ascending" } ]
+}
