@@ -11,6 +11,7 @@ import Text.JSON
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL (toString, fromString)
 
+import API.APIVersion
 import Amazon
 import DB
 import Doc.API.Callback.Data
@@ -28,25 +29,30 @@ import Utils.IO
 execute :: (AmazonMonad m, MonadDB m, MonadThrow m, MonadLog m, MonadIO m, MonadBase IO m,  MonadReader c m, HasSalesforceConf c) => DocumentAPICallback -> m Bool
 execute DocumentAPICallback{..} = do
   exists <- dbQuery $ DocumentExistsAndIsNotPurged dacDocumentID
-  if exists
-    then do
-      doc <- dbQuery $ GetDocumentByDocumentID dacDocumentID
-      case (maybesignatory =<< getAuthorSigLink doc) of
-        Nothing -> $unexpectedErrorM $ "Document" <+> show dacDocumentID <+> "has no author"
-        Just userid -> do
-          mcallbackschema <- dbQuery $ GetUserCallbackSchemeByUserID userid
-          case mcallbackschema of
-            Just (SalesforceScheme rtoken) -> executeSalesforceCallback doc rtoken dacURL
-            _ -> executeStandardCallback doc dacURL
-    else do
-      logInfo "API callback dropped since document does not exists or is purged" $ object [
-          "document_id" .= show dacDocumentID
-        ]
-      return True
+  if not exists then do
+    logInfo "API callback dropped since document does not exists or is purged" $ object [
+        "document_id" .= show dacDocumentID
+      ]
+    return True
+  else if dacApiVersion == V1 then do -- TODO APIv2: Get rid of the API version check here, executeStandardCallback will handle it
+    doc <- dbQuery $ GetDocumentByDocumentID dacDocumentID
+    case (maybesignatory =<< getAuthorSigLink doc) of
+      Nothing -> $unexpectedErrorM $ "Document" <+> show dacDocumentID <+> "has no author"
+      Just userid -> do
+        mcallbackschema <- dbQuery $ GetUserCallbackSchemeByUserID userid
+        case mcallbackschema of
+          Just (SalesforceScheme rtoken) -> executeSalesforceCallback doc rtoken dacURL
+          _ -> executeStandardCallback doc dacURL dacApiVersion
+  else do -- TODO APIv2: Get rid of this block too, see TODO above
+    logAttention "API callback was dropped as it is not a V1 callback: this is not yet implemented and shouldn't happen!" $
+      object [ "document_id" .= show dacDocumentID, "api_version" .= show dacApiVersion, "url" .= dacURL]
+    return True
 
-executeStandardCallback :: (AmazonMonad m, MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, MonadIO m) => Document -> String -> m Bool
-executeStandardCallback doc url = do
-  dJSON <- documentJSONV1 Nothing False True Nothing doc
+executeStandardCallback :: (AmazonMonad m, MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, MonadIO m) => Document -> String -> APIVersion -> m Bool
+executeStandardCallback doc url apiVersion = do
+  dJSON <- case apiVersion of
+                -- TODO APIv2: Use correct JSON for the version given
+                _ -> documentJSONV1 Nothing False True Nothing doc
   (exitcode, _ , stderr) <- readCurl
      [ "-X", "POST"
      , "-f" -- make curl return exit code (22) if it got anything else but 2XX
@@ -63,12 +69,14 @@ executeStandardCallback doc url = do
     ExitSuccess -> do
       logInfo "API callback executeStandardCallback succeeded" $ object [
           "document_id" .= show (documentid doc)
+        , "api_version" .= show apiVersion
         , "url" .= url
         ]
       return True
     ExitFailure ec -> do
       logAttention "API callback executeStandardCallback failed" $ object [
           "document_id" .= show (documentid doc)
+        , "api_version" .= show apiVersion
         , "url" .= url
         , "curl_exitcode" .= show ec
         , "stderr" .= BSL.toString stderr

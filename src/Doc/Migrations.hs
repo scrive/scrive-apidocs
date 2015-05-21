@@ -1164,3 +1164,12 @@ dropAPIVersionFromDocuments = Migration {
     , mgrDo = runSQL_ "ALTER TABLE documents DROP COLUMN api_version"
               -- Also this migration will update composite type
     }
+
+addAPIV2CallbackAndRenameExisting :: MonadDB m => Migration m
+addAPIV2CallbackAndRenameExisting = Migration {
+      mgrTable = tableDocuments
+    , mgrFrom = 39
+    , mgrDo = do
+        runSQL_ "ALTER TABLE documents RENAME api_callback_url TO api_v1_callback_url"
+        runSQL_ "ALTER TABLE documents ADD COLUMN api_v2_callback_url TEXT NULL"
+    }

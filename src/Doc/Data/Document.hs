@@ -198,7 +198,8 @@ data Document = Document {
 , documentauthorattachments      :: ![AuthorAttachment]
 , documentlang                   :: !Lang
 , documentstatusclass            :: !StatusClass
-, documentapicallbackurl         :: !(Maybe String)
+, documentapiv1callbackurl       :: !(Maybe String)
+, documentapiv2callbackurl       :: !(Maybe String)
 , documentunsaveddraft           :: !Bool
 , documentobjectversion          :: !Int64
 , documentmagichash              :: !MagicHash
@@ -234,7 +235,8 @@ instance Default Document where
   , documentauthorattachments = []
   , documentlang = def
   , documentstatusclass = SCDraft
-  , documentapicallbackurl = Nothing
+  , documentapiv1callbackurl = Nothing
+  , documentapiv2callbackurl = Nothing
   , documentunsaveddraft = False
   , documentobjectversion = 0
   , documentmagichash = unsafeMagicHash 0
@@ -281,7 +283,8 @@ documentsSelectors = [
   , "ARRAY(SELECT (" <> mintercalate ", " documentTagsSelectors <> ")::document_tag FROM document_tags WHERE documents.id = document_tags.document_id ORDER BY document_tags.name)"
   -- needs ROW since composite type has only one field for now
   , "ARRAY(SELECT ROW(" <> mintercalate ", " authorAttachmentsSelectors <> ")::author_attachment FROM author_attachments, files WHERE documents.id = author_attachments.document_id AND files.id = author_attachments.file_id ORDER BY author_attachments.file_id)"
-  , "documents.api_callback_url"
+  , "documents.api_v1_callback_url"
+  , "documents.api_v2_callback_url"
   , "documents.unsaved_draft"
   , "documents.object_version"
   , "documents.token"
@@ -337,13 +340,13 @@ documentStatusClassExpression = mconcat [
       , "END :: INTEGER)"
       ]
 
-type instance CompositeRow Document = (DocumentID, String, CompositeArray1 SignatoryLink, CompositeArray1 MainFile, DocumentStatus, DocumentType, UTCTime, UTCTime, Int32, Maybe Int32, Maybe UTCTime, Maybe UTCTime, Maybe UTCTime, Maybe IPAddress, String, String, Bool, Bool, Bool, Bool, Lang, DocumentSharing, CompositeArray1 DocumentTag, CompositeArray1 AuthorAttachment, Maybe String, Bool, Int64, MagicHash, TimeZoneName, Maybe CompanyID, StatusClass)
+type instance CompositeRow Document = (DocumentID, String, CompositeArray1 SignatoryLink, CompositeArray1 MainFile, DocumentStatus, DocumentType, UTCTime, UTCTime, Int32, Maybe Int32, Maybe UTCTime, Maybe UTCTime, Maybe UTCTime, Maybe IPAddress, String, String, Bool, Bool, Bool, Bool, Lang, DocumentSharing, CompositeArray1 DocumentTag, CompositeArray1 AuthorAttachment, Maybe String, Maybe String, Bool, Int64, MagicHash, TimeZoneName, Maybe CompanyID, StatusClass)
 
 instance PQFormat Document where
   pqFormat _ = "%document"
 
 instance CompositeFromSQL Document where
-  toComposite (did, title, CompositeArray1 signatory_links, CompositeArray1 main_files, status, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text,  show_header, show_pdf_download, show_reject_option, show_footer, lang, sharing, CompositeArray1 tags, CompositeArray1 author_attachments, apicallback, unsaved_draft, objectversion, token, time_zone_name, author_company_id, status_class) = Document {
+  toComposite (did, title, CompositeArray1 signatory_links, CompositeArray1 main_files, status, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text,  show_header, show_pdf_download, show_reject_option, show_footer, lang, sharing, CompositeArray1 tags, CompositeArray1 author_attachments, apiv1callback, apiv2callback, unsaved_draft, objectversion, token, time_zone_name, author_company_id, status_class) = Document {
     documentid = did
   , documenttitle = title
   , documentsignatorylinks = signatory_links
@@ -372,7 +375,8 @@ instance CompositeFromSQL Document where
   , documentauthorattachments = author_attachments
   , documentlang = lang
   , documentstatusclass = status_class
-  , documentapicallbackurl = apicallback
+  , documentapiv1callbackurl = apiv1callback
+  , documentapiv2callbackurl = apiv2callback
   , documentunsaveddraft = unsaved_draft
   , documentobjectversion = objectversion
   , documentmagichash = token

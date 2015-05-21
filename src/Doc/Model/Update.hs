@@ -76,6 +76,7 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.Set as S
 import qualified Text.StringTemplates.Fields as F
 
+import API.APIVersion
 import Company.Model
 import Control.Monad.Trans.Instances ()
 import Crypto.RNG
@@ -257,7 +258,8 @@ insertDocument document@(Document{..}) = do
     sqlSet "lang" documentlang
     sqlSet "sharing" documentsharing
     sqlSet "object_version" documentobjectversion
-    sqlSet "api_callback_url" documentapicallbackurl
+    sqlSet "api_v1_callback_url" documentapiv1callbackurl
+    sqlSet "api_v2_callback_url" documentapiv2callbackurl
     sqlSet "token" documentmagichash
     sqlSet "time_zone_name" documenttimezonename
     sqlResult "documents.id"
@@ -822,7 +824,8 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) =>
       return doc {documentstatus = Preparation,
                   documenttimeouttime = Nothing,
                   documentsignatorylinks = newSignLinks,
-                  documentapicallbackurl = Nothing
+                  documentapiv1callbackurl = Nothing,
+                  documentapiv2callbackurl = Nothing
                  }
 
 data RestoreArchivedDocument = RestoreArchivedDocument User Actor
@@ -1195,11 +1198,14 @@ instance (DocumentMonad m, TemplatesMonad m, MonadMask m) => DBUpdate m ProlongD
         (return ())
         actor
 
-data SetDocumentAPICallbackURL = SetDocumentAPICallbackURL (Maybe String)
+data SetDocumentAPICallbackURL = SetDocumentAPICallbackURL APIVersion (Maybe String)
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetDocumentAPICallbackURL Bool where
-  update (SetDocumentAPICallbackURL mac) = updateDocumentWithID $ \did -> do
+  update (SetDocumentAPICallbackURL apiVersion mac) = updateDocumentWithID $ \did -> do
+    let tableColumn = case apiVersion of
+                           V1 -> "api_v1_callback_url"
+                           V2 -> "api_v2_callback_url"
     runQuery01 . sqlUpdate "documents" $ do
-      sqlSet "api_callback_url" mac
+      sqlSet tableColumn mac
       sqlWhereEq "id" did
 
 data SetDocumentTimeZoneName = SetDocumentTimeZoneName TimeZoneName
@@ -1397,7 +1403,8 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateD
     , update $ SetShowRejectOption (documentshowrejectoption document) actor
     , update $ SetShowFooter (documentshowfooter document) actor
     , update $ SetDocumentTags (documenttags document) actor
-    , update $ SetDocumentAPICallbackURL (documentapicallbackurl document)
+    , update $ SetDocumentAPICallbackURL V1 (documentapiv1callbackurl document)
+    , update $ SetDocumentAPICallbackURL V2 (documentapiv2callbackurl document)
     , update $ SetDocumentTimeZoneName (documenttimezonename document)
     , updateMTimeAndObjectVersion (actorTime actor) >> return True
     ]
@@ -1611,7 +1618,8 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documenttags" documenttags
                    , checkEqualBy "documentauthorattachments" (sort . documentauthorattachments)
                    , checkEqualBy "documentlang" documentlang
-                   , checkEqualBy "documentapicallbackurl" documentapicallbackurl
+                   , checkEqualBy "documentapiv1callbackurl" documentapiv1callbackurl
+                   , checkEqualBy "documentapiv2callbackurl" documentapiv2callbackurl
                    , checkEqualBy "documentsealstatus" documentsealstatus
                    , checkEqualBy "documentsignatorylinks count" (length . documentsignatorylinks)
                    ] ++

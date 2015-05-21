@@ -6,7 +6,7 @@ import KontraPrelude
 tableDocuments :: Table
 tableDocuments = tblTable {
     tblName = "documents"
-  , tblVersion = 39
+  , tblVersion = 40
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "title", colType = TextT, colNullable = False }
@@ -21,7 +21,7 @@ tableDocuments = tblTable {
     , tblColumn { colName = "invite_text", colType = TextT, colNullable = False }
     , tblColumn { colName = "sharing", colType = SmallIntT, colNullable = False }
     , tblColumn { colName = "lang", colType = SmallIntT, colNullable = False }
-    , tblColumn { colName = "api_callback_url", colType = TextT }
+    , tblColumn { colName = "api_v1_callback_url", colType = TextT }
     , tblColumn { colName = "unsaved_draft", colType = BoolT, colNullable = False, colDefault = Just "false" }
     , tblColumn { colName = "object_version", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "purged_time", colType = TimestampWithZoneT }
@@ -33,6 +33,7 @@ tableDocuments = tblTable {
     , tblColumn { colName = "token", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "confirm_text", colType = TextT, colNullable = False, colDefault = Just "''::text" }
     , tblColumn { colName = "time_zone_name", colType = TextT, colNullable = False, colDefault = Just "'Europe/Stockholm'::text" }
+    , tblColumn { colName = "api_v2_callback_url", colType = TextT }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblIndexes = [
@@ -71,7 +72,8 @@ ctDocument = CompositeType {
   , CompositeColumn { ccName = "sharing", ccType = SmallIntT }
   , CompositeColumn { ccName = "tags", ccType = ArrayT $ CustomT "document_tag" }
   , CompositeColumn { ccName = "author_attachments", ccType = ArrayT $ CustomT "author_attachment" }
-  , CompositeColumn { ccName = "api_callback_url", ccType = TextT }
+  , CompositeColumn { ccName = "api_v1_callback_url", ccType = TextT }
+  , CompositeColumn { ccName = "api_v2_callback_url", ccType = TextT }
   , CompositeColumn { ccName = "unsaved_draft", ccType = BoolT }
   , CompositeColumn { ccName = "object_version", ccType = BigIntT }
   , CompositeColumn { ccName = "token", ccType = BigIntT }

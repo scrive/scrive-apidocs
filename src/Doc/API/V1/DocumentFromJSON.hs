@@ -444,7 +444,7 @@ instance FromJSValueWithUpdate Document where
             documentauthorattachments = updateWithDefaultAndField [] documentauthorattachments (fmap (\fid -> AuthorAttachment fid "-") <$> authorattachments), -- Name of author attachment file can't be changed
             documenttags = updateWithDefaultAndField Set.empty documenttags (Set.fromList <$> tags),
             documenttype = updateWithDefaultAndField Signable documenttype doctype,
-            documentapicallbackurl = updateWithDefaultAndField Nothing documentapicallbackurl apicallbackurl,
+            documentapiv1callbackurl = updateWithDefaultAndField Nothing documentapiv1callbackurl apicallbackurl,
             documentunsaveddraft = updateWithDefaultAndField False documentunsaveddraft (fmap not saved),
             documenttimezonename = updateWithDefaultAndField defaultTimeZoneName documenttimezonename (unsafeTimeZoneName <$> mtimezone)
           }

@@ -5,6 +5,7 @@ module Doc.API.Callback.Data (
 
 import Data.Int
 
+import API.APIVersion
 import DB
 import Doc.DocumentID
 import KontraPrelude
@@ -23,6 +24,7 @@ instance ToSQL CallbackID where
 data DocumentAPICallback = DocumentAPICallback {
   dacID         :: !CallbackID
 , dacDocumentID :: !DocumentID
+, dacApiVersion :: !APIVersion
 , dacURL        :: !String
 , dacAttempts   :: !Int32
 } deriving (Eq, Ord, Show)

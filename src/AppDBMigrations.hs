@@ -175,6 +175,8 @@ kontraMigrations = [
   , dropErrorTextFromDocuments
   , dropCSVTitleFromSignatories
   , dropAPIVersionFromDocuments
+  , addAPIV2CallbackAndRenameExisting
+  , addAPIVersionToDocumentApiCallbacks
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

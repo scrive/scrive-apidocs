@@ -11,6 +11,7 @@ import Control.Monad.State
 import Data.Int
 import Log
 
+import API.APIVersion
 import ActionQueue.Scheduler
 import DB
 import Doc.API.Callback.Data
@@ -29,10 +30,11 @@ documentAPICallback :: (MonadIO m, MonadBase IO m, MonadLog m, MonadMask m)
 documentAPICallback runExecute = ConsumerConfig {
   ccJobsTable = "document_api_callbacks"
 , ccConsumersTable = "document_api_callback_consumers"
-, ccJobSelectors = ["id", "document_id", "url", "attempts"]
-, ccJobFetcher = \(cid, did, url, attempts) -> DocumentAPICallback {
+, ccJobSelectors = ["id", "document_id", "api_version", "url", "attempts"]
+, ccJobFetcher = \(cid, did, apiVersion, url, attempts) -> DocumentAPICallback {
     dacID = cid
   , dacDocumentID = did
+  , dacApiVersion = apiVersion
   , dacURL = url
   , dacAttempts = attempts
   }
@@ -68,21 +70,24 @@ triggerAPICallbackIfThereIsOne :: (MonadDB m, MonadCatch m, MonadLog m)
   => Document -> m ()
 triggerAPICallbackIfThereIsOne doc@Document{..} = case documentstatus of
   Preparation -> return () -- We don't trigger callbacks for Drafts
-  _ -> case documentapicallbackurl of
-    Just url -> addAPICallback url
+  -- TODO APIv2:
+  -- when v2 is live this needs to check for v2 callbacks and execute only
+  -- v2 callback if there is one, otherwise use v1 callbacks
+  _ -> case documentapiv1callbackurl of
+    Just url -> addAPICallback url V1
     Nothing -> case (maybesignatory =<< getAuthorSigLink doc) of
       -- FIXME: this should be modified so it's not Maybe
       Just userid -> do
         mcallbackschema <- dbQuery $ GetUserCallbackSchemeByUserID userid
         case mcallbackschema of
-          Just (ConstantUrlScheme url) -> addAPICallback url
+          Just (ConstantUrlScheme url) -> addAPICallback url V1
           _ -> return () -- No callback defined for document nor user.
       Nothing -> $unexpectedErrorM $ "Document" <+> show documentid <+> "has no author"
 
   where
-    addAPICallback url = do
+    addAPICallback url apiVersion = do
       logInfo_ $ "Triggering API callback for document " ++ show documentid
-      dbUpdate $ MergeAPICallback documentid url
+      dbUpdate $ MergeAPICallback documentid url apiVersion
 
 ----------------------------------------
 
@@ -95,9 +100,9 @@ instance (MonadDB m, MonadCatch m) => DBQuery m CheckQueuedCallbacksFor Bool whe
     runSQL01_ $ "SELECT EXISTS (SELECT TRUE FROM document_api_callbacks WHERE document_id =" <?> did <+> "AND reserved_by IS NULL)"
     fetchOne runIdentity
 
-data MergeAPICallback = MergeAPICallback DocumentID String
+data MergeAPICallback = MergeAPICallback DocumentID String APIVersion
 instance (MonadDB m, MonadCatch m, MonadLog m) => DBUpdate m MergeAPICallback () where
-  update (MergeAPICallback did url) = do
+  update (MergeAPICallback did url apiVersion) = do
     -- If callbacks are queued, but not being processed, replace them.
     -- There will be only 1 queued callback majority of times, but it
     -- doesn't have to be the case. Consider the following:
@@ -133,6 +138,7 @@ instance (MonadDB m, MonadCatch m, MonadLog m) => DBUpdate m MergeAPICallback ()
       setFields :: (MonadState v n, SqlSet v) => n ()
       setFields = do
         sqlSet "document_id" did
+        sqlSet "api_version" apiVersion
         sqlSet "run_at" unixEpoch
         sqlSet "url" url
         sqlSet "attempts" (0::Int32)

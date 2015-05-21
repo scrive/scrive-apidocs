@@ -51,7 +51,7 @@ applyDraftDataToDocument draft actor = do
                                 , documentshowfooter = documentshowfooter draft
                                 , documentlang = documentlang draft
                                 , documenttags = documenttags draft
-                                , documentapicallbackurl = documentapicallbackurl draft
+                                , documentapiv1callbackurl = documentapiv1callbackurl draft
                                 , documenttimezonename = documenttimezonename draft
                                 } actor
     -- Only allow transition from 'unsaveddraft: true' to 'unsaveddraft: false'
@@ -141,7 +141,7 @@ draftIsChangingDocument draft doc =
      || (documentinvitetext draft /= documentinvitetext doc)
      || (documentlang draft /= documentlang doc)
      || (documenttags draft /= documenttags doc)
-     || (documentapicallbackurl draft /= documentapicallbackurl doc)
+     || (documentapiv1callbackurl draft /= documentapiv1callbackurl doc)
      || (isTemplate draft /= isTemplate doc)
      || (documentdaystosign draft /= documentdaystosign doc)
      || (documentdaystoremind draft /= documentdaystoremind doc)

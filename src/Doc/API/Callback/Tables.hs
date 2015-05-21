@@ -18,7 +18,7 @@ tableDocumentApiCallbackConsumers = tblTable {
 tableDocumentApiCallbacks :: Table
 tableDocumentApiCallbacks = tblTable {
     tblName = "document_api_callbacks"
-  , tblVersion = 4
+  , tblVersion = 5
   , tblColumns = [
       tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "run_at", colType = TimestampWithZoneT, colNullable = False }
@@ -27,6 +27,7 @@ tableDocumentApiCallbacks = tblTable {
     , tblColumn { colName = "finished_at", colType = TimestampWithZoneT }
     , tblColumn { colName = "reserved_by", colType = BigIntT }
     , tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
+    , tblColumn { colName = "api_version", colType = SmallIntT, colNullable = False}
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [

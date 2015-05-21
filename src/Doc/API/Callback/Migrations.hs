@@ -77,3 +77,12 @@ removeDuplicateIndexFromDocumentApiCallbacks = Migration {
   let Table{..} = tableDocumentApiCallbacks
   runQuery_ . sqlDropIndex tblName $ indexOnColumn "document_id"
 }
+
+addAPIVersionToDocumentApiCallbacks :: MonadDB m => Migration m
+addAPIVersionToDocumentApiCallbacks = Migration {
+  mgrTable = tableDocumentApiCallbacks
+, mgrFrom = 4
+, mgrDo = do
+    runSQL_ "ALTER TABLE document_api_callbacks ADD COLUMN api_version SMALLINT NOT NULL DEFAULT 1"
+    runSQL_ "ALTER TABLE document_api_callbacks ALTER COLUMN api_version DROP DEFAULT"
+}

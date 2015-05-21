@@ -100,7 +100,7 @@ documentJSONV1 muser forapi forauthor msl doc = do
       J.objects "tags" $ for (Set.toList $ documenttags doc) $ \(DocumentTag n v) -> do
                                     J.value "name"  n
                                     J.value "value" v
-      J.value "apicallbackurl" $ documentapicallbackurl doc
+      J.value "apicallbackurl" $ documentapiv1callbackurl doc
       J.value "saved" $ not (documentunsaveddraft doc)
       J.value "deleted" $ fromMaybe False $ documentDeletedForUser doc <$> userid <$> muser
       J.value "reallydeleted" $ fromMaybe False $ documentReallyDeletedForUser doc <$> userid <$>  muser
