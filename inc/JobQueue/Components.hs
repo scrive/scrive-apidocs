@@ -141,7 +141,9 @@ spawnMonitor ConsumerConfig{..} cs cid = forkP "monitor" . forever $ do
     inactive :: [Int64] <- fetchMany runIdentity
     -- Reset reserved jobs manually, do not rely
     -- on the foreign key constraint to do its job.
-    freed <- runSQL $ smconcat [
+    freed <- if null inactive
+      then return 0
+      else runSQL $ smconcat [
         "UPDATE" <+> raw ccJobsTable
       , "SET reserved_by = NULL"
       , "WHERE reserved_by = ANY(" <?> Array1 inactive <+> ")"
