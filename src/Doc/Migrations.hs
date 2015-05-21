@@ -1157,3 +1157,10 @@ dropCSVTitleFromSignatories = Migration {
               -- Also this migration will update composite type
     }
 
+dropAPIVersionFromDocuments :: MonadDB m => Migration m
+dropAPIVersionFromDocuments = Migration {
+      mgrTable = tableDocuments
+    , mgrFrom = 38
+    , mgrDo = runSQL_ "ALTER TABLE documents DROP COLUMN api_version"
+              -- Also this migration will update composite type
+    }

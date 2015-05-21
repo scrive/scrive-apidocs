@@ -67,7 +67,7 @@ sendDocumentMails author = do
       _ <- dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { lang = l }
       let aa = authorActor ctx author
       req <- mkRequest POST []
-      runTestKontra req ctx $ (randomUpdate (NewDocument def author "Document title" Signable defaultTimeZoneName 0 aa)) `withDocumentM` do
+      runTestKontra req ctx $ (randomUpdate (NewDocument author "Document title" Signable defaultTimeZoneName 0 aa)) `withDocumentM` do
         True <- dbUpdate $ SetDocumentLang l (systemActor $ ctxtime ctx)
 
         asl <- $head . documentsignatorylinks <$> theDocument

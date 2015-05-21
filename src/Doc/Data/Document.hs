@@ -16,7 +16,6 @@ import Data.Int
 import Database.PostgreSQL.PQTypes
 import qualified Data.Set as S
 
-import API.APIVersion
 import Company.CompanyID
 import DB.RowCache (ID, HasID(..))
 import DB.TimeZoneName
@@ -205,7 +204,6 @@ data Document = Document {
 , documentmagichash              :: !MagicHash
 , documentauthorcompanyid        :: !(Maybe CompanyID)
 , documenttimezonename           :: !TimeZoneName
-, documentapiversion             :: !APIVersion
 } deriving (Show)
 
 type instance ID Document = DocumentID
@@ -242,7 +240,6 @@ instance Default Document where
   , documentmagichash = unsafeMagicHash 0
   , documentauthorcompanyid = Nothing
   , documenttimezonename = defaultTimeZoneName
-  , documentapiversion = def
   }
 
 instance HasGuardtimeSignature Document where
@@ -289,7 +286,6 @@ documentsSelectors = [
   , "documents.object_version"
   , "documents.token"
   , "documents.time_zone_name"
-  , "documents.api_version"
   , "(SELECT u.company_id FROM users u JOIN signatory_links sl ON u.id = sl.user_id WHERE sl.document_id = documents.id AND sl.is_author)"
   , documentStatusClassExpression
   ]
@@ -341,13 +337,13 @@ documentStatusClassExpression = mconcat [
       , "END :: INTEGER)"
       ]
 
-type instance CompositeRow Document = (DocumentID, String, CompositeArray1 SignatoryLink, CompositeArray1 MainFile, DocumentStatus, DocumentType, UTCTime, UTCTime, Int32, Maybe Int32, Maybe UTCTime, Maybe UTCTime, Maybe UTCTime, Maybe IPAddress, String, String, Bool, Bool, Bool, Bool, Lang, DocumentSharing, CompositeArray1 DocumentTag, CompositeArray1 AuthorAttachment, Maybe String, Bool, Int64, MagicHash, TimeZoneName, APIVersion, Maybe CompanyID, StatusClass)
+type instance CompositeRow Document = (DocumentID, String, CompositeArray1 SignatoryLink, CompositeArray1 MainFile, DocumentStatus, DocumentType, UTCTime, UTCTime, Int32, Maybe Int32, Maybe UTCTime, Maybe UTCTime, Maybe UTCTime, Maybe IPAddress, String, String, Bool, Bool, Bool, Bool, Lang, DocumentSharing, CompositeArray1 DocumentTag, CompositeArray1 AuthorAttachment, Maybe String, Bool, Int64, MagicHash, TimeZoneName, Maybe CompanyID, StatusClass)
 
 instance PQFormat Document where
   pqFormat _ = "%document"
 
 instance CompositeFromSQL Document where
-  toComposite (did, title, CompositeArray1 signatory_links, CompositeArray1 main_files, status, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text,  show_header, show_pdf_download, show_reject_option, show_footer, lang, sharing, CompositeArray1 tags, CompositeArray1 author_attachments, apicallback, unsaved_draft, objectversion, token, time_zone_name, api_version, author_company_id, status_class) = Document {
+  toComposite (did, title, CompositeArray1 signatory_links, CompositeArray1 main_files, status, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text,  show_header, show_pdf_download, show_reject_option, show_footer, lang, sharing, CompositeArray1 tags, CompositeArray1 author_attachments, apicallback, unsaved_draft, objectversion, token, time_zone_name, author_company_id, status_class) = Document {
     documentid = did
   , documenttitle = title
   , documentsignatorylinks = signatory_links
@@ -382,7 +378,6 @@ instance CompositeFromSQL Document where
   , documentmagichash = token
   , documentauthorcompanyid = author_company_id
   , documenttimezonename = time_zone_name
-  , documentapiversion = api_version
   }
 
 ---------------------------------

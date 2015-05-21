@@ -76,7 +76,6 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.Set as S
 import qualified Text.StringTemplates.Fields as F
 
-import API.APIVersion
 import Company.Model
 import Control.Monad.Trans.Instances ()
 import Crypto.RNG
@@ -261,7 +260,6 @@ insertDocument document@(Document{..}) = do
     sqlSet "api_callback_url" documentapicallbackurl
     sqlSet "token" documentmagichash
     sqlSet "time_zone_name" documenttimezonename
-    sqlSet "api_version" documentapiversion
     sqlResult "documents.id"
   did <- fetchOne runIdentity
   insertSignatoryLinks did documentsignatorylinks
@@ -707,9 +705,9 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m MarkInv
         actor
     return success
 
-data NewDocument = NewDocument APIVersion User String DocumentType TimeZoneName Int Actor
+data NewDocument = NewDocument User String DocumentType TimeZoneName Int Actor
 instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) => DBUpdate m NewDocument Document where
-  update (NewDocument apiversion user title documenttype timezone nrOfOtherSignatories actor) = do
+  update (NewDocument user title documenttype timezone nrOfOtherSignatories actor) = do
     let ctime = actorTime actor
     magichash <- random
     authorFields <- signatoryFieldsFromUser user
@@ -732,7 +730,6 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) =>
                   , documentauthorattachments    = []
                   , documentmagichash            = token
                   , documenttimezonename         = timezone
-                  , documentapiversion           = apiversion
                   }
 
     insertDocument doc
@@ -1112,9 +1109,9 @@ instance (CryptoRNG m, MonadLog m, MonadThrow m, DocumentMonad m, TemplatesMonad
             logAttention_ $ "cannot reset signatory details on document " ++ show documentid ++ " because " ++ intercalate ";" s
             return False
 
-data CloneDocumentWithUpdatedAuthor = CloneDocumentWithUpdatedAuthor APIVersion User Document Actor
+data CloneDocumentWithUpdatedAuthor = CloneDocumentWithUpdatedAuthor User Document Actor
 instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, CryptoRNG m) => DBUpdate m CloneDocumentWithUpdatedAuthor (Maybe DocumentID) where
-  update (CloneDocumentWithUpdatedAuthor apiversion user document actor) = do
+  update (CloneDocumentWithUpdatedAuthor user document actor) = do
           company <- query $ GetCompanyByUserID (userid user)
           siglinks <- forM (documentsignatorylinks document) $ \sl -> do
                 magichash <- random
@@ -1128,7 +1125,6 @@ instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, CryptoRNG m) =>
                                        -- FIXME: Need to remove authorfields?
               , documentctime = actorTime actor
               , documentmtime = actorTime actor
-              , documentapiversion = apiversion
               }
           case res of
             Nothing -> return Nothing

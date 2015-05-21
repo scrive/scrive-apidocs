@@ -6,7 +6,7 @@ import KontraPrelude
 tableDocuments :: Table
 tableDocuments = tblTable {
     tblName = "documents"
-  , tblVersion = 38
+  , tblVersion = 39
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "title", colType = TextT, colNullable = False }
@@ -33,7 +33,6 @@ tableDocuments = tblTable {
     , tblColumn { colName = "token", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "confirm_text", colType = TextT, colNullable = False, colDefault = Just "''::text" }
     , tblColumn { colName = "time_zone_name", colType = TextT, colNullable = False, colDefault = Just "'Europe/Stockholm'::text" }
-    , tblColumn { colName = "api_version", colType = SmallIntT, colNullable = False, colDefault = Just "1" }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblIndexes = [
@@ -77,7 +76,6 @@ ctDocument = CompositeType {
   , CompositeColumn { ccName = "object_version", ccType = BigIntT }
   , CompositeColumn { ccName = "token", ccType = BigIntT }
   , CompositeColumn { ccName = "time_zone_name", ccType = TextT }
-  , CompositeColumn { ccName = "api_version", ccType = SmallIntT }
   , CompositeColumn { ccName = "author_company_id", ccType = BigIntT }
   , CompositeColumn { ccName = "status_class", ccType = SmallIntT }
   ]

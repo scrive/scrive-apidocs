@@ -117,7 +117,7 @@ handleNewDocument = do
           return Nothing
         timezone <- fromMaybe defaultTimeZoneName <$> T.sequence (mkTimeZoneName <$> mtimezonename)
         timestamp <- formatTimeSimpleWithTZ timezone (ctxtime ctx)
-        doc <- dbUpdate $ NewDocument def user (replace "  " " " $ title ++ " " ++ timestamp) Signable timezone 1 actor
+        doc <- dbUpdate $ NewDocument user (replace "  " " " $ title ++ " " ++ timestamp) Signable timezone 1 actor
         -- Default document on the frontend has different requirements,
         -- this sets up the signatories to match those requirements.
         withDocument doc $ do

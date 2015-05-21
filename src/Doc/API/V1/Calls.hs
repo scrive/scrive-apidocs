@@ -50,7 +50,6 @@ import qualified Data.Vector as Vec
 import qualified Text.JSON as J
 import qualified Text.JSON.Pretty as J (pp_value)
 
-import API.APIVersion
 import API.Monad
 import AppView (respondWithPDF)
 import Attachment.Model
@@ -202,7 +201,7 @@ apiCallV1CreateFromFile = api $ do
       return (Just fileid', takeBaseName filename)
   mtimezone <- getField "timezone"
   timezone <- fromMaybe defaultTimeZoneName <$> T.sequence (mkTimeZoneName <$> mtimezone)
-  (dbUpdate $ NewDocument V1 user title doctype timezone 0 actor) `withDocumentM` do
+  (dbUpdate $ NewDocument user title doctype timezone 0 actor) `withDocumentM` do
     when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft True
     case mfile of
       Nothing -> return ()
@@ -220,7 +219,7 @@ apiCallV1CreateFromTemplate did =  api $ do
                       (usercompany auser == usercompany user &&  isDocumentShared template)
   unless (isTemplate template && haspermission) $ do
     throwIO $ SomeKontraException $ serverError "Id did not matched template or you do not have right to access document"
-  (apiGuardJustM (serverError "Can't clone given document") (dbUpdate $ CloneDocumentWithUpdatedAuthor V1 user template actor) >>=) $ flip withDocumentID $ do
+  (apiGuardJustM (serverError "Can't clone given document") (dbUpdate $ CloneDocumentWithUpdatedAuthor user template actor) >>=) $ flip withDocumentID $ do
     dbUpdate $ DocumentFromTemplate actor
     when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft True
     Created <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
@@ -232,7 +231,7 @@ apiCallV1Clone did =  api $ do
   doc <- dbQuery $ GetDocumentByDocumentID $ did
   if isAuthor (doc,user)
      then do
-         mndid <- dbUpdate $ CloneDocumentWithUpdatedAuthor V1 user doc actor
+         mndid <- dbUpdate $ CloneDocumentWithUpdatedAuthor user doc actor
          when (isNothing mndid) $
              throwIO . SomeKontraException $ serverError "Can't clone given document"
          newdoc <- dbQuery $ GetDocumentByDocumentID $ $fromJust mndid

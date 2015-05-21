@@ -15,7 +15,6 @@ import qualified Data.ByteString.Char8 as B
 import qualified Data.ByteString.UTF8 as BU
 import qualified Data.Set as S
 
-import API.APIVersion
 import BrandedDomain.BrandedDomainID
 import Company.Model
 import DB.TimeZoneName
@@ -136,4 +135,3 @@ instance InspectXML JSValue where
 instance InspectXML StatusClass where
 instance InspectXML SealStatus
 instance InspectXML TimeZoneName
-instance InspectXML APIVersion

@@ -484,7 +484,7 @@ performNewDocumentWithRandomUser mcompany doctype title = do
   user <- maybe addNewRandomUser (\c -> addNewRandomCompanyUser (companyid c) False) mcompany
   ctx <- mkContext def
   let aa = authorActor ctx user
-  doc <- randomUpdate $ NewDocument def user title doctype defaultTimeZoneName 0 aa
+  doc <- randomUpdate $ NewDocument user title doctype defaultTimeZoneName 0 aa
   return (user, ctxtime ctx, doc)
 
 assertGoodNewDocument :: Maybe Company -> DocumentType -> String -> (User, UTCTime, Document) -> TestEnv ()
@@ -788,7 +788,7 @@ testNewDocumentDependencies = replicateM_ 10 $ do
   -- execute
   ctx <- mkContext def
   let aa = authorActor ctx author
-  doc <- randomUpdate $ (\title doctype -> NewDocument def author (fromSNN title) doctype defaultTimeZoneName 0 aa)
+  doc <- randomUpdate $ (\title doctype -> NewDocument author (fromSNN title) doctype defaultTimeZoneName 0 aa)
   -- assert
   assertInvariants doc
 
@@ -798,7 +798,7 @@ testDocumentCanBeCreatedAndFetchedByID = replicateM_ 10 $ do
   author <- addNewRandomUser
   ctx <- mkContext def
   let aa = authorActor ctx author
-  doc <- randomUpdate $ (\title doctype -> NewDocument def author (fromSNN title) doctype defaultTimeZoneName 0 aa)
+  doc <- randomUpdate $ (\title doctype -> NewDocument author (fromSNN title) doctype defaultTimeZoneName 0 aa)
   -- execute
   ndoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   -- assert
@@ -1148,7 +1148,7 @@ testCreateFromSharedTemplate = do
            dbQuery $ GetDocumentByDocumentID docid
   newuser <- addNewRandomUser
 
-  docid' <- $fromJust <$> (dbUpdate $ CloneDocumentWithUpdatedAuthor def newuser doc (systemActor mt))
+  docid' <- $fromJust <$> (dbUpdate $ CloneDocumentWithUpdatedAuthor newuser doc (systemActor mt))
   _ <- withDocumentID docid' $ dbUpdate $ DocumentFromTemplate (systemActor mt)
 
   ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
@@ -1174,7 +1174,7 @@ testCreateFromTemplateCompanyField = replicateM_ 10 $ do
            _ <- withDocumentID docid $ dbUpdate $ TemplateFromDocument (systemActor mt)
            dbQuery $ GetDocumentByDocumentID docid
   user' <- $fromJust <$> (dbQuery $ GetUserByID (userid user))
-  docid' <- $fromJust <$> (dbUpdate $ CloneDocumentWithUpdatedAuthor def user' doc (systemActor mt))
+  docid' <- $fromJust <$> (dbUpdate $ CloneDocumentWithUpdatedAuthor user' doc (systemActor mt))
   _ <- withDocumentID docid' $ dbUpdate $ DocumentFromTemplate (systemActor mt)
   doc' <- dbQuery $ GetDocumentByDocumentID docid'
   let [author] = filter isAuthor $ documentsignatorylinks doc'

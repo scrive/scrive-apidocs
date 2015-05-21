@@ -174,6 +174,7 @@ kontraMigrations = [
   , addFileNameToAuthorAttachments
   , dropErrorTextFromDocuments
   , dropCSVTitleFromSignatories
+  , dropAPIVersionFromDocuments
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations
