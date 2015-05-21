@@ -45,7 +45,7 @@ data KontraLink
     | LinkAccountCompany (Maybe CompanyID)
     | LinkChangeUserEmail UserID MagicHash
     | LinkUserMailAPI
-    | LinkSignDoc Document SignatoryLink
+    | LinkSignDoc DocumentID SignatoryLink
     | LinkSignDocPad DocumentID SignatoryLinkID
     | LinkMainFile Document SignatoryLink
     | LinkSignDocNoMagicHash DocumentID SignatoryLinkID
@@ -96,8 +96,8 @@ instance Show KontraLink where
     showsPrec _ (LinkIssueDoc documentid) =
         (++) $ "/d/" ++ show documentid
     showsPrec _ (LinkEvidenceAttachment did filename) =  (++) $ "/d/evidenceattachment/" ++ show did ++ "/" ++ BSC.unpack filename
-    showsPrec _ (LinkSignDoc document signatorylink) =
-        (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++
+    showsPrec _ (LinkSignDoc did signatorylink) =
+        (++) $ "/s/" ++ show (did) ++ "/" ++ show (signatorylinkid signatorylink) ++
                  "/"++ show (signatorymagichash signatorylink)
     showsPrec _ (LinkSignDocPad did slid) =
         (++) $ "/sp/" ++ show did ++ "/" ++ show slid

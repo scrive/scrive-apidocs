@@ -90,4 +90,4 @@ smsFields document siglink = do
     F.value "personname" $ getSmartName siglink
     F.value "documenttitle" $ documenttitle document
     F.value "partylist" partylist
-    F.value "link" $ mctxhostpart mctx ++ show (LinkSignDoc document siglink)
+    F.value "link" $ mctxhostpart mctx ++ show (LinkSignDoc (documentid document) siglink)

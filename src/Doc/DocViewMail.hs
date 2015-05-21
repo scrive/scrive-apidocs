@@ -80,7 +80,7 @@ remindMailNotSigned forMail customMessage document signlink = do
         F.value "partnerswhosigned" $ map getSmartName $  filter (isSignatory && hasSigned) (documentsignatorylinks document)
         F.value "someonesigned" $ not $ null $ filter (isSignatory && hasSigned) (documentsignatorylinks document)
         F.value "timetosign" $ show <$> documenttimeouttime document
-        F.value "link" $ protectLink forMail mctx $ LinkSignDoc document signlink
+        F.value "link" $ protectLink forMail mctx $ LinkSignDoc (documentid document) signlink
         F.value "isattachments" $ length (documentauthorattachments document) > 0
         F.value "attachments" $ map authorattachmentfilename $ documentauthorattachments document
         F.value "ispreview" $ not $ forMail
@@ -202,7 +202,7 @@ mailInvitation forMail
         F.value "hascustommessage" $ not $ null $ documentinvitetext document
         F.value "custommessage" $ asCustomMessage $ documentinvitetext document
         F.value "link" $ case msiglink of
-          Just siglink -> Just $ makeFullLink mctx $ show (LinkSignDoc document siglink)
+          Just siglink -> Just $ makeFullLink mctx $ show (LinkSignDoc (documentid document) siglink)
           Nothing -> Nothing
         F.value "partners" $ map getSmartName $ filter isSignatory (documentsignatorylinks document)
         F.value "partnerswhosigned" $ map getSmartName $ filter (isSignatory && hasSigned) (documentsignatorylinks document)
@@ -252,7 +252,7 @@ mailDocumentClosed ispreview sl sealFixed documentAttached document = do
                              then Nothing
                              else Just $ if isAuthor sl
                                then (++) (mctxhostpart mctx) $ show $ LinkIssueDoc (documentid document)
-                               else (++) (mctxhostpart mctx) $ show $ LinkSignDoc document sl
+                               else (++) (mctxhostpart mctx) $ show $ LinkSignDoc (documentid document) sl
         F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (Nothing <| ispreview |> Just sl) (mainfile)
         F.value "sealFixed" $ sealFixed
         documentAttachedFields (not ispreview) sl documentAttached document
@@ -273,7 +273,7 @@ mailDocumentAwaitingForAuthor authorlang document = do
     let mainfile =  fromMaybe (unsafeFileID 0) (mainfileid <$> documentfile document) -- There always should be main file but tests fail without it
     documentMail authorlang document (templateName "mailDocumentAwaitingForAuthor") $ do
         F.value "authorname" $ getSmartName $ $fromJust $ getAuthorSigLink document
-        F.value "documentlink" $ (mctxhostpart mctx) ++ show (LinkSignDoc document $ $fromJust $ getAuthorSigLink document)
+        F.value "documentlink" $ (mctxhostpart mctx) ++ show (LinkSignDoc  (documentid document) $ $fromJust $ getAuthorSigLink document)
         F.value "partylist" signatories
         F.value "partylistSigned" signatoriesThatSigned
         F.value "someonesigned" $ not $ null $ filter (isSignatory && hasSigned) (documentsignatorylinks document)

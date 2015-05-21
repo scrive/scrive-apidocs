@@ -170,7 +170,8 @@ signatoryJSON forauthor doc viewer siglink = do
     J.value "authentication" $ authenticationToSignJSON $ signatorylinkauthenticationtosignmethod siglink
 
     when (not (isPreparation doc) && forauthor && signatorylinkdeliverymethod siglink == APIDelivery) $ do
-        J.value "signlink" $ show $ LinkSignDoc doc siglink
+        J.value "signlink" $ show $ LinkSignDoc (documentid doc)  siglink
+
     where
       isCurrent = (signatorylinkid <$> viewer) == (Just $ signatorylinkid siglink) || (forauthor &&  isAuthor siglink)
       rejectedDate = signatorylinkrejectiontime siglink
@@ -320,7 +321,7 @@ authorAttachmentJSON file = runJSONGen $ do
 docForListJSONV1 :: TemplatesMonad m => User ->  Document -> m JSValue
 docForListJSONV1 user doc = do
   let link = case getSigLinkFor user doc of
-        Just sl | not $ isAuthor sl -> LinkSignDoc doc sl
+        Just sl | not $ isAuthor sl -> LinkSignDoc (documentid doc) sl
         _                           -> LinkIssueDoc $ documentid doc
       sigFilter sl =   isSignatory sl && (documentstatus doc /= Preparation)
   runJSONGenT $ do

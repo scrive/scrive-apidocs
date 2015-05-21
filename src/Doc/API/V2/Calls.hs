@@ -6,7 +6,7 @@ import Prelude
 import Happstack.Server.Types
 import Happstack.StaticRouting
 
-import Doc.API.V2.JSON
+import Doc.API.V2.JSONDocument
 import Doc.DocumentID
 import Doc.SignatoryLinkID
 import File.FileID
@@ -17,7 +17,8 @@ import Data.Unjson
 import Data.Unjson as Unjson
 import AppView
 
-import Doc.API.V1.DocumentUpdateUtils
+import Doc.API.V2.DocumentUpdateUtils
+import Doc.API.V2.DocumentAccess
 import Util.MonadUtils
 import Happstack.Fields
 import Util.Actor
@@ -85,7 +86,7 @@ docApiV2List = undefined -- TODO implement
 
 docApiV2Get :: Kontrakcja m => DocumentID -> m Response
 docApiV2Get did = withDocumentID did $ do
-  simpleUnjsonResponse (unjsonDocument) =<< theDocument
+  simpleUnjsonResponse (unjsonDocument (DocumentAccess did AuthorDocumentAccess)) =<< theDocument
 
 docApiV2History :: Kontrakcja m => DocumentID -> m Response
 docApiV2History _did = undefined -- TODO implement
@@ -106,13 +107,13 @@ docApiV2Update did = do
         internalError
       Right js -> do
         doc <- theDocument
-        case (Unjson.update doc unjsonDocument js) of
+        case (Unjson.update doc (unjsonDocument (DocumentAccess did AuthorDocumentAccess)) js) of
           (Result draftData []) -> do
             logInfo_ "Update in progress"
             actor <- systemActor <$> currentTime
             applyDraftDataToDocument draftData actor
             logInfo_ "Update done"
-            simpleUnjsonResponse (unjsonDocument) =<< theDocument
+            simpleUnjsonResponse (unjsonDocument (DocumentAccess did AuthorDocumentAccess)) =<< theDocument
           (Result _ errs) -> do
             logInfo_ $ "Can't unjson " ++ show errs
             internalError
