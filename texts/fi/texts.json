@@ -606,7 +606,7 @@
 "_mailDocumentAwaitingForAuthorContentSignedBy":"Olet asettanut itsesi dokumenti <strong>$documenttitle$</strong> e-allekirjoittajaksi, kun osapuoli, $partylistSigned:noescape()$ on allekirjoittanut. Nyt on sinun vuorosi.",
 "_mailDocumentAwaitingForAuthorFurtherInstructions":"Paina kuvaketta lisäohjeita varten.",
 "_mailDocumentAwaitingForAuthorTitle":"E-allekirjoitettava dokumentti: $documenttitle$",
-"_mailDocumentErrorContentBodyFirst":"",
+"_mailDocumentErrorContentBodyFirst":"Scrive E-sign ei valitettavasti pystynyt käsittelemään dokumenttitiedostoa <strong>$documenttitle$</strong>. Tästä syystä allekirjoitusprosessi on peruttu.",
 "_mailDocumentErrorContentBodyFourth":"Pahoittelemme vaivaa",
 "_mailDocumentErrorContentBodySecond":"Jos sinulla on kommentteja tai kysymyksiä tähän asiaan liittyen, voit ottaa yhteyttä Scrive-tukeen osoitteessa $supportmaillink()$.",
 "_mailDocumentErrorTitle":"Ongelma tiedoston formaatin kanssa",

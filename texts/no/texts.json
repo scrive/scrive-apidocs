@@ -606,7 +606,7 @@
 "_mailDocumentAwaitingForAuthorContentSignedBy":"Du har satt deg selv til å e-signere dokumentet <strong>$documenttitle$</strong> etter at $partylistSigned:noescape()$ hadde signert. Det er nå din tur.",
 "_mailDocumentAwaitingForAuthorFurtherInstructions":"Klikk på knappen for videre instruksjoner.",
 "_mailDocumentAwaitingForAuthorTitle":"Dokument til å e-signere: $documenttitle$",
-"_mailDocumentErrorContentBodyFirst":"",
+"_mailDocumentErrorContentBodyFirst":"Dessverre kunne ikke Scrive E-sign håndtere dokumentfilen <strong>$documenttitle$</strong>. Derfor har signeringsprosessen blitt kansellert.",
 "_mailDocumentErrorContentBodyFourth":"Vi beklager eventuelle problemer dette medfører",
 "_mailDocumentErrorContentBodySecond":"Om du har noen kommentarer eller spørsmål vedrørende dette problemet kan du kontakte Scrives support via $supportmaillink()$.",
 "_mailDocumentErrorTitle":"Problem med filformat",
