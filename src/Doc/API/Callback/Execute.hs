@@ -11,8 +11,8 @@ import Text.JSON
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL (toString, fromString)
 
-import API.APIVersion
 import Amazon
+import API.APIVersion
 import DB
 import Doc.API.Callback.Data
 import Doc.API.V1.DocumentToJSON

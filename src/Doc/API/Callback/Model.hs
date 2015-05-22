@@ -11,8 +11,8 @@ import Control.Monad.State
 import Data.Int
 import Log
 
-import API.APIVersion
 import ActionQueue.Scheduler
+import API.APIVersion
 import DB
 import Doc.API.Callback.Data
 import Doc.API.Callback.Execute
@@ -81,6 +81,8 @@ triggerAPICallbackIfThereIsOne doc@Document{..} = case documentstatus of
         mcallbackschema <- dbQuery $ GetUserCallbackSchemeByUserID userid
         case mcallbackschema of
           Just (ConstantUrlScheme url) -> addAPICallback url V1
+          -- TODO APIv2: implement this to use V2
+          Just (ConstantUrlSchemeV2 _url) -> return ()
           _ -> return () -- No callback defined for document nor user.
       Nothing -> $unexpectedErrorM $ "Document" <+> show documentid <+> "has no author"
 

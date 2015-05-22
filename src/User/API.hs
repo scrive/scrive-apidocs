@@ -312,6 +312,11 @@ apiCallUserGetCallbackScheme = api $ do
   fmap Ok $ case scheme of
       Just (ConstantUrlScheme url) -> runJSONGenT $ do
                     value "scheme" ("constant"::String)
+                    value "api_version" (1::Int)
+                    value "url" url
+      Just (ConstantUrlSchemeV2 url) -> runJSONGenT $ do
+                    value "scheme" ("constant"::String)
+                    value "api_version" (2::Int)
                     value "url" url
       Just (SalesforceScheme _key)  -> runJSONGenT $ do
                     value "scheme" ("salesforce"::String)
