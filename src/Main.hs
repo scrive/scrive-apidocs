@@ -104,7 +104,7 @@ initDatabaseEntries appConf = do
   when (not $ production appConf) $ do
     -- Add some host_clock entries in "dev" mode if there are no valid samples
     clockErrors <- dbQuery $ HC.GetNClockErrorEstimates 10
-    when ((<2) . length . group $ map HC.offset clockErrors) $ do
+    when (not $ HC.enoughClockErrorOffsetSamples clockErrors) $ do
       _ <- dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.001) 0.5
       _ <- dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.0015) 0.5
       return ()

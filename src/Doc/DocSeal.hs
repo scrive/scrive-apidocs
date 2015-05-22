@@ -506,7 +506,7 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
     elog <- dbQuery $ GetEvidenceLog documentid
     -- Evidence of Time documentation says we collect last 1000 samples
     offsets <- dbQuery $ HC.GetNClockErrorEstimates 1000
-    when ((<2) . length . group $ map HC.offset offsets) $ do
+    when (not $ HC.enoughClockErrorOffsetSamples offsets) $ do
         let msg = "Cannot seal document #" ++ show documentid ++ " because there are no valid host_clock samples"
         logAttention_ msg
         void $ dbUpdate $ ErrorDocument ErrorSealingDocumentEvidence

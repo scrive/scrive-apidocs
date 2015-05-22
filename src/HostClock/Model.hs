@@ -5,6 +5,7 @@ module HostClock.Model
   , GetNClockErrorEstimates(..)
   , maxClockError
   , showClockError
+  , enoughClockErrorOffsetSamples
   ) where
 
 import Control.Monad.Catch
@@ -63,6 +64,12 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetNClockErrorEstimates [ClockEr
         sqlOrderBy "time"
         sqlLimit limit
     fetchMany $ \(time', offset', frequency') -> ClockErrorEstimate time' offset' frequency'
+
+-- | Simple way to see that there are more than 2 different offset values
+enoughClockErrorOffsetSamples :: [ClockErrorEstimate] -> Bool
+enoughClockErrorOffsetSamples xs = case group . map offset $ xs of
+                                        (_:_:_) -> True
+                                        _ -> False
 
 showClockError :: Word8 -> Double -> String
 showClockError decimals e = show (realFracToDecimal decimals (e * 1000)) ++ " ms"
