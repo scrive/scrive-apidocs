@@ -74,7 +74,7 @@ class DocHelper
     partytab
     (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class,'design-view-action-participant-info-box')]"}).click
     sleep 1
-    @driver.execute_script("$('div.design-view-action-participant-new-field-selector a.button').click()")
+    (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class,'design-view-action-participant-new-field-selector')]//a[contains(@class,'button')]"}).click
     sleep 1
     @h.screenshot options[:screenshot_name1] if options[:screenshot_name1]
     (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class,'design-view-action-participant-new-field-select')]//div[contains(@class,'select-button')]"}).click
@@ -92,14 +92,10 @@ class DocHelper
     # set target party
 
     if not options[:skip_party_choice] then
-      # do it twice, the first one will force browser to scroll to that elem (and immediately close it, second one will work
-      (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'signature-field-placement-setter-field-selector')]//div[contains(@class,'select-button')]"}).click
       (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'signature-field-placement-setter-field-selector')]//div[contains(@class,'select-button')]"}).click
       (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'signature-field-placement-setter-field-selector')]//ul[contains(@class,'select-opts')]//li[" + (part-1).to_s() + "]"}).click
     end
 
-    # do it twice, the first one will force browser to scroll to that elem (and immediately close it, second one will work
-    (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'fieldTypeSetter-field-select-container')]//div[contains(@class,'select-button')]"}).click
     (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'fieldTypeSetter-field-select-container')]//div[contains(@class,'select-button')]"}).click
 
     @h.wait_until { @driver.find_element :xpath => "//ul[contains(@class,'select-opts')]//li/span[text()='" + fieldname + "']"}
