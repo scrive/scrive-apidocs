@@ -3,12 +3,12 @@ module Log.Utils (
   ) where
 
 import Data.Aeson
+import Log.Class
+import qualified Data.ByteString.Base16 as B16
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
-import qualified Data.ByteString.Base16 as B16
 
 import Crypto.RNG
-import Log.Class
 import KontraPrelude
 
 localRandomID :: (MonadLog m, CryptoRNG m) => T.Text -> m a -> m a

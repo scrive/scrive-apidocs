@@ -14,8 +14,8 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Trans
 import Control.Monad.Trans.Control
-import Data.Int
 import Data.Function
+import Data.Int
 import Data.Monoid
 import Data.Monoid.Utils
 import Database.PostgreSQL.PQTypes
