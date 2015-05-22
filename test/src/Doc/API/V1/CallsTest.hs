@@ -13,19 +13,19 @@ import qualified Data.ByteString.Lazy.UTF8 as BS
 import Context
 import Control.Logic
 import DB
+import Doc.Action
 import Doc.API.V1.Calls
 import Doc.API.V1.DocumentToJSON
-import Doc.Action
 import Doc.DocInfo
 import Doc.DocStateData
-import Doc.DocUtils
 import Doc.DocumentMonad
+import Doc.DocUtils
 import Doc.Model
 import Doc.SignatoryScreenshots
 import KontraPrelude
 import OAuth.Model
-import TestKontra as T
 import TestingUtil
+import TestKontra as T
 import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo
