@@ -20,6 +20,7 @@ import Data.Monoid
 import Data.Monoid.Utils
 import Database.PostgreSQL.PQTypes
 import Log
+import Log.Class.Instances ()
 import Prelude
 import qualified Control.Concurrent.STM as STM
 import qualified Control.Concurrent.Thread.Lifted as T
@@ -323,14 +324,12 @@ spawnDispatcher ConsumerConfig{..} cs cid semaphore runningJobsInfo runningJobs 
 
 ts :: TransactionSettings
 ts = def {
-  tsIsolationLevel = ReadCommitted
-, tsPermissions = ReadWrite
   -- PostgreSQL doesn't seem to handle very high amount of
   -- concurrent transactions that modify multiple rows in
   -- the same table well (see updateJobs) and sometimes (very
   -- rarely though) ends up in a deadlock. It doesn't matter
   -- much though, we just restart the transaction in such case.
-, tsRestartPredicate = Just . RestartPredicate
+  tsRestartPredicate = Just . RestartPredicate
   $ \e _ -> qeErrorCode e == DeadlockDetected
          || qeErrorCode e == SerializationFailure
 }

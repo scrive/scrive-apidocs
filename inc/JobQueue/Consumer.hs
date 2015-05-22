@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleContexts, GeneralizedNewtypeDeriving, OverloadedStrings
-  , RecordWildCards, TypeFamilies, UndecidableInstances #-}
 module JobQueue.Consumer (
     ConsumerID
   , registerConsumer
@@ -47,8 +45,6 @@ registerConsumer ConsumerConfig{..} cs = runDBT cs ts $ do
   where
     ts = def {
       tsAutoTransaction = False
-    , tsIsolationLevel = ReadCommitted
-    , tsPermissions = ReadWrite
     }
 
 -- | Unregister consumer with a given ID.
@@ -73,8 +69,6 @@ unregisterConsumer ConsumerConfig{..} cs wid = runDBT cs ts $ do
     ]
   where
     ts = def {
-      tsIsolationLevel = ReadCommitted
-    , tsRestartPredicate = Just . RestartPredicate
+      tsRestartPredicate = Just . RestartPredicate
       $ \e _ -> qeErrorCode e == DeadlockDetected
-    , tsPermissions = ReadWrite
     }

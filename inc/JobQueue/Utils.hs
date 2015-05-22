@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable, FlexibleContexts #-}
 module JobQueue.Utils (
     finalize
   , ThrownFrom(..)
