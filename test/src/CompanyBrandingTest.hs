@@ -24,7 +24,6 @@ import TestKontra
 import Theme.Model
 import Theme.View
 import User.Model
-import Utils.Default
 
 companyBrandingTests :: TestEnvSt -> Test
 companyBrandingTests env = testGroup "CompanyBranding" [
@@ -45,7 +44,7 @@ testFetchCompanyBranding = do
   company <- addNewCompany
   Just user <- addNewCompanyUser "Mariusz" "Rak" "mariusz+ut@scrive.com" (companyid company)
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
   req1 <- mkRequest GET []
   (avalue1, _) <- runTestKontra req1 ctx $ handleGetCompanyBranding Nothing
   case decode (BSL.toString $ A.encode avalue1) of
@@ -60,7 +59,7 @@ testFetchCompanyBranding = do
 
 testFetchDomainThemes:: TestEnv ()
 testFetchDomainThemes = do
-  ctx <-  mkContext defaultValue
+  ctx <-  mkContext def
   req1 <- mkRequest GET []
   (avalue, _) <- runTestKontra req1 ctx $ handleGetDomainThemes
   case decode (BSL.toString $  A.encode avalue) of
@@ -72,7 +71,7 @@ testUpdateCompanyTheme = do
   company <- addNewCompany
   Just user <- addNewCompanyUser "Mariusz" "Rak" "mariusz+ut@scrive.com" (companyid company)
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   mainbd <- dbQuery $ GetMainBrandedDomain
   mailTheme <- dbQuery $ GetTheme (bdMailTheme mainbd)
@@ -132,7 +131,7 @@ testDeleteCompanyTheme = do
   company <- addNewCompany
   Just user <- addNewCompanyUser "Mariusz" "Rak" "mariusz+ut@scrive.com" (companyid company)
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
   mainbd <- dbQuery $ GetMainBrandedDomain
   mailTheme <- dbQuery $ GetTheme (bdMailTheme mainbd)
   newTheme <- dbUpdate $ InsertNewThemeForCompany (companyid company) mailTheme
@@ -152,7 +151,7 @@ testNormalUserCantChangeOrDeleteTheme = do
   Just user2 <- dbQuery $ GetUserByID (userid user1)
 
   ctx <- (\c -> c { ctxmaybeuser = Just user2 })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   mainbd <- dbQuery $ GetMainBrandedDomain
   mailTheme <- dbQuery $ GetTheme (bdMailTheme mainbd)
@@ -181,7 +180,7 @@ testChangeCompanyUI = do
   company <- addNewCompany
   Just user <- addNewCompanyUser "Mariusz" "Rak" "mariusz+ut@scrive.com" (companyid company)
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   mainbd <- dbQuery $ GetMainBrandedDomain
   mailTheme <- dbQuery $ GetTheme (bdMailTheme mainbd)
@@ -210,7 +209,7 @@ testNormalUseCantChangeCompanyUI = do
   True <-  dbUpdate $ SetUserCompanyAdmin (userid user1) False
   Just user2 <- dbQuery $ GetUserByID (userid user1)
   ctx <- (\c -> c { ctxmaybeuser = Just user2 })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   mainbd <- dbQuery $ GetMainBrandedDomain
   mailTheme <- dbQuery $ GetTheme (bdMailTheme mainbd)
@@ -239,7 +238,7 @@ testSignviewBrandingCacheWorks = do
   company <- addNewCompany
   Just user <- addNewCompanyUser "Mariusz" "Rak" "mariusz+ut@scrive.com" (companyid company)
   ctx <- (\c -> c { ctxmaybeuser = Just user , ctxproduction = True}) -- ctxproduction is important, since we disable cache for dev
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   mainbd <- dbQuery $ GetMainBrandedDomain
   bdSignviewTheme <- dbQuery $ GetTheme (bdSignviewTheme mainbd)
@@ -271,7 +270,7 @@ testSignviewBrandingCacheWorks = do
 testBrandingCacheChangesIfOneOfThemesIsSetToDefault:: TestEnv ()
 testBrandingCacheChangesIfOneOfThemesIsSetToDefault = do
   company <- addNewCompany
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
 
   mainbd <- dbQuery $ GetMainBrandedDomain
   bdSignviewTheme <- dbQuery $ GetTheme (bdSignviewTheme mainbd)

@@ -44,7 +44,6 @@ import Util.Actor
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
-import Utils.Default
 import qualified Amazon as AWS
 import qualified CronEnv
 import qualified Doc.Screenshot as Screenshot
@@ -483,9 +482,9 @@ testCloseDocumentEvidenceLog = do
 performNewDocumentWithRandomUser :: Maybe Company -> DocumentType -> String -> TestEnv (User, UTCTime, Document)
 performNewDocumentWithRandomUser mcompany doctype title = do
   user <- maybe addNewRandomUser (\c -> addNewRandomCompanyUser (companyid c) False) mcompany
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
   let aa = authorActor ctx user
-  doc <- randomUpdate $ NewDocument defaultValue user title doctype defaultTimeZoneName 0 aa
+  doc <- randomUpdate $ NewDocument def user title doctype defaultTimeZoneName 0 aa
   return (user, ctxtime ctx, doc)
 
 assertGoodNewDocument :: Maybe Company -> DocumentType -> String -> (User, UTCTime, Document) -> TestEnv ()
@@ -515,7 +514,7 @@ assertGoodNewDocument mcompany doctype title (user, time, doc) = do
 testCancelDocumentCancelsDocument :: TestEnv ()
 testCancelDocumentCancelsDocument = replicateM_ 10 $ do
   user <- addNewRandomUser
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
   addRandomDocumentWithAuthorAndCondition user (isSignable &&^ isPending) `withDocumentM` do
     doc <- theDocument
     randomUpdate $ CancelDocument (authorActor ctx user)
@@ -531,7 +530,7 @@ testCancelDocumentReturnsLeftIfDocInWrongState :: TestEnv ()
 testCancelDocumentReturnsLeftIfDocInWrongState = replicateM_ 10 $ do
   user <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition user (isSignable &&^ not . isPending)
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
   assertRaisesKontra (\DocumentStatusShouldBe {} -> True) $
                withDocument doc $ randomUpdate $ CancelDocument (authorActor ctx user)
 
@@ -787,9 +786,9 @@ testNewDocumentDependencies = replicateM_ 10 $ do
   -- setup
   author <- addNewRandomUser
   -- execute
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
   let aa = authorActor ctx author
-  doc <- randomUpdate $ (\title doctype -> NewDocument defaultValue author (fromSNN title) doctype defaultTimeZoneName 0 aa)
+  doc <- randomUpdate $ (\title doctype -> NewDocument def author (fromSNN title) doctype defaultTimeZoneName 0 aa)
   -- assert
   assertInvariants doc
 
@@ -797,9 +796,9 @@ testDocumentCanBeCreatedAndFetchedByID :: TestEnv ()
 testDocumentCanBeCreatedAndFetchedByID = replicateM_ 10 $ do
   -- setup
   author <- addNewRandomUser
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
   let aa = authorActor ctx author
-  doc <- randomUpdate $ (\title doctype -> NewDocument defaultValue author (fromSNN title) doctype defaultTimeZoneName 0 aa)
+  doc <- randomUpdate $ (\title doctype -> NewDocument def author (fromSNN title) doctype defaultTimeZoneName 0 aa)
   -- execute
   ndoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   -- assert
@@ -874,7 +873,7 @@ testSealDocument :: TestEnv ()
 testSealDocument = replicateM_ 1 $ do
   -- setup
   author <- addNewRandomUser
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
   screenshots <- getScreenshots
   addRandomDocument ((randomDocumentAllowsDefault author) { randomDocumentAllowedStatuses = [Pending]
                                                           , randomDocumentAllowedTypes = [Signable]
@@ -952,7 +951,7 @@ testNotPreparationResetSignatoryDetailsAlwaysLeft = replicateM_ 10 $ do
     mt <- rand 10 arbitrary
     sf <- signatoryFieldsFromUser author
     --execute
-    success <- dbUpdate $ ResetSignatoryDetails [defaultValue { signatoryfields = sf}] (systemActor mt)
+    success <- dbUpdate $ ResetSignatoryDetails [def { signatoryfields = sf}] (systemActor mt)
     --assert
     assert $ not success
 
@@ -963,7 +962,7 @@ testPreparationResetSignatoryDetailsAlwaysRight = replicateM_ 10 $ do
   addRandomDocumentWithAuthorAndCondition author isPreparation `withDocumentM` do
     mt <- rand 10 arbitrary
     --execute
-    success <- dbUpdate $ ResetSignatoryDetails [defaultValue { signatoryisauthor = True , maybesignatory = Just $ userid author}] (systemActor mt)
+    success <- dbUpdate $ ResetSignatoryDetails [def { signatoryisauthor = True , maybesignatory = Just $ userid author}] (systemActor mt)
     --assert
     assert success
     assertInvariants =<< theDocument
@@ -975,7 +974,7 @@ testPreparationResetSignatoryDetails2Works = replicateM_ 10 $ do
   addRandomDocumentWithAuthorAndCondition author isPreparation `withDocumentM` do
     mt <- rand 10 arbitrary
     --execute
-    let newData1 = defaultValue {   signatoryisauthor = True , maybesignatory = Just $ userid author}
+    let newData1 = def {   signatoryisauthor = True , maybesignatory = Just $ userid author}
     success1 <- dbUpdate $ ResetSignatoryDetails [newData1] (systemActor mt)
     assert success1
     assertInvariants =<< theDocument
@@ -983,7 +982,7 @@ testPreparationResetSignatoryDetails2Works = replicateM_ 10 $ do
     assertEqual "Proper delivery method set" [EmailDelivery] (map signatorylinkdeliverymethod sls)
     assertEqual "Proper authentication method set" [StandardAuthentication] (map signatorylinkauthenticationmethod sls)
 
-    let newData2 =  defaultValue { signatoryisauthor = True, maybesignatory = Just $ userid author , signatorylinkdeliverymethod = PadDelivery, signatorylinkauthenticationmethod = ELegAuthentication }
+    let newData2 =  def { signatoryisauthor = True, maybesignatory = Just $ userid author , signatorylinkdeliverymethod = PadDelivery, signatorylinkauthenticationmethod = ELegAuthentication }
     success2 <- dbUpdate $ ResetSignatoryDetails [newData2] (systemActor mt)
     assert success2
     sls2 <- documentsignatorylinks <$> theDocument
@@ -1001,7 +1000,7 @@ testNoDocumentResetSignatoryDetailsAlwaysLeft = replicateM_ 10 $ do
   -- non-existent docid
 
   assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
-    withDocumentID a $ dbUpdate $ ResetSignatoryDetails [defaultValue { signatoryisauthor = True } ] (systemActor mt)
+    withDocumentID a $ dbUpdate $ ResetSignatoryDetails [def { signatoryisauthor = True } ] (systemActor mt)
 
 
 
@@ -1149,7 +1148,7 @@ testCreateFromSharedTemplate = do
            dbQuery $ GetDocumentByDocumentID docid
   newuser <- addNewRandomUser
 
-  docid' <- $fromJust <$> (dbUpdate $ CloneDocumentWithUpdatedAuthor defaultValue newuser doc (systemActor mt))
+  docid' <- $fromJust <$> (dbUpdate $ CloneDocumentWithUpdatedAuthor def newuser doc (systemActor mt))
   _ <- withDocumentID docid' $ dbUpdate $ DocumentFromTemplate (systemActor mt)
 
   ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
@@ -1175,7 +1174,7 @@ testCreateFromTemplateCompanyField = replicateM_ 10 $ do
            _ <- withDocumentID docid $ dbUpdate $ TemplateFromDocument (systemActor mt)
            dbQuery $ GetDocumentByDocumentID docid
   user' <- $fromJust <$> (dbQuery $ GetUserByID (userid user))
-  docid' <- $fromJust <$> (dbUpdate $ CloneDocumentWithUpdatedAuthor defaultValue user' doc (systemActor mt))
+  docid' <- $fromJust <$> (dbUpdate $ CloneDocumentWithUpdatedAuthor def user' doc (systemActor mt))
   _ <- withDocumentID docid' $ dbUpdate $ DocumentFromTemplate (systemActor mt)
   doc' <- dbQuery $ GetDocumentByDocumentID docid'
   let [author] = filter isAuthor $ documentsignatorylinks doc'
@@ -1230,7 +1229,7 @@ testRemoveDocumentAttachmentOk = replicateM_ 10 $ do
 testUpdateSigAttachmentsAttachmentsOk :: TestEnv ()
 testUpdateSigAttachmentsAttachmentsOk = replicateM_ 10 $ do
   author <- addNewRandomUser
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
   addRandomDocumentWithAuthorAndCondition author isPreparation `withDocumentM` do
     file1 <- addNewRandomFile
     file2 <- addNewRandomFile
@@ -1390,7 +1389,7 @@ testPreparationToPendingSignablePreparationRight = replicateM_ 10 $ do
 testRejectDocumentNotSignableLeft :: TestEnv ()
 testRejectDocumentNotSignableLeft = replicateM_ 10 $ do
   author <- addNewRandomUser
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
   addRandomDocumentWithAuthorAndCondition author (not . isSignable) `withDocumentM` do
     Just sl <- getSigLinkFor author <$> theDocument
     time <- rand 10 arbitrary
@@ -1401,7 +1400,7 @@ testRejectDocumentNotSignableLeft = replicateM_ 10 $ do
 testRejectDocumentSignableNotPendingLeft :: TestEnv ()
 testRejectDocumentSignableNotPendingLeft = replicateM_ 10 $ do
   author <- addNewRandomUser
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
   addRandomDocumentWithAuthorAndCondition author (isSignable &&^ not . isPending) `withDocumentM` do
     Just sl <- getSigLinkFor author <$> theDocument
     time <- rand 10 arbitrary
@@ -1412,7 +1411,7 @@ testRejectDocumentSignableNotPendingLeft = replicateM_ 10 $ do
 testRejectDocumentNotLeft :: TestEnv ()
 testRejectDocumentNotLeft = replicateM_ 10 $ do
   _ <- addRandomDocument . randomDocumentAllowsDefault =<< addNewRandomUser
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
   (did, time, sl) <- rand 10 arbitrary
   let sa = signatoryActor ctx{ ctxtime = time } sl
   assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
@@ -1421,7 +1420,7 @@ testRejectDocumentNotLeft = replicateM_ 10 $ do
 testRejectDocumentSignablePendingRight :: TestEnv ()
 testRejectDocumentSignablePendingRight = replicateM_ 10 $ do
   author <- addNewRandomUser
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
   addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending) `withDocumentM` do
     slid <- rand 10 . elements . map signatorylinkid . filter (signatoryispartner) . documentsignatorylinks =<< theDocument
     Just sl <- getSigLinkFor slid <$> theDocument
@@ -1434,7 +1433,7 @@ testRejectDocumentSignablePendingRight = replicateM_ 10 $ do
 testMarkInvitationRead :: TestEnv ()
 testMarkInvitationRead = replicateM_ 10 $ do
   author <- addNewRandomUser
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
   addRandomDocumentWithAuthorAndCondition author
          (isPending &&^ (all (isNothing . maybereadinvite) . documentsignatorylinks)) `withDocumentM` do
 
@@ -1449,7 +1448,7 @@ testMarkInvitationRead = replicateM_ 10 $ do
 
 testMarkInvitationReadDocDoesntExist :: TestEnv ()
 testMarkInvitationReadDocDoesntExist = replicateM_ 10 $ do
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
   (did, sl, time) <- rand 10 arbitrary
   assertRaisesKontra (\DocumentDoesNotExist{} -> True) $ do
     _ <- withDocumentID did $ randomUpdate . MarkInvitationRead (signatorylinkid sl)
@@ -1460,7 +1459,7 @@ testMarkInvitationReadDocDoesntExist = replicateM_ 10 $ do
 testMarkDocumentSeenNotSignableLeft :: TestEnv ()
 testMarkDocumentSeenNotSignableLeft = replicateM_ 10 $ do
   author <- addNewRandomUser
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
   addRandomDocument (randomDocumentAllowsDefault author)
          { randomDocumentAllowedTypes = documentAllTypes \\ documentSignableTypes
          } `withDocumentM` do
@@ -1475,7 +1474,7 @@ testMarkDocumentSeenNotSignableLeft = replicateM_ 10 $ do
 testMarkDocumentSeenClosedOrPreparationLeft :: TestEnv ()
 testMarkDocumentSeenClosedOrPreparationLeft = replicateM_ 10 $ do
   author <- addNewRandomUser
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
   addRandomDocument (randomDocumentAllowsDefault author)
          { randomDocumentAllowedTypes = documentSignableTypes
          , randomDocumentAllowedStatuses = [Closed, Preparation]
@@ -1507,7 +1506,7 @@ forEachSignatoryLink fn doc =
 testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight :: TestEnv ()
 testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight = replicateM_ 10 $ do
   author <- addNewRandomUser
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
   addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (not . (isClosed ||^ isPreparation))) `withDocumentM` do
     (theDocument >>=) $ forEachSignatoryLink $ \sl ->
                 when (not $ hasSeen sl) $ do
@@ -1520,7 +1519,7 @@ testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight = repl
 testMarkDocumentSeenSignableSignatoryLinkIDBadMagicHashLeft :: TestEnv ()
 testMarkDocumentSeenSignableSignatoryLinkIDBadMagicHashLeft = replicateM_ 10 $ do
   author <- addNewRandomUser
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
   addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (not . (isClosed ||^ isPreparation))) `withDocumentM` do
     (theDocument >>=) $ forEachSignatoryLink $ \sl ->
       when (not $ hasSeen sl) $ do
@@ -1563,7 +1562,7 @@ testSetInvitationDeliveryStatusSignableRight = replicateM_ 10 $ do
 testSetDocumentTagsRight :: TestEnv ()
 testSetDocumentTagsRight = replicateM_ 10 $ do
   author <- addNewRandomUser
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
   addRandomDocumentWithAuthor' author `withDocumentM` do
     (tags, time) <- first S.fromList <$> rand 10 arbitrary
     let actor = authorActor ctx{ ctxtime = time } author
@@ -1606,7 +1605,7 @@ testCloseDocumentNotNothing = replicateM_ 10 $ do
 testCancelDocumentNotSignableNothing :: TestEnv ()
 testCancelDocumentNotSignableNothing = replicateM_ 10 $ do
   author <- addNewRandomUser
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
   time <- rand 10 arbitrary
   addRandomDocument (randomDocumentAllowsDefault author)
          { randomDocumentAllowedTypes = documentAllTypes \\ documentSignableTypes
@@ -1785,7 +1784,7 @@ testStatusClassSignedWhenAllSigned = replicateM_ 10 $ do
 
 runScheduler :: MonadBase IO m => ActionQueueT (AWS.AmazonMonadT m) SchedulerData a -> m a
 runScheduler m = do
-  let appConf = defaultValue { dbConfig = "" }
+  let appConf = def { dbConfig = "" }
   templates <- liftBase $ newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates
   filecache <- MemCache.new BS.length 52428800
   CronEnv.runScheduler appConf filecache templates m

@@ -2,6 +2,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.API.V1.DocumentFromJSON () where
 
+import Data.Default
 import Data.String.Utils (strip)
 import Text.JSON.FromJSValue
 import qualified Data.Set as Set
@@ -13,7 +14,6 @@ import Doc.SignatoryLinkID
 import InputValidation
 import KontraPrelude
 import User.Lang
-import Utils.Default
 import Utils.Read
 
 -- JSON instances
@@ -101,7 +101,7 @@ instance FromJSValueWithUpdate SignatoryLink where
         delivery' <-  fromJSValueField "delivery"
         confirmationdelivery' <-  fromJSValueField "confirmationdelivery"
         case (mfields) of
-             (Just fields) -> return $ Just $ defaultValue {
+             (Just fields) -> return $ Just $ def {
                     signatorylinkid            = fromMaybe (unsafeSignatoryLinkID 0) (signatorylinkid <$> ms)
                   , signatorysignorder     = updateWithDefaultAndField (SignOrder 1) signatorysignorder (SignOrder <$> signorder)
                   -- nubBy comment: We accepted at some point documents with not uniqueue fields for signatory.
@@ -424,7 +424,7 @@ instance FromJSValueWithUpdate Document where
         let daystosign'  = min 90 $ max 1 $ updateWithDefaultAndField 14 documentdaystosign daystosign
         let daystoremind' = min daystosign' <$> max 1 <$> updateWithDefaultAndField Nothing documentdaystoremind daystoremind
 
-        return $ Just defaultValue {
+        return $ Just def {
             documenttitle = updateWithDefaultAndField "" documenttitle title,
             documentlang  = updateWithDefaultAndField LANG_SV documentlang lang,
             documentinvitetext = case (invitationmessage) of

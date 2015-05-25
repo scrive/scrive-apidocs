@@ -7,13 +7,13 @@ module User.Lang (
   , allLangs
   ) where
 
+import Data.Default
 import Data.Int
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 import qualified Control.Exception.Lifted as E
 
 import KontraPrelude
-import Utils.Default
 import Utils.Enum
 import Utils.List
 import Utils.Read
@@ -32,8 +32,8 @@ data Lang = LANG_SV
           | LANG_FI
   deriving (Bounded, Enum, Show, Read, Ord, Eq)
 
-instance HasDefaultValue Lang where
-  defaultValue = LANG_SV
+instance Default Lang where
+  def = LANG_SV
 
 instance FromReqURI Lang where
   fromReqURI = maybeRead

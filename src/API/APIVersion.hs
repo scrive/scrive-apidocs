@@ -2,20 +2,20 @@ module API.APIVersion
  ( APIVersion(..)
  ) where
 
+import Data.Default
 import Data.Int
 import Database.PostgreSQL.PQTypes
 import qualified Control.Exception.Lifted as E
 
 import KontraPrelude
-import Utils.Default
 
 data APIVersion =
     V1
  |  V2
   deriving (Eq, Show, Ord)
 
-instance HasDefaultValue APIVersion where
-  defaultValue = V1
+instance Default APIVersion where
+  def = V1
 
 instance PQFormat APIVersion where
   pqFormat = const $ pqFormat ($undefined::Int16)

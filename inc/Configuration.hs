@@ -4,6 +4,7 @@ module Configuration (
 
 import Control.Monad.Base
 import Control.Monad.Trans.Control
+import Data.Default
 import Data.Unjson
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
@@ -13,7 +14,6 @@ import qualified Data.Text as Text
 import qualified Data.Yaml as Yaml
 
 import KontraPrelude
-import Utils.Default
 
 --
 -- Error handling here:
@@ -22,7 +22,7 @@ import Utils.Default
 -- 3. When does not look like json and does not readIO: full docs
 -- 4. When unjson has issue, then just info about specific problems
 
-readConfig :: forall a m . (Unjson a, HasDefaultValue a, Monad m, MonadBaseControl IO m) => (String -> m ()) -> FilePath -> m a
+readConfig :: forall a m . (Unjson a, Default a, Monad m, MonadBaseControl IO m) => (String -> m ()) -> FilePath -> m a
 readConfig logger path = do
   logger $ "Reading configuration " ++ path ++ "..."
   bsl' <- either logExceptionAndPrintFullDocs return =<<
@@ -60,7 +60,7 @@ readConfig logger path = do
     logExceptionAndPrintFullDocs ex = logStringAndPrintFullDocs (show ex)
     logStringAndPrintFullDocs :: String -> m g
     logStringAndPrintFullDocs ex = do
-      logger $ ex ++ "\n" ++ render ud ++ "\n" ++ configAsJsonString defaultValue
+      logger $ ex ++ "\n" ++ render ud ++ "\n" ++ configAsJsonString def
       fail (show ex)
     logProblem (Anchored xpath msg) = do
         case renderForPath xpath ud of

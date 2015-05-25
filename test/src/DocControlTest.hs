@@ -39,7 +39,6 @@ import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
-import Utils.Default
 
 docControlTests :: TestEnvSt -> Test
 docControlTests env = testGroup "DocControl" [
@@ -86,7 +85,7 @@ uploadDocAsNewUser :: TestEnv (User, Response)
 uploadDocAsNewUser = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   req <- mkRequest POST [ ("file", inFile "test/pdfs/simple.pdf") ]
   (rsp, _ctx') <- runTestKontra req ctx $ apiCallV1CreateFromFile
@@ -102,7 +101,7 @@ testLastPersonSigningADocumentClosesIt :: TestEnv ()
 testLastPersonSigningADocumentClosesIt = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   let filename = "test/pdfs/simple.pdf"
   filecontent <- liftIO $ BS.readFile filename
@@ -119,11 +118,11 @@ testLastPersonSigningADocumentClosesIt = do
 
     True <- do d <- theDocument
                randomUpdate $ ResetSignatoryDetails ([
-                      (defaultValue {   signatoryfields = (signatoryfields $ $fromJust $ getAuthorSigLink d)
+                      (def {   signatoryfields = (signatoryfields $ $fromJust $ getAuthorSigLink d)
                                       , signatoryisauthor = True
                                       , signatoryispartner = False
                                       , maybesignatory = Just $ userid user })
-                    , (defaultValue {   signatorysignorder = SignOrder 1
+                    , (def {   signatorysignorder = SignOrder 1
                                       , signatoryisauthor = False
                                       , signatoryispartner = True
                                       , signatoryfields = [
@@ -170,7 +169,7 @@ testSigningWithPin = do
   True <- dbUpdate $ SetUserCompany (userid user1) (companyid company1)
   True <- dbUpdate $ SetUserCompany (userid user2) (companyid company2)
   ctx <- (\c -> c { ctxmaybeuser = Just user1 })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   let filename = "test/pdfs/simple.pdf"
   filecontent <- liftIO $ BS.readFile filename
@@ -186,12 +185,12 @@ testSigningWithPin = do
             file `withDocumentM` do
     d <- theDocument
     True <- randomUpdate $ ResetSignatoryDetails ([
-        (defaultValue {
+        (def {
             signatoryfields = signatoryfields $ $fromJust $ getAuthorSigLink d
           , signatoryisauthor = True
           , signatoryispartner = False
           , maybesignatory = Just $ userid user1 })
-          , (defaultValue {
+          , (def {
               signatorysignorder = SignOrder 1
             , signatoryisauthor = False
             , signatoryispartner = True
@@ -255,7 +254,7 @@ testSendReminderEmailUpdatesLastModifiedDate :: TestEnv ()
 testSendReminderEmailUpdatesLastModifiedDate = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   doc <- addRandomDocumentWithAuthorAndCondition
             user
@@ -285,13 +284,13 @@ testSendReminderEmailByCompanyAdmin = do
   adminuser <- addNewRandomCompanyUser (companyid company) True
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   ctxadmin <- (\c -> c { ctxmaybeuser = Just adminuser })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   ctxother <- (\c -> c { ctxmaybeuser = Just otheruser })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   doc <- addRandomDocumentWithAuthorAndCondition
             user
@@ -336,18 +335,18 @@ testDownloadFile = do
   otheruser <- addNewRandomCompanyUser (companyid company) False
   adminuser <- addNewRandomCompanyUser (companyid company) True
 
-  ctxnotloggedin <- mkContext defaultValue
+  ctxnotloggedin <- mkContext def
   ctxuser <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   ctxuseronpad <- (\c -> c { ctxmaybepaduser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   ctxadmin <- (\c -> c { ctxmaybeuser = Just adminuser })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   ctxother <- (\c -> c { ctxmaybeuser = Just otheruser })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   reqfile <- mkRequest POST [ ("file", inFile "test/pdfs/simple.pdf") ]
   (_rsp, _ctx') <- runTestKontra reqfile ctxuser $ apiCallV1CreateFromFile
@@ -394,7 +393,7 @@ testSendingReminderClearsDeliveryInformation :: TestEnv ()
 testSendingReminderClearsDeliveryInformation = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   addRandomDocumentWithAuthorAndCondition
             user
@@ -421,7 +420,7 @@ testDocumentFromTemplate = do
                                                             _ -> False)
     docs1 <- randomQuery $ GetDocumentsByAuthor (userid user)
     ctx <- (\c -> c { ctxmaybeuser = Just user })
-      <$> mkContext defaultValue
+      <$> mkContext def
     req <- mkRequest POST []
     _ <- runTestKontra req ctx $ apiCallV1CreateFromTemplate (documentid doc)
     docs2 <- randomQuery $ GetDocumentsByAuthor (userid user)
@@ -438,7 +437,7 @@ testDocumentFromTemplateShared = do
     (Just user) <- addNewCompanyUser "ccc" "ddd" "zzz@zzz.pl" companyid
     docs1 <- randomQuery $ GetDocumentsByAuthor (userid user)
     ctx <- (\c -> c { ctxmaybeuser = Just user })
-      <$> mkContext defaultValue
+      <$> mkContext def
     req <- mkRequest POST []
     _ <- runTestKontra req ctx $ apiCallV1CreateFromTemplate (documentid doc)
     docs2 <- randomQuery $ GetDocumentsByAuthor (userid user)
@@ -453,7 +452,7 @@ testDocumentDeleteInBulk = do
     docs <- replicateM 100 (addRandomDocumentWithAuthorAndCondition author (isSignable))
 
     ctx <- (\c -> c { ctxmaybeuser = Just author})
-      <$> mkContext defaultValue
+      <$> mkContext def
     req <- mkRequest POST [("documentids",  inText $ (show $ documentid <$> docs))]
 
     _ <- runTestKontra req ctx $ handleDelete
@@ -465,7 +464,7 @@ testGetLoggedIn :: TestEnv ()
 testGetLoggedIn = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   doc <- addRandomDocumentWithAuthor user
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
   req <- mkRequest GET []
   (res,_) <- runTestKontra req ctx $ apiCallV1Get doc
   assertEqual "Response code is 200" 200 (rsCode res)
@@ -475,7 +474,7 @@ testGetNotLoggedIn :: TestEnv ()
 testGetNotLoggedIn = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   doc <- addRandomDocumentWithAuthor user
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
   req <- mkRequest GET []
   (res,_) <- runTestKontra req ctx $ apiCallV1Get doc
   assertEqual "Response code is 403" 403 (rsCode res)
@@ -485,7 +484,7 @@ testGetBadHeader :: TestEnv ()
 testGetBadHeader = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   doc <- addRandomDocumentWithAuthor user
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
   req <- mkRequestWithHeaders GET [] [("authorization", ["ABC"])]
   (res,_) <- runTestKontra req ctx $ apiCallV1Get doc
   assertEqual "Response code is 403" 403 (rsCode res)
@@ -496,7 +495,7 @@ testGetEvidenceAttachmentsLoggedIn :: TestEnv ()
 testGetEvidenceAttachmentsLoggedIn = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   doc <- addRandomDocumentWithAuthor user
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
   req <- mkRequest GET []
   (res,_) <- runTestKontra req ctx $ apiCallV1GetEvidenceAttachments doc
   assertEqual "Response code is 200" 200 (rsCode res)
@@ -505,7 +504,7 @@ testGetEvidenceAttachmentsNotLoggedIn :: TestEnv ()
 testGetEvidenceAttachmentsNotLoggedIn = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   doc <- addRandomDocumentWithAuthor user
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
   req <- mkRequest GET []
   (res,_) <- runTestKontra req ctx $ apiCallV1GetEvidenceAttachments doc
   assertEqual "Response code is 403" 403 (rsCode res)
@@ -514,7 +513,7 @@ testGetEvidenceAttachmentsNotLoggedIn = do
 
 testSignviewBrandingBlocksNastyInput:: TestEnv ()
 testSignviewBrandingBlocksNastyInput = do
-  bd <- ctxbrandeddomain <$> mkContext defaultValue -- We need to get default branded domain. And it can be fetched from default ctx
+  bd <- ctxbrandeddomain <$> mkContext def -- We need to get default branded domain. And it can be fetched from default ctx
   theme <- dbQuery $ GetTheme $ (bdSignviewTheme $ bd)
   emptyBrandingCSS <- signviewBrandingCSS theme
   assertBool "CSS generated for empty branding is not empty" (not $ BSL.null $ emptyBrandingCSS)
@@ -553,11 +552,11 @@ testDownloadSignviewBrandingAccess = do
   siglink <- withDocumentID (documentid doc) $ do
     d <- theDocument
     _ <- randomUpdate $ ResetSignatoryDetails ([
-                      (defaultValue {   signatoryfields = (signatoryfields $ $fromJust $ getAuthorSigLink d)
+                      (def {   signatoryfields = (signatoryfields $ $fromJust $ getAuthorSigLink d)
                                       , signatoryisauthor = True
                                       , signatoryispartner = False
                                       , maybesignatory = Just $ userid user })
-                    , (defaultValue {   signatorysignorder = SignOrder 1
+                    , (def {   signatorysignorder = SignOrder 1
                                       , signatoryisauthor = False
                                       , signatoryispartner = True
                                       , signatoryfields = [
@@ -575,7 +574,7 @@ testDownloadSignviewBrandingAccess = do
   -- We have a document, now proper tests will take place
 
   -- 1) Check access to main signview branding
-  emptyContext <- mkContext defaultValue
+  emptyContext <- mkContext def
   svbr1 <- mkRequest GET [ ]
   resp1 <- E.try $  runTestKontra svbr1 emptyContext $ handleSignviewBranding (documentid doc) (signatorylinkid siglink) "-branding-hash-12xdaad32" "some_name.css"
   case resp1 of

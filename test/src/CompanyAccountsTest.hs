@@ -25,7 +25,6 @@ import TestingUtil
 import TestKontra as T
 import User.Email
 import Util.HasSomeUserInfo
-import Utils.Default
 
 companyAccountsTests :: TestEnvSt -> Test
 companyAccountsTests env = testGroup "CompanyAccounts" [
@@ -74,7 +73,7 @@ test_addingANewCompanyAccount = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   req <- mkRequest POST [ ("add", inText "True")
                         , ("email", inText "bob@blue.com")
@@ -105,7 +104,7 @@ test_addingExistingCompanyUserAsCompanyAccount = do
   (existinguser, existingcompany) <- addNewAdminUserAndCompany "Bob" "Blue" "bob@blue.com"
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   req <- mkRequest POST [ ("add", inText "True")
                         , ("email", inText "bob@blue.com")
@@ -132,7 +131,7 @@ test_resendingInviteToNewCompanyAccount = do
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company newuser
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   req <- mkRequest POST [ ("resend", inText "True")
                         , ("resendid", inText $ show (userid newuser))
@@ -156,7 +155,7 @@ test_switchingStandardToAdminUser = do
   Just standarduser <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (companyid company)
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   req <- mkRequest POST [ ("changerole", inText "True")
                         , ("changeid", inText $ show (userid standarduser))
@@ -179,7 +178,7 @@ test_switchingAdminToStandardUser = do
   Just adminuser <- dbQuery $ GetUserByID (userid user)
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   req <- mkRequest POST [ ("changerole", inText "True")
                         , ("changeid", inText $ show (userid adminuser))
@@ -202,7 +201,7 @@ test_removingCompanyAccountInvite = do
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company standarduser
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   req <- mkRequest POST [ ("remove", inText "True")
                         , ("removeid", inText $ show $ userid standarduser)
@@ -223,7 +222,7 @@ test_removingCompanyAccountWorks = do
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company standarduser
 
   ctx <- (\c -> c { ctxmaybeuser = Just adminuser })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   companydocs1 <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid adminuser)] [DocumentFilterUnsavedDraft False] [] (0,maxBound)
   assertEqual "Company admin sees users docs before user delete" 1 (length companydocs1)
@@ -256,7 +255,7 @@ test_privateUserTakoverWorks = do
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company user
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   req <- mkRequest POST []
   (res, ctx') <- runTestKontra req ctx $ handlePostBecomeCompanyAccount (companyid company) >>= sendRedirect
@@ -284,7 +283,7 @@ test_mustBeInvitedForTakeoverToWork = do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   req <- mkRequest POST []
   (l, _ctx') <- runTestKontra req ctx $

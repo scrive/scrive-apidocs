@@ -22,7 +22,6 @@ import TestingUtil
 import TestKontra as T
 import Theme.Model
 import Util.MonadUtils
-import Utils.Default
 
 companyControlTests :: TestEnvSt -> Test
 companyControlTests env = testGroup "CompanyControl" [
@@ -37,7 +36,7 @@ test_handleGetCompanyJSON = do
 
   companyui <- dbQuery $ GetCompanyUI (companyid company)
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   req <- mkRequest GET []
   (avalue, _ctx') <- runTestKontra req ctx $ handleGetCompanyBranding Nothing
@@ -68,7 +67,7 @@ test_settingUIWithHandleChangeCompanyBranding = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   -- Try setting new themes
   mailThemeFromDomain <- dbQuery $ GetTheme (bdMailTheme $ ctxbrandeddomain ctx)
@@ -119,7 +118,7 @@ test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership = do
 
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
 
   --Test we can't set mailTheme to domain theme

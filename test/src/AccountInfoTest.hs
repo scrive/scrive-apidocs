@@ -24,7 +24,6 @@ import User.Lang()
 import User.Model
 import User.UserControl
 import Util.HasSomeUserInfo
-import Utils.Default
 
 accountInfoTests :: TestEnvSt -> Test
 accountInfoTests env = testGroup "AccountInfo" [
@@ -46,7 +45,7 @@ testChangeEmailAddress = do
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   req1 <- mkRequest POST [ ("changeemail", inText "true")
                         , ("newemail", inText "jim@bob.com")
@@ -80,7 +79,7 @@ testNeedEmailToBeUniqueToRequestChange = do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   _ <- addNewUser "Jim" "Bob" "jim@bob.com"
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   req1 <- mkRequest POST [ ("changeemail", inText "true")
                         , ("newemail", inText "jim@bob.com")
@@ -98,7 +97,7 @@ testEmailChangeFailsIfActionIDIsWrong = do
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   req <- mkRequest POST [("password", inText "abc123")]
   EmailChangeRequest{..} <- newEmailChangeRequest (userid user) (Email "jim@bob.com")
@@ -114,7 +113,7 @@ testEmailChangeFailsIfMagicHashIsWrong = do
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   req <- mkRequest POST [("password", inText "abc123")]
   EmailChangeRequest{..} <- newEmailChangeRequest (userid user) (Email "jim@bob.com")
@@ -134,7 +133,7 @@ testEmailChangeIfForAnotherUser = do
   Just user <- dbQuery $ GetUserByID (userid user')
   Just anotheruser <- addNewUser "Fred" "Frog" "fred@frog.com"
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   req <- mkRequest POST [("password", inText "abc123")]
   EmailChangeRequest{..} <- newEmailChangeRequest (userid anotheruser) (Email "jim@bob.com")
@@ -150,7 +149,7 @@ testEmailChangeFailsIfEmailInUse = do
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   req <- mkRequest POST [("password", inText "abc123")]
   EmailChangeRequest{..} <- newEmailChangeRequest (userid user) (Email "jim@bob.com")
@@ -168,7 +167,7 @@ testEmailChangeFailsIfPasswordWrong = do
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   req <- mkRequest POST [("password", inText "wrongpassword")]
   EmailChangeRequest{..} <- newEmailChangeRequest (userid user) (Email "jim@bob.com")
@@ -186,7 +185,7 @@ testEmailChangeFailsIfNoPassword = do
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
+    <$> mkContext def
 
   req <- mkRequest POST [("password", inText "")]
   EmailChangeRequest{..} <- newEmailChangeRequest (userid user) (Email "jim@bob.com")
@@ -198,7 +197,7 @@ testEmailChangeFailsIfNoPassword = do
 testGetUserInfoWithOAuthTokens :: TestEnv ()
 testGetUserInfoWithOAuthTokens = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
   -- Create OAuth API tokens
   let uid = userid user
   _ <- dbUpdate $ CreateAPIToken uid

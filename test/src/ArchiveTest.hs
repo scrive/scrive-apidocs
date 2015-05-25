@@ -2,6 +2,7 @@ module ArchiveTest (archiveTests) where
 
 -- import Control.Monad
 import Control.Monad.Trans
+import Data.Default
 import Data.String.Utils (replace)
 import Happstack.Server
 import Test.Framework
@@ -18,7 +19,6 @@ import KontraPrelude
 import TestingUtil
 import TestKontra as T
 import User.Model
-import Utils.Default
 
 archiveTests :: TestEnvSt -> Test
 archiveTests env = testGroup "Archive" $
@@ -31,7 +31,7 @@ testListDocs = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
 
   -- send a doc as author
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
   req <- mkRequest POST [ ("expectedType", inText "text")
                        , ("file", inFile "test/pdfs/simple.pdf")]
   _ <- runTestKontra req ctx $ apiCallV1CreateFromFile
@@ -43,7 +43,7 @@ testListDocs = do
 
   -- send a doc to author from someoneelse
   (Just user2) <- addNewUser "Jackie" "Chan" "jackie@chan.com"
-  ctx2 <- (\c -> c { ctxmaybeuser = Just user2 }) <$> mkContext defaultValue
+  ctx2 <- (\c -> c { ctxmaybeuser = Just user2 }) <$> mkContext def
   req2 <- mkRequest POST [ ("expectedType", inText "text")
                         , ("file", inFile "test/pdfs/simple.pdf")]
   _ <- runTestKontra req2 ctx2 $ apiCallV1CreateFromFile
@@ -60,7 +60,7 @@ testListDocs = do
   let rspString = BS.unpack $ rsBody rsp
 
   let Right json = runGetJSON readJSObject rspString
-  
+
   withJSValue json $ do
     Just (list :: [JSValue])  <- fromJSValueField  "list"
     assertBool "Test apiCallV1List number of docs" $ length list == 2

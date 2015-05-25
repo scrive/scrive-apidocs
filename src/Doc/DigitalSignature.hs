@@ -8,6 +8,7 @@ import Control.Monad.Catch
 import Control.Monad.Reader (MonadReader, asks)
 import Control.Monad.Trans (MonadIO, liftIO)
 import Control.Monad.Trans.Control (MonadBaseControl)
+import Data.Default (def)
 import Log
 import System.Exit (ExitCode(..))
 import System.FilePath ((</>))
@@ -32,7 +33,6 @@ import GuardTime (GuardTimeConf, GuardTimeConfMonad, getGuardTimeConf)
 import KontraPrelude
 import Templates (runTemplatesT)
 import Util.Actor (systemActor)
-import Utils.Default (defaultValue)
 import Utils.Directory (withSystemTempDirectory')
 import qualified GuardTime as GT
 
@@ -82,7 +82,7 @@ extendDigitalSignature = do
     now <- currentTime
     gtconf <- asks (guardTimeConf . sdAppConf)
     templates <- getGlobalTemplates
-    res <- runTemplatesT (defaultValue, templates) $ digitallyExtendFile now gtconf sealedpath (filename file)
+    res <- runTemplatesT (def, templates) $ digitallyExtendFile now gtconf sealedpath (filename file)
     when res $ triggerAPICallbackIfThereIsOne =<< theDocument -- Users that get API callback on document change, also get information about sealed file being extended.
 
     -- Here, we have the option of notifying signatories of the

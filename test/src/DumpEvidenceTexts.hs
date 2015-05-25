@@ -4,6 +4,7 @@ import Control.Monad.Catch
 import Control.Monad.Reader (asks)
 import Control.Monad.Trans (liftIO)
 import Data.Decimal (realFracToDecimal)
+import Data.Default (def)
 import Data.Function (on)
 import Log
 import System.FilePath ((</>))
@@ -29,7 +30,6 @@ import Text.XML.DirtyContent (renderXMLContent)
 import User.Model (codeFromLang, Lang, allLangs)
 import Util.Actor (Actor(..), actorEmail, actorUserID, actorAPIString, actorIP)
 import Util.SignatoryLinkUtils (getAuthorSigLink)
-import Utils.Default (defaultValue)
 import Utils.Prelude (for)
 import Version (versionID)
 
@@ -69,7 +69,7 @@ dumpEvidenceTexts now lang doc' = do
                     , actorWho = "the author (" ++ $fromJust (actorEmail actor) ++ ")"
                     }
   let evidencetypes = [minBound .. maxBound]
-  let asl = defaultValue
+  let asl = def
             {   signatoryfields = [
                       fieldForTests (NameFI $ NameOrder 1) "Sven"
                     , fieldForTests (NameFI $ NameOrder 2) "Signatory"

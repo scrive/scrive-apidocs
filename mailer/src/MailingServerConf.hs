@@ -14,7 +14,6 @@ import qualified Data.ByteString as BS
 import KontraPrelude
 import Log.Configuration
 import Mails.Data
-import Utils.Default
 import Utils.TH
 
 data MailingServerConf = MailingServerConf {
@@ -147,8 +146,8 @@ instance Unjson SenderConfig where
 --   , smtpPassword = "zimowisko"
 -- }
 
-instance HasDefaultValue MailingServerConf where
-  defaultValue = MailingServerConf {
+instance Default MailingServerConf where
+  def = MailingServerConf {
       mscHttpBindAddress = (0x7f000001, 6666)
     , mscDBConfig = "user='kontra' password='kontra' dbname='kontrakcja'"
     , mscLogConfig = def

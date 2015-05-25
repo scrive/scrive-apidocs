@@ -19,7 +19,6 @@ import User.API
 import User.Model
 import User.UserControl
 import Util.HasSomeUserInfo
-import Utils.Default
 
 signupTests :: TestEnvSt -> Test
 signupTests env = testGroup "Signup" [
@@ -30,7 +29,7 @@ signupTests env = testGroup "Signup" [
 
 testSignupAndActivate :: TestEnv ()
 testSignupAndActivate = do
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
 
   -- enter the email to signup
   ctx1 <- signupForAccount ctx "andrzej@skrivapa.se"
@@ -50,7 +49,7 @@ testSignupAndActivate = do
 
 testLoginEventRecordedWhenLoggedInAfterActivation :: TestEnv ()
 testLoginEventRecordedWhenLoggedInAfterActivation = do
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
 
   -- enter the email to signup
   ctx1 <- signupForAccount ctx "andrzej@skrivapa.se"
@@ -62,7 +61,7 @@ testLoginEventRecordedWhenLoggedInAfterActivation = do
 
 testAcceptTOSToActivate :: TestEnv ()
 testAcceptTOSToActivate = do
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
 
   -- enter the email to signup
   ctx1 <- signupForAccount ctx "andrzej@skrivapa.se"

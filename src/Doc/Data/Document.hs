@@ -11,6 +11,7 @@ module Doc.Data.Document (
   ) where
 
 import Control.Monad.Catch
+import Data.Default
 import Data.Int
 import Database.PostgreSQL.PQTypes
 import qualified Data.Set as S
@@ -31,7 +32,6 @@ import KontraPrelude
 import MagicHash
 import MinutesTime
 import User.Lang
-import Utils.Default
 
 data DocumentType = Signable | Template
   deriving (Eq, Ord, Show, Read)
@@ -210,8 +210,8 @@ data Document = Document {
 
 type instance ID Document = DocumentID
 
-instance HasDefaultValue Document where
-  defaultValue = Document {
+instance Default Document where
+  def = Document {
     documentid = unsafeDocumentID 0
   , documenttitle = ""
   , documentsignatorylinks = []
@@ -234,7 +234,7 @@ instance HasDefaultValue Document where
   , documentsharing = Private
   , documenttags = S.empty
   , documentauthorattachments = []
-  , documentlang = defaultValue
+  , documentlang = def
   , documentstatusclass = SCDraft
   , documentapicallbackurl = Nothing
   , documentunsaveddraft = False
@@ -242,7 +242,7 @@ instance HasDefaultValue Document where
   , documentmagichash = unsafeMagicHash 0
   , documentauthorcompanyid = Nothing
   , documenttimezonename = defaultTimeZoneName
-  , documentapiversion = defaultValue
+  , documentapiversion = def
   }
 
 instance HasGuardtimeSignature Document where

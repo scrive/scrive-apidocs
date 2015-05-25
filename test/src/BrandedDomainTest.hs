@@ -10,7 +10,6 @@ import TestingUtil
 import TestKontra
 import Theme.Model
 import User.Model
-import Utils.Default
 
 brandedDomainTests :: TestEnvSt -> Test
 brandedDomainTests env = testGroup "BrandedDomainsTest" [
@@ -48,7 +47,7 @@ test_brandedDomainAssociatedDomain = do
 
   pwd <- createPassword "admin"
 
-  Just user <- dbUpdate $ AddUser ("Andrzej", "Rybczak") "andrzej@scrive.com" (Just pwd) (companyid company,True) defaultValue bdid
+  Just user <- dbUpdate $ AddUser ("Andrzej", "Rybczak") "andrzej@scrive.com" (Just pwd) (companyid company,True) def bdid
 
   wbd <- dbQuery $ GetBrandedDomainByUserID (userid user)
 

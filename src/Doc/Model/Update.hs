@@ -107,7 +107,6 @@ import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
-import Utils.Default
 import Utils.Image
 import Utils.Monad
 import Utils.Prelude (for)
@@ -725,7 +724,7 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) =>
                           mh <- random
                           return $ signLinkFromDetails' emptySignatoryFields False True (SignOrder 2) [] mh
     token <- random
-    let doc = defaultValue
+    let doc = def
                   { documenttitle                = title
                   , documentsignatorylinks       = authorlink : othersignatories
                   , documenttype                 = documenttype
@@ -810,7 +809,7 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) =>
                                              case f of
                                                SignatorySignatureField sf -> SignatorySignatureField $ sf{ssfValue = Nothing}
                                                _ -> f
-                           return $ defaultValue {
+                           return $ def {
                                 signatorylinkid            = (unsafeSignatoryLinkID 0)
                               , signatorymagichash = magichash
                               , signatoryfields            = newFields

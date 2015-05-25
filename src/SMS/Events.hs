@@ -44,7 +44,6 @@ import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
-import Utils.Default (defaultValue)
 import Utils.Read
 
 processEvents :: Scheduler ()
@@ -82,7 +81,7 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent
         templates <- getGlobalTemplates
         msl <- getSigLinkFor slid <$> theDocument
         case (eventType,msl) of
-          (SMSEvent phone SMSDelivered, Just sl) -> runTemplatesT (defaultValue, templates) $ do
+          (SMSEvent phone SMSDelivered, Just sl) -> runTemplatesT (def, templates) $ do
             logInfo_ $ "SMS with PIN delivered to " ++ phone
             time <- currentTime
             let actor = mailSystemActor time (maybesignatory sl) (getEmail sl) slid

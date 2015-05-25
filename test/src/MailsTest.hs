@@ -29,7 +29,6 @@ import User.UserView
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
-import Utils.Default
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 
 mailsTests :: TestEnvSt -> Test
@@ -68,7 +67,7 @@ sendDocumentMails author = do
       _ <- dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { lang = l }
       let aa = authorActor ctx author
       req <- mkRequest POST []
-      runTestKontra req ctx $ (randomUpdate (NewDocument defaultValue author "Document title" Signable defaultTimeZoneName 0 aa)) `withDocumentM` do
+      runTestKontra req ctx $ (randomUpdate (NewDocument def author "Document title" Signable defaultTimeZoneName 0 aa)) `withDocumentM` do
         True <- dbUpdate $ SetDocumentLang l (systemActor $ ctxtime ctx)
 
         asl <- $head . documentsignatorylinks <$> theDocument
@@ -78,7 +77,7 @@ sendDocumentMails author = do
         islf <- rand 10 arbitrary
 
         now <- currentTime
-        let sigs = [defaultValue {signatoryfields = signatoryfields asl, signatoryisauthor = True,signatoryispartner = True, maybesignatory = maybesignatory asl} , defaultValue {signatoryfields = islf, signatoryispartner = True}]
+        let sigs = [def {signatoryfields = signatoryfields asl, signatoryisauthor = True,signatoryispartner = True, maybesignatory = maybesignatory asl} , def {signatoryfields = islf, signatoryispartner = True}]
         True <- randomUpdate $ ResetSignatoryDetails sigs (systemActor now)
         tz <- mkTimeZoneName "Europe/Stockholm"
         randomUpdate $ PreparationToPending (systemActor now) tz
@@ -103,7 +102,7 @@ sendDocumentMails author = do
         checkMail "Reject"  $ mailDocumentRejected True Nothing True sl =<< theDocument
         checkMail "Reject"  $ mailDocumentRejected True Nothing False sl =<< theDocument
         -- awaiting author email
-        checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor (defaultValue :: Lang) =<< theDocument
+        checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor (def :: Lang) =<< theDocument
         -- Virtual signing
         randomUpdate . SignDocument (signatorylinkid sl) (signatorymagichash sl) Nothing Nothing SignatoryScreenshots.emptySignatoryScreenshots
                                    =<< (signatoryActor ctx{ ctxtime = 10 `minutesAfter` now } sl)

@@ -21,7 +21,6 @@ import Mails.MailsConfig
 import Payments.Config (RecurlyConfig(..))
 import Salesforce.Conf
 import User.Email
-import Utils.Default
 
 -- | Defines the application's configuration.  This includes amongst
 -- other things the http port number, amazon, trust weaver and email
@@ -144,8 +143,8 @@ instance Unjson AppConf where
 
 -- | Default application configuration that does nothing.
 --
-instance HasDefaultValue AppConf where
-  defaultValue = AppConf {
+instance Default AppConf where
+  def = AppConf {
       httpBindAddress    = (0x7f000001, 8000)
     , hostpart           = "http://localhost:8000"
     , useHttps           = True
@@ -159,7 +158,7 @@ instance HasDefaultValue AppConf where
                                          , guardTimeControlPublicationsURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-controlpublications.bin"
                                          }
     , mailsConfig        = defaultMailsConfig
-    , liveDocxConfig     = defaultValue
+    , liveDocxConfig     = def
     , cgiGrpConfig       = CgiGrpConfig {
         cgGateway = "https://grpt.funktionstjanster.se:18898/grp/v1"
       , cgCertFile = "certs/steria3.pem"

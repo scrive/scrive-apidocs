@@ -30,7 +30,6 @@ import RoutingTable
 import Templates
 import User.Email
 import User.Model
-import Utils.Default
 import Utils.IO
 import Utils.Network
 import qualified Doc.RenderedPages as RenderedPages
@@ -116,6 +115,6 @@ initDatabaseEntries appConf = do
       Nothing -> do
         bd <- dbQuery $ GetMainBrandedDomain
         company <- dbUpdate $ CreateCompany
-        _ <- dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) (companyid company,True) defaultValue (bdid bd)
+        _ <- dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) (companyid company,True) def (bdid bd)
         return ()
       Just _ -> return () -- user exist, do not add it

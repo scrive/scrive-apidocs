@@ -11,7 +11,6 @@ import qualified Data.ByteString as BS
 
 import KontraPrelude
 import Log.Configuration
-import Utils.Default
 import Utils.TH
 
 data MessengerServerConf = MessengerServerConf {
@@ -77,8 +76,8 @@ instance Unjson SenderConfig where
       )
     ]
 
-instance HasDefaultValue MessengerServerConf where
-  defaultValue = MessengerServerConf {
+instance Default MessengerServerConf where
+  def = MessengerServerConf {
       mscHttpBindAddress = (0x7f000001, 6668)
     , mscDBConfig = "user='kontra' password='kontra' dbname='kontrakcja'"
     , mscLogConfig = def

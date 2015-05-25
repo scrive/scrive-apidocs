@@ -19,7 +19,6 @@ import TestKontra as T
 import User.API
 import User.Lang
 import User.Model
-import Utils.Default
 
 langTests :: TestEnvSt -> Test
 langTests env = testGroup "Lang" [
@@ -41,7 +40,7 @@ testLoggedInLangSwitching = do
     --create a new uk user and login
     user <- createTestUser LANG_EN
     ctx0 <- (\c -> c { ctxlang = LANG_EN })
-      <$> mkContext defaultValue
+      <$> mkContext def
     req0 <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin"), ("loginType", inText "RegularLogin")]
     (_, ctx1) <- runTestKontra req0 ctx0 $ handleLoginPost
 
@@ -80,7 +79,7 @@ testLoggedInLangSwitching = do
 testDocumentLangSwitchToEnglish :: TestEnv ()
 testDocumentLangSwitchToEnglish = do
   user <- createTestUser LANG_SV
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
   doc <- createTestElegDoc user (ctxtime ctx)
 
   --make sure the doc lang matches the author lang
@@ -92,7 +91,7 @@ testDocumentLangSwitchToEnglish = do
 testDocumentLangSwitchToSwedish :: TestEnv ()
 testDocumentLangSwitchToSwedish = do
   user <- createTestUser LANG_EN
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
   doc <- createTestElegDoc user (ctxtime ctx)
 
   -- make sure the doc lang matches the author's lang

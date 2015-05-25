@@ -59,7 +59,6 @@ import Session.SessionID
 import Templates
 import User.Lang
 import Util.FinishWith
-import Utils.Default
 import qualified Amazon as AWS
 import qualified Doc.RenderedPages as RenderedPages
 import qualified MemCache
@@ -125,7 +124,7 @@ instance MonadTime TestEnv where
   }
 
 instance TemplatesMonad TestEnv where
-  getTemplates = getTextTemplatesByLanguage $ codeFromLang defaultValue
+  getTemplates = getTextTemplatesByLanguage $ codeFromLang def
   getTextTemplatesByLanguage langStr = do
     globaltemplates <- teGlobalTemplates <$> ask
     return $ TL.localizedVersion langStr globaltemplates
@@ -296,7 +295,7 @@ mkContext lang = do
         , ctxglobaltemplates = globaltemplates
         , ctxlang = lang
         , ctxmailsconfig = defaultMailsConfig
-        , ctxlivedocxconf = defaultValue
+        , ctxlivedocxconf = def
         , ctxcgigrpconfig = CgiGrpConfig {
             cgGateway = "https://grpt.funktionstjanster.se:18898/grp/v1"
           , cgCertFile = "certs/steria3.pem"

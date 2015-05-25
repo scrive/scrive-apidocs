@@ -10,7 +10,6 @@ import TestingUtil
 import TestKontra
 import User.Email
 import User.Model
-import Utils.Default
 
 sortByEmail :: [User] -> [User]
 sortByEmail = sortBy (\a b -> compare (f a) (f b))
@@ -217,7 +216,7 @@ test_setUserInfoCapEmail = do
 test_setUserSettings :: TestEnv ()
 test_setUserSettings = do
   Just User{userid, usersettings} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  let us = usersettings { lang = defaultValue }
+  let us = usersettings { lang = def }
   res <- dbUpdate $ SetUserSettings userid us
   assertBool "UserSettings updated correctly" res
   Just User{usersettings = us2} <- dbQuery $ GetUserByID userid

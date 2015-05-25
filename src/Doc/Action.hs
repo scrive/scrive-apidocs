@@ -53,7 +53,6 @@ import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
-import Utils.Default (defaultValue)
 
 -- | Log a document event, adding some standard properties.
 logDocEvent :: (MailContextMonad m, MonadDB m, MonadThrow m, MonadTime m) => EventName -> User -> [EventProperty] -> Document -> m ()
@@ -333,7 +332,7 @@ findAndTimeoutDocuments = do
   docs <- dbQuery $ GetTimeoutedButPendingDocumentsChunk now 100
   forM_ docs $ flip withDocument $ do
     gt <- getGlobalTemplates
-    runTemplatesT (defaultValue, gt) $ dbUpdate $ TimeoutDocument (systemActor now)
+    runTemplatesT (def, gt) $ dbUpdate $ TimeoutDocument (systemActor now)
     triggerAPICallbackIfThereIsOne =<< theDocument
     theDocumentID >>= \did -> logInfo_ $ "Document timedout " ++ (show did)
   when (not (null docs)) $ do

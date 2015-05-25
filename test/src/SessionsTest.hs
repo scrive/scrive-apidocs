@@ -23,7 +23,6 @@ import TestingUtil
 import TestKontra as T
 import User.Model
 import Util.SignatoryLinkUtils
-import Utils.Default
 import Utils.HTTP
 
 sessionsTests :: TestEnvSt -> Test
@@ -102,7 +101,7 @@ insertNewSession :: UserID -> TestEnv (Maybe Session, Context)
 insertNewSession uid = do
   (sess, ctx) <- do
     rq <- mkRequest GET []
-    ctx <- mkContext defaultValue
+    ctx <- mkContext def
     runTestKontra rq ctx $ do
       initialSession <- emptySession
       updateSession initialSession (initialSession { sesUserID = Just uid })
@@ -122,7 +121,7 @@ addDocumentAndInsertToken = do
   (_, ctx) <- do
     let Just asl = getAuthorSigLink doc
     rq <- mkRequest GET []
-    ctx <- mkContext defaultValue
+    ctx <- mkContext def
     runTestKontra rq ctx $ do
       sess <- emptySession
       dbUpdate $ AddDocumentSessionToken (signatorylinkid asl) (signatorymagichash asl)
@@ -147,5 +146,5 @@ testUser = do
   bd <- dbQuery $ GetMainBrandedDomain
   pwd <- createPassword "admin"
   company <- dbUpdate $ CreateCompany
-  Just user <- dbUpdate $ AddUser ("Andrzej", "Rybczak") "andrzej@scrive.com" (Just pwd) (companyid company,True) defaultValue (bdid bd)
+  Just user <- dbUpdate $ AddUser ("Andrzej", "Rybczak") "andrzej@scrive.com" (Just pwd) (companyid company,True) def (bdid bd)
   return $ userid user

@@ -22,7 +22,6 @@ import User.Email
 import User.History.Model
 import User.Model
 import User.UserControl
-import Utils.Default
 import Utils.Prelude
 
 userHistoryTests :: TestEnvSt -> Test
@@ -119,7 +118,7 @@ testDetailsChanged = do
 testHandlerForLoginAttempt :: TestEnv ()
 testHandlerForLoginAttempt = do
     user <- createTestUser
-    ctx <- mkContext defaultValue
+    ctx <- mkContext def
     req <- mkRequest POST [ ("email", inText "karol@skrivapa.se")
                           , ("password", inText "test")
                           ]
@@ -132,7 +131,7 @@ testHandlerForLoginAttempt = do
 testHandlerForLoginSuccess :: TestEnv ()
 testHandlerForLoginSuccess = do
     user <- createTestUser
-    ctx <- mkContext defaultValue
+    ctx <- mkContext def
     req <- mkRequest POST [ ("email", inText "karol@skrivapa.se")
                           , ("password", inText "test_password")
                           ]
@@ -146,7 +145,7 @@ testHandlerForPasswordSetup :: TestEnv ()
 testHandlerForPasswordSetup = do
     user <- createTestUser
     ctx <- (\c -> c { ctxmaybeuser = Just user})
-      <$> mkContext defaultValue
+      <$> mkContext def
     req <- mkRequest POST [ ("oldpassword", inText "test_password")
                           , ("password", inText "test1111test")
                           ]
@@ -160,7 +159,7 @@ testHandlerForPasswordSetupReq :: TestEnv ()
 testHandlerForPasswordSetupReq = do
     user <- createTestUser
     ctx <- (\c -> c { ctxmaybeuser = Just user})
-      <$> mkContext defaultValue
+      <$> mkContext def
     req <- mkRequest POST [ ("oldpassword", inText "test")
                           , ("password", inText "test1111test")
                           ]
@@ -172,7 +171,7 @@ testHandlerForPasswordSetupReq = do
 
 testHandlerForAccountCreated :: TestEnv ()
 testHandlerForAccountCreated = do
-    ctx <- mkContext defaultValue
+    ctx <- mkContext def
     req <- mkRequest POST [ ("email", inText "test@test.com")]
     _ <- runTestKontra req ctx $ apiCallSignup
     Just user <- dbQuery $ GetUserByEmail $ Email "test@test.com"
@@ -186,7 +185,7 @@ testHandlerForAccountCreated = do
 
 testHandlerForTOSAccept :: TestEnv ()
 testHandlerForTOSAccept = do
-    ctx <- mkContext defaultValue
+    ctx <- mkContext def
     req1 <- mkRequest POST [("email", inText "karol@skrivapa.se")]
     (_, ctx1) <- runTestKontra req1 ctx $ apiCallSignup
     UserAccountRequest{..} <- $head <$> getAccountCreatedActions
@@ -206,7 +205,7 @@ testHandlerForDetailsChanged :: TestEnv ()
 testHandlerForDetailsChanged = do
     user <- createTestUser
     ctx <- (\c -> c { ctxmaybeuser = Just user})
-      <$> mkContext defaultValue
+      <$> mkContext def
     req <- mkRequest POST [ ("fstname", inText "Karol")
                           , ("sndname", inText "Samborski")
                           , ("personalnumber", inText "123")
@@ -248,7 +247,7 @@ createTestUser = do
                                 "karol@skrivapa.se"
                                 (Just pwd)
                                 (companyid company,True)
-                                defaultValue
+                                def
                                 (bdid bd)
     case muser of
         Nothing     -> $unexpectedErrorM "can't create user"

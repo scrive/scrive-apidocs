@@ -1,5 +1,7 @@
 module Doc.DocStateCommon where
 
+import Data.Default
+
 import Company.Model
 import Doc.DocStateData
 import Doc.SignatoryFieldID
@@ -10,7 +12,6 @@ import User.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
-import Utils.Default
 
 trueOrMessage :: Bool -> String -> Maybe String
 trueOrMessage False s = Just s
@@ -25,7 +26,7 @@ signLinkFromDetails' :: [SignatoryField]
                      -> MagicHash
                      -> SignatoryLink
 signLinkFromDetails' fields author partner sorder attachments magichash =
-  defaultValue {  signatorylinkid = unsafeSignatoryLinkID 0
+  def {  signatorylinkid = unsafeSignatoryLinkID 0
                 , signatoryfields = map signatoryLinkClearField fields -- clean signatures
                 , signatoryisauthor  = author
                 , signatoryispartner = partner

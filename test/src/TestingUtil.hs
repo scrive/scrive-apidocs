@@ -53,7 +53,6 @@ import TestKontra
 import User.Email
 import User.Model
 import Util.Actor
-import Utils.Default
 import qualified KontraError as KE
 import qualified Text.XML.Content as C
 import qualified Text.XML.DirtyContent as D
@@ -159,7 +158,7 @@ class ExtendWithRandomnes a where
 
 arbitraryAuthorActor :: TestEnv Actor
 arbitraryAuthorActor = do
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
   authorActor ctx <$> rand 10 arbitrary
 
 arbitrarySystemActor :: (Functor m, CryptoRNG m) => m Actor
@@ -167,7 +166,7 @@ arbitrarySystemActor = systemActor <$> rand 10 arbitrary
 
 arbitrarySignatoryActor :: TestEnv Actor
 arbitrarySignatoryActor = do
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
   sl <- rand 10 arbitrary
   withDocumentID (unsafeDocumentID 0) $ signatoryActor ctx sl
 
@@ -185,7 +184,7 @@ instance Arbitrary SignatoryLink where
 
     delivery <- arbitrary
     authentication <- arbitrary
-    return $ defaultValue { signatorylinkid = unsafeSignatoryLinkID 0
+    return $ def { signatorylinkid = unsafeSignatoryLinkID 0
                           , signatoryfields = fields
                           , signatoryisauthor = False
                           , signatoryispartner = True
@@ -236,7 +235,7 @@ instance Arbitrary Document where
     -- we can have any days to sign. almost
     ddaystosign <- elements [1, 10, 99]
     dtimeouttime <- arbitrary
-    return $ defaultValue  { documentstatus = dstatus
+    return $ def  { documentstatus = dstatus
                            , documenttype = dtype
                            , documentsignatorylinks = sls
                            , documenttimeouttime = Just dtimeouttime
@@ -478,7 +477,7 @@ arbEmail = do
   return $ n ++ "@" ++ d ++ "." ++ t
 
 signatoryLinkExample1 :: SignatoryLink
-signatoryLinkExample1 = defaultValue { signatorylinkid = unsafeSignatoryLinkID 0
+signatoryLinkExample1 = def { signatorylinkid = unsafeSignatoryLinkID 0
                                       , signatorymagichash = unsafeMagicHash 0
                                       , maybesignatory = Nothing
                                       , maybesigninfo = Just $ SignInfo unixEpoch noIP
@@ -552,12 +551,12 @@ addNewUser :: (MonadDB m, MonadThrow m, MonadLog m) => String -> String -> Strin
 addNewUser firstname secondname email = do
   bd <- dbQuery $ GetMainBrandedDomain
   company <- dbUpdate $ CreateCompany
-  dbUpdate $ AddUser (firstname, secondname) email Nothing (companyid company,True) defaultValue (bdid bd)
+  dbUpdate $ AddUser (firstname, secondname) email Nothing (companyid company,True) def (bdid bd)
 
 addNewCompanyUser :: String -> String -> String -> CompanyID -> TestEnv (Maybe User)
 addNewCompanyUser firstname secondname email cid = do
   bd <- dbQuery $ GetMainBrandedDomain
-  dbUpdate $ AddUser (firstname, secondname) email Nothing (cid,True) defaultValue (bdid bd)
+  dbUpdate $ AddUser (firstname, secondname) email Nothing (cid,True) def (bdid bd)
 
 addNewRandomUser :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m) => m User
 addNewRandomUser = do
@@ -609,7 +608,7 @@ randomDocumentAllowsDefault user = RandomDocumentAllows
                                                                 , Canceled
                                                                 , Timedout
                                                                 , Rejected
-                                                                , DocumentError 
+                                                                , DocumentError
                                                                 ]
                               , randomDocumentAuthor = user
                               , randomDocumentCondition = const True

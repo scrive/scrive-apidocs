@@ -2,10 +2,10 @@ module LiveDocxConf (
     LiveDocxConf(..)
   ) where
 
+import Data.Default
 import Data.Unjson
 
 import KontraPrelude
-import Utils.Default
 
 data LiveDocxConf = LiveDocxConf {
     url :: String
@@ -32,8 +32,8 @@ unjsonLiveDocxConf = objectOf $ pure LiveDocxConf
 instance Unjson LiveDocxConf where
   unjsonDef = unjsonLiveDocxConf
 
-instance HasDefaultValue LiveDocxConf where
-  defaultValue = LiveDocxConf {
+instance Default LiveDocxConf where
+  def = LiveDocxConf {
       url = "https://api.livedocx.com/1.2/mailmerge.asmx"
     , serviceURL = "http://api.livedocx.com/2.1/mailmerge/"
     , username = "unittests"

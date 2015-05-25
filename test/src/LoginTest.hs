@@ -17,7 +17,6 @@ import TestKontra as T
 import User.API
 import User.Model
 import User.UserControl
-import Utils.Default
 
 loginTests :: TestEnvSt -> Test
 loginTests env = testGroup "Login" [
@@ -33,7 +32,7 @@ loginTests env = testGroup "Login" [
 testSuccessfulLogin :: TestEnv ()
 testSuccessfulLogin = do
     uid <- createTestUser
-    ctx <- mkContext defaultValue
+    ctx <- mkContext def
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin"), ("loginType", inText "RegularLogin")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost
     assertBool "Response is propper JSON" $ res == (runJSONGen $ value "logged" True)
@@ -44,7 +43,7 @@ testSuccessfulLogin = do
 testSuccessfulLoginToPadQueue :: TestEnv ()
 testSuccessfulLoginToPadQueue  = do
     uid <- createTestUser
-    ctx <- mkContext defaultValue
+    ctx <- mkContext def
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin"), ("pad", inText "true")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost
     assertBool "Response is propper JSON" $ res == (runJSONGen $ value "logged" True)
@@ -55,7 +54,7 @@ testSuccessfulLoginToPadQueue  = do
 testCantLoginWithInvalidUser :: TestEnv ()
 testCantLoginWithInvalidUser = do
     _ <- createTestUser
-    ctx <- mkContext defaultValue
+    ctx <- mkContext def
     req <- mkRequest POST [("email", inText "emily@skrivapa.se"), ("password", inText "admin"), ("loginType", inText "RegularLogin")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost
     loginFailureChecks res ctx'
@@ -63,7 +62,7 @@ testCantLoginWithInvalidUser = do
 testCantLoginWithInvalidPassword :: TestEnv ()
 testCantLoginWithInvalidPassword = do
     _ <- createTestUser
-    ctx <- mkContext defaultValue
+    ctx <- mkContext def
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "invalid"), ("loginType", inText "RegularLogin")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost
     loginFailureChecks res ctx'
@@ -71,7 +70,7 @@ testCantLoginWithInvalidPassword = do
 testSuccessfulLoginSavesAStatEvent :: TestEnv ()
 testSuccessfulLoginSavesAStatEvent = do
   uid <- createTestUser
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
   req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin"), ("loginType", inText "RegularLogin")]
   (_res, ctx') <- runTestKontra req ctx $ handleLoginPost
   assertBool "User was logged into context" $ (userid <$> ctxmaybeuser ctx') == Just uid
@@ -91,9 +90,9 @@ createUserAndResetPassword = do
   bd <- dbQuery $ GetMainBrandedDomain
   pwd <- createPassword "admin"
   company <- dbUpdate $ CreateCompany
-  Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) defaultValue (bdid bd)
+  Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) def (bdid bd)
   PasswordReminder{..} <- newPasswordReminder $ userid user
-  ctx <- mkContext defaultValue
+  ctx <- mkContext def
   req <- mkRequest POST [("password", inText "password123")]
   (_, ctx') <- runTestKontra req ctx $ handlePasswordReminderPost prUserID prToken
   req2 <- mkRequest GET []
@@ -112,5 +111,5 @@ createTestUser = do
     bd <- dbQuery $ GetMainBrandedDomain
     pwd <- createPassword "admin"
     company <- dbUpdate $ CreateCompany
-    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) defaultValue (bdid bd)
+    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) def (bdid bd)
     return userid

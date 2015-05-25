@@ -24,7 +24,6 @@ import Doc.Tables
 import EvidenceLog.Model
 import KontraPrelude
 import MinutesTime
-import Utils.Default
 import Utils.Prelude
 import Utils.String
 import Version
@@ -228,7 +227,7 @@ setMandatoryExpirationTimeInDocument = Migration {
     --   All other documents => set days to sign to 0
     let pendingDaysToSign = 90
     timeout <- (pendingDaysToSign `daysAfter`) `liftM` currentTime
-    runQuery_ $ "UPDATE documents SET days_to_sign =" <?> documentdaystosign defaultValue
+    runQuery_ $ "UPDATE documents SET days_to_sign =" <?> documentdaystosign def
         <+> "WHERE status =" <?> Preparation <+> "AND days_to_sign IS NULL"
     runQuery_ $ "UPDATE documents SET days_to_sign =" <?> (fromIntegral pendingDaysToSign :: Int32)
                            <+> ", timeout_time =" <?> timeout

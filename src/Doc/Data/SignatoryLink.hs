@@ -12,6 +12,7 @@ module Doc.Data.SignatoryLink (
   ) where
 
 import Control.Monad.Catch
+import Data.Default
 import Data.Int
 import Database.PostgreSQL.PQTypes
 
@@ -24,7 +25,6 @@ import KontraPrelude
 import MagicHash
 import MinutesTime
 import User.UserID
-import Utils.Default
 
 newtype SignOrder = SignOrder { unSignOrder :: Int32 }
   deriving (Eq, Ord, PQFormat)
@@ -230,8 +230,8 @@ data SignatoryLink = SignatoryLink {
 , signatorylinkconfirmationdeliverymethod :: !ConfirmationDeliveryMethod
 } deriving (Show)
 
-instance HasDefaultValue SignatoryLink where
-  defaultValue = SignatoryLink {
+instance Default SignatoryLink where
+  def = SignatoryLink {
     signatorylinkid = unsafeSignatoryLinkID 0
   , signatoryfields = []
   , signatoryisauthor = False
