@@ -35,7 +35,7 @@ instance Unjson UserID where
 -- Unjson for types that are just wrappers around some base type
 
 instance Unjson CSVUpload where
-  unjsonDef = invmap (CSVUpload "") csvcontents unjsonDef
+  unjsonDef = invmap (CSVUpload) csvcontents unjsonDef
 
 instance Unjson TimeZoneName where
   unjsonDef = invmap unsafeTimeZoneName toString unjsonDef

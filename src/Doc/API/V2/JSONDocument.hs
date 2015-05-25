@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Doc.API.V2.JSONDocument (unjsonDocument) where
+module Doc.API.V2.JSONDocument (unjsonDocument,listToJSONBS) where
 
 import Control.Applicative.Free
 import Doc.DocStateData
@@ -15,6 +15,7 @@ import Doc.API.V2.DisplayOptions
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.DocumentViewer
 import KontraLink
+import Data.ByteString.Lazy.Char8
 
 unjsonDocument :: DocumentAccess -> UnjsonDef Document
 unjsonDocument da = objectOf $
@@ -108,3 +109,18 @@ fieldSignLink da =
           "Link for signing document" unjsonDefWithNull
     else pure ()
 
+
+-- We can't implement lists as Unjson - since we would have to do unjsonToJSON on each document parser. And this will make us loose the order
+listToJSONBS ::  (Int,[(DocumentAccess,Document)]) -> ByteString
+listToJSONBS (i,docs) =
+    "{\n" `append`
+    "  \"more\": " `append` (pack $ show i) `append` ",\n" `append`
+    "  \"list\": [\n"  `append` (docList docs) `append`
+    "\n  ]"  `append`
+    "}"
+
+  where
+    docList :: [(DocumentAccess,Document)] -> ByteString
+    docList ((a,d):(l:ls)) = unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) (unjsonDocument a) d `append` ",\n" `append` docList (l:ls)
+    docList ((a,d):[]) = unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) (unjsonDocument a) d
+    docList [] = ""

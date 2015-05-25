@@ -43,6 +43,8 @@ import Network.HTTP (urlEncodeVars)
 import Text.JSON hiding (Ok)
 import Text.JSON.Gen hiding (object)
 import qualified Happstack.Server.Response as Web
+import Data.Unjson
+
 
 import DB
 import Doc.Rendering
@@ -163,6 +165,11 @@ instance ToAPIResponse JSValue where
   toAPIResponse jv =
     -- must be text/plain because some browsers complain about JSON type
     setHeader "Content-Type" "text/plain; charset=UTF-8" $ Web.toResponse $ encode jv
+
+instance ToAPIResponse (UnjsonDef a,a) where
+  toAPIResponse (unjson,a) =
+    -- must be text/plain because some browsers complain about JSON type
+    setHeader "Content-Type" "text/plain; charset=UTF-8" $ Web.toResponse $ unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) unjson a
 
 instance ToAPIResponse CSV where
   toAPIResponse v = let r1 = Web.toResponse $ v in

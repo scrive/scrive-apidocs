@@ -1,12 +1,13 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Doc.API.V2.DocumentAccess (DocumentAccess(..),DocumentAccessMode(..),canSeeSignlinks, propertyForCurrentSignatory) where
+module Doc.API.V2.DocumentAccess (DocumentAccess(..),DocumentAccessMode(..),canSeeSignlinks, propertyForCurrentSignatory, documentAccessForUser) where
 
 import Doc.SignatoryLinkID
 import KontraPrelude
 import Doc.DocumentID
 import Util.SignatoryLinkUtils
 import Doc.DocStateData
+import User.Model
 
 data DocumentAccess = DocumentAccess {
       daDocumentID :: DocumentID
@@ -33,3 +34,20 @@ propertyForCurrentSignatory da f doc =
     slForAccess (DocumentAccess { daAccessMode = SignatoryDocumentAccess sid}) = getSigLinkFor sid
     slForAccess (DocumentAccess { daAccessMode = AdminDocumentAccess})         = getAuthorSigLink
     slForAccess (DocumentAccess { daAccessMode = AuthorDocumentAccess})        = getAuthorSigLink
+
+
+documentAccessForUser :: User -> Document -> DocumentAccess
+documentAccessForUser user document = DocumentAccess {
+      daDocumentID = documentid document
+    , daAccessMode = documentAccessModeForUser user document
+  }
+
+documentAccessModeForUser :: User -> Document -> DocumentAccessMode
+documentAccessModeForUser user document =
+  case (getSigLinkFor user document) of
+    Just sl -> if (isAuthor sl)
+                 then AuthorDocumentAccess
+                 else SignatoryDocumentAccess $ signatorylinkid sl
+    Nothing -> if (documentauthorcompanyid document == Just (usercompany user) && useriscompanyadmin user)
+                 then AdminDocumentAccess
+                 else $unexpectedError $ "User " ++ show (userid user) ++ " accessing document " ++ show (documentid document) ++ " without any permission. This should be cought earlier."
