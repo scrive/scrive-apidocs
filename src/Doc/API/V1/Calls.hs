@@ -22,6 +22,7 @@ import Control.Conditional (whenM, unlessM, ifM)
 import Control.Exception.Lifted
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Control (MonadBaseControl)
+import Data.Aeson (Value(..))
 import Data.Char
 import Data.Int
 import Data.String.Utils (replace,splitWs, strip)
@@ -42,8 +43,10 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length)
+import qualified Data.HashMap.Strict as Hash
 import qualified Data.Map as Map hiding (map)
 import qualified Data.Traversable as T
+import qualified Data.Vector as Vec
 import qualified Text.JSON as J
 import qualified Text.JSON.Pretty as J (pp_value)
 
@@ -256,12 +259,23 @@ apiCallV1Update did = api $ do
     json <- apiGuard (badInput "The MIME part 'json' must be a valid JSON.") $ case decode jsons of
                                                                                  J.Ok js -> Just js
                                                                                  _ -> Nothing
-    logInfo "Document updated with:" $ jsonToAeson json
+    logInfo "Document updated with:" $ trimDocumentJSON $ jsonToAeson json
     draftData   <- apiGuardJustM (badInput "Given JSON does not represent valid draft data.") $ flip fromJSValueWithUpdate json . Just <$> theDocument
     whenM (draftIsChangingDocument draftData <$> theDocument) $ do
       checkObjectVersionIfProvided did -- If we will change document, then we want to be sure that object version is ok.
     applyDraftDataToDocument draftData actor
     Ok <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
+  where trimDocumentJSON (Object o) = Object $ Hash.adjust trimSignatoriesJSON "signatories" o
+        trimDocumentJSON x = x
+
+        trimSignatoriesJSON (Array a) = Array $ (Vec.map trimSignatoryJSON) a
+        trimSignatoriesJSON x = x
+
+        trimSignatoryJSON (Object o) = Object $ Hash.adjust trimCSVJSON "csv" o
+        trimSignatoryJSON x = x
+
+        trimCSVJSON Null = Null
+        trimCSVJSON _ = String $ "(Omitted for logs)"
 
 apiCallV1SetAuthorAttachemnts  :: Kontrakcja m => DocumentID -> m Response
 apiCallV1SetAuthorAttachemnts did = api $ do
