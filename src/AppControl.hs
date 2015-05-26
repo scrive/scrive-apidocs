@@ -10,7 +10,7 @@ module AppControl
     , getStandardLang
     ) where
 
-import Control.Concurrent.Lifted (MVar, modifyMVar, threadDelay, readMVar)
+import Control.Concurrent.Lifted
 import Control.DeepSeq
 import Control.Monad.Base
 import Control.Monad.Catch
@@ -37,7 +37,6 @@ import AppConf
 import AppView as V
 import BrandedDomain.Model
 import Branding.Cache
-import Control.Concurrent.MVar.Util (tryReadMVar)
 import Crypto.RNG
 import DB hiding (ErrorCode(..))
 import DB.PostgreSQL
