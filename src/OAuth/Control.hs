@@ -9,9 +9,12 @@ import Happstack.Server.Types
 import Happstack.StaticRouting(Route, choice, dir)
 import Log
 import Text.JSON
+import Text.JSON.Gen hiding (value)
+import Network.HTTP.Base (urlEncodeVars)
 import qualified Text.JSON.Gen as J
+import qualified Happstack.Server.Response as Web
 
-import API.Monad
+import API.Monad.V1
 import DB
 import Happstack.Fields
 import Kontra
@@ -57,9 +60,12 @@ tempCredRequest = api $ do
           "temp_cred_request" .= show tcr
         ]
       (temptoken, tempsecret) <- apiGuardL' $ dbUpdate $ RequestTempCredentials tcr time
-      return $ FormEncoded [("oauth_token", show temptoken),
-                            ("oauth_token_secret", show tempsecret),
-                            ("oauth_callback_confirmed", "true")]
+      return $ setHeader "Content-Type" "application/x-www-form-urlencoded" $
+                  Web.toResponse $ urlEncodeVars [
+                    ("oauth_token", show temptoken),
+                    ("oauth_token_secret", show tempsecret),
+                    ("oauth_callback_confirmed", "true")
+                  ]
 
 authorization :: Kontrakcja m => m (Either KontraLink Response)
 authorization = do
@@ -112,9 +118,11 @@ tokenCredRequest = api $ do
     Left errors -> (throwIO . SomeKontraException) $ badInput errors
     Right tr -> do
       (accesstoken, accesssecret) <- apiGuardL' $ dbUpdate $ RequestAccessToken tr time
-      return $ FormEncoded [("oauth_token",        show accesstoken)
-                           ,("oauth_token_secret", show accesssecret)
-                           ]
+      return $ setHeader "Content-Type" "application/x-www-form-urlencoded" $
+                  Web.toResponse $ urlEncodeVars [
+                    ("oauth_token",        show accesstoken),
+                    ("oauth_token_secret", show accesssecret)
+                  ]
 
 apiDashboardPersonalTokens :: Kontrakcja m => m JSValue
 apiDashboardPersonalTokens = do

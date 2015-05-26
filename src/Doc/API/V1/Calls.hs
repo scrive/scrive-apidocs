@@ -51,7 +51,7 @@ import qualified Text.JSON as J
 import qualified Text.JSON.Gen as J
 import qualified Text.JSON.Pretty as J (pp_value)
 
-import API.Monad
+import API.Monad.V1
 import AppView (respondWithPDF)
 import Attachment.Model
 import DB
@@ -452,7 +452,10 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
   (mh,mu) <- getMagicHashAndUserForSignatoryAction did slid
   screenshots' <- fmap (fromMaybe emptySignatoryScreenshots) $
                (fromJSValue =<<) <$> getFieldJSON "screenshots"
-  screenshots <- resolveReferenceScreenshotNames screenshots'
+  mscreenshots <- resolveReferenceScreenshotNames screenshots'
+  when (isNothing mscreenshots) $ do
+    throwIO . SomeKontraException $ badInput "Illegal reference screenshot name"
+  let screenshots = $fromJust mscreenshots
   fields <- getFieldForSigning
   olddoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh -- We store old document, as it is needed by postDocumentXXX calls
   olddoc `withDocument` ( do

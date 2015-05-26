@@ -9,6 +9,7 @@ import Happstack.Server hiding (simpleHTTP, host, https, dir, path)
 import Happstack.StaticRouting(Route, choice, dir, remainingPath)
 
 import AppView
+import API.Monad.V2 (noAPIV2CallFoundHandler)
 import Doc.API
 import Happstack.Server.ReqHandler
 import Kontra
@@ -210,6 +211,8 @@ staticRoutes production = choice
      , dir "email_logo" $  hGet $ toK1 $ Branding.emailLogo
      , dir "email_logo" $  hGet $ toK3 $ Branding.emailLogoForSignatory
      , dir "favicon" $  hGet $ toK1 $ Branding.faviconIcon
+     , dir "api" $ dir "v2" $ remainingPath GET $ toK0 noAPIV2CallFoundHandler
+     , dir "api" $ dir "v2" $ remainingPath POST $ toK0 noAPIV2CallFoundHandler
    ]
   where
     staticDir = if (production)

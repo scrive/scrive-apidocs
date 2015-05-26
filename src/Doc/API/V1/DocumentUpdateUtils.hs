@@ -11,7 +11,7 @@ import Data.Functor
 import Log
 import qualified Control.Exception.Lifted as E
 
-import API.Monad (serverError,badInput)
+import API.Monad.V1 (serverError,badInput)
 import DB
 import DB.TimeZoneName
 import Doc.DocInfo (isPreparation)

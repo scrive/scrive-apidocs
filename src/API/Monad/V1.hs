@@ -1,5 +1,5 @@
 {-# LANGUAGE FunctionalDependencies, ExtendedDefaultRules #-}
-module API.Monad (
+module API.Monad.V1 (
                  APIError(),
                  badInput,
                  badInput',
@@ -29,7 +29,6 @@ module API.Monad (
                  getAPIUserWithPrivileges,
                  getAPIUserWithAnyPrivileges,
                  getAPIUserWithPad,
-                 FormEncoded(..)
                  )
   where
 
@@ -39,7 +38,6 @@ import Data.Typeable
 import Happstack.Server (toResponse)
 import Happstack.Server.Types
 import Log as Log
-import Network.HTTP (urlEncodeVars)
 import Text.JSON hiding (Ok)
 import Text.JSON.Gen hiding (object)
 import qualified Happstack.Server.Response as Web
@@ -69,9 +67,6 @@ data Accepted a = Accepted a
 
 -- | Respond with a 400 Bad Input status. Use it when you need to mark that request failed, but you don't want to rollback
 data Failed a = Failed a
-
--- | Values to be form encoded
-data FormEncoded = FormEncoded [(String, String)]
 
 data APIError = BadInput           String
               | NotLoggedIn        String
@@ -196,11 +191,6 @@ instance ToAPIResponse a => ToAPIResponse (Failed a) where
 
 instance ToAPIResponse () where
   toAPIResponse () = toResponse ""
-
-instance ToAPIResponse FormEncoded where
-  toAPIResponse (FormEncoded kvs) =
-    let r1 = Web.toResponse $ urlEncodeVars kvs
-    in setHeader "Content-Type" "application/x-www-form-urlencoded" r1
 
 jsonError :: JSONGen () -> JSValue
 jsonError rest = runJSONGen $ do

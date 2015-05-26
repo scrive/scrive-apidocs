@@ -8,9 +8,8 @@ import Happstack.StaticRouting
 import Doc.Model.Update
 import Control.Conditional (unlessM)
 
-import Control.Logic
 import Doc.DocStateData
-import API.Monad
+import API.Monad.V2
 import Doc.API.V2.JSONDocument
 import Doc.DocumentID
 import Doc.SignatoryLinkID
@@ -20,14 +19,12 @@ import Routing
 import Doc.DocumentMonad
 import Data.Unjson
 import Data.Unjson as Unjson
-import AppView
 import Doc.DocInfo
 import DB
 import qualified Data.Map as Map hiding (map)
-
+import Data.Text
 import Doc.API.V2.DocumentUpdateUtils
 import Doc.API.V2.DocumentAccess
-import Util.MonadUtils
 import Happstack.Fields
 import Util.Actor
 import qualified Data.Aeson as Aeson
@@ -42,18 +39,18 @@ import Doc.Model
 
 -- TODO add 'documents' prefix
 documentAPIV2 ::  Route (Kontra Response)
-documentAPIV2  = choice [
+documentAPIV2  = dir "documents" $ choice [
     dir "new"             $ hPost $ toK0 $ docApiV2New
   , dir "newfromtemplate" $ hPost $ toK1 $ docApiV2NewFromTemplate
 
   , dir "available" $ hGet $ toK0 $ docApiV2Available
-  , dir "documents" $ dir "list"      $ hGet $ toK0 $ docApiV2List
+  , dir "list"      $ hGet $ toK0 $ docApiV2List
 
-  , dir "documents" $ param $ dir "get" $ hGet $ toK1 $ docApiV2Get
+  , param $ dir "get" $ hGet $ toK1 $ docApiV2Get
   , param $ dir "history"             $ hGet $ toK1 $ docApiV2History
   , param $ dir "evidenceattachments" $ hGet $ toK1 $ docApiV2EvidenceAttachments
 
-  , dir "documents" $ param $ dir "update" $ hPost $ toK1 $ docApiV2Update
+  , param $ dir "update" $ hPost $ toK1 $ docApiV2Update
   , param $ dir "start"           $ hPost $ toK1 $ docApiV2Start
   , param $ dir "prolong"         $ hPost $ toK1 $ docApiV2Prolong
   , param $ dir "cancel"          $ hPost $ toK1 $ docApiV2Cancel
@@ -80,6 +77,7 @@ documentAPIV2  = choice [
   , param $ param $ dir "setattachment"     $ hPost $ toK2 $ docApiV2SigSetAttachment
   ]
 
+
 -------------------------------------------------------------------------------
 
 docApiV2New :: Kontrakcja m => m Response
@@ -100,7 +98,7 @@ docApiV2List = api $ do
   let (domain,filters) = ([DocumentsVisibleToUser $ userid user],[DocumentFilterDeleted False, DocumentFilterSignable, DocumentFilterUnsavedDraft False])
 
   (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit domain filters [] (0,100,1000)
-  return $ Response 200 Map.empty nullRsFlags (listToJSONBS (allDocsCount,(\d -> (documentAccessForUser user d,d)) <$> allDocs)) Nothing
+  return $ Ok $ Response 200 Map.empty nullRsFlags (listToJSONBS (allDocsCount,(\d -> (documentAccessForUser user d,d)) <$> allDocs)) Nothing
 
 -------------------------------------------------------------------------------
 
@@ -111,16 +109,16 @@ docApiV2Get did = api $ do
   mmagichashh <- maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msignatorylink
   withDocumentID did $ case (msignatorylink,mmagichashh) of
     (Just slid,Just mh) -> do
-       sl <- apiGuardJustM  (serverError "No document found") $ getSigLinkFor slid <$> theDocument
-       when (signatorymagichash sl /= mh) $ throwIO . SomeKontraException $ serverError "No document found"
-       unlessM ((isTemplate ||^ isPreparation ||^ isClosed) <$> theDocument) $
+       sl <- apiGuardJustM  (documentNotFound "No document found") $ getSigLinkFor slid <$> theDocument
+       when (signatorymagichash sl /= mh) $ throwIO . SomeKontraException $ documentNotFound "No document found"
+       unlessM ((isTemplate || isPreparation || isClosed) <$> theDocument) $
          dbUpdate . MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl)
                        =<< signatoryActor ctx sl
        Ok <$> (\d -> (unjsonDocument (DocumentAccess did $ SignatoryDocumentAccess slid),d)) <$> theDocument
     _ -> do
       (user,_,_) <- getAPIUser APIDocCheck
       msiglink <- getSigLinkFor user <$> theDocument
-      unlessM (((const (isNothing msiglink)) ||^ isPreparation ||^ isClosed  ||^ isTemplate) <$> theDocument) $ do
+      unlessM (((const (isNothing msiglink)) || isPreparation || isClosed  || isTemplate) <$> theDocument) $ do
           let sl = $fromJust msiglink
           dbUpdate . MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl)
                =<< signatoryActor ctx sl
@@ -135,7 +133,7 @@ docApiV2Get did = api $ do
       if (haspermission)
         then do
           Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
-        else throwIO . SomeKontraException $ serverError "You do not have right to access document"
+        else throwIO . SomeKontraException $ documentAccessForbidden "You do not have right to access document"
 
 docApiV2History :: Kontrakcja m => DocumentID -> m Response
 docApiV2History _did = $undefined -- TODO implement
@@ -151,21 +149,21 @@ docApiV2Update did = api $ do
   withDocumentID did $ do
     auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
     when (not $ (auid == userid user)) $ do
-      throwIO . SomeKontraException $ serverError "Permission problem. You are not the author of this document."
+      throwIO . SomeKontraException $ documentAccessForbidden "Permission problem. You are not the author of this document."
     unlessM (isPreparation <$> theDocument) $ do
-      throwIO . SomeKontraException $ serverError "Document is not a draft or template"
-    documentJSON <- guardJustM $ getFieldBS "document"
+      throwIO . SomeKontraException $ documentStateError "Document is not a draft or template"
+    documentJSON <- apiGuardJustM (requestParametersMissing "'document' parameter not provided") $ getFieldBS "document"
     case Aeson.eitherDecode documentJSON of
       Left _ -> do
-       throwIO . SomeKontraException $ badInput $ "'document' parameter is not a valid json"
+       throwIO . SomeKontraException $ requestParametersParseError $ "'document' parameter is not a valid json"
       Right js -> do
         doc <- theDocument
         case (Unjson.update doc (unjsonDocument (DocumentAccess did AuthorDocumentAccess)) js) of
           (Result draftData []) -> do
             applyDraftDataToDocument draftData actor
-            simpleUnjsonResponse (unjsonDocument (DocumentAccess did AuthorDocumentAccess)) =<< theDocument
+            Ok <$> (unjsonDocument (DocumentAccess did AuthorDocumentAccess),) <$> theDocument
           (Result _ errs) -> do
-            throwIO . SomeKontraException $ badInput $ "Errors while parsing document data: " ++ show errs
+            throwIO . SomeKontraException $ requestParametersParseError $ "Errors while parsing document data: " `append` pack (show errs)
 
 docApiV2Start :: Kontrakcja m => DocumentID -> m Response
 docApiV2Start _did = $undefined -- TODO implement

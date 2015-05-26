@@ -5,7 +5,6 @@ module Doc.API.V2.JSONMisc (unjsonMaybeMainFile) where
 
 import Doc.DocStateData
 import KontraPrelude
-import Utils.Read
 import File.FileID
 import Data.Unjson
 import Doc.DocumentID

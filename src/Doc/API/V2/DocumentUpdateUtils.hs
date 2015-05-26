@@ -10,7 +10,7 @@ import Data.Functor
 import Log
 import qualified Control.Exception.Lifted as E
 
-import API.Monad (serverError,badInput)
+import API.Monad.V2 (serverError,requestParametersInvalid)
 import DB
 import DB.TimeZoneName
 import Doc.DocInfo (isPreparation)
@@ -27,7 +27,7 @@ import Util.HasSomeUserInfo
 checkDraftTimeZoneName ::  (Kontrakcja m) =>  Document -> m ()
 checkDraftTimeZoneName draft = do
   void $  (mkTimeZoneName $ toString (documenttimezonename draft))
-    `E.catch` (\(_::E.SomeException) ->  throwIO $ SomeKontraException $ badInput "Timezone name is invalid.")
+    `E.catch` (\(_::E.SomeException) ->  throwIO $ SomeKontraException $ requestParametersInvalid "Timezone name is invalid.")
 
 applyDraftDataToDocument :: (Kontrakcja m, DocumentMonad m) =>  Document -> Actor -> m ()
 applyDraftDataToDocument draft actor = do
@@ -47,7 +47,7 @@ applyDraftDataToDocument draft actor = do
                                 , documentshowfooter = documentshowfooter draft
                                 , documentlang = documentlang draft
                                 , documenttags = documenttags draft
-                                , documentapicallbackurl = documentapicallbackurl draft
+                                , documentapiv2callbackurl = documentapiv2callbackurl draft
                                 , documenttimezonename = documenttimezonename draft
                                 } actor
     -- Only allow transition from 'unsaveddraft: true' to 'unsaveddraft: false'
@@ -56,7 +56,7 @@ applyDraftDataToDocument draft actor = do
     whenM ((\doc -> isTemplate draft && (not $ isTemplate doc)) <$> theDocument) $ do
          dbUpdate $ TemplateFromDocument actor
     documentsignatorylinks <$> theDocument >>= \siglinks -> case (mergeAuthorDetails siglinks $ mergeSignatoriesIDs siglinks $ documentsignatorylinks draft) of
-         Nothing   -> throwIO $ SomeKontraException $ serverError "Problem with author details while sending draft"
+         Nothing   -> throwIO $ SomeKontraException $ requestParametersInvalid "Signatories list empty"
          Just sigs -> do
            res <- dbUpdate $ ResetSignatoryDetails sigs actor
            unless res $ throwIO $ SomeKontraException $ serverError "applyDraftDataToDocument failed"

@@ -16,8 +16,6 @@ import Text.JSON.Gen (value, runJSONGen)
 import Text.JSON.ToJSValue (ToJSValue(..))
 import qualified Control.Exception.Lifted as E
 
-import API.Monad (badInput)
-import DB.SQL (SomeKontraException(..))
 import Doc.Screenshot
 import KontraPrelude
 
@@ -58,15 +56,15 @@ referencePath name = "files/reference_screenshots/" ++ name ++ ".json"
 validReferenceName :: String -> Bool
 validReferenceName n = n `elem` ["author", "mobile", "standard"]
 
-resolveReferenceScreenshotNames :: (MonadBase IO m, MonadBaseControl IO m, MonadIO m) => SignatoryScreenshots -> m SignatoryScreenshots
+resolveReferenceScreenshotNames :: (MonadBase IO m, MonadBaseControl IO m, MonadIO m) => SignatoryScreenshots -> m (Maybe SignatoryScreenshots)
 resolveReferenceScreenshotNames s =
   case reference s of
-    Nothing -> return s
-    Just (Right _) -> return s
+    Nothing -> return $ Just s
+    Just (Right _) -> return $ Just s
     Just (Left name) | validReferenceName name -> do
-        Ok json <- decode <$> (liftIO $ readFile $ referencePath name) `E.catch`
-                    \E.SomeException{} -> bad
+        Ok json <- decode <$> (liftIO $ readFile $ referencePath name)
         Just r <- return $ fromJSValue json
-        return $ s{ reference = Just (Right r) }
-    _ -> bad
-  where bad = E.throwIO . SomeKontraException $ badInput "Illegal reference screenshot name"
+        return $ Just $ s{ reference = Just (Right r) }
+        `E.catch`
+          \E.SomeException{} -> return Nothing
+    _ -> return Nothing

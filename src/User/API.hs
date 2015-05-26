@@ -19,7 +19,7 @@ import ActionQueue.Core
 import ActionQueue.EmailChangeRequest
 import ActionQueue.PasswordReminder
 import ActionQueue.UserAccountRequest
-import API.Monad
+import API.Monad.V1
 import Company.Model
 import DB
 import Doc.Model

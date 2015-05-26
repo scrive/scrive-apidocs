@@ -51,6 +51,8 @@ currentLink = do
   urlbody <- currentLinkBody
   return $ scheme ++ "://" ++ urlbody
 
+
+-- TODO: MR coment. This will work only when whole path is consumed by handler. Else rqURL will contain rest of url - and it will occure twice in result.
 currentLinkBody :: ServerMonad m => m String
 currentLinkBody = do
   rq <- askRq

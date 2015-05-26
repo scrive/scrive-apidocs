@@ -9,7 +9,7 @@ import Happstack.StaticRouting
 import Text.JSON.Gen
 import Text.JSON.Types (JSValue(JSNull))
 
-import API.Monad
+import API.Monad.V1
 import AppView
 import BrandedDomain.BrandedDomain
 import Company.CompanyUI
@@ -33,7 +33,7 @@ padApplicationAPI = dir "api" $ choice
   ]
 
 padApplicationAPI' :: Route (Kontra Response)
-padApplicationAPI' = choice 
+padApplicationAPI' = choice
   [ dir "checkclient"     $ hPostNoXTokenHttp $ toK0 $ apiCallCheckClient
   , dir "padclienttheme"     $ hGet $ toK0 $ apiCallGetPadClientTheme
   ]

@@ -5,7 +5,6 @@ module Doc.API.V2.JSONDocument (unjsonDocument,listToJSONBS) where
 import Control.Applicative.Free
 import Doc.DocStateData
 import KontraPrelude
-import Utils.Default
 import Data.Unjson
 import Doc.DocUtils
 import Doc.API.V2.UnjsonUtils
@@ -16,10 +15,11 @@ import Doc.API.V2.DocumentAccess
 import Doc.API.V2.DocumentViewer
 import KontraLink
 import Data.ByteString.Lazy.Char8
+import Data.Default
 
 unjsonDocument :: DocumentAccess -> UnjsonDef Document
 unjsonDocument da = objectOf $
-       pure defaultValue
+       pure def
   <*   fieldReadonly "id" (documentid) "Document id "
   <**> (field "title" documenttitle ("Document title")
         <**> (pure $ \t d -> d { documenttitle = t }))
@@ -45,8 +45,8 @@ unjsonDocument da = objectOf $
         <**> (pure $ \t d -> d { documentconfirmtext = t }))
   <**> (field "lang" (documentlang) ("Document language")
         <**> (pure $ \l d -> d { documentlang = l }))
-  <**> (fieldOpt "api_callback_url" documentapicallbackurl ("Document language")
-        <**> (pure $ \mcu d -> d { documentapicallbackurl = mcu }))
+  <**> (fieldOpt "api_callback_url" documentapiv2callbackurl ("Document callback url (for V2)")
+        <**> (pure $ \mcu d -> d { documentapiv2callbackurl = mcu }))
   <*   fieldReadonly "object_version" documentobjectversion "Document object version token"
   <*   fieldReadonly "access_token" (show . documentmagichash)   "Document access token"
   <**> (field "timezone" documenttimezonename ("Document language")
@@ -67,15 +67,15 @@ unjsonSignatoryArray da = arrayOf (unjsonSignatory da)
 
 unjsonSignatory :: DocumentAccess -> UnjsonDef SignatoryLink
 unjsonSignatory da =  objectOf $
-       pure defaultValue
+       pure def
   <*   (fieldReadonly "id" signatorylinkid "Signatory id")
   <*   (fieldReadonlyBy "user_id"  maybesignatory "User connected to document " unjsonDefWithNull)
   <*   (fieldReadonly "is_author" signatoryisauthor "Is this signatory an actor")
-  <**> (fieldDef "is_signatory" (signatoryispartner defaultValue) signatoryispartner "Is this signatory signing this document"
+  <**> (fieldDef "is_signatory" (signatoryispartner def) signatoryispartner "Is this signatory signing this document"
         <**> (pure $ \isa s -> s { signatoryispartner = isa }))
-  <**> (fieldDefBy "fields"  (signatoryfields defaultValue) signatoryfields "Signatory field" unjsonSignatoryFields
+  <**> (fieldDefBy "fields"  (signatoryfields def) signatoryfields "Signatory field" unjsonSignatoryFields
         <**> (pure $ \fs s -> s { signatoryfields = fs }))
-  <**> (fieldDef "sign_order"  (signatorysignorder defaultValue) signatorysignorder "Signatory sign order"
+  <**> (fieldDef "sign_order"  (signatorysignorder def) signatorysignorder "Signatory sign order"
         <**> (pure $ \so s-> s { signatorysignorder = so }))
   <*   (fieldReadonlyBy "sign_time" (fmap signtime . maybesigninfo) "Time when signatory signed document" unjsonDefWithNull)
   <*   (fieldReadonlyBy "seen_time" (fmap signtime . maybeseeninfo) "Time when signatory opened document in browser" unjsonDefWithNull)
@@ -88,13 +88,13 @@ unjsonSignatory da =  objectOf $
   <*   (fieldReadonly "email_delivery_status" mailinvitationdeliverystatus "Email invitation delivery status")
   <*   (fieldReadonly "mobile_delivery_status" mailinvitationdeliverystatus "SMS invitation delivery status")
   <**> (fieldOpt "csv" signatorylinkcsvupload ("CSV upload for multipart") <**> (pure $ \mcsv s -> s { signatorylinkcsvupload = mcsv })) -- Check only one csv for whole doc
-  <**> (fieldDef "delivery_method" (signatorylinkdeliverymethod defaultValue) signatorylinkdeliverymethod "Signatory invitation delivery method"
+  <**> (fieldDef "delivery_method" (signatorylinkdeliverymethod def) signatorylinkdeliverymethod "Signatory invitation delivery method"
         <**> (pure $ \sd s -> s { signatorylinkdeliverymethod = sd }))
-  <**> (fieldDef "authentication_method" (signatorylinkauthenticationmethod defaultValue) signatorylinkauthenticationmethod "Signatory authentication method"
+  <**> (fieldDef "authentication_method" (signatorylinkauthenticationmethod def) signatorylinkauthenticationmethod "Signatory authentication method"
         <**> (pure $ \sa s -> s { signatorylinkauthenticationmethod = sa }))
-  <**> (fieldDef "confirmation_delivery_method" (signatorylinkconfirmationdeliverymethod defaultValue) signatorylinkconfirmationdeliverymethod "Signatory authentication method"
+  <**> (fieldDef "confirmation_delivery_method" (signatorylinkconfirmationdeliverymethod def) signatorylinkconfirmationdeliverymethod "Signatory authentication method"
         <**> (pure $ \scd s -> s { signatorylinkconfirmationdeliverymethod = scd }))
-  <**> (fieldDef "attachments"  (signatoryattachments defaultValue) signatoryattachments "Signatory attachments"
+  <**> (fieldDef "attachments"  (signatoryattachments def) signatoryattachments "Signatory attachments"
         <**> (pure $ \sa s -> s { signatoryattachments = sa }))
   <*   fieldSignLink da
 
