@@ -20,7 +20,6 @@ import qualified Text.StringTemplates.Templates as T
 
 import BrandedDomain.BrandedDomain
 import Branding.Adler32
-import Control.Logic
 import Crypto.RNG
 import DB
 import Doc.DocumentID
@@ -114,7 +113,7 @@ kontramailHelper :: T.TemplatesMonad m => BrandedDomain -> Theme ->  (String -> 
 kontramailHelper bd theme renderFunc tname fields = do
 
     wholemail <- renderFunc tname fields
-    let (title,content) = span (/= '\n') $ dropWhile (isControl ||^ isSpace) wholemail
+    let (title,content) = span (/= '\n') $ dropWhile (isControl || isSpace) wholemail
     return $ emptyMail {
                          originator = bdEmailOriginator bd
                        , originatorEmail = strip $ bdNoreplyEmail bd

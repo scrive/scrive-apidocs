@@ -3,10 +3,10 @@ module Doc.Model.Filter
   , documentFilterToSQL
   ) where
 
+import Control.Conditional ((<|), (|>))
 import qualified Control.Monad.State.Lazy as State
 
 import Company.Model
-import Control.Logic
 import DB
 import Doc.DocStateData
 import Doc.DocumentID

@@ -3,7 +3,6 @@ module ESignatureTest (eSignatureTests) where
 import Test.Framework
 import Test.QuickCheck
 
-import Control.Logic
 import DB hiding (query, update)
 import Doc.DocInfo
 import Doc.DocStateData
@@ -22,7 +21,7 @@ eSignatureTests env = testGroup "E-signature" [
 testBankIDSignatures :: TestEnv ()
 testBankIDSignatures = do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable && isPending)
   let Just SignatoryLink{signatorylinkid = slid} = getAuthorSigLink doc
   bids :: BankIDSignature <- rand 20 arbitrary
   dbUpdate $ MergeBankIDSignature slid bids

@@ -68,7 +68,6 @@ import Control.Arrow (second)
 import Control.Monad.Catch
 import Data.Decimal (realFracToDecimal)
 import Data.Int
-import Data.List hiding (tail, head)
 import Data.Maybe hiding (fromJust)
 import Log
 import Text.StringTemplates.Templates

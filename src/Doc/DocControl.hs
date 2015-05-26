@@ -61,7 +61,6 @@ import AppView
 import Attachment.AttachmentID (AttachmentID)
 import Attachment.Model
 import BrandedDomain.BrandedDomain
-import Control.Logic ((||^))
 import DB
 import DB.TimeZoneName
 import Doc.API.Callback.Model
@@ -274,7 +273,7 @@ handleSignShow documentid signatorylinkid = do
         when (isNothing (ctxmaybeuser ctx) || not (isSigLinkFor (ctxmaybeuser ctx) invitedlink)) $  do
           switchLang . getLang =<< theDocument
         ctx' <- getContext -- NOTE We need to refresh ctx since it could change with switchLang
-        unlessM ((isTemplate ||^ isPreparation ||^ isClosed) <$> theDocument) $ do
+        unlessM ((isTemplate || isPreparation || isClosed) <$> theDocument) $ do
           dbUpdate . MarkDocumentSeen signatorylinkid magichash =<< signatoryActor ctx' invitedlink
           triggerAPICallbackIfThereIsOne =<< theDocument
         ad <- getAnalyticsData
@@ -306,7 +305,7 @@ handleSignPadShow documentid signatorylinkid = do
         switchLang . getLang =<< theDocument
         ctx <- getContext -- Order is important since ctx after switchLang changes
         invitedlink <- guardJust . getSigLinkFor signatorylinkid =<< theDocument
-        unlessM ((isTemplate ||^ isPreparation ||^ isClosed) <$> theDocument) $ do
+        unlessM ((isTemplate || isPreparation || isClosed) <$> theDocument) $ do
           dbUpdate . MarkDocumentSeen signatorylinkid magichash =<< signatoryActor ctx invitedlink
           triggerAPICallbackIfThereIsOne =<< theDocument
         ad <- getAnalyticsData

@@ -16,6 +16,7 @@ module Doc.DocViewMail
     , brandingMailFields
     ) where
 
+import Control.Conditional ((<|), (|>))
 import Control.Monad.Catch
 import Control.Monad.Trans (lift)
 import Data.Functor
@@ -26,7 +27,6 @@ import BrandedDomain.BrandedDomain
 import Branding.Adler32
 import Company.CompanyUI
 import Company.Model
-import Control.Logic
 import DB
 import Doc.DocInfo (getLastSignedTime)
 import Doc.DocStateData
@@ -78,8 +78,8 @@ remindMailNotSigned forMail customMessage document signlink = do
         F.value  "custommessage" $ asCustomMessage <$> customMessage
         F.value  "authorname" authorname
         F.value "partners" $ map getSmartName $ filter isSignatory (documentsignatorylinks document)
-        F.value "partnerswhosigned" $ map getSmartName $  filter (isSignatory &&^ hasSigned) (documentsignatorylinks document)
-        F.value "someonesigned" $ not $ null $ filter (isSignatory &&^ hasSigned) (documentsignatorylinks document)
+        F.value "partnerswhosigned" $ map getSmartName $  filter (isSignatory && hasSigned) (documentsignatorylinks document)
+        F.value "someonesigned" $ not $ null $ filter (isSignatory && hasSigned) (documentsignatorylinks document)
         F.value "timetosign" $ show <$> documenttimeouttime document
         F.value "link" $ protectLink forMail mctx $ LinkSignDoc document signlink
         F.value "isattachments" $ length (documentauthorattachments document) > 0
@@ -204,8 +204,8 @@ mailInvitation forMail
           Just siglink -> Just $ makeFullLink mctx $ show (LinkSignDoc document siglink)
           Nothing -> Nothing
         F.value "partners" $ map getSmartName $ filter isSignatory (documentsignatorylinks document)
-        F.value "partnerswhosigned" $ map getSmartName $ filter (isSignatory &&^ hasSigned) (documentsignatorylinks document)
-        F.value "someonesigned" $ not $ null $ filter (isSignatory &&^ hasSigned) (documentsignatorylinks document)
+        F.value "partnerswhosigned" $ map getSmartName $ filter (isSignatory && hasSigned) (documentsignatorylinks document)
+        F.value "someonesigned" $ not $ null $ filter (isSignatory && hasSigned) (documentsignatorylinks document)
         F.value "timetosign" $ show <$> documenttimeouttime document
         F.value "isattachments" $ length (documentauthorattachments document) > 0
         F.value "attachments" $ map authorattachmentfilename $ documentauthorattachments document
@@ -265,15 +265,15 @@ mailDocumentClosed ispreview sl sealFixed documentAttached document = do
 mailDocumentAwaitingForAuthor :: (HasLang a, MonadDB m, MonadThrow m, TemplatesMonad m, MailContextMonad m) => a -> Document -> m Mail
 mailDocumentAwaitingForAuthor authorlang document = do
     mctx <- getMailContext
-    signatories <- renderLocalListTemplate authorlang $ map getSmartName $ filter (isSignatory &&^ (not . isAuthor)) (documentsignatorylinks document)
-    signatoriesThatSigned <- renderLocalListTemplate authorlang $ map getSmartName $ filter (isSignatory &&^ hasSigned) (documentsignatorylinks document)
+    signatories <- renderLocalListTemplate authorlang $ map getSmartName $ filter (isSignatory && (not . isAuthor)) (documentsignatorylinks document)
+    signatoriesThatSigned <- renderLocalListTemplate authorlang $ map getSmartName $ filter (isSignatory && hasSigned) (documentsignatorylinks document)
     let mainfile =  fromMaybe (unsafeFileID 0) (mainfileid <$> documentfile document) -- There always should be main file but tests fail without it
     documentMail authorlang document (templateName "mailDocumentAwaitingForAuthor") $ do
         F.value "authorname" $ getSmartName $ $fromJust $ getAuthorSigLink document
         F.value "documentlink" $ (mctxhostpart mctx) ++ show (LinkSignDoc document $ $fromJust $ getAuthorSigLink document)
         F.value "partylist" signatories
         F.value "partylistSigned" signatoriesThatSigned
-        F.value "someonesigned" $ not $ null $ filter (isSignatory &&^ hasSigned) (documentsignatorylinks document)
+        F.value "someonesigned" $ not $ null $ filter (isSignatory && hasSigned) (documentsignatorylinks document)
         F.value "companyname" $ emptyToNothing $ getCompanyName document
         F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (getAuthorSigLink document) mainfile
 

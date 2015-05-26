@@ -29,7 +29,6 @@ import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.TemplatesLoader as TL
 
 import Context
-import Control.Logic
 import Control.Monad.Trans.Instances ()
 import Crypto.RNG
 import DB
@@ -110,7 +109,7 @@ onlyAdmin m = do
 -}
 onlySalesOrAdmin :: Kontrakcja m => m a -> m a
 onlySalesOrAdmin m = do
-  admin <- (isAdmin ||^ isSales) <$> getContext
+  admin <- (isAdmin || isSales) <$> getContext
   if admin
     then m
     else respond404

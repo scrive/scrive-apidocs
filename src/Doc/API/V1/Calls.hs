@@ -18,7 +18,7 @@ module Doc.API.V1.Calls (
   , apiCallV1SetAuthorAttachemnts -- Exported for tests
   ) where
 
-import Control.Conditional (whenM, unlessM, ifM)
+import Control.Conditional ((<|), (|>), whenM, unlessM, ifM)
 import Control.Exception.Lifted
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Control (MonadBaseControl)
@@ -52,7 +52,6 @@ import API.Monad
 import AppView (respondWithPDF)
 import Attachment.Model
 import Chargeable.Model
-import Control.Logic
 import DB
 import DB.TimeZoneName (mkTimeZoneName, defaultTimeZoneName)
 import Doc.Action
@@ -329,7 +328,7 @@ apiCallV1Ready did =  api $ do
   (user, actor, _) <- getAPIUser APIDocSend
   withDocumentID did $ do
     auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) .getAuthorSigLink) <$> theDocument
-    ifM ((isPending  &&^ not . any hasSigned . documentsignatorylinks) <$> theDocument)
+    ifM ((isPending  && not . any hasSigned . documentsignatorylinks) <$> theDocument)
      {-then-} (Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument))
      {-else-} $ do
       checkObjectVersionIfProvided did
@@ -681,7 +680,7 @@ apiCallV1Get did = api $ do
     (Just slid,Just mh) -> do
        sl <- apiGuardJustM  (serverError "No document found") $ getSigLinkFor slid <$> theDocument
        when (signatorymagichash sl /= mh) $ throwIO . SomeKontraException $ serverError "No document found"
-       unlessM ((isTemplate ||^ isPreparation ||^ isClosed) <$> theDocument) $
+       unlessM ((isTemplate || isPreparation || isClosed) <$> theDocument) $
          dbUpdate . MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl)
                        =<< signatoryActor ctx sl
        switchLang . getLang =<< theDocument
@@ -690,7 +689,7 @@ apiCallV1Get did = api $ do
     _ -> do
       (user, _actor, external) <- getAPIUser APIDocCheck
       msiglink <- getSigLinkFor user <$> theDocument
-      unlessM (((const (isNothing msiglink)) ||^ isPreparation ||^ isClosed  ||^ isTemplate) <$> theDocument) $ do
+      unlessM (((const (isNothing msiglink)) || isPreparation || isClosed  || isTemplate) <$> theDocument) $ do
           let sl = $fromJust msiglink
           dbUpdate . MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl)
                =<< signatoryActor ctx sl

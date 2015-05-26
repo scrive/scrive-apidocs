@@ -11,7 +11,6 @@ import Text.JSON.Gen
 import qualified Data.ByteString.Lazy.UTF8 as BS
 
 import Context
-import Control.Logic
 import DB
 import Doc.Action
 import Doc.API.V1.Calls
@@ -468,9 +467,9 @@ testCloseEvidenceAttachments = do
   author <- addNewRandomUser
   ctx <- (\c -> c { ctxmaybeuser = Just author }) <$> mkContext def
   doc <- addRandomDocumentWithAuthorAndCondition author
-    (isSignable &&^ isPending
-     &&^ (all ((==) StandardAuthentication . signatorylinkauthenticationmethod) . documentsignatorylinks)
-     &&^ ((==) 1 . (length . documentsignatorylinks))
+    (isSignable && isPending
+     && (all ((==) StandardAuthentication . signatorylinkauthenticationmethod) . documentsignatorylinks)
+     && ((==) 1 . (length . documentsignatorylinks))
     )
 
   req <- mkRequest GET []

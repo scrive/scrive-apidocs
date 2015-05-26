@@ -14,7 +14,7 @@ module Doc.DocMails (
   , MailT
   ) where
 
-import Control.Conditional (ifM)
+import Control.Conditional ((<|), (|>), ifM)
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Log
@@ -24,7 +24,6 @@ import qualified Data.ByteString as BS
 import ActionQueue.Scheduler (SchedulerData, sdAppConf, getGlobalTemplates)
 import AppConf (mailsConfig)
 import BrandedDomain.Model
-import Control.Logic
 import Crypto.RNG
 import DB
 import Doc.API.Callback.Model

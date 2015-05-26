@@ -9,6 +9,7 @@ module Doc.API.V1.DocumentToJSON (
     , docForListCSVHeaderV1
   ) where
 
+import Control.Conditional ((<|), (|>))
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
@@ -21,7 +22,6 @@ import qualified Data.ByteString.Char8 as BSC
 import qualified Data.Set as Set
 import qualified Text.JSON.Gen as J
 
-import Control.Logic
 import DB
 import DB.TimeZoneName
 import Doc.DocInfo

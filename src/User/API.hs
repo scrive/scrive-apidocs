@@ -8,6 +8,7 @@ module User.API (
     apiCallSignup
   ) where
 
+import Control.Conditional ((<|), (|>))
 import Control.Exception.Lifted
 import Happstack.Server.Types
 import Happstack.StaticRouting
@@ -19,7 +20,6 @@ import ActionQueue.PasswordReminder
 import ActionQueue.UserAccountRequest
 import API.Monad
 import Company.Model
-import Control.Logic
 import DB
 import Doc.Model
 import Happstack.Fields

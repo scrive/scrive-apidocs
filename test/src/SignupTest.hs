@@ -1,12 +1,12 @@
 module SignupTest (signupTests, getAccountCreatedActions) where
 
+import Control.Conditional ((<|), (|>))
 import Happstack.Server
 import Test.Framework
 
 import ActionQueue.Core
 import ActionQueue.UserAccountRequest
 import Context
-import Control.Logic
 import DB hiding (query, update)
 import FlashMessage
 import KontraPrelude

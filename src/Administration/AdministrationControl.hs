@@ -40,7 +40,6 @@ import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Company.Model
 import CompanyAccounts.Model
-import Control.Logic
 import DB
 import Doc.Action (postDocumentClosedActions)
 import Doc.DocInfo
@@ -629,7 +628,7 @@ daveDocument documentid = onlyAdmin $ do
         F.value "daveBody" $  inspectXML document
         F.value "id" $ show documentid
         F.value "closed" $ documentstatus document == Closed
-        F.value "couldBeclosed" $ isDocumentError document && all (isSignatory =>>^ hasSigned) (documentsignatorylinks document)
+        F.value "couldBeclosed" $ isDocumentError document && all (isSignatory --> hasSigned) (documentsignatorylinks document)
       return $ Right r
      else return $ Left $ LinkDaveDocument documentid
 
