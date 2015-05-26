@@ -221,7 +221,7 @@ standardPageFields ctx mcompanyui ad = do
   F.object "analytics" $ analyticsTemplates ad
   F.value "homebase" $ ctxhomebase ctx
   F.valueM "brandinghash" $ brandingAdler32 ctx mcompanyui
-  F.value "title" $ case (join$ nothingIfEmpty <$> strip <$> (join $ companyBrowserTitle <$> mcompanyui)) of
+  F.value "title" $ case emptyToNothing . strip =<< companyBrowserTitle =<< mcompanyui of
                       Just ctitle -> ctitle ++ " - " ++ (bdBrowserTitle $ ctxbrandeddomain ctx)
                       Nothing -> (bdBrowserTitle $ ctxbrandeddomain ctx)
 

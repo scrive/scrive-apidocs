@@ -137,7 +137,7 @@ apiDashboardGrantedPrivileges :: Kontrakcja m => m JSValue
 apiDashboardGrantedPrivileges = do
   Context{..} <- getContext
   user <- guardJust ctxmaybeuser
-  ds <- mapassocM privilegeDescription [APIDocCreate,APIDocSend,APIDocCheck]
+  ds <- mapKeepM privilegeDescription [APIDocCreate, APIDocSend, APIDocCheck]
   ls <- concatMap (\p->jsonFromGrantedPrivilege p ds) <$> (dbQuery $ GetGrantedPrivileges (userid user))
   return $ runJSONGen $ do
     J.objects "list" $ map (J.value "fields") ls

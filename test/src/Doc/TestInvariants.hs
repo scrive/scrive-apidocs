@@ -236,7 +236,7 @@ hasValidEmail _ document =
 -- | Has only one of each type of field
 hasAtMostOneOfEachTypeOfField :: UTCTime -> Document -> Maybe String
 hasAtMostOneOfEachTypeOfField _ document =
- nothingIfEmpty $ intercalate ";" $ catMaybes $
+ emptyToNothing $ intercalate ";" $ catMaybes $
    for [(NameFI (NameOrder 1)),(NameFI (NameOrder 2)), CompanyFI, PersonalNumberFI, CompanyNumberFI, EmailFI] $ \t ->
     assertInvariant ("signatory with more than one " ++ show t) $
       all (\sl -> 1 >= length (filter (\f -> fieldIdentity f == t) (signatoryfields sl)))

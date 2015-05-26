@@ -14,7 +14,7 @@ import qualified Text.StringTemplates.Fields as F
 
 import Company.Model
 import DB
-import HubSpot.Conf    
+import HubSpot.Conf
 import Kontra
 import KontraPrelude
 import MinutesTime
@@ -22,6 +22,7 @@ import Payments.Model
 import User.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
+import Utils.Monoid
 import Utils.String
 
 data AnalyticsData = AnalyticsData { aUser           :: Maybe User
@@ -47,7 +48,7 @@ getAnalyticsData = do
     Nothing -> return Nothing
   lang <- ctxlang <$> getContext
 
- 
+
   return $ AnalyticsData { aUser         = muser
                          , aCompany      = mcompany
                          , aToken        = token
@@ -75,18 +76,18 @@ instance ToJSValue AnalyticsData where
 
     mnop (J.value "Signup Method") $ show <$> usersignupmethod <$> aUser
     mnop (J.value "TOS Date" . formatTimeISO) $ join $ userhasacceptedtermsofservice <$> aUser
-    mnop (J.value "Full Name") $ maybeS $ escapeString <$> getFullName <$> aUser
-    mnop (J.value "Smart Name") $ maybeS $ escapeString <$> getSmartName <$> aUser
-    mnop (J.value "$first_name") $ maybeS $ escapeString <$> getFirstName <$> aUser
-    mnop (J.value "$last_name") $ maybeS $ escapeString <$> getLastName <$> aUser
+    mnop (J.value "Full Name") $ emptyToNothing $ escapeString <$> getFullName <$> aUser
+    mnop (J.value "Smart Name") $ emptyToNothing $ escapeString <$> getSmartName <$> aUser
+    mnop (J.value "$first_name") $ emptyToNothing $ escapeString <$> getFirstName <$> aUser
+    mnop (J.value "$last_name") $ emptyToNothing $ escapeString <$> getLastName <$> aUser
     mnop (J.value "$username") $ escapeString <$> getEmail <$> aUser
-    mnop (J.value "Phone") $ maybeS $ escapeString <$> (userphone . userinfo) <$> aUser
-    mnop (J.value "Position") $ maybeS $ escapeString <$> usercompanyposition <$> userinfo  <$> aUser
+    mnop (J.value "Phone") $ emptyToNothing $ escapeString <$> (userphone . userinfo) <$> aUser
+    mnop (J.value "Position") $ emptyToNothing $ escapeString <$> usercompanyposition <$> userinfo  <$> aUser
 
     mnop (J.value "Company Status") $ escapeString <$> (\u -> if (useriscompanyadmin u) then "admin" else "sub") <$> aUser
-    mnop (J.value "Company Name") $ maybeS $ escapeString <$> getCompanyName  <$> aCompany
+    mnop (J.value "Company Name") $ emptyToNothing $ escapeString <$> getCompanyName  <$> aCompany
 
-    mnop (J.value "Signup Method") $ maybeS $ escapeString <$> show <$> usersignupmethod <$> aUser
+    mnop (J.value "Signup Method") $ emptyToNothing $ escapeString <$> show <$> usersignupmethod <$> aUser
 
     J.value "Payment Plan" $ maybe "free" show $ ppPricePlan <$> aPaymentPlan
     J.value "Language" $ codeFromLang aLanguage

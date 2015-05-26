@@ -2,18 +2,15 @@ module Utils.Monoid where
 
 import KontraPrelude
 
--- | Pack value to just unless we have 'mzero'.  Since we can not check
+-- | Pack value to just unless we have 'mzero'. Since we can't check
 -- emptyness of string in templates we want to pack it in maybe.
-nothingIfEmpty :: (Eq a, Monoid a) => a -> Maybe a
-nothingIfEmpty a = if mempty == a then Nothing else Just a
+emptyToNothing :: (Eq a, Monoid a) => a -> Maybe a
+emptyToNothing a
+  | a == mempty = Nothing
+  | otherwise   = Just a
 
--- | Failing if inner value is empty
-joinEmpty :: (MonadPlus m, Monoid a, Ord a) => m a -> m a
-joinEmpty m = do
-  mv <- m
-  if mv == mempty
-    then mzero
-    else return mv
+justEmptyToNothing :: (Eq a, Monoid a) => Maybe a -> Maybe a
+justEmptyToNothing = maybe Nothing emptyToNothing
 
 optional :: MonadPlus m => m a -> m (Maybe a)
 optional c = (liftM Just c) `mplus` (return Nothing)

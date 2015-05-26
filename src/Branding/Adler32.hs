@@ -5,6 +5,7 @@ module Branding.Adler32 (
   ) where
 
 import Control.Monad.Catch
+import Data.ByteString.Lazy (toStrict)
 import Data.Digest.Adler32
 import qualified Data.Binary as Binary
 import qualified Data.ByteString.Base16 as B16
@@ -16,9 +17,7 @@ import Context
 import DB
 import KontraPrelude
 import Theme.Model
-import Theme.Model ()
 import User.Model
-import Utils.String
 import Version
 
 brandingAdler32 :: (MonadDB m, MonadThrow m) => Context -> Maybe CompanyUI -> m String
@@ -77,4 +76,4 @@ companyUIAdler32 cui = do
     ] ++ themesMD5
 
 adler32BS :: BSC8.ByteString -> BSC8.ByteString
-adler32BS = B16.encode . concatChunks . Binary.encode . adler32
+adler32BS = B16.encode . toStrict . Binary.encode . adler32

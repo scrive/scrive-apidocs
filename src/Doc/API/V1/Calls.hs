@@ -106,7 +106,6 @@ import Utils.Directory
 import Utils.IO
 import Utils.Monad
 import Utils.Read
-import Utils.String
 import qualified Data.ByteString.RFC2397 as RFC2397
 
 documentAPIV1 ::  Route (Kontra Response)
@@ -293,7 +292,7 @@ apiCallV1SetAuthorAttachemnts did = api $ do
               case inp of
                    Just (Input (Left filepath) (Just filename) _contentType) -> do
                        content <- liftIO $ BSL.readFile filepath
-                       cres <- preCheckPDF (concatChunks content)
+                       cres <- preCheckPDF (BSL.toStrict content)
                        case cres of
                          Left _ -> do
                            throwIO . SomeKontraException $ (badInput $ "AttachFile " ++ show i ++ " file is not a valid PDF")
@@ -1096,9 +1095,9 @@ apiCallV1SetSignatoryAttachment did sid aname = api $ do
                   Left filepath -> liftIO $ BSL.readFile filepath
                   Right content -> return content
                 content <- if (".pdf" `isSuffixOf` (map toLower filename))
-                  then apiGuardL (badInput "The PDF was invalid.") $ preCheckPDF (concatChunks content1)
+                  then apiGuardL (badInput "The PDF was invalid.") $ preCheckPDF (BSL.toStrict content1)
                   else if (".png" `isSuffixOf` (map toLower filename) || ".jpg" `isSuffixOf` (map toLower filename))
-                    then return $ Binary $ concatChunks content1
+                    then return $ Binary $ BSL.toStrict content1
                     else throwIO . SomeKontraException $ badInput "Only pdf files or images can be attached."
                 (dbUpdate $ NewFile (dropFilePathFromWindows filename) content)
       _ -> return Nothing

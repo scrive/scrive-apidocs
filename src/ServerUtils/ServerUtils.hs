@@ -35,7 +35,6 @@ import Util.CSVUtil
 import Util.MonadUtils
 import Utils.Directory
 import Utils.IO
-import Utils.String
 import qualified MemCache as MemCache
 
 -- Read a csv file from POST, and returns a JSON with content
@@ -125,7 +124,7 @@ handleTextToImage = do
           ExitSuccess -> (liftIO $ BSL.readFile fpath) >>= (return . Just)
     case mfcontent of
          Just fcontent -> if base64
-                             then ok $ toResponseBS (BSUTF8.fromString "text/plain") $ BSL.fromChunks [BSUTF8.fromString "data:image/png;base64,", B64.encode $ concatChunks fcontent]
+                             then ok $ toResponseBS (BSUTF8.fromString "text/plain") $ BSL.fromChunks [BSUTF8.fromString "data:image/png;base64,", B64.encode $ BSL.toStrict fcontent]
                              else ok $ setHeaderBS "Cache-Control" "max-age=600" $ toResponseBS (BSUTF8.fromString "image/png") $ fcontent
          Nothing -> internalError
 

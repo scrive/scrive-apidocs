@@ -43,7 +43,6 @@ import MailContext (MailContextMonad(..))
 import Mails.MailsConfig
 import Templates
 import User.Model
-import Utils.List
 import qualified Amazon as AWS
 
 type InnerKontra = StateT Context (AWS.AmazonMonadT (CryptoRNGT (DBT (ReqHandlerT (LogT IO)))))
@@ -88,11 +87,13 @@ instance MailContextMonad Kontra where
 
 {- Logged in user is admin-}
 isAdmin :: Context -> Bool
-isAdmin ctx = (useremail <$> userinfo <$> ctxmaybeuser ctx) `melem` (ctxadminaccounts ctx)
+isAdmin ctx = maybe False (`elem` ctxadminaccounts ctx)
+  (useremail <$> userinfo <$> ctxmaybeuser ctx)
 
 {- Logged in user is sales -}
 isSales :: Context -> Bool
-isSales ctx = (useremail <$> userinfo <$> ctxmaybeuser ctx) `melem` (ctxsalesaccounts ctx)
+isSales ctx = maybe False (`elem` ctxsalesaccounts ctx)
+  (useremail <$> userinfo <$> ctxmaybeuser ctx)
 
 {- |
    Will 404 if not logged in as an admin.

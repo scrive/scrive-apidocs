@@ -41,7 +41,7 @@ mkSMS doc sl msgData msgBody = do
               Just user -> companySmsOriginator <$> (dbQuery $ GetCompanyUI $ usercompany user)
               Nothing -> return Nothing
        Nothing -> return Nothing
-  let originator = fromMaybe (bdSmsOriginator $ mctxcurrentBrandedDomain mctx) (joinEmpty moriginator)
+  let originator = fromMaybe (bdSmsOriginator $ mctxcurrentBrandedDomain mctx) (justEmptyToNothing moriginator)
   return $ SMS (getMobile sl) msgData msgBody originator
 
 smsDocumentErrorAuthor :: (MailContextMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => Document -> SignatoryLink -> m SMS

@@ -463,7 +463,7 @@ getCompanyInfoChange = do
   mcompanycity    <- getField "companycity"
   mcompanycountry <- getField "companycountry"
   mcompanyipaddressmasklist <- getOptionalField asValidIPAddressWithMaskList "companyipaddressmasklist"
-  mcompanycgidisplayname <- fmap nothingIfEmpty <$> getField "companycgidisplayname"
+  mcompanycgidisplayname <- fmap emptyToNothing <$> getField "companycgidisplayname"
   mcompanyallowsavesafetycopy <- getField "companyallowsavesafetycopy"
   mcompanyidledoctimeout <- (>>= \s -> if null s
                                        then Just Nothing
