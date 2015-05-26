@@ -11,6 +11,7 @@ import System.IO
 import Test.Framework
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
+import qualified Data.Text.IO as T
 
 import AccountInfoTest
 import AppDBMigrations
@@ -121,7 +122,7 @@ testMany (allargs, ts) = do
   let (args, envf) = modifyTestEnv allargs
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
-  pgconf <- BS.readFile "kontrakcja_test.conf"
+  pgconf <- T.readFile "kontrakcja_test.conf"
   rng <- unsafeCryptoRNGState (BS.pack (replicate 128 0))
   templates <- readGlobalTemplates
 

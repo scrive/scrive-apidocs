@@ -7,9 +7,9 @@ module MailingServerConf (
   ) where
 
 import Data.Default
+import Data.Text (Text)
 import Data.Unjson
 import Data.Word
-import qualified Data.ByteString as BS
 
 import KontraPrelude
 import Log.Configuration
@@ -18,7 +18,7 @@ import Utils.TH
 
 data MailingServerConf = MailingServerConf {
   mscHttpBindAddress :: !(Word32, Word16)
-, mscDBConfig        :: !BS.ByteString
+, mscDBConfig        :: !Text
 , mscLogConfig       :: !LogConfig
 , mscMasterSender    :: !SenderConfig
 , mscSlaveSender     :: !(Maybe SenderConfig)
