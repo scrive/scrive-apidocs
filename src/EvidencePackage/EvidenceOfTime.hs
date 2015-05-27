@@ -36,9 +36,9 @@ evidenceOfTimeHTML title clockErrors graph = do
     F.value "graph_image" graph
     F.value "EvidenceOfTimeMean"   $ HC.showClockError 2 (mean norm)
     F.value "EvidenceOfTimeStddev" $ HC.showClockError 2 (stdDev norm)
-    F.value "EvidenceOfTimeLT025"  $ showCDFInPercent norm 0.0025
-    F.value "EvidenceOfTimeLT10"   $ showCDFInPercent norm 0.01
-    F.value "EvidenceOfTimeLT25"   $ showCDFInPercent norm 0.025
+    F.value "EvidenceOfTimeLT25" $ showCDFInPercent norm 0.0025
+    F.value "EvidenceOfTimeLT5"  $ showCDFInPercent norm 0.005
+    F.value "EvidenceOfTimeLT10" $ showCDFInPercent norm 0.01
     F.value "EvidenceOfTimeStartDate" $ formatTimeUTC startTime ++ " UTC"
     F.value "EvidenceOfTimeEndDate"   $ formatTimeUTC endTime   ++ " UTC"
     F.objects "entries" $ for clockErrors $ \entry -> do
