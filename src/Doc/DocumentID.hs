@@ -11,7 +11,6 @@ import Happstack.Server
 
 import DB.Derive
 import KontraPrelude
-import Utils.Read
 
 newtype DocumentID = DocumentID Int64
   deriving (Eq, Ord, PQFormat)

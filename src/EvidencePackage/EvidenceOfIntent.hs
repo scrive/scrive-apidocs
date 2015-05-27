@@ -11,7 +11,6 @@ import Doc.SignatoryIdentification (SignatoryIdentifierMap, signatoryIdentifier)
 import KontraPrelude
 import MinutesTime
 import Utils.Image
-import Utils.Prelude
 import qualified Doc.Screenshot as Screenshot
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 

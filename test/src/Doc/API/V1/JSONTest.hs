@@ -23,7 +23,6 @@ import Doc.SignatoryLinkID (SignatoryLinkID, unsafeSignatoryLinkID)
 import KontraPrelude
 import TestingUtil
 import TestKontra as T
-import Utils.Read
 
 apiV1JSONTests :: TestEnvSt -> Test
 apiV1JSONTests env = testGroup "JSONAPIV1"

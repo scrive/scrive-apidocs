@@ -18,7 +18,6 @@ import qualified Text.StringTemplates.Fields as F
 
 import KontraPrelude
 import MinutesTime
-import Utils.Prelude
 import qualified HostClock.Model as HC
 
 -- | Given the document title, list of clock error estimates, and clock error

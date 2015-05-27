@@ -80,7 +80,6 @@ import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import Utils.Monoid
-import Utils.Read (maybeRead)
 import qualified Company.CompanyControl as Company
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
 import qualified Payments.Stats

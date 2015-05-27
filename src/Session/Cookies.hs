@@ -14,7 +14,6 @@ import KontraPrelude
 import MagicHash
 import Session.Data
 import Utils.HTTP
-import Utils.Read
 
 -- | Info that we store in cookies.
 data SessionCookieInfo = SessionCookieInfo {

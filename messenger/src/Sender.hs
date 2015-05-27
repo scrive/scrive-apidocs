@@ -25,7 +25,6 @@ import KontraPrelude
 import MessengerServerConf
 import SMS.Data
 import Utils.IO
-import Utils.Read
 
 data Sender = Sender {
     senderName :: String

@@ -108,7 +108,6 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Utils.Image
 import Utils.Monad
-import Utils.Prelude (for)
 import qualified DB.TimeZoneName as TimeZoneName
 import qualified Doc.Screenshot as Screenshot
 

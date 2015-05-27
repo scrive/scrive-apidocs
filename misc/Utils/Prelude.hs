@@ -2,10 +2,6 @@ module Utils.Prelude where
 
 import KontraPrelude
 
--- | Just @flip map@.
-for :: [a] -> (a -> b) -> [b]
-for = flip map
-
 maybeToBool :: Maybe Bool -> Bool
 maybeToBool (Just b) = b
 maybeToBool _ = False

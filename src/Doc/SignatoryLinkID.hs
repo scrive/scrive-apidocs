@@ -14,7 +14,6 @@ import Happstack.Server
 
 import DB.Derive
 import KontraPrelude
-import Utils.Read
 
 -- | 'SignatoryLinkID' is and integer that identifies
 -- a signatory inside a document scope.

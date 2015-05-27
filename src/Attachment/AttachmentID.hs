@@ -9,7 +9,6 @@ import Happstack.Server
 
 import DB.Derive
 import KontraPrelude
-import Utils.Read
 
 newtype AttachmentID = AttachmentID Int64
   deriving (Eq, Ord, PQFormat)

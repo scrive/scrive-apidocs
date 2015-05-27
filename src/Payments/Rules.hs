@@ -15,7 +15,6 @@ import Recurly
 import KontraPrelude
 import Payments.Model
 import Utils.Either
-import Utils.Read
 
 data RecurlyAction = RNoAction
                    | RUpdateNow

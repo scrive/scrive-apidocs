@@ -11,7 +11,6 @@ import KontraPrelude
 import MagicHash
 import OAuth.Model
 import Utils.List
-import Utils.Read
 
 splitAuthorization :: String -> [(String, String)]
 splitAuthorization s =

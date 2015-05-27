@@ -18,7 +18,6 @@ import Happstack.Fields
 import KontraPrelude
 import Mailer
 import Mails.Model
-import Utils.Read
 
 handleSendGridEventsV3 :: Mailer Response
 handleSendGridEventsV3= do

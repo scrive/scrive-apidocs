@@ -22,7 +22,6 @@ import User.Email
 import User.History.Model
 import User.Model
 import User.UserControl
-import Utils.Prelude
 
 userHistoryTests :: TestEnvSt -> Test
 userHistoryTests env = testGroup "User's history" [

@@ -16,7 +16,6 @@ import EvidenceLog.View
 import Kontra
 import KontraPrelude
 import ListUtil
-import Utils.Prelude
 
 jsonDocumentEvidenceLog ::  Kontrakcja m => DocumentID -> m JSValue
 jsonDocumentEvidenceLog did = do

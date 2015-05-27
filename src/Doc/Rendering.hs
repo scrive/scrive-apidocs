@@ -41,7 +41,6 @@ import ForkAction
 import Kontra
 import KontraPrelude
 import Utils.IO
-import Utils.Read
 import qualified Amazon as AWS
 import qualified MemCache as MemCache
 

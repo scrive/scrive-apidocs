@@ -64,7 +64,6 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Utils.Directory
 import Utils.IO
-import Utils.Prelude
 import Utils.Read
 import qualified Amazon as AWS
 import qualified Doc.SealSpec as Seal

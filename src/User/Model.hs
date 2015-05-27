@@ -55,7 +55,6 @@ import User.Email
 import User.Lang
 import User.Password
 import User.UserID
-import Utils.Read
 
 data InviteType = Viral | Admin
   deriving (Eq, Ord, Show)

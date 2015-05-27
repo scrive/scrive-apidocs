@@ -25,7 +25,6 @@ import Routing
 import User.Model
 import Util.MonadUtils
 import Utils.List
-import Utils.Read
 
 oauth :: Route (Kontra Response)
 oauth = choice [

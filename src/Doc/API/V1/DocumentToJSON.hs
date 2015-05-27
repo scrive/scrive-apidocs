@@ -38,7 +38,6 @@ import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Utils.Image
-import Utils.Prelude
 import Utils.String
 import qualified Amazon as AWS
 import qualified Doc.EvidenceAttachments as EvidenceAttachments

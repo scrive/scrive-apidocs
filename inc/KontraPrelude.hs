@@ -1,3 +1,4 @@
+-- | Slightly customized replacement of Prelude.
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module KontraPrelude (
     module Control.Applicative
@@ -9,6 +10,8 @@ module KontraPrelude (
   , module Data.Monoid
   , module Data.Monoid.Utils
   , module Prelude
+  , for
+  , maybeRead
   , head
   , last
   , maximum
@@ -66,6 +69,18 @@ instance Show UnexpectedError where
     . (": " ++) . (ueMessage ++)
 
 instance Exception UnexpectedError
+
+----------------------------------------
+
+-- | Just @flip map@.
+for :: [a] -> (a -> b) -> [b]
+for = flip map
+
+-- | Read a value and return 'Nothing' if an error occurs during parsing.
+maybeRead :: Read a => String -> Maybe a
+maybeRead s = case reads s of
+  [(v, "")] -> Just v
+  _         -> Nothing
 
 ----------------------------------------
 

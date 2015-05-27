@@ -16,7 +16,6 @@ import qualified Control.Exception.Lifted as E
 import KontraPrelude
 import Utils.Enum
 import Utils.List
-import Utils.Read
 
 data Lang = LANG_SV
           | LANG_EN

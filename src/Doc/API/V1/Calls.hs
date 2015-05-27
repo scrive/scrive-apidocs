@@ -104,7 +104,6 @@ import Util.SignatoryLinkUtils
 import Utils.Directory
 import Utils.IO
 import Utils.Monad
-import Utils.Read
 import qualified Data.ByteString.RFC2397 as RFC2397
 
 documentAPIV1 ::  Route (Kontra Response)

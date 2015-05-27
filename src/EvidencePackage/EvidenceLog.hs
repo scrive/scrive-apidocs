@@ -16,7 +16,6 @@ import MinutesTime
 import Text.XML.Content (cdata)
 import Text.XML.DirtyContent (XMLContent, renderXMLContent, substitute)
 import Util.SignatoryLinkUtils
-import Utils.Prelude
 import qualified HostClock.Model as HC
 
 -- | Generating text of Evidence log that is attached to PDF. It should be complete

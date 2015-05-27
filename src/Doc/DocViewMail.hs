@@ -46,7 +46,6 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Utils.Color
 import Utils.Monoid
-import Utils.Prelude
 
 mailDocumentRemind :: (MonadDB m, MonadThrow m, MonadTime m, TemplatesMonad m, MailContextMonad m)
                    => Maybe String
