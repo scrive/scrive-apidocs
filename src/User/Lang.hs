@@ -9,13 +9,13 @@ module User.Lang (
 
 import Data.Default
 import Data.Int
+import Data.List.Split
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 import qualified Control.Exception.Lifted as E
 
 import KontraPrelude
 import Utils.Enum
-import Utils.List
 
 data Lang = LANG_SV
           | LANG_EN
@@ -96,7 +96,7 @@ langFromCode :: String -> Maybe Lang
 langFromCode s = find ((== s) . codeFromLang) allValues
 
 langFromHTTPHeader :: String -> Lang
-langFromHTTPHeader s = fromMaybe LANG_EN $ msum $ map findLang (splitOver "," s)
+langFromHTTPHeader s = fromMaybe LANG_EN $ msum $ map findLang (splitOn "," s)
   where
     findLang str = find ((`isInfixOf` str) . codeFromLang) allValues
 
