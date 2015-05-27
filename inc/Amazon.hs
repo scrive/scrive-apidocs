@@ -34,7 +34,6 @@ import DB
 import File.File
 import File.Model
 import KontraPrelude
-import Utils.String
 
 isAWSConfigOk :: Maybe (String, String, String) -> Bool
 isAWSConfigOk (Just ((_:_), (_:_), (_:_))) = True
@@ -197,7 +196,7 @@ getFileContents s3action File{..} = do
         , AWS.s3bucket = bucket
       }
       case result of
-        Right rsp -> return . Just . aesDecrypt aes . concatChunks $ HTTP.rspBody rsp
+        Right rsp -> return . Just . aesDecrypt aes . BSL.toStrict $ HTTP.rspBody rsp
         Left err -> do
           logAttention "AWS.runAction failed"  $ object [
               "fileid" .= show fileid

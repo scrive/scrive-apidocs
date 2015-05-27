@@ -40,7 +40,6 @@ import User.Model
 import User.Utils
 import Util.Actor
 import Util.MonadUtils
-import Utils.String
 
 handleRename :: Kontrakcja m => AttachmentID -> m JSValue
 handleRename attid = do
@@ -181,7 +180,7 @@ makeAttachmentFromFile (Input contentspec (Just filename) _contentType) = do
     content <- case contentspec of
         Left filepath -> liftIO $ BSL.readFile filepath
         Right content -> return content
-    cres <- preCheckPDF (concatChunks content)
+    cres <- preCheckPDF (BSL.toStrict content)
     case cres of
       Left _ -> do
          logInfo_ "Attachment file is not a valid PDF"

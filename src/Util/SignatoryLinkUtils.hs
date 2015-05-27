@@ -188,7 +188,7 @@ isDeletedFor msl = maybe False (isJust . signatorylinkdeleted) (getMaybeSignator
 -}
 
 validSigLink ::  SignatoryLinkID -> MagicHash-> Maybe Document -> Bool
-validSigLink a mh (Just doc) =  joinB $ (== mh)  <$> signatorymagichash <$> (getSigLinkFor a doc)
+validSigLink a mh (Just doc) =  maybeToBool $ (== mh) <$> signatorymagichash <$> (getSigLinkFor a doc)
 validSigLink _ _ _ = False
 
 {- |

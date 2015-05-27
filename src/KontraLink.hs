@@ -1,5 +1,10 @@
-module KontraLink(KontraLink(..), LoginRedirectReason(..), getHomeOrDesignViewLink) where
+module KontraLink(
+    KontraLink(..)
+  , LoginRedirectReason(..)
+  , getHomeOrDesignViewLink
+  ) where
 
+import Data.List.Split
 import Network.HTTP
 import Network.URI
 import qualified Data.ByteString.Char8 as BSC
@@ -16,7 +21,6 @@ import KontraPrelude
 import MagicHash
 import OAuth.Model
 import User.Model
-import Utils.List
 
 {- |
    Defines the reason why we are redirected to login page
@@ -135,7 +139,7 @@ setParams uri params = uri { uriQuery = "?" ++ vars }
     vars = urlEncodeVars $ maybe params (++ params) mvars
     urlDecodeVars :: String -> Maybe [(String, String)]
     urlDecodeVars ('?':s) = urlDecodeVars s
-    urlDecodeVars s = makeKV (splitOver "&" s) []
+    urlDecodeVars s = makeKV (splitOn "&" s) []
       where
         makeKV [] a = Just a
         makeKV (kv:ks) a = case break (== '=') kv of

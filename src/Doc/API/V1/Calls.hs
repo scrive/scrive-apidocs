@@ -18,7 +18,7 @@ module Doc.API.V1.Calls (
   , apiCallV1SetAuthorAttachemnts -- Exported for tests
   ) where
 
-import Control.Conditional (whenM, unlessM, ifM)
+import Control.Conditional ((<|), (|>), whenM, unlessM, ifM)
 import Control.Exception.Lifted
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Control (MonadBaseControl)
@@ -55,7 +55,6 @@ import API.Monad
 import AppView (respondWithPDF)
 import Attachment.Model
 import Chargeable.Model
-import Control.Logic
 import DB
 import DB.TimeZoneName (mkTimeZoneName, defaultTimeZoneName)
 import Doc.Action
@@ -108,8 +107,6 @@ import Util.SignatoryLinkUtils
 import Utils.Directory
 import Utils.IO
 import Utils.Monad
-import Utils.Read
-import Utils.String
 import qualified Data.ByteString.RFC2397 as RFC2397
 
 documentAPIV1 ::  Route (Kontra Response)
@@ -307,7 +304,7 @@ apiCallV1SetAuthorAttachemnts did = api $ do
               case inp of
                    Just (Input (Left filepath) (Just filename) _contentType) -> do
                        content <- liftIO $ BSL.readFile filepath
-                       cres <- preCheckPDF (concatChunks content)
+                       cres <- preCheckPDF (BSL.toStrict content)
                        case cres of
                          Left _ -> do
                            throwIO . SomeKontraException $ (badInput $ "AttachFile " ++ show i ++ " file is not a valid PDF")
@@ -344,7 +341,7 @@ apiCallV1Ready did =  api $ do
   (user, actor, _) <- getAPIUser APIDocSend
   withDocumentID did $ do
     auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) .getAuthorSigLink) <$> theDocument
-    ifM ((isPending  &&^ not . any hasSigned . documentsignatorylinks) <$> theDocument)
+    ifM ((isPending  && not . any hasSigned . documentsignatorylinks) <$> theDocument)
      {-then-} (Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument))
      {-else-} $ do
       checkObjectVersionIfProvided did
@@ -696,7 +693,7 @@ apiCallV1Get did = api $ do
     (Just slid,Just mh) -> do
        sl <- apiGuardJustM  (serverError "No document found") $ getSigLinkFor slid <$> theDocument
        when (signatorymagichash sl /= mh) $ throwIO . SomeKontraException $ serverError "No document found"
-       unlessM ((isTemplate ||^ isPreparation ||^ isClosed) <$> theDocument) $
+       unlessM ((isTemplate || isPreparation || isClosed) <$> theDocument) $
          dbUpdate . MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl)
                        =<< signatoryActor ctx sl
        switchLang . getLang =<< theDocument
@@ -705,7 +702,7 @@ apiCallV1Get did = api $ do
     _ -> do
       (user, _actor, external) <- getAPIUser APIDocCheck
       msiglink <- getSigLinkFor user <$> theDocument
-      unlessM (((const (isNothing msiglink)) ||^ isPreparation ||^ isClosed  ||^ isTemplate) <$> theDocument) $ do
+      unlessM (((const (isNothing msiglink)) || isPreparation || isClosed  || isTemplate) <$> theDocument) $ do
           let sl = $fromJust msiglink
           dbUpdate . MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl)
                =<< signatoryActor ctx sl
@@ -1110,9 +1107,9 @@ apiCallV1SetSignatoryAttachment did sid aname = api $ do
                   Left filepath -> liftIO $ BSL.readFile filepath
                   Right content -> return content
                 content <- if (".pdf" `isSuffixOf` (map toLower filename))
-                  then apiGuardL (badInput "The PDF was invalid.") $ preCheckPDF (concatChunks content1)
+                  then apiGuardL (badInput "The PDF was invalid.") $ preCheckPDF (BSL.toStrict content1)
                   else if (".png" `isSuffixOf` (map toLower filename) || ".jpg" `isSuffixOf` (map toLower filename))
-                    then return $ Binary $ concatChunks content1
+                    then return $ Binary $ BSL.toStrict content1
                     else throwIO . SomeKontraException $ badInput "Only pdf files or images can be attached."
                 (dbUpdate $ NewFile (dropFilePathFromWindows filename) content)
       _ -> return Nothing

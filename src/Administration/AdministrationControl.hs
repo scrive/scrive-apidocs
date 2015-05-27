@@ -40,7 +40,6 @@ import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Company.Model
 import CompanyAccounts.Model
-import Control.Logic
 import DB
 import Doc.Action (postDocumentClosedActions)
 import Doc.DocInfo
@@ -81,7 +80,6 @@ import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import Utils.Monoid
-import Utils.Read (maybeRead)
 import qualified Company.CompanyControl as Company
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
 import qualified Payments.Stats
@@ -463,7 +461,7 @@ getCompanyInfoChange = do
   mcompanycity    <- getField "companycity"
   mcompanycountry <- getField "companycountry"
   mcompanyipaddressmasklist <- getOptionalField asValidIPAddressWithMaskList "companyipaddressmasklist"
-  mcompanycgidisplayname <- fmap nothingIfEmpty <$> getField "companycgidisplayname"
+  mcompanycgidisplayname <- fmap emptyToNothing <$> getField "companycgidisplayname"
   mcompanyallowsavesafetycopy <- getField "companyallowsavesafetycopy"
   mcompanyidledoctimeout <- (>>= \s -> if null s
                                        then Just Nothing
@@ -629,7 +627,7 @@ daveDocument documentid = onlyAdmin $ do
         F.value "daveBody" $  inspectXML document
         F.value "id" $ show documentid
         F.value "closed" $ documentstatus document == Closed
-        F.value "couldBeclosed" $ isDocumentError document && all (isSignatory =>>^ hasSigned) (documentsignatorylinks document)
+        F.value "couldBeclosed" $ isDocumentError document && all (isSignatory --> hasSigned) (documentsignatorylinks document)
       return $ Right r
      else return $ Left $ LinkDaveDocument documentid
 

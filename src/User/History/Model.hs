@@ -26,7 +26,6 @@ import KontraPrelude
 import MinutesTime
 import User.Email
 import User.Model
-import Utils.Prelude
 import qualified Version
 
 data UserHistory = UserHistory {

@@ -29,7 +29,6 @@ import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.TemplatesLoader as TL
 
 import Context
-import Control.Logic
 import Control.Monad.Trans.Instances ()
 import Crypto.RNG
 import DB
@@ -43,7 +42,6 @@ import MailContext (MailContextMonad(..))
 import Mails.MailsConfig
 import Templates
 import User.Model
-import Utils.List
 import qualified Amazon as AWS
 
 type InnerKontra = StateT Context (AWS.AmazonMonadT (CryptoRNGT (DBT (ReqHandlerT (LogT IO)))))
@@ -88,11 +86,13 @@ instance MailContextMonad Kontra where
 
 {- Logged in user is admin-}
 isAdmin :: Context -> Bool
-isAdmin ctx = (useremail <$> userinfo <$> ctxmaybeuser ctx) `melem` (ctxadminaccounts ctx)
+isAdmin ctx = maybe False (`elem` ctxadminaccounts ctx)
+  (useremail <$> userinfo <$> ctxmaybeuser ctx)
 
 {- Logged in user is sales -}
 isSales :: Context -> Bool
-isSales ctx = (useremail <$> userinfo <$> ctxmaybeuser ctx) `melem` (ctxsalesaccounts ctx)
+isSales ctx = maybe False (`elem` ctxsalesaccounts ctx)
+  (useremail <$> userinfo <$> ctxmaybeuser ctx)
 
 {- |
    Will 404 if not logged in as an admin.
@@ -109,7 +109,7 @@ onlyAdmin m = do
 -}
 onlySalesOrAdmin :: Kontrakcja m => m a -> m a
 onlySalesOrAdmin m = do
-  admin <- (isAdmin ||^ isSales) <$> getContext
+  admin <- (isAdmin || isSales) <$> getContext
   if admin
     then m
     else respond404

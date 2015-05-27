@@ -9,8 +9,6 @@ import qualified Text.JSON as J
 
 import KontraPrelude
 import Utils.Monoid
-import Utils.Read
-import Utils.String
 
 -- | Since we sometimes want to get 'Maybe' and also we wont work with
 -- newer versions of happstack here is.  This should be droped when
@@ -58,8 +56,8 @@ getFileField name = do
   finput <- getDataFn (lookInput name)
   case finput of
     Right (Input contentspec _ _) -> case contentspec of
-      Left filepath -> joinEmpty `liftM` ((Just . concatChunks) `liftM` liftIO (BSL.readFile filepath))
-      Right content -> return . joinEmpty . Just $ concatChunks content
+      Left filepath -> (emptyToNothing . BSL.toStrict) `liftM` liftIO (BSL.readFile filepath)
+      Right content -> return . emptyToNothing $ BSL.toStrict content
     _ -> return Nothing
 
 -- | Useful inside the 'RqData' monad.  Gets the named input parameter

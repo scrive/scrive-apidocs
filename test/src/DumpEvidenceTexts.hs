@@ -30,7 +30,6 @@ import Text.XML.DirtyContent (renderXMLContent)
 import User.Model (codeFromLang, Lang, allLangs)
 import Util.Actor (Actor(..), actorEmail, actorUserID, actorAPIString, actorIP)
 import Util.SignatoryLinkUtils (getAuthorSigLink)
-import Utils.Prelude (for)
 import Version (versionID)
 
 dumpAllEvidenceTexts :: TestEnvSt -> Test

@@ -13,7 +13,6 @@ import Happstack.Server
 
 import DB.Derive
 import KontraPrelude
-import Utils.Read
 
 newtype ThemeID = ThemeID Int64
   deriving (Eq, Ord, PQFormat, Typeable)

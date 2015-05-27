@@ -8,7 +8,6 @@ import Test.QuickCheck
 import BrandedDomain.Model
 import Company.Model
 import Context
-import Control.Logic
 import DB hiding (query, update)
 import Doc.DocInfo
 import Doc.DocStateData
@@ -117,7 +116,7 @@ insertNewSession uid = do
 addDocumentAndInsertToken :: TestEnv (User, Document, Context)
 addDocumentAndInsertToken = do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable && isPending)
   (_, ctx) <- do
     let Just asl = getAuthorSigLink doc
     rq <- mkRequest GET []

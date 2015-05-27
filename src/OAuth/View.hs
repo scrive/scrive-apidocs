@@ -15,7 +15,6 @@ import Kontra
 import KontraPrelude
 import MagicHash
 import OAuth.Model
-import Utils.Prelude
 
 pagePrivilegesConfirm :: Kontrakcja m
                       => Context

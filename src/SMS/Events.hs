@@ -44,7 +44,6 @@ import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
-import Utils.Read
 
 processEvents :: Scheduler ()
 processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent (a,b,c, fromMaybe None $ maybeRead d))

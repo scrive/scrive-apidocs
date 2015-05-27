@@ -6,10 +6,10 @@ import qualified Data.ByteString.Char8 as BS
 import KontraPrelude hiding (break)
 
 break :: Char -> BS.ByteString -> Maybe (BS.ByteString, BS.ByteString)
-break c i = case BS.break (==c) i of
-  (a,r) -> case BS.uncons r of 
-    Just (c',r') | c' == c -> Just (a,r')
-    _                      -> Nothing
+break c i = let (a, r) = BS.break (== c) i
+  in case BS.uncons r of
+    Just (c', r') | c' == c -> Just (a, r')
+    _                       -> Nothing
 
 -- | Decode a data URI into its mimetype and content, according to RFC
 -- 2397.  Assumes that character encoding is absent, and that encoding is base64.

@@ -4,14 +4,13 @@ module OAuth.Parse (
                    ,readPrivileges
                    ) where
 
+import Data.List.Split
 import Data.String.Utils hiding (maybeRead)
 import Network.HTTP (urlDecode)
 
 import KontraPrelude
 import MagicHash
 import OAuth.Model
-import Utils.List
-import Utils.Read
 
 splitAuthorization :: String -> [(String, String)]
 splitAuthorization s =
@@ -20,8 +19,8 @@ splitAuthorization s =
         -- We by default we split on commas, but if no comma is there, we split on spaces
         -- This is a fix for some headers that cant send commas in header.
         splitParts o = if (',' `elem` o)
-                          then splitOver "," o
-                          else splitOver " " o
+                          then splitOn "," o
+                          else splitOn " " o
         over = if "OAuth" `isPrefixOf` s
                then drop 5 s
                else s
@@ -44,7 +43,7 @@ splitSignature s = case break (== '&') $ urlDecode s of
   _ -> Nothing
 
 readPrivileges :: String -> Maybe [APIPrivilege]
-readPrivileges s = privs (splitOver "+" s) []
+readPrivileges s = privs (splitOn "+" s) []
   where privs [] a = Just a
         privs (p:pp) a = case maybeRead p of
           Just priv -> privs pp (priv:a)

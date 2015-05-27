@@ -5,6 +5,7 @@ module Util.CSVUtil ( parseCSV
 
 import Codec.Text.IConv
 import Control.Monad.Exception.Asynchronous (Exceptional(..))
+import Data.ByteString.Lazy (toStrict)
 import Data.Char
 import Data.Either
 import Data.Ord
@@ -14,7 +15,6 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 
 import KontraPrelude
-import Utils.String
 
 {- |
     Parses a csv file's contents.  It tries to guess the char encoding and the delimiters.
@@ -53,7 +53,7 @@ splitCSVContents x = SS.fromString guessedQuoteMark guessedSeparator (x ++ "\n")
 -}
 decodeByteString :: BSL.ByteString -> String
 decodeByteString bs =
-  guessBest . map  (BS.toString . concatChunks) . lefts $ (Left bs) : map (\enc -> convertStrictly enc "UTF-8" bs) alternativeEncodings
+  guessBest . map  (BS.toString . toStrict) . lefts $ (Left bs) : map (\enc -> convertStrictly enc "UTF-8" bs) alternativeEncodings
   where
     {- |
         I picked these because these seem to be what Excel 2007 is outputting on my Windows machine if you choose to Save As ...

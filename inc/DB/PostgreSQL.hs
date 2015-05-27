@@ -7,16 +7,17 @@ import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Catch
 import Data.Pool
+import Data.Text (Text)
+import Data.Text.Encoding (encodeUtf8)
 import Database.PostgreSQL.PQTypes
 import Database.PostgreSQL.PQTypes.Internal.Connection
-import qualified Data.ByteString as BS
 
 import DB.Model.CompositeType
 import KontraPrelude
 
-pgConnSettings :: BS.ByteString -> [CompositeType] -> ConnectionSettings
+pgConnSettings :: Text -> [CompositeType] -> ConnectionSettings
 pgConnSettings dbconf ctypes = def {
-  csConnInfo = dbconf
+  csConnInfo = encodeUtf8 dbconf
 , csComposites = map (unRawSQL . ctName) ctypes
 }
 

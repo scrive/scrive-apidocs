@@ -20,7 +20,6 @@ import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Text.StringTemplates.Fields as F
 
-import Control.Logic
 import DB
 import Doc.DocStateData
 import Doc.Model (GetDocumentsBySignatoryLinkIDs(..))
@@ -50,7 +49,7 @@ getSignatoryIdentifierMap includeviewers evs = do
 
 -- | Keep only simple events, remove some redundant signatory events after signing
 eventsForLog :: [DocumentEvidenceEvent] -> [DocumentEvidenceEvent]
-eventsForLog = cleanUnimportantAfterSigning . filter ((simpleEvents . evType) &&^ (not . emptyEvent))
+eventsForLog = cleanUnimportantAfterSigning . filter ((simpleEvents . evType) && (not . emptyEvent))
 
 -- TODO: Consider saving actor name in event instead, this is likely to become broken
 approximateActor :: (MonadDB m, MonadThrow m, TemplatesMonad m) => EventRenderTarget -> Document -> SignatoryIdentifierMap -> DocumentEvidenceEvent -> m String

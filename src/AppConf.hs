@@ -4,8 +4,8 @@ module AppConf (
       , unjsonAppConf
   ) where
 
-import Data.ByteString (ByteString)
 import Data.Default
+import Data.Text (Text)
 import Data.Unjson
 import Data.Word
 import qualified Data.Map as Map
@@ -34,7 +34,7 @@ data AppConf = AppConf {
   , useHttps           :: Bool                         -- ^ should we redirect to https?
   , store              :: FilePath                     -- ^ where to put database files
   , amazonConfig       :: Maybe (String,String,String) -- ^ bucket, access key, secret key
-  , dbConfig           :: ByteString                   -- ^ postgresql configuration
+  , dbConfig           :: Text                         -- ^ postgresql configuration
   , logConfig          :: LogConfig                    -- ^ logging configuration
   , production         :: Bool                         -- ^ production flag, enables some production stuff, disables some development
   , guardTimeConf      :: GuardTimeConf

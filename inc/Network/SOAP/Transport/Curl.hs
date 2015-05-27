@@ -14,10 +14,10 @@ import Network.Curl
 import Network.SOAP.Transport
 import Network.SOAP.Transport.HTTP
 import Text.XML
+import qualified Data.Foldable as F
 import qualified Data.Text.Lazy as TL
 
 import KontraPrelude
-import Utils.Prelude
 
 -- TODO: in the future refactor curl bits, possibly create
 -- MonadCurl class, stop using curl binary for mails, smses etc.
@@ -65,7 +65,7 @@ curlTransport :: SSL
 curlTransport ssl mcacert url response_parser on_failure soap_action soap_request = do
   curl <- initialize
   (final_body, fetch_body) <- newIncoming
-  maybeM (setopt curl . CurlCAInfo) mcacert
+  F.forM_ mcacert $ setopt curl . CurlCAInfo
   setopts curl [
       CurlWriteFunction $ gatherOutput_ fetch_body
     , CurlNoSignal True

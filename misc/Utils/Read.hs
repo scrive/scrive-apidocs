@@ -2,11 +2,6 @@ module Utils.Read where
 
 import KontraPrelude
 
-maybeRead::(Read a) => String -> Maybe a
-maybeRead s = case reads s of
-  [(v, "")] -> Just v
-  _         -> Nothing
-
 lookupAndRead :: (Read a, Eq k) => k -> [(k, String)] -> Maybe a
 lookupAndRead k kvs = maybeRead =<< lookup k kvs
 

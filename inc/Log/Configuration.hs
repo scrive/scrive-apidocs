@@ -8,10 +8,10 @@ module Log.Configuration (
 
 import Control.Monad.Base
 import Control.Monad.Catch
-import Data.ByteString (ByteString)
 import Data.Default
 import Data.Foldable (fold)
 import Data.Text (Text)
+import Data.Text.Encoding (encodeUtf8)
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Log.Backend.PostgreSQL
@@ -20,7 +20,6 @@ import Log.Data
 import Log.Logger
 import Log.Monad
 
-import Data.Aeson.Instances ()
 import DB.Checks
 import DB.PostgreSQL
 import KontraPrelude
@@ -51,7 +50,7 @@ instance Unjson LogConfig where
 
 data LoggerDef
   = StandardOutput
-  | PostgreSQL ByteString
+  | PostgreSQL Text
   deriving (Eq, Ord, Show)
 
 instance Unjson LoggerDef where
@@ -84,7 +83,7 @@ mkLogRunner component LogConfig{..} = do
   where
     defLogger StandardOutput = stdoutLogger
     defLogger (PostgreSQL ci) = do
-      pool <- poolSource def { csConnInfo = ci } 1 10 1
+      pool <- poolSource def { csConnInfo = encodeUtf8 ci } 1 10 1
       withPostgreSQL pool $ do
         migrateDatabase (liftBase . putStrLn) [] [] logsTables logsMigrations
       pgLogger pool

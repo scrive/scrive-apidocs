@@ -22,7 +22,6 @@ import Cookies
 import KontraPrelude hiding (optional)
 import Utils.HTTP
 import Utils.Monoid
-import Utils.Read
 
 data FlashType
     = OperationDone

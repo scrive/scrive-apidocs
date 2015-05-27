@@ -4,6 +4,7 @@ module OAuth.Util(
   , getAuthorization
 ) where
 
+import Control.Conditional ((<|), (|>))
 import Happstack.Server.Monads
 import Happstack.Server.RqData
 import Happstack.Server.Types
@@ -13,7 +14,6 @@ import qualified Codec.Binary.UTF8.String as UTF
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 
-import Control.Logic
 import Happstack.Fields
 import Kontra
 import KontraPrelude

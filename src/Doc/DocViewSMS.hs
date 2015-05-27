@@ -9,6 +9,7 @@ module Doc.DocViewSMS (
     , smsPinCodeSendout
     ) where
 
+import Control.Conditional ((<|), (|>))
 import Control.Monad.Catch
 import Control.Monad.Trans
 import Text.StringTemplates.Templates
@@ -16,7 +17,6 @@ import qualified Text.StringTemplates.Fields as F
 
 import BrandedDomain.BrandedDomain
 import Company.CompanyUI
-import Control.Logic
 import DB
 import Doc.DocStateData
 import Doc.DocUtils
@@ -41,7 +41,7 @@ mkSMS doc sl msgData msgBody = do
               Just user -> companySmsOriginator <$> (dbQuery $ GetCompanyUI $ usercompany user)
               Nothing -> return Nothing
        Nothing -> return Nothing
-  let originator = fromMaybe (bdSmsOriginator $ mctxcurrentBrandedDomain mctx) (joinEmpty moriginator)
+  let originator = fromMaybe (bdSmsOriginator $ mctxcurrentBrandedDomain mctx) (justEmptyToNothing moriginator)
   return $ SMS (getMobile sl) msgData msgBody originator
 
 smsDocumentErrorAuthor :: (MailContextMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => Document -> SignatoryLink -> m SMS

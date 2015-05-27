@@ -12,7 +12,6 @@ import Happstack.Server
 
 import DB.Derive
 import KontraPrelude
-import Utils.Read
 
 newtype UserID = UserID Int64
   deriving (Eq, Ord, PQFormat, Typeable)

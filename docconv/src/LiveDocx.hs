@@ -28,7 +28,6 @@ import KontraPrelude
 import LiveDocxConf
 import LiveDocxTypes
 import SOAP.SOAP
-import Utils.Read
 
 data LiveDocxContext = LiveDocxContext {
     ctxurl :: String

@@ -36,7 +36,6 @@ import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 
 import Company.Model
-import Control.Logic
 import DB
 import Doc.DocInfo
 import Doc.DocStateData
@@ -307,7 +306,7 @@ documentReallyDeletedForUser doc uid = fromMaybe False (fmap (isJust . signatory
 userCanPerformSigningAction :: UserID -> Document  -> Bool
 userCanPerformSigningAction uid doc =
       (isJust msl && (canSignatorySignNow doc sl))
-   || (isJust msl && isAuthor sl && any (canSignatorySignNow doc &&^ ((== PadDelivery) . signatorylinkdeliverymethod)) (documentsignatorylinks doc))
+   || (isJust msl && isAuthor sl && any (canSignatorySignNow doc && ((== PadDelivery) . signatorylinkdeliverymethod)) (documentsignatorylinks doc))
   where
     msl = getSigLinkFor uid doc
     sl  = $fromJust msl

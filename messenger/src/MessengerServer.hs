@@ -37,7 +37,7 @@ main = do
   withLogger $ do
     checkExecutables
 
-    let cs = def { csConnInfo = mscDBConfig conf }
+    let cs = pgConnSettings (mscDBConfig conf) []
     withPostgreSQL (simpleSource cs) $
       checkDatabase logInfo_ [] messengerTables
     pool <- liftBase $ createPoolSource (liftBase . withLogger . logAttention_) cs

@@ -12,7 +12,6 @@ import Happstack.Server
 
 import DB.Derive
 import KontraPrelude
-import Utils.Read
 
 newtype SignatoryFieldID = SignatoryFieldID Int64
   deriving (Eq, Ord, PQFormat, Typeable, Data)

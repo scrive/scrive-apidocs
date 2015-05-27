@@ -41,7 +41,6 @@ import User.Utils
 import Util.FlashUtil
 import Util.HasSomeUserInfo
 import Util.MonadUtils
-import Utils.Prelude
 
 {- |
     Gets the ajax data for the company accounts list.

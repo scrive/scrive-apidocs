@@ -127,7 +127,7 @@ getListParams = do
                         v <- fromJSValueField "value"
                         return $ liftM2 (\x y -> (x,y)) n v
     sorting <- getField "sort"
-    sortingReversed <- joinB <$> fmap (== "true") <$> getField "sortReversed"
+    sortingReversed <- maybeToBool <$> fmap (== "true") <$> getField "sortReversed"
     let sorting'  = if (sortingReversed)
                      then sorting
                      else (++ "REV") <$> sorting

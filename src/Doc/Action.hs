@@ -21,7 +21,6 @@ import Text.StringTemplates.Templates (TemplatesMonad)
 import ActionQueue.Scheduler
 import Amazon (AmazonMonad)
 import AppConf (guardTimeConf)
-import Control.Logic
 import Crypto.RNG
 import DB
 import DB.TimeZoneName
@@ -162,7 +161,7 @@ postDocumentPendingChange olddoc = do
         theDocument >>= \d -> logInfo_ $ "Resending invitation emails for document #" ++ show (documentid d) ++ ": " ++ (documenttitle d)
         sendInvitationEmails False
   where
-    allSignatoriesSigned = all (isSignatory =>>^ hasSigned) . documentsignatorylinks
+    allSignatoriesSigned = all (isSignatory --> hasSigned) . documentsignatorylinks
 
 -- | Prepare final PDF if needed, apply digital signature, and send
 -- out confirmation emails if there has been a change in the seal status.  Precondition: document must be
@@ -175,7 +174,7 @@ postDocumentClosedActions commitAfterSealing forceSealDocument = do
   mcxt <- getMailContext
   doc0 <- theDocument
 
-  unlessM ((isClosed ||^ isDocumentError) <$> theDocument) internalError
+  unlessM ((isClosed || isDocumentError) <$> theDocument) internalError
 
   whenM ((\d -> forceSealDocument || isNothing (documentsealedfile d)) <$> theDocument) $ do
 
