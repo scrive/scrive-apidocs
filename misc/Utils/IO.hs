@@ -111,6 +111,7 @@ importantExecutables =
   , ("mudraw", [])
   , ("convert", [])
   , ("lessc", ["-v"])
+  , ("gnuplot", ["--version"])
   ]
 
 checkExecutables :: (MonadLog m, MonadIO m, Functor m) => m ()
