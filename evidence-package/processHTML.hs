@@ -53,6 +53,8 @@ processor = foldr (.) id $ reverse
                           else (TagOpen s (("alt"," ") : attrs))
                  else t
           )
+    -- Remove empty attributes as TagSoup doesn't render them properly
+    , map removeEmptyAttributes
     -- Remove all inline styles
     , map (removeAttribute "style")
     -- Remove all `class` and `name` attributes, we don't use them
@@ -231,6 +233,10 @@ changeAttribute :: String -> String -> Tag String -> Tag String
 changeAttribute from to (TagOpen t attrs) | anyAttrName ((==) from) attrs =
     TagOpen t (map (\(a,v) -> if a == from then (to,v) else (a,v)) attrs)
 changeAttribute _ _ t = t
+
+removeEmptyAttributes :: Tag String -> Tag String
+removeEmptyAttributes (TagOpen t attrs) = TagOpen t (filter (\(a,v) -> not . null $ v) attrs)
+removeEmptyAttributes x = x
 
 -- | Recursively drops everything in between the two predicates, including the
 -- matching items.
