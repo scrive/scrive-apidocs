@@ -26,7 +26,7 @@ new APICallV1({
             argName: "offset",
             name: "Offset",
             sendAsParam: true,
-            description: "",
+            description: "Number of first document to be return in the list.",
             defaultValue: ""
           }),
           new APICallParam({
@@ -34,7 +34,7 @@ new APICallV1({
             argName: "limit",
             name: "Limit",
             sendAsParam: true,
-            description: "",
+            description: "Maximum number of documents to be returned.",
             defaultValue: ""
           }),
           new APICallParam({

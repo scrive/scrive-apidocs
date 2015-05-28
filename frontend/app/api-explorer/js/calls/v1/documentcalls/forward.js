@@ -18,14 +18,14 @@ new APICallV1({
             name: "Document id",
             sendAsParam: false,
             useLocalStorage: true,
-            description: "",
+            description: "Id of document.",
             defaultValue: ""
           }),
           new APICallParam({
             type: "text",
             argName: "email",
             name: "Email",
-            description: "",
+            description: "Email address to forward the document.",
             defaultValue: ""
           }),
           new APICallParam({

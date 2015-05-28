@@ -19,7 +19,7 @@ new APICallV1({
             name: "Document id",
             sendAsParam: false,
             useLocalStorage: true,
-            description: "",
+            description: "Id of document.",
             defaultValue: ""
           }),
           new APICallParam({
@@ -27,7 +27,7 @@ new APICallV1({
             argName: "fileid",
             name: "File id",
             sendAsParam: false,
-            description: "",
+            description: "Id of file.",
             defaultValue: ""
           })
         ]
