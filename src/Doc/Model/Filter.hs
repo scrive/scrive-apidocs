@@ -34,6 +34,8 @@ data DocumentFilter
   | DocumentFilterByDelivery DeliveryMethod   -- ^ Only documents that use selected delivery method
   | DocumentFilterByMonthYearFrom (Int,Int)   -- ^ Document time after or in (month,year)
   | DocumentFilterByMonthYearTo   (Int,Int)   -- ^ Document time before or in (month,year)
+  | DocumentFilterByTimeAfter UTCTime         -- ^ Document time after UTC time
+  | DocumentFilterByTimeBefore UTCTime        -- ^ Document time before UTC time
   | DocumentFilterByAuthor UserID             -- ^ Only documents created by this user
   | DocumentFilterByAuthorCompany CompanyID   -- ^ Onl documents where author is in given company
   | DocumentFilterByCanSign UserID            -- ^ Only if given person can sign right now given document
@@ -96,6 +98,10 @@ documentFilterToSQL (DocumentFilterByMonthYearFrom (month,year)) = do
   sqlWhere $ raw $ unsafeSQL $ "(documents.mtime > '" ++ show year ++  "-" ++ show month ++ "-1')"
 documentFilterToSQL (DocumentFilterByMonthYearTo (month,year)) = do
   sqlWhere $ raw $ unsafeSQL $ "(documents.mtime < '" ++ show (year + 1 <| month == 12 |> year)++ "-" ++ show ((month `mod` 12) + 1) ++ "-1')"
+documentFilterToSQL (DocumentFilterByTimeAfter time) = do
+  sqlWhere $ "documents.mtime > " <?> time
+documentFilterToSQL (DocumentFilterByTimeBefore time) = do
+  sqlWhere $ "documents.mtime < " <?> time
 documentFilterToSQL (DocumentFilterByTags []) = do
   sqlWhere "TRUE"
 documentFilterToSQL (DocumentFilterByTags tags) = do

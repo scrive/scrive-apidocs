@@ -108,11 +108,11 @@ apiGuardJustM e a = a >>= maybe ((throwIO . SomeKontraException) e) return
 -- get the user for the api; it can either be
 --  1. OAuth using Authorization header
 --  2. Session for Ajax client. ! Only if authorization header is empty !
-getAPIUser :: Kontrakcja m => APIPrivilege -> m (User, Actor, Bool)
+getAPIUser :: Kontrakcja m => APIPrivilege -> m (User, Actor)
 getAPIUser priv = getAPIUserWithPrivileges [priv]
 
 -- Get the user for the API, as long as any privileges are there
-getAPIUserWithAnyPrivileges :: Kontrakcja m => m (User, Actor, Bool)
+getAPIUserWithAnyPrivileges :: Kontrakcja m => m (User, Actor)
 getAPIUserWithAnyPrivileges = getAPIUserWithPrivileges [APIPersonal, APIDocCheck, APIDocSend, APIDocCreate]
 
 -- Get the user for the API.
@@ -121,28 +121,28 @@ getAPIUserWithAnyPrivileges = getAPIUserWithPrivileges [APIPersonal, APIDocCheck
 -- 2. Session for AJAX client (only if the Authorization is empty)
 --
 -- Only returns if *any* of the privileges in privs are issued.
-getAPIUserWithPrivileges :: Kontrakcja m => [APIPrivilege] -> m (User, Actor, Bool)
+getAPIUserWithPrivileges :: Kontrakcja m => [APIPrivilege] -> m (User, Actor)
 getAPIUserWithPrivileges privs = do
   moauthuser <- getOAuthUser privs
   case moauthuser of
     Just (Left msg) -> (throwIO . SomeKontraException) $ invalidAuthorisation $ "You authorization is invalid:" `append` pack msg
-    Just (Right (user, actor)) -> return (user, actor, True)
+    Just (Right (user, actor)) -> return (user, actor)
     Nothing -> do
       msessionuser <- getSessionUser
       case msessionuser of
-        Just (user, actor) -> return (user, actor, False)
+        Just (user, actor) -> return (user, actor)
         Nothing -> (throwIO . SomeKontraException) $ insufficientPrivileges "You need to authorize yourself to access this resource"
 
-getAPIUserWithPad :: Kontrakcja m => APIPrivilege -> m (User, Actor, Bool)
+getAPIUserWithPad :: Kontrakcja m => APIPrivilege -> m (User, Actor)
 getAPIUserWithPad priv = do
   moauthuser <- getOAuthUser [priv]
   case moauthuser of
     Just (Left msg) -> (throwIO . SomeKontraException) $ invalidAuthorisation $ "You authorization is invalid" `append` pack msg
-    Just (Right (user, actor)) -> return (user, actor, True)
+    Just (Right (user, actor)) -> return (user, actor)
     Nothing -> do
       msessionuser <- getSessionUserWithPad
       case msessionuser of
-        Just (user, actor) -> return (user, actor, False)
+        Just (user, actor) -> return (user, actor)
         Nothing -> (throwIO . SomeKontraException) $ insufficientPrivileges "You need to authorize yourself to access this resource"
 
 

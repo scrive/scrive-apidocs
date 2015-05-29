@@ -1,7 +1,11 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Doc.API.V2.JSONMisc (unjsonMaybeMainFile) where
+module Doc.API.V2.JSONMisc (unjsonMaybeMainFile,textToAuthenticationMethod) where
 
+import Data.Text.Encoding
+import Database.PostgreSQL.PQTypes.Binary
+import qualified Data.ByteString.RFC2397 as RFC2397
+import qualified Data.Aeson as Aeson
 
 import Doc.DocStateData
 import KontraPrelude
@@ -15,7 +19,10 @@ import Data.Functor.Invariant
 import Doc.SignatoryLinkID
 import User.UserID
 import Doc.API.V2.UnjsonUtils
+import qualified Doc.Screenshot as Screenshot
+import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 
+import qualified Data.ByteString.UTF8 as BS
 
 -- Unjson for various ID types
 
@@ -67,11 +74,19 @@ instance Unjson DeliveryStatus where
     ]
 
 instance Unjson AuthenticationMethod where
-  unjsonDef = unjsonEnumBy "AuthenticationMethod" [
-      (StandardAuthentication, "standard")
-    , (ELegAuthentication, "sv_bankid")
-    , (SMSPinAuthentication, "sms_pin")
-    ]
+  unjsonDef = unjsonEnum "AuthenticationMethod" textToAuthenticationMethod authenticationMethodToText
+
+authenticationMethodToText :: AuthenticationMethod -> Text
+authenticationMethodToText StandardAuthentication = "standard"
+authenticationMethodToText ELegAuthentication = "sv_bankid"
+authenticationMethodToText SMSPinAuthentication = "sms_pin"
+
+textToAuthenticationMethod :: Text -> Maybe AuthenticationMethod
+textToAuthenticationMethod "standard"  = Just StandardAuthentication
+textToAuthenticationMethod "sv_bankid" = Just ELegAuthentication
+textToAuthenticationMethod "sms_pin"   = Just SMSPinAuthentication
+textToAuthenticationMethod _           = Nothing
+
 
 instance Unjson DeliveryMethod where
   unjsonDef = unjsonEnumBy "DeliveryMethod" [
@@ -117,3 +132,33 @@ unjsonMaybeMainFile = nothingToNullDef $ objectOf $ pure Nothing
   <* fieldOpt "id" (fmap mainfileid)   "Id of file"
   <* fieldOpt "name" (fmap mainfilename) "Name of file"
 
+instance Unjson Screenshot.Screenshot where
+  unjsonDef = objectOf $ pure Screenshot.Screenshot
+    <*> field "time"  Screenshot.time  "Time when screenshot was taken"
+    <*> fieldBy "image" Screenshot.image "Image with screenshot, base64 encoded with content type" (invmap Binary unBinary unjsonImage)
+    where
+      unjsonImage :: UnjsonDef BS.ByteString
+      unjsonImage = SimpleUnjsonDef "Screenshot" parseScreenshot (Aeson.String . decodeUtf8 . (RFC2397.encode "image/jpeg"))
+      parseScreenshot :: Aeson.Value -> Result BS.ByteString
+      parseScreenshot (Aeson.String t ) = case RFC2397.decode $ encodeUtf8 t of
+                                            Just (_,v) -> pure v
+                                            _ -> fail "Can't parse screenshot image encoded string. RFC2397 encoding expected"
+      parseScreenshot _ = fail "Can't parse screenshot image from something that is not string"
+
+instance Unjson SignatoryScreenshots.SignatoryScreenshots where
+  unjsonDef = objectOf $ pure combineSignatoryScreenshots
+    <*> fieldOpt "first"  SignatoryScreenshots.first  "Screenshot taken when signatory looked at document"
+    <*> fieldOpt "signing"  SignatoryScreenshots.signing  "Screenshot taken when signatory was about to sign"
+    <*> fieldOpt "referenceName"  (join . fmap (either Just (const Nothing)) . SignatoryScreenshots.reference)  "Reference screenshot"
+    <*> fieldOpt "reference"  (join .  fmap (either (const Nothing) Just) . SignatoryScreenshots.reference)  "Reference screenshot"
+    where
+      combineSignatoryScreenshots f s (Just rn) _ = SignatoryScreenshots.SignatoryScreenshots f s (Just $ Left rn)
+      combineSignatoryScreenshots f s _ (Just rs) = SignatoryScreenshots.SignatoryScreenshots f s (Just $ Right rs)
+      combineSignatoryScreenshots f s _ _ = SignatoryScreenshots.SignatoryScreenshots f s Nothing
+
+
+{-
+  toJSValue (Screenshot time' (Binary image')) = runJSONGen $ do
+    value "time"  $ toJSValue $ formatTimeISO time'
+    value "image" $ toJSValue $ BS.toString $ RFC2397.encode "image/jpeg" image'
+    -}

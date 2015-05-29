@@ -7,13 +7,23 @@ import Happstack.Server.Types
 import Happstack.StaticRouting
 import Doc.Model.Update
 import Control.Conditional (unlessM)
+import qualified Data.ByteString.Char8 as BS
+import DB.TimeZoneName (defaultTimeZoneName)
+import qualified Data.ByteString.Lazy as BSL
+import LiveDocx
+import Text.StringTemplates.Templates
+import MinutesTime
+import Happstack.Server.RqData
+import File.Model
+import System.FilePath
+import Control.Monad.IO.Class
+
 
 import Doc.DocStateData
 import API.Monad.V2
 import Doc.API.V2.JSONDocument
 import Doc.DocumentID
 import Doc.SignatoryLinkID
-import File.FileID
 import Kontra
 import Routing
 import Doc.DocumentMonad
@@ -22,7 +32,7 @@ import Data.Unjson as Unjson
 import Doc.DocInfo
 import DB
 import qualified Data.Map as Map hiding (map)
-import Data.Text
+import Data.Text hiding (reverse, takeWhile)
 import Doc.API.V2.DocumentUpdateUtils
 import Doc.API.V2.DocumentAccess
 import Happstack.Fields
@@ -36,6 +46,13 @@ import Control.Exception.Lifted
 import Doc.DocUtils
 import User.Model
 import Doc.Model
+import Doc.Rendering
+import Doc.API.V2.CallsUtils
+import Doc.Action
+import Doc.DocControl
+import EID.Signature.Model
+import Chargeable.Model
+import Doc.API.V2.JSONList
 
 -- TODO add 'documents' prefix
 documentAPIV2 ::  Route (Kontra Response)
@@ -81,10 +98,67 @@ documentAPIV2  = dir "documents" $ choice [
 -------------------------------------------------------------------------------
 
 docApiV2New :: Kontrakcja m => m Response
-docApiV2New = $undefined -- TODO implement
+docApiV2New = api $ do
+  (user, actor) <- getAPIUser APIDocCreate
+  ctx <- getContext
+  minput <- getDataFn' (lookInput "file")
+  (mfile, title) <- case minput of
+    Nothing -> do
+      title <- renderTemplate_ "newDocumentTitle"
+      return (Nothing, title ++ " " ++ formatTimeSimple (ctxtime ctx))
+    Just (Input _ Nothing _) -> throwIO . SomeKontraException $ requestParametersInvalid "If 'file' parameter is provided, it can't be empty"
+    Just (Input contentspec (Just filename'') _contentType) -> do
+      let filename' = reverse . takeWhile (/='\\') . reverse $ filename'' -- Drop filepath for windows
+      let mformat = getFileFormatForConversion filename'
+      content' <- case contentspec of
+        Left filepath -> liftIO $ BS.readFile filepath
+        Right content -> return (BS.concat $ BSL.toChunks content)
+
+      (content'', filename) <- case mformat of
+        Nothing -> return (content', filename')
+        Just format -> do
+          eres <- convertToPDF (ctxlivedocxconf ctx) content' format
+          case eres of
+            Left (LiveDocxIOError e) -> throwIO . SomeKontraException $ requestParametersInvalid $ "LiveDocX conversion IO failed " `append` pack (show e)
+            Left (LiveDocxSoapError s)-> throwIO . SomeKontraException $ requestParametersInvalid $ "LiveDocX conversion SOAP failed " `append` pack s
+            Right res -> do
+              -- change extension from .doc, .docx and others to .pdf
+              let filename = takeBaseName filename' ++ ".pdf"
+              return $ (res, filename)
+
+      pdfcontent <- do
+        res <- preCheckPDF content''
+        case res of
+          Right r -> return r
+          Left _ ->  throwIO . SomeKontraException $ requestParametersInvalid "Uploaded file is invalid"
+      fileid' <- dbUpdate $ NewFile filename pdfcontent
+      return (Just fileid', takeBaseName filename)
+  saved <- apiBoolParamWithDefault  True "saved"
+  (dbUpdate $ NewDocument user title Signable defaultTimeZoneName 0 actor) `withDocumentM` do
+    dbUpdate $ SetDocumentUnsavedDraft (not saved)
+    case mfile of
+      Nothing -> return ()
+      Just fileid' -> do
+        dbUpdate $ AttachFile fileid' actor
+    Created <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
+
 
 docApiV2NewFromTemplate :: Kontrakcja m => DocumentID -> m Response
-docApiV2NewFromTemplate _did = $undefined -- TODO implement
+docApiV2NewFromTemplate did = api $ do
+  (user, actor) <- getAPIUser APIDocCreate
+  template <- dbQuery $ GetDocumentByDocumentID $ did
+  auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink template
+  auser <- apiGuardJustM (invalidAuthorisation "Provided authorization did not match any user") $ dbQuery $ GetUserByIDIncludeDeleted auid
+  let haspermission = (userid auser == userid user) ||
+                      (usercompany auser == usercompany user &&  isDocumentShared template)
+  unless (haspermission) $ do
+    throwIO $ SomeKontraException $ documentAccessForbidden "You don't have right to access this document"
+  withDocumentID did $ guardThatDocument isTemplate "Document must be a template"
+  (apiGuardJustM (serverError "Can't clone given document") (dbUpdate $ CloneDocumentWithUpdatedAuthor user template actor) >>=) $ flip withDocumentID $ do
+    dbUpdate $ DocumentFromTemplate actor
+    dbUpdate $ SetDocumentUnsavedDraft False
+    Created <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
+
 
 -------------------------------------------------------------------------------
 
@@ -93,11 +167,31 @@ docApiV2Available = $undefined -- TODO implement
 
 docApiV2List :: Kontrakcja m => m Response
 docApiV2List = api $ do
-  (user, _, _) <- getAPIUserWithPad APIDocCheck
+  (user, _) <- getAPIUserWithPad APIDocCheck
+  offset   <- apiIntParamWithDefault 0 "offset"
+  maxcount <- apiIntParamWithDefault 100 "max"
+  mfilters <- getFieldBS "filter"
+  filters <- case mfilters of
+    Nothing -> return []
+    Just filters' -> case Aeson.eitherDecode  filters' of
+      Left _ -> throwIO . SomeKontraException $ requestParametersParseError "Filters are not a valid JSON array"
+      Right filtersaeson -> case (Unjson.parse unjsonDef filtersaeson) of
+          (Result fs []) -> return fs
+          (Result _ errs) -> do
+            throwIO . SomeKontraException $ requestParametersParseError $ "Filters don't parse: " `append` pack (show errs)
 
-  let (domain,filters) = ([DocumentsVisibleToUser $ userid user],[DocumentFilterDeleted False, DocumentFilterSignable, DocumentFilterUnsavedDraft False])
-
-  (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit domain filters [] (0,100,1000)
+  msorting <- getFieldBS "sorting"
+  sorting <- case msorting of
+    Nothing -> return []
+    Just sorting' -> case Aeson.eitherDecode  sorting' of
+      Left _ -> throwIO . SomeKontraException $ requestParametersParseError " Sorting is not a valid JSON object"
+      Right sortingaeson -> case (Unjson.parse unjsonDef sortingaeson) of
+          (Result fs []) -> return [fs]
+          (Result _ errs) -> do
+            throwIO . SomeKontraException $ requestParametersParseError $ "Sorting doesn't parse: " `append` pack (show errs)
+  let documentFilters = (DocumentFilterUnsavedDraft False):(join $ toDocumentFilter (userid user) <$> filters)
+  let documentSorting = (toDocumentSorting <$> sorting)
+  (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit [DocumentsVisibleToUser $ userid user] documentFilters documentSorting (offset,1000,maxcount)
   return $ Ok $ Response 200 Map.empty nullRsFlags (listToJSONBS (allDocsCount,(\d -> (documentAccessForUser user d,d)) <$> allDocs)) Nothing
 
 -------------------------------------------------------------------------------
@@ -116,7 +210,7 @@ docApiV2Get did = api $ do
                        =<< signatoryActor ctx sl
        Ok <$> (\d -> (unjsonDocument (DocumentAccess did $ SignatoryDocumentAccess slid),d)) <$> theDocument
     _ -> do
-      (user,_,_) <- getAPIUser APIDocCheck
+      (user,_) <- getAPIUser APIDocCheck
       msiglink <- getSigLinkFor user <$> theDocument
       unlessM (((const (isNothing msiglink)) || isPreparation || isClosed  || isTemplate) <$> theDocument) $ do
           let sl = $fromJust msiglink
@@ -145,13 +239,10 @@ docApiV2EvidenceAttachments _did = $undefined -- TODO implement
 
 docApiV2Update :: Kontrakcja m => DocumentID -> m Response
 docApiV2Update did = api $ do
-  (user, actor, _) <- getAPIUser APIDocCreate
+  (user, actor) <- getAPIUser APIDocCreate
   withDocumentID did $ do
-    auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
-    when (not $ (auid == userid user)) $ do
-      throwIO . SomeKontraException $ documentAccessForbidden "Permission problem. You are not the author of this document."
-    unlessM (isPreparation <$> theDocument) $ do
-      throwIO . SomeKontraException $ documentStateError "Document is not a draft or template"
+    guardThatUserIsAuthor user
+    guardThatDocument isPreparation "Document must be draft or template"
     documentJSON <- apiGuardJustM (requestParametersMissing "'document' parameter not provided") $ getFieldBS "document"
     case Aeson.eitherDecode documentJSON of
       Left _ -> do
@@ -166,7 +257,19 @@ docApiV2Update did = api $ do
             throwIO . SomeKontraException $ requestParametersParseError $ "Errors while parsing document data: " `append` pack (show errs)
 
 docApiV2Start :: Kontrakcja m => DocumentID -> m Response
-docApiV2Start _did = $undefined -- TODO implement
+docApiV2Start did = api $ do
+  (user, actor) <- getAPIUser APIDocSend
+  withDocumentID did $ do
+    guardThatUserIsAuthor user
+    guardThatDocumentCanBeStarted
+    t <- ctxtime <$> getContext
+    timezone <- documenttimezonename <$> theDocument
+    dbUpdate $ PreparationToPending actor timezone
+    dbUpdate $ SetDocumentInviteTime t actor
+    authorsignsimmediately <- isFieldSet "authorsignsimmediately"
+    postDocumentPreparationChange authorsignsimmediately timezone
+    Created <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
+
 
 docApiV2Prolong :: Kontrakcja m => DocumentID -> m Response
 docApiV2Prolong _did = $undefined -- TODO implement
@@ -226,10 +329,73 @@ docApiV2SigCheck :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigCheck _did _slid = $undefined -- TODO implement
 
 docApiV2SigSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
-docApiV2SigSign _did _slid = $undefined -- TODO implement
+docApiV2SigSign did slid = api $ do
+  (mh,_mu) <- getMagicHashAndUserForSignatoryAction did slid
+  screenshots <- getScreenshots
+  fields <- getFieldForSigning
+  olddoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh -- We store old document, as it is needed by postDocumentXXX calls
+  olddoc `withDocument` ( do
+    guardThatDocument isPending "Document must be pending"
+    guardThatDocument (hasSigned . $fromJust . getSigLinkFor slid ) "Document can't be already signed"
+    checkAuthenticationMethodAndValue slid
+    authorization <- signatorylinkauthenticationmethod <$> $fromJust . getSigLinkFor slid <$> theDocument
+
+    case authorization of
+      StandardAuthentication -> do
+        signDocument slid mh fields Nothing Nothing screenshots
+        postDocumentPendingChange olddoc
+        handleAfterSigning slid
+        Ok <$> (\d -> (unjsonDocument (DocumentAccess did $ SignatoryDocumentAccess slid),d)) <$> theDocument
+
+      SMSPinAuthentication -> do
+        validPin <- getValidPin slid fields
+        if (isJust validPin)
+          then do
+            signDocument slid mh fields Nothing validPin screenshots
+            postDocumentPendingChange olddoc
+            handleAfterSigning slid
+            Ok <$> (\d -> (unjsonDocument (DocumentAccess did $ SignatoryDocumentAccess slid),d)) <$> theDocument
+          else throwIO . SomeKontraException $ documentAccessForbidden $ "Invalid PIN"
+
+      ELegAuthentication -> dbQuery (GetESignature slid) >>= \case
+        mesig@(Just _) -> do
+          -- charge company of the author of the document for the signature
+          dbUpdate $ ChargeCompanyForElegSignature did
+          signDocument slid mh fields mesig Nothing screenshots
+          postDocumentPendingChange olddoc
+          handleAfterSigning slid
+          Ok <$> (\d -> (unjsonDocument (DocumentAccess did $ SignatoryDocumentAccess slid),d)) <$> theDocument
+        Nothing -> throwIO . SomeKontraException $ documentAccessForbidden $ "No eleg signature"
+   )
+
+
+
+
+
 
 docApiV2SigSendSmsPin :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSendSmsPin _did _slid = $undefined -- TODO implement
 
 docApiV2SigSetAttachment :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSetAttachment _did _slid = $undefined -- TODO implement
+
+
+--- Utils
+
+apiBoolParamWithDefault  :: Kontrakcja m => Bool -> Text -> m Bool
+apiBoolParamWithDefault  defaultValue name = do
+  mvalue <- getField $ unpack name
+  case mvalue of
+    Just "true" -> return $ True
+    Just "false" -> return $  False
+    Just _ ->  throwIO . SomeKontraException $ requestParametersParseError $ "Can't parse parameter '" `append` name `append` "'"
+    Nothing -> return $  defaultValue
+
+
+apiIntParamWithDefault :: Kontrakcja m => Int -> Text -> m Int
+apiIntParamWithDefault defaultValue name = do
+  mvalue <- getField $ unpack name
+  case fmap maybeRead mvalue of
+    Just (Just v) -> return $ v
+    Just (Nothing) ->  throwIO . SomeKontraException $ requestParametersParseError $ "Can't parse parameter '" `append` name `append` "'"
+    Nothing -> return $  defaultValue

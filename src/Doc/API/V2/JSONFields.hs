@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Doc.API.V2.JSONFields (unjsonSignatoryFields) where
+module Doc.API.V2.JSONFields (unjsonSignatoryFields, unjsonSignatoryFieldsValues, SignatoryFieldTMPValue(..)) where
 
 
 import Doc.DocStateData
@@ -11,8 +11,12 @@ import Control.Applicative.Free
 import Doc.API.V2.UnjsonUtils
 import Doc.API.V2.JSONMisc()
 import Doc.SignatoryFieldID
+import qualified Data.ByteString.Char8 as BS
+import qualified Data.Aeson as Aeson
+import qualified Data.ByteString.RFC2397 as RFC2397
+import Data.Text.Encoding
 
-
+-- Unjson for signatory fields
 unjsonSignatoryFields :: UnjsonDef [SignatoryField]
 unjsonSignatoryFields = arrayOf unjsonSignatoryField
 
@@ -153,8 +157,8 @@ instance Unjson FieldType where
 fieldTypeToText :: FieldType -> Text
 fieldTypeToText NameFT = "name"
 fieldTypeToText CompanyFT = "company"
-fieldTypeToText PersonalNumberFT = "ssn"
-fieldTypeToText CompanyNumberFT = "comanyno"
+fieldTypeToText PersonalNumberFT = "personal_number"
+fieldTypeToText CompanyNumberFT = "company_number"
 fieldTypeToText EmailFT = "email"
 fieldTypeToText MobileFT = "mobile"
 fieldTypeToText TextFT = "text"
@@ -192,4 +196,132 @@ instance Unjson TipSide where
     , (RightTip, "right")
     ]
 
+-- Signatory fields value reading for signing. We need a dedicated datatype that will hold values that will be stored in files later
 
+data SignatoryFieldTMPValue = StringFTV String
+  | BoolFTV Bool
+  | FileFTV BS.ByteString
+  deriving (Eq, Ord, Show)
+
+unsafeStringFromSignatoryFieldTMPValue :: SignatoryFieldTMPValue -> String
+unsafeStringFromSignatoryFieldTMPValue (StringFTV a) = a
+unsafeStringFromSignatoryFieldTMPValue _ = $unexpectedError "unsafeStringFromSignatoryFieldTMPValue"
+
+unsafeBoolFromSignatoryFieldTMPValue :: SignatoryFieldTMPValue -> Bool
+unsafeBoolFromSignatoryFieldTMPValue (BoolFTV a) = a
+unsafeBoolFromSignatoryFieldTMPValue _ = $unexpectedError "unsafeBoolFromSignatoryFieldTMPValue"
+
+unsafeFileFromSignatoryFieldTMPValue :: SignatoryFieldTMPValue -> BS.ByteString
+unsafeFileFromSignatoryFieldTMPValue (FileFTV a) = a
+unsafeFileFromSignatoryFieldTMPValue _ = $unexpectedError "unsafeFileFromSignatoryFieldTMPValue"
+
+unjsonSignatoryFieldsValues :: UnjsonDef [(FieldIdentity,SignatoryFieldTMPValue)]
+unjsonSignatoryFieldsValues = arrayOf unjsonSignatoryFieldValue
+
+unjsonSignatoryFieldValue :: UnjsonDef (FieldIdentity,SignatoryFieldTMPValue)
+unjsonSignatoryFieldValue = disjointUnionOf "type" [
+    (fieldTypeToText NameFT, (\(fi,_) -> fieldTypeFromFieldIdentity fi == NameFT), (\(no,v) -> (NameFI no, StringFTV v)) <$> unjsonNameFieldFieldValue)
+  , (fieldTypeToText CompanyFT, (\(fi,_) -> fieldTypeFromFieldIdentity fi == CompanyFT),  (\v -> (CompanyFI, StringFTV v)) <$> unjsonCompanyFieldFieldValue)
+  , (fieldTypeToText PersonalNumberFT, (\(fi,_) -> fieldTypeFromFieldIdentity fi == PersonalNumberFT),  (\v -> (PersonalNumberFI, StringFTV v)) <$> unjsonPersonalNumberFieldFieldValue)
+  , (fieldTypeToText CompanyNumberFT, (\(fi,_) -> fieldTypeFromFieldIdentity fi == CompanyNumberFT),  (\v -> (CompanyNumberFI, StringFTV v)) <$> unjsonCompanyNumberFieldFieldValue)
+  , (fieldTypeToText EmailFT, (\(fi,_) -> fieldTypeFromFieldIdentity fi == EmailFT),  (\v -> (EmailFI, StringFTV v)) <$> unjsonEmailFieldFieldValue)
+  , (fieldTypeToText MobileFT,(\(fi,_) -> fieldTypeFromFieldIdentity fi == MobileFT),  (\v -> (MobileFI, StringFTV v)) <$> unjsonMobileFieldFieldValue)
+  , (fieldTypeToText TextFT,(\(fi,_) -> fieldTypeFromFieldIdentity fi == TextFT),  (\(n,v) -> (TextFI n, StringFTV v)) <$> unjsonTextFieldFieldValue)
+  , (fieldTypeToText CheckboxFT,(\(fi,_) -> fieldTypeFromFieldIdentity fi == CheckboxFT),  (\(n,v) -> (CheckboxFI n, BoolFTV v)) <$> unjsonCheckboxFieldFieldValue)
+  , (fieldTypeToText SignatureFT,(\(fi,_) -> fieldTypeFromFieldIdentity fi == SignatureFT),  (\(n,v) -> (SignatureFI n, FileFTV v)) <$> unjsonSignatureFieldFieldValue)
+  ]
+
+unjsonNameFieldFieldValue :: Ap (FieldDef (FieldIdentity,SignatoryFieldTMPValue)) (NameOrder,String)
+unjsonNameFieldFieldValue = pure (\no v ->(no,v))
+  <*  fieldReadonly "type" (fieldTypeFromFieldIdentity . fst) "Type of a field"
+  <*> field "order" (unsafeNameOrder . fst) "Order of name field"
+  <*> field "value" (unsafeStringFromSignatoryFieldTMPValue .snd) "Value of the field"
+  where
+    unsafeNameOrder :: FieldIdentity -> NameOrder
+    unsafeNameOrder (NameFI no) = no
+    unsafeNameOrder _ = $unexpectedError "unsafeNameOrder"
+
+unjsonCompanyFieldFieldValue :: Ap (FieldDef (FieldIdentity,SignatoryFieldTMPValue)) String
+unjsonCompanyFieldFieldValue =
+      fieldReadonly "type" (fieldTypeFromFieldIdentity . fst) "Type of a field"
+  *>  field "value" (unsafeStringFromSignatoryFieldTMPValue .snd) "Value of the field"
+
+unjsonPersonalNumberFieldFieldValue :: Ap (FieldDef (FieldIdentity,SignatoryFieldTMPValue)) String
+unjsonPersonalNumberFieldFieldValue =
+      fieldReadonly "type" (fieldTypeFromFieldIdentity . fst) "Type of a field"
+  *>  field "value" (unsafeStringFromSignatoryFieldTMPValue .snd) "Value of the field"
+
+unjsonCompanyNumberFieldFieldValue :: Ap (FieldDef (FieldIdentity,SignatoryFieldTMPValue)) String
+unjsonCompanyNumberFieldFieldValue =
+      fieldReadonly "type" (fieldTypeFromFieldIdentity . fst) "Type of a field"
+  *>  field "value" (unsafeStringFromSignatoryFieldTMPValue .snd) "Value of the field"
+
+unjsonEmailFieldFieldValue :: Ap (FieldDef (FieldIdentity,SignatoryFieldTMPValue)) String
+unjsonEmailFieldFieldValue =
+      fieldReadonly "type" (fieldTypeFromFieldIdentity . fst) "Type of a field"
+  *>  field "value" (unsafeStringFromSignatoryFieldTMPValue .snd) "Value of the field"
+
+unjsonMobileFieldFieldValue :: Ap (FieldDef (FieldIdentity,SignatoryFieldTMPValue)) String
+unjsonMobileFieldFieldValue =
+      fieldReadonly "type" (fieldTypeFromFieldIdentity . fst) "Type of a field"
+  *>  field "value" (unsafeStringFromSignatoryFieldTMPValue .snd) "Value of the field"
+
+unjsonTextFieldFieldValue :: Ap (FieldDef (FieldIdentity,SignatoryFieldTMPValue)) (String,String)
+unjsonTextFieldFieldValue = pure (\no v ->(no,v))
+  <*  fieldReadonly "type" (fieldTypeFromFieldIdentity . fst) "Type of a field"
+  <*> field "name" (unsafeTextName . fst) "Name of text field"
+  <*> field "value" (unsafeStringFromSignatoryFieldTMPValue .snd) "Value of the field"
+  where
+    unsafeTextName:: FieldIdentity -> String
+    unsafeTextName (TextFI n) = n
+    unsafeTextName _ = $unexpectedError "unsafeTextName"
+
+unjsonCheckboxFieldFieldValue :: Ap (FieldDef (FieldIdentity,SignatoryFieldTMPValue)) (String,Bool)
+unjsonCheckboxFieldFieldValue = pure (\no v ->(no,v))
+  <*  fieldReadonly "type" (fieldTypeFromFieldIdentity . fst) "Type of a field"
+  <*> field "name" (unsafeCheckboxName . fst) "Name of checkbox field"
+  <*> field "checked" (unsafeBoolFromSignatoryFieldTMPValue .snd) "Value of the field"
+  where
+    unsafeCheckboxName:: FieldIdentity -> String
+    unsafeCheckboxName (CheckboxFI n) = n
+    unsafeCheckboxName _ = $unexpectedError "unsafeCheckboxName"
+
+unjsonSignatureFieldFieldValue :: Ap (FieldDef (FieldIdentity,SignatoryFieldTMPValue)) (String,BS.ByteString)
+unjsonSignatureFieldFieldValue = pure (\no v ->(no,v))
+  <*  fieldReadonly "type" (fieldTypeFromFieldIdentity . fst) "Type of a field"
+  <*> field "name" (unsafeSignatureName . fst) "Name of checkbox field"
+  <*> fieldBy "signature" (unsafeFileFromSignatoryFieldTMPValue .snd) "Value of the field" unjsonImage
+  where
+    unsafeSignatureName:: FieldIdentity -> String
+    unsafeSignatureName (SignatureFI n) = n
+    unsafeSignatureName _ = $unexpectedError "unsafeSignatureName"
+    unjsonImage :: UnjsonDef BS.ByteString
+    unjsonImage = SimpleUnjsonDef "Screenshot" parseImage (Aeson.String . decodeUtf8 . (RFC2397.encode "image/png"))
+    parseImage :: Aeson.Value -> Result BS.ByteString
+    parseImage (Aeson.String t ) = case RFC2397.decode $ encodeUtf8 t of
+                                            Just (_,v) -> pure v
+                                            _ -> fail "Can't parse image encoded as string. RFC2397 encoding expected"
+    parseImage _ = fail "Can't parse image from something that is not string"
+
+
+
+ -- pure (\no v ob sfbs ps -> NameField (unsafeSignatoryFieldID 0) no v ob sfbs ps)
+  {-
+  <*  fieldReadonly "type" fieldType "Type of a field"
+  <*> field "order" (unsafeFromNameField snfNameOrder) "Order of name field"
+  <*> fieldDef "value" "" (unsafeFromNameField snfValue) "Value of the field"
+  <*> fieldDef "is_obligatory" True (unsafeFromNameField snfObligatory) "If is oligatory"
+  <*> fieldDef "should_be_filled_by_sender" False (unsafeFromNameField snfShouldBeFilledBySender) "If should be filled by sender"
+  <*> fieldDef "placements" [] (unsafeFromNameField snfPlacements) "Placements"
+  -}
+{-
+  unjsonCompanyFieldFieldValue:: Ap (FieldDef SignatoryField) SignatoryNameField
+unjsonPersonalNumberFieldFieldValue
+unjsonCompanyNumberFieldFieldValue
+unjsonEmailFieldFieldValue
+unjsonMobileFieldFieldValue
+unjsonTextFieldFieldValue
+unjsonCheckboxFieldFieldValue
+unjsonSignatureFieldFieldValue
+
+-}
