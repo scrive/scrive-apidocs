@@ -171,7 +171,7 @@
 "_blockingOverdueHeadline":"Αποτυχία πληρωμής ",
 "_blockingOverdueSubtext1":"Υπήρξε κάποιο λάθος με την τελευταία πληρωμή σας. Δεν μπορείτε να αποστείλετε περισσότερα έγγραφα έως ότου επιλυθεί. ",
 "_blockingOverdueSubtext2":"Παρακαλώ επισκεφθείτε το <a class='put-link-to-payments-here'>σελίδα πληρωμών</a>και ελέξγτε διπλά τις πληροφορίες χρέωσής σας. ",
-"_blockingPayingCSVBody":"Ο φάκελός σας περιέχει <span class='put-no-of-parties-here'></span> παραλήπτες κι εσείς έχετε μόνο <span class='put-docs-left-here'></span> υπολειπόμενα έγγραφα να στείλετε. Παρακαλώ <a class='put-link-to-payments-here'>επικοινωνήστε με την ομάδα υποστήριξης</a> για να αυξήσετε το όριο.",
+"_blockingPayingCSVBody":"",
 "_blockingPayingCreateBody":"Έχετε φθάσει το μηνιαίο όριο χρήσης των 100 απεσταλμένων εγγράφων. Παρακαλώ <a class='put-link-to-payments-here'>επικοινωνήστε με την ομάδα υποστήριξης</a> για να αυξήσετε το όριο. Λυπούμαστε για την αναστάτωση.",
 "_blockingPayingCreateTitle":"Μηνιαίο όριο χρήσης ",
 "_blockingUsedAllHeadline":"Έχετε φθάσει το μηνιαίο όριο χρήσης των 100 απεσταλμένων εγγράφων ",

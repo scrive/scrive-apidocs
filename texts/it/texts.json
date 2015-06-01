@@ -171,7 +171,7 @@
 "_blockingOverdueHeadline":"Pagamento non riuscito",
 "_blockingOverdueSubtext1":"C'è stato un errore nell'ultimo pagamento. non puoi spedire altri documenti finché non è risolto.",
 "_blockingOverdueSubtext2":"Si prega di visitare la <a class='put-link-to-payments-here'>pagina dei pagamenti</a> e ricontrollare i dati di fatturazione.",
-"_blockingPayingCSVBody":"Il tuo file contiene <span class='put-no-of-parties-here'></span> destinatari e ti rimangono solo <span class='put-docs-left-here'></span> documenti da inviare. Si prega di <a class='put-link-to-payments-here'>contattare l'assistenza</a> per aumentare il limite.",
+"_blockingPayingCSVBody":"",
 "_blockingPayingCreateBody":"Hai raggiunto il limite mensile di 100 documenti inviati. Si prega di <a class='put-link-to-payments-here'>contattare l'assistenza</a> per aumentare il limite. Ci scusiamo per l'inconveniente.",
 "_blockingPayingCreateTitle":"Limite d'uso mensile",
 "_blockingUsedAllHeadline":"Hai raggiunto il limite d'uso mensile di 100 documenti inviati",

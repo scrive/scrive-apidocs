@@ -171,7 +171,7 @@
 "_blockingOverdueHeadline":"Misslyckad betalning",
 "_blockingOverdueSubtext1":"Något gick fel med din senaste betalning. Du kan inte skicka fler dokument innan detta är löst.",
 "_blockingOverdueSubtext2":"Vänligen besök <a class='put-link-to-payments-here'>betalningssidan</a> och kontrollera din betalningsinformation.",
-"_blockingPayingCSVBody":"Denna fil innehåller <span class='put-no-of-parties-here'></span> mottagare och du har endast <span class='put-docs-left-here'></span> dokument kvar att använda. Vänligen <a class='put-link-to-payments-here'>kontakta supporten</a> för att utöka gränsen.",
+"_blockingPayingCSVBody":"",
 "_blockingPayingCreateBody":"Du har nått gränsen på 100 skickade dokument per månad. Vänligen <a class='put-link-to-payments-here'>kontakta supporten</a> för att utöka gränsen. Vi beklagar besväret.",
 "_blockingPayingCreateTitle":"Månads maxgräns",
 "_blockingUsedAllHeadline":"Du har nått denna månads maxgräns på 100 skickade dokument",
