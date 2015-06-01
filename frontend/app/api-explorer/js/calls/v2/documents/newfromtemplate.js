@@ -11,6 +11,9 @@ new APICallV2({
         },
   needsAuthorization: true,
   tryToUseDocumentIDWithCopy: true,
+  equivalentCalls: {
+    'v1': 'Create from template'
+  },
   params: [
           new APICallParam({
             type: "text",
@@ -21,7 +24,7 @@ new APICallV2({
                          The document must be a template.",
             defaultValue: ""
           })
-          , window.APICallParamObjectVersion
+          , window.APIV2CallParamObjectVersion
         ]
 });
 

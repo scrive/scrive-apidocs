@@ -11,6 +11,9 @@ new APICallV1({
           return "/api/v1/cancel/" + this.get("documentid");
         },
   needsAuthorization: true,
+  equivalentCalls: {
+    'v2': 'Cancel'
+  },
   params: [
           new APICallParam({
             type: "text",

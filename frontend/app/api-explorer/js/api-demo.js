@@ -23,10 +23,25 @@ var ApiDemoModel = Backbone.Model.extend({
   },
   changeAPIVersion: function (v) {
     if (this.selectedApiCall().callPrototype().apiVersion() != v) {
+      var equivalent = this.selectedApiCall().callPrototype().equivalentInVersion(v);
+      var apiCalls;
       if (v == "v1") {
-        this.setSelectedApiCall(APICalls.apiV1Calls()[0])
-      } else {
-        this.setSelectedApiCall(APICalls.apiV2Calls()[0])
+        apiCalls = APICalls.apiV1Calls();
+      }
+      else {
+        apiCalls = APICalls.apiV2Calls();
+      }
+      var findEquivalent = _.find(apiCalls, function(c) {return c.name() == equivalent});
+      if(findEquivalent != undefined) {
+        this.setSelectedApiCall(findEquivalent);
+      }
+      else {
+        if(v == "v1") {
+          this.setSelectedApiCall(APICalls.apiV1Calls()[0]);
+        } else {
+          var defaultV2Call = _.find(APICalls.apiV2Calls(), function (c) {return c.name() == "Get"});
+          this.setSelectedApiCall(defaultV2Call);
+        }
       }
     }
   },

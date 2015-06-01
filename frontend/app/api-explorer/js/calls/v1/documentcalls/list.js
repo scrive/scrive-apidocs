@@ -11,6 +11,9 @@ new APICallV1({
           return "/api/v1/list";
         },
   needsAuthorization: true,
+  equivalentCalls: {
+    'v2': 'List'
+  },
   params: [
           new APICallParam({
             type: "text",

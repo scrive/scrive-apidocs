@@ -39,6 +39,13 @@ window.AbstractAPICall = Backbone.Model.extend({
             return p.type() == "file";
           });
         },
+  equivalentInVersion: function(v) {
+          var eqs = this.get("equivalentCalls");
+          if (eqs != undefined) {
+            return eqs[v];
+          }
+          return undefined;
+        },
   tryToUseDocumentIDWithCopy: function () {
           return this.get("tryToUseDocumentIDWithCopy");
         },
@@ -89,17 +96,26 @@ window.ApiCallInstance = AbstractAPICall.extend({
   getParamValue: function (p) {
           return this.get(p.argName())
         },
+  includeParam: function(p) {
+          return !p.optional() || (this.getParamValue(p) !== "" || this.getParamSendEmpty(p));
+        },
   setParamValue: function (p, v) {
           this.set(p.argName(), v);
           if (p.useLocalStorage()) {
             LocalStorage.set("param", p.argName(), v);
           }
         },
+  getParamSendEmpty: function(p) {
+          return this.get(p.argName() + "-sendEmpty");
+        },
+  setParamSendEmpty: function(p, v) {
+          this.set(p.argName() + "-sendEmpty", v);
+        },
   getCallArgs: function () {
           var self = this;
           var args = {};
           _.each(this.params(), function (p) {
-            if (p.sendAsParam()) {
+            if (p.sendAsParam() && self.includeParam(p)) {
               args[p.argName()] = self.getParamValue(p);
             }
           });
@@ -109,7 +125,8 @@ window.ApiCallInstance = AbstractAPICall.extend({
     var multifile = this.getParamValue(p);
     this.slaves = _.filter(multifile.slaves, function (s) {return s != undefined;});
     this.slavesParents = _.map(this.slaves, function (s) {return $(s).parent();});
-    for (var i = 0;i < this.slaves.length - 1;i++) {
+    var upto = this.getParamSendEmpty(p) ? this.slaves.length : this.slaves.length - 1;
+    for (var i = 0;i < upto;i++) {
       form.append($(this.slaves[i]).attr("name", p.argName(i)));
     }
   },
@@ -126,7 +143,7 @@ window.ApiCallInstance = AbstractAPICall.extend({
             if (p.sendAsParam()) {
               if (p.type() == "file") {
                 self.attachFileParamsToForm(form, p);
-              } else {
+              } else if (self.includeParam(p)) {
                 form.append($("<input type='text'/>").attr("name", p.argName()).val(self.getParamValue(p)));
               }
             }
@@ -239,6 +256,7 @@ var APICall = function (props) {
     "needsAuthorization",
     "params",
     "category",
+    "equivalentCalls",
     "tryToUseDocumentIDWithCopy",
     "expectBinaryResponse"
   ];

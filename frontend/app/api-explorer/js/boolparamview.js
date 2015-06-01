@@ -17,13 +17,10 @@ window.BoolParamView  = Backbone.View.extend({
     var mainRow = $("<div class='row'>");
     $(this.el).append(mainRow);
     var input = $("<input type='checkbox' id='" + id + "'/>");
-    input.attr("checked",  call.setParamValue(param) == "true");
+    input.prop("checked", false);
+    call.setParamValue(param, input.is(":checked"));
     input.change(function () {
-        if (input.is(":checked")) {
-          call.setParamValue(param, "true");
-        } else {
-          call.setParamValue(param, undefined);
-        }
+        call.setParamValue(param, input.is(":checked"));
       });
 
     var description = $("<p>");

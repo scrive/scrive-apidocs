@@ -2,7 +2,7 @@
 
 new APICallV2({
   category: "signing",
-  name: "Signatory: Set Attachment",
+  name: "Signatory- Set Attachment",
   description: "TODO",
   sampleUrl: "/api/v2/documents/$document_id$/$signatory_id$/setattachment",
   method: "POST",
@@ -13,24 +13,8 @@ new APICallV2({
         },
   needsAuthorization: true,
   params: [
-          new APICallParam({
-            type: "text",
-            argName: "document_id",
-            name: "$document_id$",
-            sendAsParam: false,
-            useLocalStorage: true,
-            description: "TODO",
-            defaultValue: ""
-          }),
-          new APICallParam({
-            type: "text",
-            argName: "signatory_id",
-            name: "$signatory_id$",
-            sendAsParam: false,
-            useLocalStorage: true,
-            description: "TODO",
-            defaultValue: ""
-          }),
+          window.APIV2CallParamDocumentID,
+          window.APIV2CallParamSignatoryID,
           new APICallParam({
             type: "text",
             argName: "name",
@@ -41,10 +25,9 @@ new APICallV2({
           }),
           new APICallParam({
             type: "file",
-            argName: function () { return "file";},
+            argName: function () { return "attachment";},
             name: "attachment (application/pdf)",
             sendAsParam: true,
-            optional: true,
             description: "TODO",
             limit: 1,
             defaultValue: function (self) {
@@ -57,7 +40,7 @@ new APICallV2({
               return input.data("MultiFile");
             }
           }),
-          window.APICallParamObjectVersion
+          window.APIV2CallParamObjectVersion
         ]
 });
 

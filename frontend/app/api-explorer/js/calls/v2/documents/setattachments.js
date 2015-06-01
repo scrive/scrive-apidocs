@@ -10,16 +10,11 @@ new APICallV2({
           return "/api/v2/documents/" + this.get("document_id") + "/setattachments";
         },
   needsAuthorization: true,
+  equivalentCalls: {
+    'v1': 'Set author attachments'
+  },
   params: [
-          new APICallParam({
-            type: "text",
-            argName: "document_id",
-            name: "$document_id$",
-            sendAsParam: false,
-            useLocalStorage: true,
-            description: "TODO",
-            defaultValue: ""
-          }),
+          window.APIV2CallParamDocumentID,
           new APICallParam({
             type: "file",
             argName: function () { return "attachments";},
@@ -38,7 +33,7 @@ new APICallV2({
               return input.data("MultiFile");
             }
           })
-          , window.APICallParamObjectVersion
+          , window.APIV2CallParamObjectVersion
         ]
 });
 

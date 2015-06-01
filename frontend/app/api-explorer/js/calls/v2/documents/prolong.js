@@ -10,16 +10,11 @@ new APICallV2({
           return "/api/v2/documents/" + this.get("document_id") + "/prolong";
         },
   needsAuthorization: true,
+  equivalentCalls: {
+    'v1': 'Prolong'
+  },
   params: [
-          new APICallParam({
-            type: "text",
-            argName: "document_id",
-            name: "$document_id$",
-            sendAsParam: false,
-            useLocalStorage: true,
-            description: "TODO",
-            defaultValue: ""
-          }),
+          window.APIV2CallParamDocumentID,
           new APICallParam({
             type: "text",
             argName: "days",
@@ -27,7 +22,7 @@ new APICallV2({
             description: "TODO",
             defaultValue: ""
           }),
-          window.APICallParamObjectVersion
+          window.APIV2CallParamObjectVersion
         ]
 });
 

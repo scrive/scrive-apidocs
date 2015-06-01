@@ -2,7 +2,7 @@
 
 new APICallV2({
   category: "signing",
-  name: "Signatory: Check",
+  name: "Signatory- Check",
   description: "TODO",
   sampleUrl: "/api/v2/documents/$document_id$/$signatory_id$/check",
   method: "POST",
@@ -13,24 +13,8 @@ new APICallV2({
         },
   needsAuthorization: true,
   params: [
-          new APICallParam({
-            type: "text",
-            argName: "document_id",
-            name: "$document_id$",
-            sendAsParam: false,
-            useLocalStorage: true,
-            description: "TODO",
-            defaultValue: ""
-          }),
-          new APICallParam({
-            type: "text",
-            argName: "signatory_id",
-            name: "$signatory_id$",
-            sendAsParam: false,
-            useLocalStorage: true,
-            description: "TODO",
-            defaultValue: ""
-          }),
+          window.APIV2CallParamDocumentID,
+          window.APIV2CallParamSignatoryID,
           new APICallParam({
             type: "text",
             optional: true,
@@ -55,7 +39,7 @@ new APICallV2({
             description: "TODO",
             defaultValue: ""
           }),
-          window.APICallParamObjectVersion
+          window.APIV2CallParamObjectVersion
         ]
 });
 

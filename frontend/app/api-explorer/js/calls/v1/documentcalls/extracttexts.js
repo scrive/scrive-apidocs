@@ -11,6 +11,9 @@ new APICallV1({
           return "/api/v1/extracttexts/" + this.get("documentid")  + "/" + this.get("fileid") ;
         },
   needsAuthorization: true,
+  equivalentCalls: {
+    'v2': 'Document Texts'
+  },
   params: [
           new APICallParam({
             type: "text",

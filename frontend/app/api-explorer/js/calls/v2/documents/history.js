@@ -11,16 +11,11 @@ new APICallV2({
         },
   needsAuthorization: true,
   tryToUseDocumentIDWithCopy: true,
+  equivalentCalls: {
+    'v1': 'History'
+  },
   params: [
-          new APICallParam({
-            type: "text",
-            argName: "document_id",
-            name: "$document_id$",
-            sendAsParam: false,
-            useLocalStorage: true,
-            description: "TODO",
-            defaultValue: ""
-          })
+          window.APIV2CallParamDocumentID
         ]
 });
 

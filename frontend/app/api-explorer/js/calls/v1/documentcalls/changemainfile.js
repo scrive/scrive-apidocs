@@ -11,6 +11,9 @@ new APICallV1({
           return "/api/v1/changemainfile/" + this.get("documentid");
         },
   needsAuthorization: true,
+  equivalentCalls: {
+    'v2': 'Set File'
+  },
   params: [
           new APICallParam({
             type: "text",

@@ -11,6 +11,9 @@ new APICallV1({
           return "/api/v1/forward/" + this.get("documentid");
         },
   needsAuthorization: true,
+  equivalentCalls: {
+    'v2': 'Forward'
+  },
   params: [
           new APICallParam({
             type: "text",

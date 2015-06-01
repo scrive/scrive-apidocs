@@ -10,16 +10,11 @@ new APICallV2({
           return "/api/v2/documents/" + this.get("document_id") + "/update";
         },
   needsAuthorization: true,
+  equivalentCalls: {
+    'v1': 'Update'
+  },
   params: [
-          new APICallParam({
-            type: "text",
-            argName: "document_id",
-            name: "$document_id$",
-            sendAsParam: false,
-            useLocalStorage: true,
-            description: "TODO",
-            defaultValue: ""
-          }),
+          window.APIV2CallParamDocumentID,
           new APICallParam({
             type: "json",
             argName: "document",
@@ -28,7 +23,7 @@ new APICallV2({
             description: "TODO",
             defaultValue: "{}"
           }),
-          window.APICallParamObjectVersion
+          window.APIV2CallParamObjectVersion
         ]
 });
 

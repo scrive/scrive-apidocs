@@ -11,6 +11,9 @@ new APICallV1({
           return "/api/v1/update/" + this.get("documentid");
         },
   needsAuthorization: true,
+  equivalentCalls: {
+    'v2': 'Update'
+  },
   params: [
           new APICallParam({
             type: "text",

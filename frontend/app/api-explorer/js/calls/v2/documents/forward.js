@@ -10,16 +10,11 @@ new APICallV2({
           return "/api/v2/documents/" + this.get("document_id") + "/forward";
         },
   needsAuthorization: true,
+  equivalentCalls: {
+    'v1': 'Forward'
+  },
   params: [
-          new APICallParam({
-            type: "text",
-            argName: "document_id",
-            name: "$document_id$",
-            sendAsParam: false,
-            useLocalStorage: true,
-            description: "TODO",
-            defaultValue: ""
-          }),
+          window.APIV2CallParamDocumentID,
           new APICallParam({
             type: "text",
             argName: "email",
@@ -32,9 +27,9 @@ new APICallV2({
             argName: "no_content",
             optional: true,
             name: "No content",
-            description: "TODO",
+            description: "TODO"
           }),
-          window.APICallParamObjectVersion
+          window.APIV2CallParamObjectVersion
         ]
 });
 

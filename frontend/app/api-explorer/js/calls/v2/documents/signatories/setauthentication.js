@@ -2,7 +2,7 @@
 
 new APICallV2({
   category: "signing",
-  name: "Signatory: Set Authentication",
+  name: "Signatory- Set Authentication",
   description: "TODO",
   sampleUrl: "/api/v2/documents/$document_id$/$signatory_id$/setauthentication",
   method: "POST",
@@ -12,25 +12,12 @@ new APICallV2({
                                       + "/setauthentication";
         },
   needsAuthorization: true,
+  equivalentCalls: {
+    'v1': 'Change authentication'
+  },
   params: [
-          new APICallParam({
-            type: "text",
-            argName: "document_id",
-            name: "$document_id$",
-            sendAsParam: false,
-            useLocalStorage: true,
-            description: "TODO",
-            defaultValue: ""
-          }),
-          new APICallParam({
-            type: "text",
-            argName: "signatory_id",
-            name: "$signatory_id$",
-            sendAsParam: false,
-            useLocalStorage: true,
-            description: "TODO",
-            defaultValue: ""
-          }),
+          window.APIV2CallParamDocumentID,
+          window.APIV2CallParamSignatoryID,
           new APICallParam({
             type: "text",
             argName: "authentication_type",
@@ -42,10 +29,12 @@ new APICallV2({
             type: "text",
             argName: "authentication_value",
             name: "Authentication Value",
+            optional: true,
+            optionToSendEmpty: true,
             description: "TODO",
             defaultValue: ""
           }),
-          window.APICallParamObjectVersion
+          window.APIV2CallParamObjectVersion
         ]
 });
 

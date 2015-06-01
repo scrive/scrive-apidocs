@@ -11,6 +11,9 @@ new APICallV1({
           return "/api/v1/prolong/" + this.get("documentid");
         },
   needsAuthorization: true,
+  equivalentCalls: {
+    'v2': 'Prolong'
+  },
   params: [
           new APICallParam({
             type: "text",

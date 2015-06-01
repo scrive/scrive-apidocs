@@ -2,7 +2,7 @@
 
 new APICallV2({
   category: "signing",
-  name: "Signatory: Sign",
+  name: "Signatory- Sign",
   description: "TODO",
   sampleUrl: "/api/v2/documents/$document_id$/$signatory_id$/sign",
   method: "POST",
@@ -13,24 +13,8 @@ new APICallV2({
         },
   needsAuthorization: true,
   params: [
-          new APICallParam({
-            type: "text",
-            argName: "document_id",
-            name: "$document_id$",
-            sendAsParam: false,
-            useLocalStorage: true,
-            description: "TODO",
-            defaultValue: ""
-          }),
-          new APICallParam({
-            type: "text",
-            argName: "signatory_id",
-            name: "$signatory_id$",
-            sendAsParam: false,
-            useLocalStorage: true,
-            description: "TODO",
-            defaultValue: ""
-          }),
+          window.APIV2CallParamDocumentID,
+          window.APIV2CallParamSignatoryID,
           new APICallParam({
             type: "json",
             argName: "fields",
@@ -39,42 +23,39 @@ new APICallV2({
             defaultValue: "[]"
           }),
           new APICallParam({
-            type: "file",
-            argName: function () { return "file";},
-            name: "screenshot_1 (application/png)",
+            type: "json",
+            argName: "screenshots",
+            name: "Screenshots (JSON)",
             sendAsParam: true,
             optional: true,
             description: "TODO",
-            limit: 1,
-            defaultValue: function (self) {
-              var input = $("<input type='file' class='form-control multiFileInput'/>");
-              input.MultiFile({
-                afterFileAppend: function (input, title, fileinput) {
-                  setTimeout(function () {self.trigger("files-changed");}, 10);
-                }
-              });
-              return input.data("MultiFile");
-            }
+            defaultValue: "{}"
           }),
           new APICallParam({
-            type: "file",
-            argName: function () { return "file";},
-            name: "screenshot_2 (application/png)",
-            sendAsParam: true,
+            type: "text",
             optional: true,
+            argName: "authentication_type",
+            name: "Authentication Type",
             description: "TODO",
-            limit: 1,
-            defaultValue: function (self) {
-              var input = $("<input type='file' class='form-control multiFileInput'/>");
-              input.MultiFile({
-                afterFileAppend: function (input, title, fileinput) {
-                  setTimeout(function () {self.trigger("files-changed");}, 10);
-                }
-              });
-              return input.data("MultiFile");
-            }
+            defaultValue: ""
           }),
-          window.APICallParamObjectVersion
+          new APICallParam({
+            type: "text",
+            optional: true,
+            argName: "authentication_value",
+            name: "Authentication Value",
+            description: "TODO",
+            defaultValue: ""
+          }),
+          new APICallParam({
+            type: "text",
+            optional: true,
+            argName: "sms_pin",
+            name: "SMS PIN",
+            description: "TODO",
+            defaultValue: ""
+          }),
+          window.APIV2CallParamObjectVersion
         ]
 });
 

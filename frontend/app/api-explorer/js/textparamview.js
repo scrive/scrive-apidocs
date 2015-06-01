@@ -28,11 +28,29 @@ window.TextParamView  = Backbone.View.extend({
         }
       });
 
+    var sendEmptyMain = $("<div class='checkbox'>");
+    if(param.optionToSendEmpty()) {
+      var sendEmptyInput = $("<input type='checkbox' class=''/>");
+      sendEmptyInput.prop("checked", false);
+      call.setParamSendEmpty(param, sendEmptyInput.is(":checked"));
+      sendEmptyInput.change(function () {
+        call.setParamSendEmpty(param, sendEmptyInput.is(":checked"));
+      });
+
+      sendEmptyMain.append($("<label>")
+        .append(sendEmptyInput)
+        .append("Send parameter even if empty")
+      );
+    }
+
+    var inputColumn = $("<div class='col-xs-6'>").append(input)
+    if(param.optionToSendEmpty()) inputColumn.append(sendEmptyMain);
+
     var description = $("<p>");
     if(param.optional()) description.append($("<em>Optional.</em>"));
     description.append($("<p>").text(param.description()));
 
-    mainRow.append($("<div class='col-xs-6'>").append(input))
+    mainRow.append(inputColumn)
            .append($("<div class='col-xs-6'>").append($("<p/>").append(description)));
 
     return this;

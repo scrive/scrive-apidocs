@@ -10,17 +10,12 @@ new APICallV2({
           return "/api/v2/documents/" + this.get("document_id") + "/trash";
         },
   needsAuthorization: true,
+  equivalentCalls: {
+    'v1': 'Delete'
+  },
   params: [
-          new APICallParam({
-            type: "text",
-            argName: "document_id",
-            name: "$document_id$",
-            sendAsParam: false,
-            useLocalStorage: true,
-            description: "TODO",
-            defaultValue: ""
-          }),
-          window.APICallParamObjectVersion
+          window.APIV2CallParamDocumentID,
+          window.APIV2CallParamObjectVersion
         ]
 });
 

@@ -1,7 +1,7 @@
 (function (window) {
 
 new APICallV2({
-  category: "fetch",
+  category: ["main", "fetch"],
   name: "Get",
   description: "TODO",
   sampleUrl: "/api/v2/documents/$document_id$/get",
@@ -11,16 +11,11 @@ new APICallV2({
         },
   needsAuthorization: true,
   tryToUseDocumentIDWithCopy: true,
+  equivalentCalls: {
+    'v1': 'Get'
+  },
   params: [
-          new APICallParam({
-            type: "text",
-            argName: "document_id",
-            name: "$document_id$",
-            sendAsParam: false,
-            useLocalStorage: true,
-            description: "TODO",
-            defaultValue: ""
-          })
+          window.APIV2CallParamDocumentID
         ]
 });
 

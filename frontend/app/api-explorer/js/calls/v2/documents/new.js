@@ -11,6 +11,9 @@ new APICallV2({
         },
   needsAuthorization: true,
   tryToUseDocumentIDWithCopy: true,
+  equivalentCalls: {
+    'v1': 'Create from file'
+  },
   params: [
           new APICallParam({
             type: "file",
@@ -30,7 +33,16 @@ new APICallV2({
               return input.data("MultiFile");
             }
           })
-          , window.APICallParamObjectVersion
+        , new APICallParam({
+            type: "bool",
+            argName: "saved",
+            name: "saved",
+            sendAsParam: true,
+            optional: true,
+            description: "Whether the document should start out as being saved\
+                          and thus appear in the E-archive.",
+            defaultValue: false
+          })
         ]
 });
 

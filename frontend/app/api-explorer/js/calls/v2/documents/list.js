@@ -10,6 +10,9 @@ new APICallV2({
           return "/api/v2/documents/list";
         },
   needsAuthorization: true,
+  equivalentCalls: {
+    'v1': 'List'
+  },
   params: [
           new APICallParam({
             type: "text",
@@ -17,7 +20,7 @@ new APICallV2({
             name: "Offset",
             sendAsParam: true,
             description: "TODO",
-            defaultValue: ""
+            defaultValue: "0"
           }),
           new APICallParam({
             type: "text",
@@ -29,13 +32,13 @@ new APICallV2({
             defaultValue: ""
           }),
           new APICallParam({
-            type: "text",
+            type: "json",
             argName: "sorting",
             optional: true,
             name: "Sorting",
             sendAsParam: true,
             description: "TODO",
-            defaultValue: ""
+            defaultValue: "[]"
           }),
           new APICallParam({
             type: "json",
@@ -44,7 +47,7 @@ new APICallV2({
             name: "Filter",
             sendAsParam: true,
             description: "TODO",
-            defaultValue: ""
+            defaultValue: "[]"
           })
         ]
 });

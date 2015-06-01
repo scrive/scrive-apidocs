@@ -11,6 +11,9 @@ new APICallV1({
           return "/api/v1/remind/" + this.get("documentid");
         },
   needsAuthorization: true,
+  equivalentCalls: {
+    'v2': 'Remind'
+  },
   params: [
           new APICallParam({
             type: "text",
