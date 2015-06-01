@@ -17,7 +17,7 @@ new APICallV1({
             argName: "documentid",
             name: "Document id",
             sendAsParam: false,
-            description: "",
+            description: "Id of document.",
             useLocalStorage: true,
             defaultValue: ""
           }),

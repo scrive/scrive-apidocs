@@ -606,7 +606,7 @@
 "_mailDocumentAwaitingForAuthorContentSignedBy":"Du ställde in att signera dokumentet <strong>$documenttitle$</strong> efter att $partylistSigned:noescape()$ hade signerat. Det är nu din tur att signera.",
 "_mailDocumentAwaitingForAuthorFurtherInstructions":"Klicka på knappen för vidare instruktioner.",
 "_mailDocumentAwaitingForAuthorTitle":"Dokument att e-signera: $documenttitle$",
-"_mailDocumentErrorContentBodyFirst":"",
+"_mailDocumentErrorContentBodyFirst":"Tyvärr kunde inte Scrive E-sign hantera filformatet för dokumentet <strong>$documenttitle$</strong>. Signeringsprocessen har därför avbrutits.",
 "_mailDocumentErrorContentBodyFourth":"Vi beklagar för eventuellt besvär som detta orsakar",
 "_mailDocumentErrorContentBodySecond":"Vänligen kontakta Scrives support på $supportmaillink()$ om du har några frågor eller vill ha hjälp med att lösa problemet.",
 "_mailDocumentErrorTitle":"Problem med filformat",

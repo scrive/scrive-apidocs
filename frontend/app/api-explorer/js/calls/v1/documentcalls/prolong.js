@@ -18,14 +18,14 @@ new APICallV1({
             name: "Document id",
             sendAsParam: false,
             useLocalStorage: true,
-            description: "",
+            description: "Id of document.",
             defaultValue: ""
           }),
           new APICallParam({
             type: "text",
             argName: "days",
             name: "Days",
-            description: "",
+            description: "Number of days to prolong the document's deadline by.",
             defaultValue: "1"
           })
         ]
