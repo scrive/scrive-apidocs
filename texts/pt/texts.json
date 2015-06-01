@@ -171,7 +171,7 @@
 "_blockingOverdueHeadline":"Falha de pagamento",
 "_blockingOverdueSubtext1":"Ocorreu um problema com o seu último pagamento. Não é possível enviar mais documentos enquanto esta situação não for resolvida.",
 "_blockingOverdueSubtext2":"Visite a <a class='put-link-to-payments-here'>página de pagamentos</a> e verifique novamente a sua informação de facturação.",
-"_blockingPayingCSVBody":"O seu ficheiro contém <span class='put-no-of-parties-here'></span> destinatários e só tem <span class='put-docs-left-here'></span> documentos para enviar. Queira <a class='put-link-to-payments-here'>contactar o apoio</a> para aumentar o limite.",
+"_blockingPayingCSVBody":"",
 "_blockingPayingCreateBody":"Alcançou o limite de uso mensal de 100 documentos enviados. Queira <a class='put-link-to-payments-here'>contactar o apoio</a> para aumentar o limite. Lamentamos o inconveniente.",
 "_blockingPayingCreateTitle":"Limite de uso mensal",
 "_blockingUsedAllHeadline":"Alcançou o limite de uso mensal de 100 documentos enviados",

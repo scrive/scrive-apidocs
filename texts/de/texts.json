@@ -171,7 +171,7 @@
 "_blockingOverdueHeadline":"Zahlungsausfall",
 "_blockingOverdueSubtext1":"Ihre letzte Zahlung ist nicht eingegangen. Sie können keine weitere Dokumente senden, bis dieses Problem behoben ist.",
 "_blockingOverdueSubtext2":"Bitte besuchen Sie die Seite <a class='put-link-to-payments-here'>Zahlungen</a> und überprüfen Sie Ihre Zahlungsinformationen.",
-"_blockingPayingCSVBody":"Ihre Datei enthält <span class='put-no-of-parties-here'></span> Empfänger, aber Sie können nur noch <span class='put-docs-left-here'></span> Dokumente senden. Bitte <a class='put-link-to-payments-here'>kontaktieren Sie den Support</a>, um das Limit zu erhöhen.",
+"_blockingPayingCSVBody":"",
 "_blockingPayingCreateBody":"Sie haben das monatliche Limit von 100 gesendeten Dokumenten erreicht. Bitte <a class='put-link-to-payments-here'>kontaktieren Sie den Support</a>, um das Limit zu erhöhen. Wir bedauern die Unannehmlichkeiten.",
 "_blockingPayingCreateTitle":"Monatliche Benutzungsbeschränkung",
 "_blockingUsedAllHeadline":"Sie haben das monatliche Nutzungslimit von 100 gesendeten Dokumenten erreicht",
