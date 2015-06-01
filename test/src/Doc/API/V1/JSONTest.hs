@@ -302,6 +302,22 @@ testList = do
   (resList3, _) <- runTestKontra reqList3 ctx $ apiCallV1List
   testJSONWith "test/json/test_8_list_of_documents_after_operations.json" (rsBody resList3)
 
+  -- Check is file field on list is a number encoded as string. After IPad issue 01.06.2015
+  let (Just (Object m)) = decode (rsBody resList3)
+  case (H.lookup "list" m) of
+    Just (Array v) -> case (V.head v) of
+      (Object m') ->
+        case (H.lookup "fields" m') of
+          Just (Object m'') ->
+            case (H.lookup "file" m'') of
+              Just (String s) -> assertBool "file field from list call parses as Int" $ isJust (maybeRead (unpack s) :: Maybe Int)
+              _ -> assertFailure "Can't find file field"
+          _ -> assertFailure "Can't find field fields"
+      _ -> assertFailure "Can't find element on list"
+    _ -> assertFailure "Can't find list"
+
+
+
 
 {- Test 9 -}
 testSignWithSignature :: TestEnv ()
