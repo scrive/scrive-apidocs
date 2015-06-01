@@ -606,7 +606,7 @@
 "_mailDocumentAwaitingForAuthorContentSignedBy":"Sie wollten nach dem Signieren von $partylistSigned:noescape()$ das  Dokument <strong>$documenttitle$</strong> e-signieren. Sie sind jetzt an der Reihe.",
 "_mailDocumentAwaitingForAuthorFurtherInstructions":"Klicken Sie die Schaltfläche für weitere Instruktionen.",
 "_mailDocumentAwaitingForAuthorTitle":"Dokument zum E-Signieren: $documenttitle$",
-"_mailDocumentErrorContentBodyFirst":"",
+"_mailDocumentErrorContentBodyFirst":"Leider konnte Scrive E-Sign die Dokumentendatei <strong>$documenttitle$</strong> nicht bearbeiten. Deshalb wurde der Signierungsprozess abgebrochen.",
 "_mailDocumentErrorContentBodyFourth":"Wir entschuldigen uns für die Unannehmlichkeiten",
 "_mailDocumentErrorContentBodySecond":"Wenn Sie Anmerkungen oder Fragen zu diesem Thema haben, kontaktieren Sie den Support von Scrive via $supportmaillink()$.",
 "_mailDocumentErrorTitle":"Probleme mit dem Dateiformat",

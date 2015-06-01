@@ -606,7 +606,7 @@
 "_mailDocumentAwaitingForAuthorContentSignedBy":"U heeft uzelf aangegeven om het document <strong>$documenttitle$</strong> te ondertekenen nadat $partylistSigned:noescape()$ heeft ondertekent. Het is nu uw beurt. ",
 "_mailDocumentAwaitingForAuthorFurtherInstructions":"Klik op de knop voor verdere instructies.",
 "_mailDocumentAwaitingForAuthorTitle":"Document om te e-ondertekenen: $documenttitle$",
-"_mailDocumentErrorContentBodyFirst":"",
+"_mailDocumentErrorContentBodyFirst":"Helaas kon Scrive E-sign het document <strong>$documenttitle$</strong> niet hanteren. Het ondertekeningsproces is daarom geannulleerd. ",
 "_mailDocumentErrorContentBodyFourth":"Onze verontschuldigingen voor het ongemak",
 "_mailDocumentErrorContentBodySecond":"Indien u commentaar of vragen heeft in verband met dit probleem neem dan a.u.b. contact op met Scrive support via $supportmaillink()$.",
 "_mailDocumentErrorTitle":"Probleem met bestandsformaat",
