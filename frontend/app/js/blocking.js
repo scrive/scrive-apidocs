@@ -1,4 +1,4 @@
-define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
+define(['Backbone', 'moment', 'common/language_service', 'legacy_code'], function(Backbone, moment, Language) {
 
     /*
       Holds information relevant to blocking for a user.
@@ -96,6 +96,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             this.model.bind('change reset fetch', this.render);
             this.subscriptionPageHref = '/account#subscription';
             this.supportEmailHref = 'mailto:support@scrive.com';
+            this.contactHref = '/' + Language.currentLanguage() + '/contact';
         },
         setStyle: function() {
             var view = this;
@@ -404,9 +405,8 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             });
         },
         payingCSVMessage: function() {
-            return localization.blocking.paying.csv.body;
             var span = $('<span />').html(localization.blocking.paying.csv.body);
-            span.find('.put-link-to-mail-support-here').attr('href', this.supportEmailHref);
+            span.find('.put-link-to-contact-here').attr('href', this.contactHref).attr('target', '_blank');
             return span;
         }
     });
