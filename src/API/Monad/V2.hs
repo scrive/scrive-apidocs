@@ -1,18 +1,21 @@
 {-# LANGUAGE FunctionalDependencies, ExtendedDefaultRules #-}
+-- JJ: why are we individually re-exporting things from API.Monad.V2Errors?
+-- JJ: either just re-export the module, or maybe they should be included here?
 module API.Monad.V2 (
                  APIError(),
                  serverError,
-                 endPointNotFound,
+                 endpointNotFound,
                  invalidAuthorisation,
                  insufficientPrivileges,
                  requestParametersMissing,
                  requestParametersParseError,
-                 requestParametersInvalid,
-                 objectVersionMismatch,
+                 requestParameterInvalid,
+                 documentObjectVersionMismatch,
                  documentStateError,
                  signatoryStateError,
-                 documentAccessForbidden,
+                 documentActionForbidden,
                  documentNotFound,
+                 resourceNotFound,
                  apiGuardJustM,
                  api,
                  APIResponse(..),
@@ -125,24 +128,26 @@ getAPIUserWithPrivileges :: Kontrakcja m => [APIPrivilege] -> m (User, Actor)
 getAPIUserWithPrivileges privs = do
   moauthuser <- getOAuthUser privs
   case moauthuser of
-    Just (Left msg) -> (throwIO . SomeKontraException) $ invalidAuthorisation $ "You authorization is invalid:" `append` pack msg
+    Just (Left msg) -> (throwIO . SomeKontraException) $ invalidAuthorisation (pack msg)
     Just (Right (user, actor)) -> return (user, actor)
     Nothing -> do
       msessionuser <- getSessionUser
       case msessionuser of
         Just (user, actor) -> return (user, actor)
+-- JJ: this looks like a cause of "invalid_authorisation", not "insufficient_privileges"
         Nothing -> (throwIO . SomeKontraException) $ insufficientPrivileges "You need to authorize yourself to access this resource"
 
 getAPIUserWithPad :: Kontrakcja m => APIPrivilege -> m (User, Actor)
 getAPIUserWithPad priv = do
   moauthuser <- getOAuthUser [priv]
   case moauthuser of
-    Just (Left msg) -> (throwIO . SomeKontraException) $ invalidAuthorisation $ "You authorization is invalid" `append` pack msg
+    Just (Left msg) -> (throwIO . SomeKontraException) $ invalidAuthorisation (pack msg)
     Just (Right (user, actor)) -> return (user, actor)
     Nothing -> do
       msessionuser <- getSessionUserWithPad
       case msessionuser of
         Just (user, actor) -> return (user, actor)
+-- JJ: this looks like a cause of "invalid_authorisation", not "insufficient_privileges"
         Nothing -> (throwIO . SomeKontraException) $ insufficientPrivileges "You need to authorize yourself to access this resource"
 
 
@@ -172,6 +177,7 @@ getOAuthUser privs = do
       case uap of
         Nothing -> return $ Just $ Left "OAuth credentials are invalid."
         Just (userid, apistring) -> do
+-- JJ: this should really not be a server error... especially not a HTTP 5xx return code
           user <- apiGuardJustM (serverError "The User account for those credentials does not exist.") $ dbQuery $ GetUserByID userid
           let actor = apiActor ctx user apistring
           return $ Just $ Right (user, actor)
@@ -179,5 +185,5 @@ getOAuthUser privs = do
 noAPIV2CallFoundHandler :: Kontrakcja m => m Response
 noAPIV2CallFoundHandler = api $ do
   uri <- rqUri <$> askRq
-  _ <- throwIO . SomeKontraException $ endPointNotFound $ "No API endpoint for " `append` (pack uri)
+  _ <- throwIO . SomeKontraException $ endpointNotFound (pack uri)
   return $ Ok ()

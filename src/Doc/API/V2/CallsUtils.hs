@@ -52,7 +52,7 @@ guardThatUserIsAuthor :: (DocumentMonad m, Kontrakcja m) => User -> m ()
 guardThatUserIsAuthor user = do
   auid <- apiGuardJustM (serverError "Document doesn't have author signatory link connected with user account") $ ((maybesignatory =<<) .getAuthorSigLink) <$> theDocument
   when (not $ (auid == userid user)) $ do
-    throwIO . SomeKontraException $ documentAccessForbidden "Permission problem. Not an author."
+    throwIO $ SomeKontraException documentActionForbidden
 
 -- Checks if document can be strated. Throws matching API exception if it does not
 guardThatDocumentCanBeStarted :: (DocumentMonad m, Kontrakcja m) => m ()
@@ -85,22 +85,23 @@ checkAuthenticationMethodAndValue slid = do
                     let authOK = authMethod == signatorylinkauthenticationmethod siglink
                     case (authOK, authMethod) of
                          (False, _) -> throwIO . SomeKontraException $
-                             requestParametersInvalid "`authentication_type` does not match"
+                             requestParameterInvalid "authentication_type" "`authentication_type` does not match on on document"
                          (True, StandardAuthentication) -> return ()
                          (True, ELegAuthentication)   ->
                              if (authValue == getPersonalNumber siglink || null (getPersonalNumber siglink))
                                 then return ()
                                 else throwIO . SomeKontraException $
-                                    requestParametersInvalid "`authentication_value` for personal number does not match"
+                                    requestParameterInvalid "authentication_value" "`authentication_value` for personal number does not match"
                          (True, SMSPinAuthentication) ->
                              if (authValue == getMobile siglink || null (getMobile siglink))
                                 then return ()
                                 else throwIO . SomeKontraException $
-                                    requestParametersInvalid "`authentication_value` for phone number does not match"
+                                    requestParameterInvalid "authentication_value" "`authentication_value` for phone number does not match"
                 Nothing ->
                     throwIO . SomeKontraException $ requestParametersParseError "`authentication_type` was not a valid"
        (Nothing, Nothing) -> return ()
-       _ -> throwIO . SomeKontraException $ requestParametersMissing "Only one of `authentication_type` and `authentication_value` provided"
+       (Just _, Nothing) ->  throwIO . SomeKontraException $ requestParametersMissing ["authentication_value"]
+       (Nothing, Just _) ->  throwIO . SomeKontraException $ requestParametersMissing ["authentication_type"]
 
 getScreenshots :: (Kontrakcja m) => m SignatoryScreenshots
 getScreenshots = do
@@ -115,7 +116,7 @@ getScreenshots = do
             throwIO . SomeKontraException $ requestParametersParseError $ "Screenshot parameter does not parse: " `append` pack (show errs)
   resolvedScreenshots <- resolveReferenceScreenshotNames screenshots
   case resolvedScreenshots of
-    Nothing -> throwIO . SomeKontraException $ requestParametersInvalid "Could not resolve reference screenshot"
+    Nothing -> throwIO . SomeKontraException $ requestParameterInvalid "screenshots" "Could not resolve reference screenshot"
     Just res -> return res
 
 
@@ -145,7 +146,7 @@ getFieldForSigning ::(Kontrakcja m) => m [(FieldIdentity, SignatoryFieldTMPValue
 getFieldForSigning = do
   mfields <- getFieldBS "fields"
   case mfields of
-    Nothing -> throwIO . SomeKontraException $ requestParametersMissing "No fields description provided"
+    Nothing -> throwIO . SomeKontraException $ requestParametersMissing ["fields"]
     Just fields ->case Aeson.eitherDecode fields of
       Left _ -> throwIO . SomeKontraException $ requestParametersParseError "Fields are not a valid JSON array"
       Right fieldsaeson -> case (Unjson.parse unjsonSignatoryFieldsValues fieldsaeson) of
@@ -177,13 +178,13 @@ getMagicHashAndUserForSignatoryAction did sid = do
          (user, _) <- getAPIUser APIPersonal
          mh'' <- getMagicHashForDocumentSignatoryWithUser  did sid user
          case mh'' of
-           Nothing -> throwIO . SomeKontraException $ documentAccessForbidden "Can't perform this action. Not authorized."
+           Nothing -> throwIO . SomeKontraException $ documentActionForbidden
            Just mh''' -> return (mh''',Just $ user)
 
 
 getValidPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [(FieldIdentity, SignatoryFieldTMPValue)] -> m (Maybe String)
 getValidPin slid fields = do
-  pin <- apiGuardJustM (requestParametersMissing "Pin not provided or invalid.") $ getField "pin"
+  pin <- apiGuardJustM (requestParametersMissing ["pin"]) $ getField "pin"
   phone <- case (lookup MobileFI fields) of
     Just (StringFTV v) -> return v
     _ ->  getMobile <$> $fromJust . getSigLinkFor slid <$> theDocument

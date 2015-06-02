@@ -106,7 +106,7 @@ docApiV2New = api $ do
     Nothing -> do
       title <- renderTemplate_ "newDocumentTitle"
       return (Nothing, title ++ " " ++ formatTimeSimple (ctxtime ctx))
-    Just (Input _ Nothing _) -> throwIO . SomeKontraException $ requestParametersInvalid "If 'file' parameter is provided, it can't be empty"
+    Just (Input _ Nothing _) -> throwIO . SomeKontraException $ requestParameterInvalid "file" "file was empty"
     Just (Input contentspec (Just filename'') _contentType) -> do
       let filename' = reverse . takeWhile (/='\\') . reverse $ filename'' -- Drop filepath for windows
       let mformat = getFileFormatForConversion filename'
@@ -119,8 +119,8 @@ docApiV2New = api $ do
         Just format -> do
           eres <- convertToPDF (ctxlivedocxconf ctx) content' format
           case eres of
-            Left (LiveDocxIOError e) -> throwIO . SomeKontraException $ requestParametersInvalid $ "LiveDocX conversion IO failed " `append` pack (show e)
-            Left (LiveDocxSoapError s)-> throwIO . SomeKontraException $ requestParametersInvalid $ "LiveDocX conversion SOAP failed " `append` pack s
+            Left (LiveDocxIOError e) -> throwIO . SomeKontraException $ requestParameterInvalid "file" $ "LiveDocX conversion IO failed " `append` pack (show e)
+            Left (LiveDocxSoapError s)-> throwIO . SomeKontraException $ requestParameterInvalid "file" $ "LiveDocX conversion SOAP failed " `append` pack s
             Right res -> do
               -- change extension from .doc, .docx and others to .pdf
               let filename = takeBaseName filename' ++ ".pdf"
@@ -130,7 +130,7 @@ docApiV2New = api $ do
         res <- preCheckPDF content''
         case res of
           Right r -> return r
-          Left _ ->  throwIO . SomeKontraException $ requestParametersInvalid "Uploaded file is invalid"
+          Left _ ->  throwIO . SomeKontraException $ requestParameterInvalid "file" "file is not a valid PDF"
       fileid' <- dbUpdate $ NewFile filename pdfcontent
       return (Just fileid', takeBaseName filename)
   saved <- apiBoolParamWithDefault  True "saved"
@@ -148,11 +148,13 @@ docApiV2NewFromTemplate did = api $ do
   (user, actor) <- getAPIUser APIDocCreate
   template <- dbQuery $ GetDocumentByDocumentID $ did
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink template
+-- JJ: is this really "invalid_authorisation"? I would think `getAPIUser` checks for this
+-- JJ: consider making this some other kind of error
   auser <- apiGuardJustM (invalidAuthorisation "Provided authorization did not match any user") $ dbQuery $ GetUserByIDIncludeDeleted auid
   let haspermission = (userid auser == userid user) ||
                       (usercompany auser == usercompany user &&  isDocumentShared template)
   unless (haspermission) $ do
-    throwIO $ SomeKontraException $ documentAccessForbidden "You don't have right to access this document"
+    throwIO $ SomeKontraException documentActionForbidden
   withDocumentID did $ guardThatDocument isTemplate "Document must be a template"
   (apiGuardJustM (serverError "Can't clone given document") (dbUpdate $ CloneDocumentWithUpdatedAuthor user template actor) >>=) $ flip withDocumentID $ do
     dbUpdate $ DocumentFromTemplate actor
@@ -203,8 +205,8 @@ docApiV2Get did = api $ do
   mmagichashh <- maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msignatorylink
   withDocumentID did $ case (msignatorylink,mmagichashh) of
     (Just slid,Just mh) -> do
-       sl <- apiGuardJustM  (documentNotFound "No document found") $ getSigLinkFor slid <$> theDocument
-       when (signatorymagichash sl /= mh) $ throwIO . SomeKontraException $ documentNotFound "No document found"
+       sl <- apiGuardJustM  (documentNotFound did) $ getSigLinkFor slid <$> theDocument
+       when (signatorymagichash sl /= mh) $ throwIO . SomeKontraException $ documentNotFound did
        unlessM ((isTemplate || isPreparation || isClosed) <$> theDocument) $
          dbUpdate . MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl)
                        =<< signatoryActor ctx sl
@@ -227,7 +229,7 @@ docApiV2Get did = api $ do
       if (haspermission)
         then do
           Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
-        else throwIO . SomeKontraException $ documentAccessForbidden "You do not have right to access document"
+        else throwIO $ SomeKontraException documentActionForbidden
 
 docApiV2History :: Kontrakcja m => DocumentID -> m Response
 docApiV2History _did = $undefined -- TODO implement
@@ -243,7 +245,7 @@ docApiV2Update did = api $ do
   withDocumentID did $ do
     guardThatUserIsAuthor user
     guardThatDocument isPreparation "Document must be draft or template"
-    documentJSON <- apiGuardJustM (requestParametersMissing "'document' parameter not provided") $ getFieldBS "document"
+    documentJSON <- apiGuardJustM (requestParametersMissing ["document"]) $ getFieldBS "document"
     case Aeson.eitherDecode documentJSON of
       Left _ -> do
        throwIO . SomeKontraException $ requestParametersParseError $ "'document' parameter is not a valid json"
@@ -355,7 +357,7 @@ docApiV2SigSign did slid = api $ do
             postDocumentPendingChange olddoc
             handleAfterSigning slid
             Ok <$> (\d -> (unjsonDocument (DocumentAccess did $ SignatoryDocumentAccess slid),d)) <$> theDocument
-          else throwIO . SomeKontraException $ documentAccessForbidden $ "Invalid PIN"
+          else throwIO . SomeKontraException $ documentActionForbidden
 
       ELegAuthentication -> dbQuery (GetESignature slid) >>= \case
         mesig@(Just _) -> do
@@ -365,7 +367,7 @@ docApiV2SigSign did slid = api $ do
           postDocumentPendingChange olddoc
           handleAfterSigning slid
           Ok <$> (\d -> (unjsonDocument (DocumentAccess did $ SignatoryDocumentAccess slid),d)) <$> theDocument
-        Nothing -> throwIO . SomeKontraException $ documentAccessForbidden $ "No eleg signature"
+        Nothing -> throwIO . SomeKontraException $ documentActionForbidden
    )
 
 
