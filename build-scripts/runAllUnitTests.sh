@@ -1,5 +1,6 @@
 #!/bin/bash -e
 
+export LANG=en_US.UTF-8
 
 if [ "$TEAMCITY_VERSION" = "" ]; then
 
