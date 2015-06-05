@@ -5,7 +5,6 @@ window.CheckboxPlacementPlacedView = Backbone.View.extend({
         _.bindAll(this, 'closeTypeSetterIfNeeded', 'updatePosition', 'clear', 'render');
         this.model.bind('removed', this.clear);
         this.model.bind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
-        this.model.field().bind('change', this.render);
         this.model.view = this;
 
         var view = this;

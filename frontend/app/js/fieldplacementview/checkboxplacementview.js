@@ -5,6 +5,7 @@ window.CheckboxPlacementView = Backbone.View.extend({
         _.bindAll(this, 'render', 'clear', 'updateSignatoryCSSClass');
         this.model.bind('removed', this.clear);
         this.model.signatory().document().bind('change:signatories',this.updateSignatoryCSSClass);
+        this.model.bind('change', this.render);
 
         this.render();
     },
