@@ -56,13 +56,13 @@ instance Unjson NameOrder where
 
 instance Unjson DocumentStatus where
   unjsonDef = unjsonEnumBy "DocumentStatus" [
-      (Preparation, "Preparation")
-    , (Pending, "Pending")
-    , (Closed, "Closed")
-    , (Canceled, "Canceled")
-    , (Timedout, "Timedout")
-    , (Rejected, "Rejected")
-    , (DocumentError, "DocumentError")
+      (Preparation, "preparation")
+    , (Pending, "pending")
+    , (Closed, "closed")
+    , (Canceled, "canceled")
+    , (Timedout, "timedout")
+    , (Rejected, "rejected")
+    , (DocumentError, "document_error")
     ]
 
 instance Unjson DeliveryStatus where
@@ -92,8 +92,8 @@ instance Unjson DeliveryMethod where
   unjsonDef = unjsonEnumBy "DeliveryMethod" [
       (EmailDelivery, "email")
     , (PadDelivery, "pad")
-    , (APIDelivery, "unknown")
-    , (MobileDelivery, "api")
+    , (APIDelivery, "api")
+    , (MobileDelivery, "mobile")
     , (EmailAndMobileDelivery, "email_mobile")
     ]
 

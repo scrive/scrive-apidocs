@@ -10,73 +10,6 @@
     "title": {
       "type": "string"
     },
-    "file": {
-      "anyOf" : [
-        { "type": "null" }
-      , { "$ref": "#/definitions/file_def" }
-      ]
-    , "read_only": true
-    },
-    "sealed_file": {
-      "anyOf": [
-        { "type": "null" }
-      , { "$ref": "#/definitions/file_def" }
-      ]
-    , "read_only": true
-    },
-    "author_attachments": {
-      "type": "array",
-      "items": {
-        "anyOf": [
-          { "type": "null"}
-        , { "$ref": "#/definitions/file_def" }
-        ]
-      }
-    , "read_only": true
-    },
-    "mtime": {
-      "type": "string",
-      "format": "date-time"
-    , "read_only": true
-    },
-    "ctime": {
-      "type": "string",
-      "format": "date-time"
-    , "read_only": true
-    },
-    "timeout_time": {
-      "anyOf": [
-        { "type": "null"}
-      , { "type": "string", "format": "date-time" }
-      ]
-    , "read_only": true
-    },
-    "auto_remind_time": {
-      "anyOf": [
-        { "type": "null"}
-      , { "type": "string", "format": "date-time" }
-      ]
-    , "read_only": true
-    },
-    "status": {
-      "$ref": "#/definitions/document_status"
-    , "read_only": true
-    },
-    "viewer": {
-      "type": "object",
-      "properties": {
-        "role": {
-          "type": "string", "enum": ["company_admin", "signatory"]
-        },
-        "signatory_id": {
-          "oneOf": [
-            { "type": "null"}
-          , { "type": "string", "pattern": "^[0-9]+$" }
-          ]
-        }
-      }
-    , "read_only": true
-    },
     "signatories": {
       "type": "array",
       "items": {
@@ -93,8 +26,30 @@
              ]
           , "read_only": true
           },
+          "is_author": {
+            "type": "boolean"
+          , "read_only": true
+          },
+          "is_signatory": {
+            "type": "boolean",
+            "default": true
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "oneOf" : [
+                 { "$ref": "#/definitions/field_name" }
+               , { "$ref": "#/definitions/field_standard" }
+               , { "$ref": "#/definitions/field_text" }
+               , { "$ref": "#/definitions/field_signature" }
+               , { "$ref": "#/definitions/field_checkbox" }
+               ]
+            },
+            "default": []
+          },
           "sign_order": {
-            "type": "integer"
+            "type": "integer",
+            "default": 1
           },
           "sign_time": {
             "anyOf": [
@@ -124,6 +79,28 @@
             ]
           , "read_only": true
           },
+          "sign_success_redirect_url": {
+            "anyOf": [
+              { "type": "null" }
+            , { "type": "string", "format": "uri" }
+            ]
+          , "default": null
+          },
+          "reject_redirect_url": {
+            "anyOf": [
+              { "type": "null" }
+            , { "type": "string", "format": "uri" }
+            ]
+          , "default": null
+          },
+          "email_delivery_status" : {
+            "$ref": "#/definitions/delivery_status"
+          , "read_only": true
+          },
+          "mobile_delivery_status" : {
+            "$ref": "#/definitions/delivery_status"
+          , "read_only": true
+          },
           "csv": {
             "anyOf": [
                { "type": "null" }
@@ -133,14 +110,7 @@
                           }
                }
              ]
-          , "read_only": true
-          },
-          "is_author": {
-            "type": "boolean"
-          , "read_only": true
-          },
-          "is_signatory": {
-            "type": "boolean"
+          , "default": null
           },
           "delivery_method": {
             "type": "string",
@@ -152,20 +122,6 @@
             , "email_mobile"
             ],
             "default": "email"
-          },
-          "api_delivery_url": {
-            "anyOf": [
-              { "type": "null" }
-            , { "type": "string", "format": "uri" }
-            ]
-          },
-          "email_delivery_status" : {
-            "$ref": "#/definitions/delivery_status"
-          , "read_only": true
-          },
-          "mobile_delivery_status" : {
-            "$ref": "#/definitions/delivery_status"
-          , "read_only": true
           },
           "authentication_method": {
             "type": "string",
@@ -186,18 +142,6 @@
             ],
             "default": "email"
           },
-          "sign_success_redirect_url": {
-            "anyOf": [
-              { "type": "null" }
-            , { "type": "string", "format": "uri" }
-            ]
-          },
-          "reject_redirect_url": {
-            "anyOf": [
-              { "type": "null" }
-            , { "type": "string", "format": "uri" }
-            ]
-          },
           "attachments": {
             "type": "array",
             "items": {
@@ -212,35 +156,80 @@
                         }
               }
             }
-          , "read_only": true
+          , "default": []
           },
-          "fields": {
-            "type": "array",
-            "items": {
-              "oneOf" : [
-                 { "$ref": "#/definitions/field_name" }
-               , { "$ref": "#/definitions/field_standard" }
-               , { "$ref": "#/definitions/field_text" }
-               , { "$ref": "#/definitions/field_signature" }
-               , { "$ref": "#/definitions/field_checkbox" }
-               ]
-            }
+          "api_delivery_url": {
+            "anyOf": [
+              { "type": "null" }
+            , { "type": "string", "format": "uri" }
+            ]
+          , "read_only": true
           }
         }
       }
     },
-    "is_template": {
-      "type": "boolean",
-      "default": false
+    "file": {
+      "anyOf" : [
+        { "type": "null" }
+      , { "$ref": "#/definitions/file_def" }
+      ]
+    , "read_only": true
+    },
+    "sealed_file": {
+      "anyOf": [
+        { "type": "null" }
+      , { "$ref": "#/definitions/file_def" }
+      ]
+    , "read_only": true
+    },
+    "author_attachments": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          { "type": "null"}
+        , { "$ref": "#/definitions/file_def" }
+        ]
+      }
+    , "read_only": true
+    },
+    "ctime": {
+      "type": "string",
+      "format": "date-time"
+    , "read_only": true
+    },
+    "mtime": {
+      "type": "string",
+      "format": "date-time"
+    , "read_only": true
+    },
+    "timeout_time": {
+      "anyOf": [
+        { "type": "null"}
+      , { "type": "string", "format": "date-time" }
+      ]
+    , "read_only": true
+    },
+    "auto_remind_time": {
+      "anyOf": [
+        { "type": "null"}
+      , { "type": "string", "format": "date-time" }
+      ]
+    , "read_only": true
+    },
+    "status": {
+      "$ref": "#/definitions/document_status"
+    , "read_only": true
     },
     "days_to_sign": {
-      "type": "integer"
+      "type": "integer",
+      "default": 90
     },
     "days_to_remind": {
       "anyOf": [
         { "type": "null" }
       , { "type": "integer" }
-      ]
+      ],
+      "default": null
     },
     "display_options" : {
       "type": "object",
@@ -265,9 +254,11 @@
     },
     "invitation_message": {
       "type": "string"
+    , "default": ""
     },
     "confirmation_message": {
       "type": "string"
+    , "default": ""
     },
     "lang": {
       "type": "string",
@@ -286,32 +277,12 @@
       , "fi"
       ]
     },
-    "tags": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": { "type": "string" }
-        , "value": { "type": "string" }
-        }
-      }
-    },
     "api_callback_url": {
       "anyOf": [
         { "type": "null" }
       , { "type": "string", "format": "uri" }
       ]
-    },
-    "is_saved": {
-      "type": "boolean"
-    },
-    "is_trashed": {
-      "type": "boolean"
-    , "read_only": true
-    },
-    "is_deleted": {
-      "type": "boolean"
-    , "read_only": true
+    , "default": null
     },
     "object_version": {
       "type": "integer"
@@ -323,6 +294,48 @@
     },
     "timezone": {
       "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" }
+        , "value": { "type": "string" }
+        }
+      }
+    , "default": []
+    },
+    "is_template": {
+      "type": "boolean"
+    , "default": false
+    },
+    "is_saved": {
+      "type": "boolean"
+    , "default": true
+    },
+    "is_trashed": {
+      "type": "boolean"
+    , "read_only": true
+    },
+    "is_deleted": {
+      "type": "boolean"
+    , "read_only": true
+    },
+    "viewer": {
+      "type": "object",
+      "properties": {
+        "role": {
+          "type": "string", "enum": ["company_admin", "signatory"]
+        },
+        "signatory_id": {
+          "oneOf": [
+            { "type": "null"}
+          , { "type": "string", "pattern": "^[0-9]+$" }
+          ]
+        }
+      }
+    , "read_only": true
     }
   },
   "definitions": {
@@ -351,9 +364,6 @@
       "type": "object",
       "properties": {
         "is_obligatory": {
-          "type": "boolean"
-        },
-        "should_be_filled_by_sender": {
           "type": "boolean"
         },
         "placements": {
@@ -420,6 +430,9 @@
             },
             "value": {
               "type": "string"
+            },
+            "should_be_filled_by_sender": {
+              "type": "boolean"
             }
           }
         }
@@ -440,6 +453,9 @@
             },
             "value": {
               "type": "string"
+            },
+            "should_be_filled_by_sender": {
+              "type": "boolean"
             }
           }
         }
@@ -458,6 +474,9 @@
             },
             "value": {
               "type": "string"
+            },
+            "should_be_filled_by_sender": {
+              "type": "boolean"
             }
           }
         }
@@ -491,6 +510,9 @@
               "enum": [ "checkbox" ]
             },
             "is_checked": {
+              "type": "boolean"
+            },
+            "should_be_filled_by_sender": {
               "type": "boolean"
             }
           }

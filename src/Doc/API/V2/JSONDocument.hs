@@ -86,7 +86,7 @@ unjsonSignatory da =  objectOf $
   <**> (fieldOpt "reject_redirect_url" signatorylinkrejectredirecturl ("Redirect user when he rejected")
         <**> (pure $ \mrd s -> s { signatorylinkrejectredirecturl = mrd }))
   <*   (fieldReadonly "email_delivery_status" mailinvitationdeliverystatus "Email invitation delivery status")
-  <*   (fieldReadonly "mobile_delivery_status" mailinvitationdeliverystatus "SMS invitation delivery status")
+  <*   (fieldReadonly "mobile_delivery_status" smsinvitationdeliverystatus "SMS invitation delivery status")
   <**> (fieldOpt "csv" signatorylinkcsvupload ("CSV upload for multipart") <**> (pure $ \mcsv s -> s { signatorylinkcsvupload = mcsv })) -- Check only one csv for whole doc
   <**> (fieldDef "delivery_method" (signatorylinkdeliverymethod def) signatorylinkdeliverymethod "Signatory invitation delivery method"
         <**> (pure $ \sd s -> s { signatorylinkdeliverymethod = sd }))
@@ -101,7 +101,7 @@ unjsonSignatory da =  objectOf $
 fieldSignLink :: DocumentAccess -> Ap (FieldDef SignatoryLink) ()
 fieldSignLink da =
   if (canSeeSignlinks da)
-    then fieldReadonlyBy "signing_link"
+    then fieldReadonlyBy "api_delivery_url"
           (\sl -> if (signatorylinkdeliverymethod sl == APIDelivery)
                   then (Just $ show $ LinkSignDoc (daDocumentID da) sl)
                   else Nothing
