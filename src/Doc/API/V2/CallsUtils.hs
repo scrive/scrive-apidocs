@@ -5,14 +5,13 @@ module Doc.API.V2.CallsUtils (
     , checkAuthenticationMethodAndValue
     , getScreenshots
     , signDocument
-    , getFieldForSigning
     , getMagicHashAndUserForSignatoryAction
     , getValidPin
   ) where
 
 import KontraPrelude
 import Control.Conditional (unlessM, whenM)
-import Data.Text (Text, pack, append)
+import Data.Text (Text, pack)
 import Happstack.Fields
 import qualified Data.ByteString.Char8 as BS
 import File.Model
@@ -20,8 +19,6 @@ import Doc.SignatoryScreenshots(SignatoryScreenshots, emptySignatoryScreenshots,
 import EID.Signature.Model
 import MagicHash (MagicHash)
 import Data.Unjson
-import Data.Unjson as Unjson
-import qualified Data.Aeson as Aeson
 import Doc.DocumentID
 import Doc.DocStateQuery
 
@@ -44,6 +41,7 @@ import Util.Actor
 import OAuth.Model
 import Doc.Tokens.Model
 import Doc.SMSPin.Model
+import Doc.API.V2.Parameters
 
 guardThatDocument :: (DocumentMonad m, Kontrakcja m) => (Document -> Bool) -> Text -> m ()
 guardThatDocument f text = unlessM (f <$> theDocument) $ throwIO . SomeKontraException $ documentStateError text
@@ -105,15 +103,7 @@ checkAuthenticationMethodAndValue slid = do
 
 getScreenshots :: (Kontrakcja m) => m SignatoryScreenshots
 getScreenshots = do
-  mscjson <- getFieldBS "screenshots"
-  screenshots <- case mscjson of
-    Nothing -> return emptySignatoryScreenshots
-    Just scjson -> case Aeson.eitherDecode scjson of
-      Left _ -> throwIO . SomeKontraException $ requestParametersParseError "Screenshot parameter does not parse as a JSON object"
-      Right scaeson -> case (Unjson.parse unjsonDef scaeson) of
-          (Result scs []) -> return scs
-          (Result _ errs) -> do
-            throwIO . SomeKontraException $ requestParametersParseError $ "Screenshot parameter does not parse: " `append` pack (show errs)
+  screenshots <- apiV2Parameter' (ApiV2ParameterJSON "screenshots" (OptionalWithDefault (Just emptySignatoryScreenshots)) unjsonDef)
   resolvedScreenshots <- resolveReferenceScreenshotNames screenshots
   case resolvedScreenshots of
     Nothing -> throwIO . SomeKontraException $ requestParameterInvalid "screenshots" "Could not resolve reference screenshot"
@@ -140,19 +130,6 @@ signDocument slid mh fields mesig mpin screenshots = do
   getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . UpdateFieldsForSigning sl (fst fieldsWithFiles) (snd fieldsWithFiles) =<< signatoryActor ctx sl
   getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . SignDocument slid mh mesig mpin screenshots =<< signatoryActor ctx sl
 
-
-
-getFieldForSigning ::(Kontrakcja m) => m [(FieldIdentity, SignatoryFieldTMPValue)]
-getFieldForSigning = do
-  mfields <- getFieldBS "fields"
-  case mfields of
-    Nothing -> throwIO . SomeKontraException $ requestParametersMissing ["fields"]
-    Just fields ->case Aeson.eitherDecode fields of
-      Left _ -> throwIO . SomeKontraException $ requestParametersParseError "Fields are not a valid JSON array"
-      Right fieldsaeson -> case (Unjson.parse unjsonSignatoryFieldsValues fieldsaeson) of
-          (Result fs []) -> return fs
-          (Result _ errs) -> do
-            throwIO . SomeKontraException $ requestParametersParseError $ "Fields don't parse: " `append` pack (show errs)
 
 fieldsToFieldsWithFiles :: (Kontrakcja m)
                            => [(FieldIdentity,SignatoryFieldTMPValue)]

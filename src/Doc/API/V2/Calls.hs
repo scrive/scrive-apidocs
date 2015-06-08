@@ -47,12 +47,14 @@ import Doc.DocUtils
 import User.Model
 import Doc.Model
 import Doc.Rendering
+import Doc.API.V2.JSONFields
 import Doc.API.V2.CallsUtils
 import Doc.Action
 import Doc.DocControl
 import EID.Signature.Model
 import Chargeable.Model
 import Doc.API.V2.JSONList
+import Doc.API.V2.Parameters
 
 -- TODO add 'documents' prefix
 documentAPIV2 ::  Route (Kontra Response)
@@ -133,7 +135,7 @@ docApiV2New = api $ do
           Left _ ->  throwIO . SomeKontraException $ requestParameterInvalid "file" "file is not a valid PDF"
       fileid' <- dbUpdate $ NewFile filename pdfcontent
       return (Just fileid', takeBaseName filename)
-  saved <- apiBoolParamWithDefault  True "saved"
+  saved <- apiV2Parameter' (ApiV2ParameterBool "saved" (OptionalWithDefault (Just true)))
   (dbUpdate $ NewDocument user title Signable defaultTimeZoneName 0 actor) `withDocumentM` do
     dbUpdate $ SetDocumentUnsavedDraft (not saved)
     case mfile of
@@ -170,27 +172,10 @@ docApiV2Available = $undefined -- TODO implement
 docApiV2List :: Kontrakcja m => m Response
 docApiV2List = api $ do
   (user, _) <- getAPIUserWithPad APIDocCheck
-  offset   <- apiIntParamWithDefault 0 "offset"
-  maxcount <- apiIntParamWithDefault 100 "max"
-  mfilters <- getFieldBS "filter"
-  filters <- case mfilters of
-    Nothing -> return []
-    Just filters' -> case Aeson.eitherDecode  filters' of
-      Left _ -> throwIO . SomeKontraException $ requestParametersParseError "Filters are not a valid JSON array"
-      Right filtersaeson -> case (Unjson.parse unjsonDef filtersaeson) of
-          (Result fs []) -> return fs
-          (Result _ errs) -> do
-            throwIO . SomeKontraException $ requestParametersParseError $ "Filters don't parse: " `append` pack (show errs)
-
-  msorting <- getFieldBS "sorting"
-  sorting <- case msorting of
-    Nothing -> return []
-    Just sorting' -> case Aeson.eitherDecode  sorting' of
-      Left _ -> throwIO . SomeKontraException $ requestParametersParseError " Sorting is not a valid JSON object"
-      Right sortingaeson -> case (Unjson.parse unjsonDef sortingaeson) of
-          (Result fs []) -> return [fs]
-          (Result _ errs) -> do
-            throwIO . SomeKontraException $ requestParametersParseError $ "Sorting doesn't parse: " `append` pack (show errs)
+  offset   <- apiV2Parameter' (ApiV2ParameterInt  "offset"  (OptionalWithDefault (Just 0)))
+  maxcount <- apiV2Parameter' (ApiV2ParameterInt  "max"     (OptionalWithDefault (Just 100)))
+  filters  <- apiV2Parameter' (ApiV2ParameterJSON "filter"  (OptionalWithDefault (Just [])) unjsonDef)
+  sorting  <- apiV2Parameter' (ApiV2ParameterJSON "sorting" (OptionalWithDefault (Just [])) unjsonDef)
   let documentFilters = (DocumentFilterUnsavedDraft False):(join $ toDocumentFilter (userid user) <$> filters)
   let documentSorting = (toDocumentSorting <$> sorting)
   (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit [DocumentsVisibleToUser $ userid user] documentFilters documentSorting (offset,1000,maxcount)
@@ -334,7 +319,7 @@ docApiV2SigSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSign did slid = api $ do
   (mh,_mu) <- getMagicHashAndUserForSignatoryAction did slid
   screenshots <- getScreenshots
-  fields <- getFieldForSigning
+  fields <- apiV2Parameter' (ApiV2ParameterJSON "fields" Obligatory unjsonSignatoryFieldsValues)
   olddoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh -- We store old document, as it is needed by postDocumentXXX calls
   olddoc `withDocument` ( do
     guardThatDocument isPending "Document must be pending"
@@ -380,24 +365,3 @@ docApiV2SigSendSmsPin _did _slid = $undefined -- TODO implement
 
 docApiV2SigSetAttachment :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSetAttachment _did _slid = $undefined -- TODO implement
-
-
---- Utils
-
-apiBoolParamWithDefault  :: Kontrakcja m => Bool -> Text -> m Bool
-apiBoolParamWithDefault  defaultValue name = do
-  mvalue <- getField $ unpack name
-  case mvalue of
-    Just "true" -> return $ True
-    Just "false" -> return $  False
-    Just _ ->  throwIO . SomeKontraException $ requestParametersParseError $ "Can't parse parameter '" `append` name `append` "'"
-    Nothing -> return $  defaultValue
-
-
-apiIntParamWithDefault :: Kontrakcja m => Int -> Text -> m Int
-apiIntParamWithDefault defaultValue name = do
-  mvalue <- getField $ unpack name
-  case fmap maybeRead mvalue of
-    Just (Just v) -> return $ v
-    Just (Nothing) ->  throwIO . SomeKontraException $ requestParametersParseError $ "Can't parse parameter '" `append` name `append` "'"
-    Nothing -> return $  defaultValue
