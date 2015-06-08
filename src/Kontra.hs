@@ -20,7 +20,7 @@ module Kontra
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
-import Control.Monad.State
+import Control.Monad.State.Strict
 import Control.Monad.Trans.Control
 import Database.PostgreSQL.PQTypes.Class.Instances.Overlapping ()
 import Happstack.Server

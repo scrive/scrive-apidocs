@@ -21,7 +21,7 @@ import Control.Monad.Catch
 import Control.Monad.Except
 import Control.Monad.Trans.Control
 import Control.Monad.Trans.Maybe
-import Control.Monad.Trans.State
+import Control.Monad.Trans.State.Strict
 import Data.Typeable
 import Happstack.Server
 import Happstack.Server.Internal.MessageWrap
@@ -97,7 +97,7 @@ instance Monad m => FilterMonad Response (ReqHandlerT m) where
   setFilter f     = ReqHandlerT . modify $ \st -> st { hsFilter = f }
   composeFilter f = ReqHandlerT . modify $ \st -> st { hsFilter = f . hsFilter st }
   getFilter m     = ReqHandlerT . StateT $ \st -> do
-    ~(res, st') <- runStateT (unReqHandlerT m) st
+    (res, st') <- runStateT (unReqHandlerT m) st
     return ((res, hsFilter st'), st')
 
 instance (MonadIO m, MonadThrow m) => HasRqData (ReqHandlerT m) where
@@ -109,7 +109,7 @@ instance Monad m => ServerMonad (ReqHandlerT m) where
   askRq       = ReqHandlerT $ gets hsRequest
   localRq f m = ReqHandlerT . StateT $ \st -> do
     let req = hsRequest st
-    ~(res, st') <- runStateT (unReqHandlerT m) $ st { hsRequest = f req }
+    (res, st') <- runStateT (unReqHandlerT m) $ st { hsRequest = f req }
     return (res, st' { hsRequest = req })
 
 ----------------------------------------

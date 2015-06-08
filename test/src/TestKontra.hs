@@ -24,7 +24,7 @@ import Control.Concurrent.STM
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
-import Control.Monad.State
+import Control.Monad.State.Strict
 import Control.Monad.Trans.Control
 import Data.Time
 import Database.PostgreSQL.PQTypes.Internal.Monad
