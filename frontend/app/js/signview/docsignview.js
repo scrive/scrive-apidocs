@@ -3,7 +3,7 @@
  * Instrumented for Mixpanel
  */
 
-define(['React', 'signview/create_account_section_view', 'doctools/docviewsignatories', 'common/retargeting_service', 'Backbone', 'Underscore', 'legacy_code'], function(React, CreateAccountSection,DocumentViewSignatories, RetargetingService) {
+define(['React', 'signview/create_account_section_view', 'doctools/docviewsignatories', 'common/retargeting_service', 'signview/fileview/fileview', 'Backbone', 'Underscore', 'legacy_code'], function(React, CreateAccountSection,DocumentViewSignatories, RetargetingService, FileView) {
 
 
 var DocumentSignViewModel = Backbone.Model.extend({
@@ -226,7 +226,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
       var model = this;
       if (this.get("mainfile") == undefined) {
         this.set({'mainfile' :
-                    new KontraFile({
+                    new FileView({
                             file: this.document().mainfile(),
                             document: this.document(),
                             signview: this,

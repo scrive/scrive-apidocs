@@ -6,7 +6,7 @@
 
 **/
 
-define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
+define(['Spinjs', 'designview/fileview/fileview', 'Backbone', 'legacy_code'], function(Spinner, FileView) {
 
     // expected model: document
     // expected viewmodel: DesignViewModel
@@ -75,7 +75,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             var div = $('<div />');
             div.addClass('design-view-document-pages');
             if (!this.file)
-              this.file = new KontraFile({file: document.mainfile()});
+              this.file = new FileView({file: document.mainfile()});
             div.append(this.file.view.el);
             return div;
         },
