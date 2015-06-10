@@ -53,6 +53,7 @@
 "_enterSMSPin":"Entrer votre code PIN reçu par SMS",
 "_filladitionfields":"Informations supplémentaires",
 "_filladitionfieldsdescription":"Veuillez compléter vos informations personnelles.",
+"_filladitionfieldslabel":"",
 "_firstname":"Prénom",
 "_followTheArrow":"Suivez la <span class='arrowtext'>FLECHE</span>",
 "_followTheArrowWithUserName":"<span class='signatory-name'></span>, suivez la <span class='arrowtext'>FLECHE</span>",

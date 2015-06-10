@@ -171,7 +171,7 @@
 "_blockingOverdueHeadline":"Betalingsfejl",
 "_blockingOverdueSubtext1":"Der var noget galt med din seneste betaling. Du kan ikke sende flere dokumenter, førend dette er blevet løst.",
 "_blockingOverdueSubtext2":"Besøg venligst <a class='put-link-to-payments-here'>betalingsside</a> og dobbelttjek dine faktureringsoplysninger. ",
-"_blockingPayingCSVBody":"",
+"_blockingPayingCSVBody":"Din fil indeholder <span class='put-no-of-parties-here'></span> modtagere, men du kan kun sende endnu <span class='put-docs-left-here'></span> dokumenter. Du bedes derfor venligst <a class='put-link-to-contact-here'>kontakte Scrive</a>, så du kan øge antallet.",
 "_blockingPayingCreateBody":"Du har nået den månedlige forbrugsgrænse på 100 sendte dokumenter. Du bedes <a class='put-link-to-payments-here'>kontakte support</a> for at hæve grænsen. Vi beklager ulejligheden. ",
 "_blockingPayingCreateTitle":"Månedlig brugsgrænse",
 "_blockingUsedAllHeadline":"Du har nået den månedlige forbrugs grænse på 100 sendte dokumenter ",

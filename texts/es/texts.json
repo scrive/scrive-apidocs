@@ -171,7 +171,7 @@
 "_blockingOverdueHeadline":"Fallo en el pago",
 "_blockingOverdueSubtext1":"Hubo algun problema con su último pago. No puede enviar más documentos hasta que este problema sea resuelto.",
 "_blockingOverdueSubtext2":"Por favor visite la <a class='put-link-to-payments-here'>página de pagos</a> y vuelva a revisar su información bancaria.",
-"_blockingPayingCSVBody":"",
+"_blockingPayingCSVBody":"Su documento contiene <span class='put-no-of-parties-here'></span> destinatarios y sólo le quedan <span class='put-docs-left-here'></span> documentos que poder enviar. Por favor <a class='put-link-to-contact-here'>contacte Scrive</a> para aumentar su límite.",
 "_blockingPayingCreateBody":"Ha alcanzado el límite de uso de 100 documentos enviados. Por favor <a class='put-link-to-payments-here'>contacte con el personal</a> para aumentar el límite. Sentimos los posibles inconvenientes.",
 "_blockingPayingCreateTitle":"Límite de uso en un mes",
 "_blockingUsedAllHeadline":"Ha alcanzado el límite de uso del mes de envío de 100 documentos",

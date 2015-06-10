@@ -171,7 +171,7 @@
 "_blockingOverdueHeadline":"Betalingsachterstand",
 "_blockingOverdueSubtext1":"Er is iets misgegaan met uw laatste betaling. U kunt geen verdere documenten versturen tot dat dit probleem verholpen is.",
 "_blockingOverdueSubtext2":"Bezoek de <a class='put-link-to-payments-here'>betalingspagina</a> en controleer uw betalingsinformatie. ",
-"_blockingPayingCSVBody":"",
+"_blockingPayingCSVBody":"Uw bestand bevat <span class='put-no-of-parties-here'></span> ontvangers en u heeft slechts <span class='put-docs-left-here'></span> documenten over om te versturen. <a class='put-link-to-contact-here'>Neem contact op met Scrive</a> om uw limiet te verhogen. ",
 "_blockingPayingCreateBody":"U heeft uw maandelijkes limiet van 100 verstuurde documenten bereikt. Neem a.u.b. <a class='put-link-to-payments-here'>contact op met support</a> om uw limiet te vergroten. Onze excuses voor het ongemak.",
 "_blockingPayingCreateTitle":"Maandelijkse gebruikslimiet",
 "_blockingUsedAllHeadline":"U heeft het maandelijkse limiet van 100 verzonden documenten bereikt",

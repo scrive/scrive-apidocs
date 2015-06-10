@@ -53,6 +53,7 @@
 "_enterSMSPin":"Inserisci il PIN del tuo SMS",
 "_filladitionfields":"Dati aggiuntivi",
 "_filladitionfieldsdescription":"Ti preghiamo di inviare ulteriori informazioni sul tuo conto.",
+"_filladitionfieldslabel":"",
 "_firstname":"Nome",
 "_followTheArrow":"Segui la <span class='arrowtext'>FRECCIA</span>",
 "_followTheArrowWithUserName":"<span class='signatory-name'></span>, segui la <span class='arrowtext'>FRECCIA</span>",

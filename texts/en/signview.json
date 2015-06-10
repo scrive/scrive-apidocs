@@ -1,4 +1,4 @@
-{
+{ 
 "_DeletePDF":"Delete",
 "_RequestedAttachments":"Requested attachments",
 "_ReviewPDF":"Review",
@@ -52,8 +52,8 @@
 "_enterPhoneForPinDelivery":"Enter your phone number",
 "_enterSMSPin":"Enter your SMS PIN",
 "_filladitionfields":"Additional details",
-"_filladitionfieldslabel":"About you",
 "_filladitionfieldsdescription":"Please submit additional information about yourself.",
+"_filladitionfieldslabel":"About you",
 "_firstname":"First name",
 "_followTheArrow":"Follow the <span class='arrowtext'>ARROW</span>",
 "_followTheArrowWithUserName":"<span class='signatory-name'></span>, follow the <span class='arrowtext'>ARROW</span>",
