@@ -6,7 +6,7 @@ import Happstack.Server.Types
 import Happstack.StaticRouting
 
 import Doc.API.V1.Calls
-import Doc.API.V2.Calls
+import Doc.API.V2
 import Kontra
 import KontraPrelude
 
