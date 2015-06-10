@@ -2,6 +2,7 @@ module Doc.API.V2.CallsUtils (
       guardThatDocument
     , guardThatUserIsAuthor
     , guardThatDocumentCanBeStarted
+    , guardThatObjectVersionMatchesIfProvided
     , checkAuthenticationMethodAndValue
     , getScreenshots
     , signDocument
@@ -37,6 +38,7 @@ import InputValidation
 import Util.HasSomeUserInfo
 import Doc.API.V2.JSONFields
 import Doc.Model.Update
+import Doc.Model.Query
 import Util.Actor
 import OAuth.Model
 import Doc.Tokens.Model
@@ -51,6 +53,13 @@ guardThatUserIsAuthor user = do
   auid <- apiGuardJustM (serverError "Document doesn't have author signatory link connected with user account") $ ((maybesignatory =<<) .getAuthorSigLink) <$> theDocument
   when (not $ (auid == userid user)) $ do
     throwIO $ SomeKontraException documentActionForbidden
+
+guardThatObjectVersionMatchesIfProvided :: Kontrakcja m => DocumentID -> m ()
+guardThatObjectVersionMatchesIfProvided did = do
+  reqObjectVersion <- apiV2Parameter (ApiV2ParameterInt "object_version" Optional)
+  case reqObjectVersion of
+    Nothing -> return ()
+    Just ov -> dbQuery $ CheckDocumentObjectVersionIs did (fromIntegral ov)
 
 -- Checks if document can be strated. Throws matching API exception if it does not
 guardThatDocumentCanBeStarted :: (DocumentMonad m, Kontrakcja m) => m ()

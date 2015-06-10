@@ -157,6 +157,7 @@ docApiV2NewFromTemplate did = api $ do
                       (usercompany auser == usercompany user &&  isDocumentShared template)
   unless (haspermission) $ do
     throwIO $ SomeKontraException documentActionForbidden
+  guardThatObjectVersionMatchesIfProvided did
   withDocumentID did $ guardThatDocument isTemplate "Document must be a template"
   (apiGuardJustM (serverError "Can't clone given document") (dbUpdate $ CloneDocumentWithUpdatedAuthor user template actor) >>=) $ flip withDocumentID $ do
     dbUpdate $ DocumentFromTemplate actor
@@ -188,33 +189,29 @@ docApiV2Get did = api $ do
   ctx <- getContext
   (msignatorylink :: Maybe SignatoryLinkID) <- readField "signatoryid"
   mmagichashh <- maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msignatorylink
-  withDocumentID did $ case (msignatorylink,mmagichashh) of
-    (Just slid,Just mh) -> do
+  withDocumentID did $ do
+    (da,msl) <- case (msignatorylink,mmagichashh) of
+      (Just slid,Just mh) -> do
        sl <- apiGuardJustM  (documentNotFound did) $ getSigLinkFor slid <$> theDocument
        when (signatorymagichash sl /= mh) $ throwIO . SomeKontraException $ documentNotFound did
-       unlessM ((isTemplate || isPreparation || isClosed) <$> theDocument) $
-         dbUpdate . MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl)
-                       =<< signatoryActor ctx sl
-       Ok <$> (\d -> (unjsonDocument (DocumentAccess did $ SignatoryDocumentAccess slid),d)) <$> theDocument
-    _ -> do
-      (user,_) <- getAPIUser APIDocCheck
-      msiglink <- getSigLinkFor user <$> theDocument
-      unlessM (((const (isNothing msiglink)) || isPreparation || isClosed  || isTemplate) <$> theDocument) $ do
-          let sl = $fromJust msiglink
-          dbUpdate . MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl)
-               =<< signatoryActor ctx sl
-
-      mauser <- theDocument >>= \d -> case (join $ maybesignatory <$> getAuthorSigLink d) of
-                     Just auid -> dbQuery $ GetUserByIDIncludeDeleted auid
-                     _ -> return Nothing
-
-      haspermission <- theDocument >>= \d -> return $
-                          isJust msiglink
-                       || (isJust mauser && usercompany ($fromJust mauser) == usercompany user && (useriscompanyadmin user || isDocumentShared d))
-      if (haspermission)
-        then do
-          Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
-        else throwIO $ SomeKontraException documentActionForbidden
+       return (DocumentAccess did $ SignatoryDocumentAccess slid,Just sl)
+      _ -> do
+        (user,_) <- getAPIUser APIDocCheck
+        msiglink <- getSigLinkFor user <$> theDocument
+        mauser <- theDocument >>= \d -> case (join $ maybesignatory <$> getAuthorSigLink d) of
+                      Just auid -> dbQuery $ GetUserByIDIncludeDeleted auid
+                      _ -> return Nothing
+        haspermission <- theDocument >>= \d -> return $
+                            isJust msiglink
+                        || (isJust mauser && usercompany ($fromJust mauser) == usercompany user && (useriscompanyadmin user || isDocumentShared d))
+        if (haspermission)
+          then (\d -> (documentAccessForUser user d,msiglink)) <$> theDocument
+          else throwIO $ SomeKontraException documentActionForbidden
+    case (msl) of
+      Just sl -> unlessM ((isTemplate || isPreparation || isClosed) <$> theDocument) $
+                  dbUpdate . MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl) =<< signatoryActor ctx sl
+      _ -> return ()
+    Ok <$> (\d -> (unjsonDocument $ da,d)) <$> theDocument
 
 docApiV2History :: Kontrakcja m => DocumentID -> m Response
 docApiV2History _did = $undefined -- TODO implement
@@ -229,6 +226,7 @@ docApiV2Update did = api $ do
   (user, actor) <- getAPIUser APIDocCreate
   withDocumentID did $ do
     guardThatUserIsAuthor user
+    guardThatObjectVersionMatchesIfProvided did
     guardThatDocument isPreparation "Document must be draft or template"
     documentJSON <- apiGuardJustM (requestParametersMissing ["document"]) $ getFieldBS "document"
     case Aeson.eitherDecode documentJSON of
@@ -248,6 +246,7 @@ docApiV2Start did = api $ do
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
     guardThatUserIsAuthor user
+    guardThatObjectVersionMatchesIfProvided did
     guardThatDocumentCanBeStarted
     t <- ctxtime <$> getContext
     timezone <- documenttimezonename <$> theDocument
@@ -322,6 +321,7 @@ docApiV2SigSign did slid = api $ do
   fields <- apiV2Parameter' (ApiV2ParameterJSON "fields" Obligatory unjsonSignatoryFieldsValues)
   olddoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh -- We store old document, as it is needed by postDocumentXXX calls
   olddoc `withDocument` ( do
+    guardThatObjectVersionMatchesIfProvided did
     guardThatDocument isPending "Document must be pending"
     guardThatDocument (hasSigned . $fromJust . getSigLinkFor slid ) "Document can't be already signed"
     checkAuthenticationMethodAndValue slid

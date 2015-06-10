@@ -139,7 +139,7 @@ signatoryStateError msg = APIError { errorType = SignatoryStateError, errorHttpC
 
 documentActionForbidden :: APIError
 documentActionForbidden = APIError { errorType = DocumentActionForbidden, errorHttpCode = 403, errorMessage = msg}
-  where msg = "You do not have permission to access the document."
+  where msg = "You do not have permission to perform this action on the document."
 
 documentNotFound :: DocumentID -> APIError
 documentNotFound did = resourceNotFound $ "A document with id " `append` didText `append` " was not found."
@@ -256,7 +256,10 @@ convertSignatoryTokenDoesNotMatch (SomeKontraException ex) =
 convertDocumentObjectVersionDoesNotMatch :: SomeKontraException -> SomeKontraException
 convertDocumentObjectVersionDoesNotMatch (SomeKontraException ex) =
   case cast ex of
-    Just (DocumentObjectVersionDoesNotMatch {}) -> SomeKontraException $ documentObjectVersionMismatch $ "Object version does not match"
+    Just (DocumentObjectVersionDoesNotMatch {..}) -> SomeKontraException $ documentObjectVersionMismatch $
+      "The document has a different object_version to the one provided and so the request was not processed."
+      `append` " You gave " `append` (pack $ show documentObjectVersionShouldBe)
+      `append` " but the document had " `append` (pack $ show documentObjectVersionIs)
     Nothing -> (SomeKontraException ex)
 
 convertDocumentWasPurged ::  SomeKontraException -> SomeKontraException

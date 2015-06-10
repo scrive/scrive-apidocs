@@ -96,6 +96,8 @@ instance ToAPIResponse () where
 api :: (Kontrakcja m, ToAPIResponse v) => m (APIResponse v) -> m Response
 api acc =  (toAPIResponse <$> acc) `catches` [
     Handler $ \ex@(SomeKontraException e) -> do
+      -- API handler always returns a valid response. Due to that appHandler will not rollback - and we need to do it here
+      rollback
       logAttention "API error (V2 will may convert error message):" $ object ["error" .= jsonToAeson (toJSValue e)]
       -- For some exceptions we do a conversion to APIError
       let ex' = tryToConvertConditionalExpectionIntoAPIError ex
