@@ -1,4 +1,4 @@
-module Main where
+module Main (main) where
 
 import Control.Concurrent.Lifted
 import Control.Monad.Base
@@ -7,6 +7,8 @@ import Happstack.Server hiding (waitForTermination)
 import Happstack.StaticRouting
 import Log
 import Network.Curl
+import System.Console.CmdArgs hiding (def)
+import System.Environment
 import System.IO
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
@@ -37,11 +39,27 @@ import qualified HostClock.Model as HC
 import qualified MemCache
 import qualified Version
 
+data CmdConf = CmdConf {
+  config :: String
+} deriving (Data, Typeable)
+
+cmdConf :: String -> CmdConf
+cmdConf progName = CmdConf {
+  config = configFile
+        &= help ("Configuration file (default: " ++ configFile ++ ")")
+        &= typ "FILE"
+} &= program progName
+  where
+    configFile = "kontrakcja.conf"
+
+----------------------------------------
+
 type MainM = LogT IO
 
 main :: IO ()
 main = withCurlDo $ do
-  appConf <- readConfig putStrLn "kontrakcja.conf"
+  CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
+  appConf <- readConfig putStrLn config
   lr@LogRunner{..} <- mkLogRunner "kontrakcja" $ logConfig appConf
   withLoggerWait $ do
     logInfo_ $ "Starting kontrakcja-server build " ++ Version.versionID

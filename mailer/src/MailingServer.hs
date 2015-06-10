@@ -1,4 +1,4 @@
-module MailingServer where
+module MailingServer (main) where
 
 import Control.Concurrent.Lifted
 import Control.Monad.Base
@@ -6,6 +6,8 @@ import Data.Monoid
 import Data.Time
 import Happstack.Server hiding (result, waitForTermination)
 import Log
+import System.Console.CmdArgs hiding (def)
+import System.Environment
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Happstack.StaticRouting as R
@@ -31,12 +33,28 @@ import Utils.Network
 import qualified Amazon as AWS
 import qualified MemCache
 
+data CmdConf = CmdConf {
+  config :: String
+} deriving (Data, Typeable)
+
+cmdConf :: String -> CmdConf
+cmdConf progName = CmdConf {
+  config = configFile
+        &= help ("Configuration file (default: " ++ configFile ++ ")")
+        &= typ "FILE"
+} &= program progName
+  where
+    configFile = "mailing_server.conf"
+
+----------------------------------------
+
 type MainM = LogT IO
 
 main :: IO ()
 main = do
   -- All running instances need to have the same configuration.
-  conf <- readConfig putStrLn "mailing_server.conf"
+  CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
+  conf <- readConfig putStrLn config
   lr@LogRunner{..} <- mkLogRunner "mailer" $ mscLogConfig conf
   withLoggerWait $ do
     checkExecutables
