@@ -52,6 +52,7 @@
 "_enterPhoneForPinDelivery":"Enter your phone number",
 "_enterSMSPin":"Enter your SMS PIN",
 "_filladitionfields":"Additional details",
+"_filladitionfieldslabel":"About you",
 "_filladitionfieldsdescription":"Please submit additional information about yourself.",
 "_firstname":"First name",
 "_followTheArrow":"Follow the <span class='arrowtext'>ARROW</span>",
