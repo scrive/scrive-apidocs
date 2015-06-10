@@ -79,6 +79,7 @@ Executable kontrakcja-server
   Build-depends: base64-bytestring
   Build-depends: binary
   Build-depends: bytestring
+  Build-depends: cmdargs
   Build-depends: cond
   Build-depends: conduit
   Build-depends: containers
@@ -207,6 +208,7 @@ Executable cron
   Build-depends: base64-bytestring
   Build-depends: binary
   Build-depends: bytestring
+  Build-depends: cmdargs
   Build-depends: cond
   Build-depends: conduit
   Build-depends: containers
@@ -459,6 +461,7 @@ Executable mailing-server
   Build-depends: base64-bytestring
   Build-depends: binary
   Build-depends: bytestring
+  Build-depends: cmdargs
   Build-depends: cond
   Build-depends: conduit
   Build-depends: containers
@@ -578,6 +581,7 @@ Executable messenger-server
   Build-depends: base64-bytestring
   Build-depends: binary
   Build-depends: bytestring
+  Build-depends: cmdargs
   Build-depends: cond
   Build-depends: conduit
   Build-depends: containers

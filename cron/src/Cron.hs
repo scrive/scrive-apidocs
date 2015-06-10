@@ -1,4 +1,4 @@
-module Cron where
+module Cron (main) where
 
 import Control.Concurrent.Lifted
 import Control.Monad
@@ -7,6 +7,8 @@ import Data.Maybe
 import Data.Monoid.Utils
 import Data.Time
 import Log
+import System.Console.CmdArgs hiding (def)
+import System.Environment
 import qualified Data.ByteString as BS
 
 import ActionQueue.EmailChangeRequest
@@ -47,12 +49,28 @@ import qualified Amazon as AWS
 import qualified CronEnv
 import qualified MemCache
 
+data CmdConf = CmdConf {
+  config :: String
+} deriving (Data, Typeable)
+
+cmdConf :: String -> CmdConf
+cmdConf progName = CmdConf {
+  config = configFile
+        &= help ("Configuration file (default: " ++ configFile ++ ")")
+        &= typ "FILE"
+} &= program progName
+  where
+    configFile = "kontrakcja.conf"
+
+----------------------------------------
+
 type CronM = CryptoRNGT (LogT IO)
 type DBCronM = DBT CronM
 
 main :: IO ()
 main = do
-  appConf <- readConfig putStrLn "kontrakcja.conf"
+  CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
+  appConf <- readConfig putStrLn config
   LogRunner{..} <- mkLogRunner "cron" $ logConfig appConf
   withLoggerWait $ do
     checkExecutables
