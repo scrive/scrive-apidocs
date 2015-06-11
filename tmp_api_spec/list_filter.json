@@ -28,8 +28,8 @@
           "range": {
             "type": "object",
             "properties": {
-              "start": { "type": "string", "format": "date-time" },
-              "end": { "type": "string", "format": "date-time" }
+              "start_time": { "type": "string", "format": "date-time" },
+              "end_time": { "type": "string", "format": "date-time" }
             }
           }
         }

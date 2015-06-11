@@ -13,6 +13,7 @@ data DocumentOrderBy
   = DocumentOrderByTitle       -- ^ Order by title, alphabetically, case insensitive
   | DocumentOrderByMTime       -- ^ Order by modification time
   | DocumentOrderByCTime       -- ^ Order by creation time
+  | DocumentOrderByStatus      -- ^ Order by document status.
   | DocumentOrderByStatusClass -- ^ Order by status class.
   | DocumentOrderByType        -- ^ Order by document type.
   | DocumentOrderByPartners    -- ^ Order by partner names or emails
@@ -24,6 +25,7 @@ documentOrderByToSQL :: DocumentOrderBy -> SQL
 documentOrderByToSQL DocumentOrderByTitle = "documents.title"
 documentOrderByToSQL DocumentOrderByMTime = "documents.mtime"
 documentOrderByToSQL DocumentOrderByCTime = "documents.ctime"
+documentOrderByToSQL DocumentOrderByStatus = "documents.status"
 documentOrderByToSQL DocumentOrderByStatusClass = documentStatusClassExpression
 documentOrderByToSQL DocumentOrderByType = "documents.type"
 documentOrderByToSQL DocumentOrderByPartners =

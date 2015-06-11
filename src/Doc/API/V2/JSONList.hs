@@ -37,15 +37,15 @@ instance Unjson DocumentSortOn where
 instance Unjson DocumentSort where
   unjsonDef = objectOf $ pure DocumentSort
     <*> field "sort_by" (\(DocumentSort v _) -> v) "How documents should be sorted"
-    <*> field "order" (\(DocumentSort _ o) -> o) "Descending or ascending sorting"
+    <*> fieldDef "order" DocumentSortAsc (\(DocumentSort _ o) -> o) "Descending or ascending sorting"
 
 
 toDocumentSorting ::  DocumentSort -> AscDesc DocumentOrderBy
-toDocumentSorting (DocumentSort DocumentSortStatus DocumentSortAsc) = Asc DocumentOrderByStatusClass
+toDocumentSorting (DocumentSort DocumentSortStatus DocumentSortAsc) = Asc DocumentOrderByStatus
 toDocumentSorting (DocumentSort DocumentSortTitle DocumentSortAsc) = Asc DocumentOrderByTitle
 toDocumentSorting (DocumentSort DocumentSortTime DocumentSortAsc) = Asc DocumentOrderByMTime
 toDocumentSorting (DocumentSort DocumentSortAuthor DocumentSortAsc) = Asc DocumentOrderByAuthor
-toDocumentSorting (DocumentSort DocumentSortStatus DocumentSortDesc) = Desc DocumentOrderByStatusClass
+toDocumentSorting (DocumentSort DocumentSortStatus DocumentSortDesc) = Desc DocumentOrderByStatus
 toDocumentSorting (DocumentSort DocumentSortTitle DocumentSortDesc) = Desc DocumentOrderByTitle
 toDocumentSorting (DocumentSort DocumentSortTime DocumentSortDesc) = Desc DocumentOrderByMTime
 toDocumentSorting (DocumentSort DocumentSortAuthor DocumentSortDesc) = Desc DocumentOrderByAuthor
@@ -106,8 +106,8 @@ unjsonDocumentFilterStatuses = pure DocumentFilterStatuses
 unjsonDocumentFilterTime :: Ap (FieldDef DocumentFilter) DocumentFilter
 unjsonDocumentFilterTime = pure DocumentFilterTime
   <*  fieldReadonly "filter_by" filterType "Type of filter"
-  <*> fieldOpt "start" unsafeDocumentFilterStartTime "Name of tag to filter on"
-  <*> fieldOpt "end" unsafeDocumentFilterEndTime "Value of such tag"
+  <*> fieldOpt "start_time" unsafeDocumentFilterStartTime "Only documents after start time"
+  <*> fieldOpt "end_time" unsafeDocumentFilterEndTime "Only documents before end time"
   where
     unsafeDocumentFilterStartTime :: DocumentFilter ->  Maybe UTCTime
     unsafeDocumentFilterStartTime (DocumentFilterTime s _) = s
