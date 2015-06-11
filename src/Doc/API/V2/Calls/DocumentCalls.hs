@@ -60,6 +60,7 @@ import User.Model
 import Doc.Model
 import Doc.API.V2.Guards
 import Doc.Action
+import Doc.Anchors
 import Doc.API.V2.JSONList
 import Doc.API.V2.Parameters
 import Doc.API.V2.CallsUtils
@@ -218,7 +219,23 @@ docApiV2Forward :: Kontrakcja m => DocumentID -> m Response
 docApiV2Forward _did = $undefined -- TODO implement
 
 docApiV2SetFile :: Kontrakcja m => DocumentID -> m Response
-docApiV2SetFile _did = $undefined -- TODO implement
+docApiV2SetFile did = api $ do
+  (user, actor) <- getAPIUser APIDocCreate
+  withDocumentID did $ do
+    guardThatUserIsAuthor user
+    guardThatObjectVersionMatchesIfProvided did
+    guardThatDocument isPreparation "Document must be draft or template"
+    mInput <- apiV2Parameter (ApiV2ParameterInput "file" Optional)
+    case mInput of
+      Nothing -> dbUpdate $ DetachFile actor
+      Just input -> do
+        (fileid, _filename) <- processPDFParameter "file" input
+        dbUpdate $ AttachFile fileid actor
+        moldfileid <- fmap mainfileid <$> documentfile <$> theDocument
+        case moldfileid of
+          Just oldfileid -> recalcuateAnchoredFieldPlacements oldfileid fileid
+          Nothing -> return ()
+    Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
 
 docApiV2SetAttachments :: Kontrakcja m => DocumentID -> m Response
 docApiV2SetAttachments _did = $undefined -- TODO implement
