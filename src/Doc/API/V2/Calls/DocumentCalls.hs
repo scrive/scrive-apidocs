@@ -28,16 +28,10 @@ import KontraPrelude
 import Happstack.Server.Types
 import Doc.Model.Update
 import Control.Conditional (unlessM)
-import qualified Data.ByteString.Char8 as BS
 import DB.TimeZoneName (defaultTimeZoneName)
-import qualified Data.ByteString.Lazy as BSL
-import LiveDocx
 import Text.StringTemplates.Templates
 import MinutesTime
-import Happstack.Server.RqData
 import File.Model
-import System.FilePath
-import Control.Monad.IO.Class
 
 import Doc.DocStateData
 import API.Monad.V2
@@ -64,56 +58,32 @@ import Control.Exception.Lifted
 import Doc.DocUtils
 import User.Model
 import Doc.Model
-import Doc.Rendering
 import Doc.API.V2.Guards
 import Doc.Action
 import Doc.API.V2.JSONList
 import Doc.API.V2.Parameters
+import Doc.API.V2.CallsUtils
 -------------------------------------------------------------------------------
 
 docApiV2New :: Kontrakcja m => m Response
 docApiV2New = api $ do
   (user, actor) <- getAPIUser APIDocCreate
-  ctx <- getContext
-  minput <- getDataFn' (lookInput "file")
-  (mfile, title) <- case minput of
+  mInput <- apiV2Parameter (ApiV2ParameterInput "file" Optional)
+  (mFile, title) <- case mInput of
     Nothing -> do
+      ctx <- getContext
       title <- renderTemplate_ "newDocumentTitle"
       return (Nothing, title ++ " " ++ formatTimeSimple (ctxtime ctx))
-    Just (Input _ Nothing _) -> throwIO . SomeKontraException $ requestParameterInvalid "file" "file was empty"
-    Just (Input contentspec (Just filename'') _contentType) -> do
-      let filename' = reverse . takeWhile (/='\\') . reverse $ filename'' -- Drop filepath for windows
-      let mformat = getFileFormatForConversion filename'
-      content' <- case contentspec of
-        Left filepath -> liftIO $ BS.readFile filepath
-        Right content -> return (BS.concat $ BSL.toChunks content)
-
-      (content'', filename) <- case mformat of
-        Nothing -> return (content', filename')
-        Just format -> do
-          eres <- convertToPDF (ctxlivedocxconf ctx) content' format
-          case eres of
-            Left (LiveDocxIOError e) -> throwIO . SomeKontraException $ requestParameterInvalid "file" $ "LiveDocX conversion IO failed " `append` pack (show e)
-            Left (LiveDocxSoapError s)-> throwIO . SomeKontraException $ requestParameterInvalid "file" $ "LiveDocX conversion SOAP failed " `append` pack s
-            Right res -> do
-              -- change extension from .doc, .docx and others to .pdf
-              let filename = takeBaseName filename' ++ ".pdf"
-              return $ (res, filename)
-
-      pdfcontent <- do
-        res <- preCheckPDF content''
-        case res of
-          Right r -> return r
-          Left _ ->  throwIO . SomeKontraException $ requestParameterInvalid "file" "file is not a valid PDF"
-      fileid' <- dbUpdate $ NewFile filename pdfcontent
-      return (Just fileid', takeBaseName filename)
+    Just input -> do
+        (file, title) <- processPDFParameter "file" input
+        return $ (Just file, title)
   saved <- apiV2Parameter' (ApiV2ParameterBool "saved" (OptionalWithDefault (Just true)))
   (dbUpdate $ NewDocument user title Signable defaultTimeZoneName 0 actor) `withDocumentM` do
     dbUpdate $ SetDocumentUnsavedDraft (not saved)
-    case mfile of
+    case mFile of
       Nothing -> return ()
-      Just fileid' -> do
-        dbUpdate $ AttachFile fileid' actor
+      Just fileid -> do
+        dbUpdate $ AttachFile fileid actor
     Created <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
 
 

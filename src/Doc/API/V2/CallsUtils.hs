@@ -1,5 +1,6 @@
 module Doc.API.V2.CallsUtils (
-      checkAuthenticationMethodAndValue
+      processPDFParameter
+    , checkAuthenticationMethodAndValue
     , getScreenshots
     , signDocument
     , getMagicHashAndUserForSignatoryAction
@@ -7,7 +8,7 @@ module Doc.API.V2.CallsUtils (
   ) where
 
 import KontraPrelude
-import Data.Text (pack)
+import Data.Text (Text, append, pack)
 import Happstack.Fields
 import qualified Data.ByteString.Char8 as BS
 import File.Model
@@ -17,6 +18,11 @@ import MagicHash (MagicHash)
 import Data.Unjson
 import Doc.DocumentID
 import Doc.DocStateQuery
+import Control.Monad.IO.Class
+import Happstack.Server.Types
+import LiveDocx
+import System.FilePath
+import qualified Data.ByteString.Lazy as BSL
 
 import Doc.DocStateData
 import API.Monad.V2
@@ -36,6 +42,38 @@ import OAuth.Model
 import Doc.Tokens.Model
 import Doc.SMSPin.Model
 import Doc.API.V2.Parameters
+import Doc.Rendering
+
+processPDFParameter :: Kontrakcja m => Text -> Input -> m (FileID, String)
+processPDFParameter name (Input _ Nothing _) = throwIO . SomeKontraException $ requestParameterInvalid name "file was empty"
+processPDFParameter name (Input contentspec (Just filename'') _contentType) = do
+  ctx <- getContext
+  let filename' = reverse . takeWhile (/='\\') . reverse $ filename'' -- Drop filepath for windows
+  let mformat = getFileFormatForConversion filename'
+  content' <- case contentspec of
+    Left filepath -> liftIO $ BS.readFile filepath
+    Right content -> return (BS.concat $ BSL.toChunks content)
+
+  (content'', filename) <- case mformat of
+    Nothing -> return (content', filename')
+    Just format -> do
+      eres <- convertToPDF (ctxlivedocxconf ctx) content' format
+      case eres of
+        Left (LiveDocxIOError e) -> throwIO . SomeKontraException $ requestParametersParseError $ "'" `append` name `append` "' parameter: LiveDocX conversion IO failed " `append` pack (show e)
+        Left (LiveDocxSoapError s)-> throwIO . SomeKontraException $ requestParametersParseError $ "'" `append` name `append`  "' parameter: LiveDocX conversion SOAP failed " `append` pack s
+        Right res -> do
+          -- change extension from .doc, .docx and others to .pdf
+          let filename = takeBaseName filename' ++ ".pdf"
+          return $ (res, filename)
+
+  pdfcontent <- do
+    res <- preCheckPDF content''
+    case res of
+      Right r -> return r
+      Left _ ->  throwIO . SomeKontraException $ requestParametersParseError $ "The parameter '" `append` name `append` "' is not a valid PDF"
+
+  fileid <- dbUpdate $ NewFile filename pdfcontent
+  return (fileid, takeBaseName filename)
 
 {- | Check if provided authorization values for sign call patch -}
 checkAuthenticationMethodAndValue :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
