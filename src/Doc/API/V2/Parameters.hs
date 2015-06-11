@@ -5,6 +5,8 @@ module Doc.API.V2.Parameters (
   , apiV2Parameter
   , apiV2Parameter'
 ) where
+import Happstack.Server.RqData
+import Happstack.Server.Types
 import KontraPrelude
 
 import API.Monad.V2
@@ -22,10 +24,11 @@ import Control.Exception.Lifted
 data ParameterOption a = Obligatory | Optional | OptionalWithDefault (Maybe a)
 
 data ApiV2Parameter a where
-  ApiV2ParameterBool :: Text -> ParameterOption Bool -> ApiV2Parameter Bool
-  ApiV2ParameterInt  :: Text -> ParameterOption Int -> ApiV2Parameter Int
-  ApiV2ParameterText :: Text -> ParameterOption Text -> ApiV2Parameter Text
-  ApiV2ParameterJSON :: Text -> ParameterOption a -> UnjsonDef a -> ApiV2Parameter a
+  ApiV2ParameterBool  :: Text -> ParameterOption Bool -> ApiV2Parameter Bool
+  ApiV2ParameterInt   :: Text -> ParameterOption Int -> ApiV2Parameter Int
+  ApiV2ParameterText  :: Text -> ParameterOption Text -> ApiV2Parameter Text
+  ApiV2ParameterJSON  :: Text -> ParameterOption a -> UnjsonDef a -> ApiV2Parameter a
+  ApiV2ParameterInput :: Text -> ParameterOption Input -> ApiV2Parameter Input
 
 -- | Same as `apiV2Parameter` except that it fails when we have a Nothing.
 -- Given the same parameters it will behave the same way, but instead of giving
@@ -62,6 +65,12 @@ apiV2Parameter (ApiV2ParameterJSON name opt jsonDef) = do
         (Result _ errs) -> throwIO . SomeKontraException $ requestParametersParseError (name `append` pack (show errs))
     Nothing -> handleParameterOption name opt
 
+apiV2Parameter (ApiV2ParameterInput name opt) = do
+  mValue <- getDataFn' (lookInput $ unpack name)
+  case mValue of
+    Just paramValue -> return $ Just paramValue
+    Nothing -> handleParameterOption name opt
+
 -- | Helper function for all parameters that can just be parsed using `maybeRead`
 apiParameterUsingMaybeRead :: (Kontrakcja m, Read a) => Text -> ParameterOption a -> m (Maybe a)
 apiParameterUsingMaybeRead name opt = do
@@ -77,6 +86,7 @@ getParameterName (ApiV2ParameterBool n _) = n
 getParameterName (ApiV2ParameterInt n _) = n
 getParameterName (ApiV2ParameterText n _) = n
 getParameterName (ApiV2ParameterJSON n _ _) = n
+getParameterName (ApiV2ParameterInput n _) = n
 
 -- | Helper function to handle when getting the parameter gives us `Nothing`
 handleParameterOption :: Kontrakcja m => Text -> ParameterOption a -> m (Maybe a)
