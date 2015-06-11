@@ -101,7 +101,7 @@ getPadUserFromSession Session{sesPadUserID} = case sesPadUserID of
   Nothing  -> return Nothing
 
 sessionNowModifier :: UTCTime -> UTCTime
-sessionNowModifier = (120 `minutesAfter`)
+sessionNowModifier = (720 `minutesAfter`)
 
 isSessionEmpty :: Session -> Bool
 isSessionEmpty Session{..} = isNothing sesUserID && isNothing sesPadUserID
