@@ -6,9 +6,6 @@
 -- Stability   :  development
 -- Portability :  portable
 --
--- Basic email sending configuration with SendGrid. Conf file in main dir with name mail.conf
--- We use Show/Read instances for parsing. We may have some problems with unicode on win machines,
--- but don't care about this for now
 -----------------------------------------------------------------------------
 module Mails.MailsConfig
     ( MailsConfig(..)
@@ -22,8 +19,6 @@ import KontraPrelude
 -- | Configuration of mails
 data MailsConfig = MailsConfig {
     isBackdoorOpen       :: Bool
-  , ourInfoEmail         :: String
-  , ourInfoEmailNiceName :: String
   } deriving (Eq, Ord, Show)
 
 unjsonMailsConfig :: UnjsonDef MailsConfig
@@ -31,19 +26,10 @@ unjsonMailsConfig = objectOf $ pure MailsConfig
   <*> field "backdoor_open"
       isBackdoorOpen
       "Should backdoor be open"
-  <*> field "info_email"
-      ourInfoEmail
-      "Info email"
-  <*> field "info_email_nice_name"
-      ourInfoEmailNiceName
-      "Info email nice name"
-
 instance Unjson MailsConfig where
   unjsonDef = unjsonMailsConfig
 
 defaultMailsConfig :: MailsConfig
 defaultMailsConfig = MailsConfig {
     isBackdoorOpen        = False
-  , ourInfoEmail          = "development-system@skrivapa.se"
-  , ourInfoEmailNiceName  = "Development"
 }
