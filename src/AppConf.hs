@@ -32,7 +32,6 @@ data AppConf = AppConf {
                                                        -- (0, 80)   all interfaces port 80
   , hostpart           :: String                       -- ^ hostname as it should looklike in emails for example
   , useHttps           :: Bool                         -- ^ should we redirect to https?
-  , store              :: FilePath                     -- ^ where to put database files
   , amazonConfig       :: Maybe (String,String,String) -- ^ bucket, access key, secret key
   , dbConfig           :: Text                         -- ^ postgresql configuration
   , logConfig          :: LogConfig                    -- ^ logging configuration
@@ -69,9 +68,6 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> fieldDef "https" True
       useHttps
       "Should use https"
-  <*> field "store"
-      store
-      "Where to put database files"
   <*> fieldOptBy "amazon"
       amazonConfig
       "Amazon configuration"
@@ -148,7 +144,6 @@ instance Default AppConf where
       httpBindAddress    = (0x7f000001, 8000)
     , hostpart           = "http://localhost:8000"
     , useHttps           = True
-    , store              = "_local/kontrakcja/_state"
     , amazonConfig       = Nothing
     , dbConfig           = "user='kontra' password='kontra' dbname='kontrakcja'"
     , logConfig          = def
