@@ -2,7 +2,7 @@
   Anything you see in the second tab in design view.
 
 */
-define(['Backbone', 'legacy_code'], function() {
+define(['Backbone', 'designview/fileview/draggablefield', 'legacy_code'], function(Backbone, draggableField) {
 
     // expected model: DesignViewModel
     var DesignViewDraggablesView = Backbone.View.extend({
@@ -66,7 +66,7 @@ define(['Backbone', 'legacy_code'], function() {
               return false;
             }
           };
-          draggebleField(div, fieldOrPlacementFN, undefined, undefined, true,fontSize,onFieldAdded, isDisabledCallback);
+          draggableField(div, fieldOrPlacementFN, undefined, undefined, true,fontSize,onFieldAdded, isDisabledCallback);
 
           div.append(wra);
           wra.append(innerWrapper);

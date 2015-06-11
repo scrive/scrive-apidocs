@@ -2,7 +2,7 @@
  * Now unified with author and viewer views
  */
 
-define(['React','doctools/docviewsignatories', 'Backbone', 'legacy_code'], function(React,DocumentViewSignatories) {
+define(['React','doctools/docviewsignatories', 'authorview/fileview/fileview', 'Backbone', 'legacy_code'], function(React,DocumentViewSignatories, FileView) {
 
 var AuthorViewModel = Backbone.Model.extend({
   defaults : {
@@ -47,7 +47,7 @@ var AuthorViewModel = Backbone.Model.extend({
   },
   file  : function() {
     if (this.get("file") == undefined)
-      this.set({"file" : new KontraFile({
+      this.set({"file" : new FileView({
               file: this.document().mainfile()
             })}, {silent : true});
     return this.get("file");

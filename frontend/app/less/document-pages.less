@@ -179,6 +179,16 @@
   }
 }
 
+.placedcheckbox-noactive {
+  background: url(~"@{img-base-url}/checkbox-blue-unchecked.png") no-repeat scroll 0 0;
+  height: 12px;
+  width: 12px;
+
+  &.checked {
+    background: url(~"@{img-base-url}/checkbox-blue-checked.png") no-repeat scroll 0 0;
+  }
+}
+
 
 .signatureBox {
   background-color: @white;
@@ -186,9 +196,6 @@
   -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=95)";
   border: 1px solid #999999;
   min-width: 10px;
-  -moz-border-radius: 2px;
-  -webkit-border-radius: 2px;
-  border-radius: 2px;
   text-align: center;
   margin-left: -2px;
   margin-top: -2px;
