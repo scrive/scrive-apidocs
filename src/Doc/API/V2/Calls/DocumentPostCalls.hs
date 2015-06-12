@@ -126,7 +126,15 @@ docApiV2Prolong _did = $undefined -- TODO implement
 
 
 docApiV2Cancel :: Kontrakcja m => DocumentID -> m Response
-docApiV2Cancel _did = $undefined -- TODO implement
+docApiV2Cancel did = api $ do
+  (user, actor) <- getAPIUser APIDocSend
+  withDocumentID did $ do
+    guardThatUserIsAuthorOrCompanyAdmin user
+    guardThatObjectVersionMatchesIfProvided did
+    guardDocumentStatus Pending
+    dbUpdate $ CancelDocument actor
+    postDocumentCanceledChange =<< theDocument
+    Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
 
 
 docApiV2Trash :: Kontrakcja m => DocumentID -> m Response
