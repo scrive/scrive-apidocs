@@ -322,7 +322,6 @@ mkContext lang = do
         , ctxmixpaneltoken = "5b04329b972851feac0e9b853738e742"
         , ctxhubspotconf = HubSpotConf "" M.empty
         , ctxgoogleanalyticstoken = "5b04329b972851feac0e9b853738e741"
-        , ctxhomebase = "https://staging.scrive.com"
         , ctxbrandeddomain = bd
         , ctxsalesforceconf = SalesforceConf "" "" "" "" "" "" ""
         , ctxthreadjoins = []

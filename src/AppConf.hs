@@ -47,7 +47,6 @@ data AppConf = AppConf {
   , mixpanelToken      :: String                       -- ^ for mixpanel integration
   , hubspotConf        :: HubSpotConf                  -- ^ for hubspot integration
   , googleanalyticsToken      :: String                -- ^ for google-analytics integration
-  , homebase           :: String                       -- ^ url fragment where to fetch scripts
   , ntpServers         :: [String]                     -- ^ List of NTP servers to contact to get estimate of host clock error
   , salesforceConf     :: SalesforceConf             -- ^ Configuration of salesforce
   } deriving (Eq, Ord, Show)
@@ -124,9 +123,6 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> field "google_analytics"
       googleanalyticsToken
       "Token for Google Analytics"
-  <*> field "homebase"
-      homebase
-      "url fragment where to fetch scripts"
   <*> field "ntp_servers"
       ntpServers
       "List of NTP servers to contact to get estimate of host clock error"
@@ -170,7 +166,6 @@ instance Default AppConf where
     , mixpanelToken      = "5b04329b972851feac0e9b853738e742"
     , hubspotConf        = HubSpotConf "" Map.empty
     , googleanalyticsToken = "f25e59c70a8570a12fe57e7835d1d881"
-    , homebase           = "https://staging.scrive.com"
     , ntpServers         = defaultNtpServers
     , salesforceConf     = SalesforceConf
                               { salesforceAuthenticationUrl = "https://login.salesforce.com/services/oauth2/authorize"

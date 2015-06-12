@@ -219,7 +219,6 @@ standardPageFields ctx mcompanyui ad = do
   contextInfoFields ctx
   F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
   F.object "analytics" $ analyticsTemplates ad
-  F.value "homebase" $ ctxhomebase ctx
   F.valueM "brandinghash" $ brandingAdler32 ctx mcompanyui
   F.value "title" $ case emptyToNothing . strip =<< companyBrowserTitle =<< mcompanyui of
                       Just ctitle -> ctitle ++ " - " ++ (bdBrowserTitle $ ctxbrandeddomain ctx)

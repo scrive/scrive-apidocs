@@ -62,7 +62,6 @@ data Context = Context
     , ctxmixpaneltoken       :: String
     , ctxhubspotconf         :: HubSpotConf
     , ctxgoogleanalyticstoken :: String
-    , ctxhomebase            :: String
     , ctxbrandeddomain       :: BrandedDomain
     , ctxsalesforceconf      :: SalesforceConf
     -- | Contains actions that join threads spawned with forkAction

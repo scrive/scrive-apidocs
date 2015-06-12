@@ -358,7 +358,6 @@ appHandler handleRoutes appConf appGlobals = runHandler $ do
         , ctxmixpaneltoken = mixpanelToken appConf
         , ctxhubspotconf = hubspotConf appConf
         , ctxgoogleanalyticstoken = googleanalyticsToken appConf
-        , ctxhomebase = homebase appConf
         , ctxbrandeddomain = brandeddomain
         , ctxsalesforceconf = getSalesforceConf appConf
         , ctxthreadjoins = []
