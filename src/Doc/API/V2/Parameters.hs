@@ -21,7 +21,7 @@ import Control.Exception.Lifted
 
 -- | Parameters are either Obligatory or Optional
 -- If they are Optional we may want a default value, or we may want Nothing
-data ParameterOption a = Obligatory | Optional | OptionalWithDefault (Maybe a)
+data ParameterOption a = Obligatory | Optional | OptionalWithDefault a
 
 data ApiV2Parameter a where
   ApiV2ParameterBool  :: Text -> ParameterOption Bool -> ApiV2Parameter Bool
@@ -91,5 +91,5 @@ getParameterName (ApiV2ParameterInput n _) = n
 -- | Helper function to handle when getting the parameter gives us `Nothing`
 handleParameterOption :: Kontrakcja m => Text -> ParameterOption a -> m (Maybe a)
 handleParameterOption _ Optional = return Nothing
-handleParameterOption _ (OptionalWithDefault d) = return d
+handleParameterOption _ (OptionalWithDefault d) = return $ Just d
 handleParameterOption n Obligatory = throwIO . SomeKontraException $ requestParametersMissing [n]

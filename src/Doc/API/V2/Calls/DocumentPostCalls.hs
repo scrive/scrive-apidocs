@@ -62,7 +62,7 @@ docApiV2New = api $ do
     Just input -> do
         (file, title) <- processPDFParameter "file" input
         return $ (Just file, title)
-  saved <- apiV2Parameter' (ApiV2ParameterBool "saved" (OptionalWithDefault (Just true)))
+  saved <- apiV2Parameter' (ApiV2ParameterBool "saved" (OptionalWithDefault True))
   (dbUpdate $ NewDocument user title Signable defaultTimeZoneName 0 actor) `withDocumentM` do
     dbUpdate $ SetDocumentUnsavedDraft (not saved)
     case mFile of

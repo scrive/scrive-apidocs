@@ -45,10 +45,10 @@ docApiV2Available = $undefined -- TODO implement
 docApiV2List :: Kontrakcja m => m Response
 docApiV2List = api $ do
   (user, _) <- getAPIUserWithPad APIDocCheck
-  offset   <- apiV2Parameter' (ApiV2ParameterInt  "offset"  (OptionalWithDefault (Just 0)))
-  maxcount <- apiV2Parameter' (ApiV2ParameterInt  "max"     (OptionalWithDefault (Just 100)))
-  filters  <- apiV2Parameter' (ApiV2ParameterJSON "filter"  (OptionalWithDefault (Just [])) unjsonDef)
-  sorting  <- apiV2Parameter' (ApiV2ParameterJSON "sorting" (OptionalWithDefault (Just [])) unjsonDef)
+  offset   <- apiV2Parameter' (ApiV2ParameterInt  "offset"  (OptionalWithDefault 0))
+  maxcount <- apiV2Parameter' (ApiV2ParameterInt  "max"     (OptionalWithDefault 100))
+  filters  <- apiV2Parameter' (ApiV2ParameterJSON "filter"  (OptionalWithDefault []) unjsonDef)
+  sorting  <- apiV2Parameter' (ApiV2ParameterJSON "sorting" (OptionalWithDefault []) unjsonDef)
   let documentFilters = (DocumentFilterUnsavedDraft False):(join $ toDocumentFilter (userid user) <$> filters)
   let documentSorting = (toDocumentSorting <$> sorting)
   (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit [DocumentsVisibleToUser $ userid user] documentFilters documentSorting (offset,1000,maxcount)
