@@ -15,7 +15,17 @@ new APICallV2({
   },
   params: [
           window.APIV2CallParamDocumentID,
-          window.APIV2CallParamObjectVersion
+        , new APICallParam({
+            type: "bool",
+            argName: "author_signs_now",
+            name: "author_signs_now",
+            sendAsParam: true,
+            optional: true,
+            description: "Whether the document author signs immediately as part\
+                          of the start call.",
+            defaultValue: false
+          })
+        , window.APIV2CallParamObjectVersion
         ]
 });
 

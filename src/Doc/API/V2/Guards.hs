@@ -49,11 +49,11 @@ guardThatObjectVersionMatchesIfProvided did = do
 guardThatDocumentCanBeStarted :: (DocumentMonad m, Kontrakcja m) => m ()
 guardThatDocumentCanBeStarted = do
     whenM (isTemplate <$> theDocument) $ do
-       throwIO . SomeKontraException $ (documentStateError "Document is not a draft")
+       throwIO . SomeKontraException $ (documentStateError "Document is a template, templates can not be started")
     unlessM (((all signatoryHasValidDeliverySettings) . documentsignatorylinks) <$> theDocument) $ do
        throwIO . SomeKontraException $ documentStateError "Some signatories have invalid email address or phone number, and it is required for invitation delivery."
     whenM (isNothing . documentfile <$> theDocument) $ do
-       throwIO . SomeKontraException $ documentStateError "File must be provided before document can be made ready."
+       throwIO . SomeKontraException $ documentStateError "Document must have a file before it can be started"
     return ()
  where
     signatoryHasValidDeliverySettings sl = (isAuthor sl) || case (signatorylinkdeliverymethod sl) of

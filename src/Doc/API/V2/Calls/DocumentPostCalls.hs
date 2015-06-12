@@ -119,14 +119,15 @@ docApiV2Start did = api $ do
   withDocumentID did $ do
     guardThatUserIsAuthor user
     guardThatObjectVersionMatchesIfProvided did
+    guardDocumentStatus Preparation
     guardThatDocumentCanBeStarted
+    authorSignsNow <- apiV2Parameter' (ApiV2ParameterBool "author_signs_now" (OptionalWithDefault False))
     t <- ctxtime <$> getContext
     timezone <- documenttimezonename <$> theDocument
     dbUpdate $ PreparationToPending actor timezone
     dbUpdate $ SetDocumentInviteTime t actor
-    authorsignsimmediately <- isFieldSet "authorsignsimmediately"
-    postDocumentPreparationChange authorsignsimmediately timezone
-    Created <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
+    postDocumentPreparationChange authorSignsNow timezone
+    Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
 
 
 docApiV2Prolong :: Kontrakcja m => DocumentID -> m Response
