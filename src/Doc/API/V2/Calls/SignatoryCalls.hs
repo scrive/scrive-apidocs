@@ -8,6 +8,7 @@ module Doc.API.V2.Calls.SignatoryCalls (
 ) where
 
 import Happstack.Server.Types
+import Data.Text (strip, unpack)
 
 import API.Monad.V2
 import Chargeable.Model
@@ -30,12 +31,27 @@ import EID.Signature.Model
 import Kontra
 import KontraPrelude
 import Util.SignatoryLinkUtils
+import Util.Actor
+import User.Lang
 
 docApiV2SigSetAuthentication :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSetAuthentication _did _slid = $undefined -- TODO implement
 
 docApiV2SigReject :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
-docApiV2SigReject _did _slid = $undefined -- TODO implement
+docApiV2SigReject did slid = api $ do
+  (mh,_mu) <- getMagicHashAndUserForSignatoryAction did slid
+  rejectReason' <- apiV2Parameter (ApiV2ParameterText "reason" Optional)
+  let rejectReason = fmap (unpack . strip) rejectReason'
+  guardThatObjectVersionMatchesIfProvided did
+  dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
+    guardDocumentStatus Pending
+    ctx <- getContext
+    Just sl <- getSigLinkFor slid <$> theDocument
+    actor <- signatoryActor ctx sl
+    switchLang . getLang =<< theDocument
+    dbUpdate $ RejectDocument slid rejectReason actor
+    postDocumentRejectedChange slid rejectReason =<< theDocument
+    Ok <$> (\d -> (unjsonDocument (DocumentAccess did $ SignatoryDocumentAccess slid),d)) <$> theDocument
 
 docApiV2SigCheck :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigCheck _did _slid = $undefined -- TODO implement
