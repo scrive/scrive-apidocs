@@ -31,18 +31,15 @@ import Kontra
 import Doc.DocumentMonad
 import Data.Unjson
 import Data.Unjson as Unjson
-import Doc.DocInfo
 import DB
 import Data.Text hiding (reverse, takeWhile)
 import Doc.API.V2.DocumentUpdateUtils
 import Doc.API.V2.DocumentAccess
 import Happstack.Fields
 import qualified Data.Aeson as Aeson
-import Util.SignatoryLinkUtils
 import OAuth.Model
 import Control.Exception.Lifted
 import Doc.DocUtils
-import User.Model
 import Doc.Model
 import Doc.API.V2.Guards
 import Doc.Action
@@ -75,17 +72,11 @@ docApiV2New = api $ do
 docApiV2NewFromTemplate :: Kontrakcja m => DocumentID -> m Response
 docApiV2NewFromTemplate did = api $ do
   (user, actor) <- getAPIUser APIDocCreate
+  withDocumentID did $ do
+    guardThatUserIsAuthorOrDocumentIsShared user
+    guardThatObjectVersionMatchesIfProvided did
+    guardThatDocument isTemplate "Document must be a template"
   template <- dbQuery $ GetDocumentByDocumentID $ did
-  auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink template
--- JJ: is this really "invalid_authorisation"? I would think `getAPIUser` checks for this
--- JJ: consider making this some other kind of error
-  auser <- apiGuardJustM (invalidAuthorisation "Provided authorization did not match any user") $ dbQuery $ GetUserByIDIncludeDeleted auid
-  let haspermission = (userid auser == userid user) ||
-                      (usercompany auser == usercompany user &&  isDocumentShared template)
-  unless (haspermission) $ do
-    throwIO $ SomeKontraException documentActionForbidden
-  guardThatObjectVersionMatchesIfProvided did
-  withDocumentID did $ guardThatDocument isTemplate "Document must be a template"
   (apiGuardJustM (serverError "Can't clone given document") (dbUpdate $ CloneDocumentWithUpdatedAuthor user template actor) >>=) $ flip withDocumentID $ do
     dbUpdate $ DocumentFromTemplate actor
     dbUpdate $ SetDocumentUnsavedDraft False
