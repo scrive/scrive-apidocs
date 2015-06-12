@@ -21,7 +21,6 @@ import Doc.API.V2.JSONFields
 import Doc.API.V2.Parameters
 import Doc.Action
 import Doc.DocControl
-import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.DocumentMonad
@@ -49,7 +48,7 @@ docApiV2SigSign did slid = api $ do
   olddoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh -- We store old document, as it is needed by postDocumentXXX calls
   olddoc `withDocument` ( do
     guardThatObjectVersionMatchesIfProvided did
-    guardThatDocument isPending "Document must be pending"
+    guardDocumentStatus Pending
     guardThatDocument (hasSigned . $fromJust . getSigLinkFor slid ) "Document can't be already signed"
     checkAuthenticationMethodAndValue slid
     authorization <- signatorylinkauthenticationmethod <$> $fromJust . getSigLinkFor slid <$> theDocument

@@ -98,7 +98,7 @@ docApiV2Update did = api $ do
   withDocumentID did $ do
     guardThatUserIsAuthor user
     guardThatObjectVersionMatchesIfProvided did
-    guardThatDocument isPreparation "Document must be draft or template"
+    guardDocumentStatus Preparation
     documentJSON <- apiGuardJustM (requestParametersMissing ["document"]) $ getFieldBS "document"
     case Aeson.eitherDecode documentJSON of
       Left _ -> do
@@ -159,7 +159,7 @@ docApiV2SetFile did = api $ do
   withDocumentID did $ do
     guardThatUserIsAuthor user
     guardThatObjectVersionMatchesIfProvided did
-    guardThatDocument isPreparation "Document must be draft or template"
+    guardDocumentStatus Preparation
     mInput <- apiV2Parameter (ApiV2ParameterInput "file" Optional)
     case mInput of
       Nothing -> dbUpdate $ DetachFile actor

@@ -1,5 +1,6 @@
 module Doc.API.V2.Guards (
       guardThatDocument
+    , guardDocumentStatus
     , guardThatUserIsAuthor
     , guardThatDocumentCanBeStarted
     , guardThatObjectVersionMatchesIfProvided
@@ -7,7 +8,7 @@ module Doc.API.V2.Guards (
 
 import KontraPrelude
 import Control.Conditional (unlessM, whenM)
-import Data.Text (Text)
+import Data.Text (Text, pack, append)
 import Doc.DocumentID
 
 import Doc.DocStateData
@@ -26,6 +27,10 @@ import Doc.API.V2.Parameters
 
 guardThatDocument :: (DocumentMonad m, Kontrakcja m) => (Document -> Bool) -> Text -> m ()
 guardThatDocument f text = unlessM (f <$> theDocument) $ throwIO . SomeKontraException $ documentStateError text
+
+guardDocumentStatus :: (Kontrakcja m, DocumentMonad m) => DocumentStatus -> m ()
+guardDocumentStatus s = unlessM ((\d -> documentstatus d == s) <$> theDocument) $ throwIO . SomeKontraException $ documentStateError errorMsg
+  where errorMsg = "The document status should be " `append` (pack $ show s)
 
 guardThatUserIsAuthor :: (DocumentMonad m, Kontrakcja m) => User -> m ()
 guardThatUserIsAuthor user = do
