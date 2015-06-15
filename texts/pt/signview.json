@@ -53,6 +53,7 @@
 "_enterSMSPin":"Introduzir o PIN do SMS",
 "_filladitionfields":"Detalhes adicionais",
 "_filladitionfieldsdescription":"Submeta informação pessoal adicional.",
+"_filladitionfieldslabel":"",
 "_firstname":"Nome",
 "_followTheArrow":"Siga a <span class='arrowtext'>SETA</span>",
 "_followTheArrowWithUserName":"<span class='signatory-name'></span>, siga a <span class='arrowtext'>SETA</span>",

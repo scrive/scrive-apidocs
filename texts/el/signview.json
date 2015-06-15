@@ -53,6 +53,7 @@
 "_enterSMSPin":"Εισάγετε το PIN του SMS σας",
 "_filladitionfields":"Επιπρόσθετες πληροφορίες ",
 "_filladitionfieldsdescription":"Παρακαλώ παραθέστε επιπλέον πληροφορίες για εσάς. ",
+"_filladitionfieldslabel":"",
 "_firstname":"Όνομα ",
 "_followTheArrow":"Ακολουθήστε το <span class='arrowtext'>ΤΟΞΟ</span> ",
 "_followTheArrowWithUserName":"<span class='signatory-name'></span>, ακολουθήστε το <span class='arrowtext'>ΤΟΞΟ</span> ",

@@ -53,6 +53,7 @@
 "_enterSMSPin":"Indtast din SMS PIN",
 "_filladitionfields":"Yderligere detaljer",
 "_filladitionfieldsdescription":"Indsend venligst yderligere oplysninger om dig selv.",
+"_filladitionfieldslabel":"",
 "_firstname":"Fornavn",
 "_followTheArrow":"Følg<span class='arrowtext'>PILEN</span>",
 "_followTheArrowWithUserName":"<span class='signatory-name'></span>, følg<span class='arrowtext'>PILEN</span>",

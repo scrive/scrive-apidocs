@@ -333,7 +333,7 @@ SendToPadDeviceLog=The signing invitation for signatory <span class="signatory"/
 SetDocumentInviteTimeEvidenceLog=The signing process was started by <span class="actor"/>.
 ###
 ###
-SignDocumentEvidenceLogSMSPin=The signatory <span class="actor"/> signed the doucment using PIN by SMS as identification method. $pinWasSent()$
+SignDocumentEvidenceLogSMSPin=The signatory <span class="actor"/> signed the document using PIN by SMS as identification method. $pinWasSent()$
 ###
 SignDocumentEvidenceLogEleg=The signatory <span class="actor"/> signed the document using eID as identification method. $elegVerification()$
 ###

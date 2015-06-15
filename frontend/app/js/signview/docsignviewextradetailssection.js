@@ -417,8 +417,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
 
 
       var box = $(this.el).addClass('section').addClass('spacing').addClass('extradetails');
-      var header = $("<h2 class='title'/>").text(localization.docsignview.filladitionfields);
-      var description = $("<div class='column spacing descriptionbox'/>").text(localization.docsignview.filladitionfieldsdescription);
+      var header = $("<h2 class='title'/>").text(localization.docsignview.filladitionfieldslabel);
       this.fillBox = $("<div class='column spacing fillbox'/>");
 
       if (signview.askForName()) {
@@ -437,7 +436,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
        this.fillBox.append(this.phoneInput().el());
       }
 
-      box.append(header).append(description).append(this.fillBox).append("<div class='clearfix' />");
+      box.append(header).append(this.fillBox).append("<div class='clearfix' />");
   }
 });
 
