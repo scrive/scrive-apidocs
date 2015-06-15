@@ -19,7 +19,7 @@ import Doc.DocumentID
 import Doc.DocStateQuery
 
 import Doc.DocStateData
-import API.Monad.V2
+import API.V2
 import Kontra
 import Doc.DocumentMonad
 import DB
@@ -27,7 +27,6 @@ import User.Model
 import Doc.SignatoryLinkID
 import Doc.API.V2.JSONMisc
 import Util.SignatoryLinkUtils
-import Control.Exception.Lifted
 import Util.HasSomeUserInfo
 import Doc.API.V2.JSONFields
 import Doc.Model.Update
@@ -49,31 +48,31 @@ checkAuthenticationMethodAndValue slid = do
                     siglink <- $fromJust . getSigLinkFor slid <$> theDocument
                     let authOK = authMethod == signatorylinkauthenticationmethod siglink
                     case (authOK, authMethod) of
-                         (False, _) -> throwIO . SomeKontraException $
-                             requestParameterInvalid "authentication_type" "`authentication_type` does not match on on document"
+                         (False, _) -> apiError $
+                             requestParameterInvalid "authentication_type" "does not match with document"
                          (True, StandardAuthentication) -> return ()
                          (True, ELegAuthentication)   ->
                              if (authValue == getPersonalNumber siglink || null (getPersonalNumber siglink))
                                 then return ()
-                                else throwIO . SomeKontraException $
-                                    requestParameterInvalid "authentication_value" "`authentication_value` for personal number does not match"
+                                else apiError $
+                                    requestParameterInvalid "authentication_value" "value for personal number does not match"
                          (True, SMSPinAuthentication) ->
                              if (authValue == getMobile siglink || null (getMobile siglink))
                                 then return ()
-                                else throwIO . SomeKontraException $
-                                    requestParameterInvalid "authentication_value" "`authentication_value` for phone number does not match"
+                                else apiError $
+                                    requestParameterInvalid "authentication_value" "value for phone number does not match"
                 Nothing ->
-                    throwIO . SomeKontraException $ requestParametersParseError "`authentication_type` was not a valid"
+                    apiError $ requestParameterParseError "authentication_type" "invalid type"
        (Nothing, Nothing) -> return ()
-       (Just _, Nothing) ->  throwIO . SomeKontraException $ requestParametersMissing ["authentication_value"]
-       (Nothing, Just _) ->  throwIO . SomeKontraException $ requestParametersMissing ["authentication_type"]
+       (Just _, Nothing) ->  apiError $ requestParameterMissing "authentication_value"
+       (Nothing, Just _) ->  apiError $ requestParameterMissing "authentication_type"
 
 getScreenshots :: (Kontrakcja m) => m SignatoryScreenshots
 getScreenshots = do
   screenshots <- apiV2Parameter' (ApiV2ParameterJSON "screenshots" (OptionalWithDefault emptySignatoryScreenshots) unjsonDef)
   resolvedScreenshots <- resolveReferenceScreenshotNames screenshots
   case resolvedScreenshots of
-    Nothing -> throwIO . SomeKontraException $ requestParameterInvalid "screenshots" "Could not resolve reference screenshot"
+    Nothing -> apiError $ requestParameterInvalid "screenshots" "Could not resolve reference screenshot"
     Just res -> return res
 
 
@@ -122,13 +121,13 @@ getMagicHashAndUserForSignatoryAction did sid = do
          (user, _) <- getAPIUser APIPersonal
          mh'' <- getMagicHashForDocumentSignatoryWithUser  did sid user
          case mh'' of
-           Nothing -> throwIO . SomeKontraException $ documentActionForbidden
+           Nothing -> apiError documentActionForbidden
            Just mh''' -> return (mh''',Just $ user)
 
 
 getValidPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [(FieldIdentity, SignatoryFieldTMPValue)] -> m (Maybe String)
 getValidPin slid fields = do
-  pin <- apiGuardJustM (requestParametersMissing ["pin"]) $ getField "pin"
+  pin <- apiGuardJustM (requestParameterMissing "pin") $ getField "pin"
   phone <- case (lookup MobileFI fields) of
     Just (StringFTV v) -> return v
     _ ->  getMobile <$> $fromJust . getSigLinkFor slid <$> theDocument

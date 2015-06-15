@@ -16,7 +16,7 @@ import Control.Conditional (unlessM)
 import File.Model
 
 import Doc.DocStateData
-import API.Monad.V2
+import API.V2
 import Doc.API.V2.JSONDocument
 import Doc.DocumentID
 import Doc.SignatoryLinkID
@@ -32,7 +32,6 @@ import Util.Actor
 import Doc.Tokens.Model
 import Util.SignatoryLinkUtils
 import OAuth.Model
-import Control.Exception.Lifted
 import Doc.DocUtils
 import User.Model
 import Doc.Model
@@ -76,7 +75,7 @@ docApiV2Get did = api $ do
     (da,msl) <- case (msignatorylink,mmagichashh) of
       (Just slid,Just mh) -> do
        sl <- apiGuardJustM  (documentNotFound did) $ getSigLinkFor slid <$> theDocument
-       when (signatorymagichash sl /= mh) $ throwIO . SomeKontraException $ documentNotFound did
+       when (signatorymagichash sl /= mh) $ apiError $ documentNotFound did
        return (DocumentAccess did $ SignatoryDocumentAccess slid,Just sl)
       _ -> do
         (user,_) <- getAPIUser APIDocCheck
@@ -89,7 +88,7 @@ docApiV2Get did = api $ do
                         || (isJust mauser && usercompany ($fromJust mauser) == usercompany user && (useriscompanyadmin user || isDocumentShared d))
         if (haspermission)
           then (\d -> (documentAccessForUser user d,msiglink)) <$> theDocument
-          else throwIO $ SomeKontraException documentActionForbidden
+          else apiError documentActionForbidden
     case (msl) of
       Just sl -> unlessM ((isTemplate || isPreparation || isClosed) <$> theDocument) $
                   dbUpdate . MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl) =<< signatoryActor ctx sl

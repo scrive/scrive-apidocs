@@ -10,9 +10,8 @@ module Doc.API.V2.Calls.SignatoryCalls (
 import Happstack.Server.Types
 import Data.Text (strip, unpack)
 
-import API.Monad.V2
+import API.V2
 import Chargeable.Model
-import Control.Exception.Lifted
 import DB
 import Doc.API.V2.CallsUtils
 import Doc.API.V2.DocumentAccess
@@ -84,7 +83,7 @@ docApiV2SigSign did slid = api $ do
             postDocumentPendingChange olddoc
             handleAfterSigning slid
             Ok <$> (\d -> (unjsonDocument (DocumentAccess did $ SignatoryDocumentAccess slid),d)) <$> theDocument
-          else throwIO . SomeKontraException $ documentActionForbidden
+          else apiError documentActionForbidden
 
       ELegAuthentication -> dbQuery (GetESignature slid) >>= \case
         mesig@(Just _) -> do
@@ -94,7 +93,7 @@ docApiV2SigSign did slid = api $ do
           postDocumentPendingChange olddoc
           handleAfterSigning slid
           Ok <$> (\d -> (unjsonDocument (DocumentAccess did $ SignatoryDocumentAccess slid),d)) <$> theDocument
-        Nothing -> throwIO . SomeKontraException $ documentActionForbidden
+        Nothing -> apiError documentActionForbidden
    )
 
 docApiV2SigSendSmsPin :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response

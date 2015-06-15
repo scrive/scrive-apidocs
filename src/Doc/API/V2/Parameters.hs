@@ -13,8 +13,7 @@ import System.FilePath
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BSL
 
-import API.Monad.V2
-import Control.Exception.Lifted
+import API.V2
 import DB
 import Data.Text hiding (reverse, takeWhile)
 import Data.Unjson
@@ -45,7 +44,7 @@ apiV2Parameter' p = do
   v <- apiV2Parameter p
   case v of
     Just r -> return r
-    Nothing -> throwIO . SomeKontraException $ requestParametersMissing [getParameterName p]
+    Nothing -> apiError $ requestParameterMissing (getParameterName p)
 
 -- | Gets us all the different types of API parameters by matching proper
 -- constructors on `ApiV2Parameter a` which includes `ParameterOption a`
@@ -59,24 +58,24 @@ apiV2Parameter (ApiV2ParameterBool name opt) = do
   case mValue of
     Just "true"  -> return $ Just True
     Just "false" -> return $ Just False
-    Just _ -> throwIO . SomeKontraException $ requestParametersParseError name
+    Just _ -> apiError $ requestParameterParseError name "boolean value should be 'true' or 'false'"
     Nothing -> handleParameterOption name opt
 
 apiV2Parameter (ApiV2ParameterJSON name opt jsonDef) = do
   mValue <- getFieldBS (unpack name)
   case mValue of
     Just paramValue -> case Aeson.eitherDecode paramValue of
-      Left _ -> throwIO . SomeKontraException $ requestParametersParseError name
+      Left _ -> apiError $ requestParameterParseError name "Invalid JSON"
       Right paramAeson -> case (Unjson.parse jsonDef paramAeson) of
         (Result res []) -> return $ Just res
-        (Result _ errs) -> throwIO . SomeKontraException $ requestParametersParseError (name `append` pack (show errs))
+        (Result _ errs) -> apiError $ requestParameterParseError name (pack (show errs))
     Nothing -> handleParameterOption name opt
 
 apiV2Parameter (ApiV2ParameterFile name opt) = do
   mValue <- getDataFn' (lookInput $ unpack name)
   case mValue of
     Nothing -> handleParameterOption name opt
-    Just (Input _ Nothing _) -> throwIO . SomeKontraException $ requestParameterInvalid name "file was empty"
+    Just (Input _ Nothing _) -> apiError $ requestParameterInvalid name "file was empty"
     Just (Input contentspec (Just filename'') _contentType) -> do
       ctx <- getContext
       let filename' = reverse . takeWhile (/='\\') . reverse $ filename'' -- Drop filepath for windows
@@ -90,8 +89,8 @@ apiV2Parameter (ApiV2ParameterFile name opt) = do
         Just format -> do
           eres <- convertToPDF (ctxlivedocxconf ctx) content' format
           case eres of
-            Left (LiveDocxIOError e) -> throwIO . SomeKontraException $ requestParametersParseError $ "'" `append` name `append` "' parameter: LiveDocX conversion IO failed " `append` pack (show e)
-            Left (LiveDocxSoapError s)-> throwIO . SomeKontraException $ requestParametersParseError $ "'" `append` name `append`  "' parameter: LiveDocX conversion SOAP failed " `append` pack s
+            Left (LiveDocxIOError e) -> apiError $ requestParameterParseError name $ "LiveDocX conversion IO failed " `append` pack (show e)
+            Left (LiveDocxSoapError s)-> apiError $ requestParameterParseError name $ "LiveDocX conversion SOAP failed " `append` pack s
             Right res -> do
               -- change extension from .doc, .docx and others to .pdf
               let filename = takeBaseName filename' ++ ".pdf"
@@ -101,7 +100,7 @@ apiV2Parameter (ApiV2ParameterFile name opt) = do
         res <- preCheckPDF content''
         case res of
           Right r -> return r
-          Left _ ->  throwIO . SomeKontraException $ requestParametersParseError $ "The parameter '" `append` name `append` "' is not a valid PDF"
+          Left _ ->  apiError $ requestParameterParseError name $ "not a valid PDF"
 
       fileid <- dbUpdate $ NewFile filename pdfcontent
       file <- dbQuery $ GetFileByFileID fileid
@@ -113,7 +112,7 @@ apiParameterUsingMaybeRead name opt = do
   mValue <- getField $ unpack name
   case fmap maybeRead mValue of
     Just (Just v) -> return $ Just v
-    Just Nothing  -> throwIO . SomeKontraException $ requestParametersParseError name
+    Just Nothing  -> apiError $ requestParameterParseError name "could not read parameter"
     Nothing -> handleParameterOption name opt
 
 -- | Helper function to extract name from `ApiV2Parameter`
@@ -128,4 +127,4 @@ getParameterName (ApiV2ParameterFile n _) = n
 handleParameterOption :: Kontrakcja m => Text -> ParameterOption a -> m (Maybe a)
 handleParameterOption _ Optional = return Nothing
 handleParameterOption _ (OptionalWithDefault d) = return $ Just d
-handleParameterOption n Obligatory = throwIO . SomeKontraException $ requestParametersMissing [n]
+handleParameterOption n Obligatory = apiError $ requestParameterMissing n

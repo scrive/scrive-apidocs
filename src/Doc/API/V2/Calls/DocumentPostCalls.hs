@@ -23,8 +23,7 @@ import DB.TimeZoneName (defaultTimeZoneName)
 import Text.StringTemplates.Templates
 import MinutesTime
 
-import API.Monad.V2
-import Control.Exception.Lifted
+import API.V2
 import DB
 import Data.Text hiding (reverse, takeWhile)
 import Data.Unjson
@@ -88,10 +87,10 @@ docApiV2Update did = api $ do
     guardThatUserIsAuthor user
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Preparation
-    documentJSON <- apiGuardJustM (requestParametersMissing ["document"]) $ getFieldBS "document"
+    documentJSON <- apiGuardJustM (requestParameterMissing "document") $ getFieldBS "document"
     case Aeson.eitherDecode documentJSON of
       Left _ -> do
-       throwIO . SomeKontraException $ requestParametersParseError $ "'document' parameter is not a valid json"
+       apiError $ requestParameterParseError "document" "not a valid json"
       Right js -> do
         doc <- theDocument
         case (Unjson.update doc (unjsonDocument (DocumentAccess did AuthorDocumentAccess)) js) of
@@ -99,7 +98,7 @@ docApiV2Update did = api $ do
             applyDraftDataToDocument draftData actor
             Ok <$> (unjsonDocument (DocumentAccess did AuthorDocumentAccess),) <$> theDocument
           (Result _ errs) -> do
-            throwIO . SomeKontraException $ requestParametersParseError $ "Errors while parsing document data: " `append` pack (show errs)
+            apiError $ requestParameterParseError "document" $ "Errors while parsing document data: " `append` pack (show errs)
 
 
 docApiV2Start :: Kontrakcja m => DocumentID -> m Response

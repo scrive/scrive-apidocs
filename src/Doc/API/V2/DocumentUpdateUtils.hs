@@ -5,12 +5,11 @@ module Doc.API.V2.DocumentUpdateUtils (
   ) where
 
 import Control.Conditional (whenM, unlessM)
-import Control.Exception.Lifted (throwIO)
 import Data.Functor
 import Log
 import qualified Control.Exception.Lifted as E
 
-import API.Monad.V2 (serverError,requestParameterInvalid)
+import API.V2 (apiError, serverError, requestParameterInvalid)
 import DB
 import DB.TimeZoneName
 import Doc.DocInfo (isPreparation)
@@ -27,14 +26,14 @@ import Util.HasSomeUserInfo
 checkDraftTimeZoneName ::  (Kontrakcja m) =>  Document -> m ()
 checkDraftTimeZoneName draft = do
   void $  (mkTimeZoneName $ toString (documenttimezonename draft))
-    `E.catch` (\(_::E.SomeException) ->  throwIO $ SomeKontraException $ requestParameterInvalid "timezone" "timezone name is invalid")
+    `E.catch` (\(_::E.SomeException) ->  apiError $ requestParameterInvalid "document" "timezone name is invalid")
 
 applyDraftDataToDocument :: (Kontrakcja m, DocumentMonad m) =>  Document -> Actor -> m ()
 applyDraftDataToDocument draft actor = do
     checkDraftTimeZoneName draft
     unlessM (isPreparation <$> theDocument) $ do
       theDocument >>= \doc -> logAttention_ $ "Document is not in preparation, is in " ++ show (documentstatus doc)
-      throwIO $ SomeKontraException $ serverError "applyDraftDataToDocument failed"
+      apiError $ serverError "applyDraftDataToDocument failed"
     _ <- theDocument >>= \doc -> dbUpdate $ UpdateDraft doc{
                                   documenttitle = documenttitle draft
                                 , documentinvitetext = documentinvitetext draft
@@ -56,10 +55,10 @@ applyDraftDataToDocument draft actor = do
     whenM ((\doc -> isTemplate draft && (not $ isTemplate doc)) <$> theDocument) $ do
          dbUpdate $ TemplateFromDocument actor
     documentsignatorylinks <$> theDocument >>= \siglinks -> case (mergeAuthorDetails siglinks $ mergeSignatoriesIDs siglinks $ documentsignatorylinks draft) of
-         Nothing   -> throwIO $ SomeKontraException $ requestParameterInvalid "document" "document signatories list is empty"
+         Nothing   -> apiError $ requestParameterInvalid "document" "signatories list is empty"
          Just sigs -> do
            res <- dbUpdate $ ResetSignatoryDetails sigs actor
-           unless res $ throwIO $ SomeKontraException $ serverError "applyDraftDataToDocument failed"
+           unless res $ apiError $ serverError "applyDraftDataToDocument failed"
 
 mergeAuthorDetails :: [SignatoryLink] ->[SignatoryLink] -> Maybe [SignatoryLink]
 mergeAuthorDetails sigs nsigs =

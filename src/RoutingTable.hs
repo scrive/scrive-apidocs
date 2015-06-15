@@ -9,7 +9,7 @@ import Happstack.Server hiding (simpleHTTP, host, https, dir, path)
 import Happstack.StaticRouting(Route, choice, dir, remainingPath)
 
 import AppView
-import API.Monad.V2 (noAPIV2CallFoundHandler)
+import API.V2 (noAPIV2CallFoundHandler)
 import Doc.API
 import Happstack.Server.ReqHandler
 import Kontra

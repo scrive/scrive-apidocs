@@ -14,13 +14,12 @@ import Data.Text (Text, pack, append)
 import Doc.DocumentID
 
 import Doc.DocStateData
-import API.Monad.V2
+import API.V2
 import Kontra
 import Doc.DocumentMonad
 import DB
 import User.Model
 import Util.SignatoryLinkUtils
-import Control.Exception.Lifted
 import Doc.DocUtils
 import Doc.DocInfo
 import InputValidation
@@ -29,10 +28,10 @@ import Doc.Model.Query
 import Doc.API.V2.Parameters
 
 guardThatDocument :: (DocumentMonad m, Kontrakcja m) => (Document -> Bool) -> Text -> m ()
-guardThatDocument f text = unlessM (f <$> theDocument) $ throwIO . SomeKontraException $ documentStateError text
+guardThatDocument f text = unlessM (f <$> theDocument) $ apiError $ documentStateError text
 
 guardDocumentStatus :: (Kontrakcja m, DocumentMonad m) => DocumentStatus -> m ()
-guardDocumentStatus s = unlessM ((\d -> documentstatus d == s) <$> theDocument) $ throwIO . SomeKontraException $ documentStateError errorMsg
+guardDocumentStatus s = unlessM ((\d -> documentstatus d == s) <$> theDocument) $ apiError $ documentStateError errorMsg
   where errorMsg = "The document status should be " `append` (pack $ show s)
 
 -- | Internal function used in all guards on User
@@ -44,7 +43,7 @@ guardDocumentAuthorIs condition = do
   let msgNoUser = "Document doesn't have author user account for the author signatory link"
   author <- apiGuardJustM (serverError msgNoUser) $ dbQuery $ GetUserByIDIncludeDeleted authorUserId
   when (not $ condition author) $ do
-    throwIO . SomeKontraException $ documentActionForbidden
+    apiError documentActionForbidden
 
 guardThatUserIsAuthor :: (DocumentMonad m, Kontrakcja m) => User -> m ()
 guardThatUserIsAuthor user = guardDocumentAuthorIs (\a -> userid user == userid a)
@@ -73,11 +72,11 @@ guardThatObjectVersionMatchesIfProvided did = do
 guardThatDocumentCanBeStarted :: (DocumentMonad m, Kontrakcja m) => m ()
 guardThatDocumentCanBeStarted = do
     whenM (isTemplate <$> theDocument) $ do
-       throwIO . SomeKontraException $ (documentStateError "Document is a template, templates can not be started")
+       apiError $ (documentStateError "Document is a template, templates can not be started")
     unlessM (((all signatoryHasValidDeliverySettings) . documentsignatorylinks) <$> theDocument) $ do
-       throwIO . SomeKontraException $ documentStateError "Some signatories have invalid email address or phone number, and it is required for invitation delivery."
+       apiError $ documentStateError "Some signatories have invalid email address or phone number, and it is required for invitation delivery."
     whenM (isNothing . documentfile <$> theDocument) $ do
-       throwIO . SomeKontraException $ documentStateError "Document must have a file before it can be started"
+       apiError $ documentStateError "Document must have a file before it can be started"
     return ()
  where
     signatoryHasValidDeliverySettings sl = (isAuthor sl) || case (signatorylinkdeliverymethod sl) of

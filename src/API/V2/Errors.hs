@@ -1,30 +1,30 @@
 {-# LANGUAGE FunctionalDependencies, ExtendedDefaultRules #-}
-module API.Monad.V2Errors (
-                 APIError(),
-                 serverError,
-                 endpointNotFound,
-                 invalidAuthorisation,
-                 insufficientPrivileges,
-                 requestParametersMissing,
-                 requestParametersParseError,
-                 requestParameterInvalid,
-                 documentObjectVersionMismatch,
-                 documentStateError,
-                 signatoryStateError,
-                 documentActionForbidden,
-                 documentNotFound,
-                 resourceNotFound,
-                 httpCodeFromSomeKontraException,
-                 jsonFromSomeKontraException,
-                 tryToConvertConditionalExpectionIntoAPIError
-                 )
-  where
+module API.V2.Errors (
+    serverError
+  , requestParameterMissing
+  , requestParameterParseError
+  , requestParameterInvalid
+  , documentObjectVersionMismatch
+  , documentStateError
+  , signatoryStateError
+  , documentActionForbidden
+  , documentNotFound
+  , resourceNotFound
+  -- * Internal to API.V2
+  , APIError
+  , endpointNotFound
+  , invalidAuthorisation
+  , invalidAuthorisationWithMsg
+  , insufficientPrivileges
+  , httpCodeFromSomeKontraException
+  , jsonFromSomeKontraException
+  , tryToConvertConditionalExpectionIntoAPIError
+) where
 
 import Data.Text
 import Data.Typeable
 import Text.JSON
 import Text.JSON.Gen hiding (object)
-import qualified Data.Text as T
 
 import DB
 import Doc.Conditions
@@ -39,7 +39,13 @@ data APIError = APIError {
   }
   deriving (Show, Eq, Typeable)
 
+instance ToJSValue APIError where
+  toJSValue a = runJSONGen $ do
+    value "error_type" (unpack $ errorIDFromAPIErrorType $ errorType a)
+    value "error_message" (unpack $ errorMessage a)
+    value "http_code" (errorHttpCode $ a)
 
+instance KontraException APIError
 
 data APIErrorType = ServerError
                | EndpointNotFound
@@ -55,14 +61,6 @@ data APIErrorType = ServerError
                | SignatoryStateError
   deriving (Show, Eq, Typeable)
 
-instance KontraException APIError
-
-
-instance ToJSValue APIError where
-  toJSValue a = runJSONGen $ do
-    value "error_type" (unpack $ errorIDFromAPIErrorType $ errorType a)
-    value "error_message" (unpack $ errorMessage a)
-    value "http_code" (errorHttpCode $ a)
 
 
 errorIDFromAPIErrorType :: APIErrorType -> Text
@@ -89,6 +87,7 @@ httpCodeFromSomeKontraException (SomeKontraException ex) =
     Nothing -> 500
 
 
+
 -- General errors
 serverError :: Text -> APIError
 serverError reason = APIError { errorType = ServerError, errorHttpCode = 500, errorMessage = msg}
@@ -97,30 +96,36 @@ serverError reason = APIError { errorType = ServerError, errorHttpCode = 500, er
               `append` "the error, including the document id or any other details. "
               `append` "Error details: " `append` reason
 
+-- | Used internally by API.V2 for reporting bad API endpoints
 endpointNotFound :: Text -> APIError
 endpointNotFound ep = APIError { errorType = EndpointNotFound, errorHttpCode = 404, errorMessage = msg}
   where msg = "The endpoint " `append` ep `append` " was not found. See our website for API documentation."
 
-invalidAuthorisation :: Text -> APIError
-invalidAuthorisation problem = APIError { errorType = InvalidAuthorisation, errorHttpCode = 401, errorMessage = msg}
-  where msg = "No valid access credentials were provided. Please refer to our API documentation. " `append` problem
+-- | Used interally by this module and API.V2.User
+invalidAuthorisation :: APIError
+invalidAuthorisation = APIError { errorType = InvalidAuthorisation, errorHttpCode = 401, errorMessage = msg}
+  where msg = "No valid access credentials were provided. Please refer to our API documentation."
 
--- TODO JJ: convert this to the following type for proper error messages:
--- insufficientPrivileges :: [APIPrivilege] -> APIError
--- where [APIPrivilege] is the missing privileges, then we can use interal APIPrivilege -> Text to show these
-insufficientPrivileges :: Text -> APIError
-insufficientPrivileges msg = APIError { errorType = InsufficientPrivileges, errorHttpCode = 403, errorMessage = msg}
+-- | Used interally by this module and API.V2.User
+invalidAuthorisationWithMsg :: Text -> APIError
+invalidAuthorisationWithMsg problem = invalidAuthorisation { errorMessage = msg}
+  where msg = errorMessage invalidAuthorisation `append` " The problem was: " `append` problem
+
+-- | Used interally by this module and API.V2.User
+insufficientPrivileges :: APIError
+insufficientPrivileges = APIError { errorType = InsufficientPrivileges, errorHttpCode = 403, errorMessage = msg}
+  where msg = "The access credentials provided do not have sufficient privileges for this request."
 
 -- Request specific errors
-requestParametersMissing :: [Text] -> APIError
-requestParametersMissing missingParams = APIError { errorType = RequestParametersMissing, errorHttpCode = 400, errorMessage = msg}
-  where msg = "The parameter(s) " `append` params `append` " were missing. Please refer to our API documentation."
-        params = T.intercalate " " missingParams
+requestParameterMissing :: Text -> APIError
+requestParameterMissing param = APIError { errorType = RequestParametersMissing, errorHttpCode = 400, errorMessage = msg}
+  where msg = "The parameter " `append` param `append` " was missing. Please refer to our API documentation."
 
--- TODO JJ: convert this to similar type as `requestParametersMissing`, but with optional params as we might not know them?
--- TODO JJ: then we can have constant msg
-requestParametersParseError :: Text -> APIError
-requestParametersParseError msg = APIError { errorType = RequestParametersParseError, errorHttpCode = 400, errorMessage = msg}
+requestParameterParseError :: Text -> Text -> APIError
+requestParameterParseError param error = APIError { errorType = RequestParametersParseError, errorHttpCode = 400, errorMessage = msg}
+  where msg = "The parameter " `append` param `append` " could not be parsed."
+            `append` " Please refer to our API documentation. Error details: "
+            `append` error
 
 requestParameterInvalid :: Text -> Text -> APIError
 requestParameterInvalid param reason = APIError { errorType = RequestParametersInvalid, errorHttpCode = 400, errorMessage = msg}
@@ -197,28 +202,20 @@ convertDocumentStatusShouldBe (SomeKontraException ex) =
 convertUserShouldBeSelfOrCompanyAdmin :: SomeKontraException -> SomeKontraException
 convertUserShouldBeSelfOrCompanyAdmin (SomeKontraException ex) =
   case cast ex of
--- JJ: this is not a case of "invalid_authorisation", this looks like "insufficient_privileges"
--- JJ: "invalid_authorisation" is for "no valid credentials", not a permission issue
--- JJ: if you still think this is valid the function should be renamed
-    Just (UserShouldBeSelfOrCompanyAdmin{}) ->  SomeKontraException $ invalidAuthorisation $ "You can not perform this action with current authorization."
+    Just (UserShouldBeSelfOrCompanyAdmin{}) ->  SomeKontraException $ insufficientPrivileges
     Nothing -> (SomeKontraException ex)
 
 convertUserShouldBeDirectlyOrIndirectlyRelatedToDocument :: SomeKontraException -> SomeKontraException
 convertUserShouldBeDirectlyOrIndirectlyRelatedToDocument (SomeKontraException ex) =
   case cast ex of
--- JJ: this is not a case of "invalid_authorisation", this looks like "insufficient_privileges"
--- JJ: "invalid_authorisation" is for "no valid credentials", not a permission issue
--- JJ: if you still think this is valid the function should be renamed
-    Just (UserShouldBeDirectlyOrIndirectlyRelatedToDocument {}) ->  SomeKontraException $ invalidAuthorisation $ "You don't have rights not perform action on this document"
+    Just (UserShouldBeDirectlyOrIndirectlyRelatedToDocument {}) ->  SomeKontraException $ insufficientPrivileges
     Nothing -> (SomeKontraException ex)
-
 
 convertSignatoryLinkDoesNotExist :: SomeKontraException -> SomeKontraException
 convertSignatoryLinkDoesNotExist (SomeKontraException ex) =
   case cast ex of
     Just (SignatoryLinkDoesNotExist sig) ->  SomeKontraException $ signatoryStateError $ "Signatory"  `append` pack (show sig) `append` " does not exists"
     Nothing -> (SomeKontraException ex)
-
 
 convertSignatoryHasNotYetSigned :: SomeKontraException -> SomeKontraException
 convertSignatoryHasNotYetSigned (SomeKontraException ex) =
@@ -247,10 +244,7 @@ convertSignatoryHasAlreadySigned (SomeKontraException ex) =
 convertSignatoryTokenDoesNotMatch :: SomeKontraException -> SomeKontraException
 convertSignatoryTokenDoesNotMatch (SomeKontraException ex) =
   case cast ex of
--- JJ: this is not a case of "invalid_authorisation", this looks like "insufficient_privileges"
--- JJ: "invalid_authorisation" is for "no valid credentials", not a permission issue
--- JJ: if you still think this is valid the function should be renamed
-    Just (SignatoryTokenDoesNotMatch {}) -> SomeKontraException $ invalidAuthorisation $ "Signatory token does not match"
+    Just (SignatoryTokenDoesNotMatch {}) -> SomeKontraException $ invalidAuthorisationWithMsg "Signatory token does not match"
     Nothing -> (SomeKontraException ex)
 
 convertDocumentObjectVersionDoesNotMatch :: SomeKontraException -> SomeKontraException
@@ -280,18 +274,14 @@ convertDocumentIsNotDeleted (SomeKontraException ex) =
     Just (DocumentIsNotDeleted {}) -> SomeKontraException $ documentStateError $ "Document is not deleted"
     Nothing -> (SomeKontraException ex)
 
-
 convertDocumentIsReallyDeleted ::  SomeKontraException -> SomeKontraException
 convertDocumentIsReallyDeleted (SomeKontraException ex) =
   case cast ex of
     Just (DocumentIsReallyDeleted {}) -> SomeKontraException $ documentStateError $ "Document is really deleted. It is not avaialbe and will be purged soon"
     Nothing -> (SomeKontraException ex)
 
-
 convertSignatoryAuthenticationDoesNotMatch ::  SomeKontraException -> SomeKontraException
 convertSignatoryAuthenticationDoesNotMatch (SomeKontraException ex) =
   case cast ex of
--- JJ: this is really not a signatoryStateError if we are talking about authorisation
--- JJ: if this is related to SMS PIN then fine, but then the message is completely misleading
     Just (SignatoryAuthenticationDoesNotMatch {}) -> SomeKontraException $ signatoryStateError $ "Invalid authorization for signatory"
     Nothing -> (SomeKontraException ex)
