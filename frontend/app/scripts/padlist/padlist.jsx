@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React', 'lists/list','archive/statustooltipmixin', 'moment', 'legacy_code'], function(React, List, StatusTooltipMixin, moment) {
+define(['React', 'lists/list','archive/statustooltipmixin', 'common/select', 'moment', 'legacy_code'], function(React, List, StatusTooltipMixin, Select, moment) {
 
 
 var SelectPartyModal = function(signingIndexes,doc) {
@@ -20,17 +20,19 @@ var SelectPartyModal = function(signingIndexes,doc) {
                 });
             }
             var currentName = doc.field("subfields")[signingIndexes[self.current]].name.trim();
-            var select = new Select({
+
+            var $select1 = $("<span>");
+            React.render(React.createElement(Select, {
                 name : ( currentName != "" ? currentName : localization.process.signatoryname + " " + (signingIndexes[self.current] + 1)),
-                cssClass : "float-left",
+                className : "float-left",
                 options : options,
                 onSelect : function(v) {
                   self.current = v;
                   self.onChange();
                   return true;
                 }
-            });
-            return div.append(select.el());
+            }), $select1[0]);
+            return div.append($select1[0]);
           };
           self.content = modalContent();
           self.onChange = function() {
