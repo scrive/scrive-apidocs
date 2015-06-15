@@ -28,6 +28,7 @@ data JobType
   | FindAndTimeoutDocuments
   | MailEventsProcessing
   | OldDraftsRemoval
+  | OldLogsRemoval
   | PasswordRemindersEvaluation
   | RecurlySynchronization
   | SessionsEvaluation
@@ -51,6 +52,7 @@ jobTypeMapper = [
   , (FindAndTimeoutDocuments, "find_and_timeout_documents")
   , (MailEventsProcessing, "mail_events_processing")
   , (OldDraftsRemoval, "old_drafts_removal")
+  , (OldLogsRemoval, "old_logs_removal")
   , (PasswordRemindersEvaluation, "password_reminders_evaluation")
   , (RecurlySynchronization, "recurly_synchronization")
   , (SessionsEvaluation, "sessions_evaluation")

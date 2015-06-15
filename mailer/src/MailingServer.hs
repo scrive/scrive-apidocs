@@ -3,7 +3,6 @@ module MailingServer (main) where
 import Control.Concurrent.Lifted
 import Control.Monad.Base
 import Data.Monoid
-import Data.Time
 import Happstack.Server hiding (result, waitForTermination)
 import Log
 import System.Console.CmdArgs hiding (def)
@@ -27,6 +26,7 @@ import Log.Configuration
 import MailingServerConf
 import Mails.Model
 import Mails.Tables
+import MinutesTime
 import Sender
 import Utils.IO
 import Utils.Network
@@ -152,12 +152,7 @@ main = do
         logInfo_ $ "Removing emails sent" <+> show daylimit <+> "days ago."
         cleaned <- withPostgreSQL pool . dbUpdate $ CleanEmailsOlderThanDays daylimit
         logInfo_ $ show cleaned <+> "emails were removed."
-        now <- currentTime
-        -- run at midnight
-        return . Ok $ RerunAt UTCTime {
-          utctDay = 1 `addDays` utctDay now
-        , utctDayTime = 0
-        }
+        Ok . RerunAt . nextDayMidnight <$> currentTime
 
       PerformServiceTest -> case mscSlaveSender conf of
         -- If there is no slave sender, retry periodically to be

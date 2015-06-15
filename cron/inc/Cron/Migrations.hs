@@ -12,7 +12,15 @@ cronMigrations = [
     createCronWorkersTable
   , createCronJobsTable
   , addNameToCronWorkers
+  , addOldLogsRemovalToCronJobs
   ]
+
+addOldLogsRemovalToCronJobs :: MonadDB m => Migration m
+addOldLogsRemovalToCronJobs = Migration {
+  mgrTable = tableCronJobs
+, mgrFrom = 1
+, mgrDo = runSQL_ "INSERT INTO cron_jobs (id, run_at) VALUES ('old_logs_removal', to_timestamp(0))"
+}
 
 addNameToCronWorkers :: MonadDB m => Migration m
 addNameToCronWorkers = Migration {

@@ -2,7 +2,6 @@ module MessengerServer (main) where
 
 import Control.Concurrent.Lifted
 import Control.Monad.Base
-import Data.Time
 import Happstack.Server hiding (waitForTermination)
 import Log
 import System.Console.CmdArgs hiding (def)
@@ -23,6 +22,7 @@ import JobQueue.Utils
 import KontraPrelude
 import Log.Configuration
 import MessengerServerConf
+import MinutesTime
 import Sender
 import SMS.Data
 import SMS.Model
@@ -127,11 +127,6 @@ main = do
         logInfo_ $ "Removing smses sent" <+> show daylimit <+> "days ago."
         cleaned <- withPostgreSQL pool . dbUpdate $ CleanSMSesOlderThanDays daylimit
         logInfo_ $ show cleaned <+> "smses were removed."
-        now <- currentTime
-        -- run at midnight
-        return . Ok $ RerunAt UTCTime {
-          utctDay = 1 `addDays` utctDay now
-        , utctDayTime = 0
-        }
+        Ok . RerunAt . nextDayMidnight <$> currentTime
     , ccOnException = \_ _ -> return . RerunAfter $ ihours 1
     }

@@ -19,6 +19,7 @@ module MinutesTime (
   , daysBefore
   , monthsBefore
   , beginingOfMonth
+  , nextDayMidnight
   ) where
 
 import Control.Monad.Time
@@ -114,3 +115,9 @@ beginingOfMonth = localTimeToUTC utc . f . utcToLocalTime utc
       }
       where
         (year, month, _) = toGregorian localDay
+
+nextDayMidnight :: UTCTime -> UTCTime
+nextDayMidnight time = UTCTime {
+  utctDay = 1 `addDays` utctDay time
+, utctDayTime = 0
+}

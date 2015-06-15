@@ -10,6 +10,8 @@ import Log
 import System.Console.CmdArgs hiding (def)
 import System.Environment
 import qualified Data.ByteString as BS
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 
 import ActionQueue.EmailChangeRequest
 import ActionQueue.Monad
@@ -34,8 +36,10 @@ import JobQueue.Config
 import JobQueue.Utils
 import KontraPrelude hiding (All)
 import Log.Configuration
+import Log.Model
 import Log.Utils
 import Mails.Events
+import MinutesTime
 import Payments.Config
 import Payments.Control
 import Purging.Files
@@ -182,6 +186,20 @@ main = do
             delCount <- dbUpdate $ RemoveOldDrafts 100
             logInfo_ $ "OldDraftsRemoval: removed" <+> show delCount <+> "old, unsaved draft documents."
           return . RerunAfter $ ihours 1
+        OldLogsRemoval -> do
+          let connSource ci = simpleSource def { csConnInfo = T.encodeUtf8 ci }
+              logDBs = catMaybes . for (lcLoggers $ logConfig appConf) $ \case
+                PostgreSQL ci -> Just ci
+                _             -> Nothing
+          forM_ logDBs $ \ci -> runDBT (connSource ci) def $ do
+            runSQL_ "SELECT current_database()::text"
+            dbName :: T.Text <- fetchOne runIdentity
+            n <- dbUpdate $ CleanLogsOlderThanDays 30
+            logInfo "Old logs removed" $ object [
+                "database" .= dbName
+              , "logs_removed" .= n
+              ]
+          RerunAt . nextDayMidnight <$> currentTime
         PasswordRemindersEvaluation -> do
           runScheduler $ actionQueue passwordReminder
           return . RerunAfter $ ihours 1
@@ -193,11 +211,7 @@ main = do
               temps (recurlyAPIKey $ recurlyConfig appConf) time
             handleSyncNoProvider time
             return time
-          -- retry the next day at midnight
-          return $ RerunAt UTCTime {
-            utctDay = 1 `addDays` utctDay time
-          , utctDayTime = 0
-          }
+          return . RerunAt $ nextDayMidnight time
         SessionsEvaluation -> do
           runScheduler $ actionQueue session
           return . RerunAfter $ ihours 1
