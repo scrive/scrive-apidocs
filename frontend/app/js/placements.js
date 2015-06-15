@@ -43,6 +43,7 @@ window.FieldPlacement = Backbone.Model.extend({
             if (placement.alive() && document.file() && document.file().page(pageno) != undefined) {
                 document.file().page(pageno).addPlacement(placement);
                 placement.set({placed : true});
+                document.trigger('placements:change');
                 document.off('file:change',tryToAddToPage);
             }
             if(!placement.alive())

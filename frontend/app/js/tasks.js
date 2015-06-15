@@ -77,6 +77,9 @@ window.PageTask = Backbone.Model.extend({
   onDeactivate : function() {
     return this.get("onDeactivate")();
   },
+  onDelete : function() {
+    this.stopListening();
+  },
   isComplete: function() {
     return this.get("complete");
   },
@@ -128,9 +131,12 @@ window.PageTasks = Backbone.Model.extend({
       var horizontalDiff = offset1.left - offset2.left;
       return (verticalDiff === 0 ? horizontalDiff : verticalDiff);
     });
-   _.each(tasks, function(t) {t.bind('change', function() { model.activateTask();})});
-   _.each(tasks, function(t) {t.bind('change:ui', function() {model.trigger("change");})});
+   _.each(tasks, function(t) {model.listenTo(t, 'change', model.activateTask)});
+   _.each(tasks, function(t) {model.listenTo(t, 'change:ui', function() {this.trigger("change");});});
    this.activateTask();
+   console.log("Tasks");
+   window.xxxx = args.tasks;
+   _.each(args.tasks,function(t) { console.log(t.label()); console.log(t.el().offset());});
   },
   active : function() {
     return this.get("active");
@@ -164,14 +170,23 @@ window.PageTasks = Backbone.Model.extend({
          for (var i=0;i< this.tasks().length ; i++ )
                if (!this.tasks()[i].isComplete()) tasks.push(this.tasks()[i]);
          return tasks;
+  },
+  deletePageTasks: function() {
+    var model = this;
+    model.stopListening();
+    _.each(this.tasks(), function(t) {
+      t.onDelete();
+    });
   }
 });
 
 var PageTasksArrowView = Backbone.View.extend({
   initialize: function(args) {
-    _.bindAll(this, 'render');
+    _.bindAll(this, 'render', 'updateArrow', 'onScroll');
     var view = this;
-    this.model.bind("change", function() {view.render()});
+    view.listenTo(view.model, "change", view.render);
+    $(window).on("resize", view.updateArrow);
+    $(window).on("scroll", view.onScroll);
     this.render();
   },
   blink : function() {
@@ -284,17 +299,22 @@ var PageTasksArrowView = Backbone.View.extend({
     }
     this.arrow.activate();
   },
+  onScroll: function() {
+    this.updateArrow();
+    if (this.model.active() != undefined) {
+      this.model.active().onScrollWhenActive();
+    }
+  },
   render: function() {
     var view = this;
     var document = this.document;
     $(this.el).addClass('arrows');
-    $(window).resize(function() {view.updateArrow();});
-    $(window).scroll(function() {
-      view.updateArrow();
-      if (view.model.active() != undefined)
-        view.model.active().onScrollWhenActive();
-    });
     view.updateArrow();
+  },
+  deletePageTasksArrowView: function() {
+    $(window).off("resize", this.updateArrow);
+    $(window).off("scroll", this.onScroll);
+    this.stopListening();
   }
 });
 
@@ -312,6 +332,7 @@ window.PageTasksArrow = function(args){
             , disable  : function()    { view.disable(); }
             , updatePosition: function() { view.updatePosition();}
             , goToCurrentTask: function() { view.goToCurrentTask();}
+            , deletePageTasksArrow: function() { view.deletePageTasksArrowView(); model.deletePageTasks(); }
             , notCompletedTasks: function() { return model.notCompletedTasks(); }
          };
 };

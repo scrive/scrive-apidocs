@@ -353,7 +353,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
       var signatoryHasPlacedSignatures = model.document().currentSignatory().hasPlacedSignatures();
 
       var valid =  model.tasks().notCompletedTasks().length == 1 &&
-                   model.tasks().notCompletedTasks()[0] == model.signtask();
+                   model.tasks().notCompletedTasks()[0].isSignTask();
       if (!valid) {
               model.arrow().blink();
               return false;

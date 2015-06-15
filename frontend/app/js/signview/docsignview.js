@@ -35,10 +35,14 @@ var DocumentSignViewModel = Backbone.Model.extend({
       signviewbranding.bind("change", function() {
           model.trigger("change");
       });
-      document.bind("file:change", function() {
-        setTimeout(function() {
-            model.trigger("change");
-        },100);
+
+      document.bind('file:change placements:change', function() {
+        var arrow = model.get('arrow');
+        if (arrow !== undefined) {
+          arrow.deletePageTasksArrow();
+        }
+        model.set('arrow', undefined, {silent: true});
+        model.trigger("change");
       });
   },
   document : function(){
@@ -240,7 +244,6 @@ var DocumentSignViewModel = Backbone.Model.extend({
       return this.get('mainfile');
   },
   signatoryattachmentasks: function() {
-      if (this.get("signatoryattachmentasks") == undefined) {
         var model = this;
         var els = [];
         _.each(model.signatoryattachmentsection().uploadViews, function (uplView) {
@@ -250,6 +253,9 @@ var DocumentSignViewModel = Backbone.Model.extend({
         var attachments = model.document().currentSignatory().attachments();
         var tasks = [];
         _.each(attachments, function(attachment,i) {
+                var taskUpdate = function() {
+                  task.update();
+                };
                 var task = new PageTask({
                             type: 'signatory-attachment',
                             isComplete: function() {
@@ -266,21 +272,15 @@ var DocumentSignViewModel = Backbone.Model.extend({
                                 mixpanel.track('Finish attachment task');
                             }
                         });
-            attachment.bind("change", function() {
-                task.update();
-                });
-            attachment.bind("reset", function() {task.update()});
-            tasks.push(task);
+                task.listenTo(attachment, "change", taskUpdate);
+                task.listenTo(attachment, "reset", taskUpdate);
+                tasks.push(task);
         });
-        this.set({'signatoryattachmentasks' : tasks }, {silent : true});
-        }
-      return this.get('signatoryattachmentasks');
+        return tasks;
   },
   signtask : function() {
         var model = this;
-        if (this.get("signtask") == undefined)
-            this.set({'signtask' :
-                            new PageTask({
+                     return new PageTask({
                                 type: 'sign',
                                 label: localization.docsignview.signArrowLabel,
                                 onArrowClick: function () {
@@ -296,15 +296,12 @@ var DocumentSignViewModel = Backbone.Model.extend({
                                 onDeactivate : function() {
                                     mixpanel.track('Finish signature task');
                                 }
-                                })
-            }, {silent : true});
-        return this.get('signtask');
+                                });
   },
   filltasks : function() {
      var self = this;
      var document = this.document();
 
-     if (this.get("filltasks") == undefined) {
         var tasks = [];
         _.each(this.mainfile().model.placements(), function(placement) {
                 if (!placement.field().signatory().current()) return;
@@ -317,6 +314,10 @@ var DocumentSignViewModel = Backbone.Model.extend({
                 } else if (placement.field().isSignature()) {
                   label = localization.docsignview.signature;
                 }
+
+                var taskUpdate = function() {
+                  task.update();
+                };
 
                 var task = new PageTask({
                     type: 'field',
@@ -362,15 +363,15 @@ var DocumentSignViewModel = Backbone.Model.extend({
                     tipSide : placement.tip(),
                     label: label
                 });
-                placement.field().bind("change", function() { task.update();});
-                placement.field().bind("change", function() { task.update();});
-                placement.field().bind("change:inlineedited", function() { task.triggerUIChange();});
-                placement.field().bind("reset", function() {task.update();});
+                task.listenTo(placement.field(), "change", taskUpdate);
+                task.listenTo(placement.field(), "reset", taskUpdate);
+                task.listenTo(placement.field(), "change:inlineedited", function() {
+                  task.triggerUIChange();
+                });
                 tasks.push(task);
             });
          this.set({'filltasks' : tasks }, {silent : true});
-       }
-       return this.get('filltasks');
+         return tasks;
   },
   extraDetailsTasks : function() {
         var self = this;
@@ -378,7 +379,6 @@ var DocumentSignViewModel = Backbone.Model.extend({
         var document = self.document();
         var label = localization.docsignview.textfield;
 
-        if (self.get("extraDetailsTasks") == undefined) {
           var tasks = [];
 
           if(this.askForName()) {
@@ -441,13 +441,14 @@ var DocumentSignViewModel = Backbone.Model.extend({
             }));
           }
 
-          document.currentSignatory().bind("change", function() {_.each(tasks, function(t) {t.update();})});
-          self.set({'extraDetailsTasks' : tasks }, {silent : true});
-       }
-       return self.get('extraDetailsTasks');
+          _.each(tasks, function(t) {
+            t.listenTo(document.currentSignatory(), "change", function() {
+              t.update();
+            });
+          });
+          return tasks;
   },
   tasks : function() {
-      if (this.get("tasks") == undefined) {
         var tasks = [];
         if (this.hasMainFileSection()) {
             tasks = _.union(tasks,this.filltasks());
@@ -461,9 +462,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
         if (this.hasSignSection()) {
             tasks.push(this.signtask());
         }
-        this.set({'tasks' : new PageTasks({ tasks : tasks})}, {silent : true});
-      }
-      return this.get('tasks');
+        return new PageTasks({tasks : tasks});
   },
   arrow : function() {
       if (this.get("arrow") == undefined)
