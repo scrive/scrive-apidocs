@@ -14,6 +14,7 @@ module Doc.API.V2.Calls.DocumentPostCalls (
 , docApiV2SetAutoReminder
 , docApiV2Clone
 , docApiV2Restart
+, docApiV2SigSetAuthentication
 ) where
 
 import KontraPrelude
@@ -40,6 +41,7 @@ import Doc.DocUtils
 import Doc.DocumentID
 import Doc.DocumentMonad
 import Doc.Model
+import Doc.SignatoryLinkID
 import File.File (File(..))
 import Kontra
 import OAuth.Model
@@ -177,3 +179,6 @@ docApiV2Clone _did = $undefined -- TODO implement
 
 docApiV2Restart :: Kontrakcja m => DocumentID -> m Response
 docApiV2Restart _did = $undefined -- TODO implement
+
+docApiV2SigSetAuthentication :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
+docApiV2SigSetAuthentication _did _slid = $undefined -- TODO implement

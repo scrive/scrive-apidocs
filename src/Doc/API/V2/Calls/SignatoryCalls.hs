@@ -1,6 +1,5 @@
 module Doc.API.V2.Calls.SignatoryCalls (
-  docApiV2SigSetAuthentication
-, docApiV2SigReject
+  docApiV2SigReject
 , docApiV2SigCheck
 , docApiV2SigSign
 , docApiV2SigSendSmsPin
@@ -32,9 +31,6 @@ import KontraPrelude
 import Util.SignatoryLinkUtils
 import Util.Actor
 import User.Lang
-
-docApiV2SigSetAuthentication :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
-docApiV2SigSetAuthentication _did _slid = $undefined -- TODO implement
 
 docApiV2SigReject :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigReject did slid = api $ do
