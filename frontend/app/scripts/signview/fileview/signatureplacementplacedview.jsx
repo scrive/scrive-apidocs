@@ -30,6 +30,21 @@ return Backbone.View.extend({
     }
   },
 
+  activateSignatureModal: function () {
+    var placement = this.model;
+    var field = placement.field();
+    var width = placement.wrel() * this.$el.parent().width();
+    var height = placement.hrel() * this.$el.parent().height();
+
+    new SignatureDrawOrTypeModal({
+      field: field,
+      width: width,
+      height: height,
+      arrow: this.arrow,
+      signview: this.signview
+    });
+  },
+
   render: function () {
     var self = this;
     var placement = self.model;
@@ -83,13 +98,7 @@ return Backbone.View.extend({
       }
 
       box.click(function () {
-        new SignatureDrawOrTypeModal({
-          field: field,
-          width: width,
-          height: height,
-          arrow: self.arrow,
-          signview: self.signview
-        });
+        self.activateSignatureModal();
       });
     } else {
       if (field.value()) {

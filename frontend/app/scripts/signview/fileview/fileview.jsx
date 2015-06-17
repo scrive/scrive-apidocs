@@ -26,10 +26,11 @@ var FileView = Backbone.View.extend({
 
     if (view.ready()) {
 
-      // TODO. Here we need to trigger ready twice. It should be two different events, but it's not. Maybe after rewrite to React.
-      // First 'ready' will force placecements to get connected to pages. Then we 'updatePosition' on each of them.
-      // Second 'ready'will force update of arrows - and arrows are based on position or placementview el, so it has to be done after 'updatePosition'.
-      
+      // TODO. Here we need to trigger ready twice. It should be two different events, but it's not.
+      // Maybe after rewrite to React.  First 'ready' will force placecements to get connected to pages.
+      // Then we 'updatePosition' on each of them.  Second 'ready'will force update of arrows -
+      // and arrows are based on position or placementview el, so it has to be done after 'updatePosition'.
+
       view.model.trigger("ready");
       if (view.pageviews != undefined) {
         _.each(view.pageviews, function (pv) {
