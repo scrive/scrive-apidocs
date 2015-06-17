@@ -38,7 +38,7 @@ docApiV2SigSetAuthentication _did _slid = $undefined -- TODO implement
 
 docApiV2SigReject :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigReject did slid = api $ do
-  (mh,_mu) <- getMagicHashAndUserForSignatoryAction did slid
+  mh <- getMagicHashForSignatoryAction did slid
   rejectReason' <- apiV2Parameter (ApiV2ParameterText "reason" Optional)
   let rejectReason = fmap (unpack . strip) rejectReason'
   guardThatObjectVersionMatchesIfProvided did
@@ -57,7 +57,7 @@ docApiV2SigCheck _did _slid = $undefined -- TODO implement
 
 docApiV2SigSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSign did slid = api $ do
-  (mh,_mu) <- getMagicHashAndUserForSignatoryAction did slid
+  mh <- getMagicHashForSignatoryAction did slid
   screenshots <- getScreenshots
   fields <- apiV2Parameter' (ApiV2ParameterJSON "fields" Obligatory unjsonSignatoryFieldsValues)
   olddoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh -- We store old document, as it is needed by postDocumentXXX calls

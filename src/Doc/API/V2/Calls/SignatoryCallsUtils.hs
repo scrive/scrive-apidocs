@@ -1,10 +1,9 @@
 module Doc.API.V2.Calls.SignatoryCallsUtils (
-      checkAuthenticationMethodAndValue
-    , getScreenshots
-    , signDocument
-    , getMagicHashAndUserForSignatoryAction
-    , checkSignatoryPin
-  ) where
+  checkAuthenticationMethodAndValue
+, getScreenshots
+, signDocument
+, checkSignatoryPin
+) where
 
 import KontraPrelude
 import Data.Text (pack)
@@ -15,8 +14,6 @@ import Doc.SignatoryScreenshots(SignatoryScreenshots, emptySignatoryScreenshots,
 import EID.Signature.Model
 import MagicHash (MagicHash)
 import Data.Unjson
-import Doc.DocumentID
-import Doc.DocStateQuery
 
 import Doc.DocStateData
 import API.V2
@@ -31,8 +28,6 @@ import Util.HasSomeUserInfo
 import Doc.API.V2.JSONFields
 import Doc.Model.Update
 import Util.Actor
-import OAuth.Model
-import Doc.Tokens.Model
 import Doc.SMSPin.Model
 import Doc.API.V2.Parameters
 
@@ -111,18 +106,6 @@ fieldsToFieldsWithFiles (f:fs) = do
                           else do
                             fileid <- dbUpdate $ NewFile "signature.png" (Binary bs)
                             return $ ((fi,FileFV (Just fileid)):changeFields,(fileid,bs):files')
-
-getMagicHashAndUserForSignatoryAction :: (Kontrakcja m) =>  DocumentID -> SignatoryLinkID -> m (MagicHash,Maybe User)
-getMagicHashAndUserForSignatoryAction did sid = do
-    mh' <- dbQuery $ GetDocumentSessionToken sid
-    case mh' of
-      Just mh'' ->  return (mh'',Nothing)
-      Nothing -> do
-         (user, _) <- getAPIUser APIPersonal
-         mh'' <- getMagicHashForDocumentSignatoryWithUser  did sid user
-         case mh'' of
-           Nothing -> apiError documentActionForbidden
-           Just mh''' -> return (mh''',Just $ user)
 
 
 checkSignatoryPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [(FieldIdentity, SignatoryFieldTMPValue)] -> String -> m Bool

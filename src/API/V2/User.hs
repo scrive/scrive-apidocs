@@ -3,13 +3,19 @@ module API.V2.User (
   , getAPIUserWithPrivileges
   , getAPIUserWithAnyPrivileges
   , getAPIUserWithPad
+  , getMagicHashForSignatoryAction
 ) where
 
 import Data.Text
+import MagicHash (MagicHash)
 
 import API.V2.Errors
 import API.V2.Monad
 import DB
+import Doc.DocStateQuery
+import Doc.DocumentID
+import Doc.SignatoryLinkID
+import Doc.Tokens.Model
 import Kontra
 import KontraPrelude
 import OAuth.Model
@@ -37,6 +43,27 @@ getAPIUserWithPrivileges privs = getAPIUserWith ctxmaybeuser privs
 
 getAPIUserWithPad :: Kontrakcja m => APIPrivilege -> m (User, Actor)
 getAPIUserWithPad priv = getAPIUserWith (\c -> ctxmaybeuser c `mplus` ctxmaybepaduser c) [priv]
+
+-- | Get the `MagicHash` from the session for the `DocumentID` and
+-- `SignatoryLinkID`
+--
+-- If no matching session then try with `getApiUser APIPersonal` and get the
+-- signatory's `MagicHash` using `getMagicHashForDocumentSignatoryWithUser`
+-- that checks if the User is the author
+--
+-- Used to return `m (MagicHash, Maybe User)` but we don't seem to need the
+-- `User`, can be reintroduced if really needed
+getMagicHashForSignatoryAction :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m MagicHash
+getMagicHashForSignatoryAction did slid = do
+  mSessionMagicHash <- dbQuery $ GetDocumentSessionToken slid
+  case mSessionMagicHash of
+    Just mh -> return mh
+    Nothing -> do
+      (user, _) <- getAPIUser APIPersonal
+      mUserMagicHash <- getMagicHashForDocumentSignatoryWithUser did slid user
+      case mUserMagicHash of
+        Nothing -> apiError documentActionForbidden
+        Just mh -> return mh
 
 -- * Interal functions
 
