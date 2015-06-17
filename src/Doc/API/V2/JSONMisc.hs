@@ -1,30 +1,36 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-
-module Doc.API.V2.JSONMisc (unjsonMaybeMainFile,textToAuthenticationMethod) where
+module Doc.API.V2.JSONMisc (
+  iso8601Time
+, unjsonMaybeMainFile
+, textToAuthenticationMethod
+) where
 
 import Data.Text.Encoding
+import Data.Time.Clock
+import Data.Time.Format
 import Database.PostgreSQL.PQTypes.Binary
-import qualified Data.ByteString.RFC2397 as RFC2397
 import qualified Data.Aeson as Aeson
+import qualified Data.ByteString.RFC2397 as RFC2397
+import qualified Data.ByteString.UTF8 as BS
 
-import Doc.DocStateData
-import KontraPrelude
-import File.FileID
-import Data.Unjson
-import Doc.DocumentID
-import Data.Text
-import User.Lang
 import DB.TimeZoneName
 import Data.Functor.Invariant
-import Doc.SignatoryLinkID
-import User.UserID
+import Data.Text
+import Data.Unjson
 import Doc.API.V2.UnjsonUtils
+import Doc.DocStateData
+import Doc.DocumentID
+import Doc.SignatoryLinkID
+import File.FileID
+import KontraPrelude
+import User.Lang
+import User.UserID
 import qualified Doc.Screenshot as Screenshot
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 
-import qualified Data.ByteString.UTF8 as BS
-
--- Unjson for various ID types
+-- | Convert UTCTime to ISO8601 time format with two decimal places that we use
+iso8601Time :: UTCTime -> Text
+iso8601Time time = Data.Text.take 22 (pack (formatTime defaultTimeLocale (iso8601DateFormat (Just "%H:%M:%S%Q")) time)) `append` "Z"
 
 instance Unjson DocumentID where
   unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse DocumentID")  return) . maybeRead) (show . fromDocumentID :: DocumentID -> String) unjsonDef
