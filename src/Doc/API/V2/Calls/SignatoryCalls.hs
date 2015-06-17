@@ -13,7 +13,7 @@ import Data.Text (strip, unpack)
 import API.V2
 import Chargeable.Model
 import DB
-import Doc.API.V2.CallsUtils
+import Doc.API.V2.Calls.SignatoryCallsUtils
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.Guards
 import Doc.API.V2.JSONDocument
@@ -76,10 +76,11 @@ docApiV2SigSign did slid = api $ do
         Ok <$> (\d -> (unjsonDocument (DocumentAccess did $ SignatoryDocumentAccess slid),d)) <$> theDocument
 
       SMSPinAuthentication -> do
-        validPin <- getValidPin slid fields
-        if (isJust validPin)
+        pin <- fmap unpack $ apiV2Parameter' (ApiV2ParameterText "pin" Obligatory)
+        validPin <- checkSignatoryPin slid fields pin
+        if validPin
           then do
-            signDocument slid mh fields Nothing validPin screenshots
+            signDocument slid mh fields Nothing (Just pin) screenshots
             postDocumentPendingChange olddoc
             handleAfterSigning slid
             Ok <$> (\d -> (unjsonDocument (DocumentAccess did $ SignatoryDocumentAccess slid),d)) <$> theDocument

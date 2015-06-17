@@ -1,9 +1,9 @@
-module Doc.API.V2.CallsUtils (
+module Doc.API.V2.Calls.SignatoryCallsUtils (
       checkAuthenticationMethodAndValue
     , getScreenshots
     , signDocument
     , getMagicHashAndUserForSignatoryAction
-    , getValidPin
+    , checkSignatoryPin
   ) where
 
 import KontraPrelude
@@ -125,13 +125,10 @@ getMagicHashAndUserForSignatoryAction did sid = do
            Just mh''' -> return (mh''',Just $ user)
 
 
-getValidPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [(FieldIdentity, SignatoryFieldTMPValue)] -> m (Maybe String)
-getValidPin slid fields = do
-  pin <- apiGuardJustM (requestParameterMissing "pin") $ getField "pin"
+checkSignatoryPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [(FieldIdentity, SignatoryFieldTMPValue)] -> String -> m Bool
+checkSignatoryPin slid fields pin = do
   phone <- case (lookup MobileFI fields) of
     Just (StringFTV v) -> return v
     _ ->  getMobile <$> $fromJust . getSigLinkFor slid <$> theDocument
   pin' <- dbQuery $ GetSignatoryPin slid phone
-  if (pin == pin')
-    then return $ Just pin
-    else return $ Nothing
+  return $ pin == pin'
