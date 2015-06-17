@@ -33,6 +33,7 @@ data ApiV2Parameter a where
   ApiV2ParameterBool  :: Text -> ParameterOption Bool -> ApiV2Parameter Bool
   ApiV2ParameterInt   :: Text -> ParameterOption Int -> ApiV2Parameter Int
   ApiV2ParameterText  :: Text -> ParameterOption Text -> ApiV2Parameter Text
+  ApiV2ParameterRead  :: Read a => Text -> ParameterOption a -> ApiV2Parameter a
   ApiV2ParameterJSON  :: Text -> ParameterOption a -> UnjsonDef a -> ApiV2Parameter a
   ApiV2ParameterAeson :: Aeson.FromJSON a => Text -> ParameterOption a -> ApiV2Parameter a
   ApiV2ParameterFile  :: Text -> ParameterOption File -> ApiV2Parameter File
@@ -53,6 +54,7 @@ apiV2Parameter :: Kontrakcja m => ApiV2Parameter a -> m (Maybe a)
 
 apiV2Parameter (ApiV2ParameterInt name opt) = apiParameterUsingMaybeRead name opt
 apiV2Parameter (ApiV2ParameterText name opt) = apiParameterUsingMaybeRead name opt
+apiV2Parameter (ApiV2ParameterRead name opt) = apiParameterUsingMaybeRead name opt
 
 apiV2Parameter (ApiV2ParameterBool name opt) = do
   mValue <- getField $ unpack name
@@ -129,6 +131,7 @@ getParameterName :: ApiV2Parameter a -> Text
 getParameterName (ApiV2ParameterBool n _) = n
 getParameterName (ApiV2ParameterInt n _) = n
 getParameterName (ApiV2ParameterText n _) = n
+getParameterName (ApiV2ParameterRead n _) = n
 getParameterName (ApiV2ParameterJSON n _ _) = n
 getParameterName (ApiV2ParameterAeson n _) = n
 getParameterName (ApiV2ParameterFile n _) = n

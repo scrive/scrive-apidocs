@@ -4,6 +4,7 @@ module Doc.API.V2.Guards (
     , guardThatUserIsAuthor
     , guardThatUserIsAuthorOrCompanyAdmin
     , guardThatUserIsAuthorOrDocumentIsShared
+    , guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
     , guardThatDocumentCanBeStarted
     , guardThatObjectVersionMatchesIfProvided
   ) where
@@ -58,7 +59,14 @@ guardThatUserIsAuthorOrDocumentIsShared :: (Kontrakcja m, DocumentMonad m) => Us
 guardThatUserIsAuthorOrDocumentIsShared user = do
   doc <- theDocument
   guardDocumentAuthorIs (\a -> userid user == userid a
-    || (isDocumentShared doc && usercompany user == usercompany a)
+    || (usercompany user == usercompany a && isDocumentShared doc)
+    )
+
+guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared :: (Kontrakcja m, DocumentMonad m) => User -> m ()
+guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user = do
+  doc <- theDocument
+  guardDocumentAuthorIs (\a -> userid user == userid a
+    || (usercompany user == usercompany a && (useriscompanyadmin user || isDocumentShared doc))
     )
 
 guardThatObjectVersionMatchesIfProvided :: Kontrakcja m => DocumentID -> m ()

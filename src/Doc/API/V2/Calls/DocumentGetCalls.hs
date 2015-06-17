@@ -12,14 +12,12 @@ module Doc.API.V2.Calls.DocumentGetCalls (
 import KontraPrelude
 import Happstack.Server.Types
 import Doc.Model.Update
-import Control.Conditional (unlessM)
 import File.Model
 
 import Doc.DocStateData
 import API.V2
 import Doc.API.V2.JSONDocument
 import Doc.DocumentID
-import Doc.SignatoryLinkID
 import Kontra
 import Doc.DocumentMonad
 import Data.Unjson
@@ -27,14 +25,13 @@ import Doc.DocInfo
 import DB
 import qualified Data.Map as Map hiding (map)
 import Doc.API.V2.DocumentAccess
-import Happstack.Fields
 import Util.Actor
-import Doc.Tokens.Model
 import Util.SignatoryLinkUtils
 import OAuth.Model
 import Doc.DocUtils
 import User.Model
 import Doc.Model
+import Doc.API.V2.Guards
 import Doc.API.V2.JSONList
 import Doc.API.V2.Parameters
 
@@ -56,42 +53,32 @@ docApiV2List = api $ do
 docApiV2Get :: Kontrakcja m => DocumentID -> m Response
 docApiV2Get did = api $ do
   ctx <- getContext
-  -- JJ: I didn't realise 'get' call can take a 'signatoryid' parameter.
-  --     Options I see are:
-  --     1. A way around this is to get all sigids for the document, then get all
-  --        document session tokens via the sigids (i.e. magic hashes) and we can
-  --        check if the given one matches any existing one and then we can unify
-  --        this odd doubling of things
-  --     2. We need to provide 'signatoryid' because of our DB table structure
-  --        would mean high DB costs, or security, or wathever reason
-  --        THEN
-  --        this really is the work for two different API calls because we're
-  --        clearly replicating stuff just with slightly different behaviour
-  --        It is just wrong...
-  --        So we could have /api/v2/$documentid$/get/$signatoryid$/
-  (msignatorylink :: Maybe SignatoryLinkID) <- readField "signatoryid"
-  mmagichashh <- maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msignatorylink
+  -- If a 'signatory_id' parameter was given, we first check if the session
+  -- has a matching and valid MagicHash for that SignatoryLinkID
+  mSessionSignatory <- do
+    mslid <- apiV2Parameter (ApiV2ParameterRead "signatory_id" Optional)
+    case mslid of
+      Nothing -> return Nothing
+      Just slid -> getDocumentSignatoryMagicHash did slid
+  (da, msl) <- case mSessionSignatory of
+    Just sl -> do
+      let slid = signatorylinkid sl
+      return (DocumentAccess did $ SignatoryDocumentAccess slid, Just sl)
+  -- If we didn't get a session *only* then we check normally and try to get
+  -- a SignatoryLink too as we need to mark if they see the document
+    Nothing -> withDocumentID did $ do
+      (user,_) <- getAPIUser APIDocCheck
+      doc <- theDocument
+      let msiglink = getSigLinkFor user doc
+      case msiglink of
+        Just _ -> return ()
+        Nothing -> guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user
+      return (documentAccessForUser user doc, msiglink)
   withDocumentID did $ do
-    (da,msl) <- case (msignatorylink,mmagichashh) of
-      (Just slid,Just mh) -> do
-       sl <- apiGuardJustM  (documentNotFound did) $ getSigLinkFor slid <$> theDocument
-       when (signatorymagichash sl /= mh) $ apiError $ documentNotFound did
-       return (DocumentAccess did $ SignatoryDocumentAccess slid,Just sl)
-      _ -> do
-        (user,_) <- getAPIUser APIDocCheck
-        msiglink <- getSigLinkFor user <$> theDocument
-        mauser <- theDocument >>= \d -> case (join $ maybesignatory <$> getAuthorSigLink d) of
-                      Just auid -> dbQuery $ GetUserByIDIncludeDeleted auid
-                      _ -> return Nothing
-        haspermission <- theDocument >>= \d -> return $
-                            isJust msiglink
-                        || (isJust mauser && usercompany ($fromJust mauser) == usercompany user && (useriscompanyadmin user || isDocumentShared d))
-        if (haspermission)
-          then (\d -> (documentAccessForUser user d,msiglink)) <$> theDocument
-          else apiError documentActionForbidden
-    case (msl) of
-      Just sl -> unlessM ((isTemplate || isPreparation || isClosed) <$> theDocument) $
-                  dbUpdate . MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl) =<< signatoryActor ctx sl
+    doc <- theDocument
+    let canMarkSeen = not ((isTemplate || isPreparation || isClosed) doc)
+    case (msl, canMarkSeen) of
+      (Just sl, True) -> dbUpdate . MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl) =<< signatoryActor ctx sl
       _ -> return ()
     Ok <$> (\d -> (unjsonDocument $ da,d)) <$> theDocument
 

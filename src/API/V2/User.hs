@@ -4,6 +4,7 @@ module API.V2.User (
   , getAPIUserWithAnyPrivileges
   , getAPIUserWithPad
   , getMagicHashForSignatoryAction
+  , getDocumentSignatoryMagicHash
 ) where
 
 import Data.Text
@@ -12,8 +13,10 @@ import MagicHash (MagicHash)
 import API.V2.Errors
 import API.V2.Monad
 import DB
+import Doc.DocStateData
 import Doc.DocStateQuery
 import Doc.DocumentID
+import Doc.DocumentMonad
 import Doc.SignatoryLinkID
 import Doc.Tokens.Model
 import Kontra
@@ -22,6 +25,7 @@ import OAuth.Model
 import OAuth.Util
 import User.Model
 import Util.Actor
+import Util.SignatoryLinkUtils
 
 -- | Same as `getAPIUserWithPrivileges` but for only one `APIPrivilege`
 getAPIUser :: Kontrakcja m => APIPrivilege -> m (User, Actor)
@@ -64,6 +68,21 @@ getMagicHashForSignatoryAction did slid = do
       case mUserMagicHash of
         Nothing -> apiError documentActionForbidden
         Just mh -> return mh
+
+-- | Get the `SignatoryLink` based on document session token for the given
+-- `DocumentID` and `SignatoryLinkID`
+--
+-- Will give a `Nothing` if there is no matching session
+getDocumentSignatoryMagicHash :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Maybe SignatoryLink)
+getDocumentSignatoryMagicHash did slid = do
+  mMagicHash <- dbQuery $ GetDocumentSessionToken slid
+  case (mMagicHash) of
+    Nothing -> return Nothing
+    Just mh -> withDocumentID did $ do
+      sl <- apiGuardJustM (documentNotFound did) $ getSigLinkFor slid <$> theDocument
+      if mh == signatorymagichash sl
+          then return $ Just sl
+          else apiError $ documentActionForbidden
 
 -- * Interal functions
 
