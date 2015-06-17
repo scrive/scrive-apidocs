@@ -41,10 +41,8 @@ import Doc.DocumentID
 import Doc.DocumentMonad
 import Doc.Model
 import File.File (File(..))
-import Happstack.Fields
 import Kontra
 import OAuth.Model
-import qualified Data.Aeson as Aeson
 
 docApiV2New :: Kontrakcja m => m Response
 docApiV2New = api $ do
@@ -87,18 +85,14 @@ docApiV2Update did = api $ do
     guardThatUserIsAuthor user
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Preparation
-    documentJSON <- apiGuardJustM (requestParameterMissing "document") $ getFieldBS "document"
-    case Aeson.eitherDecode documentJSON of
-      Left _ -> do
-       apiError $ requestParameterParseError "document" "not a valid json"
-      Right js -> do
-        doc <- theDocument
-        case (Unjson.update doc (unjsonDocument (DocumentAccess did AuthorDocumentAccess)) js) of
-          (Result draftData []) -> do
-            applyDraftDataToDocument draftData actor
-            Ok <$> (unjsonDocument (DocumentAccess did AuthorDocumentAccess),) <$> theDocument
-          (Result _ errs) -> do
-            apiError $ requestParameterParseError "document" $ "Errors while parsing document data: " `append` pack (show errs)
+    documentJSON <- apiV2Parameter' (ApiV2ParameterAeson "document" Obligatory)
+    doc <- theDocument
+    case (Unjson.update doc (unjsonDocument (DocumentAccess did AuthorDocumentAccess)) documentJSON) of
+      (Result draftData []) -> do
+        applyDraftDataToDocument draftData actor
+        Ok <$> (unjsonDocument (DocumentAccess did AuthorDocumentAccess),) <$> theDocument
+      (Result _ errs) -> do
+        apiError $ requestParameterParseError "document" $ "Errors while parsing document data: " `append` pack (show errs)
 
 
 docApiV2Start :: Kontrakcja m => DocumentID -> m Response

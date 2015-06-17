@@ -34,6 +34,7 @@ data ApiV2Parameter a where
   ApiV2ParameterInt   :: Text -> ParameterOption Int -> ApiV2Parameter Int
   ApiV2ParameterText  :: Text -> ParameterOption Text -> ApiV2Parameter Text
   ApiV2ParameterJSON  :: Text -> ParameterOption a -> UnjsonDef a -> ApiV2Parameter a
+  ApiV2ParameterAeson :: Aeson.FromJSON a => Text -> ParameterOption a -> ApiV2Parameter a
   ApiV2ParameterFile  :: Text -> ParameterOption File -> ApiV2Parameter File
 
 -- | Same as `apiV2Parameter` except that it fails when we have a Nothing.
@@ -69,6 +70,14 @@ apiV2Parameter (ApiV2ParameterJSON name opt jsonDef) = do
       Right paramAeson -> case (Unjson.parse jsonDef paramAeson) of
         (Result res []) -> return $ Just res
         (Result _ errs) -> apiError $ requestParameterParseError name (pack (show errs))
+    Nothing -> handleParameterOption name opt
+
+apiV2Parameter (ApiV2ParameterAeson name opt) = do
+  mValue <- getFieldBS (unpack name)
+  case mValue of
+    Just paramValue -> case Aeson.eitherDecode paramValue of
+      Left _ -> apiError $ requestParameterParseError name "Invalid JSON"
+      Right js -> return $ Just js
     Nothing -> handleParameterOption name opt
 
 apiV2Parameter (ApiV2ParameterFile name opt) = do
@@ -121,6 +130,7 @@ getParameterName (ApiV2ParameterBool n _) = n
 getParameterName (ApiV2ParameterInt n _) = n
 getParameterName (ApiV2ParameterText n _) = n
 getParameterName (ApiV2ParameterJSON n _ _) = n
+getParameterName (ApiV2ParameterAeson n _) = n
 getParameterName (ApiV2ParameterFile n _) = n
 
 -- | Helper function to handle when getting the parameter gives us `Nothing`
