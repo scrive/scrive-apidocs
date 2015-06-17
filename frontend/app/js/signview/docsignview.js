@@ -332,7 +332,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
                         if (field.isText())
                           placement.view.startInlineEditing();
                         else if (field.isSignature()) {
-                          placement.view.signaturePlacement.activateSignatureModal();
+                          placement.view.activateSignatureModal();
                         }
                         else if (field.isCheckbox())
                           placement.view.toggleCheck();
