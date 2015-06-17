@@ -9,24 +9,25 @@ module Doc.API.V2.Guards (
     , guardThatObjectVersionMatchesIfProvided
   ) where
 
-import KontraPrelude
 import Control.Conditional (unlessM, whenM)
 import Data.Text (Text, pack, append)
-import Doc.DocumentID
 
-import Doc.DocStateData
 import API.V2
-import Kontra
-import Doc.DocumentMonad
 import DB
-import User.Model
-import Util.SignatoryLinkUtils
-import Doc.DocUtils
-import Doc.DocInfo
-import InputValidation
-import Util.HasSomeUserInfo
-import Doc.Model.Query
 import Doc.API.V2.Parameters
+import Doc.Conditions
+import Doc.DocInfo
+import Doc.DocStateData
+import Doc.DocUtils
+import Doc.DocumentID
+import Doc.DocumentMonad
+import Doc.Model.Query
+import InputValidation
+import Kontra
+import KontraPrelude
+import User.Model
+import Util.HasSomeUserInfo
+import Util.SignatoryLinkUtils
 
 guardThatDocument :: (DocumentMonad m, Kontrakcja m) => (Document -> Bool) -> Text -> m ()
 guardThatDocument f text = unlessM (f <$> theDocument) $ apiError $ documentStateError text
@@ -74,7 +75,8 @@ guardThatObjectVersionMatchesIfProvided did = do
   reqObjectVersion <- apiV2Parameter (ApiV2ParameterInt "object_version" Optional)
   case reqObjectVersion of
     Nothing -> return ()
-    Just ov -> dbQuery $ CheckDocumentObjectVersionIs did (fromIntegral ov)
+    Just ov -> (dbQuery $ CheckDocumentObjectVersionIs did (fromIntegral ov))
+      `catchKontra` (\e@DocumentObjectVersionDoesNotMatch {} -> apiError $ documentObjectVersionMismatch e)
 
 -- Checks if document can be strated. Throws matching API exception if it does not
 guardThatDocumentCanBeStarted :: (DocumentMonad m, Kontrakcja m) => m ()

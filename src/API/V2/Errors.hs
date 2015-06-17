@@ -133,8 +133,11 @@ requestParameterInvalid param reason = APIError { errorType = RequestParametersI
 
 -- Document calls errors
 
-documentObjectVersionMismatch :: Text -> APIError
-documentObjectVersionMismatch msg = APIError { errorType = DocumentObjectVersionMismatch, errorHttpCode = 409, errorMessage = msg}
+documentObjectVersionMismatch :: DocumentObjectVersionDoesNotMatch -> APIError
+documentObjectVersionMismatch (DocumentObjectVersionDoesNotMatch {..}) = APIError { errorType = DocumentObjectVersionMismatch, errorHttpCode = 409, errorMessage = msg}
+  where msg = "The document has a different object_version to the one provided and so the request was not processed."
+              `append` " You gave " `append` (pack $ show documentObjectVersionShouldBe)
+              `append` " but the document had " `append` (pack $ show documentObjectVersionIs)
 
 documentStateError :: Text -> APIError
 documentStateError msg = APIError { errorType = DocumentStateError, errorHttpCode = 409, errorMessage = msg}
@@ -250,10 +253,7 @@ convertSignatoryTokenDoesNotMatch (SomeKontraException ex) =
 convertDocumentObjectVersionDoesNotMatch :: SomeKontraException -> SomeKontraException
 convertDocumentObjectVersionDoesNotMatch (SomeKontraException ex) =
   case cast ex of
-    Just (DocumentObjectVersionDoesNotMatch {..}) -> SomeKontraException $ documentObjectVersionMismatch $
-      "The document has a different object_version to the one provided and so the request was not processed."
-      `append` " You gave " `append` (pack $ show documentObjectVersionShouldBe)
-      `append` " but the document had " `append` (pack $ show documentObjectVersionIs)
+    Just (e@DocumentObjectVersionDoesNotMatch {}) -> SomeKontraException $ documentObjectVersionMismatch e
     Nothing -> (SomeKontraException ex)
 
 convertDocumentWasPurged ::  SomeKontraException -> SomeKontraException
