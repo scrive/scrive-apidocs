@@ -49,13 +49,13 @@ testFromFileAndReadySimple = do
                                       ] []
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
-  testJSONWith "test/json/test_1_create.json" (rsBody resDoc)
+  testJSONWith "test/json/api_v1/test_1_create.json" (rsBody resDoc)
   did <- getDocumentID (rsBody resDoc)
 
   reqReady <- mkRequest POST []
   (resReady, _) <- runTestKontra reqReady ctx $ apiCallV1Ready did
   assertEqual "We should get a 202 response" 202 (rsCode resReady)
-  testJSONWith "test/json/test_1_ready.json" (rsBody resReady)
+  testJSONWith "test/json/api_v1/test_1_ready.json" (rsBody resReady)
 
 {- Test 2 -}
 testFromFileAndUpdate :: TestEnv ()
@@ -68,14 +68,14 @@ testFromFileAndUpdate = do
                                       ] []
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
-  testJSONWith "test/json/test_2_create.json" (rsBody resDoc)
+  testJSONWith "test/json/api_v1/test_2_create.json" (rsBody resDoc)
   did <- getDocumentID (rsBody resDoc)
 
 
   reqUpdate <- mkRequestWithHeaders POST [("json", inTextBS $ rsBody resDoc)] []
   (resUpdate, _) <- runTestKontra reqUpdate ctx $ apiCallV1Update did
   assertEqual "We should get a 200 response" 200 (rsCode resUpdate)
-  testJSONWith "test/json/test_2_create.json" (rsBody resUpdate)
+  testJSONWith "test/json/api_v1/test_2_create.json" (rsBody resUpdate)
 
 {- Test 3 -}
 testFromTemplateAndReadySimple :: TestEnv ()
@@ -88,7 +88,7 @@ testFromTemplateAndReadySimple = do
                                       ] []
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
-  testJSONWith "test/json/test_3_create.json" (rsBody resDoc)
+  testJSONWith "test/json/api_v1/test_3_create.json" (rsBody resDoc)
   did <- getDocumentID (rsBody resDoc)
 
   let Just docJSON = decode (rsBody resDoc) :: Maybe Value
@@ -98,19 +98,19 @@ testFromTemplateAndReadySimple = do
   reqUpdate <- mkRequestWithHeaders POST [("json", inTextBS strDoc)] []
   (resUpdate, _) <- runTestKontra reqUpdate ctx $ apiCallV1Update did
   assertEqual "We should get a 200 response" 200 (rsCode resUpdate)
-  testJSONWith "test/json/test_3_savedAsTemplate.json" (rsBody resUpdate)
+  testJSONWith "test/json/api_v1/test_3_savedAsTemplate.json" (rsBody resUpdate)
 
   reqFromTemplate <- mkRequestWithHeaders POST [] []
   (resFromTemplate, _) <- runTestKontra reqFromTemplate ctx $ apiCallV1CreateFromTemplate did
   assertEqual "We should get a 201 response" 201 (rsCode resFromTemplate)
   --When creating from template - result should be same as a template - before it was saved as template
-  testJSONWith "test/json/test_3_create.json" (rsBody resFromTemplate)
+  testJSONWith "test/json/api_v1/test_3_create.json" (rsBody resFromTemplate)
   newdid <- getDocumentID (rsBody resFromTemplate)
 
   reqReady <- mkRequestWithHeaders POST [] []
   (resReady, _) <- runTestKontra reqReady ctx $ apiCallV1Ready newdid
   assertEqual "We should get a 202 response" 202 (rsCode resReady)
-  testJSONWith "test/json/test_3_ready.json" (rsBody resReady)
+  testJSONWith "test/json/api_v1/test_3_ready.json" (rsBody resReady)
 
 {- Test 4 -}
 testUpdateFields :: TestEnv ()
@@ -123,7 +123,7 @@ testUpdateFields = do
                                       ] []
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
-  testJSONWith "test/json/test_4_create.json" (rsBody resDoc)
+  testJSONWith "test/json/api_v1/test_4_create.json" (rsBody resDoc)
   did <- getDocumentID (rsBody resDoc)
 
   let Just docJSON = decode (rsBody resDoc) :: Maybe Value
@@ -135,7 +135,7 @@ testUpdateFields = do
   reqUpdate <- mkRequestWithHeaders POST [("json", inTextBS strDoc)] []
   (resUpdate, _) <- runTestKontra reqUpdate ctx $ apiCallV1Update did
   assertEqual "We should get a 200 response" 200 (rsCode resUpdate)
-  testJSONWith "test/json/test_4_update.json" (rsBody resUpdate)
+  testJSONWith "test/json/api_v1/test_4_update.json" (rsBody resUpdate)
 
   invMsg <- getField "invitationmessage" (rsBody resUpdate)
   cnfMsg <- getField "confirmationmessage" (rsBody resUpdate)
@@ -147,7 +147,7 @@ testUpdateFields = do
   reqReady <- mkRequestWithHeaders POST [] []
   (resReady, _) <- runTestKontra reqReady ctx $ apiCallV1Ready did
   assertEqual "We should get a 202 response" 202 (rsCode resReady)
-  testJSONWith"test/json/test_4_ready.json" (rsBody resReady)
+  testJSONWith"test/json/api_v1/test_4_ready.json" (rsBody resReady)
 
 {- Test 5 -}
 testUpdateWithReplacementFields :: TestEnv ()
@@ -160,14 +160,14 @@ testUpdateWithReplacementFields = do
                                       ] []
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
-  testJSONWith "test/json/test_5_create.json" (rsBody resDoc)
+  testJSONWith "test/json/api_v1/test_5_create.json" (rsBody resDoc)
   did <- getDocumentID (rsBody resDoc)
-  jsonFileBS <- liftIO $ B.readFile "test/json/test_5_update.json"
+  jsonFileBS <- liftIO $ B.readFile "test/json/api_v1/test_5_update.json"
 
   reqUpdate1 <- mkRequestWithHeaders POST [("json", inTextBS jsonFileBS)] []
   (resUpdate1, _) <- runTestKontra reqUpdate1 ctx $ apiCallV1Update did
   assertEqual "We should get a 200 response" 200 (rsCode resUpdate1)
-  testJSONWith "test/json/test_5_update.json" (rsBody resUpdate1)
+  testJSONWith "test/json/api_v1/test_5_update.json" (rsBody resUpdate1)
 
   let Just docJSON = decode (rsBody resUpdate1) :: Maybe Value
       replaceValues  = setDocValuesBySimpleReplacement "#TITLE" "New title" .
@@ -182,7 +182,7 @@ testUpdateWithReplacementFields = do
   reqUpdate2 <- mkRequestWithHeaders POST [("json", inTextBS strDoc)] []
   (resUpdate2, _) <- runTestKontra reqUpdate2 ctx $ apiCallV1Update did
   assertEqual "We should get a 200 response" 200 (rsCode resUpdate2)
-  testJSONWith "test/json/test_5_update_result.json" (rsBody resUpdate2)
+  testJSONWith "test/json/api_v1/test_5_update_result.json" (rsBody resUpdate2)
   return ()
 
 {- Test 6 -}
@@ -194,14 +194,14 @@ testUpdateWithSubset = do
   reqDoc <- mkRequestWithHeaders POST [] []
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
-  testJSONWith "test/json/test_6_create.json" (rsBody resDoc)
+  testJSONWith "test/json/api_v1/test_6_create.json" (rsBody resDoc)
   did <- getDocumentID (rsBody resDoc)
-  jsonFileBS <- liftIO $ B.readFile "test/json/test_6_update.json"
+  jsonFileBS <- liftIO $ B.readFile "test/json/api_v1/test_6_update.json"
 
   reqUpdate <- mkRequestWithHeaders POST [("json", inTextBS jsonFileBS)] []
   (resUpdate, _) <- runTestKontra reqUpdate ctx $ apiCallV1Update did
   assertEqual "We should get a 200 response" 200 (rsCode resUpdate)
-  testJSONWith "test/json/test_6_update_result.json" (rsBody resUpdate)
+  testJSONWith "test/json/api_v1/test_6_update_result.json" (rsBody resUpdate)
   return ()
 
 {- Test 7 -}
@@ -216,10 +216,10 @@ testUpdateWithAllFeatures = do
 
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
-  testJSONWith "test/json/test_7_create.json" (rsBody resDoc)
+  testJSONWith "test/json/api_v1/test_7_create.json" (rsBody resDoc)
   did <- getDocumentID (rsBody resDoc)
 
-  jsonFileBS <- liftIO $ B.readFile "test/json/test_7_update.json"
+  jsonFileBS <- liftIO $ B.readFile "test/json/api_v1/test_7_update.json"
 
   reqUpdate <- mkRequestWithHeaders POST [("json", inTextBS jsonFileBS)] []
   (_, _) <- runTestKontra reqUpdate ctx $ apiCallV1Update did
@@ -235,7 +235,7 @@ testUpdateWithAllFeatures = do
   (resFinalDoc, _) <- runTestKontra reqGet ctx $ apiCallV1Get did
 
   assertEqual "We should get a 200 response" 200 (rsCode resFinalDoc)
-  testJSONWith "test/json/test_7_update_result_with_attachments.json" (rsBody resFinalDoc)
+  testJSONWith "test/json/api_v1/test_7_update_result_with_attachments.json" (rsBody resFinalDoc)
   return ()
 
 {- Test 8 -}
@@ -268,14 +268,14 @@ testList = do
 
   reqList1 <- mkRequestWithHeaders GET [] []
   (resList1, _) <- runTestKontra reqList1 ctx $ apiCallV1List
-  testJSONWith "test/json/test_8_list_of_documents_before_saving.json" (rsBody resList1)
+  testJSONWith "test/json/api_v1/test_8_list_of_documents_before_saving.json" (rsBody resList1)
 
   withDocumentID did1 $ do
     dbUpdate $ SetDocumentUnsavedDraft False
 
   reqList2 <- mkRequestWithHeaders GET [] []
   (resList2, _) <- runTestKontra reqList2 ctx $ apiCallV1List
-  testJSONWith "test/json/test_8_list_of_documents_after_saving.json" (rsBody resList2)
+  testJSONWith "test/json/api_v1/test_8_list_of_documents_after_saving.json" (rsBody resList2)
 
   reqReady1 <- mkRequestWithHeaders POST [] []
   _ <- runTestKontra reqReady1 ctx $ apiCallV1Ready did1
@@ -300,7 +300,7 @@ testList = do
 
   reqList3 <- mkRequestWithHeaders GET [("sort", inText "status")] []
   (resList3, _) <- runTestKontra reqList3 ctx $ apiCallV1List
-  testJSONWith "test/json/test_8_list_of_documents_after_operations.json" (rsBody resList3)
+  testJSONWith "test/json/api_v1/test_8_list_of_documents_after_operations.json" (rsBody resList3)
 
   -- Check is file field on list is a number encoded as string. After IPad issue 01.06.2015
   let (Just (Object m)) = decode (rsBody resList3)
@@ -331,10 +331,10 @@ testSignWithSignature = do
 
   (resDoc1, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc1)
-  testJSONWith "test/json/test_9_create.json" (rsBody resDoc1)
+  testJSONWith "test/json/api_v1/test_9_create.json" (rsBody resDoc1)
   did <- getDocumentID (rsBody resDoc1)
 
-  jsonFileBS <- liftIO $ B.readFile "test/json/test_9_update.json"
+  jsonFileBS <- liftIO $ B.readFile "test/json/api_v1/test_9_update.json"
 
   reqUpdate <- mkRequestWithHeaders POST [("json", inTextBS jsonFileBS)] []
   (resDoc2, _) <- runTestKontra reqUpdate ctx $ apiCallV1Update did
@@ -350,7 +350,7 @@ testSignWithSignature = do
   (resFinalDoc, _) <- runTestKontra reqGet ctx $ apiCallV1Get did
 
   assertEqual "We should get a 200 response" 200 (rsCode resFinalDoc)
-  testJSONWith "test/json/test_9_get_after_signing.json" (rsBody resFinalDoc)
+  testJSONWith "test/json/api_v1/test_9_get_after_signing.json" (rsBody resFinalDoc)
 
 
 -- Compare JSON sesults from API calls
