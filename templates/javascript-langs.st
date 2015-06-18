@@ -575,7 +575,6 @@ javascriptLocalisation =
              , textfield: "$_signViewTextField()$"
              , filladitionfields : "$_filladitionfields()$"
              , filladitionfieldslabel: "$_filladitionfieldslabel()$"
-             , filladitionfieldsdescription : "$_filladitionfieldsdescription()$"
              , additionalFieldsMissingInModal : "$_filladitionfieldsdescription()$"
              , mandatoryAction: "$_mandatoryAction()$"
              , optionalAction: "$_optionalAction()$"

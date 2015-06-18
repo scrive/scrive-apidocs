@@ -154,7 +154,6 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
     var signatory = this.model.document().currentSignatory();
 
     var body = $("<div class='standard-input-table'>");
-    body.append($("<p />").text(localization.docsignview.filladitionfieldsdescription));
     var table = $("<table/>");
 
     if(signview.askForName()) {
