@@ -3,11 +3,9 @@ nicemail=
   <table border="0" cellpadding="0" cellspacing="0" width="100%" id="backgroundTable" style="margin: 0; padding: 0; width: 100%; vertical-align: top; line-height: 0px;background-color: $nicemailheaderbackground()$;">
     <tr>
       <td align="center" valign="top">
-        <!-- // Begin Template Header \\ -->
         <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateHeader" style="background-color: $nicemailheaderbackground()$; border-bottom: 0;">
           <tr>
             <td class="headerContent" style="background-color: $nicemailheaderbackground()$; font-family: Helvetica Neue, Arial, sans-serif; font-size: 40px; font-weight: bold; line-height: 100%; padding: 0; text-align: left; vertical-align: middle" >
-              <!-- // Begin Module: Standard Header Image \\ -->
               <table cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="padding-top: 32px; padding-bottom: 32px;">
@@ -15,10 +13,9 @@ nicemail=
                   </td>
                 </tr>
               </table>
-              <!-- // End Module: Standard Header Image \\ -->
             </td>
           </tr>
-        </table><!-- // End Template Header \\ -->
+        </table>
       </td>
     </tr>
 
@@ -31,12 +28,10 @@ nicemail=
 
           <tr>
             <td align="center" valign="top">
-              <!-- // Begin Template Body \\ -->
 
               <table border="0" cellpadding="0" cellspacing="32" width="600" id="templateBody" style="border-collapse: separate;">
                 <tr>
                   <td valign="top" class="bodyContent" style="background-color: $nicemailbgcolour()$">
-                    <!-- // Begin Module: Standard Content \\ -->
 
                     <table border="0" cellspacing="0" width="100%">
                       <tr>
@@ -82,22 +77,19 @@ nicemail=
                         </td>
                       </tr>
                     </table>
-                    <!-- // End Module: Standard Content \\ -->
                   </td>
                 </tr>
-              </table><!-- // End Template Body \\ -->
+              </table>
             </td>
           </tr>
 
           $if(footer)$
           <tr>
             <td>
-              <!-- // Begin Template Footer \\ -->
 
               <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateFooter" style="border-top: 1px solid $nicemailbordercolor()$;">
                 <tr>
                   <td valign="top" class="footerContent">
-                    <!-- // Begin Module: Standard Footer \\ -->
 
                     <table border="0" cellpadding="0" cellspacing="0" width="100%">
                       <tr>
@@ -112,10 +104,9 @@ nicemail=
                         </td>
                       </tr>
                     </table>
-                    <!-- // End Module: Standard Footer \\ -->
                   </td>
                 </tr>
-              </table><!-- // End Template Footer \\ -->
+              </table>
             </td>
           </tr>
           $else$
