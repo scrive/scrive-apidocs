@@ -174,7 +174,6 @@ return React.createClass({
           <List.ListSelectActions
             name={localization.more}
             width={270}
-            optionsWidth={270}
             actions={[
               {
                 name: localization.archive.documents.csv.action,

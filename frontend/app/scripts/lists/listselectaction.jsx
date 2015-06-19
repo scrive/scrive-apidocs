@@ -18,7 +18,7 @@ return React.createClass({
             color={"#000000"}
             options={options}
             name ={this.props.name}
-            optionsWidth={this.props.optionsWidth}
+            maxOptionsWidth={this.props.maxOptionsWidth}
             width={this.props.width}
          />
        </div>

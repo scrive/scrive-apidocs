@@ -75,7 +75,6 @@ return React.createClass({
           options={availableThemesOptions}
           name ={selectedThemeName}
           width = {156}
-          optionsWidth = {156}
        />
       );
     },

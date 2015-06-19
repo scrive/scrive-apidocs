@@ -92,7 +92,6 @@ return React.createClass({
                        options={availableThemesOptions}
                        name ={localization.branding.defaultTheme}
                        width = {300}
-                       optionsWidth = {300}
                      />
                    </div>
                  }

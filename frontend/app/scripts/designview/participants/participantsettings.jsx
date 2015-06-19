@@ -97,7 +97,6 @@ return React.createClass({
             ref="order-select"
             name={LanguageService.localizedOrdinal(sig.signorder())}
             width={178}
-            optionsWidth={178}
             options={self.signorderOptions()}
             onSelect={function (v) {
               mixpanel.track("Choose sign order", {
@@ -114,7 +113,6 @@ return React.createClass({
             ref="delivery-select"
             name={self.deliveryText(sig.isLastViewer() ? "none" : sig.delivery())}
             width={178}
-            optionsWidth={178}
             options={self.deliveryOptions()}
             onSelect={function (v) {
               mixpanel.track("Choose delivery method", {
@@ -137,7 +135,6 @@ return React.createClass({
               localization.designview.addParties.roleViewer
             }
             width={178}
-            optionsWidth={178}
             options={self.roleOptions()}
             onSelect={function (v) {
               mixpanel.track("Choose participant role", {
@@ -158,7 +155,6 @@ return React.createClass({
             ref="authentication-select"
             name={self.authenticationText(sig.authentication())}
             width={178}
-            optionsWidth={178}
             options={self.authenticationOptions()}
             onSelect={function (v) {
               mixpanel.track("Choose auth", {
@@ -175,7 +171,6 @@ return React.createClass({
             ref="confirmation-delivery-select"
             name={self.confirmationDeliveryText(sig.confirmationdelivery())}
             width={178}
-            optionsWidth={178}
             options={self.confirmationDeliveryOptions()}
             onSelect={function (v) {
               mixpanel.track("Choose confirmation delivery method", {

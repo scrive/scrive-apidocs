@@ -4,7 +4,6 @@ define(["Underscore", "React", "common/button", "common/select",
         "common/editabletext", "legacy_code"],
   function (_, React, Button, Select, EditableText) {
 
-  var SELECT_OPTIONS_WIDTH = 218;
   var SELECT_TEXT_WIDTH = 218;
 
   return React.createClass({
@@ -146,7 +145,6 @@ define(["Underscore", "React", "common/button", "common/select",
       var field = model.field();
 
       var buttonSize = field.isCustom() ? this.state.buttonSize : 0;
-      var optionsWidth = SELECT_OPTIONS_WIDTH - buttonSize;
       var textWidth = SELECT_TEXT_WIDTH - buttonSize;
 
       return (
@@ -160,7 +158,6 @@ define(["Underscore", "React", "common/button", "common/select",
                   <Select
                     name={this.typeSelected()}
                     options={this.typeOptions()}
-                    optionsWidth={optionsWidth}
                     width={textWidth}
                     className={"typesetter-obligatory-option"}
                     style={{fontSize: "16px"}}

@@ -18,7 +18,7 @@ Usage:
     border="1px solid #ddd" // border css property.
     inactive={false} // is select box inactive.
     width={100} // width of select button in pixels.
-    optionsWidth={200} // width of option box as css property.
+    maxOptionsWidth={200} // Optional. If not provided, 2 * width will be used instead. Max width of option box as css property.
     onSelect={function (v) { return true; }} // fired when an option is selected,
                                              // can be overwittern by options onSelect,
                                              // return false to not close option box.
@@ -69,9 +69,6 @@ define(["legacy_code", "React"], function (legacy_code, React) {
     render: function () {
       var parent = this.props.parent;
 
-      var width = parent.props.width;
-      var optionsWidth = parent.props.optionsWidth || parent.props.width;
-
       var mainStyle = {border: parent.props.border, color: parent.props.color};
 
       if (this.props.expanded) {
@@ -79,7 +76,7 @@ define(["legacy_code", "React"], function (legacy_code, React) {
         mainStyle.top = $(parent.getDOMNode()).offset().top;
         mainStyle.left = $(parent.getDOMNode()).offset().left;
       } else {
-        mainStyle.maxWidth = optionsWidth + "px";
+        mainStyle.maxWidth = parent.props.width + "px";
       }
 
       if (this.props.adjust) {
@@ -87,15 +84,16 @@ define(["legacy_code", "React"], function (legacy_code, React) {
       }
 
       var buttonStyle = {
-        width: width + "px"
+        width: parent.props.width + "px"
       };
 
       var labelStyle = {
-        width: width - EXTRA_BUTTON_WIDTH + "px"
+        width: parent.props.width - EXTRA_BUTTON_WIDTH + "px"
       };
 
       var optionStyle = {
-        minWidth: optionsWidth + "px",
+        minWidth: parent.props.width + "px",
+        maxWidth: (parent.props.maxOptionsWidth || 2 * parent.props.width) + "px",
         border: parent.props.border
       };
 
@@ -157,7 +155,7 @@ define(["legacy_code", "React"], function (legacy_code, React) {
       name: React.PropTypes.string.isRequired,
       className: React.PropTypes.string,
       width: React.PropTypes.number,
-      optionsWidth: React.PropTypes.number,
+      maxOptionsWidth: React.PropTypes.number,
       color: React.PropTypes.string,
       style:  React.PropTypes.object,
       onOpen: React.PropTypes.func,

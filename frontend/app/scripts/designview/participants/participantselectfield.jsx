@@ -78,7 +78,6 @@ return React.createClass({
            className={"design-view-action-participant-new-field-select"}
            border={""}
            width={297}
-           optionsWidth={297}
            options={self.fieldOptions()}
            onSelect={function (v) {
              if (v.name === "--custom") {

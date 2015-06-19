@@ -40,7 +40,7 @@ define(['React', 'Backbone', 'common/select'], function(React, Backbone, Select)
           border={this.props.border}
           className={this.props.cssClass}
           width={this.props.width}
-          optionsWidth={this.props.optionsWidth}
+          maxOptionsWidth={this.props.maxOptionsWidth}
           adjustHeightOnExpand={this.props.adjustHeightOnExpand}
           onSelect={function(v) {self.changeLang(v);}}
         />
