@@ -53,7 +53,8 @@ handleSignRequest did slid = do
     logInfo_ "No personal number"
     respond404
   certErrorHandler <- mkCertErrorHandler
-  let transport = curlTransport SecureSSL (Just cgCertFile) cgGateway id certErrorHandler
+  debugFunction <- mkDebugFunction
+  let transport = curlTransport SecureSSL (Just cgCertFile) cgGateway id certErrorHandler debugFunction
       req = SignRequest {
         srqPolicy = cgServiceID
       , srqDisplayName = fromMaybe cgDisplayName mcompany_display_name
@@ -85,7 +86,8 @@ handleCollectRequest did slid = do
     respond404
 
   certErrorHandler <- mkCertErrorHandler
-  let transport = curlTransport SecureSSL (Just cgCertFile) cgGateway id certErrorHandler
+  debugFunction <- mkDebugFunction
+  let transport = curlTransport SecureSSL (Just cgCertFile) cgGateway id certErrorHandler debugFunction
       req = CollectRequest {
         crqPolicy = cgServiceID
       , crqTransactionID = cgtTransactionID
