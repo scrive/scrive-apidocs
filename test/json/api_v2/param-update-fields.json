@@ -1,0 +1,56 @@
+{
+  "signatories": [
+    {},
+    {
+      "fields": [
+        {
+          "type": "name",
+          "order": 1
+        },
+        {
+          "type": "name",
+          "order": 2
+        },
+        {
+          "type": "company"
+        },
+        {
+          "type": "company_number"
+        },
+        {
+          "type": "email"
+        },
+        {
+          "type": "mobile"
+        },
+        {
+          "type": "personal_number"
+        },
+        {
+          "type": "checkbox",
+          "name": ""
+        },
+        {
+          "type": "checkbox",
+          "name": "☭Җ"
+        },
+        {
+          "type": "text",
+          "name": ""
+        },
+        {
+          "type": "text",
+          "name": "☭Җ"
+        },
+        {
+          "type": "signature",
+          "name": ""
+        },
+        {
+          "type": "signature",
+          "name": "☭Җ"
+        }
+      ]
+    }
+  ]
+}

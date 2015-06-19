@@ -1,0 +1,196 @@
+{
+  "id": "40",
+  "title": "#☭ҖDOCTITLE",
+  "signatories": [
+    {
+      "id": "65",
+      "user_id": "1",
+      "is_author": true,
+      "is_signatory": false,
+      "fields": [
+        {
+          "type": "email",
+          "value": "test@scrive.com",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        },
+        {
+          "type": "name",
+          "order": 2,
+          "value": "JonesTest",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        },
+        {
+          "type": "name",
+          "order": 1,
+          "value": "BobTest",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        }
+      ],
+      "sign_order": 1,
+      "sign_time": null,
+      "seen_time": null,
+      "read_invitation_time": null,
+      "rejected_time": null,
+      "sign_success_redirect_url": null,
+      "reject_redirect_url": null,
+      "email_delivery_status": "unknown",
+      "mobile_delivery_status": "unknown",
+      "csv": null,
+      "delivery_method": "email",
+      "authentication_method": "standard",
+      "confirmation_delivery_method": "email",
+      "attachments": [],
+      "api_delivery_url": null
+    },
+    {
+      "id": "66",
+      "user_id": null,
+      "is_author": false,
+      "is_signatory": false,
+      "fields": [
+        {
+          "type": "name",
+          "order": 1,
+          "value": "#☭ҖFST_NAME",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": [
+            {
+              "xrel": 0.9999999,
+              "yrel": 1,
+              "wrel": 1e-17,
+              "hrel": 1e-45,
+              "fsrel": 0,
+              "page": 1,
+              "tip": "right",
+              "anchors": []
+            }
+          ]
+        },
+        {
+          "type": "name",
+          "order": 2,
+          "value": "#☭ҖSND_NAME",
+          "is_obligatory": false,
+          "should_be_filled_by_sender": false,
+          "placements": [
+            {
+              "xrel": 1,
+              "yrel": 0,
+              "wrel": 0.12345679,
+              "hrel": 2e+45,
+              "fsrel": 2e+46,
+              "page": 0,
+              "tip": "left",
+              "anchors": [
+                {
+                  "text": "#☭Җ#",
+                  "index": 54423213123,
+                  "pages": [
+                    0,
+                    1,
+                    50000
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "email",
+          "value": "#☭ҖEMAIL",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": true,
+          "placements": []
+        },
+        {
+          "type": "text",
+          "name": "#☭ҖTEXT_FIELD",
+          "value": "#☭ҖEMAIL",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        },
+        {
+          "type": "checkbox",
+          "name": "#☭ҖCHECKBOX",
+          "is_checked": false,
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        }
+      ],
+      "sign_order": 5000,
+      "sign_time": null,
+      "seen_time": null,
+      "read_invitation_time": null,
+      "rejected_time": null,
+      "sign_success_redirect_url": "#☭ҖSIGNURL",
+      "reject_redirect_url": "#☭ҖREJURL",
+      "email_delivery_status": "unknown",
+      "mobile_delivery_status": "unknown",
+      "csv": null,
+      "delivery_method": "api",
+      "authentication_method": "sms_pin",
+      "confirmation_delivery_method": "none",
+      "attachments": [
+        {
+          "name": "#☭ҖATT",
+          "description": "#☭ҖATT_DESC",
+          "file": null
+        }
+      ],
+      "api_delivery_url": "/s/40/66/04fdc959b537f5db"
+    }
+  ],
+  "file": {
+    "name": "simple.pdf",
+    "id": "18"
+  },
+  "sealed_file": null,
+  "author_attachments": [],
+  "ctime": "2015-06-24T14:42:06.47Z",
+  "mtime": "2015-06-24T15:10:46.09Z",
+  "timeout_time": null,
+  "auto_remind_time": null,
+  "status": "preparation",
+  "days_to_sign": 10,
+  "days_to_remind": 11,
+  "display_options": {
+    "show_header": false,
+    "show_pdf_download": false,
+    "show_reject_option": false,
+    "show_footer": false
+  },
+  "invitation_message": "#☭ҖINVITATION_MESSAGE",
+  "confirmation_message": "#☭ҖINVITATION_MESSAGE",
+  "lang": "fr",
+  "api_callback_url": "#☭ҖCALLBACK_URL",
+  "object_version": 58,
+  "access_token": "987064b4e29646d9",
+  "timezone": "Asia/Tbilisi",
+  "tags": [
+    {
+      "name": "#☭ҖTAG_NAME",
+      "value": "#☭ҖTAG_VALUE"
+    },
+    {
+      "name": "TAG_NAME",
+      "value": "#☭ҖTAG_VALUE"
+    }
+  ],
+  "is_template": false,
+  "is_saved": true,
+  "is_trashed": false,
+  "is_deleted": false,
+  "viewer": {
+    "signatory_id": "65",
+    "role": "signatory"
+  }
+}

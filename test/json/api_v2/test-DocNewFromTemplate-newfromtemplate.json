@@ -1,0 +1,94 @@
+{
+  "id": "34",
+  "title": "simple.pdf",
+  "signatories": [
+    {
+      "id": "53",
+      "user_id": "1",
+      "is_author": true,
+      "is_signatory": true,
+      "fields": [
+        {
+          "type": "name",
+          "order": 1,
+          "value": "BobTest",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": true,
+          "placements": []
+        },
+        {
+          "type": "name",
+          "order": 2,
+          "value": "JonesTest",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": true,
+          "placements": []
+        },
+        {
+          "type": "email",
+          "value": "test@scrive.com",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": true,
+          "placements": []
+        },
+        {
+          "type": "company",
+          "value": "",
+          "is_obligatory": false,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        }
+      ],
+      "sign_order": 1,
+      "sign_time": null,
+      "seen_time": null,
+      "read_invitation_time": null,
+      "rejected_time": null,
+      "sign_success_redirect_url": null,
+      "reject_redirect_url": null,
+      "email_delivery_status": "unknown",
+      "mobile_delivery_status": "unknown",
+      "csv": null,
+      "delivery_method": "email",
+      "authentication_method": "standard",
+      "confirmation_delivery_method": "email",
+      "attachments": [],
+      "api_delivery_url": null
+    }
+  ],
+  "file": {
+    "name": "simple.pdf",
+    "id": "15"
+  },
+  "sealed_file": null,
+  "author_attachments": [],
+  "ctime": "2015-06-18T11:25:56.34Z",
+  "mtime": "2015-06-18T11:25:56.34Z",
+  "timeout_time": null,
+  "auto_remind_time": null,
+  "status": "preparation",
+  "days_to_sign": 90,
+  "days_to_remind": null,
+  "display_options": {
+    "show_header": true,
+    "show_pdf_download": true,
+    "show_reject_option": true,
+    "show_footer": true
+  },
+  "invitation_message": "",
+  "confirmation_message": "",
+  "lang": "sv",
+  "api_callback_url": null,
+  "object_version": 2,
+  "access_token": "6b1e6b4e36616bc2",
+  "timezone": "Europe/Stockholm",
+  "tags": [],
+  "is_template": false,
+  "is_saved": true,
+  "is_trashed": false,
+  "is_deleted": false,
+  "viewer": {
+    "signatory_id": "53",
+    "role": "signatory"
+  }
+}

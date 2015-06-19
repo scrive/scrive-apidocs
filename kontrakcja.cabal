@@ -720,6 +720,7 @@ Executable kontrakcja-test
   Build-depends: cryptohash
   Build-depends: data-default
   Build-depends: dataenc
+  Build-depends: free
   Build-depends: Decimal
   Build-depends: deepseq
   Build-depends: digest

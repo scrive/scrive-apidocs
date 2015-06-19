@@ -1,0 +1,87 @@
+{
+  "id": "38",
+  "title": "Untitled 2015-06-19 14:55",
+  "signatories": [
+    {
+      "id": "58",
+      "user_id": "1",
+      "is_author": true,
+      "is_signatory": false,
+      "fields": [
+        {
+          "type": "email",
+          "value": "test@scrive.com",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        },
+        {
+          "type": "name",
+          "order": 2,
+          "value": "JonesTest",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        },
+        {
+          "type": "name",
+          "order": 1,
+          "value": "BobTest",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        }
+      ],
+      "sign_order": 1,
+      "sign_time": null,
+      "seen_time": null,
+      "read_invitation_time": null,
+      "rejected_time": null,
+      "sign_success_redirect_url": null,
+      "reject_redirect_url": null,
+      "email_delivery_status": "unknown",
+      "mobile_delivery_status": "unknown",
+      "csv": null,
+      "delivery_method": "email",
+      "authentication_method": "standard",
+      "confirmation_delivery_method": "email",
+      "attachments": [],
+      "api_delivery_url": null
+    }
+  ],
+  "file": {
+    "name": "simple.pdf",
+    "id": "15"
+  },
+  "sealed_file": null,
+  "author_attachments": [],
+  "ctime": "2015-06-19T14:55:34.21Z",
+  "mtime": "2015-06-19T16:16:53.37Z",
+  "timeout_time": null,
+  "auto_remind_time": null,
+  "status": "preparation",
+  "days_to_sign": 90,
+  "days_to_remind": null,
+  "display_options": {
+    "show_header": true,
+    "show_pdf_download": true,
+    "show_reject_option": true,
+    "show_footer": true
+  },
+  "invitation_message": "",
+  "confirmation_message": "",
+  "lang": "sv",
+  "api_callback_url": null,
+  "object_version": 5,
+  "access_token": "726564b4c02e1499",
+  "timezone": "Europe/Stockholm",
+  "tags": [],
+  "is_template": false,
+  "is_saved": true,
+  "is_trashed": false,
+  "is_deleted": false,
+  "viewer": {
+    "signatory_id": "58",
+    "role": "signatory"
+  }
+}

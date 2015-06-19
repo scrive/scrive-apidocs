@@ -1,0 +1,101 @@
+{
+  "days_to_sign": 10,
+  "days_to_remind": 11,
+  "invitation_message": "#☭ҖINVITATION_MESSAGE",
+  "confirmation_message": "#☭ҖINVITATION_MESSAGE",
+  "title": "#☭ҖDOCTITLE",
+  "lang": "fr",
+  "api_callback_url": "#☭ҖCALLBACK_URL",
+  "timezone": "Asia/Tbilisi",
+  "tags": [ {"name":"#☭ҖTAG_NAME","value":"#☭ҖTAG_VALUE"}
+          , {"name":"TAG_NAME", "value":"#☭ҖTAG_VALUE"}
+          ],
+  "display_options": {
+    "show_header": false,
+    "show_pdf_download": false,
+    "show_reject_option": false,
+    "show_footer": false
+  },
+  "signatories": [
+    {},
+    {
+      "is_signatory": false,
+      "fields": [
+        {
+          "type": "name",
+          "order": 1,
+          "value": "#☭ҖFST_NAME",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": [
+            {
+              "xrel": 0.9999999,
+              "yrel": 0.99999999999999999,
+              "wrel": 0.00000000000000001,
+              "hrel": 1e-45,
+              "fsrel": 0,
+              "page": 1,
+              "tip": "right"
+            }
+          ]
+        },
+        {
+          "type": "name",
+          "order": 2,
+          "value": "#☭ҖSND_NAME",
+          "is_obligatory": false,
+          "should_be_filled_by_sender": false,
+          "placements": [
+            {
+              "xrel": 1,
+              "yrel": 0,
+              "wrel": 0.123456789123456789,
+              "hrel": 2e45,
+              "fsrel": 2e46,
+              "page": 2e1024,
+              "tip": "left",
+              "anchors": [
+                {
+                  "text": "#☭Җ#",
+                  "index": 54423213123,
+                  "pages": [0,1,50000]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "email",
+          "value": "#☭ҖEMAIL",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": true
+        },
+        {
+          "type": "text",
+          "name": "#☭ҖTEXT_FIELD",
+          "value": "#☭ҖEMAIL",
+          "should_be_filled_by_sender": false
+        },
+        {
+          "type": "checkbox",
+          "name": "#☭ҖCHECKBOX",
+          "is_checked": false
+        }
+      ],
+      "sign_order": 5000,
+      "sign_success_redirect_url": "#☭ҖSIGNURL",
+      "reject_redirect_url": "#☭ҖREJURL",
+      "delivery_method": "api",
+      "authentication_method": "sms_pin",
+      "confirmation_delivery_method": "none",
+      "attachments": [
+        {
+          "name": "#☭ҖATT",
+          "description": "#☭ҖATT_DESC",
+          "file": null
+        }
+      ],
+      "api_delivery_url": null
+    }
+  ]
+}
