@@ -43,7 +43,7 @@ var BackboneMixin = {
     if(!~self.__syncedModels.indexOf(model)){
       self.__syncedModels.push(model);
       var updater = self.forceUpdate.bind(this, null);
-      self.listenTo(model,'add change remove', function() {
+      self.listenTo(model,'add change remove', function(e, n) {
         if (~self.__syncedModels.indexOf(model)) {
           if (!this._pendingForceUpdate) {
             updater();

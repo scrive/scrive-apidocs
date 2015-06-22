@@ -11,6 +11,7 @@ var notTestFiles = [
   "/base/test/setup.js",
   "/base/test/backend.js",
   "/base/test/util.js",
+  "/base/test/image.js",
   "/base/test/localization.js"
 ];
 
@@ -49,6 +50,7 @@ var realLoad = function () {
       sinon: '../libs/sinon',
       backend: '../test/backend',
       util: '../test/util',
+      image: '../test/image',
       /**
        *  Legacy code imports
        */

@@ -27,6 +27,8 @@ define(["legacy_code", "React"], function(legacy_code, React) {
     part = part || 0;
     id = id || +new Date();
     var sigs = doc.signatories();
+    var file = doc.mainfile();
+    var page = file.pages()[0];
     var sig = sigs[part];
     var options = {
       signatory: sig
@@ -44,6 +46,9 @@ define(["legacy_code", "React"], function(legacy_code, React) {
     placement.view = new Backbone.View;
     placement.set({ page: 1 });
     field.addPlacement(placement);
+    if (page) {
+      page.addPlacement(placement);
+    }
     return placement;
   };
 

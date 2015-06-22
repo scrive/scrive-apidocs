@@ -127,6 +127,9 @@ window.File = Backbone.Model.extend({
             for(var i=0;i<response.pages;i++)
               pages[i] = new FilePage({number : i + 1, file: file});
             this.set({pages: pages});
+            if (this.ready()) {
+              this.trigger("ready");
+            }
         }
     }
 });

@@ -1,99 +1,89 @@
 
-define(["legacy_code", "Underscore", "Backbone", "signview/fileview/signatureplacementplacedview",
-        "signview/fileview/checkboxplacementplacedview", "signview/fileview/textplacementplacedview"],
-  function (legacy_code, _, Backbone, SignaturePlacementPlacedView,
+define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin",
+        "signview/fileview/signatureplacementplacedview", "signview/fileview/checkboxplacementplacedview",
+        "signview/fileview/textplacementplacedview"],
+  function (legacy_code, _, Backbone, React, BackboneMixin, SignaturePlacementPlacedView,
             CheckboxPlacementPlacedView, TextPlacementPlacedView) {
 
-return Backbone.View.extend({
-  model: FilePage,
+  return React.createClass({
+    propTypes: {
+      model: React.PropTypes.instanceOf(FilePage).isRequired,
+      signview: React.PropTypes.instanceOf(Backbone.Model).isRequired,
+      arrow: React.PropTypes.func.isRequired,
+      imageSrc: React.PropTypes.string.isRequired,
+      imageComplete: React.PropTypes.bool.isRequired,
+      imageWidth: React.PropTypes.number.isRequired,
+      imageHeight: React.PropTypes.number.isRequired
+    },
 
-  initialize: function (args) {
-    _.bindAll(this, "render", "renderDragables", "updateDragablesPosition");
-    this.signview = args.signview;
-    this.arrow = args.arrow;
-    this.listenTo(this.model, "change:dragables", this.renderDragables);
-    this.render();
-  },
+    mixins: [BackboneMixin.BackboneMixin],
 
-  destroy: function () {
-    this.off();
-    this.stopListening();
-    $(this.el).remove();
-  },
+    // TODO: should be replaced with only `change` event later.
+    componentWillMount: function () {
+      this.props.model.on("change:dragables", this.handleChange);
+    },
 
-  renderDragables: function () {
-    var view = this;
-    var page = this.model;
-    var container = $(this.el);
-    var file = page.file();
-    _.each(page.placements(), function (placement) {
-      var placement = placement;
-      if (!placement.placed() && placement.page() == page.number()) {
-        var elem = $("<div />").appendTo(container);
+    componentWillUnmount: function () {
+      this.props.model.off("change:dragables", this.handleChange);
+    },
+
+    getBackboneModels: function () {
+      return [this.props.model];
+    },
+
+    renderFields: function () {
+      var self = this;
+      var page = self.props.model;
+      var file = page.file();
+      var imageWidth = self.props.imageWidth;
+      var imageHeight = self.props.imageHeight;
+
+      return _.map(page.placements(), function (placement, index) {
         var field = placement.field();
+
         var args = {
           model: placement,
-          signview: view.signview,
-          arrow: view.arrow,
-          el: elem
+          width: imageWidth,
+          height: imageHeight,
+          signview: self.props.signview,
+          arrow: self.props.arrow
         };
 
         if (field.isSignature()) {
-          return new SignaturePlacementPlacedView(args);
+          return <SignaturePlacementPlacedView key={index} {...args} />;
         }
 
         if (field.isCheckbox()) {
-          return new CheckboxPlacementPlacedView(args);
+          return <CheckboxPlacementPlacedView key={index} {...args} />;
         }
 
         if (field.isText()) {
-          return new TextPlacementPlacedView(args);
+          return <TextPlacementPlacedView key={index} {...args} />;
         }
 
         throw new Error("unknown field type");
+      });
+    },
+
+    handleChange: function () {
+      if (this.isMounted()) {
+        this.forceUpdate();
       }
-    });
-  },
+    },
 
-  updateDragablesPosition: function () {
-    var page = this.model;
-    _.each(page.placements(), function (placement) {
-      if (placement.placed() && placement.page() == page.number() && placement.view && placement.view.updatePosition) {
-        placement.view.updatePosition();
-      }
-    });
-  },
+    render: function () {
+      var page = this.props.model;
+      var imageSrc = this.props.imageSrc;
+      var imageComplete = this.props.imageComplete;
 
-  ready: function () {
-    var ready = this.pagejpg && this.pagejpg[0].complete;
-
-    if (ready) {
-      this.model.setSize(this.pagejpg.width(), this.pagejpg.height());
+      return (
+        <div id={"page" + page.number()} className="pagediv">
+          <img src={imageSrc} />
+          {/* if */ imageComplete &&
+            this.renderFields()
+          }
+        </div>
+      );
     }
-
-    return ready;
-  },
-
-  render: function () {
-    var page = this.model;
-    var file = page.file();
-    var fileid = file.fileid();
-    var container = $(this.el);
-
-    container.empty();
-    container.attr("id", "page" + page.number());
-    container.addClass("pagediv");
-
-    this.pagejpg = $("<img class='pagejpg'/>");
-    var pagelink = "/pages/" + fileid  + "/" + page.number() + file.queryPart({"pixelwidth": page.width()});
-
-    this.pagejpg.attr("src", pagelink);
-    container.append(this.pagejpg);
-
-    this.renderDragables();
-
-    return this;
-  }
-});
-
+  });
 });

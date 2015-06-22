@@ -3,7 +3,7 @@
  * Instrumented for Mixpanel
  */
 
-define(['React', 'signview/create_account_section_view', 'doctools/docviewsignatories', 'common/retargeting_service', 'signview/fileview/fileview', 'Backbone', 'Underscore', 'legacy_code'], function(React, CreateAccountSection,DocumentViewSignatories, RetargetingService, FileView) {
+define(['React', 'signview/create_account_section_view', 'doctools/docviewsignatories', 'common/retargeting_service', 'signview/fileview/fileclass', 'Backbone', 'Underscore', 'legacy_code'], function(React, CreateAccountSection,DocumentViewSignatories, RetargetingService, FileClass) {
 
 
 var DocumentSignViewModel = Backbone.Model.extend({
@@ -242,14 +242,14 @@ var DocumentSignViewModel = Backbone.Model.extend({
       var model = this;
       if (this.get("mainfile") == undefined) {
         this.set({'mainfile' :
-                    new FileView({
+                    new FileClass({
                             file: this.document().mainfile(),
                             document: this.document(),
                             signview: this,
                             arrow : function() {return model.arrow();}
                         })
         }, {silent : true} );
-        this.get('mainfile').view.bind("ready", function() {
+        this.get('mainfile').model.bind("view:ready", function() {
             model.trigger("change");
         });
       }
@@ -317,6 +317,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
         var tasks = [];
         _.each(this.mainfile().model.placements(), function(placement) {
                 if (!placement.field().signatory().current()) return;
+                if (!placement.view) return;
                 var elem = $(placement.view.el);
                 var label = "";
                 if (placement.field().isText()) {
@@ -597,8 +598,11 @@ var DocumentSignViewView = Backbone.View.extend({
         this.subcontainer.append($("<div class='clearfix' />"));
      }
 
-     if (this.model.hasArrows())
+     if (this.model.hasArrows()) {
          view.container.prepend(view.model.arrow().view().el);
+         var active = view.model.arrow().model().active();
+         if (active) { active.onActivate(); }
+     }
 
      if (BrowserInfo.isSmallScreen() && this.model.signviewbranding().showheader()) {
        $('.mainContainer').css('padding-top', '20px');
