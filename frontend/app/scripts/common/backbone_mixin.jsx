@@ -45,7 +45,11 @@ var BackboneMixin = {
       var updater = self.forceUpdate.bind(this, null);
       self.listenTo(model,'add change remove', function() {
         if (~self.__syncedModels.indexOf(model)) {
-          updater();
+          if (!this._pendingForceUpdate) {
+            updater();
+          } else {
+            console.log("Forced update durring force update. This should not happend");
+          }
         }
       });
     }
