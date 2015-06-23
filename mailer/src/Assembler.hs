@@ -8,6 +8,7 @@ import Control.Arrow
 import Control.Monad.Base
 import Control.Monad.Catch
 import Data.Char
+import Data.List.Split (chunksOf)
 import Log
 import Text.HTML.TagSoup
 import Text.HTML.TagSoup.Entity
@@ -122,9 +123,25 @@ mailHeader :: String -> String -> String
 mailHeader headerName headerValue = prefix ++ mailEncode (Just $ 75 - length prefix) headerValue ++ "\r\n"
     where prefix = headerName ++ ": "
 
--- from simple utf-8 to =?UTF-8?B?zzzzzzz?=
 mailEncode :: Maybe Int -> String -> String
-mailEncode mFirstLineLength source = concat $ intersperse "\r\n\t" $ map encodeWord chunksBeforeEncoding
+mailEncode mFirstLineLength source | all asciiPrintable source = asciiMailEncode mFirstLineLength source
+                                   | otherwise = unicodeMailEncode mFirstLineLength source
+  where asciiPrintable c = ord c >= 32 && ord c <= 126
+
+-- only line breaking
+asciiMailEncode :: Maybe Int -> String -> String
+asciiMailEncode mFirstLineLength source = concat $ intersperse "\r\n\t" chunks
+  where
+    cleanedUpSource = unwords $ words source
+    (firstLine, rest) = splitAt (fromMaybe 75 mFirstLineLength) cleanedUpSource
+    chunks = if null rest then
+                 [firstLine] -- Lets not encode empty lines
+             else
+                 firstLine:chunksOf 75 rest
+
+-- from simple utf-8 to =?UTF-8?B?zzzzzzz?=
+unicodeMailEncode :: Maybe Int -> String -> String
+unicodeMailEncode mFirstLineLength source = concat $ intersperse "\r\n\t" $ map encodeWord chunksBeforeEncoding
   where
     -- Use encoded-words from rfc 1342 (using utf-8 and base64)
     -- Every encoded-word cannot be longer than 75 chars
