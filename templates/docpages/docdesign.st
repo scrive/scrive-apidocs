@@ -28,12 +28,6 @@ $htmlopentag()$
       );
       dv.afterInsert();
 
-      if (FirstTimeUserExperience.isActive()) {
-        FirstTimeUserExperience.reset();
-        new DesignViewTour({
-            model: dv.model()
-        })
-      }
     });
      });
 

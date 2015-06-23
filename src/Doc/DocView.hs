@@ -14,7 +14,6 @@ module Doc.DocView (
   , pageDocumentSignForPadView
   , pageDocumentPadList
   , pageDocumentPadListLogin
-  , pagePostSignview
   , pageDocumentToStartList
   , pageDocumentToStartLogin
   , pageDocumentToStartView
@@ -108,17 +107,6 @@ pageDocumentPadListLogin:: Kontrakcja m
 pageDocumentPadListLogin ctx ad = do
   renderTemplate "padLogin" $ do
       standardPageFields ctx Nothing ad
-
-
-pagePostSignview :: Kontrakcja m
-                    => Context
-                    -> AnalyticsData
-                    -> m String
-pagePostSignview ctx ad = do
-  mcompany <- companyUIForPage
-  renderTemplate "pagePostSignview" $ do
-      standardPageFields ctx mcompany ad
-
 
 {- To start, list + login + show view -}
 

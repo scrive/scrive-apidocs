@@ -30,7 +30,6 @@ module Doc.DocControl(
     , handleMarkAsSaved
     , handleAfterSigning
     , handlePadList
-    , handlePostSignview
     , handleToStart
     , handleToStartShow
 ) where
@@ -578,13 +577,6 @@ handlePadList = do
   case (ctxmaybeuser ctx `mplus` ctxmaybepaduser ctx) of
     Just _ -> simpleHtmlResonseClrFlash =<< pageDocumentPadList ctx  ad
     _ -> simpleHtmlResonseClrFlash =<< pageDocumentPadListLogin ctx  ad
-
-handlePostSignview :: Kontrakcja m => m Response
-handlePostSignview = do
-  ctx <- getContext
-  ad <- getAnalyticsData
-  _ <- guardJust $ ctxmaybeuser ctx
-  simpleHtmlResonseClrFlash =<< pagePostSignview ctx  ad
 
 handleToStart :: Kontrakcja m => m Response
 handleToStart = do

@@ -273,22 +273,6 @@ javascriptLocalisation =
              , anyoneElse: "$_questionnaireAnyoneElse()$"
              , phoneNumber: "$_questionnairePhoneNumber()$"
          }
-         , ftue : {
-               step1: "$_FTUEstep1()$"
-             , step2: "$_FTUEstep2()$"
-             , step3: "$_FTUEstep3()$"
-             , step4: "$_FTUEstep4()$"
-             , step1description: "$_FTUEstep1description()$"
-             , step2description: "$_FTUEstep2description()$"
-             , step3description: "$_FTUEstep3description()$"
-             , step3descriptionScriver: "$_FTUEstep3descriptionScriver()$"
-             , step3descriptionYourself: "$_FTUEstep3descriptionYourself()$"
-             , step4description: "$_FTUEstep4description()$"
-             , useSampleDocument: "$_FTUEuseSampleDocument()$"
-             , addYourself: "$_FTUEaddYourself()$"
-             , addAScriver: "$_FTUEaddAScriver()$"
-             , documentTitle: "$_documentTitle()$"
-           }
          , phonePlaceholder: "$_phonePlaceholder()$"
          , designview : {
               dndDisabled: "$_designViewDNDDisabled()$",
@@ -851,15 +835,6 @@ javascriptLocalisation =
                     , idleRemark  : "$_documentsArchiveIdleRemark()$"
                     , idleRemark1 : "$_documentsArchiveIdleRemark1()$"
                 }
-            , ftue: {
-                       title: "$_title()$"
-                     , subtitleInJustAFewMinutes: "$_subtitleInJustAFewMinutes()$"
-                     , subtitleIsntThisHowSimple: "$_subtitleIsntThisHowSimple()$"
-                     , subtitleReturned: "$_subtitleReturned()$"
-                     , subtitleReviewed: "$_subtitleReviewed()$"
-                     , subtitleSaved: "$_subtitleSaved()$"
-                     , button: "$_button()$"
-                       }
             ,  templates : {
                        name :  "$_docListTabsTemplates()$"
                     ,  remove : {
