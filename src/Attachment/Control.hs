@@ -175,7 +175,7 @@ attachmentSearchingFromParams params =
 
 makeAttachmentFromFile :: Kontrakcja m => Input -> m (Maybe Attachment)
 makeAttachmentFromFile (Input contentspec (Just filename) _contentType) = do
-    logInfo_ $ "makeAttachmentFromFile: beggining"
+    logInfo_ "makeAttachmentFromFile: beggining"
     guardLoggedIn
     content <- case contentspec of
         Left filepath -> liftIO $ BSL.readFile filepath

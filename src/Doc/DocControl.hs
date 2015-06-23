@@ -45,7 +45,6 @@ import Log
 import System.Directory
 import System.IO.Temp
 import Text.JSON hiding (Result)
-import Text.JSON.Gen hiding (value)
 import Text.StringTemplates.Templates
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
@@ -72,6 +71,7 @@ import Doc.DocumentMonad (DocumentMonad, withDocumentM, withDocument, theDocumen
 import Doc.DocUtils (fileFromMainFile)
 import Doc.DocView
 import Doc.DocViewMail
+import Doc.Logging
 import Doc.Model
 import Doc.RenderedPages
 import Doc.Rendering
@@ -88,6 +88,7 @@ import InputValidation
 import Kontra
 import KontraLink
 import KontraPrelude
+import Log.Identifier
 import MagicHash
 import MinutesTime
 import Redirect
@@ -112,7 +113,9 @@ handleNewDocument = do
         title <- renderTemplate_ "newDocumentTitle"
         actor <- guardJustM $ mkAuthorActor <$> getContext
         mtimezonename <- runPlusSandboxT (lookCookieValue "timezone") `catch` \(RqDataError errs) -> do
-          mapM_ logInfo_ $ unErrors errs
+          logInfo "Errors while looking up 'timezone' cookie" $ object [
+              "errors" .= unErrors errs
+            ]
           return Nothing
         timezone <- fromMaybe defaultTimeZoneName <$> T.sequence (mkTimeZoneName <$> mtimezonename)
         timestamp <- formatTimeSimpleWithTZ timezone (ctxtime ctx)
@@ -195,16 +198,15 @@ showCreateFromTemplate = withUserGet $ pageCreateFromTemplate
     Handles an account setup from within the sign view.
 -}
 handleAcceptAccountFromSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
-handleAcceptAccountFromSign documentid
-                            signatorylinkid = do
-  magichash <- guardJustM $ dbQuery $ GetDocumentSessionToken signatorylinkid
-  dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash documentid signatorylinkid magichash) `withDocumentM` do
-    signatorylink <- guardJust . getSigLinkFor signatorylinkid =<< theDocument
+handleAcceptAccountFromSign did slid = logDocumentAndSignatory did slid $ do
+  magichash <- guardJustM $ dbQuery $ GetDocumentSessionToken slid
+  dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid magichash) `withDocumentM` do
+    signatorylink <- guardJust . getSigLinkFor slid =<< theDocument
     muser <- User.Action.handleAccountSetupFromSign signatorylink
     case muser of
-      Just user -> runJSONGenT $ do
+      Just user -> J.runJSONGenT $ do
         J.value "userid" (show $ userid user)
-      Nothing -> runJSONGenT $ do
+      Nothing -> J.runJSONGenT $ do
         return ()
 
 {- |
@@ -212,12 +214,12 @@ handleAcceptAccountFromSign documentid
     put up the appropriate modal.
 -}
 handleAfterSigning :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
-handleAfterSigning signatorylinkid = do
-  signatorylink <- guardJust . getSigLinkFor signatorylinkid =<< theDocument
+handleAfterSigning slid = logSignatory slid $ do
+  signatorylink <- guardJust . getSigLinkFor slid =<< theDocument
   maybeuser <- dbQuery $ GetUserByEmail (Email $ getEmail signatorylink)
   case maybeuser of
     Just user | isJust $ userhasacceptedtermsofservice user-> do
-      _ <- dbUpdate $ SaveDocumentForUser user signatorylinkid
+      _ <- dbUpdate $ SaveDocumentForUser user slid
       return ()
     _ -> return ()
 
@@ -244,7 +246,7 @@ handleAfterSigning signatorylinkid = do
 -- call Apple service and enable cookies (again) on their phone.
 {-# NOINLINE handleSignShowSaveMagicHash #-}
 handleSignShowSaveMagicHash :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m KontraLink
-handleSignShowSaveMagicHash did sid mh = do
+handleSignShowSaveMagicHash did sid mh = logDocumentAndSignatory did sid $ do
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh) `withDocumentM` do
     dbUpdate $ AddDocumentSessionToken sid mh
     -- Redirect to propper page
@@ -254,13 +256,13 @@ handleSignShowSaveMagicHash did sid mh = do
 --   /s/[documentid]/[signatorylinkid]
 {-# NOINLINE handleSignShow #-}
 handleSignShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
-handleSignShow documentid signatorylinkid = do
-  mmagichash <- dbQuery $ GetDocumentSessionToken signatorylinkid
+handleSignShow did slid = logDocumentAndSignatory did slid $ do
+  mmagichash <- dbQuery $ GetDocumentSessionToken slid
 
   case mmagichash of
     Just magichash ->
-      dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash documentid signatorylinkid magichash) `withDocumentM` do
-        invitedlink <- guardJust . getSigLinkFor signatorylinkid =<< theDocument
+      dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid magichash) `withDocumentM` do
+        invitedlink <- guardJust . getSigLinkFor slid =<< theDocument
 
         -- We will switch to document langauge if no one is logged in or logged in user doesn't match signatory
         ctx <- getContext
@@ -277,11 +279,11 @@ handleSignShow documentid signatorylinkid = do
            else do
              addEventForVisitingSigningPageIfNeeded VisitedViewForSigningEvidence invitedlink
              unlessM ((isTemplate || isPreparation || isClosed) <$> theDocument) $ do
-               dbUpdate . MarkDocumentSeen signatorylinkid magichash =<< signatoryActor ctx' invitedlink
+               dbUpdate . MarkDocumentSeen slid magichash =<< signatoryActor ctx' invitedlink
                triggerAPICallbackIfThereIsOne =<< theDocument
              content <- theDocument >>= \d -> pageDocumentSignView ctx' d invitedlink ad
              simpleHtmlResonseClrFlash content
-    Nothing -> handleCookieFail signatorylinkid documentid
+    Nothing -> handleCookieFail slid did
 
 -- |
 --   /ts/[documentid] (doc has to be a draft)
@@ -331,12 +333,12 @@ handleSignPadShow documentid signatorylinkid = do
 -- to enable cookies on iPhone that seems to be the only
 -- offender.
 handleCookieFail :: Kontrakcja m => SignatoryLinkID -> DocumentID -> m Response
-handleCookieFail slid did = do
+handleCookieFail slid did = logDocumentAndSignatory did slid $ do
   cookies <- rqCookies <$> askRq
   if null cookies
     then sendRedirect LinkEnableCookies
     else do
-      logInfo_ $ "Signview load after session timedout for slid: " ++ show slid ++ ", did: " ++ show did
+      logInfo_ "Signview load after session timedout"
       ctx <- getContext
       ad <- getAnalyticsData
       let fields = standardPageFields ctx Nothing ad
@@ -440,7 +442,7 @@ handleFilePages fid = do
       -- Here we steal Twitter's Enhance Your Calm status code.  Out
       -- mechanism upwards the stack will know to retry to ask us
       -- again before giving up.
-      rsp <- simpleJsonResponse $ runJSONGen $ J.value "wait" ("Rendering in progress"::String)
+      rsp <- simpleJsonResponse $ J.runJSONGen $ J.value "wait" ("Rendering in progress"::String)
       return (rsp { rsCode = 420 })
     RenderedPages True pngpages  -> do
       -- This communicates to JavaScript how many pages there
@@ -459,7 +461,7 @@ handleFilePages fid = do
       -- Such architecture would allow incremental rendering of pages
       -- on the server side also, thus improving user experience a
       -- lot.
-      simpleJsonResponse $ runJSONGen $ J.value "pages" $ length pngpages
+      simpleJsonResponse $ J.runJSONGen $ J.value "pages" $ length pngpages
 
 {- |
    Get some html to display the images of the files
@@ -521,7 +523,10 @@ showPage' fileid pageno = do
     RenderedPages _ contents | pageno - 1 < length contents -> do
       let content = contents !! (pageno - 1)
       let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [content]) Nothing
-      logInfo_ $ "PNG page found and returned for file " ++ show fileid ++ " and page " ++ show pageno
+      logInfo "PNG page found and returned for file" $ object [
+          identifier_ fileid
+        , "page" .= pageno
+        ]
       return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png")
              -- max-age same as for brandedSignviewImage
              $ setHeaderBS (BS.fromString "Cache-Control") (BS.fromString "max-age=604800") res
@@ -529,7 +534,10 @@ showPage' fileid pageno = do
     RenderedPages False _ -> do
       return ((toResponse "") { rsCode = 420 })
     _ -> do
-      logInfo_ $ "JPEG page not found in cache, responding 404 for file " ++ show fileid ++ " and page " ++ show pageno
+      logInfo "JPEG page not found in cache, responding 404" $ object [
+          identifier_ fileid
+        , "page" .= pageno
+        ]
       notFound (toResponse "temporarily unavailable (document has files pending for process)")
 
 handleDownloadClosedFile :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> String -> m Response
@@ -676,7 +684,7 @@ prepareEmailPreview docid slid = do
              doc <- getDocByDocID docid
              mailClosedContent True doc
          _ -> fail "prepareEmailPreview"
-    runJSONGenT $ J.value "content" content
+    J.runJSONGenT $ J.value "content" content
 
 -- GuardTime verification page. This can't be external since its a page in our system.
 -- withAnonymousContext so the verify page looks like the user is not logged in
@@ -696,14 +704,14 @@ handleVerify = do
                     return pth
             _ -> internalError
       ctx <- getContext
-      toJSValue <$> GuardTime.verify (ctxgtconf ctx) filepath
+      J.toJSValue <$> GuardTime.verify (ctxgtconf ctx) filepath
 
 handleMarkAsSaved :: Kontrakcja m => DocumentID -> m JSValue
 handleMarkAsSaved docid = do
   guardLoggedIn
   getDocByDocID docid `withDocumentM` do
     whenM (isPreparation <$> theDocument) $ dbUpdate $ SetDocumentUnsavedDraft False
-    runJSONGenT $ return ()
+    J.runJSONGenT $ return ()
 
 -- Add some event as signatory if this signatory has not signed yet, and document is pending
 addEventForVisitingSigningPageIfNeeded :: (Kontrakcja m, DocumentMonad m) => CurrentEvidenceEventType -> SignatoryLink -> m ()

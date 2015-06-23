@@ -10,8 +10,6 @@
 module Util.MonadUtils where
 
 import Control.Monad.Base
-import Control.Monad.Trans
-import Log
 
 import KontraError
 import KontraPrelude
@@ -33,19 +31,3 @@ guardJust = maybe internalError return
  -}
 guardJustM :: MonadBase IO m => m (Maybe b) -> m b
 guardJustM action = guardJust =<< action
-
-
-{- |
-   Get the value from a Right or log an error and fail if it is Left
- -}
-guardRight :: (MonadBase IO m, MonadIO m, Show msg, MonadLog m) => Either msg a -> m a
-guardRight (Right val) = return val
-guardRight (Left  msg) = do
-  logInfo_ (show msg)
-  internalError
-
-{- |
-   Get the value from a Right or log an error and fail if it is a left
- -}
-guardRightM :: (MonadBase IO m, MonadIO m, Show msg, MonadLog m) => m (Either msg b) -> m b
-guardRightM action = guardRight =<< action

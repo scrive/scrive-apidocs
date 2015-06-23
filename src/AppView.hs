@@ -24,6 +24,7 @@ module AppView(
               , enableCookiesPage
               ) where
 
+import Control.Arrow (second)
 import Control.Monad.Catch
 import Data.Char
 import Data.String.Utils hiding (join)
@@ -187,7 +188,9 @@ enableCookiesPage = do
                                                         , SomeProp "browser" $ PVString ua
                                                         , SomeProp "host" $ PVString hostname
                                                         ]
-  logInfo_ $ show cookies
+  logInfo "Current cookies" $ object [
+      "cookies" .= map (second cookieToJson) cookies
+    ]
   ctx <- getContext
   ad <- getAnalyticsData
   case cookies of
@@ -208,6 +211,16 @@ enableCookiesPage = do
                                              else
                                                  "sessionTimeOutWithoutHeaders"
       pageWhereLanguageCanBeInUrl $ simpleHtmlResonseClrFlash content >>= internalServerError
+  where
+    cookieToJson Cookie{..} = object [
+        "version"   .= cookieVersion
+      , "path"      .= cookiePath
+      , "domain"    .= cookieDomain
+      , "name"      .= cookieName
+      , "value"     .= cookieValue
+      , "secure"    .= secure
+      , "http_only" .= httpOnly
+      ]
 
 handleTermsOfService :: Kontrakcja m => m Response
 handleTermsOfService = withAnonymousContext $ do

@@ -6,6 +6,7 @@ import Control.Monad.Catch
 import Data.ByteString (ByteString)
 import Data.Int
 import Log
+import qualified Data.Text as T
 
 import DB
 import DB.Checks
@@ -130,7 +131,7 @@ moveAtachmentsToSeparateTable =
         sqlWhere "attachments <> '[]'"
       count :: Int64 <- fetchOne runIdentity
 
-      logInfo_ $ "There are " ++ show count ++ " mails with attachments to move to mail_attachments, it will take around " ++ show ((count+999) `div` 1000) ++ " minutes"
+      logInfo_ $ "There are " <> T.pack (show count) <> " mails with attachments to move to mail_attachments, it will take around " <> T.pack (show ((count+999) `div` 1000)) <> " minutes"
 
       runSQL_ $ "WITH"
           <+> "toinsert AS (SELECT mails.id AS id"

@@ -31,6 +31,7 @@ import File.Model (NewFile(..))
 import File.Storage (getFileContents)
 import GuardTime (GuardTimeConf, GuardTimeConfMonad, getGuardTimeConf)
 import KontraPrelude
+import Log.Identifier
 import Templates (runTemplatesT)
 import Util.Actor (systemActor)
 import Utils.Directory (withSystemTempDirectory')
@@ -53,21 +54,29 @@ addDigitalSignature = theDocumentID >>= \did ->
       case vr of
            GT.Valid gsig -> do
                 res <- liftIO $ BS.readFile mainpath
-                logInfo_ $ "GuardTime verification result: " ++ show vr
-                logInfo_ $ "GuardTime signed successfully #" ++ show did
+                logInfo "GuardTime verification result" $ object [
+                    "result" .= show vr
+                  ]
+                logInfo_ "GuardTime signed successfully"
                 return (res, Guardtime (GT.extended gsig) (GT.privateGateway gsig))
            _ -> do
                 res <- liftIO $ BS.readFile mainpath
-                logAttention_ $ "GuardTime verification after signing failed for document #" ++ show did ++ ": " ++ show vr
+                logAttention "GuardTime verification after signing failed for document" $ object [
+                    "result" .= show vr
+                  ]
                 return (res, Missing)
     ExitFailure c -> do
       res <- liftIO $ BS.readFile mainpath
-      logAttention_ $ "GuardTime failed " ++ show c ++ " of document #" ++ show did
+      logAttention "GuardTime failed" $ object [
+          "code" .= c
+        ]
       return (res, Missing)
   when (status /= Missing) $ do
-    logInfo_ $ "Adding new sealed file to DB"
+    logInfo_ "Adding new sealed file to DB"
     sealedfileid <- dbUpdate $ NewFile (filename file) newfilepdf
-    logInfo_ $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
+    logInfo "Finished adding sealed file to DB, adding to document" $ object [
+        identifier_ sealedfileid
+      ]
     dbUpdate $ AppendSealedFile sealedfileid status $ systemActor now
 
 -- | Extend a document: replace the digital signature with a keyless one.  Trigger callbacks.
@@ -102,7 +111,6 @@ extendDigitalSignature = do
 digitallyExtendFile :: (TemplatesMonad m, MonadThrow m, CryptoRNG m, MonadLog m, MonadIO m, DocumentMonad m)
                     => UTCTime -> GuardTimeConf -> FilePath -> String -> m Bool
 digitallyExtendFile ctxtime ctxgtconf pdfpath pdfname = do
-  documentid <- theDocumentID
   code <- GT.digitallyExtend ctxgtconf pdfpath
   mr <- case code of
     ExitSuccess -> do
@@ -110,20 +118,28 @@ digitallyExtendFile ctxtime ctxgtconf pdfpath pdfname = do
       case vr of
            GT.Valid gsig | GT.extended gsig -> do
                 res <- liftIO $ BS.readFile pdfpath
-                logInfo_ $ "GuardTime verification result: " ++ show vr
-                logInfo_ $ "GuardTime extended successfully #" ++ show documentid
+                logInfo "GuardTime verification result" $ object [
+                    "result" .= show vr
+                  ]
+                logInfo_ "GuardTime extended successfully"
                 return $ Just (res, Guardtime (GT.extended gsig) (GT.privateGateway gsig))
            _ -> do
-                logInfo_ $ "GuardTime verification after extension failed for document #" ++ show documentid ++ ": " ++ show vr
+                logInfo "GuardTime verification after extension failed" $ object [
+                    "result" .= show vr
+                  ]
                 return Nothing
     ExitFailure c -> do
-      logAttention_ $ "GuardTime failed " ++ show c ++ " for document #" ++ show documentid
+      logAttention "GuardTime failed for document" $ object [
+          "code" .= c
+        ]
       return Nothing
   case mr of
     Nothing -> return False
     Just (extendedfilepdf, status) -> do
-      logInfo_ $ "Adding new extended file to DB"
+      logInfo_ "Adding new extended file to DB"
       sealedfileid <- dbUpdate $ NewFile pdfname (Binary extendedfilepdf)
-      logInfo_ $ "Finished adding extended file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
+      logInfo "Finished adding extended file to DB, adding to document" $ object [
+          identifier_ sealedfileid
+        ]
       dbUpdate $ AppendExtendedSealedFile sealedfileid status $ systemActor ctxtime
       return True

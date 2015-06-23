@@ -12,6 +12,7 @@ import DB
 import File.File
 import File.Model
 import KontraPrelude
+import Log.Identifier
 import qualified Amazon as AWS
 import qualified MemCache as MemCache
 
@@ -26,7 +27,9 @@ getFileContents file = do
         mcontentAWS <- AWS.getFileContents (AWS.mkAWSAction $ AWS.amazonConfig ac) file
         case mcontentAWS of
           Nothing -> do
-            logInfo_ $ "Couldn't get content for file " ++ show (fileid file) ++ ", returning empty ByteString."
+            logAttention "Couldn't get content for file, returning empty ByteString." $ object [
+                identifier_ $ fileid file
+              ]
             return BS.empty
           Just contentAWS -> do
             MemCache.put (fileid file) contentAWS (AWS.fileCache ac)

@@ -14,9 +14,10 @@ import KontraPrelude
 -- | Update the statistics for the host's clock error versus reference NTP servers.
 collectClockError :: (MonadDB m, MonadBaseControl IO m, MonadLog m) => [String] -> m ()
 collectClockError ntpServers = do
-  moffset <- (Just <$> liftBase (getOffset ntpServers)) `E.catch`
-                \(E.SomeException e) -> do
-    logAttention_ $ "HostClock.collectClockError: getOffset failed: " ++ show e
+  moffset <- (Just <$> liftBase (getOffset ntpServers)) `E.catch` \(E.SomeException e) -> do
+    logAttention "HostClock.collectClockError: getOffset failed" $ object [
+        "error" .= show e
+      ]
     return Nothing
   freq <- liftBase getFrequency
   _ <- dbUpdate $ InsertClockOffsetFrequency moffset freq

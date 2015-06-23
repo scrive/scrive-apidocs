@@ -21,13 +21,14 @@ import Log
 import System.Exit
 import Text.JSON
 import Text.JSON.FromJSValue
-import Text.JSON.Gen
+import Text.JSON.Gen hiding (object)
 import Text.JSON.String
 import qualified Data.ByteString.Lazy as BSL hiding (length)
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 
 import GuardTime.Class
 import KontraPrelude
+import Log.Utils
 import Utils.IO
 
 newtype GuardTimeConfT m a = GuardTimeConfT { unGuardTimeConfT :: ReaderT GuardTimeConf m a }
@@ -69,16 +70,14 @@ digitallySign conf inputFileName = do
              , inputFileName
              ]
   when (code /= ExitSuccess) $ do
-    logInfo_ $ "GuardTime exit code " ++ show code
-    when (not (BSL.null stdout)) $ do
-      logInfo_ $ "GuardTime stdout  : " ++ BSL.toString stdout
-    when (not (BSL.null stderr)) $ do
-      logInfo_ $ "GuardTime errout  : " ++ BSL.toString stderr
-
+    logAttention "GuardTime signing failed" $ object [
+        "exit_code" .= show code
+      , "stdout" `equalsExternalBSL` stdout
+      , "stderr" `equalsExternalBSL` stderr
+      ]
   return code
 
 -- Verification
-
 
 digitallyExtend :: (MonadLog m, MonadIO m) => GuardTimeConf -> String -> m ExitCode
 digitallyExtend conf inputFileName = do
@@ -88,11 +87,11 @@ digitallyExtend conf inputFileName = do
              , inputFileName
              ]
   when (code /= ExitSuccess) $ do
-    logInfo_ $ "GuardTime exit code " ++ show code
-    when (not (BSL.null stdout)) $ do
-      logInfo_ $ "GuardTime stdout  : " ++ BSL.toString stdout
-    when (not (BSL.null stderr)) $ do
-      logInfo_ $ "GuardTime errout  : " ++ BSL.toString stderr
+    logAttention "GuardTime extending failed" $ object [
+        "exit_code" .= show code
+      , "stdout" `equalsExternalBSL` stdout
+      , "stderr" `equalsExternalBSL` stderr
+      ]
 
   return code
 
@@ -101,7 +100,7 @@ digitallyExtend conf inputFileName = do
 
 data VerifyResult = Valid GuardtimeSignature |
                     Invalid String           |
-                    Problem String
+                    Problem BSL.ByteString BSL.ByteString String
   deriving Show
 
 data GuardtimeSignature =
@@ -129,26 +128,29 @@ instance FromJSValue VerifyResult where
         minvalid <- fromJSValueFieldCustom "invalid" $ do
                       liftM (fmap Invalid) $ fromJSValueField "reason"
         mproblem <- fromJSValueFieldCustom "error" $ do
-                      liftM (fmap Problem) $ fromJSValueField "reason"
+                      liftM (fmap $ Problem BSL.empty BSL.empty) $ fromJSValueField "reason"
         return $ mvalid `mplus` minvalid `mplus` mproblem
 
 
 instance ToJSValue VerifyResult where
-    toJSValue (Valid gtsig)     =  runJSONGen $ do
-                                        value "success" True
-                                        value "time" (time gtsig)
-                                        value "gateway" (gateway_id gtsig)
-                                        value "extended" (extended gtsig)
-    toJSValue (Invalid msg)     =  runJSONGen $ do
-                                        value "success" False
-                                        value "error"   False
-                                        value "message" msg
-    toJSValue (Problem msg)     = runJSONGen $ do
-                                        value "success" False
-                                        value "error"   True
-                                        value "message" msg
+    toJSValue (Valid gtsig) =  runJSONGen $ do
+      value "success" True
+      value "time" (time gtsig)
+      value "gateway" (gateway_id gtsig)
+      value "extended" (extended gtsig)
+    toJSValue (Invalid msg) =  runJSONGen $ do
+      value "success" False
+      value "error"   False
+      value "message" msg
+    toJSValue (Problem stdout stderr msg) = runJSONGen $ do
+      value "success" False
+      value "error"   True
+      value "message" $ msg
+        ++ if BSL.null stdout && BSL.null stderr
+          then []
+          else " (stdout: " ++ BSL.toString stdout ++ ", stderr: " ++ BSL.toString stderr ++ ")"
 
-verify :: (MonadLog m, MonadIO m) => GuardTimeConf -> String -> m VerifyResult
+verify :: MonadIO m => GuardTimeConf -> String -> m VerifyResult
 verify conf inputFileName = do
   (code,stdout,stderr) <- invokeGuardtimeTool "PdfVerifier"
              [ "-j"
@@ -158,12 +160,10 @@ verify conf inputFileName = do
              , inputFileName
              ]
   case code of
-       ExitSuccess -> do
-           case (runGetJSON readJSObject $ BSL.toString stdout) of
-                Left s -> return $ Problem $ "GuardTime verification result bad format: " ++ s ++", stdout: " ++ BSL.toString stdout ++ ", stderr " ++ BSL.toString stderr
-                Right json -> case fromJSValue json of
-                                  Nothing -> do
-                                      logInfo_ $ "GT parsing error " ++ BSL.toString stdout
-                                      return $ Problem $ "GuardTime verification result parsing error"
-                                  Just res -> return res
-       _ -> return $ Problem $ "GuardTime verification failed: " ++ BSL.toString stderr
+    ExitSuccess -> do
+      case (runGetJSON readJSObject $ BSL.toString stdout) of
+        Left s -> return . Problem stdout stderr $ "GuardTime verification result bad format: " ++ s
+        Right json -> case fromJSValue json of
+          Nothing -> return $ Problem stdout stderr "GuardTime verification result parsing error"
+          Just res -> return res
+    _ -> return $ Problem stdout stderr "GuardTime verification failed"

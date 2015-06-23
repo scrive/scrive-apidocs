@@ -4,7 +4,6 @@ import Control.Concurrent.Lifted
 import Control.Monad
 import Control.Monad.Base
 import Data.Maybe
-import Data.Monoid.Utils
 import Data.Time
 import Log
 import System.Console.CmdArgs hiding (def)
@@ -81,9 +80,9 @@ main = do
 
     let connSettings = pgConnSettings $ dbConfig appConf
     withPostgreSQL (simpleSource $ connSettings []) $
-      checkDatabase logInfo_ kontraDomains kontraTables
+      checkDatabase (logInfo_ . T.pack) kontraDomains kontraTables
 
-    pool <- liftBase . createPoolSource (liftBase . withLogger . logAttention_) $ connSettings kontraComposites
+    pool <- liftBase . createPoolSource (liftBase . withLogger . logAttention_ . T.pack) $ connSettings kontraComposites
     templates <- liftBase (newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates)
     rng <- newCryptoRNGState
     filecache <- MemCache.new BS.length 52428800
@@ -125,10 +124,8 @@ main = do
     , ccNotificationChannel = Nothing
     , ccNotificationTimeout = 3 * 1000000
     , ccMaxRunningJobs = 10
-    , ccProcessJob = \CronJob{..} -> localRandomID "job_handler_id" $ do
-      logInfo "Processing job" $ object [
-          "job_id" .= show cjType
-        ]
+    , ccProcessJob = \CronJob{..} -> logHandlerInfo cjType $ do
+      logInfo_ "Processing job"
       action <- case cjType of
         AmazonDeletion -> do -- This one should be renamed to FilesPurge
           runScheduler purgeSomeFiles
@@ -141,7 +138,7 @@ main = do
                 then return . RerunAfter $ iseconds 1
                 else return . RerunAfter $ iminutes 1
             else do
-              logInfo_ "AmazonUpload: no valid AWS config, skipping."
+              logInfo_ "No valid AWS config, skipping"
               return . RerunAfter $ iminutes 1
         AsyncEventsProcessing -> do
           runDB $ asyncProcessEvents (catEventProcs $ catMaybes [mmixpanel]) All
@@ -155,13 +152,17 @@ main = do
         DocumentsPurge -> do
           runScheduler $ do
             purgedCount <- dbUpdate $ PurgeDocuments 30 unsavedDocumentLingerDays
-            logInfo_ $ "DocumentsPurge: purged" <+> show purgedCount <+> "documents."
+            logInfo "Purged documents" $ object [
+                "purged" .= purgedCount
+              ]
           return . RerunAfter $ iminutes 10
         DocumentsArchiveIdle -> do
           runScheduler $ do
             now <- currentTime
             archived <- dbUpdate $ ArchiveIdleDocuments now
-            logInfo_ $ "DocumentsArchiveIdle: archived documents for" <+> show archived <+> "signatories."
+            logInfo "Archived documents for signatories" $ object [
+                "signatories" .= archived
+              ]
           return . RerunAfter $ ihours 24
         EmailChangeRequestsEvaluation -> do
           runScheduler $ actionQueue emailChangeRequest
@@ -184,7 +185,9 @@ main = do
         OldDraftsRemoval -> do
           runScheduler $ do
             delCount <- dbUpdate $ RemoveOldDrafts 100
-            logInfo_ $ "OldDraftsRemoval: removed" <+> show delCount <+> "old, unsaved draft documents."
+            logInfo "Removed old, unsaved draft documents" $ object [
+                "removed" .= delCount
+              ]
           return . RerunAfter $ ihours 1
         OldLogsRemoval -> do
           let connSource ci = simpleSource def { csConnInfo = T.encodeUtf8 ci }
@@ -231,3 +234,5 @@ main = do
       5 -> RerunAfter $ iminutes 30
       _ -> RerunAfter $ ihours 1
     }
+      where
+        logHandlerInfo jobType = localRandomID "job_id" . localData ["job_type" .= show jobType]

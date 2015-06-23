@@ -7,6 +7,7 @@ import Log
 import System.Console.CmdArgs hiding (def)
 import System.Environment
 import qualified Control.Exception.Lifted as E
+import qualified Data.Text as T
 import qualified Happstack.StaticRouting as R
 
 import Configuration
@@ -21,6 +22,7 @@ import JobQueue.Config
 import JobQueue.Utils
 import KontraPrelude
 import Log.Configuration
+import Log.Identifier
 import MessengerServerConf
 import MinutesTime
 import Sender
@@ -57,8 +59,8 @@ main = do
 
     let cs = pgConnSettings (mscDBConfig conf) []
     withPostgreSQL (simpleSource cs) $
-      checkDatabase logInfo_ [] messengerTables
-    pool <- liftBase $ createPoolSource (liftBase . withLogger . logAttention_) cs
+      checkDatabase (logInfo_ . T.pack) [] messengerTables
+    pool <- liftBase $ createPoolSource (liftBase . withLogger . logAttention_ . T.pack) cs
     rng <- newCryptoRNGState
 
     E.bracket (startServer lr pool rng conf) (liftBase killThread) . const $ do
@@ -75,7 +77,9 @@ main = do
           handlerConf = nullConf { port = fromIntegral port, logAccess = Nothing }
       routes <- case R.compile handlers of
         Left e -> do
-          logInfo_ e
+          logInfo "Error while compiling routes" $ object [
+              "error" .= e
+            ]
           $unexpectedErrorM "static routing"
         Right r -> return $ r >>= maybe (notFound $ toResponse ("Not found."::String)) return
       socket <- liftBase (listenOn (htonl iface) $ fromIntegral port)
@@ -92,8 +96,8 @@ main = do
     , ccNotificationChannel = Just smsNotificationChannel
     , ccNotificationTimeout = 60 * 1000000 -- 1 minute
     , ccMaxRunningJobs = 10
-    , ccProcessJob = \sms@ShortMessage{..} -> runCryptoRNGT rng $ do
-      logInfo_ $ "Sending sms" <+> show smID
+    , ccProcessJob = \sms@ShortMessage{..} -> localData [identifier_ smID] . runCryptoRNGT rng $ do
+      logInfo_ "Sending sms"
       sendSMS sender sms >>= \case
         True  -> return $ Ok MarkProcessed
         False -> Failed <$> sendoutFailed sms
@@ -101,13 +105,13 @@ main = do
     }
       where
         sendoutFailed ShortMessage{..} = do
-          logInfo_ $ "Failed to send sms" <+> show smID
+          logInfo_ "Failed to send sms"
           if smAttempts < 100
             then do
-              logInfo_ $ "Deferring sms" <+> show smID <+> "for 5 minutes"
+              logInfo_ "Deferring sms for 5 minutes"
               return . RerunAfter $ iminutes 5
             else do
-              logInfo_ $ "Deleting sms" <+> show smID <+> "since there was over 100 tries to send it"
+              logInfo_ "Deleting sms since there was over 100 tries to send it"
               return Remove
 
     jobsWorker :: ConnectionSource
@@ -124,9 +128,11 @@ main = do
     , ccProcessJob = \MessengerJob{..} -> case mjType of
       CleanOldSMSes -> do
         let daylimit = 3
-        logInfo_ $ "Removing smses sent" <+> show daylimit <+> "days ago."
+        logInfo_ $ "Removing smses sent" <+> T.pack (show daylimit) <+> "days ago"
         cleaned <- withPostgreSQL pool . dbUpdate $ CleanSMSesOlderThanDays daylimit
-        logInfo_ $ show cleaned <+> "smses were removed."
+        logInfo "Old smses removed" $ object [
+            "removed" .= cleaned
+          ]
         Ok . RerunAt . nextDayMidnight <$> currentTime
     , ccOnException = \_ _ -> return . RerunAfter $ ihours 1
     }

@@ -14,6 +14,7 @@ import Happstack.Server
 
 import DB.Derive
 import KontraPrelude
+import Log.Identifier
 
 -- | 'SignatoryLinkID' is and integer that identifies
 -- a signatory inside a document scope.
@@ -23,6 +24,9 @@ $(newtypeDeriveUnderlyingReadShow ''SignatoryLinkID)
 
 instance FromReqURI SignatoryLinkID where
   fromReqURI = maybeRead
+
+instance Identifier SignatoryLinkID Int64 where
+  gidentifier f n = f "signatory_link_id" .= fmap (\(SignatoryLinkID k) -> k) n
 
 instance FromSQL SignatoryLinkID where
   type PQBase SignatoryLinkID = PQBase Int64

@@ -18,6 +18,7 @@ import Network.SOAP.Transport.HTTP
 import Text.XML
 import qualified Data.ByteString as BS
 import qualified Data.Foldable as F
+import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 
 import KontraPrelude
@@ -47,7 +48,7 @@ mkCertErrorHandler = liftBaseWith $ \runInBase ->
   return $ \response_parser curl code ->
     case code of
       CurlSSLCACert -> do
-        _ <- runInBase (logAttention_ "CERTIFICATE VERIFICATION ERROR, falling back to insecure connection")
+        void . runInBase $ logAttention_ "CERTIFICATE VERIFICATION ERROR, falling back to insecure connection"
         (final_body, fetch_body) <- newIncoming
         setopts curl
           [ CurlWriteFunction $ gatherOutput_ fetch_body
@@ -64,7 +65,7 @@ mkDebugFunction = liftBaseWith $ \run -> do
     InfoText -> do
       -- Show text message.
       strMsg <- peekCStringLen (msg, fromIntegral msgSize)
-      void . run . curlDomain $ forM_ (lines strMsg) logInfo_
+      void . run . curlDomain $ forM_ (lines strMsg) $ logInfo_ . T.pack
     _ -> F.forM_ (maybeShowInfo debugInfo) $ \strMsg -> do
       data_ <- BS.packCStringLen (msg, fromIntegral msgSize)
       void . run . curlDomain . logInfo strMsg $ object [
@@ -73,7 +74,7 @@ mkDebugFunction = liftBaseWith $ \run -> do
   where
     curlDomain = localDomain "curl"
 
-    maybeShowInfo :: DebugInfo -> Maybe String
+    maybeShowInfo :: DebugInfo -> Maybe T.Text
     maybeShowInfo InfoText       = Nothing -- irrelevant
     maybeShowInfo InfoHeaderIn   = Just "Incoming header"
     maybeShowInfo InfoHeaderOut  = Just "Outgoing header"

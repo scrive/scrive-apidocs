@@ -11,7 +11,7 @@ import Text.JSON
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BSC8
 import qualified Data.ByteString.Lazy.Char8 as BSL
-import qualified Data.ByteString.Lazy.UTF8 as BSL (toString, fromString)
+import qualified Data.ByteString.Lazy.UTF8 as BSLU
 
 import Amazon
 import API.APIVersion
@@ -20,8 +20,11 @@ import Doc.API.Callback.Data
 import Doc.API.V1.DocumentToJSON
 import Doc.DocInfo
 import Doc.DocStateData
+import Doc.Logging
 import Doc.Model
 import KontraPrelude
+import Log.Identifier
+import Log.Utils
 import Salesforce.AuthorizationWorkflow
 import Salesforce.Conf
 import User.CallbackScheme.Model
@@ -29,12 +32,10 @@ import Util.SignatoryLinkUtils
 import Utils.IO
 
 execute :: (AmazonMonad m, MonadDB m, MonadThrow m, MonadLog m, MonadIO m, MonadBase IO m,  MonadReader c m, HasSalesforceConf c) => DocumentAPICallback -> m Bool
-execute DocumentAPICallback{..} = do
+execute DocumentAPICallback{..} = logDocument dacDocumentID $ do
   exists <- dbQuery $ DocumentExistsAndIsNotPurged dacDocumentID
   if not exists then do
-    logInfo "API callback dropped since document does not exists or is purged" $ object [
-        "document_id" .= show dacDocumentID
-      ]
+    logInfo_ "API callback dropped since document does not exists or is purged"
     return True
   else if dacApiVersion == V1 then do -- TODO APIv2: Get rid of the API version check here, executeStandardCallback will handle it
     doc <- dbQuery $ GetDocumentByDocumentID dacDocumentID
@@ -47,37 +48,39 @@ execute DocumentAPICallback{..} = do
           Just (BasicAuthScheme lg pwd) -> executeStandardCallback (Just (lg,pwd)) doc dacURL dacApiVersion
           _ -> executeStandardCallback Nothing doc dacURL dacApiVersion
   else do -- TODO APIv2: Get rid of this block too, see TODO above
-    logAttention "API callback was dropped as it is not a V1 callback: this is not yet implemented and shouldn't happen!" $
-      object [ "document_id" .= show dacDocumentID, "api_version" .= show dacApiVersion, "url" .= dacURL]
+    logAttention "API callback was dropped as it is not a V1 callback: this is not yet implemented and shouldn't happen!" $ object [
+          identifier_ dacApiVersion
+        , "url" .= dacURL
+        ]
     return True
 
 executeStandardCallback :: (AmazonMonad m, MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, MonadIO m) => Maybe (String,String) -> Document -> String -> APIVersion -> m Bool
-executeStandardCallback mBasicAuth doc url apiVersion = do
+executeStandardCallback mBasicAuth doc url apiVersion = logDocument (documentid doc) $ do
   dJSON <- case apiVersion of
-                -- TODO APIv2: Use correct JSON for the version given
-                _ -> documentJSONV1 Nothing False True Nothing doc
+    -- TODO APIv2: Use correct JSON for the version given
+    _ -> documentJSONV1 Nothing False True Nothing doc
   (exitcode, _ , stderr) <- readCurl
-     curlParams
-     (BSL.fromString (urlEncodeVars [ ("documentid", show (documentid doc))
-                                      , ("signedAndSealed", (if (isClosed doc && (isJust $ documentsealedfile doc))
-                                                             then "true" else "false"))
-                                      , ("json", encode dJSON)
-                                      ]))
+    curlParams
+    (BSLU.fromString $ urlEncodeVars [
+        ("documentid", show (documentid doc))
+      , ("signedAndSealed", if isClosed doc && isJust (documentsealedfile doc)
+        then "true"
+        else "false")
+      , ("json", encode dJSON)
+      ])
   case exitcode of
     ExitSuccess -> do
       logInfo "API callback executeStandardCallback succeeded" $ object [
-          "document_id" .= show (documentid doc)
-        , "api_version" .= show apiVersion
+          identifier_ apiVersion
         , "url" .= url
         ]
       return True
     ExitFailure ec -> do
       logAttention "API callback executeStandardCallback failed" $ object [
-          "document_id" .= show (documentid doc)
-        , "api_version" .= show apiVersion
+          identifier_ apiVersion
         , "url" .= url
         , "curl_exitcode" .= show ec
-        , "stderr" .= BSL.toString stderr
+        , "stderr" `equalsExternalBSL` stderr
         ]
       return False
   where
@@ -95,7 +98,7 @@ executeStandardCallback mBasicAuth doc url apiVersion = do
         [ url]
 
 executeSalesforceCallback :: (MonadDB m, MonadLog m, MonadIO m, MonadBase IO m, MonadReader c m, HasSalesforceConf c) => Document -> String ->  String -> m Bool
-executeSalesforceCallback doc rtoken url = do
+executeSalesforceCallback doc rtoken url = logDocument (documentid doc) $ do
   mtoken <- getAccessTokenFromRefreshToken rtoken
   case mtoken of
        Left _ -> return False
@@ -114,4 +117,8 @@ executeSalesforceCallback doc rtoken url = do
                     ] BSL.empty
         case exitcode of
                     ExitSuccess -> return True
-                    ExitFailure _ -> (logInfo_ $ "Salesforce API callback for #" ++ show (documentid doc)  ++ " failed: " ++ BSL.toString stderr) >> return False
+                    ExitFailure _ -> do
+                      logInfo "Salesforce API callback failed" $ object [
+                          "stderr" `equalsExternalBSL` stderr
+                        ]
+                      return False

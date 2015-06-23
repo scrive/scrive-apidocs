@@ -97,7 +97,9 @@ makeSoapCall :: (XmlContent request, XmlContent result, MonadLog m, MonadBaseCon
 makeSoapCall url action extraargs request = tryAndJoinEither $ do
   let input = showXml False (SOAP request)
   -- BSL.appendFile "soap.xml" input
-  logInfo_ $ input
+  logInfo "Making SOAP call" $ object [
+      "request_body" .= input
+    ]
   let args = [ "-X", "POST",
                "-k", "--show-error" ] ++ extraargs ++
              [ "--data-binary", "@-",
@@ -141,9 +143,11 @@ makeSoapCall url action extraargs request = tryAndJoinEither $ do
     ExitSuccess -> do
       liftBase $ BSL.appendFile "soap.xml" xml
       let s = BSL.toString xml
-      logInfo_ $ "length of xml string from soap call: " ++ show (length s)
       let rx = readXml s
-      logInfo_ $ "readXml returned left or right: " ++ if isLeft rx then "Left" else "Right"
+      logInfo "SOAP call was successful" $ object [
+          "response_length" .= length s
+        , "result" .= if isLeft rx then "left"::String else "right"
+        ]
       case rx of
         Right (SOAP result) -> return (Right result)
         Right (SOAPFault soapcode string actor) -> return (Left (soapcode ++":" ++ string ++":" ++ actor))

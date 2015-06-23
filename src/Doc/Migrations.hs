@@ -14,6 +14,7 @@ import Text.XML.HaXml.Parse (xmlParse')
 import Text.XML.HaXml.Posn
 import Text.XML.HaXml.Pretty(content)
 import qualified Data.ByteString as BS
+import qualified Data.Text as T
 import qualified Text.XML.HaXml.Types as XML
 
 import DB
@@ -468,7 +469,7 @@ moveCancelationReasonFromDocumentsToSignatoryLinks = Migration {
           sqlWhereEq "id" slid
           sqlWhereEq "document_id" did
         when (r /= 1) $
-          logInfo_ $ "Migration failed at " ++ show v
+          logInfo_ $ "Migration failed at " <> T.pack (show v)
       runQuery_ $ sqlUpdate "documents" $ do
         sqlSetCmd "cancelation_reason" "NULL"
         sqlWhere "cancelation_reason = '\"ManualCancel\"'"
@@ -488,7 +489,7 @@ dropCancelationReasonFromDocuments = Migration {
                  sqlResult "id, title, cancelation_reason"
                  sqlWhere "cancelation_reason IS NOT NULL"
       values :: [(Int64, String, String)] <- fetchMany id
-      mapM_ (\(a,b,c) -> logInfo_ $ "ID: " ++ show a ++ " (" ++ b ++ "): " ++ c) $ values
+      mapM_ (\(a,b,c) -> logInfo_ $ "ID: " <> T.pack (show a) <> " (" <> T.pack b <> "): " <> T.pack c) $ values
 
       --when (not (null values)) $
       --     error "There are some useful cancelation_reason fields in documents still"
@@ -627,7 +628,7 @@ moveAttachmentsFromDocumentsToAttachments =
                               <> " WHERE type = 3"
       deleted <- runSQL "DELETE FROM documents WHERE type = 3"
       when (deleted /= inserted) $
-         logInfo_  $ "Migration from documents to attachments done. Migrated: " ++ show inserted ++ ". Lost attachments due to missing files: " ++ show (deleted - inserted)
+         logInfo_  $ "Migration from documents to attachments done. Migrated: " <> T.pack (show inserted) <> ". Lost attachments due to missing files: " <> T.pack (show (deleted - inserted))
   }
 
 removeOldDocumentLog :: (MonadDB m, MonadThrow m, MonadTime m) => Migration m
@@ -674,7 +675,7 @@ moveBinaryDataForSignatoryScreenshotsToFilesTable =
   , mgrDo = do
       runSQL_ "ALTER TABLE signatory_screenshots DROP COLUMN mimetype"
       runSQL_ "ALTER TABLE signatory_screenshots ADD COLUMN file_id BIGINT"
-      logInfo_ $ "This is a long running migration with O(n^2) complexity. Please wait!"
+      logInfo_ "This is a long running migration with O(n^2) complexity. Please wait!"
       runSQL_ "CREATE INDEX ON signatory_screenshots((digest(image,'sha1')))"
       filesInserted <- runQuery . sqlInsertSelect "files" "signatory_screenshots" $ do
           sqlSetCmd "content" "signatory_screenshots.image"
@@ -687,7 +688,7 @@ moveBinaryDataForSignatoryScreenshotsToFilesTable =
         sqlSetCmd "file_id" "(SELECT id FROM files WHERE content = signatory_screenshots.image AND name=signatory_screenshots.type || '_screenshot.jpeg' LIMIT 1)"
 
       runSQL_ "ALTER TABLE signatory_screenshots DROP COLUMN image"
-      logInfo_ $ "Moved " ++ show screenshotsUpdated ++ " into " ++ show filesInserted ++ " files (removing duplicates)"
+      logInfo_ $ "Moved " <> T.pack (show screenshotsUpdated) <> " into " <> T.pack (show filesInserted) <> " files (removing duplicates)"
   }
 
 migrateSignatoryLinksDeletedTime :: (MonadDB m, MonadTime m) => Migration m
@@ -1037,7 +1038,7 @@ addUniqueContraintsTypeOnFields=
                -- (anywhere in order).
                sqlWhere "(signatory_link_fields.id > s2.id OR s2.placements <> '[]')"
                sqlWhereEq "signatory_link_fields.placements" ("[]" :: String)
-             logInfo_ $ "Migration (unique fields): " ++ show n1 ++" duplicated signature fields removed"
+             logInfo_ $ "Migration (unique fields): " <> T.pack (show n1) <> " duplicated signature fields removed"
        migrateOnce
        -- We are expecting to have less then 500 other fields, that
        -- need to be fixed. So it should be ok to do a separate update
@@ -1076,7 +1077,7 @@ addUniqueContraintsTypeOnFields=
              sqlWhere "signatory_link_fields.type = s3.type"
              sqlWhere "signatory_link_fields.custom_name = s3.custom_name"
              sqlWhere "s3.id < signatory_link_fields.id"
-         logInfo_ $ "Renamed " ++ show n ++ " unmergeable fields"
+         logInfo_ $ "Renamed " <> T.pack (show n) <> " unmergeable fields"
 
        fixOtherFields = do
          runQuery_ $ sqlSelect "signatory_link_fields" $ do
@@ -1097,8 +1098,8 @@ addUniqueContraintsTypeOnFields=
        fixUniqField [] = return ()
 
        fixStandardField (fid1,fv1,fp1,fid2,fv2,fp2) = do
-         logInfo_ $ "Migration (unique fields): Merging standard fields that should be joined: " ++ show fid1 ++ " " ++ show fid2 ++ ".\n" ++
-                       "Values that are merged are: '" ++ fv1 ++"' and '" ++ fv2 ++ "'. Value '"++(if (null fv1) then fv2 else fv1)++"' will be used."
+         logInfo_ $ "Migration (unique fields): Merging standard fields that should be joined: " <> T.pack (show fid1) <> " " <> T.pack (show fid2) <> ".\n" <>
+                       "Values that are merged are: '" <> T.pack fv1 <>"' and '" <> T.pack fv2 <> "'. Value '"<> (T.pack $ if (null fv1) then fv2 else fv1) <> "' will be used."
          runQuery_ $ sqlUpdate "signatory_link_fields" $ do
            sqlWhereEq "id" fid1
            sqlSet "value" (if (null fv1) then fv2 else fv1)

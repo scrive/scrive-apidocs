@@ -15,6 +15,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 
 import BrandedDomain.BrandedDomain
 import KontraPrelude
+import Log.Utils
 import Theme.Model
 import Utils.Color
 import Utils.Font
@@ -30,9 +31,10 @@ signviewBrandingCSS theme = do
       ExitSuccess -> do
           return $ stdout
       ExitFailure _ -> do
-          logAttention_ $ "Creating sign view branding failed : " ++ BSL.toString stderr
+          logAttention "Creating sign view branding failed" $ object [
+              "stderr" `equalsExternalBSL` stderr
+            ]
           return BSL.empty
-
 
 signviewBrandingLess :: Theme -> String
 signviewBrandingLess theme = unlines $
@@ -59,7 +61,9 @@ serviceBrandingCSS theme = do
       ExitSuccess -> do
           return $ stdout
       ExitFailure _ -> do
-          logAttention_ $ "Creating service branding failed : " ++ BSL.toString stderr
+          logAttention "Creating service branding failed" $ object [
+              "stderr" `equalsExternalBSL` stderr
+            ]
           return BSL.empty
 
 serviceBrandingLess :: Theme -> String
@@ -89,7 +93,9 @@ loginBrandingCSS theme = do
       ExitSuccess -> do
           return $ stdout
       ExitFailure _ -> do
-          logAttention_ $ "Creating login branding failed : " ++ BSL.toString stderr
+          logAttention "Creating login branding failed" $ object [
+              "stderr" `equalsExternalBSL` stderr
+            ]
           return BSL.empty
 
 loginBrandingLess :: Theme -> String
@@ -119,7 +125,9 @@ scriveBrandingCSS = do
       ExitSuccess -> do
           return $ stdout
       ExitFailure _ -> do
-          logAttention_ $ "Creating Scrive branding failed : " ++ BSL.toString stderr
+          logAttention "Creating Scrive branding failed" $ object [
+              "stderr" `equalsExternalBSL` stderr
+            ]
           return BSL.empty
 
 scriveBrandingLess :: String
@@ -156,7 +164,9 @@ domainBrandingCSS bd = do
       ExitSuccess -> do
           return $ stdout
       ExitFailure _ -> do
-          logAttention_ $ "Creating domain branding failed : " ++ BSL.toString stderr
+          logAttention "Creating domain branding failed" $ object [
+              "stderr" `equalsExternalBSL` stderr
+            ]
           return BSL.empty
 
 domainBrandingLess :: BrandedDomain -> String

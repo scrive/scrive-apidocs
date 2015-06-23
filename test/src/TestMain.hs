@@ -11,6 +11,7 @@ import System.IO
 import Test.Framework
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
+import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
 import AccountInfoTest
@@ -129,7 +130,7 @@ testMany (allargs, ts) = do
   let connSettings = pgConnSettings pgconf
   lr@LogRunner{..} <- mkLogRunner "test" def
   withLogger . runDBT (simpleSource $ connSettings []) def $ do
-    migrateDatabase logInfo_ kontraExtensions kontraDomains kontraTables kontraMigrations
+    migrateDatabase (logInfo_ . T.pack) kontraExtensions kontraDomains kontraTables kontraMigrations
     defineFunctions kontraFunctions
     defineComposites kontraComposites
     offsets <- dbQuery $ HC.GetNClockErrorEstimates 10

@@ -2,13 +2,13 @@
 module OAuth.Control(oauth) where
 
 import Control.Exception.Lifted
+import Data.Aeson
 import Data.Map (singleton)
 import Happstack.Server.RqData
 import Happstack.Server.Types
 import Happstack.StaticRouting(Route, choice, dir)
 import Log
 import Text.JSON
-import Text.JSON.Gen hiding (value)
 import qualified Text.JSON.Gen as J
 
 import API.Monad
@@ -53,7 +53,9 @@ tempCredRequest = api $ do
   case etcr of
     Left errors -> (throwIO . SomeKontraException) $ badInput errors
     Right tcr -> do
-      logInfo_ $ "TempCredRequest: " ++ show tcr
+      logInfo "TempCredRequest got successfully" $ object [
+          "temp_cred_request" .= show tcr
+        ]
       (temptoken, tempsecret) <- apiGuardL' $ dbUpdate $ RequestTempCredentials tcr time
       return $ FormEncoded [("oauth_token", show temptoken),
                             ("oauth_token_secret", show tempsecret),
@@ -119,7 +121,7 @@ apiDashboardPersonalTokens = do
   Context{..} <- getContext
   user <- guardJust ctxmaybeuser
   ls <- map jsonFromPersonalToken <$> maybeToList <$> (dbQuery $ GetPersonalToken (userid user))
-  return $ runJSONGen $ do
+  return $ J.runJSONGen $ do
     J.objects "list" $ map (J.value "fields") ls
     J.value "paging" $ pagingParamsJSON $ PagedList {list = ls, pageSize = 100, params = emptyListParams, listLength = length ls}
 
@@ -128,7 +130,7 @@ apiDashboardAPITokens = do
   Context{..} <- getContext
   user <- guardJust ctxmaybeuser
   ls <- map jsonFromAPIToken <$> (dbQuery $ GetAPITokensForUser (userid user))
-  return $ runJSONGen $ do
+  return $ J.runJSONGen $ do
     J.objects "list" $ map (J.value "fields") ls
     J.value "paging" $ pagingParamsJSON $ PagedList {list = ls, pageSize = 100, params = emptyListParams, listLength = length ls}
 
@@ -138,14 +140,14 @@ apiDashboardGrantedPrivileges = do
   user <- guardJust ctxmaybeuser
   ds <- mapKeepM privilegeDescription [APIDocCreate, APIDocSend, APIDocCheck]
   ls <- concatMap (\p->jsonFromGrantedPrivilege p ds) <$> (dbQuery $ GetGrantedPrivileges (userid user))
-  return $ runJSONGen $ do
+  return $ J.runJSONGen $ do
     J.objects "list" $ map (J.value "fields") ls
     J.value "paging" $ pagingParamsJSON $ PagedList {list = ls, pageSize = 100, params = emptyListParams, listLength = length ls}
 
 -- Manipulate dashboard stuff
 
 success :: JSValue
-success = toJSValue $ singleton ("status" :: String) ("success" :: String)
+success = J.toJSValue $ singleton ("status" :: String) ("success" :: String)
 
 createAPIToken :: Kontrakcja m => m JSValue
 createAPIToken = do

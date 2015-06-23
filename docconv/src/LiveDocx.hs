@@ -117,10 +117,16 @@ convertToPDF conf filecontents format = do
   end <- liftBase $ getCPUTime
   case res of
     Left err ->
-      logInfo_ $ "failed conversion from " ++ show format ++ " to PDF: " ++ show err
+      logInfo "Conversion to PDF failed" $ object [
+          "source_format" .= show format
+        , "error" .= show err
+        ]
     Right _ ->
       let diff = ((fromIntegral (end - start) * 0.00000000001) :: Double) in
-      logInfo_ $ "successful conversion from " ++ show format ++ " to PDF (took " ++ show diff ++ "s)"
+      logInfo "Conversion to PDF was successful" $ object [
+          "source_format" .= show format
+        , "time" .= diff
+        ]
   return res
   where
     {- | API calls are as follows:

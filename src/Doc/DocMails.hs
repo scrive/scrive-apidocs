@@ -34,6 +34,7 @@ import Doc.DocUtils
 import Doc.DocView
 import Doc.DocViewMail
 import Doc.DocViewSMS
+import Doc.Logging
 import Doc.Model
 import EvidenceLog.Model (InsertEvidenceEventWithAffectedSignatoryAndMsg(..), CurrentEvidenceEventType(..))
 import File.File
@@ -42,6 +43,7 @@ import InputValidation
 import IPAddress (noIP)
 import Kontra
 import KontraPrelude
+import Log.Identifier
 import MailContext (getMailContext, MailContext(..), MailContextMonad, MailContextT, runMailContextT)
 import Mails.SendMail
 import SMS.SMS (scheduleSMS)
@@ -153,7 +155,7 @@ sendInvitationEmail1 authorsiglink = do
 -}
 sendReminderEmail :: (MonadLog m, MonadCatch m, TemplatesMonad m, CryptoRNG m, DocumentMonad m, MailContextMonad m) =>
                           Maybe String -> Actor -> Bool -> SignatoryLink  -> m SignatoryLink
-sendReminderEmail custommessage  actor automatic siglink = do
+sendReminderEmail custommessage actor automatic siglink = logSignatory (signatorylinkid siglink) $ do
   mctx <- getMailContext
   doc <- theDocument
   let domail = do
@@ -192,7 +194,7 @@ sendReminderEmail custommessage  actor automatic siglink = do
   when sent $ do
     when (isPending doc &&  not (hasSigned siglink)) $ do
       -- Reset delivery status if the signatory has not signed yet
-      logInfo_ $ "Reminder mail send for signatory that has not signed " ++ show (signatorylinkid siglink)
+      logInfo_ "Reminder mail send for signatory that has not signed"
       dbUpdate $ PostReminderSend siglink custommessage automatic actor
     triggerAPICallbackIfThereIsOne =<< theDocument
   return siglink
@@ -340,7 +342,12 @@ sendPinCode sl phone pin = do
 -- | Send out mail and/or SMS or not, depending on delivery method.  Return 'False' iff nothing was sent. Email is always sent to authors if alwaysEmailAuthor is True.
 sendNotifications :: (Monad m, MonadLog m) => SignatoryLink -> Bool -> m () -> m () -> m Bool
 sendNotifications sl alwaysEmailAuthor domail dosms = do
-  logInfo_ $ "Chosen delivery method: " ++ show (signatorylinkdeliverymethod sl) ++ " for phone=" ++ getMobile sl ++ ", email=" ++ getEmail sl
+  logInfo "Delivery method chosen for a signatory" $ object [
+      identifier_ $ signatorylinkid sl
+    , "method" .= show (signatorylinkdeliverymethod sl)
+    , "phone" .= getMobile sl
+    , "email" .= getEmail sl
+    ]
   case (forceAuthorEmail, signatorylinkdeliverymethod sl) of
     (_, EmailDelivery) -> domail >> return True
     (_, EmailAndMobileDelivery) -> domail >> dosms >> return True

@@ -19,6 +19,7 @@ import Log
 import Text.JSON
 import qualified Data.ByteString as BSS
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.Text as T
 import qualified Text.JSON.Gen as J
 import qualified Text.StringTemplates.Fields as F
 
@@ -30,6 +31,7 @@ import Doc.Action
 import Doc.DocInfo (isPending)
 import Doc.DocMails
 import Doc.DocStateData
+import Doc.DocumentID
 import Doc.DocumentMonad (withDocument, theDocument, DocumentT)
 import Doc.Model
 import File.Storage as F
@@ -37,6 +39,7 @@ import InputValidation
 import Kontra
 import KontraLink
 import KontraPrelude
+import Log.Identifier
 import User.Model
 import User.Utils
 import Util.Actor
@@ -44,7 +47,7 @@ import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import Util.ZipUtil
 
-handleArchiveDocumentsAction :: Kontrakcja m => String -> (User -> Document -> Bool) -> ((User, Actor) -> DocumentT m a) -> m [a]
+handleArchiveDocumentsAction :: forall m a. Kontrakcja m => String -> (User -> Document -> Bool) -> ((User, Actor) -> DocumentT m a) -> m [a]
 handleArchiveDocumentsAction actionStr docPermission m = do
   ctx <- getContext
   user <- guardJust $ ctxmaybeuser ctx `mplus` ctxmaybepaduser ctx
@@ -56,12 +59,14 @@ handleArchiveDocumentsAction actionStr docPermission m = do
     let actor = userActor ctx user
     forM docs $ flip withDocument $ m (user, actor)
   else do
-    failWithMsg user ids $ "User didn't have permission to " ++ actionStr
+    failWithMsg user ids "User didn't have permission to do an action"
   where
+    failWithMsg :: forall r. User -> [DocumentID] -> T.Text -> m r
     failWithMsg user ids msg = do
       logInfo msg $ object [
-          "user_id" .= show (userid user)
-        , "document_id" .= map show ids
+          "action" .= actionStr
+        , identifier_ $ userid user
+        , identifiers ids
         ]
       internalError
 
@@ -114,7 +119,7 @@ handleShare = handleArchiveDocumentsAction' "share documents" isAuthorOrAuthorsA
 
 handleZip :: Kontrakcja m => m ZipArchive
 handleZip = do
-  logInfo_ $ "Downloading zip list"
+  logInfo_ "Downloading zip list"
   mentries <- handleArchiveDocumentsAction "download zipped documents" isDocumentVisibleToUser $ const $ do
                docToEntry =<< theDocument
   return $ ZipArchive "selectedfiles.zip" $ foldr addEntryToArchive emptyArchive $ catMaybes $ mentries

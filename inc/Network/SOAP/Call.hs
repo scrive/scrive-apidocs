@@ -3,7 +3,6 @@ module Network.SOAP.Call (
   , xpSOAPFault
   , soapCall
   , unwrapEnvelope
-  , ppDocument
   , ppCursor
   ) where
 
@@ -65,7 +64,9 @@ soapCall :: (ToXML header, ToXML body, MonadBase IO m, MonadLog m, MonadThrow m)
          -> XMLParser response
          -> m response
 soapCall transport soap_action header body parser = do
-  logInfo_ $ "SOAP request body:" <+> ppDocument req
+  logInfo "Making SOAP call" $ object [
+      "request_body" .= renderText def req
+    ]
   c <- liftBase (transport soap_action req)
     >>= unwrapEnvelope . fromDocument . parseLBS_ def
   case runParser (Right <$> parser <|> Left <$> xpSOAPFault) c of
@@ -84,10 +85,6 @@ unwrapEnvelope c = maybe err return . listToMaybe
   where
     err = throwM . SOAPParsingError $ "No SOAP Body:" <+> ppCursor c
 
--- | Pretty print XML document.
-ppDocument :: Document -> String
-ppDocument = T.unpack . renderText def
-
 -- | Render cursor as an XML document and pretty print it.
 ppCursor :: Cursor -> String
-ppCursor = ppDocument . document "response" . W.node . node
+ppCursor = T.unpack . renderText def . document "response" . W.node . node

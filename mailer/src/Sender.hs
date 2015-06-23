@@ -11,12 +11,13 @@ import System.Exit
 import System.Process
 import qualified  Data.Foldable as F
 import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.Lazy.UTF8 as BSLU
 
 import Assembler
 import Crypto.RNG (CryptoRNG)
 import DB
 import KontraPrelude
+import Log.Identifier
+import Log.Utils
 import MailingServerConf
 import Mails.Model
 import Utils.IO
@@ -44,25 +45,27 @@ createSender cs mc = case mc of
 createExternalSender :: ConnectionSource -> String -> String -> (Mail -> [String]) -> Sender
 createExternalSender cs name program createArgs = Sender {
   senderName = name
-, sendMail = \mail@Mail{..} -> do
+, sendMail = \mail@Mail{..} -> localData [identifier_ mailID] $ do
   content <- runDBT cs ts $ assembleContent mail
   (code, _, bsstderr) <- liftBase $ readProcessWithExitCode' program (createArgs mail) content
-  let receivers = intercalate ", " (map addrEmail mailTo)
   case code of
     ExitFailure retcode -> do
-      logInfo_ $ "Error while sending email" <+> show mailID <> ", cannot execute" <+> program <+> "to send email (code" <+> show retcode <> ") stderr:\n" <> BSLU.toString bsstderr
+      logInfo "Error while sending email, execution of external program failed" $ object [
+          "program" .= program
+        , "code" .= retcode
+        , "stderr" `equalsExternalBSL` bsstderr
+        ]
       return False
     ExitSuccess -> do
       let subject = filter (not . (`elem` ("\r\n"::String))) mailTitle
-      logInfo_ $ "Email" <+> show mailID <+> "with subject '" <> subject <> "' sent correctly to:" <+> receivers
-      logInfo_ $ unlines [
-          "Subject:" <+> subject
-        , "To:" <+> intercalate ", " (map addrEmail mailTo)
-        , case mailReplyTo of
-            Just addr -> "Reply-To:" <+> addrEmail addr
+      logInfo "Email sent correctly" $ object [
+          "subject" .= subject
+        , "to" .= map addrEmail mailTo
+        , "attachments" .= length mailAttachments
+        , "reply-to" .= case mailReplyTo of
+            Just addr -> addrEmail addr
             Nothing   -> ""
-        , "Attachments:" <+> show (length mailAttachments)
-        , htmlToTxt mailContent
+        , "content" .= htmlToTxt mailContent
         ]
       return True
 }
@@ -96,11 +99,13 @@ createSMTPSender cs config =
 createLocalSender :: ConnectionSource -> SenderConfig -> Sender
 createLocalSender cs config = Sender {
   senderName = "localSender"
-, sendMail = \mail@Mail{..} -> do
+, sendMail = \mail@Mail{..} -> localData [identifier_ mailID] $ do
   content <- runDBT cs ts $ assembleContent mail
   let filename = localDirectory config ++ "/Email-" ++ addrEmail ($head mailTo) ++ "-" ++ show mailID ++ ".eml"
   liftBase $ BSL.writeFile filename content
-  logInfo_ $ "Email" <+> show mailID <+> "saved to file" <+> filename
+  logInfo "Email saved to file" $ object [
+      "file" .= filename
+    ]
   liftBase $ F.forM_ (localOpenCommand config) $ \cmd -> createProcess (proc cmd [filename]) {
     std_in  = Inherit
   , std_out = Inherit

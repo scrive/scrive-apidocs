@@ -18,6 +18,7 @@ import Crypto.RNG
 import DB
 import KontraLink
 import KontraPrelude
+import Log.Identifier
 import MagicHash
 import MinutesTime
 import User.Model
@@ -46,14 +47,14 @@ userAccountRequest = Action {
       sqlSet "expires" uarExpires
       sqlSet "token" uarToken
       sqlWhereEq (qaIndexField userAccountRequest) uarUserID
-  , qaEvaluateExpired = \UserAccountRequest{uarUserID} -> do
+  , qaEvaluateExpired = \UserAccountRequest{uarUserID} -> localData [identifier_ uarUserID] $ do
       _ <- dbUpdate $ DeleteAction userAccountRequest uarUserID
       musertos <- (fmap userhasacceptedtermsofservice) <$> dbQuery (GetUserByIDIncludeDeleted uarUserID)
       case musertos of
         Just Nothing -> do
           success <- dbUpdate $ RemoveInactiveUser uarUserID
           when success $
-               logInfo_ $ "Inactive user (no plan) with id = " ++ show uarUserID ++ " successfully removed from database"
+            logInfo_ "Inactive user (no plan) successfully removed from database"
         _ -> return ()
   }
 

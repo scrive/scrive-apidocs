@@ -12,6 +12,7 @@ import Happstack.Server
 
 import DB.Derive
 import KontraPrelude
+import Log.Identifier
 
 newtype UserID = UserID Int64
   deriving (Eq, Ord, PQFormat, Typeable)
@@ -23,6 +24,9 @@ instance FromReqURI UserID where
 instance Binary UserID where
   put (UserID uid) = put uid
   get = fmap UserID get
+
+instance Identifier UserID Int64 where
+  gidentifier f n = f "user_id" .= fmap (\(UserID k) -> k) n
 
 instance FromSQL UserID where
   type PQBase UserID = PQBase Int64

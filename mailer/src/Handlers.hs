@@ -5,8 +5,6 @@ module Handlers (
   ) where
 
 import Control.Monad.Reader
-import Data.ByteString.UTF8  as BS
-import Data.Functor
 import Happstack.Server hiding (dir, path)
 import Happstack.StaticRouting
 import Log
@@ -37,13 +35,6 @@ handlers = choice [
 
 showHelloMessage :: Mailer Response
 showHelloMessage = ok $ toResponse "Mailer says hello!"
-
-handleSendGridEvents :: Mailer Response
-handleSendGridEvents = do
-  ct <- getHeader "Content-Type" <$> askRq
-  if ("x-www-form-urlencoded" `isInfixOf` (fromMaybe "" $ BS.toString <$> ct))
-     then withDecodedBody_ handleSendGridEventsV1
-     else handleSendGridEventsV3
 
 withDecodedBody_ :: Mailer Response -> Mailer Response
 withDecodedBody_ action = do

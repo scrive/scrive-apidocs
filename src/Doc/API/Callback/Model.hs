@@ -18,6 +18,7 @@ import Doc.API.Callback.Data
 import Doc.API.Callback.Execute
 import Doc.DocStateData
 import Doc.DocumentID
+import Doc.Logging
 import JobQueue.Config
 import KontraPrelude
 import MinutesTime
@@ -42,17 +43,17 @@ documentAPICallback runExecute = ConsumerConfig {
 , ccNotificationChannel = Just apiCallbackNotificationChannel
 , ccNotificationTimeout = 60 * 1000000 -- 1 minute
 , ccMaxRunningJobs = 32
-, ccProcessJob = \dac@DocumentAPICallback{..} -> runExecute $ execute dac >>= \case
+, ccProcessJob = \dac@DocumentAPICallback{..} -> logDocument dacDocumentID . runExecute $ execute dac >>= \case
   True  -> return $ Ok Remove
   False -> dbQuery (CheckQueuedCallbacksFor dacDocumentID) >>= \case
     True -> do
-      logInfo_ $ "Callback for document" <+> show dacDocumentID <+> "failed and there are more queued, discarding."
+      logInfo_ "Callback for document failed and there are more queued, discarding"
       return $ Failed Remove
-    False -> Failed <$> onFailure dacAttempts
-, ccOnException = const $ onFailure . dacAttempts
+    False -> Failed <$> onFailure dac
+, ccOnException = const onFailure
 }
   where
-    onFailure attempts = case attempts of
+    onFailure DocumentAPICallback{..} = logDocument dacDocumentID $ case dacAttempts of
       1 -> return . RerunAfter $ iminutes 5
       2 -> return . RerunAfter $ iminutes 10
       3 -> return . RerunAfter $ iminutes 30
@@ -63,12 +64,12 @@ documentAPICallback runExecute = ConsumerConfig {
       8 -> return . RerunAfter $ ihours 4
       9 -> return . RerunAfter $ ihours 8
       _ -> do
-        logInfo_ "10th call attempt failed, discarding."
+        logInfo_ "10th call attempt failed, discarding"
         return Remove
 
 triggerAPICallbackIfThereIsOne :: (MonadDB m, MonadCatch m, MonadLog m)
   => Document -> m ()
-triggerAPICallbackIfThereIsOne doc@Document{..} = case documentstatus of
+triggerAPICallbackIfThereIsOne doc@Document{..} = logDocument documentid $ case documentstatus of
   Preparation -> return () -- We don't trigger callbacks for Drafts
   -- TODO APIv2:
   -- when v2 is live this needs to check for v2 callbacks and execute only
@@ -88,7 +89,7 @@ triggerAPICallbackIfThereIsOne doc@Document{..} = case documentstatus of
 
   where
     addAPICallback url apiVersion = do
-      logInfo_ $ "Triggering API callback for document " ++ show documentid
+      logInfo_ "Triggering API callback for document"
       dbUpdate $ MergeAPICallback documentid url apiVersion
 
 ----------------------------------------
@@ -104,7 +105,7 @@ instance (MonadDB m, MonadCatch m) => DBQuery m CheckQueuedCallbacksFor Bool whe
 
 data MergeAPICallback = MergeAPICallback DocumentID String APIVersion
 instance (MonadDB m, MonadCatch m, MonadLog m) => DBUpdate m MergeAPICallback () where
-  update (MergeAPICallback did url apiVersion) = do
+  update (MergeAPICallback did url apiVersion) = logDocument did $ do
     -- If callbacks are queued, but not being processed, replace them.
     -- There will be only 1 queued callback majority of times, but it
     -- doesn't have to be the case. Consider the following:
@@ -132,10 +133,10 @@ instance (MonadDB m, MonadCatch m, MonadLog m) => DBUpdate m MergeAPICallback ()
       sqlWhere "reserved_by IS NULL"
     when (updated == 0) $ do
       -- Otherwise insert a new one.
-      logInfo_ $ "Inserting callback for document" <+> show did
+      logInfo_ "Inserting callback for document"
       runQuery_ $ sqlInsert "document_api_callbacks" setFields
     notify apiCallbackNotificationChannel ""
-    logInfo_ $ "Callback for document" <+> show did <+> "merged"
+    logInfo_ "Callback for document merged"
     where
       setFields :: (MonadState v n, SqlSet v) => n ()
       setFields = do

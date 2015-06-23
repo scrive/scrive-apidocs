@@ -25,6 +25,7 @@ import Happstack.Fields
 import InputValidation
 import Kontra
 import KontraPrelude
+import Log.Identifier
 import MailContext (MailContextMonad(..), MailContext(..))
 import Mails.SendMail
 import MinutesTime
@@ -70,7 +71,10 @@ handleAccountSetupFromSign signatorylink = do
 
 handleActivate :: Kontrakcja m => Maybe String -> Maybe String -> (User,Company) -> SignupMethod -> m (Maybe User)
 handleActivate mfstname msndname (actvuser,company) signupmethod = do
-  logInfo_ $ "Attempting to activate account for user " ++ (show $ getEmail actvuser)
+  logInfo "Attempting to activate account for user" $ object [
+      identifier_ $ userid actvuser
+    , "email" .= getEmail actvuser
+    ]
   when (isJust $ userhasacceptedtermsofservice actvuser) $ do  -- Don't remove - else people will be able to hijack accounts
     internalError
   switchLang (getLang actvuser)
@@ -123,18 +127,21 @@ handleActivate mfstname msndname (actvuser,company) signupmethod = do
                 scheduleNewAccountMail ctx actvuser
               tosuser <- guardJustM $ dbQuery $ GetUserByID (userid actvuser)
 
-              logInfo_ $ "Attempting successfull. User " ++ (show $ getEmail actvuser) ++ "is logged in."
+              logInfo "Attempt successful, user logged in" $ object [
+                  identifier_ $ userid actvuser
+                , "email" .= getEmail actvuser
+                ]
               when (not stoplogin) $ do
                 logUserToContext $ Just tosuser
               when (callme) $ phoneMeRequest (Just tosuser) phone
               when (promo) $ addCompanyPlanManual (companyid company) TrialPricePlan ActiveStatus
               return $ Just tosuser
             else do
-              logInfo_ $ "No TOS accepted. We cant activate user."
+              logInfo_ "No TOS accepted, user cannot be activated"
               addFlashM flashMessageMustAcceptTOS
               return Nothing
     _ -> do
-        logInfo_ $ "Create account attempt failed (params missing)"
+        logInfo_ "Attempt to create account failed, 'tos' parameter is missing"
         return Nothing
 
 scheduleNewAccountMail :: (TemplatesMonad m, CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m) => Context -> User -> m ()

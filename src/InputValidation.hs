@@ -176,13 +176,11 @@ getAndValidate validate fieldname = do
 logIfBad :: Kontrakcja m => (Input, Result a) -> m (Input, Result a)
 logIfBad x@(input, Bad) = do
   Context{ctxmaybeuser, ctxipnumber} <- getContext
-  let username :: String
-      username = maybe "unknown" (unEmail . useremail . userinfo) ctxmaybeuser
-      logtext = "ip " ++ show ctxipnumber ++
-               " user " ++ username ++
-               " invalid input: " ++
-               " raw value info [" ++ show input ++ "]"
-  _ <- logInfo_ logtext
+  logInfo "Input validation failed" $ object [
+      "ip" .= show ctxipnumber
+    , "user" .= maybe "unknown" (unEmail . useremail . userinfo) ctxmaybeuser
+    , "input" .= show input
+    ]
   return x
 logIfBad x = return x
 

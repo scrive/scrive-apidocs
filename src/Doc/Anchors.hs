@@ -25,6 +25,7 @@ import File.Model
 import File.Storage
 import KontraMonad
 import KontraPrelude
+import Log.Utils
 import Utils.Directory
 import Utils.IO
 
@@ -55,7 +56,7 @@ getAnchorPositions pdfcontent anchors = do
         stdoutjs <- either (\e -> do
           logAttention "scrivepdftools/scrivepdftools.jar find-texts did not produce valid json" $ object [
               "message" .= e
-            , "stdout" .= BSL.toString stdout
+            , "stdout" `equalsExternalBSL` stdout
             ]
           fail "scrivepdftools/scrivepdftools.jar find-texts did not produce valid json"
           ) return $ J.runGetJSON J.readJSValue (BSL.toString stdout)
@@ -77,9 +78,10 @@ getAnchorPositions pdfcontent anchors = do
           _ -> do
             return Map.empty
       ExitFailure _ -> do
-        logAttention_ $ BSL.toString stderr
+        logAttention "Error while running scrivepdftools" $ object [
+            "stderr" `equalsExternalBSL` stderr
+          ]
         return Map.empty
-
 
 recalcuateAnchoredFieldPlacements :: (Kontrakcja m,DocumentMonad m) => FileID -> FileID -> m ()
 recalcuateAnchoredFieldPlacements oldfileid newfileid | oldfileid == newfileid = do

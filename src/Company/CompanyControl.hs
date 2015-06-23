@@ -75,7 +75,9 @@ handleChangeCompanyBranding mcid = withCompanyAdminOrAdminOnly mcid $ \company -
   companyUIJSON <- guardJustM $ getFieldBS "companyui"
   case Aeson.eitherDecode $ companyUIJSON of
      Left err -> do
-       logInfo_ $ "Error while parsing company branding " ++ err
+       logInfo "Error while parsing company branding" $ object [
+          "error" .= err
+        ]
        internalError
      Right js -> case (Unjson.parse unjsonCompanyUI js) of
         (Result cui []) -> do

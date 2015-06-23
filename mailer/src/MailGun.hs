@@ -11,6 +11,7 @@ import qualified Control.Exception.Lifted as E
 import DB
 import Happstack.Fields
 import KontraPrelude
+import Log.Identifier
 import Mailer
 import Mails.Model
 
@@ -21,40 +22,49 @@ import Mails.Model
 -- nothing, so I would rather leave it the way it is for now.
 
 handleMailGunEvents :: Mailer Response
-handleMailGunEvents = do
-  logMsg_ $ "Processing some mailgun event"
+handleMailGunEvents = localDomain "handleMailGunEvents" $ do
+  logInfo_ "Processing mailgun event"
   mident <- (,) <$> readField "email_id" <*> readField "email_token"
   case mident of
-    (Just mid, Just token) -> do
+    (Just mid, Just token) -> localData [identifier_ mid] $ do
       mmail <- dbQuery $ GetEmail mid token
       case mmail of
-        Nothing -> logMsg_ $ "Email with id =" <+> show mid ++ ", token =" <+> show token <+> "doesn't exist."
-        Just Mail{..} -> do
+        Nothing -> logInfo "Email doesn't exist" $ object [
+            "token" .= show token
+          ]
+        Just Mail{..} -> localData [identifier_ mailID] $ do
           let attrs = fromXSMTPAttrs mailXSMTPAttrs
           fields <- forM attrs $ \(name,_) -> do
             fvalue <- getField name
             return (name, fvalue)
           if fields /= map (second Just) attrs
-            then logMsg_ $ "Expected X-SMTP data (" ++ show attrs ++ ") doesn't match delivered one:" <+> show fields
+            then logInfo "Expected X-SMTP data doesn't match delivered one" $ object [
+                "expected" .= attrs
+              , "delivered" .= fields
+              ]
             else do
               mevent <- readEventType =<< getField "event"
               case mevent of
-                Nothing -> logMsg_ "No event object received"
+                Nothing -> logInfo_ "No event object received"
                 Just event -> do
                   email <- fromMaybe "" <$> getField "recipient"
                   let ev = MailGunEvent email event
                   res <- dbUpdate (UpdateWithEvent mailID ev) `E.catch` \(e::DBException) -> do
-                    logMsg_ $ "DBException thrown while executing UpdateWithEvent:" <+> show e
+                    logInfo "DBException thrown while executing UpdateWithEvent" $ object [
+                        "exception" .= show e
+                      ]
                     rollback
                     return False
-                  logMsg_ $ if not res
-                    then "UpdateWithEvent didn't update anything"
-                    else "Event '" ++ show event ++ "' for email" <+> show mailID <+> "received."
-    (mid, token) -> logMsg_ $ "Invalid id (" ++ show mid ++ ") or token (" ++ show token ++ ") received."
+                  if not res
+                    then logInfo_ "UpdateWithEvent didn't update anything"
+                    else logInfo "Event received" $ object [
+                        "event" .= show event
+                      ]
+    (mid, token) -> logInfo "Invalid id or token received" $ object [
+        gidentifier id mid
+      , "token" .= fmap show token
+      ]
   ok $ toResponse "Thanks"
-
-logMsg_ :: String -> Mailer ()
-logMsg_ msg = logInfo_ $ "handleMailGunEvents:" <+> msg
 
 readEventType :: Maybe String -> Mailer (Maybe MailGunEvent)
 readEventType (Just "opened") = return $ Just MG_Opened

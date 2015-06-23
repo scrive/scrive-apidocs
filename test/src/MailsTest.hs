@@ -7,6 +7,7 @@ import Log
 import Test.Framework
 import Test.QuickCheck
 import Text.XML.HaXml.Parse (xmlParse')
+import qualified Data.Text as T
 
 import ActionQueue.UserAccountRequest
 import Company.CompanyUI
@@ -88,7 +89,7 @@ sendDocumentMails author = do
         [sl] <- filter (not . isAuthor) . documentsignatorylinks <$> theDocument
         --Invitation Mails
         let checkMail s mg = do
-                              logInfo_ $ "Checking mail " ++ s
+                              logInfo_ $ "Checking mail" <+> T.pack s
                               m <- mg
                               validMail s m
         checkMail "Invitation" $ mailInvitation True Sign (Just sl) =<< theDocument
@@ -123,7 +124,7 @@ testUserMails = do
 
     req <- mkRequest POST []
     let checkMail s mg = do
-                           logInfo_ $ "Checking mail " ++ s
+                           logInfo_ $ "Checking mail" <+> T.pack s
                            m <- fst <$> (runTestKontra req ctx $ mg)
                            validMail s m
     checkMail "New account" $ do

@@ -207,7 +207,9 @@ jsonError rest = runJSONGen $ do
 api :: (Kontrakcja m, ToAPIResponse v) => m v -> m Response
 api acc = (toAPIResponse <$> acc) `catches` [
     Handler $ \ex@(SomeKontraException e) -> do
-      logAttention "API error" $ object ["error" .= jsonToAeson (toJSValue e)]
+      logAttention "API error" $ object [
+          "error" .= jsonToAeson (toJSValue e)
+        ]
       return $ (toAPIResponse $ toJSValue e) {
         rsCode = httpCodeFromSomeKontraException ex
       }

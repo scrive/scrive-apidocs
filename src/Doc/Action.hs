@@ -31,8 +31,9 @@ import Doc.DocInfo
 import Doc.DocMails (sendInvitationEmails, sendRejectEmails, sendDocumentErrorEmail, sendClosedEmails, runMailTInScheduler)
 import Doc.DocSeal (sealDocument)
 import Doc.DocStateData
-import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID, withDocument)
+import Doc.DocumentMonad
 import Doc.DocUtils
+import Doc.Logging
 import Doc.Model
 import Doc.SealStatus (SealStatus(..), hasGuardtimeSignature)
 import Doc.SignatoryLinkID
@@ -40,6 +41,7 @@ import ForkAction (forkAction)
 import GuardTime (GuardTimeConfMonad, runGuardTimeConfT)
 import Kontra
 import KontraPrelude
+import Log.Identifier
 import MailContext (MailContextMonad(..), MailContext(..))
 import MinutesTime
 import Templates (runTemplatesT)
@@ -80,17 +82,20 @@ logDocEvent name user extraProps doc = do
 
 postDocumentPreparationChange :: (Kontrakcja m, DocumentMonad m) => Bool -> TimeZoneName -> m ()
 postDocumentPreparationChange authorsignsimmediately tzn = do
-  docid <- theDocumentID
   triggerAPICallbackIfThereIsOne =<< theDocument
   unlessM (isPending <$> theDocument) $
     theDocument >>= stateMismatchError "postDocumentPreparationChange" Pending
-  logInfo_ $ "Preparation -> Pending; Sending invitation emails: " ++ show docid
+  logInfo_ "Preparation -> Pending; Sending invitation emails"
   msaved <- saveDocumentForSignatories
   case msaved of
     Just msg -> do
-      logAttention_ $ "Failed to save document #" ++ (show docid) ++ " for signatories " ++ msg
+      logAttention "Failed to save document for signatories" $ object [
+          "error" .= msg
+        ]
     Nothing -> return ()
-  theDocument >>= \d -> logInfo_ $ "Sending invitation emails for document #" ++ show docid ++ ": " ++ documenttitle d
+  theDocument >>= \d -> logInfo "Sending invitation emails for document" $ object [
+      "title" .= documenttitle d
+    ]
 
   -- Stat logging
   now <- currentTime
@@ -108,12 +113,14 @@ postDocumentPreparationChange authorsignsimmediately tzn = do
   return ()
 
 postDocumentRejectedChange :: Kontrakcja m => SignatoryLinkID -> Maybe String -> Document -> m ()
-postDocumentRejectedChange siglinkid customMessage doc@Document{..} = do
+postDocumentRejectedChange siglinkid customMessage doc@Document{..} = logDocument documentid $ do
   triggerAPICallbackIfThereIsOne doc
   unless (isRejected doc) $
     stateMismatchError "postDocumentRejectedChange" Rejected doc
-  logInfo_ $ "Pending -> Rejected; send reject emails: " ++ show documentid
-  logInfo_ $ "Sending rejection emails for document #" ++ show documentid ++ ": " ++ documenttitle
+  logInfo_ "Pending -> Rejected; send reject emails"
+  logInfo "Sending rejection emails for document" $ object [
+      "title" .= documenttitle
+    ]
   ctx <- getContext
   -- Log the fact that the current user rejected a document.
   maybe (return ())
@@ -123,11 +130,11 @@ postDocumentRejectedChange siglinkid customMessage doc@Document{..} = do
   return ()
 
 postDocumentCanceledChange :: Kontrakcja m => Document -> m ()
-postDocumentCanceledChange doc@Document{..} = do
+postDocumentCanceledChange doc@Document{..} = logDocument documentid $ do
   triggerAPICallbackIfThereIsOne doc
   unless (isCanceled doc) $
     stateMismatchError "postDocumentCanceledChange" Canceled doc
-  logInfo_ $ "Pending -> Canceled" ++ show documentid
+  logInfo_ "Pending -> Canceled"
   author <- getDocAuthor doc
   logDocEvent "Doc Canceled" author [] doc
 
@@ -142,7 +149,9 @@ postDocumentPendingChange olddoc = do
 
   ifM (allSignatoriesSigned <$> theDocument)
   {-then-} (do
-      theDocument >>= \d -> logInfo_ $ "All have signed; " ++ show (documentstatus d) ++ " -> Closed: " ++ show (documentid d)
+      theDocument >>= \d -> logInfo "All have signed, document closed" $ object [
+          "old_status" .= show (documentstatus d)
+        ]
       time <- ctxtime <$> getContext
       dbUpdate $ CloseDocument (systemActor time)
       author <- theDocument >>= getDocAuthor
@@ -158,7 +167,9 @@ postDocumentPendingChange olddoc = do
   {-else-} $ do
       theDocument >>= triggerAPICallbackIfThereIsOne
       whenM ((\d -> documentcurrentsignorder d /= documentcurrentsignorder olddoc) <$> theDocument) $ do
-        theDocument >>= \d -> logInfo_ $ "Resending invitation emails for document #" ++ show (documentid d) ++ ": " ++ (documenttitle d)
+        theDocument >>= \d -> logInfo "Resending invitation emails" $ object [
+            "title" .= documenttitle d
+          ]
         sendInvitationEmails False
   where
     allSignatoriesSigned = all (isSignatory --> hasSigned) . documentsignatorylinks
@@ -194,7 +205,9 @@ postDocumentClosedActions commitAfterSealing forceSealDocument = do
 
   whenM ((\d -> isDocumentError d && not (isDocumentError doc0)) <$> theDocument) $ do
 
-    logInfo_ $ "Sending seal error emails for document #" ++ show (documentid doc0) ++ ": " ++ documenttitle doc0
+    logInfo "Sending seal error emails" $ object [
+        "title" .= documenttitle doc0
+      ]
     theDocument >>= \d -> flip sendDocumentErrorEmail d =<< getDocAuthor d
     theDocument >>= triggerAPICallbackIfThereIsOne
 
@@ -238,7 +251,9 @@ findAndDoPostDocumentClosedActions
              ] ++ signtimefilter)
             [] (0,100)
   when (not (null docs)) $ do
-    logInfo_ $ "findAndDoPostDocumentClosedActions: considering " ++ show (length docs) ++ " document(s)"
+    logInfo "findAndDoPostDocumentClosedActions: considering documents" $ object [
+        "documents" .= length docs
+      ]
   gtConf <- asks (guardTimeConf . sdAppConf)
   forM_ docs $ \doc -> do
     void $ runMailTInScheduler doc $ runGuardTimeConfT gtConf $ withDocument doc $ postDocumentClosedActions False False
@@ -248,7 +263,9 @@ findAndDoPostDocumentClosedActions
 findAndExtendDigitalSignatures :: (MonadBaseControl IO m, MonadReader SchedulerData m, CryptoRNG m, AmazonMonad m, MonadDB m, MonadMask m, MonadIO m, MonadLog m) => m ()
 findAndExtendDigitalSignatures = do
   lpt <- latest_publication_time
-  logInfo_ $ "extendSignatures: latest publication time is " ++ show lpt
+  logInfo "extendSignatures: logging latest publication time" $ object [
+      "time" .= lpt
+    ]
   docs <- dbQuery $ GetDocuments [DocumentsOfWholeUniverse]
             [ DocumentFilterStatuses [Closed]
             , DocumentFilterByLatestSignTimeBefore lpt
@@ -258,7 +275,9 @@ findAndExtendDigitalSignatures = do
               ]
             ] [] (0,50)
   when (not (null docs)) $ do
-    logInfo_ $ "findAndExtendDigitalSignatures: considering " ++ show (length docs) ++ " document(s)"
+    logInfo "findAndExtendDigitalSignatures: considering documents" $ object [
+        "documents" .= length docs
+      ]
   forM_ docs $ \d ->
     case documentsealstatus d of
       Just (Guardtime{ extended = False }) -> do
@@ -283,7 +302,12 @@ latest_publication_time = localTimeToUTC utc . f . utcToLocalTime utc <$> curren
 
 stateMismatchError :: (MonadBase IO m, MonadLog m) => String -> DocumentStatus -> Document -> m a
 stateMismatchError funame expected Document{documentstatus, documentid} = do
-  logInfo_ $ funame ++ ": document #" ++ show documentid ++ " in " ++ show documentstatus ++ " state, expected " ++ show expected
+  logInfo "State mismatch error" $ object [
+      "function" .= funame
+    , identifier_ documentid
+    , "status" .= show documentstatus
+    , "expected_status" .= show expected
+    ]
   internalError
 
 getDocAuthor :: (MonadDB m, MonadThrow m, MonadBase IO m) => Document -> m User
@@ -333,7 +357,7 @@ findAndTimeoutDocuments = do
     gt <- getGlobalTemplates
     runTemplatesT (def, gt) $ dbUpdate $ TimeoutDocument (systemActor now)
     triggerAPICallbackIfThereIsOne =<< theDocument
-    theDocumentID >>= \did -> logInfo_ $ "Document timedout " ++ (show did)
+    logInfo_ "Document timed out"
   when (not (null docs)) $ do
     commit
     findAndTimeoutDocuments

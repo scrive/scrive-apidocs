@@ -46,6 +46,8 @@ import Happstack.Server.ReqHandler
 import IPAddress
 import Kontra
 import KontraPrelude
+import Log.Identifier
+import Log.Utils
 import MinutesTime
 import Salesforce.Conf
 import ServerUtils.BrandedImagesCache
@@ -82,7 +84,9 @@ getStandardLang :: (HasLang a, HasRqData m, ServerMonad m, FilterMonad Response 
 getStandardLang muser = do
   rq <- askRq
   langcookie <- runPlusSandboxT (lookCookie "lang") `catch` \(RqDataError errs) -> do
-    mapM_ logInfo_ $ unErrors errs
+    logInfo "Errors while looking up 'lang' cookie" $ object [
+        "errors" .= unErrors errs
+      ]
     return Nothing
   let mcookielang = join $ langFromCode <$> cookieValue <$> langcookie
   let browserlang = langFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
@@ -99,7 +103,7 @@ maybeReadTemplates _ mvar = modifyMVar mvar $ \(modtime, templates) -> do
   modtime' <- liftBase getTemplatesModTime
   if modtime /= modtime'
     then do
-      logInfo_ $ "Reloading templates"
+      logInfo_ "Reloading templates"
       templates' <- liftBase readGlobalTemplates
       return ((modtime', templates'), templates')
     else return ((modtime, templates), templates)
@@ -176,9 +180,10 @@ appHandler handleRoutes appConf appGlobals = runHandler $ do
     -- access/update session from a row that was previously locked.
     commit
 
-    localData ["session_id" .= show (sesID session)] $ do
+    localData [identifier_ $ sesID session] . localRandomID "handler_id" $ do
       rq <- askRq
-      logInfo_ $ "Handling routes for:" <+> rqUri rq ++ rqQuery rq
+      let routeLogData = ["uri" .= rqUri rq, "query" .= rqQuery rq]
+      logInfo "Handler started" $ object routeLogData
 
       (res, ctx') <- routeHandlers ctx
 
@@ -195,12 +200,17 @@ appHandler handleRoutes appConf appGlobals = runHandler $ do
       -- application control. That is good because we want to stress
       -- places that can be fixed.
 
-      stats <- getConnectionStats
+      ConnectionStats{..} <- getConnectionStats
       finishTime <- liftIO getCurrentTime
-      logInfo ("Statistics for " ++ rqUri rq ++ rqQuery rq) $ object [
-          "statistics" .= show stats
+      logInfo "Handler finished" . object $ [
+          "statistics" .= object [
+              "queries" .= statsQueries
+            , "rows"    .= statsRows
+            , "values"  .= statsValues
+            , "params"  .= statsParams
+            ]
         , "time" .= (realToFrac $ diffUTCTime finishTime startTime :: Double)
-        ]
+        ] ++ routeLogData
 
       -- Make sure response is well defined before passing it further.
       res `deepseq` case res of
@@ -211,7 +221,11 @@ appHandler handleRoutes appConf appGlobals = runHandler $ do
   where
     runHandler :: AWS.AmazonMonadT (CryptoRNGT (DBT HandlerM)) Response
                -> HandlerM Response
-    runHandler = catchEverything . enhanceYourCalm . withPostgreSQL (connsource appGlobals) . runCryptoRNGT (cryptorng appGlobals) . AWS.runAmazonMonadT (AWS.AmazonConfig (amazonConfig appConf) (filecache appGlobals))
+    runHandler = catchEverything
+               . enhanceYourCalm
+               . withPostgreSQL (connsource appGlobals)
+               . runCryptoRNGT (cryptorng appGlobals)
+               . AWS.runAmazonMonadT (AWS.AmazonConfig (amazonConfig appConf) (filecache appGlobals))
 
     catchEverything :: HandlerM Response -> HandlerM Response
     catchEverything m = m `E.catch` \(e::E.SomeException) -> do
@@ -311,7 +325,9 @@ appHandler handleRoutes appConf appGlobals = runHandler $ do
         case flashes of
           Right (Just fs) -> return fs
           _ -> do
-            logInfo_ $ "Couldn't read flash messages from value: " ++ fval
+            logInfo "Couldn't read flash messages from value" $ object [
+                "value" .= fval
+              ]
             F.removeFlashCookie
             return []
 

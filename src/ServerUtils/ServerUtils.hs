@@ -19,13 +19,13 @@ import System.FilePath ((</>), takeBaseName)
 import System.Path (secureAbsNormPath)
 import System.Process
 import Text.JSON
-import Text.JSON.Gen
-import Text.JSON.Gen as J
+import Text.JSON.Gen hiding (object)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS (fromString)
 import qualified Data.ByteString.UTF8 as BSUTF8
+import qualified Text.JSON.Gen as J
 
 import Happstack.Fields
 import Kontra
@@ -69,7 +69,7 @@ handleScaleImage = do
   logo' <- if base64ImgPrefix `BS.isPrefixOf` logo then
             case B64.decode $ BS.drop (BS.length base64ImgPrefix) logo of
               Left e -> do
-                logInfo_ $ "Problem scaling image: " ++ show e
+                logScalingProblem e
                 internalError
               Right x -> return x
           else do
@@ -80,7 +80,7 @@ handleScaleImage = do
   (procResult, out, _) <- readProcessWithExitCode' "convert" ["-", "-resize", "60%", "-"] $ strictBStoLazyBS logo'
   case procResult of
     ExitFailure msg -> do
-      logInfo_ $ "Problem scaling image: " ++ show msg
+      logScalingProblem msg
       internalError
     ExitSuccess -> do
       let result64 = base64ImgPrefix `BS.append` B64.encode (lazyBStoStrictBS out)
@@ -88,6 +88,10 @@ handleScaleImage = do
   where base64ImgPrefix = BS.pack $ map (fromIntegral . ord) "data:image/png;base64,"
         strictBStoLazyBS = BSL.fromChunks . (:[])
         lazyBStoStrictBS = BS.concat . BSL.toChunks
+
+        logScalingProblem err = logAttention "Error while scaling an image" $ object [
+            "error" .= err
+          ]
 
 -- Based on text, returns an image of this text, drawn using `handwriting` font.
 -- Expected text, dimentions, font and format (base64 or plain) are passed as parameters.
@@ -119,7 +123,9 @@ handleTextToImage = do
       drawerexitcode <- liftIO $ waitForProcess drawer
       case drawerexitcode of
           ExitFailure msg -> do
-            logInfo_ $ "Problem text_to_image " ++ show msg
+            logInfo "text_to_image failed" $ object [
+                "error" .= msg
+              ]
             return Nothing
           ExitSuccess -> (liftIO $ BSL.readFile fpath) >>= (return . Just)
     case mfcontent of
@@ -162,7 +168,9 @@ brandImage file color = do
                                                   , "-"] ""
     case procResult of
       ExitFailure msg -> do
-        logInfo_ $ "Problem branding signview image: " ++ show msg
+        logInfo "Problem branding signview image" $ object [
+            "error" .= msg
+          ]
         internalError
       ExitSuccess -> return out
 

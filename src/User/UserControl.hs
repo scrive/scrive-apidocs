@@ -29,8 +29,8 @@ import Data.Functor
 import Happstack.Server hiding (simpleHTTP)
 import Log
 import Text.JSON (JSValue(..))
-import Text.JSON.Gen
 import Text.StringTemplates.Templates
+import qualified Text.JSON.Gen as J
 import qualified Text.StringTemplates.Fields as F
 
 import ActionQueue.AccessNewAccount
@@ -50,6 +50,7 @@ import Kontra
 import KontraLink
 import KontraPrelude
 import ListUtil
+import Log.Identifier
 import MagicHash (MagicHash)
 import Mails.SendMail
 import MinutesTime
@@ -105,7 +106,11 @@ sendChangeToExistingEmailInternalWarningMail user newemail = do
         securitymsg
         ++ "Maybe they're trying to attempt to merge accounts and need help, "
         ++ "or maybe they're a hacker trying to figure out who is and isn't a user."
-  logInfo_ securitymsg
+  logInfo "User has requested that their email be changed, but new proposed email is already used by another account" $ object [
+      identifier_ $ userid user
+    , "email" .= getEmail user
+    , "new_email" .= unEmail newemail
+    ]
   scheduleEmailSendout (ctxmailsconfig ctx) $ emptyMail {
       to = [MailAddress { fullname = "info@skrivapa.se", email = "info@skrivapa.se" }]
     , title = "Request to Change Email to Existing Account"
@@ -307,27 +312,27 @@ handleAccountSetupPost uid token sm = do
   user <- guardJustM $ getUserAccountRequestUser uid token
   company <-  getCompanyForUser user
   if isJust $ userhasacceptedtermsofservice user
-    then runJSONGenT $ do
-      value "ok" False
-      value "error" ("already_active" :: String)
+    then J.runJSONGenT $ do
+      J.value "ok" False
+      J.value "error" ("already_active" :: String)
     else do
       mfstname <- getOptionalField asValidName "fstname"
       msndname <- getOptionalField asValidName "sndname"
       mactivateduser <- handleActivate mfstname msndname (user,company) sm
       case mactivateduser of
-        Nothing -> runJSONGenT $ do
-                    value "ok" False
-                    value "error" ("reload" :: String)
+        Nothing -> J.runJSONGenT $ do
+                    J.value "ok" False
+                    J.value "error" ("reload" :: String)
         Just _ -> do
           _ <- dbUpdate $ DeleteAction userAccountRequest uid
           ctx <- getContext
           _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) { lang = ctxlang ctx }
           addFlashM flashMessageUserActivated
           link <- getHomeOrDesignViewLink
-          runJSONGenT $ do
-            value "ok" True
-            value "location" $ show link
-            value "userid" $ show uid
+          J.runJSONGenT $ do
+            J.value "ok" True
+            J.value "location" $ show link
+            J.value "userid" $ show uid
 
 {- |
     This is where we get to when the user clicks the link in their new-account
@@ -356,7 +361,10 @@ handleAccessNewAccountGet uid token = do
           case ctxmaybeuser ctx of
             Just currentUser | currentUser == user -> return LinkArchive
             Just currentUser -> do
-              logInfo_ $ "New account email button link for user " ++ show uid ++ " clicked by logged user " ++ show (userid currentUser)
+              logInfo "New account email button link clicked by s different logged user" $ object [
+                  identifier ("new_" <>) uid
+                , identifier ("logged_" <>) $ userid currentUser
+                ]
               return LinkArchive
             Nothing -> return $ LinkLogin (ctxlang ctx) NotLogged
         _ -> do
@@ -380,10 +388,10 @@ handleAccessNewAccountPost uid token = do
       addFlashM flashMessageUserPasswordChanged
 
       logUserToContext $ Just user
-      runJSONGenT $ do
-          value "logged" True
-          value "location" $ show LinkArchive
-    Nothing -> runJSONGenT $ value "logged" False
+      J.runJSONGenT $ do
+          J.value "logged" True
+          J.value "location" $ show LinkArchive
+    Nothing -> J.runJSONGenT $ J.value "logged" False
 
 {- |
     This is where we get to when the user clicks the link in their password reminder
@@ -423,10 +431,10 @@ handlePasswordReminderPost uid token = do
       addFlashM flashMessageUserPasswordChanged
 
       logUserToContext $ Just user
-      runJSONGenT $ do
-          value "logged" True
-          value "location" $ show LinkDesignView
-    Nothing -> runJSONGenT $ value "logged" False
+      J.runJSONGenT $ do
+          J.value "logged" True
+          J.value "location" $ show LinkDesignView
+    Nothing -> J.runJSONGenT $ J.value "logged" False
 
 -- please treat this function like a public query form, it's not secure
 handleContactUs :: Kontrakcja m => m KontraLink

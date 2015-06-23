@@ -257,12 +257,12 @@ asyncProcessEvents process numEvts = do
     processEvent (AsyncEvent name props) = do
         result <- process name props
         case result of
-          PutBack ->
-            asyncLogEvent name props
-          Failed msg ->
-            logAttention_ $ "Event processing failure; event name = " ++ (show name) ++ " reason = " ++ msg
-          _  | otherwise ->
-            return ()
+          PutBack -> asyncLogEvent name props
+          Failed msg -> logAttention "Event processing failed" $ object [
+              "event_name" .= show name
+            , "reason" .= msg
+            ]
+          _  | otherwise -> return ()
 
     decoder (evts, max_seq) (seqnum, evt) = return
         (decode (BL.fromChunks [DB.unBinary evt]) : evts, max seqnum max_seq)

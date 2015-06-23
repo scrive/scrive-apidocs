@@ -22,6 +22,8 @@ import qualified Data.ByteString.Lazy.UTF8 as BSU
 
 import Crypto.RNG (CryptoRNG)
 import KontraPrelude
+import Log.Identifier
+import Log.Utils
 import MessengerServerConf
 import SMS.Data
 import Utils.IO
@@ -45,8 +47,14 @@ createSender mc = case mc of
 createGlobalMouthSender :: String -> String -> String -> Sender
 createGlobalMouthSender user password url = Sender {
   senderName = "GlobalMouth"
-, sendSMS = \sms@ShortMessage{..} -> do
-  logInfo_ $ show sms
+, sendSMS = \ShortMessage{..} -> localData [identifier_ smID] $ do
+  logInfo "Sending sms" $ object [
+      "originator" .= smOriginator
+    , "msisdn"     .= smMSISDN
+    , "body"       .= smBody
+    , "data"       .= smData
+    , "attempts"   .= smAttempts
+    ]
   sendSMSHelper (user, password, url) smOriginator smMSISDN smBody (show smID)
 }
 
@@ -59,8 +67,8 @@ sendSMSHelper (user, password, baseurl) originator msisdn body ref = do
     _ -> do
       logInfo "sendSMSHelper failed" $ object [
           "code" .= show code
-        , "message" .= BSLU.toString stdout
-        , "stderr" .= BSLU.toString stderr
+        , "stdout" `equalsExternalBSL` stdout
+        , "stderr" `equalsExternalBSL` stderr
         , "number" .= msisdn
         ]
       return False
@@ -103,7 +111,7 @@ createLocalSender :: SenderConfig -> Sender
 createLocalSender config = Sender { senderName = "localSender", sendSMS = send }
   where
     send :: (CryptoRNG m, MonadIO m, MonadBase IO m, MonadLog m) => ShortMessage -> m Bool
-    send ShortMessage{..} = do
+    send ShortMessage{..} = localData [identifier_ smID] $ do
       let matchResult = (match (makeRegex ("https?://[a-zA-Z:0-9.-]+/[a-zA-Z_:/0-9#?-]+" :: String) :: Regex) (smBody :: String) :: MatchResult String)
       let withClickableLinks = mrBefore matchResult ++ "<a href=\"" ++ mrMatch matchResult ++ "\">" ++ mrMatch matchResult ++ "</a>" ++ mrAfter matchResult
       let content = "<html><head><title>SMS - " ++ show smID ++ " to " ++ smMSISDN ++ "</title></head><body>" ++
@@ -117,7 +125,9 @@ createLocalSender config = Sender { senderName = "localSender", sendSMS = send }
                     "</body></html>"
       let filename = localDirectory config ++ "/SMS-" ++ show smID ++ ".html"
       liftBase $ BSL.writeFile filename (BSLU.fromString content)
-      logInfo_ $ "SMS #" ++ show smID ++ " saved to file " ++ filename
+      logInfo "SMS saved to file" $ object [
+          "path" .= filename
+        ]
       case localOpenCommand config of
         Nothing  -> return ()
         Just cmd -> do

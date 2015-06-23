@@ -597,7 +597,7 @@ sendInviteAgain = onlySalesOrAdmin $ do
 -- This method can be used to reseal a document
 resealFile :: Kontrakcja m => DocumentID -> m KontraLink
 resealFile docid = onlyAdmin $ withDocumentID docid $ do
-  logInfo_ $ "Trying to reseal document "++ show docid ++" | Only superadmin can do that"
+  logInfo_ "Trying to reseal document (only superadmin can do that)"
   ctx <- getContext
   actor <- guardJust $ mkAdminActor ctx
   _ <- dbUpdate $ InsertEvidenceEvent
@@ -619,7 +619,9 @@ daveDocument documentid = onlyAdmin $ do
     -- but I could not come up with a better one than this
     --  -Eric
     location <- rqUri <$> askRq
-    logInfo_ $ "location: " ++ location
+    logInfo "Logging location" $ object [
+        "location" .= location
+      ]
     if "/" `isSuffixOf` location
      then do
       document <- dbQuery $ GetDocumentForDave documentid
@@ -711,14 +713,16 @@ updateBrandedDomain :: Kontrakcja m => BrandedDomainID -> m ()
 updateBrandedDomain xbdid = onlySalesOrAdmin $ do
     obd <- dbQuery $ GetBrandedDomainByID xbdid
     when (bdMainDomain obd) $ do
-      logInfo_ $ "Main domain can't be changed"
+      logInfo_ "Main domain can't be changed"
       internalError
     -- keep this 1to1 consistent with fields in the database
     domainJSON <- guardJustM $ getFieldBS "domain"
     case Aeson.eitherDecode $ domainJSON of
      Left err -> do
-       logInfo_ $ "Error while parsing branding for adminonly " ++ err
-       internalError
+      logInfo "Error while parsing branding for adminonly" $ object [
+          "error" .= err
+        ]
+      internalError
      Right js -> case (Unjson.parse unjsonBrandedDomain js) of
         (Result newDomain []) -> do
           _ <- dbUpdate $ UpdateBrandedDomain newDomain {bdid = bdid obd, bdMainDomain = bdMainDomain obd}

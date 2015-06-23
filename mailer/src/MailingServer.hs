@@ -2,6 +2,7 @@ module MailingServer (main) where
 
 import Control.Concurrent.Lifted
 import Control.Monad.Base
+import Data.Aeson
 import Data.Monoid
 import Happstack.Server hiding (result, waitForTermination)
 import Log
@@ -9,6 +10,7 @@ import System.Console.CmdArgs hiding (def)
 import System.Environment
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.Text as T
 import qualified Happstack.StaticRouting as R
 
 import Configuration
@@ -23,6 +25,8 @@ import JobQueue.Config
 import JobQueue.Utils
 import KontraPrelude
 import Log.Configuration
+import Log.Identifier
+import Log.Utils
 import MailingServerConf
 import Mails.Model
 import Mails.Tables
@@ -61,9 +65,9 @@ main = do
 
     let cs = pgConnSettings $ mscDBConfig conf
     withPostgreSQL (simpleSource $ cs []) $ do
-      checkDatabase logInfo_ [] mailerTables
+      checkDatabase (logInfo_ . T.pack) [] mailerTables
     awsconf <- AWS.AmazonConfig (mscAmazonConfig conf) <$> MemCache.new BS.length 52428800
-    pool <- liftBase . createPoolSource (liftBase . withLogger . logAttention_) $ cs mailerComposites
+    pool <- liftBase . createPoolSource (liftBase . withLogger . logAttention_ . T.pack) $ cs mailerComposites
     rng <- newCryptoRNGState
 
     E.bracket (startServer lr conf pool rng) (liftBase . killThread) . const $ do
@@ -83,7 +87,9 @@ main = do
           handlerConf = nullConf { port = fromIntegral port, logAccess = Nothing }
       routes <- case R.compile handlers of
         Left e -> do
-          logInfo_ e
+          logInfo "Error while compiling routes" $ object [
+              "error" .= e
+            ]
           $unexpectedErrorM "static routing"
         Right r -> return $ r >>= maybe (notFound $ toResponse ("Not found."::String)) return
       socket <- liftBase . listenOn (htonl iface) $ fromIntegral port
@@ -100,9 +106,11 @@ main = do
     , ccNotificationChannel = Just mailNotificationChannel
     , ccNotificationTimeout = 60 * 1000000 -- 1 minute
     , ccMaxRunningJobs = 10
-    , ccProcessJob = \mail@Mail{..} -> if isNotSendable mail
+    , ccProcessJob = \mail@Mail{..} -> localData [identifier_ mailID] $ if isNotSendable mail
       then do
-        logInfo_ $ "Email" <+> show mail <+> "is not sendable, discarding."
+        logInfo "Email is not sendable, discarding" $ object [
+            "mail" .= show mail
+          ]
         return $ Failed Remove
       else AWS.runAmazonMonadT awsconf . runCryptoRNGT rng $ do
         senderType <- if mailServiceTest
@@ -115,7 +123,9 @@ main = do
             Nothing -> do
               logAttention_ "No slave sender, falling back to master"
               return master
-        logInfo_ $ "Sending email" <+> show mailID <+> "using" <+> show sender
+        logInfo "Sending email" $ object [
+            "sender" .= show sender
+          ]
         sendMail sender mail >>= \case
           True  -> return $ Ok MarkProcessed
           False -> Failed <$> sendoutFailed mail
@@ -126,13 +136,13 @@ main = do
           null (addrEmail mailFrom) || null mailTo || any (null . addrEmail) mailTo
 
         sendoutFailed Mail{..} = do
-          logInfo_ $ "Failed to send email" <+> show mailID
+          logInfo_ "Failed to send email"
           if mailAttempts < 100
             then do
-              logInfo_ $ "Deferring email" <+> show mailID <+> "for 5 minutes"
+              logInfo_ "Deferring email for 5 minutes"
               return . RerunAfter $ iminutes 5
             else do
-              logInfo_ $ "Deleting email" <+> show mailID <+> "since there were 100 unsuccessful attempts to send it"
+              logInfo_ "Deleting email since there were 100 unsuccessful attempts to send it"
               return Remove
 
     jobsWorker :: MailingServerConf -> ConnectionSource -> CryptoRNGState
@@ -146,12 +156,14 @@ main = do
     , ccNotificationChannel = Nothing
     , ccNotificationTimeout = 60 * 1000000 -- 1 minute
     , ccMaxRunningJobs = 1
-    , ccProcessJob = \MailerJob{..} -> case mjType of
+    , ccProcessJob = \MailerJob{..} -> runCryptoRNGT rng . logHandlerInfo mjType $ case mjType of
       CleanOldEmails -> do
         let daylimit = 14
-        logInfo_ $ "Removing emails sent" <+> show daylimit <+> "days ago."
+        logInfo_ $ "Removing emails sent" <+> T.pack (show daylimit) <+> "days ago."
         cleaned <- withPostgreSQL pool . dbUpdate $ CleanEmailsOlderThanDays daylimit
-        logInfo_ $ show cleaned <+> "emails were removed."
+        logInfo "Old emails removed" $ object [
+            "removed" .= cleaned
+          ]
         Ok . RerunAt . nextDayMidnight <$> currentTime
 
       PerformServiceTest -> case mscSlaveSender conf of
@@ -161,10 +173,12 @@ main = do
           dbUpdate $ CollectServiceTestResultIn $ iseconds 50
           return $ Ok MarkProcessed
         Just _ -> withPostgreSQL pool . runCryptoRNGT rng $ do
-          logInfo_ $ "Running service checker"
+          logInfo_ "Running service checker"
           token <- random
           mid <- dbUpdate $ CreateServiceTest (token, testSender, testReceivers conf, Just testSender, "test", "test", [], mempty)
-          logInfo_ $ "Service testing email" <+> show mid <+> "created."
+          logInfo "Service testing email created" $ object [
+              identifier_ mid
+            ]
           dbUpdate $ CollectServiceTestResultIn $ iminutes 10
           return $ Ok MarkProcessed
 
@@ -176,22 +190,26 @@ main = do
           events <- dbQuery GetServiceTestEvents
           result <- if any isDelivered events
             then do
-              logInfo_ $ "Service testing emails were delivered successfully."
+              logInfo_ "Service testing emails were delivered successfully"
               return Ok
             else do
-              logInfo_ $ "Service testing emails failed to be delivered within 10 minutes."
+              logInfo_ "Service testing emails failed to be delivered within 10 minutes"
               sender <- dbQuery GetCurrentSenderType
               when (sender == MasterSender) $ do
-                logInfo_ $ "Switching to slave sender and resending all emails that were sent within this time."
+                logInfo_ "Switching to slave sender and resending all emails that were sent within this time"
                 dbUpdate SwitchToSlaveSenderImmediately
                 resent <- dbUpdate ResendEmailsSentAfterServiceTest
-                logInfo_ $ show resent <+> "emails set to be resent."
+                logInfo "Emails set to be resent" $ object [
+                    "emails" .= resent
+                  ]
               return Failed
           dbUpdate ScheduleServiceTest
           return $ result MarkProcessed
     , ccOnException = \_ _ -> return . RerunAfter $ ihours 1
     }
       where
+        logHandlerInfo jobType = localRandomID "job_id" . localData ["job_type" .= show jobType]
+
         isDelivered (_, _, _, SendGridEvent _ SG_Delivered{} _) = True
         isDelivered (_, _, _, MailGunEvent _ MG_Delivered) = True
         isDelivered _ = False

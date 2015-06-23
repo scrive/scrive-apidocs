@@ -34,6 +34,7 @@ import DB
 import File.File
 import File.Model
 import KontraPrelude
+import Log.Identifier
 
 isAWSConfigOk :: Maybe (String, String, String) -> Bool
 isAWSConfigOk (Just ((_:_), (_:_), (_:_))) = True
@@ -111,7 +112,7 @@ urlFromFile File{filename, fileid} =
 -- - do nothing and keep it in memory database
 exportFile :: (MonadIO m, MonadDB m, MonadLog m, CryptoRNG m) => S3Action -> File -> m Bool
 exportFile ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)}
-           file@File{fileid, filestorage = FileStorageMemory plainContent} = do
+           file@File{fileid, filestorage = FileStorageMemory plainContent} = localData [identifier_ fileid] $ do
   Right aes <- mkAESConf <$> randomBytes 32 <*> randomBytes 16
   let encryptedContent = aesEncrypt aes plainContent
   let action = ctxs3action {
@@ -126,15 +127,13 @@ exportFile ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)}
   case result of
     Right _ -> do
       logInfo "AWS uploaded" $ object [
-          "fileid" .= show fileid
-        , "url" .= (bucket </> url)
+          "url" .= (bucket </> url)
         ]
       _ <- dbUpdate $ FileMovedToAWS fileid bucket url aes
       return True
     Left err -> do
       logAttention "AWS failed to upload" $ object [
-          "fileid" .= show fileid
-        , "url" .= (bucket </> url)
+          "url" .= (bucket </> url)
         , "error" .= show err
         ]
       return False
@@ -168,21 +167,19 @@ deleteFile ctxs3action bucket url = do
 
 
 getFileContents :: (MonadBase IO m, MonadLog m) => S3Action -> File -> m (Maybe BS.ByteString)
-getFileContents s3action File{..} = do
+getFileContents s3action File{..} = localData [identifier_ fileid] $ do
   mcontent <- getContent filestorage
   case mcontent of
     Nothing -> do
       logAttention "No content for file" $ object [
-          "fileid" .= show fileid
-        , "filename" .= filename
+          "filename" .= filename
         ]
       return Nothing
     Just content -> do
       if isJust filechecksum && Just (SHA1.hash content) /= filechecksum
         then do
           logAttention "SHA1 checksum of file doesn't match the one in the database" $ object [
-              "fileid" .= show fileid
-            , "filename" .= filename
+              "filename" .= filename
             ]
              -- value "database_sha1" filechecksum
              -- value "calculated_sha1" (SHA1.hash content)
@@ -198,9 +195,8 @@ getFileContents s3action File{..} = do
       case result of
         Right rsp -> return . Just . aesDecrypt aes . BSL.toStrict $ HTTP.rspBody rsp
         Left err -> do
-          logAttention "AWS.runAction failed"  $ object [
-              "fileid" .= show fileid
-            , "error" .= show err
+          logAttention "AWS.runAction failed" $ object [
+              "error" .= show err
             , "filename" .= filename
             ]
           return Nothing

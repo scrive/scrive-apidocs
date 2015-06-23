@@ -13,6 +13,7 @@ import System.IO
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL8
+import qualified Data.Text as T
 
 import AppConf
 import AppControl
@@ -62,12 +63,14 @@ main = withCurlDo $ do
   appConf <- readConfig putStrLn config
   lr@LogRunner{..} <- mkLogRunner "kontrakcja" $ logConfig appConf
   withLoggerWait $ do
-    logInfo_ $ "Starting kontrakcja-server build " ++ Version.versionID
+    logInfo "Starting kontrakcja-server" $ object [
+        "version" .= Version.versionID
+      ]
     checkExecutables
 
     let connSettings = pgConnSettings $ dbConfig appConf
     withPostgreSQL (simpleSource $ connSettings []) $
-      checkDatabase logInfo_ kontraDomains kontraTables
+      checkDatabase (logInfo_ . T.pack) kontraDomains kontraTables
 
     appGlobals <- do
       templates <- liftBase (newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates)
@@ -76,7 +79,7 @@ main = withCurlDo $ do
       brandedimagescache <- MemCache.new BSL8.length 50000000
       docs <- MemCache.new RenderedPages.pagesCount 3000
       rng <- newCryptoRNGState
-      connpool <- liftBase . createPoolSource (liftBase . withLogger . logAttention_) $ connSettings kontraComposites
+      connpool <- liftBase . createPoolSource (liftBase . withLogger . logAttention_ . T.pack) $ connSettings kontraComposites
       return AppGlobals {
           templates = templates
         , filecache = filecache
@@ -97,10 +100,12 @@ startSystem LogRunner{..} appGlobals appConf = E.bracket startServer stopServer 
       let (iface,port) = httpBindAddress appConf
       listensocket <- liftBase $ listenOn (htonl iface) (fromIntegral port)
       routes <- case compile $ staticRoutes (production appConf) of
-                  Left e -> do
-                    logInfo_ e
-                    $unexpectedErrorM "static routing"
-                  Right r -> return r
+        Left e -> do
+          logInfo "Error while compiling routes" $ object [
+              "error" .= e
+            ]
+          $unexpectedErrorM "static routing"
+        Right r -> return r
       let conf = nullConf {
             port = fromIntegral port
           , timeout = 120
@@ -114,7 +119,7 @@ startSystem LogRunner{..} appGlobals appConf = E.bracket startServer stopServer 
       withPostgreSQL (connsource appGlobals) . runCryptoRNGT (cryptorng appGlobals) $ do
         initDatabaseEntries appConf
       liftBase $ waitForTermination
-      logInfo_ $ "Termination request received"
+      logInfo_ "Termination request received"
 
 initDatabaseEntries :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m) => AppConf -> m ()
 initDatabaseEntries appConf = do

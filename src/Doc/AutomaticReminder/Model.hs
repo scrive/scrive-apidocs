@@ -23,6 +23,7 @@ import Doc.DocumentID
 import Doc.DocumentMonad (withDocument)
 import Doc.Model
 import KontraPrelude
+import Log.Identifier
 import MinutesTime
 import Util.Actor
 import qualified DB.TimeZoneName as TimeZoneName
@@ -61,7 +62,7 @@ documentAutomaticReminder = Action {
             withDocument doc $ sendAllReminderEmails (systemActor now) True
         else do
           logInfo "Auto reminder dropped since document does not exists or is purged" $ object [
-              "document_id" .= (show $ reminderDocumentID dar)
+              identifier_ $ reminderDocumentID dar
             ]
       void $ dbUpdate $ DeleteAction documentAutomaticReminder (reminderDocumentID dar)
 

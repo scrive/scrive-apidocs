@@ -11,10 +11,14 @@ import Happstack.Server
 
 import DB.Derive
 import KontraPrelude
+import Log.Identifier
 
 newtype DocumentID = DocumentID Int64
   deriving (Eq, Ord, PQFormat)
 $(newtypeDeriveUnderlyingReadShow ''DocumentID)
+
+instance Identifier DocumentID Int64 where
+  gidentifier f n = f "document_id" .= fmap (\(DocumentID k) -> k) n
 
 instance FromReqURI DocumentID where
   fromReqURI = maybeRead

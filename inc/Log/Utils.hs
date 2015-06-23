@@ -1,5 +1,6 @@
 module Log.Utils (
     equalsExternalBS
+  , equalsExternalBSL
   , localRandomID
   ) where
 
@@ -10,6 +11,7 @@ import Log.Class
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 
@@ -30,6 +32,9 @@ equalsExternalBS name value
     Left _ -> name .= T.decodeLatin1 value
   where
     resultBase64 = (name <> "_base64") .= T.decodeLatin1 (B64.encode value)
+
+equalsExternalBSL :: T.Text -> BSL.ByteString -> Pair
+equalsExternalBSL name = equalsExternalBS name . BSL.toStrict
 
 localRandomID :: (MonadLog m, CryptoRNG m) => T.Text -> m a -> m a
 localRandomID name action = do

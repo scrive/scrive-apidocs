@@ -35,7 +35,6 @@ import System.Exit
 import System.FilePath.Posix (takeBaseName)
 import Text.JSON hiding (Ok)
 import Text.JSON.FromJSValue
-import Text.JSON.Gen
 import Text.JSON.String (runGetJSON)
 import Text.StringTemplates.Templates
 import qualified Data.ByteString.Base64 as B64
@@ -48,6 +47,7 @@ import qualified Data.Map as Map hiding (map)
 import qualified Data.Traversable as T
 import qualified Data.Vector as Vec
 import qualified Text.JSON as J
+import qualified Text.JSON.Gen as J
 import qualified Text.JSON.Pretty as J (pp_value)
 
 import API.Monad
@@ -72,6 +72,7 @@ import Doc.DocStateQuery
 import Doc.DocumentID
 import Doc.DocumentMonad (DocumentMonad, withDocument, withDocumentID, withDocumentM, theDocument)
 import Doc.DocUtils
+import Doc.Logging
 import Doc.Model
 import Doc.Rendering
 import Doc.SealStatus (SealStatus(..))
@@ -90,6 +91,7 @@ import Kontra
 import KontraPrelude
 import ListUtil
 import LiveDocx
+import Log.Utils
 import MagicHash (MagicHash)
 import MinutesTime
 import OAuth.Model
@@ -209,7 +211,7 @@ apiCallV1CreateFromFile = api $ do
     Created <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
 
 apiCallV1CreateFromTemplate :: Kontrakcja m => DocumentID -> m Response
-apiCallV1CreateFromTemplate did =  api $ do
+apiCallV1CreateFromTemplate did = logDocument did . api $ do
   (user, actor, external) <- getAPIUser APIDocCreate
   template <- dbQuery $ GetDocumentByDocumentID $ did
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink template
@@ -225,9 +227,8 @@ apiCallV1CreateFromTemplate did =  api $ do
     when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft True
     Created <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
 
-
 apiCallV1Clone :: Kontrakcja m => DocumentID -> m Response
-apiCallV1Clone did =  api $ do
+apiCallV1Clone did = logDocument did . api $ do
   (user, actor, _) <- getAPIUser APIDocCreate
   doc <- dbQuery $ GetDocumentByDocumentID $ did
   if isAuthor (doc,user)
@@ -239,12 +240,8 @@ apiCallV1Clone did =  api $ do
          Created <$> documentJSONV1 (Just $ user) True  True Nothing newdoc
      else throwIO . SomeKontraException $ serverError "Id did not matched template or you do not have right to access document"
 
-
-
-
-
 apiCallV1Update :: Kontrakcja m => DocumentID -> m Response
-apiCallV1Update did = api $ do
+apiCallV1Update did = logDocument did . api $ do
   (user, actor, _) <- getAPIUser APIDocCreate
   withDocumentID did $ do
     auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
@@ -256,7 +253,7 @@ apiCallV1Update did = api $ do
     json <- apiGuard (badInput "The MIME part 'json' must be a valid JSON.") $ case decode jsons of
                                                                                  J.Ok js -> Just js
                                                                                  _ -> Nothing
-    logInfo "Document updated with:" $ trimDocumentJSON $ jsonToAeson json
+    logInfo "Document updated" $ trimDocumentJSON $ jsonToAeson json
     draftData   <- apiGuardJustM (badInput "Given JSON does not represent valid draft data.") $ flip fromJSValueWithUpdate json . Just <$> theDocument
     whenM (draftIsChangingDocument draftData <$> theDocument) $ do
       checkObjectVersionIfProvided did -- If we will change document, then we want to be sure that object version is ok.
@@ -275,7 +272,7 @@ apiCallV1Update did = api $ do
         trimCSVJSON _ = String $ "(Omitted for logs)"
 
 apiCallV1SetAuthorAttachemnts  :: Kontrakcja m => DocumentID -> m Response
-apiCallV1SetAuthorAttachemnts did = api $ do
+apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
   (user, actor, _) <- getAPIUser APIDocCreate
   withDocumentID did $ do
     auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
@@ -337,7 +334,7 @@ apiCallV1SetAuthorAttachemnts did = api $ do
               return $ not $ null atts
 
 apiCallV1Ready :: (MonadBaseControl IO m, Kontrakcja m) => DocumentID -> m Response
-apiCallV1Ready did =  api $ do
+apiCallV1Ready did = logDocument did . api $ do
   (user, actor, _) <- getAPIUser APIDocSend
   withDocumentID did $ do
     auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) .getAuthorSigLink) <$> theDocument
@@ -379,7 +376,7 @@ apiCallV1Ready did =  api $ do
       _ -> True
 
 apiCallV1Cancel :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> m Response
-apiCallV1Cancel did =  api $ do
+apiCallV1Cancel did = logDocument did . api $ do
     checkObjectVersionIfProvided did
     (user, actor, _) <- getAPIUser APIDocSend
     withDocumentID did $ do
@@ -390,9 +387,8 @@ apiCallV1Cancel did =  api $ do
       postDocumentCanceledChange =<< theDocument
       Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
 
-
 apiCallV1Reject :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> SignatoryLinkID -> m Response
-apiCallV1Reject did slid = api $ do
+apiCallV1Reject did slid = logDocumentAndSignatory did slid . api $ do
   checkObjectVersionIfProvided did
   (mh,mu) <- getMagicHashAndUserForSignatoryAction did slid
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
@@ -406,12 +402,11 @@ apiCallV1Reject did slid = api $ do
     postDocumentRejectedChange slid customtext =<< theDocument
     Accepted <$> (documentJSONV1 mu True True Nothing =<< theDocument)
 
-
 apiCallV1CheckSign :: Kontrakcja m
              => DocumentID      -- ^ The DocumentID of the document to sign
              -> SignatoryLinkID -- ^ The SignatoryLinkID that is in the URL
              -> m Response
-apiCallV1CheckSign did slid = api $ do
+apiCallV1CheckSign did slid = logDocumentAndSignatory did slid . api $ do
   checkObjectVersionIfProvided did
 
   (mh,_) <- getMagicHashAndUserForSignatoryAction did slid
@@ -422,7 +417,7 @@ apiCallV1CheckSign did slid = api $ do
     whenM (hasSigned <$> $fromJust . getSigLinkFor slid <$> theDocument) $ do -- We can use fromJust since else we would not get access to document
       (throwIO . SomeKontraException $ conflictError $ "Document already signed")
     whenM (signatoryNeedsToIdentifyToView =<< $fromJust . getSigLinkFor slid <$> theDocument) $ do
-      (throwIO . SomeKontraException $ forbidden "Authorization to view is needed")  
+      (throwIO . SomeKontraException $ forbidden "Authorization to view is needed")
     checkAuthenticationToSignMethodAndValue slid
     authorization <- signatorylinkauthenticationtosignmethod <$> $fromJust . getSigLinkFor slid <$> theDocument
     fields <- getFieldForSigning
@@ -432,20 +427,20 @@ apiCallV1CheckSign did slid = api $ do
              validPin <- getValidPin slid fields
              if (isJust validPin)
                then return $ Right $ Ok ()
-               else (Left . Failed) <$> (runJSONGenT $ value "pinProblem" True)
+               else (Left . Failed) <$> (J.runJSONGenT $ J.value "pinProblem" True)
        SEBankIDAuthenticationToSign -> dbQuery (GetESignature slid) >>= \case
          Just _ -> return $ Right $ Ok ()
          Nothing -> do
            logInfo_ "No e-signature found for a signatory"
-           return . Left . Failed $ runJSONGen $ value "noSignature" True
+           return . Left . Failed $ J.runJSONGen $ J.value "noSignature" True
 
 apiCallV1Sign :: Kontrakcja m
              => DocumentID      -- ^ The DocumentID of the document to sign
              -> SignatoryLinkID -- ^ The SignatoryLinkID that is in the URL
              -> m Response
-apiCallV1Sign  did slid = api $ do
+apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
   checkObjectVersionIfProvided did
-  logInfo_ $ "Ready to sign a document " ++ show did ++ " for signatory " ++ show slid
+  logInfo_ "Ready to sign a document for signatory"
   (mh,mu) <- getMagicHashAndUserForSignatoryAction did slid
   screenshots' <- fmap (fromMaybe emptySignatoryScreenshots) $
                (fromJSValue =<<) <$> getFieldJSON "screenshots"
@@ -477,7 +472,7 @@ apiCallV1Sign  did slid = api $ do
             postDocumentPendingChange olddoc
             handleAfterSigning slid
             (Right . Accepted) <$> (documentJSONV1 mu True True Nothing =<< theDocument)
-          else (Left . Failed) <$> (runJSONGenT $ return ())
+          else (Left . Failed) <$> (J.runJSONGenT $ return ())
 
       SEBankIDAuthenticationToSign -> dbQuery (GetESignature slid) >>= \case
         mesig@(Just _) -> do
@@ -487,7 +482,7 @@ apiCallV1Sign  did slid = api $ do
           (Right . Accepted) <$> (documentJSONV1 mu True True Nothing =<< theDocument)
         Nothing -> do
           logInfo_ "No e-signature found for a signatory"
-          return . Left . Failed $ runJSONGen $ value "noSignature" True
+          return . Left . Failed $ J.runJSONGen $ J.value "noSignature" True
    )
     `catchKontra` (\(DocumentStatusShouldBe _ _ i) -> throwIO . SomeKontraException $ conflictError $ "Document not pending but " ++ show i)
     `catchKontra` (\(SignatoryHasAlreadySigned {}) -> throwIO . SomeKontraException $ conflictError $ "Signatory has already signed")
@@ -499,7 +494,7 @@ checkAuthenticationToSignMethodAndValue slid = do
   mAuthValue :: Maybe String <- getField "authentication_value"
   case (mAuthType, mAuthValue) of
        (Just authType, Just authValue) -> do
-           let mAuthMethod = fromJSValue $ toJSValue authType
+           let mAuthMethod = fromJSValue $ J.toJSValue authType
            case mAuthMethod of
                 Just authMethod -> do
                     siglink <- $fromJust . getSigLinkFor slid <$> theDocument
@@ -545,7 +540,7 @@ signDocument slid mh fields mesig mpin screenshots = do
 {- End of utils-}
 
 apiCallV1Restart :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> m Response
-apiCallV1Restart did =  api $ do
+apiCallV1Restart did = logDocument did . api $ do
     checkObjectVersionIfProvided did
     (user, actor, _) <- getAPIUser APIDocSend
     doc <- dbQuery $ GetDocumentByDocumentID $ did
@@ -558,7 +553,7 @@ apiCallV1Restart did =  api $ do
     Accepted <$> documentJSONV1 (Just $ user) True True Nothing newdocument
 
 apiCallV1Prolong :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> m Response
-apiCallV1Prolong did =  api $ do
+apiCallV1Prolong did = logDocument did . api $ do
     checkObjectVersionIfProvided did
     (user, actor, _) <- getAPIUser APIDocSend
     withDocumentID did $ do
@@ -580,7 +575,7 @@ apiCallV1Prolong did =  api $ do
 
 
 apiCallV1SetAutoReminder :: (MonadBaseControl IO m, Kontrakcja m) => DocumentID -> m Response
-apiCallV1SetAutoReminder did =  api $ do
+apiCallV1SetAutoReminder did = logDocument did . api $ do
     ctx <- getContext
     checkObjectVersionIfProvided did
     (user, _actor, _) <- getAPIUser APIDocSend
@@ -603,7 +598,7 @@ apiCallV1SetAutoReminder did =  api $ do
       Accepted <$> (documentJSONV1 (Just $ user) True True Nothing =<< theDocument)
 
 apiCallV1ChangeAuthenticationToSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
-apiCallV1ChangeAuthenticationToSign did slid = api $ do
+apiCallV1ChangeAuthenticationToSign did slid = logDocumentAndSignatory did slid . api $ do
   (user, actor, _) <- getAPIUser APIDocSend
   withDocumentID did $ do
       guardAuthorOrAuthorsAdmin user "Permission problem. You don't have a permission to change this document"
@@ -621,7 +616,7 @@ apiCallV1ChangeAuthenticationToSign did slid = api $ do
       when (isNothing authentication_type) $
           throwIO . SomeKontraException $ badInput $ "`authentication_type` must be given. "
                                           ++ "Supported values are: `standard`, `eleg`, `sms_pin`."
-      let authenticationMethod = case fromJSValue $ toJSValue $ fromMaybe "" authentication_type of
+      let authenticationMethod = case fromJSValue $ J.toJSValue $ fromMaybe "" authentication_type of
               Just am -> Right am
               Nothing -> Left $ fromMaybe "" authentication_type
       -- Change authentication method (if input is a valid method)
@@ -633,7 +628,7 @@ apiCallV1ChangeAuthenticationToSign did slid = api $ do
       Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
 
 apiCallV1Remind :: Kontrakcja m => DocumentID -> m Response
-apiCallV1Remind did =  api $ do
+apiCallV1Remind did = logDocument did . api $ do
   (user, actor , _) <- getAPIUser APIDocSend
   withDocumentID did $ do
     unlessM (isPending <$> theDocument) $ do
@@ -645,7 +640,7 @@ apiCallV1Remind did =  api $ do
     Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
 
 apiCallV1Forward :: Kontrakcja m => DocumentID -> m Response
-apiCallV1Forward did =  api $ do
+apiCallV1Forward did = logDocument did . api $ do
   (user, _actor , _) <- getAPIUser APIDocCheck
   withDocumentID did $ do
     unlessM (isClosed <$> theDocument) $ do
@@ -660,7 +655,7 @@ apiCallV1Forward did =  api $ do
     Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
 
 apiCallV1Delete :: Kontrakcja m => DocumentID -> m Response
-apiCallV1Delete did =  api $ do
+apiCallV1Delete did = logDocument did . api $ do
   (user, actor, _) <- getAPIUser APIDocSend
   withDocumentID did $ do
     mauser <- theDocument >>= \d -> case join $ maybesignatory <$> getAuthorSigLink d of
@@ -673,11 +668,11 @@ apiCallV1Delete did =  api $ do
            throwIO . SomeKontraException $ serverError "Permission problem. Not connected to document."
     dbUpdate $ ArchiveDocument (userid user) actor
 
-    Accepted <$> (runJSONGenT $ return ())
+    Accepted <$> (J.runJSONGenT $ return ())
 
 
 apiCallV1ReallyDelete :: Kontrakcja m => DocumentID -> m Response
-apiCallV1ReallyDelete did =  api $ do
+apiCallV1ReallyDelete did = logDocument did . api $ do
   (user, actor, _) <- getAPIUser APIDocSend
   withDocumentID did $ do
     mauser <- theDocument >>= \d -> case join $ maybesignatory <$> getAuthorSigLink d of
@@ -690,13 +685,13 @@ apiCallV1ReallyDelete did =  api $ do
            throwIO . SomeKontraException $ serverError "Permission problem. Not connected to document."
     dbUpdate $ ReallyDeleteDocument (userid user) actor
 
-    Accepted <$> (runJSONGenT $ return ())
+    Accepted <$> (J.runJSONGenT $ return ())
 
 
 
 -- TODO test case to make sure apiCallV1Get does not update document version (MarkDocumentSeen case)
 apiCallV1Get :: Kontrakcja m => DocumentID -> m Response
-apiCallV1Get did = api $ do
+apiCallV1Get did = logDocument did . api $ do
   ctx <- getContext
   (msignatorylink :: Maybe SignatoryLinkID) <- readField "signatoryid"
   mmagichashh <- maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msignatorylink
@@ -732,7 +727,7 @@ apiCallV1Get did = api $ do
 
 -- Return evidence attachments for document
 apiCallV1GetEvidenceAttachments :: Kontrakcja m => DocumentID -> m Response
-apiCallV1GetEvidenceAttachments did = api $ withDocumentID did $ do
+apiCallV1GetEvidenceAttachments did = logDocument did . api $ withDocumentID did $ do
   (user, _, _) <- getAPIUser APIDocCheck
   guardAuthorOrAuthorsAdmin user "Permission problem. You don't have a permission to access this document"
   Ok <$> (evidenceAttachmentsJSONV1 =<< theDocument)
@@ -800,9 +795,9 @@ apiCallV1List = api $ do
                                 , listLength = allDocsCount
                                 }
           docsJSONs <- mapM (docForListJSONV1 user) $ list docs
-          return $ Right $ runJSONGen $ do
-              value "list" docsJSONs
-              value "paging" $ pagingParamsJSON docs
+          return $ Right $ J.runJSONGen $ do
+              J.value "list" docsJSONs
+              J.value "paging" $ pagingParamsJSON docs
   where
     docSortingFromParams :: ListParams -> [AscDesc DocumentOrderBy]
     docSortingFromParams params =
@@ -844,12 +839,12 @@ apiCallV1CheckAvailable = api $ do
   when (length ids > 10000) $ do
     throwIO . SomeKontraException $ serverError "This request can't check more then 10000 documents"
   docids <- dbQuery $ GetDocumentsIDs [DocumentsVisibleToUser $ userid user] [DocumentFilterDeleted False,DocumentFilterByDocumentIDs ids] []
-  Ok <$> (runJSONGenT $ value "ids" (show <$> docids))
+  Ok <$> (J.runJSONGenT $ J.value "ids" (show <$> docids))
 
 
 
 apiCallV1History :: Kontrakcja m => DocumentID -> m Response
-apiCallV1History did = api $ do
+apiCallV1History did = logDocument did . api $ do
   (user, _actor, _) <- getAPIUser APIDocCheck
   ctx <- getContext
   modifyContext (\ctx' -> ctx' {ctxmaybeuser = Just user});
@@ -864,7 +859,7 @@ apiCallV1History did = api $ do
 --   or one with preprinted fields if not closed
 
 apiCallV1DownloadMainFile :: Kontrakcja m => DocumentID -> String -> m Response
-apiCallV1DownloadMainFile did _nameForBrowser = api $ do
+apiCallV1DownloadMainFile did _nameForBrowser = logDocument did . api $ do
 
   (msid :: Maybe SignatoryLinkID) <- readField "signatorylinkid"
   (maccesstoken :: Maybe MagicHash) <- readField "accesstoken"
@@ -896,7 +891,9 @@ apiCallV1DownloadMainFile did _nameForBrowser = api $ do
                     now <- currentTime
                     -- Give Guardtime signing a few seconds to complete before we respond
                     when (diffUTCTime now (documentmtime doc) < 8) $ do
-                      logInfo_ $ "Waiting for Guardtime signing, document was modified " ++ show (diffUTCTime now (documentmtime doc)) ++ " ago"
+                      logInfo "Waiting for Guardtime signing" $ object [
+                          "document_last_modified_ago" .= show (diffUTCTime now $ documentmtime doc)
+                        ]
                       throwIO $ SomeKontraException $ noAvailableYet "Digitally sealed document not ready"
                   file <- apiGuardJustM (noAvailableYet "Not ready, please try later") $ fileFromMainFile (documentsealedfile doc)
                   getFileIDContents $ fileid file
@@ -906,7 +903,7 @@ apiCallV1DownloadMainFile did _nameForBrowser = api $ do
   return $ respondWithPDF False content
 
 apiCallV1DownloadFile :: Kontrakcja m => DocumentID -> FileID -> String -> m Response
-apiCallV1DownloadFile did fileid nameForBrowser = api $ do
+apiCallV1DownloadFile did fileid nameForBrowser = logDocumentAndFile did fileid . api $ do
   (msid :: Maybe SignatoryLinkID) <- readField "signatorylinkid"
   (maccesstoken :: Maybe MagicHash) <- readField "accesstoken"
   mmh <- maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msid
@@ -948,7 +945,7 @@ apiCallV1DownloadFile did fileid nameForBrowser = api $ do
         return res2
 
 apiCallV1ExtractTexts :: Kontrakcja m => DocumentID -> FileID -> m Response
-apiCallV1ExtractTexts did fileid = api $ do
+apiCallV1ExtractTexts did fileid = logDocumentAndFile did fileid . api $ do
   (user, _actor , _) <- getAPIUser APIDocCreate
   withDocumentID did $ do
     unlessM (isPreparation <$> theDocument) $ do
@@ -1004,12 +1001,12 @@ runJavaTextExtract json content = do
     let specpath = tmppath ++ "/sealspec.json"
 
     let (rects :: Maybe JSValue) = fromJSValueField "rects" json
-    let config = runJSONGen $ do
-                   value "rects" rects
+    let config = J.runJSONGen $ do
+                   J.value "rects" rects
 
     liftIO $ BS.writeFile tmpin content
-    liftIO $ BS.writeFile specpath (BS.fromString $ show $ J.pp_value (toJSValue config))
-    (code,_stdout,_stderr) <- liftIO $ do
+    liftIO $ BS.writeFile specpath (BS.fromString $ show $ J.pp_value (J.toJSValue config))
+    (code,_stdout,stderr) <- liftIO $ do
       readProcessWithExitCode' "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "extract-texts", specpath, tmpin] (BSL.empty)
     case code of
       ExitSuccess -> do
@@ -1018,20 +1015,21 @@ runJavaTextExtract json content = do
                                           J.Ok js -> Just js
                                           _ -> Nothing
           let (rectsresult :: Maybe JSValue) = fromJSValueField "rects" jsonresult
-          let censoredresult = runJSONGen $ do
-                   value "rects" rectsresult
+          let censoredresult = J.runJSONGen $ do
+                   J.value "rects" rectsresult
           return $ Ok censoredresult
       ExitFailure _ -> do
-          logAttention_ $ BSL.toString _stderr
-          logAttention_ $ "Extract texts failed for configuration: " ++ show json
+          logAttention "Extract texts failed" $ object [
+              "configuration" .= jsonToAeson json
+            , "stderr" `equalsExternalBSL` stderr
+            ]
           apiGuardL (serverError "Extract texts failed on PDF") (return Nothing)
-
 
 -- this one must be standard post with post params because it needs to
 -- be posted from a browser form
 -- Change main file, file stored in input "file" OR templateid stored in "template"
 apiCallV1ChangeMainFile :: Kontrakcja m => DocumentID -> m Response
-apiCallV1ChangeMainFile docid = api $ do
+apiCallV1ChangeMainFile docid = logDocument docid . api $ do
   (user, actor, _) <- getAPIUser APIDocCreate
   checkObjectVersionIfProvided docid
   withDocumentID docid $ do
@@ -1084,7 +1082,7 @@ apiCallV1ChangeMainFile docid = api $ do
 
 
 apiCallV1SendSMSPinCode :: Kontrakcja m => DocumentID -> SignatoryLinkID ->  m Response
-apiCallV1SendSMSPinCode did slid = api $ do
+apiCallV1SendSMSPinCode did slid = logDocumentAndSignatory did slid . api $ do
   mh <- apiGuardL (serverError "No document found")  $ dbQuery $ GetDocumentSessionToken slid
   (dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
     sl <- apiGuardJustM  (serverError "No document found") $ getSigLinkFor slid <$> theDocument
@@ -1095,10 +1093,10 @@ apiCallV1SendSMSPinCode did slid = api $ do
     phone <- apiGuardJustM (badInput "Phone number is no valid.") $ getOptionalField  asValidPhone "phone"
     pin <- dbQuery $ GetSignatoryPin slid phone
     sendPinCode sl phone pin
-    Ok <$> (runJSONGenT $ value "sent" True)
+    Ok <$> (J.runJSONGenT $ J.value "sent" True)
 
 apiCallV1GetBrandingForSignView :: Kontrakcja m => DocumentID -> SignatoryLinkID ->  m Response
-apiCallV1GetBrandingForSignView did slid = api $ do
+apiCallV1GetBrandingForSignView did slid = logDocumentAndSignatory did slid . api $ do
   magichash <- apiGuardL (serverError "No document found")  $ dbQuery $ GetDocumentSessionToken slid
   doc <- dbQuery $ GetDocumentByDocumentID did
   sl <- apiGuardJustM  (serverError "No document found") $ return $ getMaybeSignatoryLink (doc,slid)
@@ -1106,13 +1104,15 @@ apiCallV1GetBrandingForSignView did slid = api $ do
   authorid <- apiGuardL (serverError "Document problem | No author") $ return $ getAuthorSigLink doc >>= maybesignatory
   user <- apiGuardL (serverError "Document problem | No author in DB") $ dbQuery $ GetUserByIDIncludeDeleted authorid
   company <- getCompanyForUser user
-  Ok <$> (runJSONGenT $ documentSignviewBrandingJSON user company doc)
+  Ok <$> (J.runJSONGenT $ documentSignviewBrandingJSON user company doc)
 
 -- Signatory Attachments handling
 apiCallV1SetSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryLinkID -> String -> m Response
-apiCallV1SetSignatoryAttachment did sid aname = api $ do
+apiCallV1SetSignatoryAttachment did sid aname = logDocumentAndSignatory did sid . api $ do
   checkObjectVersionIfProvided did
-  logInfo_ $ "Setting signatory attachments" ++ show did ++ " for signatory " ++ show sid ++ " name " ++ aname
+  logInfo "Setting signatory attachments for signatory" $ object [
+      "name" .= aname
+    ]
   (mh,mu) <- getMagicHashAndUserForSignatoryAction did sid
   logInfo_ "We are authorized to set signatory attachment"
   -- We check permission here - because we are able to get a valid magichash here
@@ -1142,7 +1142,7 @@ apiCallV1SetSignatoryAttachment did sid aname = api $ do
 
     Accepted <$> (documentJSONV1 mu True False (Just sl) =<< theDocument)
 
-checkObjectVersionIfProvided ::  (Kontrakcja m) => DocumentID -> m ()
+checkObjectVersionIfProvided :: Kontrakcja m => DocumentID -> m ()
 checkObjectVersionIfProvided did = do
     mov <- readField "objectversion"
     case mov of
@@ -1177,12 +1177,14 @@ getMagicHashAndUserForSignatoryAction did sid = do
     case mh' of
       Just mh'' ->  return (mh'',Nothing)
       Nothing -> do
-         (user, _ , _) <- getAPIUser APIPersonal
-         logInfo_ $ "User is " ++ show user
-         mh'' <- getMagicHashForDocumentSignatoryWithUser  did sid user
-         case mh'' of
-           Nothing -> throwIO . SomeKontraException $ serverError "Can't perform this action. Not authorized."
-           Just mh''' -> return (mh''',Just $ user)
+        (user, _ , _) <- getAPIUser APIPersonal
+        logInfo "Logging user" $ object [
+            "user" .= show user
+          ]
+        mh'' <- getMagicHashForDocumentSignatoryWithUser  did sid user
+        case mh'' of
+          Nothing -> throwIO . SomeKontraException $ serverError "Can't perform this action. Not authorized."
+          Just mh''' -> return (mh''',Just $ user)
 
 -- Helper type that represents ~field value, but without file reference - and only with file content. Used only locally.
 data FieldTmpValue = StringFTV String

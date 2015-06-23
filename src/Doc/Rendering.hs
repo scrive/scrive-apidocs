@@ -40,6 +40,7 @@ import File.Storage
 import ForkAction
 import Kontra
 import KontraPrelude
+import Log.Identifier
 import Utils.IO
 import qualified Amazon as AWS
 import qualified MemCache as MemCache
@@ -95,12 +96,15 @@ runRendering _renderedPages fid widthInPixels renderingMode = do
                        ]) BSL.empty
 
     when (exitcode /= ExitSuccess) $
-      logAttention_ $ "mudraw process for pdf->png render failed, will look for rendered images anyway"
+      logAttention_ "mudraw process for pdf->png render failed, will look for rendered images anyway"
     pages <- readNumberedFiles pathOfPage 1 []
     when (null pages) $ do
       systmp <- liftIO $ getTemporaryDirectory
       (path, handle) <- liftIO $ openTempFile systmp $ "mudraw-failed-" ++ show fid ++ "-.pdf"
-      logAttention_ $ "Cannot mudraw of file #" ++ show fid ++ ": " ++ path
+      logAttention "Cannot mudraw file" $ object [
+          identifier_ fid
+        , "path" .= path
+        ]
       liftIO $ BS.hPutStr handle content
       liftIO $ hClose handle
     return $ RenderedPages True pages
@@ -224,7 +228,9 @@ preCheckPDF content =
     res <- liftBase (preCheckPDFHelper content tmppath)
       `E.catch` \(e::IOError) -> return (Left (FileOtherError (show e)))
     case res of
-      Left x -> logAttention_ $ "preCheckPDF: " ++ show x
+      Left x -> logAttention "preCheckPDF failed" $ object [
+          "error" .= show x
+        ]
       Right _ -> return ()
     return $ Binary <$> res
 

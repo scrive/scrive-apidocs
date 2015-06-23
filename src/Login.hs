@@ -8,8 +8,8 @@ module Login (
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
 import Log
 import Text.JSON
-import Text.JSON.Gen as J
 import Text.StringTemplates.Templates
+import qualified Text.JSON.Gen as J
 import qualified Text.StringTemplates.Fields as F
 
 import Analytics.Include
@@ -66,7 +66,9 @@ handleLoginPost = do
                 Just user@User{userpassword}
                     | verifyPassword userpassword passwd
                     && ipIsOK -> do
-                        logInfo_ $ "User " ++ show email ++ " logged in"
+                        logInfo "User logged in" $ object [
+                            "email" .= email
+                          ]
                         muuser <- dbQuery $ GetUserByID (userid user)
 
                         case muuser of
@@ -88,17 +90,21 @@ handleLoginPost = do
                           else do
                             _ <- dbUpdate $ LogHistoryLoginSuccess (userid user) (ctxipnumber ctx) (ctxtime ctx)
                             logUserToContext muuser
-                        runJSONGenT $ value "logged" True
+                        J.runJSONGenT $ J.value "logged" True
                 Just u@User{userpassword} | not (verifyPassword userpassword passwd) -> do
-                        logInfo_ $ "User " ++ show email ++ " login failed (invalid password)"
+                        logInfo "User login failed (invalid password)" $ object [
+                            "email" .= email
+                          ]
                         _ <- if padlogin
                           then dbUpdate $ LogHistoryPadLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
                           else dbUpdate $ LogHistoryLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
-                        runJSONGenT $ value "logged" False
+                        J.runJSONGenT $ J.value "logged" False
 
                 Just u -> do
-                        logInfo_ $ "User " ++ show email ++ " login failed (ip " ++ show (ctxipnumber ctx)
-                                ++ " not on allowed list)"
+                        logInfo "User login failed (ip not on allowed list)" $ object [
+                            "email" .= email
+                          , "ip" .= show (ctxipnumber ctx)
+                          ]
                         _ <- if padlogin
                           then dbUpdate $ LogHistoryPadLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
                           else dbUpdate $ LogHistoryLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
@@ -106,16 +112,18 @@ handleLoginPost = do
                         company <- dbQuery $ GetCompanyByUserID (userid u)
                         admins <-  dbQuery $ GetCompanyAdmins (companyid company)
                         case admins of
-                          (admin:_) -> runJSONGenT $ do
-                                         value "logged" False
-                                         value "ipaddr" (show (ctxipnumber ctx))
-                                         value "adminname" (getSmartName admin)
-                          _ -> runJSONGenT $ do
-                                         value "logged" False
+                          (admin:_) -> J.runJSONGenT $ do
+                                         J.value "logged" False
+                                         J.value "ipaddr" (show (ctxipnumber ctx))
+                                         J.value "adminname" (getSmartName admin)
+                          _ -> J.runJSONGenT $ do
+                                         J.value "logged" False
                 Nothing -> do
-                    logInfo_ $ "User " ++ show email ++ " login failed (user not found)"
-                    runJSONGenT $ value "logged" False
-        _ -> runJSONGenT $ value "logged" False
+                    logInfo "User login failed (user not found)" $ object [
+                        "email" .= email
+                      ]
+                    J.runJSONGenT $ J.value "logged" False
+        _ -> J.runJSONGenT $ J.value "logged" False
 
 {- |
    Handles the logout, and sends user back to main page.
@@ -133,4 +141,4 @@ handleLogoutAJAX :: Kontrakcja m => m JSValue
 handleLogoutAJAX = do
     logUserToContext Nothing
     logPadUserToContext Nothing
-    runJSONGenT $ value "success" True
+    J.runJSONGenT $ J.value "success" True

@@ -17,6 +17,7 @@ import qualified Text.JSON as J
 
 import DB
 import KontraPrelude
+import Log.Utils
 import Salesforce.Conf
 import Utils.IO
 
@@ -46,7 +47,9 @@ getRefreshTokenFromCode code = do
               ] BSL.empty
   case exitcode of
       ExitFailure err -> do
-        logInfo_ $ "Failed to recieve token from salesforce: " ++ show stderr
+        logInfo "Failed to receive token from Salesforce" $ object [
+            "stderr" `equalsExternalBSL` stderr
+          ]
         return $ Left $ "Connection to Salesforce (refresh) closed with " ++ show err
       ExitSuccess ->  case decode $ BSL.toString stdout of
                          J.Ok js ->  do
@@ -54,10 +57,12 @@ getRefreshTokenFromCode code = do
                            case mrt of
                              Just rt -> return $ Right rt
                              Nothing -> do
-                              logInfo_ $ "Parsing Salesfoce refresh response - no token found"
+                              logInfo_ "Parsing Salesfoce refresh response - no token found"
                               return $ Left "Response from Salesforce was a valid JSON, but no refresh token was found"
                          _ -> do
-                           logInfo_ $ "Parsing error with:" ++ show stdout
+                           logInfo "Parsing standard output failed" $ object [
+                               "stdout" `equalsExternalBSL` stdout
+                             ]
                            return $ Left "Response from salesforce was not a valid JSON"
 
 {- Every time we do a salesforce callback, we need to get new access token. We get it using refresh token -}
@@ -74,7 +79,9 @@ getAccessTokenFromRefreshToken rtoken = do
               ] BSL.empty
   case exitcode of
       ExitFailure err -> do
-        logInfo_ $ "Failed to recieve token from salesforce: " ++ show stderr
+        logInfo "Failed to receive token from salesforce" $ object [
+            "stderr" `equalsExternalBSL` stderr
+          ]
         return $ Left $ "Connection to Salesforce closed with " ++ show err
       ExitSuccess ->  case (decode $ BSL.toString stdout) of
                         J.Ok js -> do
@@ -82,10 +89,12 @@ getAccessTokenFromRefreshToken rtoken = do
                           case mrt of
                             Just rt -> return $ Right rt
                             Nothing -> do
-                              logInfo_ $ "Parsing Salesfoce access response - no token found"
+                              logInfo_ "Parsing Salesfoce access response - no token found"
                               return $ Left "Response from Salesforce was a valid JSON, but no access token was found"
                         _ -> do
-                          logInfo_ $ "Parsing error with:" ++ show stdout
+                          logInfo "Parsing standard output failed" $ object [
+                              "stdout" `equalsExternalBSL` stdout
+                            ]
                           return $ Left "Response from salesforce (access) was not a valid JSON"
 
 

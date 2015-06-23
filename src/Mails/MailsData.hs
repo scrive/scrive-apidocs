@@ -1,15 +1,24 @@
 module Mails.MailsData where
 
+import Data.Aeson
 import qualified Data.ByteString as BS
+import qualified Data.Text as T
 
 import File.FileID
 import KontraPrelude
+import Log.Identifier
 import MessageData
 
 data MailAddress = MailAddress {
     fullname    :: String
   , email       :: String
   } deriving (Eq, Ord, Show)
+
+instance ToJSON MailAddress where
+  toJSON MailAddress{..} = object [
+      "name" .= fullname
+    , "email" .= email
+    ]
 
 -- | Structure for holding mails. If from is not set mail will be send
 -- as SkrivaPa admin (fromMails Config).
@@ -23,6 +32,35 @@ data Mail = Mail {
   , attachments :: [(String, Either BS.ByteString FileID)] -- list of attachments (name,content)
   , mailInfo    :: MessageData
   } deriving (Eq, Ord, Show)
+
+instance ToJSON Mail where
+  toJSON Mail{..} = object $ [
+      "to" .= to
+    , "originator" .= originator
+    , "originator_email" .= originatorEmail
+    , "reply_to" .= replyTo
+    , "title" .= title
+    , "content" .= content
+    , "attachments" .= map attachmentToJson attachments
+    ] ++ jsonizeMailInfo mailInfo
+    where
+      jsonizeMailInfo (Invitation did slid) = [
+          "type" .= ("invitation"::T.Text)
+        , identifier_ did
+        , identifier_ slid
+        ]
+      jsonizeMailInfo (SMSPinSendout slid) = [
+          "type" .= ("sms_pin_sendout"::T.Text)
+        , identifier_ slid
+        ]
+      jsonizeMailInfo None = []
+
+      attachmentToJson (name, acontent) = object [
+          "name" .= name
+        , "storage_type" .= case acontent of
+          Left _ -> "direct"
+          Right fid -> object [identifier_ fid]
+        ]
 
 emptyMail :: Mail
 emptyMail = Mail {

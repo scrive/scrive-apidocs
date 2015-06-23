@@ -24,6 +24,7 @@ import Database.PostgreSQL.PQTypes
 import DB.Derive
 import File.FileID
 import KontraPrelude
+import Log.Identifier
 import MagicHash (MagicHash)
 import Utils.List
 
@@ -73,6 +74,9 @@ data MailerJob = MailerJob {
 newtype MailID = MailID Int64
   deriving (Eq, Ord, PQFormat)
 $(newtypeDeriveUnderlyingReadShow ''MailID)
+
+instance Identifier MailID Int64 where
+  gidentifier f n = f "mail_id" .= fmap (\(MailID k) -> k) n
 
 instance FromSQL MailID where
   type PQBase MailID = PQBase Int64
@@ -167,6 +171,9 @@ data Mail = Mail {
 newtype EventID = EventID Int64
   deriving (Eq, Ord, PQFormat)
 $(newtypeDeriveUnderlyingReadShow ''EventID)
+
+instance Identifier EventID Int64 where
+  gidentifier f n = f "mail_event_id" .= fmap (\(EventID k) -> k) n
 
 instance FromSQL EventID where
   type PQBase EventID = PQBase Int64

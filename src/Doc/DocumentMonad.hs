@@ -19,6 +19,7 @@ import DB.RowCache (RowCacheT, GetRow, runRowCacheT, runRowCacheTID, rowCache, r
 import Doc.Class
 import Doc.Data.Document
 import Doc.DocumentID (DocumentID)
+import Doc.Logging
 import KontraPrelude
 
 -- | A monad transformer that has a 'DocumentMonad' instance
@@ -45,18 +46,15 @@ instance (GetRow Document m, MonadDB m) => DocumentMonad (DocumentT m) where
   updateDocument m = DocumentT $ updateRow $ unDocumentT . m
   updateDocumentWithID m = DocumentT $ updateRowWithID $ unDocumentT . m
 
-logDocumentID :: MonadLog m => DocumentID -> m a -> m a
-logDocumentID did = localData ["document_id" .= show did]
-
 -- | Lock a document and perform an operation that modifies the
 -- document in the database, given the document
 withDocument :: (MonadDB m, MonadLog m, GetRow Document m) => Document -> DocumentT m a -> m a
-withDocument d = runRowCacheT d . logDocumentID (documentid d) . unDocumentT . (lockDocument >>)
+withDocument d = runRowCacheT d . logDocument (documentid d) . unDocumentT . (lockDocument >>)
 
 -- | Lock a document and perform an operation that modifies the
 -- document in the database, given the document ID
 withDocumentID :: (MonadDB m, MonadLog m, GetRow Document m) => DocumentID -> DocumentT m a -> m a
-withDocumentID d = runRowCacheTID d . logDocumentID d . unDocumentT . (lockDocument >>)
+withDocumentID d = runRowCacheTID d . logDocument d . unDocumentT . (lockDocument >>)
 
 -- | Lock a document and perform an operation that modifies the
 -- document in the database, given an operation that obtains the
@@ -64,7 +62,7 @@ withDocumentID d = runRowCacheTID d . logDocumentID d . unDocumentT . (lockDocum
 withDocumentM :: (MonadDB m, MonadLog m, GetRow Document m) => m Document -> DocumentT m a -> m a
 withDocumentM dm action = do
   d <- dm
-  runRowCacheT d . logDocumentID (documentid d) . unDocumentT $ do
+  runRowCacheT d . logDocument (documentid d) . unDocumentT $ do
     lockDocument
     action
 

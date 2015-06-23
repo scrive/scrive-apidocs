@@ -33,6 +33,7 @@ import Happstack.Fields
 import Kontra hiding (InternalError)
 import KontraLink
 import KontraPrelude
+import Log.Identifier
 import Network.SOAP.Call
 import Network.SOAP.Transport.Curl
 import Routing
@@ -82,7 +83,9 @@ handleAuthRequest did slid = do
   case cgiResp of
     Left fault -> return $ unjsonToJSON unjsonDef fault
     Right sr@AuthResponse{..} -> do
-        logInfo_ $ "SOAP response:" <+> show sr
+        logInfo "SOAP response returned" $ object [
+            "response" .= show sr
+          ]
         sess <- getCurrentSession
         dbUpdate $ MergeCgiGrpTransaction $ CgiGrpAuthTransaction slid arsTransactionID arsOrderRef (sesID sess)
         return $ unjsonToJSON unjsonDef (arsAutoStartToken, sessionCookieInfoFromSession sess)
@@ -117,7 +120,9 @@ handleSignRequest did slid = do
   case cgiResp of
     Left fault -> return $ unjsonToJSON unjsonDef fault
     Right sr@SignResponse{..} -> do
-      logInfo_ $ "SOAP response:" <+> show sr
+      logInfo "SOAP response returned" $ object [
+          "response" .= show sr
+        ]
       sess <- getCurrentSession
       dbUpdate $ MergeCgiGrpTransaction $ CgiGrpSignTransaction slid (T.pack tbs) srsTransactionID srsOrderRef (sesID sess)
       return $ unjsonToJSON unjsonDef (srsAutoStartToken,sessionCookieInfoFromSession sess)
@@ -147,12 +152,12 @@ collectRequest did slid = do
   CgiGrpConfig{..} <- ctxcgigrpconfig <$> getContext
   (doc,sl) <- getDocumentAndSignatory did slid
   mcompany_display_name <- getCompanyDisplayName doc
-  ttype <- getField "type" >>= \t -> case t of
-                                        Just "auth" -> return CgiGrpAuth
-                                        Just "sign" -> return CgiGrpSign
-                                        _ -> do
-                                          logInfo_ "Collect request without type"
-                                          respond404
+  ttype <- getField "type" >>= \case
+    Just "auth" -> return CgiGrpAuth
+    Just "sign" -> return CgiGrpSign
+    _ -> do
+      logInfo_ "Collect request without type"
+      respond404
   mcgiTransaction <- dbQuery (GetCgiGrpTransaction ttype slid)
   case mcgiTransaction of
     Nothing -> do
@@ -177,11 +182,15 @@ collectRequest did slid = do
 
       soapCall transport "" () req parser >>= \case
         Left fault -> do
-          logInfo_ $ "CGI Fault:" <+> show fault
+          logInfo "SOAP fault returned" $ object [
+              "fault" .= show fault
+            ]
           dbUpdate $ DeleteCgiGrpTransaction ttype slid
           return $ Left fault
         Right cr@CollectResponse{..} -> do
-          logInfo_ $ "SOAP response:" <+> show cr
+          logInfo "SOAP response returned" $ object [
+              "response" .= show cr
+            ]
           when (crsProgressStatus == Complete) $ do
             dbUpdate $ DeleteCgiGrpTransaction ttype slid
             case cgiTransaction of
@@ -241,7 +250,10 @@ getDocumentAndSignatory did slid = dbQuery (GetDocumentSessionToken slid) >>= \c
     logInfo_ "Document token found"
     doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
     when (documentstatus doc /= Pending) $ do
-      logInfo_ $ "Document is" <+> show (documentstatus doc) <+> ", should be" <+> show Pending
+      logInfo "Unexpected status of the document" $ object [
+          "expected" .= show Pending
+        , "given" .= show (documentstatus doc)
+        ]
       respond404
     -- this should always succeed as we already got the document
     let slink = $fromJust $ getSigLinkFor slid doc
@@ -265,12 +277,13 @@ textToBeSigned doc@Document{..} = renderLocalTemplate doc "tbs" $ do
   F.value "document_title" $ documenttitle
   F.value "document_id"   $ show documentid
 
-
-
 guardThatPersonalNumberMatches :: Kontrakcja m => SignatoryLinkID -> String -> Document -> m ()
 guardThatPersonalNumberMatches slid pn doc = case getSigLinkFor slid doc of
     Nothing -> do
-      logInfo_ "Can't find signatory for eleg operation"
+      logInfo "Can't find signatory for eleg operation" $ object [
+          identifier_ $ documentid doc
+        , identifier_ slid
+        ]
       respond404
     Just sl -> do
       let withoutDashes = filter (not . (== '-'))
@@ -278,6 +291,9 @@ guardThatPersonalNumberMatches slid pn doc = case getSigLinkFor slid doc of
           pn' = withoutDashes pn
       if (slPersonalNumber /= "" && slPersonalNumber /= pn' && "19" ++ slPersonalNumber /= pn'  && slPersonalNumber /= "19" ++ pn')
         then do
-          logInfo_ "Personal number for eleg operation does not match and signatory personal number can't be changed"
+          logInfo "Personal number for eleg operation does not match and signatory personal number can't be changed" $ object [
+              identifier_ $ documentid doc
+            , identifier_ slid
+            ]
           respond404
         else return ()

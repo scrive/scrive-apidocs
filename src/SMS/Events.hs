@@ -27,13 +27,15 @@ import BrandedDomain.Model
 import Crypto.RNG
 import DB
 import Doc.DocStateData
-import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID, withDocument)
+import Doc.DocumentMonad
 import Doc.DocViewMail
+import Doc.Logging
 import Doc.Model
 import Doc.SignatoryLinkID
 import EvidenceLog.Model
 import KontraLink
 import KontraPrelude
+import Log.Identifier
 import Mails.MailsConfig
 import Mails.SendMail
 import SMS.Data
@@ -46,10 +48,22 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 
 processEvents :: Scheduler ()
-processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent (a,b,c, fromMaybe None $ maybeRead d))
+processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, msmsType) -> do
+  let smsType = fromMaybe None $ maybeRead msmsType
+      ids = case smsType of
+          Invitation did slid -> [identifier_ slid, identifier_ did]
+          SMSPinSendout slid  -> [identifier_ slid]
+          None                -> []
+  localData ids $ do
+    logInfo "Messages.procesEvent: logging info" . object $ [
+            identifier_ eid
+          , identifier_ smsid
+          , "event_type" .= show eventType
+          ]
+    processEvent (eid, smsid, eventType, smsType)
+  )
   where
-    processEvent (eid, smsid, eventType, Invitation _did slid ) = do
-      logInfo_ $ "Messages.procesEvent: " ++ show (eid, smsid, eventType, slid)
+    processEvent (eid, _, eventType, Invitation _did slid ) = do
       dbQuery (GetDocumentBySignatoryLinkID slid) >>= \doc' -> withDocument doc' $ do
         _ <- dbUpdate $ MarkSMSEventAsRead eid
         msl <- getSigLinkFor slid <$> theDocument
@@ -66,22 +80,27 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent
             -- success/failure for old signatory address, so we need to compare
             -- addresses here (for dropped/bounce events)
             handleEv (SMSEvent phone ev) = do
-              logInfo_ $ signphone ++ " == " ++ phone
+              logInfo "Comparing phone numbers" $ object [
+                  identifier_ slid
+                , "signatory_phone" .= signphone
+                , "event_phone" .= phone
+                ]
               theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ case ev of
                 SMSDelivered -> handleDeliveredInvitation slid
                 SMSUndelivered _ -> when (signphone == phone) $ do
                   handleUndeliveredSMSInvitation bd host mc slid
         handleEv eventType
 
-    processEvent (eid, smsid, eventType, SMSPinSendout slid) = do
-      logInfo_ $ "Messages.procesEvent: " ++ show (eid, smsid, eventType, slid)
+    processEvent (eid, _, eventType, SMSPinSendout slid) = do
       dbQuery (GetDocumentBySignatoryLinkID slid) >>= \doc' -> withDocument doc' $ do
         _ <- dbUpdate $ MarkSMSEventAsRead eid
         templates <- getGlobalTemplates
         msl <- getSigLinkFor slid <$> theDocument
         case (eventType,msl) of
           (SMSEvent phone SMSDelivered, Just sl) -> runTemplatesT (def, templates) $ do
-            logInfo_ $ "SMS with PIN delivered to " ++ phone
+            logInfo "SMS with PIN delivered" $ object [
+                "recipient" .= phone
+              ]
             time <- currentTime
             let actor = mailSystemActor time (maybesignatory sl) (getEmail sl) slid
             void $ dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
@@ -97,8 +116,8 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent
       return ()
 
 handleDeliveredInvitation :: (CryptoRNG m, MonadThrow m, MonadLog m, DocumentMonad m, TemplatesMonad m) => SignatoryLinkID -> m ()
-handleDeliveredInvitation signlinkid = do
-  theDocumentID >>= \did -> logInfo_ $ "handleDeliveredInvitation: docid=" ++ show did ++ ", siglinkid=" ++ show signlinkid
+handleDeliveredInvitation signlinkid = logSignatory signlinkid $ do
+  logInfo_ "handleDeliveredInvitation: logging info"
   getSigLinkFor signlinkid <$> theDocument >>= \case
     Just signlink -> do
       time <- currentTime
@@ -108,8 +127,8 @@ handleDeliveredInvitation signlinkid = do
     Nothing -> return ()
 
 handleUndeliveredSMSInvitation :: (CryptoRNG m, MonadThrow m, MonadLog m, DocumentMonad m, TemplatesMonad m, MonadBase IO m) => BrandedDomain -> String -> MailsConfig -> SignatoryLinkID -> m ()
-handleUndeliveredSMSInvitation bd hostpart mc signlinkid = do
-  theDocumentID >>= \did -> logInfo_ $ "handleUndeliveredSMSInvitation: docid=" ++ show did ++ ", siglinkid=" ++ show signlinkid
+handleUndeliveredSMSInvitation bd hostpart mc signlinkid = logSignatory signlinkid $ do
+  logInfo_ "handleUndeliveredSMSInvitation: logging info"
   getSigLinkFor signlinkid <$> theDocument >>= \case
     Just signlink -> do
       time <- currentTime

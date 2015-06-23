@@ -74,6 +74,7 @@ import Text.StringTemplates.Templates
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Set as S
+import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
 
 import API.APIVersion
@@ -100,6 +101,7 @@ import File.FileID
 import File.Model
 import IPAddress
 import KontraPrelude
+import Log.Identifier
 import MagicHash
 import MinutesTime
 import User.Model
@@ -789,7 +791,10 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) =>
 
             return $ Just d
       Left err -> do
-        logAttention_ err
+        logAttention "Document restart failed" $ object [
+            identifier_ $ documentid doc
+          , "error" .= err
+          ]
         return Nothing
    where
 
@@ -1110,8 +1115,11 @@ instance (CryptoRNG m, MonadLog m, MonadThrow m, DocumentMonad m, TemplatesMonad
             insertSignatoryLinks documentid siglinks
             return True
 
-          s -> do
-            logAttention_ $ "cannot reset signatory details on document " ++ show documentid ++ " because " ++ intercalate ";" s
+          errs -> do
+            logAttention "Cannot reset signatory details on document" $ object [
+                identifier_ documentid
+              , "errors" .= errs
+              ]
             return False
 
 data CloneDocumentWithUpdatedAuthor = CloneDocumentWithUpdatedAuthor User Document Actor
@@ -1578,10 +1586,12 @@ checkEqualByAllowSecondNothing name func obj1 obj2
 assertEqualDocuments :: (MonadThrow m, MonadLog m) => Document -> Document -> m ()
 assertEqualDocuments d1 d2 | null inequalities = return ()
                            | otherwise = do
-                                logInfo_ message
-                                $unexpectedErrorM message
+  logInfo message $ object [
+      "inequalities" .= concatMap showInequality inequalities
+    ]
+  $unexpectedErrorM $ T.unpack message
   where
-    message = "Documents aren't equal in " ++ concat (map showInequality inequalities)
+    message = "Documents aren't equal"
     showInequality (name,obj1,obj2) = name ++ ": \n" ++ obj1 ++ "\n" ++ obj2 ++ "\n"
     sl1 = documentsignatorylinks d1
     sl2 = documentsignatorylinks d2

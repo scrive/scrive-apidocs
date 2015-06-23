@@ -7,11 +7,19 @@ import Database.PostgreSQL.PQTypes
 import qualified Control.Exception.Lifted as E
 
 import KontraPrelude
+import Log.Identifier
 
 data APIVersion =
     V1
  |  V2
   deriving (Eq, Show, Ord)
+
+instance Identifier APIVersion Int where
+  gidentifier f n = f "api_version" .= fmap versionToInt n
+    where
+      versionToInt :: APIVersion -> Int
+      versionToInt V1 = 1
+      versionToInt V2 = 2
 
 instance PQFormat APIVersion where
   pqFormat = const $ pqFormat ($undefined::Int16)

@@ -29,7 +29,6 @@ import Text.HTML.TagSoup (Tag(..), parseTags)
 import Text.StringTemplates.Templates
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BSL (empty, writeFile)
-import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 import qualified Data.Unjson as Unjson
@@ -42,6 +41,7 @@ import Doc.DocStateData
 import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
 import Doc.DocUtils
 import Doc.DocView
+import Doc.Logging
 import Doc.Model
 import Doc.Rendering
 import Doc.SealStatus (SealStatus(..))
@@ -56,6 +56,8 @@ import File.Model
 import File.Storage
 import Kontra
 import KontraPrelude
+import Log.Identifier
+import Log.Utils
 import MinutesTime
 import Templates
 import Util.Actor
@@ -197,7 +199,7 @@ listAttachmentsFromDocument document =
 findOutAttachmentDesc :: (MonadIO m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, AWS.AmazonMonad m, MonadBaseControl IO m)
                       => SignatoryIdentifierMap -> String -> Document -> m [Seal.FileDesc]
 
-findOutAttachmentDesc sim tmppath document = do
+findOutAttachmentDesc sim tmppath document = logDocument (documentid document) $ do
   a <- mapM findAttachmentsForAuthorAttachment authorAttsNumbered
   b <- mapM findAttachmentsForSignatoryAttachment attAndSigsNumbered
   return (a ++ b)
@@ -223,10 +225,12 @@ findOutAttachmentDesc sim tmppath document = do
             file <- dbQuery $ GetFileByFileID fileid'
             eNumberOfPages <- liftIO $ getNumberOfPDFPages contents
             numberOfPages <- case eNumberOfPages of
-                              Left e -> do
-                                logAttention_ $ "Calculating number of pages of document #" ++ show (documentid document) ++ " failed, falling back to 1. Reason: " ++ show e
-                                return 1
-                              Right x -> return x
+              Left e -> do
+                logAttention "Calculating number of pages of document failed, falling back to 1" $ object [
+                    "reason" .= e
+                  ]
+                return 1
+              Right x -> return x
             return (contents, numberOfPages, filename file)
         numberOfPagesText <-
           if (".png" `isSuffixOf` (map toLower name) || ".jpg" `isSuffixOf` (map toLower name) )
@@ -411,10 +415,12 @@ sealSpecFromDocument boxImages hostpart document elog offsets graphEvidenceOfTim
 
   eNumberOfPages <- liftIO $ getNumberOfPDFPages content
   numberOfPages <- case eNumberOfPages of
-                        Left e -> do
-                          logAttention_ $ "Calculating number of pages of document #" ++ show (documentid document) ++ " failed, falling back to 1. Reason: " ++ show e
-                          return 1
-                        Right x -> return x
+    Left e -> do
+      logAttention "Calculating number of pages of document failed, falling back to 1" $ object [
+          "reason" .= e
+        ]
+      return 1
+    Right x -> return x
 
   numberOfPagesText <-
     if numberOfPages==1
@@ -472,15 +478,15 @@ presealSpecFromDocument boxImages document inputpath outputpath = do
             }
 
 sealDocument :: (CryptoRNG m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadMask m, MonadLog m, AWS.AmazonMonad m) => String -> m ()
-sealDocument hostpart = theDocumentID >>= \did -> do
+sealDocument hostpart = do
   mfile <- fileFromMainFile =<< documentfile <$> theDocument
   case mfile of
     Just file -> do
-      logInfo_ $ "Sealing document #" ++ show did
+      logInfo_ "Sealing document"
       sealDocumentFile hostpart file
-      logInfo_ $ "Sealing of document #" ++ show did ++ " should be done now"
+      logInfo_ "Sealing of document should be done now"
     Nothing -> do
-      logInfo_ $ "Sealing of document #" ++ show did ++ " failed because it has no main file attached"
+      logInfo_ "Sealing of document failed because it has no main file attached"
       internalError
 
 sealDocumentFile :: (CryptoRNG m, MonadMask m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadLog m, AWS.AmazonMonad m)
@@ -506,11 +512,10 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
     -- Evidence of Time documentation says we collect last 1000 samples
     offsets <- dbQuery $ HC.GetNClockErrorEstimates 1000
     when (not $ HC.enoughClockErrorOffsetSamples offsets) $ do
-        let msg = "Cannot seal document #" ++ show documentid ++ " because there are no valid host_clock samples"
-        logAttention_ msg
-        void $ dbUpdate $ ErrorDocument ErrorSealingDocumentEvidence
-                                        (return ())
-                                        (systemActor now)
+      logAttention_ "Cannot seal document because there are no valid host_clock samples"
+      void $ dbUpdate $ ErrorDocument ErrorSealingDocumentEvidence
+        (return ())
+        (systemActor now)
     graphEvidenceOfTime <- generateEvidenceOfTimeGraph 100 (tmppath ++ "/eot_samples.txt") (tmppath ++ "/eot_graph.svg") (map HC.offset offsets)
     config <- theDocument >>= \d -> sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart d elog offsets graphEvidenceOfTime content tmppath tmpin tmpout
 
@@ -520,13 +525,15 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
       liftIO $ BSL.writeFile sealspecpath json_config
       readProcessWithExitCode' "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "add-verification-pages", sealspecpath] (BSL.empty)
 
-    logInfo_ $ "Sealing completed with " ++ show code
+    logInfo "Sealing completed" $ object [
+        "code" .= show code
+      ]
     case code of
       ExitSuccess -> do
         tmpoutContent <- liftIO (BS.readFile tmpout)
         case tmpoutContent of
           "" -> do
-            logAttention_ $ "Sealing document #" ++ show documentid ++ " resulted in an empty output"
+            logAttention_ $ "Sealing document resulted in an empty output"
             internalError
           _ -> do
             sealedfileid <- dbUpdate $ NewFile filename $ Binary tmpoutContent
@@ -534,9 +541,11 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
       ExitFailure _ -> do
         systmp <- liftIO $ getTemporaryDirectory
         (path, handle) <- liftIO $ openTempFile systmp ("seal-failed-" ++ show documentid ++ "-" ++ show fileid ++ "-.pdf")
-        let msg = "Cannot seal document #" ++ show documentid ++ " because of file #" ++ show fileid
-        logAttention_ $ msg ++ ": " ++ path
-        logAttention_ $ BSL.toString stderr
+        logAttention "Cannot seal document because of file" $ object [
+            identifier_ fileid
+          , "path" .= path
+          , "stderr" `equalsExternalBSL` stderr
+          ]
         -- show JSON'd config as that's what the java app is fed.
         liftIO $ BS.hPutStr handle content
         liftIO $ hClose handle
@@ -552,7 +561,9 @@ presealDocumentFile :: (MonadBaseControl IO m, MonadDB m, MonadLog m, KontraMona
                  -> m (Either String BS.ByteString)
 presealDocumentFile document@Document{documentid} file@File{fileid} =
   withSystemTempDirectory' ("preseal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
-    logInfo_ ("presealing: " ++ show fileid)
+    logInfo "Presealing file" $ object [
+        identifier_ fileid
+      ]
     let tmpin = tmppath ++ "/input.pdf"
     let tmpout = tmppath ++ "/output.pdf"
     content <- getFileContents file
@@ -566,13 +577,17 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
       let sealspecpath = tmppath ++ "/sealspec.json"
       liftIO $ BSL.writeFile sealspecpath json_config
       readProcessWithExitCode' "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "add-verification-pages", sealspecpath] (BSL.empty)
-    logInfo_ $ "PreSealing completed with " ++ show code
+    logInfo "Presealing completed" $ object [
+        "code" .= show code
+      ]
     case code of
       ExitSuccess -> do
           res <- liftIO $ BS.readFile tmpout
-          logInfo_ $ "Returning presealed content"
+          logInfo_ "Returning presealed content"
           return $ Right res
       ExitFailure _ -> do
-          logAttention_ $ BSL.toString stderr
+          logAttention "Presealing failed" $ object [
+              "stderr" `equalsExternalBSL` stderr
+            ]
           -- show JSON'd config as that's what the java app is fed.
           return $ Left "Error when preprinting fields on PDF"

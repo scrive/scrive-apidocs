@@ -16,6 +16,7 @@ import Database.PostgreSQL.PQTypes
 
 import DB.Derive
 import KontraPrelude
+import Log.Identifier
 import Utils.List
 
 data JobType
@@ -56,6 +57,9 @@ newtype ShortMessageID = ShortMessageID Int64
   deriving (Eq, Ord, PQFormat)
 $(newtypeDeriveUnderlyingReadShow ''ShortMessageID)
 
+instance Identifier ShortMessageID Int64 where
+  gidentifier f n = f "sms_id" .= fmap (\(ShortMessageID k) -> k) n
+
 instance FromSQL ShortMessageID where
   type PQBase ShortMessageID = PQBase Int64
   fromSQL mbase = ShortMessageID <$> fromSQL mbase
@@ -78,6 +82,9 @@ data ShortMessage = ShortMessage {
 newtype SMSEventID = SMSEventID Int64
   deriving (Eq, Ord, PQFormat)
 $(newtypeDeriveUnderlyingReadShow ''SMSEventID)
+
+instance Identifier SMSEventID Int64 where
+  gidentifier f n = f "sms_event_id" .= fmap (\(SMSEventID k) -> k) n
 
 instance FromSQL SMSEventID where
   type PQBase SMSEventID = PQBase Int64

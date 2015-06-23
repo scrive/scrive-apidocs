@@ -12,6 +12,7 @@ import Chargeable.Model
 import DB
 import Doc.DocStateData
 import KontraPrelude
+import Log.Identifier
 import MessageData
 import SMS.Model
 
@@ -28,13 +29,20 @@ data SMS = SMS {
 -- latin1, but we still want messages containing such characters to be sent
 -- successfully.
 scheduleSMS :: (MonadLog m, MonadDB m, MonadThrow m) => Document -> SMS -> m ()
-scheduleSMS doc msg@SMS{..} = do
+scheduleSMS doc SMS{..} = do
   when (null smsMSISDN) $ do
     $unexpectedErrorM "no mobile phone number defined"
   sid <- dbUpdate $ CreateSMS (fixOriginator smsOriginator) (fixPhoneNumber smsMSISDN) smsBody (show smsData)
   -- charge company of the author of the document for the smses
   dbUpdate $ ChargeCompanyForSMS (documentid doc) sms_count
-  logInfo_ $ "SMS" <+> show msg <+> "with id" <+> show sid <+> "scheduled for sendout"
+  logInfo "SMS scheduled for sendout" $ object [
+      identifier_ $ documentid doc
+    , identifier_ sid
+    , "sms_msisdn" .= smsMSISDN
+    , "sms_data" .= show smsData
+    , "sms_body" .= smsBody
+    , "sms_originator" .= smsOriginator
+    ]
   where
     -- Count the real smses; if the message length is less than
     -- 160 characters, it's 1 sms. Otherwise it's split into

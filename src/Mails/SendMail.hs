@@ -15,6 +15,7 @@ import Control.Monad.Catch
 import Data.Char
 import Data.String.Utils
 import Log
+import qualified Data.Aeson as A
 import qualified Text.StringTemplates.Fields as F
 import qualified Text.StringTemplates.Templates as T
 
@@ -65,9 +66,11 @@ scheduleEmailSendoutWithAuthorSender did c m = do
 
 scheduleEmailSendoutHelper :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m) => String -> MailsConfig -> Mail ->  m ()
 scheduleEmailSendoutHelper authorname  MailsConfig{..} mail@Mail{..} = do
-  logInfo_ $ "Sending mail with originator " ++ show originator
+  logInfo "Sending mail" $ object [
+      "originator" .= originator
+    ]
   if unsendable to
-    then logAttention_ $ "Email " ++ show mail ++ " is unsendable, discarding."
+    then logAttention "Email is unsendable, discarding" $ A.toJSON mail
     else do
       fromAddr <- return Address {addrName = authorname, addrEmail = originatorEmail }
       token <- random

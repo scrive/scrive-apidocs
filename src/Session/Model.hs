@@ -20,6 +20,7 @@ import DB
 import Happstack.Server.ReqHandler
 import KontraMonad
 import KontraPrelude
+import Log.Identifier
 import MagicHash
 import MinutesTime
 import Session.Cookies
@@ -72,7 +73,10 @@ updateSession old_ses new_ses_id new_muser new_mpad_user = do
     True | (isJust new_muser || isJust new_mpad_user) -> do
       let uid = $fromJust $ (new_muser `mplus` new_mpad_user)
       n <- deleteSuperfluousUserSessions uid
-      logInfo_ $ show n ++ " superfluous sessions of user with id = " ++ show uid ++ " removed from the database"
+      logInfo "Superfluous sessions of user removed from the database" $ object [
+          identifier_ uid
+        , "sessions" .= n
+        ]
       expires <- sessionNowModifier `liftM` currentTime
       dbUpdate (NewAction session expires (new_muser, new_mpad_user, sesToken old_ses, sesCSRFToken old_ses, sesDomain old_ses))
         >>= startSessionCookie

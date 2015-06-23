@@ -20,6 +20,7 @@ import Data.Unjson
 import Data.Unjson as Unjson
 import Log
 import qualified Data.Aeson as Aeson
+import qualified Data.Text as T
 
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
@@ -62,7 +63,9 @@ handleUpdateThemeForDomain did tid =  do
   themeJSON <- guardJustM $ getFieldBS "theme"
   case Aeson.eitherDecode themeJSON of
     Left err -> do
-      logInfo_ $ "Error while parsing theme for domain " ++ err
+      logInfo "Error while parsing theme for domain" $ object [
+          "error" .= err
+        ]
       internalError
     Right js -> case (Unjson.parse unjsonTheme js) of
       (Result newTheme []) -> do
@@ -76,8 +79,10 @@ handleUpdateThemeForCompany cid tid =  do
   themeJSON <- guardJustM $ getFieldBS "theme"
   case Aeson.eitherDecode themeJSON of
    Left err -> do
-     logInfo_ $ "Error while parsing theme for company " ++ err
-     internalError
+    logInfo "Error while parsing theme for company" $ object [
+        "error" .= err
+      ]
+    internalError
    Right js -> case (Unjson.parse unjsonTheme js) of
         (Result newTheme []) -> do
           _ <- dbUpdate $ UpdateThemeForCompany cid newTheme {themeID = themeID theme}
@@ -110,11 +115,11 @@ handleDeleteThemeForCompany cid tid = do
   dbUpdate $ DeleteThemeOwnedByCompany cid tid
 
 
-guardNotMainDomain :: Kontrakcja m => BrandedDomainID -> String -> m ()
+guardNotMainDomain :: Kontrakcja m => BrandedDomainID -> T.Text -> m ()
 guardNotMainDomain did msg = do
   bd <- dbQuery $ GetBrandedDomainByID did
   if (bdMainDomain bd)
    then do
-    logInfo_ $ msg
+    logInfo_ msg
     internalError
    else return ()
