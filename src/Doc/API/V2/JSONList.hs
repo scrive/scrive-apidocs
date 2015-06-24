@@ -186,9 +186,9 @@ unjsonDocumentFilterCanBeSignedBy = pure DocumentFilterCanBeSignedBy
 
 toDocumentFilter :: UserID -> DocumentFilter -> [DF.DocumentFilter]
 toDocumentFilter _ (DocumentFilterStatuses ss) = [DF.DocumentFilterStatuses ss]
-toDocumentFilter _ (DocumentFilterTime (Just start) (Just end)) = [DF.DocumentFilterByTimeAfter  start,DF.DocumentFilterByTimeAfter end]
-toDocumentFilter _ (DocumentFilterTime Nothing (Just end)) = [DF.DocumentFilterByTimeAfter end]
-toDocumentFilter _ (DocumentFilterTime (Just start) Nothing) = [DF.DocumentFilterByTimeAfter  start]
+toDocumentFilter _ (DocumentFilterTime (Just start) (Just end)) = [DF.DocumentFilterByTimeAfter start, DF.DocumentFilterByTimeBefore end]
+toDocumentFilter _ (DocumentFilterTime Nothing (Just end)) = [DF.DocumentFilterByTimeBefore end]
+toDocumentFilter _ (DocumentFilterTime (Just start) Nothing) = [DF.DocumentFilterByTimeAfter start]
 toDocumentFilter _ (DocumentFilterTime Nothing Nothing) = []
 toDocumentFilter _ (DocumentFilterTag name value) = [DF.DocumentFilterByTags [DocumentTag (unpack name) (unpack value)]]
 toDocumentFilter uid (DocumentFilterIsAuthor) = [DF.DocumentFilterByAuthor uid]
